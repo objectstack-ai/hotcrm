@@ -18,7 +18,7 @@ description: 用 ObjectStack 元数据、动作、流程、AI skills 和 UI 定�
 
 ## 当前源码结构
 
-HotCRM 由四个包构建出一个 ObjectStack 制品（ADR-0130）：`src/` 下的一个目录**就是**一个包。请在拥有该对象的包里新增或修改元数据，然后从那个包对应的 barrel 文件导出。一个文件只能从自己的目录或 `src/sales/` 导入，模块之间不得横向导入。
+HotCRM 构建出一个装着两个包的 ObjectStack 制品（ADR-0130）——`src/sales/` 里的 `type: app` 包与 `src/service/` 里的服务模块——而 `src/` 下的一个目录**就是**一个包：`src/revenue/` 和 `src/marketing/` 在各自单独打包之前，由 app 包注册。请在拥有该对象的包里新增或修改元数据，然后从那个包对应的 barrel 文件导出。一个文件只能从自己的目录或 `src/sales/` 导入，模块之间不得横向导入。
 
 ```text
 src/

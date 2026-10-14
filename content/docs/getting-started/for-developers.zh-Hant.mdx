@@ -28,7 +28,7 @@ pnpm dev
 
 ## 倉庫結構
 
-HotCRM 由**四個套件**建置出**一個** ObjectStack 產物（ADR-0130）：`src/` 下的一個目錄就是一個套件。`objectstack.config.ts` 是唯一的 `defineStack()`，`objectstack.composition.ts` 負責把四個套件的 barrel 彙總給它。一個檔案只能從自己的目錄或 `src/sales/` 匯入，模組之間不得橫向匯入。
+HotCRM 建置出**一個** ObjectStack 產物，裡面裝著**兩個套件**（ADR-0130）：`src/sales/` 裡的 `type: app` 套件 `app.objectstack.hotcrm`，以及 `src/service/` 裡的服務模組 `app.objectstack.hotcrm.service`。兩者各有一個 `index.ts`，各自呼叫 `defineStack()`；`objectstack.composition.ts` 建置這兩個套件，`objectstack.config.ts` 把它們組合成產物。`src/` 下的一個目錄就是佈局上的一個套件：`src/revenue/` 和 `src/marketing/` 在各自單獨打包之前，仍由 app 套件註冊。一個檔案只能從自己的目錄或 `src/sales/` 匯入，模組之間不得橫向匯入。
 
 ```text
 hotcrm/
@@ -36,9 +36,9 @@ hotcrm/
 ├── objectstack.composition.ts
 ├── src/
 │   ├── sales/          # `type: app` 套件 —— account、contact、lead、opportunity、forecast、task、event
-│   ├── service/        # 模組 —— case、knowledge_article、article_feedback
-│   ├── revenue/        # 模組 —— product、opportunity_line_item、quote、quote_line_item、contract
-│   ├── marketing/      # 模組 —— campaign、campaign_member
+│   ├── service/        # 服務模組 —— case、knowledge_article、article_feedback
+│   ├── revenue/        # 目前由 app 套件註冊 —— product、opportunity_line_item、quote、quote_line_item、contract
+│   ├── marketing/      # 目前由 app 套件註冊 —— campaign、campaign_member
 │   └── docs/           # 隨建置產物一起發布的應用文件
 ├── apps/docs/          # Fumadocs 應用
 └── content/docs/       # 文件內容

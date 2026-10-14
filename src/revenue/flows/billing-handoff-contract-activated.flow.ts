@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -8,11 +8,10 @@ import {
   BILLING_HANDOFF_ENDPOINT,
   BILLING_HANDOFF_EVENT,
   BILLING_HANDOFF_LINE_ITEM_LIMIT,
-  BILLING_HANDOFF_PAYLOAD_VERSION,
   BILLING_HANDOFF_SIGNING_SECRET,
   BILLING_HANDOFF_TIMEOUT_MS,
   LINE_ITEM_FIELDS,
-  accountBlock,
+  billingBody,
   loadAccountNode,
 } from '../../sales/flows/_billing-endpoint';
 
@@ -133,9 +132,9 @@ export const BillingHandoffContractActivatedFlow: Flow = {
         // Contracts carry no line items of their own; what was sold sits on the
         // opportunity the contract came from. Reached only via the guarded edge
         // below, because `crm_opportunity` is OPTIONAL on a contract and a
-        // filter token that resolves to nothing makes `get_record` refuse the
+        // filter operand that evaluates to null makes `get_record` refuse the
         // step (an absent condition widens a query rather than narrowing it).
-        filter: { crm_opportunity: '{record.crm_opportunity}' },
+        filter: { crm_opportunity: cel`record.crm_opportunity` },
         fields: LINE_ITEM_FIELDS,
         limit: BILLING_HANDOFF_LINE_ITEM_LIMIT,
         outputVariable: 'billingLineItems',
@@ -151,33 +150,15 @@ export const BillingHandoffContractActivatedFlow: Flow = {
         durable: true,
         timeoutMs: BILLING_HANDOFF_TIMEOUT_MS,
         signingSecret: BILLING_HANDOFF_SIGNING_SECRET,
-        body: {
-          event: BILLING_HANDOFF_EVENT.contractActivated,
-          version: BILLING_HANDOFF_PAYLOAD_VERSION,
-          occurred_at: '{NOW()}',
-          contract: {
-            id: '{record.id}',
-            contract_number: '{record.contract_number}',
-            status: '{record.status}',
-            contract_type: '{record.contract_type}',
-            start_date: '{record.start_date}',
-            end_date: '{record.end_date}',
-            contract_term_months: '{record.contract_term_months}',
-            contract_value: '{record.contract_value}',
-            // This flow is the consumer of these two fields: they are what the
-            // billing system needs to raise the schedule HotCRM deliberately
-            // does not model.
-            billing_frequency: '{record.billing_frequency}',
-            payment_terms: '{record.payment_terms}',
-            auto_renewal: '{record.auto_renewal}',
-            signed_date: '{record.signed_date}',
-            account_id: '{record.crm_account}',
-            opportunity_id: '{record.crm_opportunity}',
-            owner_id: '{record.owner_id}',
-          },
-          account: accountBlock,
-          line_items: '{billingLineItems}',
-        },
+        // One envelope building the whole payload (see `billingBody`). This
+        // flow is the consumer of `billing_frequency` and `payment_terms`: they
+        // are what the billing system needs to raise the schedule HotCRM
+        // deliberately does not model.
+        body: billingBody(BILLING_HANDOFF_EVENT.contractActivated, 'contract', [
+          'id', 'contract_number', 'status', 'contract_type', 'start_date', 'end_date', 'contract_term_months',
+          'contract_value', 'billing_frequency', 'payment_terms', 'auto_renewal', 'signed_date',
+          ['account_id', 'crm_account'], ['opportunity_id', 'crm_opportunity'], 'owner_id',
+        ]),
       },
     },
     { id: 'end', type: 'end', label: 'End' },

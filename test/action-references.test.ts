@@ -2,17 +2,18 @@
 
 import { describe, it, expect } from 'vitest';
 import { applySystemFields } from '@objectstack/objectql';
-import stack from '../objectstack.config';
-import {
-  type AnyRec,
-  objects,
-  pages,
-  views,
-  objectNames,
-  packFor,
-  walk,
-  PLATFORM_OBJECTS,
-} from './helpers/metadata-fixtures';
+import stack, { servedApps, type AnyRec, packFor, walk } from './helpers/composed-stack';
+import { hotcrmStack, platformObjectNames } from './helpers/verify-stack';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
+const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
+const views: AnyRec[] = (stack as AnyRec).views ?? [];
+const objectNames = new Set(objects.map((o) => o.name as string));
+
+// The runtime half of a reference check — which objects and columns the booted
+// app actually registers — is read from the platform's registry, not a roster.
+const runtime = await hotcrmStack();
+const PLATFORM_OBJECTS = platformObjectNames(runtime, objectNames);
 
 /**
  * Dangling-reference guards for the surfaces that DISPATCH — navigation,
@@ -37,14 +38,20 @@ import {
  * surface they resolve against; this one owns navigation, actions and
  * dashboards.
  *
- * The derivations every one of them shares (`objects`, `views`, `walk`, the
- * locale packs, the platform-object allowlist) live in
- * `test/helpers/metadata-fixtures.ts`. No assertion, helper or fixture changed
- * in the split — see the reconciliation table on the PR.
+ * The derivations every one of them shares come from two places: the app's
+ * authored collections, the locale packs and `walk` from
+ * `test/helpers/composed-stack.ts`, and the runtime half — which objects and
+ * columns the booted app registers — from the platform's registry through
+ * `@objectstack/verify`'s handle (`test/helpers/verify-stack.ts`). No
+ * assertion, helper or fixture changed in the split — see the reconciliation
+ * table on the PR.
  */
 
 describe('navigation reaches everything the app ships', () => {
-  const apps: AnyRec[] = (stack as any).apps ?? [];
+  // The SERVED apps: a module's `navigationContributions` are folded in, so an
+  // entry the service module contributes is reachable here exactly as it is in
+  // the sidebar — and one it stops contributing is stranded here too.
+  const apps: AnyRec[] = servedApps();
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
   const reports: AnyRec[] = (stack as any).reports ?? [];
 
@@ -362,6 +369,65 @@ describe('record-page header action references resolve', () => {
     expect(resolveHeaderAction('convert_lead', 'crm_lead')).not.toEqual([]);
     expect(resolveHeaderAction('no_such_action', 'crm_lead')).toEqual([]);
     expect(resolveHeaderAction('convert_lead', 'crm_case')).toEqual([]);
+  });
+
+  /**
+   * The converse (#2072): a record page's authored `page:header` names its
+   * buttons, and an action of the page's object that it does not name is
+   * reachable from the record by no button at all — only the list row's ⋮
+   * menu (#592). `case_detail_page` named three of the six crm_case actions
+   * this app places at `record_header`, so an agent on an unowned case went
+   * back to the list to claim it and could not log or book a meeting from
+   * the case.
+   *
+   * What this pins is a fact of THIS app, not a platform rule: both inputs
+   * are this app's own metadata — the `locations` each action declares and
+   * the id list each header authors — and the assertion is that the two
+   * agree. It predicts nothing about what the renderer draws (`visible`,
+   * capabilities and the inline/⋯ split stay the renderer's), so a header
+   * that lists an action whose `visible` hides it on a given record passes.
+   *
+   * An action deliberately kept off a header is written down in
+   * `LEFT_OUT_OF_HEADER` with the business reason, keyed by page then action
+   * name. None is today: every header lists every `record_header` action of
+   * its object.
+   */
+  const LEFT_OUT_OF_HEADER: Record<string, Record<string, string>> = {};
+
+  /** The `record_header` actions of the page's object its header does not list. */
+  const unlistedHeaderActions = (object: string, listed: unknown[]): string[] =>
+    actions
+      .filter((a) => a.objectName === object && (a.locations ?? []).includes('record_header'))
+      .map((a) => a.name as string)
+      .filter((name) => !listed.includes(name));
+
+  const recordHeaders = headers.filter(({ page }) => typeof page.object === 'string');
+
+  it('every record-page header lists each record_header action of its object, or says why not', () => {
+    expect(
+      recordHeaders.map(({ page }) => page.name),
+      'the walk no longer reaches the record-page headers this suite holds',
+    ).toContain('case_detail_page');
+    const bad: string[] = [];
+    for (const { page, component } of recordHeaders) {
+      const excused = LEFT_OUT_OF_HEADER[page.name] ?? {};
+      const unlisted = unlistedHeaderActions(page.object, component.properties?.actions ?? []);
+      for (const name of unlisted.filter((n) => !(n in excused))) {
+        bad.push(`${page.name}/${component.id}: "${name}" is placed at record_header on "${page.object}" but the header does not list it`);
+      }
+      for (const name of Object.keys(excused).filter((n) => !unlisted.includes(n))) {
+        bad.push(`${page.name}: LEFT_OUT_OF_HEADER excuses "${name}", which is no unlisted record_header action of "${page.object}"`);
+      }
+    }
+    expect(bad, `record_header actions no header button reaches:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('the completeness check still names an action a header leaves out', () => {
+    // The #2072 shape, on the real case header: take one action off its list.
+    const caseHeader = recordHeaders.find(({ page }) => page.name === 'case_detail_page');
+    const listed: string[] = caseHeader?.component.properties?.actions ?? [];
+    expect(listed).toContain('claim_case');
+    expect(unlistedHeaderActions('crm_case', listed.filter((n) => n !== 'claim_case'))).toEqual(['claim_case']);
   });
 });
 

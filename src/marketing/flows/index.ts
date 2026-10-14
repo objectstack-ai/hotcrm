@@ -3,7 +3,8 @@
 /**
  * Marketing flow barrel — the flows whose start node names `crm_campaign` or
  * `crm_campaign_member`. See `src/sales/flows/index.ts` for why the
- * registration order is assembled in `objectstack.config.ts` rather than here.
+ * registration order is assembled in `objectstack.composition.ts` rather than
+ * here.
  */
 export { CampaignEnrollmentFlow } from './campaign-enrollment.flow';
 export {

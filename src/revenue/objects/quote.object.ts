@@ -276,7 +276,7 @@ export const Quote = ObjectSchema.create({
     apiEnabled: true,
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
     // #602 — the generated quote PDF and the customer's countersigned copy.
-    // See the canonical capability note in `src/objects/index.ts`.
+    // See the canonical capability note in `src/sales/objects/index.ts`.
     files: true,
   },
   
@@ -369,5 +369,5 @@ export const Quote = ObjectSchema.create({
   // Workflow Rules
   // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
   // removed from the platform. Field updates live in this object's `*.hook.ts`;
-  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
+  // scheduled status flips and notifications live in `src/*/flows/*.flow.ts`.
 });

@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * The bulk-dispatch contract: how a list view delivers a multi-row selection
@@ -29,7 +29,7 @@ import stack from '../objectstack.config';
  *
  * These are METADATA pins: they assert the shape the renderer needs. The
  * execution half — that the shape actually moves rows — is
- * `test/action-sandbox.test.ts`, which runs the shipped body against a real
+ * `test/script-bodies.test.ts`, which runs the shipped body against a real
  * ObjectQL kernel with `_selectedIds` in the params bag.
  */
 

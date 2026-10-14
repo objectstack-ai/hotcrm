@@ -28,7 +28,7 @@ export const GuestPortalProfile = {
   // No `allowExport` anywhere below, deliberately: this set is bound to the
   // `guest` anchor, and ADR-0090 D9 classes `allowExport` as a high-privilege
   // bit no anchor may confer — the set would stop binding at all, on top of
-  // handing anonymous visitors bulk table egress. See `src/profiles/index.ts`.
+  // handing anonymous visitors bulk table egress. See `src/sales/profiles/index.ts`.
   objects: {
     crm_lead: {
       allowCreate: true,

@@ -23,6 +23,10 @@ export const Account = ObjectSchema.create({
   // search silently return zero. These are real, indexed columns.
   searchableFields: ['name', 'account_number', 'registration_number'],
   highlightFields: ['account_number', 'name', 'type', 'owner_id'],
+  // The record's picture (#1199): the record chrome draws the logo beside the
+  // title in every account page header. No logo, no picture: the platform
+  // draws no placeholder or initials in its place.
+  imageField: 'logo',
 
   // Field groups organize the form layout. Array order == display order.
   // Each field below opts in via `group: '<key>'`.
@@ -92,7 +96,7 @@ export const Account = ObjectSchema.create({
     // declared index is taken verbatim, i.e. platform-wide. The table form
     // means the SECOND organization to create an "Acme Corp" is rejected by the
     // database, and account name is also the seed data's external-id / upsert
-    // key (`src/data/sales.seed.ts`), so it bites the first multi-tenant
+    // key (`src/sales/data/sales.seed.ts`), so it bites the first multi-tenant
     // install. The composite also indexes the column, so no separate
     // `{ fields: ['name'] }` entry is needed for the `searchableFields` /
     // seed-upsert read paths.
@@ -537,38 +541,48 @@ export const Account = ObjectSchema.create({
     /**
      * Where this account stands in its sign-off (REQ-0003 step 5 / acceptance 4).
      *
-     * The shape `crm_opportunity.approval_status` already uses: `readonly` so
-     * only the platform's own approval write reaches it, and a FIELD-level
-     * `defaultValue` — option-level `default: true` only preselects in a UI
-     * form, so an API or flow insert would land `null` and never match the
-     * flow's entry condition.
+     * `readonly`, so only the platform's own approval write reaches it: a
+     * user's insert or edit that names this column has it stripped (measured
+     * on 17.7.0 for `approved`, `pending` and `rejected` alike, #2067).
      *
      * ⛔ NOT a second boolean beside `is_active`, which REQ-0003 rules out by
      * name. `is_active` answers "is this account live at all"; this answers
      * "has the record been signed off", and collapsing them would make
      * deactivating an account indistinguishable from rejecting one.
      *
-     * ⚠️ Ships `pending`, so a NEW account enters the approval inbox on
-     * creation — REQ-0003 acceptance 4 in as many words ("A newly created
-     * account sits in a pending state"). An install that wants no account
-     * sign-off changes this one default to `approved`; from then on the flow's
-     * start condition is false for every record and the gate is off, switchable
-     * and inert. That is the same off-switch `crm_lead.conversion_approval_
-     * status` records, and ⛔ NOT the flow's `status`, for the reasons measured
-     * in `lead-conversion-approval.flow.ts`.
+     * ⚠️ Ships with NO default, and that is what keeps the gate armed (#2067).
+     * A new account is born blank, `account_approval` starts on the blank, and
+     * its approval node opens the request; the node's `approvalStatusField`
+     * mirror then writes `pending` (plugin-approvals `openNodeRequest`) before
+     * the create returns; only the create's own response body still shows the
+     * blank row it inserted. So with approvals in the composition REQ-0003
+     * acceptance 4 holds in as many words ("A newly created account sits in a
+     * pending state, appears in the platform approval inbox …"), and `pending`
+     * always has a request behind it. Without approvals (a plan or edition
+     * that omits the capability) nothing opens a request, so nothing writes
+     * `pending`: the account stays blank and editable instead of reading
+     * "locked for approval" forever, which is what a shipped `pending` default
+     * did, since the console derives its lock from this column's value.
      *
-     * ⛔ There is deliberately no `not_required` value. On the lead the gate
-     * ships OFF and needs a fourth value to say so; here acceptance 4 ships it
-     * ON, and `approved` already spells "nothing to decide".
+     * ⛔ Do not restore `defaultValue: 'pending'`, nor an option-level
+     * `default: true` on Pending (the form would preselect it). An install
+     * that wants no account sign-off ADDS `defaultValue: 'approved'`; the
+     * flow's start condition is then false for every record and the gate is
+     * off, switchable and inert. That is the same kind of off switch
+     * `crm_lead.conversion_approval_status` records, and ⛔ NOT the flow's
+     * `status`, for the reasons measured in `lead-conversion-approval.flow.ts`.
+     *
+     * ⛔ There is deliberately no `not_required` value. Blank already says
+     * "no request has been opened", and `approved` already spells "nothing to
+     * decide".
      */
     approval_status: Field.select({
       label: 'Approval Status',
       group: 'ownership',
       readonly: true,
       trackHistory: true,
-      defaultValue: 'pending',
       options: [
-        { label: 'Pending', value: 'pending', color: '#FFA500', default: true },
+        { label: 'Pending', value: 'pending', color: '#FFA500' },
         { label: 'Approved', value: 'approved', color: '#00AA00' },
         { label: 'Rejected', value: 'rejected', color: '#FF0000' },
       ],
@@ -658,7 +672,7 @@ export const Account = ObjectSchema.create({
 
     // ⛔ No account-level renewal model here, on purpose. Renewal is a
     // CONTRACT-level process with exactly one home — `crm_contract.end_date` +
-    // `renewal_notice_days`, swept daily by `src/flows/contract-renewal.flow.ts`,
+    // `renewal_notice_days`, swept daily by `src/revenue/flows/contract-renewal.flow.ts`,
     // which books the task and notifies the CONTRACT owner; the user-facing
     // queue is that object's `renewal_calendar` view. A `renewal_owner` /
     // `next_renewal_date` pair here would be declared and inert, telling an
@@ -714,7 +728,7 @@ export const Account = ObjectSchema.create({
   ],
   
   // API surface + capabilities. `files` and `feeds` are live and enforced (see
-  // the canonical note in `src/objects/index.ts`). Field history lives on
+  // the canonical note in `src/sales/objects/index.ts`). Field history lives on
   // individual `Field.trackHistory` (ADR-0052); global search uses
   // `searchableFields` / per-field `searchable`.
   enable: {
@@ -728,5 +742,5 @@ export const Account = ObjectSchema.create({
   
   // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
   // removed from the platform. Field updates live in this object's `*.hook.ts`;
-  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
+  // scheduled status flips and notifications live in `src/*/flows/*.flow.ts`.
 });

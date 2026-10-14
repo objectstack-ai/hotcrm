@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { unknownImportMappingTargets } from '@objectstack/spec/data';
 import { applyMappingToRows, buildFieldMetaMap, coerceRow, type MappingArtifactLike } from '@objectstack/core';
 import { REPO_ROOT } from './helpers/repo-root';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { offeredOptions } from './helpers/stack-picklists';
 
 /**
@@ -33,8 +33,9 @@ import { offeredOptions } from './helpers/stack-picklists';
  *      again with a green import. The header sets are asserted to match
  *      exactly, in both directions.
  *
- * Everything here reads the REGISTERED stack (`objectstack.config.ts`), so a
- * mapping that is authored but never registered fails too — an unregistered
+ * Everything here reads the REGISTERED stacks (the two package stacks
+ * `objectstack.config.ts` composes, through `test/helpers/composed-stack.ts`),
+ * so a mapping that is authored but never registered fails too — an unregistered
  * mapping is a 404 `MAPPING_NOT_FOUND` at import time.
  */
 

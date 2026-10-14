@@ -10,7 +10,7 @@
 
 ## Summary
 
-HotCRM is a single ObjectStack marketplace app at version `3.1.0`. The app manifest is defined in [`objectstack.config.ts`](../objectstack.config.ts) with id `app.objectstack.hotcrm` and namespace `crm`.
+HotCRM is a single ObjectStack marketplace app at version `4.0.1`, shipped as one release artifact carrying two packages in the namespace `crm` (ADR-0130 D4). The app manifest — id `app.objectstack.hotcrm`, the artifact's own identity — is defined in [`src/sales/index.ts`](../src/sales/index.ts); the service module `app.objectstack.hotcrm.service` in [`src/service/index.ts`](../src/service/index.ts); [`objectstack.config.ts`](../objectstack.config.ts) composes the two.
 
 ## ObjectStack Validation
 
@@ -18,10 +18,10 @@ The summary `pnpm validate` prints — every figure read straight off the stack 
 loader registers:
 
 ```text
-HotCRM v3.1.0
-Data: 18 Objects  358 Fields
+HotCRM v4.0.1
+Data: 18 Objects  357 Fields
 UI: 1 Apps  14 Views  8 Pages  5 Dashboards  10 Reports  31 Actions
-Logic: 32 Flows
+Logic: 33 Flows
 Security: 12 Positions  7 Permissions
 ```
 
@@ -73,7 +73,7 @@ pnpm verify
 | --- | --- |
 | Node.js | `^22.11 \|\| ^24 \|\| >=26` |
 | pnpm | `>=10.0.0` |
-| ObjectStack packages | `17.7.0` |
+| ObjectStack packages | `18.0.0-next.1` |
 | Local dev port | `4001` |
 
 Each row above is asserted against `package.json` (`engines`, the `@objectstack/*`

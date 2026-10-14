@@ -35,9 +35,11 @@ export const CampaignMember = ObjectSchema.create({
   description: 'Membership and response tracking for marketing campaigns',
 
   // ADR-0090 D1/D7: OWD is an authored decision. Membership is an attribute of
-  // the campaign, so record access DERIVES from it (ADR-0055). The relation
-  // resolver accepts the REQUIRED `crm_campaign` LOOKUP as the parent, so no
-  // master-detail conversion is needed.
+  // the campaign, so record access DERIVES from it (ADR-0055). The parent is
+  // `crm_campaign`, the object's ONE required `master_detail`: since
+  // @objectstack/spec 18.0.0-next.1 that is the only shape a controlled-by-parent
+  // object derives its master from (ADR-0055 §1). It was a required LOOKUP
+  // through 18.0.0-next.0, which next.1 refuses at parse (#2105).
   //
   // The derivation delivers exactly "members whose `crm_campaign` the caller
   // can read". ⚠️ Master accessibility resolves through the same paths a direct
@@ -53,7 +55,7 @@ export const CampaignMember = ObjectSchema.create({
   // `member_default` set carries an owner-only-writes RLS policy on updates,
   // and because the derivation folds master RLS in, that policy reaches through
   // to member writes — see the `marketing_campaign_updates` note in
-  // `src/profiles/marketing-user.profile.ts`.
+  // `src/sales/profiles/marketing-user.profile.ts`.
   //
   // ⛔ Not `private`: with no owner field on the junction row that resolves to
   // "whoever inserted it", which is nobody's idea of campaign membership and
@@ -102,9 +104,14 @@ export const CampaignMember = ObjectSchema.create({
       group: 'basic',
     }),
 
-    crm_campaign: Field.lookup('crm_campaign', {
+    // The master (see `sharingModel` above). `deleteBehavior: 'restrict'` keeps
+    // what the required lookup did: a campaign that still has members cannot
+    // be deleted. A `master_detail` left on its default would cascade instead
+    // and delete the campaign's membership history with it.
+    crm_campaign: Field.masterDetail('crm_campaign', {
       label: 'Campaign',
       required: true,
+      deleteBehavior: 'restrict',
       storage: { notNull: true },
       group: 'basic',
 
@@ -200,10 +207,10 @@ export const CampaignMember = ObjectSchema.create({
     // Writers, one per surviving value (#597):
     //   sent         — campaign_enrollment flow, `create_campaign` (leads) and
     //                  `add_contact_to_campaign` (contacts) stamp it on insert.
-    //   responded    — the `mark_responded` action (src/actions/campaign.actions.ts).
+    //   responded    — the `mark_responded` action (src/marketing/actions/campaign.actions.ts).
     //   converted    — the member's lead converting; `campaign_lead_conversion_refresh`
-    //                  (campaign.hook.ts) promotes the row when
-    //                  `crm_lead.is_converted` flips.
+    //                  (src/sales/objects/lead.campaign-metrics.hook.ts) promotes
+    //                  the row when `crm_lead.is_converted` flips.
     //   unsubscribed — set by a rep (or an opt-out request) on the member row;
     //                  `campaign_member_optout_sync` round-trips it to the
     //                  lead/contact's `email_opt_out`, which is what makes the

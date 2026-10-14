@@ -55,7 +55,11 @@ Held calls and meetings are counted on the **Sales Activity** dashboard — *Int
 
 The intended surface: reusable templates saved on an **Email Templates settings page**, with merge fields (`{{Contact.FirstName}}`, `{{Opportunity.Amount}}`), HTML plus plain-text versions, per-team folders, and approval-gated templates for legal-sensitive content — plus the AI assistant personalising a chosen template from record context.
 
-HotCRM ships none of it today. The platform carries an email-template object of its own, used for authentication mail (invitations, password resets); **Send Email** above does not read it, and this app authors no templates.
+HotCRM ships none of it today: there is no template for a rep to pick, and **Send Email** above sends exactly the subject and body you type.
+
+What the app *does* ship is the wording of its own **automatic notifications**, the alerts its flows send to your colleagues (never to customers). Each one takes its subject and body from an email template the app authors: an approval decision on an account, a lead conversion or a large deal; a newly routed or converted lead; a new contact to welcome; a stalled deal or a large one won; a task reminder or an urgent task; a new quote; a contract that has expired or is due for renewal; a case that was escalated or missed its SLA. Each template comes in English, Simplified Chinese, Japanese and Spanish, and every recipient gets the copy in their own language, or in English when the app has none for it. The alert lands in the recipient's in-app inbox, and most are emailed as well, through the same platform email service as **Send Email**. The alerts about task reminders, stalled deals, contract expiry and renewal, and missed SLAs come from scheduled flows, which run only where the deployment has switched scheduled work on; see [Scheduled automation](/docs/administration/automation#scheduled-automation).
+
+These templates are records of the platform's email-template object, alongside the platform's own authentication mail (invitations, password resets). In the source they live in an `email-templates/` folder in each package whose flows send them (`src/sales/`, `src/service/` and `src/revenue/`), one file per language.
 
 ## Connecting your inbox (not shipped yet)
 

@@ -48,8 +48,8 @@ import { SystemAdminProfile } from './system-admin.profile';
  * 17.1.0 packages, `manage_users` appears in a single comment and nothing reads
  * either name — the member-management door is the enterprise organizations
  * runtime's, and it is the edition that supplies the gate. That is the shape the
- * maintainer's 2026-08-11 ruling asks for and `objectstack.config.ts` already
- * follows for `hierarchy-security`: 「本项目是元数据app，在企业版运行就具备企业版
+ * maintainer's 2026-08-11 ruling asks for and the app package's `requires`
+ * (`src/sales/index.ts`) already follows for `hierarchy-security`: 「本项目是元数据app，在企业版运行就具备企业版
  * 相关的能力，不重复开发。」 The app states what it MEANS; the edition enforces.
  *
  * ### What `view_all_data` / `modify_all_data` mean under the wall — the audit
@@ -91,16 +91,19 @@ import { SystemAdminProfile } from './system-admin.profile';
  * and no session produces. Keeping the two grants therefore says the true
  * thing about a tenant admin: inside their org, they see and edit everything.
  *
- * ### What a tenant admin may AUTHOR: their own org's presentation, no more
+ * ### What a tenant admin may AUTHOR: nothing, since 18.0.0-next.0
  *
- * `manage_org_presentation` IS granted. The platform declares it `scope: 'org'`
- * (objectstack-ai/objectstack#12702): it admits `/meta` item writes only for
- * the types whose registry entry declares `allowOrgOverride: true` — on the
- * installed 17.6.0 that is view, dashboard, report, translation and
- * email_template — and only as overlays in the caller's own active
- * organization. Measured on 17.6.0 against the platform's own write verdict
- * (`metaWriteCapabilityVerdict`): with this grant those saves are allowed when
- * the session carries an active organization, and refused when it does not.
+ * Through 17.7.0 this set held `manage_org_presentation`, the platform's
+ * `scope: 'org'` capability (objectstack-ai/objectstack#12702) that admitted
+ * `/meta` writes of the `allowOrgOverride: true` types — view, dashboard,
+ * report, translation, email_template — as overlays in the caller's own
+ * organization. 18.0.0-next.0 RETIRES it with the per-organization overlay
+ * axis (ADR-0131 D6, the spec's `manage-org-presentation-retired` entry): it is
+ * no longer in `PLATFORM_CAPABILITIES`, nothing consults it, and the entry's
+ * remedy is to delete it from every set. There is no organization-bounded
+ * authoring capability left; the only key that admits those writes is
+ * `manage_metadata`, whose writes land environment-wide, so it stays
+ * ungranted for the reason below.
  *
  * `customize_application`, `manage_profiles` and `manage_roles` stay
  * ungranted. They describe authoring the app's structure and security model —
@@ -133,8 +136,5 @@ export const TenantAdminProfile = {
     // Org-bounded by the driver's tenant predicate — see the audit above.
     'view_all_data', 'modify_all_data',
     'manage_sharing',
-    // Org-scoped `/meta` writes, only for `allowOrgOverride: true` types and
-    // only in the caller's own active org — see the AUTHOR note above.
-    'manage_org_presentation',
   ],
 };

@@ -15,6 +15,7 @@ export const ContractViews = defineView({
     type: 'grid',
     name: 'all_contracts',
     label: 'All Contracts',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_contract' },
     columns: [
       { field: 'contract_number', width: 150, link: true, pinned: 'left' },

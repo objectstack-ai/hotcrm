@@ -19,9 +19,10 @@ import type { Page } from '@objectstack/spec/ui';
  *              re-state it so it ALWAYS appears — even on accounts
  *              with no related lists (the auto-emitter sometimes
  *              skips chatter for lean objects). Discussion is core
- *              to the chat-first vibe. It carries no props: the
- *              renderer's own defaults already deliver comments,
- *              reactions and threading (see the slot's note).
+ *              to the chat-first vibe, and it is the account's
+ *              activity timeline: its one `feed` turns on the
+ *              completed rows a logged call or meeting writes
+ *              (see the slot's note).
  *
  * Why not embed an inline chat panel? `ai:chat_window` was dropped
  * from objectui (see @object-ui/layout CHANGELOG 5.x). The supported
@@ -82,7 +83,7 @@ export const AccountDetailPage = {
         // `z.array(z.string())` ("Action IDs to show in header") in
         // @objectstack/spec 17.3.0, and this repo authors against the protocol
         // (#1653). Each id is the `name` of a crm_account-scoped action in
-        // `src/actions/global.actions.ts`.
+        // `src/sales/actions/activity-actions.ts`.
         actions: ['log_call', 'log_meeting', 'schedule_meeting'],
       },
     },
@@ -92,39 +93,41 @@ export const AccountDetailPage = {
       id: 'account_chatter',
       label: 'Discussion',
       /**
-       * No props — and that is the fix, not an omission (#1269).
+       * One `feed`, for one reason: `showCompleted` (#2071).
        *
-       * This slot used to author `enableComments` / `enableReactions` /
-       * `enableMentions`. None of the three is a `record:chatter` key:
-       * `RecordChatterProps` declares `position`, `width`, `collapsible`,
-       * `defaultCollapsed`, `feed` and `aria`, and nothing else, so all three
-       * were stripped by the props schema and dropped at render.
+       * This feed IS the account's activity timeline — the slotted page
+       * synthesizes no Activity tab, so the panel's "All Activity" stream is
+       * where an account's `sys_activity` rows surface. A call or meeting
+       * logged on the account is a row of type `completed` (the `task` feed
+       * kind), and the timeline drops every such row unless
+       * `feed.showCompleted` is true — so Log a Call / Log a Meeting on an
+       * account wrote a row that appeared nowhere on the account.
        *
-       * Every behaviour they asked for is already on, from the renderer's own
-       * defaults — measured, not assumed. `RecordChatterRenderer` builds
-       * `{ position: 'bottom', collapsible: false, feed: { enableReactions:
-       * true, enableThreading: true, showCommentInput: true }, ...schema }` and
-       * hands `config.feed` to `RecordActivityTimeline`, which reads
-       * `showCommentInput !== false`, `enableReactions ?? false` and
-       * `enableThreading ?? false` off it. Comments, reactions and threading
-       * are therefore already delivered; deleting these keys costs the page
-       * nothing.
+       * Authoring a `feed` costs two more keys, and they are stated rather
+       * than left out. `RecordChatterRenderer` builds `{ position: 'bottom',
+       * collapsible: false, feed: { enableReactions: true, enableThreading:
+       * true, showCommentInput: true }, ...schema }` — one shallow spread — so
+       * a `feed` of our own REPLACES that default object wholesale, and
+       * `RecordActivityTimeline` reads `enableReactions ?? false` and
+       * `enableThreading ?? false` off what is left. Without the two keys
+       * below, reactions and threading would silently switch off.
+       * `showCommentInput` needs no restating: the timeline reads it as
+       * `!== false`.
        *
-       * The two spellings that DO land are deliberately not authored here:
-       *
-       *   - Re-authoring them under `feed` would REPLACE that default object
-       *     wholesale — the merge above is one shallow spread, so a `feed` of
-       *     our own silently turns `enableThreading` OFF unless every key is
-       *     restated. Materializing a renderer default also rewrites "the
-       *     author said nothing" into "the author asked for the default",
-       *     which is the distinction @objectstack/spec's own `maxVisible` and
-       *     `inlineEdit` docblocks refuse to blur.
-       *   - `enableMentions` has no read point on THIS surface at all: the
-       *     mentions branch lives in the `record:activity` renderer, and
-       *     `record:chatter` mounts `RecordActivityTimeline` directly, past it.
-       *     Authoring it under `feed` would parse and still do nothing.
+       * `feed.enableMentions` needs none either: the renderer reads it as
+       * `!== false` too. And the older note still holds (#1269):
+       * `enableComments` and a top-level `enableReactions` / `enableMentions`
+       * are not `record:chatter` keys — `RecordChatterProps` declares
+       * `position`, `width`, `collapsible`, `defaultCollapsed`, `feed` and
+       * `aria`, nothing else.
        */
-      properties: {},
+      properties: {
+        feed: {
+          showCompleted: true,
+          enableReactions: true,
+          enableThreading: true,
+        },
+      },
     },
   },
 } as unknown as Page;

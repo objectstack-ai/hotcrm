@@ -236,10 +236,10 @@ const metadataKinds = (): Set<string> =>
  * module load.
  *
  * Loud, and in every suite at once, because that is the only volume that
- * matches the blast radius: fourteen suites import this helper directly and
- * `hook-harness.ts` carries `CrmObjects` into some forty more, so a merged view
- * that has quietly stopped covering the tree is a wrong answer given to most of
- * the test run. The failure this replaces gave no answer at all.
+ * matches the blast radius: every app-wide suite imports this helper, so a
+ * merged view that has quietly stopped covering the tree is a wrong answer
+ * given to most of the test run. The failure this replaces gave no answer at
+ * all.
  */
 const assertBarrelsCoverTheTree = (): void => {
   if (PACKAGES.length === 0) {

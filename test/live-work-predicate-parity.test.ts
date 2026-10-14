@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import { parseFilterAST } from '@objectstack/spec/data';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
 
 /**
@@ -153,6 +153,7 @@ const caseViews = views.find((v) => v.list?.data?.object === 'crm_case');
 const sharingRules: AnyRec[] = ((stack as AnyRec).sharingRules ?? []) as AnyRec[];
 const flows: AnyRec[] = ((stack as AnyRec).flows ?? []) as AnyRec[];
 const hooks: AnyRec[] = ((stack as AnyRec).hooks ?? []) as AnyRec[];
+const dashboards: AnyRec[] = ((stack as AnyRec).dashboards ?? []) as AnyRec[];
 
 /** A view's `filter[]`, lowered rule by rule into one `$and`. */
 function loweredViewFilter(viewName: string): unknown {
@@ -191,6 +192,12 @@ function flowFilters(flowName: string): unknown[] {
   return found;
 }
 
+/** One dashboard widget's `filter` — already a lowered `FilterCondition`. */
+function widgetFilter(dashboardName: string, widgetId: string): unknown {
+  const dashboard = dashboards.find((d) => d.name === dashboardName);
+  return ((dashboard?.widgets ?? []) as AnyRec[]).find((w) => w.id === widgetId)?.filter;
+}
+
 /**
  * The `$nin` a sandboxed hook body spells INLINE.
  *
@@ -212,6 +219,23 @@ function hookInlineStatusExclusions(hookName: string): string[] | undefined {
   // One handler stating the concept two different ways is the very defect.
   if (new Set(sets).size !== 1) return [`INCONSISTENT: ${sets.join(' | ')}`];
   return sets[0].split(',');
+}
+
+/**
+ * The status list a sandboxed hook body declares INLINE as `const <name> = [...]`.
+ *
+ * The membership-test sibling of {@link hookInlineStatusExclusions}: a hook
+ * that asks "has this write taken the case OUT of live work?" tests the status
+ * against a list rather than querying with `$nin`, and the sandbox makes it
+ * write that list out too. Read off the REGISTERED handler, for the same reason.
+ */
+function hookInlineStatusList(hookName: string, constName: string): string[] | undefined {
+  const hook = hooks.find((h) => h.name === hookName);
+  if (!hook) return undefined;
+  const body = String(hook.handler ?? '');
+  const match = new RegExp(`const\\s+${constName}\\s*=\\s*\\[([^\\]]*)\\]`).exec(body);
+  if (!match) return undefined;
+  return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((s) => s[1]).sort();
 }
 
 /**
@@ -257,6 +281,22 @@ const LIVE_WORK_CONSUMERS: { name: string; surface: string; excluded: () => stri
         .filter((s) => s.length > 0);
       return sets.length === 0 ? undefined : [...new Set(sets.flat())].sort();
     },
+  },
+  {
+    // The close-time breach stamp (#2070) is the sweep's other half: the sweep
+    // judges a case while it is live work, the stamp on the write that ends
+    // it. A status in one set and not the other would be judged twice or never.
+    name: 'case_sla_defaults',
+    surface: 'close-time breach stamp — src/service/objects/case.hook.ts',
+    excluded: () => hookInlineStatusList('case_sla_defaults', 'settledStatuses'),
+  },
+  {
+    // The SLA Violations tile's open-case branch (#2070): beside the flag, it
+    // counts a case still live work whose due date has passed — the sweep's
+    // own selection, read at query time. Only that branch excludes statuses.
+    name: 'sla_violations',
+    surface: 'dashboard widget filter — src/service/dashboards/service.dashboard.ts',
+    excluded: () => excludedValues(widgetFilter('service_dashboard', 'sla_violations'), 'status'),
   },
 ];
 

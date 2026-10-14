@@ -11,11 +11,12 @@ import { definePicklist } from '@objectstack/spec/data';
  * Both fields are this package's, so the list is too — the lowest package all
  * its consumers depend on.
  *
- * The carry-over is `quote_on_accepted` in `src/revenue/objects/quote.hook.ts`,
- * named here because this rationale spent its first months unenforced (#873):
- * the hook drafted the contract without `payment_terms`, so every accepted
- * quote produced a contract on the `net_30` default below regardless of what
- * was negotiated — a shared vocabulary justified by a copy that did not exist.
+ * The carry-over is `quote_accepted_contract_draft` in
+ * `src/revenue/objects/quote.hook.ts`, named here because this rationale spent
+ * its first months unenforced (#873): the hook drafted the contract without
+ * `payment_terms`, so every accepted quote produced a contract on the `net_30`
+ * default below regardless of what was negotiated — a shared vocabulary
+ * justified by a copy that did not exist.
  * A comment that names its enforcer can be checked; this one could not be.
  *
  * ⛔ Not `crm_opportunity.payment_terms`, which is a different vocabulary on

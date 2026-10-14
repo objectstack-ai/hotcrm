@@ -12,9 +12,9 @@ export const SalesManagerProfile = {
   objects: {
     // `allowTransfer` on exactly the objects this set holds `modifyAllRecords`
     // on — the sales book a manager reassigns. Canonical note in
-    // `src/profiles/index.ts`.
+    // `src/sales/profiles/index.ts`.
     // `allowExport` where an export surface exists — canonical note in
-    // `src/profiles/index.ts`. A manager owns the number, so the pipeline and
+    // `src/sales/profiles/index.ts`. A manager owns the number, so the pipeline and
     // book exports that feed offline forecasting are part of the job.
     crm_lead:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },
     crm_account:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },
@@ -83,6 +83,15 @@ export const SalesManagerProfile = {
     // objectstack-ai/objectstack#5386 (#694).
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
+    // The record Attachments panel, READ only: canonical note on `enable.files`
+    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
+    // derives from the parent record; upload and delete wait upstream.
+    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // The record Discussion panel, comments and activity: canonical note on
+    // `enable.feeds` in `src/sales/objects/index.ts` (#2029). Which threads it
+    // reaches derives from the parent record; deleting a comment waits upstream.
+    sys_comment:  { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
     // Sensitive fields a manager must see in full. Authored explicitly rather
@@ -110,8 +119,9 @@ export const SalesManagerProfile = {
       name: 'opportunity_private_owner_only',
       // A deal flagged Private is visible only to its owner, even to holders of
       // org-wide opportunity read. (`rowLevelSecurity[].label` / `description`
-      // have no runtime effect — liveness: dead in 17.6.0 — so the intent lives
-      // in this comment.)
+      // are display copy — the 17.7.0 liveness ledger marks both live: the
+      // permission editor draws them on the policy card. This policy authors
+      // neither, so its intent lives in this comment.)
       object: 'crm_opportunity',
       operation: 'select' as const,
       using: 'is_private == false || owner_id == current_user.id',

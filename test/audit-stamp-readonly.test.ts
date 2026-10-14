@@ -2,17 +2,23 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow } from '../src/sales/flows/opportunity-approval.flow';
 import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
 import {
   CampaignLeadMemberEnrollFlow,
   CampaignContactMemberEnrollFlow,
 } from '../src/marketing/flows/campaign-member-enroll.flow';
-import { silentLogger } from './helpers/flow-harness';
+
+/** The engine's logger, silenced: these suites read results, not log lines. */
+const silentLogger: any = {
+  info() {}, warn() {}, error() {}, debug() {}, trace() {},
+  child() { return silentLogger; },
+};
 
 /**
  * THE AUDIT STAMPS ARE DECLARED `readonly`, AND BOTH HALVES ARE MEASURED
@@ -70,7 +76,7 @@ let ql: any;
 
 beforeAll(async () => {
   ql = await ObjectQL.create({
-    datasources: { default: new InMemoryDriver({ persistence: false }) },
+    datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
     objects: {
       crm_account: shippedFields('crm_account'),
       crm_opportunity: shippedFields('crm_opportunity'),
@@ -79,6 +85,7 @@ beforeAll(async () => {
       crm_campaign_member: shippedFields('crm_campaign_member'),
     } as never,
   });
+  await ql.syncSchemas();
 });
 
 afterAll(async () => {
@@ -164,9 +171,15 @@ const readBack = (object: string, id: string): Promise<AnyRec> =>
 // ─────────────────────────────────────────────────────── #1666 · approval ──
 
 describe('#1666 — crm_opportunity approval stamps are declared readonly', () => {
-  /** A closable deal, inserted under a system context so the seed itself is not the measurement. */
+  /**
+   * A closable deal, inserted under a system context so the seed itself is not
+   * the measurement. Each deal gets its own account: `crm_account.name` is
+   * declared unique, and the SQL driver enforces it (`driver-memory`, which ran
+   * this file until #2092, did not).
+   */
+  let accounts = 0;
   async function seedOpportunity(): Promise<string> {
-    const account = await ql.insert('crm_account', { name: 'Acme Industrial' }, { context: sysCtx });
+    const account = await ql.insert('crm_account', { name: `Acme Industrial ${++accounts}` }, { context: sysCtx });
     const row = await ql.insert(
       'crm_opportunity',
       {
@@ -224,7 +237,7 @@ describe('#1666 — crm_opportunity approval stamps are declared readonly', () =
         'pin_mark_approved',
         (OpportunityApprovalFlow as AnyRec).runAs,
         node,
-        { filter: { id: '{rowId}' } },
+        { filter: { id: cel`rowId` } },
       ),
     });
     await engine.execute('pin_mark_approved', { params: { rowId: id }, userId: 'user_1', event: 'manual' } as never);
@@ -244,7 +257,7 @@ describe('#1666 — crm_opportunity approval stamps are declared readonly', () =
         'pin_mark_rejected',
         (OpportunityApprovalFlow as AnyRec).runAs,
         node,
-        { filter: { id: '{rowId}' } },
+        { filter: { id: cel`rowId` } },
       ),
     });
     await engine.execute('pin_mark_rejected', { params: { rowId: id }, userId: 'user_1', event: 'manual' } as never);
@@ -339,7 +352,7 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
       expect(node!.type, 'an INSERT on an elevated callee. If this ever becomes update_record it ' +
         'is a different write with different ordering — that is the failure #1667 trades against.').toBe('create_record');
       expect(node!.config.objectName).toBe('crm_campaign_member');
-      expect(node!.config.fields.added_date, 'the stamp itself, taken from source').toBe('{NOW()}');
+      expect(node!.config.fields.added_date, 'the stamp itself, taken from source').toEqual(cel`isoDatetime(now())`);
     }
   });
 
@@ -369,7 +382,7 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
         (CampaignLeadMemberEnrollFlow as AnyRec).runAs ?? 'user',
         node,
         // Addressing only — `status` and `added_date` stay exactly as authored.
-        { fields: { ...node.config.fields, crm_campaign: '{rowId}', crm_lead: '{linkId}' } },
+        { fields: { ...node.config.fields, crm_campaign: cel`rowId`, crm_lead: cel`linkId` } },
       ),
     });
     await engine.execute('pin_enrol', {

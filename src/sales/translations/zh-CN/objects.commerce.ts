@@ -14,7 +14,7 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/zh-CN.ts`.
+ * `src/sales/translations/zh-CN.ts`.
  */
 export const commerce: Record<string, ObjectTranslationData> = {
   crm_quote: {
@@ -104,7 +104,6 @@ export const commerce: Record<string, ObjectTranslationData> = {
       unit_price: { label: '销售单价' },
       discount: { label: '折扣（%）' },
       subtotal: { label: '小计' },
-      tax_rate: { label: '税率（%）' },
       total_price: { label: '总计' },
       line_number: { label: '行号' },
     },

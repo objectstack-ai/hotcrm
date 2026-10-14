@@ -36,7 +36,7 @@ When a contract is activated for a prospect, the system automatically promotes t
 
 Tender agencies, resellers-of-record, intra-group billing entities and dormant accounts are the usual *Settlement Only* cases: you still pay them and get paid through them, you just do not sell to them.
 
-This is a **gate, not a label**. Pick an account marked *Settlement Only* on a new opportunity and the save is refused, with a message naming the account and telling you what to do instead. Two things it deliberately does **not** do:
+This is a **gate, not a label**. Pick an account marked *Settlement Only* on a new opportunity and the save is refused, with a message saying that this account is *Settlement Only* and telling you what to do instead. It applies to everyone, including people who cannot see the account itself — and because of that the message never names the account or repeats anything else about it; you chose it on the same form. Two things it deliberately does **not** do:
 
 - **It never breaks history.** Opportunities that already point at the account keep working and stay editable, including after someone reclassifies the account. Only the *new* link is refused.
 - **It is not a compliance lock.** It is a classification a person writes down, and the same person can set it back to *Full* when the relationship changes.
@@ -47,9 +47,11 @@ The two axes are independent: a *Settlement Only* account can be a prospect, a c
 
 A newly created account starts at **Pending**. It shows up in the approval inbox, and a Sales Manager approves or rejects it. **Approval Status** is read-only on the form, so it only ever moves through a decision on that request — nobody can type their way to *Approved*. A rejected account stays on file, so its details can be corrected and sent back for another look.
 
+On a deployment that does not include approvals (a hosted plan that leaves them out, for example), there is no inbox to send the account to. A new account then keeps **Approval Status** blank and stays editable like any other record; it is never shown as locked for approval.
+
 **Approval Status** answers *"has this record been signed off?"*. **Active** answers *"is this account live at all?"*. They are deliberately separate: an approved account can later be deactivated, and a pending account is not the same thing as an inactive one.
 
-If your organisation does not want to sign accounts off, an admin changes the default on **Approval Status** to *Approved* and no new account enters the queue again — see [Administration › Automation](/docs/administration/automation).
+If your organisation does not want to sign accounts off, an admin sets the default on **Approval Status** to *Approved* and no new account enters the queue again — see [Administration › Automation](/docs/administration/automation).
 
 ## What each account record stores
 
@@ -62,7 +64,7 @@ The account detail screen is organised into 7 sections:
 | **Business Profile** | Incumbent vendor, annual purchasing budget, payment cycle |
 | **Contact Information** | Phone, website, billing address, office location (with map) |
 | **Ownership & Status** | Owner, parent account, active flag, approval status |
-| **Branding** | Brand color (used as the avatar accent), company logo (uploaded image — PNG, JPEG, SVG or WebP, up to 2 MB) |
+| **Branding** | Brand color (used as the avatar accent), company logo (uploaded image — PNG, JPEG, SVG or WebP, up to 2 MB). The logo is shown beside the title at the top of the account's detail page; an account without one shows no picture there, and no placeholder. |
 | **System** | Timestamps, audit trail |
 
 Two of those need a word of explanation.
@@ -95,7 +97,7 @@ Two things the hierarchy deliberately does **not** do. It does **not** cascade s
 
 - The account **name must be unique within your organization**. You'll get an error if you try to create a second account with a name you already use. Another organization on the same platform is free to have its own "Acme Corp" — the rule is scoped to your data, not the whole platform. The uniqueness check compares names exactly as typed, so `Acme Corp` and `ACME  Corp` can both exist as separate accounts. Lead conversion is more forgiving: it ignores capitalisation and extra spaces when looking for an account to reuse (see [Leads](./leads)), so converting a lead for `ACME  Corp` attaches it to your existing `Acme Corp` rather than creating a near-duplicate.
 - **Annual revenue must be zero or positive** — no negative numbers allowed.
-- You **cannot delete** an account that has open opportunities or active contracts. Set it to *Inactive* instead (`is_active = false`).
+- You **cannot delete** an account that still has opportunities — **closed ones included** — or active contracts. A closed deal is part of the account's sales history, so closing a deal does not free the account: the delete goes through only once every deal is deleted or, while it is still open, moved to another account. To retire the account, set it to *Inactive* instead (`is_active = false`).
 - You **cannot open a new opportunity** against an account whose **Commercial Capability** is *Settlement Only*. The opportunities it already has are untouched and stay editable.
 
 ## Automatic updates
@@ -107,15 +109,14 @@ Two things the hierarchy deliberately does **not** do. It does **not** cascade s
 
 ## Account detail layout
 
-When you open an account, you'll see tabs for:
+When you open an account, these tabs sit under the header:
 
-- **Overview** — description, key contacts, owner, primary address with a small map.
-- **Opportunities** — all related deals, grouped by stage, with the pipeline total at the top.
-- **Contacts** — everyone at this account, with the primary contact highlighted.
-- **Cases** — open and recently closed support cases.
-- **Activity** — calls, emails, meetings, latest first.
-- **Contracts** — active and historical contracts.
-- **Files** — attached documents (logos, signed PDFs, datasheets).
+- **Details** — the account's fields, in the sections described above.
+- **Related** — one list for each kind of record linked to the account, such as its contacts, opportunities and contracts. Each list shows how many records it holds and has a **New** button.
+- **Approvals** — the account's approval requests and how each one was decided. This tab appears only on an account that has been through [approval](#account-approval).
+- **Attachments** — files uploaded to the account.
+
+The **Discussion** feed sits below the tabs and stays in view whichever tab is open.
 
 ## Sharing — who can see which account
 

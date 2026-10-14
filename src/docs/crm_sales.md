@@ -69,8 +69,9 @@ New opportunities start at **10% probability**. Keep the **amount**, **stage**,
 and **close date** current — the automation below keys off all three.
 
 ### Stalled-deal nudge (automatic)
-A daily **07:30** sweep finds any open opportunity that has sat in its current
-stage for **more than 14 days**. The owner is notified — the owner alone, not
+Where the deployment has switched scheduled work on (see
+**[Administration](crm_admin.md)**), a daily **07:30** sweep finds any open
+opportunity that has sat in its current stage for **more than 14 days**. The owner is notified — the owner alone, not
 their manager — and a **high-priority follow-up task** is created. Advance the
 stage or re-qualify the deal to clear it.
 
@@ -108,14 +109,18 @@ The system computes the math for you: subtotal = the opportunity amount,
 discount amount = subtotal × discount %, and **total = amount × (1 − discount%)**.
 
 ### Quote auto-expiration (automatic)
-A daily **01:00** job marks any still-open quote past its expiration date as
-**Expired**. Re-issue a fresh quote if the deal is still live.
+Where the deployment has switched scheduled work on, a daily **01:00** job marks
+any still-open quote past its expiration date as **Expired**. A default install
+boots that job unbound, and a lapsed quote keeps its status until someone
+changes it. Re-issue a fresh quote if the deal is still live.
 
 ## 6. After the win: contracts & renewals
 
 Closing a deal isn't the end of the relationship — it's the start of a contract
 you'll eventually renew. Two automatic jobs make sure a contract never lapses
-unnoticed.
+unnoticed, on a deployment that has switched scheduled work on. A default install
+boots both unbound: no renewal task, notification or deal is created, and an
+activated contract past its end date stays activated until someone changes it.
 
 ### Renewal reminders (automatic)
 Each contract carries its own **Renewal Notice Days** — how far ahead to start

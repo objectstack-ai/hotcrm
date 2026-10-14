@@ -14,10 +14,10 @@ export const SystemAdminProfile = {
   name: 'system_admin',
   label: 'System Administrator',
   objects: {
-    // `allowTransfer` on every object — canonical note in `src/profiles/index.ts`.
+    // `allowTransfer` on every object — canonical note in `src/sales/profiles/index.ts`.
     // The admin is the persona that reassigns ownership when someone leaves.
     // `allowExport` on the five objects with an export surface — see the
-    // canonical note in `src/profiles/index.ts`. It is authored even here:
+    // canonical note in `src/sales/profiles/index.ts`. It is authored even here:
     // 17.0 gates export on the explicit bit, and `modifyAllRecords` does not
     // stand in for it, so without these an admin cannot export either.
     crm_lead:        { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true, allowExport: true },
@@ -44,6 +44,15 @@ export const SystemAdminProfile = {
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     crm_campaign_member:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
+    // The record Attachments panel, READ only: canonical note on `enable.files`
+    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
+    // derives from the parent record; upload and delete wait upstream.
+    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // The record Discussion panel, comments and activity: canonical note on
+    // `enable.feeds` in `src/sales/objects/index.ts` (#2029). Which threads it
+    // reaches derives from the parent record; deleting a comment waits upstream.
+    sys_comment:  { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   systemPermissions: [
     'view_setup', 'manage_users', 'customize_application',

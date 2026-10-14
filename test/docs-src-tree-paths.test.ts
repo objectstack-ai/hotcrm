@@ -24,7 +24,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * `src/agents/*.agent.ts` in their tree diagrams and registration tables, so
  * the next reader (human or agent) was told to put a file somewhere that does
  * not exist. `src/cubes/` had the same shape: dropped in favour of datasets
- * (ADR-0021, see the note in objectstack.config.ts), still drawn in two trees.
+ * (ADR-0021, see the note in objectstack.composition.ts), still drawn in two trees.
  *
  * Nothing checked, because a path in prose is just prose. This walks the
  * maintainer docs, pulls every `src/<dir>/` they mention, and resolves it

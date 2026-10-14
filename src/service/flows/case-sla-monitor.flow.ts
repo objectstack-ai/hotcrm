@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from '../../sales/flows/_guarded-iteration';
 type Flow = Automation.Flow;
@@ -100,10 +100,22 @@ export const CaseSlaMonitorFlow: Flow = {
         // has met its SLA — work is finished — but `is_closed` only flips on
         // `closed`, so the boolean filter stamps false breaches on resolved
         // cases and drags them back to `escalated`.
+        //
+        // `$lt` is `caseSlaBreached` (`src/service/objects/_case-sla.ts`) read
+        // with "now" as the instant: STRICTLY past due. Its other half is
+        // `case_sla_defaults`, which applies the same rule on the write that
+        // settles a case — so a case settled late is flagged even when this
+        // sweep never reached it, or never runs (#2070).
+        //
+        // "Now" is the query engine's own `{now}` placeholder, which an
+        // 18.0.0-next.0 filter operand leaves to the engine as written. It
+        // renders the instant's ISO text, as the retired `{NOW()}` flow token
+        // did, and it is the spelling the SLA Violations tile reads, so the
+        // sweep and the tile say "past due" in one wording.
         filter: {
           status: { $nin: ['resolved', 'closed'] },
           is_sla_violated: false,
-          sla_due_date: { $lt: '{NOW()}' },
+          sla_due_date: { $lt: '{now}' },
         },
         limit: 500,
         outputVariable: 'caseList',
@@ -112,7 +124,7 @@ export const CaseSlaMonitorFlow: Flow = {
     {
       id: 'loop_cases', type: 'loop', label: 'For Each Breached Case',
       config: {
-        collection: '{caseList}',
+        collection: cel`caseList`,
         iteratorVariable: 'currentCase',
         body: guarded('case', {
           nodes: [
@@ -120,7 +132,7 @@ export const CaseSlaMonitorFlow: Flow = {
               id: 'flag_breach', type: 'update_record', label: 'Flag SLA Breach',
               config: {
                 objectName: 'crm_case',
-                filter: { id: '{currentCase.id}' },
+                filter: { id: cel`currentCase.id` },
                 // `escalation_reason` must accompany `is_escalated: true` — the
                 // object's `escalation_reason_required` validation (severity:
                 // error) rejects the whole write otherwise, turning this sweep
@@ -129,7 +141,7 @@ export const CaseSlaMonitorFlow: Flow = {
                   is_sla_violated: true,
                   is_escalated: true,
                   status: 'escalated',
-                  escalated_date: '{NOW()}',
+                  escalated_date: cel`isoDatetime(now())`,
                   escalation_reason: 'Auto-escalated: SLA due date breached',
                 },
               },
@@ -168,7 +180,7 @@ export const CaseSlaMonitorFlow: Flow = {
               // ⚠️ THE ASSIGNMENT IS NOT AUTHORED HERE, AND MUST NOT BE.
               // `flag_breach` writes `status: 'escalated'`, and that IS the
               // escalation transition `case_escalation_reassign`
-              // (`src/objects/_case-assignment.ts`, `beforeUpdate`, priority
+              // (`src/service/objects/_case-assignment.ts`, `beforeUpdate`, priority
               // 250) fires on: it stamps the least-loaded holder of the
               // `service_manager` position onto the payload of the update
               // already in flight. So the sweep does not need a seam to "call"
@@ -201,7 +213,7 @@ export const CaseSlaMonitorFlow: Flow = {
               id: 'reload_case', type: 'get_record', label: 'Re-read Case After Escalation',
               config: {
                 objectName: 'crm_case',
-                filter: { id: '{currentCase.id}' },
+                filter: { id: cel`currentCase.id` },
                 outputVariable: 'currentCase',
               },
             },
@@ -258,15 +270,19 @@ export const CaseSlaMonitorFlow: Flow = {
               config: {
                 // Owner only — `{currentCase.owner_id.manager}` dot-walks a
                 // lookup, which flow templates interpolate as "undefined".
-                recipients: ['{currentCase.owner_id}'],
+                recipients: [cel`currentCase.owner_id`],
                 channels: ['inbox', 'email'],
                 severity: 'critical',
                 topic: 'case_sla_breach',
                 template: 'crm.case_sla_breach',
                 templateData: {
-                  case_number: '{currentCase.case_number}', priority: '{currentCase.priority}',
+                  case_number: cel`currentCase.case_number`, priority: cel`currentCase.priority`,
                 },
-                actionUrl: '/crm_case/{currentCase.id}',
+                actionUrl: '/crm_case/{{currentCase.id}}',
+                // A schedule run has no organization: since 18.0.0-next.1 the
+                // notification takes its owner from this record (objectstack#23284).
+                sourceObject: 'crm_case',
+                sourceId: cel`currentCase.id`,
               },
             },
           ],

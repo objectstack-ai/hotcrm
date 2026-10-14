@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { applySystemFields } from '@objectstack/objectql';
 import { expectedIndexes } from '@objectstack/driver-sql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * Account-name uniqueness is PER ORGANIZATION, not platform-wide (#625).

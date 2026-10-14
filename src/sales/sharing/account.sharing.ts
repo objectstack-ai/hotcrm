@@ -19,7 +19,7 @@ export const AccountTeamSharingRule = {
  *
  * These filter on `crm_account.territory` — a declared `select` whose value
  * `account.hook.ts` derives from `billing_address.country` against the one
- * authored mapping in `src/objects/_territory.ts`.
+ * authored mapping in `src/sales/objects/_territory.ts`.
  *
  * ### Two defects, in the order they were fixed
  *

@@ -2,11 +2,13 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL, bindHooksToEngine } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import stack, { type AnyRec, walk } from './helpers/composed-stack';
 import { products } from '../src/revenue/data/catalog.seed';
-import { type AnyRec, objects, pages, walk } from './helpers/metadata-fixtures';
 import { registerStackPicklists } from './helpers/stack-picklists';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
+const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
 
 /**
  * The opportunity Products panel offers a route to add a line item (#1731).
@@ -145,7 +147,7 @@ describe('the row a picker-shaped insert actually produces', () => {
 
   const boot = async (withHooks: boolean) => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_opportunity_line_item: LINE_ITEM,
         crm_opportunity: byName('crm_opportunity'),
@@ -154,6 +156,7 @@ describe('the row a picker-shaped insert actually produces', () => {
       } as never,
     })) as never;
     registerStackPicklists(ql);
+    await ql.syncSchemas();
     if (withHooks) {
       const hooks: AnyRec[] = (stack as never as AnyRec).hooks ?? [];
       bindHooksToEngine(

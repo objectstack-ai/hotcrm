@@ -64,7 +64,8 @@ import type { Territory } from '../objects/_territory';
  * loginable accounts created by better-auth, not raw `sys_user` rows: identity
  * tables are `managedBy: 'better-auth'` and direct data-API inserts are refused
  * by the ADR-0092 write guard, which is also why a seed cannot do this and why
- * the note at the foot of `src/data/index.ts` says a seed can never name a user.
+ * the "A seed can't name a user" note in `objectstack.composition.ts` says a
+ * seed can never name a user.
  *
  * ### Why exactly these five people
  *
@@ -80,7 +81,7 @@ import type { Territory } from '../objects/_territory';
  *   - the sales manager makes `opportunity_approval`'s `manager_review` resolve
  *     to a non-empty slate for the first time.
  *   - the service AGENT is the case INTAKE POOL. `case_auto_assign`
- *     (`src/objects/_case-assignment.ts`) round-robins an ownerless case — a
+ *     (`src/service/objects/_case-assignment.ts`) round-robins an ownerless case — a
  *     web-to-case submission, an email import — to the least-loaded holder of
  *     `service_agent`. With nobody holding it the hook took its no-op path on
  *     every demo box and the `unassigned_triage` tab was the entire story. The
@@ -155,7 +156,7 @@ import type { Territory } from '../objects/_territory';
  * declared position that a sharing rule named and that `case_escalation_reassign`
  * routed cases to, and its holder was refused every CRM object until a set
  * carrying the name `service_manager` existed. A position with no same-named
- * permission set grants NOTHING — the note in `src/profiles/service-agent.profile.ts`
+ * permission set grants NOTHING — the note in `src/sales/profiles/service-agent.profile.ts`
  * records where that name-matching binding is enforced inside the platform.
  *
  * The falsifiable part, and the reason `test/demo-staffing.test.ts` pins it: a
@@ -318,7 +319,7 @@ export type DemoOwnershipRoute = {
  * Territory → the demo staff `key` that owns rows in it.
  *
  * The `Record<Territory, …>` annotation is what keeps this in step with the one
- * authored domain: rename or add a territory in `src/objects/_territory.ts` and
+ * authored domain: rename or add a territory in `src/sales/objects/_territory.ts` and
  * this object stops compiling — a missing key on one side, an excess one on the
  * other. A renamed territory therefore cannot be half-applied here, the same
  * property the sharing-rule conditions get from interpolating `TERRITORY`.

@@ -13,6 +13,7 @@ export const ContactViews = defineView({
     type: 'grid',
     name: 'all_contacts',
     label: 'All Contacts',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_contact' },
     columns: [
       { field: 'avatar', width: 64, align: 'center' },
@@ -71,6 +72,7 @@ export const ContactViews = defineView({
       name: 'primary_contacts',
       type: 'grid',
       label: 'Primary Contacts',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_contact' },
       columns: ['first_name', 'last_name', 'crm_account', 'title', 'email', 'phone'],
       filter: [{ field: 'is_primary', operator: 'equals', value: true }],

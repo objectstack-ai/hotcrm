@@ -36,7 +36,7 @@ export const SalesRepProfile = {
   // objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4.
   objects: {
     // `allowExport` where an export surface exists — canonical note in
-    // `src/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
+    // `src/sales/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
     // read-derived, so a rep's CSV carries their own book, not the org's.
     crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     crm_account:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
@@ -95,6 +95,15 @@ export const SalesRepProfile = {
     // Which campaign sourced a lead — read-only context, derived from the
     // campaign (controlled_by_parent). Enrollment belongs to marketing_user.
     crm_campaign_member:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // The record Attachments panel, READ only: canonical note on `enable.files`
+    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
+    // derives from the parent record; upload and delete wait upstream.
+    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // The record Discussion panel, comments and activity: canonical note on
+    // `enable.feeds` in `src/sales/objects/index.ts` (#2029). Which threads it
+    // reaches derives from the parent record; deleting a comment waits upstream.
+    sys_comment:  { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
     'crm_account.annual_revenue':     { readable: true, editable: false },

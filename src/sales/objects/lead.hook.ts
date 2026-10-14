@@ -49,13 +49,41 @@ import type { HookApi } from './_hook-api';
  * AFTER `lead_automation` (200), whose guest branch strips a client-spoofed
  * `owner_id` from anonymous Web-to-Lead submissions. Assigning first and being
  * stripped afterwards lands every web-to-lead ownerless — the exact case this
- * hook exists for.
+ * hook exists for. It is also what keeps the elevation below from letting an
+ * anonymous client choose the owner: the strip runs first, so this hook only
+ * ever writes the pool's choice.
+ *
+ * ## `runAs: 'system'` (#2014, AGENTS.md rule 9), and the organization pin
+ *
+ * Web-to-lead is the intake this hook exists for, and as the caller it never
+ * reached the pool: the anonymous form writes under `guest_portal`, which
+ * reads nothing, so the pool read came back empty and every web lead landed
+ * ownerless with reps staffed (measured on 17.7.0 and again on 18.0.0-next.0).
+ * Who works an enquiry is the business's routing, not the submitter's
+ * privilege, so the hook elevates. Elevation reaches the two READS only: the
+ * owner is still stamped on the payload in flight (no write of its own, no
+ * transfer grant), and a person's own insert never gets here.
+ *
+ * What elevation reads never reaches the submitter. Maintainer ruling on
+ * #2014 (item 4, B): the platform fixed the door first — since
+ * objectstack#22437 (18.0.0-next.0) the anonymous form answers the new
+ * record's id and nothing else, so the owner chosen here stays inside the CRM.
+ * `test/hooks-runtime.test.ts` pins that answer through the real door.
+ *
+ * AGENTS.md rule 10: the pool and the load counts are organization-NEUTRAL
+ * predicates, so both are pinned to the new lead's `organization_id` when the
+ * writer named one (a system import into one organization of several). The
+ * anonymous form names none here — the platform stamps the organization after
+ * the beforeInsert hooks (ADR-0131) — and an organization-less insert lands
+ * only on an install with exactly one organization (with two, the platform
+ * refuses it), so an unpinned read has no other organization to reach.
  */
 const leadAutoAssignHook: Hook = {
   name: 'lead_auto_assign',
   object: 'crm_lead',
   events: ['beforeInsert'],
   priority: 250,
+  runAs: 'system',
   description: 'Assign ownerless new leads to the least-loaded sales rep.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
@@ -67,17 +95,21 @@ const leadAutoAssignHook: Hook = {
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
+    // The rule-10 pin on both reads below: the organization the writer named
+    // on the new lead, when it named one (see the note above the hook).
+    const organizationId =
+      typeof input.organization_id === 'string' && input.organization_id !== ''
+        ? input.organization_id
+        : undefined;
+    const inOrganization: Record<string, string> = organizationId ? { organization_id: organizationId } : {};
+
     // Auto-assignment is a best-effort ENHANCEMENT — it must NEVER block lead
-    // creation. In particular an anonymous Web-to-Lead submission runs under the
-    // public-form grant, which permits only create/read-back on crm_lead and
-    // DENIES `find` on sys_user_position; letting that denial propagate would
-    // reject the whole insert and break the public form. So the pool lookup +
-    // load balancing are wrapped: on ANY error (permission, etc.) we log and
-    // leave the lead ownerless (a manager / the lead_assignment flow routes it).
+    // creation. So the pool lookup + load balancing are wrapped: on ANY error
+    // the lead is still captured, ownerless.
     try {
       // Rep pool = holders of the sales_rep position.
       const holders = await api.object('sys_user_position').find({
-        where: { position: 'sales_rep' }, fields: ['user_id'], top: 1000,
+        where: { position: 'sales_rep', ...inOrganization }, fields: ['user_id'], top: 1000,
       });
       const repIds = Array.from(
         new Set(
@@ -93,7 +125,7 @@ const leadAutoAssignHook: Hook = {
       let bestCount = Infinity;
       for (const repId of repIds) {
         const openCount = await api.object('crm_lead').count({
-          where: { owner_id: repId, is_converted: false },
+          where: { owner_id: repId, is_converted: false, ...inOrganization },
         });
         if (openCount < bestCount) {
           bestCount = openCount;
@@ -102,10 +134,9 @@ const leadAutoAssignHook: Hook = {
       }
       if (best) input.owner_id = best;
     } catch {
-      // Swallow: auto-assignment must never block the insert. Common case is the
-      // anonymous public-form context, which can't read sys_user_position — the
-      // lead is still captured, ownerless, for downstream routing. (No `console`
-      // here — the L2 hook sandbox doesn't define it.)
+      // Swallow: auto-assignment must never block the insert — the lead is
+      // still captured, ownerless. (No `console` here — the L2 hook sandbox
+      // doesn't define it.)
     }
   },
 };
@@ -530,12 +561,35 @@ const leadHook: Hook = {
  * ⚠️ Priority 300 — after `lead_automation` (200), whose guest branch strips
  * client-supplied `duplicate_*` from anonymous submissions. Running earlier
  * would let a spoofed `duplicate_status` switch this hook off.
+ *
+ * ## `runAs: 'system'` (#2014, AGENTS.md rule 9), and the organization pin
+ *
+ * Whether an address is already in the CRM is the CRM's fact, not the
+ * writer's privilege. As the caller, job 2 saw only what the writer may read:
+ * the anonymous form reads nothing, so a web duplicate always landed
+ * unflagged, and a rep's scan missed a colleague's contact or lead. So the
+ * hook elevates. Elevation reaches the two insert-time reads, the only
+ * `ctx.api` calls here; what it writes is the verdict and the link on the NEW
+ * lead, nothing else.
+ *
+ * The verdict never reaches an anonymous submitter: ruling #2014 item 4 (B)
+ * waited for objectstack#22437, and since 18.0.0-next.0 the form answers the
+ * new record's id and nothing else, so no public form is an email-existence
+ * oracle. `test/hooks-runtime.test.ts` pins that answer through the real door.
+ *
+ * AGENTS.md rule 10: both reads are pinned to the new lead's
+ * `organization_id` when the writer named one, so a match is never found in
+ * another organization. A person's write is confined by their own tenant,
+ * which the elevated `ctx.api` keeps; the anonymous form names none here, and
+ * lands only on an install with exactly one organization (see
+ * `lead_auto_assign`).
  */
 const leadDuplicateCheckHook: Hook = {
   name: 'lead_duplicate_check',
   object: 'crm_lead',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 300,
+  runAs: 'system',
   description:
     'Normalize lead email and company match key; flag a re-captured address as a suspected duplicate of the record it repeats.',
   handler: async (ctx: HookContext) => {
@@ -687,7 +741,7 @@ const leadDuplicateCheckHook: Hook = {
         } else {
           input.duplicate_of_type = null;
           // `duplicate_status` goes with it. Its readers in this app are the
-          // `suspected_duplicates` review queue (`src/views/lead.view.ts`),
+          // `suspected_duplicates` review queue (`src/sales/views/lead.view.ts`),
           // whose whole workflow is "open the two records and compare them";
           // the `duplicate_disqualification_requires_survivor` validation,
           // which demands a NAMED survivor; the duplicate form block; and this
@@ -733,15 +787,20 @@ const leadDuplicateCheckHook: Hook = {
       return best;
     };
 
+    // The rule-10 pin on both reads below (see the note above the hook).
+    const organizationId =
+      typeof input.organization_id === 'string' && input.organization_id !== ''
+        ? input.organization_id
+        : undefined;
+    const inOrganization: Record<string, string> = organizationId ? { organization_id: organizationId } : {};
+
     // Best-effort ENHANCEMENT, never a gate on the write — identical to
-    // `lead_auto_assign` above. An anonymous Web-to-Lead submission runs under
-    // the `guest_portal` grant, which is INSERT-only on `crm_lead` and denies
-    // reads outright; letting that denial propagate would reject the very
-    // submission this feature exists to accept. A guest's duplicate therefore
-    // lands unflagged rather than not landing at all.
+    // `lead_auto_assign` above. A failed read must not reject the very
+    // submission this feature exists to accept, so the duplicate lands
+    // unflagged rather than not landing at all.
     try {
       const contacts = await api.object('crm_contact').find({
-        where: { email },
+        where: { email, ...inOrganization },
         fields: ['id', 'created_at'],
         top: SCAN_LIMIT,
       });
@@ -758,7 +817,7 @@ const leadDuplicateCheckHook: Hook = {
       // address — pointing at the locked lead instead would name a record
       // nobody can work.
       const leads = await api.object('crm_lead').find({
-        where: { email, is_converted: false },
+        where: { email, is_converted: false, ...inOrganization },
         fields: ['id', 'created_at'],
         top: SCAN_LIMIT,
       });

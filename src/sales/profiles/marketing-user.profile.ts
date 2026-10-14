@@ -5,7 +5,7 @@ export const MarketingUserProfile = {
   label: 'Marketing User',
   objects: {
     // `allowExport` where an export surface exists — canonical note in
-    // `src/profiles/index.ts`. Lead and contact list exports are marketing's
+    // `src/sales/profiles/index.ts`. Lead and contact list exports are marketing's
     // core targeting workflow; account/opportunity back the campaign-ROI
     // reports. No `crm_case` grant here, so no export bit for it either.
     crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
@@ -18,7 +18,7 @@ export const MarketingUserProfile = {
     // pipeline from marketing (and tripped security-private-no-readscope).
     crm_opportunity: { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     // Campaign membership is THIS profile's core write surface: the
-    // "Add to Campaign" action (`src/actions/lead.actions.ts`) inserts
+    // "Add to Campaign" action (`src/sales/actions/lead.actions.ts`) inserts
     // `crm_campaign_member` rows, and before #488 no permission set granted the
     // object — the action failed for the only persona meant to run it. Rows
     // derive from the campaign (controlled_by_parent), so there is no record
@@ -39,6 +39,15 @@ export const MarketingUserProfile = {
     // Reads the KB and may rate it; cannot author articles (#601).
     crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
+    // The record Attachments panel, READ only: canonical note on `enable.files`
+    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
+    // derives from the parent record; upload and delete wait upstream.
+    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // The record Discussion panel, comments and activity: canonical note on
+    // `enable.feeds` in `src/sales/objects/index.ts` (#2029). Which threads it
+    // reaches derives from the parent record; deleting a comment waits upstream.
+    sys_comment:  { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
     // Marketing reads pipeline for campaign ROI but never prices a deal, and
@@ -55,8 +64,9 @@ export const MarketingUserProfile = {
       name: 'opportunity_private_owner_only_marketing',
       // A deal flagged Private is visible only to its owner, even to holders of
       // org-wide opportunity read. (`rowLevelSecurity[].label` / `description`
-      // have no runtime effect — liveness: dead in 17.6.0 — so the intent lives
-      // in this comment.)
+      // are display copy — the 17.7.0 liveness ledger marks both live: the
+      // permission editor draws them on the policy card. This policy authors
+      // neither, so its intent lives in this comment.)
       object: 'crm_opportunity',
       operation: 'select' as const,
       using: 'is_private == false || owner_id == current_user.id',

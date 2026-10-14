@@ -4,7 +4,7 @@
  * Revenue seeds — contracts, quotes and their lines.
  *
  * Split out of the former monolithic `src/data/index.ts` (#635). Seed doctrine
- * lives in `./_shared.ts`.
+ * lives in `src/sales/data/_shared.ts`.
  */
 import { defineSeed } from '@objectstack/spec/data';
 import { cel } from '@objectstack/spec';
@@ -276,10 +276,5 @@ export const quotes = defineSeed(Quote, {
 export const quoteLineItems = defineSeed(QuoteLineItem, {
   mode: 'upsert',
   externalId: ['crm_quote', 'crm_product'],
-  // `tax_rate` is deliberately left at its 0 default: in this app tax is a
-  // QUOTE-level figure (`crm_quote.tax`, applied after the quote-level
-  // discount) and `quote_total_rollup` ignores the per-line rate entirely.
-  // Seeding a rate here would put a second, contradictory tax number on the
-  // record.
   records: lineItemRecords('crm_quote', QUOTE_LINES),
 });

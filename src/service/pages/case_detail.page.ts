@@ -12,7 +12,8 @@ import type { Page } from '@objectstack/spec/ui';
  * The Activity tab uses `record:activity`, which pulls the unified
  * timeline from `sys_comment`, `sys_activity`, `feed_item` and the field
  * history (enabled via `trackHistory: true` on `case.object.ts`). That is
- * how case comments and call logs surface here without a custom feed.
+ * how case comments and call logs surface here without a custom feed —
+ * call logs only because the block sets `showCompleted` (#2071).
  */
 export const CaseDetailPage: Page = {
   name: 'case_detail_page',
@@ -53,10 +54,23 @@ export const CaseDetailPage: Page = {
             // `z.array(z.string())` ("Action IDs to show in header") in
             // @objectstack/spec 17.3.0, and this repo authors against the
             // protocol (#1653). Each id is the `name` of a crm_case-scoped
-            // action — `escalate_case` / `close_case` in
-            // `src/actions/case.actions.ts`, `log_call` in
-            // `src/actions/global.actions.ts`.
-            actions: ['escalate_case', 'close_case', 'log_call'],
+            // action — `claim_case` / `escalate_case` / `close_case` in
+            // `src/service/actions/case.actions.ts`, the activity trio in
+            // `src/service/actions/case-activity.actions.ts`.
+            //
+            // This list is the whole header (#2072, the #592 sentence on
+            // `lead_detail.page.ts`): an action it does not name is reachable
+            // only from the list row's ⋮ menu, which is how an agent on an
+            // unowned case had to go back to the list to claim it, and could
+            // not log or book a meeting here at all. Each action's own
+            // `visible` still decides when it shows — `claim_case` only on an
+            // ownerless open case. `claim_case` goes FIRST because the header
+            // draws three buttons inline and folds the rest into ⋯: on an
+            // ownerless case claiming is the gesture, and on an owned one it
+            // is hidden, so the inline three stay escalate / close / call.
+            // `test/action-references.test.ts` holds this list to every
+            // crm_case action placed at `record_header`.
+            actions: ['claim_case', 'escalate_case', 'close_case', 'log_call', 'log_meeting', 'schedule_meeting'],
           },
         },
         {
@@ -251,6 +265,19 @@ export const CaseDetailPage: Page = {
                       enableMentions: true,
                       enableReactions: true,
                       enableThreading: true,
+                      // Load-bearing (#2071): a call or meeting logged on the
+                      // case is a `sys_activity` row of type `completed` (the
+                      // `task` feed kind), and the renderer drops every such
+                      // row unless this is true — so an agent's logged call
+                      // never reached this tab. The case's other `completed`
+                      // writers are its own `resolved` / `closed` milestones
+                      // (`case.object.ts`), which belong on this timeline too.
+                      // Completed crm_task rows do NOT arrive here: a task's
+                      // audit rows are keyed to the task, and this feed reads
+                      // only rows keyed to the case. No `types` filter, unlike
+                      // the lead page: this timeline mixes comments and field
+                      // changes on purpose (`unifiedTimeline` above).
+                      showCompleted: true,
                     },
                   },
                 ],

@@ -4,8 +4,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import stack from './helpers/composed-stack';
 import { CrmTranslations } from '../src/sales/translations';
 import leadHooks from '../src/sales/objects/lead.hook';
 import {
@@ -74,19 +74,23 @@ const LEAD_BASE = {
 // ─────────────────────────────────── the engine, with the real schema ──
 
 /**
- * A real ObjectQL over the in-memory driver, carrying `crm_lead` + `crm_contact`
- * exactly as the app declares them.
+ * A real ObjectQL over a real SQLite database, carrying `crm_lead` +
+ * `crm_contact` exactly as the app declares them.
  *
- * The in-memory driver is not a convenience here, it is part of the test: it
- * stores only the columns a row was written with, so a lead created without the
- * duplicate fields comes back WITHOUT those keys. That is the record shape that
- * used to make the validation abort (`No such key`) and be skipped.
+ * A lead created without the duplicate fields comes back with those columns
+ * NULL. The shape that used to make the validation abort (`No such key`) and be
+ * skipped — the keys ABSENT, as `driver-memory` stored them until the #2092
+ * ruling moved every test onto SQL — is swept per predicate in
+ * `object-validation-predicates.test.ts`.
  */
-const makeEngine = () =>
-  ObjectQL.create({
-    datasources: { default: new InMemoryDriver({ persistence: false }) },
+const makeEngine = async () => {
+  const ql = await ObjectQL.create({
+    datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
     objects: { crm_lead: lead, crm_contact: contact } as never,
   });
+  await ql.syncSchemas();
+  return ql;
+};
 
 describe('a repeated email is recorded, not rejected', () => {
   let ql: Awaited<ReturnType<typeof makeEngine>>;
@@ -356,8 +360,9 @@ describe('the predicates are TOTAL — they return a verdict for every record sh
    * The unguarded first draft of these rules therefore let a lead be closed as
    * a duplicate with no survivor named — silently, and only on update. The
    * `has(...)` guards are what make the predicate answer instead of abort;
-   * the engine test above is the proof they work, and this is the reminder of
-   * why they cannot be "simplified" away.
+   * the no-keys sweep in `object-validation-predicates.test.ts` is the proof
+   * they work, and this is the reminder of why they cannot be "simplified"
+   * away.
    */
   it('guards every field reference in the disqualification rule', () => {
     const source = celSource(rule?.condition);

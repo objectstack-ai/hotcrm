@@ -14,7 +14,7 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/zh-CN.ts`.
+ * `src/sales/translations/zh-CN.ts`.
  */
 export const activity: Record<string, ObjectTranslationData> = {
   crm_task: {
@@ -48,7 +48,7 @@ export const activity: Record<string, ObjectTranslationData> = {
         // low/normal/high/urgent · case: low/medium/high/critical), so the two
         // zh-CN words must stay different or the screen stops distinguishing
         // two values the model treats as distinct — the crossing
-        // `src/views/task.view.ts` carries the tombstone of. Maintainer ruling
+        // `src/sales/views/task.view.ts` carries the tombstone of. Maintainer ruling
         // 2026-08-31, #1342: 紧急 stays here (urgent is this object's literal
         // word) and case `critical` moved to 严重.
         label: '优先级',

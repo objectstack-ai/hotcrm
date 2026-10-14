@@ -1,10 +1,12 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { ObjectQL, bindHooksToEngine } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
-import { extractSandboxBody, makeSandboxEngine, runHookBody } from './helpers/action-sandbox';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import stack from './helpers/composed-stack';
+import { extractHookBody } from '@objectstack/cli/hook-body';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * `line_number` HAS A WRITER (#1828 — ruling: batch #163 item 2, letter 1).
@@ -47,18 +49,40 @@ const seed = { isSystem: true };
 let ql: AnyRec;
 
 /**
+ * The two headers every case files its lines under, written as the seed loader
+ * would. Since 18.0.0-next.0 a non-system write of a detail must name a header
+ * the caller can read (`master_detail`, objectstack#22519), so the headers are
+ * real rows of the shipped parent objects rather than bare ids.
+ */
+const HEADERS = ['p1', 'p2'];
+const header: Record<string, (id: string) => AnyRec> = {
+  crm_opportunity: (id) => ({
+    id, name: `Header ${id}`, crm_account: 'acc_1', amount: 100, stage: 'prospecting', close_date: '2026-12-31',
+  }),
+  crm_quote: (id) => ({
+    id, name: `Header ${id}`, crm_account: 'acc_1', status: 'draft', quote_date: '2026-10-01', expiration_date: '2026-12-31',
+  }),
+};
+
+/**
  * Boot on the shipped schemas. Only the numbering hooks are bound: the price
  * fill and the async rollups are other hooks' behaviour, and a line here carries
  * its own price so none of them is needed to make the insert legal.
  */
 async function boot(withNumbering: boolean) {
   ql = (await ObjectQL.create({
-    datasources: { default: new InMemoryDriver({ persistence: false }) },
+    datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
     objects: {
+      crm_opportunity: byName('crm_opportunity'),
+      crm_quote: byName('crm_quote'),
       crm_opportunity_line_item: byName('crm_opportunity_line_item'),
       crm_quote_line_item: byName('crm_quote_line_item'),
     } as never,
   })) as never;
+  await ql.syncSchemas();
+  for (const parent of PAIRS.map((p) => p.parentKey)) {
+    for (const id of HEADERS) await ql.insert(parent, header[parent](id), { context: seed });
+  }
   if (withNumbering) {
     bindHooksToEngine(
       ql as never,
@@ -182,16 +206,49 @@ describe.each(PAIRS)('$object — the assigner ships body-only', ({ object, pare
   const shipped = () => hooks.find((x) => x.name === hook) as AnyRec;
 
   it('lowers with no free identifiers — the parent key is read from ctx.object', () => {
-    expect(() => extractSandboxBody(shipped().handler, `hook '${hook}'`)).not.toThrow();
+    expect(() => extractHookBody(shipped().handler, `hook '${hook}'`)).not.toThrow();
   });
 
-  it('stamps max + 1 in the VM', async () => {
-    const engine = makeSandboxEngine({
-      [object]: [{ id: 'a', [parentKey]: 'p1', line_number: 1 }, { id: 'b', [parentKey]: 'p1', line_number: 4 }],
+  /**
+   * The same stamp on the real app — booted through `@objectstack/verify`'s
+   * handle, every hook bound in the engine's own order, a sales rep adding the
+   * line under a parent that already carries ordinals 1 and 4 (written as the
+   * seed loader writes, which keeps a supplied ordinal — measured above).
+   */
+  let verify: VerifyStack;
+  let rep: Person;
+  const parents: Record<string, string> = {};
+  let product: string;
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    rep = await signUpPerson(verify, `rep-${object}@line-item-line-number.test`, {
+      name: 'Line Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
     });
-    const { input } = await runHookBody(shipped(), {
-      event: 'beforeInsert', input: { [parentKey]: 'p1' }, user: { id: 'rep_1' } as never, engine,
+    const create = async (o: string, doc: AnyRec) => String((await verify.hooks.run(o, 'insert', doc, { as: rep.token })).id);
+    const account = await create('crm_account', { name: `Line Co (${object})` });
+    const contact = await create('crm_contact', {
+      first_name: 'Lina', last_name: 'Lines', email: `lina-${object}@line-item-line-number.test`, crm_account: account,
     });
-    expect(input.line_number).toBe(5);
+    parents.crm_opportunity = await create('crm_opportunity', {
+      name: 'Line deal', crm_account: account, stage: 'prospecting', amount: 1000, close_date: '2030-06-30',
+    });
+    parents.crm_quote = await create('crm_quote', {
+      name: 'Line quote', crm_account: account, crm_contact: contact, crm_opportunity: parents.crm_opportunity,
+      quote_date: '2030-01-01', expiration_date: '2030-02-01',
+    });
+    const [seeded] = await verify.seed('crm_product', [{ name: `Line widget (${object})`, list_price: 100, is_active: true }]);
+    product = String(seeded!.id);
+  }, 180_000);
+
+  it('stamps max + 1 on a real write', async () => {
+    const parent = parents[parentKey]!;
+    await verify.seed(object, [
+      { [parentKey]: parent, crm_product: product, quantity: 1, unit_price: 100, line_number: 1 },
+      { [parentKey]: parent, crm_product: product, quantity: 1, unit_price: 100, line_number: 4 },
+    ]);
+    const stored = await verify.hooks.run(
+      object, 'insert', { [parentKey]: parent, crm_product: product, quantity: 1, unit_price: 100 }, { as: rep.token },
+    );
+    expect(stored.line_number).toBe(5);
   });
 });

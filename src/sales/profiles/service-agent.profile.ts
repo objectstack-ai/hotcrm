@@ -11,7 +11,7 @@ export const ServiceAgentProfile = {
     // private object with no scope had silently locked agents out of every
     // account they didn't personally own.
     // `allowExport` where an export surface exists — canonical note in
-    // `src/profiles/index.ts`. `crm_opportunity` carries no export bit: this
+    // `src/sales/profiles/index.ts`. `crm_opportunity` carries no export bit: this
     // set has no read on it at all, and the axis never widens read.
     crm_lead:        { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
@@ -24,7 +24,7 @@ export const ServiceAgentProfile = {
     // sees only their own tasks on it (#549).
     crm_case:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const, allowExport: true },
     // `allowTransfer` on `crm_task` ONLY — canonical note in
-    // `src/profiles/index.ts`. Narrow and load-bearing: escalating a case fires
+    // `src/sales/profiles/index.ts`. Narrow and load-bearing: escalating a case fires
     // `case_status_side_effects`, which opens the follow-up task OWNED BY the
     // account owner (`case.hook.ts`). That insert runs on `ctx.api` with the
     // agent's own context, so planting it under another user is a transfer and
@@ -62,6 +62,15 @@ export const ServiceAgentProfile = {
     // erased one.
     crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
+    // The record Attachments panel, READ only: canonical note on `enable.files`
+    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
+    // derives from the parent record; upload and delete wait upstream.
+    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // The record Discussion panel, comments and activity: canonical note on
+    // `enable.feeds` in `src/sales/objects/index.ts` (#2029). Which threads it
+    // reaches derives from the parent record; deleting a comment waits upstream.
+    sys_comment:  { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
     'crm_case.is_sla_violated':        { readable: true, editable: false },
@@ -79,7 +88,7 @@ export const ServiceAgentProfile = {
  *
  * ### What was ruled
  *
- * `service_manager` is a declared position (`src/sharing/positions.ts`) that
+ * `service_manager` is a declared position (`src/sales/sharing/positions.ts`) that
  * `case_escalation_sharing` names and that `case_escalation_reassign` routes
  * escalating cases to — measured, 35 of them on a demo box — and no permission
  * set reached it, so the persona was denied every CRM object (403). Director
@@ -109,6 +118,14 @@ export const ServiceAgentProfile = {
  *
  * ⇒ For this app, "bind set X to position P" has exactly one spelling: declare
  * X's grants under the name P. Hence this export rather than a new file.
+ *
+ * ⚠️ The schema half above is dated, not current: on 18.0.0-next.1
+ * `PositionSchema` accepts `permissionSets` and the `sys_position_permission_set`
+ * object is retired (objectstack 66949b7). The name binding still resolves
+ * there: for a demo user holding the `service_agent` position and no grant,
+ * `POST /api/v1/security/explain` answers `permissionSets: [service_agent,
+ * member_default]` (measured in #2105). Whether to declare the binding
+ * instead was not decided there.
  *
  * ### Why a spread and not a copy
  *

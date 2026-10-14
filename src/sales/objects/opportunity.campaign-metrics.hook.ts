@@ -46,6 +46,16 @@ import type { HookApi } from './_hook-api';
  * arithmetic that happens to be triggered by an opportunity write, and the
  * hooks barrel flattens each `*.hook.ts` default export regardless of which
  * object each entry names.
+ *
+ * `runAs: 'system'` (#2014, AGENTS.md rule 9). The trigger is a sales write —
+ * a rep winning their own deal, a manager winning one on a marketing-owned
+ * campaign — and neither may edit the campaign, so the metric write was
+ * refused, logged and swallowed: the deal was won and the campaign's revenue
+ * stayed 0. The recompute is the campaign's writer, not the rep's, so the
+ * hook elevates; the opportunity write stays the caller's. Organization
+ * (rule 10): every read is keyed to the triggering deal's campaign (and the
+ * leads its members name), and the elevated `ctx.api` keeps the trigger's
+ * tenant.
  */
 const campaignAttributionRefresh: Hook = {
   name: 'campaign_attribution_refresh',
@@ -54,6 +64,7 @@ const campaignAttributionRefresh: Hook = {
   priority: 810,
   async: true,
   onError: 'log',
+  runAs: 'system',
   description: 'Recompute campaign metrics when an opportunity’s campaign attribution changes.',
   handler: async (ctx: HookContext) => {
     const api = ctx.api as HookApi | undefined;

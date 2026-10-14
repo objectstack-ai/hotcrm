@@ -128,10 +128,10 @@ export const TEXT_SCANNED = ['content', '.changeset', 'docs', '.github', '.claud
  * as well (#1236).
  *
  * The root `.ts` files are why this list exists at all:
- * `objectstack.config.ts` is the app manifest AGENTS.md calls the source of
- * truth, `objectstack.composition.ts` is the collection step it consumes (the
- * ADR-0130 packages merged into the arrays `defineStack()` takes — it is a
- * separate module because the config may carry no named export), and
+ * `objectstack.config.ts` is the artifact AGENTS.md calls the source of truth
+ * (`composeStacks` over the two ADR-0130 package stacks),
+ * `objectstack.composition.ts` builds those stacks from the packages' barrels
+ * (a separate module because the config may carry no named export), and
  * `vitest.config.ts` / `playwright.config.ts` are the test entry points —
  * first-class TypeScript that no check read before #838. They joined
  * the byte check there, and the two `.ts` checks in #1236, which derives

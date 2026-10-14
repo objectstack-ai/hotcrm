@@ -61,7 +61,7 @@ export const AccountImportMapping = defineMapping({
     },
 
     // The account hook rejects a website that is not http(s) — keep full URLs
-    // in the source sheet (see `src/objects/account.hook.ts`).
+    // in the source sheet (see `src/sales/objects/account.hook.ts`).
     { source: 'Website', target: 'website' },
     { source: 'Phone', target: 'phone' },
     { source: 'Annual Revenue', target: 'annual_revenue' },

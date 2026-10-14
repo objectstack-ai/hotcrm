@@ -5,7 +5,7 @@
  * it, so a line item's `list_price` can never disagree with the catalogue.
  *
  * Split out of the former monolithic `src/data/index.ts` (#635). Seed doctrine
- * lives in `./_shared.ts`.
+ * lives in `src/sales/data/_shared.ts`.
  */
 import { defineSeed } from '@objectstack/spec/data';
 import { Product } from '../objects/product.object';

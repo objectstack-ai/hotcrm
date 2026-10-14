@@ -2,8 +2,8 @@
 
 /**
  * Service flow barrel — the flows whose start node names `crm_case`.
- * See `src/sales/flows/index.ts` for why the registration order is assembled
- * in `objectstack.config.ts` rather than here.
+ * Registered, in order, by the service module's own stack — `serviceFlows` in
+ * `src/service/index.ts`.
  */
 export { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
 export { EscalateCaseFlow, CloseCaseFlow, ClaimCaseFlow } from './case-actions.flow';

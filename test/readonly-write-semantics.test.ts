@@ -2,11 +2,16 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
-import { P } from '@objectstack/spec';
-import { silentLogger } from './helpers/flow-harness';
+import { P, cel } from '@objectstack/spec';
+
+/** The engine's logger, silenced: these suites read results, not log lines. */
+const silentLogger: any = {
+  info() {}, warn() {}, error() {}, debug() {}, trace() {},
+  child() { return silentLogger; },
+};
 
 type AnyRec = Record<string, any>;
 type Flow = Automation.Flow;
@@ -57,11 +62,10 @@ type Flow = Automation.Flow;
  *
  * ## Why a real engine and a purpose-built probe object
  *
- * `test/helpers/flow-harness.ts` runs flows over a stand-in data engine with no
- * readonly semantics at all, so it cannot see this. Here the AutomationEngine's
- * `data` service IS a real `ObjectQL` — its flat `update(object, data, options)`
+ * The rule under test is the engine's own, so the AutomationEngine's
+ * `data` service here IS a real `ObjectQL` — its flat `update(object, data, options)`
  * surface is exactly what the `update_record` executor calls — over a real
- * `InMemoryDriver`. The probe object is purpose-built so the measurement never
+ * SQLite database. The probe object is purpose-built so the measurement never
  * depends on, or perturbs, the shipped `crm_case` declaration.
  *
  * First measured on `@objectstack/* 17.1.0`. RE-MEASURED 2026-09-03 against
@@ -150,7 +154,7 @@ const writeNode = {
   id: 'write', type: 'update_record', label: 'Write Probe',
   config: {
     objectName: PROBE,
-    filter: { id: '{rowId}' },
+    filter: { id: cel`rowId` },
     fields: { locked_flag: true, open_flag: true },
   },
 };
@@ -200,9 +204,8 @@ const screenFlow = (name: string, runAs: 'system' | 'user'): Flow =>
 
 /** Boot an AutomationEngine whose `data` service is the REAL ObjectQL. */
 function automation(flows: Record<string, Flow>) {
-  // `any`, matching `test/helpers/flow-harness.ts`: `installBuiltinNodes` wants a
-  // full `PluginContext` and this stands in for the two members the node
-  // executors actually reach for.
+  // `any`: `installBuiltinNodes` wants a full `PluginContext`, and this is the
+  // two members the node executors actually reach for.
   const ctx: any = {
     logger: silentLogger,
     getService: (n: string) => (n === 'data' || n === 'objectql' ? ql : undefined),
@@ -228,7 +231,7 @@ const readBack = async (id: string): Promise<AnyRec> =>
 
 beforeAll(async () => {
   ql = await ObjectQL.create({
-    datasources: { default: new InMemoryDriver({ persistence: false }) },
+    datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
     objects: { [PROBE]: probeObject, [ORDERED]: orderedObject } as never,
     hooks: [
       {
@@ -246,6 +249,7 @@ beforeAll(async () => {
       },
     ],
   });
+  await ql.syncSchemas();
 });
 
 afterAll(async () => {
@@ -555,7 +559,7 @@ const callerFlow = (name: string, childName: string): Flow =>
       },
       {
         id: 'stamp', type: 'subflow', label: 'Stamp',
-        config: { flowName: childName, input: { rowId: '{rowId}' } },
+        config: { flowName: childName, input: { rowId: cel`rowId` } },
       },
       {
         // The parent's OWN write, after the child returned. Same object, same
@@ -564,7 +568,7 @@ const callerFlow = (name: string, childName: string): Flow =>
         id: 'parent_write', type: 'update_record', label: 'Parent Write',
         config: {
           objectName: PROBE,
-          filter: { id: '{rowId}' },
+          filter: { id: cel`rowId` },
           fields: { locked_after: true },
         },
       },
@@ -668,7 +672,7 @@ const orderedStamp = (name: string): Flow =>
       { id: 'start', type: 'start', label: 'Start', config: {} },
       {
         id: 'write', type: 'update_record', label: 'Stamp',
-        config: { objectName: ORDERED, filter: { id: '{rowId}' }, fields: { locked_flag: true } },
+        config: { objectName: ORDERED, filter: { id: cel`rowId` }, fields: { locked_flag: true } },
       },
       { id: 'end', type: 'end', label: 'End' },
     ],
@@ -685,11 +689,11 @@ const orderedStamp = (name: string): Flow =>
 const orderedCaller = (name: string, childName: string, reasonFirst: boolean): Flow => {
   const reasonNode = {
     id: 'write_reason', type: 'update_record', label: 'Write Reason',
-    config: { objectName: ORDERED, filter: { id: '{rowId}' }, fields: { reason: '{reason}' } },
+    config: { objectName: ORDERED, filter: { id: cel`rowId` }, fields: { reason: cel`reason` } },
   };
   const stampNode = {
     id: 'stamp', type: 'subflow', label: 'Stamp',
-    config: { flowName: childName, input: { rowId: '{rowId}' } },
+    config: { flowName: childName, input: { rowId: cel`rowId` } },
   };
   const [first, second] = reasonFirst ? [reasonNode, stampNode] : [stampNode, reasonNode];
   return {

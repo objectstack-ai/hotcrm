@@ -6,7 +6,9 @@ import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { SysApprovalRequest } from '@objectstack/plugin-approvals';
 import { REPO_ROOT } from './helpers/repo-root';
-import { type AnyRec, packFor, views } from './helpers/metadata-fixtures';
+import stack, { type AnyRec, packFor } from './helpers/composed-stack';
+
+const views: AnyRec[] = (stack as AnyRec).views ?? [];
 
 /**
  * `guides/search-and-navigation` › *Built-in vs personal vs shared*, pinned to

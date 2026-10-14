@@ -5,7 +5,7 @@ import { P } from '@objectstack/spec';
 /**
  * Campaign leadership sharing.
  *
- * `crm_campaign` is `public_read` (`src/objects/campaign.object.ts`), so the OWD
+ * `crm_campaign` is `public_read` (`src/marketing/objects/campaign.object.ts`), so the OWD
  * baseline already hands READ to everyone holding object-level read on it: a
  * marketing manager or director opens any campaign with or without this file.
  * What `public_read` does NOT hand out is WRITE. `@objectstack/plugin-sharing`

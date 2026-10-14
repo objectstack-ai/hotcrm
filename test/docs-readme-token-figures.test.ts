@@ -61,8 +61,8 @@ import { REPO_ROOT } from './helpers/repo-root';
  * a size the app does not have — the ratchet owns the growth budget, alone, and
  * a raise there sits on the maintainer floor where it always did.
  *
- *   business semantics  banner ~54k -> band 51,300–56,700 · ceiling 59,000
- *   interaction layer   banner ~29k -> band 27,550–30,450 · ceiling 31,000
+ *   business semantics  banner ~57k -> band 54,150–59,850 · ceiling 88,500
+ *   interaction layer   banner ~29k -> band 27,550–30,450 · ceiling 46,500
  *
  * ⚠️ The ceiling column is still worked out per row, and still pinned to
  * `CEILINGS` below — that is what stops the README quoting a ceiling the gate no
@@ -111,7 +111,8 @@ import { REPO_ROOT } from './helpers/repo-root';
  * exactly the decoupling that lets one move without the other, and #1951 is
  * that decoupling paying off: the ceiling rose 4,000 tokens and this rule had
  * nothing to restate, because the reading the banner is pinned to did not
- * move at all.
+ * move at all. #2031's ×1.5 grant (「hotcrm token 上限提升 50%」) moved the
+ * column again, to 88,500 and 46,500, and again no band edge.
  *
  * ## The measurement is the gate's, not a copy of it
  *

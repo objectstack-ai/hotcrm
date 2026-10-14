@@ -36,8 +36,9 @@ export const OpportunityLineItem = ObjectSchema.create({
   // written to go red the day the platform widens them: with the master set
   // resolved from RLS policies alone, any caller without the private-deal
   // policy — `sales_rep` included — reaches EVERY opportunity's lines.
-  // ADR-0055's relation resolver accepts a REQUIRED LOOKUP as the parent, so
-  // this works without converting the relationship to master-detail.
+  // The master is `crm_opportunity`, this object's one required
+  // `master_detail`: since 18.0.0-next.1 the only shape ADR-0055's relation
+  // resolver derives a master from (a required lookup no longer counts).
   //
   // ⛔ Not `private`: this object has no owner of its own, so `private` falls
   // back to the platform's auto-stamped `owner_id` (whoever inserted the row) —
@@ -59,14 +60,14 @@ export const OpportunityLineItem = ObjectSchema.create({
   // `quantity` is a pricing field here, not an identity one — it is a factor in
   // `total_price`, and separating it from the price it multiplies would put the
   // two halves of one product on two sections. `crm_quote_line_item` takes the
-  // same split over its eleven fields, and the parents agree: `crm_quote` and
+  // same split over its ten fields, and the parents agree: `crm_quote` and
   // `crm_product` both keep every money field in `pricing` — `crm_quote`'s
   // `tax` included — and both keep `description` in `basic`.
   //
   // ⚠️ Neither group may be a subset of the highlight strip: a synthesized
   // detail page hoists the title plus the first four `highlightFields` out of
   // the body, so an all-hoisted group renders on forms and nowhere else
-  // (`field-group-shadowed`; `test/field-groups-coverage.test.ts` pins it).
+  // (`field-group-shadowed`; `pnpm lint` — `os lint --strict` — fails on it).
   // `basic` keeps crm_opportunity/description/line_number and `pricing` keeps
   // list_price/discount outside that strip, so both survive the hoist.
   fieldGroups: [

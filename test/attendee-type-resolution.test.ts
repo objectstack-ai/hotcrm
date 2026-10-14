@@ -2,9 +2,9 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { SysUser } from '@objectstack/platform-objects';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { ATTENDEE_RESOLUTIONS } from '../src/sales/objects/event_attendee.object';
 import { eventAttendeesFromContacts, eventAttendeesFromLeads } from '../src/sales/data/activity.seed';
 import { registerStackPicklists } from './helpers/stack-picklists';
@@ -151,7 +151,7 @@ describe('the acceptance surface, on a real engine', () => {
 
   beforeEach(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_event_attendee: EVENT_ATTENDEE,
         crm_event: byName('crm_event'),
@@ -162,6 +162,7 @@ describe('the acceptance surface, on a real engine', () => {
       } as never,
     })) as never;
     registerStackPicklists(ql);
+    await ql.syncSchemas();
     api = ql.createContext({ isSystem: true });
 
     const event = await api.object('crm_event').insert({

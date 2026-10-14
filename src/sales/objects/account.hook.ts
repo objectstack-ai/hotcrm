@@ -12,8 +12,9 @@ import type { HookApi } from './_hook-api';
  *   rules filter on (#639).
  * - Folds `name` into the `name_normalized` column lead conversion matches
  *   accounts on (#626).
- * - Refuses to delete a `customer` account that still has open opportunities
- *   or activated contracts — contracts cascade with the account since #549.
+ * - Refuses to delete a `customer` account that still has opportunities —
+ *   open or closed, the account's sales history (#2019) — or activated
+ *   contracts — contracts cascade with the account since #549.
  */
 const accountHook: Hook = {
   name: 'account_protection',
@@ -21,7 +22,7 @@ const accountHook: Hook = {
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
   description:
-    'Validate account fields and protect customer accounts with open opportunities or activated contracts from deletion.',
+    'Validate account fields and protect customer accounts with opportunities or activated contracts from deletion.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -202,13 +203,23 @@ const accountHook: Hook = {
       if (!previous || previous.type !== 'customer') return;
       const api = ctx.api as HookApi | undefined;
       if (!api) return;
-      const openOpps = await api.object('crm_opportunity').count({
-        where: {
-          crm_account: previous.id,
-          stage: { $nin: ['closed_won', 'closed_lost'] },
-        },
+      // EVERY opportunity, closed ones included (#2019). A closed deal is the
+      // account's sales history — the won and lost amounts its rollups,
+      // forecasts and win rates are read from — and the app keeps it: the
+      // `crm_opportunity.crm_account` lookup is required and does not cascade,
+      // so the engine refuses the delete while ANY deal names the account, and
+      // `opportunity_lifecycle` freezes a closed deal against being moved to
+      // another account. This guard used to count open deals only and tell the
+      // user to "Close or reassign it first"; closing it was answered by the
+      // engine's own refusal all the same. So the count is the engine's, and
+      // the sentence names what frees the account for every deal it counts —
+      // deleting it (an open deal could also be moved; a closed one cannot) —
+      // and the way to retire a customer that keeps its history: the account
+      // goes inactive, as `product_catalog` retires a product with a history.
+      const opportunities = await api.object('crm_opportunity').count({
+        where: { crm_account: previous.id },
       });
-      if (openOpps > 0) {
+      if (opportunities > 0) {
         // Whole sentence per branch, not a stitched-together noun (#721). The
         // count switched the NOUN only (`opportunit{y,ies}`) while the verb and
         // the closing pronoun stayed plural, so the singular case read
@@ -217,9 +228,9 @@ const accountHook: Hook = {
         // pronoun — and the two readable sentences are cheaper to keep correct
         // (and to grep for) than three interlocking conditionals.
         throw refuse(
-          openOpps === 1
-            ? 'Cannot delete customer account: 1 open opportunity still references it. Close or reassign it first.'
-            : `Cannot delete customer account: ${openOpps} open opportunities still reference it. Close or reassign them first.`,
+          opportunities === 1
+            ? 'Cannot delete customer account: 1 opportunity, open or closed, still references it. Delete the opportunity first, or mark the account inactive to retire it instead.'
+            : `Cannot delete customer account: ${opportunities} opportunities, open or closed, still reference it. Delete the opportunities first, or mark the account inactive to retire it instead.`,
           'DELETE_RESTRICTED',
           409,
         );

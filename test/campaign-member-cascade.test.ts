@@ -2,8 +2,8 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import stack from './helpers/composed-stack';
 import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
@@ -86,17 +86,20 @@ describe('crm_campaign_member declares cascade on both party lookups', () => {
   });
 
   /**
-   * The CAMPAIGN side is deliberately NOT cascade, and is not changed by #696.
-   * `crm_campaign` is a REQUIRED lookup, and the engine escalates a `set_null`
-   * default on a required lookup to `restrict` — a campaign with members
-   * refuses to delete, with a message that names the real obstacle. That is the
-   * correct answer there (a campaign's member list is its historical record,
-   * not a per-person artefact), and it is pinned so a copy-paste of the two
-   * lines above cannot silently start shredding campaign history.
+   * The CAMPAIGN side is deliberately NOT cascade, and is not changed by #696:
+   * a campaign with members refuses to delete, with a message that names the
+   * real obstacle. That is the correct answer there (a campaign's member list
+   * is its historical record, not a per-person artefact), and it is pinned so a
+   * copy-paste of the two lines above cannot silently start shredding campaign
+   * history. `crm_campaign` is the object's master, a required `master_detail`
+   * since 18.0.0-next.1 (#2105), which would cascade on its default, so it
+   * declares `restrict`. Through 18.0.0-next.0 it was a required lookup whose
+   * `set_null` default the engine escalated to the same refusal.
    */
-  it('leaves the required campaign lookup on the default', () => {
+  it('keeps the required campaign master on restrict', () => {
+    expect(CAMPAIGN_MEMBER.fields.crm_campaign.type).toBe('master_detail');
     expect(CAMPAIGN_MEMBER.fields.crm_campaign.required).toBe(true);
-    expect(CAMPAIGN_MEMBER.fields.crm_campaign.deleteBehavior).toBe('set_null');
+    expect(CAMPAIGN_MEMBER.fields.crm_campaign.deleteBehavior).toBe('restrict');
   });
 });
 
@@ -108,12 +111,10 @@ describe('crm_campaign_member declares cascade on both party lookups', () => {
  * metadata-only assertion can show that a delete now succeeds, and no hook
  * harness runs the referential pass at all.
  *
- * `InMemoryDriver` is used for the same reason `object-validation-predicates`
- * uses it: it stores only the columns a row was written with, so the merged
- * record handed to the validator has ABSENT keys — the shape that made the rule
- * fire in the first place. A column-complete driver would still reproduce this
- * bug (the cleared column is `null`, not absent, and `isBlank(null)` is true),
- * but the sparse one exercises the harder shape.
+ * On a real SQLite database, column-complete: the cleared column is `null`,
+ * and `isBlank(null)` is true, so this reproduces the bug as it was found on
+ * `driver-memory` (whose merged record had the key ABSENT). The absent-key
+ * shape itself is swept per predicate in `object-validation-predicates`.
  */
 describe('deleting an enrolled person', () => {
   let ql: AnyRec;
@@ -121,7 +122,7 @@ describe('deleting an enrolled person', () => {
 
   beforeEach(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_campaign_member: CAMPAIGN_MEMBER,
         crm_campaign: byName('crm_campaign'),
@@ -131,6 +132,7 @@ describe('deleting an enrolled person', () => {
       } as never,
     })) as never;
     registerStackPicklists(ql);
+    await ql.syncSchemas();
     api = ql.createContext({ isSystem: true });
   });
   afterEach(async () => {

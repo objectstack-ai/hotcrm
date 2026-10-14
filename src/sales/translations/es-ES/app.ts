@@ -14,7 +14,7 @@ import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/es-ES.ts`.
+ * `src/sales/translations/es-ES.ts`.
  *
  * A namespace `TranslationData` gains later lands here too, and the room is
  * measured: this file is the smaller half of the bundle, and the schema bounds
@@ -594,10 +594,18 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `screens.<node>.title` and `screens.<node>.fields.<field>.{label,placeholder}`
   // — the keys `os lint`'s `i18n/missing-flow` names, read by the console's
   // flow runner since @objectstack 17.7.0 (the spec's `flows` liveness row is
-  // `live` there). A screen with no authored `title` shows its flow's label in
-  // every locale, so each `screen_1.title` repeats the flow label. Select
-  // option labels and screen descriptions are not translatable keys on a
-  // screen (`FLOW_SCREEN_FIELD_NO_OPTIONS`), so they stay as authored.
+  // `live` there). A screen with no authored `title` is headed by its node
+  // `label` (the executor's `config.title ?? node.label`, measured on
+  // 18.0.0-next.0), so each `screens.<node>.title` translates that node label,
+  // never the flow label: the dialog shows the flow label as its eyebrow above
+  // the title, and the two differ on `lead_conversion`, `quote_generation` and
+  // `campaign_enrollment` (#2096). Since
+  // 18.0.0-next.0 three more surfaces are keys the engine reads in the run's
+  // locale, and `i18n/missing-flow` names each missing one: a select field's
+  // `options.<value>` (worded as the object field's own option in this pack),
+  // an authored screen `description`, and a refusing `end` node's
+  // `refusals.<node>.message`. A translated description or message is a text
+  // slot like the one it translates, so a hole in it is `{{ }}`.
   // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
   // retyped: the number lives in `_thresholds.ts` alone (#1711).
   flows: {
@@ -605,11 +613,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Inscribir miembros en la campaña',
       screens: {
         screen_1: {
-          title: 'Inscribir miembros en la campaña',
+          title: 'Criterios de Inscripción',
           fields: {
-            memberSource: { label: 'Tipo de miembro a inscribir' },
-            leadStatus: { label: 'Inscribir prospectos con estado' },
-            contactDepartment: { label: 'Inscribir contactos del departamento' },
+            memberSource: { label: 'Tipo de miembro a inscribir', options: { leads: 'Prospectos', contacts: 'Contactos' } },
+            leadStatus: { label: 'Inscribir prospectos con estado', options: { new: 'Nuevo', contacted: 'Contactado', qualified: 'Calificado' } },
+            contactDepartment: {
+              label: 'Inscribir contactos del departamento',
+              options: { executive: 'Ejecutivo', sales: 'Ventas', marketing: 'Marketing', engineering: 'Ingeniería', support: 'Soporte', finance: 'Finanzas', hr: 'Recursos Humanos', operations: 'Operaciones' },
+            },
           },
         },
       },
@@ -632,13 +643,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     claim_case: {
       label: 'Tomar Caso',
-      screens: { screen_1: { title: 'Tomar Caso', fields: { claimStatus: { label: 'Estado de trabajo' } } } },
+      screens: {
+        screen_1: {
+          title: 'Tomar Caso',
+          fields: {
+            claimStatus: {
+              label: 'Estado de trabajo',
+              options: { in_progress: 'En Curso', waiting_customer: 'Esperando al Cliente', waiting_support: 'Esperando a Soporte' },
+            },
+          },
+        },
+      },
     },
     lead_conversion: {
       label: 'Proceso de conversión de prospecto',
       screens: {
         screen_1: {
-          title: 'Proceso de conversión de prospecto',
+          title: 'Detalles de la Conversión',
+          // The duplicate warning's text is a variable the flow assigns; this
+          // key can only carry the hole that shows it.
+          description: '{{duplicateWarning}}',
           fields: {
             createOpportunity: { label: '¿Crear oportunidad?' },
             opportunityName: { label: 'Nombre de Oportunidad' },
@@ -646,8 +670,21 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: 'Fecha de Cierre' },
           },
         },
-        refuse_confirmed_duplicate: { title: 'Conversión rechazada' },
-        refuse_unapproved: { title: 'Conversión rechazada' },
+        refuse_confirmed_duplicate: {
+          title: 'Conversión rechazada',
+          description:
+            'El Estado del Duplicado de este prospecto es Confirmado: un revisor lo comparó con un registro existente y registró que lo repite. Convertirlo crearía una segunda cuenta, contacto y oportunidad para el mismo comprador. La sección Gestión de Duplicados de este prospecto indica el registro que se conserva; descalifique este prospecto como duplicado. Solo un revisor que cambie ese veredicto vuelve a habilitar la conversión.',
+        },
+        refuse_unapproved: {
+          title: 'Conversión rechazada',
+          description:
+            'Este prospecto no ha sido aprobado para la conversión. Un aprobador debe darle el visto bueno antes de que pueda convertirse en una cuenta, un contacto y una oportunidad; el campo Aprobación de Conversión del prospecto muestra si la decisión sigue pendiente o fue rechazada. Mientras tanto, siga trabajando el prospecto: nada de él queda bloqueado.',
+        },
+        refuse_no_match_key: {
+          title: 'Conversión rechazada',
+          description:
+            'La empresa de este prospecto no tiene clave de coincidencia, así que la conversión no puede saber a qué cuenta pertenece y no lo va a adivinar: una suposición podría archivar el contacto y la oportunidad bajo otro cliente. Guardar la Empresa del prospecto reconstruye la clave, así que guárdela de nuevo y luego conviértalo. No se ha creado nada.',
+        },
       },
     },
     schedule_followup: {
@@ -658,8 +695,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           fields: {
             subject: { label: '¿Cuál es el siguiente paso?' },
             dueDate: { label: 'Fecha Límite' },
-            activityType: { label: 'Tipo de Actividad' },
-            priority: { label: 'Prioridad' },
+            activityType: {
+              label: 'Tipo de Actividad',
+              options: { call: 'Llamada', email: 'Email', meeting: 'Reunión', follow_up: 'Seguimiento', demo: 'Demostración', other: 'Otro' },
+            },
+            priority: { label: 'Prioridad', options: { low: 'Baja', normal: 'Normal', high: 'Alta', urgent: 'Urgente' } },
             notes: { label: 'Notas' },
           },
         },
@@ -667,9 +707,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     quote_generation: {
       label: 'Generar cotización desde la oportunidad',
+      refusals: { refuse_held: { message: 'Primero va la aprobación de calificación: marque Solicitar Aprobación de Calificación. No se creó nada.' } },
       screens: {
         screen_1: {
-          title: 'Generar cotización desde la oportunidad',
+          title: 'Detalles de la Cotización',
           fields: {
             quoteName: { label: 'Nombre de Cotización' },
             expirationDays: { label: 'Válida por (días)' },

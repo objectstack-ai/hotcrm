@@ -14,6 +14,7 @@ export const AccountViews = defineView({
     type: 'grid',
     name: 'all_accounts',
     label: 'All Accounts',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_account' },
     columns: [
       { field: 'name', width: 240, sortable: true, link: true, pinned: 'left' },
@@ -24,7 +25,11 @@ export const AccountViews = defineView({
       { field: 'health_score', width: 140 },
     ],
     sort: [{ field: 'annual_revenue', order: 'desc' }],
-    rowColor: { field: 'is_active', colors: { true: 'green', false: 'slate' } },
+    // Only the exception row is tinted: an inactive account greys out, an
+    // active one stays plain. Measured on 18.0.0-next.1 it paints nothing: the
+    // console fetches only the columns and `is_active` is not one. That is a
+    // platform gap, reported upstream from #2107; ⛔ no column added to dodge it.
+    rowColor: { field: 'is_active', colors: { false: 'slate' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },
     exportOptions: { formats: ['csv', 'xlsx'] },
@@ -138,6 +143,7 @@ export const AccountViews = defineView({
       name: 'enterprise_accounts',
       type: 'grid',
       label: 'Enterprise Accounts',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner_id'],
       filter: [{ field: 'annual_revenue', operator: 'greater_than_or_equal', value: 10000000 }],
@@ -173,6 +179,7 @@ export const AccountViews = defineView({
       name: 'my_accounts',
       type: 'grid',
       label: 'My Accounts',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'annual_revenue', 'phone', 'last_activity_date'],
       filter: [{ field: 'owner_id', operator: 'equals', value: '{current_user_id}' }],
@@ -190,6 +197,7 @@ export const AccountViews = defineView({
       name: 'at_risk_accounts',
       type: 'grid',
       label: '⚠️ At-Risk Accounts',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'tier', 'health_score', 'segment', 'last_activity_date'],
       filter: [

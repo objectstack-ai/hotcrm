@@ -2,10 +2,10 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import { resolveSeedRecord } from '@objectstack/formula';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CrmSeedData } from '../objectstack.composition';
 
 /**
@@ -407,9 +407,14 @@ const accountIsActiveDefault = (): boolean => {
   return field!.defaultValue === true;
 };
 
-const makeEngine = () =>
-  ObjectQL.create({
-    datasources: { default: new InMemoryDriver({ persistence: false }) },
+/**
+ * A real SQLite database. `ObjectQL.create` connects the datasource but emits
+ * no DDL, so the engine's own `syncSchemas()` creates the tables the way the
+ * runtime's boot does.
+ */
+const makeEngine = async () => {
+  const ql = await ObjectQL.create({
+    datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
     objects: {
       // Only the columns the four datasets read. The object suite owns the full
       // schemas; the contract under test here is "which rows do the widget
@@ -460,6 +465,9 @@ const makeEngine = () =>
       },
     } as never,
   });
+  await ql.syncSchemas();
+  return ql;
+};
 
 describe('every Sales Activity widget returns a number over the shipped seeds (#671)', () => {
   let ql: Awaited<ReturnType<typeof makeEngine>>;

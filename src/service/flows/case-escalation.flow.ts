@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -81,7 +81,7 @@ export const CaseEscalationFlow: Flow = {
     },
     {
       id: 'get_case', type: 'get_record', label: 'Get Case Record',
-      config: { objectName: 'crm_case', filter: { id: '{record.id}' }, outputVariable: 'caseRecord' },
+      config: { objectName: 'crm_case', filter: { id: cel`record.id` }, outputVariable: 'caseRecord' },
     },
     {
       // The `label` names what this node actually does: it flags the case as
@@ -92,7 +92,7 @@ export const CaseEscalationFlow: Flow = {
       // fix.
       id: 'assign_senior_agent', type: 'update_record', label: 'Flag as Escalated',
       config: {
-        objectName: 'crm_case', filter: { id: '{record.id}' },
+        objectName: 'crm_case', filter: { id: cel`record.id` },
         // `escalation_reason` must be set whenever `is_escalated` flips true — the
         // object's `escalation_reason_required` validation rejects the write
         // otherwise (which silently aborted this flow until it was supplied).
@@ -103,12 +103,12 @@ export const CaseEscalationFlow: Flow = {
         // and would orphan the case under a phantom owner. The hand-off does not
         // need to happen here: this very update fires the
         // `case_escalation_reassign` beforeUpdate hook
-        // (`src/objects/_case-assignment.ts`), which puts the case with the
+        // (`src/service/objects/_case-assignment.ts`), which puts the case with the
         // least-loaded holder of the flat `service_manager` position — a pool,
         // which the app can resolve, rather than a manager chain, which it
         // cannot. With that pool unstaffed the case keeps its owner and this
         // write is unchanged.
-        fields: { is_escalated: true, escalation_reason: 'Auto-escalated: critical priority', escalated_date: '{NOW()}', status: 'escalated' },
+        fields: { is_escalated: true, escalation_reason: 'Auto-escalated: critical priority', escalated_date: cel`isoDatetime(now())`, status: 'escalated' },
       },
     },
     // No `create_task` node here: the escalation write above flips `status` to
@@ -120,8 +120,8 @@ export const CaseEscalationFlow: Flow = {
       // Gateway only — the live predicate is on the out-edge `e4`. The engine
       // never reads a `decision` node's singular `config.condition`, so a copy
       // here would restate the gate without BEING the gate
-      // (`flow-inert-node-condition`); `test/flow-decision-authority.test.ts`
-      // enforces that.
+      // (`flow-inert-node-condition`); `pnpm lint` — `os lint --strict` —
+      // fails on that.
       //
       // Why the gate exists: `crm_case.owner_id` is NULLABLE and an unowned case
       // is an ordinary state — this repo ships `scripts/backfill-owner-id.ts`
@@ -176,7 +176,7 @@ export const CaseEscalationFlow: Flow = {
         // `{caseRecord.owner_id.manager}` and `{caseRecord.crm_account.name}`
         // both interpolate to the literal string "undefined" — a phantom
         // recipient and a garbled body.
-        recipients: ['{caseRecord.owner_id}'],
+        recipients: [cel`caseRecord.owner_id`],
         channels: ['inbox', 'email'],
         severity: 'critical',
         topic: 'case_escalated',
@@ -188,8 +188,8 @@ export const CaseEscalationFlow: Flow = {
         // So it states the rule and points at the record for the answer, in
         // every language.
         template: 'crm.case_escalated',
-        templateData: { case_number: '{caseRecord.case_number}', priority: '{caseRecord.priority}' },
-        actionUrl: '/crm_case/{record.id}',
+        templateData: { case_number: cel`caseRecord.case_number`, priority: cel`caseRecord.priority` },
+        actionUrl: '/crm_case/{{record.id}}',
       },
     },
     { id: 'end', type: 'end', label: 'End' },

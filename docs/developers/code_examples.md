@@ -2,7 +2,7 @@
 
 > Examples that match the current single-app HotCRM repository.
 
-HotCRM metadata is registered from `src/` through [`objectstack.config.ts`](../../objectstack.config.ts). File names use the ObjectStack suffix convention: `.object.ts`, `.hook.ts`, `.actions.ts`, `.flow.ts`, `.skill.ts`, `.view.ts`, `.page.ts`, `.dashboard.ts`, and `.report.ts`.
+HotCRM metadata is registered from `src/` by two package stacks — the app package's, built in [`objectstack.composition.ts`](../../objectstack.composition.ts) from the sales, revenue and marketing barrels, and the service module's, [`src/service/index.ts`](../../src/service/index.ts) — which [`objectstack.config.ts`](../../objectstack.config.ts) composes into one artifact. File names use the ObjectStack suffix convention: `.object.ts`, `.hook.ts`, `.actions.ts`, `.flow.ts`, `.skill.ts`, `.view.ts`, `.page.ts`, `.dashboard.ts`, and `.report.ts`.
 
 ## Define An Object
 
@@ -86,7 +86,7 @@ const warrantyHook: Hook = {
 export default warrantyHook;
 ```
 
-Register it by re-exporting it from its package's `objects/hooks.ts` and adding it to the `allHooks` list in `objectstack.composition.ts`. `objectstack.config.ts` already passes `allHooks` into `defineStack()`.
+Register it by re-exporting it from its package's `objects/hooks.ts` and adding it to that package's hook list: `appHooks` in `objectstack.composition.ts` for sales, revenue and marketing, `serviceHooks` in `src/service/index.ts` for the service module. Each list is what its package's `defineStack({ hooks })` receives.
 
 ## Add An Action
 
@@ -153,7 +153,7 @@ export const AddLeadsToCampaignAction: Action = {
 };
 ```
 
-Export actions from `src/*/actions/index.ts` so `objectstack.config.ts` can register them.
+Export actions from `src/*/actions/index.ts` so the owning package's stack registers them — `objectstack.composition.ts` merges the app package's action barrels, and `src/service/index.ts` names the service module's.
 
 ### Bulk actions: how a multi-row selection reaches the body
 
@@ -209,7 +209,7 @@ Two more rules the shipped code depends on:
 The live reference implementation is `mass_update_stage` —
 `src/sales/actions/opportunity.actions.ts` (the body) plus the `bulkActionDefs` entry
 in `src/sales/views/opportunity.view.ts` (the declaration), pinned end to end in
-`test/bulk-action-dispatch.test.ts` and `test/action-sandbox.test.ts`. Read
+`test/bulk-action-dispatch.test.ts` and `test/script-bodies.test.ts`. Read
 those two files together: a body reading `_selectedIds` with no aggregate def in
 the view is just as dead as the misspelling, because nothing injects the key.
 
@@ -264,7 +264,7 @@ export const WarrantyExpirationFlow: Flow = {
 };
 ```
 
-Export flows from `src/*/flows/index.ts`. Record-change flows require the `triggers` capability, which is already declared in `objectstack.config.ts`.
+Export flows from `src/*/flows/index.ts`. Record-change flows require the `triggers` capability, which every package carrying such flows declares in its own `requires` (`src/sales/index.ts`, `src/service/index.ts`) — `defineStack` checks it per package.
 
 ## Add An AI Skill
 
@@ -298,8 +298,7 @@ sources resolve, and only two:
   guess at. The ones a CRM skill wants are `describe_object`, `list_objects`,
   `query_records`, `query_data`, `get_record`, `aggregate_data`,
   `search_knowledge` and `visualize_data`. From 17.0 the authoritative set is
-  exported as `PLATFORM_PROVIDED_TOOL_NAMES` from `@objectstack/spec/system`;
-  before 17.0 it is transcribed into `test/skills-integrity.test.ts`. Note
+  exported as `PLATFORM_PROVIDED_TOOL_NAMES` from `@objectstack/spec/system`. Note
   `search_knowledge` retrieves over a *declared knowledge source*, and there is
   currently nowhere in a skills-only app to declare one.
 - **`action_<name>`** — materialised from an Action that opts in with
@@ -309,8 +308,10 @@ sources resolve, and only two:
 Authoring a `defineTool` record does **not** create a third source: `ToolSchema`
 is a read-only projection for Studio discovery with no `implementation` field
 and no executor. Reasoning — scoring, drafting, forecasting — belongs in
-`instructions`, not in a tool (ADR-0109). `test/skills-integrity.test.ts`
-enforces all of this at PR time.
+`instructions`, not in a tool (ADR-0109). At PR time `pnpm lint` resolves every
+tool name (`ai-skill-tool-unresolved`), and `test/skills-integrity.test.ts`
+refuses `stack.tools` records and checks that a referenced Action is AI-exposed
+with a headless path.
 
 Note there is no `permissions` key on a skill — `SkillSchema` has no such field,
 so one is silently stripped ([#511](https://github.com/objectstack-ai/hotcrm/pull/511)).

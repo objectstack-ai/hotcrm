@@ -18,7 +18,7 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
  *  - A `type: 'script'` action body runs in the QuickJS sandbox, whose
  *    execution context carries no caller identity. An UPDATE it issues against
  *    an object with sharing rules is refused by the sharing middleware even for
- *    the record's owner — the measurement `src/flows/case-actions.flow.ts`
+ *    the record's owner — the measurement `src/service/flows/case-actions.flow.ts`
  *    records, and the reason both case actions are screen flows. INSERTS are
  *    unaffected, which is the seam this object takes.
  *  - `crm_knowledge_article` is `public_read`: read-open, WRITE-OWNED. So the
@@ -129,8 +129,13 @@ export const ArticleFeedback = ObjectSchema.create({
      * enrolled person became permanently undeletable. A required lookup that
      * defaults to `set_null` is that bug waiting to happen, so the behaviour is
      * spelled out here rather than inherited.
+     *
+     * It is the master of this `controlled_by_parent` object: its ONE required
+     * `master_detail` (ADR-0055 §1). It was a required lookup through
+     * 18.0.0-next.0, which @objectstack/spec 18.0.0-next.1 refuses at parse
+     * (#2105); `cascade` was already declared, so deletes behave as before.
      */
-    crm_knowledge_article: Field.lookup('crm_knowledge_article', {
+    crm_knowledge_article: Field.masterDetail('crm_knowledge_article', {
       label: 'Article',
       required: true,
       storage: { notNull: true },

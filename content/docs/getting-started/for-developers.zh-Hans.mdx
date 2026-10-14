@@ -26,7 +26,7 @@ pnpm dev
 
 ## 仓库结构
 
-HotCRM 由**四个包**构建出**一个** ObjectStack 制品（ADR-0130）：`src/` 下的一个目录就是一个包。`objectstack.config.ts` 是唯一的 `defineStack()`，`objectstack.composition.ts` 负责把四个包的 barrel 汇总给它。一个文件只能从自己的目录或 `src/sales/` 导入，模块之间不得横向导入。
+HotCRM 构建出**一个** ObjectStack 制品，里面装着**两个包**（ADR-0130）：`src/sales/` 里的 `type: app` 包 `app.objectstack.hotcrm`，以及 `src/service/` 里的服务模块 `app.objectstack.hotcrm.service`。两者各有一个 `index.ts`，各自调用 `defineStack()`；`objectstack.composition.ts` 构建这两个包，`objectstack.config.ts` 把它们组合成制品。`src/` 下的一个目录就是布局上的一个包：`src/revenue/` 和 `src/marketing/` 在各自单独打包之前，仍由 app 包注册。一个文件只能从自己的目录或 `src/sales/` 导入，模块之间不得横向导入。
 
 ```text
 hotcrm/
@@ -34,9 +34,9 @@ hotcrm/
 ├── objectstack.composition.ts
 ├── src/
 │   ├── sales/          # `type: app` 包 —— account、contact、lead、opportunity、forecast、task、event
-│   ├── service/        # 模块 —— case、knowledge_article、article_feedback
-│   ├── revenue/        # 模块 —— product、opportunity_line_item、quote、quote_line_item、contract
-│   ├── marketing/      # 模块 —— campaign、campaign_member
+│   ├── service/        # 服务模块 —— case、knowledge_article、article_feedback
+│   ├── revenue/        # 目前由 app 包注册 —— product、opportunity_line_item、quote、quote_line_item、contract
+│   ├── marketing/      # 目前由 app 包注册 —— campaign、campaign_member
 │   └── docs/           # 随构建产物一起分发的应用文档
 ├── apps/docs/          # Fumadocs 应用
 └── content/docs/       # 文档内容

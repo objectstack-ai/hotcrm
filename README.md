@@ -5,10 +5,10 @@
 # HotCRM
 
 > **The reference app for AI-written enterprise software.** A complete CRM —
-> 18 objects, 32 flows, 5 dashboards, 6 AI skills, 4 languages — built as four
+> 18 objects, 33 flows, 5 dashboards, 6 AI skills, 4 languages — built as four
 > packages (sales, service, revenue, marketing) that compile to one artifact.
 > The **sales package**, the one a customer installs, carries its whole
-> business semantics (objects, flows, actions, hooks) in **~54k tokens**
+> business semantics (objects, flows, actions, hooks) in **~57k tokens**
 > of typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata,
 > and its whole interaction layer (views, pages, dashboards, app shell) in
 > another **~29k**. An agent holds every business rule of a real enterprise CRM
@@ -27,8 +27,8 @@
 > logic.</sub>
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](objectstack.config.ts)
-[![Version](https://img.shields.io/badge/version-3.1.0-brightgreen)](CHANGELOG.md)
+[![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](src/sales/index.ts)
+[![Version](https://img.shields.io/badge/version-4.0.1-brightgreen)](CHANGELOG.md)
 [![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.app-orange)](https://cloud.objectos.app)
 
 HotCRM is a complete, opinionated CRM built as the **first official application** on the [ObjectStack](https://cloud.objectos.app) marketplace. Install it into any ObjectStack environment in one click and get a working CRM in 30 seconds — or fork it as the canonical example of how to build your own marketplace app.
@@ -69,7 +69,7 @@ HotCRM is a complete, opinionated CRM built as the **first official application*
 | `crm_event` | | | |
 | `crm_event_attendee` | | | |
 
-Plus **6 AI skills** (a skills-only surface — HotCRM defines no agents of its own; the skills attach to the platform `ask` assistant), **5 dashboards**, **32 flows**, **31 actions**, **9 datasets**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **12 positions**, and **9 sharing rules**.
+Plus **6 AI skills** (a skills-only surface — HotCRM defines no agents of its own; the skills attach to the platform `ask` assistant), **5 dashboards**, **33 flows**, **31 actions**, **9 datasets**, **4 language bundles** (en, zh-CN, es-ES, ja-JP), **6 permission profiles**, **12 positions**, and **9 sharing rules**.
 
 > **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
 
@@ -134,13 +134,13 @@ See [docs: Publishing your first marketplace app](content/docs/marketplace/publi
 
 ```
 hotcrm/
-├── objectstack.config.ts         # manifest + defineStack() — single source of truth
-├── objectstack.composition.ts    # the four packages collected into the arrays defineStack() takes
+├── objectstack.config.ts         # composeStacks() — one artifact carrying the two package stacks
+├── objectstack.composition.ts    # the directories' barrels collected into those two stacks
 ├── src/
 │   ├── sales/                    # the `type: app` package — customers, pipeline, activities
-│   ├── service/                  # module — cases and the knowledge base
-│   ├── revenue/                  # module — products, quotes, line items, contracts
-│   ├── marketing/                # module — campaigns and campaign members
+│   ├── service/                  # the service module — cases and the knowledge base
+│   ├── revenue/                  # registered by the app package for now — products, quotes, line items, contracts
+│   ├── marketing/                # registered by the app package for now — campaigns and campaign members
 │   └── docs/                     # package docs, shipped inside the built artifact
 ├── apps/docs/                    # Fumadocs site — standalone, own lockfile (not a pnpm workspace member)
 └── content/docs/                 # Documentation content

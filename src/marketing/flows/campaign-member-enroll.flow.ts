@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -65,7 +66,7 @@ type Flow = Automation.Flow;
 const MEMBERSHIP_FIELDS = {
   status: 'sent',
   // The readonly stamp this elevation exists for.
-  added_date: '{NOW()}',
+  added_date: cel`isoDatetime(now())`,
 } as const;
 
 export const CampaignLeadMemberEnrollFlow: Flow = {
@@ -98,7 +99,7 @@ export const CampaignLeadMemberEnrollFlow: Flow = {
         // ⛔ Do not add fields here. Every column in this node is written with
         // the elevated context; anything a marketer may legitimately type
         // belongs in `campaign_enrollment` instead.
-        fields: { crm_campaign: '{campaignId}', crm_lead: '{leadId}', ...MEMBERSHIP_FIELDS },
+        fields: { crm_campaign: cel`campaignId`, crm_lead: cel`leadId`, ...MEMBERSHIP_FIELDS },
       },
     },
     { id: 'end', type: 'end', label: 'End' },
@@ -131,7 +132,7 @@ export const CampaignContactMemberEnrollFlow: Flow = {
       id: 'create_contact_member', type: 'create_record', label: 'Add Contact to Campaign',
       config: {
         objectName: 'crm_campaign_member',
-        fields: { crm_campaign: '{campaignId}', crm_contact: '{contactId}', ...MEMBERSHIP_FIELDS },
+        fields: { crm_campaign: cel`campaignId`, crm_contact: cel`contactId`, ...MEMBERSHIP_FIELDS },
       },
     },
     { id: 'end', type: 'end', label: 'End' },

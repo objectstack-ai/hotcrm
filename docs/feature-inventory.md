@@ -114,9 +114,9 @@
 | QUO-002 | 报价状态机 | `draft → in_review → presented → accepted/rejected/expired`;accepted/expired 终态,rejected 可回 draft 重报 | `src/revenue/objects/quote.object.ts`(validations) |
 | QUO-003 | 报价默认与冻结 | 未给失效日时默认 `quote_date + 30 天`;accepted/expired 后除内部备注外禁改 | `src/revenue/objects/quote.hook.ts`(`quote_workflow`) |
 | QUO-004 | 从商机生成报价 | 屏幕流收集名称/有效期/折扣,按商机金额播种报价定价,并把早期阶段商机推进到 proposal | `src/revenue/flows/quote-generation.flow.ts` + `src/sales/actions/opportunity.actions.ts`(`generate_quote`) |
-| QUO-005 | 接受报价→起草合同 | status 变 accepted 时自动创建 draft 合同(12 个日历月,合同额=报价总价);无联系人时给出具名报错 | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
-| QUO-006 | 接受报价→商机赢单 | 同一 hook 的独立第二条腿:关联商机置 closed_won、补关闭日与 `win_reason='quote_accepted'` | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
-| QUO-007 | 报价行项目与总额汇总 | 明细对象(`crm_quote_line_item`,受父控、删报价级联,行级税率公式):重算 subtotal/discount_amount/total_price 回写报价,已结报价跳过 | `src/revenue/objects/quote_line_item.object.ts` + `.hook.ts` |
+| QUO-005 | 接受报价→起草合同 | status 变 accepted 时自动创建 draft 合同(12 个日历月,合同额=报价总价);无联系人时给出具名报错;以系统身份起草,销售代表的接受也能拿到合同 | `src/revenue/objects/quote.hook.ts`(`quote_accepted_contract_draft`) |
+| QUO-006 | 接受报价→商机赢单 | 与起草合同相互独立的另一个 hook,以接受者本人身份:关联商机置 closed_won、补关闭日与 `win_reason='quote_accepted'`;商机被审批锁住时接受本身即被拒绝(`quote_workflow`) | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
+| QUO-007 | 报价行项目与总额汇总 | 明细对象(`crm_quote_line_item`,受父控、删报价级联,行合计 = 扣除本行折扣后的金额,行项目不单独计税):重算 subtotal/discount_amount/total_price 回写报价,已结报价跳过 | `src/revenue/objects/quote_line_item.object.ts` + `.hook.ts` |
 | QUO-008 | 报价自动过期 | 每日 01:00 把过了 `expiration_date` 的未结报价置 expired | `src/revenue/flows/quote-expiration.flow.ts` |
 | QUO-009 | 报价视图 | 状态看板(按 total_price 汇总)、报价日→失效日日历、总额汇总列表 | `src/revenue/views/quote.view.ts` |
 | QUO-010 | 产品目录对象 | `crm_product`:PRD-{0000} 编号、SKU 租户唯一、类别/产品族、定价(目录价/成本)、图片与 PDF datasheet,全组织可读 | `src/revenue/objects/product.object.ts` |
@@ -148,7 +148,7 @@
 | SVC-006 | 关闭指标 | 关闭时打 `closed_date` 并计算 `resolution_time_hours`;`is_closed` 由状态派生 | `src/service/objects/case.hook.ts` |
 | SVC-007 | Critical 即时升级 | record 流(update+create 孪生):critical 工单自动标升级、置 escalated、通知 owner(critical 级);只标记不改派 | `src/service/flows/case-escalation.flow.ts` |
 | SVC-008 | SLA 每小时违约扫描 | 过期未结工单标 `is_sla_violated`、升级并通知 owner(topic `case_sla_breach`) | `src/service/flows/case-sla-monitor.flow.ts` |
-| SVC-009 | 升级派发跟进任务 | 升级时的唯一任务产出点:给客户负责人创建次日到期的 urgent 跟进任务;解决时更新客户活动时钟 | `src/service/objects/case.hook.ts`(`case_status_side_effects`) |
+| SVC-009 | 升级派发跟进任务 | 升级时的唯一任务产出点:给客户负责人创建次日到期的 urgent 跟进任务;解决时更新客户活动时钟(独立 hook,以 system 身份写入) | `src/service/objects/case.hook.ts`(`case_status_side_effects`、`case_resolution_account_activity`) |
 | SVC-010 | 手动升级/关闭工单 | 两个屏幕流动作:升级必填原因并置 critical;关闭必填解决方案(系统身份写只读生命周期字段) | `src/service/flows/case-actions.flow.ts` + `src/service/actions/case.actions.ts` |
 | SVC-011 | CSAT 关单回访 | **已移除 (#1428)**:曾在工单关闭 1 天后通知 owner 联系客户记录满意度评分。它唯一喂养的 `crm_case.customer_rating` / `customer_feedback` 从来没有任何输入面,两个字段与本流程一并按 ADR-0049 enforce-or-remove 退役 | 已删除 |
 | SVC-012 | 首次响应打戳 | 工单上出现任何一条 held 互动事件时,自动补 `first_response_date`(SLA 首次响应指标) | `src/sales/objects/event.hook.ts`(`event_activity_bubble`) |
@@ -247,7 +247,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Sales/My Work/Activity/Marketing/Service/Insights/Approvals),royal blue 品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
+| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Sales/My Work/Activity/Marketing/Service/Insights/Approvals),橙色品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
 | ADM-002 | Sales Home 页 | 三栏首页(sales_rep/manager 默认):4 个实时 KPI、我的线索/交易/任务三个嵌入列表 tab、快速新建、AI 助手引导卡、今日日程 | `src/sales/pages/home.page.ts` |
 | ADM-003 | 启动器与工具条 | App Launcher(应用网格+全局搜索)与 Utility Bar(通知面板、快速笔记、快速搜索),四个 profile 全覆盖 | `src/sales/pages/app_launcher.page.ts`、`src/sales/pages/utility_bar.page.ts` |
 | ADM-004 | 数据导入 | 3 个可复用导入映射(客户/联系人/线索,CSV/XLSX upsert)+ 行业与线索来源同义词表 + 现成模板 | `src/sales/mappings/` + `assets/import-templates/` |
@@ -261,7 +261,7 @@
 | ADM-012 | AI Live Data 技能 | 每次先读取当前活 schema 再查询——管理员新加字段后 AI 立即可用(平台 `ask` 助手挂载,skills-only 架构) | `src/sales/skills/live-data.skill.ts` |
 | ADM-013 | 应用内规则手册 | 4 篇随包文档:总览/销售规则(路由、审批阈值、停滞窗口)/服务规则(SLA、升级)/管理手册(岗位、共享、12 个自动化旋钮) | `src/docs/` |
 | ADM-014 | 字段历史跟踪 | 各对象关键字段 `trackHistory`(owner、状态/阶段/优先级、金额/营收等)驱动记录页 History 审计流 | `src/*/objects/*.object.ts` |
-| ADM-015 | 平台能力声明 | `requires: automation/triggers/analytics/auth/ui/approvals/sharing`;`ai` 刻意不列(开源版无 AI service,技能仍编入产物在云端运行) | `objectstack.config.ts` |
+| ADM-015 | 平台能力声明 | `requires: automation/triggers/analytics/auth/ui/approvals/sharing`;`ai` 刻意不列(开源版无 AI service,技能仍编入产物在云端运行);每个包各自声明 | `src/sales/index.ts`、`src/service/index.ts` |
 
 ---
 

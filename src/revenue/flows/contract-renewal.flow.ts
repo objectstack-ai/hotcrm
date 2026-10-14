@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from '../../sales/flows/_guarded-iteration';
 type Flow = Automation.Flow;
@@ -44,7 +44,7 @@ export const ContractRenewalFlow: Flow = {
       id: 'query_contracts', type: 'get_record', label: 'Find Expiring Contracts',
       config: {
         objectName: 'crm_contract',
-        filter: { status: 'activated', end_date: { $gte: '{TODAY()}', $lte: '{TODAY() + 120}' } },
+        filter: { status: 'activated', end_date: { $gte: cel`isoDate(today())`, $lte: cel`isoDate(daysFromNow(120))` } },
         limit: 500,
         outputVariable: 'contractList',
       },
@@ -52,7 +52,7 @@ export const ContractRenewalFlow: Flow = {
     {
       id: 'loop_contracts', type: 'loop', label: 'For Each Contract',
       config: {
-        collection: '{contractList}',
+        collection: cel`contractList`,
         iteratorVariable: 'currentContract',
         body: guarded('contract', {
           nodes: [
@@ -70,8 +70,8 @@ export const ContractRenewalFlow: Flow = {
               config: {
                 objectName: 'crm_task',
                 filter: {
-                  related_to_account: '{currentContract.crm_account}',
-                  subject: 'Renewal due: contract {currentContract.contract_number}',
+                  related_to_account: cel`currentContract.crm_account`,
+                  subject: cel`'Renewal due: contract ' + currentContract.contract_number`,
                   status: { $nin: ['completed'] },
                 },
                 outputVariable: 'existingRenewalTask',
@@ -86,10 +86,10 @@ export const ContractRenewalFlow: Flow = {
               config: {
                 objectName: 'crm_task',
                 fields: {
-                  subject: 'Renewal due: contract {currentContract.contract_number}',
+                  subject: cel`'Renewal due: contract ' + currentContract.contract_number`,
                   type: 'follow_up', priority: 'high', status: 'not_started',
-                  due_date: '{currentContract.end_date}',
-                  owner_id: '{currentContract.owner_id}',
+                  due_date: cel`currentContract.end_date`,
+                  owner_id: cel`has(currentContract.owner_id) ? currentContract.owner_id : null`,
                   // ORG PARTITION. A schedule trigger carries no
                   // organization, so the engine has nothing to fill this from
                   // and the row would be born `organization_id` NULL — outside
@@ -99,27 +99,34 @@ export const ContractRenewalFlow: Flow = {
                   // with the flow author: a renewal task belongs to the org of
                   // the contract that spawned it. Fill-only precedence means an
                   // author-set value wins over the engine (objectstack#6153).
-                  // The source MUST be a row that actually carries the column —
-                  // an absent key interpolates to `undefined` and lands as NULL,
-                  // which satisfies the publish guard while reproducing the bug.
-                  // `crm_contract` carries it; `sys_user` does not.
-                  organization_id: '{currentContract.organization_id}',
+                  // The source MUST be a row that actually carries the column.
+                  // On 17.x an absent key interpolated to `undefined` and landed
+                  // as NULL, which satisfied the publish guard while reproducing
+                  // the bug; the CEL read below fails the iteration instead, and
+                  // it is deliberately left UNGUARDED — a `has()` guard would
+                  // write that NULL back. `crm_contract` carries it; `sys_user`
+                  // does not.
+                  organization_id: cel`currentContract.organization_id`,
                   related_to_type: 'crm_account',
-                  related_to_account: '{currentContract.crm_account}',
+                  related_to_account: cel`currentContract.crm_account`,
                 },
               },
             },
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
               config: {
-                recipients: ['{currentContract.owner_id}'],
+                recipients: [cel`has(currentContract.owner_id) ? currentContract.owner_id : null`],
                 channels: ['inbox', 'email'],
                 topic: 'contract_renewal',
                 template: 'crm.contract_renewal',
                 templateData: {
-                  contract_number: '{currentContract.contract_number}', end_date: '{currentContract.end_date}',
+                  contract_number: cel`currentContract.contract_number`, end_date: cel`currentContract.end_date`,
                 },
-                actionUrl: '/crm_contract/{currentContract.id}',
+                actionUrl: '/crm_contract/{{currentContract.id}}',
+                // A schedule run has no organization: since 18.0.0-next.1 the
+                // notification takes its owner from this record (objectstack#23284).
+                sourceObject: 'crm_contract',
+                sourceId: cel`currentContract.id`,
               },
             },
             {
@@ -134,7 +141,7 @@ export const ContractRenewalFlow: Flow = {
               config: {
                 objectName: 'crm_opportunity',
                 filter: {
-                  crm_account: '{currentContract.crm_account}',
+                  crm_account: cel`currentContract.crm_account`,
                   type: 'existing_renewal',
                   stage: { $nin: ['closed_won', 'closed_lost'] },
                 },
@@ -150,16 +157,16 @@ export const ContractRenewalFlow: Flow = {
               config: {
                 objectName: 'crm_opportunity',
                 fields: {
-                  name: 'Renewal — {currentContract.contract_number}',
-                  crm_account: '{currentContract.crm_account}',
-                  amount: '{currentContract.contract_value}',
+                  name: cel`'Renewal — ' + currentContract.contract_number`,
+                  crm_account: cel`currentContract.crm_account`,
+                  amount: cel`currentContract.contract_value`,
                   stage: 'proposal',
                   type: 'existing_renewal',
-                  close_date: '{currentContract.end_date}',
-                  owner_id: '{currentContract.owner_id}',
+                  close_date: cel`currentContract.end_date`,
+                  owner_id: cel`has(currentContract.owner_id) ? currentContract.owner_id : null`,
                   // ORG PARTITION — see `create_renewal_task` above.
                   // The renewal deal belongs to the same org as the contract.
-                  organization_id: '{currentContract.organization_id}',
+                  organization_id: cel`currentContract.organization_id`,
                   next_step: 'Confirm renewal terms with customer',
                 },
               },

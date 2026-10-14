@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -9,6 +9,15 @@ type Flow = Automation.Flow;
  *
  * Fires on lead *insert*, sets a rating-based `next_followup_date` SLA, and
  * alerts the lead's OWNER — the accountable party — to follow up.
+ *
+ * A lead with NO owner gets its SLA stamp and no alert, and the run ends
+ * there successfully (#2060 item 6). Web-to-lead lands ownerless whenever
+ * `lead_auto_assign` stands down (an empty `sales_rep` pool, or a pool the
+ * writer cannot read), and so can a seed or integration write. There is
+ * nobody to alert: the business declares no recipient for ownerless intake
+ * (no queue, no position — `content/docs/administration/setup.mdx` §8), and
+ * `notify` REFUSES an audience that evaluates to nothing, so before the owner
+ * gates below the run FAILED at the notify node, after the stamp had landed.
  *
  * ⛔ Never address a CRM position (`sales_manager` and friends) as a recipient.
  * Positions are not a messaging audience: the messaging service resolves
@@ -22,7 +31,7 @@ type Flow = Automation.Flow;
  * so the record-change trigger provider binds it to the ObjectQL `afterInsert`
  * lifecycle hook. Firing on insert only means the SLA write does not re-trigger
  * the flow. The full record is seeded into the run, so fields are read via
- * `{record.*}` (no get_record round-trip needed).
+ * `record.*` (no get_record round-trip needed).
  */
 export const LeadAssignmentFlow: Flow = {
   name: 'lead_assignment',
@@ -62,7 +71,11 @@ export const LeadAssignmentFlow: Flow = {
     // ── Hot path: 1-day SLA, high-severity alert ───────────────────
     {
       id: 'sla_hot', type: 'update_record', label: 'Set 1-Day SLA',
-      config: { objectName: 'crm_lead', filter: { id: '{record.id}' }, fields: { next_followup_date: '{TODAY() + 1}' } },
+      config: { objectName: 'crm_lead', filter: { id: cel`record.id` }, fields: { next_followup_date: cel`isoDate(daysFromNow(1))` } },
+    },
+    {
+      // Gateway only — the predicate lives on its out-edges `e8` / `e9`.
+      id: 'owner_hot', type: 'decision', label: 'Has an Owner?',
     },
     {
       id: 'notify_hot', type: 'notify', label: 'Alert — Hot Lead',
@@ -71,39 +84,46 @@ export const LeadAssignmentFlow: Flow = {
         // 'sales_manager' is NOT a messaging audience — the messaging service
         // resolves user:/role:(sys_member)/team:/owner_of:, and a bare
         // 'sales_manager' was stored verbatim as sys_inbox_message.user_id,
-        // matching no real user, so these alerts reached nobody. owner is set
-        // on insert (defaultValue os.user.id) and is the accountable party.
-        recipients: ['{record.owner_id}'],
+        // matching no real user, so these alerts reached nobody. A write that
+        // carries a user is stamped with that user as owner, and
+        // `lead_auto_assign` fills an ownerless one from the rep pool when it
+        // can; a lead still ownerless never reaches this node (`owner_hot`).
+        recipients: [cel`record.owner_id`],
         channels: ['inbox', 'email'],
         severity: 'warning',
         topic: 'lead_routing',
         template: 'crm.lead_routing_hot',
         templateData: {
-          first_name: '{record.first_name}', last_name: '{record.last_name}',
-          company: '{record.company}', rating: '{record.rating}',
+          first_name: cel`record.first_name`, last_name: cel`record.last_name`,
+          company: cel`record.company`, rating: cel`record.rating`,
         },
-        actionUrl: '/crm_lead/{record.id}',
+        actionUrl: '/crm_lead/{{record.id}}',
       },
     },
 
     // ── Standard path: 3-day SLA, normal alert ─────────────────────
     {
       id: 'sla_std', type: 'update_record', label: 'Set 3-Day SLA',
-      config: { objectName: 'crm_lead', filter: { id: '{record.id}' }, fields: { next_followup_date: '{TODAY() + 3}' } },
+      config: { objectName: 'crm_lead', filter: { id: cel`record.id` }, fields: { next_followup_date: cel`isoDate(daysFromNow(3))` } },
+    },
+    {
+      // Gateway only — the predicate lives on its out-edges `e10` / `e11`.
+      id: 'owner_std', type: 'decision', label: 'Has an Owner?',
     },
     {
       id: 'notify_std', type: 'notify', label: 'Alert — New Lead',
       config: {
         // Route to the lead's owner — see notify_hot for why a bare
-        // 'sales_manager' position never reached anyone.
-        recipients: ['{record.owner_id}'],
+        // 'sales_manager' position never reached anyone, and `owner_std` for
+        // the lead that has no owner.
+        recipients: [cel`record.owner_id`],
         channels: ['inbox'],
         topic: 'lead_routing',
         template: 'crm.lead_routing_new',
         templateData: {
-          first_name: '{record.first_name}', last_name: '{record.last_name}', company: '{record.company}',
+          first_name: cel`record.first_name`, last_name: cel`record.last_name`, company: cel`record.company`,
         },
-        actionUrl: '/crm_lead/{record.id}',
+        actionUrl: '/crm_lead/{{record.id}}',
       },
     },
 
@@ -129,9 +149,23 @@ export const LeadAssignmentFlow: Flow = {
     // dyn<null> >= int` — so both guards are required, in this order.
     { id: 'e2', source: 'check_hot', target: 'sla_hot', type: 'conditional', condition: P`has(record.rating) && record.rating != null && record.rating >= 4`, label: 'Hot' },
     { id: 'e3', source: 'check_hot', target: 'sla_std', type: 'conditional', condition: P`!has(record.rating) || record.rating == null || record.rating < 4`, label: 'Standard' },
-    { id: 'e4', source: 'sla_hot', target: 'notify_hot', type: 'default' },
+    { id: 'e4', source: 'sla_hot', target: 'owner_hot', type: 'default' },
     { id: 'e5', source: 'notify_hot', target: 'end', type: 'default' },
-    { id: 'e6', source: 'sla_std', target: 'notify_std', type: 'default' },
+    { id: 'e6', source: 'sla_std', target: 'owner_std', type: 'default' },
     { id: 'e7', source: 'notify_std', target: 'end', type: 'default' },
+    // OWNER GATES, one per branch so the hot/standard split stays the single
+    // rating cut on `e2` / `e3`. The SLA stamp has already landed either way;
+    // only the alert needs someone to go to. "Has an owner" is the one
+    // predicate, and the ownerless route is the `isDefault` fallback rather
+    // than a hand-written complement, so the pair cannot drift apart: a
+    // `decision` with no `config.conditions` takes its first conditioned
+    // out-edge that holds, and its default edge only when none does.
+    // `isBlank` answers true for exactly what `notify` would refuse as no
+    // recipient — null, a blank string, an empty list — and `has()` covers the
+    // key a sparse driver leaves absent.
+    { id: 'e8', source: 'owner_hot', target: 'notify_hot', type: 'conditional', condition: P`has(record.owner_id) && !isBlank(record.owner_id)`, label: 'Owned' },
+    { id: 'e9', source: 'owner_hot', target: 'end', type: 'default', isDefault: true, label: 'No owner' },
+    { id: 'e10', source: 'owner_std', target: 'notify_std', type: 'conditional', condition: P`has(record.owner_id) && !isBlank(record.owner_id)`, label: 'Owned' },
+    { id: 'e11', source: 'owner_std', target: 'end', type: 'default', isDefault: true, label: 'No owner' },
   ],
 };

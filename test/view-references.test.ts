@@ -2,23 +2,25 @@
 
 import { describe, it, expect } from 'vitest';
 import { isDateMacroToken } from '@objectstack/spec/data';
-import stack from '../objectstack.config';
+import stack, { servedApps, type AnyRec, walk } from './helpers/composed-stack';
+import { hotcrmStack, registeredFields } from './helpers/verify-stack';
 import { Opportunity } from '../src/sales/objects/opportunity.object';
-import {
-  type AnyRec,
-  objects,
-  pages,
-  views,
-  stackActions,
-  objectNames,
-  fieldsOf,
-  walk,
-} from './helpers/metadata-fixtures';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
+const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
+const views: AnyRec[] = (stack as AnyRec).views ?? [];
+const stackActions: AnyRec[] = (stack as AnyRec).actions ?? [];
+const objectNames = new Set(objects.map((o) => o.name as string));
+
+// The runtime half of a reference check — which objects and columns the booted
+// app actually registers — is read from the platform's registry, not a roster.
+const runtime = await hotcrmStack();
+const fieldsOf = (object: string): string[] => registeredFields(runtime, object);
 
 /**
  * Dangling-reference guards for the VIEW surface.
  *
- * Everything a list view or form view names — the fields it sections, sorts and
+ * Everything a list view or form view names — the fields it sorts and
  * filters on, the option values it tints rows and kanban columns by, the stage
  * enumerations it draws, the navigation entries that reach it. `os validate`
  * checks that a view has the SHAPE of a view; nothing checked that the names
@@ -37,41 +39,18 @@ import {
  * exactly that reason. The four files now split the guards by the metadata
  * surface they resolve against; this one owns views and list views.
  *
- * The derivations every one of them shares (`objects`, `views`, `walk`, the
- * locale packs, the platform-object allowlist) live in
- * `test/helpers/metadata-fixtures.ts`. No assertion, helper or fixture changed
- * in the split — see the reconciliation table on the PR.
+ * The derivations every one of them shares come from two places: the app's
+ * authored collections, the locale packs and `walk` from
+ * `test/helpers/composed-stack.ts`, and the runtime half — which objects and
+ * columns the booted app registers — from the platform's registry through
+ * `@objectstack/verify`'s handle (`test/helpers/verify-stack.ts`). No
+ * assertion, helper or fixture changed in the split — see the reconciliation
+ * table on the PR.
  */
 
-describe('view field references resolve', () => {
-  /** Views are keyed by object; `defineView` output carries the object on its data provider. */
-  const viewObjectOf = (v: AnyRec): string | undefined =>
-    v.list?.data?.object ?? v.form?.data?.object ?? v.object;
-
-  it('every form section field is a real field on the view object', () => {
-    const bad: string[] = [];
-    for (const v of views) {
-      const objectName = viewObjectOf(v);
-      if (!objectName || !objectNames.has(objectName)) continue;
-      const known = fieldsOf(objectName);
-      // The default `form` plus every named form under `formViews`. (The
-      // container key is `formViews` — iterating a non-existent `forms` key
-      // silently skipped every named form view.)
-      const forms = [v.form, ...Object.values(v.formViews ?? {})].filter(Boolean) as AnyRec[];
-      for (const form of forms) {
-        for (const section of form.sections ?? []) {
-          for (const f of section.fields ?? []) {
-            const name = typeof f === 'string' ? f : f?.field;
-            if (name && !known.includes(name)) {
-              bad.push(`${objectName} form "${form.name ?? 'default'}": no field "${name}"`);
-            }
-          }
-        }
-      }
-    }
-    expect(bad, `dangling form fields:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-});
+// ⚰️ RETIRED (#1583): "every form section field is a real field on the view
+// object". `objectstack lint --strict` reports it as `form-field-unknown`, on
+// the default `form` and on every `formViews` entry, and `pnpm lint` fails on it.
 
 describe('priority queues sort by urgency, not alphabetically', () => {
   /**
@@ -271,12 +250,12 @@ describe('row colors and kanban groups key off real option values', () => {
  * The two guards above answer "is every value written here a real option?" —
  * a subset check. Nothing asked the converse, "is every real option written
  * here?", and that is the half that broke (#759): `needs_analysis` is one of
- * the seven canonical stages and was absent from BOTH the
- * detail page's stage path and the Open Deals `rowColor` map. Six of seven
- * stages worked, so both surfaces looked fine on every deal that happened not
- * to be in Needs Analysis — the deal that WAS lit up no step on the path and
- * got no row tint, which reads to a user as corrupted data rather than as
- * missing metadata.
+ * the seven canonical stages and was absent from the
+ * detail page's stage path. Six of seven stages worked, so the path looked
+ * fine on every deal that happened not to be in Needs Analysis — the deal that
+ * WAS lit up no step, which reads to a user as corrupted data rather than as
+ * missing metadata. (Open Deals no longer tints rows by stage, #2107, so the
+ * path is the one enumeration left to guard.)
  *
  * The expectation is derived from `crm_opportunity.stage`'s own options — the
  * single source the `mass_update_stage` action is built from too (#2000 moved
@@ -301,23 +280,10 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
           ]),
       );
 
-  /** Every list `rowColor` keyed on `crm_opportunity.stage`, as [viewName, colors]. */
-  const stageRowColors = (): [string, AnyRec][] =>
-    views
-      .filter((v) => (v.list?.data?.object ?? v.object) === 'crm_opportunity')
-      .flatMap((v) =>
-        ([v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[])
-          .filter((list) => list.rowColor?.field === 'stage')
-          .map((list): [string, AnyRec] => [
-            `view "${list.name ?? 'default'}"`,
-            list.rowColor?.colors ?? {},
-          ]),
-      );
-
   it('the canonical stage list is the set the object validates against', () => {
     // Guards the guard twice over: an empty list would make every assertion
     // below pass by comparing against nothing, and a registered `stage` field
-    // that stopped matching the authored one would leave the two sites below
+    // that stopped matching the authored one would leave the path guard below
     // chasing a list the runtime no longer enforces.
     expect(canonical.length, 'crm_opportunity.stage declares no options').toBeGreaterThan(0);
     const objDef = objects.find((o) => o.name === 'crm_opportunity');
@@ -353,41 +319,6 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
     }
     expect(bad, `incomplete stage paths:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
-
-  it('every stage has a row colour in the opportunity list views that tint by stage', () => {
-    const sites = stageRowColors();
-    expect(sites.length, 'no rowColor keyed on crm_opportunity.stage was found').toBeGreaterThan(0);
-
-    const bad: string[] = [];
-    for (const [site, colors] of sites) {
-      const keys = Object.keys(colors);
-      for (const stage of canonical) {
-        if (!keys.includes(stage)) bad.push(`${site}: no rowColor entry for stage "${stage}"`);
-      }
-      for (const key of keys) {
-        if (!canonical.includes(key)) bad.push(`${site}: rowColor key "${key}" is not a canonical stage`);
-      }
-    }
-    expect(bad, `incomplete stage row colours:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  it('stage colours stay distinguishable from one another', () => {
-    // The point of the map is that a rep can tell two stages apart at a
-    // glance; two stages sharing a hex make the tint say nothing. (#759 was
-    // nearly fixed by copying `needs_analysis`'s `#FFD700` off the stage
-    // field, one hue step from proposal's `#f59e0b`.)
-    const bad: string[] = [];
-    for (const [site, colors] of stageRowColors()) {
-      const seen = new Map<string, string>();
-      for (const key of Object.keys(colors)) {
-        const hex = String(colors[key]).toLowerCase();
-        const owner = seen.get(hex);
-        if (owner) bad.push(`${site}: "${key}" and "${owner}" are both ${hex}`);
-        else seen.set(hex, key);
-      }
-    }
-    expect(bad, `stages sharing a row colour:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
 });
 
 /**
@@ -409,8 +340,8 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
  * iconed from a `viewTypeIcons` map the console hardcodes. So a `listViews`
  * entry was on the strip whether or not a tab named it: those seven queues
  * were reachable the whole time, and `tabs` curated nothing. The inert key is
- * gone from every view file; `test/view-tab-label-inert.test.ts` pins that it
- * stays gone.
+ * gone from every view file, and since @objectstack/spec 17.5.0 the view
+ * schema refuses it by name (`view.list.tabs` was removed), so it stays gone.
  *
  * What is left to guard here is the direction that CAN still dangle. A view is
  * on its own object's strip by existing, but a NAVIGATION entry names a view
@@ -421,7 +352,10 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
  * `viewName`, never that the name resolves.
  */
 describe('every named list view is reachable', () => {
-  const apps: AnyRec[] = (stack as any).apps ?? [];
+  // The SERVED apps — `nav_my_cases` pins `my_open_cases` through the service
+  // module's `navigationContributions`, and a contributed entry dangles the
+  // same way an authored one does.
+  const apps: AnyRec[] = servedApps();
 
   /** Every `viewName` an app navigation entry pins, with its object and id. */
   const navViewTargets: { id: string; object: string; view: string }[] = apps.flatMap((app) =>
@@ -503,7 +437,9 @@ describe('every named list view is reachable', () => {
  * fixture.
  */
 describe('objects reached only through a parent curate that related list', () => {
-  const apps: AnyRec[] = (stack as any).apps ?? [];
+  // The SERVED apps — a contributed entry reaches its object as surely as an
+  // authored one.
+  const apps: AnyRec[] = servedApps();
   const navObjects = new Set(
     apps.flatMap((app) =>
       (app.navigation ?? []).flatMap(function walk(n: AnyRec): string[] {

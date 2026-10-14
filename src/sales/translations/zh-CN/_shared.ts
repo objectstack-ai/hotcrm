@@ -9,7 +9,7 @@
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/zh-CN.ts`.
+ * `src/sales/translations/zh-CN.ts`.
  *
  * Every constant here is spread into object rows that live in MORE THAN ONE
  * family file, so it cannot sit in any one of them. A value used by exactly

@@ -125,12 +125,19 @@ export const LeadViews = defineView({
     type: 'grid',
     name: 'all_leads',
     label: 'All Leads',
+    userActions: { editInline: true },
     data: {
       provider: 'object',
       object: 'crm_lead',
     },
     
-    // Column Configuration with Enhanced Features
+    // Column Configuration with Enhanced Features.
+    //
+    // No column carries its own `label:`. Without one the header is the
+    // field's label, which all four locale packs translate. With one, the
+    // string is served verbatim in every locale: the translation schema has no
+    // per-column key, so it left this whole header row English in zh-CN
+    // (#2094). A wording the field label cannot carry is a platform gap.
     columns: [
       {
         // One name column, not two. Splitting first/last spent 300px to say
@@ -138,37 +145,31 @@ export const LeadViews = defineView({
         // given name alone — so opening a person meant aiming at their first
         // name specifically.
         field: 'full_name',
-        label: 'Name',
         width: 200,
         sortable: true,
         link: true, // Primary navigation link
       },
       {
         field: 'company',
-        label: 'Company',
         width: 200,
         sortable: true,
       },
       {
         field: 'email',
-        label: 'Email',
         width: 200,
       },
       {
         field: 'status',
-        label: 'Status',
         width: 120,
         sortable: true,
       },
       {
         field: 'rating',
-        label: 'Score',
         width: 100,
         align: 'center',
       },
       {
         field: 'lead_source',
-        label: 'Source',
         width: 120,
       },
       // REQ-0005 acceptance 1: what the prospect wants and what it is worth,
@@ -181,20 +182,17 @@ export const LeadViews = defineView({
       // stored value, so a multi-valued column would group by the combination.
       {
         field: 'need_type',
-        label: 'Need Type',
         width: 160,
         sortable: true,
       },
       {
         field: 'estimated_amount',
-        label: 'Est. Amount',
         width: 130,
         align: 'right',
         sortable: true,
       },
       {
         field: 'owner_id',
-        label: 'Owner',
         width: 150,
       },
     ],
@@ -209,7 +207,7 @@ export const LeadViews = defineView({
     // hook reads it into the SECOND argument of `onNavigate` — the slot that
     // otherwise carries the literal mode string, `r(t, d ?? 'view')` — so it
     // named nothing and selected nothing. The record page here is rendered by
-    // `lead_detail_page` (`src/pages/lead_detail.page.ts`), not by a named
+    // `lead_detail_page` (`src/sales/pages/lead_detail.page.ts`), not by a named
     // form view, and clicking a row behaved identically with the key present,
     // with it absent, and on a list that never declared it. `detail_form`
     // below stays: it is this file's one TABBED layout example, and it was
@@ -289,10 +287,12 @@ export const LeadViews = defineView({
           },
           'lead_source',
           'industry',
-          {
-            field: 'owner_id',
-            required: true,
-          },
+          // Offered, ⛔ not `required` (#2097): an insert that leaves it empty is
+          // stamped to the creator by the platform (see `lead.hook.ts`), so a
+          // rep's new lead is theirs without a pick. `required` blocked that
+          // save client-side. A pick of another owner on create is currently
+          // dropped by the console (objectui#12359).
+          'owner_id',
           // `disqualification_reason` is enforced by the
           // `disqualification_reason_required` validation on crm_lead, so every
           // form that lets a user pick "Unqualified" must also offer the reason
@@ -403,6 +403,7 @@ export const LeadViews = defineView({
       name: 'my_leads',
       type: 'grid',
       label: 'My Leads',
+      userActions: { editInline: true },
       data: {
         provider: 'object',
         object: 'crm_lead',
@@ -440,8 +441,8 @@ export const LeadViews = defineView({
      * rating >= 4, still New or Contacted. What differs is what they are FOR.
      * Hot Leads is the work order — sorted by next-follow-up (the SLA that
      * routing just stamped), with phone, email and owner on the row so it can
-     * be dialled top to bottom. High Priority is the scan list — score-tinted
-     * rows and lead source, no SLA column, no time ordering. A 5-star-only
+     * be dialled top to bottom. High Priority is the scan list — rating and
+     * lead source on the row, no SLA column, no time ordering. A 5-star-only
      * queue, if it is ever a real need, gets its own view under its own name
      * instead of squatting on "Hot".
      *
@@ -452,6 +453,7 @@ export const LeadViews = defineView({
       name: 'hot_leads',
       type: 'grid',
       label: '🔥 Hot Leads',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_lead' },
       columns: ['full_name', 'company', 'phone', 'email', 'rating', 'next_followup_date', 'owner_id'],
       // Same rating cut as the `lead_assignment` hot branch, scoped to the
@@ -471,6 +473,7 @@ export const LeadViews = defineView({
       name: 'high_priority',
       type: 'grid',
       label: 'High Priority',
+      userActions: { editInline: true },
       data: {
         provider: 'object',
         object: 'crm_lead',
@@ -480,13 +483,6 @@ export const LeadViews = defineView({
         { field: 'rating', operator: 'greater_than_or_equal', value: 4 },
         { field: 'status', operator: 'in', value: ['new', 'contacted'] },
       ],
-      rowColor: {
-        field: 'rating',
-        colors: {
-          '5': 'green',
-          '4': 'orange',
-        },
-      },
     },
 
     /**
@@ -502,6 +498,7 @@ export const LeadViews = defineView({
       name: 'suspected_duplicates',
       type: 'grid',
       label: 'Suspected Duplicates',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_lead' },
       columns: [
         'full_name', 'company', 'email',

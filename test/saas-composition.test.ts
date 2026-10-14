@@ -2,8 +2,10 @@
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { PLATFORM_CAPABILITIES } from '@objectstack/spec/security';
-import defaultStack from '../objectstack.config';
-import { CrmSeedData, SaasTenantSeedData } from '../objectstack.composition';
+import defaultStack from './helpers/composed-stack';
+import {
+  CrmSeedData, SaasTenantSeedData, ServiceSeedData, AppSeedData, serviceStack, appStack,
+} from '../objectstack.composition';
 import { COMPOSITION_ENV_VAR, resolveComposition } from '../src/sales/data/index';
 import { SystemAdminProfile } from '../src/sales/profiles/system-admin.profile';
 import { TenantAdminProfile } from '../src/sales/profiles/tenant-admin.profile';
@@ -31,7 +33,10 @@ import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 type AnyRec = Record<string, any>;
 
 /**
- * Load `objectstack.config` afresh under a given composition value.
+ * Load the app's stack afresh under a given composition value — the composed
+ * view of `test/helpers/composed-stack.ts`, which re-imports
+ * `objectstack.composition.ts`, where the knob is resolved and the two package
+ * stacks are built.
  *
  * `value` is a plain `string`: every caller names a composition, so an
  * "unset it instead" branch here would be code no test can reach. The RESTORE
@@ -44,7 +49,7 @@ async function loadStack(value: string): Promise<AnyRec> {
   process.env[COMPOSITION_ENV_VAR] = value;
   vi.resetModules();
   try {
-    return ((await import('../objectstack.config')) as AnyRec).default as AnyRec;
+    return ((await import('./helpers/composed-stack')) as AnyRec).default as AnyRec;
   } finally {
     if (previous === undefined) delete process.env[COMPOSITION_ENV_VAR];
     else process.env[COMPOSITION_ENV_VAR] = previous;
@@ -85,12 +90,31 @@ describe('the default composition is the community app, untouched', () => {
     // Compared by CONTENT, not by reference: `defineStack` parses its input
     // through the spec schemas, so what lands on the stack is a fresh value —
     // reference identity holds only upstream of that call, which is exactly
-    // where `objectstack.config.ts` does its filtering.
-    const registered = ((defaultStack as AnyRec).data as AnyRec[]).map((d) => String(d.object));
-    expect(registered).toEqual(CrmSeedData.map((d) => String((d as AnyRec).object)));
+    // where `objectstack.composition.ts` does its filtering.
+    //
+    // As a SET of families, not a sequence: each family is registered by the
+    // package that owns its object (the next test), so the composed view lists
+    // the service package's families first and the app package's after them.
+    const objectsOf = (list: AnyRec[]) => list.map((d) => String(d.object));
+    const registered = objectsOf((defaultStack as AnyRec).data as AnyRec[]);
+    expect([...registered].sort()).toEqual(objectsOf(CrmSeedData as AnyRec[]).sort());
     const rows = (list: AnyRec[]) =>
       list.reduce((n, d) => n + (Array.isArray(d.records) ? d.records.length : 0), 0);
     expect(rows((defaultStack as AnyRec).data as AnyRec[])).toBe(rows(CrmSeedData as AnyRec[]));
+  });
+
+  it('registers each family with the package that owns its object, in replay order', () => {
+    // `defineStack` refuses `data` naming an object the stack does not define
+    // and was not told the artifact defines, so the split is not a choice —
+    // and the two halves together are exactly the union, each in the order
+    // `CrmSeedData` gives its families.
+    const objectsOf = (list: readonly unknown[] = []) => (list as AnyRec[]).map((d) => String(d.object));
+    expect(objectsOf(serviceStack.data)).toEqual(objectsOf(ServiceSeedData));
+    expect(objectsOf(serviceStack.data)).toEqual(['crm_case', 'crm_knowledge_article']);
+    expect(objectsOf(appStack.data)).toEqual(objectsOf(AppSeedData));
+    expect([...objectsOf(serviceStack.data), ...objectsOf(appStack.data)].sort()).toEqual(
+      objectsOf(CrmSeedData).sort(),
+    );
   });
 
   it('still ships every seed family, storytelling included', () => {
@@ -200,15 +224,23 @@ describe('tenant_admin is an ORG admin, judged by the platform capability regist
     ).toBe('org');
   });
 
-  it('holds the org-scoped presentation-authoring capability (#1369)', () => {
-    // The org-bounded subset of metadata authoring. Its scope is read off the
-    // installed registry, never copied here: if the platform ever widened it,
-    // this and the platform-scoped pin below would both go red.
-    expect(TenantAdminProfile.systemPermissions).toContain('manage_org_presentation');
+  it('holds no presentation-authoring grant: 18.0.0-next.0 retired the org-scoped one (#1369)', () => {
+    // #1369 granted `manage_org_presentation`, the org-bounded subset of
+    // metadata authoring. 18.0.0-next.0 retires it with the per-organization
+    // overlay axis (ADR-0131 D6; the spec's `manage-org-presentation-retired`
+    // entry): it leaves the registry, nothing consults it, and the remedy is to
+    // delete it from every set. Read off the installed registry, so the day the
+    // platform declares an org-scoped authoring capability again this goes red
+    // and #1369 is re-measured rather than forgotten.
     expect(
-      scopeOf.get('manage_org_presentation'),
-      'manage_org_presentation is not org-scoped on the installed platform line — a tenant profile must not hold it',
-    ).toBe('org');
+      scopeOf.has('manage_org_presentation'),
+      'the installed platform declares manage_org_presentation again — re-measure #1369 before granting it',
+    ).toBe(false);
+    expect(TenantAdminProfile.systemPermissions).not.toContain('manage_org_presentation');
+    // The one key that still admits those writes lands them environment-wide,
+    // so a tenant profile may not hold it.
+    expect(scopeOf.get('manage_metadata')).toBe('platform');
+    expect(TenantAdminProfile.systemPermissions).not.toContain('manage_metadata');
   });
 
   it('grants NO platform-scoped capability', () => {

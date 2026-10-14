@@ -93,7 +93,7 @@ export const SERVICE_MANAGER_POSITION = 'service_manager';
  * Load balancing counts OPEN cases, and `is_closed` is the wrong predicate:
  * it only flips on `closed`, so a pile of `resolved` cases would keep counting
  * against an agent who has already finished them. `case_sla_monitor` settles it
- * the same way — see the `$nin` note in `src/flows/case-sla-monitor.flow.ts`,
+ * the same way — see the `$nin` note in `src/service/flows/case-sla-monitor.flow.ts`,
  * which also records that comparing the boolean `is_closed` walks into the
  * SQLite `1 != true` trap.
  */
@@ -156,17 +156,40 @@ export const CLAIMABLE_TARGET_STATUSES = [
  * `service_agent` position the pool is empty and this hook is a NO-OP: the case
  * is created and stays ownerless. Never blocking intake is correct, but silent
  * ownerlessness hides the problem, so the no-op path has a UI counterpart — the
- * `unassigned_triage` pinned tab on `crm_case` (`src/views/case.view.ts`) shows
+ * `unassigned_triage` pinned tab on `crm_case` (`src/service/views/case.view.ts`) shows
  * exactly the cases this hook could not place.
  *
  * ## Best-effort, always
  *
- * Auto-assignment is an ENHANCEMENT and must never reject the insert. An
- * anonymous Web-to-Case submission runs under the public-form grant, which
- * permits create/read-back on `crm_case` and DENIES `find` on
- * `sys_user_position`; letting that denial propagate would 403 the whole
- * submission and break the public support form. So every read is wrapped and
- * ANY failure leaves the case ownerless for the triage view to surface.
+ * Auto-assignment is an ENHANCEMENT and must never reject the insert, so every
+ * read is wrapped and ANY failure leaves the case ownerless for the triage
+ * view to surface.
+ *
+ * ## `runAs: 'system'` (#2014, AGENTS.md rule 9), and the organization pin
+ *
+ * Web-to-case is the intake this hook exists for (#596), and as the caller it
+ * never reached the pool: the anonymous form writes under `guest_portal`,
+ * which reads nothing, so the read came back empty and every web case landed
+ * in triage with agents staffed (measured on 17.7.0 and again on
+ * 18.0.0-next.0). Who works a case is the business's routing, not the
+ * submitter's privilege, so the hook elevates. Elevation reaches the two READS
+ * only: the owner is still stamped on the payload in flight (door ① above, no
+ * transfer grant), and the strip at priority 200 runs first, so an anonymous
+ * client cannot choose the owner.
+ *
+ * What elevation reads never reaches the submitter. Maintainer ruling on
+ * #2014 (item 4, B): the platform fixed the door first — since
+ * objectstack#22437 (18.0.0-next.0) the anonymous form answers the new
+ * record's id and nothing else. `test/case-assignment.test.ts` pins that
+ * answer through the real door.
+ *
+ * AGENTS.md rule 10: the pool and the load counts are pinned to the new
+ * case's `organization_id` when the writer named one (a system import into
+ * one organization of several). The anonymous form names none here — the
+ * platform stamps the organization after the beforeInsert hooks (ADR-0131) —
+ * and an organization-less insert lands only on an install with exactly one
+ * organization (with two, the platform refuses it), so an unpinned read has
+ * no other organization to reach.
  *
  * @param hookName registry name for the hook (metadata only — never read by
  *   the body, which the sandbox would not let it be).
@@ -177,6 +200,7 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
     object: 'crm_case',
     events: ['beforeInsert'],
     priority: 250,
+    runAs: 'system',
     description: 'Assign ownerless new cases to the least-loaded service agent.',
     handler: async (ctx: HookContext) => {
       const { input } = ctx;
@@ -189,12 +213,20 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
       const api = ctx.api as HookApi | undefined;
       if (!api) return;
 
+      // The rule-10 pin on both reads below: the organization the writer
+      // named on the new case, when it named one.
+      const organizationId =
+        typeof input.organization_id === 'string' && input.organization_id !== ''
+          ? input.organization_id
+          : undefined;
+      const inOrganization: Record<string, string> = organizationId ? { organization_id: organizationId } : {};
+
       try {
         // The pool = holders of the `service_agent` position. This literal is
         // the exported SERVICE_AGENT_POSITION; the sandbox forbids reading the
         // constant here, and `test/case-assignment.test.ts` pins the parity.
         const holders = await api.object('sys_user_position').find({
-          where: { position: 'service_agent' }, fields: ['user_id'], top: 1000,
+          where: { position: 'service_agent', ...inOrganization }, fields: ['user_id'], top: 1000,
         });
         const agentIds = Array.from(
           new Set(
@@ -214,7 +246,7 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
         let bestCount = Infinity;
         for (const agentId of agentIds) {
           const openCount = await api.object('crm_case').count({
-            where: { owner_id: agentId, status: { $nin: ['resolved', 'closed'] } },
+            where: { owner_id: agentId, status: { $nin: ['resolved', 'closed'] }, ...inOrganization },
           });
           if (openCount < bestCount) {
             bestCount = openCount;
@@ -223,11 +255,9 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
         }
         if (best) input.owner_id = best;
       } catch {
-        // Swallow: assignment must never block case creation. The common case
-        // is the anonymous public-form context, which cannot read
-        // `sys_user_position` — the case is still captured, ownerless, and the
-        // triage view surfaces it. (No `console` here — the L2 hook sandbox
-        // does not define one.)
+        // Swallow: assignment must never block case creation — the case is
+        // still captured, ownerless, and the triage view surfaces it. (No
+        // `console` here — the L2 hook sandbox does not define one.)
       }
     },
   };
@@ -243,7 +273,7 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
  * the agent who could not get to the case in time stays the only person who can
  * work it.
  *
- * ⚠️ Positions are FLAT (`src/sharing/positions.ts`), so "the owner's manager"
+ * ⚠️ Positions are FLAT (`src/sales/sharing/positions.ts`), so "the owner's manager"
  * is not resolvable in this app — and a flow template referencing a lookup
  * traversal such as `{caseRecord.owner_id.manager}` interpolates to the literal
  * string `undefined` rather than failing. That is why the hand-off is a hook
@@ -281,7 +311,7 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
  *
  * `sys_user_position` membership is runtime data, and `service_manager` is
  * unstaffed on a fresh install. ⚠️ The demo org is NO LONGER one of those: #1102
- * staffs Tomas Okafor into the position (`src/sharing/demo-staffing.ts`), so the
+ * staffs Tomas Okafor into the position (`src/sales/sharing/demo-staffing.ts`), so the
  * exemplar now demonstrates the hand-off rather than the stand-down — which is
  * also what makes the sweep's assignment visible on this repo's own seed.
  *
@@ -297,6 +327,30 @@ export function createCaseRoundRobinAssign(hookName = 'case_auto_assign'): Hook 
  * read denial, an empty pool or any other failure leaves the case with its
  * current owner and lets the escalation write through untouched.
  *
+ * ## `runAs: 'system'` (#2014), and the organization pin
+ *
+ * The pool is `sys_user_position`, which a service agent may not read — so an
+ * agent escalating their own case (the record form, or the `escalate_case`
+ * action, whose `escalate` node deliberately keeps the status write in the
+ * acting user's context) was refused the read, stood down, and the case stayed
+ * with the agent who could not get to it; only the SLA sweep's system write
+ * reached the pool. Choosing the escalation desk is the business's routing, not
+ * the agent's privilege, so the hook elevates. What elevation reaches is the
+ * two READS: the hook still issues no write of its own (door ① above), so it
+ * needs no transfer grant and moves nothing the escalation write is not
+ * already moving.
+ *
+ * AGENTS.md rule 10: the pool and the load counts are organization-NEUTRAL
+ * predicates (a position name, an owner id), so both are pinned to the
+ * escalating case's own `organization_id` when it carries one. A person's
+ * escalation is already confined by the driver — the elevated `ctx.api` keeps
+ * the trigger's tenant — but the SLA sweep writes as the system with no
+ * tenant at all, and without the pin its escalation would pick the
+ * least-loaded manager of ANY organization. A case with no organization (a
+ * single-organization install) has no wall to stay inside, and is not pinned.
+ * Pinned, a manager whose position assignment is global (no organization)
+ * does not receive a tenant's case.
+ *
  * @param hookName registry name for the hook (metadata only — never read by
  *   the body, which the sandbox would not let it be).
  */
@@ -306,6 +360,7 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
     object: 'crm_case',
     events: ['beforeUpdate'],
     priority: 250,
+    runAs: 'system',
     description: 'Hand a case being escalated to the least-loaded service manager.',
     handler: async (ctx: HookContext) => {
       // D3 stand-down: the escalation TRANSITION is read off this row's
@@ -331,12 +386,21 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
       const api = ctx.api as HookApi | undefined;
       if (!api) return;
 
+      // The escalating case's own organization — the rule-10 pin on both
+      // reads below. Read off the stored row: an update payload does not carry
+      // it, and the platform stamped it there.
+      const organizationId =
+        typeof previous.organization_id === 'string' && previous.organization_id !== ''
+          ? previous.organization_id
+          : undefined;
+      const inOrganization: Record<string, string> = organizationId ? { organization_id: organizationId } : {};
+
       try {
         // The pool = holders of the `service_manager` position. This literal is
         // the exported SERVICE_MANAGER_POSITION; the sandbox forbids reading the
         // constant here, and `test/case-assignment.test.ts` pins the parity.
         const holders = await api.object('sys_user_position').find({
-          where: { position: 'service_manager' }, fields: ['user_id'], top: 1000,
+          where: { position: 'service_manager', ...inOrganization }, fields: ['user_id'], top: 1000,
         });
         const managerIds = Array.from(
           new Set(
@@ -362,7 +426,7 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
         let bestCount = Infinity;
         for (const managerId of managerIds) {
           const openCount = await api.object('crm_case').count({
-            where: { owner_id: managerId, status: { $nin: ['resolved', 'closed'] } },
+            where: { owner_id: managerId, status: { $nin: ['resolved', 'closed'] }, ...inOrganization },
           });
           if (openCount < bestCount) {
             bestCount = openCount;
@@ -371,8 +435,8 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
         }
         if (best) input.owner_id = best;
       } catch {
-        // Swallow: the hand-off must never reject the escalation. A denied
-        // `sys_user_position` read leaves the case where it is, escalated.
+        // Swallow: the hand-off must never reject the escalation. A failed
+        // pool read leaves the case where it is, escalated.
         // (No `console` here — the L2 hook sandbox does not define one.)
       }
     },
@@ -401,7 +465,7 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
  * payload and is inert unless the STORED row is ownerless. The alternative,
  * granting `crm_case.allowTransfer`, cannot express "to yourself only": it
  * would let an agent reassign any case they can edit, to anyone.
- * `src/profiles/service-agent.profile.ts` needs no new grant for this hook.
+ * `src/sales/profiles/service-agent.profile.ts` needs no new grant for this hook.
  *
  * ## The four boundaries
  *
@@ -476,7 +540,7 @@ export function createCaseSelfClaim(hookName = 'case_self_claim'): Hook {
       // 4. …and only one that is not CLOSED. ⚠️ This guard and the triage
       //    sharing grant draw DIFFERENT lines on purpose, and ⛔ neither is to
       //    be "aligned" onto the other. `case_unassigned_triage_sharing`
-      //    (`src/sharing/case.sharing.ts`) excludes `resolved` as well as
+      //    (`src/service/sharing/case.sharing.ts`) excludes `resolved` as well as
       //    `closed`, because a resolved unowned case is history, not backlog,
       //    and the tab's row count has to keep meaning "work waiting for a
       //    human". This guard stops at `closed` alone, because REOPENING a

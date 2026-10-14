@@ -41,7 +41,7 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // address country into (#639) — no rule compares a country string any more.
 // `country` still carries the 2-LETTER CODE here: seed addresses keep to ISO
 // 3166-1 alpha-2 as a data-quality convention, and the spelling table in
-// `src/objects/_territory.ts` exists for what USERS type, not for what this
+// `src/sales/objects/_territory.ts` exists for what USERS type, not for what this
 // file authors.
 //
 // `UK` on the London account is the one deliberate exception, and it is now
@@ -88,7 +88,7 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // writes (#617), and two of them stamp TODAY on an account:
 //
 //   · `event_activity_bubble` — on any `held` event, walking up from its
-//     contact / opportunity / case (`src/objects/event.hook.ts`);
+//     contact / opportunity / case (`src/sales/objects/event.hook.ts`);
 //   · `task_activity_bubble`  — on any task seeded already completed.
 //
 // Neither reads the activity's own timestamp: a `held` meeting seeded 45 days
@@ -157,12 +157,29 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // was never won. The criterion `$in [at_risk, churning]` does not match an
 // absent value, so a blank row is outside the panel either way — it says
 // "nobody has assessed this", which is exactly true of a prospect.
+//
+// ─── `approval_status`: every seeded account is already signed off ─────
+//
+// Each row below states `approval_status: 'approved'`, and it has to. On a real
+// insert the column is born blank and `account_approval` submits it (REQ-0003;
+// the request's mirror writes `pending`, #2067). A seed row never reaches that
+// flow: the platform writes every seed row with `skipTriggers`
+// (`SEED_WRITE_EXECUTION_CONTEXT`, `@objectstack/spec`), because a seed is
+// established END-STATE data, not a user event. Left unstated, a row would
+// claim no sign-off at all; under the former `pending` default it read
+// `pending` with no request behind it, the console showed "Locked for
+// approval" and disabled Edit, and no admin could edit a seeded account
+// (#2042). These accounts carry deals, contracts and cases; they are past
+// their sign-off, so the row says so.
+// ⛔ Do not "fix" it with an `approved` field default instead: that switches
+// the gate off for every account a user creates.
 export const accounts = defineSeed(Account, {
   mode: 'upsert',
   externalId: 'name',
   records: [
     {
       name: 'Acme Corporation',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'technology',
       annual_revenue: 5000000,
@@ -219,6 +236,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Globex Industries',
+      approval_status: 'approved',
       type: 'prospect',
       industry: 'manufacturing',
       annual_revenue: 12000000,
@@ -234,6 +252,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Initech Solutions',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'finance',
       annual_revenue: 3500000,
@@ -252,6 +271,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Stark Medical',
+      approval_status: 'approved',
       type: 'partner',
       industry: 'healthcare',
       annual_revenue: 8000000,
@@ -285,6 +305,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Wayne Enterprises',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'technology',
       annual_revenue: 25000000,
@@ -313,6 +334,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Northwind Energy',
+      approval_status: 'approved',
       type: 'prospect',
       industry: 'energy',
       annual_revenue: 18000000,
@@ -331,6 +353,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Vertex Analytics',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'software',
       annual_revenue: 9500000,
@@ -347,13 +370,14 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Lattice Education',
+      approval_status: 'approved',
       type: 'customer',
       industry: 'education',
       annual_revenue: 6800000,
       number_of_employees: 320,
       // europe_territory, half 2 — and the alias fixture. `UK` is not ISO
       // 3166-1 alpha-2 (`GB` is); it is an ACCEPTED SPELLING in
-      // `src/objects/_territory.ts`, so this row proves on stock data that a
+      // `src/sales/objects/_territory.ts`, so this row proves on stock data that a
       // legacy spelling still lands in `emea` (#639). No `state`: an address
       // without a subdivision is a normal shape, and only `country` is read.
       phone: '+44-20-7946-0800',
@@ -369,6 +393,7 @@ three regional teams (NA, EMEA, APAC).
     },
     {
       name: 'Apex Logistics',
+      approval_status: 'approved',
       type: 'prospect',
       industry: 'logistics',
       annual_revenue: 22000000,

@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { evaluateValidationRules } from '@objectstack/objectql';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CrmSeedData } from '../objectstack.composition';
 import { REPO_ROOT } from './helpers/repo-root';
 

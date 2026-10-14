@@ -1,20 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { ObjectKernel } from '@objectstack/core';
-import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
-import { ObjectQLPlugin } from '@objectstack/objectql';
-import { MetadataPlugin } from '@objectstack/metadata';
-import {
-  SecurityPlugin,
-  appDefaultPermissionSetName,
-  buildContextForUser,
-} from '@objectstack/plugin-security';
-import { SharingServicePlugin } from '@objectstack/plugin-sharing';
-import { tenancyProbe } from './helpers/tenancy-probe';
-import stack from '../objectstack.config';
-import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
-import { identityObjects } from './helpers/identity-objects';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import { signUpPerson, guestInsert, type Person } from './helpers/verify-stack';
+import artifact from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * What a guest (web-to-case / web-to-lead) submission ACTUALLY stores — pinned
@@ -84,10 +74,10 @@ process.env.OS_REGISTRY_LOG ??= 'silent';
  * caller there is, and treating it as one blanks the owner of every seeded row.
  * The engine's context builder is what separates them: a system context reaches
  * a hook as `session: { isSystem: true }`, an anonymous one carries no session.
+ * `guestInsert` writes under the execution context the platform's anonymous
+ * form door (`POST /forms/:slug/submit`) writes under.
  */
 const GUEST = {} as AnyRec;
-/** The trusted write / read-back channel. */
-const SYS = { isSystem: true } as AnyRec;
 
 /**
  * `crm_case`'s declared field map, read off the compiled stack rather than
@@ -97,63 +87,46 @@ const SYS = { isSystem: true } as AnyRec;
 const caseFields: AnyRec =
   ((stack as AnyRec).objects as AnyRec[]).find((o) => o.name === 'crm_case')?.fields ?? {};
 
-let kernel: AnyRec;
-let ql: AnyRec;
+let verify: VerifyStack;
 const id: Record<string, string> = {};
-let agentCtx: AnyRec;
+let agent: Person;
 
-const insertAs = async (context: AnyRec, object: string, doc: AnyRec): Promise<string> => {
-  const row = await ql.insert(object, doc, { context });
+/**
+ * Write as `who`: the GUEST context goes through the one local guest-write path
+ * (the handle has no door for a caller that is neither a person nor the
+ * system — see `test/helpers/verify-stack.ts`); a person writes through the
+ * handle's engine door as themselves.
+ */
+const insertAs = async (who: typeof GUEST | Person, object: string, doc: AnyRec): Promise<string> => {
+  const row = who === GUEST
+    ? await guestInsert(verify, object, doc)
+    : await verify.hooks.run(object, 'insert', doc, { as: (who as Person).token });
   return String(row?.id ?? row?.record?.id);
 };
-const rowById = async (object: string, rowId: string): Promise<AnyRec> => {
-  const found = await ql.findOne(object, { where: { id: rowId } }, { context: SYS });
-  return (found ?? {}) as AnyRec;
-};
+/** The stored row, read back as the system through the handle. */
+const rowById = async (object: string, rowId: string): Promise<AnyRec> =>
+  (await verify.rows(object, { id: rowId }))[0] ?? {};
 
 beforeAll(async () => {
-  kernel = new ObjectKernel({ logger: { level: 'silent' } } as never);
-  await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
-  await kernel.use(
-    new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_test' } as never),
-  );
-  await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
-  // 17.7.0 refuses an object name the registry does not hold (objectstack#21545):
-  // register the identity objects `plugin-auth` would (`test/helpers/identity-objects.ts`).
-  await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
-  await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
-  await kernel.use(
-    new SecurityPlugin({
-      fallbackPermissionSet: appDefaultPermissionSetName((stack as AnyRec).permissions),
-    } as never),
-  );
-  // 17.2.0: declared sharing rules are only seeded once this stack states its
-  // tenancy posture — see `test/helpers/tenancy-probe.ts` for the measurement.
-  // Mounted BEFORE SharingServicePlugin, which reads the posture during its own
-  // boot.
-  await kernel.use(tenancyProbe('single') as never);
-  await kernel.use(new SharingServicePlugin());
-  await kernel.bootstrap();
-  ql = kernel.getService('objectql');
+  // The platform's boot — `@objectstack/verify`'s `bootStack` over the shipped
+  // artifact (objectql, auth and its `tenancy` service, security with the app's
+  // own default profile, sharing) — on the SQL in-memory datasource. Through 17.7.0 this file measured on
+  // `driver-memory`; on 18.0.0-next.0 that driver refuses every tenant-scoped
+  // call, and the boot now creates the Default Organization (ADR-0131 D3), so
+  // `@objectstack/verify` 34dba5a moves such a leg to the SQL driver.
+  verify = await bootStack(artifact);
 
-  // The FIRST human user is auto-promoted to platform admin at boot. Burn that
-  // promotion on a throwaway so the agent below is an ordinary user whose
-  // writes go through the same enforcement a real staff edit would.
-  await insertAs(SYS, 'sys_user', { name: 'Platform Admin', email: 'admin@guest-sanitisation.test' });
-  id.agent = await insertAs(SYS, 'sys_user', { name: 'Service Agent', email: 'agent@guest-sanitisation.test' });
-
+  // A fresh sign-up is an ordinary member (the stack's first user is its own
+  // platform admin), so the agent's writes go through the same enforcement a
+  // real staff edit would.
+  //
   // Pool membership for `case_auto_assign`: it is what makes "the guest's
   // planted owner did not survive" provable by a POSITIVE value (the case is
   // owned by the real agent) rather than by an absence.
-  await insertAs(SYS, 'sys_user_position', { user_id: id.agent, position: 'service_agent' });
-  const sets = await ql.find('sys_permission_set', { where: {} }, { context: SYS });
-  const agentSet = (sets as AnyRec[]).find((s) => s.name === 'service_agent');
-  await insertAs(SYS, 'sys_user_permission_set', {
-    user_id: id.agent,
-    permission_set_id: agentSet?.id,
+  agent = await signUpPerson(verify, 'agent@guest-sanitisation.test', {
+    name: 'Service Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
   });
-
-  agentCtx = await buildContextForUser(ql, id.agent);
+  id.agent = agent.id;
 }, 120_000);
 
 describe('crm_case — guest submission sanitisation', () => {
@@ -231,9 +204,10 @@ describe('crm_case — guest submission sanitisation', () => {
       ).not.toHaveProperty(retired);
     }
 
-    // The planted owner is gone, and `case_auto_assign` — which runs after this
-    // strip, and only on a case the strip left ownerless — placed the case on
-    // the real service agent instead.
+    // The planted owner is gone. `case_auto_assign` runs after this strip, on
+    // the case the strip left ownerless, and reads the agent pool elevated
+    // (#2014) — so the case is owned by the real agent: a POSITIVE value, not
+    // an absence.
     expect(stored.owner_id).not.toBe('planted_user');
     expect(stored.owner_id).toBe(id.agent);
   }, 60_000);
@@ -268,7 +242,7 @@ describe('crm_case — guest submission sanitisation', () => {
     // contract. The control is unchanged in what it CONTROLS FOR: three distinct
     // planted values became two, both on user-writable columns, and either one
     // failing still means the guest strip stopped being guest-scoped.
-    const caseId = await insertAs(agentCtx, 'crm_case', {
+    const caseId = await insertAs(agent, 'crm_case', {
       subject: 'Escalated by an agent',
       description: 'Raised internally.',
       internal_notes: 'STAFF-NOTES',
@@ -320,12 +294,10 @@ describe('crm_lead — guest submission sanitisation', () => {
     // submission — and the link beside it can name any record id they care to
     // guess.
     //
-    // What this case does NOT assert is that the dedupe then ran and wrote its
-    // own `suspected` verdict. It cannot: an anonymous submission holds the
-    // `guest_portal` grant, which is INSERT-only on `crm_lead` and denies the
-    // reads that check needs, so `lead_duplicate_check` swallows the denial by
-    // design and a guest's duplicate lands unflagged. Asserting `suspected` here
-    // would pin a fiction. The security property is that the guest's own verdict
+    // What this case does NOT assert is a verdict of the dedupe's own: the
+    // address repeats nothing on this stack, so the scan (elevated since #2014,
+    // and pinned flagging a real web duplicate in hooks-runtime-service) finds
+    // nothing to write. The security property is that the guest's own verdict
     // does not survive, and that is what is measured.
     const second = await insertAs(GUEST, 'crm_lead', {
       first_name: 'Grace', last_name: 'Hopper', company: 'Mark II',

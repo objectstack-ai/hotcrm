@@ -25,8 +25,16 @@ Please scaffold it using the Architect Guidelines:
 3. Import only from the file's own directory or from `src/sales/` — never sideways
    between modules, never upward. A source more than one package needs goes in
    `src/sales/`, in one copy.
-4. Register the new barrels in `objectstack.composition.ts`, which collects the packages
-   into the arrays `objectstack.config.ts` hands to the single `defineStack()`.
+4. Give the package its own stack, the shape `src/service/index.ts` has: a
+   `src/[PACKAGE_NAME]/index.ts` calling `defineStack` with a `type: 'module'` manifest in the
+   `crm` namespace, the app's version and protocol, `dependencies` on `app.objectstack.hotcrm`,
+   the `requires` its own metadata needs, and `navigationContributions` for its menu entries
+   (an app's own `navigation` may not name another package's object). Build it in
+   `objectstack.composition.ts` — route its seed families to it and add its objects to the app
+   stack's `artifactObjects`, so the app package's permission sets may grant on them — and add
+   it to the `composeStacks([...])` call in `objectstack.config.ts`, before the app. (A
+   directory not yet packaged has its barrels merged into the app package's collections in
+   `objectstack.composition.ts` instead — `revenue/` and `marketing/` today.)
 5. Commit the new package's ceilings in `COMMITTED` in
    `scripts/check-source-token-ratchet.mjs`. The package ROSTER is read off disk
    there (an `objects/` directory is what makes a directory a package), so nothing

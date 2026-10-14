@@ -5,8 +5,8 @@
  * ONCE.
  *
  * "What counts as a large deal" is one business question with four consumers:
- * the approval entry gate and the won-deal alert (`src/flows/`), and the
- * sales-director and executive rules (`src/sharing/opportunity.sharing.ts`).
+ * the approval entry gate and the won-deal alert (`src/sales/flows/`), and the
+ * sales-director and executive rules (`src/sales/sharing/opportunity.sharing.ts`).
  * Each interpolates the constant below, and each cuts at `>=`.
  *
  * ⛔ Both halves are load-bearing, and neither may drift. Four independent
@@ -74,7 +74,7 @@ export const HIGH_VALUE_DEAL_AMOUNT = 500_000;
  * about it; 60% refuses "a rep can give 90% off a $99K deal and nothing reviews
  * it" while leaving genuine strategic pricing alone. The stock catalogue
  * agrees: the deepest discount HotCRM seeds anywhere is 20%
- * (`src/data/*.seed.ts`).
+ * (`src/<pkg>/data/*.seed.ts`).
  *
  * ⛔ There is deliberately no SOFT ceiling constant beside it. A soft tier has
  * exactly one possible consumer — discount-triggered approval routing — which

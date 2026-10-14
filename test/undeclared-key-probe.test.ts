@@ -5,9 +5,9 @@ import { ObjectKernel } from '@objectstack/core';
 import { DefaultDatasourcePlugin, AppPlugin } from '@objectstack/runtime';
 import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
-import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
+import { Quote } from '../src/revenue/objects/quote.object';
 
 /**
  * What a typo costs — measured, per driver (#1200).
@@ -35,16 +35,16 @@ import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
  * ## The caller path is CLOSED, and that is what half 1 pins
  *
  * A key the caller supplies is refused before anything happens —
- * `INVALID_FIELD` / 400, identically on all three drivers. Upstream
+ * `INVALID_FIELD` / 400, identically on every driver measured. Upstream
  * objectstack#8682 (insert) and objectstack#8738 (update) put that door in,
  * ahead of hooks and ahead of statement construction.
  *
  * That guarantee is now load-bearing for this whole repo, so it is pinned
  * rather than assumed, WITH its controls: `A` inserts the same row without the
  * key (it must succeed, or a red here would only mean the fixture broke), and
- * `D` sends the SAME key to the twin `crm_quote_line_item`, which DOES declare
- * `tax_rate` (it must succeed, or the probe would be measuring a banned name
- * rather than an undeclared one). Without both, this file could pass while
+ * `D` sends the SAME key to `crm_quote`, which DOES declare `tax` (it must
+ * succeed, or the probe would be measuring a banned name rather than an
+ * undeclared one). Without both, this file could pass while
  * measuring nothing. `E` shows the refusal is about declaration, not about one
  * borrowed name: a plain misspelling of a real field is refused the same way.
  *
@@ -52,7 +52,7 @@ import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
  *
  * The door sits in front of the hooks, so a key a hook itself assigns is never
  * checked against the schema. Whatever the hook wrote then reaches the driver
- * — and the three drivers do three different things with it:
+ * — and on 17.1.0 the three drivers measured did three different things with it:
  *
  *   - `memory`      — accepted, stored, and returned on read. #1200's original
  *                     defect, alive on 17.1.0 on this path.
@@ -84,8 +84,11 @@ type AnyRec = Record<string, any>;
 process.env.OS_REGISTRY_LOG ??= 'silent';
 const SYS = { isSystem: true } as AnyRec;
 
-/** The undeclared key. Declared on `crm_quote_line_item`, not on its twin. */
-const KEY = 'tax_rate';
+/**
+ * The undeclared key. Declared on `crm_quote` (its typed Tax), not on a line
+ * item: until #2069 this was the quote line's `tax_rate`, now retired.
+ */
+const KEY = 'tax';
 /** A plain misspelling of a field the probe object really does declare. */
 const TYPO = 'unit_pric';
 /** Written to a DECLARED field, so the injector hook stays inert otherwise. */
@@ -132,11 +135,11 @@ interface Reading {
   insert: Outcome;
   /** Caller supplies the undeclared key on UPDATE of a clean row. */
   update: Outcome;
-  /** The same key on the twin that DECLARES it — the second control. */
-  declaredTwin: Outcome;
-  /** Stored value on that twin, proving the control really wrote. */
-  declaredTwinValue: unknown;
-  /** A misspelling of a real field, rather than a borrowed twin's name. */
+  /** The same key on `crm_quote`, which DECLARES it — the second control. */
+  declared: Outcome;
+  /** Stored value on that quote, proving the control really wrote. */
+  declaredValue: unknown;
+  /** A misspelling of a real field, rather than a name borrowed from another object. */
   typo: Outcome;
   /** A hook assigns the undeclared key after the caller-path door. */
   viaHook: Outcome;
@@ -188,17 +191,14 @@ async function measure(driver: string, config: AnyRec): Promise<{ kernels: AnyRe
     () => ql.update('crm_opportunity_line_item', { id: cleanId, [KEY]: 42 }, { context: SYS }),
   );
 
-  const quoteId = await insert('crm_quote', {
-    name: 'Probe Quote', crm_account: accountId, status: 'draft',
-    quote_date: '2026-01-01', expiration_date: '2026-02-01',
-  });
-  let quoteLineId = '';
-  const declaredTwin = await attempt(async () => {
-    quoteLineId = await insert('crm_quote_line_item', {
-      crm_quote: quoteId, crm_product: productId, quantity: 1, unit_price: 100, [KEY]: 10,
+  let quoteId = '';
+  const declared = await attempt(async () => {
+    quoteId = await insert('crm_quote', {
+      name: 'Probe Quote', crm_account: accountId, status: 'draft',
+      quote_date: '2026-01-01', expiration_date: '2026-02-01', [KEY]: 10,
     });
   });
-  const twinRow = quoteLineId ? await read(ql, 'crm_quote_line_item', quoteLineId) : undefined;
+  const quoteRow = quoteId ? await read(ql, 'crm_quote', quoteId) : undefined;
   const typo = await attempt(() => ql.insert('crm_opportunity_line_item', line({ [TYPO]: 7 }), { context: SYS }));
 
   // ── the hook seam, on its own kernel so the injector cannot touch the above ──
@@ -225,19 +225,18 @@ async function measure(driver: string, config: AnyRec): Promise<{ kernels: AnyRe
     kernels: [kernel, k2],
     reading: {
       control, insert: insertLeg, update: updateLeg,
-      declaredTwin, declaredTwinValue: twinRow?.[KEY], typo, viaHook, viaHookRow,
+      declared, declaredValue: quoteRow?.[KEY], typo, viaHook, viaHookRow,
     },
   };
 }
 
 /**
- * `memory` is the sparse, schemaless store; `sqlite` is `@objectstack/driver-sql`
- * on knex/better-sqlite3; `sqlite-wasm` is the WASM build of the same family.
- * All three ship in this repo's dependencies, so all three are deployments a
- * customer can actually run.
+ * `sqlite` is `@objectstack/driver-sql` on knex/better-sqlite3; `sqlite-wasm` is
+ * the WASM build of the same family. Both are deployments a customer can
+ * actually run. (`memory` was a third leg until the maintainer's ruling on
+ * #2092 moved every test onto SQL.)
  */
 const DRIVERS: Array<{ driver: string; config: AnyRec }> = [
-  { driver: 'memory', config: {} },
   { driver: 'sqlite', config: { filename: ':memory:' } },
   { driver: 'sqlite-wasm', config: { filename: ':memory:' } },
 ];
@@ -258,12 +257,12 @@ afterAll(async () => {
 });
 
 describe('the probe rests on a real asymmetry (#1200)', () => {
-  it('crm_opportunity_line_item does not declare tax_rate', () => {
+  it(`crm_opportunity_line_item does not declare ${KEY}`, () => {
     expect(Object.keys((OpportunityLineItem as AnyRec).fields)).not.toContain(KEY);
   });
 
-  it('its twin crm_quote_line_item does', () => {
-    expect(Object.keys((QuoteLineItem as AnyRec).fields)).toContain(KEY);
+  it('crm_quote does', () => {
+    expect(Object.keys((Quote as AnyRec).fields)).toContain(KEY);
   });
 });
 
@@ -276,9 +275,9 @@ describe.each(DRIVERS.map((d) => d.driver))(
       expect(R().control).toMatchObject({ ok: true });
     });
 
-    it('control: the same key on the twin that DECLARES it is accepted and stored', () => {
-      expect(R().declaredTwin).toMatchObject({ ok: true });
-      expect(R().declaredTwinValue).toBe(10);
+    it('control: the same key on an object that DECLARES it is accepted and stored', () => {
+      expect(R().declared).toMatchObject({ ok: true });
+      expect(R().declaredValue).toBe(10);
     });
 
     it('insert carrying the undeclared key is refused as INVALID_FIELD / 400', () => {
@@ -313,25 +312,17 @@ describe.each(DRIVERS.map((d) => d.driver))(
  * refused it, but as a raw driver error carrying neither the ADR-0112 `code` nor
  * a `status`, so no caller could handle it by shape.
  *
- * On 17.3.0 all three agree, and they agree on the strict answer: the write is
+ * On 17.3.0 all three agreed, and they agreed on the strict answer: the write is
  * refused with the same `INVALID_FIELD` / 400 envelope the declared-surface door
  * already produced (asserted in half 1 above). The hook door and the caller door
  * are now one contract.
  *
  * ⚠️ Read this as a REAL behaviour change for any app whose hook quietly wrote a
  * key its object does not declare: on `driver-memory` that write used to land
- * and now refuses. This app writes no such key outside this probe.
+ * and now refuses. This app writes no such key outside this probe. (The memory
+ * leg itself left this file with the #2092 ruling; the SQL legs remain.)
  */
 describe('half 2 — a key a HOOK writes is refused by every driver, in one envelope (#1200, closed)', () => {
-  it('memory no longer accepts it — the permissive driver came into line', () => {
-    const R = readings.get('memory')!;
-    expect(R.viaHook.ok, 'driver-memory accepted an undeclared key again').toBe(false);
-    expect(R.viaHookRow).toBeUndefined();
-    // The object still declares no such field — the premise is unchanged; what
-    // changed is that the platform now refuses instead of storing it.
-    expect(Object.keys((OpportunityLineItem as AnyRec).fields)).not.toContain(KEY);
-  });
-
   it.each(['sqlite', 'sqlite-wasm'])('%s refuses it as an ADR-0112 envelope now', (driver) => {
     const R = readings.get(driver)!;
     expect(R.viaHook.ok).toBe(false);
@@ -342,7 +333,7 @@ describe('half 2 — a key a HOOK writes is refused by every driver, in one enve
     expect(R.viaHookRow).toBeUndefined();
   });
 
-  it('so the three drivers DO agree — the convergence is the finding', () => {
+  it('so the SQL drivers DO agree — the convergence is the finding', () => {
     const outcomes = DRIVERS.map((d) => readings.get(d.driver)!.viaHook.ok);
     expect(new Set(outcomes).size).toBe(1);
     expect(outcomes.every((ok) => ok === false)).toBe(true);

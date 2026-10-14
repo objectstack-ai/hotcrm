@@ -1,6 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -40,8 +40,8 @@ type Flow = Automation.Flow;
  *
  * ⛔ Do NOT reach for `status: 'draft'` as the off switch instead, and ⛔ not
  * `'obsolete'` either. Both readings are measured and recorded in
- * `lead-conversion-approval.flow.ts`'s docstring on the pinned
- * `@objectstack/service-automation` 17.4.0: draft flows still fire their
+ * `lead-conversion-approval.flow.ts`'s docstring on
+ * `@objectstack/service-automation` 17.4.0, the pin at that taking: draft flows still fire their
  * triggers, and `isFlowEnabled` composes `obsolete` with the installation's
  * activation ledger into a gate no install can ever turn ON. ⛔ Do not
  * re-derive it here.
@@ -119,7 +119,7 @@ export const OpportunityStatusChangeApprovalFlow: Flow = {
       id: 'get_opportunity',
       type: 'get_record',
       label: 'Get Opportunity',
-      config: { objectName: 'crm_opportunity', filter: { id: '{record.id}' }, outputVariable: 'oppRecord' },
+      config: { objectName: 'crm_opportunity', filter: { id: cel`record.id` }, outputVariable: 'oppRecord' },
     },
     {
       id: 'status_review',
@@ -164,11 +164,11 @@ export const OpportunityStatusChangeApprovalFlow: Flow = {
       label: 'Apply Requested Status',
       config: {
         objectName: 'crm_opportunity',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         fields: {
-          stage: '{oppRecord.requested_status}',
+          stage: cel`oppRecord.requested_status`,
           status_change_approval_status: 'approved',
-          approved_date: '{NOW()}',
+          approved_date: cel`isoDatetime(now())`,
         },
       },
     },
@@ -181,7 +181,7 @@ export const OpportunityStatusChangeApprovalFlow: Flow = {
       label: 'Clear Rejected Request',
       config: {
         objectName: 'crm_opportunity',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         fields: { status_change_approval_status: 'rejected', requested_status: null },
       },
     },

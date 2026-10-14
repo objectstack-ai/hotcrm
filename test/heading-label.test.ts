@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { headingLabel } from './helpers/heading-label';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 
 /**
  * `headingLabel()` reduces a docs heading to the label a drift guard compares

@@ -2,9 +2,8 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, applySystemFields } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { QUOTE_DISCOUNT_CEILING } from '../src/sales/objects/_thresholds';
 import { quotes, quoteLineItems } from '../src/revenue/data/revenue.seed';
 
@@ -45,9 +44,11 @@ import { quotes, quoteLineItems } from '../src/revenue/data/revenue.seed';
  * with a table of five metadata surfaces that accept a rule and then do not
  * apply it, and this card found a sixth of its own: a `severity: 'warning'`
  * script validation is ADMITTED with no observable surface at all (measured
- * below). So the refusal is driven through a real ObjectQL on both driver
- * shapes: `InMemoryDriver`, whose stored rows omit unwritten columns, and a
- * real SQLite database, whose rows are column-complete with NULLs.
+ * below). So the refusal is driven through a real ObjectQL over a real SQLite
+ * database, whose rows are column-complete with NULLs — the shape a deployed
+ * install stores. The absent-key shape (a sparse datasource such as
+ * `driver-mongodb`) is held per predicate by the totality sweep in
+ * `object-validation-predicates.test.ts`.
  *
  * Every refusal is asserted by its SUBSTANCE — the envelope `code`, the
  * per-field `code`, the message, and the fact that the record did not move.
@@ -198,16 +199,17 @@ describe('the ceiling is declared where the platform can act on it', () => {
   });
 });
 
-// ──────────────────────────────────────── the write is REFUSED (in-memory) ──
+// ──────────────────────────────────────────────────── the write is REFUSED ──
 
-describe('the write is REFUSED, not warned about (in-memory driver)', () => {
+describe('the write is REFUSED, not warned about', () => {
   let ql: AnyRec;
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_quote: quote } as never,
     })) as never;
+    await ql.syncSchemas();
   });
   afterAll(async () => {
     await ql?.close();
@@ -252,17 +254,6 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
     expectCeilingRefusal(env);
   });
 
-  it('leaves a quote with no discount at all alone', async () => {
-    // The sparse-row shape: `discount` is absent, not null. Without the
-    // `has(...)` guard this is where the predicate aborts and the rule dies.
-    const row = await api().object('crm_quote').insert({ ...DRAFT, name: 'No Discount' });
-    const stored = await api().object('crm_quote').findOne({ where: { id: row.id } });
-    expect('discount' in (stored ?? {})).toBe(false);
-    await api().object('crm_quote').update({ internal_notes: 'ok' }, { where: { id: row.id } });
-    const after = await api().object('crm_quote').findOne({ where: { id: row.id } });
-    expect(after?.internal_notes).toBe('ok');
-  });
-
   it('leaves ordinary discounts alone across the whole lifecycle', async () => {
     // A rule that fires on legitimate work is a rule someone disables.
     const row = await api().object('crm_quote').insert({ ...DRAFT, name: 'Normal', discount: 20 });
@@ -290,9 +281,10 @@ describe('the write is REFUSED, not warned about (in-memory driver)', () => {
 // ─────────────────────── the same contract on a real SQL database ───────────
 
 describe('the write is REFUSED on a real SQLite database too', () => {
-  // A SQL driver hands back a full row with NULLs where the in-memory driver
-  // hands back a sparse one. Those are different inputs to the same predicate,
-  // and which driver is underneath is not something a marketplace app chooses.
+  // The column-complete precondition, pinned: a SQL driver hands back a full
+  // row with NULLs, and the predicate must answer on that shape. (Its sparse
+  // twin ran on `driver-memory` until the #2092 ruling moved every test onto
+  // SQL; the no-keys shape is swept in `object-validation-predicates.test.ts`.)
   let ql: AnyRec;
 
   beforeAll(async () => {
@@ -320,7 +312,7 @@ describe('the write is REFUSED on a real SQLite database too', () => {
     const row = await api.object('crm_quote').insert({ ...DRAFT, name: 'SQL Probe', discount: 5 });
 
     const stored = await api.object('crm_quote').findOne({ where: { id: row.id } });
-    // The opposite precondition to the in-memory suite: the column is present.
+    // The column-complete shape: the column is present.
     expect('discount' in (stored ?? {})).toBe(true);
 
     const env = await refusal(() =>
@@ -377,11 +369,12 @@ describe('the ceiling is an INVARIANT — it reaches a row that was already over
 
   /** A store holding one 90%-discount quote, then re-opened with the ceiling. */
   const legacyRow = async (schema: AnyRec = quote) => {
-    const driver = new InMemoryDriver({ persistence: false });
+    const driver = new SqliteWasmDriver({ filename: ':memory:' });
     const before: AnyRec = (await ObjectQL.create({
       datasources: { default: driver },
       objects: { crm_quote: ungated() } as never,
     })) as never;
+    await before.syncSchemas();
     const row = await before
       .createContext({ isSystem: true })
       .object('crm_quote')
@@ -391,6 +384,7 @@ describe('the ceiling is an INVARIANT — it reaches a row that was already over
       datasources: { default: driver },
       objects: { crm_quote: schema } as never,
     })) as never;
+    await after.syncSchemas();
     return { ql: after, api: after.createContext({ isSystem: true }), row };
   };
 
@@ -473,9 +467,10 @@ describe('a `warning` severity would be a rule that does nothing', () => {
     );
 
     const ql: AnyRec = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_quote: warned } as never,
     })) as never;
+    await ql.syncSchemas();
     const api = ql.createContext({ isSystem: true });
 
     const row = await api.object('crm_quote').insert({ ...DRAFT, name: 'Warned', discount: 90 });
@@ -549,14 +544,15 @@ describe('the ceiling is declared on the line item too, as one policy', () => {
   });
 });
 
-describe('the line write is REFUSED, not warned about (in-memory driver)', () => {
+describe('the line write is REFUSED, not warned about', () => {
   let ql: AnyRec;
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_quote_line_item: lineItem } as never,
     })) as never;
+    await ql.syncSchemas();
   });
   afterAll(async () => {
     await ql?.close();
@@ -597,17 +593,14 @@ describe('the line write is REFUSED, not warned about (in-memory driver)', () =>
     expectLineCeilingRefusal(env);
   });
 
-  it('leaves a line with no discount written alone — and it is NOT the sparse shape', async () => {
-    // The opposite precondition to the quote object, measured rather than
-    // copied: `crm_quote_line_item.discount` carries `defaultValue: 0`, so even
-    // the in-memory driver stores the column on a write that never mentioned
-    // it. The `has(...)` guard is still load-bearing — the repo-wide sweep in
+  it('leaves a line with no discount written alone — the field default is 0', async () => {
+    // `crm_quote_line_item.discount` carries `defaultValue: 0`, so a write that
+    // never mentions it stores 0, not NULL. The `has(...)` guard is still
+    // load-bearing — the repo-wide sweep in
     // `object-validation-predicates.test.ts` evaluates every predicate against
-    // a record with NO keys at all — but this object cannot reach that state
-    // through an ordinary insert.
+    // a record with NO keys at all, the shape a sparse datasource hands back.
     const row = await api().object('crm_quote_line_item').insert({ ...LINE });
     const stored = await api().object('crm_quote_line_item').findOne({ where: { id: row.id } });
-    expect('discount' in (stored ?? {})).toBe(true);
     expect(stored?.discount).toBe(0);
 
     await api().object('crm_quote_line_item').update({ quantity: 3 }, { where: { id: row.id } });
@@ -657,11 +650,12 @@ describe('the line ceiling is an INVARIANT — it reaches a line already over it
 
   /** A store holding one 90%-discount line, then re-opened with the ceiling. */
   const legacyLine = async (schema: AnyRec = lineItem) => {
-    const driver = new InMemoryDriver({ persistence: false });
+    const driver = new SqliteWasmDriver({ filename: ':memory:' });
     const before: AnyRec = (await ObjectQL.create({
       datasources: { default: driver },
       objects: { crm_quote_line_item: ungatedLine() } as never,
     })) as never;
+    await before.syncSchemas();
     const row = await before
       .createContext({ isSystem: true })
       .object('crm_quote_line_item')
@@ -671,6 +665,7 @@ describe('the line ceiling is an INVARIANT — it reaches a line already over it
       datasources: { default: driver },
       objects: { crm_quote_line_item: schema } as never,
     })) as never;
+    await after.syncSchemas();
     return { ql: after, api: after.createContext({ isSystem: true }), row };
   };
 
@@ -728,9 +723,10 @@ describe('a quote with a 90% line discount cannot reach `presented`', () => {
 
   beforeAll(async () => {
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_quote: quote, crm_quote_line_item: lineItem } as never,
     })) as never;
+    await ql.syncSchemas();
   });
   afterAll(async () => {
     await ql?.close();
@@ -815,7 +811,7 @@ describe('a quote with a 90% line discount cannot reach `presented`', () => {
     // load-bearing input to #1109: an EFFECTIVE-discount ceiling has to read
     // both numbers at once, so it cannot be a script validation on either
     // object and would have to live where the rollup already joins them.
-    const driver = new InMemoryDriver({ persistence: false });
+    const driver = new SqliteWasmDriver({ filename: ':memory:' });
     const ungated = JSON.parse(JSON.stringify(lineItem)) as AnyRec;
     ungated.validations = ((ungated.validations ?? []) as AnyRec[]).filter(
       (r) => r?.name !== CEILING_RULE,
@@ -825,6 +821,7 @@ describe('a quote with a 90% line discount cannot reach `presented`', () => {
       datasources: { default: driver },
       objects: { crm_quote: quote, crm_quote_line_item: ungated } as never,
     })) as never;
+    await before.syncSchemas();
     const legacyApi = before.createContext({ isSystem: true });
     const q = await legacyApi
       .object('crm_quote')
@@ -837,6 +834,7 @@ describe('a quote with a 90% line discount cannot reach `presented`', () => {
       datasources: { default: driver },
       objects: { crm_quote: quote, crm_quote_line_item: lineItem } as never,
     })) as never;
+    await after.syncSchemas();
     const gatedApi = after.createContext({ isSystem: true });
 
     // The LINE is frozen — this is the half the card fixes.

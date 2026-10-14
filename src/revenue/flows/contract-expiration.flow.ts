@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from '../../sales/flows/_guarded-iteration';
 type Flow = Automation.Flow;
@@ -28,7 +29,7 @@ export const ContractExpirationFlow: Flow = {
       id: 'query_contracts', type: 'get_record', label: 'Find Expired Contracts',
       config: {
         objectName: 'crm_contract',
-        filter: { status: 'activated', end_date: { $lt: '{TODAY()}' } },
+        filter: { status: 'activated', end_date: { $lt: cel`isoDate(today())` } },
         limit: 500,
         outputVariable: 'contractList',
       },
@@ -36,23 +37,27 @@ export const ContractExpirationFlow: Flow = {
     {
       id: 'loop_contracts', type: 'loop', label: 'For Each Contract',
       config: {
-        collection: '{contractList}',
+        collection: cel`contractList`,
         iteratorVariable: 'currentContract',
         body: guarded('contract', {
           nodes: [
             {
               id: 'mark_expired', type: 'update_record', label: 'Mark Expired',
-              config: { objectName: 'crm_contract', filter: { id: '{currentContract.id}' }, fields: { status: 'expired' } },
+              config: { objectName: 'crm_contract', filter: { id: cel`currentContract.id` }, fields: { status: 'expired' } },
             },
             {
               id: 'notify_owner', type: 'notify', label: 'Notify Owner',
               config: {
-                recipients: ['{currentContract.owner_id}'],
+                recipients: [cel`has(currentContract.owner_id) ? currentContract.owner_id : null`],
                 channels: ['inbox', 'email'],
                 topic: 'contract_expired',
                 template: 'crm.contract_expired',
-                templateData: { contract_number: '{currentContract.contract_number}' },
-                actionUrl: '/crm_contract/{currentContract.id}',
+                templateData: { contract_number: cel`currentContract.contract_number` },
+                actionUrl: '/crm_contract/{{currentContract.id}}',
+                // A schedule run has no organization: since 18.0.0-next.1 the
+                // notification takes its owner from this record (objectstack#23284).
+                sourceObject: 'crm_contract',
+                sourceId: cel`currentContract.id`,
               },
             },
           ],

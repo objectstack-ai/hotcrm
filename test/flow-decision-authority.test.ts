@@ -1,18 +1,20 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { P } from '@objectstack/spec';
 import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
 import { allFlows } from '../objectstack.composition';
-import { makeFlowHarness } from './helpers/flow-harness';
 import { flowGraphDeep } from './helpers/flow-regions';
+import { hotcrmStack, signUpPerson, daysFromNow, notificationsTo, runScheduledFlow } from './helpers/verify-stack';
 
 /**
  * ═══ HOUSE RULE: a `decision` node's OUT-EDGES are the only branch site ═════
  *
  * A `decision` node in this repo carries **no predicate of its own**. It is a
  * bare gateway; the branching lives entirely on its out-edges' `condition`.
- * This file enforces that, so you do not have to remember it.
+ * `pnpm lint` enforces that (`objectstack lint --strict`, rule
+ * `flow-inert-node-condition`), so you do not have to remember it.
  *
  * ### The defect this closes (#650)
  *
@@ -40,8 +42,8 @@ import { flowGraphDeep } from './helpers/flow-regions';
  *     decision node's contract at all.
  *   - `FlowNodeSchema.config` is an open `z.record`, and `decision` publishes
  *     no descriptor `configSchema`, so the engine's undeclared-config-key
- *     rejection (#4277) explicitly EXEMPTS it. Nothing at any layer rejects
- *     the key.
+ *     rejection (#4277) explicitly EXEMPTS it. Nothing in the schema or the
+ *     engine rejects the key; `objectstack lint` reports it (see above).
  *
  * So 8 `decision` nodes across 4 flows authored a predicate that read like the
  * decision and decided nothing. Behaviour was correct only because every one
@@ -83,7 +85,7 @@ import { flowGraphDeep } from './helpers/flow-regions';
  * invariant — totality/partition — and it is owned by
  * `test/flow-condition-totality.test.ts` and
  * `test/flow-variable-conditions.test.ts`, which already sweep edge
- * conditions. This file owns only "the node states no predicate".
+ * conditions. This file owns only the decision node's own side of it.
  */
 
 type AnyRec = Record<string, any>;
@@ -130,24 +132,10 @@ describe('decision nodes state no predicate of their own', () => {
     ).toBe(true);
   });
 
-  it('no decision node carries the inert singular `config.condition`', () => {
-    const offenders = decisions
-      .filter((d) => d.node.config?.condition !== undefined)
-      .map((d) => d.id);
-
-    expect(
-      offenders,
-      'These `decision` nodes declare `config.condition`, which NO reader in ' +
-        '@objectstack/service-automation ever evaluates — the decision executor reads ' +
-        'the PLURAL `config.conditions[]`, and nothing else. The key is not in ' +
-        "`DecisionConfigSchema` either, and `decision` publishes no descriptor " +
-        'configSchema, so the engine\'s undeclared-key rejection exempts it: nothing ' +
-        'at any layer will tell you. The branch is decided entirely by the out-edge ' +
-        "`condition`s, so a copy here is inert metadata that reads like the live " +
-        'predicate and is free to drift away from it. Delete it and author the ' +
-        'predicate on the out-edge (#650).',
-    ).toEqual([]);
-  });
+  // ⚰️ RETIRED (#1582): "no decision node carries the inert singular
+  // `config.condition`". `objectstack lint --strict` reports it as
+  // `flow-inert-node-condition` (a blank one as `expression-invalid`), at the
+  // top level and inside loop / try regions, and `pnpm lint` fails on it.
 
   it('every decision node actually decides something', () => {
     // A `decision` whose out-edges carry no conditions and which declares no
@@ -209,6 +197,31 @@ describe('decision nodes state no predicate of their own', () => {
 });
 
 describe('the mechanism, on the real engine', () => {
+  // The shipped app booted through `@objectstack/verify`. A flow variant is
+  // registered beside the shipped ones through the platform's own
+  // flow-authoring door (`POST /automation`, as the admin), run the way its
+  // schedule trigger runs it (`runScheduledFlow`), and removed again
+  // (`DELETE /automation/:name`).
+  let verify: VerifyStack;
+  let admin: string;
+  let n = 0;
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    admin = await verify.signIn();
+  }, 120_000);
+
+  /** Register `flow` under `name` for the duration of `body`. */
+  const withFlow = async <T>(name: string, flow: AnyRec, body: () => Promise<T>): Promise<T> => {
+    const registered = await verify.apiAs(admin, 'POST', '/automation', { ...flow, name });
+    expect(registered.status, await registered.clone().text()).toBe(200);
+    try {
+      return await body();
+    } finally {
+      const removed = await verify.apiAs(admin, 'DELETE', `/automation/${name}`);
+      expect(removed.status).toBe(200);
+    }
+  };
+
   /**
    * The issue's core claim, reproduced end to end on a REAL repo flow: edit
    * the node condition alone and the flow keeps its old routing, silently.
@@ -217,38 +230,48 @@ describe('the mechanism, on the real engine', () => {
    * idempotency shape — a second sweep must not re-nudge. We inject the
    * INVERSE of the live edge predicate onto the node. Were the node copy read
    * at all, the gate would flip and the second sweep would duplicate. It does
-   * not: the run is byte-identical to the control.
+   * not: the run is identical to the control.
+   *
+   * Each arm gets a stalled deal of its own, owned by a rep of its own, and is
+   * read over that deal's tasks and that rep's inbox: a sweep nudges EVERY
+   * stalled deal (the boot's seed deals included), so the control's two sweeps
+   * have already nudged anything that existed before the tampered arm's deal.
    */
-  const seedOpps = () => {
-    const day = (n: number) =>
-      new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
-    return [
-      { id: 'o_stalled', name: 'Stalled Deal', stage: 'proposal', stage_entry_date: day(-30), owner_id: 'rep1' },
-    ];
+  const stalledDeal = async () => {
+    const i = ++n;
+    const rep = await signUpPerson(verify, `rep${i}@flow-decision-authority.test`, {
+      name: `Stalled Rep ${i}`, positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+    const [account] = await verify.seed('crm_account', [{ name: `Stalled Co ${i}`, owner_id: rep.id }]);
+    const [opp] = await verify.seed('crm_opportunity', [{
+      name: `Stalled Deal ${i}`, stage: 'proposal', stage_entry_date: daysFromNow(-30), amount: 50000,
+      close_date: '2030-06-30', crm_account: account!.id, owner_id: rep.id,
+    }]);
+    return { rep, opp: opp! };
   };
 
-  const sweepTwice = async (flow: AnyRec) => {
-    const h = makeFlowHarness(
-      { opportunity_stagnation: flow as never },
-      { crm_opportunity: seedOpps(), crm_task: [] },
-    );
-    await h.run('opportunity_stagnation', {}, { event: 'schedule' });
-    await h.run('opportunity_stagnation', {}, { event: 'schedule' });
-    return { tasks: h.store.crm_task.length, notifications: h.notifications.length };
+  const sweepTwice = async (flowName: string, deal: Awaited<ReturnType<typeof stalledDeal>>) => {
+    await runScheduledFlow(verify, flowName);
+    await runScheduledFlow(verify, flowName);
+    const tasks = await verify.rows('crm_task', { related_to_opportunity: deal.opp.id });
+    const notifications = await notificationsTo(verify, deal.rep.id, 'deal_stalled');
+    return { tasks: tasks.length, notifications: notifications.length };
   };
 
   it('a decision node`s singular `config.condition` changes NOTHING', async () => {
-    const control = await sweepTwice(OpportunityStagnationFlow as AnyRec);
+    const control = await sweepTwice('opportunity_stagnation', await stalledDeal());
 
     // Same flow, with the inverse of the live edge predicate planted on the
     // gate node. `existingStallTask != null` is exactly "nudge only when a
     // nudge already exists" — the opposite of what the flow does.
     const tampered = structuredClone(OpportunityStagnationFlow) as AnyRec;
-    const gate = graphOf(tampered).nodes.find((n) => n.id === 'check_not_nudged');
+    const gate = graphOf(tampered).nodes.find((node) => node.id === 'check_not_nudged');
     expect(gate, 'check_not_nudged not found — the flow was restructured').toBeDefined();
     gate!.config = { ...(gate!.config ?? {}), condition: P`existingStallTask != null` };
 
-    const injected = await sweepTwice(tampered);
+    const deal = await stalledDeal();
+    const injected = await withFlow('opportunity_stagnation_tampered', tampered, () =>
+      sweepTwice('opportunity_stagnation_tampered', deal));
 
     expect(control, 'the control sweep did not nudge exactly once').toEqual({
       tasks: 1,
@@ -270,8 +293,7 @@ describe('the mechanism, on the real engine', () => {
    * edge predicate should make the CLOSED gate run its action anyway. It does.
    */
   it('a node-authoritative decision with no default sink FAILS OPEN', async () => {
-    const gateFlow = (nodeAuthoritative: boolean): AnyRec => ({
-      name: 'probe',
+    const gateFlow = (stall: string, nudge: string, nodeAuthoritative: boolean): AnyRec => ({
       label: 'Probe',
       type: 'autolaunched',
       status: 'active',
@@ -281,7 +303,7 @@ describe('the mechanism, on the real engine', () => {
         { id: 'start', type: 'start', label: 'Start' },
         {
           id: 'find', type: 'get_record', label: 'Already nudged?',
-          config: { objectName: 'crm_task', filter: { subject: 'stall' }, outputVariable: 'existingStallTask' },
+          config: { objectName: 'crm_task', filter: { subject: stall }, outputVariable: 'existingStallTask' },
         },
         {
           id: 'gate', type: 'decision', label: 'First Nudge?',
@@ -291,7 +313,10 @@ describe('the mechanism, on the real engine', () => {
         },
         {
           id: 'act', type: 'create_record', label: 'Nudge',
-          config: { objectName: 'crm_audit', fields: { note: 'NUDGED' } },
+          config: {
+            objectName: 'crm_task',
+            fields: { subject: nudge, type: 'follow_up', priority: 'high', status: 'not_started' },
+          },
         },
       ],
       edges: [
@@ -308,12 +333,13 @@ describe('the mechanism, on the real engine', () => {
 
     // Gate CLOSED: a stall task already exists, so the action must NOT run.
     const runClosed = async (nodeAuthoritative: boolean) => {
-      const h = makeFlowHarness(
-        { probe: gateFlow(nodeAuthoritative) as never },
-        { crm_task: [{ id: 't1', subject: 'stall' }], crm_audit: [] },
-      );
-      await h.run('probe', {}, { event: 'schedule' });
-      return (h.store.crm_audit ?? []).map((r: AnyRec) => r.note);
+      const i = ++n;
+      const stall = `stall ${i}`;
+      const nudge = `NUDGED ${i}`;
+      await verify.seed('crm_task', [{ subject: stall, type: 'follow_up', priority: 'high', status: 'not_started' }]);
+      const name = `decision_probe_${i}`;
+      await withFlow(name, gateFlow(stall, nudge, nodeAuthoritative), () => runScheduledFlow(verify, name));
+      return (await verify.rows('crm_task', { subject: nudge })).map(() => 'NUDGED');
     };
 
     expect(

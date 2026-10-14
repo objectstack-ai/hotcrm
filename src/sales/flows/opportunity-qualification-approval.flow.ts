@@ -1,6 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
@@ -112,7 +112,7 @@ export const OpportunityQualificationApprovalFlow: Flow = {
       id: 'get_opportunity',
       type: 'get_record',
       label: 'Get Opportunity',
-      config: { objectName: 'crm_opportunity', filter: { id: '{record.id}' }, outputVariable: 'oppRecord' },
+      config: { objectName: 'crm_opportunity', filter: { id: cel`record.id` }, outputVariable: 'oppRecord' },
     },
     {
       id: 'qualification_review',
@@ -147,7 +147,7 @@ export const OpportunityQualificationApprovalFlow: Flow = {
       label: 'Mark Qualified',
       config: {
         objectName: 'crm_opportunity',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         fields: { qualification_approval_status: 'approved' },
       },
     },
@@ -160,7 +160,7 @@ export const OpportunityQualificationApprovalFlow: Flow = {
       label: 'Clear Rejected Request',
       config: {
         objectName: 'crm_opportunity',
-        filter: { id: '{record.id}' },
+        filter: { id: cel`record.id` },
         fields: { qualification_approval_status: 'rejected', qualification_requested: false },
       },
     },

@@ -177,8 +177,8 @@ pnpm publish:marketplace           # publish
 
 > **Note**: publishing is one step of a longer release sequence, and
 > [`docs/RELEASE_STRATEGY.md`](docs/RELEASE_STRATEGY.md) is that runbook — version
-> sources, the `objectstack.config.ts` manifest version `changeset version` does not
-> touch, and the artifacts to confirm before announcing. It is the single source of
+> sources, the package manifests' version (`src/sales/index.ts`, `src/service/index.ts`)
+> `changeset version` does not touch, and the artifacts to confirm before announcing. It is the single source of
 > truth for the release process, so this section links to it rather than restating it.
 
 ## 🔄 Pull Request Process

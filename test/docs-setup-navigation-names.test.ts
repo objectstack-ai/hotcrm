@@ -9,6 +9,7 @@ import {
   SETUP_NAV_CONTRIBUTIONS,
   SetupAppTranslations,
 } from '@objectstack/platform-objects/apps';
+import { servedApp } from './helpers/composed-stack';
 import { CrmApp } from '../src/sales/apps';
 import { CrmTranslations } from '../src/sales/translations';
 import { REPO_ROOT } from './helpers/repo-root';
@@ -385,7 +386,14 @@ const crmPairKey = (group: string, child: string): string => `${group} → ${chi
  * group → child pair, keyed within ONE locale, so a citation cannot pass by
  * naming a group and a child that both exist but sit apart. The label a locale
  * does not override falls back to the shell's own, exactly as the Console does.
+ *
+ * The navigation walked is the SERVED tree (`servedApp()`): the service
+ * module contributes *Cases*, *Knowledge* and *Service Overview* into
+ * **Service** (and two more items elsewhere), so `Service → Knowledge` is a
+ * real pair although `src/sales/apps/crm.app.ts` no longer lists it.
  */
+const CRM_SERVED_APP: AnyRec = servedApp(CRM_APP_ID);
+
 const { CRM_GROUP_LABELS, CRM_PAIRS, CRM_LABELS } = (() => {
   const groups = new Set<string>();
   const pairs = new Set<string>();
@@ -393,7 +401,7 @@ const { CRM_GROUP_LABELS, CRM_PAIRS, CRM_LABELS } = (() => {
   for (const locale of CRM_LOCALES) {
     const nav = crmNavOverrides(locale);
     const labelOf = (id: string, fallback: string): string => nav[id]?.label ?? fallback;
-    for (const entry of ((CrmApp as AnyRec).navigation ?? []) as AnyRec[]) {
+    for (const entry of (CRM_SERVED_APP.navigation ?? []) as AnyRec[]) {
       if (!entry?.label) continue;
       const entryLabel = labelOf(entry.id, entry.label);
       all.add(entryLabel);

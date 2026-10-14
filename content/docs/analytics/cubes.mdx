@@ -84,7 +84,7 @@ So the three questions this section offered — *"ROI by campaign type"*, *"cost
 
 ## How users interact with datasets
 
-What the app guarantees is the binding: a report or a dashboard tile names a dataset and selects its measures and dimensions by name, and `test/analytics-integrity.test.ts` fails the build if any of those names does not resolve. That is what keeps two tiles showing the same number — and it is also why the names in `src/*/datasets/` are worth reading directly rather than through a copy.
+What the app guarantees is the binding: a report or a dashboard tile names a dataset and selects its measures and dimensions by name, and the platform's own checks — `objectstack validate` and `objectstack lint --strict`, which `pnpm verify` and CI both run — fail the build if any of those names does not resolve. That is what keeps two tiles showing the same number — and it is also why the names in `src/*/datasets/` are worth reading directly rather than through a copy.
 
 The drag-and-drop pivot experience this section used to describe — pick a cube, drag dimensions to rows and columns, filter, pivot, chart, save the view as a report, pin it to a dashboard — is a **platform** surface rather than something HotCRM declares. Nothing in this app's metadata configures such a screen, and nothing here tests one, so this page makes no claim about it in either direction. If your workflow depends on self-service pivoting, verify it against your deployment rather than against this page.
 
@@ -102,7 +102,7 @@ Whether the platform's own agent additionally reads the compiled cubes, and whet
 
 ## Custom cubes
 
-In HotCRM a new cube starts as a new **dataset in source**: a `defineDataset(...)` in the owning package's `datasets/<object>.dataset.ts`, exported from that directory's `index.ts`, merged into `allDatasets` by `objectstack.composition.ts`, handed to `defineStack()` by `objectstack.config.ts`, then deployed. That is the route every dataset in the app took, and the reason the marketing gap is a code change rather than a configuration one.
+In HotCRM a new cube starts as a new **dataset in source**: a `defineDataset(...)` in the owning package's `datasets/<object>.dataset.ts`, exported from that directory's `index.ts`, registered by the stack of the package that owns it — merged into `appDatasets` by `objectstack.composition.ts` for the app package (sales, revenue and marketing), named in `src/service/index.ts` for the service module — then deployed. That is the route every dataset in the app took, and the reason the marketing gap is a code change rather than a configuration one.
 
 The three examples this section used to offer — a *Subscriptions Cube*, a *Renewal Cube*, a *Partner Cube* — exist in no form; there is no subscription or partner object to build them on. Whether the console additionally offers an admin-facing cube builder is, again, a platform question this page does not answer.
 

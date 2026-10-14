@@ -7,10 +7,12 @@
  * A named re-export barrel, like every other barrel in this tree, and NOT a
  * pre-assembled array. The order hooks reach `defineStack()` is written
  * straight into the artifact — measured: reversing the input array reverses
- * `hooks[]` in `dist/objectstack.json` — and four independently ordered package
- * lists cannot reproduce one interleaved order. So assembly stays at the single
- * place that can see all four, `objectstack.config.ts`, which registers them in
- * the order this repo has always used (by hook source file name).
+ * `hooks[]` in `dist/objectstack.json` — and the app package registers three
+ * directories' hooks (sales, revenue, marketing) in one interleaved order no
+ * per-directory list can reproduce. So that assembly stays in the place that
+ * can see all three, `objectstack.composition.ts` (`appHooks`), in the order
+ * this repo has always used (by hook source file name); the service module
+ * lists its own in `src/service/index.ts`.
  *
  * A `*.hook.ts` sits beside the `*.object.ts` it names: co-location is what
  * enforces ADR-0130 R4 (a hook may not attach to another package's object), so

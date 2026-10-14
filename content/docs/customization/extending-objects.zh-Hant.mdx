@@ -50,7 +50,7 @@ export { Warranty } from './warranty.object.js';
 
 ## 新增生命週期邏輯
 
-`*.hook.ts` 與它命名的那個 `*.object.ts` 並排放在同一個套件裡，並從該套件自己的 `objects/hooks.ts` 註冊——這裡是 `src/revenue/objects/hooks.ts`——再由 `objectstack.composition.ts` 彙入 `allHooks`。兩處都沒到達的 hook 會被靜默忽略：建置照樣是綠的，而處理函式永遠不會執行。
+`*.hook.ts` 與它命名的那個 `*.object.ts` 並排放在同一個套件裡，並從該套件自己的 `objects/hooks.ts` 註冊——這裡是 `src/revenue/objects/hooks.ts`——再進入它所屬套件的 hook 清單：app 套件（sales、revenue、marketing）是 `objectstack.composition.ts` 裡的 `appHooks`，服務模組是 `src/service/index.ts` 裡的 `serviceHooks`。兩處都沒到達的 hook 會被靜默忽略：建置照樣是綠的，而處理函式永遠不會執行。
 
 ```ts
 // src/revenue/objects/warranty.hook.ts
@@ -95,9 +95,10 @@ export const WarrantyAlertFlow: Flow = {
 };
 ```
 
-註冊分兩步，漏掉第二步會讓這條流程被靜默丟棄。先從該套件的 barrel 重新匯出，再把它加入
-`objectstack.composition.ts` 裡的 `allFlows` —— 正是這個陣列、而不是那個 barrel，被
-`objectstack.config.ts` 交給 `defineStack({ flows })`：
+註冊分兩步，漏掉第二步會讓這條流程被靜默丟棄。先從該套件的 barrel 重新匯出，再把它加入所屬套件的
+流程清單——sales、revenue、marketing（app 套件）是 `objectstack.composition.ts` 裡的 `appFlows`，
+服務模組是 `src/service/index.ts` 裡的 `serviceFlows`。正是這份清單、而不是那個 barrel，被交給
+該套件自己的 `defineStack({ flows })`：
 
 ```ts
 // src/revenue/flows/index.ts —— 套件自己的 barrel：只做重新匯出，別無其它
@@ -105,19 +106,19 @@ export { WarrantyAlertFlow } from './warranty-alert.flow.js';
 ```
 
 ```ts
-// objectstack.composition.ts —— 全應用的那份清單，按流程註冊順序排列
+// objectstack.composition.ts —— app 套件的那份清單，按流程註冊順序排列
 import { WarrantyAlertFlow } from './src/revenue/flows/index.js';
 
-export const allFlows = [
+export const appFlows = [
   // …既有的流程
   WarrantyAlertFlow,
 ];
 ```
 
-只進 barrel 是不夠的。`allFlows` 之所以是一份顯式有序清單，是因為註冊順序在四個套件之間交錯，
-任何按套件切分的 barrel 都承載不了它。一條到了 barrel 卻沒進這個陣列的流程，註冊它的是零：
+只進 barrel 是不夠的。`appFlows` 之所以是一份顯式有序清單，是因為註冊順序在三個目錄之間交錯，
+任何按目錄切分的 barrel 都承載不了它。一條到了 barrel 卻沒進所屬套件清單的流程，註冊它的是零：
 `pnpm validate` 照樣退出 0，而且哪裡都不會提到它——能發現它的是 `pnpm test`，套件會點名任何
-被套件匯出、卻不在 `allFlows` 裡的流程。
+被套件匯出、卻不在這兩份清單裡的流程。
 
 ## 驗證
 

@@ -2,10 +2,11 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
-import { hookNamed, makeCtx } from './helpers/hook-harness';
-import leadHooks from '../src/sales/objects/lead.hook';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import type { VerifyStack } from '@objectstack/verify';
+import stack from './helpers/composed-stack';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { LeadViews } from '../src/sales/views/lead.view';
 
 /**
  * ═══ HotCRM has ONE owner, and it is the platform's (#548) ════════════════
@@ -162,6 +163,21 @@ describe('one ownership column, and it is `owner_id`', () => {
     );
     expect(withDefault, 'owner_id must have no schema default').toEqual([]);
   });
+
+  it('the New Lead form leaves `owner_id` to that stamp — offered, not required (#2097)', () => {
+    // `LeadViews.form` IS the create dialog (see `case-create-form-narrowing`),
+    // and a `required` entry there is a client-side submit check. Measured on
+    // 18.0.0-next.0: a rep's Leads → New stopped at "Lead Owner is required"
+    // with nothing POSTed, so the stamp never saw the insert. The server half —
+    // a rep's ownerless insert lands owned by the rep — is pinned end to end by
+    // `stands down when the middleware already stamped an owner` below.
+    const entries: unknown[] = ((LeadViews as AnyRec).form?.sections ?? []).flatMap(
+      (s: AnyRec) => s.fields ?? [],
+    );
+    const owner = entries.find((f) => (typeof f === 'string' ? f : (f as AnyRec)?.field) === 'owner_id');
+    expect(owner, 'owner_id left the New Lead form — this pin would judge nothing').toBeDefined();
+    expect((owner as AnyRec)?.required === true, 'the New Lead form demands an owner again').toBe(false);
+  });
 });
 
 // ──────────────────────────────────── which writers the gate can see ──
@@ -174,7 +190,7 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
   beforeAll(async () => {
     seen = [];
     ql = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_lead: {
           name: 'crm_lead',
@@ -195,6 +211,7 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
         },
       } as never,
     })) as never;
+    await ql.syncSchemas();
 
     // The SAME seam `@objectstack/plugin-security` registers its guard on. It
     // reads `opCtx.data` and passes everything through — a recorder, not a gate,
@@ -409,49 +426,47 @@ describe('every owner-facing surface points at the one column', () => {
 // ─────────────────────────────────────── the round-robin, end to end ──
 
 describe('lead_auto_assign assigns the platform column', () => {
-  const assign = hookNamed(leadHooks, 'lead_auto_assign');
-
-  const makeApi = (leads: AnyRec[], reps: string[]): AnyRec => ({
-    object: (name: string) => ({
-      async find() {
-        return name === 'sys_user_position' ? reps.map((user_id) => ({ user_id })) : leads;
-      },
-      async count(q: AnyRec = {}) {
-        const where = (q.where ?? {}) as AnyRec;
-        return leads.filter((l) =>
-          Object.entries(where).every(([k, v]) => l[k] === v)).length;
-      },
-    }),
+  /**
+   * On the shipped app booted by `@objectstack/verify`: two sales reps hold
+   * the `sales_rep` position — the round-robin's pool — and rep A already
+   * carries two open leads to rep B's one, so the least-loaded rep is B.
+   */
+  let verify: VerifyStack;
+  let repA: Person;
+  let repB: Person;
+  let k = 0;
+  const lead = (over: AnyRec = {}): AnyRec => ({
+    first_name: 'Nora', last_name: `Intake ${++k}`, company: `NewCo ${k}`, email: `intake${k}@ownership-model.test`, ...over,
   });
+  beforeAll(async () => {
+    verify = await hotcrmStack();
+    repA = await signUpPerson(verify, 'rep-a@ownership-model.test', {
+      name: 'Rep A', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+    repB = await signUpPerson(verify, 'rep-b@ownership-model.test', {
+      name: 'Rep B', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+    await verify.seed('crm_lead', [lead({ owner_id: repA.id }), lead({ owner_id: repA.id }), lead({ owner_id: repB.id })]);
+  }, 120_000);
 
   it('writes owner_id, not a second column', async () => {
-    const input: AnyRec = { company: 'NewCo' };
-    await assign.handler(makeCtx({
-      event: 'beforeInsert',
-      input,
-      api: makeApi(
-        [
-          { id: 'x1', owner_id: 'repA', is_converted: false },
-          { id: 'x2', owner_id: 'repA', is_converted: false },
-          { id: 'x3', owner_id: 'repB', is_converted: false },
-        ],
-        ['repA', 'repB'],
-      ) as never,
-    }) as never);
-    expect(input.owner_id, 'did not assign the least-loaded rep on owner_id').toBe('repB');
-    expect('owner' in input, 'wrote a second, unread ownership column').toBe(false);
+    // Genuinely ownerless intake: a row written by the system with no owner —
+    // the posture an import or a seed load writes under (the platform's own
+    // seed context). A public-form submission reaches the same pool, read
+    // elevated (#2014; pinned in hooks-runtime.test.ts).
+    const [written] = await verify.seed('crm_lead', [lead()]);
+    const [stored] = await verify.rows('crm_lead', { id: written!.id });
+    expect(stored!.owner_id, 'did not assign the least-loaded rep on owner_id').toBe(repB.id);
+    expect('owner' in stored!, 'wrote a second, unread ownership column').toBe(false);
   });
 
   it('stands down when the middleware already stamped an owner', async () => {
     // On any write that carries a user, `owner_id` is already the creator by
     // the time this hook runs — which is what keeps the round-robin scoped to
-    // genuinely ownerless intake (import, web-to-lead, API capture).
-    const input: AnyRec = { company: 'NewCo', owner_id: 'usr_creator' };
-    await assign.handler(makeCtx({
-      event: 'beforeInsert',
-      input,
-      api: makeApi([], ['repA', 'repB']) as never,
-    }) as never);
-    expect(input.owner_id).toBe('usr_creator');
+    // genuinely ownerless intake (import, web-to-lead, API capture). Rep A is
+    // the MORE loaded rep, so a round-robin would have moved this lead to B.
+    const written = await verify.hooks.run('crm_lead', 'insert', lead(), { as: repA.token });
+    const [stored] = await verify.rows('crm_lead', { id: written.id });
+    expect(stored!.owner_id).toBe(repA.id);
   });
 });

@@ -3,17 +3,19 @@
 import { describe, it, expect } from 'vitest';
 import { AgentSchema } from '@objectstack/spec/ai';
 import { ComponentPropsMap, RecordActivityProps, RecordRelatedListProps } from '@objectstack/spec/ui';
-import stack from '../objectstack.config';
-import {
-  type AnyRec,
-  objects,
-  pages,
-  views,
-  objectNames,
-  PLATFORM_OBJECTS,
-  fieldsOf,
-  walk,
-} from './helpers/metadata-fixtures';
+import stack, { type AnyRec, walk } from './helpers/composed-stack';
+import { hotcrmStack, platformObjectNames, registeredFields } from './helpers/verify-stack';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
+const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
+const views: AnyRec[] = (stack as AnyRec).views ?? [];
+const objectNames = new Set(objects.map((o) => o.name as string));
+
+// The runtime half of a reference check — which objects and columns the booted
+// app actually registers — is read from the platform's registry, not a roster.
+const runtime = await hotcrmStack();
+const PLATFORM_OBJECTS = platformObjectNames(runtime, objectNames);
+const fieldsOf = (object: string): string[] => registeredFields(runtime, object);
 
 /**
  * Dangling-reference guards for UI metadata.
@@ -40,7 +42,7 @@ import {
  * family so a reader lands on the guard in one hop:
  *
  *   `test/view-references.test.ts`
- *     view field references resolve · priority queues sort by urgency, not
+ *     priority queues sort by urgency, not
  *     alphabetically · filter template tokens are resolvable · row colors and
  *     kanban groups key off real option values · every canonical opportunity
  *     stage reaches the UI that enumerates stages · every named list view is
@@ -59,7 +61,9 @@ import {
  *   `test/bulk-action-dispatch.test.ts` (split earlier, by #815)
  *     the `bulkActionDefs` / `execution: 'aggregate'` dispatch contract
  *
- * The derivations all four share live in `test/helpers/metadata-fixtures.ts`.
+ * The derivations all four share live in `test/helpers/composed-stack.ts` (the
+ * authored collections) and the platform's registry, read through
+ * `@objectstack/verify`'s handle (`test/helpers/verify-stack.ts`).
  * The split moved text only: no assertion, helper or fixture changed, and the
  * suite runs the same 70 tests it ran before.
  */
@@ -538,29 +542,55 @@ describe('page component references resolve', () => {
     ).toEqual([]);
   });
 
-  it('record:details / record:highlights / record:path only name real fields on the page object', () => {
+  /**
+   * A logged call or meeting shows on the record it was logged on (#2071).
+   *
+   * `log_call` and `log_meeting` write their `sys_activity` row as type
+   * `completed` — the `task` feed kind — and the console's activity timeline
+   * drops every such row unless the block that renders it sets
+   * `showCompleted: true` (`RecordActivityProps.showCompleted`, default
+   * `false`). So a record page whose feed leaves it off shows the rep a
+   * success toast and then no call: measured on the case and the deal, whose
+   * Activity tabs never listed one, and on the account, whose Discussion feed
+   * — its only timeline — never did either.
+   *
+   * The pages are found, not listed: every authored record page of an object
+   * the app registers `log_call` / `log_meeting` on. Each must carry at least
+   * one feed block, and every feed block on it must show completed rows — on
+   * `record:activity` directly, on `record:chatter` / `record:discussion`
+   * under `feed`. An object with no authored page (`crm_contact`) renders the
+   * platform's default page, which this app cannot configure; that half is
+   * the platform's, reported from #2071.
+   */
+  it('every record page of an object that logs calls and meetings shows completed activity', () => {
+    const LOGGING = new Set(['log_call', 'log_meeting']);
+    const loggingObjects = new Set(
+      (((stack as AnyRec).actions ?? []) as AnyRec[])
+        .filter((a) => LOGGING.has(a.name) && typeof a.objectName === 'string')
+        .map((a) => a.objectName as string),
+    );
+    const recordPages = pages.filter((p) => p.type === 'record' && loggingObjects.has(p.object));
+    // Not vacuous: the lead, case, deal and account pages are all such pages.
+    expect(recordPages.length, 'no authored record page of a logging object was found').toBeGreaterThan(0);
+
+    const showsCompleted = (c: AnyRec): boolean =>
+      c.type === 'record:activity' ? c.properties?.showCompleted === true : c.properties?.feed?.showCompleted === true;
     const bad: string[] = [];
-    for (const page of pages) {
-      if (!page.object || !objectNames.has(page.object)) continue;
-      const known = fieldsOf(page.object);
-      for (const c of [...walk(page.regions), ...walk(page.slots)]) {
-        const named: string[] = [];
-        if (c.type === 'record:highlights') named.push(...(c.properties?.fields ?? []));
-        if (c.type === 'record:details') {
-          for (const s of c.properties?.sections ?? []) named.push(...(s.fields ?? []));
-        }
-        if (c.type === 'record:path' && c.properties?.statusField) {
-          named.push(c.properties.statusField);
-        }
-        for (const f of named) {
-          if (typeof f === 'string' && !known.includes(f)) {
-            bad.push(`${page.name} / ${c.id}: "${page.object}" has no field "${f}"`);
-          }
-        }
+    for (const p of recordPages) {
+      const feeds = [...walk(p.regions), ...walk(p.slots)].filter((c) =>
+        ['record:activity', 'record:chatter', 'record:discussion'].includes(c.type),
+      );
+      if (feeds.length === 0) bad.push(`${p.name}: no activity feed block — a logged call has nowhere to appear`);
+      for (const c of feeds.filter((f) => !showsCompleted(f))) {
+        bad.push(`${p.name} › ${c.id}: ${c.type} hides completed rows — set showCompleted: true${c.type === 'record:activity' ? '' : ' under feed'}`);
       }
     }
-    expect(bad, `dangling record-component fields:\n  ${bad.join('\n  ')}`).toEqual([]);
+    expect(bad, `record pages that hide a logged call or meeting:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
+
+  // ⚰️ RETIRED (#1583): "record:details / record:highlights / record:path only
+  // name real fields on the page object". `objectstack lint --strict` reports
+  // each as `page-field-unknown`, and `pnpm lint` fails on it.
 
   it('record:path stages are real options of the status field', () => {
     const bad: string[] = [];

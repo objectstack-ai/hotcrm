@@ -108,8 +108,7 @@ const testFiles = (dir: string, out: string[] = []): string[] => {
  *
  * Not optional here: this file's prose names the scanned functions repeatedly,
  * and rule B builds child sources that call them. A scan that read those would
- * report itself. Same technique as `test/hook-input-shape.test.ts`,
- * deliberately — one scanner idiom in `test/`.
+ * report itself.
  */
 const codeOnly = (src: string): string => {
   let out = '';

@@ -14,7 +14,7 @@ import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
  * follows its master. A new row goes in the file for ITS family, never in
  * whichever file is already open: that is how one file re-grows past the 70%
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
- * `src/translations/zh-CN.ts`.
+ * `src/sales/translations/zh-CN.ts`.
  *
  * A namespace `TranslationData` gains later lands here too, and the room is
  * measured: this file is the smaller half of the bundle, and the schema bounds
@@ -595,10 +595,18 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `screens.<node>.title` and `screens.<node>.fields.<field>.{label,placeholder}`
   // — the keys `os lint`'s `i18n/missing-flow` names, read by the console's
   // flow runner since @objectstack 17.7.0 (the spec's `flows` liveness row is
-  // `live` there). A screen with no authored `title` shows its flow's label in
-  // every locale, so each `screen_1.title` repeats the flow label. Select
-  // option labels and screen descriptions are not translatable keys on a
-  // screen (`FLOW_SCREEN_FIELD_NO_OPTIONS`), so they stay as authored.
+  // `live` there). A screen with no authored `title` is headed by its node
+  // `label` (the executor's `config.title ?? node.label`, measured on
+  // 18.0.0-next.0), so each `screens.<node>.title` translates that node label,
+  // never the flow label: the dialog shows the flow label as its eyebrow above
+  // the title, and the two differ on `lead_conversion`, `quote_generation` and
+  // `campaign_enrollment` (#2096). Since
+  // 18.0.0-next.0 three more surfaces are keys the engine reads in the run's
+  // locale, and `i18n/missing-flow` names each missing one: a select field's
+  // `options.<value>` (worded as the object field's own option in this pack),
+  // an authored screen `description`, and a refusing `end` node's
+  // `refusals.<node>.message`. A translated description or message is a text
+  // slot like the one it translates, so a hole in it is `{{ }}`.
   // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
   // retyped: the number lives in `_thresholds.ts` alone (#1711).
   flows: {
@@ -606,11 +614,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '将成员加入营销活动',
       screens: {
         screen_1: {
-          title: '将成员加入营销活动',
+          title: '加入条件',
           fields: {
-            memberSource: { label: '加入的成员类型' },
-            leadStatus: { label: '加入以下状态的线索' },
-            contactDepartment: { label: '加入以下部门的联系人' },
+            memberSource: { label: '加入的成员类型', options: { leads: '线索', contacts: '联系人' } },
+            leadStatus: { label: '加入以下状态的线索', options: { new: '新建', contacted: '已联系', qualified: '已确认' } },
+            contactDepartment: {
+              label: '加入以下部门的联系人',
+              options: { executive: '管理层', sales: '销售部', marketing: '市场部', engineering: '工程部', support: '支持部', finance: '财务部', hr: '人力资源', operations: '运营部' },
+            },
           },
         },
       },
@@ -633,13 +644,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     claim_case: {
       label: '认领工单',
-      screens: { screen_1: { title: '认领工单', fields: { claimStatus: { label: '处理状态' } } } },
+      screens: {
+        screen_1: {
+          title: '认领工单',
+          fields: {
+            claimStatus: {
+              label: '处理状态',
+              options: { in_progress: '处理中', waiting_customer: '等待客户回复', waiting_support: '等待支持回复' },
+            },
+          },
+        },
+      },
     },
     lead_conversion: {
       label: '线索转化流程',
       screens: {
         screen_1: {
-          title: '线索转化流程',
+          title: '转化详情',
+          // The duplicate warning's text is a variable the flow assigns; this
+          // key can only carry the hole that shows it.
+          description: '{{duplicateWarning}}',
           fields: {
             createOpportunity: { label: '是否创建商机？' },
             opportunityName: { label: '商机名称' },
@@ -647,8 +671,21 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: '预计成交日期' },
           },
         },
-        refuse_confirmed_duplicate: { title: '转化被拒绝' },
-        refuse_unapproved: { title: '转化被拒绝' },
+        refuse_confirmed_duplicate: {
+          title: '转化被拒绝',
+          description:
+            '该线索的「重复状态」为「已确认重复」：审核人已将其与现有记录比对，并记录为重复。转化会为同一买家再创建一个客户、联系人和商机。本线索的「重复线索管理」部分列出了保留的记录；请改为以重复为由将此线索设为「未通过」。只有审核人修改该结论后才能重新转化。',
+        },
+        refuse_unapproved: {
+          title: '转化被拒绝',
+          description:
+            '该线索尚未获准转化。必须由审批人批准后，才能转化为客户、联系人和商机；线索上的「转化审批」字段显示该决定仍在待审批还是已被驳回。在此期间请继续跟进该线索——它的任何内容都没有被冻结。',
+        },
+        refuse_no_match_key: {
+          title: '转化被拒绝',
+          description:
+            '该线索的公司没有匹配键，因此转化无法判断它属于哪个客户，也不会去猜测：猜测可能会把联系人和商机归到另一个客户名下。保存线索的「公司」会重新生成匹配键，请重新保存后再转化。尚未创建任何记录。',
+        },
       },
     },
     schedule_followup: {
@@ -659,8 +696,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           fields: {
             subject: { label: '下一步做什么？' },
             dueDate: { label: '截止日期' },
-            activityType: { label: '活动类型' },
-            priority: { label: '优先级' },
+            activityType: {
+              label: '活动类型',
+              options: { call: '电话', email: '邮件', meeting: '会议', follow_up: '跟进', demo: '演示', other: '其他' },
+            },
+            priority: { label: '优先级', options: { low: '低', normal: '普通', high: '高', urgent: '紧急' } },
             notes: { label: '备注' },
           },
         },
@@ -668,9 +708,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     quote_generation: {
       label: '从商机生成报价单',
+      refusals: { refuse_held: { message: '需先完成立项审批：请勾选「申请立项审批」。尚未创建任何内容。' } },
       screens: {
         screen_1: {
-          title: '从商机生成报价单',
+          title: '报价单详情',
           fields: {
             quoteName: { label: '报价名称' },
             expirationDays: { label: '有效期（天）' },

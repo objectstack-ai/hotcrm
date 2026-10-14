@@ -36,7 +36,7 @@ git remote add origin git@github.com:<you>/<my-app>.git
 
 ### 2. Rename the manifest
 
-Edit `objectstack.config.ts`:
+HotCRM ships one artifact carrying two packages, and each declares its own manifest. Edit the app package's, in `src/sales/index.ts` — it is also the artifact's identity:
 
 ```diff
  manifest: {
@@ -52,6 +52,8 @@ Edit `objectstack.config.ts`:
 +  description: 'Your app, your tagline.',
  },
 ```
+
+Then give the service module in `src/service/index.ts` the same `namespace`, an `id` under yours (`app.acme.myapp.service`), and point its `dependencies` at your new app `id`. `objectstack.config.ts` only composes the two and needs no edit.
 
 ### 3. Rename the prefix everywhere
 
@@ -83,7 +85,7 @@ rm -r src/service src/revenue src/marketing
 rm src/sales/objects/forecast.object.ts
 ```
 
-Then drop those three packages' imports from `objectstack.composition.ts`, and prune the sales-side hooks, actions, flows, dashboards, translations and docs that reference removed objects. `pnpm typecheck` will flag the broken references.
+Then drop those three directories from `objectstack.composition.ts` — their imports, the service module's stack and its seed families — compose the app package alone in `objectstack.config.ts`, and prune the sales-side hooks, actions, flows, dashboards, translations and docs that reference removed objects. `pnpm typecheck` will flag the broken references.
 
 ### 5. Add what you do need
 

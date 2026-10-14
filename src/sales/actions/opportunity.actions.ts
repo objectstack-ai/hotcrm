@@ -57,7 +57,7 @@ export const CloneOpportunityAction: Action = {
         lead_source: src.lead_source ?? null,
         crm_campaign: src.crm_campaign ?? null,
         // Explicit because an action body runs \`isSystem\`, so nothing stamps
-        // \`owner_id\` for it — see the note in global.actions.ts (#548).
+        // \`owner_id\` for it — see the note in activity-actions.ts (#548).
         owner_id: ctx.user?.id ?? null,
       });
       return { id: inserted?.id ?? null };

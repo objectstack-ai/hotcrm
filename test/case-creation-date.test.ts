@@ -7,12 +7,12 @@ import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
 import { AnalyticsService } from '@objectstack/service-analytics';
 import { SEED_WRITE_EXECUTION_CONTEXT } from '@objectstack/spec/kernel';
-import { SysUser, SysMember, SysOrganization } from '@objectstack/platform-objects/identity';
-import stack from '../objectstack.config';
+import { createIdentityObjectsPlugin } from '@objectstack/plugin-auth';
+import artifact from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
 import { CasesOpenedByDayPriorityReport } from '../src/service/reports/case.report';
 import { ServiceDashboard } from '../src/service/dashboards/service.dashboard';
-import { identityObjects } from './helpers/identity-objects';
 
 /**
  * `crm_case` has one creation stamp, and the platform owns it (#1992).
@@ -124,10 +124,17 @@ describe('a case created without any date is counted', () => {
     await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_test' } as never));
     await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
     // 17.7.0 refuses an object name the registry does not hold (objectstack#21545).
-    await kernel.use(identityObjects(SysUser, SysMember, SysOrganization) as never);
-    await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
+    await kernel.use(createIdentityObjectsPlugin() as never);
+    await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
     await kernel.bootstrap();
     ql = kernel.getService('objectql');
+    // The install's one organization. Since 18.0.0-next.0 a system write on a
+    // tenant-scoped object takes its organization from the install's ONE
+    // organization and is refused when there is none (ADR-0131 D3/D9,
+    // `SystemWriteOrganizationRequiredError`). Since 18.0.0-next.1
+    // `createIdentityObjectsPlugin()` creates it at boot under the `single`
+    // posture (objectstack 917b1a0), so this kernel no longer writes the row
+    // itself: a second one would make every system write ambiguous.
 
     const read = async (id: string): Promise<AnyRec> =>
       ((await ql.findOne('crm_case', { where: { id } }, { context: { isSystem: true } })) ?? {}) as AnyRec;

@@ -45,7 +45,7 @@ The intended flow: a *Sandbox Management* screen where you pick a **type** (conf
 
 There is no such screen. Provisioning an environment is a control-plane concern of ObjectStack Cloud, not a page inside this tenant's Setup; the only cloud entry Setup ships is **Setup → Cloud Connection**.
 
-Worth knowing, because it is the one environment axis this app really can express: seed data declared in `objectstack.config.ts` is **per-environment**. Each `data[]` entry takes an `env` list, and the vocabulary is exactly three values:
+Worth knowing, because it is the one environment axis this app really can express: the seed data the app's packages register is **per-environment**. Each `data[]` entry takes an `env` list, and the vocabulary is exactly three values:
 
 ```
 data: [{ object: 'crm_account', env: ['prod', 'dev', 'test'], records: [...] }]

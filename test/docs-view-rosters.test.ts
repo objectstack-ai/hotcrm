@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { zhCN } from '../src/sales/translations/zh-CN';
 
 type AnyRec = Record<string, any>;

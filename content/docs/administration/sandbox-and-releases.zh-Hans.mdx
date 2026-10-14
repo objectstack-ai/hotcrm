@@ -43,7 +43,7 @@ production | sandbox | development | test | staging | preview | trial
 
 并没有这样一个屏幕。开出一个环境是 ObjectStack Cloud 控制面的事，不是本租户设置里的某一页；设置里唯一与云相关的入口是 **系统设置 → 云连接**。
 
-有一件事值得知道，因为它是这个应用真正能表达的唯一一条环境轴：在 `objectstack.config.ts` 里声明的种子数据是**按环境区分**的。每个 `data[]` 条目接受一个 `env` 列表，而这套词汇恰好只有三个取值：
+有一件事值得知道，因为它是这个应用真正能表达的唯一一条环境轴：应用各个包注册的种子数据是**按环境区分**的。每个 `data[]` 条目接受一个 `env` 列表，而这套词汇恰好只有三个取值：
 
 ```
 data: [{ object: 'crm_account', env: ['prod', 'dev', 'test'], records: [...] }]

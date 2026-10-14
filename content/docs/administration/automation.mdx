@@ -50,11 +50,12 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (32). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
+**Built-in flows in HotCRM** (33). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
 | **Lead Conversion Process** | Screen | Convert a qualified lead into an account + contact (+ optional opportunity), then notify |
+| **Copy Lead Revenue to New Account** | Subflow | Called by **Lead Conversion Process** to copy the lead's annual revenue onto the account it has just created, with system privilege |
 | **Generate Quote from Opportunity** | Screen | Build a quote from an opportunity and move it to *Proposal* |
 | **Schedule Follow-up** | Screen | Create the next follow-up task on a lead, already linked to it and owned by the right user |
 | **Enroll Members in Campaign** | Screen | Bulk-enroll eligible leads or contacts into this campaign, skipping the already-enrolled and the opted-out |
@@ -72,7 +73,7 @@ A flow fires one of three ways, set by its start node:
 | **Opportunity Status Change Approval** | Record change (update) | Sign-off a deal needs before it is declared won or lost. Ships switched OFF — it opens nothing until an install arms the gate on the opportunity's **Status Change Approval** field; armed, the rep sets **Requested Status** and the stage moves only when the request is approved |
 | **Opportunity Qualification Approval** | Record change (update) | The qualification (立项) sign-off a new deal needs before its stage or its won/lost call may change. Ships switched OFF — it opens nothing until an install arms the gate on the opportunity's **Qualification Approval** field; armed, the rep ticks **Request Qualification Approval**, and everything else on the deal stays editable while it waits |
 | **Lead Conversion Approval** | Record change (insert) | Sign-off a lead needs before it can be converted. Ships switched OFF — it opens nothing until an install arms the gate on the lead's **Conversion Approval** field |
-| **Account Approval** | Record change (insert) | Sign-off a newly created account needs before it counts as established data. Ships switched **ON** — a new account starts *Pending* and is decided in the approval inbox; an install that wants no account sign-off changes the default on the account's **Approval Status** field |
+| **Account Approval** | Record change (insert) | Sign-off a newly created account needs before it counts as established data. Ships switched **ON** — a new account starts *Pending* and is decided in the approval inbox (on a deployment without approvals it stays blank and editable instead); an install that wants no account sign-off sets the default on the account's **Approval Status** field to *Approved* |
 | **Large Deal Won Alert** | Record change (update) | When an opportunity of $100K or more turns *Closed Won*, notify the owner — the owner alone, not their manager |
 | **Billing Hand-off: Closed Won** | Record change (update) | On the transition into *Closed Won*, enqueue one durable POST of the deal + account + line items to the billing endpoint |
 | **Billing Hand-off: Contract Activated** | Record change (update) | On the transition into *Activated*, enqueue one durable POST of the contract + account + the originating deal's line items |
@@ -131,18 +132,20 @@ Understanding this order helps debug *"why didn't my flow fire?"* questions.
 
 Most automation actions send email. Templates live in **Studio → Integration → Email Templates** and support:
 
-- **Merge fields** — `{{path.to.value}}` placeholders, rendered against the `data` payload passed on that send. Spell every segment the way HotCRM spells it — objects are `crm_opportunity` and `crm_contact`, fields are `name`, `owner_id`, `email` — never Salesforce-style `Opportunity.Name`. What the path is rooted at depends on the payload shape the sender passes, and this app ships no `sendTemplate()` caller to copy one from, so declare the names your template reads in its `variables` list and agree the shape with whoever sends the mail.
+- **Merge fields** — `{{path.to.value}}` placeholders, rendered against the `data` payload passed on that send. Spell every segment the way HotCRM spells it — objects are `crm_opportunity` and `crm_contact`, fields are `name`, `owner_id`, `email` — never Salesforce-style `Opportunity.Name`. What the path is rooted at depends on the payload shape the sender passes. HotCRM's own notification templates (below) are the shape to copy: each reads flat holes such as `{{name}}` or `{{contract_number}}`, filled from the values the flow's `notify` node passes with it. Declare the names your template reads in its `variables` list and agree the shape with whoever sends the mail.
 - **Conditional blocks** — show only if a condition is true.
 - **HTML + plain text** versions.
 - **Attachments** — quote PDFs, contract PDFs.
 
-HotCRM itself ships no email templates: nothing under `src/` authors one, and the compiled app carries no email-template metadata at all. The lead-routing, opportunity-win, case and renewal notifications this app sends come from the **`notify` nodes** in the flows listed above — each one's subject and body text is written inline in its own flow, so that is where you change the wording. Contract activation sends nothing: it runs as an object hook (`src/revenue/objects/contract.hook.ts`) with no notification step, and the contract mail that does go out comes from the **Contract Auto-Expiration** and **Contract Renewal Reminder** flows. Author a template in **Studio → Integration → Email Templates** when you need a templated outbound email of your own.
+HotCRM ships an email template for each of its own **automatic notifications**, the alerts its flows send to your colleagues (never to customers): an approval decision on an account, a lead conversion or a large deal; a newly routed or converted lead; a new contact to welcome; a stalled deal or a large one won; a task reminder or an urgent task; a new quote; a contract that has expired or is due for renewal; a case that was escalated or missed its SLA. Each template comes in English, Simplified Chinese, Japanese and Spanish, and every recipient gets the copy in their own language, or in English when the app has none for it. They are records of the platform's email-template object, alongside the platform's own authentication mail (invitations, password resets).
+
+Each **`notify` node** in the flows listed above names its template and passes the values the template's holes read, so the subject and body text live in the template, not in the flow: to change the wording, change the template. In the source the templates live in an `email-templates/` folder in each package whose flows send them (`src/sales/`, `src/service/` and `src/revenue/`), one file per language. The alerts that come from scheduled flows go out only where the deployment has switched scheduled work on (see [Scheduled automation](#scheduled-automation)). Contract activation sends nothing: it runs as an object hook (`src/revenue/objects/contract.hook.ts`) with no notification step, and the contract mail that does go out comes from the **Contract Auto-Expiration** and **Contract Renewal Reminder** flows. Author a template in **Studio → Integration → Email Templates** when you need a templated outbound email of your own.
 
 ## Where to monitor automation
 
 - **Studio → Developer → Flow Runs** — pick a flow from the list, then read its recent runs and each run's status (*success* / *failed* / *running* / *skipped*). Scheduled flows appear here too: they are flows, so there is no separate scheduled-job history to go looking for.
 - **Studio → Automation → Flows** — the flow roster itself, when you need to check what a flow is wired to do before reading its runs.
-- **Object → audit log** — what changed on the record, who/what made the change.
+- **Setup → Diagnostics → Audit Logs** — what changed on a record and who changed it: one entry per save, with its time, the user who saved, and the old and new value of every field the save changed. A field an object hook filled in on the way appears inside the same entry as the save that set it off. It is an administrator's screen: Setup is not among a sales rep's apps and the audit log refuses a rep's reads, so a rep follows a record's changes on the record itself (see *Tips for users* below).
 - **The run's outcome counters** — each run also records **Records Selected**, **Records Acted On**, **Gate Skips** and **Uncountable Effects**, with a per-node breakdown in **Run Summary**. These are real columns rather than one JSON blob, so you can filter and alert on them. Terminal runs are kept for 30 days.
 
 A green run and a run that did something are not the same thing: a sweep that selects records and then writes none reports *success* exactly like a sweep with nothing to do. **Records Acted On** is what separates them. The alert worth wiring is **Records Selected > 0 and Records Acted On = 0 and Uncountable Effects = 0**, sustained over consecutive runs — that last term is not optional, because a run that reached something the platform cannot count has an *incomplete* acted count rather than a zero one. On runs recorded before these counters existed the fields are empty, and empty is not `0`.
@@ -161,6 +164,6 @@ Read one qualifier alongside it, or HotCRM's own sweeps will trip that alert whi
 
 If a record isn't behaving as expected:
 
-1. Check the **audit log** — was the field updated by a flow or an object hook?
+1. Check the record's activity — the **Activity** tab on a case, lead or opportunity, the **Discussion** feed on other records, and on a lead its **History** tab too. Each save adds an entry: a change to a field the app tracks shows its old and new value (*Status: New → In Progress*), and an edit to other fields shows as a plain *Updated* entry. It does not say whether a flow or an object hook made the change; ask an admin to read the record's entries in **Setup → Diagnostics → Audit Logs**.
 2. Check the **task list** — did a flow auto-create a task you missed?
 3. Ask an admin to open **Studio → Developer → Flow Runs** and read the recent runs of the flow you expected to fire.

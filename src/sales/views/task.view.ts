@@ -16,6 +16,7 @@ export const TaskViews = defineView({
     type: 'grid',
     name: 'all_tasks',
     label: 'All Tasks',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_task' },
     // NO `progress_percent` column here (#1214 item 5). The default grid used
     // to render completion THREE times on one row — 是否完成 (tick), 状态, and
@@ -65,13 +66,10 @@ export const TaskViews = defineView({
       { field: 'is_completed', order: 'asc' },
       { field: 'due_date', order: 'asc' },
     ],
-    rowColor: {
-      // Task priority is low/normal/high/urgent — the previous critical/medium
-      // keys were Case values, so urgent and normal rows got no color at all.
-      // Colors mirror the option colors on crm_task.priority.
-      field: 'priority',
-      colors: { urgent: 'red', high: 'orange', normal: 'green', low: 'slate' },
-    },
+    // Only the exception row is tinted: an urgent task turns red. The priority
+    // column already draws each value's badge, so a colour per value marked
+    // every row and flagged none.
+    rowColor: { field: 'priority', colors: { urgent: 'red' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
     appearance: {
@@ -155,6 +153,7 @@ export const TaskViews = defineView({
       name: 'my_open_tasks',
       type: 'grid',
       label: 'My Open Tasks',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'due_date', 'progress_percent'],
       filter: [
@@ -169,6 +168,7 @@ export const TaskViews = defineView({
       name: 'todays_tasks',
       type: 'grid',
       label: '📅 My Priority Tasks',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'status', 'due_date', 'related_to_type', 'owner_id'],
       // Operator-only filter — priority and status, no tokens — and the reason
@@ -219,7 +219,7 @@ export const TaskViews = defineView({
       // `UnknownFilterTokenError` (`FILTER_TOKEN_UNKNOWN`, HTTP 400) — the same
       // envelope `{TODAY}` gets. The change landed at 17.0.0-rc.6 and this repo
       // already pins it elsewhere: `test/flow-filter-today-token.test.ts`
-      // (#1107). That is also why the `src/flows` sweeps that still spell
+      // (#1107). That is also why the `src/*/flows` sweeps that still spell
       // `{TODAY()}` work — `interpolateFilter()` resolves it before ObjectQL
       // sees the filter at all.
       //
@@ -316,6 +316,7 @@ export const TaskViews = defineView({
       // As shipped: the open-task backlog ordered most-overdue-first (oldest
       // due date on top), which is the actionable queue a manager works.
       label: '⏰ Open Tasks · Most Overdue First',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_task' },
       columns: ['subject', 'priority', 'status', 'due_date', 'owner_id'],
       filter: [

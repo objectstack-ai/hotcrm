@@ -36,7 +36,7 @@ git remote add origin git@github.com:<you>/<my-app>.git
 
 ### 2. 重命名清单
 
-编辑 `objectstack.config.ts`：
+HotCRM 发布的是一个装着两个包的制品，每个包声明自己的清单。编辑 app 包的清单，位于 `src/sales/index.ts`——它同时也是整个制品的身份：
 
 ```diff
  manifest: {
@@ -52,6 +52,8 @@ git remote add origin git@github.com:<you>/<my-app>.git
 +  description: 'Your app, your tagline.',
  },
 ```
+
+然后把 `src/service/index.ts` 里服务模块的 `namespace` 改成同一个，`id` 改到你的名下（`app.acme.myapp.service`），并把它的 `dependencies` 指向你新的 app `id`。`objectstack.config.ts` 只负责组合这两个包，无需改动。
 
 ### 3. 在各处重命名前缀
 
@@ -83,7 +85,7 @@ rm -r src/service src/revenue src/marketing
 rm src/sales/objects/forecast.object.ts
 ```
 
-然后从 `objectstack.composition.ts` 里删掉这三个包的 import，再修剪 sales 侧那些引用了已删除对象的钩子、动作、流程、仪表盘、翻译和文档。`pnpm typecheck` 会标记出断裂的引用。
+然后从 `objectstack.composition.ts` 里删掉这三个目录——它们的 import、服务模块的 stack 及其种子数据——在 `objectstack.config.ts` 里只组合 app 包，再修剪 sales 侧那些引用了已删除对象的钩子、动作、流程、仪表盘、翻译和文档。`pnpm typecheck` 会标记出断裂的引用。
 
 ### 5. 添加你确实需要的部分
 

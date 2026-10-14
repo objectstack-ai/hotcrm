@@ -1,10 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { cel } from '@objectstack/spec';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
 import { registerStackPicklists } from './helpers/stack-picklists';
 
@@ -82,8 +83,8 @@ import { registerStackPicklists } from './helpers/stack-picklists';
  *
  * **What binds a variable.** `get_record` runs
  * `if (outputVariable) variables.set(outputVariable, record)` unconditionally,
- * and `findOne` answers a miss with `null` (measured against `InMemoryDriver`
- * below) — so after a `get_record`, the variable IS bound, possibly to `null`.
+ * and `findOne` answers a miss with `null` (measured on SQL below) — so after
+ * a `get_record`, the variable IS bound, possibly to `null`.
  * `assignment` sets every key of `config.assignments`. A `loop` binds its
  * `iteratorVariable` inside the body region, which runs in the ENCLOSING
  * variable scope. A failed node throws and the run stops, so a node that could
@@ -651,7 +652,7 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
       field.defaultValue,
       'the screen field restates the default instead of deriving it — that is the ' +
         'duplication #1173 removed, moved one level over',
-    ).toBe('{memberSource}');
+    ).toEqual(cel`memberSource`);
     const literals = (flow.variables as AnyRec[])
       .filter((v) => v.name === 'memberSource' && v.defaultValue !== undefined).length +
       (field.defaultValue === 'leads' ? 1 : 0);
@@ -659,10 +660,11 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
 
     // `leadStatus` / `contactDepartment` are the DELIBERATE asymmetry, pinned
     // so a later reader does not "finish the job" by seeding them too. No
-    // condition reads either one — they are interpolated into a `get_record`
-    // filter, where an unresolved interpolation makes the node refuse to run
-    // and name the culprit. A declared default would replace that loud refusal
-    // with a silent enrolment of a segment nobody chose.
+    // condition reads either one — each is a `get_record` filter operand (a
+    // CEL envelope since 18.0.0-next.0), where an unbound variable fails the
+    // run before the query and names the culprit. A declared default would
+    // replace that loud failure with a silent enrolment of a segment nobody
+    // chose.
     for (const name of ['leadStatus', 'contactDepartment']) {
       const v = (flow.variables as AnyRec[]).find((x) => x.name === name)!;
       expect(v.defaultValue, `${name} gained a defaultValue — no condition reads it, so this buys nothing`).toBeUndefined();
@@ -682,7 +684,7 @@ describe('every variable a flow condition reads is BOUND on every path to it', (
       field.defaultValue,
       'the screen field restates the default instead of deriving it — that is the ' +
         'duplication #1155 removed, moved one level over',
-    ).toBe('{createOpportunity}');
+    ).toEqual(cel`createOpportunity`);
 
     // …and the literal really is written once. Restating `false` on the field
     // would put a second copy in this file with nothing reconciling them.
@@ -923,7 +925,7 @@ describe('declared defaults are seeded by the real engine, not just by this file
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// End-to-end, on the engine + driver that actually produce the shapes
+// End-to-end, on the real engine over a real SQLite database
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('the two defects, reproduced end-to-end', () => {
@@ -940,13 +942,14 @@ describe('the two defects, reproduced end-to-end', () => {
     silent.child = () => silent;
 
     const ql: AnyRec = (await ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: objMap as never,
       // `logger` is honoured at runtime but is not on the published options
       // type — without it this suite prints every engine INFO line.
       ...({ logger: silent } as object),
     })) as never;
     registerStackPicklists(ql);
+    await ql.syncSchemas();
 
     const engine = new AutomationEngine(silent);
     installBuiltinNodes(engine, {
@@ -986,15 +989,6 @@ describe('the two defects, reproduced end-to-end', () => {
       // Not `toBeFalsy()`: `null` specifically is what `get_record` then binds,
       // and `vars.X.f` on a null X aborts with `No such key: f`.
       expect(miss).toBeNull();
-      // …while `crm_campaign.status` IS required, so the sparse-COLUMN variant
-      // was never the exposure here. If that changes this assertion fails and
-      // the guard's second clause starts earning its keep.
-      const camp = await api.object('crm_campaign').insert({
-        name: 'Spring', type: 'email', status: 'planning',
-        start_date: '2026-01-01', end_date: '2026-03-01',
-      });
-      const stored = await api.object('crm_campaign').findOne({ where: { id: camp.id } });
-      expect('status' in (stored ?? {})).toBe(true);
     } finally {
       await b.close();
     }
@@ -1117,8 +1111,8 @@ describe('the two defects, reproduced end-to-end', () => {
 
       const plain = await prefillOf({});
       expect(plain, 'the enrolment screen no longer offers memberSource').toBeDefined();
-      // Interpolated to the raw value — NOT the literal '{memberSource}', which
-      // a `select` would match against no option and render as nothing chosen.
+      // Evaluated to the raw value — NOT the envelope, which a `select` would
+      // match against no option and render as nothing chosen.
       expect(plain!.defaultValue).toBe('leads');
       expect(typeof plain!.defaultValue).toBe('string');
       expect(plain!.required, 'memberSource stopped being required — the refusal test above no longer measures this flow').toBe(true);
@@ -1134,7 +1128,7 @@ describe('the two defects, reproduced end-to-end', () => {
   }, 60_000);
 
   it('lead_conversion: a resume signal that omits the untouched checkbox still converts', async () => {
-    const b = await boot(['lead_conversion']);
+    const b = await boot(['lead_conversion', 'lead_conversion_account_revenue']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const lead = await api.object('crm_lead').insert({
@@ -1179,7 +1173,7 @@ describe('the two defects, reproduced end-to-end', () => {
   }, 60_000);
 
   it('lead_conversion: an explicit yes still creates the opportunity', async () => {
-    const b = await boot(['lead_conversion']);
+    const b = await boot(['lead_conversion', 'lead_conversion_account_revenue']);
     try {
       const api = b.ql.createContext({ isSystem: true });
       const lead = await api.object('crm_lead').insert({

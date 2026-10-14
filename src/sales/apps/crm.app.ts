@@ -2,6 +2,24 @@
 
 import { App } from '@objectstack/spec/ui';
 
+// The brand mark, inlined as a `data:` URI of `assets/icon.svg` (#2051), so it
+// travels inside the published artifact. The path it replaces,
+// `/runtime/assets/icon.svg` (#731), resolves only under `objectstack serve`
+// run from this repo — the CLI's `createRuntimeAssetsPlugin` mounts the
+// project's `assets/` there. A hosted install runs the artifact, which carried
+// the path but not the file, and its runtime mounts no `/runtime/assets/`: the
+// logo answered 404 on every hosted environment. The SVG's own bytes, with only
+// `%`, `#` and line breaks percent-encoded: a raw `#` would start a URL fragment
+// and a raw newline is stripped by the URL parser. `assets/icon.svg` stays the
+// single source — `test/app-branding-icon.test.ts` decodes this URI as a browser
+// does and requires the file's exact bytes back, so edit the file, then this.
+const HOTCRM_ICON =
+  'data:image/svg+xml,' +
+  '<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HotCRM">%0A' +
+  '  <rect x="16" y="16" width="224" height="224" rx="56" fill="%23EA580C"/>%0A' +
+  '  <path d="M76 64h40v52h24V64h40v128h-40v-52h-24v52H76z" fill="%23FFFFFF"/>%0A' +
+  '</svg>%0A';
+
 /**
  * HotCRM — navigation.
  *
@@ -17,7 +35,7 @@ import { App } from '@objectstack/spec/ui';
  * page already carries a view-switcher tab strip that reaches all of them.
  * Those redundant view entries are gone; each removed destination stays one
  * click away on its object's tab strip — which the console builds from the
- * VIEW DESCRIPTORS in `src/views/*.view.ts`: the primary `list` plus every
+ * VIEW DESCRIPTORS in `src/<pkg>/views/*.view.ts`: the primary `list` plus every
  * `listViews` entry, one tab each, carrying that view's own `label`. So
  * reachability needs nothing authored; a `listViews` entry is on the strip by
  * existing. What `test/view-references.test.ts` → "every named list view is
@@ -42,25 +60,19 @@ export const CrmApp = App.create({
   // ADR-0063 §1/§2 — `defaultAgent` is a surface binding, not a custom-agent
   // slot: the only resolvable values are the two PLATFORM agents, `ask` (data
   // surface) and `build` (authoring surface). HotCRM is a data surface, so it
-  // binds `ask`; the app's own AI capability ships as skills (`src/skills/`),
+  // binds `ask`; the app's own AI capability ships as skills (`src/*/skills/`),
   // which attach to the platform agents by `surface` affinity. The app-authored
   // agents this key used to name were retired in #512.
   defaultAgent: 'ask',
-  // `logo`/`favicon` point at the repo's existing `assets/icon.svg` (#731):
-  // the previously-referenced `crm-logo.png` / `crm-favicon.ico` were never
-  // added to `assets/`, and — separately — the runtime never serves a plain
-  // `/assets/*` path at all; static assets under `assets/` are only mounted
-  // at `/runtime/assets/:filename` (packages/cli's `createRuntimeAssetsPlugin`
-  // in @objectstack/cli). Verified live: GET /runtime/assets/icon.svg → 200,
-  // `content-type: image/svg+xml`. Both console consumers accept an SVG
-  // string here — `logo` renders via a plain `<img src>` (objectui's
-  // `AppSidebar.tsx`) and `favicon` is set via `link.href` (objectui's
-  // `AppShell.tsx`'s `useAppShellBranding`) — so repointing to the existing
-  // icon is correct without adding new binary assets.
+  // `logo` and `favicon` are the inlined `HOTCRM_ICON` above (#2051), never a
+  // server path: an install serves only what the artifact carries. The console
+  // passes each value through untouched — `logo` as the sidebar's `<img src>`,
+  // `favicon` as the favicon `link.href` — and a `data:` URI renders in both.
+  // `primaryColor` is the icon's tile fill (#2066): the mark and the theme are one orange.
   branding: {
-    primaryColor: '#4169E1',
-    logo: '/runtime/assets/icon.svg',
-    favicon: '/runtime/assets/icon.svg',
+    primaryColor: '#EA580C',
+    logo: HOTCRM_ICON,
+    favicon: HOTCRM_ICON,
   },
 
   navigation: [
@@ -131,7 +143,6 @@ export const CrmApp = App.create({
         { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
         { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target' },
         { id: 'nav_my_leads', type: 'object', objectName: 'crm_lead', viewName: 'my_leads', label: 'My Leads', icon: 'user-plus' },
-        { id: 'nav_my_cases', type: 'object', objectName: 'crm_case', viewName: 'my_open_cases', label: 'My Cases', icon: 'life-buoy' },
         // #592 — the rep's own calendar: a list of events, so a view, not a
         // dashboard.
         { id: 'nav_my_calendar', type: 'object', objectName: 'crm_event', viewName: 'my_events', label: 'My Calendar', icon: 'calendar-days' },
@@ -242,11 +253,23 @@ export const CrmApp = App.create({
       label: 'Service',
       icon: 'headset',
       expanded: true,
-      children: [
-        { id: 'nav_case',      type: 'object', objectName: 'crm_case',              label: 'Cases',     icon: 'life-buoy' },
-        { id: 'nav_knowledge', type: 'object', objectName: 'crm_knowledge_article', label: 'Knowledge', icon: 'book-open' },
-        { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge' },
-      ],
+      // EMPTY ON PURPOSE — this group is a CONTAINER, not a menu.
+      //
+      // `crm_case`, `crm_knowledge_article`, `service_dashboard` and
+      // `sla_performance` belong to `app.objectstack.hotcrm.service`, and an
+      // app's own `navigation` may not name another package's object (ADR-0130
+      // §1.5): the entry fails at author time with "references object
+      // `crm_case` which is not defined in objects". The module puts all three
+      // back through `navigationContributions` (ADR-0029 D7), and it can only
+      // aim at a group the app DECLARES — a module cannot create one inside an
+      // app it does not own. So the app publishes the anchor and the module
+      // fills it; `src/service/index.ts` holds the other half, and the two
+      // service items of *My Work* and *Insights* come back the same way.
+      //
+      // ⛔ Do not "tidy" the group away: deleting it relocates all three
+      // contributed items to the app's top level with a
+      // `nav_contribution_group_missing` warning.
+      children: [],
     },
 
     {
@@ -261,7 +284,6 @@ export const CrmApp = App.create({
         { id: 'nav_forecast',                 type: 'object', objectName: 'crm_forecast',                 label: 'Forecasts',         icon: 'trending-up' },
         { id: 'nav_report_pipeline_coverage', type: 'report', reportName: 'pipeline_coverage_by_quarter', label: 'Pipeline Coverage', icon: 'columns-3' },
         { id: 'nav_report_lead_inflow',       type: 'report', reportName: 'lead_inflow_by_month_source',  label: 'Lead Inflow',       icon: 'trending-up' },
-        { id: 'nav_report_sla',               type: 'report', reportName: 'sla_performance',              label: 'SLA Performance',   icon: 'timer' },
       ],
     },
 

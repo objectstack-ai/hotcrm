@@ -7,7 +7,7 @@ import { P } from '@objectstack/spec';
  * Convert Lead to Account, Contact, and Opportunity.
  *
  * Flow-typed action: invocation is delegated to the `lead_conversion`
- * flow defined under `src/flows/`. The flow engine handles the screen
+ * flow defined under `src/sales/flows/`. The flow engine handles the screen
  * + server steps; no metadata body is required here.
  */
 export const ConvertLeadAction: Action = {
@@ -32,7 +32,7 @@ export const ConvertLeadAction: Action = {
   // the row lands, then re-evaluates it against the full row. So an absent
   // `status` here means "no record yet", never "a lead with no status" — a lead
   // with no status cannot exist, since `status` is `required` with
-  // `storage: { notNull: true }` and `defaultValue: 'new'` (src/objects/lead.object.ts),
+  // `storage: { notNull: true }` and `defaultValue: 'new'` (src/sales/objects/lead.object.ts),
   // and the REST payload this surface reads carries every declared column.
   // Fail-open (`!has(record.status) || …`) would therefore buy nothing and cost
   // something real: Convert would flash on a disqualified lead for the
@@ -113,7 +113,7 @@ export const ConvertLeadAction: Action = {
  * (the console resolves the action's `target` as an object name, so submitting
  * one dies on `GET /api/v1/meta/object/<target>` → 400 — reproducible on the
  * pre-existing `log_call` too). The screen flow under
- * `src/flows/schedule-followup.flow.ts` collects the same fields and does the
+ * `src/sales/flows/schedule-followup.flow.ts` collects the same fields and does the
  * write; that mechanism is proven by `convert_lead` above.
  */
 export const ScheduleFollowUpAction: Action = {
@@ -145,7 +145,7 @@ export const ScheduleFollowUpAction: Action = {
  * on the campaign. The chosen campaign arrives as `input.crm_campaign`; the
  * lead arrives as `ctx.recordId`.
  *
- * PER-RECORD dispatch, deliberately. `src/views/lead.view.ts` wires this as the
+ * PER-RECORD dispatch, deliberately. `src/sales/views/lead.view.ts` wires this as the
  * BARE-STRING form — `bulkActions: ['create_campaign']` — and that string is a
  * dispatch contract, not a spelling of the other one:
  *

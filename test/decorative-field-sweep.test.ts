@@ -21,7 +21,7 @@ import { AccountViews } from '../src/sales/views/account.view';
 import { products } from '../src/revenue/data/catalog.seed';
 import { ContactImportMapping } from '../src/sales/mappings/contact_import.mapping';
 import { AccountImportMapping } from '../src/sales/mappings/account_import.mapping';
-import { localePacks, type AnyRec } from './helpers/metadata-fixtures';
+import { localePacks, type AnyRec } from './helpers/composed-stack';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
@@ -214,7 +214,7 @@ describe('the roll-up actually computes, and keeps computing (#1182)', () => {
   beforeAll(async () => {
     process.env.OS_REGISTRY_LOG ??= 'silent';
     kernel = new ObjectKernel({ logger: { level: 'silent' } } as never);
-    await kernel.use(new DefaultDatasourcePlugin({ driver: 'memory', config: {} } as never));
+    await kernel.use(new DefaultDatasourcePlugin({ driver: 'sqlite-wasm', config: { filename: ':memory:' } } as never));
     await kernel.use(new MetadataPlugin({ watch: false, artifactWatch: false, environmentId: 'proj_sweep' } as never));
     await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_sweep' } as never));
     // The app's own metadata is the subject. Seed data is skipped — the three

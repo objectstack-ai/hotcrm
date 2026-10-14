@@ -13,11 +13,15 @@ import {
  *
  * - Stamps `sla_due_date` on a case that has none, from the priority × account
  *   tier matrix in `_case-sla.ts`.
+ * - Records `is_sla_violated` on the write that resolves or closes a case after
+ *   its `sla_due_date` — the half of the breach rule no schedule can miss.
  * - On escalation: creates a follow-up task OWNED BY the account owner (the
  *   single owner of escalation tasks — flows must not create their own).
  *   Owning it, not merely labelling it: `owner_id` is the one ownership column,
  *   so the person the task names is the person who can work it.
- * - On `resolved`: bumps account `last_activity_date`.
+ * - On `resolved`: bumps account `last_activity_date` — its own hook,
+ *   `case_resolution_account_activity`, because it is the one write here that
+ *   needs elevation (#2014).
  *
  * ⚠️ Ownership assignment is NOT here: all three answers to "who should own
  * this case" live in `_case-assignment.ts` — the ownerless-intake round-robin,
@@ -117,7 +121,7 @@ const caseValidation: Hook = {
     // `escalation_reason` is pipeline, not a fact a submitter states about
     // themselves — the rule this branch declares — and every real writer is
     // staff-side (`case_escalation`, `case_sla_monitor`, the `escalate_case`
-    // screen flow). The public `web_to_case` form (`src/views/case.view.ts`)
+    // screen flow). The public `web_to_case` form (`src/service/views/case.view.ts`)
     // collects exactly `subject`, `description`, `type` and `priority`, so
     // nulling this drops nothing any guest surface asks for. `guest_portal`
     // grants `crm_case.allowCreate` at the OBJECT level with no field
@@ -314,6 +318,35 @@ const caseValidation: Hook = {
         const hrs = (new Date(closedDate).getTime() - new Date(createdDate).getTime()) / 3_600_000;
         if (Number.isFinite(hrs) && hrs >= 0) input.resolution_time_hours = Math.round(hrs * 10) / 10;
       }
+
+      // ── The breach is recorded when the clock stops (#2070) ──
+      //
+      // `case_sla_monitor` flags a breach only while a case is live work, and
+      // only where scheduled work runs. A case resolved or closed after its
+      // `sla_due_date` therefore kept `is_sla_violated: false` for good, and
+      // the closed-case surfaces (`sla_performance`, the compliance gauge)
+      // counted it as met. The write that takes the case out of live work is
+      // the moment its clock stops, so that write records a late finish.
+      //
+      // The rule is `caseSlaBreached` in `_case-sla.ts`; the status set is
+      // `CLOSED_CASE_STATUSES` in `_case-assignment.ts`. Both are spelled
+      // inline because this body has no module scope:
+      // `test/case-sla-breach-on-close.test.ts` drives the lowered body
+      // against the helper, and `test/live-work-predicate-parity.test.ts` pins
+      // the set by name. Only the ENTRY into the set is judged (a
+      // resolved → closed write stopped no clock), a case with no due date is
+      // left alone, and the flag is never cleared — a breach stays recorded.
+      //
+      // The stop instant is the `closed_date` this write carries — the stamp
+      // above, or a system writer's own — else now. The flag is written onto
+      // this record's own payload, which is not a caller-supplied key, so the
+      // agent's `editable: false` mask on it does not refuse the agent's close.
+      const settledStatuses = ['resolved', 'closed'];
+      if (settledStatuses.includes(String(effStatus)) && !settledStatuses.includes(String(ctx.previous?.status))) {
+        const due = input.sla_due_date !== undefined ? input.sla_due_date : ctx.previous?.sla_due_date;
+        const stoppedAt = (typeof input.closed_date === 'string' && input.closed_date) || new Date().toISOString();
+        if (typeof due === 'string' && Date.parse(due) < Date.parse(stoppedAt)) input.is_sla_violated = true;
+      }
     }
   },
 };
@@ -325,7 +358,7 @@ const caseSideEffects: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
-  description: 'Escalation tasks, resolved-date stamping, and account activity rollup.',
+  description: 'Open the escalation follow-up task for the account owner.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
     const previous = ctx.previous;
@@ -348,8 +381,8 @@ const caseSideEffects: Hook = {
     // caller holds `allowTransfer`. This insert runs on `ctx.api`, which
     // carries the CALLER's context (not a system one), so the guard applies —
     // hence the `crm_task.allowTransfer` grant on `service_agent` (see
-    // `src/profiles/service-agent.profile.ts`, and the canonical note in
-    // `src/profiles/index.ts`). One ownership column means one answer, and the
+    // `src/sales/profiles/service-agent.profile.ts`, and the canonical note in
+    // `src/sales/profiles/index.ts`). One ownership column means one answer, and the
     // answer is the person who must act.
     //
     // The CASE itself has already changed hands by the time this runs, on the
@@ -417,20 +450,59 @@ const caseSideEffects: Hook = {
         related_to_account: accountId,
       });
     }
+  },
+};
 
-    // Resolution rollup. ⛔ No date is stamped here — `closed_date` belongs
-    // exclusively to the `closed` transition (stamped by `case_sla_defaults`).
-    // Writing it as a proxy for a resolved-date both corrupts resolution
-    // metrics (a resolved-then-closed case keeps its resolve time as its close
-    // time) and re-enters the record-change trigger surface.
-    if (input.status === 'resolved' && previous.status !== 'resolved') {
-      if (accountId) {
-        await api.object('crm_account').update(
-          { id: accountId, last_activity_date: new Date().toISOString().slice(0, 10) },
-          { where: { id: accountId } },
-        );
-      }
-    }
+/**
+ * Resolution rollup: a case reaching `resolved` bumps its account's
+ * `last_activity_date`.
+ *
+ * ⛔ No date is stamped on the CASE — `closed_date` belongs exclusively to the
+ * `closed` transition (stamped by `case_sla_defaults`). Writing it as a proxy
+ * for a resolved-date both corrupts resolution metrics (a resolved-then-closed
+ * case keeps its resolve time as its close time) and re-enters the
+ * record-change trigger surface.
+ *
+ * ## `runAs: 'system'`, and why this is its own hook (#2014)
+ *
+ * Cases are resolved by service agents, and an agent holds no edit right on
+ * accounts — so as the caller the bump was refused, `onError: 'log'` swallowed
+ * it, and an agent's resolve never reached the account's activity clock. The
+ * clock is the account's derived fact, not the agent's edit, so the write is
+ * elevated. It is split out of `case_status_side_effects` because `runAs` is
+ * per hook and that hook's other write — the escalation task — needs no
+ * elevation: the agent's narrow `crm_task.allowTransfer` grant exists for it
+ * (`service-agent.profile.ts`). Elevating as little as possible (AGENTS.md rule
+ * 9) means this one write. Elevation is not anonymity: the account's
+ * `updated_by` still names the agent. Organization (rule 10): it writes only
+ * the account the triggering case names, and the elevated `ctx.api` keeps the
+ * trigger's tenant.
+ */
+const caseResolutionAccountActivity: Hook = {
+  name: 'case_resolution_account_activity',
+  object: 'crm_case',
+  events: ['afterUpdate'],
+  priority: 800,
+  async: true,
+  onError: 'log',
+  runAs: 'system',
+  description: 'Bump the account’s last activity date when a case is resolved.',
+  handler: async (ctx: HookContext) => {
+    const { input } = ctx;
+    const previous = ctx.previous;
+    if (!previous) return;
+    if (input.status !== 'resolved' || previous.status === 'resolved') return;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const accountId =
+      (typeof input.crm_account === 'string' && input.crm_account) ||
+      (typeof previous.crm_account === 'string' && previous.crm_account) ||
+      undefined;
+    if (!accountId) return;
+    await api.object('crm_account').update(
+      { id: accountId, last_activity_date: new Date().toISOString().slice(0, 10) },
+      { where: { id: accountId } },
+    );
   },
 };
 
@@ -532,4 +604,5 @@ export default [
   caseSelfClaim,
   caseResolutionArticleNormalize,
   caseSideEffects,
+  caseResolutionAccountActivity,
 ];

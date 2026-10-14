@@ -118,6 +118,16 @@ const campaignMemberLifecycle: Hook = {
  * `async` + `onError: 'log'`: the member write is the user's action and must
  * not fail because the lead row is locked or gone. A missed sync is recovered
  * by the next unsubscribe; a rejected write loses the unsubscribe itself.
+ *
+ * `runAs: 'system'` (#2014, AGENTS.md rule 9). Members are worked by
+ * marketing, and a contact is a master-detail child of its account, which a
+ * marketing user may not edit — so the contact write was refused ("requires
+ * edit access to its master record"), logged and swallowed, and the person
+ * stayed enrollable by the next campaign. An unsubscribe has to reach the
+ * person whoever recorded it, so the hook elevates; the member write stays the
+ * caller's, and `updated_by` on the person still names them. Organization
+ * (rule 10): it writes only the lead / contact the triggering member row
+ * names, and the elevated `ctx.api` keeps the trigger's tenant.
  */
 const campaignMemberOptOutSync: Hook = {
   name: 'campaign_member_optout_sync',
@@ -126,6 +136,7 @@ const campaignMemberOptOutSync: Hook = {
   priority: 300,
   async: true,
   onError: 'log',
+  runAs: 'system',
   description: 'Sync an unsubscribed member back to the lead/contact email_opt_out flag.',
   handler: async (ctx: HookContext) => {
     const api = ctx.api as HookApi | undefined;
@@ -178,6 +189,16 @@ const campaignMemberOptOutSync: Hook = {
  *
  * No loop: this writes `crm_campaign`, and the campaign-side refresh only fires
  * on a `status` transition, which a metric-only write does not carry.
+ *
+ * `runAs: 'system'` (#2014, AGENTS.md rule 9). A rollup must not depend on who
+ * fired it. Run as a marketing user, the recompute counted only the deals that
+ * user may see — a Private won deal is its owner's alone — and wrote the
+ * smaller numbers over the right ones: measured, `num_won_opportunities` 2 → 1
+ * and `actual_revenue` 1,100 → 100 the moment a marketer enrolled a member.
+ * Elevated, every member write recomputes the same campaign the same way; the
+ * member write itself stays the caller's. Organization (rule 10): every read
+ * is keyed to the triggering member's campaign (and the leads that campaign's
+ * members name), and the elevated `ctx.api` keeps the trigger's tenant.
  */
 const campaignMemberMetricsRefresh: Hook = {
   name: 'campaign_member_metrics_refresh',
@@ -186,6 +207,7 @@ const campaignMemberMetricsRefresh: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
+  runAs: 'system',
   description: 'Recompute the campaign metric block live whenever its membership changes.',
   handler: async (ctx: HookContext) => {
     const api = ctx.api as HookApi | undefined;

@@ -16,7 +16,7 @@ import { INDUSTRY_SYNONYMS, LEAD_SOURCE_SYNONYMS } from './_shared';
  *   so importing a mid-lifecycle status is a normal write here, not a
  *   transition.
  * - **A blank owner lands with the IMPORTER, not with auto-assignment.**
- *   `lead_auto_assign` (`src/objects/lead.hook.ts`) only routes a lead whose
+ *   `lead_auto_assign` (`src/sales/objects/lead.hook.ts`) only routes a lead whose
  *   `owner_id` is still empty when the hook runs — and the import write carries
  *   the importer's own context, so the security middleware has ALREADY stamped
  *   `owner_id` to them by the time `beforeInsert` runs (the guard is an

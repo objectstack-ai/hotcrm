@@ -45,7 +45,7 @@ export const MarkPrimaryContactAction: Action = {
  * copied deliberately from the lead action rather than re-derived, so the two
  * paths cannot drift:
  *
- *   - PER-RECORD dispatch. `src/views/contact.view.ts` wires this as the
+ *   - PER-RECORD dispatch. `src/sales/views/contact.view.ts` wires this as the
  *     BARE-STRING form (`bulkActions: ['add_contact_to_campaign']`), which the
  *     renderer fans out once per selected row with that row's `recordId` and NO
  *     selection array. The body reads `ctx.recordId` and nothing else. ⛔ Never
@@ -63,7 +63,7 @@ export const MarkPrimaryContactAction: Action = {
  * person enrolled as a LEAD and again as a CONTACT is not treated as a
  * duplicate. Those are two different records of two different relationships,
  * and `crm_campaign_member` keys them separately (see the two seed datasets in
- * `src/data/marketing.seed.ts`).
+ * `src/marketing/data/marketing.seed.ts`).
  */
 export const AddContactToCampaignAction: Action = {
   name: 'add_contact_to_campaign',

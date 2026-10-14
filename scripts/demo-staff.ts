@@ -30,7 +30,8 @@
 //      (objectstack-ai/objectstack#16549). So a demo salesperson asking their
 //      agent about the pipeline got 0 opportunities and 0 tasks. This step
 //      re-stamps `owner_id` per the routes in `src/sales/sharing/demo-staffing.ts`;
-//      `crm_account` is deliberately NOT among them (see step 5);
+//      `crm_account` is deliberately NOT among them (see step 5), and a row a
+//      pending approval locks is held where it is (see `handBookToRoster`);
 //   4. RE-EVALUATE every active sharing rule. This step is not optional and is
 //      the reason staffing alone was never enough: `plugin-sharing` materialises
 //      grants from a record-write hook that returns early on `isSystem` writes,
@@ -42,7 +43,7 @@
 //      evidence that speaks to step 3: the reps must still OWN NO ACCOUNT (a
 //      share to an owner proves nothing under a `private` OWD, so owning them
 //      would delete the territory demonstration), while every routed row must
-//      sit on a demo persona and none of them may hold the lot. Exits non-zero
+//      sit on a demo persona (held rows aside) and none of them may hold the lot. Exits non-zero
 //      if any of that fails.
 //
 // Flags: --url (default http://localhost:4001, the port `pnpm dev` binds),
@@ -149,10 +150,18 @@ class Api {
     }
   }
 
-  /** Rows of `object` matching `filters` (the data API's own query verb). */
+  /**
+   * Rows of `object` matching `filters` (the data API's own query verb).
+   *
+   * An empty `filters` is sent as NO `filters` key: the query door validates
+   * the body against `FindDataRequestSchema`, which refuses `filters: []`
+   * (`query.filters` min_items) with 400 "Invalid query request" — the same
+   * shape #1999 removed from the back-fill scripts (#2029).
+   * `test/backfill-query-bodies.test.ts` runs this script against that schema.
+   */
   async query(object: string, filters: unknown[][], fields?: string[]): Promise<Json[]> {
     const json = await this.postOk(`/api/v1/data/${object}/query`, {
-      filters,
+      ...(filters.length ? { filters } : {}),
       ...(fields ? { fields } : {}),
       top: 500,
     });
@@ -166,7 +175,8 @@ class Api {
    * crash to die on.
    */
   async tryQuery(object: string, fields: string[]): Promise<{ rows: Json[] } | { denied: string }> {
-    const { status, json } = await this.post(`/api/v1/data/${object}/query`, { filters: [], fields, top: 500 });
+    // No `filters` key: every row, which is what an empty filter meant (see `query`).
+    const { status, json } = await this.post(`/api/v1/data/${object}/query`, { fields, top: 500 });
     if (status >= 200 && status < 300) return { rows: (json.records ?? []) as Json[] };
     const msg = json?.error?.message ?? json?.error ?? json?.message ?? JSON.stringify(json);
     return { denied: `${status} ${String(json?.code ?? '')} ${msg}`.trim() };
@@ -265,6 +275,8 @@ type OwnershipOutcome = {
   route: DemoOwnershipRoute;
   /** rowId → the owner this run settled on: the routed one, or the one it left alone. */
   settled: Map<string, string>;
+  /** rowId → the owner it keeps: rows under a PENDING APPROVAL, which no edit may reach (see below). */
+  held: Map<string, string>;
   written: number;
   leftAlone: number;
 };
@@ -291,6 +303,17 @@ type OwnershipOutcome = {
  * resulting tasks to the service manager, and re-routing those by territory
  * would overwrite the app demonstrating itself.
  *
+ * A row under a PENDING APPROVAL is left where it is too, and reported as held
+ * rather than routed (#2029). The seed prices exactly two open deals over the
+ * large-deal line on purpose (`Acme Platform Upgrade`, `Wayne Enterprise
+ * License`, see `src/sales/data/sales.seed.ts`), and once the seed settles each
+ * sits in `opportunity_approval` with `lockRecord: true`. The platform then
+ * refuses every edit to the record, the dev admin's ownership PATCH included
+ * (409, "locked while an approval is in progress"), until the request is
+ * decided. Measured on a fresh `pnpm dev` box: the first such PATCH killed the
+ * run at this step. Decide the approval and run the script again to hand the
+ * row over.
+ *
  * That also makes the run idempotent and order-independent: correct whether
  * that claim has already run or has not run yet, and a
  * second pass over a converged org writes nothing.
@@ -315,11 +338,16 @@ async function handBookToRoster(
     return userId;
   };
 
+  // The records a pending approval holds, as `object:id` (see the note above).
+  const pending = await api.query('sys_approval_request', [['status', '=', 'pending']], ['object_name', 'record_id']);
+  const underApproval = new Set(pending.map((r) => `${String(r.object_name)}:${String(r.record_id)}`));
+
   const outcomes: OwnershipOutcome[] = [];
   for (const route of DemoPipelineOwnership) {
     const fields = ['id', 'owner_id', ...(route.accountField ? [route.accountField] : [])];
     const rows = await api.query(route.object, [], fields);
     const settled = new Map<string, string>();
+    const held = new Map<string, string>();
     let written = 0;
     let leftAlone = 0;
     for (const row of rows) {
@@ -330,13 +358,17 @@ async function handBookToRoster(
         leftAlone++;
         continue;
       }
+      if (underApproval.has(`${route.object}:${id}`)) {
+        held.set(id, current);
+        continue;
+      }
       const accountId = route.accountField ? row[route.accountField] : undefined;
       const wanted = ownerFor(accountId ? territoryOf.get(String(accountId)) : undefined);
       settled.set(id, wanted);
       await api.patchOk(route.object, id, { owner_id: wanted });
       written++;
     }
-    outcomes.push({ route, settled, written, leftAlone });
+    outcomes.push({ route, settled, held, written, leftAlone });
   }
   return outcomes;
 }
@@ -356,7 +388,9 @@ async function handBookToRoster(
  * It judges only the rows this run settled, by id. Rows that APPEAR while it
  * runs — the scheduled sweeps do create some — are reported on their own line
  * and never counted as a disagreement, because a census that failed on the app
- * doing its job would be a broken instrument, not a finding.
+ * doing its job would be a broken instrument, not a finding. Rows held by a
+ * pending approval (`held`) are counted on their own column for the same
+ * reason: the approval is the app doing its job.
  */
 async function ownershipCensus(
   api: Api,
@@ -374,10 +408,10 @@ async function ownershipCensus(
   console.log(
     `   ${'object'.padEnd(18)}${'routed'.padStart(7)}` +
     `${roster.map((r) => r.email.split('@')[0].padStart(w)).join('')}` +
-    `${'dev admin'.padStart(w)}${'nobody'.padStart(8)}${'new'.padStart(6)}`,
+    `${'dev admin'.padStart(w)}${'nobody'.padStart(8)}${'held'.padStart(6)}${'new'.padStart(6)}`,
   );
 
-  for (const { route, settled } of outcomes) {
+  for (const { route, settled, held } of outcomes) {
     const rows = await api.query(route.object, [], ['id', 'owner_id']);
     const ownerById = new Map(rows.map((r) => [String(r.id), String(r.owner_id ?? '')]));
     const observed = new Map<string, number>();
@@ -399,7 +433,8 @@ async function ownershipCensus(
     console.log(
       `   ${route.object.padEnd(18)}${String(settled.size).padStart(7)}` +
       `${roster.map((r) => String(observed.get(r.userId) ?? 0).padStart(w)).join('')}` +
-      `${String(admin).padStart(w)}${String(ownerless).padStart(8)}${String(rows.length - settled.size).padStart(6)}`,
+      `${String(admin).padStart(w)}${String(ownerless).padStart(8)}${String(held.size).padStart(6)}` +
+      `${String(rows.filter((r) => !settled.has(String(r.id)) && !held.has(String(r.id))).length).padStart(6)}`,
     );
 
     // Guard the guard: an object with no routed rows balances trivially and
@@ -557,7 +592,15 @@ async function main(): Promise<number> {
   for (const o of ownership) {
     console.log(
       `   ${o.route.object.padEnd(18)} re-stamped ${String(o.written).padStart(3)}, left ` +
-      `${String(o.leftAlone).padStart(3)} with a live owner — ${o.route.why}`,
+      `${String(o.leftAlone).padStart(3)} with a live owner` +
+      `${o.held.size ? `, held ${o.held.size} under a pending approval` : ''} — ${o.route.why}`,
+    );
+  }
+  const heldTotal = ownership.reduce((n, o) => n + o.held.size, 0);
+  if (heldTotal > 0) {
+    console.log(
+      `   ↳ ${heldTotal} row(s) stay with their current owner: a pending approval locks each one ` +
+      `against every edit, ownership included. Decide the approval, then run demo:staff again.`,
     );
   }
 

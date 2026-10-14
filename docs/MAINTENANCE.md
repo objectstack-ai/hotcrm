@@ -18,7 +18,7 @@ management surface. Know which file owns which fact:
 | --- | --- |
 | Conventions for humans + AI agents | [`AGENTS.md`](../AGENTS.md) |
 | Customer requirements → product disposition | [`docs/requirements/`](requirements/README.md) |
-| App identity (id, namespace, version) | [`objectstack.config.ts`](../objectstack.config.ts) + [`objectstack.manifest.json`](../objectstack.manifest.json) |
+| App identity (id, namespace, version) | the package manifests — [`src/sales/index.ts`](../src/sales/index.ts) (the app, the artifact's identity) and [`src/service/index.ts`](../src/service/index.ts) (the service module) — + [`objectstack.manifest.json`](../objectstack.manifest.json) |
 | What metadata exists (live counts) | [`docs/STATUS.md`](STATUS.md) — regenerated from `pnpm validate` |
 | How it ships | [`docs/RELEASE_STRATEGY.md`](RELEASE_STRATEGY.md) |
 | What changed, per release | [`CHANGELOG.md`](../CHANGELOG.md) + `.changeset/` |
@@ -56,8 +56,9 @@ can silently invalidate existing metadata or **seed data** (see §4). Treat ever
    they are released in lockstep, so keep them on one version line.
 2. Update `specVersion` in [`objectstack.manifest.json`](../objectstack.manifest.json)
    to match the installed `@objectstack/spec` (e.g. `^10.0.0`), and the
-   `engines.protocol` range declared in both
-   [`objectstack.config.ts`](../objectstack.config.ts) and the manifest to the
+   `engines.protocol` range declared in every package manifest
+   ([`src/sales/index.ts`](../src/sales/index.ts),
+   [`src/service/index.ts`](../src/service/index.ts)) and the manifest to the
    new protocol major (ADR-0087; the runtime refuses to load the app under a
    protocol major outside this range).
 3. `pnpm install`.
@@ -221,12 +222,11 @@ worth knowing apart when triaging:
   nothing and creates a *second* account for a company that already has one —
   silently. This is the failure that makes the backfill non-optional: it is
   more duplicates than the behaviour the change replaced.
-- **A lead with no key stops the conversion.** The filter value resolves to
-  nothing, and `get_record` refuses to run rather than widen the query:
-  *"refusing to run — 1 filter condition(s) resolved to nothing and were dropped
-  from the query: `{leadRecord.company_normalized}` (at name_normalized)"*. The
-  run is recorded failed and the lead stays unconverted. Loud, and the message
-  names the missing key — re-save that lead and convert again.
+- **A lead with no key is refused at conversion.** **Convert** opens a
+  "Conversion refused" dialog before the conversion form, and nothing is
+  written. (Before hotcrm#2017 a `NULL` key silently matched an unrelated
+  key-less account, and an absent key failed the run in `get_record`.) Re-save
+  that lead's `company` and convert again.
 
 > [!NOTE]
 > **This section is a contingency, not a step in any current upgrade.** HotCRM's
@@ -354,10 +354,11 @@ Three things worth knowing before changing any of it:
 
 ## 5. Releasing
 
-HotCRM ships as **one** app package (`hotcrm` / `app.objectstack.hotcrm`).
-`changeset version` writes `package.json` and `CHANGELOG.md`; the
-`objectstack.config.ts` manifest `version` and the marketplace publish note are
-matched to it by hand, and `pnpm verify` fails if the config drifts from
+HotCRM ships as **one** release artifact (`hotcrm` / `app.objectstack.hotcrm`)
+carrying the app package and its service module. `changeset version` writes
+`package.json` and `CHANGELOG.md`; the package manifests' `version`
+(`src/sales/index.ts`, `src/service/index.ts`) and the marketplace publish note
+are matched to it by hand, and `pnpm verify` fails if a manifest drifts from
 `package.json`.
 
 Which file each of those is, and the full procedure (cut the version, build the

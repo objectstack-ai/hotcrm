@@ -1,12 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import type { VerifyStack } from '@objectstack/verify';
 import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
-import {
-  CampaignLeadMemberEnrollFlow,
-  CampaignContactMemberEnrollFlow,
-} from '../src/marketing/flows/campaign-member-enroll.flow';
-import { makeFlowHarness, type Rec } from './helpers/flow-harness';
+import { hotcrmStack, signUpPerson, daysFromNow, type Person } from './helpers/verify-stack';
+
+type Rec = Record<string, any>;
 
 /**
  * campaign_enrollment runtime tests.
@@ -20,126 +19,186 @@ import { makeFlowHarness, type Rec } from './helpers/flow-harness';
  * validation: the `recordId` input contract, the eligibility filter (an
  * opted-out lead must never be enrolled in an email campaign), and the dedupe
  * that makes a re-run top up rather than double-enrol.
+ *
+ * Runs on the shipped app booted by `@objectstack/verify`: a marketer starts
+ * the screen flow on a campaign (`flows.run`) and submits the screen
+ * (`flows.resume`); the enrolment INSERT happens in the registered
+ * `runAs: 'system'` callees, resolved by name off the real registry. The boot
+ * replays the app's seed leads and contacts, and the eligibility filter rightly
+ * enrols the eligible ones among them too — so every assertion about WHO was
+ * enrolled is read over this file's own fixture people, and every assertion
+ * that NOBODY was enrolled is read over the whole campaign.
  */
 
-const campaign = (over: Rec = {}): Rec => ({
-  id: 'cmp1', name: 'Spring Push', status: 'in_progress', ...over,
-});
-
-const leads = (): Rec[] => [
-  { id: 'l_new', status: 'new', is_converted: false, email: 'a@acme.io', email_opt_out: false },
-  { id: 'l_new2', status: 'new', is_converted: false, email: 'b@acme.io', email_opt_out: false },
-  // Ineligible for various reasons — none may be enrolled.
-  { id: 'l_optout', status: 'new', is_converted: false, email: 'c@acme.io', email_opt_out: true },
-  { id: 'l_converted', status: 'new', is_converted: true, email: 'd@acme.io', email_opt_out: false },
-  { id: 'l_noemail', status: 'new', is_converted: false, email: null, email_opt_out: false },
-  { id: 'l_other', status: 'qualified', is_converted: false, email: 'e@acme.io', email_opt_out: false },
-];
+let verify: VerifyStack;
+let marketer: Person;
+let k = 0;
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  marketer = await signUpPerson(verify, 'marketer@flow-campaign-enrollment.test', {
+    name: 'Enrolment Marketer', positions: ['marketing_user'], permissionSets: ['marketing_user'],
+  });
+}, 120_000);
 
 /**
- * Contacts, the #597 mirror of the lead roster above.
- *
- * `crm_campaign_member.crm_contact` was a lookup no writer populated, so a
- * campaign could only ever reach LEADS — the existing customer base, which is
- * most of what a CRM knows, was unreachable by marketing. Same ineligibility
- * shapes as the leads: opted out, no email, wrong segment. There is no
- * `is_converted` twin — a contact IS the converted end state.
+ * One campaign and the people who could be enrolled in it — the eligible ones
+ * and one of every ineligible shape — written as the system, owned by the
+ * marketer.
  */
-const contacts = (): Rec[] => [
-  { id: 'c_eng', department: 'engineering', email: 'x@acme.io', email_opt_out: false },
-  { id: 'c_eng2', department: 'engineering', email: 'y@acme.io', email_opt_out: false },
-  { id: 'c_optout', department: 'engineering', email: 'z@acme.io', email_opt_out: true },
-  { id: 'c_noemail', department: 'engineering', email: null, email_opt_out: false },
-  { id: 'c_other', department: 'finance', email: 'w@acme.io', email_opt_out: false },
-];
+async function world(campaignOver: Rec = {}) {
+  const n = ++k;
+  const [campaign] = await verify.seed('crm_campaign', [{
+    name: `Spring Push ${n}`, status: 'in_progress', start_date: daysFromNow(-7), end_date: daysFromNow(30),
+    owner_id: marketer.id, ...campaignOver,
+  }]);
+  const lead = async (key: string, over: Rec) => {
+    const [row] = await verify.seed('crm_lead', [{
+      first_name: 'Lee', last_name: `${key} ${n}`, company: `Acme ${key} ${n}`,
+      email: `${key}.${n}@acme.flow-campaign-enrollment.test`, status: 'new', is_converted: false,
+      email_opt_out: false, owner_id: marketer.id, ...over,
+    }]);
+    return [key, row!] as const;
+  };
+  const leads = Object.fromEntries(await Promise.all([
+    lead('l_new', {}),
+    lead('l_new2', {}),
+    // Ineligible for various reasons — none may be enrolled.
+    lead('l_optout', { email_opt_out: true }),
+    lead('l_converted', { is_converted: true }),
+    lead('l_other', { status: 'qualified' }),
+  ])) as Record<string, Rec>;
+  const [account] = await verify.seed('crm_account', [{ name: `Acme ${n}`, owner_id: marketer.id }]);
+  /**
+   * Contacts, the #597 mirror of the lead roster above.
+   *
+   * `crm_campaign_member.crm_contact` was a lookup no writer populated, so a
+   * campaign could only ever reach LEADS — the existing customer base, which is
+   * most of what a CRM knows, was unreachable by marketing. Same ineligibility
+   * shapes as the leads: opted out, no email, wrong segment. There is no
+   * `is_converted` twin — a contact IS the converted end state.
+   */
+  const contact = async (key: string, over: Rec) => {
+    const [row] = await verify.seed('crm_contact', [{
+      first_name: 'Cy', last_name: `${key} ${n}`, crm_account: account!.id, department: 'engineering',
+      email: `${key}.${n}@acme.flow-campaign-enrollment.test`, email_opt_out: false, owner_id: marketer.id, ...over,
+    }]);
+    return [key, row!] as const;
+  };
+  const contacts = Object.fromEntries(await Promise.all([
+    contact('c_eng', {}),
+    contact('c_eng2', {}),
+    contact('c_optout', { email_opt_out: true }),
+    contact('c_other', { department: 'finance' }),
+  ])) as Record<string, Rec>;
+  return { campaign: campaign!, leads, contacts, account: account! };
+}
+type World = Awaited<ReturnType<typeof world>>;
 
 /** Every screen field the flow declares — all three are `required`. */
 const SCREEN = { memberSource: 'leads', leadStatus: 'new', contactDepartment: 'engineering' };
 
-async function enrol(seed: Rec = {}, screen: Rec = SCREEN) {
-  // The two callees are registered because the enrollment INSERT lives in them
-  // now, not in the screen flow: `added_date` is readonly and objectql 17.4.0
-  // strips a readonly column from a non-system INSERT, so the write is handed to
-  // a dedicated `runAs: 'system'` sub-flow (AGENTS.md house rule 9). A `subflow`
-  // node resolves its callee BY NAME off the engine's registry — leave them out
-  // and every enrolment assertion below reads back an empty member table.
-  const h = makeFlowHarness({
-    campaign_enrollment: CampaignEnrollmentFlow,
-    campaign_lead_member_enroll: CampaignLeadMemberEnrollFlow,
-    campaign_contact_member_enroll: CampaignContactMemberEnrollFlow,
-  }, {
-    crm_campaign: [campaign()],
-    crm_lead: leads(),
-    crm_contact: contacts(),
-    crm_campaign_member: [],
-    ...seed,
-  });
-  const runId = await h.run('campaign_enrollment', { recordId: 'cmp1' });
-  expect(runId, 'campaign_enrollment did not start').toBeTruthy();
+/** Run the screen action on `w`'s campaign as the marketer, and return its member rows. */
+async function enrol(w: World, screen: Rec = SCREEN): Promise<Rec[]> {
+  const run = await verify.flows.run('campaign_enrollment', { recordId: w.campaign.id }, { as: marketer.token });
+  expect(run.runId, 'campaign_enrollment did not start').toBeTruthy();
   // Screen fields ONLY. `recordId` is a start-time input the console seeds on
   // the trigger, and from 17.0.0-rc.2 the engine holds a resume to the screen's
   // declared field contract (#4477) — re-sending it here is refused with
   // `INVALID_SCREEN_INPUT: Unknown screen field "recordId"`, which is the
   // engine correctly rejecting a signal the console never sends.
-  await h.resume(runId!, screen);
-  return h;
+  await verify.flows.resume(run, screen, { as: marketer.token });
+  return verify.rows('crm_campaign_member', { crm_campaign: w.campaign.id });
 }
 
+/** The fixture keys of the `side` (`crm_lead` / `crm_contact`) people among `members`. */
+const enrolledKeys = (w: World, members: Rec[], side: 'crm_lead' | 'crm_contact'): string[] => {
+  const people = side === 'crm_lead' ? w.leads : w.contacts;
+  const byId = new Map(Object.entries(people).map(([key, row]) => [row.id, key]));
+  return members.map((m) => byId.get(m[side])).filter((key): key is string => key !== undefined).sort();
+};
+
+/**
+ * The email-less shape of `object`, attempted as the system: `email` is
+ * `required` on both `crm_lead` and `crm_contact`, so no such person can be
+ * written and the filter's `email: { $ne: null }` clause guards a row the
+ * engine refuses to hold. Pinned as that refusal — the reason the clause can
+ * select nobody.
+ */
+const emailLess = (object: 'crm_lead' | 'crm_contact', w: World) =>
+  verify.seed(object, [object === 'crm_lead'
+    ? { first_name: 'No', last_name: `Email ${k}`, company: `No Email ${k}`, status: 'new', email: null, owner_id: marketer.id }
+    : { first_name: 'No', last_name: `Email ${k}`, crm_account: w.account.id, department: 'engineering', email: null, owner_id: marketer.id }]);
+
+/** An existing member row on `campaign` — the state a re-run starts from. */
+const existingMember = async (campaign: Rec, doc: Rec) =>
+  verify.seed('crm_campaign_member', [{ crm_campaign: campaign.id, status: 'sent', ...doc }]);
+
 describe('campaign_enrollment — screen action', () => {
+  it('enrols each person through the two per-person subflows, as registered on the app', () => {
+    // The enrolment the cases below read back is written by these two flows,
+    // which the screen calls by name: a `subflow` node resolves its callee off
+    // the engine's registry, so both must be registered on the booted app.
+    const called = JSON.stringify(CampaignEnrollmentFlow).match(/"flowName":"([a-z_]+)"/g)?.map((m) => m.split('"')[3]);
+    expect(called).toEqual(['campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
+    const registered = verify.metadata.items('flow').map((f) => String((f as Rec).name));
+    expect(registered).toEqual(expect.arrayContaining(['campaign_lead_member_enroll', 'campaign_contact_member_enroll']));
+  });
+
   it('seeds its input from the console’s `recordId` contract', () => {
     const names = (CampaignEnrollmentFlow.variables ?? []).map((v) => v.name);
     expect(names, 'the console only seeds `recordId`').toContain('recordId');
   });
 
   it('enrols the eligible leads in the chosen status', async () => {
-    const h = await enrol();
-    const members = h.store.crm_campaign_member;
-    expect(members.map((m) => m.crm_lead).sort()).toEqual(['l_new', 'l_new2']);
+    const w = await world();
+    const members = await enrol(w);
+    expect(enrolledKeys(w, members, 'crm_lead')).toEqual(['l_new', 'l_new2']);
     for (const m of members) {
-      expect(m.crm_campaign).toBe('cmp1');
+      expect(m.crm_campaign).toBe(w.campaign.id);
       expect(m.status).toBe('sent');
       expect(m.added_date, 'added_date should be stamped').toBeTruthy();
     }
   });
 
-  it('never enrols an opted-out, converted, email-less or off-status lead', async () => {
-    const h = await enrol();
-    const enrolled = h.store.crm_campaign_member.map((m) => m.crm_lead);
-    for (const id of ['l_optout', 'l_converted', 'l_noemail', 'l_other']) {
-      expect(enrolled, `${id} must not be enrolled`).not.toContain(id);
+  it('never enrols an opted-out, converted or off-status lead, and an email-less one cannot be stored', async () => {
+    const w = await world();
+    await expect(emailLess('crm_lead', w), 'an email-less lead cannot exist').rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    const enrolled = enrolledKeys(w, await enrol(w), 'crm_lead');
+    for (const key of ['l_optout', 'l_converted', 'l_other']) {
+      expect(enrolled, `${key} must not be enrolled`).not.toContain(key);
     }
   });
 
   it('tops up rather than double-enrolling on a re-run', async () => {
     // Duplicate member rows inflated num_sent and the response rate.
-    const h = await enrol({
-      crm_campaign_member: [{ id: 'm_existing', crm_campaign: 'cmp1', crm_lead: 'l_new', status: 'sent' }],
-    });
-    const forNew = h.store.crm_campaign_member.filter((m) => m.crm_lead === 'l_new');
-    expect(forNew, 'l_new was enrolled twice').toHaveLength(1);
+    const w = await world();
+    await existingMember(w.campaign, { crm_lead: w.leads.l_new!.id });
+    const members = await enrol(w);
+    expect(members.filter((m) => m.crm_lead === w.leads.l_new!.id), 'l_new was enrolled twice').toHaveLength(1);
     // …and the not-yet-enrolled lead still gets added.
-    expect(h.store.crm_campaign_member.map((m) => m.crm_lead)).toContain('l_new2');
+    expect(enrolledKeys(w, members, 'crm_lead')).toContain('l_new2');
   });
 
   it('does not treat an enrolment in ANOTHER campaign as a duplicate', async () => {
-    const h = await enrol({
-      crm_campaign_member: [{ id: 'm_other', crm_campaign: 'cmp_other', crm_lead: 'l_new', status: 'sent' }],
-    });
-    const forNew = h.store.crm_campaign_member.filter(
-      (m) => m.crm_lead === 'l_new' && m.crm_campaign === 'cmp1',
-    );
-    expect(forNew, 'a member row for a different campaign blocked enrolment').toHaveLength(1);
+    const w = await world();
+    const other = await world();
+    await existingMember(other.campaign, { crm_lead: w.leads.l_new!.id });
+    const members = await enrol(w);
+    expect(
+      members.filter((m) => m.crm_lead === w.leads.l_new!.id),
+      'a member row for a different campaign blocked enrolment',
+    ).toHaveLength(1);
   });
 
   it.each(['completed', 'aborted'])('refuses to top up a %s campaign', async (status) => {
     // Enrolling into a finished campaign corrupts its final snapshot metrics.
-    const h = await enrol({ crm_campaign: [campaign({ status })] });
-    expect(h.store.crm_campaign_member).toHaveLength(0);
+    const w = await world({ status });
+    expect(await enrol(w)).toHaveLength(0);
   });
 
   it('enrols into a campaign still in planning', async () => {
-    const h = await enrol({ crm_campaign: [campaign({ status: 'planning' })] });
-    expect(h.store.crm_campaign_member.length).toBeGreaterThan(0);
+    const w = await world({ status: 'planning' });
+    expect(enrolledKeys(w, await enrol(w), 'crm_lead').length).toBeGreaterThan(0);
   });
 });
 
@@ -147,57 +206,65 @@ describe('campaign_enrollment — contacts (#597)', () => {
   const asContacts = (over: Rec = {}) => ({ ...SCREEN, memberSource: 'contacts', ...over });
 
   it('enrols the eligible contacts in the chosen department', async () => {
-    const h = await enrol({}, asContacts());
-    const members = h.store.crm_campaign_member;
-    expect(members.map((m) => m.crm_contact).sort()).toEqual(['c_eng', 'c_eng2']);
+    const w = await world();
+    const members = await enrol(w, asContacts());
+    expect(enrolledKeys(w, members, 'crm_contact')).toEqual(['c_eng', 'c_eng2']);
     for (const m of members) {
-      expect(m.crm_campaign).toBe('cmp1');
+      expect(m.crm_campaign).toBe(w.campaign.id);
       expect(m.crm_lead, 'a contact member must not also claim a lead').toBeNull();
       expect(m.status).toBe('sent');
       expect(m.added_date, 'added_date should be stamped').toBeTruthy();
     }
   });
 
-  it('never enrols an opted-out, email-less or off-segment contact', async () => {
-    const h = await enrol({}, asContacts());
-    const enrolled = h.store.crm_campaign_member.map((m) => m.crm_contact);
-    for (const id of ['c_optout', 'c_noemail', 'c_other']) {
-      expect(enrolled, `${id} must not be enrolled`).not.toContain(id);
+  it('never enrols an opted-out or off-segment contact, and an email-less one cannot be stored', async () => {
+    const w = await world();
+    await expect(emailLess('crm_contact', w), 'an email-less contact cannot exist').rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    const enrolled = enrolledKeys(w, await enrol(w, asContacts()), 'crm_contact');
+    for (const key of ['c_optout', 'c_other']) {
+      expect(enrolled, `${key} must not be enrolled`).not.toContain(key);
     }
   });
 
   it('tops up rather than double-enrolling a contact on a re-run', async () => {
-    const h = await enrol({
-      crm_campaign_member: [{ id: 'm_existing', crm_campaign: 'cmp1', crm_contact: 'c_eng', status: 'sent' }],
-    }, asContacts());
+    const w = await world();
+    await existingMember(w.campaign, { crm_contact: w.contacts.c_eng!.id });
+    const members = await enrol(w, asContacts());
     expect(
-      h.store.crm_campaign_member.filter((m) => m.crm_contact === 'c_eng'),
+      members.filter((m) => m.crm_contact === w.contacts.c_eng!.id),
       'c_eng was enrolled twice',
     ).toHaveLength(1);
-    expect(h.store.crm_campaign_member.map((m) => m.crm_contact)).toContain('c_eng2');
+    expect(enrolledKeys(w, members, 'crm_contact')).toContain('c_eng2');
   });
 
   it('does not treat a LEAD enrolment as a duplicate of a contact enrolment', async () => {
     // Two different records of two different relationships; the seed datasets
     // in src/data/marketing.seed.ts key them separately for the same reason.
-    const h = await enrol({
-      crm_campaign_member: [{ id: 'm_lead', crm_campaign: 'cmp1', crm_lead: 'c_eng', status: 'sent' }],
-    }, asContacts());
-    expect(h.store.crm_campaign_member.filter((m) => m.crm_contact === 'c_eng')).toHaveLength(1);
+    // The lead member carries the SAME id string as the contact — a lead row
+    // written under the contact's id — so only the relationship tells them apart.
+    const w = await world();
+    const [twin] = await verify.seed('crm_lead', [{
+      id: w.contacts.c_eng!.id, first_name: 'Twin', last_name: `Lead ${k}`, company: `Twin ${k}`,
+      email: `twin.${k}@acme.flow-campaign-enrollment.test`, status: 'contacted', owner_id: marketer.id,
+    }]);
+    expect(twin!.id).toBe(w.contacts.c_eng!.id);
+    await existingMember(w.campaign, { crm_lead: twin!.id });
+    const members = await enrol(w, asContacts());
+    expect(members.filter((m) => m.crm_contact === w.contacts.c_eng!.id)).toHaveLength(1);
   });
 
   it.each(['completed', 'aborted'])('refuses to top up a %s campaign with contacts either', async (status) => {
-    const h = await enrol({ crm_campaign: [campaign({ status })] }, asContacts());
-    expect(h.store.crm_campaign_member).toHaveLength(0);
+    const w = await world({ status });
+    expect(await enrol(w, asContacts())).toHaveLength(0);
   });
 
   it('the two branches are exclusive — picking contacts enrols no leads', async () => {
-    const h = await enrol({}, asContacts());
-    expect(h.store.crm_campaign_member.filter((m) => m.crm_lead)).toHaveLength(0);
+    const w = await world();
+    expect((await enrol(w, asContacts())).filter((m) => m.crm_lead)).toHaveLength(0);
   });
 
   it('…and picking leads enrols no contacts', async () => {
-    const h = await enrol();
-    expect(h.store.crm_campaign_member.filter((m) => m.crm_contact)).toHaveLength(0);
+    const w = await world();
+    expect((await enrol(w)).filter((m) => m.crm_contact)).toHaveLength(0);
   });
 });

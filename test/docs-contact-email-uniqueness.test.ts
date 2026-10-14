@@ -5,8 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { Contact } from '../src/sales/objects/contact.object';
-import contactHooks from '../src/sales/objects/contact.hook';
-import { makeHarness, makeCtx, hookNamed, type Rec } from './helpers/hook-harness';
+import { hotcrmStack, signUpPerson } from './helpers/verify-stack';
 
 /**
  * The contact-email rule, as documented vs. as enforced (#648).
@@ -110,13 +109,19 @@ describe('the enforcement the contact docs now describe (#648)', () => {
   });
 
   it('rejects the same address on two contacts under DIFFERENT accounts', async () => {
-    const hook = hookNamed(contactHooks, 'contact_integrity');
-    const h = makeHarness({
-      crm_contact: [{ id: 'c1', email: 'ada@example.com', crm_account: 'accA' }],
+    // The doc sentence as a reader would act on it, on the shipped app booted
+    // by `@objectstack/verify`: a sales rep adding a second contact, under
+    // another of their accounts, with an address already on file.
+    const verify = await hotcrmStack();
+    const rep = await signUpPerson(verify, 'rep@docs-contact-email-uniqueness.test', {
+      name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
     });
-    const input: Rec = { email: 'Ada@Example.com', crm_account: 'accB' };
-    await expect(
-      hook.handler(makeCtx({ event: 'beforeInsert', input, user: { id: 'user_1' }, api: h.api })),
-    ).rejects.toThrow(/already exists/);
-  });
+    const [accA, accB] = await verify.seed('crm_account', [
+      { name: 'Board Co A', owner_id: rep.id }, { name: 'Board Co B', owner_id: rep.id },
+    ]);
+    await verify.seed('crm_contact', [{ first_name: 'Ada', last_name: 'Lovelace', email: 'ada@example.com', crm_account: accA!.id, owner_id: rep.id }]);
+    await expect(verify.hooks.run('crm_contact', 'insert', {
+      first_name: 'Ada', last_name: 'Lovelace', email: 'Ada@Example.com', crm_account: accB!.id,
+    }, { as: rep.token })).rejects.toThrow(/already exists/);
+  }, 120_000);
 });

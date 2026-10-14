@@ -147,9 +147,9 @@ export const Contract = ObjectSchema.create({
       group: 'value',
       // The list shared with Quote: an accepted quote's terms (incl.
       // due_on_receipt) must survive the copy onto the contract. That copy is
-      // `quote_on_accepted` (src/revenue/objects/quote.hook.ts). The list's
-      // `net_30` option default applies only when the quote itself carried no
-      // term, which is the intended fall-through, not a gap.
+      // `quote_accepted_contract_draft` (src/revenue/objects/quote.hook.ts). The
+      // list's `net_30` option default applies only when the quote itself
+      // carried no term, which is the intended fall-through, not a gap.
       picklist: 'payment_terms',
     }),
     
@@ -231,7 +231,7 @@ export const Contract = ObjectSchema.create({
     apiMethods: ['get', 'list', 'create', 'update', 'delete'],
     // #602 — the executed contract itself. `document_url` remains the pointer
     // to an external DMS copy; this is where the file actually lives.
-    // See the canonical capability note in `src/objects/index.ts`.
+    // See the canonical capability note in `src/sales/objects/index.ts`.
     files: true,
   },
   
@@ -283,5 +283,5 @@ export const Contract = ObjectSchema.create({
   // Workflow Rules
   // ⚠️ No `workflows[]` here, and none is possible: object `workflows[]` were
   // removed from the platform. Field updates live in this object's `*.hook.ts`;
-  // scheduled status flips and notifications live in `src/flows/*.flow.ts`.
+  // scheduled status flips and notifications live in `src/*/flows/*.flow.ts`.
 });

@@ -27,6 +27,7 @@ export const EventViews = defineView({
     type: 'grid',
     name: 'all_events',
     label: 'All Events',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_event' },
     columns: [
       { field: 'subject', width: 280, sortable: true, link: true },
@@ -38,11 +39,6 @@ export const EventViews = defineView({
       { field: 'owner_id', width: 150 },
     ],
     sort: [{ field: 'start_datetime', order: 'desc' }],
-    rowColor: {
-      // Mirrors the option colors on crm_event.status.
-      field: 'status',
-      colors: { planned: 'blue', held: 'green', cancelled: 'slate', no_show: 'orange' },
-    },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
     appearance: {
@@ -116,6 +112,7 @@ export const EventViews = defineView({
       name: 'upcoming_events',
       type: 'grid',
       label: '📅 Upcoming · Soonest First',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_event' },
       columns: ['subject', 'type', 'start_datetime', 'location', 'related_to_type', 'owner_id'],
       filter: [{ field: 'status', operator: 'equals', value: 'planned' }],
@@ -127,6 +124,7 @@ export const EventViews = defineView({
       name: 'held_events',
       type: 'grid',
       label: '✅ Interaction History',
+      userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_event' },
       columns: ['subject', 'type', 'start_datetime', 'duration_minutes', 'related_to_type', 'owner_id'],
       filter: [{ field: 'status', operator: 'equals', value: 'held' }],

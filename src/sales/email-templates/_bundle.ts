@@ -9,7 +9,7 @@ import type { EmailTemplateDefinition } from '@objectstack/spec/system';
  * `EmailTemplateDefinition` carries ONE `locale` per row, so an n-language
  * bundle is n rows of the same `name` — that is the spec's own key, not a
  * convention this repo picked. Writing those rows out by hand would mean
- * repeating `name`, `category` and the row scaffolding four times per
+ * repeating `name` and the row scaffolding four times per
  * template; here each locale pack states only what actually differs between
  * languages (the label and the two bodies) and this helper produces the rows.
  *
@@ -25,8 +25,8 @@ import type { EmailTemplateDefinition } from '@objectstack/spec/system';
  * `EmailTemplateDefinition` whose value is genuinely per-locale.
  *
  * `label` is in here because it is the Studio display name an administrator
- * reads, so it localizes with the content; `name`, `category` and `active` are
- * not, and {@link bundle} supplies them once per row.
+ * reads, so it localizes with the content; `name` and `locale` are not, and
+ * {@link bundle} supplies them once per row.
  */
 export interface LocalizedEmailTemplate {
   /** Studio display label for this template, in this language. */
@@ -58,4 +58,4 @@ export type EmailTemplatePack = Record<string, LocalizedEmailTemplate>;
  */
 export const bundle = (packs: Record<string, EmailTemplatePack>): EmailTemplateDefinition[] =>
   Object.entries(packs).flatMap(([locale, pack]) =>
-    Object.entries(pack).map(([name, row]) => ({ name, locale, category: 'workflow' as const, ...row })));
+    Object.entries(pack).map(([name, row]) => ({ name, locale, ...row })));

@@ -10,7 +10,7 @@ description: 新增 AI skills，並註冊到 HotCRM stack。
 AI skills 位於擁有它的那個套件的 `skills/` 目錄下——今天是 `src/sales/skills/` 與 `src/service/skills/`——每個套件各自從該目錄的 `index.ts` 重新匯出自己的 skill。
 
 HotCRM **不定義任何自己的 agent** —— 不存在 `src/agents/` 目錄。Skills 附著在每個
-ObjectStack 環境已自帶的平台助手（`ask`）之上。把 skill 註冊進 `allSkills` 就是全部
+ObjectStack 環境已自帶的平台助手（`ask`）之上。把 skill 註冊進所屬套件的 skill 清單就是全部
 的接線工作。
 
 ## 新增 skill
@@ -33,8 +33,9 @@ account and contract records, summarize risk, and draft a concise
 ## 註冊
 
 註冊分兩步，漏掉第二步會讓這個 skill 被靜默丟棄。先從它自己所在套件的 barrel 重新匯出，再把它加入
-`objectstack.composition.ts` 裡的 `allSkills` —— 正是這個陣列、而不是那個 barrel，被
-`objectstack.config.ts` 傳給 `defineStack({ skills })`：
+所屬套件的 skill 清單——app 套件（sales、revenue、marketing）是 `objectstack.composition.ts` 裡的
+`appSkills`，服務模組是 `src/service/index.ts` 裡的 `serviceSkills`。正是這份清單、而不是那個
+barrel，被交給該套件自己的 `defineStack({ skills })`：
 
 ```ts
 // src/sales/skills/index.ts —— 套件自己的 barrel：只做重新匯出，別無其它
@@ -42,10 +43,10 @@ export { RenewalPitchSkill } from './renewal_pitch.skill.js';
 ```
 
 ```ts
-// objectstack.composition.ts —— 全應用的那份清單，由四個套件彙集而成
+// objectstack.composition.ts —— app 套件的那份清單
 import { RenewalPitchSkill } from './src/sales/skills/index.js';
 
-export const allSkills = [
+export const appSkills = [
   // …既有的 skills
   RenewalPitchSkill,
 ];

@@ -6,16 +6,20 @@ import { REPO_ROOT } from './repo-root';
 
 /**
  * The mechanics behind "a package barrel is only HALF the registration path"
- * (#1938), shared by every hand-maintained list in `objectstack.composition.ts`.
+ * (#1938), shared by every hand-maintained registration list.
  *
- * That file assembles two kinds of collection. Ten of them go through
- * `byExportName({ ...four barrels })`, where reaching the package barrel IS
- * reaching the registration. Five are explicit ordered arrays — `allHooks`,
- * `allFlows`, `allSkills`, `CrmSharingRules` and `CrmSeedData` — and for those
- * the barrel is necessary and NOT sufficient: the entry must also be imported
- * into that file and written into the array by hand. The five stay hand-
- * maintained because their order interleaves the four packages (see the ORDER
- * note at the top of the composition), so no per-package barrel can carry it.
+ * `objectstack.composition.ts` assembles the app package's collections in two
+ * ways. Ten go through `byExportName({ ...barrels })`, where reaching the
+ * barrel IS reaching the registration. The rest are explicit ordered arrays,
+ * one per package — `appHooks` / `appFlows` / `appSkills` / `appSharingRules`
+ * there, `serviceHooks` / `serviceFlows` / `serviceSkills` /
+ * `serviceSharingRules` in `src/service/index.ts` — unioned in the composition
+ * as `allHooks`, `allFlows`, `allSkills` and `CrmSharingRules`, plus
+ * `CrmSeedData`, cut by owning package. For those the barrel is necessary and
+ * NOT sufficient: the entry must also be written into its package's list by
+ * hand. The app package's lists stay hand-maintained because their order
+ * interleaves three directories (see the ORDER note at the top of the
+ * composition), so no per-directory barrel can carry it.
  *
  * "Missed off the list" is therefore a PERMANENT failure surface, not one a
  * refactor can remove, and it is silent: the symbol is exported, every suite

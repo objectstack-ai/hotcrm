@@ -108,7 +108,7 @@ const EXCLUSIVE_CONDITION = ATTENDEE_RESOLUTIONS
  * when its field goes invisible — no `clearOnHide`-shaped key exists on either
  * surface — so `visibleWhen` here cannot be paired into safety from this repo.
  * The half that would need to change is upstream; it is the same
- * fail-open/stale-state family as the note in `src/views/lead.view.ts`. ⛔ Do
+ * fail-open/stale-state family as the note in `src/sales/views/lead.view.ts`. ⛔ Do
  * not add `visibleWhen` to these four columns until a hidden field stops being
  * submitted; the rules above will keep refusing the row, but the person in
  * front of the form will have no way to fix it.
@@ -150,9 +150,11 @@ const partyFormHints = (column: string) => {
  *
  * # Access derives from the event
  *
- * `sharingModel: 'controlled_by_parent'` (ADR-0055). The relation resolver
- * accepts the REQUIRED `crm_event` lookup as the parent, so no master-detail
- * conversion is needed — same construction as `crm_campaign_member`.
+ * `sharingModel: 'controlled_by_parent'` (ADR-0055). The parent is `crm_event`,
+ * the object's ONE required `master_detail` — same construction as
+ * `crm_campaign_member`. Since @objectstack/spec 18.0.0-next.1 that is the only
+ * shape a controlled-by-parent object derives its master from; it was a
+ * required lookup through 18.0.0-next.0, which next.1 refuses at parse (#2105).
  *
  * Reads are filtered to attendees whose `crm_event` the caller can read, and
  * adding or updating an attendee requires edit access to that event. ⚠️ That
@@ -193,20 +195,21 @@ export const EventAttendee = ObjectSchema.create({
       format: 'EA-{00000}',
     }),
 
-    // ⚠️ Deliberately left on the spec default, and NOT cascaded with the party
-    // lookups below. Because it is REQUIRED, the engine escalates the stored
-    // `set_null` to a refusal at delete time, with a message naming the real
-    // obstacle instead of an unrelated rule: "Cannot delete crm_event (...): 3
-    // dependent crm_event_attendee record(s) reference it via crm_event
-    // (crm_event is required, so it cannot be cleared)." That is the correct
-    // answer on this side, for the same reason `crm_campaign_member.crm_campaign`
-    // keeps it: a meeting's attendee list is the meeting's historical record,
-    // not a per-person artefact. `test/event-attendee-cascade.test.ts` pins the
-    // resolved value so a copy-paste of the three cascades cannot reach here.
-    crm_event: Field.lookup('crm_event', {
+    // ⚠️ `restrict`, and NOT cascaded with the party lookups below. Deleting a
+    // meeting that still has attendees is refused, with a message naming the
+    // real obstacle instead of an unrelated rule. That is the correct answer on
+    // this side, for the same reason `crm_campaign_member.crm_campaign` keeps
+    // it: a meeting's attendee list is the meeting's historical record, not a
+    // per-person artefact. A `master_detail` left on its default would cascade
+    // and shred that history. Through 18.0.0-next.0 this was a required lookup
+    // on the `set_null` default, which the engine escalated to the same
+    // refusal. `test/event-attendee-cascade.test.ts` pins the resolved value so
+    // a copy-paste of the three cascades cannot reach here.
+    crm_event: Field.masterDetail('crm_event', {
       group: 'basic',
       label: 'Event',
       required: true,
+      deleteBehavior: 'restrict',
       storage: { notNull: true },
     }),
 
@@ -240,7 +243,7 @@ export const EventAttendee = ObjectSchema.create({
     // construction bites `crm_campaign_member`.
     //
     // `external_name` is the fourth resolution, but it is blank on every row the
-    // product actually writes (`src/actions/global.actions.ts` logs attendees
+    // product actually writes (`src/sales/actions/activity-actions.ts` logs attendees
     // with a party reference and never an external name), so it rescues nothing.
     //
     // Cascade rather than `restrict`: an attendee row is a JUNCTION whose whole
@@ -352,7 +355,7 @@ export const EventAttendee = ObjectSchema.create({
     // user-context UPDATE writer, which none of the three columns #1666 / #1667
     // moved had. The census, in full:
     //   • the fifteen generated activity actions (5 `ACTIVITY_TARGETS` × 3
-    //     kinds, one shared body in `global.actions.ts`) INSERT it, and an
+    //     kinds, one shared body in `activity-actions.ts`) INSERT it, and an
     //     action body runs `isSystem` — exempt twice over;
     //   • the two `service.seed.ts` attendee seeds write it, and their
     //     `mode: 'upsert'` replay UPDATE is exempt too, because seed writes are
@@ -362,7 +365,7 @@ export const EventAttendee = ObjectSchema.create({
     //     profiles that name the object all grant `allowEdit`. A rep correcting
     //     Invited on a saved row is a non-`isSystem` UPDATE carrying a
     //     caller-supplied key: precisely what the strip deletes. The three
-    //     flipped columns appear in NO form section anywhere in `src/views/`,
+    //     flipped columns appear in NO form section anywhere in `src/*/views/`,
     //     `crm_opportunity`'s authored form included.
     // ⭐ It is also not the same KIND of column. `added_date` / `approved_date`
     // are stamped `{NOW()}` by the writer, so their value IS the write moment;

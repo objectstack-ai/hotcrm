@@ -4,7 +4,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
+import artifact from '../objectstack.config';
 
 /*
  * The versions this app declares, and the pages that state them — the app
@@ -78,10 +79,12 @@ const h2Sections = (text: string): { heading: string; body: string }[] => {
  * `docs/ARCHITECTURE.md` and #611 fixed that one copy; nothing generalised, so
  * the next copy went on lying.
  *
- * `manifest.version` in `objectstack.config.ts` is the single source of truth
- * here — it is what `pnpm build` stamps into the artifact — and it is READ FROM
- * THE CONFIG rather than regexed out of it, the same derivation the flow rules
- * in `docs-drift.test.ts` use for thresholds.
+ * The app package's `manifest.version` (`src/sales/index.ts`) is the single
+ * source of truth here — it is the version `pnpm build` stamps on the artifact
+ * `objectstack.config.ts` composes — and it is READ FROM THE STACK rather than
+ * regexed out of a file, the same derivation the flow rules in
+ * `docs-drift.test.ts` use for thresholds. Every other package of the artifact
+ * states the same version (ADR-0130 D6), and a rule below holds them to it.
  *
  * Two rules, because the docs make two different claims:
  *
@@ -132,8 +135,34 @@ describe('the docs print the version the manifest declares (#612)', () => {
     // row rule below would go green over zero rows. Pin the source directly.
     expect(
       VERSION,
-      'objectstack.config.ts declares no manifest.version — this whole guard is vacuous',
+      'the app package (src/sales/index.ts) declares no manifest.version — this whole guard is vacuous',
     ).toMatch(/^\d+\.\d+\.\d+/);
+  });
+
+  it('every package of the artifact declares that version, and the module depends on it', () => {
+    // ADR-0130 D6 — one artifact, one version. The app package's manifest
+    // (`src/sales/index.ts`) is the version the artifact identifies as; the
+    // service module (`src/service/index.ts`) states its own `version` and the
+    // range it `dependencies` on the app with, and both must move with it.
+    // Read off the ARTIFACT's `packages[]`, so a third package is covered the
+    // day it is composed in.
+    const bodies = (((artifact as any).packages ?? []) as { manifest?: Record<string, any> }[])
+      .map((entry) => entry.manifest ?? {});
+    expect(bodies.length, 'the artifact carries no packages[] — this rule is vacuous').toBeGreaterThan(1);
+    const drifted = bodies
+      .filter((body) => body.version !== VERSION)
+      .map((body) => `${body.id} declares ${body.version}`);
+    expect(
+      drifted,
+      `packages whose version is not the app's ${VERSION}:\n  ${drifted.join('\n  ')}`,
+    ).toEqual([]);
+    const appId = String(((stack as any).manifest ?? {}).id);
+    const ranges = bodies
+      .filter((body) => body.id !== appId)
+      .map((body) => [String(body.id), (body.dependencies ?? {})[appId]] as const);
+    for (const [id, range] of ranges) {
+      expect(range, `${id} declares no dependency on ${appId}`).toBe(`^${VERSION}`);
+    }
   });
 
   it('package.json agrees with the manifest', () => {
@@ -142,7 +171,7 @@ describe('the docs print the version the manifest declares (#612)', () => {
     // every doc below correct against one source and wrong against the other.
     expect(
       PACKAGE_JSON.version,
-      `package.json is ${PACKAGE_JSON.version} but objectstack.config.ts declares ${VERSION}. ` +
+      `package.json is ${PACKAGE_JSON.version} but the app package (src/sales/index.ts) declares ${VERSION}. ` +
         'These ship as one artifact; align them (docs/RELEASE_STRATEGY.md §Version Sources).',
     ).toBe(VERSION);
   });
@@ -163,7 +192,7 @@ describe('the docs print the version the manifest declares (#612)', () => {
     );
     expect(
       drifted,
-      `version rows that do not match objectstack.config.ts:\n  ${drifted.join('\n  ')}\n` +
+      `version rows that do not match the app package's manifest:\n  ${drifted.join('\n  ')}\n` +
         'Update the doc — the manifest is the source of truth, and a release page printing a ' +
         'stale version is the one page a releaser trusts.',
     ).toEqual([]);
@@ -269,7 +298,7 @@ describe('the docs print the version the manifest declares (#612)', () => {
       drifted,
       `latest-release headings that do not state the declared version:\n  ${drifted.join('\n  ')}\n` +
         'A heading is what a reader sees in the table of contents, and "Latest release" is a ' +
-        'claim about today. Name the version objectstack.config.ts declares — the number in ' +
+        'claim about today. Name the version the app package declares — the number in ' +
         'this heading is the one thing on the page that cannot be a matter of taste.',
     ).toEqual([]);
   });
@@ -350,7 +379,7 @@ describe('one protocol version, declared in three files (#728)', () => {
     // Vacuity guard: any of these going absent would make every comparison below
     // compare '' with '' and pass over nothing at all.
     const sources: [string, string | undefined][] = [
-      ['objectstack.config.ts manifest.engines.protocol', configProtocol],
+      ['the app package (src/sales/index.ts) manifest.engines.protocol', configProtocol],
       [`${TEMPLATE} specVersion`, template.specVersion],
       [`${TEMPLATE} engines.protocol`, template.engines?.protocol],
       ['package.json dependencies["@objectstack/spec"]', installedSpec],
@@ -365,14 +394,25 @@ describe('one protocol version, declared in three files (#728)', () => {
     ).toEqual([]);
   });
 
-  it('objectstack.config.ts declares the protocol the template manifest declares', () => {
-    expect(
-      bare(configProtocol),
-      `objectstack.config.ts declares ${configProtocol}, ${TEMPLATE} declares ` +
-        `${template.engines?.protocol}. These ship as one app: objectstack.config.ts drives ` +
-        `dist/objectstack.json's manifest.engines.protocol, and ${TEMPLATE} is what the ` +
-        'marketplace reads. Bump both together (docs/MAINTENANCE.md §3).',
-    ).toBe(bare(template.engines?.protocol));
+  it('every package of the artifact declares the protocol the template manifest declares', () => {
+    // Since the packaging (ADR-0130 D4) the artifact `objectstack.config.ts`
+    // builds carries one manifest per package, each with its own
+    // `engines.protocol`: the app package's (`src/sales/index.ts`, also the
+    // artifact's own `manifest`) and the service module's
+    // (`src/service/index.ts`). Read off `packages[]`, so a third package is
+    // held to the same line the day it is composed in.
+    const bodies = (((artifact as any).packages ?? []) as { manifest?: Record<string, any> }[])
+      .map((entry) => entry.manifest ?? {});
+    expect(bodies.length, 'the artifact carries no packages[] — this rule is vacuous').toBeGreaterThan(1);
+    for (const body of [{ id: 'the artifact manifest', engines: { protocol: configProtocol } }, ...bodies]) {
+      expect(
+        bare(body.engines?.protocol),
+        `${body.id} declares ${body.engines?.protocol}, ${TEMPLATE} declares ` +
+          `${template.engines?.protocol}. These ship as one app: the package manifests drive ` +
+          `dist/objectstack.json's engines.protocol, and ${TEMPLATE} is what the ` +
+          'marketplace reads. Bump them together (docs/MAINTENANCE.md §3).',
+      ).toBe(bare(template.engines?.protocol));
+    }
   });
 
   it('the template manifest states one version in both of its fields', () => {
@@ -554,7 +594,7 @@ describe('docs/STATUS.md states the current repository (#1011)', () => {
     const stated = /^HotCRM v(\d+\.\d+\.\d+[^\s]*)/m.exec(TRANSCRIPT)?.[1];
     expect(
       stated,
-      `${STATUS}'s transcript opens with "HotCRM v${stated}" but objectstack.config.ts declares ` +
+      `${STATUS}'s transcript opens with "HotCRM v${stated}" but the app package declares ` +
         `${declared}.`,
     ).toBe(declared);
   });

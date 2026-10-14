@@ -18,7 +18,7 @@ This section is for developers and technical implementers extending HotCRM with 
 
 ## Current source layout
 
-HotCRM builds one ObjectStack artifact from four packages (ADR-0130): a directory under `src/` **is** a package. Add or modify metadata under the package that owns the object, then export it from that package's matching barrel file. A file may import from its own directory or from `src/sales/` — never sideways between modules.
+HotCRM builds one ObjectStack artifact that carries two packages (ADR-0130) — the `type: app` package in `src/sales/` and the service module in `src/service/` — and a directory under `src/` **is** a package: `src/revenue/` and `src/marketing/` are registered by the app package until each is packaged on its own. Add or modify metadata under the package that owns the object, then export it from that package's matching barrel file. A file may import from its own directory or from `src/sales/` — never sideways between modules.
 
 ```text
 src/

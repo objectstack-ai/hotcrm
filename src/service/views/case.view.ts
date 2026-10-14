@@ -3,6 +3,14 @@
 import { defineView } from '@objectstack/spec/ui';
 
 /**
+ * The one data provider every view below reads — the default list, the seven
+ * named list views and the web-to-case form all list or write `crm_case` —
+ * written once and passed by shorthand (`data,`) rather than spelled out nine
+ * times.
+ */
+const data = { provider: 'object', object: 'crm_case' } as const;
+
+/**
  * Case (Service) Views
  *
  *   • grid     — support queue with SLA columns
@@ -15,7 +23,8 @@ export const CaseViews = defineView({
     type: 'grid',
     name: 'all_cases',
     label: 'All Cases',
-    data: { provider: 'object', object: 'crm_case' },
+    userActions: { editInline: true },
+    data,
     columns: [
       { field: 'case_number', width: 130, sortable: true, link: true, pinned: 'left' },
       { field: 'subject', width: 280, sortable: true },
@@ -36,10 +45,10 @@ export const CaseViews = defineView({
       { field: 'priority_rank', order: 'desc' },
       { field: 'sla_due_date', order: 'asc' },
     ],
-    rowColor: {
-      field: 'priority',
-      colors: { critical: 'red', high: 'orange', medium: 'yellow', low: 'slate' },
-    },
+    // Only the exception row is tinted: a case whose SLA is breached turns
+    // red and every other row stays plain. A colour per priority painted every
+    // row the priority column's own badge already marks, so it flagged none.
+    rowColor: { field: 'is_sla_violated', colors: { true: 'red' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50 },
     // The UI door for the `allowExport` grant four profiles already hold on
@@ -75,7 +84,7 @@ export const CaseViews = defineView({
       name: 'case_workflow',
       type: 'kanban',
       label: 'Service Workflow',
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject', 'priority', 'sla_due_date'],
       kanban: {
         groupByField: 'status',
@@ -90,7 +99,7 @@ export const CaseViews = defineView({
       name: 'sla_calendar',
       type: 'calendar',
       label: 'SLA Calendar',
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject', 'priority'],
       calendar: {
         startDateField: 'sla_due_date',
@@ -104,7 +113,7 @@ export const CaseViews = defineView({
       name: 'case_timeline',
       type: 'timeline',
       label: 'Case Timeline',
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       columns: ['case_number', 'subject'],
       timeline: {
         // `created_at`, the platform's own creation stamp — the object's
@@ -129,7 +138,8 @@ export const CaseViews = defineView({
       name: 'my_open_cases',
       type: 'grid',
       label: 'My Open Cases',
-      data: { provider: 'object', object: 'crm_case' },
+      userActions: { editInline: true },
+      data,
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'status', 'sla_due_date'],
       // ⚠️ `status not_in CLOSED_CASE_STATUSES`, NOT `is_closed == false`: the
       // flag is derived as `effStatus === 'closed'` and never flips on
@@ -155,13 +165,12 @@ export const CaseViews = defineView({
     /**
      * Unassigned — triage (#596). The second half of the queue substitute.
      *
-     * `case_auto_assign` (`src/objects/_case-assignment.ts`) is a NO-OP whenever
+     * `case_auto_assign` (`src/service/objects/_case-assignment.ts`) is a NO-OP whenever
      * the `service_agent` pool is empty, and an empty pool is the FIRST-INSTALL
      * NORM rather than an edge case: `sys_user_position` membership is runtime
      * data, so on a fresh org — and any time every agent has been unassigned
      * from the position — an inbound web-to-case lands ownerless. Best-effort
-     * assignment also stands down on a permission denial (the anonymous
-     * public-form context cannot read `sys_user_position` at all).
+     * assignment also stands down when its pool read fails.
      *
      * Those cases used to be invisible: no view filtered on the absence of an
      * owner, so an unowned case appeared in `All Cases` with a blank Owner
@@ -200,7 +209,7 @@ export const CaseViews = defineView({
      *   - `sales_manager` — `viewAllRecords`, read-only.
      *   - a service manager / director — the critical, open slice only, via the
      *     existing `case_escalation_sharing` / `case_director_sharing` criteria
-     *     rules (`src/sharing/case.sharing.ts`).
+     *     rules (`src/service/sharing/case.sharing.ts`).
      *   - `service_agent` — `readScope: 'own'` on `crm_case`, and an unowned
      *     row is owned by nobody, so **an agent's triage tab is empty**.
      *
@@ -216,7 +225,8 @@ export const CaseViews = defineView({
       name: 'unassigned_triage',
       type: 'grid',
       label: 'Unassigned — triage',
-      data: { provider: 'object', object: 'crm_case' },
+      userActions: { editInline: true },
+      data,
       columns: ['case_number', 'subject', 'crm_account', 'crm_contact', 'priority', 'status', 'origin', 'sla_due_date'],
       filter: [
         { field: 'owner_id', operator: 'is_null' },
@@ -228,10 +238,11 @@ export const CaseViews = defineView({
         { field: 'priority_rank', order: 'desc' },
         { field: 'sla_due_date', order: 'asc' },
       ],
-      rowColor: {
-        field: 'priority',
-        colors: { critical: 'red', high: 'orange', medium: 'yellow', low: 'slate' },
-      },
+      // Same exception tint as the main queue: a breached case turns red.
+      // Measured on 18.0.0-next.1 it paints nothing here: the console fetches
+      // only the columns and `is_sla_violated` is not one. That is a platform
+      // gap, reported upstream from #2107; ⛔ no column added to dodge it.
+      rowColor: { field: 'is_sla_violated', colors: { true: 'red' } },
       // The empty state carries the operational instruction, because "no rows"
       // here is ambiguous on its own: it means either "the round-robin placed
       // everything" (good) or "no case has arrived yet" (also fine) — and the
@@ -248,7 +259,8 @@ export const CaseViews = defineView({
       name: 'escalated_cases',
       type: 'grid',
       label: 'Escalated Cases',
-      data: { provider: 'object', object: 'crm_case' },
+      userActions: { editInline: true },
+      data,
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
       filter: [{ field: 'is_escalated', operator: 'equals', value: true }],
       sort: [{ field: 'priority_rank', order: 'desc' }],
@@ -270,7 +282,8 @@ export const CaseViews = defineView({
       name: 'sla_at_risk',
       type: 'grid',
       label: '⏰ SLA at Risk',
-      data: { provider: 'object', object: 'crm_case' },
+      userActions: { editInline: true },
+      data,
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
       // Operator-only filter — sort by SLA due date ascending so the soonest
       // surface first. (The view runtime does not interpolate `{NOW() + 4h}`.)
@@ -322,7 +335,7 @@ export const CaseViews = defineView({
    * dialog showed THREE tabs — these sections. The renderer only reaches for
    * `fieldGroups` on its AUTO-DERIVED path, taken when a form authors no
    * `sections` at all; an authored `sections` array wins outright. So
-   * `src/objects/case.object.ts` is not part of this surface.
+   * `src/service/objects/case.object.ts` is not part of this surface.
    *
    * ## ⚠️ Authoring `sections` OPTS OUT of the create-mode field strip
    *
@@ -446,7 +459,7 @@ export const CaseViews = defineView({
   formViews: {
     web_to_case: {
       type: 'simple',
-      data: { provider: 'object', object: 'crm_case' },
+      data,
       sections: [
         {
           name: 'how_can_we_help',

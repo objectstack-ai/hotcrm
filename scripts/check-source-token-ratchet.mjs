@@ -457,18 +457,18 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  *     src/revenue    business semantics ~15,169 · interaction layer ~2,136 · authored total ~18,279
  *     src/marketing  business semantics ~8,001 · interaction layer ~876 · authored total ~9,096
  *
- *   src/sales      business semantics   55,986 × 1.05 =  58,785 -> ceil 1k ->  59,000  (headroom 3,014, 5.4%)  2026-09-18
- *   src/sales      interaction layer    29,477 × 1.05 =  30,951 -> ceil 1k ->  31,000  (headroom 1,523, 5.2%)  2026-09-16
- *   src/sales      authored total      101,395 × 1.05 = 106,465 -> ceil 1k -> 107,000  (headroom 5,605, 5.5%)  2026-09-18
- *   src/service    business semantics   12,593 × 1.05 =  13,223 -> ceil 1k ->  14,000  (headroom 1,407, 11.2%)  2026-09-18
- *   src/service    interaction layer     6,228 × 1.05 =   6,539 -> ceil 1k ->   7,000  (headroom 772, 12.4%)  2026-09-18
- *   src/service    authored total       20,423 × 1.05 =  21,444 -> ceil 1k ->  22,000  (headroom 1,577, 7.7%)  2026-09-16
- *   src/revenue    business semantics   15,169 × 1.05 =  15,927 -> ceil 1k ->  16,000  (headroom 831, 5.5%)  2026-09-18
- *   src/revenue    interaction layer     2,136 × 1.05 =   2,243 -> ceil 1k ->   3,000  (headroom 864, 40.4%)  2026-09-18
- *   src/revenue    authored total       17,485 × 1.05 =  18,359 -> ceil 1k ->  19,000  (headroom 1,515, 8.7%)  2026-09-16
- *   src/marketing  business semantics    8,001 × 1.05 =   8,401 -> ceil 1k ->   9,000  (headroom 999, 12.5%)  2026-09-18
- *   src/marketing  interaction layer       876 × 1.05 =     920 -> ceil 1k ->   1,000  (headroom 124, 14.2%)  2026-09-18
- *   src/marketing  authored total        9,096 × 1.05 =   9,551 -> ceil 1k ->  10,000  (headroom 904, 9.9%)  2026-09-18
+ *   src/sales      business semantics   55,986 × 1.05 =  58,785 -> ceil 1k ->  59,000  (headroom 3,014, 5.4%)  2026-09-18  superseded (#2031)
+ *   src/sales      interaction layer    29,477 × 1.05 =  30,951 -> ceil 1k ->  31,000  (headroom 1,523, 5.2%)  2026-09-16  superseded (#2031)
+ *   src/sales      authored total      101,395 × 1.05 = 106,465 -> ceil 1k -> 107,000  (headroom 5,605, 5.5%)  2026-09-18  superseded (#2031)
+ *   src/service    business semantics   12,593 × 1.05 =  13,223 -> ceil 1k ->  14,000  (headroom 1,407, 11.2%)  2026-09-18  superseded (#2031)
+ *   src/service    interaction layer     6,228 × 1.05 =   6,539 -> ceil 1k ->   7,000  (headroom 772, 12.4%)  2026-09-18  superseded (#2031)
+ *   src/service    authored total       20,423 × 1.05 =  21,444 -> ceil 1k ->  22,000  (headroom 1,577, 7.7%)  2026-09-16  superseded (#2031)
+ *   src/revenue    business semantics   15,169 × 1.05 =  15,927 -> ceil 1k ->  16,000  (headroom 831, 5.5%)  2026-09-18  superseded (#2031)
+ *   src/revenue    interaction layer     2,136 × 1.05 =   2,243 -> ceil 1k ->   3,000  (headroom 864, 40.4%)  2026-09-18  superseded (#2031)
+ *   src/revenue    authored total       17,485 × 1.05 =  18,359 -> ceil 1k ->  19,000  (headroom 1,515, 8.7%)  2026-09-16  superseded (#2031)
+ *   src/marketing  business semantics    8,001 × 1.05 =   8,401 -> ceil 1k ->   9,000  (headroom 999, 12.5%)  2026-09-18  superseded (#2031)
+ *   src/marketing  interaction layer       876 × 1.05 =     920 -> ceil 1k ->   1,000  (headroom 124, 14.2%)  2026-09-18  superseded (#2031)
+ *   src/marketing  authored total        9,096 × 1.05 =   9,551 -> ceil 1k ->  10,000  (headroom 904, 9.9%)  2026-09-18  superseded (#2031)
  *
  * `headroom` is the headroom **at anchor time** (`ceiling - reading`, on that
  * row's own run): it is a derivation of the constant beside it, not a live
@@ -482,9 +482,9 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  * from, and the row saying why is the record that they were weighed rather than
  * overlooked:
  *
- *   src/sales      interaction layer  anchor( 29,725) =  32,000  > ceiling  31,000  2026-09-18
- *   src/service    authored total     anchor( 21,127) =  23,000  > ceiling  22,000  2026-09-18
- *   src/revenue    authored total     anchor( 18,279) =  20,000  > ceiling  19,000  2026-09-18
+ *   src/sales      interaction layer  anchor( 29,725) =  32,000  > ceiling  31,000  2026-09-18  superseded (#2031)
+ *   src/service    authored total     anchor( 21,127) =  23,000  > ceiling  22,000  2026-09-18  superseded (#2031)
+ *   src/revenue    authored total     anchor( 18,279) =  20,000  > ceiling  19,000  2026-09-18  superseded (#2031)
  *
  * ⚠️ The small modules carry headroom well past 5% and there is no way around
  * it: `anchor()` rounds up to the next 1,000, and on a reading of 876 that step
@@ -510,13 +510,46 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  *   whole tree     interaction layer    37,424 × 1.05 =  39,295 -> ceil 1k ->  40,000   2026-08-26 (#1316)
  *   whole tree     authored total      133,302 × 1.05 = 139,967 -> ceil 1k -> 140,000   2026-08-17 (#1189)
  *
- * ⚠️ The RULED kind is still a kind this gate knows, and `isAnchored()` is
- * still what the opportunistic-tightening advisory asks (#1607). No committed
- * ceiling declares it today. That is the finished state of this table, not a
- * disabled mechanism: the next grant declares `CEILING_KIND.RULED` and the
- * advisory drops for it without another change here. ⛔ Do not delete the kind
- * because nothing currently uses it — #1607 is the card that explains what
- * breaks when a grant is silently read as anchored.
+ * ## 2026-10-13 — #2031 grants every ceiling ×1.5, by ruling
+ *
+ * The ruling that authorises this grant, verbatim and untranslated, recorded on
+ * objectstack-ai/hotcrm#2031 (comment 6143114246):
+ *
+ *   「hotcrm token 上限提升 50%」
+ *   「暂时只优先处理升级相关的任务」
+ *
+ * Each of the twelve committed ceilings is multiplied by exactly 1.5. None of
+ * the products is `anchor()` of a reading (88,500 is not even a multiple of
+ * 1,000), so all twelve are RULED: a maintainer grant, with no worked
+ * arithmetic that could honestly be written beside it. The warning in the
+ * 2026-09-18 section against filing an anchored raise as RULED still stands
+ * for an anchoring; this is not one, and the ruling is what pins these numbers
+ * against future tightening. Lowering one now takes a ruling quoted in the
+ * lowering PR, exactly as this raise did, and the opportunistic-tightening
+ * advisory stands down for every row (#1607). The anchored rows they replace
+ * stay above, marked `superseded (#2031)`, so the base each grant multiplies
+ * can still be re-derived.
+ *
+ *   src/sales      business semantics    ruled 88,500 — ×1.5 of the anchored 59,000, by the #2031 ruling    2026-10-13
+ *   src/sales      interaction layer     ruled 46,500 — ×1.5 of the anchored 31,000, by the #2031 ruling    2026-10-13
+ *   src/sales      authored total       ruled 160,500 — ×1.5 of the anchored 107,000, by the #2031 ruling   2026-10-13
+ *   src/service    business semantics    ruled 21,000 — ×1.5 of the anchored 14,000, by the #2031 ruling    2026-10-13
+ *   src/service    interaction layer     ruled 10,500 — ×1.5 of the anchored 7,000, by the #2031 ruling     2026-10-13
+ *   src/service    authored total        ruled 33,000 — ×1.5 of the anchored 22,000, by the #2031 ruling    2026-10-13
+ *   src/revenue    business semantics    ruled 24,000 — ×1.5 of the anchored 16,000, by the #2031 ruling    2026-10-13
+ *   src/revenue    interaction layer      ruled 4,500 — ×1.5 of the anchored 3,000, by the #2031 ruling     2026-10-13
+ *   src/revenue    authored total        ruled 28,500 — ×1.5 of the anchored 19,000, by the #2031 ruling    2026-10-13
+ *   src/marketing  business semantics    ruled 13,500 — ×1.5 of the anchored 9,000, by the #2031 ruling     2026-10-13
+ *   src/marketing  interaction layer      ruled 1,500 — ×1.5 of the anchored 1,000, by the #2031 ruling     2026-10-13
+ *   src/marketing  authored total        ruled 15,000 — ×1.5 of the anchored 10,000, by the #2031 ruling    2026-10-13
+ *
+ * ⚠️ Since #2031 RULED is the kind every committed ceiling declares, and
+ * `isAnchored()` is still what the opportunistic-tightening advisory asks
+ * (#1607). ANCHORED stays a kind this gate knows: a re-anchoring a later ruling
+ * allows declares it again, and the advisory returns for that row without
+ * another change here. ⛔ Do not delete either kind because the committed table
+ * holds only one of them today — #1607 is the card that explains what breaks
+ * when a grant is silently read as anchored.
  *
  * Lower them whenever the tree shrinks — that is free and encouraged. Raising
  * one requires a maintainer ruling quoted in the raising PR's body. Both of
@@ -545,18 +578,18 @@ const CEILING_KIND = { ANCHORED: 'anchored', RULED: 'ruled' };
  * ceiling, it is four, and a table keyed by label alone could not hold them.
  */
 const COMMITTED = [
-  { module: 'src/sales', label: 'business semantics', ceiling: 59000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/sales', label: 'interaction layer', ceiling: 31000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/sales', label: 'authored total', ceiling: 107000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/service', label: 'business semantics', ceiling: 14000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/service', label: 'interaction layer', ceiling: 7000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/service', label: 'authored total', ceiling: 22000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/revenue', label: 'business semantics', ceiling: 16000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/revenue', label: 'interaction layer', ceiling: 3000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/revenue', label: 'authored total', ceiling: 19000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/marketing', label: 'business semantics', ceiling: 9000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/marketing', label: 'interaction layer', ceiling: 1000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/marketing', label: 'authored total', ceiling: 10000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/sales', label: 'business semantics', ceiling: 88500, kind: CEILING_KIND.RULED },
+  { module: 'src/sales', label: 'interaction layer', ceiling: 46500, kind: CEILING_KIND.RULED },
+  { module: 'src/sales', label: 'authored total', ceiling: 160500, kind: CEILING_KIND.RULED },
+  { module: 'src/service', label: 'business semantics', ceiling: 21000, kind: CEILING_KIND.RULED },
+  { module: 'src/service', label: 'interaction layer', ceiling: 10500, kind: CEILING_KIND.RULED },
+  { module: 'src/service', label: 'authored total', ceiling: 33000, kind: CEILING_KIND.RULED },
+  { module: 'src/revenue', label: 'business semantics', ceiling: 24000, kind: CEILING_KIND.RULED },
+  { module: 'src/revenue', label: 'interaction layer', ceiling: 4500, kind: CEILING_KIND.RULED },
+  { module: 'src/revenue', label: 'authored total', ceiling: 28500, kind: CEILING_KIND.RULED },
+  { module: 'src/marketing', label: 'business semantics', ceiling: 13500, kind: CEILING_KIND.RULED },
+  { module: 'src/marketing', label: 'interaction layer', ceiling: 1500, kind: CEILING_KIND.RULED },
+  { module: 'src/marketing', label: 'authored total', ceiling: 15000, kind: CEILING_KIND.RULED },
 ];
 
 // Every committed ceiling declares a kind this module recognises. A ceiling

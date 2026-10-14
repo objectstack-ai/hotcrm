@@ -1,7 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { type AnyRec, objects, pages, walk } from './helpers/metadata-fixtures';
+import stack, { type AnyRec, walk } from './helpers/composed-stack';
+
+const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
+const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
 
 /**
  * `record:details` sections may only list fields the tab actually renders (#1211).

@@ -1,0 +1,68 @@
+{
+  "manifest": {
+    "id": "app.example.crm",
+    "namespace": "ex",
+    "version": "1.0.0",
+    "type": "app",
+    "name": "Example CRM",
+    "engines": { "protocol": "^17.7.0" }
+  },
+  "packages": [
+    {
+      "manifest": {
+        "id": "app.example.crm.service",
+        "namespace": "ex",
+        "version": "1.0.0",
+        "type": "module",
+        "name": "Example Service",
+        "dependencies": { "app.example.crm": "^1.0.0" },
+        "navigationContributions": [
+          {
+            "app": "ex_app",
+            "group": "group_service",
+            "priority": 10,
+            "items": [{ "id": "nav_case", "label": "Cases", "type": "object", "objectName": "ex_case" }]
+          }
+        ],
+        "engines": { "protocol": "^17.7.0" },
+        "objects": [
+          { "name": "ex_case", "label": "Case", "fields": { "subject": { "type": "text", "label": "Subject" } } }
+        ],
+        "actions": [
+          { "name": "log_call", "label": "Log Call", "objectName": "ex_case", "type": "script", "body": { "language": "js", "source": "return 1;" } }
+        ],
+        "requires": ["automation", "sharing"]
+      }
+    },
+    {
+      "manifest": {
+        "id": "app.example.crm",
+        "namespace": "ex",
+        "version": "1.0.0",
+        "type": "app",
+        "name": "Example CRM",
+        "engines": { "protocol": "^17.7.0" },
+        "objects": [
+          { "name": "ex_account", "label": "Account", "fields": { "title": { "type": "text", "label": "Title" } } },
+          { "name": "ex_contact", "label": "Contact", "fields": { "title": { "type": "text", "label": "Title" } } }
+        ],
+        "apps": [
+          {
+            "name": "ex_app",
+            "label": "Example",
+            "navigation": [
+              { "id": "nav_account", "label": "Accounts", "type": "object", "objectName": "ex_account" },
+              { "id": "group_service", "label": "Service", "type": "group", "children": [] }
+            ]
+          }
+        ],
+        "actions": [
+          { "name": "log_call", "label": "Log Call", "objectName": "ex_account", "type": "script", "body": { "language": "js", "source": "return 1;" } }
+        ],
+        "requires": ["automation", "sharing", "ui"]
+      }
+    }
+  ],
+  "i18n": { "defaultLocale": "en", "supportedLocales": ["en"], "fallbackLocale": "en" },
+  "docs": [{ "name": "ex_overview", "label": "Overview", "content": "# Overview" }]
+}

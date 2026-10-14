@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, applySystemFields } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AnalyticsService } from '@objectstack/service-analytics';
-import stack from '../objectstack.config';
+import stack from './helpers/composed-stack';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
 
 /**
@@ -109,6 +109,8 @@ interface FixtureCase {
   resolved_by_article: string | null;
   /** Days before now; every row is stamped at UTC NOON of that day. */
   offset: number;
+  /** `sla_due_date`, in days from now (negative = past due); `null` = no deadline. */
+  due: number | null;
 }
 
 const c = (owner: string, over: Partial<FixtureCase>): FixtureCase => ({
@@ -122,6 +124,7 @@ const c = (owner: string, over: Partial<FixtureCase>): FixtureCase => ({
   resolution_time_hours: null,
   resolved_by_article: null,
   offset: 3,
+  due: null,
   ...over,
 });
 
@@ -141,9 +144,9 @@ const c = (owner: string, over: Partial<FixtureCase>): FixtureCase => ({
 const CASE_ROWS: FixtureCase[] = [
   // ── Alpha: 10 cases — 6 open, 4 closed ──
   c(ALPHA, { status: 'new', priority: 'critical', origin: 'email', type: 'problem', offset: 1 }),
-  c(ALPHA, { status: 'new', priority: 'low', origin: 'web', type: 'question', offset: 2 }),
-  c(ALPHA, { status: 'in_progress', priority: 'high', origin: 'phone', type: 'bug', is_sla_violated: true, offset: 4 }),
-  c(ALPHA, { status: 'in_progress', priority: 'high', origin: 'web', type: 'problem', offset: 6 }),
+  c(ALPHA, { status: 'new', priority: 'low', origin: 'web', type: 'question', offset: 2, due: -1 }),
+  c(ALPHA, { status: 'in_progress', priority: 'high', origin: 'phone', type: 'bug', is_sla_violated: true, offset: 4, due: -1 }),
+  c(ALPHA, { status: 'in_progress', priority: 'high', origin: 'web', type: 'problem', offset: 6, due: 1 }),
   c(ALPHA, { status: 'waiting_customer', priority: 'medium', origin: 'chat', type: 'question', is_sla_violated: true, offset: 8 }),
   c(ALPHA, { status: 'waiting_customer', priority: 'high', origin: 'email', type: 'feature_request', offset: 11 }),
   c(ALPHA, { status: 'closed', priority: 'medium', origin: 'web', type: 'question', is_closed: true, resolution_time_hours: 4, resolved_by_article: 'KB-1', offset: 13 }),
@@ -155,14 +158,14 @@ const CASE_ROWS: FixtureCase[] = [
   c(BETA, { status: 'new', priority: 'critical', origin: 'web', type: 'bug', is_sla_violated: true, offset: 1 }),
   c(BETA, { status: 'new', priority: 'medium', origin: 'social_media', type: 'question', offset: 2 }),
   c(BETA, { status: 'new', priority: 'low', origin: 'chat', type: 'feature_request', offset: 3 }),
-  c(BETA, { status: 'in_progress', priority: 'high', origin: 'email', type: 'problem', offset: 5 }),
+  c(BETA, { status: 'in_progress', priority: 'high', origin: 'email', type: 'problem', offset: 5, due: -2 }),
   c(BETA, { status: 'in_progress', priority: 'medium', origin: 'phone', type: 'problem', is_sla_violated: true, offset: 7 }),
   c(BETA, { status: 'escalated', priority: 'critical', origin: 'phone', type: 'bug', is_sla_violated: true, offset: 9 }),
   c(BETA, { status: 'escalated', priority: 'high', origin: 'web', type: 'problem', offset: 10 }),
   c(BETA, { status: 'waiting_support', priority: 'medium', origin: 'social_media', type: 'question', offset: 12 }),
-  c(BETA, { status: 'waiting_support', priority: 'low', origin: 'web', type: 'question', offset: 14 }),
+  c(BETA, { status: 'waiting_support', priority: 'low', origin: 'web', type: 'question', offset: 14, due: -1 }),
   c(BETA, { status: 'closed', priority: 'critical', origin: 'email', type: 'bug', is_closed: true, is_sla_violated: true, resolution_time_hours: 96, resolved_by_article: 'KB-3', offset: 16 }),
-  c(BETA, { status: 'closed', priority: 'high', origin: 'web', type: 'problem', is_closed: true, resolution_time_hours: 12, resolved_by_article: 'KB-1', offset: 17 }),
+  c(BETA, { status: 'closed', priority: 'high', origin: 'web', type: 'problem', is_closed: true, resolution_time_hours: 12, resolved_by_article: 'KB-1', offset: 17, due: -3 }),
   c(BETA, { status: 'closed', priority: 'medium', origin: 'chat', type: 'question', is_closed: true, resolution_time_hours: 8, resolved_by_article: 'KB-2', offset: 19 }),
   c(BETA, { status: 'closed', priority: 'medium', origin: 'phone', type: 'question', is_closed: true, resolution_time_hours: 20, offset: 20 }),
   c(BETA, { status: 'closed', priority: 'low', origin: 'web', type: 'question', is_closed: true, resolution_time_hours: 3, resolved_by_article: 'KB-3', offset: 23 }),
@@ -186,12 +189,28 @@ const utcNoonDaysAgo = (offset: number): string => {
 
 /**
  * Does a fixture row satisfy a widget filter? Only the shapes the Service
- * dashboard actually authors are understood — field equality and a
- * `{N_days_ago}` floor on the range field. Anything else THROWS, so a widget
- * filter this function silently mis-models cannot pass by accident.
+ * dashboard actually authors are understood — field equality, a
+ * `{N_days_ago}` floor on the range field, and the SLA Violations tile's `$or`
+ * of the flag with "open and past due" (`$nin` on `status`, `$lt '{now}'` on
+ * `sla_due_date`, #2070). Anything else THROWS, so a widget filter this
+ * function silently mis-models cannot pass by accident.
  */
 const truthMatches = (row: FixtureCase, filter: AnyRec | undefined): boolean => {
   for (const [field, cond] of Object.entries(filter ?? {})) {
+    if (field === '$or') {
+      if (!(cond as AnyRec[]).some((branch) => truthMatches(row, branch))) return false;
+      continue;
+    }
+    const ops = cond !== null && typeof cond === 'object' ? Object.keys(cond as AnyRec).join() : '';
+    if (field === 'status' && ops === '$nin') {
+      if (((cond as AnyRec).$nin as string[]).includes(row.status)) return false;
+      continue;
+    }
+    if (field === 'sla_due_date' && ops === '$lt' && (cond as AnyRec).$lt === '{now}') {
+      // A missing deadline never compares: SQL NULL, and no clock to have run out.
+      if (row.due === null || row.due >= 0) return false;
+      continue;
+    }
     if (field === AGENT_FIELD) {
       // `{current_user_id}` is resolved by the caller (see `truthFor`), so an
       // unresolved placeholder here is a mis-modelled filter: throw.
@@ -256,7 +275,7 @@ const keyOf = (v: unknown): string => (v === null || v === undefined || v === ''
 const CASE_COLUMNS = [
   'owner_id', 'subject', 'description', 'status', 'priority', 'origin', 'type',
   'is_closed', 'is_sla_violated', 'resolution', 'resolution_time_hours',
-  'resolved_by_article', 'created_at',
+  'resolved_by_article', 'created_at', 'sla_due_date',
 ];
 
 let ql: AnyRec;
@@ -296,6 +315,7 @@ beforeAll(async () => {
       resolved_by_article: row.resolved_by_article,
       // The platform's creation stamp, which the dashboard range windows (#1992).
       created_at: utcNoonDaysAgo(row.offset),
+      sla_due_date: row.due === null ? null : new Date(Date.now() + row.due * DAY).toISOString(),
       // The app's own `resolution_required_for_closed` rule fires on these
       // inserts — a welcome sign the REAL object is under test.
       ...(row.is_closed ? { resolution: 'Resolved by the fixture.' } : {}),

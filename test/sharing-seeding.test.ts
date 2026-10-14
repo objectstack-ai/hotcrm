@@ -3,8 +3,8 @@
 import { describe, it, expect } from 'vitest';
 import { compileCelToFilter } from '@objectstack/formula';
 import { ObjectQL } from '@objectstack/objectql';
-import { InMemoryDriver } from '@objectstack/driver-memory';
-import stack from '../objectstack.config';
+import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import stack from './helpers/composed-stack';
 import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
 
 /**
@@ -388,6 +388,9 @@ describe('what a sharing condition may contain (platform compiler, measured)', (
  *
  * ### Measured on `@objectstack/driver-memory` 17.1.0 — the card's half is dead
  *
+ * (Since the maintainer's ruling on #2092 the witnesses below run on
+ * `driver-sqlite-wasm`, which answers every one of them the same way.)
+ *
  * `$not` no longer reaches mingo: the driver declares `$and`/`$or`/`$not` and
  * refuses anything else with a coded `INVALID_FILTER` instead of passing it
  * through. Measured directly, both the authored form and the portable
@@ -407,10 +410,9 @@ function columnsFor(rule: AnyRec, names: string[]): AnyRec {
 }
 
 /**
- * One record each rule must reach, and records it must not.
- *
- * Persistence is off: the memory driver otherwise writes
- * `.objectstack/data/memory-driver.json` and would carry rows between runs.
+ * One record each rule must reach, and records it must not. Each rule gets a
+ * fresh in-memory SQLite database (`filename: ':memory:'`), so no row carries
+ * between runs.
  */
 const RULE_WITNESSES: Record<string, { reaches: AnyRec; misses: AnyRec[] }> = {
   account_team_sharing: {
@@ -499,11 +501,12 @@ describe('every seeded rule EXECUTES on the configured driver, not merely compil
       const witness = RULE_WITNESSES[name];
       const columns = Object.keys(Object.assign({}, witness.reaches, ...witness.misses));
       const ql = await ObjectQL.create({
-        datasources: { default: new InMemoryDriver({ persistence: false }) },
+        datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
         objects: {
           [rule!.object as string]: { name: rule!.object, fields: columnsFor(rule!, columns) },
         } as never,
       });
+      await ql.syncSchemas();
 
       try {
         const api = ql.createContext({ isSystem: true });
@@ -539,14 +542,16 @@ describe('every seeded rule EXECUTES on the configured driver, not merely compil
  * measured separately and a platform upgrade that breaks either one names
  * which.
  *
- * The expected row sets are MEASURED against `driver-memory` 17.1.0, not
- * reasoned about — including the two null-sensitive rows, which is the family
- * objectstack#11065 records drivers disagreeing on (`avg` over a boolean
- * answers `null` on memory and a number on sqlite). Note what was measured
- * here: `Cyan` has a null `type`, and both `!= "customer"` and
- * `!(… == "customer")` DO return it. That is this driver's answer, written
- * down; if another driver answers differently, that difference belongs in a
- * card, not in a `??` in this file.
+ * The expected row sets are MEASURED, not reasoned about — first against
+ * `driver-memory` 17.1.0, and re-measured on `driver-sqlite-wasm`
+ * 18.0.0-next.0 when the maintainer's ruling on #2092 moved every test onto
+ * SQL: every row answered identically on both. That includes the two
+ * null-sensitive rows, which is the family objectstack#11065 records drivers
+ * disagreeing on (`avg` over a boolean answers `null` on memory and a number
+ * on sqlite). Note what was measured here: `Cyan` has a null `type`, and both
+ * `!= "customer"` and `!(… == "customer")` DO return it. That is this driver's
+ * answer, written down; if another driver answers differently, that
+ * difference belongs in a card, not in a `??` in this file.
  */
 describe('what the configured driver does with a compiled condition (measured)', () => {
   const FIXTURE = [
@@ -555,9 +560,9 @@ describe('what the configured driver does with a compiled condition (measured)',
     { name: 'Cyan', type: null, is_active: true, billing_country: 'JP', annual_revenue: 1000, territory: 'other' },
   ];
 
-  const makeAccounts = () =>
-    ObjectQL.create({
-      datasources: { default: new InMemoryDriver({ persistence: false }) },
+  const makeAccounts = async () => {
+    const ql = await ObjectQL.create({
+      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: {
         crm_account: {
           name: 'crm_account',
@@ -569,6 +574,9 @@ describe('what the configured driver does with a compiled condition (measured)',
         },
       } as never,
     });
+    await ql.syncSchemas();
+    return ql;
+  };
 
   it.each([
     ['equality + conjunction', 'record.type == "customer" && record.is_active == true', ['Acme']],
@@ -607,13 +615,18 @@ describe('what the configured driver does with a compiled condition (measured)',
     // widening the result set. That is what makes "the rows came back" a
     // trustworthy signal above — and it is the platform behaviour that
     // replaced the mingo passthrough this card was filed against.
+    //
+    // Asserted by its envelope. The SQL driver withholds the offending key
+    // from the message (it names it in the server log only, because this
+    // predicate is not marked as author-written), so the `$nor` text the
+    // memory driver's message carried is not part of the contract here.
     const ql = await makeAccounts();
     try {
       const api = ql.createContext({ isSystem: true });
       for (const row of FIXTURE) await api.object('crm_account').insert(row as never);
       await expect(
         api.object('crm_account').find({ where: { $nor: [{ type: 'customer' }] } as never }),
-      ).rejects.toThrow(/\$nor/);
+      ).rejects.toMatchObject({ code: 'INVALID_FILTER', status: 400 });
     } finally {
       await ql.close();
     }

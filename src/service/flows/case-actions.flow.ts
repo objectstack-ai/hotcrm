@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { CLAIMABLE_TARGET_STATUSES } from '../objects/_case-assignment';
 type Flow = Automation.Flow;
@@ -62,7 +63,7 @@ export const EscalateCaseFlow: Flow = {
       // The two stamps a person never types — `is_escalated` and
       // `escalated_date` — are `readonly: true` on `crm_case` and are written
       // by the `case_escalation_stamp` subflow that follows, with the system
-      // context. See `src/flows/case-escalation-stamp.flow.ts`.
+      // context. See `src/service/flows/case-escalation-stamp.flow.ts`.
       //
       // ⚠️ `status: 'escalated'` MUST stay in this node, and not only because
       // it is user-writable: it is the trigger both escalation hooks key off —
@@ -79,9 +80,9 @@ export const EscalateCaseFlow: Flow = {
       id: 'escalate', type: 'update_record', label: 'Escalate Case',
       config: {
         objectName: 'crm_case',
-        filter: { id: '{recordId}' },
+        filter: { id: cel`recordId` },
         fields: {
-          escalation_reason: '{reason}',
+          escalation_reason: cel`reason`,
           status: 'escalated',
           priority: 'critical',
         },
@@ -107,7 +108,7 @@ export const EscalateCaseFlow: Flow = {
       id: 'stamp_escalation', type: 'subflow', label: 'Stamp Escalation Flags',
       config: {
         flowName: 'case_escalation_stamp',
-        input: { recordId: '{recordId}' },
+        input: { recordId: cel`recordId` },
       },
     },
     { id: 'end', type: 'end', label: 'End' },
@@ -135,7 +136,7 @@ export const CloseCaseFlow: Flow = {
   // it). The standing rule is the opposite one: a screen flow stays
   // `runAs: 'user'` and a write that genuinely needs elevation is split into a
   // dedicated `system` sub-flow reached by a `subflow` node — see
-  // `escalate_case` above and `src/flows/case-escalation-stamp.flow.ts`.
+  // `escalate_case` above and `src/service/flows/case-escalation-stamp.flow.ts`.
   // "Readonly stripped my write, so I made the flow system" is the pattern
   // that ruling exists to stop being copied; `AGENTS.md` house rule 9 carries
   // it as house policy. This flow predates that rule and has not been
@@ -186,21 +187,27 @@ export const CloseCaseFlow: Flow = {
     {
       // `resolved_by_article` is written unconditionally, and a blank one is
       // normalised to NULL by `case_resolution_article_normalize`
-      // (`src/objects/case.hook.ts`) rather than branched around here: MEASURED
+      // (`src/service/objects/case.hook.ts`) rather than branched around here: MEASURED
       // on the real engine, a screen field left empty resumes as `''` and lands
       // as an empty string, which `count(resolved_by_article)` counts. A
       // `decision` node could not have branched it either — this repo has
       // measured `decision.config.condition` to be inert metadata
       // (`test/win-loss-capture.test.ts`'s table of five such surfaces).
+      //
+      // The read is guarded because the field is optional: a resume that omits
+      // it leaves the variable unbound, which the 17.x template wrote as nothing
+      // (the stored link left alone) and CEL refuses. The guard writes NULL
+      // there — the value a blank field already lands as after the normalize
+      // hook — so an omitted answer and an empty one now close the case alike.
       id: 'close', type: 'update_record', label: 'Close Case',
       config: {
         objectName: 'crm_case',
-        filter: { id: '{recordId}' },
+        filter: { id: cel`recordId` },
         fields: {
           is_closed: true,
-          resolution: '{resolution}',
+          resolution: cel`resolution`,
           status: 'closed',
-          resolved_by_article: '{resolved_by_article}',
+          resolved_by_article: cel`has(vars.resolved_by_article) ? resolved_by_article : null`,
         },
       },
     },
@@ -221,7 +228,7 @@ export const CloseCaseFlow: Flow = {
  *
  * The claim already exists as behaviour: an agent moves an unowned case out of
  * **Unassigned — triage** by setting its status to one that means a person is
- * on it, and `case_self_claim` (`src/objects/_case-assignment.ts`, priority
+ * on it, and `case_self_claim` (`src/service/objects/_case-assignment.ts`, priority
  * 260) stamps `owner_id` with the caller. This flow is the screen that says so.
  *
  * It is **pure UI over the existing seam**. Its one write is the
@@ -308,9 +315,9 @@ export const ClaimCaseFlow: Flow = {
       id: 'claim', type: 'update_record', label: 'Claim Case',
       config: {
         objectName: 'crm_case',
-        filter: { id: '{recordId}' },
+        filter: { id: cel`recordId` },
         fields: {
-          status: '{claimStatus}',
+          status: cel`claimStatus`,
         },
       },
     },
