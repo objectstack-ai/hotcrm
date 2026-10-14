@@ -35,8 +35,8 @@ export const QuoteLineItem = ObjectSchema.create({
   // master RLS policies only, under a SYSTEM context, and no policy authored on
   // `crm_quote`, the master set is EVERY quote and a line item is readable —
   // and writable — by every holder of object-level read on this object. The
-  // relation resolver accepts a REQUIRED LOOKUP as the parent, so no
-  // master-detail conversion is needed.
+  // master is `crm_quote`, this object's one required `master_detail`: since
+  // 18.0.0-next.1 the only shape the relation resolver derives a master from.
   //
   // ⛔ Not `private`: with no owner field on this object that resolves to the
   // platform's auto-stamped `owner_id` — the row's inserter — so lines cloned
