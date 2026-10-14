@@ -595,8 +595,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `screens.<node>.title` and `screens.<node>.fields.<field>.{label,placeholder}`
   // — the keys `os lint`'s `i18n/missing-flow` names, read by the console's
   // flow runner since @objectstack 17.7.0 (the spec's `flows` liveness row is
-  // `live` there). A screen with no authored `title` shows its flow's label in
-  // every locale, so each `screen_1.title` repeats the flow label. Since
+  // `live` there). A screen with no authored `title` is headed by its node
+  // `label` (the executor's `config.title ?? node.label`, measured on
+  // 18.0.0-next.0), so each `screens.<node>.title` translates that node label,
+  // never the flow label: the dialog shows the flow label as its eyebrow above
+  // the title, and the two differ on `lead_conversion`, `quote_generation` and
+  // `campaign_enrollment` (#2096). Since
   // 18.0.0-next.0 three more surfaces are keys the engine reads in the run's
   // locale, and `i18n/missing-flow` names each missing one: a select field's
   // `options.<value>` (worded as the object field's own option in this pack),
@@ -610,7 +614,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '将成员加入营销活动',
       screens: {
         screen_1: {
-          title: '将成员加入营销活动',
+          title: '加入条件',
           fields: {
             memberSource: { label: '加入的成员类型', options: { leads: '线索', contacts: '联系人' } },
             leadStatus: { label: '加入以下状态的线索', options: { new: '新建', contacted: '已联系', qualified: '已确认' } },
@@ -656,7 +660,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '线索转化流程',
       screens: {
         screen_1: {
-          title: '线索转化流程',
+          title: '转化详情',
           // The duplicate warning's text is a variable the flow assigns; this
           // key can only carry the hole that shows it.
           description: '{{duplicateWarning}}',
@@ -707,7 +711,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       refusals: { refuse_held: { message: '需先完成立项审批：请勾选「申请立项审批」。尚未创建任何内容。' } },
       screens: {
         screen_1: {
-          title: '从商机生成报价单',
+          title: '报价单详情',
           fields: {
             quoteName: { label: '报价名称' },
             expirationDays: { label: '有效期（天）' },
