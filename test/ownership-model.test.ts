@@ -6,6 +6,7 @@ import { InMemoryDriver } from '@objectstack/driver-memory';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { LeadViews } from '../src/sales/views/lead.view';
 
 /**
  * ═══ HotCRM has ONE owner, and it is the platform's (#548) ════════════════
@@ -161,6 +162,21 @@ describe('one ownership column, and it is `owner_id`', () => {
       (n) => (objectByName.get(n)?.fields ?? {}).owner_id?.defaultValue != null,
     );
     expect(withDefault, 'owner_id must have no schema default').toEqual([]);
+  });
+
+  it('the New Lead form leaves `owner_id` to that stamp — offered, not required (#2097)', () => {
+    // `LeadViews.form` IS the create dialog (see `case-create-form-narrowing`),
+    // and a `required` entry there is a client-side submit check. Measured on
+    // 18.0.0-next.0: a rep's Leads → New stopped at "Lead Owner is required"
+    // with nothing POSTed, so the stamp never saw the insert. The server half —
+    // a rep's ownerless insert lands owned by the rep — is pinned end to end by
+    // `stands down when the middleware already stamped an owner` below.
+    const entries: unknown[] = ((LeadViews as AnyRec).form?.sections ?? []).flatMap(
+      (s: AnyRec) => s.fields ?? [],
+    );
+    const owner = entries.find((f) => (typeof f === 'string' ? f : (f as AnyRec)?.field) === 'owner_id');
+    expect(owner, 'owner_id left the New Lead form — this pin would judge nothing').toBeDefined();
+    expect((owner as AnyRec)?.required === true, 'the New Lead form demands an owner again').toBe(false);
   });
 });
 
