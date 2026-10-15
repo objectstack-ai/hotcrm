@@ -670,23 +670,20 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: 'Fecha de Cierre' },
           },
         },
-        refuse_confirmed_duplicate: {
-          title: 'Conversión rechazada',
-          description:
-            'El Estado del Duplicado de este prospecto es Confirmado: un revisor lo comparó con un registro existente y registró que lo repite. Convertirlo crearía una segunda cuenta, contacto y oportunidad para el mismo comprador. La sección Gestión de Duplicados de este prospecto indica el registro que se conserva; descalifique este prospecto como duplicado. Solo un revisor que cambie ese veredicto vuelve a habilitar la conversión.',
-        },
-        refuse_unapproved: {
-          title: 'Conversión rechazada',
-          description:
-            'Este prospecto no ha sido aprobado para la conversión. Un aprobador debe darle el visto bueno antes de que pueda convertirse en una cuenta, un contacto y una oportunidad; el campo Aprobación de Conversión del prospecto muestra si la decisión sigue pendiente o fue rechazada. Mientras tanto, siga trabajando el prospecto: nada de él queda bloqueado.',
-        },
-        refuse_no_match_key: {
-          title: 'Conversión rechazada',
-          description:
-            'La empresa de este prospecto no tiene clave de coincidencia, así que la conversión no puede saber a qué cuenta pertenece y no lo va a adivinar: una suposición podría archivar el contacto y la oportunidad bajo otro cliente. Guardar la Empresa del prospecto reconstruye la clave, así que guárdela de nuevo y luego conviértalo. No se ha creado nada.',
-        },
       },
       refusals: {
+        refuse_confirmed_duplicate: {
+          message:
+            'Conversión rechazada. El Estado del Duplicado de este prospecto es Confirmado: un revisor lo comparó con un registro existente y registró que lo repite. Convertirlo crearía una segunda cuenta, contacto y oportunidad para el mismo comprador. La sección Gestión de Duplicados de este prospecto indica el registro que se conserva; descalifique este prospecto como duplicado. Solo un revisor que cambie ese veredicto vuelve a habilitar la conversión.',
+        },
+        refuse_unapproved: {
+          message:
+            'Conversión rechazada. Este prospecto no ha sido aprobado para la conversión. Un aprobador debe darle el visto bueno antes de que pueda convertirse en una cuenta, un contacto y una oportunidad; el campo Aprobación de Conversión del prospecto muestra si la decisión sigue pendiente o fue rechazada. Mientras tanto, siga trabajando el prospecto: nada de él queda bloqueado.',
+        },
+        refuse_no_match_key: {
+          message:
+            'Conversión rechazada. La empresa de este prospecto no tiene clave de coincidencia, así que la conversión no puede saber a qué cuenta pertenece y no lo va a adivinar: una suposición podría archivar el contacto y la oportunidad bajo otro cliente. Guardar la Empresa del prospecto reconstruye la clave, así que guárdela de nuevo y luego conviértalo. No se ha creado nada.',
+        },
         refuse_nonpositive_amount: {
           message:
             'Conversión rechazada: el monto de una oportunidad debe ser mayor que cero. No se creó nada. Vuelva a convertir el prospecto con el monto que vale el negocio, o deje sin marcar ¿Crear oportunidad? para convertirlo sin una.',

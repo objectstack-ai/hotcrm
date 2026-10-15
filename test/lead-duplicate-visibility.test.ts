@@ -631,12 +631,14 @@ describe('lead_conversion — the warning at the moment of conversion', () => {
  * guess would need an override flag, and an override flag is the shape this
  * exhibit must not demonstrate.
  *
- * ## Why these pins resume the run instead of reading the screen
+ * ## Why these pins read the outcome AND the store
  *
- * A paused run has created nothing on ANY branch yet, so a pin that stopped at
- * the pause would be green against a flow with no refusal in it at all. Each
- * case below submits the screen it stopped on and then counts what the store
- * holds — the refusal is the four zeroes, not the dialog.
+ * The refusal is a refusing `end` (`outcome: 'refused'`): the run ends there,
+ * `refused` and never resumable, so there is no dialog to submit. Each case
+ * reads that outcome and counts what the store holds in ONE object — the
+ * refusal is the outcome and the four zeroes together, not the dialog. Until
+ * #2060 item 2c it was a message-only screen whose Submit completed the run,
+ * and the console toasted "Lead converted successfully!" over it.
  *
  * ## The before-picture these replace
  *
@@ -658,12 +660,23 @@ describe('lead_conversion — a confirmed duplicate is refused (#1288)', () => {
     ['a survivor that has since been erased', () => ({ duplicate_of_type: 'erased' })],
   ];
 
-  it.each(CONFIRMED_SURVIVORS)('refuses, and creates nothing — %s', async (_label, link) => {
-    const { screen, products } = await convert(await seedLead({ ...link(), duplicate_status: 'confirmed' }));
+  /** Start the conversion of `lead`; the run's outcome, its refusal and the store. */
+  const refusalOf = async (lead: Rec) => {
+    const { started } = await startConversion(lead);
+    return {
+      outcome: { success: started.success, status: started.status, runId: started.runId, screen: started.screen },
+      message: String(started.refusalMessage ?? ''),
+      products: await productsOf(lead),
+    };
+  };
 
-    expect(screen!.nodeId, 'the run did not stop on the refusal screen')
-      .toBe('refuse_confirmed_duplicate');
-    expect(products, 'a confirmed duplicate was converted anyway').toEqual(NOTHING_CONVERTED);
+  it.each(CONFIRMED_SURVIVORS)('refuses, and creates nothing — %s', async (_label, link) => {
+    const { outcome, message, products } = await refusalOf(await seedLead({ ...link(), duplicate_status: 'confirmed' }));
+
+    expect({ ...outcome, ...products }, 'the run did not end refused, or a confirmed duplicate was converted anyway').toEqual({
+      success: true, status: 'refused', runId: undefined, screen: undefined, ...NOTHING_CONVERTED,
+    });
+    expect(message, 'the rep is not told why').not.toBe('');
   });
 
   it('says why, naming the verdict and where the surviving record is', async () => {
@@ -671,11 +684,8 @@ describe('lead_conversion — a confirmed duplicate is refused (#1288)', () => {
       duplicate_of_type: 'crm_lead', duplicate_of_lead: survivorLeadId,
       duplicate_status: 'confirmed',
     });
-    const { screen } = await convert(lead);
-
-    const description = String(screen!.description ?? '');
-    expect(String(screen!.title ?? ''), 'the refusal dialog has no title of its own')
-      .toContain('refused');
+    const { message: description } = await refusalOf(lead);
+    expect(description, 'the refusal does not say the conversion was refused').toContain('refused');
 
     // The ruling's item 1, both halves. The VERDICT, in the vocabulary the
     // record itself publishes: `duplicate_status`'s label is "Duplicate Status"

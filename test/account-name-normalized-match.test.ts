@@ -577,10 +577,11 @@ describe('acceptance: a case/whitespace variant reuses the same account', () => 
    * writes too (a non-string name or company folds to `null`, above), not
    * only from an un-backfilled install.
    *
-   * So the flow refuses ahead of its form (`refuse_no_match_key`), and the
-   * pin reads the outcome off the engine after the rep submits that dialog:
-   * the lead is not converted, the unrelated account gained no contact, and
-   * no account was created for the lead's company.
+   * So the flow refuses ahead of its form, at a refusing `end`
+   * (`refuse_no_match_key`, `outcome: 'refused'`), and the pin reads that
+   * outcome and the engine's store together: the lead is not converted, the
+   * unrelated account gained no contact, and no account was created for the
+   * lead's company.
    */
   it('a lead with no match key is refused, and attaches to no account (#2017)', async () => {
     const n = ++k;
@@ -589,14 +590,12 @@ describe('acceptance: a case/whitespace variant reuses the same account', () => 
     const legacy = await leadFor(company('Acme Corp', n));
     await systemUpdate(verify, 'crm_lead', { id: legacy.id, company_normalized: null });
 
-    const started = await verify.flows.run('lead_conversion', { recordId: legacy.id }, { as: manager.token });
-    const screen = (started.screen ?? null) as Rec | null;
-    expect(started.status, 'the conversion did not stop on a dialog').toBe('paused');
-    expect(screen?.nodeId, 'a key-less lead reached the conversion form').toBe('refuse_no_match_key');
-    // Submitting the refusal is the rep's next click, and the state after it
-    // is the claim: the branch reaches `end` without one create or update.
-    const done = await verify.flows.resume(started, { createOpportunity: false }, { as: manager.token });
-    expect(done.success, 'submitting the refusal failed the run').toBe(true);
+    const run = await verify.flows.run('lead_conversion', { recordId: legacy.id }, { as: manager.token }) as Rec;
+    // A refusal is a successful evaluation that says no: `refused`, never
+    // parked on a dialog whose Submit would complete the run (#2060 item 2c).
+    expect({ success: run.success, status: run.status, runId: run.runId, screen: run.screen }, 'the key-less lead was not refused')
+      .toEqual({ success: true, status: 'refused', runId: undefined, screen: undefined });
+    expect(String(run.refusalMessage ?? ''), 'the rep is not told why').not.toBe('');
 
     const [after] = await verify.rows('crm_lead', { id: legacy.id });
     expect(Boolean(after!.is_converted), 'the key-less lead was converted').toBe(false);
