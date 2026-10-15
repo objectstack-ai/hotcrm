@@ -2,6 +2,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { CrmApp } from '../src/sales/apps/crm.app';
+import { SalesRepProfile } from '../src/sales/profiles/sales-rep.profile';
+import { SalesManagerProfile } from '../src/sales/profiles/sales-manager.profile';
+import { ServiceAgentProfile, ServiceManagerProfile } from '../src/sales/profiles/service-agent.profile';
 
 /**
  * The two standing constraints on `src/apps/crm.app.ts`'s shape (#1259).
@@ -20,9 +23,8 @@ import { CrmApp } from '../src/sales/apps/crm.app';
  *  1. **A FLOOR on variety.** HotCRM is the exemplar app: an author reading it
  *     is reading it to learn what each kind of nav item looks like. Nav items
  *     come in six kinds and every one of them must keep at least one entry —
- *     `page` and `component` are down to a single exemplar each, so the next
- *     slimming pass is one deletion away from removing a demonstration
- *     silently. That is the failure this half exists to make loud.
+ *     `component` is down to a single exemplar, so the next slimming pass is
+ *     one deletion away from removing a demonstration silently. That is the failure this half exists to make loud.
  *
  *  2. **A CEILING on duplication.** No two entries may open the same
  *     destination, and no object may hold more than one plain list entry.
@@ -151,5 +153,36 @@ describe('the app navigation opens each destination once (#1259)', () => {
       (n) => n.id as string,
     );
     expect(bad, `object entries with an empty viewName:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+describe('entries built on opportunities are gated on reading them (#2060 item 5)', () => {
+  // Measured on 18.0.0-next.1 (PR body has the per-persona tables): without the
+  // gate a service agent was offered all five and each answered "You don't have
+  // access", one 403 per opportunity query. `requiredPermissions` cannot say
+  // this — the server reads it as capability names, and `crm_opportunity:read`
+  // hid the entry from every user, the admin included (see `crm.app.ts`).
+  const GATE = 'current_user.can("crm_opportunity", "read")';
+  const GATED = ['nav_home', 'nav_sales_home', 'nav_sales_dashboard', 'nav_crm_dashboard', 'nav_report_pipeline_coverage'];
+  const sourceOf = (v: unknown): unknown => (v && typeof v === 'object' ? (v as AnyRec).source : v);
+
+  it('exactly these entries carry the opportunity read gate', () => {
+    const gated = LEAVES.filter((n) => sourceOf(n.visible) === GATE).map((n) => n.id);
+    expect(gated).toEqual(GATED);
+    const other = LEAVES.filter((n) => n.visible !== undefined && sourceOf(n.visible) !== GATE).map((n) => n.id);
+    expect(other, 'entries gated on something else').toEqual([]);
+  });
+
+  it('the gate parts the personas the way the permission sets say', () => {
+    const reads = (set: AnyRec) => set.objects?.crm_opportunity?.allowRead === true;
+    expect([SalesRepProfile, SalesManagerProfile].map(reads)).toEqual([true, true]);
+    expect([ServiceAgentProfile, ServiceManagerProfile].map(reads)).toEqual([false, false]);
+  });
+
+  it('Sales Home has a sidebar entry, second after Home', () => {
+    expect(NAV.slice(0, 2).map((n) => [n.id, n.dashboardName ?? n.pageName])).toEqual([
+      ['nav_home', 'executive_dashboard'],
+      ['nav_sales_home', 'sales_home_page'],
+    ]);
   });
 });

@@ -310,8 +310,8 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 });
 
 describe('the source facts the quick-tour table now rests on (#960)', () => {
-  it('the app has one pinned top-level entry and six groups', () => {
-    expect(PINNED.map((p) => p.label)).toEqual(['Home']);
+  it('the app has two pinned top-level entries and six groups', () => {
+    expect(PINNED.map((p) => p.label)).toEqual(['Home', 'Sales Home']);
     expect(GROUP_LABELS).toEqual([
       'Sales',
       'My Work',

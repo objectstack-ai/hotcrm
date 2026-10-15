@@ -33,6 +33,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_activity_dashboard: { label: 'Actividad de Ventas' },
         nav_my_calendar: { label: 'Mi Calendario' },
         nav_home: { label: 'Inicio' },
+        nav_sales_home: { label: 'Inicio de Ventas' },
 
         group_sales: { label: 'Ventas' },
         nav_lead: { label: 'Prospectos' },

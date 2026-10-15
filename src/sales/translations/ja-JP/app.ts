@@ -28,6 +28,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
       navigation: {
         nav_home: { label: 'ホーム' },
+        nav_sales_home: { label: '営業ホーム' },
 
         group_sales: { label: '営業' },
         nav_lead: { label: 'リード' },
