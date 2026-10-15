@@ -513,9 +513,10 @@ export const LeadConversionFlow: Flow = {
         objectName: 'crm_contact',
         fields: {
           // The person's own facts travel with them (#2068). `crm_contact`
-          // declares each of these on the lead's vocabulary (`_picklists.ts`
-          // for the two selects, pinned by `test/actions-flows-integrity`), so
-          // a straight copy is always legal. The two opt-outs are copied,
+          // declares each of these on the lead's vocabulary (the two selects
+          // reference the same `salutation` and `lead_source` picklists,
+          // pinned by `test/actions-flows-integrity`), so a straight copy is
+          // always legal. The two opt-outs are copied,
           // never defaulted: a lead that opted out must not become a contact
           // that has not — `email_opt_out` hides Send Email and silences
           // `contact_welcome`, `do_not_call` refuses a scheduled call. A

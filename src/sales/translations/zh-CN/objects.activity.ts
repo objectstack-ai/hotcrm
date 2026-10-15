@@ -65,13 +65,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       reminder_date: { label: '提醒时间' },
       completed_date: { label: '完成日期' },
       owner_id: { label: '负责人' },
-      related_to_type: {
-        label: '关联对象类型',
-        options: {
-          crm_account: '客户', crm_contact: '联系人', crm_opportunity: '商机',
-          crm_lead: '线索', crm_case: '工单',
-        },
-      },
+      related_to_type: { label: '关联对象类型' },
       related_to_account: { label: '关联客户' },
       related_to_contact: { label: '关联联系人' },
       related_to_opportunity: { label: '关联商机' },
@@ -147,13 +141,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       all_day: { label: '全天活动' },
       duration_minutes: { label: '时长（分钟）' },
       location: { label: '地点', help: '会议室、地址或会议链接' },
-      related_to_type: {
-        label: '关联对象类型',
-        options: {
-          crm_account: '客户', crm_contact: '联系人', crm_opportunity: '商机',
-          crm_lead: '线索', crm_case: '工单',
-        },
-      },
+      related_to_type: { label: '关联对象类型' },
       related_to_account: { label: '关联客户' },
       related_to_contact: { label: '关联联系人' },
       related_to_opportunity: { label: '关联商机' },

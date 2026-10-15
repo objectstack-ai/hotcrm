@@ -2,7 +2,7 @@
 
 import type { ObjectTranslationData } from '@objectstack/spec/system';
 
-import { activityActions, salutationOptions, industryOptions, leadSourceOptions } from './_shared';
+import { activityActions } from './_shared';
 
 /**
  * 日本語 (ja-JP) — `objects` translations for the PIPELINE family:
@@ -44,7 +44,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     pluralLabel: 'リード',
     description: 'まだ適格判定を受けていない見込み客',
     fields: {
-      salutation: { label: '敬称', options: { ...salutationOptions } },
+      salutation: { label: '敬称' },
       first_name: { label: '名' },
       last_name: { label: '姓' },
       full_name: { label: '氏名' },
@@ -57,10 +57,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       title: { label: '役職' },
       email: { label: 'メール' },
       phone: { label: '電話' },
-      industry: {
-        label: '業種',
-        options: { ...industryOptions },
-      },
+      industry: { label: '業種' },
       status: {
         label: 'ステータス',
         options: {
@@ -68,7 +65,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           unqualified: '不適格', converted: '変換済み',
         },
       },
-      lead_source: { label: 'リードソース', options: { ...leadSourceOptions } },
+      lead_source: { label: 'リードソース' },
       owner_id: { label: 'リード所有者' },
       is_converted: { label: '変換済み' },
       description: { label: '説明' },
@@ -255,7 +252,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       description: { label: '説明' },
       next_step: { label: '次のステップ' },
-      lead_source: { label: 'リードソース', options: { ...leadSourceOptions } },
+      lead_source: { label: 'リードソース' },
       crm_campaign: { label: 'キャンペーン', help: 'この商談を生み出したマーケティングキャンペーン' },
       days_in_stage: { label: '現ステージ滞在日数' },
       stage_entry_date: { label: 'ステージ開始日', help: 'この商談が現在のステージに入った日。' },

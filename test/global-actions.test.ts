@@ -208,9 +208,12 @@ describe('a rep can log an interaction on everything they sell to (#509 / #592)'
     // The map in `global.actions.ts` decides which `crm_event` column records
     // the link. A stale entry writes an event linked to nothing at all.
     const eventFields = objectByName.get('crm_event')?.fields ?? {};
-    const typeOptions = new Set(
-      (eventFields.related_to_type?.options ?? []).map((o: AnyRec) => o.value),
-    );
+    // `related_to_type` references the shared `related_to_type` picklist (#2000)
+    // and carries no options of its own, so the options are read off the field
+    // as the booted registry SERVES it — the list's, resolved by the platform.
+    const servedType: AnyRec | undefined = verify.metadata.object('crm_event')?.fields?.related_to_type;
+    const typeOptions = new Set(((servedType?.options ?? []) as AnyRec[]).map((o) => o.value));
+    expect(typeOptions.size, 'crm_event.related_to_type offers no options').toBeGreaterThan(0);
     const bad: string[] = [];
     for (const [objectName, field] of Object.entries(ACTIVITY_TARGETS)) {
       if (!eventFields[field]) bad.push(`crm_event has no field "${field}" (for ${objectName})`);

@@ -2,7 +2,7 @@
 
 import type { Action } from '@objectstack/spec/ui';
 import { P } from '@objectstack/spec';
-import { OPPORTUNITY_STAGE_OPTIONS, plainOptions } from '../objects/_picklists';
+import { Opportunity } from '../objects/opportunity.object';
 
 /**
  * Clone Opportunity.
@@ -191,8 +191,11 @@ export const MassUpdateStageAction: Action = {
       label: 'New Stage',
       type: 'select',
       required: true,
-      // Mirrors crm_opportunity.stage exactly — see _picklists.ts.
-      options: plainOptions(OPPORTUNITY_STAGE_OPTIONS),
+      // crm_opportunity.stage's OWN options, read off the object definition
+      // and projected to bare `{ label, value }` pairs: an action param's
+      // option entry is strict and refuses `color` / `default`, which mean
+      // something only on the field.
+      options: Opportunity.fields.stage.options!.map(({ label, value }) => ({ label, value })),
     }
   ],
   successMessage: 'Opportunities updated successfully!',

@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * Deleting an enrolled person must work (#696).
@@ -130,6 +131,7 @@ describe('deleting an enrolled person', () => {
         crm_account: byName('crm_account'),
       } as never,
     })) as never;
+    registerStackPicklists(ql);
     await ql.syncSchemas();
     api = ql.createContext({ isSystem: true });
   });
