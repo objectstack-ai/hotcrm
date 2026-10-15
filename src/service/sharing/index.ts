@@ -10,6 +10,7 @@
 
 export {
   CaseDirectorSharingRule,
+  CaseEscalatedFromSharingRule,
   CaseEscalationSharingRule,
   CaseUnassignedTriageSharingRule,
 } from './case.sharing';

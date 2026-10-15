@@ -95,6 +95,7 @@ na_sales_team       eu_sales_team          （区域分组）
 | Escalated Cases Sharing | 工单 | 编辑 | `service_manager` —— 未关闭的严重工单 |
 | Escalated Cases — Service Director | 工单 | 读取 | `service_director` —— 同一批工单，上一层级 |
 | Unassigned Cases — Triage | 工单 | 编辑 | `service_agent` —— 没有负责人的工单，直到它被 Resolved 或 Closed |
+| Escalated Cases — Previous Owner | 工单 | 读取 | 工单 `escalated_from` 字段里的那个人 —— 升级从他手上转走的工单，直到它被 Closed |
 | Live Campaigns — Marketing Manager | 营销活动 | 编辑 | `marketing_manager` —— 筹划中 / 进行中的活动 |
 | Live Campaigns — Marketing Director | 营销活动 | 编辑 | `marketing_director` —— 同一批活动 |
 

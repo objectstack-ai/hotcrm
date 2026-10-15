@@ -86,6 +86,7 @@ export const service: Record<string, ObjectTranslationData> = {
       display_title: { label: '显示名称' },
       priority_rank: { label: '优先级排序' },
       escalated_date: { label: '升级日期' },
+      escalated_from: { label: '升级前负责人' },
     },
     _views: {
       all_cases: { label: '全部工单' },

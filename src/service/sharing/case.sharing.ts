@@ -187,3 +187,33 @@ export const CaseUnassignedTriageSharingRule = {
   accessLevel: 'edit' as const,
   sharedWith: { type: 'position' as const, value: 'service_agent' },
 };
+
+/**
+ * The agent an escalation took the case from keeps READ on it while it is open
+ * (#2060 item 3).
+ *
+ * `case_escalation_reassign` hands an escalating case to the `service_manager`
+ * pool, and `service_agent` reads `crm_case` with `readScope: 'own'` — so the
+ * agent who logged a Critical case (escalated on create) or pressed Escalate
+ * lost it in the same save, and the console answered "Record not found" over
+ * the success toast. The escalation notice links that same agent to the case.
+ *
+ * The recipient is RECORD-RELATIVE (`type: 'field'`, #14103): the user the
+ * hand-off stamps into `escalated_from`, one person per case — never a pool.
+ * Not `created_by`: measured on the demo, every case an agent owns from intake,
+ * triage or seed has none, so the creator is the wrong person to key on.
+ *
+ * `read`, not `edit`: the manager works the case now; the agent follows it.
+ * Bounded by `is_closed == false`, the window the two rules above keep on
+ * purpose (read the note on `CaseEscalationSharingRule`). An empty column
+ * shares with nobody.
+ */
+export const CaseEscalatedFromSharingRule = {
+  name: 'case_escalated_from_sharing',
+  label: 'Escalated Cases — Previous Owner',
+  object: 'crm_case',
+  type: 'criteria' as const,
+  condition: P`record.is_closed == false`,
+  accessLevel: 'read' as const,
+  sharedWith: { type: 'field' as const, value: 'escalated_from' },
+};

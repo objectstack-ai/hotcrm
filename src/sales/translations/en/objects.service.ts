@@ -66,6 +66,7 @@ export const service: Record<string, ObjectTranslationData> = {
       display_title: { label: 'Display Title' },
       priority_rank: { label: 'Priority Rank' },
       escalated_date: { label: 'Escalated Date' },
+      escalated_from: { label: 'Escalated From' },
     },
     _views: {
       all_cases: { label: 'All Cases' },

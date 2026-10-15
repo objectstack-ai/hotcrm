@@ -52,7 +52,7 @@ This drives reporting (which channels generate the most volume) and is auto-fill
 
 ## What a case record stores
 
-`crm_case` declares **24 fields** (`src/service/objects/case.object.ts`), and three different things organise them: the object's own field groups, the case detail screen, and the case form. Only the first of the three has six sections, and no two of them agree — so it is worth knowing which one you are being shown.
+`crm_case` declares **25 fields** (`src/service/objects/case.object.ts`), and three different things organise them: the object's own field groups, the case detail screen, and the case form. Only the first of the three has six sections, and no two of them agree — so it is worth knowing which one you are being shown.
 
 ### The object's field groups
 
@@ -64,7 +64,7 @@ The six names below are real, but not one of them is a screen: they are `crm_cas
 | **Origin & Routing** | Case Owner, Case Origin |
 | **SLA & Priority** | Priority, Closed Date, First Response Date, Resolution Time (Hours), SLA Due Date, SLA Violated |
 | **Resolution** | Resolution, Resolved by Article |
-| **Escalation** *(collapsed by default)* | Escalated, Escalated Date, Escalation Reason |
+| **Escalation** *(collapsed by default)* | Escalated, Escalated Date, Escalation Reason, Escalated From |
 | **System** *(collapsed by default)* | Internal Notes, Is Closed |
 
 Five of those six rows used to be written differently on this page, and the differences were not cosmetic: **Status** and **Case Type** are in *Case Information*, not *SLA & Priority*; **Closed Date** is in *SLA & Priority*, not *Resolution*; and *System* holds **Internal Notes** and **Is Closed** — there is no *audit trail* field on a case at all, and the timestamps sit in *SLA & Priority*. Only *Escalation* was right as it stood. **Priority Rank**, the hidden sort key that orders *My Open Cases*, is in no group at all.
@@ -85,7 +85,7 @@ The tab is shorter than its section names suggest, and that is deliberate: a sec
 
 ### The form
 
-The case form (`src/service/views/case.view.ts`) is **not** tabbed. It is a single section, holding **9** of the 24 fields:
+The case form (`src/service/views/case.view.ts`) is **not** tabbed. It is a single section, holding **9** of the 25 fields:
 
 | Section | Fields |
 | --- | --- |
@@ -162,6 +162,7 @@ Nothing else claims a case, and each exclusion is deliberate:
 - By default, cases are **private** — only the owner. Positions are flat and **nothing rolls up**, so no manager sees a case by sitting above its owner.
 - **Critical open cases** are auto-shared by two rules, one per rung: *Escalated Cases Sharing* grants read/edit to `service_manager`, and *Escalated Cases — Service Director* grants read to `service_director`. Both rungs are named explicitly because neither inherits from the other.
 - **Unowned open cases** are shared with every `service_agent` by *Unassigned Cases — Triage*, read and edit — the grant behind the **Unassigned — triage** tab. It lasts exactly as long as the case has no owner and is neither *Resolved* nor *Closed*, and claiming the case is what ends it: from that point you hold the case the ordinary way, as its owner.
+- **An escalated case stays readable by the agent it was taken from.** The hand-off records that agent in **Escalated From**, and *Escalated Cases — Previous Owner* shares the case with them, read-only, until it is *Closed* — so the agent who logs a Critical case or presses **Escalate Case** can still open it. Working it is the manager's: the agent cannot edit it.
 
 ## Field-level security
 

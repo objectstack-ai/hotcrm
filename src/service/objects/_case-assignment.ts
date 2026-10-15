@@ -433,7 +433,13 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
             best = managerId;
           }
         }
-        if (best) input.owner_id = best;
+        if (!best) return;
+        input.owner_id = best;
+        // Record whom the case was taken from, in the same payload: the owner
+        // loses own-scope read the moment this write lands, and
+        // `case_escalated_from_sharing` keeps them on it, read-only, while it
+        // is open (#2060 item 3). An ownerless case was taken from nobody.
+        if (currentOwner) input.escalated_from = currentOwner;
       } catch {
         // Swallow: the hand-off must never reject the escalation. A failed
         // pool read leaves the case where it is, escalated.

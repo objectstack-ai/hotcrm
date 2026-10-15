@@ -73,6 +73,7 @@ export const service: Record<string, ObjectTranslationData> = {
       is_sla_violated: { label: 'SLA違反' },
       is_escalated: { label: 'エスカレーション済' },
       escalated_date: { label: 'エスカレーション日' },
+      escalated_from: { label: 'エスカレーション元' },
       escalation_reason: { label: 'エスカレーション理由' },
       resolution: { label: '解決内容' },
       resolved_by_article: { label: '解決したナレッジ記事', help: 'このケースを解決したナレッジ記事 — 逸らし率の指標。' },
