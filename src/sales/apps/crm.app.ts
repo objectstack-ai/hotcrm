@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { App } from '@objectstack/spec/ui';
 
 // The brand mark, inlined as a `data:` URI of `assets/icon.svg` (#2051), so it
@@ -19,6 +20,27 @@ const HOTCRM_ICON =
   '  <rect x="16" y="16" width="224" height="224" rx="56" fill="%23EA580C"/>%0A' +
   '  <path d="M76 64h40v52h24V64h40v128h-40v-52h-24v52H76z" fill="%23FFFFFF"/>%0A' +
   '</svg>%0A';
+
+/**
+ * The read gate on the five entries built on `crm_opportunity` (#2060 item 5):
+ * Home (Executive Overview), Sales Home, Sales Performance, CRM Overview and
+ * Pipeline Coverage. A member whose permission sets do not read opportunities
+ * (`service_agent`, `service_manager`) got each one as a page of "You don't
+ * have access" tiles, one 403 per opportunity query. Object entries are pruned
+ * by read access already; dashboard, report and page entries are not.
+ *
+ * `visible`, not `requiredPermissions` — measured on 18.0.0-next.1: the server
+ * keeps an entry only when the caller's permission sets grant every
+ * `requiredPermissions` entry as a CAPABILITY (`systemPermissions`), so
+ * `['crm_opportunity:read']` hid the entry from every user, the admin
+ * included, and a capability of our own would be a grant change. This asks
+ * the effective object permission itself.
+ *
+ * Sales Activity (1 of 13 tiles) and Lead Inflow (leads) stay open: they work
+ * without opportunity read. The gate hides an entry, not the landing — the
+ * console opens the app's first served entry without reading `visible`.
+ */
+const READS_OPPORTUNITIES = P`current_user.can("crm_opportunity", "read")`;
 
 /**
  * HotCRM — navigation.
@@ -76,13 +98,26 @@ export const CrmApp = App.create({
   },
 
   navigation: [
-    // Pinned landing — single executive view, single click from launcher.
+    // Pinned landing — the console opens an app on its first entry, for
+    // every member alike (there is no per-member landing to declare).
     {
       id: 'nav_home',
       type: 'dashboard',
       dashboardName: 'executive_dashboard',
       label: 'Home',
       icon: 'home',
+      visible: READS_OPPORTUNITIES,
+    },
+    // The rep's own page (`sales_home_page`): pipeline KPIs, my leads, open
+    // deals and open tasks, upcoming events. It had no entry, only a typed
+    // URL, while the activities docs sent readers to it.
+    {
+      id: 'nav_sales_home',
+      type: 'page',
+      pageName: 'sales_home_page',
+      label: 'Sales Home',
+      icon: 'layout-grid',
+      visible: READS_OPPORTUNITIES,
     },
 
     {
@@ -116,7 +151,7 @@ export const CrmApp = App.create({
         // points at — a sales object that happened to be filed next to
         // campaigns.
         { id: 'nav_product',     type: 'object', objectName: 'crm_product',     label: 'Products',      icon: 'package' },
-        { id: 'nav_sales_dashboard', type: 'dashboard', dashboardName: 'sales_dashboard', label: 'Sales Performance', icon: 'chart-line' },
+        { id: 'nav_sales_dashboard', type: 'dashboard', dashboardName: 'sales_dashboard', label: 'Sales Performance', icon: 'chart-line', visible: READS_OPPORTUNITIES },
       ],
     },
 
@@ -280,9 +315,9 @@ export const CrmApp = App.create({
       children: [
         // Trimmed to three high-signal reports. Full report catalogue still
         // ships as metadata; admins can pin more from the report picker.
-        { id: 'nav_crm_dashboard',            type: 'dashboard', dashboardName: 'crm_overview_dashboard', label: 'CRM Overview',      icon: 'layout-dashboard' },
+        { id: 'nav_crm_dashboard',            type: 'dashboard', dashboardName: 'crm_overview_dashboard', label: 'CRM Overview',      icon: 'layout-dashboard', visible: READS_OPPORTUNITIES },
         { id: 'nav_forecast',                 type: 'object', objectName: 'crm_forecast',                 label: 'Forecasts',         icon: 'trending-up' },
-        { id: 'nav_report_pipeline_coverage', type: 'report', reportName: 'pipeline_coverage_by_quarter', label: 'Pipeline Coverage', icon: 'columns-3' },
+        { id: 'nav_report_pipeline_coverage', type: 'report', reportName: 'pipeline_coverage_by_quarter', label: 'Pipeline Coverage', icon: 'columns-3', visible: READS_OPPORTUNITIES },
         { id: 'nav_report_lead_inflow',       type: 'report', reportName: 'lead_inflow_by_month_source',  label: 'Lead Inflow',       icon: 'trending-up' },
       ],
     },

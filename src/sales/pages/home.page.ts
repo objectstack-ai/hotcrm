@@ -58,12 +58,11 @@ const embeddedListView = (id: string, objectName: string, views: View, viewKey: 
  * - Dashboard-style layout
  * - Multiple component regions
  * - Global search and notifications
- * - Quick action cards
  */
 export const SalesHomePage: Page = {
   name: 'sales_home_page',
   label: 'Sales Home',
-  description: 'Sales team home page with key metrics and quick actions',
+  description: 'Sales team home page with key metrics, my open work and upcoming events',
   
   type: 'home',
   
@@ -129,22 +128,18 @@ export const SalesHomePage: Page = {
       name: 'left_sidebar',
       width: 'small',
       components: [
-        {
-          type: 'page:card',
-          id: 'quick_create',
-          label: 'Quick Create',
-          properties: {
-            title: 'Quick Create',
-            bordered: true,
-            children: [
-              {
-                type: 'nav:menu',
-                id: 'create_menu',
-                properties: {},
-              },
-            ],
-          },
-        },
+        // There is no `Quick Create` card here any more either (#2060 item 5),
+        // and re-adding one needs a block that creates records.
+        //
+        // It was a `page:card` titled "Quick Create" around a bare `nav:menu`,
+        // which draws the app's navigation: the sidebar a second time, 28
+        // links, nothing that creates. The title lied, as below. On 18.0.0-next.1
+        // `ComponentPropsMap` has no create block: the `action:*` blocks run
+        // `script` / `url` / `modal` / `flow` / `api` / `form`, where `form`
+        // opens a FormView at `/forms/NAME` and `modal` a page, so a "New Lead"
+        // button would hard-code a console route. Each list page has its own
+        // New button. When the platform ships a create block, it goes here.
+        //
         // There is no `Recent Items` card here any more, and re-adding one
         // needs a data source that does not exist yet.
         //
@@ -353,6 +348,6 @@ export const SalesHomePage: Page = {
   
   aria: {
     ariaLabel: 'Sales Home Page',
-    ariaDescribedBy: 'Sales team home page with metrics, leads, and quick actions',
+    ariaDescribedBy: 'Sales team home page with metrics, my open work and upcoming events',
   },
 };

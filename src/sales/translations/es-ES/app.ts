@@ -33,6 +33,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_activity_dashboard: { label: 'Actividad de Ventas' },
         nav_my_calendar: { label: 'Mi Calendario' },
         nav_home: { label: 'Inicio' },
+        nav_sales_home: { label: 'Inicio de Ventas' },
 
         group_sales: { label: 'Ventas' },
         nav_lead: { label: 'Prospectos' },
@@ -548,7 +549,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_home_page: {
       label: 'Inicio de Ventas',
-      description: 'Página de inicio del equipo comercial con métricas clave y acciones rápidas',
+      description: 'Página de inicio del equipo comercial con métricas clave, mi trabajo pendiente y próximos eventos',
       title: 'Panel de Ventas',
       subtitle: 'Bienvenido de nuevo',
       components: {
@@ -567,7 +568,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_upcoming_events: {
           label: '📅 Próximos · Más cercanos primero',
         },
-        quick_create: { title: 'Creación Rápida', label: 'Creación Rápida' },
         key_metrics: { title: 'Indicadores Clave de Rendimiento', label: 'Métricas Clave' },
         home_tabs: { label: 'Pestañas de Inicio' },
         home_my_leads: { label: 'Mis Prospectos' },

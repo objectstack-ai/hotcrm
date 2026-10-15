@@ -28,6 +28,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
       navigation: {
         nav_home: { label: 'ホーム' },
+        nav_sales_home: { label: '営業ホーム' },
 
         group_sales: { label: '営業' },
         nav_lead: { label: 'リード' },
@@ -550,7 +551,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_home_page: {
       label: '営業ホーム',
-      description: '主要指標とクイックアクションをまとめた営業チームのホームページ',
+      description: '主要指標、自分の未完了の仕事、今後の予定をまとめた営業チームのホームページ',
       title: '営業ダッシュボード',
       subtitle: 'おかえりなさい',
       components: {
@@ -569,7 +570,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_upcoming_events: {
           label: '📅 開催予定 · 直近順',
         },
-        quick_create: { title: 'クイック作成', label: 'クイック作成' },
         key_metrics: { title: '主要業績評価指標', label: '主要指標' },
         home_tabs: { label: 'ホームタブ' },
         home_my_leads: { label: '私のリード' },
