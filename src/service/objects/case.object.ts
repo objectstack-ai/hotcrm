@@ -323,7 +323,19 @@ export const Case = ObjectSchema.create({
       label: 'Escalation Reason',
       group: 'escalation',
     }),
-    
+
+    // The owner the escalation hand-off took this case from — stamped only by
+    // `case_escalation_reassign` (`_case-assignment.ts`), in the escalation
+    // write itself. `case_escalated_from_sharing` names this column, so the
+    // person it holds keeps READ on the case while it is open (#2060 item 3).
+    // ⛔ `readonly` is load-bearing: a writable recipient column would let any
+    // editor share the case with anyone. Never typed by a person.
+    escalated_from: Field.lookup('sys_user', {
+      label: 'Escalated From',
+      group: 'escalation',
+      readonly: true,
+    }),
+
     // No `parent_case`. A case hierarchy was declared here and never
     // traversed: nothing rolled child cases up, nothing closed or notified them
     // with the parent, and no service flow read the link. Related cases that

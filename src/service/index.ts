@@ -21,7 +21,7 @@ import {
   CasesByStatusPriorityReport, SlaPerformanceReport, CasesOpenedByDayPriorityReport,
 } from './reports/index.js';
 import {
-  CaseDirectorSharingRule, CaseEscalationSharingRule, CaseUnassignedTriageSharingRule,
+  CaseDirectorSharingRule, CaseEscalatedFromSharingRule, CaseEscalationSharingRule, CaseUnassignedTriageSharingRule,
 } from './sharing/index.js';
 import { CaseTriageSkill } from './skills/index.js';
 import { CaseViews, KnowledgeArticleViews } from './views/index.js';
@@ -50,7 +50,7 @@ export const serviceSkills = [CaseTriageSkill];
 
 /** This package's sharing rules — see {@link serviceHooks}. */
 export const serviceSharingRules = [
-  CaseEscalationSharingRule, CaseDirectorSharingRule, CaseUnassignedTriageSharingRule,
+  CaseEscalationSharingRule, CaseDirectorSharingRule, CaseUnassignedTriageSharingRule, CaseEscalatedFromSharingRule,
 ];
 
 /**
@@ -73,7 +73,7 @@ export type HotCrmServiceCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * every item authored against them: their hooks, views, the case detail page,
  * the seven case flows, the case and article actions, `case_metrics` and the
  * three reports over it, the Service Overview dashboard, the case-triage skill,
- * the three case sharing rules, the two case notification templates and the
+ * the four case sharing rules, the two case notification templates and the
  * case and knowledge seed rows.
  *
  * Three properties are load-bearing:
@@ -109,7 +109,7 @@ export type HotCrmServiceCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  *
  * So this list is exactly what THIS package's metadata needs: `automation` and
  * `triggers` for the seven case flows, `analytics` for `case_metrics` and the
- * items over it, `sharing` for the three case sharing rules. The app package's
+ * items over it, `sharing` for the four case sharing rules. The app package's
  * surface capabilities (`auth`, `ui`, `approvals`, `hierarchy-security`) are
  * not repeated.
  *

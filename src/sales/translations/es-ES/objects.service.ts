@@ -75,6 +75,7 @@ export const service: Record<string, ObjectTranslationData> = {
       is_sla_violated: { label: 'SLA Incumplido' },
       is_escalated: { label: 'Escalado' },
       escalated_date: { label: 'Fecha de Escalación' },
+      escalated_from: { label: 'Escalado desde' },
       escalation_reason: { label: 'Motivo de Escalación' },
       resolution: { label: 'Resolución' },
       resolved_by_article: { label: 'Resuelto por Artículo', help: 'Artículo de la base de conocimiento que resolvió este caso — la señal de desvío.' },
