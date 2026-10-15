@@ -27,7 +27,9 @@ offers it, with a message that names the list.
 served with its resolved `options` as before, and now also carries
 `picklist: 'NAME'`. The option labels of these five lists are translated once
 per locale, under `picklists.NAME` in the language packs, instead of under
-each field.
+each field. Chart and report categories over these fields keep their
+translated labels: the pinned platform (18.0.0-next.1) resolves a
+picklist-bound dimension through the same `picklists.NAME` translations.
 
 Lists that only one field offers (Opportunity **Stage**, Task and Event **Type**,
 Event **Status**, Attendee **Response**, Lead **Need Type** and Lead
