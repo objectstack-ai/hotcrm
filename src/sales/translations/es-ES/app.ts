@@ -685,6 +685,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           description:
             'La empresa de este prospecto no tiene clave de coincidencia, así que la conversión no puede saber a qué cuenta pertenece y no lo va a adivinar: una suposición podría archivar el contacto y la oportunidad bajo otro cliente. Guardar la Empresa del prospecto reconstruye la clave, así que guárdela de nuevo y luego conviértalo. No se ha creado nada.',
         },
+        refuse_nonpositive_amount: {
+          title: 'Conversión rechazada',
+          description:
+            'El monto de una oportunidad debe ser mayor que cero. No se ha creado nada: vuelva a convertir el prospecto e introduzca lo que vale el negocio, o deje sin marcar ¿Crear oportunidad? para convertirlo sin una oportunidad.',
+        },
       },
     },
     schedule_followup: {

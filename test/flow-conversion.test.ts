@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import type { VerifyStack } from '@objectstack/verify';
+import type { FlowRunRef, VerifyStack } from '@objectstack/verify';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import {
   hotcrmStack, signUpPerson, notificationsTo, conditionHolds, type Person,
@@ -377,6 +377,77 @@ describe('lead_conversion — a ticked Create Opportunity needs an amount before
       accounts: 1, contacts: 1, opportunities: 1, isConverted: true, leadStatus: 'converted',
     });
     expect((await after(who, lead.id)).opportunities[0]!.amount).toBe(40_000);
+  });
+});
+
+/**
+ * A ticked Create Opportunity with an amount of zero or less is refused
+ * BEFORE anything is written (#2060 item 2b).
+ *
+ * `crm_opportunity`'s `amount_positive` rule refuses an amount of zero or
+ * less, and a screen field's `min` is inclusive, so the dialog cannot state
+ * "greater than zero". On 18.0.0-next.1 such a submission reached
+ * `create_opportunity` after `create_account` and `create_contact` had run:
+ * `FLOW_FAILED`, one account, one contact, no opportunity, an unconverted
+ * lead. `decision_amount` now turns it away right after the dialog, so the
+ * resume SUCCEEDS and the run pauses on the refusal: the claim is that node
+ * and an empty store, compared in one object.
+ */
+describe('lead_conversion — a ticked Create Opportunity with an amount of zero or less is refused before anything is written (#2060 item 2b)', () => {
+  const state = async (who: { company: string; email: string }, leadId: string) => {
+    const out = await after(who, leadId);
+    return {
+      accounts: out.accounts.length, contacts: out.contacts.length, opportunities: out.opportunities.length,
+      isConverted: Boolean(out.lead.is_converted), leadStatus: out.lead.status,
+    };
+  };
+  const ticked = (amount: number) => ({ createOpportunity: true, opportunityName: 'Deal', opportunityAmount: amount });
+
+  it.each([['zero', 0], ['negative', -5]] as const)('amount %s: refused with nothing written, and a new run with an amount converts', async (_label, amount) => {
+    const who = identity();
+    const lead = await qualifiedLead(who);
+    const refused = (await runConversion(lead.id, ticked(amount)).catch((e: unknown) => e)) as Rec;
+    expect({ code: refused.code, status: refused.status, node: refused.screen?.nodeId, ...(await state(who, lead.id)) }).toEqual({
+      code: undefined, status: 'paused', node: 'refuse_nonpositive_amount',
+      accounts: 0, contacts: 0, opportunities: 0, isConverted: false, leadStatus: 'qualified',
+    });
+    // Closing the refusal is the rep's next click; that path reaches `end` without a write.
+    expect((await verify.flows.resume(refused as FlowRunRef, {}, { as: rep.token })).success).toBe(true);
+    expect(await state(who, lead.id)).toMatchObject({ accounts: 0, contacts: 0, isConverted: false });
+
+    expect((await runConversion(lead.id, ticked(25_000))).error ?? null).toBeNull();
+    expect(await state(who, lead.id)).toEqual({
+      accounts: 1, contacts: 1, opportunities: 1, isConverted: true, leadStatus: 'converted',
+    });
+    expect((await after(who, lead.id)).opportunities[0]!.amount).toBe(25_000);
+  });
+
+  it('control: an unticked box converts without an opportunity whatever amount is posted', async () => {
+    const who = identity();
+    const lead = await qualifiedLead(who);
+    expect((await runConversion(lead.id, { createOpportunity: false, opportunityAmount: 0 })).error ?? null).toBeNull();
+    expect(await state(who, lead.id)).toEqual({
+      accounts: 1, contacts: 1, opportunities: 0, isConverted: true, leadStatus: 'converted',
+    });
+  });
+
+  it('decision_amount answers with exactly one live edge on every shape', () => {
+    const out = (LeadConversionFlow.edges as Rec[]).filter((e) => e.source === 'decision_amount');
+    expect(out, 'decision_amount must branch two ways').toHaveLength(2);
+    for (const [shape, vars, refuse] of [
+      ['unticked, no amount', { createOpportunity: false, opportunityAmount: null }, false],
+      ['unticked, zero', { createOpportunity: false, opportunityAmount: 0 }, false],
+      ['ticked, zero', { createOpportunity: true, opportunityAmount: 0 }, true],
+      ['ticked, negative', { createOpportunity: true, opportunityAmount: -5 }, true],
+      ['ticked, a cent', { createOpportunity: true, opportunityAmount: 0.01 }, false],
+      ['ticked, positive', { createOpportunity: true, opportunityAmount: 25_000 }, false],
+      // Unreachable at runtime (the screen's `required` refuses it first); the edges stay total on it.
+      ['ticked, no amount', { createOpportunity: true, opportunityAmount: null }, false],
+    ] as Array<[string, Rec, boolean]>) {
+      const live = out.filter((e) => conditionHolds(verify, e.condition, vars));
+      expect(live, shape).toHaveLength(1);
+      expect(live[0]!.target === 'refuse_nonpositive_amount', shape).toBe(refuse);
+    }
   });
 });
 
