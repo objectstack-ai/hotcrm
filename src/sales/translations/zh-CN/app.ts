@@ -499,15 +499,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '客户工作台',
       description: '面向销售团队的精选客户列表：仅提供快捷筛选，不含视图管理。',
     },
-    app_launcher_page: {
-      label: '应用中心',
-      description: '访问全部应用的统一入口',
-      subtitle: '选择一个应用开始使用',
-      components: {
-        app_search: { label: '搜索应用' },
-        app_grid: { label: '应用网格' },
-      },
-    },
     case_detail_page: {
       label: '工单详情',
       description: '客服工单记录页：关键信息、SLA 进度、明细与活动时间线。',
@@ -579,15 +570,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: 'AI 助手今日速览',
         },
         upcoming_events: { title: '即将开始的活动', label: '即将开始的活动' },
-      },
-    },
-    utility_bar_page: {
-      label: '工具栏',
-      description: '悬浮工具的快捷访问栏',
-      components: {
-        notifications_panel: { label: '通知' },
-        quick_notes: { title: '快速笔记', label: '快速笔记' },
-        quick_search: { label: '快速搜索' },
       },
     },
   },

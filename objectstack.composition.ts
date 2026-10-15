@@ -288,7 +288,7 @@ export const appViews = byExportName({
   ...salesViews, ...revenueViews, ...marketingViews,
 });
 
-/** Its page layouts — `home`, `app_launcher` and `utility_bar` among them. */
+/** Its page layouts — `home` among them. */
 export const appPages = byExportName({ ...salesPages });
 
 /** Every import mapping — sales only; nothing else authors one. */

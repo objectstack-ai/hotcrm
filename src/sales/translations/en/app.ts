@@ -162,15 +162,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Account Workbench',
       description: 'Curated account list for the sales team: quick filters only, no view management.',
     },
-    app_launcher_page: {
-      label: 'App Launcher',
-      description: 'Central hub for accessing all applications',
-      subtitle: 'Select an app to get started',
-      components: {
-        app_search: { label: 'Search Apps' },
-        app_grid: { label: 'Application Grid' },
-      },
-    },
     case_detail_page: {
       label: 'Case Detail',
       description: 'Service-agent case record: highlights, SLA path, details and activity timeline.',
@@ -218,15 +209,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: 'Today with the AI Assistant',
         },
         upcoming_events: { title: 'Upcoming Events', label: 'Upcoming Events' },
-      },
-    },
-    utility_bar_page: {
-      label: 'Utility Bar',
-      description: 'Quick access utility bar with floating tools',
-      components: {
-        notifications_panel: { label: 'Notifications' },
-        quick_notes: { title: 'Quick Notes', label: 'Quick Notes' },
-        quick_search: { label: 'Quick Search' },
       },
     },
   },

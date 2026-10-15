@@ -500,15 +500,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '取引先ワークベンチ',
       description: '営業チーム向けに厳選した取引先リスト。クイックフィルターのみで、ビュー管理は行いません。',
     },
-    app_launcher_page: {
-      label: 'アプリランチャー',
-      description: 'すべてのアプリケーションにアクセスするための統合ハブ',
-      subtitle: '開始するアプリを選択してください',
-      components: {
-        app_search: { label: 'アプリを検索' },
-        app_grid: { label: 'アプリグリッド' },
-      },
-    },
     case_detail_page: {
       label: 'ケース詳細',
       description: 'サービス担当者向けのケースレコードページ：ハイライト、SLA パス、詳細、活動タイムライン。',
@@ -580,15 +571,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: '今日の AI アシスタント',
         },
         upcoming_events: { title: '今後の予定', label: '今後の予定' },
-      },
-    },
-    utility_bar_page: {
-      label: 'ユーティリティバー',
-      description: 'フローティングツールへのクイックアクセスバー',
-      components: {
-        notifications_panel: { label: '通知' },
-        quick_notes: { title: 'クイックメモ', label: 'クイックメモ' },
-        quick_search: { label: 'クイック検索' },
       },
     },
   },

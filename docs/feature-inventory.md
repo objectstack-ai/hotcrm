@@ -249,7 +249,7 @@
 | --- | --- | --- | --- |
 | ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Sales/My Work/Activity/Marketing/Service/Insights/Approvals),橙色品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
 | ADM-002 | Sales Home 页 | 三栏首页(sales_rep/manager 默认):4 个实时 KPI、我的线索/交易/任务三个嵌入列表 tab、快速新建、AI 助手引导卡、今日日程 | `src/sales/pages/home.page.ts` |
-| ADM-003 | 启动器与工具条 | App Launcher(应用网格+全局搜索)与 Utility Bar(通知面板、快速笔记、快速搜索),四个 profile 全覆盖 | `src/sales/pages/app_launcher.page.ts`、`src/sales/pages/utility_bar.page.ts` |
+| ADM-003 | 启动器与工具条 | **已移除 (#2118)**:曾有 App Launcher 与 Utility Bar 两个页面,但只能经手输 URL 打开,没有任何导航入口;前者重复控制台自带的应用切换,后者并不悬浮,只在主栏内平铺(控制台没有工具条槽位,上游 objectstack#23610)。两页连同其四语言文案一并下线,应用内不再有对应功能 | 已删除 |
 | ADM-004 | 数据导入 | 3 个可复用导入映射(客户/联系人/线索,CSV/XLSX upsert)+ 行业与线索来源同义词表 + 现成模板 | `src/sales/mappings/` + `assets/import-templates/` |
 | ADM-005 | 数据导出 | 五对象(客户/联系人/线索/商机/工单)列表 CSV/XLSX 导出,经单一服务端路由与 `allowExport` 权限把关 | `src/*/views/*.view.ts`(exportOptions)+ `src/sales/profiles/index.ts` |
 | ADM-006 | 文件与附件 | 6 个对象启用附件面(客户/联系人/商机/报价/合同/工单);记录评论 feed 全对象默认开启;产品图/logo/头像/签名等媒体字段带服务端类型与大小限制 | `src/*/objects/*.object.ts`(enable.files)+ `src/sales/objects/index.ts`(机制说明) |

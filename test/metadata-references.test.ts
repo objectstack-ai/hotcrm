@@ -707,57 +707,30 @@ describe('page component references resolve', () => {
    * an open bag, so an undeclared key is a success receipt for configuration
    * that renders nothing. A container is full when it holds components.
    *
-   * # The exemption list is the honest half
+   * # No exemptions
    *
    * #771 declined to widen its rule to sidebars because a rule that goes red
-   * on things the PR is not fixing gets suppressed rather than fixed. The way
-   * out is not a narrower rule, it is a rule that covers everything with the
-   * known-open cases named, dated and owned — so the debt is visible instead
-   * of invisible. Each entry needs an issue, and the assertion below fails
-   * when an entry is no longer reachable, so a fixed defect cannot leave its
-   * exemption behind to cover the next one.
+   * on things the PR is not fixing gets suppressed rather than fixed. #734
+   * widened it anyway, naming its known-open cases in an exemption list that
+   * went red when an entry outlived its defect. #1581 fixed one entry and
+   * #2118 retired the page holding the last, so the list went with them:
+   * every container on every page is held to the rule.
    */
   it('no page region renders an empty container', () => {
-    /**
-     * `page.name/component.id` of containers that are known-empty and NOT this
-     * card's to fix. Shrink-only: adding a line needs an issue and a reason.
-     *
-     *   utility_bar_page/quick_notes — an empty `page:card` on a page #734
-     *   deliberately does not touch (that page is the reproduction of an
-     *   upstream renderer gap for `global:*` component types, and editing it
-     *   would destroy the evidence). Filed as #1215.
-     *
-     *   sales_home_page/ai_briefing — RESOLVED, exemption removed (#1581). Its
-     *   copy sat under `properties.description`, which `page:card` does not
-     *   declare. It is now an `element:text` child, so the card holds a
-     *   component, and the stale arm below went red naming this line.
-     */
-    const KNOWN_EMPTY = new Set(['utility_bar_page/quick_notes']);
-
     const bad: string[] = [];
-    const emptyFound = new Set<string>();
     let containersSeen = 0;
     for (const page of pages) {
       for (const c of [...walk(page.regions), ...walk(page.slots)] as AnyRec[]) {
         if (!CONTAINERS.has(c.type)) continue;
         containersSeen++;
         if (hasContent(c)) continue;
-        const where = `${page.name}/${c.id}`;
-        emptyFound.add(where);
-        if (KNOWN_EMPTY.has(where)) continue;
-        bad.push(`${where}: ${c.type} "${c.properties?.title ?? c.label ?? ''}" has no body — it renders as a title over nothing`);
+        bad.push(`${page.name}/${c.id}: ${c.type} "${c.properties?.title ?? c.label ?? ''}" has no body — it renders as a title over nothing`);
       }
     }
 
     // Same reason as `tabsSeen` above: the rule must not pass by finding nothing.
     expect(containersSeen, 'no page containers were inspected — the walk found nothing').toBeGreaterThan(0);
     expect(bad, `containers that render blank:\n  ${bad.join('\n  ')}`).toEqual([]);
-
-    // An exemption outlives its defect only if nobody checks. Keyed on still
-    // being EMPTY, not on still existing: a `quick_notes` that gets a body
-    // must drop its line here, or the next empty card inherits the cover.
-    const stale = [...KNOWN_EMPTY].filter((k) => !emptyFound.has(k));
-    expect(stale, `exemptions whose container is no longer empty — delete these lines:\n  ${stale.join('\n  ')}`).toEqual([]);
   });
 
   /**
