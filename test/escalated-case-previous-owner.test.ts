@@ -82,6 +82,7 @@ describe('the agent an escalation takes a case from keeps read on it', () => {
 
   it('closing the case ends the grant', async () => {
     const kase = await verify.hooks.run('crm_case', 'insert', newCase({ priority: 'critical' }), { as: agent.token });
+    expect(await reads(agent, kase.id), 'no grant to end, so this proves nothing').toBe(true);
     await systemUpdate(verify, 'crm_case', { id: kase.id, status: 'closed', resolution: 'Fixed.' });
     expect(await reads(agent, kase.id)).toBe(false);
     expect(await grants(kase.id)).not.toContain('case_escalated_from_sharing→agent:read');
