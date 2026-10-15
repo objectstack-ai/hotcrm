@@ -300,8 +300,8 @@ const quoteValidation: Hook = {
     // Any writer, a user or not: the rollup's write is how lines reach the
     // header, and seeds replay. ⛔ Never on a quote settled before this write —
     // the freeze above is not reopened, and the rollup skips one too — nor
-    // with no stored `subtotal` to derive from, nor on the predicate path,
-    // because it reads `previous` (D3, see `forecast.hook.ts`).
+    // with no `subtotal` to derive from, nor on the predicate path, because
+    // it reads `previous` (D3, see `forecast.hook.ts`).
     const settled = previous?.status === 'accepted' || previous?.status === 'expired';
     if (event === 'beforeUpdate' && previous && !settled && ctx.dispatch?.mode !== 'per-row'
       && ['subtotal', 'discount', 'tax', 'shipping_handling'].some((k) => k in input)) {
