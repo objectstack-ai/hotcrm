@@ -429,7 +429,14 @@ export const CaseViews = defineView({
         fields: [
           'case_number',
           { field: 'subject', required: true, span: 'full' },
-          { field: 'crm_account', required: true },
+          // Offered, ⛔ not `required` (#2060 item 4): `crm_case.crm_account`
+          // is optional on the object and a web-to-case submission carries
+          // none. This form is also the one an agent claims such a case
+          // through (a move to In Progress), so `required` here refused that
+          // save client-side ("Please check the highlighted fields: Account")
+          // while the server took it. A case with no account takes the `smb`
+          // SLA column, and the escalation task and resolution bump skip it.
+          'crm_account',
           'crm_contact',
           { field: 'status', required: true },
           'priority',

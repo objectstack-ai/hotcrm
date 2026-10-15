@@ -218,6 +218,19 @@ describe('crm_case create form — removal direction', () => {
     expect(new Set(authorable)).toEqual(CREATOR_AUTHORABLE);
   });
 
+  it('offers `crm_account` without requiring it — a web case carries none (#2060 item 4)', () => {
+    // This is the edit form too, and an agent claims a web case through it (a
+    // move to In Progress). Measured on 18.0.0-next.1: with `required` here the
+    // console refused that save ("Please check the highlighted fields: Account")
+    // with nothing sent, while the server took the same PATCH.
+    const entries: unknown[] = ((CaseViews as AnyRec).form?.sections ?? []).flatMap(
+      (s: AnyRec) => s.fields ?? [],
+    );
+    const account = entries.find((f) => (typeof f === 'string' ? f : (f as AnyRec)?.field) === 'crm_account');
+    expect(account, 'crm_account left the case form — this pin would judge nothing').toBeDefined();
+    expect((account as AnyRec)?.required === true, 'the case form demands an account again').toBe(false);
+  });
+
   it('the public web-to-case form stays narrower still', () => {
     const wtc = (CaseViews as AnyRec).formViews?.web_to_case;
     const fields = (wtc?.sections ?? []).flatMap(fieldNamesOf);
