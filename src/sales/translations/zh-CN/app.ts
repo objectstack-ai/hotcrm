@@ -687,6 +687,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             '该线索的公司没有匹配键，因此转化无法判断它属于哪个客户，也不会去猜测：猜测可能会把联系人和商机归到另一个客户名下。保存线索的「公司」会重新生成匹配键，请重新保存后再转化。尚未创建任何记录。',
         },
       },
+      refusals: {
+        refuse_nonpositive_amount: {
+          message:
+            '转化被拒绝：商机金额必须大于零。尚未创建任何内容。请填写这笔交易的金额后重新转化该线索，或不勾选「是否创建商机？」，以不创建商机的方式转化。',
+        },
+      },
     },
     schedule_followup: {
       label: '安排跟进',

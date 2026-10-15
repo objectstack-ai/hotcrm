@@ -39,7 +39,12 @@ export const LeadConversionFlow: Flow = {
     // pinned in `test/flow-variable-conditions.test.ts`.
     { name: 'createOpportunity', type: 'boolean', isInput: true, isOutput: false, defaultValue: false },
     { name: 'opportunityName', type: 'text', isInput: true, isOutput: false },
-    { name: 'opportunityAmount', type: 'text', isInput: true, isOutput: false },
+    // Bound to `null` up front because `decision_amount`'s edges read it: a
+    // runner may post nothing for an unticked box, and an unbound read fails
+    // the run (`test/flow-variable-conditions.test.ts`, CLASS 2). The screen
+    // answer overwrites it, and a ticked box with no amount is still refused
+    // by the screen's `required` before any edge is read.
+    { name: 'opportunityAmount', type: 'text', isInput: true, isOutput: false, defaultValue: null },
     // The conversion's close date, collected on the screen below
     // instead of stamped inside `create_opportunity`. Declared with NO
     // `defaultValue`, and that is measured rather than chosen: the engine
@@ -138,7 +143,10 @@ export const LeadConversionFlow: Flow = {
           // `notNull`, and without this a ticked box with no amount reached
           // `create_opportunity` after the account and contact were written,
           // leaving the lead half-converted (#2060 item 2). Visible-only, so
-          // an unticked box still converts with no amount.
+          // an unticked box still converts with no amount. The column's other
+          // rule, `amount_positive` (greater than zero), cannot be said here:
+          // a screen field's `min` is inclusive. `decision_amount` refuses it
+          // instead, before any write (#2060 item 2b).
           { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, defaultValue: cel`leadRecord.company`, visibleWhen: 'createOpportunity == true' },
           { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', required: true, defaultValue: cel`has(leadRecord.estimated_amount) ? leadRecord.estimated_amount : null`, visibleWhen: 'createOpportunity == true' },
           // The close date, DEFAULTED AND VISIBLE. `close_date` is what files
@@ -360,6 +368,34 @@ export const LeadConversionFlow: Flow = {
         description:
           "This lead's company has no match key, so conversion cannot tell which account it belongs to, and it will not guess: a guess could file the contact and opportunity under another customer. Saving the lead's Company rebuilds the key, so save it again, then convert. Nothing has been created.",
         waitForInput: true,
+      },
+    },
+    {
+      // Branching is on edges `e44` / `e45` — see `decision_account`. The
+      // only gate AFTER `screen_1`, because it judges an answer the rep typed
+      // there, and it dominates every write (`find_account` below only reads).
+      id: 'decision_amount', type: 'decision', label: 'Opportunity Amount Above Zero?',
+    },
+    {
+      // The NON-POSITIVE AMOUNT refusal (#2060 item 2b). `crm_opportunity`'s
+      // `amount_positive` refuses an amount of zero or less, and the platform
+      // does not undo a failed run, so letting it reach `create_opportunity`
+      // left the account and contact written and the lead unconverted. The
+      // edges restate that rule's predicate exactly (`<= 0`, null excluded:
+      // an empty amount is the screen's `required`), so the two cannot
+      // disagree about which amounts convert.
+      //
+      // A first-class refusal (`EndConfigSchema` `outcome: 'refused'`), as in
+      // `quote_generation`, and ⛔ not the message-only screen the three
+      // refusals above use: the run ends `refused` rather than `completed`,
+      // and the console shows the message with Close only. A screen here was
+      // measured to toast "Saved — next step" over a refusal, and its Submit
+      // toasts `convert_lead`'s "Lead converted successfully!". Translated as
+      // `refusals.refuse_nonpositive_amount.message` in the packs.
+      id: 'refuse_nonpositive_amount', type: 'end', label: 'Conversion Refused',
+      config: {
+        outcome: 'refused',
+        message: 'Conversion refused: an opportunity amount must be greater than zero. Nothing was created. Convert the lead again with the amount the deal is worth, or leave Create Opportunity unticked to convert it without one.',
       },
     },
     {
@@ -651,7 +687,7 @@ export const LeadConversionFlow: Flow = {
 
   edges: [
     // ⛔ A retired edge's id stays VACANT and every surviving edge keeps the id
-    // it has always had — `e1`, `e3`, `e7` and `e15` are gaps on purpose.
+    // it has always had — `e1`, `e2`, `e3`, `e7` and `e15` are gaps on purpose.
     // Renumbering to close a gap rewrites ids that other notes, tests and run
     // logs refer to.
     { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
@@ -659,7 +695,7 @@ export const LeadConversionFlow: Flow = {
     // not reuse a vacant one, and do not assume an unused-looking id is free.
     // A duplicate id is INERT (traversal filters out-edges by `source`, never
     // by `id`), so nothing fails and the collision survives to trap the next
-    // editor picking out of the sequence. `e1`, `e3`, `e7` and `e15` are
+    // editor picking out of the sequence. `e1`, `e2`, `e3`, `e7` and `e15` are
     // vacant retired ids and stay that way; `e27` is above the highest live
     // id, not a gap-fill.
     { id: 'e27', source: 'get_lead', target: 'decision_approval', type: 'default' },
@@ -736,7 +772,14 @@ export const LeadConversionFlow: Flow = {
     // every create/update sits behind `screen_1`, which this path never
     // reaches.
     { id: 'e26', source: 'refuse_confirmed_duplicate', target: 'end', type: 'default' },
-    { id: 'e2', source: 'screen_1', target: 'find_account', type: 'default' },
+    // `e2` (screen_1 → find_account) is RETIRED and stays vacant (#2060 item
+    // 2b): the amount gate sits between them now, on `e43` – `e45`. The pair
+    // is TOTAL and PARTITIONING (`e45` is `e44` negated by De Morgan), pinned
+    // in `test/flow-conversion.test.ts`; an unticked box never reads the amount.
+    // `e45` ends the run at its target, a refusing `end`: no edge leaves it.
+    { id: 'e43', source: 'screen_1', target: 'decision_amount', type: 'default' },
+    { id: 'e44', source: 'decision_amount', target: 'find_account', type: 'default', condition: P`vars.createOpportunity != true || vars.opportunityAmount == null || vars.opportunityAmount > 0`, label: 'Amount accepted' },
+    { id: 'e45', source: 'decision_amount', target: 'refuse_nonpositive_amount', type: 'default', condition: P`vars.createOpportunity == true && vars.opportunityAmount != null && vars.opportunityAmount <= 0`, label: 'Zero or less' },
     { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },
     // Existing account → reuse; no account → create. Both converge on create_contact.
     // `find_account` is reached only with a match key (`e31`), so a match
