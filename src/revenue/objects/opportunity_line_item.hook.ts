@@ -45,6 +45,73 @@ const opportunityLineItemNumbering: Hook = createLineItemNumbering(
   'opportunity_line_item_line_number',
 );
 
+/**
+ * A closed deal's LINES are frozen with it (#2077, the deal-side twin of the
+ * settled-quote line freeze in `quote_workflow`, #2060 item 1).
+ *
+ * Measured on 18.0.0-next.1 before this hook: a rep added a 3 × 500 line to
+ * their own closed-won deal (admitted), `opportunity_amount_rollup` rightly
+ * left the closed amount at 1,000, and the lines summed to 1,500. Changing a
+ * closed-lost deal's line and moving an open deal's line onto a closed one were
+ * admitted too.
+ *
+ * ⚠️ Not in `opportunity_lifecycle`, though that is the deal's own freeze: a
+ * hook may not attach to another package's object (ADR-0130 R4), and this
+ * object is `src/revenue`'s. The freeze is the same one, drawn the same way:
+ * "closed" is the lifecycle's own test (`closed_won` / `closed_lost`), the
+ * envelope is its `RECORD_LOCKED` / 409, and only USER writes are judged (a
+ * write with no `ctx.user` — the seed, a migration — passes). An update is
+ * judged by what it CHANGES, as the quote line freeze judges it, so the 4.0.0
+ * line-number back-fill's `{ line_number: null }` touch still lands. Both
+ * parents are judged, so a line moves neither onto a closed deal nor off one.
+ * Priority 90 runs it ahead of the price fill and the numbering, so the
+ * caller's own payload is what is judged, not the keys those two inject.
+ *
+ * ⚠️ DELETE is not guarded: deleting a deal cascades to its lines as the
+ * deleting user, the same open question as quote lines (decision card #2078).
+ */
+const opportunityLineItemFreeze: Hook = {
+  name: 'opportunity_line_item_freeze',
+  object: 'crm_opportunity_line_item',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 90,
+  description: 'Refuse a user adding, changing or moving a line item of a closed opportunity.',
+  handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts`
+    // because a lowered body has no module scope and `extractHookBody` THROWS on
+    // an import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(
+      message: string,
+      code: string,
+      status: number,
+      userMessage: string = message,
+    ): Error {
+      const err = new Error(message) as Error & {
+        code: string;
+        status: number;
+        userMessage: string;
+      };
+      err.code = code;
+      err.status = status;
+      err.userMessage = userMessage;
+      return err;
+    }
+    const { input, previous } = ctx;
+    const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number'].includes(k) && input[k] !== previous?.[k]);
+    if (!changed || !ctx.user?.id) return;
+    for (const id of new Set([input.crm_opportunity, previous?.crm_opportunity])) {
+      const deal = typeof id === 'string' && id
+        ? await (ctx.api as HookApi | undefined)?.object('crm_opportunity').findOne({ where: { id }, fields: ['name', 'stage'] })
+        : null;
+      if (deal?.stage === 'closed_won' || deal?.stage === 'closed_lost') {
+        // `crm_opportunity.nameField` is `name` — never the record id (#1243).
+        const name = typeof deal.name === 'string' ? deal.name.trim() : '';
+        throw refuse(`${name ? `Opportunity ${name}` : 'Opportunity'} is closed (${deal.stage}), so its line items can no longer be added or changed.`, 'RECORD_LOCKED', 409);
+      }
+    }
+  },
+};
+
 const opportunityAmountRollup: Hook = {
   name: 'opportunity_amount_rollup',
   object: 'crm_opportunity_line_item',
@@ -99,4 +166,4 @@ const opportunityAmountRollup: Hook = {
   },
 };
 
-export default [opportunityLineItemPriceFill, opportunityLineItemNumbering, opportunityAmountRollup];
+export default [opportunityLineItemPriceFill, opportunityLineItemNumbering, opportunityAmountRollup, opportunityLineItemFreeze];

@@ -105,6 +105,9 @@ const RUNTIME_TEST_FILES = [
   // non-system strip, a caller-supplied one does not) measured on a real
   // ObjectQL with the strip's own control beside it, plus the lowered body.
   'line-item-line-number.test.ts',
+  // #2077 — the closed-deal line freeze: the refusals, the open-deal and
+  // system-write controls, and the lowered body.
+  'opportunity-line-freeze.test.ts',
 ];
 
 /**
