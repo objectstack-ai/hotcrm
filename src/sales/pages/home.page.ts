@@ -58,12 +58,11 @@ const embeddedListView = (id: string, objectName: string, views: View, viewKey: 
  * - Dashboard-style layout
  * - Multiple component regions
  * - Global search and notifications
- * - Quick action cards
  */
 export const SalesHomePage: Page = {
   name: 'sales_home_page',
   label: 'Sales Home',
-  description: 'Sales team home page with key metrics and quick actions',
+  description: 'Sales team home page with key metrics, my open work and upcoming events',
   
   type: 'home',
   
@@ -349,6 +348,6 @@ export const SalesHomePage: Page = {
   
   aria: {
     ariaLabel: 'Sales Home Page',
-    ariaDescribedBy: 'Sales team home page with metrics, leads, and quick actions',
+    ariaDescribedBy: 'Sales team home page with metrics, my open work and upcoming events',
   },
 };

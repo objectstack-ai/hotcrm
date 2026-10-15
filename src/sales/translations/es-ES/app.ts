@@ -549,7 +549,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_home_page: {
       label: 'Inicio de Ventas',
-      description: 'Página de inicio del equipo comercial con métricas clave y acciones rápidas',
+      description: 'Página de inicio del equipo comercial con métricas clave, mi trabajo pendiente y próximos eventos',
       title: 'Panel de Ventas',
       subtitle: 'Bienvenido de nuevo',
       components: {

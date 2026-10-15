@@ -550,7 +550,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_home_page: {
       label: '销售主页',
-      description: '销售团队主页，汇总关键指标与快捷操作',
+      description: '销售团队主页，汇总关键指标、我的待办工作与即将到来的活动',
       title: '销售看板',
       subtitle: '欢迎回来',
       components: {

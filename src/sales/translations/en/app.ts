@@ -207,7 +207,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_home_page: {
       label: 'Sales Home',
-      description: 'Sales team home page with key metrics and quick actions',
+      description: 'Sales team home page with key metrics, my open work and upcoming events',
       title: 'Sales Dashboard',
       subtitle: 'Welcome back',
       components: {
