@@ -248,6 +248,42 @@ describe('quote_total_rollup', () => {
     await settle();
     expect((await stored('crm_quote', quote.id)).total_price).toBe(111);
   });
+
+  describe("quote_workflow · the quote's own pricing edit re-derives its totals in that write (#2083)", () => {
+    // QTE-0005's shape, where #2083 measured the stale total: 80,000 of lines, 6,400 tax.
+    const priced = { subtotal: 80_000, discount: 0, discount_amount: 0, tax: 6_400, shipping_handling: 0, total_price: 86_400 };
+
+    it.each([
+      [{ tax: 7_000 }, { discount_amount: 0, total_price: 87_000 }],
+      [{ discount: 10 }, { discount_amount: 8_000, total_price: 78_400 }], // 80,000 − 8,000 + 6,400
+      [{ shipping_handling: 500 }, { discount_amount: 0, total_price: 86_900 }],
+    ])('a rep editing %o stores %o', async (edit, totals) => {
+      const quote = await quoteOf({ status: 'draft', ...priced });
+      await repWrites('crm_quote', 'update', { id: quote.id, ...edit });
+      expect(await stored('crm_quote', quote.id)).toMatchObject({ ...edit, ...totals });
+    });
+
+    it('re-derives nothing on a settled quote: a rep is refused as before, a system write passes as written', async () => {
+      const quote = await quoteOf({ status: 'accepted', ...priced });
+      const refused = await repWrites('crm_quote', 'update', { id: quote.id, discount: 10 })
+        .then(() => null, (e: Rec) => [e.code, e.status]);
+      expect(refused, 'the freeze admitted a rep edit').toEqual(['RECORD_LOCKED', 409]);
+      await systemUpdate(verify, 'crm_quote', { id: quote.id, tax: 7_000 });
+      expect(await stored('crm_quote', quote.id)).toMatchObject({ ...priced, tax: 7_000 });
+    });
+
+    it('drafts the contract at the re-derived total when the rep accepts right after an edit', async () => {
+      const quote = await quoteOf({ status: 'presented', ...priced });
+      await repWrites('crm_quote', 'update', { id: quote.id, discount: 10 });
+      await repWrites('crm_quote', 'update', { id: quote.id, status: 'accepted' });
+      const contract = await vi.waitFor(async () => {
+        const [row] = await verify.rows('crm_contract', { crm_opportunity: quote.crm_opportunity });
+        expect(row, 'no contract drafted').toBeTruthy();
+        return row!;
+      }, { timeout: 10_000, interval: 50 });
+      expect(contract.contract_value).toBe(78_400);
+    });
+  });
 });
 
 describe('opportunity_line_item_price_fill', () => {
