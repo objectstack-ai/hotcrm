@@ -226,7 +226,7 @@ describe('what a shared account carries into its related lists', () => {
 });
 
 /**
- * `crm_case`'s three grants, named — including the triage widening (#1096).
+ * `crm_case`'s four grants, named — including the triage widening (#1096).
  *
  * The ledger above answers `crm_case: 'partial'`, and 'partial' says only "some
  * rule widens some records". That was true before #1096 and is true after it,
@@ -245,7 +245,7 @@ describe('what a shared account carries into its related lists', () => {
 describe('who can read a case they do not own', () => {
   const caseRules = () => rulesOn('crm_case');
 
-  it('exactly three rules widen crm_case, and each names its position', () => {
+  it('exactly four rules widen crm_case, and each names its recipient', () => {
     const roster = caseRules()
       .map((r) => `${r.name}→${r.sharedWith?.value}:${r.accessLevel ?? 'read'}`)
       .sort();
@@ -256,6 +256,8 @@ describe('who can read a case they do not own', () => {
         'both belong in a PR that also updates the admin docs and this list.',
     ).toEqual([
       'case_director_sharing→service_director:read',
+      // A FIELD recipient (#2060 item 3): the one user the case names, not a position.
+      'case_escalated_from_sharing→escalated_from:read',
       'case_escalation_sharing→service_manager:edit',
       'case_unassigned_triage_sharing→service_agent:edit',
     ]);

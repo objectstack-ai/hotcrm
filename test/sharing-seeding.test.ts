@@ -102,6 +102,8 @@ const MAPPABLE_RECIPIENTS = new Set([
   'position',
   'business_unit',
   'unit_and_subordinates',
+  // Record-relative (#14103); mapped and seeded since plugin-sharing #15072.
+  'field',
 ]);
 
 /** `P` compiles to `{ dialect: 'cel', source }`. */
@@ -442,6 +444,11 @@ const RULE_WITNESSES: Record<string, { reaches: AnyRec; misses: AnyRec[] }> = {
   case_director_sharing: {
     reaches: { priority: 'critical', is_closed: false },
     misses: [{ priority: 'high', is_closed: false }, { priority: 'critical', is_closed: true }],
+  },
+  case_escalated_from_sharing: {
+    // Reaches every open case; WHO it grants is the case's own `escalated_from`.
+    reaches: { is_closed: false },
+    misses: [{ is_closed: true }],
   },
   case_unassigned_triage_sharing: {
     // `owner_id == null` is the one rule whose witness turns on a null, and

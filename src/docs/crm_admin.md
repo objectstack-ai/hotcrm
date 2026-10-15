@@ -19,6 +19,7 @@ sources:
   - sharing_rule:opportunity_executive_sharing
   - sharing_rule:case_escalation_sharing
   - sharing_rule:case_director_sharing
+  - sharing_rule:case_escalated_from_sharing
   - sharing_rule:campaign_leadership_manager
   - sharing_rule:campaign_leadership_director
   - position:crm_positions
@@ -65,6 +66,7 @@ Ownership-based access is widened by these rules:
 | Large Open Deals — Executive | Opportunity | **Read** | The same deals at the Executive rung. |
 | Case Escalation | Case | **Edit** | Escalated cases become editable by the escalation handler. |
 | Escalated Cases — Service Director | Case | **Read** | Service Director sees what the manager is paged about. |
+| Escalated Cases — Previous Owner | Case | **Read** | The agent an escalation took the case from keeps sight of it until it is closed. |
 | Live Campaigns — Marketing Manager / Director | Campaign | **Edit** | Marketing leadership works any live campaign. |
 
 Detail objects — opportunity line items, quote line items, campaign members and
