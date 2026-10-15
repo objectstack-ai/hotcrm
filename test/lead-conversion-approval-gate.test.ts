@@ -65,19 +65,23 @@ const edgeCondition = (id: string) =>
 
 /**
  * One write by the rep against their own lead, standing in `previous`: the
- * lead is written as the system (its verdict column is `readonly`, so only a
- * system write can put it in a state), then the rep's update runs the app's
+ * lead is written as the system (`leadWith`: its verdict column is `readonly`,
+ * so only a system write can put it in a state), then the rep's update runs the app's
  * `lead_automation` hook for real. Resolves on success, rejects with the
  * engine's error.
  */
-const write = async (input: AnyRec, previous: AnyRec): Promise<void> => {
+const leadWith = async (previous: AnyRec): Promise<AnyRec> => {
   const n = ++k;
   const [lead] = await verify.seed('crm_lead', [{
     first_name: 'Ada', last_name: 'Lovelace', company: `Acme ${n}`, email: `ada${n}@lead-conversion-approval-gate.test`,
     status: 'qualified', owner_id: rep.id,
   }]);
   if (Object.keys(previous).length > 0) await systemUpdate(verify, 'crm_lead', { id: lead!.id, ...previous });
-  await verify.hooks.run('crm_lead', 'update', { id: lead!.id, ...input }, { as: rep.token });
+  return lead!;
+};
+const write = async (input: AnyRec, previous: AnyRec): Promise<void> => {
+  const lead = await leadWith(previous);
+  await verify.hooks.run('crm_lead', 'update', { id: lead.id, ...input }, { as: rep.token });
 };
 
 /**
@@ -150,7 +154,7 @@ describe('lead_conversion — the decision_approval branch', () => {
   // `lead-duplicate-visibility.test.ts`, and for the measured reason recorded
   // there: a decision node declaring no `config.conditions` takes EVERY
   // out-edge whose condition holds, IN PARALLEL. Two overlapping guards here
-  // would show the refusal screen and convert the lead in one run.
+  // would refuse the conversion and convert the lead in one run.
   const SHAPES: [string, Record<string, unknown>][] = [
     ...OFF_SHAPES.map(([l, s]) => [l, { leadRecord: { id: 'l1', ...s } }] as [string, Record<string, unknown>]),
     ...REFUSING_SHAPES.map(([l, s]) => [l, { leadRecord: { id: 'l1', ...s } }] as [string, Record<string, unknown>]),
@@ -162,16 +166,28 @@ describe('lead_conversion — the decision_approval branch', () => {
     expect(taken).toHaveLength(1);
   });
 
-  it.each(REFUSING_SHAPES)('routes %s to the refusal screen, ahead of every writer', (_l, shape) => {
+  it.each(REFUSING_SHAPES)('refuses a lead %s ahead of every writer: the run ends refused', async (_l, shape) => {
     const vars = { leadRecord: { id: 'l1', ...shape } };
     expect(conditionHolds(edgeCondition('e28'), vars)).toBe(true);
-    // The refusal rejoins nothing: the flow's first create sits behind
-    // `screen_1`, which this path never reaches.
+    // A refusing `end` (#2060 item 2c): no edge leaves it, and the flow's
+    // first create sits behind `screen_1`, which this path never reaches.
     const e28 = (LeadConversionFlow.edges as Rec[]).find((e) => e.id === 'e28');
     expect(e28?.target).toBe('refuse_unapproved');
-    expect((LeadConversionFlow.edges as Rec[])
-      .filter((e) => e.source === 'refuse_unapproved')
-      .map((e) => e.target)).toEqual(['end']);
+    expect((LeadConversionFlow.edges as Rec[]).filter((e) => e.source === 'refuse_unapproved')).toEqual([]);
+
+    const lead = await leadWith(shape);
+    const run = await verify.flows.run('lead_conversion', { recordId: lead.id }, { as: rep.token }) as AnyRec;
+    const [after] = await verify.rows('crm_lead', { id: lead.id });
+    expect({
+      success: run.success, status: run.status, runId: run.runId, screen: run.screen,
+      accounts: (await verify.rows('crm_account', { name: lead.company })).length,
+      contacts: (await verify.rows('crm_contact', { email: lead.email })).length,
+      isConverted: Boolean(after!.is_converted), leadStatus: after!.status,
+    }).toEqual({
+      success: true, status: 'refused', runId: undefined, screen: undefined,
+      accounts: 0, contacts: 0, isConverted: false, leadStatus: 'qualified',
+    });
+    expect(String(run.refusalMessage ?? ''), 'the rep is not told why').not.toBe('');
   });
 
   it.each(OFF_SHAPES)('lets %s straight through to the duplicate verdict', (_l, shape) => {

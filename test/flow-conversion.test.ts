@@ -390,9 +390,9 @@ describe('lead_conversion — a ticked Create Opportunity needs an amount before
  * `create_opportunity` after `create_account` and `create_contact` had run:
  * `FLOW_FAILED`, one account, one contact, no opportunity, an unconverted
  * lead. `decision_amount` now turns it away right after the dialog, at a
- * refusing `end`: the resume SUCCEEDS and the run ends `refused` (the only
- * refusal in this flow that ends that way), and the claim is that outcome
- * and an empty store, compared in one object.
+ * refusing `end`: the resume SUCCEEDS and the run ends `refused` (since
+ * #2060 item 2c every refusal in this flow ends that way), and the claim is
+ * that outcome and an empty store, compared in one object.
  */
 describe('lead_conversion — a ticked Create Opportunity with an amount of zero or less is refused before anything is written (#2060 item 2b)', () => {
   const state = async (who: { company: string; email: string }, leadId: string) => {

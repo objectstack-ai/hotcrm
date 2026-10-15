@@ -253,8 +253,8 @@ export const LeadConversionFlow: Flow = {
       // explain itself and `disabled` greys one out with no reason attached.
       // `errorMessage` on the Action is a single static string — what the
       // console toasts on a FAILED run — and cannot say anything about THIS
-      // lead. A screen node's `description` is a text slot rendered per run
-      // and shown by `FlowRunner` as the dialog body.
+      // lead. A refusing `end` node's `message` is a text slot rendered per
+      // run and shown by `FlowRunner` as the dialog body.
       //
       // The flow is also the only choke point covering every door: the
       // record-header button, the list-row button and the `action_convert_lead`
@@ -262,15 +262,22 @@ export const LeadConversionFlow: Flow = {
       // `visible` / `disabled` are console-side and say nothing to the other
       // two.
       //
-      // ## What the rep sees, measured on the shipped console bundle
+      // ## What the rep sees
       //
-      // A run that PAUSES returns `{ success: true, silent: true }` to the
-      // action framework (`RecordDetailView`'s flow handler), and `silent`
-      // suppresses the success toast — so `convert_lead`'s
-      // `successMessage: 'Lead converted successfully!'` does NOT fire behind
-      // this dialog. Submitting it resumes into `end`; nothing is created and
-      // the lead is untouched on either path, because every write in this flow
-      // is downstream of `screen_1`.
+      // A first-class refusal (`EndConfigSchema` `outcome: 'refused'`), as in
+      // `refuse_nonpositive_amount` and `quote_generation`'s `refuse_held`: the
+      // run ends `refused`, is never resumed, and the console shows the message
+      // under the flow's label with Close only — no Submit and no success
+      // toast. Until #2060 item 2c each of the three refusals was a
+      // message-only `waitForInput` screen whose Submit resumed into `end`, so
+      // the run COMPLETED and the console toasted `convert_lead`'s "Lead
+      // converted successfully!" over a lead it had not converted (measured in
+      // the console on all three). Nothing is written on this path, because
+      // every write in this flow is downstream of `screen_1`.
+      //
+      // An `end` node has no heading, so each message opens with the words the
+      // screen's title carried ("Conversion refused") and the body follows
+      // unchanged.
       //
       // ## What the copy may claim
       //
@@ -292,19 +299,12 @@ export const LeadConversionFlow: Flow = {
       // section this line points at, and a hand-copied machine list in prose is
       // the drift AGENTS.md documentation rule 5 forbids.
       //
-      // The title and the body are translated in the packs
-      // (`flows.lead_conversion.screens.refuse_confirmed_duplicate`).
-      id: 'refuse_confirmed_duplicate', type: 'screen', label: 'Conversion Refused',
+      // Translated as `refusals.refuse_confirmed_duplicate.message` in the packs.
+      id: 'refuse_confirmed_duplicate', type: 'end', label: 'Conversion Refused',
       config: {
-        title: 'Conversion refused',
-        description:
-          "This lead's Duplicate Status is Confirmed: a reviewer compared it against an existing record and recorded that it repeats one. Converting would create a second account, contact and opportunity for the same buyer. The Duplicate Management section on this lead names the surviving record; disqualify this lead as a duplicate instead. Only a reviewer revising that verdict reopens conversion.",
-        // A message-only screen: no fields, so the pause has to be asked for.
-        // `waitForInput` is what turns a field-less screen from a server-side
-        // pass-through into the dialog the rep reads (the executor's
-        // `shouldPause`), and without it this node would fall through to `end`
-        // in silence — a refusal nobody is told about.
-        waitForInput: true,
+        outcome: 'refused',
+        message:
+          "Conversion refused. This lead's Duplicate Status is Confirmed: a reviewer compared it against an existing record and recorded that it repeats one. Converting would create a second account, contact and opportunity for the same buyer. The Duplicate Management section on this lead names the surviving record; disqualify this lead as a duplicate instead. Only a reviewer revising that verdict reopens conversion.",
       },
     },
     {
@@ -322,15 +322,14 @@ export const LeadConversionFlow: Flow = {
       // half-converted. Refusing HERE, ahead of `screen_1`, is what makes the
       // gate whole: every create and update in this flow sits behind that
       // screen, and this path never reaches it.
-      id: 'refuse_unapproved', type: 'screen', label: 'Conversion Refused',
+      //
+      // A refusing `end`, for the reason given at `refuse_confirmed_duplicate`;
+      // translated as `refusals.refuse_unapproved.message` in the packs.
+      id: 'refuse_unapproved', type: 'end', label: 'Conversion Refused',
       config: {
-        title: 'Conversion refused',
-        description:
-          "This lead has not been approved for conversion. An approver has to sign it off before it can become an account, contact and opportunity; the Conversion Approval field on the lead shows whether the decision is still pending or was refused. Keep working the lead in the meantime — nothing about it is frozen.",
-        // Field-less screen: `waitForInput` is what turns it from a server-side
-        // pass-through into the dialog the rep reads. See
-        // `refuse_confirmed_duplicate` for the mechanism.
-        waitForInput: true,
+        outcome: 'refused',
+        message:
+          "Conversion refused. This lead has not been approved for conversion. An approver has to sign it off before it can become an account, contact and opportunity; the Conversion Approval field on the lead shows whether the decision is still pending or was refused. Keep working the lead in the meantime — nothing about it is frozen.",
       },
     },
     {
@@ -356,18 +355,15 @@ export const LeadConversionFlow: Flow = {
       // The copy claims only what holds on every path into it: the key is
       // derived from `company` on every write that carries it
       // (`lead_duplicate_check`), and nothing has been written, because every
-      // create and update in this flow sits behind `screen_1`. Its title and
-      // body are translated in the packs, like the other two refusals.
+      // create and update in this flow sits behind `screen_1`.
       //
-      // Field-less screen: `waitForInput` is what turns it from a server-side
-      // pass-through into the dialog the rep reads. See
-      // `refuse_confirmed_duplicate` for the mechanism.
-      id: 'refuse_no_match_key', type: 'screen', label: 'Conversion Refused',
+      // A refusing `end`, for the reason given at `refuse_confirmed_duplicate`;
+      // translated as `refusals.refuse_no_match_key.message` in the packs.
+      id: 'refuse_no_match_key', type: 'end', label: 'Conversion Refused',
       config: {
-        title: 'Conversion refused',
-        description:
-          "This lead's company has no match key, so conversion cannot tell which account it belongs to, and it will not guess: a guess could file the contact and opportunity under another customer. Saving the lead's Company rebuilds the key, so save it again, then convert. Nothing has been created.",
-        waitForInput: true,
+        outcome: 'refused',
+        message:
+          "Conversion refused. This lead's company has no match key, so conversion cannot tell which account it belongs to, and it will not guess: a guess could file the contact and opportunity under another customer. Saving the lead's Company rebuilds the key, so save it again, then convert. Nothing has been created.",
       },
     },
     {
@@ -386,8 +382,8 @@ export const LeadConversionFlow: Flow = {
       // disagree about which amounts convert.
       //
       // A first-class refusal (`EndConfigSchema` `outcome: 'refused'`), as in
-      // `quote_generation`, and ⛔ not the message-only screen the three
-      // refusals above use: the run ends `refused` rather than `completed`,
+      // `quote_generation` and the three refusals above, and ⛔ not a
+      // message-only screen: the run ends `refused` rather than `completed`,
       // and the console shows the message with Close only. A screen here was
       // measured to toast "Saved — next step" over a refusal, and its Submit
       // toasts `convert_lead`'s "Lead converted successfully!". Translated as
@@ -687,7 +683,8 @@ export const LeadConversionFlow: Flow = {
 
   edges: [
     // ⛔ A retired edge's id stays VACANT and every surviving edge keeps the id
-    // it has always had — `e1`, `e2`, `e3`, `e7` and `e15` are gaps on purpose.
+    // it has always had — `e1`, `e2`, `e3`, `e7`, `e15`, `e26`, `e30` and `e33`
+    // are gaps on purpose.
     // Renumbering to close a gap rewrites ids that other notes, tests and run
     // logs refer to.
     { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
@@ -695,9 +692,9 @@ export const LeadConversionFlow: Flow = {
     // not reuse a vacant one, and do not assume an unused-looking id is free.
     // A duplicate id is INERT (traversal filters out-edges by `source`, never
     // by `id`), so nothing fails and the collision survives to trap the next
-    // editor picking out of the sequence. `e1`, `e2`, `e3`, `e7` and `e15` are
-    // vacant retired ids and stay that way; `e27` is above the highest live
-    // id, not a gap-fill.
+    // editor picking out of the sequence. `e1`, `e2`, `e3`, `e7`, `e15`, `e26`,
+    // `e30` and `e33` are vacant retired ids and stay that way; `e27` is above
+    // the highest live id, not a gap-fill.
     { id: 'e27', source: 'get_lead', target: 'decision_approval', type: 'default' },
     // ── The approval gate (REQ-0005 step 7) ────────────────────────────
     //
@@ -718,8 +715,6 @@ export const LeadConversionFlow: Flow = {
       && (vars.leadRecord.conversion_approval_status == "pending" || vars.leadRecord.conversion_approval_status == "rejected")`, label: 'Not approved' },
     { id: 'e29', source: 'decision_approval', target: 'decision_duplicate', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.conversion_approval_status)
       || (vars.leadRecord.conversion_approval_status != "pending" && vars.leadRecord.conversion_approval_status != "rejected")`, label: 'Clear' },
-    // Rejoins nothing, exactly like `e26`: the refusal IS not reaching a writer.
-    { id: 'e30', source: 'refuse_unapproved', target: 'end', type: 'default' },
     // ⚠️ Both conditions are TOTAL, and on this surface that is not a style
     // preference: a flow condition is interpreted strict CEL on every run, and
     // an unguarded field read against a driver that omits absent columns
@@ -765,13 +760,10 @@ export const LeadConversionFlow: Flow = {
     // match on, and a guess is the defect.
     { id: 'e31', source: 'decision_match_key', target: 'screen_1', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.company_normalized) && !isBlank(vars.leadRecord.company_normalized)`, label: 'Has match key' },
     { id: 'e32', source: 'decision_match_key', target: 'refuse_no_match_key', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.company_normalized) || isBlank(vars.leadRecord.company_normalized)`, label: 'No match key' },
-    // Rejoins nothing, exactly like `e26` / `e30`.
-    { id: 'e33', source: 'refuse_no_match_key', target: 'end', type: 'default' },
-    // The refusal branch rejoins nothing: it goes straight to `end`, so no
-    // node that writes is downstream of it. That is the refusal — the flow's
-    // every create/update sits behind `screen_1`, which this path never
-    // reaches.
-    { id: 'e26', source: 'refuse_confirmed_duplicate', target: 'end', type: 'default' },
+    // `e26`, `e30` and `e33` (each refusal → `end`) are RETIRED and stay
+    // vacant (#2060 item 2c): `e25`, `e28` and `e32` end the run at a refusing
+    // `end`, which no edge leaves, so no node that writes is downstream of a
+    // refusal — every create/update sits behind `screen_1`.
     // `e2` (screen_1 → find_account) is RETIRED and stays vacant (#2060 item
     // 2b): the amount gate sits between them now, on `e43` – `e45`. The pair
     // is TOTAL and PARTITIONING (`e45` is `e44` negated by De Morgan), pinned
