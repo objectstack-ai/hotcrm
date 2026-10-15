@@ -66,6 +66,9 @@ import * as salesObjects from './src/sales/objects/index.js';
 import * as revenueObjects from './src/revenue/objects/index.js';
 import * as marketingObjects from './src/marketing/objects/index.js';
 
+import * as salesPicklists from './src/sales/picklists/index.js';
+import * as revenuePicklists from './src/revenue/picklists/index.js';
+
 import * as salesActions from './src/sales/actions/index.js';
 import * as marketingActions from './src/marketing/actions/index.js';
 
@@ -257,6 +260,16 @@ export const appSkills = [
 export const appObjects = byExportName({
   ...salesObjects, ...revenueObjects, ...marketingObjects,
 });
+
+/**
+ * Every shared option list (`*.picklist.ts`) it registers — the lists a select
+ * field references by name with `Field.select({ picklist })` instead of copying
+ * options. Every field that references one is an app-package field (sales and
+ * revenue objects); the service package references none. A field naming a list
+ * registered here by nothing is refused by `pnpm validate` and fails the boot,
+ * so this line is load-bearing.
+ */
+export const appPicklists = byExportName({ ...salesPicklists, ...revenuePicklists });
 
 /** Every UI / AI-callable action it registers. */
 export const appActions = byExportName({ ...salesActions, ...marketingActions });
@@ -544,6 +557,11 @@ export const serviceStack = createHotCrmServiceStack({ data: seedData.service })
 export const appStack = createHotCrmAppStack(
   {
     objects: appObjects,
+    // Shared option lists (#2000, objectstack#18164). Each select field that
+    // offers one names it — `Field.select({ picklist: 'industry' })` — and the
+    // platform serves that field with the list's resolved options, refuses a
+    // write outside them, and relabels them from `picklists.NAME` per locale.
+    picklists: appPicklists,
     actions: appActions,
     dashboards: appDashboards,
     datasets: appDatasets,

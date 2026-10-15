@@ -62,13 +62,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       // Los valores son nombres de objeto: se reutilizan las etiquetas ya
       // traducidas de cada objeto en este mismo paquete (igual que
       // `crm_event.related_to_type`).
-      related_to_type: {
-        label: 'Tipo de Objeto Relacionado',
-        options: {
-          crm_account: 'Cuenta', crm_contact: 'Contacto', crm_opportunity: 'Oportunidad',
-          crm_lead: 'Prospecto', crm_case: 'Caso',
-        },
-      },
+      related_to_type: { label: 'Tipo de Objeto Relacionado' },
       related_to_account: { label: 'Cuenta Relacionada' },
       related_to_contact: { label: 'Contacto Relacionado' },
       related_to_opportunity: { label: 'Oportunidad Relacionada' },
@@ -142,13 +136,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       all_day: { label: 'Evento de todo el día' },
       duration_minutes: { label: 'Duración (minutos)' },
       location: { label: 'Ubicación', help: 'Sala, dirección o enlace de la reunión' },
-      related_to_type: {
-        label: 'Tipo de registro relacionado',
-        options: {
-          crm_account: 'Cuenta', crm_contact: 'Contacto', crm_opportunity: 'Oportunidad',
-          crm_lead: 'Prospecto', crm_case: 'Caso',
-        },
-      },
+      related_to_type: { label: 'Tipo de registro relacionado' },
       related_to_account: { label: 'Cuenta relacionada' },
       related_to_contact: { label: 'Contacto relacionado' },
       related_to_opportunity: { label: 'Oportunidad relacionada' },

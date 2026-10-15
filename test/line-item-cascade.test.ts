@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * Deleting an itemised opportunity or quote must work (#727).
@@ -138,6 +139,7 @@ describe('deleting an itemised parent', () => {
         crm_product: byName('crm_product'),
       } as never,
     })) as never;
+    registerStackPicklists(ql);
     await ql.syncSchemas();
     api = ql.createContext({ isSystem: true });
   });

@@ -49,16 +49,7 @@ export const customer: Record<string, ObjectTranslationData> = {
         label: 'Type',
         options: { prospect: 'Prospect', customer: 'Customer', partner: 'Partner', former: 'Former Customer' },
       },
-      industry: {
-        label: 'Industry',
-        options: {
-          technology: 'Technology', software: 'Software / SaaS', finance: 'Finance',
-          healthcare: 'Healthcare', retail: 'Retail', manufacturing: 'Manufacturing',
-          education: 'Education', real_estate: 'Real Estate', media: 'Media & Entertainment',
-          logistics: 'Logistics', hospitality: 'Hospitality', energy: 'Energy & Utilities',
-          government: 'Government', nonprofit: 'Non-profit', other: 'Other',
-        },
-      },
+      industry: { label: 'Industry' },
       annual_revenue: { label: 'Annual Revenue' },
       child_account_revenue: { label: 'Child Account Revenue', help: 'Sum of the annual revenue of the direct children of this account.' },
       number_of_employees: { label: 'Number of Employees' },
@@ -129,10 +120,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     label: 'Contact',
     pluralLabel: 'Contacts',
     fields: {
-      salutation: {
-        label: 'Salutation',
-        options: { mr: 'Mr.', ms: 'Ms.', mrs: 'Mrs.', dr: 'Dr.', prof: 'Prof.' },
-      },
+      salutation: { label: 'Salutation' },
       first_name: { label: 'First Name' },
       last_name: { label: 'Last Name' },
       full_name: { label: 'Full Name' },
@@ -178,15 +166,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       is_primary: { label: 'Primary Contact', help: 'Is this the main contact for the account?' },
       avatar: { label: 'Profile Picture' },
       mailing_address: { label: 'Mailing Address' },
-      lead_source: {
-        label: 'Lead Source',
-        options: {
-          web: 'Web', referral: 'Referral', event: 'Event / Trade Show',
-          webinar: 'Webinar', partner: 'Partner', advertisement: 'Advertisement',
-          paid_search: 'Paid Search', social: 'Social Media', content: 'Content / Blog',
-          cold_call: 'Cold Call', email_campaign: 'Email Campaign', other: 'Other',
-        },
-      },
+      lead_source: { label: 'Lead Source' },
       do_not_call: { label: 'Do Not Call' },
       email_opt_out: { label: 'Email Opt Out' },
       last_contacted_date: { label: 'Last Contacted' },
