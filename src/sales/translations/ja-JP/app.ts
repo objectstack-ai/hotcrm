@@ -570,7 +570,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_upcoming_events: {
           label: '📅 開催予定 · 直近順',
         },
-        quick_create: { title: 'クイック作成', label: 'クイック作成' },
         key_metrics: { title: '主要業績評価指標', label: '主要指標' },
         home_tabs: { label: 'ホームタブ' },
         home_my_leads: { label: '私のリード' },

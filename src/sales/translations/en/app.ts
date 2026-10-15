@@ -211,7 +211,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       title: 'Sales Dashboard',
       subtitle: 'Welcome back',
       components: {
-        quick_create: { title: 'Quick Create', label: 'Quick Create' },
         key_metrics: { title: 'Key Performance Indicators', label: 'Key Metrics' },
         home_tabs: { label: 'Home Tabs' },
         ai_briefing: {

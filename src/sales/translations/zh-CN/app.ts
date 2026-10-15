@@ -569,7 +569,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_upcoming_events: {
           label: '📅 即将开始 · 最近优先',
         },
-        quick_create: { title: '快速创建', label: '快速创建' },
         key_metrics: { title: '关键绩效指标', label: '关键指标' },
         home_tabs: { label: '主页标签页' },
         home_my_leads: { label: '我的线索' },

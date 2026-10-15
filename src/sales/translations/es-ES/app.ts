@@ -568,7 +568,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_upcoming_events: {
           label: '📅 Próximos · Más cercanos primero',
         },
-        quick_create: { title: 'Creación Rápida', label: 'Creación Rápida' },
         key_metrics: { title: 'Indicadores Clave de Rendimiento', label: 'Métricas Clave' },
         home_tabs: { label: 'Pestañas de Inicio' },
         home_my_leads: { label: 'Mis Prospectos' },
