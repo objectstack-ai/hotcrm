@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import type { FlowRunRef, VerifyStack } from '@objectstack/verify';
+import type { VerifyStack } from '@objectstack/verify';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import {
   hotcrmStack, signUpPerson, notificationsTo, conditionHolds, type Person,
@@ -389,8 +389,9 @@ describe('lead_conversion — a ticked Create Opportunity needs an amount before
  * "greater than zero". On 18.0.0-next.1 such a submission reached
  * `create_opportunity` after `create_account` and `create_contact` had run:
  * `FLOW_FAILED`, one account, one contact, no opportunity, an unconverted
- * lead. `decision_amount` now turns it away right after the dialog, so the
- * resume SUCCEEDS and the run pauses on the refusal: the claim is that node
+ * lead. `decision_amount` now turns it away right after the dialog, at a
+ * refusing `end`: the resume SUCCEEDS and the run ends `refused` (the only
+ * refusal in this flow that ends that way), and the claim is that outcome
  * and an empty store, compared in one object.
  */
 describe('lead_conversion — a ticked Create Opportunity with an amount of zero or less is refused before anything is written (#2060 item 2b)', () => {
@@ -407,13 +408,14 @@ describe('lead_conversion — a ticked Create Opportunity with an amount of zero
     const who = identity();
     const lead = await qualifiedLead(who);
     const refused = (await runConversion(lead.id, ticked(amount)).catch((e: unknown) => e)) as Rec;
-    expect({ code: refused.code, status: refused.status, node: refused.screen?.nodeId, ...(await state(who, lead.id)) }).toEqual({
-      code: undefined, status: 'paused', node: 'refuse_nonpositive_amount',
+    expect({
+      code: refused.code, success: refused.success, status: refused.status, runId: refused.runId,
+      ...(await state(who, lead.id)),
+    }).toEqual({
+      code: undefined, success: true, status: 'refused', runId: undefined,
       accounts: 0, contacts: 0, opportunities: 0, isConverted: false, leadStatus: 'qualified',
     });
-    // Closing the refusal is the rep's next click; that path reaches `end` without a write.
-    expect((await verify.flows.resume(refused as FlowRunRef, {}, { as: rep.token })).success).toBe(true);
-    expect(await state(who, lead.id)).toMatchObject({ accounts: 0, contacts: 0, isConverted: false });
+    expect(String(refused.refusalMessage ?? ''), 'the rep is not told why').not.toBe('');
 
     expect((await runConversion(lead.id, ticked(25_000))).error ?? null).toBeNull();
     expect(await state(who, lead.id)).toEqual({

@@ -383,14 +383,19 @@ export const LeadConversionFlow: Flow = {
       // left the account and contact written and the lead unconverted. The
       // edges restate that rule's predicate exactly (`<= 0`, null excluded:
       // an empty amount is the screen's `required`), so the two cannot
-      // disagree about which amounts convert. Same field-less shape as the
-      // three refusals above; translated in the packs like them.
-      id: 'refuse_nonpositive_amount', type: 'screen', label: 'Conversion Refused',
+      // disagree about which amounts convert.
+      //
+      // A first-class refusal (`EndConfigSchema` `outcome: 'refused'`), as in
+      // `quote_generation`, and ⛔ not the message-only screen the three
+      // refusals above use: the run ends `refused` rather than `completed`,
+      // and the console shows the message with Close only. A screen here was
+      // measured to toast "Saved — next step" over a refusal, and its Submit
+      // toasts `convert_lead`'s "Lead converted successfully!". Translated as
+      // `refusals.refuse_nonpositive_amount.message` in the packs.
+      id: 'refuse_nonpositive_amount', type: 'end', label: 'Conversion Refused',
       config: {
-        title: 'Conversion refused',
-        description:
-          'An opportunity amount must be greater than zero. Nothing has been created: convert the lead again and enter what the deal is worth, or leave Create Opportunity unticked to convert it without an opportunity.',
-        waitForInput: true,
+        outcome: 'refused',
+        message: 'Conversion refused: an opportunity amount must be greater than zero. Nothing was created. Convert the lead again with the amount the deal is worth, or leave Create Opportunity unticked to convert it without one.',
       },
     },
     {
@@ -767,14 +772,13 @@ export const LeadConversionFlow: Flow = {
     // reaches.
     { id: 'e26', source: 'refuse_confirmed_duplicate', target: 'end', type: 'default' },
     // `e2` (screen_1 → find_account) is RETIRED and stays vacant (#2060 item
-    // 2b): the amount gate sits between them now, on `e43` – `e46`. The pair
+    // 2b): the amount gate sits between them now, on `e43` – `e45`. The pair
     // is TOTAL and PARTITIONING (`e45` is `e44` negated by De Morgan), pinned
     // in `test/flow-conversion.test.ts`; an unticked box never reads the amount.
+    // `e45` ends the run at its target, a refusing `end`: no edge leaves it.
     { id: 'e43', source: 'screen_1', target: 'decision_amount', type: 'default' },
     { id: 'e44', source: 'decision_amount', target: 'find_account', type: 'default', condition: P`vars.createOpportunity != true || vars.opportunityAmount == null || vars.opportunityAmount > 0`, label: 'Amount accepted' },
     { id: 'e45', source: 'decision_amount', target: 'refuse_nonpositive_amount', type: 'default', condition: P`vars.createOpportunity == true && vars.opportunityAmount != null && vars.opportunityAmount <= 0`, label: 'Zero or less' },
-    // Rejoins nothing, exactly like `e26` / `e30` / `e33`.
-    { id: 'e46', source: 'refuse_nonpositive_amount', target: 'end', type: 'default' },
     { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },
     // Existing account → reuse; no account → create. Both converge on create_contact.
     // `find_account` is reached only with a match key (`e31`), so a match
