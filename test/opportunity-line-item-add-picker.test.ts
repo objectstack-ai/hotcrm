@@ -5,6 +5,7 @@ import { ObjectQL, bindHooksToEngine } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack, { type AnyRec, walk } from './helpers/composed-stack';
 import { products } from '../src/revenue/data/catalog.seed';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
 const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
@@ -154,6 +155,7 @@ describe('the row a picker-shaped insert actually produces', () => {
         crm_product: PRODUCT,
       } as never,
     })) as never;
+    registerStackPicklists(ql);
     await ql.syncSchemas();
     if (withHooks) {
       const hooks: AnyRec[] = (stack as never as AnyRec).hooks ?? [];

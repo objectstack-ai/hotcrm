@@ -50,16 +50,7 @@ export const customer: Record<string, ObjectTranslationData> = {
         label: '类型',
         options: { prospect: '潜在客户', customer: '正式客户', partner: '合作伙伴', former: '前客户' },
       },
-      industry: {
-        label: '行业',
-        options: {
-          technology: '科技', software: '软件 / SaaS', finance: '金融',
-          healthcare: '医疗', retail: '零售', manufacturing: '制造',
-          education: '教育', real_estate: '房地产', media: '传媒娱乐',
-          logistics: '物流', hospitality: '酒店旅游', energy: '能源公用事业',
-          government: '政府', nonprofit: '非营利', other: '其他',
-        },
-      },
+      industry: { label: '行业' },
       annual_revenue: { label: '年营收' },
       child_account_revenue: { label: '子公司年营收合计', help: '本客户直属子公司的年营收合计。' },
       number_of_employees: { label: '员工人数' },
@@ -155,10 +146,7 @@ export const customer: Record<string, ObjectTranslationData> = {
     pluralLabel: '联系人',
     description: '客户与商机的关键人物联系人',
     fields: {
-      salutation: {
-        label: '称谓',
-        options: { mr: '先生', ms: '女士', mrs: '夫人', dr: '博士', prof: '教授' },
-      },
+      salutation: { label: '称谓' },
       first_name: { label: '名' },
       last_name: { label: '姓' },
       full_name: { label: '全名' },
@@ -204,15 +192,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       description: { label: '描述' },
       is_primary: { label: '主要联系人', help: '是否为该客户的主要联系人？' },
       mailing_address: { label: '邮寄地址' },
-      lead_source: {
-        label: '线索来源',
-        options: {
-          web: '网站', referral: '推荐', event: '活动 / 展会',
-          webinar: '线上研讨会', partner: '合作伙伴', advertisement: '广告',
-          paid_search: '付费搜索', social: '社交媒体', content: '内容 / 博客',
-          cold_call: '陌生拜访', email_campaign: '邮件营销', other: '其他',
-        },
-      },
+      lead_source: { label: '线索来源' },
       do_not_call: { label: '禁止致电' },
       email_opt_out: { label: '拒绝邮件' },
       last_contacted_date: { label: '最近联系时间' },

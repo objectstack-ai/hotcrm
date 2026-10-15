@@ -7,6 +7,7 @@ import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import stack from './helpers/composed-stack';
 import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * ═══ HOUSE RULE: flow conditions over FLOW VARIABLES ═══════════════════════
@@ -947,6 +948,7 @@ describe('the two defects, reproduced end-to-end', () => {
       // type — without it this suite prints every engine INFO line.
       ...({ logger: silent } as object),
     })) as never;
+    registerStackPicklists(ql);
     await ql.syncSchemas();
 
     const engine = new AutomationEngine(silent);

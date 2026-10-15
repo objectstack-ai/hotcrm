@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { Contract } from '../src/revenue/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
-import { PAYMENT_TERMS_OPTIONS } from '../src/sales/objects/_picklists';
+import { PaymentTermsPicklist } from '../src/revenue/picklists/payment_terms.picklist';
 import {
   hotcrmStack, signUpPerson, recordEngineWrites, today, type Person,
 } from './helpers/verify-stack';
@@ -14,8 +14,9 @@ import {
  *
  * ### What was wrong
  *
- * `_picklists.ts` declares `PAYMENT_TERMS_OPTIONS` a set shared by Quote and
- * Contract, and justifies the sharing in so many words: *"an accepted quote's
+ * The `payment_terms` list was declared a set shared by Quote and Contract
+ * (then `PAYMENT_TERMS_OPTIONS` in `_picklists.ts`, since #2000 the
+ * `payment_terms` picklist), justified in so many words: *"an accepted quote's
  * terms carry over to the contract, so the contract vocabulary must cover every
  * quote value."* `crm_contract.payment_terms` repeats the same rationale. No
  * such carry-over existed. `quote_on_accepted` drafted the contract from
@@ -70,7 +71,7 @@ type AnyRec = Record<string, any>;
 type Rec = Record<string, any>;
 
 /** Every value a quote can hold, straight from the shared vocabulary. */
-const QUOTE_TERMS = PAYMENT_TERMS_OPTIONS.map((o) => o.value);
+const QUOTE_TERMS: string[] = PaymentTermsPicklist.options.map((o) => o.value);
 
 /** The value `crm_contract.payment_terms` falls to when nothing is written. */
 const CONTRACT_DEFAULT = 'net_30';
@@ -224,7 +225,8 @@ describe('what a real crm_contract does with those documents', () => {
     // would be true of any string and would prove nothing about the superset.
     const { doc } = await accepted({}, { payment_terms: null });
     await expect(verify.seed('crm_contract', [{ ...doc, payment_terms: 'net_45' }])).rejects.toThrow(
-      /Payment Terms must be one of: net_15, net_30, net_60, net_90, due_on_receipt/,
+      // Since #2000 the refusal names the picklist the field takes its values from.
+      /Payment Terms must be one of the values of picklist "payment_terms": net_15, net_30, net_60, net_90, due_on_receipt/,
     );
   });
 });
@@ -259,19 +261,20 @@ describe('the rationale the shared vocabulary is justified by', () => {
    * with nothing holding it up.
    */
   it('both objects really do declare the same vocabulary', () => {
-    const values = (o: AnyRec): string[] => o.fields.payment_terms.options.map((x: AnyRec) => x.value);
-    expect(values(Contract as AnyRec)).toEqual(QUOTE_TERMS);
-    expect(values(Quote as AnyRec)).toEqual(QUOTE_TERMS);
+    // Since #2000 this is structural: both fields REFERENCE one picklist and
+    // carry no options of their own, so there is no second copy to drift.
+    for (const o of [Contract, Quote] as AnyRec[]) {
+      expect(o.fields.payment_terms.picklist, `${o.name}.payment_terms`).toBe(PaymentTermsPicklist.name);
+      expect(o.fields.payment_terms.options, `${o.name}.payment_terms carries a copy`).toBeUndefined();
+    }
   });
 
   it('names the hook that performs the carry-over, in both places that claim it', async () => {
     const { readFileSync } = await import('node:fs');
     const { join } = await import('node:path');
-    // The two files sit in different packages since the ADR-0130 layout: the
-    // picklist vocabulary is a shared source and lives in the app package,
-    // `crm_contract` is revenue's. Both still make the claim, so both are read.
+    // The picklist and `crm_contract` both make the claim, so both are read.
     for (const file of [
-      'src/sales/objects/_picklists.ts',
+      'src/revenue/picklists/payment_terms.picklist.ts',
       'src/revenue/objects/contract.object.ts',
     ]) {
       expect(

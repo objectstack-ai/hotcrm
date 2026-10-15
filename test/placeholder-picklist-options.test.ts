@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import stack, { type AnyRec, localePacks } from './helpers/composed-stack';
+import { stackPicklists } from './helpers/stack-picklists';
 
 const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
 
@@ -51,8 +52,18 @@ type Hit = { where: string; label: string };
  */
 const PLACEHOLDER_SERIAL = /(?:^|[^A-Za-z])([A-Z])\s*$/;
 
+/**
+ * Option labels authored in metadata: every field's inline `options`, and every
+ * shared picklist's (`*.picklist.ts`, #2000) — a field that references a list
+ * carries no options of its own, so the list is where its labels are written.
+ */
 const optionLabelsFromObjects = (): Hit[] => {
   const out: Hit[] = [];
+  for (const list of stackPicklists) {
+    for (const opt of (list.options ?? []) as AnyRec[]) {
+      if (typeof opt?.label === 'string') out.push({ where: `picklist ${list.name}`, label: opt.label });
+    }
+  }
   for (const obj of objects) {
     for (const [fieldName, def] of Object.entries((obj.fields ?? {}) as Record<string, AnyRec>)) {
       const options = def?.options;
@@ -67,9 +78,15 @@ const optionLabelsFromObjects = (): Hit[] => {
   return out;
 };
 
+/** Option labels in the locale packs: per field, and per shared picklist (`picklists.<name>`). */
 const optionLabelsFromPacks = (): Hit[] => {
   const out: Hit[] = [];
   for (const [locale, pack] of localePacks) {
+    for (const [name, entry] of Object.entries((pack.picklists ?? {}) as Record<string, AnyRec>)) {
+      for (const [value, label] of Object.entries((entry?.options ?? {}) as Record<string, unknown>)) {
+        if (typeof label === 'string') out.push({ where: `${locale}: picklists.${name}.${value}`, label });
+      }
+    }
     for (const [objectName, objEntry] of Object.entries((pack.objects ?? {}) as Record<string, AnyRec>)) {
       for (const [fieldName, fieldEntry] of Object.entries(
         (objEntry?.fields ?? {}) as Record<string, AnyRec>,
@@ -92,6 +109,10 @@ describe('no picklist ships placeholder option labels (#1061)', () => {
     // `Competitor A/B/C` sit in production metadata unnoticed in the first place.
     expect(optionLabelsFromObjects().length, 'no option labels read off the objects').toBeGreaterThan(80);
     expect(optionLabelsFromPacks().length, 'no option labels read off the locale packs').toBeGreaterThan(200);
+    // The shared lists (#2000) are read on both surfaces too, not only the
+    // fields that still carry inline options.
+    expect(optionLabelsFromObjects().filter((h) => h.where.startsWith('picklist ')).length).toBeGreaterThan(30);
+    expect(optionLabelsFromPacks().filter((h) => h.where.includes(': picklists.')).length).toBeGreaterThan(120);
   });
 
   it('no option label is a serial placeholder ("Competitor A")', () => {

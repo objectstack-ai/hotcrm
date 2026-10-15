@@ -62,26 +62,3 @@ export const activityActions = {
     },
   },
 };
-
-/**
- * 共有ピックリスト（`_picklists.ts`）は複数オブジェクトで同一の値集合を持つ。
- * 訳語がオブジェクトごとにぶれると、同じピックリストが画面によって別の言葉で
- * 表示される不具合になる（#494）。ここで一度だけ定義して各所に展開する。
- * キーは表示ラベルではなく **保存値** であることに注意（#494 の主因）。
- */
-export const salutationOptions = { mr: 'Mr.', ms: 'Ms.', mrs: 'Mrs.', dr: '博士', prof: '教授' };
-
-export const industryOptions = {
-  technology: 'テクノロジー', software: 'ソフトウェア / SaaS', finance: '金融',
-  healthcare: 'ヘルスケア', retail: '小売', manufacturing: '製造',
-  education: '教育', real_estate: '不動産', media: 'メディア・エンタメ',
-  logistics: '物流', hospitality: 'ホスピタリティ', energy: 'エネルギー・公益',
-  government: '政府・行政', nonprofit: '非営利', other: 'その他',
-};
-
-export const leadSourceOptions = {
-  web: 'ウェブ', referral: '紹介', event: 'イベント・展示会',
-  webinar: 'ウェビナー', partner: 'パートナー', advertisement: '広告',
-  paid_search: '有料検索', social: 'ソーシャルメディア', content: 'コンテンツ・ブログ',
-  cold_call: 'コールドコール', email_campaign: 'メールキャンペーン', other: 'その他',
-};

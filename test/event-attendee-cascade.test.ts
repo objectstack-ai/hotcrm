@@ -5,6 +5,7 @@ import { ObjectQL } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { SysUser } from '@objectstack/platform-objects';
 import stack from './helpers/composed-stack';
+import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
  * Deleting a person who attended a meeting must work (#711).
@@ -202,6 +203,7 @@ describe('deleting a person who attended a meeting', () => {
         sys_user: SysUser,
       } as never,
     })) as never;
+    registerStackPicklists(ql);
     await ql.syncSchemas();
     api = ql.createContext({ isSystem: true });
   });

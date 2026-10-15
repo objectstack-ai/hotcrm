@@ -70,6 +70,37 @@ describe('picklist values never reach the UI unresolved', () => {
   // and an unknown field as `translation-target-unknown`; `pnpm lint` fails on
   // both.
 
+  it('shared picklist translations are keyed by the list\'s option VALUES (#2000)', () => {
+    // A field that references a picklist inherits `picklists.<name>.options`,
+    // matched by value exactly as a field's own options are — so the same two
+    // misses resolve to nothing: a key that is not one of the list's values,
+    // and a list name no package registers. `objectstack lint --strict` reads
+    // neither for `picklists.*` on 18.0.0-next.1 (its option-key rule walks
+    // field options only), so this row stays until it does. The lists are the
+    // ones the booted registry holds — what the resolver translates against.
+    const registered = runtime.metadata.items<AnyRec>('picklist');
+    expect(registered.length, 'the booted app registers no picklists').toBeGreaterThan(0);
+    expect(
+      localePacks.every(([, pack]) => Object.keys(pack?.picklists ?? {}).length > 0),
+      'a locale pack carries no picklist translations',
+    ).toBe(true);
+    const bad: string[] = [];
+    for (const [locale, pack] of localePacks) {
+      for (const [name, entry] of Object.entries<AnyRec>(pack?.picklists ?? {})) {
+        const list = registered.find((p) => p.name === name);
+        if (!list) {
+          bad.push(`${locale}: translates picklist "${name}", which no package registers`);
+          continue;
+        }
+        const values = (list.options as AnyRec[]).map((o) => String(o.value));
+        for (const key of Object.keys(entry?.options ?? {})) {
+          if (!values.includes(key)) bad.push(`${locale}: picklists.${name} option key "${key}" is not an option value`);
+        }
+      }
+    }
+    expect(bad, `picklist translations that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('translated object and field keys name real objects and fields', () => {
     // A translation keyed to a renamed/removed field is dead weight that reads
     // as coverage — the bundle looks complete while the screen stays English.

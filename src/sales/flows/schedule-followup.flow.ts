@@ -2,7 +2,7 @@
 
 import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
-import { TASK_TYPE_OPTIONS, plainOptions } from '../objects/_picklists';
+import { Task } from '../objects/task.object';
 type Flow = Automation.Flow;
 
 /**
@@ -47,9 +47,11 @@ export const ScheduleFollowUpFlow: Flow = {
           { name: 'dueDate', label: 'Due Date', type: 'date', required: true },
           {
             name: 'activityType', label: 'Activity Type', type: 'select',
-            // Mirrors crm_task.type exactly. ⛔ Never hand-copy the subset — it
-            // silently drops an option (`other`) from the picker.
-            options: plainOptions(TASK_TYPE_OPTIONS),
+            // crm_task.type's OWN options, read off the object definition and
+            // projected to bare `{ label, value }` pairs (a screen select has no
+            // use for colors or the default). ⛔ Never hand-copy the subset — it
+            // silently drops an option (`other`) from the picker (#490).
+            options: Task.fields.type.options!.map(({ label, value }) => ({ label, value })),
           },
           {
             name: 'priority', label: 'Priority', type: 'select',
