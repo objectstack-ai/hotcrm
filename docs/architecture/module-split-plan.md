@@ -122,7 +122,7 @@ enumerated below and in the JSON, each with a stated reason.
 ### What stays in the app package, and why it holds no objects
 
 The app package holds the consumer surface — the app and its navigation scaffolding, the
-three pages that are not record pages (`home`, `app_launcher`, `utility_bar`), the two
+one page authored against no object (`home`), the two
 cross-domain dashboards, the three cross-domain AI skills, the six permission sets, the four
 locale bundles, the package docs, and the shared TypeScript source described below.
 

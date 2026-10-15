@@ -498,15 +498,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Mesa de Trabajo de Cuentas',
       description: 'Lista de cuentas curada para el equipo comercial: solo filtros rápidos, sin gestión de vistas.',
     },
-    app_launcher_page: {
-      label: 'Lanzador de Aplicaciones',
-      description: 'Punto de acceso central a todas las aplicaciones',
-      subtitle: 'Seleccione una aplicación para empezar',
-      components: {
-        app_search: { label: 'Buscar Aplicaciones' },
-        app_grid: { label: 'Cuadrícula de Aplicaciones' },
-      },
-    },
     case_detail_page: {
       label: 'Detalle de Caso',
       description: 'Página de caso para el agente de servicio: datos destacados, progreso del SLA, detalles y cronología de actividad.',
@@ -578,15 +569,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: 'Hoy con el Asistente de IA',
         },
         upcoming_events: { title: 'Próximos Eventos', label: 'Próximos Eventos' },
-      },
-    },
-    utility_bar_page: {
-      label: 'Barra de Utilidades',
-      description: 'Barra de acceso rápido con herramientas flotantes',
-      components: {
-        notifications_panel: { label: 'Notificaciones' },
-        quick_notes: { title: 'Notas Rápidas', label: 'Notas Rápidas' },
-        quick_search: { label: 'Búsqueda Rápida' },
       },
     },
   },

@@ -29,6 +29,13 @@
    "change": "Removed the files[] row for src/sales/flows/demo-bootstrap.flow.ts (kind 'flow', module app.objectstack.hotcrm, 860 authored tokens). The file existed at measured_at.commit and was deleted by #1892, which retired the demo_bootstrap ownership sweep once the platform's seed-settle ownership claim (objectstack#17872, in the 17.6.0 pin) was measured leaving no seeded owner-scoped row ownerless.",
    "figures_left_as_measured": "Untouched, per do_not_hand_patch: totals, ratchet, edges (the demo_bootstrap entries included), modules[] and every other files[].authored_tokens are still the one measurement taken at measured_at.commit. Only the row that pointed at a deleted file was removed, as #1698 did for case-csat-followup.flow.ts.",
    "roster_drift_measured_at_this_date": "files[] held 170 rows before this edit and holds 169 after. The 35 files the 2026-09-14 entry lists as postdating measured_at.commit are still left out, for the reason it gives."
+  },
+  {
+   "date": "2026-10-15",
+   "issue": 2118,
+   "change": "Removed the files[] rows for src/sales/pages/app_launcher.page.ts (kind 'page', module app.objectstack.hotcrm, 310 authored tokens) and src/sales/pages/utility_bar.page.ts (kind 'page', module app.objectstack.hotcrm, 279 authored tokens). Both files existed at measured_at.commit and were deleted by #2118, which retired the two pages: neither had a navigation entry or any other consumer, and their page types promised shell roles (an app launcher, a floating utility bar) the console does not give.",
+   "figures_left_as_measured": "Untouched, per do_not_hand_patch: totals, ratchet, edges, modules[] and every other files[].authored_tokens are still the one measurement taken at measured_at.commit. Only the two rows that pointed at deleted files were removed, as #1698 and #1892 did before.",
+   "roster_drift_measured_at_this_date": "files[] held 169 rows before this edit and holds 167 after. The 35 files the 2026-09-14 entry lists as postdating measured_at.commit are still left out, for the reason it gives."
   }
  ],
  "measured_at": {
@@ -2886,15 +2893,6 @@
    "authored_tokens": 233
   },
   {
-   "path": "src/sales/pages/app_launcher.page.ts",
-   "kind": "page",
-   "module": "app.objectstack.hotcrm",
-   "anchor_object": null,
-   "reason": "global launcher, no object binding",
-   "ratcheted": true,
-   "authored_tokens": 310
-  },
-  {
    "path": "src/service/pages/case_detail.page.ts",
    "kind": "page",
    "module": "app.objectstack.hotcrm.service",
@@ -2938,15 +2936,6 @@
    "reason": "authored against crm_opportunity",
    "ratcheted": true,
    "authored_tokens": 1915
-  },
-  {
-   "path": "src/sales/pages/utility_bar.page.ts",
-   "kind": "page",
-   "module": "app.objectstack.hotcrm",
-   "anchor_object": null,
-   "reason": "global utility bar, no object binding",
-   "ratcheted": true,
-   "authored_tokens": 279
   },
   {
    "path": "src/sales/profiles/guest-portal.profile.ts",

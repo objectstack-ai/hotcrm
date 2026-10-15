@@ -13,5 +13,3 @@ export { OpportunityDetailPage } from './opportunity_detail.page';
 export { AccountDetailPage } from './account_detail.page';
 export { AccountWorkbenchPage } from './account_workbench.page';
 export { SalesHomePage } from './home.page';
-export { AppLauncherPage } from './app_launcher.page';
-export { UtilityBarPage } from './utility_bar.page';
