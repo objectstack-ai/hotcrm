@@ -52,7 +52,7 @@ installs (ADR-0019 D1):
 | --- | --- | --- |
 | id | `app.objectstack.hotcrm` | `app.objectstack.hotcrm.service` |
 | namespace | `crm` | `crm` |
-| version | `4.0.1` | `4.0.1` |
+| version | `5.0.0` | `5.0.0` |
 | type | `app` | `module` |
 | name | `HotCRM` | `HotCRM Service` |
 
