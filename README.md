@@ -11,7 +11,7 @@
 > business semantics (objects, flows, actions, hooks) in **~57k tokens**
 > of typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata,
 > and its whole interaction layer (views, pages, dashboards, app shell) in
-> another **~29k**. An agent holds every business rule of a real enterprise CRM
+> another **~28k**. An agent holds every business rule of a real enterprise CRM
 > module in a fraction of one context window — and the entire authored app
 > still fits comfortably — so it can reason about the system whole and refactor
 > it safely.
