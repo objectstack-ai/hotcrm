@@ -1,5 +1,374 @@
 # Changelog
 
+## 5.0.0
+
+### Major Changes
+
+- **HotCRM 5.0.0 needs an ObjectStack 18 host.** This release is built on ObjectStack 18.0.0-next.2,
+  a prerelease of the platform's next major. The protocol handshake compares majors, so a 17.x host
+  refuses to load this release before it reads a single object, and reports why. Upgrade the host
+  first.
+  
+  **The host runs the platform's migration before it serves this release.** Moving a host from 17.x
+  to 18 is the platform's migration, not this app's. An 18 runtime refuses to serve a database still
+  in the 17.x organization shape until the operator runs `os migrate organization-ownership`: plan
+  with `--out plan.json`, then `--apply --backup-taken --plan-file plan.json`. That migration keeps
+  existing data.
+  
+  **Nothing needs to be cleared.** No entry of this release asks for data to be cleared or reloaded,
+  and upgrading deletes no stored value.
+  
+  What changes for the people who use HotCRM:
+  
+  - **Tenant administrators no longer hold `manage_org_presentation`.** ObjectStack 18 retires the
+    capability together with per-organization overlays (ADR-0131 D6). The platform has no
+    organization-bounded authoring capability now, so a tenant administrator authors no metadata.
+  - **The App Launcher and Utility Bar pages are retired** (`app_launcher_page`,
+    `utility_bar_page`). Neither could be reached from the app. Reading either
+    (`GET /api/v1/meta/page/app_launcher_page` or `.../utility_bar_page`) now answers 404, and a
+    bookmark to either address stops working. To switch apps, use the console's own app switcher.
+  - **Sales Home is now three columns.** The *Ask the AI Assistant* and *Upcoming Events* cards sit
+    in a column to the right of the key metrics. Before, they stacked below the rest of the page at
+    full width.
+  
+  What changes in the data model, each with its own entry below:
+  
+  - **Quote line items lose Tax Rate %** (`crm_quote_line_item.tax_rate`). A write naming it is
+    refused with 400 `INVALID_FIELD`, and a line's **Total** is now its **Subtotal**. The stored
+    rates stay in the database, unread. `os migrate plan` lists dropping the column as a destructive
+    change, and `os migrate apply --allow-destructive` drops it, so read the rates first if you need
+    them.
+  - **Cases gain a read-only Escalated From field**, naming the agent an escalation took the case
+    from.
+  - **Campaign members, event attendees and article feedback name their parent as a master-detail
+    field** (Campaign, Event, Article), because ObjectStack 18 derives a row's access from its parent
+    only through a required master-detail field.
+  
+  What operators should know:
+  
+  - **Assign a sales manager or service manager again if their 17.x position assignment carries no
+    organization.** Such a row does not staff the case-escalation pool.
+  - **Scheduled flows still need `OS_AUTOMATION_SCHEDULED_WORK_ENABLED=true`.** Without it, none of
+    the eight scheduled flows runs.
+  - **A copy of Sales Home or of the lead, opportunity or case record page saved through Studio keeps
+    loading.** The platform refuses the next save of such a copy until it uses the new template and
+    region names.
+
+### Minor Changes
+
+- 8dfed90: Shared option lists are now platform picklists: Industry, Lead Source, Salutation, Payment Terms and Related To Type are each declared once
+  
+  Five option lists that several fields offer are now declared once, as platform
+  `picklist` metadata, and every field that offers one references it by name
+  instead of carrying its own copy:
+  
+  | Picklist | Fields that offer it |
+  |:--|:--|
+  | `industry` | Lead and Account **Industry** |
+  | `lead_source` | Lead, Contact and Opportunity **Lead Source** |
+  | `salutation` | Lead and Contact **Salutation** |
+  | `payment_terms` | Quote and Contract **Payment Terms** |
+  | `related_to_type` | Task and Event **Related To Type** |
+  
+  Nothing a user picks or stores changes: every value, label, color and default is
+  the same, and so is the order. What changes is that each list can no longer
+  drift between the objects that share it, because there is only one. A value
+  converted from a lead onto an account or an opportunity is always a value the
+  target accepts, and a value outside the list is refused on every object that
+  offers it, with a message that names the list.
+  
+  **FROM → TO for integrations that read metadata.** A picklist-bound field is
+  served with its resolved `options` as before, and now also carries
+  `picklist: 'NAME'`. The option labels of these five lists are translated once
+  per locale, under `picklists.NAME` in the language packs, instead of under
+  each field. Chart and report categories over these fields keep their
+  translated labels: the pinned platform (18.0.0-next.1) resolves a
+  picklist-bound dimension through the same `picklists.NAME` translations.
+  
+  Lists that only one field offers (Opportunity **Stage**, Task and Event **Type**,
+  Event **Status**, Attendee **Response**, Lead **Need Type** and Lead
+  **Duplicate Of**) moved back onto that field as its own options. The
+  **Update Stage** action and the **Schedule Follow-up** screen now read
+  their option lists from the field they mirror.
+- 2f3d898: Upgrade the ObjectStack platform to 18.0.0-next.0 (prerelease)
+  
+  All 24 `@objectstack/*` dependencies move from 17.7.0 to 18.0.0-next.0 together, pinned exact:
+  20 in `dependencies` and 4 in `devDependencies`. `specVersion` and `engines.protocol` follow to
+  `^18.0.0-next.0` in `objectstack.manifest.json` and in both package manifests (`src/sales`,
+  `src/service`). `pnpm install` regenerated `pnpm-lock.yaml` against the public registry: 790
+  `packages:` entries before, 791 after. The 54 `@objectstack/*` and `create-objectstack` keys moved
+  one for one, `@objectstack/service-mailbox@18.0.0-next.0` was added, and no third-party package
+  changed version.
+  
+  **This release needs an ObjectStack 18 runtime.** 18.0.0-next.0 is a prerelease. The protocol
+  handshake compares majors, so a 17.x host refuses to load this artifact before it reads a single
+  object, and reports why. Upgrade the host first.
+  
+  The platform changes that reached this app:
+  
+  - **Every flow is rewritten in the two 18.0.0-next.0 dialects.** The platform no longer accepts
+    `{…}` templates in a flow's value fields. A value is now a CEL expression, and a text field
+    (screen titles and descriptions, end messages, action links, HTTP URLs and headers) takes
+    `{{ … }}` holes. All 32 flows and the shared billing payload were rewritten, and `os validate`
+    goes from 340 refusals to none. Each site keeps what it did on 17.7.0, with one exception. On
+    **Close Case**, an agent who leaves *Resolved by Article* unanswered now clears a link that was
+    set earlier on the record form. On 17.7.0 that link stayed.
+  - **Flow dialogs translate more of their text.** 18.0.0-next.0 makes screen descriptions, select
+    options and refusal messages translatable, and `os lint` reports the missing keys. All 32 new
+    keys are translated in zh-CN, es-ES and ja-JP, using the words the packs already use for the
+    same objects.
+  - **Tenant administrators no longer hold `manage_org_presentation`.** 18.0.0-next.0 retires the
+    capability together with per-organization overlays (ADR-0131 D6). The platform has no
+    organization-bounded authoring capability now, so a tenant administrator authors no metadata.
+  - **Email templates no longer declare `category`.** The platform retires the key and refuses it.
+  
+  **What operators should know:**
+  
+  - **Scheduled flows still need `OS_AUTOMATION_SCHEDULED_WORK_ENABLED=true`.** Without it, none of
+    the eight scheduled flows runs: no contract or quote expiry, no SLA monitor, no reminders, no
+    forecast snapshots.
+  - **Every install now has an organization.** Under the `single` posture, the platform creates the
+    Default Organization at boot and loads the seed data into it.
+  - **A position assigned through Setup carries that organization.** A position row written without
+    one, such as a 17.x row an upgrade carries over, does not staff the case-escalation pool, which
+    stays inside each case's organization. A sales manager or service manager whose 17.x assignment
+    carries no organization should be assigned again.
+  - **Deleting an account removes its draft, expired and terminated contracts with it.** An activated
+    contract still blocks the delete, as the account documentation says.
+  - **An elevated scheduled or sub-flow can no longer be started by name**, not even by an
+    administrator. It starts from its own trigger, or as a sub-flow of a parent flow.
+  
+  The test suite moved with the platform. Every suite runs on the SQL datasource, by maintainer
+  ruling. The legs whose only subject was the absent-column shape of the in-memory driver are retired,
+  because that driver no longer serves an app with organizations. The token ceilings are raised 50%
+  by maintainer ruling and recorded as a grant.
+- 77de62d: Remove **Tax Rate %** from quote line items: a line's **Total** is now its **Subtotal**.
+  
+  A quote carried two tax models that never read each other. A quote's own **Tax** is an amount
+  typed on the quote, and its **Total Price** adds it: *Subtotal − Discount + Tax + Shipping &
+  Handling*. A quote line item also carried a **Tax Rate %**, but the rate reached only that
+  line's own **Total**, and the quote total never read it. So on a quote whose line carried a
+  rate, the lines on the quote's *Related* tab added up to more than the quote beside them: lines
+  10,945 against a quote total of 9,810, on a quote with a 10% discount and one line taxed at 5%.
+  
+  The quote's typed **Tax** is the model this app ships. It is on every demo quote, on the quote
+  form and the All Quotes list, and in the documentation's price formula, so the line rate is
+  removed. A line's **Total** is its price after its own discount, the same figure as its
+  **Subtotal**, and a quote's line totals add up to its **Subtotal**.
+  
+  **What this means for you.** `crm_quote_line_item.tax_rate` no longer exists on the object, in
+  any of the four language packs, or in the documentation. A write naming it is refused with 400
+  `INVALID_FIELD`. No demo line ever carried a rate, so the demo data is unaffected.
+  
+  **If you filled a line's Tax Rate % on an existing install**, that line's **Total** changes when
+  you upgrade, and its rate no longer shows. A line of 1 × 1,000 at a 10% line discount and a 5%
+  rate showed 945 and now shows 900. The quote's **Total Price** does not change, because the
+  quote total never included a line's rate. If that tax belongs on the quote, add it to the
+  quote's **Tax**.
+  
+  The upgrade does not delete the stored rates. The column stays in the database, unread. On boot
+  the server logs it as orphaned (`[schema-drift] crm_quote_line_item.tax_rate`), `os migrate plan`
+  lists dropping it as the one destructive change, and
+  `os migrate unmapped-columns --object crm_quote_line_item --json` reads each line's stored rate
+  by record id. `os migrate apply --allow-destructive` drops the column, so read the rates first if
+  you need them.
+  
+  A tax model where line rates roll up into the quote remains a possible future design; this
+  removal does not build it.
+- f4ac253: Upgrade the ObjectStack platform to 18.0.0-next.1 (prerelease)
+  
+  All 23 `@objectstack/*` dependencies move from 18.0.0-next.0 to 18.0.0-next.1 together, pinned
+  exact: 19 in `dependencies` and 4 in `devDependencies`. `specVersion` and `engines.protocol` follow
+  to `^18.0.0-next.1` in `objectstack.manifest.json` and in both package manifests (`src/sales`,
+  `src/service`). The protocol major is still 18, so any 18 runtime admits the artifact, and a 17.x
+  host still refuses it. `pnpm install` regenerated `pnpm-lock.yaml`: 705 `packages:` entries before,
+  707 after. The 55 `@objectstack/*` keys moved one for one. `@objectstack/connector-imap` and
+  `postal-mime@4.0.6` arrive with the platform's mailbox service. No other third-party package
+  changed version.
+  
+  The platform changes that reached this app:
+  
+  - **Campaign members, event attendees and article feedback now name their parent as a master.**
+    Access to each of these rows derives from its parent (the campaign, the meeting, the article).
+    Since 18.0.0-next.1 the platform derives that parent only from a required master-detail field,
+    and it refused the required lookup these three objects used. **Campaign** and **Event** are now
+    master-detail fields that refuse to delete a campaign or a meeting that still has members or
+    attendees, as before. **Article** is master-detail and still deletes the feedback with its
+    article, as before.
+  - **Scheduled notifications name the record they are about.** The contract renewal and expiry
+    reminders, the stalled-deal nudge, the task reminder and the case SLA alert now link their inbox
+    entry to the contract, deal, task or case. On 18.0.0-next.1 this link also decides which
+    organization owns the notification. Without it, an install holding more than one organization
+    would refuse each of these notifications on 18.0.0-next.1, and the sweep would abandon that
+    record: no renewal deal opened, no stalled-deal task written.
+  
+  The test suite moved with the platform. Test kits that mount the identity objects without the auth
+  plugin no longer create their own Default Organization, because the platform now creates it at boot.
+  The hierarchy read-depth suite saves its throwaway permission sets through the metadata API, because
+  the `sys_permission_set` data object is retired.
+- 63db83e: Remove the **App Launcher** and **Utility Bar** pages (`app_launcher_page`, `utility_bar_page`).
+  
+  Neither page could be reached from the app: no sidebar entry, button or other page pointed at
+  either, so each opened only at a typed address. Once opened, neither did what its name said.
+  The App Launcher was a search box and a "Your apps" strip holding one app, a copy of the app
+  switcher the console already has. The Utility Bar did not float: it laid out inline in the main
+  column as a heading, an empty **Quick Notes** card, a search box and a notifications block that
+  drew nothing. The console has no slot for a utility bar to dock into.
+  
+  HotCRM is also the reference app people read to learn how to build one, and these two pages
+  taught that a page of type `app` makes a launcher and a page of type `utility` makes a floating
+  bar. Neither is true on the current platform, so both pages are retired together with their
+  labels in the four language packs.
+  
+  **What this means for you.** The two pages are no longer in the app, and reading either one
+  (`GET /api/v1/meta/page/app_launcher_page` or `.../utility_bar_page`) now answers 404. A
+  bookmark to either address stops working. Every other page, **Sales Home** and the record
+  pages included, is unchanged. To switch apps, use the console's own app switcher.
+- e50d048: Upgrade the ObjectStack platform to 18.0.0-next.2 (prerelease)
+  
+  All 23 `@objectstack/*` dependencies move from 18.0.0-next.1 to 18.0.0-next.2 together, pinned
+  exact: 19 in `dependencies` and 4 in `devDependencies`. `specVersion` and `engines.protocol` follow
+  to `^18.0.0-next.2` in `objectstack.manifest.json` and in both package manifests (`src/sales`,
+  `src/service`). `pnpm install` regenerated `pnpm-lock.yaml`: 707 `packages:` entries before and
+  after. The 55 `@objectstack/*` keys and `create-objectstack` moved one for one, nothing was added or
+  removed, and no third-party package changed version.
+  
+  **This release needs an ObjectStack 18 host.** 18.0.0-next.2 is a prerelease of protocol major 18.
+  The handshake compares majors, so any 18 runtime admits the artifact and a 17.x host refuses it
+  before it reads a single object.
+  
+  The platform changes that reached this app:
+  
+  - **Pages name only the layouts and slots the console draws.** 18.0.0-next.2 refuses the page
+    template `full-width`, a region its template does not place, and `isDefault` on a page that is not
+    a record page.
+    - The lead, opportunity and case record pages move from `template: 'full-width'` to
+      `template: 'default'`, the layout `full-width` was a second name for. They render as before.
+    - Sales Home's `right_sidebar` region becomes `aside`, a slot its three-column layout places, and
+      the page no longer declares `isDefault` (where the app opens is set by its navigation). Its empty
+      `left_sidebar` region is removed: as a placed `sidebar` it would have reserved a blank column.
+    - What a user sees: on Sales Home, the *Ask the AI Assistant* and *Upcoming Events* cards now sit
+      in a column to the right of the key metrics. Before, the page stacked them below the rest of the
+      page at full width.
+  - **The console that ships with the platform changed what HotCRM users see**, with no change here:
+    - Text formula fields, such as a lead's full name, now read in the normal text font instead of a
+      code font.
+    - An inactive account is greyed out on *All Accounts*. Before, that tint painted nothing.
+    - On *All Leads*, **Add to Campaign** is offered in the selection bar and in each row's menu, and
+      no longer as a header button.
+    - A service agent or service manager now opens the app on **Leads**, the first entry their sidebar
+      shows. Before, they opened on the Executive Overview dashboard, which they cannot read.
+  
+  The test suite moved with the platform. A cascade-delete test now pins the platform's new
+  `referentialCascadeDelete` marker, the one signal a hook can use to tell a parent's cascade from a
+  hand delete. A forecast test hands the platform's seed-ownership claim the row it restores, because
+  since 18.0.0-next.2 the claim only takes over ownerless rows that the seed itself reports writing.
+  
+  **What operators should know:**
+  
+  - **No app data changes.** No object, field or stored value changes in this release, and nothing
+    needs to be cleared or reloaded.
+  - **A stored page customization keeps loading.** A deployment that saved its own copy of one of the
+    four pages above through Studio keeps serving it as stored. The platform refuses the next save of
+    such a copy until it uses the new template and region names.
+  - **A web lead or case that nobody was assigned stays unassigned.** On 18.0.0-next.2 the platform
+    no longer hands rows that nobody owns to the first administrator at the next restart, unless its
+    own seed wrote them. HotCRM still assigns web leads and cases as they arrive. A case that arrives
+    while nobody holds the Service Agent position now stays in *Unassigned — triage* until someone
+    takes it.
+  - **Moving a host from 17.x to 18 is the platform's migration, not this app's.** An 18 runtime
+    refuses to serve a database still in the 17.x organization shape until the operator runs
+    `os migrate organization-ownership` (plan with `--out plan.json`, then
+    `--apply --backup-taken --plan-file plan.json`). That ceremony keeps existing data.
+
+### Patch Changes
+
+- 6400397: Submissions from the public Web-to-Lead (Contact Us) and Web-to-Case (Support) forms are now routed like every other incoming lead and case: a web lead goes to the sales rep with the fewest open leads, and its new-lead alert reaches that rep; a web case goes to the service agent with the fewest open cases, instead of waiting in Unassigned — triage while agents are on the rota. A web enquiry from an address already in the CRM is now flagged as a suspected duplicate, and a sales rep's new lead is now flagged when it repeats a colleague's contact or lead the rep cannot see. The visitor who fills in a public form is still told only that the submission was received — never who it went to, or whether the address was already known.
+- 850f75c: A sales rep can now convert a lead into a new account. Before this fix the conversion stopped with "Field write denied … [annual_revenue]" whenever the lead's company had no account yet, and nothing was created; a sales manager had to convert it instead. The new account still carries the lead's **Annual Revenue**, and it is owned and created by the rep who converted it.
+  
+  **Annual Revenue** stays read-only for sales reps. The rep's conversion creates the account as before, and a new sub-flow, **Copy Lead Revenue to New Account**, copies the lead's revenue onto that account with system privilege. Nobody can start the sub-flow on its own, administrators included; it runs only as a step of **Lead Conversion Process**.
+  
+  A user who may not create accounts, such as a marketing user or a service agent, still cannot convert a lead into a new account, and nothing is written when they try.
+  
+  On every conversion into a new account, a sales manager's included, the revenue now arrives just after the account is created. The account's approval request records the account as it was submitted, so its snapshot in the approval inbox shows no annual revenue. The account itself carries it.
+- b8f5421: **An accepted or expired quote no longer takes new line items.** The quote itself was already
+  frozen once the customer accepted it (or it expired), but its line items were not: a rep could
+  add a line from the quote's Line Items panel, or change the quantity or price of an existing
+  one, and the save went through. The quote kept its accepted subtotal and total, so its lines no
+  longer added up to it, while the contract drafted from it carried the accepted figure.
+  
+  Adding a line to an accepted or expired quote, changing one of its lines, or moving a line onto
+  or off such a quote is now refused with *"Quote QTE-0007 - Annual Renewal is accepted, so its
+  line items can no longer be added or changed."* (409, `RECORD_LOCKED`). A draft, in-review,
+  presented or rejected quote takes line changes as before. Imports and other system writes are
+  not affected, and the one-time line-number back-fill (`scripts/backfill-line-number.ts`) still
+  numbers the lines of settled quotes.
+  
+  Not changed: removing a line from an accepted or expired quote is still allowed, and deleting
+  such a quote still deletes its lines. Whether a single line may be removed is an open decision
+  on #2060.
+- c7d0947: **Converting a lead with Create Opportunity ticked now requires an Opportunity Amount.** The
+  amount was optional on the conversion dialog, although every opportunity needs one. Submitting
+  the dialog with the box ticked and the amount empty used to create the account and the contact
+  first, then fail on the opportunity with "Amount is required". The lead was left half-converted:
+  a new account and contact, no opportunity, and the lead still not converted.
+  
+  The dialog now marks Opportunity Amount as required whenever Create Opportunity is ticked, and a
+  submission without one is refused before anything is created; enter the amount to finish the
+  conversion. A lead with an Estimated Amount still has it filled in for you, and converting
+  without an opportunity needs no amount, as before.
+- 628bd2a: **Converting a lead with Create Opportunity ticked and an amount of zero or less no longer leaves it half-converted.** Every opportunity needs an amount greater than zero, but the conversion dialog accepted 0 or a negative figure. Submitting it created the account and the contact first, then failed on the opportunity with "Amount must be greater than zero". The lead was left with a new account and contact, no opportunity, and still not converted.
+  
+  Such a conversion now stops right after the dialog, before anything is created, and says why: the opportunity amount must be greater than zero. Convert the lead again with the amount the deal is worth, or leave Create Opportunity unticked to convert it without one. A positive amount converts exactly as before.
+- f1c8083: **A refused lead conversion no longer tells the rep the lead was converted.** Convert Lead refuses three kinds of lead: one whose Duplicate Status is Confirmed, one whose Conversion Approval is Pending or Rejected, and one whose company has no match key. Each refusal opened a dialog with a Submit button, and clicking Submit showed "Lead converted successfully!" although nothing had been converted.
+  
+  The refusal now ends the conversion on the spot. The dialog shows the same explanation, opening with "Conversion refused", and offers Close only: no Submit and no success message. Which leads are refused is unchanged, and a refused conversion still creates nothing and leaves the lead as it was. A run started through the API reports the conversion as `refused`, with the explanation, rather than pausing on a screen.
+- 421bd1d: **A service agent no longer loses a case the moment it is escalated.** An escalated case is handed to the Service Manager with the fewest open cases, and an agent only sees the cases they own. So an agent who logged a Critical case saw "Case created successfully" over a "Record not found" page. An agent who pressed Escalate Case got the same page when it refreshed.
+  
+  The case now records the agent it was taken from in a new read-only **Escalated From** field. A new sharing rule, *Escalated Cases — Previous Owner*, lets that agent read the case until it is closed. They can follow the case but cannot edit it: the manager works it. No other agent gains access, and the manager's and director's access is unchanged. A case escalated with no owner names nobody, and nobody can type a name into the field.
+- bd5fda2: A service agent can now pick up a case that came in through the web support form. Such a case has no **Account** (the public form does not ask for one), and the case form marked **Account** as required, so moving the case to **In Progress** to claim it stopped at *"Please check the highlighted fields: Account"* and nothing was saved. The form no longer requires **Account**: the claim saves and the case becomes the agent's, as the Cases guide describes. **Account** stays on the form. A case raised in the console may now also be saved without one; its SLA target is the one for an **SMB** customer, the same as a web case's, and escalating it opens no account follow-up task.
+- d211930: The sidebar no longer offers a service agent pages it cannot open. **Home** (Executive Overview), **Sales Performance**, **CRM Overview** and **Pipeline Coverage** are built on opportunities, and a user who cannot read opportunities (the Service Agent and Service Manager permission sets) used to get each of them as a page of "You don't have access" tiles. Those entries are now left out for such a user; everyone who reads opportunities sees the same sidebar as before. **Sales Home**, the rep's page of pipeline figures, leads, open deals, open tasks and upcoming events, is now pinned in the sidebar under **Home**. Before, it could only be reached by typing its address. Its **Quick Create** card is gone: it drew a second copy of the sidebar's links and could create nothing, and the platform has no create-record block to put there yet. Each list page keeps its own **New** button. The app still opens on **Home** for every user, a service agent included: the console has no way to give each role its own landing page yet.
+- c0f3485: **A new lead with no owner no longer fails New Lead Routing & SLA.** A lead that lands without an owner — a Web-to-Lead submission while nobody can be assigned from the Sales Rep pool, or a lead written by an import or an integration without one — still got its Next Follow-up Date, but the routing run then failed while sending its alert, because there was no owner to send it to. The failure showed up only in the flow's run history and the server log.
+  
+  Such a lead now gets its Next Follow-up Date (tomorrow at four stars or better, otherwise in three days) and no alert, and the run ends successfully. A lead with an owner is routed exactly as before: its owner is alerted.
+- 5e314ff: HotCRM has a new icon: a flat orange tile with a white bold **H**. The old mark, an orange gradient with two arcs and a dot, was hard to make out at small sizes, such as a browser tab. The sidebar logo and the favicon both show the new mark. The app's primary theme colour changes from royal blue (`#4169E1`) to the icon's orange (`#EA580C`), so the theme and the logo match.
+- 71684fd: Accounts created on a deployment without approvals are no longer locked for good. Until now every new account started as *Pending*, even where no approval engine exists to decide it (a hosted plan that leaves approvals out, for example), so the record page showed it as locked for approval with Edit disabled and nothing could ever unlock it. A new account now starts with **Approval Status** blank and turns *Pending* when its approval request is opened. Where approvals are available nothing changes: the account is *Pending* as soon as it is created, waits in the approval inbox, and becomes *Approved* only through a decision. Where they are not, the account stays blank and editable. To switch account sign-off off, an admin now sets the default on **Approval Status** to *Approved*. Accounts already created as *Pending* with no request behind them are not changed by this update.
+- e419d50: Converting a lead now keeps the person's communication preferences. The new contact carries the lead's **Do Not Call** and **Email Opt Out**, along with its mobile, lead source and salutation. Before this fix, a lead that had opted out became a contact you could email and call. If the conversion reuses an existing contact, an opt-out on either record wins: the conversion can turn a flag on but never clears one.
+- 283a31f: A case that is resolved or closed after its **SLA Due Date** is now marked **SLA Violated** at that moment. Until now only the hourly SLA sweep set the flag, and the sweep only looks at open cases, so a case finished late before a sweep reached it — or on any deployment that does not run scheduled work, which is the platform default — stayed marked as within SLA. The **SLA Performance** report showed a 0.0% violation rate and the service dashboard's **SLA Compliance** gauge showed 100% over closed cases that had finished days late. Those surfaces now count every late finish, on every deployment. A case finished on time is not flagged, a case resolved on time is not flagged when it is closed later, a case with no due date is never flagged, and flagging a finished case does not escalate it or send any alert. The demo data's resolved and closed cases now carry the flag their own dates call for, so a fresh demo database shows 2 of 8 closed cases within SLA instead of 8 of 8. Cases closed late before this update keep the flag they already have.
+- df5cbb9: The **SLA Violations** tile on the service dashboard now counts open breaches when it is read, so it is right on every deployment, including one that runs no scheduled work (the platform default). It used to count only cases flagged **SLA Violated**, and an open case is flagged only by the hourly SLA sweep, which never runs where scheduled work is off. Such a deployment showed far fewer violations than it had: on a fresh demo database the tile read **13** while **29** cases had breached. The tile now counts a case that is flagged, or a case that is still open (neither *Resolved* nor *Closed*) and whose **SLA Due Date** has passed, using the same rule the sweep applies. A fresh demo database now shows **29**. The tile only counts: escalating a breached case and alerting its owner still need the sweep, so where it does not run, an open breach is in the count but not yet in **Escalated Cases**.
+- 29bf17e: Calls and meetings you log on a case, an opportunity or an account now appear on that record. **Log a Call** and **Log a Meeting** saved the interaction, but the record page never listed it: on a case or an opportunity it was missing from the **Activity** tab, and on an account, whose activity shows in the **Discussion** feed below the tabs, it was missing there. These feeds now list the logged calls and meetings. The case's *resolved* and *closed* entries and the opportunity's *won* and *lost* entries were hidden in the same way, and now appear too. Leads already showed their logged calls and are unchanged. Contacts do not change yet: a contact uses the platform's standard record page, which still hides logged calls.
+- 598ac4a: An unowned case can now be claimed from its own record page, and a meeting can be logged or scheduled there. The case page's header offered only **Escalate Case**, **Close Case** and **Log a Call**, so an agent who opened a case from **Unassigned — triage** had to go back to the list to use **Claim Case**, and **Log a Meeting** and **Schedule a Meeting** were reachable from the list's row menu only. The header now offers all six. **Claim Case** shows only on a case that has no owner and is neither resolved nor closed, and it is the header's first button there; actions the header has no room for are under **⋯**.
+- abc1663: **A closed opportunity no longer takes new line items.** A closed-won or closed-lost deal was
+  already locked, but its line items were not: a rep could add a product line to it from the
+  Products panel, change the quantity or price of an existing line, or move a line onto it from an
+  open deal, and the save went through. The deal kept its closed Amount, so its lines no longer
+  added up to it.
+  
+  Adding a line to a closed deal, changing one of its lines, or moving a line onto or off a closed
+  deal is now refused with *"Opportunity Acme Renewal is closed (closed_won), so its line items can
+  no longer be added or changed."* (409, `RECORD_LOCKED`), the same lock the deal's own fields
+  have. An open deal takes line changes as before. Seed data and other system writes that carry no
+  signed-in user are not affected, and the one-time line-number back-fill
+  (`scripts/backfill-line-number.ts`) still numbers the lines of closed deals.
+  
+  Not changed: removing a line from a closed deal is still allowed, and deleting a closed deal still
+  deletes its lines. Whether a single line may be removed is an open decision on #2078.
+- 9e064b3: Editing a quote's own **Discount %**, **Tax** or **Shipping & Handling** now updates its **Discount Amount** and **Total Price** in the same save. Before this fix the two totals stayed at their old figures until a line item was added, changed or removed. A quote accepted in that window drafted its contract at the old total. For example, a quote with a 95,000 subtotal, 7,220 tax and 2,500 shipping had its discount raised from 5% to 10% and was then accepted: its contract was drafted at 99,970 instead of 95,220.
+  
+  The totals follow one formula, whichever field changed: Discount Amount = Subtotal × Discount %, and Total Price = Subtotal − Discount Amount + Tax + Shipping & Handling. An accepted or expired quote is still frozen, and editing one is refused exactly as before. A quote with no Subtotal keeps the totals it has.
+- e094ec7: The **All Leads** list now shows its column headers in the user's language. In Chinese, Spanish and Japanese the nine headers were in English: Name, Company, Email, Status, Score, Source, Need Type, Est. Amount and Owner. The **Account** column on **Open Deals** and **All Opportunities** was also in English. Each header now uses its field's label, which the app translates into every supported language. In English, five lead headers now use the full field name: *Name* is now **Full Name**, *Score* is **Lead Score**, *Source* is **Lead Source**, *Est. Amount* is **Estimated Amount** and *Owner* is **Lead Owner**. The other English headers do not change.
+- 6782f78: Three screen-flow dialogs no longer repeat their own name as the step title in Chinese, Spanish and Japanese. The small line above the dialog's title names the flow, and the title names the step, as it already did in English: **Convert Lead** now opens on **转化详情** / **Detalles de la Conversión** / **変換詳細** (Conversion Details), **Generate Quote** on **报价单详情** / **Detalles de la Cotización** / **見積詳細** (Quote Details), and **Enroll Members** on **加入条件** / **Criterios de Inscripción** / **登録条件** (Enrollment Criteria). Each wording reuses the term the app already uses for that object or action. Before this change, all three dialogs showed the flow's name twice, for example **线索转化流程** on both lines.
+- 4f38942: A sales rep can create a lead without first picking themselves as its owner. The **New Lead** form marked **Lead Owner** as required, so clicking **Create** with the field left blank stopped at *"Lead Owner is required"* and nothing was saved. The form no longer requires it. A lead created with the field left blank is owned by the person who created it, as on the **Opportunity**, **Account** and **Contact** New forms. **Lead Owner** stays on the form.
+- 4de5343: List rows are tinted only when they need attention. Nine list views used to give every row a colour, one per value of a field that already shows as a coloured badge in its own column, so a whole page of colour marked no row. Now:
+  
+  - **Cases** (*All Cases* and *Unassigned — triage*): a case flagged **SLA Violated** is red. Before, the tint followed priority and painted every case, breached or not.
+  - **Tasks**: an urgent task is red.
+  - **Event Attendees**: a declined invitation is red.
+  - **Accounts**: an inactive account is grey; active accounts are no longer green.
+  - **Open Deals**, **Events**, **Knowledge Articles** and the **High Priority** leads list are no longer tinted.
+  
+  The *Unassigned — triage* and *All Accounts* tints are not visible yet. The console fetches only a list's columns, and neither list has a column for the field its tint reads (**SLA Violated**, **Active**). They will show once the platform fetches that field.
+
 ## 4.0.1
 
 ### Patch Changes
