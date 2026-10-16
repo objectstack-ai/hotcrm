@@ -63,21 +63,60 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v4.0.1 — Latest release
+## v5.0.0 — Latest release
 
-**HotCRM 4.0.1** shipped on **ObjectStack 17.7.0** across every
-`@objectstack/*` package. The release after it runs on **ObjectStack
-18.0.0-next.2**, a prerelease of the platform's next major, and its manifest
+**HotCRM 5.0.0** runs on **ObjectStack 18.0.0-next.2**, a prerelease of the
+platform's next major, across every `@objectstack/*` package. The app manifest
 declares the matching `^18.0.0-next.2` protocol range, so a runtime on a
 different protocol major — a 17.x host included — refuses the load up front
-with a structured diagnostic instead of failing deep in a schema parse.
+with a structured diagnostic instead of failing deep in a schema parse. 4.0.1,
+the release before it, shipped on ObjectStack 17.7.0.
 
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 4.0.1 are
+> entry every pull request adds. The versions between v1.0 and 5.0.0 are
 > recorded there and are deliberately not re-listed here — a hand-maintained
 > copy of that history is exactly how this section came to advertise a "v5.0"
-> that was never an app version, on a platform major that never shipped it.
+> while the app was at 2.2.2, on a platform major that never shipped it.
+
+### What 5.0.0 adds
+
+**5.0.0 is a major because it needs an ObjectStack 18 host.** The platform line moved
+from 17.7.0 to 18.0.0-next.2, in three steps, every `@objectstack/*` package together
+with the protocol range the manifest declares.
+
+- **Tenant administrators no longer hold `manage_org_presentation`.** ObjectStack 18
+  retires per-organization overlays, so a tenant administrator authors no metadata.
+- **The App Launcher and Utility Bar pages are retired.** Neither could be reached from
+  the app. To switch apps, use the console's own app switcher.
+- **Sales Home is three columns, and has its own sidebar entry under Home.** The
+  *Ask the AI Assistant* and *Upcoming Events* cards sit to the right of the key metrics.
+- **A quote has one tax.** Quote line items no longer carry **Tax Rate %**: the quote's
+  own **Tax** is the tax, and a line's **Total** is its **Subtotal**.
+- **An escalated case stays readable to the agent it was taken from.** A new read-only
+  **Escalated From** field names that agent.
+- **Shared option lists are declared once.** Industry, Lead Source, Salutation, Payment
+  Terms and Related To Type no longer drift between the objects that offer them.
+
+Plus a long tail of fixes, each with its own entry in `CHANGELOG.md`.
+
+**Check these before upgrading:**
+
+- **Move the host to ObjectStack 18 first, and run the platform's migration.** An 18
+  runtime refuses to serve a database still in the 17.x organization shape until the
+  operator runs `os migrate organization-ownership` (plan with `--out plan.json`, then
+  `--apply --backup-taken --plan-file plan.json`). That migration keeps existing data,
+  and nothing needs to be cleared.
+- **An integration that writes `crm_quote_line_item.tax_rate`** is refused with 400
+  `INVALID_FIELD`. The stored rates stay in the database, unread; read them before
+  `os migrate apply --allow-destructive`, which drops the column.
+- **A sales manager or service manager whose 17.x position assignment carries no
+  organization** does not staff the case-escalation pool. Assign them again.
+- **A bookmark to the App Launcher or Utility Bar page stops working.**
+- **Coming from 3.x**, everything under "What 4.0.0 adds" below, its checks before
+  upgrading included, applies as well.
+
+### What 4.0.1 fixes
 
 **4.0.1 is the first 4.x release that installs from the marketplace.** 4.0.0's marketplace
 publish carried an empty app and was withdrawn, so a deployment on 3.x upgrades straight to
