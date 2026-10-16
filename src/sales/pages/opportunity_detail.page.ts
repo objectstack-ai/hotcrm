@@ -6,10 +6,11 @@ import { Page } from '@objectstack/spec/ui';
  * Opportunity Detail Record Page
  *
  * Salesforce Lightning-style record page for the `crm_opportunity` object.
- * Mirrors the lead_detail blueprint: single-column full-width layout with
- * a Lightning-style header chip, primary action, key highlights strip and
- * status path, then a tab strip below. No sidebar — secondary widgets such
- * as the AI assistant live in the floating console chat instead.
+ * Mirrors the lead_detail blueprint on the `default` template: a
+ * Lightning-style header chip, primary action, key highlights strip and
+ * status path, then a tab strip below, with the reference rail in the
+ * `aside` slot. Secondary widgets such as the AI assistant live in the
+ * floating console chat instead.
  */
 export const OpportunityDetailPage: Page = {
   name: 'opportunity_detail_page',
@@ -19,7 +20,7 @@ export const OpportunityDetailPage: Page = {
   type: 'record',
   object: 'crm_opportunity',
 
-  template: 'full-width',
+  template: 'default',
   kind: 'full',
   variables: [
     { name: 'activeTab', type: 'string', defaultValue: 'details' },

@@ -66,6 +66,12 @@ export const SalesHomePage: Page = {
   
   type: 'home',
   
+  // `three-column` places `header`, `sidebar`, `main`, `aside` and `footer`;
+  // each region below is named for the slot it fills. On @objectstack/spec
+  // 18.0.0-next.2 a region the template does not place is refused, so the
+  // former `left_sidebar` / `right_sidebar` are `sidebar` / `aside`. The page
+  // declares no `isDefault` either: that is refused off a record page, and
+  // where the app opens is its navigation's business (objectstack#23610).
   template: 'three-column',
   kind: 'full',  
   variables: [
@@ -125,7 +131,7 @@ export const SalesHomePage: Page = {
     },
     
     {
-      name: 'left_sidebar',
+      name: 'sidebar',
       width: 'small',
       components: [
         // There is no `Quick Create` card here any more either (#2060 item 5),
@@ -273,7 +279,7 @@ export const SalesHomePage: Page = {
     },
     
     {
-      name: 'right_sidebar',
+      name: 'aside',
       width: 'medium',
       components: [
         {
@@ -343,8 +349,6 @@ export const SalesHomePage: Page = {
       ],
     },
   ],
-  
-  isDefault: true,
   
   aria: {
     ariaLabel: 'Sales Home Page',
