@@ -62,7 +62,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * a raise there sits on the maintainer floor where it always did.
  *
  *   business semantics  banner ~57k -> band 54,150–59,850 · ceiling 88,500
- *   interaction layer   banner ~29k -> band 27,550–30,450 · ceiling 46,500
+ *   interaction layer   banner ~28k -> band 26,600–29,400 · ceiling 46,500
  *
  * ⚠️ The ceiling column is still worked out per row, and still pinned to
  * `CEILINGS` below — that is what stops the README quoting a ceiling the gate no

@@ -22,12 +22,15 @@ export const LeadDetailPage: Page = {
   type: 'record',
   object: 'crm_lead',
 
-  // Template defines the overall layout structure. We use `full-width`
-  // (single column) because the previous `header-sidebar-main` layout
-  // sandwiched the highlights strip into a cramped sidebar with no other
-  // meaningful sidebar content — Salesforce Lightning record pages
-  // similarly default to a stacked column for medium-density objects.
-  template: 'full-width',
+  // Template defines the overall layout structure. We use `default` with only
+  // `header` and `main` regions (a single stacked column) because the previous
+  // `header-sidebar-main` layout sandwiched the highlights strip into a cramped
+  // sidebar with no other meaningful sidebar content — Salesforce Lightning
+  // record pages similarly default to a stacked column for medium-density
+  // objects. It was spelled `full-width` until @objectstack/spec 18.0.0-next.2
+  // refused that name: it was a second name for `default`, drawn by the same
+  // layout (objectstack#23610).
+  template: 'default',
   kind: 'full',
   // Page-level state variables
   variables: [

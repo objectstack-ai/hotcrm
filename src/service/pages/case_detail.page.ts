@@ -24,7 +24,7 @@ export const CaseDetailPage: Page = {
   type: 'record',
   object: 'crm_case',
 
-  template: 'full-width',
+  template: 'default',
   kind: 'full',
   variables: [
     { name: 'activeTab', type: 'string', defaultValue: 'details' },

@@ -26,9 +26,11 @@ export const AccountViews = defineView({
     ],
     sort: [{ field: 'annual_revenue', order: 'desc' }],
     // Only the exception row is tinted: an inactive account greys out, an
-    // active one stays plain. Measured on 18.0.0-next.1 it paints nothing: the
-    // console fetches only the columns and `is_active` is not one. That is a
-    // platform gap, reported upstream from #2107; ⛔ no column added to dodge it.
+    // active one stays plain. On 18.0.0-next.1 it painted nothing: the console
+    // fetched only the columns and `is_active` is not one (objectui#12376,
+    // reported from #2107; ⛔ no column was added to dodge it). The
+    // 18.0.0-next.2 console selects the tint's field and greys the row out
+    // (measured).
     rowColor: { field: 'is_active', colors: { false: 'slate' } },
     selection: { type: 'multiple' },
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },

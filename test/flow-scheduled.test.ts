@@ -1011,13 +1011,22 @@ describe('re-seed × snapshot leaves one row per (owner, period, window) (#702)'
     // Predicted direction, and the one that makes the guards above
     // meaningful — the duplicate is what they would report.
     const w = await bootWorld();
-    await w.stack.seed('crm_forecast', [{
+    const [restored] = await w.stack.seed('crm_forecast', [{
       seed_key: 'demo_quarter_current', owner_id: null,
       period: 'quarter', period_start: isoUtc(qStart), period_end: isoUtc(qEnd),
       snapshot_date: today, source: 'scheduled', quota: 1_500_000, closed_amount: 820_000,
     }]);
+    // Since 18.0.0-next.2 the claim re-owns an ownerless row only when the seed
+    // reports landing on it (objectstack#23354): a boot binds that reading from
+    // the `seed-settlement` contract, and a direct call without it re-owns none.
+    // This row stands in for one the seed shipped, so the claim is told so.
+    const ql = w.stack.kernel.getService<Rec>('objectql');
+    const claimAsSeeded = () => claimSeedOwnership(ql, w.adminId, {
+      logger: silent,
+      seededRecordIds: (object: string) => (object === 'crm_forecast' ? [String(restored!.id)] : []),
+    });
     await w.steps.forecast_snapshot!();
-    await w.steps.claim!();
+    await claimAsSeeded();
 
     const adminRows = async () =>
       (await w.stack.rows('crm_forecast', { owner_id: w.adminId })).filter(inCurrentQuarter);
@@ -1025,7 +1034,7 @@ describe('re-seed × snapshot leaves one row per (owner, period, window) (#702)'
     // And it is terminal: the sweep's findOne refreshes whichever row it
     // reaches first and never sees, let alone merges, the other.
     await w.steps.forecast_snapshot!();
-    await w.steps.claim!();
+    await claimAsSeeded();
     expect(await adminRows(), 'a later pass healed the duplicate — then the seed guard would be optional').toHaveLength(2);
   }, 120_000);
 });
