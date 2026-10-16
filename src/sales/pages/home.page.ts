@@ -69,9 +69,10 @@ export const SalesHomePage: Page = {
   // `three-column` places `header`, `sidebar`, `main`, `aside` and `footer`;
   // each region below is named for the slot it fills. On @objectstack/spec
   // 18.0.0-next.2 a region the template does not place is refused, so the
-  // former `left_sidebar` / `right_sidebar` are `sidebar` / `aside`. The page
-  // declares no `isDefault` either: that is refused off a record page, and
-  // where the app opens is its navigation's business (objectstack#23610).
+  // former `right_sidebar` is `aside`, and the empty `left_sidebar` is gone
+  // (see the note above `main`). The page declares no `isDefault` either:
+  // that is refused off a record page, and where the app opens is its
+  // navigation's business (objectstack#23610).
   template: 'three-column',
   kind: 'full',  
   variables: [
@@ -130,39 +131,39 @@ export const SalesHomePage: Page = {
       ],
     },
     
-    {
-      name: 'sidebar',
-      width: 'small',
-      components: [
-        // There is no `Quick Create` card here any more either (#2060 item 5),
-        // and re-adding one needs a block that creates records.
-        //
-        // It was a `page:card` titled "Quick Create" around a bare `nav:menu`,
-        // which draws the app's navigation: the sidebar a second time, 28
-        // links, nothing that creates. The title lied, as below. On 18.0.0-next.1
-        // `ComponentPropsMap` has no create block: the `action:*` blocks run
-        // `script` / `url` / `modal` / `flow` / `api` / `form`, where `form`
-        // opens a FormView at `/forms/NAME` and `modal` a page, so a "New Lead"
-        // button would hard-code a console route. Each list page has its own
-        // New button. When the platform ships a create block, it goes here.
-        //
-        // There is no `Recent Items` card here any more, and re-adding one
-        // needs a data source that does not exist yet.
-        //
-        // It shipped as a `page:card` with a title and no body: a bordered box
-        // with the words "Recent Items" and nothing under them, on the landing
-        // page of every `sales_rep` / `sales_manager`. "Recent" is per-user
-        // access history across objects, and the platform publishes no source
-        // for it on 17.1.0 — `ComponentPropsMap` has no recent-records
-        // component, and the two that sound like one (`record:activity`,
-        // `record:history`) both read the page's BOUND RECORD, which a home
-        // page does not have. Binding it to one object's list view instead
-        // would have made the title lie, which is the defect #771 exists to
-        // prevent, so the card is removed rather than filled with something
-        // that is not recency. Recorded as #1217; when the platform ships a
-        // recent-records source, this is where the card goes back.
-      ],
-    },
+    // No `sidebar` region. It has held nothing since #2117, and on
+    // 18.0.0-next.2 `three-column` gives a declared `sidebar` its column even
+    // when it is empty: measured, the empty region pushed `main` 280 px right
+    // and left that strip blank beside the KPIs.
+    //
+    // There is no `Quick Create` card here any more either (#2060 item 5),
+    // and re-adding one needs a block that creates records.
+    //
+    // It was a `page:card` titled "Quick Create" around a bare `nav:menu`,
+    // which draws the app's navigation: the sidebar a second time, 28
+    // links, nothing that creates. The title lied, as below. On 18.0.0-next.1
+    // `ComponentPropsMap` has no create block: the `action:*` blocks run
+    // `script` / `url` / `modal` / `flow` / `api` / `form`, where `form`
+    // opens a FormView at `/forms/NAME` and `modal` a page, so a "New Lead"
+    // button would hard-code a console route. Each list page has its own
+    // New button. When the platform ships a create block, it goes in a
+    // `sidebar` region here.
+    //
+    // There is no `Recent Items` card here any more, and re-adding one
+    // needs a data source that does not exist yet.
+    //
+    // It shipped as a `page:card` with a title and no body: a bordered box
+    // with the words "Recent Items" and nothing under them, on the landing
+    // page of every `sales_rep` / `sales_manager`. "Recent" is per-user
+    // access history across objects, and the platform publishes no source
+    // for it on 17.1.0 — `ComponentPropsMap` has no recent-records
+    // component, and the two that sound like one (`record:activity`,
+    // `record:history`) both read the page's BOUND RECORD, which a home
+    // page does not have. Binding it to one object's list view instead
+    // would have made the title lie, which is the defect #771 exists to
+    // prevent, so the card is removed rather than filled with something
+    // that is not recency. Recorded as #1217; when the platform ships a
+    // recent-records source, this is where the card goes back.
     
     {
       name: 'main',
