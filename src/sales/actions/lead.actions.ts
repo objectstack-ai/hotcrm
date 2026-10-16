@@ -230,13 +230,18 @@ export const CreateCampaignAction: Action = {
     capabilities: ['api.read', 'api.write'],
     timeoutMs: 10000,
   },
-  // list_item gives every row a working record-scoped entry point. The
-  // list_toolbar button is single-record by construction: with no `_selectedIds`
-  // in the bag the dispatcher resolves a recordId from the grid selection, and a
+  // list_item gives every row a working record-scoped entry point (the row's
+  // menu). Multi-lead enrollment is the SELECTION-BAR button, which All Leads'
+  // `bulkActions: ['create_campaign']` produces and which fans out per row.
+  // Since 18.0.0-next.2 the console's list header leaves out a record-scoped
+  // list_toolbar action the active view already wires that way
+  // (objectui#12462), so on All Leads the action is drawn in the selection bar
+  // and on the row only (measured). A lead view that wires no `bulkActions`
+  // (My Leads, for one) still draws the list_toolbar button in its header, and
+  // that button is single-record by construction: with no `_selectedIds` in
+  // the bag the dispatcher resolves a recordId from the grid selection, and a
   // multi-row selection there is ambiguous, so it is refused client-side with
   // "This action runs on a single record — select exactly one row."
-  // Multi-lead enrollment is the SELECTION-BAR button instead, which the view's
-  // `bulkActions: ['create_campaign']` produces and which fans out per row.
   locations: ['list_toolbar', 'list_item'],
   params: [
     // Field-backed param: `field` + `objectOverride` make the console resolve

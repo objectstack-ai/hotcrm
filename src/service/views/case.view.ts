@@ -239,9 +239,10 @@ export const CaseViews = defineView({
         { field: 'sla_due_date', order: 'asc' },
       ],
       // Same exception tint as the main queue: a breached case turns red.
-      // Measured on 18.0.0-next.1 it paints nothing here: the console fetches
-      // only the columns and `is_sla_violated` is not one. That is a platform
-      // gap, reported upstream from #2107; ⛔ no column added to dodge it.
+      // On 18.0.0-next.1 it painted nothing here: the console fetched only the
+      // columns and `is_sla_violated` is not one (objectui#12376, reported from
+      // #2107; ⛔ no column was added to dodge it). The 18.0.0-next.2 console's
+      // fetch for this view selects `is_sla_violated` (measured).
       rowColor: { field: 'is_sla_violated', colors: { true: 'red' } },
       // The empty state carries the operational instruction, because "no rows"
       // here is ambiguous on its own: it means either "the round-robin placed
