@@ -31,7 +31,8 @@ import { createIdentityObjectsPlugin } from '@objectstack/plugin-auth';
  *
  * ### Why the hooks cannot simply say "delete"
  *
- * Each guard has TWO invocation contexts and no way to tell them apart:
+ * Each guard has TWO invocation contexts, and until 18.0.0-next.2 no way to tell
+ * them apart:
  *
  * - `contact_integrity`'s `beforeDelete` runs on a direct contact delete AND as
  *   a cascade child of an account delete (`crm_contact.crm_account` is a
@@ -42,12 +43,17 @@ import { createIdentityObjectsPlugin } from '@objectstack/plugin-auth';
  *   holds the lookup, so deleting the referenced record arrives at the guard as
  *   `{ <field>: null }`.
  *
- * Measured on 17.0.0-rc.2 (pinned by the first test below), the hook context in
- * the cascade case carries no marker at all: the same keys, and a `session`
- * that is the caller's own. So the fix is not to detect the cascade — it is to
- * phrase every refusal from the BLOCKING RELATIONSHIP, which is true in both
- * contexts. The messages name the refusing record, the references that block,
- * and what to do.
+ * Measured on 17.0.0-rc.2, the hook context in the cascade case carried no
+ * marker at all: the same keys, and a `session` that is the caller's own. So
+ * the fix is not to detect the cascade — it is to phrase every refusal from the
+ * BLOCKING RELATIONSHIP, which is true in both contexts. The messages name the
+ * refusing record, the references that block, and what to do.
+ *
+ * Since 18.0.0-next.2 the platform declares one marker: the engine's cascade
+ * child delete carries `ctx.referentialCascadeDelete === true`, and nothing
+ * else tells it apart (objectstack#23221, 584e737). The first test below now
+ * pins that. These guards do not read the key yet, so their messages are
+ * unchanged and still true in both contexts.
  *
  * ⚠️ Superseded in part by #720. The three `beforeUpdate` locks no longer refuse
  * the referential clear at all — they yield to it on the write SHAPE, so those
@@ -148,20 +154,26 @@ const accountWithContact = async (label: string) => {
   return { account, contact };
 };
 
-// ────────────────────────────── the premise: no cascade marker in the ctx ──
+// ─────────────────────── the premise: one declared cascade marker in the ctx ──
 
-describe('a guard cannot tell a cascade from a direct write', () => {
+describe('a guard tells a cascade from a direct write by the declared key only', () => {
   /**
-   * The measurement the whole fix rests on. If a future platform version starts
-   * marking referential writes, this test fails — and the messages below can be
-   * re-taken as "…so this ACCOUNT cannot be deleted", which is strictly better.
-   * Treat a failure here as news, not as a regression to paper over.
+   * The measurement the whole fix rests on. Through 18.0.0-next.1 a cascaded
+   * `beforeDelete` carried no marker, and this test asserted none. 18.0.0-next.2
+   * declares `referentialCascadeDelete` (objectstack#23221), and that tripwire
+   * fired as it was written to: the messages below can now be re-taken as
+   * "…so this ACCOUNT cannot be deleted", which is strictly better, by reading
+   * that key and no other. If the key disappears, or an undeclared marker
+   * appears beside it, this test fails. Treat a failure here as news.
    */
-  it('carries no cascade flag on a cascaded beforeDelete or referential update', async () => {
+  it('marks a cascaded beforeDelete with referentialCascadeDelete and nothing else', async () => {
     const seen: AnyRec[] = [];
     ql.registerHook('beforeDelete', async (ctx: AnyRec) => {
       if (ctx.object !== 'crm_contact') return;
-      seen.push({ where: 'contact.beforeDelete', keys: Object.keys(ctx), session: ctx.session ?? {} });
+      seen.push({
+        where: 'contact.beforeDelete', keys: Object.keys(ctx), session: ctx.session ?? {},
+        cascade: ctx.referentialCascadeDelete,
+      });
     }, { object: 'crm_contact', priority: 1 });
 
     const { account } = await accountWithContact('Marker Probe');
@@ -171,10 +183,11 @@ describe('a guard cannot tell a cascade from a direct write', () => {
     expect(seen, 'the cascade never reached the contact guard').toHaveLength(1);
     const [probe] = seen;
     const marker = /cascade|referential|__/i;
-    expect(probe.keys.filter((k: string) => marker.test(k))).toEqual([]);
+    expect(probe.keys.filter((k: string) => marker.test(k))).toEqual(['referentialCascadeDelete']);
+    expect(probe.cascade).toBe(true);
     expect(Object.keys(probe.session).filter((k: string) => marker.test(k))).toEqual([]);
     // Positively: the session is the CALLER's, which is exactly why it cannot
-    // be used to tell the two invocations apart.
+    // be used to tell the two invocations apart; only the declared key can.
     expect(probe.session.userId).toBe(userCtx.userId);
   });
 });
