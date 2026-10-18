@@ -3,8 +3,9 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, signUpPerson, systemUpdate, recordEngineWrites, today, daysFromNow, type Person,
+  hotcrmStack, signUpPerson, systemUpdate, recordEngineWrites, runShippedHook, today, daysFromNow, type Person,
 } from './helpers/verify-stack';
+import { hookNamed } from './helpers/composed-stack';
 
 type Rec = Record<string, any>;
 
@@ -1098,6 +1099,140 @@ describe('contact_integrity', () => {
       await expect(deleteContact(contact), ending).resolves.toBeDefined();
       expect(await verify.rows('crm_contract', { id: contract!.id, status: ending }), 'the contract went with the person').toHaveLength(1);
     }
+  });
+});
+
+/**
+ * One primary contact per account (#2060 item 9, A-15). Before this hook every
+ * writer of `is_primary` — Mark as Primary, the form, the data door — left the
+ * account's previous primary flagged too (measured on 18.0.0-next.3), so the
+ * demo's Primary Contacts view listed 11 contacts of 11.
+ */
+describe('contact_primary_per_account', () => {
+  /** An account of the rep's with `n` contacts written as the system; index `primary` is flagged. */
+  const accountWith = async (n: number, primary: number | null, over: Rec = {}): Promise<{ account: Rec; people: Rec[] }> => {
+    const account = await accountOf();
+    const people: Rec[] = [];
+    for (let i = 0; i < n; i++) {
+      const [person] = await verify.seed('crm_contact', [{
+        first_name: 'Pat', last_name: `Primary ${++k}`, email: `primary${k}@hooks-runtime-sales.test`,
+        crm_account: account.id, owner_id: rep.id, is_primary: i === primary, ...over,
+      }]);
+      people.push(person!);
+    }
+    return { account, people };
+  };
+  const primariesOf = async (account: Rec): Promise<string[]> =>
+    (await verify.rows('crm_contact', { crm_account: account.id, is_primary: true })).map((c) => c.id).sort();
+  /** Flag a contact by a write no hook sees — the state an account written before this rule can hold. */
+  const flagUnseen = (id: string) => verify.kernel.getService<Rec>('objectql').update(
+    'crm_contact', { id, is_primary: true }, { where: { id }, context: { isSystem: true, skipAutomations: true } },
+  );
+
+  it('Mark as Primary hands the flag over: the account keeps one primary, and no other account is touched', async () => {
+    const { account, people } = await accountWith(2, 0);
+    const bystander = await accountWith(1, 0);
+    await verify.actions.run('crm_contact', 'mark_primary', { as: rep.token, recordId: people[1]!.id, params: {} });
+    expect(await primariesOf(account)).toEqual([people[1]!.id]);
+    expect(await primariesOf(bystander.account)).toEqual([bystander.people[0]!.id]);
+  });
+
+  it('every write door obeys it: an insert carrying the flag, an update setting it, and a system write', async () => {
+    const { account, people } = await accountWith(3, 0);
+    const added = await repContact({ email: `added${++k}@hooks-runtime-sales.test`, is_primary: true }, account.id);
+    expect(await primariesOf(account), 'insert').toEqual([added.id]);
+    await repUpdates('crm_contact', people[1]!.id, { is_primary: true });
+    expect(await primariesOf(account), 'update').toEqual([people[1]!.id]);
+    await systemUpdate(verify, 'crm_contact', { id: people[2]!.id, is_primary: true });
+    expect(await primariesOf(account), 'system write').toEqual([people[2]!.id]);
+  });
+
+  it('two contacts flagged in one batch: one keeps the flag, never none', async () => {
+    const account = await accountOf();
+    await verify.seed('crm_contact', [1, 2].map(() => ({
+      first_name: 'Bat', last_name: `Ch ${++k}`, email: `batch${k}@hooks-runtime-sales.test`,
+      crm_account: account.id, owner_id: rep.id, is_primary: true,
+    })));
+    expect(await primariesOf(account)).toHaveLength(1);
+  });
+
+  it('a primary contact moved to another account takes the flag there', async () => {
+    const from = await accountWith(1, 0);
+    const to = await accountWith(1, 0);
+    await repUpdates('crm_contact', from.people[0]!.id, { crm_account: to.account.id });
+    expect(await primariesOf(to.account)).toEqual([from.people[0]!.id]);
+  });
+
+  it('only a change moves the flag: re-saving a primary or clearing one writes no other contact', async () => {
+    const { account, people } = await accountWith(3, 0);
+    await flagUnseen(people[1]!.id);
+    const engine = recordEngineWrites(verify);
+    try {
+      await repUpdates('crm_contact', people[0]!.id, { title: 'Head of Buying', is_primary: true });
+      await repUpdates('crm_contact', people[0]!.id, { is_primary: false });
+    } finally {
+      engine.restore();
+    }
+    const others = engine.of('crm_contact', 'update').filter((w) => (w.args[1] as Rec).id !== people[0]!.id);
+    expect(others, 'a write reached another contact').toEqual([]);
+    expect(await primariesOf(account)).toEqual([people[1]!.id]);
+  });
+
+  it('clears every other primary once, and its own clearing writes do not re-run it', async () => {
+    const { account, people } = await accountWith(3, 0);
+    await flagUnseen(people[1]!.id);
+    const engine = recordEngineWrites(verify);
+    try {
+      await repUpdates('crm_contact', people[2]!.id, { is_primary: true });
+    } finally {
+      engine.restore();
+    }
+    const cleared = engine.of('crm_contact', 'update')
+      .map((w) => w.args[1] as Rec)
+      .filter((doc) => doc.is_primary === false)
+      .map((doc) => doc.id)
+      .sort();
+    expect(cleared).toEqual([people[0]!.id, people[1]!.id].sort());
+    expect(await primariesOf(account)).toEqual([people[2]!.id]);
+  });
+
+  it('the clearing writes are the writer’s own: other people’s contacts follow the account, and a writer the account refuses moves nothing', async () => {
+    // `crm_contact` is controlled by its account, so the rep who may write one
+    // of the account's contacts may write all of them, whoever owns them.
+    const { account, people } = await accountWith(2, 0, { owner_id: rep2.id });
+    await repUpdates('crm_contact', people[1]!.id, { is_primary: true });
+    expect(await primariesOf(account)).toEqual([people[1]!.id]);
+    // A second rep cannot write this account's contacts at all, so the flag never moves.
+    const err = await verify.hooks.run('crm_contact', 'update', { id: people[0]!.id, is_primary: true }, as(rep2))
+      .then(() => null, (e: Error & Rec) => e);
+    expect(err, 'a rep outside the account moved its primary contact').toBeTruthy();
+    expect(await primariesOf(account)).toEqual([people[1]!.id]);
+  });
+
+  it('a clearing write that is refused takes the new flag down with it', async () => {
+    const { account, people } = await accountWith(2, 0);
+    const refused = Object.assign(new Error('clearing refused'), { code: 'PERMISSION_DENIED', status: 403 });
+    const engine = recordEngineWrites(verify, (op, object, args) =>
+      (op === 'update' && object === 'crm_contact' && (args[1] as Rec)?.is_primary === false ? refused : undefined));
+    let err: unknown;
+    try {
+      err = await repUpdates('crm_contact', people[1]!.id, { is_primary: true }).then(() => null, (e: unknown) => e);
+    } finally {
+      engine.restore();
+    }
+    expect(err).toMatchObject({ code: 'PERMISSION_DENIED', status: 403 });
+    expect(await primariesOf(account)).toEqual([people[0]!.id]);
+  });
+
+  it('the shipped body reads the stored row from result and clears the others', async () => {
+    const { account, people } = await accountWith(2, 0);
+    await flagUnseen(people[1]!.id);
+    const stored = (await verify.rows('crm_contact', { id: people[1]!.id }))[0]!;
+    await runShippedHook(verify, hookNamed('contact_primary_per_account'), {
+      event: 'afterUpdate', input: { id: stored.id, is_primary: true },
+      previous: { ...stored, is_primary: false }, result: stored, as: rep.token,
+    });
+    expect(await primariesOf(account)).toEqual([people[1]!.id]);
   });
 });
 
