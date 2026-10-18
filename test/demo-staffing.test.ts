@@ -1,13 +1,16 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { CrmSeedData } from '../objectstack.composition';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 import { CrmSharing as sharingBarrel } from './helpers/src-roster';
-import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
+import { hotcrmStack, systemUpdate, type Person } from './helpers/verify-stack';
 import { regionsOf } from './helpers/flow-regions';
+import { REPO_ROOT } from './helpers/repo-root';
 
 /**
  * Demo-org staffing (#640) — the third layer of position-based access.
@@ -35,37 +38,109 @@ import { regionsOf } from './helpers/flow-regions';
  *
  * ### What this file can and cannot check
  *
- * It cannot run the script against a dev server. What it CAN pin is every
- * authoring-time premise the script depends on — that each staffed position is
- * declared, that the positions chosen are the ones the sharing rules and the
- * approval nodes actually name, and — the load-bearing one — that **the
- * published artifact contains no mechanism that could create these people**.
- * That last group is what keeps "a real deployment installs none of them" a
- * structural fact rather than a promise. And it can do what the script does,
- * on the shipped app booted by `@objectstack/verify`: sign the table's people
- * up with the positions the table gives them, re-evaluate the rules through
- * the platform's own door, and read what each person then receives — the
- * territory arithmetic (6/2/1 against the real seeds) and the two case pools.
+ * It pins every authoring-time premise the script depends on — that each
+ * staffed position is declared, that the positions chosen are the ones the
+ * sharing rules and the approval nodes actually name, and — the load-bearing
+ * one — that **the published artifact contains no mechanism that could create
+ * these people**. That last group is what keeps "a real deployment installs
+ * none of them" a structural fact rather than a promise.
+ *
+ * And it RUNS the script (#2129): `scripts/demo-staff.ts`'s own `main()`, its
+ * `fetch` pointed at the shipped app booted by `@objectstack/verify`, so every
+ * request goes through the same Hono app and routes a dev server answers. The
+ * people every block below reads are the ones that run created, signed in
+ * with the table's own passwords; on top of them this file reads the
+ * territory arithmetic (6/2/1 against the real seeds), the two case pools,
+ * and who submitted the large-deal approvals the run opened. What it cannot
+ * reach: a socket and a separate server process (`pnpm dev`), and the
+ * Approvals inbox as a page.
  */
 
 type AnyRec = Record<string, any>;
 
+/** What one run of `scripts/demo-staff.ts` left behind: its exit code and everything it printed. */
+type ScriptRun = { exit: unknown; output: string[] };
+
 /**
- * The demo org on the shipped app: each table row a real sign-up holding the
- * positions the table gives it (a position binds the same-named permission
- * set, which is how the table grants anything), as `pnpm demo:staff` step 2
- * leaves it.
+ * `pnpm demo:staff`, run against the shipped app.
+ *
+ * The script is imported the way `test/backfill-query-bodies.test.ts` imports
+ * it, so its own `main()` runs its real request code; here `fetch` is pointed
+ * at the booted app (`raw` injects the request into the real Hono app at the
+ * origin `@objectstack/verify` serves) instead of being answered by a stub.
+ * `--url` names that origin, and `process.exit` is captured rather than
+ * allowed to end the worker.
+ *
+ * ONE call is answered by the harness instead of by the app: step 1's
+ * `POST /api/v1/auth/admin/create-user`. The verify boot does not mount
+ * better-auth's admin plugin (`auth.plugins.admin`; that route answers 501
+ * here, while `pnpm dev` mounts it), so the person is created through the
+ * harness's own sign-up door with the same email, password and name, and the
+ * script receives the id the way `create-user` returns it. Every later
+ * request, the persona sign-ins included, is the app's.
+ */
+async function runDemoStaff(on: VerifyStack): Promise<ScriptRun> {
+  const origin = 'http://localhost:3000';
+  const realFetch = globalThis.fetch;
+  vi.stubGlobal('fetch', async (input: string | URL | Request, init?: RequestInit) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if (url.origin !== origin) return realFetch(input, init);
+    if (url.pathname === '/api/v1/auth/admin/create-user' && init?.method === 'POST') {
+      const { email, password, name } = JSON.parse(String(init.body));
+      const token = await on.signUp(email, password, name);
+      const id = String((await on.contextFor(token)).userId);
+      return new Response(JSON.stringify({ data: { user: { id, email } } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return on.raw(`${url.pathname}${url.search}`, init);
+  });
+  const output: string[] = [];
+  const capture = (...parts: unknown[]) => { output.push(parts.map(String).join(' ')); };
+  const log = vi.spyOn(console, 'log').mockImplementation(capture);
+  const error = vi.spyOn(console, 'error').mockImplementation(capture);
+  const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+  const argv = process.argv;
+  process.argv = [argv[0]!, 'demo-staffing.test', '--url', origin];
+  try {
+    await import(pathToFileURL(join(REPO_ROOT, 'scripts', 'demo-staff.ts')).href);
+    await vi.waitFor(() => {
+      if (exit.mock.calls.length === 0) throw new Error('scripts/demo-staff.ts has not exited yet');
+    }, { timeout: 150_000, interval: 50 });
+    return { exit: exit.mock.calls[0]?.[0], output };
+  } finally {
+    process.argv = argv;
+    exit.mockRestore();
+    error.mockRestore();
+    log.mockRestore();
+    vi.unstubAllGlobals();
+  }
+}
+
+/**
+ * The demo org on the shipped app, as `pnpm demo:staff` leaves it: the script
+ * creates each table row as a real, loginable account holding the positions
+ * the table gives it (a position binds the same-named permission set, which is
+ * how the table grants anything), hands them the book, re-evaluates the rules
+ * and has each owner save their deals. Each person is then signed in with the
+ * table's password.
  */
 let verify: VerifyStack;
 let admin: string;
+let run: ScriptRun;
 const staffed: Record<string, Person> = {};
 beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
+  run = await runDemoStaff(verify);
   for (const m of DemoOrgStaffing) {
-    staffed[m.key] = await signUpPerson(verify, m.email, { name: m.name, positions: [...m.positions] });
+    const token = await verify.signIn(m.email, m.password).catch((err: unknown) => {
+      throw new Error(`${m.email} cannot sign in after scripts/demo-staff.ts ran (exit ${String(run.exit)}): ${String(err)}\n${run.output.join('\n')}`);
+    });
+    staffed[m.key] = { token, id: String((await verify.contextFor(token)).userId) };
   }
-}, 120_000);
+}, 240_000);
 
 const positions: AnyRec[] = (stack as any).positions ?? [];
 const sharingRules: AnyRec[] = (stack as any).sharingRules ?? [];
@@ -509,6 +584,80 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
       'case_escalation_sharing\u2192service_manager: 1 holder(s)',
       'case_unassigned_triage_sharing\u2192service_agent: 1 holder(s)',
     ]);
+  });
+});
+
+/**
+ * Who asks for the large-deal approvals (#2129) — read off the run in
+ * `beforeAll`, not re-enacted.
+ *
+ * `opportunity_approval` fires on ANY update of an open deal at or above the
+ * large-deal line that is not yet in approval, and the request names the
+ * writer as submitter. A seeded deal opens none (the seed loader writes with
+ * `skipTriggers`), so whoever makes the first write after the seed is the one
+ * who asked. When the script's hand-off PATCHed `owner_id` as the dev admin,
+ * that was the write, and both requests named the dev admin (measured on a
+ * fresh `pnpm dev` box, 18.0.0-next.3). The script's order is what this block
+ * pins: the hand-off goes through the import door with automations off, the
+ * rules are evaluated, and only then does each owner save their deals — so the
+ * request on each of the two seeded open deals over the line names the rep who
+ * owns it and waits on the sales manager, and the dev admin holds none of it.
+ */
+describe('pnpm demo:staff on the shipped app: the owning rep submits each large-deal approval (#2129)', () => {
+  /** The two open deals the seed prices over the line, by name (`test/seed-consistency.test.ts` pins them). */
+  const LARGE_OPEN_DEALS = ['Acme Platform Upgrade', 'Wayne Enterprise License'];
+
+  it('finishes with its own verdict green', () => {
+    expect(run.exit, `scripts/demo-staff.ts did not connect:\n${run.output.join('\n')}`).toBe(0);
+  });
+
+  it("opens each large deal's request on its owner's save, waiting on the sales manager", async () => {
+    const adminId = String((await verify.contextFor(admin)).userId);
+    const personaIds = new Set(Object.values(staffed).map((p) => p.id));
+    const manager = staffed[holdersOf('sales_manager')[0]!.key]!.id;
+    const deals = await verify.rows('crm_opportunity', { name: { $in: LARGE_OPEN_DEALS } });
+    expect(deals.map((d) => String(d.name)).sort(), 'the seeded large open deals are not both there').toEqual(
+      [...LARGE_OPEN_DEALS].sort(),
+    );
+
+    for (const deal of deals) {
+      const owner = String(deal.owner_id ?? '');
+      expect(personaIds.has(owner), `${deal.name} is owned by ${owner || 'nobody'}, not by a demo person`).toBe(true);
+      const requests = await verify.rows('sys_approval_request', {
+        object_name: 'crm_opportunity',
+        record_id: deal.id,
+        status: 'pending',
+      });
+      expect(requests.length, `${deal.name}: ${requests.length} pending approval request(s), expected its one`).toBe(1);
+      const [request] = requests;
+      expect(
+        String(request!.submitter_id),
+        `${deal.name}: the request names ${request!.submitter_id === adminId ? 'the DEV ADMIN' : request!.submitter_id} ` +
+        `as submitter, not the rep who owns the deal. The hand-off opened it again: the deal went over with ` +
+        `automations on, or an owner's save stopped being the first write after the seed.`,
+      ).toBe(owner);
+      expect(request!.current_step).toBe('manager_review');
+      expect(String(request!.pending_approvers ?? '').split(','), `${deal.name}: not waiting on the sales manager`).toEqual([
+        manager,
+      ]);
+    }
+  });
+
+  it("leaves the dev admin's inbox empty and decides nothing", async () => {
+    // Wayne's director tier lands on the admin (`admin_rescue`) only once the
+    // sales manager approves the manager tier; the script approves nothing, so
+    // the admin waits on none of these and every action on them is a submit.
+    const adminId = String((await verify.contextFor(admin)).userId);
+    const deals = await verify.rows('crm_opportunity', { name: { $in: LARGE_OPEN_DEALS } });
+    const dealIds = new Set(deals.map((d) => String(d.id)));
+    const res = await verify.apiAs(admin, 'GET', `/approvals/requests?status=pending&approverId=${adminId}`);
+    expect(res.status, await res.clone().text()).toBe(200);
+    const inbox = ((await res.json()).data ?? []) as AnyRec[];
+    expect(inbox.filter((r) => dealIds.has(String(r.record_id))).map((r) => String(r.current_step))).toEqual([]);
+
+    const requests = await verify.rows('sys_approval_request', { object_name: 'crm_opportunity', record_id: { $in: [...dealIds] } });
+    const actions = await verify.rows('sys_approval_action', { request_id: { $in: requests.map((r) => r.id) } });
+    expect(actions.map((a) => String(a.action)).sort()).toEqual(requests.map(() => 'submit'));
   });
 });
 
