@@ -21,8 +21,14 @@ import type { LineSpec } from '../../sales/data/_shared';
 // validation rule that "has never once evaluated" while the field was blank
 // everywhere, and margin is what the product-mix analytics are for. Every row
 // keeps cost strictly below list price.
+//
+// INSERT-ONCE (`mode: 'ignore'`, #2139): the catalogue is the customer's to
+// rename, re-price and delete (the maintainer ruling quoted at
+// `SaasTenantSeedData` in `objectstack.composition.ts`), and under `upsert`
+// the next boot wrote an admin's new price back to the seeded one. The mechanism and the price:
+// beside `leads` in `src/sales/data/sales.seed.ts`.
 export const products = defineSeed(Product, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'name',
   records: [
     {

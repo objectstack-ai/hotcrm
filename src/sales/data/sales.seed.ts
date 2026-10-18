@@ -173,8 +173,13 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // their sign-off, so the row says so.
 // ⛔ Do not "fix" it with an `approved` field default instead: that switches
 // the gate off for every account a user creates.
+//
+// INSERT-ONCE (`mode: 'ignore'`, #2139): an account is the rep's to keep
+// current (its phone, address, tier, health score), and under `upsert` every
+// boot wrote the seeded value back over each edited field. The mechanism and
+// the price are written once, beside `leads` below.
 export const accounts = defineSeed(Account, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'name',
   records: [
     {
@@ -419,8 +424,12 @@ three regional teams (NA, EMEA, APAC).
 });
 
 // ─── Contacts ─────────────────────────────────────────────────────────
+// INSERT-ONCE (`mode: 'ignore'`, #2139): which contact is an account's primary
+// is the rep's call (Mark as Primary). Under `upsert` the next boot wrote
+// `is_primary: true` back on the seeded contact, and the one-primary rule
+// (`contact_primary_per_account`) then cleared the rep's choice.
 export const contacts = defineSeed(Contact, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'email',
   records: [
     {
@@ -543,7 +552,8 @@ const DISQUALIFICATION_REASONS = [
   { reason: 'unreachable',   note: 'Six touches across email and phone over four weeks, no response.' },
 ] as const;
 
-// INSERT-ONCE (`mode: 'ignore'`), unlike the datasets around it (#2134). A
+// INSERT-ONCE (`mode: 'ignore'`), like every dataset whose records a person
+// works (#2134, #2139); this note is the one full account of why. A
 // lead's `status` is the rep's to move, and Convert Lead moves it to
 // `converted` together with `is_converted` and the `converted_*` links. Under
 // `upsert` the platform re-applies this dataset on every boot (the loader's
@@ -560,7 +570,8 @@ const DISQUALIFICATION_REASONS = [
 // knowingly: the relative dates below (`next_followup_date`,
 // `last_contacted_date`) keep the values of the boot that inserted them, and a
 // later edit to a record here reaches only a database that does not hold that
-// lead yet. Pinned across a real restart in `test/lead-seed-replay.test.ts`.
+// lead yet. Pinned across a real restart in `test/lead-seed-replay.test.ts`;
+// the other insert-once datasets in `test/seed-replay-user-edits.test.ts`.
 export const leads = defineSeed(Lead, {
   mode: 'ignore',
   externalId: 'email',
@@ -847,8 +858,13 @@ const dealValue = (opportunityName: string, probability: number) => {
 // `days_in_stage` numbers (#489). Open deals carry an age that spans the
 // 14-day stale threshold in both directions; settled deals entered their
 // closed stage on their close date.
+//
+// INSERT-ONCE (`mode: 'ignore'`, #2139): a deal's stage, amount and close date
+// are the rep's to move. Under `upsert` the next boot wrote the seeded stage
+// back over a moved deal, a move `opportunity_stage_progression` forbids (seed
+// writes skip it). Mechanism and price: beside `leads` above.
 export const opportunities = defineSeed(Opportunity, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'name',
   records: [
     {
