@@ -75,6 +75,12 @@ Both of those you set up by hand, and that is the only way a series starts here:
 
 The **renewal reminder is not one of them**. The daily renewal sweep files an ordinary high-priority follow-up — no recurrence fields on it — against *Activated* contracts whose end date has come within that contract's own **Renewal Notice (Days)**, **30** by default and set per contract, not a fixed 60. It returns each morning because the sweep runs again and skips any contract that still has an open one, not because of a recurrence rule: complete it and, while the contract is still inside its window, tomorrow's sweep files a fresh task. The [Contracts](/docs/revenue/contracts) page describes that sweep in full.
 
+## Completing a task
+
+An open task carries a **Complete** button in two places: at the top of the task's own page, and on the task's row in the task list, beside the row's **⋯** menu. One click marks the task **Completed**; the completion date and the 100% progress follow from that, exactly as when you edit the status yourself (see below). A task that is already completed shows no button.
+
+**Complete** acts as you: it completes a task you are allowed to edit and no other. There is no confirmation and no Undo. To reopen a task, edit its status back; the completion date it was given stays on the record.
+
 ## What happens automatically
 
 - **Mark completed** → `is_completed` is set to true, `completed_date` is stamped to now, and `progress_percent` becomes 100. You don't have to set any of these manually.

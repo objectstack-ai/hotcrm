@@ -96,6 +96,12 @@ export const activity: Record<string, ObjectTranslationData> = {
       related_records: { label: '关联记录' },
       recurrence_and_effort: { label: '重复与工时' },
     },
+    _actions: {
+      complete_task: {
+        label: '完成',
+        successMessage: '任务已完成。',
+      },
+    },
     _views: {
       all_tasks: { label: '全部任务' },
       task_board: { label: '任务看板' },
