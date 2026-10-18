@@ -109,3 +109,64 @@ export function createLineItemNumbering(objectName: string, hookName: string): H
     },
   };
 }
+
+/**
+ * Shared product-title writer (#2086). `product_title` is each line object's
+ * `nameField`, and this hook writes it from the line side.
+ *
+ * It writes the product's `display_title` (`product_code - name`) in three
+ * cases. A product is part of THIS write: an insert, or a re-point to another
+ * product. Or an update reaches a row that has no title yet, which is what
+ * heals a line older than the field. The rename half lives on `crm_product`
+ * (`product_title_mirror`, `product.hook.ts`), so the governing table in
+ * `skills/objectstack-data/SKILL.md` is covered on both sides.
+ *
+ * The title is read as a column, `fields: ['display_title']`. The engine
+ * computes a formula on read, so the line carries exactly what the product's
+ * own surfaces show. `ctx.title('crm_product')` would follow the product's
+ * `nameField` pointer instead. The hook does not use it, because the hook
+ * context under `@objectstack/verify` has no `ctx.title`
+ * (objectstack-ai/objectstack#24289). Until that ships, a test pins
+ * `crm_product.nameField` to `display_title`, so the two cannot drift apart.
+ *
+ * A no-user write that carries its own title keeps it. That is
+ * `product_title_mirror` re-stamping after a rename. A user's value is never
+ * kept: the field is `readonly`, so the engine drops it unless this hook wrote
+ * it. A PREDICATE update hands every row one shared payload (the ADR-0058
+ * Addendum II D3 note in `forecast.hook.ts`). So the fill, which reads
+ * `ctx.previous`, stands down there. A product named in that payload is the
+ * same for every row, so its title still lands.
+ *
+ * Priority 105 sits after the line freezes (90), so a caller's own payload is
+ * what they judge. Body-only rule as above: the body closes over `ctx` alone.
+ */
+export function createLineItemProductTitle(objectName: string, hookName: string): Hook {
+  return {
+    name: hookName,
+    object: objectName,
+    events: ['beforeInsert', 'beforeUpdate'],
+    priority: 105,
+    description: "Copy the product's title onto the line; it is the line's nameField.",
+    handler: async (ctx: HookContext) => {
+      const { event, input } = ctx;
+      const prev = ctx.previous;
+      const api = ctx.api as HookApi | undefined;
+      if (!api) return;
+      if (!ctx.user?.id && typeof input.product_title === 'string' && input.product_title.trim() !== '') return;
+      const untitled = typeof prev?.product_title !== 'string' || prev.product_title.trim() === '';
+      let productId: string | undefined;
+      if (typeof input.crm_product === 'string' && input.crm_product) {
+        productId = input.crm_product;
+      } else if (event === 'beforeUpdate' && ctx.dispatch?.mode !== 'per-row' && untitled
+        && typeof prev?.crm_product === 'string' && prev.crm_product) {
+        productId = prev.crm_product;
+      }
+      if (!productId) return;
+      const product = await api.object('crm_product').findOne({
+        where: { id: productId }, fields: ['id', 'display_title'],
+      });
+      const title = product && typeof product.display_title === 'string' ? product.display_title.trim() : '';
+      if (title) input.product_title = title;
+    },
+  };
+}

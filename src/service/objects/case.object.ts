@@ -231,10 +231,11 @@ export const Case = ObjectSchema.create({
       scale: 2,
     }),
     
-    // Stamped once, on the first write that gives the case a priority, from the
-    // priority × account-tier matrix in `./_case-sla.ts` (`case_sla_defaults`).
-    // Not `readonly`: a service manager may legitimately renegotiate a deadline,
-    // and the hook never overwrites a value that is already there.
+    // Stamped on the first write that gives the case a priority, from the
+    // priority × account-tier matrix in `./_case-sla.ts` (`case_sla_defaults`),
+    // and re-derived — earlier only — by a priority change that tightens the
+    // window (#2073). Not `readonly`: a service manager may legitimately
+    // renegotiate a deadline, and no other write moves a value already there.
     sla_due_date: Field.datetime({
       label: 'SLA Due Date',
       description: 'Set from the case priority and the account’s Customer Tier, in calendar hours: nights, weekends and holidays count.',
