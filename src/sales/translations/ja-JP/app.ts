@@ -543,8 +543,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     sales_home_page: {
       label: '営業ホーム',
       description: '主要指標、自分の未完了の仕事、今後の予定をまとめた営業チームのホームページ',
-      title: '営業ダッシュボード',
-      subtitle: 'おかえりなさい',
       components: {
         kpi_revenue_won: {
           label: '受注売上',
