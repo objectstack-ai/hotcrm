@@ -13,7 +13,8 @@ type Rec = Record<string, any>;
  * (`flows.resume`), the quote and the opportunity read back off the engine.
  *
  * Guards the P0 CPQ fix: the flow's `recordId` input contract, the priced
- * create_quote (subtotal / discount_amount / total from the opportunity), the
+ * quote (the opportunity's amount as subtotal, and the discount_amount / total
+ * that `quote_workflow` derives inside that same insert, #2110), the
  * account/contact carry-over, the stage → proposal advance, that a
  * contact-LESS opportunity can still draft a quote (crm_quote.crm_contact was
  * relaxed to optional), that a deal awaiting approval gets its quote and
@@ -99,7 +100,7 @@ describe('quote_generation flow — runtime', () => {
    * only evidence the rounding works.
    *
    * Both discounts are measured on a 180,000 opportunity, and between them they
-   * cover both edited expressions: at 30% (the issue's own measurement) only
+   * cover both figures: at 30% (the issue's own measurement) only
    * `total_price` is inexact (125999.99999999999); at 34% both are
    * (61200.00000000001 and 118799.99999999999). The issue's second measurement,
    * 70%, is above the 60% ceiling `crm_quote` enforces, so no real quote can
@@ -298,15 +299,14 @@ describe('quote_generation flow — the 立项 gate (#2032)', () => {
 });
 
 /**
- * The two pricing expressions are CEL value envelopes (#1984), and CEL divides
- * an int by an int as INTEGERS. `round()` returns an int, so `round(x * 100) /
- * 100` silently drops the cents there; only the decimal divisor `/ 100.0`
- * keeps them. The pins above cannot see that: every amount they use prices to
- * whole units. 1,234.56 at 10% is 123.456 → 123.46 with the decimal divisor
- * and 123 with an integer one, and the total 1,111.104 → 1,111.10 vs 1,111 —
- * so these go red if either divisor loses its `.0`.
+ * Cents survive the pricing (#1984). The figures were CEL value envelopes in
+ * the flow then, where an integer divisor dropped the cents; since #2110 they
+ * are `quote_workflow`'s derivation inside the flow's insert. The pins above
+ * cannot see a lost cent: every amount they use prices to whole units.
+ * 1,234.56 at 10% is 123.456 → 123.46, and the total 1,111.104 → 1,111.10, so
+ * these go red if the derivation rounds to whole units instead of cents.
  */
-describe('quote_generation flow — CEL pricing (#1984)', () => {
+describe('quote_generation flow — pricing keeps the cents (#1984)', () => {
   const quoteAt = async (amount: unknown, screen: Rec) => {
     const opp = await opportunity({ name: 'Cents Deal', amount, primary_contact: null });
     const quotes = await runQuote(opp.id, { quoteName: 'Q-4', expirationDays: 30, ...screen });
@@ -314,15 +314,14 @@ describe('quote_generation flow — CEL pricing (#1984)', () => {
     return quotes[0]!;
   };
 
-  it('keeps the cents: both divisors are decimal, not integer division', async () => {
+  it('keeps the cents: both figures round to the cent, not to the unit', async () => {
     const q = await quoteAt(1234.56, { discount: 10 });
     expect(q.discount_amount).toBe(123.46);
     expect(q.total_price).toBe(1111.1);
   });
 
-  // The template dialect read a cleared discount as 0. A bare `double(discount)`
-  // ERRORS on null, which would fail the quote instead — the guard keeps the
-  // old pricing: no discount, full price.
+  // A cleared discount reaches the insert as null or "", and the derivation
+  // reads anything but a number as 0%: no discount, full price.
   it.each([null, ''])('prices a cleared discount (%j) as no discount', async (discount) => {
     const q = await quoteAt(180000, { discount });
     expect(q.discount_amount).toBe(0);
