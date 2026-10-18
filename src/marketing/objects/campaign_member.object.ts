@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { P } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 
 /**
  * Campaign Member Object
@@ -126,8 +126,8 @@ export const CampaignMember = ObjectSchema.create({
       // It is a SUPERSET of the fallback it replaces — Lead / Contact /
       // Status / Response Date, in that order — plus the one column the panel
       // was missing. `added_date` is the enrollment stamp: `readonly: true`
-      // (#1667) and written on every enrollment by the two elevated sub-flows
-      // #1807 built for it, so a marketer could see WHEN a member responded
+      // (#1667) and stamped on every insert by the field's own default (see
+      // the field below), so a marketer could see WHEN a member responded
       // but not when they were added, on a register whose whole subject is
       // the enrollment. It sits after the person and before the response
       // lifecycle, which is the order the row happens in.
@@ -172,28 +172,44 @@ export const CampaignMember = ObjectSchema.create({
       description: 'Set when the member is an existing Contact',
     }),
 
-    // ⭐ `readonly: true` — DECLARED, and it still costs no writer its write,
-    // but the reason CHANGED on the @objectstack/* 17.4.0 migration. It used to
-    // be "the strip is an UPDATE-path rule and every writer here is an INSERT".
-    // objectql 17.4.0 retired that: a static readonly field is now stripped from
-    // a NON-SYSTEM caller's INSERT payload inside `engine.insert` too, so an
-    // ordinary user-context create no longer seeds this column.
+    // ⭐ ONE writer: this field's own `defaultValue`, a write-moment stamp
+    // (#2142). No caller writes `added_date` — not a flow, not an action, not a
+    // hook — and none has to remember to.
     //
-    // Every writer is therefore elevated now, and the elevation is scoped as
-    // narrowly as AGENTS.md house rule 9 requires — the `campaign_enrollment`
-    // SCREEN flow stays `runAs: 'user'` and hands only the insert to
-    // `campaign_lead_member_enroll` / `campaign_contact_member_enroll`
-    // (`runAs: 'system'`, one `create_record` each); the marketing seed is a
-    // system write already. Nothing updates it: there is no `update_record`
-    // node, no hook and no action that writes `added_date`. This column's own
-    // two halves are pinned in `test/audit-stamp-readonly.test.ts` — the
-    // enrollment writers still stamp it, and a user-context UPDATE is stripped.
-    // Ruled #1667 (director seat, decision batch #74, 2026-09-07): an
-    // enrollment stamp nobody is meant to hand-edit gets the declaration that
-    // says so. ⛔ The 16.x claim this note used to carry ("every member landed
-    // with a null Added Date while the flag was on") described an engine this
-    // repo no longer runs; ⛔ do not resurrect it as a reason to open the
-    // column back up.
+    // Why it is declared here rather than written by the callers: a member is
+    // created through four doors — the console's **New** on a members list (a
+    // user-context `POST /api/v1/data/crm_campaign_member`), the
+    // `create_campaign` / `add_contact_to_campaign` list actions, the two
+    // `campaign_enrollment` sub-flows, and the seed. Until #2142 the stamp was
+    // written by the sub-flows and the seed alone, so the first two doors
+    // stored a blank Added Date (measured on 18.0.0-next.3: `201` with
+    // `added_date: null`). A declared default is the one rule the engine
+    // applies to every insert, and unlike a `beforeInsert` stamp no early
+    // `return` in a handler can skip it.
+    //
+    // How it meets `readonly: true` (measured on 18.0.0-next.3 and pinned in
+    // `test/campaign-member-lifecycle.test.ts`):
+    //   • a user-context insert that OMITS the column gets the default;
+    //   • one that SUPPLIES a value has it stripped (a non-system create may
+    //     not seed a readonly column, objectql 17.4.0 on) and the engine
+    //     re-derives the default for the stripped key, so the stamp still
+    //     lands and a caller cannot back-date a membership;
+    //   • a SYSTEM insert that supplies a value keeps it, because a default
+    //     fills only a missing value: the marketing seed's authored
+    //     `daysAgo(n)` dates land as written.
+    // An expression, `now()`, not the `'NOW()'` token: `@objectstack/spec`
+    // documents the token as the one a SQL driver also turns into a physical
+    // column DEFAULT, while an expression default is evaluated by the engine
+    // alone, so an existing database needs no schema change for this.
+    //
+    // The `readonly` half stands as ruled in #1667 (director seat, decision
+    // batch #74, 2026-09-07): an enrollment stamp nobody is meant to hand-edit
+    // gets the declaration that says so. Nothing updates it, and a
+    // user-context UPDATE is stripped — pinned in
+    // `test/audit-stamp-readonly.test.ts`. ⛔ The 16.x claim this note used to
+    // carry ("every member landed with a null Added Date while the flag was
+    // on") described an engine this repo no longer runs; ⛔ do not resurrect it
+    // as a reason to open the column back up.
     //
     // Grouped under `basic`, not `response` (#715): it records when the
     // membership was created, which is a fact about the enrollment, not a step
@@ -202,6 +218,7 @@ export const CampaignMember = ObjectSchema.create({
       label: 'Added Date',
       group: 'basic',
       readonly: true,
+      defaultValue: cel`now()`,
     }),
 
     // Writers, one per surviving value (#597):

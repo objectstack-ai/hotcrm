@@ -5,6 +5,7 @@ import type { VerifyStack } from '@objectstack/verify';
 import campaignMemberHooks from '../src/marketing/objects/campaign_member.hook';
 import { CampaignMember } from '../src/marketing/objects/campaign_member.object';
 import { Campaign } from '../src/marketing/objects/campaign.object';
+import { campaignMembersFromLeads, campaignMembersFromContacts } from '../src/marketing/data/marketing.seed';
 import stack, { localePacks } from './helpers/composed-stack';
 import campaignHooks, { CAMPAIGN_METRIC_FIELDS } from '../src/marketing/objects/campaign.hook';
 // The two hooks of this family that fire on a SALES object live beside that
@@ -195,6 +196,126 @@ describe('campaign_member_lifecycle', () => {
   });
 });
 
+// ──────────────────────────────────────── added_date, every door (#2142) ──
+
+/**
+ * `added_date` has ONE writer: the field's own write-moment `defaultValue`.
+ *
+ * Until #2142 the stamp was written by the two enrollment sub-flows (and the
+ * seed) alone, so a member added through the members panel's **New** — a
+ * user-context `POST /api/v1/data/crm_campaign_member` — or through **Add to
+ * Campaign** answered `201` with `added_date: null` (measured on
+ * 18.0.0-next.3). Each door below is driven the way its caller drives it, and
+ * the stored row is read back. A stamp is asserted to fall inside the write
+ * window, not merely to be present, so a value that came from anywhere but the
+ * write moment fails.
+ */
+describe('added_date is stamped on every insert, whichever door (#2142)', () => {
+  const DAY = 86_400_000;
+  const BACKDATED = '2020-01-01T00:00:00.000Z';
+
+  /** Run `write` and return the instants just before and after it. */
+  const windowed = async <T>(write: () => Promise<T>): Promise<{ value: T; from: number; to: number }> => {
+    const from = Date.now();
+    const value = await write();
+    return { value, from, to: Date.now() };
+  };
+  const expectWithin = (stamp: unknown, w: { from: number; to: number }, why: string): void => {
+    expect(typeof stamp, `${why}: no added_date was stored`).toBe('string');
+    const at = Date.parse(String(stamp));
+    expect(at >= w.from && at <= w.to, `${why}: added_date ${String(stamp)} is not the write moment`).toBe(true);
+  };
+  /** The console's New door: a REST create as the marketer, answering the new row's id. */
+  const createByRest = async (body: Rec): Promise<string> => {
+    const res = await verify.apiAs(marketer.token, 'POST', '/data/crm_campaign_member', body);
+    expect(res.status, await res.clone().text()).toBe(201);
+    const answer: Rec = await res.json();
+    return String((answer.record ?? answer.data ?? answer).id);
+  };
+
+  it('the console New door: a marketing user’s REST create stores the write moment', async () => {
+    const campaign = await campaignOf();
+    const w = await windowed(async () => createByRest({ crm_campaign: campaign.id, crm_lead: (await people()).lead.id, status: 'sent' }));
+    expectWithin((await stored('crm_campaign_member', w.value)).added_date, w, 'a member added through New');
+  });
+
+  it('a caller-supplied added_date does not survive the create: the stamp is still the write moment', async () => {
+    // `readonly` strips the caller's value from a non-system create; what
+    // lands instead is the default, re-derived for the stripped key.
+    const campaign = await campaignOf();
+    const { lead } = await people();
+    const w = await windowed(() => createByRest({ crm_campaign: campaign.id, crm_lead: lead.id, status: 'sent', added_date: BACKDATED }));
+    const row = await stored('crm_campaign_member', w.value);
+    expect(String(row.added_date), 'a caller back-dated the membership').not.toContain('2020-01-01');
+    expectWithin(row.added_date, w, 'a member created with a back-dated payload');
+  });
+
+  it('the Add to Campaign list action, a separate door, stamps it too', async () => {
+    // `create_campaign` inserts in its own body and never reaches the
+    // enrollment sub-flows, so before #2142 its members were born blank.
+    const campaign = await campaignOf();
+    const { lead } = await people();
+    const w = await windowed(() => verify.actions.run('crm_lead', 'create_campaign', {
+      as: marketer.token, recordId: lead.id, params: { crm_campaign: campaign.id },
+    }));
+    const rows = await verify.rows('crm_campaign_member', { crm_campaign: campaign.id });
+    expect(rows, 'the action enrolled nobody').toHaveLength(1);
+    expectWithin(rows[0]!.added_date, w, 'a member added through Add to Campaign');
+  });
+
+  it('control: the enrollment sub-flow, which no longer writes the column, still lands it', async () => {
+    // Started the way `campaign_enrollment`'s `subflow` node hands it the
+    // insert: as the callee's own `runAs: 'system'`, with its two inputs.
+    const campaign = await campaignOf();
+    const { lead } = await people();
+    const w = await windowed(() => verify.flows.run('campaign_lead_member_enroll', { campaignId: campaign.id, leadId: lead.id }, { system: true }));
+    const run = w.value as Rec;
+    expect(run.success, String(run.error ?? '')).toBe(true);
+    const rows = await verify.rows('crm_campaign_member', { crm_campaign: campaign.id });
+    expect(rows, 'the sub-flow enrolled nobody').toHaveLength(1);
+    expectWithin(rows[0]!.added_date, w, 'a member the enrollment sub-flow inserted');
+  });
+
+  it('a value a system write supplies is kept: the stamp fills only a missing one', async () => {
+    const campaign = await campaignOf();
+    const { lead } = await people();
+    const row = await verify.hooks.run('crm_campaign_member', 'insert', {
+      crm_campaign: campaign.id, crm_lead: lead.id, status: 'sent', added_date: '2026-03-02T00:00:00.000Z',
+    }, { system: true });
+    expect(new Date(String((await stored('crm_campaign_member', row.id)).added_date)).toISOString()).toBe('2026-03-02T00:00:00.000Z');
+  });
+
+  /**
+   * The seed is that system write. Each authored member says `daysAgo(n)`,
+   * which the loader resolves to midnight UTC n days before the boot, so the
+   * stored stamp sits between n and n+1 days before the row's own
+   * `created_at`. A default that overwrote it would sit at `created_at`.
+   */
+  it('the seeded members keep the dates the seed authored', async () => {
+    const authored = [...campaignMembersFromLeads.records, ...campaignMembersFromContacts.records] as Rec[];
+    expect(authored.length, 'no authored member rows were found').toBeGreaterThan(0);
+    const idOf = async (object: string, where: Rec): Promise<string> => {
+      const [row] = await verify.rows(object, where);
+      expect(row, `${object} ${JSON.stringify(where)} was not seeded`).toBeTruthy();
+      return String(row!.id);
+    };
+    const drifted: string[] = [];
+    for (const spec of authored) {
+      const daysAgo = Number(/daysAgo\((\d+)\)/.exec(String((spec.added_date as Rec)?.source))?.[1]);
+      expect(Number.isInteger(daysAgo), `an authored added_date is not daysAgo(n): ${JSON.stringify(spec.added_date)}`).toBe(true);
+      const where: Rec = { crm_campaign: await idOf('crm_campaign', { name: spec.crm_campaign }) };
+      if (spec.crm_lead) where.crm_lead = await idOf('crm_lead', { email: spec.crm_lead });
+      else where.crm_contact = await idOf('crm_contact', { email: spec.crm_contact });
+      const [row] = await verify.rows('crm_campaign_member', where);
+      const age = Date.parse(String(row?.created_at)) - Date.parse(String(row?.added_date));
+      if (!(age >= daysAgo * DAY && age < (daysAgo + 1) * DAY)) {
+        drifted.push(`${JSON.stringify(where)}: authored daysAgo(${daysAgo}), stored ${String(row?.added_date)}`);
+      }
+    }
+    expect(drifted, `seeded members whose authored added_date did not land:\n  ${drifted.join('\n  ')}`).toEqual([]);
+  });
+});
+
 // ─────────────────────────────────────────────────── the opt-out loop ──
 
 describe('campaign_member_optout_sync', () => {
@@ -379,7 +500,7 @@ describe('every surviving member field and campaign metric has a writer', () => 
     crm_campaign: 'campaign_enrollment flow / create_campaign / add_contact_to_campaign',
     crm_lead: 'campaign_enrollment flow (leads branch) / create_campaign',
     crm_contact: 'campaign_enrollment flow (contacts branch) / add_contact_to_campaign',
-    added_date: 'campaign_enrollment flow',
+    added_date: 'its own write-moment defaultValue, on every insert (#2142)',
     status: 'enrollment (sent) / mark_responded / campaign_lead_conversion_refresh / rep unsubscribe',
     response_date: 'mark_responded action + campaign_member_lifecycle',
     has_responded: 'campaign_member_lifecycle',
