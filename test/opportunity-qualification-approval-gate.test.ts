@@ -201,9 +201,12 @@ describe('the approval branches leave the gate unable to re-enter, and trip no o
   const node = (id: string) => (FLOW.nodes as Rec[]).find((n) => n.id === id);
   const edge = (label: string) => (FLOW.edges as Rec[]).find((e) => e.source === reviewNode?.id && e.label === label);
 
-  it('approve stamps `approved` and nothing else — no stage, no request', () => {
-    expect(edge('approve')?.target).toBe('mark_qualified');
-    expect(node('mark_qualified')?.config?.fields).toEqual({ qualification_approval_status: 'approved' });
+  it('approve writes nothing of its own — the mirror\'s `approved` is the verdict, so no stage, no request', () => {
+    // #2061: an `update_record` restating `approved` ran as the submitter and
+    // re-stamped `updated_by`; the decision is the approver's, pinned in
+    // `test/approval-decision-attribution.test.ts`.
+    expect(edge('approve')?.target).toBe('end');
+    expect(reviewNode?.config?.approvalStatusField).toBe('qualification_approval_status');
   });
 
   it('reject unticks the request and keeps the verdict `rejected` — still armed, free to ask again', () => {
