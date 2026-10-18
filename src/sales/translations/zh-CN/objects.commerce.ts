@@ -99,6 +99,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_quote: { label: '关联报价单' },
       crm_product: { label: '产品' },
       description: { label: '描述' },
+      product_title: { label: '产品标题', help: '产品的标题，随产品同步更新，用作此明细行的名称。' },
       quantity: { label: '数量' },
       list_price: { label: '标价' },
       unit_price: { label: '销售单价' },

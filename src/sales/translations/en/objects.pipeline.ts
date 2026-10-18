@@ -371,6 +371,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       crm_opportunity: { label: 'Opportunity' },
       crm_product: { label: 'Product' },
       description: { label: 'Description' },
+      product_title: { label: 'Product Title', help: "The product's title, kept in step with the product. It names this line." },
       quantity: { label: 'Quantity' },
       list_price: { label: 'List Price', help: "Auto-populated from the product's List Price." },
       unit_price: {

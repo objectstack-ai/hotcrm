@@ -11,6 +11,7 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * - Refuses delete when the product is referenced by ANY opportunity or quote
  *   line item (historical included — deals keep their line history); suggests
  *   deactivating (`is_active=false`) instead.
+ * - `product_title_mirror`: keeps a renamed product's title on its line items.
  */
 
 const productHook: Hook = {
@@ -76,4 +77,73 @@ const productHook: Hook = {
   },
 };
 
-export default productHook;
+/**
+ * A renamed product renames its line items (#2086).
+ *
+ * Both line objects name a line by `product_title`, a stored copy of this
+ * product's `display_title` (`product_code - name`). The rename side of the
+ * governing table in `skills/objectstack-data/SKILL.md` ("mirror the value,
+ * always") is this hook. The line side is `*_line_item_product_title`
+ * (`_line-item-price-fill.ts`).
+ *
+ * It acts only on a write that carries `name`. `product_code` is an
+ * autonumber the engine issues once. It re-reads the title as the engine
+ * computes it, and re-writes only lines whose copy differs. So an edit that
+ * resends an unchanged name reads the lines and writes none.
+ * `scripts/backfill-line-product-title.ts` relies on that: it resends each
+ * product's own name to stamp the lines that predate the field.
+ *
+ * Every line follows, frozen parents included (#2086 ruling 2): a closed
+ * deal's lines and an accepted or expired quote's lines. The title is a name,
+ * not a figure, and the line's own header already shows the live product chip
+ * beside it. `runAs: 'system'` is what lets the re-stamp through. Both line
+ * freezes judge user writes only, and the product's editor may not be able to
+ * edit every deal that sold it. A user's own write to a frozen line is still
+ * refused; `test/line-item-product-title.test.ts` pins both directions.
+ *
+ * `async` + `onError: 'log'`, as the line rollups are: a rename is never
+ * refused because one old line will not take a write (a quote line stored
+ * above today's discount ceiling refuses every write). One bad line does not
+ * stop the others. The hook re-stamps every line it can, then throws once,
+ * naming how many kept a stale copy, and `onError: 'log'` records that.
+ */
+const productTitleMirror: Hook = {
+  name: 'product_title_mirror',
+  object: 'crm_product',
+  events: ['afterUpdate'],
+  priority: 300,
+  runAs: 'system',
+  async: true,
+  onError: 'log',
+  description: 'Re-stamp product_title on every opportunity and quote line of a renamed product.',
+  handler: async (ctx: HookContext) => {
+    const api = ctx.api as HookApi | undefined;
+    const id = ctx.previous?.id ?? ctx.input?.id;
+    if (!api || typeof id !== 'string' || !id) return;
+    if (!ctx.input || !Object.prototype.hasOwnProperty.call(ctx.input, 'name')) return;
+    const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'display_title'] });
+    const title = product && typeof product.display_title === 'string' ? product.display_title.trim() : '';
+    if (!title) return;
+    let stale = 0;
+    let first = '';
+    for (const object of ['crm_opportunity_line_item', 'crm_quote_line_item']) {
+      const lines = await api.object(object).find({
+        where: { crm_product: id }, fields: ['id', 'product_title'], top: 5000,
+      });
+      for (const line of lines) {
+        if (line.product_title === title) continue;
+        try {
+          await api.object(object).update({ id: String(line.id), product_title: title }, { where: { id: String(line.id) } });
+        } catch (err) {
+          stale++;
+          if (!first) first = `${object} ${String(line.id)}: ${err instanceof Error ? err.message : String(err)}`;
+        }
+      }
+    }
+    if (stale > 0) {
+      throw new Error(`product_title_mirror: ${stale} line(s) of product ${id} kept a stale product_title; the first: ${first}`);
+    }
+  },
+};
+
+export default [productHook, productTitleMirror];
