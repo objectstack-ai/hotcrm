@@ -598,3 +598,64 @@ describe('lead_conversion — a contacted lead ends at status converted for ever
     },
   );
 });
+
+/**
+ * The converted contact takes the account's primary flag only when the account
+ * has none (#2060 item 9, A-15).
+ *
+ * `create_contact` used to write `is_primary: true` on every conversion, so a
+ * lead converted into an account that already had a primary contact gave it a
+ * second one (measured on 18.0.0-next.3: both flagged). With one primary per
+ * account kept by `contact_primary_per_account`, the same `true` would instead
+ * take the flag from the account's established contact. So the conversion asks
+ * first: `find_account_primary`, then `is_primary` only when it found none.
+ */
+describe('lead_conversion — the converted contact is the account’s primary only when it has none (#2060 item 9)', () => {
+  let salesRep: Person;
+  beforeAll(async () => {
+    salesRep = await signUpPerson(verify, 'rep-primary@flow-conversion.test', {
+      name: 'Primary Contact Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+  }, 120_000);
+
+  /** The rep's qualified lead for a company the rep's account `existing` may already carry. */
+  const convertInto = async (existing: 'none' | 'with a primary' | 'without a primary') => {
+    const who = identity();
+    let incumbent: Rec | undefined;
+    if (existing !== 'none') {
+      const [account] = await verify.seed('crm_account', [{ name: who.company, is_active: true, owner_id: salesRep.id }]);
+      [incumbent] = await verify.seed('crm_contact', [{
+        first_name: 'Ida', last_name: 'Incumbent', email: `incumbent${++k}@globex.example.com`,
+        crm_account: account!.id, owner_id: salesRep.id, is_primary: existing === 'with a primary',
+      }]);
+    }
+    const [lead] = await verify.seed('crm_lead', [{
+      company: who.company, email: who.email, first_name: 'Nia', last_name: 'Newcomer', status: 'qualified',
+      owner_id: salesRep.id,
+    }]);
+    const done = await runConversion(lead!.id, { createOpportunity: false }, salesRep);
+    expect(done.error ?? null).toBeNull();
+    const out = await after(who, lead!.id);
+    const converted = out.contacts.find((c) => c.email === who.email);
+    return { out, converted, incumbent: incumbent && out.contacts.find((c) => c.id === incumbent!.id) };
+  };
+
+  it('into a new account, the converted contact is its primary contact', async () => {
+    const { out, converted } = await convertInto('none');
+    expect({ contacts: out.contacts.length, primary: converted?.is_primary }).toEqual({ contacts: 1, primary: true });
+  });
+
+  it('into an account that has a primary contact, that contact stays primary and the converted one is not', async () => {
+    const { out, converted, incumbent } = await convertInto('with a primary');
+    expect({
+      contacts: out.contacts.length, converted: converted?.is_primary, incumbent: incumbent?.is_primary,
+      primaries: out.contacts.filter((c) => c.is_primary === true).length,
+    }).toEqual({ contacts: 2, converted: false, incumbent: true, primaries: 1 });
+  });
+
+  it('into an account with contacts but no primary, the converted contact becomes it', async () => {
+    const { out, converted, incumbent } = await convertInto('without a primary');
+    expect({ contacts: out.contacts.length, converted: converted?.is_primary, incumbent: incumbent?.is_primary })
+      .toEqual({ contacts: 2, converted: true, incumbent: false });
+  });
+});

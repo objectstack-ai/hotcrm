@@ -11,6 +11,10 @@ import { ACTOR_NAME_RESOLUTION_SOURCE } from './activity-actions';
  * in the QuickJS sandbox via `actionBodyRunnerFactory`. The script receives
  * `(input, ctx)` where `ctx.recordId` is the contact id from the action
  * URL and `ctx.api.object('crm_contact').update(...)` is gated by `api.write`.
+ *
+ * It writes the clicked contact only. Clearing the account's previous primary
+ * is the object's rule (`contact_primary_per_account` in `contact.hook.ts`),
+ * which every writer of the flag reaches; ⛔ do not repeat it here.
  */
 export const MarkPrimaryContactAction: Action = {
   name: 'mark_primary',
