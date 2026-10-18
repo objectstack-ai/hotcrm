@@ -101,6 +101,12 @@ export const activity: Record<string, ObjectTranslationData> = {
       related_records: { label: 'Registros Relacionados' },
       recurrence_and_effort: { label: 'Recurrencia y Esfuerzo' },
     },
+    _actions: {
+      complete_task: {
+        label: 'Completar',
+        successMessage: 'Tarea completada.',
+      },
+    },
   },
   crm_event: {
     _validations: {

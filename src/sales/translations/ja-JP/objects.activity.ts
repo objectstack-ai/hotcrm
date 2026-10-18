@@ -98,6 +98,12 @@ export const activity: Record<string, ObjectTranslationData> = {
       related_records: { label: '関連レコード' },
       recurrence_and_effort: { label: '繰り返しと工数' },
     },
+    _actions: {
+      complete_task: {
+        label: '完了',
+        successMessage: 'タスクを完了しました。',
+      },
+    },
   },
   crm_event: {
     _validations: {

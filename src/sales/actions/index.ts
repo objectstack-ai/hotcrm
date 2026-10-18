@@ -26,3 +26,6 @@ export {
 } from './activity-actions';
 export { ConvertLeadAction, CreateCampaignAction, ScheduleFollowUpAction } from './lead.actions';
 export { CloneOpportunityAction, MassUpdateStageAction, GenerateQuoteAction } from './opportunity.actions';
+// A declarative update (`operation: 'update'`): no body, the platform writes
+// its `patch` as the caller.
+export { CompleteTaskAction } from './task.actions';
