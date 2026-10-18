@@ -669,16 +669,16 @@ Only an administrator of your organization can make these changes.`,
       last_reviewed_at: cel`daysAgo(18)`,
     },
     {
-      title: 'Annual Billing Discount (2024 Pricing)',
-      summary: 'The 2024 prepaid annual discount, kept for customers who signed under it.',
+      title: 'Annual Billing Discount (Previous Price List)',
+      summary: 'The prepaid annual discount of the previous price list, kept for customers who signed under it.',
       category: 'billing',
       status: 'archived',
       audience: 'public',
       language: 'en',
-      body: `# Annual Billing Discount (2024 Pricing)
+      body: `# Annual Billing Discount (Previous Price List)
 
-Customers who prepaid a year under the 2024 price list received 15% off the
-monthly rate. This offer was replaced by the current price list and is no
+Customers who prepaid a year under the previous price list received 15% off
+the monthly rate. This offer was replaced by the current price list and is no
 longer available to new subscriptions.`,
       published_at: cel`daysAgo(520)`,
       last_reviewed_at: cel`daysAgo(430)`,
@@ -814,13 +814,13 @@ to reach another organization's records.`,
       last_reviewed_at: cel`daysAgo(60)`,
     },
     {
-      title: 'Support Hours and Response Targets (2024)',
-      summary: 'The 2024 support hours, replaced by the current support plans.',
+      title: 'Support Hours and Response Targets (Previous Plans)',
+      summary: 'The support hours of the previous plans, replaced by the current support plans.',
       category: 'policy',
       status: 'archived',
       audience: 'public',
       language: 'en',
-      body: `# Support Hours and Response Targets (2024)
+      body: `# Support Hours and Response Targets (Previous Plans)
 
 Support answered weekdays 09:00 to 18:00 UTC, with a first response within one
 business day. These hours were replaced by the response targets of the current
