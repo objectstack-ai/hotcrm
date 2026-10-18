@@ -9,7 +9,7 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 ## 1. 主页仪表盘
 
-左侧导航最上面有两个固定条目 **Home** 与 **Sales Home**，你落地的是 **Home**。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
+应用打开时落在你的侧边栏显示的第一个条目上，所以你落在哪里取决于你是谁。销售经理或管理员落在 **Home**，即两个固定条目中的第一个。销售代表的侧边栏里没有 **Home**：它从 **Sales Home**（销售代表自己的页面）开始，销售代表就落在那里。服务坐席与服务经理不能读取商机，两个固定条目都看不到，于是落在 **Service Overview**，即 **Service** 分组下的第一个条目。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
 
 | 磁贴 | 它显示什么 |
 | --- | --- |
@@ -27,7 +27,7 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 磁贴上方是三个面板级控件：一个按预计成交日期的日期范围选择器（默认本季度）、一个 **Owner** 筛选器和一个 **Lead Source** 筛选器。开头 4 个 KPI 磁贴各自框定了自己的周期（本年度累计、"活跃"、"未转化"），不受日期选择器收窄，所以这几个数始终是完整的，而收入类图表跟着选择器走。
 
-把它当作你每日开始工作的着陆页。
+对销售经理与管理员来说，它就是每日开始工作的着陆页。
 
 本节过去承诺的 4 样东西，这块盘上没有任何磁贴对应；另有一个名字，它属于另一块盘：
 
@@ -52,18 +52,18 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 | 分组 | 内容 |
 | --- | --- |
+| **Service** | Service Overview、Cases、Knowledge |
 | **Sales** | Leads、Accounts、Account Workbench、Contacts、Opportunities、Quotes、Contracts、Products、Sales Performance |
 | **My Work** | My Tasks、My Deals、My Leads、My Calendar、Inbox、My Cases |
 | **Activity** | Events、Sales Activity |
 | **Marketing** | Campaigns |
-| **Service** | Cases、Knowledge、Service Overview |
 | **Insights** | CRM Overview、Forecasts、Pipeline Coverage、Lead Inflow、SLA Performance |
 
 上表用的是源码里的英文 label，也就是英文界面上看到的名字。简体中文界面下，它们显示为语言包里的译名——例如 **Inbox** 显示为「待我审批」、**Knowledge** 显示为「知识库」、**My Work** 显示为「我的工作」。
 
 **Marketing**、**Insights** 这两个分组在应用加载时是折叠的——只有 **Sales**、**My Work**、**Activity**、**Service** 会自动展开。先把分组点开，再判断某样东西在不在这里。
 
-有五个条目建立在商机之上——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview** 与 **Pipeline Coverage**——不能读取商机的人（例如服务坐席）在侧边栏里看不到它们。
+有五个条目建立在商机之上——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview** 与 **Pipeline Coverage**——不能读取商机的人（例如服务坐席）在侧边栏里看不到它们。销售代表也看不到 **Home**，所以销售代表的侧边栏从 **Sales Home** 开始。**Service** 排在所有分组之首，是因为应用打开时落在侧边栏显示的第一个条目上：对服务坐席与服务经理来说，那就是 **Service Overview**。
 
 一个去处只占一行，这是刻意的。同一个对象如果有多种查看方式，它们是该对象列表页顶部的标签页，而不是导航里另起一行——这样侧边栏才短到能一眼扫完。
 

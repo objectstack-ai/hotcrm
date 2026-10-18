@@ -5,6 +5,9 @@ import { CrmApp } from '../src/sales/apps/crm.app';
 import { SalesRepProfile } from '../src/sales/profiles/sales-rep.profile';
 import { SalesManagerProfile } from '../src/sales/profiles/sales-manager.profile';
 import { ServiceAgentProfile, ServiceManagerProfile } from '../src/sales/profiles/service-agent.profile';
+import { CrmPositions } from '../src/sales/sharing/positions';
+import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
+import { servedApp } from './helpers/composed-stack';
 
 /**
  * The two standing constraints on `src/apps/crm.app.ts`'s shape (#1259).
@@ -44,6 +47,9 @@ import { ServiceAgentProfile, ServiceManagerProfile } from '../src/sales/profile
 type AnyRec = Record<string, any>;
 
 const NAV = ((CrmApp as AnyRec).navigation ?? []) as AnyRec[];
+
+/** A `visible` gate's CEL source: `P\`…\`` authors an envelope, a literal stays itself. */
+const sourceOf = (v: unknown): unknown => (v && typeof v === 'object' ? (v as AnyRec).source : v);
 
 /** Every non-group node, depth-first. Groups are containers, not destinations. */
 const LEAVES: AnyRec[] = (() => {
@@ -163,14 +169,15 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
   // this — the server reads it as capability names, and `crm_opportunity:read`
   // hid the entry from every user, the admin included (see `crm.app.ts`).
   const GATE = 'current_user.can("crm_opportunity", "read")';
-  const GATED = ['nav_home', 'nav_sales_home', 'nav_sales_dashboard', 'nav_crm_dashboard', 'nav_report_pipeline_coverage'];
-  const sourceOf = (v: unknown): unknown => (v && typeof v === 'object' ? (v as AnyRec).source : v);
+  const GATED = ['nav_sales_home', 'nav_sales_dashboard', 'nav_crm_dashboard', 'nav_report_pipeline_coverage'];
 
   it('exactly these entries carry the opportunity read gate', () => {
     const gated = LEAVES.filter((n) => sourceOf(n.visible) === GATE).map((n) => n.id);
     expect(gated).toEqual(GATED);
+    // Home carries the same read question, narrowed to its audience (below).
     const other = LEAVES.filter((n) => n.visible !== undefined && sourceOf(n.visible) !== GATE).map((n) => n.id);
-    expect(other, 'entries gated on something else').toEqual([]);
+    expect(other, 'entries gated on something else').toEqual(['nav_home']);
+    expect(String(sourceOf(LEAVES.find((n) => n.id === 'nav_home')?.visible))).toMatch(/^current_user\.can\("crm_opportunity", "read"\) && /);
   });
 
   it('the gate parts the personas the way the permission sets say', () => {
@@ -184,5 +191,47 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
       ['nav_home', 'executive_dashboard'],
       ['nav_sales_home', 'sales_home_page'],
     ]);
+  });
+});
+
+describe("each persona's first entry is its home (#2060 item 5)", () => {
+  // The console opens an app on the first entry the member is SHOWN
+  // (objectui#12426, in the 18.0.0-next.2 console), so the landing is this
+  // app's order and gates. The ruled homes: rep → Sales Home, manager / admin
+  // → Executive Overview, service agent / manager → the service module's
+  // dashboard. Measured per persona in a browser by the PR that made this order (its
+  // body has the table); these are the source facts that measurement rests on.
+  const SERVED = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
+
+  it('the sidebar opens with Home, Sales Home, then the Service group led by its dashboard', () => {
+    expect(SERVED.slice(0, 3).map((n) => n.id)).toEqual(['nav_home', 'nav_sales_home', 'group_service']);
+    // A contributed item lands after the group's own children: the app gives
+    // this group none, so the module's first item is the group's first entry.
+    expect(NAV.find((n) => n.id === 'group_service')?.children).toEqual([]);
+    expect((SERVED[2].children as AnyRec[])[0]).toMatchObject({
+      id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard',
+    });
+  });
+
+  it('Home is the entry a sales rep is not shown, asked by the position a rep holds', () => {
+    expect(sourceOf(NAV[0].visible)).toBe(
+      'current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions)',
+    );
+    // The name in the gate is a declared position, the one both demo reps hold
+    // and the manager does not, and it binds the rep's permission set by name.
+    expect(CrmPositions.map((p) => p.name)).toContain('sales_rep');
+    expect(SalesRepProfile.name).toBe('sales_rep');
+    const holds = (key: string) => DemoOrgStaffing.find((m) => m.key === key)?.positions.includes('sales_rep');
+    expect(['na_rep', 'eu_rep', 'sales_manager'].map(holds)).toEqual([true, true, false]);
+  });
+
+  it('a service persona is shown nothing ahead of the Service group', () => {
+    // Both pinned entries ask for opportunity read, which neither service set
+    // grants (asserted above), so the Service group is their first slot.
+    for (const n of SERVED.slice(0, 2)) {
+      expect(String(sourceOf(n.visible)), n.id).toMatch(/^current_user\.can\("crm_opportunity", "read"\)/);
+    }
+    const readsCases = (set: AnyRec) => set.objects?.crm_case?.allowRead === true;
+    expect([ServiceAgentProfile, ServiceManagerProfile].map(readsCases)).toEqual([true, true]);
   });
 });

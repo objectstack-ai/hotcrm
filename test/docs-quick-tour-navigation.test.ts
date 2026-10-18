@@ -312,12 +312,14 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 describe('the source facts the quick-tour table now rests on (#960)', () => {
   it('the app has two pinned top-level entries and six groups', () => {
     expect(PINNED.map((p) => p.label)).toEqual(['Home', 'Sales Home']);
+    // Service leads the groups (#2060 item 5): its first entry, Service
+    // Overview, is where a service persona lands — see `crm.app.ts`.
     expect(GROUP_LABELS).toEqual([
+      'Service',
       'Sales',
       'My Work',
       'Activity',
       'Marketing',
-      'Service',
       'Insights',
     ]);
   });
@@ -329,7 +331,7 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
 
   it('Marketing and Insights are the groups that stay collapsed', () => {
     expect(COLLAPSED).toEqual(['Marketing', 'Insights']);
-    expect(EXPANDED).toEqual(['Sales', 'My Work', 'Activity', 'Service']);
+    expect(EXPANDED).toEqual(['Service', 'Sales', 'My Work', 'Activity']);
   });
 
   it('carries no navigation label matching any name the page calls a phantom', () => {
