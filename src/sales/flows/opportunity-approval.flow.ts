@@ -28,9 +28,9 @@ type Flow = Automation.Flow;
  * `<= 500000`) whose two halves must partition, which is a different property
  * and is left alone.
  *
- * On full approval the deal is stamped `approval_status = approved` (+ date);
- * any rejection stamps `approval_status = rejected`. The record is locked while
- * a step is pending and `approval_status` mirrors the live request status.
+ * `approval_status` mirrors the live request status, and the record is locked
+ * while a step is pending. The mirror alone writes a rejection; on full
+ * approval `mark_approved` adds `approved_date`.
  */
 export const OpportunityApprovalFlow: Flow = {
   name: 'opportunity_approval',
@@ -50,9 +50,8 @@ export const OpportunityApprovalFlow: Flow = {
   // Elevating the USER-driven runs too is not merely acceptable here, it is
   // required. This gate exists to CONSTRAIN the submitter, so the submitter's
   // own scope is the wrong identity to evaluate it under; and
-  // `mark_approved` / `mark_rejected` stamp `approval_status` on a record the
-  // approval node holds locked (`lockRecord: true`), which only a platform
-  // write may land. The approval node itself already opens its request under
+  // `mark_approved` stamps `approved_date` on a record the approval node holds
+  // locked (`lockRecord: true`), which only a platform write may land. The approval node itself already opens its request under
   // the platform identity while re-attaching the deciding user for
   // attribution, so this declaration aligns the flow with the node it drives.
   runAs: 'system',
@@ -150,8 +149,12 @@ export const OpportunityApprovalFlow: Flow = {
       },
     },
 
-    // ── Final approve: stamp status + notify owner ──────────────────
+    // ── Final approve: stamp the date + notify owner ────────────────
     {
+      // Kept, unlike the rejection's twin (#2061): `approved_date` is a value
+      // only this node writes. It runs as the run's trigger user, the
+      // submitter, so it still stamps `updated_by` as them. The restated
+      // `approved` changes nothing about that, since the node writes either way.
       id: 'mark_approved',
       type: 'update_record',
       label: 'Mark Approved',
@@ -175,17 +178,13 @@ export const OpportunityApprovalFlow: Flow = {
       },
     },
 
-    // ── Rejection: stamp status + notify owner ──────────────────────
-    {
-      id: 'mark_rejected',
-      type: 'update_record',
-      label: 'Mark Rejected',
-      config: {
-        objectName: 'crm_opportunity',
-        filter: { id: cel`record.id` },
-        fields: { approval_status: 'rejected' },
-      },
-    },
+    // ── Rejection: notify owner ─────────────────────────────────────
+    // The approval node's mirror has already written `rejected`, as the person
+    // who decided. ⛔ No `update_record` here restates it (#2061): a write from
+    // the resumed run carries the run's trigger user, the submitter, so it
+    // re-stamped `updated_by` from the approver back to the submitter while
+    // changing no value. Measured on 18.0.0-next.3, pinned in
+    // `test/approval-decision-attribution.test.ts`.
     {
       id: 'notify_rejected',
       type: 'notify',
@@ -210,7 +209,7 @@ export const OpportunityApprovalFlow: Flow = {
 
     // Manager decision (approval-node branch labels)
     { id: 'e3', source: 'manager_review', target: 'check_high_value', type: 'default', label: 'approve' },
-    { id: 'e4', source: 'manager_review', target: 'mark_rejected', type: 'default', label: 'reject' },
+    { id: 'e4', source: 'manager_review', target: 'notify_rejected', type: 'default', label: 'reject' },
 
     // Tier gate (decision-node conditional branches). These EDGES are the live
     // sites — the engine never evaluates a `decision` node's singular
@@ -241,12 +240,11 @@ export const OpportunityApprovalFlow: Flow = {
 
     // Director decision (approval-node branch labels)
     { id: 'e7', source: 'director_signoff', target: 'mark_approved', type: 'default', label: 'approve' },
-    { id: 'e8', source: 'director_signoff', target: 'mark_rejected', type: 'default', label: 'reject' },
+    { id: 'e8', source: 'director_signoff', target: 'notify_rejected', type: 'default', label: 'reject' },
 
     // Terminal branches
     { id: 'e9', source: 'mark_approved', target: 'notify_approved', type: 'default' },
     { id: 'e10', source: 'notify_approved', target: 'end', type: 'default' },
-    { id: 'e11', source: 'mark_rejected', target: 'notify_rejected', type: 'default' },
     { id: 'e12', source: 'notify_rejected', target: 'end', type: 'default' },
   ],
 };
