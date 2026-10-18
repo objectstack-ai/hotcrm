@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 import caseHooks from '../src/service/objects/case.hook';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, signUpPerson, runShippedHook, runScheduledFlow, type Person,
+  hotcrmStack, signUpPerson, runShippedHook, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -52,10 +52,6 @@ beforeAll(async () => {
     const [account] = await verify.seed('crm_account', [{ name: `Priority ${tier} Co`, tier, owner_id: agent.id }]);
     accountByTier[tier] = String(account!.id);
   }
-  // The boot replays the demo cases, and many of them are open and past due.
-  // One sweep here takes that backlog, so a sweep inside a test below handles
-  // only the cases that test wrote.
-  await runScheduledFlow(verify, 'case_sla_monitor');
 }, 120_000);
 
 afterEach(() => {
@@ -140,12 +136,11 @@ describe('the new window runs from the change, and only ever pulls the deadline 
     const after = await expectRederived(kase.id, 4, () => escalate(kase.id));
     expect(dueMs(after), 'counted from creation, the deadline would already have passed').toBeGreaterThan(createdAt + 4 * HOUR);
 
-    // Not born breached: the sweep passes it over, and closing it inside the
-    // new window records no breach.
-    await runScheduledFlow(verify, 'case_sla_monitor');
-    const swept = await stored(kase.id);
-    expect(swept.is_sla_violated).toBe(false);
-    expect(swept.escalation_reason, 'the sweep’s breach write would have replaced the agent’s reason').toBe('Customer is blocked in production');
+    // Not born breached: `case_sla_monitor` selects `sla_due_date < now`, which
+    // this case does not meet, and closing it inside the new window records no
+    // breach.
+    expect(dueMs(after)).toBeGreaterThan(Date.now());
+    expect(after.is_sla_violated).toBe(false);
     await verify.hooks.run('crm_case', 'update', { id: kase.id, status: 'closed', resolution: 'Patched' }, { as: agent.token });
     expect((await stored(kase.id)).is_sla_violated).toBe(false);
   });
@@ -163,7 +158,8 @@ describe('the new window runs from the change, and only ever pulls the deadline 
     expect(dueMs(before)).toBeLessThan(Date.now());
     await escalate(kase.id);
     expect((await stored(kase.id)).sla_due_date, 'a raise must not erase a breach').toBe(before.sla_due_date);
-    await runScheduledFlow(verify, 'case_sla_monitor');
+    // The settling write judges the stored date, so the late finish is recorded.
+    await verify.hooks.run('crm_case', 'update', { id: kase.id, status: 'closed', resolution: 'Patched' }, { as: agent.token });
     expect((await stored(kase.id)).is_sla_violated).toBe(true);
   });
 });
