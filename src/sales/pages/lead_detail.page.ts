@@ -467,7 +467,128 @@ export const LeadDetailPage: Page = {
                             },
                           ],
                         },
+                        // Events and Campaign Members (#2127). Both lists carry no
+                        // `title` and no component `label`, so each is headed by
+                        // its object's translated `pluralLabel`, which all four
+                        // locale packs already hold. A `title` would only restate
+                        // those words, and would then need its own entry under
+                        // `pages.lead_detail_page.components` in every pack.
+                        //
+                        // The panel labels are inline locale maps because an
+                        // accordion item has no id, so no pack key reaches it. The
+                        // words are each pack's `pluralLabel`, pinned in
+                        // `test/lead-related-tab.test.ts`, so the panel and the
+                        // list under it agree. A plain `'Events'` would read 日程
+                        // in zh-CN, from the console's built-in tab dictionary,
+                        // above a list the pack heads 活动, and stay English in
+                        // ja-JP and es-ES.
+                        //
+                        // "+ New" is the platform's own button, not a key here. The
+                        // record page draws it on a related list where the caller
+                        // may create the child object, pre-linked to this lead
+                        // through `relationshipField`. So reps, managers and
+                        // admins get New on Events, and only the permission sets
+                        // that may enrol (`marketing_user`, the admin sets) get it
+                        // on Campaign Members. A sales rep reads memberships and
+                        // cannot create them: enrolment belongs to marketing
+                        // (`sales-rep.profile.ts`).
+                        {
+                          label: {
+                            en: 'Events',
+                            'zh-CN': '活动',
+                            'ja-JP': 'イベント',
+                            'es-ES': 'Eventos',
+                          },
+                          icon: 'calendar-days',
+                          collapsed: false,
+                          children: [
+                            {
+                              type: 'record:related_list',
+                              id: 'related_events',
+                              properties: {
+                                objectName: 'crm_event',
+                                // The lead side of crm_event's polymorphic
+                                // `related_to_*` lookups, the same binding the
+                                // Tasks list above uses.
+                                relationshipField: 'related_to_lead',
+                                // When, then whether it happened, right after the
+                                // subject: at a 1024 px window the panel shows
+                                // about three columns before it scrolls sideways,
+                                // and the start is what this list is sorted by.
+                                columns: ['subject', 'start_datetime', 'status', 'type', 'owner_id'],
+                                // Upcoming first: a booked event starts later
+                                // than any event that already happened, so the
+                                // newest start leads. The list keeps the history
+                                // below it. `asc` would put the oldest held call
+                                // on top. Filtering to `planned`, as the
+                                // `upcoming_events` view does, would drop that
+                                // history from the record. Two upcoming events
+                                // read latest-first; a static sort cannot order
+                                // the future soonest-first and the past
+                                // newest-first in one list.
+                                sort: [{ field: 'start_datetime', order: 'desc' }],
+                                limit: 10,
+                              },
+                            },
+                          ],
+                        },
+                        {
+                          label: {
+                            en: 'Campaign Members',
+                            'zh-CN': '营销活动成员',
+                            'ja-JP': 'キャンペーンメンバー',
+                            'es-ES': 'Miembros de Campaña',
+                          },
+                          icon: 'user-plus',
+                          collapsed: false,
+                          children: [
+                            {
+                              type: 'record:related_list',
+                              id: 'related_campaign_members',
+                              properties: {
+                                objectName: 'crm_campaign_member',
+                                relationshipField: 'crm_lead',
+                                // The campaign's own members panel, read from the
+                                // other end: `relatedListColumns` on the
+                                // `crm_campaign` lookup, minus the two people
+                                // columns, in the order the row happens in. That
+                                // key only reaches lists scoped by `crm_campaign`,
+                                // so this list names its columns itself.
+                                columns: ['crm_campaign', 'added_date', 'status', 'response_date'],
+                                sort: [{ field: 'added_date', order: 'desc' }],
+                                limit: 10,
+                              },
+                            },
+                          ],
+                        },
                       ],
+                    },
+                  },
+                  // Conversion (#2127): the lead's own `converted_account` /
+                  // `converted_contact` / `converted_opportunity` lookups, so a
+                  // group reference rather than a related list. It sits outside
+                  // the accordion so that it can be absent: `hideFields` takes
+                  // `is_converted` out of this block, every remaining member
+                  // (the three links and `converted_date`) is empty until the
+                  // conversion flow's `mark_converted` writes them, and a section
+                  // whose members are all empty renders nothing, heading
+                  // included. So the section appears once the links are set,
+                  // through the renderer's own empty-section rule, with no
+                  // predicate. Inside an accordion item it would leave an empty
+                  // panel on every unconverted lead.
+                  //
+                  // The section is the `conversion` group's, so it opens folded
+                  // (`collapse: 'collapsed'` in lead.object.ts). No slot takes a
+                  // collapse state as a predicate (#2134), and changing the
+                  // group's collapse would fold or unfold the Details tab with it.
+                  {
+                    type: 'record:details',
+                    id: 'related_conversion',
+                    properties: {
+                      sections: [{ group: 'conversion' }],
+                      // The flag stays on the Details tab and in the status
+                      // path, which reads Converted.
+                      hideFields: ['is_converted'],
                     },
                   },
                 ],
