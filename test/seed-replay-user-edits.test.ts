@@ -1,6 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -8,7 +8,7 @@ import { bootStack, type VerifyStack } from '@objectstack/verify';
 import artifact from '../objectstack.config';
 import { CrmSeedData } from '../objectstack.composition';
 import { contracts } from '../src/revenue/data/revenue.seed';
-import { tasks } from '../src/sales/data/activity.seed';
+import { leadInteractionPointers, tasks } from '../src/sales/data/activity.seed';
 import { bootOptions, buildArtifactAgain } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -27,12 +27,16 @@ type Rec = Record<string, any>;
  *
  * Measured the way an install meets it: the app boots over a database file,
  * the admin makes each edit through the engine's user write door, the kernel
- * stops, and the app cold-boots over the same file, replaying the seed.
+ * stops, and the app cold-boots over the same file, replaying the seed. The
+ * cold boot runs a day later (the clock is moved forward, `Date` only), as a
+ * demo environment's next restart usually does: relative seed dates then
+ * resolve to new values, which is what a later boot's replay meets.
  *
- * The datasets that stay `upsert` are the package's and are not edited here:
- * `forecasts` (positional demo snapshots, #702) and `leadInteractionPointers`
- * (timeline rows no persona edits). The reason for each mode sits beside the
- * dataset in `src/<package>/data/*.seed.ts`.
+ * `leadInteractionPointers` has no editor: it is insert-once because it
+ * mirrors `events`, and the pin for it is that each pointer still reads its
+ * event's end after that later boot. `forecasts` stays `upsert` (positional
+ * demo snapshots, #702) and is the clock control. The reason for each mode
+ * sits beside the dataset in `src/<package>/data/*.seed.ts`.
  */
 
 /** The dataset registered for `object` (and, for a junction, keyed on `keyPart`). */
@@ -121,6 +125,7 @@ const resolveKey = async (stack: VerifyStack, key: Rec): Promise<Rec> => {
 };
 
 const ACME = 'Acme Corporation';
+const DAY_MS = 86_400_000;
 // A contact the rep adds and marks primary. Not a seeded row: the seeded
 // contact it displaces is (John Smith, Acme's seeded primary).
 const NEW_PRIMARY = { first_name: 'Nora', last_name: 'Newhire', email: 'nora.newhire@acme.example.com' };
@@ -180,12 +185,32 @@ describe('a user edit to a seeded record survives a restart (#2139)', () => {
     expect(await before.rows('crm_task', { subject: deletedSubject }), 'fixture: the control task was not deleted').toHaveLength(0);
     await before.stop();
 
+    // The next restart, a day later. Only `Date` is faked, and it keeps
+    // advancing, so the boot's own timers and waits run as they do for real.
+    vi.useFakeTimers({ toFake: ['Date'], shouldAdvanceTime: true });
+    vi.setSystemTime(Date.now() + DAY_MS);
     after = await bootStack(await buildArtifactAgain(), bootOptions({ databaseFile }));
   }, 300_000);
 
   afterAll(async () => {
     await after?.stop();
+    vi.useRealTimers();
     if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('control: the restart ran a day later — the forecast snapshot the replay re-points reads that day', async () => {
+    const [row] = await after!.rows('crm_forecast', { seed_key: 'demo_month_current' });
+    expect(String(row?.snapshot_date).slice(0, 10)).toBe(new Date().toISOString().slice(0, 10));
+  });
+
+  it('each lead timeline pointer still reads its event\'s end', async () => {
+    const subjects = (leadInteractionPointers.records as Rec[]).map((p) => String(p.source_id));
+    expect(subjects.length, 'fixture: the seed holds lead timeline pointers').toBeGreaterThan(0);
+    for (const subject of subjects) {
+      const [event] = await after!.rows('crm_event', { subject });
+      const [pointer] = await after!.rows('sys_activity', { source_object: 'crm_event', source_id: event?.id });
+      expect({ subject, at: pointer?.timestamp }).toEqual({ subject, at: event?.end_datetime });
+    }
   });
 
   it('control: the restart replayed the seed — the deleted seeded task is back', async () => {

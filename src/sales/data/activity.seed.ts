@@ -653,12 +653,15 @@ const LOGGED_SUMMARY_PREFIX: Partial<Record<EventSpec['type'], string>> = {
   meeting: 'Meeting: ',
 };
 
-// `upsert` STAYS (#2139): no persona edits a timeline pointer (every profile,
-// the system administrator's included, grants `sys_activity` read only), so a
-// replay has no user edit to undo here.
+// INSERT-ONCE (`mode: 'ignore'`, #2139), though no persona edits a pointer
+// (every profile grants `sys_activity` read only): it follows `events`. Its
+// `timestamp` is its event's end, and both are relative dates. Left on `upsert`
+// beside an insert-once `events`, a restart a day later re-dated every pointer
+// and left its event alone, so the timeline logged each call a day after it
+// ended (measured over 4 pointers). Pinned in `test/seed-replay-user-edits.test.ts`.
 export const leadInteractionPointers = {
   object: 'sys_activity',
-  mode: 'upsert' as const,
+  mode: 'ignore' as const,
   // One timeline pointer per rich source record, exactly as the action writes
   // it. Matched on the RESOLVED ids, so replay boots dedupe.
   externalId: ['source_object', 'source_id'],
