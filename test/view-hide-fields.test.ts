@@ -18,8 +18,9 @@ import stack, { type AnyRec } from './helpers/composed-stack';
  * (`sys_user_preference`, key `ui.list.<object>`, objectui#12474) and never
  * writes the shared view, so it survives a reload and changes no one else's
  * list. That holds on a view that declares `columns`, which every view below
- * does; on a system view that declares none the console keeps the choice for
- * the session only (objectui#12505), so a pin below keeps the projection.
+ * does; on a system view that declares none, the console source keeps the
+ * choice for the session only (objectui#12505), so a pin below keeps the
+ * projection.
  *
  * `rowColor` stays OFF on purpose. The row tint is authored per view, and only
  * the exception row is tinted (the ruling on #2107); a toolbar control that
