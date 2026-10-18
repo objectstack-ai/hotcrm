@@ -21,7 +21,8 @@ import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
  * seeded parent matches:
  *
  *   - `opportunity_amount_rollup`  → opportunity.amount
- *   - `quote_total_rollup`         → quote subtotal / discount_amount / total_price
+ *   - `quote_total_rollup`         → quote subtotal, and `quote_workflow`'s
+ *                                    header formula → discount_amount / total_price
  *   - the four #597 refresh hooks  → the campaign num_* / actual_revenue block
  *   - `_line-item-price-fill`      → line list_price
  *   - `lead.hook` whole-star rounding, and the product cost/price rule

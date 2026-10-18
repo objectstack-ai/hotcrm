@@ -198,8 +198,8 @@ export const QuoteLineItem = ObjectSchema.create({
       //
       // ### The walk-around this closes
       //
-      // A quote's total has TWO independent discount multipliers, and
-      // `quote_total_rollup` composes them:
+      // A quote's total has TWO independent discount multipliers, applied by
+      // two hooks — `quote_total_rollup` the first, `quote_workflow` the second:
       //
       //   subtotal        = Σ line (quantity × unit_price × (1 − LINE discount/100))
       //   discount_amount = subtotal × QUOTE discount%

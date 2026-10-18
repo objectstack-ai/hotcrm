@@ -720,13 +720,15 @@ const GUARDS: GuardCase[] = [
       const t = await linkTargets(desk);
       const [quote] = await verify.seed('crm_quote', [{
         name: `Q-1001-${n}`, status: 'accepted', crm_account: t.account.id, crm_contact: t.contacts[0]!.id,
-        quote_date: '2026-01-01', expiration_date: '2030-12-31', total_price: 100, owner_id: rep.id,
+        quote_date: '2026-01-01', expiration_date: '2030-12-31', tax: 100, owner_id: rep.id,
         ...(withLink ? { crm_opportunity: t.deals[0]!.id } : {}),
       }]);
       return { id: String(quote!.id), other: String(t.deals[1]!.id) };
     },
     link: 'crm_opportunity',
-    businessField: 'total_price',
+    // `tax`, not `total_price`: the total is `readonly` (#2110), so the engine
+    // drops a rep's value before the freeze could see it.
+    businessField: 'tax',
     businessValue: 1,
     refusal: /Quote QTE-\d+ - Q-1001-\d+ is accepted; only internal_notes may be edited/,
   },

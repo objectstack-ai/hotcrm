@@ -13,8 +13,10 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *   a line to a settled quote nor change one of its lines.
  * - Refuses a user's acceptance while the linked opportunity is held by an
  *   approval, because acceptance closes that deal as won (#2014).
- * - Derives `discount_amount` / `total_price` on an unsettled quote's update
- *   that carries a pricing input — the quote header's one formula (#2083).
+ * - Derives `discount_amount` / `total_price` on a create carrying a
+ *   `subtotal`, and on an unsettled quote's update that carries a pricing
+ *   input — the quote header's one formula (#2083), and the only writer of
+ *   those two `readonly` fields (#2110).
  * - On `accepted`, drafts a contract — carrying the quote's negotiated
  *   `payment_terms` onto it, and filling what the quote cannot express from
  *   `DRAFT_CONTRACT_DEFAULTS`, declared placeholders rather than decisions
@@ -288,16 +290,24 @@ const quoteValidation: Hook = {
       }
     }
 
-    // ─── The header totals follow their inputs (#2083) ──────────────────
+    // ─── The header totals follow their inputs (#2083, #2110) ───────────
     //
     // The quote header's ONE formula, written here and nowhere else:
     //   discount_amount = subtotal × discount%
     //   total_price     = subtotal − discount_amount + tax + shipping_handling
-    // Two writers reach it in the same write they make: a person editing
+    // Three writers reach it in the same write they make: a person editing
     // `discount`, `tax` or `shipping_handling` — measured on 18.0.0-next.1,
     // that left both figures stale until some line was written, and a quote
-    // accepted then drafted its contract at the stale total — and
-    // `quote_total_rollup`, which writes only `subtotal`.
+    // accepted then drafted its contract at the stale total —
+    // `quote_total_rollup`, which writes only `subtotal`, and a create
+    // carrying a `subtotal`, `quote_generation`'s draft above all.
+    //
+    // Both figures are `readonly` (#2110), and this is why they still land:
+    // the engine drops a read-only key only when the CALLER sent it, never one
+    // a before-hook wrote. The create leg is load-bearing, not tidiness —
+    // `quote_generation` runs as the rep, so since the platform's 17.4.0
+    // create-path strip its own copy of the two figures would be dropped
+    // (measured on 18.0.0-next.3: both stored null).
     //
     // Any writer, a user or not: the rollup's write is how lines reach the
     // header, and seeds replay. ⛔ Never on a quote settled before this write —
@@ -305,13 +315,13 @@ const quoteValidation: Hook = {
     // with no `subtotal` to derive from, nor on the predicate path, because
     // it reads `previous` (D3, see `forecast.hook.ts`).
     const settled = previous?.status === 'accepted' || previous?.status === 'expired';
-    if (event === 'beforeUpdate' && previous && !settled && ctx.dispatch?.mode !== 'per-row'
-      && ['subtotal', 'discount', 'tax', 'shipping_handling'].some((k) => k in input)) {
+    if (event === 'beforeInsert' || (event === 'beforeUpdate' && previous && !settled && ctx.dispatch?.mode !== 'per-row'
+      && ['subtotal', 'discount', 'tax', 'shipping_handling'].some((k) => k in input))) {
       const now = (k: string): number => {
-        const v = k in input ? input[k] : previous[k];
+        const v = k in input ? input[k] : previous?.[k];
         return typeof v === 'number' ? v : 0;
       };
-      const subtotal = 'subtotal' in input ? input.subtotal : previous.subtotal;
+      const subtotal = 'subtotal' in input ? input.subtotal : previous?.subtotal;
       if (typeof subtotal === 'number') {
         const discountAmount = Math.round(subtotal * (now('discount') / 100) * 100) / 100;
         input.discount_amount = discountAmount;
