@@ -1,5 +1,181 @@
 # Changelog
 
+## 5.1.0
+
+### Minor Changes
+
+- c9095f0: **Opportunity and quote line items are now named after their product.** Open an opportunity and its **Opportunity Line Items** card lists each line as its product, for example **PRD-0009 - Premium Support**. A line's own page is headed the same way, and so is every other place that names a single line. Before, a line had no name of its own, so the app showed its description. A line added with the **Products** list's **Add** picker has no description, so it showed a raw record id, such as **Opportunity Line Item anj16lV4**. Quote line items had the same gap and get the same fix.
+  
+  The name is the product's own title, its code and name, kept in a new read-only **Product Title** field on both line items. It follows the product: rename a product and the name changes on every line that sold it. That includes lines on closed deals and on accepted or expired quotes, because a name is not a figure. Every other field of those lines stays locked, as before. Searching line items by a product's name now finds them.
+  
+  **After upgrading, run the one-time backfill once.** Lines created before this version have no Product Title yet, so their page would be headed by a record id until it is filled. The backfill fills every line, on open and closed parents alike:
+  
+  ```
+  pnpm exec tsx scripts/backfill-line-product-title.ts --url https://YOUR-ORG --email ADMIN --password PASSWORD          # report only
+  pnpm exec tsx scripts/backfill-line-product-title.ts --url https://YOUR-ORG --email ADMIN --password PASSWORD --apply  # write
+  ```
+  
+  It changes no product: it re-saves each product's unchanged name, which fills the lines that sold it. A second run reports zero lines. Restarting the server does not fill these lines, demo data included.
+- 149f201: **You can now hide columns on the Leads, Accounts and Opportunities lists.** On every table view of these three objects, the **Display** menu now has a **Hide fields** section, under **Group**: untick a column to take it off your list, tick it again to bring it back. Before, the menu offered grouping, density, row numbers and inline editing, but no way to hide a column, so a column you never use, such as **Need Type** on **All Leads**, stayed on screen.
+  
+  The choice is yours alone. It is kept with your own list settings, so it is still there after you reload or sign in from another browser, and it does not change the list for anyone else. **Show all** at the top of the Hide fields section brings every column back, and **Reset view** in the list's **⋯** menu returns the whole list to the view's own setup. You can hide only the columns the view already shows; this does not add new columns.
+  
+  The board, calendar, gallery, map and timeline views of these objects are unchanged. Row colours are unchanged too: the views still tint only the rows that need attention (for example, inactive accounts on **All Accounts**), and there is no control to change the tint.
+- 617cda2: **A lead's Related tab now shows its events, its campaigns and what it was converted into.** Until now the tab held one list, the lead's open tasks. The calls and meetings booked with a lead, the campaigns it had been added to and the account, contact and opportunity it became were all stored, but none of them could be reached from the lead.
+  
+  The Related tab now has four sections:
+  
+  - **Tasks**, as before: the lead's open tasks, the one due soonest first.
+  - **Events**: the calls, meetings and other events with the lead. Booked events come first, and the ones that already happened follow, newest first.
+  - **Campaign Members**: the campaigns the lead was added to, when it was added and how it responded.
+  - **Conversion**: after the lead is converted, links to the account, contact and opportunity it became, with the conversion date. The section does not appear on a lead that has not been converted, and it opens folded.
+  
+  Each list has a **New** button for users allowed to create that kind of record, and the new record comes linked to the lead. Sales users can book an event from a lead. Only users with the Marketing User permission set and administrators can add a lead to a campaign from here; sales reps and managers see the campaign list without the button.
+- 99971af: Tasks: a **Complete** button on the task's row and on its record page
+  
+  Completing a task used to take four steps: open it, Edit, change Status, Update. An open task now
+  has a **Complete** button at the top of its record page and on its row in the task lists. One click
+  sets the status to Completed. The rest follows from that status change, the same way as when you
+  edit the status yourself: the completion date is set to now, progress goes to 100%, a recurring
+  task starts its next occurrence, and the last-activity date of the customer it is linked to is
+  refreshed.
+  
+  The button is not shown on a task that is already completed. It completes the task as you, so it
+  works only on a task you are allowed to edit; for anyone else the platform refuses the write. It
+  asks for no confirmation and offers no Undo. To reopen a task, edit its status back.
+- d4738da: Upgrade the ObjectStack platform to 18.0.0-next.3 (prerelease)
+  
+  All 23 `@objectstack/*` dependencies move from 18.0.0-next.2 to 18.0.0-next.3 together, pinned
+  exact: 19 in `dependencies` and 4 in `devDependencies`. `specVersion` and `engines.protocol` follow
+  to `^18.0.0-next.3` in `objectstack.manifest.json` and in both package manifests (`src/sales`,
+  `src/service`). `pnpm install` regenerated `pnpm-lock.yaml`: 707 `packages:` entries before and
+  after. The 55 `@objectstack/*` keys and `create-objectstack` moved one for one, nothing was added or
+  removed, and no third-party package changed version. `@objectstack/metadata-core` no longer declares
+  an optional `vitest` peer, so the lockfile's snapshot keys drop that suffix.
+  
+  **This release still needs an ObjectStack 18 host.** 18.0.0-next.3 is a prerelease of protocol
+  major 18, so any 18 runtime admits the artifact and a 17.x host refuses it.
+  
+  The platform changes that reached this app:
+  
+  - **Sales Home's lists draw again.** The console that ships with 18.0.0-next.3 reads a page's list
+    block only in the platform's list view spelling: the object in `data`, the kind in `type`. Under
+    the old `objectName` / `viewType` spelling, *My Leads*, *My Open Deals*, *My Open Tasks* and
+    *Upcoming Events* each showed "No object named: set data.object or dataSource.object." and loaded
+    nothing. Sales Home now names its lists the new way, and each tab shows its saved view as before.
+  - **The lead forms say `visibleWhen`.** 18.0.0-next.3 removes `visibleOn`, the old name for a form
+    field's show-when condition. The lead form views now use `visibleWhen`, and each condition is
+    unchanged, so the same fields appear and hide as before.
+  
+  Changes in the platform that HotCRM users see, with no change here:
+  
+  - **Setup › Audit Logs no longer fills with your own clicks.** Opening a record or a list saves your
+    recent items, and each save used to add an `update` row on `sys_user_preference` to the audit log.
+    A user's own writes to their own preferences are no longer recorded. Anyone else's write to them
+    still is.
+  - **Public web forms show their section headings in the visitor's language.** A Chinese visitor of
+    *Contact Us* or *Support* now reads the section titles in Chinese, beside the field labels that
+    were already translated.
+  
+  **What operators should know:**
+  
+  - **No app data changes.** No object, field or stored value changes in this release, and nothing
+    needs to be cleared or reloaded.
+  - **A Studio copy of Sales Home keeps its old list spelling.** A deployment that saved its own copy
+    of Sales Home through Studio keeps serving that copy as stored, and this console no longer reads
+    its `objectName` / `viewType`. Delete the copy to fall back to the packaged page, or re-save it
+    with `data` and `type`.
+  - **Moving a host from 17.x to 18 is still the platform's migration, not this app's.** An 18 runtime
+    refuses a database still in the 17.x organization shape until the operator runs
+    `os migrate organization-ownership`.
+
+### Patch Changes
+
+- 3b05ae7: **A knowledge article's Last Reviewed date now moves only when someone looks after the article.** Before, every save of a published article refreshed it, including ones nobody made by hand. Pressing **Helpful** or **Not Helpful** on an article recounts its votes, and that recount moved the article's Last Reviewed date to today, so an article readers kept voting on looked freshly reviewed however long ago anyone had checked it.
+  
+  Now the date refreshes when the article is published or published again, and when its content is edited while it is published: the title, summary, body, category, tags, audience, language or originating case. A reader's vote, or a change of the article's owner, leaves the date where it was.
+  
+  The sample articles now show the review dates they were written with. On a new database, *Getting Started with HotCRM* reads as reviewed 20 days ago, *Resetting Your Password* 10 days ago, and *Legacy SSO Setup* 220 days ago. Before, all three read as reviewed on the day the database was created. A demo database created earlier keeps the date it was given; reset it (`pnpm demo:reset`) to see the sample dates.
+  
+  A data import or other system write that carries its own Last Reviewed date keeps that date. A person still cannot type one in: the field is read-only.
+- 410bd42: The app now opens on each role's own home page. Before, every user who could read opportunities landed on **Home** (Executive Overview), and a service agent landed on **Leads**. Now:
+  
+  - A **sales manager**, an **administrator** or a **marketing user** lands on **Home** (Executive Overview), as before.
+  - A **sales rep** lands on **Sales Home**, the rep's page of pipeline figures, leads, open deals, open tasks and upcoming events. **Home** is no longer in a rep's sidebar.
+  - A **service agent** or **service manager** lands on **Service Overview**, the service dashboard.
+  
+  To make this work, **Service** is now the first group in the sidebar for everyone, and **Service Overview** is the first entry in it, above **Cases** and **Knowledge**. The console opens the app on the first entry a user's sidebar shows, so the order of the sidebar decides where each role lands.
+- c4c73e7: **An account now has at most one primary contact.** Before, the flag piled up: **Mark as Primary Contact** flagged the contact you clicked and left the account's previous primary flagged too, ticking **Primary Contact** on the contact form did the same, and converting a lead into an account that already had a primary contact flagged the new contact as well. The **Primary Contacts** list ended up showing almost every contact.
+  
+  Now, when a contact becomes an account's primary contact, the flag is cleared on the account's other contacts. This holds however the flag is set: Mark as Primary Contact, the contact form, the API, or moving a primary contact to another account.
+  
+  Converting a lead now flags the new contact as primary only when its account has no primary contact yet. Converting into a new account works as before: the new contact is its primary contact. Converting into an account that already has one leaves that contact as primary.
+  
+  An account that already shows more than one primary contact keeps them until you choose one: untick **Primary Contact** on the contacts that should not be primary. Marking another contact of the account as primary also clears them all.
+- 0177c64: **An approval decision now shows the approver as Last Modified By.** Before, when a sales manager approved or rejected a request, the record's **Last Modified By** went back to the person who submitted it. The record's history already named the approver. The approval flow then saved the same verdict a second time, as the submitter, and that second save changed only Last Modified By.
+  
+  That second save is gone from these decisions:
+  
+  - **Account Approval**: approve and reject.
+  - **Lead Conversion Approval**: approve and reject, on installs that turn the gate on.
+  - **Large Deal Approval**: reject.
+  - **Opportunity Qualification Approval**: approve.
+  
+  Each verdict still lands the same way: **Approved** or **Rejected**, written by the approval as the person who decided.
+  
+  Some decisions also save a value of their own: the approval date on a large deal, the stage on an approved status change, or the request cleared after a rejection. On those decisions **Last Modified By** still names the submitter.
+- 8ff185c: **Raising a case's priority now brings its SLA Due Date in.** A case kept the SLA Due Date it got when it was opened, whatever happened to its priority afterwards. A Medium case escalated to Critical with **Escalate Case** stayed on its Medium deadline (36 hours from opening, on an Enterprise account), and a Low case raised to High kept its 7-day deadline.
+  
+  Now a priority change that shortens the target sets the SLA Due Date to the new priority's hours from the moment of the change, on the account's Customer Tier, as the matrix on the SLA & Escalation page gives them. For example, a Medium case escalated to Critical is due four hours after the escalation, and a Low case on a Mid-Market account raised to High is due eight hours after the edit.
+  
+  The new deadline is counted from the change, not from when the case was opened. Counted from the opening, a case escalated late would be past due the moment it was escalated, and the hourly SLA sweep would flag it as violated straight away. The new date is used only when it is sooner than the one the case already has. A case raised in the last hours of its old window keeps its sooner deadline, and a case already past due stays past due, so its breach is still recorded.
+  
+  Lowering the priority does not move the SLA Due Date, and neither does any other edit, including a save that sends the same priority again. A due date someone typed in by hand is kept, unless a later priority raise gives a sooner one. A save that sets the SLA Due Date itself keeps the date it sets. Cases whose priority was raised before this release keep the deadline they have.
+- 6736fc2: **A line item can no longer be removed from an accepted or expired quote, or from a closed deal.** Since earlier releases these lines could not be added or changed, but a rep could still delete one from the quote's Line Items panel or the deal's Products panel, or over the REST API, and the delete went through. The quote or deal kept its settled total, so its remaining lines no longer added up to it.
+  
+  Deleting one line of an accepted or expired quote, or of a closed-won or closed-lost deal, is now refused with the same lock as adding or changing one (409, `RECORD_LOCKED`). The message now names all three: *"Quote QTE-0007 - Annual Renewal is accepted, so its line items can no longer be added, changed or removed."* and *"Opportunity Acme Renewal is closed (closed_won), so its line items can no longer be added, changed or removed."* (FROM *"…can no longer be added or changed."*). Lines of a draft, in-review, presented or rejected quote, and of an open deal, are removed as before. Deletes made by imports and other system writes that carry no signed-in user are not affected.
+  
+  Deleting the whole quote or the whole deal is not affected: its lines are deleted with it. Nor does this add any refusal to deleting an account. HotCRM tells such a delete apart from removing one line by hand using the cascade-delete signal that ObjectStack 18.0.0-next.2 added (objectstack#23221). The Quotes and Opportunities guides now say so, in all three languages.
+- 202a4fa: A quote's **Discount Amount** and **Total Price** are now read-only. The system works them out from the quote's other pricing fields, as the Quotes guide says. Before this fix both could be typed by hand, in the edit dialog's Totals tab or over the REST API, and the typed figure was stored. It stayed until the next discount, tax, shipping or line-item change replaced it, and a quote accepted before then drafted its contract at the typed total.
+  
+  Now the edit dialog shows both fields as read-only. A REST update that sends either field still succeeds, but the sent value is ignored: the stored figure stays as it was, or is worked out afresh when the same update changes a pricing field. A quote created over the REST API with a Subtotal also gets both figures worked out from its Subtotal, Discount %, Tax and Shipping & Handling, whatever figures the request sent. For example, a quote created with a 1,000 subtotal, a 10% discount, 50 tax and a total of 999 is stored with a Discount Amount of 100 and a Total Price of 950. A quote created without a Subtotal has neither figure until it gets one.
+  
+  **Generate Quote** now prices the new quote with the same formula an edit uses, so the new quote's Discount Amount and Total Price always add up to its Subtotal. When the discount comes to an exact half cent, the Total Price can differ by one cent from what Generate Quote stored before. For example, a 999.95 opportunity at 10% now gets a Discount Amount of 100.00 and a Total Price of 899.95, where it used to get 899.96, so the two came to one cent more than the Subtotal.
+  
+  Editing the discount, tax or shipping still updates both totals in the same save, and adding, changing or removing a line item still updates them right after. **Subtotal** can still be edited.
+- 3fd939d: **Lead cards now show the person's name, and the Lead Calendar shows follow-ups.**
+  
+  - **Lead Pipeline** (the kanban board): each card is titled by the lead's full name, with the company, email and star rating below it. Before, the card title was the first name alone, and the first and last name were printed again on two separate lines.
+  - **Lead Cards** (the gallery): each card is titled by the lead's full name, with the company as the first line, then job title, email, phone, status and rating. Before, the card was titled by the company, with the first and last name on two separate lines under it.
+  - **Lead Calendar**: a lead now sits on the day of its **Next Follow-up Date**, so the calendar shows the follow-ups you have planned. Before, it placed each lead on the day the lead was created, which put every newly loaded lead on one day. A lead with no follow-up date is not placed on a day; the calendar lists it separately, below the month.
+  
+  The view names are unchanged, so links and saved references to these views keep working.
+- 6b312eb: **The Sales Home page is now headed Sales Home, the name its sidebar entry gives it.** The page used to head itself **Sales Dashboard**, so a rep clicked **Sales Home** and landed on a page with a different name. That name also belongs to a different place: the sales dashboard opens from **Sales Performance**. The heading now matches the sidebar entry in every language the app ships: 销售主页 in Chinese, Inicio de Ventas in Spanish and 営業ホーム in Japanese.
+  
+  The **Welcome back** line under the heading is gone. It greeted no one by name and said nothing about the page. The heading is now followed by one line, the page's description, which says what the page holds: key metrics, your open work and upcoming events.
+- bd8166c: **The sample knowledge base now looks like one.** A new database used to hold four sample articles, one in each of four categories, so the Knowledge Articles list grouped into four headings with a single row under each, and three of the seven categories were empty.
+  
+  It now holds 24 articles, three or four in every category: Getting Started, How-To, Troubleshooting, Billing & Pricing, API & Integrations, Release Notes and Policy. Most are published, with publish and review dates spread over the past months. Three are drafts and one is in review, so **My Drafts** has work in it for the administrator who owns the sample data, and two are archived (a superseded price list and superseded support hours), so the archived state shows up in the list too.
+  
+  A demo database created earlier gets the 20 new articles the next time the app starts; the four it already has are left exactly as they are. Restarting the app adds no further rows: each sample article is written once, and a later start never adds a copy or writes over an edit.
+- 33a8843: **A sample lead you convert stays converted after the server restarts.** The sample leads that ship with HotCRM were written back on every boot. A sample lead converted with Convert Lead therefore came back after the next restart at the stage it was seeded with, Contacted for example, while it still counted as converted and kept its links to the new account, contact and opportunity. Its stage path showed the old stage, Convert Lead stayed hidden, and nothing on the page said the lead had been converted.
+  
+  The sample leads are now added once, on the first boot of a database that does not have them, and a later boot leaves them alone. A conversion, or any other change you make to a sample lead, now survives a restart. The follow-up and last-contacted dates on the sample leads now keep the values from the day they were added and no longer move forward on each boot. Leads you create yourself were never affected, and conversion itself is unchanged.
+  
+  A sample lead that a restart has already reset keeps its wrong stage: this release does not repair it. Reset the demo database (`pnpm demo:reset`) to start again from the shipped sample data.
+- 5224ed7: **The number tiles at the top of the dashboards no longer draw a half-empty box.** Each figure tile (Total Pipeline, Open Cases, Interactions Logged and the like) was set two rows tall, but a figure needs about one row, so the number sat in the upper half of a box with blank space underneath. All 29 figure tiles on the Sales Performance, Executive Overview, CRM Overview, Sales Activity and Customer Service dashboards are now one row tall and fit their content, and the charts and tables below them move up with them.
+  
+  Nothing about the figures changed: the same values, filters and positions in each row. Two figure tiles stay tall on purpose, **Interactions on Deals** and **Open Deals** on Sales Activity, because they share their row with two charts.
+- 5b7301f: **Your changes to HotCRM's sample records now survive a server restart.** The sample accounts, contacts, deals and their line items, tasks, meetings and attendees, campaigns and their members, products, contracts, quotes and their line items, cases and knowledge articles were written back on every boot. Anything you changed on one of them was undone by the next restart: a completed task reopened, a deal you moved went back to its old stage, a product's new price returned to the shipped one, and a contact you marked as an account's primary contact lost the flag to the sample contact again.
+  
+  These sample records are now added once, on the first boot of a database that does not have them, and a later boot leaves them alone. The sample leads already worked this way.
+  
+  What this costs, knowingly: the dates on the sample records (due dates, close dates, meeting times, campaign, contract and quote dates) now keep the values from the day the records were added, and no longer move forward on each boot. On a demo database that runs for weeks, sample tasks fall overdue and sample deals pass their close dates, the way real ones would. And a sample record that a later HotCRM release changes reaches only a database that does not have that record yet: an existing database keeps the version it was given. Reset the demo database (`pnpm demo:reset`) to start again from the shipped sample data.
+  
+  The sample entries on a lead's activity timeline are added once too, so each one keeps matching the call or meeting it records. One kind of sample row still follows each boot: the forecast snapshots move with the calendar so the forecast history stays current, so a change you make to a sample forecast snapshot is still written back on the next restart. The current quarter's forecast, which the nightly sweep creates, is never a sample row.
+  
+  A sample record that a restart has already reset stays as the restart left it: make the change again, or reset the demo database. Records you create yourself were never affected.
+
 ## 5.0.0
 
 ### Major Changes

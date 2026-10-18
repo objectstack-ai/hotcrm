@@ -13,7 +13,8 @@ type Flow = Automation.Flow;
  * `sla_due_date` and `is_sla_violated`, but nothing watched the clock — a case
  * could silently blow its SLA. This flow sweeps open (not resolved/closed)
  * cases whose `sla_due_date` has passed, stamps the breach, escalates, and
- * alerts the owner.
+ * alerts the owner. A case that is already escalated keeps the escalation it
+ * has — the agent's reason and the date — and gets the breach on top of it.
  *
  * A breached case with NO owner is the hard case, and it is answered in two
  * halves. The escalation the sweep writes is itself what gives the case an
@@ -77,6 +78,44 @@ const CASE_HAS_OWNER = () => P`has(vars.currentCase) && has(vars.currentCase.own
 const CASE_HAS_NO_OWNER = () => P`has(vars.currentCase) && (!has(vars.currentCase.owner_id)
   || vars.currentCase.owner_id == null || string(vars.currentCase.owner_id).trim() == "")`;
 
+/**
+ * "The case in hand is escalated already" — by the agent's Escalate Case, by
+ * `case_escalation` on a Critical priority, or by an earlier sweep of a case
+ * that was then worked (back to `in_progress`) and has breached again.
+ *
+ * Such a case already carries its escalation's record: the reason the agent
+ * typed and the Escalated Date. The sweep adds the breach and leaves that
+ * record as it is (#2073 item 9). {@link CASE_NOT_YET_ESCALATED} is its
+ * complement, in the partition polarity of {@link CASE_HAS_NO_OWNER}.
+ *
+ * Read off `is_escalated`, the flag the record page shows, and not off
+ * `escalated_date`: the seed's escalated cases carry the flag and a reason but
+ * no date, so a date-keyed gate would still replace their reasons. The flag
+ * reads back as a boolean (measured on the verify boot's SQLite driver;
+ * `driver-sql` coerces a declared boolean column on read), so the `1 != true`
+ * trap `case_escalation` documents does not reach a loop item.
+ *
+ * TOTALITY: the same loop item as above, so `has()` before every field read.
+ */
+const CASE_ALREADY_ESCALATED = () => P`has(vars.currentCase) && has(vars.currentCase.is_escalated)
+  && vars.currentCase.is_escalated == true`;
+
+/** The exact complement of {@link CASE_ALREADY_ESCALATED} over a bound `currentCase`. */
+const CASE_NOT_YET_ESCALATED = () => P`has(vars.currentCase) && (!has(vars.currentCase.is_escalated)
+  || vars.currentCase.is_escalated != true)`;
+
+/**
+ * What every breached case is written, escalated before or not: the flag, and
+ * the `escalated` status. Authored once for the two breach writes below.
+ *
+ * The status is kept on BOTH writes so everything after them behaves as it did
+ * before they were split. On a case not in `escalated` it is the transition
+ * `case_escalation_reassign` and `case_status_side_effects` fire on (the
+ * hand-off, the follow-up task); on a case already in `escalated` it is no
+ * transition, and both stand down, as they always did.
+ */
+const SLA_BREACH = { is_sla_violated: true, status: 'escalated' } as const;
+
 export const CaseSlaMonitorFlow: Flow = {
   name: 'case_sla_monitor',
   label: 'Case SLA Monitor',
@@ -129,6 +168,16 @@ export const CaseSlaMonitorFlow: Flow = {
         body: guarded('case', {
           nodes: [
             {
+              // Gateway only — the predicate lives on the out-edges (`b6` /
+              // `b7`), an exact partition like `check_owner`'s below.
+              //
+              // The breach write splits on whether the case is escalated
+              // already (#2073 item 9). A first escalation writes its reason
+              // and date; an existing escalation keeps the ones it has.
+              id: 'check_escalated', type: 'decision', label: 'Already Escalated?',
+            },
+            {
+              // The FIRST escalation of a breached case.
               id: 'flag_breach', type: 'update_record', label: 'Flag SLA Breach',
               config: {
                 objectName: 'crm_case',
@@ -138,12 +187,33 @@ export const CaseSlaMonitorFlow: Flow = {
                 // error) rejects the whole write otherwise, turning this sweep
                 // into a silent no-op (cf. the same fix in case_escalation).
                 fields: {
-                  is_sla_violated: true,
+                  ...SLA_BREACH,
                   is_escalated: true,
-                  status: 'escalated',
                   escalated_date: cel`isoDatetime(now())`,
                   escalation_reason: 'Auto-escalated: SLA due date breached',
                 },
+              },
+            },
+            {
+              // The breach on a case that is ALREADY ESCALATED: the flag and
+              // the status, and nothing of the escalation's own record.
+              //
+              // ⛔ No `escalation_reason`, `escalated_date` or `is_escalated`
+              // here. The case carries all three already, and the reason has
+              // no history: when one write served every case, the agent's
+              // reason was replaced by the auto text, and the date moved to the
+              // sweep, for good (measured, #2073 item 9).
+              //
+              // Leaving the keys OUT is the fix, not writing the stored values
+              // back: `currentCase` is the snapshot `query_breached` took, so a
+              // write-back would undo an edit made while the sweep ran.
+              // `escalation_reason_required` is satisfied without the key — it
+              // reads the merged record, and an escalated case has its reason.
+              id: 'flag_breach_escalated', type: 'update_record', label: 'Flag SLA Breach (Already Escalated)',
+              config: {
+                objectName: 'crm_case',
+                filter: { id: cel`currentCase.id` },
+                fields: { ...SLA_BREACH },
               },
             },
             {
@@ -162,11 +232,12 @@ export const CaseSlaMonitorFlow: Flow = {
               // never even flagged. Measured, not assumed — see
               // `test/flow-sla-ownerless-case.test.ts`.
               //
-              // The gate sits AFTER `flag_breach` on purpose. `flag_breach` is
-              // unconditional, so an ownerless breach is still RECORDED on the
-              // record — visible in views and reports, where a service manager
-              // finds it. Gating both would trade a dead run for a silently
-              // dropped alert on exactly the cases most likely to be neglected.
+              // The gate sits AFTER the breach write on purpose. One of the two
+              // breach writes runs on every case, owned or not, so an ownerless
+              // breach is still RECORDED on the record — visible in views and
+              // reports, where a service manager finds it. Gating both would
+              // trade a dead run for a silently dropped alert on exactly the
+              // cases most likely to be neglected.
               //
               // The ownerless branch is not a dead end: it goes to
               // `reload_case`, because by the time the gate is reached the
@@ -178,7 +249,7 @@ export const CaseSlaMonitorFlow: Flow = {
               // Re-read the case the sweep just wrote.
               //
               // ⚠️ THE ASSIGNMENT IS NOT AUTHORED HERE, AND MUST NOT BE.
-              // `flag_breach` writes `status: 'escalated'`, and that IS the
+              // The breach write carries `status: 'escalated'`, and that IS the
               // escalation transition `case_escalation_reassign`
               // (`src/service/objects/_case-assignment.ts`, `beforeUpdate`, priority
               // 250) fires on: it stamps the least-loaded holder of the
@@ -199,7 +270,7 @@ export const CaseSlaMonitorFlow: Flow = {
               //
               // ⛔ The READ is what this node is for, not a second write:
               // `currentCase` is the loop item bound by `query_breached` BEFORE
-              // `flag_breach` ran, so the owner the sweep just assigned is
+              // the breach write ran, so the owner the sweep just assigned is
               // invisible to it and `{currentCase.owner_id}` addresses the
               // pre-write state. Re-binding the SAME variable is what makes the
               // rest of the iteration — the gate below and the notify node's
@@ -243,7 +314,7 @@ export const CaseSlaMonitorFlow: Flow = {
               //
               // ⚠️ THE RECIPIENT IS RULED, NOT INCIDENTAL — #1535, maintainer
               // ruling 2026-09-07, option A. On a breached
-              // case that ALREADY HAS AN OWNER, `flag_breach` writes
+              // case that ALREADY HAS AN OWNER, the breach write carries
               // `status: 'escalated'` and `case_escalation_reassign` hands the
               // case to the least-loaded `service_manager` inside that same
               // write — yet this node addresses `currentCase` as
@@ -287,7 +358,13 @@ export const CaseSlaMonitorFlow: Flow = {
             },
           ],
           edges: [
+            // Exactly one breach write per bound case: the same partition
+            // discipline as `check_owner` below, never a `default` edge beside
+            // a conditional one.
+            { id: 'b6', source: 'check_escalated', target: 'flag_breach', type: 'conditional', condition: CASE_NOT_YET_ESCALATED(), label: 'Not escalated yet' },
+            { id: 'b7', source: 'check_escalated', target: 'flag_breach_escalated', type: 'conditional', condition: CASE_ALREADY_ESCALATED(), label: 'Already escalated — keep its reason and date' },
             { id: 'b1', source: 'flag_breach', target: 'check_owner', type: 'default' },
+            { id: 'b8', source: 'flag_breach_escalated', target: 'check_owner', type: 'default' },
             // The two out-edges of `check_owner` are an exact PARTITION of the
             // cases where `currentCase` is bound (see {@link CASE_HAS_OWNER} /
             // {@link CASE_HAS_NO_OWNER}) — never a `default` edge alongside a
