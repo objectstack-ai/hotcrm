@@ -172,10 +172,13 @@ export const createHotCrmServiceStack = (
         // contributes into one of these groups, the order is an authored fact
         // instead of a registration-order accident.
         priority: 10,
+        // The dashboard leads (#2060 item 5): `group_service` is the app's
+        // first group and declares no children, so this item is the first
+        // entry a service agent or manager is shown, and the app opens on it.
         items: [
+          { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge' },
           { id: 'nav_case',      type: 'object', objectName: 'crm_case',              label: 'Cases',     icon: 'life-buoy' },
           { id: 'nav_knowledge', type: 'object', objectName: 'crm_knowledge_article', label: 'Knowledge', icon: 'book-open' },
-          { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge' },
         ],
       },
       {
