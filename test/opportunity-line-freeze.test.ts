@@ -126,4 +126,15 @@ describe('what the freeze lets through', () => {
     await verify.hooks.run('crm_opportunity_line_item', 'update', { id: line.id, line_number: null }, as(admin));
     expect(typeof (await stored('crm_opportunity_line_item', line.id))!.line_number).toBe('number');
   });
+
+  it('lets through a write that changes only product_title, a name the hooks write (#2086)', async () => {
+    // `product_title_mirror` re-stamps a renamed product's lines elevated but
+    // AS the renaming user, so this freeze sees a user; the key is what lets it
+    // through. A rep never reaches it: the engine holds their readonly value back.
+    const { line } = await dealWithLine('closed_won');
+    const input = await runShippedHook(verify, hookNamed('opportunity_line_item_freeze'), {
+      event: 'beforeUpdate', input: { id: line.id, product_title: 'Renamed Product' }, previous: line, as: rep.token,
+    });
+    expect(input.product_title).toBe('Renamed Product');
+  });
 });

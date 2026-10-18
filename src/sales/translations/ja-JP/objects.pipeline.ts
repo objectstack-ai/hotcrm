@@ -399,6 +399,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       crm_opportunity: { label: '商談' },
       crm_product: { label: '製品' },
       description: { label: '説明' },
+      product_title: { label: '製品タイトル', help: '製品のタイトル。製品と同期して更新され、この明細行の名前になります。' },
       quantity: { label: '数量' },
       list_price: { label: '定価', help: '製品のカタログ価格から自動入力されます' },
       unit_price: { label: '販売価格', help: '交渉後の単価（定価と異なる場合があります）' },

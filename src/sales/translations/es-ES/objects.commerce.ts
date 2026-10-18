@@ -100,6 +100,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_quote: { label: 'Cotización' },
       crm_product: { label: 'Producto' },
       description: { label: 'Descripción' },
+      product_title: { label: 'Título del producto', help: 'El título del producto, sincronizado con el producto. Da nombre a esta línea.' },
       quantity: { label: 'Cantidad' },
       list_price: { label: 'Precio de Lista' },
       unit_price: { label: 'Precio de Venta' },

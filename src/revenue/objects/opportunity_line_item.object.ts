@@ -50,9 +50,27 @@ export const OpportunityLineItem = ObjectSchema.create({
   // quantity/unit_price/discount below. Master-detail children still inherit
   // the master's sharing automatically.
 
+  // A line is named after the product it sells (#2086, ADR-0079 D1). With no
+  // `nameField` the platform derived `description`, so a line added through the
+  // Products picker, which writes no description, was named by its record id
+  // in the opportunity's rail and in its own record header.
+  //
+  // ⛔ Not a formula over `record.crm_product`: a formula reads only this
+  // record's own columns, and a reference holds the product's bare id there.
+  // Measured on 18.0.0-next.3, `record.crm_product.name` read null on every
+  // row. The title is therefore a STORED mirror of the product's title, the
+  // one shape `skills/objectstack-data/SKILL.md` prescribes for a related
+  // record's title ("mirror the value, always"). It has three writers:
+  // `opportunity_line_item_product_title` (insert, a product change, and any
+  // update of a row that has none), `product_title_mirror` on `crm_product`
+  // (a rename), and `scripts/backfill-line-product-title.ts` (rows older than
+  // this field). It is a real column, so search scans it directly.
+  nameField: 'product_title',
+  searchableFields: ['product_title', 'description'],
+
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
-  // Two groups, derived from the nine fields this object actually declares
+  // Two groups, derived from the ten fields this object actually declares
   // rather than copied off a neighbour (#1453). The split is the one the
   // arithmetic already makes: everything `total_price` multiplies together is
   // `pricing`, everything that says WHICH line this is is `basic`.
@@ -123,6 +141,17 @@ export const OpportunityLineItem = ObjectSchema.create({
       label: 'Description',
       group: 'basic',
       maxLength: 500,
+    }),
+
+    // The line's title, which is the product's `display_title` (`product_code - name`).
+    // `readonly`: the hooks named on `nameField` above are its only writers.
+    // 300 is room for the product's 255-character name plus its code.
+    product_title: Field.text({
+      label: 'Product Title',
+      group: 'basic',
+      readonly: true,
+      maxLength: 300,
+      description: "The product's title, kept in step with the product. It names this line.",
     }),
 
     quantity: Field.number({
