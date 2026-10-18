@@ -247,23 +247,10 @@ describe('#1666 — crm_opportunity approval stamps are declared readonly', () =
     expect(after.approved_date, 'the approval date was stripped — the stamp is now permanently null').toBeTruthy();
   });
 
-  it('the shipped mark_rejected node still lands its stamp on the system path', async () => {
-    const node = findNode(OpportunityApprovalFlow as AnyRec, 'mark_rejected')!;
-    expect(node.config.objectName).toBe('crm_opportunity');
-
-    const id = await seedOpportunity();
-    const engine = automation({
-      pin_mark_rejected: runnable(
-        'pin_mark_rejected',
-        (OpportunityApprovalFlow as AnyRec).runAs,
-        node,
-        { filter: { id: cel`rowId` } },
-      ),
-    });
-    await engine.execute('pin_mark_rejected', { params: { rowId: id }, userId: 'user_1', event: 'manual' } as never);
-
-    expect((await readBack('crm_opportunity', id)).approval_status).toBe('rejected');
-  });
+  // A rejection has no writer of this app's own since #2061: `mark_rejected`
+  // only restated the approval node's `rejected` mirror, as the submitter, and
+  // was removed. That the mirror's `rejected` still lands on the `readonly`
+  // column is pinned end to end in `test/approval-decision-attribution.test.ts`.
 
   it('a plain user-context UPDATE of either stamp is STRIPPED', async () => {
     const id = await seedOpportunity();

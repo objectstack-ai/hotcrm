@@ -69,9 +69,9 @@ export const AccountApprovalFlow: Flow = {
   status: 'active',
   // Same reading the two sibling approval flows record. A gate exists to
   // CONSTRAIN the submitter, so the submitter's own scope is the wrong identity
-  // to evaluate it under; and the verdict writes below land on
-  // `approval_status`, which is `readonly: true` on the object, so only a
-  // platform write reaches it at all.
+  // to evaluate it under. The verdict on `approval_status` (`readonly: true` on
+  // the object) is the approval node's own write, not this run's: see
+  // `approvalStatusField` on `account_review`.
   runAs: 'system',
 
   variables: [{ name: 'accountId', type: 'text', isInput: true, isOutput: false }],
@@ -130,17 +130,14 @@ export const AccountApprovalFlow: Flow = {
         // `readonly: true`, so the only field this decision touches is one no
         // user may write anyway.
         lockRecord: false,
+        // The mirror writes the whole verdict: `pending` when the request
+        // opens, then `approved` or `rejected` when it is decided, the decision
+        // written as the person who made it. ⛔ No `update_record` after the
+        // decision restates it (#2061): a write from the resumed run carries the
+        // run's trigger user, the submitter, so it re-stamped `updated_by` from
+        // the approver back to the submitter while changing no value. Measured
+        // on 18.0.0-next.3, pinned in `test/approval-decision-attribution.test.ts`.
         approvalStatusField: 'approval_status',
-      },
-    },
-    {
-      id: 'mark_approved',
-      type: 'update_record',
-      label: 'Mark Approved',
-      config: {
-        objectName: 'crm_account',
-        filter: { id: cel`record.id` },
-        fields: { approval_status: 'approved' },
       },
     },
     {
@@ -154,16 +151,6 @@ export const AccountApprovalFlow: Flow = {
         template: 'crm.account_approved',
         templateData: { name: cel`accountRecord.name` },
         actionUrl: '/crm_account/{{record.id}}',
-      },
-    },
-    {
-      id: 'mark_rejected',
-      type: 'update_record',
-      label: 'Mark Rejected',
-      config: {
-        objectName: 'crm_account',
-        filter: { id: cel`record.id` },
-        fields: { approval_status: 'rejected' },
       },
     },
     {
@@ -188,11 +175,9 @@ export const AccountApprovalFlow: Flow = {
     { id: 'e2', source: 'get_account', target: 'account_review', type: 'default' },
     // Approval-node branch labels — the engine resumes down the out-edge whose
     // `label` matches the recorded decision.
-    { id: 'e3', source: 'account_review', target: 'mark_approved', type: 'default', label: 'approve' },
-    { id: 'e4', source: 'account_review', target: 'mark_rejected', type: 'default', label: 'reject' },
-    { id: 'e5', source: 'mark_approved', target: 'notify_approved', type: 'default' },
+    { id: 'e3', source: 'account_review', target: 'notify_approved', type: 'default', label: 'approve' },
+    { id: 'e4', source: 'account_review', target: 'notify_rejected', type: 'default', label: 'reject' },
     { id: 'e6', source: 'notify_approved', target: 'end', type: 'default' },
-    { id: 'e7', source: 'mark_rejected', target: 'notify_rejected', type: 'default' },
     { id: 'e8', source: 'notify_rejected', target: 'end', type: 'default' },
   ],
 };

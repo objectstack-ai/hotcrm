@@ -23,7 +23,8 @@ type Flow = Automation.Flow;
  * has ever existed — the flow registers, binds its trigger, opens nothing, and
  * costs a predicate evaluation per insert. An install arms the gate by changing
  * that one value to `'pending'`; from then on every NEW lead enters here, and
- * `lead.hook.ts` refuses its conversion until this flow writes a verdict.
+ * `lead.hook.ts` refuses its conversion until this flow's approval node writes
+ * a verdict.
  *
  * ⛔ Do NOT reach for `status: 'draft'` as the off switch instead. Measured on
  * `@objectstack/service-automation` 17.4.0, whose own registration
@@ -59,8 +60,9 @@ export const LeadConversionApprovalFlow: Flow = {
   // the wrong identity to evaluate it under — and an approval control that
   // engages only for writers carrying a session is not a control, since a
   // `runAs: 'system'` importer creating leads would simply bypass it. The
-  // verdict writes below also land on `conversion_approval_status`, which is
-  // `readonly: true` on the object, so only a platform write reaches it.
+  // verdict on `conversion_approval_status` (`readonly: true` on the object) is
+  // the approval node's own write, not this run's: see `approvalStatusField` on
+  // `conversion_review`.
   runAs: 'system',
 
   variables: [
@@ -117,17 +119,13 @@ export const LeadConversionApprovalFlow: Flow = {
         // open: the verdict column is `readonly: true`, so the only field this
         // node's decision touches is one no user may write anyway.
         lockRecord: false,
+        // The mirror writes the decision itself, `approved` or `rejected`, as
+        // the person who made it. ⛔ No `update_record` after the decision
+        // restates it (#2061): a write from the resumed run carries the run's
+        // trigger user, the submitter, so it re-stamped `updated_by` from the
+        // approver back to the submitter while changing no value. Measured on
+        // 18.0.0-next.3, pinned in `test/approval-decision-attribution.test.ts`.
         approvalStatusField: 'conversion_approval_status',
-      },
-    },
-    {
-      id: 'mark_approved',
-      type: 'update_record',
-      label: 'Mark Approved',
-      config: {
-        objectName: 'crm_lead',
-        filter: { id: cel`record.id` },
-        fields: { conversion_approval_status: 'approved' },
       },
     },
     {
@@ -141,16 +139,6 @@ export const LeadConversionApprovalFlow: Flow = {
         template: 'crm.lead_conversion_approved',
         templateData: { first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name` },
         actionUrl: '/crm_lead/{{record.id}}',
-      },
-    },
-    {
-      id: 'mark_rejected',
-      type: 'update_record',
-      label: 'Mark Rejected',
-      config: {
-        objectName: 'crm_lead',
-        filter: { id: cel`record.id` },
-        fields: { conversion_approval_status: 'rejected' },
       },
     },
     {
@@ -175,11 +163,9 @@ export const LeadConversionApprovalFlow: Flow = {
     { id: 'e2', source: 'get_lead', target: 'conversion_review', type: 'default' },
     // Approval-node branch labels — the engine resumes down the out-edge whose
     // `label` matches the recorded decision.
-    { id: 'e3', source: 'conversion_review', target: 'mark_approved', type: 'default', label: 'approve' },
-    { id: 'e4', source: 'conversion_review', target: 'mark_rejected', type: 'default', label: 'reject' },
-    { id: 'e5', source: 'mark_approved', target: 'notify_approved', type: 'default' },
+    { id: 'e3', source: 'conversion_review', target: 'notify_approved', type: 'default', label: 'approve' },
+    { id: 'e4', source: 'conversion_review', target: 'notify_rejected', type: 'default', label: 'reject' },
     { id: 'e6', source: 'notify_approved', target: 'end', type: 'default' },
-    { id: 'e7', source: 'mark_rejected', target: 'notify_rejected', type: 'default' },
     { id: 'e8', source: 'notify_rejected', target: 'end', type: 'default' },
   ],
 };

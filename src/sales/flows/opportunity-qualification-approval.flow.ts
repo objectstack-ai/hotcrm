@@ -54,8 +54,9 @@ type Flow = Automation.Flow;
  * Measured on a 17.6.0 boot with this gate armed: a deal raised past
  * `LARGE_DEAL_AMOUNT` while its 立项 request waited failed
  * `opportunity_approval`'s run with that error (logged, nothing opened); the
- * amount approval opened on the next write, which was this flow's own verdict
- * stamp, because the amount flow's entry tests the current value.
+ * amount approval opened on the next write, because the amount flow's entry
+ * tests the current value. Re-measured on 18.0.0-next.3, that next write is the
+ * approval node's own `approved` mirror, written as the approver (#2061).
  */
 export const OpportunityQualificationApprovalFlow: Flow = {
   name: 'opportunity_qualification_approval',
@@ -100,7 +101,7 @@ export const OpportunityQualificationApprovalFlow: Flow = {
         //   exclude the flow's own write-back"); with it, none. `previous.*` is
         //   guarded FAIL-CLOSED: no visible prior value, no visible new request.
         //
-        // `mark_qualified` leaves the gate `approved` (out of reach) and
+        // An approval leaves the gate `approved` (out of reach) and
         // `clear_request` unticks the request, so neither re-enters.
         condition: P`has(record.qualification_approval_status)
           && (record.qualification_approval_status == "pending" || record.qualification_approval_status == "rejected")
@@ -138,17 +139,14 @@ export const OpportunityQualificationApprovalFlow: Flow = {
         // are refused by `opportunity_lifecycle` whether or not a request is
         // open, so the lock would add nothing but the freeze.
         lockRecord: false,
+        // The mirror writes the decision itself, `approved` or `rejected`, as
+        // the person who made it, so an approval needs no write of this run's.
+        // ⛔ No `update_record` on the approve branch restates it (#2061): a
+        // write from the resumed run carries the run's trigger user, the
+        // submitter, so it re-stamped `updated_by` from the approver back to the
+        // submitter while changing no value. Measured on 18.0.0-next.3, pinned
+        // in `test/approval-decision-attribution.test.ts`.
         approvalStatusField: 'qualification_approval_status',
-      },
-    },
-    {
-      id: 'mark_qualified',
-      type: 'update_record',
-      label: 'Mark Qualified',
-      config: {
-        objectName: 'crm_opportunity',
-        filter: { id: cel`record.id` },
-        fields: { qualification_approval_status: 'approved' },
       },
     },
     {
@@ -171,9 +169,8 @@ export const OpportunityQualificationApprovalFlow: Flow = {
     { id: 'e1', source: 'start', target: 'get_opportunity', type: 'default' },
     { id: 'e2', source: 'get_opportunity', target: 'qualification_review', type: 'default' },
     // Approval-node branch labels.
-    { id: 'e3', source: 'qualification_review', target: 'mark_qualified', type: 'default', label: 'approve' },
+    { id: 'e3', source: 'qualification_review', target: 'end', type: 'default', label: 'approve' },
     { id: 'e4', source: 'qualification_review', target: 'clear_request', type: 'default', label: 'reject' },
-    { id: 'e5', source: 'mark_qualified', target: 'end', type: 'default' },
     { id: 'e6', source: 'clear_request', target: 'end', type: 'default' },
   ],
 };
