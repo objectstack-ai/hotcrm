@@ -97,33 +97,22 @@ export const SalesHomePage: Page = {
           id: 'home_header',
           label: 'Sales Home Header',
           properties: {
-            title: 'Sales Dashboard',
-            // Was `Welcome back, {current_user.first_name}`, which rendered as
-            // "Welcome back, " — the name was never going to arrive, because
-            // that one string mixes three vocabularies that do not compose:
-            //
-            //  1. `subtitle` is an `I18nLabel` (`ComponentPropsMap`,
-            //     `@objectstack/spec/ui`) — a display string or an inline
-            //     locale map, resolved by `resolveI18nLabel`. The field has no
-            //     token pass and no expression pass of its own.
-            //  2. Braces DO resolve in a page header, but the vocabulary is the
-            //     BOUND RECORD's own fields — `case_detail.page.ts` records the
-            //     measurement, where `{account}` matched no field and the
-            //     subtitle rendered blank until it was spelled `{crm_account}`.
-            //     A `type: 'home'` page has no record, so no brace token can
-            //     ever resolve here.
-            //  3. `current_user.first_name` is a CEL path, and CEL is written
-            //     bare, never inside `{…}`. The one resolvable brace token in
-            //     the filter vocabulary is `{current_user_id}` on its own.
-            //
-            // A greeting that names the user is not expressible on a
-            // translatable label, so the label now says the part that is true
-            // in every locale and the four bundles carry the translations
-            // (`pages.sales_home_page.subtitle`). Personalising it would need a
-            // component that takes user data — no shipped component does
-            // (`user:profile` and its neighbours are `emptyProps` rows), so
-            // this is a static greeting rather than a widened accept surface.
-            subtitle: 'Welcome back',
+            // The heading is the name the sidebar gives this page (`nav_sales_home`
+            // in `crm.app.ts`), so the entry a rep clicks and the page it opens
+            // agree (#2125). It restates the page `label` on purpose: the locale
+            // packs carry no `pages.sales_home_page.title`, and the platform's
+            // `translatePage` puts each pack's `label` here instead, so the
+            // heading can never drift from the nav label in any language.
+            // `test/sales-home-header.test.ts` holds that, locale by locale.
+            title: 'Sales Home',
+            // No `subtitle` (#2125). On the 18.0.0-next.3 console the page
+            // `description` above is drawn directly under this heading, and it
+            // already says what the page holds; a subtitle saying it again
+            // would be a second line repeating the first. The former
+            // "Welcome back" said nothing: a greeting that names the user is
+            // not expressible on a translatable label (the brace vocabulary
+            // in a page header is the BOUND RECORD's fields, and a `home`
+            // page has none — see `case_detail.page.ts`).
             // `icon` removed from `page:header` in @objectstack/spec 17.0.0
             // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
             // `account_detail.page.ts`; nothing ever drew it.
