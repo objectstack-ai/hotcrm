@@ -73,15 +73,18 @@ const opportunityLineItemProductTitle: Hook = createLineItemProductTitle(
  * Priority 90 runs it ahead of the price fill and the numbering, so the
  * caller's own payload is what is judged, not the keys those two inject.
  *
- * ⚠️ DELETE is not guarded: deleting a deal cascades to its lines as the
- * deleting user, the same open question as quote lines (decision card #2078).
+ * A user's DELETE of a closed deal's line is refused too (#2088, ruling C of
+ * #2078), and only a hand delete: deleting the deal cascades to its lines as
+ * the deleting user, and that cascade is let through, so a closed deal stays
+ * deletable (#720). Measured on 18.0.0-next.3 before this leg: a rep's REST
+ * `DELETE` of a closed-won deal's line answered 200 and the line was gone.
  */
 const opportunityLineItemFreeze: Hook = {
   name: 'opportunity_line_item_freeze',
   object: 'crm_opportunity_line_item',
-  events: ['beforeInsert', 'beforeUpdate'],
+  events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 90,
-  description: 'Refuse a user adding, changing or moving a line item of a closed opportunity.',
+  description: 'Refuse a user adding, changing, moving or removing a line item of a closed opportunity.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts`
     // because a lowered body has no module scope and `extractHookBody` THROWS on
@@ -102,10 +105,17 @@ const opportunityLineItemFreeze: Hook = {
       err.userMessage = userMessage;
       return err;
     }
-    const { input, previous } = ctx;
+    const { event, input, previous } = ctx;
     // `product_title` (#2086) is a name, not a figure, and hooks are its only
     // writers: the engine holds a caller's readonly value back from this hook.
-    const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number', 'product_title'].includes(k) && input[k] !== previous?.[k]);
+    // A delete removes the line, so it is a change, unless the engine's own
+    // cascade issued it (the deal being deleted): the cascade runs as the
+    // deleting user, and the platform's declared marker is the one thing that
+    // tells it from a hand delete (objectstack#23221). ⛔ Read nothing else to
+    // tell them apart (#1165). The deal is the pre-image's `crm_opportunity`.
+    const changed = event === 'beforeDelete'
+      ? ctx.referentialCascadeDelete !== true
+      : Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number', 'product_title'].includes(k) && input[k] !== previous?.[k]);
     if (!changed || !ctx.user?.id) return;
     for (const id of new Set([input.crm_opportunity, previous?.crm_opportunity])) {
       const deal = typeof id === 'string' && id
@@ -114,7 +124,7 @@ const opportunityLineItemFreeze: Hook = {
       if (deal?.stage === 'closed_won' || deal?.stage === 'closed_lost') {
         // `crm_opportunity.nameField` is `name` — never the record id (#1243).
         const name = typeof deal.name === 'string' ? deal.name.trim() : '';
-        throw refuse(`${name ? `Opportunity ${name}` : 'Opportunity'} is closed (${deal.stage}), so its line items can no longer be added or changed.`, 'RECORD_LOCKED', 409);
+        throw refuse(`${name ? `Opportunity ${name}` : 'Opportunity'} is closed (${deal.stage}), so its line items can no longer be added, changed or removed.`, 'RECORD_LOCKED', 409);
       }
     }
   },

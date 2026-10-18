@@ -20,13 +20,25 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } 
  * Pinned both ways: a user's insert, change or move is refused with the deal
  * freeze's own envelope (`RECORD_LOCKED` / 409); an open deal still takes lines
  * (the control), a system write still lands, and the line-number back-fill's
- * touch still numbers a closed deal's line. Delete is decision card #2078.
+ * touch still numbers a closed deal's line.
+ *
+ * The delete leg (#2088, ruling C of #2078): measured on 18.0.0-next.3 before
+ * it, a rep's REST `DELETE` of a closed-won deal's line answered 200 and the
+ * line was gone. Now a user's HAND delete is refused the same way, while
+ * deleting the deal still takes its lines with it: the cascade runs as the
+ * deleting user and carries the platform's declared `referentialCascadeDelete`
+ * (objectstack#23221), the one key the guard reads. The lowered body is pinned
+ * on both sides of that key with an otherwise identical context. No account
+ * case here: an account with any deal, closed included, is not deletable at
+ * all (#2019, `content/docs/sales/accounts.mdx`), so no account delete reaches
+ * a deal's lines.
  */
 
 type Rec = Record<string, any>;
 
 let verify: VerifyStack;
 let rep: Person;
+let manager: Person;
 let admin: string;
 let k = 0;
 beforeAll(async () => {
@@ -34,6 +46,9 @@ beforeAll(async () => {
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@opportunity-line-freeze.test', {
     name: 'Line Freeze Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+  });
+  manager = await signUpPerson(verify, 'manager@opportunity-line-freeze.test', {
+    name: 'Line Freeze Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 180_000);
 
@@ -58,7 +73,7 @@ const dealWithLine = async (stage: string): Promise<{ deal: Rec; line: Rec; prod
 /** What the engine refused a write with, or null when it went through. */
 const refusalOf = (p: Promise<unknown>): Promise<Rec | null> => p.then(() => null, (e: Rec) => e);
 
-const sentence = (deal: Rec) => `Opportunity ${deal.name} is closed (${deal.stage}), so its line items can no longer be added or changed.`;
+const sentence = (deal: Rec) => `Opportunity ${deal.name} is closed (${deal.stage}), so its line items can no longer be added, changed or removed.`;
 
 /** The deal freeze's envelope, its wording, and the deal named by its name, never its id. */
 const expectFrozen = (err: Rec | null, deal: Rec): void => {
@@ -100,6 +115,58 @@ describe('a user cannot change the lines of a closed deal', () => {
     expect(err?.name).toBe('SandboxError');
     expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
     expect(String(err!.userMessage)).toBe(sentence(deal));
+  });
+});
+
+describe('a user cannot remove a line from a closed deal by hand (#2088)', () => {
+  it.each(['closed_won', 'closed_lost'])('refuses a rep deleting a line of a %s deal, and keeps the line', async (stage) => {
+    const { deal, line } = await dealWithLine(stage);
+    expectFrozen(await refusalOf(verify.hooks.run('crm_opportunity_line_item', 'delete', { id: line.id }, as(rep))), deal);
+    expect(await stored('crm_opportunity_line_item', line.id)).toBeDefined();
+  });
+
+  it('answers the REST door with the freeze envelope', async () => {
+    const { deal, line } = await dealWithLine('closed_won');
+    const res = await verify.apiAs(rep.token, 'DELETE', `/data/crm_opportunity_line_item/${line.id}`);
+    const body = (await res.json()) as Rec;
+    expect({ status: res.status, code: body.code }, JSON.stringify(body)).toEqual({
+      status: REFUSAL_CODES.locked.status, code: REFUSAL_CODES.locked.code,
+    });
+    expect(body.userMessage).toBe(sentence(deal));
+    expect(await stored('crm_opportunity_line_item', line.id)).toBeDefined();
+  });
+
+  it('on the SHIPPED path, refuses a hand delete and yields to the declared cascade marker, on one context', async () => {
+    const { deal, line } = await dealWithLine('closed_won');
+    const handDelete = { event: 'beforeDelete', input: { id: line.id }, previous: line, as: rep.token };
+    const err = await refusalOf(runShippedHook(verify, hookNamed('opportunity_line_item_freeze'), handDelete));
+    expect(err?.name).toBe('SandboxError');
+    expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
+    expect(String(err!.userMessage)).toBe(sentence(deal));
+    // The same delete, with the one key the engine's cascade adds.
+    await expect(runShippedHook(verify, hookNamed('opportunity_line_item_freeze'), { ...handDelete, referentialCascadeDelete: true })).resolves.toBeDefined();
+  });
+});
+
+describe('what the delete leg lets through', () => {
+  it('CONTROL — a rep still removes a line from an open deal', async () => {
+    const { line } = await dealWithLine('negotiation');
+    await verify.hooks.run('crm_opportunity_line_item', 'delete', { id: line.id }, as(rep));
+    expect(await stored('crm_opportunity_line_item', line.id)).toBeUndefined();
+  });
+
+  it('a system delete of a closed deal\'s line still lands (the freeze judges users only)', async () => {
+    const { line } = await dealWithLine('closed_won');
+    await verify.hooks.run('crm_opportunity_line_item', 'delete', { id: line.id }, { system: true });
+    expect(await stored('crm_opportunity_line_item', line.id)).toBeUndefined();
+  });
+
+  it.each(['closed_won', 'closed_lost'])('a manager can still delete a %s deal that carries lines, through the REST door', async (stage) => {
+    const { deal, line } = await dealWithLine(stage);
+    const res = await verify.apiAs(manager.token, 'DELETE', `/data/crm_opportunity/${deal.id}`);
+    expect(res.status, await res.clone().text()).toBe(200);
+    expect(await stored('crm_opportunity', deal.id)).toBeUndefined();
+    expect(await stored('crm_opportunity_line_item', line.id)).toBeUndefined();
   });
 });
 
