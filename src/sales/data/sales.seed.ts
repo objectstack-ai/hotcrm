@@ -1158,13 +1158,15 @@ analytics seats for the Ops org, (3) priority support SLA.`,
     // a customer demo. They also tell a coherent sales story instead of
     // overwhelming the board with anonymous generated rows.
     //
-    // PRICED TO STAY DRAGGABLE (#1902). A deal at or above
-    // `LARGE_DEAL_AMOUNT` is born into `opportunity_approval_on_create`, whose
-    // approval nodes hold the record with `lockRecord: true` — on the board
-    // that card refuses every drag with `RECORD_LOCKED`. When nine of the ten
-    // open deals sat over the line, the one board a demo opens first was
-    // frozen. So exactly TWO open deals exhibit the approval flow, one per
-    // tier, and both are in the block above: `Acme Platform Upgrade`
+    // PRICED TO STAY DRAGGABLE (#1902). A seeded deal opens no approval (the
+    // seed loader writes with `skipTriggers`), but an open deal at or above
+    // `LARGE_DEAL_AMOUNT` enters `opportunity_approval` on its first write
+    // after the seed (on a demo box, its owner's save in `pnpm demo:staff`),
+    // and the approval nodes then hold the record with `lockRecord: true` — on
+    // the board that card refuses every drag with `RECORD_LOCKED`. When nine
+    // of the ten open deals sat over the line, the one board a demo opens
+    // first was frozen. So exactly TWO open deals exhibit the approval flow,
+    // one per tier, and both are in the block above: `Acme Platform Upgrade`
     // (manager review only, $100K–$500K) and `Wayne Enterprise License`
     // (manager, then director sign-off, over `HIGH_VALUE_DEAL_AMOUNT`). Every
     // deal in this block is priced under the line, so each active stage keeps
