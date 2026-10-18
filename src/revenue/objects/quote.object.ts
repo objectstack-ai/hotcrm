@@ -175,22 +175,24 @@ export const Quote = ObjectSchema.create({
     }),
     
     // Pricing
-    // subtotal/discount_amount/total_price are NOT `readonly`, and the writer
-    // that decides it is the LINE-ITEM ROLLUP — not the flow this note used to
-    // name. `quote_total_rollup` (`quote_line_item.hook.ts`) recomputes all
-    // three on every line insert/update/delete through
-    // `api.object('crm_quote').update(...)`: a cross-record write via `ctx.api`,
-    // which is a `ScopedContext` over the ACTING USER's context. The keys are
-    // therefore CALLER-supplied to a non-`isSystem` UPDATE, exactly what
-    // `stripReadonlyFields` deletes — with `readonly` on, a quote's totals would
-    // freeze at whatever the flow first seeded and never track its lines again.
-    // ⚠️ `quote_generation` writes them too, but at CREATE time, and the strip
-    // is an UPDATE-path rule — that write would survive `readonly` untouched.
-    // The retired 16.x claim rested on that create-time write, which is how this
-    // note reached a right conclusion from the wrong writer.
-    // Measured in `test/readonly-write-semantics.test.ts` (insert is exempt) and
-    // `test/activity-recency.test.ts` (the `ctx.api` strip, on the real engine).
-    subtotal: Field.currency({ 
+    // `discount_amount` / `total_price` are DERIVED, so they are `readonly`
+    // (#2110). Their one writer is `quote_workflow` (`quote.hook.ts`), which
+    // derives both inside the write that changes an input: a create carrying a
+    // `subtotal`, or an update of an unsettled quote carrying `subtotal`,
+    // `discount`, `tax` or `shipping_handling`. The other writers reach the two
+    // figures only through it: `quote_total_rollup` (`quote_line_item.hook.ts`)
+    // writes `subtotal` alone, and `quote_generation` writes `subtotal` and
+    // `discount` at create.
+    //
+    // Why `readonly` does not freeze them (measured on 18.0.0-next.3,
+    // `test/hooks-runtime.test.ts`): for a non-system caller the engine holds a
+    // read-only key the CALLER sent back from the before-hooks and drops it
+    // after them, on update and (since 17.4.0) on create, but it never drops a
+    // key a before-hook wrote. So a person's typed figure is ignored (200, and
+    // the column keeps the derived figure) while the derivation lands. A system
+    // write (a seed, an import) is not stripped at all. `subtotal` stays
+    // editable: on a quote with no line items it is the rep's own number.
+    subtotal: Field.currency({
       label: 'Subtotal',
       group: 'pricing',
     }),
@@ -206,6 +208,7 @@ export const Quote = ObjectSchema.create({
     discount_amount: Field.currency({ 
       label: 'Discount Amount',
       group: 'pricing',
+      readonly: true,
     }),
     
     tax: Field.currency({ 
@@ -221,6 +224,7 @@ export const Quote = ObjectSchema.create({
     total_price: Field.currency({ 
       label: 'Total Price',
       group: 'pricing',
+      readonly: true,
     }),
     
     // Terms
@@ -355,7 +359,7 @@ export const Quote = ObjectSchema.create({
         in_review: ['draft', 'presented', 'rejected', 'expired'],
         presented: ['accepted', 'rejected', 'expired'],
         // `accepted` and `expired` are terminal, and not only by convention —
-        // `quote_pricing_guard` in quote.hook.ts freezes both, allowing edits
+        // `quote_workflow` in quote.hook.ts freezes both, allowing edits
         // to `internal_notes` and nothing else.
         accepted: [],
         expired: [],

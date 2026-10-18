@@ -6,15 +6,9 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
 type Flow = Automation.Flow;
 
 /**
- * The screen's discount as a CEL double, 0 when the rep cleared the box. A
- * source FRAGMENT, spliced into both pricing envelopes with `expression()`:
- * the `P` tag JSON-quotes an interpolated string, so it cannot splice one.
- */
-const DISCOUNT = '(!has(vars.discount) || isBlank(vars.discount) ? 0.0 : double(vars.discount))';
-
-/**
- * Edge `e4a`'s predicate — advance the deal to `proposal`. A source FRAGMENT
- * for the same reason as `DISCOUNT`: edge `e4b` is its exact negation,
+ * Edge `e4a`'s predicate — advance the deal to `proposal`. A source FRAGMENT,
+ * spliced with `expression()` because the `P` tag JSON-quotes an interpolated
+ * string and cannot splice one: edge `e4b` is its exact negation,
  * spliced as `!(…)`, so the two branches partition by construction rather
  * than by a hand-kept De Morgan copy (the rationale is on the edges).
  */
@@ -149,32 +143,17 @@ export const QuoteGenerationFlow: Flow = {
           // unbound, which the template wrote as nothing and the guard writes
           // as null (the quote field has no default, so the two agree).
           subtotal: cel`oppRecord.amount`, discount: cel`has(vars.discount) ? discount : null`,
-          // ⛔ A currency × percentage MUST be rounded to whole cents inside the
-          // expression — the flow hands the engine a money amount, never an
-          // unrounded double. `discount / 100` is inexact for every percentage
-          // whose hundredth is not a dyadic rational, so a BARE product carries
-          // a tail: 180,000 at 30% is 125999.99999999999. While these fields
-          // declared `scale: 2` the insert was rejected for it (`Total Price
-          // must have at most 2 decimal places (got 11)`, #1206). Currency
-          // fields no longer declare `scale` — the platform refuses it, a
-          // currency's decimals are its ISO 4217 minor unit (#1965) — so the
-          // write is now ACCEPTED and the tail would be stored silently. The
-          // rounding keeps `discount_amount` / `total_price` whole-cent amounts.
+          // ⛔ No `discount_amount` / `total_price` here (#2110). Both are
+          // `readonly` on `crm_quote` and this flow runs as the rep, so the
+          // engine's create-path strip drops them (measured on 18.0.0-next.3:
+          // both stored null). `quote_workflow` derives them from the
+          // `subtotal` and `discount` above, inside this same insert and to
+          // whole cents (#1206): the header's one formula.
           //
-          // Both are CEL value envelopes. CEL's `round()` is INTEGER-ONLY and
-          // single-argument, and it returns an INT — so the divisor MUST be
-          // the decimal `100.0`. ⛔ Never `/ 100`: in CEL int / int is integer
-          // division, which silently drops the cents (1,234.56 at 10% would
-          // store 123, not 123.46; `test/flow-quote.test.ts` pins it). ⛔ Not
-          // `round(x, 2)` either: there is no precision form, and it fails
-          // loudly. `double()` types the amount, which some drivers return as
-          // a string. A cleared discount (null / absent / "") prices as 0%, as
-          // it did before; the `has()` guard is what keeps that TOTAL.
-          //
-          // ⭐ This shape applies ANYWHERE a flow multiplies a currency by a
-          // percentage. Write the rounding, not the bare product.
-          discount_amount: expression(`round(double(oppRecord.amount) * (${DISCOUNT} / 100.0) * 100.0) / 100.0`, 'cel'),
-          total_price: expression(`round(double(oppRecord.amount) * (1.0 - ${DISCOUNT} / 100.0) * 100.0) / 100.0`, 'cel'),
+          // A currency × percentage in CEL, should a flow ever need one, rounds
+          // inside the expression with a DECIMAL divisor,
+          // `round(x * 100.0) / 100.0`: `round()` returns an int, so `/ 100` is
+          // integer division and drops the cents (#1984).
           payment_terms: 'net_30',
         },
         outputVariable: 'quoteId',

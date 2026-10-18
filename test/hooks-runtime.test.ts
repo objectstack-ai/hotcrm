@@ -284,6 +284,35 @@ describe('quote_total_rollup', () => {
       expect(contract.contract_value).toBe(78_400);
     });
   });
+
+  describe('quote_workflow · Discount Amount and Total Price are read-only, and still derived (#2110)', () => {
+    const priced = { subtotal: 80_000, discount: 0, discount_amount: 0, tax: 6_400, shipping_handling: 0, total_price: 86_400 };
+    const restAs = (method: string, path: string, body: Rec) => verify.apiAs(rep.token, method, `/data/crm_quote${path}`, body);
+
+    it("ignores a rep's typed figure over REST, and a pricing edit still re-derives both", async () => {
+      const quote = await quoteOf({ status: 'draft', ...priced });
+      // Ignored, not refused (measured on 18.0.0-next.3): the engine drops a
+      // read-only key the caller sent and commits the rest, so 200 and the
+      // stored figures unchanged.
+      for (const typed of [{ total_price: 1 }, { discount_amount: 5 }]) {
+        expect((await restAs('PATCH', `/${quote.id}`, typed)).status).toBe(200);
+        expect(await stored('crm_quote', quote.id)).toMatchObject(priced);
+      }
+      // A typed figure riding on a pricing edit loses to the derivation.
+      expect((await restAs('PATCH', `/${quote.id}`, { tax: 7_000, total_price: 1, discount_amount: 2 })).status).toBe(200);
+      expect(await stored('crm_quote', quote.id)).toMatchObject({ ...priced, tax: 7_000, total_price: 87_000 });
+    });
+
+    it("derives both on a rep's create, whatever figures the create carried", async () => {
+      const res = await restAs('POST', '', {
+        name: `Q-${++k}`, crm_account: (await accountOf()).id, status: 'draft', quote_date: '2026-01-01', expiration_date: '2030-12-31',
+        subtotal: 1_000, discount: 10, tax: 50, shipping_handling: 0, discount_amount: 999, total_price: 999,
+      });
+      expect(res.status).toBe(201);
+      const { id } = (await res.json()) as Rec;
+      expect(await stored('crm_quote', id)).toMatchObject({ subtotal: 1_000, discount_amount: 100, total_price: 950 }); // 1,000 − 100 + 50
+    });
+  });
 });
 
 describe('opportunity_line_item_price_fill', () => {

@@ -55,9 +55,10 @@ export const HIGH_VALUE_DEAL_AMOUNT = 500_000;
  * `crm_quote_line_item.discount_within_ceiling` both interpolate this constant.
  * The second is not a copy for symmetry's sake: the quote-level percentage and
  * the per-line percentage are INDEPENDENT inputs to the same total
- * (`quote_total_rollup` discounts each line, sums, then applies the quote's
- * percentage to the sum), so a quote at `discount: 0` with every line at 90%
- * clears the quote-level rule outright and still prices 90% below list.
+ * (`quote_total_rollup` discounts each line and sums, then `quote_workflow`
+ * applies the quote's percentage to the sum), so a quote at `discount: 0`
+ * with every line at 90% clears the quote-level rule outright and still
+ * prices 90% below list.
  * Ceiling one multiplier and the other is the way around it.
  *
  * ⚠️ What this constant does NOT settle is what the ceiling means once the two
