@@ -519,7 +519,10 @@ export const LeadViews = defineView({
     },
 
     /**
-     * Kanban Board View
+     * Kanban Board View — a card is titled by the person (`full_name`) and
+     * carries the business fields below it. Name fragments stay off the card
+     * body: without a `titleField` the first card field became the title and
+     * the name was printed twice, split over two lines (#2122).
      */
     kanban_by_status: {
       name: 'kanban_by_status',
@@ -529,11 +532,12 @@ export const LeadViews = defineView({
         provider: 'object',
         object: 'crm_lead',
       },
-      columns: ['first_name', 'last_name', 'company', 'email'],
+      columns: ['full_name', 'company', 'email'],
       kanban: {
         groupByField: 'status',
         summarizeField: 'annual_revenue',
-        columns: ['first_name', 'last_name', 'company', 'rating'],
+        titleField: 'full_name',
+        columns: ['company', 'email', 'rating'],
       },
       navigation: {
         mode: 'drawer', // Open in drawer instead of new page
@@ -542,7 +546,11 @@ export const LeadViews = defineView({
     },
     
     /**
-     * Calendar View
+     * Calendar View — leads on the day of their next follow-up, the date a
+     * seller plans by. Keyed on `created_at` it put every seeded lead on the
+     * day of the boot (#2122). The name keeps its `_by_created` spelling: it
+     * is the key the four locale packs and any saved reference address, and
+     * the label a user reads names no date.
      */
     calendar_by_created: {
       name: 'calendar_by_created',
@@ -554,14 +562,15 @@ export const LeadViews = defineView({
       },
       columns: ['first_name', 'last_name', 'company'],
       calendar: {
-        startDateField: 'created_at',
+        startDateField: 'next_followup_date',
         titleField: 'company',
         colorField: 'status',
       },
     },
     
     /**
-     * Gallery/Card View
+     * Gallery/Card View — one card per person: titled by `full_name`, the
+     * company first beneath it (#2122).
      */
     gallery_view: {
       name: 'gallery_view',
@@ -571,11 +580,11 @@ export const LeadViews = defineView({
         provider: 'object',
         object: 'crm_lead',
       },
-      columns: ['first_name', 'last_name', 'company', 'email', 'status'],
+      columns: ['full_name', 'company', 'email', 'status'],
       gallery: {
         cardSize: 'medium',
-        titleField: 'company',
-        visibleFields: ['first_name', 'last_name', 'email', 'phone', 'status', 'rating'],
+        titleField: 'full_name',
+        visibleFields: ['company', 'title', 'email', 'phone', 'status', 'rating'],
       },
     },
     
