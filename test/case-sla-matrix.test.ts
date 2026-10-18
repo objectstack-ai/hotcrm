@@ -226,9 +226,11 @@ describe('the rules the matrix does not change', () => {
     expect((await verify.rows('crm_case', { id: written.id }))[0]!.sla_due_date).toBe('2026-01-01T00:00:00.000Z');
   });
 
-  it('never overwrites a deadline the record already has', async () => {
-    // A service manager may renegotiate a due date; a later edit to the case
-    // must not silently pull it back to the matrix default.
+  it('never moves a deadline the record already has to a later one', async () => {
+    // A service manager may renegotiate a due date. A priority raise re-derives
+    // the deadline only when the new window ends sooner than the stored date
+    // (#2073, `test/case-sla-priority-change.test.ts`), so a stored date that
+    // is already earlier — here, long past — survives the raise untouched.
     const { row } = await stampFor('high', 'strategic');
     await systemUpdate(verify, 'crm_case', { id: row.id, sla_due_date: '2026-01-01T00:00:00.000Z' });
     await verify.hooks.run('crm_case', 'update', { id: row.id, priority: 'critical', status: 'in_progress' }, { as: agent.token });
