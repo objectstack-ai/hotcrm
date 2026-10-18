@@ -535,8 +535,19 @@ export const LeadConversionFlow: Flow = {
       },
     },
     {
-      // Branching is on edges `e11` / `e12` — see `decision_account`.
+      // Branching is on edges `e11` / `e46` — see `decision_account`.
       id: 'decision_contact', type: 'decision', label: 'Contact Already Exists?',
+    },
+    {
+      // Does the account already have a primary contact? A brand-new account
+      // has none, so its first contact takes the flag; an existing account's
+      // primary keeps it (#2060 item 9). `create_contact` reads the answer.
+      id: 'find_account_primary', type: 'get_record', label: 'Find Account Primary Contact',
+      config: {
+        objectName: 'crm_contact',
+        filter: { crm_account: cel`accountId`, is_primary: true },
+        outputVariable: 'accountPrimaryContact',
+      },
     },
     {
       // `accountId` is a bare id string from whichever account branch ran.
@@ -567,7 +578,10 @@ export const LeadConversionFlow: Flow = {
           first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name`,
           email: cel`leadRecord.email`, phone: cel`has(leadRecord.phone) ? leadRecord.phone : null`,
           title: cel`has(leadRecord.title) ? leadRecord.title : null`, crm_account: cel`accountId`,
-          is_primary: true, owner_id: cel`current_user.id`,
+          // Primary only when the account has none: a `true` here on an
+          // account that has one would take the flag from that contact
+          // (`contact_primary_per_account` keeps one per account).
+          is_primary: cel`accountPrimaryContact == null`, owner_id: cel`current_user.id`,
         },
         outputVariable: 'createdContact',
       },
@@ -683,8 +697,8 @@ export const LeadConversionFlow: Flow = {
 
   edges: [
     // ⛔ A retired edge's id stays VACANT and every surviving edge keeps the id
-    // it has always had — `e1`, `e2`, `e3`, `e7`, `e15`, `e26`, `e30` and `e33`
-    // are gaps on purpose.
+    // it has always had — `e1`, `e2`, `e3`, `e7`, `e12`, `e15`, `e26`, `e30` and
+    // `e33` are gaps on purpose.
     // Renumbering to close a gap rewrites ids that other notes, tests and run
     // logs refer to.
     { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
@@ -692,8 +706,8 @@ export const LeadConversionFlow: Flow = {
     // not reuse a vacant one, and do not assume an unused-looking id is free.
     // A duplicate id is INERT (traversal filters out-edges by `source`, never
     // by `id`), so nothing fails and the collision survives to trap the next
-    // editor picking out of the sequence. `e1`, `e2`, `e3`, `e7`, `e15`, `e26`,
-    // `e30` and `e33` are vacant retired ids and stay that way; `e27` is above
+    // editor picking out of the sequence. `e1`, `e2`, `e3`, `e7`, `e12`, `e15`,
+    // `e26`, `e30` and `e33` are vacant retired ids and stay that way; `e27` is above
     // the highest live id, not a gap-fill.
     { id: 'e27', source: 'get_lead', target: 'decision_approval', type: 'default' },
     // ── The approval gate (REQ-0005 step 7) ────────────────────────────
@@ -789,10 +803,13 @@ export const LeadConversionFlow: Flow = {
     { id: 'e8', source: 'use_new_account', target: 'find_contact', type: 'default' },
     { id: 'e9', source: 'use_existing_account', target: 'find_contact', type: 'default' },
     { id: 'e10', source: 'find_contact', target: 'decision_contact', type: 'default' },
-    // Existing contact → reuse; none → create. Both converge on
-    // decision_opportunity, the reuse path through the consent raise below.
+    // Existing contact → reuse; none → create, after reading whether the
+    // account already has a primary (`e12` retired for `e46` / `e47`, #2060
+    // item 9). Both converge on decision_opportunity, the reuse path through
+    // the consent raise below.
     { id: 'e11', source: 'decision_contact', target: 'use_existing_contact', type: 'default', condition: P`vars.matchedContact != null`, label: 'Existing' },
-    { id: 'e12', source: 'decision_contact', target: 'create_contact', type: 'default', condition: P`vars.matchedContact == null`, label: 'New' },
+    { id: 'e46', source: 'decision_contact', target: 'find_account_primary', type: 'default', condition: P`vars.matchedContact == null`, label: 'New' },
+    { id: 'e47', source: 'find_account_primary', target: 'create_contact', type: 'default' },
     { id: 'e13', source: 'create_contact', target: 'use_new_contact', type: 'default' },
     { id: 'e14', source: 'use_new_contact', target: 'decision_opportunity', type: 'default' },
     // ── The reused contact's consent raise (#2068) ─────────────────────

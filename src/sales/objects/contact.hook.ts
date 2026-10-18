@@ -39,6 +39,7 @@ import type { HookApi } from './_hook-api';
  *   an untenanted (community) install, where the old global lookup is right.
  * - On delete, refuses if the contact is referenced by an active opportunity,
  *   open quote or active contract.
+ * - `contact_primary_per_account` (below) keeps one primary contact per account.
  *
  * ⛔ No email/phone propagation to opportunities: `crm_opportunity` has no
  * `contact_email` / `contact_phone` columns, and a rollup writing nonexistent
@@ -197,4 +198,63 @@ const contactHook: Hook = {
   },
 };
 
-export default contactHook;
+/**
+ * One primary contact per account (#2060 item 9, A-15).
+ *
+ * When a contact BECOMES its account's primary contact — inserted with the
+ * flag, flagged later, or moved onto another account while flagged — the flag
+ * is cleared on the account's other contacts. Every writer of `is_primary`
+ * reaches this one rule: Mark as Primary, the record form and the create
+ * dialog, the REST / AI data door, and the seed. Measured on 18.0.0-next.3
+ * before this hook, each of them left two primaries side by side.
+ *
+ * - After the write, so `ctx.result` is the row as stored (an insert's `input`
+ *   carries no id). Blocking with `onError: 'abort'`, so the clearing writes
+ *   ride the write's own unit of work: a clearing write that is refused takes
+ *   the new flag down with it, and the account is never left half-switched.
+ * - `runAs` is left at `inherit`: the clearing writes run as the writer.
+ *   `crm_contact` is `controlled_by_parent`, so the person who may write one
+ *   contact of an account may write all of them; nothing is elevated.
+ * - No loop: a clearing write stores `false`, and only a row that holds `true`
+ *   reaches the read below. Only a CHANGE re-runs it, so re-saving a primary
+ *   contact touches nothing else, and an account written before this rule
+ *   with several primaries keeps them until a contact there is marked primary
+ *   (which clears the rest) or the extras are cleared.
+ * - Rule 10: the read is pinned to one account id, under the writer's own
+ *   context, so it cannot reach another organization's rows.
+ *
+ * ⛔ Not "the first contact of an account becomes primary": no contact is ever
+ * made primary here. Who is primary stays the writer's call (#2060 ruling).
+ */
+const contactPrimaryPerAccount: Hook = {
+  name: 'contact_primary_per_account',
+  object: 'crm_contact',
+  events: ['afterInsert', 'afterUpdate'],
+  priority: 300,
+  description:
+    "When a contact becomes its account's primary contact, clear the flag on the account's other contacts.",
+  handler: async (ctx: HookContext) => {
+    const api = ctx.api as HookApi | undefined;
+    const row = ctx.result as Record<string, unknown> | undefined;
+    if (!api || !row || row.is_primary !== true) return;
+    const id = row.id;
+    const accountId = row.crm_account;
+    if (typeof id !== 'string' || typeof accountId !== 'string') return;
+    const previous = ctx.previous;
+    if (previous?.is_primary === true && previous.crm_account === accountId) return;
+    const primaries = await api.object('crm_contact').find({
+      where: { crm_account: accountId, is_primary: true },
+      fields: ['id'],
+      top: 200,
+    });
+    // Already cleared by a contact written in the same batch, whose own pass
+    // ran first: that one keeps the flag. Clearing here would leave none.
+    if (!primaries.some((c) => c.id === id)) return;
+    for (const other of primaries) {
+      if (typeof other.id !== 'string' || other.id === id) continue;
+      await api.object('crm_contact').update({ id: other.id, is_primary: false }, { where: { id: other.id } });
+    }
+  },
+};
+
+export default [contactHook, contactPrimaryPerAccount];
