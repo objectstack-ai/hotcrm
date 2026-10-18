@@ -469,20 +469,19 @@ export const LeadDetailPage: Page = {
                         },
                         // Events and Campaign Members (#2127). Both lists carry no
                         // `title` and no component `label`, so each is headed by
-                        // its object's translated `pluralLabel`, the copy all four
-                        // locale packs already hold. A `title` here would not
-                        // reach the other three locales: a component nested under
-                        // a `page:tabs` item sits outside the platform's
-                        // page-translation walk, so its `pages.<page>.components`
-                        // copy is dropped (`test/i18n-references.test.ts`).
+                        // its object's translated `pluralLabel`, which all four
+                        // locale packs already hold. A `title` would only restate
+                        // those words, and would then need its own entry under
+                        // `pages.lead_detail_page.components` in every pack.
                         //
-                        // The panel labels are inline locale maps for the same
-                        // reason: an accordion item has no id and no pack key. The
+                        // The panel labels are inline locale maps because an
+                        // accordion item has no id, so no pack key reaches it. The
                         // words are each pack's `pluralLabel`, pinned in
                         // `test/lead-related-tab.test.ts`, so the panel and the
                         // list under it agree. A plain `'Events'` would read 日程
                         // in zh-CN, from the console's built-in tab dictionary,
-                        // above a list the pack heads 活动.
+                        // above a list the pack heads 活动, and stay English in
+                        // ja-JP and es-ES.
                         //
                         // "+ New" is the platform's own button, not a key here. The
                         // record page draws it on a related list where the caller
@@ -512,7 +511,11 @@ export const LeadDetailPage: Page = {
                                 // `related_to_*` lookups, the same binding the
                                 // Tasks list above uses.
                                 relationshipField: 'related_to_lead',
-                                columns: ['subject', 'type', 'status', 'start_datetime', 'owner_id'],
+                                // When, then whether it happened, right after the
+                                // subject: at a 1024 px window the panel shows
+                                // about three columns before it scrolls sideways,
+                                // and the start is what this list is sorted by.
+                                columns: ['subject', 'start_datetime', 'status', 'type', 'owner_id'],
                                 // Upcoming first: a booked event starts later
                                 // than any event that already happened, so the
                                 // newest start leads. The list keeps the history
