@@ -31,10 +31,28 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } 
  * - A system write is let through, exactly as the quote freeze lets one
  *   through; so is the 4.0.0 line-number back-fill's `{ line_number: null }`
  *   touch, which changes no field a person can author.
- * - Deleting a settled quote that carries lines still works: the engine's
- *   cascade deletes each line AS THE DELETING USER, so a line-delete guard
- *   would make it impossible. That is why delete is not guarded (the decision
- *   is open on #2060), and this file goes red the day someone adds one.
+ *
+ * ### The delete leg (#2088, ruling C of #2078)
+ *
+ * Measured on 18.0.0-next.3 before it: a rep's REST `DELETE` of one line of an
+ * accepted quote answered 200 and the line was gone. Now a user's HAND delete
+ * of a settled quote's line is refused with the same envelope and sentence,
+ * through the engine, the REST door and the lowered body alike.
+ *
+ * Deleting the quote still works, and deleting an account whose settled quote
+ * goes with it: the engine's cascade deletes each line AS THE DELETING USER,
+ * and what lets it through is the platform's declared marker
+ * `referentialCascadeDelete` (objectstack#23221), which the cascade sets on
+ * each child delete at any depth and a hand delete never carries. The lowered
+ * body is pinned on both sides of that one key, with an otherwise identical
+ * context, so the guard is shown to read it and nothing else (#1165).
+ *
+ * An account delete reaches a settled quote's lines only when nothing above
+ * them refuses first. Measured on 18.0.0-next.3, before and after this leg:
+ * an account whose quote is *accepted* is refused by `contact_integrity`
+ * (the quote's contact counts as referenced by an active quote) before the
+ * cascade reaches any line. So the account case pinned here holds an
+ * *expired* quote, the settled state that path does reach.
  */
 
 type Rec = Record<string, any>;
@@ -81,13 +99,14 @@ const quoteWithLine = async (status: string): Promise<{ quote: Rec; line: Rec; p
 /** What the engine refused a write with, or null when it went through. */
 const refusalOf = (p: Promise<unknown>): Promise<Rec | null> => p.then(() => null, (e: Rec) => e);
 
+const sentence = (quote: Rec) =>
+  `Quote ${quote.quote_number} - ${quote.name} is ${quote.status}, so its line items can no longer be added, changed or removed.`;
+
 /** The freeze's envelope, its wording, and the quote named the way the UI names it. */
 const expectFrozen = (err: Rec | null, quote: Rec): void => {
   expect(err, 'the write went through').toBeTruthy();
   expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
-  expect(String(err!.message)).toContain(
-    `Quote ${quote.quote_number} - ${quote.name} is ${quote.status}, so its line items can no longer be added or changed.`,
-  );
+  expect(String(err!.message)).toContain(sentence(quote));
   expect(String(err!.message)).not.toContain(quote.id);
 };
 
@@ -137,9 +156,67 @@ describe('a user cannot change the lines of a settled quote', () => {
     }));
     expect(err?.name).toBe('SandboxError');
     expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
-    expect(String(err!.userMessage)).toBe(
-      `Quote ${quote.quote_number} - ${quote.name} is accepted, so its line items can no longer be added or changed.`,
-    );
+    expect(String(err!.userMessage)).toBe(sentence(quote));
+  });
+});
+
+describe('a user cannot remove a line from a settled quote by hand (#2088)', () => {
+  it.each(['accepted', 'expired'])('refuses a rep deleting a line of an %s quote, and keeps the line', async (status) => {
+    const { quote, line } = await quoteWithLine(status);
+    expectFrozen(await refusalOf(verify.hooks.run('crm_quote_line_item', 'delete', { id: line.id }, as(rep))), quote);
+    expect(await stored('crm_quote_line_item', line.id)).toBeDefined();
+  });
+
+  it('answers the REST door with the freeze envelope', async () => {
+    const { quote, line } = await quoteWithLine('accepted');
+    const res = await verify.apiAs(rep.token, 'DELETE', `/data/crm_quote_line_item/${line.id}`);
+    const body = (await res.json()) as Rec;
+    expect({ status: res.status, code: body.code }, JSON.stringify(body)).toEqual({
+      status: REFUSAL_CODES.locked.status, code: REFUSAL_CODES.locked.code,
+    });
+    expect(body.userMessage).toBe(sentence(quote));
+    expect(await stored('crm_quote_line_item', line.id)).toBeDefined();
+  });
+
+  it('on the SHIPPED path, refuses a hand delete and yields to the declared cascade marker, on one context', async () => {
+    const { quote, line } = await quoteWithLine('accepted');
+    const handDelete = { event: 'beforeDelete', object: 'crm_quote_line_item', input: { id: line.id }, previous: line, as: rep.token };
+    const err = await refusalOf(runShippedHook(verify, hookNamed('quote_workflow'), handDelete));
+    expect(err?.name).toBe('SandboxError');
+    expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
+    expect(String(err!.userMessage)).toBe(sentence(quote));
+    // The same delete, with the one key the engine's cascade adds.
+    await expect(runShippedHook(verify, hookNamed('quote_workflow'), { ...handDelete, referentialCascadeDelete: true })).resolves.toBeDefined();
+  });
+});
+
+describe('what the delete leg lets through', () => {
+  it('CONTROL — a rep still removes a line from a draft quote', async () => {
+    const { line } = await quoteWithLine('draft');
+    await verify.hooks.run('crm_quote_line_item', 'delete', { id: line.id }, as(rep));
+    expect(await stored('crm_quote_line_item', line.id)).toBeUndefined();
+  });
+
+  it('a system delete of a settled quote\'s line still lands (the freeze judges users only)', async () => {
+    const { line } = await quoteWithLine('accepted');
+    await verify.hooks.run('crm_quote_line_item', 'delete', { id: line.id }, { system: true });
+    expect(await stored('crm_quote_line_item', line.id)).toBeUndefined();
+  });
+
+  it.each(['accepted', 'expired'])('a manager can still delete an %s quote that carries lines, through the REST door', async (status) => {
+    const { quote, line } = await quoteWithLine(status);
+    const res = await verify.apiAs(manager.token, 'DELETE', `/data/crm_quote/${quote.id}`);
+    expect(res.status, await res.clone().text()).toBe(200);
+    expect(await stored('crm_quote', quote.id)).toBeUndefined();
+    expect(await stored('crm_quote_line_item', line.id)).toBeUndefined();
+  });
+
+  it('a manager can still delete an account whose expired quote carries lines, two cascade levels above them', async () => {
+    const { quote, line } = await quoteWithLine('expired');
+    const res = await verify.apiAs(manager.token, 'DELETE', `/data/crm_account/${quote.crm_account}`);
+    expect(res.status, await res.clone().text()).toBe(200);
+    expect(await stored('crm_quote', quote.id)).toBeUndefined();
+    expect(await stored('crm_quote_line_item', line.id)).toBeUndefined();
   });
 });
 

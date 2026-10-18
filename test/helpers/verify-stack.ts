@@ -408,7 +408,7 @@ let shippedRunner: QuickJSScriptRunner | undefined;
 export async function runShippedHook(
   stack: VerifyStack,
   hook: Row,
-  ctx: { event: string; input?: Row; previous?: Row; result?: Row; as?: string; object?: string },
+  ctx: { event: string; input?: Row; previous?: Row; result?: Row; as?: string; object?: string; referentialCascadeDelete?: boolean },
 ): Promise<Row> {
   const { source, capabilities } = extractHookBody(hook.handler, `hook '${String(hook.name)}'`);
   const bind = hookBodyRunnerFactory((shippedRunner ??= new QuickJSScriptRunner()), {
@@ -428,9 +428,12 @@ export async function runShippedHook(
   // The engine dispatches ONE object per write, so a hook naming several
   // (`quote_workflow`, #2060) is told which one with `ctx.object`.
   // An `after*` hook reads the stored row from `result` (#2060 item 9).
+  // `referentialCascadeDelete` is the engine's declared cascade-delete marker,
+  // handed over as the engine hands it; the runtime decides what crosses into
+  // the sandbox (#2088).
   await handler({
     event: ctx.event, input, previous: ctx.previous, result: ctx.result, user, executionContext,
-    object: ctx.object ?? hook.object,
+    object: ctx.object ?? hook.object, referentialCascadeDelete: ctx.referentialCascadeDelete,
   });
   return input;
 }
