@@ -37,10 +37,30 @@ const HOTCRM_ICON =
  * the effective object permission itself.
  *
  * Sales Activity (1 of 13 tiles) and Lead Inflow (leads) stay open: they work
- * without opportunity read. The gate hides an entry, not the landing — the
- * console opens the app's first served entry without reading `visible`.
+ * without opportunity read. Since objectui#12426 (in the 18.0.0-next.2
+ * console) the gate moves the landing too: the console opens an app on the
+ * first entry the member is SHOWN, not the first one served.
  */
 const READS_OPPORTUNITIES = P`current_user.can("crm_opportunity", "read")`;
+
+/**
+ * Executive Overview's audience (#2060 item 5): everyone who reads
+ * opportunities, except a sales rep.
+ *
+ * The app opens on the first entry a member is shown, and Home is first, so
+ * this gate is what sends a rep to Sales Home (second) instead. A rep's grants
+ * are a subset of a manager's on every object, so no `current_user.can(…)`
+ * term can tell the two apart: the only candidates are grants a rep happens
+ * to lack (`transfer`, `delete`), which say "cannot reassign deals", not "is a
+ * rep", and the marketing user lacks them too. What a rep IS, is the holder
+ * of the `sales_rep` position (`src/sales/sharing/positions.ts`; it binds the
+ * `sales_rep` permission set by name). So the role is asked by position, and
+ * the access half stays the same object-permission question as above.
+ *
+ * Managers, administrators and the marketing user keep Home first. A member
+ * whose positions are unknown evaluates `[]`, so the gate keeps Home for them.
+ */
+const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions)`;
 
 /**
  * HotCRM — navigation.
@@ -98,19 +118,33 @@ export const CrmApp = App.create({
   },
 
   navigation: [
-    // Pinned landing — the console opens an app on its first entry, for
-    // every member alike (there is no per-member landing to declare).
+    // ── The order below IS each persona's landing (#2060 item 5) ─────────────
+    //
+    // The console opens an app on the first entry the member is shown — after
+    // `visible`, `requiredPermissions` and the object-read prune, the gates the
+    // sidebar draws with (objectui#12426, in the 18.0.0-next.2 console). There
+    // is no landing key to declare, so the first three slots are ordered and
+    // gated so that each persona's first shown entry is its home:
+    //
+    //   sales manager · administrator · marketing user → Home (Executive Overview)
+    //   sales rep                                       → Sales Home
+    //   service agent · service manager                 → Service Overview
+    //
+    // A service persona reads no opportunity, so both pinned entries are gated
+    // away from it, and the next slot is the Service group, which the service
+    // module fills with its dashboard first. ⛔ Do not put an entry a service
+    // persona can see ahead of the Service group: it becomes their landing.
     {
       id: 'nav_home',
       type: 'dashboard',
       dashboardName: 'executive_dashboard',
       label: 'Home',
       icon: 'home',
-      visible: READS_OPPORTUNITIES,
+      visible: EXECUTIVE_AUDIENCE,
     },
     // The rep's own page (`sales_home_page`): pipeline KPIs, my leads, open
-    // deals and open tasks, upcoming events. It had no entry, only a typed
-    // URL, while the activities docs sent readers to it.
+    // deals and open tasks, upcoming events — a rep's landing, because Home
+    // above is not shown to a rep.
     {
       id: 'nav_sales_home',
       type: 'page',
@@ -118,6 +152,36 @@ export const CrmApp = App.create({
       label: 'Sales Home',
       icon: 'layout-grid',
       visible: READS_OPPORTUNITIES,
+    },
+
+    {
+      id: 'group_service',
+      type: 'group',
+      label: 'Service',
+      icon: 'headset',
+      expanded: true,
+      // EMPTY ON PURPOSE — this group is a CONTAINER, not a menu.
+      //
+      // `crm_case`, `crm_knowledge_article`, `service_dashboard` and
+      // `sla_performance` belong to `app.objectstack.hotcrm.service`, and an
+      // app's own `navigation` may not name another package's object (ADR-0130
+      // §1.5): the entry fails at author time with "references object
+      // `crm_case` which is not defined in objects". The module puts all three
+      // back through `navigationContributions` (ADR-0029 D7), and it can only
+      // aim at a group the app DECLARES — a module cannot create one inside an
+      // app it does not own. So the app publishes the anchor and the module
+      // fills it; `src/service/index.ts` holds the other half, and the two
+      // service items of *My Work* and *Insights* come back the same way.
+      //
+      // FIRST of the groups on purpose (#2060 item 5): a contributed item lands
+      // after everything the app declares ahead of it, so this is the only slot
+      // where the module's dashboard can be the first entry a service persona
+      // is shown — below Sales, a service agent opened the app on Leads.
+      //
+      // ⛔ Do not "tidy" the group away: deleting it relocates all three
+      // contributed items to the app's top level with a
+      // `nav_contribution_group_missing` warning.
+      children: [],
     },
 
     {
@@ -280,31 +344,6 @@ export const CrmApp = App.create({
       children: [
         { id: 'nav_campaign', type: 'object', objectName: 'crm_campaign', label: 'Campaigns', icon: 'megaphone' },
       ],
-    },
-
-    {
-      id: 'group_service',
-      type: 'group',
-      label: 'Service',
-      icon: 'headset',
-      expanded: true,
-      // EMPTY ON PURPOSE — this group is a CONTAINER, not a menu.
-      //
-      // `crm_case`, `crm_knowledge_article`, `service_dashboard` and
-      // `sla_performance` belong to `app.objectstack.hotcrm.service`, and an
-      // app's own `navigation` may not name another package's object (ADR-0130
-      // §1.5): the entry fails at author time with "references object
-      // `crm_case` which is not defined in objects". The module puts all three
-      // back through `navigationContributions` (ADR-0029 D7), and it can only
-      // aim at a group the app DECLARES — a module cannot create one inside an
-      // app it does not own. So the app publishes the anchor and the module
-      // fills it; `src/service/index.ts` holds the other half, and the two
-      // service items of *My Work* and *Insights* come back the same way.
-      //
-      // ⛔ Do not "tidy" the group away: deleting it relocates all three
-      // contributed items to the app's top level with a
-      // `nav_contribution_group_missing` warning.
-      children: [],
     },
 
     {

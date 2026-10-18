@@ -11,7 +11,7 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 ## 1. 主頁儀表板
 
-左側導覽最上面有兩個固定條目 **Home** 與 **Sales Home**，你落地的是 **Home**。**Home** 打開的是 **Executive Overview** 儀表板——9 個磁貼，講收入、客戶與管道：
+應用打開時落在你的側邊欄顯示的第一個條目上，所以你落在哪裡取決於你是誰。銷售經理或管理員落在 **Home**，即兩個固定條目中的第一個。銷售代表的側邊欄裡沒有 **Home**：它從 **Sales Home**（銷售代表自己的頁面）開始，銷售代表就落在那裡。服務專員與服務經理不能讀取商機，兩個固定條目都看不到，於是落在 **Service Overview**，即 **Service** 群組下的第一個條目。**Home** 打開的是 **Executive Overview** 儀表板——9 個磁貼，講收入、客戶與管道：
 
 | 磁貼 | 它顯示什麼 |
 | --- | --- |
@@ -29,7 +29,7 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 磁貼上方是三個面板級控制項：一個按預計成交日期的日期範圍選擇器（預設本季）、一個 **Owner** 篩選器和一個 **Lead Source** 篩選器。開頭 4 個 KPI 磁貼各自框定了自己的週期（本年度累計、"活躍"、"未轉換"），不受日期選擇器收窄，所以這幾個數始終是完整的，而收入類圖表跟著選擇器走。
 
-把它當作你每日開始工作的著陸頁。
+對銷售經理與管理員來說，它就是每日開始工作的著陸頁。
 
 本節過去承諾的 4 樣東西，這塊儀表板上沒有任何磁貼對應；另有一個名字，它屬於另一塊儀表板：
 
@@ -52,18 +52,18 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 | 分組 | 內容 |
 | --- | --- |
+| **Service** | Service Overview、Cases、Knowledge |
 | **Sales** | Leads、Accounts、Account Workbench、Contacts、Opportunities、Quotes、Contracts、Products、Sales Performance |
 | **My Work** | My Tasks、My Deals、My Leads、My Calendar、Inbox、My Cases |
 | **Activity** | Events、Sales Activity |
 | **Marketing** | Campaigns |
-| **Service** | Cases、Knowledge、Service Overview |
 | **Insights** | CRM Overview、Forecasts、Pipeline Coverage、Lead Inflow、SLA Performance |
 
 上表用的是原始碼裡的英文 label，也就是英文介面上看到的名字。本應用提供 en / zh-CN / ja-JP / es-ES 四種介面語言，沒有繁體語言包——簡體中文介面下這些名字會顯示為語言包裡的譯名，例如 **Inbox** 顯示為「待我审批」、**Knowledge** 顯示為「知识库」、**My Work** 顯示為「我的工作」。
 
 **Marketing**、**Insights** 這兩個群組在應用載入時是摺疊的——只有 **Sales**、**My Work**、**Activity**、**Service** 會自動展開。先把群組點開，再判斷某樣東西在不在這裡。
 
-有五個條目建立在商機之上——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview** 與 **Pipeline Coverage**——不能讀取商機的人（例如服務專員）在側邊欄裡看不到它們。
+有五個條目建立在商機之上——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview** 與 **Pipeline Coverage**——不能讀取商機的人（例如服務專員）在側邊欄裡看不到它們。銷售代表也看不到 **Home**，所以銷售代表的側邊欄從 **Sales Home** 開始。**Service** 排在所有群組之首，是因為應用打開時落在側邊欄顯示的第一個條目上：對服務專員與服務經理來說，那就是 **Service Overview**。
 
 一個去處只佔一列，這是刻意的。同一個物件如果有多種檢視方式，它們是該物件列表頁頂部的標籤頁，而不是導覽裡另起一列——這樣側邊欄才短到能一眼掃完。
 
