@@ -136,12 +136,12 @@ const productTitleMirror: Hook = {
           await api.object(object).update({ id: String(line.id), product_title: title }, { where: { id: String(line.id) } });
         } catch (err) {
           stale++;
-          if (!first) first = `${object} ${String(line.id)}: ${err instanceof Error ? err.message : String(err)}`;
+          if (!first) first = `${object}: ${err instanceof Error ? err.message : String(err)}`;
         }
       }
     }
     if (stale > 0) {
-      throw new Error(`product_title_mirror: ${stale} line(s) of product ${id} kept a stale product_title; the first: ${first}`);
+      throw new Error(`product_title_mirror: ${stale} line(s) of ${title} kept a stale product_title; the first refusal: ${first}`);
     }
   },
 };
