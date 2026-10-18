@@ -91,8 +91,12 @@ const seededSettledBreach = (
 ): boolean => caseSlaBreached(seededSlaHours(priority, accountName), (createdDaysAgo - settledDaysAgo) * 24);
 
 // ─── Cases ────────────────────────────────────────────────────────────
+// INSERT-ONCE (`mode: 'ignore'`, #2139): an agent works each case (status,
+// priority, owner, resolution) and closes it; under `upsert` the next boot
+// wrote each edited field back to its seeded value. The mechanism and the
+// price: beside `leads` in `src/sales/data/sales.seed.ts`.
 export const cases = defineSeed(Case, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'subject',
   records: [
     {
@@ -392,8 +396,14 @@ export const cases = defineSeed(Case, {
 // `API rate limit exceeded on production` case above carries a real
 // `resolved_by_article` and the Service dashboard's KB tiles have something
 // true to show on a fresh `pnpm demo:reset`.
+//
+// INSERT-ONCE (`mode: 'ignore'`, #2139): an author revises, publishes and
+// archives articles; under `upsert` the next boot wrote each edited field back.
+// It was also the whole of an idle restart's `updated` count: the publish hook
+// stamps `last_reviewed_at` on every write of a published article, so the
+// seeded value never matched and each boot rewrote the three published rows.
 export const knowledgeArticles = defineSeed(KnowledgeArticle, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'title',
   records: [
     {

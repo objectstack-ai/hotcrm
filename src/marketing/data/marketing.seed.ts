@@ -168,8 +168,12 @@ const campaignMetrics = (campaignName: string) => {
 };
 
 // ─── Campaigns ────────────────────────────────────────────────────────
+// INSERT-ONCE (`mode: 'ignore'`, #2139): a marketer moves a campaign through
+// its status and edits its budget, cost and dates; under `upsert` the next
+// boot wrote each edited field back to its seeded value. The mechanism and
+// the price: beside `leads` in `src/sales/data/sales.seed.ts`.
 export const campaigns = defineSeed(Campaign, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'name',
   records: [
     {
@@ -315,14 +319,17 @@ const memberRecords = (
       })),
   );
 
+// Both INSERT-ONCE (`mode: 'ignore'`, #2139): a marketer marks a member
+// responded (Mark Responded) and a member unsubscribes; under `upsert` the next
+// boot wrote the seeded `status` back.
 export const campaignMembersFromLeads = defineSeed(CampaignMember, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: ['crm_campaign', 'crm_lead'],
   records: memberRecords('lead'),
 });
 
 export const campaignMembersFromContacts = defineSeed(CampaignMember, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: ['crm_campaign', 'crm_contact'],
   records: memberRecords('contact'),
 });

@@ -433,8 +433,9 @@ describe('a row that was ALREADY presented when the rule landed', () => {
 
 describe('the stock data clears the new gate', () => {
   // The gate applies ON WRITE, so it cannot retroactively break rows that are
-  // already stored — but seeds run in `upsert` mode on every boot, which IS a
-  // write. A seeded quote at `presented`/`accepted` with no `crm_contact` would
+  // already stored — but a seed row is written on the boot that inserts it
+  // (every fresh install, every `pnpm demo:reset`), which IS a write. A
+  // seeded quote at `presented`/`accepted` with no `crm_contact` would
   // therefore fail the seed load, not merely sit there. This asserts the
   // enumeration reported on #1017 rather than trusting it: all five seeded
   // quotes carry a contact, so none of them is gated.

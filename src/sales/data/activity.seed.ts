@@ -29,8 +29,13 @@ import { celDaysAgo } from './_shared';
 // object and the matching `related_to_*` lookup carries the record. The
 // Related tab and task.hook's activity bubble key off `related_to_type`, so a
 // lookup without it is invisible to both (#490).
+//
+// INSERT-ONCE (`mode: 'ignore'`, #2139): a rep completes, re-dates and
+// re-prioritises tasks. Under `upsert` the next boot reopened a completed one
+// (`status` back to its seeded value, `completed_date` left set). The
+// mechanism and the price: beside `leads` in `./sales.seed.ts`.
 export const tasks = defineSeed(Task, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'subject',
   records: [
     {
@@ -500,8 +505,12 @@ const endClock = (spec: EventSpec): readonly [number, number] => {
   return [Math.floor(total / 60), total % 60];
 };
 
+// INSERT-ONCE (`mode: 'ignore'`, #2139): a rep reschedules, relocates and
+// holds meetings and writes their outcome; under `upsert` the next boot wrote
+// the seeded slot, place and status back. Price: beside `leads` in
+// `./sales.seed.ts`.
 export const events = defineSeed(Event, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'subject',
   records: EVENT_SPECS.map((spec) => {
     const [endHour, endMinute] = endClock(spec);
@@ -589,14 +598,16 @@ const attendeeRecords = (kind: 'contact' | 'lead') =>
       })),
   );
 
+// Both INSERT-ONCE (`mode: 'ignore'`, #2139): a rep records each attendee's
+// answer, and under `upsert` the next boot wrote the seeded `response` back.
 export const eventAttendeesFromContacts = defineSeed(EventAttendee, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: ['crm_event', 'crm_contact'],
   records: attendeeRecords('contact'),
 });
 
 export const eventAttendeesFromLeads = defineSeed(EventAttendee, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: ['crm_event', 'crm_lead'],
   records: attendeeRecords('lead'),
 });
@@ -642,6 +653,9 @@ const LOGGED_SUMMARY_PREFIX: Partial<Record<EventSpec['type'], string>> = {
   meeting: 'Meeting: ',
 };
 
+// `upsert` STAYS (#2139): no persona edits a timeline pointer (every profile,
+// the system administrator's included, grants `sys_activity` read only), so a
+// replay has no user edit to undo here.
 export const leadInteractionPointers = {
   object: 'sys_activity',
   mode: 'upsert' as const,

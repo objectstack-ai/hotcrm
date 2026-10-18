@@ -25,9 +25,14 @@ import { OPPORTUNITY_LINES } from '../../sales/data/sales.seed';
  * fields by their RESOLVED ids, so this dedupes correctly across restarts.
  * The practical constraint it imposes: a product appears at most once per
  * deal, which is how these lines are authored anyway.
+ *
+ * INSERT-ONCE (`mode: 'ignore'`, #2139): a rep edits a deal's lines (quantity,
+ * price, discount), and under `upsert` the next boot wrote the seeded line
+ * back. `ignore` decides "already there?" from the same composite key. The
+ * mechanism and the price: beside `leads` in `src/sales/data/sales.seed.ts`.
  */
 export const opportunityLineItems = defineSeed(OpportunityLineItem, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: ['crm_opportunity', 'crm_product'],
   records: lineItemRecords('crm_opportunity', OPPORTUNITY_LINES),
 });
