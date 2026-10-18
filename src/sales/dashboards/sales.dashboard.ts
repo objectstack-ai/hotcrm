@@ -74,7 +74,7 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['total_amount'],
-      layout: { x: 0, y: 0, w: 3, h: 2 },
+      layout: { x: 0, y: 0, w: 3, h: 1 },
     },
     {
       id: 'closed_won_qtd',
@@ -85,7 +85,7 @@ export const SalesDashboard: Dashboard = {
       filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['total_amount'],
-      layout: { x: 3, y: 0, w: 3, h: 2 },
+      layout: { x: 3, y: 0, w: 3, h: 1 },
     },
     {
       id: 'open_opportunities',
@@ -95,9 +95,9 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'orange',
       dataset: 'opportunity_metrics', values: ['opp_count'],
-      layout: { x: 6, y: 0, w: 3, h: 2 },
+      layout: { x: 6, y: 0, w: 3, h: 1 },
     },
-    avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 2 }, {
+    avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 1 }, {
       description: 'Average value of closed-won deals this quarter',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
       filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
@@ -131,7 +131,7 @@ export const SalesDashboard: Dashboard = {
       filterBindings: { dateRange: false },
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['win_rate'],
-      layout: { x: 0, y: 2, w: 4, h: 2 },
+      layout: { x: 0, y: 2, w: 4, h: 1 },
     },
     {
       id: 'won_deals_12m',
@@ -142,7 +142,7 @@ export const SalesDashboard: Dashboard = {
       filterBindings: { dateRange: false },
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['won_count'],
-      layout: { x: 4, y: 2, w: 4, h: 2 },
+      layout: { x: 4, y: 2, w: 4, h: 1 },
     },
     {
       id: 'lost_deals_12m',
@@ -153,7 +153,7 @@ export const SalesDashboard: Dashboard = {
       filterBindings: { dateRange: false },
       colorVariant: 'orange',
       dataset: 'opportunity_metrics', values: ['lost_count'],
-      layout: { x: 8, y: 2, w: 4, h: 2 },
+      layout: { x: 8, y: 2, w: 4, h: 1 },
     },
 
     // ─── Row 3: Pipeline & Trends ─────────────────────────────────────

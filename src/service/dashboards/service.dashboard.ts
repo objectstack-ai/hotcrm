@@ -93,7 +93,7 @@ export const ServiceDashboard: Dashboard = {
       filter: { is_closed: false },
       colorVariant: 'orange',
       dataset, values: ['case_count'],
-      layout: { x: 0, y: 0, w: 3, h: 2 },
+      layout: { x: 0, y: 0, w: 3, h: 1 },
     },
     {
       id: 'critical_cases',
@@ -103,7 +103,7 @@ export const ServiceDashboard: Dashboard = {
       filter: { priority: 'critical', is_closed: false },
       colorVariant: 'danger',
       dataset, values: ['case_count'],
-      layout: { x: 3, y: 0, w: 3, h: 2 },
+      layout: { x: 3, y: 0, w: 3, h: 1 },
     },
     {
       id: 'avg_resolution_time',
@@ -113,7 +113,7 @@ export const ServiceDashboard: Dashboard = {
       filter: { is_closed: true },
       colorVariant: 'blue',
       dataset, values: ['avg_resolution'],
-      layout: { x: 6, y: 0, w: 3, h: 2 },
+      layout: { x: 6, y: 0, w: 3, h: 1 },
     },
     {
       id: 'sla_violations',
@@ -136,7 +136,7 @@ export const ServiceDashboard: Dashboard = {
       },
       colorVariant: 'warning',
       dataset, values: ['case_count'],
-      layout: { x: 9, y: 0, w: 3, h: 2 },
+      layout: { x: 9, y: 0, w: 3, h: 1 },
     },
 
     // ─── Row 2: Distribution ──────────────────────────────────────────
@@ -269,7 +269,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       colorVariant: 'success',
       dataset, values: ['kb_deflection_rate'],
-      layout: { x: 0, y: 10, w: 4, h: 2 },
+      layout: { x: 0, y: 10, w: 4, h: 1 },
     },
     {
       id: 'kb_resolved_cases',
@@ -278,7 +278,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       colorVariant: 'blue',
       dataset, values: ['kb_resolved_count'],
-      layout: { x: 4, y: 10, w: 4, h: 2 },
+      layout: { x: 4, y: 10, w: 4, h: 1 },
     },
     {
       id: 'closed_cases_total',
@@ -287,7 +287,7 @@ export const ServiceDashboard: Dashboard = {
       type: 'metric',
       colorVariant: 'default',
       dataset, values: ['closed_count'],
-      layout: { x: 8, y: 10, w: 4, h: 2 },
+      layout: { x: 8, y: 10, w: 4, h: 1 },
     },
     {
       id: 'top_resolving_articles',
