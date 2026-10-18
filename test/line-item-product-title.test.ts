@@ -175,7 +175,7 @@ describe.each(PAIRS)('$object — the line-side writer', ({ object, parentKey, h
 });
 
 describe('frozen parents: the title follows, every other change is refused (#2086 rulings 2 and A)', () => {
-  const sentence = /so its line items can no longer be added or changed/;
+  const sentence = /so its line items can no longer be added, changed or removed/;
   const refusalOf = (p: Promise<unknown>): Promise<Rec | null> => p.then(() => null, (e: Rec) => e);
   const FROZEN = [
     { object: 'crm_opportunity_line_item', parentKey: 'crm_opportunity', settle: { stage: 'closed_won', win_reason: 'better_price' } },
