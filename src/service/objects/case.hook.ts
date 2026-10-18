@@ -12,7 +12,8 @@ import {
  * Case SLA & escalation hook.
  *
  * - Stamps `sla_due_date` on a case that has none, from the priority × account
- *   tier matrix in `_case-sla.ts`.
+ *   tier matrix in `_case-sla.ts`, and re-derives it when a priority change
+ *   tightens the window — earlier only, never later (#2073).
  * - Records `is_sla_violated` on the write that resolves or closes a case after
  *   its `sla_due_date` — the half of the breach rule no schedule can miss.
  * - On escalation: creates a follow-up task OWNED BY the account owner (the
@@ -226,7 +227,48 @@ const caseValidation: Hook = {
     // authoring time and arrives as `undefined`. The seed module imports the
     // real constant; this body cannot. `test/case-sla-matrix.test.ts` pins all
     // sixteen cells by driving THIS handler, so the copies cannot drift.
-    if (priority && !input.sla_due_date && !ctx.previous?.sla_due_date) {
+    //
+    // ── A priority raise re-derives the deadline (#2073) ──
+    //
+    // The stamp used to run once: a case that already carried a due date kept
+    // it whatever happened to its priority, so a Medium case escalated to
+    // Critical kept its 36-hour clock, and a Low case raised to High its
+    // 7-day one. Now a write that CHANGES `priority` re-runs the lookup, and
+    // the rule has three parts:
+    //
+    //   1. Only a change that TIGHTENS the window — the new priority's cell is
+    //      smaller than the old one's, on the same tier — re-derives. A change
+    //      that loosens it (Critical → Low) leaves the deadline alone, as every
+    //      priority change did before: the app never extends a deadline by
+    //      itself, so lowering the priority cannot take a breach that is about
+    //      to happen off the books. A person who agrees a later date sets SLA
+    //      Due Date by hand; the field is not `readonly`.
+    //   2. The new window runs from the moment of the change (now + hours),
+    //      the same clock the first stamp uses — NOT from `created_at`. Counted
+    //      from creation, every escalation made after the new window had
+    //      already elapsed would land in the past: `case_sla_monitor` would
+    //      flag it within the hour and its breach write would replace the
+    //      agent's own escalation reason. A case is put on the Critical clock
+    //      when it becomes Critical.
+    //   3. The re-derived date only ever moves the deadline EARLIER: it is
+    //      written when it is before the stored one, and otherwise the stored
+    //      one stays. So a raise cannot extend a deadline either — a case
+    //      escalated in the last hours of its old window keeps the sooner
+    //      date, and a case already past due stays past due, its breach still
+    //      there for the sweep or the settling write to record.
+    //
+    // Only a write that changes the priority re-derives. One that does not
+    // carry `priority`, or carries the value already stored (a whole-form
+    // save), leaves the due date alone, and so does a write that carries
+    // `sla_due_date` itself: the writer's own date wins.
+    const storedDue = ctx.previous?.sla_due_date;
+    const changedFrom =
+      ctx.previous && storedDue && !('sla_due_date' in input) &&
+      typeof input.priority === 'string' && input.priority &&
+      input.priority !== ctx.previous.priority
+        ? String(ctx.previous.priority)
+        : undefined;
+    if (priority && ((!input.sla_due_date && !storedDue) || changedFrom)) {
       const slaCalendarHours: Record<string, Record<string, number>> = {
         critical: { strategic: 4, enterprise: 4, mid_market: 4, smb: 4 },
         high: { strategic: 6, enterprise: 8, mid_market: 8, smb: 8 },
@@ -239,18 +281,22 @@ const caseValidation: Hook = {
       // a permission error would manufacture breaches.
       const DEFAULT_TIER = 'smb';
       const row = slaCalendarHours[priority];
+      // The window the case is leaving, on a priority change.
+      const leftRow = changedFrom ? slaCalendarHours[changedFrom] : undefined;
       // An unrecognised priority gets no clock at all rather than a guessed
       // one — the same refusal-to-invent as the `0` unranked sentinel above.
-      if (row) {
+      // A change away from one has no window to compare with, so it re-derives
+      // nothing either.
+      if (row && (!changedFrom || leftRow)) {
         let tier = DEFAULT_TIER;
-        // Only pay for the account read when the row actually varies by tier.
-        // The `critical` row does not, which is what makes a critical case
+        // Only pay for the account read when a row in play actually varies by
+        // tier. The `critical` row does not, which is what makes a critical case
         // behave EXACTLY as it did before this hook learned about accounts —
-        // same 4 hours, same absence of any dependency on `ctx.api`.
-        const variesByTier =
-          row.strategic !== row.enterprise ||
-          row.enterprise !== row.mid_market ||
-          row.mid_market !== row.smb;
+        // same 4 hours, same absence of any dependency on `ctx.api`. On a
+        // priority change the row being left counts too, so the two cells are
+        // compared on the case's own tier.
+        const variesByTier = [row, leftRow].some((r) =>
+          !!r && (r.strategic !== r.enterprise || r.enterprise !== r.mid_market || r.mid_market !== r.smb));
         const accountId =
           (typeof input.crm_account === 'string' && input.crm_account) ||
           (typeof ctx.previous?.crm_account === 'string' && (ctx.previous.crm_account as string)) ||
@@ -276,7 +322,16 @@ const caseValidation: Hook = {
         // silently becomes 3 or 5 real hours across a transition — and a 168h
         // Low-priority clock crosses one twice a year by construction. These
         // are elapsed hours, so add elapsed milliseconds.
-        input.sla_due_date = new Date(Date.now() + hours * 3_600_000).toISOString();
+        const dueMs = Date.now() + hours * 3_600_000;
+        if (!changedFrom) {
+          input.sla_due_date = new Date(dueMs).toISOString();
+        } else if (
+          leftRow &&
+          hours < (leftRow[tier] ?? leftRow[DEFAULT_TIER]) &&
+          dueMs < Date.parse(String(storedDue))
+        ) {
+          input.sla_due_date = new Date(dueMs).toISOString();
+        }
       }
     }
 
