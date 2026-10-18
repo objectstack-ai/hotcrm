@@ -4,8 +4,10 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import campaignHooks, { CAMPAIGN_METRIC_WRITE_KEYS } from '../src/marketing/objects/campaign.hook';
 import leadHooks from '../src/sales/objects/lead.hook';
+import knowledgeArticlePublish from '../src/service/objects/knowledge_article.hook';
+import { knowledgeArticles } from '../src/service/data/service.seed';
 import {
-  hotcrmStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, today, daysFromNow,
+  hotcrmStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, runShippedHook, today, daysFromNow,
   type Person,
 } from './helpers/verify-stack';
 
@@ -885,6 +887,95 @@ describe('knowledge_article_publish_timestamps', () => {
     const a = await stored('crm_knowledge_article', written.id);
     expect(a.published_at ?? null).toBeNull();
     expect(a.last_reviewed_at ?? null).toBeNull();
+  });
+
+  /**
+   * What is NOT a review (#2060 item 10, B-17). The date "reflects real
+   * attention" (`content/docs/service/knowledge-base.mdx`). Measured at
+   * 5b7301f, every write of a published article refreshed it: a reader's vote
+   * (the recount submits only the two counters), an owner change, and the
+   * system insert that carries a historical date. Each case below starts from
+   * an article last reviewed in 2024, a date the system's insert now keeps.
+   */
+  const ORIGINAL_REVIEW = '2024-06-01T00:00:00.000Z';
+  const reviewDate = async (id: string): Promise<string> =>
+    new Date((await stored('crm_knowledge_article', id)).last_reviewed_at).toISOString();
+  const reviewedIn2024 = async (): Promise<string> => {
+    const { id } = await articleOf({ status: 'published', published_at: ORIGINAL_PUBLISH, last_reviewed_at: ORIGINAL_REVIEW });
+    expect(await reviewDate(id), 'a review date the system supplies is history, kept as written').toBe(ORIGINAL_REVIEW);
+    return id;
+  };
+
+  it('leaves the review date alone when a reader votes (#2060 item 10, B-17)', async () => {
+    const id = await reviewedIn2024();
+    await verify.actions.run('crm_knowledge_article', 'mark_article_helpful', { as: rep.token, recordId: id });
+    await settles('crm_knowledge_article', id, (row) => expect(row.helpful_count).toBe(1));
+    // A change of mind is a second recount of the same article.
+    await verify.actions.run('crm_knowledge_article', 'mark_article_not_helpful', { as: rep.token, recordId: id });
+    await settles('crm_knowledge_article', id, (row) => expect(row.not_helpful_count).toBe(1));
+    expect(await reviewDate(id), 'a vote is not a review').toBe(ORIGINAL_REVIEW);
+  });
+
+  it('leaves the review date alone when the article changes owner', async () => {
+    const id = await reviewedIn2024();
+    await verify.hooks.run('crm_knowledge_article', 'update', { id, owner_id: rep.id }, as(admin));
+    expect((await stored('crm_knowledge_article', id)).owner_id, 'the transfer did not land').toBe(rep.id);
+    expect(await reviewDate(id), 'an owner change is not a review').toBe(ORIGINAL_REVIEW);
+  });
+
+  it('refreshes the review date when the content is edited while published', async () => {
+    const id = await reviewedIn2024();
+    const before = Date.now();
+    const a = await agentEdits(id, { summary: `Revised summary ${++k}` });
+    expect(new Date(a.last_reviewed_at).getTime(), 'a content edit is a review').toBeGreaterThanOrEqual(before - 1000);
+    expect(new Date(a.published_at).toISOString()).toBe(ORIGINAL_PUBLISH);
+  });
+
+  it('does not let a person backdate a review', async () => {
+    // The field is readonly: the engine strips a person's value before the
+    // hook runs, so only a system write can supply one.
+    const before = Date.now();
+    const written = await verify.hooks.run('crm_knowledge_article', 'insert', {
+      title: `Backdated ${++k}`, body: 'Open Settings › Security.', summary: 'Password reset.',
+      status: 'published', audience: 'public', last_reviewed_at: ORIGINAL_REVIEW,
+    }, as(agent));
+    expect(new Date((await stored('crm_knowledge_article', written.id)).last_reviewed_at).getTime(), 'insert')
+      .toBeGreaterThanOrEqual(before - 1000);
+    const id = await reviewedIn2024();
+    const a = await agentEdits(id, { title: `Backdated edit ${++k}`, last_reviewed_at: '2020-01-01T00:00:00.000Z' });
+    expect(new Date(a.last_reviewed_at).getTime(), 'update').toBeGreaterThanOrEqual(before - 1000);
+  });
+
+  it('decides a review the same way on the shipped path (the lowered body)', async () => {
+    const previous = { id: 'ka-shipped', status: 'published', published_at: ORIGINAL_PUBLISH, last_reviewed_at: ORIGINAL_REVIEW };
+    const shipped = (input: Rec) =>
+      runShippedHook(verify, knowledgeArticlePublish as unknown as Rec, { event: 'beforeUpdate', input, previous, as: agent.token });
+    expect((await shipped({ helpful_count: 1, not_helpful_count: 0 })).last_reviewed_at, 'the recount').toBeUndefined();
+    expect((await shipped({ owner_id: rep.id })).last_reviewed_at, 'an owner change').toBeUndefined();
+    expect((await shipped({ summary: 'Revised.' })).last_reviewed_at, 'a content edit').toEqual(expect.any(String));
+  });
+
+  /**
+   * The seed face (#2060 item 10, folded in comment 6248487795). This suite's
+   * boot replays the shipped seed, so the rows read here are a fresh boot's.
+   * At 5b7301f all three published sample articles stored the boot instant,
+   * and "Legacy SSO Setup", authored 220 days stale, read as reviewed today.
+   * Each `daysAgo(N)` resolves on one clock at load, so the gap between the
+   * two dates a record authors is exact (seed doctrine rule 2: the seeded value
+   * is what the hook stores).
+   */
+  it('stores each seeded article’s authored review date on a fresh boot', async () => {
+    const DAY = 86_400_000;
+    const daysAgo = (value: Rec): number => Number(/^daysAgo\((\d+)\)$/.exec(String(value?.source))?.[1]);
+    const authored = (knowledgeArticles.records as Rec[]).filter((r) => r.status === 'published');
+    expect(authored, 'fixture: the seed ships three published articles').toHaveLength(3);
+    for (const record of authored) {
+      const [row] = await verify.rows('crm_knowledge_article', { title: record.title });
+      const gapDays = daysAgo(record.published_at) - daysAgo(record.last_reviewed_at);
+      expect(gapDays, `fixture: ${record.title} authors both dates`).toBeGreaterThan(0);
+      expect(new Date(row!.last_reviewed_at).toISOString(), record.title)
+        .toBe(new Date(new Date(row!.published_at).getTime() + gapDays * DAY).toISOString());
+    }
   });
 });
 
