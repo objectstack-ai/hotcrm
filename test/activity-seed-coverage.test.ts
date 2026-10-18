@@ -139,9 +139,10 @@ describe('the activity seeds resolve against real records (#671)', () => {
     expect(bad, `events whose parent does not resolve:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
-  it('keys every event on a unique subject — the upsert identity', () => {
-    // `externalId: 'subject'`. Two rows sharing one means the second overwrites
-    // the first on every boot, and the demo silently loses an interaction.
+  it('keys every event on a unique subject — the seed identity', () => {
+    // `externalId: 'subject'`. Two rows sharing one collide on that key: a
+    // reference by subject (an attendee row, a timeline pointer) reaches only
+    // one of them.
     const seen = new Map<string, number>();
     for (const e of eventRows) seen.set(String(e.subject), (seen.get(String(e.subject)) ?? 0) + 1);
     const dupes = [...seen].filter(([, n]) => n > 1).map(([s]) => s);

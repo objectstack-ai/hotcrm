@@ -15,7 +15,7 @@ import stack from './helpers/composed-stack';
  * tenant composite `(organization_id, ...)` (framework#3696). So the physical
  * index was `UNIQUE (name)` and the SECOND organization to create an account
  * called "Acme Corp" was rejected by the database. Account name is also the
- * seed data's external-id / upsert key, so it bit the first multi-tenant
+ * seed data's external-id key, so it bit the first multi-tenant
  * install. `crm_contact.email`, `crm_lead.email` and `crm_product.sku` already
  * carry the field-level spelling and document the trap; `crm_account` did not.
  *
@@ -117,9 +117,9 @@ describe('the physical index set is tenant-scoped', () => {
     expect(indexes.map((i) => i.name)).not.toContain('uniq_crm_account_name');
   });
 
-  it('still indexes name — the seed upsert key and $search read it', () => {
+  it('still indexes name — the seed\'s natural key and $search read it', () => {
     // `searchableFields: ['name', ...]` promises a real indexed column, and
-    // `src/data/sales.seed.ts` upserts accounts on `externalId: 'name'` (a
+    // `src/sales/data/sales.seed.ts` keys accounts on `externalId: 'name'` (a
     // per-organization lookup). The tenant composite leads with
     // organization_id, so `WHERE organization_id = ? AND name = ?` is a prefix
     // match and no separate `{ fields: ['name'] }` entry is needed.

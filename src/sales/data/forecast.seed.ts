@@ -183,6 +183,12 @@ const closedPeriod = (
 // `forecast_snapshot` writes, and two producers in one window is what #702 was.
 // The current MONTH stays — the sweep's period is `quarter`, so no runtime
 // writer opens a monthly row.
+//
+// `upsert` STAYS (#2139), unlike the insert-once datasets around it: the rows
+// are positional snapshots that each boot re-points at the calendar (above),
+// and the period a rep or manager works is the current quarter, which no seed
+// row ever holds. Its price: an edit to a seeded snapshot itself is written
+// back on the next boot.
 export const forecasts = defineSeed(Forecast, {
   mode: 'upsert',
   externalId: 'seed_key',

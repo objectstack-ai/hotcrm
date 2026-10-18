@@ -143,12 +143,13 @@ describe('child seeds resolve to real parents', () => {
   });
 });
 
-describe('composite natural keys are usable as upsert identity', () => {
+describe('composite natural keys are usable as seed identity', () => {
   /**
    * The loader joins composite key parts and yields an EMPTY key if any part is
    * blank — no dedupe, so a replay boot re-inserts the whole dataset
-   * (framework#3434). Both conditions below have to hold for `mode: 'upsert'`
-   * to mean anything on these junction-shaped objects.
+   * (framework#3434). Both conditions below have to hold for the dataset's
+   * `mode` to mean anything on these junction-shaped objects: `ignore` decides
+   * "already there?" from the same key that `upsert` matched on.
    */
   it.each([
     ['crm_opportunity_line_item'],

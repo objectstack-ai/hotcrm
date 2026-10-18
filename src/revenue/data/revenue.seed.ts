@@ -18,9 +18,14 @@ import { OPPORTUNITY_LINES } from '../../sales/data/sales.seed';
 // ─── Contracts ────────────────────────────────────────────────────────
 // `contract_number` is a runtime-owned autonumber and is NOT seeded (#490).
 // Contract has no natural-name field, so the (unique, stable) description
-// doubles as the upsert identity for these fixtures.
+// doubles as the seed identity (`externalId`) for these fixtures.
+//
+// INSERT-ONCE (`mode: 'ignore'`, #2139): a rep moves a contract through
+// approval and activation and edits its terms; under `upsert` the next boot
+// wrote each edited field back to its seeded value. The mechanism and the
+// price: beside `leads` in `src/sales/data/sales.seed.ts`.
 export const contracts = defineSeed(Contract, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'description',
   records: [
     // The one ACTIVATED contract in the app — `contract_renewal`,
@@ -118,7 +123,7 @@ export const contracts = defineSeed(Contract, {
 
 // ─── Quotes ───────────────────────────────────────────────────────────
 // `quote_number` is a runtime-owned autonumber and is NOT seeded (#490);
-// the (unique) quote name is the upsert identity instead.
+// the (unique) quote name is the seed identity (`externalId`) instead.
 /**
  * Quote line items, keyed by quote name. The four quotes generated from a deal
  * carry that deal's configuration verbatim — which is exactly what the
@@ -172,8 +177,12 @@ const quoteTotals = (
   };
 };
 
+// INSERT-ONCE (`mode: 'ignore'`, #2139): a rep moves a quote through review
+// and presentation and edits its terms; under `upsert` the next boot wrote the
+// seeded status back over a quote the rep had moved on. The mechanism and the
+// price: beside `leads` in `src/sales/data/sales.seed.ts`.
 export const quotes = defineSeed(Quote, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'name',
   records: [
     {
@@ -274,8 +283,11 @@ export const quotes = defineSeed(Quote, {
 // ─── Quote line items ─────────────────────────────────────────────────
 // Same composite-key reasoning as the opportunity lines above: (quote,
 // product) is the only natural key this junction-shaped object has.
+//
+// INSERT-ONCE (`mode: 'ignore'`, #2139): a rep edits a quote's lines, and
+// under `upsert` the next boot wrote the seeded line back.
 export const quoteLineItems = defineSeed(QuoteLineItem, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: ['crm_quote', 'crm_product'],
   records: lineItemRecords('crm_quote', QUOTE_LINES),
 });
