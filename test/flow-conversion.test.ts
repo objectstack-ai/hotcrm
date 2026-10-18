@@ -556,3 +556,45 @@ describe('lead_conversion — a rep converts into a NEW account, and the revenue
     });
   });
 });
+
+/**
+ * A CONTACTED lead converts to `status: 'converted'`, whoever converts it
+ * (#2134).
+ *
+ * The lead the card measured sat at `contacted` with `is_converted: true` and
+ * all three `converted_*` links, and the suspicion was that `mark_converted`
+ * lost `status` for some converting identity. Measured on the real engine, it
+ * does not: the rep, the manager and the admin each leave a `contacted` lead —
+ * the stage the measured lead was in, which every block above skips by starting
+ * from `qualified` — at `converted`, in the same write as `is_converted`. What
+ * reset the measured lead was the seed replay on the next boot, pinned across a
+ * real restart in `test/lead-seed-replay.test.ts`.
+ */
+describe('lead_conversion — a contacted lead ends at status converted for every converting identity (#2134)', () => {
+  const people: Record<string, Person> = {};
+  beforeAll(async () => {
+    people.rep = await signUpPerson(verify, 'rep-contacted@flow-conversion.test', {
+      name: 'Contacted Lead Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    });
+    people.manager = rep;
+    const admin = await verify.signIn();
+    people.admin = { token: admin, id: String((await verify.contextFor(admin)).userId) };
+  }, 120_000);
+
+  it.each([['a sales rep', 'rep'], ['a sales manager', 'manager'], ['the admin', 'admin']] as const)(
+    '%s converts a contacted lead and it reads converted',
+    async (_label, key) => {
+      const person = people[key]!;
+      const who = identity();
+      const lead = await verify.hooks.run('crm_lead', 'insert', {
+        company: who.company, email: who.email, first_name: 'Cora', last_name: 'Cole', status: 'contacted',
+      }, { as: person.token });
+      expect(lead.status, 'fixture: the lead starts at contacted').toBe('contacted');
+      const done = await runConversion(lead.id, { createOpportunity: false }, person);
+      const [stored] = await verify.rows('crm_lead', { id: lead.id });
+      expect({ error: done.error ?? null, status: stored?.status, isConverted: stored?.is_converted }).toEqual({
+        error: null, status: 'converted', isConverted: true,
+      });
+    },
+  );
+});
