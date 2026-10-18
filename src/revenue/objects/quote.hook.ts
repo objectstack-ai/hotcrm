@@ -9,8 +9,9 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * - Defaults `expiration_date` to `quote_date + 30 days` when missing.
  * - Freezes quotes once `accepted` or `expired` — against USER edits only: a
  *   write that is purely the engine clearing a link is let through. The
- *   freeze covers the quote's LINE ITEMS too (#2060): a user may neither add
- *   a line to a settled quote nor change one of its lines.
+ *   freeze covers the quote's LINE ITEMS too (#2060, #2088): a user may not
+ *   add a line to a settled quote, change one of its lines or remove one,
+ *   while deleting the quote itself still takes its lines with it.
  * - Refuses a user's acceptance while the linked opportunity is held by an
  *   approval, because acceptance closes that deal as won (#2014).
  * - Derives `discount_amount` / `total_price` on a create carrying a
@@ -36,7 +37,9 @@ const quoteValidation: Hook = {
   // boundary and carried by one envelope, rather than a second copy of both on
   // the line. `test/package-ownership.test.ts` reads every name in the list.
   object: ['crm_quote', 'crm_quote_line_item'],
-  events: ['beforeInsert', 'beforeUpdate'],
+  // `beforeDelete` is the line freeze's delete leg (#2088); a quote's own
+  // delete fires it too and is let through below, unjudged.
+  events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
   description: 'Default expiration date; freeze accepted/expired quotes and their lines; derive the header totals.',
   handler: async (ctx: HookContext) => {
@@ -77,25 +80,39 @@ const quoteValidation: Hook = {
     // unnumbered line, settled quotes included. Both parents are judged, so a
     // line moves neither onto a settled quote nor off one.
     //
-    // ⚠️ DELETE is not guarded, pending a decision on #2060: deleting a quote,
-    // or the account it cascades from, deletes its lines AS THE DELETING USER
-    // (measured: each line's `beforeDelete` sees that user), and no declared
-    // hook-context key tells that cascade from a hand delete of one line — so a
-    // delete guard would make every settled quote with lines undeletable.
+    // A user's DELETE of one line is refused too (#2088, ruling C of #2078),
+    // and only a hand delete. Deleting the quote, or the account it cascades
+    // from, deletes its lines AS THE DELETING USER (measured: each line's
+    // `beforeDelete` sees that user), so refusing every line delete would make
+    // every settled quote with lines undeletable, against #720. The engine's
+    // cascade child delete carries the platform's declared marker
+    // `referentialCascadeDelete` (objectstack#23221, 18.0.0-next.2), at any
+    // depth, and a hand delete never does: that delete is let through. ⛔ Read
+    // nothing else to tell them apart (#1165). Measured on 18.0.0-next.3 before
+    // this leg: a rep's REST `DELETE` of an accepted quote's line answered 200.
     if (ctx.object === 'crm_quote_line_item') {
       // `product_title` (#2086) is a name, not a figure, and hooks are its only
       // writers: the engine holds a caller's readonly value back from this hook.
-      const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number', 'product_title'].includes(k) && input[k] !== previous?.[k]);
+      // A delete removes the line, so it is a change unless the cascade issued
+      // it; its quote is the pre-image's `crm_quote`.
+      const changed = event === 'beforeDelete'
+        ? ctx.referentialCascadeDelete !== true
+        : Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number', 'product_title'].includes(k) && input[k] !== previous?.[k]);
       for (const id of new Set([input.crm_quote, previous?.crm_quote])) {
         const q = changed && ctx.user?.id && typeof id === 'string' && id
           ? await (ctx.api as HookApi | undefined)?.object('crm_quote').findOne({ where: { id }, fields: ['quote_number', 'name', 'status'] })
           : null;
         if (q?.status === 'accepted' || q?.status === 'expired') {
-          throw refuse(`Quote ${String(q.quote_number)} - ${String(q.name)} is ${q.status}, so its line items can no longer be added or changed.`, 'RECORD_LOCKED', 409);
+          throw refuse(`Quote ${String(q.quote_number)} - ${String(q.name)} is ${q.status}, so its line items can no longer be added, changed or removed.`, 'RECORD_LOCKED', 409);
         }
       }
       return;
     }
+
+    // A quote's own delete is not frozen, settled or not: #720 keeps the
+    // records a settled quote references deletable, and #2078 excluded
+    // forbidding it. Its lines go with it, through the leg above.
+    if (event === 'beforeDelete') return;
 
     // The quote as every quote surface titles it. `crm_quote.display_title` is
     // `quote_number - name`; compose the same pair from the two stored columns
