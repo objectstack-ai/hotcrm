@@ -5,11 +5,47 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
 /**
  * Knowledge article lifecycle hook.
  *
- * On the FIRST publish, stamps `published_at` and `last_reviewed_at`. On every
- * later write that leaves the article published — an ordinary edit, or a
- * re-publish after archiving — refreshes `last_reviewed_at` only, so admin
+ * On the FIRST publish, stamps `published_at` and `last_reviewed_at`. On a later
+ * REVIEW — a re-publish after archiving, or an edit of the article's content
+ * while it stays published — refreshes `last_reviewed_at` only, so admin
  * "stale article" reports keep working while the original publish date stays
  * put.
+ *
+ * ### What is a review, and what is not (#2060 item 10, B-17)
+ *
+ * The date "reflects real attention" (`content/docs/service/knowledge-base.mdx`).
+ * Until #2060 it refreshed on EVERY write of a published article, and two
+ * writers that are not attention reached it, both measured on 18.0.0-next.3:
+ *
+ *   - A reader's Helpful / Not Helpful vote. The action writes a
+ *     `crm_article_feedback` row, and `article_feedback_metrics_refresh`
+ *     recounts the article by id, submitting `{ id, helpful_count,
+ *     not_helpful_count }` and nothing else. Every vote moved the date to
+ *     today.
+ *   - The seed insert. The three published sample articles author their
+ *     review dates (`daysAgo(20)`, `daysAgo(10)`, `daysAgo(220)`), and the
+ *     insert stamped the boot instant over all three, so "Legacy SSO Setup",
+ *     authored 220 days stale, read as reviewed on its first boot.
+ *
+ * So a write is a review only when it PUBLISHES (an insert, or a move into
+ * `published` from any other status) or CARRIES one of the article's content
+ * fields, the keys an author edits. That is an allow-list on purpose: a
+ * bookkeeping writer added later (a rollup, an ownership claim, a key the
+ * platform stamps) cannot refresh the date by accident, which is the failure
+ * measured here. An owner change submits `owner_id` only, so it is not a review
+ * either. The console's edit form sends the fields the user changed, or the
+ * whole form on a Save with nothing changed: an author confirming the
+ * article, which counts.
+ *
+ * A write that SUPPLIES `last_reviewed_at` keeps it, on insert and update
+ * alike, the precedence `published_at` follows below. Only a system write (the
+ * seed, an import, a script action body) can supply one: the field is
+ * `readonly`, and the engine strips a person's read-only value before
+ * `beforeInsert` / `beforeUpdate` run. Measured: a service agent's insert
+ * carrying 2024 dates stored today for both, so a person cannot backdate a
+ * review. That is what seed doctrine rule 2 (`src/sales/data/_shared.ts`)
+ * asks of a hook-owned seeded value: what the seed authors is what this hook
+ * stores.
  *
  * "First publish" is decided by whether the record ALREADY CARRIES a
  * `published_at`, not by which status the write arrives from (#780). The old
@@ -32,19 +68,20 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  *     the original date there. The `sys_fetch_previous_update` builtin that used
  *     to issue that `findOne` is retired.
  *   - `input` carries the date whenever the write supplies one, and on an INSERT
- *     that value is what gets stored: measured on 17.0.0-rc.2, the engine's
- *     read-only strip runs on the update path only, and hooks run before it in
- *     any case. So an import or migration publishing records with their
- *     historical dates reaches this handler with `published_at` set and no
- *     `previous`, and stamping over it rewrites imported history.
+ *     that value is what gets stored. Only a SYSTEM write can supply it: the
+ *     engine strips a person's read-only value before the hooks run, on insert
+ *     and update alike (measured on 18.0.0-next.3, #2060 item 10). So an import
+ *     or migration publishing records with their historical dates reaches this
+ *     handler with `published_at` set and no `previous`, and stamping over it
+ *     rewrites imported history.
  *
- * Two adjacent engine behaviours this handler deliberately does NOT try to
- * paper over, both measured and filed as #788: `readonly: true` is not enforced
- * on the insert path at all, and on the update path the strip deletes the
- * caller-supplied key together with whatever a hook wrote there — so an update
- * that echoes `published_at` back can land a published article with none. That
- * outcome is identical before and after this change; a lenient consumer here
- * would only hide it.
+ * ⚠️ HISTORY — do not reason from it. #788 measured, on 17.0.0-rc.2, two engine
+ * behaviours this handler deliberately did not paper over: `readonly: true` was
+ * not enforced on the insert path at all, and on the update path the strip
+ * deleted the caller-supplied key together with whatever a hook wrote there.
+ * Neither holds on 18.0.0-next.3: a person's value is stripped before the
+ * hooks, and a hook's own write survives (`test/hooks-runtime-service.test.ts`,
+ * "does not let a person backdate a review").
  *
  * On the bulk path (`multi: true`) this handler now runs ONCE PER ROW, with
  * `input.id` bound to the row and `previous` its pre-image (ADR-0058 Addendum
@@ -87,7 +124,8 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * ⚠️ The `ctx.event` half of the guard is load-bearing, not ceremony: a batch
  * INSERT also reports `dispatch.mode === 'per-row'`, and there each row carries
  * its OWN payload. This hook is `beforeInsert` too, so dropping that half would
- * stop the seed load stamping `published_at` / `last_reviewed_at` at all.
+ * stop a batch insert (the seed load, an import) stamping either date a row
+ * does not carry.
  *
  * ⚠️ HISTORY — do not reason from it. Until 17.3.0 the sandbox context carried
  * no per-row signal, so a `ctx.dispatch` guard lowered cleanly, passed every
@@ -102,7 +140,7 @@ const knowledgeArticlePublish: Hook = {
   object: 'crm_knowledge_article',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 300,
-  description: 'Stamp published_at on the first publish; refresh last_reviewed_at while published.',
+  description: 'Stamp published_at on the first publish; refresh last_reviewed_at on a publish or a content edit.',
   handler: async (ctx: HookContext) => {
     // D3 stand-down (see the header). Every write below is decided against this
     // row's `previous`, and this handler makes no refusal, so the whole body
@@ -115,8 +153,12 @@ const knowledgeArticlePublish: Hook = {
     if (nextStatus !== 'published') return;
 
     const nowIso = new Date().toISOString();
-    // Publishing, re-publishing and editing while published are all reviews.
-    input.last_reviewed_at = nowIso;
+    // A review is a publish, or a write carrying the article's content (see the
+    // header): a vote's recount or an owner change carries neither. A date the
+    // write supplies is kept, and only a system write can supply one.
+    const content = ['title', 'summary', 'body', 'category', 'tags', 'audience', 'language', 'related_to_case'];
+    const reviewed = previous?.status !== 'published' || content.some((key) => input[key] !== undefined);
+    if (reviewed && !input.last_reviewed_at) input.last_reviewed_at = nowIso;
     // The emptiness test is spelled out here rather than factored into a
     // module-scope helper: hook handlers lower to a metadata-only body, and a
     // free identifier would push this one into the legacy runtime bundle
