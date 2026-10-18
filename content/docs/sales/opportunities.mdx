@@ -115,6 +115,8 @@ Each opportunity can have line items — one per product being sold. Each line s
 
 The sum of all line items rolls up into the opportunity **Amount**. If you'd rather just type the amount manually without configuring line items, you can — both work.
 
+A closed deal's line items are locked with it: once the deal is *Closed Won* or *Closed Lost*, a line can no longer be added, changed or removed. Deleting the whole deal is not affected, and its lines go with it.
+
 You add one from the **Products** panel on the *Related* tab. Alongside the lines a deal already has and the *View all* link into the full list, the panel carries an **Add** button. A related list can carry a button in exactly two ways, an `actions` list or an `add` picker, and this one declares the second and still not the first: there is no *Add Product* action anywhere in the app. The picker offers the product catalog filtered to **active** products, so a retired product cannot be sold onto a new deal, and the row it creates arrives complete and priced — quantity 1, the product's list price as the unit price, no discount — for you to adjust from there. Its rows read the way the catalog names a product, *PRD-0001 - Widget*. There is still no line-item entry in the sidebar to fall back on: `crm_opportunity_line_item` has no list view of its own. Permission was never what was missing — a rep's profile grants create on the object — and an import or the API still writes these rows; they are simply no longer the only route. If itemising is not how your team works, type the **Amount** by hand: that is a supported route, not a workaround.
 
 ## Discount approval for high-value deals
