@@ -320,6 +320,16 @@ describe('quote_generation flow — pricing keeps the cents (#1984)', () => {
     expect(q.total_price).toBe(1111.1);
   });
 
+  // The flow's own CEL total, `round(amount × (1 − d))`, rounded the half cent
+  // the other way from the discount: measured on `main` c4c73e7, 999.95 at 10%
+  // stored 100 + 899.96, a cent over the Subtotal. The header's one formula
+  // (#2110) subtracts the rounded discount, so the two always add up.
+  it('a discount on a half cent: Discount Amount + Total Price is the Subtotal (#2110)', async () => {
+    const q = await quoteAt(999.95, { discount: 10 });
+    expect([q.subtotal, q.discount_amount, q.total_price]).toEqual([999.95, 100, 899.95]);
+    expect(Math.round((q.discount_amount + q.total_price) * 100)).toBe(Math.round(q.subtotal * 100));
+  });
+
   // A cleared discount reaches the insert as null or "", and the derivation
   // reads anything but a number as 0%: no discount, full price.
   it.each([null, ''])('prices a cleared discount (%j) as no discount', async (discount) => {
