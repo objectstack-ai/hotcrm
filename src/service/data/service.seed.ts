@@ -591,7 +591,8 @@ A converted lead is read-only from then on; keep working the new opportunity.`,
       body: `# Saving a Filtered List View (DRAFT)
 
 Open any list, add the filters you need, then choose **Save as view** and give
-it a name. TODO: add the sharing options once the view menu settles.`,
+it a name. Still to write: who else can see a saved view, once the view
+menu settles.`,
     },
 
     // ── Troubleshooting ──────────────────────────────────────────────
