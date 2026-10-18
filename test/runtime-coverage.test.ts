@@ -108,6 +108,10 @@ const RUNTIME_TEST_FILES = [
   // #2077 — the closed-deal line freeze: the refusals, the open-deal and
   // system-write controls, and the lowered body.
   'opportunity-line-freeze.test.ts',
+  // #2086 — the line items' `product_title`: the line-side writer on both
+  // objects (in-process and the lowered body) and `product_title_mirror`, the
+  // rename writer on `crm_product`.
+  'line-item-product-title.test.ts',
 ];
 
 /**

@@ -168,6 +168,17 @@ describe('what the freeze lets through', () => {
     expect(typeof (await stored('crm_quote_line_item', line.id))!.line_number).toBe('number');
   });
 
+  it('lets through a write that changes only product_title, a name the hooks write (#2086)', async () => {
+    // `product_title_mirror` re-stamps a renamed product's lines elevated but
+    // AS the renaming user, so this freeze sees a user; the key is what lets it
+    // through. A rep never reaches it: the engine holds their readonly value back.
+    const { line } = await quoteWithLine('accepted');
+    const input = await runShippedHook(verify, hookNamed('quote_workflow'), {
+      event: 'beforeUpdate', object: 'crm_quote_line_item', input: { id: line.id, product_title: 'Renamed Product' }, previous: line, as: rep.token,
+    });
+    expect(input.product_title).toBe('Renamed Product');
+  });
+
   it('a manager can still delete a settled quote that carries lines — the cascade runs as them', async () => {
     const { quote, line } = await quoteWithLine('accepted');
     await verify.hooks.run('crm_quote', 'delete', { id: quote.id }, as(manager));

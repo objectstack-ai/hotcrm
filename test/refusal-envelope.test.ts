@@ -163,15 +163,18 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     }
   });
 
-  it('leaves exactly the two cascade faults bare — each IS a 500', () => {
+  it('leaves exactly the three cascade faults bare — each IS a 500', () => {
     const bare = LOWERED.filter((h) => /throw new Error\(/.test(h.source)).map((h) => h.name);
     // The two accepted-quote hooks (one hook until #2014 split the elevated
     // contract draft out) fire from an afterUpdate cascade when the contract
     // draft or the close-won failed for reasons the user neither caused nor
     // can act on. `resolveThrownHttpError` maps a bare Error to 500 /
     // INTERNAL_ERROR, which is the correct answer — an envelope would file a
-    // broken cascade as user error.
-    expect(bare).toEqual(['quote_accepted_contract_draft', 'quote_on_accepted']);
+    // broken cascade as user error. `product_title_mirror` (#2086) is the same
+    // class: an async afterUpdate cascade whose throw, naming the lines that
+    // kept a stale title, reaches only the `onError: 'log'` record, never the
+    // person who renamed the product.
+    expect(bare).toEqual(['product_title_mirror', 'quote_accepted_contract_draft', 'quote_on_accepted']);
   });
 });
 

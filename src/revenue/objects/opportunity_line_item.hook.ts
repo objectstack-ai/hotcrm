@@ -2,7 +2,7 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from '../../sales/objects/_hook-api';
-import { createLineItemNumbering, createLineItemPriceFill } from './_line-item-price-fill';
+import { createLineItemNumbering, createLineItemPriceFill, createLineItemProductTitle } from './_line-item-price-fill';
 
 /**
  * Opportunity amount rollup.
@@ -43,6 +43,12 @@ const opportunityLineItemPriceFill: Hook = createLineItemPriceFill(
 const opportunityLineItemNumbering: Hook = createLineItemNumbering(
   'crm_opportunity_line_item',
   'opportunity_line_item_line_number',
+);
+
+/** `product_title` writer, the line's `nameField`; see `_line-item-price-fill.ts` (#2086). */
+const opportunityLineItemProductTitle: Hook = createLineItemProductTitle(
+  'crm_opportunity_line_item',
+  'opportunity_line_item_product_title',
 );
 
 /**
@@ -97,7 +103,9 @@ const opportunityLineItemFreeze: Hook = {
       return err;
     }
     const { input, previous } = ctx;
-    const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number'].includes(k) && input[k] !== previous?.[k]);
+    // `product_title` (#2086) is a name, not a figure, and hooks are its only
+    // writers: the engine holds a caller's readonly value back from this hook.
+    const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number', 'product_title'].includes(k) && input[k] !== previous?.[k]);
     if (!changed || !ctx.user?.id) return;
     for (const id of new Set([input.crm_opportunity, previous?.crm_opportunity])) {
       const deal = typeof id === 'string' && id
@@ -166,4 +174,4 @@ const opportunityAmountRollup: Hook = {
   },
 };
 
-export default [opportunityLineItemPriceFill, opportunityLineItemNumbering, opportunityAmountRollup, opportunityLineItemFreeze];
+export default [opportunityLineItemPriceFill, opportunityLineItemNumbering, opportunityLineItemProductTitle, opportunityAmountRollup, opportunityLineItemFreeze];

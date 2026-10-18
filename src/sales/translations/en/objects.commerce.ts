@@ -80,6 +80,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_quote: { label: 'Quote' },
       crm_product: { label: 'Product' },
       description: { label: 'Description' },
+      product_title: { label: 'Product Title', help: "The product's title, kept in step with the product. It names this line." },
       quantity: { label: 'Quantity' },
       list_price: { label: 'List Price' },
       unit_price: { label: 'Sales Price' },
