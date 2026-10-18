@@ -967,8 +967,10 @@ describe('knowledge_article_publish_timestamps', () => {
   it('stores each seeded article’s authored review date on a fresh boot', async () => {
     const DAY = 86_400_000;
     const daysAgo = (value: Rec): number => Number(/^daysAgo\((\d+)\)$/.exec(String(value?.source))?.[1]);
+    // Every published article, however many the set holds (#2129 grew it from
+    // three); `test/knowledge-article-seed.test.ts` pins the set's shape.
     const authored = (knowledgeArticles.records as Rec[]).filter((r) => r.status === 'published');
-    expect(authored, 'fixture: the seed ships three published articles').toHaveLength(3);
+    expect(authored.length, 'fixture: the seed ships published articles').toBeGreaterThan(0);
     for (const record of authored) {
       const [row] = await verify.rows('crm_knowledge_article', { title: record.title });
       const gapDays = daysAgo(record.published_at) - daysAgo(record.last_reviewed_at);
