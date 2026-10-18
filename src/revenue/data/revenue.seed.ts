@@ -145,16 +145,17 @@ const QUOTE_LINES: Record<string, readonly LineSpec[]> = {
 
 /**
  * `subtotal` / `discount_amount` / `total_price` for a quote, derived from its
- * lines with `quote_total_rollup`'s own model:
+ * lines with the app's own model — `subtotal` is `quote_total_rollup`'s, the
+ * other two are `quote_workflow`'s header formula (`quote.hook.ts`):
  *
  *   subtotal        = Σ line (quantity × unit_price × (1 − line_discount/100))
  *   discount_amount = subtotal × quote.discount%
  *   total_price     = subtotal − discount_amount + tax + shipping_handling
  *
- * Quote-level `tax` and `shipping_handling` stay manual inputs — the rollup
- * does not derive them either. Everything the rollup DOES own is computed here
- * so that the first edit to a seeded line item recomputes the same numbers
- * instead of visibly correcting them.
+ * Quote-level `tax` and `shipping_handling` stay manual inputs — neither hook
+ * derives them. Everything the two hooks DO own is computed here so that the
+ * first edit to a seeded line item recomputes the same numbers instead of
+ * visibly correcting them.
  */
 const quoteTotals = (
   quoteName: string,
