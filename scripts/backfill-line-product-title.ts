@@ -19,10 +19,10 @@
 // line with a missing or stale copy, it re-sends the product's own name,
 // `{ name: <unchanged> }`. That triggers `product_title_mirror`
 // (`src/revenue/objects/product.hook.ts`), the hook that follows a rename. It
-// runs as the system, so it reaches every line of that product on both
-// objects. Lines of closed deals and of accepted or expired quotes are
-// included: both line freezes judge user writes only. The name does not
-// change, so nothing else about the product does.
+// runs elevated, so it reaches every line of that product on both objects.
+// Lines of closed deals and of accepted or expired quotes are included,
+// because both line freezes list `product_title` as a key that is not a
+// change. The name does not change, so nothing else about the product does.
 //
 // Safe by construction:
 //   • report-only unless `--apply` is passed;

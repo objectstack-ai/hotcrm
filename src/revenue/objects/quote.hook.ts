@@ -81,7 +81,9 @@ const quoteValidation: Hook = {
     // hook-context key tells that cascade from a hand delete of one line — so a
     // delete guard would make every settled quote with lines undeletable.
     if (ctx.object === 'crm_quote_line_item') {
-      const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number'].includes(k) && input[k] !== previous?.[k]);
+      // `product_title` (#2086) is a name, not a figure, and hooks are its only
+      // writers: the engine holds a caller's readonly value back from this hook.
+      const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number', 'product_title'].includes(k) && input[k] !== previous?.[k]);
       for (const id of new Set([input.crm_quote, previous?.crm_quote])) {
         const q = changed && ctx.user?.id && typeof id === 'string' && id
           ? await (ctx.api as HookApi | undefined)?.object('crm_quote').findOne({ where: { id }, fields: ['quote_number', 'name', 'status'] })

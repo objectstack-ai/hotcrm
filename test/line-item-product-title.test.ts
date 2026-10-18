@@ -24,9 +24,10 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } 
  *
  * Pinned here, on both objects: the declaration; the line-side writer (insert,
  * a product change, an untitled row's next update) on the in-process path and
- * on the SHIPPED lowered body; search by the product's name; the rename
- * writer on an open parent; and a user's write to a frozen line, still
- * refused.
+ * on the SHIPPED lowered body; search by the product's name; and the rename
+ * writer. On a closed deal or a settled quote, a rename and the backfill's
+ * touch still re-stamp the title, and a rep's change to the line is still
+ * refused (#2086 rulings 2 and A).
  */
 
 const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
@@ -173,7 +174,7 @@ describe.each(PAIRS)('$object — the line-side writer', ({ object, parentKey, h
   });
 });
 
-describe("a user's write to a frozen line is still refused", () => {
+describe('frozen parents: the title follows, every other change is refused (#2086 rulings 2 and A)', () => {
   const sentence = /so its line items can no longer be added or changed/;
   const refusalOf = (p: Promise<unknown>): Promise<Rec | null> => p.then(() => null, (e: Rec) => e);
   const FROZEN = [
@@ -181,18 +182,44 @@ describe("a user's write to a frozen line is still refused", () => {
     { object: 'crm_quote_line_item', parentKey: 'crm_quote', settle: { status: 'accepted' } },
   ] as const;
 
-  it.each(FROZEN)("$object: a rep's change to a settled parent's line is refused, and its title stays", async ({ object, parentKey, settle }) => {
+  /** A rep's line, written while the parent was open; the system then settles the parent. */
+  const frozenLine = async (object: string, parentKey: string, settle: Rec): Promise<{ line: Rec; product: Rec }> => {
     const [product, parent] = [await newProduct(), (await parents())[parentKey]!];
     const line = await verify.hooks.run(object, 'insert', { [parentKey]: parent.id, crm_product: product.id }, as(rep));
     await systemUpdate(verify, parentKey, { id: parent.id, ...settle });
+    return { line, product };
+  };
+  const titleOf = async (object: string, id: string) => (await stored(object, id)).product_title ?? null;
+
+  it.each(FROZEN)("$object: a rename re-stamps a settled parent's line", async ({ object, parentKey, settle }) => {
+    const { line, product } = await frozenLine(object, parentKey, settle);
+    await verify.hooks.run('crm_product', 'update', { id: product.id, name: `${product.name} Plus` }, as(admin));
+    const renamed = (await stored('crm_product', product.id)).display_title;
+    expect(renamed).toBe(`${product.display_title} Plus`);
+    await vi.waitFor(async () => expect(await titleOf(object, line.id)).toBe(renamed), { timeout: 10_000, interval: 50 });
+  });
+
+  it.each(FROZEN)("$object: the backfill's touch names a settled parent's untitled line", async ({ object, parentKey, settle }) => {
+    const { line, product } = await frozenLine(object, parentKey, settle);
+    // A line older than the field: no title stored.
+    await systemUpdate(verify, object, { id: line.id, product_title: null });
+    expect(await titleOf(object, line.id)).toBeNull();
+    // `scripts/backfill-line-product-title.ts`'s own write: an admin re-sends the product's unchanged name.
+    await verify.hooks.run('crm_product', 'update', { id: product.id, name: product.name }, as(admin));
+    await vi.waitFor(async () => expect(await titleOf(object, line.id)).toBe(product.display_title), { timeout: 10_000, interval: 50 });
+  });
+
+  it.each(FROZEN)("$object: a rep's change to a settled parent's line is refused, and a typed title is ignored", async ({ object, parentKey, settle }) => {
+    const { line, product } = await frozenLine(object, parentKey, settle);
     const err = await refusalOf(verify.hooks.run(object, 'update', { id: line.id, quantity: 9 }, as(rep)));
     expect(err, "a rep's change went through").toBeTruthy();
     expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
     expect(String(err!.message)).toMatch(sentence);
+    expect((await stored(object, line.id)).quantity).toBe(1);
     // A rep's own title never lands, on a frozen line or any other: the engine
-    // drops a readonly value the caller supplies before the freeze reads the
-    // payload, so the write changes nothing and has nothing to refuse.
+    // holds a readonly value the caller supplies back from the before-hooks,
+    // so the write changes nothing and has nothing to refuse.
     await verify.hooks.run(object, 'update', { id: line.id, product_title: 'Renamed by hand' }, as(rep));
-    expect((await stored(object, line.id)).product_title).toBe(product.display_title);
+    expect(await titleOf(object, line.id)).toBe(product.display_title);
   });
 });

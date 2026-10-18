@@ -96,9 +96,12 @@ const productHook: Hook = {
  * Every line follows, frozen parents included (#2086 ruling 2): a closed
  * deal's lines and an accepted or expired quote's lines. The title is a name,
  * not a figure, and the line's own header already shows the live product chip
- * beside it. `runAs: 'system'` is what lets the re-stamp through. Both line
- * freezes judge user writes only, and the product's editor may not be able to
- * edit every deal that sold it. A user's own write to a frozen line is still
+ * beside it. Two things let the re-stamp through. Both line freezes list
+ * `product_title` as a key that is not a change, beside `line_number` (#2086
+ * ruling A). That is needed because `runAs: 'system'` elevates but keeps the
+ * renaming user, and the freezes judge `ctx.user`. `runAs: 'system'` itself
+ * is still needed: the product's editor may not be able to edit every deal
+ * that sold it. A user's change to any other field of a frozen line is still
  * refused; `test/line-item-product-title.test.ts` pins both directions.
  *
  * `async` + `onError: 'log'`, as the line rollups are: a rename is never

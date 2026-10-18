@@ -103,7 +103,9 @@ const opportunityLineItemFreeze: Hook = {
       return err;
     }
     const { input, previous } = ctx;
-    const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number'].includes(k) && input[k] !== previous?.[k]);
+    // `product_title` (#2086) is a name, not a figure, and hooks are its only
+    // writers: the engine holds a caller's readonly value back from this hook.
+    const changed = Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number', 'product_title'].includes(k) && input[k] !== previous?.[k]);
     if (!changed || !ctx.user?.id) return;
     for (const id of new Set([input.crm_opportunity, previous?.crm_opportunity])) {
       const deal = typeof id === 'string' && id
