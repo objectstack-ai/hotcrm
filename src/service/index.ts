@@ -135,7 +135,7 @@ export const createHotCrmServiceStack = (
     description: 'HotCRM support module — cases, knowledge articles, and the SLA surface.',
     // The same protocol as the app package (ADR-0087 handshake); bump it with
     // `specVersion` on every platform upgrade, exactly as the app's is.
-    engines: { protocol: '^18.0.0-next.2' },
+    engines: { protocol: '^18.0.0-next.3' },
     // The App package this module extends.
     dependencies: { 'app.objectstack.hotcrm': '^5.0.0' },
 

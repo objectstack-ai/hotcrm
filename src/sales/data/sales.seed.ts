@@ -543,8 +543,26 @@ const DISQUALIFICATION_REASONS = [
   { reason: 'unreachable',   note: 'Six touches across email and phone over four weeks, no response.' },
 ] as const;
 
+// INSERT-ONCE (`mode: 'ignore'`), unlike the datasets around it (#2134). A
+// lead's `status` is the rep's to move, and Convert Lead moves it to
+// `converted` together with `is_converted` and the `converted_*` links. Under
+// `upsert` the platform re-applies this dataset on every boot (the loader's
+// "seed replay" on a dev-server restart) as a system write, comparing only the
+// fields declared here: a seeded lead the rep had converted differed on
+// `status`, so the replay wrote the seeded value back and left the conversion
+// columns it does not declare alone. The lead then read `is_converted: true`
+// with its path at its seeded stage, Convert Lead hidden and nothing on the
+// page saying it was converted. The converted-lead lock in `lead.hook.ts`
+// does not stop it, by design: the replay is a system write.
+//
+// `ignore` inserts a lead the database lacks and never writes over one it
+// holds, so a seeded lead is the rep's from its first boot on. The price, paid
+// knowingly: the relative dates below (`next_followup_date`,
+// `last_contacted_date`) keep the values of the boot that inserted them, and a
+// later edit to a record here reaches only a database that does not hold that
+// lead yet. Pinned across a real restart in `test/lead-seed-replay.test.ts`.
 export const leads = defineSeed(Lead, {
-  mode: 'upsert',
+  mode: 'ignore',
   externalId: 'email',
   records: [
     {
