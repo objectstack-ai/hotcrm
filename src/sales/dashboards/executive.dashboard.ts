@@ -121,7 +121,7 @@ export const ExecutiveDashboard: Dashboard = {
       // (default this_quarter) is ANDed in and the tile shows quarter revenue.
       filterBindings: { dateRange: false },
       dataset: 'opportunity_metrics', values: ['total_amount'],
-      layout: { x: 0, y: 0, w: 3, h: 2 },
+      layout: { x: 0, y: 0, w: 3, h: 1 },
     },
     {
       id: 'total_accounts',
@@ -137,7 +137,7 @@ export const ExecutiveDashboard: Dashboard = {
       // into every business object, #548), so the owner filter is left to apply.
       filterBindings: { dateRange: false, lead_source: false },
       dataset: 'account_metrics', values: ['account_count'],
-      layout: { x: 3, y: 0, w: 3, h: 2 },
+      layout: { x: 3, y: 0, w: 3, h: 1 },
     },
     {
       id: 'total_contacts',
@@ -146,7 +146,7 @@ export const ExecutiveDashboard: Dashboard = {
       type: 'metric',
       filterBindings: { dateRange: false }, // crm_contact has no close_date — opt out of the date picker
       dataset: 'contact_metrics', values: ['contact_count'],
-      layout: { x: 6, y: 0, w: 3, h: 2 },
+      layout: { x: 6, y: 0, w: 3, h: 1 },
     },
     {
       id: 'open_leads',
@@ -156,7 +156,7 @@ export const ExecutiveDashboard: Dashboard = {
       filter: { is_converted: false },
       filterBindings: { dateRange: false }, // crm_lead has no close_date — opt out of the date picker
       dataset: 'lead_metrics', values: ['lead_count'],
-      layout: { x: 9, y: 0, w: 3, h: 2 },
+      layout: { x: 9, y: 0, w: 3, h: 1 },
     },
 
     // ─── Row 2: Revenue Analysis ──────────────────────────────────────
