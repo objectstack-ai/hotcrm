@@ -748,7 +748,7 @@ describe('page component references resolve', () => {
       hasContent({ type: 'page:card', properties: { title: 'Ask the AI Assistant', description: 'Open the panel…' } }),
     ).toBe(false);
     // What it ships now, and the shapes that must stay accepted.
-    expect(hasContent({ type: 'list-view', properties: { objectName: 'crm_lead' } })).toBe(true);
+    expect(hasContent({ type: 'list-view', properties: { data: { provider: 'object', object: 'crm_lead' } } })).toBe(true);
     expect(hasContent({ type: 'page:card', properties: { children: [{ type: 'object-metric' }] } })).toBe(true);
     // The retired `body` spelling still renders, so it still counts as content.
     expect(hasContent({ type: 'page:card', properties: { body: [{ type: 'object-metric' }] } })).toBe(true);

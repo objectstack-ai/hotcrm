@@ -38,9 +38,13 @@ const embeddedListView = (id: string, objectName: string, views: View, viewKey: 
     type: 'list-view',
     id,
     label: view.label,
+    // The spec list view's spelling: the object in `data`, the kind in `type`.
+    // The 18.0.0-next.3 console reads only these; under the retired
+    // `objectName` / `viewType` every tab drew "No object named" (measured;
+    // objectstack#22444 ruling C).
     properties: {
-      objectName,
-      viewType: 'grid',
+      data: { provider: 'object', object: objectName },
+      type: 'grid',
       columns: view.columns,
       filter: view.filter,
       sort: view.sort,

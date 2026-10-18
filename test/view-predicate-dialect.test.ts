@@ -113,8 +113,10 @@ const BOUND_ROOTS = new Set(
  * predicate key names.
  *
  * Two reasons the walk collects *envelopes* (`{ dialect, source }`) rather than
- * looking up known keys: `visibleOn` does not survive compilation (ADR-0089 D2
- * folds it into `visibleWhen` at the schema boundary), and a key list cannot
+ * looking up known keys: a retired alias key never reaches the compiled stack
+ * (through 18.0.0-next.2 ADR-0089 D2 folded the form view's `visibleOn` into
+ * `visibleWhen` at the schema boundary; from 18.0.0-next.3 the schema refuses
+ * `visibleOn` by name), and a key list cannot
  * grow when the platform adds a predicate-bearing key. Anything expression-
  * shaped anywhere under `stack.views` is in scope by construction. Measured on
  * 17.0.0-rc.2: 49 envelopes, all of them `visibleWhen`, all `dialect: 'cel'`.

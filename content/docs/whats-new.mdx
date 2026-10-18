@@ -65,12 +65,13 @@ http://localhost:4001 and create the first admin account.
 
 ## v5.0.0 — Latest release
 
-**HotCRM 5.0.0** runs on **ObjectStack 18.0.0-next.2**, a prerelease of the
-platform's next major, across every `@objectstack/*` package. The app manifest
-declares the matching `^18.0.0-next.2` protocol range, so a runtime on a
-different protocol major — a 17.x host included — refuses the load up front
-with a structured diagnostic instead of failing deep in a schema parse. 4.0.1,
-the release before it, shipped on ObjectStack 17.7.0.
+**HotCRM 5.0.0** shipped on **ObjectStack 18.0.0-next.2**, a prerelease of the
+platform's next major, across every `@objectstack/*` package. The release after
+it runs on **ObjectStack 18.0.0-next.3**, and its manifest declares the matching
+`^18.0.0-next.3` protocol range, so a runtime on a different protocol major — a
+17.x host included — refuses the load up front with a structured diagnostic
+instead of failing deep in a schema parse. 4.0.1, the release before 5.0.0,
+shipped on ObjectStack 17.7.0.
 
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
