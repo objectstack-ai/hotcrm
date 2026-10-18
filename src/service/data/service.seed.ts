@@ -399,9 +399,26 @@ export const cases = defineSeed(Case, {
 //
 // INSERT-ONCE (`mode: 'ignore'`, #2139): an author revises, publishes and
 // archives articles; under `upsert` the next boot wrote each edited field back.
-// It was also the whole of an idle restart's `updated` count: the publish hook
-// stamps `last_reviewed_at` on every write of a published article, so the
-// seeded value never matched and each boot rewrote the three published rows.
+// Under `upsert` it was also the whole of an idle restart's `updated` count:
+// until #2060 item 10 the publish hook stamped `last_reviewed_at` on every
+// write of a published article, so the seeded value never matched and each
+// boot rewrote the published rows. The hook now keeps a date a system write
+// supplies, so the review date a row below authors is the one it stores.
+//
+// THE SET (#2129): three or four articles in every category the object
+// declares, so the All Articles grid groups into a knowledge base rather than
+// one row per heading, and each tab has rows on a fresh boot. The platform's
+// seed-ownership claim hands every article to the dev admin, which is who
+// `my_drafts` (draft or in review, owned by the viewer) then lists.
+//
+// The dates follow the seed doctrine, per status:
+//   - published: both dates, the review AFTER the publish; the hook keeps both
+//     (`test/hooks-runtime-service.test.ts` pins that the stored review date
+//     is the authored one);
+//   - archived: the dates it carried while it was live. The hook returns early
+//     for anything not published, so what is authored is what is stored;
+//   - draft / in review: neither date. Nothing has been published yet, and the
+//     hook stamps nothing for them either.
 export const knowledgeArticles = defineSeed(KnowledgeArticle, {
   mode: 'ignore',
   externalId: 'title',
@@ -470,6 +487,346 @@ This covers the deprecated SAML 1.1 flow. New tenants should use the OIDC
 connector instead. Retained for customers still on the legacy stack.`,
       published_at: cel`daysAgo(240)`,
       last_reviewed_at: cel`daysAgo(220)`,
+    },
+
+    // ── Getting Started ──────────────────────────────────────────────
+    {
+      title: 'Importing Your First Accounts and Contacts',
+      summary: 'Bring an existing customer list into HotCRM from a CSV file, with duplicates caught on the way in.',
+      category: 'getting_started',
+      tags: ['data_import'],
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Importing Your First Accounts and Contacts
+
+1. Export your customer list to CSV, one row per company or person.
+2. Open **Accounts** and choose **Import**, then map each column to a field.
+3. Import accounts first, then contacts, so each contact can name its account.
+
+Leads import the same way. Check a handful of imported records before you
+import the rest of the file.`,
+      published_at: cel`daysAgo(34)`,
+      last_reviewed_at: cel`daysAgo(12)`,
+    },
+    {
+      title: 'Your First Week with the Sales Pipeline',
+      summary: 'How deals move from prospecting to closed, and what each stage asks of the rep.',
+      category: 'getting_started',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Your First Week with the Sales Pipeline
+
+Every opportunity sits in one stage: prospecting, qualification, needs
+analysis, proposal, negotiation, then closed won or closed lost.
+
+- Drag a card on the **Sales Pipeline** board to move it to the next stage.
+- Keep **Next Step** current; it is what your manager reads first.
+- Deals of $100,000 or more go to your sales manager for approval.`,
+      published_at: cel`daysAgo(31)`,
+      last_reviewed_at: cel`daysAgo(9)`,
+    },
+    {
+      title: 'Inviting Your Team',
+      summary: 'Add colleagues, give each the position they work in, and check what they can see.',
+      category: 'getting_started',
+      status: 'in_review',
+      audience: 'internal',
+      language: 'en',
+      body: `# Inviting Your Team
+
+1. Open **Setup → Users** and invite each colleague by email.
+2. Assign the position they work in (sales rep, sales manager, service agent).
+3. Sign in as them once to confirm the records they should see are there.
+
+Waiting on the admin team to confirm the screenshots for the new Setup menu.`,
+    },
+
+    // ── How-To ───────────────────────────────────────────────────────
+    {
+      title: 'Logging Calls, Meetings and Emails',
+      summary: 'Record every customer touch on the account, contact or deal it belongs to.',
+      category: 'how_to',
+      tags: ['email'],
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Logging Calls, Meetings and Emails
+
+Open the record the conversation was about and use **Log a Call**, or add a
+meeting as an event related to it. Email a contact with **Send Email** from the
+contact's own page.
+
+Each entry lands on the record's activity timeline, so nobody has to ask who
+spoke to the customer last.`,
+      published_at: cel`daysAgo(58)`,
+      last_reviewed_at: cel`daysAgo(21)`,
+    },
+    {
+      title: 'Converting a Qualified Lead',
+      summary: 'Turn a lead into an account, a contact and an opportunity in one step.',
+      category: 'how_to',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Converting a Qualified Lead
+
+When a lead is qualified, open it and choose **Convert**. HotCRM creates the
+account and the contact (or reuses the ones that already exist) and, if you
+ask for one, the first opportunity.
+
+A converted lead is read-only from then on; keep working the new opportunity.`,
+      published_at: cel`daysAgo(47)`,
+      last_reviewed_at: cel`daysAgo(30)`,
+    },
+    {
+      title: 'Saving a Filtered List View',
+      summary: 'Keep the filter you use every morning one click away.',
+      category: 'how_to',
+      tags: ['reports'],
+      status: 'draft',
+      audience: 'public',
+      language: 'en',
+      body: `# Saving a Filtered List View (DRAFT)
+
+Open any list, add the filters you need, then choose **Save as view** and give
+it a name. Still to write: who else can see a saved view, once the view
+menu settles.`,
+    },
+
+    // ── Troubleshooting ──────────────────────────────────────────────
+    {
+      title: 'Emails Missing from the Activity Timeline',
+      summary: 'Why a sent email may not appear on the record, and how to get it there.',
+      category: 'troubleshooting',
+      tags: ['email'],
+      status: 'published',
+      audience: 'internal',
+      language: 'en',
+      body: `# Emails Missing from the Activity Timeline
+
+Start from where the email was sent.
+
+1. Check it was sent with the contact's **Send Email** action, not from a
+   personal mailbox.
+2. Check the recipient matches the contact's email address exactly.
+3. If both hold, escalate to the platform team with the record link.`,
+      published_at: cel`daysAgo(19)`,
+      last_reviewed_at: cel`daysAgo(4)`,
+    },
+    {
+      title: 'A Dashboard Chart Shows No Data',
+      summary: 'Most empty charts are a filter or a date range, not missing data.',
+      category: 'troubleshooting',
+      tags: ['reports', 'performance'],
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# A Dashboard Chart Shows No Data
+
+1. Give the chart a second to load; heavy charts draw just after the page.
+2. Widen the dashboard's date range; a quarter with no closed deals is empty.
+3. Clear the dashboard filters, then add them back one at a time.
+
+If the chart is still empty, open the report behind it and check its rows.`,
+      published_at: cel`daysAgo(66)`,
+      last_reviewed_at: cel`daysAgo(14)`,
+    },
+
+    // ── Billing & Pricing ────────────────────────────────────────────
+    {
+      title: 'Understanding Your Invoice',
+      summary: 'What each line on the monthly invoice means and when it is charged.',
+      category: 'billing',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Understanding Your Invoice
+
+Your invoice lists one line per subscription: the plan, the number of seats
+and the billing period it covers. Seats added mid-period are charged pro rata
+on the next invoice. Invoices are issued on the first business day of the
+period and are due within 30 days.`,
+      published_at: cel`daysAgo(88)`,
+      last_reviewed_at: cel`daysAgo(33)`,
+    },
+    {
+      title: 'Changing Your Plan or Seat Count',
+      summary: 'Upgrade, downgrade or add seats, and when each change takes effect.',
+      category: 'billing',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Changing Your Plan or Seat Count
+
+- **More seats** take effect immediately and are charged pro rata.
+- **An upgrade** takes effect immediately; the difference appears on the next invoice.
+- **A downgrade or fewer seats** take effect at the end of the current period.
+
+Only an administrator of your organization can make these changes.`,
+      published_at: cel`daysAgo(73)`,
+      last_reviewed_at: cel`daysAgo(18)`,
+    },
+    {
+      title: 'Annual Billing Discount (Previous Price List)',
+      summary: 'The prepaid annual discount of the previous price list, kept for customers who signed under it.',
+      category: 'billing',
+      status: 'archived',
+      audience: 'public',
+      language: 'en',
+      body: `# Annual Billing Discount (Previous Price List)
+
+Customers who prepaid a year under the previous price list received 15% off
+the monthly rate. This offer was replaced by the current price list and is no
+longer available to new subscriptions.`,
+      published_at: cel`daysAgo(520)`,
+      last_reviewed_at: cel`daysAgo(430)`,
+    },
+
+    // ── API & Integrations ───────────────────────────────────────────
+    {
+      title: 'Authenticating with API Keys',
+      summary: 'Give each integration its own API key, and know what that key can reach.',
+      category: 'api',
+      tags: ['auth'],
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Authenticating with API Keys
+
+Give every integration its own API key, created by your administrator, so one
+can be revoked without breaking the others.
+
+A key acts as the person it belongs to: it reads and writes exactly what they
+can, no more. Revoke a key the moment the integration is retired.`,
+      published_at: cel`daysAgo(62)`,
+      last_reviewed_at: cel`daysAgo(11)`,
+    },
+    {
+      title: 'Receiving Record Changes with Webhooks',
+      summary: 'Have HotCRM call your endpoint when a deal, case or account changes.',
+      category: 'api',
+      tags: ['webhooks'],
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Receiving Record Changes with Webhooks
+
+Register an HTTPS endpoint and pick the objects and events it should hear
+about. Answer each delivery quickly with a 2xx and do the slow work afterwards.
+
+Make your handler safe to run twice: the same change can arrive more than
+once, and the record's id is how you tell.`,
+      published_at: cel`daysAgo(44)`,
+      last_reviewed_at: cel`daysAgo(16)`,
+    },
+    {
+      title: 'Bulk Loading Records through the API',
+      summary: 'Load thousands of records without tripping rate limits or duplicate rules.',
+      category: 'api',
+      tags: ['data_import'],
+      status: 'published',
+      audience: 'internal',
+      language: 'en',
+      body: `# Bulk Loading Records through the API
+
+Send records in batches of a few hundred, parents before children, and wait
+for each batch to finish before sending the next. Use the record's natural key
+(account name, contact email) to check for an existing row before inserting.`,
+      published_at: cel`daysAgo(27)`,
+      last_reviewed_at: cel`daysAgo(6)`,
+    },
+
+    // ── Release Notes ────────────────────────────────────────────────
+    {
+      title: 'Release Notes: Lead Cards and the Lead Calendar',
+      summary: 'Lead cards name the person, and the Lead Calendar shows each follow-up.',
+      category: 'release_notes',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Release Notes: Lead Cards and the Lead Calendar
+
+- **Lead Pipeline** and **Lead Cards** title each card by the person's name.
+- **Lead Calendar** places each lead on its follow-up date.
+- A task can be completed from its row with the new **Complete** action.`,
+      published_at: cel`daysAgo(12)`,
+      last_reviewed_at: cel`daysAgo(5)`,
+    },
+    {
+      title: 'Release Notes: Helpful Votes on Articles',
+      summary: 'Readers can now mark an article helpful or not, and authors see the count.',
+      category: 'release_notes',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Release Notes: Helpful Votes on Articles
+
+Every published article now carries **Helpful** and **Not Helpful** buttons.
+Each reader has one vote per article and can change it. The counts appear on
+the Published list, so authors can see which answers land.`,
+      published_at: cel`daysAgo(29)`,
+      last_reviewed_at: cel`daysAgo(27)`,
+    },
+    {
+      title: 'Release Notes: Forecast Snapshots',
+      summary: 'Next release: monthly forecast snapshots for every rep and manager.',
+      category: 'release_notes',
+      status: 'draft',
+      audience: 'internal',
+      language: 'en',
+      body: `# Release Notes: Forecast Snapshots (DRAFT)
+
+Forecasts will be captured on a schedule so a manager can compare this
+period's commit with the last one. Hold until the release date is set.`,
+    },
+
+    // ── Policy ───────────────────────────────────────────────────────
+    {
+      title: 'Data Retention and Deletion',
+      summary: 'How long customer data is kept, and how to have it deleted.',
+      category: 'policy',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Data Retention and Deletion
+
+Records stay in your organization until you delete them. To close your
+organization and have all of its data deleted, an administrator asks support
+in writing; support confirms when the deletion is complete.`,
+      published_at: cel`daysAgo(150)`,
+      last_reviewed_at: cel`daysAgo(35)`,
+    },
+    {
+      title: 'Acceptable Use',
+      summary: 'What HotCRM may and may not be used for.',
+      category: 'policy',
+      status: 'published',
+      audience: 'public',
+      language: 'en',
+      body: `# Acceptable Use
+
+Use HotCRM to manage your own customer relationships. Do not upload data you
+have no right to hold, send bulk email to people who have not opted in, or try
+to reach another organization's records.`,
+      published_at: cel`daysAgo(210)`,
+      last_reviewed_at: cel`daysAgo(60)`,
+    },
+    {
+      title: 'Support Hours and Response Targets (Previous Plans)',
+      summary: 'The support hours of the previous plans, replaced by the current support plans.',
+      category: 'policy',
+      status: 'archived',
+      audience: 'public',
+      language: 'en',
+      body: `# Support Hours and Response Targets (Previous Plans)
+
+Support answered weekdays 09:00 to 18:00 UTC, with a first response within one
+business day. These hours were replaced by the response targets of the current
+support plans.`,
+      published_at: cel`daysAgo(400)`,
+      last_reviewed_at: cel`daysAgo(310)`,
     },
   ]
 });
