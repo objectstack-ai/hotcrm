@@ -9,21 +9,29 @@ type Flow = Automation.Flow;
  *
  * ## Why these two flows exist
  *
- * `crm_campaign_member.added_date` is `readonly: true`: nobody is meant to
- * hand-edit when a membership was created.
+ * They were built (#1807) for one column: `crm_campaign_member.added_date`,
+ * `readonly: true`, which from `@objectstack/objectql` 17.4.0 a non-system
+ * caller's INSERT can no longer seed (*"Seeding a read-only column at create
+ * time is a **system** act"*, that release's changelog).
  *
- * ⭐ From `@objectstack/objectql` 17.4.0 the readonly strip covers INSERT as
- * well as UPDATE, which is the reason this file exists. Its changelog states
- * the BREAKING behaviour change: *"a static `readonly` field is now stripped
- * from a **non-system caller's INSERT payload inside `engine.insert`**, exactly
- * as it already was on `engine.update`"*, and it names the remedy in the same
- * sentence —
- * *"Seeding a read-only column at create time is a **system** act — use
- * `context.isSystem`, a flow's `runAs: 'system'`, a system hook or a seed."*
- * `objectstack validate` says the same thing at author time through
- * `flow-update-readonly-field`.
+ * ⭐ That reason is GONE since #2142. The stamp is now the object's own
+ * write-moment `defaultValue`, which the engine applies to a user-context
+ * insert as well, so these callees no longer write it. Measured on
+ * 18.0.0-next.3: with both callees switched to `runAs: 'user'` in a throwaway
+ * boot, a marketing user's Enroll Members still lands every member with its
+ * Added Date.
  *
- * ⛔ The remedy is NOT to elevate `campaign_enrollment`. That flow is a screen
+ * What the elevation STILL does, measured in that same boot: it is what lets a
+ * user whose permission set has `allowCreate: false` on `crm_campaign_member`
+ * (`sales_rep`, `sales_manager`) enroll through Enroll Members at all. With the
+ * callees at `runAs: 'user'` their runs enrolled nobody and still reported
+ * success, because the parent's per-member `try_catch` swallows the refusal.
+ * Whether those two profiles should be able to enroll is an open product
+ * question that the #2142 report hands to the `repo:hotcrm` seat. ⛔ Do not
+ * retire these flows or change their `runAs` as a side effect of a stamp
+ * change: that would silently change who can enroll.
+ *
+ * ⛔ Nor is the remedy to elevate `campaign_enrollment`. That flow is a screen
  * flow a marketer launches from a campaign record, and `AGENTS.md` house rule 9
  * ("Elevate as little as possible") is explicit: *"A screen
  * flow stays `runAs: 'user'`. A write that genuinely needs elevation is split
@@ -41,8 +49,7 @@ type Flow = Automation.Flow;
  *
  * ELEVATION IS NOT ANONYMITY: `resolveRunDataContext`
  * returns `{ isSystem: true, actor, ...userId }` for a `runAs: 'system'` run, so
- * the membership row is still attributed to the marketer who enrolled it — only
- * the readonly strip's `if (!opCtx.context?.isSystem)` branch is skipped.
+ * the membership row is still attributed to the user who enrolled it.
  *
  * ## Two flows, not one branching flow
  *
@@ -62,18 +69,23 @@ type Flow = Automation.Flow;
  * them here would elevate a read that has no business being elevated.
  */
 
-/** Fields both callees write, minus the branch's own person lookup. */
+/**
+ * Fields both callees write, minus the branch's own person lookup.
+ *
+ * ⛔ No `added_date`. The enrollment stamp is the object's own write-moment
+ * default (`campaign_member.object.ts`, #2142), so it lands on every insert,
+ * these included; writing it here as well would make it a second writer of a
+ * column that has exactly one.
+ */
 const MEMBERSHIP_FIELDS = {
   status: 'sent',
-  // The readonly stamp this elevation exists for.
-  added_date: cel`isoDatetime(now())`,
 } as const;
 
 export const CampaignLeadMemberEnrollFlow: Flow = {
   name: 'campaign_lead_member_enroll',
   label: 'Enroll Lead in Campaign',
   description:
-    'Insert one lead campaign-membership row with its readonly added_date stamp, using the system context. Called by campaign_enrollment through a subflow node.',
+    'Insert one lead campaign-membership row, using the system context. Called by campaign_enrollment through a subflow node.',
   type: 'autolaunched',
   status: 'active',
 
@@ -115,7 +127,7 @@ export const CampaignContactMemberEnrollFlow: Flow = {
   name: 'campaign_contact_member_enroll',
   label: 'Enroll Contact in Campaign',
   description:
-    'Insert one contact campaign-membership row with its readonly added_date stamp, using the system context. Called by campaign_enrollment through a subflow node.',
+    'Insert one contact campaign-membership row, using the system context. Called by campaign_enrollment through a subflow node.',
   type: 'autolaunched',
   status: 'active',
 

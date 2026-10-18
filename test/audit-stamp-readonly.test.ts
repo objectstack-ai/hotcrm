@@ -33,13 +33,14 @@ const silentLogger: any = {
  *
  *   • `crm_opportunity.approval_status` / `approved_date` (#1666) — every
  *     writer is the `runAs: 'system'` approval flow or an insert.
- *   • `crm_campaign_member.added_date` (#1667) — every writer is a
- *     `runAs: 'system'` flow. ⭐ It used to read "every writer is an INSERT",
- *     which stopped being a reason on the @objectstack/* 17.4.0 migration:
- *     objectql 17.4.0 strips a static readonly column from a non-system
- *     INSERT too. The enrollment insert therefore moved into the dedicated
- *     `campaign_lead_member_enroll` / `campaign_contact_member_enroll`
- *     callees (AGENTS.md house rule 9), and this file follows it there.
+ *   • `crm_campaign_member.added_date` (#1667) — its one writer is the
+ *     field's own write-moment `defaultValue` (#2142), which the engine
+ *     applies to every insert, a user-context one included. Before #2142 the
+ *     writers were the two `runAs: 'system'` enrollment callees
+ *     (`campaign_lead_member_enroll` / `campaign_contact_member_enroll`),
+ *     because objectql 17.4.0 strips a static readonly column from a
+ *     non-system INSERT; every other door stored the column blank. This file
+ *     follows the stamp to the object, and still runs the callees' node.
  *
  * ⭐ A declaration without these pins is just a flag. What has to stay true is
  * a CONJUNCTION, and each half fails in a different direction:
@@ -312,11 +313,13 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
   });
 
   it('the elevation lives in the two callees, and nowhere else', () => {
+    // The stamp no longer needs it (#2142), but the elevation stays: it is
+    // what lets the profiles without `allowCreate` on this object enroll
+    // through the screen flow, and retiring it is not a stamp change.
     for (const callee of [CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow]) {
       expect(
         (callee as AnyRec).runAs,
-        `${(callee as AnyRec).name} is the whole reason the split exists: it is the only ` +
-          'place the enrollment insert runs elevated.',
+        `${(callee as AnyRec).name} is the only place the enrollment insert runs elevated.`,
       ).toBe('system');
       const writes = ((callee as AnyRec).nodes as AnyRec[])
         .filter((n) => n.type !== 'start' && n.type !== 'end')
@@ -328,18 +331,27 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
     }
   });
 
-  it('both shipped create nodes still carry the stamp', () => {
+  it('the object is the stamp\'s one writer: a declared default, and neither create node writes it', () => {
+    const fields = objectByName.get('crm_campaign_member')?.fields as AnyRec;
+    expect(
+      fields.added_date?.defaultValue,
+      'added_date has no default, so every insert that does not write it — the console\'s New, ' +
+        'Add to Campaign — is born with a blank Added Date again (#2142)',
+    ).toBeTruthy();
     const callees: [AnyRec, string][] = [
       [CampaignLeadMemberEnrollFlow as AnyRec, 'create_campaign_member'],
       [CampaignContactMemberEnrollFlow as AnyRec, 'create_contact_member'],
     ];
     for (const [flow, id] of callees) {
       const node = findNode(flow, id);
-      expect(node, `${id} is one of the two writers the #1667 census rests on`).toBeTruthy();
+      expect(node, `${id} is one of the two enrollment inserts`).toBeTruthy();
       expect(node!.type, 'an INSERT on an elevated callee. If this ever becomes update_record it ' +
         'is a different write with different ordering — that is the failure #1667 trades against.').toBe('create_record');
       expect(node!.config.objectName).toBe('crm_campaign_member');
-      expect(node!.config.fields.added_date, 'the stamp itself, taken from source').toEqual(cel`isoDatetime(now())`);
+      expect(
+        Object.keys(node!.config.fields),
+        'a callee writes added_date again — a second writer of a column the object already stamps',
+      ).not.toContain('added_date');
     }
   });
 
@@ -356,11 +368,11 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
     }
   });
 
-  it('the shipped create_campaign_member node still stamps added_date on INSERT', async () => {
-    // Both halves come from the SHIPPED callee now: its node AND its `runAs`.
-    // Reading the runAs off the flow that owns the node is what makes this a
-    // measurement rather than a restatement — hard-code 'system' here and the
-    // pin would stay green through exactly the regression it exists to catch.
+  it('a member the shipped create_campaign_member node inserts still carries added_date', async () => {
+    // Both halves come from the SHIPPED callee: its node AND its `runAs`. The
+    // node no longer writes the column (#2142); what this measures is that the
+    // enrollment row still carries the stamp, now from the field's default,
+    // which this engine reads off the shipped field definition.
     const node = findNode(CampaignLeadMemberEnrollFlow as AnyRec, 'create_campaign_member')!;
     const { campaignId, leadId } = await seedEnrollmentTargets();
     const engine = automation({
@@ -368,7 +380,7 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
         'pin_enrol',
         (CampaignLeadMemberEnrollFlow as AnyRec).runAs ?? 'user',
         node,
-        // Addressing only — `status` and `added_date` stay exactly as authored.
+        // Addressing only — every other field stays exactly as authored.
         { fields: { ...node.config.fields, crm_campaign: cel`rowId`, crm_lead: cel`linkId` } },
       ),
     });
@@ -381,8 +393,8 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
     expect(members[0].status, 'the CONTROL column did not land — harness fault, not a strip').toBe('sent');
     expect(
       members[0].added_date,
-      'added_date came back null after the readonly declaration. Every campaign member would ' +
-        'now be born without an enrollment date — the exact 16.x symptom #1667 measured away.',
+      'added_date came back null on an enrollment insert. Every enrolled member would now be ' +
+        'born without an enrollment date — the symptom #1667 and #2142 measured away.',
     ).toBeTruthy();
   });
 
