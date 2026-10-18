@@ -48,10 +48,18 @@ export const QuoteLineItem = ObjectSchema.create({
   // quantity/unit_price/discount below. Master-detail children still inherit
   // the master's sharing automatically.
 
+  // Named after the product it sells (#2086). This is the same stored mirror
+  // as `crm_opportunity_line_item`, for the same reason: a formula cannot read
+  // through `crm_product`. Read the long note on the twin. Its writers are
+  // `quote_line_item_product_title`, `product_title_mirror` and
+  // `scripts/backfill-line-product-title.ts`.
+  nameField: 'product_title',
+  searchableFields: ['product_title', 'description'],
+
   highlightFields: ['crm_product', 'quantity', 'unit_price', 'total_price'],
 
   // The same two-group split as `crm_opportunity_line_item` (#1453), derived
-  // from the ten fields declared here: every factor `total_price` multiplies
+  // from the eleven fields declared here: every factor `total_price` multiplies
   // is `pricing`, everything that says WHICH line this is is `basic`.
   //
   // ⚠️ Neither group may be a subset of the highlight strip — see the twin
@@ -102,6 +110,15 @@ export const QuoteLineItem = ObjectSchema.create({
       label: 'Description',
       group: 'basic',
       maxLength: 500,
+    }),
+
+    // The line's title. The twin object declares the same field; read the note there.
+    product_title: Field.text({
+      label: 'Product Title',
+      group: 'basic',
+      readonly: true,
+      maxLength: 300,
+      description: "The product's title, kept in step with the product. It names this line.",
     }),
 
     quantity: Field.number({

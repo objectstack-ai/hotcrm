@@ -393,6 +393,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       crm_opportunity: { label: '关联商机' },
       crm_product: { label: '产品' },
       description: { label: '描述' },
+      product_title: { label: '产品标题', help: '产品的标题，随产品同步更新，用作此明细行的名称。' },
       quantity: { label: '数量' },
       list_price: { label: '标价', help: '自动取自产品的目录价' },
       unit_price: { label: '销售单价', help: '协商后的单价（可与目录价不同）' },

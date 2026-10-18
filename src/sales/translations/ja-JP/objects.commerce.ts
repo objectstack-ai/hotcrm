@@ -99,6 +99,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_quote: { label: '見積' },
       crm_product: { label: '製品' },
       description: { label: '説明' },
+      product_title: { label: '製品タイトル', help: '製品のタイトル。製品と同期して更新され、この明細行の名前になります。' },
       quantity: { label: '数量' },
       list_price: { label: '定価' },
       unit_price: { label: '販売価格' },

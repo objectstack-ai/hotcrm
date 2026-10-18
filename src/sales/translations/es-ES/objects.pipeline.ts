@@ -431,6 +431,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       crm_opportunity: { label: 'Oportunidad' },
       crm_product: { label: 'Producto' },
       description: { label: 'Descripción' },
+      product_title: { label: 'Título del producto', help: 'El título del producto, sincronizado con el producto. Da nombre a esta línea.' },
       quantity: { label: 'Cantidad' },
       list_price: { label: 'Precio de Lista', help: 'Se rellena automáticamente desde el Precio de Lista del producto.' },
       unit_price: { label: 'Precio de Venta', help: 'Precio unitario negociado (puede diferir del precio de lista)' },
