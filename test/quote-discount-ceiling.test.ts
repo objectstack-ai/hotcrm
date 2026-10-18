@@ -859,8 +859,8 @@ describe('a quote with a 90% line discount cannot reach `presented`', () => {
 // ──────────────────────────────────────────── the data already shipped ──────
 
 describe('the stock data clears the new ceiling', () => {
-  // The ceiling applies on WRITE, and seeds run in `upsert` mode on every boot
-  // — which IS a write. A seeded quote above the ceiling would fail the seed
+  // The ceiling applies on WRITE, and a seed row is written on the boot that
+  // inserts it — which IS a write. A seeded quote above the ceiling would fail the seed
   // load, i.e. turn a tightened rule into a boot failure. Enumerated, not
   // assumed: the deepest discount anywhere in HotCRM's seeds is 20%.
   it('no seeded quote carries a discount above the ceiling', () => {
@@ -878,8 +878,9 @@ describe('the stock data clears the new ceiling', () => {
 
   it('no seeded quote LINE carries a discount above the ceiling (#1086)', () => {
     // Same reasoning one object down, and the same failure mode if it were
-    // false: `quoteLineItems` seeds in `upsert` mode, so a line above the
-    // ceiling would turn the new rule into a boot failure on every dev reset.
+    // false: `quoteLineItems` writes each line on the boot that inserts it, so a
+    // line above the ceiling would turn the new rule into a boot failure on
+    // every dev reset.
     const records = (quoteLineItems as AnyRec).records as AnyRec[];
     const offenders = records.filter(
       (r) => typeof r.discount === 'number' && r.discount > QUOTE_DISCOUNT_CEILING,
