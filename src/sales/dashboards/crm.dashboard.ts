@@ -66,7 +66,7 @@ export const CrmOverviewDashboard: Dashboard = {
       filter: { stage: 'closed_won' },
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['total_amount'],
-      layout: { x: 0, y: 0, w: 3, h: 2 },
+      layout: { x: 0, y: 0, w: 3, h: 1 },
     },
     {
       id: 'active_deals',
@@ -76,7 +76,7 @@ export const CrmOverviewDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['opp_count'],
-      layout: { x: 3, y: 0, w: 3, h: 2 },
+      layout: { x: 3, y: 0, w: 3, h: 1 },
     },
     {
       id: 'won_deals',
@@ -86,10 +86,10 @@ export const CrmOverviewDashboard: Dashboard = {
       filter: { stage: 'closed_won' },
       colorVariant: 'purple',
       dataset: 'opportunity_metrics', values: ['opp_count'],
-      layout: { x: 6, y: 0, w: 3, h: 2 },
+      layout: { x: 6, y: 0, w: 3, h: 1 },
     },
     // No overrides left once the fabricated trend is gone.
-    avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 2 }),
+    avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 1 }),
 
     // ─── Charts Row 1 ─────────────────────────────────────────────────
     {

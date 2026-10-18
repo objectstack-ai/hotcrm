@@ -88,7 +88,7 @@ export const ActivityDashboard: Dashboard = {
       filter: { status: 'held' },
       colorVariant: 'success',
       dataset: 'event_metrics', values: ['event_count'],
-      layout: { x: 0, y: 0, w: 3, h: 2 },
+      layout: { x: 0, y: 0, w: 3, h: 1 },
     },
     {
       id: 'meetings_booked',
@@ -98,7 +98,7 @@ export const ActivityDashboard: Dashboard = {
       filter: { status: 'planned', type: 'meeting' },
       colorVariant: 'blue',
       dataset: 'event_metrics', values: ['event_count'],
-      layout: { x: 3, y: 0, w: 3, h: 2 },
+      layout: { x: 3, y: 0, w: 3, h: 1 },
     },
     {
       id: 'customer_minutes',
@@ -108,7 +108,7 @@ export const ActivityDashboard: Dashboard = {
       filter: { status: 'held' },
       colorVariant: 'purple',
       dataset: 'event_metrics', values: ['total_minutes'],
-      layout: { x: 6, y: 0, w: 3, h: 2 },
+      layout: { x: 6, y: 0, w: 3, h: 1 },
     },
     {
       // First widget in the app to use `task_metrics`. The dataset shipped with
@@ -121,7 +121,7 @@ export const ActivityDashboard: Dashboard = {
       filter: { is_completed: true },
       colorVariant: 'orange',
       dataset: 'task_metrics', values: ['task_count'],
-      layout: { x: 9, y: 0, w: 3, h: 2 },
+      layout: { x: 9, y: 0, w: 3, h: 1 },
     },
 
     // ─── Row 2: who, and when ─────────────────────────────────────────
@@ -206,6 +206,8 @@ export const ActivityDashboard: Dashboard = {
       filter: { status: 'held', related_to_type: 'crm_opportunity' },
       colorVariant: 'success',
       dataset: 'event_metrics', values: ['event_count'],
+      // `h: 4` on purpose (#2135): this pair shares the row with the two `h: 4` charts;
+      // every other metric tile is `h: 1`. Roster: test/dashboard-metric-tile-height.test.ts.
       layout: { x: 8, y: 6, w: 2, h: 4 },
     },
     {
@@ -216,6 +218,7 @@ export const ActivityDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['opp_count'],
+      // `h: 4` on purpose, as `deal_activity` above (#2135).
       layout: { x: 10, y: 6, w: 2, h: 4 },
     },
 
@@ -234,7 +237,7 @@ export const ActivityDashboard: Dashboard = {
       filter: { is_active: true, last_activity_date: { $lt: '{30_days_ago}' } },
       colorVariant: 'warning',
       dataset: 'account_metrics', values: ['account_count'],
-      layout: { x: 0, y: 10, w: 4, h: 2 },
+      layout: { x: 0, y: 10, w: 4, h: 1 },
     },
     {
       id: 'quiet_accounts_60',
@@ -244,7 +247,7 @@ export const ActivityDashboard: Dashboard = {
       filter: { is_active: true, last_activity_date: { $lt: '{60_days_ago}' } },
       colorVariant: 'orange',
       dataset: 'account_metrics', values: ['account_count'],
-      layout: { x: 4, y: 10, w: 4, h: 2 },
+      layout: { x: 4, y: 10, w: 4, h: 1 },
     },
     {
       id: 'quiet_accounts_90',
@@ -254,7 +257,7 @@ export const ActivityDashboard: Dashboard = {
       filter: { is_active: true, last_activity_date: { $lt: '{90_days_ago}' } },
       colorVariant: 'danger',
       dataset: 'account_metrics', values: ['account_count'],
-      layout: { x: 8, y: 10, w: 4, h: 2 },
+      layout: { x: 8, y: 10, w: 4, h: 1 },
     },
   ],
 };
