@@ -12,7 +12,7 @@
 // deployment installs none of these people" structural rather than hopeful
 // (see the header of `src/sales/sharing/demo-staffing.ts`).
 //
-// Six steps, all idempotent — rerun it any time, including against a
+// Five steps, all idempotent — rerun it any time, including against a
 // half-staffed org:
 //
 //   1. create each person in `DemoOrgStaffing` via
@@ -30,22 +30,21 @@
 //      (objectstack-ai/objectstack#16549). So a demo salesperson asking their
 //      agent about the pipeline got 0 opportunities and 0 tasks. This step
 //      re-stamps `owner_id` per the routes in `src/sales/sharing/demo-staffing.ts`;
-//      `crm_account` is deliberately NOT among them (see step 6), the deals go
-//      over through a door that fires no automation, and a row a pending
-//      approval locks is held where it is (see `handBookToRoster`);
+//      `crm_account` is deliberately NOT among them (see step 5), every row goes
+//      over through the same write with every control in force — so on a large
+//      open deal it opens `opportunity_approval`, submitted by the dev admin —
+//      and a row a pending approval locks is held where it is (see
+//      `handBookToRoster`);
 //   4. RE-EVALUATE every active sharing rule. This step is not optional and is
 //      the reason staffing alone was never enough: `plugin-sharing` materialises
 //      grants from a record-write hook that returns early on `isSystem` writes,
 //      and every seeded row is written with `isSystem: true`. So the seeded
 //      accounts carry no grants no matter who holds a position, until a rule is
-//      re-evaluated (boot backfill does it too — this just avoids the restart);
-//   5. LET EACH OWNER SAVE THE DEALS HANDED TO THEM (#2129). Signed in as
-//      themselves, each demo person saves every deal step 3 gave them. That
-//      save is the first write the platform sees on the deal, so whatever it
-//      sets off runs as the owner: on an open deal at or above the large-deal
-//      line it opens `opportunity_approval`, with the REP as submitter and
-//      the sales manager as approver (see `ownersSave`);
-//   6. VERIFY, as each demo user, that the three layers actually connect —
+//      re-evaluated (boot backfill does it too — this just avoids the restart).
+//      The rules are listed through `GET /api/v1/sharing/rules`: since
+//      18.0.0-next.4 a rule the app declares has no `sys_sharing_rule` row, and
+//      its id is its name (objectstack#23952);
+//   5. VERIFY, as each demo user, that the three layers actually connect —
 //      plus an OWNERSHIP CENSUS over the routed objects, which is the only
 //      evidence that speaks to step 3: the reps must still OWN NO ACCOUNT (a
 //      share to an owner proves nothing under a `private` OWD, so owning them
@@ -75,9 +74,10 @@ type Json = Record<string, any>;
  *
  * That flow fires on ANY update of an open deal at or above the large-deal
  * line that is not yet in approval, and the request it opens names the WRITER
- * as its submitter. So for this one object, who makes the first write after
- * the seed decides who asked for the approval. Step 3 hands these rows over
- * through a door that fires nothing, and step 5 has their new owner save them.
+ * as its submitter. So for this one object, the first write after the seed
+ * decides who asked for the approval, and that write is step 3's hand-over:
+ * the requests it opens name the dev admin (see `handBookToRoster`). The
+ * closing banner reads them back.
  */
 const APPROVAL_GATED_OBJECT = String(
   (OpportunityApprovalFlow.nodes.find((n) => n.type === 'start')?.config as { objectName?: unknown } | undefined)
@@ -170,31 +170,6 @@ class Api {
       // `allowTransfer`; a refusal here means the signed-in account is not an
       // administrator, exactly as `scripts/backfill-owner-id.ts` reports it.
       throw new Error(`PATCH ${object}/${id} → ${status}: ${msg}`);
-    }
-  }
-
-  /**
-   * Re-stamp `owner_id` on rows of `object` through the platform's import door,
-   * with "run automations" OFF — the write that fires no record-change flow
-   * and no metadata-bound hook (`runAutomations: false` is the import's own
-   * opt-out; the engine carries it as `skipAutomations`, which implies
-   * `skipTriggers`). Still a transfer, still gated on `allowTransfer` like the
-   * PATCH above. Throws unless every row reports `updated`.
-   */
-  async importOwners(object: string, rows: Array<{ id: string; owner_id: string }>): Promise<void> {
-    const json = await this.postOk(`/api/v1/data/${object}/import`, {
-      format: 'json',
-      writeMode: 'update',
-      matchFields: ['id'],
-      runAutomations: false,
-      rows,
-    });
-    const bad = ((json.results ?? []) as Json[]).filter((r) => r?.ok !== true || r?.action !== 'updated');
-    if (Number(json.updated ?? -1) !== rows.length || bad.length > 0) {
-      throw new Error(
-        `import of ${rows.length} ${object} owner(s) updated ${String(json.updated)}: ` +
-        `${JSON.stringify(bad.slice(0, 5))}`,
-      );
     }
   }
 
@@ -299,14 +274,23 @@ async function ensurePositions(api: Api, userId: string, member: DemoStaffMember
 /**
  * Re-materialise the grants of every active rule.
  *
- * `POST /sharing/rules/:id/evaluate` is diff-based: it grants what now matches,
- * revokes what no longer does, and is safe to run repeatedly.
+ * The rules come from the sharing door, `GET /api/v1/sharing/rules`, which
+ * lists the rules the app declares beside any the organization authored.
+ * `sys_sharing_rule` holds only the latter: since 18.0.0-next.4 plugin-sharing
+ * reads a declared rule from the registry and writes no row for it, and its id
+ * is its name (objectstack#23952). `POST /sharing/rules/:idOrName/evaluate` is
+ * diff-based: it grants what now matches, revokes what no longer does, and is
+ * safe to run repeatedly.
  */
 async function evaluateRules(api: Api) {
-  const rules = await api.query('sys_sharing_rule', [['active', '=', true]], ['id', 'name']);
+  const { status, json } = await api.get('/api/v1/sharing/rules?activeOnly=true');
+  if (status !== 200 || !Array.isArray(json.data)) {
+    throw new Error(`GET /api/v1/sharing/rules → ${status}: ${JSON.stringify(json).slice(0, 300)}`);
+  }
+  const rules = json.data as Json[];
   const results: Array<{ name: string; matched: number; users: number; created: number; revoked: number }> = [];
   for (const rule of rules) {
-    const out = await api.postOk(`/api/v1/sharing/rules/${rule.id}/evaluate`);
+    const out = await api.postOk(`/api/v1/sharing/rules/${encodeURIComponent(String(rule.id ?? rule.name))}/evaluate`);
     results.push({
       name: String(rule.name),
       matched: Number(out.matchedRecords ?? 0),
@@ -325,8 +309,6 @@ type OwnershipOutcome = {
   settled: Map<string, string>;
   /** rowId → the owner it keeps: rows under a PENDING APPROVAL, which no edit may reach (see below). */
   held: Map<string, string>;
-  /** rowId → the new owner, for rows handed over without automations: step 5 has that owner save each one. */
-  toSave: Map<string, string>;
   written: number;
   leftAlone: number;
 };
@@ -353,7 +335,7 @@ type OwnershipOutcome = {
  * resulting tasks to the service manager, and re-routing those by territory
  * would overwrite the app demonstrating itself.
  *
- * ### The deals go over WITHOUT automations, so their owner submits (#2129)
+ * ### Every row goes over with its controls on, so the dev admin submits the large deals
  *
  * The seed prices exactly two open deals over the large-deal line on purpose
  * (`Acme Platform Upgrade`, `Wayne Enterprise License`, see
@@ -361,19 +343,21 @@ type OwnershipOutcome = {
  * loader writes with `skipTriggers`, so a fresh box has 0
  * `sys_approval_request` rows when this runs. `opportunity_approval` then
  * fires on the FIRST later update of such a deal, whatever it changes, and
- * the request it opens names the writer as submitter. Measured on a fresh
- * `pnpm dev` box at 18.0.0-next.3: when this step PATCHed `owner_id` as the
- * dev admin, that PATCH was the write, so both requests named the dev admin
- * as submitter.
+ * the request it opens names the writer as submitter. This step's PATCH is
+ * that write, so each of the two requests names the dev admin as submitter,
+ * waits on the sales manager at `manager_review`, and locks the deal.
  *
- * So rows of {@link APPROVAL_GATED_OBJECT} go over through `importOwners`,
- * with automations off: same transfer and same `allowTransfer` gate, but no
- * flow fires (measured: 0 requests after it). Their new owner saves them in
- * step 5 (`ownersSave`), and that save opens the request. The rep cannot take
- * the deal themselves instead: before the hand-off they cannot even read it
- * (`crm_opportunity` is `private`, no rule shares it with a rep, so GET and
- * PATCH both answer 404), and reps hold no `allowTransfer`. The other routed
- * objects keep the plain PATCH: no flow on them opens anything on such a write.
+ * Until 18.0.0-next.3 these deals went over through the import door with
+ * `runAutomations: false`, and each new owner then saved their deal, so the
+ * request named the rep (#2129). Since 18.0.0-next.4 the import door refuses
+ * that opt-out to every caller but the system principal, administrators
+ * included (objectstack#24348). A recall does not restore the old outcome
+ * either. Measured on 18.0.0-next.5: after the dev admin recalls the request
+ * the hand-over opened, the deal is unlocked, but its `approval_status` reads
+ * `recalled`, and `opportunity_approval` enters only from `not_required`, so
+ * the rep's next save opens nothing. The rep cannot take the deal themselves:
+ * before the hand-off they cannot read it (`crm_opportunity` is `private`, no
+ * rule shares it with a rep), and reps hold no `allowTransfer`.
  *
  * A row under a PENDING APPROVAL is left where it is, and reported as held
  * rather than routed (#2029). On a rerun before the request is decided, the
@@ -416,8 +400,6 @@ async function handBookToRoster(
     const rows = await api.query(route.object, [], fields);
     const settled = new Map<string, string>();
     const held = new Map<string, string>();
-    const toSave = new Map<string, string>();
-    const gated = route.object === APPROVAL_GATED_OBJECT;
     let written = 0;
     let leftAlone = 0;
     for (const row of rows) {
@@ -435,113 +417,25 @@ async function handBookToRoster(
       const accountId = route.accountField ? row[route.accountField] : undefined;
       const wanted = ownerFor(accountId ? territoryOf.get(String(accountId)) : undefined);
       settled.set(id, wanted);
-      if (gated) {
-        toSave.set(id, wanted);
-        continue;
-      }
       await api.patchOk(route.object, id, { owner_id: wanted });
       written++;
     }
-    if (toSave.size > 0) {
-      await api.importOwners(route.object, [...toSave].map(([id, owner_id]) => ({ id, owner_id })));
-      written += toSave.size;
-    }
-    outcomes.push({ route, settled, held, toSave, written, leftAlone });
+    outcomes.push({ route, settled, held, written, leftAlone });
   }
   return outcomes;
 }
 
-/** One deal step 5 saved, and the approval request on it afterwards (if its save opened one). */
-type SaveOutcome = {
-  object: string;
-  rowId: string;
-  ownerId: string;
-  request?: { id: string; submitterId: string; pendingApprovers: string[]; step: string };
-};
-
 /**
- * Step 5 — each demo person, signed in as themselves, saves the deals step 3
- * handed them (#2129).
- *
- * The save echoes the person's own `owner_id` back, which is what a record
- * form's save sends and which the platform does not treat as a transfer (see
- * the `allowTransfer` note in `src/sales/profiles/index.ts`), so a rep needs
- * no grant beyond owning the row. It changes no business field: no deal is
- * re-priced or re-staged. Being the first write after the seed, it fires every
- * record-change flow on the deal as the OWNER. Which flows actually open
- * anything is decided by their own start conditions, not by this script: on
- * the two open deals over the large-deal line `opportunity_approval` opens
- * `manager_review`, submitted by the rep, waiting on the sales manager.
- * Nothing here approves or rejects a request.
- *
- * A refused save is reported, not thrown, like a persona `verify()` cannot
- * read: the census still runs. A run that dies between step 3 and this step
- * leaves the deal with its owner and no request; that owner's next save of
- * the deal, here or in the Console, opens it.
+ * The PENDING approval requests on {@link APPROVAL_GATED_OBJECT}, re-read from
+ * the server for the closing banner: this run's (step 3's hand-over opened
+ * them) and an earlier run's alike. Nothing here approves or rejects one.
  */
-async function ownersSave(
-  base: URL,
-  staff: StaffOutcome[],
-  ownership: OwnershipOutcome[],
-): Promise<{ saved: SaveOutcome[]; failures: string[] }> {
-  const failures: string[] = [];
-  const saved: SaveOutcome[] = [];
-  for (const { member, userId } of staff) {
-    const mine = ownership.flatMap((o) =>
-      [...o.toSave].filter(([, owner]) => owner === userId).map(([rowId]) => ({ object: o.route.object, rowId })),
-    );
-    if (mine.length === 0) continue;
-    const asOwner = new Api(base);
-    await asOwner.signIn(member.email, member.password);
-    for (const { object, rowId } of mine) {
-      try {
-        await asOwner.patchOk(object, rowId, { owner_id: userId });
-        saved.push({ object, rowId, ownerId: userId });
-      } catch (err) {
-        failures.push(
-          `${member.email} could not save the ${object} row ${rowId} they were handed ` +
-          `(${err instanceof Error ? err.message : String(err)}), so nothing it would open runs as them.`,
-        );
-      }
-    }
-  }
-  return { saved, failures };
-}
-
-/**
- * Read back the PENDING approval requests on {@link APPROVAL_GATED_OBJECT}, and
- * judge the one thing step 5 exists for: every request on a deal its owner
- * saved names that owner as its submitter. Re-read from the server, never
- * inferred from the saves (#2129). Every pending request is returned, this
- * run's and an earlier run's alike, so the closing banner reports what waits.
- */
-async function readSubmissions(
-  api: Api,
-  saved: SaveOutcome[],
-): Promise<{ pending: Json[]; failures: string[] }> {
-  const failures: string[] = [];
-  const pending = await api.query(
+async function readPendingApprovals(api: Api): Promise<Json[]> {
+  return api.query(
     'sys_approval_request',
     [['status', '=', 'pending'], ['object_name', '=', APPROVAL_GATED_OBJECT]],
     ['id', 'object_name', 'record_id', 'submitter_id', 'pending_approvers', 'current_step'],
   );
-  for (const s of saved) {
-    const r = pending.find((q) => String(q.object_name) === s.object && String(q.record_id) === s.rowId);
-    if (!r) continue;
-    s.request = {
-      id: String(r.id),
-      submitterId: String(r.submitter_id ?? ''),
-      pendingApprovers: String(r.pending_approvers ?? '').split(',').map((x) => x.trim()).filter(Boolean),
-      step: String(r.current_step ?? ''),
-    };
-    if (s.request.submitterId !== s.ownerId) {
-      failures.push(
-        `${s.object} ${s.rowId}: its approval request ${s.request.id} names ${s.request.submitterId || 'nobody'} ` +
-        `as submitter, not the owner who saved it — the hand-off opened it, not the rep (#2129).`,
-      );
-    }
-  }
-  return { pending, failures };
 }
 
 /**
@@ -729,8 +623,8 @@ async function main(): Promise<number> {
   const base = assertLocal(arg('url', 'OS_DEMO_URL', DEFAULT_URL));
   if (!APPROVAL_GATED_OBJECT) {
     throw new Error(
-      "opportunity_approval's start node names no objectName, so step 3 cannot tell which deals to hand over " +
-      'without automations, and the dev admin would submit their approvals (#2129).',
+      "opportunity_approval's start node names no objectName, so the closing banner cannot tell which " +
+      'approval requests the hand-over opened (#2129).',
     );
   }
   const adminEmail = arg('admin-email', 'OS_SEED_ADMIN_EMAIL', 'admin@objectos.ai');
@@ -768,8 +662,7 @@ async function main(): Promise<number> {
   );
   for (const o of ownership) {
     console.log(
-      `   ${o.route.object.padEnd(18)} re-stamped ${String(o.written).padStart(3)}` +
-      `${o.toSave.size ? ' (import, automations off)' : ''}, left ` +
+      `   ${o.route.object.padEnd(18)} re-stamped ${String(o.written).padStart(3)}, left ` +
       `${String(o.leftAlone).padStart(3)} with a live owner` +
       `${o.held.size ? `, held ${o.held.size} under a pending approval` : ''} — ${o.route.why}`,
     );
@@ -790,29 +683,24 @@ async function main(): Promise<number> {
     );
   }
 
-  // Step 5, after the org is fully set up: the owners make the first write on
-  // the deals they were handed, so what that write opens is theirs (#2129).
-  console.log('\n── Owners saving the deals handed to them (#2129) ──');
-  const saves = await ownersSave(base, outcomes, ownership);
-  const submissions = await readSubmissions(api, saves.saved);
+  // What the hand-over opened (#2129): re-read, never inferred from the writes.
+  console.log(`\n── Pending ${APPROVAL_GATED_OBJECT} approval requests ──`);
+  const waiting = await readPendingApprovals(api);
   const emailOf = (userId: string) =>
     outcomes.find((o) => o.userId === userId)?.member.email ?? (userId === String(admin.id) ? 'the dev admin' : userId);
-  const submitted = saves.saved.filter((s) => s.request);
-  console.log(
-    `   ${saves.saved.length} saved, ${submitted.length} of those saves opened an approval request` +
-    `${saves.failures.length ? `, ${saves.failures.length} refused` : ''}`,
-  );
-  for (const s of submitted) {
+  const approversOf = (r: Json) => String(r.pending_approvers ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+  for (const r of waiting) {
     console.log(
-      `   ${s.object} ${s.rowId}  ${s.request!.step}  submitter=${emailOf(s.request!.submitterId)}  ` +
-      `waiting on=[${s.request!.pendingApprovers.map(emailOf).join(', ')}]`,
+      `   ${String(r.record_id)}  ${String(r.current_step ?? '')}  submitter=${emailOf(String(r.submitter_id ?? ''))}  ` +
+      `waiting on=[${approversOf(r).map(emailOf).join(', ')}]`,
     );
   }
+  if (waiting.length === 0) console.log('   none');
 
   const shares = await api.query('sys_record_share', [['source', '=', 'rule']], ['id']);
   const accounts = await api.query('crm_account', [], ['name', 'territory', 'billing_country']);
   console.log(`\n── Verifying (sys_record_share: ${shares.length} rule-materialised grants) ──`);
-  const failures = [...saves.failures, ...submissions.failures, ...(await verify(base, outcomes, accounts))];
+  const failures = await verify(base, outcomes, accounts);
 
   // The reading #1759 turns on: what each identity OWNS, which is what an agent
   // session can reach. Printed whether or not it passes — a census nobody can
@@ -839,7 +727,6 @@ async function main(): Promise<number> {
   // reference app should not be teaching. (CodeQL says the same thing:
   // js/clear-text-logging of sensitive information.)
   const manager = DemoOrgStaffing.find((m) => m.positions.includes('sales_manager'))?.email;
-  const waiting = submissions.pending;
   const listOf = (ids: string[]) => [...new Set(ids)].map(emailOf).join(' · ') || 'nobody';
   console.log(
     `\n🎉 demo org staffed. Sign in as any of: ` +
@@ -848,7 +735,7 @@ async function main(): Promise<number> {
     (waiting.length
       ? `   ${waiting.length} ${APPROVAL_GATED_OBJECT} approval request(s) pending, submitted by ` +
         `${listOf(waiting.map((r) => String(r.submitter_id ?? '')))}, in the Approvals inbox of ` +
-        `${listOf(waiting.flatMap((r) => String(r.pending_approvers ?? '').split(',').map((x) => x.trim()).filter(Boolean)))}.\n`
+        `${listOf(waiting.flatMap(approversOf))}.\n`
       : `   Save an open opportunity of $100K or more as its owner to see manager_review route to ${manager}.\n`),
   );
   return 0;
