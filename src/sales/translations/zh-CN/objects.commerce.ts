@@ -50,7 +50,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       description: { label: '描述' },
       crm_contact: {
         label: '联系人',
-        help: '报价进入「已提交」或「已接受」后必填 —— 起草的合同从这里取主要联系人。',
+        help: '把报价改为「已提交」或「已接受」的那次保存必须填写 —— 起草的合同从这里取主要联系人。',
       },
       owner_id: { label: '报价负责人' },
       quote_date: { label: '报价日期' },
