@@ -52,10 +52,14 @@ export const Product = ObjectSchema.create({
     }),
 
     // ADR-0079 record title (was titleFormat '{product_code} - {name}').
+    // A product with no code is titled by its name (#2168). `product_code` is
+    // an autonumber the engine issues on insert, so only rows older than the
+    // autonumber lack one; on those the concatenation evaluated to nothing,
+    // leaving the product, and every line item that copies this title, unnamed.
     display_title: Field.formula({
       label: 'Display Title',
       group: 'basic',
-      expression: F`record.product_code + " - " + record.name`,
+      expression: F`has(record.product_code) && record.product_code != null && record.product_code != "" ? record.product_code + " - " + record.name : record.name`,
     }),
 
     description: Field.markdown({

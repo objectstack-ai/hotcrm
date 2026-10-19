@@ -101,11 +101,15 @@ describe('product_title_mirror: one pass, a bounded share of the lines (#2168)',
 
 describe('line_item_product_title_backfill: an untitled line, read, starts its product\'s re-stamp (#2168)', () => {
   const backfill = hookNamed('line_item_product_title_backfill');
-  const touches = () => {
+  const touches = (untitled: string[] = []) => {
     const touched: string[] = [];
     const api = {
       object: (name: string) => ({
-        findOne: async (q: AnyRec) => ({ id: q.where.id, name: `Product ${q.where.id}` }),
+        findOne: async (q: AnyRec) => ({
+          id: q.where.id,
+          name: `Product ${q.where.id}`,
+          display_title: untitled.includes(q.where.id) ? '' : `PRD - Product ${q.where.id}`,
+        }),
         find: async () => [],
         count: async () => 0,
         insert: async () => ({}),
@@ -153,5 +157,14 @@ describe('line_item_product_title_backfill: an untitled line, read, starts its p
     const t = touches();
     await read(t.api, { id: 'l1', crm_product: { id: 'p9', name: 'Expanded' }, product_title: null });
     expect(t.touched).toEqual(['p9']);
+  });
+
+  it('never touches a product whose title is empty — the mirror would stamp nothing, and every read would write it again', async () => {
+    const t = touches(['p2']);
+    await read(t.api, [
+      { id: 'l1', crm_product: 'p1', product_title: null },
+      { id: 'l2', crm_product: 'p2', product_title: null },
+    ]);
+    expect(t.touched).toEqual(['p1']);
   });
 });

@@ -295,3 +295,30 @@ describe('a hosted environment titles its old lines on the first read (#2168)', 
     await vi.waitFor(async () => expect((await stored('crm_opportunity_line_item', line.id)).product_title).toBe(product.display_title), { timeout: 20_000, interval: 100 });
   }, 30_000);
 });
+
+describe('a product with no code is titled by its name, and so are its lines (#2168)', () => {
+  /** A product older than the `product_code` autonumber: the column holds nothing. */
+  const codelessProduct = async (): Promise<Rec> => {
+    const product = await newProduct();
+    await systemUpdate(verify, 'crm_product', { id: product.id, product_code: null });
+    return stored('crm_product', product.id);
+  };
+
+  it("its display_title is its name, not nothing", async () => {
+    const product = await codelessProduct();
+    expect(product.product_code ?? null).toBeNull();
+    expect(product.display_title).toBe(product.name);
+  });
+
+  it.each(PAIRS)('$object: a line of it is named by the product name, and an old untitled one is named on its first read', async ({ object, parentKey }) => {
+    const [product, parent] = [await codelessProduct(), (await parents())[parentKey]!];
+    const line = await verify.hooks.run(object, 'insert', { [parentKey]: parent.id, crm_product: product.id }, as(rep));
+    expect((await stored(object, line.id)).product_title).toBe(product.name);
+    await systemUpdate(verify, object, { id: line.id, product_title: null });
+    const res = await verify.apiAs(admin, 'POST', `/data/${object}/query`, {
+      fields: ['id', 'crm_product', 'product_title'], where: { [parentKey]: parent.id }, top: 50,
+    });
+    expect(res.status).toBe(200);
+    await vi.waitFor(async () => expect((await stored(object, line.id)).product_title).toBe(product.name), { timeout: 20_000, interval: 100 });
+  }, 30_000);
+});

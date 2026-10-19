@@ -218,7 +218,9 @@ const productTitleMirror: Hook = {
  * `line_number`. So the re-stamp's own reads never trigger another re-stamp.
  *
  * `async`, so it runs off the read's response path. While every line is
- * titled it makes no database call. It touches at most five products per read
+ * titled it makes no database call. A product whose title is empty is never
+ * touched: the mirror would have nothing to stamp, and the read would write
+ * the product again every time it ran. It touches at most five products per read
  * to stay inside the sandbox's wall-clock ceiling; the next read finds the
  * rest.
  */
@@ -252,10 +254,12 @@ const lineProductTitleBackfill: Hook = {
       if (products.length >= PRODUCTS_PER_READ) break;
     }
     for (const id of products) {
-      const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'name'] });
-      if (product && typeof product.name === 'string') {
-        await api.object('crm_product').update({ id, name: product.name }, { where: { id } });
-      }
+      const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'name', 'display_title'] });
+      // A product with no title gives the mirror nothing to stamp. Touching it
+      // would write the product on every read and title nothing.
+      if (!product || typeof product.name !== 'string') continue;
+      if (typeof product.display_title !== 'string' || product.display_title.trim() === '') continue;
+      await api.object('crm_product').update({ id, name: product.name }, { where: { id } });
     }
   },
 };
