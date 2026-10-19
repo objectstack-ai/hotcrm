@@ -160,7 +160,6 @@ export const SalesHomePage: Page = {
     
     {
       name: 'main',
-      width: 'large',
       components: [
         {
           type: 'page:card',

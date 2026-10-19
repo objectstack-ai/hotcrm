@@ -21,9 +21,12 @@ export const Contract = ObjectSchema.create({
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
   // Original template was '{contract_number} - {crm_account.name}'. The
   // `crm_account.name` segment is a lookup DOT-WALK, which a formula field
-  // cannot reference (ADR-0072), so it is DROPPED. Only the local
-  // `contract_number` (autonumber) remains, so no formula is needed — point
-  // `nameField` straight at it.
+  // could not reference when this was written (ADR-0072), so it was DROPPED.
+  // Only the local `contract_number` (autonumber) remains, so no formula is
+  // needed — point `nameField` straight at it. Since 18.0.0-next.4 a formula
+  // reads one hop through a reference (changeset
+  // `24197-objectql-formula-one-hop`), so the drop is no longer forced; the
+  // title is left as it ships.
   nameField: 'contract_number',
   highlightFields: ['contract_number', 'crm_account', 'status', 'start_date', 'end_date'],
 

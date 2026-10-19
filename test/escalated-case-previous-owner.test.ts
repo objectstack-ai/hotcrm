@@ -38,12 +38,18 @@ const stored = async (id: string): Promise<Rec> => (await verify.rows('crm_case'
 const reads = async (who: Person, id: string) => (await verify.rows('crm_case', { id }, { as: who.token })).length === 1;
 const newCase = (over: Rec = {}) => ({ subject: `Case ${++k}`, description: 'Customer is down.', status: 'new', ...over });
 
-/** The rule-materialised grants on one case, by rule name. */
+/**
+ * The rule-materialised grants on one case, by rule name.
+ *
+ * Both rules are declared by the app. Since @objectstack/spec 18.0.0-next.4 a
+ * declared rule has no `sys_sharing_rule` row: plugin-sharing reads it from the
+ * registry, its id IS its name, and the grants it materialises carry that name
+ * as `source_id` (changeset `23952-declared-sharing-rules-registry`).
+ */
 async function grants(id: string): Promise<string[]> {
-  const rules = new Map((await verify.rows('sys_sharing_rule', {})).map((r: Rec) => [String(r.id), String(r.name)]));
   const who = new Map([[agent.id, 'agent'], [other.id, 'other'], [manager.id, 'manager']]);
   return (await verify.rows('sys_record_share', { record_id: id, source: 'rule' }))
-    .map((g: Rec) => `${rules.get(String(g.source_id))}→${who.get(String(g.recipient_id)) ?? g.recipient_id}:${g.access_level}`)
+    .map((g: Rec) => `${String(g.source_id)}→${who.get(String(g.recipient_id)) ?? g.recipient_id}:${g.access_level}`)
     .sort();
 }
 

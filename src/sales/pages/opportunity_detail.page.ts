@@ -105,7 +105,6 @@ export const OpportunityDetailPage: Page = {
     },
     {
       name: 'main',
-      width: 'large',
       components: [
         {
           type: 'page:tabs',

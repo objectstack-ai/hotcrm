@@ -115,7 +115,6 @@ export const CaseDetailPage: Page = {
     },
     {
       name: 'main',
-      width: 'large',
       components: [
         {
           type: 'page:tabs',
