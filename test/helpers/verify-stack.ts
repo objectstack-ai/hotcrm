@@ -87,8 +87,16 @@ export const bootOptions = (overrides: Partial<BootOptions> = {}): BootOptions =
     // with none, picks the log transport and a default `no-reply@` sender.
     // Built bare, the service had no sender, so it refused every notification
     // email and the outbox retried each one (#2175).
+    //
+    // The mail environment is pinned EMPTY (`env: {}`): the rule falls back to
+    // `process.env` when it is handed none, so a shell carrying a real mail
+    // setup (`OS_EMAIL_PROVIDER=smtp`, `OS_EMAIL_SMTP_*`, `OS_EMAIL_API_KEY`,
+    // `OS_EMAIL_FROM`) would make the suite deliver through that transport, and
+    // a refusing one turns this boot's mail `failed` on that machine alone. The
+    // argument models an unconfigured install instead, whatever the machine's
+    // `OS_EMAIL_*`.
     new EmailServicePlugin(resolveCapabilityArgument('email', {
-      stack: artifact, packageRoot: process.cwd(), providerModule: { resolveEmailCapabilityArg },
+      stack: artifact, packageRoot: process.cwd(), providerModule: { resolveEmailCapabilityArg }, env: {},
     }).argument as EmailServicePluginOptions),
     new RecordChangeTriggerPlugin(),
   ],
@@ -278,11 +286,14 @@ async function deliveryWorkedOff(observation: WriteObservation, id: string): Pro
  * enqueues 60 deliveries (30 notifications, inbox and email), and the next
  * test's `contextFor` spent 1.8–2.5 s behind them, against a 3 ms sweep.
  *
- * A retry due soon is waited out as well. This boot's email channel fails
- * every attempt (its email service has no from address), and the outbox
- * retries a failed delivery about 1 s later, then about 10 s later: the first
- * landed in the next test's window (measured: 0.5 s of its 0.6 s), the second
- * does not reach it.
+ * A retry due soon is waited out as well: the outbox retries a delivery whose
+ * channel failed, and one due within {@link DELIVERY_NEAR_TERM_MS} of its
+ * attempt can land in the next test's window. Measured on #2157, before this
+ * boot's email service was constructed with a sender (#2175): the email
+ * channel then failed every attempt (no from address), the outbox retried each
+ * delivery about 1 s later, then about 10 s later, and the first retry landed
+ * in the next test's window (0.5 s of its 0.6 s) while the second did not
+ * reach it.
  *
  * The window is time, not cause (`observeWrites`): a delivery another writer
  * enqueues while `fn` runs, or while this waits, is waited for too, and a
