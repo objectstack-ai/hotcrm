@@ -58,10 +58,10 @@ import { pipelineByStageFunnelWidget } from '../src/sales/dashboards/shared-widg
  *
  * ## Why the nav rules are scoped to one section
  *
- * *Dashboards*, *Reports* and *Cubes* are phantoms only as NAVIGATION items:
- * nothing in the sidebar carries those labels. They are perfectly real as the
- * three docs pages this page links to, and the "What's included" table bolds
- * them in exactly that sense. So the bold/italic rules run over the "Where to
+ * *Dashboards* and *Cubes* are phantoms only as NAVIGATION items: nothing in
+ * the sidebar carries those labels. They are perfectly real as docs pages this
+ * page links to, and the "What's included" table bolds them in exactly that
+ * sense. (*Reports* was the third until #2073 item 1 made it a real group.) So the bold/italic rules run over the "Where to
  * find things" block alone, the way `docs-quick-tour-navigation.test.ts` scopes
  * its rules to the left-nav block, rather than over the whole page.
  *
@@ -99,6 +99,11 @@ const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
 const GROUPS = NAV.filter((n) => n.type === 'group');
 const INSIGHTS = GROUPS.find((g) => g.label === 'Insights') as AnyRec | undefined;
 const INSIGHTS_CHILDREN: string[] = ((INSIGHTS?.children ?? []) as AnyRec[]).map(
+  (c) => c.label as string,
+);
+/** The group holding every shipped report (#2073 item 1), contributed entries included. */
+const REPORTS_GROUP = GROUPS.find((g) => g.id === 'group_reports') as AnyRec | undefined;
+const REPORTS_CHILDREN: string[] = ((REPORTS_GROUP?.children ?? []) as AnyRec[]).map(
   (c) => c.label as string,
 );
 
@@ -147,8 +152,11 @@ const PAGES = [
   },
 ] as const;
 
-/** Names the old nav section carried that resolve to no navigation label. */
-const PHANTOMS = ['Analytics', 'Dashboards', 'Reports', 'Cubes'] as const;
+/**
+ * Names the old nav section carried that resolve to no navigation label.
+ * *Reports* left the list in #2073 item 1, when it became a real group.
+ */
+const PHANTOMS = ['Analytics', 'Dashboards', 'Cubes'] as const;
 
 /** The four cube names the page advertised. None exists anywhere in the app. */
 const RETIRED_CUBES = ['Sales', 'Pipeline', 'Service', 'Marketing'] as const;
@@ -241,6 +249,16 @@ describe('analytics/index states the counts and names the app really ships (#976
       expect(
         missing,
         `${file}: Insights child/children not named in bold: ${missing.join(', ')}`,
+      ).toEqual([]);
+    });
+
+    it('names the Reports group and every report entry in it', () => {
+      const block = blockOf(read(file), navHeading);
+      expect(block, `${file}: the Reports group is not named`).toContain('**Reports**');
+      const missing = REPORTS_CHILDREN.filter((l) => !block.includes(`**${l}**`));
+      expect(
+        missing,
+        `${file}: Reports entry/entries not named in bold: ${missing.join(', ')}`,
       ).toEqual([]);
     });
 
@@ -429,17 +447,15 @@ describe('the source facts these pages now rest on (#976, #977)', () => {
     expect(DATASET_LIST.map((d) => d.object as string)).not.toContain('crm_contract');
   });
 
-  it('the navigation group is Insights, and no group is called Analytics', () => {
+  it('the navigation groups are Insights and Reports, and no group is called Analytics', () => {
     const labels = GROUPS.map((g) => g.label as string);
     expect(labels).toContain('Insights');
     expect(labels).not.toContain('Analytics');
-    expect(INSIGHTS_CHILDREN).toEqual([
-      'CRM Overview',
-      'Forecasts',
-      'Pipeline Coverage',
-      'Lead Inflow',
-      'SLA Performance',
-    ]);
+    expect(INSIGHTS_CHILDREN).toEqual(['CRM Overview', 'Forecasts']);
+    // One entry per report; `app-navigation-shape.test.ts` holds that against
+    // the registered roster, so only the vacuity half is asserted here.
+    expect(REPORTS_GROUP?.label).toBe('Reports');
+    expect(REPORTS_CHILDREN).toHaveLength(REPORT_LABELS.length);
   });
 
   it('carries no navigation label matching any name the page calls a phantom', () => {

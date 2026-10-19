@@ -198,7 +198,7 @@
 | FCT-007 | 销售业绩仪表板 | 17 个 widget:管道/QTD 赢单/赢率三件套、按预测类别管道、按人配额达成与赢率、输单原因、阶段×来源透视表 | `src/sales/dashboards/sales.dashboard.ts` |
 | FCT-008 | 高管与 CRM 总览仪表板 | 高管版(YTD 营收、行业分布、获客节奏,9 widget)与全员总览版(营收/管道/来源,9 widget) | `src/sales/dashboards/executive.dashboard.ts`、`src/sales/dashboards/crm.dashboard.ts` |
 | FCT-009 | 预测数据集 | `forecast_metrics`(attainment 派生比率);度量跨期间不可加,消费方必须钉期间(构建期测试强制) | `src/sales/datasets/forecast.dataset.ts` |
-| FCT-010 | 业绩报表入口 | 管道覆盖矩阵/线索流入/SLA 三份高信号报表直达导航;完整报表目录仍作为元数据出货 | `src/sales/apps/crm.app.ts`(`group_insights`) |
+| FCT-010 | 报表入口 | 出货的每份报表各一个导航条目,集中在默认折叠的 Reports 分组;条目按其报表所读对象的读取权限显示;服务模块的工单报表经 `navigationContributions` 填入同一分组 | `src/sales/apps/crm.app.ts`(`group_reports`)、`src/service/index.ts` |
 
 ## ACT — 任务与活动
 
@@ -247,7 +247,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Sales/My Work/Activity/Marketing/Service/Insights/Approvals),橙色品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
+| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Service/Sales/My Work/Activity/Marketing/Insights/Reports),橙色品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
 | ADM-002 | Sales Home 页 | 三栏首页(sales_rep/manager 默认):4 个实时 KPI、我的线索/交易/任务三个嵌入列表 tab、快速新建、AI 助手引导卡、今日日程 | `src/sales/pages/home.page.ts` |
 | ADM-003 | 启动器与工具条 | **已移除 (#2118)**:曾有 App Launcher 与 Utility Bar 两个页面,但只能经手输 URL 打开,没有任何导航入口;前者重复控制台自带的应用切换,后者并不悬浮,只在主栏内平铺(控制台没有工具条槽位,上游 objectstack#23610)。两页连同其四语言文案一并下线,应用内不再有对应功能 | 已删除 |
 | ADM-004 | 数据导入 | 3 个可复用导入映射(客户/联系人/线索,CSV/XLSX upsert)+ 行业与线索来源同义词表 + 现成模板 | `src/sales/mappings/` + `assets/import-templates/` |

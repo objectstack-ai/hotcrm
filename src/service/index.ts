@@ -1,6 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
+import { defineStack, P, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import {
   EscalateCaseAction, CloseCaseAction, ClaimCaseAction,
@@ -64,6 +64,9 @@ export const serviceSharingRules = [
  * `objectstack.composition.ts`.
  */
 export type HotCrmServiceCollections = Pick<ObjectStackDefinitionInput, 'data'>;
+
+/** The read gate on this package's report entries (#2073 item 1); see `navigationContributions`. */
+const READS_CASES = P`current_user.can("crm_case", "read")`;
 
 /**
  * `app.objectstack.hotcrm.service` — the SUPPORT module of this artifact
@@ -140,29 +143,34 @@ export const createHotCrmServiceStack = (
     dependencies: { 'app.objectstack.hotcrm': '^5.1.2' },
 
     /**
-     * The five navigation entries this module puts into the app's menu
+     * The seven navigation entries this module puts into the app's menu
      * (ADR-0029 D7).
      *
      * Not a design choice: an app's own `navigation` may not name another
-     * package's object (ADR-0130 §1.5, rule R3 of `module-split-plan.md`), so
-     * all five became contributions the moment `crm_case`,
-     * `crm_knowledge_article`, `service_dashboard` and `sla_performance` left
-     * the app package. The app keeps the GROUPS (`group_service`, `group_work`,
-     * `group_insights`) — a container a module cannot declare inside an app it
-     * does not own — and this module fills them.
+     * package's object or report (ADR-0130 §1.5, rule R3 of
+     * `module-split-plan.md`), so this package's entries became contributions
+     * the moment `crm_case`, `crm_knowledge_article`, `service_dashboard` and
+     * the case reports left the app package. The app keeps the GROUPS
+     * (`group_service`, `group_work`, `group_reports`) — a container a module
+     * cannot declare inside an app it does not own — and this module fills them.
      *
      * `app` is the app's bare `name` (`crm_enterprise`), not the manifest id: a
      * dotted id is refused as a non-snake_case identifier.
      *
      * ⚠️ `priority` orders CONTRIBUTIONS against each other inside a group. It
      * does NOT interleave them with the app's own children — a contributed item
-     * is appended after everything the app itself declares in that group. The
-     * one visible consequence is `nav_my_cases`, 4th of 6 in *My Work* before
-     * the split and last after it; the three `group_service` items and
-     * `nav_report_sla` keep their positions because the app declares nothing
-     * after them. ⛔ Do not compensate with a per-item `order`: that key sorts
-     * in the renderer only, this app authors none anywhere, and adding one to
-     * work around a platform merge rule is what AGENTS.md forbids.
+     * is appended after everything the app itself declares in that group. So
+     * `nav_my_cases` is last in *My Work*, and the case reports follow the
+     * sales reports in *Reports*. ⛔ Do not compensate with a per-item
+     * `order`: that key sorts in the renderer only, this app authors none
+     * anywhere, and adding one to work around a platform merge rule is what
+     * AGENTS.md forbids.
+     *
+     * The report entries ask for case read: the console prunes object entries
+     * by read access but not report entries, so a member who reads no cases
+     * (the marketing user) would otherwise get three pages of 403s. The app's
+     * `READS_OPPORTUNITIES` note in `crm.app.ts` says why it is `visible` and
+     * not `requiredPermissions`.
      */
     navigationContributions: [
       {
@@ -191,10 +199,14 @@ export const createHotCrmServiceStack = (
       },
       {
         app: 'crm_enterprise',
-        group: 'group_insights',
+        // Every shipped report has an entry in the app's Reports group
+        // (#2073 item 1); this package's three land after the sales ones.
+        group: 'group_reports',
         priority: 30,
         items: [
-          { id: 'nav_report_sla', type: 'report', reportName: 'sla_performance', label: 'SLA Performance', icon: 'timer' },
+          { id: 'nav_report_cases_by_status',     type: 'report', reportName: 'cases_by_status_priority',     label: 'Cases by Status and Priority', icon: 'chart-column',  visible: READS_CASES },
+          { id: 'nav_report_sla',                 type: 'report', reportName: 'sla_performance',              label: 'SLA Performance',              icon: 'timer',         visible: READS_CASES },
+          { id: 'nav_report_cases_opened_by_day', type: 'report', reportName: 'cases_opened_by_day_priority', label: 'Cases Opened by Day',          icon: 'calendar-days', visible: READS_CASES },
         ],
       },
     ],
