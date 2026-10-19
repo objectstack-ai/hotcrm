@@ -10,7 +10,7 @@ import { CrmDashboards as dashboards } from './helpers/src-roster';
 import { CrmDatasets as datasets } from './helpers/src-roster';
 import { CrmReports as reports } from './helpers/src-roster';
 import { OpportunitiesByStageReport } from '../src/sales/reports/opportunity.report';
-import { pipelineByStageFunnelWidget } from '../src/sales/dashboards/shared-widgets';
+import { pipelineByStageWidget } from '../src/sales/dashboards/shared-widgets';
 
 /**
  * The analytics landing page, and the cube vocabulary around it, pinned to
@@ -293,7 +293,7 @@ describe('analytics/index states the counts and names the app really ships (#976
       ).toEqual([]);
     });
 
-    it('names the real report behind the funnel everyone calls Pipeline by Stage', () => {
+    it('names the real report behind the tile everyone calls Pipeline by Stage', () => {
       const text = read(file);
       expect(
         text,
@@ -463,7 +463,7 @@ describe('the source facts these pages now rest on (#976, #977)', () => {
   });
 
   it('Pipeline by Stage is a tile title and a chart title, and no report answers to it', () => {
-    const title = pipelineByStageFunnelWidget({ x: 0, y: 0, w: 6, h: 4 }).title;
+    const title = pipelineByStageWidget({ x: 0, y: 0, w: 6, h: 4 }).title;
     expect(title).toBe('Pipeline by Stage');
     expect(OpportunitiesByStageReport.chart?.title).toBe(title);
     expect(REPORT_LABELS).not.toContain(title);
