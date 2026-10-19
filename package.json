@@ -1,6 +1,6 @@
 {
   "name": "hotcrm",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "HotCRM - Production CRM built on ObjectStack",
   "license": "Apache-2.0",
   "private": true,

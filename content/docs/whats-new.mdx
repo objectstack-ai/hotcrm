@@ -63,22 +63,31 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v5.1.1 — Latest release
+## v5.1.2 — Latest release
 
-**HotCRM 5.1.1** runs on **ObjectStack 18.0.0-next.3**, a prerelease of the
+**HotCRM 5.1.2** runs on **ObjectStack 18.0.0-next.3**, a prerelease of the
 platform's next major, across every `@objectstack/*` package, and its manifest
 declares the matching `^18.0.0-next.3` protocol range, so a runtime on a
 different protocol major — a 17.x host included — refuses the load up front with
-a structured diagnostic instead of failing deep in a schema parse. 5.1.0 shipped
-on the same platform version, 5.0.0 on ObjectStack 18.0.0-next.2, and 4.0.1 on
+a structured diagnostic instead of failing deep in a schema parse. 5.1.1 and 5.1.0
+shipped on the same platform version, 5.0.0 on ObjectStack 18.0.0-next.2, and 4.0.1 on
 ObjectStack 17.7.0.
 
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 5.1.1 are
+> entry every pull request adds. The versions between v1.0 and 5.1.2 are
 > recorded there and are deliberately not re-listed here — a hand-maintained
 > copy of that history is exactly how this section came to advertise a "v5.0"
 > while the app was at 2.2.2, on a platform major that never shipped it.
+
+### What 5.1.2 fixes
+
+- **A product with no product code is titled by its name, and so are its line items.**
+  Products created before HotCRM issued product codes had no title at all, so since 5.1.0
+  their line items were named by a record id that nothing could fix. Coming from 5.1.0,
+  they are now named on their first view like every other line.
+- 5.1.1 was only ever on the staging marketplace; everything under "What 5.1.1 fixes"
+  below reaches production with 5.1.2.
 
 ### What 5.1.1 fixes
 

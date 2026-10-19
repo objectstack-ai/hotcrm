@@ -74,7 +74,7 @@ export const createHotCrmAppStack = (
     manifest: {
       id: 'app.objectstack.hotcrm',
       namespace: 'crm',
-      version: '5.1.1',
+      version: '5.1.2',
       type: 'app',
       name: 'HotCRM',
       description: 'AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, Contracts.',
