@@ -3,7 +3,7 @@
 import { vi } from 'vitest';
 import { QuickJSScriptRunner, hookBodyRunnerFactory } from '@objectstack/runtime';
 import { extractHookBody } from '@objectstack/cli/hook-body';
-import { bootStackOnce, type BootOptions, type VerifyStack } from '@objectstack/verify';
+import { bootStackOnce, type BootOptions, type ObservedWrite, type VerifyStack, type WriteObservation } from '@objectstack/verify';
 import { RecordChangeTriggerPlugin } from '@objectstack/trigger-record-change';
 import { MessagingServicePlugin } from '@objectstack/service-messaging';
 import { ApprovalsServicePlugin } from '@objectstack/plugin-approvals';
@@ -197,6 +197,102 @@ export async function flowRuns(stack: VerifyStack, flowName: string, recordId: s
  */
 export const notificationsTo = (stack: VerifyStack, userId: string, topic?: string): Promise<Row[]> =>
   stack.rows('sys_notification_delivery', { recipient_id: userId, channel: 'inbox', ...(topic ? { topic } : {}) });
+
+/**
+ * A retry the outbox parks for longer than this after an attempt is out of
+ * reach of the test that runs next: one test's whole default budget (vitest's
+ * `testTimeout`, 5 s). A retry due sooner is part of the aftermath to wait for.
+ */
+const DELIVERY_NEAR_TERM_MS = 5_000;
+
+/**
+ * How long one delivery may go unanswered before the wait FAILS, naming every
+ * write it observed. A bound on a failure, not a wait: the wait resolves the
+ * moment the dispatcher answers the delivery. It sits well inside the 120 s
+ * budget of the `beforeAll` that calls this, and above the dispatcher's own
+ * idle ceiling (`dispatchMaxIdleIntervalMs`, 30 s by default), the longest it
+ * can leave a due delivery unclaimed.
+ */
+const DELIVERY_ANSWER_BOUND_MS = 60_000;
+
+/** The messaging outbox's delivery rows: one per recipient and channel of each notification. */
+const DELIVERY = 'sys_notification_delivery';
+
+/** The id of the delivery row a write inserted; `undefined` for any other write. */
+const insertedDeliveryId = (write: ObservedWrite): string | undefined => {
+  if (write.object !== DELIVERY || write.operation !== 'insert' || write.outcome.status !== 'resolved') return undefined;
+  const id = (write.data as Row | undefined)?.id;
+  if (id == null) throw new Error(`a ${DELIVERY} insert carried no id, so its delivery cannot be waited for`);
+  return String(id);
+};
+
+/**
+ * Wait until the dispatcher has worked off delivery `id`: an attempt was made
+ * and it left the row finished (`success`, `suppressed`, `dead`), or parked
+ * for a retry beyond {@link DELIVERY_NEAR_TERM_MS}. An attempt is the
+ * dispatcher's acknowledging `update` addressed to the row's id, the one
+ * write that stamps `last_attempted_at`; the claim and the reap address rows
+ * by predicate and stamp nothing of the kind.
+ */
+async function deliveryWorkedOff(observation: WriteObservation, id: string): Promise<void> {
+  const answered = new Set<ObservedWrite>();
+  for (;;) {
+    const attempt = await observation.settled((w) => {
+      if (w.object !== DELIVERY || w.operation !== 'update' || answered.has(w)) return false;
+      return (w.where as Row | undefined)?.id === id && 'last_attempted_at' in ((w.data as Row | undefined) ?? {});
+    }, { timeoutMs: DELIVERY_ANSWER_BOUND_MS });
+    answered.add(attempt);
+    if (attempt.outcome.status === 'refused') {
+      throw new Error(`the engine refused the dispatcher's acknowledgement of delivery ${id}`, { cause: attempt.outcome.error });
+    }
+    const left = attempt.data as Row;
+    if (left.status !== 'pending' || left.next_attempt_at == null) return;
+    if (Number(left.next_attempt_at) - Number(left.last_attempted_at) >= DELIVERY_NEAR_TERM_MS) return;
+  }
+}
+
+/**
+ * Run `fn` (a sweep, a write that notifies) and resolve with what it returns
+ * once the messaging outbox has worked off every notification delivery
+ * enqueued while it ran: the async aftermath of `notify`, waited for on the
+ * work itself rather than on the clock.
+ *
+ * `notify` only ENQUEUES: one `sys_notification_delivery` row per recipient
+ * and channel, inside the run (which is why {@link notificationsTo} can be read
+ * straight after it). The dispatcher delivers afterwards, on its own loop: a
+ * channel send and an acknowledging update per row. On this boot's synchronous
+ * SQLite driver that work is one unbroken run of promise continuations, so
+ * anything waiting on a timer or on the thread pool waits for ALL of it, and
+ * a person's session lookup does — the next `hooks.run(…, { as })` pays for the
+ * whole drain. Measured on #2157: the backlog sweep of `case_sla_monitor`
+ * enqueues 60 deliveries (30 notifications, inbox and email), and the next
+ * test's `contextFor` spent 1.8–2.5 s behind them, against a 3 ms sweep.
+ *
+ * A retry due soon is waited out as well. This boot's email channel fails
+ * every attempt (its email service has no from address), and the outbox
+ * retries a failed delivery about 1 s later, then about 10 s later: the first
+ * landed in the next test's window (measured: 0.5 s of its 0.6 s), the second
+ * does not reach it.
+ *
+ * The window is time, not cause (`observeWrites`): a delivery another writer
+ * enqueues while `fn` runs, or while this waits, is waited for too, and a
+ * delivery `fn` triggers after its own return (a record-change flow that
+ * notifies) is picked up for as long as the wait is open.
+ */
+export async function settleNotificationDeliveries<T>(stack: VerifyStack, fn: () => Promise<T>): Promise<T> {
+  let result: T | undefined;
+  await stack.observeWrites(async (observation) => {
+    result = await fn();
+    const waited = new Set<string>();
+    for (;;) {
+      const next = observation.writes.map(insertedDeliveryId).filter((id): id is string => id !== undefined && !waited.has(id));
+      if (next.length === 0) return;
+      for (const id of next) waited.add(id);
+      await Promise.all(next.map((id) => deliveryWorkedOff(observation, id)));
+    }
+  });
+  return result as T;
+}
 
 /**
  * Evaluate a flow condition on the booted stack's own automation service —
