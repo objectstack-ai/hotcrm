@@ -149,7 +149,11 @@ export const Quote = ObjectSchema.create({
       // read would refuse every write to such a row. `previous` is null on an
       // insert, so `previous == null` decides an insert (a quote born accepted
       // still needs its contact) before `previous.status` is read, and
-      // `has(previous.status)` covers a prior row stored without it.
+      // `has(previous.status)` covers a prior row stored without it. (Measured
+      // on 18.0.0-next.5: `has()` on a null `previous` also answers false, so
+      // the two overlap on an insert. The explicit `previous == null` is kept:
+      // it is the spelling the engine's own unevaluable-`previous` diagnostic
+      // asks for, and it does not lean on that answer.)
       //
       // @objectstack 12: string[] `referenceFilters` is dead (not read by the
       // picker); `dependsOn` is the live cascading form — scopes contacts to the
