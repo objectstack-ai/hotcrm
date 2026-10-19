@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P } from '@objectstack/spec';
+import { F, P, cel } from '@objectstack/spec';
 
 /**
  * Forecast Object
@@ -16,8 +16,9 @@ import { F, P } from '@objectstack/spec';
  *     scheduled flow, nightly at 03:00, one current-quarter row per active
  *     opportunity owner (#590). It never touches `quota`.
  *   • `revenue_forecasting` AI skill on demand
- *   • `forecast.hook.ts` derives the period family + `snapshot_date` on every
- *     write; it creates nothing on its own.
+ *   • `forecast.hook.ts` derives the period family on every write; it creates
+ *     nothing on its own. `snapshot_date` defaults to today through its own
+ *     `defaultValue` below.
  *
  * Forecast categories follow the standard Salesforce ladder, and the buckets
  * are CUMULATIVE — each is a subset of the one above it:
@@ -99,11 +100,21 @@ export const Forecast = ObjectSchema.create({
     // (`period_end_matches_calendar_period` below), and the description states
     // that rule rather than the weaker `period_end_after_start` it subsumes:
     // the form says what is actually enforced.
+    //
+    // A NOT NULL column the hook fills, ⛔ not `required` (#2060 item 7, C-08).
+    // Measured on 18.0.0-next.3: the New Forecast form refused "Please check
+    // the highlighted fields: … Period End …" and sent nothing, because the
+    // form reads `required` as "the user must type this" and cannot see the
+    // derivation, while a REST insert carrying only period + period_start
+    // stored the derived end. The derivation cannot be a declared default:
+    // `period_start` may itself be derived by the hook, after defaults run.
+    // So the hook stays the producer (one derivation, see its header), and
+    // `storage.notNull` keeps the column whole: an import with automations off
+    // that leaves it out is still refused.
     period_end: Field.date({
       label: 'Period End',
       description:
         'Normally derived automatically from Period and Period Start. If set by hand, it must be the last day of that period — e.g. 2026-09-30 for a quarter starting 2026-07-01, or 2026-08-31 for Aug 2026.',
-      required: true,
       storage: { notNull: true },
       group: 'basic',
     }),
@@ -131,11 +142,21 @@ export const Forecast = ObjectSchema.create({
       group: 'basic',
     }),
 
+    // Today unless the writer names a day (#2060 item 7, C-08). Declared
+    // rather than stamped by `forecast_derive_period`, which did it until this
+    // change: measured on 18.0.0-next.3, the New Forecast form refused on
+    // Snapshot Date and sent nothing, because the form cannot see a hook's
+    // default. A runtime `defaultValue` is the one default the form reads as
+    // the server's to fill ("Set automatically when saved."), and the engine
+    // applies it on every insert door, before the hook, which still anchors a
+    // derived `period_start` on it. `required` stays: an update may still not
+    // clear the date.
     snapshot_date: Field.date({
       label: 'Snapshot Date',
       description: 'The day this snapshot was captured.',
       required: true,
       storage: { notNull: true },
+      defaultValue: cel`today()`,
       group: 'meta',
     }),
 

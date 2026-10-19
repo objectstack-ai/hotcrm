@@ -8,8 +8,10 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  * Auto-derives the whole period family — `period_start`, `period_end` and
  * `period_label` — from `period` (+ `period_start`, when the caller supplies
  * one) so callers (UI, AI skill, the `forecast_snapshot` scheduled flow) don't
- * have to compute them. Also stamps `snapshot_date` to today on insert if
- * unset.
+ * have to compute them. `snapshot_date` is not stamped here: it defaults to
+ * today through its own `defaultValue` (`forecast.object.ts`, #2060 item 7),
+ * which the engine applies before this hook, so the anchor below always sees
+ * it on insert.
  *
  * Why `period_start` is derived here and nowhere else: a flow template can
  * express `{TODAY()}` and day offsets, but it has no way to say "the first day
@@ -27,7 +29,7 @@ const forecastDerive: Hook = {
   object: 'crm_forecast',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
-  description: 'Derive period_start, period_end and period_label from period (+ snapshot_date).',
+  description: 'Derive period_start, period_end and period_label from period (anchored on snapshot_date).',
   handler: async (ctx: HookContext) => {
     // ⛔ A PREDICATE UPDATE DERIVES NOTHING HERE — ADR-0058 Addendum II D3.
     //
@@ -126,10 +128,6 @@ const forecastDerive: Hook = {
         if (!input.period_end) input.period_end = isoDate(end);
         if (!input.period_label) input.period_label = labelFor(period, start);
       }
-    }
-
-    if (!input.snapshot_date && !previous?.snapshot_date) {
-      input.snapshot_date = isoDate(new Date());
     }
   },
 };

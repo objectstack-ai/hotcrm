@@ -167,11 +167,28 @@ export const Quote = ObjectSchema.create({
       defaultValue: cel`today()`,
     }),
     
+    // A quote is valid for 30 days from its quote date unless the rep sets
+    // another date (#2060 item 7, B-11). Declared here rather than stamped by
+    // `quote_workflow`, which did it until this change: measured on
+    // 18.0.0-next.3, the console's New Quote form refused "Please check the
+    // highlighted fields: Expiration Date" and sent nothing, because the form
+    // cannot see a hook's default, while a REST insert stored quote_date + 30.
+    // A runtime `defaultValue` is the one default the form reads as the
+    // server's to fill ("Set automatically when saved.", no required mark on
+    // create), and the engine applies it on every insert door, an import with
+    // automations off and the dry-run preview included. `required` stays: an
+    // update may still not clear the date.
+    //
+    // ⚠️ `record.quote_date` is in scope because `quote_date` is declared
+    // ABOVE this field: the engine applies defaults in declaration order, so
+    // a quote that names no date already holds today's here.
+    // `test/form-required-server-defaults.test.ts` pins both.
     expiration_date: Field.date({
       label: 'Expiration Date',
       group: 'terms',
       required: true,
       storage: { notNull: true },
+      defaultValue: cel`addDays(record.quote_date, 30)`,
     }),
     
     // Pricing

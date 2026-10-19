@@ -172,10 +172,23 @@ export const OpportunityLineItem = ObjectSchema.create({
       description: "Auto-populated from the product's List Price.",
     }),
 
+    // A NOT NULL column the server fills, ⛔ not `required` (#2060 item 7, A-21).
+    // `opportunity_line_item_price_fill` (`_line-item-price-fill.ts`) defaults
+    // a blank price to the product's list price on insert, and
+    // `crm_product.list_price` is itself required, so every insert that runs
+    // the app's hooks stores one. `required` is the WRITER's contract, and the
+    // console form reads it as "the user must type this": measured on
+    // 18.0.0-next.3, the create form refused "Please check the highlighted
+    // fields: Sales Price" and sent nothing, while the same insert over REST
+    // stored the list price. A cross-record default has no declared form
+    // (`defaultValue` reads this record only), so the hook stays the producer
+    // and `storage.notNull` keeps the column whole: an import with automations
+    // off, or an update that clears the price, is still refused (400
+    // `VALIDATION_FAILED`). This is the spec's "engine-populated column"
+    // posture (`storage.notNull` without `required`, ADR-0113).
     unit_price: Field.currency({
       label: 'Sales Price',
       group: 'pricing',
-      required: true,
       storage: { notNull: true },
       description: 'Negotiated unit price (may differ from list price)',
       trackHistory: true,
