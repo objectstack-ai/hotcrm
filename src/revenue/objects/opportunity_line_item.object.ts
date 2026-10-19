@@ -55,10 +55,13 @@ export const OpportunityLineItem = ObjectSchema.create({
   // Products picker, which writes no description, was named by its record id
   // in the opportunity's rail and in its own record header.
   //
-  // ⛔ Not a formula over `record.crm_product`: a formula reads only this
-  // record's own columns, and a reference holds the product's bare id there.
-  // Measured on 18.0.0-next.3, `record.crm_product.name` read null on every
-  // row. The title is therefore a STORED mirror of the product's title, the
+  // ⛔ Not a formula over `record.crm_product`. On 18.0.0-next.3 a formula read
+  // only this record's own columns, where a reference holds the product's bare
+  // id: `record.crm_product.name` read null on every row (measured). Since
+  // 18.0.0-next.4 a formula reads one hop through a reference, but its value is
+  // stored nowhere, so it can be neither searched nor sorted by (changeset
+  // `24197-objectql-formula-one-hop`), and this title is the line's search
+  // target. The title is therefore a STORED mirror of the product's title, the
   // one shape `skills/objectstack-data/SKILL.md` prescribes for a related
   // record's title ("mirror the value, always"). It has three writers:
   // `opportunity_line_item_product_title` (insert, a product change, and any
