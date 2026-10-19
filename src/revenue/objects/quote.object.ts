@@ -84,7 +84,11 @@ export const Quote = ObjectSchema.create({
     crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
       group: 'basic',
-      // Optional AT DRAFT TIME, required from `presented` on (#1017).
+      // A TRANSITION GATE, not an invariant (#1017, narrowed by #2161; AGENTS.md
+      // Metadata semantics rule 7). Optional at draft time. Required on the
+      // write that takes the quote INTO `presented` or `accepted`, and on every
+      // write while it is `presented`. Once the quote is accepted, the
+      // requirement has done its job and the link may be cleared.
       //
       // quote_generation maps the opportunity's `primary_contact`, which is
       // itself optional — a flat `required: true` here meant contact-less
@@ -102,6 +106,25 @@ export const Quote = ObjectSchema.create({
       // watching moment: the rep is told on the write that turns the quote
       // outward, against the field, with the quote still editable.
       //
+      // WHY THE ACCEPTED HALF STOPS AT THE ACCEPTING WRITE (#2161, the
+      // maintainer's ruling A of 2026-10-19). The contract is drafted from
+      // that one write (`quote_accepted_contract_draft` reads the contact off
+      // it), so that is the write that needs a recipient. After it the quote is
+      // settled and frozen, and #720 (maintainer, 2026-08-11) holds: "A frozen
+      // record must not make the people it references undeletable." The engine
+      // frees a deleted contact by writing `{ crm_contact: null }` on every
+      // quote that names it (`set_null`), and while this rule also covered an
+      // ALREADY-accepted quote it refused that write: measured on
+      // 18.0.0-next.3, `DELETE /data/crm_contact/<id>` answered 400 "Contact is
+      // required", so the person stayed undeletable, and so did the account
+      // above them. Reading `previous` keeps the requirement on the write that
+      // turns a quote accepted and lifts it from every write after, so both
+      // rulings hold: no contract is drafted without a recipient (#1017), and
+      // the person who signed can still be erased (#720). The accepted quote
+      // stays, with its contact cleared — the trade #720 accepted for a closed
+      // deal's `primary_contact`. `contact_integrity` (contact.hook.ts) no
+      // longer counts an accepted quote for the same reason.
+      //
       // WHY EXACTLY `presented` + `accepted`, and not the other two terminal
       // states. Both of those are reachable WITHOUT the quote ever being sent
       // (see the `quote_status_progression` transitions below):
@@ -116,21 +139,25 @@ export const Quote = ObjectSchema.create({
       //     verdict asks for a recipient the quote never had.
       // Neither state passes anything on to a contract, so neither needs one.
       //
-      // ⚠️ `has(record.status)` is load-bearing, not decoration — the same trap
-      // documented at `lead.object.ts`'s duplicate lookups: a bare
+      // ⚠️ Every read is guarded (#630), and the guards are load-bearing — the
+      // same trap documented at `lead.object.ts`'s duplicate lookups. A bare
       // `record.status == "presented"` aborts with `No such key` on any merged
-      // record that simply omits the column, and the engine's answer to a
-      // predicate that fails to evaluate is to SKIP it ("requiredWhen for
-      // 'crm_contact' failed to evaluate — skipped"). The rule would then read
-      // as enforced and require nothing at all.
+      // record that simply omits the column, and since 17.0.0-rc.2 the engine's
+      // answer to a predicate that fails to evaluate is to REJECT the write
+      // ("requiredWhen for 'crm_contact' failed to evaluate … — write
+      // rejected"; before rc.2 it was skipped in silence), so an unguarded
+      // read would refuse every write to such a row. `previous` is null on an
+      // insert, so `previous == null` decides an insert (a quote born accepted
+      // still needs its contact) before `previous.status` is read, and
+      // `has(previous.status)` covers a prior row stored without it.
       //
       // @objectstack 12: string[] `referenceFilters` is dead (not read by the
       // picker); `dependsOn` is the live cascading form — scopes contacts to the
       // quote's `crm_account` (ADR-0049).
       dependsOn: ['crm_account'],
-      requiredWhen: P`has(record.status) && (record.status == "presented" || record.status == "accepted")`,
+      requiredWhen: P`has(record.status) && (record.status == "presented" || (record.status == "accepted" && (previous == null || !has(previous.status) || previous.status != "accepted")))`,
       description:
-        'Required once the quote is Presented or Accepted — the drafted contract takes its Primary Contact from here.',
+        'Required on the save that moves the quote to Presented or Accepted — the drafted contract takes its Primary Contact from here.',
     }),
 
     crm_opportunity: Field.lookup('crm_opportunity', {
