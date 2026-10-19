@@ -602,15 +602,22 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
  * large-deal line that is not yet in approval, and the request names the
  * writer as submitter. A seeded deal opens none (the seed loader writes with
  * `skipTriggers`), so whoever makes the first write after the seed is the one
- * who asked. When the script's hand-off PATCHed `owner_id` as the dev admin,
- * that was the write, and both requests named the dev admin (measured on a
- * fresh `pnpm dev` box, 18.0.0-next.3). The script's order is what this block
- * pins: the hand-off goes through the import door with automations off, the
- * rules are evaluated, and only then does each owner save their deals — so the
- * request on each of the two seeded open deals over the line names the rep who
- * owns it and waits on the sales manager, and the dev admin holds none of it.
+ * who asked, and that write is the script's hand-over, a PATCH of `owner_id`
+ * as the dev admin with every control in force. So the request on each of the
+ * two seeded open deals over the line names the DEV ADMIN as submitter, waits
+ * on the sales manager, and the deal belongs to the rep its territory routes
+ * it to.
+ *
+ * Through 18.0.0-next.3 the script handed these deals over through the import
+ * door with `runAutomations: false` and had each owner save their deal, so the
+ * request named the rep. Since 18.0.0-next.4 the import door refuses that
+ * opt-out to every caller but the system principal (objectstack#24348). A
+ * recall does not bring the rep back as submitter either: measured on
+ * 18.0.0-next.5, a recalled request leaves the deal's `approval_status` at
+ * `recalled`, and the flow enters only from `not_required`, so the owner's next
+ * save opens nothing (hotcrm#2179).
  */
-describe('pnpm demo:staff on the shipped app: the owning rep submits each large-deal approval (#2129)', () => {
+describe('pnpm demo:staff on the shipped app: the hand-over opens each large-deal approval, as the dev admin (#2129)', () => {
   /** The two open deals the seed prices over the line, by name (`test/seed-consistency.test.ts` pins them). */
   const LARGE_OPEN_DEALS = ['Acme Platform Upgrade', 'Wayne Enterprise License'];
 
@@ -618,7 +625,7 @@ describe('pnpm demo:staff on the shipped app: the owning rep submits each large-
     expect(run.exit, `scripts/demo-staff.ts did not connect:\n${run.output.join('\n')}`).toBe(0);
   });
 
-  it("opens each large deal's request on its owner's save, waiting on the sales manager", async () => {
+  it("opens each large deal's request on the hand-over, waiting on the sales manager", async () => {
     const adminId = String((await verify.contextFor(admin)).userId);
     const personaIds = new Set(Object.values(staffed).map((p) => p.id));
     const manager = staffed[holdersOf('sales_manager')[0]!.key]!.id;
@@ -639,10 +646,9 @@ describe('pnpm demo:staff on the shipped app: the owning rep submits each large-
       const [request] = requests;
       expect(
         String(request!.submitter_id),
-        `${deal.name}: the request names ${request!.submitter_id === adminId ? 'the DEV ADMIN' : request!.submitter_id} ` +
-        `as submitter, not the rep who owns the deal. The hand-off opened it again: the deal went over with ` +
-        `automations on, or an owner's save stopped being the first write after the seed.`,
-      ).toBe(owner);
+        `${deal.name}: the request names ${request!.submitter_id === owner ? 'the rep who owns the deal' : request!.submitter_id} ` +
+        `as submitter, not the dev admin whose hand-over is the first write after the seed.`,
+      ).toBe(adminId);
       expect(request!.current_step).toBe('manager_review');
       expect(String(request!.pending_approvers ?? '').split(','), `${deal.name}: not waiting on the sales manager`).toEqual([
         manager,
