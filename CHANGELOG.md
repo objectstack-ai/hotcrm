@@ -1,5 +1,42 @@
 # Changelog
 
+## 5.1.1
+
+### Patch Changes
+
+- d2f231d: **The hourly SLA sweep no longer overwrites the Escalation Reason on a case that is already escalated.** Before this release, when a case escalated with **Escalate Case** later passed its SLA Due Date, the sweep replaced the reason the agent typed with "Auto-escalated: SLA due date breached". It also moved the Escalated Date to the time of the sweep. The Escalation Reason keeps no history, so the agent's words could not be recovered.
+  
+  Now the sweep checks whether a breached case is already escalated. If it is, the sweep sets **SLA Violated**, sets the status to *Escalated*, and leaves the Escalation Reason and the Escalated Date as they were. This also covers a case that was escalated, put back to *In Progress* to be worked, and then breached. That case goes back to *Escalated* with its original reason and date. The case owner is alerted as before.
+  
+  A breached case that was never escalated is handled exactly as before: it gets the reason "Auto-escalated: SLA due date breached" and the time of the sweep as its Escalated Date.
+  
+  Cases whose reason was already overwritten before this release keep the text they have now. The earlier reason was never stored anywhere else, so this release cannot restore it.
+- bb8e207: **`pnpm demo:staff` now leaves two large-deal approvals waiting for the sales manager, each submitted by the rep who owns the deal.** Before, the script opened these requests while handing the demo deals to the reps. Its ownership update ran as the dev admin, so both **Large Deal Approval** requests named the dev admin as requester.
+  
+  The script now does it in this order:
+  
+  1. It hands the deals over through the data import with automations off, so the hand-off opens nothing.
+  2. It re-evaluates the sharing rules.
+  3. Each demo person signs in and saves the deals they were given. The save changes no field.
+  
+  On a new demo database, **Acme Platform Upgrade** and **Wayne Enterprise License** each open **Sales Manager Review** on Nina Reyes's save (`na.rep@objectos.ai`). Both wait in Marta Quinn's **Approvals Inbox** (`sales.manager@objectos.ai`), and the dev admin's inbox stays empty. Once Marta approves Wayne's request, its director sign-off goes to the dev admin, because nobody holds the sales director position. The script approves nothing itself. At the end it prints each request with its requester and approver, and it exits non-zero if any request it opened does not name the deal's owner as requester.
+  
+  Leads, tasks and events are handed over as before. Running the script again changes nothing.
+- fc60e19: **Every campaign member now gets an Added Date, however it was added.** Until this release only **Enroll Members** on a campaign filled in a member's Added Date. A member added with **New** on a campaign's Campaign Members panel, or with **Add to Campaign** on a lead or contact list, was saved with a blank Added Date. Those members showed an empty Added Date column on the campaign's members panel and on the lead's Campaign Members list, and that list sorts by Added Date.
+  
+  Now Added Date is filled in at the moment the membership is saved, whichever way it was added: Enroll Members, Add to Campaign, New on the members panel, or a REST create. It is still read-only. A create that sends its own Added Date over the REST API still succeeds, but the sent date is ignored and the moment of saving is stored, so a membership cannot be back-dated. The demo data keeps the dates it was written with.
+  
+  Members saved with a blank Added Date before this release stay blank.
+- d87855e: **Old line items now get their product name on their own, and renaming a product with many lines updates every one of them.**
+  
+  5.1.0 names each opportunity and quote line item after its product. Lines created before 5.1.0 had no name yet, so they showed a record id until someone ran `scripts/backfill-line-product-title.ts`. That script signs in with a password, so a hosted environment had no way to run it.
+  
+  Now, the first time a list, a record page or an API read shows such a line, HotCRM fills in the name of every line of that product in the background. That first screen still shows the id; the next one shows the product. Nobody has to run anything, and a read where every line is already named does no extra database work.
+  
+  Renaming a product used to stop partway on a product with many lines when HotCRM runs on a hosted environment, and so did the backfill: hook code there runs under a 30-second limit, and the update wrote one line at a time. On staging, a product with 21 lines had 9 of them renamed. The update now handles a few lines at a time and carries on in a fresh run until every line has the new name. If a run cannot make progress (for example, a line refuses every write), it stops and logs one error instead of retrying forever.
+  
+  `scripts/backfill-line-product-title.ts` still works for self-hosted operators, and a second run still reports zero lines.
+
 ## 5.1.0
 
 ### Minor Changes
