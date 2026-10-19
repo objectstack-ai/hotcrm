@@ -601,6 +601,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   flows: {
     campaign_enrollment: {
       label: '将成员加入营销活动',
+      successMessage: '符合条件的成员已加入营销活动。',
+      refusals: {
+        end_refused: {
+          message:
+            '有 {{refusedCount}} 人被拒绝加入：已加入 {{enrolledCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
+        },
+      },
       screens: {
         screen_1: {
           title: '加入条件',

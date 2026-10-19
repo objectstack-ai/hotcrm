@@ -600,6 +600,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   flows: {
     campaign_enrollment: {
       label: 'Inscribir miembros en la campaña',
+      successMessage: 'Miembros elegibles inscritos en la campaña.',
+      refusals: {
+        end_refused: {
+          message:
+            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} inscritas, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
+        },
+      },
       screens: {
         screen_1: {
           title: 'Criterios de Inscripción',

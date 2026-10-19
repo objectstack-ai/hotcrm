@@ -81,10 +81,7 @@ export const marketing: Record<string, ObjectTranslationData> = {
       assets: { label: 'Campaign Assets' },
     },
     _actions: {
-      enroll_leads: {
-        label: 'Enroll Members',
-        successMessage: 'Eligible members enrolled in campaign.',
-      },
+      enroll_leads: { label: 'Enroll Members' },
     },
   },
   crm_campaign_member: {

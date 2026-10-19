@@ -208,7 +208,7 @@ export const customer: Record<string, ObjectTranslationData> = {
         label: 'Add to Campaign',
         successMessage: 'Contacts added to campaign!',
         params: {
-          crm_campaign: { label: 'Campaign' },
+          campaignId: { label: 'Campaign' },
         },
       },
     },

@@ -87,10 +87,7 @@ export const marketing: Record<string, ObjectTranslationData> = {
       campaign_timeline: { label: '营销时间线' },
     },
     _actions: {
-      enroll_leads: {
-        label: '批量加入成员',
-        successMessage: '符合条件的成员已加入营销活动。',
-      },
+      enroll_leads: { label: '批量加入成员' },
     },
   },
   crm_campaign_member: {

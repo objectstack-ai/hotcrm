@@ -602,6 +602,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   flows: {
     campaign_enrollment: {
       label: 'キャンペーンにメンバーを登録',
+      successMessage: '対象メンバーをキャンペーンに登録しました。',
+      refusals: {
+        end_refused: {
+          message:
+            '選択された人のうち {{refusedCount}} 人の登録が拒否されました：登録 {{enrolledCount}} 人、拒否 {{refusedCount}} 人。拒否された人はキャンペーンに追加されていません。理由はフローの実行ログに一人ずつ記録されています。',
+        },
+      },
       screens: {
         screen_1: {
           title: '登録条件',

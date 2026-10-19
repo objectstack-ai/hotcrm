@@ -1,76 +1,69 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { cel } from '@objectstack/spec';
+import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
 /**
- * The campaign-membership INSERT — the one elevated step behind Enroll Members.
+ * Enroll ONE person in ONE campaign: the one enrollment flow per side, run as
+ * the person who asked for it.
  *
- * ## Why these two flows exist
+ * ## Who calls these
  *
- * They were built (#1807) for one column: `crm_campaign_member.added_date`,
- * `readonly: true`, which from `@objectstack/objectql` 17.4.0 a non-system
- * caller's INSERT can no longer seed (*"Seeding a read-only column at create
- * time is a **system** act"*, that release's changelog).
+ * Every enrollment door in the app reaches the membership INSERT through one
+ * of these two flows, and only through them:
  *
- * ⭐ That reason is GONE since #2142. The stamp is now the object's own
- * write-moment `defaultValue`, which the engine applies to a user-context
- * insert as well, so these callees no longer write it. Measured on
- * 18.0.0-next.3: with both callees switched to `runAs: 'user'` in a throwaway
- * boot, a marketing user's Enroll Members still lands every member with its
- * Added Date.
+ *   - **Enroll Members** (`campaign_enrollment`) calls them per eligible
+ *     person through its `subflow` nodes;
+ *   - **Add to Campaign** on a lead (`create_campaign`) and on a contact
+ *     (`add_contact_to_campaign`) is a `type: 'flow'` action that starts the
+ *     side's flow directly, once per selected row.
  *
- * What the elevation STILL does, measured in that same boot: it is what lets a
- * user whose permission set has `allowCreate: false` on `crm_campaign_member`
- * (`sales_rep`, `sales_manager`) enroll through Enroll Members at all. With the
- * callees at `runAs: 'user'` their runs enrolled nobody and still reported
- * success, because the parent's per-member `try_catch` swallows the refusal.
- * Whether those two profiles should be able to enroll is an open product
- * question that the #2142 report hands to the `repo:hotcrm` seat. ⛔ Do not
- * retire these flows or change their `runAs` as a side effect of a stamp
- * change: that would silently change who can enroll.
+ * ## `runAs: 'user'` — the object's own `allowCreate` is the one gate (#2167)
  *
- * ⛔ Nor is the remedy to elevate `campaign_enrollment`. That flow is a screen
- * flow a marketer launches from a campaign record, and `AGENTS.md` house rule 9
- * ("Elevate as little as possible") is explicit: *"A screen
- * flow stays `runAs: 'user'`. A write that genuinely needs elevation is split
- * into a dedicated `system` sub-flow and called through a `subflow` node. ⛔ Do
- * not elevate a whole flow to make `readonly` take effect."* Elevating the
- * parent would also lift row-level security off its two bulk reads — and
- * `crm_lead` is `sharingModel: 'private'`, so a rep clicking Enroll Members
- * would silently enroll the whole organisation's lead pool instead of the leads
- * they can see. That is a product change, not a migration.
+ * Ruled on #2167 (Q1 letter B): every enrollment door writes in the caller's
+ * context, so `crm_campaign_member`'s own `allowCreate` decides who may
+ * enroll, on every door alike. A profile without it (`sales_rep`,
+ * `sales_manager`, whose sets say enrollment belongs to marketing) is refused
+ * at the insert: the action answers 400 `FLOW_FAILED` with the permission
+ * message, and `campaign_enrollment` counts the person as refused.
  *
- * So the shape is the one `case_escalation_stamp` already uses for
- * `escalate_case`: the parent keeps the marketer's identity for the campaign
- * read, the eligibility queries and the per-member dedupe, and hands ONLY the
- * insert to a dedicated `runAs: 'system'` callee.
+ * These ran `runAs: 'system'` until #2167. The elevation was built (#1807)
+ * for the readonly `added_date` stamp, a reason #2142 removed by moving the
+ * stamp to the object's own write-moment default, which a user-context insert
+ * applies too. All it still did was let those two profiles create members
+ * their sets do not let them create. ⛔ Do not elevate these again to let
+ * a profile enroll: grant `allowCreate` on its permission set instead, so the
+ * profile says what the app does.
  *
- * ELEVATION IS NOT ANONYMITY: `resolveRunDataContext`
- * returns `{ isSystem: true, actor, ...userId }` for a `runAs: 'system'` run, so
- * the membership row is still attributed to the user who enrolled it.
+ * ## The dedupe lives here, and nowhere else
+ *
+ * A person already on the campaign is skipped, so a re-run tops up rather
+ * than double-enrolling (double rows inflated `num_sent` and the response
+ * rate). The read runs as the caller too. Member rows are
+ * `controlled_by_parent`, so a caller who can see the campaign sees all of
+ * its members, and the read misses none of them. `enrolled` tells the caller
+ * which of the two happened; `campaign_enrollment` counts on it.
  *
  * ## Two flows, not one branching flow
  *
- * `create_record`'s `fields` map is static, and the lead branch and the contact
- * branch write DIFFERENT lookup columns (`crm_lead` vs `crm_contact`) — the
- * dedupe in the parent is scoped that way on purpose, because a person enrolled
- * as a lead and again as a contact is two memberships, not a duplicate. A
- * single callee would need a decision node routing on which id happened to be
- * supplied, which is a second place to get that distinction wrong. Two callees
- * with no branching at all say it once each.
+ * `create_record`'s `fields` map is static, and the lead side and the contact
+ * side write DIFFERENT lookup columns (`crm_lead` vs `crm_contact`) — the
+ * dedupe is scoped that way on purpose, because a person enrolled as a lead
+ * and again as a contact is two memberships, not a duplicate. A single flow
+ * would need a decision node routing on which id happened to be supplied,
+ * which is a second place to get that distinction wrong. Two flows with no
+ * such branch say it once each.
  *
  * ## ⛔ What these flows deliberately do NOT do
  *
- * They insert one membership row and nothing else. The open-campaign gate, the
- * eligibility filters, the opt-out honour and the already-enrolled dedupe all
- * stay in `campaign_enrollment` under the marketer's context — moving any of
- * them here would elevate a read that has no business being elevated.
+ * They decide nothing about WHO is eligible. The open-campaign gate, the
+ * segment, and the opt-out honour stay in `campaign_enrollment`, and on Add
+ * to Campaign the person picked the row.
  */
 
 /**
- * Fields both callees write, minus the branch's own person lookup.
+ * Fields both flows write, minus the side's own person lookup.
  *
  * ⛔ No `added_date`. The enrollment stamp is the object's own write-moment
  * default (`campaign_member.object.ts`, #2142), so it lands on every insert,
@@ -81,45 +74,62 @@ const MEMBERSHIP_FIELDS = {
   status: 'sent',
 } as const;
 
+/** `enrolled` starts false; only the insert's own out-edge sets it. */
+const ENROLLED = { name: 'enrolled', type: 'boolean', isInput: false, isOutput: true, defaultValue: false };
+
 export const CampaignLeadMemberEnrollFlow: Flow = {
   name: 'campaign_lead_member_enroll',
   label: 'Enroll Lead in Campaign',
   description:
-    'Insert one lead campaign-membership row, using the system context. Called by campaign_enrollment through a subflow node.',
+    'Enroll one lead in one campaign as the caller, skipping a lead already on it. Called by campaign_enrollment and by the lead Add to Campaign action.',
   type: 'autolaunched',
   status: 'active',
 
-  // ⭐ THE ENTIRE POINT OF THIS FILE — see the header. One `create_record`.
-  runAs: 'system',
+  // ⭐ The caller's own create right is the gate — see the header.
+  runAs: 'user',
 
   variables: [
-    // Supplied by the caller's `subflow` node.
+    // Supplied by the caller's `subflow` node, or by the action door:
+    // `leadId` is the action's `recordIdParam`, `campaignId` its param.
     { name: 'campaignId', type: 'text', isInput: true, isOutput: false },
     { name: 'leadId', type: 'text', isInput: true, isOutput: false },
+    ENROLLED,
   ],
 
   nodes: [
     // `config: {}` — an autolaunched callee is handed its params by the
-    // `subflow` executor and resolves no trigger record of its own, so there is
-    // no `objectName` for the start node to load. Same shape as
-    // `case_escalation_stamp`, measured in `test/readonly-write-semantics.test.ts`.
+    // `subflow` executor or the action door and resolves no trigger record of
+    // its own, so there is no `objectName` for the start node to load. Same
+    // shape as `case_escalation_stamp`.
     { id: 'start', type: 'start', label: 'Start', config: {} },
+    {
+      id: 'find_existing_member', type: 'get_record', label: 'Already Enrolled?',
+      config: {
+        objectName: 'crm_campaign_member',
+        filter: { crm_campaign: cel`campaignId`, crm_lead: cel`leadId` },
+        outputVariable: 'existingMember',
+      },
+    },
+    // Gateway only — the predicate lives on the out-edge.
+    { id: 'check_not_enrolled', type: 'decision', label: 'New Member?' },
     {
       id: 'create_campaign_member', type: 'create_record', label: 'Add to Campaign',
       config: {
         objectName: 'crm_campaign_member',
-        // ⛔ Do not add fields here. Every column in this node is written with
-        // the elevated context; anything a marketer may legitimately type
-        // belongs in `campaign_enrollment` instead.
         fields: { crm_campaign: cel`campaignId`, crm_lead: cel`leadId`, ...MEMBERSHIP_FIELDS },
       },
     },
+    { id: 'mark_enrolled', type: 'assignment', label: 'Enrolled', config: { assignments: { enrolled: true } } },
     { id: 'end', type: 'end', label: 'End' },
   ],
 
   edges: [
-    { id: 'e1', source: 'start', target: 'create_campaign_member', type: 'default' },
-    { id: 'e2', source: 'create_campaign_member', target: 'end', type: 'default' },
+    { id: 'e1', source: 'start', target: 'find_existing_member', type: 'default' },
+    { id: 'e2', source: 'find_existing_member', target: 'check_not_enrolled', type: 'default' },
+    // Already enrolled → no edge → the run ends with `enrolled` still false.
+    { id: 'e3', source: 'check_not_enrolled', target: 'create_campaign_member', type: 'conditional', condition: P`existingMember == null`, label: 'Enroll' },
+    { id: 'e4', source: 'create_campaign_member', target: 'mark_enrolled', type: 'default' },
+    { id: 'e5', source: 'mark_enrolled', target: 'end', type: 'default' },
   ],
 };
 
@@ -127,19 +137,31 @@ export const CampaignContactMemberEnrollFlow: Flow = {
   name: 'campaign_contact_member_enroll',
   label: 'Enroll Contact in Campaign',
   description:
-    'Insert one contact campaign-membership row, using the system context. Called by campaign_enrollment through a subflow node.',
+    'Enroll one contact in one campaign as the caller, skipping a contact already on it. Called by campaign_enrollment and by the contact Add to Campaign action.',
   type: 'autolaunched',
   status: 'active',
 
-  runAs: 'system',
+  runAs: 'user',
 
   variables: [
     { name: 'campaignId', type: 'text', isInput: true, isOutput: false },
     { name: 'contactId', type: 'text', isInput: true, isOutput: false },
+    ENROLLED,
   ],
 
   nodes: [
     { id: 'start', type: 'start', label: 'Start', config: {} },
+    {
+      // Scoped on `crm_contact`: a person enrolled as a LEAD and again as a
+      // CONTACT is two memberships (see the header).
+      id: 'find_existing_contact_member', type: 'get_record', label: 'Already Enrolled?',
+      config: {
+        objectName: 'crm_campaign_member',
+        filter: { crm_campaign: cel`campaignId`, crm_contact: cel`contactId` },
+        outputVariable: 'existingContactMember',
+      },
+    },
+    { id: 'check_contact_not_enrolled', type: 'decision', label: 'New Member?' },
     {
       id: 'create_contact_member', type: 'create_record', label: 'Add Contact to Campaign',
       config: {
@@ -147,11 +169,15 @@ export const CampaignContactMemberEnrollFlow: Flow = {
         fields: { crm_campaign: cel`campaignId`, crm_contact: cel`contactId`, ...MEMBERSHIP_FIELDS },
       },
     },
+    { id: 'mark_contact_enrolled', type: 'assignment', label: 'Enrolled', config: { assignments: { enrolled: true } } },
     { id: 'end', type: 'end', label: 'End' },
   ],
 
   edges: [
-    { id: 'e1', source: 'start', target: 'create_contact_member', type: 'default' },
-    { id: 'e2', source: 'create_contact_member', target: 'end', type: 'default' },
+    { id: 'e1', source: 'start', target: 'find_existing_contact_member', type: 'default' },
+    { id: 'e2', source: 'find_existing_contact_member', target: 'check_contact_not_enrolled', type: 'default' },
+    { id: 'e3', source: 'check_contact_not_enrolled', target: 'create_contact_member', type: 'conditional', condition: P`existingContactMember == null`, label: 'Enroll' },
+    { id: 'e4', source: 'create_contact_member', target: 'mark_contact_enrolled', type: 'default' },
+    { id: 'e5', source: 'mark_contact_enrolled', target: 'end', type: 'default' },
   ],
 };

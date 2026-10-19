@@ -60,8 +60,13 @@
  *
  * The handler swallows the item and moves on. It does not retry (no `retry`
  * policy is declared, so one attempt is made), does not notify, and does not
- * accumulate a failure list — a sweep that reports its skips is a product
- * feature this card does not have a ruling for. The run log is the record.
+ * accumulate a failure list. The run log is the record of WHICH item failed.
+ *
+ * A loop whose run must report HOW MANY failed hands a third argument, the
+ * handler's `assignments` (a counter, in practice). That is the one loop
+ * that has a ruling for it, `campaign_enrollment` (#2167, Q2 letter a: "the
+ * counters are assignment nodes inside the guarded try and catch"); the other
+ * loops pass none and keep the bare handler.
  *
  * ⛔ Not every loop wants this. A sweep MEANT to stop at its first failure is a
  * legitimate reading and keeps its warning, so decide per loop rather than
@@ -82,15 +87,21 @@ type Region = { nodes: unknown[]; edges?: unknown[] };
  *
  * `key` must be unique within its flow — it names the two nodes this adds
  * (`guard_<key>` and `handled_<key>`), and node ids collide flow-wide.
+ * `onCaught`, when given, is the handler's `assignments`.
  */
-export const guarded = (key: string, region: Region): Region => ({
+export const guarded = (key: string, region: Region, onCaught?: Record<string, unknown>): Region => ({
   nodes: [{
     id: `guard_${key}`,
     type: 'try_catch',
     label: 'Guarded Iteration',
     config: {
       try: region,
-      catch: { nodes: [{ id: `handled_${key}`, type: 'assignment', label: 'Skip This Item' }] },
+      catch: {
+        nodes: [{
+          id: `handled_${key}`, type: 'assignment', label: 'Skip This Item',
+          ...(onCaught ? { config: { assignments: onCaught } } : {}),
+        }],
+      },
     },
   }],
 });

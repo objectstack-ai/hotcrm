@@ -221,7 +221,7 @@ export const customer: Record<string, ObjectTranslationData> = {
         label: '加入营销活动',
         successMessage: '联系人已加入营销活动！',
         params: {
-          crm_campaign: { label: '营销活动' },
+          campaignId: { label: '营销活动' },
         },
       },
     },
