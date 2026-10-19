@@ -90,6 +90,24 @@ const seededSettledBreach = (
   accountName?: string,
 ): boolean => caseSlaBreached(seededSlaHours(priority, accountName), (createdDaysAgo - settledDaysAgo) * 24);
 
+/**
+ * `escalated_date` of an escalated case: `hoursAfter` hours after its authored
+ * creation instant, as a CEL expression (#2163). Every escalation path stamps
+ * this date, so by the seed doctrine (`src/sales/data/_shared.ts`) an escalated
+ * seed row carries one; and `case_escalation` reads a missing one as "never
+ * escalated", which re-escalated a seeded Critical case on its next edit.
+ *
+ * The bound keeps the instant after creation and in the past whatever calendar
+ * day `daysAgo()` resolves in: it stays inside the case's first
+ * `createdDaysAgo - 1` days.
+ */
+const celEscalatedAt = (createdDaysAgo: number, hoursAfter: number) => {
+  if (!(hoursAfter > 0 && hoursAfter <= (createdDaysAgo - 1) * 24)) {
+    throw new Error(`seed: escalated ${hoursAfter}h after a case created ${createdDaysAgo} days ago is not between its creation and now`);
+  }
+  return cel`daysAgo(${createdDaysAgo}) + duration('${hoursAfter}h')`;
+};
+
 // ─── Cases ────────────────────────────────────────────────────────────
 // INSERT-ONCE (`mode: 'ignore'`, #2139): an agent works each case (status,
 // priority, owner, resolution) and closes it; under `upsert` the next boot
@@ -134,6 +152,7 @@ export const cases = defineSeed(Case, {
       is_escalated: true,
       escalation_reason: 'Customer threatening churn',
       created_at: cel`daysAgo(5)`,
+      escalated_date: celEscalatedAt(5, 3),
       sla_due_date: celCaseSlaDue(5, 'critical', 'Globex Industries'),
     },
     {
@@ -236,6 +255,8 @@ export const cases = defineSeed(Case, {
       is_escalated: true,
       escalation_reason: 'Affects 30% of mobile users',
       created_at: cel`daysAgo(3)`,
+      // Escalated, then put back to work: `in_progress` with the date kept.
+      escalated_date: celEscalatedAt(3, 1),
       sla_due_date: celCaseSlaDue(3, 'critical', 'Globex Industries'),
     },
     {
@@ -364,6 +385,11 @@ export const cases = defineSeed(Case, {
           ...(status === 'closed' ? { resolution: 'Resolved per standard runbook; root cause documented and customer confirmed.' } : {}),
           ...(status === 'escalated' ? { escalation_reason: 'Escalated to tier-2 engineering for SLA-risk review.' } : {}),
           created_at: celDaysAgo(ageDays),
+          // The SLA-risk review the reason names escalates the case halfway
+          // through its SLA window, before it falls due.
+          ...(status === 'escalated'
+            ? { escalated_date: celEscalatedAt(ageDays, Math.ceil(seededSlaHours(priority, account) / 2)) }
+            : {}),
           // Resolved cases also carry closed_date: case.hook stamps it as the
           // resolved-date proxy while keeping is_closed=false.
           ...(settled ? { closed_date: celDaysAgo(ageDays - resolutionDays) } : {}),
