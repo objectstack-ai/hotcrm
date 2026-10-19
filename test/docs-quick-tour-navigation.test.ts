@@ -81,9 +81,9 @@ type AnyRec = Record<string, any>;
  * The sidebar AS SERVED — `CrmApp.navigation` with every package's
  * `navigationContributions` folded in by the platform (`servedApp()`), because
  * that is what "here is what the sidebar holds" means. The service module
- * contributes five entries into three of the app's groups; a contributed item
+ * contributes seven entries into three of the app's groups; a contributed item
  * lands after the group's own children, which is why *My Cases* is the last
- * row of *My Work*.
+ * row of *My Work* and the case reports close *Reports*.
  */
 const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
 const GROUPS = NAV.filter((n) => n.type === 'group');
@@ -127,7 +127,9 @@ const PHANTOMS = [
   'Approval Requests',
   'Action History',
   'Dashboards',
-  'Reports',
+  // *Reports* left this list in #2073 item 1: it is a real group now, holding
+  // every shipped report, so the page bolds it like any other group.
+  //
   // #1259 retired these four sidebar rows. Every one of their destinations is
   // still shipping — as a tab on the list page of the object it belongs to —
   // so the page owes the reader a re-point, not a deletion. Listing them here
@@ -310,7 +312,7 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 });
 
 describe('the source facts the quick-tour table now rests on (#960)', () => {
-  it('the app has two pinned top-level entries and six groups', () => {
+  it('the app has two pinned top-level entries and seven groups', () => {
     expect(PINNED.map((p) => p.label)).toEqual(['Home', 'Sales Home']);
     // Service leads the groups (#2060 item 5): its first entry, Service
     // Overview, is where a service persona lands — see `crm.app.ts`.
@@ -321,6 +323,7 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
       'Activity',
       'Marketing',
       'Insights',
+      'Reports',
     ]);
   });
 
@@ -329,8 +332,8 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     expect(PINNED[0].dashboardName).toBe(ExecutiveDashboard.name);
   });
 
-  it('Marketing and Insights are the groups that stay collapsed', () => {
-    expect(COLLAPSED).toEqual(['Marketing', 'Insights']);
+  it('Marketing, Insights and Reports are the groups that stay collapsed', () => {
+    expect(COLLAPSED).toEqual(['Marketing', 'Insights', 'Reports']);
     expect(EXPANDED).toEqual(['Service', 'Sales', 'My Work', 'Activity']);
   });
 

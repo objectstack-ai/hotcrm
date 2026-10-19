@@ -22,12 +22,13 @@ const HOTCRM_ICON =
   '</svg>%0A';
 
 /**
- * The read gate on the five entries built on `crm_opportunity` (#2060 item 5):
+ * The read gate on the entries built on `crm_opportunity` (#2060 item 5):
  * Home (Executive Overview), Sales Home, Sales Performance, CRM Overview and
- * Pipeline Coverage. A member whose permission sets do not read opportunities
- * (`service_agent`, `service_manager`) got each one as a page of "You don't
- * have access" tiles, one 403 per opportunity query. Object entries are pruned
- * by read access already; dashboard, report and page entries are not.
+ * the four opportunity reports under Reports. A member whose permission sets
+ * do not read opportunities (`service_agent`, `service_manager`) got each one
+ * as a page of "You don't have access" tiles, one 403 per opportunity query.
+ * Object entries are pruned by read access already; dashboard, report and page
+ * entries are not.
  *
  * `visible`, not `requiredPermissions` — measured on 18.0.0-next.1: the server
  * keeps an entry only when the caller's permission sets grant every
@@ -36,12 +37,26 @@ const HOTCRM_ICON =
  * included, and a capability of our own would be a grant change. This asks
  * the effective object permission itself.
  *
- * Sales Activity (1 of 13 tiles) and Lead Inflow (leads) stay open: they work
- * without opportunity read. Since objectui#12426 (in the 18.0.0-next.2
- * console) the gate moves the landing too: the console opens an app on the
- * first entry the member is SHOWN, not the first one served.
+ * Sales Activity (1 of 13 tiles) stays open: it works without opportunity
+ * read. Since objectui#12426 (in the 18.0.0-next.2 console) the gate moves the
+ * landing too: the console opens an app on the first entry the member is
+ * SHOWN, not the first one served.
  */
 const READS_OPPORTUNITIES = P`current_user.can("crm_opportunity", "read")`;
+
+/**
+ * The same question for the other report entries (#2073 item 1): each asks
+ * for read on the object its report's dataset reads. The service module gates
+ * its case reports the same way.
+ *
+ * Customer Churn Signals asks for account read only. Three of its four panels
+ * read accounts; measured on 18.0.0-next.3, a service agent (accounts, no
+ * opportunities) gets those three and a "You don't have access" panel for
+ * Recently Lost Opportunities — a working report, kept open like Sales
+ * Activity rather than hidden.
+ */
+const READS_LEADS = P`current_user.can("crm_lead", "read")`;
+const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
 
 /**
  * Executive Overview's audience (#2060 item 5): everyone who reads
@@ -351,13 +366,41 @@ export const CrmApp = App.create({
       type: 'group',
       label: 'Insights',
       icon: 'sparkles',
+      // The reports this group used to pin moved to Reports below (#2073 item 1).
       children: [
-        // Trimmed to three high-signal reports. Full report catalogue still
-        // ships as metadata; admins can pin more from the report picker.
-        { id: 'nav_crm_dashboard',            type: 'dashboard', dashboardName: 'crm_overview_dashboard', label: 'CRM Overview',      icon: 'layout-dashboard', visible: READS_OPPORTUNITIES },
-        { id: 'nav_forecast',                 type: 'object', objectName: 'crm_forecast',                 label: 'Forecasts',         icon: 'trending-up' },
-        { id: 'nav_report_pipeline_coverage', type: 'report', reportName: 'pipeline_coverage_by_quarter', label: 'Pipeline Coverage', icon: 'columns-3', visible: READS_OPPORTUNITIES },
-        { id: 'nav_report_lead_inflow',       type: 'report', reportName: 'lead_inflow_by_month_source',  label: 'Lead Inflow',       icon: 'trending-up' },
+        { id: 'nav_crm_dashboard', type: 'dashboard', dashboardName: 'crm_overview_dashboard', label: 'CRM Overview', icon: 'layout-dashboard', visible: READS_OPPORTUNITIES },
+        { id: 'nav_forecast',      type: 'object', objectName: 'crm_forecast',                 label: 'Forecasts',    icon: 'trending-up' },
+      ],
+    },
+
+    {
+      // EVERY shipped report, one entry each (#2073 item 1). The console has no
+      // report index or picker, so a report without an entry here had no way
+      // in but its URL, and ⌘K finds a report only through a nav entry: it
+      // matches the active app's entries by label and name.
+      // objectstack-ai/objectui#13020 asks the console for a report index.
+      //
+      // The sales reports are declared below. The case reports belong to the
+      // service module, which contributes them into this group the way it
+      // fills `group_service` (see there), after the app's own children.
+      // `test/app-navigation-shape.test.ts` requires an entry for each report
+      // either package registers, so a new report without one goes red.
+      //
+      // Collapsed on load, like Marketing and Insights: ten rows would push
+      // everything under them out of a first screen.
+      id: 'group_reports',
+      type: 'group',
+      label: 'Reports',
+      icon: 'file-chart-column',
+      expanded: false,
+      children: [
+        { id: 'nav_report_opportunities_by_stage', type: 'report', reportName: 'opportunities_by_stage',         label: 'Opportunities by Stage',        icon: 'chart-column',  visible: READS_OPPORTUNITIES },
+        { id: 'nav_report_won_by_owner',           type: 'report', reportName: 'won_opportunities_by_owner',     label: 'Won Opportunities by Owner',    icon: 'trophy',        visible: READS_OPPORTUNITIES },
+        { id: 'nav_report_pipeline_coverage',      type: 'report', reportName: 'pipeline_coverage_by_quarter',   label: 'Pipeline Coverage',             icon: 'columns-3',     visible: READS_OPPORTUNITIES },
+        { id: 'nav_report_funnel_by_owner',        type: 'report', reportName: 'opportunity_funnel_owner_stage', label: 'Opportunity Funnel by Owner',   icon: 'funnel',        visible: READS_OPPORTUNITIES },
+        { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Inflow',                   icon: 'trending-up',   visible: READS_LEADS },
+        { id: 'nav_report_accounts_by_industry',   type: 'report', reportName: 'accounts_by_industry_type',      label: 'Accounts by Industry & Type',   icon: 'building',      visible: READS_ACCOUNTS },
+        { id: 'nav_report_churn_signals',          type: 'report', reportName: 'customer_churn_signals',         label: 'Customer Churn Signals',        icon: 'heart-pulse',   visible: READS_ACCOUNTS },
       ],
     },
 

@@ -5,9 +5,10 @@ import { CrmApp } from '../src/sales/apps/crm.app';
 import { SalesRepProfile } from '../src/sales/profiles/sales-rep.profile';
 import { SalesManagerProfile } from '../src/sales/profiles/sales-manager.profile';
 import { ServiceAgentProfile, ServiceManagerProfile } from '../src/sales/profiles/service-agent.profile';
+import { MarketingUserProfile } from '../src/sales/profiles/marketing-user.profile';
 import { CrmPositions } from '../src/sales/sharing/positions';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
-import { servedApp } from './helpers/composed-stack';
+import composedStack, { servedApp } from './helpers/composed-stack';
 
 /**
  * The two standing constraints on `src/apps/crm.app.ts`'s shape (#1259).
@@ -169,13 +170,20 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
   // this — the server reads it as capability names, and `crm_opportunity:read`
   // hid the entry from every user, the admin included (see `crm.app.ts`).
   const GATE = 'current_user.can("crm_opportunity", "read")';
-  const GATED = ['nav_sales_home', 'nav_sales_dashboard', 'nav_crm_dashboard', 'nav_report_pipeline_coverage'];
+  const GATED = [
+    'nav_sales_home', 'nav_sales_dashboard', 'nav_crm_dashboard',
+    'nav_report_opportunities_by_stage', 'nav_report_won_by_owner',
+    'nav_report_pipeline_coverage', 'nav_report_funnel_by_owner',
+  ];
 
   it('exactly these entries carry the opportunity read gate', () => {
     const gated = LEAVES.filter((n) => sourceOf(n.visible) === GATE).map((n) => n.id);
     expect(gated).toEqual(GATED);
     // Home carries the same read question, narrowed to its audience (below).
-    const other = LEAVES.filter((n) => n.visible !== undefined && sourceOf(n.visible) !== GATE).map((n) => n.id);
+    // Report entries each ask for their own object (the describe after this).
+    const other = LEAVES.filter(
+      (n) => n.type !== 'report' && n.visible !== undefined && sourceOf(n.visible) !== GATE,
+    ).map((n) => n.id);
     expect(other, 'entries gated on something else').toEqual(['nav_home']);
     expect(String(sourceOf(LEAVES.find((n) => n.id === 'nav_home')?.visible))).toMatch(/^current_user\.can\("crm_opportunity", "read"\) && /);
   });
@@ -191,6 +199,86 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
       ['nav_home', 'executive_dashboard'],
       ['nav_sales_home', 'sales_home_page'],
     ]);
+  });
+});
+
+describe('every shipped report has one entry, under Reports, gated on reading what it reads (#2073 item 1)', () => {
+  // The console has no report index, so a report with no nav entry had no way
+  // in but its URL (7 of 10 on 0a8f73d), and ⌘K finds a report only through a
+  // nav entry. The roster is what the two packages REGISTER, so a report added
+  // to either without an entry goes red here. The served tree carries the
+  // service module's contributed entries (`servedApp`).
+  const REPORTS = ((composedStack as AnyRec).reports ?? []) as AnyRec[];
+  const DATASETS = new Map(
+    (((composedStack as AnyRec).datasets ?? []) as AnyRec[]).map((d) => [d.name as string, d]),
+  );
+  const SERVED = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
+  const walk = (nodes: AnyRec[], group?: string): Array<{ n: AnyRec; group?: string }> =>
+    nodes.flatMap((n) =>
+      n.type === 'group' ? walk((n.children ?? []) as AnyRec[], n.id as string) : [{ n, group }],
+    );
+  const REPORT_ENTRIES = walk(SERVED).filter(({ n }) => n.type === 'report');
+
+  /** The objects a report reads: its dataset's, or every block's for a joined report. */
+  const objectsOf = (r: AnyRec): string[] =>
+    [...new Set(
+      [r.dataset, ...((r.blocks ?? []) as AnyRec[]).map((b) => b.dataset)]
+        .filter(Boolean)
+        .map((name) => DATASETS.get(name as string)?.object as string),
+    )];
+
+  it('reads a real roster', () => {
+    expect(REPORTS.length, 'no reports registered').toBeGreaterThanOrEqual(10);
+    expect(REPORT_ENTRIES.length, 'no report entries in the served navigation').toBeGreaterThan(0);
+    for (const r of REPORTS) expect(objectsOf(r).filter(Boolean), r.name).not.toEqual([]);
+  });
+
+  it('each registered report is the target of exactly one entry', () => {
+    const bad = REPORTS.map((r) => [r.name, REPORT_ENTRIES.filter(({ n }) => n.reportName === r.name).length])
+      .filter(([, count]) => count !== 1)
+      .map(([name, count]) => `${name}: ${count} entries`);
+    expect(bad, `reports without exactly one nav entry:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every report entry is in the Reports group, which the app declares collapsed', () => {
+    expect(REPORT_ENTRIES.filter(({ group }) => group !== 'group_reports').map(({ n }) => n.id)).toEqual([]);
+    const declared = NAV.find((n) => n.id === 'group_reports');
+    expect(declared).toMatchObject({ type: 'group', label: 'Reports', expanded: false });
+  });
+
+  it('each entry asks for read on the object its report reads', () => {
+    const bad: string[] = [];
+    for (const { n } of REPORT_ENTRIES) {
+      const report = REPORTS.find((r) => r.name === n.reportName);
+      const asked = /^current_user\.can\("(\w+)", "read"\)$/.exec(String(sourceOf(n.visible)))?.[1];
+      if (!report || !asked || !objectsOf(report).includes(asked)) {
+        bad.push(`${n.id}: gate ${JSON.stringify(sourceOf(n.visible))}, report reads ${report ? objectsOf(report).join(' + ') : '?'}`);
+      }
+    }
+    expect(bad, `report entries not gated on what their report reads:\n  ${bad.join('\n  ')}`).toEqual([]);
+    // The one report reading two objects asks for the one three of its four
+    // panels read: a member without the other gets an access notice on the
+    // fourth panel, not a broken page (measured, see `crm.app.ts`).
+    const churn = REPORT_ENTRIES.find(({ n }) => n.reportName === 'customer_churn_signals')?.n;
+    expect(sourceOf(churn?.visible)).toBe('current_user.can("crm_account", "read")');
+  });
+
+  it('the gates part the personas the way the permission sets say', () => {
+    const shown = (set: AnyRec): string[] =>
+      REPORT_ENTRIES.filter(({ n }) => {
+        const asked = /"(\w+)"/.exec(String(sourceOf(n.visible)))?.[1] as string;
+        return set.objects?.[asked]?.allowRead === true;
+      }).map(({ n }) => n.reportName as string);
+    const ALL = REPORT_ENTRIES.map(({ n }) => n.reportName as string);
+    const CASES = ['cases_by_status_priority', 'sla_performance', 'cases_opened_by_day_priority'];
+    expect(shown(SalesRepProfile)).toEqual(ALL);
+    expect(shown(SalesManagerProfile)).toEqual(ALL);
+    for (const set of [ServiceAgentProfile, ServiceManagerProfile]) {
+      expect(shown(set), set.name).toEqual([
+        'lead_inflow_by_month_source', 'accounts_by_industry_type', 'customer_churn_signals', ...CASES,
+      ]);
+    }
+    expect(shown(MarketingUserProfile)).toEqual(ALL.filter((name) => !CASES.includes(name)));
   });
 });
 

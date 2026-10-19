@@ -7,6 +7,12 @@ description: 标准报表库——HotCRM 就商机、线索、工单与客户发
 
 报表是可筛选、可导出的列表，带有分组和汇总合计。仪表盘展示*是什么*，而报表回答*为什么*和*哪些*。
 
+## 在哪里找到它们 [#where-to-find-them]
+
+下面每一份报表在侧边栏的 **Reports** 分组里都有一个条目。这个分组在应用加载时是折叠的，先把它点开；⌘K 也能按侧边栏上的名字找到一份报表。只有你能读取其记录的报表才会出现条目：服务坐席读不了商机，看不到那四张商机报表的条目；读不了工单的人看不到那三张工单报表的条目。
+
+有几个侧边栏名字比本页用的报表标题短：**Pipeline Coverage** 打开 **Pipeline Coverage by Forecast × Quarter**，**Opportunity Funnel by Owner** 打开 **Opportunity Funnel by Owner → Stage**，**Lead Inflow** 打开 **Lead Engagement by Month × Source**，**Accounts by Industry & Type** 打开 **Accounts by Industry and Type**，**SLA Performance** 打开 **SLA Performance Report**，**Cases Opened by Day** 打开 **Cases Opened by Priority × Day**。
+
 ## 标准报表
 
 HotCRM 开箱即用地发布 **十份** 报表 —— `src/sales/reports/index.ts` 和 `src/service/reports/index.ts` 这两个 barrel 合起来就是整个报表库。下面每一节先列出它发布的那几份，再逐条点名本页曾经承诺过的名字，并说明语义层能不能回答它：

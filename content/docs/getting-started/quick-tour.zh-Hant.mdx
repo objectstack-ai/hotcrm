@@ -48,7 +48,7 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 - **HotCRM** —— 包含所有 CRM 功能的主應用。
 - **Admin** —— 面向系統管理員。
 
-在 HotCRM 內，左側導覽最上面是兩個固定條目——**Home**，它打開的是 **Executive Overview** 儀表板；**Sales Home**，銷售代表自己的頁面，匯總管道數字、線索、未結商機、未完成任務與即將到來的活動；其餘內容分在 6 個群組裡：
+在 HotCRM 內，左側導覽最上面是兩個固定條目——**Home**，它打開的是 **Executive Overview** 儀表板；**Sales Home**，銷售代表自己的頁面，匯總管道數字、線索、未結商機、未完成任務與即將到來的活動；其餘內容分在 7 個群組裡：
 
 | 分組 | 內容 |
 | --- | --- |
@@ -57,13 +57,14 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 | **My Work** | My Tasks、My Deals、My Leads、My Calendar、Inbox、My Cases |
 | **Activity** | Events、Sales Activity |
 | **Marketing** | Campaigns |
-| **Insights** | CRM Overview、Forecasts、Pipeline Coverage、Lead Inflow、SLA Performance |
+| **Insights** | CRM Overview、Forecasts |
+| **Reports** | Opportunities by Stage、Won Opportunities by Owner、Pipeline Coverage、Opportunity Funnel by Owner、Lead Inflow、Accounts by Industry & Type、Customer Churn Signals、Cases by Status and Priority、SLA Performance、Cases Opened by Day |
 
 上表用的是原始碼裡的英文 label，也就是英文介面上看到的名字。本應用提供 en / zh-CN / ja-JP / es-ES 四種介面語言，沒有繁體語言包——簡體中文介面下這些名字會顯示為語言包裡的譯名，例如 **Inbox** 顯示為「待我审批」、**Knowledge** 顯示為「知识库」、**My Work** 顯示為「我的工作」。
 
-**Marketing**、**Insights** 這兩個群組在應用載入時是摺疊的——只有 **Sales**、**My Work**、**Activity**、**Service** 會自動展開。先把群組點開，再判斷某樣東西在不在這裡。
+**Marketing**、**Insights**、**Reports** 這三個群組在應用載入時是摺疊的——只有 **Sales**、**My Work**、**Activity**、**Service** 會自動展開。先把群組點開，再判斷某樣東西在不在這裡。
 
-有五個條目建立在商機之上——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview** 與 **Pipeline Coverage**——不能讀取商機的人（例如服務專員）在側邊欄裡看不到它們。銷售代表也看不到 **Home**，所以銷售代表的側邊欄從 **Sales Home** 開始。**Service** 排在所有群組之首，是因為應用打開時落在側邊欄顯示的第一個條目上：對服務專員與服務經理來說，那就是 **Service Overview**。
+建立在商機之上的條目——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview**，以及 **Reports** 下的四張商機報表——不能讀取商機的人（例如服務專員）在側邊欄裡看不到。其餘報表對各自的資料也是同樣的要求：服務專員照樣看得到線索、客戶與工單報表，而不能讀取工單的人看不到那三張工單報表。銷售代表也看不到 **Home**，所以銷售代表的側邊欄從 **Sales Home** 開始。**Service** 排在所有群組之首，是因為應用打開時落在側邊欄顯示的第一個條目上：對服務專員與服務經理來說，那就是 **Service Overview**。
 
 一個去處只佔一列，這是刻意的。同一個物件如果有多種檢視方式，它們是該物件列表頁頂部的標籤頁，而不是導覽裡另起一列——這樣側邊欄才短到能一眼掃完。
 
@@ -73,7 +74,7 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 - *Approvals* 現在也不是群組了。它下面唯一的條目 **Inbox** 本質上是一個「等你處理」的個人佇列，因此已併入 **My Work** 群組——參見 [Approvals](/zh-Hant/docs/revenue/approvals)。
 - 本頁過去列出的 4 個條目名已經不在側邊欄了，但功能一個都沒少——它們各自成了所屬列表頁上的一個標籤頁：*Pipeline* 是 **Opportunities** 頁面上的 Sales Pipeline 標籤頁；*Calendar* 與 *Interaction History* 是 **Events** 頁面上的 Event Calendar 與 ✅ Interaction History 標籤頁；*All Tasks* 則是 **My Tasks** 打開的那個頁面的第一個標籤頁。
 - *Activities* 不是群組，真實的群組叫 **Activity**，而且任務不在裡面。`crm_task` 在側邊欄上就是 **My Work** 群組下的 **My Tasks** 一項。
-- *Analytics* 不是群組，真實的群組叫 **Insights**。它裡面沒有任何條目叫 *Dashboards* 或 *Reports*——它釘住的那個儀表板和三張報表，上表已按各自的名字列出。
+- *Analytics* 不是群組。跨職能的儀表板 **CRM Overview** 在 **Insights** 群組下，應用自帶的每一張報表都在 **Reports** 群組下，上表已按各自的名字列出。沒有任何條目叫 *Dashboards*。
 - *AI* 不是群組，也沒有叫 *Copilot* 或 *Knowledge Bases* 的側邊欄條目。Copilot 是每個頁面右側的聊天面板（見下文第 6 節），知識文章則是 **Service** 群組下的 **Knowledge**。
 - *Knowledge Base* 不是本應用使用的 label。**Service** 群組下的條目叫 **Knowledge**，與它並列的服務儀表板叫 **Service Overview**——參見 [Service](/zh-Hant/docs/service/index)。
 - *Campaign Members* 不是側邊欄條目。行銷活動成員要從行銷活動詳情頁或全域搜尋進入——參見 [Campaign Members](/zh-Hant/docs/marketing/campaign-members)。

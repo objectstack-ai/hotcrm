@@ -92,9 +92,9 @@ export function* walk(node: unknown): Generator<AnyRec> {
  * Every app of the artifact AS SERVED — each package's `navigationContributions`
  * folded into the app's navigation tree by the platform's own fold.
  *
- * The service module puts five entries into the app's menu through its
+ * The service module puts seven entries into the app's menu through its
  * manifest (`nav_case`, `nav_knowledge`, `nav_service_dashboard`,
- * `nav_my_cases`, `nav_report_sla`), so the app's AUTHORED `navigation` no
+ * `nav_my_cases` and its three case reports), so the app's AUTHORED `navigation` no
  * longer carries them, and a suite that walks it alone would call them
  * unreachable. What a user sees is the folded tree:
  * `SchemaRegistry.applyNavContributions` — the method `GET /api/v1/meta/app`
