@@ -396,8 +396,8 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
  * The rewrite is measured against `ExecutiveDashboard.widgets` at runtime, not
  * against the file's text, and that distinction is the whole reason the issue
  * mis-counted. #971 read the source and listed EIGHT tiles, concluding that no
- * pipeline tile existed on this dashboard — but the funnel arrives from the
- * shared factory (`pipelineByStageFunnelWidget`, #539), so it carries no inline
+ * pipeline tile existed on this dashboard — but the tile arrives from the
+ * shared factory (`pipelineByStageWidget`, #539), so it carries no inline
  * `title:` literal to grep. The dashboard ships NINE tiles, and **Pipeline by
  * Stage** is one of them; the four locale bundles register it too. So the
  * page's "opportunities in your pipeline" bullet was the one claim that was
@@ -586,10 +586,10 @@ describe('the source facts the quick-tour landing section now rests on (#971)', 
     ]);
   });
 
-  it('counts the funnel that arrives from the shared factory, which no title grep finds', () => {
+  it('counts the pipeline tile that arrives from the shared factory, which no title grep finds', () => {
     // #971 read `executive.dashboard.ts` and found eight `title:` literals, so it
     // reported that the dashboard carries no pipeline tile. `pipeline_by_stage`
-    // comes from `pipelineByStageFunnelWidget` (#539) and has no inline literal —
+    // comes from `pipelineByStageWidget` (#539) and has no inline literal —
     // it is the ninth tile, and it is the reason the "opportunities in your
     // pipeline" bullet was half-right rather than simply wrong.
     const inlineTitles = (readFileSync(
