@@ -107,8 +107,25 @@ const productHook: Hook = {
  * `async` + `onError: 'log'`, as the line rollups are: a rename is never
  * refused because one old line will not take a write (a quote line stored
  * above today's discount ceiling refuses every write). One bad line does not
- * stop the others. The hook re-stamps every line it can, then throws once,
- * naming how many kept a stale copy, and `onError: 'log'` records that.
+ * stop the others. A pass that leaves a refused line throws once, naming how
+ * many kept a stale copy, and `onError: 'log'` records that.
+ *
+ * ## One invocation does a bounded share of the lines (#2168)
+ *
+ * The hosted runtime runs this body in a sandbox with a 30 s wall-clock
+ * ceiling. Each line write runs the line's own before-hooks, each a round trip
+ * to the remote database, so a product with a few dozen lines used to stop
+ * after about ten. `onError: 'log'` swallowed the stop, and the rest of the
+ * lines kept their old copy until someone renamed the product again.
+ *
+ * So a pass writes at most `WRITES_PER_PASS` lines (and gives up early on
+ * `PASS_BUDGET_MS`). When lines are still stale, it hands the rest to a fresh
+ * invocation, with a fresh budget, by re-sending the product's own `name`.
+ * That is the same unchanged-name write the backfill makes. It continues only
+ * on measured progress: the stale count read back after the pass must be
+ * lower than the count it started from. So a write that does not stick, or a
+ * run of refused lines, ends the chain with one logged error instead of
+ * looping.
  */
 const productTitleMirror: Hook = {
   name: 'product_title_mirror',
@@ -120,33 +137,127 @@ const productTitleMirror: Hook = {
   onError: 'log',
   description: 'Re-stamp product_title on every opportunity and quote line of a renamed product.',
   handler: async (ctx: HookContext) => {
+    // Inside the handler, not at module scope: a lowered body has none.
+    const WRITES_PER_PASS = 5;
+    const ATTEMPTS_PER_PASS = 10;
+    const PASS_BUDGET_MS = 15_000;
+    const startedAt = Date.now();
     const api = ctx.api as HookApi | undefined;
     const id = ctx.previous?.id ?? ctx.input?.id;
     if (!api || typeof id !== 'string' || !id) return;
     if (!ctx.input || !Object.prototype.hasOwnProperty.call(ctx.input, 'name')) return;
-    const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'display_title'] });
+    const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'name', 'display_title'] });
     const title = product && typeof product.display_title === 'string' ? product.display_title.trim() : '';
     if (!title) return;
-    let stale = 0;
-    let first = '';
-    for (const object of ['crm_opportunity_line_item', 'crm_quote_line_item']) {
-      const lines = await api.object(object).find({
-        where: { crm_product: id }, fields: ['id', 'product_title'], top: 5000,
-      });
-      for (const line of lines) {
-        if (line.product_title === title) continue;
-        try {
-          await api.object(object).update({ id: String(line.id), product_title: title }, { where: { id: String(line.id) } });
-        } catch (err) {
-          stale++;
-          if (!first) first = `${object}: ${err instanceof Error ? err.message : String(err)}`;
+    const staleLines = async (): Promise<Array<{ object: string; id: string }>> => {
+      const out: Array<{ object: string; id: string }> = [];
+      for (const object of ['crm_opportunity_line_item', 'crm_quote_line_item']) {
+        const lines = await api.object(object).find({
+          where: { crm_product: id }, fields: ['id', 'product_title'], top: 5000,
+        });
+        for (const line of lines) {
+          if (line.product_title !== title) out.push({ object, id: String(line.id) });
         }
       }
+      return out;
+    };
+    const before = await staleLines();
+    let written = 0;
+    let refused = 0;
+    let first = '';
+    for (const line of before) {
+      if (written >= WRITES_PER_PASS || written + refused >= ATTEMPTS_PER_PASS) break;
+      if (Date.now() - startedAt > PASS_BUDGET_MS) break;
+      try {
+        await api.object(line.object).update({ id: line.id, product_title: title }, { where: { id: line.id } });
+        written++;
+      } catch (err) {
+        refused++;
+        if (!first) first = `${line.object}: ${err instanceof Error ? err.message : String(err)}`;
+      }
     }
-    if (stale > 0) {
-      throw new Error(`product_title_mirror: ${stale} line(s) of ${title} kept a stale product_title; the first refusal: ${first}`);
+    if (written + refused < before.length) {
+      // Lines are left for another pass. Hand them on only if this pass moved the data.
+      const left = (await staleLines()).length;
+      if (left < before.length) {
+        await api.object('crm_product').update({ id, name: product!.name }, { where: { id } });
+        return;
+      }
+      throw new Error(
+        `product_title_mirror: ${left} line(s) of ${title} still hold a stale product_title and this pass made no progress; the first refusal: ${first || 'none'}`,
+      );
+    }
+    if (refused > 0) {
+      throw new Error(`product_title_mirror: ${refused} line(s) of ${title} kept a stale product_title; the first refusal: ${first}`);
     }
   },
 };
 
-export default [productHook, productTitleMirror];
+/**
+ * An untitled line, read, starts its product's re-stamp (#2168).
+ *
+ * Lines created before 5.1.0 hold no `product_title`, so they are named by
+ * their record id until something writes them. Self-hosted operators can run
+ * `scripts/backfill-line-product-title.ts`. A hosted environment cannot: that
+ * script signs in with a password, and the platform gives an installed package
+ * no upgrade-time code path (package `migrations` are retired, `onEnable` does
+ * not survive the JSON artifact, and seeds do not run where sample data is
+ * off). So the trigger is the first read that shows such a line. For each
+ * product behind an untitled row, this re-sends the product's own `name`,
+ * the same write the script makes, and `product_title_mirror` titles every
+ * line of that product, pass after pass.
+ *
+ * It does not fix the response that triggered it. A hosted hook body hands
+ * only `input` back to the engine, never `result`, so the first view after an
+ * upgrade still shows the id and the next one shows the name.
+ *
+ * It acts only on a row that carries BOTH `crm_product` and an empty
+ * `product_title`, the shape of a record page, a list or an API read. None of
+ * the app's own reads of a line projects both: the mirror reads `id` and
+ * `product_title`, the rollups read the figures, numbering reads
+ * `line_number`. So the re-stamp's own reads never trigger another re-stamp.
+ *
+ * `async`, so it runs off the read's response path. While every line is
+ * titled it makes no database call. It touches at most five products per read
+ * to stay inside the sandbox's wall-clock ceiling; the next read finds the
+ * rest.
+ */
+const lineProductTitleBackfill: Hook = {
+  name: 'line_item_product_title_backfill',
+  object: ['crm_opportunity_line_item', 'crm_quote_line_item'],
+  events: ['afterFind'],
+  priority: 900,
+  runAs: 'system',
+  async: true,
+  onError: 'log',
+  description: "Re-send the product's name for every untitled line a read returns, so product_title_mirror titles them.",
+  handler: async (ctx: HookContext) => {
+    // Inside the handler, not at module scope: a lowered body has none.
+    const PRODUCTS_PER_READ = 5;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const result = (ctx as { result?: unknown }).result;
+    const rows: unknown[] = Array.isArray(result) ? result : result && typeof result === 'object' ? [result] : [];
+    const products: string[] = [];
+    for (const row of rows) {
+      if (!row || typeof row !== 'object') continue;
+      const r = row as Record<string, unknown>;
+      if (!Object.prototype.hasOwnProperty.call(r, 'product_title') || !Object.prototype.hasOwnProperty.call(r, 'crm_product')) continue;
+      if (typeof r.product_title === 'string' && r.product_title.trim() !== '') continue;
+      const ref = r.crm_product;
+      const productId = typeof ref === 'string'
+        ? ref
+        : ref && typeof ref === 'object' && typeof (ref as Record<string, unknown>).id === 'string' ? String((ref as Record<string, unknown>).id) : '';
+      if (productId && !products.includes(productId)) products.push(productId);
+      if (products.length >= PRODUCTS_PER_READ) break;
+    }
+    for (const id of products) {
+      const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'name'] });
+      if (product && typeof product.name === 'string') {
+        await api.object('crm_product').update({ id, name: product.name }, { where: { id } });
+      }
+    }
+  },
+};
+
+export default [productHook, productTitleMirror, lineProductTitleBackfill];

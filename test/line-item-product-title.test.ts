@@ -223,3 +223,75 @@ describe('frozen parents: the title follows, every other change is refused (#208
     expect(await titleOf(object, line.id)).toBe(product.display_title);
   });
 });
+
+describe('a product with many lines is finished pass after pass (#2168)', () => {
+  it.each(PAIRS)('$object: one touch titles all 12 untitled lines of a product', async ({ object, parentKey }) => {
+    const [product, parent] = [await newProduct(), (await parents())[parentKey]!];
+    const ids: string[] = [];
+    for (let i = 0; i < 12; i++) {
+      ids.push(String((await verify.hooks.run(object, 'insert', { [parentKey]: parent.id, crm_product: product.id }, as(rep))).id));
+    }
+    // Lines older than the field: no title stored.
+    for (const id of ids) await systemUpdate(verify, object, { id, product_title: null });
+    // One unchanged-name write. The mirror writes five, re-sends the name, and the
+    // next passes finish the rest through the engine's own `afterUpdate` dispatch.
+    await verify.hooks.run('crm_product', 'update', { id: product.id, name: product.name }, as(admin));
+    await vi.waitFor(async () => {
+      const titled = (await Promise.all(ids.map((id) => stored(object, id)))).filter((r) => r.product_title === product.display_title);
+      expect(titled).toHaveLength(12);
+    }, { timeout: 30_000, interval: 100 });
+  }, 45_000);
+
+  it('the SHIPPED mirror body runs in QuickJS and titles the lines of its pass', async () => {
+    const [product, parent] = [await newProduct(), (await parents()).crm_opportunity!];
+    const line = await verify.hooks.run('crm_opportunity_line_item', 'insert', { crm_opportunity: parent.id, crm_product: product.id }, as(rep));
+    await systemUpdate(verify, 'crm_opportunity_line_item', { id: line.id, product_title: null });
+    await runShippedHook(verify, hookNamed('product_title_mirror'), {
+      event: 'afterUpdate', input: { id: product.id, name: product.name }, previous: product, as: admin,
+    });
+    expect((await stored('crm_opportunity_line_item', line.id)).product_title).toBe(product.display_title);
+  }, 30_000);
+});
+
+describe('a hosted environment titles its old lines on the first read (#2168)', () => {
+  it.each(PAIRS)('$object: an API read of untitled lines starts their re-stamp', async ({ object, parentKey }) => {
+    const [product, parent] = [await newProduct(), (await parents())[parentKey]!];
+    const ids: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      ids.push(String((await verify.hooks.run(object, 'insert', { [parentKey]: parent.id, crm_product: product.id }, as(rep))).id));
+    }
+    for (const id of ids) await systemUpdate(verify, object, { id, product_title: null });
+    // The shape a record page or a list reads: the product reference and the name field.
+    const res = await verify.apiAs(admin, 'POST', `/data/${object}/query`, {
+      fields: ['id', 'crm_product', 'product_title'], where: { [parentKey]: parent.id }, top: 50,
+    });
+    expect(res.status).toBe(200);
+    await vi.waitFor(async () => {
+      const titled = (await Promise.all(ids.map((id) => stored(object, id)))).filter((r) => r.product_title === product.display_title);
+      expect(titled).toHaveLength(3);
+    }, { timeout: 20_000, interval: 100 });
+  }, 30_000);
+
+  it('a read that projects no product reference starts nothing', async () => {
+    const [product, parent] = [await newProduct(), (await parents()).crm_opportunity!];
+    const line = await verify.hooks.run('crm_opportunity_line_item', 'insert', { crm_opportunity: parent.id, crm_product: product.id }, as(rep));
+    await systemUpdate(verify, 'crm_opportunity_line_item', { id: line.id, product_title: null });
+    const res = await verify.apiAs(admin, 'POST', '/data/crm_opportunity_line_item/query', {
+      fields: ['id', 'product_title'], where: { crm_opportunity: parent.id }, top: 50,
+    });
+    expect(res.status).toBe(200);
+    await new Promise((r) => setTimeout(r, 1500));
+    expect((await stored('crm_opportunity_line_item', line.id)).product_title ?? null).toBeNull();
+  }, 30_000);
+
+  it('the SHIPPED read trigger runs in QuickJS and starts the re-stamp', async () => {
+    const [product, parent] = [await newProduct(), (await parents()).crm_opportunity!];
+    const line = await verify.hooks.run('crm_opportunity_line_item', 'insert', { crm_opportunity: parent.id, crm_product: product.id }, as(rep));
+    await systemUpdate(verify, 'crm_opportunity_line_item', { id: line.id, product_title: null });
+    await runShippedHook(verify, hookNamed('line_item_product_title_backfill'), {
+      event: 'afterFind', object: 'crm_opportunity_line_item', as: admin,
+      result: [{ id: line.id, crm_product: product.id, product_title: null }] as unknown as Rec,
+    });
+    await vi.waitFor(async () => expect((await stored('crm_opportunity_line_item', line.id)).product_title).toBe(product.display_title), { timeout: 20_000, interval: 100 });
+  }, 30_000);
+});
