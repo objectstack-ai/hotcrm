@@ -19,8 +19,11 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } 
  * The fix is the stored mirror `skills/objectstack-data/SKILL.md` prescribes
  * for a related record's title ("mirror the value, always"). `product_title`
  * copies the product's `display_title`, and is `nameField` and search target
- * on both line objects. A formula could not do it: a formula reads only this
- * record's columns, and `record.crm_product.name` read null on every row.
+ * on both line objects. A formula could not do it on 18.0.0-next.3: it read
+ * only this record's columns, and `record.crm_product.name` read null on every
+ * row. Since 18.0.0-next.4 a formula reads one hop through a reference, but its
+ * value is stored nowhere, so search cannot scan it (changeset
+ * `24197-objectql-formula-one-hop`).
  *
  * Pinned here, on both objects: the declaration; the line-side writer (insert,
  * a product change, an untitled row's next update) on the in-process path and

@@ -114,9 +114,9 @@ That sixth row used to read *Account teams*. **There is no account-team object a
 
 ## Audit logs
 
-`sys_audit_log` is real and it is genuinely immutable: the object is `managedBy: 'append-only'` and every field on it is `readonly: true`. It ships with `@objectstack/plugin-audit`, and **this app gets it** — declaring `auth` in `requires` makes the CLI register the auth, security and audit plugins as a set. Read it at **Setup → Audit Logs**, under *Diagnostics*, which ships six list views: *Recent*, *Writes*, *Auth*, *Record Views*, *Config* and *All*.
+`sys_audit_log` is real and it is genuinely immutable: the object is `managedBy: 'append-only'` and every field on it is `readonly: true`. It ships with `@objectstack/plugin-audit`, and **this app gets it** — declaring `auth` in `requires` makes the CLI register the auth, security and audit plugins as a set. Read it at **Setup → Audit Log**, under *Diagnostics*, which ships six list views: *Recent*, *Writes*, *Auth*, *Record Views*, *Config* and *All*.
 
-⚠️ **What Setup → Audit Logs shows changed in ObjectStack 17.6.0.** The log now shows every reader — administrators included — only rows about records that reader can still open. Rows stay stored, but these no longer appear in the console: every `delete` row (the record is gone), `logout` rows and `login` rows whose session has ended, and rows about records the reader cannot open. `config_change` rows are still shown. A review that must see every row needs a server-side job running with system access; the console offers no such view.
+⚠️ **What Setup → Audit Log shows changed in ObjectStack 17.6.0.** The log now shows every reader — administrators included — only rows about records that reader can still open. Rows stay stored, but these no longer appear in the console: every `delete` row (the record is gone), `logout` rows and `login` rows whose session has ended, and rows about records the reader cannot open. `config_change` rows are still shown. A review that must see every row needs a server-side job running with system access; the console offers no such view.
 
 The category table was the unmeasured part. Re-judged against the writers that actually exist:
 
@@ -262,7 +262,7 @@ Establish, and write down where your users can find them: who to contact, where 
 - ✅ **Set an idle and absolute session timeout**, and a concurrent-session cap if your policy has one. All three default to unlimited.
 - ✅ **Turn on SSO** as soon as you have >10 users. SCIM has no screen, so plan for it as a deployment change rather than an admin task.
 - ✅ **Restrict System Admin** to 2-3 people max.
-- ✅ **Review the audit log** monthly at **Setup → Audit Logs** — look for failed-login *lockouts* and unusual `config_change` volume. ⚠️ Do not plan a review around export events: none are recorded.
+- ✅ **Review the audit log** monthly at **Setup → Audit Log** — look for failed-login *lockouts* and unusual `config_change` volume. ⚠️ Do not plan a review around export events: none are recorded.
 - ✅ **Consider opting into record-view auditing** for `crm_contact` and `crm_account` if you are in a regulated industry. It is a `plugins` change in the app package's stack definition (`src/sales/index.ts`), not a setting.
 - ✅ **Run a tabletop exercise** annually — what happens if an admin account is compromised?
 - ⛔ Do not plan around per-profile IP allowlists, login hours, device trust, column-level field encryption, a *View Encrypted Data* permission, or audit-log streaming to a SIEM. Every one of them is marked *(not shipped)* above.
