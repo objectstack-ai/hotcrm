@@ -48,7 +48,7 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 - **HotCRM** —— 包含所有 CRM 功能的主应用。
 - **Admin** —— 面向系统管理员。
 
-在 HotCRM 内，左侧导航最上面是两个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；**Sales Home**，销售代表自己的页面，汇总管道数字、线索、未结商机、未完成任务与即将到来的活动；其余内容分在 6 个分组里：
+在 HotCRM 内，左侧导航最上面是两个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；**Sales Home**，销售代表自己的页面，汇总管道数字、线索、未结商机、未完成任务与即将到来的活动；其余内容分在 7 个分组里：
 
 | 分组 | 内容 |
 | --- | --- |
@@ -57,13 +57,14 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 | **My Work** | My Tasks、My Deals、My Leads、My Calendar、Inbox、My Cases |
 | **Activity** | Events、Sales Activity |
 | **Marketing** | Campaigns |
-| **Insights** | CRM Overview、Forecasts、Pipeline Coverage、Lead Inflow、SLA Performance |
+| **Insights** | CRM Overview、Forecasts |
+| **Reports** | Opportunities by Stage、Won Opportunities by Owner、Pipeline Coverage、Opportunity Funnel by Owner、Lead Inflow、Accounts by Industry & Type、Customer Churn Signals、Cases by Status and Priority、SLA Performance、Cases Opened by Day |
 
 上表用的是源码里的英文 label，也就是英文界面上看到的名字。简体中文界面下，它们显示为语言包里的译名——例如 **Inbox** 显示为「待我审批」、**Knowledge** 显示为「知识库」、**My Work** 显示为「我的工作」。
 
-**Marketing**、**Insights** 这两个分组在应用加载时是折叠的——只有 **Sales**、**My Work**、**Activity**、**Service** 会自动展开。先把分组点开，再判断某样东西在不在这里。
+**Marketing**、**Insights**、**Reports** 这三个分组在应用加载时是折叠的——只有 **Sales**、**My Work**、**Activity**、**Service** 会自动展开。先把分组点开，再判断某样东西在不在这里。
 
-有五个条目建立在商机之上——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview** 与 **Pipeline Coverage**——不能读取商机的人（例如服务坐席）在侧边栏里看不到它们。销售代表也看不到 **Home**，所以销售代表的侧边栏从 **Sales Home** 开始。**Service** 排在所有分组之首，是因为应用打开时落在侧边栏显示的第一个条目上：对服务坐席与服务经理来说，那就是 **Service Overview**。
+建立在商机之上的条目——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview**，以及 **Reports** 下的四张商机报表——不能读取商机的人（例如服务坐席）在侧边栏里看不到。其余报表对各自的数据也是同样的要求：服务坐席照样看得到线索、客户与工单报表，而不能读取工单的人看不到那三张工单报表。销售代表也看不到 **Home**，所以销售代表的侧边栏从 **Sales Home** 开始。**Service** 排在所有分组之首，是因为应用打开时落在侧边栏显示的第一个条目上：对服务坐席与服务经理来说，那就是 **Service Overview**。
 
 一个去处只占一行，这是刻意的。同一个对象如果有多种查看方式，它们是该对象列表页顶部的标签页，而不是导航里另起一行——这样侧边栏才短到能一眼扫完。
 
@@ -73,7 +74,7 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 - *Approvals* 现在也不是分组了。它下面唯一的条目 **Inbox** 本质上是一个「等你处理」的个人队列，因此已并入 **My Work** 分组——参见 [Approvals](/zh-Hans/docs/revenue/approvals)。
 - 本页过去列出的 4 个条目名已经不在侧边栏了，但功能一个都没少——它们各自成了所属列表页上的一个标签页：*Pipeline* 是 **Opportunities** 页面上的 Sales Pipeline 标签页；*Calendar* 与 *Interaction History* 是 **Events** 页面上的 Event Calendar 与 ✅ Interaction History 标签页；*All Tasks* 则是 **My Tasks** 打开的那个页面的第一个标签页。
 - *Activities* 不是分组，真实的分组叫 **Activity**，而且任务不在里面。`crm_task` 在侧边栏上就是 **My Work** 分组下的 **My Tasks** 一项。
-- *Analytics* 不是分组，真实的分组叫 **Insights**。它里面没有任何条目叫 *Dashboards* 或 *Reports*——它固定的那个仪表盘和三张报表，上表已按各自的名字列出。
+- *Analytics* 不是分组。跨职能的仪表盘 **CRM Overview** 在 **Insights** 分组下，应用自带的每一张报表都在 **Reports** 分组下，上表已按各自的名字列出。没有任何条目叫 *Dashboards*。
 - *AI* 不是分组，也没有叫 *Copilot* 或 *Knowledge Bases* 的侧边栏条目。Copilot 是每个页面右侧的聊天面板（见下文第 6 节），知识文章则是 **Service** 分组下的 **Knowledge**。
 - *Knowledge Base* 不是本应用使用的 label。**Service** 分组下的条目叫 **Knowledge**，与它并列的服务仪表盘叫 **Service Overview**——参见 [Service](/zh-Hans/docs/service/index)。
 - *Campaign Members* 不是侧边栏条目。营销活动成员要从营销活动详情页或全局搜索进入——参见 [Campaign Members](/zh-Hans/docs/marketing/campaign-members)。

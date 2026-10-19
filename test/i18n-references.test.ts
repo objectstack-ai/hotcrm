@@ -799,7 +799,7 @@ describe('every locale is complete on every authored surface', () => {
    * walk follows `children` to any depth and also covers each area's own id
    * and navigation, so an id counts as declared exactly when something can
    * render it — the same reachability the console builds the sidebar from.
-   * That is the SERVED tree (`servedApps()`): the service module's five
+   * That is the SERVED tree (`servedApps()`): the service module's seven
    * entries reach the app through its `navigationContributions`, are labelled
    * from the app's own locale packs, and are as declared as any child the app
    * authors itself.
