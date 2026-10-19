@@ -111,9 +111,9 @@ description: SSO、MFA、稽核日誌、secret 欄位通道、GDPR —— HotCRM
 
 ## 稽核日誌
 
-`sys_audit_log` 是真的，而且確實不可變：該物件是 `managedBy: 'append-only'`，其上每個欄位都是 `readonly: true`。它隨 `@objectstack/plugin-audit` 一起發布，而**本應用拿得到它** —— 在 `requires` 中宣告 `auth` 會讓 CLI 把 auth、security、audit 三個外掛作為一組註冊。在 **Setup → Audit Logs**（位於 *Diagnostics* 群組下）讀取，它帶了六個列表檢視：*Recent*、*Writes*、*Auth*、*Record Views*、*Config* 與 *All*。
+`sys_audit_log` 是真的，而且確實不可變：該物件是 `managedBy: 'append-only'`，其上每個欄位都是 `readonly: true`。它隨 `@objectstack/plugin-audit` 一起發布，而**本應用拿得到它** —— 在 `requires` 中宣告 `auth` 會讓 CLI 把 auth、security、audit 三個外掛作為一組註冊。在 **Setup → Audit Log**（位於 *Diagnostics* 群組下）讀取，它帶了六個列表檢視：*Recent*、*Writes*、*Auth*、*Record Views*、*Config* 與 *All*。
 
-⚠️ **ObjectStack 17.6.0 改變了 Setup → Audit Logs 顯示的內容。** 稽核日誌現在只向每個讀者（管理員也不例外）顯示其仍能開啟的記錄的相關列。這些列仍然儲存著，但以下幾類不再出現在主控台中：每一筆 `delete` 列（記錄已不存在）、`logout` 列以及工作階段已結束的 `login` 列，還有讀者無法開啟的記錄的相關列。`config_change` 列仍會顯示。需要查看全部列的審查，必須由以系統權限執行的伺服器端工作來做；主控台不提供這樣的檢視。
+⚠️ **ObjectStack 17.6.0 改變了 Setup → Audit Log 顯示的內容。** 稽核日誌現在只向每個讀者（管理員也不例外）顯示其仍能開啟的記錄的相關列。這些列仍然儲存著，但以下幾類不再出現在主控台中：每一筆 `delete` 列（記錄已不存在）、`logout` 列以及工作階段已結束的 `login` 列，還有讀者無法開啟的記錄的相關列。`config_change` 列仍會顯示。需要查看全部列的審查，必須由以系統權限執行的伺服器端工作來做；主控台不提供這樣的檢視。
 
 分類表是沒測過的那部分。對照真正存在的寫入方重新判定：
 
@@ -259,7 +259,7 @@ HotCRM 能告訴你的是它給了你什麼可用之物：上文的 `type: 'secr
 - ✅ **設定閒置與絕對工作階段逾時**，如果你的策略有要求，再加上並行工作階段上限。這三項預設都是不限。
 - ✅ **一旦使用者超過 10 人就打開 SSO。** SCIM 沒有介面，所以要把它當成一次部署改動來規劃，而不是一項管理員任務。
 - ✅ **把系統管理員限制在 2-3 人以內。**
-- ✅ **每月評審稽核日誌** —— 在 **Setup → Audit Logs** —— 留意登入失敗導致的*鎖定*以及異常的 `config_change` 量。⚠️ 不要圍繞匯出事件來安排評審：它們一條都沒被記錄。
+- ✅ **每月評審稽核日誌** —— 在 **Setup → Audit Log** —— 留意登入失敗導致的*鎖定*以及異常的 `config_change` 量。⚠️ 不要圍繞匯出事件來安排評審：它們一條都沒被記錄。
 - ✅ **如果你身處受監管行業，考慮為 `crm_contact` 與 `crm_account` 選入記錄查看稽核。** 那是 app 套件 stack 定義（`src/sales/index.ts`）裡的一次 `plugins` 改動，不是一個設定項。
 - ✅ **每年做一次桌面推演** —— 如果一個管理員帳戶被攻陷會發生什麼？
 - ⛔ 不要圍繞按設定檔的 IP 允許清單、登入時間、裝置信任、列級欄位加密、*View Encrypted Data* 權限，或稽核日誌流式傳輸到 SIEM 來做規劃。上面每一項都標著 *(not shipped)*。

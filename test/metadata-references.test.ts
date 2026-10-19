@@ -366,16 +366,15 @@ describe('page component references resolve', () => {
    * Component types this app authors that the spec declares NO props contract
    * for, so nothing can parse them. Shrink-only: adding a line needs a reason.
    *
-   *   list-view — the embedded saved-view panel `home.page.ts` builds for each
-   *   Sales Home tab. `ComponentPropsMap` has no `list-view` row, so its
-   *   `properties` (objectName / viewType / columns / filter / sort) are
-   *   checked by the field- and view-reference guards in this file and in
-   *   `test/view-references.test.ts`, and by nothing schema-shaped.
+   * Empty since @objectstack/spec 18.0.0-next.4, whose `ComponentPropsMap`
+   * gained a `list-view` row (changeset `22444-list-view-component-props-row`):
+   * the embedded saved-view panels `home.page.ts` builds for each Sales Home
+   * tab, the one line this set held, now join the parse below.
    *
    * The staleness half matters as much as the list: when the spec grows a row
    * for one of these, the exemption must go so the type joins the parse below.
    */
-  const NO_PROPS_CONTRACT = new Set(['list-view']);
+  const NO_PROPS_CONTRACT = new Set<string>();
 
   it('every page component type has a props contract to parse against', () => {
     expect(
