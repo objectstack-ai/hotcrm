@@ -8,7 +8,8 @@ import { RecordChangeTriggerPlugin } from '@objectstack/trigger-record-change';
 import { MessagingServicePlugin } from '@objectstack/service-messaging';
 import { ApprovalsServicePlugin } from '@objectstack/plugin-approvals';
 import { AuditPlugin } from '@objectstack/plugin-audit';
-import { EmailServicePlugin } from '@objectstack/plugin-email';
+import { EmailServicePlugin, resolveEmailCapabilityArg, type EmailServicePluginOptions } from '@objectstack/plugin-email';
+import { resolveCapabilityArgument } from '@objectstack/core';
 import artifact from '../../objectstack.config';
 
 /**
@@ -79,7 +80,16 @@ export const bootOptions = (overrides: Partial<BootOptions> = {}): BootOptions =
     new MessagingServicePlugin(),
     new ApprovalsServicePlugin(),
     new AuditPlugin(),
-    new EmailServicePlugin(),
+    // Constructed with the argument `objectstack serve` gives it, by the same
+    // rule: `resolveCapabilityArgument('email', …)` (`@objectstack/core`), which
+    // the handle's own served-provider loop reads too. It reads the
+    // deployment's mail configuration (`OS_EMAIL_*`, the config's `email`) and,
+    // with none, picks the log transport and a default `no-reply@` sender.
+    // Built bare, the service had no sender, so it refused every notification
+    // email and the outbox retried each one (#2175).
+    new EmailServicePlugin(resolveCapabilityArgument('email', {
+      stack: artifact, packageRoot: process.cwd(), providerModule: { resolveEmailCapabilityArg },
+    }).argument as EmailServicePluginOptions),
     new RecordChangeTriggerPlugin(),
   ],
   ...overrides,
