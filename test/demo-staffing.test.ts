@@ -419,15 +419,22 @@ describe('what each staffed person actually receives', () => {
 
   /**
    * `pnpm demo:staff` step 4: re-evaluate the territory rules through the
-   * platform's own door (`POST /sharing/rules/:id/evaluate`, as the admin) —
-   * the seeded accounts were written as the system, which materialises no
-   * grant, and the people above did not exist yet when they were.
+   * platform's own door (`POST /sharing/rules/:idOrName/evaluate`, as the
+   * admin) — the seeded accounts were written as the system, which
+   * materialises no grant, and the people above did not exist yet when they
+   * were.
+   *
+   * Both rules are declared by the app, and since @objectstack/spec
+   * 18.0.0-next.4 a declared rule has no `sys_sharing_rule` row: plugin-sharing
+   * reads it from the registry and its id IS its name (changeset
+   * `23952-declared-sharing-rules-registry`). So each is read and evaluated
+   * through the sharing door, by name.
    */
   beforeAll(async () => {
     for (const name of ['north_america_territory', 'europe_territory']) {
-      const [rule] = await verify.rows('sys_sharing_rule', { name });
-      expect(rule, `sharing rule ${name} is not installed`).toBeTruthy();
-      const res = await verify.apiAs(admin, 'POST', `/sharing/rules/${rule!.id}/evaluate`);
+      const rule = await verify.apiAs(admin, 'GET', `/sharing/rules/${name}`);
+      expect(rule.status, `sharing rule ${name} is not served: ${await rule.clone().text()}`).toBe(200);
+      const res = await verify.apiAs(admin, 'POST', `/sharing/rules/${name}/evaluate`);
       expect(res.status, await res.clone().text()).toBe(200);
     }
   }, 120_000);
