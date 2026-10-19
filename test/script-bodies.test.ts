@@ -363,12 +363,26 @@ describe('what the record actions write', () => {
     // The body hands the mail over QUEUED; delivering it is the email service's
     // job, and with the platform's service mounted it may already have moved
     // the row on (the dev transport sends at once).
-    const [handedOver] = engine.of('sys_email', 'insert');
-    expect((handedOver!.args[1] as AnyRec).status).toBe('queued');
+    //
+    // The recorder's window is time, not cause. The messaging dispatcher sends
+    // an earlier write's notification emails on its own loop, so another
+    // writer's `sys_email` insert can land in the window ahead of the body's
+    // (#2175, measured: the `contact_welcome` email for a contact created
+    // earlier in this file). The insert read here is the one the engine
+    // answered with the id the body returned, never the window's first.
+    const answered = await Promise.all(
+      engine.of('sys_email', 'insert').map(async (write) => ({ write, answer: await write.settled })),
+    );
+    const own = answered.filter(({ answer }) => answer.ok && (answer.value as AnyRec | undefined)?.id === result!.emailId);
+    expect(own, 'exactly one sys_email insert was answered with the id send_email returned').toHaveLength(1);
+    const handedOver = own[0]!.write;
+    expect((handedOver.args[1] as AnyRec).status).toBe('queued');
     expect(['queued', 'sent']).toContain(email.status);
     expect(activity.source_object).toBe('sys_email');
-    // The pointer is the id the FIRST insert returned — so this also proves the
-    // body's two awaits really sequenced across the VM boundary.
+    // The pointer is the id the engine answered the body's `sys_email` insert
+    // with (the row read above), which the body only holds once that first
+    // await has resolved, so this also proves the body's two awaits really
+    // sequenced across the VM boundary.
     expect(activity.source_id).toBe(email.id);
     expect(activity.record_label).toBe(record.crm_contact!.full_name);
     expect(activity.record_label).toBe('Ada Lovelace');
