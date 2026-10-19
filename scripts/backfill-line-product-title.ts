@@ -30,6 +30,11 @@
 //     differs from the product's title;
 //   • rerunnable: a second pass over a converged org reports zero lines.
 //
+// A hosted environment needs no script (#2168): the first read that shows an
+// untitled line re-sends that line's product name (`line_item_product_title_backfill`
+// in `src/revenue/objects/product.hook.ts`). This script is for self-hosted
+// operators who want every line titled now rather than on first view.
+//
 // The re-stamp is `async`, so the PATCH answers before the lines are written.
 // The script re-reads until no line is left stale, or until `--wait` seconds
 // (default 60) have passed.
