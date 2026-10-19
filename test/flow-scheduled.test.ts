@@ -10,7 +10,8 @@ import artifact from '../objectstack.config';
 import { CrmFlows as allFlows } from './helpers/src-roster';
 import { regionsOf } from './helpers/flow-regions';
 import {
-  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, systemUpdate, notificationsTo, runScheduledFlow, type Person,
+  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, systemUpdate, notificationsTo, runScheduledFlow,
+  settleNotificationDeliveries, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -144,7 +145,14 @@ describe('case_sla_monitor — hourly breach sweep', () => {
   beforeAll(async () => {
     ids = await seedCases();
     before = await readBack('crm_case', ids);
-    await sweep('case_sla_monitor');
+    // The first sweep of the file is a BACKLOG sweep: it processes every
+    // match, the seed's past-due cases included, and notifies 30 times (inbox
+    // and email each). Delivering those is the outbox dispatcher's work, after
+    // the sweep returns, and it left nothing else running until it was done:
+    // the no-op test below spent ~2.2 s of its 5 s budget waiting for it
+    // behind its first session lookup, and timed out on slower CI runners
+    // (#2157). The block waits for that aftermath here, inside its own budget.
+    await settleNotificationDeliveries(verify, () => sweep('case_sla_monitor'));
     byId = await readBack('crm_case', ids);
   }, 120_000);
 
