@@ -292,9 +292,15 @@ const leadHook: Hook = {
     // field existed. So only the two verdicts a live approval actually writes
     // refuse. (`convert_lead`'s predicate carries the same polarity and the
     // same reason, against its own fail-CLOSED neighbours.)
+    //
+    // ⚠️ "Already converted" is `is_converted`, the same reading as the lock
+    // below (#2189). A lead stored at Converted with nothing converted is NOT
+    // converted, so setting `is_converted` on it is a conversion this gate
+    // judges — reading the status here as well would let exactly that write
+    // past an approval the lock no longer stands in front of.
     if (event === 'beforeUpdate') {
       const previous = ctx.previous;
-      const wasConverted = previous?.is_converted === true || previous?.status === 'converted';
+      const wasConverted = previous?.is_converted === true;
       const isConverting =
         !wasConverted && (input.is_converted === true || input.status === 'converted');
       const verdict = previous?.conversion_approval_status;
@@ -327,9 +333,19 @@ const leadHook: Hook = {
     // this throw always won the race and a second layer could only drift. The
     // message below therefore has to carry the whole story, hence the
     // attempted-field list.
+    //
+    // ⚠️ The lock keys on `is_converted`, ⛔ not on `status` (#2189). The
+    // conversion flow writes the two together, so for every lead it converted
+    // they agree; they disagree only on a lead that reached Converted some
+    // other way, with no account or contact behind it. Reading the status too
+    // froze such a lead for good, telling the user to "make changes on the
+    // converted records" when there were none. A write into that state is now
+    // refused by the `converted_only_by_conversion` validation on `crm_lead`,
+    // and a lead stored in it before the rule is released: it can be edited
+    // again, its status set back, and Convert Lead then converts it.
     if (event === 'beforeUpdate' && ctx.user?.id) {
       const previous = ctx.previous;
-      const wasConverted = previous?.is_converted === true || previous?.status === 'converted';
+      const wasConverted = previous?.is_converted === true;
       if (wasConverted) {
         const ALLOWED = new Set([
           'description', 'notes',

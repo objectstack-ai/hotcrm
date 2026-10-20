@@ -102,8 +102,23 @@ describe('crm_lead declares no second converted-lead rule', () => {
     // previous record is that rule wearing a hat.
     const celSource = (condition: unknown): string =>
       typeof condition === 'string' ? condition : String((condition as AnyRec | null)?.source ?? '');
+    // AGENTS.md rule 11: a rule that reads both and is NOT the lock, each with
+    // the reason it is not. Every entry must exist, so the roster cannot rot.
+    const NOT_THE_LOCK: Record<string, string> = {
+      // #2189: refuses the write CROSSING into status Converted without
+      // `is_converted: true` (it reads `previous.status`, never
+      // `previous.is_converted`). An edit to a converted lead satisfies it, so
+      // it never judges one; `test/lead-converted-only-by-conversion.test.ts`
+      // pins that the lock still answers such an edit with its 409.
+      converted_only_by_conversion: 'gates the status crossing, not edits to a converted lead',
+    };
+    expect(
+      Object.keys(NOT_THE_LOCK).filter((name) => !validations.some((v) => v.name === name)),
+      'a NOT_THE_LOCK entry names no rule on crm_lead',
+    ).toEqual([]);
     const offenders = validations
       .filter((v) => v.type === 'script')
+      .filter((v) => !(v.name in NOT_THE_LOCK))
       .filter((v) => {
         const src = celSource(v.condition);
         return src.includes('is_converted') && src.includes('previous.');

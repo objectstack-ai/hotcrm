@@ -395,7 +395,10 @@ export const Lead = ObjectSchema.create({
     // Edit-protection is the `beforeUpdate` guard in `lead.hook.ts`, which
     // rejects any USER edit to a converted lead outside a small allow-list —
     // and it is the ONLY guard, deliberately: a script validation beside it
-    // never fires, because the hook's throw always wins the race.
+    // never fires, because the hook's throw always wins the race. "Converted"
+    // there means THIS column is `true` (#2189); a write that sets the status
+    // to Converted without it is refused by the `converted_only_by_conversion`
+    // validation instead.
     is_converted: Field.boolean({
       label: 'Converted',
       defaultValue: false,
@@ -686,6 +689,50 @@ export const Lead = ObjectSchema.create({
       condition: P`has(record.disqualification_reason) && record.disqualification_reason == "duplicate" && !(has(record.duplicate_of_type) && !isBlank(record.duplicate_of_type) && has(record.duplicate_status) && record.duplicate_status == "confirmed")`,
     },
     {
+      // A lead is Converted only through Convert Lead (#2189). The
+      // `lead_conversion` flow creates or reuses the account and contact and
+      // writes `is_converted: true` in the SAME update as `status: 'converted'`
+      // (`mark_converted`), so this rule never refuses it. What it refuses is
+      // every other way to that status — the Status picklist on the Edit and
+      // Create forms, the kanban, a REST `PATCH` / `POST` — which used to save
+      // a lead at Converted with nothing converted.
+      //
+      // A TRANSITION GATE, not an invariant (AGENTS.md metadata semantics rule
+      // 7), and the `previous` term is what makes it one: it refuses the write
+      // that CROSSES into Converted (an insert, or an update from another
+      // status) without `is_converted: true`. A lead stored at Converted with
+      // nothing converted before this rule existed passes every later write,
+      // so it can be edited again, its status set back, and then converted
+      // through Convert Lead; the converted-lead lock in `lead.hook.ts` no
+      // longer freezes it, because it keys on `is_converted`, not on the status.
+      //
+      // ⛔ Not the invariant form (refuse whenever the merged record reads
+      // Converted without `is_converted`). Measured on 18.0.0: it refuses the
+      // engine's own `set_null` cleanup on such a lead, so deleting the contact
+      // its intake dedupe linked it to answered 400 with this message and the
+      // contact stayed — the undeletable-record shape #720 ruled out.
+      //
+      // ⚠️ A script with a `previous` read, and neither of the two gate
+      // constructs rule 7 names, deliberately (rule 11; the roster entry is in
+      // `test/converted-lead-guard.test.ts`). `requiredWhen` judges presence,
+      // and a `false` flag is present. A `visibleWhen` bound on the
+      // `converted` option is enforced on the write, but its refusal is the
+      // platform's fixed "option 'converted' is not available", which cannot
+      // tell a rep where conversion happens — and the ruling on #2189 makes
+      // naming Convert Lead the refusal's contract.
+      //
+      // ⚠️ `severity: 'error'` is the point. `lead_status_progression` below is
+      // a `warning` and allows `→ converted` from every open status, so it
+      // could not say this; a state machine judges the step, not what the
+      // conversion wrote.
+      name: 'converted_only_by_conversion',
+      type: 'script',
+      severity: 'error',
+      message:
+        'Only Convert Lead sets a lead to Converted, because it creates the account and contact the lead becomes. Choose another Status, then use Convert Lead.',
+      condition: P`has(record.status) && record.status == "converted" && !(has(record.is_converted) && record.is_converted == true) && (previous == null || !has(previous.status) || previous.status != "converted")`,
+    },
+    {
       name: 'lead_status_progression',
       type: 'state_machine',
       severity: 'warning',
@@ -694,7 +741,8 @@ export const Lead = ObjectSchema.create({
       // Conversion (→ converted) is allowed from any worked-open status so the
       // Convert action's widened visibility (new/contacted/qualified) never trips
       // a spurious "invalid transition" warning when the flow stamps
-      // status:'converted'.
+      // status:'converted'. WHO may take that step is `converted_only_by_conversion`
+      // above: only the write that also sets `is_converted: true`.
       transitions: {
         new: ['contacted', 'qualified', 'unqualified', 'converted'],
         contacted: ['qualified', 'unqualified', 'converted'],
