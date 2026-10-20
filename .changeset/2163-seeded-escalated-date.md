@@ -6,4 +6,4 @@
 
 Every escalated demo case now carries an Escalated Date between the moment the case was opened and now. Editing one keeps its reason, its date and its status.
 
-This applies to a new demo database only. The demo cases are written once, when the database is first seeded, and later starts never write them again (#2139). A demo database seeded before this release keeps its escalated cases without an Escalated Date, and there an edit to "Mobile app crashes on iOS 17" still escalates it again. A new demo database (`pnpm demo:reset`, which deletes the existing one) gets the new data.
+This applies to a new demo database only. The demo cases are written once, when the database is first seeded, and later starts never write them again: the case dataset is insert-once (`mode: 'ignore'`, #2139), and this release ships no migration or backfill. A demo database seeded before this release keeps its escalated cases without an Escalated Date, and there an edit to "Mobile app crashes on iOS 17" still escalates it again. A new demo database (`pnpm demo:reset`, which deletes the existing one) gets the new data.

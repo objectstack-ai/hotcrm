@@ -162,7 +162,7 @@ describe('a breached case that is already escalated keeps its escalation', () =>
     expect(await alertsAbout(ids.worked)).toHaveLength(1);
   });
 
-  it('an escalated case with no Escalated Date (the seed’s shape) keeps its reason, and no date is invented', async () => {
+  it('an escalated case with no Escalated Date (the shape a demo database seeded before #2163 holds) keeps its reason, and no date is invented', async () => {
     expect(after.seeded!.escalation_reason).toBe(SEEDED_REASON);
     expect(after.seeded!.escalated_date ?? null).toBeNull();
     expect(after.seeded).toMatchObject({ is_sla_violated: true, status: 'escalated' });
