@@ -46,9 +46,6 @@ What administrators, operators and integrators should know:
   `os migrate organization-ownership --out plan.json`, review the plan, then run
   `os migrate organization-ownership --apply --plan-file plan.json --backup-taken` and start again.
   A local development database is upgraded by `os dev` itself, which keeps a copy first.
-- **This replaces two notes of the 18.0.0-next.5 upgrade.** `os migrate organization-ownership`
-  runs again (it is the step above), and `os serve` starts again with
-  `OS_TENANCY_POSTURE=group` or `isolated`, or `OS_MULTI_ORG_ENABLED=true`, on a fresh install.
 - **A front-end on another origin must be named to call the API.** With no `OS_CORS_ORIGIN` set,
   the server admits no cross-origin browser caller (a loopback origin is still admitted in
   development). The console and the public forms are served by the server itself and are not

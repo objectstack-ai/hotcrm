@@ -33,9 +33,10 @@ What administrators and integrators should know:
   them from the app, so that list shows only rules your organization creates. They still grant
   access exactly as before. To see every rule, use the sharing rules API (`GET /api/v1/sharing/rules`).
   An app rule cannot be deleted, and no new rule may take its name.
-- **ObjectStack 18.0 runs fresh, single-organization installs only.** `os serve` refuses to start
-  with `OS_TENANCY_POSTURE=group` or `isolated`, or with `OS_MULTI_ORG_ENABLED=true`, and the
-  17 → 18 database upgrade (`os migrate organization-ownership`) refuses to run until a later 18.x
-  release. Keep a multi-organization or not-yet-upgraded 17.x deployment on its current release.
+- **ObjectStack 18.0 starts a fresh install under every tenancy posture.** `os serve` starts with
+  `OS_TENANCY_POSTURE=group` or `isolated`, or with `OS_MULTI_ORG_ENABLED=true`, as it does under
+  `single`, given the enterprise `@objectstack/organizations` runtime and `OS_PLATFORM_OWNER_EMAIL`.
+  An existing database is a different case: it is upgraded before 18.0 serves it (see the 18.0.0
+  upgrade entry).
 - **No app data changes.** No object, field or stored value changes in this release, and nothing
   needs to be cleared or reloaded.
