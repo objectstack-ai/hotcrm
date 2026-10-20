@@ -184,19 +184,22 @@ export const CreateCampaignAction: Action = {
   target: 'campaign_lead_member_enroll',
   // The flow's own input name for the lead (the door seeds `recordId` too).
   recordIdParam: 'leadId',
-  // list_item gives every row a working record-scoped entry point (the row's
-  // menu). Multi-lead enrollment is the SELECTION-BAR button, which All Leads'
-  // `bulkActions: ['create_campaign']` produces and which fans out per row.
-  // Since 18.0.0-next.2 the console's list header leaves out a record-scoped
-  // list_toolbar action the active view already wires that way
-  // (objectui#12462), so on All Leads the action is drawn in the selection bar
-  // and on the row only (measured). A lead view that wires no `bulkActions`
-  // (My Leads, for one) still draws the list_toolbar button in its header, and
-  // that button is single-record by construction: with no `_selectedIds` in
-  // the bag the dispatcher resolves a recordId from the grid selection, and a
-  // multi-row selection there is ambiguous, so it is refused client-side with
-  // "This action runs on a single record — select exactly one row."
-  locations: ['list_toolbar', 'list_item'],
+  // Two doors, and no header button (#2073 item 5):
+  //   - `list_item`: every row's menu, on every lead view — the row's lead.
+  //   - the SELECTION BAR, which a view opens by naming the action in its
+  //     `bulkActions` (All Leads does) and which fans out once per ticked row.
+  //     That placement is the view's, so it takes no location here.
+  // ⛔ Do not add `list_toolbar` back. A header button is drawn with nothing
+  // selected, and this action runs on exactly one record: launched from the
+  // header it opened the whole Campaign dialog, then refused in English
+  // ("This action runs on a single record — select a row first.") and sent
+  // nothing. The console leaves it out of the header only on a view whose
+  // `bulkActions` names it (objectui#12462). Measured on 18.0.0-next.5, the
+  // seven lead views that name it nowhere (My Leads, Hot Leads, High Priority,
+  // Suspected Duplicates, and the kanban, calendar and gallery views) all drew
+  // it, and a view a user creates names nothing either. On those views a
+  // marketing user gets no row checkboxes at all, so it could never succeed.
+  locations: ['list_item'],
   // The server refusal is the gate; this only stops offering a button that
   // cannot succeed (see the header).
   visible: P`current_user.can("crm_campaign_member", "create")`,

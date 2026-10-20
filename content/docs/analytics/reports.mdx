@@ -26,7 +26,7 @@ HotCRM ships **ten** reports out of the box — the two report barrels, `src/sal
 | **Opportunities by Stage** | Pipeline amount and average probability by stage, over deals closing this year and excluding closed-lost — with a bar chart of amount by stage |
 | **Won Opportunities by Owner** | Closed-won amount per rep, charted as **Revenue by Sales Rep** |
 | **Pipeline Coverage by Forecast × Quarter** | A matrix of open pipeline: forecast category down the rows, close quarter across the columns, with amount and deal count in each cell |
-| **Opportunity Funnel by Owner → Stage** | A two-level funnel — each rep's book of business broken down stage by stage, with amount, deal count and average probability |
+| **Opportunity Funnel by Owner → Stage** | Each rep's book of business broken down stage by stage, with amount, deal count and average probability, excluding closed-lost — with a horizontal bar chart of amount by stage across all reps |
 
 All four bind `opportunity_metrics` (`src/sales/datasets/opportunity.dataset.ts`), which is what makes *pipeline* mean the same number here as on the dashboards.
 

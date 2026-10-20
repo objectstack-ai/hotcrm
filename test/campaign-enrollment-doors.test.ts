@@ -322,3 +322,41 @@ describe('each door is offered only to a caller who holds the right it exercises
     for (const persona of ALLOWED) expect(await offered(name, persona, record), `${name} hidden from ${persona}`).toBe(true);
   });
 });
+
+/**
+ * Where Add to Campaign on a lead is drawn, and that both of its doors still
+ * enroll (#2073 item 5).
+ *
+ * The action runs on exactly one record. Declared at `list_toolbar` as well, it
+ * was a header button on every lead view that names it in no `bulkActions` —
+ * seven of them, measured on 18.0.0-next.5 — drawn with nothing selected: it
+ * ran the whole Campaign dialog, then refused in English and sent nothing. It
+ * is drawn at two doors now: each row's menu (`list_item`), and the selection
+ * bar All Leads opens by naming it in `bulkActions`. The bar fans out one run
+ * per ticked row, each carrying that row's `recordId`, which is the call the
+ * row menu makes for its one row.
+ */
+describe('Add to Campaign on a lead is drawn on the row menu and the selection bar, not the list header (#2073 item 5)', () => {
+  const views: Rec[] = (stack as Rec).views ?? [];
+
+  it('declares the row menu as its only location', () => {
+    expect(actionNamed('create_campaign').locations).toEqual(['list_item']);
+  });
+
+  it('All Leads still opens the selection bar on it, in the per-record bare-string form', () => {
+    const allLeads = views.map((v) => v.list).find((l) => l?.name === 'all_leads');
+    expect(allLeads, 'no all_leads list view').toBeTruthy();
+    expect(allLeads!.bulkActions).toContain('create_campaign');
+    expect(actionNamed('create_campaign')).toMatchObject({ type: 'flow', recordIdParam: 'leadId' });
+  });
+
+  it('one run per ticked row enrolls every row on the one campaign', async () => {
+    const marketer = who.marketing_user!;
+    const w = await world(marketer);
+    for (const lead of [w.leadA, w.leadB]) {
+      expect(await addLead(marketer, lead.id, w.campaign.id)).toMatchObject({ success: true, output: { enrolled: true } });
+    }
+    const enrolled = (await membersOf(w.campaign.id)).map((m) => m.crm_lead).sort();
+    expect(enrolled).toEqual([w.leadA.id, w.leadB.id].sort());
+  }, ENROLL_BUDGET_MS);
+});

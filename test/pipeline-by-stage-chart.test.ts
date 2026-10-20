@@ -72,3 +72,34 @@ describe('the Pipeline by Stage tile', () => {
     expect(open).toEqual(['prospecting', 'qualification', 'needs_analysis', 'proposal', 'negotiation']);
   });
 });
+
+/**
+ * The same remedy on a report: the chart of **Opportunity Funnel by Owner →
+ * Stage** (#2073 item 10).
+ *
+ * Its chart sums amount by stage over every stage but Closed Lost, so Closed Won
+ * is drawn too. Measured on 18.0.0-next.5, opened from its Reports entry on a
+ * fresh boot: 139,500 / 174,000 / 173,000 / 237,000 / 1,294,000 / 1,290,000 from
+ * Prospecting to Closed Won. As a funnel it pinched and flared (trapezoids 139 /
+ * 139 / 189 / 1034 / 1034 / 1031 px wide), and the Negotiation label was not
+ * drawn. As horizontal bars, all six stages are drawn top to bottom in the stage
+ * field's option order, each with its whole name, in en-US and zh-CN alike.
+ *
+ * The report keeps its label and description: "funnel" there is the sales word
+ * for the stage-by-stage pipeline, not the chart's shape.
+ */
+describe('the Opportunity Funnel by Owner → Stage report', () => {
+  const reports: AnyRec[] = (stack as any).reports ?? [];
+  const report = reports.find((r) => r.name === 'opportunity_funnel_owner_stage');
+
+  it('charts amount by stage as a horizontal bar chart', () => {
+    expect(report, 'no opportunity_funnel_owner_stage report registered').toBeTruthy();
+    expect(report!.chart).toMatchObject({ type: 'horizontal-bar', xAxis: 'stage', yAxis: 'total_amount' });
+    expect(report!.dataset).toBe('opportunity_metrics');
+    expect(report!.runtimeFilter).toEqual({ stage: { $ne: 'closed_lost' } });
+  });
+
+  it('declares no order, the state the stage-order bars were measured in', () => {
+    expect(report!.order).toBeUndefined();
+  });
+});
