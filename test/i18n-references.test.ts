@@ -327,14 +327,14 @@ describe('select fields are translated in every locale', () => {
  * Nothing in CI caught that at the time: `pnpm lint` then ran with
  * `--skip-i18n`, and `objectstack lint` exited 0 on warnings. Neither holds
  * now — `pnpm lint` is `objectstack lint --strict` (#1581) and runs the
- * `i18n/missing-*` rules — but on this artifact they report nothing: since
- * the two-package composition (#1907) the CLI's coverage pass reads the
- * composed top level, which carries no `translations` and no metadata
- * (measured on 17.7.0 in #1582: a deleted `zh-CN` label is exit 0). Where the
- * rules do run, they still do not report a missing `en` entry when the
- * metadata carries an inline label (that label IS the `en` text), while this
- * repo requires the explicit `en` entry (#679). This suite is the gate, which
- * is why the assertions live here rather than in a lint config.
+ * `i18n/missing-*` rules, which since 18.0.0 (objectstack#22238) read both
+ * packages of this artifact: a deleted `zh-CN` entry fails it (measured in
+ * #1585; on 17.7.0 the coverage pass read only the composed top level and
+ * answered exit 0, #1582). The rules still do not report a missing `en` entry
+ * when the metadata carries an inline label (that label IS the `en` text),
+ * while this repo requires the explicit `en` entry (#679). This suite is the
+ * gate for that convention, which is why the assertions live here rather than
+ * in a lint config.
  *
  * This started as a zh-CN-only guard, because zh-CN was completed first ahead
  * of a customer trial while `en` / `ja-JP` / `es-ES` still carried the debt in
@@ -639,8 +639,9 @@ describe('every locale is complete on every authored surface', () => {
    *    2298 i18n issue(s) hidden`, because app-authored `_views` completeness
    *    was not in the set the linter checked at all. So this was NOT the #494
    *    family (real warnings suppressed by a flag); it was a surface nobody was
-   *    checking. (`pnpm lint` is `--strict` today, but its `i18n/missing-*`
-   *    coverage reports nothing on this artifact — see this describe's header.)
+   *    checking. (`pnpm lint` is `--strict` today and fails on a missing
+   *    non-`en` view label; the `en` gap below is the one it cannot see — see
+   *    this describe's header.)
    *  - Every gap was in `en`, and in the source locale a missing key is
    *    invisible: the resolver falls back to the metadata `label`, which is
    *    already correct English. #679 wrote this down for select options, page
