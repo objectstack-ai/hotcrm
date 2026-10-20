@@ -3,14 +3,19 @@ kind: screenshot
 scope: hotcrm
 category: automation
 status: published
-captured: '2026-08-01'
+captured: '2026-10-20'
 capture:
   application: HotCRM
+  platformVersion: '18.0.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  flow: opportunity_approval
   surface: Studio flow designer
   theme: light
   viewport: 1600x900
   aspectRatio: '16:9'
-  dataset: curated-opportunities
   selectedNode: Sales Director Sign-off
 locales:
   en: en.png

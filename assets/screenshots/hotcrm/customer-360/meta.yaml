@@ -3,10 +3,16 @@ kind: screenshot
 scope: hotcrm
 category: hotcrm
 status: published
-captured: '2026-08-01'
+captured: '2026-10-20'
 capture:
   application: HotCRM
-  theme: dark
+  platformVersion: '18.0.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  record: ACC-000001 Acme Corporation
+  theme: light
   viewport: 1440x1024
 locales:
   en: en.png

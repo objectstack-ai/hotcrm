@@ -3,12 +3,17 @@ kind: screenshot
 scope: hotcrm
 category: hotcrm
 status: published
-captured: '2026-08-01'
+captured: '2026-10-20'
 capture:
   application: HotCRM
-  theme: dark
+  platformVersion: '18.0.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  record: CPG-0004 Operations Platform Launch
+  theme: light
   viewport: 1440x1024
-  dataset: curated-campaign-schedule
 locales:
   en: en.png
   zh-Hans: zh-Hans.png

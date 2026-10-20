@@ -10,12 +10,15 @@ import { REPO_ROOT } from './helpers/repo-root';
 /**
  * The README headline figures are the gate's, within the ruled buffer (#1187).
  *
- * The README banner states HotCRM's positioning claim as two measured numbers:
- * business semantics ~50k tokens, interaction layer ~29k — of the SALES
- * package, which is the surface #1905 put the gate on
- * (「token 门禁： 放到 sales」) and the unit ADR-0130 §1.3(b) makes the claim
- * about: *a CRM sales module fits whole in an AI context window*. That claim is the
- * first thing a reader sees and the reason a developer keeps reading, and for
+ * The README banner states HotCRM's size claim as two measured numbers, the
+ * business semantics and the interaction layer — of the SALES package, which is
+ * the surface #1905 put the gate on (「token 门禁： 放到 sales」) and the unit
+ * ADR-0130 §1.3(b) makes the claim about: *a CRM sales module fits whole in an AI
+ * context window*. Since #2205 the README opens on the platform's positioning
+ * ("the ontology is the software", quoted) and the size claim sits under it in a
+ * `> [!NOTE]` callout: a blockquote on purpose, because `bannerText` below reads
+ * every `>` line of the README and nothing else. It is still the claim a
+ * developer reads first and the reason one keeps reading, and for
  * months nothing checked it — the banner said "~170k tokens (~18,000 lines)", a
  * hand measurement of a tree that had since moved, and no test, gate or reviewer
  * could have noticed. #1183 built the measurement
@@ -61,8 +64,8 @@ import { REPO_ROOT } from './helpers/repo-root';
  * a size the app does not have — the ratchet owns the growth budget, alone, and
  * a raise there sits on the maintainer floor where it always did.
  *
- *   business semantics  banner ~57k -> band 54,150–59,850 · ceiling 88,500
- *   interaction layer   banner ~28k -> band 26,600–29,400 · ceiling 46,500
+ *   business semantics  banner ~58k -> band 55,100–60,900 · ceiling 88,500
+ *   interaction layer   banner ~29k -> band 27,550–30,450 · ceiling 46,500
  *
  * ⚠️ The ceiling column is still worked out per row, and still pinned to
  * `CEILINGS` below — that is what stops the README quoting a ceiling the gate no

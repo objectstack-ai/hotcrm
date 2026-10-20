@@ -3,14 +3,19 @@ kind: screenshot
 scope: hotcrm
 category: governance
 status: published
-captured: '2026-08-01'
+captured: '2026-10-20'
 capture:
   application: HotCRM
+  platformVersion: '18.0.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  permissionSet: sales_rep
   surface: Studio permission matrix
   theme: light
   viewport: 1600x900
   aspectRatio: '16:9'
-  dataset: curated-crm-schema
 locales:
   en: en.png
   zh-Hans: zh-Hans.png

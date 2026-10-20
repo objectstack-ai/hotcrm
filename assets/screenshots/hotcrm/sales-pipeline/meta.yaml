@@ -3,13 +3,18 @@ kind: screenshot
 scope: hotcrm
 category: ui
 status: published
-captured: '2026-08-01'
+captured: '2026-10-20'
 capture:
   application: HotCRM
+  platformVersion: '18.0.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  view: crm_opportunity / pipeline_kanban
   theme: light
   viewport: 1600x900
   aspectRatio: '16:9'
-  dataset: curated-opportunities
 locales:
   en: en.png
   zh-Hans: zh-Hans.png
