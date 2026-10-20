@@ -11,18 +11,25 @@ import { hotcrmStack, signUpPerson, recordEngineWrites, type Person } from './he
  * account owner on every escalation, and nothing closed it: measured before
  * the fix, a case escalated through **Escalate Case** and then closed left its
  * task `not_started`, `urgent`, `is_completed: false`, in the owner's My Open
- * Tasks, whichever door closed it (`close_case` as the manager, `close_case`
- * as the agent, the manager's own `PATCH`). `case_close_escalation_task` now
- * completes it.
+ * Tasks, whichever door closed it. `case_close_escalation_task` now completes
+ * it.
  *
  * The people are the ones the card is about: an agent opens and escalates the
- * case, the escalation hands it to the service manager, and the task belongs
- * to the sales rep who owns the account. The manager's `crm_task` read is
- * `own`, so the manager cannot see the rep's task (`GET` answers 404); the
- * `PATCH` leg is the one that holds the hook's `runAs: 'system'` in place.
+ * case, and the task belongs to the sales rep who owns the account. Who closes
+ * the case depends on the Service Manager bench:
+ *
+ *  - nobody holds the position (a fresh install): the case stays with the
+ *    agent, and the agent closes it;
+ *  - a manager holds it: the escalation hands the case to them, and they close
+ *    it.
+ *
+ * Neither closer can read the rep's task (`crm_task` read is `own`; `GET`
+ * answers 404). The two `PATCH` legs, a door no flow is on, are what hold the
+ * hook's `runAs: 'system'` in place.
  *
  * Every state is reached through a shipped door, and the boot's seed shares
- * the database, so every reading is taken by id.
+ * the database, so every reading is taken by id. The bench is empty for the
+ * first block and staffed from the second on, so the blocks run in file order.
  */
 
 type Rec = Record<string, any>;
@@ -62,9 +69,9 @@ const closeByFlow = async (id: string, who: Person): Promise<void> => {
   await verify.flows.resume(run, { resolution: 'Replaced the unit' }, { as: who.token });
 };
 
-/** The manager closes or reopens the case by editing its status. */
-const patchCase = async (id: string, doc: Rec): Promise<void> => {
-  const res = await verify.apiAs(manager.token, 'PATCH', `/data/crm_case/${id}`, doc);
+/** The case's owner closes or reopens it by editing its status. */
+const patchCase = async (who: Person, id: string, doc: Rec): Promise<void> => {
+  const res = await verify.apiAs(who.token, 'PATCH', `/data/crm_case/${id}`, doc);
   expect(res.status, `PATCH crm_case ${JSON.stringify(doc)}: ${await res.clone().text()}`).toBe(200);
 };
 
@@ -91,10 +98,8 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   // Service grants with no position: a case the agent opens stays theirs.
   agent = await signUpPerson(verify, 'agent@escalation-task-on-close.test', { name: 'Case Agent', permissionSets: ['service_agent'] });
-  // The `service_manager` pool the escalation hands the case to.
-  manager = await signUpPerson(verify, 'manager@escalation-task-on-close.test', {
-    name: 'Service Manager', positions: ['service_manager'], permissionSets: ['service_manager'],
-  });
+  // The grants now; the `service_manager` position (the escalation pool) only from the second block on.
+  manager = await signUpPerson(verify, 'manager@escalation-task-on-close.test', { name: 'Service Manager', permissionSets: ['service_manager'] });
   rep = await signUpPerson(verify, 'rep@escalation-task-on-close.test', {
     name: 'Account Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
@@ -102,157 +107,185 @@ beforeAll(async () => {
   accountId = String(account!.id);
 }, 120_000);
 
-describe('case_close_escalation_task: closing an escalated case completes its escalation task', { timeout: WAIT_BUDGET_MS }, () => {
-  it('fixture: the escalation hands the case to the manager, and the task is the rep’s, open and urgent', async () => {
+describe('case_close_escalation_task: nobody on the Service Manager bench, so the agent keeps the case and closes it', { timeout: WAIT_BUDGET_MS }, () => {
+  it('fixture: the escalated case stays the agent’s, and the task is the rep’s, open, urgent and out of the agent’s sight', async () => {
     const id = await open();
     await escalate(id, agent);
     const [kase] = await verify.rows('crm_case', { id });
-    expect(kase).toMatchObject({ status: 'escalated', owner_id: manager.id, escalated_from: agent.id });
+    expect(kase).toMatchObject({ status: 'escalated', owner_id: agent.id });
     const [task] = await escalationTasks(id);
     expect(task).toMatchObject({ status: 'not_started', priority: 'urgent', is_completed: false, owner_id: rep.id });
-    // The manager cannot read the rep's task as themselves.
-    const res = await verify.apiAs(manager.token, 'GET', `/data/crm_task/${task!.id}`);
-    expect(res.status).toBe(404);
+    expect((await verify.apiAs(agent.token, 'GET', `/data/crm_task/${task!.id}`)).status).toBe(404);
   });
 
-  it('Close Case, run by the manager who owns the case', async () => {
-    const id = await open();
-    await escalate(id, agent);
-    await closeByFlow(id, manager);
-    const [task] = await completedTasks(id);
-    expect(task).toMatchObject({ is_completed: true, owner_id: rep.id, progress_percent: 100 });
-    expect(task!.completed_date, 'no completed date was stamped').toBeTruthy();
-    // Who completed it stays on the record: the person who closed the case.
-    expect(task!.updated_by).toBe(manager.id);
-  });
-
-  it('Close Case, run by the agent the case was escalated from', async () => {
+  it('Close Case, run by the agent', async () => {
     const id = await open();
     await escalate(id, agent);
     await closeByFlow(id, agent);
     const [task] = await completedTasks(id);
+    expect(task).toMatchObject({ is_completed: true, owner_id: rep.id, progress_percent: 100 });
+    expect(task!.completed_date, 'no completed date was stamped').toBeTruthy();
+    // Who completed it stays on the record: the person who closed the case.
     expect(task!.updated_by).toBe(agent.id);
   });
 
-  it('the manager’s own edit of the status to Closed, a door no flow is on', async () => {
+  it('the agent’s own edit of the status to Closed', async () => {
     const id = await open();
     await escalate(id, agent);
-    await patchCase(id, { status: 'closed', resolution: 'Fixed by hand' });
+    await patchCase(agent, id, { status: 'closed', resolution: 'Fixed by hand' });
     const [task] = await completedTasks(id);
-    expect(task!.updated_by).toBe(manager.id);
-  });
-
-  it('a case escalated twice has two tasks, and both are completed', async () => {
-    const id = await open();
-    await escalate(id, agent);
-    await patchCase(id, { status: 'in_progress' });
-    await escalate(id, manager, 2);
-    await closeByFlow(id, manager);
-    expect(await completedTasks(id)).toHaveLength(2);
-  });
-
-  it('the untitled shape the insert falls back to is completed too', async () => {
-    // `case_status_side_effects` titles a case with no number and no subject
-    // "Escalated case needs attention". No door produces that case today (the
-    // subject is required; `escalation-task-subject.test.ts` pins the refusal),
-    // so the task is written through the seed door in that exact shape.
-    const id = await open();
-    await escalate(id, agent);
-    const [untitled] = await verify.seed('crm_task', [{
-      subject: 'Escalated case needs attention', status: 'not_started', priority: 'urgent', type: 'follow_up',
-      owner_id: rep.id, related_to_type: 'crm_case', related_to_case: id, related_to_account: accountId,
-    }]);
-    await closeByFlow(id, manager);
-    await completedTasks(id);
-    await vi.waitFor(async () => {
-      const [row] = await verify.rows('crm_task', { id: untitled!.id });
-      expect(row).toMatchObject({ status: 'completed', is_completed: true });
-    }, { timeout: 10_000, interval: 50 });
+    expect(task!.updated_by).toBe(agent.id);
   });
 });
 
-describe('what the close leaves alone', { timeout: WAIT_BUDGET_MS }, () => {
-  it('another task on the same case, written by a person, stays open', async () => {
-    const id = await open();
-    const own = await verify.hooks.run('crm_task', 'insert', {
-      subject: 'Call the customer back', status: 'not_started', priority: 'normal', related_to_case: id,
-    }, { as: agent.token });
-    await escalate(id, agent);
-    await closeByFlow(id, manager);
-    await completedTasks(id);
-    const [mine] = await verify.rows('crm_task', { id: own.id });
-    expect(mine).toMatchObject({ status: 'not_started', is_completed: false });
+describe('with a Service Manager on the bench', { timeout: WAIT_BUDGET_MS }, () => {
+  beforeAll(async () => {
+    // The position row as `signUpPerson` writes one: carrying the person's organization.
+    const context = await verify.contextFor(manager.token);
+    const organization = context.tenantId ? { organization_id: String(context.tenantId) } : {};
+    await verify.seed('sys_user_position', [{ user_id: manager.id, position: 'service_manager', ...organization }]);
   });
 
-  it('a task its owner already completed is not written again', async () => {
-    const id = await open();
-    await escalate(id, agent);
-    const [task] = await escalationTasks(id);
-    const done = await verify.apiAs(rep.token, 'PATCH', `/data/crm_task/${task!.id}`, { status: 'completed' });
-    expect(done.status, await done.clone().text()).toBe(200);
-    const [before] = await verify.rows('crm_task', { id: task!.id });
-    expect(before).toMatchObject({ status: 'completed', updated_by: rep.id });
+  describe('the escalation hands the case to the manager, who closes it', () => {
+    it('fixture: the case is the manager’s, and the task is the rep’s and out of the manager’s sight', async () => {
+      const id = await open();
+      await escalate(id, agent);
+      const [kase] = await verify.rows('crm_case', { id });
+      expect(kase).toMatchObject({ status: 'escalated', owner_id: manager.id, escalated_from: agent.id });
+      const [task] = await escalationTasks(id);
+      expect(task).toMatchObject({ status: 'not_started', is_completed: false, owner_id: rep.id });
+      expect((await verify.apiAs(manager.token, 'GET', `/data/crm_task/${task!.id}`)).status).toBe(404);
+    });
 
-    // A sibling escalated case closed in the same window proves the hook ran.
-    const sibling = await open();
-    await escalate(sibling, agent);
-    const recorder = recordEngineWrites(verify);
-    try {
+    it('Close Case, run by the manager', async () => {
+      const id = await open();
+      await escalate(id, agent);
       await closeByFlow(id, manager);
-      await closeByFlow(sibling, manager);
-      await completedTasks(sibling);
-      await new Promise((r) => setTimeout(r, 300));
-    } finally {
-      recorder.restore();
-    }
-    expect(updatesTo(recorder, String(task!.id)), 'the completed task was written again').toHaveLength(0);
-    const [after] = await verify.rows('crm_task', { id: task!.id });
-    expect(after).toMatchObject({ status: 'completed', updated_by: rep.id, completed_date: before!.completed_date });
+      const [task] = await completedTasks(id);
+      expect(task).toMatchObject({ is_completed: true, owner_id: rep.id });
+      expect(task!.updated_by).toBe(manager.id);
+    });
+
+    it('the manager’s own edit of the status to Closed', async () => {
+      const id = await open();
+      await escalate(id, agent);
+      await patchCase(manager, id, { status: 'closed', resolution: 'Fixed by hand' });
+      const [task] = await completedTasks(id);
+      expect(task!.updated_by).toBe(manager.id);
+    });
+
+    it('a case escalated twice has two tasks, and both are completed', async () => {
+      const id = await open();
+      await escalate(id, agent);
+      await patchCase(manager, id, { status: 'in_progress' });
+      await escalate(id, manager, 2);
+      await closeByFlow(id, manager);
+      expect(await completedTasks(id)).toHaveLength(2);
+    });
+
+    it('the untitled shape the insert falls back to is completed too', async () => {
+      // `case_status_side_effects` titles a case with no number and no subject
+      // "Escalated case needs attention". No door produces that case today (the
+      // subject is required; `escalation-task-subject.test.ts` pins the refusal),
+      // so the task is written through the seed door in that exact shape.
+      const id = await open();
+      await escalate(id, agent);
+      const [untitled] = await verify.seed('crm_task', [{
+        subject: 'Escalated case needs attention', status: 'not_started', priority: 'urgent', type: 'follow_up',
+        owner_id: rep.id, related_to_type: 'crm_case', related_to_case: id, related_to_account: accountId,
+      }]);
+      await closeByFlow(id, manager);
+      await completedTasks(id);
+      await vi.waitFor(async () => {
+        const [row] = await verify.rows('crm_task', { id: untitled!.id });
+        expect(row).toMatchObject({ status: 'completed', is_completed: true });
+      }, { timeout: 10_000, interval: 50 });
+    });
   });
 
-  it('another case’s escalation task stays open', async () => {
-    const closing = await open();
-    const other = await open();
-    await escalate(closing, agent);
-    await escalate(other, agent);
-    await closeByFlow(closing, manager);
-    await completedTasks(closing);
-    const [task] = await escalationTasks(other);
-    expect(task).toMatchObject({ status: 'not_started', is_completed: false });
-  });
+  describe('what the close leaves alone', () => {
+    it('another task on the same case, written by a person, stays open', async () => {
+      const id = await open();
+      const own = await verify.hooks.run('crm_task', 'insert', {
+        subject: 'Call the customer back', status: 'not_started', priority: 'normal', related_to_case: id,
+      }, { as: agent.token });
+      await escalate(id, agent);
+      await closeByFlow(id, manager);
+      await completedTasks(id);
+      const [mine] = await verify.rows('crm_task', { id: own.id });
+      expect(mine).toMatchObject({ status: 'not_started', is_completed: false });
+    });
 
-  it('a case closed with no escalation writes no task', async () => {
-    const id = await open();
-    const own = await verify.hooks.run('crm_task', 'insert', {
-      subject: 'Send the replacement part', status: 'in_progress', priority: 'high', related_to_case: id,
-    }, { as: agent.token });
-    const recorder = recordEngineWrites(verify);
-    try {
-      await closeByFlow(id, agent);
-      await new Promise((r) => setTimeout(r, 500));
-    } finally {
-      recorder.restore();
-    }
-    expect(updatesTo(recorder, String(own.id))).toHaveLength(0);
-    const [mine] = await verify.rows('crm_task', { id: own.id });
-    expect(mine).toMatchObject({ status: 'in_progress', is_completed: false });
-  });
+    it('a task its owner already completed is not written again', async () => {
+      const id = await open();
+      await escalate(id, agent);
+      const [task] = await escalationTasks(id);
+      const done = await verify.apiAs(rep.token, 'PATCH', `/data/crm_task/${task!.id}`, { status: 'completed' });
+      expect(done.status, await done.clone().text()).toBe(200);
+      const [before] = await verify.rows('crm_task', { id: task!.id });
+      expect(before).toMatchObject({ status: 'completed', updated_by: rep.id });
 
-  it('reopening a closed case leaves its task completed, and closing it again writes nothing more', async () => {
-    const id = await open();
-    await escalate(id, agent);
-    await closeByFlow(id, manager);
-    const [first] = await completedTasks(id);
-    await patchCase(id, { status: 'in_progress' });
-    const recorder = recordEngineWrites(verify);
-    try {
-      await patchCase(id, { status: 'closed', resolution: 'Fixed for good' });
-      await new Promise((r) => setTimeout(r, 500));
-    } finally {
-      recorder.restore();
-    }
-    expect(updatesTo(recorder, String(first!.id))).toHaveLength(0);
-    const [again] = await verify.rows('crm_task', { id: first!.id });
-    expect(again).toMatchObject({ status: 'completed', completed_date: first!.completed_date });
+      // A sibling escalated case closed in the same window proves the hook ran.
+      const sibling = await open();
+      await escalate(sibling, agent);
+      const recorder = recordEngineWrites(verify);
+      try {
+        await closeByFlow(id, manager);
+        await closeByFlow(sibling, manager);
+        await completedTasks(sibling);
+        await new Promise((r) => setTimeout(r, 300));
+      } finally {
+        recorder.restore();
+      }
+      expect(updatesTo(recorder, String(task!.id)), 'the completed task was written again').toHaveLength(0);
+      const [after] = await verify.rows('crm_task', { id: task!.id });
+      expect(after).toMatchObject({ status: 'completed', updated_by: rep.id, completed_date: before!.completed_date });
+    });
+
+    it('another case’s escalation task stays open', async () => {
+      const closing = await open();
+      const other = await open();
+      await escalate(closing, agent);
+      await escalate(other, agent);
+      await closeByFlow(closing, manager);
+      await completedTasks(closing);
+      const [task] = await escalationTasks(other);
+      expect(task).toMatchObject({ status: 'not_started', is_completed: false });
+    });
+
+    it('a case closed with no escalation writes no task', async () => {
+      const id = await open();
+      const own = await verify.hooks.run('crm_task', 'insert', {
+        subject: 'Send the replacement part', status: 'in_progress', priority: 'high', related_to_case: id,
+      }, { as: agent.token });
+      const recorder = recordEngineWrites(verify);
+      try {
+        await closeByFlow(id, agent);
+        await new Promise((r) => setTimeout(r, 500));
+      } finally {
+        recorder.restore();
+      }
+      expect(updatesTo(recorder, String(own.id))).toHaveLength(0);
+      const [mine] = await verify.rows('crm_task', { id: own.id });
+      expect(mine).toMatchObject({ status: 'in_progress', is_completed: false });
+    });
+
+    it('reopening a closed case leaves its task completed, and closing it again writes nothing more', async () => {
+      const id = await open();
+      await escalate(id, agent);
+      await closeByFlow(id, manager);
+      const [first] = await completedTasks(id);
+      await patchCase(manager, id, { status: 'in_progress' });
+      const recorder = recordEngineWrites(verify);
+      try {
+        await patchCase(manager, id, { status: 'closed', resolution: 'Fixed for good' });
+        await new Promise((r) => setTimeout(r, 500));
+      } finally {
+        recorder.restore();
+      }
+      expect(updatesTo(recorder, String(first!.id))).toHaveLength(0);
+      const [again] = await verify.rows('crm_task', { id: first!.id });
+      expect(again).toMatchObject({ status: 'completed', completed_date: first!.completed_date });
+    });
   });
 });
