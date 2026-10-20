@@ -72,6 +72,7 @@ On the quote's *Related* tab, the line items panel shows each line's product, qu
 
 ## What happens automatically
 
+- **A blank expiration date is 30 days after the quote date** — leave **Expiration Date** empty on a new quote and the quote expires 30 days after its **Quote Date**, which is itself today unless you pick another. A date you enter is kept, and it still has to fall after the quote date.
 - **Daily expiration sweep** — where your deployment runs scheduled work, every night at 1 AM the system marks any quote whose expiration has passed as **Expired** (unless it's already accepted or rejected), which keeps your active list clean. Scheduled work is off until the deployment switches it on (see [Administration › Automation](/docs/administration/automation#scheduled-automation)). Without it nothing expires a quote: one past its expiration date keeps its status until someone changes it.
 - **On acceptance** — marking a quote *Accepted* is what drafts the contract. The system inserts a contract in **Draft** status, typed *Subscription*, on a 12-month term starting today, carrying the quote's account, primary contact, related opportunity, owner and total price. The draft is the system's own write, so it is made whoever records the acceptance — a sales rep included, although a rep cannot create a contract by hand. It then advances the linked opportunity to *Closed Won*, dated today, and — only when the rep recorded no win reason — stamps **Quote Accepted** as one. An opportunity already closed, won or lost, is left where it is.
 
