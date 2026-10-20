@@ -10,7 +10,7 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * - Normalizes `sku` to uppercase.
  * - Refuses delete when the product is referenced by ANY opportunity or quote
  *   line item (historical included — deals keep their line history); suggests
- *   deactivating (`is_active=false`) instead.
+ *   deactivating (turning off Active, `is_active`) instead.
  * - `product_title_mirror`: keeps a renamed product's title on its line items.
  */
 
@@ -67,8 +67,17 @@ const productHook: Hook = {
         api.object('crm_quote_line_item').count({ where: { crm_product: id } }).catch(() => 0),
       ]);
       if (oppRefs + quoteRefs > 0) {
+        // The sentence counts what it names (#2060 item 12, B-16). Both counts
+        // are LINE ITEMS: three lines of this product on one deal are three,
+        // not one deal, and "4 opportunity(ies) and 2 quote(s)" said deals and
+        // quotes. Each count carries its own plural and a zero is not listed,
+        // as `contact_integrity` words its refusal. The remedy names the field
+        // by its label, Active, not by its API key (the C-11 class).
+        const held: string[] = [];
+        if (oppRefs > 0) held.push(`${oppRefs} opportunity ${oppRefs === 1 ? 'line item' : 'line items'}`);
+        if (quoteRefs > 0) held.push(`${quoteRefs} quote ${quoteRefs === 1 ? 'line item' : 'line items'}`);
         throw refuse(
-          `Cannot delete product: referenced by ${oppRefs} opportunity(ies) and ${quoteRefs} quote(s). Set is_active=false to retire instead.`,
+          `Cannot delete product: it is on ${held.join(' and ')}. To retire it instead, turn off Active.`,
           'DELETE_RESTRICTED',
           409,
         );

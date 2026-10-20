@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import campaignHooks, { CAMPAIGN_METRIC_WRITE_KEYS } from '../src/marketing/objects/campaign.hook';
+import { Campaign } from '../src/marketing/objects/campaign.object';
 import leadHooks from '../src/sales/objects/lead.hook';
 import knowledgeArticlePublish from '../src/service/objects/knowledge_article.hook';
 import { knowledgeArticles } from '../src/service/data/service.seed';
@@ -380,14 +381,42 @@ describe('campaign_validation', () => {
   const marketerCampaign = (doc: Rec) =>
     verify.hooks.run('crm_campaign', 'insert', { name: `Launch ${++k}`, status: 'planning', ...doc }, as(marketer));
 
-  it('rejects a start_date after the end_date', async () => {
-    await expect(marketerCampaign({ start_date: '2026-06-01', end_date: '2026-01-01' })).rejects.toThrow(/must not be after end_date/);
+  // The refusals name each field by the label the form shows, never by its API
+  // key (#2060 item 12, C-11: "Campaign start_date (…) must not be after
+  // end_date (…)"). The labels are read off the object, so a renamed label
+  // that its refusal does not follow turns this red.
+  const label = (field: string): string => (Campaign.fields as Rec)[field].label;
+  const statusLabel = (value: string): string =>
+    ((Campaign.fields as Rec).status.options as Rec[]).find((o) => o.value === value)!.label;
+
+  it('rejects a Start Date after the End Date, naming both fields by their labels', async () => {
+    const err = await marketerCampaign({ start_date: '2026-06-01', end_date: '2026-01-01' }).then(() => null, (e) => e);
+    expect(err).toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
+    expect(err.message).toBe(
+      `The campaign's ${label('start_date')} (2026-06-01) must not be after its ${label('end_date')} (2026-01-01).`,
+    );
+    expect(err.message).not.toMatch(/start_date|end_date/);
+  });
+
+  it('refuses a campaign stored as In Progress without both dates, naming the status and the fields by their labels', async () => {
+    // Reachable on a real write: the hook runs before the engine's own
+    // required-field check, so an In Progress insert that leaves out a date
+    // meets this refusal, not the engine's (measured on 18.0.0-next.5).
+    for (const doc of [{ start_date: '2026-01-01' }, {}]) {
+      const err = await marketerCampaign({ status: 'in_progress', ...doc }).then(() => null, (e) => e);
+      expect(err).toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
+      expect(err.message).toBe(
+        `A campaign cannot be ${statusLabel('in_progress')} without both a ${label('start_date')} and an ${label('end_date')}.`,
+      );
+      expect(err.message).not.toMatch(/start_date|end_date|in_progress/);
+    }
   });
 
   it('a campaign without both dates cannot be stored at all', async () => {
     // Both dates are REQUIRED on `crm_campaign`, so the engine refuses a
-    // campaign missing one on every writer — the hook's own "no in_progress
-    // without both dates" rule never meets one.
+    // campaign missing one on every writer. The hook's own "not In Progress
+    // without both dates" rule meets one only on an In Progress insert, where
+    // it runs first (the case above); an update cannot clear a date at all.
     await expect(marketerCampaign({ start_date: '2026-01-01' })).rejects.toMatchObject({
       code: 'VALIDATION_FAILED',
       fields: expect.arrayContaining([expect.objectContaining({ field: 'end_date' })]),

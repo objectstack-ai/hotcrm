@@ -47,7 +47,7 @@ The advice is therefore what it always was — when you write a snapshot by hand
 
 **A row stored before these rules shipped stays refused until its window is corrected.** The check reads the whole record on every save, not just the field you touched, so even an unrelated edit to such a row — a quota correction, a note — is rejected until the dates agree with the label. The correction itself is always accepted: put `period_start` and `period_end` back on the calendar period, and the row saves normally again.
 
-So you'll never see a record labelled “2026-07-01 through ???” — only the human label. The list view and dashboards group by `period_label` directly.
+So you'll never see a record labelled “2026-07-01 through ???” — only the human label. Dashboards group by `period_label` directly. The **All Forecasts** list groups on two levels, newest period first: by `period_start`, and under each start date by `period_label`, so every period gets a heading of its own (**Q4 2026**). It cannot group by the label alone, because a label sorts as text: *Sep 2026* would come before *Q4 2026*, and *Q4 2025* before *Oct 2026*. Nor can it group by the start date alone, because a quarter and the month that opens it start on the same day: **Q4 2026** and **Oct 2026** share one start-date heading and sit under it as two periods.
 
 ## How forecasts get created
 
