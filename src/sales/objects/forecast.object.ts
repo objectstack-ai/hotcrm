@@ -383,12 +383,24 @@ export const Forecast = ObjectSchema.create({
     // invariant (a row's window is exactly the calendar period it is labelled
     // with), not three independent gates.
     //
+    // So the rule STANDS DOWN while a start rule fires (#2060 item 7c): each
+    // branch also requires the start that period opens on, in the start rules'
+    // own patterns. Off a boundary, the arithmetic judges a window that is no
+    // calendar period. Measured on 18.0.0-next.5 before this: a month starting
+    // 2026-10-15 drew "Period End must be the last day …" on the end the hook
+    // derived (2026-10-31), on a typed 2026-10-31 and on an edit that moved only
+    // the start, and it passed a typed 2026-11-14. Now the refusal names Period
+    // Start alone, and every row this leaves alone is still refused, by a start
+    // rule. The hook keeps deriving: the boundary is known here and nowhere else.
+    //
     // ⚠️ `daysBetween(a, b) != 0` rather than `a == b`: both drivers this app
     // runs on hand dates back as `YYYY-MM-DD` strings while `addDays` returns a
     // timestamp, and a string never `==` a timestamp — the rule would be
     // permanently green. `daysBetween` puts both sides through the same
     // `toDate`, so the string, an ISO datetime spelling and a JS `Date` all
-    // compare alike.
+    // compare alike. (The start's pattern check reads `string()`, which has no
+    // `Date` overload, so a JS `Date` start is refused here as by the start
+    // rules; no writer in this app sends one.)
     //
     // ⚠️ The `!= null` guards are load-bearing for a THIRD hazard beyond the two
     // AGENTS.md names: `daysBetween(null, …)` reaches `BigInt(NaN)` and THROWS,
@@ -407,7 +419,7 @@ export const Forecast = ObjectSchema.create({
       // an undeclared `period` is refused BY NAME by the picklist ("Period must
       // be one of: month, quarter", measured), so this rule judges only the two
       // values it understands and leaves the rest to the schema.
-      condition: P`has(record.period) && record.period != null && has(record.period_start) && record.period_start != null && has(record.period_end) && record.period_end != null && ((record.period == "month" && daysBetween(record.period_end, addDays(addMonths(record.period_start, 1), -1)) != 0) || (record.period == "quarter" && daysBetween(record.period_end, addDays(addMonths(record.period_start, 3), -1)) != 0))`,
+      condition: P`has(record.period) && record.period != null && has(record.period_start) && record.period_start != null && has(record.period_end) && record.period_end != null && ((record.period == "month" && matches(string(record.period_start), "^[0-9]{4}-[0-9]{2}-01") && daysBetween(record.period_end, addDays(addMonths(record.period_start, 1), -1)) != 0) || (record.period == "quarter" && matches(string(record.period_start), "^[0-9]{4}-(01|04|07|10)-01") && daysBetween(record.period_end, addDays(addMonths(record.period_start, 3), -1)) != 0))`,
     },
     {
       name: 'snapshot_amounts_non_negative',
