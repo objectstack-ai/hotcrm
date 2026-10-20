@@ -4,8 +4,10 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { servedApp, packFor } from './helpers/composed-stack';
 import { OpportunityViews } from '../src/sales/views/opportunity.view';
 import { Opportunity } from '../src/sales/objects/opportunity.object';
+import { CrmApp } from '../src/sales/apps/crm.app';
 
 /**
  * The pipeline page's kanban section, pinned to the board it describes (#996).
@@ -41,6 +43,16 @@ import { Opportunity } from '../src/sales/objects/opportunity.object';
  * The source side of each claim is pinned too, so the prose cannot become wrong
  * in the other direction: bind `owner_id` onto the cards, drop the board's
  * filter, or raise the rule to `error`, and this file goes red.
+ *
+ * **The way to the board (#2174).** The daily cadence row used to be pinned to
+ * a sidebar entry called **Pipeline**, under a test title saying that entry
+ * exists. #1259 had removed it: the served navigation carries no such row, so
+ * the pin held a false sentence in place. The board is a tab on the list page
+ * the **Opportunities** entry opens, and that pair is what the row now names.
+ * Both halves are read from the source — the entry's label off the served
+ * navigation, the tab's off the view (en) or the zh-CN pack (zh-Hans) — and the
+ * source facts below pin that the entry exists and that the board still has no
+ * sidebar row of its own, which is what the page says.
  */
 
 type AnyRec = Record<string, any>;
@@ -66,6 +78,30 @@ const STAGE_MACHINE = (((Opportunity as AnyRec).validations ?? []) as AnyRec[]).
 
 const CARD_FIELDS: string[] = (KANBAN?.kanban?.columns ?? []) as string[];
 
+/** The sidebar as served, every node of it (groups and their children). */
+const NAV_NODES: AnyRec[] = (() => {
+  const flat = (nodes: AnyRec[]): AnyRec[] => nodes.flatMap((n) => [n, ...flat((n.children ?? []) as AnyRec[])]);
+  return flat((servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[]);
+})();
+
+/**
+ * The entry that opens Opportunities' own list page — the page whose view
+ * switcher carries the board as a tab. Throws rather than answering
+ * `undefined`, so a missing entry fails as itself, not as a row mismatch.
+ */
+const OPPORTUNITIES_ENTRY: AnyRec = (() => {
+  const entry = NAV_NODES.find(
+    (n) => n.type === 'object' && n.objectName === 'crm_opportunity' && !n.viewName,
+  );
+  if (!entry) throw new Error('the served navigation has no entry opening the crm_opportunity list page');
+  return entry;
+})();
+
+const ZH_CN = packFor('zh-CN') as AnyRec | undefined;
+/** The same entry and the board's tab, as the zh-CN pack labels them (the zh-Hans page's source). */
+const ZH_ENTRY_LABEL = ZH_CN?.apps?.[(CrmApp as AnyRec).name]?.navigation?.[OPPORTUNITIES_ENTRY.id]?.label as string;
+const ZH_BOARD_LABEL = ZH_CN?.objects?.crm_opportunity?._views?.pipeline_kanban?.label as string;
+
 const PAGES = [
   {
     file: 'content/docs/sales/pipeline-management.mdx',
@@ -77,8 +113,8 @@ const PAGES = [
     /** The rule is advisory, in the wording administration/state-machines uses. */
     advisory: /advice, not a gate/,
     savesAnyway: /the save still goes through/,
-    /** The sidebar label the cadence row must send a reader to. */
-    boardName: '**Pipeline**',
+    /** The sidebar entry, then the tab on its page, the cadence row must send a reader to. */
+    entry: [`**${OPPORTUNITIES_ENTRY.label}**`, `**${KANBAN?.label}**`],
     /**
      * Claims #996 removed. `Pipeline Kanban` is a camel-case reading of the
      * identifier `pipeline_kanban` and names nothing in the product; on the en
@@ -100,7 +136,7 @@ const PAGES = [
     activeCount: /五个活跃阶段/,
     advisory: /建议，不是闸门/,
     savesAnyway: /保存照样通过/,
-    boardName: '**销售管道**',
+    entry: [`**${ZH_ENTRY_LABEL}**`, `**${ZH_BOARD_LABEL}**`],
     retired: ['7 列', '负责人头像', '系统会强制执行阶段规则'],
     pageWideRetired: [],
   },
@@ -112,7 +148,10 @@ const PAGES = [
     activeCount: /五個活躍階段/,
     advisory: /建議，不是閘門/,
     savesAnyway: /儲存照樣通過/,
-    boardName: '**銷售管道**',
+    // No Traditional pack ships, so navigation keeps its English label and the
+    // view name is the zh-CN pack's wording in Traditional characters (AGENTS.md
+    // documentation rule 6).
+    entry: [`**${OPPORTUNITIES_ENTRY.label}**`, '**銷售流水線**'],
     retired: ['7 列', '負責人頭像', '系統會強制執行階段規則'],
     pageWideRetired: [],
   },
@@ -137,7 +176,7 @@ const bulletRun = (section: string): string[] => {
 describe('the pipeline page describes the board it actually ships (#996)', () => {
   describe.each(PAGES)(
     '$file',
-    ({ file, heading, cadence, activeCount, advisory, savesAnyway, boardName, retired, pageWideRetired }) => {
+    ({ file, heading, cadence, activeCount, advisory, savesAnyway, entry, retired, pageWideRetired }) => {
       const section = () => sectionOf(file, heading);
 
       it('lists exactly the fields the cards are bound to', () => {
@@ -167,15 +206,15 @@ describe('the pipeline page describes the board it actually ships (#996)', () =>
         expect(text).toContain(STAGE_MACHINE.name);
       });
 
-      it('sends the daily cadence to the sidebar entry that exists', () => {
+      it('sends the daily cadence to the board through the sidebar entry that exists', () => {
         const row = sectionOf(file, cadence)
           .split('\n')
           .find((l) => l.includes('|') && /每日|Daily/.test(l));
         expect(row, `${file}: the cadence table has no daily row`).toBeTruthy();
         expect(
-          row,
-          `${file}: the daily row must name the sidebar entry that opens the board`,
-        ).toContain(boardName);
+          entry.filter((name) => !row!.includes(name)),
+          `${file}: the daily row must name the sidebar entry and the board's tab on its page`,
+        ).toEqual([]);
       });
 
       it('does not resurrect the claims #996 removed', () => {
@@ -199,6 +238,16 @@ describe('the source facts those three claims now rest on (#996)', () => {
       'binding owner onto the cards would make the "no owner on the card" paragraph wrong — ' +
         'update the prose in all three locales, not just the metadata',
     ).not.toContain('owner_id');
+  });
+
+  it('the board has no sidebar row of its own; the Opportunities entry opens the page it is a tab of (#2174)', () => {
+    // The zh-Hant page spells the tab 銷售流水線 by character conversion of this
+    // label; a pack rename moves the zh-Hans page with it and must move that one too.
+    expect(ZH_BOARD_LABEL).toBe('销售流水线');
+    expect(
+      NAV_NODES.filter((n) => n.viewName === 'pipeline_kanban').map((n) => n.id),
+      'a sidebar row opening the board makes "it has no sidebar entry of its own" false on both pages, in all three locales',
+    ).toEqual([]);
   });
 
   it('owner_id is in the view-level columns the prose re-points to', () => {

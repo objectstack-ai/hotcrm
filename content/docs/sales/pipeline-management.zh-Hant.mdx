@@ -39,7 +39,7 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 ## 銷售管道看板視圖
 
-這塊看板是商機上的**銷售流水線**視圖（`pipeline_kanban`），側邊欄上打開它的那個條目寫作**銷售管道**。它把銷售管道按**每個階段一列**鋪開，且**只放在飛交易**：這塊板自帶過濾器——`src/sales/views/opportunity.view.ts` 裡的 `stage not_in [closed_won, closed_lost]`——所以只有五個活躍階段（*尋找客戶*、*資格審查*、*需求分析*、*提案*、*談判*）裡才可能有卡片。已結束的生意不是被藏了，而是在別處：**全部商機**檢視與 **Sales Performance** 儀表板都算上它們。至於那兩個已結束階段是被畫成永遠空著的欄、還是乾脆不出現在板上，那是 console 的算繪選擇，本應用的元資料並沒有宣告——無論哪種，這塊板上都沒有已結束的交易可找。
+這塊看板是商機上的**銷售流水線**視圖（`pipeline_kanban`）。它在側邊欄裡沒有自己的條目：打開 **Sales › Opportunities**，清單頂部視圖切換器裡的**銷售流水線**標籤頁就是它。它把銷售管道按**每個階段一列**鋪開，且**只放在飛交易**：這塊板自帶過濾器——`src/sales/views/opportunity.view.ts` 裡的 `stage not_in [closed_won, closed_lost]`——所以只有五個活躍階段（*尋找客戶*、*資格審查*、*需求分析*、*提案*、*談判*）裡才可能有卡片。已結束的生意不是被藏了，而是在別處：**全部商機**檢視與 **Sales Performance** 儀表板都算上它們。至於那兩個已結束階段是被畫成永遠空著的欄、還是乾脆不出現在板上，那是 console 的算繪選擇，本應用的元資料並沒有宣告——無論哪種，這塊板上都沒有已結束的交易可找。
 
 每張卡片帶的是這塊板綁定的四個欄位（`kanban.columns`）：
 
@@ -79,7 +79,7 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 | **Opportunity Funnel by Owner → Stage** | 每位銷售代表的漏斗健康——發現漏水的階段。 |
 | **Opportunities by Stage** | 按階段的銷售管道柱狀圖。 |
 | **Won Opportunities by Owner** | 用於季末表彰的排行榜。 |
-| **Customer Churn Signals** | 現有客戶的開放工單 + 低 NPS = 流失風險。 |
+| **Customer Churn Signals** | 面向主動挽留、上下疊放的四塊面板：**CSM-Flagged Accounts**（CSM 手動標記的客戶）、**At-Risk Accounts**（60 天以上無活動）、**Silent High-Value Accounts**（策略級與企業級客戶沉默 90 天以上）與 **Recently Lost Opportunities**（最近 30 天丟單）。 |
 
 詳情參見 [分析 › 報表](/zh-Hant/docs/analytics/reports)。
 
@@ -87,7 +87,7 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 | 節奏 | 該做什麼 |
 | --- | --- |
-| **每日** | 打開**銷售管道**這塊板。找出停滯的卡片（階段內 > 14 天）。推進或關閉。 |
+| **每日** | 打開 **Opportunities**，切到**銷售流水線**標籤頁。找出停滯的卡片（階段內 > 14 天）。推進或關閉。 |
 | **每週** | 執行 *Pipeline Coverage*。向 AI 助手提問：*"what's at risk?"* |
 | **每月** | 執行 *Opportunity Funnel by Owner → Stage*。對漏斗漏水的銷售代表進行一對一輔導。 |
 | **季末** | 執行 *Won Opportunities by Owner* 以計算提成。歸檔*失敗*的交易並附上*丟單原因*。 |
