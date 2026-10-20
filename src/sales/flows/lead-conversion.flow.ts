@@ -87,7 +87,28 @@ export const LeadConversionFlow: Flow = {
         // than an empty paragraph. That is why the conditionality lives in an
         // assignment and not in the copy: a screen `description` has no
         // `visibleWhen`.
-        description: '{{duplicateWarning}}',
+        //
+        // The ACCOUNT NOTICE follows the warning (#2073 item 8): which account
+        // the lead will join, said before the rep submits — the existing
+        // account `find_account` matched, by that account's own name, or a new
+        // account named after the lead's company. Until then the match ran
+        // after this screen, so the rep was asked only "Create Opportunity?"
+        // and the account was chosen in silence.
+        //
+        // `compose_account_notice` binds exactly one of `existingAccountName`
+        // / `newAccountName` to a name and the other to `null`, and each
+        // hole's `default:` carries the OTHER branch's words, so one template
+        // reads "<account> is the existing account this lead will join." or
+        // "No account you can see matches …, so converting creates a new
+        // account named <company>." Name-first because a template hole is a
+        // path and a formatter, never logic (`@objectstack/formula`'s template
+        // engine), and `default:` is its one conditional. ⛔ Do not compose the
+        // sentence in a variable instead: no locale pack reaches a variable's
+        // text (the reason the warning is English-only), and this notice shows
+        // on every conversion. Every pack translates the whole template, and
+        // `test/lead-conversion-account-notice.test.ts` renders each one for
+        // both branches.
+        description: '{{duplicateWarning}} {{ existingAccountName | default:"No account you can see matches the company on this lead, so converting creates a new account named " }}{{ newAccountName | default:" is the existing account this lead will join" }}.',
         // `visibleWhen` on a screen field is BARE CEL over the screen's own
         // field names — not the CEL value envelopes the rest of this flow uses
         // for filters and `update_record` fields, evaluated on the server. The
@@ -183,9 +204,9 @@ export const LeadConversionFlow: Flow = {
       },
     },
     {
-      // ⛔ This fetch must stay AHEAD of the screen: the duplicate warning
-      // reads `leadRecord`, and a screen that suspends before the fetch has
-      // nothing to read. The fetch itself never depended on the screen —
+      // ⛔ This fetch must stay AHEAD of the screen: the duplicate warning and
+      // the account notice read `leadRecord`, and a screen that suspends
+      // before the fetch has nothing to read. The fetch itself never depended on the screen —
       // `recordId` is an input variable, seeded before the run starts.
       id: 'get_lead', type: 'get_record', label: 'Get Lead Record',
       config: { objectName: 'crm_lead', filter: { id: cel`recordId` }, outputVariable: 'leadRecord' },
@@ -367,9 +388,11 @@ export const LeadConversionFlow: Flow = {
       },
     },
     {
-      // Branching is on edges `e44` / `e45` — see `decision_account`. The
+      // Branching is on edges `e51` / `e45` — see `decision_account`. The
       // only gate AFTER `screen_1`, because it judges an answer the rep typed
-      // there, and it dominates every write (`find_account` below only reads).
+      // there, and it dominates every write (`find_account`, which used to sit
+      // between it and them, runs ahead of the screen since #2073 item 8 and
+      // only reads).
       id: 'decision_amount', type: 'decision', label: 'Opportunity Amount Above Zero?',
     },
     {
@@ -451,8 +474,53 @@ export const LeadConversionFlow: Flow = {
       // raw `name`: a missing key means the producer could not derive one, and
       // a tolerant consumer path would hide that while restoring the exact bug
       // this node exists to fix.
+      //
+      // ## Why the match runs AHEAD of the screen (#2073 item 8)
+      //
+      // `screen_1` says which account the lead will join, and it can only say
+      // what has already been read: `compose_account_notice` turns this node's
+      // answer into the screen's account notice, and `decision_account`, after
+      // the screen, branches on the SAME binding, so what the rep is told is
+      // what the submit does. ⛔ Do not re-run the match after the screen: a
+      // second read could choose another account than the one the screen
+      // named. Moving it is the `get_lead` pattern — a read before the screen,
+      // every write behind it — and this node writes nothing.
+      //
+      // ⚠️ The match is the CONVERTING USER's view, by design. The flow runs
+      // as the user, so an account the rep may not read is not found, and the
+      // screen tells the rep a new account will be created. Measured on
+      // 18.0.0-next.5 as a `sales_rep`, for an account another rep owns: with
+      // the SAME name the submit is refused by the per-organization unique
+      // account name ("Duplicate record refused … No record was written."),
+      // and the lead stays unconverted; with a name that differs only in case
+      // or spacing a second account with the same match key is created.
+      // ⛔ Never elevate this read to close that gap: a system-context match
+      // would file the rep's contact and opportunity under an account they
+      // cannot read, and name that account to them on this screen.
       id: 'find_account', type: 'get_record', label: 'Find Existing Account',
       config: { objectName: 'crm_account', filter: { name_normalized: cel`leadRecord.company_normalized` }, outputVariable: 'matchedAccount' },
+    },
+    {
+      // The account notice's two values (#2073 item 8), read only by
+      // `screen_1`'s body text. Exactly one is a name on every run: the
+      // matched account's own `name` — it can differ from the lead's company
+      // in case and spacing, and the account's spelling is the one the rep
+      // will find in Accounts — or the lead's company, the name
+      // `create_account` writes. The other is `null`, which the template's
+      // `default:` turns into this branch's words (see `screen_1`).
+      //
+      // One node with two ternaries, not a decision and two assignments: it
+      // only reads what `find_account` bound, the binding `decision_account`'s
+      // edges read after the screen, so the notice and the branch cannot
+      // disagree. `name` is `required` on `crm_account` and `company` on
+      // `crm_lead`, so neither read needs a guard.
+      id: 'compose_account_notice', type: 'assignment', label: 'Compose Account Notice',
+      config: {
+        assignments: {
+          existingAccountName: cel`matchedAccount != null ? matchedAccount.name : null`,
+          newAccountName: cel`matchedAccount == null ? leadRecord.company : null`,
+        },
+      },
     },
     {
       // Branching is on edges `e5` / `e6`. No `config.condition` here: a
@@ -697,8 +765,8 @@ export const LeadConversionFlow: Flow = {
 
   edges: [
     // ⛔ A retired edge's id stays VACANT and every surviving edge keeps the id
-    // it has always had — `e1`, `e2`, `e3`, `e7`, `e12`, `e15`, `e26`, `e30` and
-    // `e33` are gaps on purpose.
+    // it has always had — `e1`, `e2`, `e3`, `e4`, `e7`, `e12`, `e15`, `e26`,
+    // `e30`, `e31`, `e33` and `e44` are gaps on purpose.
     // Renumbering to close a gap rewrites ids that other notes, tests and run
     // logs refer to.
     { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
@@ -706,9 +774,9 @@ export const LeadConversionFlow: Flow = {
     // not reuse a vacant one, and do not assume an unused-looking id is free.
     // A duplicate id is INERT (traversal filters out-edges by `source`, never
     // by `id`), so nothing fails and the collision survives to trap the next
-    // editor picking out of the sequence. `e1`, `e2`, `e3`, `e7`, `e12`, `e15`,
-    // `e26`, `e30` and `e33` are vacant retired ids and stay that way; `e27` is above
-    // the highest live id, not a gap-fill.
+    // editor picking out of the sequence. `e1`, `e2`, `e3`, `e4`, `e7`, `e12`,
+    // `e15`, `e26`, `e30`, `e31`, `e33` and `e44` are vacant retired ids and stay
+    // that way; `e27` is above the highest live id, not a gap-fill.
     { id: 'e27', source: 'get_lead', target: 'decision_approval', type: 'default' },
     // ── The approval gate (REQ-0005 step 7) ────────────────────────────
     //
@@ -766,29 +834,40 @@ export const LeadConversionFlow: Flow = {
     // ── The match-key guard (#2017) ────────────────────────────────────
     //
     // TOTAL and PARTITIONING, for the reason recorded at `e28` / `e29`: `e32`
-    // is `e31` negated by De Morgan, so exactly one holds for every shape
+    // is `e48` negated by De Morgan, so exactly one holds for every shape
     // `get_lead` can bind — unbound, a null row, the column absent, null,
     // empty, or keyed. `has()` alone is not the test: on a row that carries
     // the column as null it answers true, so the value needs `isBlank` too.
     // Fail-CLOSED, unlike the approval gate: without a key there is nothing to
     // match on, and a guess is the defect.
-    { id: 'e31', source: 'decision_match_key', target: 'screen_1', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.company_normalized) && !isBlank(vars.leadRecord.company_normalized)`, label: 'Has match key' },
+    //
+    // `e31` (decision_match_key → screen_1) is RETIRED and stays vacant
+    // (#2073 item 8): the account match sits between them now, so the screen
+    // can say which account the lead will join. `e48` carries `e31`'s
+    // condition unchanged, onto `find_account`; `e49` and `e50` lead on
+    // through the notice to the screen.
+    { id: 'e48', source: 'decision_match_key', target: 'find_account', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.company_normalized) && !isBlank(vars.leadRecord.company_normalized)`, label: 'Has match key' },
     { id: 'e32', source: 'decision_match_key', target: 'refuse_no_match_key', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.company_normalized) || isBlank(vars.leadRecord.company_normalized)`, label: 'No match key' },
+    { id: 'e49', source: 'find_account', target: 'compose_account_notice', type: 'default' },
+    { id: 'e50', source: 'compose_account_notice', target: 'screen_1', type: 'default' },
     // `e26`, `e30` and `e33` (each refusal → `end`) are RETIRED and stay
     // vacant (#2060 item 2c): `e25`, `e28` and `e32` end the run at a refusing
     // `end`, which no edge leaves, so no node that writes is downstream of a
     // refusal — every create/update sits behind `screen_1`.
     // `e2` (screen_1 → find_account) is RETIRED and stays vacant (#2060 item
     // 2b): the amount gate sits between them now, on `e43` – `e45`. The pair
-    // is TOTAL and PARTITIONING (`e45` is `e44` negated by De Morgan), pinned
+    // is TOTAL and PARTITIONING (`e45` is `e51` negated by De Morgan), pinned
     // in `test/flow-conversion.test.ts`; an unticked box never reads the amount.
     // `e45` ends the run at its target, a refusing `end`: no edge leaves it.
+    // `e44` (decision_amount → find_account) and `e4` (find_account →
+    // decision_account) are RETIRED and stay vacant (#2073 item 8): the match
+    // runs ahead of the screen now, so an accepted amount goes straight to
+    // the account branch, on `e51`, which carries `e44`'s condition unchanged.
     { id: 'e43', source: 'screen_1', target: 'decision_amount', type: 'default' },
-    { id: 'e44', source: 'decision_amount', target: 'find_account', type: 'default', condition: P`vars.createOpportunity != true || vars.opportunityAmount == null || vars.opportunityAmount > 0`, label: 'Amount accepted' },
+    { id: 'e51', source: 'decision_amount', target: 'decision_account', type: 'default', condition: P`vars.createOpportunity != true || vars.opportunityAmount == null || vars.opportunityAmount > 0`, label: 'Amount accepted' },
     { id: 'e45', source: 'decision_amount', target: 'refuse_nonpositive_amount', type: 'default', condition: P`vars.createOpportunity == true && vars.opportunityAmount != null && vars.opportunityAmount <= 0`, label: 'Zero or less' },
-    { id: 'e4', source: 'find_account', target: 'decision_account', type: 'default' },
     // Existing account → reuse; no account → create. Both converge on create_contact.
-    // `find_account` is reached only with a match key (`e31`), so a match
+    // `find_account` is reached only with a match key (`e48`), so a match
     // here is an equality on a real key, never the has-no-value predicate.
     // ⛔ No second copy of the key test on these two edges: it could never
     // be false here, and an inert restatement of a live predicate is the

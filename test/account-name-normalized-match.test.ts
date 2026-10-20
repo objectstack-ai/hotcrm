@@ -617,10 +617,12 @@ describe('acceptance: a case/whitespace variant reuses the same account', () => 
     ['the column absent (sparse datasource)', { leadRecord: { id: 'l1' } }, 'e32'],
     ['the column null (SQL)', { leadRecord: { id: 'l1', company_normalized: null } }, 'e32'],
     ['the column empty', { leadRecord: { id: 'l1', company_normalized: '' } }, 'e32'],
-    ['a key', { leadRecord: { id: 'l1', company_normalized: 'acme corp' } }, 'e31'],
+    // `e48` carries the condition `e31` had (#2073 item 8): it leads to the
+    // account match now, which runs ahead of the screen.
+    ['a key', { leadRecord: { id: 'l1', company_normalized: 'acme corp' } }, 'e48'],
   ])('the match-key guard takes exactly one edge for %s', (_label, vars, expected) => {
     const out = (LeadConversionFlow.edges as Rec[]).filter((e) => e.source === 'decision_match_key');
-    expect(out.map((e) => e.id).sort()).toEqual(['e31', 'e32']);
+    expect(out.map((e) => e.id).sort()).toEqual(['e32', 'e48']);
     expect(out.filter((e) => conditionHolds(verify, e.condition, vars)).map((e) => e.id)).toEqual([expected]);
   });
 

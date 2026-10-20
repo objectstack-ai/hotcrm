@@ -659,8 +659,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         screen_1: {
           title: '変換詳細',
           // The duplicate warning's text is a variable the flow assigns; this
-          // key can only carry the hole that shows it.
-          description: '{{duplicateWarning}}',
+          // key can only carry the hole that shows it. The account notice
+          // after it is translated here (#2073 item 8): exactly one of the two
+          // holes holds a name, and each hole's `default:` is the OTHER
+          // branch's words, so the sentence stays name-first. Keep both holes,
+          // in this order, with a `default:` each (see `screen_1` in
+          // `lead-conversion.flow.ts`).
+          description: '{{duplicateWarning}} {{ existingAccountName | default:"このリードの会社名に一致する、あなたが閲覧できる取引先はありません。変換すると、次の名前で新しい取引先が作成されます：" }}{{ newAccountName | default:" は、このリードが加わる既存の取引先です" }}。',
           fields: {
             createOpportunity: { label: '商談を作成しますか？' },
             opportunityName: { label: '商談名' },
