@@ -222,6 +222,52 @@ describe('a profile with allowCreate enrolls through every door, as itself (#216
   }, ENROLL_BUDGET_MS);
 });
 
+/**
+ * A campaign id that names no campaign is refused at both Add to Campaign
+ * doors, and no member row is written (#2073 item 6).
+ *
+ * Until #2167 both actions were script bodies. A script body runs elevated by
+ * platform design, and a system write is exempt from the engine's write-time
+ * reference check, so a value that named no campaign was stored as typed. On
+ * the 2026-10-12 hosted pass, a campaign NAME typed into the bulk bar's text
+ * box answered 200 and wrote a member row that no user could read back. The
+ * campaign metric hooks then logged `Record … not found in crm_campaign` on
+ * every later write that touched it.
+ *
+ * Written as the caller now, the flow's insert meets that check. The
+ * administrator is refused because no such campaign exists, and a marketing
+ * user because a master that does not exist is not one they may edit. Either
+ * way the run fails at the insert, and nothing names the lead at all. The
+ * value sent is the campaign's own name, which is the shape the hosted pass
+ * typed. The control is the block above: the same door, with the campaign's
+ * id, enrolls.
+ *
+ * The rows are read as the SYSTEM (`verify.rows` without `as`). Such a row is
+ * invisible to every user: its access derives from a master that does not
+ * exist, so a read as the caller would come back empty either way.
+ */
+describe('a campaign id that names no campaign is refused at both Add to Campaign doors (#2073 item 6)', () => {
+  it.each(ALLOWED)('%s: Add to Campaign on a lead is refused at the insert, and no member is written', async (persona) => {
+    const w = await world(who[persona]!);
+    const typed = String(w.campaign.name);
+    const answer = await settle(addLead(who[persona]!, w.leadA.id, typed));
+    expect(answer).toMatchObject({ ok: false, code: 'FLOW_FAILED', status: 400 });
+    expect((answer as Rec).message).toContain("Node 'create_campaign_member' failed");
+    expect(await membersOf(typed), 'a member row names a campaign that does not exist').toHaveLength(0);
+    expect(await verify.rows('crm_campaign_member', { crm_lead: w.leadA.id })).toHaveLength(0);
+  });
+
+  it.each(ALLOWED)('%s: Add to Campaign on a contact is refused at the insert, and no member is written', async (persona) => {
+    const w = await world(who[persona]!);
+    const typed = String(w.campaign.name);
+    const answer = await settle(addContact(who[persona]!, w.contact.id, typed));
+    expect(answer).toMatchObject({ ok: false, code: 'FLOW_FAILED', status: 400 });
+    expect((answer as Rec).message).toContain("Node 'create_contact_member' failed");
+    expect(await membersOf(typed), 'a member row names a campaign that does not exist').toHaveLength(0);
+    expect(await verify.rows('crm_campaign_member', { crm_contact: w.contact.id })).toHaveLength(0);
+  });
+});
+
 describe('a partly refused Enroll Members run reports both counts (#2167, Q2 letter a)', { timeout: ENROLL_BUDGET_MS }, () => {
   it('ends refused with the enrolled and refused counts, and writes every member it was allowed to', async () => {
     const marketer = who.marketing_user!;
