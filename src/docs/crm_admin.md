@@ -97,6 +97,13 @@ call before OWD, sharing rules or *View All Data* are consulted. Adding an
 object to the app therefore always means adding a grant for it;
 `test/authorization-coverage.test.ts` fails the build when one is missing.
 
+Export is **granted, not implied**. The platform's own administrator access
+carries no export, so an administrator, the account that set the deployment up
+included, exports a list only once a set granting export is assigned to them:
+**System Administrator** grants it on Leads, Accounts, Contacts, Opportunities
+and Cases. On a local demo box, `pnpm demo:staff` assigns that set to the dev
+admin.
+
 Two record-level rules sit on top of the object grants:
 
 - `crm_opportunity.is_private` — a deal flagged Private is visible only to its

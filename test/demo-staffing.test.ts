@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { CrmSeedData } from '../objectstack.composition';
-import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
+import { DemoAdminPermissionSets, DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 import { CrmSharing as sharingBarrel } from './helpers/src-roster';
 import { hotcrmStack, systemUpdate, type Person } from './helpers/verify-stack';
 import { regionsOf } from './helpers/flow-regions';
@@ -129,10 +129,13 @@ async function runDemoStaff(on: VerifyStack): Promise<ScriptRun> {
 let verify: VerifyStack;
 let admin: string;
 let run: ScriptRun;
+/** The dev admin's export answer on `crm_account` BEFORE the script ran: #2061's control reading. */
+let adminExportBefore: ExportAnswer;
 const staffed: Record<string, Person> = {};
 beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
+  adminExportBefore = await exportAnswer(admin, 'crm_account');
   run = await runDemoStaff(verify);
   for (const m of DemoOrgStaffing) {
     const token = await verify.signIn(m.email, m.password).catch((err: unknown) => {
@@ -141,6 +144,16 @@ beforeAll(async () => {
     staffed[m.key] = { token, id: String((await verify.contextFor(token)).userId) };
   }
 }, 240_000);
+
+type ExportAnswer = { status: number; code?: string };
+
+/** What the export door, `GET /api/v1/data/OBJECT/export`, answers `token`: the status, and a refusal's code. */
+async function exportAnswer(token: string, object: string): Promise<ExportAnswer> {
+  const res = await verify.apiAs(token, 'GET', `/data/${object}/export?format=json`);
+  if (res.status === 200) return { status: 200 };
+  const body = (await res.json().catch(() => ({}))) as AnyRec;
+  return { status: res.status, code: body.code ?? body.error?.code };
+}
 
 const positions: AnyRec[] = (stack as any).positions ?? [];
 const sharingRules: AnyRec[] = (stack as any).sharingRules ?? [];
@@ -671,6 +684,51 @@ describe('pnpm demo:staff on the shipped app: the hand-over opens each large-dea
     const requests = await verify.rows('sys_approval_request', { object_name: 'crm_opportunity', record_id: { $in: [...dealIds] } });
     const actions = await verify.rows('sys_approval_action', { request_id: { $in: requests.map((r) => r.id) } });
     expect(actions.map((a) => String(a.action)).sort()).toEqual(requests.map(() => 'submit'));
+  });
+});
+
+/**
+ * The dev admin exports once `pnpm demo:staff` has run, and exports only what
+ * the sets step 0 grants it name (#2061).
+ *
+ * Since 18.0.0 the platform's administrator sets carry no export (maintainer
+ * ruling of 2026-08-15), so the dev admin's own sets export nothing and the
+ * export it gets is exactly the app set's. The reading taken before the run is
+ * the control: the same admin on the same boot, refused, so a 200 below is the
+ * grant's and not a platform default's.
+ */
+describe('pnpm demo:staff gives the dev admin export, and only where system_admin grants it (#2061)', () => {
+  const granted = new Set(DemoAdminPermissionSets.map((g) => g.permissionSet));
+  const exportable = [...new Set(
+    permissionSets
+      .filter((ps) => granted.has(String(ps.name)))
+      .flatMap((ps) => Object.entries((ps.objects ?? {}) as Record<string, AnyRec>)
+        .filter(([, perm]) => perm.allowExport === true)
+        .map(([objectName]) => objectName)),
+  )].sort();
+
+  it('names sets the app ships, each with a reason, and together they grant export', () => {
+    const shipped = new Set(permissionSets.map((ps) => String(ps.name)));
+    expect([...granted].filter((name) => !shipped.has(name)), 'the dev admin is granted a set the app does not ship').toEqual([]);
+    expect(DemoAdminPermissionSets.filter((g) => g.demonstrates.trim() === '').map((g) => g.permissionSet)).toEqual([]);
+    expect(exportable, "the dev admin's demo sets grant export on no object").not.toEqual([]);
+  });
+
+  it('refuses the dev admin before the run, and answers every object those sets export after it', async () => {
+    expect(adminExportBefore, 'the control: before the run the dev admin must be refused').toEqual({
+      status: 403,
+      code: 'EXPORT_NOT_PERMITTED',
+    });
+    const after: Record<string, ExportAnswer> = {};
+    for (const objectName of exportable) after[objectName] = await exportAnswer(admin, objectName);
+    expect(after, `scripts/demo-staff.ts output:\n${run.output.join('\n')}`).toEqual(
+      Object.fromEntries(exportable.map((objectName) => [objectName, { status: 200 }])),
+    );
+  });
+
+  it('still refuses an object no granted set exports: no wildcard', async () => {
+    expect(exportable).not.toContain('crm_quote');
+    expect(await exportAnswer(admin, 'crm_quote')).toEqual({ status: 403, code: 'EXPORT_NOT_PERMITTED' });
   });
 });
 

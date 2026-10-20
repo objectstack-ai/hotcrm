@@ -12,9 +12,15 @@
 // deployment installs none of these people" structural rather than hopeful
 // (see the header of `src/sales/sharing/demo-staffing.ts`).
 //
-// Five steps, all idempotent — rerun it any time, including against a
+// Six steps, all idempotent — rerun it any time, including against a
 // half-staffed org:
 //
+//   0. GIVE THE DEV ADMIN THE APP'S ADMIN SET (#2061): the sets
+//      `DemoAdminPermissionSets` names, as `sys_user_permission_set` rows on
+//      the signed-in admin. Since 18.0.0 the platform's administrator sets
+//      carry no export, so without an app set the dev admin cannot export a
+//      list at all (the reasons and the reading are in
+//      `src/sales/sharing/demo-staffing.ts`);
 //   1. create each person in `DemoOrgStaffing` via
 //      POST /api/v1/auth/admin/create-user (better-auth: a REAL, loginable
 //      account with a credential and a `sys_member` row — not a raw `sys_user`
@@ -49,14 +55,16 @@
 //      evidence that speaks to step 3: the reps must still OWN NO ACCOUNT (a
 //      share to an owner proves nothing under a `private` OWD, so owning them
 //      would delete the territory demonstration), while every routed row must
-//      sit on a demo persona (held rows aside) and none of them may hold the lot. Exits non-zero
-//      if any of that fails.
+//      sit on a demo persona (held rows aside) and none of them may hold the lot. It also
+//      re-reads the dev admin's resolved sets, which must name every set step 0
+//      granted. Exits non-zero if any of that fails.
 //
 // Flags: --url (default http://localhost:4001, the port `pnpm dev` binds),
 //        --admin-email / --admin-password (default the platform's dev-admin
 //        seed, which only exists when NODE_ENV=development).
 
 import {
+  DemoAdminPermissionSets,
   DemoOrgStaffing,
   DemoPipelineOwnership,
   TERRITORY_OWNER,
@@ -269,6 +277,41 @@ async function ensurePositions(api: Api, userId: string, member: DemoStaffMember
     added.push(position);
   }
   return { added, already: member.positions.filter((p) => heldNames.has(p)) };
+}
+
+/**
+ * Step 0 (#2061): grant the dev admin every set `DemoAdminPermissionSets`
+ * names, skipping ones it already holds.
+ *
+ * The row names the set and the user, nothing else: the server stamps the
+ * writer's organization on it, as it does on the platform's own admin grants.
+ */
+async function ensureAdminPermissionSets(api: Api, adminId: string) {
+  const held = await api.query('sys_user_permission_set', [['user_id', '=', adminId]], ['id', 'permission_set']);
+  const heldNames = new Set(held.map((r) => String(r.permission_set)));
+  const wanted = DemoAdminPermissionSets.map((g) => g.permissionSet);
+  const added: string[] = [];
+  for (const permissionSet of wanted) {
+    if (heldNames.has(permissionSet)) continue;
+    await api.postOk('/api/v1/data/sys_user_permission_set', { user_id: adminId, permission_set: permissionSet });
+    added.push(permissionSet);
+  }
+  return { added, already: wanted.filter((p) => heldNames.has(p)) };
+}
+
+/**
+ * The dev admin's sets as the server RESOLVES them, re-read rather than taken
+ * from step 0's writes: a grant row that resolves to nothing (a misspelt name,
+ * a set the activation ledger switched off) is stored fine and grants nothing.
+ */
+async function verifyAdminSets(api: Api): Promise<string[]> {
+  const { status, json } = await api.get('/api/v1/auth/me/permissions');
+  if (status !== 200) return [`GET /api/v1/auth/me/permissions → ${status} for the dev admin`];
+  const resolved = new Set(((json.permissionSets ?? []) as unknown[]).map(String));
+  console.log(`   the dev admin resolves [${[...resolved].join(', ')}]`);
+  return DemoAdminPermissionSets.filter((g) => !resolved.has(g.permissionSet)).map(
+    (g) => `the dev admin's ${g.permissionSet} grant does not resolve, so this stays off: ${g.demonstrates}`,
+  );
 }
 
 /**
@@ -641,6 +684,13 @@ async function main(): Promise<number> {
   const organizationId = membership[0]?.organization_id ? String(membership[0].organization_id) : null;
   console.log(`🏢 organization: ${organizationId ?? '(none — single-tenant boot)'}\n`);
 
+  const adminSets = await ensureAdminPermissionSets(api, String(admin.id));
+  console.log(
+    `${adminSets.added.length ? '➕' : '✓ '} ${'the dev admin'.padEnd(26)} ` +
+    `${adminSets.added.length ? `+[${adminSets.added.join(', ')}]` : ''}` +
+    `${adminSets.already.length ? ` (already: ${adminSets.already.join(', ')})` : ''}`,
+  );
+
   const outcomes: StaffOutcome[] = [];
   for (const member of DemoOrgStaffing) {
     const { userId, created } = await ensureUser(api, member);
@@ -701,6 +751,7 @@ async function main(): Promise<number> {
   const accounts = await api.query('crm_account', [], ['name', 'territory', 'billing_country']);
   console.log(`\n── Verifying (sys_record_share: ${shares.length} rule-materialised grants) ──`);
   const failures = await verify(base, outcomes, accounts);
+  failures.push(...(await verifyAdminSets(api)));
 
   // The reading #1759 turns on: what each identity OWNS, which is what an agent
   // session can reach. Printed whether or not it passes — a census nobody can
