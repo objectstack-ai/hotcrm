@@ -27,7 +27,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '涵盖销售、服务和市场营销的客户关系管理系统',
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
       navigation: {
-        group_activity: { label: '活动' },
+        // The group and its Events item are two words, as in every other pack
+        // (Activity / Events, Actividad / Eventos, 活動 / イベント). The item
+        // keeps 活动: it is `crm_event`'s own label, the heading of the page it
+        // opens. The group takes 互动, the word this pack already uses for the
+        // interactions it gathers (`crm_event`'s description, the 互动历史
+        // view, the Sales Activity tiles). #2060 item 13.
+        group_activity: { label: '互动' },
         nav_event: { label: '活动' },
         nav_activity_dashboard: { label: '销售活动' },
         nav_my_calendar: { label: '我的日历' },
