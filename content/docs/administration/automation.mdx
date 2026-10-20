@@ -65,7 +65,7 @@ A flow fires one of three ways, set by its start node:
 | **Escalate Case** | Screen | Collect an escalation reason, then flag and re-prioritise the case |
 | **Stamp Case Escalation** | Subflow | Called by **Escalate Case** to write the escalation stamps with system privilege |
 | **Close Case** | Screen | Collect the resolution, then close the case and stop the SLA clock |
-| **New Lead Routing & SLA** | Record change (insert) | Stamp a rating-based follow-up SLA and alert the new lead's owner |
+| **New Lead Routing & SLA** | Record change (insert) | Stamp a rating-based follow-up SLA and alert the lead's owner (for a standard lead, only when someone else assigned it) |
 | **Contact Welcome** | Record change (insert) | Prompt the owner to welcome a newly created contact |
 | **Urgent Task Alert** | Record change (insert) | Notify the owner when a task is created at *Urgent* |
 | **Large Deal Approval** | Record change (update) | Tiered sign-off via approval nodes — Sales Manager ≥ $100K, Sales Director > $500K |

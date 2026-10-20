@@ -313,11 +313,14 @@ describe('task_urgent_alert — start condition', () => {
 });
 
 describe('lead_assignment — hot-lead SLA routing', () => {
+  // Each lead is one the administrator logs in the rep's name: a standard lead
+  // the rep wrote for themselves alerts nobody (#2073 item 7, the describe
+  // below), so both branches are read off a lead someone else assigned.
   const create = (rating: number): Promise<Rec> =>
     verify.hooks.run('crm_lead', 'insert', {
       first_name: 'Ada', last_name: `Lead ${++k}`, company: `Acme ${k}`,
-      email: `lead${k}@flow-record-change.test`, rating,
-    }, as(rep));
+      email: `lead${k}@flow-record-change.test`, rating, owner_id: rep.id,
+    }, { as: admin });
   const alerts = (lead: Rec) => notified(rep.id, 'lead_routing', `/crm_lead/${lead.id}`);
 
   /**
@@ -361,6 +364,97 @@ describe('lead_assignment — hot-lead SLA routing', () => {
       }
     }
   });
+});
+
+/**
+ * Who the routing alert reaches (#2073 item 7).
+ *
+ * A write that carries a user is stamped with that user as owner, so before
+ * the creator test on edge `e10` every lead a rep created alerted that same rep
+ * "New lead to assign … is awaiting assignment" — measured on the 2026-10-12
+ * hosted pass for a form lead (owner = the rep) and an API lead with no owner,
+ * and re-measured on 18.0.0-next.5 through the doors below (the hot path and
+ * the web form sent the same assigner wording to the owner).
+ * The standard alert is now the assignment notice: it goes to an owner someone
+ * ELSE put the lead with (the round-robin, a colleague), and a person's own
+ * standard lead sends nothing. The hot alert is the 24h follow-up SLA and still
+ * reaches the owner of their own hot lead (the flow's header says why).
+ *
+ * Each lead is written through a door a person uses — the data API as the rep
+ * (the create form posts there), the anonymous web form — and every alert this
+ * flow sent about it is read, to anyone, on any channel. The empty answers are
+ * read after the run has landed and passed its notify node over, so "nobody"
+ * is a verdict, not a race.
+ */
+describe('lead_assignment — who the routing alert reaches (#2073 item 7)', () => {
+  type Sent = { to: string; channel: string; template: string };
+  /** Every routing alert sent about lead `id`, to anyone, on any channel. */
+  const sentAbout = async (id: string): Promise<Sent[]> =>
+    (await verify.rows('sys_notification_delivery', { topic: 'lead_routing' }))
+      .filter((n) => n.payload?.actionUrl === `/crm_lead/${id}`)
+      .map((n) => ({ to: String(n.recipient_id), channel: String(n.channel), template: String(n.payload?.template) }))
+      .sort((a, b) => a.channel.localeCompare(b.channel));
+  /** POST /data/crm_lead as `token`; the new lead's id. */
+  const post = async (token: string, lead: Rec): Promise<string> => {
+    const res = await verify.apiAs(token, 'POST', '/data/crm_lead', {
+      first_name: 'Ada', last_name: `Routed ${++k}`, company: `Routed Co ${k}`,
+      email: `routed${k}@flow-record-change.test`, ...lead,
+    });
+    expect(res.status, 'the lead was not created').toBe(201);
+    return String(((await res.json()) as Rec).id);
+  };
+  /** The lead's one finished run, and the status of `notify` in it. */
+  const ranPast = async (id: string, notify: string) => {
+    const [run, ...more] = await landedRuns('lead_assignment', id);
+    expect(more).toHaveLength(0);
+    expect(run?.status).toBe('completed');
+    return (run?.summary?.nodes ?? []).find((n: Rec) => n.nodeId === notify)?.status;
+  };
+
+  it('a rep’s own lead from the create form (owner = the rep) alerts nobody', async () => {
+    const id = await post(rep.token, { owner_id: rep.id, rating: 2 });
+    expect(await ranPast(id, 'notify_std'), 'notify_std was not passed over').toBe('skipped');
+    const [stored] = await verify.rows('crm_lead', { id });
+    expect(stored!.next_followup_date, 'the SLA stamp did not land').toBeTruthy();
+    expect(await sentAbout(id), 'the rep was alerted about a lead they created').toEqual([]);
+  }, 30_000);
+
+  it('a rep’s own lead through the API with no owner (stamped the rep’s) alerts nobody', async () => {
+    const id = await post(rep.token, { rating: 2 });
+    const [stored] = await verify.rows('crm_lead', { id });
+    expect(stored!.owner_id, 'not the creator-stamped lead this case is about').toBe(rep.id);
+    expect(await ranPast(id, 'notify_std'), 'notify_std was not passed over').toBe('skipped');
+    expect(await sentAbout(id), 'the rep was alerted about a lead they created').toEqual([]);
+  }, 30_000);
+
+  it('a web-to-lead lead alerts the rep the round-robin gave it to, with the assignment notice', async () => {
+    const res = await verify.api('/forms/contact-us/submit', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ first_name: 'Ada', last_name: `Web ${++k}`, email: `web${k}@flow-record-change.test`, company: 'Web Co', description: 'Please call.' }),
+    });
+    expect(res.status).toBe(201);
+    const id = String(((await res.json()) as Rec).id);
+    await ranPast(id, 'notify_std');
+    const [stored] = await verify.rows('crm_lead', { id });
+    expect(stored!.owner_id, 'the web lead was not routed to the rep').toBe(rep.id);
+    expect(stored!.rating, 'not the standard lead this case is about').toBeLessThan(4);
+    expect(await sentAbout(id)).toEqual([{ to: rep.id, channel: 'inbox', template: 'crm.lead_routing_new' }]);
+  }, 30_000);
+
+  it('a lead a colleague logs in the rep’s name alerts the rep, not the colleague', async () => {
+    const id = await post(admin, { owner_id: rep.id, rating: 2 });
+    await ranPast(id, 'notify_std');
+    expect(await sentAbout(id)).toEqual([{ to: rep.id, channel: 'inbox', template: 'crm.lead_routing_new' }]);
+  }, 30_000);
+
+  it('a rep’s own HOT lead still alerts the rep: the 24h follow-up SLA, inbox and email', async () => {
+    const id = await post(rep.token, { rating: 5 });
+    await ranPast(id, 'notify_hot');
+    expect(await sentAbout(id)).toEqual([
+      { to: rep.id, channel: 'email', template: 'crm.lead_routing_hot' },
+      { to: rep.id, channel: 'inbox', template: 'crm.lead_routing_hot' },
+    ]);
+  }, 30_000);
 });
 
 /**
