@@ -213,6 +213,11 @@ describe('the write is REFUSED, not warned about', () => {
     // rather than a silent drift in what a caller can rely on.
     expect(env.status).toBeUndefined();
     expect(env.message).toMatch(/first day of the period|quarter boundary/i);
+    // …and names the START alone (#2060 item 7c). The hook still derives an
+    // end from this start, and the window rule no longer judges it: measured
+    // on 18.0.0-next.5 before that change, the month row drew "Period End must
+    // be the last day …" as well, for an end nobody typed.
+    expect(env.message).not.toMatch(/Period End/);
   });
 
   it('names the QUARTER half specifically when the day is right and the month is not', async () => {

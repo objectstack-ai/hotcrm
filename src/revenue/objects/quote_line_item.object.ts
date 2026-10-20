@@ -138,10 +138,15 @@ export const QuoteLineItem = ObjectSchema.create({
       readonly: true,
     }),
 
+    // A NOT NULL column the server fills, ⛔ not `required` (#2060 item 7b),
+    // the twin's A-21 change; read the note on the twin. `quote_line_item_price_fill`
+    // (`_line-item-price-fill.ts`) defaults a blank price to the product's list
+    // price on insert. Measured on 18.0.0-next.5 while it was `required`: the
+    // New Quote Line Item form refused "Please check the highlighted fields:
+    // Sales Price" and sent nothing, while the same insert stored the list price.
     unit_price: Field.currency({
       label: 'Sales Price',
       group: 'pricing',
-      required: true,
       storage: { notNull: true },
       trackHistory: true,
     }),
