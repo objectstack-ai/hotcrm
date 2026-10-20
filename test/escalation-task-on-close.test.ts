@@ -27,6 +27,13 @@ import { hotcrmStack, signUpPerson, recordEngineWrites, type Person } from './he
 
 type Rec = Record<string, any>;
 const ESCALATION_SUBJECT = /^Escalated: CASE-\d+ · /;
+/**
+ * Each test's budget. The `async: true` hooks are waited for with `vi.waitFor`
+ * (10 s), so a test must outlive its own wait: one that vitest abandoned at
+ * its default 5 s would keep running with its write recorder still attached,
+ * underneath the next test's.
+ */
+const WAIT_BUDGET_MS = 30_000;
 
 let verify: VerifyStack;
 let agent: Person;
@@ -95,7 +102,7 @@ beforeAll(async () => {
   accountId = String(account!.id);
 }, 120_000);
 
-describe('case_close_escalation_task: closing an escalated case completes its escalation task', () => {
+describe('case_close_escalation_task: closing an escalated case completes its escalation task', { timeout: WAIT_BUDGET_MS }, () => {
   it('fixture: the escalation hands the case to the manager, and the task is the rep’s, open and urgent', async () => {
     const id = await open();
     await escalate(id, agent);
@@ -164,7 +171,7 @@ describe('case_close_escalation_task: closing an escalated case completes its es
   });
 });
 
-describe('what the close leaves alone', () => {
+describe('what the close leaves alone', { timeout: WAIT_BUDGET_MS }, () => {
   it('another task on the same case, written by a person, stays open', async () => {
     const id = await open();
     const own = await verify.hooks.run('crm_task', 'insert', {
