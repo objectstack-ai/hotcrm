@@ -56,6 +56,12 @@ export const CloneOpportunityAction: Action = {
         type: src.type ?? null,
         lead_source: src.lead_source ?? null,
         crm_campaign: src.crm_campaign ?? null,
+        // A copy of a PRIVATE deal is private too. A deal flagged Private is
+        // visible only to its owner (\`src/docs/crm_admin.md\`), and the copy
+        // carries its name and amount, so it keeps the flag; the person cloning
+        // owns the copy and can clear it there. Only \`true\` counts, the field's
+        // own boolean (\`test/private-opportunity-derived-records.test.ts\`).
+        is_private: src.is_private === true,
         // Explicit because an action body runs \`isSystem\`, so nothing stamps
         // \`owner_id\` for it — see the note in activity-actions.ts (#548).
         owner_id: ctx.user?.id ?? null,

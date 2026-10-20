@@ -439,13 +439,29 @@ const opportunityWonHook: Hook = {
     // `case.hook.ts` documents: `crm_task.subject` enforces it, and this hook is
     // `async: true` + `onError: 'log'`, so a rejected insert would surface
     // nowhere at all.
+    //
+    // ⛔ Except when the deal is PRIVATE. A deal flagged Private is visible only
+    // to its owner (`src/docs/crm_admin.md`), and that promise covers what the
+    // app derives from it. Who may read THIS task is decided by `crm_task`'s own
+    // grants and its owner, not by the deal's, so its title is written for every
+    // reader of the task: a private deal's task reads
+    // `Activate new customer (private opportunity)`, without the name. The owner
+    // still gets the step, and `related_to_opportunity` still links the deal for
+    // whoever can read it. The flag is read the way the name is — this write's
+    // value first, then the stored row — and only `true` counts as private, the
+    // field's own boolean (`crm_opportunity.is_private`, default `false`).
+    // `test/private-opportunity-derived-records.test.ts` pins it.
+    const isPrivate =
+      typeof input.is_private === 'boolean' ? input.is_private : previous?.is_private === true;
     const oppName =
       (typeof input.name === 'string' && input.name.trim()) ||
       (typeof previous?.name === 'string' && previous.name.trim()) ||
       '';
-    const titled = oppName
-      ? `Activate new customer for opportunity ${oppName}`
-      : 'Activate new customer';
+    const titled = isPrivate
+      ? 'Activate new customer (private opportunity)'
+      : oppName
+        ? `Activate new customer for opportunity ${oppName}`
+        : 'Activate new customer';
     await api.object('crm_task').insert({
       subject: titled.length > 255 ? `${titled.slice(0, 254)}…` : titled,
       status: 'not_started',
