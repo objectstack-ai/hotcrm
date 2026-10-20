@@ -37,7 +37,7 @@ No dashboard can give you the same figure. The **Sales Performance** dashboard (
 
 ## The pipeline kanban view
 
-The kanban board is the **Sales Pipeline** view on Opportunities (`pipeline_kanban`), and the sidebar entry that opens it reads **Pipeline**. It shows the pipeline **one column per stage, open deals only**: the board carries its own filter — `stage not_in [closed_won, closed_lost]` in `src/sales/views/opportunity.view.ts` — so only the five active stages, *Prospecting*, *Qualification*, *Needs Analysis*, *Proposal* and *Negotiation*, can ever hold a card. Closed business is not hidden, it is elsewhere: **All Opportunities** and the **Sales Performance** dashboard both include it. Whether the two closed stages are drawn as permanently empty columns or left off the board altogether is the console's rendering choice and not something this app declares — either way there is no closed deal on this board to find.
+The kanban board is the **Sales Pipeline** view on Opportunities (`pipeline_kanban`). It has no sidebar entry of its own: open **Sales › Opportunities**, and the board is the **Sales Pipeline** tab in the view switcher along the top of the list. It shows the pipeline **one column per stage, open deals only**: the board carries its own filter — `stage not_in [closed_won, closed_lost]` in `src/sales/views/opportunity.view.ts` — so only the five active stages, *Prospecting*, *Qualification*, *Needs Analysis*, *Proposal* and *Negotiation*, can ever hold a card. Closed business is not hidden, it is elsewhere: **All Opportunities** and the **Sales Performance** dashboard both include it. Whether the two closed stages are drawn as permanently empty columns or left off the board altogether is the console's rendering choice and not something this app declares — either way there is no closed deal on this board to find.
 
 Each card carries the four fields the board binds (`kanban.columns`):
 
@@ -77,7 +77,7 @@ All five are in the sidebar's **Reports** group, which holds every report the ap
 | **Opportunity Funnel by Owner → Stage** | Per-rep funnel health — spot leaky stages. |
 | **Opportunities by Stage** | Bar chart of pipeline by stage. |
 | **Won Opportunities by Owner** | Leaderboard for quarter-end recognition. |
-| **Customer Churn Signals** | Open cases + low NPS on existing customers = churn risk. |
+| **Customer Churn Signals** | Four stacked panels for proactive retention: **CSM-Flagged Accounts** (accounts a CSM has flagged by hand), **At-Risk Accounts** (no activity in 60+ days), **Silent High-Value Accounts** (strategic and enterprise accounts quiet for 90+ days) and **Recently Lost Opportunities** (closed-lost in the last 30 days). |
 
 See [Analytics › Reports](/docs/analytics/reports) for details.
 
@@ -85,7 +85,7 @@ See [Analytics › Reports](/docs/analytics/reports) for details.
 
 | Cadence | What to do |
 | --- | --- |
-| **Daily** | Open the **Pipeline** board. Find stalled cards (in-stage > 14 days). Push or close. |
+| **Daily** | Open **Opportunities** and switch to its **Sales Pipeline** tab. Find stalled cards (in-stage > 14 days). Push or close. |
 | **Weekly** | Run *Pipeline Coverage*. Ask the AI assistant: *"what's at risk?"* |
 | **Monthly** | Run *Opportunity Funnel by Owner → Stage*. Coach reps with leaky stages 1:1. |
 | **Quarter-end** | Run *Won Opportunities by Owner* for commissions. Archive lost deals with a *loss reason*. |
