@@ -1,7 +1,5 @@
 # HotCRM full functional browser pass on ObjectStack 18.0.0 (draft, in progress)
 
-Card: objectstack-ai/hotcrm#2207, track 1. Draft pushed as the pass runs; the final report replaces this file.
-
 ## Coverage (so far)
 
 | Row | Verdict | Reason | Screenshot |
@@ -42,3 +40,26 @@ Card: objectstack-ai/hotcrm#2207, track 1. Draft pushed as the pass runs; the fi
 | ACC-015 | pass | Console import with the shipped "Account Import (CSV)" and "Contact Import (CSV)" mappings: 2/2 created each; re-import of the same accounts file → 2 updated (upsert) | shots/38-ACC-015-account-import-shipped-mapping.png, shots/38-ACC-015-contact-import-after-1.png |
 | ACC-016 | not reachable | AI skill; no AI service in this boot | — |
 | ACC-017 | not reachable | AI skill; no AI service in this boot | — |
+| ACC-018 | pass | Accounts by Industry & Type and Customer Churn Signals reports answered 200 and drew — see *Extras*; account/contact datasets feed the executive and CRM dashboards | shots/91-RPT-*.png |
+| OPP-001 | pass | Opportunity list and detail; required name/account/amount/stage/close date; attachments | shots/40-OPP-010-open-opportunities.png, shots/41-OPP-016-opp-detail.png |
+| OPP-002 | pass | closed_won without win_reason → 400 "Win Reason is required"; closed_lost without loss_reason → 400; backward needs_analysis→qualification saved (warning level by design) | (REST) |
+| OPP-003 | pass | qualification→needs_analysis with a forged probability 99: probability 40, expected_revenue 31,600, forecast_category best_case | (REST) |
+| OPP-004 | pass | stage_entry_date reset to today, days_in_stage 0; Stale tab sorts by days in stage | shots/40-OPP-010-stale-opportunities.png |
+| OPP-005 | pass | Won deal: amount edit → 409 RECORD_LOCKED "only description, next_step, notes may be edited"; description 200; close_date stamped today on the win | (REST) |
+| OPP-006 | pass | eu.rep won Northwind Grid Modernization in the Edit form: Northwind Energy prospect→customer; high task "Activate new customer…" due +3 days. The first Update fails once on Win Reason (6th tab) — #2194 T1-U02, unchanged | shots/42-OPP-006-win-first-save.png, shots/42-OPP-006-won-record.png |
+| OPP-007 | fail | Lines roll up (BlueFjord deal 64,000 → 36,000 → 43,000 as lines were added), but a line added while the deal is approval-locked is still saved and its rollup fails: Acme Platform Upgrade 150,000 vs lines 156,000 — F-03 / #2191 still reproduces | (REST + server log 15:44:56Z) |
+| OPP-008 | pass | Line with no unit_price → unit_price = list_price 18,000; negotiated 7,000 kept | (REST) |
+| OPP-009 | pass | Sales Pipeline kanban: columns per stage with amount sums; closed deals excluded | shots/40-OPP-010-pipeline-kanban.png |
+| OPP-010 | pass | All 10 tabs draw (Open Deals, All, Pipeline, Forecast Calendar, Timeline, Cards, My Open, and under "3 more": Stale, Tender This Quarter (designed empty state), Closing This Quarter) | shots/40-OPP-010-*.png |
+| OPP-011 | pass | 2 deals → Update Stage → Proposal → one aggregate dispatch (`_selectedIds` of 2) → "Succeeded 2 / 2" | shots/43-OPP-011-mass-update-stage.png, shots/43-OPP-011-mass-update-stage-done.png |
+| OPP-012 | pass | Clone → "Copy of Globex Manufacturing Suite", prospecting, amount kept, close date +90 days; toast "Opportunity cloned successfully!" (the page stays on the original) | shots/44-OPP-012-clone-result.png |
+| OPP-013 | not reachable | Daily 07:30 schedule only. `POST /api/v1/automation/opportunity_stagnation/trigger` → 403 "This caller may not start this flow"; Setup → Packaged Automation offers On/Clone only, no run-now; 07:30 did not fall inside the pass | — |
+| OPP-014 | pass | Wayne 1.2M won after both approvals → owner inbox "Large deal won: … closed at 1200000" — the amount is still unformatted, F-08 / #2193 still reproduces | shots/96-F08-large-deal-won-unformatted.png |
+| OPP-015 | pass | is_private deal: owner and admin 200; sales manager, marketing user and eu.rep 404 by id and absent from lists | (REST) |
+| OPP-016 | pass | Detail header Generate Quote / Clone Opportunity / Log a Call / Edit, 7-stage path, highlights | shots/41-OPP-016-opp-detail.png |
+| OPP-017 | pass | Opportunity reports and dashboards answered 200 — see *Extras* | shots/91-RPT-*.png |
+| APR-001 | pass | ≥100K opened manager review (Initech raised to 110,000 → pending); 1.2M got manager_review then director_signoff | shots/50-APR-005-mgr-inbox.png |
+| APR-002 | pass | Pending deal: rep edit of amount or next_step → 409 RECORD_LOCKED; approval_status mirrors pending / approved / rejected | (REST) |
+| APR-003 | pass | Approve → approved_date + owner inbox "Deal approved"; Reject → approval_status rejected + warning "Deal rejected… Review and revise before resubmitting" | shots/51-APR-003-mgr-approve-wayne-dialog.png, shots/51-APR-003-mgr-reject-acme-done.png |
+| APR-004 | pass | sales_director has no holder → the director step landed in the dev admin's inbox (admin rescue); admin approved | shots/52-APR-004-admin-inbox-director-rescue.png |
+| APR-005 | pass | My Work → Inbox opens approvals:inbox with the manager's 5 pending requests (2 deals, 3 account reviews); approve/reject from the record view, which shows "Locked for approval" | shots/50-APR-005-mgr-inbox.png, shots/51-APR-003-mgr-approve-wayne-request.png |
