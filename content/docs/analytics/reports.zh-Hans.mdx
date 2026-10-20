@@ -32,7 +32,7 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/sales/reports/index.t
 
 本节曾经列出的八个名字哪儿都没有发布。其中两个是真名，但它们属于报表以外的东西：
 
-- **Pipeline by Stage** 是仪表盘**磁贴**标题和图表标题，不是报表。磁贴是 **CRM Overview**、**Sales Performance** 与 **Executive Overview** 三个仪表盘共用的未结管道漏斗（`src/sales/dashboards/shared-widgets.ts`）；图表则是上面 **Opportunities by Stage** 那张柱状图，它的标题就写作 **Pipeline by Stage**。在报表库里按这个名字搜，一份都搜不到；你要的那份叫 **Opportunities by Stage**。
+- **Pipeline by Stage** 是仪表盘**磁贴**标题和图表标题，不是报表。磁贴是 **CRM Overview**、**Sales Performance** 与 **Executive Overview** 三个仪表盘共用的未结管道条形图（`src/sales/dashboards/shared-widgets.ts`）；图表则是上面 **Opportunities by Stage** 那张柱状图，它的标题就写作 **Pipeline by Stage**。在报表库里按这个名字搜，一份都搜不到；你要的那份叫 **Opportunities by Stage**。
 - **Stale Opportunities** 是商机上的**列表视图** —— **⚠️ Stale Opportunities · Longest in Stage First**，标签页上写的也是这个名字（`src/sales/views/opportunity.view.ts`）—— 而且它并不施加本表所说的 14 天筛选。它列出**所有**未结交易，按 **Stage Entry Date** 升序排，停留最久的排在最上面；那 14 天属于负责催办的 `opportunity_stagnation` 流程，不属于这个视图。分析侧也重建不出来：**Days in Current Stage** 是查询之后才求值的公式，任何东西都无法按它分组、筛选或排序，也没有任何数据集把它暴露出来。
 - *Top Performing Reps* 是存在的，只是真名不同：**Won Opportunities by Owner** 就是赢单排行榜，**Opportunity Funnel by Owner → Stage** 则是同一份排名再把每人的各阶段摊开。`opportunity_metrics` 声明了 **Owner** 维度 —— 这一点和 `case_metrics` 不同，也正是服务侧没有客服排行的原因。
 

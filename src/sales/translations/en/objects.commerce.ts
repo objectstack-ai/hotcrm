@@ -26,7 +26,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_account: { label: 'Account' },
       crm_contact: {
         label: 'Contact',
-        help: 'Required once the quote is Presented or Accepted — the drafted contract takes its Primary Contact from here.',
+        help: 'Required on the save that moves the quote to Presented or Accepted — the drafted contract takes its Primary Contact from here.',
       },
       crm_opportunity: { label: 'Opportunity' },
       owner_id: { label: 'Quote Owner' },

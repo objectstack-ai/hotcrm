@@ -102,9 +102,12 @@ const expectContactRequired = (env: ReturnType<typeof envelope>) => {
 // ─────────────────────────────────────────── the declared shape of the gate ──
 
 describe('the gate is declared where the platform can act on it', () => {
-  it('requires the contact exactly from `presented` onward', () => {
+  it('requires the contact on the write INTO `presented` or `accepted`, and while `presented`', () => {
+    // A gate, not an invariant (#2161, ruling A): an ALREADY-accepted quote is
+    // past it, so the engine's referential clear can free a deleted contact
+    // (#720). `test/accepted-quote-frees-contact.test.ts` drives both halves.
     expect(celSource(quote.fields.crm_contact.requiredWhen)).toBe(
-      'has(record.status) && (record.status == "presented" || record.status == "accepted")',
+      'has(record.status) && (record.status == "presented" || (record.status == "accepted" && (previous == null || !has(previous.status) || previous.status != "accepted")))',
     );
   });
 

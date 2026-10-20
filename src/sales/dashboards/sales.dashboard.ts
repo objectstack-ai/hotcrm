@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Dashboard } from '@objectstack/spec/ui';
-import { avgDealSizeMetricWidget, pipelineByStageFunnelWidget } from './shared-widgets';
+import { avgDealSizeMetricWidget, pipelineByStageWidget } from './shared-widgets';
 
 /**
  * Sales Performance Dashboard
@@ -157,7 +157,7 @@ export const SalesDashboard: Dashboard = {
     },
 
     // ─── Row 3: Pipeline & Trends ─────────────────────────────────────
-    pipelineByStageFunnelWidget({ x: 0, y: 4, w: 6, h: 4 }),
+    pipelineByStageWidget({ x: 0, y: 4, w: 6, h: 4 }),
     {
       id: 'monthly_revenue_trend',
       title: 'Monthly Revenue Trend',
