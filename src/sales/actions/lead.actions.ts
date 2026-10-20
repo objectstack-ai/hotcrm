@@ -140,10 +140,20 @@ export const ScheduleFollowUpAction: Action = {
 /**
  * Add selected leads to a Campaign.
  *
- * Script-typed action: collects a campaign id (param dialog) then writes one
- * `crm_campaign_member` record for the dispatched lead, skipping leads already
- * on the campaign. The chosen campaign arrives as `input.crm_campaign`; the
- * lead arrives as `ctx.recordId`.
+ * Flow-typed action over `campaign_lead_member_enroll`, the one flow that
+ * enrolls one lead (`src/marketing/flows/campaign-member-enroll.flow.ts`). The
+ * param dialog collects the campaign as `campaignId`, the flow's input of that
+ * name; the lead is the dispatched row, which the action door seeds into the
+ * flow's `leadId` through `recordIdParam`. The flow skips a lead the campaign
+ * already has and answers `enrolled: false` for it.
+ *
+ * It runs AS THE CALLER (#2167, Q1 letter B): `crm_campaign_member`'s own
+ * `allowCreate` is the gate, so a profile without it is refused with 400
+ * `FLOW_FAILED` and the permission message, and `visible` stops offering it
+ * to that profile. It was a system-elevated script body until #2167, which
+ * let `sales_rep` and `sales_manager` create members their sets do not let
+ * them create. ⛔ Do not bring a script body back: a body runs elevated by
+ * platform design, and the profile would stop being the answer.
  *
  * PER-RECORD dispatch, deliberately. `src/sales/views/lead.view.ts` wires this as the
  * BARE-STRING form — `bulkActions: ['create_campaign']` — and that string is a
@@ -152,84 +162,28 @@ export const ScheduleFollowUpAction: Action = {
  *   - bare string    → the renderer promotes the action to a def carrying its
  *     own label / icon / params / `visible` and dispatches it ONCE PER selected
  *     row, each call carrying that row's `recordId` and NO selection array. A
- *     10-lead selection is 10 dispatches through this body, one lead each.
+ *     10-lead selection is 10 flow runs, one lead each, on one collected
+ *     campaign.
  *   - `bulkActionDefs` + `execution: 'aggregate'` → ONE dispatch for the whole
  *     selection, every id in the builtin `params._selectedIds` and no
- *     `recordId` (see `mass_update_stage` in `opportunity.actions.ts`).
+ *     `recordId` (see `mass_update_stage` in `opportunity.actions.ts`). A flow
+ *     takes one `leadId`, so that contract has nothing to hand this flow.
  *
- * So multi-select enrollment already works here — it just arrives one lead at a
- * time. This body reads `ctx.recordId` and nothing else, which is exactly what
- * the fan-out delivers.
- *
- * ⛔ Never add an `input.selectedIds` read (no underscore). Nothing can deliver
- * that key on either contract, so it is dead code and not a fallback: a
- * top-level `selectedIds` is never merged into the params bag, and a
- * `params.selectedIds` is refused by the strict params gate (ADR-0104) with
- * `Unknown action param "selectedIds" — not declared on this action`. The only
- * selection channel is the underscore-prefixed builtin, and only the aggregate
- * contract injects it (`@objectstack/spec` `ui/action-params.zod.ts`,
- * `ACTION_PARAM_BUILTIN_KEYS`).
- *
- * Switching this action to the aggregate contract would be a PRODUCT change —
- * one audit entry and one dedupe read per run instead of per lead, and
- * all-or-nothing failure semantics — so it needs `lead.view.ts` changed with it
- * and is deliberately not done here.
+ * ⛔ Never declare a `selectedIds` param (no underscore). Nothing can deliver
+ * that key on either contract: a top-level `selectedIds` is never merged into
+ * the params bag, and the only selection channel is the underscore-prefixed
+ * builtin, which only the aggregate contract injects (`@objectstack/spec`
+ * `ui/action-params.zod.ts`, `ACTION_PARAM_BUILTIN_KEYS`).
  */
 export const CreateCampaignAction: Action = {
   name: 'create_campaign',
   label: 'Add to Campaign',
   objectName: 'crm_lead',
   icon: 'send',
-  // script, not modal — a `type: 'modal'` action has NO server dispatch at all:
-  // the renderer just opens its `target`, and the runtime refuses it over REST
-  // (`headlessActionTypeError`, 400 "a client-side action with no server
-  // dispatch"), so its `body` never runs. To collect input and then run
-  // server-side, the shape is `type: 'script'` + `params` — the runner collects
-  // the same dialog. See ScheduleFollowUpAction.
-  type: 'script',
-  body: {
-    language: 'js',
-    source: `
-      // Value key = the param's field name ('crm_campaign') since the param
-      // omits an explicit 'name'. Insert uses the REAL lookup field names on
-      // crm_campaign_member (crm_campaign / crm_lead) — not the generic
-      // campaign_id / lead_id an earlier revision of the doc example taught,
-      // which don't exist here and left crm_campaign null → 'Campaign required'
-      // validation failure.
-      const campaignId = input.crm_campaign ?? null;
-      if (!campaignId) throw new Error('create_campaign requires a campaign id');
-      // One lead per dispatch — the bare-string \`bulkActions\` wiring fans this
-      // body out once per selected row (see the note above). \`ids\` stays a
-      // list so the dedupe + skip loop below reads the same on both contracts,
-      // should this action ever move to an aggregate def.
-      const ids = ctx.recordId ? [ctx.recordId] : [];
-      if (!ids.length) throw new Error('create_campaign: no lead selected');
-      // Skip leads already on this campaign — the modal copy promises
-      // duplicates are skipped, and re-running the action on the same
-      // selection must not double-count marketing touches.
-      const raw = await ctx.api.object('crm_campaign_member').find({
-        where: { crm_campaign: campaignId },
-        fields: ['crm_lead'],
-        top: 5000,
-      });
-      const existingRows = Array.isArray(raw) ? raw : (raw?.records ?? []);
-      const existing = new Set(existingRows.map((r) => r.crm_lead));
-      const inserted = [];
-      let skipped = 0;
-      for (const leadId of ids) {
-        if (existing.has(leadId)) { skipped++; continue; }
-        const row = await ctx.api.object('crm_campaign_member').insert({
-          crm_campaign: campaignId,
-          crm_lead: leadId,
-          status: 'sent',
-        });
-        inserted.push(row?.id ?? null);
-      }
-      return { campaignId, count: inserted.length, skipped, ids: inserted };
-    `,
-    capabilities: ['api.read', 'api.write'],
-    timeoutMs: 10000,
-  },
+  type: 'flow',
+  target: 'campaign_lead_member_enroll',
+  // The flow's own input name for the lead (the door seeds `recordId` too).
+  recordIdParam: 'leadId',
   // list_item gives every row a working record-scoped entry point (the row's
   // menu). Multi-lead enrollment is the SELECTION-BAR button, which All Leads'
   // `bulkActions: ['create_campaign']` produces and which fans out per row.
@@ -243,12 +197,17 @@ export const CreateCampaignAction: Action = {
   // multi-row selection there is ambiguous, so it is refused client-side with
   // "This action runs on a single record — select exactly one row."
   locations: ['list_toolbar', 'list_item'],
+  // The server refusal is the gate; this only stops offering a button that
+  // cannot succeed (see the header).
+  visible: P`current_user.can("crm_campaign_member", "create")`,
   params: [
     // Field-backed param: `field` + `objectOverride` make the console resolve
     // the widget from crm_campaign_member.crm_campaign (a lookup → crm_campaign),
     // rendering a RECORD PICKER. A bare `{ type:'lookup' }` with no field can't
     // resolve a target object and silently falls back to a paste-the-ID textbox.
+    // `name` is the flow's input variable, which the value is sent under.
     {
+      name: 'campaignId',
       field: 'crm_campaign',
       objectOverride: 'crm_campaign_member',
       label: 'Campaign',

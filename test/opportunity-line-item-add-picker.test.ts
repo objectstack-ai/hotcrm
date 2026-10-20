@@ -37,7 +37,9 @@ const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
  *     { [relationshipField]: <opportunityId>, [linkField]: <pickedProductId> }
  *
  * On this object that leaves `quantity` and `unit_price` unset, and both are
- * `required` + `storage.notNull`. A picker that produced a row the engine
+ * `storage.notNull` (`quantity` is also `required`; `unit_price` stopped being
+ * `required` in #2060 item 7, because the hook below is its producer). A
+ * picker that produced a row the engine
  * refuses — or worse, a row with no quantity and no price, which prices the
  * deal at nothing — would mean "A needs more than a picker". It does not, and
  * the reason is machinery that predates this list:
@@ -53,9 +55,9 @@ const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
  * write, which is why the end-to-end block below measures the real insert on a
  * real engine rather than asserting the page's shape and calling it done. The
  * ABLATION is the other half: unbind the price-fill hook and the same insert is
- * rejected as "Sales Price is required". Without it, a future change that
- * silently made `unit_price` optional would leave this suite green while the
- * picker started writing priceless lines into the billing hand-off.
+ * refused by the `unit_price` NOT NULL column. Without it, a future change that
+ * silently dropped that column constraint would leave this suite green while
+ * the picker started writing priceless lines into the billing hand-off.
  */
 
 const byName = (n: string) => objects.find((o) => o.name === n) as AnyRec;
@@ -223,10 +225,16 @@ describe('the row a picker-shaped insert actually produces', () => {
   });
 
   it('ABLATION: without the price-fill hook the same insert is refused', async () => {
-    // The negative control. `unit_price` is `required` + NOT NULL and the picker
+    // The negative control. `unit_price` is a NOT NULL column and the picker
     // authors no price, so the ONLY reason the assertions above can pass is the
     // `beforeInsert` hook. Unbind it and the insert must fail — otherwise those
     // assertions would keep passing on a day the hook stopped running.
+    //
+    // The refusal is the COLUMN's, named by table and column: since #2060
+    // item 7 the field is not `required`, so no engine check runs first. In
+    // process it surfaces as the driver's error, which carries no `code`; the
+    // REST door translates the same failure to 400 `VALIDATION_FAILED`
+    // (measured in the PR), which is the platform's envelope, not this app's.
     const { api, product, opportunity } = await boot(false);
 
     await expect(
@@ -234,6 +242,7 @@ describe('the row a picker-shaped insert actually produces', () => {
         crm_opportunity: opportunity.id,
         crm_product: product.id,
       }),
-    ).rejects.toThrow(/Sales Price is required/);
+    ).rejects.toThrow(/NOT NULL constraint failed: crm_opportunity_line_item\.unit_price/);
+    expect(await api.object('crm_opportunity_line_item').find({ where: { crm_opportunity: opportunity.id } })).toHaveLength(0);
   });
 });

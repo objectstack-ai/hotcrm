@@ -190,7 +190,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: '加入营销活动',
         successMessage: '已将线索加入营销活动！',
         params: {
-          crm_campaign: { label: '营销活动' },
+          campaignId: { label: '营销活动' },
         },
       },
       schedule_followup: {

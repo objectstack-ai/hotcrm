@@ -32,6 +32,17 @@ type Flow = Automation.Flow;
  * ⛔ This flow does NOT write the campaign metric rollups (`num_sent` etc.) —
  * the campaign metric hooks own them and refresh on every membership change. A
  * per-run `num_sent = {leadList.length}` overwrite here clobbers prior batches.
+ *
+ * ## Who may enroll, and what the run says (#2167)
+ *
+ * The insert and the already-enrolled check are the two per-person flows in
+ * `campaign-member-enroll.flow.ts`, and they run as the caller, like this
+ * flow: a profile without `allowCreate` on `crm_campaign_member` is refused
+ * there, person by person. The guarded iteration contains each refusal, and
+ * the run counts both outcomes (Q2 letter a): a run that refused anyone ends
+ * `refused` with both counts in its message, and a clean run ends `completed`
+ * with the static `successMessage` below. Which person failed, and why, is
+ * the failed step the run log keeps for each refused iteration.
  */
 export const CampaignEnrollmentFlow: Flow = {
   name: 'campaign_enrollment',
@@ -39,6 +50,12 @@ export const CampaignEnrollmentFlow: Flow = {
   description: 'Bulk enroll eligible leads or contacts into this campaign (skips already-enrolled and opted-out people).',
   type: 'screen',
   status: 'active',
+  // The clean run's message, and the ONLY place it is written: the Enroll
+  // Members action declares none, so the console shows this one (translated
+  // as `flows.campaign_enrollment.successMessage` in the packs). A plain
+  // string; the engine interpolates nothing here, which is why the counts
+  // live on the refused ending instead.
+  successMessage: 'Eligible members enrolled in campaign.',
 
   variables: [
     // `recordId` matches the console's flow-action trigger contract
@@ -95,6 +112,10 @@ export const CampaignEnrollmentFlow: Flow = {
      */
     { name: 'leadStatus', type: 'text', isInput: true, isOutput: false },
     { name: 'contactDepartment', type: 'text', isInput: true, isOutput: false },
+    // The two counts the refused ending reports. Not inputs: a caller has no
+    // business seeding a count.
+    { name: 'enrolledCount', type: 'number', isInput: false, isOutput: false, defaultValue: 0 },
+    { name: 'refusedCount', type: 'number', isInput: false, isOutput: false, defaultValue: 0 },
   ],
 
   nodes: [
@@ -184,48 +205,38 @@ export const CampaignEnrollmentFlow: Flow = {
         body: guarded('lead', {
           nodes: [
             {
-              // Dedupe: skip leads already enrolled in THIS campaign, so a
-              // re-run tops up instead of double-enrolling (double rows
-              // inflated num_sent / response_rate).
-              id: 'find_existing_member', type: 'get_record', label: 'Already Enrolled?',
-              config: {
-                objectName: 'crm_campaign_member',
-                filter: { crm_campaign: cel`recordId`, crm_lead: cel`currentLead.id` },
-                outputVariable: 'existingMember',
-              },
-            },
-            {
-              // Gateway only — the predicate lives on the out-edge.
-              id: 'check_not_enrolled', type: 'decision', label: 'New Member?',
-            },
-            {
-              // ⭐ The INSERT is elevated, this flow is NOT. `added_date` is
-              // `readonly: true`, and from @objectstack/objectql 17.4.0 the
-              // readonly strip runs inside `engine.insert` for a non-system
-              // caller as well as on update — so a write from this screen
-              // flow's user context now loses the stamp. The remedy the
-              // platform names is a system context; the remedy AGENTS.md house
-              // rule 9 names is a dedicated `system` sub-flow rather than
-              // elevating the screen flow. Both are satisfied here. ⛔ Do not
-              // fold this back by giving THIS flow `runAs: 'system'`: it would
-              // also lift RLS off `query_leads` / `query_contacts`, and
-              // `crm_lead` is `sharingModel: 'private'`.
+              // The per-person flow inserts the member, or skips a lead this
+              // campaign already has, as the caller; `enrolled` says which.
+              // ⛔ Do not give THIS flow `runAs: 'system'` to let a profile
+              // enroll: it would also lift RLS off `query_leads` /
+              // `query_contacts`, and `crm_lead` is `sharingModel: 'private'`.
               // See `src/marketing/flows/campaign-member-enroll.flow.ts`.
               id: 'create_campaign_member', type: 'subflow', label: 'Add to Campaign',
               config: {
                 flowName: 'campaign_lead_member_enroll',
                 input: { campaignId: cel`recordId`, leadId: cel`currentLead.id` },
+                outputVariable: 'leadEnrolment',
               },
+            },
+            {
+              // Gateway only — the predicate lives on the out-edge.
+              id: 'check_lead_enrolled', type: 'decision', label: 'Enrolled?',
+            },
+            {
+              id: 'count_enrolled_lead', type: 'assignment', label: 'Count Enrolled',
+              config: { assignments: { enrolledCount: cel`enrolledCount + 1` } },
             },
           ],
           edges: [
-            { id: 'b1', source: 'find_existing_member', target: 'check_not_enrolled', type: 'default' },
-            // Already enrolled → no edge → next lead. This edge is the ONLY
-            // site for the predicate: a `decision` node's singular
-            // `config.condition` is never read, so a node copy would be inert.
-            { id: 'b2', source: 'check_not_enrolled', target: 'create_campaign_member', type: 'conditional', condition: P`existingMember == null`, label: 'Enroll' },
+            { id: 'b1', source: 'create_campaign_member', target: 'check_lead_enrolled', type: 'default' },
+            // Already enrolled → no edge → next lead, counted as neither.
+            // `leadEnrolment` is the callee's output map, so its field read
+            // carries both `has()` guards like any other variable field read
+            // (test/flow-variable-conditions.test.ts).
+            { id: 'b2', source: 'check_lead_enrolled', target: 'count_enrolled_lead', type: 'conditional', condition: P`has(vars.leadEnrolment) && has(vars.leadEnrolment.enrolled) && vars.leadEnrolment.enrolled == true`, label: 'Enrolled' },
           ],
-        }),
+        // A refused lead is caught here and counted.
+        }, { refusedCount: cel`refusedCount + 1` }),
       },
     },
     {
@@ -251,36 +262,39 @@ export const CampaignEnrollmentFlow: Flow = {
         body: guarded('contact', {
           nodes: [
             {
-              // Dedupe scoped on `crm_contact`, so a person enrolled as a LEAD
-              // and again as a CONTACT is not treated as a duplicate: those are
-              // two records of two different relationships, and the seed
-              // datasets key them separately for the same reason.
-              id: 'find_existing_contact_member', type: 'get_record', label: 'Already Enrolled?',
-              config: {
-                objectName: 'crm_campaign_member',
-                filter: { crm_campaign: cel`recordId`, crm_contact: cel`currentContact.id` },
-                outputVariable: 'existingContactMember',
-              },
-            },
-            {
-              // Gateway only — the predicate lives on the out-edge.
-              id: 'check_contact_not_enrolled', type: 'decision', label: 'New Member?',
-            },
-            {
-              // The contact mirror of `create_campaign_member` above — same
-              // elevation, same reason. See that node's note.
+              // The contact mirror of `create_campaign_member` above. Its
+              // dedupe is scoped on `crm_contact`, so a person enrolled as a
+              // LEAD is not a duplicate of the same person as a CONTACT.
               id: 'create_contact_member', type: 'subflow', label: 'Add Contact to Campaign',
               config: {
                 flowName: 'campaign_contact_member_enroll',
                 input: { campaignId: cel`recordId`, contactId: cel`currentContact.id` },
+                outputVariable: 'contactEnrolment',
               },
+            },
+            { id: 'check_contact_enrolled', type: 'decision', label: 'Enrolled?' },
+            {
+              id: 'count_enrolled_contact', type: 'assignment', label: 'Count Enrolled',
+              config: { assignments: { enrolledCount: cel`enrolledCount + 1` } },
             },
           ],
           edges: [
-            { id: 'c1', source: 'find_existing_contact_member', target: 'check_contact_not_enrolled', type: 'default' },
-            { id: 'c2', source: 'check_contact_not_enrolled', target: 'create_contact_member', type: 'conditional', condition: P`existingContactMember == null`, label: 'Enroll' },
+            { id: 'c1', source: 'create_contact_member', target: 'check_contact_enrolled', type: 'default' },
+            { id: 'c2', source: 'check_contact_enrolled', target: 'count_enrolled_contact', type: 'conditional', condition: P`has(vars.contactEnrolment) && has(vars.contactEnrolment.enrolled) && vars.contactEnrolment.enrolled == true`, label: 'Enrolled' },
           ],
-        }),
+        }, { refusedCount: cel`refusedCount + 1` }),
+      },
+    },
+    // Gateway only — the two complementary predicates live on `e10` / `e11`.
+    { id: 'check_refused', type: 'decision', label: 'Anyone Refused?' },
+    {
+      // Q2 letter a (#2167): any refusal ends the run `refused`, with both
+      // counts. The console shows it with Close only, and no completion
+      // toast. Translated as `refusals.end_refused.message` in the packs.
+      id: 'end_refused', type: 'end', label: 'Enrollment Refused',
+      config: {
+        outcome: 'refused',
+        message: 'Enrollment refused for {{refusedCount}} of the people selected: {{enrolledCount}} enrolled, {{refusedCount}} refused. A refused person was not added to the campaign; the flow run log records why for each one.',
       },
     },
     { id: 'end', type: 'end', label: 'End' },
@@ -318,7 +332,7 @@ export const CampaignEnrollmentFlow: Flow = {
       && (vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress")
       && vars.memberSource != "contacts"`, label: 'Open · Leads' },
     { id: 'e5', source: 'query_leads', target: 'loop_leads', type: 'default' },
-    { id: 'e6', source: 'loop_leads', target: 'end', type: 'default' },
+    { id: 'e6', source: 'loop_leads', target: 'check_refused', type: 'default' },
     // The contact branch. `memberSource` carries no `has()` guard on either
     // edge, deliberately: its `flow.variables` declaration carries
     // `defaultValue: 'leads'`, which the engine seeds before the start node, so
@@ -331,6 +345,14 @@ export const CampaignEnrollmentFlow: Flow = {
       && (vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress")
       && vars.memberSource == "contacts"`, label: 'Open · Contacts' },
     { id: 'e8', source: 'query_contacts', target: 'loop_contacts', type: 'default' },
-    { id: 'e9', source: 'loop_contacts', target: 'end', type: 'default' },
+    { id: 'e9', source: 'loop_contacts', target: 'check_refused', type: 'default' },
+    // Complementary conditionals rather than an `isDefault` fallback, so the
+    // pair reads as one cut and neither edge depends on branch-label routing.
+    // Equality, not `> 0`: the count only ever grows from its declared 0, so
+    // `!= 0` says the same thing, and an equality answers on every shape a
+    // variable can hold where an ordering test aborts on a null
+    // (test/flow-variable-conditions.test.ts).
+    { id: 'e10', source: 'check_refused', target: 'end_refused', type: 'conditional', condition: P`vars.refusedCount != 0`, label: 'Refused' },
+    { id: 'e11', source: 'check_refused', target: 'end', type: 'conditional', condition: P`vars.refusedCount == 0`, label: 'Clean' },
   ],
 };

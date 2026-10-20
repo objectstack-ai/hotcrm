@@ -53,33 +53,53 @@ const nodeOf = (f: AnyRec | undefined, id: string) =>
 const fieldNames = (obj: string) => Object.keys(objects.find((o) => o.name === obj)?.fields ?? {});
 
 describe('action body ↔ schema field-name contracts', () => {
-  it('create_campaign inserts REAL crm_campaign_member fields, not the doc-example names', () => {
-    const a = action('create_campaign');
-    expect(a, 'create_campaign action missing').toBeTruthy();
-    const src: string = a!.body?.source ?? '';
-    // The real lookup fields on crm_campaign_member.
+  /**
+   * Add to Campaign, on both sides, is a FLOW action since #2167: the insert is
+   * the target flow's `create_record`, run as the caller. The field-name
+   * contract the script body used to carry now lives in that node's map.
+   */
+  const ADD_TO_CAMPAIGN = [
+    { name: 'create_campaign', person: 'crm_lead' },
+    { name: 'add_contact_to_campaign', person: 'crm_contact' },
+  ] as const;
+  const targetOf = (name: string): AnyRec => {
+    const a = action(name);
+    expect(a, `${name} action missing`).toBeTruthy();
+    expect(a!.type, `${name} must be flow-typed`).toBe('flow');
+    const f = flow(a!.target);
+    expect(f, `${name} targets missing flow "${a!.target}"`).toBeTruthy();
+    return f!;
+  };
+  const inputsOf = (f: AnyRec): string[] =>
+    ((f.variables ?? []) as AnyRec[]).filter((v) => v.isInput).map((v) => v.name);
+
+  it.each(ADD_TO_CAMPAIGN)('$name inserts REAL crm_campaign_member fields, not the doc-example names', ({ name, person }) => {
+    const inserts = (targetOf(name).nodes as AnyRec[]).filter((n) => n.type === 'create_record');
+    expect(inserts, `${name}'s flow must insert exactly one membership row`).toHaveLength(1);
+    const [insert] = inserts;
+    expect(insert!.config.objectName).toBe('crm_campaign_member');
+    // The real lookup fields on crm_campaign_member — never the generic
+    // campaign_id / lead_id (which left the required crm_campaign null →
+    // validation failure on every insert).
     const cmFields = fieldNames('crm_campaign_member');
-    expect(cmFields).toContain('crm_campaign');
-    expect(cmFields).toContain('crm_lead');
-    // Body must write those, never the generic campaign_id/lead_id (which left
-    // the required crm_campaign null → validation failure on every insert).
-    expect(src).toMatch(/crm_campaign\s*:/);
-    expect(src).toMatch(/crm_lead\s*:/);
-    expect(src, 'body still writes the non-existent campaign_id column').not.toMatch(/campaign_id\s*:/);
-    expect(src, 'body still writes the non-existent lead_id column').not.toMatch(/lead_id\s*:/);
+    const written = Object.keys(insert!.config.fields ?? {});
+    expect(cmFields).toEqual(expect.arrayContaining(['crm_campaign', person]));
+    expect(written).toEqual(expect.arrayContaining(['crm_campaign', person]));
+    expect(written.filter((f) => !cmFields.includes(f)), 'writes a column crm_campaign_member does not have').toEqual([]);
   });
 
-  it('create_campaign campaign param is field-backed so it renders a picker (not a paste-ID textbox)', () => {
-    const p = (action('create_campaign')?.params ?? [])[0];
+  it.each(ADD_TO_CAMPAIGN)('$name campaign param is field-backed so it renders a picker (not a paste-ID textbox)', ({ name }) => {
+    const p = (action(name)?.params ?? [])[0];
     expect(p, 'campaign param missing').toBeTruthy();
     // A field-backed param (`field` + `objectOverride`) is what makes the console
     // resolve the widget to a record picker. A bare { type:'lookup' } falls back
     // to a plain text input.
     expect(p.field, 'param must be field-backed').toBeTruthy();
     expect(p.objectOverride, 'param must name the object to resolve the field on').toBeTruthy();
-    // And the body must read the value under the param's own key.
-    const key = p.name ?? p.field;
-    expect(action('create_campaign')!.body.source).toContain(`input.${key}`);
+    // And the flow must declare an input under the param's own key: the door
+    // sends the collected value under `name`, and an undeclared one never
+    // reaches the insert.
+    expect(inputsOf(targetOf(name))).toContain(p.name ?? p.field);
   });
 
   it('clone_opportunity copies the REQUIRED opportunity fields (not just name+stage)', () => {
@@ -329,14 +349,25 @@ describe('no action relies on the broken modal machinery', () => {
     }
   });
 
-  it('create_campaign skips leads already on the campaign', () => {
-    // The body must check existing members before inserting — re-running the
+  it.each([
+    { name: 'create_campaign', person: 'crm_lead' },
+    { name: 'add_contact_to_campaign', person: 'crm_contact' },
+  ])('$name skips a person already on the campaign', ({ name, person }) => {
+    // The flow must check existing members before inserting — re-running the
     // action on the same selection must not double-count marketing touches.
-    const a = action('create_campaign');
-    const src: string = a?.body?.source ?? '';
-    expect(src).toMatch(/find\(|findOne\(|existing/);
-    // The dedupe read requires the read capability alongside the write.
-    expect(a?.body?.capabilities).toContain('api.read');
+    // The read is scoped on the side's own lookup: a person enrolled as a lead
+    // and again as a contact is two memberships, not a duplicate.
+    const f = flow(action(name)!.target)!;
+    const nodes = f.nodes as AnyRec[];
+    const read = nodes.find((n) => n.type === 'get_record' && n.config?.objectName === 'crm_campaign_member');
+    expect(read, `${name}'s flow has no dedupe read`).toBeTruthy();
+    expect(Object.keys(read!.config.filter).sort()).toEqual(['crm_campaign', person].sort());
+    // …and the insert is reached only through a conditional edge on its miss.
+    const insert = nodes.find((n) => n.type === 'create_record')!;
+    const into = (f.edges as AnyRec[]).filter((e) => e.target === insert.id);
+    expect(into).toHaveLength(1);
+    expect(into[0]!.type).toBe('conditional');
+    expect(String(into[0]!.condition?.source)).toBe(`${read!.config.outputVariable} == null`);
   });
 });
 

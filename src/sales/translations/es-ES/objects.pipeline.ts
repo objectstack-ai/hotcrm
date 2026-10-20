@@ -197,7 +197,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: 'Agregar a Campaña',
         successMessage: '¡Prospecto agregado a la campaña!',
         params: {
-          crm_campaign: { label: 'Campaña' },
+          campaignId: { label: 'Campaña' },
         },
       },
       schedule_followup: {

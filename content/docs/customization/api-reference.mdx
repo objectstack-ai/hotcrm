@@ -52,23 +52,23 @@ Common operators include `=`, `!=`, `>`, `>=`, `<`, `<=`, `in`, `not_in`, `betwe
 HotCRM actions can include executable metadata bodies with constrained capabilities.
 
 ```ts
-export const CreateCampaignAction = {
-  name: 'create_campaign',
-  objectName: 'crm_lead',
-  type: 'modal',
+export const MarkPrimaryContactAction = {
+  name: 'mark_primary',
+  objectName: 'crm_contact',
+  type: 'script',
   body: {
     language: 'js',
     capabilities: ['api.write'],
     source: `
-      await ctx.api.object('crm_campaign_member').insert({
-        crm_campaign: input.campaign,
-        crm_lead: input.leadId,
-        status: 'sent'
-      });
+      const id = ctx.recordId;
+      await ctx.api.object('crm_contact').update({ id, is_primary: true }, { where: { id } });
+      return { ok: true, id, is_primary: true };
     `,
   },
 };
 ```
+
+A body runs with system privilege. An action that writes on the caller's behalf, where the caller's own permissions must decide, is not a body: **Add to Campaign** (`create_campaign`, `add_contact_to_campaign`) is a flow action over a flow that runs as the caller, and **Mark Responded** (`mark_responded`) is a declarative update. Add to Campaign takes the campaign as `campaignId` and answers with the flow's result, whose `output.enrolled` is `true` for a new member and `false` for a person already on the campaign.
 
 ## Verification
 

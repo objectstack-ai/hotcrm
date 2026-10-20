@@ -285,8 +285,8 @@ export const OpportunityDetailPage: Page = {
                                 //    [linkField]: <pickedProductId> }` — and
                                 // nothing else. On this object that would leave
                                 // `quantity` and `unit_price` unset, and both are
-                                // `required` + `storage.notNull`, so the insert
-                                // would be refused. It is not, because the two
+                                // `storage.notNull` (`quantity` also `required`),
+                                // so the insert would be refused. It is not, because the two
                                 // gaps are already filled by machinery that
                                 // predates this list:
                                 //
@@ -306,8 +306,8 @@ export const OpportunityDetailPage: Page = {
                                 // inserts the picker's exact two-key shape and
                                 // asserts the complete priced row, with an ablation
                                 // that unbinds the hook and shows the same insert
-                                // rejected as "Sales Price is required" — so the
-                                // assertion cannot pass vacuously.
+                                // refused by the `unit_price` NOT NULL column — so
+                                // the assertion cannot pass vacuously.
                                 //
                                 // ⛔ Do not add a `label`. The button falls back to
                                 // the platform's own localized "Add"; the

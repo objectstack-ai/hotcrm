@@ -22,8 +22,10 @@ type Rec = Record<string, any>;
  *
  * Runs on the shipped app booted by `@objectstack/verify`: a marketer starts
  * the screen flow on a campaign (`flows.run`) and submits the screen
- * (`flows.resume`); the enrolment INSERT happens in the registered
- * `runAs: 'system'` callees, resolved by name off the real registry. The boot
+ * (`flows.resume`); the enrolment INSERT happens in the registered callees,
+ * resolved by name off the real registry, which run as the marketer too since
+ * #2167 (who may enroll, door by door, is
+ * `test/campaign-enrollment-doors.test.ts`). The boot
  * replays the app's seed leads and contacts, and the eligibility filter rightly
  * enrols the eligible ones among them too — so every assertion about WHO was
  * enrolled is read over this file's own fixture people, and every assertion

@@ -59,8 +59,8 @@ A flow fires one of three ways, set by its start node:
 | **Generate Quote from Opportunity** | Screen | Build a quote from an opportunity and move it to *Proposal* |
 | **Schedule Follow-up** | Screen | Create the next follow-up task on a lead, already linked to it and owned by the right user |
 | **Enroll Members in Campaign** | Screen | Bulk-enroll eligible leads or contacts into this campaign, skipping the already-enrolled and the opted-out |
-| **Enroll Lead in Campaign** | Subflow | Called by **Enroll Members in Campaign** to write one lead membership with system privilege |
-| **Enroll Contact in Campaign** | Subflow | Called by **Enroll Members in Campaign** to write one contact membership with system privilege |
+| **Enroll Lead in Campaign** | Subflow | Called by **Enroll Members in Campaign**, and by **Add to Campaign** on a lead, to enroll one lead as the person running it: a lead already on the campaign is skipped, and a person who may not create campaign members is refused |
+| **Enroll Contact in Campaign** | Subflow | Called by **Enroll Members in Campaign**, and by **Add to Campaign** on a contact, to enroll one contact as the person running it: a contact already on the campaign is skipped, and a person who may not create campaign members is refused |
 | **Claim Case** | Screen | Take an unowned case out of triage by moving it to a status that means you are on it |
 | **Escalate Case** | Screen | Collect an escalation reason, then flag and re-prioritise the case |
 | **Stamp Case Escalation** | Subflow | Called by **Escalate Case** to write the escalation stamps with system privilege |
@@ -102,7 +102,7 @@ Time-based automation is implemented as **scheduled flows** — flows whose star
 
 > **From ObjectStack 17.5.0, scheduled flows are off until the deployment turns them on.** The platform runs package-authored scheduled work only when the deployment sets `OS_AUTOMATION_SCHEDULED_WORK_ENABLED=true` (`1`, `on` and `yes` also count). Without it, none of the eight flows above runs — no contract or quote expiry, no SLA monitor, no reminders, no forecast snapshots — and `os doctor` prints the effective value. Under the `isolated` tenancy posture a scheduled flow must also name the organization it acts as; these eight do not, so they are not armed there.
 
-Date-driven field logic that needs no orchestration — defaulting a quote's expiration date, freezing an expired/accepted quote, deriving a forecast period — lives in lightweight **object hooks** (`beforeInsert` / `beforeUpdate`) rather than a scheduled sweep.
+Date-driven field logic that needs no orchestration lives on the object rather than in a scheduled sweep. A default the field can state for itself is declared on the field: a new quote's expiration date is 30 days after its quote date, and a new forecast's snapshot date is today, unless the person saving it enters another date. The rest — freezing an expired/accepted quote, deriving a forecast period — lives in lightweight **object hooks** (`beforeInsert` / `beforeUpdate`).
 
 The division of labour on forecasts is worth calling out, because it is the pattern to copy: the **Forecast Snapshot** flow decides *who* gets a snapshot and *what the totals are*, while the forecast object's hook decides *which calendar period the snapshot belongs to*. A cron expression can say "every night"; it cannot say "the first day of this quarter", so that boundary is derived once, by the object, for every writer.
 

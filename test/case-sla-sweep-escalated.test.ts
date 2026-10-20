@@ -24,7 +24,9 @@ import {
  * `escalate_case` screen flow with a typed reason, put back to work by the
  * agent's own `PATCH`, and swept the way the schedule trigger starts the sweep.
  * The one exception is the seed-shaped case, written through the seed door
- * because the shipped seed is the only writer of that shape.
+ * because the shipped seed was the only writer of that shape. It wrote it until
+ * #2163, and a demo database seeded before then still holds it: the dataset is
+ * insert-once (`mode: 'ignore'`), so no later boot adds the date.
  *
  * The sweep processes every breached case in the database, the boot's seed
  * backlog included, so every reading is taken by id.
@@ -97,8 +99,8 @@ beforeAll(async () => {
   const res = await verify.apiAs(agent.token, 'PATCH', `/data/crm_case/${worked}`, { status: 'in_progress' });
   expect(res.status, `the agent could not put the case back to work: ${await res.clone().text()}`).toBe(200);
 
-  // The shape `src/service/data/service.seed.ts` writes for an escalated demo
-  // case: the flag and a reason, and no Escalated Date.
+  // The shape `src/service/data/service.seed.ts` wrote for an escalated demo
+  // case before #2163: the flag and a reason, and no Escalated Date.
   const [seeded] = await verify.seed('crm_case', [{
     subject: `Seeded escalation ${++k}`, description: 'A demo case.', crm_account: accountId,
     status: 'escalated', priority: 'high', is_escalated: true, escalation_reason: SEEDED_REASON,
@@ -160,7 +162,7 @@ describe('a breached case that is already escalated keeps its escalation', () =>
     expect(await alertsAbout(ids.worked)).toHaveLength(1);
   });
 
-  it('an escalated case with no Escalated Date (the seed’s shape) keeps its reason, and no date is invented', async () => {
+  it('an escalated case with no Escalated Date (the shape a demo database seeded before #2163 holds) keeps its reason, and no date is invented', async () => {
     expect(after.seeded!.escalation_reason).toBe(SEEDED_REASON);
     expect(after.seeded!.escalated_date ?? null).toBeNull();
     expect(after.seeded).toMatchObject({ is_sla_violated: true, status: 'escalated' });
