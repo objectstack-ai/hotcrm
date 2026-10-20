@@ -446,6 +446,53 @@ describe('the hand-typed window is REFUSED, not warned about', () => {
   });
 });
 
+// ─────────────────── it stands down while a start rule fires (#2060 7c) ─────
+
+describe('the window rule stands down while a start rule fires (#2060 item 7c)', () => {
+  /**
+   * The rule's arithmetic judges the window that an ADMITTED start opens. Off
+   * that boundary its verdict meant nothing, and it was measured on
+   * 18.0.0-next.5 before this change on every row below: each drew "Period End
+   * must be the last day of the period …" beside the start's own refusal. The
+   * end it judged was one the hook derived, a correctly typed calendar end, or
+   * one the edit never touched. Each row is still REFUSED, by a start rule, and
+   * that is now the only refusal: the messages are read off the declared rules,
+   * so the assertion names which rules fired.
+   */
+  const desk = deskOn(hotcrmStack, 'stand-down');
+  const START = ruleNamed('period_start_first_of_period')!.message as string;
+  const QUARTER = ruleNamed('quarter_starts_on_quarter_boundary')!.message as string;
+  const firedRules = (env: Awaited<ReturnType<typeof refusal>>) => env.fields.map((f) => f.message).sort();
+
+  it.each([
+    { period: 'month', period_start: '2026-10-15', why: "the card's row: no Period End, the hook derives one", only: [START] },
+    { period: 'quarter', period_start: '2026-10-15', why: 'mid-month and mid-quarter, no Period End', only: [START, QUARTER] },
+    { period: 'month', period_start: '2026-10-15', period_end: '2026-10-31', why: "October's real last day, typed", only: [START] },
+    { period: 'quarter', period_start: '2026-08-01', period_end: '2026-09-30', why: "Q3's real end under a month start", only: [QUARTER] },
+  ])('refuses $period from $period_start naming the start alone ($why)', async ({ why: _why, only, ...doc }) => {
+    const env = await refusal(() => viaHook(desk, 'insert', { ...BASE, ...doc }));
+    expect(env.code).toBe('VALIDATION_FAILED');
+    expect(firedRules(env)).toEqual([...only].sort());
+    expect(env.message).not.toMatch(/Period End/);
+  });
+
+  it('refuses an edit that moves only the start off its boundary, naming the start alone', async () => {
+    const row = await viaHook(desk, 'insert', { ...BASE, period: 'month', period_start: '2026-09-01' });
+    const env = await refusal(() => viaHook(desk, 'update', { id: row.id, period_start: '2026-09-15' }));
+    expect(firedRules(env)).toEqual([START]);
+    expect((await storedForecast(desk, row.id))?.period_start).toBe('2026-09-01');
+  });
+
+  it('judges the end again once the start is on its boundary', async () => {
+    // The control: the rule stands down for the start, not for good. The same
+    // October with the start corrected and a short end is the window refusal.
+    const env = await refusal(() =>
+      viaHook(desk, 'insert', { ...BASE, period: 'month', period_start: '2026-10-01', period_end: '2026-10-15' }),
+    );
+    expectCalendarRefusal(env);
+  });
+});
+
 // ────────────────────────────────────────────── the gate can FAIL ──────────
 
 describe('the gate can fail — the same row is admitted without the rule', () => {

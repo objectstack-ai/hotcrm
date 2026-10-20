@@ -16,6 +16,10 @@ import { hotcrmStack, signUpPerson, today, type Person } from './helpers/verify-
  *   crm_quote.expiration_date               "… Expiration Date"           201, quote_date + 30
  *   crm_forecast.period_end                 "… Period End"                201, the period's last day
  *   crm_forecast.snapshot_date              "… Snapshot Date"             201, today
+ *   crm_quote_line_item.unit_price          "… Sales Price"               201, the list price
+ *
+ * (The last row is item 7b, measured on 18.0.0-next.5: the twin line object
+ * the shared price fill also serves.)
  *
  * A hook filled each one, and a form cannot see a hook: it reads `required` as
  * "the user must type this". Two constructs, chosen by what the spec can say:
@@ -58,6 +62,8 @@ const refusalOf = async (write: Promise<unknown>): Promise<AnyRec> => {
 describe('the create form is told who supplies each value', () => {
   it.each([
     ['crm_opportunity_line_item', 'unit_price'],
+    // Item 7b: the twin line object, which the shared price fill serves too.
+    ['crm_quote_line_item', 'unit_price'],
     ['crm_forecast', 'period_end'],
   ])('%s.%s is a NOT NULL column the server fills, not a value the writer must supply', (object, field) => {
     const def = fieldOf(object, field);
@@ -197,15 +203,32 @@ describe('the save lands, the value is supplied, and the protection stays', () =
     });
   });
 
-  describe('Sales Price (A-21)', () => {
-    /** A deal line the rep adds as the form posts it: a product and no price. */
-    const repLine = async (doc: AnyRec = {}): Promise<{ line: AnyRec; listPrice: number }> => {
-      const [product] = await verify.seed('crm_product', [{ name: `Defaults Product ${++k}`, product_code: `DF-${k}`, is_active: true, list_price: 420 }]);
+  // The shared price fill serves both line objects, so both are pinned alike:
+  // the deal line (A-21, item 7) and the quote line (item 7b). Measured on
+  // 18.0.0-next.5 before 7b: the New Quote Line Item form refused "Please check
+  // the highlighted fields: Sales Price" and sent nothing, while a REST insert
+  // without a price answered 201 at the list price.
+  describe.each([
+    ['a deal line (A-21)', 'crm_opportunity_line_item'],
+    ['a quote line (7b)', 'crm_quote_line_item'],
+  ])('Sales Price on %s', (_line, object) => {
+    /** The rep's parent for a line: their deal, or a draft quote on it. */
+    const parentOf = async (): Promise<AnyRec> => {
       const p = await parties();
-      const written = await verify.hooks.run('crm_opportunity_line_item', 'insert', {
-        crm_opportunity: p.crm_opportunity, crm_product: product!.id, quantity: 2, ...doc,
+      if (object === 'crm_opportunity_line_item') return { crm_opportunity: p.crm_opportunity };
+      const quote = await verify.hooks.run('crm_quote', 'insert', { name: `Q-${++k}`, ...p }, as(rep));
+      return { crm_quote: quote.id };
+    };
+    const productAt420 = async (): Promise<AnyRec> =>
+      (await verify.seed('crm_product', [{ name: `Defaults Product ${++k}`, product_code: `DF-${k}`, is_active: true, list_price: 420 }]))[0]!;
+
+    /** A line the rep adds as the form posts it: a parent, a product and no price. */
+    const repLine = async (doc: AnyRec = {}): Promise<{ line: AnyRec; listPrice: number }> => {
+      const product = await productAt420();
+      const written = await verify.hooks.run(object, 'insert', {
+        ...(await parentOf()), crm_product: product.id, quantity: 2, ...doc,
       }, as(rep));
-      return { line: await stored('crm_opportunity_line_item', written.id), listPrice: 420 };
+      return { line: await stored(object, written.id), listPrice: 420 };
     };
 
     it('a line with no price lands at the product list price', async () => {
@@ -217,15 +240,24 @@ describe('the save lands, the value is supplied, and the protection stays', () =
       expect((await repLine({ unit_price: 399 })).line.unit_price).toBe(399);
     });
 
+    it('the dry-run preview, which runs no hook, no longer reports the price as missing', async () => {
+      // `verify.validate` is the import preview's door (see Expiration Date
+      // above). While the price was `required` it answered "Sales Price is
+      // required" for a line the import itself would price.
+      const product = await productAt420();
+      const verdict = await verify.validate(object, { ...(await parentOf()), crm_product: product.id, quantity: 2 }, as(rep));
+      expect(verdict.results[0]!.errors).toEqual([]);
+    });
+
     it('an update that clears the price is refused by the column, and the price stays', async () => {
       const { line } = await repLine();
       // In process this is the driver's NOT NULL refusal, which carries no
       // `code`; the REST door translates it to 400 `VALIDATION_FAILED`
       // (measured in the PR). The table and column name it, so this cannot be
       // some other failure passing for it.
-      const refusal = await refusalOf(verify.hooks.run('crm_opportunity_line_item', 'update', { id: line.id, unit_price: null }, as(rep)));
-      expect(refusal.message).toMatch(/NOT NULL constraint failed: crm_opportunity_line_item\.unit_price/);
-      expect((await stored('crm_opportunity_line_item', line.id)).unit_price).toBe(line.unit_price);
+      const refusal = await refusalOf(verify.hooks.run(object, 'update', { id: line.id, unit_price: null }, as(rep)));
+      expect(refusal.message).toContain(`NOT NULL constraint failed: ${object}.unit_price`);
+      expect((await stored(object, line.id)).unit_price).toBe(line.unit_price);
     });
   });
 });
