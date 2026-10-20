@@ -249,6 +249,56 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
   },
 ];
 
+// ───────────────────────── what the DEV ADMIN holds (#2061) ──────────────
+
+/**
+ * The permission sets `pnpm demo:staff` grants the DEV ADMIN, the HotCRM
+ * administrator on a demo box. Add a set = add a row.
+ *
+ * ### Why the administrator needs a HotCRM set at all
+ *
+ * Since 18.0.0 the platform's administrator sets carry no export: the
+ * maintainer's 2026-08-15 ruling removed the `allowExport` wildcard from them
+ * (migration `admin-export-wildcard-removed`), so an administrator exports
+ * exactly what an APP set grants. Measured on 18.0.0, fresh `pnpm dev`: the dev
+ * admin holds the positions `platform_admin`, `org_owner` and `everyone`, which
+ * resolve to `admin_full_access`, `organization_admin_no_bypass` and
+ * `member_default`, none of them HotCRM's. `GET /api/v1/data/crm_account/export`
+ * answered 403 `EXPORT_NOT_PERMITTED`, as did the other four exportable
+ * objects, and the list's Display panel offered no Export entry.
+ *
+ * ### Why a runtime grant, and why this script makes it
+ *
+ * Nothing in the artifact can bind a set to that principal. A permission set
+ * names no holder, the positions the dev admin holds are the platform's
+ * built-in identities rather than HotCRM's, and a seed cannot name a user (and
+ * must not write a grant row: see "Why this file is NOT metadata" above). So
+ * the binding is a `sys_user_permission_set` row that an administrator writes,
+ * which is what an operator does for their own administrators in Setup. On a
+ * demo box this script writes it: the dev admin grants itself `system_admin`,
+ * the set the app already authors for its administrator, whose export grants
+ * `test/authorization-coverage.test.ts` pins.
+ *
+ * ⛔ No other set's grants change, and no wildcard comes back. With the row in
+ * place the dev admin exports the five objects `system_admin` grants export on,
+ * and nothing else.
+ */
+export type DemoAdminGrant = {
+  /** A permission set the app ships, by name. */
+  readonly permissionSet: string;
+  /** What holding it makes observable for the dev admin. Asserted to be non-empty. */
+  readonly demonstrates: string;
+};
+
+export const DemoAdminPermissionSets: readonly DemoAdminGrant[] = [
+  {
+    permissionSet: 'system_admin',
+    demonstrates:
+      'export: on the five objects whose list view declares exportOptions, the Display panel offers ' +
+      'Export as CSV / XLSX and GET /api/v1/data/OBJECT/export answers with the rows.',
+  },
+];
+
 // ───────────────────────── who OWNS the demo book (#1759) ────────────────
 
 /**
