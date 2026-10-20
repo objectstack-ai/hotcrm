@@ -60,6 +60,15 @@ beforeAll(async () => {
   who.admin = { token: adminToken, id: String((await verify.contextFor(adminToken)).userId) };
 }, 180_000);
 
+/**
+ * The budget of the cases whose Enroll Members run writes members: the clean
+ * runs and the partly refused one. Such a run enrolls every eligible lead the
+ * caller can see, and that set grows with each `world()`. Measured: about 2 s
+ * alone, about 4.3 s beside two other booted files under coverage (as CI runs
+ * the suite), and the partly refused case ran past the 5 s default on CI once.
+ */
+const ENROLL_BUDGET_MS = 30_000;
+
 /** The personas whose sets refuse both rights, and those that hold them. */
 const REFUSED = ['sales_rep', 'sales_manager'] as const;
 const ALLOWED = ['marketing_user', 'admin'] as const;
@@ -210,10 +219,10 @@ describe('a profile with allowCreate enrolls through every door, as itself (#216
     expect(result.successMessage).toBe('Eligible members enrolled in campaign.');
     const enrolled = (await membersOf(w.campaign.id)).map((m) => m.crm_lead);
     expect(enrolled).toEqual(expect.arrayContaining([w.leadA.id, w.leadB.id]));
-  });
+  }, ENROLL_BUDGET_MS);
 });
 
-describe('a partly refused Enroll Members run reports both counts (#2167, Q2 letter a)', () => {
+describe('a partly refused Enroll Members run reports both counts (#2167, Q2 letter a)', { timeout: ENROLL_BUDGET_MS }, () => {
   it('ends refused with the enrolled and refused counts, and writes every member it was allowed to', async () => {
     const marketer = who.marketing_user!;
     const w = await world(marketer);
