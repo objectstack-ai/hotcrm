@@ -36,6 +36,13 @@
    "change": "Removed the files[] rows for src/sales/pages/app_launcher.page.ts (kind 'page', module app.objectstack.hotcrm, 310 authored tokens) and src/sales/pages/utility_bar.page.ts (kind 'page', module app.objectstack.hotcrm, 279 authored tokens). Both files existed at measured_at.commit and were deleted by #2118, which retired the two pages: neither had a navigation entry or any other consumer, and their page types promised shell roles (an app launcher, a floating utility bar) the console does not give.",
    "figures_left_as_measured": "Untouched, per do_not_hand_patch: totals, ratchet, edges, modules[] and every other files[].authored_tokens are still the one measurement taken at measured_at.commit. Only the two rows that pointed at deleted files were removed, as #1698 and #1892 did before.",
    "roster_drift_measured_at_this_date": "files[] held 169 rows before this edit and holds 167 after. The 35 files the 2026-09-14 entry lists as postdating measured_at.commit are still left out, for the reason it gives."
+  },
+  {
+   "date": "2026-10-20",
+   "issue": 2060,
+   "change": "Removed the two unmeasured_edge_classes.instances rows of class 'action body writes an object in another module' for create_campaign@crm_lead (home module app.objectstack.hotcrm.sales) and add_contact_to_campaign@crm_contact (home module app.objectstack.hotcrm.core), each reaching app.objectstack.hotcrm.marketing. At measured_at.commit both actions were script bodies that inserted crm_campaign_member, so the rows were correct as history, but they were being read as a description of live action bodies. Since #2167 neither action has a body: each is a `type: 'flow'` action that starts its side's enroll-one-person flow, campaign_lead_member_enroll or campaign_contact_member_enroll (src/marketing/flows/campaign-member-enroll.flow.ts), and the member insert is that flow's create_record node, run as the caller.",
+   "figures_left_as_measured": "Untouched, per do_not_hand_patch: unmeasured_edge_classes.summary still counts 19 instances of that class, as measured, so instances[] now holds 17 rows of it. totals, ratchet, edges, modules[] and files[] are unchanged. Putting the two rows back gives the class exactly as measured, as #1698 recorded for files[].",
+   "roster_drift_measured_at_this_date": "The flows that carry the insert now postdate measured_at.commit (the 2026-09-14 entry lists campaign-member-enroll.flow.ts among the files left out), so their reads of crm_lead and crm_contact are not added as instances of 'flow node reads or writes an object in another module', for the reason that entry gives: this file is evidence for one measurement, not an index of the tree."
   }
  ],
  "measured_at": {
@@ -1526,15 +1533,6 @@
    },
    {
     "item_class": "action body writes an object in another module",
-    "item": "add_contact_to_campaign@crm_contact",
-    "home_module": "app.objectstack.hotcrm.core",
-    "reaches": [
-     "app.objectstack.hotcrm.marketing"
-    ],
-    "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
-   },
-   {
-    "item_class": "action body writes an object in another module",
     "item": "schedule_meeting@crm_case",
     "home_module": "app.objectstack.hotcrm.service",
     "reaches": [
@@ -1584,15 +1582,6 @@
      "app.objectstack.hotcrm.activity",
      "app.objectstack.hotcrm.sales",
      "app.objectstack.hotcrm.service"
-    ],
-    "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
-   },
-   {
-    "item_class": "action body writes an object in another module",
-    "item": "create_campaign@crm_lead",
-    "home_module": "app.objectstack.hotcrm.sales",
-    "reaches": [
-     "app.objectstack.hotcrm.marketing"
     ],
     "disposition": "ships in the module owning its host object; the write is run-time ObjectQL."
    },
