@@ -162,7 +162,7 @@ const knowledgeArticlePublish: Hook = {
     // The emptiness test is spelled out here rather than factored into a
     // module-scope helper: hook handlers lower to a metadata-only body, and a
     // free identifier would push this one into the legacy runtime bundle
-    // instead — `test/action-sandbox.test.ts` fails the build on it.
+    // instead — `pnpm lint` refuses it as `hook-body/not-lowerable`.
     const existing = input.published_at ?? previous?.published_at;
     if (existing === undefined || existing === null || existing === '') {
       input.published_at = nowIso;

@@ -139,7 +139,7 @@ tiers devPlugins runtimeModule
 | AI 技能、知識庫設定 | ⚠️ `skills` 是鍵；**不存在知識庫設定這個鍵** —— 知識文章就是普通記錄 |
 | 審批流程 | ⚠️ **沒有這個鍵。** 獨立的 `approvals` 堆疊欄位在 ObjectStack 7.4 被移除；審批是帶 `approval` 節點的 `flows`（ADR-0019），因此按流程打包 |
 | 電子郵件範本 | ✅ `emailTemplates` 是鍵 —— 儘管本應用一個都沒寫 |
-| **資料記錄** | ❌ → **✅ 寫錯了，而且這條值得糾正。** `data` 是頂層工件鍵，HotCRM 透過它發布了 21 個種子族。記錄完全可以打包，還能按環境區分（`env: ['prod','dev','test']`），並帶 upsert `mode` 與 `externalId` |
+| **資料記錄** | ❌ → **✅ 寫錯了，而且這條值得糾正。** `data` 是頂層工件鍵，HotCRM 透過它發布了 20 個種子族。記錄完全可以打包，還能按環境區分（`env: ['prod','dev','test']`），並帶重放 `mode` 與 `externalId`：二十個族中有十九個只插入一次（`ignore`），預測快照用 `upsert` |
 | **檔案** | ✅ ❌ 判定正確 —— 沒有檔案鍵，而且**不存在檔案同步 API** 可用；那條建議指向的是空的 |
 | **使用者帳戶** | ✅ ❌ 判定正確 —— 沒有使用者鍵。SCIM 作為平台面確實存在（`sys_scim_provider`），但在本租戶裡沒有任何畫面 |
 

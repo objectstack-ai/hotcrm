@@ -20,6 +20,7 @@ sources:
   - sharing_rule:case_escalation_sharing
   - sharing_rule:case_director_sharing
   - sharing_rule:case_escalated_from_sharing
+  - sharing_rule:case_unassigned_triage_sharing
   - sharing_rule:campaign_leadership_manager
   - sharing_rule:campaign_leadership_director
   - position:crm_positions
@@ -67,6 +68,7 @@ Ownership-based access is widened by these rules:
 | Case Escalation | Case | **Edit** | Escalated cases become editable by the escalation handler. |
 | Escalated Cases — Service Director | Case | **Read** | Service Director sees what the manager is paged about. |
 | Escalated Cases — Previous Owner | Case | **Read** | The agent an escalation took the case from keeps sight of it until it is closed. |
+| Unassigned Cases — Triage | Case | **Edit** | Every Service Agent sees and can claim an open case nobody owns yet; the case leaves the rule once it has an owner or is resolved or closed. |
 | Live Campaigns — Marketing Manager / Director | Campaign | **Edit** | Marketing leadership works any live campaign. |
 
 Detail objects — opportunity line items, quote line items, campaign members and
@@ -85,8 +87,9 @@ the own-only behaviour rather than promising a 360° view.
 ## Profiles
 
 Permission sets ship for the standard personas: **System Administrator**,
-**Sales Manager**, **Sales Representative**, **Service Agent**, **Marketing
-User**, and **Guest (Public Forms)** for unauthenticated web-to-lead capture.
+**Sales Manager**, **Sales Representative**, **Service Agent**, **Service
+Manager**, **Marketing User**, and **Guest (Public Forms)** for unauthenticated
+web-to-lead capture.
 
 Permission sets are **explicit-allow only**: an object no set names is denied to
 every user, administrators included — the object-level CRUD gate refuses the

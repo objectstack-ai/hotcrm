@@ -59,9 +59,10 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * to a metadata-only, body-only script: a reference to module scope — an
  * import, a top-level const, a shared factory's parameter — is a
  * `ReferenceError` at runtime, not a closure, and a handler that reaches for
- * one silently stops lowering (`test/action-sandbox.test.ts` fails the build on
- * it). Hooks may be composed by a FACTORY (`_case-assignment.ts` does exactly
- * that); the logic inside a body may not be imported.
+ * one silently stops lowering (`pnpm lint` refuses it as
+ * `hook-body/not-lowerable`). Hooks may be composed by a FACTORY
+ * (`_case-assignment.ts` does exactly that); the logic inside a body may not be
+ * imported.
  */
 const articleFeedbackMetricsRefresh: Hook = {
   name: 'article_feedback_metrics_refresh',

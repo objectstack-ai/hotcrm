@@ -350,10 +350,11 @@ export { CrmPositions };
  * Every hook in the ARTIFACT, both packages.
  *
  * The suites that sweep hooks (`test/refusal-envelope.test.ts`,
- * `test/runtime-coverage.test.ts`, `test/hook-write-shape.test.ts`,
- * `test/action-sandbox.test.ts`, `test/territory-single-source.test.ts`) are
- * about the app a customer installs, which is the whole artifact — so they keep
- * reading one list, assembled here from each package's own.
+ * `test/runtime-coverage.test.ts`, `test/freeze-guard-reference-cleanup.test.ts`,
+ * `test/registration-list-completeness.test.ts`) are about the app a customer
+ * installs, which is the whole artifact — so they keep reading one list,
+ * assembled here from each package's own. That every hook still lowers is
+ * `pnpm lint`'s to say (`hook-body/not-lowerable`), over the built stack.
  */
 export const allHooks = [...appHooks, ...serviceHooks];
 

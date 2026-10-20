@@ -32,9 +32,10 @@ import type { SelectOption } from '@objectstack/spec/data';
  * evaluated inside QuickJS with NO module scope: a reference to anything
  * exported here is not a closure at runtime, it is a `ReferenceError`.
  * `extractHookBody` rejects such a handler outright
- * (`detectFreeIdentifiers`), and `test/action-sandbox.test.ts` fails the
- * build's own lowering pass for every registered hook. So the derivation cannot
- * import this module — the table has to be inline in the handler.
+ * (`detectFreeIdentifiers`), and `pnpm lint` (`os lint --strict`) runs the
+ * build's own lowering pass over every registered hook and refuses one that
+ * leaks as `hook-body/not-lowerable`. So the derivation cannot import this
+ * module — the table has to be inline in the handler.
  *
  * `test/territory-single-source.test.ts` closes that gap from both directions:
  * it parses the inline table out of the LOWERED body source and asserts deep
