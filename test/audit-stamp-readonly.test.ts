@@ -312,22 +312,21 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
     ).toBe('user');
   });
 
-  it('the elevation lives in the two callees, and nowhere else', () => {
-    // The stamp no longer needs it (#2142), but the elevation stays: it is
-    // what lets the profiles without `allowCreate` on this object enroll
-    // through the screen flow, and retiring it is not a stamp change.
+  it('no enrollment write is elevated: both callees run as the caller (#2167)', () => {
+    // The stamp stopped needing the elevation in #2142; what it still did was
+    // let `sales_rep` and `sales_manager`, whose sets carry no `allowCreate` on
+    // this object, enroll through the screen flow. Ruled on #2167 (Q1 letter
+    // B): every enrollment door writes as the caller, so the object's own
+    // `allowCreate` is the one gate.
     for (const callee of [CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow]) {
       expect(
         (callee as AnyRec).runAs,
-        `${(callee as AnyRec).name} is the only place the enrollment insert runs elevated.`,
-      ).toBe('system');
+        `${(callee as AnyRec).name} runs elevated again — the profiles without allowCreate would enroll through it`,
+      ).toBe('user');
       const writes = ((callee as AnyRec).nodes as AnyRec[])
-        .filter((n) => n.type !== 'start' && n.type !== 'end')
+        .filter((n) => /^(create|update|delete)_record$/.test(String(n.type)))
         .map((n) => n.config?.objectName);
-      expect(
-        writes,
-        'an elevated callee must stay minimal — one write, on the membership object',
-      ).toEqual(['crm_campaign_member']);
+      expect(writes, 'an enrollment callee writes one row, on the membership object').toEqual(['crm_campaign_member']);
     }
   });
 
@@ -345,7 +344,7 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
     for (const [flow, id] of callees) {
       const node = findNode(flow, id);
       expect(node, `${id} is one of the two enrollment inserts`).toBeTruthy();
-      expect(node!.type, 'an INSERT on an elevated callee. If this ever becomes update_record it ' +
+      expect(node!.type, 'an INSERT in the enrollment callee. If this ever becomes update_record it ' +
         'is a different write with different ordering — that is the failure #1667 trades against.').toBe('create_record');
       expect(node!.config.objectName).toBe('crm_campaign_member');
       expect(

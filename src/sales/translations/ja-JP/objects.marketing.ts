@@ -91,10 +91,7 @@ export const marketing: Record<string, ObjectTranslationData> = {
       assets: { label: 'キャンペーンアセット' },
     },
     _actions: {
-      enroll_leads: {
-        label: 'メンバーを一括登録',
-        successMessage: '対象メンバーをキャンペーンに登録しました。',
-      },
+      enroll_leads: { label: 'メンバーを一括登録' },
     },
   },
   crm_campaign_member: {

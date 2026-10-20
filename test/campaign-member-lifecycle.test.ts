@@ -153,9 +153,10 @@ describe('campaign_member_lifecycle', () => {
   const member = async (): Promise<Rec> => enroll(await campaignOf(), { crm_lead: (await people()).lead.id });
 
   it('back-fills has_responded and response_date when a rep flips the status by hand', async () => {
-    // The `mark_responded` action stamps all three. This is the OTHER path —
-    // the record detail page, where only `status` is written — and without the
-    // hook the row reads "Responded" beside "Has Responded: false".
+    // The record detail page writes only `status`, and so, since #2167, does
+    // the `mark_responded` action (a declarative update of `status` alone).
+    // Both reach this hook; without it the row reads "Responded" beside
+    // "Has Responded: false".
     const m = await member();
     await editMember(m.id, { status: 'responded' });
     const row = await stored('crm_campaign_member', m.id);
@@ -251,12 +252,14 @@ describe('added_date is stamped on every insert, whichever door (#2142)', () => 
   });
 
   it('the Add to Campaign list action, a separate door, stamps it too', async () => {
-    // `create_campaign` inserts in its own body and never reaches the
-    // enrollment sub-flows, so before #2142 its members were born blank.
+    // Before #2142 `create_campaign` inserted in its own body, never reaching
+    // the enrollment sub-flows, so its members were born blank. Since #2167 it
+    // is a flow action over the lead-side enrollment flow, started directly by
+    // the action door rather than by a `subflow` node.
     const campaign = await campaignOf();
     const { lead } = await people();
     const w = await windowed(() => verify.actions.run('crm_lead', 'create_campaign', {
-      as: marketer.token, recordId: lead.id, params: { crm_campaign: campaign.id },
+      as: marketer.token, recordId: lead.id, params: { campaignId: campaign.id },
     }));
     const rows = await verify.rows('crm_campaign_member', { crm_campaign: campaign.id });
     expect(rows, 'the action enrolled nobody').toHaveLength(1);
@@ -265,10 +268,11 @@ describe('added_date is stamped on every insert, whichever door (#2142)', () => 
 
   it('control: the enrollment sub-flow, which no longer writes the column, still lands it', async () => {
     // Started the way `campaign_enrollment`'s `subflow` node hands it the
-    // insert: as the callee's own `runAs: 'system'`, with its two inputs.
+    // insert: as the marketer who runs the screen flow (the callee is
+    // `runAs: 'user'` since #2167), with its two inputs.
     const campaign = await campaignOf();
     const { lead } = await people();
-    const w = await windowed(() => verify.flows.run('campaign_lead_member_enroll', { campaignId: campaign.id, leadId: lead.id }, { system: true }));
+    const w = await windowed(() => verify.flows.run('campaign_lead_member_enroll', { campaignId: campaign.id, leadId: lead.id }, { as: marketer.token }));
     const run = w.value as Rec;
     expect(run.success, String(run.error ?? '')).toBe(true);
     const rows = await verify.rows('crm_campaign_member', { crm_campaign: campaign.id });
@@ -502,7 +506,7 @@ describe('every surviving member field and campaign metric has a writer', () => 
     crm_contact: 'campaign_enrollment flow (contacts branch) / add_contact_to_campaign',
     added_date: 'its own write-moment defaultValue, on every insert (#2142)',
     status: 'enrollment (sent) / mark_responded / campaign_lead_conversion_refresh / rep unsubscribe',
-    response_date: 'mark_responded action + campaign_member_lifecycle',
+    response_date: 'campaign_member_lifecycle, from the status mark_responded or an edit writes',
     has_responded: 'campaign_member_lifecycle',
   };
 

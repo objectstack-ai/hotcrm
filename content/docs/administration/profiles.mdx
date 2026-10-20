@@ -35,7 +35,7 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 - Org-wide read **and** write on **leads**, **accounts**, **contacts**, **opportunities**, **quotes** and **tasks** — a manager works any rep's record, not just their own
 - Create and edit **contracts**, **products** and **campaigns** (deleting them is an admin action)
 - Full control of **opportunity and quote line items**, so pricing on any rep's deal can be fixed
-- Read **cases**, **knowledge articles** and **campaign members**
+- Read **cases**, **knowledge articles** and **campaign members** — enrolling people in a campaign, and recording their responses, is marketing's, so a manager is not offered **Enroll Members**, **Add to Campaign** or **Mark Responded**
 - **Forecasts**: reads every rep's snapshot and adjusts the committed number — the forecast is the manager's own deliverable
 - Cannot see a deal another user flagged **Private** (see [Sharing & security](/docs/administration/sharing-and-security))
 
@@ -45,7 +45,7 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 - **Quotes**: the quotes on accounts the rep can see, and edit on the quotes of accounts they can edit — Quote is Controlled by Parent under the account since #549, the same derivation as Contact below
 - **Contacts**: the contacts on accounts the rep can see — their own, plus every account a territory rule or manual share put in reach. Contact is Controlled by Parent, and that derivation follows the account's sharing (see [Sharing & security](/docs/administration/sharing-and-security), *Controlled by Parent, in practice*)
 - **Opportunity and quote line items** — full control, which is what the "Products" related list and quote building need. Controlled by Parent again, so this reaches the lines of the deals and quotes the rep can see, and no others
-- Read the **product** catalog, **campaigns**, **campaign members** and **knowledge articles**
+- Read the **product** catalog, **campaigns**, **campaign members** and **knowledge articles** — as for a manager, enrolling and recording responses is marketing's, so **Enroll Members**, **Add to Campaign** and **Mark Responded** are not offered
 - Read their **own forecast snapshots** — a rep never writes one. The nightly forecast job opens and refreshes them, and a manager or an admin may also enter one by hand; a hand-entered current-quarter row stands that nightly job down for the owner and period until the row is deleted (see [Forecasting](/docs/sales/forecasting))
 - Read the **contracts** of every account they can see (Contract is Controlled by Parent under the account) and their own **cases**; deleting is a manager privilege (their own tasks excepted)
 
@@ -61,7 +61,7 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 
 - **Leads**: create them, read every lead in the org, and edit the ones they own and created — org-wide read does not carry org-wide editing (see [below](#why-org-wide-describes-reading-not-writing))
 - **Contacts**: read every contact in the org. Creating one is refused in practice — a contact is master-detail under its account, so inserting one requires edit access to that account, and this profile holds no account editing anywhere. Editing is the same owner-and-creator gate as leads
-- **Campaigns** and **campaign members**: create, and edit *any* of them — these two objects carry a row-level rule written for this profile, which is what lets a marketer work a campaign a colleague planned and update members the enrollment flow created. This is what the "Add to Campaign" action writes
+- **Campaigns** and **campaign members**: create, and edit *any* of them — these two objects carry a row-level rule written for this profile, which is what lets a marketer work a campaign a colleague planned and update members a colleague enrolled. This is what the "Add to Campaign" action writes, as the marketer who runs it
 - Read **accounts** and **opportunities** org-wide, for campaign→pipeline ROI (a deal flagged **Private** stays hidden)
 - Read **knowledge articles**
 - Cannot delete records
@@ -75,7 +75,7 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 
 A profile's object grant says what a user **may** do. Whether a save actually lands is decided a second time, per record, by the platform — and today that second gate is narrow: a user updates a record only when they are both its **owner** and its **creator**. Org-wide read (**View All**) does not widen it; it is a read scope and never grants a write. This is why the bullets above say, per object, whether editing reaches *any* record or only your own.
 
-The exception is authored deliberately, one object at a time: a **row-level rule** on the object can open updates to every holder of a profile. This app ships two, both on the Marketing User set — **campaigns** and **campaign members** — because enrolling and tracking members is teamwork on rows the enrollment flow created, not the marketer. Anywhere no such rule exists, "edit" means the records you own and created, whatever the read scope says.
+The exception is authored deliberately, one object at a time: a **row-level rule** on the object can open updates to every holder of a profile. This app ships two, both on the Marketing User set — **campaigns** and **campaign members** — because enrolling and tracking members is teamwork: a marketer records responses on members a colleague enrolled. Anywhere no such rule exists, "edit" means the records you own and created, whatever the read scope says.
 
 ## Field-level security
 
