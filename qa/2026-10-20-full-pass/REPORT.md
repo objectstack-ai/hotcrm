@@ -203,7 +203,7 @@ Card: objectstack-ai/hotcrm#2188. One cloud tester drove a locally booted, seede
 
 ## Findings
 
-Six new findings (F-01 to F-06) and one known item re-measured in more depth (F-07). Known items that still reproduce, and the ones that no longer do, are listed after them in one line each.
+Seven new findings (F-01 to F-06 and the UX defect F-08) and one known item re-measured in more depth (F-07). Known items that still reproduce, and the ones that no longer do, are listed after them in one line each.
 
 ### F-01 — A lead set to "Converted" in the Edit form is locked forever with nothing converted
 
@@ -330,6 +330,19 @@ Six new findings (F-01 to F-06) and one known item re-measured in more depth (F-
 - **Dedupe words:** `MAPPING_FORMAT_MISMATCH`, `crm_lead_import`, `sourceFormat csv json`.
 - **Known carrier:** #2060 item 17 (it asked to "measure first"). This answers it: the console door fails, the REST door succeeds.
 
+### F-08 — (UX defect) Notifications print money unformatted: "closed at 1200000"
+
+- **Persona / URL / steps:** na.rep wins a deal of $100K or more (Wayne Enterprise License, 1,200,000), then opens the bell panel on any page.
+- **Expected:** the amount appears the way every other surface of the app shows it: 1,200,000.00 on the record and the list, "1,200,000" on the inbox card.
+- **Actual:** the inbox reads "Wayne Enterprise License closed at 1200000. Congratulations to the team." and "Acme Platform Upgrade closed at 150000." There are no thousands separators and no currency. A seven-digit number is hard to read at a glance.
+- **Evidence:** `shots/96-ux-F-08-unformatted-amount-notification.png`; inbox REST row `large_deal_won`.
+- **class:** a (UX defect: stable, and inconsistent with every sibling surface). **reach:** a ≥$100K win → the `opportunity_won_alert` notify → the bell panel and email.
+- **Suspected landing spot:**
+  - `src/sales/email-templates/en.ts:43`, which renders `{{amount}}` raw (and its locale siblings);
+  - if the template language offers no number or currency formatter, the platform notify/template engine.
+- **Dedupe words:** `closed at {{amount}}`, `large_deal_won`, `unformatted amount`.
+- **Known carrier:** none found.
+
 ### Known items that still reproduce on this build (one line each)
 
 - **#2073 item 7:** a lead the rep owns still sends that rep "New lead to assign: … is awaiting assignment" (eu.rep for the web lead, na.rep for its own lead). Source: `src/sales/email-templates/en.ts:67`.
@@ -397,6 +410,90 @@ Six new findings (F-01 to F-06) and one known item re-measured in more depth (F-
   - Five pages captured: Executive Overview, lead list, opportunity record, approvals inbox, Sales Performance.
   - Screenshots: `shots/92-I18N-*.png`, `shots/93-I18N-zh-*.png`.
 
+## UI and UX suggestions
+
+These are preferences, redesigns or new capabilities, noticed on pages the pass already visited. The one stable UX defect is F-08 under *Findings*. Sizes are rough: S under a day, M a few days, L larger.
+
+### U-01 — Lead record: make the status path clickable
+- **Page / persona:** lead record, eu.rep.
+- **Now:** the 5-stage path (New … Converted, Unqualified) is display only; clicking a stage does nothing. Moving New → Contacted takes Edit → Status picker → option → Update (4 clicks and a modal) per step.
+- **Suggestion:** click a stage to set it, opening the conversion wizard for Converted and the reason field for Unqualified.
+- **Why:** four clicks become one per transition. Making Converted route to the wizard would also close the door behind F-01.
+- **Landing spot:** console `record:path`, `src/sales/pages/lead_detail.page.ts`. **Size:** M.
+- **Screenshot:** `shots/97-ux-U-01-lead-path-display-only.png`.
+
+### U-02 — Opportunity edit: show Win/Loss Reason beside Stage when a closed stage is picked
+- **Page / persona:** opportunity Edit form, na.rep / eu.rep.
+- **Now:** choosing Closed Won and pressing Update fails once ("Please check the highlighted fields: Win Reason"). The form then jumps to the 6th tab "Win / Loss", which correctly marks the field. Every win costs one failed save and a tab switch.
+- **Suggestion:** show the reason field (`requiredWhen`) on the Overview tab next to Stage once a closed stage is chosen.
+- **Why:** removes a guaranteed error round-trip on the most common close action.
+- **Landing spot:** `src/sales/objects/opportunity.object.ts` field groups, or a `visibleWhen`-driven placement on the Overview group. **Size:** S.
+- **Screenshot:** `shots/95-ux-U-02-win-reason-on-last-tab.png`.
+
+### U-03 — Generate Quote: prefill Quote Name
+- **Page / persona:** opportunity → Generate Quote, na.rep.
+- **Now:** Quote Name is empty and required; the first Submit fails with "Please complete the required fields: Quote Name".
+- **Suggestion:** default it to "<Opportunity name> Quote", as the seeded quotes are named.
+- **Why:** removes one failed submit and one typing step from every quote.
+- **Landing spot:** `src/revenue/flows/quote-generation.flow.ts` (screen field default). **Size:** S.
+- **Screenshot:** `shots/97-ux-U-03-quote-name-empty.png`.
+
+### U-04 — Escalate Case / Close Case: drop the extra confirm before the form
+- **Page / persona:** case record, service agent and service manager.
+- **Now:** "Confirm Action — This will escalate the case… Continue?" appears first, then the form that asks for the reason, which has its own Cancel. Close Case behaves the same way. That is 2 dialogs and 3 clicks before any input.
+- **Suggestion:** go straight to the form.
+- **Why:** one dialog and one click less; the form already lets the user cancel.
+- **Landing spot:** `src/service/actions/case.actions.ts` (`confirmText` on the screen-flow actions). **Size:** S.
+- **Screenshot:** `shots/97-ux-U-04-escalate-double-confirm.png`.
+
+### U-05 — Enroll Members: show only the criteria for the chosen source
+- **Page / persona:** campaign → Enroll Members, marketing user.
+- **Now:** "Enroll leads in status *" and "Enroll contacts in department *" both show, and both are required, whatever "Enroll" is set to. I enrolled contacts by department while a lead status was still required on screen.
+- **Suggestion:** hide the criterion that does not apply.
+- **Why:** less to read, and no required field the run ignores.
+- **Landing spot:** `src/marketing/flows/campaign-enrollment.flow.ts` (screen field visibility). **Size:** S.
+- **Screenshot:** `shots/97-ux-U-05-enroll-irrelevant-criteria.png`.
+
+### U-06 — Import wizard: preselect the object's shipped mapping
+- **Page / persona:** Leads / Accounts / Contacts → Import, sales manager and admin.
+- **Now:** "Saved mapping: — Map columns manually —" is the default. A user who doesn't open that menu imports without the synonym tables; the repo's own template then loses 2 of 3 rows.
+- **Suggestion:** preselect the mapping when the object has exactly one.
+- **Why:** the shipped mapping exists precisely for these files. (Today choosing it also hits F-07, so this follows F-07's fix.)
+- **Landing spot:** console import wizard. **Size:** S.
+- **Screenshot:** `shots/97-ux-U-06-import-mapping-not-preselected.png`.
+
+### U-07 — Record highlights: show the year on dates
+- **Page / persona:** contract record CTR-0003, admin.
+- **Now:** the header reads "Start Date Sep 15, 2025 | End Date Sep 15". The current year is dropped, so a contract that ended this September looks like it ends next month. The same compact format appears on opportunity close dates ("Close Date Nov 19").
+- **Suggestion:** always show the year on contractual dates.
+- **Why:** the two dates of one contract read inconsistently, and an expiry date without a year is ambiguous.
+- **Landing spot:** console date formatter for highlight fields. **Size:** S.
+- **Screenshot:** `shots/97-ux-U-07-date-without-year.png`.
+
+### U-08 — Forecast record title
+- **Page / persona:** forecast record, sales manager.
+- **Now:** the title is "Q4 2026 (2026-10-01)"; the label already names the period, and the owner is not in the title.
+- **Suggestion:** "Q4 2026 · Nina Reyes".
+- **Why:** forecasts are per owner × period, so two owners' Q4 rows are indistinguishable in Recent items and lookups today.
+- **Landing spot:** `src/sales/objects/forecast.object.ts` (display/title formula). **Size:** S.
+- **Screenshot:** `shots/97-ux-U-08-forecast-title-redundant.png`.
+
+### U-09 — Lead conversion: a more specific default Opportunity Name
+- **Page / persona:** Convert Lead wizard, na.rep.
+- **Now:** Opportunity Name defaults to the company name ("Acme Corporation"). Acme already had 3 deals, so the new one is indistinguishable in Acme's Related list and in pickers.
+- **Suggestion:** "<Company> – <lead need type or date>".
+- **Why:** deal names stay unique per account without manual typing.
+- **Landing spot:** `src/sales/flows/lead-conversion.flow.ts` (screen default). **Size:** S.
+- **Screenshot:** `shots/97-ux-U-09-opportunity-name-defaults-to-company.png`.
+
+### U-10 — Rep sidebar: Service entries a rep cannot act on
+- **Page / persona:** sidebar, na.rep / eu.rep.
+- **Now:** reps see Service Overview, Cases, My Cases and three case reports. They own no case, cannot create one, and their Service Overview tiles read 0. That is 6 of the rep's 34 sidebar entries.
+- **Suggestion:** gate them the way the sales entries are gated for service personas (`visible` on case-read-with-ownership, or a sales-only audience).
+- **Why:** a shorter, persona-shaped nav, consistent with how the service personas' nav already hides sales entries.
+- **Landing spot:** `src/sales/apps/crm.app.ts` and the service module's `navigationContributions` in `src/service/index.ts`. **Size:** S–M (it touches the audience rule shared with Home).
+- **Screenshot:** `shots/97-ux-U-10-rep-nav-service-entries.png`.
+
 ## Choices made
 
 - **Schedule-only rows.**
@@ -408,6 +505,7 @@ Six new findings (F-01 to F-06) and one known item re-measured in more depth (F-
 - **REST beside the browser.** Where a row is a server rule (state machines, freezes, field-level security, export gate), I drove it through the same public REST door the console uses, as the persona, and kept the browser for the screens. Those rows say "(REST)" in place of a screenshot.
 - **Re-measurement.** Known items in #2060 / #2073 were re-measured only where my route crossed them. Items I did not cross are not claimed either way.
 - **Screenshots.** Viewport-sized everywhere except the two public-form captures (full page); the set is about 36 MB.
+- **Scope addition.** The *UI and UX suggestions* section was added mid-pass, on the maintainer's instruction relayed by the seat 2 session. Its screenshots reuse captures from pages already visited, renamed `NN-ux-U-xx-*.png`; F-08 and U-02 were captured fresh.
 - **Locale left behind.** The sales manager's language preference was left at zh-CN after the locale pass.
 
 ## Deviations
