@@ -26,7 +26,7 @@ HotCRM 开箱即用地发布 **十份** 报表 —— `src/sales/reports/index.t
 | **Opportunities by Stage** | 按阶段的管道金额与平均赢单概率，只算今年内成交的、并排除已丢单的交易 —— 附一张按阶段的金额柱状图 |
 | **Won Opportunities by Owner** | 每位销售代表的赢单金额，图表标题是 **Revenue by Sales Rep** |
 | **Pipeline Coverage by Forecast × Quarter** | 未结管道的矩阵：行是预测类别，列是预计成交季度，每格给出金额与商机数 |
-| **Opportunity Funnel by Owner → Stage** | 两级漏斗 —— 每位代表的商机盘子再按阶段拆开，带金额、商机数与平均概率 |
+| **Opportunity Funnel by Owner → Stage** | 每位代表的商机盘子再按阶段拆开，带金额、商机数与平均概率，排除已丢单的交易 —— 附一张按阶段的金额条形图，汇总所有代表 |
 
 四份都绑定 `opportunity_metrics`（`src/sales/datasets/opportunity.dataset.ts`），这也正是「管道」在这里和在仪表盘上是同一个数字的原因。
 

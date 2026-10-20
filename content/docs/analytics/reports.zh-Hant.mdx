@@ -28,7 +28,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 | **Opportunities by Stage** | 按階段的管道金額與平均贏單機率，只算今年內成交的、並排除已丟單的交易 —— 附一張按階段的金額長條圖 |
 | **Won Opportunities by Owner** | 每位銷售代表的贏單金額，圖表標題是 **Revenue by Sales Rep** |
 | **Pipeline Coverage by Forecast × Quarter** | 未結管道的矩陣：列是預測類別，欄是預計成交季度，每格給出金額與商機數 |
-| **Opportunity Funnel by Owner → Stage** | 兩級漏斗 —— 每位代表的商機盤子再按階段拆開，帶金額、商機數與平均機率 |
+| **Opportunity Funnel by Owner → Stage** | 每位代表的商機盤子再按階段拆開，帶金額、商機數與平均機率，排除已丟單的交易 —— 附一張按階段的金額橫條圖，彙總所有代表 |
 
 四份都繫結 `opportunity_metrics`（`src/sales/datasets/opportunity.dataset.ts`），這也正是「管道」在這裡和在儀表板上是同一個數字的原因。
 
