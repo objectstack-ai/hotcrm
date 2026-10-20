@@ -83,3 +83,26 @@
 | CON-005 | not reachable | Daily 00:00 schedule only; trigger API 403 | — |
 | CON-006 | not reachable | Daily 08:00 schedule only; trigger API 403 | — |
 | CON-007 | pass | Renewal Calendar, Contract Terms (gantt), Contract Timeline grouped by account, list | shots/58-CON-007-*.png |
+| SVC-001 | pass | Case list and detail, CASE-##### numbers (web cases got CASE-00039 / 00040), priorities, origins, attachments | shots/60-SVC-013-all-cases.png, shots/61-SVC-014-case-detail-agent.png |
+| SVC-002 | pass | Close without resolution → 400 "Resolution is required when closing a case"; escalated reachable from in_progress; new→in_progress 200 | (REST) |
+| SVC-003 | pass | Web case high → sla_due_date +8 h (smb default); critical → +4 h. An escalation of an already past-due case keeps the earlier date by design (hook comment: the re-derived date only moves the deadline earlier) | (REST) |
+| SVC-004 | pass | priority_rank high 3, critical 4 | (REST) |
+| SVC-005 | pass | /forms/support → /_console/f/support; anonymous browser submit 201 (CASE-00039, origin web, owner round-robined to the service agent); forged status/owner/internal_notes/resolution stripped. The form still collects no way to reach the visitor — F-02 / #2190 still reproduces | shots/22-SVC-005-web-to-case-form.png, shots/22-SVC-005-web-to-case-filled.png, shots/22-SVC-005-web-to-case-submitted.png |
+| SVC-006 | pass | Close → closed_date stamped, resolution_time_hours 63.9, is_closed true | shots/64-SVC-006-closed-case.png |
+| SVC-007 | pass | Forged critical web case CASE-00040 auto-escalated ("Auto-escalated: critical priority") and reassigned to the service manager; critical notice sent | (REST) |
+| SVC-009 | pass | Agent escalation → urgent task "Escalated: CASE-00001…" due next day to the account owner; closing the case completed it (open PR #2187 from last round has landed); Acme last_activity_date bumped | (REST) |
+| SVC-010 | pass | Agent: Escalate Case (confirm, then reason) → critical, escalated, owner Tomas (service manager), escalated_from Priya. Service manager: Close Case (resolution + optional article) → closed. The extra confirm before each form is #2194 T1-U04, unchanged. Agent keeps read after escalating and loses it once the case closes (#2060 item 3 family, unchanged) | shots/63-SVC-010-escalate-form.png, shots/63-SVC-010-escalate-after-agent.png, shots/64-SVC-010-close-form.png |
+| SVC-011 | n/a | Removed (#1428) | — |
+| SVC-012 | pass | Agent's Log a Call on CASE-00039 stamped first_response_date | shots/75-ACT-009-case-log-call-form.png |
+| SVC-013 | pass | All 8 tabs draw for agent / service manager (All, Service Workflow kanban, SLA Calendar, Timeline, My Open, Unassigned triage (empty), and under "2 more": Escalated, SLA at Risk) | shots/60-SVC-013-*.png |
+| SVC-014 | pass | Detail: SLA highlights, 6-stage path, Escalate / Close / Log a Call, Details / Related / Activity | shots/61-SVC-014-case-detail-agent.png |
+| SVC-015 | pass | Service manager reads the open critical cases through the escalation share (7 open critical); the agent sees only own | shots/60-SVC-013-svcmgr-escalated-cases.png |
+| SVC-016 | pass | Activity timeline shows "Case escalated —" and "Case closed —" milestone entries | shots/64-SVC-016-case-activity-timeline.png |
+| SVC-017 | not reachable | AI skill; no AI service in this boot | — |
+| KB-001 | pass | Agent created KA-0025 with category, audience public, linked source case | shots/65-KB-001-article-detail.png |
+| KB-002 | pass | draft → in_review → published → archived → published all saved | (REST) |
+| KB-003 | pass | Publish without body → 400 "Articles cannot be published without a body."; without summary → saved (warning) | (REST) |
+| KB-004 | pass | published_at set on first publish and kept on re-publish after archive | (REST) |
+| KB-005 | pass | Helpful vote by a rep → "Thanks — recorded as helpful.", helpful_count 0→1 | shots/66-KB-005-helpful-vote.png |
+| KB-006 | pass | All Articles, Published, My Drafts draw | shots/65-KB-006-*.png |
+| KB-007 | pass | Agent create/edit 200, delete 403; rep read 200, edit 403; anonymous GET 401 | (REST) |
