@@ -8,7 +8,23 @@ type Flow = Automation.Flow;
  * Lead Assignment & Routing — react the instant a new lead lands.
  *
  * Fires on lead *insert*, sets a rating-based `next_followup_date` SLA, and
- * alerts the lead's OWNER — the accountable party — to follow up.
+ * alerts the lead's OWNER — the accountable party — to follow up:
+ *
+ * - a HOT lead alerts its owner whoever wrote it. The alert IS the 24h
+ *   follow-up SLA, and "hot" is the system's verdict (the rating is scored on
+ *   insert when the writer gave none), so the owner hears it even for a lead
+ *   they typed in themselves.
+ * - a STANDARD lead alerts its owner only when someone ELSE put it in their
+ *   name: `lead_auto_assign`'s pick on web-to-lead or a user-less import, an
+ *   integration's named owner, a colleague with transfer rights logging it for
+ *   them. A write that carries a user is stamped with that user as owner, so
+ *   before the creator test on `e10` every lead a rep created told that same
+ *   rep "New lead to assign … is awaiting assignment" (#2073 item 7).
+ *
+ * Both templates address the owner: the lead is theirs to follow up. ⛔ Neither
+ * may say the lead awaits assignment: no lead reaching a notify node does (the
+ * owner gates below), and whoever assigns leads is no messaging audience (the
+ * position note below), so an "awaiting assignment" alert has nobody to go to.
  *
  * A lead with NO owner gets its SLA stamp and no alert, and the run ends
  * there successfully (#2060 item 6). Web-to-lead lands ownerless whenever
@@ -23,9 +39,10 @@ type Flow = Automation.Flow;
  * Positions are not a messaging audience: the messaging service resolves
  * `user:` / `role:` (sys_member) / `team:` / `owner_of:`, and a bare position
  * name is stored verbatim as `sys_inbox_message.user_id`, matching no real user,
- * so the alert reaches nobody. With no territory / round-robin table modelled,
- * the owner is the correct recipient. (Swap to a `team:`/`role:` audience once a
- * manager group is seeded.)
+ * so the alert reaches nobody. `role:` is organization membership
+ * (owner / admin / member), not a sales rung, and this app seeds no `team:`.
+ * With no territory / round-robin table modelled, the owner is the correct
+ * recipient. (Swap to a `team:`/`role:` audience once a manager group is seeded.)
  *
  * Trigger wiring: the `start` node declares `triggerType: 'record-after-create'`
  * so the record-change trigger provider binds it to the ObjectQL `afterInsert`
@@ -36,7 +53,7 @@ type Flow = Automation.Flow;
 export const LeadAssignmentFlow: Flow = {
   name: 'lead_assignment',
   label: 'New Lead Routing & SLA',
-  description: 'On new lead: set a rating-based follow-up SLA and alert the lead owner.',
+  description: 'On new lead: set a rating-based follow-up SLA and alert the lead owner (a standard lead only when someone else assigned it).',
   type: 'record_change',
   status: 'active',
   // A record-change flow fired by a SYSTEM write carries no trigger user
@@ -88,6 +105,8 @@ export const LeadAssignmentFlow: Flow = {
         // carries a user is stamped with that user as owner, and
         // `lead_auto_assign` fills an ownerless one from the rep pool when it
         // can; a lead still ownerless never reaches this node (`owner_hot`).
+        // Unlike `notify_std`, a lead its owner wrote still comes here — see
+        // the header.
         recipients: [cel`record.owner_id`],
         channels: ['inbox', 'email'],
         severity: 'warning',
@@ -108,14 +127,14 @@ export const LeadAssignmentFlow: Flow = {
     },
     {
       // Gateway only — the predicate lives on its out-edges `e10` / `e11`.
-      id: 'owner_std', type: 'decision', label: 'Has an Owner?',
+      id: 'owner_std', type: 'decision', label: 'Assigned by Someone Else?',
     },
     {
-      id: 'notify_std', type: 'notify', label: 'Alert — New Lead',
+      id: 'notify_std', type: 'notify', label: 'Alert — New Lead Assigned',
       config: {
         // Route to the lead's owner — see notify_hot for why a bare
         // 'sales_manager' position never reached anyone, and `owner_std` for
-        // the lead that has no owner.
+        // the lead that has no owner or was written by its owner.
         recipients: [cel`record.owner_id`],
         channels: ['inbox'],
         topic: 'lead_routing',
@@ -163,9 +182,18 @@ export const LeadAssignmentFlow: Flow = {
     // `isBlank` answers true for exactly what `notify` would refuse as no
     // recipient — null, a blank string, an empty list — and `has()` covers the
     // key a sparse driver leaves absent.
+    //
+    // The standard gate `e10` also asks WHO put the lead in the owner's name
+    // (#2073 item 7; the hot gate `e8` deliberately does not — see the header).
+    // `created_by` is the platform's insert stamp of the writing user: equal
+    // to `owner_id` when a person created the lead for themselves (their own
+    // owner stamp), and blank or absent on a write with no user (web-to-lead,
+    // an import or integration), whose owner is then the round-robin's pick or
+    // the one the writer named. A colleague who logs a lead for a rep differs
+    // from the owner too. Only the owner's own lead takes the default edge.
     { id: 'e8', source: 'owner_hot', target: 'notify_hot', type: 'conditional', condition: P`has(record.owner_id) && !isBlank(record.owner_id)`, label: 'Owned' },
     { id: 'e9', source: 'owner_hot', target: 'end', type: 'default', isDefault: true, label: 'No owner' },
-    { id: 'e10', source: 'owner_std', target: 'notify_std', type: 'conditional', condition: P`has(record.owner_id) && !isBlank(record.owner_id)`, label: 'Owned' },
-    { id: 'e11', source: 'owner_std', target: 'end', type: 'default', isDefault: true, label: 'No owner' },
+    { id: 'e10', source: 'owner_std', target: 'notify_std', type: 'conditional', condition: P`has(record.owner_id) && !isBlank(record.owner_id) && (!has(record.created_by) || isBlank(record.created_by) || record.created_by != record.owner_id)`, label: 'Assigned by someone else' },
+    { id: 'e11', source: 'owner_std', target: 'end', type: 'default', isDefault: true, label: 'No owner, or the owner wrote it' },
   ],
 };

@@ -46,13 +46,13 @@ export const zhCN: EmailTemplatePack = {
   },
   'crm.lead_routing_hot': {
     label: '热门线索分配',
-    subject: '热门线索 — 24 小时内分配：{{first_name}} {{last_name}}',
-    bodyHtml: '<p>来自 {{company}} 的 {{first_name}} {{last_name}}（评分 {{rating}}）需要今天就指定负责人。</p>',
+    subject: '热门线索 — 请在 24 小时内跟进：{{first_name}} {{last_name}}',
+    bodyHtml: '<p>来自 {{company}} 的 {{first_name}} {{last_name}}（评分 {{rating}}）由您负责，请最迟明天跟进。</p>',
   },
   'crm.lead_routing_new': {
     label: '新线索分配',
-    subject: '待分配新线索：{{first_name}} {{last_name}}',
-    bodyHtml: '<p>来自 {{company}} 的 {{first_name}} {{last_name}} 正在等待分配。</p>',
+    subject: '新线索已分配给您：{{first_name}} {{last_name}}',
+    bodyHtml: '<p>来自 {{company}} 的 {{first_name}} {{last_name}} 现已分配给您，请在三天内跟进。</p>',
   },
   'crm.opportunity_approved': {
     label: '商机审批通过',

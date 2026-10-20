@@ -46,13 +46,13 @@ export const esES: EmailTemplatePack = {
   },
   'crm.lead_routing_hot': {
     label: 'Asignación de cliente potencial caliente',
-    subject: 'Cliente potencial caliente — asignar en 24 h: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} de {{company}} (puntuación {{rating}}) necesita propietario hoy.</p>',
+    subject: 'Cliente potencial caliente — haz el seguimiento en 24 h: {{first_name}} {{last_name}}',
+    bodyHtml: '<p>{{first_name}} {{last_name}} de {{company}} (puntuación {{rating}}) es tuyo. Haz el seguimiento antes de que termine mañana.</p>',
   },
   'crm.lead_routing_new': {
     label: 'Asignación de cliente potencial',
-    subject: 'Nuevo cliente potencial por asignar: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} de {{company}} está pendiente de asignación.</p>',
+    subject: 'Nuevo cliente potencial asignado a ti: {{first_name}} {{last_name}}',
+    bodyHtml: '<p>{{first_name}} {{last_name}} de {{company}} ahora es tuyo. Haz el seguimiento en los próximos 3 días.</p>',
   },
   'crm.opportunity_approved': {
     label: 'Oportunidad aprobada',

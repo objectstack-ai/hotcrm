@@ -46,13 +46,13 @@ export const jaJP: EmailTemplatePack = {
   },
   'crm.lead_routing_hot': {
     label: 'ホットリードの割り当て',
-    subject: 'ホットリード — 24 時間以内に割り当て: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{company}} の {{first_name}} {{last_name}}（評価 {{rating}}）に本日中に担当者を割り当ててください。</p>',
+    subject: 'ホットリード — 24 時間以内にフォローアップ: {{first_name}} {{last_name}}',
+    bodyHtml: '<p>{{company}} の {{first_name}} {{last_name}}（評価 {{rating}}）はあなたの担当です。明日までにフォローアップしてください。</p>',
   },
   'crm.lead_routing_new': {
     label: '新規リードの割り当て',
-    subject: '割り当て待ちの新規リード: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{company}} の {{first_name}} {{last_name}} が割り当てを待っています。</p>',
+    subject: '新規リードがあなたに割り当てられました: {{first_name}} {{last_name}}',
+    bodyHtml: '<p>{{company}} の {{first_name}} {{last_name}} があなたの担当になりました。3 日以内にフォローアップしてください。</p>',
   },
   'crm.opportunity_approved': {
     label: '商談承認済み',
