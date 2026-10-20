@@ -128,20 +128,32 @@ export const CloseCaseFlow: Flow = {
   description: 'Collect the resolution, then close the case and stop the SLA clock.',
   type: 'screen',
   status: 'active',
-  // `is_closed` is a readonly lifecycle field. This trusted screen flow owns
-  // the transition and must therefore run with the system writer.
+  // Runs as the person who starts it (`AGENTS.md` house rule 9), so the engine
+  // applies that person's own grants to the `close` write below: Close Case
+  // changes a case only for a caller who may edit it, and a caller who may
+  // not is refused at `close` with nothing written.
   //
-  // ⛔ A HISTORICAL PRECEDENT, NOT A POLICY — do not cite this line to justify
-  // elevating another screen flow (#1434, the maintainer ruling that settled
-  // it). The standing rule is the opposite one: a screen flow stays
-  // `runAs: 'user'` and a write that genuinely needs elevation is split into a
-  // dedicated `system` sub-flow reached by a `subflow` node — see
-  // `escalate_case` above and `src/service/flows/case-escalation-stamp.flow.ts`.
-  // "Readonly stripped my write, so I made the flow system" is the pattern
-  // that ruling exists to stop being copied; `AGENTS.md` house rule 9 carries
-  // it as house policy. This flow predates that rule and has not been
-  // re-shaped to match it.
-  runAs: 'system',
+  // ⭐ No elevated step, because no column of the close needs one — measured
+  // on the verify boot, not assumed. The caller writes `status`, `resolution`
+  // and `resolved_by_article`, none of them readonly. Everything readonly that
+  // a close changes — `is_closed`, `closed_date`, `resolution_time_hours` — and
+  // the SLA breach flag are DERIVED by `case_sla_defaults`
+  // (`src/service/objects/case.hook.ts`) on that same write, from `status`.
+  // A key a hook writes onto its own record is not a caller-supplied key, so
+  // the platform's readonly strip leaves it: the caller's own close lands the
+  // same end state the record has always had. The afterUpdate hooks that
+  // follow a close (`case_close_escalation_task`, which completes the
+  // escalation follow-up task and so moves the account's last activity date)
+  // key off the same `status` transition and declare their own elevation.
+  // `test/close-case-caller-may-edit.test.ts` holds both halves.
+  //
+  // ⛔ Do not give this flow `runAs: 'system'`: the caller's own grants are
+  // what decide the close. ⛔ Do not add a hand-written permission check
+  // either; the engine's own gate on a user-context write IS the check. If a column the close must write ever becomes one the caller may
+  // not write, it goes into a dedicated `runAs: 'system'` sub-flow reached by
+  // a `subflow` node AFTER `close` succeeds — the `escalate_case` /
+  // `case_escalation_stamp` shape above.
+  runAs: 'user',
 
   variables: [
     { name: 'recordId', type: 'text', isInput: true, isOutput: false },
@@ -199,12 +211,15 @@ export const CloseCaseFlow: Flow = {
       // (the stored link left alone) and CEL refuses. The guard writes NULL
       // there — the value a blank field already lands as after the normalize
       // hook — so an omitted answer and an empty one now close the case alike.
+      //
+      // ⛔ No `is_closed` here. It is readonly and derived from `status` by
+      // `case_sla_defaults` on every write (see the note on `runAs` above);
+      // this node writes only columns its caller may write.
       id: 'close', type: 'update_record', label: 'Close Case',
       config: {
         objectName: 'crm_case',
         filter: { id: cel`recordId` },
         fields: {
-          is_closed: true,
           resolution: cel`resolution`,
           status: 'closed',
           resolved_by_article: cel`has(vars.resolved_by_article) ? resolved_by_article : null`,
