@@ -461,14 +461,29 @@ describe('how the shipped escalate path splits privilege (#1434)', () => {
     ).not.toBe(true);
   });
 
-  it('close_case is a historical precedent and says so in the file', async () => {
-    // The in-repo proof that `runAs: 'system'` on a whole flow predates the
-    // rule — kept as a pin because #1434 item 3 requires the file to SAY it is
-    // not a policy, so nobody cites it to elevate the next screen flow.
+  it('close_case stays runAs:"user" and writes only columns its caller may write', async () => {
+    // A person clicks Close Case, so it runs as that person and the engine
+    // applies their grants to the close (house rule 9). Its update node names
+    // no readonly column: `is_closed`, `closed_date` and
+    // `resolution_time_hours` are derived by `case_sla_defaults` on the same
+    // write. The runtime half — who is refused, and that an editor's close
+    // lands the same end state — is `test/close-case-caller-may-edit.test.ts`.
     const { CloseCaseFlow } = await import('../src/service/flows/case-actions.flow');
     const { Case } = await import('../src/service/objects/case.object');
-    expect((CloseCaseFlow as AnyRec).runAs).toBe('system');
-    expect((Case as AnyRec).fields.is_closed.readonly).toBe(true);
+    const flow = CloseCaseFlow as AnyRec;
+    expect(
+      flow.runAs ?? 'user',
+      'close_case is invoked by a person from the UI and must run as that person. A column ' +
+        'the close must write that its caller may not goes into a dedicated runAs:"system" ' +
+        'subflow reached AFTER the close node, the escalate_case shape.',
+    ).toBe('user');
+    const fields = (Case as AnyRec).fields as Record<string, AnyRec>;
+    const written = (flow.nodes as AnyRec[])
+      .filter((n) => n.type === 'update_record')
+      .flatMap((n) => Object.keys(n.config?.fields ?? {}));
+    expect(written.sort()).toEqual(['resolution', 'resolved_by_article', 'status']);
+    expect(written.filter((name) => fields[name]?.readonly === true)).toEqual([]);
+    expect(fields.is_closed.readonly, 'is_closed is derived from status, and nobody types it').toBe(true);
   });
 });
 
