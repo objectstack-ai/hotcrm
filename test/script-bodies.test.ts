@@ -21,8 +21,11 @@ import {
  * inside a real write through `hooks.run`. What is asserted is read back off
  * the rows the engine stored, or off the writes it received.
  *
- * Real people run them: a sales rep on the sales objects, a marketing user on
- * campaign enrolment, a service agent on the case and the knowledge base.
+ * Real people run them: a sales rep on the sales objects, a service agent on
+ * the case and the knowledge base. Campaign enrolment and Mark Responded left
+ * this file in #2167: none of the three is a script body any more (two flow
+ * actions and a declarative update, all written as the caller), and their
+ * pins live in `test/campaign-enrollment-doors.test.ts`.
  *
  * What lowering each body is the BUILD's to refuse: `os lint --strict`
  * (`pnpm lint`) fails a hook that no longer lowers to a metadata-only body
@@ -42,7 +45,6 @@ const SCRIPT_ACTIONS = stackActions.filter((a) => a.body?.language === 'js');
 
 let verify: VerifyStack;
 let rep: Person;
-let marketer: Person;
 let agent: Person;
 /** One real record per object an action is dispatched against. */
 const record: Record<string, AnyRec> = {};
@@ -57,9 +59,6 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@script-bodies.test', {
     name: 'Ada Lovelace', positions: ['sales_rep'], permissionSets: ['sales_rep'],
-  });
-  marketer = await signUpPerson(verify, 'marketer@script-bodies.test', {
-    name: 'Mara Keting', positions: ['marketing_user'], permissionSets: ['marketing_user'],
   });
   agent = await signUpPerson(verify, 'agent@script-bodies.test', {
     name: 'Sam Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
@@ -79,24 +78,15 @@ beforeAll(async () => {
   record.crm_case = await create('crm_case', {
     subject: 'Script body case', description: 'Raised for the activity bodies.', crm_account: record.crm_account.id,
   }, agent);
-  record.crm_campaign = await create('crm_campaign', {
-    name: 'Script Body Campaign', status: 'planning', start_date: '2030-01-01', end_date: '2030-02-01',
-  }, marketer);
   const [article] = await verify.seed('crm_knowledge_article', [{
     title: 'Reset your password', status: 'published', audience: 'public',
     body: 'Open Settings › Security and choose Reset password.', summary: 'How to reset a password.',
   }]);
   record.crm_knowledge_article = article!;
-  // The member `mark_responded` stamps: a lead on the campaign, still `sent`.
-  const [member] = await verify.seed('crm_campaign_member', [{
-    crm_campaign: record.crm_campaign.id, crm_lead: record.crm_lead.id, status: 'sent',
-  }]);
-  record.crm_campaign_member = member!;
 }, 180_000);
 
-/** Who dispatches each action: marketing enrols, the agent works the case and the articles. */
+/** Who dispatches each action: the agent works the case and the articles, the rep the rest. */
 const actorFor = (key: string): Person => {
-  if (/add_contact_to_campaign|create_campaign|mark_responded/.test(key)) return marketer;
   if (key.startsWith('crm_case:') || key.startsWith('crm_knowledge_article:')) return agent;
   return rep;
 };
@@ -121,12 +111,6 @@ describe('every script action body executes under QuickJS', () => {
    */
   const INVOCATIONS: Record<string, () => AnyRec> = {
     'crm_opportunity:clone_opportunity': () => ({}),
-    'crm_lead:create_campaign': () => ({ crm_campaign: record.crm_campaign!.id }),
-    // The contact-side mirror of `create_campaign` (#597) — the writer that
-    // finally populates `crm_campaign_member.crm_contact`.
-    'crm_contact:add_contact_to_campaign': () => ({ crm_campaign: record.crm_campaign!.id }),
-    // The `responded` status's writer (#597), on the member seeded above.
-    'crm_campaign_member:mark_responded': () => ({}),
     'crm_contact:mark_primary': () => ({}),
     'crm_contact:send_email': () => ({ subject: 'Hello', body: 'Body text' }),
     'crm_opportunity:mass_update_stage': () => ({ stage: 'needs_analysis' }),
@@ -270,83 +254,6 @@ describe('what the record actions write', () => {
     expect(call!.args[1]).toEqual({ id: contact.id, is_primary: true });
     expect((call!.args[2] as AnyRec).where).toEqual({ id: contact.id });
     expect((await stored('crm_contact', contact.id)).is_primary).toBe(true);
-  });
-
-  /**
-   * The behaviour pin for #813's lead half — a NON-regression nail: a
-   * dispatch carrying only a recordId WRITES a membership row (the per-record
-   * fan-out shape `bulkActions: ['create_campaign']` uses).
-   */
-  it('create_campaign enrols the dispatched lead from ctx.recordId alone', async () => {
-    const lead = await create('crm_lead', {
-      first_name: 'Ena', last_name: 'Rolled', company: 'Script Body Co', email: `enrol${++k}@script-bodies.test`,
-    });
-    const result = await runAction('crm_lead:create_campaign', { recordId: lead.id, params: { crm_campaign: record.crm_campaign!.id } });
-    expect(result).toMatchObject({ campaignId: record.crm_campaign!.id, count: 1, skipped: 0 });
-    const members = await verify.rows('crm_campaign_member', { crm_campaign: record.crm_campaign!.id, crm_lead: lead.id });
-    expect(members).toHaveLength(1);
-    expect(members[0]).toMatchObject({ crm_campaign: record.crm_campaign!.id, crm_lead: lead.id, status: 'sent' });
-  });
-
-  /**
-   * The contact side of the same fan-out (#597): `crm_campaign_member.crm_contact`
-   * was a lookup no writer populated, so a campaign could only ever reach leads.
-   */
-  it('add_contact_to_campaign enrols the dispatched contact, keeping crm_lead null', async () => {
-    const contact = await create('crm_contact', {
-      first_name: 'Cam', last_name: 'Paign', email: `cam${++k}@script-bodies.test`, crm_account: record.crm_account!.id,
-    });
-    const result = await runAction('crm_contact:add_contact_to_campaign', { recordId: contact.id, params: { crm_campaign: record.crm_campaign!.id } });
-    expect(result).toMatchObject({ campaignId: record.crm_campaign!.id, count: 1, skipped: 0 });
-    const members = await verify.rows('crm_campaign_member', { crm_campaign: record.crm_campaign!.id, crm_contact: contact.id });
-    expect(members).toHaveLength(1);
-    expect(members[0]).toMatchObject({ crm_campaign: record.crm_campaign!.id, crm_contact: contact.id, status: 'sent' });
-    expect(members[0]!.crm_lead ?? null, 'a contact member must not also claim a lead').toBeNull();
-  });
-
-  it('add_contact_to_campaign skips a contact already on the campaign', async () => {
-    const contact = await create('crm_contact', {
-      first_name: 'Twi', last_name: 'Ce', email: `twice${++k}@script-bodies.test`, crm_account: record.crm_account!.id,
-    });
-    const params = { crm_campaign: record.crm_campaign!.id };
-    await runAction('crm_contact:add_contact_to_campaign', { recordId: contact.id, params });
-    const again = await runAction('crm_contact:add_contact_to_campaign', { recordId: contact.id, params });
-    expect(again).toMatchObject({ count: 0, skipped: 1 });
-    expect(await verify.rows('crm_campaign_member', { crm_campaign: record.crm_campaign!.id, crm_contact: contact.id })).toHaveLength(1);
-  });
-
-  /**
-   * `mark_responded` is the only writer of the `responded` status, and it
-   * stamps all three response fields together rather than leaving two of them
-   * for `campaign_member_lifecycle` to back-fill.
-   */
-  it('mark_responded stamps status, has_responded and response_date together', async () => {
-    const [member] = await verify.seed('crm_campaign_member', [{
-      crm_campaign: record.crm_campaign!.id, crm_contact: record.crm_contact!.id, status: 'sent',
-    }]);
-    const result = await runAction('crm_campaign_member:mark_responded', { recordId: member!.id });
-    expect(result).toMatchObject({ id: member!.id, status: 'responded' });
-    const row = await stored('crm_campaign_member', member!.id);
-    expect(row.status).toBe('responded');
-    expect(row.has_responded).toBe(true);
-    expect(typeof row.response_date).toBe('string');
-  });
-
-  it('create_campaign skips a lead already enrolled on the campaign', async () => {
-    const lead = await create('crm_lead', {
-      first_name: 'Al', last_name: 'Ready', company: 'Script Body Co', email: `already${++k}@script-bodies.test`,
-    });
-    const params = { crm_campaign: record.crm_campaign!.id };
-    await runAction('crm_lead:create_campaign', { recordId: lead.id, params });
-    const engine = recordEngineWrites(verify);
-    let again: AnyRec;
-    try {
-      again = await runAction('crm_lead:create_campaign', { recordId: lead.id, params });
-    } finally {
-      engine.restore();
-    }
-    expect(again!).toMatchObject({ campaignId: record.crm_campaign!.id, count: 0, skipped: 1 });
-    expect(engine.of('crm_campaign_member', 'insert')).toHaveLength(0);
   });
 
   it('send_email writes the email and its timeline pointer', async () => {

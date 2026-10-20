@@ -230,7 +230,10 @@ export const CampaignEnrollmentFlow: Flow = {
           edges: [
             { id: 'b1', source: 'create_campaign_member', target: 'check_lead_enrolled', type: 'default' },
             // Already enrolled → no edge → next lead, counted as neither.
-            { id: 'b2', source: 'check_lead_enrolled', target: 'count_enrolled_lead', type: 'conditional', condition: P`leadEnrolment.enrolled == true`, label: 'Enrolled' },
+            // `leadEnrolment` is the callee's output map, so its field read
+            // carries both `has()` guards like any other variable field read
+            // (test/flow-variable-conditions.test.ts).
+            { id: 'b2', source: 'check_lead_enrolled', target: 'count_enrolled_lead', type: 'conditional', condition: P`has(vars.leadEnrolment) && has(vars.leadEnrolment.enrolled) && vars.leadEnrolment.enrolled == true`, label: 'Enrolled' },
           ],
         // A refused lead is caught here and counted.
         }, { refusedCount: cel`refusedCount + 1` }),
@@ -277,7 +280,7 @@ export const CampaignEnrollmentFlow: Flow = {
           ],
           edges: [
             { id: 'c1', source: 'create_contact_member', target: 'check_contact_enrolled', type: 'default' },
-            { id: 'c2', source: 'check_contact_enrolled', target: 'count_enrolled_contact', type: 'conditional', condition: P`contactEnrolment.enrolled == true`, label: 'Enrolled' },
+            { id: 'c2', source: 'check_contact_enrolled', target: 'count_enrolled_contact', type: 'conditional', condition: P`has(vars.contactEnrolment) && has(vars.contactEnrolment.enrolled) && vars.contactEnrolment.enrolled == true`, label: 'Enrolled' },
           ],
         }, { refusedCount: cel`refusedCount + 1` }),
       },
@@ -345,7 +348,11 @@ export const CampaignEnrollmentFlow: Flow = {
     { id: 'e9', source: 'loop_contacts', target: 'check_refused', type: 'default' },
     // Complementary conditionals rather than an `isDefault` fallback, so the
     // pair reads as one cut and neither edge depends on branch-label routing.
-    { id: 'e10', source: 'check_refused', target: 'end_refused', type: 'conditional', condition: P`vars.refusedCount > 0`, label: 'Refused' },
+    // Equality, not `> 0`: the count only ever grows from its declared 0, so
+    // `!= 0` says the same thing, and an equality answers on every shape a
+    // variable can hold where an ordering test aborts on a null
+    // (test/flow-variable-conditions.test.ts).
+    { id: 'e10', source: 'check_refused', target: 'end_refused', type: 'conditional', condition: P`vars.refusedCount != 0`, label: 'Refused' },
     { id: 'e11', source: 'check_refused', target: 'end', type: 'conditional', condition: P`vars.refusedCount == 0`, label: 'Clean' },
   ],
 };

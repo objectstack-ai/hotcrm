@@ -37,6 +37,7 @@ type AnyRec = Record<string, any>;
 
 const views: AnyRec[] = (stack as any).views ?? [];
 const actions: AnyRec[] = (stack as any).actions ?? [];
+const flows: AnyRec[] = (stack as any).flows ?? [];
 const actionNames = new Set(actions.map((a) => a.name));
 
 const listsOf = (v: AnyRec): AnyRec[] =>
@@ -161,23 +162,25 @@ describe('bulk dispatch is declared the way the renderer reads it', () => {
  * list — the per-record fan-out. The renderer promotes the action to a def
  * carrying its own label / icon / params / `visible` and dispatches it ONCE PER
  * selected row, each call carrying that row's `recordId` and no selection
- * array. So the body's whole input is `ctx.recordId`, and multi-lead enrolment
- * already works: it just arrives one lead at a time.
+ * array. So the action's whole per-row input is the row id, and multi-lead
+ * enrolment already works: it just arrives one lead at a time.
  *
- * Until #813 that body also carried `const selected = Array.isArray(
- * input.selectedIds) ? input.selectedIds : [];` with a `ctx.recordId` fallback
- * behind it. The limb never executed — nothing delivers a no-underscore
- * `selectedIds` on EITHER contract — and its comment promised, in the present
- * tense, that "when the runtime starts passing selectedIds the bulk path lights
- * up". It would not have. The limb is gone; these pin why it must not come back
- * AND the wiring the surviving body depends on.
+ * Since #2167 the action is a FLOW action over `campaign_lead_member_enroll`,
+ * the one flow that enrolls one lead as the caller: the door seeds the row id
+ * into the flow input its `recordIdParam` names, and the collected campaign
+ * rides under the param's `name`, the flow's other input. Until #813 the
+ * script body it replaced also carried a `selectedIds` limb that never
+ * executed — nothing delivers a no-underscore `selectedIds` on EITHER contract
+ * — and these pin why no such channel may come back AND the wiring the action
+ * depends on.
  *
- * The two halves are one test on purpose: `ctx.recordId` is correct *because*
- * the view uses the bare string. Move the lead list to an aggregate def and the
- * body stops receiving a recordId at all — every dispatch would answer "no lead
- * selected". Whichever half changes, this goes red rather than the button.
+ * The two halves are one test on purpose: one lead per dispatch is correct
+ * *because* the view uses the bare string. Move the lead list to an aggregate
+ * def and the door stops receiving a recordId at all — every dispatch would
+ * reach the flow with no lead. Whichever half changes, this goes red rather
+ * than the button.
  */
-describe('create_campaign is the per-record fan-out, body and wiring agreeing (#813)', () => {
+describe('create_campaign is the per-record fan-out, action and wiring agreeing (#813)', () => {
   const leadLists = () => {
     const leadView = views.find((v) => (v.list?.data?.object ?? v.object) === 'crm_lead');
     expect(leadView, 'no crm_lead view').toBeTruthy();
@@ -190,10 +193,10 @@ describe('create_campaign is the per-record fan-out, body and wiring agreeing (#
     expect(
       wiredBare,
       'the lead list no longer names create_campaign in `bulkActions`. That bare string IS the '
-        + "per-record contract the body is written for — it reads `ctx.recordId` and nothing else. "
+        + 'per-record contract the action is written for — it hands the flow one row id and nothing else. '
         + 'Dropping it removes multi-lead enrolment from the selection bar; replacing it with an '
         + 'aggregate def sends the whole selection in `_selectedIds` and NO recordId, so every '
-        + 'dispatch would throw "no lead selected" (#813).',
+        + 'dispatch would reach the flow with no lead (#813).',
     ).toBe(true);
 
     const aggregateDefs = lists.flatMap((l) =>
@@ -201,34 +204,38 @@ describe('create_campaign is the per-record fan-out, body and wiring agreeing (#
     );
     expect(
       aggregateDefs,
-      'create_campaign is declared as a bulk DEF on the lead list while its body still reads '
-        + '`ctx.recordId`. Moving it to `execution: \'aggregate\'` is a product decision (one '
-        + 'audit entry and one dedupe read per run instead of per lead, plus all-or-nothing '
-        + 'failure semantics) and requires the body to read `input._selectedIds` in the same '
-        + 'change — see `mass_update_stage` for the finished shape.',
+      'create_campaign is declared as a bulk DEF on the lead list while the action still hands '
+        + 'its flow one row id. Moving it to `execution: \'aggregate\'` is a product decision (one '
+        + 'audit entry per run instead of per lead, plus all-or-nothing failure semantics) and '
+        + 'needs a door that takes `_selectedIds` in the same change — see `mass_update_stage` for '
+        + 'the finished shape.',
     ).toEqual([]);
   });
 
-  it('the body reads ctx.recordId and no undeliverable selection key', () => {
+  it('the flow action takes the dispatched row as its lead, and no undeliverable selection key', () => {
     const createCampaign = actions.find((a) => a.name === 'create_campaign');
     expect(createCampaign, 'create_campaign is not defined').toBeTruthy();
-    const source = String(createCampaign!.body?.source ?? '');
+    expect(createCampaign!.type).toBe('flow');
+    const flow = flows.find((f) => f.name === createCampaign!.target);
+    expect(flow, `create_campaign targets ${createCampaign!.target}, which is not a registered flow`).toBeTruthy();
+    const inputs = ((flow!.variables ?? []) as AnyRec[]).filter((v) => v.isInput).map((v) => v.name).sort();
 
     expect(
-      source.includes('ctx.recordId'),
-      'the create_campaign body no longer reads `ctx.recordId` — the per-record fan-out delivers '
-        + 'the lead under exactly that key and carries no selection array',
+      inputs.includes(createCampaign!.recordIdParam),
+      'create_campaign no longer seeds the dispatched row into an input of its flow — the per-record '
+        + 'fan-out delivers the lead as the row id and carries no selection array, so `recordIdParam` '
+        + `must name the flow's lead input (inputs: ${inputs.join(', ')})`,
     ).toBe(true);
+    // Every collected value reaches the flow under an input it declares.
+    const paramNames = ((createCampaign!.params ?? []) as AnyRec[]).map((p) => p.name ?? p.field);
+    expect([...paramNames, createCampaign!.recordIdParam].sort()).toEqual(inputs);
 
-    // Boundary-matched so an `input._selectedIds` read (which would be correct
-    // only alongside an aggregate def, guarded above) does not trip this.
     expect(
-      /(?<![\w$])input\.selectedIds\b/.test(source),
-      'the create_campaign body reads `input.selectedIds` (no underscore) again. It is not a '
-        + 'fallback and not a forward-compatible limb: on the fan-out contract nothing delivers '
-        + 'any selection array, and on the aggregate contract the key is `_selectedIds`. Top-level '
-        + 'it is never merged into the params bag; under `params.` the strict gate answers 400 '
-        + '`Unknown action param "selectedIds"` (#813).',
-    ).toBe(false);
+      paramNames.filter((n) => /^_?selectedIds$/.test(String(n))),
+      'create_campaign declares a `selectedIds` param again. It is not a fallback and not a '
+        + 'forward-compatible limb: on the fan-out contract nothing delivers any selection array, '
+        + 'and on the aggregate contract the key is the builtin `_selectedIds`, which is never '
+        + 'declared. Top-level it is never merged into the params bag (#813).',
+    ).toEqual([]);
   });
 });
