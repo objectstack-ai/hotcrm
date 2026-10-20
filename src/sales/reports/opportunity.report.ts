@@ -53,5 +53,17 @@ export const OpportunityFunnelByOwnerStageReport: Report = {
   dataset: 'opportunity_metrics', rows: ['owner', 'stage'], values: ['total_amount', 'opp_count', 'avg_probability'],
   type: 'summary',
   runtimeFilter: { stage: { $ne: 'closed_lost' } },
-  chart: { type: 'funnel', title: 'Pipeline Funnel', showLegend: false, xAxis: 'stage', yAxis: 'total_amount' },
+  // A horizontal bar chart of amount by stage, not a funnel (#2073 item 10, the
+  // remedy #2073 item 2 gave the Pipeline by Stage tile). A funnel draws each
+  // stage as wide as its value, so it reads as one only when the values shrink
+  // stage by stage, and these do not: measured on 18.0.0-next.5, the shipped
+  // seed gives 139,500 / 174,000 / 173,000 / 237,000 / 1,294,000 / 1,290,000
+  // from Prospecting to Closed Won, the shape pinched and flared, and the
+  // Negotiation label was not drawn. Horizontal bars run top to bottom in the
+  // stage field's option order, though the dataset answers alphabetically, and
+  // draw every stage name whole; a vertical `bar` rotates them and cuts each to
+  // 12 characters ("Qualificati…" on Opportunities by Stage above). "Funnel" in
+  // the label, description and title is the sales word for the stage-by-stage
+  // pipeline, not the chart's shape, so it stays.
+  chart: { type: 'horizontal-bar', title: 'Pipeline Funnel', showLegend: false, xAxis: 'stage', yAxis: 'total_amount' },
 };
