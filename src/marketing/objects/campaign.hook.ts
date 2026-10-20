@@ -80,15 +80,29 @@ const campaignValidation: Hook = {
       (typeof input.end_date === 'string' && input.end_date) ||
       (typeof previous?.end_date === 'string' && (previous.end_date as string)) ||
       undefined;
+    // The refusals name each field by its label, as the form shows it, never
+    // by its API key (#2060 item 12, C-11: "Campaign start_date (…) must not
+    // be after end_date (…)"). A lowered body cannot read the object's
+    // metadata, so the labels are written out here;
+    // `test/hooks-runtime-service.test.ts` reads them off `crm_campaign` and
+    // fails when a label and its refusal part ways.
     if (start && end && start > end) {
-      throw refuse(`Campaign start_date (${start}) must not be after end_date (${end}).`, 'VALIDATION_FAILED', 400);
+      throw refuse(
+        `The campaign's Start Date (${start}) must not be after its End Date (${end}).`,
+        'VALIDATION_FAILED',
+        400,
+      );
     }
     const status =
       (typeof input.status === 'string' && input.status) ||
       (typeof previous?.status === 'string' && (previous.status as string)) ||
       undefined;
     if (status === 'in_progress' && (!start || !end)) {
-      throw refuse('Campaign cannot move to in_progress without both start_date and end_date.', 'VALIDATION_FAILED', 400);
+      throw refuse(
+        'A campaign cannot be In Progress without both a Start Date and an End Date.',
+        'VALIDATION_FAILED',
+        400,
+      );
     }
   },
 };

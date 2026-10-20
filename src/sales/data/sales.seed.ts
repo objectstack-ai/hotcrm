@@ -63,6 +63,15 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // Phone numbers moved with the addresses: a Munich account answering a Denver
 // number is the kind of incoherence an evaluator notices before the feature.
 //
+// `office_location` moved with them too, and it is what Accounts by Location
+// plots (#2060 item 15, A-13): the map view's `locationField`, a
+// `Field.location` stored as `{ lat, lng }`. Each account is pinned at its
+// billing address's building. Every row used to leave it blank, so the map
+// drew nothing and reported "9 records with missing or invalid coordinates
+// excluded". `test/account-seed-locations.test.ts` holds every row to the
+// field's value shape. Insert-once (below) means a database seeded before this
+// keeps its blank locations; only a fresh one gets the pins.
+//
 // ─── `last_activity_date`: the churn clock, and who is allowed to set it ───
 //
 // The three "Quiet 30 / 60 / 90+ Days" tiles on the Sales Activity dashboard,
@@ -191,6 +200,7 @@ export const accounts = defineSeed(Account, {
       number_of_employees: 250,
       phone: '+1-415-555-0100',
       billing_address: { street: '500 Howard Street, Suite 400', city: 'San Francisco', state: 'CA', postalCode: '94105', country: 'US' },
+      office_location: { lat: 37.7887, lng: -122.3966 },
       website: 'https://acme.example.com',
       tier: 'enterprise',
       segment: 'growth',
@@ -248,6 +258,7 @@ three regional teams (NA, EMEA, APAC).
       number_of_employees: 800,
       phone: '+1-312-555-0200',
       billing_address: { street: '233 South Wacker Drive', city: 'Chicago', state: 'IL', postalCode: '60606', country: 'US' },
+      office_location: { lat: 41.8789, lng: -87.6359 },
       website: 'https://globex.example.com',
       tier: 'enterprise',
       segment: 'net_new',
@@ -264,6 +275,7 @@ three regional teams (NA, EMEA, APAC).
       number_of_employees: 150,
       phone: '+1-212-555-0300',
       billing_address: { street: '1 Liberty Plaza, 23rd Floor', city: 'New York', state: 'NY', postalCode: '10006', country: 'US' },
+      office_location: { lat: 40.7094, lng: -74.011 },
       website: 'https://initech.example.com',
       tier: 'mid_market',
       segment: 'at_risk',
@@ -285,6 +297,7 @@ three regional teams (NA, EMEA, APAC).
       // reason that rule's `$in` list is not a single-country list in disguise.
       phone: '+1-416-555-0400',
       billing_address: { street: '181 Bay Street, Suite 2200', city: 'Toronto', state: 'ON', postalCode: 'M5J 2T3', country: 'CA' },
+      office_location: { lat: 43.6469, lng: -79.3787 },
       website: 'https://starkmed.example.com',
       tier: 'mid_market',
       segment: 'stable',
@@ -317,6 +330,7 @@ three regional teams (NA, EMEA, APAC).
       number_of_employees: 2000,
       phone: '+1-650-555-0500',
       billing_address: { street: '3000 Hanover Street', city: 'Palo Alto', state: 'CA', postalCode: '94304', country: 'US' },
+      office_location: { lat: 37.4125, lng: -122.1476 },
       website: 'https://wayne.example.com',
       tier: 'strategic',
       segment: 'growth',
@@ -347,6 +361,7 @@ three regional teams (NA, EMEA, APAC).
       // europe_territory, half 1: DE.
       phone: '+49-89-5550-0600',
       billing_address: { street: 'Leopoldstrasse 21', city: 'Munich', state: 'BY', postalCode: '80802', country: 'DE' },
+      office_location: { lat: 48.1567, lng: 11.5847 },
       website: 'https://northwind.example.com',
       tier: 'enterprise',
       segment: 'net_new',
@@ -365,6 +380,7 @@ three regional teams (NA, EMEA, APAC).
       number_of_employees: 420,
       phone: '+1-512-555-0700',
       billing_address: { street: '600 Congress Avenue, Floor 14', city: 'Austin', state: 'TX', postalCode: '78701', country: 'US' },
+      office_location: { lat: 30.2687, lng: -97.7428 },
       website: 'https://vertex.example.com',
       tier: 'enterprise',
       segment: 'growth',
@@ -387,6 +403,7 @@ three regional teams (NA, EMEA, APAC).
       // without a subdivision is a normal shape, and only `country` is read.
       phone: '+44-20-7946-0800',
       billing_address: { street: '20 Fenchurch Street', city: 'London', postalCode: 'EC3M 3BY', country: 'UK' },
+      office_location: { lat: 51.5113, lng: -0.0836 },
       website: 'https://lattice.example.com',
       tier: 'mid_market',
       segment: 'stable',
@@ -411,6 +428,7 @@ three regional teams (NA, EMEA, APAC).
       // blank.
       phone: '+65-6555-0900',
       billing_address: { street: '10 Marina Boulevard, #30-01', city: 'Singapore', postalCode: '018983', country: 'SG' },
+      office_location: { lat: 1.2797, lng: 103.8543 },
       website: 'https://apexlogistics.example.com',
       tier: 'enterprise',
       segment: 'net_new',

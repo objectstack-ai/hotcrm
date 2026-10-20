@@ -96,8 +96,8 @@ describe('the line-item objects declare cascade on their parent lookup', () => {
    * lookup on a line item". `crm_product` stays on the default, which the same
    * escalation turns into `restrict`: retiring a catalog product must never
    * shred the priced history of the deals that sold it. `product.hook.ts` says
-   * the same thing in its own `beforeDelete` ("Set is_active=false to retire
-   * instead"), and the engine-level answer below proves the restrict survives
+   * the same thing in its own `beforeDelete` ("To retire it instead, turn off
+   * Active"), and the engine-level answer below proves the restrict survives
    * independently of that hook.
    */
   it.each([
