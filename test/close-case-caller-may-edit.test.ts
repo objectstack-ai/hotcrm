@@ -135,11 +135,11 @@ describe('Close Case changes a case only for a caller who may edit it', () => {
       const before = await stored(id);
 
       const refusal = await closeCase(who(), id);
-      expect(refusal, 'Close Case closed a case its caller may not edit').not.toBeNull();
+      expect(refusal, 'Close Case must refuse a caller who may not edit the case').not.toBeNull();
       expect({ code: refusal!.code, status: refusal!.status }).toEqual({ code: 'FLOW_FAILED', status: 400 });
       // Refused at the caller's own write, not at the screen contract.
       expect(refusal!.nodes).toContainEqual(expect.objectContaining({ nodeId: 'close', status: 'failure' }));
-      expect(await stored(id), 'the refused close wrote to the case').toEqual(before);
+      expect(await stored(id), 'a refused close must leave the case unchanged').toEqual(before);
     });
   });
 
@@ -161,7 +161,7 @@ describe('Close Case changes a case only for a caller who may edit it', () => {
         body: 'Power down, open the rear panel and swap the fuser.', summary: 'Fuser replacement.',
       }]);
       const refusal = await closeCase(who(), id, { resolution: 'Replaced the faulty unit', resolved_by_article: article!.id });
-      expect(refusal, 'a person who may edit the case was refused').toBeNull();
+      expect(refusal, 'Close Case must close the case for a caller who may edit it').toBeNull();
 
       const row = await stored(id);
       expect(row).toMatchObject({
