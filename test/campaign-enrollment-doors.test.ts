@@ -360,3 +360,28 @@ describe('Add to Campaign on a lead is drawn on the row menu and the selection b
     expect(enrolled).toEqual([w.leadA.id, w.leadB.id].sort());
   }, ENROLL_BUDGET_MS);
 });
+
+/**
+ * Add to Campaign on a contact takes the same two doors (#2073 item 5b).
+ *
+ * The contact-side twin of the case above. Its header button drew nowhere
+ * even while it declared `list_toolbar`, measured on the three contact views
+ * on 18.0.0-next.5, but only because its `visible` reads
+ * `record.email_opt_out` and a list header binds no record. So the placement
+ * is pinned on its own, and not left to that predicate. The row door's run is
+ * pinned by the #2167 blocks above (`addContact`).
+ */
+describe('Add to Campaign on a contact is declared on the row menu only, like the lead action (#2073 item 5b)', () => {
+  const views: Rec[] = (stack as Rec).views ?? [];
+
+  it('declares the row menu as its only location', () => {
+    expect(actionNamed('add_contact_to_campaign').locations).toEqual(['list_item']);
+  });
+
+  it('All Contacts still opens the selection bar on it, in the per-record bare-string form', () => {
+    const allContacts = views.map((v) => v.list).find((l) => l?.name === 'all_contacts');
+    expect(allContacts, 'no all_contacts list view').toBeTruthy();
+    expect(allContacts!.bulkActions).toContain('add_contact_to_campaign');
+    expect(actionNamed('add_contact_to_campaign')).toMatchObject({ type: 'flow', recordIdParam: 'contactId' });
+  });
+});
