@@ -107,10 +107,10 @@ const deskOn = (boot: () => Promise<VerifyStack>, label: string) => {
  * A write as PRODUCTION performs it: the manager's, through the engine — so
  * `forecast_derive_period` runs first and the engine's checks second.
  *
- * This is not decoration. `period_end` is `required` + `notNull`, and the
- * required-field check runs BEFORE the `validations[]` rules — so a write the
- * hook did not see would be refused with "Period End is required" and never
- * reach the boundary rule at all. The hook is what puts the drifting
+ * This is not decoration. `period_end` is a NOT NULL column (no longer
+ * `required`, #2060 item 7) and only the hook fills it — so a write the hook
+ * did not see would carry no end, the boundary rule would have nothing to
+ * judge, and the column would refuse the row. The hook is what puts the drifting
  * `period_end` (2026-08-15 → 2026-10-31) on the record, which is the exact row
  * the rule has to refuse.
  */
