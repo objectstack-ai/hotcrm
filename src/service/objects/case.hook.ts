@@ -705,7 +705,7 @@ const caseSelfClaim: Hook = createCaseSelfClaim();
  * ⚠️ The blank test is spelled inline rather than lifted into a shared helper:
  * hook handlers lower to a metadata-only body and a free identifier would push
  * this one into the legacy runtime bundle instead
- * (`test/action-sandbox.test.ts` fails the build on it).
+ * (`pnpm lint` refuses it as `hook-body/not-lowerable`).
  */
 const caseResolutionArticleNormalize: Hook = {
   name: 'case_resolution_article_normalize',

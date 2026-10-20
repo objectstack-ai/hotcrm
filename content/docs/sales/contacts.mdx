@@ -25,13 +25,7 @@ The contact detail screen has 7 collapsible sections:
 
 Each account has **one primary contact** — usually the main decision-maker or business sponsor. Setting a contact as primary automatically clears the flag on the previous one, so you never end up with two.
 
-The primary contact is auto-suggested as the default on:
-
-- Opportunities (Primary Contact field)
-- Quotes (Contact field)
-- Contracts (Primary Contact field)
-
-This saves a lot of clicks.
+The flag is not a default anywhere. On a new opportunity, quote or contract you pick the person yourself: the opportunity's **Primary Contact**, the quote's **Contact** and the contract's **Primary Contact** each offer the chosen account's contacts and start empty. Two flows carry a contact forward, and both copy a field rather than read the flag: **Generate Quote** takes the opportunity's **Primary Contact**, and the contract drafted when a quote is accepted takes the quote's **Contact**.
 
 ## No org chart — and what to use instead
 
@@ -69,7 +63,7 @@ Contacts opens on **All Contacts**, and the switcher carries three saved views �
 | --- | --- |
 | **All Contacts** *(the landing view)* | Every contact, **grouped by account with the groups collapsed**: you expand the account you are working on instead of scrolling one flat roster. Inside a group, people are ordered by last name A→Z, with avatar, account, title, department, the three buying-centre columns, email, phone and owner on the row — an expanded account reads as a map of who decides and who is on our side. 50 rows a page, export to CSV or XLSX. |
 | **People Directory** | The same people as photo cards, each card fronted by the contact's avatar — the fastest way to put faces to an account team before a meeting. Name, title, department, email, phone and account are on the card. |
-| **Primary Contacts** | Only the contacts flagged as primary — one per account, as described above — ordered by account. This is the list worth reviewing before a quote run or a mail-merge, because it is exactly the set every default draws from. |
+| **Primary Contacts** | Only the contacts flagged as primary — one per account, as described above — ordered by account: each account's main person, in one list. No field anywhere defaults from it. |
 
 There is no owner-filtered contact view, and none is needed for access: contacts are not shared on their own, they inherit the account's sharing (see above). To work "your" people, start from **My Accounts** on the [Accounts](./accounts) list and open the account, or expand your accounts' groups on **All Contacts**.
 

@@ -53,7 +53,7 @@
 | LEA-010 | 线索转化向导 | 屏幕流:账户按归一化名去重复用、联系人按邮箱去重、可选建商机、回写转化字段并通知操作者 | `src/sales/flows/lead-conversion.flow.ts` + `src/sales/actions/lead.actions.ts`(`convert_lead`) |
 | LEA-011 | 新线索路由 SLA | 新建即路由:热线索(rating≥4)1 天跟进期限并发热线索告警,普通线索 3 天 | `src/sales/flows/lead-assignment.flow.ts` |
 | LEA-012 | 排定跟进 | 屏幕流收集下一步动作/到期日/类型/优先级,创建任务并同步线索 `next_followup_date` | `src/sales/flows/schedule-followup.flow.ts` + `src/sales/actions/lead.actions.ts`(`schedule_followup`) |
-| LEA-013 | 批量加入活动 | 列表多选批量动作:逐行去重后插入活动成员(记录选择器选活动) | `src/sales/actions/lead.actions.ts`(`create_campaign`) |
+| LEA-013 | 批量加入活动 | 列表多选批量动作(逐行分派):每行以调用者身份启动 `campaign_lead_member_enroll` 流程,去重后插入活动成员(记录选择器选活动);无活动成员创建权的 profile 不显示该动作,服务端也拒绝(400 `FLOW_FAILED`) | `src/sales/actions/lead.actions.ts`(`create_campaign`)+ `src/marketing/flows/campaign-member-enroll.flow.ts` |
 | LEA-014 | 线索列表视图族 | 默认列表 + 7 个具名视图:我的/热线索/高优/疑似重复/状态看板/日历/卡片 | `src/sales/views/lead.view.ts` |
 | LEA-015 | 线索表单族 | 7 个具名表单覆盖全部布局类型:分 tab 详情/转化向导/分栏/抽屉/弹窗/公开表单/条件示范(SIMPLE 由默认 `form` 演示) | `src/sales/views/lead.view.ts`(formViews) |
 | LEA-016 | 线索详情页 | header 挂转化/跟进/三个活动动作,highlights 条,5 阶段 path,Details/Related/Activity/History 四 tab | `src/sales/pages/lead_detail.page.ts` |
@@ -68,9 +68,9 @@
 | ACC-001 | 客户对象 | 公司主档(`crm_account`):类型/行业/财务、客户成功字段(tier/segment/health_score/续约)、logo/品牌色/地理位置,启用附件 | `src/sales/objects/account.object.ts` |
 | ACC-002 | 客户名唯一与匹配键 | `name` 租户内唯一;hook 维护 `name_normalized`(小写+折叠空白)作为线索转化的账户去重键 | `src/sales/objects/account.object.ts` + `src/sales/objects/account.hook.ts` |
 | ACC-003 | 区域派生 | 从 `billing_address.country` 投影扁平列 `billing_country`(大写 trim),并按唯一映射表分类为 `territory` 选择列表(`na`/`emea`/`other`),供区域共享规则下推过滤 | `src/sales/objects/_territory.ts` + `src/sales/objects/account.hook.ts` |
-| ACC-004 | 客户保护 | 网址须以 http(s) 开头、营收非负;有开放商机的 customer 禁止删除 | `src/sales/objects/account.hook.ts` |
+| ACC-004 | 客户保护 | 网址须以 http(s) 开头、营收非负;仍被任何商机(开放或已关闭)或已激活合同引用的 customer 禁止删除(409 `DELETE_RESTRICTED`,提示改为停用) | `src/sales/objects/account.hook.ts` |
 | ACC-005 | 客户活动时钟 | `last_activity_date` 由多路写入:owner/type 变更、held 事件与完成任务冒泡、工单解决;是流失分析的信号源 | `src/sales/objects/account.hook.ts` 等 |
-| ACC-006 | 客户列表视图族 | 默认列表 + 卡片/地图/大客户/我的/续约/风险 7 个 tab;批量改 tier、转移 owner、批量删除 | `src/sales/views/account.view.ts` |
+| ACC-006 | 客户列表视图族 | 默认列表 + 卡片/地图/大客户/我的/风险共 6 个 tab(续约视图随 #1181 删除,续约队列在合同上);批量改 tier、转移 owner、批量删除 | `src/sales/views/account.view.ts` |
 | ACC-007 | 客户工作台 | ADR-0047 interface page:引用 `all_accounts` 视图的策展列表,仅行业/类型/负责人三个快速筛选,锁定 grid、禁新建 | `src/sales/pages/account_workbench.page.ts` |
 | ACC-008 | 客户详情页 | slotted 页:覆盖 header(三个活动动作)与 discussion(评论/表情/提及全开的 chatter)两个 slot,其余由默认页合成 | `src/sales/pages/account_detail.page.ts` |
 | ACC-009 | 联系人对象 | 自然人档案(`crm_contact`):masterDetail 挂客户(删客户级联删联系人),email 租户内唯一,头像、汇报关系、沟通偏好 | `src/sales/objects/contact.object.ts` |
@@ -112,7 +112,7 @@
 | --- | --- | --- | --- |
 | QUO-001 | 报价对象 | 正式报价单(`crm_quote`):QTE-{0000} 自动编号,定价字段组(subtotal/discount/tax/shipping/total),条款与双地址,启用附件 | `src/revenue/objects/quote.object.ts` |
 | QUO-002 | 报价状态机 | `draft → in_review → presented → accepted/rejected/expired`;accepted/expired 终态,rejected 可回 draft 重报 | `src/revenue/objects/quote.object.ts`(validations) |
-| QUO-003 | 报价默认与冻结 | 未给失效日时默认 `quote_date + 30 天`;accepted/expired 后除内部备注外禁改 | `src/revenue/objects/quote.hook.ts`(`quote_workflow`) |
+| QUO-003 | 报价默认与冻结 | 未给失效日时默认 `quote_date + 30 天`(字段自身的 `defaultValue`,不由 hook 盖戳);accepted/expired 后除内部备注外禁改,明细行随之冻结 | `src/revenue/objects/quote.object.ts`(`expiration_date`)+ `src/revenue/objects/quote.hook.ts`(`quote_workflow`) |
 | QUO-004 | 从商机生成报价 | 屏幕流收集名称/有效期/折扣,按商机金额播种报价定价,并把早期阶段商机推进到 proposal | `src/revenue/flows/quote-generation.flow.ts` + `src/sales/actions/opportunity.actions.ts`(`generate_quote`) |
 | QUO-005 | 接受报价→起草合同 | status 变 accepted 时自动创建 draft 合同(12 个日历月,合同额=报价总价);无联系人时给出具名报错;以系统身份起草,销售代表的接受也能拿到合同 | `src/revenue/objects/quote.hook.ts`(`quote_accepted_contract_draft`) |
 | QUO-006 | 接受报价→商机赢单 | 与起草合同相互独立的另一个 hook,以接受者本人身份:关联商机置 closed_won、补关闭日与 `win_reason='quote_accepted'`;商机被审批锁住时接受本身即被拒绝(`quote_workflow`) | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
@@ -140,13 +140,13 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| SVC-001 | 工单对象 | 支持工单(`crm_case`):CASE-{00000} 租户内唯一编号,四档优先级、七状态、来源渠道、父工单,客户签名/五星评分/反馈,启用附件 | `src/service/objects/case.object.ts` |
+| SVC-001 | 工单对象 | 支持工单(`crm_case`):CASE-{00000} 租户内唯一编号,四档优先级、七状态、来源渠道,启用附件;无父工单,也无客户签名/评分/反馈字段 | `src/service/objects/case.object.ts` |
 | SVC-002 | 工单状态机 | 每个开放状态都可达 escalated 与 closed;resolved/closed 可重开;关闭必填 resolution | `src/service/objects/case.object.ts`(validations) |
 | SVC-003 | SLA 时限计算 | 每张工单首次落库时按「优先级 × 账户 tier」矩阵写 `sla_due_date`(日历小时;critical 各 tier 均 4 小时) | `src/service/objects/case.hook.ts`(`case_sla_defaults`)、`src/service/objects/_case-sla.ts` |
 | SVC-004 | 优先级排序落地 | `priority_rank`(critical=4…low=1,未知=0)供队列按紧急度排序,与任务侧哨兵一致 | `src/service/objects/case.hook.ts` |
 | SVC-005 | Web-to-Case 公开表单 | 匿名表单 `/forms/support`;hook 判定访客提交,补默认值并剥离 owner/升级/关闭/内部备注字段 | `src/service/views/case.view.ts`(`web_to_case`)+ `src/service/objects/case.hook.ts` |
 | SVC-006 | 关闭指标 | 关闭时打 `closed_date` 并计算 `resolution_time_hours`;`is_closed` 由状态派生 | `src/service/objects/case.hook.ts` |
-| SVC-007 | Critical 即时升级 | record 流(update+create 孪生):critical 工单自动标升级、置 escalated、通知 owner(critical 级);只标记不改派 | `src/service/flows/case-escalation.flow.ts` |
+| SVC-007 | Critical 即时升级 | record 流(update+create 孪生):critical 工单自动标升级、置 escalated、通知升级前的 owner(critical 级);这次写入触发 `case_escalation_reassign`,把工单交给 `service_manager` 岗位中负载最轻的人(岗位无人时保留原 owner),原 owner 记入 `escalated_from` 并保留只读 | `src/service/flows/case-escalation.flow.ts` + `src/service/objects/_case-assignment.ts` |
 | SVC-008 | SLA 每小时违约扫描 | 过期未结工单标 `is_sla_violated`、升级并通知 owner(topic `case_sla_breach`) | `src/service/flows/case-sla-monitor.flow.ts` |
 | SVC-009 | 升级派发跟进任务 | 升级时的唯一任务产出点:给客户负责人创建次日到期的 urgent 跟进任务;关闭工单时把仍未完成的升级跟进任务置为已完成;解决时更新客户活动时钟(后两者各为独立 hook,以 system 身份写入) | `src/service/objects/case.hook.ts`(`case_status_side_effects`、`case_close_escalation_task`、`case_resolution_account_activity`) |
 | SVC-010 | 手动升级/关闭工单 | 两个屏幕流动作:升级必填原因并置 critical;关闭必填解决方案(系统身份写只读生命周期字段) | `src/service/flows/case-actions.flow.ts` + `src/service/actions/case.actions.ts` |
@@ -166,9 +166,9 @@
 | KB-001 | 知识文章对象 | `crm_knowledge_article`:KA-{0000} 编号,全组织可读,分类/多选标签/语言标记,受众开关(public/internal),可回链来源工单 | `src/service/objects/knowledge_article.object.ts` |
 | KB-002 | 审核发布生命周期 | `draft → in_review → published → archived`,`archived → published` 重新上架是承认的合法回路 | `src/service/objects/knowledge_article.object.ts` |
 | KB-003 | 发布门槛 | 无正文禁止发布(error);无摘要发布告警(摘要供搜索结果与 AI 引用) | `src/service/objects/knowledge_article.object.ts`(validations) |
-| KB-004 | 发布时间戳 | 首次发布写 `published_at`(重新上架不重置,导入可带历史日期);处于已发布态的写入刷新 `last_reviewed_at` | `src/service/objects/knowledge_article.hook.ts` |
-| KB-005 | 参与度指标 | `view_count`/`helpful_count`/`not_helpful_count` 只读计数字段 | `src/service/objects/knowledge_article.object.ts` |
-| KB-006 | 知识库视图 | 已发布按浏览量、我的草稿(draft+in_review)、按分类分组全量(复审队列已随 #781 裁决删除) | `src/service/views/knowledge_article.view.ts` |
+| KB-004 | 发布时间戳 | 首次发布写 `published_at`(重新上架不重置,导入可带历史日期);`last_reviewed_at` 只在发布或内容编辑(标题/摘要/正文/分类/标签/受众/语言/关联工单)时刷新,读者投票与改 owner 不算复审;系统写入自带的日期保留 | `src/service/objects/knowledge_article.hook.ts` |
+| KB-005 | 参与度指标 | `helpful_count`/`not_helpful_count` 只读计数字段,由 `article_feedback_metrics_refresh` 按 `crm_article_feedback` 记录重新统计(每位读者每篇一票);`view_count` 已随 #601 删除 | `src/service/objects/knowledge_article.object.ts` |
+| KB-006 | 知识库视图 | 已发布按有用票数、我的草稿(draft+in_review)、按分类分组全量(复审队列已随 #781 裁决删除) | `src/service/views/knowledge_article.view.ts` |
 | KB-007 | 知识库权限面 | 服务坐席可建/改(无删,归档留给管理员),销售只读,匿名访客一律拒绝(门户走 `allowAnonymous` 视图而非放宽对象读) | `src/sales/profiles/service-agent.profile.ts`、`src/sales/profiles/guest-portal.profile.ts` |
 
 ## MKT — 营销活动
@@ -178,19 +178,19 @@
 | MKT-001 | 活动对象 | 市场活动(`crm_campaign`):CPG-{0000} 编号,类型/渠道,预算四件套与 `response_rate`/`roi` 公式,父活动层级,全组织可读 | `src/marketing/objects/campaign.object.ts` |
 | MKT-002 | 活动校验 | 结束日须晚于开始日、进入 in_progress 须起止日齐备、实际成本超预算告警 | `src/marketing/objects/campaign.hook.ts` + validations |
 | MKT-003 | 活动成员联结对象 | `crm_campaign_member`:挂 Lead 或 Contact(二选一强制),4 状态响应生命周期(sent → responded / converted / unsubscribed —— 每个值都有真实写入方),受父活动控共享;人物删除级联(GDPR) | `src/marketing/objects/campaign_member.object.ts` + `campaign_member.hook.ts` |
-| MKT-004 | 批量入组成员 | 屏幕流:线索按状态、联系人按部门筛选(均要求有邮箱、未退订;线索另须未转化,上限 1000),去重后批量插入成员并盖 `added_date`;单条加入走 `create_campaign`(线索)/`add_contact_to_campaign`(联系人) | `src/marketing/flows/campaign-enrollment.flow.ts` + `src/marketing/actions/campaign.actions.ts`(`enroll_leads`) |
+| MKT-004 | 批量入组成员 | 屏幕流(以调用者身份运行):线索按状态、联系人按部门筛选(均要求有邮箱、未退订;线索另须未转化,上限 1000),逐人经 `campaign_lead_member_enroll`/`campaign_contact_member_enroll` 子流程去重插入成员,`added_date` 由字段默认值盖戳;无成员创建权者逐人被拒,结束消息给出两个计数;单条加入走 `create_campaign`(线索)/`add_contact_to_campaign`(联系人),同经这两个子流程 | `src/marketing/flows/campaign-enrollment.flow.ts` + `src/marketing/flows/campaign-member-enroll.flow.ts` + `src/marketing/actions/campaign.actions.ts`(`enroll_leads`) |
 | MKT-005 | 活动指标实时重算 | 成员变更、商机归因变更、线索转化、活动状态流转四类事件各自触发一次全量重算(入组数/响应数/线索数/转化数/商机数/赢单数/实际营收);不再是「完成时快照」,进行中的活动即时出数 | `src/sales/objects/lead.campaign-metrics.hook.ts` + `src/sales/objects/opportunity.campaign-metrics.hook.ts` + `src/marketing/objects/campaign.hook.ts` + `src/marketing/objects/campaign_member.hook.ts` |
 | MKT-006 | 活动自动完结 | 每日 02:00 把过了 `end_date` 的 in_progress 活动置 completed(状态流转随即触发一次指标重算) | `src/marketing/flows/campaign-completion.flow.ts` |
 | MKT-007 | 活动时间可视化 | 全仓唯一同时具备 gantt/calendar/timeline 三种时间视图的对象 | `src/marketing/views/campaign.view.ts` |
 | MKT-008 | 营销协作权限 | planning/in_progress 活动共享给营销经理/总监(可编辑);marketing_user 经 RLS 放宽可编辑他人活动与系统创建的成员行 | `src/marketing/sharing/campaign.sharing.ts` + `src/sales/profiles/marketing-user.profile.ts` |
-| MKT-009 | 退订闭环 | 成员置 `unsubscribed` 时经 hook 回写该 lead/contact 的 `email_opt_out`,使入组流与发信动作既有的退订尊重形成闭环;`mark_responded` 动作写 `responded`/`response_date`/`has_responded` | `src/marketing/objects/campaign_member.hook.ts` + `src/marketing/actions/campaign.actions.ts`(`mark_responded`) |
+| MKT-009 | 退订闭环 | 成员置 `unsubscribed` 时经 hook 回写该 lead/contact 的 `email_opt_out`,使入组流与发信动作既有的退订尊重形成闭环;`mark_responded` 动作只写 `status: responded`,`has_responded`/`response_date` 由 `campaign_member_lifecycle` 随状态盖戳(在记录上直接改状态同理) | `src/marketing/objects/campaign_member.hook.ts` + `src/marketing/actions/campaign.actions.ts`(`mark_responded`) |
 
 ## FCT — 预测与销售业绩
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
 | FCT-001 | 预测对象 | `crm_forecast`:按 owner×期间(月/季)的管道快照,四个累计金额桶 + quota,`attainment_pct`/`coverage_ratio`/`expected_amount` 公式,私有共享 | `src/sales/objects/forecast.object.ts` |
-| FCT-002 | 期间族派生 | 写入时自动派生 `period_start`/`period_end`/`period_label`(如 "Q3 2026")与 `snapshot_date`,杜绝期间边界漂移 | `src/sales/objects/forecast.hook.ts` |
+| FCT-002 | 期间族派生 | 写入时由 hook 自动派生 `period_start`/`period_end`/`period_label`(如 "Q3 2026"),以 `snapshot_date` 为锚,杜绝期间边界漂移;`snapshot_date` 由字段自身的 `defaultValue` 默认为当天 | `src/sales/objects/forecast.hook.ts` + `src/sales/objects/forecast.object.ts`(`snapshot_date`) |
 | FCT-003 | 夜间预测快照 | 每日 03:00 为每个有活跃商机的 owner upsert 当季快照并累加四桶(pipeline/best_case/commit/closed);quota 保持手工维护 | `src/sales/flows/forecast-snapshot.flow.ts` |
 | FCT-004 | 预测类别累计桶 | 桶边界即 `crm_opportunity.forecast_category` 存储列(由阶段派生),与商机视图和仪表板共用同一定义 | `src/sales/objects/forecast.object.ts` + `src/sales/objects/opportunity.hook.ts` |
 | FCT-005 | 预测视图 | 本季度视图(period+period_start 双条件钉死单一快照)、我的预测、按期间分组的金额汇总列表 | `src/sales/views/forecast.view.ts` |
@@ -215,7 +215,7 @@
 | ACT-009 | 活动记录动作家族 | 15 个动作(记录通话/记录会议/安排会议 × 线索/联系人/客户/商机/工单):建真实事件+参与者行+`sys_activity` 时间线条目 | `src/sales/actions/activity-actions.ts`(工厂 + 线索/联系人/客户/商机)+ `src/service/actions/case-activity.actions.ts`(工单) |
 | ACT-010 | 互动 recency 冒泡 | held 事件与完成任务向上冒泡(含经联系人/商机/工单走到父客户):写客户 `last_activity_date` 与联系人/线索 `last_contacted_date` | `src/sales/objects/event.hook.ts` + `src/sales/objects/task.hook.ts`(activity bubble) |
 | ACT-011 | 事件日历 | 全局日历 + 我的日历(全仓唯一双日历对象)、按人泳道的团队 timeline、即将进行/互动历史队列 | `src/sales/views/event.view.ts` |
-| ACT-012 | 活动导航与仪表板 | 独立 Activity 导航组(事件/日历/互动历史);活动仪表板 13 widget 含 30/60/90 天静默客户计数 | `src/sales/apps/crm.app.ts`(`group_activity`)+ `src/sales/dashboards/activity.dashboard.ts` |
+| ACT-012 | 活动导航与仪表板 | 独立 Activity 导航组(事件 + Sales Activity 仪表板;日历与互动历史是事件列表的视图 tab,My Calendar 在 My Work 组);活动仪表板 13 widget 含 30/60/90 天静默客户计数 | `src/sales/apps/crm.app.ts`(`group_activity`)+ `src/sales/dashboards/activity.dashboard.ts` |
 | ACT-013 | 活动数据集 | `event_metrics`(周分桶、面客分钟数)与 `task_metrics`(逾期/进度) | `src/sales/datasets/event.dataset.ts`、`src/sales/datasets/task.dataset.ts` |
 
 ## APR — 审批
@@ -232,12 +232,12 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| PRM-001 | 六个 profile 权限矩阵 | system_admin/sales_rep/sales_manager/service_agent/marketing_user/guest_portal,显式允许制,覆盖全部业务对象 | `src/sales/profiles/` |
+| PRM-001 | 七个权限集矩阵 | system_admin/sales_rep/sales_manager/service_agent/service_manager/marketing_user/guest_portal,显式允许制,覆盖全部业务对象;SaaS 组合以 tenant_admin 替换 system_admin | `src/sales/profiles/` + `objectstack.composition.ts` |
 | PRM-002 | Guest Portal | 匿名访客仅可创建 lead 与 case(服务两个公开表单),零读取、零编辑、无导出位 | `src/sales/profiles/guest-portal.profile.ts` |
 | PRM-003 | 字段级安全 | 如 `annual_revenue`/`health_score` 对销售只读、`crm_case.internal_notes` 对销售完全遮蔽、坐席可读写 | `src/sales/profiles/*.profile.ts`(fieldPermissions) |
 | PRM-004 | 导出权限闸门 | `allowExport` 是真实闸门(未设即拒):仅在有读权限且视图提供导出界面的五个对象上授予,服务端 `canExport` 把关 | `src/sales/profiles/index.ts` |
 | PRM-005 | 所有权转移轴 | `allowTransfer` 控制把记录种到/改到他人名下:管理员全量、经理随 modifyAll、坐席仅在任务上窄授权(工单升级派单所需) | `src/sales/profiles/index.ts` |
-| PRM-006 | 九条条件共享规则 | 客户团队(customer→经理可编辑)、NA/EU 区域(按 `territory`)、活动领导层、工单升级、大单(≥$100K→总监/高管只读) | `src/*/sharing/` |
+| PRM-006 | 十一条条件共享规则 | 客户团队(customer→经理可编辑)、NA/EU 区域(按 `territory`)、活动领导层(经理/总监)、工单升级(critical→服务经理可编辑、服务总监只读)、无主工单分诊(→坐席可编辑)、升级前负责人(`escalated_from`,只读)、大单(≥$100K→总监/高管只读) | `src/*/sharing/` |
 | PRM-007 | 扁平岗位结构 | 12 个岗位(销售/服务/营销三线 + NA/EU 区域组),无层级、可见性不向上滚动,每个层级各带自己的授权 | `src/sales/sharing/positions.ts` |
 | PRM-008 | 行级安全(RLS) | 私密商机仅 owner 可见(经理与营销两份 select 规则);营销对活动/成员的 update 放宽 | `src/sales/profiles/sales-manager.profile.ts`、`src/sales/profiles/marketing-user.profile.ts` |
 | PRM-009 | OWD 共享模型分布 | 销售/服务核心对象 private;产品/活动/知识库 public_read;联系人与四个明细/联结对象 controlled_by_parent | `src/*/objects/*.object.ts`(sharingModel) |
@@ -247,8 +247,8 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Service/Sales/My Work/Activity/Marketing/Insights/Reports),橙色品牌,落地页为高管仪表板 | `src/sales/apps/crm.app.ts` |
-| ADM-002 | Sales Home 页 | 三栏首页(sales_rep/manager 默认):4 个实时 KPI、我的线索/交易/任务三个嵌入列表 tab、快速新建、AI 助手引导卡、今日日程 | `src/sales/pages/home.page.ts` |
+| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Service/Sales/My Work/Activity/Marketing/Insights/Reports),橙色品牌;落地页按岗位:销售经理/管理员/营销用户落在 Home(高管仪表板),销售代表落在 Sales Home,服务岗位落在 Service Overview | `src/sales/apps/crm.app.ts` |
+| ADM-002 | Sales Home 页 | 主栏 + 侧栏首页(仅 sales_rep 的落地页;其他能读商机的成员在 Home 下方有它的入口):4 个实时 KPI、我的线索/我的未结交易/我的未结任务三个嵌入列表 tab、AI 助手引导卡、即将到来的事件(快速新建卡已随 #2060 item 5 删除) | `src/sales/pages/home.page.ts` |
 | ADM-003 | 启动器与工具条 | **已移除 (#2118)**:曾有 App Launcher 与 Utility Bar 两个页面,但只能经手输 URL 打开,没有任何导航入口;前者重复控制台自带的应用切换,后者并不悬浮,只在主栏内平铺(控制台没有工具条槽位,上游 objectstack#23610)。两页连同其四语言文案一并下线,应用内不再有对应功能 | 已删除 |
 | ADM-004 | 数据导入 | 3 个可复用导入映射(客户/联系人/线索,CSV/XLSX upsert)+ 行业与线索来源同义词表 + 现成模板 | `src/sales/mappings/` + `assets/import-templates/` |
 | ADM-005 | 数据导出 | 五对象(客户/联系人/线索/商机/工单)列表 CSV/XLSX 导出,经单一服务端路由与 `allowExport` 权限把关 | `src/*/views/*.view.ts`(exportOptions)+ `src/sales/profiles/index.ts` |
@@ -256,7 +256,7 @@
 | ADM-007 | 通知体系 | 全部流程经声明式 notify 节点(ADR-0012)发 inbox+email,收件人统一为记录 owner(转化/生成报价通知操作者);severity 分级 | `src/*/flows/*.flow.ts` |
 | ADM-008 | 多语言 | en/zh-CN/ja-JP/es-ES 四语言全量翻译:对象/字段/选项/视图/表单分区/动作/仪表板/页面/导航/通用文案 | `src/sales/translations/` |
 | ADM-009 | 分析语义层 | 9 个 dataset(ADR-0021)承载全部仪表板与报表的维度/度量定义,含派生比率与跨对象维度 | `src/*/datasets/` |
-| ADM-010 | 种子数据 | 19 个幂等 upsert 数据集(客户 9/线索 21/商机 23/工单 8/事件 27/活动成员 ~52 等),金额自明细派生、区域与流失时钟按演示可观测性设计 | `src/*/data/` |
+| ADM-010 | 种子数据 | 20 个种子数据集(客户 9/线索 21/商机 23/工单 38/事件 29/活动成员 51 等):除预测(`upsert`,每次启动按日历重新对位)外均只插入一次(`mode: 'ignore'`,#2139),重启保留用户的编辑;金额自明细派生、区域与流失时钟按演示可观测性设计 | `src/*/data/` + `objectstack.composition.ts`(`CrmSeedData`) |
 | ADM-011 | 演示数据认领 | **已移除 (#1892)**:曾以 `demo_bootstrap` 计划流程每 10 分钟扫描,把 12 个对象的无主种子记录认领给首个真实用户。平台(17.6.0 起)在种子写入完成时自行把无主种子记录交给首位管理员,该流程随之退役,应用内不再有对应功能 | 已删除 |
 | ADM-012 | AI Live Data 技能 | 每次先读取当前活 schema 再查询——管理员新加字段后 AI 立即可用(平台 `ask` 助手挂载,skills-only 架构) | `src/sales/skills/live-data.skill.ts` |
 | ADM-013 | 应用内规则手册 | 4 篇随包文档:总览/销售规则(路由、审批阈值、停滞窗口)/服务规则(SLA、升级)/管理手册(岗位、共享、12 个自动化旋钮) | `src/docs/` |

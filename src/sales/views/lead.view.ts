@@ -424,7 +424,7 @@ export const LeadViews = defineView({
      * "Hot" is defined in exactly ONE place: the `lead_assignment` flow's
      * `check_hot` decision (edge `e2`, `record.rating >= 4`). Crossing that
      * line is what stamps the 1-day follow-up SLA and fires the "Hot lead —
-     * assign within 24h" alert at the owner, so this queue must hold precisely
+     * follow up within 24h" alert at the owner, so this queue must hold precisely
      * the leads that alert is about. (An earlier comment here credited a
      * flagging workflow that has never existed in this repo — dead name
      * removed, the routing flow is the producer.)

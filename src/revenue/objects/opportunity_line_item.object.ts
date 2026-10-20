@@ -132,7 +132,7 @@ export const OpportunityLineItem = ObjectSchema.create({
     // Deliberately left on the default, which the same escalation turns into
     // `restrict`: deleting a catalog product must NOT shred the priced history
     // of deals that sold it. `product.hook.ts`'s own `beforeDelete` says the
-    // same thing in words ("Set is_active=false to retire instead").
+    // same thing in words ("To retire it instead, turn off Active.").
     crm_product: Field.lookup('crm_product', {
       label: 'Product',
       group: 'basic',

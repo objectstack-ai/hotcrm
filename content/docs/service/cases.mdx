@@ -52,11 +52,11 @@ This drives reporting (which channels generate the most volume) and is auto-fill
 
 ## What a case record stores
 
-`crm_case` declares **25 fields** (`src/service/objects/case.object.ts`), and three different things organise them: the object's own field groups, the case detail screen, and the case form. Only the first of the three has six sections, and no two of them agree — so it is worth knowing which one you are being shown.
+`crm_case` declares **25 fields** (`src/service/objects/case.object.ts`), and two things organise them: the object's own field groups, which are also the sections of the case detail screen, and the case form, which has a single section of its own. So it is worth knowing which one you are being shown.
 
 ### The object's field groups
 
-The six names below are real, but not one of them is a screen: they are `crm_case`'s **field groups** (`fieldGroups`), the object's own filing scheme for its fields. Neither the detail screen nor the form renders them — each declares sections of its own, listed below. This is, though, the one list that accounts for every field the object has:
+The six names below are `crm_case`'s **field groups** (`fieldGroups`), the object's own filing scheme for its fields. The detail screen renders them as its sections (see below); the form does not use them. This is the one list that accounts for every field the object has:
 
 | Field group | Fields |
 | --- | --- |
@@ -71,17 +71,13 @@ Five of those six rows used to be written differently on this page, and the diff
 
 ### The detail screen
 
-The **Details** tab of the case detail page (`src/service/pages/case_detail.page.ts`) declares **three** sections, holding **10** of the 24 fields:
+The **Details** tab of the case detail page (`src/service/pages/case_detail.page.ts`) is made of the field groups above, in this order: *Case Information*, *Origin & Routing*, *SLA & Priority*, *Escalation*, *Resolution*, *System*. The page sets only the order; which fields a section holds comes from the object. Three things decide what a section shows:
 
-| Section | Fields |
-| --- | --- |
-| **Case Information** | Case Number, Contact, Case Type, Case Origin |
-| **Status & SLA** | Escalated, Escalation Reason, Resolution Time (Hours) |
-| **Description** *(collapsible)* | Description, Resolution, Internal Notes |
+- **Nothing is shown twice.** **Status**, **Priority**, **SLA Due Date**, **SLA Violated**, **Case Owner** and **Account** are on the *Key Information* strip above the tabs, so their sections leave them out. *Case Information* therefore shows **Case Number**, **Subject**, **Description**, **Contact** and **Case Type**; *Origin & Routing* shows only **Case Origin**; and *SLA & Priority* keeps just the three stamps **Closed Date**, **First Response Date** and **Resolution Time (Hours)**.
+- **A section with nothing in it is not drawn.** On a case still being worked, *SLA & Priority* and *Resolution* are usually absent: their fields are written as the case is answered and closed, and a section appears once one of its fields holds a value. *Origin & Routing* is the exception and always shows, so an agent can pick the channel on a new case. Inside a section that does show, an empty field reads as a dash, or several are folded behind a **Show N empty fields** toggle.
+- ***Escalation* and *System* start collapsed.** *Escalation* holds **Escalated**, **Escalated Date**, **Escalation Reason** and **Escalated From**, the agent the escalation took the case from. *System* holds **Internal Notes** and **Is Closed**; a boolean always holds a value, so it shows on every case, and it is where an agent writes **Internal Notes**, inline on the record, while working the case.
 
-*Description* is the only one of the three that can be collapsed, and nothing marks it collapsed to begin with, so it opens along with the rest.
-
-The tab is shorter than its section names suggest, and that is deliberate: a section here lists only the fields it is responsible for. **Status**, **Priority**, **SLA Due Date**, **SLA Violated**, **Case Owner** and **Account** are already on the *Key Information* strip above the tabs, and **Subject** is half the page title — so the tab does not repeat any of them. **Internal Notes** sits in *Description* rather than in a section of its own, and this tab is the only place in the app that shows it: an agent writes it here, on the record, while working the case.
+Two fields are on no section: **Display Title**, the title formula the object uses as its `nameField`, and **Priority Rank**, the hidden sort key behind *My Open Cases*.
 
 ### The form
 
@@ -93,7 +89,7 @@ The case form (`src/service/views/case.view.ts`) is **not** tabbed. It is a sing
 
 The platform gives an object one form, so this is the **create** form and the **edit** form both — which is why it stops where it does. What it offers is what the person raising a case actually has in hand at intake; everything the lifecycle fills in later is deliberately absent, because a creator typing an SLA deadline or a resolution time would be authoring state the app is supposed to derive. Those fields are read on the detail screen instead — see *What happens automatically* for who writes each one. **Case Number** is the one exception on the list: it is shown but never typed, because the app allocates it and the field is read-only.
 
-The two are not one screen wearing different chrome — they overlap in only four fields (Case Number, Contact, Case Origin, Description). **Case Type** is on the detail screen but not on the agent's case form at all. The public support form at `/forms/support` is a third layout again: a single section with four fields (subject, description, type, priority).
+The two are not one screen wearing different chrome — they overlap in only five fields (Case Number, Subject, Contact, Case Origin, Description). **Case Type** is on the detail screen but not on the agent's case form at all. The public support form at `/forms/support` is a third layout again: a single section with four fields (subject, description, type, priority).
 
 ## What happens automatically
 
@@ -104,7 +100,7 @@ The two are not one screen wearing different chrome — they overlap in only fou
 - **Resolution time (hours)** — calculated as the time between the moment the case was created and its *Closed date*. The creation moment is the platform's own timestamp, written on every case however it was raised; a case has no separate *Created Date* field of its own.
 - **SLA due date** — stamped on **every** case with a recognised priority. `case_sla_defaults` looks up the case's priority against its account's **Customer Tier** and fills the field with *now + the matching number of calendar hours*, when a case is created and whenever the field is still empty. **Raising the priority re-derives it** — *now + the new priority's hours*, written only when that is sooner than the date the case already has — so a case escalated to Critical is due four hours after the escalation. Lowering the priority, or any other edit, leaves it as it is, and a date somebody set by hand is replaced only by a priority raise that brings a sooner one.
 - **SLA Violated** (`is_sla_violated`) — there is no field called *SLA Breached?*. It is set to true when the **SLA Due Date** passes before the case is finished: by the hourly `case_sla_monitor` sweep on cases that are **still open** (status is neither *Resolved* nor *Closed*), and by the save that resolves or closes a case after its due date. A case with no due date is never flagged, and once set the flag is never cleared.
-- **Account's last activity date** — bumped to today when the case is updated.
+- **Account's last activity date** — bumped to today when the case reaches *Resolved*, and when an interaction is recorded on it: a call or meeting logged on the case, or a task on the case completed. Closing an escalated case completes its escalation follow-up task, so that close bumps it too. Any other save leaves it alone, an escalation included.
 
 ## Built-in rules
 
@@ -198,20 +194,19 @@ When you open a case, you'll see:
 - **Status path** — a Salesforce-style horizontal flow showing New → In Progress → Waiting on Customer → Escalated → Resolved → Closed, so an agent can see at a glance where the case stands and what the next stop is.
 - **Customer panel** — there is no such panel. The page (`src/service/pages/case_detail.page.ts`) declares two regions and nothing else: a header holding the three components above, and a main region holding the tab strip below. What customer context there is sits in those: the **account** appears twice over — the header subtitle and the Key Information strip — and the **primary contact** is a field in the *Details* tab's *Case Information* section. **Contract tier** and **open cases this month** are on no case surface at all. A case links to no contract, and `crm_contract` carries no tier field either; the nearest real field is **Customer Tier** on the account record, which this page does not show. Nothing in this app counts a customer's cases by month.
 - **Three tabs:**
-  - **Details** — the case description, resolution and internal notes in full, but not "all metadata fields": **10** of the object's **24**, in the three sections listed under *What a case record stores* above. Of the fourteen that are not on the tab, seven are elsewhere on this same screen: **Status**, **Priority**, **SLA Due Date**, **SLA Violated**, **Case Owner** and **Account** are on the **Key Information** strip above the tabs, and **Subject** is half the page title. The remaining seven are on no case screen at all — **Closed Date**, **Escalated Date**, **First Response Date**, **Is Closed**, **Priority Rank**, **Display Title** and **Resolved by Article**. **Closed Date** and **Is Closed** are stamped as the case closes and are read by the *Case Timeline* and *Service Workflow* views rather than by this screen, **Escalated Date** is written by the escalation flows and displayed nowhere, **Priority Rank** is the sort key behind *My Open Cases*, **Display Title** is the object's `nameField`, the title formula that names a case wherever one is referenced rather than a field you read here, and **Resolved by Article** is read by the deflection measures rather than by a screen. **First Response Date** is the omission worth knowing about: *What happens automatically* above explains at length how it gets stamped, and this is not the tab you can read it on.
-  - **Related** — one list, not four: **Open Tasks** — the `crm_task` records pointing at this case through **Related Case** (`related_to_case`), filtered to those whose status is not *Completed*, ten at a time. That is the whole tab. There is no attachments list: files can be attached to a case (the object enables them), but no component on this page lists them. There is no linked-opportunity list, because `crm_case` has no opportunity relationship in either direction. And there is no milestone list — the case's three milestones, *escalated*, *resolved* and *closed*, are emitted as entries in the **Activity** timeline, not as records here.
+  - **Details** — the field-group sections described under *The detail screen* above: the case description, resolution and internal notes in full, and every other field except the six on the **Key Information** strip, **Display Title** and **Priority Rank**. The stamps are here too once they hold a value: **Escalated Date** and **Escalated From** in *Escalation*, **Closed Date**, **First Response Date** and **Resolution Time (Hours)** in *SLA & Priority*, **Resolved by Article** in *Resolution*, and **Is Closed** in *System*.
+  - **Related** — one list, not four: **Open Tasks** — the `crm_task` records pointing at this case through **Related Case** (`related_to_case`), filtered to those whose status is not *Completed*, ten at a time. That is the whole tab. Attachments are not on this tab either: because the object enables files, the page shows an **Attachments** panel with an **Upload** button below the tab strip, whichever tab is open. There is no linked-opportunity list, because `crm_case` has no opportunity relationship in either direction. And there is no milestone list — the case's three milestones, *escalated*, *resolved* and *closed*, are emitted as entries in the **Activity** timeline, not as records here.
   - **Activity** — a unified timeline (more on this below).
-- **AI Reference Rail** — there is no rail on this page, of any kind. The main region holds the tab strip and nothing else, and not one component on the page is AI-driven. The service skills are real — see *How the AI assistant helps* below — but you reach them by asking, not from a panel beside the case. The one reference rail this app does render sits on the opportunity detail page, and even there it lists related records (quotes, products, open tasks) rather than suggestions.
+- **AI Reference Rail** — there is no rail on this page, of any kind. The main region holds the tab strip and, below it, the platform's **Attachments** panel, and not one component on the page is AI-driven. The service skills are real — see *How the AI assistant helps* below — but you reach them by asking, not from a panel beside the case. The one reference rail this app does render sits on the opportunity detail page, and even there it lists related records (quotes, products, open tasks) rather than suggestions.
 
 ### The Activity timeline
 
-The Activity tab is the single source of truth for what has happened on a case. It combines four streams into one chronological feed:
+The Activity tab is the single source of truth for what has happened on a case. It combines three streams into one chronological feed. No email reaches it: **Send Email** is a contact action, and a case offers none.
 
 | Stream | Where it comes from | What you'll see |
 |--------|---------------------|------------------|
 | **Comments** | A teammate or customer posts on the case | Threaded discussion, @mentions, internal/external visibility |
-| **Logged calls** | "Log a Call" action — stored as `sys_activity` of type *completed* | Call subject, duration, outcome, who logged it |
-| **Outbound emails** | "Send Email" action — queued through `sys_email` | Subject, recipient, delivery status (queued / sent / bounced) |
+| **Logged calls and meetings** | "Log a Call" and "Log a Meeting" actions — stored as `sys_activity` of type *completed* | The subject and who logged it, linking to the event behind it |
 | **Field changes** | Every change to a tracked field on the case | What changed, who changed it, when, before → after |
 
 You don't have to configure any of this. The platform adds an entry of its own each time the case is created or saved: a change to a field the app tracks, such as **Status**, shows the old and new value (*Status: New → In Progress*), and an edit that touches only other fields shows as a plain *Updated Case* entry. Tracking is chosen field by field in the app, not switched on for a whole object. The platform's audit log, which keeps every field of every change, is a separate administrator's screen (**Setup → Diagnostics → Audit Logs**) and does not feed this tab.
