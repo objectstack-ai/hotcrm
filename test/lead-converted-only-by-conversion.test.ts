@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
 
 /**
  * A lead reaches Converted only through Convert Lead (#2189).
@@ -221,6 +221,22 @@ describe('a lead stuck at Converted with nothing converted is released (#2189)',
     expect(deleted.status).toBe(200);
     expect(await verify.rows('crm_contact', { id: contact!.id })).toEqual([]);
     expect((await stored(lead.id))?.duplicate_of_contact ?? null).toBeNull();
+  });
+
+  it('is not "already converted" to the conversion approval gate', async () => {
+    // The gate in `lead.hook.ts` reads "already converted" the way the lock
+    // does, off `is_converted`. While it also read the status, a stuck lead
+    // counted as converted there, so setting `is_converted` on one walked past
+    // an approval the lock no longer stands in front of.
+    const lead = await stuckLeadOf(people.rep);
+    await systemUpdate(verify, 'crm_lead', { id: lead.id, conversion_approval_status: 'pending' });
+    const err = await refusal(
+      verify.hooks.run('crm_lead', 'update', { id: lead.id, is_converted: true }, { as: people.rep.token }),
+    );
+    // The gate's envelope. The lock cannot be what speaks: it keys on the
+    // stored `is_converted`, which is false here.
+    expect({ code: err?.code, status: err?.status }).toEqual({ code: 'RECORD_LOCKED', status: 409 });
+    expect(Boolean((await stored(lead.id))?.is_converted)).toBe(false);
   });
 
   it.each(PEOPLE)('%s edits its status back, and it then converts through the wizard', async (_label, key) => {
