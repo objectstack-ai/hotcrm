@@ -21,7 +21,9 @@ import { P } from '@objectstack/spec';
  * that reaches the QuickJS sandbox reaches for no module scope. ⛔ Never write
  * the other shape — a body that CALLS a shared function at runtime lowers to a
  * `ReferenceError`, because the body ships without its module
- * (`test/action-sandbox.test.ts` fails the build on it, and
+ * (`test/script-bodies.test.ts` runs every script action body through the real
+ * action door, where that throws; `pnpm lint` refuses a handler written that
+ * way before it is ever lowered, as `hook-body/not-lowerable`; and
  * `test/knowledge-feedback.test.ts` pins that these two bodies stay
  * character-identical apart from the verdict).
  *

@@ -32,8 +32,9 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * L2 hook bodies run BODY-ONLY inside QuickJS: the handler is lowered to a
  * source string with no module scope, so a body referencing an import, a
  * top-level const or a factory PARAMETER is a `ReferenceError` at runtime, not
- * a closure. `test/action-sandbox.test.ts` lowers every hook in `allHooks` with
- * the CLI build's own extraction pass and fails the ones that leak.
+ * a closure. `pnpm lint` (`os lint --strict`) lowers every registered hook with
+ * the build's own extraction pass and refuses the ones that leak, as
+ * `hook-body/not-lowerable`.
  *
  * So sharing here is authoring-time sharing: the FACTORY composes the hook and
  * owns the doc, the constants and the contract; the handler body closes over

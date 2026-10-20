@@ -137,7 +137,7 @@ tiers devPlugins runtimeModule
 | AI 技能、知识库配置 | ⚠️ `skills` 是键；**不存在知识库配置这个键** —— 知识文章就是普通记录 |
 | 审批流程 | ⚠️ **没有这个键。** 独立的 `approvals` 栈字段在 ObjectStack 7.4 被移除；审批是带 `approval` 节点的 `flows`（ADR-0019），因此按流程打包 |
 | 电子邮件模板 | ✅ `emailTemplates` 是键 —— 尽管本应用一个都没写 |
-| **数据记录** | ❌ → **✅ 写错了，而且这条值得纠正。** `data` 是顶层工件键，HotCRM 通过它发布了 21 个种子族。记录完全可以打包，还能按环境区分（`env: ['prod','dev','test']`），并带 upsert `mode` 与 `externalId` |
+| **数据记录** | ❌ → **✅ 写错了，而且这条值得纠正。** `data` 是顶层工件键，HotCRM 通过它发布了 20 个种子族。记录完全可以打包，还能按环境区分（`env: ['prod','dev','test']`），并带重放 `mode` 与 `externalId`：二十个族中有十九个只插入一次（`ignore`），预测快照用 `upsert` |
 | **文件** | ✅ ❌ 判定正确 —— 没有文件键，而且**不存在文件同步 API** 可用；那条建议指向的是空的 |
 | **用户账户** | ✅ ❌ 判定正确 —— 没有用户键。SCIM 作为平台面确实存在（`sys_scim_provider`），但在本租户里没有任何屏幕 |
 

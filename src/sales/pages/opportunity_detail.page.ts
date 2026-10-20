@@ -336,7 +336,8 @@ export const OpportunityDetailPage: Page = {
                                     // A retired product must not be sellable onto a
                                     // new deal. `product.hook.ts`'s `beforeDelete`
                                     // defines retirement as precisely this flag
-                                    // ("Set is_active=false to retire instead"),
+                                    // ("To retire it instead, turn off Active."
+                                    // Active is `is_active`),
                                     // so the catalog's own retirement mechanism is
                                     // what scopes the picker. All 13 seeded
                                     // products carry `is_active: true`, so this

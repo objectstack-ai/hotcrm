@@ -33,11 +33,12 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * Keep the response summary fields honest, on every write path.
  *
  * There are two ways a member becomes "responded" and they must not disagree:
- * the `mark_responded` action (which stamps all three fields itself) and a rep
- * flipping `status` on the record detail page (which stamps only `status`). The
- * second path is why this hook exists — without it, a hand-flipped member reads
- * `Responded` on the status badge and `Has Responded: false` two rows below it,
- * and `test/seed-consistency.test.ts`'s "track the responded status exactly"
+ * the `mark_responded` action and a marketer flipping `status` on the record
+ * detail page. Both write `status` and nothing else — the action's whole patch
+ * is `{ status: 'responded' }` — so this hook is what stamps `has_responded` and
+ * `response_date` on either path. Without it, a member reads `Responded` on the
+ * status badge and `Has Responded: false` two rows below it, and
+ * `test/seed-consistency.test.ts`'s "track the responded status exactly"
  * contract holds for seeded rows while runtime rows drift out of it.
  *
  * `converted` counts as responded too: a member cannot convert without having

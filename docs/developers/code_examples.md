@@ -214,7 +214,9 @@ those two files together: a body reading `_selectedIds` with no aggregate def in
 the view is just as dead as the misspelling, because nothing injects the key.
 
 `create_campaign` in `src/sales/actions/lead.actions.ts` is the other contract — bare
-string, per-record fan-out — and reads `ctx.recordId` only.
+string, per-record fan-out — and it has no body at all: it is a `type: 'flow'` action, so
+each row's call starts the `campaign_lead_member_enroll` flow with that row's `recordId`
+handed over as the flow's `leadId` input (`recordIdParam`).
 
 ## Add A Flow
 
