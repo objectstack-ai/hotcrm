@@ -106,3 +106,34 @@
 | KB-005 | pass | Helpful vote by a rep → "Thanks — recorded as helpful.", helpful_count 0→1 | shots/66-KB-005-helpful-vote.png |
 | KB-006 | pass | All Articles, Published, My Drafts draw | shots/65-KB-006-*.png |
 | KB-007 | pass | Agent create/edit 200, delete 403; rep read 200, edit 403; anonymous GET 401 | (REST) |
+| MKT-001 | pass | Campaign list and detail, CPG-#### codes, response_rate / roi compute | shots/70-MKT-007-all-campaigns.png, shots/71-MKT-001-campaign-detail.png |
+| MKT-002 | pass | start after end → 400 "The campaign's Start Date (…) must not be after its End Date (…)" (labels, not API names: #2060 item 12's campaign half no longer reproduces); in_progress without dates → 400; actual cost over budget saved (warning) | (REST) |
+| MKT-003 | pass | Members carry a lead or a contact; sent → responded → unsubscribed; members readable by the marketing user | shots/73-MKT-009-mark-responded.png |
+| MKT-004 | pass | Marketing user: Enroll Members screen flow (Leads, status New) → 6 leads enrolled (9 → 15 members), toast "Eligible members enrolled in campaign." (#2060 item 8 no longer reproduces). The form still requires both the lead and the contact criterion (#2194 T1-U05, unchanged) | shots/72-MKT-004-mkt-enroll-form.png, shots/72-MKT-004-mkt-enroll-toast.png |
+| MKT-005 | pass | Enrolment recomputed response_rate 33.33 → 20; attributing and winning a 95,000 deal on CPG-0004 → actual_revenue 120,000 → 215,000, won opportunities 1 → 2, ROI 900 → 1,691.67 | (REST) |
+| MKT-006 | not reachable | Daily 02:00 schedule only; trigger API 403 | — |
+| MKT-007 | pass | Campaign Schedule (gantt), Launch Calendar, Marketing Timeline draw | shots/70-MKT-007-*.png |
+| MKT-008 | pass | Marketing user edited an admin-owned campaign (200); a sales rep's edit → 403 | (REST) |
+| MKT-009 | pass | Mark Responded (member header button) → responded + response_date + has_responded, toast "Response recorded on this campaign member."; status unsubscribed → contact Sarah Johnson email_opt_out true | shots/73-MKT-009-mark-responded.png |
+| FCT-001 | pass | Forecast object: quota, four buckets, attainment / coverage / expected formulas; detail renders | shots/74-FCT-001-forecast-detail.png |
+| FCT-002 | pass | Manager created a quarter forecast with only period + period_start 2026-10-01 → period_end 2026-12-31, label "Q4 2026", snapshot_date today; a mid-quarter start → 400 with both reasons | (REST) |
+| FCT-003 | not reachable | Daily 03:00 schedule only; trigger API 403. This Quarter shows its designed empty state until the sweep has run | shots/74-FCT-005-this-quarter-forecasts.png |
+| FCT-004 | pass | Buckets read crm_opportunity.forecast_category, which the stage hook writes (pipeline / best_case / commit / closed seen) | (REST) |
+| FCT-005 | pass | All Forecasts, This Quarter, My Forecast draw. All Forecasts now groups by Period Start, newest first (#2060 item 11 no longer reproduces); the group heading prints the raw date "2026-10-01" (objectui#13234, known) | shots/74-FCT-005-all-forecasts.png |
+| FCT-006 | not reachable | AI skill; no AI service in this boot | — |
+| FCT-007 | pass | Sales Performance dashboard drew, every dataset query 200 — see *Extras* | shots/90-DASH-02-sales_dashboard.png |
+| FCT-008 | pass | Executive Overview and CRM Overview drew, every query 200 — see *Extras* | shots/90-DASH-01-executive_dashboard.png, shots/90-DASH-05-crm_overview_dashboard.png |
+| FCT-009 | pass | forecast_metrics tiles on Sales Performance / CRM Overview answered 200 | shots/90-DASH-02-sales_dashboard.png |
+| ACT-001 | pass | Task related to an account; urgent → priority_rank 4; reminder after due date → 400 with a clear message | (REST) |
+| ACT-002 | pass | status completed → completed_date stamped, progress_percent 100, is_completed true | (REST) |
+| ACT-003 | pass | Monthly recurring task due 2026-10-31 completed → next occurrence due 2026-11-30 (month-end clamp) | shots/76-ACT-006-task-gantt.png |
+| ACT-004 | pass | Hourly sweep at 16:00 (scheduled work enabled): probe task with reminder 15:52 → owner inbox "Task reminder: QA reminder probe" (warning), reminder_date cleared, reminder_sent true | (REST) |
+| ACT-005 | pass | New urgent task → owner inbox "Urgent task: QA urgent probe" (warning) | (REST) |
+| ACT-006 | pass | Task tabs draw: All, Board, Schedule, Execution Plan (gantt), Worklog Timeline, My Open, and under "2 more" Today's (10) and Overdue (13) | shots/76-ACT-006-*.png |
+| ACT-007 | pass | Logged call event: type call, status held, duration 15 | (REST) |
+| ACT-008 | pass | log_call returned an attendee row id | (REST) |
+| ACT-009 | pass | Case Log a Call (subject, duration, contact and internal attendees, notes) → event + attendee + activity; lead / contact / account / opportunity headers carry Log a Call (and Log a Meeting / Schedule a Meeting) | shots/75-ACT-009-case-log-call-form.png |
+| ACT-010 | pass | eu.rep's held call on contact Priya Shah moved Lattice Education last_activity_date 2026-10-14 → 2026-10-20 and stamped the contact's last_contacted_date | (REST) |
+| ACT-011 | pass | Event tabs draw: All, Event Calendar, Team Schedule, My Calendar, Upcoming, Interaction History | shots/77-ACT-011-*.png |
+| ACT-012 | pass | Activity group (Events, Sales Activity); Sales Activity dashboard drew — see *Extras* | shots/90-DASH-04-sales_activity_dashboard.png |
+| ACT-013 | pass | event_metrics / task_metrics tiles answered 200 | shots/90-DASH-04-sales_activity_dashboard.png |
