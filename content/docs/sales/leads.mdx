@@ -139,9 +139,13 @@ When a lead is qualified, click **Convert**. A small form pops up asking:
 - Should we also create an Opportunity?
 - If yes — what's the opportunity name and amount?
 
+Above those questions, the form tells you which account the lead will join before you submit: the existing account it matched, by that account's name, or a new account named after the lead's company when no account you can see matches. If that is not the account you expected — say the lead reads `Acme Corp` and your customer is `Acme Corporation` — cancel, correct the lead's **Company**, and convert again.
+
+The match only looks at accounts you can see. An account owned by a colleague and not shared with you is never matched, so the form says a new account will be created. If that account has exactly the same name, the conversion is then refused as a duplicate record and nothing is created; if its name differs only in capitalisation or spacing, a second account is created. So when you expect the company to be an existing customer and the form says the account is new, ask the **Account Owner** or an administrator to share the account with you before you convert.
+
 The system then, in a single step:
 
-1. Creates an **Account** from the lead's company information — or reuses the one you already have. The match ignores capitalisation and extra spaces, so a lead for `ACME  Corp` lands on your existing `Acme Corp` instead of creating a second account. It is not a fuzzy match: `Acme Corp` and `Acme Corporation` are still two different companies.
+1. Creates an **Account** from the lead's company information — or reuses the existing one the form named. The match ignores capitalisation and extra spaces, so a lead for `ACME  Corp` lands on your existing `Acme Corp` instead of creating a second account. It is not a fuzzy match: `Acme Corp` and `Acme Corporation` are still two different companies.
 2. Creates a **Contact** from the lead's person information, attached to that account. It becomes the account's primary contact only when the account has none yet: converting into an account that already has a primary contact leaves that contact as primary.
 3. *(Optional)* Creates an **Opportunity** in the *Prospecting* stage with a 90-day close date.
 4. Marks the lead as **Converted** and locks it.
