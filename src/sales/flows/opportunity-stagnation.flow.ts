@@ -21,6 +21,28 @@ type Flow = Automation.Flow;
  */
 const STALE_THRESHOLD_DAYS = 14;
 
+/**
+ * The stall task's title. It names the deal — except a PRIVATE one.
+ *
+ * A deal flagged Private is visible only to its owner (`src/docs/crm_admin.md`),
+ * and that promise covers what the app derives from it. Who may read the stall
+ * task is decided by `crm_task`'s own grants and its owner, not by the deal's,
+ * so the title is written for every reader of the task: a private deal's task
+ * reads {@link PRIVATE_STALL_SUBJECT}, without the name. The owner is still
+ * nudged (the notification goes to the owner alone, who can read the deal), and
+ * `related_to_opportunity` still links the deal for whoever can read it.
+ *
+ * `is_private` is `has()`-guarded and compared to `true`: `currentOpp` is a raw
+ * driver row (see the totality note in `contract-renewal.flow.ts`), and only the
+ * field's own boolean counts as private. `name` stays bare as it always was:
+ * `crm_opportunity.name` is required + notNull.
+ * `test/private-opportunity-derived-records.test.ts` pins both titles.
+ */
+const PRIVATE_STALL_SUBJECT = 'Advance stalled deal (private opportunity)';
+const NAMED_STALL_SUBJECT = cel`'Advance stalled deal: ' + currentOpp.name`;
+const STALL_SUBJECT = cel`has(currentOpp.is_private) && currentOpp.is_private == true
+  ? ${PRIVATE_STALL_SUBJECT} : 'Advance stalled deal: ' + currentOpp.name`;
+
 export const OpportunityStagnationFlow: Flow = {
   name: 'opportunity_stagnation',
   label: 'Stalled Deal Alert',
@@ -69,12 +91,17 @@ export const OpportunityStagnationFlow: Flow = {
               // already nudged. ⛔ Without it the daily sweep re-notifies and
               // re-creates an identical task every morning for as long as the
               // deal stays stalled — an unbounded duplicate pile-up.
+              //
+              // The gate matches BOTH title shapes (see `STALL_SUBJECT`): the
+              // title follows `is_private`, which can change while a stall task
+              // is open, and a gate that matched only today's shape would book
+              // a second task for the same stall episode.
               id: 'find_existing_task', type: 'get_record', label: 'Already Nudged?',
               config: {
                 objectName: 'crm_task',
                 filter: {
                   related_to_opportunity: cel`currentOpp.id`,
-                  subject: cel`'Advance stalled deal: ' + currentOpp.name`,
+                  subject: { $in: [NAMED_STALL_SUBJECT, PRIVATE_STALL_SUBJECT] },
                   status: { $nin: ['completed'] },
                 },
                 outputVariable: 'existingStallTask',
@@ -110,7 +137,7 @@ export const OpportunityStagnationFlow: Flow = {
               config: {
                 objectName: 'crm_task',
                 fields: {
-                  subject: cel`'Advance stalled deal: ' + currentOpp.name`,
+                  subject: STALL_SUBJECT,
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: cel`isoDate(daysFromNow(2))`,
                   owner_id: cel`has(currentOpp.owner_id) ? currentOpp.owner_id : null`,
