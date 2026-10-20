@@ -9,10 +9,10 @@ import type { EmailTemplatePack } from './_bundle';
  * the same convention `src/sales/translations/` already follows for the UI
  * locale packs.
  *
- * Every string here is the text its `notify` node already sent, with the
+ * Every string here began as the text its `notify` node already sent, with the
  * flow's `{var.path}` interpolations re-expressed as the `{{key}}` holes the
  * renderer fills from that node's `templateData`. A conversion, not a rewrite:
- * no notification says anything new.
+ * no notification said anything new. A text changed since says why beside it.
  *
  * ⚠️ Registered under `en-US`, not `en` — see the ladder note on `bundle()`.
  */
@@ -57,15 +57,19 @@ export const en: EmailTemplatePack = {
     subject: 'Lead converted: {{first_name}} {{last_name}}',
     bodyHtml: '<p>Lead {{first_name}} {{last_name}} was converted into an account and contact.</p>',
   },
+  // The two routing alerts go to the lead's OWNER (`lead_assignment`), so they
+  // say the lead is theirs to follow up. They used to read as an assigner's
+  // queue ("assign within 24h", "awaiting assignment"), sent to the person the
+  // lead was already assigned to (#2073 item 7).
   'crm.lead_routing_hot': {
     label: 'Hot Lead Routing',
-    subject: 'Hot lead — assign within 24h: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} from {{company}} (rating {{rating}}) needs an owner today.</p>',
+    subject: 'Hot lead — follow up within 24h: {{first_name}} {{last_name}}',
+    bodyHtml: '<p>{{first_name}} {{last_name}} from {{company}} (rating {{rating}}) is yours. Follow up by tomorrow.</p>',
   },
   'crm.lead_routing_new': {
     label: 'New Lead Routing',
-    subject: 'New lead to assign: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} from {{company}} is awaiting assignment.</p>',
+    subject: 'New lead assigned to you: {{first_name}} {{last_name}}',
+    bodyHtml: '<p>{{first_name}} {{last_name}} from {{company}} is now yours. Follow up within 3 days.</p>',
   },
   'crm.opportunity_approved': {
     label: 'Deal Approved',
