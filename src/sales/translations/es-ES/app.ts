@@ -657,8 +657,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         screen_1: {
           title: 'Detalles de la Conversión',
           // The duplicate warning's text is a variable the flow assigns; this
-          // key can only carry the hole that shows it.
-          description: '{{duplicateWarning}}',
+          // key can only carry the hole that shows it. The account notice
+          // after it is translated here (#2073 item 8): exactly one of the two
+          // holes holds a name, and each hole's `default:` is the OTHER
+          // branch's words, so the sentence stays name-first. Keep both holes,
+          // in this order, with a `default:` each (see `screen_1` in
+          // `lead-conversion.flow.ts`).
+          description: '{{duplicateWarning}} {{ existingAccountName | default:"Ninguna cuenta que usted pueda ver coincide con la empresa de este prospecto, así que la conversión crea una cuenta nueva llamada " }}{{ newAccountName | default:" es la cuenta existente a la que se unirá este prospecto" }}.',
           fields: {
             createOpportunity: { label: '¿Crear oportunidad?' },
             opportunityName: { label: 'Nombre de Oportunidad' },

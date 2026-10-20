@@ -580,8 +580,10 @@ describe('lead_conversion — the warning at the moment of conversion', () => {
     expect(started.error ?? null, 'the run failed before it could show the screen').toBeNull();
     expect(started.status).toBe('paused');
     expect(screen, 'the conversion screen never suspended').toBeTruthy();
-    expect(screen!.description, 'a clean lead was warned about being a duplicate')
-      .toBeUndefined();
+    // The body text carries the account notice on every conversion since
+    // #2073 item 8, so "says nothing" is read as the warning's absence.
+    expect(String(screen!.description ?? ''), 'a clean lead was warned about being a duplicate')
+      .not.toContain('Suspected duplicate');
 
     const done: AnyRec = await verify.flows.resume(started as never, {
       createOpportunity: true, opportunityName: `Skyline Deal ${lead.company}`, opportunityAmount: 50_000,
@@ -745,7 +747,10 @@ describe('lead_conversion — a confirmed duplicate is refused (#1288)', () => {
     }));
 
     expect(screen!.nodeId, 'a lead with no verdict was still refused').toBe('screen_1');
-    expect(screen!.description, 'a lead with no verdict was warned about one').toBeUndefined();
+    // The body text carries the account notice on every conversion since
+    // #2073 item 8, so "no warning" is read as the warning's absence, not the
+    // description's.
+    expect(String(screen!.description ?? ''), 'a lead with no verdict was warned about one').not.toContain('Suspected duplicate');
     expect(products, 'clearing the verdict did not restore conversion').toEqual(FULLY_CONVERTED);
   });
 });

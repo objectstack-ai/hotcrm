@@ -664,8 +664,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         screen_1: {
           title: '转化详情',
           // The duplicate warning's text is a variable the flow assigns; this
-          // key can only carry the hole that shows it.
-          description: '{{duplicateWarning}}',
+          // key can only carry the hole that shows it. The account notice
+          // after it is translated here (#2073 item 8): exactly one of the two
+          // holes holds a name, and each hole's `default:` is the OTHER
+          // branch's words, so the sentence stays name-first. Keep both holes,
+          // in this order, with a `default:` each (see `screen_1` in
+          // `lead-conversion.flow.ts`).
+          description: '{{duplicateWarning}} {{ existingAccountName | default:"没有你能查看的客户与该线索的公司匹配，因此转化会新建一个客户，名称为 " }}{{ newAccountName | default:" 是该线索将加入的现有客户" }}。',
           fields: {
             createOpportunity: { label: '是否创建商机？' },
             opportunityName: { label: '商机名称' },

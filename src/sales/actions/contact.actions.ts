@@ -81,7 +81,20 @@ export const AddContactToCampaignAction: Action = {
   type: 'flow',
   target: 'campaign_contact_member_enroll',
   recordIdParam: 'contactId',
-  locations: ['list_toolbar', 'list_item'],
+  // The same two doors as `create_campaign` on `crm_lead` (#2073 items 5 and
+  // 5b): `list_item`, every row's menu, and the SELECTION BAR a view opens by
+  // naming the action in its `bulkActions` (All Contacts does), which takes no
+  // location here.
+  // ⛔ Do not add `list_toolbar` back. A header button is drawn with nothing
+  // selected, and this action runs on exactly one contact: launched from the
+  // header, the lead side's twin opened the whole Campaign dialog, then refused
+  // in English ("This action runs on a single record — select a row first.")
+  // and sent nothing. Here the header button happens to draw nowhere, only
+  // because `visible` below reads `record.email_opt_out` and a list header
+  // binds no record (measured on the three contact views, as marketing and
+  // as the admin, on 18.0.0-next.5). Relaxing that predicate would bring the
+  // defect back on contacts, so the placement is not left to depend on it.
+  locations: ['list_item'],
   params: [
     {
       name: 'campaignId',
