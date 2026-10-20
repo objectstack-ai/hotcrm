@@ -94,6 +94,8 @@ When triggered, the flow performs these steps in order:
 
 The status change to *Escalated* then fires the `case_status_side_effects` hook, which opens a **follow-up task** due tomorrow at **Urgent** priority — for cases that have an account, since the task is keyed to that account.
 
+Closing the case completes that task. When the case moves to *Closed*, the `case_close_escalation_task` hook sets each of its escalation tasks that is still open to **Completed**, so a closed case leaves nothing urgent in the account owner's **My Open Tasks**. The task records the person who closed the case as the one who completed it, and the case's other tasks are left as they are.
+
 The hand-off is **least-loaded**, not round-robin by rotation: whoever holds the position with the fewest open (neither *Resolved* nor *Closed*) cases takes it, so consecutive escalations spread across the team without any counter to keep. It steps aside in three situations, each of them deliberate: **nobody holds the position** — the state a fresh install is in — so the case keeps its owner and the escalation completes as it always did; the case is **already owned by a pool member**, so it is left with the manager working it; or the same write **names an owner itself**, which wins.
 
 The mechanics, for the record: the reassignment is not a second write. It rides on the escalation update itself (a `beforeUpdate` hook, `case_escalation_reassign` in `src/service/objects/_case-assignment.ts`) — which is why it fires no extra automation and cannot loop, and why the flow's own `update_record` node still writes no owner. A flow could not do this: `{caseRecord.owner_id.manager}` dot-walks a lookup and interpolates to the literal `undefined`.

@@ -112,6 +112,10 @@ const RUNTIME_TEST_FILES = [
   // objects (in-process and the lowered body) and `product_title_mirror`, the
   // rename writer on `crm_product`.
   'line-item-product-title.test.ts',
+  // #2073 item 3 — `case_close_escalation_task`: every door that closes an
+  // escalated case (both Close Case runs and the manager's own edit), and the
+  // tasks the close must leave alone.
+  'escalation-task-on-close.test.ts',
 ];
 
 /**
