@@ -63,3 +63,23 @@
 | APR-003 | pass | Approve → approved_date + owner inbox "Deal approved"; Reject → approval_status rejected + warning "Deal rejected… Review and revise before resubmitting" | shots/51-APR-003-mgr-approve-wayne-dialog.png, shots/51-APR-003-mgr-reject-acme-done.png |
 | APR-004 | pass | sales_director has no holder → the director step landed in the dev admin's inbox (admin rescue); admin approved | shots/52-APR-004-admin-inbox-director-rescue.png |
 | APR-005 | pass | My Work → Inbox opens approvals:inbox with the manager's 5 pending requests (2 deals, 3 account reviews); approve/reject from the record view, which shows "Locked for approval" | shots/50-APR-005-mgr-inbox.png, shots/51-APR-003-mgr-approve-wayne-request.png |
+| QUO-001 | pass | Quote list and detail (QTE-0007 auto-number, pricing block, 6-stage path) | shots/55-QUO-001-quote-detail.png |
+| QUO-002 | pass | draft→in_review→presented→accepted held; "Contact is required" blocks presented without a contact (400); expired QTE-0001 → draft → 409 | (REST) |
+| QUO-003 | pass | REST-created quote got expiration_date = quote_date + 30 days; accepted quote: discount edit → 409 "only internal_notes may be edited" | (REST) |
+| QUO-004 | pass | Generate Quote screen flow (name / valid days / discount): QTE-0007 seeded from the deal amount 79,000 −10% = 71,100, contact filled from the deal; toast with a View link. Quote Name still has no default (#2194 T1-U03, unchanged) | shots/53-QUO-004-generate-quote-form.png, shots/53-QUO-004-generate-quote-done.png |
+| QUO-005 | pass | na.rep accepted QTE-0007 → draft contract CTR-0005, 54,720, 12 months, owner the rep | shots/58-CON-007-contract-timeline.png |
+| QUO-006 | pass | Same acceptance closed the deal: closed_won, win_reason quote_accepted, close_date today | (REST) |
+| QUO-007 | pass | Lines 1×50,000 and 2×6,000 −10% → subtotal 60,800, quote discount 10% → 54,720; a line on the accepted quote → 409 | (REST) |
+| QUO-008 | not reachable | Daily 01:00 schedule only; trigger API 403; no run-now in Setup | — |
+| QUO-009 | pass | All Quotes, Quote Pipeline (status kanban with total sums), Quote Calendar draw | shots/54-QUO-009-*.png |
+| QUO-010 | pass | Product list grouped by category, PRD-#### numbers | shots/56-QUO-012-all-products.png |
+| QUO-011 | pass | list_price < cost → 400; sku "qa-wid-1" stored "QA-WID-1"; delete a referenced product → 409 "it is on 14 opportunity line items and 5 quote line items. To retire it instead, turn off Active." (#2060 item 12's product half no longer reproduces) | (REST) |
+| QUO-012 | pass | Product list by category and the image gallery catalog draw | shots/56-QUO-012-product-catalog.png |
+| QUO-013 | pass | product_metrics feeds the CRM Overview tile; every query on that dashboard 200 — see *Extras* | shots/90-DASH-05-crm_overview_dashboard.png |
+| CON-001 | pass | Contract list and detail, CTR-#### numbers | shots/58-CON-007-all-contracts.png |
+| CON-002 | fail | Terminal states still not held: admin set expired CTR-0003 → activated (200; it now reads Activated with an end date of Sep 15 in the past); manager set activated CTR-0005 → draft (200) and back. F-04 / #2192 still reproduces | shots/57-F04-contract-expired-reactivated.png |
+| CON-003 | pass | 12-month term with a 20-month range → 400; shrinking end_date after activation → 409 | (REST) |
+| CON-004 | pass | Activation stamped signed_date 2026-10-20; Vertex Analytics is a customer. (A sales rep owns the quote-born contract but cannot edit it: sales_rep has read-only contract access by design) | (REST) |
+| CON-005 | not reachable | Daily 00:00 schedule only; trigger API 403 | — |
+| CON-006 | not reachable | Daily 08:00 schedule only; trigger API 403 | — |
+| CON-007 | pass | Renewal Calendar, Contract Terms (gantt), Contract Timeline grouped by account, list | shots/58-CON-007-*.png |
