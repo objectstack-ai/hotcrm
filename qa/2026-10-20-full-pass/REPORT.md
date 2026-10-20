@@ -34,7 +34,7 @@ Card: objectstack-ai/hotcrm#2188. One cloud tester drove a locally booted, seede
 
 ## Coverage
 
-161 rows: **139 pass · 6 fail · 12 not reachable · 1 not tested · 3 n/a (rows the inventory marks removed)**.
+161 rows: **140 pass · 6 fail · 12 not reachable · 0 not tested · 3 n/a (rows the inventory marks removed)**.
 
 "Not reachable" rows are AI skills (no AI service in this open-source boot; ADM-015 says `ai` is deliberately not required) or daily schedule-only flows. The trigger API refuses those flows, and their fire times did not fall inside the pass (see *Choices made*).
 | Row | Verdict | Reason | Screenshot |
@@ -165,7 +165,7 @@ Card: objectstack-ai/hotcrm#2188. One cloud tester drove a locally booted, seede
 | ACT-001 | pass | Task with account relation, urgent → priority_rank 4; reminder after due date → 400 | (REST) |
 | ACT-002 | pass | status completed → completed_date stamped, progress_percent 100, is_completed true | (REST) |
 | ACT-003 | pass | Monthly recurring task due 2026-10-31 completed → next occurrence due 2026-11-30 (month-end clamp) | shots/76-ACT-006-task-gantt.png |
-| ACT-004 | not tested | Hourly reminder sweep: a probe task with reminder 03:10 was planted; result pending at the time of writing | — |
+| ACT-004 | pass | Hourly sweep at 04:00 (scheduled work enabled): probe task with reminder 03:10 → owner inbox "Task reminder: QA reminder probe" (topic task_reminder), reminder_date cleared and reminder_sent true | (REST) |
 | ACT-005 | pass | New urgent task → owner inbox "Urgent task: …" (warning) — also fires for the generated next occurrence | (REST) |
 | ACT-006 | pass | Task tabs draw: All, Task Board, Task Schedule, Execution Plan (gantt), Worklog Timeline, My Open, My Priority, overdue | shots/76-ACT-006-*.png |
 | ACT-007 | pass | Logged call event: type call, status held, duration 15 | (REST) |
@@ -511,5 +511,5 @@ These are preferences, redesigns or new capabilities, noticed on pages the pass 
 ## Deviations
 
 - **objectstack-ai/objectstack#22722 could not be read.** The repository is not attached to this session, so the GitHub tools refuse it, and `api.github.com/repos/objectstack-ai/objectstack/issues/22722` answers 403 through this container's proxy. Findings were deduped against #2060, #2073 and hotcrm issue search only. F-05, F-06 and F-07 are console-side and are the ones most likely to overlap with it.
-- **Container restart.** It restarted once (about 02:40Z) and killed the dev server; I relaunched with the same command and DB. No evidence was lost; every domain was pushed as it finished.
+- **Container restarts.** It restarted twice (about 02:40Z and 03:35Z) and killed the dev server each time; I relaunched with the same command and DB. No evidence was lost; every domain was pushed as it finished.
 - **No AI service.** All 6 AI-skill rows are "not reachable".
