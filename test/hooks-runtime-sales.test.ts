@@ -1008,7 +1008,7 @@ describe('contact_integrity', () => {
   it('refuses to delete a contact referenced by open work', async () => {
     const contact = await referenced({ opp: 'proposal', quote: 'draft', contract: 'activated' });
     await expect(deleteContact(contact))
-      .rejects.toThrow(/still referenced by 1 open opportunity\(ies\), 1 active quote\(s\), 1 active contract\(s\)/);
+      .rejects.toThrow(/still referenced by 1 open opportunity, 1 open quote and 1 active contract, so it cannot be deleted/);
   });
 
   /**
@@ -1079,7 +1079,7 @@ describe('contact_integrity', () => {
       const guarded = await deleteContact(contact).then(() => null, (e: Error & Rec) => e);
       expect(guarded, `the contact under an activated contract was deleted (${ending} leg)`).toBeTruthy();
       expect(guarded).toMatchObject({ code: 'DELETE_RESTRICTED', status: 409 });
-      expect(guarded!.message, ending).toContain('1 active contract(s)');
+      expect(guarded!.message, ending).toContain('still referenced by 1 active contract, so it cannot be deleted');
       expect(guarded!.message, ending).toContain('give each contract another primary contact: a contract keeps its primary contact even after it ends.');
       expect(guarded!.message, ending).not.toContain('Close or reassign those records');
 

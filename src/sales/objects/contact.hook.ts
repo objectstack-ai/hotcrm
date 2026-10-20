@@ -137,8 +137,14 @@ const contactHook: Hook = {
         api.object('crm_opportunity').count({
           where: { primary_contact: id, stage: { $nin: ['closed_won', 'closed_lost'] } },
         }),
+        // An OPEN quote holds the contact; a settled one does not (#2161). An
+        // accepted quote is settled like a rejected or expired one: its
+        // contact is required only on the write that accepts it
+        // (`crm_quote.crm_contact`'s `requiredWhen`, quote.object.ts), so the
+        // engine clears the link on delete and the accepted quote stays. The
+        // opportunity count above excludes both settled stages the same way.
         api.object('crm_quote').count({
-          where: { crm_contact: id, status: { $nin: ['rejected', 'expired'] } },
+          where: { crm_contact: id, status: { $nin: ['accepted', 'rejected', 'expired'] } },
         }),
         api.object('crm_contract').count({
           where: { crm_contact: id, status: 'activated' },
@@ -150,14 +156,15 @@ const contactHook: Hook = {
         // operation (#693). This hook fires on a direct
         // `DELETE /crm_contact/<id>` AND as a cascade child of
         // `DELETE /crm_account/<id>` (`crm_contact.crm_account` is a
-        // master-detail with `deleteBehavior: 'cascade'`), and the hook context
-        // carries nothing that distinguishes the two — measured on 17.0.0-rc.2,
-        // a cascaded `beforeDelete` ctx holds exactly
-        // {api,event,input,object,previous,provenance,ql,session,transaction,user}
-        // with no cascade marker. So "Cannot delete contact" told an account
-        // deleter that they had asked to delete a contact, and sent them
-        // looking for the wrong record. Naming the contact and both
-        // consequences is true in either context.
+        // master-detail with `deleteBehavior: 'cascade'`). Measured on
+        // 17.0.0-rc.2, a cascaded `beforeDelete` ctx carried no cascade marker;
+        // since 18.0.0-next.2 the platform declares one,
+        // `ctx.referentialCascadeDelete` (objectstack#23221, pinned in
+        // `test/cascade-guard-messages.test.ts`), and this guard does not read
+        // it. So "Cannot delete contact" told an account deleter that they had
+        // asked to delete a contact, and sent them looking for the wrong
+        // record. Naming the contact and both consequences is true in either
+        // context.
         const name = [ctx.previous?.first_name, ctx.previous?.last_name]
           .filter((part) => typeof part === 'string' && part.trim() !== '')
           .join(' ');
@@ -170,7 +177,7 @@ const contactHook: Hook = {
         // What frees the contact is not the same for the three (#2019). An
         // opportunity's `primary_contact` and a quote's `crm_contact` are
         // optional, so once the deal or quote is settled the engine clears the
-        // link and the delete lands. A contract's `crm_contact` is REQUIRED: a
+        // link and the delete lands (an accepted quote included since #2161). A contract's `crm_contact` is REQUIRED: a
         // contract keeps its primary contact for its whole life, ended or not
         // — it is the account's signed record and is kept, so the engine
         // refuses the delete while ANY contract names the contact. The old
@@ -180,16 +187,46 @@ const contactHook: Hook = {
         // primary contact on it.
         //
         // ⛔ The COUNT stays `activated`, and that is deliberate. This guard also
-        // runs inside an account delete (the cascade above) and cannot tell the
-        // two apart, and an account delete takes its draft and ended contracts
+        // runs inside an account delete (the cascade above) and does not tell
+        // the two apart, and an account delete takes its draft and ended contracts
         // with it (#549, `account_protection`). Counting those here would make
         // this guard refuse that account delete itself — today the engine
         // already refuses it on the cascade's order (objectstack#22305, pinned
         // in `test/hooks-runtime-sales.test.ts`), and that is the platform's to
         // fix. An ended contract on a DIRECT contact delete is refused by the
         // engine, in its own words naming the contract.
+        //
+        // The sentence names only what holds the contact, each count with its
+        // own plural (#2060 item 12, A-17: "2 open opportunity(ies), 0 active
+        // quote(s)" listed a zero and left the grammar to the reader), and only
+        // remedies that FREE it (#2161). For an open quote that is another
+        // contact or a rejection — ⛔ not acceptance: accepting drafts a
+        // contract naming the same person, and a contract keeps its primary
+        // contact for life. "Close or reassign the quotes" was the old remedy,
+        // and on an accepted quote, which this count used to include, neither
+        // could be done.
+        const held: string[] = [];
+        const remedies: string[] = [];
+        if (openOpps > 0) {
+          held.push(`${openOpps} open ${openOpps === 1 ? 'opportunity' : 'opportunities'}`);
+          remedies.push('close each open opportunity or give it another primary contact');
+        }
+        if (openQuotes > 0) {
+          held.push(`${openQuotes} open ${openQuotes === 1 ? 'quote' : 'quotes'}`);
+          remedies.push('give each open quote another contact or reject it');
+        }
+        if (activeContracts > 0) {
+          held.push(`${activeContracts} active ${activeContracts === 1 ? 'contract' : 'contracts'}`);
+          remedies.push('give each contract another primary contact: a contract keeps its primary contact even after it ends');
+        }
+        const referents =
+          held.length > 1 ? `${held.slice(0, -1).join(', ')} and ${held[held.length - 1]}` : held[0];
+        const todo =
+          remedies.length > 1
+            ? `${remedies.slice(0, -1).join('; ')}; and ${remedies[remedies.length - 1]}`
+            : remedies[0];
         throw refuse(
-          `${subject} is still referenced by ${openOpps} open opportunity(ies), ${openQuotes} active quote(s), ${activeContracts} active contract(s), so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. Close or reassign the opportunities and quotes first, and give each contract another primary contact: a contract keeps its primary contact even after it ends.`,
+          `${subject} is still referenced by ${referents}, so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. To free the contact, ${todo}.`,
           'DELETE_RESTRICTED',
           409,
         );

@@ -51,7 +51,8 @@ import { REPO_ROOT } from './helpers/repo-root';
  * The back-fill runs are report-only (no `--apply` in `argv`) and the door
  * returns no rows, so no back-fill ever reaches a write. `demo-staff.ts` has no
  * report-only mode: it creates each demo person and their positions before its
- * first query by `crm_account`, so the stub also answers those two writes, and
+ * first query by `crm_account`, so the stub also answers those two writes and
+ * the sharing-rule list it reads before re-evaluating, and
  * with no rows to route it reaches every later query and ends by reporting the
  * staffing as unconnected, which is its own verdict on an empty org and not a
  * failure of this probe. Its `process.exit` is stubbed for the run.
@@ -103,6 +104,12 @@ function stubDoor(sent: Sent[]) {
     }
     if (pathname === '/api/v1/data/sys_user_position' && init?.method === 'POST') {
       return reply(201, { object: 'sys_user_position', id: `probe-position-${sent.length}` });
+    }
+    // The rules `demo-staff.ts` re-evaluates come from the sharing door, not a
+    // query: since 18.0.0-next.4 a declared rule has no `sys_sharing_rule` row
+    // (objectstack#23952). An empty org has none to list.
+    if (pathname === '/api/v1/sharing/rules' && (init?.method ?? 'GET') === 'GET') {
+      return reply(200, { data: [] });
     }
     return reply(404, { error: `probe: no route for ${init?.method ?? 'GET'} ${pathname}` });
   });

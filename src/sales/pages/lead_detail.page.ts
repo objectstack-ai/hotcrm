@@ -329,7 +329,6 @@ export const LeadDetailPage: Page = {
 
     {
       name: 'main',
-      width: 'large',
       components: [
         {
           type: 'page:tabs',

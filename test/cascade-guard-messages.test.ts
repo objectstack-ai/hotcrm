@@ -220,7 +220,7 @@ describe('deleting an account whose contact is still referenced', () => {
     // BY, and it stays out of the prose.
     expect(message).toContain('Contact Ada Lovelace is still referenced by');
     expect(message).not.toContain(contact.id);
-    expect(message).toContain('1 open opportunity(ies)');
+    expect(message).toContain('still referenced by 1 open opportunity, so it cannot be deleted');
     expect(message).toContain('neither can its account');
     // The reported symptom: a caller who addressed an ACCOUNT was told they
     // could not delete a CONTACT.
@@ -241,7 +241,7 @@ describe('deleting an account whose contact is still referenced', () => {
     const message = await deleteAndCatch('crm_contact', contact.id);
     expect(message).toContain('Contact Ada Lovelace is still referenced by');
     expect(message).not.toContain(contact.id);
-    expect(message).toContain('1 open opportunity(ies)');
+    expect(message).toContain('still referenced by 1 open opportunity, so it cannot be deleted');
   });
 
   it('still deletes an account whose contact nothing references', async () => {
