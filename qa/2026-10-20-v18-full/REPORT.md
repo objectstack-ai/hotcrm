@@ -24,3 +24,21 @@ Card: objectstack-ai/hotcrm#2207, track 1. Draft pushed as the pass runs; the fi
 | LEA-016 | pass | Detail: Convert Lead / Schedule Follow-up / Log a Call / Edit, highlights, 5-stage path, Details/Related/Activity/History | shots/23-LEA-016-lead-detail.png |
 | LEA-017 | not reachable | AI skill; no AI service in this open-source boot (ADM-015: `ai` deliberately not required) | — |
 | LEA-018 | pass | Console import with the shipped "Lead Import (CSV)" mapping now sends format csv: 3/3 created, synonyms applied (LinkedIn→social, Google Ads→paid_search), owner = importer. The mapping is offered but still not preselected (#2194 T1-U06) | shots/30-LEA-018-import-shipped-mapping.png, shots/30-LEA-018-import-after-1.png |
+| LEA-019 | pass | Lead Inflow report (lead_metrics) answered 200 and drew — see *Extras* | shots/91-RPT-*.png |
+| ACC-001 | pass | Account list, cards and detail render (tier, health score, segment, territory); attachments section on the record | shots/31-ACC-006-all-accounts.png, shots/33-ACC-008-account-detail.png |
+| ACC-002 | pass | Exact duplicate "Acme Corporation" → 409 UNIQUE_VIOLATION; "QA  Brücken   GmbH" → name_normalized "qa brücken gmbh" | (REST) |
+| ACC-003 | pass | billing_address.country " de " → billing_country "DE", territory "emea" | (REST) |
+| ACC-004 | pass | ftp:// website → 400; negative revenue → 400 (manager); a rep gets 403 field-write on annual_revenue; delete Acme (customer, 3 opportunities) → 409 DELETE_RESTRICTED with the "mark inactive" hint | (REST) |
+| ACC-005 | pass | See ACT-010 (held event and completed task bubble last_activity_date to the account); Send Email also stamped it | (REST) |
+| ACC-006 | pass | 6 tabs draw; bulk bar Update Tier / Transfer Owner / Delete; Update Tier on 2 rows → "Succeeded 2 / 2" (bulk 405, per-row PATCH fallback; an Undo button is new). The confirm still prints raw {{count}} / {{tier}} — F-05 still reproduces. Map: 9 of 10 accounts now carry coordinates (#2060 item 15 no longer reproduces); the external tile host is blocked in this container | shots/31-ACC-006-*.png, shots/31-ACC-006-mass-tier-confirm.png |
+| ACC-007 | pass | Account Workbench: curated grid with Industry / Type / Account Owner quick filters only | shots/32-ACC-007-workbench.png |
+| ACC-008 | pass | Slotted detail: Log a Call / Log a Meeting / Schedule a Meeting / Edit; Details / Related (18) / Attachments; discussion feed | shots/33-ACC-008-account-detail.png |
+| ACC-009 | pass | Contact detail renders; deleting a prospect account cascaded its contact (read back 0 rows) | shots/34-ACC-009-contact-detail.png |
+| ACC-010 | pass | "Hal.Brook@Acme.example" stored lower-case; same email again → 409 DUPLICATE_VALUE; deleting a contact on an open opportunity → 409 DELETE_RESTRICTED with a clear message | (REST) |
+| ACC-011 | pass | Record header More actions → Mark as Primary Contact → confirm → "Contact marked as primary!"; Hal primary, John demoted | shots/34-ACC-011-mark-primary-confirm.png, shots/34-ACC-011-mark-primary-done.png |
+| ACC-012 | pass | Send Email (Subject / Body) → 200 emailId + activityId; contact last_contacted_date stamped. Toast is the generic "Action completed successfully" | shots/35-ACC-012-send-email-form.png |
+| ACC-013 | pass | Rep-created contact → owner inbox "New contact: Hal Brook" (contact_welcome) | (REST) |
+| ACC-014 | pass | All Contacts (grouped by account), People Directory, Primary Contacts draw | shots/36-ACC-014-*.png |
+| ACC-015 | pass | Console import with the shipped "Account Import (CSV)" and "Contact Import (CSV)" mappings: 2/2 created each; re-import of the same accounts file → 2 updated (upsert) | shots/38-ACC-015-account-import-shipped-mapping.png, shots/38-ACC-015-contact-import-after-1.png |
+| ACC-016 | not reachable | AI skill; no AI service in this boot | — |
+| ACC-017 | not reachable | AI skill; no AI service in this boot | — |
