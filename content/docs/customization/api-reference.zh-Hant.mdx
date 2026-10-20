@@ -53,23 +53,23 @@ http://localhost:4001
 HotCRM actions 可以包含帶受限能力的可執行中繼資料體。
 
 ```ts
-export const CreateCampaignAction = {
-  name: 'create_campaign',
-  objectName: 'crm_lead',
-  type: 'modal',
+export const MarkPrimaryContactAction = {
+  name: 'mark_primary',
+  objectName: 'crm_contact',
+  type: 'script',
   body: {
     language: 'js',
     capabilities: ['api.write'],
     source: `
-      await ctx.api.object('crm_campaign_member').insert({
-        crm_campaign: input.campaign,
-        crm_lead: input.leadId,
-        status: 'sent'
-      });
+      const id = ctx.recordId;
+      await ctx.api.object('crm_contact').update({ id, is_primary: true }, { where: { id } });
+      return { ok: true, id, is_primary: true };
     `,
   },
 };
 ```
+
+動作體以系統權限執行。凡是代表呼叫者寫入、應由呼叫者自己的權限來決定的動作，都不寫成動作體：**Add to Campaign**（`create_campaign`、`add_contact_to_campaign`）是一個流程動作，它呼叫的流程以呼叫者身分執行；**Mark Responded**（`mark_responded`）是一個宣告式更新。Add to Campaign 以 `campaignId` 接收行銷活動，回傳該流程的結果：新加入的成員 `output.enrolled` 為 `true`，已在該活動中的人為 `false`。
 
 ## 驗證
 

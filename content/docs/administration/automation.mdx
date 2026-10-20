@@ -59,8 +59,8 @@ A flow fires one of three ways, set by its start node:
 | **Generate Quote from Opportunity** | Screen | Build a quote from an opportunity and move it to *Proposal* |
 | **Schedule Follow-up** | Screen | Create the next follow-up task on a lead, already linked to it and owned by the right user |
 | **Enroll Members in Campaign** | Screen | Bulk-enroll eligible leads or contacts into this campaign, skipping the already-enrolled and the opted-out |
-| **Enroll Lead in Campaign** | Subflow | Called by **Enroll Members in Campaign** to write one lead membership with system privilege |
-| **Enroll Contact in Campaign** | Subflow | Called by **Enroll Members in Campaign** to write one contact membership with system privilege |
+| **Enroll Lead in Campaign** | Subflow | Called by **Enroll Members in Campaign**, and by **Add to Campaign** on a lead, to enroll one lead as the person running it: a lead already on the campaign is skipped, and a person who may not create campaign members is refused |
+| **Enroll Contact in Campaign** | Subflow | Called by **Enroll Members in Campaign**, and by **Add to Campaign** on a contact, to enroll one contact as the person running it: a contact already on the campaign is skipped, and a person who may not create campaign members is refused |
 | **Claim Case** | Screen | Take an unowned case out of triage by moving it to a status that means you are on it |
 | **Escalate Case** | Screen | Collect an escalation reason, then flag and re-prioritise the case |
 | **Stamp Case Escalation** | Subflow | Called by **Escalate Case** to write the escalation stamps with system privilege |
