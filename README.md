@@ -10,7 +10,7 @@
 >
 > Ontology-driven: database, API, UI and agent tools all derive from that one definition of the business, so there is no second application to keep in step with it.
 
-<sub>The positioning of [ObjectStack](https://github.com/objectstack-ai/objectstack), quoted from its README. The long form is the post [The Ontology Is the Software](https://objectstack.ai/blog/the-ontology-is-the-software).</sub>
+<sub>The positioning of [ObjectStack](https://github.com/objectstack-ai/objectstack), quoted as its README and the post [The Ontology Is the Software](https://objectstack.ai/blog/the-ontology-is-the-software) state it.</sub>
 
 **HotCRM is the reference implementation of that statement for a CRM.**
 
@@ -53,7 +53,7 @@ The same dashboard, two projections: the English UI and the zh-CN language pack 
 |---|---|
 | ![Sales performance dashboard](assets/screenshots/hotcrm/sales-dashboard/en.jpg) | ![销售业绩仪表盘](assets/screenshots/hotcrm/sales-dashboard/zh-Hans.jpg) |
 
-> The screenshots live in `assets/screenshots/hotcrm/<screen>/<locale>.png`, each with a colocated `meta.yaml` recording its purpose, alt text, capture context and platform version. This README uses English; the documentation site also publishes the `zh-Hans` variants.
+> The screenshots live in `assets/screenshots/hotcrm/<screen>/<locale>.png` (`.jpg` for the sales dashboard), each with a colocated `meta.yaml` recording its purpose, alt text, capture context and platform version. This README uses English; the documentation site also publishes the `zh-Hans` variants.
 
 ---
 
@@ -66,7 +66,7 @@ Measured on a local community-edition boot (`pnpm dev`, then `pnpm demo:staff`).
 ```bash
 curl -c admin.txt -X POST http://localhost:4001/api/v1/auth/sign-in/email \
   -H 'content-type: application/json' -d '{"email":"admin@objectos.ai","password":"admin123"}'
-curl -b admin.txt -X POST http://localhost:4001/api/v1/keys     # → { "data": { "key": "osk_…" } }, shown once
+curl -b admin.txt -X POST http://localhost:4001/api/v1/keys     # → { "data": { "key": "osk_…", … } }
 ```
 
 Then send an agent's `tools/call` with that key:
@@ -182,7 +182,7 @@ Metadata files are named **`<name>.<kind>.ts`** — `lead.object.ts` with its ho
 
 ## 🤝 Why fork HotCRM?
 
-Because it is the reference implementation: every ObjectStack convention you will meet, applied to a real CRM.
+Because it is the platform's reference implementation — ObjectStack's North Star names it so (「参考实现 hotcrm」) — and it applies these conventions to a real CRM:
 
 - ✅ `crm_` namespace prefix on every object (explicit, grep-able)
 - ✅ Strict `*.object.ts` / `*.hook.ts` / `*.actions.ts` separation of concerns
