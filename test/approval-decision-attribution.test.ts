@@ -31,8 +31,11 @@ type Rec = Record<string, any>;
  * `opportunity_qualification_approval`. Each is pinned below.
  *
  * ⚠️ The post-decision writes that write a value of their own (an approval
- * date, the stage, a cleared request) stay, and they still stamp `updated_by`
- * as the submitter. Who a resumed run's writes are attributed to is the
+ * date, the stage, a cleared request) stay. Through 18.0.0-next.5 they stamped
+ * `updated_by` as the submitter. From 18.0.0 the platform runs the nodes after
+ * a decision as the person who decided (objectstack changeset
+ * `24321-resume-as-decider`), and measured on 18.0.0 `mark_approved` stamps
+ * the approver. Who a resumed run's writes are attributed to is the
  * platform's question, not this app's, so ⛔ nothing here pins either answer
  * for those branches. Only their own values are pinned.
  */

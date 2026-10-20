@@ -152,9 +152,12 @@ export const OpportunityApprovalFlow: Flow = {
     // ── Final approve: stamp the date + notify owner ────────────────
     {
       // Kept, unlike the rejection's twin (#2061): `approved_date` is a value
-      // only this node writes. It runs as the run's trigger user, the
-      // submitter, so it still stamps `updated_by` as them. The restated
-      // `approved` changes nothing about that, since the node writes either way.
+      // only this node writes. Through 18.0.0-next.5 it ran as the run's
+      // trigger user, the submitter, and stamped `updated_by` as them. From
+      // 18.0.0 the platform runs the nodes after a decision as the person who
+      // decided (objectstack changeset `24321-resume-as-decider`); measured on
+      // 18.0.0, it stamps the approver. The restated `approved` changes
+      // nothing about that, since the node writes either way.
       id: 'mark_approved',
       type: 'update_record',
       label: 'Mark Approved',
