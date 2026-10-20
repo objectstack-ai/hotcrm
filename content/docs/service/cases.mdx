@@ -132,7 +132,7 @@ It performs:
 
 The hand-off goes to a **pool**, not up a chain. Positions in this app are flat, so "the owner's manager" is not something it can resolve; the case goes to whoever holds the **Service Manager** position and has the fewest open (neither *Resolved* nor *Closed*) cases, which spreads consecutive escalations across the team on its own. Three cases where it deliberately does nothing: **nobody holds the position** — the state a fresh install is in — so the case keeps its owner and the escalation completes exactly as before; the case is **already owned by a pool member**, so it stays with the manager working it; or the same edit **names an owner itself**, which wins over the pool.
 
-The status change to *Escalated* then fires the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner** — and only for cases that have an account, since the task is keyed to it.
+The status change to *Escalated* then fires the `case_status_side_effects` hook, which opens an **Urgent follow-up task due tomorrow for the account owner** — and only for cases that have an account, since the task is keyed to it. Closing the case sets that task to **Completed** if it is still open, so it leaves the account owner's **My Open Tasks**.
 
 Two things this list deliberately does not claim, because the escalation does not do them:
 

@@ -23,6 +23,8 @@ import {
  * - On `resolved`: bumps account `last_activity_date` — its own hook,
  *   `case_resolution_account_activity`, because it is the one write here that
  *   needs elevation (#2014).
+ * - On `closed`: completes the case's open escalation follow-up task(s) — its
+ *   own hook, `case_close_escalation_task`, elevated for the same reason.
  *
  * ⚠️ Ownership assignment is NOT here: all three answers to "who should own
  * this case" live in `_case-assignment.ts` — the ownerless-intake round-robin,
@@ -486,6 +488,10 @@ const caseSideEffects: Hook = {
       // bundling the closure instead, with no gate going red. The pin runs this
       // out of the LOWERED body for exactly that reason
       // (`test/escalation-task-subject.test.ts`).
+      //
+      // ⚠️ `case_close_escalation_task` below finds this task again by these
+      // two title shapes; change one and change the other
+      // (`test/escalation-task-on-close.test.ts` drives both).
       const caseNumber = typeof previous.case_number === 'string' ? previous.case_number.trim() : '';
       const caseSubject =
         (typeof input.subject === 'string' && input.subject.trim()) ||
@@ -558,6 +564,77 @@ const caseResolutionAccountActivity: Hook = {
       { id: accountId, last_activity_date: new Date().toISOString().slice(0, 10) },
       { where: { id: accountId } },
     );
+  },
+};
+
+/**
+ * Closing a case completes its open escalation follow-up task(s) (#2073).
+ *
+ * `case_status_side_effects` opens an urgent "Escalated: …" task for the
+ * account owner on every escalation, and nothing ever closed it: a closed case
+ * left an urgent task in the owner's **My Open Tasks**, one per escalation.
+ *
+ * ## Why `completed`
+ *
+ * `crm_task.status` declares one terminal value. `deferred` is an OPEN state
+ * to every reader in this app: `is_completed` stays false (`task_completion`
+ * derives it from `completed` alone), so the task stays in My Open Tasks, the
+ * board and the overdue list, and Mark Complete is still offered on it. The
+ * escalation the task followed up is over when its case closes, so the task is
+ * completed. Who completed it stays on the record: `updated_by` and the status
+ * history name the person who closed the case, not the task's owner.
+ *
+ * ## Which tasks
+ *
+ * Only this case's, only open ones, and only the ones the escalation opened:
+ * `related_to_case` is the case, the status is not `completed`, and the subject
+ * has one of the two shapes the insert above writes. Any other task on the
+ * case is the owner's own work and is left alone. A case escalated twice has
+ * two tasks, and both are completed.
+ *
+ * ## `runAs: 'system'` (AGENTS.md rule 9)
+ *
+ * The task belongs to the account owner, and the closer is usually a service
+ * manager or agent whose `crm_task` read is `own`. Measured as the caller: a
+ * manager's own close of the case (`PATCH`) found no task, so it completed
+ * nothing. Elevation is this one write, on its own hook, as for
+ * `case_resolution_account_activity`. Organization (rule 10): the read is
+ * pinned to the case's own organization when it carries one, and every write
+ * is by the id that read returned.
+ */
+const caseCloseEscalationTask: Hook = {
+  name: 'case_close_escalation_task',
+  object: 'crm_case',
+  events: ['afterUpdate'],
+  priority: 800,
+  async: true,
+  onError: 'log',
+  runAs: 'system',
+  description: 'Complete the case’s open escalation follow-up task(s) when the case is closed.',
+  handler: async (ctx: HookContext) => {
+    const { input } = ctx;
+    const previous = ctx.previous;
+    if (!previous) return;
+    if (input.status !== 'closed' || previous.status === 'closed') return;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const caseId =
+      (typeof input.id === 'string' && input.id) ||
+      (typeof previous.id === 'string' ? (previous.id as string) : undefined);
+    if (!caseId) return;
+    const org = typeof previous.organization_id === 'string' && previous.organization_id ? previous.organization_id : undefined;
+    const inOrg: Record<string, string> = org ? { organization_id: org } : {};
+    const open = await api.object('crm_task').find({
+      where: { related_to_case: caseId, status: { $ne: 'completed' }, ...inOrg },
+      fields: ['id', 'subject'],
+      top: 100,
+    });
+    for (const task of open ?? []) {
+      const subject = typeof task.subject === 'string' ? task.subject : '';
+      if (!subject.startsWith('Escalated: ') && subject !== 'Escalated case needs attention') continue;
+      const id = String(task.id);
+      await api.object('crm_task').update({ id, status: 'completed' }, { where: { id } });
+    }
   },
 };
 
@@ -660,4 +737,5 @@ export default [
   caseResolutionArticleNormalize,
   caseSideEffects,
   caseResolutionAccountActivity,
+  caseCloseEscalationTask,
 ];
