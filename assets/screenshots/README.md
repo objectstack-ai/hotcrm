@@ -41,7 +41,3 @@ Use public paths such as `/screenshots/hotcrm/lead-detail/en.png` from MDX.
    change. Keep the real file extension (`.jpg` for JPEG, `.png` for PNG).
 3. Run the sync command and verify both documentation locales in a browser.
 4. Update the README or docs page that tells the corresponding product story.
-
-The numbered files at this directory's root are retained as historical capture
-sets. New product documentation should use the semantic `hotcrm/<screen>/`
-directories above.

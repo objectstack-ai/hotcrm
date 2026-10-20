@@ -3,9 +3,14 @@ kind: screenshot
 scope: hotcrm
 category: analytics
 status: published
-captured: '2026-09-09'
+captured: '2026-10-20'
 capture:
   application: HotCRM
+  platformVersion: '18.0.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
   theme: light
   viewport: 1408x964
   dashboard: sales_dashboard
@@ -22,25 +27,25 @@ capture:
 # /_console/apps/app.objectstack.hotcrm/dashboard/sales_dashboard, in two fresh
 # browser contexts that differ in nothing but that locale.
 #
-# ⚠️ The two files carry IDENTICAL y-axis labels on Monthly Revenue Trend
-# (0 / 100,000 / 200,000 / 300,000 / 400,000) and that is CORRECT here — do not
-# "fix" it back. Measured on the pinned platform (17.3.0) rather than assumed:
+# ⚠️ The two files carry DIFFERENT y-axis labels on Monthly Revenue Trend, and
+# on 18.0.0 that is CORRECT — do not "fix" either one. Measured on the pinned
+# platform (18.0.0, #2205) with a DOM probe of the chart's tick labels rather
+# than read off the picture:
 #
-#   this widget declares an explicit numeral format,
-#     src/dashboards/sales.dashboard.ts -> monthly_revenue_trend.chartConfig
-#     .yAxis[0].format: '0,0'
-#     => the axis renders grouped digits in every UI language
+#   en.jpg       0 / 200K / 400K / 600K / 800K
+#   zh-Hans.jpg  0 / 20万 / 40万 / 60万 / 80万
 #
-#   the executive dashboard's revenue_trend declares NO chartConfig (default
-#   rendering is intentional there)
-#     => it takes the locale-aware compact formatter, and the same probe run
-#        against it renders 0/100K/200K/300K/400K under en-US and
-#        0/10万/20万/30万/40万 under zh-CN.
+#   this widget declares NO numeral format on this tree
+#     src/sales/dashboards/sales.dashboard.ts -> monthly_revenue_trend.chartConfig
+#     carries no yAxis.format
+#     => it takes the locale-aware compact formatter, exactly as the executive
+#        dashboard's revenue_trend does: the same probe run against that chart
+#        renders the same two label sets under en-US and zh-CN.
 #
-# That second chart is the control that proves the probe can see 万 at all, so
-# the absence of 万 here is a property of this widget's format, not of the
-# capture. If `format: '0,0'` is ever removed from that widget, this pair stops
-# being identical and both files must be re-captured together.
+# The previous pair (captured on 17.3.0) carried IDENTICAL grouped digits
+# because the widget then declared `chartConfig.yAxis[0].format: '0,0'`. If a
+# numeral format is ever declared on it again, this pair becomes identical once
+# more and both files must be re-captured together.
 locales:
   en: en.jpg
   zh-Hans: zh-Hans.jpg
@@ -48,8 +53,8 @@ title:
   en: Sales performance dashboard
   zh-Hans: 销售业绩仪表盘
 alt:
-  en: A sales dashboard with KPI cards, a pipeline funnel, and revenue trends.
-  zh-Hans: 包含 KPI 卡片、销售漏斗和收入趋势的销售仪表盘。
+  en: A sales dashboard with KPI cards, open pipeline value by stage, and the monthly revenue trend.
+  zh-Hans: 包含 KPI 卡片、按阶段的进行中管道金额与月度收入趋势的销售仪表盘。
 purpose:
   en: Show a unified analytical workspace for operating metrics and pipeline health.
   zh-Hans: 展示用于运营指标和销售管道健康度的统一分析工作区。
