@@ -6,6 +6,9 @@ import {
   hotcrmStack, signUpPerson, systemUpdate, recordEngineWrites, runShippedHook, today, daysFromNow, type Person,
 } from './helpers/verify-stack';
 import { hookNamed } from './helpers/composed-stack';
+import { Product } from '../src/revenue/objects/product.object';
+import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
+import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
 
 type Rec = Record<string, any>;
 
@@ -1260,7 +1263,22 @@ describe('product_catalog', () => {
     expect((await adminProduct({ sku: `crm-pro-${n}`, list_price: 10 })).sku).toBe(`CRM-PRO-${n}`);
   });
 
-  it('refuses to delete a product referenced by any line item, historical included', async () => {
+  // The refusal counts what it names, LINE ITEMS, each count with its own
+  // plural and no zero listed, and it names the retirement field by its label
+  // (#2060 item 12, B-16: "referenced by 4 opportunity(ies) and 2 quote(s)"
+  // counted four lines on two deals as four deals). The nouns and the label
+  // are read off the objects, so a renamed label its refusal does not follow
+  // turns this red.
+  const lines = (n: number, object: Rec): string =>
+    `${n} ${(n === 1 ? object.label : object.pluralLabel).toLowerCase()}`;
+  const deleteRefusal = async (id: string): Promise<Rec> => {
+    const err = await verify.hooks.run('crm_product', 'delete', { id }, as(admin)).then(() => null, (e) => e);
+    expect(err).toMatchObject({ code: 'DELETE_RESTRICTED', status: 409 });
+    return err;
+  };
+  const retire = () => `To retire it instead, turn off ${(Product.fields as Rec).is_active.label}.`;
+
+  it('refuses to delete a product referenced by any line item, historical included, counting the lines', async () => {
     const product = await adminProduct({ list_price: 100 });
     const { opp } = await quoteParties();
     await verify.seed('crm_opportunity_line_item', [{ crm_opportunity: opp.id, crm_product: product.id, quantity: 1, unit_price: 100 }]);
@@ -1268,8 +1286,29 @@ describe('product_catalog', () => {
       const quote = await repQuotes();
       await verify.seed('crm_quote_line_item', [{ crm_quote: quote.id, crm_product: product.id, quantity: 1, unit_price: 100 }]);
     }
-    await expect(verify.hooks.run('crm_product', 'delete', { id: product.id }, as(admin)))
-      .rejects.toThrow(/referenced by 1 opportunity\(ies\) and 2 quote\(s\)/);
+    const err = await deleteRefusal(product.id);
+    expect(err.message).toBe(
+      `Cannot delete product: it is on ${lines(1, OpportunityLineItem)} and ${lines(2, QuoteLineItem)}. ${retire()}`,
+    );
+    expect(err.message).not.toMatch(/\(ies\)|\(s\)|is_active/);
+  });
+
+  it('counts three lines on one opportunity as three line items, and lists no zero', async () => {
+    const product = await adminProduct({ list_price: 100 });
+    const { opp } = await quoteParties();
+    for (let i = 0; i < 3; i++) {
+      await verify.seed('crm_opportunity_line_item', [{ crm_opportunity: opp.id, crm_product: product.id, quantity: 1, unit_price: 100 }]);
+    }
+    expect((await deleteRefusal(product.id)).message).toBe(
+      `Cannot delete product: it is on ${lines(3, OpportunityLineItem)}. ${retire()}`,
+    );
+
+    const quoted = await adminProduct({ list_price: 100 });
+    const quote = await repQuotes();
+    await verify.seed('crm_quote_line_item', [{ crm_quote: quote.id, crm_product: quoted.id, quantity: 1, unit_price: 100 }]);
+    expect((await deleteRefusal(quoted.id)).message).toBe(
+      `Cannot delete product: it is on ${lines(1, QuoteLineItem)}. ${retire()}`,
+    );
   });
 
   it('allows deleting an unreferenced product', async () => {
