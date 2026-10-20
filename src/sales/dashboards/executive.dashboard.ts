@@ -2,7 +2,7 @@
 
 import type { Dashboard, InlineLocaleMap } from '@objectstack/spec/ui';
 import { LeadSourcePicklist } from '../picklists/lead_source.picklist';
-import { pipelineByStageFunnelWidget } from './shared-widgets';
+import { pipelineByStageWidget } from './shared-widgets';
 
 /**
  * `lead_source` filter option labels, keyed by the CANONICAL stored value.
@@ -186,9 +186,8 @@ export const ExecutiveDashboard: Dashboard = {
     },
 
     // ─── Row 3: Pipeline & Activity ───────────────────────────────────
-    // The funnel now comes from the shared factory (#539); its remaining inert
-    // config lives in shared-widgets.ts and is out of this PR's scope.
-    pipelineByStageFunnelWidget({ x: 0, y: 6, w: 6, h: 4 }),
+    // The pipeline-by-stage chart comes from the shared factory (#539).
+    pipelineByStageWidget({ x: 0, y: 6, w: 6, h: 4 }),
     {
       id: 'new_accounts_by_month',
       title: 'New Accounts',

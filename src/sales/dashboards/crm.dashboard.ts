@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Dashboard } from '@objectstack/spec/ui';
-import { avgDealSizeMetricWidget, pipelineByStageFunnelWidget } from './shared-widgets';
+import { avgDealSizeMetricWidget, pipelineByStageWidget } from './shared-widgets';
 
 /**
  * CRM Overview Dashboard
@@ -10,7 +10,7 @@ import { avgDealSizeMetricWidget, pipelineByStageFunnelWidget } from './shared-w
  * to mirror the polished CRM dashboard reference at
  * https://github.com/objectstack-ai/objectui/tree/main/examples/crm/src/dashboards
  * — KPI tiles, an area-chart revenue trend, a lead-source donut, a
- * pipeline funnel, and a recent-deals table.
+ * pipeline-by-stage bar chart, and a recent-deals table.
  *
  * This dashboard intentionally uses the framework's first-class metadata fields
  * (colorVariant, chartConfig, header, dateRange, descriptions, action buttons)
@@ -126,7 +126,7 @@ export const CrmOverviewDashboard: Dashboard = {
     },
 
     // ─── Charts Row 2 ─────────────────────────────────────────────────
-    pipelineByStageFunnelWidget({ x: 0, y: 6, w: 6, h: 4 }),
+    pipelineByStageWidget({ x: 0, y: 6, w: 6, h: 4 }),
     {
       id: 'top_products',
       title: 'Top Products',
