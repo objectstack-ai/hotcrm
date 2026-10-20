@@ -445,7 +445,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         help: '通常は「期間」と「期間開始」から自動的に算出されます。手動で入力する場合は、その期間の最終日である必要があります — 例: 2026-07-01 開始の四半期なら 2026-09-30、2026 年 8 月なら 2026-08-31。',
       },
       period_label: {
-        label: '期間',
+        label: '期間ラベル',
         help: '「2026 年第 3 四半期」「2026 年 8 月」のような読みやすい期間ラベル。',
       },
       display_title: { label: '表示名' },
