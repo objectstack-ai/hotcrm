@@ -28,7 +28,7 @@ The member status is the response lifecycle, and every value on it has something
 | ⚪ **Sent** | The campaign reached them *(the default for a new member, however it was created)* | Enrollment |
 | 🟢 **Responded** | They answered — replied, registered, downloaded | **Mark Responded** on the member |
 | 🟣 **Converted** | Their lead went on to become a customer | Automatic, when that lead is converted |
-| 🔴 **Unsubscribed** | They asked to stop hearing from you | A rep on the member record, or an opt-out request |
+| 🔴 **Unsubscribed** | They asked to stop hearing from you | A user who may edit campaign members, on the member record |
 
 These four are not a ladder that only climbs. Most members stay at *Sent*; one who answers moves to *Responded*, and a member still at *Sent* or *Responded* whose lead is later converted is promoted to *Converted* for you. Moving a member back — a mis-click corrected, or a reset to *Sent* for a re-send — clears the response stamp with it. An *Unsubscribed* member is never promoted by that conversion sweep: an opt-out is not overwritten by a marketing outcome.
 
@@ -65,7 +65,7 @@ Each status has a real writer:
 - **Sent** — written when the membership is created, by every enrollment path above.
 - **Responded** — the **Mark Responded** button on the member record. Recording a response edits the member, so the button is offered only to users who may edit campaign members (Marketing User and the administrators), and only while the member is still at *Sent*: an already-responded, converted or unsubscribed member has nothing to record, and an unsubscribed one must not be pulled back into the funnel by a mis-click. It stamps *Response Date* and *Has Responded* along with the status.
 - **Converted** — automatic. When a member's lead is converted, every campaign that lead is enrolled in promotes its member row and recomputes its numbers. Conversion is the one campaign outcome the app observes by itself.
-- **Unsubscribed** — set by a rep on the member record, or on an opt-out request. Setting it also ticks **Email Opt Out** on that person's lead or contact, which is what keeps them out of future campaigns: the enrollment flow skips opted-out people. It runs one way only — opting a person out does not rewrite the memberships they already have, because those record what happened at the time.
+- **Unsubscribed** — set on the member record by a user who may edit campaign members (Marketing User and the administrators), usually when the person asks to stop hearing from you. Nothing in the app sets it on its own: an opt-out request reaches the member only when one of those users records it there. Setting it also ticks **Email Opt Out** on that person's lead or contact, which is what keeps them out of future campaigns: the enrollment flow skips opted-out people. It runs one way only — opting a person out does not rewrite the memberships they already have, because those record what happened at the time.
 
 ## How the metrics roll up
 

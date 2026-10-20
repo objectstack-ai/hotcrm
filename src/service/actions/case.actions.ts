@@ -9,6 +9,25 @@ import { P } from '@objectstack/spec';
  * actions never execute their body in 16.1.0, and script bodies cannot
  * UPDATE a record on a sharing-ruled object; screen flows are the mechanism
  * that demonstrably works, same as `convert_lead` / `schedule_followup`).
+ *
+ * ⚠️ Escalate Case and Close Case are offered only to a caller whose permission
+ * set may EDIT a case (#2060 item 8), by the rule `claim_case` states below:
+ * `visible` mirrors the grant, never a convenience flag. Both buttons edit the
+ * case they sit on. The sets that may are `service_agent`, `service_manager`
+ * and the two administrator sets. `sales_rep` and `sales_manager` read cases
+ * (an account's support history) with `allowEdit: false`, and
+ * `marketing_user` holds no case grant at all. Before this, both buttons were
+ * drawn for every reader on the record's state alone, and a sales rep's or a
+ * sales manager's Escalate Case ended in "Node 'escalate' failed:
+ * update_record(crm_case) failed: You do not have permission" (measured on
+ * 18.0.0, pinned in `test/case-actions-offer.test.ts`).
+ *
+ * `current_user.can(…)` answers from the effective object permissions the
+ * server publishes at `/auth/me/permissions`, the map the console evaluates it
+ * against, so the offer follows the set rather than a list of names written
+ * here. It answers per OBJECT, not per record: it does not see a record-level
+ * share, which is not this declaration's to restate (a hand-copied sharing
+ * rule in a predicate is the drift `claim_case` pins against).
  */
 export const EscalateCaseAction: Action = {
   name: 'escalate_case',
@@ -18,7 +37,8 @@ export const EscalateCaseAction: Action = {
   type: 'flow',
   target: 'escalate_case',
   locations: ['record_header', 'list_item'],
-  visible: P`has(record.is_escalated) && record.is_escalated == false && has(record.is_closed) && record.is_closed == false`,
+  // The record's state, then the caller's edit right on cases (see the header).
+  visible: P`has(record.is_escalated) && record.is_escalated == false && has(record.is_closed) && record.is_closed == false && current_user.can("crm_case", "edit")`,
   confirmText: 'This will escalate the case to the escalation team. Continue?',
   successMessage: 'Case escalated successfully!',
   refreshAfter: true,
@@ -32,7 +52,8 @@ export const CloseCaseAction: Action = {
   type: 'flow',
   target: 'close_case',
   locations: ['record_header'],
-  visible: P`has(record.is_closed) && record.is_closed == false`,
+  // Same grant as Escalate Case: closing a case is editing it (see the header).
+  visible: P`has(record.is_closed) && record.is_closed == false && current_user.can("crm_case", "edit")`,
   confirmText: 'Are you sure you want to close this case?',
   successMessage: 'Case closed successfully!',
   refreshAfter: true,
