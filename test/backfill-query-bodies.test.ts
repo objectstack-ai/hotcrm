@@ -50,9 +50,10 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  * The back-fill runs are report-only (no `--apply` in `argv`) and the door
  * returns no rows, so no back-fill ever reaches a write. `demo-staff.ts` has no
- * report-only mode: it creates each demo person and their positions before its
- * first query by `crm_account`, so the stub also answers those two writes and
- * the sharing-rule list it reads before re-evaluating, and
+ * report-only mode: it grants the dev admin its sets and creates each demo
+ * person and their positions before its first query by `crm_account`, so the
+ * stub also answers those three writes and the sharing-rule list it reads
+ * before re-evaluating, and
  * with no rows to route it reaches every later query and ends by reporting the
  * staffing as unconnected, which is its own verdict on an empty org and not a
  * failure of this probe. Its `process.exit` is stubbed for the run.
@@ -97,8 +98,12 @@ function stubDoor(sent: Sent[]) {
         ? reply(200, { records: [] })
         : reply(400, { error: 'Invalid query request', code: 'VALIDATION_FAILED' });
     }
-    // The two writes `demo-staff.ts` makes before its first unfiltered query:
-    // the person (better-auth's admin route) and each position they hold.
+    // The three writes `demo-staff.ts` makes before its first unfiltered query:
+    // the dev admin's own sets (#2061), the person (better-auth's admin route)
+    // and each position they hold.
+    if (pathname === '/api/v1/data/sys_user_permission_set' && init?.method === 'POST') {
+      return reply(201, { object: 'sys_user_permission_set', id: `probe-grant-${sent.length}` });
+    }
     if (pathname === '/api/v1/auth/admin/create-user' && init?.method === 'POST') {
       return reply(200, { data: { user: { id: `probe-user-${sent.length}` } } });
     }
