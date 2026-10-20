@@ -153,8 +153,9 @@ export const OpportunityStatusChangeApprovalFlow: Flow = {
       // INPUT-FIRST, so this write presents itself as already-approved and the
       // guard lets the stage through. Splitting it into two writes would have
       // the guard refuse the flow's own write (ELEVATION IS NOT ANONYMITY —
-      // `runAs: 'system'` carries the triggering user, so `ctx.user?.id` is
-      // present in this run).
+      // `runAs: 'system'` carries a user, so `ctx.user?.id` is present in this
+      // run; from 18.0.0 that user is the approver for the nodes after the
+      // decision, objectstack changeset `24321-resume-as-decider`).
       //
       // `win_reason` / `loss_reason` are `requiredWhen` the stage is closed and
       // are evaluated against the merged record, so the values the rep captured
