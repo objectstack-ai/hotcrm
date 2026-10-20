@@ -104,9 +104,10 @@ const accountHook: Hook = {
       // A hook handler is lowered to a metadata-only `body.source` and
       // evaluated inside QuickJS with no module scope, so an import is a
       // `ReferenceError` at runtime, not a closure; `extractHookBody` rejects
-      // such a handler and `test/action-sandbox.test.ts` runs that same
-      // lowering pass over every registered hook. The table therefore cannot be
-      // read from `./_territory.ts` here. It is not trusted to stay in step
+      // such a handler and `pnpm lint` (`os lint --strict`) runs that same
+      // lowering pass over every registered hook (`hook-body/not-lowerable`).
+      // The table therefore cannot be read from `./_territory.ts` here. It is
+      // not trusted to stay in step
       // either: `test/territory-single-source.test.ts` parses this literal out
       // of the LOWERED body and asserts deep equality with the module's derived
       // map, so a country added to either side alone fails.
@@ -168,7 +169,7 @@ const accountHook: Hook = {
       //
       // Written inline, not as a module-scope helper, for the same reason as
       // the block above: hook bodies lower to metadata-only (no free
-      // identifiers), which `test/action-sandbox.test.ts` enforces.
+      // identifiers), which `pnpm lint` (`hook-body/not-lowerable`) enforces.
       if ('name' in input) {
         const rawName = input.name;
         const normalizedName =

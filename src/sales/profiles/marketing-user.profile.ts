@@ -95,8 +95,10 @@ export const MarketingUserProfile = {
       using: 'id != null',
     },
     // Same widening for the member rows themselves: response tracking means
-    // updating rows the enrollment flow (system context) created, which the
-    // default owner-only-writes policy would otherwise deny.
+    // updating rows somebody else created — another marketer, since Enroll
+    // Members and Add to Campaign insert as the person who runs them (#2167),
+    // or the seed — which the default owner-only-writes policy would otherwise
+    // deny.
     {
       name: 'marketing_campaign_member_updates',
       // Marketing users update member response state on rows they did not

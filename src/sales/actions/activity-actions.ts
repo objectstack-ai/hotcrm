@@ -115,13 +115,14 @@ const lit = (value: string): string => JSON.stringify(value);
  *
  * An action body is shipped BODY-ONLY and evaluated in a QuickJS sandbox with
  * no module scope, so a shared helper called from a body is not a closure at
- * runtime — it is a `ReferenceError` (`test/helpers/action-sandbox.ts` states
- * the same constraint for the shared line-item price fill). A string spliced at
+ * runtime — it is a `ReferenceError` (`_line-item-price-fill.ts` states the
+ * same constraint for the shared line-item price fill). A string spliced at
  * AUTHORING time, while Node builds the metadata, has no such problem: what
  * reaches the sandbox is one self-contained body with this text inlined,
- * exactly as if it had been typed there. `test/action-sandbox.test.ts` executes
- * both bodies under the real runner AND pins that both still contain this
- * constant, so the two call sites cannot drift into disagreeing.
+ * exactly as if it had been typed there. `test/script-bodies.test.ts` runs
+ * the bodies through the real action door AND pins that every `actor_name`
+ * writer still contains this constant, so the call sites cannot drift into
+ * disagreeing.
  *
  * # Contract for a splice site
  *

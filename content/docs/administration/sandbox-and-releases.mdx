@@ -139,7 +139,7 @@ Measured against the old table, row by row:
 | AI skills, knowledge base configs | ⚠️ `skills` is a key; **there is no knowledge-base-config key** — knowledge articles are ordinary records |
 | Approval processes | ⚠️ **No such key.** The standalone `approvals` stack field was removed in ObjectStack 7.4; approvals are `flows` carrying `approval` nodes (ADR-0019), so they package as flows |
 | Email templates | ✅ `emailTemplates` is a key — though this app authors none |
-| **Data records** | ❌ → **✅ WRONG, and this one is worth correcting.** `data` is a top-level artifact key, and HotCRM ships 21 seed families through it. Records package fine, per environment (`env: ['prod','dev','test']`) and with an upsert `mode` and `externalId` |
+| **Data records** | ❌ → **✅ WRONG, and this one is worth correcting.** `data` is a top-level artifact key, and HotCRM ships 20 seed families through it. Records package fine, per environment (`env: ['prod','dev','test']`) and with a replay `mode` and an `externalId`: nineteen of the twenty insert once (`ignore`), and the forecast snapshots `upsert` |
 | **Files** | ✅ ❌ correct — no file key, and **no file sync API exists** to use instead; the suggestion points at nothing |
 | **User accounts** | ✅ ❌ correct — no user key. SCIM is real as a platform surface (`sys_scim_provider`), but ships no screen in this tenant |
 

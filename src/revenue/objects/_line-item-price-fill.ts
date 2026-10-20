@@ -28,11 +28,12 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * NOTHING but its own `ctx`. Never move a value the body reads into this
  * factory's parameters; it would resolve here and be undefined in the sandbox.
  *
- * That rule is enforced, not just documented: `test/action-sandbox.test.ts`
- * lowers this handler with the CLI build's own extraction pass (which rejects a
- * body referencing anything out of scope) and runs the result under the real
- * QuickJS runner, with a negative control that shows the guard still bites.
- * Worth knowing why a test has to: when extraction fails the build does not,
+ * That rule is enforced, not just documented: `pnpm lint` (`os lint --strict`)
+ * refuses a handler that does not lower as `hook-body/not-lowerable`, with the
+ * build's own extraction pass (which rejects a body referencing anything out of
+ * scope), and `test/script-bodies.test.ts` lowers this one, runs it inside real
+ * writes and keeps a negative control that shows the extraction still bites.
+ * Worth knowing why a gate has to: when extraction fails the build does not,
  * it silently keeps the handler in its bundled form and the hook stops being
  * deployable as pure metadata.
  */

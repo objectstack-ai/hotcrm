@@ -21,7 +21,8 @@ import type { HookApi } from './_hook-api';
  * `refreshCampaignMetrics()` import would be a free identifier — the CLI build
  * silently declines to lower the handler, keeps it in a bundled runtime file,
  * and the hook stops being deployable as pure metadata (the build says so in
- * one line nobody reads). `test/action-sandbox.test.ts` is what catches it.
+ * one line nobody reads). `pnpm lint` (`os lint --strict`) is what catches it,
+ * as `hook-body/not-lowerable`.
  *
  * So the arithmetic is inlined per handler. The duplication is NOT trusted:
  * `test/campaign-member-lifecycle.test.ts` lowers all four bodies and asserts
