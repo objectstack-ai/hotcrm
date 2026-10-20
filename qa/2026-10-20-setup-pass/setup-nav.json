@@ -1,0 +1,450 @@
+{
+    "type": "app",
+    "items": [
+        {
+            "name": "setup",
+            "label": "Setup",
+            "description": "Platform settings and administration",
+            "icon": "settings",
+            "active": true,
+            "isDefault": false,
+            "branding": {
+                "primaryColor": "#475569"
+            },
+            "requiredPermissions": [
+                "setup.access"
+            ],
+            "navigation": [
+                {
+                    "id": "group_overview",
+                    "type": "group",
+                    "label": "Overview",
+                    "icon": "layout-dashboard",
+                    "requiredPermissions": [
+                        "manage_platform_settings"
+                    ],
+                    "children": [
+                        {
+                            "id": "nav_system_overview",
+                            "type": "dashboard",
+                            "label": "System Overview",
+                            "dashboardName": "system_overview",
+                            "icon": "activity"
+                        }
+                    ]
+                },
+                {
+                    "id": "group_apps",
+                    "type": "group",
+                    "label": "Apps",
+                    "icon": "package",
+                    "children": [
+                        {
+                            "id": "nav_packages",
+                            "type": "component",
+                            "label": "Packages",
+                            "componentRef": "developer:packages",
+                            "icon": "package"
+                        },
+                        {
+                            "id": "nav_packaged_automation",
+                            "type": "component",
+                            "label": "Packaged Automation",
+                            "componentRef": "automation:packaged",
+                            "icon": "workflow"
+                        },
+                        {
+                            "id": "nav_marketplace_browse",
+                            "type": "url",
+                            "label": "Browse Marketplace",
+                            "url": "/apps/setup/system/marketplace",
+                            "icon": "store"
+                        },
+                        {
+                            "id": "nav_marketplace_installed",
+                            "type": "component",
+                            "label": "Installed Apps",
+                            "componentRef": "developer:packages",
+                            "params": {
+                                "source": "marketplace"
+                            },
+                            "icon": "package-check"
+                        },
+                        {
+                            "id": "nav_cloud_connection",
+                            "type": "page",
+                            "pageName": "cloud_connection_settings",
+                            "label": "Cloud Connection",
+                            "icon": "cloud"
+                        }
+                    ]
+                },
+                {
+                    "id": "group_people_org",
+                    "type": "group",
+                    "label": "People & Organization",
+                    "icon": "users",
+                    "children": [
+                        {
+                            "id": "nav_users",
+                            "type": "object",
+                            "label": "Users",
+                            "objectName": "sys_user",
+                            "viewName": "all_users",
+                            "icon": "user"
+                        },
+                        {
+                            "id": "nav_organization",
+                            "type": "object",
+                            "label": "Organization",
+                            "objectName": "sys_organization",
+                            "recordId": "{current_org_id}",
+                            "icon": "building-2"
+                        },
+                        {
+                            "id": "nav_business_units",
+                            "type": "object",
+                            "label": "Business Units",
+                            "objectName": "sys_business_unit",
+                            "icon": "building",
+                            "requiresObject": "sys_business_unit"
+                        },
+                        {
+                            "id": "nav_teams",
+                            "type": "object",
+                            "label": "Teams",
+                            "objectName": "sys_team",
+                            "icon": "users-round"
+                        },
+                        {
+                            "id": "nav_invitations",
+                            "type": "object",
+                            "label": "Invitations",
+                            "objectName": "sys_invitation",
+                            "icon": "mail"
+                        }
+                    ]
+                },
+                {
+                    "id": "group_access_control",
+                    "type": "group",
+                    "label": "Access Control",
+                    "icon": "shield",
+                    "children": [
+                        {
+                            "id": "nav_positions",
+                            "type": "url",
+                            "label": "Positions",
+                            "url": "/apps/setup/metadata/position?scope=environment",
+                            "icon": "shield-check"
+                        },
+                        {
+                            "id": "nav_capabilities",
+                            "type": "url",
+                            "label": "Capabilities",
+                            "url": "/apps/setup/metadata/capability?scope=environment",
+                            "icon": "badge-check"
+                        },
+                        {
+                            "id": "nav_permission_sets",
+                            "type": "url",
+                            "label": "Permission Sets",
+                            "url": "/apps/setup/metadata/permission?scope=environment",
+                            "icon": "lock"
+                        },
+                        {
+                            "id": "nav_sharing_rules",
+                            "type": "object",
+                            "label": "Sharing Rules",
+                            "objectName": "sys_sharing_rule",
+                            "icon": "share-2",
+                            "requiresObject": "sys_sharing_rule",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        },
+                        {
+                            "id": "nav_record_shares",
+                            "type": "object",
+                            "label": "Record Shares",
+                            "objectName": "sys_record_share",
+                            "viewName": "all_shares",
+                            "icon": "link",
+                            "requiresObject": "sys_record_share",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        },
+                        {
+                            "id": "nav_api_keys",
+                            "type": "object",
+                            "label": "API Keys",
+                            "objectName": "sys_api_key",
+                            "viewName": "all_keys",
+                            "icon": "key",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "group_approvals",
+                    "type": "group",
+                    "label": "Approvals",
+                    "icon": "check-circle",
+                    "requiredPermissions": [
+                        "manage_platform_settings"
+                    ],
+                    "children": [
+                        {
+                            "id": "nav_approvals_inbox",
+                            "type": "component",
+                            "label": "Approvals Inbox",
+                            "componentRef": "approvals:inbox",
+                            "icon": "list-checks"
+                        },
+                        {
+                            "id": "nav_approval_requests",
+                            "type": "object",
+                            "label": "Requests",
+                            "objectName": "sys_approval_request",
+                            "viewName": "all_requests",
+                            "icon": "inbox",
+                            "requiresObject": "sys_approval_request"
+                        },
+                        {
+                            "id": "nav_approval_actions",
+                            "type": "object",
+                            "label": "Action History",
+                            "objectName": "sys_approval_action",
+                            "icon": "history",
+                            "requiresObject": "sys_approval_action"
+                        },
+                        {
+                            "id": "nav_approval_delegations",
+                            "type": "object",
+                            "label": "Delegations (OOO)",
+                            "objectName": "sys_approval_delegation",
+                            "icon": "user-clock",
+                            "requiresObject": "sys_approval_delegation"
+                        }
+                    ]
+                },
+                {
+                    "id": "group_configuration",
+                    "type": "group",
+                    "label": "Configuration",
+                    "icon": "sliders-horizontal",
+                    "children": [
+                        {
+                            "id": "nav_settings_hub",
+                            "type": "url",
+                            "label": "All Settings",
+                            "url": "/apps/setup/system/settings",
+                            "icon": "settings-2",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        },
+                        {
+                            "id": "nav_settings_localization",
+                            "type": "url",
+                            "label": "Localization",
+                            "url": "/apps/setup/system/settings/localization",
+                            "icon": "globe"
+                        },
+                        {
+                            "id": "nav_settings_company",
+                            "type": "url",
+                            "label": "Company",
+                            "url": "/apps/setup/system/settings/company",
+                            "icon": "building-2"
+                        },
+                        {
+                            "id": "nav_settings_branding",
+                            "type": "url",
+                            "label": "Branding",
+                            "url": "/apps/setup/system/settings/branding",
+                            "icon": "palette"
+                        },
+                        {
+                            "id": "nav_settings_auth",
+                            "type": "url",
+                            "label": "Authentication",
+                            "url": "/apps/setup/system/settings/auth",
+                            "icon": "lock-keyhole",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        },
+                        {
+                            "id": "nav_settings_mail",
+                            "type": "url",
+                            "label": "Email",
+                            "url": "/apps/setup/system/settings/mail",
+                            "icon": "mail",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        },
+                        {
+                            "id": "nav_settings_storage",
+                            "type": "url",
+                            "label": "File Storage",
+                            "url": "/apps/setup/system/settings/storage",
+                            "icon": "hard-drive",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        },
+                        {
+                            "id": "nav_settings_ai",
+                            "type": "url",
+                            "label": "AI & Embedder",
+                            "url": "/apps/setup/system/settings/ai",
+                            "icon": "sparkles",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        },
+                        {
+                            "id": "nav_settings_knowledge",
+                            "type": "url",
+                            "label": "Knowledge",
+                            "url": "/apps/setup/system/settings/knowledge",
+                            "icon": "book-open",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        },
+                        {
+                            "id": "nav_settings_feature_flags",
+                            "type": "url",
+                            "label": "Feature Flags",
+                            "url": "/apps/setup/system/settings/feature_flags",
+                            "icon": "flag"
+                        },
+                        {
+                            "id": "nav_notification_preferences",
+                            "type": "object",
+                            "label": "Notification Preferences",
+                            "objectName": "sys_notification_preference",
+                            "icon": "bell-ring",
+                            "requiresObject": "sys_notification_preference"
+                        },
+                        {
+                            "id": "nav_notification_subscriptions",
+                            "type": "object",
+                            "label": "Notification Subscriptions",
+                            "objectName": "sys_notification_subscription",
+                            "icon": "rss",
+                            "requiresObject": "sys_notification_subscription"
+                        },
+                        {
+                            "id": "nav_notification_templates",
+                            "type": "object",
+                            "label": "Notification Templates",
+                            "objectName": "sys_notification_template",
+                            "icon": "file-text",
+                            "requiresObject": "sys_notification_template"
+                        }
+                    ]
+                },
+                {
+                    "id": "group_diagnostics",
+                    "type": "group",
+                    "label": "Diagnostics",
+                    "icon": "stethoscope",
+                    "requiredPermissions": [
+                        "manage_platform_settings"
+                    ],
+                    "children": [
+                        {
+                            "id": "nav_audit_logs",
+                            "type": "component",
+                            "label": "Audit Log",
+                            "componentRef": "audit:log",
+                            "icon": "scroll-text"
+                        },
+                        {
+                            "id": "nav_sessions",
+                            "type": "object",
+                            "label": "Sessions",
+                            "objectName": "sys_session",
+                            "viewName": "all_sessions",
+                            "icon": "monitor"
+                        },
+                        {
+                            "id": "nav_notifications",
+                            "type": "object",
+                            "label": "Notifications",
+                            "objectName": "sys_notification",
+                            "viewName": "recent",
+                            "icon": "bell",
+                            "requiresObject": "sys_notification"
+                        }
+                    ]
+                },
+                {
+                    "id": "group_integrations",
+                    "type": "group",
+                    "label": "Integrations",
+                    "icon": "plug",
+                    "requiredPermissions": [
+                        "manage_platform_settings"
+                    ],
+                    "children": [
+                        {
+                            "id": "nav_datasources",
+                            "type": "url",
+                            "label": "Datasources",
+                            "url": "/apps/setup/component/metadata/resource?type=datasource",
+                            "icon": "database",
+                            "requiredPermissions": [
+                                "manage_platform_settings"
+                            ]
+                        },
+                        {
+                            "id": "nav_connect_agent",
+                            "type": "page",
+                            "pageName": "connect_agent",
+                            "label": "Connect an Agent",
+                            "icon": "bot"
+                        }
+                    ]
+                },
+                {
+                    "id": "group_advanced",
+                    "type": "group",
+                    "label": "Advanced",
+                    "icon": "wrench",
+                    "expanded": false,
+                    "requiredPermissions": [
+                        "manage_platform_settings"
+                    ],
+                    "children": [
+                        {
+                            "id": "nav_oauth_apps",
+                            "type": "object",
+                            "label": "OAuth Applications",
+                            "objectName": "sys_oauth_application",
+                            "viewName": "all_apps",
+                            "icon": "app-window"
+                        }
+                    ]
+                }
+            ],
+            "_packageId": "com.objectstack.setup",
+            "_packageVersion": "9.3.0",
+            "_provenance": "package",
+            "_lock": "full",
+            "_lockReason": "Core admin UI shipped by @objectstack/platform-objects \u2014 see ADR-0010.",
+            "_lockDocsUrl": "https://objectstack.ai/docs/references/shared/protection",
+            "_lockSource": "package",
+            "_diagnostics": {
+                "valid": true
+            }
+        }
+    ]
+}
