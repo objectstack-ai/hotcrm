@@ -149,9 +149,10 @@ export const CloseCaseFlow: Flow = {
   //
   // ⛔ Do not give this flow `runAs: 'system'`: the caller's own grants are
   // what decide the close. ⛔ Do not add a hand-written permission check
-  // either; the engine's own gate on a user-context write IS the check. If a column the close must write ever becomes one the caller may
-  // not write, it goes into a dedicated `runAs: 'system'` sub-flow reached by
-  // a `subflow` node AFTER `close` succeeds — the `escalate_case` /
+  // either; the engine's own gate on a user-context write IS the check. If a
+  // column the close must write ever becomes one the caller may not write, it
+  // goes into a dedicated `runAs: 'system'` sub-flow reached by a `subflow`
+  // node AFTER `close` succeeds — the `escalate_case` /
   // `case_escalation_stamp` shape above.
   runAs: 'user',
 
