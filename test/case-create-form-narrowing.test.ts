@@ -64,6 +64,10 @@ const CREATOR_AUTHORABLE = new Set([
   'subject',
   'crm_account',
   'crm_contact',
+  // What a web submitter typed (#2190): beside the contact, editable, never
+  // required — a staff-created case links a contact and needs neither.
+  'supplied_name',
+  'supplied_email',
   'status',
   'priority',
   'origin',
@@ -234,7 +238,30 @@ describe('crm_case create form — removal direction', () => {
   it('the public web-to-case form stays narrower still', () => {
     const wtc = (CaseViews as AnyRec).formViews?.web_to_case;
     const fields = (wtc?.sections ?? []).flatMap(fieldNamesOf);
-    expect(new Set(fields)).toEqual(new Set(['subject', 'description', 'type', 'priority']));
+    // The two `supplied_*` fields are who to answer (#2190); the public door
+    // admits exactly this list, so a field added here is a field a guest writes.
+    expect(new Set(fields)).toEqual(new Set(['supplied_name', 'supplied_email', 'subject', 'description', 'type', 'priority']));
+  });
+
+  it('the public form requires the reply address; the object requires neither supplied field (#2190)', () => {
+    const entries: AnyRec[] = ((CaseViews as AnyRec).formViews?.web_to_case?.sections ?? [])
+      .flatMap((s: AnyRec) => s.fields ?? [])
+      .map((f: unknown) => (typeof f === 'string' ? { field: f } : (f as AnyRec)));
+    const entry = (name: string) => entries.find((f) => f.field === name);
+    // `required` on the FORM entry is what the door judges, and only on an
+    // entry with no `visibleWhen` / `hidden` — a gated one is skipped there.
+    expect(entry('supplied_email')?.required, 'the public form no longer requires the reply address').toBe(true);
+    expect(entry('supplied_email')?.visibleWhen, 'a gated required entry is not judged by the door').toBeUndefined();
+    expect(entry('supplied_name'), 'the public form no longer asks for the name').toBeDefined();
+    // Optional on the object: a staff-created case saves without either, and
+    // no predicate requires them by origin (⛔ no `requiredWhen`).
+    for (const name of ['supplied_name', 'supplied_email']) {
+      expect(objectFields[name], `crm_case.${name} is not declared`).toBeDefined();
+      expect(objectFields[name]?.required, `crm_case.${name} became required on the object`).not.toBe(true);
+      expect(objectFields[name]?.requiredWhen, `crm_case.${name} gained a requiredWhen`).toBeUndefined();
+      expect(objectFields[name]?.readonly, `crm_case.${name} became readonly — staff can no longer correct it`).not.toBe(true);
+    }
+    expect(objectFields.supplied_email?.type).toBe('email');
   });
 });
 

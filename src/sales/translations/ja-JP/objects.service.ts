@@ -41,6 +41,8 @@ export const service: Record<string, ObjectTranslationData> = {
       description: { label: '説明' },
       crm_account: { label: '取引先' },
       crm_contact: { label: '取引先責任者' },
+      supplied_name: { label: '申告氏名', help: 'ケースを起票した人が入力した氏名（入力どおり）。未確認で、どの取引先責任者にも紐付いていません。' },
+      supplied_email: { label: '申告メール', help: 'ケースを起票した人が入力した返信先メールアドレス（入力どおり）。未確認で、どの取引先責任者にも紐付いていません。' },
       status: {
         label: 'ステータス',
         options: {

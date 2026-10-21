@@ -51,8 +51,9 @@ import stack from './helpers/composed-stack';
  *
  * ⛔ The answer is PER-COLUMN, and flattening it into one reassuring sentence
  * gets one of the two columns below wrong. `web_to_case` declares exactly
- * `subject`, `description`, `type` and `priority` (`src/views/case.view.ts` —
- * that list WAS re-read here, unlike the route readings above), so against the
+ * `supplied_name`, `supplied_email` (#2190), `subject`, `description`, `type`
+ * and `priority` (`src/views/case.view.ts` — that list WAS re-read here, unlike
+ * the route readings above), so against the
  * allow-list mechanism the two columns this file pins land differently:
  *
  *   escalation_reason  NOT declared ⇒ dropped before ObjectQL and before the
@@ -74,8 +75,9 @@ import stack from './helpers/composed-stack';
  * themselves, never about the pipeline", and an escalation reason is pipeline:
  * every real writer of the column is staff-side (`case_escalation`,
  * `case_sla_monitor`, the `escalate_case` screen flow), and the public
- * `web_to_case` form view collects exactly `subject`, `description`, `type` and
- * `priority` — so nulling it drops nothing any guest surface asks for.
+ * `web_to_case` form view collects exactly the submitter's `supplied_name` and
+ * `supplied_email` (#2190), `subject`, `description`, `type` and `priority` —
+ * so nulling it drops nothing any guest surface asks for.
  *
  * After #1133 the incoherence is the sharper argument: `is_escalated` is
  * cleaned and the prose EXPLAINING that flag was not, so a case could carry a

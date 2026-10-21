@@ -52,7 +52,7 @@ This drives reporting (which channels generate the most volume) and is auto-fill
 
 ## What a case record stores
 
-`crm_case` declares **25 fields** (`src/service/objects/case.object.ts`), and two things organise them: the object's own field groups, which are also the sections of the case detail screen, and the case form, which has a single section of its own. So it is worth knowing which one you are being shown.
+`crm_case` declares **27 fields** (`src/service/objects/case.object.ts`), and two things organise them: the object's own field groups, which are also the sections of the case detail screen, and the case form, which has a single section of its own. So it is worth knowing which one you are being shown.
 
 ### The object's field groups
 
@@ -60,7 +60,7 @@ The six names below are `crm_case`'s **field groups** (`fieldGroups`), the objec
 
 | Field group | Fields |
 | --- | --- |
-| **Case Information** | Case Number, Subject, Display Title, Description, Account, Contact, Status, Case Type |
+| **Case Information** | Case Number, Subject, Display Title, Description, Account, Contact, Supplied Name, Supplied Email, Status, Case Type |
 | **Origin & Routing** | Case Owner, Case Origin |
 | **SLA & Priority** | Priority, Closed Date, First Response Date, Resolution Time (Hours), SLA Due Date, SLA Violated |
 | **Resolution** | Resolution, Resolved by Article |
@@ -73,7 +73,7 @@ Five of those six rows used to be written differently on this page, and the diff
 
 The **Details** tab of the case detail page (`src/service/pages/case_detail.page.ts`) is made of the field groups above, in this order: *Case Information*, *Origin & Routing*, *SLA & Priority*, *Escalation*, *Resolution*, *System*. The page sets only the order; which fields a section holds comes from the object. Three things decide what a section shows:
 
-- **Nothing is shown twice.** **Status**, **Priority**, **SLA Due Date**, **SLA Violated**, **Case Owner** and **Account** are on the *Key Information* strip above the tabs, so their sections leave them out. *Case Information* therefore shows **Case Number**, **Subject**, **Description**, **Contact** and **Case Type**; *Origin & Routing* shows only **Case Origin**; and *SLA & Priority* keeps just the three stamps **Closed Date**, **First Response Date** and **Resolution Time (Hours)**.
+- **Nothing is shown twice.** **Status**, **Priority**, **SLA Due Date**, **SLA Violated**, **Case Owner** and **Account** are on the *Key Information* strip above the tabs, so their sections leave them out. *Case Information* therefore shows **Case Number**, **Subject**, **Description**, **Contact**, **Supplied Name**, **Supplied Email** and **Case Type**; *Origin & Routing* shows only **Case Origin**; and *SLA & Priority* keeps just the three stamps **Closed Date**, **First Response Date** and **Resolution Time (Hours)**.
 - **A section with nothing in it is not drawn.** On a case still being worked, *SLA & Priority* and *Resolution* are usually absent: their fields are written as the case is answered and closed, and a section appears once one of its fields holds a value. *Origin & Routing* is the exception and always shows, so an agent can pick the channel on a new case. Inside a section that does show, an empty field reads as a dash, or several are folded behind a **Show N empty fields** toggle.
 - ***Escalation* and *System* start collapsed.** *Escalation* holds **Escalated**, **Escalated Date**, **Escalation Reason** and **Escalated From**, the agent the escalation took the case from. *System* holds **Internal Notes** and **Is Closed**; a boolean always holds a value, so it shows on every case, and it is where an agent writes **Internal Notes**, inline on the record, while working the case.
 
@@ -81,15 +81,17 @@ Two fields are on no section: **Display Title**, the title formula the object us
 
 ### The form
 
-The case form (`src/service/views/case.view.ts`) is **not** tabbed. It is a single section, holding **9** of the 25 fields:
+The case form (`src/service/views/case.view.ts`) is **not** tabbed. It is a single section, holding **11** of the 27 fields:
 
 | Section | Fields |
 | --- | --- |
-| **Case** | Case Number, Subject, Account, Contact, Status, Priority, Case Origin, Case Owner, Description |
+| **Case** | Case Number, Subject, Account, Contact, Supplied Name, Supplied Email, Status, Priority, Case Origin, Case Owner, Description |
 
 The platform gives an object one form, so this is the **create** form and the **edit** form both — which is why it stops where it does. What it offers is what the person raising a case actually has in hand at intake; everything the lifecycle fills in later is deliberately absent, because a creator typing an SLA deadline or a resolution time would be authoring state the app is supposed to derive. Those fields are read on the detail screen instead — see *What happens automatically* for who writes each one. **Case Number** is the one exception on the list: it is shown but never typed, because the app allocates it and the field is read-only.
 
-The two are not one screen wearing different chrome — they overlap in only five fields (Case Number, Subject, Contact, Case Origin, Description). **Case Type** is on the detail screen but not on the agent's case form at all. The public support form at `/forms/support` is a third layout again: a single section with four fields (subject, description, type, priority).
+The two are not one screen wearing different chrome — they overlap in only seven fields (Case Number, Subject, Contact, Supplied Name, Supplied Email, Case Origin, Description). **Case Type** is on the detail screen but not on the agent's case form at all. The public support form at `/forms/support` is a third layout again: a single section with six fields (the visitor's name and email, subject, description, type, priority).
+
+**Who wrote in.** A case from the public support form has no account and no contact, because the visitor is anonymous. So the form asks for their name and email — the email is required, and the form will not send without it — and the case keeps them as **Supplied Name** and **Supplied Email**, beside **Contact**. They are exactly what the visitor typed: nothing checks them, and the app never links the case to a contact or an account because the address matches one. Reply to the supplied address (it is a mail link on the case), and link the case to the right contact once you have confirmed who wrote in. On a case an agent raises, both fields are optional.
 
 ## What happens automatically
 
