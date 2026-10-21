@@ -41,6 +41,8 @@ export const service: Record<string, ObjectTranslationData> = {
       description: { label: 'Descripción' },
       crm_account: { label: 'Cuenta' },
       crm_contact: { label: 'Contacto' },
+      supplied_name: { label: 'Nombre Facilitado', help: 'El nombre que dio quien abrió el caso, tal como lo escribió. Sin verificar y sin vincular a ningún contacto.' },
+      supplied_email: { label: 'Correo Electrónico Facilitado', help: 'La dirección de respuesta que dio quien abrió el caso, tal como la escribió. Sin verificar y sin vincular a ningún contacto.' },
       status: {
         label: 'Estado',
         options: {

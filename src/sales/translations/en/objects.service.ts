@@ -28,6 +28,8 @@ export const service: Record<string, ObjectTranslationData> = {
       description: { label: 'Description' },
       crm_account: { label: 'Account' },
       crm_contact: { label: 'Contact' },
+      supplied_name: { label: 'Supplied Name', help: 'The name the person raising the case gave, as typed. Not verified, and not linked to any contact.' },
+      supplied_email: { label: 'Supplied Email', help: 'The reply address the person raising the case gave, as typed. Not verified, and not linked to any contact.' },
       status: {
         label: 'Status',
         options: {

@@ -125,8 +125,12 @@ const caseValidation: Hook = {
     // themselves — the rule this branch declares — and every real writer is
     // staff-side (`case_escalation`, `case_sla_monitor`, the `escalate_case`
     // screen flow). The public `web_to_case` form (`src/service/views/case.view.ts`)
-    // collects exactly `subject`, `description`, `type` and `priority`, so
-    // nulling this drops nothing any guest surface asks for. `guest_portal`
+    // collects exactly `supplied_name`, `supplied_email`, `subject`,
+    // `description`, `type` and `priority`, so nulling this drops nothing any
+    // guest surface asks for. ⛔ The two `supplied_*` columns (#2190) are NOT
+    // in the strip below, deliberately: they are the visitor's own name and
+    // reply address, the one fact about themselves the form exists to collect,
+    // and nothing downstream reads them as verified. `guest_portal`
     // grants `crm_case.allowCreate` at the OBJECT level with no field
     // allow-list, which is precisely why this branch is the field-level control
     // and why an omission from it is a hole rather than a second layer.

@@ -30,6 +30,9 @@ export const CaseViews = defineView({
       { field: 'subject', width: 280, sortable: true },
       { field: 'crm_account', width: 180 },
       { field: 'crm_contact', width: 160 },
+      // A web case has no contact; these say who wrote in (#2190).
+      { field: 'supplied_name', width: 160 },
+      { field: 'supplied_email', width: 200 },
       { field: 'priority', width: 110, sortable: true },
       { field: 'status', width: 130, sortable: true },
       { field: 'origin', width: 120 },
@@ -227,7 +230,9 @@ export const CaseViews = defineView({
       label: 'Unassigned — triage',
       userActions: { editInline: true },
       data,
-      columns: ['case_number', 'subject', 'crm_account', 'crm_contact', 'priority', 'status', 'origin', 'sla_due_date'],
+      // `supplied_name` / `supplied_email` beside the contact (#2190): a
+      // web-to-case submission, the usual row here, carries no contact.
+      columns: ['case_number', 'subject', 'crm_account', 'crm_contact', 'supplied_name', 'supplied_email', 'priority', 'status', 'origin', 'sla_due_date'],
       filter: [
         { field: 'owner_id', operator: 'is_null' },
         { field: 'status', operator: 'not_in', value: ['resolved', 'closed'] },
@@ -439,6 +444,11 @@ export const CaseViews = defineView({
           // SLA column, and the escalation task and resolution bump skip it.
           'crm_account',
           'crm_contact',
+          // Beside the contact, as on the record page (#2190): what a web
+          // submitter typed, editable here and never required — a staff case
+          // links a contact instead, and needs neither.
+          'supplied_name',
+          'supplied_email',
           { field: 'status', required: true },
           'priority',
           'origin',
@@ -474,6 +484,13 @@ export const CaseViews = defineView({
           label: 'How can we help?',
           columns: 1,
           fields: [
+            // Who to answer (#2190): a web case carries no contact, so this
+            // is the only reply address the agent gets. The email is required
+            // here, like web-to-lead's — the door refuses a submission
+            // without it — and optional on the object, so a staff-created
+            // case needs neither.
+            'supplied_name',
+            { field: 'supplied_email', required: true },
             {
               field: 'subject',
               required: true,

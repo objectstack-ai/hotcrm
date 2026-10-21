@@ -40,6 +40,8 @@ export const service: Record<string, ObjectTranslationData> = {
       description: { label: '描述' },
       crm_account: { label: '所属客户' },
       crm_contact: { label: '联系人' },
+      supplied_name: { label: '提交人姓名', help: '提出工单的人所填写的姓名，按原样保存。未经核实，也未关联任何联系人。' },
+      supplied_email: { label: '提交人邮箱', help: '提出工单的人所填写的回复邮箱，按原样保存。未经核实，也未关联任何联系人。' },
       status: {
         label: '状态',
         options: {

@@ -107,7 +107,36 @@ export const Case = ObjectSchema.create({
       // contact candidates to those sharing the case's `crm_account` (ADR-0049).
       dependsOn: ['crm_account'],
     }),
-    
+
+    // Who wrote in, as they wrote it (#2190). A Web-to-Case submission lands
+    // with no contact and no account (above), so without these two the agent
+    // who receives it has no way to answer the customer. Named `supplied_*`
+    // (the Salesforce Web-to-Case `SuppliedName` / `SuppliedEmail` convention)
+    // because they are what the submitter TYPED, never verified:
+    //
+    // ⛔ No hook or flow matches `supplied_email` to a contact or account, or
+    // sets `crm_contact` / `crm_account` from it. An anonymous visitor's address
+    // is unverified, so a match would attach a stranger's text to a real
+    // customer; the agent links the case after checking.
+    //
+    // Optional here, required only on the public form (`web_to_case`, where the
+    // door refuses a submission without the email). A staff-created case needs
+    // neither, so ⛔ no `requiredWhen` on `origin`. The guest branch of
+    // `case_sla_defaults` leaves both alone: they are the visitor's own facts,
+    // which is exactly what that branch lets a guest state.
+    supplied_name: Field.text({
+      label: 'Supplied Name',
+      group: 'basic',
+      maxLength: 255,
+      description: 'The name the person raising the case gave, as typed. Not verified, and not linked to any contact.',
+    }),
+
+    supplied_email: Field.email({
+      label: 'Supplied Email',
+      group: 'basic',
+      description: 'The reply address the person raising the case gave, as typed. Not verified, and not linked to any contact.',
+    }),
+
     // Case Management
     status: Field.select({
       label: 'Status',
