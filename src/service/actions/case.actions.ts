@@ -13,7 +13,7 @@ import { P } from '@objectstack/spec';
  * ⚠️ Escalate Case and Close Case are offered only to a caller whose permission
  * set may EDIT a case (#2060 item 8), by the rule `claim_case` states below:
  * `visible` mirrors the grant, never a convenience flag. Both buttons edit the
- * case they sit on. The sets that may are `service_agent`, `service_manager`
+ * case they sit on. The sets that may are `service_agent` (declared by both service positions)
  * and the two administrator sets. `sales_rep` and `sales_manager` read cases
  * (an account's support history) with `allowEdit: false`, and
  * `marketing_user` holds no case grant at all. Before this, both buttons were

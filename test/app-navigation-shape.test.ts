@@ -4,11 +4,18 @@ import { describe, it, expect } from 'vitest';
 import { CrmApp } from '../src/sales/apps/crm.app';
 import { SalesRepProfile } from '../src/sales/profiles/sales-rep.profile';
 import { SalesManagerProfile } from '../src/sales/profiles/sales-manager.profile';
-import { ServiceAgentProfile, ServiceManagerProfile } from '../src/sales/profiles/service-agent.profile';
+import { ServiceAgentProfile } from '../src/sales/profiles/service-agent.profile';
 import { MarketingUserProfile } from '../src/sales/profiles/marketing-user.profile';
 import { CrmPositions } from '../src/sales/sharing/positions';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 import composedStack, { servedApp } from './helpers/composed-stack';
+
+/** The sets a persona's position declares (`permissionSets`, #2200): what a holder of it is granted. */
+const SETS: Record<string, AnyRec> = Object.fromEntries(
+  [SalesRepProfile, SalesManagerProfile, ServiceAgentProfile, MarketingUserProfile].map((s) => [s.name, s]),
+);
+const setsOf = (position: string): AnyRec[] =>
+  (CrmPositions.find((p) => p.name === position)?.permissionSets ?? []).map((name) => SETS[name]!);
 
 /**
  * The two standing constraints on `src/apps/crm.app.ts`'s shape (#1259).
@@ -189,9 +196,9 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
   });
 
   it('the gate parts the personas the way the permission sets say', () => {
-    const reads = (set: AnyRec) => set.objects?.crm_opportunity?.allowRead === true;
-    expect([SalesRepProfile, SalesManagerProfile].map(reads)).toEqual([true, true]);
-    expect([ServiceAgentProfile, ServiceManagerProfile].map(reads)).toEqual([false, false]);
+    const reads = (position: string) => setsOf(position).some((set) => set.objects?.crm_opportunity?.allowRead === true);
+    expect(['sales_rep', 'sales_manager'].map(reads)).toEqual([true, true]);
+    expect(['service_agent', 'service_manager'].map(reads)).toEqual([false, false]);
   });
 
   it('Sales Home has a sidebar entry, second after Home', () => {
@@ -273,8 +280,9 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
     const CASES = ['cases_by_status_priority', 'sla_performance', 'cases_opened_by_day_priority'];
     expect(shown(SalesRepProfile)).toEqual(ALL);
     expect(shown(SalesManagerProfile)).toEqual(ALL);
-    for (const set of [ServiceAgentProfile, ServiceManagerProfile]) {
-      expect(shown(set), set.name).toEqual([
+    for (const position of ['service_agent', 'service_manager']) {
+      expect(setsOf(position).map((set) => set.name), position).toEqual(['service_agent']);
+      expect(shown(setsOf(position)[0]!), position).toEqual([
         'lead_inflow_by_month_source', 'accounts_by_industry_type', 'customer_churn_signals', ...CASES,
       ]);
     }
@@ -306,20 +314,21 @@ describe("each persona's first entry is its home (#2060 item 5)", () => {
       'current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions)',
     );
     // The name in the gate is a declared position, the one both demo reps hold
-    // and the manager does not, and it binds the rep's permission set by name.
+    // and the manager does not, and it declares the rep's permission set.
     expect(CrmPositions.map((p) => p.name)).toContain('sales_rep');
-    expect(SalesRepProfile.name).toBe('sales_rep');
+    expect(setsOf('sales_rep')).toEqual([SalesRepProfile]);
     const holds = (key: string) => DemoOrgStaffing.find((m) => m.key === key)?.positions.includes('sales_rep');
     expect(['na_rep', 'eu_rep', 'sales_manager'].map(holds)).toEqual([true, true, false]);
   });
 
   it('a service persona is shown nothing ahead of the Service group', () => {
-    // Both pinned entries ask for opportunity read, which neither service set
-    // grants (asserted above), so the Service group is their first slot.
+    // Both pinned entries ask for opportunity read, which the set both service
+    // positions declare does not grant (asserted above), so the Service group
+    // is their first slot.
     for (const n of SERVED.slice(0, 2)) {
       expect(String(sourceOf(n.visible)), n.id).toMatch(/^current_user\.can\("crm_opportunity", "read"\)/);
     }
-    const readsCases = (set: AnyRec) => set.objects?.crm_case?.allowRead === true;
-    expect([ServiceAgentProfile, ServiceManagerProfile].map(readsCases)).toEqual([true, true]);
+    const readsCases = (position: string) => setsOf(position).some((set) => set.objects?.crm_case?.allowRead === true);
+    expect(['service_agent', 'service_manager'].map(readsCases)).toEqual([true, true]);
   });
 });

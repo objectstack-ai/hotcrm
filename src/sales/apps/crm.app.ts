@@ -25,7 +25,7 @@ const HOTCRM_ICON =
  * The read gate on the entries built on `crm_opportunity` (#2060 item 5):
  * Home (Executive Overview), Sales Home, Sales Performance, CRM Overview and
  * the four opportunity reports under Reports. A member whose permission sets
- * do not read opportunities (`service_agent`, `service_manager`) got each one
+ * do not read opportunities (`service_agent`; `service_manager`, retired in #2200) got each one
  * as a page of "You don't have access" tiles, one 403 per opportunity query.
  * Object entries are pruned by read access already; dashboard, report and page
  * entries are not.

@@ -54,7 +54,7 @@ beforeAll(async () => {
   otherAgent = await signUpPerson(verify, 'other-agent@close-case-caller-may-edit.test', { name: 'Other Agent', permissionSets: ['service_agent'] });
   // On the Service Manager bench from the start: an escalation hands the case to them.
   manager = await signUpPerson(verify, 'manager@close-case-caller-may-edit.test', {
-    name: 'Service Manager', positions: ['service_manager'], permissionSets: ['service_manager'],
+    name: 'Service Manager', positions: ['service_manager'], permissionSets: ['service_agent'],
   });
   rep = await signUpPerson(verify, 'rep@close-case-caller-may-edit.test', { name: 'Account Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'] });
   salesManager = await signUpPerson(verify, 'sales-manager@close-case-caller-may-edit.test', {

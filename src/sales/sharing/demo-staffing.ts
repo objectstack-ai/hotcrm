@@ -42,8 +42,9 @@ import type { Territory } from '../objects/_territory';
  * Adding a person to the demo org is adding a ROW here. Nothing else changes:
  * `scripts/demo-staff.ts` walks this array, and `test/demo-staffing.test.ts`
  * checks each row against the declared positions, the sharing rules and the
- * approval nodes. A row that names a position no rule and no permission set
- * mentions is a row that grants nothing (#488) — the test says so by name.
+ * approval nodes. A row that names a position no rule names and that declares
+ * no permission set is a row that grants nothing (#488) — the test says so by
+ * name.
  *
  * ### Why this file is NOT metadata, and MUST NOT become metadata
  *
@@ -131,9 +132,9 @@ import type { Territory } from '../objects/_territory';
  * other way round from how this note used to read it:
  *
  *   - the OBJECT-LEVEL door on `crm_account` is opened by `sales_rep` — the
- *     permission set that carries the rep POSITION'S NAME — and by nothing
- *     else. `member_default`, the platform's additive baseline (ADR-0090 D5),
- *     opens no CRM object at all on 17.3.0: measured for the same principal,
+ *     permission set the rep POSITION declares in its `permissionSets` — and
+ *     by nothing else. `member_default`, the platform's additive baseline
+ *     (ADR-0090 D5), opens no CRM object at all on 17.3.0: measured for the same principal,
  *     `object_crud grants — read on 'crm_account' is granted by [sales_rep]`
  *     once the functional position is held, and `denies` when it is not.
  *   - the ROW SET is decided one layer down and is still the whole ballgame:
@@ -154,10 +155,11 @@ import type { Territory } from '../objects/_territory';
  * ⚠️ The same correction retires the idea that a declared position is enough on
  * its own. It is not, and #1779 is the tombstone: `service_manager` was a
  * declared position that a sharing rule named and that `case_escalation_reassign`
- * routed cases to, and its holder was refused every CRM object until a set
- * carrying the name `service_manager` existed. A position with no same-named
- * permission set grants NOTHING — the note in `src/sales/profiles/service-agent.profile.ts`
- * records where that name-matching binding is enforced inside the platform.
+ * routed cases to, and its holder was refused every CRM object until a
+ * permission set reached it. A position grants a set only through its
+ * `permissionSets` (`src/sales/sharing/positions.ts`, #2200): `service_manager`
+ * declares `service_agent` there, and a position that declares no set grants no
+ * object at all.
  *
  * The falsifiable part, and the reason `test/demo-staffing.test.ts` pins it: a
  * set bound to a position a territory rep holds MUST NOT grant `viewAllRecords`

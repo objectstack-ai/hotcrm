@@ -99,7 +99,7 @@ beforeAll(async () => {
   // Service grants with no position: a case the agent opens stays theirs.
   agent = await signUpPerson(verify, 'agent@escalation-task-on-close.test', { name: 'Case Agent', permissionSets: ['service_agent'] });
   // The grants now; the `service_manager` position (the escalation pool) only from the second block on.
-  manager = await signUpPerson(verify, 'manager@escalation-task-on-close.test', { name: 'Service Manager', permissionSets: ['service_manager'] });
+  manager = await signUpPerson(verify, 'manager@escalation-task-on-close.test', { name: 'Service Manager', permissionSets: ['service_agent'] });
   rep = await signUpPerson(verify, 'rep@escalation-task-on-close.test', {
     name: 'Account Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
