@@ -437,7 +437,9 @@ describe('the guest strip and the assignment are ordered, not merely coexisting'
     try {
       const res = await verify.api('/forms/support/submit', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ subject: 'Web submission', description: 'Printer on fire.', priority: 'high' }),
+        // `supplied_email` is required on the form since #2190 — the door
+        // refuses a submission without it.
+        body: JSON.stringify({ supplied_email: 'visitor@case-assignment.test', subject: 'Web submission', description: 'Printer on fire.', priority: 'high' }),
       });
       expect(res.status).toBe(201);
       const answer = await res.json() as Rec;
