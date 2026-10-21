@@ -120,7 +120,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         message: 'La fecha de fin debe ser posterior a la de inicio',
       },
       contract_status_progression: {
-        message: 'Transición de estado de contrato no válida',
+        message: 'Este cambio de estado no está permitido. Un contrato avanza Borrador → En Aprobación → Activado → Expirado; En Aprobación puede volver a Borrador, y Borrador, En Aprobación o Activado pueden pasar a Rescindido. Expirado y Rescindido son definitivos: una renovación es un contrato nuevo.',
       },
     },
     label: 'Contrato',

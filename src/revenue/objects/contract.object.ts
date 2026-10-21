@@ -263,10 +263,22 @@ export const Contract = ObjectSchema.create({
       // never passed approval. Activation is the consequential edge here:
       // `contract_on_activation` stamps `signed_date`, promotes the account to
       // `customer`, and the renewal flow starts counting from it.
+      //
+      // `error`, unlike the lead / opportunity / case / quote machines (#2192).
+      // CON-002 (`docs/feature-inventory.md`) makes both end states final, and
+      // at `warning` an expired contract re-activated, an activated one went
+      // back to draft and a draft activated without approval, each saving with
+      // 200 and feeding the account promotion and the billing hand-off. The
+      // quote holds its end states with the `quote_workflow` freeze; this rule
+      // is the contract's only hold. It judges a write that CHANGES `status`
+      // and nothing else: an edit that leaves the status as stored, and a
+      // create (no `initialStates`, so seeds and imports land in any state),
+      // pass untouched, so no stored row is frozen by it.
       name: 'contract_status_progression',
       type: 'state_machine',
-      severity: 'warning',
-      message: 'Invalid contract status transition',
+      severity: 'error',
+      message:
+        'This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; In Approval can go back to Draft, and Draft, In Approval or Activated can be Terminated. Expired and Terminated are final: a renewal is a new contract.',
       field: 'status',
       transitions: {
         draft: ['in_approval', 'terminated'],
