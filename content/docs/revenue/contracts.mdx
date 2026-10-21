@@ -125,26 +125,26 @@ On a deployment without scheduled work none of this happens: no renewal task, no
 Two bounds worth knowing: the sweep looks 120 days ahead at most, so a notice window set longer than that only starts firing at 120 days out; and it takes at most 500 contracts per run.
 
 ### Manual termination
-Terminating a contract is a status change to *Terminated*, and two things commonly assumed about that change do not hold.
+Terminating a contract is a status change to *Terminated*, and two things about that change are worth knowing.
 
 **Being the owner is not what qualifies you to make it.** Edit on Contract is an object-level right that ownership does not extend: **Sales Manager** and **System Administrator** hold it, **Sales Rep** does not. That gap lands on the most common case, because the contract an accepted quote drafts carries the quote's owner across with it — so the rep whose deal it was ends up owning a contract they can read and cannot touch. Terminating it is someone else's action to take — a Sales Manager's, on any edition, since a manager can edit every account and therefore every contract; see *Who can edit which contract* under Sharing below.
 
-**And nothing holds the door shut afterwards.** *Terminated* is declared a dead end, but on the same **warning**-severity status machine as the rest of the progression: an edit that moves a terminated contract back to *Activated* is written to the server log and **saved anyway** — see *The status progression is advice, not a gate* below. Termination is one-way by convention, which is what the status means and how everything downstream reads it, not by enforcement. If it has to be enforced, an admin has to author that.
+**And it is final.** An edit that moves a terminated contract to any other status is refused, and the contract stays *Terminated* — see *The status progression is a gate* below; a replacement is a new contract. The rest of the contract stays editable: a change to its notes, its terms or its primary contact saves as long as the status is left as it is.
 
-**Status** is one of the two fields Contract keeps history on, so the audit log does record who moved it and when — a revival included.
+**Status** is one of the two fields Contract keeps history on, so the audit log does record who moved it and when.
 
 ## Built-in rules
 
-Three rules reject a save outright:
+Four rules reject a save outright:
 
-- **End date must be after start date** — the one validation rule on the object that refuses a contract.
+- **End date must be after start date** — a validation rule on the object.
 - **The term must match the dates** — the contract hook counts the months between **Start Date** and **End Date** and rejects anything more than **one month** away from **Contract Term (Months)**: *"Contract term (12 months) does not match date range (6 months from … to …)."* Term and dates move together, or the save bounces.
 - **An activated contract's end date cannot be pulled in** — once the contract is *Activated*, an edit that moves **End Date** earlier is refused (*"Cannot shrink end_date … after activation"*). Pushing it out is fine; shortening a live agreement is a termination or an amendment, not an edit.
+- **The status progression is a gate.** The route is *Draft* → *In Approval* → *Activated* → *Expired* or *Terminated*, with *In Approval* able to go back to *Draft*, *Terminated* reachable from all three live statuses, and *Expired* and *Terminated* both final: a renewal is a new contract, never a revived one. A status change off that route — *Draft* straight to *Activated*, *Activated* back to *Draft*, or reviving an *Expired* or *Terminated* contract — is refused on **Status** with *"This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; In Approval can go back to Draft, and Draft, In Approval or Activated can be Terminated. Expired and Terminated are final: a renewal is a new contract."*, and the contract keeps its status, whether the change comes from the Edit form or the REST API (`400 VALIDATION_FAILED`). Only a change of the status is judged: any other edit saves on any contract, an expired or terminated one included. A contract *created* directly as *Activated* or *Expired* is not checked at all, which is the same import path that skips the activation writes described above.
 
-Two more things are often read as rules and are not:
+One more thing is often read as a rule and is not:
 
 - **Contract Value cannot be negative** — that is the field's own minimum of 0 rather than a validation rule, so NDAs at $0 are fine. **Contract Term (Months)** is bounded the same way, at a minimum of 1.
-- **The status progression is advice, not a gate.** The declared route is *Draft* → *In Approval* → *Activated* → *Expired* or *Terminated*, with *In Approval* able to go back to *Draft*, *Terminated* reachable from all three live statuses, and *Expired* and *Terminated* both dead ends. But it is declared at **warning** severity: an illegal jump — *Draft* straight to *Activated*, or reviving an *Expired* contract — is written to the server log and **the save still goes through**. Nothing in the form stops it and nobody is notified. A contract *created* directly as *Activated* is not checked at all, which is the same import path that skips the activation writes described above.
 
 And one rule people expect that is only half there: **nothing stops an activated contract from being deleted directly.** Contract has no delete hook and no status check of its own — who may delete a contract is decided by their profile alone, and the profile never looks at the status. A **System Administrator** can delete any contract, activated ones included; **Sales Manager** and **Sales Rep** can delete none, not even a draft. What *is* refused is deleting the **account** out from under its contracts. Contracts belong to their account (master-detail, so an account delete would cascade them), and the account guard refuses to delete a customer account while an *Activated* contract still references it — *"Cannot delete customer account: 1 activated contract still references it. Terminate or reassign it first."* An account carrying only drafts or ended contracts is refused too, by the platform rather than the guard: the delete cascades the account's contacts first and stops on the contract's required **Primary Contact** (*"This Contact is still referenced by 1 Contract record(s) through Primary Contact, which is required and cannot be cleared"*). In practice an account with contracts cannot be deleted until its contracts are gone. If signed agreements must be undeletable outright in your org, an admin has to author that — the app does not do it for you.
 

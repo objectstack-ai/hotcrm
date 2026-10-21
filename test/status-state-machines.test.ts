@@ -41,19 +41,25 @@ const objectNamed = (name: string): AnyRec => {
 const machinesOf = (name: string): AnyRec[] =>
   ((objectNamed(name).validations ?? []) as AnyRec[]).filter((v) => v.type === 'state_machine');
 
-/** Objects that must be governed, and the field the table governs. */
+/**
+ * Objects that must be governed, the field the table governs, and the
+ * severity it is declared at. Four machines advise: a support-driven
+ * correction outside the route still saves, and a warning names it. The
+ * contract's machine blocks (#2192): CON-002 makes both of its end states
+ * final, a renewal is a new contract, and nothing else holds them.
+ */
 const GOVERNED = [
-  { object: 'crm_lead', field: 'status' },
-  { object: 'crm_opportunity', field: 'stage' },
-  { object: 'crm_case', field: 'status' },
-  { object: 'crm_quote', field: 'status' },
-  { object: 'crm_contract', field: 'status' },
+  { object: 'crm_lead', field: 'status', severity: 'warning' },
+  { object: 'crm_opportunity', field: 'stage', severity: 'warning' },
+  { object: 'crm_case', field: 'status', severity: 'warning' },
+  { object: 'crm_quote', field: 'status', severity: 'warning' },
+  { object: 'crm_contract', field: 'status', severity: 'error' },
 ] as const;
 
 /** Objects whose status is descriptive — a table here is a regression. */
 const UNGOVERNED = ['crm_campaign', 'crm_task'] as const;
 
-describe.each(GOVERNED)('$object lifecycle is constrained', ({ object, field }) => {
+describe.each(GOVERNED)('$object lifecycle is constrained', ({ object, field, severity }) => {
   const [machine, ...extra] = machinesOf(object);
 
   it('declares exactly one state machine, over the lifecycle field', () => {
@@ -62,10 +68,11 @@ describe.each(GOVERNED)('$object lifecycle is constrained', ({ object, field }) 
     expect(machine!.field).toBe(field);
   });
 
-  it('warns rather than blocks, like the three that came first', () => {
-    // Every machine in this repo is advisory. A hard `error` would make a
-    // legitimate support correction impossible without a data fix.
-    expect(machine!.severity).toBe('warning');
+  it('is declared at its ledger severity, with a message', () => {
+    // The severity is a decision per object (see GOVERNED), so a machine that
+    // drifts either way — an advisory one hardened, or the contract's softened
+    // back to a warning that stores every departure — turns this red.
+    expect(machine!.severity).toBe(severity);
     expect(String(machine!.message ?? '')).not.toBe('');
   });
 

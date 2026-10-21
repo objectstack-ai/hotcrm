@@ -119,7 +119,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         message: '结束日期必须晚于开始日期',
       },
       contract_status_progression: {
-        message: '无效的合同状态流转',
+        message: '不允许这样更改状态。合同按 草稿 → 审批中 → 已激活 → 已过期 推进；审批中可以退回草稿，草稿、审批中或已激活的合同可以改为已终止。已过期和已终止是最终状态：续约是一份新合同。',
       },
     },
     label: '合同',

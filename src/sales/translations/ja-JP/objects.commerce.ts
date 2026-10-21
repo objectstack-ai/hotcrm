@@ -119,7 +119,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         message: '終了日は開始日より後である必要があります',
       },
       contract_status_progression: {
-        message: '無効な契約ステータス遷移です',
+        message: 'このステータス変更はできません。契約は 下書き → 承認中 → 有効 → 期限切れ の順に進みます。承認中は下書きに戻すことができ、下書き・承認中・有効の契約は解約にできます。期限切れと解約は最終状態です。更新は新しい契約になります。',
       },
     },
     label: '契約',

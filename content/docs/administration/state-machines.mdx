@@ -5,7 +5,7 @@ description: How HotCRM declares valid status transitions on leads and opportuni
 
 # State Machines
 
-Some objects have a strict **lifecycle** — a lead progresses from *New* to *Contacted* to *Qualified* and on to *Converted*. A state machine **declares** that route; it does not enforce it. All five machines in this app carry **warning** severity, so a user can move a record outside the route and **the save still goes through** — see *A declared route is advice, not a gate* below.
+Some objects have a strict **lifecycle** — a lead progresses from *New* to *Contacted* to *Qualified* and on to *Converted*. A state machine **declares** that route. Four of the five machines in this app carry **warning** severity, so a user can move a record outside the route and **the save still goes through**; the contract's carries **error** severity and refuses the move — see *A declared route is advice, not a gate — except on contracts* below.
 
 ## Where state machines apply
 
@@ -19,7 +19,7 @@ HotCRM uses state machines on **five** objects:
 
 All five are declared the same way — a named `state_machine` validation rule on the object, over that object's lifecycle field (`status`, or `stage` on opportunities). Cases, contracts and quotes are not a lighter mechanism than leads and opportunities; they are the same one. The top-level `stateMachines` key was removed in platform 7.7 and every machine moved onto its object.
 
-**A declared route is advice, not a gate.** All five rules carry **warning** severity, so a move outside the transition table is written to the server log — *"Invalid contract status transition"*, and so on — and **the save still goes through**. Nor is a record checked when it is *created*: the rules compare a new value against the previous one, so they only run on update, and a record imported straight into a late state passes untouched. What the table buys you is a declared, machine-readable route that automation, reports and the Copilot can rely on — not a lock on the field.
+**A declared route is advice, not a gate — except on contracts.** The lead, opportunity, case and quote rules carry **warning** severity, so a move outside the transition table is written to the server log — *"Invalid quote status transition"*, and so on — and **the save still goes through**. The contract rule, `contract_status_progression`, carries **error** severity: a move outside its table is refused and the contract keeps its status. Contracts are the exception because both of their end states are final — a renewal is a new contract, never a revived one — and activation promotes the account and hands the contract to billing, so a contract that skipped approval or came back from *Expired* would count as live everywhere downstream. On every object, a rule judges only a change of the status: an edit that leaves it as it is never meets the rule. Nor is a record checked when it is *created*: the rules compare a new value against the previous one, so they only run on update, and a record imported straight into a late state passes untouched — a contract included. What a warning-level table buys you is a declared, machine-readable route that automation, reports and the Copilot can rely on — not a lock on the field.
 
 **Campaigns have no state machine, and that is deliberate.** A campaign's status is descriptive (*Planning / In Progress / Completed / Aborted*) rather than a controlled lifecycle, and the same is true of the status fields on campaign members, events, knowledge articles and tasks. A transition table on any of them would warn on ordinary edits and teach users to ignore the warning.
 
@@ -99,7 +99,7 @@ The heading is fair for the first three, unlike the transition tables above them
 
 ## What a state machine buys you
 
-Not prevention. Everything this section used to list as impossible still happens exactly as it did before the table was declared: a rep can mark a lead *Converted* by accident, an opportunity can go from *Prospecting* straight to *Closed Won*, and records can skip stages. Each of those writes one warning to the server log and is then saved. So a funnel report does **not** "reflect reality" by virtue of a table existing — it reports whatever stages the records actually passed through.
+Not prevention, on four of the five — the contract's table is the one that refuses a move (see above). On the other four, everything this section used to list as impossible still happens exactly as it did before the table was declared: a rep can mark a lead *Converted* by accident, an opportunity can go from *Prospecting* straight to *Closed Won*, and records can skip stages. Each of those writes one warning to the server log and is then saved. So a funnel report does **not** "reflect reality" by virtue of a table existing — it reports whatever stages the records actually passed through.
 
 What the table does buy you is the route itself, **written down in one machine-readable place**:
 
@@ -107,7 +107,7 @@ What the table does buy you is the route itself, **written down in one machine-r
 - **Illegal moves are reported rather than silent.** The move is saved, but the engine names it in the log — *"Invalid opportunity stage transition"*, with the rule's own name — so a bad import or a misbehaving integration can be found afterwards. A move inside the table logs nothing, which is what makes the warnings worth reading.
 - **Something for automation and reporting to point at.** A flow condition, a report or a skill can be written against the declared route instead of a list of statuses copied out by hand.
 
-If you need a status change to be genuinely impossible, the state machine is the wrong tool: an `error`-severity validation rule is the one that blocks a save. Keeping these five advisory is deliberate — the reasoning is written into the rules themselves (`src/revenue/objects/quote.object.ts`): a support-driven correction must not require a data fix.
+If you need a status change to be genuinely impossible, the table has to be declared at `error` severity: that is what blocks the save, and it is what the contract's table does. Keeping the other four advisory is deliberate — the reasoning is written into the rules themselves (`src/revenue/objects/quote.object.ts`): a support-driven correction must not require a data fix. A contract's route leaves its own way out: a contract that is not yet expired or terminated can always be terminated, and a renewal or a replacement is a new contract.
 
 ## Customising state machines
 
@@ -124,7 +124,8 @@ All of that is a source edit, not a Setup screen: **there is no Setup → Object
 ## What users see
 
 - **The status dropdown is not filtered.** It offers every option the field declares, whatever the record's current status is. The platform *can* compute the legal next states — `legalNextStates` in `@objectstack/objectql`, reachable over `GET /objects/{name}/state/{field}?from=…` — but nothing in this app calls it, and no list, form or detail page narrows a picklist by it.
-- **A disallowed transition raises no error and no dialog.** The save goes through and the record keeps its new value; the only trace is a single server-side log line — `WARN Validation rule 'lead_status_progression' (warning): Invalid lead status transition` — which nobody working in the UI ever sees.
+- **On a lead, an opportunity, a case or a quote, a disallowed transition raises no error and no dialog.** The save goes through and the record keeps its new value; the only trace is a single server-side log line — `WARN Validation rule 'lead_status_progression' (warning): Invalid lead status transition` — which nobody working in the UI ever sees.
+- **On a contract, a disallowed transition is refused.** The Edit form stays open, **Status** is highlighted with the rule's message — *"This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; …"* — and the contract keeps the status it had. The REST API answers the same write with `400 VALIDATION_FAILED`.
 - Required fields for the new state are enforced — the user sees them inline before save. That is a different mechanism: a `requiredWhen` predicate on the field (for example `win_reason` when the stage becomes *Closed Won*), which does reject the save.
 
 ## State machines and the AI Copilot
@@ -145,7 +146,7 @@ What the tables do give an agent is what they give a report author: the route, d
 ## Tips for users
 
 - A status dropdown never hides an option on the state machine's account — it does not filter the picklist at all. If an option you expect is missing, look at the field's own options or at your profile's field-level security, not at the transition table.
-- There is no *"bypass state machine"* permission to ask for, and nothing to bypass. Importing legacy data straight into a late status needs no grant: on **create** the table is not consulted at all, and on update a move outside it is logged and saved. What you should still do is tell an admin, so the warnings that land in the log are recognised as the import rather than chased as a bug.
+- There is no *"bypass state machine"* permission to ask for. Importing legacy data straight into a late status needs no grant: on **create** the table is not consulted at all, a contract's included. On update, a move outside the table is logged and saved on a lead, an opportunity, a case or a quote, and refused on a contract. What you should still do is tell an admin, so the warnings that land in the log are recognised as the import rather than chased as a bug.
 
 ## Related
 

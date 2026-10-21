@@ -337,17 +337,19 @@ describe('contract_validation', () => {
 
 describe('contract_on_activation', () => {
   const TERM = { start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 };
+  // Activation from In Approval, the one edge into `activated` the status
+  // table holds (#2192): `contract_status_progression` refuses draft → activated.
   const activate = (id: string) => verify.hooks.run('crm_contract', 'update', { id, status: 'activated' }, as(manager));
 
   it('stamps signed_date and promotes the account to customer', async () => {
-    const contract = await contractOf({ status: 'draft', ...TERM }, { type: 'prospect' });
+    const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'prospect' });
     await activate(contract.id);
     await settles('crm_contract', contract.id, (c) => expect(c.signed_date).toBe(today()));
     await settles('crm_account', String(contract.crm_account), (a) => expect(a.type).toBe('customer'));
   });
 
   it('does not overwrite an existing signed_date', async () => {
-    const contract = await contractOf({ status: 'draft', signed_date: '2025-05-05', ...TERM }, { type: 'customer' });
+    const contract = await contractOf({ status: 'in_approval', signed_date: '2025-05-05', ...TERM }, { type: 'customer' });
     const engine = await engineWritesDuring(() => activate(contract.id));
     expect(
       engine.of('crm_contract', 'update').filter((w) => 'signed_date' in (w.args[1] as Rec)),
@@ -359,7 +361,7 @@ describe('contract_on_activation', () => {
   it('creates NO renewal task — that belongs to the contract_renewal flow', async () => {
     // The activation-time task this hook used to create hardcoded a 60-day
     // notice and duplicated the flow, which honours renewal_notice_days.
-    const contract = await contractOf({ status: 'draft', ...TERM }, { type: 'prospect' });
+    const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'prospect' });
     const engine = await engineWritesDuring(async () => {
       await activate(contract.id);
       await settles('crm_contract', contract.id, (c) => expect(c.signed_date).toBe(today()));
