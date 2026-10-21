@@ -14,10 +14,13 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } 
  * keeps it so by writing the deal after every line write. An approval node with
  * `lockRecord: true` refuses that write (`RECORD_LOCKED`), and the rollup is
  * `onError: 'log'`, so before this guard the line was stored and the deal kept
- * its old amount. Measured on 18.0.0 before the guard, with this file: a rep's
- * second line on their deal under its Large Deal Approval answered 201, the deal
- * stayed at 100,000 while its lines summed to 107,000, and the log carried
- * `opportunity_amount_rollup … RECORD_LOCKED (onError=log; suppressing)`.
+ * its old amount. Measured on 18.0.0 before the guard: this file's refusal pins
+ * were red on `main` (the REST insert of a second line answered 201 and stored
+ * it, and the log carried `opportunity_amount_rollup … RECORD_LOCKED
+ * (onError=log; suppressing)` for every insert and update, a description-only
+ * edit included), and a probe with the guard's throw ablated read the deal at
+ * 100,000 while its lines summed to 107,000. A status-change request's lock
+ * refused the rollup the same way.
  *
  * Now the line write is refused up front, with the deal freeze's own envelope
  * (`RECORD_LOCKED` / 409), and nothing is stored, the way a settled quote

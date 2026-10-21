@@ -89,11 +89,12 @@ const opportunityLineItemProductTitle: Hook = createLineItemProductTitle(
  * deal AS the line's writer, so the rollup of any user line write is refused.
  * The rollup is `onError: 'log'`, so before this leg the line was stored and the
  * deal kept its old amount (OPP-007 broken). Measured on 18.0.0 before it: a
- * rep's second line on their deal under its Large Deal Approval answered 201,
- * the deal stayed at 100,000 while its lines summed to 107,000, and the log read
- * `opportunity_amount_rollup … RECORD_LOCKED (onError=log; suppressing)`; a
- * description-only edit was stored and its rollup refused the same way. So the
- * line write is refused up front instead, and nothing is stored.
+ * rep's REST insert of a second line on their deal under its Large Deal
+ * Approval answered 201, the deal stayed at 100,000 while its lines summed to
+ * 107,000, and the log read `opportunity_amount_rollup … RECORD_LOCKED
+ * (onError=log; suppressing)`; a description-only edit was stored and its
+ * rollup refused the same way. So the line write is refused up front instead,
+ * and nothing is stored.
  *
  * "Locked" is read off the lock's own mirrors (`approvalStatusField`), as the
  * quote acceptance gate reads them (#2014), for exactly the two approvals on
