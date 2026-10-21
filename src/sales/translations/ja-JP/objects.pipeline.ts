@@ -27,6 +27,9 @@ const opportunityStageOptions = {
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
     _validations: {
+      converted_only_by_conversion: {
+        message: '「リード変換」だけがリードを変換済みにできます。変換先の取引先と取引先責任者を作成するのが「リード変換」だからです。別のステータスを選んでから「リード変換」を使ってください。',
+      },
       disqualification_reason_required: {
         message: 'リードを「対象外」にする場合は失格理由が必要です',
       },

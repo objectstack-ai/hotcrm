@@ -21,6 +21,9 @@ import { activityActions } from './_shared';
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
     _validations: {
+      converted_only_by_conversion: {
+        message: '只有“转化线索”能把线索设为已转化，因为它会创建线索转化成的客户和联系人。请选择其他状态，然后使用“转化线索”。',
+      },
       disqualification_reason_required: {
         message: '线索标记为不合格时必须填写取消资格原因',
       },
