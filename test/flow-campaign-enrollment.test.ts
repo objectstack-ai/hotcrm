@@ -53,6 +53,14 @@ async function world(campaignOver: Rec = {}) {
     name: `Spring Push ${n}`, status: 'in_progress', start_date: daysFromNow(-7), end_date: daysFromNow(30),
     owner_id: marketer.id, ...campaignOver,
   }]);
+  const [account] = await verify.seed('crm_account', [{ name: `Acme ${n}`, owner_id: marketer.id }]);
+  // The contact the converted lead became: a converted lead points at the
+  // account and the contact Convert Lead left it (#2219: the flag stands only
+  // with both). In no department, so no contact run enrols it.
+  const [became] = await verify.seed('crm_contact', [{
+    first_name: 'Cy', last_name: `became ${n}`, crm_account: account!.id,
+    email: `became.${n}@acme.flow-campaign-enrollment.test`, email_opt_out: false, owner_id: marketer.id,
+  }]);
   const lead = async (key: string, over: Rec) => {
     const [row] = await verify.seed('crm_lead', [{
       first_name: 'Lee', last_name: `${key} ${n}`, company: `Acme ${key} ${n}`,
@@ -66,10 +74,9 @@ async function world(campaignOver: Rec = {}) {
     lead('l_new2', {}),
     // Ineligible for various reasons — none may be enrolled.
     lead('l_optout', { email_opt_out: true }),
-    lead('l_converted', { is_converted: true }),
+    lead('l_converted', { is_converted: true, converted_account: account!.id, converted_contact: became!.id }),
     lead('l_other', { status: 'qualified' }),
   ])) as Record<string, Rec>;
-  const [account] = await verify.seed('crm_account', [{ name: `Acme ${n}`, owner_id: marketer.id }]);
   /**
    * Contacts, the #597 mirror of the lead roster above.
    *

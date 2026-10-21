@@ -85,6 +85,28 @@ const write = async (input: AnyRec, previous: AnyRec): Promise<void> => {
 };
 
 /**
+ * The records a conversion leaves on the lead, the rep's own: the account and
+ * the contact `mark_converted` writes into `converted_account` /
+ * `converted_contact`. Since #2219 the flag crosses to `true` only with both
+ * (`converted_flag_only_by_conversion` on `crm_lead`), so every conversion
+ * these pins write carries them, the way the flow does. A bare flag is refused
+ * whatever the approval says, and a pin that sent one would stop showing that
+ * the GATE judged it.
+ */
+const conversionRecords = async (): Promise<AnyRec> => {
+  const n = ++k;
+  const [account] = await verify.seed('crm_account', [{ name: `Gate Works ${n}`, owner_id: rep.id }]);
+  const [contact] = await verify.seed('crm_contact', [{
+    first_name: 'Gia', last_name: `Gate ${n}`, email: `gia${n}@records.lead-conversion-approval-gate.test`,
+    crm_account: account!.id, owner_id: rep.id,
+  }]);
+  return { converted_account: account!.id, converted_contact: contact!.id };
+};
+
+/** The conversion's own write, as `mark_converted` sends it. */
+const conversion = async (): Promise<AnyRec> => ({ is_converted: true, status: 'converted', ...(await conversionRecords()) });
+
+/**
  * The verdict column in every shape a record can present it in. "A lead older
  * than the column" is the ABSENT key a sparse datasource hands a predicate; no
  * write produces it (an insert stamps the field default, and a SQL row reads
@@ -214,7 +236,7 @@ describe('convert_lead — the button', () => {
 
 describe('the write path — the half a REST caller cannot route around', () => {
   it.each(REFUSING_SHAPES)('refuses a lead %s crossing into converted', async (_l, shape) => {
-    const err: AnyRec = await write({ is_converted: true, status: 'converted' }, shape)
+    const err: AnyRec = await write(await conversion(), shape)
       .then(() => null, (e: AnyRec) => e) as AnyRec;
     expect(err, 'the gate let an unapproved conversion through').toBeTruthy();
     // ADR-0112 envelope: the CODE and the STATUS are the contract, not the
@@ -225,14 +247,16 @@ describe('the write path — the half a REST caller cannot route around', () => 
     expect(String(err.message)).toContain('Ada Lovelace - Acme');
   });
 
-  it('refuses a bare is_converted flip with no status change (the API shape)', async () => {
-    const err = await write({ is_converted: true }, { conversion_approval_status: 'pending' })
+  it('refuses an is_converted flip with no status change (the API shape)', async () => {
+    // The flag and its records, the status left alone: what a REST caller who
+    // converts by hand sends since #2219 refuses the flag without the records.
+    const err = await write({ is_converted: true, ...(await conversionRecords()) }, { conversion_approval_status: 'pending' })
       .then(() => null, (e: AnyRec) => e);
-    expect(err?.code).toBe('RECORD_LOCKED');
+    expect({ code: err?.code, status: err?.status }).toEqual({ code: 'RECORD_LOCKED', status: 409 });
   });
 
   it.each(OFF_SHAPES)('lets the conversion through for %s', async (_l, shape) => {
-    await expect(write({ is_converted: true, status: 'converted' }, shape))
+    await expect(write(await conversion(), shape))
       .resolves.toBeUndefined();
   });
 
@@ -243,7 +267,7 @@ describe('the write path — the half a REST caller cannot route around', () => 
     await expect(
       write(
         { description: 'note added after conversion' },
-        { is_converted: true, status: 'converted', conversion_approval_status: 'pending' },
+        { ...(await conversion()), conversion_approval_status: 'pending' },
       ),
     ).resolves.toBeUndefined();
   });

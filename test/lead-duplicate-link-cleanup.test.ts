@@ -313,9 +313,17 @@ describe('a lead stops claiming a duplicate once the record it named is gone', (
     // `duplicate_status` are neither — so if the retirement block ran before
     // that lock instead of after it (priority 300), the lock would refuse the
     // very cleanup #720 fixed it to allow, and this delete would fail.
-    const { contact, lead } = await buildContactCase();
+    const { n, account, contact, lead } = await buildContactCase();
+    // Converted as the conversion leaves it, onto an account and a contact of
+    // its own (#2219: the flag stands only with both). The contact is not the
+    // one it was flagged against, so the delete below clears the duplicate
+    // link alone.
+    const became = await insert('crm_contact', {
+      first_name: 'Dee', last_name: 'Became', crm_account: account.id, email: `dee.became.${n}@dupe-cleanup.test`,
+    });
     await ql.update('crm_lead', {
       id: lead.id, is_converted: true, status: 'converted', converted_date: '2026-02-01',
+      converted_account: account.id, converted_contact: became.id,
     }, { context: SYS });
 
     expect(await deleteAndCatch('crm_contact', contact.id)).toBeNull();

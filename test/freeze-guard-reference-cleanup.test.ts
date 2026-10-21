@@ -739,9 +739,12 @@ const GUARDS: GuardCase[] = [
     settled: async (withLink = true, desk = sql) => {
       const { verify, rep } = desk;
       const t = await linkTargets(desk);
+      // The account and the contact a conversion always leaves (#2219: the
+      // flag stands only with both); the deal is the link under test.
       const [lead] = await verify.seed('crm_lead', [{
         is_converted: true, status: 'converted', converted_date: '2026-01-01', company: 'Acme',
         first_name: 'Ada', last_name: 'Lovelace', email: `lead${n}@freeze-guard-units.test`, rating: 1, owner_id: rep.id,
+        converted_account: t.account.id, converted_contact: t.contacts[0]!.id,
         ...(withLink ? { converted_opportunity: t.deals[0]!.id } : {}),
       }]);
       return { id: String(lead!.id), other: String(t.deals[1]!.id) };

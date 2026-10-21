@@ -92,6 +92,22 @@ const engineWritesDuring = async (write: () => Promise<unknown>, settleMs = 400)
 const accountOf = async (over: Rec = {}): Promise<Rec> =>
   (await verify.seed('crm_account', [{ name: `Service Hooks Co ${++k}`, owner_id: rep.id, ...over }]))[0]!;
 
+/**
+ * The records a conversion leaves on a lead: an account and a contact of the
+ * rep's, written as the system. Since #2219 `is_converted` crosses to `true`
+ * only with `converted_account` and `converted_contact` (the
+ * `converted_flag_only_by_conversion` rule on `crm_lead`), so every converted
+ * lead and every conversion here carries both, as `mark_converted` writes them.
+ */
+const conversionRecords = async (): Promise<Rec> => {
+  const account = await accountOf();
+  const [contact] = await verify.seed('crm_contact', [{
+    first_name: 'Cole', last_name: `Converted ${++k}`, email: `became${k}@records.hooks-runtime-service.test`,
+    crm_account: account.id, owner_id: rep.id,
+  }]);
+  return { converted_account: account.id, converted_contact: contact!.id };
+};
+
 // ─────────────────────────────────────────────────────────────── case ──
 
 describe('case_sla_defaults', () => {
@@ -443,7 +459,7 @@ describe('campaign_metrics_refresh', () => {
   const populated = async (status = 'in_progress'): Promise<Rec> => {
     const campaign = await campaignOf({ status });
     const other = await campaignOf();
-    const l1 = await leadOf({ is_converted: true });
+    const l1 = await leadOf({ is_converted: true, ...(await conversionRecords()) });
     const l2 = await leadOf();
     const l9 = await leadOf();
     await verify.seed('crm_campaign_member', [
@@ -636,8 +652,9 @@ describe('campaign_lead_conversion_refresh', () => {
     ]);
     return { cmp1, cmp2, l1, m1: m1!, m2: m2!, m3: m3! };
   };
-  const convert = (leadId: string, who?: Person) =>
-    desk.verify.hooks.run('crm_lead', 'update', { id: leadId, is_converted: true }, { as: who ? who.token : desk.admin });
+  /** The conversion's write on `leadId`, records included, as `mark_converted` sends it. */
+  const convert = async (leadId: string, who?: Person) =>
+    desk.verify.hooks.run('crm_lead', 'update', { id: leadId, is_converted: true, ...(await conversionRecords()) }, { as: who ? who.token : desk.admin });
   const settlesOn = (object: string, id: string, check: (row: Rec) => void) =>
     vi.waitFor(async () => {
       const [row] = await desk.verify.rows(object, { id });
@@ -733,7 +750,7 @@ describe('campaign_lead_conversion_refresh', () => {
    */
   it('on SQL, a converted lead’s memberships are promoted', async () => {
     const s = await store('sent', verify);
-    await verify.hooks.run('crm_lead', 'update', { id: s.l1.id, is_converted: true }, as(admin));
+    await verify.hooks.run('crm_lead', 'update', { id: s.l1.id, is_converted: true, ...(await conversionRecords()) }, as(admin));
     // The handler promotes the members before it refreshes their campaigns, so
     // once the campaign has counted the conversion the members are settled.
     await settles('crm_campaign', s.cmp1.id, (c) => expect(c.num_converted_leads).toBe(1));
@@ -1221,7 +1238,7 @@ describe('lead_automation', () => {
   it('locks identity fields on a converted lead but leaves notes editable', async () => {
     const [lead] = await verify.seed('crm_lead', [{
       first_name: 'Ada', last_name: 'Lovelace', company: 'Acme', email: `locked${++k}@hooks-runtime-service.test`,
-      is_converted: true, status: 'converted', converted_date: '2026-01-01', owner_id: rep.id,
+      is_converted: true, status: 'converted', converted_date: '2026-01-01', owner_id: rep.id, ...(await conversionRecords()),
     }]);
     // The refusal NAMES the lead (#693) — a converted-lead lock also fires on
     // writes the caller never made, so "a converted lead" left the reader with
@@ -1235,7 +1252,7 @@ describe('lead_automation', () => {
   it('lets a SYSTEM write through the converted-lead lock', async () => {
     const [lead] = await verify.seed('crm_lead', [{
       first_name: 'Ada', last_name: 'Lovelace', company: 'Acme', email: `sys${++k}@hooks-runtime-service.test`,
-      is_converted: true, status: 'converted', converted_date: '2026-01-01', owner_id: rep.id,
+      is_converted: true, status: 'converted', converted_date: '2026-01-01', owner_id: rep.id, ...(await conversionRecords()),
     }]);
     await systemUpdate(verify, 'crm_lead', { id: lead!.id, company: 'Other' });
     expect((await stored('crm_lead', lead!.id)).company).toBe('Other');
@@ -1327,7 +1344,9 @@ describe('lead_duplicate_check', () => {
 
   it('ignores a converted predecessor — its contact carries the same address', async () => {
     const address = fresh();
-    await leadOf({ email: address, is_converted: true, status: 'converted', converted_date: '2026-01-01' });
+    // Its records carry an address of their own here, so the one match left to
+    // make is the converted lead itself.
+    await leadOf({ email: address, is_converted: true, status: 'converted', converted_date: '2026-01-01', ...(await conversionRecords()) });
     const lead = await repLead({ email: address });
     expect(lead.duplicate_status ?? null).toBeNull();
     expect(lead.duplicate_of_type ?? null).toBeNull();
