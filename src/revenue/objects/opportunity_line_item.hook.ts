@@ -26,7 +26,10 @@ import { createLineItemNumbering, createLineItemPriceFill, createLineItemProduct
  *   used line items at all.
  * - `async: true` + `onError: 'log'` — the rollup is a derived convenience; a
  *   failure must never block the line-item write. Updating the parent does not
- *   re-trigger this hook (different object), so there's no loop.
+ *   re-trigger this hook (different object), so there's no loop. The one
+ *   refusal the app can foresee, an approval lock on the deal, is not left to
+ *   this log: `opportunity_line_item_freeze` refuses a user's line write on a
+ *   deal an approval locks, before anything is stored (#2191).
  * - On re-parenting (update that moves a line to another opportunity), BOTH the
  *   old and new parents are recomputed.
  */
@@ -78,13 +81,35 @@ const opportunityLineItemProductTitle: Hook = createLineItemProductTitle(
  * the deleting user, and that cascade is let through, so a closed deal stays
  * deletable (#720). Measured on 18.0.0-next.3 before this leg: a rep's REST
  * `DELETE` of a closed-won deal's line answered 200 and the line was gone.
+ *
+ * A deal an approval LOCKS holds its lines the same way while the approval is
+ * in progress (#2191), on the same boundary and with the same envelope. The
+ * lock is the platform's (`lockRecord: true` on the approval node): it refuses
+ * every non-system write of the deal, and `opportunity_amount_rollup` writes the
+ * deal AS the line's writer, so the rollup of any user line write is refused.
+ * The rollup is `onError: 'log'`, so before this leg the line was stored and the
+ * deal kept its old amount (OPP-007 broken). Measured on 18.0.0 before it: a
+ * rep's second line on their deal under its Large Deal Approval answered 201,
+ * the deal stayed at 100,000 while its lines summed to 107,000, and the log read
+ * `opportunity_amount_rollup … RECORD_LOCKED (onError=log; suppressing)`; a
+ * description-only edit was stored and its rollup refused the same way. So the
+ * line write is refused up front instead, and nothing is stored.
+ *
+ * "Locked" is read off the lock's own mirrors (`approvalStatusField`), as the
+ * quote acceptance gate reads them (#2014), for exactly the two approvals on
+ * this deal whose node locks it. `approval_status` `pending` is the Large Deal
+ * Approval's open request. `status_change_approval_status` `pending` also means
+ * an armed gate that has no request yet, which locks nothing, so that hold
+ * needs a request: a `requested_status`. A qualification (立项) approval does not
+ * lock (`lockRecord: false`), and a decided approval holds nothing. Each of
+ * those states is measured in `test/opportunity-line-approval-lock.test.ts`.
  */
 const opportunityLineItemFreeze: Hook = {
   name: 'opportunity_line_item_freeze',
   object: 'crm_opportunity_line_item',
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 90,
-  description: 'Refuse a user adding, changing, moving or removing a line item of a closed opportunity.',
+  description: 'Refuse a user adding, changing, moving or removing a line item of a closed opportunity, or of one an approval locks.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts`
     // because a lowered body has no module scope and `extractHookBody` THROWS on
@@ -119,12 +144,21 @@ const opportunityLineItemFreeze: Hook = {
     if (!changed || !ctx.user?.id) return;
     for (const id of new Set([input.crm_opportunity, previous?.crm_opportunity])) {
       const deal = typeof id === 'string' && id
-        ? await (ctx.api as HookApi | undefined)?.object('crm_opportunity').findOne({ where: { id }, fields: ['name', 'stage'] })
+        ? await (ctx.api as HookApi | undefined)?.object('crm_opportunity').findOne({
+          where: { id },
+          fields: ['name', 'stage', 'approval_status', 'status_change_approval_status', 'requested_status'],
+        })
         : null;
+      // `crm_opportunity.nameField` is `name` — never the record id (#1243).
+      const name = typeof deal?.name === 'string' ? deal.name.trim() : '';
+      const subject = name ? `Opportunity ${name}` : 'Opportunity';
       if (deal?.stage === 'closed_won' || deal?.stage === 'closed_lost') {
-        // `crm_opportunity.nameField` is `name` — never the record id (#1243).
-        const name = typeof deal.name === 'string' ? deal.name.trim() : '';
-        throw refuse(`${name ? `Opportunity ${name}` : 'Opportunity'} is closed (${deal.stage}), so its line items can no longer be added, changed or removed.`, 'RECORD_LOCKED', 409);
+        throw refuse(`${subject} is closed (${deal.stage}), so its line items can no longer be added, changed or removed.`, 'RECORD_LOCKED', 409);
+      }
+      const locked = deal?.approval_status === 'pending'
+        || (deal?.status_change_approval_status === 'pending' && typeof deal.requested_status === 'string' && deal.requested_status !== '');
+      if (locked) {
+        throw refuse(`${subject} is locked while an approval is in progress, so its line items cannot be added, changed or removed until that approval is complete.`, 'RECORD_LOCKED', 409);
       }
     }
   },
