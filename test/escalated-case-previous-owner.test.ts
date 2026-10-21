@@ -30,7 +30,7 @@ beforeAll(async () => {
   agent = await signUpPerson(verify, 'agent@escalated-from.test', { name: 'Logging Agent', ...asAgent });
   other = await signUpPerson(verify, 'other@escalated-from.test', { name: 'Other Agent', ...asAgent });
   manager = await signUpPerson(verify, 'manager@escalated-from.test', {
-    name: 'Pool Manager', positions: ['service_manager'], permissionSets: ['service_manager'],
+    name: 'Pool Manager', positions: ['service_manager'], permissionSets: ['service_agent'],
   });
 }, 120_000);
 

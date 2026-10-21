@@ -121,8 +121,9 @@ async function runDemoStaff(on: VerifyStack): Promise<ScriptRun> {
 /**
  * The demo org on the shipped app, as `pnpm demo:staff` leaves it: the script
  * creates each table row as a real, loginable account holding the positions
- * the table gives it (a position binds the same-named permission set, which is
- * how the table grants anything), hands them the book, re-evaluates the rules
+ * the table gives it (a position grants the permission sets its definition
+ * declares in `permissionSets`, which is how the table grants anything), hands
+ * them the book, re-evaluates the rules
  * and has each owner save their deals. Each person is then signed in with the
  * table's password.
  */
@@ -132,16 +133,31 @@ let run: ScriptRun;
 /** The dev admin's export answer on `crm_account` BEFORE the script ran: #2061's control reading. */
 let adminExportBefore: ExportAnswer;
 const staffed: Record<string, Person> = {};
+/**
+ * What the platform's logger wrote while `beforeAll` booted the app, ran the
+ * script and signed each person in (#2200). The logger writes to
+ * `process.stdout`, not through `console`, so that stream is what is read.
+ */
+const bootLog: string[] = [];
 beforeAll(async () => {
-  verify = await hotcrmStack();
-  admin = await verify.signIn();
-  adminExportBefore = await exportAnswer(admin, 'crm_account');
-  run = await runDemoStaff(verify);
-  for (const m of DemoOrgStaffing) {
-    const token = await verify.signIn(m.email, m.password).catch((err: unknown) => {
-      throw new Error(`${m.email} cannot sign in after scripts/demo-staff.ts ran (exit ${String(run.exit)}): ${String(err)}\n${run.output.join('\n')}`);
-    });
-    staffed[m.key] = { token, id: String((await verify.contextFor(token)).userId) };
+  const write = process.stdout.write.bind(process.stdout);
+  const capture = vi.spyOn(process.stdout, 'write').mockImplementation(((chunk: unknown, ...rest: unknown[]) => {
+    bootLog.push(String(chunk));
+    return (write as (...args: unknown[]) => boolean)(chunk, ...rest);
+  }) as typeof process.stdout.write);
+  try {
+    verify = await hotcrmStack();
+    admin = await verify.signIn();
+    adminExportBefore = await exportAnswer(admin, 'crm_account');
+    run = await runDemoStaff(verify);
+    for (const m of DemoOrgStaffing) {
+      const token = await verify.signIn(m.email, m.password).catch((err: unknown) => {
+        throw new Error(`${m.email} cannot sign in after scripts/demo-staff.ts ran (exit ${String(run.exit)}): ${String(err)}\n${run.output.join('\n')}`);
+      });
+      staffed[m.key] = { token, id: String((await verify.contextFor(token)).userId) };
+    }
+  } finally {
+    capture.mockRestore();
   }
 }, 240_000);
 
@@ -161,6 +177,10 @@ const permissionSets: AnyRec[] = (stack as any).permissions ?? [];
 const flows: AnyRec[] = (stack as any).flows ?? [];
 
 const positionNames = new Set(positions.map((p) => String(p.name)));
+const shippedSetNames = new Set(permissionSets.map((p) => String(p.name)));
+/** The permission sets a position's own definition declares (`permissionSets`, ADR-0131 D3/D4): the only binding (#2200). */
+const declaredSets = (position: string): string[] =>
+  ((positions.find((p) => String(p.name) === position)?.permissionSets ?? []) as unknown[]).map(String);
 const staffedPositions = new Set(DemoOrgStaffing.flatMap((m) => m.positions));
 const holdersOf = (position: string) => DemoOrgStaffing.filter((m) => m.positions.includes(position));
 
@@ -298,12 +318,11 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
     // additive `member_default` baseline (ADR-0090 D5) and the rows come from
     // the share — i.e. the demo would show a generic org member who happens to
     // see two records, not a sales rep.
-    const setNames = new Set(permissionSets.map((p) => String(p.name)));
     const bad: string[] = [];
     for (const m of DemoOrgStaffing) {
       if (!territorial(m)) continue;
-      // A set whose NAME matches a position is bound to it at install time.
-      if (!m.positions.some((p) => setNames.has(p))) {
+      // A position grants the sets it declares, each one this app ships.
+      if (!m.positions.some((p) => declaredSets(p).some((s) => shippedSetNames.has(s)))) {
         bad.push(`${m.email}: holds only territory position(s) [${m.positions.join(', ')}], so no permission set applies`);
       }
     }
@@ -331,19 +350,21 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
     for (const m of DemoOrgStaffing) {
       if (!territorial(m)) continue;
       for (const position of m.positions) {
-        const grant = (setByName.get(position)?.objects ?? {})['crm_account'];
-        if (!grant) continue;
-        if (grant.viewAllRecords === true) {
-          bad.push(
-            `${m.email}: position "${position}" grants viewAllRecords on crm_account — they would ` +
-            `read every account, territory or not`,
-          );
-        }
-        if (grant.readScope != null && grant.readScope !== 'own') {
-          bad.push(
-            `${m.email}: position "${position}" reads crm_account at scope "${grant.readScope}", ` +
-            `which is wider than the 'own' depth the territory demo rests on`,
-          );
+        for (const set of declaredSets(position)) {
+          const grant = (setByName.get(set)?.objects ?? {})['crm_account'];
+          if (!grant) continue;
+          if (grant.viewAllRecords === true) {
+            bad.push(
+              `${m.email}: position "${position}" (set "${set}") grants viewAllRecords on crm_account — ` +
+              `they would read every account, territory or not`,
+            );
+          }
+          if (grant.readScope != null && grant.readScope !== 'own') {
+            bad.push(
+              `${m.email}: position "${position}" (set "${set}") reads crm_account at scope ` +
+              `"${grant.readScope}", which is wider than the 'own' depth the territory demo rests on`,
+            );
+          }
         }
       }
     }
@@ -355,7 +376,7 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
 });
 
 describe('staffing lines up with the rules that grant, and the nodes that route', () => {
-  it('every staffed position is named by a sharing rule or a permission set', () => {
+  it('every staffed position is named by a sharing rule or an approval, or declares a permission set', () => {
     const referenced = new Set<string>();
     for (const rule of sharingRules) {
       if (rule.sharedWith?.type === 'position') referenced.add(String(rule.sharedWith.value));
@@ -367,7 +388,7 @@ describe('staffing lines up with the rules that grant, and the nodes that route'
         }
       }
     }
-    for (const ps of permissionSets) if (positionNames.has(String(ps.name))) referenced.add(String(ps.name));
+    for (const p of positionNames) if (declaredSets(p).some((s) => shippedSetNames.has(s))) referenced.add(p);
 
     const inert = [...staffedPositions].filter((p) => !referenced.has(p));
     expect(
@@ -414,6 +435,58 @@ describe('staffing lines up with the rules that grant, and the nodes that route'
       }
     }
     expect(bad, `approval nodes that can strand a locked record:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+});
+
+/**
+ * Each position names the permission sets it distributes, and none reaches a
+ * set through the platform's name fold (#2200).
+ *
+ * The platform still folds a held position's name onto a same-named set, and
+ * logs `position_name_fold_grant` when that fold, and no declaration, is what
+ * granted it; the fold is ruled for retirement (objectstack#13419, ruling B).
+ * Measured on 18.0.0 before the declarations: this boot logged it for
+ * `sales_rep`, `sales_manager`, `service_agent` and `service_manager`, and Setup
+ * showed no set on those positions and nobody on each set's Assigned Users panel.
+ * The warning is read only for the positions a staffed person holds, the ones
+ * this boot resolves; `marketing_user`, staffed by nobody, is held by the
+ * roster pin alone.
+ */
+describe('each position names the sets it distributes, and none is reached by the name fold (#2200)', () => {
+  it('declares the five bindings, each to a set the app ships', () => {
+    const declared = Object.fromEntries(
+      [...positionNames].filter((p) => declaredSets(p).length > 0).map((p) => [p, declaredSets(p)]),
+    );
+    expect(declared).toEqual({
+      sales_manager: ['sales_manager'],
+      sales_rep: ['sales_rep'],
+      // The #1779 ruling: the escalation pool works tickets with the agent's grants.
+      service_manager: ['service_agent'],
+      service_agent: ['service_agent'],
+      marketing_user: ['marketing_user'],
+    });
+    expect(Object.values(declared).flat().filter((s) => !shippedSetNames.has(s)), 'a binding names a set the app does not ship').toEqual([]);
+  });
+
+  it('each staffed person resolves every set their positions declare', async () => {
+    const missing: string[] = [];
+    for (const m of DemoOrgStaffing) {
+      const res = await verify.apiAs(staffed[m.key]!.token, 'GET', '/auth/me/permissions');
+      expect(res.status, await res.clone().text()).toBe(200);
+      const body = (await res.json()) as AnyRec;
+      const resolved = new Set(((body.data ?? body).permissionSets ?? []).map(String));
+      for (const set of m.positions.flatMap(declaredSets)) if (!resolved.has(set)) missing.push(`${m.email}: ${set}`);
+    }
+    expect(missing, 'declared sets a staffed person does not resolve').toEqual([]);
+  });
+
+  it('the boot logs no position_name_fold_grant naming a HotCRM position', () => {
+    const lines = bootLog.join('').split('\n');
+    expect(lines.some((l) => /\b(INFO|WARN)\b/.test(l)), 'the capture read none of the platform logger, so it proves nothing').toBe(true);
+    const folded = lines
+      .filter((l) => l.includes('position_name_fold_grant'))
+      .filter((l) => [...positionNames].some((p) => l.includes(`'${p}'`)));
+    expect(folded, 'a HotCRM position reached a set only by sharing its name: declare it in permissionSets').toEqual([]);
   });
 });
 

@@ -498,8 +498,11 @@ describe('sharing rules and positions line up', () => {
       for (const policy of (ps.rowLevelSecurity ?? []) as AnyRec[]) {
         for (const p of policy.positions ?? []) referenced.add(p);
       }
-      // A set whose name matches a position is bound to it at install time.
-      if (positionNames.has(ps.name)) referenced.add(ps.name);
+    }
+    // A position grants the permission sets its own definition declares
+    // (`permissionSets`, ADR-0131 D3/D4), each a set this app ships (#2200).
+    for (const position of positions) {
+      if (((position.permissionSets ?? []) as string[]).some((name) => setByName.has(name))) referenced.add(position.name);
     }
     const orphans = [...positionNames].filter((p) => !referenced.has(p));
     expect(

@@ -232,7 +232,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| PRM-001 | 七个权限集矩阵 | system_admin/sales_rep/sales_manager/service_agent/service_manager/marketing_user/guest_portal,显式允许制,覆盖全部业务对象;SaaS 组合以 tenant_admin 替换 system_admin | `src/sales/profiles/` + `objectstack.composition.ts` |
+| PRM-001 | 六个权限集矩阵 | system_admin/sales_rep/sales_manager/service_agent/marketing_user/guest_portal,显式允许制,覆盖全部业务对象;SaaS 组合以 tenant_admin 替换 system_admin。岗位在自身的 `permissionSets` 里声明所发放的权限集(`service_manager` 岗位发放 `service_agent`) | `src/sales/profiles/` + `src/sales/sharing/positions.ts` + `objectstack.composition.ts` |
 | PRM-002 | Guest Portal | 匿名访客仅可创建 lead 与 case(服务两个公开表单),零读取、零编辑、无导出位 | `src/sales/profiles/guest-portal.profile.ts` |
 | PRM-003 | 字段级安全 | 如 `annual_revenue`/`health_score` 对销售只读、`crm_case.internal_notes` 对销售完全遮蔽、坐席可读写 | `src/sales/profiles/*.profile.ts`(fieldPermissions) |
 | PRM-004 | 导出权限闸门 | `allowExport` 是真实闸门(未设即拒):仅在有读权限且视图提供导出界面的五个对象上授予,服务端 `canExport` 把关 | `src/sales/profiles/index.ts` |

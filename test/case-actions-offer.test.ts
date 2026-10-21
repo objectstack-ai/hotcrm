@@ -48,7 +48,7 @@ const PERSONAS: Record<string, { positions: string[]; set: string }> = {
   sales_manager: { positions: ['sales_manager'], set: 'sales_manager' },
   marketing_user: { positions: ['marketing_user'], set: 'marketing_user' },
   service_agent: { positions: ['service_agent'], set: 'service_agent' },
-  service_manager: { positions: ['service_manager'], set: 'service_manager' },
+  service_manager: { positions: ['service_manager'], set: 'service_agent' },
 };
 
 /** The personas whose sets may not edit a case, and those whose sets may. */
