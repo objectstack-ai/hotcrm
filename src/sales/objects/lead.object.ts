@@ -398,7 +398,11 @@ export const Lead = ObjectSchema.create({
     // never fires, because the hook's throw always wins the race. "Converted"
     // there means THIS column is `true` (#2189); a write that sets the status
     // to Converted without it is refused by the `converted_only_by_conversion`
-    // validation instead.
+    // validation instead, and a write that sets it without the account and
+    // the contact Convert Lead creates is refused by
+    // `converted_flag_only_by_conversion` (#2219) — the Details tab's
+    // Converted switch included, which stays drawn for that reason: the
+    // refusal names Convert Lead, and this column stays writable for the flow.
     is_converted: Field.boolean({
       label: 'Converted',
       defaultValue: false,
@@ -731,6 +735,53 @@ export const Lead = ObjectSchema.create({
       message:
         'Only Convert Lead sets a lead to Converted, because it creates the account and contact the lead becomes. Choose another Status, then use Convert Lead.',
       condition: P`has(record.status) && record.status == "converted" && !(has(record.is_converted) && record.is_converted == true) && (previous == null || !has(previous.status) || previous.status != "converted")`,
+    },
+    {
+      // The other door to the same state (#2219): the Converted FLAG. The
+      // Details tab draws `is_converted` as a switch, and it cannot be
+      // `readonly` (the note on the field), so ticking it and saving — or a
+      // REST `PATCH` / `POST` carrying it — stored the flag with every
+      // `converted_*` link null, and the converted-lead lock in `lead.hook.ts`,
+      // which keys on the flag, then froze the lead with no converted records
+      // to "make changes on". So the flag crosses to `true` only with the
+      // records the conversion leaves: `converted_account` and
+      // `converted_contact`, in the same write or already stored (the rule
+      // reads the merged record).
+      //
+      // Exactly the records `mark_converted` always writes, measured on the
+      // flow: it writes both on every path (a new or a reused account, a new or
+      // a reused contact). ⛔ Not `converted_opportunity`: "Create
+      // Opportunity?" unticked writes it null, so requiring it would refuse
+      // the wizard's own conversion. Not `converted_date`: a stamp of when, not
+      // a record the lock sends anyone to.
+      //
+      // A TRANSITION GATE, in the shape of `converted_only_by_conversion`
+      // above, and for its measured reason: the `previous` term refuses only
+      // the write that CROSSES the flag to `true` (an insert, or an update of
+      // a lead not yet converted). ⛔ Not the invariant form (refuse whenever
+      // the merged record holds the flag without both records): deleting a
+      // converted lead's account makes the engine clear `converted_account`
+      // and `converted_contact` with an UPDATE of the lead (`set_null`), and
+      // the invariant form refuses that cleanup, so the account could never
+      // be deleted — the #720 shape. `test/freeze-guard-reference-cleanup.test.ts`
+      // ("tears the whole conversion down") is that case.
+      //
+      // ⚠️ A script with a `previous` read rather than `requiredWhen` on the
+      // two links, deliberately (rule 11; the roster entry is in
+      // `test/converted-lead-guard.test.ts`): `requiredWhen` answers with the
+      // platform's fixed "… is required", which cannot tell a rep where
+      // conversion happens, and naming Convert Lead is this refusal's contract
+      // as it is #2189's.
+      //
+      // The rules agree on the wizard's write and on no other: a write of the
+      // status alone is `converted_only_by_conversion`'s, a write of the flag
+      // without both records is this one's.
+      name: 'converted_flag_only_by_conversion',
+      type: 'script',
+      severity: 'error',
+      message:
+        'Only Convert Lead marks a lead as Converted, because it creates the account and contact the lead becomes. Use Convert Lead instead of ticking Converted.',
+      condition: P`has(record.is_converted) && record.is_converted == true && !(has(record.converted_account) && !isBlank(record.converted_account) && has(record.converted_contact) && !isBlank(record.converted_contact)) && (previous == null || !has(previous.is_converted) || previous.is_converted != true)`,
     },
     {
       name: 'lead_status_progression',

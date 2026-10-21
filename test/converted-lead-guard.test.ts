@@ -111,6 +111,12 @@ describe('crm_lead declares no second converted-lead rule', () => {
       // it never judges one; `test/lead-converted-only-by-conversion.test.ts`
       // pins that the lock still answers such an edit with its 409.
       converted_only_by_conversion: 'gates the status crossing, not edits to a converted lead',
+      // #2219: refuses the write CROSSING `is_converted` to `true` without
+      // `converted_account` and `converted_contact`. It reads
+      // `previous.is_converted` only to stand down when it is already `true`,
+      // so it never judges an edit to a converted lead; the lock's 409 on such
+      // an edit is pinned by `test/lead-converted-only-by-conversion.test.ts`.
+      converted_flag_only_by_conversion: 'gates the flag crossing, not edits to a converted lead',
     };
     expect(
       Object.keys(NOT_THE_LOCK).filter((name) => !validations.some((v) => v.name === name)),

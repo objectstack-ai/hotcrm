@@ -120,6 +120,22 @@ async function stuckLeadOf(who: Person): Promise<Rec> {
   return row!;
 }
 
+/**
+ * The two records Convert Lead leaves a lead pointing at, `who`'s own, written
+ * as the system the way the wizard's creates leave them: the account and the
+ * contact `mark_converted` writes into `converted_account` /
+ * `converted_contact`.
+ */
+async function conversionRecordsOf(who: Person): Promise<{ converted_account: string; converted_contact: string }> {
+  const n = ++k;
+  const [account] = await verify.seed('crm_account', [{ name: `Flag Works ${n}`, owner_id: who.id }]);
+  const [contact] = await verify.seed('crm_contact', [{
+    first_name: 'Flo', last_name: `Flag ${n}`, email: `flo${n}@records.lead-converted-only-by-conversion.test`,
+    crm_account: account!.id, owner_id: who.id,
+  }]);
+  return { converted_account: String(account!.id), converted_contact: String(contact!.id) };
+}
+
 describe('Create as Converted is refused (#2189)', () => {
   it.each(PEOPLE)('%s, through the engine write door', async (_label, key) => {
     const who = identity();
@@ -230,8 +246,11 @@ describe('a lead stuck at Converted with nothing converted is released (#2189)',
     // an approval the lock no longer stands in front of.
     const lead = await stuckLeadOf(people.rep);
     await systemUpdate(verify, 'crm_lead', { id: lead.id, conversion_approval_status: 'pending' });
+    // The conversion's own write, records included (#2219: the flag alone is
+    // refused by `converted_flag_only_by_conversion`, whatever the approval).
+    const records = await conversionRecordsOf(people.rep);
     const err = await refusal(
-      verify.hooks.run('crm_lead', 'update', { id: lead.id, is_converted: true }, { as: people.rep.token }),
+      verify.hooks.run('crm_lead', 'update', { id: lead.id, is_converted: true, ...records }, { as: people.rep.token }),
     );
     // The gate's envelope. The lock cannot be what speaks: it keys on the
     // stored `is_converted`, which is false here.
@@ -250,5 +269,87 @@ describe('a lead stuck at Converted with nothing converted is released (#2189)',
     const row = await stored(lead.id);
     expect({ status: row?.status, isConverted: row?.is_converted, contact: typeof row?.converted_contact })
       .toEqual({ status: 'converted', isConverted: true, contact: 'string' });
+  });
+});
+
+/**
+ * The Converted flag is the other door to the same state (#2219).
+ *
+ * The Details tab draws `is_converted` as a switch in the Conversion group, and
+ * the field is not `readonly`, because `mark_converted` writes it as the user.
+ * Ticking it and saving sent `PATCH crm_lead {is_converted: true}`, which
+ * answered 200 and stored the flag with every `converted_*` link null; the
+ * converted-lead lock, which keys on the flag, then refused every later edit
+ * with `409 RECORD_LOCKED`. So the flag crosses to `true` only with the records
+ * the conversion leaves: `converted_account` and `converted_contact`, in the
+ * same write or already stored. The wizard writes both in `mark_converted`
+ * (the third pin above). `converted_opportunity` stays optional, as it is in
+ * the wizard ("Create Opportunity?" unticked writes it null).
+ */
+describe('the Converted flag is set only with the records Convert Lead leaves (#2219)', () => {
+  it.each(PEOPLE)('%s: a bare REST PATCH of the flag is refused, and the lead stays unchanged and editable', async (_label, key) => {
+    const lead = await leadOf(people[key], 'qualified');
+    const refused = await rest(people[key], 'PATCH', `/data/crm_lead/${lead.id}`, { is_converted: true });
+    expect(refused.status).toBe(400);
+    expect(restText(refused.body)).toContain('Convert Lead');
+    // Not frozen: the next ordinary edit lands.
+    const next = await rest(people[key], 'PATCH', `/data/crm_lead/${lead.id}`, { title: 'Buyer' });
+    expect(next.status).toBe(200);
+    const row = await stored(lead.id);
+    expect({
+      isConverted: Boolean(row?.is_converted), status: row?.status, title: row?.title,
+      account: row?.converted_account ?? null, contact: row?.converted_contact ?? null,
+    }).toEqual({ isConverted: false, status: 'qualified', title: 'Buyer', account: null, contact: null });
+  });
+
+  it.each(PEOPLE)('%s: the flag alone, or with the status, is refused at the engine write door', async (_label, key) => {
+    for (const write of [{ is_converted: true }, { is_converted: true, status: 'converted' }]) {
+      const lead = await leadOf(people[key], 'contacted');
+      const err = await refusal(verify.hooks.run('crm_lead', 'update', { id: lead.id, ...write }, { as: people[key].token }));
+      expect({ name: err?.name, code: err?.code }, JSON.stringify(write)).toEqual({ name: 'ValidationError', code: 'VALIDATION_FAILED' });
+      expect(String(err?.message)).toContain('Convert Lead');
+      const row = await stored(lead.id);
+      expect({ isConverted: Boolean(row?.is_converted), status: row?.status }).toEqual({ isConverted: false, status: 'contacted' });
+    }
+  });
+
+  it('half the records is not the records: the account alone, or the contact alone, is refused', async () => {
+    const records = await conversionRecordsOf(people.rep);
+    for (const half of [{ converted_account: records.converted_account }, { converted_contact: records.converted_contact }]) {
+      const lead = await leadOf(people.rep, 'qualified');
+      const err = await refusal(
+        verify.hooks.run('crm_lead', 'update', { id: lead.id, is_converted: true, ...half }, { as: people.rep.token }),
+      );
+      expect({ name: err?.name, code: err?.code }, Object.keys(half).join()).toEqual({ name: 'ValidationError', code: 'VALIDATION_FAILED' });
+      expect(Boolean((await stored(lead.id))?.is_converted)).toBe(false);
+    }
+  });
+
+  it.each(PEOPLE)('%s: Create with the flag set is refused, and nothing is stored', async (_label, key) => {
+    const who = identity();
+    const res = await rest(people[key], 'POST', '/data/crm_lead', { ...who, is_converted: true });
+    expect(res.status).toBe(400);
+    expect(restText(res.body)).toContain('Convert Lead');
+    expect(await verify.rows('crm_lead', { email: who.email })).toEqual([]);
+  });
+
+  it.each([
+    ['in the same write', true],
+    ['already stored on the lead', false],
+  ] as const)('the records %s let the flag through', async (_label, sameWrite) => {
+    // What the gate judges is the lead's records, not who writes the flag: the
+    // wizard writes them in the same update, and a write that finds them
+    // already stored is judged the same way.
+    const lead = await leadOf(people.rep, 'qualified');
+    const records = await conversionRecordsOf(people.rep);
+    if (!sameWrite) await systemUpdate(verify, 'crm_lead', { id: lead.id, ...records });
+    await verify.hooks.run(
+      'crm_lead', 'update',
+      { id: lead.id, is_converted: true, status: 'converted', ...(sameWrite ? records : {}) },
+      { as: people.rep.token },
+    );
+    const row = await stored(lead.id);
+    expect({ isConverted: row?.is_converted, status: row?.status, account: row?.converted_account, contact: row?.converted_contact })
+      .toEqual({ isConverted: true, status: 'converted', account: records.converted_account, contact: records.converted_contact });
   });
 });

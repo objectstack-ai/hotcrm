@@ -24,6 +24,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       converted_only_by_conversion: {
         message: 'Solo «Convertir Prospecto» marca un prospecto como Convertido, porque crea la cuenta y el contacto en los que se convierte. Elija otro estado y use «Convertir Prospecto».',
       },
+      converted_flag_only_by_conversion: {
+        message: 'Solo «Convertir Prospecto» marca un prospecto como Convertido, porque crea la cuenta y el contacto en los que se convierte. Use «Convertir Prospecto» en lugar de marcar «Convertido».',
+      },
       disqualification_reason_required: {
         message: 'El motivo de descalificación es obligatorio cuando un prospecto no está cualificado',
       },

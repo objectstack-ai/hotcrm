@@ -260,10 +260,15 @@ describe('refusals a user reads name the record they are about', () => {
 
   it('the converted-lead lock (lead_automation)', async () => {
     // A converted lead, as the conversion leaves it — written as the system,
-    // owned by the rep who now tries to edit it.
+    // owned by the rep who now tries to edit it, and pointing at the account
+    // and contact it became (#2219: the flag stands only with both).
+    const [account] = await verify.seed('crm_account', [{ name: `Atlas Construction ${++n}`, owner_id: rep.id }]);
+    const [contact] = await verify.seed('crm_contact', [{
+      first_name: 'Mira', last_name: 'Costa', email: `became${n}@atlas.example.com`, crm_account: account!.id, owner_id: rep.id,
+    }]);
     const [lead] = await verify.seed('crm_lead', [{
       first_name: 'Mira', last_name: 'Costa', company: 'Atlas Construction', email: `conv${++n}@atlas.example.com`,
-      status: 'converted', is_converted: true, owner_id: rep.id,
+      status: 'converted', is_converted: true, converted_account: account!.id, converted_contact: contact!.id, owner_id: rep.id,
     }]);
     const err = await refusalFrom(() => update('crm_lead', { id: lead.id, company: 'Atlas Construction Group' }), 'lead_automation');
     expect(err.message).toContain('Cannot edit converted lead Mira Costa - Atlas Construction');
