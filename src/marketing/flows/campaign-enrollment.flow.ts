@@ -181,6 +181,19 @@ export const CampaignEnrollmentFlow: Flow = {
       id: 'check_campaign_open', type: 'decision', label: 'Campaign Open?',
     },
     {
+      // Where `check_campaign_open`'s default edge `e12` ends (#2121): a
+      // campaign that is not Planning or In Progress, or a `recordId` that
+      // names no campaign. A first-class refusal like `end_refused` below: the
+      // run ends `refused` with nothing written, and the console shows this
+      // message with Close only, not the clean ending's `successMessage`.
+      // Translated as `refusals.refuse_not_open.message` in the packs.
+      id: 'refuse_not_open', type: 'end', label: 'Campaign Not Open',
+      config: {
+        outcome: 'refused',
+        message: 'This campaign is not open for enrollment, or no longer exists: only a Planning or In Progress campaign takes members. Nobody was enrolled.',
+      },
+    },
+    {
       id: 'query_leads', type: 'get_record', label: 'Find Eligible Leads',
       config: {
         objectName: 'crm_lead',
@@ -304,7 +317,8 @@ export const CampaignEnrollmentFlow: Flow = {
     { id: 'e1', source: 'start', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'get_campaign', type: 'default' },
     { id: 'e3', source: 'get_campaign', target: 'check_campaign_open', type: 'default' },
-    // Closed campaign → no edge → flow ends without enrolling.
+    // Closed or missing campaign → `e12`, the default edge below, to the
+    // refusing end `refuse_not_open`: nobody is enrolled, and the run says why.
     //
     // THE live gate, on the EDGES and only here. A `decision` node's singular
     // `config.condition` is never read by the engine.
@@ -344,6 +358,17 @@ export const CampaignEnrollmentFlow: Flow = {
     { id: 'e7', source: 'check_campaign_open', target: 'query_contacts', type: 'conditional', condition: P`has(vars.campaignRecord) && has(vars.campaignRecord.status)
       && (vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress")
       && vars.memberSource == "contacts"`, label: 'Open · Contacts' },
+    // The decision's default edge (#2121). This decision declares no
+    // `config.conditions`, so it reports no branch, and the engine takes `e12`
+    // only when neither `e4` nor `e7` holds: Completed, Aborted, any status
+    // added later, and a `campaignRecord` bound to null all land here. Before
+    // it existed no edge matched, and the run ended on the clean path under
+    // the static `successMessage` with nobody enrolled. A default rather than
+    // a complementary conditional like `e10` / `e11`: this complement would be
+    // the two open clauses negated by hand, `has()` guards and all, and kept
+    // in step with them; and Studio's Problems panel flags a decision with no
+    // default edge however its guards partition.
+    { id: 'e12', source: 'check_campaign_open', target: 'refuse_not_open', type: 'default', isDefault: true, label: 'Not open' },
     { id: 'e8', source: 'query_contacts', target: 'loop_contacts', type: 'default' },
     { id: 'e9', source: 'loop_contacts', target: 'check_refused', type: 'default' },
     // Complementary conditionals rather than an `isDefault` fallback, so the

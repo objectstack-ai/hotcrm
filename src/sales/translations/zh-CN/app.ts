@@ -613,6 +613,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           message:
             '有 {{refusedCount}} 人被拒绝加入：已加入 {{enrolledCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
         },
+        refuse_not_open: {
+          message:
+            '该营销活动不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+        },
       },
       screens: {
         screen_1: {

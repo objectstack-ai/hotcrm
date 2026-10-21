@@ -606,6 +606,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           message:
             'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} inscritas, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
         },
+        refuse_not_open: {
+          message:
+            'Esta campaña no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
+        },
       },
       screens: {
         screen_1: {

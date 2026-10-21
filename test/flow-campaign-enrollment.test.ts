@@ -199,12 +199,6 @@ describe('campaign_enrollment — screen action', () => {
     ).toHaveLength(1);
   });
 
-  it.each(['completed', 'aborted'])('refuses to top up a %s campaign', async (status) => {
-    // Enrolling into a finished campaign corrupts its final snapshot metrics.
-    const w = await world({ status });
-    expect(await enrol(w)).toHaveLength(0);
-  });
-
   it('enrols into a campaign still in planning', async () => {
     const w = await world({ status: 'planning' });
     expect(enrolledKeys(w, await enrol(w), 'crm_lead').length).toBeGreaterThan(0);
@@ -262,11 +256,6 @@ describe('campaign_enrollment — contacts (#597)', () => {
     expect(members.filter((m) => m.crm_contact === w.contacts.c_eng!.id)).toHaveLength(1);
   });
 
-  it.each(['completed', 'aborted'])('refuses to top up a %s campaign with contacts either', async (status) => {
-    const w = await world({ status });
-    expect(await enrol(w, asContacts())).toHaveLength(0);
-  });
-
   it('the two branches are exclusive — picking contacts enrols no leads', async () => {
     const w = await world();
     expect((await enrol(w, asContacts())).filter((m) => m.crm_lead)).toHaveLength(0);
@@ -275,5 +264,82 @@ describe('campaign_enrollment — contacts (#597)', () => {
   it('…and picking leads enrols no contacts', async () => {
     const w = await world();
     expect((await enrol(w)).filter((m) => m.crm_contact)).toHaveLength(0);
+  });
+});
+
+/**
+ * A campaign that is not open, or no longer exists, is refused (#2121).
+ *
+ * `check_campaign_open` takes `e4` (leads) or `e7` (contacts) only for a
+ * campaign in Planning or In Progress. Every other case takes its default
+ * edge to the refusing `end` `refuse_not_open`: a Completed or Aborted
+ * campaign (enrolling would corrupt its final metrics), and a `recordId` that
+ * names no campaign (deleted after the click, or never one). Until #2121 the
+ * decision had no edge for those cases, so the run ended on the clean path
+ * and the console showed the static "Eligible members enrolled in campaign."
+ * over a run that enrolled nobody.
+ *
+ * Each claim is the run's ending, the member queries it ran and the
+ * campaign's member rows, compared in one object. The queries come off the
+ * run's terminal `summary` (a refusing `end` records no step of its own
+ * there); the refusal is the node's own `config.message`, read off the flow
+ * rather than retyped, so what is pinned is WHICH ending fired.
+ */
+describe('campaign_enrollment — a campaign that is not open, or no longer exists, is refused (#2121)', () => {
+  const refusal = (CampaignEnrollmentFlow.nodes.find((n) => n.id === 'refuse_not_open')?.config as Rec | undefined)?.message;
+
+  /** Start the screen on `recordId` as the marketer, submit it, and read what the run did. */
+  async function ending(recordId: string, screen: Rec) {
+    const run = await verify.flows.run('campaign_enrollment', { recordId }, { as: marketer.token });
+    expect(run.status, 'campaign_enrollment did not pause on its screen').toBe('paused');
+    const result = (await verify.flows.resume(run, screen, { as: marketer.token })) as Rec;
+    const ran = new Set(((result.summary?.nodes ?? []) as Rec[]).filter((n) => n.runs > 0).map((n) => String(n.nodeId)));
+    return {
+      success: result.success,
+      // Set on a refusal only: the clean ending answers `success` and the
+      // flow's `successMessage`, with no `status`.
+      status: result.status,
+      refusalMessage: result.refusalMessage,
+      successMessage: result.successMessage,
+      ran: { query_leads: ran.has('query_leads'), query_contacts: ran.has('query_contacts') },
+      members: (await verify.rows('crm_campaign_member', { crm_campaign: recordId })).length,
+    };
+  }
+
+  const REFUSED = {
+    success: true, status: 'refused', successMessage: undefined,
+    ran: { query_leads: false, query_contacts: false }, members: 0,
+  };
+
+  it('the refusing ending exists and says something', () => {
+    expect(typeof refusal === 'string' && refusal.length > 0, 'no `refuse_not_open` end node with a message').toBe(true);
+  });
+
+  it.each([
+    ['completed', 'leads'], ['completed', 'contacts'], ['aborted', 'leads'], ['aborted', 'contacts'],
+  ] as const)('a %s campaign (%s) is refused, and nobody is enrolled', async (status, memberSource) => {
+    const w = await world({ status });
+    expect(await ending(w.campaign.id, { ...SCREEN, memberSource }))
+      .toEqual({ ...REFUSED, refusalMessage: refusal });
+  });
+
+  it.each(['leads', 'contacts'] as const)('a campaign id that names no campaign (%s) is refused, and nobody is enrolled', async (memberSource) => {
+    const missing = `no-such-campaign-${++k}`;
+    expect(await verify.rows('crm_campaign', { id: missing }), 'the missing campaign exists').toHaveLength(0);
+    expect(await ending(missing, { ...SCREEN, memberSource }))
+      .toEqual({ ...REFUSED, refusalMessage: refusal });
+  });
+
+  it.each([
+    ['in_progress', 'leads', { query_leads: true, query_contacts: false }],
+    ['in_progress', 'contacts', { query_leads: false, query_contacts: true }],
+    ['planning', 'leads', { query_leads: true, query_contacts: false }],
+  ] as const)('control: a %s campaign (%s) takes its open edge and enrols', async (status, memberSource, ran) => {
+    const w = await world({ status });
+    const out = await ending(w.campaign.id, { ...SCREEN, memberSource });
+    expect({ ...out, members: out.members > 0 }).toEqual({
+      success: true, status: undefined, refusalMessage: undefined,
+      successMessage: CampaignEnrollmentFlow.successMessage, ran, members: true,
+    });
   });
 });

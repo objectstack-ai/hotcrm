@@ -608,6 +608,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           message:
             '選択された人のうち {{refusedCount}} 人の登録が拒否されました：登録 {{enrolledCount}} 人、拒否 {{refusedCount}} 人。拒否された人はキャンペーンに追加されていません。理由はフローの実行ログに一人ずつ記録されています。',
         },
+        refuse_not_open: {
+          message:
+            'このキャンペーンはメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
+        },
       },
       screens: {
         screen_1: {
