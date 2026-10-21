@@ -12,11 +12,12 @@ activated one could return to **Draft**, and a draft could be activated without 
 those counted as a live contract again, for the account's *Customer* status, renewal reminders and the billing
 hand-off.
 
-- **A status change outside the route is now refused** on the record's Edit form, on the status path and through
-  the REST API (`400 VALIDATION_FAILED`, on **Status**), with the message "This status change is not allowed. A
-  contract moves Draft → In Approval → Activated → Expired; In Approval can go back to Draft, and Draft, In Approval
-  or Activated can be Terminated. Expired and Terminated are final: a renewal is a new contract." The contract
-  keeps the status it had. The message is translated into Chinese, Spanish and Japanese.
+- **A status change outside the route is now refused**, on the contract's Edit form (the message appears under
+  **Status** and the form stays open) and through the REST API (`400 VALIDATION_FAILED`, on `status`), with the
+  message "This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; In
+  Approval can go back to Draft, and Draft, In Approval or Activated can be Terminated. Expired and Terminated are
+  final: a renewal is a new contract." The contract keeps the status it had. The message is translated into
+  Chinese, Spanish and Japanese.
 - **Everything else about an ended contract can still be edited.** Only the status is held: an expired or
   terminated contract still takes changes to its terms, notes, primary contact or any other field.
 - **Creating a contract is not checked.** A contract imported or created directly as *Activated* or *Expired*
