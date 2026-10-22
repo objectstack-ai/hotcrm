@@ -123,7 +123,7 @@ enumerated below and in the JSON, each with a stated reason.
 
 The app package holds the consumer surface — the app and its navigation scaffolding, the
 one page authored against no object (`home`), the two
-cross-domain dashboards, the three cross-domain AI skills, the six permission sets, the four
+cross-domain dashboards, the three cross-domain AI skills, every permission set, the four
 locale bundles, the package docs, and the shared TypeScript source described below.
 
 It declares **no objects at all**, and that is deliberate. ADR-0130's payoff is that "package

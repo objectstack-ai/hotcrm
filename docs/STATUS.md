@@ -22,7 +22,7 @@ HotCRM v5.1.2
 Data: 18 Objects  362 Fields
 UI: 1 Apps  14 Views  6 Pages  5 Dashboards  10 Reports  32 Actions
 Logic: 33 Flows
-Security: 12 Positions  6 Permissions
+Security: 12 Positions  7 Permissions
 ```
 
 Validation command:

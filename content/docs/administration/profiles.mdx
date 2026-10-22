@@ -20,6 +20,10 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 | 📣 **Marketing User** | `marketing_user` | Marketers | Demand gen, campaign manager |
 | 🌐 **Guest (Public Forms)** | `guest_portal` | Anonymous web visitors | Nobody — it is assigned to unauthenticated form traffic |
 
+## Default set for every member [#default-set]
+
+Besides the six profiles above, HotCRM ships one more permission set, **CRM User** (`crm_user`), and it is the one HotCRM offers to **every member** of the organization. It is a floor, not a job: each member creates, reads and edits their **own** leads, accounts, opportunities, tasks and events, adds contacts to their own accounts and attendees to their own meetings, and reads the **product**, **campaign** and **knowledge** catalogues. It deletes nothing, exports nothing and carries no *View All*, *Modify All* or system permission, which is what lets the platform give it to everyone at once. When HotCRM is installed, its package page in the **Marketplace** shows the suggestion *This app suggests granting "crm_user" to all signed-in users (the Everyone position).* **Grant** gives it to every signed-in member, people invited later included, so a new colleague opens the CRM without anyone assigning them a profile; **Dismiss** declines it. To take it back, click **Revoke** on that suggestion on the same package page: members then hold only the profiles assigned to them. On a self-hosted server started with `objectstack serve`, every signed-in member holds CRM User from the start and the suggestion already reads as accepted, so there is nothing to grant there. Sets are additive, so it also adds to every profile above: where a profile says it cannot create accounts or opportunities, as Marketing User and Service Agent do, its holders can once CRM User is in force — but only their own.
+
 ## What each profile can do
 
 ### 👑 System Administrator
@@ -53,15 +57,15 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 ### 🎧 Service Agent
 
 - Create, read and edit **cases** and **tasks** in their own queue; critical cases reach the wider service team through the escalation sharing rule
-- Read **accounts**, **contacts** and **leads** org-wide — a ticket is meaningless without the customer behind it. Reading is the whole of it: an agent who opens a customer's contact to correct a phone number can save it only if that contact is one they both own and created, which a contact that came in with the account never is (see [Why "org-wide" describes reading, not writing](#why-org-wide-describes-reading-not-writing))
+- Read **accounts**, **contacts** and **leads** org-wide — a ticket is meaningless without the customer behind it. Beyond the [default set](#default-set) floor, which lets an agent create and edit leads and accounts of their **own**, reading is the whole of it: an agent who opens a customer's contact to correct a phone number can save it only if that contact is one they both own and created, which a contact that came in with the account never is (see [Why "org-wide" describes reading, not writing](#why-org-wide-describes-reading-not-writing))
 - **Knowledge articles**: read every article and author or revise them (the draft → in review → published lifecycle is enforced by the KB flow, not by permissions). Archiving is an admin action
 - Read the **product** catalog
-- No access to opportunities, quotes or forecasts
+- No access to opportunities, quotes or forecasts beyond the floor: with the [default set](#default-set) in force, an agent creates, reads and edits only opportunities of their **own**, and still no quote or forecast
 
 ### 📣 Marketing User
 
 - **Leads**: create them, read every lead in the org, and edit the ones they own and created — org-wide read does not carry org-wide editing (see [below](#why-org-wide-describes-reading-not-writing))
-- **Contacts**: read every contact in the org. Creating one is refused in practice — a contact is master-detail under its account, so inserting one requires edit access to that account, and this profile holds no account editing anywhere. Editing is the same owner-and-creator gate as leads
+- **Contacts**: read every contact in the org. Creating one under an account they do not own is refused in practice — a contact is master-detail under its account, so inserting one requires edit access to that account, and this profile holds no account editing anywhere beyond the floor: the [default set](#default-set) lets a marketer create and edit accounts of their **own**, and contacts under those. Editing is the same owner-and-creator gate as leads
 - **Campaigns** and **campaign members**: create, and edit *any* of them — these two objects carry a row-level rule written for this profile, which is what lets a marketer work a campaign a colleague planned and update members a colleague enrolled. This is what the "Add to Campaign" action writes, as the marketer who runs it
 - Read **accounts** and **opportunities** org-wide, for campaign→pipeline ROI (a deal flagged **Private** stays hidden)
 - Read **knowledge articles**

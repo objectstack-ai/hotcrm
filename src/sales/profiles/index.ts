@@ -127,6 +127,7 @@
  * for them ownership is assigned, never taken.
  */
 
+export { CrmUserProfile } from './crm-user.profile';
 export { GuestPortalProfile } from './guest-portal.profile';
 export { MarketingUserProfile } from './marketing-user.profile';
 export { SalesManagerProfile } from './sales-manager.profile';
