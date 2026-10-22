@@ -228,10 +228,13 @@ export const CampaignMember = ObjectSchema.create({
     //   converted    — the member's lead converting; `campaign_lead_conversion_refresh`
     //                  (src/sales/objects/lead.campaign-metrics.hook.ts) promotes
     //                  the row when `crm_lead.is_converted` flips.
-    //   unsubscribed — set by a rep (or an opt-out request) on the member row;
-    //                  `campaign_member_optout_sync` round-trips it to the
-    //                  lead/contact's `email_opt_out`, which is what makes the
-    //                  enrollment flow's opt-out filter honour it next run.
+    //   unsubscribed — set on the member row by a user who may edit campaign
+    //                  members (Marketing User and the administrators), usually
+    //                  when the person asks to stop hearing from you; nothing
+    //                  sets it on its own. `campaign_member_optout_sync`
+    //                  round-trips it to the lead/contact's `email_opt_out`,
+    //                  which is what makes the enrollment flow's opt-out filter
+    //                  honour it next run.
     //
     // `opened` / `clicked` / `bounced` were removed here — see the object
     // docblock. Nothing on the platform can produce them.

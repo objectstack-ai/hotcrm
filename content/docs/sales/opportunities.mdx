@@ -1,6 +1,6 @@
 ---
 title: Opportunities
-description: Active sales deals — the heart of the pipeline, with 7 stages, line items and discount approvals.
+description: Active sales deals — the heart of the pipeline, with 7 stages, line items and large-deal approvals.
 ---
 
 # Opportunities
@@ -101,7 +101,7 @@ You don't have to remember any of this — the system does it for you:
 - **Expected revenue** = amount × probability ÷ 100, recalculated whenever amount or probability changes.
 - **Stage entry date** is stamped the moment a deal is created and re-stamped every time you move it to a new stage. **Days in current stage** counts from it, so it is always up to date — that is what surfaces stagnant deals.
 - When you mark a deal **Closed Won and the amount is $100K or more**, the deal owner gets an email — the owner alone, not their manager.
-- When the amount exceeds **$500K**, the deal enters the [Discount Approval](/docs/revenue/approvals) process automatically.
+- When an open deal's amount is **$100K or more**, it enters the [Large Deal Approval](/docs/revenue/approvals) flow automatically — see *Approval for large deals* below.
 
 ## Line items — what's actually being sold
 
@@ -119,15 +119,17 @@ A closed deal's line items are locked with it: once the deal is *Closed Won* or 
 
 You add one from the **Products** panel on the *Related* tab. Alongside the lines a deal already has and the *View all* link into the full list, the panel carries an **Add** button. A related list can carry a button in exactly two ways, an `actions` list or an `add` picker, and this one declares the second and still not the first: there is no *Add Product* action anywhere in the app. The picker offers the product catalog filtered to **active** products, so a retired product cannot be sold onto a new deal, and the row it creates arrives complete and priced — quantity 1, the product's list price as the unit price, no discount — for you to adjust from there. Its rows read the way the catalog names a product, *PRD-0001 - Widget*. There is still no line-item entry in the sidebar to fall back on: `crm_opportunity_line_item` has no list view of its own. Permission was never what was missing — a rep's profile grants create on the object — and an import or the API still writes these rows; they are simply no longer the only route. If itemising is not how your team works, type the **Amount** by hand: that is a supported route, not a workaround.
 
-## Discount approval for high-value deals
+## Approval for large deals
 
-If a deal's **amount goes over $500,000**, the opportunity is automatically routed for approval:
+Saving an open deal whose **amount is $100K or more** routes it into the **Large Deal Approval** flow automatically — there is no submit button, and a deal at exactly $100,000 is on the approval side of the line:
 
-1. The opportunity is **locked** — nobody can edit it.
-2. **Sales Manager** reviews first.
-3. If approved, **Sales Director** signs off.
-4. On final approval, the stage is automatically set to **Closed Won**.
-5. If rejected at any step, the deal is returned to the rep to re-justify.
+1. The opportunity is **locked** while a step is pending — edits wait until the approver decides.
+2. A **Sales Manager** reviews it first. For a deal up to $500K, that review is the whole approval.
+3. A deal **above $500K** goes on to a **Sales Director** for sign-off once the manager approves.
+4. On final approval, **Approval Status** becomes *Approved*, **Approved Date** is stamped and the owner is notified. The stage does not move: the deal stays where it was, and the rep closes it as usual.
+5. If either approver rejects it, the run ends there: **Approval Status** becomes *Rejected* and the owner is notified.
+
+A deal already *Closed Won* or *Closed Lost* never enters approval.
 
 The approval status is shown as a banner at the top of the opportunity detail screen. See [Revenue › Approvals](/docs/revenue/approvals) for the full process.
 
@@ -208,5 +210,5 @@ When you open an opportunity, ask:
 ## Tips for admins
 
 - The stage list, the default probabilities and the legal transitions live in three places in the source, not on a Setup screen: the `stage` field's own options (`src/sales/objects/opportunity.object.ts`); the `STAGE_PROBABILITY` map inside the `opportunity_lifecycle` hook (`src/sales/objects/opportunity.hook.ts`), which re-syncs *Probability* on every save; and the `opportunity_stage_progression` state-machine validation rule on the opportunity object (`src/sales/objects/opportunity.object.ts`). Change the three in lockstep. See [Customization › Extending Objects](/docs/customization/extending-objects).
-- The $500K discount approval threshold can be changed in the [approval process configuration](/docs/revenue/approvals).
+- The approval amounts are not a Setup field either. The $100K entry and the $500K director tier are the two amounts in `src/sales/objects/_thresholds.ts`, and the $100K line is the app's one definition of a large deal: the won-deal alert and the large-deal sharing rules cut at the same amount, so changing it moves them together. See [Revenue › Approvals](/docs/revenue/approvals).
 - The $100K large-deal notification threshold is not a Setup field either: it is the CEL start condition of the `opportunity_won_alert` flow — `record.amount >= 100000` in `src/sales/flows/opportunity-won-alert.flow.ts`. Who gets the alert is that flow's `notify` node, whose `recipients` list is the single entry `{record.owner_id}` — the deal owner alone.
