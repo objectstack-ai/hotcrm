@@ -354,18 +354,65 @@ export const DemoAdminPermissionSets: readonly DemoAdminGrant[] = [
  * be resolved — no lookup, or an account outside both staffed territories —
  * goes to the manager. The territory VALUES are spelled through
  * {@link TERRITORY}, so a renamed territory cannot be half-applied here.
+ *
+ * ### Cases route by DESK, not by territory (#2206)
+ *
+ * The service positions are not territorial: `service_agent` and
+ * `service_manager` are the two case pools, and a case's owner is whichever
+ * desk the app's own routing would have put it on. See {@link CASE_DESK}.
  */
-export type DemoOwnershipRoute = {
-  /** The object whose seeded rows get re-stamped. */
-  readonly object: string;
-  /**
-   * Lookup field resolving this row's `crm_account`, or `null` when the object
-   * has none — those rows all fall to the `other` bucket.
-   */
-  readonly accountField: string | null;
-  /** Why this object is routed. Asserted non-empty, like `demonstrates`. */
-  readonly why: string;
-};
+export type DemoOwnershipRoute =
+  | {
+      /** The object whose seeded rows get re-stamped. */
+      readonly object: string;
+      /** Routed by the territory of the row's account ({@link TERRITORY_OWNER}). */
+      readonly by: 'territory';
+      /**
+       * Lookup field resolving this row's `crm_account`, or `null` when the object
+       * has none — those rows all fall to the `other` bucket.
+       */
+      readonly accountField: string | null;
+      /** Why this object is routed. Asserted non-empty, like `demonstrates`. */
+      readonly why: string;
+    }
+  | {
+      readonly object: string;
+      /** Routed to the service desk the case belongs on ({@link CASE_DESK}). */
+      readonly by: 'case_desk';
+      readonly why: string;
+    };
+
+/**
+ * Case desk → the demo staff `key` that owns the cases on it (#2206).
+ *
+ * Before this row existed no seeded case was routed at all, so which persona
+ * owned the demo's 38 cases depended on timing. Measured on 18.0.0, fresh
+ * `pnpm dev`: run `demo:staff` while the seed was still writing and
+ * `case_auto_assign` round-robined all 38 onto the service agent (the only
+ * holder of the intake pool, so the manager got none, escalated ones
+ * included); run it after the seed settled and all 38 stayed with the dev
+ * admin, so the agent landed on a Customer Service page of zeros.
+ *
+ * The escalation desk takes what the app's own escalation hands it: a case
+ * already escalated, and a case at Critical priority, which the Case
+ * Escalation flow hands to the least-loaded `service_manager` (on a never
+ * escalated open one, on the hand-over's own save). The intake desk takes
+ * everything else.
+ */
+export const CASE_DESK = {
+  escalation: 'service_manager',
+  intake: 'service_agent',
+} as const;
+
+/** Which desk a case belongs on. `is_escalated` may come back as `1` from SQLite, so it is read for truthiness. */
+export function caseDeskOf(row: { readonly priority?: unknown; readonly is_escalated?: unknown }): keyof typeof CASE_DESK {
+  return row.priority === 'critical' || row.is_escalated === true || row.is_escalated === 1
+    ? 'escalation'
+    : 'intake';
+}
+
+/** The `crm_case` fields {@link caseDeskOf} reads, for the script's query. */
+export const CASE_DESK_FIELDS = ['priority', 'is_escalated'] as const;
 
 /**
  * Territory → the demo staff `key` that owns rows in it.
@@ -397,22 +444,31 @@ export const TERRITORY_OWNER: Readonly<Record<Territory, string>> = {
 export const DemoPipelineOwnership: readonly DemoOwnershipRoute[] = [
   {
     object: 'crm_opportunity',
+    by: 'territory',
     accountField: 'crm_account',
     why: 'the pipeline the OAuth measurement read as 0; every deal hangs off an account',
   },
   {
     object: 'crm_lead',
+    by: 'territory',
     accountField: null,
     why: 'a lead has no account yet, so the whole top of funnel sits with the manager',
   },
   {
     object: 'crm_task',
+    by: 'territory',
     accountField: 'related_to_account',
     why: '"last follow-up" is derived from tasks, so an unowned one reads as no follow-up',
   },
   {
     object: 'crm_event',
+    by: 'territory',
     accountField: 'related_to_account',
     why: 'the other half of last-follow-up, and the owner axis of the Activity by Rep bar',
+  },
+  {
+    object: 'crm_case',
+    by: 'case_desk',
+    why: 'the service journey: the agent works the intake desk, the manager the escalated and critical cases',
   },
 ];

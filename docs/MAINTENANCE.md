@@ -296,10 +296,15 @@ pnpm dev          # terminal 1 — leave running
 pnpm demo:staff   # terminal 2 — once, after the server is up
 ```
 
+It can be started as soon as the server answers: a fresh database keeps loading
+its seed for a while after that, and the script waits for the seed to finish
+(up to 180 s, `--seed-wait SECONDS`) before it hands anything over ([#2206]).
+
 That creates the non-admin demo users the table declares (`na.rep@` /
 `eu.rep@` / `sales.manager@` / `service.agent@` / `service.manager@objectos.ai`,
 all `demo1234`), assigns their positions, hands them the demo book by
-re-stamping `owner_id` on the routed objects, and re-evaluates every sharing
+re-stamping `owner_id` on the routed objects (each seeded case goes to the
+service manager when it is escalated or critical, to the service agent otherwise), and re-evaluates every sharing
 rule so the already-seeded accounts materialise grants. It is idempotent,
 self-verifying (non-zero exit if the layers do not connect) and prints both what
 each user can see and what each user owns:
@@ -350,6 +355,7 @@ Three things worth knowing before changing any of it:
 
 [#640]: https://github.com/objectstack-ai/hotcrm/issues/640
 [#1759]: https://github.com/objectstack-ai/hotcrm/issues/1759
+[#2206]: https://github.com/objectstack-ai/hotcrm/issues/2206
 [objectstack#16549]: https://github.com/objectstack-ai/objectstack/issues/16549
 
 ## 5. Releasing
