@@ -39,9 +39,34 @@ const STALE_THRESHOLD_DAYS = 14;
  * `test/private-opportunity-derived-records.test.ts` pins both titles.
  */
 const PRIVATE_STALL_SUBJECT = 'Advance stalled deal (private opportunity)';
-const NAMED_STALL_SUBJECT = cel`'Advance stalled deal: ' + currentOpp.name`;
-const STALL_SUBJECT = cel`has(currentOpp.is_private) && currentOpp.is_private == true
-  ? ${PRIVATE_STALL_SUBJECT} : 'Advance stalled deal: ' + currentOpp.name`;
+
+/**
+ * `crm_task.subject` caps at 255 and the engine ENFORCES it, while
+ * `crm_opportunity.name` declares no cap: a deal named longer than 233
+ * characters made `'Advance stalled deal: ' + name` overflow, the insert was
+ * refused, and the deal got no stall task (#2210). The title is cut the way its
+ * hook siblings cut theirs (`opportunity.hook.ts`, `case.hook.ts`): over 255,
+ * the first 254 characters and an ellipsis.
+ *
+ * `size()` guards `substring()` because the installed CEL `substring` throws
+ * when its end index runs past the string, so it cannot be called unguarded on
+ * a short name. Both are platform CEL (cel-js built-ins on the platform's
+ * evaluator); nothing here re-implements a cap the engine owns.
+ *
+ * The gate below matches on this SAME expression, so a long-named deal's
+ * already-open task is found and the sweep stays idempotent for it.
+ */
+const SUBJECT_CAP = 255;
+const NAMED_STALL_SUBJECT = cel`size('Advance stalled deal: ' + currentOpp.name) > ${SUBJECT_CAP}
+  ? ('Advance stalled deal: ' + currentOpp.name).substring(0, ${SUBJECT_CAP - 1}) + '…'
+  : 'Advance stalled deal: ' + currentOpp.name`;
+// The private branch wraps the named expression's own source, so the title
+// written and the title the gate looks for cannot drift apart.
+const STALL_SUBJECT: typeof NAMED_STALL_SUBJECT = {
+  ...NAMED_STALL_SUBJECT,
+  source: `has(currentOpp.is_private) && currentOpp.is_private == true
+  ? ${JSON.stringify(PRIVATE_STALL_SUBJECT)} : (${NAMED_STALL_SUBJECT.source})`,
+};
 
 export const OpportunityStagnationFlow: Flow = {
   name: 'opportunity_stagnation',

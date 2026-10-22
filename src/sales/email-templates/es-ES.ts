@@ -27,7 +27,7 @@ export const esES: EmailTemplatePack = {
   'crm.large_deal_won': {
     label: 'Gran operación ganada',
     subject: 'Gran operación ganada: {{name}}',
-    bodyHtml: '<p>{{name}} se cerró por {{amount}}. Enhorabuena al equipo.</p>',
+    bodyHtml: '<p>{{name}} se cerró por {{amount | number:2}}. Enhorabuena al equipo.</p>',
   },
   'crm.lead_conversion_approved': {
     label: 'Cliente potencial aprobado para conversión',
