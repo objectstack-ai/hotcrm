@@ -20,6 +20,10 @@ Permission sets are **explicit-allow only**: if an object is not listed in a set
 | 📣 **Marketing User** | `marketing_user` | Marketers | Demand gen, campaign manager |
 | 🌐 **Guest (Public Forms)** | `guest_portal` | Anonymous web visitors | Nobody — it is assigned to unauthenticated form traffic |
 
+## Default set for every member [#default-set]
+
+Besides the six profiles above, HotCRM ships one more permission set, **CRM User** (`crm_user`), and it is the one HotCRM offers to **every member** of the organization. It is a floor, not a job: each member creates, reads and edits their **own** leads, accounts, opportunities, tasks and events, reads the contacts, quotes, contracts and line items under the records they can see, and reads the **product**, **campaign** and **knowledge** catalogues. It deletes nothing, exports nothing and carries no *View All*, *Modify All* or system permission, which is what lets the platform give it to everyone at once. When HotCRM is installed, its package page in the **Marketplace** shows the suggestion *This app suggests granting "crm_user" to all signed-in users (the Everyone position).* **Grant** gives it to every signed-in member, people invited later included, so a new colleague opens the CRM without anyone assigning them a profile; **Dismiss** declines it. To take it back, click **Revoke** on that suggestion on the same package page: members then hold only the profiles assigned to them. On a self-hosted server started with `objectstack serve`, every signed-in member holds CRM User from the start and the suggestion already reads as accepted, so there is nothing to grant there. A member's own profile always adds to it, since sets are additive.
+
 ## What each profile can do
 
 ### 👑 System Administrator
