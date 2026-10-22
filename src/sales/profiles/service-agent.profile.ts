@@ -19,9 +19,13 @@ export const ServiceAgentProfile = {
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. `crm_opportunity` carries no export bit: this
     // set has no read on it at all, and the axis never widens read.
+    // Create/edit `false` is overridden by the `crm_user` floor for OWN leads (#2231).
     crm_lead:        { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
+    // Create/edit `false` is overridden by the `crm_user` floor for OWN accounts (#2231).
     crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
+    // Create `false` is overridden by the `crm_user` floor under OWN accounts (#2231).
     crm_contact:     { allowCreate: false, allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
+    // Create/read/edit `false` is overridden by the `crm_user` floor for OWN opportunities (#2231).
     crm_opportunity: { allowCreate: false, allowRead: false, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     // Cases + tasks: an agent's own queue by default (readScope: 'own').
     // Cross-agent visibility exists for CASES only — the escalation rules widen
