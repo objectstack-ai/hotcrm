@@ -377,7 +377,14 @@ describe('the harness enforces (negative controls)', () => {
       // ⛔ No app profile. If one of these principals ever picked up
       // `sales_manager`, its `viewAllRecords: true` would decide the read and
       // the arms would stop measuring their own grants.
-      for (const profile of ((stack as AnyRec).permissions as AnyRec[]).map((p) => p.name)) {
+      // The app's `isDefault` set (`crm_user`, #2231) is the exception, and it is
+      // excused by what it is rather than by name: `objectstack serve` and this
+      // boot hand it to every member as the baseline (ADR-0056 D7), so no
+      // principal here can be without it. It reads `crm_opportunity` at
+      // `readScope: 'own'` with no View All, a reach every arm below already
+      // has, so it decides no read.
+      const profiles = ((stack as AnyRec).permissions as AnyRec[]).filter((p) => p.isDefault !== true);
+      for (const profile of profiles.map((p) => p.name)) {
         expect(c.permissions, `${arm} must not hold the app profile ${profile}`)
           .not.toContain(profile);
       }

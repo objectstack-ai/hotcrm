@@ -26,13 +26,23 @@
  *   - the sales book, OWN scope: create, read and edit their own leads,
  *     accounts, opportunities, tasks and events. Nothing is deleted, nothing
  *     exported, and ownership is assigned, never taken (no `allowTransfer`).
- *   - what hangs off those records, READ only and parent-derived: contacts,
- *     attendees (both writable — they are part of working an own account /
- *     own meeting), quotes, contracts, line items, campaign members. A
- *     `controlled_by_parent` grant carries no `readScope` (it would be inert).
+ *   - contacts and meeting attendees, `controlled_by_parent`: create, read
+ *     and edit under the accounts and events the member can reach, so an own
+ *     account gets its people and an own meeting its guests. No `readScope`
+ *     (it would be inert on a parent-derived object).
  *   - the reference catalogues — products, campaigns, knowledge articles —
  *     READ, through their `public_read` OWD and without View All.
  *   - the record Attachments / Discussion / activity panels, as `sales_rep`.
+ *
+ * WHAT IT DOES NOT GRANT, deliberately: quotes, contracts, line items and
+ * campaign members. Each is `controlled_by_parent`, so a read here would reach
+ * every child of every parent the HOLDER can read — and this set is held
+ * alongside every persona. `marketing_user` reads every account and deal, and
+ * `service_agent` every account, so the same grant that shows a bare member
+ * the quotes of their own account would show those personas every quote and
+ * contract in the organization. Campaign members hang off campaigns, which are
+ * `public_read`, so that read would be every enrollment for every member.
+ * Pricing and enrollment stay with the sales and marketing profiles.
  *
  * No `fields` block, deliberately. Field-level security merges MOST
  * PERMISSIVE over the fields a set authors (`getFieldPermissions`,
@@ -60,13 +70,8 @@ export const CrmUserProfile = {
     crm_event:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
 
     // ─── Under those records: `controlled_by_parent`, no readScope ────
-    crm_contact:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    crm_event_attendee: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    crm_quote:                 { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    crm_contract:              { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    crm_opportunity_line_item: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    crm_quote_line_item:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    crm_campaign_member:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    crm_contact:        { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
 
     // ─── Reference catalogues: `public_read` OWD, so read needs no View All
     crm_product:           { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },

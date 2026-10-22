@@ -13,9 +13,13 @@ until an administrator assigned them a profile, person by person, in **Setup →
   position).* One **Grant** gives it to every signed-in member, people invited later included. **Revoke** on the same
   panel takes it back.
 - **What it gives.** Each member creates, reads and edits their **own** leads, accounts, opportunities, tasks and
-  events, reads the contacts, quotes, contracts and line items under the records they can see, and reads the product,
-  campaign and knowledge catalogues. It deletes nothing, exports nothing, and carries no View All, Modify All or system
+  events, adds contacts and meeting attendees to them, and reads the product, campaign and knowledge catalogues.
+  Quotes, contracts and line items stay with the sales profiles. It deletes nothing, exports nothing, and carries no View All, Modify All or system
   permission. Every grant in it is one the Sales Representative profile already makes, so a rep gains nothing new.
+- **It adds to every profile.** Permission sets add up, so once CRM User is in force a Marketing User or a Service
+  Agent can also create and edit accounts and opportunities of their own, which their profiles alone do not
+  allow. What it adds for them to read is limited to their own records and the shared product and campaign
+  catalogues; it reaches no quote, contract or line item.
 - **Why not Sales Representative.** The platform refuses to give everyone a set that can export, delete or see every
   record, and Sales Representative does all three, so a narrower set was written for this purpose.
 - **Nobody's field security changes.** CRM User masks no field and opens no field, so every profile reads and edits the

@@ -1,10 +1,11 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll } from 'vitest';
-import type { VerifyStack } from '@objectstack/verify';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import { SecurityPlugin } from '@objectstack/plugin-security';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import {
-  hotcrmStack, signUpPerson, notificationsTo, conditionHolds, type Person,
+  hotcrmStack, signUpPerson, notificationsTo, conditionHolds, bootOptions, buildArtifactAgain, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -65,8 +66,9 @@ async function runConversion(
   leadId: string,
   screen: Rec = { createOpportunity: true, opportunityName: 'Deal', opportunityAmount: 100000 },
   by: Person = rep,
+  on: VerifyStack = verify,
 ) {
-  const started = await verify.flows.run('lead_conversion', { recordId: leadId }, { as: by.token });
+  const started = await on.flows.run('lead_conversion', { recordId: leadId }, { as: by.token });
   // Screen flow pauses at screen_1; resume with the collected inputs — ON TOP
   // OF WHAT THE SCREEN PREFILLED. The runner seeds its value state from every
   // field carrying a `defaultValue`, visible or not, and submits that bag
@@ -81,16 +83,16 @@ async function runConversion(
   for (const f of ((started_.screen ?? started_.output?.screen)?.fields ?? []) as Rec[]) {
     if (f.defaultValue !== undefined) prefilled[f.name] = f.defaultValue;
   }
-  return verify.flows.resume(started, { ...prefilled, ...screen }, { as: by.token });
+  return on.flows.resume(started, { ...prefilled, ...screen }, { as: by.token });
 }
 
 /** What the conversion left for `who`: the account(s), contact(s), deal(s) and the lead. */
-const after = async (who: { company: string; email: string }, leadId: string) => {
-  const accounts = await verify.rows('crm_account', { name: who.company });
+const after = async (who: { company: string; email: string }, leadId: string, on: VerifyStack = verify) => {
+  const accounts = await on.rows('crm_account', { name: who.company });
   const ids = accounts.map((a) => a.id);
-  const contacts = ids.length ? await verify.rows('crm_contact', { crm_account: { $in: ids } }) : [];
-  const opportunities = ids.length ? await verify.rows('crm_opportunity', { crm_account: { $in: ids } }) : [];
-  const [lead] = await verify.rows('crm_lead', { id: leadId });
+  const contacts = ids.length ? await on.rows('crm_contact', { crm_account: { $in: ids } }) : [];
+  const opportunities = ids.length ? await on.rows('crm_opportunity', { crm_account: { $in: ids } }) : [];
+  const [lead] = await on.rows('crm_lead', { id: leadId });
   return { accounts, contacts, opportunities, lead: lead! };
 };
 
@@ -478,9 +480,9 @@ describe('lead_conversion — a rep converts into a NEW account, and the revenue
   }, 120_000);
 
   /** A qualified lead owned by `owner`, for a company no account carries yet. */
-  const leadOf = async (owner: Person, revenue: number | null) => {
+  const leadOf = async (owner: Person, revenue: number | null, on: VerifyStack = verify) => {
     const who = identity();
-    const [lead] = await verify.seed('crm_lead', [{
+    const [lead] = await on.seed('crm_lead', [{
       company: who.company, email: who.email, first_name: 'Rita', last_name: 'Ruiz', status: 'qualified',
       owner_id: owner.id, ...(revenue === null ? {} : { annual_revenue: revenue }),
     }]);
@@ -542,17 +544,56 @@ describe('lead_conversion — a rep converts into a NEW account, and the revenue
     expect((await verify.rows('crm_account', { id: account!.id }))[0]?.annual_revenue).toBe(4_200_000);
   });
 
-  it('a marketing user, who may not create accounts, still converts nothing into a new company', async () => {
-    // The elevation covers the revenue column only, so the account is still
-    // created under the converting user's object grant. Creating the whole
-    // account in the system flow was measured to leave an account behind for
-    // this persona, written past `allowCreate: false`, before the run failed
-    // at `create_contact`.
+  it('a marketing user converts into a new company of their own — the default set is what lets them (#2231)', async () => {
+    // `marketing_user` grants no account create. Every signed-in member of this
+    // boot also holds the app's default set `crm_user` (own-record create and
+    // edit on accounts and contacts) as the baseline `objectstack serve` hands
+    // out, so the conversion lands and the account is the marketer's own. The
+    // refusal this case used to pin — a caller WITHOUT account create — is
+    // measured in the block below, on a boot where the default set has not
+    // been granted.
     const { who, lead } = await leadOf(marketer, 4_200_000);
-    const refused = await refusalOf(runConversion(lead.id, { createOpportunity: false }, marketer));
+    const done = await runConversion(lead.id, { createOpportunity: false }, marketer);
+    expect(done.error ?? null).toBeNull();
     const out = await after(who, lead.id);
-    expect({ ...refused, accounts: out.accounts.length, isConverted: out.lead.is_converted }).toEqual({
-      code: 'FLOW_FAILED', status: 400, accounts: 0, isConverted: false,
+    expect({ accounts: out.accounts.length, isConverted: out.lead.is_converted, owner: out.accounts[0]?.owner_id })
+      .toEqual({ accounts: 1, isConverted: true, owner: marketer.id });
+  });
+
+  /**
+   * A caller who may NOT create accounts converts nothing into a new company.
+   *
+   * The elevation covers the revenue column only, so the account is still
+   * created under the converting user's object grant. Creating the whole
+   * account in the system flow was measured to leave an account behind for
+   * such a caller, written past `allowCreate: false`, before the run failed at
+   * `create_contact`.
+   *
+   * Since #2231 no signed-in member of a self-hosted boot is such a caller: the
+   * app's default set grants own-record account create to everyone. A managed
+   * environment before an administrator grants that set is where the caller
+   * still exists, so this boot models it — the platform's SecurityPlugin built
+   * bare, without the app's default set as the baseline — on a configuration
+   * built again, since the shared boot of this one is live.
+   */
+  describe('before the default set is granted (managed environment)', () => {
+    let managed: VerifyStack;
+    let bareMarketer: Person;
+    beforeAll(async () => {
+      managed = await bootStack(await buildArtifactAgain(), bootOptions({ security: new SecurityPlugin() }));
+      bareMarketer = await signUpPerson(managed, 'marketer-managed@flow-conversion.test', {
+        name: 'Managed Marketer', permissionSets: ['marketing_user'],
+      });
+    }, 120_000);
+    afterAll(() => managed?.stop());
+
+    it('a marketing user, who may not create accounts there, still converts nothing into a new company', async () => {
+      const { who, lead } = await leadOf(bareMarketer, 4_200_000, managed);
+      const refused = await refusalOf(runConversion(lead.id, { createOpportunity: false }, bareMarketer, managed));
+      const out = await after(who, lead.id, managed);
+      expect({ ...refused, accounts: out.accounts.length, isConverted: out.lead.is_converted }).toEqual({
+        code: 'FLOW_FAILED', status: 400, accounts: 0, isConverted: false,
+      });
     });
   });
 });
