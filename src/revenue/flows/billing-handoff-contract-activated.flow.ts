@@ -165,14 +165,20 @@ export const BillingHandoffContractActivatedFlow: Flow = {
   ],
   edges: [
     { id: 'e1', source: 'start', target: 'load_account', type: 'default' },
-    // The two edges below are COMPLEMENTARY CONDITIONALS on a plain data node,
-    // deliberately not a `decision` gateway. A decision with no declared
-    // `config.conditions` reports the engine's `default` branch label, and
-    // traversal then narrows the edge set to out-edges claiming that label —
-    // an `isDefault: true` sibling would swallow the whole branch and the
-    // conditional edge would never be evaluated. Complementary conditions off a
-    // non-branching node are evaluated one by one, which is the behaviour this
-    // needs.
+    // The two edges below are COMPLEMENTARY CONDITIONALS on a plain data node:
+    // they partition on one field, `record.crm_opportunity`, so exactly one of
+    // them holds on every run and the flow takes exactly one path to the
+    // hand-off. The cut is written whole on the two edges, guards and all, and
+    // needs no gateway node in front of it.
+    //
+    // This is a choice of form, not an engine constraint (#2228). On 18.0.0 a
+    // `decision` with no `config.conditions` reports no branch label, and the
+    // engine evaluates its conditioned out-edges, taking an `isDefault: true`
+    // sibling only when none of them held — the form `campaign_enrollment`'s
+    // `check_campaign_open` uses. An older comment here said such a decision
+    // reported the `default` label and that an `isDefault` sibling would
+    // swallow the branch; that was the engine before objectstack#4414, and
+    // the 18.0.0 decision executor's own comment says it no longer does.
     {
       id: 'e2',
       source: 'load_account',
