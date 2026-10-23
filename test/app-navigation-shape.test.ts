@@ -257,7 +257,9 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
     const bad: string[] = [];
     for (const { n } of REPORT_ENTRIES) {
       const report = REPORTS.find((r) => r.name === n.reportName);
-      const asked = /^current_user\.can\("(\w+)", "read"\)$/.exec(String(sourceOf(n.visible)))?.[1];
+      // A case report also asks that the member is not a sales rep (#2244);
+      // `app-navigation-audience.test.ts` pins who that hides.
+      const asked = /^current_user\.can\("(\w+)", "read"\)(?: && !\("sales_rep" in current_user\.positions\))?$/.exec(String(sourceOf(n.visible)))?.[1];
       if (!report || !asked || !objectsOf(report).includes(asked)) {
         bad.push(`${n.id}: gate ${JSON.stringify(sourceOf(n.visible))}, report reads ${report ? objectsOf(report).join(' + ') : '?'}`);
       }
@@ -266,11 +268,17 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
     // The one report reading two objects asks for the one three of its four
     // panels read: a member without the other gets an access notice on the
     // fourth panel, not a broken page (measured, see `crm.app.ts`).
+    expect(
+      REPORT_ENTRIES.filter(({ n }) => String(sourceOf(n.visible)).includes('current_user.positions')).map(({ n }) => n.id),
+      'report entries that also ask the rep position',
+    ).toEqual(['nav_report_cases_by_status', 'nav_report_sla', 'nav_report_cases_opened_by_day']);
     const churn = REPORT_ENTRIES.find(({ n }) => n.reportName === 'customer_churn_signals')?.n;
     expect(sourceOf(churn?.visible)).toBe('current_user.can("crm_account", "read")');
   });
 
   it('the gates part the personas the way the permission sets say', () => {
+    // The read half only: a rep's set reads cases, and the rep position is
+    // what hides the case reports from a rep (`app-navigation-audience.test.ts`).
     const shown = (set: AnyRec): string[] =>
       REPORT_ENTRIES.filter(({ n }) => {
         const asked = /"(\w+)"/.exec(String(sourceOf(n.visible)))?.[1] as string;
