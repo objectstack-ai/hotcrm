@@ -22,19 +22,16 @@ const HOTCRM_ICON =
   '</svg>%0A';
 
 /**
- * The read gate on the entries built on `crm_opportunity` (#2060 item 5):
- * Home (Executive Overview), Sales Home, Sales Performance, CRM Overview and
- * the four opportunity reports under Reports. A member whose permission sets
- * do not read opportunities (`service_agent`; `service_manager`, retired in #2200) got each one
- * as a page of "You don't have access" tiles, one 403 per opportunity query.
- * Object entries are pruned by read access already; dashboard, report and page
- * entries are not.
- *
- * Since #2231 every member also holds `crm_user`, which reads their own
- * opportunities, so the service personas pass this gate and are shown these
- * entries, each scoped to the deals they own. Home and Sales Home add a
- * position term (`EXECUTIVE_AUDIENCE`, `SALES_HOME_AUDIENCE`) so the landing
- * stays where #2060 item 5 ruled (#2262).
+ * The gate on the entries built on `crm_opportunity` (#2060 item 5): Home
+ * (Executive Overview), Sales Home, Sales Performance, CRM Overview and the
+ * four opportunity reports under Reports. A member whose permission sets do
+ * not read opportunities got each one as a page of "You don't have access"
+ * tiles, one 403 per opportunity query. Object entries are pruned by read
+ * access already; dashboard, report and page entries are not. Home asks one
+ * more term (`EXECUTIVE_AUDIENCE`); the other seven share
+ * `OPPORTUNITY_AUDIENCE` below. (This note was the `READS_OPPORTUNITIES` note
+ * until #2268 retired that constant; `src/service/index.ts` cites it by that
+ * name.)
  *
  * `visible`, not `requiredPermissions` — measured on 18.0.0-next.1: the server
  * keeps an entry only when the caller's permission sets grant every
@@ -48,10 +45,9 @@ const HOTCRM_ICON =
  * landing too: the console opens an app on the first entry the member is
  * SHOWN, not the first one served.
  */
-const READS_OPPORTUNITIES = P`current_user.can("crm_opportunity", "read")`;
 
 /**
- * The same question for the other report entries (#2073 item 1): each asks
+ * The read question for the other report entries (#2073 item 1): each asks
  * for read on the object its report's dataset reads. The service module gates
  * its case reports the same way.
  *
@@ -93,13 +89,20 @@ const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
 const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions) && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
 
 /**
- * Sales Home's audience (#2262): everyone who reads opportunities, except the
- * two service personas — `EXECUTIVE_AUDIENCE` above says why they are asked by
- * position. A rep keeps it: it is a rep's landing. Each gate spells the
- * positions out: `P` interpolates a value as a literal, never as an
- * expression, so a sub-predicate cannot be shared by reference.
+ * The audience of Sales Home (#2262) and of the six opportunity entries
+ * (#2268: Sales Performance, CRM Overview and the four opportunity reports):
+ * everyone who reads opportunities, except the two service personas —
+ * `EXECUTIVE_AUDIENCE` above says why they are asked by position. Since #2231
+ * the read term alone showed them all seven, each scoped to the deals they
+ * own. A rep keeps them: Sales Home is a rep's landing. ⛔ Do not narrow
+ * `crm_user` instead (#2231); the object entries (Opportunities, My Deals,
+ * Leads…) keep no position term and stay visible to them.
+ *
+ * Each gate spells the positions out: `P` interpolates a value as a literal,
+ * never as an expression, so a sub-predicate cannot be shared by reference.
+ * One constant is shared by the seven entries instead.
  */
-const SALES_HOME_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
 
 /**
  * HotCRM — navigation.
@@ -192,7 +195,7 @@ export const CrmApp = App.create({
       pageName: 'sales_home_page',
       label: 'Sales Home',
       icon: 'layout-grid',
-      visible: SALES_HOME_AUDIENCE,
+      visible: OPPORTUNITY_AUDIENCE,
     },
 
     {
@@ -256,7 +259,7 @@ export const CrmApp = App.create({
         // points at — a sales object that happened to be filed next to
         // campaigns.
         { id: 'nav_product',     type: 'object', objectName: 'crm_product',     label: 'Products',      icon: 'package' },
-        { id: 'nav_sales_dashboard', type: 'dashboard', dashboardName: 'sales_dashboard', label: 'Sales Performance', icon: 'chart-line', visible: READS_OPPORTUNITIES },
+        { id: 'nav_sales_dashboard', type: 'dashboard', dashboardName: 'sales_dashboard', label: 'Sales Performance', icon: 'chart-line', visible: OPPORTUNITY_AUDIENCE },
       ],
     },
 
@@ -394,7 +397,7 @@ export const CrmApp = App.create({
       icon: 'sparkles',
       // The reports this group used to pin moved to Reports below (#2073 item 1).
       children: [
-        { id: 'nav_crm_dashboard', type: 'dashboard', dashboardName: 'crm_overview_dashboard', label: 'CRM Overview', icon: 'layout-dashboard', visible: READS_OPPORTUNITIES },
+        { id: 'nav_crm_dashboard', type: 'dashboard', dashboardName: 'crm_overview_dashboard', label: 'CRM Overview', icon: 'layout-dashboard', visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_forecast',      type: 'object', objectName: 'crm_forecast',                 label: 'Forecasts',    icon: 'trending-up' },
       ],
     },
@@ -420,10 +423,10 @@ export const CrmApp = App.create({
       icon: 'file-chart-column',
       expanded: false,
       children: [
-        { id: 'nav_report_opportunities_by_stage', type: 'report', reportName: 'opportunities_by_stage',         label: 'Opportunities by Stage',        icon: 'chart-column',  visible: READS_OPPORTUNITIES },
-        { id: 'nav_report_won_by_owner',           type: 'report', reportName: 'won_opportunities_by_owner',     label: 'Won Opportunities by Owner',    icon: 'trophy',        visible: READS_OPPORTUNITIES },
-        { id: 'nav_report_pipeline_coverage',      type: 'report', reportName: 'pipeline_coverage_by_quarter',   label: 'Pipeline Coverage',             icon: 'columns-3',     visible: READS_OPPORTUNITIES },
-        { id: 'nav_report_funnel_by_owner',        type: 'report', reportName: 'opportunity_funnel_owner_stage', label: 'Opportunity Funnel by Owner',   icon: 'funnel',        visible: READS_OPPORTUNITIES },
+        { id: 'nav_report_opportunities_by_stage', type: 'report', reportName: 'opportunities_by_stage',         label: 'Opportunities by Stage',        icon: 'chart-column',  visible: OPPORTUNITY_AUDIENCE },
+        { id: 'nav_report_won_by_owner',           type: 'report', reportName: 'won_opportunities_by_owner',     label: 'Won Opportunities by Owner',    icon: 'trophy',        visible: OPPORTUNITY_AUDIENCE },
+        { id: 'nav_report_pipeline_coverage',      type: 'report', reportName: 'pipeline_coverage_by_quarter',   label: 'Pipeline Coverage',             icon: 'columns-3',     visible: OPPORTUNITY_AUDIENCE },
+        { id: 'nav_report_funnel_by_owner',        type: 'report', reportName: 'opportunity_funnel_owner_stage', label: 'Opportunity Funnel by Owner',   icon: 'funnel',        visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Inflow',                   icon: 'trending-up',   visible: READS_LEADS },
         { id: 'nav_report_accounts_by_industry',   type: 'report', reportName: 'accounts_by_industry_type',      label: 'Accounts by Industry & Type',   icon: 'building',      visible: READS_ACCOUNTS },
         { id: 'nav_report_churn_signals',          type: 'report', reportName: 'customer_churn_signals',         label: 'Customer Churn Signals',        icon: 'heart-pulse',   visible: READS_ACCOUNTS },
