@@ -64,7 +64,7 @@
     "@objectstack/plugin-audit": "18.0.0",
     "@objectstack/plugin-email": "18.0.0",
     "@objectstack/verify": "18.0.0",
-    "@playwright/test": "^1.63.0",
+    "@playwright/test": "^1.64.1",
     "@vitest/coverage-v8": "^4.1.10",
     "fumadocs-core": "16.15.14",
     "remark": "^15.0.1",
