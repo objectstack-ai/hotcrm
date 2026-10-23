@@ -24,7 +24,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](src/sales/index.ts)
-[![Version](https://img.shields.io/badge/version-5.1.2-brightgreen)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-6.0.0-brightgreen)](CHANGELOG.md)
 [![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.app-orange)](https://cloud.objectos.app)
 
 Install it into an ObjectStack environment from the [marketplace](https://cloud.objectos.app), or fork it and build & ask with Claude Code or any coding agent: the agent writes the metadata in your repo, and operates the running app over MCP.

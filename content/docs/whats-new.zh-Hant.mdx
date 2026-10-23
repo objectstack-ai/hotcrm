@@ -47,19 +47,66 @@ HOTCRM_TOKEN=... ./scripts/wow1-live-schema.sh
 
 ---
 
-## v5.1.2 —— 最新發行
+## v6.0.0 —— 最新發行
 
-**HotCRM 5.1.2** 發行時，全線 `@objectstack/*` 套件執行在 **ObjectStack 18.0.0-next.3** 上
-（平台下一個大版本的預發行版）。它之後的版本執行在 **ObjectStack 18.0.0** 上（平台 18
-大版本的首個正式版），應用清單宣告了與之相符的 `^18.0.0` 協定區間，因此協定大版本不同的執行時
+**HotCRM 6.0.0** 全線 `@objectstack/*` 套件執行在 **ObjectStack 18.0.0** 上（平台 18 大版本的
+首個正式版），應用清單宣告了與之相符的 `^18.0.0` 協定區間，因此協定大版本不同的執行時
 （包括 17.x 的宿主）會在載入之初就帶著結構化診斷拒絕載入，而不是在某次 schema 解析的
-深處才失敗。5.1.1、5.1.0 與 5.1.2 執行在同一個平台版本上，5.0.0 執行在
+深處才失敗。5.1.2、5.1.1 與 5.1.0 執行在 ObjectStack 18.0.0-next.3 上，5.0.0 執行在
 ObjectStack 18.0.0-next.2 上，4.0.1 執行在 ObjectStack 17.7.0 上。
 
 > **這一頁不維護第二張發行表。** 逐版本的發行歷史在儲存庫的 `CHANGELOG.md` 裡，由每個
-> 拉取請求補上的 `.changeset/` 條目編譯而成。v1.0 與 5.1.2 之間的各個版本都記錄在那裡，
+> 拉取請求補上的 `.changeset/` 條目編譯而成。v1.0 與 6.0.0 之間的各個版本都記錄在那裡，
 > 這裡刻意不再重列一遍 —— 手工謄抄那份歷史，正是這一節曾在應用還是 2.2.2 時就宣稱
 > 「v5.0」、並把它掛在一個從未發行過它的平台大版本上的原因。
+
+### 6.0.0 改變了什麼
+
+**6.0.0 是大版本，因為升級到它需要你動手。** 在 ObjectStack 18.0.0 接管資料庫之前必須先遷移
+資料庫，Service Manager 權限集退役，三個行銷活動操作的 API 結構也變了 —— 本節末尾的檢查清單
+說明了該怎麼做。平台從 18.0.0-next.3 升到 18.0.0（中間經過 18.0.0-next.5），全部
+`@objectstack/*` 套件一起升級。它仍然需要 ObjectStack 18 的宿主。
+
+- **受邀的同事不必分配權限集也能開啟 CRM。** 新的權限集 **CRM User**（`crm_user`）是這個套件的
+  預設權限集：它在 **Marketplace** 裡的套件頁面會建議授予所有已登入成員，按一次 **Grant** 即可。
+  它讓每個成員處理自己的潛在客戶、客戶、商機、任務和活動，並讀取產品、行銷活動和知識庫目錄；
+  它不能刪除、也不能匯出任何資料。在自行託管的 `objectstack serve` 上，每個已登入成員一開始就持有它。
+- **每張報表都有側邊欄入口**，放在新的 **報表** 分組裡，位於清單最後。
+- **每個職位都寫明它授予的權限集**，所以 Setup 能看出誰持有什麼。Service Manager 職位現在
+  授予 **Service Agent**，Service Manager 權限集隨之退役。
+- **行銷活動的報名依你自己的權限進行。** Enroll Members、Add to Campaign 和 Mark Responded
+  以使用者本人的身分執行，因此 Sales Rep 和 Sales Manager 不再看到它們。Enroll Members
+  有人被拒絕時會如實說明，並給出兩個數字；對未開放的行銷活動會直接拒絕。
+- **Convert Lead 在送出之前就說明潛在客戶會併入哪個客戶。** 只有 Convert Lead 能把潛在客戶標為
+  已轉換；停在已轉換卻什麼都沒轉換的潛在客戶可以重新編輯。
+- **合約狀態依既定路線流轉。** Expired 和 Terminated 是終態；續約是一份新合約。
+- **商機被審批鎖定期間，它的明細行也被鎖定**，所以金額始終與明細行一致。
+- **公開的支援表單會詢問訪客的姓名和電子郵件**，儲存在工單的 **Supplied Name** 和
+  **Supplied Email** 上，客服可以據此回覆。
+- **關閉工單會完成它的升級跟進任務**；**Escalate Case** 和 **Close Case** 只對有權編輯工單的人顯示。
+- **Pipeline by Stage** 磁貼和 **Opportunity Funnel by Owner → Stage** 報表**改為橫向長條圖**，
+  依銷售順序每個階段一條。
+- **新建表單不再要求填寫應用會自動補上的值**：明細行的 Sales Price、報價的 Expiration Date，
+  以及預測的 Period End 和 Snapshot Date。
+
+另有一長串修正 —— 拒絕提示的措辭與介面一致、All Forecasts 依最新在前排序、示範客戶出現在
+地圖上、大額成交提醒中的金額帶格式、私有商機的名稱不再出現在任務標題裡、文件依應用實測
+重新校對 —— 每條都在 `CHANGELOG.md` 裡有自己的條目。
+
+**升級到 6.0.0 前後請檢查：**
+
+- **在 ObjectStack 18.0.0 接管資料庫之前先升級資料庫。** 每個 5.x 部署都執行在 18.0.0 的
+  預發行宿主上，而在執行 `os migrate organization-ownership` 之前，18.0.0 會拒絕在預發行版
+  建立的資料庫上啟動。步驟見 `CHANGELOG.md` 中 18.0.0 升級那一條。
+- **直接分配過 Service Manager 權限集的人**，在這個版本之後從它得不到任何權限。請改為分配
+  **Service Agent**，或者把 Service Manager 職位給他們。
+- **授予 CRM User 會疊加到每個權限集上。** 生效後，Marketing User 或 Service Agent 也能
+  建立和編輯自己名下的客戶和商機。
+- **呼叫 Add to Campaign 的整合** 要把行銷活動放在 `params.campaignId` 裡傳送；舊的
+  `params.crm_campaign` 會被 `400` 拒絕。Add to Campaign 和 Mark Responded 的回傳結構也變了；
+  兩者都寫在 `CHANGELOG.md` 的對應條目裡。
+- **另一個來源上的前端必須寫進 `OS_CORS_ORIGIN`**，正式環境的 `os serve` 需要 `OS_AUTH_SECRET`。
+- **從 5.1.1 或更早版本升級**，下面各節的全部內容同樣適用。
 
 ### 5.1.2 修正了什麼
 
