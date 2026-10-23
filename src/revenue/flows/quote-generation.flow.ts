@@ -86,11 +86,26 @@ export const QuoteGenerationFlow: Flow = {
     // translated label. ⛔ Do not re-route the refusal through a screen to
     // borrow a translatable title.
     { id: 'refuse_held', type: 'end', label: 'Quote Refused', config: { outcome: 'refused', message: 'Qualification approval comes first: tick Request Qualification Approval. Nothing was created.' } },
+    // The Quote Name's PREFILL (#2239): the deal's own name, read ahead of
+    // the form so the first Submit does not fail on an empty required field.
+    // A read of its own, for the same reason `get_held` is: ⛔ do not hoist
+    // `get_opportunity` ahead of the screen to serve it — the pricing and the
+    // `e4a` / `e4b` branch read the deal as it is at SUBMIT, and this read is
+    // only a suggestion the rep can overwrite.
+    { id: 'get_deal_name', type: 'get_record', label: 'Get Deal Name', config: { objectName: 'crm_opportunity', filter: { id: cel`recordId` }, outputVariable: 'dealName' } },
     {
       id: 'screen_1', type: 'screen', label: 'Quote Details',
       config: {
         fields: [
-          { name: 'quoteName', label: 'Quote Name', type: 'text', required: true },
+          // Prefilled with the deal's NAME ALONE, not the seed rows' "<deal>
+          // Quote": a field's `defaultValue` is a CEL envelope evaluated with
+          // no locale in scope, and the `flows` translation face keys no
+          // `defaultValue` slot, so an English " Quote" suffix would reach
+          // every locale untranslated. `required` stays: a rep who clears the
+          // box is still refused at the screen. `get_deal_name` binds `null`
+          // on a miss (a deal the rep cannot read), so the read is guarded and
+          // that run reaches the form empty, failing where it always did.
+          { name: 'quoteName', label: 'Quote Name', type: 'text', required: true, defaultValue: cel`vars.dealName != null ? vars.dealName.name : null` },
           { name: 'expirationDays', label: 'Valid For (Days)', type: 'number', required: true, defaultValue: 30 },
           // The ceiling is a HARD block with no override
           // (`crm_quote.discount_within_ceiling`), so until it is written here
@@ -230,7 +245,8 @@ export const QuoteGenerationFlow: Flow = {
     // Fail-OPEN like the hook: a deal the read cannot see goes on to the form
     // and fails at `create_quote` exactly as it always did.
     { id: 'e9', source: 'get_held', target: 'refuse_held', type: 'default', condition: P`vars.held != null`, label: 'Held' },
-    { id: 'e10', source: 'get_held', target: 'screen_1', type: 'default', condition: P`vars.held == null`, label: 'Not held' },
+    { id: 'e10', source: 'get_held', target: 'get_deal_name', type: 'default', condition: P`vars.held == null`, label: 'Not held' },
+    { id: 'e11', source: 'get_deal_name', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'get_opportunity', type: 'default' },
     { id: 'e3', source: 'get_opportunity', target: 'create_quote', type: 'default' },
     { id: 'e4', source: 'create_quote', target: 'check_stage', type: 'default' },
