@@ -268,7 +268,17 @@ export const CaseViews = defineView({
       userActions: { editInline: true },
       data,
       columns: ['case_number', 'subject', 'crm_account', 'priority', 'sla_due_date', 'owner_id'],
-      filter: [{ field: 'is_escalated', operator: 'equals', value: true }],
+      // The manager's escalation QUEUE, so it lists escalated cases that are
+      // still live work (#2245). `is_escalated` alone is a stamp that never
+      // clears, so a resolved or closed escalation stayed on the tab forever.
+      //
+      // ⚠️ Same spelling as `sla_at_risk` below — `status not_in` the closed
+      // statuses, NOT `is_closed == false` (the flag never flips on
+      // `resolved`). Pinned by `test/live-work-predicate-parity.test.ts`.
+      filter: [
+        { field: 'is_escalated', operator: 'equals', value: true },
+        { field: 'status', operator: 'not_in', value: ['resolved', 'closed'] },
+      ],
       sort: [{ field: 'priority_rank', order: 'desc' }],
     },
 

@@ -258,6 +258,13 @@ const LIVE_WORK_CONSUMERS: { name: string; surface: string; excluded: () => stri
     excluded: () => excludedValues(loweredViewFilter('my_open_cases'), 'status'),
   },
   {
+    // The manager's escalation queue (#2245). It filtered on `is_escalated`
+    // alone, a stamp that never clears, so a closed escalation stayed listed.
+    name: 'escalated_cases',
+    surface: 'view filter[] — src/service/views/case.view.ts',
+    excluded: () => excludedValues(loweredViewFilter('escalated_cases'), 'status'),
+  },
+  {
     name: 'case_unassigned_triage_sharing',
     surface: 'sharing condition (CEL) — src/sharing/case.sharing.ts',
     excluded: () => excludedValues(loweredSharingCondition('case_unassigned_triage_sharing'), 'status'),
@@ -349,7 +356,7 @@ describe('the "no longer live work" predicate is ONE set, and the roster is by n
     // above would also pass a consumer that excluded the right statuses AND
     // additionally narrowed on the flag.
     const offenders: string[] = [];
-    for (const name of ['unassigned_triage', 'sla_at_risk', 'my_open_cases']) {
+    for (const name of ['unassigned_triage', 'sla_at_risk', 'my_open_cases', 'escalated_cases']) {
       const fields = narrowedFields(loweredViewFilter(name));
       if (fields.includes('is_closed')) offenders.push(`${name} (view filter)`);
     }
@@ -422,6 +429,19 @@ const NOT_LIVE_WORK: { name: string; surface: 'view' | 'sharing'; why: string }[
       'See `src/sharing/case.sharing.ts` for the reasoning beside the rule.',
   },
 ];
+
+describe('escalated_cases keeps its own narrowing beside the live-work set (#2245)', () => {
+  it('still selects on is_escalated == true', () => {
+    // The status set above is asserted on its own; this is the other half of
+    // the tab's contract, so dropping the escalation narrowing while keeping
+    // the status rule (every open case on the "Escalated Cases" tab) is red.
+    const rules: AnyRec[] = (caseViews?.listViews?.escalated_cases?.filter ?? []) as AnyRec[];
+    expect(rules.filter((r) => r.field === 'is_escalated')).toEqual([
+      { field: 'is_escalated', operator: 'equals', value: true },
+    ]);
+    expect(narrowedFields(loweredViewFilter('escalated_cases'))).toEqual(['is_escalated', 'status']);
+  });
+});
 
 describe('the boundary of the set — what deliberately still keys on is_closed', () => {
   it.each(NOT_LIVE_WORK.map((e) => [e.name, e] as const))(
