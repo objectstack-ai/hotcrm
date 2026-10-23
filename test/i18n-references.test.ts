@@ -206,6 +206,24 @@ describe('action labels are translated in every locale', () => {
     }
     expect(bad, `action strings declared in code but not translated:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
+
+  it('Send Email says the email was queued to the contact, in every locale (#2246)', () => {
+    // Its siblings on the contact say what happened; Send Email fell back to
+    // the console's generic "Action completed successfully". The body hands the
+    // `sys_email` row over with `status: 'queued'` (pinned in
+    // script-bodies.test.ts), so the message says queued, never sent.
+    const action = stackActions.find((a) => a.objectName === 'crm_contact' && a.name === 'send_email');
+    expect(action?.successMessage).toBe('Email queued to this contact.');
+    const expected: Record<string, string> = {
+      en: 'Email queued to this contact.',
+      'zh-CN': '邮件已排队，将发送给该联系人。',
+      'es-ES': 'Correo en cola para este contacto.',
+      'ja-JP': 'この取引先責任者宛てのメールを送信キューに追加しました。',
+    };
+    for (const [locale, message] of Object.entries(expected)) {
+      expect(packFor(locale)?.objects?.crm_contact?._actions?.send_email?.successMessage, locale).toBe(message);
+    }
+  });
 });
 
 /**
