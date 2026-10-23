@@ -580,10 +580,14 @@ export const Opportunity = ObjectSchema.create({
     // the engine's answer to a predicate that cannot evaluate is to SKIP it
     // ("requiredWhen for 'loss_reason' failed to evaluate — skipped"), which
     // would make this read as enforced while requiring nothing at all.
+    //
+    // Both reasons are in `sales_process`, the group that holds `stage`, so
+    // every derived surface files the reason with the stage it depends on; the
+    // Edit form places them beside Stage itself (`opportunity.view.ts`, #2238).
     win_reason: Field.select({
       label: 'Win Reason',
       description: 'Why this deal was won. Required to close an opportunity as Won.',
-      group: 'classification',
+      group: 'sales_process',
       requiredWhen: P`has(record.stage) && record.stage == "closed_won"`,
       options: [
         { label: 'Better Product', value: 'better_product' },
@@ -607,7 +611,7 @@ export const Opportunity = ObjectSchema.create({
     loss_reason: Field.select({
       label: 'Loss Reason',
       description: 'Why this deal was lost. Required to close an opportunity as Lost.',
-      group: 'classification',
+      group: 'sales_process',
       requiredWhen: P`has(record.stage) && record.stage == "closed_lost"`,
       options: [
         { label: 'Price Too High', value: 'price' },
