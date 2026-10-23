@@ -298,7 +298,7 @@ export const CampaignEnrollmentFlow: Flow = {
         }, { refusedCount: cel`refusedCount + 1` }),
       },
     },
-    // Gateway only — the two complementary predicates live on `e10` / `e11`.
+    // Gateway only — the predicate lives on `e10`; `e11` is its default edge.
     { id: 'check_refused', type: 'decision', label: 'Anyone Refused?' },
     {
       // Q2 letter a (#2167): any refusal ends the run `refused`, with both
@@ -364,20 +364,29 @@ export const CampaignEnrollmentFlow: Flow = {
     // added later, and a `campaignRecord` bound to null all land here. Before
     // it existed no edge matched, and the run ended on the clean path under
     // the static `successMessage` with nobody enrolled. A default rather than
-    // a complementary conditional like `e10` / `e11`: this complement would be
-    // the two open clauses negated by hand, `has()` guards and all, and kept
-    // in step with them; and Studio's Problems panel flags a decision with no
-    // default edge however its guards partition.
+    // a complementary conditional: this complement would be the two open
+    // clauses negated by hand, `has()` guards and all, and kept in step with
+    // them; and Studio's Problems panel flags a decision with no default edge
+    // however its guards partition.
     { id: 'e12', source: 'check_campaign_open', target: 'refuse_not_open', type: 'default', isDefault: true, label: 'Not open' },
     { id: 'e8', source: 'query_contacts', target: 'loop_contacts', type: 'default' },
     { id: 'e9', source: 'loop_contacts', target: 'check_refused', type: 'default' },
-    // Complementary conditionals rather than an `isDefault` fallback, so the
-    // pair reads as one cut and neither edge depends on branch-label routing.
+    // One conditional and its default (#2227), the same form as
+    // `check_campaign_open`'s `e12`. This decision declares no
+    // `config.conditions`, so on 18.0.0 it reports no branch label: the
+    // engine evaluates `e10`, and takes the `isDefault` edge `e11` only when
+    // `e10` does not hold. So a run that refused nobody ends on the clean
+    // path with the static `successMessage`, and any refusal ends at
+    // `end_refused` with both counts. The clean side is the default because
+    // it is the complement nobody has to write: a second predicate
+    // (`== 0`) would be one more copy of the cut to keep in step, and
+    // Studio's Problems panel flags a decision with no default edge however
+    // its guards partition.
     // Equality, not `> 0`: the count only ever grows from its declared 0, so
     // `!= 0` says the same thing, and an equality answers on every shape a
     // variable can hold where an ordering test aborts on a null
     // (test/flow-variable-conditions.test.ts).
     { id: 'e10', source: 'check_refused', target: 'end_refused', type: 'conditional', condition: P`vars.refusedCount != 0`, label: 'Refused' },
-    { id: 'e11', source: 'check_refused', target: 'end', type: 'conditional', condition: P`vars.refusedCount == 0`, label: 'Clean' },
+    { id: 'e11', source: 'check_refused', target: 'end', type: 'default', isDefault: true, label: 'Clean' },
   ],
 };

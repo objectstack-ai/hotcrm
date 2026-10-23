@@ -343,3 +343,31 @@ describe('campaign_enrollment — a campaign that is not open, or no longer exis
     });
   });
 });
+
+/**
+ * `check_refused` routes on one conditional and its default (#2227).
+ *
+ * `e10` carries the only predicate (`refusedCount != 0`, to `end_refused`);
+ * `e11`, to the clean `end`, is the decision's `isDefault` edge with no
+ * condition of its own, the form `check_campaign_open`'s `e12` takes above.
+ * The two endings it chooses between are pinned on the real engine in
+ * `test/campaign-enrollment-doors.test.ts`: "a clean Enroll Members run
+ * completes with the static success message" and "a partly refused Enroll
+ * Members run reports both counts". This case pins the edge shape those runs
+ * cannot tell apart, both measured: with `e11` deleted, a clean run still
+ * ends on the clean path, because a decision whose guards all fail simply
+ * ends the run; with `e11` left without `isDefault`, it is an unconditional
+ * sibling that also runs after `end_refused`, and the refused run still
+ * reports `refused`.
+ */
+describe('campaign_enrollment — `check_refused` takes its default edge on a clean run (#2227)', () => {
+  it('has `e10` as its one conditional edge and `e11` as its condition-free default', () => {
+    const out = CampaignEnrollmentFlow.edges
+      .filter((e) => e.source === 'check_refused')
+      .map((e) => ({ id: e.id, target: e.target, isDefault: e.isDefault === true, conditional: e.condition !== undefined }));
+    expect(out).toEqual([
+      { id: 'e10', target: 'end_refused', isDefault: false, conditional: true },
+      { id: 'e11', target: 'end', isDefault: true, conditional: false },
+    ]);
+  });
+});
