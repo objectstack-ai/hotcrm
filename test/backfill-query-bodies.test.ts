@@ -160,7 +160,9 @@ describe('scripts/*.ts query bodies, against the installed query schema', () => 
       const argv = process.argv;
       const exitCode = process.exitCode;
       // Report-only, default URL: the scripts read `--apply` and `--url` from here.
-      process.argv = [argv[0], 'backfill-query-bodies-probe'];
+      // `--seed-wait=0`: the door returns no rows, so `demo-staff.ts`'s seed wait
+      // (#2206) would otherwise poll for its full default before going on.
+      process.argv = [argv[0], 'backfill-query-bodies-probe', '--seed-wait=0'];
       try {
         await import(pathToFileURL(join(REPO_ROOT, 'scripts', file)).href);
         await quiesce(stub);

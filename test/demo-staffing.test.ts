@@ -6,7 +6,9 @@ import { pathToFileURL } from 'node:url';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { CrmSeedData } from '../objectstack.composition';
-import { DemoAdminPermissionSets, DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
+import { CASE_DESK, caseDeskOf, DemoAdminPermissionSets, DemoOrgStaffing, DemoPipelineOwnership } from '../src/sales/sharing/demo-staffing';
+import * as salesSeeds from '../src/sales/data';
+import * as serviceSeeds from '../src/service/data';
 import { CrmSharing as sharingBarrel } from './helpers/src-roster';
 import { hotcrmStack, systemUpdate, type Person } from './helpers/verify-stack';
 import { regionsOf } from './helpers/flow-regions';
@@ -757,6 +759,67 @@ describe('pnpm demo:staff on the shipped app: the hand-over opens each large-dea
     const requests = await verify.rows('sys_approval_request', { object_name: 'crm_opportunity', record_id: { $in: [...dealIds] } });
     const actions = await verify.rows('sys_approval_action', { request_id: { $in: requests.map((r) => r.id) } });
     expect(actions.map((a) => String(a.action)).sort()).toEqual(requests.map(() => 'submit'));
+  });
+});
+
+/**
+ * Every seeded case has a named owner once `pnpm demo:staff` has run (#2206).
+ *
+ * Until `crm_case` was routed, which persona owned the demo's cases depended on
+ * timing. Measured on 18.0.0, fresh `pnpm dev`: run while the seed was still
+ * writing, `case_auto_assign` put all 38 on the service agent; run after it
+ * settled, all 38 stayed with the dev admin, and the agent's
+ * `GET /api/v1/data/crm_case` answered `total: 0`. The script now waits for the
+ * seed and hands each case to its desk (`CASE_DESK`): escalated and critical
+ * cases to the service manager, the rest to the service agent. On the same
+ * fresh boot that left the agent 23 cases (12 open) and the manager 15.
+ */
+describe('pnpm demo:staff hands every seeded case to its service desk (#2206)', () => {
+  const seededCases = (CrmSeedData as ReadonlyArray<AnyRec>)
+    .filter((d) => d.object === 'crm_case')
+    .flatMap((d) => (d.records ?? []) as AnyRec[]);
+  const subjects = seededCases.map((c) => String(c.subject));
+  const ownerOfDesk = (desk: keyof typeof CASE_DESK) => staffed[CASE_DESK[desk]]!.id;
+
+  it("waits on every routed object's whole seed: the barrels it reads carry all of CrmSeedData's rows for them", () => {
+    // `scripts/demo-staff.ts` reads the two seed barrels rather than `CrmSeedData`
+    // (see `seededKeysByObject`). A routed object seeded from anywhere else would
+    // be routed without being waited for, which is the #2206 race again.
+    const rowsOf = (datasets: ReadonlyArray<unknown>, object: string) =>
+      (datasets as AnyRec[]).filter((d) => d?.object === object).reduce((n, d) => n + (d.records?.length ?? 0), 0);
+    const barrels = Object.values({ ...salesSeeds, ...serviceSeeds });
+    for (const { object } of DemoPipelineOwnership) {
+      const seeded = rowsOf(CrmSeedData, object);
+      expect(seeded, `${object} is routed but CrmSeedData seeds no row of it`).toBeGreaterThan(0);
+      expect(rowsOf(barrels, object), `${object}: the seed barrels the script reads miss some of its seeded rows`).toBe(seeded);
+    }
+  });
+
+  it('puts seeded cases on both desks', () => {
+    expect(seededCases.length, 'no seeded case found in CrmSeedData').toBeGreaterThan(0);
+    const desks = new Set(seededCases.map(caseDeskOf));
+    expect([...desks].sort(), 'every seeded case lands on one desk, so the other persona has nothing').toEqual([
+      'escalation',
+      'intake',
+    ]);
+  });
+
+  it('leaves no seeded case with the dev admin or nobody, and each on its desk', async () => {
+    const rows = await verify.rows('crm_case', { subject: { $in: subjects } });
+    expect(rows.length, 'a seeded case is missing from the booted app').toBe(subjects.length);
+    const misplaced = rows
+      .filter((r) => String(r.owner_id ?? '') !== ownerOfDesk(caseDeskOf(r)))
+      .map((r) => `${String(r.subject)} (${caseDeskOf(r)} desk) is owned by ${String(r.owner_id ?? 'nobody')}`);
+    expect(misplaced, `scripts/demo-staff.ts output:\n${run.output.join('\n')}`).toEqual([]);
+  });
+
+  it('gives the service agent cases of their own to work, read as the agent', async () => {
+    const agent = staffed[CASE_DESK.intake]!;
+    const res = await verify.apiAs(agent.token, 'GET', '/data/crm_case');
+    expect(res.status, await res.clone().text()).toBe(200);
+    const records = ((await res.json()).records ?? []) as AnyRec[];
+    expect(records.length, 'the service agent reads no case: their Customer Service page is all zeros').toBeGreaterThan(0);
+    expect(records.filter((r) => !['resolved', 'closed'].includes(String(r.status))).length, 'no OPEN case to work').toBeGreaterThan(0);
   });
 });
 

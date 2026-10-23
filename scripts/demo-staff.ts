@@ -13,7 +13,9 @@
 // (see the header of `src/sales/sharing/demo-staffing.ts`).
 //
 // Six steps, all idempotent — rerun it any time, including against a
-// half-staffed org:
+// half-staffed org. They start once the seed has SETTLED (#2206): a fresh
+// `pnpm dev` answers sign-in well before its seed finishes writing, and every
+// step below reads what the seed left. See `awaitSeedSettled`.
 //
 //   0. GIVE THE DEV ADMIN THE APP'S ADMIN SET (#2061): the sets
 //      `DemoAdminPermissionSets` names, as `sys_user_permission_set` rows on
@@ -61,9 +63,14 @@
 //
 // Flags: --url (default http://localhost:4001, the port `pnpm dev` binds),
 //        --admin-email / --admin-password (default the platform's dev-admin
-//        seed, which only exists when NODE_ENV=development).
+//        seed, which only exists when NODE_ENV=development),
+//        --seed-wait SECONDS (default 180): how long to wait for the seed to
+//        settle before routing what is there.
 
 import {
+  CASE_DESK,
+  CASE_DESK_FIELDS,
+  caseDeskOf,
   DemoAdminPermissionSets,
   DemoOrgStaffing,
   DemoPipelineOwnership,
@@ -73,6 +80,8 @@ import {
 } from '../src/sales/sharing/demo-staffing.js';
 import { TERRITORY, type Territory } from '../src/sales/objects/_territory.js';
 import { OpportunityApprovalFlow } from '../src/sales/flows/opportunity-approval.flow.js';
+import * as salesSeeds from '../src/sales/data/index.js';
+import * as serviceSeeds from '../src/service/data/index.js';
 
 type Json = Record<string, any>;
 
@@ -93,6 +102,10 @@ const APPROVAL_GATED_OBJECT = String(
 );
 
 const DEFAULT_URL = 'http://localhost:4001';
+/** Seconds `awaitSeedSettled` waits by default. A fresh boot measured ~40 s of seeding after sign-in first answered. */
+const DEFAULT_SEED_WAIT_SECONDS = 180;
+/** How often `awaitSeedSettled` re-reads the routed objects. */
+const SEED_POLL_MS = 2_000;
 
 /** `--flag value` / `--flag=value`, else the env var, else the fallback. */
 function arg(name: string, envName: string, fallback: string): string {
@@ -225,6 +238,98 @@ class Api {
       );
     }
     return json.user as Json;
+  }
+}
+
+/**
+ * The natural keys the app SEEDS into each routed object, read off the seed
+ * datasets themselves, never counted by hand. They are taken from the seed
+ * barrels of the two packages that own every routed object (`src/sales/data`,
+ * `src/service/data`) rather than from `CrmSeedData`: that roster sits in
+ * `objectstack.composition.ts`, which loads the whole app, and importing it
+ * made this script ~5x slower to start. `test/demo-staffing.test.ts` pins that
+ * every routed object is seeded from one of the two. Only datasets keyed by one
+ * field take part; every routed object's is.
+ */
+function seededKeysByObject(): Map<string, { field: string; keys: Set<string> }> {
+  const routed = new Set(DemoPipelineOwnership.map((r) => r.object));
+  const out = new Map<string, { field: string; keys: Set<string> }>();
+  for (const exported of Object.values({ ...salesSeeds, ...serviceSeeds })) {
+    const dataset = exported as { object?: unknown; externalId?: unknown; records?: ReadonlyArray<Json> };
+    if (typeof dataset.object !== 'string' || !routed.has(dataset.object)) continue;
+    if (typeof dataset.externalId !== 'string') continue;
+    const entry = out.get(dataset.object) ?? { field: dataset.externalId, keys: new Set<string>() };
+    for (const record of dataset.records ?? []) entry.keys.add(String(record[dataset.externalId]));
+    out.set(dataset.object, entry);
+  }
+  return out;
+}
+
+/**
+ * Wait until the seed has settled, then let staffing start (#2206).
+ *
+ * ### Why the run cannot start the moment sign-in answers
+ *
+ * Measured on 18.0.0, fresh `pnpm dev`: sign-in answered ~30 s into the boot,
+ * but the seed overran the platform's inline budget and kept writing in the
+ * background ("Seeds: pending — 1 source still writing" on the banner) for
+ * ~40 s more — `crm_task` landed at +26 s, `crm_event` at +31 s, `crm_case` at
+ * +36 s, and the platform's seed-ownership claim stamped the dev admin on all
+ * of it at +39 s. A run started inside that window routed what had landed and
+ * nothing else: `crm_task` and `crm_event` "routed no rows at all" (exit 1),
+ * and the cases, inserted after the staffing, were round-robined onto the
+ * service agent by `case_auto_assign` instead of routed. That is why this wait
+ * comes BEFORE step 0, not just before the hand-over.
+ *
+ * ### What "settled" means here
+ *
+ * The platform announces settlement only over the IPC channel of a process that
+ * spawned `os dev`; a script in a second terminal has no such channel and no
+ * HTTP door says it. So the run reads the app's OWN fact instead: every row
+ * the app seeds into a routed object is present, and each has an owner.
+ * The second half is the platform's claim having run, which happens only when
+ * the seed source settles — so a row still ownerless means the claim is yet to
+ * come and could re-stamp a row this run is about to hand over.
+ *
+ * ### Bounded, never fatal on its own
+ *
+ * On an old box a seeded row may have been deleted or renamed, and then the
+ * keys never all turn up. So the wait is bounded by `--seed-wait`, and on
+ * timeout it says what is missing and goes on to route what is there; the
+ * ownership census at the end still judges the outcome.
+ */
+async function awaitSeedSettled(api: Api, waitSeconds: number): Promise<void> {
+  const seeded = seededKeysByObject();
+  const deadline = Date.now() + waitSeconds * 1000;
+  const started = Date.now();
+  let lastLine = '';
+  for (;;) {
+    const lines: string[] = [];
+    for (const [object, { field, keys }] of seeded) {
+      const rows = await api.query(object, [], ['id', field, 'owner_id']);
+      const present = rows.filter((r) => keys.has(String(r[field])));
+      const ownerless = present.filter((r) => String(r.owner_id ?? '') === '').length;
+      const seen = new Set(present.map((r) => String(r[field]))).size;
+      if (seen < keys.size || ownerless > 0) {
+        lines.push(`${object} ${seen}/${keys.size} seeded rows present${ownerless ? `, ${ownerless} not yet claimed` : ''}`);
+      }
+    }
+    if (lines.length === 0) {
+      const waited = Math.round((Date.now() - started) / 1000);
+      console.log(`🌱 seed settled${waited ? ` (waited ${waited}s)` : ''}\n`);
+      return;
+    }
+    const line = lines.join(' · ');
+    if (Date.now() >= deadline) {
+      console.log(
+        `⚠️  seed not settled after ${waitSeconds}s: ${line}. Routing what is there; the ownership ` +
+        `census below judges the outcome. (A seeded row deleted or renamed on this box looks the same.)\n`,
+      );
+      return;
+    }
+    if (line !== lastLine) console.log(`⏳ waiting for the seed to settle: ${line}`);
+    lastLine = line;
+    await new Promise((resolve) => setTimeout(resolve, SEED_POLL_MS));
   }
 }
 
@@ -364,8 +469,9 @@ type OwnershipOutcome = {
  * the agent ceiling that produced the zeros is the platform behaving
  * correctly. A row goes to whoever owns its account's TERRITORY, and a row
  * whose account cannot be resolved goes to the manager — so each identity ends
- * up with a SUBSET, which is the demonstration. `crm_account` is not routed at
- * all; see `DemoPipelineOwnership`.
+ * up with a SUBSET, which is the demonstration. A case goes to its service
+ * desk instead (`CASE_DESK`, #2206). `crm_account` is not routed at all; see
+ * `DemoPipelineOwnership`.
  *
  * ### What it claims, and what it deliberately does not
  *
@@ -424,14 +530,14 @@ async function handBookToRoster(
   const accountRows = await api.query('crm_account', [], ['id', 'territory']);
   const territoryOf = new Map(accountRows.map((a) => [String(a.id), String(a.territory ?? '')]));
 
-  const ownerFor = (territory: string | undefined): string => {
-    const key = TERRITORY_OWNER[(territory ?? '') as Territory] ?? TERRITORY_OWNER[TERRITORY.OTHER];
+  /** The user id of a demo staff `key`, which every route ends on. */
+  const staffKeyFor = (key: string): string => {
     const userId = userIdByKey.get(key);
-    if (!userId) {
-      throw new Error(`ownership routing names demo staff key "${key}", who is not in DemoOrgStaffing`);
-    }
+    if (!userId) throw new Error(`ownership routing names demo staff key "${key}", who is not in DemoOrgStaffing`);
     return userId;
   };
+  const ownerFor = (territory: string | undefined): string =>
+    staffKeyFor(TERRITORY_OWNER[(territory ?? '') as Territory] ?? TERRITORY_OWNER[TERRITORY.OTHER]);
 
   // The records a pending approval holds, as `object:id` (see the note above).
   const pending = await api.query('sys_approval_request', [['status', '=', 'pending']], ['object_name', 'record_id']);
@@ -439,7 +545,11 @@ async function handBookToRoster(
 
   const outcomes: OwnershipOutcome[] = [];
   for (const route of DemoPipelineOwnership) {
-    const fields = ['id', 'owner_id', ...(route.accountField ? [route.accountField] : [])];
+    const fields = [
+      'id',
+      'owner_id',
+      ...(route.by === 'territory' ? (route.accountField ? [route.accountField] : []) : CASE_DESK_FIELDS),
+    ];
     const rows = await api.query(route.object, [], fields);
     const settled = new Map<string, string>();
     const held = new Map<string, string>();
@@ -457,8 +567,13 @@ async function handBookToRoster(
         held.set(id, current);
         continue;
       }
-      const accountId = route.accountField ? row[route.accountField] : undefined;
-      const wanted = ownerFor(accountId ? territoryOf.get(String(accountId)) : undefined);
+      let wanted: string;
+      if (route.by === 'territory') {
+        const accountId = route.accountField ? row[route.accountField] : undefined;
+        wanted = ownerFor(accountId ? territoryOf.get(String(accountId)) : undefined);
+      } else {
+        wanted = staffKeyFor(CASE_DESK[caseDeskOf(row)]);
+      }
       settled.set(id, wanted);
       await api.patchOk(route.object, id, { owner_id: wanted });
       written++;
@@ -683,6 +798,8 @@ async function main(): Promise<number> {
   const membership = await api.query('sys_member', [['user_id', '=', String(admin.id)]], ['organization_id']);
   const organizationId = membership[0]?.organization_id ? String(membership[0].organization_id) : null;
   console.log(`🏢 organization: ${organizationId ?? '(none — single-tenant boot)'}\n`);
+
+  await awaitSeedSettled(api, Number(arg('seed-wait', 'OS_DEMO_SEED_WAIT', String(DEFAULT_SEED_WAIT_SECONDS))));
 
   const adminSets = await ensureAdminPermissionSets(api, String(admin.id));
   console.log(
