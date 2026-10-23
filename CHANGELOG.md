@@ -1,5 +1,471 @@
 # Changelog
 
+## 6.0.0
+
+### Major Changes
+
+- 8daa492: Only people allowed to create campaign members can enroll anyone in a campaign
+  
+  **Who can enroll now.** Enroll Members on a campaign, and Add to Campaign on the lead and contact
+  lists, now write as the person who runs them, so that person's own permission to create campaign
+  members decides. Marketing User and the administrators enroll as before. Sales Rep and Sales Manager,
+  whose profiles have always said that enrollment belongs to marketing, are no longer offered Enroll
+  Members or Add to Campaign, and a request that reaches the server anyway is refused. Until now two
+  elevated paths let them enroll all the same.
+  
+  Mark Responded works the same way: it records the response as the person who presses it. It is
+  offered to the users who may edit campaign members (Marketing User and the administrators), and a
+  sales rep or manager is refused.
+  
+  **What Enroll Members says.** A run in which anyone was refused used to report success. It now ends
+  with a refusal that gives both counts: *"Enrollment refused for 4 of the people selected: 0 enrolled,
+  4 refused."* A clean run ends with *"Eligible members enrolled in campaign."* A refused person is not
+  added to the campaign.
+  
+  **What Add to Campaign answers.** From the selection toolbar it asks for the campaign once, lists the
+  people you ticked, then enrolls each of them on their own and reports *Succeeded* with a count. From a
+  row's menu it shows *"Leads added to campaign!"* or *"Contacts added to campaign!"*. A person already on
+  the campaign is skipped and still counts as a success. A campaign id that names no campaign is now
+  refused, where it used to write a member that pointed at nothing.
+  
+  **For API callers**, the two Add to Campaign actions and Mark Responded change shape:
+  
+  - `POST /api/v1/actions/crm_lead/create_campaign` and `POST /api/v1/actions/crm_contact/add_contact_to_campaign`:
+    the campaign was sent as `params.crm_campaign` and is now sent as `params.campaignId`; the old key
+    is refused with 400 as an unknown param. The answer was `{ campaignId, count, skipped, ids }` and is
+    now the flow's result, `{ success, output: { enrolled } }`, where `enrolled` is `false` for a person
+    already on the campaign. A caller who may not create campaign members gets 400 `FLOW_FAILED`.
+  - `POST /api/v1/actions/crm_campaign_member/mark_responded`: the answer was `{ id, status, response_date }`
+    and is now the updated member (`{ operation: 'update', object, id, record }`). A caller who may not
+    edit the member gets 403 `PERMISSION_DENIED`.
+  
+  *Campaign Members*, *Profiles*, *Automation*, *Leads*, *Email & Calendar* and *API reference* describe
+  the new behaviour in all three languages.
+- c8a7a70: Each position now names the profile it hands out, so Setup shows who holds what
+  
+  Five positions give their holders a profile: Sales Manager, Sales Representative, Service Agent, Service Manager and
+  Marketing User. Until now none of them said so. Each reached its profile only because the two share a name, a match
+  the platform makes without anything declaring it, warns about on every boot, and is retiring. So Setup told the
+  wrong story: a position's page said it grants nothing on its own, and each profile's **Assigned Users** panel was
+  empty, while the people holding those positions were in fact getting the profile.
+  
+  - **Each of the five positions now lists its profile** under **Permission Sets** on its page in **Setup →
+    Positions**. Sales Manager, Sales Representative, Service Agent and Marketing User each hand out the profile of
+    the same name; Service Manager hands out **Service Agent**.
+  - **Nobody's access changes.** Every persona reads and edits exactly the records it did before: the sales reps,
+    the sales manager, the service agent, the service manager and the marketing user were each measured object by
+    object before and after. The boot no longer warns about these positions, and when the platform stops matching
+    positions to profiles by name, these five keep working.
+  - **The Service Manager profile is retired.** It was a renamed copy of Service Agent that existed only because a
+    position could not name its profile. The Service Manager position now names Service Agent directly, so there is
+    one profile to keep correct instead of two. **If you assigned the Service Manager profile to someone directly** in
+    Setup, rather than giving them the Service Manager position, that assignment grants nothing after this release:
+    assign **Service Agent** instead, or give them the position.
+- 16c2866: Upgrade the ObjectStack platform to 18.0.0, the first general-availability release of major 18
+  
+  All 23 `@objectstack/*` dependencies move from 18.0.0-next.5 to 18.0.0 together, pinned exact.
+  `specVersion` and `engines.protocol` follow to `^18.0.0` in `objectstack.manifest.json` and in both
+  package manifests. No third-party package changes version, and no app metadata had to change.
+  
+  **This release still needs an ObjectStack 18 host.** A 17.x host refuses the artifact at the
+  protocol handshake, as before.
+  
+  What HotCRM users see on the new platform:
+  
+  - **The public Support form preselects Priority.** It opens on *Low*, the option the app marks as
+    the default, so a visitor who leaves it alone can submit. Before, the field was empty and the form
+    refused "Required: Priority".
+  - **Import with a saved mapping works from the Import wizard.** Choosing a mapping the app ships,
+    such as *Account Import (CSV)*, under *Saved mapping* now imports the file through that mapping,
+    with its value translations (*Client* becomes *Customer*). Before, the wizard sent the rows in a
+    format the mapping does not declare, and the import failed.
+  - **Clearing a line item's Sales Price names the field.** The refusal reads "Sales Price is
+    required" (in Chinese, "销售单价不能为空") instead of the column key `unit_price`.
+  - **The person who submits an approval is told the outcome.** When a manager approves or rejects
+    a request, its submitter gets a *Request approved* or *Request rejected* notification from the
+    platform. The app's own notices to the record owner stay, so an owner who submitted the request
+    themselves now gets both.
+  - **Writes an approval makes after the decision are the approver's.** For example, when a manager
+    approves a large deal, its approval date is written as the manager, and *Last Modified By* names
+    them.
+  - **Recalling a large-deal approval re-opens it.** A recall now puts *Approval Status* back to
+    what it was before the request (*Not Required*), and the Large Deal Approval starts again on
+    that change. The deal stays locked under a new pending request. Before, a recall left the status
+    at *Recalled*, unlocked the deal, and the deal never re-entered approval.
+  - **Setup › Access Control lists the app's own sharing rules** under *Declared Sharing Rules*,
+    read-only, where each can be switched off or cloned. *Sharing Rules* keeps listing the rules
+    your organization creates.
+  
+  What administrators, operators and integrators should know:
+  
+  - **A database an 18.0 pre-release created must be upgraded before 18.0.0 serves it.** Every
+    HotCRM 5.x deployment runs on an `18.0.0-next` host, so this applies to all of them. 18.0.0
+    refuses to start on such a database ("This database carries no organization-ownership marker").
+    Start 18.0.0 once (the start is refused, after it has created the new tables), take a backup, run
+    `os migrate organization-ownership --out plan.json`, review the plan, then run
+    `os migrate organization-ownership --apply --plan-file plan.json --backup-taken` and start again.
+    A local development database is upgraded by `os dev` itself, which keeps a copy first.
+  - **A front-end on another origin must be named to call the API.** With no `OS_CORS_ORIGIN` set,
+    the server admits no cross-origin browser caller (a loopback origin is still admitted in
+    development). The console and the public forms are served by the server itself and are not
+    affected. An embedded form or a portal on another domain sets
+    `OS_CORS_ORIGIN=https://its.domain`.
+  - **A production `os serve` with no `OS_AUTH_SECRET` refuses to start.** `os start` supplies one.
+  - **Mail bodies are readable only with `manage_platform_settings`.** An organization
+    administrator still sees that an email from *Send Email* was sent, to whom and with what result,
+    but not its text.
+  - **A flow resume that carries both `inputs` and `variables` is refused with `400`.** Send the
+    screen's answers under `inputs` only. The console already does.
+  - **No app data changes.** No object, field or stored value changes in this release, and nothing
+    needs to be reloaded.
+
+### Minor Changes
+
+- 4166f21: HotCRM now offers one default permission set to every member, so an invited colleague can open the CRM without a profile
+  
+  On a hosted environment, a colleague the organization invites is signed in and created on first visit, holding only
+  the platform's own baseline: their profile, preferences and inbox. With HotCRM installed they still saw no CRM object
+  until an administrator assigned them a profile, person by person, in **Setup → Users**.
+  
+  - **New permission set: CRM User (`crm_user`), the package's default.** Installing HotCRM now puts a suggestion on its
+    package page in the **Marketplace**: *This app suggests granting "crm_user" to all signed-in users (the Everyone
+    position).* One **Grant** gives it to every signed-in member, people invited later included. **Revoke** on the same
+    panel takes it back.
+  - **What it gives.** Each member creates, reads and edits their **own** leads, accounts, opportunities, tasks and
+    events, adds contacts and meeting attendees to them, and reads the product, campaign and knowledge catalogues.
+    Quotes, contracts and line items stay with the sales profiles. It deletes nothing, exports nothing, and carries no View All, Modify All or system
+    permission. Every grant in it is one the Sales Representative profile already makes, so a rep gains nothing new.
+  - **It adds to every profile.** Permission sets add up, so once CRM User is in force a Marketing User or a Service
+    Agent can also create and edit accounts and opportunities of their own, which their profiles alone do not
+    allow. What it adds for them to read is limited to their own records and the shared product and campaign
+    catalogues; it reaches no quote, contract or line item.
+  - **Why not Sales Representative.** The platform refuses to give everyone a set that can export, delete or see every
+    record, and Sales Representative does all three, so a narrower set was written for this purpose.
+  - **Nobody's field security changes.** CRM User masks no field and opens no field, so every profile reads and edits the
+    same fields it did before.
+  - **Self-hosted servers (`objectstack serve`)**: every signed-in member holds CRM User from the start, and the
+    suggestion already shows as accepted.
+  
+  The default set is described under **Default set for every member** on the Profiles page, in all three languages.
+
+### Patch Changes
+
+- 9db9a58: **The Chinese sidebar names the Activity group and its Events item apart, and the New Forecast form names its two period fields apart.**
+  
+  - **Chinese (zh-CN) sidebar.** The Activity group is now 互动, and its Events item stays 活动, the name of the page it opens. Before, both read 活动, so the sidebar showed 活动 › 活动. English, Spanish and Japanese already used two words (Activity › Events, Actividad › Eventos, 活動 › イベント).
+  - **New Forecast form.** The free-text period name is now labelled **Period Label** in English, **Etiqueta del periodo** in Spanish and **期間ラベル** in Japanese. Before, it was labelled **Period** (**Periodo**, **期間**), the same as the Month / Quarter picklist beside it, so the form showed two fields with one name. Chinese already labelled them apart (周期 / 周期标签).
+  - **Approval names stay in English for now.** In every language, the approvals inbox and the approval panel on a record still show an approval's name and its step's name in English, for example "Large Deal Approval (on create) · Sales Manager Review". The app's language packs cannot change that today: the platform shows each name as it was written when the approval was opened, and has no translation for an approval step. This release does not change it; the fix belongs to the platform.
+- b91ac1b: **The product docs, the feature inventory and the admin guide now describe the app as it ships.** Nothing in the app changes; each corrected sentence was measured in the running app, the engine or the source first.
+  
+  - **Cases.** The case detail screen is made of the object's field groups (Case Information, Origin & Routing, SLA & Priority, Escalation, Resolution, System). The page used to say it had three sections of its own and that Escalated Date and First Response Date appeared on no screen; both are on the Details tab, and an Attachments panel sits below the tabs. The Activity timeline has no email stream (Send Email is a contact action). The account's last activity date moves when a case reaches Resolved or an interaction is recorded on it, not on every case update.
+  - **Activities and opportunities.** An account, lead, opportunity or case lists its tasks and events on its Related tab; its timeline carries logged calls and meetings, not tasks, and a completed task adds nothing to it. The opportunity timeline has no emails and no task completions.
+  - **Contacts and accounts.** The primary contact is not a default anywhere: you pick the contact on each opportunity, quote and contract. The Primary Contacts list is the place the flag shows.
+  - **Knowledge base.** The Published tab lists the most Helpful Votes first (there is no view count).
+  - **Forecasts.** A forecast record has three sections, Snapshot, Amounts and Source (collapsed); the form arranges them as Snapshot, Amounts and Notes.
+  - **Sandbox and releases.** HotCRM ships 20 seed families, not 21; nineteen insert once and the forecast snapshots upsert.
+  - **Admin guide** (`src/docs/crm_admin.md`). The sharing table lists Unassigned Cases — Triage, and the permission sets include Service Manager.
+  - **Feature inventory** (`docs/feature-inventory.md`). Eighteen rows corrected: the account tabs and delete guard, the case fields and the escalation hand-off, the article review date, vote counts and Published order, campaign enrollment and Mark Responded, the quote and forecast defaults, the Activity group, seven permission sets, eleven sharing rules, each persona's landing page, Sales Home, and the seed data.
+- f22dfa5: **Three New forms no longer make you type a value the app fills in for you.**
+  
+  - **Opportunity line item.** Leave **Sales Price** blank and the line takes the product's **List Price**, which you can still change. Before, the form refused to save with "Please check the highlighted fields: Sales Price", although the app already defaulted a blank price to the list price for lines added any other way.
+  - **Quote.** Leave **Expiration Date** blank and the quote expires 30 days after its **Quote Date**. The form now says "Set automatically when saved." under the field, as it already did for **Quote Date**. Before, the form refused to save until you picked a date.
+  - **Forecast.** Leave **Period End** blank and it is filled in from **Period** and **Period Start**. Leave **Snapshot Date** blank and it is today, with the same "Set automatically when saved." note. Before, the form refused to save until you filled both in. **Period Start** is still asked for.
+  
+  Nothing else changes. A date or price you enter yourself is kept, and the existing rules still apply to it. Saving a quote or forecast with its Expiration Date or Snapshot Date cleared is still refused. Clearing a line's Sales Price is still refused too, but the message now names the field `unit_price` rather than "Sales Price". An import's dry-run preview no longer reports a blank Sales Price, Expiration Date, Period End or Snapshot Date as an error, so the preview agrees with the import itself, which already filled them in.
+  
+  The documentation now says so too: the quotes page lists the 30-day default, the forecasting page says a blank snapshot date is today, and the automation page says these two defaults are declared on their fields rather than computed by a hook.
+- 39dee2b: **All Forecasts lists periods newest first, two refusals read the way the screens do, and the demo accounts appear on the map.**
+  
+  - **All Forecasts.** The list now groups by **Period Start**, newest first, and under each start date by the period's label, so every period still has a heading of its own (**Q4 2026**). Before, it grouped by the label alone, which sorts as text: *Sep 2026*, then *Q4 2026*, then *Q4 2025*, with *Oct 2026* near the bottom. A quarter and the month that opens it start on the same day, so **Q4 2026** and **Oct 2026** sit under one start date as two periods.
+  - **Campaign dates.** A campaign whose **Start Date** falls after its **End Date** is refused with "The campaign's Start Date (…) must not be after its End Date (…)". A campaign saved as *In Progress* without both dates is refused with "A campaign cannot be In Progress without both a Start Date and an End Date". Before, both messages named the fields `start_date`, `end_date` and the status `in_progress`.
+  - **Deleting a product.** A product still on any opportunity or quote line is refused as before, and the message now counts what it names: "Cannot delete product: it is on 4 opportunity line items and 2 quote line items. To retire it instead, turn off Active." Before, it read "referenced by 4 opportunity(ies) and 2 quote(s)" for four lines on two deals, listed a zero, and named the field `is_active`.
+  - **Accounts by Location.** Each demo account now carries an **Office Location** at its billing address, so the map shows all nine offices. Before, every demo account left it blank and the map reported "9 records with missing or invalid coordinates excluded". A database seeded before this release keeps its blank locations: the demo accounts are written once and never overwritten. Fill **Office Location** on an account to put it on the map.
+- 01808c3: **A quote line no longer asks for a Sales Price, and a mid-month forecast start gets one clear message.**
+  
+  - **Quote line item.** Leave **Sales Price** blank and the line takes the product's **List Price**, which you can still change. Before, the New Quote Line Item form refused to save with "Please check the highlighted fields: Sales Price", although a quote line added any other way already got the list price. Opportunity line items have worked this way since the previous release, and the two now behave the same.
+  - **Forecast.** A **Period Start** that is not the first day of its period is still refused, and the message now names **Period Start** only. Before, a start such as 2026-10-15 also drew "Period End must be the last day of the period", even with **Period End** left blank, or when the end you typed was the month's real last day. Once **Period Start** is on the 1st (on a quarter boundary for a quarterly forecast), a **Period End** you type is checked as before.
+  
+  Nothing else changes. A price you type is kept, and clearing a quote line's Sales Price is still refused; as on opportunity lines, that message names the field `unit_price` rather than "Sales Price". An import's dry-run preview no longer reports a blank Sales Price on a quote line as an error. The forecasting page now says that a start off its boundary is the only thing reported.
+- df2d21c: **Escalate Case and Close Case are offered only to people who may edit a case.** Both buttons edit the case they sit on, so they now appear only for the Service Agent, the Service Manager and the administrators. Sales Rep and Sales Manager can read cases (an account's support history) but not edit them, and Marketing User has no access to cases. Until now both buttons were drawn for anyone who could open the case, and a sales rep or manager who pressed Escalate Case got "Node 'escalate' failed: update_record(crm_case) failed: You do not have permission". The rule follows each person's permission set, so it moves with the set.
+  
+  **Docs that described the app as it was.**
+  
+  - **Campaign members.** *Unsubscribed* is set on the member record by a user who may edit campaign members (Marketing User and the administrators). The page used to say a sales rep sets it; reps and sales managers cannot edit a member. Nothing in the app sets it automatically.
+  - **Quick tour.** The lead button is **Convert Lead** (转化线索), not *Convert*, and the Simplified Chinese pipeline screenshot is captioned with the view's own name, 销售流水线.
+  - **Module-split inventory** (`docs/architecture/module-split-inventory.json`). Add to Campaign on a lead and on a contact are no longer listed as action bodies that write another module's object; since #2167 each starts the marketing module's own enrollment flow. The change is recorded in the file's hand-edit log, and the measured figures are left as measured.
+- a9e7fac: The demo administrator can export lists, and the admin docs say export is granted, not implied
+  
+  Since ObjectStack 18 the platform's own administrator access carries no export, so on a fresh demo box the dev
+  admin (`admin@objectos.ai`) could not export any list: the list's **Display** panel offered no **Export**, and the
+  export API refused it. `pnpm demo:staff` now assigns the app's **System Administrator** profile to the dev admin, as
+  the first thing it does, so the dev admin exports the **Leads**, **Accounts**, **Contacts**, **Opportunities** and
+  **Cases** lists, and nothing that profile does not grant. No profile's grants change.
+  
+  The Profiles page and the in-product administration notes now say that export comes from a profile: an
+  administrator, the account that set the deployment up included, exports nothing until **System Administrator** (or
+  another profile that grants export) is assigned to them.
+- f2af469: **Add to Campaign is no longer a button in a lead list's header.** On **My Leads**, **🔥 Hot Leads**, **High Priority**, **Suspected Duplicates**, **Lead Pipeline**, **Lead Calendar** and **Lead Cards**, the header carried an **Add to Campaign** button (加入营销活动 in Simplified Chinese) for marketing users and administrators. The button works on one lead at a time but was drawn with nothing selected: it opened the whole Campaign dialog, let you pick or even create a campaign, and only then refused in English ("This action runs on a single record — select a row first."), adding nobody. A campaign created from that dialog stayed behind.
+  
+  Add to Campaign is now offered where a lead is already chosen: in every lead row's ⋮ menu, for that one lead, and on **All Leads**, where you tick the rows and run it from the selection toolbar for all of them at once. Who is offered it is unchanged: marketing users and administrators, not sales reps or sales managers. Contacts were not affected: their header never showed the button.
+  
+  **The Opportunity Funnel by Owner → Stage report now charts amount by stage as a horizontal bar chart instead of a funnel.** The amounts do not shrink from one stage to the next (on the demo data, Negotiation and Closed Won hold the most money), so the funnel pinched and then flared, and the Negotiation label was hidden. Now each stage is one bar, top to bottom in sales order from Prospecting to Closed Won, and every stage name is shown in full. The report's name, its table and its numbers have not changed.
+- 399d414: **The Convert Lead screen now says which account the lead will join, before you submit.** It used to ask only **Create Opportunity?** (是否创建商机？ in Simplified Chinese) and then matched an account by the lead's company in silence. Now the screen names the existing account the lead will join, by that account's own name, or says that no account you can see matches and that converting creates a new account named after the lead's company. It reads in every shipped language. If the account is not the one you expected, cancel, correct the lead's **Company**, and convert again.
+  
+  The match is still the same normalized company-name match, and it still only looks at accounts you can see. An account owned by a colleague and not shared with you is never matched, and the screen now tells you a new account will be created. If that account has exactly the same name, the conversion is refused as a duplicate record and nothing is created, as before. If its name differs only in capitalisation or spacing, a second account is created, as before. Ask the account's owner or an administrator to share it with you before converting.
+  
+  The match now happens when the screen opens, and the conversion acts on that match. If the named account is deleted while the screen is open, the conversion is refused and nothing is created. Before, a new account the screen had never mentioned was created instead.
+  
+  **Add to Campaign on a contact is declared on each row's ⋮ menu only.** It also carried a list-header placement. That header button never appeared, because the action is offered only for a contact who has not opted out of email, and a list header has no contact. The placement is gone so that a later change to that rule cannot bring the header button back. On **All Contacts** you still tick rows and run it from the selection toolbar.
+- e6d5d3e: **Closing a case now completes its escalation follow-up task.** Escalating a case opens an urgent "Escalated: CASE-…" task for the account owner. Nothing closed that task when the case was closed, so a closed case left an urgent task in the account owner's **My Open Tasks**, one for each time the case was escalated.
+  
+  Now, when a case moves to *Closed*, each of its escalation tasks that is still open is set to **Completed**. This happens however the case is closed: with **Close Case**, or by setting the status to *Closed* on the record. The task records the person who closed the case as the one who completed it. A task its owner already completed is not changed, and the case's other tasks are left as they are. Reopening the case does not reopen the task.
+  
+  Completing the task counts as activity on the account, as completing any task does, so the account's **Last Activity Date** moves to the day the case was closed.
+- b8348e9: **A lead you create for yourself no longer sends you an "awaiting assignment" alert.** New-lead routing alerts the lead's owner, but its standard alert read *"New lead to assign: … is awaiting assignment"*, an assigner's message sent to the person the lead was already assigned to. Every lead a rep created, from the form or through the API, therefore told that same rep the lead was waiting to be assigned.
+  
+  Now the standard alert reads *"New lead assigned to you"*, and it is sent only when someone else put the lead in the owner's name: the round-robin gave them a web-to-lead enquiry, an integration named them as owner, or a colleague logged the lead for them. A lead you create for yourself sends you no standard alert. Its three-day follow-up date is still set, and it is in **My Leads**.
+  
+  The hot-lead alert (4 stars or better) now reads *"Hot lead — follow up within 24h"* instead of *"Hot lead — assign within 24h … needs an owner today"*. It still goes to the owner whoever created the lead, by inbox and email, because the rating may be the system's own score. Both alerts are reworded in all four languages. A lead with no owner still gets its follow-up date and no alert.
+- f8eed90: **The Pipeline by Stage tile is now a horizontal bar chart instead of a funnel.** The tile is on **Executive Overview**, **Sales Performance** and **CRM Overview** (in Simplified Chinese it reads 阶段管道分布). It shows the value of open opportunities at each sales stage. A funnel draws each stage as wide as its value, so it reads as a funnel only when the value shrinks from one stage to the next, and open pipeline value usually does not. On the demo data the late stages hold the most money, so the funnel pinched in the middle and then flared out at the bottom.
+  
+  Now each stage is one bar, its length the stage's open value. The stages run top to bottom in sales order: Prospecting, Qualification, Needs Analysis, Proposal, Negotiation. Closed deals are still left out, and the tile still follows the dashboard's date and filter pickers. The title, the description and the numbers behind the tile have not changed.
+- 2961679: **Every report the app ships now has a sidebar entry, in a new Reports group.** Before, only three of the ten reports could be opened from the app: **Pipeline Coverage** and **Lead Inflow** under **Insights**, and **SLA Performance**. The other seven, such as **Opportunities by Stage** or **Cases by Status and Priority**, opened only if you knew their address, and searching for one with ⌘K found nothing.
+  
+  Now the sidebar has a **Reports** group, last in the list. It holds all ten reports, one entry each, and is collapsed when the app loads, so click it open. ⌘K finds a report by its sidebar name. **Pipeline Coverage**, **Lead Inflow** and **SLA Performance** moved into it from **Insights**, which keeps **CRM Overview** and **Forecasts**.
+  
+  You only see a report whose records you can read. A sales rep or sales manager sees all ten. A service agent or service manager sees the lead, account and case reports, but not the four opportunity reports. A user who cannot read cases does not see the three case reports. **Customer Churn Signals** shows to anyone who can read accounts: three of its four panels are about accounts, and someone who cannot read opportunities sees a "You don't have access" notice on the fourth.
+  
+  A few sidebar names are shorter than the report's own title. For example, **Accounts by Industry & Type** opens the report **Accounts by Industry and Type**, and **Cases Opened by Day** opens **Cases Opened by Priority × Day**.
+- 5782101: Enroll Members on a campaign that is not open, or no longer exists, now says so instead of claiming success
+  
+  **Enroll Members** enrolls people only into a campaign in *Planning* or *In Progress*. On any other campaign the run
+  already enrolled nobody, but it then ended like a clean run: the console showed *Eligible members enrolled in
+  campaign.* over a run that had added no one. That happened on a *Completed* or *Aborted* campaign, and on one deleted
+  after the button was clicked.
+  
+  - **Such a run now ends with a refusal.** The message says the campaign is not open for enrollment or no longer
+    exists, that only a *Planning* or *In Progress* campaign takes members, and that nobody was enrolled. The console
+    shows it with **Close** only, as it shows the other refusals, and no member row is written. The message is
+    translated into Chinese, Spanish and Japanese.
+  - **Enrolling into an open campaign is unchanged.** Leads by status and contacts by department are enrolled as
+    before, a run that refused anyone still reports both counts, and a clean run still ends with *Eligible members
+    enrolled in campaign.*
+  - **Studio no longer warns that the flow's *Campaign Open?* step can dead-end.** The step now has a default branch,
+    which is where the refusal is.
+- b6cadbd: A contact or account whose only quote is accepted can now be deleted
+  
+  Handling a data-deletion request used to stop at the first quote the customer had accepted. Deleting
+  the contact, or the prospect account above it, was refused with *"… 1 active quote(s) … Close or
+  reassign the opportunities and quotes first"*, and neither could be done: an accepted quote is
+  settled and frozen.
+  
+  Now both deletes go through. **The accepted quote stays, with its Contact cleared** and everything
+  else on it unchanged, the way a closed deal already keeps its record when its primary contact is
+  deleted. When the accepted quote sits under the account being deleted, it goes with that account, as
+  every quote under a deleted account does.
+  
+  What still holds a contact is open work: an open opportunity or open quote naming them, or a
+  contract with them as its primary contact. The refusal now lists only what holds the contact, with
+  real plurals (*"1 open opportunity and 2 open quotes"*, not *"1 open opportunity(ies), 2 active
+  quote(s), 0 active contract(s)"*), and names only steps that free the contact: close the opportunity
+  or give it another primary contact, give the quote another contact or reject it, give the contract
+  another primary contact.
+  
+  A quote's Contact is still required on the save that moves the quote to Presented or Accepted, and
+  cannot be emptied while the quote is Presented, so a contract is never drafted without a recipient.
+  The Contact field's help text now says that. *Import & Export › Data deletion requests* and *Quotes*
+  describe the new behaviour.
+- b94cf85: **Editing the demo case "Mobile app crashes on iOS 17" no longer escalates it a second time.** The demo data's escalated cases had the **Escalated** flag and an **Escalation Reason** but no **Escalated Date**, and the automatic escalation of Critical cases treats a case with no Escalated Date as never escalated. So the first edit anyone saved on that case, a Critical case being worked in **In Progress**, replaced its reason "Affects 30% of mobile users" with "Auto-escalated: critical priority", gave it a new Escalated Date, and moved it back to **Escalated**.
+  
+  Every escalated demo case now carries an Escalated Date between the moment the case was opened and now. Editing one keeps its reason, its date and its status.
+  
+  This applies to a new demo database only. The demo cases are written once, when the database is first seeded, and later starts never write them again: the case dataset is insert-once (`mode: 'ignore'`, #2139), and this release ships no migration or backfill. A demo database seeded before this release keeps its escalated cases without an Escalated Date, and there an edit to "Mobile app crashes on iOS 17" still escalates it again. A new demo database (`pnpm demo:reset`, which deletes the existing one) gets the new data.
+- 1cc6861: **The Sales docs now send readers to the kanban board the way the app reaches it, and describe Customer Churn Signals by the panels it shows.** Nothing in the app changes; both corrections were measured in the running app first, in all three locales.
+  
+  - **The kanban board.** The Pipeline Management and Opportunities pages told readers to open a **Pipeline** sidebar entry, which the app has not had since the sidebar was regrouped. The board is the **Sales Pipeline** tab on the list page that **Sales › Opportunities** opens. The pages, and the daily row of the recommended cadence, now say that.
+  - **Customer Churn Signals.** The Pipeline Management page described this report as "open cases + low NPS". The report reads no cases and no NPS. It shows four panels: **CSM-Flagged Accounts**, **At-Risk Accounts** (no activity in 60+ days), **Silent High-Value Accounts** (strategic and enterprise accounts quiet for 90+ days) and **Recently Lost Opportunities** (closed-lost in the last 30 days).
+  - The test that held the old daily-row wording in place now requires the real entry and tab, and checks that the board still has no sidebar entry of its own.
+- 57d9853: Upgrade the ObjectStack platform to 18.0.0-next.5 (prerelease)
+  
+  All 23 `@objectstack/*` dependencies move from 18.0.0-next.3 to 18.0.0-next.5 together, pinned
+  exact. `specVersion` and `engines.protocol` follow to `^18.0.0-next.5` in `objectstack.manifest.json`
+  and in both package manifests. No third-party package changes version.
+  
+  **This release still needs an ObjectStack 18 host.** 18.0.0-next.5 is a prerelease of protocol
+  major 18, so any 18 runtime admits the artifact and a 17.x host refuses it.
+  
+  What HotCRM users see on the new platform:
+  
+  - **Sales Home's key figures show in full.** *Revenue (Won)* and *Pipeline Value* used to be cut
+    with an ellipsis (`1,290,0…`). The figure now shrinks to fit its tile, so `1,290,000.00` reads whole
+    at a 1440 px window.
+  - **Setup › Diagnostics has one audit entry, Audit Log.** It opens the audit browser, which filters
+    by action, object, user and date. The separate *Audit Logs* record list is no longer in Setup's
+    menu; the browser links to it.
+  - Every page lays out as before. Sales Home and the lead, opportunity and case record pages no longer
+    declare a width for their main column, which the platform now refuses there; the column is drawn
+    at the same width as before.
+  
+  What administrators and integrators should know:
+  
+  - **A public web form now refuses a submission that leaves one of its required fields empty.** A
+    script or integration that posts to *Contact Us* or *Support* without a *Description* gets `400`
+    with the field named, and nothing is stored. Before, the case or lead was stored with that field
+    empty. People filling in the forms see no change, because the form page already asked for it.
+  - **The app's own sharing rules are no longer rows in Setup › Sharing Rules.** The platform reads
+    them from the app, so that list shows only rules your organization creates. They still grant
+    access exactly as before. To see every rule, use the sharing rules API (`GET /api/v1/sharing/rules`).
+    An app rule cannot be deleted, and no new rule may take its name.
+  - **ObjectStack 18.0 starts a fresh install under every tenancy posture.** `os serve` starts with
+    `OS_TENANCY_POSTURE=group` or `isolated`, or with `OS_MULTI_ORG_ENABLED=true`, as it does under
+    `single`, given the enterprise `@objectstack/organizations` runtime and `OS_PLATFORM_OWNER_EMAIL`.
+    An existing database is a different case: it is upgraded before 18.0 serves it (see the 18.0.0
+    upgrade entry).
+  - **No app data changes.** No object, field or stored value changes in this release, and nothing
+    needs to be cleared or reloaded.
+- c16c0bb: A lead becomes Converted only through Convert Lead, and a lead stuck at Converted with nothing converted can be edited again
+  
+  Picking **Converted** in a lead's **Status** (in the Edit or the New Lead form, or through the REST API) used to save
+  the lead at Converted with no account or contact behind it: **Converted** stayed unticked and the converted
+  account, contact and opportunity stayed empty. From then on every edit was refused with "Cannot edit converted lead
+  … Make changes on the converted records instead", although there were no converted records, so the lead was frozen
+  for good. A lead created as Converted also broke the lead assignment automation that runs on every new lead.
+  
+  - **Setting Status to Converted by hand is now refused** when you create or edit a lead, with the message "Only
+    Convert Lead sets a lead to Converted, because it creates the account and contact the lead becomes. Choose
+    another Status, then use Convert Lead." The lead keeps its status and stays editable. The REST API refuses the
+    same write with `400 VALIDATION_FAILED`.
+  - **Convert Lead works as before.** It creates or reuses the account and contact, optionally creates the
+    opportunity, marks the lead Converted, and the converted lead stays locked.
+  - **Leads already stuck are released.** A lead that was set to Converted by hand before this release (Status
+    Converted, **Converted** unticked) is no longer locked: it can be edited again. Set its Status back to where the
+    lead really is, for example Qualified, and use **Convert Lead** to convert it. No data migration is needed.
+- 896e720: The public support form now asks who is writing in, so the agent who gets the case can answer them
+  
+  A case from the public support form (`/forms/support`) used to carry no way to reach the person who sent it. The
+  form asked only for a subject, a description, a case type and a priority, and a case has no account or contact
+  when an anonymous visitor raises it, so the agent it was routed to had nobody to reply to.
+  
+  - **The form now asks for the visitor's name and email.** The email is required: the form will not send without
+    it, and the server refuses a submission that leaves it out (`400 VALIDATION_FAILED`, on `supplied_email`). The
+    name is optional.
+  - **The case keeps them as Supplied Name and Supplied Email.** They sit beside **Contact** in the case's *Case
+    Information* section, on the case form and in the **All Cases** and **Unassigned — triage** lists. The email is a
+    mail link, so the agent can reply from the case. Both labels are translated into Chinese, Spanish and Japanese.
+  - **They are what the visitor typed, and nothing more.** The app never links the case to a contact or an account
+    because the email matches one: an anonymous address is not verified. The agent links the case to the right
+    contact after checking who wrote in.
+  - **Nothing else a visitor can set has changed.** The form still cannot set the case's contact, account, owner,
+    status, escalation, resolution or internal notes.
+  - **Cases your team raises are unchanged.** Both fields are optional there, and an agent can fill them in or
+    correct them on the case.
+- cd25f29: A deal's line items can no longer be changed while an approval locks the deal, so its amount keeps matching its lines
+  
+  While a deal waits on its **Large Deal Approval**, the deal itself is locked. Its line items were not: a rep could
+  still add a product, change a line's quantity, sales price or discount, or remove a line. The line was saved, but the
+  deal's **Amount** could not follow it, because the approval lock also refused the automatic amount update. The deal
+  then showed one amount (and the approver was asked to sign off on it) while its lines added up to another. The
+  only trace was an error in the server log.
+  
+  - **A line write on a locked deal is now refused, and nothing is saved.** Adding, changing, moving or removing a
+    line of a deal under approval answers "Opportunity *name* is locked while an approval is in progress, so its line
+    items cannot be added, changed or removed until that approval is complete." The REST API refuses the same write
+    with `409 RECORD_LOCKED`. This is the same rule a closed deal and an accepted quote already apply to their lines.
+  - **The same applies while a status-change (won/lost) request is waiting for approval**, on an install that turns
+    that approval on, because it locks the deal the same way.
+  - **Nothing else changes.** A deal that is not under approval takes lines as before, and its amount follows them.
+    Once the approval is decided (approved or rejected), the lines can be edited again. A qualification approval does
+    not lock the deal, so it does not hold the lines either. Deleting the whole deal still deletes its lines.
+  - No data migration is needed: a fresh install has no deal whose amount differs from its lines.
+- dfe41c7: A contract's status now follows its route: an expired or terminated contract can no longer be revived
+  
+  A contract moves **Draft → In Approval → Activated → Expired**. **In Approval** can go back to **Draft**, and a
+  **Draft**, **In Approval** or **Activated** contract can be **Terminated**. **Expired** and **Terminated** are final:
+  a renewal is a new contract. That route was declared before, but only as a warning in the server log, so any other
+  status change saved. An expired contract could be set back to **Activated** with its end date in the past, an
+  activated one could return to **Draft**, and a draft could be activated without going through approval. Each of
+  those counted as a live contract again, for the account's *Customer* status, renewal reminders and the billing
+  hand-off.
+  
+  - **A status change outside the route is now refused**, on the contract's Edit form (the message appears under
+    **Status** and the form stays open) and through the REST API (`400 VALIDATION_FAILED`, on `status`), with the
+    message "This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; In
+    Approval can go back to Draft, and Draft, In Approval or Activated can be Terminated. Expired and Terminated are
+    final: a renewal is a new contract." The contract keeps the status it had. The message is translated into
+    Chinese, Spanish and Japanese.
+  - **Everything else about an ended contract can still be edited.** Only the status is held: an expired or
+    terminated contract still takes changes to its terms, notes, primary contact or any other field.
+  - **Creating a contract is not checked.** A contract imported or created directly as *Activated* or *Expired*
+    still saves, as before.
+  - **The nightly expiration sweep is unchanged.** It still moves an *Activated* contract past its end date to
+    *Expired*.
+  - **Leads, opportunities, cases and quotes are unchanged.** Their status routes still only warn.
+- 6d150c0: **The large-deal-won notification shows the amount formatted, and a stalled deal with a long name gets its follow-up task.**
+  
+  - **Large Deal Won Alert** (#2193): the inbox and email text read "Wayne Enterprise License closed at 1200000." The amount now goes through the template renderer's `number:2` formatter in the recipient's locale, so it reads "closed at 1,200,000.00", the way the record and the list show it (`1.200.000,00` in Spanish). All four locale packs carry the change.
+  - **Stalled Deal Alert** (#2210): a deal whose name was longer than 233 characters got no stall task, because `Advance stalled deal: ` + the name overflowed the task subject's 255-character limit and the insert was refused. The subject is now cut to 254 characters plus an ellipsis, as the won-deal and case-escalation tasks already are. The "already nudged?" check matches the cut subject, so a long-named deal still gets exactly one task per stall.
+- 3116e7a: **The README now presents HotCRM as the reference implementation of "the ontology is the software" for a CRM, and its screenshots show the 18.0.0 Console.** The README opens on ObjectStack's positioning, quoted as the platform states it ("The ontology is the software", 本体即软件), then says what HotCRM is under it: the business ontology (objects, relations, actions, permissions, flows) is the app; the database, the API, the Console and the agent tools derive from it; views, dashboards and translations are projections of it. The README is also the package readme the marketplace listing shows, so the listing picks this up at the next release.
+  
+  Every figure in it was re-measured on this release: the counts as the app registers them (7 permission sets and 11 sharing rules, where the old page said 6 and 9), and the token figures as `node scripts/check-source-token-ratchet.mjs` prints them (~58k business semantics, ~29k interaction layer for the sales package). A new **Agents operate it** section shows what was run on a local community-edition boot: an agent's MCP `create_record` call creates a campaign with the dev admin's API key, and the same call with the demo sales rep's key is refused with `PERMISSION_DENIED`. Two claims the old page made are gone because they were not true: that every object has an actions file that is also an AI tool (two actions are exposed to agents, Convert Lead and Schedule Follow-up), and that every file is named after its entity and kind.
+  
+  The nine documentation screenshots are re-captured in English and Simplified Chinese from a fresh database with the shipped seed data and demo staff, in the light theme, each `meta.yaml` recording the capture date and platform version. The English sales pipeline no longer shows Chinese dates. The five older numbered screenshots under `assets/screenshots/`, which nothing referenced, are removed.
+- 1e71d5e: `pnpm demo:staff` gives every seeded case an owner, and no longer fails when run right after `pnpm dev` starts
+  
+  The demo's 38 seeded cases were routed to nobody, so who ended up owning them depended on timing: run while the seed
+  was still loading, all of them went to the service agent (the escalated ones included); run afterwards, all of them
+  stayed with the dev admin, and the service agent signed in to a Customer Service page where every tile read zero.
+  The script now hands each seeded case to a service desk: escalated and critical cases to the service manager
+  (`service.manager@objectos.ai`), every other case to the service agent (`service.agent@objectos.ai`). On a fresh
+  database that leaves the agent 23 cases, 12 of them open, and the manager 15.
+  
+  A fresh `pnpm dev` answers sign-in about 40 seconds before its seed finishes loading, and a run started in that
+  window found no tasks or meetings to hand over and exited 1 ("routed no rows at all"). The script now waits for the
+  seed to finish first (up to 180 seconds, `--seed-wait` to change it), and then routes what is there.
+- d723f6f: Ticking a lead's Converted switch no longer freezes the lead with nothing converted
+  
+  On a lead's **Details** tab, the **Conversion** section draws **Converted** as a switch. Ticking it and saving (or
+  sending `is_converted: true` through the REST API) used to save the lead as converted with no account, contact or
+  opportunity behind it. From then on every edit was refused with "Cannot edit converted lead … Make changes on the
+  converted records instead", although there were no converted records, so the lead was frozen for good. This is the
+  same dead end that choosing **Converted** in the **Status** field led to before the previous release, reached
+  through the switch instead.
+  
+  - **Ticking Converted by hand is now refused** when you edit or create a lead, with the message "Only Convert Lead
+    marks a lead as Converted, because it creates the account and contact the lead becomes. Use Convert Lead instead of
+    ticking Converted." The lead keeps its values and stays editable. The REST API refuses the same write with
+    `400 VALIDATION_FAILED`.
+  - **Convert Lead works as before.** It creates or reuses the account and contact, optionally creates the opportunity,
+    marks the lead Converted, and the converted lead stays locked. A conversion approval that is pending or rejected
+    still refuses it.
+  - **Converted leads keep working.** Deleting the account or contact a converted lead became is not refused, and the
+    lead stays converted.
+- e93b2f7: **The docs and one report now say what the app does.** No behaviour changes.
+  
+  - **Large deal approval.** The opportunities page, the sales and revenue overviews, the pipeline health signals, the setup checklist and the FAQ said a deal entered approval above $500K, and the opportunities page said final approval set the stage to Closed Won. A deal enters the Large Deal Approval flow at $100K or more: a Sales Manager reviews it, and only a deal above $500K also needs a Sales Director. Final approval sets Approval Status to Approved and stamps Approved Date; the stage does not move, and the rep closes the deal as usual.
+  - **Lead statuses.** The leads page said reps can only advance one step at a time and that the app blocks other jumps. The usual path is a guide, not a rule: a status change off it still saves, with a warning in the server log. Only Converted is enforced, and only Convert Lead sets it.
+  - **Customer Churn Signals.** The report's description called it a three-panel view and missed CSM-Flagged Accounts. It now describes all four panels.
+- ee7c4b0: Enroll Members (`campaign_enrollment`): the "Anyone Refused?" decision now routes a clean run through a default edge instead of a second, complementary condition, so Studio's Problems panel no longer warns that the decision has no default branch. Runs end exactly as before: a run that refused nobody completes with the success message, and a run with any refusal ends refused with the enrolled and refused counts. Also corrects an authoring comment in the contract-activated billing hand-off flow that described how decisions routed before the 18.0.0 engine.
+- 1f124b0: Close Case changes a case only for a person who may edit it
+  
+  **Close Case** now runs as the person who uses it, so that person's own access to the case decides the
+  close. Someone who may edit the case closes it exactly as before: the resolution, the optional resolving
+  article, the closed date, the resolution time and the SLA result are all recorded, an escalated case's
+  follow-up task is still completed, and the account's **Last Activity Date** still moves. Someone who may
+  not edit the case is refused, and the case is left exactly as it was.
+- b9ecab6: Tasks booked from a private opportunity no longer carry its name
+  
+  A deal flagged **Private** is visible only to its owner, and the records HotCRM writes from such a deal
+  now keep that promise too. The activation task booked when a private deal is won reads *Activate new
+  customer (private opportunity)*, and the follow-up task the daily **Stalled Deal Alert** books for it
+  reads *Advance stalled deal (private opportunity)*. Each still goes to the deal's owner and still links
+  to the deal. A deal whose Private flag changes while its stall task is open is still nudged once per
+  stall, not twice.
+  
+  **Clone Opportunity** on a private deal now makes a private copy; the owner of the copy can clear the
+  flag on it.
+  
+  Deals that are not private are unchanged: their tasks keep the deal's name in the title.
+
 ## 5.1.2
 
 ### Patch Changes

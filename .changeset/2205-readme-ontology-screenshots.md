@@ -1,9 +1,0 @@
----
-"hotcrm": patch
----
-
-**The README now presents HotCRM as the reference implementation of "the ontology is the software" for a CRM, and its screenshots show the 18.0.0 Console.** The README opens on ObjectStack's positioning, quoted as the platform states it ("The ontology is the software", 本体即软件), then says what HotCRM is under it: the business ontology (objects, relations, actions, permissions, flows) is the app; the database, the API, the Console and the agent tools derive from it; views, dashboards and translations are projections of it. The README is also the package readme the marketplace listing shows, so the listing picks this up at the next release.
-
-Every figure in it was re-measured on this release: the counts as the app registers them (7 permission sets and 11 sharing rules, where the old page said 6 and 9), and the token figures as `node scripts/check-source-token-ratchet.mjs` prints them (~58k business semantics, ~29k interaction layer for the sales package). A new **Agents operate it** section shows what was run on a local community-edition boot: an agent's MCP `create_record` call creates a campaign with the dev admin's API key, and the same call with the demo sales rep's key is refused with `PERMISSION_DENIED`. Two claims the old page made are gone because they were not true: that every object has an actions file that is also an AI tool (two actions are exposed to agents, Convert Lead and Schedule Follow-up), and that every file is named after its entity and kind.
-
-The nine documentation screenshots are re-captured in English and Simplified Chinese from a fresh database with the shipped seed data and demo staff, in the light theme, each `meta.yaml` recording the capture date and platform version. The English sales pipeline no longer shows Chinese dates. The five older numbered screenshots under `assets/screenshots/`, which nothing referenced, are removed.
