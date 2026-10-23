@@ -21,7 +21,7 @@ Every opportunity moves through these stages. The system tracks where you are an
 | 🟢 **Closed Won** | 100% | **Deal won** *(final stage)* |
 | 🔴 **Closed Lost** | 0% | **Deal lost** *(final stage)* |
 
-You can move from any open stage directly to **Closed Lost** (deals can be lost at any point), but you can't skip forward — you have to walk through the funnel one stage at a time. The system blocks invalid jumps to keep your forecast honest.
+Deals normally walk the funnel one stage at a time, and a deal can be lost from any open stage — but the stage path is **advice, not a gate**. A move off it still saves: you can skip ahead (say, from **Prospecting** straight to **Negotiation**) or step an open deal back to an earlier stage, and the win probability follows the new stage. Such a save comes back with a warning, *"Invalid opportunity stage transition"*, which is also written to the server log, so an odd import or integration can be found afterwards; [Administration › State Machines](/docs/administration/state-machines) shows the declared path. What *is* enforced is the end of the funnel: once a deal is **Closed Won** or **Closed Lost**, its stage cannot be changed — reopening it, or switching a won deal to lost, is refused (see *Closed deals are locked* below).
 
 ## Closing a deal — the reason is required
 
