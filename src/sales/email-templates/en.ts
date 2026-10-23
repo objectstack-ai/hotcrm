@@ -37,10 +37,15 @@ export const en: EmailTemplatePack = {
     subject: 'Stalled deal: {{name}}',
     bodyHtml: '<p>Opportunity {{name}} has sat in {{stage}} for {{days_in_stage}} days. Time to advance or re-qualify it.</p>',
   },
+  // `{{amount | number:2}}`: the hole goes through the renderer's `number`
+  // formatter (ADR-0053), in the recipient's locale, so the amount reads
+  // "1,200,000.00" as it does on the record and the list. The bare hole printed
+  // the raw value, "closed at 1200000" (#2193). Every locale pack uses the
+  // same hole.
   'crm.large_deal_won': {
     label: 'Large Deal Won',
     subject: 'Large deal won: {{name}}',
-    bodyHtml: '<p>{{name}} closed at {{amount}}. Congratulations to the team.</p>',
+    bodyHtml: '<p>{{name}} closed at {{amount | number:2}}. Congratulations to the team.</p>',
   },
   'crm.lead_conversion_approved': {
     label: 'Lead Approved for Conversion',

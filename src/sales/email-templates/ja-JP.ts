@@ -27,7 +27,7 @@ export const jaJP: EmailTemplatePack = {
   'crm.large_deal_won': {
     label: '大型商談の受注',
     subject: '大型商談を受注: {{name}}',
-    bodyHtml: '<p>{{name}} が {{amount}} で成約しました。チームの皆さん、おめでとうございます。</p>',
+    bodyHtml: '<p>{{name}} が {{amount | number:2}} で成約しました。チームの皆さん、おめでとうございます。</p>',
   },
   'crm.lead_conversion_approved': {
     label: 'リード変換の承認',

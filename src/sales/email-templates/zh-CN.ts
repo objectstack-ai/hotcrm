@@ -27,7 +27,7 @@ export const zhCN: EmailTemplatePack = {
   'crm.large_deal_won': {
     label: '大额商机赢单',
     subject: '大额商机赢单：{{name}}',
-    bodyHtml: '<p>{{name}} 以 {{amount}} 成交。恭喜团队。</p>',
+    bodyHtml: '<p>{{name}} 以 {{amount | number:2}} 成交。恭喜团队。</p>',
   },
   'crm.lead_conversion_approved': {
     label: '线索转换已批准',

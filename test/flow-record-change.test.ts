@@ -146,6 +146,45 @@ describe('opportunity_won_alert — start condition', () => {
     expect(JSON.stringify(alert), 'a template dot-walked a lookup').not.toContain('undefined');
     expect(String(alert!.payload.templateData.name)).toContain(opp.name);
   });
+
+  /**
+   * The amount reads the way the record and the list show it (#2193). The
+   * template's `{{amount}}` hole printed the raw value, "closed at 1200000";
+   * it now goes through the renderer's `number:2` formatter, in the
+   * recipient's locale. Read off the inbox row the dispatcher writes, which is
+   * the text the bell panel shows; the row lands after the run, hence the wait.
+   */
+  it('shows the won amount formatted in the inbox, not the raw value (#2193)', async () => {
+    const opp = await deal(1_200_000);
+    await close(opp, 'closed_won');
+    const row = await vi.waitFor(async () => {
+      const rows = (await verify.rows('sys_inbox_message', { user_id: rep.id, topic: 'large_deal_won' }))
+        .filter((r) => r.action_url === `/crm_opportunity/${opp.id}`);
+      expect(rows, 'no inbox row for the won deal yet').toHaveLength(1);
+      return rows[0]!;
+    }, { timeout: 15_000, interval: 100 });
+    expect(String(row.body_md)).toContain(`${opp.name} closed at 1,200,000.00.`);
+    expect(String(row.body_md), 'the raw amount leaked through').not.toContain('1200000');
+  });
+
+  /**
+   * Every locale pack carries the formatted hole, each in its own number
+   * convention. Rendered through the booted email service, the renderer the
+   * inbox and the email channel both call.
+   */
+  it('formats the won amount in every locale pack (#2193)', async () => {
+    const email = verify.kernel.getService<Rec>('email');
+    const expected: Record<string, string> = {
+      'en-US': '1,200,000.00', 'zh-CN': '1,200,000.00', 'ja-JP': '1,200,000.00', 'es-ES': '1.200.000,00',
+    };
+    for (const [locale, amount] of Object.entries(expected)) {
+      const rendered = await email.renderTemplate({
+        template: 'crm.large_deal_won', data: { name: 'Wayne Enterprise License', amount: '1200000' }, locale,
+      });
+      expect(rendered.text, `${locale} pack`).toContain(amount);
+      expect(rendered.text, `${locale} pack leaked the raw amount`).not.toContain('1200000');
+    }
+  });
 });
 
 describe('case_escalation — start condition', () => {

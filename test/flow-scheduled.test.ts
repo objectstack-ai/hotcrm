@@ -530,6 +530,33 @@ describe('opportunity_stagnation — daily stalled-deal nudge', () => {
     await sweep('opportunity_stagnation');
     expect((await tasksFor(ids.o_stalled)).filter((t) => t.status === 'not_started')).toHaveLength(1);
   });
+
+  /**
+   * A long deal name still gets its stall task (#2210). `crm_task.subject`
+   * caps at 255 while `crm_opportunity.name` does not, so `Advance stalled
+   * deal: ` + a 250-character name was refused on insert and the deal got no
+   * task. The title is now cut to 254 characters and an ellipsis. A 233-character
+   * name fills the 255 exactly and is not cut. The second sweep proves the gate
+   * matches the cut title, so the long-named deal is not re-tasked every morning.
+   */
+  it('books the stall task for a deal whose name overflows the subject cap (#2210)', async () => {
+    const prefix = 'Advance stalled deal: ';
+    const longName = `Long Stalled Deal ${++k} `.padEnd(250, 'x');
+    const fitName = `Fit Stalled Deal ${++k} `.padEnd(255 - prefix.length, 'y');
+    const longId = String((await deal({ name: longName, stage: 'proposal', stage_entry_date: day(-30) })).id);
+    const fitId = String((await deal({ name: fitName, stage: 'proposal', stage_entry_date: day(-30) })).id);
+    await sweep('opportunity_stagnation');
+    await sweep('opportunity_stagnation');
+
+    const long = await tasksFor(longId);
+    expect(long, 'a long-named deal got no stall task, or got one per sweep').toHaveLength(1);
+    expect(long[0]!.subject).toBe(`${(prefix + longName).slice(0, 254)}…`);
+    expect(String(long[0]!.subject)).toHaveLength(255);
+
+    const fit = await tasksFor(fitId);
+    expect(fit).toHaveLength(1);
+    expect(fit[0]!.subject, 'a title that fits was cut').toBe(prefix + fitName);
+  });
 });
 
 describe('contract_renewal — daily notice-window sweep', () => {
