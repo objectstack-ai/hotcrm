@@ -28,6 +28,14 @@ import { P } from '@objectstack/spec';
  * here. It answers per OBJECT, not per record: it does not see a record-level
  * share, which is not this declaration's to restate (a hand-copied sharing
  * rule in a predicate is the drift `claim_case` pins against).
+ *
+ * No `confirmText` on either, by the rule `claim_case` states below: each flow
+ * opens on a screen that asks for the reason (escalation reason, resolution),
+ * and that screen IS the confirmation, with its own Cancel. A "Continue?" modal
+ * in front of it was two dialogs and three clicks before any input (#2240).
+ * `confirmText` is the UI prompt only: what an AI caller is asked to confirm is
+ * `ai.requiresConfirmation`, which neither action declares (#1578), so this
+ * leaves the AI side as it was. Pinned in `test/case-action-one-dialog.test.ts`.
  */
 export const EscalateCaseAction: Action = {
   name: 'escalate_case',
@@ -39,7 +47,6 @@ export const EscalateCaseAction: Action = {
   locations: ['record_header', 'list_item'],
   // The record's state, then the caller's edit right on cases (see the header).
   visible: P`has(record.is_escalated) && record.is_escalated == false && has(record.is_closed) && record.is_closed == false && current_user.can("crm_case", "edit")`,
-  confirmText: 'This will escalate the case to the escalation team. Continue?',
   successMessage: 'Case escalated successfully!',
   refreshAfter: true,
 };
@@ -54,7 +61,6 @@ export const CloseCaseAction: Action = {
   locations: ['record_header'],
   // Same grant as Escalate Case: closing a case is editing it (see the header).
   visible: P`has(record.is_closed) && record.is_closed == false && current_user.can("crm_case", "edit")`,
-  confirmText: 'Are you sure you want to close this case?',
   successMessage: 'Case closed successfully!',
   refreshAfter: true,
 };
