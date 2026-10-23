@@ -108,7 +108,9 @@ export const CampaignEnrollmentFlow: Flow = {
      * 18.0.0-next.0 filter-operand contract), because an absent condition
      * widens a query instead of narrowing it. Seeding these two would turn that
      * loud failure into a silent enrolment of a segment nobody chose; their
-     * `required: true` screen fields are what supply them.
+     * `required: true` screen fields are what supply them, each on the side
+     * that reads it (the fields' `visibleWhen`, #2241). The other side's one
+     * may stay unbound: its query is not on the path the run takes.
      */
     { name: 'leadStatus', type: 'text', isInput: true, isOutput: false },
     { name: 'contactDepartment', type: 'text', isInput: true, isOutput: false },
@@ -139,7 +141,26 @@ export const CampaignEnrollmentFlow: Flow = {
             ],
           },
           {
+            // ONE SEGMENT FIELD PER SIDE (#2241). Each criterion shows only
+            // for the side whose query reads it, and its `required` holds only
+            // while it shows: the console filters the screen's fields by
+            // `visibleWhen` and checks `required` over the visible ones, and
+            // the server's resume contract skips a hidden field's `required`,
+            // evaluating the predicate over the SUBMITTED values layered over
+            // the run's variables (read in the installed 18.0.0
+            // `service-automation`, `refuseInvalidScreenInput`). Before it,
+            // both showed and both were required whatever the source, so a
+            // contacts run had to name a lead status nobody reads.
+            //
+            // The two predicates are `e4` / `e7`'s source clauses, so a field
+            // shows exactly when its branch is the one the run will take.
+            // Bare CEL over this screen's own field names, like
+            // `lead_conversion`'s `visibleWhen` (see the note there): it is
+            // forwarded raw and re-evaluated by the client as the user picks.
+            // `memberSource` is `required`, so neither predicate meets it
+            // unanswered.
             name: 'leadStatus', label: 'Enroll leads in status', type: 'select', required: true,
+            visibleWhen: 'memberSource != "contacts"',
             defaultValue: 'new',
             options: [
               { label: 'New', value: 'new' },
@@ -148,12 +169,14 @@ export const CampaignEnrollmentFlow: Flow = {
             ],
           },
           {
-            // Required, like `leadStatus`, and for the same reason: a blank
-            // segment would reach the filter as an empty string and
-            // silently match the contacts with NO department rather than all of
-            // them. Both branches make the caller name a segment.
+            // Required while it shows, like `leadStatus`, and for the same
+            // reason: a blank segment would reach the filter as an empty
+            // string and silently match the contacts with NO department
+            // rather than all of them. Both branches make the caller name a
+            // segment, each its own (#2241, the note on `leadStatus`).
             name: 'contactDepartment', label: 'Enroll contacts in department',
             type: 'select', required: true, defaultValue: 'executive',
+            visibleWhen: 'memberSource == "contacts"',
             options: [
               { label: 'Executive', value: 'executive' },
               { label: 'Sales', value: 'sales' },
