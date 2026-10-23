@@ -42,7 +42,9 @@ type Rec = Record<string, any>;
  * gates showed it, and every persona's first entry must be the same.
  *
  * #2262 pins the service personas' landing the same way, against the gates
- * Home and Sales Home carried before it (`BEFORE_2262`).
+ * Home and Sales Home carried before it (`BEFORE_2262`), and #2268 pins the
+ * six opportunity entries they are no longer shown against the plain read
+ * gate those six carried before it (`BEFORE_2268`).
  */
 
 const NAV = (servedApp((CrmApp as Rec).name).navigation ?? []) as Rec[];
@@ -70,6 +72,17 @@ const BEFORE_2262: Record<string, unknown> = {
   nav_home: P`current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions)`,
   nav_sales_home: P`current_user.can("crm_opportunity", "read")`,
 };
+
+/** Sales Performance, CRM Overview and the four opportunity reports (#2268). */
+const OPPORTUNITY_ONLY = [
+  'nav_sales_dashboard', 'nav_crm_dashboard',
+  'nav_report_opportunities_by_stage', 'nav_report_won_by_owner',
+  'nav_report_pipeline_coverage', 'nav_report_funnel_by_owner',
+];
+
+/** The gate the six carried before #2268: the read question alone, which `crm_user` answers yes for everyone (#2231). */
+const READS_OPPORTUNITIES = P`current_user.can("crm_opportunity", "read")`;
+const BEFORE_2268: Record<string, unknown> = Object.fromEntries(OPPORTUNITY_ONLY.map((id) => [id, READS_OPPORTUNITIES]));
 
 const PERSONAS = ['na_rep', 'eu_rep', 'sales_manager', 'service_agent', 'service_manager'] as const;
 const REPS = ['na_rep', 'eu_rep'];
@@ -211,5 +224,39 @@ describe('a service persona lands on Service Overview again (#2262)', () => {
 
   it.each([...REPS, 'sales_manager', 'admin'])('%s is shown exactly the sidebar it was shown before', (persona) => {
     expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2262));
+  });
+});
+
+describe('a service persona is not shown the opportunity dashboards and reports (#2268)', () => {
+  const SERVICE = ['service_agent', 'service_manager'];
+  const OTHERS = [...REPS, 'sales_manager', 'admin'];
+
+  it('reads a real served tree that carries all six entries', () => {
+    expect(OPPORTUNITY_ONLY.filter((id) => !LEAVES.some((n) => n.id === id))).toEqual([]);
+  });
+
+  it.each(SERVICE)('the gate before #2268 showed %s all six: it reads opportunities through crm_user', (persona) => {
+    expect(who[persona]!.objects.crm_opportunity?.allowRead).toBe(true);
+    expect(OPPORTUNITY_ONLY.filter((id) => !shownTo(persona, BEFORE_2268).includes(id))).toEqual([]);
+  });
+
+  it.each(SERVICE)('%s is shown none of the six', (persona) => {
+    expect(shownTo(persona).filter((id) => OPPORTUNITY_ONLY.includes(id))).toEqual([]);
+  });
+
+  it.each(SERVICE)('%s is shown its old sidebar less the six, nothing else, and the object entries stay', (persona) => {
+    const shown = shownTo(persona);
+    expect(shown).toEqual(shownTo(persona, BEFORE_2268).filter((id) => !OPPORTUNITY_ONLY.includes(id)));
+    expect(shown).toEqual(expect.arrayContaining(['nav_opportunity', 'nav_my_deals', 'nav_lead']));
+  });
+
+  it.each(SERVICE)('%s still lands on Service Overview', (persona) => {
+    expect(shownTo(persona)[0]).toBe('nav_service_dashboard');
+  });
+
+  it.each(OTHERS)('%s is shown all six and exactly the sidebar it was shown before', (persona) => {
+    const shown = shownTo(persona);
+    expect(OPPORTUNITY_ONLY.filter((id) => !shown.includes(id))).toEqual([]);
+    expect(shown).toEqual(shownTo(persona, BEFORE_2268));
   });
 });

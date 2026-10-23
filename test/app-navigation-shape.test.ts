@@ -177,23 +177,28 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
   // access", one 403 per opportunity query. `requiredPermissions` cannot say
   // this — the server reads it as capability names, and `crm_opportunity:read`
   // hid the entry from every user, the admin included (see `crm.app.ts`).
-  const GATE = 'current_user.can("crm_opportunity", "read")';
+  // Since #2268 the read question carries the two service positions (#2231
+  // let them through it): one gate, `OPPORTUNITY_AUDIENCE`, shared by Sales
+  // Home and the six entries below.
+  const GATE =
+    'current_user.can("crm_opportunity", "read") && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)';
   const GATED = [
+    'nav_sales_home',
     'nav_sales_dashboard', 'nav_crm_dashboard',
     'nav_report_opportunities_by_stage', 'nav_report_won_by_owner',
     'nav_report_pipeline_coverage', 'nav_report_funnel_by_owner',
   ];
 
-  it('exactly these entries carry the opportunity read gate', () => {
+  it('exactly these entries carry the opportunity gate', () => {
     const gated = LEAVES.filter((n) => sourceOf(n.visible) === GATE).map((n) => n.id);
     expect(gated).toEqual(GATED);
-    // Home and Sales Home carry the same read question, narrowed to their
-    // audience by position (below). Report entries each ask for their own
-    // object (the describe after this).
+    // Home carries the same question, narrowed further by the rep position
+    // (below). Report entries each ask for their own object (the describe
+    // after this).
     const other = LEAVES.filter(
       (n) => n.type !== 'report' && n.visible !== undefined && sourceOf(n.visible) !== GATE,
     ).map((n) => n.id);
-    expect(other, 'entries gated on something else').toEqual(['nav_home', 'nav_sales_home']);
+    expect(other, 'entries gated on something else').toEqual(['nav_home']);
     for (const id of other) {
       expect(String(sourceOf(LEAVES.find((n) => n.id === id)?.visible)), id).toMatch(/^current_user\.can\("crm_opportunity", "read"\) && /);
     }
@@ -267,9 +272,10 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
     const bad: string[] = [];
     for (const { n } of REPORT_ENTRIES) {
       const report = REPORTS.find((r) => r.name === n.reportName);
-      // A case report also asks that the member is not a sales rep (#2244);
-      // `app-navigation-audience.test.ts` pins who that hides.
-      const asked = /^current_user\.can\("(\w+)", "read"\)(?: && !\("sales_rep" in current_user\.positions\))?$/.exec(String(sourceOf(n.visible)))?.[1];
+      // A case report also asks that the member is not a sales rep (#2244),
+      // an opportunity report that the member holds neither service position
+      // (#2268); `app-navigation-audience.test.ts` pins who that hides.
+      const asked = /^current_user\.can\("(\w+)", "read"\)(?: && !\("sales_rep" in current_user\.positions\)| && !\("service_agent" in current_user\.positions\) && !\("service_manager" in current_user\.positions\))?$/.exec(String(sourceOf(n.visible)))?.[1];
       if (!report || !asked || !objectsOf(report).includes(asked)) {
         bad.push(`${n.id}: gate ${JSON.stringify(sourceOf(n.visible))}, report reads ${report ? objectsOf(report).join(' + ') : '?'}`);
       }
@@ -279,9 +285,16 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
     // panels read: a member without the other gets an access notice on the
     // fourth panel, not a broken page (measured, see `crm.app.ts`).
     expect(
-      REPORT_ENTRIES.filter(({ n }) => String(sourceOf(n.visible)).includes('current_user.positions')).map(({ n }) => n.id),
+      REPORT_ENTRIES.filter(({ n }) => String(sourceOf(n.visible)).includes('"sales_rep" in current_user.positions')).map(({ n }) => n.id),
       'report entries that also ask the rep position',
     ).toEqual(['nav_report_cases_by_status', 'nav_report_sla', 'nav_report_cases_opened_by_day']);
+    expect(
+      REPORT_ENTRIES.filter(({ n }) => String(sourceOf(n.visible)).includes('"service_agent" in current_user.positions')).map(({ n }) => n.id),
+      'report entries that also ask the service positions',
+    ).toEqual([
+      'nav_report_opportunities_by_stage', 'nav_report_won_by_owner',
+      'nav_report_pipeline_coverage', 'nav_report_funnel_by_owner',
+    ]);
     const churn = REPORT_ENTRIES.find(({ n }) => n.reportName === 'customer_churn_signals')?.n;
     expect(sourceOf(churn?.visible)).toBe('current_user.can("crm_account", "read")');
   });
