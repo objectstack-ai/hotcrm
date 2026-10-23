@@ -73,7 +73,16 @@ export const CloneOpportunityAction: Action = {
   },
   locations: ['record_header', 'record_more'],
   successMessage: 'Opportunity cloned successfully!',
-  refreshAfter: true,
+  // Open the clone once it exists: the body returns `{ id }`, and the
+  // console's ActionRunner resolves `${result.id}` against that result and
+  // navigates in the same tab (`openIn` defaults to 'self'). No
+  // `refreshAfter`: the runner refreshes before it navigates, so it would only
+  // re-read the source page being left. (#2247, rulings 6366949124, 6367379843)
+  //
+  // The full app path is spelled out until the platform supports an
+  // app-relative navigate (upstream gap): a bare `/crm_opportunity/<id>` is
+  // resolved against the console's `/_console` basename and lands on home.
+  onSuccess: { navigate: '/apps/app.objectstack.hotcrm/crm_opportunity/record/${result.id}' },
 };
 
 /**
