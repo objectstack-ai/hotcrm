@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
 
 /**
@@ -383,6 +384,20 @@ export const OpportunityViews = defineView({
           { field: 'crm_account', required: true },
           'primary_contact',
           { field: 'stage', required: true },
+          // The close reason sits in the cell beside Stage, shown only once
+          // its closed stage is picked (#2238). The object's `requiredWhen`
+          // demands it on that stage; while it lived on the last tab, every
+          // Closed Won save failed once and jumped there to show the field.
+          // Each predicate is TOTAL (`has()`-guarded), per AGENTS.md: an
+          // unevaluable `visibleWhen` fails OPEN and would show both at once.
+          {
+            field: 'win_reason',
+            visibleWhen: P`has(record.stage) && record.stage == "closed_won"`,
+          },
+          {
+            field: 'loss_reason',
+            visibleWhen: P`has(record.stage) && record.stage == "closed_lost"`,
+          },
           { field: 'amount', required: true },
           'probability',
           'close_date',
@@ -450,13 +465,14 @@ export const OpportunityViews = defineView({
       {
         // Win/loss capture at close time. The fields existed on the object for
         // reporting but no form offered them, so every closed deal lost its
-        // why-we-won / why-we-lost data.
+        // why-we-won / why-we-lost data. The two reason picklists moved to
+        // Overview beside Stage (#2238); the free-text context stays here.
         name: 'win_loss',
         label: 'Win / Loss',
         collapsible: true,
         collapsed: true,
         columns: 2,
-        fields: ['win_reason', 'loss_reason', { field: 'loss_details', span: 'full' }],
+        fields: [{ field: 'loss_details', span: 'full' }],
       },
     ],
   },

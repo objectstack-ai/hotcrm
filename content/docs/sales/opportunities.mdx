@@ -55,10 +55,10 @@ The nine names below are `crm_opportunity`'s **field groups** (`fieldGroups` in 
 | --- | --- |
 | **Basic Information** | Opportunity Owner, Opportunity Name, Account, Primary Contact |
 | **Financials** | Amount, Expected Revenue |
-| **Sales Process** | Stage, Probability (%), Close Date, Stage Entry Date, Customer Initiation Date, Expected Tender Date, Expected Signing Date, Expected Tender Amount, Expected Signing Amount, Approval Status, Approved Date, Requested Status, Status Change Approval |
+| **Sales Process** | Stage, Probability (%), Close Date, Stage Entry Date, Customer Initiation Date, Expected Tender Date, Expected Signing Date, Expected Tender Amount, Expected Signing Amount, Approval Status, Approved Date, Requested Status, Status Change Approval, Win Reason, Loss Reason |
 | **Qualification** | Will Bid, Controllability, Priority, Deal Level, Involves Subcontracting, Subcontracting Note, Request Qualification Approval, Qualification Approval |
 | **Deal Narrative** | Customer Background, Project Background, Risk Analysis, Payment Terms |
-| **Classification** | Opportunity Type, Business Line, Lead Source, Win Reason, Loss Reason, Loss/Win Details |
+| **Classification** | Opportunity Type, Business Line, Lead Source, Loss/Win Details |
 | **Campaigns** *(collapsed by default)* | Campaign |
 | **Notes & Next Steps** | Description, Next Steps |
 | **Forecast & Metrics** *(collapsed by default)* | Days in Current Stage, Private, Forecast Category |
@@ -77,10 +77,10 @@ The opportunity form (`src/sales/views/opportunity.view.ts`) is tabbed, and its 
 
 | Section | Fields |
 | --- | --- |
-| **Overview** | Opportunity Name, Account, Primary Contact, Stage, Amount, Probability (%), Close Date, Opportunity Owner |
+| **Overview** | Opportunity Name, Account, Primary Contact, Stage, Win Reason *(only at Closed Won)*, Loss Reason *(only at Closed Lost)*, Amount, Probability (%), Close Date, Opportunity Owner |
 | **Forecast** | Expected Revenue, Forecast Category, Opportunity Type, Lead Source, Campaign, Stage Entry Date, Days in Current Stage, Private, Customer Initiation Date, Expected Tender Date, Expected Tender Amount, Expected Signing Date, Expected Signing Amount |
 | **Sales Strategy** | Next Steps |
-| **Win / Loss** *(collapsed by default)* | Win Reason, Loss Reason, Loss/Win Details |
+| **Win / Loss** *(collapsed by default)* | Loss/Win Details |
 
 ## Opportunity types
 
