@@ -2,7 +2,36 @@
 
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { Lead } from '../objects/lead.object';
 type Flow = Automation.Flow;
+
+/**
+ * The proposed Opportunity Name: "<company> – <need type label>", or
+ * "<company> – <conversion date>" when the lead carries no need type (#2243).
+ * The company alone named every deal of an account the same, so a new deal
+ * could not be told from the account's others in its Related list or a picker.
+ *
+ * The LABEL, not the stored value, and reached the only way the screen's CEL
+ * can reach it. Measured on 18.0.0 by running the flow: `get_lead` binds the
+ * row as stored (`need_type: 'expansion'`, no label beside it), and
+ * `@objectstack/formula` registers no option-label function. So the label is
+ * looked up in a CEL map literal DERIVED from the field's own `options` — ⛔
+ * never a hand-copied table, which silently loses an option the next overlay
+ * adds (the rule `schedule-followup.flow.ts` states for its `type` picker).
+ * A stored value the map does not hold (an option an overlay since removed)
+ * falls back to the date, like an empty one: CEL refuses a missing map key,
+ * and the guard is `.exists()` over the map's keys because the installed CEL
+ * checker refuses `in` on it (`no such overload: dyn in string`, measured).
+ *
+ * The label is the field's ENGLISH label: a screen field's `defaultValue` is
+ * evaluated on the server with no locale, and no locale pack reaches it.
+ */
+// `cel` renders an interpolated object as its JSON text, which is a CEL map
+// literal: `{"expansion": "Expansion", …}`.
+const NEED_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  Lead.fields.need_type.options!.map(({ label, value }) => [value, label]),
+);
+const OPPORTUNITY_NAME_DEFAULT = cel`leadRecord.company + ' – ' + (has(leadRecord.need_type) && ${NEED_TYPE_LABELS}.exists(v, v == leadRecord.need_type) ? ${NEED_TYPE_LABELS}[leadRecord.need_type] : isoDate(today()))`;
 
 /** Lead Conversion — multi-step screen flow to convert qualified leads */
 export const LeadConversionFlow: Flow = {
@@ -138,10 +167,11 @@ export const LeadConversionFlow: Flow = {
           // opposite case: forwarded raw, never evaluated on the server. Same
           // node, two different dialects.)
           { name: 'createOpportunity', label: 'Create Opportunity?', type: 'boolean', defaultValue: cel`createOpportunity` },
-          // PREFILLED FROM THE LEAD (REQ-0005 acceptance 2). Both defaults are
+          // PREFILLED FROM THE LEAD (REQ-0005 acceptance 2; the name since #2243,
+          // see `OPPORTUNITY_NAME_DEFAULT` above). The defaults are
           // CEL envelopes over `leadRecord`, which `get_lead` bound before this
           // screen was reached — the fetch sits AHEAD of the screen for the
-          // duplicate warning, and these two ride the same ordering.
+          // duplicate warning, and these ride the same ordering.
           //
           // ⚠️ Each envelope is evaluated before the descriptor goes on the
           // wire, so `estimated_amount` arrives as a NUMBER. `company` is
@@ -168,7 +198,7 @@ export const LeadConversionFlow: Flow = {
           // rule, `amount_positive` (greater than zero), cannot be said here:
           // a screen field's `min` is inclusive. `decision_amount` refuses it
           // instead, before any write (#2060 item 2b).
-          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, defaultValue: cel`leadRecord.company`, visibleWhen: 'createOpportunity == true' },
+          { name: 'opportunityName', label: 'Opportunity Name', type: 'text', required: true, defaultValue: OPPORTUNITY_NAME_DEFAULT, visibleWhen: 'createOpportunity == true' },
           { name: 'opportunityAmount', label: 'Opportunity Amount', type: 'currency', required: true, defaultValue: cel`has(leadRecord.estimated_amount) ? leadRecord.estimated_amount : null`, visibleWhen: 'createOpportunity == true' },
           // The close date, DEFAULTED AND VISIBLE. `close_date` is what files
           // an opportunity into a forecast PERIOD, so ⛔ never stamp it silently

@@ -4,8 +4,9 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import { SecurityPlugin } from '@objectstack/plugin-security';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
+import { Lead } from '../src/sales/objects/lead.object';
 import {
-  hotcrmStack, signUpPerson, notificationsTo, conditionHolds, bootOptions, buildArtifactAgain, type Person,
+  hotcrmStack, signUpPerson, notificationsTo, conditionHolds, bootOptions, buildArtifactAgain, today, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -698,5 +699,60 @@ describe('lead_conversion — the converted contact is the account’s primary o
     const { out, converted, incumbent } = await convertInto('without a primary');
     expect({ contacts: out.contacts.length, converted: converted?.is_primary, incumbent: incumbent?.is_primary })
       .toEqual({ contacts: 2, converted: true, incumbent: false });
+  });
+});
+
+/**
+ * The proposed Opportunity Name tells the new deal from the account's others
+ * (#2243). It used to be the company alone, so an account with three deals got
+ * a fourth that read exactly like them in its Related list and every picker.
+ * Now: "<company> – <need type label>", or "<company> – <conversion date>"
+ * when the lead names no need type. The LABEL, never the stored value — the
+ * `support` case is the one whose label and value differ beyond case.
+ */
+describe('lead_conversion — the proposed Opportunity Name is "<company> – <need type>" or "<company> – <date>" (#2243)', () => {
+  const proposedName = async (leadId: string) => {
+    const started = await verify.flows.run('lead_conversion', { recordId: leadId }, { as: rep.token });
+    const fields = (((started as Rec).screen ?? (started as Rec).output?.screen)?.fields ?? []) as Rec[];
+    return fields.find((f) => f.name === 'opportunityName')?.defaultValue;
+  };
+  const leadWith = (who: { company: string; email: string }, extra: Rec = {}) => create('crm_lead', {
+    company: who.company, email: who.email, first_name: 'Joe', last_name: 'Green', status: 'qualified', ...extra,
+  });
+
+  it('names the need type by its label', async () => {
+    const who = identity();
+    expect(await proposedName((await leadWith(who, { need_type: 'expansion' })).id)).toBe(`${who.company} – Expansion`);
+    const other = identity();
+    expect(await proposedName((await leadWith(other, { need_type: 'support' })).id)).toBe(`${other.company} – Support & Maintenance`);
+  });
+
+  // Every option the field offers, read off the field: the flow's lookup is
+  // derived from the same list, so an option added there is covered here.
+  it.each(Lead.fields.need_type.options!.map(({ label, value }) => [value, label] as const))(
+    'need type %s proposes its label %s', async (value, label) => {
+      const who = identity();
+      expect(await proposedName((await leadWith(who, { need_type: value })).id)).toBe(`${who.company} – ${label}`);
+    },
+  );
+
+  it('falls back to the conversion date when the lead has no need type', async () => {
+    const who = identity();
+    expect(await proposedName((await leadWith(who)).id)).toBe(`${who.company} – ${today()}`);
+  });
+
+  it('the proposal is what the deal is named when the rep leaves it, and the rep can overwrite it; account matching is unchanged', async () => {
+    const kept = identity();
+    const account = await create('crm_account', { name: kept.company, is_active: true });
+    const lead = await leadWith(kept, { need_type: 'renewal', estimated_amount: 10_000 });
+    await runConversion(lead.id, { createOpportunity: true });
+    const out = await after(kept, lead.id);
+    expect({ accounts: out.accounts.map((a) => a.id), deals: out.opportunities.map((o) => o.name) })
+      .toEqual({ accounts: [account.id], deals: [`${kept.company} – Renewal`] });
+
+    const typed = identity();
+    const typedLead = await leadWith(typed, { need_type: 'renewal', estimated_amount: 10_000 });
+    await runConversion(typedLead.id, { createOpportunity: true, opportunityName: 'Globex FY27 renewal' });
+    expect((await after(typed, typedLead.id)).opportunities.map((o) => o.name)).toEqual(['Globex FY27 renewal']);
   });
 });
