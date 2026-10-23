@@ -203,6 +203,7 @@ export const customer: Record<string, ObjectTranslationData> = {
           subject: { label: 'Subject' },
           body: { label: 'Body' },
         },
+        successMessage: 'Email queued to this contact.',
       },
       add_contact_to_campaign: {
         label: 'Add to Campaign',

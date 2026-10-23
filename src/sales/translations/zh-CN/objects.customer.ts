@@ -216,6 +216,7 @@ export const customer: Record<string, ObjectTranslationData> = {
           subject: { label: '主题' },
           body: { label: '正文' },
         },
+        successMessage: '邮件已排队，将发送给该联系人。',
       },
       add_contact_to_campaign: {
         label: '加入营销活动',
