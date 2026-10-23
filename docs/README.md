@@ -22,6 +22,7 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | Versioning and distribution | [RELEASE_STRATEGY.md](RELEASE_STRATEGY.md) |
 | Module boundaries and the ADR-0130 multi-package split plan | [architecture/module-split-plan.md](architecture/module-split-plan.md) |
 | The PSA (project delivery and cost) module — standard-product design and the first ADR-0130 module cut | [architecture/psa-module-plan.md](architecture/psa-module-plan.md) |
+| The order-to-cash module — what sales sees after the contract: collection plan, invoice and payment status (REQ-0007) | [architecture/order-to-cash-module-plan.md](architecture/order-to-cash-module-plan.md) |
 | Upgrade, seeding, and version alignment | [MAINTENANCE.md](MAINTENANCE.md) |
 | Customer requirements and product disposition | [requirements/README.md](requirements/README.md) |
 | Where object and field metadata is declared | [developers/api_reference.md](developers/api_reference.md) |

@@ -440,6 +440,12 @@ v2 candidates, each its own design note when its turn comes: work breakdown (tas
 milestones with planned-vs-actual hours), resource requests and capacity, billing
 milestones for `fixed_fee` projects, and a project template to seed members and budget lines.
 
+> **Note (2026-10-23).** The billing milestones are now designed — not here but in the
+> order-to-cash module ([`order-to-cash-module-plan.md`](./order-to-cash-module-plan.md),
+> REQ-0007), whose `crm_billing_milestone` a `fixed_fee` project reaches through its
+> `crm_contract`. The same record reopens the 2026-08-02 ruling that rows 37, 38 and 40 of the
+> mapping table above cite: invoice and collection status is that module's, never PSA's.
+
 ## Decisions needed from the maintainer before Phase 0
 
 The first draft's decision 1 — partition the token gate per package or raise its ceilings —
