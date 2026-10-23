@@ -38,7 +38,7 @@ export const CustomerChurnSignalsReport: Report = {
   name: 'customer_churn_signals',
   label: 'Customer Churn Signals',
   description:
-    'Three-panel early-warning view: at-risk customers, silent high-value accounts, and recently-lost opportunities.',
+    'Four stacked early-warning panels for proactive retention: accounts a CSM has flagged as at risk or churning, active accounts with no recent activity, silent high-value accounts, and recently lost opportunities.',
   type: 'joined',
   blocks: [
     {

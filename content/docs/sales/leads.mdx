@@ -21,7 +21,7 @@ The point is to keep unqualified noise out of your real customer database.
 
 ## The 5 lead statuses
 
-Every lead moves through these states. Reps can only advance one step at a time — the system blocks invalid jumps.
+Every lead moves through these states. The usual path runs forward — from New, through Contacted and Qualified, to Converted, with Unqualified as the way out — but the app does not hold reps to it: a status change off that path, such as setting a Qualified lead back to New, still saves, and the app only records a warning in its server log. The one step it does enforce is Converted: only **Convert Lead** sets it.
 
 | Status | What it means | What you typically do next |
 | --- | --- | --- |
