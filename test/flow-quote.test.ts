@@ -338,3 +338,36 @@ describe('quote_generation flow — pricing keeps the cents (#1984)', () => {
     expect(q.total_price).toBe(180000);
   });
 });
+
+/**
+ * #2239 — the Quote Name is PREFILLED with the deal's name. It was required
+ * with no default, so the first Submit of every quote failed with "Please
+ * complete the required fields: Quote Name". The prefill is the deal's name
+ * alone: a screen field's default is evaluated with no locale in scope, so a
+ * " Quote" suffix could not follow the rep's language (see `screen_1`).
+ *
+ * "Submitting without typing a name" is the console posting the served
+ * default back unchanged, which is what these runs do.
+ */
+describe('quote_generation flow — the Quote Name prefill (#2239)', () => {
+  const quoteNameOf = (run: Rec): unknown =>
+    (((run.screen ?? run.output?.screen)?.fields ?? []) as Rec[]).find((f) => f.name === 'quoteName')?.defaultValue;
+
+  it('serves the form with the deal name, and an untouched name creates the quote', async () => {
+    const opp = await opportunity({ name: 'Acme Platform Upgrade', amount: 50000, primary_contact: null });
+    const run = await verify.flows.run('quote_generation', { recordId: opp.id }, { as: rep.token });
+    const served = quoteNameOf(run);
+    expect(served, 'the Quote Name is not prefilled from the deal').toBe('Acme Platform Upgrade');
+
+    const done = await verify.flows.resume(run, { quoteName: served, expirationDays: 30, discount: 0 }, { as: rep.token });
+    expect(done.success, 'submitting the prefilled form did not succeed').toBe(true);
+    const quotes = await verify.rows('crm_quote', { crm_opportunity: opp.id });
+    expect(quotes.map((q) => q.name)).toEqual(['Acme Platform Upgrade']);
+  });
+
+  it('a typed name still wins over the prefill', async () => {
+    const opp = await opportunity({ name: 'Typed Name Deal', amount: 50000, primary_contact: null });
+    const quotes = await runQuote(opp.id, { quoteName: 'Q-TYPED', expirationDays: 30, discount: 0 });
+    expect(quotes.map((q) => q.name)).toEqual(['Q-TYPED']);
+  });
+});
