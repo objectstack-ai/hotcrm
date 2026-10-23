@@ -204,5 +204,8 @@ export const SendEmailAction: Action = {
     { name: 'subject', label: 'Subject', type: 'text', required: true },
     { name: 'body', label: 'Body', type: 'textarea', required: true },
   ],
+  // "queued", not "sent": the body inserts the `sys_email` row with
+  // `status: 'queued'` and delivery happens after the action returns (#2246).
+  successMessage: 'Email queued to this contact.',
   refreshAfter: false,
 };

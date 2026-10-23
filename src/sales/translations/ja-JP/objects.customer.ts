@@ -235,6 +235,7 @@ export const customer: Record<string, ObjectTranslationData> = {
           subject: { label: '件名' },
           body: { label: '本文' },
         },
+        successMessage: 'この取引先責任者宛てのメールを送信キューに追加しました。',
       },
       add_contact_to_campaign: {
         label: 'キャンペーンに追加',

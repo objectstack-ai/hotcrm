@@ -249,6 +249,7 @@ export const customer: Record<string, ObjectTranslationData> = {
           subject: { label: 'Asunto' },
           body: { label: 'Cuerpo' },
         },
+        successMessage: 'Correo en cola para este contacto.',
       },
       add_contact_to_campaign: {
         label: 'Añadir a Campaña',
