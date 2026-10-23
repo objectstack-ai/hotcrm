@@ -65,8 +65,29 @@ export const serviceSharingRules = [
  */
 export type HotCrmServiceCollections = Pick<ObjectStackDefinitionInput, 'data'>;
 
-/** The read gate on this package's report entries (#2073 item 1); see `navigationContributions`. */
-const READS_CASES = P`current_user.can("crm_case", "read")`;
+/**
+ * Who this package's case entries are for (#2244): everyone but a sales rep.
+ *
+ * A rep's permission set reads cases (an account's history is part of selling
+ * to it), so the read gate alone kept Service Overview, Cases, My Cases and the
+ * three case reports in a rep's sidebar: no case of their own, none they can
+ * create, an overview of zeros. What a rep IS, is the holder of the
+ * `sales_rep` position — the same question the app's Home gate asks
+ * (`EXECUTIVE_AUDIENCE` in `src/sales/apps/crm.app.ts`, which says why no
+ * `current_user.can(…)` term can tell a rep apart). The two gates spell the
+ * position out each: `P` interpolates a value as a literal, never as an
+ * expression, so the sub-predicate cannot be shared by reference.
+ *
+ * Knowledge stays open to a rep: articles are read while selling too.
+ *
+ * Landing (#2060 item 5) is unmoved: a rep's first shown entry is Sales Home,
+ * ahead of the Service group, and a service persona or the administrator
+ * holds no `sales_rep` position, so the dashboard still leads for them.
+ */
+const NOT_A_SALES_REP = P`!("sales_rep" in current_user.positions)`;
+
+/** The read gate on this package's report entries (#2073 item 1), narrowed to the audience above. */
+const CASE_REPORT_AUDIENCE = P`current_user.can("crm_case", "read") && !("sales_rep" in current_user.positions)`;
 
 /**
  * `app.objectstack.hotcrm.service` — the SUPPORT module of this artifact
@@ -170,7 +191,8 @@ export const createHotCrmServiceStack = (
      * by read access but not report entries, so a member who reads no cases
      * (the marketing user) would otherwise get three pages of 403s. The app's
      * `READS_OPPORTUNITIES` note in `crm.app.ts` says why it is `visible` and
-     * not `requiredPermissions`.
+     * not `requiredPermissions`. Every case entry but Knowledge also asks that
+     * the member is not a sales rep (`NOT_A_SALES_REP` above, #2244).
      */
     navigationContributions: [
       {
@@ -184,8 +206,8 @@ export const createHotCrmServiceStack = (
         // first group and declares no children, so this item is the first
         // entry a service agent or manager is shown, and the app opens on it.
         items: [
-          { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge' },
-          { id: 'nav_case',      type: 'object', objectName: 'crm_case',              label: 'Cases',     icon: 'life-buoy' },
+          { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge', visible: NOT_A_SALES_REP },
+          { id: 'nav_case',      type: 'object', objectName: 'crm_case',              label: 'Cases',     icon: 'life-buoy', visible: NOT_A_SALES_REP },
           { id: 'nav_knowledge', type: 'object', objectName: 'crm_knowledge_article', label: 'Knowledge', icon: 'book-open' },
         ],
       },
@@ -194,7 +216,7 @@ export const createHotCrmServiceStack = (
         group: 'group_work',
         priority: 20,
         items: [
-          { id: 'nav_my_cases', type: 'object', objectName: 'crm_case', viewName: 'my_open_cases', label: 'My Cases', icon: 'life-buoy' },
+          { id: 'nav_my_cases', type: 'object', objectName: 'crm_case', viewName: 'my_open_cases', label: 'My Cases', icon: 'life-buoy', visible: NOT_A_SALES_REP },
         ],
       },
       {
@@ -204,9 +226,9 @@ export const createHotCrmServiceStack = (
         group: 'group_reports',
         priority: 30,
         items: [
-          { id: 'nav_report_cases_by_status',     type: 'report', reportName: 'cases_by_status_priority',     label: 'Cases by Status and Priority', icon: 'chart-column',  visible: READS_CASES },
-          { id: 'nav_report_sla',                 type: 'report', reportName: 'sla_performance',              label: 'SLA Performance',              icon: 'timer',         visible: READS_CASES },
-          { id: 'nav_report_cases_opened_by_day', type: 'report', reportName: 'cases_opened_by_day_priority', label: 'Cases Opened by Day',          icon: 'calendar-days', visible: READS_CASES },
+          { id: 'nav_report_cases_by_status',     type: 'report', reportName: 'cases_by_status_priority',     label: 'Cases by Status and Priority', icon: 'chart-column',  visible: CASE_REPORT_AUDIENCE },
+          { id: 'nav_report_sla',                 type: 'report', reportName: 'sla_performance',              label: 'SLA Performance',              icon: 'timer',         visible: CASE_REPORT_AUDIENCE },
+          { id: 'nav_report_cases_opened_by_day', type: 'report', reportName: 'cases_opened_by_day_priority', label: 'Cases Opened by Day',          icon: 'calendar-days', visible: CASE_REPORT_AUDIENCE },
         ],
       },
     ],
