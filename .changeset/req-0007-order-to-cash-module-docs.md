@@ -1,0 +1,4 @@
+---
+---
+
+Documentation only, nothing ships: REQ-0007 records the maintainer's request that sales see what happens after the contract, and its disposition as a new standard module that revises the 2026-08-02 revenue-scope ruling (the core packages still model no orders, invoices or payments). The module is `app.objectstack.hotcrm.o2c` (*Order to Cash*), present in every install and used by permission, depending on revenue rather than folded into it. It is a window on figures kept in the ERP or by finance, never a book, and its first version is lean: a contract's collection plan, kept by sales, and the invoices and payments finance enters or imports against it (the maintainer's decisions of 2026-10-23). The design is `docs/architecture/order-to-cash-module-plan.md`; REQ-0002 and the PSA plan gain a pointer to it (REQ-0007).

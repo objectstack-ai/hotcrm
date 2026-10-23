@@ -130,6 +130,12 @@ product is met differently by each half:
 promotes a configurable approval-chain shape from C to B; a second customer asking for
 project invoicing reopens the billing-scope ruling rather than this record.
 
+> **Note (2026-10-23).** The billing-scope ruling was reopened — by the maintainer, not by a
+> second customer — in [REQ-0007](0007-order-to-cash-module.md): the core packages still model
+> no orders, invoices or payments, and a standard module shows sales their status. The invoicing and
+> collection figures of steps 37–38 and the sales orders of step 40 are answered there; purchase
+> contracts in step 40 stay D. This note adds a pointer; the verdicts above stand as decided.
+
 ## Product response
 
 - **B (Track B)** — the metadata, phasing and acceptance are the design document's; nothing
