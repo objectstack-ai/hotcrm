@@ -30,6 +30,12 @@ const HOTCRM_ICON =
  * Object entries are pruned by read access already; dashboard, report and page
  * entries are not.
  *
+ * Since #2231 every member also holds `crm_user`, which reads their own
+ * opportunities, so the service personas pass this gate and are shown these
+ * entries, each scoped to the deals they own. Home and Sales Home add a
+ * position term (`EXECUTIVE_AUDIENCE`, `SALES_HOME_AUDIENCE`) so the landing
+ * stays where #2060 item 5 ruled (#2262).
+ *
  * `visible`, not `requiredPermissions` — measured on 18.0.0-next.1: the server
  * keeps an entry only when the caller's permission sets grant every
  * `requiredPermissions` entry as a CAPABILITY (`systemPermissions`), so
@@ -60,7 +66,7 @@ const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
 
 /**
  * Executive Overview's audience (#2060 item 5): everyone who reads
- * opportunities, except a sales rep.
+ * opportunities, except a sales rep and the two service personas.
  *
  * The app opens on the first entry a member is shown, and Home is first, so
  * this gate is what sends a rep to Sales Home (second) instead. A rep's grants
@@ -72,10 +78,28 @@ const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
  * `sales_rep` permission set by name). So the role is asked by position, and
  * the access half stays the same object-permission question as above.
  *
+ * The service personas are asked by position for the same reason (#2262).
+ * Since #2231 every member holds `crm_user`, the package's `isDefault` set,
+ * which reads the member's own opportunities: a service agent and a service
+ * manager answer the read question exactly as a manager does, so it no longer
+ * keeps Home from them, and they opened the app on Home instead of Service
+ * Overview. What they ARE is the holder of the `service_agent` or the
+ * `service_manager` position. ⛔ Do not narrow `crm_user` to restore the old
+ * answer: #2231 requires a member holding only it to read opportunities.
+ *
  * Managers, administrators and the marketing user keep Home first. A member
  * whose positions are unknown evaluates `[]`, so the gate keeps Home for them.
  */
-const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions)`;
+const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions) && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+
+/**
+ * Sales Home's audience (#2262): everyone who reads opportunities, except the
+ * two service personas — `EXECUTIVE_AUDIENCE` above says why they are asked by
+ * position. A rep keeps it: it is a rep's landing. Each gate spells the
+ * positions out: `P` interpolates a value as a literal, never as an
+ * expression, so a sub-predicate cannot be shared by reference.
+ */
+const SALES_HOME_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
 
 /**
  * HotCRM — navigation.
@@ -145,10 +169,12 @@ export const CrmApp = App.create({
     //   sales rep                                       → Sales Home
     //   service agent · service manager                 → Service Overview
     //
-    // A service persona reads no opportunity, so both pinned entries are gated
-    // away from it, and the next slot is the Service group, which the service
-    // module fills with its dashboard first. ⛔ Do not put an entry a service
-    // persona can see ahead of the Service group: it becomes their landing.
+    // Both pinned entries are gated away from a service persona by the
+    // position it holds (#2262: since #2231 it reads its own opportunities, so
+    // the read question alone no longer parts it), and the next slot is the
+    // Service group, which the service module fills with its dashboard first.
+    // ⛔ Do not put an entry a service persona can see ahead of the Service
+    // group: it becomes their landing.
     {
       id: 'nav_home',
       type: 'dashboard',
@@ -166,7 +192,7 @@ export const CrmApp = App.create({
       pageName: 'sales_home_page',
       label: 'Sales Home',
       icon: 'layout-grid',
-      visible: READS_OPPORTUNITIES,
+      visible: SALES_HOME_AUDIENCE,
     },
 
     {

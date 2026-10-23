@@ -40,6 +40,9 @@ type Rec = Record<string, any>;
  * #2244 (`BEFORE`): no gate on the three service entries, case read on the
  * three reports. Every persona but the reps must be shown exactly what those
  * gates showed it, and every persona's first entry must be the same.
+ *
+ * #2262 pins the service personas' landing the same way, against the gates
+ * Home and Sales Home carried before it (`BEFORE_2262`).
  */
 
 const NAV = (servedApp((CrmApp as Rec).name).navigation ?? []) as Rec[];
@@ -60,6 +63,12 @@ const READS_CASES = P`current_user.can("crm_case", "read")`;
 const BEFORE: Record<string, unknown> = {
   nav_service_dashboard: undefined, nav_case: undefined, nav_my_cases: undefined,
   nav_report_cases_by_status: READS_CASES, nav_report_sla: READS_CASES, nav_report_cases_opened_by_day: READS_CASES,
+};
+
+/** The gates Home and Sales Home carried before #2262: neither asked a service position. */
+const BEFORE_2262: Record<string, unknown> = {
+  nav_home: P`current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions)`,
+  nav_sales_home: P`current_user.can("crm_opportunity", "read")`,
 };
 
 const PERSONAS = ['na_rep', 'eu_rep', 'sales_manager', 'service_agent', 'service_manager'] as const;
@@ -98,12 +107,12 @@ beforeAll(async () => {
   };
 }, 180_000);
 
-/** The entries `persona` is shown, in sidebar order; `before` evaluates the six with their pre-#2244 gates. */
-const shownTo = (persona: string, before = false): string[] => {
+/** The entries `persona` is shown, in sidebar order; `before` evaluates the entries it names with those gates instead. */
+const shownTo = (persona: string, before?: Record<string, unknown>): string[] => {
   const p = who[persona]!;
   return LEAVES.filter((n) => {
     if (n.type === 'object' && p.objects[n.objectName]?.allowRead !== true) return false;
-    const visible = before && n.id in BEFORE ? BEFORE[n.id] : n.visible;
+    const visible = before && n.id in before ? before[n.id] : n.visible;
     if (visible === undefined) return true;
     const result = ExpressionEngine.evaluate<boolean>(visible as never, {
       user: { id: p.id, positions: p.positions },
@@ -154,33 +163,53 @@ describe("no other persona's sidebar or landing moves (#2060 item 5, #2244)", ()
 
   it('the pre-#2244 gates showed every persona all six (a rep included), so the comparison is real', () => {
     for (const persona of ALL) {
-      expect(SERVICE_ONLY.filter((id) => !shownTo(persona, true).includes(id)), persona).toEqual([]);
+      expect(SERVICE_ONLY.filter((id) => !shownTo(persona, BEFORE).includes(id)), persona).toEqual([]);
     }
   });
 
   it.each(['sales_manager', 'service_agent', 'service_manager', 'admin'])('%s is shown exactly the sidebar it was shown before', (persona) => {
-    expect(shownTo(persona)).toEqual(shownTo(persona, true));
+    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE));
   });
 
   it.each(REPS)('%s is shown its old sidebar less the six, nothing else', (rep) => {
-    expect(shownTo(rep)).toEqual(shownTo(rep, true).filter((id) => !SERVICE_ONLY.includes(id)));
+    expect(shownTo(rep)).toEqual(shownTo(rep, BEFORE).filter((id) => !SERVICE_ONLY.includes(id)));
   });
 
   it.each(ALL)('%s lands where it landed before', (persona) => {
-    expect(shownTo(persona)[0]).toBe(shownTo(persona, true)[0]);
+    expect(shownTo(persona)[0]).toBe(shownTo(persona, BEFORE)[0]);
   });
 
-  // The ruled homes this app's order is built for. The service personas'
-  // home, Service Overview, is not pinned here: since #2231 every member also
-  // holds `crm_user`, which reads opportunities, so the served answer for a
-  // service persona opens on Home ahead of the Service group, before and after
-  // #2244 alike (reported on #2244's PR, out of its scope).
+  // The ruled homes this app's order is built for, one per persona.
   it.each([
     ['na_rep', 'nav_sales_home'],
     ['eu_rep', 'nav_sales_home'],
     ['sales_manager', 'nav_home'],
+    ['service_agent', 'nav_service_dashboard'],
+    ['service_manager', 'nav_service_dashboard'],
     ['admin', 'nav_home'],
   ])('%s lands on %s', (persona, landing) => {
     expect(shownTo(persona)[0]).toBe(landing);
+  });
+});
+
+describe('a service persona lands on Service Overview again (#2262)', () => {
+  const SERVICE = ['service_agent', 'service_manager'];
+  const PINNED = ['nav_home', 'nav_sales_home'];
+
+  it.each(SERVICE)('%s reads opportunities (crm_user, since #2231), so its position is what hides Home and Sales Home', (persona) => {
+    expect(who[persona]!.positions).toContain(persona);
+    expect(who[persona]!.objects.crm_opportunity?.allowRead).toBe(true);
+  });
+
+  it.each(SERVICE)('the gates before #2262 opened %s on Home', (persona) => {
+    expect(shownTo(persona, BEFORE_2262)[0]).toBe('nav_home');
+  });
+
+  it.each(SERVICE)('%s is shown its old sidebar less Home and Sales Home, nothing else', (persona) => {
+    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2262).filter((id) => !PINNED.includes(id)));
+  });
+
+  it.each([...REPS, 'sales_manager', 'admin'])('%s is shown exactly the sidebar it was shown before', (persona) => {
+    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2262));
   });
 });

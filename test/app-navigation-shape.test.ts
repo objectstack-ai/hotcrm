@@ -6,6 +6,7 @@ import { SalesRepProfile } from '../src/sales/profiles/sales-rep.profile';
 import { SalesManagerProfile } from '../src/sales/profiles/sales-manager.profile';
 import { ServiceAgentProfile } from '../src/sales/profiles/service-agent.profile';
 import { MarketingUserProfile } from '../src/sales/profiles/marketing-user.profile';
+import { CrmUserProfile } from '../src/sales/profiles/crm-user.profile';
 import { CrmPositions } from '../src/sales/sharing/positions';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 import composedStack, { servedApp } from './helpers/composed-stack';
@@ -178,7 +179,7 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
   // hid the entry from every user, the admin included (see `crm.app.ts`).
   const GATE = 'current_user.can("crm_opportunity", "read")';
   const GATED = [
-    'nav_sales_home', 'nav_sales_dashboard', 'nav_crm_dashboard',
+    'nav_sales_dashboard', 'nav_crm_dashboard',
     'nav_report_opportunities_by_stage', 'nav_report_won_by_owner',
     'nav_report_pipeline_coverage', 'nav_report_funnel_by_owner',
   ];
@@ -186,19 +187,28 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
   it('exactly these entries carry the opportunity read gate', () => {
     const gated = LEAVES.filter((n) => sourceOf(n.visible) === GATE).map((n) => n.id);
     expect(gated).toEqual(GATED);
-    // Home carries the same read question, narrowed to its audience (below).
-    // Report entries each ask for their own object (the describe after this).
+    // Home and Sales Home carry the same read question, narrowed to their
+    // audience by position (below). Report entries each ask for their own
+    // object (the describe after this).
     const other = LEAVES.filter(
       (n) => n.type !== 'report' && n.visible !== undefined && sourceOf(n.visible) !== GATE,
     ).map((n) => n.id);
-    expect(other, 'entries gated on something else').toEqual(['nav_home']);
-    expect(String(sourceOf(LEAVES.find((n) => n.id === 'nav_home')?.visible))).toMatch(/^current_user\.can\("crm_opportunity", "read"\) && /);
+    expect(other, 'entries gated on something else').toEqual(['nav_home', 'nav_sales_home']);
+    for (const id of other) {
+      expect(String(sourceOf(LEAVES.find((n) => n.id === id)?.visible)), id).toMatch(/^current_user\.can\("crm_opportunity", "read"\) && /);
+    }
   });
 
-  it('the gate parts the personas the way the permission sets say', () => {
-    const reads = (position: string) => setsOf(position).some((set) => set.objects?.crm_opportunity?.allowRead === true);
-    expect(['sales_rep', 'sales_manager'].map(reads)).toEqual([true, true]);
-    expect(['service_agent', 'service_manager'].map(reads)).toEqual([false, false]);
+  it('the read question no longer parts the service personas: every member holds crm_user (#2231)', () => {
+    // A position's own sets read opportunities for sales and not for service,
+    // but `crm_user` is the package's `isDefault` set, held by every member
+    // beside them, and it reads opportunities. So every persona answers the
+    // read question yes, and a gate that must part the service personas asks
+    // their position (#2262). The booted answer is measured in
+    // `app-navigation-audience.test.ts`.
+    const own = (position: string) => setsOf(position).some((set) => set.objects?.crm_opportunity?.allowRead === true);
+    expect(['sales_rep', 'sales_manager', 'service_agent', 'service_manager'].map(own)).toEqual([true, true, false, false]);
+    expect(CrmUserProfile).toMatchObject({ isDefault: true, objects: { crm_opportunity: { allowRead: true } } });
   });
 
   it('Sales Home has a sidebar entry, second after Home', () => {
@@ -318,8 +328,8 @@ describe("each persona's first entry is its home (#2060 item 5)", () => {
   });
 
   it('Home is the entry a sales rep is not shown, asked by the position a rep holds', () => {
-    expect(sourceOf(NAV[0].visible)).toBe(
-      'current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions)',
+    expect(String(sourceOf(NAV[0].visible))).toMatch(
+      /^current_user\.can\("crm_opportunity", "read"\) && !\("sales_rep" in current_user\.positions\)/,
     );
     // The name in the gate is a declared position, the one both demo reps hold
     // and the manager does not, and it declares the rep's permission set.
@@ -329,13 +339,18 @@ describe("each persona's first entry is its home (#2060 item 5)", () => {
     expect(['na_rep', 'eu_rep', 'sales_manager'].map(holds)).toEqual([true, true, false]);
   });
 
-  it('a service persona is shown nothing ahead of the Service group', () => {
-    // Both pinned entries ask for opportunity read, which the set both service
-    // positions declare does not grant (asserted above), so the Service group
-    // is their first slot.
+  it('a service persona is shown nothing ahead of the Service group (#2262)', () => {
+    // Both pinned entries refuse both service positions by name: the read
+    // question alone lets them through since #2231 (asserted above), so the
+    // position is what makes the Service group their first slot.
     for (const n of SERVED.slice(0, 2)) {
-      expect(String(sourceOf(n.visible)), n.id).toMatch(/^current_user\.can\("crm_opportunity", "read"\)/);
+      for (const position of ['service_agent', 'service_manager']) {
+        expect(String(sourceOf(n.visible)), n.id).toContain(`!("${position}" in current_user.positions)`);
+      }
     }
+    expect(CrmPositions.map((p) => p.name)).toEqual(expect.arrayContaining(['service_agent', 'service_manager']));
+    const holds = (key: string, position: string) => DemoOrgStaffing.find((m) => m.key === key)?.positions.includes(position);
+    expect([holds('service_agent', 'service_agent'), holds('service_manager', 'service_manager')]).toEqual([true, true]);
     const readsCases = (position: string) => setsOf(position).some((set) => set.objects?.crm_case?.allowRead === true);
     expect(['service_agent', 'service_manager'].map(readsCases)).toEqual([true, true]);
   });
