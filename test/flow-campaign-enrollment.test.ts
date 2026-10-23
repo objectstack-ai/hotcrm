@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
+import { ExpressionEngine } from '@objectstack/formula';
 import type { VerifyStack } from '@objectstack/verify';
 import { CampaignEnrollmentFlow } from '../src/marketing/flows/campaign-enrollment.flow';
 import { hotcrmStack, signUpPerson, daysFromNow, type Person } from './helpers/verify-stack';
@@ -103,7 +104,7 @@ async function world(campaignOver: Rec = {}) {
 }
 type World = Awaited<ReturnType<typeof world>>;
 
-/** Every screen field the flow declares — all three are `required`. */
+/** Every screen field the flow declares, all three answered (each criterion is `required` only on its own side, #2241). */
 const SCREEN = { memberSource: 'leads', leadStatus: 'new', contactDepartment: 'engineering' };
 
 /** Run the screen action on `w`'s campaign as the marketer, and return its member rows. */
@@ -369,5 +370,79 @@ describe('campaign_enrollment — `check_refused` takes its default edge on a cl
       { id: 'e10', target: 'end_refused', isDefault: false, conditional: true },
       { id: 'e11', target: 'end', isDefault: true, conditional: false },
     ]);
+  });
+});
+
+/**
+ * Each segment criterion shows, and is required, only for its own side (#2241).
+ *
+ * Until #2241 "Enroll leads in status" and "Enroll contacts in department"
+ * both showed and both were `required` whatever "Enroll" was set to, so a
+ * contacts run had to name a lead status its query never reads. Now each
+ * field carries the `visibleWhen` of the branch edge that reads it (`e4` /
+ * `e7`). The console draws the fields whose predicate holds over the values
+ * on the screen and checks `required` over those only; the server's resume
+ * contract skips a hidden field's `required` the same way. Both halves are
+ * pinned here: which fields each choice shows, and that a run submitting only
+ * what it showed enrols. The control is the visible side's own `required`,
+ * which still refuses a submission that leaves it out.
+ */
+describe('campaign_enrollment — only the chosen source\'s criterion shows, and only it is required (#2241)', () => {
+  const visibleFields = (screen: Rec, values: Rec): string[] => {
+    const fields = (screen.fields ?? []) as Rec[];
+    // The console's scope: every declared field (null when unanswered), then
+    // the values on the screen over it.
+    const scope: Rec = Object.fromEntries(fields.map((f) => [f.name, null]));
+    Object.assign(scope, values);
+    return fields.filter((f) => {
+      if (!f.visibleWhen) return true;
+      const result = ExpressionEngine.evaluate<boolean>({ dialect: 'cel', source: String(f.visibleWhen) } as never, { extra: scope });
+      expect(result.ok, `${f.name}.visibleWhen did not evaluate: ${JSON.stringify(result)}`).toBe(true);
+      return (result as Rec).value === true;
+    }).map((f) => String(f.name));
+  };
+
+  it.each([
+    ['leads', ['memberSource', 'leadStatus']],
+    ['contacts', ['memberSource', 'contactDepartment']],
+  ] as const)('Enroll = %s shows only that side\'s criterion', async (memberSource, shown) => {
+    const w = await world();
+    const run = await verify.flows.run('campaign_enrollment', { recordId: w.campaign.id }, { as: marketer.token });
+    expect(run.status, 'campaign_enrollment did not pause on its screen').toBe('paused');
+    const screen = ((run as Rec).screen ?? (run as Rec).output?.screen) as Rec | undefined;
+    expect(screen?.fields, 'the paused run carries no screen descriptor').toBeTruthy();
+    expect(visibleFields(screen!, { memberSource })).toEqual(shown);
+  });
+
+  it('a contacts run with no lead status submits and enrols the chosen department', async () => {
+    const w = await world();
+    const members = await enrol(w, { memberSource: 'contacts', contactDepartment: 'engineering' });
+    expect(enrolledKeys(w, members, 'crm_contact')).toEqual(['c_eng', 'c_eng2']);
+    expect(members.filter((m) => m.crm_lead), 'a contacts run enrolled a lead').toHaveLength(0);
+  });
+
+  it('a leads run with no department submits and enrols the chosen status', async () => {
+    const w = await world();
+    const members = await enrol(w, { memberSource: 'leads', leadStatus: 'new' });
+    expect(enrolledKeys(w, members, 'crm_lead')).toEqual(['l_new', 'l_new2']);
+    expect(members.filter((m) => m.crm_contact), 'a leads run enrolled a contact').toHaveLength(0);
+  });
+
+  it.each([
+    ['contacts', 'contactDepartment', { memberSource: 'contacts', leadStatus: 'new' }],
+    ['leads', 'leadStatus', { memberSource: 'leads', contactDepartment: 'engineering' }],
+  ] as const)('control: a %s run without its own criterion is still refused, and nobody is enrolled', async (_side, missing, screen) => {
+    const w = await world();
+    const run = await verify.flows.run('campaign_enrollment', { recordId: w.campaign.id }, { as: marketer.token });
+    let refusal: Rec | undefined;
+    try {
+      const answer = (await verify.flows.resume(run, screen, { as: marketer.token })) as Rec;
+      refusal = answer;
+    } catch (err) {
+      refusal = err as Rec;
+    }
+    expect(JSON.stringify({ code: refusal?.code, error: refusal?.error, message: refusal?.message }))
+      .toContain(`Screen field \\"${missing}\\" is required`);
+    expect(await verify.rows('crm_campaign_member', { crm_campaign: w.campaign.id })).toHaveLength(0);
   });
 });
