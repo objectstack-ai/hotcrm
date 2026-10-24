@@ -8,6 +8,13 @@ import stack from './helpers/composed-stack';
 import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * Every declared sharing rule must actually be SEEDED (#621).
  *
  * ### The defect this file exists to catch
@@ -516,7 +523,7 @@ describe('every seeded rule EXECUTES on the configured driver, not merely compil
       await ql.syncSchemas();
 
       try {
-        const api = ql.createContext({ isSystem: true });
+        const api = ql.createContext({ isSystem: true, tenantId: ORG });
         const repo = () => api.object(rule!.object as string);
         const reached = (await repo().insert(witness.reaches as never)) as AnyRec;
         for (const miss of witness.misses) await repo().insert(miss as never);
@@ -605,7 +612,7 @@ describe('what the configured driver does with a compiled condition (measured)',
 
     const ql = await makeAccounts();
     try {
-      const api = ql.createContext({ isSystem: true });
+      const api = ql.createContext({ isSystem: true, tenantId: ORG });
       for (const row of FIXTURE) await api.object('crm_account').insert(row as never);
       const rows = (await api.object('crm_account').find({
         where: (compiled as unknown as { filter: unknown }).filter,
@@ -629,7 +636,7 @@ describe('what the configured driver does with a compiled condition (measured)',
     // memory driver's message carried is not part of the contract here.
     const ql = await makeAccounts();
     try {
-      const api = ql.createContext({ isSystem: true });
+      const api = ql.createContext({ isSystem: true, tenantId: ORG });
       for (const row of FIXTURE) await api.object('crm_account').insert(row as never);
       await expect(
         api.object('crm_account').find({ where: { $nor: [{ type: 'customer' }] } as never }),

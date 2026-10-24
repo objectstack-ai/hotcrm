@@ -9,6 +9,13 @@ import stack from './helpers/composed-stack';
 import { CrmSeedData } from '../objectstack.composition';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * The activity model's demo data (#671).
  *
  * #592 / PR #670 shipped `crm_event`, `crm_event_attendee`, the per-object
@@ -476,7 +483,7 @@ describe('every Sales Activity widget returns a number over the shipped seeds (#
 
   beforeAll(async () => {
     ql = await makeEngine();
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
 
     const isActive = accountIsActiveDefault();
     for (const a of accountRows) {
@@ -551,7 +558,7 @@ describe('every Sales Activity widget returns a number over the shipped seeds (#
         measures: widget.values,
         ...(widget.filter ? { runtimeFilter: widget.filter as never } : {}),
       },
-      { isSystem: true } as never,
+      { isSystem: true, tenantId: ORG } as never,
     );
     return result.rows as AnyRec[];
   };

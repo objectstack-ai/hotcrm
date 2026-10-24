@@ -7,6 +7,13 @@ import stack from './helpers/composed-stack';
 import { quotes } from '../src/revenue/data/revenue.seed';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * A quote may not be PRESENTED without a recipient (#1017, from #714 / PR #1013).
  *
  * ### What this closes
@@ -177,7 +184,7 @@ describe('the write is REFUSED, not warned about', () => {
   });
 
   const newDraft = async (name = 'Gate Probe') => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api.object('crm_quote').insert({ ...DRAFT, name });
     return { api, row };
   };
@@ -209,7 +216,7 @@ describe('the write is REFUSED, not warned about', () => {
     // The path a data import, a seed file or an AI-authored write takes. On
     // insert the engine fills absent fields with null rather than omitting
     // them, so this exercises a different branch of the same rule.
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const env = await refusal(() =>
       api.object('crm_quote').insert({ ...DRAFT, name: 'Born Presented', status: 'presented' }),
     );
@@ -219,7 +226,7 @@ describe('the write is REFUSED, not warned about', () => {
   it('refuses to blank the contact out of a quote that is already presented', async () => {
     // Otherwise the contract would hold for exactly one write: present with a
     // contact, then clear it.
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api
       .object('crm_quote')
       .insert({ ...DRAFT, name: 'Recipient Eraser', crm_contact: 'con_stub', status: 'presented' });
@@ -234,7 +241,7 @@ describe('the write is REFUSED, not warned about', () => {
   // ── the positive cases: the gate must not fire on anything else ──
 
   it('presents a quote that HAS a contact', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api
       .object('crm_quote')
       .insert({ ...DRAFT, name: 'Proper Quote', crm_contact: 'con_stub' });
@@ -276,7 +283,7 @@ describe('the write is REFUSED, not warned about', () => {
     // The merged shape of an already-presented quote carries `presented`, so
     // the predicate is live on EVERY later write to that record — it must be
     // satisfied by the contact the record already has, not re-demanded.
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api
       .object('crm_quote')
       .insert({ ...DRAFT, name: 'Presented Then Edited', crm_contact: 'con_stub', status: 'presented' });
@@ -319,7 +326,7 @@ describe('the write is REFUSED on a real SQLite database too', () => {
   });
 
   it('refuses the presentation and leaves the row where it was', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api.object('crm_quote').insert({ ...DRAFT, name: 'SQL Probe' });
 
     const stored = await api.object('crm_quote').findOne({ where: { id: row.id } });
@@ -337,7 +344,7 @@ describe('the write is REFUSED on a real SQLite database too', () => {
   });
 
   it('presents the quote once the contact is on it', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api
       .object('crm_quote')
       .insert({ ...DRAFT, name: 'SQL Probe 2', crm_contact: 'con_stub' });
@@ -384,7 +391,7 @@ describe('a row that was ALREADY presented when the rule landed', () => {
     })) as never;
     await before.syncSchemas();
     const row = await before
-      .createContext({ isSystem: true })
+      .createContext({ isSystem: true, tenantId: ORG })
       .object('crm_quote')
       .insert({ ...DRAFT, name: 'Legacy Presented', status: 'presented' });
 
@@ -393,7 +400,7 @@ describe('a row that was ALREADY presented when the rule landed', () => {
       objects: { crm_quote: quote } as never,
     })) as never;
     await after.syncSchemas();
-    return { ql: after, api: after.createContext({ isSystem: true }), row };
+    return { ql: after, api: after.createContext({ isSystem: true, tenantId: ORG }), row };
   };
 
   it('is still readable and still editable — the gate breaks no stock row', async () => {

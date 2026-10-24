@@ -8,6 +8,13 @@ import { RecordChangeTrigger } from '@objectstack/trigger-record-change';
 import stack from './helpers/composed-stack';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * ═══ HOUSE RULE: record-change flow conditions must be TOTAL ═══════════════
  *
  * **Every `record.x` / `previous.x` read in a record-change flow's condition
@@ -550,7 +557,7 @@ describe('conditions answer end-to-end on the real engine', () => {
   it('case_escalation_on_create: a case BORN critical still evaluates', async () => {
     const b = await boot(['case_escalation_on_create']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       await api.object('crm_case').insert({
         subject: 'Prod outage', description: 'Everything is down',
         priority: 'critical', status: 'new',
@@ -565,7 +572,7 @@ describe('conditions answer end-to-end on the real engine', () => {
   it('contact_welcome: a contact written with no resolvable owner still evaluates', async () => {
     const b = await boot(['contact_welcome']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const account = await api.object('crm_account').insert({ name: 'Acme Corp' });
       await api.object('crm_contact').insert({
         first_name: 'Ada', last_name: 'Lovelace',
@@ -581,7 +588,7 @@ describe('conditions answer end-to-end on the real engine', () => {
   it('lead_assignment: an unrated lead takes the standard branch instead of aborting', async () => {
     const b = await boot(['lead_assignment']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       await api.object('crm_lead').insert({
         first_name: 'Jo', last_name: 'Smith', company: 'Acme',
         status: 'new', email: 'jo@acme.com',
@@ -603,7 +610,7 @@ describe('conditions answer end-to-end on the real engine', () => {
       'task_urgent_alert',
     ]);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
 
       await api.object('crm_task').insert({ subject: 'Fix the thing', priority: 'urgent' });
 

@@ -9,6 +9,13 @@ import stack from './helpers/composed-stack';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * Guards for the CEL predicates inside object `validations[]`.
  *
  * A validation rule is metadata: `os validate` checks that it has a name, a
@@ -749,7 +756,7 @@ describe('the rule fires on the real engine', () => {
   });
 
   const newTask = async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api
       .object('crm_task')
       .insert({ subject: 'Call back', status: 'not_started', priority: 'normal' });

@@ -81,12 +81,13 @@ describe('the physical index set is tenant-scoped', () => {
   });
 
   it('expects two unique indexes — (organization_id, account_number) and (organization_id, name)', () => {
-    // `nullSafeColumns` arrived with platform 17.0.0-rc.4 (ADR-0120 D3): the
-    // tenant column's key part is the NULL-safe COALESCE form rather than the
-    // bare column. It is named here, not loosened away with `objectContaining`,
-    // because it is the difference between an index that enforces this
-    // constraint on an untenanted install and one that does not — see the
-    // null-safe case in the SQLite block below.
+    // Matched exactly, not loosened with `objectContaining`. From platform
+    // 17.0.0-rc.4 (ADR-0120 D3) through 18.0.0 each entry also carried
+    // `nullSafeColumns: ['organization_id']`, the COALESCE key part that made
+    // the index bite on an untenanted install. 18.1.0 keys the plain column
+    // (objectstack#24893), because the tenant column is `NOT NULL` now
+    // (objectstack#24940) and no untenanted row exists to bucket — see the
+    // untenanted case in the SQLite block below.
     //
     // `account_number` joined the set on the 17.2.0 -> 17.3.0 upgrade and is NOT
     // an authoring change here: platform 17.3.0 makes an `autonumber` field
@@ -101,13 +102,11 @@ describe('the physical index set is tenant-scoped', () => {
       {
         name: 'uniq_crm_account_organization_id_account_number',
         columns: ['organization_id', 'account_number'],
-        nullSafeColumns: ['organization_id'],
         unique: true,
       },
       {
         name: 'uniq_crm_account_organization_id_name',
         columns: ['organization_id', 'name'],
-        nullSafeColumns: ['organization_id'],
         unique: true,
       },
     ]);
@@ -173,30 +172,26 @@ describe('two organizations can each have an "Acme Corp" (real SQLite)', () => {
 
   it('still rejects a duplicate account name WITHIN one organization', async () => {
     await driver.create('crm_account', { name: 'Globex' }, { tenantId: 'org_a' });
-    // SQLite names the INDEX rather than the columns when the violated index is
-    // an expression index, and from platform 17.0.0-rc.4 this one is:
-    // `UNIQUE (COALESCE(organization_id, '__global__'), name)` (ADR-0120 D3).
-    // Through rc.3 the same index was `UNIQUE (organization_id, name)` over bare
-    // columns and the message read
-    // `UNIQUE constraint failed: crm_account.organization_id, crm_account.name`.
-    // The constraint is unchanged for a tenanted row — only its wording is.
+    // From platform 17.0.0-rc.4 through 18.0.0 the index was an expression index,
+    // `UNIQUE (COALESCE(organization_id, '__global__'), name)`, and SQLite named
+    // the INDEX in the message. 18.1.0 keys the plain column again, so the
+    // message names the columns, as it did through rc.3. The constraint is
+    // unchanged for a tenanted row — only its wording is.
     await expect(
       driver.create('crm_account', { name: 'Globex' }, { tenantId: 'org_a' }),
-    ).rejects.toThrow(/UNIQUE constraint failed: index 'uniq_crm_account_organization_id_name'/);
+    ).rejects.toThrow(/UNIQUE constraint failed: crm_account\.organization_id, crm_account\.name/);
   });
 
-  it('rejects a duplicate account name on an UNTENANTED install too (rc.4)', async () => {
-    // What the COALESCE key part above actually buys, and the reason the two
-    // assertions in this block were re-taken rather than re-spelled. A row
-    // written with no tenant leaves `organization_id` NULL, and SQL UNIQUE
-    // treats NULLs as distinct — so through platform 17.0.0-rc.3 the composite
-    // index enforced NOTHING on a single-tenant or untenanted install and the
-    // duplicate name #625 set out to prevent went straight in. MEASURED on both
-    // releases against this same metadata: rc.3 ACCEPTED the second insert,
-    // rc.4 rejects it, because both rows now key on '__global__'.
-    await driver.create('crm_account', { name: 'Untenanted Inc' }, {} as never);
+  it('stores no UNTENANTED account at all, so no duplicate name can escape (18.1.0)', async () => {
+    // A row written with no tenant used to leave `organization_id` NULL, and
+    // SQL UNIQUE treats NULLs as distinct — so through platform 17.0.0-rc.3 the
+    // composite index enforced NOTHING on a single-tenant or untenanted install
+    // and the duplicate name #625 set out to prevent went straight in (measured:
+    // rc.3 accepted the second insert, rc.4's COALESCE key part refused it).
+    // Since 18.1.0 the tenant column is `NOT NULL` (objectstack#24940), so the
+    // database refuses the untenanted row itself, the first one already.
     await expect(
       driver.create('crm_account', { name: 'Untenanted Inc' }, {} as never),
-    ).rejects.toThrow(/UNIQUE constraint failed: index 'uniq_crm_account_organization_id_name'/);
+    ).rejects.toThrow(/NOT NULL constraint failed: crm_account\.organization_id/);
   });
 });

@@ -18,6 +18,13 @@ import {
   hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, type Person,
 } from './helpers/verify-stack';
 
+/**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
 type Rec = Record<string, any>;
 
 /**
@@ -191,7 +198,7 @@ describe('the transfer gate cannot see a beforeInsert owner_id stamp on crm_case
     // expectation below flips and this test goes red. That is the signal to
     // grant `allowTransfer` deliberately, or to stop assigning in a hook — NOT
     // to widen the permission model in order to make a red test green.
-    const api = ql.createContext({ userId: 'usr_guest_form' });
+    const api = ql.createContext({ userId: 'usr_guest_form', tenantId: ORG });
     const row = await api.object('crm_case').insert({ subject: 'Printer on fire', status: 'new' });
 
     const observed = seen.filter((s) => s.object === 'crm_case' && s.operation === 'insert').pop();
@@ -213,7 +220,7 @@ describe('the transfer gate cannot see a beforeInsert owner_id stamp on crm_case
     // place. A caller-supplied `owner_id` on the same object, through the same
     // seam, must be visible — that is what makes "the hook's stamp is invisible"
     // a statement about the hook phase rather than about this test.
-    const api = ql.createContext({ userId: 'usr_admin' });
+    const api = ql.createContext({ userId: 'usr_admin', tenantId: ORG });
     await api.object('crm_case').insert({
       subject: 'Manually owned', status: 'new', owner_id: 'agent_explicit',
     });
@@ -597,7 +604,7 @@ describe('the transfer gate on the UPDATE door: which escalation seam it can see
     // the test goes red. That is the signal to grant `allowTransfer`
     // deliberately, or to stop reassigning in a hook — NOT to widen the
     // permission model in order to make a red test green.
-    const api = ql.createContext({ userId: 'usr_agent' });
+    const api = ql.createContext({ userId: 'usr_agent', tenantId: ORG });
     const row = await api.object('crm_case').insert({ subject: 'Printer on fire', status: 'new', owner_id: 'agent_a' });
     await api.object('crm_case').update({ id: row.id, status: 'escalated' }, { where: { id: row.id } });
 
@@ -617,7 +624,7 @@ describe('the transfer gate on the UPDATE door: which escalation seam it can see
     // Guards the guard. Reading A is an ABSENCE, and an absence proves nothing
     // if the recorder could never have seen the key on an update in the first
     // place.
-    const api = ql.createContext({ userId: 'usr_admin' });
+    const api = ql.createContext({ userId: 'usr_admin', tenantId: ORG });
     const row = await api.object('crm_case').insert({ subject: 'Manually moved', status: 'new', owner_id: 'agent_a' });
     await api.object('crm_case').update(
       { id: row.id, status: 'in_progress', owner_id: 'agent_explicit' },
@@ -639,7 +646,7 @@ describe('the transfer gate on the UPDATE door: which escalation seam it can see
     // to invisible, the afterUpdate seam becomes available too — but the
     // re-entrancy argument (a second write re-enters the record-change trigger
     // surface) stands on its own and does not.
-    const api = ql.createContext({ userId: 'usr_agent' });
+    const api = ql.createContext({ userId: 'usr_agent', tenantId: ORG });
     const row = await api.object('crm_case').insert({ subject: 'Second write', status: 'new', owner_id: 'agent_a' });
     await api.object('crm_case').update(
       { id: row.id, owner_id: 'mgr_from_after_update' },

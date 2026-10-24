@@ -9,6 +9,13 @@ import { ForecastDataset } from '../src/sales/datasets/forecast.dataset';
 import { CrmSeedData } from '../objectstack.composition';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * `forecast_metrics` is per-period; aggregating it without pinning a period is
  * a double count (#614).
  *
@@ -231,7 +238,7 @@ describe('quota_attainment_by_rep over the real seeds plus one sweep (#614)', ()
 
   beforeAll(async () => {
     ql = await makeEngine();
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
 
     // The seed file ships ONE unowned set of snapshots (`owner_id` is backfilled to
     // the active user at runtime). Replaying it per rep is what the live table
@@ -294,7 +301,7 @@ describe('quota_attainment_by_rep over the real seeds plus one sweep (#614)', ()
         measures: quotaWidget.values,
         ...(runtimeFilter ? { runtimeFilter: runtimeFilter as never } : {}),
       },
-      { isSystem: true } as never,
+      { isSystem: true, tenantId: ORG } as never,
     )).rows as AnyRec[];
 
   it('the table really does hold several periods for one owner', () => {

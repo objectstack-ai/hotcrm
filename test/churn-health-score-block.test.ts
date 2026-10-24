@@ -9,6 +9,13 @@ import stack from './helpers/composed-stack';
 import { CrmSeedData } from '../objectstack.composition';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * `customer_churn_signals` reads `crm_account.health_score` (#1186).
  *
  * The field is declared as a "CSM-maintained health indicator" with `at_risk`
@@ -196,7 +203,7 @@ describe('the health_score block returns rows over the shipped seeds (#1186)', (
 
   beforeAll(async () => {
     ql = await makeEngine();
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const isActive = accountIsActiveDefault();
 
     for (const a of accountRows) {
@@ -255,7 +262,7 @@ describe('the health_score block returns rows over the shipped seeds (#1186)', (
         measures: block.values,
         ...(block.runtimeFilter ? { runtimeFilter: block.runtimeFilter as never } : {}),
       },
-      { isSystem: true } as never,
+      { isSystem: true, tenantId: ORG } as never,
     );
     return result.rows as AnyRec[];
   };
@@ -307,7 +314,7 @@ describe('the health_score block returns rows over the shipped seeds (#1186)', (
             name: ACTIVE_AND_CHURNING,
           } as never,
         },
-        { isSystem: true } as never,
+        { isSystem: true, tenantId: ORG } as never,
       );
       return countOf(result.rows as AnyRec[]) > 0;
     };

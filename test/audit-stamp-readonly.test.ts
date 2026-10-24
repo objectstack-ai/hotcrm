@@ -14,6 +14,13 @@ import {
   CampaignContactMemberEnrollFlow,
 } from '../src/marketing/flows/campaign-member-enroll.flow';
 
+/**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
 /** The engine's logger, silenced: these suites read results, not log lines. */
 const silentLogger: any = {
   info() {}, warn() {}, error() {}, debug() {}, trace() {},
@@ -165,7 +172,7 @@ function findNode(flow: AnyRec, id: string): AnyRec | undefined {
   return walk(flow.nodes);
 }
 
-const sysCtx = { isSystem: true, userId: 'seed' };
+const sysCtx = { isSystem: true, tenantId: ORG, userId: 'seed' };
 const readBack = (object: string, id: string): Promise<AnyRec> =>
   ql.findOne(object, { where: { id }, context: sysCtx });
 
@@ -241,7 +248,7 @@ describe('#1666 — crm_opportunity approval stamps are declared readonly', () =
         { filter: { id: cel`rowId` } },
       ),
     });
-    await engine.execute('pin_mark_approved', { params: { rowId: id }, userId: 'user_1', event: 'manual' } as never);
+    await engine.execute('pin_mark_approved', { params: { rowId: id }, userId: 'user_1', tenantId: ORG, event: 'manual' } as never);
 
     const after = await readBack('crm_opportunity', id);
     expect(after.approval_status, 'the approval verdict was stripped — the flow is no longer elevated').toBe('approved');
@@ -260,7 +267,7 @@ describe('#1666 — crm_opportunity approval stamps are declared readonly', () =
     await ql.update(
       'crm_opportunity',
       { approval_status: 'approved', approved_date: '2026-01-01T00:00:00.000Z', next_step: 'hand-edited' },
-      { where: { id }, context: { userId: 'user_1' } },
+      { where: { id }, context: { userId: 'user_1', tenantId: ORG } },
     );
     const after = await readBack('crm_opportunity', id);
     // The control must land, or this run measured a broken harness, not a strip.
@@ -384,7 +391,7 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
       ),
     });
     await engine.execute('pin_enrol', {
-      params: { rowId: campaignId, linkId: leadId }, userId: 'user_1', event: 'manual',
+      params: { rowId: campaignId, linkId: leadId }, userId: 'user_1', tenantId: ORG, event: 'manual',
     } as never);
 
     const members = await ql.find('crm_campaign_member', { where: { crm_campaign: campaignId }, context: sysCtx });
@@ -419,7 +426,7 @@ describe('#1667 — crm_campaign_member.added_date is declared readonly', () => 
     await ql.update(
       'crm_campaign_member',
       { added_date: '2020-01-01T00:00:00.000Z', status: 'responded' },
-      { where: { id: row.id }, context: { userId: 'user_1' } },
+      { where: { id: row.id }, context: { userId: 'user_1', tenantId: ORG } },
     );
     const after = await readBack('crm_campaign_member', String(row.id));
     expect(after.status, 'the CONTROL column did not land — harness fault, not a strip').toBe('responded');

@@ -7,6 +7,13 @@ import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-auto
 import type * as Automation from '@objectstack/spec/automation';
 import { P, cel } from '@objectstack/spec';
 
+/**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
 /** The engine's logger, silenced: these suites read results, not log lines. */
 const silentLogger: any = {
   info() {}, warn() {}, error() {}, debug() {}, trace() {},
@@ -142,9 +149,9 @@ const orderedObject = {
 
 /** The three caller contexts the card asks to vary, by name. */
 const CONTEXTS: Array<[label: string, ctx: AnyRec]> = [
-  ['{ userId, isSystem }', { userId: 'user_1', isSystem: true }],
-  ['{ isSystem }', { isSystem: true }],
-  ['{ userId } (no isSystem)', { userId: 'user_1' }],
+  ['{ userId, isSystem }', { userId: 'user_1', tenantId: ORG, isSystem: true }],
+  ['{ isSystem }', { isSystem: true, tenantId: ORG }],
+  ['{ userId } (no isSystem)', { userId: 'user_1', tenantId: ORG }],
 ];
 
 let ql: any;
@@ -221,13 +228,13 @@ async function seedRow(): Promise<string> {
   const row = await ql.insert(
     PROBE,
     { name: 'probe', locked_flag: false, open_flag: false, locked_after: false },
-    { context: { isSystem: true, userId: 'seed' } },
+    { context: { isSystem: true, tenantId: ORG, userId: 'seed' } },
   );
   return String(row.id);
 }
 
 const readBack = async (id: string): Promise<AnyRec> =>
-  await ql.findOne(PROBE, { where: { id }, context: { isSystem: true, userId: 'seed' } });
+  await ql.findOne(PROBE, { where: { id }, context: { isSystem: true, tenantId: ORG, userId: 'seed' } });
 
 beforeAll(async () => {
   ql = await ObjectQL.create({
@@ -739,7 +746,7 @@ async function runOrdered(reasonFirst: boolean, tag: string): Promise<AnyRec> {
   const row = await ql.insert(
     ORDERED,
     { name: 'probe', reason: null, locked_flag: false },
-    { context: { isSystem: true, userId: 'seed' } },
+    { context: { isSystem: true, tenantId: ORG, userId: 'seed' } },
   );
   const id = String(row.id);
   const childName = `probe_ord_child_${tag}`;
@@ -752,7 +759,7 @@ async function runOrdered(reasonFirst: boolean, tag: string): Promise<AnyRec> {
     params: { rowId: id, reason: 'customer escalated on the phone' },
     userId: 'user_1', event: 'manual',
   } as never);
-  return await ql.findOne(ORDERED, { where: { id }, context: { isSystem: true, userId: 'seed' } });
+  return await ql.findOne(ORDERED, { where: { id }, context: { isSystem: true, tenantId: ORG, userId: 'seed' } });
 }
 
 describe('ordering: the reason must be stored BEFORE the flag flips (#1434)', () => {
