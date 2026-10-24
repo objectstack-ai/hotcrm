@@ -2,23 +2,23 @@
 
 import { composeStacks } from '@objectstack/spec';
 import { SchemaRegistry } from '@objectstack/objectql';
-import { serviceStack, appStack } from '../../objectstack.composition';
+import { packageStacks } from '../../objectstack.composition';
 
 /**
  * Every collection of the app, in ONE stack — what the suites read.
  *
- * `objectstack.config.ts` composes the two package stacks with
+ * `objectstack.config.ts` composes the four package stacks with
  * `manifest: 'preserve'`, and a multi-package `preserve` composition carries
  * each definition ONCE, in the body of the package that owns it: the artifact
  * has `packages[]` and no flattened `objects` / `views` / `flows` / … beside
  * it (ADR-0130 D4, 2026-09-22 addendum). That is right for the artifact and
  * useless to a suite asking "every object of the app", which is the question
  * almost every suite here asks — they pin this app's business facts, and the
- * app a customer installs is the whole artifact, both packages.
+ * app a customer installs is the whole artifact, all four packages.
  *
- * So this composes the SAME two built stacks with the platform's own
+ * So this composes the SAME four built stacks with the platform's own
  * `composeStacks` in its default, flattening mode: every collection
- * concatenated in stack order (service first, the app last), objects merged
+ * concatenated in stack order (the three modules first, the app last), objects merged
  * under the default `objectConflict: 'error'`, and the singular `manifest`
  * picked by the default `'last'` rule — the app package's, exactly as the
  * artifact's own `manifest` is. ⛔ Nothing here re-implements a platform
@@ -30,16 +30,16 @@ import { serviceStack, appStack } from '../../objectstack.composition';
  * reads them where they live:
  *
  *  - PER-PACKAGE ownership — read `objectstack.config`'s `packages[]`, or
- *    `serviceStack` / `appStack` from `objectstack.composition.ts`.
- *  - the service module's `navigationContributions` — they are part of its
+ *    the package stacks from `objectstack.composition.ts`.
+ *  - the modules' `navigationContributions` — they are part of each module's
  *    manifest, and the singular manifest here is the app's. Read
- *    `serviceStack.manifest.navigationContributions`.
+ *    {@link servedApps}, which folds them in.
  *
  * A suite that BOOTS the app (`new AppPlugin(…)`) hands it the real artifact,
  * `objectstack.config`, not this view: the registration path is part of what
  * such a suite measures.
  */
-const composedStack = composeStacks([serviceStack, appStack]);
+const composedStack = composeStacks(packageStacks);
 
 export default composedStack;
 
@@ -92,21 +92,22 @@ export function* walk(node: unknown): Generator<AnyRec> {
  * Every app of the artifact AS SERVED — each package's `navigationContributions`
  * folded into the app's navigation tree by the platform's own fold.
  *
- * The service module puts seven entries into the app's menu through its
- * manifest (`nav_case`, `nav_knowledge`, `nav_service_dashboard`,
- * `nav_my_cases` and its three case reports), so the app's AUTHORED `navigation` no
- * longer carries them, and a suite that walks it alone would call them
- * unreachable. What a user sees is the folded tree:
+ * The modules put their entries into the app's menu through their manifests
+ * — service seven (`nav_case`, `nav_knowledge`, `nav_service_dashboard`,
+ * `nav_my_cases` and its three case reports), revenue three (`nav_quote`,
+ * `nav_contract`, `nav_product`), marketing one (`nav_campaign`) — so the
+ * app's AUTHORED `navigation` no longer carries them, and a suite that walks
+ * it alone would call them unreachable. What a user sees is the folded tree:
  * `SchemaRegistry.applyNavContributions` — the method `GET /api/v1/meta/app`
  * serves through — appends each contribution into the group it names, in
- * `priority` order, after the group's own children. This registers the same two
+ * `priority` order, after the group's own children. This registers the same four
  * package stacks into a bare registry and reads the apps back through it, so
  * the order a suite sees is the order the console renders, and ⛔ no suite
  * re-implements the fold.
  */
 export const servedApps = (): AnyRec[] => {
   const registry = new SchemaRegistry();
-  for (const stack of [serviceStack, appStack] as AnyRec[]) {
+  for (const stack of packageStacks as AnyRec[]) {
     const packageId = String(stack.manifest?.id);
     for (const app of (stack.apps ?? []) as AnyRec[]) registry.registerApp(app, packageId);
     for (const contribution of (stack.manifest?.navigationContributions ?? []) as AnyRec[]) {

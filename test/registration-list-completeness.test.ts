@@ -69,11 +69,11 @@ import * as marketingData from '../src/marketing/data';
  * Since the packaging (#1907) `allHooks`, `allSkills` and `CrmSharingRules`
  * are the ARTIFACT's lists: the app package's half is a hand-ordered list in
  * `objectstack.composition.ts` (`appHooks`, `appSkills`, `appSharingRules`)
- * and the service module's is the list `src/service/index.ts` registers
- * (`serviceHooks`, `serviceSkills`, `serviceSharingRules`), concatenated. The
+ * and each module's is the list its `index.ts` registers (`serviceHooks`,
+ * `revenueHooks`, `marketingSharingRules` and the rest), concatenated. The
  * seed union stays one list, `CrmSeedData`, and is partitioned by owning
  * package there. So "the list" an entry owes is its package's list, and the
- * union below is exactly what the two package stacks register.
+ * union below is exactly what the four package stacks register.
  *
  * Both directions are asserted for each, because the two failure modes are
  * opposite: an entry the barrel exports and the list drops (registered by

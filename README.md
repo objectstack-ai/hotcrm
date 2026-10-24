@@ -155,13 +155,13 @@ See [docs: Publishing your first marketplace app](content/docs/marketplace/publi
 
 ```
 hotcrm/
-├── objectstack.config.ts         # composeStacks() — one artifact carrying the two package stacks
-├── objectstack.composition.ts    # the directories' barrels collected into those two stacks
+├── objectstack.config.ts         # composeStacks() — one artifact carrying the four package stacks
+├── objectstack.composition.ts    # the four package stacks built, and the composition knob
 ├── src/
 │   ├── sales/                    # the `type: app` package — customers, pipeline, activities
 │   ├── service/                  # the service module — cases and the knowledge base
-│   ├── revenue/                  # registered by the app package for now — products, quotes, line items, contracts
-│   ├── marketing/                # registered by the app package for now — campaigns and campaign members
+│   ├── revenue/                  # the revenue module — products, quotes, line items, contracts
+│   ├── marketing/                # the marketing module — campaigns and campaign members
 │   └── docs/                     # package docs, shipped inside the built artifact
 ├── apps/docs/                    # Fumadocs site — standalone, own lockfile (not a pnpm workspace member)
 └── content/docs/                 # Documentation content

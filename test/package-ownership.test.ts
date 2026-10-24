@@ -7,16 +7,18 @@ import composed from './helpers/composed-stack';
 /**
  * Which package of the artifact owns what (ADR-0130 D4, #1907).
  *
- * HotCRM ships ONE release artifact carrying TWO packages that share the `crm`
+ * HotCRM ships ONE release artifact carrying FOUR packages that share the `crm`
  * namespace: `app.objectstack.hotcrm` (`src/sales/index.ts`, the `type: 'app'`
- * package a customer installs) and `app.objectstack.hotcrm.service`
- * (`src/service/index.ts`, the support module). Per-package ownership is what
+ * package a customer installs) and three modules —
+ * `app.objectstack.hotcrm.service` (`src/service/index.ts`),
+ * `app.objectstack.hotcrm.revenue` (`src/revenue/index.ts`) and
+ * `app.objectstack.hotcrm.marketing` (`src/marketing/index.ts`). Per-package ownership is what
  * `ObjectQL.registerApp` stamps on every object at install, what
  * `GET /api/v1/packages` reports, and what Studio groups by — so which package
  * an object lands in is a fact about this app, pinned here off the artifact
  * itself rather than off the source that is meant to produce it.
  *
- * The suites read `test/helpers/composed-stack.ts` — the same two package
+ * The suites read `test/helpers/composed-stack.ts` — the same four package
  * stacks, flattened by the platform's own composition — because the artifact
  * carries no flattened collections beside `packages[]` (ADR-0130 D4, 2026-09-22
  * addendum). The last block holds the two views to the same contents, so that
@@ -27,9 +29,30 @@ type AnyRec = Record<string, any>;
 
 const APP_ID = 'app.objectstack.hotcrm';
 const SERVICE_ID = 'app.objectstack.hotcrm.service';
+const REVENUE_ID = 'app.objectstack.hotcrm.revenue';
+const MARKETING_ID = 'app.objectstack.hotcrm.marketing';
+const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID];
 
-/** The support module's objects — `module-split-plan.md` decision 5. */
+/** Each module's objects — `module-split-plan.md` decision 5. */
 const SERVICE_OBJECTS = ['crm_article_feedback', 'crm_case', 'crm_knowledge_article'];
+const REVENUE_OBJECTS = ['crm_contract', 'crm_opportunity_line_item', 'crm_product', 'crm_quote', 'crm_quote_line_item'];
+const MARKETING_OBJECTS = ['crm_campaign', 'crm_campaign_member'];
+const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS];
+
+/**
+ * The assignment rule's one roster of deliberate exceptions (AGENTS.md rule 11):
+ * module items the APP package registers because the platform judges the
+ * reference to them one package at a time (objectstack#25514) — the other half
+ * is `appRegisteredModuleItems` in `objectstack.composition.ts`. Maintainer
+ * ruling 2026-10-24 on #2270, option 1. Of the four, only the dataset names
+ * its object; the three flows carry no top-level object, so this sweep cannot
+ * see them and `appRegisteredModuleItems` is their record. Emptied when a
+ * published platform release carries #25514 and the four move to their
+ * modules.
+ */
+const APP_REGISTERED_MODULE_ITEMS = [
+  `${APP_ID}: dataset "product_metrics" is authored against crm_product`,
+];
 
 const bodies: AnyRec[] = (((artifact as AnyRec).packages ?? []) as AnyRec[]).map(
   (entry) => (entry?.manifest ?? {}) as AnyRec,
@@ -42,11 +65,15 @@ const body = (id: string): AnyRec => {
 const namesOf = (items: unknown): string[] =>
   ((Array.isArray(items) ? items : []) as AnyRec[]).map((item) => String(item?.name)).sort();
 
-describe('one artifact, two packages', () => {
-  it('carries exactly the app package and the service module, the app last', () => {
-    expect(bodies.map((b) => b.id)).toEqual([SERVICE_ID, APP_ID]);
+describe('one artifact, four packages', () => {
+  it('carries exactly the three modules and the app package, the app last', () => {
+    expect(bodies.map((b) => b.id)).toEqual([...MODULE_IDS, APP_ID]);
     expect(body(APP_ID).type).toBe('app');
-    expect(body(SERVICE_ID).type).toBe('module');
+    for (const id of MODULE_IDS) expect(body(id).type, id).toBe('module');
+  });
+
+  it('carries the artifact version on every package', () => {
+    expect(new Set(bodies.map((b) => b.version))).toEqual(new Set([body(APP_ID).version]));
   });
 
   it('identifies as the app a customer installs (ADR-0019 D1)', () => {
@@ -54,11 +81,11 @@ describe('one artifact, two packages', () => {
   });
 
   it('shares one namespace, so no object is renamed (ADR-0130 D1)', () => {
-    expect(bodies.map((b) => b.namespace)).toEqual(['crm', 'crm']);
+    expect(bodies.map((b) => b.namespace)).toEqual(['crm', 'crm', 'crm', 'crm']);
   });
 
-  it('declares the edge: the module depends on the app package', () => {
-    expect(Object.keys(body(SERVICE_ID).dependencies ?? {})).toEqual([APP_ID]);
+  it('declares the edges: every module depends on the app package and nothing else (a star)', () => {
+    for (const id of MODULE_IDS) expect(Object.keys(body(id).dependencies ?? {}), id).toEqual([APP_ID]);
   });
 });
 
@@ -67,14 +94,22 @@ describe('every object has exactly one owner', () => {
     expect(namesOf(body(SERVICE_ID).objects)).toEqual(SERVICE_OBJECTS);
   });
 
-  it('the app package owns every other object of the app', () => {
-    const appObjects = namesOf(body(APP_ID).objects);
-    expect(appObjects.length, 'the app package owns no objects — this rule is vacuous').toBeGreaterThan(10);
-    expect(appObjects.filter((name) => SERVICE_OBJECTS.includes(name))).toEqual([]);
-    expect([...appObjects, ...SERVICE_OBJECTS].sort()).toEqual(namesOf((composed as AnyRec).objects));
+  it('the revenue module owns the product, line-item, quote and contract objects', () => {
+    expect(namesOf(body(REVENUE_ID).objects)).toEqual(REVENUE_OBJECTS);
   });
 
-  it('an item authored against a service object ships in the service module', () => {
+  it('the marketing module owns the campaign and campaign-member objects', () => {
+    expect(namesOf(body(MARKETING_ID).objects)).toEqual(MARKETING_OBJECTS);
+  });
+
+  it('the app package owns every other object of the app', () => {
+    const appObjects = namesOf(body(APP_ID).objects);
+    expect(appObjects).toHaveLength(8);
+    expect(appObjects.filter((name) => MODULE_OBJECTS.includes(name))).toEqual([]);
+    expect([...appObjects, ...MODULE_OBJECTS].sort()).toEqual(namesOf((composed as AnyRec).objects));
+  });
+
+  it('an item authored against a module object ships in that module', () => {
     // The assignment rule (AGENTS.md *Project Architecture*, rule 3), read off
     // the artifact for the item classes that name their object directly.
     const strays: string[] = [];
@@ -99,14 +134,17 @@ describe('every object has exactly one owner', () => {
       check('page', b.pages, (p) => p.object);
       check('flow', b.flows, (f) => f.objectName);
     }
-    expect(strays, `items shipped in a package that does not own their object:\n  ${strays.join('\n  ')}`).toEqual([]);
+    expect(strays, `items shipped in a package that does not own their object:\n  ${strays.join('\n  ')}`)
+      .toEqual(APP_REGISTERED_MODULE_ITEMS);
   });
 
   it('the permission sets stay whole in the app package (ADR-0130, 2026-09-02 addendum)', () => {
-    expect(namesOf(body(SERVICE_ID).permissions)).toEqual([]);
-    const grantsOnService = ((body(APP_ID).permissions ?? []) as AnyRec[]).filter((set) =>
-      Object.keys(set.objects ?? {}).some((object) => SERVICE_OBJECTS.includes(object)));
-    expect(grantsOnService.length, 'no app-owned set grants on a service object').toBeGreaterThan(0);
+    for (const id of MODULE_IDS) expect(namesOf(body(id).permissions), id).toEqual([]);
+    const grantingOn = (objects: string[]) => ((body(APP_ID).permissions ?? []) as AnyRec[]).filter((set) =>
+      Object.keys(set.objects ?? {}).some((object) => objects.includes(object)));
+    expect(grantingOn(SERVICE_OBJECTS).length, 'no app-owned set grants on a service object').toBeGreaterThan(0);
+    expect(grantingOn(REVENUE_OBJECTS).length, 'no app-owned set grants on a revenue object').toBeGreaterThan(0);
+    expect(grantingOn(MARKETING_OBJECTS).length, 'no app-owned set grants on a marketing object').toBeGreaterThan(0);
   });
 });
 

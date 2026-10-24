@@ -26,7 +26,7 @@ pnpm dev
 
 ## 仓库结构
 
-HotCRM 构建出**一个** ObjectStack 制品，里面装着**两个包**（ADR-0130）：`src/sales/` 里的 `type: app` 包 `app.objectstack.hotcrm`，以及 `src/service/` 里的服务模块 `app.objectstack.hotcrm.service`。两者各有一个 `index.ts`，各自调用 `defineStack()`；`objectstack.composition.ts` 构建这两个包，`objectstack.config.ts` 把它们组合成制品。`src/` 下的一个目录就是布局上的一个包：`src/revenue/` 和 `src/marketing/` 在各自单独打包之前，仍由 app 包注册。一个文件只能从自己的目录或 `src/sales/` 导入，模块之间不得横向导入。
+HotCRM 构建出**一个** ObjectStack 制品，里面装着**四个包**（ADR-0130）：`src/sales/` 里的 `type: app` 包 `app.objectstack.hotcrm`，以及三个模块——`src/service/` 里的服务模块、`src/revenue/` 里的收入模块和 `src/marketing/` 里的营销模块。每个包各有一个 `index.ts`，各自调用 `defineStack()`；`objectstack.composition.ts` 构建这四个包，`objectstack.config.ts` 把它们组合成制品。`src/` 下的一个目录就是一个包。`src/revenue/` 和 `src/marketing/` 里写的三个 flow 和一个数据集目前仍由 app 包注册，因为平台对销售动作引用的 flow、仪表盘引用的数据集是逐包判定的（objectstack#25514）；平台发布带这项修复的版本后，它们再归回各自的模块。一个文件只能从自己的目录或 `src/sales/` 导入，模块之间不得横向导入。
 
 ```text
 hotcrm/
@@ -35,8 +35,8 @@ hotcrm/
 ├── src/
 │   ├── sales/          # `type: app` 包 —— account、contact、lead、opportunity、forecast、task、event
 │   ├── service/        # 服务模块 —— case、knowledge_article、article_feedback
-│   ├── revenue/        # 目前由 app 包注册 —— product、opportunity_line_item、quote、quote_line_item、contract
-│   ├── marketing/      # 目前由 app 包注册 —— campaign、campaign_member
+│   ├── revenue/        # 收入模块 —— product、opportunity_line_item、quote、quote_line_item、contract
+│   ├── marketing/      # 营销模块 —— campaign、campaign_member
 │   └── docs/           # 随构建产物一起分发的应用文档
 ├── apps/docs/          # Fumadocs 应用
 └── content/docs/       # 文档内容

@@ -30,15 +30,17 @@ export type HotCrmAppCollections = Omit<
  *
  * ## Why this file takes its collections instead of importing them
  *
- * `src/revenue/` and `src/marketing/` are packages in the LAYOUT but not yet
- * packages in the ARTIFACT — the ruling asked for sales and support first — so
- * the app package registers their collections for now. A file under
- * `src/sales/` may not import from a module directory (AGENTS.md *Project
- * Architecture* rule 2: own directory or `src/sales/`, never sideways), so the
- * assembly of those two cannot happen here. It happens in
- * `objectstack.composition.ts`, the root module that is allowed to see every
- * package. When revenue and marketing become packages of their own, the
- * argument shrinks to the sales barrels and this file can import them itself.
+ * `objectstack.composition.ts` assembles them, and two reasons keep it there.
+ * The `HOTCRM_COMPOSITION` knob selects this package's permission sets and
+ * seed families at the root (below). And four items whose files sit in
+ * `src/revenue/` and `src/marketing/` are still registered by this package —
+ * three flows that sales actions launch and the dataset the CRM Overview
+ * dashboard binds — because the platform judges those references one package
+ * at a time (objectstack#25514, maintainer ruling 2026-10-24 on #2270). A file
+ * under `src/sales/` may not import from a module directory (AGENTS.md
+ * *Project Architecture* rule 2: own directory or `src/sales/`, never
+ * sideways), so their assembly happens in the root module, which may see
+ * every package (`appRegisteredModuleItems` there).
  *
  * ## `artifactObjects` — the permission sets stay whole here
  *

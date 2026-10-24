@@ -39,7 +39,7 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 
 ## Current Repository Shape
 
-HotCRM is a single ObjectStack marketplace app, shipped as one release artifact that carries two packages (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package, and the service module `app.objectstack.hotcrm.service`. The source of truth is [`objectstack.config.ts`](../objectstack.config.ts), which composes the two package stacks [`objectstack.composition.ts`](../objectstack.composition.ts) builds from `src/`.
+HotCRM is a single ObjectStack marketplace app, shipped as one release artifact that carries four packages (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package, and the modules `app.objectstack.hotcrm.service`, `app.objectstack.hotcrm.revenue` and `app.objectstack.hotcrm.marketing`. The source of truth is [`objectstack.config.ts`](../objectstack.config.ts), which composes the four package stacks [`objectstack.composition.ts`](../objectstack.composition.ts) builds from `src/`.
 
 ```text
 hotcrm/
@@ -48,8 +48,8 @@ hotcrm/
 ├── src/
 │   ├── sales/          # the `type: app` package (ADR-0130) — a directory under src/ IS a package
 │   ├── service/        # the service module — case, knowledge_article, article_feedback
-│   ├── revenue/        # registered by the app package until packaged — product, opportunity_line_item, quote, quote_line_item, contract
-│   ├── marketing/      # registered by the app package until packaged — campaign, campaign_member
+│   ├── revenue/        # the revenue module — product, opportunity_line_item, quote, quote_line_item, contract
+│   ├── marketing/      # the marketing module — campaign, campaign_member
 │   └── docs/           # package docs (ADR-0046), read from this fixed path by the builder
 ├── content/docs/       # Product documentation site content
 └── docs/               # Internal documentation

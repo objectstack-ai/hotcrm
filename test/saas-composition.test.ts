@@ -4,7 +4,8 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { PLATFORM_CAPABILITIES } from '@objectstack/spec/security';
 import defaultStack from './helpers/composed-stack';
 import {
-  CrmSeedData, SaasTenantSeedData, ServiceSeedData, AppSeedData, serviceStack, appStack,
+  CrmSeedData, SaasTenantSeedData, ServiceSeedData, RevenueSeedData, MarketingSeedData, AppSeedData,
+  serviceStack, revenueStack, marketingStack, appStack,
 } from '../objectstack.composition';
 import { COMPOSITION_ENV_VAR, resolveComposition } from '../src/sales/data/index';
 import { SystemAdminProfile } from '../src/sales/profiles/system-admin.profile';
@@ -45,11 +46,16 @@ type AnyRec = Record<string, any>;
  * `= undefined` are not the same thing to `process.env`.
  */
 async function loadStack(value: string): Promise<AnyRec> {
+  return ((await loadUnder(value, './helpers/composed-stack')) as AnyRec).default as AnyRec;
+}
+
+/** A module imported fresh under one value of the composition knob. */
+async function loadUnder(value: string, specifier: string): Promise<AnyRec> {
   const previous = process.env[COMPOSITION_ENV_VAR];
   process.env[COMPOSITION_ENV_VAR] = value;
   vi.resetModules();
   try {
-    return ((await import('./helpers/composed-stack')) as AnyRec).default as AnyRec;
+    return (await import(/* @vite-ignore */ specifier)) as AnyRec;
   } finally {
     if (previous === undefined) delete process.env[COMPOSITION_ENV_VAR];
     else process.env[COMPOSITION_ENV_VAR] = previous;
@@ -106,15 +112,21 @@ describe('the default composition is the community app, untouched', () => {
   it('registers each family with the package that owns its object, in replay order', () => {
     // `defineStack` refuses `data` naming an object the stack does not define
     // and was not told the artifact defines, so the split is not a choice —
-    // and the two halves together are exactly the union, each in the order
+    // and the four parts together are exactly the union, each in the order
     // `CrmSeedData` gives its families.
     const objectsOf = (list: readonly unknown[] = []) => (list as AnyRec[]).map((d) => String(d.object));
     expect(objectsOf(serviceStack.data)).toEqual(objectsOf(ServiceSeedData));
     expect(objectsOf(serviceStack.data)).toEqual(['crm_case', 'crm_knowledge_article']);
+    expect(objectsOf(revenueStack.data)).toEqual(objectsOf(RevenueSeedData));
+    expect(objectsOf(revenueStack.data)).toEqual([
+      'crm_product', 'crm_opportunity_line_item', 'crm_contract', 'crm_quote', 'crm_quote_line_item',
+    ]);
+    expect(objectsOf(marketingStack.data)).toEqual(objectsOf(MarketingSeedData));
+    expect(objectsOf(marketingStack.data)).toEqual(['crm_campaign', 'crm_campaign_member', 'crm_campaign_member']);
     expect(objectsOf(appStack.data)).toEqual(objectsOf(AppSeedData));
-    expect([...objectsOf(serviceStack.data), ...objectsOf(appStack.data)].sort()).toEqual(
-      objectsOf(CrmSeedData).sort(),
-    );
+    expect(
+      [serviceStack, revenueStack, marketingStack, appStack].flatMap((stack) => objectsOf(stack.data)).sort(),
+    ).toEqual(objectsOf(CrmSeedData).sort());
   });
 
   it('still ships every seed family, storytelling included', () => {
@@ -152,6 +164,18 @@ describe('HOTCRM_COMPOSITION=saas', () => {
     // Same length as the module's own declaration — so a family added to
     // `SaasTenantSeedData` has to be added deliberately, and lands here.
     expect((saas.data as AnyRec[]).length).toBe(SaasTenantSeedData.length);
+  });
+
+  it('the catalogue registers with the revenue package, and no other package registers any rows', async () => {
+    // A seed family registers with the package that owns its object, under
+    // either shape; `crm_product` is revenue's, so under `saas` revenue is the
+    // one package with rows.
+    const built = await loadUnder('saas', '../objectstack.composition');
+    const objectsOf = (stack: AnyRec) => ((stack.data ?? []) as AnyRec[]).map((d) => String(d.object));
+    expect(objectsOf(built.revenueStack)).toEqual(['crm_product']);
+    expect(objectsOf(built.serviceStack)).toEqual([]);
+    expect(objectsOf(built.marketingStack)).toEqual([]);
+    expect(objectsOf(built.appStack)).toEqual([]);
   });
 
   it('excludes every storytelling family by name', () => {

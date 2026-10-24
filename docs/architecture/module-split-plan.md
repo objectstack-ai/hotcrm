@@ -563,6 +563,23 @@ decisions left to the compile path and this ruling settles.
      ruling asked for sales and support first; their directories are final from PR 0, so
      packaging either is a manifest, an `index.ts` and a navigation contribution, with no
      move.
+     **✅ Landed by #2270 (ruled 2026-10-24), with one deviation.** Two reference classes
+     this plan left unmeasured were refused by the platform's per-package checks: an app
+     action launching a module flow (`generate_quote` → `quote_generation`,
+     `create_campaign` / `add_contact_to_campaign` → the two member-enroll flows) and the
+     CRM Overview dashboard binding `product_metrics`. Maintainer ruling, verbatim and
+     untranslated, choosing "keep the refused items in sales, package the rest now" over
+     waiting for objectstack#25514:
+
+     > 「1」
+
+     So those four stay registered by the app package (`appRegisteredModuleItems` in
+     `objectstack.composition.ts`, the roster in `test/package-ownership.test.ts`) and
+     move to their modules once a platform release carries #25514. The page related
+     lists, the `crm_product` picker and the app → module lookup were measured accepted;
+     the inventory's 2026-10-24 `$hand_edits` entry records all of it. Sidebar effect:
+     Quotes, Contracts and Products now follow Sales Performance in *Sales*, by the same
+     contribution rule as My Cases.
    - **PSA** follows as `src/psa/` (`psa-module-plan.md`).
 
 The three upstream blockers under *上游缺口* are no longer the reason to wait: the compile
