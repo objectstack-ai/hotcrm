@@ -12,23 +12,25 @@ import * as marketingFlows from '../src/marketing/flows';
 /**
  * Flow registration completeness — the barrel is only HALF the path (#1930).
  *
- * The two package stacks register two kinds of collection, and they do not
+ * The four package stacks register two kinds of collection, and they do not
  * take the same authoring step:
  *
  *   - `byExportName({ ...barrels })` in `objectstack.composition.ts` for the
  *     app package's objects, views, pages, actions, datasets, reports,
  *     dashboards, mappings, apps and translations. Reaching the barrel IS
- *     reaching the registration. (The service module names its barrels' items
- *     in `src/service/index.ts`.)
+ *     reaching the registration. (Each module names its barrels' items in its
+ *     own `index.ts`.)
  *   - an explicit ordered list per package for hooks, flows, skills and sharing
  *     rules — `appFlows` and its siblings in `objectstack.composition.ts`,
- *     `serviceFlows` and its siblings in `src/service/index.ts`, unioned there
+ *     `serviceFlows`, `revenueFlows`, `marketingFlows` and their siblings in
+ *     each module's `index.ts`, unioned there
  *     as `allHooks`, `allFlows`, `allSkills` and `CrmSharingRules` — and
  *     `CrmSeedData`, cut by owning package. The barrel is necessary and NOT
  *     sufficient: the entry must also be written into its package's list by
- *     hand. The app package's list exists because its order interleaves three
- *     directories (see the ORDER note at the top of
- *     `objectstack.composition.ts`), so no per-directory barrel can carry it.
+ *     hand. The app package's list exists because it keeps the order the
+ *     single-tree barrels had (see the ORDER note at the top of
+ *     `objectstack.composition.ts`), and because it carries the three module
+ *     flows the app still registers (`appRegisteredModuleItems`).
  *
  * Nothing failed on the second kind. A flow exported from its package barrel
  * but absent from `allFlows` is handed to `defineStack()` by nobody: it is

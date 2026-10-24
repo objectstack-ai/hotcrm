@@ -2,7 +2,7 @@
 
 > Examples that match the current single-app HotCRM repository.
 
-HotCRM metadata is registered from `src/` by two package stacks — the app package's, built in [`objectstack.composition.ts`](../../objectstack.composition.ts) from the sales, revenue and marketing barrels, and the service module's, [`src/service/index.ts`](../../src/service/index.ts) — which [`objectstack.config.ts`](../../objectstack.config.ts) composes into one artifact. File names use the ObjectStack suffix convention: `.object.ts`, `.hook.ts`, `.actions.ts`, `.flow.ts`, `.skill.ts`, `.view.ts`, `.page.ts`, `.dashboard.ts`, and `.report.ts`.
+HotCRM metadata is registered from `src/` by four package stacks — the app package's, built in [`objectstack.composition.ts`](../../objectstack.composition.ts) from the sales barrels, and one per module: [`src/service/index.ts`](../../src/service/index.ts), [`src/revenue/index.ts`](../../src/revenue/index.ts) and [`src/marketing/index.ts`](../../src/marketing/index.ts) — which [`objectstack.config.ts`](../../objectstack.config.ts) composes into one artifact. File names use the ObjectStack suffix convention: `.object.ts`, `.hook.ts`, `.actions.ts`, `.flow.ts`, `.skill.ts`, `.view.ts`, `.page.ts`, `.dashboard.ts`, and `.report.ts`.
 
 ## Define An Object
 

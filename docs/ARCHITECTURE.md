@@ -6,28 +6,33 @@
 
 HotCRM is an ObjectStack marketplace app. It is not organized as multiple scoped npm
 packages — one `package.json`, one build — and it ships as ONE release artifact carrying
-TWO packages (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
-(`src/sales/index.ts`), and `app.objectstack.hotcrm.service`, a `type: module`
-(`src/service/index.ts`). The four directories under the local `src/` tree are the four
-packages of the layout; `src/revenue/` and `src/marketing/` are still registered by the app
-package until each is packaged on its own.
-[`objectstack.composition.ts`](../objectstack.composition.ts) builds the two package stacks
+FOUR packages (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
+(`src/sales/index.ts`), and three `type: module` packages — `app.objectstack.hotcrm.service`
+(`src/service/index.ts`), `app.objectstack.hotcrm.revenue` (`src/revenue/index.ts`) and
+`app.objectstack.hotcrm.marketing` (`src/marketing/index.ts`). The four directories under
+the local `src/` tree are the four packages. Three flows and one dataset authored in
+`src/revenue/` and `src/marketing/` are still registered by the app package, because the
+platform judges a sales action's flow and a dashboard's dataset one package at a time
+(objectstack#25514); they move to their modules once a platform release carries that fix.
+[`objectstack.composition.ts`](../objectstack.composition.ts) builds the four package stacks
 and [`objectstack.config.ts`](../objectstack.config.ts) composes them with
 `composeStacks(…, { manifest: 'preserve' })`.
 
 ```mermaid
 flowchart TD
   Sales["src/sales/ — the type: app package"] --> Composition["objectstack.composition.ts"]
-  Revenue["src/revenue/"] --> Composition
-  Marketing["src/marketing/"] --> Composition
   Composition --> AppStack["app.objectstack.hotcrm — defineStack()"]
   Service["src/service/ — the service module"] --> ServiceStack["app.objectstack.hotcrm.service — defineStack()"]
+  Revenue["src/revenue/ — the revenue module"] --> RevenueStack["app.objectstack.hotcrm.revenue — defineStack()"]
+  Marketing["src/marketing/ — the marketing module"] --> MarketingStack["app.objectstack.hotcrm.marketing — defineStack()"]
   AppStack --> Config["objectstack.config.ts — composeStacks(preserve)"]
   ServiceStack --> Config
+  RevenueStack --> Config
+  MarketingStack --> Config
   Config --> Runtime["@objectstack/runtime"]
 ```
 
-The diagram sketches the assembly path — four directories, two package stacks, one
+The diagram sketches the assembly path — four directories, four package stacks, one
 artifact whose `packages[]` carries each package's metadata once, in that package's body.
 It is deliberately not a roster of metadata:
 [Metadata Areas](#metadata-areas) below is the complete directory-to-key map, and each

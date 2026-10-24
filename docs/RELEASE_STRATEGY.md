@@ -11,7 +11,7 @@ carrying the service module beside it (ADR-0130 D4; one artifact, one version �
 | --- | --- |
 | npm package name | `hotcrm` |
 | ObjectStack manifest id | `app.objectstack.hotcrm` |
-| Packages in the artifact | `app.objectstack.hotcrm` (`type: app`), `app.objectstack.hotcrm.service` (`type: module`) |
+| Packages in the artifact | `app.objectstack.hotcrm` (`type: app`), `app.objectstack.hotcrm.service`, `app.objectstack.hotcrm.revenue`, `app.objectstack.hotcrm.marketing` (`type: module`) |
 | Namespace | `crm` |
 | Current version | `6.0.0` |
 | Publish artifact | output from `pnpm build` |
@@ -30,8 +30,9 @@ accumulated — ⛔ do not hand-edit either:
 The rest are matched by hand to the version it just wrote:
 
 - the package manifests' `version` — the app package's in `src/sales/index.ts`, and
-  the service module's `version` and its `dependencies` range on the app in
-  `src/service/index.ts`; `pnpm verify` fails if any of them drifts from `package.json`
+  each module's `version` and its `dependencies` range on the app in
+  `src/service/index.ts`, `src/revenue/index.ts` and `src/marketing/index.ts`;
+  `pnpm verify` fails if any of them drifts from `package.json`
 - marketplace publish note
 
 ## Release Checklist
@@ -51,9 +52,10 @@ The rest are matched by hand to the version it just wrote:
    ```
 
    Then set the package manifests' `version` to the version it just wrote — the
-   app package's in `src/sales/index.ts`, the service module's `version` and
-   `dependencies` range in `src/service/index.ts`. `changeset version` does not
-   touch those files, and `pnpm verify` is what catches the drift.
+   app package's in `src/sales/index.ts`, each module's `version` and
+   `dependencies` range in `src/service/index.ts`, `src/revenue/index.ts` and
+   `src/marketing/index.ts`. `changeset version` does not touch those files, and
+   `pnpm verify` is what catches the drift.
 
 4. Build the artifact:
 
