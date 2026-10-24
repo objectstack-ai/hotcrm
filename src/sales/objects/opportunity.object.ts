@@ -21,7 +21,7 @@ export const Opportunity = ObjectSchema.create({
   nameField: 'name',
   // Explicit search targets (ADR-0061). `name` is a real indexed column, so
   // $search resolves on its own here; the list is kept explicit to pin the
-  // intent (other objects whose nameField IS a formula rely on it).
+  // intent, as on the objects whose stored title composes several columns.
   searchableFields: ['name'],
   highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner_id'],
 

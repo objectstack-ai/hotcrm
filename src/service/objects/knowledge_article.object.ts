@@ -103,12 +103,12 @@ export const KnowledgeArticle = ObjectSchema.create({
 
   // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
   // which names a real field. The former template composed two local fields, so
-  // a `display_title` formula field reproduces it for the record title.
+  // a stored `display_title` field reproduces it for the record title.
   nameField: 'display_title',
-  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
-  // FORMULA (display_title/full_name): without this, $search auto-defaults to
-  // the formula field, which isn't a real column, so the lookup picker + global
-  // search silently return zero. These are real, indexed columns.
+  // Explicit search targets (ADR-0061): the real columns the lookup picker
+  // and global search match. Until #2230 they were required, because the
+  // title was a formula with no column for `$search` to default to. The
+  // title is stored now; these stay because they name what is searched.
   searchableFields: ['title', 'article_number', 'summary'],
   highlightFields: ['article_number', 'title', 'category', 'status', 'audience'],
 
@@ -145,7 +145,14 @@ export const KnowledgeArticle = ObjectSchema.create({
     }),
 
     // ADR-0079 record title (was titleFormat '{article_number} - {title}').
-    display_title: Field.formula({
+    // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
+    // computes the expression on every insert and every update by id and
+    // stores the result, so an import matches a lookup cell against this title
+    // and sort and search read a real column. `readonly` keeps it off the
+    // forms; a value a client sends never stands. Rows stored before #2230
+    // are titled by `scripts/backfill-record-titles.ts`.
+    display_title: Field.text({
+      readonly: true,
       label: 'Display Title',
       expression: F`record.article_number + " - " + record.title`,
       group: 'basic',

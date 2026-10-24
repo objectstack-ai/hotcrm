@@ -126,9 +126,16 @@ export const Lead = ObjectSchema.create({
     }),
 
     // ADR-0079 record title (was titleFormat '{full_name} - {company}').
-    // Composed from the same source fields as `full_name` (not formula-on-formula)
+    // Composed from the same source fields as `full_name` (not read off that formula)
     // plus `company`, so the title resolves from real stored values.
-    display_title: Field.formula({
+    // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
+    // computes the expression on every insert and every update by id and
+    // stores the result, so an import matches a lookup cell against this title
+    // and sort and search read a real column. `readonly` keeps it off the
+    // forms; a value a client sends never stands. Rows stored before #2230
+    // are titled by `scripts/backfill-record-titles.ts`.
+    display_title: Field.text({
+      readonly: true,
       label: 'Display Title',
       expression: F`joinNonEmpty([record.first_name, record.last_name], ' ') + " - " + record.company`,
       group: 'identity',
@@ -622,12 +629,12 @@ export const Lead = ObjectSchema.create({
     apiEnabled: true,
   },
   
-  // ADR-0079 record title — the `display_title` formula field defined above.
+  // ADR-0079 record title — the stored `display_title` field defined above.
   nameField: 'display_title',
-  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
-  // FORMULA (display_title/full_name): without this, $search auto-defaults to
-  // the formula field, which isn't a real column, so the lookup picker + global
-  // search silently return zero. These are real, indexed columns.
+  // Explicit search targets (ADR-0061): the real columns the lookup picker
+  // and global search match. Until #2230 they were required, because the
+  // title was a formula with no column for `$search` to default to. The
+  // title is stored now; these stay because they name what is searched.
   searchableFields: ['first_name', 'last_name', 'company', 'email'],
   highlightFields: ['full_name', 'company', 'email', 'status', 'owner_id'],
   

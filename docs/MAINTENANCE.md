@@ -265,6 +265,33 @@ repeat or to run over every row rather than hunting for the empty ones.
    existing account only in case or spacing, and confirm it **reuses** that
    account instead of creating a second one.
 
+### 3.4 Backfilling the stored record titles (#2230)
+
+Nine objects title their records with a stored field the engine computes from
+the row's own columns (`display_title`; `full_name` on `crm_contact`). They were
+formulas before #2230, computed on read and stored nowhere, so the import could
+not match a lookup cell against them (objectstack#24981 ruling A).
+
+A **fresh install needs nothing**: every insert stores the title, the seed's
+included.
+
+An **in-place upgrade does**. The migration adds the column, and every row
+written before it holds `NULL` until it is next updated by id. Until then its
+record header, lookup chip and search hit fall back to the record id, and a
+lookup cell naming it by title does not import. Measured on a dev database
+created on the formula titles and served on the stored ones: all 134 seeded
+rows came up untitled.
+
+`scripts/backfill-record-titles.ts` is the writer. It is report-only without
+`--apply`, touches only rows with no title, and is rerunnable. For each such
+row it re-sends one of the row's own fields unchanged, so the update recomputes
+the title; the field it re-sends per object is its `TITLES` table. On that
+database it titled 134 of 134 rows with exactly the value the formula had
+answered, including an accepted and an expired quote (their freeze lets the
+engine's own title through, `quote.hook.ts`; the converted-lead freeze in
+`lead.hook.ts` does the same). The re-save is an ordinary update, so the
+script's header names the one automation that can act on it.
+
 ## 4. Seed-data staleness — the #1 HotCRM pitfall
 
 Stale seed data is the most common cause of "Studio shows a red

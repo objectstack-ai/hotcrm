@@ -77,7 +77,7 @@ The **Details** tab of the case detail page (`src/service/pages/case_detail.page
 - **A section with nothing in it is not drawn.** On a case still being worked, *SLA & Priority* and *Resolution* are usually absent: their fields are written as the case is answered and closed, and a section appears once one of its fields holds a value. *Origin & Routing* is the exception and always shows, so an agent can pick the channel on a new case. Inside a section that does show, an empty field reads as a dash, or several are folded behind a **Show N empty fields** toggle.
 - ***Escalation* and *System* start collapsed.** *Escalation* holds **Escalated**, **Escalated Date**, **Escalation Reason** and **Escalated From**, the agent the escalation took the case from. *System* holds **Internal Notes** and **Is Closed**; a boolean always holds a value, so it shows on every case, and it is where an agent writes **Internal Notes**, inline on the record, while working the case.
 
-Two fields are on no section: **Display Title**, the title formula the object uses as its `nameField`, and **Priority Rank**, the hidden sort key behind *My Open Cases*.
+Two fields are on no section: **Display Title**, the stored title the object uses as its `nameField`, and **Priority Rank**, the hidden sort key behind *My Open Cases*.
 
 ### The form
 

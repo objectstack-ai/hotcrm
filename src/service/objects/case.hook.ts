@@ -464,7 +464,7 @@ const caseSideEffects: Hook = {
       // Title the task with what the reader already knows the case by (#1208).
       // Title the task with what the reader already knows the case by. The
       // PRIMARY KEY is not that: every case surface in this app (record pages,
-      // list views, breadcrumbs, the `display_title` formula on `crm_case`)
+      // list views, breadcrumbs, the stored `display_title` on `crm_case`)
       // names a case `CASE-00039`, so a queue of urgent rows differing only in
       // a 16-character opaque id is a queue nobody can triage. The id is not
       // lost — it travels in `related_to_case` below, where a relationship

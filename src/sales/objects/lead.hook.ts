@@ -349,6 +349,11 @@ const leadHook: Hook = {
       if (wasConverted) {
         const ALLOWED = new Set([
           'description', 'notes',
+          // The stored record title (#2230): the engine computes it before this
+          // hook, so a write carries it whenever the stored value differs from
+          // the computed one. Its inputs are frozen here, so that is only a row
+          // stored before the title was (the backfill's re-save).
+          'display_title',
           // Framework-managed / system columns (cf. opportunity.hook.ts).
           'id', 'owner_id', 'created_at', 'updated_at',
           'created_by', 'updated_by', 'space_id', 'organization_id', 'org_id', 'version',
@@ -430,7 +435,7 @@ const leadHook: Hook = {
           // which is unmatchable against every lead surface in this app (record
           // page, list view, breadcrumb, lookup picker), all of which title a
           // lead `Ada Lovelace - Acme`. Composed from the two stored columns
-          // because a lowered hook body cannot read the `display_title` formula.
+          // because a lead stored before its title was (#2230) holds none.
           const person = [previous?.first_name, previous?.last_name]
             .filter((part) => typeof part === 'string' && part.trim() !== '')
             .join(' ');
