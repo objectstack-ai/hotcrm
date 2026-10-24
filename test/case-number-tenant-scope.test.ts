@@ -29,6 +29,13 @@ import stack from './helpers/composed-stack';
  * organization key part is NULL-safe — `COALESCE(organization_id, '__global__')`
  * — so NULL-organization rows form one bucket instead of each escaping.
  *
+ * Since platform 18.1.0 the second defect is closed one layer down: the driver
+ * creates the tenant column `NOT NULL` (objectstack#24940), so a row with no
+ * organization is refused before it reaches any index, and the per-organization
+ * index keys the plain column (objectstack#24893) — the COALESCE key part had
+ * nothing left to bucket. The first defect still stands, so the field-level
+ * spelling is still the one required here.
+ *
  * Why this matters more here than on any other object: `case_number` is an
  * autonumber (`CASE-{00000}`) and the platform's autonumber sequence is keyed
  * PER TENANT, so every organization counts from 1. The sequence was already
@@ -107,7 +114,7 @@ describe('crm_case declares case-number uniqueness on the FIELD', () => {
 
 // ─────────────────────────────── the index the driver derives from it ──
 
-describe('the physical index set is tenant-scoped and NULL-safe', () => {
+describe('the physical index set is tenant-scoped', () => {
   const indexes = expectedIndexes({
     table: 'crm_case',
     fields: orgScoped.fields as Record<string, unknown>,
@@ -116,17 +123,16 @@ describe('the physical index set is tenant-scoped and NULL-safe', () => {
     physicalColumns,
   });
 
-  it('expects exactly one unique index, NULL-safe on (organization_id, case_number)', () => {
-    // `nullSafeColumns` is named here rather than loosened away with
-    // `objectContaining` because it is the entire difference between an index
-    // that constrains an untenanted install and one that does not — see the
+  it('expects exactly one unique index, on (organization_id, case_number)', () => {
+    // Matched exactly rather than with `objectContaining`, so a NULL-safe key
+    // part coming back (or any other change to the shape) is a visible change.
+    // There is none on 18.1.0: the tenant column is `NOT NULL`, see the
     // untenanted case in the SQLite block below.
     const unique = indexes.filter((i) => i.unique);
     expect(unique).toEqual([
       {
         name: 'uniq_crm_case_organization_id_case_number',
         columns: ['organization_id', 'case_number'],
-        nullSafeColumns: ['organization_id'],
         unique: true,
       },
     ]);
@@ -163,19 +169,20 @@ describe('case numbers collide per organization, never across (real SQLite)', ()
     await driver?.disconnect();
   });
 
-  it('materialized the NULL-safe per-organization unique index', async () => {
+  it('materialized the per-organization unique index over a NOT NULL tenant column', async () => {
     const rows = (await driver
       .getKnex()
-      .raw("select name, sql from sqlite_master where type = 'index' and tbl_name = 'crm_case'")) as Array<{
+      .raw("select name, sql from sqlite_master where tbl_name = 'crm_case'")) as Array<{
       name: string;
       sql: string | null;
     }>;
     const uniq = rows.find((r) => r.name === 'uniq_crm_case_organization_id_case_number');
     expect(uniq, 'the per-organization unique index is missing entirely').toBeTruthy();
-    // The COALESCE key part IS the fix — asserting only the index name would
-    // pass just as well against the un-scoped composite this replaced.
-    expect(uniq!.sql).toMatch(/COALESCE\(`organization_id`, '__global__'\)/);
+    expect(uniq!.sql).toMatch(/\(`organization_id`, `case_number`\)/);
     expect(rows.map((r) => r.name)).not.toContain('uniq_crm_case_case_number');
+    // The column, not the index, is what keeps an untenanted row out now.
+    const table = rows.find((r) => r.name === 'crm_case');
+    expect(table!.sql).toMatch(/`organization_id` varchar\(255\) not null/);
   });
 
   it('accepts the same case number in two different organizations', async () => {
@@ -191,36 +198,34 @@ describe('case numbers collide per organization, never across (real SQLite)', ()
 
   it('rejects a duplicate case number WITHIN one organization', async () => {
     await driver.create('crm_case', row('CASE-00002'), { tenantId: 'org_a' } as never);
-    // SQLite names the INDEX rather than the columns when the violated index is
-    // an expression index, which from platform 17.0.0-rc.4 this one is.
+    // A plain column index since 18.1.0, so SQLite names the columns.
     await expect(
       driver.create('crm_case', row('CASE-00002'), { tenantId: 'org_a' } as never),
-    ).rejects.toThrow(/UNIQUE constraint failed: index 'uniq_crm_case_organization_id_case_number'/);
+    ).rejects.toThrow(/UNIQUE constraint failed: crm_case\.organization_id, crm_case\.case_number/);
   });
 
-  it('rejects a duplicate case number on an UNTENANTED install too', async () => {
+  it('stores no UNTENANTED case at all, so no duplicate can escape the index', async () => {
     // The acceptance criterion of #1023, and the one the old table composite
-    // failed — see the reverse-verification block below, which re-measures it.
-    // A single-organization deployment leaves `organization_id` NULL on every
-    // row, so this is not an exotic configuration: it is the default one.
-    await driver.create('crm_case', row('CASE-00003'), {} as never);
+    // failed. Up to 18.0.0 a single-organization deployment left
+    // `organization_id` NULL on every row; since 18.1.0 the database refuses
+    // such a row outright, the first one already.
     await expect(driver.create('crm_case', row('CASE-00003'), {} as never)).rejects.toThrow(
-      /UNIQUE constraint failed: index 'uniq_crm_case_organization_id_case_number'/,
+      /NOT NULL constraint failed: crm_case\.organization_id/,
     );
   });
 });
 
 // ────────────────────────────────────────────── reverse verification ──
 
-describe('the OLD table-composite spelling constrained nothing untenanted', () => {
+describe('the OLD table-composite spelling, re-measured', () => {
   /**
    * Reverse verification, kept in the repo rather than done by hand once: put
-   * the deleted spelling back and measure that the hole reopens. Predicted
-   * direction, decided before running it — the untenanted duplicate flips
-   * REJECTED → ACCEPTED, because SQL UNIQUE treats the two NULL
-   * `organization_id`s as distinct. This is the assertion that would go red if
-   * someone "simplified" the field-level declaration back into `indexes[]`,
-   * and it is the reason the fix is not a cosmetic re-spelling.
+   * the deleted spelling back and measure what it materializes. Up to 18.0.0
+   * the untenanted duplicate flipped REJECTED → ACCEPTED here, because SQL
+   * UNIQUE treats two NULL `organization_id`s as distinct. Since 18.1.0 the
+   * NOT NULL tenant column refuses the untenanted row under this spelling too,
+   * so the last case below pins that the column closed the hole; the first
+   * defect (an unstated scope) is still why the spelling is gone.
    */
   const legacy = JSON.parse(JSON.stringify(kase)) as AnyRec;
   delete legacy.fields.case_number.unique;
@@ -269,12 +274,9 @@ describe('the OLD table-composite spelling constrained nothing untenanted', () =
     ).rejects.toThrow(/UNIQUE constraint failed/);
   });
 
-  it('ACCEPTS a duplicate untenanted case number — the defect, reproduced', async () => {
-    const first = await driver.create('crm_case', row('CASE-00011'), {} as never);
-    const second = await driver.create('crm_case', row('CASE-00011'), {} as never);
-    expect(first?.id).toBeTruthy();
-    expect(second?.id).toBeTruthy();
-    expect(second.id).not.toBe(first.id);
-    expect(second.organization_id ?? null).toBeNull();
+  it('no longer stores an untenanted case: the NOT NULL column closed the hole (18.1.0)', async () => {
+    await expect(driver.create('crm_case', row('CASE-00011'), {} as never)).rejects.toThrow(
+      /NOT NULL constraint failed: crm_case\.organization_id/,
+    );
   });
 });

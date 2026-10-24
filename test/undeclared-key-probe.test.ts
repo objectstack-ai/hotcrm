@@ -10,6 +10,13 @@ import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_ite
 import { Quote } from '../src/revenue/objects/quote.object';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * What a typo costs — measured, per driver (#1200).
  *
  * Every hook, action and flow in this repo writes by NAME (`input.close_date`,
@@ -82,7 +89,7 @@ import { Quote } from '../src/revenue/objects/quote.object';
 type AnyRec = Record<string, any>;
 
 process.env.OS_REGISTRY_LOG ??= 'silent';
-const SYS = { isSystem: true } as AnyRec;
+const SYS = { isSystem: true, tenantId: ORG } as AnyRec;
 
 /**
  * The undeclared key. Declared on `crm_quote` (its typed Tax), not on a line

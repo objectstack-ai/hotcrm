@@ -115,10 +115,11 @@ const quoteValidation: Hook = {
 
     // The quote as every quote surface titles it. `crm_quote.display_title` is
     // `quote_number - name`; compose the same pair from the two stored columns
-    // rather than appending the record id. A lowered hook body cannot read the
-    // formula field itself, and both of its sources are already on the
-    // pre-image — the number is an engine-issued autonumber, so it is read from
-    // `previous` only. Both refusals below name the quote with it.
+    // rather than appending the record id. The title is stored since #2230,
+    // but a row stored before its backfill holds none, and both of its sources
+    // are already on the pre-image — the number is an engine-issued
+    // autonumber, so it is read from `previous` only. Both refusals below name
+    // the quote with it.
     function subject(): string {
       const label = [previous?.quote_number, previous?.name].map((v) => (typeof v === 'string' ? v.trim() : '')).filter(Boolean).join(' - ');
       return label ? `Quote ${label}` : 'Quote';
@@ -136,7 +137,12 @@ const quoteValidation: Hook = {
     if (event === 'beforeUpdate' && previous && ctx.user?.id) {
       const frozen = previous.status === 'accepted' || previous.status === 'expired';
       if (frozen) {
-        const allowed = new Set(['internal_notes']);
+        // `display_title` is the engine's, not the user's (#2230): the stored
+        // title's expression is computed before this hook, so a write carries it
+        // whenever the stored value differs from the computed one. That is only
+        // ever a row stored before the title was (the backfill's re-save of an
+        // unchanged `name`), because its inputs are frozen below.
+        const allowed = new Set(['internal_notes', 'display_title']);
         // Framework-managed columns (ownership, audit timestamps) are re-stamped
         // by the 9.x runtime — never treat those system writes as edits to a
         // frozen quote, only user changes to business fields.

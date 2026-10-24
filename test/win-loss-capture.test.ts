@@ -9,6 +9,13 @@ import { OpportunityDataset } from '../src/sales/datasets/opportunity.dataset';
 import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * Win/loss reasons are CAPTURED, and win rate is MEASURED (#593).
  *
  * Two halves, and neither is provable by reading metadata:
@@ -140,7 +147,7 @@ describe('the write is REJECTED, not warned about', () => {
   });
 
   const newDeal = async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api.object('crm_opportunity').insert({ ...OPEN_DEAL });
     return { api, row };
   };
@@ -171,7 +178,7 @@ describe('the write is REJECTED, not warned about', () => {
     // The path a data import, a seed file or an AI-authored write takes. On
     // insert the engine fills absent fields with null rather than leaving them
     // out, so this exercises a different branch of the same rule.
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     await expect(
       api.object('crm_opportunity').insert({ ...OPEN_DEAL, name: 'Born Lost', stage: 'closed_lost' }),
     ).rejects.toThrow(/Loss Reason is required/i);
@@ -193,7 +200,7 @@ describe('the write is REJECTED, not warned about', () => {
   it('refuses to blank the reason out of a deal that is already closed', async () => {
     // Otherwise the contract would hold for exactly one write: close with a
     // reason, then clear it.
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api
       .object('crm_opportunity')
       .insert({ ...OPEN_DEAL, name: 'Reason Eraser', stage: 'closed_won', win_reason: 'best_fit' });
@@ -255,7 +262,7 @@ describe('the write is REJECTED on a real SQLite database too', () => {
   });
 
   it('rejects the close and leaves the row where it was', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api.object('crm_opportunity').insert({ ...OPEN_DEAL, name: 'SQL Probe' });
 
     const stored = await api.object('crm_opportunity').findOne({ where: { id: row.id } });
@@ -272,7 +279,7 @@ describe('the write is REJECTED on a real SQLite database too', () => {
   });
 
   it('accepts the close with a reason', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api.object('crm_opportunity').insert({ ...OPEN_DEAL, name: 'SQL Probe 2' });
     await api
       .object('crm_opportunity')
@@ -305,7 +312,7 @@ describe('crm_case.resolution_required_for_closed is still live', () => {
   });
 
   it('rejects closing a case with no resolution', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api.object('crm_case').insert({
       subject: 'Reference probe',
       description: 'Measuring whether the named pattern still blocks writes.',
@@ -382,7 +389,7 @@ describe('every settled seed carries its reason', () => {
     registerStackPicklists(ql);
     await ql.syncSchemas();
     try {
-      const api = ql.createContext({ isSystem: true });
+      const api = ql.createContext({ isSystem: true, tenantId: ORG });
       const isCel = (v: unknown) => !!v && typeof v === 'object' && 'source' in (v as AnyRec);
       for (const rec of seedRecords) {
         const row: AnyRec = {};
@@ -474,7 +481,7 @@ describe('win rate is measured, and both halves are load-bearing', () => {
     await ql?.close();
   });
 
-  const api = () => ql.createContext({ isSystem: true });
+  const api = () => ql.createContext({ isSystem: true, tenantId: ORG });
 
   /** Insert one deal; only the analytics columns are carried. */
   const add = async (rec: AnyRec) => {
@@ -492,7 +499,7 @@ describe('win rate is measured, and both halves are load-bearing', () => {
         measures: w.values,
         ...(overrideFilter ?? w.filter ? { runtimeFilter: (overrideFilter ?? w.filter) as never } : {}),
       } as never,
-      { isSystem: true } as never,
+      { isSystem: true, tenantId: ORG } as never,
     );
     return (res.rows ?? []) as AnyRec[];
   };
@@ -743,7 +750,7 @@ describe('the shipped seeds produce a real win rate and a real loss breakdown', 
     registerStackPicklists(ql);
     await ql.syncSchemas();
 
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     for (const rec of seedRecords) {
       await api.object('crm_opportunity').insert({
         name: rec.name,
@@ -783,7 +790,7 @@ describe('the shipped seeds produce a real win rate and a real loss breakdown', 
         measures: w.values,
         ...(runtimeFilter ? { runtimeFilter: runtimeFilter as never } : {}),
       } as never,
-      { isSystem: true } as never,
+      { isSystem: true, tenantId: ORG } as never,
     )).rows ?? []) as AnyRec[];
 
   it('ships both outcomes — the premise of a win RATE', () => {
@@ -830,7 +837,7 @@ describe('the shipped seeds produce a real win rate and a real loss breakdown', 
 
   it('losing one seeded win moves the rate, and only by one deal', async () => {
     const before = (await run(widget('win_rate_12m')))[0];
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const target = await api
       .object('crm_opportunity')
       .findOne({ where: { name: wonSeeds[0].name } });

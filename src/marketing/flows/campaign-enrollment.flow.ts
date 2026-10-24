@@ -147,7 +147,7 @@ export const CampaignEnrollmentFlow: Flow = {
             // `visibleWhen` and checks `required` over the visible ones, and
             // the server's resume contract skips a hidden field's `required`,
             // evaluating the predicate over the SUBMITTED values layered over
-            // the run's variables (read in the installed 18.0.0
+            // the run's variables (read in the 18.0.0
             // `service-automation`, `refuseInvalidScreenInput`). Before it,
             // both showed and both were required whatever the source, so a
             // contacts run had to name a lead status nobody reads.

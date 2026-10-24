@@ -10,6 +10,13 @@ import { eventAttendeesFromContacts, eventAttendeesFromLeads } from '../src/sale
 import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * `attendee_type` and the column it names must agree (#740).
  *
  * ### The defect
@@ -163,7 +170,7 @@ describe('the acceptance surface, on a real engine', () => {
     })) as never;
     registerStackPicklists(ql);
     await ql.syncSchemas();
-    api = ql.createContext({ isSystem: true });
+    api = ql.createContext({ isSystem: true, tenantId: ORG });
 
     const event = await api.object('crm_event').insert({
       subject: 'Contract negotiation',

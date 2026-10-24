@@ -6,6 +6,13 @@ import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * ═══ HOUSE RULE: a view label may not promise a time scope its filter does
  *     not express ═══════════════════════════════════════════════════════════
  *
@@ -530,7 +537,7 @@ describe('this_quarter_forecasts returns the current quarter, on the real engine
     await ql.syncSchemas();
     // No `tenantId` here: this fixture holds one implicit tenant and measures
     // nothing about tenancy.
-    api = ql.createContext({ isSystem: true, userId: 'usr_1' } as never);
+    api = ql.createContext({ isSystem: true, tenantId: ORG, userId: 'usr_1' } as never);
 
     // The current quarter, as the 03:00 sweep opens it — one row per owner.
     await api.object('crm_forecast').insert({
@@ -676,7 +683,7 @@ describe('closing_this_quarter returns this quarter only, on the real engine (#7
     await ql.syncSchemas();
     // No `tenantId` here: this fixture holds one implicit tenant and measures
     // nothing about tenancy.
-    api = ql.createContext({ isSystem: true, userId: 'usr_1' } as never);
+    api = ql.createContext({ isSystem: true, tenantId: ORG, userId: 'usr_1' } as never);
     for (const f of fixtures) {
       await api.object('crm_opportunity').insert({
         name: f.name, close_date: f.close_date, forecast_category: f.forecast_category,

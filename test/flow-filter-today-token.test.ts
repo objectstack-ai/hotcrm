@@ -9,6 +9,13 @@ import { allFlows } from '../objectstack.composition';
 import { ContractExpirationFlow } from '../src/revenue/flows/contract-expiration.flow';
 import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 
+/**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
 type Flow = Automation.Flow;
 type AnyRec = Record<string, any>;
 
@@ -267,7 +274,7 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
   const seedContracts = async () => {
     // No `tenantId` here: this fixture holds one implicit tenant and measures
     // nothing about tenancy.
-    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1' } as never);
+    const api: AnyRec = ql.createContext({ isSystem: true, tenantId: ORG, userId: 'u1' } as never);
     await api.object('crm_contract').insert({
       id: 'k_past', contract_number: 'C-1', status: 'activated', end_date: ymd(-3), owner_id: 'rep1',
     });
@@ -440,7 +447,7 @@ describe('{TODAY()} through a real ObjectQL + real AutomationEngine', () => {
     //    flipping means the resolved value was not today.
     // No `tenantId` here: this fixture holds one implicit tenant and measures
     // nothing about tenancy.
-    const api: AnyRec = ql.createContext({ isSystem: true, userId: 'u1' } as never);
+    const api: AnyRec = ql.createContext({ isSystem: true, tenantId: ORG, userId: 'u1' } as never);
     const rows: AnyRec[] = await api.object('crm_contract').find({ where: {} });
     const byId = Object.fromEntries(rows.map((r) => [r.id, r.status]));
     expect(byId).toEqual({

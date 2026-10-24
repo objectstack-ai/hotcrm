@@ -7,6 +7,13 @@ import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from './helpers/composed-stack';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * ═══ A dashboard date picker must SELECT THE RIGHT ROWS, not merely exist ═══
  *
  * # What replaced what, and why (#460 → #546 → #1157)
@@ -265,7 +272,7 @@ beforeAll(async () => {
     datasources: { default: driver },
     objects: { crm_case: CASE_OBJECT } as never,
   });
-  api = ql.createContext({ isSystem: true });
+  api = ql.createContext({ isSystem: true, tenantId: ORG });
 
   for (const row of CASE_ROWS) {
     const { offset, due: dueDays, ...rest } = row;
@@ -428,7 +435,7 @@ describe('every datetime-windowed dashboard answers under its own picker', () =>
       },
       // A signed-in viewer: `{current_user_id}` has no answer for a bare system
       // caller, and the platform refuses the query rather than guess (#510).
-      { isSystem: true, userId: VIEWER } as never,
+      { isSystem: true, tenantId: ORG, userId: VIEWER } as never,
     );
     return result.rows as AnyRec[];
   };

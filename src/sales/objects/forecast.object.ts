@@ -42,13 +42,13 @@ export const Forecast = ObjectSchema.create({
   // OWD is an authored decision (ADR-0090 D1/D7). Forecasts are personal to the
   // owner.
   sharingModel: 'private',
-  // ADR-0079 record title. ⚠️ A formula cannot dot-walk a lookup (ADR-0072), so
-  // `display_title` composes local fields only: period_label + (period_start).
+  // ADR-0079 record title. ⚠️ An expression cannot dot-walk a lookup (ADR-0072),
+  // so `display_title` composes local fields only: period_label + (period_start).
   nameField: 'display_title',
-  // ⚠️ Explicit search targets (ADR-0061), REQUIRED because `nameField` is a
-  // FORMULA: without this, `$search` auto-defaults to the formula field, which
-  // is not a real column, so the lookup picker and global search silently
-  // return zero. These are real, indexed columns.
+  // Explicit search targets (ADR-0061): the real columns the lookup picker
+  // and global search match. Until #2230 they were required, because the
+  // title was a formula with no column for `$search` to default to. The
+  // title is stored now; these stay because they name what is searched.
   searchableFields: ['period_label'],
   highlightFields: ['owner_id', 'period', 'period_start', 'commit_amount', 'closed_amount'],
 
@@ -125,18 +125,25 @@ export const Forecast = ObjectSchema.create({
       group: 'basic',
     }),
 
-    // ADR-0079 record title. ⚠️ A formula cannot dot-walk a lookup (ADR-0072),
+    // ADR-0079 record title. ⚠️ An expression cannot dot-walk a lookup (ADR-0072),
     // so this composes local fields only; `period_start` (a date) is
     // string()-coerced for concat.
     //
     // ⚠️ The coercion is `string()`, NOT `text()`. `text` is not a registered
-    // CEL function — it is absent from `CEL_STDLIB_FUNCTIONS` — so a formula
+    // CEL function — it is absent from `CEL_STDLIB_FUNCTIONS` — so an expression
     // using it faults at runtime and leaves the record's `nameField` null. The
     // author-time `expression-invalid` rule now REPORTS it ("found no matching
-    // overload for 'text(dyn)'") instead of letting a broken formula through to
+    // overload for 'text(dyn)'") instead of letting a broken expression through to
     // null silently. `string` is the catalog's coercion, alongside
     // `int`/`bool`/`double`/`timestamp`.
-    display_title: Field.formula({
+    // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
+    // computes the expression on every insert and every update by id and
+    // stores the result, so an import matches a lookup cell against this title
+    // and sort and search read a real column. `readonly` keeps it off the
+    // forms; a value a client sends never stands. Rows stored before #2230
+    // are titled by `scripts/backfill-record-titles.ts`.
+    display_title: Field.text({
+      readonly: true,
       label: 'Display Title',
       expression: F`record.period_label + " (" + string(record.period_start) + ")"`,
       group: 'basic',

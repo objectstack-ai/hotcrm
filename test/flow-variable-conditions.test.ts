@@ -10,6 +10,13 @@ import { flowGraphDeep, regionsOf } from './helpers/flow-regions';
 import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * ═══ HOUSE RULE: flow conditions over FLOW VARIABLES ═══════════════════════
  *
  * `test/flow-condition-totality.test.ts` owns the **trigger record** scope
@@ -850,7 +857,7 @@ describe('declared defaults are seeded by the real engine, not just by this file
     const engine = new AutomationEngine(silent);
     installBuiltinNodes(engine, { logger: silent, getService: () => undefined } as never);
     (engine as unknown as AnyRec).registerFlow('probe', flow);
-    return (engine as unknown as AnyRec).execute('probe', { userId: 'u1', user: { id: 'u1' }, params });
+    return (engine as unknown as AnyRec).execute('probe', { userId: 'u1', tenantId: ORG, user: { id: 'u1' }, params });
   }
 
   const OUT = (defaultValue?: unknown, isInput = true): AnyRec[] => [{
@@ -979,12 +986,12 @@ describe('the two defects, reproduced end-to-end', () => {
   }
 
   /** The invocation contract the console's flow-action trigger sends. */
-  const asUser = (params: AnyRec) => ({ userId: 'u1', user: { id: 'u1' }, params });
+  const asUser = (params: AnyRec) => ({ userId: 'u1', tenantId: ORG, user: { id: 'u1' }, params });
 
   it('findOne answers a miss with null — the precondition for class 1', async () => {
     const b = await boot([]);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const miss = await api.object('crm_account').findOne({ where: { name: '__nothing__' } });
       // Not `toBeFalsy()`: `null` specifically is what `get_record` then binds,
       // and `vars.X.f` on a null X aborts with `No such key: f`.
@@ -997,7 +1004,7 @@ describe('the two defects, reproduced end-to-end', () => {
   it('campaign_enrollment: a campaign that vanished still reaches a verdict', async () => {
     const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const camp = await api.object('crm_campaign').insert({
         name: 'Spring', type: 'email', status: 'planning',
         start_date: '2026-01-01', end_date: '2026-03-01',
@@ -1024,7 +1031,7 @@ describe('the two defects, reproduced end-to-end', () => {
   it('campaign_enrollment: an OPEN campaign still enrols, so the guard did not close the door', async () => {
     const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const camp = await api.object('crm_campaign').insert({
         name: 'Spring', type: 'email', status: 'planning',
         start_date: '2026-01-01', end_date: '2026-03-01',
@@ -1061,7 +1068,7 @@ describe('the two defects, reproduced end-to-end', () => {
     // between edge e4/e7 and a `No such key` abort.
     const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const camp = await api.object('crm_campaign').insert({
         name: 'Spring', type: 'email', status: 'planning',
         start_date: '2026-01-01', end_date: '2026-03-01',
@@ -1097,7 +1104,7 @@ describe('the two defects, reproduced end-to-end', () => {
     // variable — so what the caller asked for is what the user sees.
     const b = await boot(['campaign_enrollment', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const camp = await api.object('crm_campaign').insert({
         name: 'Spring', type: 'email', status: 'planning',
         start_date: '2026-01-01', end_date: '2026-03-01',
@@ -1130,7 +1137,7 @@ describe('the two defects, reproduced end-to-end', () => {
   it('lead_conversion: a resume signal that omits the untouched checkbox still converts', async () => {
     const b = await boot(['lead_conversion', 'lead_conversion_account_revenue']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const lead = await api.object('crm_lead').insert({
         // `company_normalized` is authored here because this harness registers
         // FLOWS but no hooks — in production `lead_duplicate_check` derives it
@@ -1175,7 +1182,7 @@ describe('the two defects, reproduced end-to-end', () => {
   it('lead_conversion: an explicit yes still creates the opportunity', async () => {
     const b = await boot(['lead_conversion', 'lead_conversion_account_revenue']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const lead = await api.object('crm_lead').insert({
         // See the note on the previous test: hook-derived key, hand-authored
         // because this harness has no hooks (#626).
@@ -1232,7 +1239,7 @@ describe('the two defects, reproduced end-to-end', () => {
   it('quote_generation: an ordinary run still advances the stage', async () => {
     const b = await boot(['quote_generation']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const account = await api.object('crm_account').insert({ name: 'Acme Corp' });
       const opp = await api.object('crm_opportunity').insert({
         name: 'Big Deal', amount: 750_000, stage: 'prospecting',
@@ -1253,7 +1260,7 @@ describe('the two defects, reproduced end-to-end', () => {
   it('opportunity_approval: both tiers still route correctly through the guarded gate', async () => {
     const b = await boot(['opportunity_approval_on_create']);
     try {
-      const api = b.ql.createContext({ isSystem: true });
+      const api = b.ql.createContext({ isSystem: true, tenantId: ORG });
       const account = await api.object('crm_account').insert({ name: 'Acme Corp' });
       const run = async (amount: number) => {
         const opp = await api.object('crm_opportunity').insert({

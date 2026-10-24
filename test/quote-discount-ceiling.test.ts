@@ -8,6 +8,13 @@ import { QUOTE_DISCOUNT_CEILING } from '../src/sales/objects/_thresholds';
 import { quotes, quoteLineItems } from '../src/revenue/data/revenue.seed';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * A quote's discount may never exceed the ceiling (#599) — and neither may any
  * of its LINES (#1086).
  *
@@ -215,7 +222,7 @@ describe('the write is REFUSED, not warned about', () => {
     await ql?.close();
   });
 
-  const api = () => ql.createContext({ isSystem: true });
+  const api = () => ql.createContext({ isSystem: true, tenantId: ORG });
 
   it('refuses an INSERT above the ceiling — the seed / import / API path', async () => {
     const env = await refusal(() =>
@@ -308,7 +315,7 @@ describe('the write is REFUSED on a real SQLite database too', () => {
   });
 
   it('refuses the deep discount and leaves the row where it was', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api.object('crm_quote').insert({ ...DRAFT, name: 'SQL Probe', discount: 5 });
 
     const stored = await api.object('crm_quote').findOne({ where: { id: row.id } });
@@ -325,7 +332,7 @@ describe('the write is REFUSED on a real SQLite database too', () => {
   });
 
   it('admits a quote with a NULL discount — the column-complete shape', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api.object('crm_quote').insert({ ...DRAFT, name: 'SQL Null' });
     const stored = await api.object('crm_quote').findOne({ where: { id: row.id } });
     expect(stored?.discount ?? null).toBeNull();
@@ -376,7 +383,7 @@ describe('the ceiling is an INVARIANT — it reaches a row that was already over
     })) as never;
     await before.syncSchemas();
     const row = await before
-      .createContext({ isSystem: true })
+      .createContext({ isSystem: true, tenantId: ORG })
       .object('crm_quote')
       .insert({ ...DRAFT, name: 'Legacy Deep Discount', discount: 90 });
 
@@ -385,7 +392,7 @@ describe('the ceiling is an INVARIANT — it reaches a row that was already over
       objects: { crm_quote: schema } as never,
     })) as never;
     await after.syncSchemas();
-    return { ql: after, api: after.createContext({ isSystem: true }), row };
+    return { ql: after, api: after.createContext({ isSystem: true, tenantId: ORG }), row };
   };
 
   it('refuses an UNRELATED edit to a row stored above the ceiling', async () => {
@@ -471,7 +478,7 @@ describe('a `warning` severity would be a rule that does nothing', () => {
       objects: { crm_quote: warned } as never,
     })) as never;
     await ql.syncSchemas();
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
 
     const row = await api.object('crm_quote').insert({ ...DRAFT, name: 'Warned', discount: 90 });
     const stored = await api.object('crm_quote').findOne({ where: { id: row.id } });
@@ -558,7 +565,7 @@ describe('the line write is REFUSED, not warned about', () => {
     await ql?.close();
   });
 
-  const api = () => ql.createContext({ isSystem: true });
+  const api = () => ql.createContext({ isSystem: true, tenantId: ORG });
 
   it('refuses an INSERT above the ceiling — the clone / import / API path', async () => {
     const env = await refusal(() =>
@@ -657,7 +664,7 @@ describe('the line ceiling is an INVARIANT — it reaches a line already over it
     })) as never;
     await before.syncSchemas();
     const row = await before
-      .createContext({ isSystem: true })
+      .createContext({ isSystem: true, tenantId: ORG })
       .object('crm_quote_line_item')
       .insert({ ...LINE, description: 'Legacy Deep Line', discount: 90 });
 
@@ -666,7 +673,7 @@ describe('the line ceiling is an INVARIANT — it reaches a line already over it
       objects: { crm_quote_line_item: schema } as never,
     })) as never;
     await after.syncSchemas();
-    return { ql: after, api: after.createContext({ isSystem: true }), row };
+    return { ql: after, api: after.createContext({ isSystem: true, tenantId: ORG }), row };
   };
 
   it('refuses an UNRELATED edit to a line stored above the ceiling', async () => {
@@ -732,7 +739,7 @@ describe('a quote with a 90% line discount cannot reach `presented`', () => {
     await ql?.close();
   });
 
-  const api = () => ql.createContext({ isSystem: true });
+  const api = () => ql.createContext({ isSystem: true, tenantId: ORG });
 
   it('refuses the 90% line, so no such quote can be assembled in the first place', async () => {
     const q = await api()
@@ -822,7 +829,7 @@ describe('a quote with a 90% line discount cannot reach `presented`', () => {
       objects: { crm_quote: quote, crm_quote_line_item: ungated } as never,
     })) as never;
     await before.syncSchemas();
-    const legacyApi = before.createContext({ isSystem: true });
+    const legacyApi = before.createContext({ isSystem: true, tenantId: ORG });
     const q = await legacyApi
       .object('crm_quote')
       .insert({ ...DRAFT, name: 'Legacy Line Parent', discount: 0 });
@@ -835,7 +842,7 @@ describe('a quote with a 90% line discount cannot reach `presented`', () => {
       objects: { crm_quote: quote, crm_quote_line_item: lineItem } as never,
     })) as never;
     await after.syncSchemas();
-    const gatedApi = after.createContext({ isSystem: true });
+    const gatedApi = after.createContext({ isSystem: true, tenantId: ORG });
 
     // The LINE is frozen — this is the half the card fixes.
     expectLineCeilingRefusal(
