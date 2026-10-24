@@ -2,22 +2,27 @@
 
 import { composeStacks } from '@objectstack/spec';
 
-// The two package stacks, built — see `objectstack.composition.ts`, which also
+// The four package stacks, built — see `objectstack.composition.ts`, which also
 // resolves the `HOTCRM_COMPOSITION` knob and records why that work cannot live
 // in this file (⛔ this module may carry no named export: the build parses it
 // against a `.strict` stack schema and fails on any key but the default).
-import { serviceStack, appStack } from './objectstack.composition.js';
+import { packageStacks } from './objectstack.composition.js';
 
 /**
- * ONE release artifact, TWO packages (ADR-0130 D4).
+ * ONE release artifact, FOUR packages (ADR-0130 D4).
  *
  *  - `app.objectstack.hotcrm` (`src/sales/index.ts`) — the `type: 'app'`
- *    package a customer installs: sales, plus the `src/revenue/` and
- *    `src/marketing/` directories it still registers, the app and its
- *    navigation groups, the permission sets, the locale packs.
+ *    package a customer installs: sales, the app and its navigation groups,
+ *    the cross-domain dashboards, the permission sets, the locale packs.
  *  - `app.objectstack.hotcrm.service` (`src/service/index.ts`) — the support
- *    module: cases and knowledge, and the five navigation entries it
- *    contributes into the app's groups.
+ *    module: cases and knowledge.
+ *  - `app.objectstack.hotcrm.revenue` (`src/revenue/index.ts`) — products,
+ *    line items, quotes and contracts.
+ *  - `app.objectstack.hotcrm.marketing` (`src/marketing/index.ts`) — campaigns
+ *    and campaign members.
+ *
+ * Each module puts its navigation entries into the app's groups through its
+ * manifest's `navigationContributions`.
  *
  * `manifest: 'preserve'` is the only option that separates "one artifact
  * carrying N packages" from the pick-one composition every other strategy
@@ -35,7 +40,7 @@ import { serviceStack, appStack } from './objectstack.composition.js';
  *  - the singular `manifest` is still picked by the default `'last'` rule, so
  *    the artifact identifies as the App a consumer installs (ADR-0019 D1),
  *    `app.objectstack.hotcrm`, not as one of its modules;
- *  - REGISTRATION order is decided by `dependencies` — the service module
+ *  - REGISTRATION order is decided by `dependencies` — every module
  *    declares `app.objectstack.hotcrm`, and `packages[]` is sorted through the
  *    platform's one topological sorter (ADR-0130 D5, ADR-0116) — so the app
  *    registers first whatever slot it occupies here. An artifact that only
@@ -45,4 +50,4 @@ import { serviceStack, appStack } from './objectstack.composition.js';
  * `objectstack build` compiles this file into one `dist/objectstack.json`;
  * `objectstack dev` boots the same shape straight from source.
  */
-export default composeStacks([serviceStack, appStack], { manifest: 'preserve' });
+export default composeStacks(packageStacks, { manifest: 'preserve' });

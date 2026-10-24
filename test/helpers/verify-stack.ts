@@ -17,7 +17,7 @@ import artifact from '../../objectstack.config';
  *
  * Every suite that needs the real engine — a hook, a flow, an action, the
  * runtime registry — reaches it through `@objectstack/verify`'s `bootStackOnce`
- * over the SHIPPED artifact (`objectstack.config`, both packages, as
+ * over the SHIPPED artifact (`objectstack.config`, all four packages, as
  * `packages[]`). Nothing here executes anything: the boot, the write door
  * (`hooks.run` / `seed` / `rows`), the flow door (`flows.run` /
  * `flows.resume`), the action door (`actions.run`) and the registry

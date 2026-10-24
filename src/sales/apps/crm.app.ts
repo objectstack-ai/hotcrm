@@ -249,17 +249,11 @@ export const CrmApp = App.create({
         // view-entry exemplar duty this item used to carry now sits with the
         // "My Work" items below, which are all object + `viewName`.
         { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
-        { id: 'nav_quote',       type: 'object', objectName: 'crm_quote',       label: 'Quotes',        icon: 'receipt' },
-        // Contracts close the sales cycle: quote → signed agreement → renewal.
-        // The object, its views and its renewal automation all shipped, but
-        // there was no way to reach any of it from the app.
-        { id: 'nav_contract',    type: 'object', objectName: 'crm_contract',    label: 'Contracts',     icon: 'file-signature' },
-        // Products sit here, not under Marketing (#1259): they are the
-        // revenue master data every quote line and opportunity line item
-        // points at — a sales object that happened to be filed next to
-        // campaigns.
-        { id: 'nav_product',     type: 'object', objectName: 'crm_product',     label: 'Products',      icon: 'package' },
         { id: 'nav_sales_dashboard', type: 'dashboard', dashboardName: 'sales_dashboard', label: 'Sales Performance', icon: 'chart-line', visible: OPPORTUNITY_AUDIENCE },
+        // Quotes, Contracts and Products follow, contributed by the revenue
+        // module (`src/revenue/index.ts`): the app's own navigation may not
+        // name another package's object (rule R3), and a contributed item
+        // lands after the group's own children (#2270).
       ],
     },
 
@@ -385,9 +379,12 @@ export const CrmApp = App.create({
       type: 'group',
       label: 'Marketing',
       icon: 'megaphone',
-      children: [
-        { id: 'nav_campaign', type: 'object', objectName: 'crm_campaign', label: 'Campaigns', icon: 'megaphone' },
-      ],
+      // Campaigns is contributed by the marketing module
+      // (`src/marketing/index.ts`) — the app keeps the group as the anchor,
+      // as it keeps `group_service`. ⛔ Do not tidy the empty group away:
+      // the contributed item would land at the app's top level with a
+      // `nav_contribution_group_missing` warning.
+      children: [],
     },
 
     {

@@ -33,7 +33,7 @@ import { offeredOptions } from './helpers/stack-picklists';
  *      again with a green import. The header sets are asserted to match
  *      exactly, in both directions.
  *
- * Everything here reads the REGISTERED stacks (the two package stacks
+ * Everything here reads the REGISTERED stacks (the four package stacks
  * `objectstack.config.ts` composes, through `test/helpers/composed-stack.ts`),
  * so a mapping that is authored but never registered fails too — an unregistered
  * mapping is a 404 `MAPPING_NOT_FOUND` at import time.

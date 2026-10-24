@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { servedApp } from './helpers/composed-stack';
 import { CrmApp } from '../src/sales/apps/crm.app';
 import { CrmTranslations } from '../src/sales/translations';
 import { AccountWorkbenchPage } from '../src/sales/pages/account_workbench.page';
@@ -44,7 +45,13 @@ import { AccountWorkbenchPage } from '../src/sales/pages/account_workbench.page'
 
 type AnyRec = Record<string, any>;
 
-const NAV = ((CrmApp as AnyRec).navigation ?? []) as AnyRec[];
+/**
+ * The navigation AS SERVED — the app's own groups with each module's
+ * contributions folded in (`servedApp`). Quotes, Contracts and Products are
+ * the revenue module's since #2270 and Campaigns the marketing module's, so the
+ * app's authored tree alone no longer holds them; a reader's sidebar does.
+ */
+const NAV = ((servedApp('crm_enterprise').navigation ?? []) as AnyRec[]);
 
 const SALES = (() => {
   const g = NAV.find((n) => n.type === 'group' && n.label === 'Sales');
@@ -170,11 +177,22 @@ describe('the source facts that section now rests on (#997)', () => {
       'Account Workbench',
       'Contacts',
       'Opportunities',
+      'Sales Performance',
       'Quotes',
       'Contracts',
       'Products',
-      'Sales Performance',
     ]);
+  });
+
+  it('Quotes, Contracts and Products are contributed by the revenue module, after the app\'s own entries (#2270)', () => {
+    // A contributed item lands after the group's own children (the rule that
+    // put My Cases last in My Work, #1907), which is why Sales Performance now
+    // precedes them.
+    const authored = ((CrmApp as AnyRec).navigation as AnyRec[]).find((n) => n.id === 'group_sales');
+    expect(((authored?.children ?? []) as AnyRec[]).map((c) => c.id)).toEqual([
+      'nav_lead', 'nav_account', 'nav_account_workbench', 'nav_contact', 'nav_opportunity', 'nav_sales_dashboard',
+    ]);
+    expect(SALES_CHILDREN.slice(-3).map((c) => c.id)).toEqual(['nav_quote', 'nav_contract', 'nav_product']);
   });
 
   it('seven of them open an object list; two open something else', () => {

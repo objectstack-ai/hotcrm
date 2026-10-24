@@ -22,7 +22,7 @@ import { PERSONAS, normalise } from './helpers/persona-vocabulary';
  *
  * ## What this reads, and why it reads all of it
  *
- * The scan walks the RESOLVED stacks — the two package stacks
+ * The scan walks the RESOLVED stacks — the four package stacks
  * `objectstack.config.ts` composes, after every `src/` module is imported and
  * registered (`test/helpers/composed-stack.ts`) — not the source text. That choice
  * is load-bearing twice over:
