@@ -516,6 +516,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         case_highlights: { label: 'Información Clave' },
         case_status_path: { label: 'Progreso del Estado del Caso' },
         case_details: { label: 'Detalles del Caso' },
+        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        case_main_tabs: { items: { details: { label: 'Detalles' }, related: { label: 'Relacionado' }, activity: { label: 'Actividad' } } },
       },
     },
     lead_detail_page: {
@@ -545,6 +548,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         opp_highlights: { label: 'Información Clave' },
         opp_stage_path: { label: 'Progreso de Etapa de la Oportunidad' },
         opp_details: { label: 'Detalles de la Oportunidad' },
+        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        opp_main_tabs: { items: { details: { label: 'Detalles' }, related: { label: 'Relacionado' }, activity: { label: 'Actividad' } } },
       },
     },
     sales_home_page: {
@@ -598,6 +604,47 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
   // retyped: the number lives in `_thresholds.ts` alone (#1711).
   flows: {
+    // Approval flows (#2060 item 13, C-15): the flow's own `label`, and each
+    // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
+    // the step name the approval request shows the submitter and the approvers.
+    account_approval: {
+      label: 'Aprobación de Cuenta',
+      approvals: {
+        account_review: { label: 'Revisión de la Cuenta' },
+      },
+    },
+    lead_conversion_approval: {
+      label: 'Aprobación de Conversión del Prospecto',
+      approvals: {
+        conversion_review: { label: 'Revisión de la Conversión' },
+      },
+    },
+    opportunity_approval: {
+      label: 'Aprobación de Grandes Oportunidades',
+      approvals: {
+        manager_review: { label: 'Revisión del Gerente de Ventas' },
+        director_signoff: { label: 'Visto Bueno del Director de Ventas' },
+      },
+    },
+    opportunity_approval_on_create: {
+      label: 'Aprobación de Grandes Oportunidades (al crear)',
+      approvals: {
+        manager_review: { label: 'Revisión del Gerente de Ventas' },
+        director_signoff: { label: 'Visto Bueno del Director de Ventas' },
+      },
+    },
+    opportunity_qualification_approval: {
+      label: 'Aprobación de Calificación de la Oportunidad',
+      approvals: {
+        qualification_review: { label: 'Revisión de Calificación' },
+      },
+    },
+    opportunity_status_change_approval: {
+      label: 'Aprobación del Cambio de Estado de la Oportunidad',
+      approvals: {
+        status_review: { label: 'Revisión del Cambio de Estado' },
+      },
+    },
     campaign_enrollment: {
       label: 'Inscribir miembros en la campaña',
       successMessage: 'Miembros elegibles inscritos en la campaña.',

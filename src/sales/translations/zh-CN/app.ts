@@ -523,6 +523,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         case_highlights: { label: '关键信息' },
         case_status_path: { label: '工单状态进度' },
         case_details: { label: '工单明细' },
+        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        case_main_tabs: { items: { details: { label: '明细' }, related: { label: '相关' }, activity: { label: '互动' } } },
       },
     },
     lead_detail_page: {
@@ -552,6 +555,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         opp_highlights: { label: '关键信息' },
         opp_stage_path: { label: '商机阶段进度' },
         opp_details: { label: '商机明细' },
+        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        opp_main_tabs: { items: { details: { label: '明细' }, related: { label: '相关' }, activity: { label: '互动' } } },
       },
     },
     sales_home_page: {
@@ -605,6 +611,47 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
   // retyped: the number lives in `_thresholds.ts` alone (#1711).
   flows: {
+    // Approval flows (#2060 item 13, C-15): the flow's own `label`, and each
+    // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
+    // the step name the approval request shows the submitter and the approvers.
+    account_approval: {
+      label: '客户审批',
+      approvals: {
+        account_review: { label: '客户审核' },
+      },
+    },
+    lead_conversion_approval: {
+      label: '线索转化审批',
+      approvals: {
+        conversion_review: { label: '线索转化审核' },
+      },
+    },
+    opportunity_approval: {
+      label: '大额商机审批',
+      approvals: {
+        manager_review: { label: '销售经理审核' },
+        director_signoff: { label: '销售总监签批' },
+      },
+    },
+    opportunity_approval_on_create: {
+      label: '大额商机审批（创建时）',
+      approvals: {
+        manager_review: { label: '销售经理审核' },
+        director_signoff: { label: '销售总监签批' },
+      },
+    },
+    opportunity_qualification_approval: {
+      label: '商机立项审批',
+      approvals: {
+        qualification_review: { label: '立项审核' },
+      },
+    },
+    opportunity_status_change_approval: {
+      label: '商机状态变更审批',
+      approvals: {
+        status_review: { label: '状态变更审核' },
+      },
+    },
     campaign_enrollment: {
       label: '将成员加入营销活动',
       successMessage: '符合条件的成员已加入营销活动。',
