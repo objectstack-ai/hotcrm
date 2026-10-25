@@ -124,11 +124,12 @@ describe('page component references resolve', () => {
    *
    * What made all three survive review is that NOTHING red went off. The props
    * bag is `z.record(z.string(), z.unknown())` on `PageComponent`, so a rejected
-   * rule is dropped, not refused: `objectstack build` prints an advisory
+   * rule is dropped, not refused: `objectstack build` printed an advisory
    * `component-props-invalid` / `component-props-unknown-key` warning among ~80
-   * others and still exits 0, the artifact still writes, and the list still
-   * renders — unfiltered. A heading reading "Open Tasks" over every task,
-   * completed ones included, is the whole symptom.
+   * others and still exited 0, the artifact still wrote, and the list still
+   * rendered — unfiltered. A heading reading "Open Tasks" over every task,
+   * completed ones included, is the whole symptom. (Since @objectstack 18.0.0
+   * both rules are errors under `objectstack lint --strict`, exit 1; hotcrm#1583.)
    *
    * So the legal shape comes from the contract itself, never from a list copied
    * into this file — the same discipline the `record:activity` guard below
@@ -330,25 +331,24 @@ describe('page component references resolve', () => {
   });
 
   /**
-   * ── The general form of the two guards above (#1269) ──────────────────────
+   * ── Every page component's props bag: the platform parses it (#1583) ──────
    *
-   * EVERY page component's `properties` bag, parsed against ITS OWN entry in
-   * the spec's `ComponentPropsMap`. The two guards above pin one prop each
-   * (`record:related_list.filter`, `record:activity.types`) because those were
-   * the props somebody had already got wrong; this one closes the class they
-   * belong to, and it does not depend on anyone noticing the next instance.
+   * The two guards above pin one prop each (`record:related_list.filter`,
+   * `record:activity.types`) because those were the props somebody had already
+   * got wrong. The general form, every component's `properties` parsed against
+   * its own `ComponentPropsMap` entry, used to live here too (#1269). It is
+   * retired: `objectstack lint --strict` (`pnpm lint`) now refuses the whole
+   * class as `component-props-invalid` / `component-props-unknown-key` errors,
+   * exit 1, on every case that sweep covered (top level, nested and in a slot,
+   * an absent bag, an unknown key, a wrong type, a retired key, and a nested
+   * bag that is `null` or an array: objectstack#22212, #24991). Measured by
+   * ablation on @objectstack 18.1.0 in hotcrm#1583, which holds the table.
    *
-   * WHY A GUARD AND NOT A BUILD CHECK. `PageComponent.properties` is
-   * `z.record(z.string(), z.unknown())`, so a key the component does not
-   * declare is DROPPED, not refused: the page builds, the artifact writes, the
-   * component renders — minus whatever the key was meant to configure.
-   * `objectstack build` does report each one as an advisory
-   * `component-props-invalid` / `component-props-unknown-key` warning and still
-   * exits 0, and its printer caps the detail list at 50 entries with no
-   * "…and N more" line (objectstack#11529), so the visible count is a floor,
-   * never a total. 75 of these had accumulated across all eight pages by the
-   * time anyone counted. Zero printed warnings is corroboration; THIS is the
-   * measurement.
+   * WHAT IS LEFT HERE. Lint can only judge a type it has a contract for: a
+   * component type with no `ComponentPropsMap` row is parsed by nothing, and a
+   * type outside the platform's reserved namespaces is not even reported as
+   * unknown (hotcrm#1583, probe p13). That is this app's rule, not the
+   * platform's, so the guard below stays.
    *
    * WHAT COUNTS AS A PAGE COMPONENT. `walk` yields every object carrying a
    * string `type`, which on these pages includes things that are not
@@ -369,17 +369,17 @@ describe('page component references resolve', () => {
    * Empty since @objectstack/spec 18.0.0-next.4, whose `ComponentPropsMap`
    * gained a `list-view` row (changeset `22444-list-view-component-props-row`):
    * the embedded saved-view panels `home.page.ts` builds for each Sales Home
-   * tab, the one line this set held, now join the parse below.
+   * tab, the one line this set held, are now parsed by lint.
    *
    * The staleness half matters as much as the list: when the spec grows a row
-   * for one of these, the exemption must go so the type joins the parse below.
+   * for one of these, the exemption must go so lint's parse covers the type.
    */
   const NO_PROPS_CONTRACT = new Set<string>();
 
   it('every page component type has a props contract to parse against', () => {
     expect(
       PAGE_COMPONENTS.length,
-      'no page components were found — this guard and the one below would be vacuous',
+      'no page components were found — this guard would be vacuous',
     ).toBeGreaterThan(0);
 
     const map = ComponentPropsMap as Record<string, unknown>;
@@ -392,7 +392,7 @@ describe('page component references resolve', () => {
     ];
     expect(
       uncovered,
-      `page component types with no ComponentPropsMap row — the guard below cannot check these:\n  ${uncovered.join('\n  ')}`,
+      `page component types with no ComponentPropsMap row — lint cannot check these:\n  ${uncovered.join('\n  ')}`,
     ).toEqual([]);
 
     // An exemption outlives its reason only if nobody checks. Both directions:
@@ -404,140 +404,6 @@ describe('page component references resolve', () => {
     expect(
       stale,
       `NO_PROPS_CONTRACT entries that gained a contract or are no longer authored — delete these lines:\n  ${stale.join('\n  ')}`,
-    ).toEqual([]);
-  });
-
-  /**
-   * Props the components drop, that are NOT this card's to fix — each named,
-   * dated and owned, so the debt is visible instead of invisible.
-   *
-   * Keyed `page.name/component.id :: prop`, where `prop` is the issue path
-   * with array indices collapsed to `[]` (so a finding survives its list being
-   * reordered, and the five rejected entries of one `actions` array are one
-   * line rather than five).
-   *
-   *   …/*_header :: actions[] — RESOLVED, exemption removed (#1653). The entry
-   *   rested on a renderer argument: `PageHeaderProps.actions` is
-   *   `z.array(z.string())` ("Action IDs"), objectui's `page:header` renderer
-   *   was measured consuming ActionDef OBJECTS, and the exemption held the
-   *   source on the renderer's side. Maintainer ruling of 2026-09-06, verbatim
-   *   and untranslated — 「元数据项目不应该依赖 @object-ui/components」 — settles
-   *   which side moves: this repo declares zero `@object-ui/*` dependencies, so
-   *   a renderer's current behaviour was never its authority, and cannot even
-   *   be measured from here. The four headers now author action ids per
-   *   `@objectstack/spec` 17.3.0 and conform. Renderer-side id resolution is
-   *   objectui#6252 / #7182 (ruled 2026-09-02, option C, "ids are the
-   *   contract"), not this repo's.
-   *
-   *   …/*_details :: sections[].collapsible — RESOLVED UPSTREAM, exemption
-   *   removed. The disagreement pointed the other way: the key WORKED (objectui
-   *   spreads the authored section into `DetailSection`, which renders a
-   *   `<Collapsible>` card) while `RecordDetailsProps` refused to declare it, so
-   *   the spec's own rule — the delivered shape is the contract, which is how
-   *   `alwaysShowStrip`, `maxVisible`, `inlineEdit` and `hideFields` came to be
-   *   declared — said the DECLARATION should move. Filed as
-   *   objectstack-ai/objectstack#11289 (via #1249); it landed in the platform
-   *   17.3.0 line, and the 17.2.0 -> 17.3.0 upgrade is what surfaced it here:
-   *   `os validate` stopped raising the two `collapsible` advisories and this
-   *   guard's own stale-exemption arm went red naming both lines. Nothing in
-   *   this repo changed shape — the schema caught up with the renderer.
-   *
-   *   sales_home_page/ai_briefing :: description — RESOLVED, exemption
-   *   removed (#1581). `page:card` does not declare `description`, so the
-   *   paragraph rendered nowhere. The copy moved into an `element:text` child,
-   *   and the #1002 persona guard at the bottom of this file moved with it.
-   *   This rule's stale-exemption arm went red naming the line once the key
-   *   was gone.
-   *
-   * The set is empty and stays declared: a new line needs an issue and a reason.
-   */
-  const KNOWN_UNCONFORMING = new Set<string>();
-
-  it("every page component's properties parse against its own ComponentPropsMap entry", () => {
-    const map = ComponentPropsMap as Record<string, { safeParse: (v: unknown) => any }>;
-
-    /** Issue path → prop label: numeric segments collapse to `[]`. */
-    const propLabel = (path: readonly unknown[], key?: string): string => {
-      const parts = path.map((p) => (typeof p === 'number' ? '[]' : String(p)));
-      const joined = parts.reduce<string>(
-        (acc, p) => (p === '[]' ? `${acc}[]` : acc ? `${acc}.${p}` : p),
-        '',
-      );
-      if (!key) return joined || '<component>';
-      return joined ? `${joined}.${key}` : key;
-    };
-
-    const found = new Set<string>();
-    const bad: string[] = [];
-    const pagesSeen = new Set<string>();
-    const parsedTypes = new Set<string>();
-    let parsed = 0;
-
-    for (const page of pages) {
-      for (const c of [...walk(page.regions), ...walk(page.slots)] as AnyRec[]) {
-        if (typeof c.id !== 'string') continue;
-        const schema = map[c.type];
-        if (!schema) continue; // covered by the guard above
-        parsed++;
-        pagesSeen.add(page.name);
-        parsedTypes.add(c.type as string);
-        const result = schema.safeParse(c.properties ?? {});
-        if (result.success) continue;
-        for (const issue of result.error.issues) {
-          // `unrecognized_keys` reports every rejected key of one object in a
-          // single issue, so it expands to one finding per key.
-          const keys: (string | undefined)[] =
-            issue.code === 'unrecognized_keys' ? (issue.keys as string[]) : [undefined];
-          for (const key of keys) {
-            const where = `${page.name}/${c.id} :: ${propLabel(issue.path, key)}`;
-            found.add(where);
-            if (KNOWN_UNCONFORMING.has(where)) continue;
-            bad.push(`${where} [${c.type}] ${issue.message}`);
-          }
-        }
-      }
-    }
-
-    // ── Non-vacuity ──────────────────────────────────────────────────────
-    // Three ways a later refactor could empty this rule while it kept
-    // reporting clean, each closed by a check that does not read the same
-    // expression the loop above does.
-    //
-    // 1. Nothing parsed at all.
-    expect(parsed, 'no page component was parsed — the walk found nothing').toBeGreaterThan(0);
-
-    // 2. A whole page stops being reached. The expectation is derived
-    //    STRUCTURALLY — a page composes components iff it declares regions or
-    //    slots — so it stays true if the walk itself breaks. `account_workbench`
-    //    is correctly absent: an ADR-0047 interface page carries no components
-    //    at all (`regions: []`), its list surface being generated from
-    //    `interfaceConfig`. `account_detail` is the case this catches: it is
-    //    slots-only (`regions: []`), so a walk that stopped descending into
-    //    `slots` would drop it and nothing else would notice.
-    const composes = pages.filter((p) => (p.regions?.length ?? 0) > 0 || !!p.slots);
-    expect(
-      composes.map((p) => p.name).filter((n) => !pagesSeen.has(n)),
-      'pages that declare regions or slots but contributed no parsed component — the walk no longer reaches them',
-    ).toEqual([]);
-
-    // 3. The walk stops DESCENDING and only enumerates each region's top
-    //    level — which would still parse a dozen components and report clean.
-    //    Every `record:related_list` in this app sits three levels down (tab
-    //    item → accordion item → children), so its presence is the proof that
-    //    nested components are still being reached.
-    expect(
-      parsedTypes.has('record:related_list'),
-      'no nested record:related_list was parsed — the walk is no longer descending into tab/accordion children',
-    ).toBe(true);
-
-    expect(bad, `props the component drops:\n  ${bad.join('\n  ')}`).toEqual([]);
-
-    // Keyed on still being BROKEN, not on still existing: a header that starts
-    // conforming must drop its line, or the next bad prop inherits the cover.
-    const stale = [...KNOWN_UNCONFORMING].filter((k) => !found.has(k));
-    expect(
-      stale,
-      `exemptions whose prop now conforms — delete these lines:\n  ${stale.join('\n  ')}`,
     ).toEqual([]);
   });
 
