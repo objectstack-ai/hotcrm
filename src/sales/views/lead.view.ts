@@ -893,6 +893,11 @@ export const LeadViews = defineView({
      */
     web_to_lead: {
       type: 'simple',
+      // The heading a visitor reads (#2284). Translated under
+      // `objects.crm_lead._views.web_to_lead.title`, which `GET /forms/:slug`
+      // serves in the visitor's language; a form with no authored title has
+      // nothing to translate, so it showed English or the object name.
+      title: 'Contact Us',
       data: {
         provider: 'object',
         object: 'crm_lead',

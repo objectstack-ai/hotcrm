@@ -71,6 +71,8 @@ export const service: Record<string, ObjectTranslationData> = {
       escalated_from: { label: 'Escalated From' },
     },
     _views: {
+      // The public Web-to-Case form's heading (#2284), as `web_to_lead`.
+      web_to_case: { title: 'Contact Support' },
       all_cases: { label: 'All Cases' },
       case_workflow: { label: 'Service Workflow' },
       sla_calendar: { label: 'SLA Calendar' },

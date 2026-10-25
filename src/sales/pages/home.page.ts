@@ -244,8 +244,15 @@ export const SalesHomePage: Page = {
              */
             tabStyle: 'card',
             position: 'top',
+            // Each tab item carries a `value` (#2284): it is the `?tab=` URL
+            // token the renderer reads and the key the locale pack translates
+            // the tab label under (`pages.sales_home_page.components.home_tabs
+            // .items.<value>.label`, spec 18.1.0). An item without one gets no
+            // translation slot, so its label stayed English in every locale.
+            // Each value is the view key the tab embeds.
             items: [
               {
+                value: 'my_leads',
                 label: 'My Leads',
                 icon: 'user-plus',
                 children: [embeddedListView('home_my_leads', 'crm_lead', LeadViews, 'my_leads')],
@@ -255,12 +262,14 @@ export const SalesHomePage: Page = {
                 // view behind it is the open-pipeline one (the nav's My Work >
                 // My Deals opens the same `my_open_deals`). The tab name now
                 // says what the panel shows.
+                value: 'my_open_deals',
                 label: 'My Open Deals',
                 icon: 'dollar-sign',
                 children: [embeddedListView('home_my_deals', 'crm_opportunity', OpportunityViews, 'my_open_deals')],
               },
               {
                 // Same correction: `my_open_tasks` excludes completed tasks.
+                value: 'my_open_tasks',
                 label: 'My Open Tasks',
                 icon: 'list-checks',
                 children: [embeddedListView('home_my_tasks', 'crm_task', TaskViews, 'my_open_tasks')],

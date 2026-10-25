@@ -487,6 +487,9 @@ export const CaseViews = defineView({
   formViews: {
     web_to_case: {
       type: 'simple',
+      // The heading a visitor reads (#2284), translated under
+      // `objects.crm_case._views.web_to_case.title` — see `web_to_lead`.
+      title: 'Contact Support',
       data,
       sections: [
         {

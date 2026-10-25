@@ -580,7 +580,16 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: '📅 即将开始 · 最近优先',
         },
         key_metrics: { title: '关键绩效指标', label: '关键指标' },
-        home_tabs: { label: '主页标签页' },
+        // `page:tabs` item labels, keyed by each item's `value` (#2284, spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        home_tabs: {
+          label: '主页标签页',
+          items: {
+            my_leads: { label: '我的线索' },
+            my_open_deals: { label: '我的进行中商机' },
+            my_open_tasks: { label: '我的待办任务' },
+          },
+        },
         home_my_leads: { label: '我的线索' },
         home_my_deals: { label: '我的进行中商机' },
         home_my_tasks: { label: '我的待办任务' },

@@ -91,6 +91,8 @@ export const service: Record<string, ObjectTranslationData> = {
       escalated_from: { label: '升级前负责人' },
     },
     _views: {
+      // The public Web-to-Case form's heading (#2284), as `web_to_lead`.
+      web_to_case: { title: '联系支持团队' },
       all_cases: { label: '全部工单' },
       case_workflow: { label: '服务流转' },
       sla_calendar: { label: 'SLA 日历' },
