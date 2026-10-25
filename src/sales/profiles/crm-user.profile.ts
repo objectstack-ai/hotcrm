@@ -32,7 +32,11 @@
  *     (it would be inert on a parent-derived object).
  *   - the reference catalogues — products, campaigns, knowledge articles —
  *     READ, through their `public_read` OWD and without View All.
- *   - the record Attachments / Discussion / activity panels, as `sales_rep`.
+ *   - the record Attachments / Discussion / activity panels: read, and post
+ *     and edit a comment, as `sales_rep`. The upload and the two deletes
+ *     the position sets grant (#2038) are not here: the `everyone` anchor
+ *     refuses delete on any object, and an upload for a member who holds no
+ *     position is a call about this set of its own.
  *
  * WHAT IT DOES NOT GRANT, deliberately: quotes, contracts, line items and
  * campaign members. Each is `controlled_by_parent`, so a read here would reach
@@ -78,7 +82,7 @@ export const CrmUserProfile = {
     crm_campaign:          { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
 
-    // ─── Record panels, as `sales_rep` (#2029) ────────────────────────
+    // ─── Record panels, as `sales_rep` minus upload and delete (#2029, #2038)
     sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     sys_comment:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     sys_activity:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },

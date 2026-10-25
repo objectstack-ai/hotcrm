@@ -44,22 +44,25 @@
  * error). So a rep lists the attachments of the quotes they can read and of no
  * other (`test/record-attachments-access.test.ts` measures it).
  *
- * **Upload and delete are NOT granted, on purpose (#2029).** Their gate is
- * `canEdit(parent)` (attach) and uploader-or-`canEdit(parent)` (delete), asked
- * of the sharing service, and on 17.7.0 that service answers `true` for EVERY
- * `controlled_by_parent` object: it reads that model as `public` and never asks
- * the master. Three of the six files-enabled objects are such children
- * (`crm_contact`, `crm_quote`, `crm_contract`). Measured on the same box with
- * the write bits granted: `na.rep` attached a file to a quote they get 404 on
- * (201), and on a contract whose own PATCH answers them 403 they attached a
- * file (201) and deleted the admin's executed-contract file (200), while an
- * attach to a private account they cannot read answered 403
- * `ATTACHMENT_PARENT_ACCESS`. So the write bits would let every persona plant
- * files on, and delete others' files from, quotes, contracts and contacts
- * they cannot edit. That is a platform defect, reported upstream
- * from #2029; until its fix is in the pinned version, only an administrator
- * uploads, and the write bits join `allowRead` here when it lands (AGENTS.md
- * §2: wait, do not route around it).
+ * **Upload and delete follow the parent's update (#2038).** Every set that
+ * grants `allowRead`, the default `crm_user` aside, grants `allowCreate` and
+ * `allowDelete` beside it; `allowEdit` stays off, as the panel offers no
+ * edit. WHERE those bits
+ * take is the platform's: `service-storage` admits an upload only where a
+ * by-id update of the parent record would be admitted, and a delete only from
+ * the file's uploader or a person whose update of the parent would be
+ * (objectstack-ai/objectstack#24549, shipped in 18.1.0). So a rep uploads to
+ * the quotes of the accounts they can edit and deletes their own files, and
+ * is refused (403 `ATTACHMENT_PARENT_ACCESS`) an upload to a contract they
+ * only read or to a record they cannot reach.
+ * `test/record-attachments-access.test.ts` measures both sides. `crm_user`,
+ * which every member holds, keeps the read alone (its profile says why).
+ *
+ * Until 18.1.0 the write bits were held back on purpose, because the parent
+ * gate did not yet give that answer: on 17.7.0 it admitted every
+ * `controlled_by_parent` parent (objectstack-ai/objectstack#22455), and a
+ * further leg stayed open until objectstack-ai/objectstack#24549. Granting
+ * them earlier would have routed around a platform defect (AGENTS.md §2).
  *
  * Leads are deliberately excluded — attachments on unqualified leads invite
  * junk. Revisit on demand.
@@ -98,13 +101,15 @@
  * and a post to one of those is refused. `test/record-comments-access.test.ts`
  * pins it.
  *
- * **Deleting a comment is NOT granted, on purpose (#2029).** Its gate is
- * author-or-`canEdit(parent)`, the same sharing-service call as the attachment
- * gate above, with the same 17.7.0 answer of `true` for every
- * `controlled_by_parent` parent. Measured with the delete bit granted: `na.rep`
- * deleted the admin's comment on a contract whose own PATCH answers them 403.
- * Reported upstream from #2029; the delete bit joins the grant when the fix is
- * in the pinned version (AGENTS.md §2).
+ * **Deleting a comment follows the parent's update too (#2038).** The same
+ * sets grant `sys_comment` `allowDelete`, and `plugin-audit` takes a
+ * delete only from the comment's author or a person whose by-id update of the
+ * parent would be admitted (objectstack-ai/objectstack#24549, shipped in
+ * 18.1.0; held back until then for the same reason as the attachment bits).
+ * So a rep removes a comment on a quote they can edit, and is refused on a
+ * contract they only read; `test/record-comments-access.test.ts` measures it.
+ * `crm_user` grants no delete: the `everyone` anchor refuses delete on any
+ * object.
  */
 
 export { Account } from './account.object';
