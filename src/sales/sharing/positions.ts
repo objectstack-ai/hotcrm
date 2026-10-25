@@ -26,13 +26,50 @@
  * `position_name_fold_grant` on every boot and which the platform has ruled to
  * retire (objectstack#13419, ruling B). A position added here that should grant
  * capability declares its sets the same way.
+ *
+ * ### Every position says what it is for (#2249)
+ *
+ * Each position carries a one-sentence business `description`, served with
+ * the position's metadata (`GET /meta/position`) so Setup → Positions can tell
+ * an admin who belongs in it before anyone is assigned. Measured on 18.1.0:
+ * the list there shows Name, Label, Holders and Permission sets
+ * (objectstack#25333) and no Description column yet. It names the business
+ * job, not the rule wiring: the grants themselves are the sharing rules and
+ * `permissionSets`, and a description that restated those would drift.
+ * `test/position-descriptions.test.ts` pins that every position has one.
+ *
+ * The descriptions, like the labels, are English only: the platform's
+ * translation bundle has no namespace for positions, so the four locale packs
+ * translate neither (the same holds for the labels today).
  */
 export const CrmPositions = [
-  { name: 'executive',          label: 'Executive' },
-  { name: 'sales_director',     label: 'Sales Director' },
-  { name: 'sales_manager',      label: 'Sales Manager',        permissionSets: ['sales_manager'] },
-  { name: 'sales_rep',          label: 'Sales Representative', permissionSets: ['sales_rep'] },
-  { name: 'service_director',   label: 'Service Director' },
+  {
+    name: 'executive',
+    label: 'Executive',
+    description: 'Company leadership: reads every large open deal across the pipeline, while the deal team keeps ownership.',
+  },
+  {
+    name: 'sales_director',
+    label: 'Sales Director',
+    description: 'Leads the sales organization, gives the final sign-off on the largest deals and reads every large open opportunity.',
+  },
+  {
+    name: 'sales_manager',
+    label: 'Sales Manager',
+    description: 'Runs a sales team: approves new accounts, lead conversions and large deals, and edits every active customer account.',
+    permissionSets: ['sales_manager'],
+  },
+  {
+    name: 'sales_rep',
+    label: 'Sales Representative',
+    description: 'Works leads and opportunities day to day and receives new leads by round-robin assignment.',
+    permissionSets: ['sales_rep'],
+  },
+  {
+    name: 'service_director',
+    label: 'Service Director',
+    description: 'Oversees customer service and reads every open critical case while a service manager handles it.',
+  },
   // The escalation pool works tickets with the agent's own grants: the #1779
   // ruling (director seat, decision batch #92, 2026-09-08) bound the EXISTING
   // `service_agent` set to this position, and refused both a manager-specific
@@ -41,12 +78,43 @@ export const CrmPositions = [
   // the name fold picked up; it is declared here instead and the copy is gone.
   // A manager grant that DIFFERS from an agent's comes back as a product card
   // with its puller named, and only then as a set of its own.
-  { name: 'service_manager',    label: 'Service Manager',      permissionSets: ['service_agent'] },
-  { name: 'service_agent',      label: 'Service Agent',        permissionSets: ['service_agent'] },
-  { name: 'marketing_director', label: 'Marketing Director' },
-  { name: 'marketing_manager',  label: 'Marketing Manager' },
-  { name: 'marketing_user',     label: 'Marketing User',       permissionSets: ['marketing_user'] },
+  {
+    name: 'service_manager',
+    label: 'Service Manager',
+    description: 'Works the escalation pool: escalated cases are handed to this position, which edits every open critical case.',
+    permissionSets: ['service_agent'],
+  },
+  {
+    name: 'service_agent',
+    label: 'Service Agent',
+    description: 'Handles customer cases, receives new cases by round-robin assignment and pulls unassigned cases from triage.',
+    permissionSets: ['service_agent'],
+  },
+  {
+    name: 'marketing_director',
+    label: 'Marketing Director',
+    description: 'Leads marketing and edits every live campaign, whoever owns it.',
+  },
+  {
+    name: 'marketing_manager',
+    label: 'Marketing Manager',
+    description: 'Manages marketing campaigns and edits every live campaign, whoever owns it.',
+  },
+  {
+    name: 'marketing_user',
+    label: 'Marketing User',
+    description: 'Plans and runs marketing campaigns and their members day to day.',
+    permissionSets: ['marketing_user'],
+  },
   // Territory groupings referenced by the account sharing rules.
-  { name: 'na_sales_team',      label: 'NA Sales Team' },
-  { name: 'eu_sales_team',      label: 'EU Sales Team' },
+  {
+    name: 'na_sales_team',
+    label: 'NA Sales Team',
+    description: 'Territory team for North America: edits every account in the North America territory.',
+  },
+  {
+    name: 'eu_sales_team',
+    label: 'EU Sales Team',
+    description: 'Territory team for Europe: edits every account in the Europe (EMEA) territory.',
+  },
 ];
