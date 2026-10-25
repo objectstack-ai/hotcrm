@@ -326,10 +326,23 @@ describe('allowTransfer is granted deliberately', () => {
     // The rule: transfer follows `modifyAllRecords` on this set — the sales
     // stack, and nothing beyond it. Contracts, campaigns, cases and the product
     // catalog are edit-only for a manager and stay untransferable.
+    //
+    // One rostered deviation (AGENTS.md rule 11): `crm_forecast`. #2277
+    // (ruling B) replaced Modify All there with an edit share so that
+    // `allowDelete: false` is enforced, and the transfer bit stayed — the
+    // profile's capability is authored precisely so it survives a narrowing
+    // of `modifyAllRecords` (`src/sales/profiles/index.ts`). It is still a
+    // real write grant: the manager edits every forecast through the
+    // `forecast_manager_sharing` share, and reassigning one is measured in
+    // `test/forecast-manager-edit-share.test.ts`.
+    const TRANSFER_WITHOUT_MODIFY_ALL = ['crm_forecast'];
     const modifyAll = Object.entries(objectsOf('sales_manager'))
       .filter(([, p]) => p?.modifyAllRecords === true).map(([o]) => o).sort();
     expect(modifyAll.length, 'sales_manager holds modifyAllRecords nowhere — rule vacuous').toBeGreaterThan(4);
-    expect(transfersIn('sales_manager')).toEqual(modifyAll);
+    for (const o of TRANSFER_WITHOUT_MODIFY_ALL) {
+      expect(objectsOf('sales_manager')[o]?.modifyAllRecords, `${o} is back on Modify All — drop it from the roster`).not.toBe(true);
+    }
+    expect(transfersIn('sales_manager')).toEqual([...modifyAll, ...TRANSFER_WITHOUT_MODIFY_ALL].sort());
   });
 
   it('service_agent may assign a TASK and nothing else', () => {

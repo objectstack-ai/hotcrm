@@ -116,8 +116,9 @@
  *
  *   `allowTransfer` is granted IFF the set already holds `allowEdit` on that
  *   object, and only to `system_admin` (every business object) and
- *   `sales_manager` (exactly the objects it holds `modifyAllRecords` on — the
- *   sales book it owns the number for).
+ *   `sales_manager` (the objects it holds `modifyAllRecords` on — the sales
+ *   book it owns the number for — plus `crm_forecast`, which kept the bit when
+ *   #2277 replaced Modify All there with an edit share).
  *
  * On those objects `modifyAllRecords` already implies the bit, so authoring it
  * grants nothing new. It is authored anyway, for the same reason `allowExport`

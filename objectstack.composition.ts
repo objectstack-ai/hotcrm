@@ -122,6 +122,7 @@ import {
 import {
   AccountTeamSharingRule, TerritorySharingRules,
   OpportunitySalesSharingRule, OpportunityExecutiveSharingRule,
+  ForecastManagerSharingRule,
   CrmPositions,
 } from './src/sales/sharing/index.js';
 
@@ -343,6 +344,7 @@ export const appSharingRules = [
   OpportunitySalesSharingRule,
   OpportunityExecutiveSharingRule,
   ...TerritorySharingRules,
+  ForecastManagerSharingRule,
 ];
 
 export { CrmPositions };

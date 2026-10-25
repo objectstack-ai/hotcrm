@@ -5,5 +5,6 @@
  */
 
 export { AccountTeamSharingRule, TerritorySharingRules } from './account.sharing';
+export { ForecastManagerSharingRule } from './forecast.sharing';
 export { OpportunityExecutiveSharingRule, OpportunitySalesSharingRule } from './opportunity.sharing';
 export { CrmPositions } from './positions';

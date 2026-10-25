@@ -34,7 +34,7 @@ OWD 是每个对象的 *最严格* 设置，其他一切都在此之上放宽。
 | 任务 | 私有 | 个人活动条目 |
 | 活动 | 私有 | 个人活动条目，与任务同类 |
 | 活动参与者 | 由父级控制（活动） | 参与者属于他们参加的那场会议，并跟随那场会议的共享 —— 见下面的 *“由父级控制”在实践中* |
-| 预测 | 私有 | 快照属于其所有人；经理持有 *查看所有* |
+| 预测 | 私有 | 快照属于其所有人；经理持有 *查看所有*，并通过一条共享规则编辑每一份快照 |
 | 产品 | 公共只读 | 所有人都看得到目录 |
 | 营销活动 | 公共只读 | 营销创建，销售查看 |
 | 营销活动成员 | 由父级控制（营销活动） | 成员关系是营销活动的一个属性，并跟随它的共享 —— 见下面的 *“由父级控制”在实践中* |
@@ -90,6 +90,7 @@ na_sales_team       eu_sales_team          （区域分组）
 | Account Team Sharing | 客户 | 编辑 | `sales_manager` —— 活跃的客户型客户 |
 | North America Territory | 客户 | 编辑 | `na_sales_team` —— 销售区域为 `na` 的客户 |
 | Europe Territory | 客户 | 编辑 | `eu_sales_team` —— 销售区域为 `emea` 的客户 |
+| Forecasts — Sales Manager Edit | 预测 | 编辑 | `sales_manager` —— 每一份预测（可以编辑，从不能删除） |
 | Opportunity Sales Team Sharing | 商机 | 读取 | `sales_director` —— 金额 ≥ $100,000 的进行中交易 |
 | Large Open Deals — Executive | 商机 | 读取 | `executive` —— 同一批交易，上一层级 |
 | Escalated Cases Sharing | 工单 | 编辑 | `service_manager` —— 未关闭的严重工单 |
