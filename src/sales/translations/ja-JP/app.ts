@@ -33,7 +33,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_sales: { label: '営業' },
         nav_lead: { label: 'リード' },
         nav_account: { label: '取引先' },
-        nav_account_workbench: { label: '取引先ワークベンチ' },
         nav_contact: { label: '取引先責任者' },
         nav_opportunity: { label: '商談' },
         nav_quote: { label: '見積' },

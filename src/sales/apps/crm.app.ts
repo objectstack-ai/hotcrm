@@ -244,9 +244,12 @@ export const CrmApp = App.create({
       children: [
         { id: 'nav_lead',        type: 'object', objectName: 'crm_lead',        label: 'Leads',         icon: 'user-plus' },
         { id: 'nav_account',     type: 'object', objectName: 'crm_account',     label: 'Accounts',      icon: 'building' },
-        // ADR-0047 interface page — the curated counterpart to the Accounts
-        // object entry (quick filters only; activates with spec > 9.2.0).
-        { id: 'nav_account_workbench', type: 'page', pageName: 'account_workbench', label: 'Account Workbench', icon: 'sliders-horizontal' },
+        // No "Account Workbench" entry (#2286): the ADR-0047 interface page
+        // `account_workbench` showed the same rows and columns as Accounts, so
+        // a second row here read as a duplicate. The page still ships and is
+        // reached by URL — not by ⌘K, whose palette on 18.1.0 lists pages
+        // from navigation only. `test/account-workbench-exhibit.test.ts` pins
+        // that it is served and that no entry here opens it.
         { id: 'nav_contact',     type: 'object', objectName: 'crm_contact',     label: 'Contacts',      icon: 'user' },
         // No separate "Pipeline" entry: the kanban board is another tab on
         // this same list page — `pipeline_kanban` in

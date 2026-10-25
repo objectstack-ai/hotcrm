@@ -6,7 +6,6 @@ import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { servedApp } from './helpers/composed-stack';
 import { CrmApp } from '../src/sales/apps/crm.app';
-import { CrmTranslations } from '../src/sales/translations';
 import { AccountWorkbenchPage } from '../src/sales/pages/account_workbench.page';
 
 /**
@@ -29,6 +28,13 @@ import { AccountWorkbenchPage } from '../src/sales/pages/account_workbench.page'
  * in all three locales, the way #938 (marketing/index, Products) and #927
  * (service/index, Knowledge) each had to be found by hand.
  *
+ * #2286 (ruling B) then took Account Workbench OUT of the group: it showed
+ * the same rows and columns as Accounts, so the sidebar carried two identical
+ * entries. The page still ships as the ADR-0047 exhibit; the section now says
+ * there is no such entry, in italics, the way it says there is no Pipeline
+ * entry. That the page is served and that no nav item opens it is pinned in
+ * `account-workbench-exhibit.test.ts`.
+ *
  * The rules are shaped around the section's own layout, which differs by
  * locale in exactly one respect worth knowing:
  *
@@ -37,7 +43,7 @@ import { AccountWorkbenchPage } from '../src/sales/pages/account_workbench.page'
  *    labels — what is pinned instead is the COUNT, which catches a seventh
  *    object entry landing in the group in every locale. The en page is checked
  *    label-for-label on top of that.
- *  - the three NON-object entries get a bullet each, and every locale spells
+ *  - the NON-object entries get a bullet each, and every locale spells
  *    the English label there (bare on en, in parentheses on the zh pages), so
  *    those are matched by label everywhere.
  *  - the group size is stated in prose and must match the group.
@@ -93,7 +99,7 @@ const PAGES = [
     lang: 'en',
     heading: '## Where to find things',
     /** The group size, stated in prose. */
-    count: /nine entries/,
+    count: /eight entries/,
     /** The en page names the object entries in English, so they are checked verbatim. */
     checkObjectLabels: true,
   },
@@ -101,14 +107,14 @@ const PAGES = [
     file: 'content/docs/sales/index.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 在哪里找到这些功能',
-    count: /九个条目/,
+    count: /八个条目/,
     checkObjectLabels: false,
   },
   {
     file: 'content/docs/sales/index.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 在哪裡找到這些功能',
-    count: /九個條目/,
+    count: /八個條目/,
     checkObjectLabels: false,
   },
 ] as const;
@@ -153,12 +159,17 @@ describe('sales/index lists the whole Sales navigation group (#997)', () => {
       ).toEqual([]);
     });
 
-    it('names Account Workbench — the entry #997 found missing', () => {
+    it('says Account Workbench is not a sidebar entry, and never bolds it (#2286)', () => {
+      const text = section();
       expect(
-        section(),
-        `${file}: Account Workbench is a real Sales entry with a label in every locale bundle; ` +
-          'omitting it tells the reader it does not exist.',
+        text,
+        `${file}: a reader who knew the Account Workbench entry is told where it went`,
       ).toContain('Account Workbench');
+      // Bold is for names the sidebar carries; the zh pages bold the
+      // translated name, so both spellings are refused.
+      for (const bold of ['**Account Workbench**', '**客户工作台**', '**客戶工作台**']) {
+        expect(text, `${file}: Account Workbench is no longer a Sales entry`).not.toContain(bold);
+      }
     });
 
     if (checkObjectLabels) {
@@ -170,11 +181,10 @@ describe('sales/index lists the whole Sales navigation group (#997)', () => {
 });
 
 describe('the source facts that section now rests on (#997)', () => {
-  it('the Sales group holds nine entries, in this order', () => {
+  it('the Sales group holds eight entries, in this order', () => {
     expect(SALES_CHILDREN.map((c) => c.label)).toEqual([
       'Leads',
       'Accounts',
-      'Account Workbench',
       'Contacts',
       'Opportunities',
       'Sales Performance',
@@ -190,12 +200,12 @@ describe('the source facts that section now rests on (#997)', () => {
     // precedes them.
     const authored = ((CrmApp as AnyRec).navigation as AnyRec[]).find((n) => n.id === 'group_sales');
     expect(((authored?.children ?? []) as AnyRec[]).map((c) => c.id)).toEqual([
-      'nav_lead', 'nav_account', 'nav_account_workbench', 'nav_contact', 'nav_opportunity', 'nav_sales_dashboard',
+      'nav_lead', 'nav_account', 'nav_contact', 'nav_opportunity', 'nav_sales_dashboard',
     ]);
     expect(SALES_CHILDREN.slice(-3).map((c) => c.id)).toEqual(['nav_quote', 'nav_contract', 'nav_product']);
   });
 
-  it('seven of them open an object list; two open something else', () => {
+  it('seven of them open an object list; one opens something else', () => {
     expect(OBJECT_ENTRIES.map((c) => c.label)).toEqual([
       'Leads',
       'Accounts',
@@ -205,10 +215,7 @@ describe('the source facts that section now rests on (#997)', () => {
       'Contracts',
       'Products',
     ]);
-    expect(OTHER_ENTRIES.map((c) => c.label)).toEqual([
-      'Account Workbench',
-      'Sales Performance',
-    ]);
+    expect(OTHER_ENTRIES.map((c) => c.label)).toEqual(['Sales Performance']);
   });
 
   it('Products is a Sales entry, not a Marketing one (#1259)', () => {
@@ -223,15 +230,7 @@ describe('the source facts that section now rests on (#997)', () => {
       .toBeUndefined();
   });
 
-  it('Account Workbench is a page entry sitting directly under Accounts', () => {
-    const i = SALES_CHILDREN.findIndex((c) => c.id === 'nav_account_workbench');
-    expect(SALES_CHILDREN[i - 1]?.id).toBe('nav_account');
-    expect(SALES_CHILDREN[i].type).toBe('page');
-    expect(SALES_CHILDREN[i].pageName).toBe(AccountWorkbenchPage.name);
-    expect(SALES_CHILDREN[i].label).toBe(AccountWorkbenchPage.label);
-  });
-
-  it('that page reuses the accounts view rather than restating it, as the bullet says', () => {
+  it('the Account Workbench page reuses the accounts view rather than restating it, as the section says', () => {
     const cfg = (AccountWorkbenchPage as AnyRec).interfaceConfig ?? {};
     expect(cfg.source).toBe('crm_account');
     expect(cfg.sourceView).toBe('all_accounts');
@@ -241,31 +240,5 @@ describe('the source facts that section now rests on (#997)', () => {
       'type',
       'owner_id',
     ]);
-  });
-
-  /**
-   * Read off the assembled bundle, not off a locale file's source text.
-   *
-   * This used to `readFileSync` `src/translations/<locale>.ts` and regex for
-   * `nav_account_workbench: { label:`. That was a proxy for the fact it means
-   * — "the entry has a label in this locale" — and the proxy broke the moment
-   * the bundles were split into `src/translations/<locale>/` (#1311): the
-   * label was still there, still exported, still in the built artifact, and
-   * the rule went red because the bytes had moved to a sibling file.
-   *
-   * `CrmTranslations` is the surface the app and the i18n gate consume, so a
-   * label reachable through it is a label the product actually shows, however
-   * the files behind it are laid out. It is also the stronger assertion: a
-   * present-but-empty label matched the old regex and fails this.
-   */
-  it('every locale bundle gives that nav entry a real label', () => {
-    (['zh-CN', 'es-ES', 'ja-JP'] as const).forEach((locale) => {
-      const label =
-        CrmTranslations[locale]?.apps?.[CrmApp.name]?.navigation?.nav_account_workbench?.label;
-      expect(
-        label,
-        `${locale}: nav_account_workbench has no label — the docs claim it is not a hidden item`,
-      ).toBeTruthy();
-    });
   });
 });
