@@ -573,7 +573,16 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: '📅 Próximos · Más cercanos primero',
         },
         key_metrics: { title: 'Indicadores Clave de Rendimiento', label: 'Métricas Clave' },
-        home_tabs: { label: 'Pestañas de Inicio' },
+        // `page:tabs` item labels, keyed by each item's `value` (#2284, spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        home_tabs: {
+          label: 'Pestañas de Inicio',
+          items: {
+            my_leads: { label: 'Mis Prospectos' },
+            my_open_deals: { label: 'Mis Negocios Abiertos' },
+            my_open_tasks: { label: 'Mis Tareas Abiertas' },
+          },
+        },
         home_my_leads: { label: 'Mis Prospectos' },
         home_my_deals: { label: 'Mis Negocios Abiertos' },
         home_my_tasks: { label: 'Mis Tareas Abiertas' },

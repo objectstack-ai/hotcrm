@@ -134,6 +134,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
     },
     _views: {
+      // The public Web-to-Lead form's heading (#2284): a form view carries a
+      // `title`, never a `label`, and `GET /forms/:slug` serves it translated.
+      web_to_lead: { title: '联系我们' },
       all_leads: {
         label: '全部线索',
         emptyState: { title: '还没有线索', message: '创建第一条线索，从这里开始' },

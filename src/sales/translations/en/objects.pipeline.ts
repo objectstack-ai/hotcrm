@@ -112,6 +112,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
     },
     _views: {
+      // The public Web-to-Lead form's heading (#2284): a form view carries a
+      // `title`, never a `label`, and `GET /forms/:slug` serves it translated.
+      web_to_lead: { title: 'Contact Us' },
       all_leads: {
         label: 'All Leads',
         emptyState: { title: 'No Leads Yet', message: 'Get started by creating your first lead' },

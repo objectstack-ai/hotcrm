@@ -575,7 +575,16 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: '📅 開催予定 · 直近順',
         },
         key_metrics: { title: '主要業績評価指標', label: '主要指標' },
-        home_tabs: { label: 'ホームタブ' },
+        // `page:tabs` item labels, keyed by each item's `value` (#2284, spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        home_tabs: {
+          label: 'ホームタブ',
+          items: {
+            my_leads: { label: '私のリード' },
+            my_open_deals: { label: '私のオープン商談' },
+            my_open_tasks: { label: '私のオープンタスク' },
+          },
+        },
         home_my_leads: { label: '私のリード' },
         home_my_deals: { label: '私のオープン商談' },
         home_my_tasks: { label: '私のオープンタスク' },

@@ -83,6 +83,8 @@ export const service: Record<string, ObjectTranslationData> = {
       is_closed: { label: 'クローズ済' },
     },
     _views: {
+      // The public Web-to-Case form's heading (#2284), as `web_to_lead`.
+      web_to_case: { title: 'サポートへのお問い合わせ' },
       all_cases: { label: '全ケース' },
       case_workflow: { label: 'サービスフロー' },
       sla_calendar: { label: 'SLA カレンダー' },

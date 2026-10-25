@@ -201,7 +201,16 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: 'Sales team home page with key metrics, my open work and upcoming events',
       components: {
         key_metrics: { title: 'Key Performance Indicators', label: 'Key Metrics' },
-        home_tabs: { label: 'Home Tabs' },
+        // `page:tabs` item labels, keyed by each item's `value` (#2284, spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        home_tabs: {
+          label: 'Home Tabs',
+          items: {
+            my_leads: { label: 'My Leads' },
+            my_open_deals: { label: 'My Open Deals' },
+            my_open_tasks: { label: 'My Open Tasks' },
+          },
+        },
         ai_briefing: {
           title: 'Ask the AI Assistant',
           label: 'Today with the AI Assistant',
@@ -251,6 +260,44 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         crm_account: 'Account', crm_contact: 'Contact', crm_opportunity: 'Opportunity',
         crm_lead: 'Lead', crm_case: 'Case',
       },
+    },
+  },
+  // Approval flows (#2060 item 13, #2284): the flow's own `label`, and each
+  // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
+  // the step name an approval request shows the submitter and the approvers.
+  // The source copy, verbatim from the flow files, so the other three packs
+  // translate a key en also carries. Screen-flow copy is not repeated here:
+  // en reads it from the flow source.
+  flows: {
+    account_approval: {
+      label: 'Account Approval',
+      approvals: { account_review: { label: 'Account Review' } },
+    },
+    lead_conversion_approval: {
+      label: 'Lead Conversion Approval',
+      approvals: { conversion_review: { label: 'Lead Conversion Review' } },
+    },
+    opportunity_approval: {
+      label: 'Large Deal Approval',
+      approvals: {
+        manager_review: { label: 'Sales Manager Review' },
+        director_signoff: { label: 'Sales Director Sign-off' },
+      },
+    },
+    opportunity_approval_on_create: {
+      label: 'Large Deal Approval (on create)',
+      approvals: {
+        manager_review: { label: 'Sales Manager Review' },
+        director_signoff: { label: 'Sales Director Sign-off' },
+      },
+    },
+    opportunity_qualification_approval: {
+      label: 'Opportunity Qualification Approval',
+      approvals: { qualification_review: { label: 'Qualification Review' } },
+    },
+    opportunity_status_change_approval: {
+      label: 'Opportunity Status Change Approval',
+      approvals: { status_review: { label: 'Status Change Review' } },
     },
   },
 };
