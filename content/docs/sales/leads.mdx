@@ -145,7 +145,7 @@ The match only looks at accounts you can see. An account owned by a colleague an
 
 The system then, in a single step:
 
-1. Creates an **Account** from the lead's company information — or reuses the existing one the form named. The match ignores capitalisation and extra spaces, so a lead for `ACME  Corp` lands on your existing `Acme Corp` instead of creating a second account. It is not a fuzzy match: `Acme Corp` and `Acme Corporation` are still two different companies.
+1. Creates an **Account** from the lead's company information — or reuses the existing one the form named. The match ignores capitalisation and extra spaces, so a lead for `ACME  Corp` lands on your existing `Acme Corp` instead of creating a second account. It is not a fuzzy match: `Acme Corp` and `Acme Corporation` are still two different companies. A new account created here does not go to [account approval](/docs/sales/accounts#account-approval): qualifying the lead was the check, so the account is ready to use at once, and its **Converted From Lead** links back to this lead.
 2. Creates a **Contact** from the lead's person information, attached to that account. It becomes the account's primary contact only when the account has none yet: converting into an account that already has a primary contact leaves that contact as primary.
 3. *(Optional)* Creates an **Opportunity** in the *Prospecting* stage with a 90-day close date.
 4. Marks the lead as **Converted** and locks it.
