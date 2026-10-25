@@ -184,7 +184,10 @@ describe('every declared sharing rule is actually seeded', () => {
       const outcome = seedOutcome(rule);
       if (!outcome.seeded) continue; // reported by the test above
       for (const field of outcome.fields) {
-        if (!(field in (object.fields ?? {}))) {
+        // `id` is the platform's primary key — a real, flat column on every
+        // object, declared by none. `forecast_manager_sharing` filters on it
+        // (`record.id != ""`), the match-every-row predicate #2277 ruled.
+        if (field !== 'id' && !(field in (object.fields ?? {}))) {
           bad.push(`${rule.name}: filters on "${field}", which ${rule.object} does not declare`);
         }
       }
@@ -482,6 +485,14 @@ const RULE_WITNESSES: Record<string, { reaches: AnyRec; misses: AnyRec[] }> = {
   opportunity_executive_sharing: {
     reaches: { stage: 'negotiation', amount: 500000 },
     misses: [{ stage: 'closed_won', amount: 500000 }, { stage: 'proposal', amount: 100 }],
+  },
+  forecast_manager_sharing: {
+    // Match-every-row by design (#2277): the edit half of the manager's
+    // org-wide forecast grant. There is no row it may miss, so the witness is
+    // that it reaches an ordinary row at all — a `!= ""` the driver could not
+    // run, or one that compiled to match-nothing, returns zero rows here.
+    reaches: { period: 'quarter' },
+    misses: [],
   },
 };
 

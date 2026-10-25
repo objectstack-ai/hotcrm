@@ -10,8 +10,9 @@ export const SalesManagerProfile = {
   name: 'sales_manager',
   label: 'Sales Manager',
   objects: {
-    // `allowTransfer` on exactly the objects this set holds `modifyAllRecords`
-    // on — the sales book a manager reassigns. Canonical note in
+    // `allowTransfer` on the objects this set holds `modifyAllRecords` on —
+    // the sales book a manager reassigns — plus `crm_forecast`, which kept it
+    // when #2277 narrowed Modify All there. Canonical note in
     // `src/sales/profiles/index.ts`.
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. A manager owns the number, so the pipeline and
@@ -52,9 +53,18 @@ export const SalesManagerProfile = {
     crm_event:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
     crm_event_attendee: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // The forecast IS the manager's job: they read every rep's snapshot and
-    // adjust the committed number, so this is org-wide read AND write on a
-    // private object (#488 — the object had no grant at all).
-    crm_forecast:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
+    // adjust the committed number, so this is org-wide read AND edit on a
+    // private object, and delete on none (#488 — the object had no grant at
+    // all; #2277 ruling B). READ is `viewAllRecords`. EDIT on rows another
+    // person owns is the `forecast_manager_sharing` edit share
+    // (`src/sales/sharing/forecast.sharing.ts`), ⛔ not `modifyAllRecords`:
+    // Modify All is the bypass for edit, delete and transfer, so beside it
+    // `allowDelete: false` was never enforced. An edit share opens update and
+    // never delete. `allowTransfer` stays authored although this is no longer
+    // a Modify All object — the deliberate deviation from the rule in
+    // `src/sales/profiles/index.ts`, rostered in `test/ownership-model.test.ts`:
+    // the profile's capability survives the narrowing, as that note intends.
+    crm_forecast:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowTransfer: true },
     // Knowledge is service-authored; sales reads it (public_read OWD).
     // Reads the KB and may rate it; cannot author articles (#601).
     crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },

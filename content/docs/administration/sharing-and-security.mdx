@@ -34,7 +34,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | Task | Private | Personal activity items |
 | Event | Private | Personal activity items, like tasks |
 | Event Attendee | Controlled by Parent (Event) | An attendee belongs to the meeting they were in, and follows that meeting's sharing — see *Controlled by Parent, in practice* below |
-| Forecast | Private | A snapshot belongs to its owner; managers hold *View All* |
+| Forecast | Private | A snapshot belongs to its owner; managers hold *View All*, and edit every snapshot through a sharing rule |
 | Product | Public Read-Only | Everyone sees the catalog |
 | Campaign | Public Read-Only | Marketing creates, sales sees |
 | Campaign Member | Controlled by Parent (Campaign) | Membership is an attribute of the campaign, and follows its sharing — see *Controlled by Parent, in practice* below |
@@ -90,6 +90,7 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Account Team Sharing | Account | Edit | `sales_manager` — active customer accounts |
 | North America Territory | Account | Edit | `na_sales_team` — accounts whose Territory is `na` |
 | Europe Territory | Account | Edit | `eu_sales_team` — accounts whose Territory is `emea` |
+| Forecasts — Sales Manager Edit | Forecast | Edit | `sales_manager` — every forecast (it can edit them, never delete one) |
 | Opportunity Sales Team Sharing | Opportunity | Read | `sales_director` — open deals ≥ $100,000 |
 | Large Open Deals — Executive | Opportunity | Read | `executive` — the same deals, one rung up |
 | Escalated Cases Sharing | Case | Edit | `service_manager` — open critical cases |
