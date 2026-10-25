@@ -1,14 +1,15 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ExpressionEngine } from '@objectstack/formula';
 import { P } from '@objectstack/spec';
-import type { VerifyStack } from '@objectstack/verify';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import { SecurityPlugin } from '@objectstack/plugin-security';
 import { CrmApp } from '../src/sales/apps/crm.app';
 import { CrmPositions } from '../src/sales/sharing/positions';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 import { servedApp } from './helpers/composed-stack';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { bootOptions, buildArtifactAgain, hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -45,6 +46,10 @@ type Rec = Record<string, any>;
  * Home and Sales Home carried before it (`BEFORE_2262`), and #2268 pins the
  * six opportunity entries they are no longer shown against the plain read
  * gate those six carried before it (`BEFORE_2268`).
+ *
+ * #2250 adds the member who holds no HotCRM grant at all (see its block at the
+ * end of this file): the console sends them to the platform's access page
+ * before it consults this order.
  */
 
 const NAV = (servedApp((CrmApp as Rec).name).navigation ?? []) as Rec[];
@@ -258,5 +263,91 @@ describe('a service persona is not shown the opportunity dashboards and reports 
     const shown = shownTo(persona);
     expect(OPPORTUNITY_ONLY.filter((id) => !shown.includes(id))).toEqual([]);
     expect(shown).toEqual(shownTo(persona, BEFORE_2268));
+  });
+});
+
+/**
+ * A member who holds no HotCRM grant lands on the platform's access page, not
+ * on Service Overview (#2250, the HotCRM half of objectstack#25338).
+ *
+ * WHO. On a managed environment an invited member is created holding the
+ * platform baseline (`member_default`) alone, and `crm_user` reaches them only
+ * once an administrator accepts the package's suggestion (#2231). Until then
+ * they read none of the app's objects. The shared boot cannot model them: it
+ * hands every member `crm_user` as the self-hosted baseline. So this block
+ * boots the app with the platform's SecurityPlugin built bare, exactly as
+ * `test/default-permission-set.test.ts` models a managed environment, from a
+ * fresh build of the configuration (one configuration holds one live kernel).
+ *
+ * WHAT THE CONSOLE DOES. Since objectui#13347 (in the 18.1.0 console) the app
+ * root asks one question before any landing is chosen: does the app name
+ * objects in its navigation, and may the member read none of them? On a yes
+ * it renders the platform's "Nothing in HotCRM is available to you yet" page
+ * (`data-reason="no-readable-object"`) instead of opening the first entry
+ * shown. The gates above never get a say. So the HotCRM half needs no gate of
+ * its own, and ⛔ HotCRM authors no access page: what this pins is the app's
+ * own fact that such a member reads none of the objects its served tree
+ * names, which is what hands them to the platform. Measured in a browser on
+ * 18.1.0: the member opens `/_console/` and lands on that page.
+ *
+ * `landingOf` is that order of questions: the platform's page when every
+ * object the served tree names is unread, otherwise the first entry shown.
+ */
+const PLATFORM_ACCESS_PAGE = 'platform:no-readable-object';
+const NAMED_OBJECTS = [...new Set(LEAVES.filter((n) => n.type === 'object').map((n) => n.objectName as string))];
+
+const landingOf = (persona: string): string => {
+  const p = who[persona]!;
+  if (NAMED_OBJECTS.every((o) => p.objects[o]?.allowRead !== true)) return PLATFORM_ACCESS_PAGE;
+  return shownTo(persona)[0]!;
+};
+
+describe('a member with no HotCRM grant lands on the platform access page (#2250)', () => {
+  let managed: VerifyStack;
+
+  beforeAll(async () => {
+    managed = await bootStack(await buildArtifactAgain(), bootOptions({ security: new SecurityPlugin() }));
+    const person = await signUpPerson(managed, 'no-grant@nav-audience.test', { name: 'Nav no grant' });
+    const res = await managed.apiAs(person.token, 'GET', '/auth/me/permissions');
+    expect(res.status, await res.clone().text()).toBe(200);
+    const body: Rec = await res.json();
+    expect((body.data ?? body).permissionSets, 'the managed boot must hand this member no HotCRM set').not.toContain('crm_user');
+    const context = (await managed.contextFor(person.token)) as Rec;
+    who.no_grant = {
+      ...person,
+      positions: (context.positions ?? []) as string[],
+      objects: (body.data ?? body).objects,
+    };
+  }, 180_000);
+
+  afterAll(() => managed?.stop());
+
+  it('the served tree names objects, so the console asks the question at all', () => {
+    expect(NAMED_OBJECTS.length).toBeGreaterThan(10);
+    expect(NAMED_OBJECTS).toEqual(expect.arrayContaining(['crm_case', 'crm_account', 'crm_opportunity']));
+  });
+
+  it('the member reads none of them', () => {
+    expect(NAMED_OBJECTS.filter((o) => who.no_grant!.objects[o]?.allowRead === true)).toEqual([]);
+  });
+
+  it('the gates alone would open the app on Service Overview: the reported first screen', () => {
+    expect(shownTo('no_grant')[0]).toBe('nav_service_dashboard');
+  });
+
+  it('so the member lands on the platform access page, not on any HotCRM entry', () => {
+    expect(landingOf('no_grant')).toBe(PLATFORM_ACCESS_PAGE);
+  });
+
+  it.each([
+    ['na_rep', 'nav_sales_home'],
+    ['eu_rep', 'nav_sales_home'],
+    ['sales_manager', 'nav_home'],
+    ['service_agent', 'nav_service_dashboard'],
+    ['service_manager', 'nav_service_dashboard'],
+    ['admin', 'nav_home'],
+  ])('%s still lands on %s', (persona, landing) => {
+    expect(landingOf(persona)).toBe(landing);
+    expect(landingOf(persona)).toBe(shownTo(persona)[0]);
   });
 });

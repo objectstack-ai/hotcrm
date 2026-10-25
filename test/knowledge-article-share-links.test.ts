@@ -15,6 +15,13 @@ import {
 import stack from './helpers/composed-stack';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * Share-link publishing for public knowledge articles (#1104, from #601 item 3).
  *
  * ### What this file is for
@@ -68,7 +75,7 @@ const byName = (n: string) => objects.find((o) => o.name === n) as AnyRec;
 const ARTICLE = byName('crm_knowledge_article');
 const POLICY = (ARTICLE.publicSharing ?? {}) as AnyRec;
 
-const SIGNED_IN = { userId: 'user_author', isSystem: false, positions: [], permissions: [] };
+const SIGNED_IN = { userId: 'user_author', tenantId: ORG, isSystem: false, positions: [], permissions: [] };
 const ANONYMOUS = {};
 
 // ────────────────────────────────────────────── the declaration itself ──
@@ -186,7 +193,7 @@ describe('the two-sided acceptance criterion, on the real ShareLinkService', () 
       } as never,
     })) as never;
     await ql.syncSchemas();
-    api = ql.createContext({ isSystem: true });
+    api = ql.createContext({ isSystem: true, tenantId: ORG });
 
     for (const [key, status, audience] of FIXTURES) {
       const row = await api.object('crm_knowledge_article').insert({

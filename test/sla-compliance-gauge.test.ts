@@ -9,6 +9,13 @@ import { CrmSeedData } from '../objectstack.composition';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * The SLA gauge plots COMPLIANCE (#1213).
  *
  * The widget was titled, described, success-coloured and given a 0.95 target
@@ -169,7 +176,7 @@ describe('the compliance measure over sqlite', () => {
     await ql?.close();
   });
 
-  const api = () => ql.createContext({ isSystem: true });
+  const api = () => ql.createContext({ isSystem: true, tenantId: ORG });
 
   const addCase = async (rec: AnyRec) => {
     const row: AnyRec = {};
@@ -186,7 +193,7 @@ describe('the compliance measure over sqlite', () => {
         measures: w.values,
         ...(w.filter ? { runtimeFilter: w.filter as never } : {}),
       } as never,
-      { isSystem: true } as never,
+      { isSystem: true, tenantId: ORG } as never,
     );
     return (res.rows ?? []) as AnyRec[];
   };
@@ -320,7 +327,7 @@ describe('the gauge reads met ÷ closed on the seeded demo org', () => {
     })) as AnyRec;
     await ql.syncSchemas();
     try {
-      const api = () => (ql as AnyRec).createContext({ isSystem: true });
+      const api = () => (ql as AnyRec).createContext({ isSystem: true, tenantId: ORG });
       for (const rec of seededCases) {
         const row: AnyRec = {};
         for (const c of CASE_COLUMNS) if (rec[c] !== undefined) row[c] = rec[c];
@@ -332,7 +339,7 @@ describe('the gauge reads met ÷ closed on the seeded demo org', () => {
       const res = await makeAnalytics(ql).queryDataset(
         CaseDataset as never,
         { measures: [...(w.values as string[]), 'closed_count'], runtimeFilter: w.filter as never } as never,
-        { isSystem: true } as never,
+        { isSystem: true, tenantId: ORG } as never,
       );
       const row = (res.rows ?? [])[0] as AnyRec;
       expect(row.closed_count).toBe(8);

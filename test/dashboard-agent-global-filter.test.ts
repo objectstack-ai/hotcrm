@@ -8,6 +8,13 @@ import stack from './helpers/composed-stack';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * ═══ The Service dashboard's Agent filter must SELECT ROWS, not just render ═══
  *
  * # What this pins, and why nothing else could (#966 → #1398)
@@ -299,7 +306,7 @@ beforeAll(async () => {
     objects: { crm_case: kase } as never,
   })) as never;
 
-  const api = ql.createContext({ isSystem: true });
+  const api = ql.createContext({ isSystem: true, tenantId: ORG });
   for (const [i, row] of CASE_ROWS.entries()) {
     const record: AnyRec = {
       owner_id: row.owner,
@@ -375,7 +382,7 @@ const run = async (w: AnyRec, opts: { agent?: string; window?: AnyRec; viewer?: 
     } as never,
     // `viewer` signs the query in, so a `{current_user_id}` widget filter has
     // someone to resolve to (#510); without one the platform refuses it.
-    { isSystem: true, ...(opts.viewer ? { userId: opts.viewer } : {}) } as never,
+    { isSystem: true, tenantId: ORG, ...(opts.viewer ? { userId: opts.viewer, tenantId: ORG } : {}) } as never,
   );
   return (result.rows ?? []) as AnyRec[];
 };

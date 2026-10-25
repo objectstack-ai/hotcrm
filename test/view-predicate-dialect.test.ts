@@ -151,7 +151,7 @@ function objectsOf(view: unknown, found = new Set<string>()): Set<string> {
 
 const viewBundles: AnyRec[] = ((stack as AnyRec).views ?? []) as AnyRec[];
 
-const predicates = viewBundles.flatMap((view, index) => {
+const envelopes = viewBundles.flatMap((view, index) => {
   const label = [...objectsOf(view)].filter((n) => n.startsWith('crm_'))[0] ?? `views[${index}]`;
   const found: { path: string; expr: AnyRec }[] = [];
   collectExpressions(view, `views[${index}]`, found);
@@ -162,6 +162,16 @@ const predicates = viewBundles.flatMap((view, index) => {
     source: String(expr.source ?? ''),
   }));
 });
+
+/**
+ * Since 18.1.0 a bulk action's `confirmText` compiles to a `template` envelope
+ * too (objectstack#25451: its holes are filled from `count` and the action's
+ * params). That is a message, not a predicate, so it answers no visibility
+ * question and is left out of the sweep; the first `describe` below pins that
+ * nothing else is.
+ */
+const templates = envelopes.filter((e) => e.dialect === 'template');
+const predicates = envelopes.filter((e) => e.dialect !== 'template');
 
 /**
  * A record shape with EVERY conditional field populated — the "shown" side of
@@ -216,6 +226,13 @@ describe('view predicates — the sweep itself', () => {
       expect(p.dialect, `${p.id} — non-CEL dialect on a visibility predicate`).toBe('cel');
       expect(p.source.trim(), `${p.id} — empty predicate source`).not.toBe('');
     }
+  });
+
+  it('sets aside only confirmation messages as templates', () => {
+    // The filter above must not become a way out of the sweep: a `template`
+    // envelope anywhere but a `confirmText` key is reported here by path.
+    expect(templates.length).toBeGreaterThan(0);
+    expect(templates.filter((t) => !t.path.endsWith('.confirmText')).map((t) => t.id)).toEqual([]);
   });
 });
 

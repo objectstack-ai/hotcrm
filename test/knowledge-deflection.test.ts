@@ -9,6 +9,13 @@ import stack from './helpers/composed-stack';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
+/**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
 type Rec = Record<string, any>;
 
 /**
@@ -259,7 +266,7 @@ describe('the deflection measures over sqlite', () => {
     await ql?.close();
   });
 
-  const api = () => ql.createContext({ isSystem: true });
+  const api = () => ql.createContext({ isSystem: true, tenantId: ORG });
 
   const addCase = async (rec: AnyRec) => {
     const row: AnyRec = {};
@@ -276,7 +283,7 @@ describe('the deflection measures over sqlite', () => {
         measures: w.values,
         ...(w.filter ? { runtimeFilter: w.filter as never } : {}),
       } as never,
-      { isSystem: true } as never,
+      { isSystem: true, tenantId: ORG } as never,
     );
     return (res.rows ?? []) as AnyRec[];
   };

@@ -27,6 +27,13 @@ import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * Enforce-or-remove, decided per field (#1182).
  *
  * A consumer scan found ten rows of declared-but-inert fields, and the
@@ -194,7 +201,7 @@ describe('the account hierarchy was kept because it now has a consumer (#1182)',
  * and they are re-measured here on every run.
  */
 describe('the roll-up actually computes, and keeps computing (#1182)', () => {
-  const SYS = { isSystem: true } as AnyRec;
+  const SYS = { isSystem: true, tenantId: ORG } as AnyRec;
   let kernel: AnyRec;
   let ql: AnyRec;
   const id: Record<string, string> = {};

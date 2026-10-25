@@ -7,6 +7,13 @@ import stack from './helpers/composed-stack';
 import { registerStackPicklists } from './helpers/stack-picklists';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * Deleting an enrolled person must work (#696).
  *
  * ### The bug this file exists to keep dead
@@ -133,7 +140,7 @@ describe('deleting an enrolled person', () => {
     })) as never;
     registerStackPicklists(ql);
     await ql.syncSchemas();
-    api = ql.createContext({ isSystem: true });
+    api = ql.createContext({ isSystem: true, tenantId: ORG });
   });
   afterEach(async () => {
     await ql?.close();

@@ -31,24 +31,25 @@ import stack from './helpers/composed-stack';
  * model), which is exactly how a "capability" nobody enforces gets shipped.
  *
  * The authorization half is split. WHICH attachments a person reaches is the
- * platform's: attaching requires `canEdit(parent)`, reads are intersected with
- * the parents the caller can see, and deletes require uploader-or-parent-editor
+ * platform's: attaching requires that a by-id update of the parent be admitted,
+ * reads are intersected with the parents the caller can see, and deletes
+ * require the uploader or a person whose update of the parent would be
  * (service-storage attachment hooks + ADR-0104 governed download). Whether a
  * person may open the panel AT ALL is this app's: `sys_attachment` is granted by
  * nothing but a permission set, and through #2029 none here granted it, so every
  * persona but the platform admin was refused the panel — see the canonical note
  * in `src/sales/objects/index.ts`. What this file pins is the app-side half: the
  * flag is only on where a real persona can actually use it, every such persona
- * holds the read grant (and, until a platform gate is fixed, only that), and the
- * guest set reaches none of it.
+ * holds read, upload and delete (#2038; the default `crm_user` read alone), and
+ * the guest set reaches none of it.
  * `test/record-attachments-access.test.ts` measures the two halves together.
  *
  * Comments split the same way (#2029). The Discussion panel reads `sys_comment`
  * and `sys_activity`, which no platform baseline grants either; which threads a
  * grant reaches is the platform's parent-derived gate. So every such set also
- * holds read, create and edit on `sys_comment` and read on `sys_activity`,
- * none may delete a comment until a platform gate is fixed, and the guest set
- * names neither. `test/record-comments-access.test.ts` measures those halves.
+ * holds read, create, edit and delete on `sys_comment` (the default set no
+ * delete) and read on `sys_activity`, and the guest set names neither.
+ * `test/record-comments-access.test.ts` measures those halves.
  */
 
 type AnyRec = Record<string, any>;
@@ -79,6 +80,14 @@ const FILES_ENABLED = [
   'crm_opportunity',
   'crm_quote',
 ] as const;
+
+/**
+ * The package's default set (`isDefault`, held by every member). The
+ * `everyone` anchor refuses delete on any object, so it carries no delete bit
+ * on either panel, and it does not take the upload either: an upload for a
+ * member who holds no position is a call about that set of its own.
+ */
+const DEFAULT_SET = 'crm_user';
 
 const filesFlag = (name: string) => objectByName.get(name)?.enable?.files;
 const feedsFlag = (name: string) => objectByName.get(name)?.enable?.feeds;
@@ -120,7 +129,8 @@ describe('enable.files is authored exactly where attachments belong', () => {
   });
 
   it('a files-enabled object is editable by at least one non-guest profile', () => {
-    // Attaching requires `canEdit(parent)`. A flag on an object nobody can edit
+    // Attaching requires that a by-id update of the parent be admitted. A flag
+    // on an object nobody can edit
     // renders an Upload button that answers 403 ATTACHMENT_PARENT_ACCESS for
     // every user — a surface that exists only to fail.
     const stranded = FILES_ENABLED.filter(
@@ -132,42 +142,40 @@ describe('enable.files is authored exactly where attachments belong', () => {
     ).toEqual([]);
   });
 
-  it('every set that can read a files-enabled object can list its attachments, and none may write them yet', () => {
+  it('every set that can read a files-enabled object lists, uploads and deletes its attachments', () => {
     // `sys_attachment` is granted by no platform baseline, so a set that reads
     // a files-enabled record but does not name the object hands its holders a
     // panel that answers 403 PERMISSION_DENIED (#2029). Which rows the read
-    // reaches is the platform's parent-derived filter, not this grant.
-    //
-    // The write bits stay off. On 17.7.0 the platform's attach / delete gate
-    // asks `canEdit(parent)`, which answers true for every controlled_by_parent
-    // parent (crm_contact, crm_quote, crm_contract), so a write grant would let
-    // a rep attach to a quote they cannot read and delete files from a contract
-    // they cannot edit (measured, #2029; reported upstream). When the platform
-    // fix is in the pinned version, the write bits are granted and this flips.
+    // reaches, and where an upload or a delete takes, is the platform's
+    // parent gate, not this grant: it admits a write only where a by-id update
+    // of the parent would be (objectstack-ai/objectstack#24549, in 18.1.0), so
+    // the write bits are granted beside the read (#2038). Never `allowEdit`
+    // (the panel offers no edit), never View / Modify All: the parent decides.
     const canRead = (ps: AnyRec, name: string) => {
       const perm = (ps.objects ?? {})[name];
       return perm?.allowRead === true || perm?.viewAllRecords === true;
     };
+    const writes = (name: string) => name !== DEFAULT_SET;
     const wrong = permissionSets
       .filter((ps) => ps.name !== 'guest_portal')
       .filter((ps) => FILES_ENABLED.some((name) => canRead(ps, name)))
       .map((ps) => ({ name: ps.name as string, perm: (ps.objects ?? {}).sys_attachment ?? {} }))
-      .filter(({ perm }) =>
+      .filter(({ name, perm }) =>
         perm.allowRead !== true ||
-        perm.allowCreate === true || perm.allowEdit === true || perm.allowDelete === true ||
-        perm.viewAllRecords === true || perm.modifyAllRecords === true)
+        (perm.allowCreate === true) !== writes(name) || (perm.allowDelete === true) !== writes(name) ||
+        perm.allowEdit === true || perm.viewAllRecords === true || perm.modifyAllRecords === true)
       .map(({ name }) => name);
     expect(
       wrong,
-      'sets whose sys_attachment grant is not exactly read — every set that opens a files-enabled ' +
-        'record lists its attachments, and none writes them until the platform gate is fixed ' +
+      'sets whose sys_attachment grant is not exactly read + create + delete (crm_user: read) — every set ' +
+        'that opens a files-enabled record lists, uploads and deletes its attachments, where the parent allows ' +
         `(canonical note in src/sales/objects/index.ts):\n  ${wrong.join('\n  ')}`,
     ).toEqual([]);
   });
 
   it('the guest set can edit none of them, so it can attach to none', () => {
     // ADR-0090 D9 / the guest set's iron-clad rule. The platform gates the
-    // attach on `canEdit(parent)`, so "guest gains nothing from enable.files"
+    // attach on the parent's update, so "guest gains nothing from enable.files"
     // is exactly "guest holds no edit on a files-enabled object".
     const guest = setByName.get('guest_portal');
     expect(guest, 'the guest_portal permission set is missing').toBeTruthy();
@@ -201,22 +209,21 @@ describe('enable.feeds is left at its default', () => {
     ).toEqual([]);
   });
 
-  it('every set that opens a record opens its Discussion panel, and none may delete a comment yet', () => {
+  it('every set that opens a record opens its Discussion panel, and may delete where the parent allows', () => {
     // `sys_comment` and `sys_activity` are granted by no platform baseline, so a
     // set that reads a record but names them hands its holders a Discussion
     // panel that refuses both its halves with 403 PERMISSION_DENIED (#2029).
     // Which threads the grants reach is the platform's parent-derived gate, and
     // only a comment's author may edit it.
     //
-    // The delete bit stays off. On 17.7.0 the platform's comment delete gate
-    // asks `canEdit(parent)`, which answers true for every controlled_by_parent
-    // parent, so the bit would let a rep delete another person's comment on a
-    // contract they cannot edit (measured, #2029; reported upstream). When the
-    // platform fix is in the pinned version, the bit is granted and this flips.
-    const EXPECTED: Record<string, AnyRec> = {
-      sys_comment: { allowRead: true, allowCreate: true, allowEdit: true, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // The delete bit is granted (#2038): the platform takes a delete only from
+    // the comment's author or a person whose by-id update of the parent would
+    // be admitted (objectstack-ai/objectstack#24549, in 18.1.0). The default
+    // set carries no delete (see DEFAULT_SET).
+    const expected = (name: string): Record<string, AnyRec> => ({
+      sys_comment: { allowRead: true, allowCreate: true, allowEdit: true, allowDelete: name !== DEFAULT_SET, viewAllRecords: false, modifyAllRecords: false },
       sys_activity: { allowRead: true, allowCreate: false, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    };
+    });
     const readsARecord = (ps: AnyRec) => businessObjects.some((name) => {
       const perm = (ps.objects ?? {})[name];
       return perm?.allowRead === true || perm?.viewAllRecords === true;
@@ -224,13 +231,14 @@ describe('enable.feeds is left at its default', () => {
     const wrong = permissionSets
       .filter((ps) => ps.name !== 'guest_portal')
       .filter(readsARecord)
-      .flatMap((ps) => Object.entries(EXPECTED)
+      .flatMap((ps) => Object.entries(expected(ps.name as string))
         .filter(([object, bits]) => Object.entries(bits)
           .some(([bit, want]) => (((ps.objects ?? {})[object] ?? {})[bit] === true) !== want))
         .map(([object]) => `${ps.name as string} → ${object}`));
     expect(
       wrong,
-      'sets whose Discussion grants are not exactly sys_comment read + create + edit and sys_activity read ' +
+      'sets whose Discussion grants are not exactly sys_comment read + create + edit + delete (crm_user: no delete) ' +
+        'and sys_activity read ' +
         `(canonical note on enable.feeds in src/sales/objects/index.ts):\n  ${wrong.join('\n  ')}`,
     ).toEqual([]);
     const guest = (setByName.get('guest_portal')?.objects ?? {}) as AnyRec;

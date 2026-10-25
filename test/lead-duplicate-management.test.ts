@@ -16,6 +16,13 @@ import {
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * Soft lead dedupe (#598) — a returning prospect is RECORDED, not rejected.
  *
  * `crm_lead.email` used to carry a hard `unique: true`, so the second enquiry
@@ -109,7 +116,7 @@ describe('a repeated email is recorded, not rejected', () => {
   });
 
   it('accepts the same address twice — the acceptance case for the dropped constraint', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const first = await api.object('crm_lead').insert({ ...LEAD_BASE, email: 'Ada@Acme.IO' });
     const second = await api.object('crm_lead').insert({ ...LEAD_BASE, email: 'ada@acme.io ' });
 
@@ -119,13 +126,13 @@ describe('a repeated email is recorded, not rejected', () => {
   });
 
   it('stores both under one canonical address, whatever the visitor typed', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const row = await api.object('crm_lead').insert({ ...LEAD_BASE, email: '  Grace@Hopper.NAVY ' });
     expect(row.email).toBe('grace@hopper.navy');
   });
 
   it('flags and links the second lead to the first', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const first = await api.object('crm_lead').insert({ ...LEAD_BASE, email: 'repeat@acme.io' });
     const second = await api.object('crm_lead').insert({ ...LEAD_BASE, email: 'REPEAT@acme.io' });
 
@@ -138,7 +145,7 @@ describe('a repeated email is recorded, not rejected', () => {
   });
 
   it('points at the contact when the prospect already became one', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const person = await api.object('crm_contact').insert({
       // `crm_account` is a required master-detail on crm_contact; this engine
       // carries no crm_account, so the id is a stand-in for a real parent.
@@ -162,7 +169,7 @@ describe('disqualifying as a duplicate must name the survivor', () => {
 
   beforeAll(async () => {
     ql = await makeEngine();
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     // Written WITHOUT any duplicate_* column, on purpose — see makeEngine().
     survivor = await api.object('crm_lead').insert({ ...LEAD_BASE, email: 'survivor@acme.io' });
     target = await api.object('crm_lead').insert({ ...LEAD_BASE, email: 'target@acme.io' });
@@ -173,7 +180,7 @@ describe('disqualifying as a duplicate must name the survivor', () => {
 
   /** Try to close `target` as unqualified with the given duplicate fields. */
   const disqualify = (doc: AnyRec) => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     return api.object('crm_lead').update(
       { id: target.id, status: 'unqualified', disqualification_reason: 'duplicate', ...doc },
       { where: { id: target.id } },
@@ -213,7 +220,7 @@ describe('disqualifying as a duplicate must name the survivor', () => {
       duplicate_of_lead: survivor.id,
       duplicate_status: 'confirmed',
     });
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const saved = await api.object('crm_lead').findOne({ where: { id: target.id } });
     expect(saved?.disqualification_reason).toBe('duplicate');
     expect(saved?.duplicate_of_type).toBe('crm_lead');
@@ -222,7 +229,7 @@ describe('disqualifying as a duplicate must name the survivor', () => {
   });
 
   it('leaves every other disqualification reason alone', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const other = await api.object('crm_lead').insert({ ...LEAD_BASE, email: 'nofit@acme.io' });
     await expect(
       api.object('crm_lead').update(
@@ -233,7 +240,7 @@ describe('disqualifying as a duplicate must name the survivor', () => {
   });
 
   it('rejects the same mistake on INSERT, not only on update', async () => {
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     await expect(
       api.object('crm_lead').insert({
         ...LEAD_BASE,

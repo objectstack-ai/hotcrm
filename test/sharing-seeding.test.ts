@@ -8,6 +8,13 @@ import stack from './helpers/composed-stack';
 import { COUNTRY_TERRITORY, TERRITORY_OPTIONS, territoryFor } from '../src/sales/objects/_territory';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * Every declared sharing rule must actually be SEEDED (#621).
  *
  * ### The defect this file exists to catch
@@ -177,7 +184,10 @@ describe('every declared sharing rule is actually seeded', () => {
       const outcome = seedOutcome(rule);
       if (!outcome.seeded) continue; // reported by the test above
       for (const field of outcome.fields) {
-        if (!(field in (object.fields ?? {}))) {
+        // `id` is the platform's primary key — a real, flat column on every
+        // object, declared by none. `forecast_manager_sharing` filters on it
+        // (`record.id != ""`), the match-every-row predicate #2277 ruled.
+        if (field !== 'id' && !(field in (object.fields ?? {}))) {
           bad.push(`${rule.name}: filters on "${field}", which ${rule.object} does not declare`);
         }
       }
@@ -476,6 +486,14 @@ const RULE_WITNESSES: Record<string, { reaches: AnyRec; misses: AnyRec[] }> = {
     reaches: { stage: 'negotiation', amount: 500000 },
     misses: [{ stage: 'closed_won', amount: 500000 }, { stage: 'proposal', amount: 100 }],
   },
+  forecast_manager_sharing: {
+    // Match-every-row by design (#2277): the edit half of the manager's
+    // org-wide forecast grant. There is no row it may miss, so the witness is
+    // that it reaches an ordinary row at all — a `!= ""` the driver could not
+    // run, or one that compiled to match-nothing, returns zero rows here.
+    reaches: { period: 'quarter' },
+    misses: [],
+  },
 };
 
 describe('every seeded rule EXECUTES on the configured driver, not merely compiles', () => {
@@ -516,7 +534,7 @@ describe('every seeded rule EXECUTES on the configured driver, not merely compil
       await ql.syncSchemas();
 
       try {
-        const api = ql.createContext({ isSystem: true });
+        const api = ql.createContext({ isSystem: true, tenantId: ORG });
         const repo = () => api.object(rule!.object as string);
         const reached = (await repo().insert(witness.reaches as never)) as AnyRec;
         for (const miss of witness.misses) await repo().insert(miss as never);
@@ -605,7 +623,7 @@ describe('what the configured driver does with a compiled condition (measured)',
 
     const ql = await makeAccounts();
     try {
-      const api = ql.createContext({ isSystem: true });
+      const api = ql.createContext({ isSystem: true, tenantId: ORG });
       for (const row of FIXTURE) await api.object('crm_account').insert(row as never);
       const rows = (await api.object('crm_account').find({
         where: (compiled as unknown as { filter: unknown }).filter,
@@ -629,7 +647,7 @@ describe('what the configured driver does with a compiled condition (measured)',
     // memory driver's message carried is not part of the contract here.
     const ql = await makeAccounts();
     try {
-      const api = ql.createContext({ isSystem: true });
+      const api = ql.createContext({ isSystem: true, tenantId: ORG });
       for (const row of FIXTURE) await api.object('crm_account').insert(row as never);
       await expect(
         api.object('crm_account').find({ where: { $nor: [{ type: 'customer' }] } as never }),

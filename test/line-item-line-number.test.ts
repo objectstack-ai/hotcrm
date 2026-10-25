@@ -41,10 +41,16 @@ const PAIRS = [
   { object: 'crm_quote_line_item', parentKey: 'crm_quote', hook: 'quote_line_item_line_number' },
 ] as const;
 
+/**
+ * Both contexts name one organization: since 18.1.0 the driver creates the
+ * tenant column `NOT NULL`, so a write that carries none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
 /** A rep: a real user id, and NOT system — the context the readonly strip bites on. */
-const rep = { userId: 'rep_1' };
+const rep = { userId: 'rep_1', tenantId: ORG };
 /** The seed loader's shape: system, no user. */
-const seed = { isSystem: true };
+const seed = { isSystem: true, tenantId: ORG };
 
 let ql: AnyRec;
 

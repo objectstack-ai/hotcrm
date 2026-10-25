@@ -9,6 +9,13 @@ import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 import { LeadViews } from '../src/sales/views/lead.view';
 
 /**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
+/**
  * ═══ HotCRM has ONE owner, and it is the platform's (#548) ════════════════
  *
  * Every business object used to author its own `owner` lookup while the
@@ -250,7 +257,7 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
       if (data && !data.owner_id) data.owner_id = 'rep_round_robin';
     }, { object: 'crm_lead' });
 
-    const api = ql.createContext({ userId: 'usr_actor' });
+    const api = ql.createContext({ userId: 'usr_actor', tenantId: ORG });
     const row = await api.object('crm_lead').insert({ company: 'NewCo', is_converted: false });
 
     const observed = seen.filter((s) => s.object === 'crm_lead').pop();
@@ -274,7 +281,7 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
     // `service_agent` carries `allowTransfer` on `crm_task` and nothing else.
     const before = seen.filter((s) => s.object === 'crm_task').length;
 
-    const api = ql.createContext({ userId: 'usr_agent' });
+    const api = ql.createContext({ userId: 'usr_agent', tenantId: ORG });
     await api.object('crm_task').insert({ subject: 'Escalated case', owner_id: 'rep_account_owner' });
 
     const observed = seen.filter((s) => s.object === 'crm_task');
@@ -319,10 +326,23 @@ describe('allowTransfer is granted deliberately', () => {
     // The rule: transfer follows `modifyAllRecords` on this set — the sales
     // stack, and nothing beyond it. Contracts, campaigns, cases and the product
     // catalog are edit-only for a manager and stay untransferable.
+    //
+    // One rostered deviation (AGENTS.md rule 11): `crm_forecast`. #2277
+    // (ruling B) replaced Modify All there with an edit share so that
+    // `allowDelete: false` is enforced, and the transfer bit stayed — the
+    // profile's capability is authored precisely so it survives a narrowing
+    // of `modifyAllRecords` (`src/sales/profiles/index.ts`). It is still a
+    // real write grant: the manager edits every forecast through the
+    // `forecast_manager_sharing` share, and reassigning one is measured in
+    // `test/forecast-manager-edit-share.test.ts`.
+    const TRANSFER_WITHOUT_MODIFY_ALL = ['crm_forecast'];
     const modifyAll = Object.entries(objectsOf('sales_manager'))
       .filter(([, p]) => p?.modifyAllRecords === true).map(([o]) => o).sort();
     expect(modifyAll.length, 'sales_manager holds modifyAllRecords nowhere — rule vacuous').toBeGreaterThan(4);
-    expect(transfersIn('sales_manager')).toEqual(modifyAll);
+    for (const o of TRANSFER_WITHOUT_MODIFY_ALL) {
+      expect(objectsOf('sales_manager')[o]?.modifyAllRecords, `${o} is back on Modify All — drop it from the roster`).not.toBe(true);
+    }
+    expect(transfersIn('sales_manager')).toEqual([...modifyAll, ...TRANSFER_WITHOUT_MODIFY_ALL].sort());
   });
 
   it('service_agent may assign a TASK and nothing else', () => {

@@ -7,6 +7,13 @@ import stack, { type AnyRec, walk } from './helpers/composed-stack';
 import { products } from '../src/revenue/data/catalog.seed';
 import { registerStackPicklists } from './helpers/stack-picklists';
 
+/**
+ * The organization every write here carries: since 18.1.0 the driver creates
+ * the tenant column `NOT NULL`, so a write that names none is refused at the
+ * database (objectstack#24940).
+ */
+const ORG = 'org_1';
+
 const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
 const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
 
@@ -166,7 +173,7 @@ describe('the row a picker-shaped insert actually produces', () => {
         hooks.filter((h) => h.object === 'crm_opportunity_line_item') as never,
       );
     }
-    const api = ql.createContext({ isSystem: true });
+    const api = ql.createContext({ isSystem: true, tenantId: ORG });
     const account = await api.object('crm_account').insert({
       name: 'Northwind', type: 'customer', industry: 'technology',
     });

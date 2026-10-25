@@ -55,13 +55,20 @@ export const Contact = ObjectSchema.create({
       group: 'identity',
     }),
 
-    // Formula field - Full name
-    // `salutation` is a picklist, so the formula sees the raw VALUE (`ms`, `dr`),
+    // Full name, the record title
+    // `salutation` is a picklist, so the expression sees the raw VALUE (`ms`, `dr`),
     // not the label — names rendered as "ms Emily Davis" in lists and details
     // (#461). The formula language has no proper-case or option-label lookup, and
     // hardcoding "Ms." would defeat translation, so the name is built from the
     // name fields alone; salutation stays its own (translated) field.
-    full_name: Field.formula({
+    // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
+    // computes the expression on every insert and every update by id and
+    // stores the result, so an import matches a lookup cell against this title
+    // and sort and search read a real column. `readonly` keeps it off the
+    // forms; a value a client sends never stands. Rows stored before #2230
+    // are titled by `scripts/backfill-record-titles.ts`.
+    full_name: Field.text({
+      readonly: true,
       label: 'Full Name',
       expression: F`joinNonEmpty([record.first_name, record.last_name], ' ')`,
       group: 'identity',
@@ -315,12 +322,12 @@ export const Contact = ObjectSchema.create({
   ],
   
   // Display configuration. ADR-0079 `nameField` names the real field holding
-  // the record title — here the `full_name` formula field defined above.
+  // the record title — here the stored `full_name` field defined above.
   nameField: 'full_name',
-  // Explicit search targets (ADR-0061). REQUIRED because nameField is a
-  // FORMULA (display_title/full_name): without this, $search auto-defaults to
-  // the formula field, which isn't a real column, so the lookup picker + global
-  // search silently return zero. These are real, indexed columns.
+  // Explicit search targets (ADR-0061): the real columns the lookup picker
+  // and global search match. Until #2230 they were required, because the
+  // title was a formula with no column for `$search` to default to. The
+  // title is stored now; these stay because they name what is searched.
   searchableFields: ['first_name', 'last_name', 'email'],
   highlightFields: ['full_name', 'email', 'crm_account', 'phone'],
   

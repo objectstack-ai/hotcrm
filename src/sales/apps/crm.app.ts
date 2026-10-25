@@ -178,6 +178,13 @@ export const CrmApp = App.create({
     // Service group, which the service module fills with its dashboard first.
     // ⛔ Do not put an entry a service persona can see ahead of the Service
     // group: it becomes their landing.
+    //
+    // A member who reads NONE of the objects this tree names (no HotCRM grant
+    // yet: `crm_user` not accepted on a managed environment, #2231) is never
+    // opened on this order. Since objectui#13347 (the 18.1.0 console) the app
+    // root sends them to the platform's access page first (objectstack#25338,
+    // #2250), so ⛔ no gate here asks "reads anything" and HotCRM authors no
+    // access page. `test/app-navigation-audience.test.ts` pins both landings.
     {
       id: 'nav_home',
       type: 'dashboard',

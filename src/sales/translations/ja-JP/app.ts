@@ -518,6 +518,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         case_highlights: { label: '重要情報' },
         case_status_path: { label: 'ケースステータスの進捗' },
         case_details: { label: 'ケース詳細情報' },
+        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        case_main_tabs: { items: { details: { label: '詳細' }, related: { label: '関連' }, activity: { label: '活動' } } },
       },
     },
     lead_detail_page: {
@@ -547,6 +550,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         opp_highlights: { label: '重要情報' },
         opp_stage_path: { label: '商談ステージの進捗' },
         opp_details: { label: '商談詳細情報' },
+        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
+        // `pages.PAGE.components.TABS.items.VALUE.label`).
+        opp_main_tabs: { items: { details: { label: '詳細' }, related: { label: '関連' }, activity: { label: '活動' } } },
       },
     },
     sales_home_page: {
@@ -600,6 +606,47 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
   // retyped: the number lives in `_thresholds.ts` alone (#1711).
   flows: {
+    // Approval flows (#2060 item 13, C-15): the flow's own `label`, and each
+    // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
+    // the step name the approval request shows the submitter and the approvers.
+    account_approval: {
+      label: '取引先承認',
+      approvals: {
+        account_review: { label: '取引先レビュー' },
+      },
+    },
+    lead_conversion_approval: {
+      label: 'リードコンバージョン承認',
+      approvals: {
+        conversion_review: { label: 'コンバージョンレビュー' },
+      },
+    },
+    opportunity_approval: {
+      label: '大口商談承認',
+      approvals: {
+        manager_review: { label: '営業マネージャーのレビュー' },
+        director_signoff: { label: '営業ディレクターの最終承認' },
+      },
+    },
+    opportunity_approval_on_create: {
+      label: '大口商談承認（作成時）',
+      approvals: {
+        manager_review: { label: '営業マネージャーのレビュー' },
+        director_signoff: { label: '営業ディレクターの最終承認' },
+      },
+    },
+    opportunity_qualification_approval: {
+      label: '商談の案件化承認',
+      approvals: {
+        qualification_review: { label: '案件化レビュー' },
+      },
+    },
+    opportunity_status_change_approval: {
+      label: '商談のステータス変更承認',
+      approvals: {
+        status_review: { label: 'ステータス変更レビュー' },
+      },
+    },
     campaign_enrollment: {
       label: 'キャンペーンにメンバーを登録',
       successMessage: '対象メンバーをキャンペーンに登録しました。',

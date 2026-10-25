@@ -11,7 +11,8 @@ import artifact from '../objectstack.config';
 
 /**
  * A sales rep reaches the attachments of the quotes they can read, and of no
- * other (#2029).
+ * other (#2029), and uploads and deletes only where they can edit the record
+ * (#2038).
  *
  * ### What was wrong
  *
@@ -34,10 +35,18 @@ import artifact from '../objectstack.config';
  * quote the rep reaches through the territory rule and one on a quote they
  * cannot reach, and asserts both sides.
  *
- * The grant is READ only. On 17.7.0 the platform's attach / delete gate admits
- * every `controlled_by_parent` parent, quotes included, so a write grant would
- * let the rep place a file on the quote they cannot reach (measured, #2029;
- * reported upstream). The last case pins that the rep cannot.
+ * ### Uploads and deletes (#2038)
+ *
+ * The grant carries upload and delete beside the read. Where they take is the
+ * platform's parent gate again: an upload is admitted only where a by-id update
+ * of the parent would be, and a delete only from the file's uploader or a
+ * person whose update of the parent would be (objectstack-ai/objectstack#24549,
+ * in 18.1.0). Until that release the two bits were held back, because the gate
+ * did not yet give that answer. So the fixture adds a contract under the
+ * reachable account, which the rep reads and may not edit (`sales_rep` holds no
+ * edit on `crm_contract`), and the write cases assert both sides: the editable
+ * quote takes the rep's upload and their deletes, the contract and the
+ * unreachable quote refuse them.
  *
  * ### Why this suite boots its own stack
  *
@@ -72,9 +81,9 @@ const fileRow = (name: string) =>
     key: `attachments/${name}`, name, mime_type: 'application/pdf', size: 1, scope: 'attachments', status: 'committed',
   });
 
-/** The fields an Attachments-panel upload posts, for a quote. */
-const attachmentOn = async (quoteId: string, name: string) => ({
-  parent_object: 'crm_quote', parent_id: quoteId, file_id: await fileRow(name),
+/** The fields an Attachments-panel upload posts, for a record (a quote unless named). */
+const attachmentOn = async (parentId: string, name: string, parentObject = 'crm_quote') => ({
+  parent_object: parentObject, parent_id: parentId, file_id: await fileRow(name),
   file_name: name, mime_type: 'application/pdf', size: 1,
 });
 
@@ -110,9 +119,25 @@ beforeAll(async () => {
   id.quote_US = await quote(id.acct_US, 'Attachments US Quote');
   id.quote_JP = await quote(id.acct_JP, 'Attachments JP Quote');
 
-  // One attachment on each quote, uploaded by the owner.
-  id.att_US = await insert('sys_attachment', { ...(await attachmentOn(id.quote_US, 'us-quote.pdf')), uploaded_by: id.owner });
-  id.att_JP = await insert('sys_attachment', { ...(await attachmentOn(id.quote_JP, 'jp-quote.pdf')), uploaded_by: id.owner });
+  // A contract under the reachable account: `crm_contract` is
+  // controlled_by_parent too, so the rep reads it, and `sales_rep` holds no
+  // edit on the object, so they may not update it (#2038).
+  id.contact_US = await insert('crm_contact', {
+    first_name: 'Ann', last_name: 'Attachments', email: 'ann@attachments.test', crm_account: id.acct_US, owner_id: id.owner,
+  });
+  id.contract_US = await insert('crm_contract', {
+    crm_account: id.acct_US, crm_contact: id.contact_US, owner_id: id.owner, status: 'draft',
+    contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1000,
+  });
+
+  // One attachment on each quote and on the contract, uploaded by the owner,
+  // and a second one on the reachable quote for the parent-editor delete.
+  const ownerFile = async (parentId: string, name: string, parentObject?: string) =>
+    insert('sys_attachment', { ...(await attachmentOn(parentId, name, parentObject)), uploaded_by: id.owner });
+  id.att_US = await ownerFile(id.quote_US, 'us-quote.pdf');
+  id.att_US_other = await ownerFile(id.quote_US, 'us-quote-redline.pdf');
+  id.att_JP = await ownerFile(id.quote_JP, 'jp-quote.pdf');
+  id.att_contract_US = await ownerFile(id.contract_US, 'us-contract.pdf', 'crm_contract');
 
   // The boot backfill ran before this population existed. The sharing service
   // is a kernel service the handle does not front, so it is driven directly.
@@ -140,6 +165,14 @@ describe('the fixture discriminates (controls)', () => {
     expect(await verify.rows('crm_quote', { id: id.quote_US }, { as: rep.token })).toHaveLength(1);
     expect(await verify.rows('crm_quote', { id: id.quote_JP }, { as: rep.token })).toHaveLength(0);
   });
+
+  it('the rep reads the US contract and may not update it', async () => {
+    // The write cases tell "may edit the record" from "may read it" only if
+    // one parent is readable and not editable.
+    expect(await verify.rows('crm_contract', { id: id.contract_US }, { as: rep.token })).toHaveLength(1);
+    const res = await verify.apiAs(rep.token, 'PATCH', `/data/crm_contract/${id.contract_US}`, { contract_value: 2 });
+    expect(res.status, await res.clone().text()).toBe(403);
+  });
 });
 
 describe('a sales rep and the Attachments panel of a quote (#2029)', () => {
@@ -148,18 +181,65 @@ describe('a sales rep and the Attachments panel of a quote (#2029)', () => {
     const body = (await res.json()) as AnyRec;
     // Before #2029: 403 PERMISSION_DENIED, the panel's "You don't have access".
     expect(res.status, JSON.stringify(body)).toBe(200);
-    expect(fixtureLabels(body.records ?? [])).toEqual(['att_US']);
+    expect(fixtureLabels(body.records ?? [])).toEqual(['att_US', 'att_US_other', 'att_contract_US']);
+  });
+});
+
+/** A call on the data door as the rep: its status and error code. */
+const asRep = async (method: string, path: string, payload?: unknown) => {
+  const res = await verify.apiAs(rep.token, method, path, payload);
+  const body = (await res.json().catch(() => ({}))) as AnyRec;
+  return { status: res.status, code: body.code as string | undefined, body };
+};
+
+describe('a sales rep uploads and deletes where they can edit the record (#2038)', () => {
+  it('uploads to a quote they can edit, and deletes their own file', async () => {
+    const posted = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.quote_US, 'rep-upload.pdf'));
+    // Before #2038: 403 PERMISSION_DENIED, the grant was read only.
+    expect(posted.status, JSON.stringify(posted.body)).toBe(201);
+    const [mine] = await verify.rows('sys_attachment', { parent_id: id.quote_US, file_name: 'rep-upload.pdf' });
+    expect(mine?.uploaded_by).toBe(rep.id);
+
+    const deleted = await asRep('DELETE', `/data/sys_attachment/${mine!.id}`);
+    expect(deleted.status, JSON.stringify(deleted.body)).toBe(200);
+    expect(await verify.rows('sys_attachment', { id: mine!.id })).toHaveLength(0);
   });
 
-  it('cannot place a file on a quote they cannot reach', async () => {
-    // Refused by the object gate, because the grant is read only (see the
-    // header). The day the write bits are granted, the refusal has to come from
-    // the platform's parent gate instead, and this case is where that shows.
-    const res = await verify.apiAs(rep.token, 'POST', '/data/sys_attachment', await attachmentOn(id.quote_JP, 'stray.pdf'));
-    const body = (await res.json()) as AnyRec;
-    expect({ status: res.status, code: body.code }, JSON.stringify(body)).toEqual({
-      status: 403, code: 'PERMISSION_DENIED',
+  it("deletes another person's file on a quote they can edit", async () => {
+    // The platform's rule, and the files-and-comments guide's: the uploader
+    // and anyone who can edit the record delete a file.
+    const res = await asRep('DELETE', `/data/sys_attachment/${id.att_US_other}`);
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect(await verify.rows('sys_attachment', { id: id.att_US_other })).toHaveLength(0);
+  });
+
+  it('is refused an upload to a contract they only read, and to a quote they cannot reach', async () => {
+    // The rep holds create on sys_attachment, so the refusal is the platform's
+    // parent gate, not the object gate.
+    const contract = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.contract_US, 'stray-contract.pdf', 'crm_contract'));
+    expect({ status: contract.status, code: contract.code }, JSON.stringify(contract.body)).toEqual({
+      status: 403, code: 'ATTACHMENT_PARENT_ACCESS',
     });
+    const quote = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.quote_JP, 'stray-quote.pdf'));
+    expect({ status: quote.status, code: quote.code }, JSON.stringify(quote.body)).toEqual({
+      status: 403, code: 'ATTACHMENT_PARENT_ACCESS',
+    });
+    expect(fixtureLabels(await verify.rows('sys_attachment', { parent_id: id.contract_US }))).toEqual(['att_contract_US']);
     expect(fixtureLabels(await verify.rows('sys_attachment', { parent_id: id.quote_JP }))).toEqual(['att_JP']);
+  });
+
+  it("is refused a delete of another person's file where they cannot edit the record", async () => {
+    // On the contract they read: refused by name. On the quote they cannot
+    // reach: the file is not there for them at all.
+    const contract = await asRep('DELETE', `/data/sys_attachment/${id.att_contract_US}`);
+    expect({ status: contract.status, code: contract.code }, JSON.stringify(contract.body)).toEqual({
+      status: 403, code: 'ATTACHMENT_DELETE_DENIED',
+    });
+    const quote = await asRep('DELETE', `/data/sys_attachment/${id.att_JP}`);
+    expect({ status: quote.status, code: quote.code }, JSON.stringify(quote.body)).toEqual({
+      status: 404, code: 'RECORD_NOT_FOUND',
+    });
+    expect(fixtureLabels(await verify.rows('sys_attachment', { id: { $in: [id.att_contract_US, id.att_JP] } })))
+      .toEqual(['att_JP', 'att_contract_US']);
   });
 });

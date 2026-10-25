@@ -41,14 +41,15 @@ export const MarketingUserProfile = {
     // Reads the KB and may rate it; cannot author articles (#601).
     crm_article_feedback: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_knowledge_article: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
-    // The record Attachments panel, READ only: canonical note on `enable.files`
-    // in `src/sales/objects/index.ts` (#2029). Which attachments it lists
-    // derives from the parent record; upload and delete wait upstream.
-    sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // The record Attachments panel: canonical note on `enable.files` in
+    // `src/sales/objects/index.ts` (#2029, #2038). Which attachments it lists,
+    // and where an upload or a delete is taken, derives from the parent record.
+    sys_attachment: { allowCreate: true,  allowRead: true, allowEdit: false, allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     // The record Discussion panel, comments and activity: canonical note on
-    // `enable.feeds` in `src/sales/objects/index.ts` (#2029). Which threads it
-    // reaches derives from the parent record; deleting a comment waits upstream.
-    sys_comment:  { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // `enable.feeds` in `src/sales/objects/index.ts` (#2029, #2038). Which
+    // threads it reaches, and whose comments a delete takes, derives from the
+    // parent record.
+    sys_comment:  { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
