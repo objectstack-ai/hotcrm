@@ -6,7 +6,8 @@ import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * A sales rep reads and joins the Discussion of the records they can read, and
- * of no other (#2029).
+ * of no other (#2029), and deletes comments only where they can edit the
+ * record (#2038).
  *
  * ### What was wrong
  *
@@ -29,11 +30,15 @@ import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
  * the rep reaches through the territory rule and one of each on a quote they
  * cannot reach, and asserts both sides.
  *
- * Deleting a comment is not granted. On 17.7.0 the platform's delete gate asks
- * `canEdit(parent)`, which admits every `controlled_by_parent` parent, so the
- * delete bit would let the rep delete another person's comment on a contract
- * they cannot edit (measured, #2029; reported upstream). The last case pins
- * that the rep cannot.
+ * ### Deleting a comment (#2038)
+ *
+ * The grant carries delete. The platform takes it only from the comment's
+ * author or a person whose by-id update of the parent would be admitted
+ * (objectstack-ai/objectstack#24549, in 18.1.0; until that release the bit was
+ * held back, because the gate did not yet give that answer). So the fixture
+ * adds a contract under the reachable account, which the rep reads and may not
+ * edit (`sales_rep` holds no edit on `crm_contract`), and the delete cases
+ * assert both sides.
  *
  * The shared boot carries `AuditPlugin`, which owns both objects and their read
  * gates (`test/helpers/verify-stack.ts`), so this file needs no boot of its own.
@@ -55,7 +60,7 @@ const insert = async (object: string, doc: AnyRec): Promise<string> => {
   return String(row?.id);
 };
 
-const thread = (quoteId: string) => `crm_quote:${quoteId}`;
+const thread = (recordId: string, object = 'crm_quote') => `${object}:${recordId}`;
 
 beforeAll(async () => {
   verify = await hotcrmStack();
@@ -94,6 +99,23 @@ beforeAll(async () => {
     });
   }
 
+  // For the delete cases (#2038): a second owner comment on the reachable
+  // quote, and a contract under the reachable account with an owner comment.
+  // `crm_contract` is controlled_by_parent, so the rep reads it, and
+  // `sales_rep` holds no edit on the object.
+  const ownerComment = (threadId: string, body: string) => insert('sys_comment', {
+    thread_id: threadId, author_id: id.owner, author_name: 'Another Owner', body,
+  });
+  id.cmt_US_other = await ownerComment(thread(id.quote_US), 'US discount note');
+  id.contact_US = await insert('crm_contact', {
+    first_name: 'Ann', last_name: 'Comments', email: 'ann@comments.test', crm_account: id.acct_US, owner_id: id.owner,
+  });
+  id.contract_US = await insert('crm_contract', {
+    crm_account: id.acct_US, crm_contact: id.contact_US, owner_id: id.owner, status: 'draft',
+    contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1000,
+  });
+  id.cmt_contract_US = await ownerComment(thread(id.contract_US, 'crm_contract'), 'US contract note');
+
   // The boot backfill ran before this population existed. The sharing service
   // is a kernel service the handle does not front, so it is driven directly.
   const rules: AnyRec = verify.kernel.getService('sharingRules');
@@ -123,8 +145,17 @@ describe('the fixture discriminates (controls)', () => {
     expect(await verify.rows('crm_quote', { id: id.quote_JP }, { as: rep.token })).toHaveLength(0);
   });
 
+  it('the rep reads the US contract and may not update it', async () => {
+    // The delete cases tell "may edit the record" from "may read it" only if
+    // one parent is readable and not editable.
+    expect(await verify.rows('crm_contract', { id: id.contract_US }, { as: rep.token })).toHaveLength(1);
+    const res = await verify.apiAs(rep.token, 'PATCH', `/data/crm_contract/${id.contract_US}`, { contract_value: 2 });
+    expect(res.status, await res.clone().text()).toBe(403);
+  });
+
   it('both quotes carry a comment and an activity row', async () => {
-    expect(fixtureLabels(await verify.rows('sys_comment', {}))).toEqual(['cmt_JP', 'cmt_US']);
+    expect(fixtureLabels(await verify.rows('sys_comment', { thread_id: { $in: [thread(id.quote_US), thread(id.quote_JP)] } })))
+      .toEqual(['cmt_JP', 'cmt_US', 'cmt_US_other']);
     expect(fixtureLabels(await verify.rows('sys_activity', { object_name: 'crm_quote' }))).toEqual(['act_JP', 'act_US']);
   });
 });
@@ -135,7 +166,7 @@ describe('a sales rep and the Discussion panel of a quote (#2029)', () => {
     const body = (await res.json()) as AnyRec;
     // Before #2029: 403 PERMISSION_DENIED, the panel's "view comments" refusal.
     expect(res.status, JSON.stringify(body)).toBe(200);
-    expect(fixtureLabels(body.records ?? [])).toEqual(['cmt_US']);
+    expect(fixtureLabels(body.records ?? [])).toEqual(['cmt_US', 'cmt_US_other', 'cmt_contract_US']);
     // Asked for the other thread by name, the answer is still nothing.
     const other = await query(rep.token, 'sys_comment', [['thread_id', '=', thread(id.quote_JP)]]);
     expect({ status: other.status, labels: other.labels }, JSON.stringify(other.body)).toEqual({ status: 200, labels: [] });
@@ -163,16 +194,41 @@ describe('a sales rep and the Discussion panel of a quote (#2029)', () => {
     expect(fixtureLabels(await verify.rows('sys_comment', { thread_id: thread(id.quote_JP) }))).toEqual(['cmt_JP']);
   });
 
-  it("cannot delete another person's comment", async () => {
-    // Refused by the object gate, because the grant carries no delete bit (see
-    // the header). The day it is granted, the refusal has to come from the
-    // platform's author-or-parent-editor gate instead, and this case is where
-    // that shows.
-    const res = await verify.apiAs(rep.token, 'DELETE', `/data/sys_comment/${id.cmt_US}`);
-    const body = (await res.json()) as AnyRec;
-    expect({ status: res.status, code: body.code }, JSON.stringify(body)).toEqual({
-      status: 403, code: 'PERMISSION_DENIED',
+});
+
+describe('a sales rep deletes comments where they can edit the record (#2038)', () => {
+  it('deletes their own comment', async () => {
+    const posted = await verify.apiAs(rep.token, 'POST', '/data/sys_comment', { thread_id: thread(id.quote_US), body: 'Rep typo' });
+    expect(posted.status, await posted.clone().text()).toBe(201);
+    const [mine] = await verify.rows('sys_comment', { thread_id: thread(id.quote_US), body: 'Rep typo' });
+    // Before #2038: 403 PERMISSION_DENIED, the grant carried no delete.
+    const res = await verify.apiAs(rep.token, 'DELETE', `/data/sys_comment/${mine!.id}`);
+    expect(res.status, await res.clone().text()).toBe(200);
+    expect(await verify.rows('sys_comment', { id: mine!.id })).toHaveLength(0);
+  });
+
+  it("deletes another person's comment on a quote they can edit", async () => {
+    // The platform's rule: the author and anyone who can edit the record.
+    const res = await verify.apiAs(rep.token, 'DELETE', `/data/sys_comment/${id.cmt_US_other}`);
+    expect(res.status, await res.clone().text()).toBe(200);
+    expect(await verify.rows('sys_comment', { id: id.cmt_US_other })).toHaveLength(0);
+  });
+
+  it("is refused a delete of another person's comment where they cannot edit the record", async () => {
+    // The rep holds delete on sys_comment, so the refusal is the platform's
+    // parent gate, not the object gate. On the contract they read: refused by
+    // name. On the quote they cannot reach: the comment is not there for them.
+    const contract = await verify.apiAs(rep.token, 'DELETE', `/data/sys_comment/${id.cmt_contract_US}`);
+    const contractBody = (await contract.json()) as AnyRec;
+    expect({ status: contract.status, code: contractBody.code }, JSON.stringify(contractBody)).toEqual({
+      status: 403, code: 'RECORD_NOT_ACCESSIBLE',
     });
-    expect(fixtureLabels(await verify.rows('sys_comment', { id: id.cmt_US }))).toEqual(['cmt_US']);
+    const quote = await verify.apiAs(rep.token, 'DELETE', `/data/sys_comment/${id.cmt_JP}`);
+    const quoteBody = (await quote.json()) as AnyRec;
+    expect({ status: quote.status, code: quoteBody.code }, JSON.stringify(quoteBody)).toEqual({
+      status: 404, code: 'RECORD_NOT_FOUND',
+    });
+    expect(fixtureLabels(await verify.rows('sys_comment', { id: { $in: [id.cmt_contract_US, id.cmt_JP] } })))
+      .toEqual(['cmt_JP', 'cmt_contract_US']);
   });
 });
