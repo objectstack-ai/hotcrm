@@ -21,7 +21,9 @@ HotCRM 內建五個儀表板。每個都為特定角色而建構，回答該角�
 | 🎧 **Customer Service** | 服務客服、經理 | "我們在工單和 SLA 上表現如何？" |
 | 👔 **Executive Overview** | 高階主管、財務 | "我們達成目標了嗎？" |
 
-五者都遵守 [共享規則](/zh-Hant/docs/administration/sharing-and-security)——你看到的內容取決於你的角色。建立在商機之上的三塊——CRM Overview、Sales Performance 與 Executive Overview——對不能讀取商機的角色（例如服務專員）不出現在側邊欄裡。
+五者都遵守 [共享規則](/zh-Hant/docs/administration/sharing-and-security)——你看到的內容取決於你的角色。建立在商機之上的三塊——CRM Overview、Sales Performance 與 Executive Overview——對不能讀取商機的人不出現在側邊欄裡，也按職位對服務專員與服務經理不出現。
+
+**隱藏的儀表板不等於上鎖的儀表板。** Executive Overview 還對持有 `sales_rep`、`service_agent` 或 `service_manager` 職位的人不出現在側邊欄裡，這樣他們打開應用時落在為自己日常工作準備的頁面上——銷售代表落在 **Sales Home**——而不是公司層面的總覽。這只是為了聚焦而縮短選單，不是存取限制：銷售代表直接打開這個儀表板的連結，仍然能看到它。任何儀表板顯示什麼，由記錄可見性決定，而記錄可見性由 [共享規則](/zh-Hant/docs/administration/sharing-and-security#how-the-layers-combine) 設定：每個數字只彙總檢視者有權讀取的記錄，所以銷售代表看到的是高管版面下自己那一份資料，看不到任何他自己打不開的交易。
 
 ### 沒有任何磁貼顯示趨勢箭頭
 

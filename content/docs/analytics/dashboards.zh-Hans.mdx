@@ -19,7 +19,9 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 | 🎧 **Customer Service** | 服务客服、经理 | "我们在工单和 SLA 上表现如何？" |
 | 👔 **Executive Overview** | 高管、财务 | "我们达成目标了吗？" |
 
-五者都遵守 [共享规则](/zh-Hans/docs/administration/sharing-and-security)——你看到的内容取决于你的角色。建立在商机之上的三块——CRM Overview、Sales Performance 与 Executive Overview——对不能读取商机的角色（例如服务坐席）不出现在侧边栏里。
+五者都遵守 [共享规则](/zh-Hans/docs/administration/sharing-and-security)——你看到的内容取决于你的角色。建立在商机之上的三块——CRM Overview、Sales Performance 与 Executive Overview——对不能读取商机的人不出现在侧边栏里，也按岗位对服务坐席与服务经理不出现。
+
+**隐藏的仪表盘不等于上锁的仪表盘。** Executive Overview 还对持有 `sales_rep`、`service_agent` 或 `service_manager` 岗位的人不出现在侧边栏里，这样他们打开应用时落在为自己日常工作准备的页面上——销售代表落在 **Sales Home**——而不是公司层面的总览。这只是为了聚焦而缩短菜单，不是访问限制：销售代表直接打开这个仪表盘的链接，仍然能看到它。任何仪表盘显示什么，由记录可见性决定，而记录可见性由 [共享规则](/zh-Hans/docs/administration/sharing-and-security#how-the-layers-combine) 设定：每个数字只汇总查看者有权读取的记录，所以销售代表看到的是高管版式下自己那一份数据，看不到任何他自己打不开的交易。
 
 ### 没有任何磁贴显示趋势箭头
 
