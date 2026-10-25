@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import stack, { servedApps, type AnyRec, localePacks, packFor } from './helpers/composed-stack';
+import stack, { servedApps, type AnyRec, localePacks, packFor, walk } from './helpers/composed-stack';
 import { hotcrmStack, registeredFields } from './helpers/verify-stack';
 
 const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
@@ -746,6 +746,13 @@ describe('every locale is complete on every authored surface', () => {
     // as coverage while translating nothing, and the next person to add a view
     // by that name inherits a stale label.
     const shipped = new Set(canonicalViews().map(({ object, name }) => `${object}.${name}`));
+    // A named form view ships too: its `title` is keyed `_views.<formViews key>.title`
+    // (#2284, the public forms). It carries no label, so it is not a canonical
+    // view above — only a key an orphan check must not call unshipped.
+    for (const record of views) {
+      const object = record.list?.data?.object ?? record.form?.data?.object ?? record.object;
+      for (const key of Object.keys(record.formViews ?? {})) shipped.add(`${object}.${key}`);
+    }
     const bad: string[] = [];
     for (const [locale, pack] of packs()) {
       for (const [object, entry] of Object.entries<AnyRec>(pack.objects ?? {})) {
@@ -965,4 +972,52 @@ describe('every locale is complete on every authored surface', () => {
   // that shape — on a view `form`, a `formViews` entry and a page
   // `record:details` nested in tabs — as `translation-section-name-missing`,
   // and `pnpm lint` fails on it.
+});
+
+describe('the Sales Home tabs and the public forms keep the slot their translation is keyed under (#2284)', () => {
+  /**
+   * `objectstack lint --strict` (`pnpm lint`) names a missing locale key for each
+   * of these as `i18n/missing-page` / `i18n/missing-view` — measured on 18.1.0 by
+   * removing one key per row. What it cannot see is the SOURCE side going: a
+   * `page:tabs` item with no `value` gets no translation slot at all (its token
+   * is index-derived), and a form view with no `title` has nothing for
+   * `GET /forms/:slug` to translate, so either regression makes the key vanish
+   * and lint go green while the visitor reads English again. This pins the two
+   * authoring facts and the key each locale carries for them.
+   */
+  const homeTabs = [...walk(pages.find((p) => p.name === 'sales_home_page'))].find(
+    (c) => c.type === 'page:tabs' && c.id === 'home_tabs',
+  );
+  const forms: [string, string][] = [['crm_lead', 'web_to_lead'], ['crm_case', 'web_to_case']];
+  const formView = (object: string, key: string): AnyRec | undefined =>
+    views.find((v) => (v.list?.data?.object ?? v.form?.data?.object) === object && v.formViews?.[key])
+      ?.formViews?.[key];
+
+  it('every Sales Home tab item carries a value, and every locale labels it', () => {
+    const items: AnyRec[] = homeTabs?.properties?.items ?? [];
+    expect(items.length).toBe(3);
+    const bad: string[] = [];
+    for (const item of items) {
+      if (typeof item.value !== 'string' || !item.value) bad.push(`item "${item.label}" has no value`);
+      for (const [locale, pack] of localePacks) {
+        if (!pack.pages?.sales_home_page?.components?.home_tabs?.items?.[item.value]?.label) {
+          bad.push(`${locale}: home_tabs.items.${item.value}.label`);
+        }
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('both public forms author a title, and every locale translates it', () => {
+    const bad: string[] = [];
+    for (const [object, key] of forms) {
+      const form = formView(object, key);
+      if (!form?.sharing?.allowAnonymous) bad.push(`${object}.${key} is not a public form`);
+      if (typeof form?.title !== 'string' || !form.title) bad.push(`${object}.${key} authors no title`);
+      for (const [locale, pack] of localePacks) {
+        if (!pack.objects?.[object]?._views?.[key]?.title) bad.push(`${locale}: ${object}._views.${key}.title`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
 });
