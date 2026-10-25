@@ -43,7 +43,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_sales: { label: '销售' },
         nav_lead: { label: '线索' },
         nav_account: { label: '客户' },
-        nav_account_workbench: { label: '客户工作台' },
         nav_contact: { label: '联系人' },
         nav_opportunity: { label: '商机' },
         nav_quote: { label: '报价' },

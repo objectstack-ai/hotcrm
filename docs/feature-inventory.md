@@ -71,7 +71,7 @@
 | ACC-004 | 客户保护 | 网址须以 http(s) 开头、营收非负;仍被任何商机(开放或已关闭)或已激活合同引用的 customer 禁止删除(409 `DELETE_RESTRICTED`,提示改为停用) | `src/sales/objects/account.hook.ts` |
 | ACC-005 | 客户活动时钟 | `last_activity_date` 由多路写入:owner/type 变更、held 事件与完成任务冒泡、工单解决;是流失分析的信号源 | `src/sales/objects/account.hook.ts` 等 |
 | ACC-006 | 客户列表视图族 | 默认列表 + 卡片/地图/大客户/我的/风险共 6 个 tab(续约视图随 #1181 删除,续约队列在合同上);批量改 tier、转移 owner、批量删除 | `src/sales/views/account.view.ts` |
-| ACC-007 | 客户工作台 | ADR-0047 interface page:引用 `all_accounts` 视图的策展列表,仅行业/类型/负责人三个快速筛选,锁定 grid、禁新建 | `src/sales/pages/account_workbench.page.ts` |
+| ACC-007 | 客户工作台 | ADR-0047 interface page:引用 `all_accounts` 视图的策展列表,仅行业/类型/负责人三个快速筛选,锁定 grid、禁新建;#2286 起不在侧栏(与 Accounts 列表行列相同,读作重复入口),页面作为接口页展品保留,经 `…/page/account_workbench` URL 打开 | `src/sales/pages/account_workbench.page.ts` |
 | ACC-008 | 客户详情页 | slotted 页:覆盖 header(三个活动动作)与 discussion(评论/表情/提及全开的 chatter)两个 slot,其余由默认页合成 | `src/sales/pages/account_detail.page.ts` |
 | ACC-009 | 联系人对象 | 自然人档案(`crm_contact`):masterDetail 挂客户(删客户级联删联系人),email 租户内唯一,头像、汇报关系、沟通偏好 | `src/sales/objects/contact.object.ts` |
 | ACC-010 | 联系人完整性 | 邮箱小写化并全局查重;被开放商机/未结报价/激活合同引用的联系人禁止删除 | `src/sales/objects/contact.hook.ts` |

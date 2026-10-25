@@ -5,9 +5,18 @@ import { Page } from '@objectstack/spec/ui';
 /**
  * Account Workbench — ADR-0047 interface page (Airtable Interfaces parity).
  *
- * The author-curated counterpart to the Accounts object nav entry. Where
- * the object entry (data mode) shows every list view as switcher tabs and
- * offers the full toolbar, this page is deliberately closed:
+ * The app's exhibit of an interface page: what a curated, author-closed
+ * screen over an object looks like next to that object's own list. It has
+ * NO sidebar entry (#2286, ruling B): it showed the same rows and columns
+ * as **Accounts**, so a second row read as a duplicate to every user. It
+ * still ships and is reached by URL — `/apps/<app>/page/account_workbench`
+ * in the console. ⚠️ The console's ⌘K palette on the pinned 18.1.0 lists
+ * pages only from the app's navigation, so it does not offer this one.
+ * `test/account-workbench-exhibit.test.ts` pins that the page is served
+ * and that no nav item opens it.
+ *
+ * Where the Accounts list (data mode) shows every list view as switcher
+ * tabs and offers the full toolbar, this page is deliberately closed:
  *
  *   • it REFERENCES the account default view (`sourceView`) — columns,
  *     base filter and sort are inherited, never restated (the iron rule);
