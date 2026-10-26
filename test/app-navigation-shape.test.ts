@@ -225,9 +225,9 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
 });
 
 describe('every shipped report has one entry, under Reports, gated on reading what it reads (#2073 item 1)', () => {
-  // The console has no report index, so a report with no nav entry had no way
-  // in but its URL (7 of 10 on 0a8f73d), and ⌘K finds a report only through a
-  // nav entry. The roster is what the two packages REGISTER, so a report added
+  // A report with no nav entry had no way in but its URL (7 of 10 on
+  // 0a8f73d), and ⌘K still finds a report only through a nav entry; the
+  // console's own report index (18.1.0) does not change that. The roster is what the two packages REGISTER, so a report added
   // to either without an entry goes red here. The served tree carries the
   // service module's contributed entries (`servedApp`).
   const REPORTS = ((composedStack as AnyRec).reports ?? []) as AnyRec[];

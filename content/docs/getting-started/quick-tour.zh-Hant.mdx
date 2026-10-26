@@ -33,7 +33,7 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 本節過去承諾的 4 樣東西，這塊儀表板上沒有任何磁貼對應；另有一個名字，它屬於另一塊儀表板：
 
-- **CRM Overview** 是一塊真實存在的儀表板，但它不是 **Home** 打開的那塊。它掛在 **Insights** 群組下，而 **Insights** 在應用載入時是摺疊的——所以它離你兩次點擊，不是"第一眼看到"的東西。**Open Deals (Selected Period)**（進行中商機的筆數）、**Deals Won (Selected Period)** 與 **Pipeline by Owner** 是它的磁貼，不是這塊的。
+- **CRM Overview** 是一塊真實存在的儀表板，但它不是 **Home** 打開的那塊。它掛在 **Insights** 群組下，在側邊欄靠下的位置——所以它要點一下才打開，不是"第一眼看到"的東西。**Open Deals (Selected Period)**（進行中商機的筆數）、**Deals Won (Selected Period)** 與 **Pipeline by Owner** 是它的磁貼，不是這塊的。
 - *等待你回應的工單*：兩塊儀表板上都沒有。**Executive Overview** 與 **CRM Overview** 都沒有任何磁貼在數工單。**Open Cases**、**Critical Cases**、**SLA Violations** 在 **Service** 群組下的 **Service Overview** 上——參見 [Service](/zh-Hant/docs/service/index)。
 - *按管道價值排名的頂級客戶*：本應用裡根本沒有這樣一個磁貼。**Accounts by Industry** 是按產業歸組，不是給客戶排名；全應用最接近的排名是 **CRM Overview** 上的 **Pipeline by Owner**，那是按業務代表排，不是按客戶排。
 - *近期活動（最近的通話、會議、郵件）*：也不在這裡。**Interactions Logged**、**Meetings Booked** 與 **Customer Minutes** 在 **Activity** 群組下的 **Sales Activity** 上。
@@ -62,7 +62,7 @@ description: HotCRM 的 5 分鐘演練 —— 主頁、你的第一條線索、�
 
 上表用的是原始碼裡的英文 label，也就是英文介面上看到的名字。本應用提供 en / zh-CN / ja-JP / es-ES 四種介面語言，沒有繁體語言包——簡體中文介面下這些名字會顯示為語言包裡的譯名，例如 **Inbox** 顯示為「待我审批」、**Knowledge** 顯示為「知识库」、**My Work** 顯示為「我的工作」。
 
-**Marketing**、**Insights**、**Reports** 這三個群組在應用載入時是摺疊的——只有 **Sales**、**My Work**、**Activity**、**Service** 會自動展開。先把群組點開，再判斷某樣東西在不在這裡。
+**Reports** 這個群組在應用載入時是摺疊的——**Service**、**Sales**、**My Work**、**Activity**、**Marketing**、**Insights** 都會自動展開。先把它點開，再判斷某份報表在不在這裡。
 
 建立在商機之上的條目——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview**，以及 **Reports** 下的四張商機報表——不能讀取商機的人在側邊欄裡看不到；服務專員與服務經理也按職位看不到它們：他們仍可從 **Opportunities** 與 **My Deals** 打開自己的商機，但這些儀表板與報表不對他們顯示。其餘報表對各自的資料也是同樣的要求：服務專員照樣看得到線索、客戶與工單報表，而不能讀取工單的人看不到那三張工單報表。銷售代表也看不到 **Home**，所以銷售代表的側邊欄從 **Sales Home** 開始。銷售代表不處理工單，所以銷售代表的側邊欄也看不到 **Service Overview**、**Cases**、**My Cases** 以及那三張工單報表——**Cases by Status and Priority**、**SLA Performance**、**Cases Opened by Day**；**Knowledge** 仍然保留，因為銷售時也要查閱知識文章。**Service** 排在所有群組之首，是因為應用打開時落在側邊欄顯示的第一個條目上：對服務專員與服務經理來說，那就是 **Service Overview**。
 

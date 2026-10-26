@@ -389,6 +389,11 @@ export const CrmApp = App.create({
       type: 'group',
       label: 'Marketing',
       icon: 'megaphone',
+      // Open on load (#2295), like Insights below: a group with no `expanded`
+      // key renders CLOSED, because the spec defaults the key to `false`
+      // (`GroupNavItemSchema`, 18.1.0), so Campaigns sat behind a click and
+      // the sidebar did not say it existed.
+      expanded: true,
       // Campaigns is contributed by the marketing module
       // (`src/marketing/index.ts`) — the app keeps the group as the anchor,
       // as it keeps `group_service`. ⛔ Do not tidy the empty group away:
@@ -402,6 +407,7 @@ export const CrmApp = App.create({
       type: 'group',
       label: 'Insights',
       icon: 'sparkles',
+      expanded: true,
       // The reports this group used to pin moved to Reports below (#2073 item 1).
       children: [
         { id: 'nav_crm_dashboard', type: 'dashboard', dashboardName: 'crm_overview_dashboard', label: 'CRM Overview', icon: 'layout-dashboard', visible: OPPORTUNITY_AUDIENCE },
@@ -410,11 +416,12 @@ export const CrmApp = App.create({
     },
 
     {
-      // EVERY shipped report, one entry each (#2073 item 1). The console has no
-      // report index or picker, so a report without an entry here had no way
-      // in but its URL, and ⌘K finds a report only through a nav entry: it
-      // matches the active app's entries by label and name.
-      // objectstack-ai/objectui#13020 asks the console for a report index.
+      // EVERY shipped report, one entry each (#2073 item 1). ⌘K finds a report
+      // only through a nav entry: it matches the active app's entries by label
+      // and name. Since the 18.1.0 console there is also a report index at
+      // `<app>/reports`, which the console links as its own *All reports* row
+      // after this tree — not a child of this group, and on screen whether
+      // the group is open or not (measured, #2295).
       //
       // The sales reports are declared below. The case reports belong to the
       // service module, which contributes them into this group the way it
@@ -422,8 +429,10 @@ export const CrmApp = App.create({
       // `test/app-navigation-shape.test.ts` requires an entry for each report
       // either package registers, so a new report without one goes red.
       //
-      // Collapsed on load, like Marketing and Insights: ten rows would push
-      // everything under them out of a first screen.
+      // The only group collapsed on load: opened, it lists one row per report
+      // (ten for an administrator, seven for a rep, measured on 18.1.0), which
+      // would push everything under it down a screen, and the *All reports*
+      // row already reaches every report without a click (#2295).
       id: 'group_reports',
       type: 'group',
       label: 'Reports',
