@@ -332,9 +332,9 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     expect(PINNED[0].dashboardName).toBe(ExecutiveDashboard.name);
   });
 
-  it('Marketing, Insights and Reports are the groups that stay collapsed', () => {
-    expect(COLLAPSED).toEqual(['Marketing', 'Insights', 'Reports']);
-    expect(EXPANDED).toEqual(['Service', 'Sales', 'My Work', 'Activity']);
+  it('Reports is the only group that stays collapsed (#2295)', () => {
+    expect(COLLAPSED).toEqual(['Reports']);
+    expect(EXPANDED).toEqual(['Service', 'Sales', 'My Work', 'Activity', 'Marketing', 'Insights']);
   });
 
   it('carries no navigation label matching any name the page calls a phantom', () => {
@@ -354,9 +354,9 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     expect(taskOwners).toEqual(['My Work']);
   });
 
-  it('routes CRM Overview through Insights, which is collapsed on load', () => {
+  it('routes CRM Overview through Insights, which is open on load (#2295)', () => {
     const insights = GROUPS.find((g) => g.label === 'Insights');
-    expect(insights?.expanded).not.toBe(true);
+    expect(insights?.expanded).toBe(true);
     const item = ((insights?.children ?? []) as AnyRec[]).find(
       (c) => c.dashboardName === CrmOverviewDashboard.name,
     );
@@ -388,8 +388,8 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
  *
  * The section described a dashboard that does not exist. Its name came from
  * `crm_overview_dashboard` — a real dashboard, but the one under **Insights**,
- * a group that is collapsed on load, so a new user neither lands on it nor can
- * click it without opening the group first. Its five bullets came from three
+ * far down the sidebar (and, until #2295, in a group collapsed on load), so a
+ * new user does not land on it. Its five bullets came from three
  * different dashboards: exactly one, **Open Leads**, is a tile on the dashboard
  * `nav_home` actually binds.
  *
