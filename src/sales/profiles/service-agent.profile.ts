@@ -9,6 +9,8 @@
 export const ServiceAgentProfile = {
   name: 'service_agent',
   label: 'Service Agent',
+  description:
+    'Service agents and managers: work their own cases, read the accounts, contacts and leads behind them and write knowledge articles, but see no opportunities.',
   objects: {
     // Reference context an agent needs to work ANY ticket — a customer's cases
     // are meaningless without seeing the account/contact behind them, so these

@@ -9,6 +9,8 @@
 export const SalesManagerProfile = {
   name: 'sales_manager',
   label: 'Sales Manager',
+  description:
+    "Sales managers: read, edit, reassign and delete every rep's leads, accounts, opportunities, quotes and activities, without system administration.",
   objects: {
     // `allowTransfer` on the objects this set holds `modifyAllRecords` on —
     // the sales book a manager reassigns — plus `crm_forecast`, which kept it

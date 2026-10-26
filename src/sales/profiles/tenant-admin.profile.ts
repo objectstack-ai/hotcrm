@@ -125,6 +125,8 @@ import { SystemAdminProfile } from './system-admin.profile';
 export const TenantAdminProfile = {
   name: 'tenant_admin',
   label: 'Tenant Administrator',
+  description:
+    'Administrator of one organization in a shared deployment: full control of its records and members, but no platform-wide user management or app authoring.',
   // Derived, never transcribed — see the note above. Spread rather than
   // aliased so the two sets are independent values in the built artifact.
   objects: { ...SystemAdminProfile.objects },

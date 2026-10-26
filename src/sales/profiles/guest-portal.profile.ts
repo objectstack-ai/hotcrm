@@ -23,8 +23,7 @@ export const GuestPortalProfile = {
   name: 'guest_portal',
   label: 'Guest (Public Forms)',
   description:
-    'Anonymous visitors submitting public Web-to-Lead / Web-to-Case forms. ' +
-    'INSERT-only on lead and case; no read/edit/delete on any object.',
+    'Anonymous visitors to the public Web-to-Lead and Web-to-Case forms: they submit a new lead or case and can read, edit or delete nothing.',
   // No `allowExport` anywhere below, deliberately: this set is bound to the
   // `guest` anchor, and ADR-0090 D9 classes `allowExport` as a high-privilege
   // bit no anchor may confer — the set would stop binding at all, on top of
