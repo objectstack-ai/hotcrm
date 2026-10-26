@@ -23,10 +23,10 @@ export const ContactViews = defineView({
       { field: 'title', width: 180 },
       { field: 'department', width: 140 },
       // REQ-0004 acceptance 2: the three buying-centre attributes are columns
-      // on the landing roster, which is already grouped by account with the
-      // groups collapsed — so expanding one account reads as a MAP (who
-      // decides, who is on our side) instead of a directory. Columns are also
-      // what the list's own filter and grouping controls offer.
+      // on the landing roster, which is already grouped by account — so one
+      // account's group reads as a MAP (who decides, who is on our side)
+      // instead of a directory. Columns are also what the list's own filter
+      // and grouping controls offer.
       { field: 'buying_function', width: 160 },
       { field: 'attitude', width: 140 },
       { field: 'relationship_strength', width: 180 },
@@ -35,7 +35,12 @@ export const ContactViews = defineView({
       { field: 'owner_id', width: 150 },
     ],
     sort: [{ field: 'last_name', order: 'asc' }],
-    grouping: { fields: [{ field: 'crm_account', order: 'asc', collapsed: true }] },
+    // Groups start OPEN (#2290). Collapsed groups left the landing screen with
+    // account headers and not one contact row: an org with one or two
+    // contacts per account (the demo seed has one) had to expand every group
+    // to find a person. Open groups keep the per-account map and still let a
+    // reader fold the accounts they are not working.
+    grouping: { fields: [{ field: 'crm_account', order: 'asc', collapsed: false }] },
     selection: { type: 'multiple' },
     // The selection-bar entry point for campaigning at existing customers
     // (#597), mirroring `bulkActions: ['create_campaign']` on the lead grid.
