@@ -123,7 +123,7 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
     // readonly since #1434 — stamped by `case_escalation`, `case_sla_monitor`
     // and the `case_escalation_stamp` sub-flow, all `runAs: 'system'`.
     why: 'readonly on the object; stamped by the escalation flows, never typed',
-    keeps: ['list.columns', 'escalated_cases.filter', 'detail.details'],
+    keeps: ['escalated_cases.filter', 'detail.details'],
   },
   escalation_reason: {
     why: 'written alongside `is_escalated` by the escalation path',

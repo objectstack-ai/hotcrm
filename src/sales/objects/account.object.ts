@@ -32,13 +32,19 @@ export const Account = ObjectSchema.create({
   // Each field below opts in via `group: '<key>'`.
   fieldGroups: [
     { key: 'basic',        label: 'Basic Information',  icon: 'building' },
+    // Contact and ownership come straight after `basic` so phone, website and
+    // health are on the first screen at 1440x900; the figures and the long
+    // Markdown narrative follow (#2292). `description` was in `basic`, where it
+    // filled the first screen; its key and label mirror the form's own
+    // `description` section (account.view.ts).
+    { key: 'contact_info', label: 'Contact Information', icon: 'phone' },
+    { key: 'ownership',    label: 'Ownership & Status', icon: 'users' },
     { key: 'financials',   label: 'Financials',         icon: 'dollar-sign' },
     // REQ-0003 acceptance 3: the business-profile fields render as their own
     // group with NO `record:details` section authored anywhere — the derived
     // layout ladder's rung 1 (AGENTS.md: escape hatches are for extreme cases).
     { key: 'business_profile', label: 'Business Profile', icon: 'briefcase' },
-    { key: 'contact_info', label: 'Contact Information', icon: 'phone' },
-    { key: 'ownership',    label: 'Ownership & Status', icon: 'users' },
+    { key: 'description',  label: 'Description',        icon: 'file-text' },
     { key: 'branding',     label: 'Branding',           icon: 'palette', collapse: 'collapsed' },
     { key: 'system',       label: 'System',             icon: 'settings', collapse: 'collapsed' },
   ],
@@ -327,7 +333,7 @@ export const Account = ObjectSchema.create({
 
     description: Field.markdown({
       label: 'Description',
-      group: 'basic',
+      group: 'description',
     }),
 
     // Number fields
