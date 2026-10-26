@@ -60,10 +60,7 @@ export const CrmUserProfile = {
   name: 'crm_user',
   label: 'CRM User',
   description:
-    'The default set every member of the organization is offered at install: ' +
-    'their own leads, accounts, opportunities and activities, and read access ' +
-    'to the product, campaign and knowledge catalogues. No delete, no export, ' +
-    'no View All, no system permissions.',
+    "Every member's default: their own leads, accounts, opportunities and activities and read-only catalogues, with no delete, export, View All or system permission.",
   isDefault: true,
   objects: {
     // ─── The sales book, own scope ────────────────────────────────────

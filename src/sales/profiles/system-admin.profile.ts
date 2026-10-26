@@ -13,6 +13,8 @@
 export const SystemAdminProfile = {
   name: 'system_admin',
   label: 'System Administrator',
+  description:
+    'The operator of a single-organization install: full control of every business record, plus user, security model and setup administration.',
   objects: {
     // `allowTransfer` on every object — canonical note in `src/sales/profiles/index.ts`.
     // The admin is the persona that reassigns ownership when someone leaves.

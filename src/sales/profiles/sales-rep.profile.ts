@@ -3,6 +3,8 @@
 export const SalesRepProfile = {
   name: 'sales_rep',
   label: 'Sales Representative',
+  description:
+    'Sales reps: work their own book of leads, accounts, opportunities, quotes and activities and read the catalogues, but delete no customer record.',
   // A rep's book of business is private by design (own records + whatever a
   // sharing rule or team grant extends). The objects below carry an explicit
   // `readScope: 'own'` so the intent is authored, not inferred — this both

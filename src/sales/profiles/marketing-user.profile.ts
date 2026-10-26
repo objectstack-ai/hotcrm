@@ -3,6 +3,8 @@
 export const MarketingUserProfile = {
   name: 'marketing_user',
   label: 'Marketing User',
+  description:
+    'Marketing staff: run campaigns and their members and read every lead, contact, account and opportunity for targeting, but see no cases and delete no CRM record.',
   objects: {
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. Lead and contact list exports are marketing's
