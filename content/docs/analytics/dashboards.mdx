@@ -33,10 +33,10 @@ The cross-functional home dashboard — revenue, pipeline and deal mix on one pa
 
 **Tiles**:
 
-- **Total Revenue** — closed-won revenue in the selected period.
-- **Active Deals** — open opportunities in the pipeline.
-- **Won Deals** — closed-won deals in the selected period.
-- **Avg Deal Size** — average value of closed-won deals.
+- **Total Revenue (Selected Period)** — closed-won revenue in the selected period.
+- **Open Deals (Selected Period)** — open opportunities whose close date falls in the selected period.
+- **Deals Won (Selected Period)** — closed-won deals in the selected period.
+- **Avg Deal Size (Selected Period)** — average value of the deals closed won in the selected period.
 - **Revenue Trends** — closed-won revenue over the last 12 months (area chart).
 - **Lead Source** — pipeline value by acquisition channel (donut).
 - **Pipeline by Stage** — open opportunity value at each sales stage (horizontal bar chart).
@@ -53,10 +53,10 @@ The sales team's daily operational dashboard.
 
 **Tiles**:
 
-- **Total Pipeline** — sum of open opportunity value.
+- **Open Pipeline (Selected Period)** — value of the open opportunities whose close date falls in the selected period.
 - **Closed Won (QTD)** — revenue closed this quarter.
-- **Open Opportunities** — active deals in flight.
-- **Avg Deal Size** — average value of the deals closed won this quarter.
+- **Open Deals (Selected Period)** — the count of those same open opportunities.
+- **Avg Deal Size (QTD)** — average value of the deals closed won this quarter.
 - **Win Rate (12M)** — deals won as a share of deals *settled* (won + lost) in the last 12 months. Open pipeline is not in the denominator.
 - **Deals Won (12M)** — the numerator behind that percentage.
 - **Deals Lost (12M)** — the other half of its denominator, so both numbers are always on screen next to the rate.
@@ -151,6 +151,8 @@ Some tiles opt out of the dashboard's own filters on purpose. The 12-month reven
 Every tile is bound to a dataset — the semantic layer that defines what "pipeline", "settled deal" or "SLA violation" means, once, for every tile and report that uses it. See [Datasets and cubes](/docs/analytics/cubes) for the measures and dimensions available, and [Reports](/docs/analytics/reports) for the record-level views behind the aggregates.
 
 Definitions that appear on more than one dashboard are shared rather than re-typed: Pipeline by Stage and Avg Deal Size are one definition each, used by three and two dashboards respectively, so "open pipeline" cannot come to mean different things on different pages.
+
+The window is not shared, and each KPI title says which one it reads. *(Selected Period)* follows the dashboard's date picker, so it shows this quarter until you pick another range; *(QTD)*, *(YTD)* and *(12M)* are fixed windows the picker cannot move; and the KPI tiles on **Sales Home** say *(All Time)* because they read every record. The same measure over the same window has the same title on every page, so two different numbers always sit under two different titles.
 
 ## Tips
 

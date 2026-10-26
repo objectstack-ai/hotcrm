@@ -130,10 +130,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'CRM 总览',
       description: '收入指标、管道分析与商机洞察',
       widgets: {
-        total_revenue: { title: '总收入', description: '本期已成交收入' },
-        active_deals: { title: '活跃商机', description: '管道中进行中的商机' },
-        won_deals: { title: '赢单数', description: '本期已结案商机中赢单的总数' },
-        avg_deal_size: { title: '平均订单金额', description: '已成交商机的平均金额' },
+        total_revenue: { title: '总收入（所选期间）', description: '所选期间内的已成交收入' },
+        active_deals: { title: '进行中商机（所选期间）', description: '预计在所选期间内成交的进行中商机' },
+        won_deals: { title: '赢单数（所选期间）', description: '所选期间内赢单的商机数' },
+        avg_deal_size: { title: '平均订单金额（所选期间）', description: '所选期间内已成交商机的平均金额' },
         revenue_trends: { title: '收入趋势', description: '过去 12 个月的已成交收入' },
         lead_source: { title: '线索来源', description: '按获客渠道统计的管道金额' },
         pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
@@ -160,10 +160,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '销售业绩',
       description: '管道分析、赢率趋势及销售代表绩效',
       widgets: {
-        total_pipeline_value: { title: '管道总额', description: '所有进行中商机金额合计' },
+        total_pipeline_value: { title: '进行中管道（所选期间）', description: '预计在所选期间内成交的进行中商机金额合计' },
         closed_won_qtd: { title: '本季度已成交', description: '本季度已赢得的收入' },
-        open_opportunities: { title: '进行中商机', description: '正在推进的活跃商机' },
-        avg_deal_size: { title: '平均订单金额', description: '本季度已成交商机的平均金额' },
+        open_opportunities: { title: '进行中商机（所选期间）', description: '预计在所选期间内成交的进行中商机' },
+        avg_deal_size: { title: '平均订单金额（本季度）', description: '本季度已成交商机的平均金额' },
         pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
         monthly_revenue_trend: { title: '月度收入趋势', description: '过去 12 个月的已成交收入' },
         pipeline_by_forecast_category: { title: '预测类别管道分布', description: '按预测类别统计的进行中管道金额' },
@@ -564,13 +564,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '销售团队主页，汇总关键指标、我的待办工作与即将到来的活动',
       components: {
         kpi_revenue_won: {
-          label: '赢单营收',
+          label: '总收入（全部期间）',
         },
         kpi_deals_won: {
-          label: '赢单数',
+          label: '赢单数（全部期间）',
         },
         kpi_pipeline_value: {
-          label: '销售管道金额',
+          label: '进行中管道（全部期间）',
         },
         kpi_open_leads: {
           label: '开放线索',

@@ -68,8 +68,12 @@ export const SalesDashboard: Dashboard = {
     // ─── Row 1: Pipeline KPIs ─────────────────────────────────────────
     {
       id: 'total_pipeline_value',
-      title: 'Total Pipeline',
-      description: 'Sum of open opportunity value',
+      // The window is the header's date picker (close date, this quarter by
+      // default), so the title names it rather than a quarter the reader may
+      // have changed (#2291). Same name as the CRM Overview tiles over the
+      // same window; Sales Home's unwindowed tiles say "(All Time)".
+      title: 'Open Pipeline (Selected Period)',
+      description: 'Value of open opportunities closing in the selected period',
       type: 'metric',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
@@ -89,8 +93,8 @@ export const SalesDashboard: Dashboard = {
     },
     {
       id: 'open_opportunities',
-      title: 'Open Opportunities',
-      description: 'Active deals in flight',
+      title: 'Open Deals (Selected Period)', // follows the date picker, as above (#2291)
+      description: 'Open opportunities closing in the selected period',
       type: 'metric',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'orange',
@@ -98,6 +102,7 @@ export const SalesDashboard: Dashboard = {
       layout: { x: 6, y: 0, w: 3, h: 1 },
     },
     avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 1 }, {
+      title: 'Avg Deal Size (QTD)', // CRM Overview's follows the picker; this one is pinned (#2291)
       description: 'Average value of closed-won deals this quarter',
       filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
       filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it

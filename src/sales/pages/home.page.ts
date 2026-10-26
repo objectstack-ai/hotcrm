@@ -172,13 +172,19 @@ export const SalesHomePage: Page = {
             // page has neither, and the four names it listed (total_revenue,
             // deals_won, …) exist on no object — the card rendered blank.
             // `object-metric` widgets aggregate live data instead.
+            //
+            // These read every record — no date window — so each label says
+            // "(All Time)": the dashboards' tiles of the same measure follow a
+            // date picker or a fixed window and show smaller numbers (#2291).
+            // Open Leads is a current-state count on every page and needs no
+            // window.
             children: [
               {
                 type: 'object-metric',
                 id: 'kpi_revenue_won',
                 properties: {
                   objectName: 'crm_opportunity',
-                  label: 'Revenue (Won)',
+                  label: 'Total Revenue (All Time)',
                   icon: 'dollar-sign',
                   aggregate: { field: 'amount', function: 'sum' },
                   filter: [{ field: 'stage', operator: 'equals', value: 'closed_won' }],
@@ -189,7 +195,7 @@ export const SalesHomePage: Page = {
                 id: 'kpi_deals_won',
                 properties: {
                   objectName: 'crm_opportunity',
-                  label: 'Deals Won',
+                  label: 'Deals Won (All Time)',
                   icon: 'trophy',
                   aggregate: { field: 'id', function: 'count' },
                   filter: [{ field: 'stage', operator: 'equals', value: 'closed_won' }],
@@ -200,7 +206,7 @@ export const SalesHomePage: Page = {
                 id: 'kpi_pipeline_value',
                 properties: {
                   objectName: 'crm_opportunity',
-                  label: 'Pipeline Value',
+                  label: 'Open Pipeline (All Time)',
                   icon: 'briefcase',
                   aggregate: { field: 'amount', function: 'sum' },
                   filter: [{ field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] }],

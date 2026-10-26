@@ -33,10 +33,10 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 
 **磁贴**：
 
-- **Total Revenue** — 所选周期内的成交赢单收入。
-- **Active Deals** — 管道中进行中的商机。
-- **Won Deals** — 所选周期内成交赢单的交易。
-- **Avg Deal Size** — 成交赢单交易的平均金额。
+- **Total Revenue (Selected Period)** — 所选周期内的成交赢单收入。
+- **Open Deals (Selected Period)** — 预计成交日期落在所选周期内的进行中商机。
+- **Deals Won (Selected Period)** — 所选周期内成交赢单的交易。
+- **Avg Deal Size (Selected Period)** — 所选周期内成交赢单交易的平均金额。
 - **Revenue Trends** — 近 12 个月的成交赢单收入（面积图）。
 - **Lead Source** — 按获客渠道统计的管道金额（环形图）。
 - **Pipeline by Stage** — 各销售阶段的进行中商机金额（条形图）。
@@ -53,10 +53,10 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 
 **磁贴**：
 
-- **Total Pipeline** — 进行中商机金额合计。
+- **Open Pipeline (Selected Period)** — 预计成交日期落在所选周期内的进行中商机金额合计。
 - **Closed Won (QTD)** — 本季度已成交的收入。
-- **Open Opportunities** — 正在推进中的交易。
-- **Avg Deal Size** — 本季度成交赢单交易的平均金额。
+- **Open Deals (Selected Period)** — 同一批进行中商机的条数。
+- **Avg Deal Size (QTD)** — 本季度成交赢单交易的平均金额。
 - **Win Rate (12M)** — 近 12 个月内*已结案*（赢单 + 丢单）商机中的赢单占比。进行中的管道不计入分母。
 - **Deals Won (12M)** — 这个百分比背后的分子。
 - **Deals Lost (12M)** — 分母的另一半，好让分子和分母始终陈列在赢率旁边。
@@ -151,6 +151,8 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 每个磁贴都绑定到一个数据集——正是这一层语义把"管道""已结案交易""SLA 违约"各定义一次，供用到它们的每个磁贴和报表共用。可用的度量和维度见 [数据集与多维数据集](/zh-Hans/docs/analytics/cubes)，聚合数字背后的记录级视图见 [报表](/zh-Hans/docs/analytics/reports)。
 
 出现在不止一个仪表盘上的定义是共享的，而不是重新敲一遍：Pipeline by Stage 和 Avg Deal Size 各自只有一份定义，分别被三个和两个仪表盘使用，所以"进行中管道"不会在不同页面上变成不同的意思。
+
+时间窗不共享，每个 KPI 标题都写明自己读的是哪一个。*(Selected Period)* 跟随仪表盘的日期范围选择器，在你换别的区间之前显示的是本季度；*(QTD)*、*(YTD)* 和 *(12M)* 是选择器挪不动的固定时间窗；**Sales Home** 上的 KPI 磁贴写 *(All Time)*，因为它们读的是全部记录。同一度量、同一时间窗在每个页面上都是同一个标题，所以两个不同的数字总是挂在两个不同的标题下。
 
 ## 提示
 

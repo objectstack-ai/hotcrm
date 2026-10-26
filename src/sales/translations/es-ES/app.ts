@@ -125,10 +125,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Resumen CRM',
       description: 'Métricas de ingresos, analítica de pipeline e información de oportunidades',
       widgets: {
-        total_revenue: { title: 'Ingresos totales', description: 'Ingresos cerrados ganados en este período' },
-        active_deals: { title: 'Negocios activos', description: 'Oportunidades abiertas en el pipeline' },
-        won_deals: { title: 'Negocios ganados', description: 'Negocios cerrados ganados en este período' },
-        avg_deal_size: { title: 'Tamaño medio del negocio', description: 'Valor medio de los negocios cerrados ganados' },
+        total_revenue: { title: 'Ingresos totales (período seleccionado)', description: 'Ingresos cerrados ganados en el período seleccionado' },
+        active_deals: { title: 'Negocios abiertos (período seleccionado)', description: 'Oportunidades abiertas con cierre previsto en el período seleccionado' },
+        won_deals: { title: 'Negocios ganados (período seleccionado)', description: 'Negocios cerrados ganados en el período seleccionado' },
+        avg_deal_size: { title: 'Tamaño medio del negocio (período seleccionado)', description: 'Valor medio de los negocios cerrados ganados en el período seleccionado' },
         revenue_trends: { title: 'Tendencia de ingresos', description: 'Ingresos cerrados ganados de los últimos 12 meses' },
         lead_source: { title: 'Origen del prospecto', description: 'Valor del pipeline por canal de adquisición' },
         pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas en cada etapa de venta' },
@@ -155,10 +155,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Rendimiento de ventas',
       description: 'Analítica de pipeline, tendencias de tasa de éxito y rendimiento de los representantes',
       widgets: {
-        total_pipeline_value: { title: 'Pipeline total', description: 'Suma del valor de las oportunidades abiertas' },
+        total_pipeline_value: { title: 'Pipeline abierto (período seleccionado)', description: 'Valor de las oportunidades abiertas con cierre previsto en el período seleccionado' },
         closed_won_qtd: { title: 'Cerrado ganado (trimestre)', description: 'Ingresos cerrados este trimestre' },
-        open_opportunities: { title: 'Oportunidades abiertas', description: 'Negocios activos en curso' },
-        avg_deal_size: { title: 'Tamaño medio del negocio', description: 'Valor medio de los negocios cerrados ganados este trimestre' },
+        open_opportunities: { title: 'Negocios abiertos (período seleccionado)', description: 'Oportunidades abiertas con cierre previsto en el período seleccionado' },
+        avg_deal_size: { title: 'Tamaño medio del negocio (trimestre)', description: 'Valor medio de los negocios cerrados ganados este trimestre' },
         pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas en cada etapa de venta' },
         monthly_revenue_trend: { title: 'Tendencia mensual de ingresos', description: 'Ingresos cerrados ganados de los últimos 12 meses' },
         pipeline_by_forecast_category: { title: 'Pipeline por categoría de pronóstico', description: 'Pipeline abierto agrupado por categoría de pronóstico de ventas' },
@@ -557,13 +557,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: 'Página de inicio del equipo comercial con métricas clave, mi trabajo pendiente y próximos eventos',
       components: {
         kpi_revenue_won: {
-          label: 'Ingresos (ganados)',
+          label: 'Ingresos totales (todas las fechas)',
         },
         kpi_deals_won: {
-          label: 'Negocios ganados',
+          label: 'Negocios ganados (todas las fechas)',
         },
         kpi_pipeline_value: {
-          label: 'Valor del pipeline',
+          label: 'Pipeline abierto (todas las fechas)',
         },
         kpi_open_leads: {
           label: 'Prospectos abiertos',
