@@ -22,7 +22,6 @@ import { cel } from '@objectstack/spec';
 import { Case } from '../objects/case.object';
 import { KnowledgeArticle } from '../objects/knowledge_article.object';
 import { CASE_SLA_DEFAULT_TIER, caseSlaBreached, caseSlaCalendarHours } from '../objects/_case-sla';
-import { celDaysAgo } from '../../sales/data/_shared';
 import { accounts } from '../../sales/data/sales.seed';
 
 // ─── Seeded SLA due dates ─────────────────────────────────────────────
@@ -52,43 +51,85 @@ const seededSlaHours = (priority: string, accountName?: string): number => {
 };
 
 /**
+ * When a seeded case was created: a whole number of days ago (`daysAgo(n)`, a
+ * UTC midnight), or `{ hoursAgo }` — that many hours before the seed loads
+ * (`now() - duration('Nh')`).
+ *
+ * The hour form exists for open cases that are still INSIDE their SLA window
+ * (#2288). A Critical clock is 4 hours and a High one at most 8, so a case
+ * created on any midnight is past due before most of the day has gone: day
+ * granularity cannot hold an open High or Critical case that has not breached.
+ * Open Medium cases take it too, opened three quarters of the way through
+ * their window, so most of them land a day or two back rather than on today.
+ * Settled cases, open Low cases and deliberate breaches keep the day form.
+ */
+type CaseAge = number | { readonly hoursAgo: number };
+
+/** `created_at` of a seeded case, as a CEL expression (see {@link CaseAge}). */
+const celCreatedAt = (age: CaseAge) =>
+  typeof age === 'number' ? cel`daysAgo(${age})` : cel`now() - duration('${age.hoursAgo}h')`;
+
+/**
  * `created_at + matrix(priority, tier)`, as a CEL expression — the case's
  * authored creation instant (the platform's own `created_at`, which the seed
  * loader keeps on first insert since @objectstack/objectql 17.7.0,
  * objectstack#21646) plus the cell `case_sla_defaults` would have applied.
  *
  * `daysAgo(n)` is a UTC midnight, so the hour offset has to be added on top of
- * it — hence `+ duration('Nh')` rather than a second day-granular helper.
+ * it — hence `+ duration('Nh')` rather than a second day-granular helper. The
+ * hour form of {@link CaseAge} takes the same `+ duration('Nh')` on top of its
+ * own creation instant.
  *
  * A due date that lands in the past is expected and correct on an old open case
  * — that is what a breach IS. On an OPEN case the flag is `case_sla_monitor`'s
  * to write, on a deployment that runs scheduled work, and the seed only pre-sets
  * it where the demo wants a breach visible without a sweep.
  */
-const celCaseSlaDue = (createdDaysAgo: number, priority: string, accountName?: string) =>
-  cel`daysAgo(${createdDaysAgo}) + duration('${seededSlaHours(priority, accountName)}h')`;
+const celCaseSlaDue = (age: CaseAge, priority: string, accountName?: string) => {
+  const hours = seededSlaHours(priority, accountName);
+  return typeof age === 'number'
+    ? cel`daysAgo(${age}) + duration('${hours}h')`
+    : cel`now() - duration('${age.hoursAgo}h') + duration('${hours}h')`;
+};
 
 /**
  * `is_sla_violated` of a SETTLED case (resolved or closed) — DERIVED, never
  * picked (#2070). `case_sla_defaults` records the breach on the write that
  * settles a case after its due date, so a settled seed row has to arrive
  * holding exactly what that write would have recorded: `caseSlaBreached` over
- * the row's own dates. Both instants are offsets from the same `daysAgo()`
- * midnight — the due date `matrix(priority, tier)` hours after creation, the
- * settle instant (`closed_date`, which a settled seed row carries as its
- * resolved-date proxy) whole days after it — so the hour counts compare
- * directly, and a case settled exactly on its deadline met it.
+ * the row's own dates. Both instants are hour offsets from the same creation
+ * instant — the due date `matrix(priority, tier)` hours after it, the settle
+ * instant (`closed_date`, which a settled seed row carries as its
+ * resolved-date proxy, written by {@link celSettledAt}) `settledHoursAfter`
+ * hours after it — so the hour counts compare directly, and a case settled
+ * exactly on its deadline met it.
  *
  * These rows used to be authored `false` across the board, which made the
  * `sla_performance` report and the compliance gauge read 100% met over closed
- * cases that had finished days late by their own dates.
+ * cases that had finished days late by their own dates. Since #2288 the
+ * settle instants are hour-granular and every seeded settled case finishes
+ * inside its window, so this derivation answers `false` for each of them —
+ * from their dates, which `test/seed-consistency.test.ts` re-derives row by row.
  */
-const seededSettledBreach = (
-  createdDaysAgo: number,
-  settledDaysAgo: number,
-  priority: string,
-  accountName?: string,
-): boolean => caseSlaBreached(seededSlaHours(priority, accountName), (createdDaysAgo - settledDaysAgo) * 24);
+const seededSettledBreach = (settledHoursAfter: number, priority: string, accountName?: string): boolean =>
+  caseSlaBreached(seededSlaHours(priority, accountName), settledHoursAfter);
+
+/**
+ * `closed_date` of a settled case: `hoursAfter` hours after its authored
+ * creation instant, as a CEL expression. `resolution_time_hours` is exactly
+ * `hoursAfter` — the closed−created delta `case_sla_defaults` computes.
+ *
+ * Hour-granular since #2288: a High case on a 6-hour clock cannot be shown
+ * settling inside it in whole days. The bound is {@link celEscalatedAt}'s: the
+ * instant stays inside the case's first `createdDaysAgo - 1` days, so it is in
+ * the past whatever calendar day `daysAgo()` resolves in.
+ */
+const celSettledAt = (createdDaysAgo: number, hoursAfter: number) => {
+  if (!(hoursAfter > 0 && hoursAfter <= (createdDaysAgo - 1) * 24)) {
+    throw new Error(`seed: settled ${hoursAfter}h after a case created ${createdDaysAgo} days ago is not between its creation and now`);
+  }
+  return cel`daysAgo(${createdDaysAgo}) + duration('${hoursAfter}h')`;
+};
 
 /**
  * `escalated_date` of an escalated case: `hoursAfter` hours after its authored
@@ -97,15 +138,18 @@ const seededSettledBreach = (
  * seed row carries one; and `case_escalation` reads a missing one as "never
  * escalated", which re-escalated a seeded Critical case on its next edit.
  *
- * The bound keeps the instant after creation and in the past whatever calendar
- * day `daysAgo()` resolves in: it stays inside the case's first
- * `createdDaysAgo - 1` days.
+ * The bound keeps the instant after creation and in the past: a case created
+ * `n` days ago is escalated inside its first `n - 1` days, whatever calendar day
+ * `daysAgo()` resolves in; a case created `h` hours ago, before the last hour.
  */
-const celEscalatedAt = (createdDaysAgo: number, hoursAfter: number) => {
-  if (!(hoursAfter > 0 && hoursAfter <= (createdDaysAgo - 1) * 24)) {
-    throw new Error(`seed: escalated ${hoursAfter}h after a case created ${createdDaysAgo} days ago is not between its creation and now`);
+const celEscalatedAt = (age: CaseAge, hoursAfter: number) => {
+  const window = typeof age === 'number' ? (age - 1) * 24 : age.hoursAgo - 1;
+  if (!(hoursAfter > 0 && hoursAfter <= window)) {
+    throw new Error(`seed: escalated ${hoursAfter}h after a case created ${JSON.stringify(age)} ago is not between its creation and now`);
   }
-  return cel`daysAgo(${createdDaysAgo}) + duration('${hoursAfter}h')`;
+  return typeof age === 'number'
+    ? cel`daysAgo(${age}) + duration('${hoursAfter}h')`
+    : cel`now() - duration('${age.hoursAgo - hoursAfter}h')`;
 };
 
 // ─── Cases ────────────────────────────────────────────────────────────
@@ -167,14 +211,13 @@ export const cases = defineSeed(Case, {
       origin: 'web',
       // Resolved-but-not-closed: case.hook keeps is_closed=false and stamps
       // closed_date as the resolved-date proxy; resolution_time_hours is the
-      // closed−created delta the hook would compute (daysAgo() is day-granular,
-      // so deltas come in 24h steps).
+      // closed−created delta the hook would compute (`celSettledAt`).
       is_closed: false,
-      is_sla_violated: seededSettledBreach(3, 2, 'medium', 'Initech Solutions'),
+      is_sla_violated: seededSettledBreach(24, 'medium', 'Initech Solutions'),
       is_escalated: false,
       resolution_time_hours: 24.0,
       created_at: cel`daysAgo(3)`,
-      closed_date: cel`daysAgo(2)`,
+      closed_date: celSettledAt(3, 24),
       sla_due_date: celCaseSlaDue(3, 'medium', 'Initech Solutions'),
     },
     {
@@ -188,7 +231,10 @@ export const cases = defineSeed(Case, {
       type: 'problem',
       origin: 'chat',
       is_closed: true,
-      is_sla_violated: seededSettledBreach(7, 6, 'high', 'Wayne Enterprises'),
+      // Closed inside Wayne's 6-hour High clock (strategic tier) — five hours
+      // after it was raised (#2288). It used to close a whole day later, the
+      // one hand-written case the Cases list tinted red after closing.
+      is_sla_violated: seededSettledBreach(5, 'high', 'Wayne Enterprises'),
       is_escalated: false,
       // `resolution` is REQUIRED when status is 'closed' (object validation
       // `resolution_required_for_closed`) — without it the seed row is rejected.
@@ -199,9 +245,9 @@ export const cases = defineSeed(Case, {
       // lookup names its target.
       resolved_by_article: 'API Rate Limits',
       // closed−created delta, as case.hook computes it.
-      resolution_time_hours: 24.0,
+      resolution_time_hours: 5.0,
       created_at: cel`daysAgo(7)`,
-      closed_date: cel`daysAgo(6)`,
+      closed_date: celSettledAt(7, 5),
       sla_due_date: celCaseSlaDue(7, 'high', 'Wayne Enterprises'),
     },
     {
@@ -270,19 +316,72 @@ export const cases = defineSeed(Case, {
       type: 'feature_request',
       origin: 'web',
       is_closed: true,
-      is_sla_violated: seededSettledBreach(10, 8, 'low', 'Wayne Enterprises'),
+      is_sla_violated: seededSettledBreach(48, 'low', 'Wayne Enterprises'),
       is_escalated: false,
       // Required for closed cases (resolution_required_for_closed).
       resolution: 'Delivered CSV bulk-import in the 9.4 release; shared the docs link with the customer.',
       // closed−created delta, as case.hook computes it.
       resolution_time_hours: 48.0,
       created_at: cel`daysAgo(10)`,
-      closed_date: cel`daysAgo(8)`,
+      closed_date: celSettledAt(10, 48),
       sla_due_date: celCaseSlaDue(10, 'low', 'Wayne Enterprises'),
     },
     // ─── Generated demo cases — 30 cases over the last 30 days, mixed across
     // priorities. Powers `CasesOpenedByDayPriorityReport` (daily bucketing
     // matrix) and the service dashboard's daily-volume area chart.
+    //
+    // ### Timing follows status (#2288)
+    //
+    // Every row used to be created `1 + i` days ago, while its due date is the
+    // matrix cell in HOURS — so every open row was past due on arrival, the
+    // first `case_sla_monitor` sweep flagged and escalated each one, and 29 of
+    // the 38 seeded cases read as breached (seven settled ones by their own
+    // late dates). A support desk's open work is young and its old work is
+    // settled, so the rotations below still choose status and priority, and
+    // the status then chooses the timing:
+    //
+    //   - a SETTLED row keeps its day (`1 + i` days ago) and finishes inside
+    //     its window, 1/4 to 3/4 of the way through it, to the hour;
+    //   - an OPEN row is opened 1/8 to 3/8 of the way through its window
+    //     before the seed loads (`{ hoursAgo }`), so it is inside it on a
+    //     fresh seed — a High or Critical clock is too short for any midnight;
+    //   - the open Critical rows on every third index are the demo's
+    //     deliberate breaches: they keep their day, and arrive flagged.
+    //
+    // In detail:
+    //
+    //   - a SETTLED row keeps its day, `1 + i` days ago, and finishes 1/4 to
+    //     3/4 of the way through its window, to the hour;
+    //   - the open High and Critical rows on every third index are the demo's
+    //     deliberate breaches: they keep their day and arrive flagged;
+    //   - an open Low row, whose window is four to seven days, sits whole days
+    //     back — as deep in its window as whole days allow, less `i % 3` —
+    //     and stays inside it through the day it is seeded;
+    //   - an open Medium row (a one- to two-day window) is opened 3/4 of the
+    //     way through its window, and an open High or Critical row 1/8 to 3/8
+    //     of the way through its window, both counted in hours before the seed
+    //     loads (`{ hoursAgo }`). A 4- to 8-hour clock is too short for any
+    //     midnight, and a Medium row on a midnight would land on today's day.
+    //
+    // On a fresh seed that is 7 of 38 cases breached after the first sweep
+    // (three hand-written, four generated), none of them settled, and one
+    // escalation task: the sweep's own, on `Login issues after platform
+    // upgrade`. `test/seed-sla-share.test.ts` boots the app and pins it. The
+    // clock keeps running after the seed loads: an open row inside its window
+    // breaches when its window ends, as it would on a real desk.
+    //
+    // ### What the timing does to the date axis
+    //
+    // `created_at` is the axis `CasesOpenedByDayPriorityReport` and the daily
+    // volume chart bucket by day, and the timing above moves it. Open work is
+    // young, so the generated inflow is denser in the last five days than in
+    // the rest of the month. The day spread above, plus the three-quarter
+    // depth of the Medium rows, keeps that young work from piling onto one
+    // day. Whatever hour of the UTC day the seed loads, no day holds more than
+    // 5 of the 30 generated cases. Before #2288 there was one per day.
+    // `test/seed-sla-share.test.ts` pins the 5. Before the day spread
+    // and the Medium depth, the hour-granular rows put up to 12 generated
+    // cases on a single day.
     //
     // ### Why every axis carries a rotation, and not just `i % length` (#1659)
     //
@@ -322,8 +421,12 @@ export const cases = defineSeed(Case, {
     // so they cannot resonate") empties one status completely; and rotating
     // `crm_account` as well — to break the every-fifth-day beat it walks the
     // calendar on — costs twelve further empty cells. That beat is the
-    // deliberate price of anchoring: with one row per day, some axis has to be
-    // the fixed one the other four are measured against.
+    // deliberate price of anchoring: with one row per index, some axis has to
+    // be the fixed one the other four are measured against. (The timing above
+    // reads status, priority and account and changes none of them, so these
+    // cross-tabs stand as measured. It does move the date axis — see "What the
+    // timing does to the date axis" above — so the every-fifth-day beat now
+    // holds only for settled rows and breaches.)
     ...((): readonly Record<string, unknown>[] => {
       const priorities = ['low', 'medium', 'high', 'critical'] as const;
       // Mirror of case.hook's priority rank map — hooks don't run over seeds.
@@ -343,30 +446,42 @@ export const cases = defineSeed(Case, {
         const type = types[(i + 2 * Math.floor(i / types.length)) % types.length];
         const origin = origins[(i + Math.floor(i / 10)) % origins.length];
         const settled = status === 'resolved' || status === 'closed';
-        const ageDays = 1 + (i % 30);
-        // Settled cases get a resolution delay of 1–3 days (capped at the
-        // case's age); resolution_time_hours is exactly the closed−created
-        // delta case.hook would compute (daysAgo() is day-granular → 24h steps).
-        const resolutionDays = Math.min(ageDays, 1 + (i % 3));
+        const slaHours = seededSlaHours(priority, account);
+        // ### Timing follows status (#2288) — see the block comment above.
+        //
+        // The demo's deliberate open breaches: the High and Critical rows on
+        // every third index. Open, flagged, and days past an 8-hour clock.
+        const shortClock = priority === 'high' || priority === 'critical';
+        const breach = !settled && shortClock && i % 3 === 0;
+        const ageDays = 1 + i;
+        // The deepest whole day of a window that holds the row through the day
+        // it is seeded: `daysAgo(n) + H` is no earlier than the next midnight.
+        const deepestDay = Math.floor(slaHours / 24) - 1;
+        const age: CaseAge = settled || breach
+          ? ageDays
+          : shortClock
+            ? { hoursAgo: Math.ceil((slaHours * (1 + (i % 3))) / 8) }
+            : deepestDay >= 2
+              ? Math.max(1, deepestDay - (i % 3))
+              : { hoursAgo: Math.floor((slaHours * 3) / 4) };
+        // A settled row finished 1/4, 2/4 or 3/4 of the way through its
+        // window; resolution_time_hours is exactly that closed−created delta.
+        const resolutionHours = Math.ceil((slaHours * (1 + (i % 3))) / 4);
         // A SETTLED row's flag is derived from its own dates (#2070,
-        // `seededSettledBreach`): the write that settled it would have recorded
-        // a late finish, so the seed does too.
+        // `seededSettledBreach`) — `false` for every one, since each settles
+        // inside its window.
         //
         // An OPEN row's flag is the sweep's definition — open, and its due date
-        // already in the past. The old generator flagged rows as violated while
-        // giving every row a FUTURE due date; since #595 the due date is DERIVED
-        // (`celCaseSlaDue` below), so "already in the past" holds by
-        // construction here: a critical case is due 4h after creation and every
-        // generated case is at least a day old. The converse is deliberately not
-        // enforced — other open rows are past due too, and `case_sla_monitor`
-        // notices them where scheduled work runs. Pre-setting the flag here only
-        // decides which open breaches the demo shows without a sweep.
-        const slaViolated = settled
-          ? seededSettledBreach(ageDays, ageDays - resolutionDays, priority, account)
-          : priority === 'critical' && i % 3 === 0;
+        // already in the past — and only a breach row is pre-set: it is days
+        // old against an 8-hour clock at most, so "already in the past" holds
+        // by construction. Every other open row is inside its window when the
+        // seed loads, so the first `case_sla_monitor` sweep finds none of them.
+        const slaViolated = settled ? seededSettledBreach(resolutionHours, priority, account) : breach;
         out.push({
           subject: `Demo case ${String(i + 1).padStart(2, '0')} — ${priority} ${type}`,
-          description: `Auto-generated demo case for ${priority} priority on day -${ageDays}.`,
+          description: typeof age === 'number'
+            ? `Auto-generated demo case for ${priority} priority on day -${age}.`
+            : `Auto-generated demo case for ${priority} priority, opened ${age.hoursAgo}h into a ${slaHours}h SLA window.`,
           crm_account: account,
           status,
           priority,
@@ -378,22 +493,23 @@ export const cases = defineSeed(Case, {
           is_closed: status === 'closed',
           is_sla_violated: slaViolated,
           is_escalated: status === 'escalated',
-          ...(settled ? { resolution_time_hours: resolutionDays * 24 } : {}),
+          ...(settled ? { resolution_time_hours: resolutionHours } : {}),
           // Object validations require these when closed/escalated — without
           // them the generated rows are rejected (resolution_required_for_closed
           // / escalation_reason_required).
           ...(status === 'closed' ? { resolution: 'Resolved per standard runbook; root cause documented and customer confirmed.' } : {}),
           ...(status === 'escalated' ? { escalation_reason: 'Escalated to tier-2 engineering for SLA-risk review.' } : {}),
-          created_at: celDaysAgo(ageDays),
-          // The SLA-risk review the reason names escalates the case halfway
-          // through its SLA window, before it falls due.
+          created_at: celCreatedAt(age),
+          // The SLA-risk review the reason names escalates the case before it
+          // falls due: halfway through its window, or halfway through the time
+          // it has been open when that is sooner.
           ...(status === 'escalated'
-            ? { escalated_date: celEscalatedAt(ageDays, Math.ceil(seededSlaHours(priority, account) / 2)) }
+            ? { escalated_date: celEscalatedAt(age, Math.min(Math.ceil(slaHours / 2), Math.floor((typeof age === 'number' ? age * 24 : age.hoursAgo) / 2))) }
             : {}),
           // Resolved cases also carry closed_date: case.hook stamps it as the
           // resolved-date proxy while keeping is_closed=false.
-          ...(settled ? { closed_date: celDaysAgo(ageDays - resolutionDays) } : {}),
-          sla_due_date: celCaseSlaDue(ageDays, priority, account),
+          ...(settled ? { closed_date: celSettledAt(ageDays, resolutionHours) } : {}),
+          sla_due_date: celCaseSlaDue(age, priority, account),
         });
       }
       return out;
