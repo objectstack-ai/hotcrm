@@ -16,18 +16,19 @@ export const QuoteViews = defineView({
     label: 'All Quotes',
     userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_quote' },
+    // Eight columns sized to fit a 1440 px screen with the sidebar open
+    // (#2292): eleven ran 1580 px wide and cut the discount at the edge.
+    // `quote_date` still orders the list and opens the calendar; it, the
+    // subtotal and the tax are on the record page, and the total carries them.
     columns: [
-      { field: 'quote_number', width: 140, link: true, pinned: 'left' },
+      { field: 'quote_number', width: 120, link: true, pinned: 'left' },
       { field: 'crm_account', width: 200 },
-      { field: 'crm_opportunity', width: 200 },
-      { field: 'status', width: 130, sortable: true },
-      { field: 'quote_date', width: 130, sortable: true },
-      { field: 'expiration_date', width: 140, sortable: true },
-      { field: 'subtotal', width: 130, align: 'right', summary: 'sum' },
-      { field: 'discount', width: 110, align: 'right' },
-      { field: 'tax', width: 110, align: 'right', summary: 'sum' },
-      { field: 'total_price', width: 140, align: 'right', summary: 'sum' },
-      { field: 'owner_id', width: 150 },
+      { field: 'crm_opportunity', width: 190 },
+      { field: 'status', width: 100, sortable: true },
+      { field: 'expiration_date', width: 110, sortable: true },
+      { field: 'discount', width: 100, align: 'right' },
+      { field: 'total_price', width: 130, align: 'right', summary: 'sum' },
+      { field: 'owner_id', width: 120 },
     ],
     sort: [{ field: 'quote_date', order: 'desc' }],
     pagination: { pageSize: 25 },

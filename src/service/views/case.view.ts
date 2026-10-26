@@ -25,21 +25,21 @@ export const CaseViews = defineView({
     label: 'All Cases',
     userActions: { editInline: true },
     data,
+    // Eight columns in the order a support queue is scanned, sized to fit a
+    // 1440 px screen with the sidebar open (#2292). Contact, the web
+    // submitter's `supplied_name` / `supplied_email` (#2190) and origin stay
+    // on `unassigned_triage`, where a web case lands, and on the record page;
+    // the escalation flag is what `escalated_cases` filters on. Here they
+    // pushed priority, status and SLA off the right edge.
     columns: [
       { field: 'case_number', width: 130, sortable: true, link: true, pinned: 'left' },
-      { field: 'subject', width: 280, sortable: true },
-      { field: 'crm_account', width: 180 },
-      { field: 'crm_contact', width: 160 },
-      // A web case has no contact; these say who wrote in (#2190).
-      { field: 'supplied_name', width: 160 },
-      { field: 'supplied_email', width: 200 },
-      { field: 'priority', width: 110, sortable: true },
-      { field: 'status', width: 130, sortable: true },
-      { field: 'origin', width: 120 },
-      { field: 'sla_due_date', width: 160, sortable: true },
-      { field: 'is_sla_violated', width: 110, align: 'center' },
-      { field: 'is_escalated', width: 110, align: 'center' },
-      { field: 'owner_id', width: 150 },
+      { field: 'subject', width: 200, sortable: true },
+      { field: 'crm_account', width: 170 },
+      { field: 'priority', width: 100, sortable: true },
+      { field: 'status', width: 110, sortable: true },
+      { field: 'sla_due_date', width: 180, sortable: true },
+      { field: 'is_sla_violated', width: 100, align: 'center' },
+      { field: 'owner_id', width: 110 },
     ],
     // Sort on the materialised ordinal, not the select itself: `priority desc`
     // compares raw strings and lands medium > low > high > critical, burying
