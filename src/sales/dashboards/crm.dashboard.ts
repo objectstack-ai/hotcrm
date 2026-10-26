@@ -60,8 +60,12 @@ export const CrmOverviewDashboard: Dashboard = {
     // ─── KPI Row ──────────────────────────────────────────────────────
     {
       id: 'total_revenue',
-      title: 'Total Revenue',
-      description: 'Closed-won revenue this period',
+      // Every KPI on this row follows the header's date picker (close date,
+      // this quarter by default), and the title says so instead of naming a
+      // quarter the reader may have changed (#2291). The same measure over
+      // the same window carries the same name on Sales Performance.
+      title: 'Total Revenue (Selected Period)',
+      description: 'Closed-won revenue in the selected period',
       type: 'metric',
       filter: { stage: 'closed_won' },
       colorVariant: 'success',
@@ -70,8 +74,8 @@ export const CrmOverviewDashboard: Dashboard = {
     },
     {
       id: 'active_deals',
-      title: 'Active Deals',
-      description: 'Open opportunities in the pipeline',
+      title: 'Open Deals (Selected Period)',
+      description: 'Open opportunities closing in the selected period',
       type: 'metric',
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
@@ -80,16 +84,18 @@ export const CrmOverviewDashboard: Dashboard = {
     },
     {
       id: 'won_deals',
-      title: 'Won Deals',
-      description: 'Closed-won deals this period',
+      title: 'Deals Won (Selected Period)',
+      description: 'Closed-won deals in the selected period',
       type: 'metric',
       filter: { stage: 'closed_won' },
       colorVariant: 'purple',
       dataset: 'opportunity_metrics', values: ['opp_count'],
       layout: { x: 6, y: 0, w: 3, h: 1 },
     },
-    // No overrides left once the fabricated trend is gone.
-    avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 1 }),
+    avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 1 }, {
+      title: 'Avg Deal Size (Selected Period)',
+      description: 'Average value of closed-won deals in the selected period',
+    }),
 
     // ─── Charts Row 1 ─────────────────────────────────────────────────
     {

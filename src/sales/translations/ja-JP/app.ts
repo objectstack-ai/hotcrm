@@ -125,10 +125,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'CRM 概要',
       description: '売上指標、パイプライン分析、商談インサイト',
       widgets: {
-        total_revenue: { title: '総売上', description: '当期の成立済み売上' },
-        active_deals: { title: '進行中の商談', description: 'パイプライン上のオープン商談' },
-        won_deals: { title: '成立商談数', description: '当期に成立した商談の総数' },
-        avg_deal_size: { title: '平均商談規模', description: '成立済み商談の平均金額' },
+        total_revenue: { title: '総売上（選択期間）', description: '選択期間の成立済み売上' },
+        active_deals: { title: 'オープン商談（選択期間）', description: '選択期間内に完了予定のオープン商談' },
+        won_deals: { title: '成立商談数（選択期間）', description: '選択期間に成立した商談の数' },
+        avg_deal_size: { title: '平均商談規模（選択期間）', description: '選択期間の成立済み商談の平均金額' },
         revenue_trends: { title: '売上トレンド', description: '過去12か月の成立済み売上' },
         lead_source: { title: 'リードソース', description: '獲得チャネル別のパイプライン金額' },
         pipeline_by_stage: { title: 'ステージ別パイプライン', description: '各営業ステージのオープン商談金額' },
@@ -155,10 +155,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '営業実績',
       description: 'パイプライン分析、勝率トレンド、担当者別パフォーマンス',
       widgets: {
-        total_pipeline_value: { title: 'パイプライン合計', description: 'オープン商談金額の合計' },
+        total_pipeline_value: { title: 'オープンパイプライン（選択期間）', description: '選択期間内に完了予定のオープン商談金額の合計' },
         closed_won_qtd: { title: '今四半期成立額', description: '今四半期に成立した売上' },
-        open_opportunities: { title: 'オープン商談', description: '進行中のアクティブ商談' },
-        avg_deal_size: { title: '平均商談規模', description: '今四半期の成立済み商談の平均金額' },
+        open_opportunities: { title: 'オープン商談（選択期間）', description: '選択期間内に完了予定のオープン商談' },
+        avg_deal_size: { title: '平均商談規模（今四半期）', description: '今四半期の成立済み商談の平均金額' },
         pipeline_by_stage: { title: 'ステージ別パイプライン', description: '各営業ステージのオープン商談金額' },
         monthly_revenue_trend: { title: '月次売上トレンド', description: '過去12か月の成立済み売上' },
         pipeline_by_forecast_category: { title: '予測カテゴリ別パイプライン', description: '売上予測カテゴリ別のオープンパイプライン金額' },
@@ -559,13 +559,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '主要指標、自分の未完了の仕事、今後の予定をまとめた営業チームのホームページ',
       components: {
         kpi_revenue_won: {
-          label: '受注売上',
+          label: '総売上（全期間）',
         },
         kpi_deals_won: {
-          label: '受注件数',
+          label: '成立商談数（全期間）',
         },
         kpi_pipeline_value: {
-          label: 'パイプライン金額',
+          label: 'オープンパイプライン（全期間）',
         },
         kpi_open_leads: {
           label: 'オープンリード',

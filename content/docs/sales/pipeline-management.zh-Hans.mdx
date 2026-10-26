@@ -33,7 +33,7 @@ description: 销售管道的日常运作方式——推进交易、自动概率�
 
 加权预测是**列表视图上的合计，不是仪表盘上的数字**。商机的**进行中商机**与**全部商机**两个视图各带一列*预期营收*并对该列求和（`src/sales/views/opportunity.view.ts`），这个在开放管道上的合计就是加权预测。
 
-仪表盘给不出同一个数。**Sales Performance** 仪表盘（`sales_dashboard`）读的是 `opportunity_metrics` dataset，而该 dataset **没有任何度量读 `expected_revenue`** —— 它暴露的金额类度量（*Total Amount*、*Avg Deal Size*、*Won Revenue*、*Lost Revenue*）一律读原始的 `amount` 字段。所以它的 *Total Pipeline* 磁贴是**未加权**的在飞管道；两个数字之间差的正是上面这层概率加权。
+仪表盘给不出同一个数。**Sales Performance** 仪表盘（`sales_dashboard`）读的是 `opportunity_metrics` dataset，而该 dataset **没有任何度量读 `expected_revenue`** —— 它暴露的金额类度量（*Total Amount*、*Avg Deal Size*、*Won Revenue*、*Lost Revenue*）一律读原始的 `amount` 字段。所以它的 *Open Pipeline (Selected Period)* 磁贴是**未加权**的在飞管道；两个数字之间差的正是上面这层概率加权。
 
 ## 销售管道看板视图
 

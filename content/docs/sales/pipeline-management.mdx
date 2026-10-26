@@ -33,7 +33,7 @@ This number is the heart of the weighted forecast. It's recalculated automatical
 
 The weighted forecast is a **list-view total, not a dashboard number**. The **Open Deals** and **All Opportunities** views on Opportunities each carry an *Expected Revenue* column with a column sum (`src/sales/views/opportunity.view.ts`), and that sum over the open pipeline is the weighted forecast.
 
-No dashboard can give you the same figure. The **Sales Performance** dashboard (`sales_dashboard`) reads the `opportunity_metrics` dataset, and that dataset declares **no measure over `expected_revenue`** — every amount measure it exposes (*Total Amount*, *Avg Deal Size*, *Won Revenue*, *Lost Revenue*) reads the raw `amount` field. So its *Total Pipeline* tile is the **unweighted** open pipeline; the two numbers differ by the probability weighting, which is the whole point of the calculation above.
+No dashboard can give you the same figure. The **Sales Performance** dashboard (`sales_dashboard`) reads the `opportunity_metrics` dataset, and that dataset declares **no measure over `expected_revenue`** — every amount measure it exposes (*Total Amount*, *Avg Deal Size*, *Won Revenue*, *Lost Revenue*) reads the raw `amount` field. So its *Open Pipeline (Selected Period)* tile is the **unweighted** open pipeline; the two numbers differ by the probability weighting, which is the whole point of the calculation above.
 
 ## The pipeline kanban view
 
