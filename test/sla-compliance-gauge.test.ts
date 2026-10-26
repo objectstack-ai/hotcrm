@@ -301,7 +301,10 @@ describe('the compliance measure over sqlite', () => {
  * `is_sla_violated: false`, though 6 of the 8 closed cases finished days after
  * their own due dates. The settled rows' flags are now DERIVED from those dates
  * (`seededSettledBreach`, pinned row by row in `test/seed-consistency.test.ts`),
- * so 2 of 8 closed cases are within SLA and the gauge must read 25%.
+ * and since #2288 those dates finish every closed case inside its window, to
+ * the hour — so the derived flags say all 8 met, and the gauge must read 100%.
+ * The difference from the #2070 defect is the dates: then the flags denied
+ * them, now they agree with them.
  *
  * The rows come from the SHIPPED seed rather than hand-typed stand-ins, and
  * the binding comes from the SHIPPED widget, so re-pointing the widget or
@@ -315,12 +318,12 @@ describe('the gauge reads met ÷ closed on the seeded demo org', () => {
     .flatMap((d) => d.records);
   const closedSeeds = seededCases.filter((c) => c.is_closed === true);
 
-  it('seeds 8 closed cases, 6 of them finished after their due date', () => {
+  it('seeds 8 closed cases, none of them finished after its due date', () => {
     expect(closedSeeds.length).toBe(8);
-    expect(closedSeeds.filter((c) => c.is_sla_violated === true)).toHaveLength(6);
+    expect(closedSeeds.filter((c) => c.is_sla_violated !== false)).toHaveLength(0);
   });
 
-  it('renders 25% through the shipped widget binding', async () => {
+  it('renders 100% through the shipped widget binding', async () => {
     const ql = (await ObjectQL.create({
       datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
       objects: { crm_case: kase } as never,
@@ -343,7 +346,7 @@ describe('the gauge reads met ÷ closed on the seeded demo org', () => {
       );
       const row = (res.rows ?? [])[0] as AnyRec;
       expect(row.closed_count).toBe(8);
-      expect(row.sla_compliance_rate as number).toBeCloseTo(2 / 8, 5);
+      expect(row.sla_compliance_rate as number).toBeCloseTo(8 / 8, 5);
     } finally {
       await (ql as AnyRec)?.close();
     }
