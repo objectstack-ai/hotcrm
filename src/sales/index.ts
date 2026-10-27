@@ -92,7 +92,7 @@ export const createHotCrmAppStack = (
       // rc.3) moved the manifest and left this line behind (#728). Every package
       // of this artifact states the same protocol; `src/service/index.ts`
       // repeats it for the same reason.
-      engines: { protocol: '^18.1.0' },
+      engines: { protocol: '^18.2.0' },
     },
 
     // ─── Platform capabilities this app needs ─────────────────────────

@@ -2,7 +2,7 @@
 'hotcrm': minor
 ---
 
-Record titles are stored, so an exported lookup column imports back, and the app runs on ObjectStack 18.1.0
+Record titles are stored, so an exported lookup column imports back, and the app moves to ObjectStack 18.1.0
 
 **Nine record titles are stored fields now, not formulas (#2230).** Account, contact, lead,
 forecast, product, quote, campaign, case and knowledge article each title their records with a

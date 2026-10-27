@@ -71,6 +71,13 @@ import stack from './helpers/composed-stack';
  *     `buildReadFilter` abstains on both, every probe would see all five deals,
  *     and the subject of this pin would have moved out from under it.
  *
+ * **Since @objectstack 18.2.0** (objectstack#26305) case 1's arm can no longer
+ * be built here: the metadata door refuses to publish a hierarchy grant on a
+ * runtime with no hierarchy resolver. The boundary is the same, stated earlier,
+ * so the open-edition block asserts that refusal, and the baseline and org-wide
+ * arms keep measuring what a non-bypass grant reads. Installing the enterprise
+ * resolver still turns this file red, at the refusal case.
+ *
  * The fixtures are wired so that none of those can be confused with missing
  * data: the report's `manager_id` really points at the hierarchy probe's
  * manager (asserted by read-back), so the one row it sees is a statement about
@@ -119,6 +126,9 @@ const ctx: Record<string, AnyRec> = {};
 const token: Record<string, string> = {};
 /** The five deals this fixture writes — the population every arm reports on. */
 const deals = new Set<string>();
+/** The metadata door's answer to the hierarchy grant (it is not saved). */
+let hierarchyRefusal: { status: number; body: AnyRec };
+let admin: string;
 
 /** A system write — the fixture's setup channel (the handle's `seed` door). */
 const insert = async (object: string, doc: AnyRec): Promise<string> => {
@@ -288,7 +298,12 @@ beforeAll(async () => {
   // one does. Through 18.0.0-next.0 they were `sys_permission_set` DATA rows;
   // 18.0.0-next.1 retires that object (objectstack 66949b7, ADR-0131 D3) and
   // names `PUT /api/v1/meta/permission/:name` as its replacement.
-  const admin = await verify.signIn();
+  //
+  // Since @objectstack 18.2.0 (objectstack#26305) that door refuses the
+  // hierarchy grant on a runtime that mounts no hierarchy resolver, so
+  // `probe_read_hierarchy` is the one set NOT saved: its refusal is kept here
+  // and is what the open-edition block below asserts.
+  admin = await verify.signIn();
   for (const [name, grant] of Object.entries(PROBE_GRANTS)) {
     const res = await verify.apiAs(admin, 'PUT', `/meta/permission/${name}`, {
       name,
@@ -296,6 +311,10 @@ beforeAll(async () => {
       description: 'Throwaway grant created by test/hierarchy-read-depth.test.ts. Not an app profile.',
       objects: { crm_opportunity: grant },
     });
+    if (name === 'probe_read_hierarchy') {
+      hierarchyRefusal = { status: res.status, body: await res.json() as AnyRec };
+      continue;
+    }
     expect(res.status, `saving the throwaway set ${name}: ${await res.clone().text()}`).toBeLessThan(300);
   }
 
@@ -304,7 +323,6 @@ beforeAll(async () => {
   // sign-ups are plain members — the stack's first user is its own platform
   // admin, so nobody below inherits that bypass.
   const managers = {
-    mgrHier: ['hier@hierarchy-read.test', 'Hierarchy Manager', 'probe_read_hierarchy', 'hier'],
     mgrOwn: ['own@hierarchy-read.test', 'Baseline Manager', 'probe_read_owner_only', 'own'],
     mgrOrg: ['org@hierarchy-read.test', 'Org-wide Manager', 'probe_read_org_wide', 'org'],
   } as const;
@@ -313,6 +331,10 @@ beforeAll(async () => {
     id[key] = person.id;
     token[arm] = person.token;
   }
+  // The hierarchy manager's set cannot be published (above), so they are a
+  // plain row: their deal and their report's deal stay in the population the
+  // other arms are measured against.
+  id.mgrHier = await insert('sys_user', { name: 'Hierarchy Manager', email: 'hier@hierarchy-read.test' });
   // One direct report each. `manager_id` is the chain `own_and_reports` is
   // defined over (`@objectstack/spec`: "me + my sys_user.manager_id report
   // chain"), and it is wired for real so that owner-only below is a reading of
@@ -346,7 +368,7 @@ beforeAll(async () => {
     deals.add(await insert('crm_opportunity', deal(name, owner)));
   }
 
-  for (const arm of ['hier', 'own', 'org']) ctx[arm] = await verify.contextFor(token[arm]) as AnyRec;
+  for (const arm of ['own', 'org']) ctx[arm] = await verify.contextFor(token[arm]) as AnyRec;
 }, 120_000);
 
 afterAll(async () => {
@@ -369,7 +391,7 @@ describe('the harness enforces (negative controls)', () => {
 
   it('each probe principal holds exactly its throwaway set and no admin bypass', () => {
     const held: Record<string, string> = {
-      hier: 'probe_read_hierarchy', own: 'probe_read_owner_only', org: 'probe_read_org_wide',
+      own: 'probe_read_owner_only', org: 'probe_read_org_wide',
     };
     for (const [arm, setName] of Object.entries(held)) {
       const c = ctx[arm];
@@ -416,7 +438,7 @@ describe('the harness enforces (negative controls)', () => {
   });
 
   it('narrowing is DETECTABLE: the org-wide arm reads every seeded deal', async () => {
-    // ⭐ THE CONTROL. One bit apart from the hierarchy arm (`viewAllRecords`),
+    // ⭐ THE CONTROL. One bit apart from the baseline arm (`viewAllRecords`),
     // this principal reads all five. So a one-row result below is a real
     // narrowing measured by a working harness, ⛔ not a rig that returns
     // nothing for everyone.
@@ -427,7 +449,7 @@ describe('the harness enforces (negative controls)', () => {
   });
 });
 
-describe('open edition: a hierarchy readScope resolves owner-only (#1378)', () => {
+describe('open edition: a hierarchy readScope is refused at publish (#1378)', () => {
   it('the DEPTH resolves exactly as declared — the loss is further down', () => {
     // Not the depth computation: `getEffectiveScope` hands back
     // `own_and_reports` for this grant, faithfully. What cannot happen on this
@@ -443,42 +465,43 @@ describe('open edition: a hierarchy readScope resolves owner-only (#1378)', () =
     expect(scope).toBe('own_and_reports');
   });
 
-  it('the manager reads only their OWN deal, never a REPORT-owned deal', async () => {
-    // ⚠️ EDITION BOUNDARY, NOT A BROKEN GRANT. The declaration says
-    // `own_and_reports` and the chain is wired (negative control above);
-    // resolving that depth into owners needs the enterprise
-    // `hierarchy-scope-resolver`, absent here, so `resolveOwnerScopeIds`
-    // returns the caller alone and `buildReadFilter` emits `owner_id = <caller>`.
+  it('the metadata door refuses to publish the hierarchy grant here', () => {
+    // ⚠️ EDITION BOUNDARY. Through 18.1.0 this grant saved, and its holder then
+    // read only their OWN deal: resolving `own_and_reports` into owners needs
+    // the enterprise `hierarchy-scope-resolver`, absent here, so
+    // `resolveOwnerScopeIds` returned the caller alone. Since 18.2.0
+    // (objectstack#26305) the same boundary is stated before anyone can hold
+    // the grant: a runtime with no hierarchy resolver refuses to publish it,
+    // naming the capability it lacks and the key it refuses.
     //
     // ⭐ THIS IS THE CASE THAT FLIPS. Install
-    // `@objectstack/security-enterprise` and this arm reads TWO deals — its
-    // own and the report's. That red is correct and expected; rewrite this file
+    // `@objectstack/security-enterprise` and the set saves; rewrite this file
     // for the enterprise reality then, ⛔ do not relax it.
-    expect(await dealsVisibleTo(token.hier)).toEqual(['Hierarchy manager deal']);
+    expect(hierarchyRefusal.status).toBe(422);
+    expect(hierarchyRefusal.body.code).toBe('INVALID_METADATA');
+    expect(hierarchyRefusal.body.issues).toEqual([
+      expect.objectContaining({
+        severity: 'error',
+        rule: 'hierarchy-scope-capability-required',
+        path: 'permissions.probe_read_hierarchy.objects.crm_opportunity.readScope',
+      }),
+    ]);
   });
 
-  it('so own_and_reports conveys nothing beyond the own baseline here', async () => {
-    // The two arms differ by exactly one authored key — one declares the
-    // hierarchy depth, the other declares no depth at all — and both land on
-    // "the caller's own rows, and nothing else" even though only one of them
-    // asked for more. That indistinguishability IS the unexercised read half
-    // #1378 reports, stated as a measurement instead of as an absence.
-    //
-    // On the enterprise edition the two stop being interchangeable: the
-    // hierarchy arm gains its report's deal and the baseline arm does not.
-    const hier = await dealsVisibleTo(token.hier);
-    const own = await dealsVisibleTo(token.own);
-    expect(hier).toHaveLength(1);
-    expect(own).toEqual(['Baseline manager deal']);
-    expect(own).toHaveLength(hier.length);
+  it('so no one can hold own_and_reports here: the refused set is not served', async () => {
+    // The refusal is total, not a warning beside a stored set: the stack serves
+    // no permission set of that name, so no member can be assigned it
+    // (`signUpPerson` refuses an unserved set by name) and the baseline arm's
+    // owner-only read is the most a non-bypass grant conveys on this edition.
+    expect(verify.metadata.items<{ name?: string }>('permission').map((p) => p.name))
+      .not.toContain('probe_read_hierarchy');
+    expect(await dealsVisibleTo(token.own)).toEqual(['Baseline manager deal']);
   });
 
   it('the depth does not leak sideways — no arm reads the outsider deal', async () => {
     // Owner-only is a floor as well as a ceiling here: a rig that had simply
     // broken sharing open would show up as the outsider's deal appearing in a
     // narrowed arm.
-    for (const arm of ['hier', 'own'] as const) {
-      expect(await dealsVisibleTo(token[arm])).not.toContain('Outsider deal');
-    }
+    expect(await dealsVisibleTo(token.own)).not.toContain('Outsider deal');
   });
 });

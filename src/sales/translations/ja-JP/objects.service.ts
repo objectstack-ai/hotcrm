@@ -103,7 +103,15 @@ export const service: Record<string, ObjectTranslationData> = {
     _sections: {
       // case.view.ts のフォームセクション名 (#1100)。
       case: { label: 'ケース' },
-      how_can_we_help: { label: 'どのようなご用件でしょうか？' },
+      how_can_we_help: {
+        label: 'どのようなご用件でしょうか？',
+        fields: {
+          subject: { placeholder: '問題の簡単な概要' },
+          description: { placeholder: '再現手順、エラーメッセージ、スクリーンショットなど…' },
+          type: { helpText: 'お問い合わせ内容に最も近い選択肢をお選びください。' },
+          priority: { helpText: '重大な問題は電話でもご連絡ください。' },
+        },
+      },
       // オブジェクト定義のセクションキー（case.object.ts）— 入力フォームと、
       // これらのグループを参照する詳細ページのセクション（#970）で使用
       basic: { label: 'ケース情報' },

@@ -69,7 +69,7 @@ export const createHotCrmMarketingStack = (
     version: '6.0.0',
     type: 'module',
     description: 'HotCRM marketing module — campaigns and campaign members.',
-    engines: { protocol: '^18.1.0' },
+    engines: { protocol: '^18.2.0' },
     // The App package this module extends, and nothing else (the star).
     dependencies: { 'app.objectstack.hotcrm': '^6.0.0' },
 

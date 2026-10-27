@@ -23,11 +23,12 @@ import { TenantAdminProfile } from '../src/sales/profiles/tenant-admin.profile';
  * `organization_admin`, `member_default` and the rest — are the platform's to
  * describe and are not in it.
  *
- * English only, measured on @objectstack/spec 18.1.0: the translation bundle
- * (`TranslationDataSchema`) answers `unrecognized_keys` to a `permissions`,
- * `permissionSets` or `positions` slot, so a set's description cannot be
- * translated yet. objectstack#25652 adds that slot; the locale packs carry the
- * translations once a released `@objectstack/*` does.
+ * Measured on @objectstack/spec 18.1.0 the translation bundle
+ * (`TranslationDataSchema`) answered `unrecognized_keys` to a `permissions` or
+ * `positions` slot, so a set's description stayed English. 18.2.0 carries that
+ * slot (objectstack#25652): the three non-en locale packs translate each set's
+ * label and description under `permissions.<name>`, and `pnpm lint` fails on a
+ * missing one (`i18n/missing-permission`).
  *
  * A sentence here means what it means for positions: non-empty, starts with a
  * capital letter, ends with one full stop and contains no other sentence

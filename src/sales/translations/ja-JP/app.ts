@@ -6,7 +6,8 @@ import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
 
 /**
  * 日本語 (ja-JP) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`.
+ * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`,
+ * `reports`, `positions`, `permissions`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -826,6 +827,131 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         crm_account: '取引先', crm_contact: '取引先責任者', crm_opportunity: '商談',
         crm_lead: 'リード', crm_case: 'ケース',
       },
+    },
+  },
+  // Report index and report page headings (`reports[].label` / `description`).
+  reports: {
+    accounts_by_industry_type: {
+      label: '業種・種別別取引先',
+      description: '取引先を業種と種別でクロス集計するマトリックスレポート',
+    },
+    customer_churn_signals: {
+      label: '顧客離反シグナル',
+      description: '能動的な顧客維持のための 4 つの早期警告パネル：CSM が離反リスクありまたは離反中とフラグを付けた取引先、最近活動のない有効な取引先、動きのない高価値取引先、最近失注した商談。',
+    },
+    lead_inflow_by_month_source: {
+      label: '月 × ソース別リード対応',
+      description: '月ごとのコンタクト済みリード数を獲得チャネル別に表示',
+    },
+    opportunities_by_stage: {
+      label: 'ステージ別商談',
+      description: 'ステージ別に集計した商談のサマリー',
+    },
+    opportunity_funnel_owner_stage: {
+      label: '担当者 → ステージ別商談ファネル',
+      description: '営業担当者ごとのステージ別パイプラインファネル',
+    },
+    pipeline_coverage_by_quarter: {
+      label: 'フォーキャスト区分 × 四半期別パイプラインカバレッジ',
+      description: '進行中のパイプライン金額をフォーキャスト区分別に、完了予定の四半期ごとに集計',
+    },
+    won_opportunities_by_owner: {
+      label: '担当者別成立商談',
+      description: '所有者別にまとめた成立済み商談',
+    },
+    cases_by_status_priority: {
+      label: 'ステータス・優先度別ケース',
+      description: 'ステータスと優先度別のケースのサマリー',
+    },
+    sla_performance: {
+      label: 'SLA 実績レポート',
+      description: 'SLA 遵守状況の分析',
+    },
+    cases_opened_by_day_priority: {
+      label: '優先度 × 日別新規ケース',
+      description: '1 日ごとの新規ケース数を優先度別に表示',
+    },
+  },
+  // Setup → Positions (`src/sales/sharing/positions.ts`).
+  positions: {
+    executive: {
+      label: 'エグゼクティブ',
+      description: '経営層：パイプライン全体の進行中の大型商談をすべて閲覧できます。商談の所有権は商談チームに残ります。',
+    },
+    sales_director: {
+      label: '営業ディレクター',
+      description: '営業組織を率い、最大規模の商談の最終承認を行い、進行中の大型商談をすべて閲覧します。',
+    },
+    sales_manager: {
+      label: '営業マネージャー',
+      description: '営業チームを率い、新規取引先・リード変換・大型商談を承認し、有効な取引先をすべて編集します。',
+    },
+    sales_rep: {
+      label: '営業担当者',
+      description: 'リードと商談を日々担当し、ラウンドロビン割り当てで新しいリードを受け取ります。',
+    },
+    service_director: {
+      label: 'サービスディレクター',
+      description: 'カスタマーサービスを統括し、サービスマネージャーが対応中の未解決の重大ケースをすべて閲覧します。',
+    },
+    service_manager: {
+      label: 'サービスマネージャー',
+      description: 'エスカレーション窓口を担当します。エスカレーションされたケースはこの役職に引き渡され、未解決の重大ケースをすべて編集できます。',
+    },
+    service_agent: {
+      label: 'サービス担当者',
+      description: '顧客のケースに対応し、ラウンドロビン割り当てで新しいケースを受け取り、トリアージから未割り当てのケースを引き取ります。',
+    },
+    marketing_director: {
+      label: 'マーケティングディレクター',
+      description: 'マーケティングを率い、所有者にかかわらず実施中のキャンペーンをすべて編集します。',
+    },
+    marketing_manager: {
+      label: 'マーケティングマネージャー',
+      description: 'キャンペーンを管理し、所有者にかかわらず実施中のキャンペーンをすべて編集します。',
+    },
+    marketing_user: {
+      label: 'マーケティングユーザー',
+      description: 'キャンペーンとそのメンバーを日々企画・運用します。',
+    },
+    na_sales_team: {
+      label: '北米営業チーム',
+      description: '北米テリトリーのチーム：北米テリトリーの取引先をすべて編集します。',
+    },
+    eu_sales_team: {
+      label: '欧州営業チーム',
+      description: '欧州テリトリーのチーム：欧州（EMEA）テリトリーの取引先をすべて編集します。',
+    },
+  },
+  // Setup → Permission Sets (`src/sales/profiles/*.profile.ts`).
+  permissions: {
+    crm_user: {
+      label: 'CRM ユーザー',
+      description: '全メンバーの既定セット：自分のリード・取引先・商談・活動と読み取り専用のカタログ。削除・エクスポート・すべて表示・システム権限はありません。',
+    },
+    guest_portal: {
+      label: 'ゲスト（公開フォーム）',
+      description: '公開の Web-to-リード・Web-to-ケースフォームの匿名訪問者：新しいリードまたはケースを送信でき、閲覧・編集・削除は一切できません。',
+    },
+    marketing_user: {
+      label: 'マーケティングユーザー',
+      description: 'マーケティング担当者：キャンペーンとそのメンバーを運用し、ターゲティングのためにすべてのリード・取引先責任者・取引先・商談を閲覧できますが、ケースは見えず、CRM レコードは削除できません。',
+    },
+    sales_manager: {
+      label: '営業マネージャー',
+      description: '営業マネージャー：すべての営業担当者のリード・取引先・商談・見積・活動を閲覧、編集、再割り当て、削除できますが、システム管理権限はありません。',
+    },
+    sales_rep: {
+      label: '営業担当者',
+      description: '営業担当者：自分のリード・取引先・商談・見積・活動を担当し、カタログを閲覧できますが、顧客レコードは削除できません。',
+    },
+    service_agent: {
+      label: 'サービス担当者',
+      description: 'サービス担当者とマネージャー：自分のケースを処理し、その背後の取引先・取引先責任者・リードを閲覧し、ナレッジ記事を作成できますが、商談は見えません。',
+    },
+    system_admin: {
+      label: 'システム管理者',
+      description: '単一組織インストールの運用者：すべての業務レコードを完全に管理し、ユーザー・セキュリティモデル・設定を管理します。',
     },
   },
 };
