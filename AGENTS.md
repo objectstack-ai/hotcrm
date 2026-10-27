@@ -44,8 +44,7 @@ Writing an `emptyState` on every tile, or hand-tuning tile placement to dodge a 
 HotCRM is **one ObjectStack release artifact carrying four packages** (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
 (`src/sales/index.ts`), and three `type: module` packages — `app.objectstack.hotcrm.service`, `.revenue` and `.marketing`
 (`src/<dir>/index.ts`) — one `defineStack` each, composed by `objectstack.config.ts` with `composeStacks(…, { manifest: 'preserve' })`.
-Four items authored in `src/revenue/` and `src/marketing/` are still registered by the app package (`appRegisteredModuleItems` in
-`objectstack.composition.ts`, objectstack#25514): a deliberate, listed exception, ⛔ not a pattern to extend. One `package.json`, one `tsconfig.json`, one build — on the `@objectstack/runtime` dependency, ⛔ never built, patched or
+One `package.json`, one `tsconfig.json`, one build — on the `@objectstack/runtime` dependency, ⛔ never built, patched or
 worked around here.
 
 **A directory under `src/` IS a package.** There is no `packages/` level and no `shared/`; the top-level directories under `src/` are
