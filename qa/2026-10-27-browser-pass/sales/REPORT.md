@@ -1,11 +1,11 @@
 # #2320 browser pass — track 1 (CRM · Sales)
 
-> Work in progress: pushed after each inventory prefix. Sections still marked `(in progress)` are not final.
+> Work in progress: pushed after each inventory prefix. Phone-width pass still to come.
 
 - **Tested sha:** hotcrm `main` `1f3f888` (`@objectstack/*` 18.2.0), checked again after the 09:36Z worker restart: `origin/main` still `1f3f888`.
 - **Boot:** `pnpm install --frozen-lockfile` exit 0 · `pnpm dev` healthy on `:4001` (44 plugins, seed settled in background) · `pnpm demo:staff` exit 0 (na.rep, eu.rep, sales.manager, service.agent, service.manager).
 - **Browser:** preinstalled Chromium via `require('playwright')`, desktop 1440×900, phone 390×844 (`isMobile`, touch).
-- **Personas used:** dev admin (`admin@objectos.ai`), sales rep Nina Reyes (`na.rep`), anonymous visitor (web-to-lead). Sales manager / eu.rep where a row names them.
+- **Personas used:** dev admin (`admin@objectos.ai`), sales rep Nina Reyes (`na.rep`), anonymous visitor (web-to-lead). Sales manager (`sales.manager`), eu.rep and service.manager where a row names them.
 - **Environment note:** the container has no egress to `demotiles.maplibre.org`, so the account map's tiles cannot load here (the view shows its own fallback message). That is the sandbox, not the product.
 
 ## Coverage — LEA (leads)
@@ -55,6 +55,32 @@
 | ACC-017 AI email drafting skill | **not reachable** | no agent on this boot (as LEA-017) |
 | ACC-018 account analytics | pass | Reports → Accounts by Industry and Type (matrix, 10 accounts), Customer Churn Signals (four panels) · `rpt-accounts-*`, `rpt-customer-churn-*` |
 
+## Coverage — CON (contracts)
+
+CON-001 … CON-007 are track 2 (seat ruling); not driven here.
+
+## Coverage — OPP (opportunities)
+
+| Row | Result | Evidence / reason |
+| --- | --- | --- |
+| OPP-001 opportunity object | pass | Create with nothing filled: "Opportunity Name / Account / Amount / Close Date is required" inline (4 `aria-invalid`); Primary Contact reads "Select Account first", and after Globex Industries offers only Globex's contact (Sarah Johnson) · `opp-18-*` |
+| OPP-002 stage state machine | pass | Closed Won without a win reason → "Win Reason is required"; with a reason it closes · `opp-08-*`, `opp-09-*`. Jumping from an early stage saves with the "Invalid opportunity stage transition" warning toast (warning level, see S22) |
+| OPP-003 stage-driven fields | pass | prospecting → needs_analysis: probability 40, expected revenue 48,000 (120,000 × 40 %), forecast `best_case` · `opp-03-*` |
+| OPP-004 stage age clock | pass | the same save stamped `stage_entry_date` today, `days_in_stage` 0 |
+| OPP-005 closed-deal freeze | pass | won without a close date → `close_date` today; editing Amount on the closed deal → 409 "closed_won; only description, next_step, notes may be edited. Attempted: amount." (raw values, S21) · `opp-10-*` |
+| OPP-006 won → account promotion | pass | Globex Industries `type` prospect → customer; task "Activate new customer…" (high, +3 days) |
+| OPP-007 line items roll up | pass | Northwind Grid Modernization: Related → Products → New, Standard Support × 3 → amount 86,500 → 113,500 · `opp-15-*` |
+| OPP-008 price fill | pass | picking the product left Sales Price empty in the form (list price not shown, S26); on insert `unit_price` defaulted to the catalogue 9,000 |
+| OPP-009 pipeline kanban | pass | Sales Pipeline tab: stage columns with amount sums, closed deals excluded · `opp-01-02-*` |
+| OPP-010 opportunity views | pass, with defect D4 | 9 tabs: Open Deals, Sales Pipeline, Close Date Calendar, Deal Timeline (D4), Deal Gallery, My Open Deals (overflow, S27), Stale, Tender This Quarter (empty state), Closing This Quarter · `opp-01-*` |
+| OPP-011 mass update stage | pass in Open Deals, defect D6 elsewhere | Open Deals → select 2 → bulk bar Update Stage → confirm → "Succeeded 2 / 2", then reverted · `opp-14-*`, `opp-14r-*`. The header-toolbar copy of the action refuses 2 rows and opens on 0 rows (D6) · `opp-13-*` |
+| OPP-012 clone | pass | "Copy of Globex Manufacturing Suite", prospecting, close date +90 days, same amount, account, source; no confirmation or toast (S28) · `opp-07-*` |
+| OPP-013 stagnation daily scan | **not reachable** | the boot log says "8 flows declare a 'schedule' trigger but are NOT bound — disabled by deployment policy … (OS_AUTOMATION_SCHEDULED_WORK_ENABLED is unset or not truthy)", `opportunity_stagnation` among them. The Stale view (OPP-010) is the reachable part |
+| OPP-014 large-deal won alert | pass, with defect D5 | Bluepeak Robotics 120,000 went to Large Deal Approval; Marta approved it in the Approvals Inbox; na.rep won it → "Large deal won" notification · `opp-11-*`, `opp-12-*`. Recall re-submits at once (D5) · `opp-05-*`, `opp-06-*` |
+| OPP-015 private deal | pass | na.rep ticked Private on Initech Cloud Migration: sales.manager, eu.rep and service.manager read `total 0` over REST; sales.manager's record URL shows "Record not found" and the deal is gone from All Opportunities; sales.manager's Opportunities by Stage counts Needs Analysis 93,000 (the private 80,000 left out). Admin still sees it. Unticked again and verified · `opp-16-*` |
+| OPP-016 record page | pass | header Generate Quote / Clone Opportunity / Log a Call / Edit, 7-step path with Closed Won and Closed Lost apart, Details / Related / Activity, reference rail · `opp-02-*` |
+| OPP-017 opportunity analytics | pass | as sales.manager: Opportunities by Stage (6 stages, total 3,442,500), Won Opportunities by Owner (Nina 1,435,000 · Emil 70,000), Pipeline Coverage by Forecast × Quarter (matrix 2026-Q4 / 2027-Q1, total 2,017,500), Opportunity Funnel by Owner → Stage (S13) · `opp-17-*`. No report shows the dataset's `win_rate` |
+
 ## Defects
 
 ### D1 — A screen flow's Submit with an empty required field is a silent no-op
@@ -78,6 +104,27 @@
 - **Suspected landing:** the console's synthesized record header (crm_contact has no authored page; the lead and opportunity pages pass their actions explicitly) — platform/console; if the synthesized header is meant to show only the activity actions, then the app needs a contact page.
 - **Dedupe words:** record_header action missing synthesized header, contact send email record page, mark primary record header.
 
+### D4 — Deal Timeline draws every deal from its created date, so closed deals show backwards bars
+- **Steps:** Opportunities → **Deal Timeline** tab.
+- **Expected:** each bar spans the deal's life (open → close).
+- **Actual:** every bar starts at `created_at`, which for the seeded deals is the seed boot date (today), so a deal closed in September reads "10/27/2026 → 9/7/2026" and every open deal starts today · `opp-01-04-deal-timeline.png`.
+- **Suspected landing:** `src/sales/views/opportunity.view.ts` `deal_timeline` (`startDateField: 'created_at'`, `endDateField: 'close_date'`); a deal needs a stored open date (seeded too), or the timeline should start at `stage_entry_date` and skip closed deals.
+- **Dedupe words:** deal timeline created_at reversed range, opportunity timeline start date.
+
+### D5 — Recalling a large-deal approval re-submits it in the same second
+- **Steps:** as na.rep, raise Bluepeak Robotics Inc – 2026-10-27 to 120,000 (the deal goes to Large Deal Approval and locks) → **Recall** above the title → confirm.
+- **Expected:** the dialog's own words: "Approvers can no longer act on it and the record is unlocked."
+- **Actual:** request `areq_f168…` is recalled at 13:15:42.407 and a new pending request `areq_407e…` is created at 13:15:42.477; the page stays "Locked for approval" with Edit disabled. The rep can never take a large deal back to edit it · `opp-05-locked-header.png`, `opp-06-recall-dialog.png`, `opp-06-after-recall-page.png`.
+- **Suspected landing:** `src/sales/flows/opportunity-approval.flow.ts` start condition — its comment says it gates on crossing the threshold, but the condition only checks `amount >= 100000` and `approval_status` not_required/null, so the recall's own write (status back to not_required) re-fires it. Either the flow needs a previous-value check, or the platform's recall write should not re-trigger record flows.
+- **Dedupe words:** recall approval resubmits, opportunity_approval crossing, locked for approval after recall.
+
+### D6 — The "Update Stage" button in the opportunity header fails on every selection
+- **Steps:** Opportunities → any tab → tick 2 rows → **Update Stage** in the header toolbar; then with no rows ticked.
+- **Expected:** `mass_update_stage` is the one aggregate bulk action: the whole selection in one dispatch.
+- **Actual:** with 2 rows: "This action runs on a single record — select exactly one row."; with 0 rows: the dialog opens and targets nothing. Only the bulk-bar copy in Open Deals works (OPP-011) · `opp-13-mass-stage-two-open.png`, `opp-13-mass-stage-none.png`.
+- **Suspected landing:** `src/sales/actions/opportunity.actions.ts` (`locations: ['list_toolbar']`) together with how the console dispatches a `list_toolbar` action (as single-record); dropping the toolbar location may be enough, since the view's `bulkActionDefs` already carries it.
+- **Dedupe words:** mass update stage toolbar single record, list_toolbar aggregate action.
+
 ## UI / UX suggestions (kept apart from defects)
 
 | # | Where | Today | Proposed | Who benefits | Screenshot |
@@ -100,3 +147,19 @@
 | S16 | Create Contact form | the required Email sits on the third tab (Contact Info); Create jumps there with "Email is required" | Put Email (and Phone) on the first tab | anyone creating contacts | `con-08-new-form.png`, `con-08-missing-email-other-tab.png` |
 | S17 | Send Email action | dialog says "Please provide the required information to continue.", button "Confirm", and the recipient is not shown | Title "Email Owen Becker", show To:, button "Send" | reps | `con-07-send-email-form.png` |
 | S18 | Discussion / history | system entries read "Account Owner: ∅ → Dev Admin" | Plain words: "Account owner set to Dev Admin" | everyone | `acc-14-discussion-posted.png` |
+| S19 | Opportunity under approval | the lock shows as orphan "Recall" / "Reply" buttons above the title and a small "Locked for approval" badge with no reason; nothing told the rep that the save (or a line item that pushed the amount past 100K) sent the deal to approval | On the save that submits, toast "Sent to Sales Manager for approval (over 100,000)"; one banner naming the process, approver and what Recall does | reps | `opp-05-locked-header.png`, `opp-06-after-recall-page.png` |
+| S20 | Opportunity rail and Related tab | the rail reads "+3 empty (Quotes · Opportunity Line Items …)"; Related accordions close each other, and the line-item New is hidden in the collapsed "Products" accordion | Name it "Products" consistently, keep one accordion open by default, put "Add product" in the header | reps | `opp-02-record-tab-related-5.png`, `opp-15-related-tab.png` |
+| S21 | Closed-deal edit error | "closed_won; only description, next_step, notes may be edited. Attempted: amount." | "This deal is Closed Won. Only Description, Next Step and Notes can change." | reps | `opp-10-closed-freeze-result.png` |
+| S22 | Closing from an early stage | three toasts stack (updated, the stage-transition warning, the account promotion) | One toast; skip the transition warning when the target is a closed stage the rules allow | reps | `opp-09-won-result.png` |
+| S23 | Line items | Quantity "1.00", Total "50,000" (no decimals), Sales Price "9,000.00" side by side | Quantity as an integer, all money with one format | reps, finance | `opp-15-line-created.png` |
+| S24 | Lookups everywhere | every lookup shows the record number first ("ACC-000002 - Globex Industries"), which truncates the name in lists | Show the name, keep the number as secondary text in the picker | everyone | `opp-01-01-all-opportunities.png` |
+| S25 | Private record denied | sales.manager opening a private deal's link sees "The record you are looking for does not exist or may have been deleted." | "You don't have access to this record" (if leaking existence is acceptable) | managers | `opp-16-private-mgr-record.png` |
+| S26 | Line item form | picking a product shows no list price; the price appears only after save | Fill List Price / Sales Price in the form on pick | reps | `opp-15-line-after-product.png` |
+| S27 | Opportunity tabs | "My Open Deals" sits in the overflow for the admin, behind presentation views | Put My Open Deals right after Open Deals | reps | `opp-01-06-my-open-deals.png` |
+| S28 | Clone Opportunity | no confirm and no toast; the user lands on the copy without being told | Toast "Copied — this is the new deal" with a link back | reps | `opp-07-clone-after.png` |
+
+## Test data: reverts and what is left
+
+- Reverted and re-read: seeded opportunity stages put back to prospecting after the bulk Update Stage; "Territory Probe na" account deleted; Initech Cloud Migration un-ticked Private (`is_private: false` read back as sales.manager); Northwind Grid Modernization — the approval its line item triggered was rejected by sales.manager, the line item deleted, amount read back 86,500.
+- Left in place (this local SQLite only, nothing shared): test leads, imported leads / accounts / contacts and the records conversions created; Bluepeak Robotics Inc – 2026-10-27 approved and Closed Won; "Copy of Globex Manufacturing Suite"; Northwind Grid's `approval_status` stays `rejected` (a PATCH to `not_required` is accepted with 200 and silently ignored — the field is system-owned).
+- Observation, not a defect: every bulk update logs `405 POST /api/v1/data/<object>/updateMany` before the console falls back to per-record writes; the result is right.
