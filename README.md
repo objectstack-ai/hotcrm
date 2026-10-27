@@ -158,9 +158,9 @@ hotcrm/
 ├── objectstack.config.ts         # composeStacks() — one artifact carrying the four package stacks
 ├── objectstack.composition.ts    # the four package stacks built, and the composition knob
 ├── src/
-│   ├── sales/                    # the `type: app` package — customers, pipeline, activities
+│   ├── sales/                    # the `type: app` package — customers, pipeline, activities, contracts
 │   ├── service/                  # the service module — cases and the knowledge base
-│   ├── revenue/                  # the revenue module — products, quotes, line items, contracts
+│   ├── revenue/                  # the revenue module — products, quotes, line items
 │   ├── marketing/                # the marketing module — campaigns and campaign members
 │   └── docs/                     # package docs, shipped inside the built artifact
 ├── apps/docs/                    # Fumadocs site — standalone, own lockfile (not a pnpm workspace member)
