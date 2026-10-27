@@ -82,6 +82,12 @@ export const commerce: Record<string, ObjectTranslationData> = {
       quote_terms: { label: '条款' },
       addresses_and_notes: { label: '地址与备注' },
     },
+    _actions: {
+      print_quote: {
+        label: '打印报价',
+        successMessage: '报价 PDF 已归档到附件。',
+      },
+    },
   },
   crm_quote_line_item: {
     _validations: {

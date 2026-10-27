@@ -1,15 +1,19 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
+import { PrintServicePlugin } from '@objectstack/service-print';
 
+import { PrintQuoteAction } from './actions/index.js';
 import { RevenueEmailTemplates } from './email-templates/index.js';
 import {
   ContractRenewalFlow, QuoteExpirationFlow, ContractExpirationFlow, BillingHandoffContractActivatedFlow,
+  QuotePrintPresentedFlow,
 } from './flows/index.js';
 import { Contract, OpportunityLineItem, Product, Quote, QuoteLineItem } from './objects/index.js';
 import {
   contractHook, opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
 } from './objects/hooks.js';
+import { QuotePrintPage } from './pages/index.js';
 import { PaymentTermsPicklist } from './picklists/index.js';
 import { ContractViews, ProductViews, QuoteViews } from './views/index.js';
 
@@ -38,6 +42,7 @@ export const revenueHooks = [
  */
 export const revenueFlows = [
   ContractRenewalFlow, QuoteExpirationFlow, ContractExpirationFlow, BillingHandoffContractActivatedFlow,
+  QuotePrintPresentedFlow,
 ];
 
 /**
@@ -131,6 +136,9 @@ export const createHotCrmRevenueStack = (
   views: [ContractViews, ProductViews, QuoteViews],
   flows: revenueFlows,
   emailTemplates: RevenueEmailTemplates,
+  pages: [QuotePrintPage],
+  actions: [PrintQuoteAction],
+  plugins: [new PrintServicePlugin()],
 
   ...collections,
 });

@@ -51,6 +51,7 @@
     "@objectstack/service-analytics": "18.2.0",
     "@objectstack/service-automation": "18.2.0",
     "@objectstack/service-messaging": "18.2.0",
+    "@objectstack/service-print": "18.2.0",
     "@objectstack/service-storage": "18.2.0",
     "@objectstack/spec": "18.2.0",
     "@objectstack/trigger-record-change": "18.2.0"

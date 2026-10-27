@@ -82,6 +82,12 @@ export const commerce: Record<string, ObjectTranslationData> = {
       quote_terms: { label: '契約条件' },
       addresses_and_notes: { label: '住所と備考' },
     },
+    _actions: {
+      print_quote: {
+        label: '見積書を印刷',
+        successMessage: '見積書の PDF を添付しました。',
+      },
+    },
   },
   crm_quote_line_item: {
     _validations: {

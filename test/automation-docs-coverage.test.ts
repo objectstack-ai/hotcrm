@@ -266,6 +266,8 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
     'zh-Hans': '计费交接：合同激活',
     'zh-Hant': '計費交接：合約啟用',
   },
+  // REQ-0008 phase 1 (#2312): 已提交 is the zh-CN pack's word for `presented`.
+  quote_print_presented: { 'zh-Hans': '报价打印后转为已提交', 'zh-Hant': '報價打印後轉為已提交' },
 };
 
 /** How each page spells the two counts. An unmapped count throws — see the header. */

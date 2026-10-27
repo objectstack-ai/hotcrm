@@ -140,7 +140,13 @@ describe('the new tables agree with the automation that drives them', () => {
 
   it('a quote cannot jump from draft straight to accepted', () => {
     expect(quote.draft).not.toContain('accepted');
-    expect(quote.draft).not.toContain('presented');
+  });
+
+  it('a printed draft is presented (REQ-0008 phase 1)', () => {
+    // `quote_print_presented` moves a draft quote to `presented` when its PDF
+    // is printed: printing is presenting. Without the edge every print of a
+    // draft would raise the machine's warning on a write the app itself makes.
+    expect(quote.draft).toContain('presented');
   });
 
   it('a contract reaches activation only through approval', () => {

@@ -553,6 +553,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         opp_main_tabs: { items: { details: { label: 'Detalles' }, related: { label: 'Relacionado' }, activity: { label: 'Actividad' } } },
       },
     },
+    quote_print_page: {
+      label: 'Documento de Cotización',
+      description: 'La cotización como documento imprimible: encabezado, cliente, líneas, precios y términos.',
+      components: {
+        quote_print_lines: { title: 'Líneas de Cotización' },
+      },
+    },
     sales_home_page: {
       label: 'Inicio de Ventas',
       description: 'Página de inicio del equipo comercial con métricas clave, mi trabajo pendiente y próximos eventos',

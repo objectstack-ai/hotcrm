@@ -560,6 +560,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         opp_main_tabs: { items: { details: { label: '明细' }, related: { label: '相关' }, activity: { label: '互动' } } },
       },
     },
+    quote_print_page: {
+      label: '报价文档',
+      description: '可打印的报价文档：抬头、客户、行项目、价格与条款。',
+      components: {
+        quote_print_lines: { title: '行项目' },
+      },
+    },
     sales_home_page: {
       label: '销售主页',
       description: '销售团队主页，汇总关键指标、我的待办工作与即将到来的活动',

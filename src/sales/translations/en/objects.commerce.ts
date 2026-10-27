@@ -71,6 +71,12 @@ export const commerce: Record<string, ObjectTranslationData> = {
       quote_terms: { label: 'Terms' },
       addresses_and_notes: { label: 'Addresses & Notes' },
     },
+    _actions: {
+      print_quote: {
+        label: 'Print Quote',
+        successMessage: 'Quote PDF attached to the quote.',
+      },
+    },
   },
   crm_quote_line_item: {
     label: 'Quote Line Item',

@@ -56,6 +56,9 @@ importers:
       '@objectstack/service-messaging':
         specifier: 18.2.0
         version: 18.2.0
+      '@objectstack/service-print':
+        specifier: 18.2.0
+        version: 18.2.0
       '@objectstack/service-storage':
         specifier: 18.2.0
         version: 18.2.0
@@ -768,6 +771,10 @@ packages:
 
   '@objectstack/service-package@18.2.0':
     resolution: {integrity: sha512-NjTynxhUy/jy78Ak6NIemDDvnWG2gEREci1qKLg4LJRYoAdoHeGGtPZw41/VxuQREh1evNxnaoBlVU45vIXIUw==}
+    engines: {node: '>=22.0.0'}
+
+  '@objectstack/service-print@18.2.0':
+    resolution: {integrity: sha512-ZQJFJ52EtG4nFgz2Q9oqR4UGn4AqgAibmR479QeddM8IWWXZvBCkzivAnFUMenVLah8vU35jRVfovKj8D15VfQ==}
     engines: {node: '>=22.0.0'}
 
   '@objectstack/service-queue@18.2.0':
@@ -2633,6 +2640,11 @@ packages:
     resolution: {integrity: sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ==}
     engines: {node: '>=16.20.0'}
 
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   playwright-core@1.64.1:
     resolution: {integrity: sha512-BC4s8y6SEVA6Q1rSxZTto8hI1KUI3xXlHGZgvGqP4IqPdI/a6FX9H29IDNz7vKo9l21b6LfYosScPL6M3xxyDQ==}
     engines: {node: '>=20'}
@@ -4350,6 +4362,18 @@ snapshots:
       '@objectstack/metadata-core': 18.2.0
       '@objectstack/spec': 18.2.0
     transitivePeerDependencies:
+      - ai
+
+  '@objectstack/service-print@18.2.0':
+    dependencies:
+      '@objectstack/core': 18.2.0
+      '@objectstack/service-storage': 18.2.0
+      '@objectstack/spec': 18.2.0
+      '@objectstack/types': 18.2.0
+      playwright-core: 1.63.0
+    transitivePeerDependencies:
+      - '@aws-sdk/client-s3'
+      - '@aws-sdk/s3-request-presigner'
       - ai
 
   '@objectstack/service-queue@18.2.0':
@@ -6427,6 +6451,8 @@ snapshots:
   pirates@4.0.7: {}
 
   pkce-challenge@5.0.1: {}
+
+  playwright-core@1.63.0: {}
 
   playwright-core@1.64.1: {}
 

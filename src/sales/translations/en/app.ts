@@ -196,6 +196,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         opp_stage_path: { label: 'Opportunity Stage Path' },
       },
     },
+    quote_print_page: {
+      label: 'Quote Document',
+      description: 'The quote as a printable document: header, customer, line items, pricing and terms.',
+      components: {
+        quote_print_lines: { title: 'Line Items' },
+      },
+    },
     sales_home_page: {
       label: 'Sales Home',
       description: 'Sales team home page with key metrics, my open work and upcoming events',

@@ -10,3 +10,4 @@ export { ContractRenewalFlow } from './contract-renewal.flow';
 export { QuoteExpirationFlow } from './quote-expiration.flow';
 export { ContractExpirationFlow } from './contract-expiration.flow';
 export { BillingHandoffContractActivatedFlow } from './billing-handoff-contract-activated.flow';
+export { QuotePrintPresentedFlow } from './quote-print-presented.flow';

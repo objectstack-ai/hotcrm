@@ -398,9 +398,16 @@ export const Quote = ObjectSchema.create({
       // #575 B4. `crm_quote` had a full lifecycle vocabulary and no transition
       // constraint whatsoever — nor a status guard in `quote.hook.ts` — so a
       // quote could go straight from `draft` to `accepted`, which in CPQ terms
-      // is a signed number nobody reviewed or sent. `warning` severity matches
-      // the lead / opportunity / case machines: it flags the jump on the record
-      // without blocking a support-driven correction.
+      // is a signed number nobody sent. `warning` severity matches the lead /
+      // opportunity / case machines: it flags the jump on the record without
+      // blocking a support-driven correction.
+      //
+      // `draft → presented` is a legal edge since REQ-0008 phase 1 (#2312):
+      // printing a quote IS presenting it. Print Quote archives the PDF the
+      // rep sends, and `quote_print_presented` moves the quote to `presented`
+      // on that archive, from `draft` as from `in_review` — review is a step a
+      // team may take, not one the document waits for. What `presented` needs
+      // of the quote is still enforced on that write: the contact gate above.
       name: 'quote_status_progression',
       type: 'state_machine',
       severity: 'warning',
@@ -410,7 +417,7 @@ export const Quote = ObjectSchema.create({
         // `→ expired` is legal from every UNSETTLED state: the quote_expiration
         // flow sweeps on `expiration_date` alone and expires drafts that were
         // never sent as readily as presented ones.
-        draft: ['in_review', 'expired'],
+        draft: ['in_review', 'presented', 'expired'],
         in_review: ['draft', 'presented', 'rejected', 'expired'],
         presented: ['accepted', 'rejected', 'expired'],
         // `accepted` and `expired` are terminal, and not only by convention —

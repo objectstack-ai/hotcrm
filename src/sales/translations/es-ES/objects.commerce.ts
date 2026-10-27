@@ -83,6 +83,12 @@ export const commerce: Record<string, ObjectTranslationData> = {
       quote_terms: { label: 'Términos' },
       addresses_and_notes: { label: 'Direcciones y Notas' },
     },
+    _actions: {
+      print_quote: {
+        label: 'Imprimir Cotización',
+        successMessage: 'PDF de la cotización adjuntado a la cotización.',
+      },
+    },
   },
   crm_quote_line_item: {
     _validations: {

@@ -48,6 +48,9 @@ const RUNTIME_TEST_FILES = [
   // #600 — the two outbound billing hand-off flows, driven through the real
   // engine and the real builtin `http` executor's durable branch.
   'flow-billing-handoff.test.ts',
+  // #2312 — printing a quote presents it: the print archive's attachment write
+  // fires `quote_print_presented`, and nothing else does.
+  'flow-quote-print-presented.test.ts',
   // #592 — the activity model's own runtime file: both `crm_event` hooks, the
   // parity check that keeps the duplicated bubble body from drifting, and the
   // readonly-strip regression proof against a real engine.
