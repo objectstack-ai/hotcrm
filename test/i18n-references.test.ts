@@ -213,7 +213,10 @@ describe('action labels are translated in every locale', () => {
     // `sys_email` row over with `status: 'queued'` (pinned in
     // script-bodies.test.ts), so the message says queued, never sent.
     const action = stackActions.find((a) => a.objectName === 'crm_contact' && a.name === 'send_email');
-    expect(action?.successMessage).toBe('Email queued to this contact.');
+    // Since @objectstack 18.2.0 (objectstack#25981) an object's own actions
+    // are stored as their ActionSchema parse, where the copy is a `template`
+    // slot (384bb7b): the authored sentence is its `source`.
+    expect(action?.successMessage).toEqual({ dialect: 'template', source: 'Email queued to this contact.' });
     const expected: Record<string, string> = {
       en: 'Email queued to this contact.',
       'zh-CN': '邮件已排队，将发送给该联系人。',

@@ -105,7 +105,15 @@ export const service: Record<string, ObjectTranslationData> = {
     _sections: {
       // Nombres de sección del formulario en case.view.ts (#1100).
       case: { label: 'Caso' },
-      how_can_we_help: { label: '¿Cómo podemos ayudarte?' },
+      how_can_we_help: {
+        label: '¿Cómo podemos ayudarte?',
+        fields: {
+          subject: { placeholder: 'Resumen breve del problema' },
+          description: { placeholder: 'Pasos para reproducirlo, mensajes de error, capturas de pantalla...' },
+          type: { helpText: 'Elige la opción que mejor describa tu problema.' },
+          priority: { helpText: 'Los problemas críticos también deben comunicarse por teléfono.' },
+        },
+      },
       // Claves de sección del objeto (case.object.ts) que usan los
       // formularios de registro y la página de detalle, cuyas secciones
       // hacen referencia a estos grupos (#970).

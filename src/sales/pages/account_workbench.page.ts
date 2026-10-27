@@ -10,7 +10,7 @@ import { Page } from '@objectstack/spec/ui';
  * NO sidebar entry (#2286, ruling B): it showed the same rows and columns
  * as **Accounts**, so a second row read as a duplicate to every user. It
  * still ships and is reached by URL — `/apps/<app>/page/account_workbench`
- * in the console. ⚠️ The console's ⌘K palette on the pinned 18.1.0 lists
+ * in the console. ⚠️ The console's ⌘K palette, as measured on 18.1.0, lists
  * pages only from the app's navigation, so it does not offer this one.
  * `test/account-workbench-exhibit.test.ts` pins that the page is served
  * and that no nav item opens it.

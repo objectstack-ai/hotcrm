@@ -6,7 +6,8 @@ import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
 
 /**
  * Español (es-ES) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`.
+ * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`,
+ * `reports`, `positions`, `permissions`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -825,6 +826,131 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         crm_account: 'Cuenta', crm_contact: 'Contacto', crm_opportunity: 'Oportunidad',
         crm_lead: 'Prospecto', crm_case: 'Caso',
       },
+    },
+  },
+  // Report index and report page headings (`reports[].label` / `description`).
+  reports: {
+    accounts_by_industry_type: {
+      label: 'Cuentas por Industria y Tipo',
+      description: 'Informe matricial de cuentas por industria y tipo',
+    },
+    customer_churn_signals: {
+      label: 'Señales de Abandono',
+      description: 'Cuatro paneles apilados de alerta temprana para la retención proactiva: cuentas que un CSM marcó en riesgo o en abandono, cuentas activas sin actividad reciente, cuentas de alto valor silenciosas y oportunidades perdidas recientemente.',
+    },
+    lead_inflow_by_month_source: {
+      label: 'Interacción con Prospectos por Mes × Origen',
+      description: 'Volumen mensual de prospectos contactados, desglosado por canal de adquisición',
+    },
+    opportunities_by_stage: {
+      label: 'Oportunidades por Etapa',
+      description: 'Resumen de oportunidades agrupadas por etapa',
+    },
+    opportunity_funnel_owner_stage: {
+      label: 'Embudo de Oportunidades por Propietario → Etapa',
+      description: 'Embudo del pipeline etapa por etapa para cada representante',
+    },
+    pipeline_coverage_by_quarter: {
+      label: 'Cobertura del Pipeline por Previsión × Trimestre',
+      description: 'Importe del pipeline abierto por categoría de previsión, agrupado por trimestre de cierre',
+    },
+    won_opportunities_by_owner: {
+      label: 'Oportunidades Ganadas por Propietario',
+      description: 'Oportunidades ganadas agrupadas por propietario',
+    },
+    cases_by_status_priority: {
+      label: 'Casos por Estado y Prioridad',
+      description: 'Resumen de casos por estado y prioridad',
+    },
+    sla_performance: {
+      label: 'Informe de Cumplimiento de SLA',
+      description: 'Análisis del cumplimiento de los SLA',
+    },
+    cases_opened_by_day_priority: {
+      label: 'Casos Abiertos por Prioridad × Día',
+      description: 'Entrada diaria de casos desglosada por prioridad',
+    },
+  },
+  // Setup → Positions (`src/sales/sharing/positions.ts`).
+  positions: {
+    executive: {
+      label: 'Ejecutivo',
+      description: 'Dirección de la empresa: lee todas las grandes oportunidades abiertas de todo el pipeline, mientras el equipo de la oportunidad conserva la propiedad.',
+    },
+    sales_director: {
+      label: 'Director de Ventas',
+      description: 'Dirige la organización de ventas, da el visto bueno final a las mayores oportunidades y lee todas las grandes oportunidades abiertas.',
+    },
+    sales_manager: {
+      label: 'Gerente de Ventas',
+      description: 'Dirige un equipo de ventas: aprueba cuentas nuevas, conversiones de prospectos y grandes oportunidades, y edita todas las cuentas de clientes activas.',
+    },
+    sales_rep: {
+      label: 'Representante de Ventas',
+      description: 'Trabaja prospectos y oportunidades a diario y recibe prospectos nuevos por asignación rotativa.',
+    },
+    service_director: {
+      label: 'Director de Servicio',
+      description: 'Supervisa la atención al cliente y lee todos los casos críticos abiertos mientras un gerente de servicio los atiende.',
+    },
+    service_manager: {
+      label: 'Gerente de Servicio',
+      description: 'Atiende la bolsa de escalados: los casos escalados se asignan a este puesto, que edita todos los casos críticos abiertos.',
+    },
+    service_agent: {
+      label: 'Agente de Servicio',
+      description: 'Atiende casos de clientes, recibe casos nuevos por asignación rotativa y toma casos sin asignar de la cola de clasificación.',
+    },
+    marketing_director: {
+      label: 'Director de Marketing',
+      description: 'Dirige marketing y edita todas las campañas activas, sea quien sea su propietario.',
+    },
+    marketing_manager: {
+      label: 'Gerente de Marketing',
+      description: 'Gestiona las campañas de marketing y edita todas las campañas activas, sea quien sea su propietario.',
+    },
+    marketing_user: {
+      label: 'Usuario de Marketing',
+      description: 'Planifica y gestiona a diario las campañas de marketing y sus miembros.',
+    },
+    na_sales_team: {
+      label: 'Equipo de Ventas de Norteamérica',
+      description: 'Equipo territorial de Norteamérica: edita todas las cuentas del territorio de Norteamérica.',
+    },
+    eu_sales_team: {
+      label: 'Equipo de Ventas de Europa',
+      description: 'Equipo territorial de Europa: edita todas las cuentas del territorio de Europa (EMEA).',
+    },
+  },
+  // Setup → Permission Sets (`src/sales/profiles/*.profile.ts`).
+  permissions: {
+    crm_user: {
+      label: 'Usuario de CRM',
+      description: 'El valor predeterminado de cada miembro: sus propios prospectos, cuentas, oportunidades y actividades, y catálogos de solo lectura, sin eliminar, exportar, Ver todo ni permisos de sistema.',
+    },
+    guest_portal: {
+      label: 'Invitado (formularios públicos)',
+      description: 'Visitantes anónimos de los formularios públicos web-a-prospecto y web-a-caso: envían un prospecto o caso nuevo y no pueden leer, editar ni eliminar nada.',
+    },
+    marketing_user: {
+      label: 'Usuario de Marketing',
+      description: 'Personal de marketing: gestiona campañas y sus miembros y lee todos los prospectos, contactos, cuentas y oportunidades para segmentar, pero no ve casos ni elimina ningún registro del CRM.',
+    },
+    sales_manager: {
+      label: 'Gerente de Ventas',
+      description: 'Gerentes de ventas: leen, editan, reasignan y eliminan los prospectos, cuentas, oportunidades, cotizaciones y actividades de todos los representantes, sin administración del sistema.',
+    },
+    sales_rep: {
+      label: 'Representante de Ventas',
+      description: 'Representantes de ventas: trabajan su propia cartera de prospectos, cuentas, oportunidades, cotizaciones y actividades y leen los catálogos, pero no eliminan ningún registro de cliente.',
+    },
+    service_agent: {
+      label: 'Agente de Servicio',
+      description: 'Agentes y gerentes de servicio: atienden sus propios casos, leen las cuentas, contactos y prospectos relacionados y redactan artículos de conocimiento, pero no ven oportunidades.',
+    },
+    system_admin: {
+      label: 'Administrador del Sistema',
+      description: 'El operador de una instalación de una sola organización: control total de todos los registros de negocio, más la administración de usuarios, del modelo de seguridad y de la configuración.',
     },
   },
 };

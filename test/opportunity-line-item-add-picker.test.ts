@@ -237,11 +237,11 @@ describe('the row a picker-shaped insert actually produces', () => {
     // `beforeInsert` hook. Unbind it and the insert must fail — otherwise those
     // assertions would keep passing on a day the hook stopped running.
     //
-    // The refusal is the COLUMN's, named by table and column: since #2060
-    // item 7 the field is not `required`, so no engine check runs first. In
-    // process it surfaces as the driver's error, which carries no `code`; the
-    // REST door translates the same failure to 400 `VALIDATION_FAILED`
-    // (measured in the PR), which is the platform's envelope, not this app's.
+    // The refusal is the COLUMN's: since #2060 item 7 the field is not
+    // `required`, so no engine check runs first. Since @objectstack 18.2.0
+    // (objectstack#26026) the column's NOT NULL refusal reaches every door as
+    // the record validator's ValidationError naming the field, not the
+    // driver's SQLite text, so it is asserted by envelope and field.
     const { api, product, opportunity } = await boot(false);
 
     await expect(
@@ -249,7 +249,10 @@ describe('the row a picker-shaped insert actually produces', () => {
         crm_opportunity: opportunity.id,
         crm_product: product.id,
       }),
-    ).rejects.toThrow(/NOT NULL constraint failed: crm_opportunity_line_item\.unit_price/);
+    ).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+      fields: expect.arrayContaining([expect.objectContaining({ field: 'unit_price' })]),
+    });
     expect(await api.object('crm_opportunity_line_item').find({ where: { crm_opportunity: opportunity.id } })).toHaveLength(0);
   });
 });

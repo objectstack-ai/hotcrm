@@ -6,7 +6,8 @@ import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
 
 /**
  * 简体中文 (zh-CN) — every translation namespace EXCEPT `objects`:
- * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`.
+ * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`,
+ * `reports`, `positions`, `permissions`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -832,6 +833,131 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         crm_account: '客户', crm_contact: '联系人', crm_opportunity: '商机',
         crm_lead: '线索', crm_case: '工单',
       },
+    },
+  },
+  // Report index and report page headings (`reports[].label` / `description`).
+  reports: {
+    accounts_by_industry_type: {
+      label: '客户行业与类型',
+      description: '按行业和类型交叉统计客户的矩阵报表',
+    },
+    customer_churn_signals: {
+      label: '客户流失信号',
+      description: '四个堆叠的预警面板，用于主动挽留客户：客户成功经理标记为有风险或正在流失的客户、近期没有活动的活跃客户、沉寂的高价值客户，以及最近丢单的商机。',
+    },
+    lead_inflow_by_month_source: {
+      label: '按月份 × 来源统计线索跟进',
+      description: '每月已联系线索的数量，按获客渠道细分',
+    },
+    opportunities_by_stage: {
+      label: '各阶段商机',
+      description: '按阶段分组汇总商机',
+    },
+    opportunity_funnel_owner_stage: {
+      label: '各负责人商机漏斗（按阶段）',
+      description: '每位销售代表逐阶段的管道漏斗',
+    },
+    pipeline_coverage_by_quarter: {
+      label: '按预测类别 × 季度统计管道覆盖率',
+      description: '按预测类别统计进行中的管道金额，并按预计成交季度分段',
+    },
+    won_opportunities_by_owner: {
+      label: '各负责人成交商机',
+      description: '按负责人分组的已成交商机',
+    },
+    cases_by_status_priority: {
+      label: '工单状态与优先级',
+      description: '按状态和优先级汇总工单',
+    },
+    sla_performance: {
+      label: 'SLA 达成报表',
+      description: 'SLA 达成情况分析',
+    },
+    cases_opened_by_day_priority: {
+      label: '按优先级 × 日期统计新建工单',
+      description: '每日新建工单数，按优先级细分',
+    },
+  },
+  // Setup → Positions (`src/sales/sharing/positions.ts`).
+  positions: {
+    executive: {
+      label: '高管',
+      description: '公司管理层：可查看整个销售管道中每一笔进行中的大额商机，商机仍归原商机团队负责。',
+    },
+    sales_director: {
+      label: '销售总监',
+      description: '领导销售组织，对最大的商机做最终签批，并可查看每一笔进行中的大额商机。',
+    },
+    sales_manager: {
+      label: '销售经理',
+      description: '管理销售团队：审批新客户、线索转化和大额商机，并可编辑每一个活跃客户。',
+    },
+    sales_rep: {
+      label: '销售代表',
+      description: '日常跟进线索和商机，并通过轮询分配接收新线索。',
+    },
+    service_director: {
+      label: '服务总监',
+      description: '统管客户服务，在服务经理处理期间可查看每一个未关闭的严重工单。',
+    },
+    service_manager: {
+      label: '服务经理',
+      description: '负责升级处理池：升级的工单会交给此岗位，可编辑每一个未关闭的严重工单。',
+    },
+    service_agent: {
+      label: '客服专员',
+      description: '处理客户工单，通过轮询分配接收新工单，并从待分诊队列中领取未分配的工单。',
+    },
+    marketing_director: {
+      label: '市场总监',
+      description: '领导市场营销，可编辑每一个进行中的营销活动，无论负责人是谁。',
+    },
+    marketing_manager: {
+      label: '市场经理',
+      description: '管理营销活动，可编辑每一个进行中的营销活动，无论负责人是谁。',
+    },
+    marketing_user: {
+      label: '市场专员',
+      description: '日常策划和执行营销活动及其成员。',
+    },
+    na_sales_team: {
+      label: '北美销售团队',
+      description: '北美区域团队：可编辑北美区域内的每一个客户。',
+    },
+    eu_sales_team: {
+      label: '欧洲销售团队',
+      description: '欧洲区域团队：可编辑欧洲（EMEA）区域内的每一个客户。',
+    },
+  },
+  // Setup → Permission Sets (`src/sales/profiles/*.profile.ts`).
+  permissions: {
+    crm_user: {
+      label: 'CRM 用户',
+      description: '每位成员的默认权限：自己的线索、客户、商机和活动，以及只读的目录数据；没有删除、导出、查看全部或任何系统权限。',
+    },
+    guest_portal: {
+      label: '访客（公开表单）',
+      description: '公开的网页转线索和网页转工单表单的匿名访客：只能提交新线索或新工单，不能查看、编辑或删除任何记录。',
+    },
+    marketing_user: {
+      label: '市场专员',
+      description: '市场人员：管理营销活动及其成员，可查看所有线索、联系人、客户和商机用于圈定目标，但看不到工单，也不能删除任何 CRM 记录。',
+    },
+    sales_manager: {
+      label: '销售经理',
+      description: '销售经理：可查看、编辑、重新分配和删除每位销售代表的线索、客户、商机、报价单和活动，但没有系统管理权限。',
+    },
+    sales_rep: {
+      label: '销售代表',
+      description: '销售代表：经营自己名下的线索、客户、商机、报价单和活动，可查看目录数据，但不能删除任何客户记录。',
+    },
+    service_agent: {
+      label: '客服专员',
+      description: '客服专员和服务经理：处理自己的工单，可查看工单背后的客户、联系人和线索并撰写知识文章，但看不到商机。',
+    },
+    system_admin: {
+      label: '系统管理员',
+      description: '单组织部署的运营者：完全控制每一条业务记录，并负责用户、安全模型和系统设置的管理。',
     },
   },
 };
