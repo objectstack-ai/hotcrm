@@ -4,6 +4,10 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
 
 import { activityActions } from './_shared';
 
+// The `duplicate_status` entry of every lead form that shows it carries the same
+// help sentence (`DUPLICATE_LINK_FIELDS` in src/sales/views/lead.view.ts).
+const DUPLICATE_STATUS_HELP = '「已确认重复」表示有人核对过这两条记录，确认是同一个人。';
+
 /**
  * 简体中文 (zh-CN) — `objects` translations for the PIPELINE family:
  * demand and the deals it becomes, plus the roll-up that forecasts them.
@@ -159,7 +163,12 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       identity: { label: '身份信息' },
       company_info: { label: '公司信息' },
       contact_info: { label: '联系方式' },
-      qualification: { label: '资格评估' },
+      qualification: {
+        label: '资格评估',
+        fields: {
+          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
+        },
+      },
       assignment: { label: '分配' },
       additional: { label: '附加信息' },
       preferences: { label: '沟通偏好' },
@@ -168,7 +177,12 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       // lead.view.ts 表单区块名称 (#1100) —— 默认表单与每一个具名 formView
       // 的区块名字都住在这里：那边新增一个表单，这里就补上它的区块名。
       contact_information: { label: '联系信息' },
-      lead_classification: { label: '线索分类' },
+      lead_classification: {
+        label: '线索分类',
+        fields: {
+          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
+        },
+      },
       company_information: { label: '公司信息' },
       additional_information: { label: '附加信息' },
       privacy: { label: '隐私' },
@@ -176,18 +190,61 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       details: { label: '详情' },
       step_1_contact_details: { label: '第一步：联系方式' },
       step_2_company_information: { label: '第二步：公司信息' },
-      step_3_qualification: { label: '第三步：资质审核' },
-      step_4_review_and_convert: { label: '第四步：审核并转化' },
-      primary_information: { label: '主要信息' },
+      step_3_qualification: {
+        label: '第三步：资质审核',
+        fields: {
+          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
+        },
+      },
+      step_4_review_and_convert: {
+        label: '第四步：审核并转化',
+        fields: {
+          description: { helpText: '转化为客户和联系人之前，请核对所有信息' },
+        },
+      },
+      primary_information: {
+        label: '主要信息',
+        fields: {
+          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
+        },
+      },
       extended_details: { label: '扩展信息' },
-      quick_edit: { label: '快速编辑' },
-      update_lead_status: { label: '更新线索状态' },
+      quick_edit: {
+        label: '快速编辑',
+        fields: {
+          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
+        },
+      },
+      update_lead_status: {
+        label: '更新线索状态',
+        fields: {
+          status: { helpText: '为此线索选择新状态' },
+          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
+          notes: { placeholder: '添加此次状态变更的备注' },
+        },
+      },
       tell_us_about_yourself: { label: '请介绍一下您自己' },
       about_your_company: { label: '您的公司信息' },
-      how_can_we_help: { label: '我们能帮您什么？' },
-      lead_information: { label: '线索信息' },
+      how_can_we_help: {
+        label: '我们能帮您什么？',
+        fields: {
+          description: { placeholder: '请简要描述您的需求……', helpText: '销售代表将在一个工作日内与您联系。' },
+        },
+      },
+      lead_information: {
+        label: '线索信息',
+        fields: {
+          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
+        },
+      },
       address_information: { label: '地址信息' },
-      privacy_preferences: { label: '隐私偏好' },
+      privacy_preferences: {
+        label: '隐私偏好',
+        fields: {
+          do_not_call: { helpText: '如果该线索要求不要致电，请勾选' },
+          email_opt_out: { helpText: '如果该线索已退订邮件通讯，请勾选' },
+        },
+      },
     },
     _actions: {
       ...activityActions,

@@ -128,7 +128,15 @@ export const service: Record<string, ObjectTranslationData> = {
     _sections: {
       // case.view.ts 表单区块名称 (#1100)。
       case: { label: '工单' },
-      how_can_we_help: { label: '我们能帮您什么？' },
+      how_can_we_help: {
+        label: '我们能帮您什么？',
+        fields: {
+          subject: { placeholder: '问题的简要概述' },
+          description: { placeholder: '复现步骤、错误信息、截图……' },
+          type: { helpText: '请选择最符合您问题的选项。' },
+          priority: { helpText: '严重问题请同时致电报告。' },
+        },
+      },
       // Object-level section keys (case.object.ts), used by record forms and
       // by the detail page, whose sections reference these groups (#970)
       basic: { label: '工单信息' },

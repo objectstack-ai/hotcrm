@@ -14,5 +14,5 @@ about what a position grants has changed.
 On ObjectStack 18.1.0 the Setup → Positions list shows each position's holders and permission sets
 but no description column yet; the descriptions appear there once the console lists them.
 
-The descriptions are in English in every language, as the position names already are: the platform
-does not yet translate positions.
+The platform could not translate positions when this was written; the 18.2.0 upgrade in this
+release translates the position names and descriptions in Chinese, Japanese and Spanish.

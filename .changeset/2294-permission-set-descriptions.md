@@ -12,6 +12,6 @@ opportunities, quotes and activities and read the catalogues, but delete no cust
 *CRM User* and *Guest (Public Forms)* replace their earlier multi-line paragraphs with one sentence
 of the same meaning. Nothing about what a set grants has changed.
 
-The descriptions are in English in every language for now: ObjectStack 18.1.0 does not yet
-translate permission sets. The sets the platform itself ships (such as *Administrator — Full
+ObjectStack 18.1.0 could not translate permission sets when this was written; the 18.2.0 upgrade in
+this release translates their names and descriptions in Chinese, Japanese and Spanish. The sets the platform itself ships (such as *Administrator — Full
 Access* and *Organization Administrator*) are described by the platform, not by HotCRM.
