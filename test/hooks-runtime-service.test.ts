@@ -335,17 +335,24 @@ describe('contract_validation', () => {
   });
 });
 
-describe('contract_on_activation', () => {
+describe('contract_signed_date_stamp', () => {
   const TERM = { start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 };
-  // Activation from In Approval, the one edge into `activated` the status
-  // table holds (#2192): `contract_status_progression` refuses draft → activated.
-  const activate = (id: string) => verify.hooks.run('crm_contract', 'update', { id, status: 'activated' }, as(manager));
+  const activate = (id: string, patch: Rec = {}) =>
+    verify.hooks.run('crm_contract', 'update', { id, status: 'activated', ...patch }, as(manager));
 
-  it('stamps signed_date and promotes the account to customer', async () => {
+  it('stamps signed_date on the activating write itself, in one contract write (#2325)', async () => {
+    // Read straight after the save, with no settling: the date is on the row
+    // the activation wrote, which is the row the billing hand-off flow reads.
     const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'prospect' });
-    await activate(contract.id);
-    await settles('crm_contract', contract.id, (c) => expect(c.signed_date).toBe(today()));
-    await settles('crm_account', String(contract.crm_account), (a) => expect(a.type).toBe('customer'));
+    const engine = await engineWritesDuring(() => activate(contract.id));
+    expect((await stored('crm_contract', contract.id)).signed_date).toBe(today());
+    expect(engine.of('crm_contract', 'update'), 'a second write stamped the date after the activation').toHaveLength(1);
+  });
+
+  it('keeps a signed_date typed in the activating edit', async () => {
+    const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'customer' });
+    await activate(contract.id, { signed_date: '2025-06-06' });
+    expect((await stored('crm_contract', contract.id)).signed_date).toBe('2025-06-06');
   });
 
   it('does not overwrite an existing signed_date', async () => {
@@ -358,13 +365,32 @@ describe('contract_on_activation', () => {
     expect((await stored('crm_contract', contract.id)).signed_date).toBe('2025-05-05');
   });
 
+  it('stamps nothing on a save that does not activate', async () => {
+    const contract = await contractOf({ status: 'draft', ...TERM }, { type: 'prospect' });
+    await verify.hooks.run('crm_contract', 'update', { id: contract.id, status: 'in_approval' }, as(manager));
+    expect((await stored('crm_contract', contract.id)).signed_date ?? null).toBeNull();
+  });
+});
+
+describe('contract_on_activation', () => {
+  const TERM = { start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 };
+  // Activation from In Approval, the one edge into `activated` the status
+  // table holds (#2192): `contract_status_progression` refuses draft → activated.
+  const activate = (id: string) => verify.hooks.run('crm_contract', 'update', { id, status: 'activated' }, as(manager));
+
+  it('promotes the account to customer', async () => {
+    const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'prospect' });
+    await activate(contract.id);
+    await settles('crm_account', String(contract.crm_account), (a) => expect(a.type).toBe('customer'));
+  });
+
   it('creates NO renewal task — that belongs to the contract_renewal flow', async () => {
     // The activation-time task this hook used to create hardcoded a 60-day
     // notice and duplicated the flow, which honours renewal_notice_days.
     const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'prospect' });
     const engine = await engineWritesDuring(async () => {
       await activate(contract.id);
-      await settles('crm_contract', contract.id, (c) => expect(c.signed_date).toBe(today()));
+      await settles('crm_account', String(contract.crm_account), (a) => expect(a.type).toBe('customer'));
     });
     expect(engine.of('crm_task', 'insert')).toHaveLength(0);
   });

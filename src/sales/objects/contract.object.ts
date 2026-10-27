@@ -261,8 +261,8 @@ export const Contract = ObjectSchema.create({
       // with no transition constraint and no status guard in `contract.hook.ts`
       // — so `draft → activated` was a legal move, activating an agreement that
       // never passed approval. Activation is the consequential edge here:
-      // `contract_on_activation` stamps `signed_date`, promotes the account to
-      // `customer`, and the renewal flow starts counting from it.
+      // `contract_signed_date_stamp` stamps `signed_date`, `contract_on_activation`
+      // promotes the account to `customer`, and the renewal flow starts counting from it.
       //
       // `error`, unlike the lead / opportunity / case / quote machines (#2192).
       // CON-002 (`docs/feature-inventory.md`) makes both end states final, and
