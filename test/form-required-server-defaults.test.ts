@@ -251,12 +251,15 @@ describe('the save lands, the value is supplied, and the protection stays', () =
 
     it('an update that clears the price is refused by the column, and the price stays', async () => {
       const { line } = await repLine();
-      // In process this is the driver's NOT NULL refusal, which carries no
-      // `code`; the REST door translates it to 400 `VALIDATION_FAILED`
-      // (measured in the PR). The table and column name it, so this cannot be
-      // some other failure passing for it.
+      // The column's NOT NULL refuses it. Since @objectstack 18.2.0
+      // (objectstack#26026) that refusal reaches every door as the record
+      // validator's ValidationError naming the field, not the driver's SQLite
+      // text, so it is asserted by envelope like the two dates above. The
+      // field is named, so this cannot be some other failure passing for it.
       const refusal = await refusalOf(verify.hooks.run(object, 'update', { id: line.id, unit_price: null }, as(rep)));
-      expect(refusal.message).toContain(`NOT NULL constraint failed: ${object}.unit_price`);
+      expect(refusal.code).toBe('VALIDATION_FAILED');
+      expect(refusal.status).toBeUndefined();
+      expect(refusal.fields).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'unit_price' })]));
       expect((await stored(object, line.id)).unit_price).toBe(line.unit_price);
     });
   });
