@@ -70,6 +70,7 @@ Ownership-based access is widened by these rules:
 | Escalated Cases — Previous Owner | Case | **Read** | The agent an escalation took the case from keeps sight of it until it is closed. |
 | Unassigned Cases — Triage | Case | **Edit** | Every Service Agent sees and can claim an open case nobody owns yet; the case leaves the rule once it has an owner or is resolved or closed. |
 | Live Campaigns — Marketing Manager / Director | Campaign | **Edit** | Marketing leadership works any live campaign. |
+| Forecasts — Sales Manager Edit | Forecast | **Edit** | Sales Managers adjust any rep's forecast. An edit share never grants delete, so forecasts stay undeletable for them. |
 
 Detail objects — opportunity line items, quote line items, campaign members and
 contacts — carry **no** sharing rules by design: their record access derives
