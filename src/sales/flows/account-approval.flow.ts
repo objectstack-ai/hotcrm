@@ -26,6 +26,15 @@ type Flow = Automation.Flow;
  * default, a new account is born blank, and the start condition below fires on
  * the blank.
  *
+ * ## An account lead conversion creates is not submitted (#2285)
+ *
+ * Maintainer ruling B on #2285: an account whose `converted_from_lead_id` is
+ * set skips this flow. The lead was already qualified, so a conversion is not
+ * a second application, and the rep was never told one had been opened. Such
+ * an account stays blank in `approval_status`, which is what "no request was
+ * ever opened" reads as everywhere else. Every other account, from the New
+ * form, a REST create or an import, enters exactly as before.
+ *
  * ## `pending` is written by the request, not by the field default (#2067)
  *
  * The approval node's `approvalStatusField` mirror writes `pending` onto the
@@ -94,7 +103,14 @@ export const AccountApprovalFlow: Flow = {
         // table. A flow condition is strict CEL on every run, and an unguarded
         // read against a driver that omits absent columns aborts — which from
         // 17.0.0-rc.2 FAILS THE RUN rather than skipping it.
-        condition: P`!has(record.approval_status) || isBlank(record.approval_status)`,
+        //
+        // An account Convert Lead CREATED is not submitted (#2285 ruling B):
+        // qualifying the lead was the gate, and converting it is not a second
+        // application. `create_account` writes `converted_from_lead_id` in the
+        // same insert, and `account_protection` lets nothing but a flow run
+        // write it, so the New form and a REST create still land here. Same
+        // TOTAL "x holds no value" form as the first term.
+        condition: P`(!has(record.approval_status) || isBlank(record.approval_status)) && (!has(record.converted_from_lead_id) || isBlank(record.converted_from_lead_id))`,
       },
     },
     {
