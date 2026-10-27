@@ -245,11 +245,11 @@ export const Lead = ObjectSchema.create({
       // need a real defaultValue (see approval_status for the same lesson).
       defaultValue: 'new',
       options: [
-        { label: 'New', value: 'new', color: '#808080', default: true },
-        { label: 'Contacted', value: 'contacted', color: '#FFA500' },
-        { label: 'Qualified', value: 'qualified', color: '#4169E1' },
-        { label: 'Unqualified', value: 'unqualified', color: '#FF0000' },
-        { label: 'Converted', value: 'converted', color: '#00AA00' },
+        { label: 'New', value: 'new', color: '#808080', kind: 'open', default: true },
+        { label: 'Contacted', value: 'contacted', color: '#FFA500', kind: 'open' },
+        { label: 'Qualified', value: 'qualified', color: '#4169E1', kind: 'open' },
+        { label: 'Unqualified', value: 'unqualified', color: '#FF0000', kind: 'lost' },
+        { label: 'Converted', value: 'converted', color: '#00AA00', kind: 'won' },
       ]
     }),
 
