@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { hotcrmStack, signUpPerson, predicateUpdate, flowRuns, type Person } from './helpers/verify-stack';
 import { BillingHandoffClosedWonFlow } from '../src/sales/flows/billing-handoff-closed-won.flow';
-import { BillingHandoffContractActivatedFlow } from '../src/revenue/flows/billing-handoff-contract-activated.flow';
+import { BillingHandoffContractActivatedFlow } from '../src/sales/flows/billing-handoff-contract-activated.flow';
 import {
   BILLING_HANDOFF_ENDPOINT,
   BILLING_HANDOFF_EVENT,

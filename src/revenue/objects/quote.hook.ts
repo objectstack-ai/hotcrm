@@ -430,7 +430,7 @@ const quoteAcceptedContractDraft: Hook = {
      * `crm_contract.payment_terms`'s own option default `net_30` on every
      * accepted quote, including one negotiated at `due_on_receipt`; and the
      * contract's `payment_terms` is one of the fields
-     * `src/revenue/flows/billing-handoff-contract-activated.flow.ts` POSTs to
+     * `src/sales/flows/billing-handoff-contract-activated.flow.ts` POSTs to
      * billing when the contract activates, so a defaulted term becomes an
      * invoicing term.
      *
@@ -460,7 +460,7 @@ const quoteAcceptedContractDraft: Hook = {
      *     auto-drafted contract in the app is a subscription and the other
      *     five types are unreachable on this path. It does not stay here
      *     either —
-     *     `src/revenue/flows/billing-handoff-contract-activated.flow.ts`
+     *     `src/sales/flows/billing-handoff-contract-activated.flow.ts`
      *     POSTs `contract_type` to billing when the contract activates;
      *   - `start_date` — the one member that is not a literal: the date the
      *     quote happened to be ACCEPTED, which is not necessarily the date the

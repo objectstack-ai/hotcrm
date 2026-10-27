@@ -114,6 +114,7 @@
 
 export { Account } from './account.object';
 export { Contact } from './contact.object';
+export { Contract } from './contract.object';
 export { Event } from './event.object';
 export { EventAttendee } from './event_attendee.object';
 export { Forecast } from './forecast.object';

@@ -194,5 +194,5 @@ None of the four filters anything, so **every contract you can see appears in al
 
 ## Tips for admins
 
-- Contract activation is an **object hook** (`src/revenue/objects/contract.hook.ts`), not a flow — that is where the signed-date stamp and the account promotion live, and it is not in the flow list. The expiration sweep and the renewal reminder *are* scheduled flows, so they run only once the deployment switches scheduled work on. See [Administration › Automation](/docs/administration/automation#scheduled-automation).
+- Contract activation is an **object hook** (`src/sales/objects/contract.hook.ts`), not a flow — that is where the signed-date stamp and the account promotion live, and it is not in the flow list. The expiration sweep and the renewal reminder *are* scheduled flows, so they run only once the deployment switches scheduled work on. See [Administration › Automation](/docs/administration/automation#scheduled-automation).
 - Contract types and billing frequency picklists are extensible.

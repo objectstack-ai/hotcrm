@@ -119,7 +119,7 @@ describe('the default composition is the community app, untouched', () => {
     expect(objectsOf(serviceStack.data)).toEqual(['crm_case', 'crm_knowledge_article']);
     expect(objectsOf(revenueStack.data)).toEqual(objectsOf(RevenueSeedData));
     expect(objectsOf(revenueStack.data)).toEqual([
-      'crm_product', 'crm_opportunity_line_item', 'crm_contract', 'crm_quote', 'crm_quote_line_item',
+      'crm_product', 'crm_opportunity_line_item', 'crm_quote', 'crm_quote_line_item',
     ]);
     expect(objectsOf(marketingStack.data)).toEqual(objectsOf(MarketingSeedData));
     expect(objectsOf(marketingStack.data)).toEqual(['crm_campaign', 'crm_campaign_member', 'crm_campaign_member']);
@@ -136,7 +136,7 @@ describe('the default composition is the community app, untouched', () => {
       'crm_account',      // sales
       'crm_case',         // service
       'crm_campaign',     // marketing
-      'crm_contract',     // revenue
+      'crm_contract',     // contracts — the app package's since plan item 11
     ]) {
       expect(objects.has(object), `the default composition dropped ${object} seeds`).toBe(true);
     }

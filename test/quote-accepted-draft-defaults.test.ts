@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { extractHookBody } from '@objectstack/cli/hook-body';
 import type { VerifyStack } from '@objectstack/verify';
 import quoteHooks from '../src/revenue/objects/quote.hook';
-import { Contract } from '../src/revenue/objects/contract.object';
+import { Contract } from '../src/sales/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
 import {
   hotcrmStack, signUpPerson, recordEngineWrites, today, type Person,

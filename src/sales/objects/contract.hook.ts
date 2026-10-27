@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import type { HookApi } from '../../sales/objects/_hook-api';
+import type { HookApi } from './_hook-api';
 
 /**
  * Contract lifecycle hook.

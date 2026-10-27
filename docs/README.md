@@ -48,7 +48,7 @@ hotcrm/
 ├── src/
 │   ├── sales/          # the `type: app` package (ADR-0130) — a directory under src/ IS a package
 │   ├── service/        # the service module — case, knowledge_article, article_feedback
-│   ├── revenue/        # the revenue module — product, opportunity_line_item, quote, quote_line_item, contract
+│   ├── revenue/        # the revenue module — product, opportunity_line_item, quote, quote_line_item
 │   ├── marketing/      # the marketing module — campaign, campaign_member
 │   └── docs/           # package docs (ADR-0046), read from this fixed path by the builder
 ├── content/docs/       # Product documentation site content

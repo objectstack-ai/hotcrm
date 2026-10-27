@@ -287,7 +287,7 @@ export const Quote = ObjectSchema.create({
       label: 'Payment Terms',
       group: 'terms',
       // The list shared with Contract (#490) —
-      // `src/revenue/picklists/payment_terms.picklist.ts`.
+      // `src/sales/picklists/payment_terms.picklist.ts`.
       picklist: 'payment_terms',
     }),
     

@@ -19,6 +19,16 @@ export const zhCN: EmailTemplatePack = {
     subject: '新联系人：{{first_name}} {{last_name}}',
     bodyHtml: '<p>{{first_name}} {{last_name}} 已添加为联系人。请主动联系并表示欢迎。</p>',
   },
+  'crm.contract_expired': {
+    label: '合同已到期',
+    subject: '合同已到期：{{contract_number}}',
+    bodyHtml: '<p>合同 {{contract_number}} 已到达结束日期，并已标记为到期。</p>',
+  },
+  'crm.contract_renewal': {
+    label: '合同续约提醒',
+    subject: '合同待续约：{{contract_number}}',
+    bodyHtml: '<p>合同 {{contract_number}} 将于 {{end_date}} 结束。请立即启动续约沟通。</p>',
+  },
   'crm.deal_stalled': {
     label: '商机停滞',
     subject: '停滞商机：{{name}}',

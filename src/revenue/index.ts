@@ -3,15 +3,12 @@
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { RevenueEmailTemplates } from './email-templates/index.js';
+import { QuoteExpirationFlow } from './flows/index.js';
+import { OpportunityLineItem, Product, Quote, QuoteLineItem } from './objects/index.js';
 import {
-  ContractRenewalFlow, QuoteExpirationFlow, ContractExpirationFlow, BillingHandoffContractActivatedFlow,
-} from './flows/index.js';
-import { Contract, OpportunityLineItem, Product, Quote, QuoteLineItem } from './objects/index.js';
-import {
-  contractHook, opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
+  opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
 } from './objects/hooks.js';
-import { PaymentTermsPicklist } from './picklists/index.js';
-import { ContractViews, ProductViews, QuoteViews } from './views/index.js';
+import { ProductViews, QuoteViews } from './views/index.js';
 
 /**
  * The collections of this package that the artifact-wide sweeps also read,
@@ -22,7 +19,7 @@ import { ContractViews, ProductViews, QuoteViews } from './views/index.js';
  * `*.hook.ts` may default-export an ARRAY of hooks.
  */
 export const revenueHooks = [
-  contractHook, opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
+  opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
 ].flat();
 
 /**
@@ -36,9 +33,7 @@ export const revenueHooks = [
  * published platform release carries that fix, then register it here. See
  * `appRegisteredModuleItems` in `objectstack.composition.ts`.
  */
-export const revenueFlows = [
-  ContractRenewalFlow, QuoteExpirationFlow, ContractExpirationFlow, BillingHandoffContractActivatedFlow,
-];
+export const revenueFlows = [QuoteExpirationFlow];
 
 /**
  * What this package registers but does not assemble: its seed rows, which the
@@ -53,11 +48,17 @@ export type HotCrmRevenueCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * (ADR-0130 D4, `module-split-plan.md` decision 5): the unit ADR-0130 §1.3(c)
  * says must be sellable on its own.
  *
- * It owns `crm_product`, `crm_opportunity_line_item`, `crm_quote`,
- * `crm_quote_line_item` and `crm_contract`, and the items authored against
- * them: their hooks and views, the `payment_terms` option list, the contract
- * and quote-expiry flows, the quote and contract notification templates and
- * their seed rows.
+ * It owns `crm_product`, `crm_opportunity_line_item`, `crm_quote` and
+ * `crm_quote_line_item`, and the items authored against them: their hooks and
+ * views, the quote-expiry flow, the quote notification template and their seed
+ * rows. `crm_contract` and everything authored against it — hook, views, the
+ * three contract flows, the `payment_terms` option list, the two contract
+ * notification templates and the contract seed rows — moved to the app
+ * package (`module-split-plan.md` item 11): the contract references only
+ * app-package objects, and O2C and PSA hang off it, so it lives where every
+ * add-on can reach it in one dependency level. The quote-accepted contract
+ * draft (`quote_accepted_contract_draft`) is now a write along this module's
+ * edge into the app package.
  *
  * Two items authored here are registered by the app package for now —
  * `quote_generation` (see {@link revenueFlows}) and `product_metrics`, which
@@ -86,21 +87,23 @@ export const createHotCrmRevenueStack = (
     // holds it, and the range below, to the app package's.
     version: '6.0.0',
     type: 'module',
-    description: 'HotCRM revenue module — products, opportunity line items, quotes, and contracts.',
+    description: 'HotCRM revenue module — products, opportunity line items and quotes.',
     engines: { protocol: '^18.2.0' },
     // The App package this module extends — and nothing else: the graph is a
     // star (plan decision 5), ⛔ no edge to another module.
     dependencies: { 'app.objectstack.hotcrm': '^6.0.0' },
 
     /**
-     * The three entries this module puts into the app's Sales group.
+     * The two entries this module puts into the app's Sales group.
      *
      * Rule R3: the app's own `navigation` may not name this package's objects,
      * so the group stays the app's and this module fills it. A contributed item
-     * lands after the group's own children, so Quotes, Contracts and Products
-     * now follow Sales Performance (#2270) — the same rule that put My Cases
-     * last in *My Work* (#1907). ⛔ No per-item `order` to restore the old
-     * position: see the navigation note in `src/service/index.ts`.
+     * lands after the group's own children, so Quotes and Products follow
+     * Sales Performance and Contracts (#2270) — the same rule that put My Cases
+     * last in *My Work* (#1907). Contracts is the app's own entry since
+     * `crm_contract` moved there (`module-split-plan.md` item 11). ⛔ No
+     * per-item `order` to restore the old position: see the navigation note in
+     * `src/service/index.ts`.
      */
     navigationContributions: [
       {
@@ -109,8 +112,6 @@ export const createHotCrmRevenueStack = (
         priority: 40,
         items: [
           { id: 'nav_quote',    type: 'object', objectName: 'crm_quote',    label: 'Quotes',    icon: 'receipt' },
-          // Contracts close the sales cycle: quote → signed agreement → renewal.
-          { id: 'nav_contract', type: 'object', objectName: 'crm_contract', label: 'Contracts', icon: 'file-signature' },
           // In Sales, not Marketing (#1259): products are the revenue master
           // data every quote line and opportunity line item points at.
           { id: 'nav_product',  type: 'object', objectName: 'crm_product',  label: 'Products',  icon: 'package' },
@@ -120,15 +121,13 @@ export const createHotCrmRevenueStack = (
   },
 
   // What THIS package's metadata needs: `automation` and `triggers` for the
-  // record-change and scheduled contract and quote flows — each refused by
-  // name when deleted. (`analytics` joins when `product_metrics` registers
+  // scheduled quote-expiry flow — each refused by name when deleted. (`analytics` joins when `product_metrics` registers
   // here.)
   requires: ['automation', 'triggers'],
 
-  objects: [Contract, OpportunityLineItem, Product, Quote, QuoteLineItem],
-  picklists: [PaymentTermsPicklist],
+  objects: [OpportunityLineItem, Product, Quote, QuoteLineItem],
   hooks: revenueHooks,
-  views: [ContractViews, ProductViews, QuoteViews],
+  views: [ProductViews, QuoteViews],
   flows: revenueFlows,
   emailTemplates: RevenueEmailTemplates,
 
