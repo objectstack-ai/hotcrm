@@ -835,10 +835,11 @@ export const LeadConversionFlow: Flow = {
       // Every write is behind this screen, so it changes nothing: Submit only
       // completes the run, and a rep who closes the dialog instead leaves a
       // lead that is already fully converted. A `record_link` field (spec
-      // 18.2.0) takes no input, so the screen also pauses a headless caller —
-      // the REST door and the `action_convert_lead` AI tool get the run back
-      // `paused` on this screen, the conversion already written, and the
-      // links' ids are what they read.
+      // 18.2.0) takes no input, so the screen pauses every caller: one that
+      // resumes `screen_1` through the REST door or the AI tool's
+      // `resume_run` gets the run back `paused` on this screen, the
+      // conversion already written and the links' ids on it, and one more
+      // resume with no values completes it.
       //
       // The opportunity link is always declared. With no opportunity,
       // `opportunityId` is `null` and the console shows "—" with no link, which
