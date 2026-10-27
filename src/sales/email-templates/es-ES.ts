@@ -19,6 +19,16 @@ export const esES: EmailTemplatePack = {
     subject: 'Nuevo contacto: {{first_name}} {{last_name}}',
     bodyHtml: '<p>{{first_name}} {{last_name}} se ha añadido como contacto. Ponte en contacto para darle la bienvenida.</p>',
   },
+  'crm.contract_expired': {
+    label: 'Contrato vencido',
+    subject: 'Contrato vencido: {{contract_number}}',
+    bodyHtml: '<p>El contrato {{contract_number}} alcanzó su fecha de fin y se ha marcado como vencido.</p>',
+  },
+  'crm.contract_renewal': {
+    label: 'Renovación de contrato pendiente',
+    subject: 'Renovación de contrato pendiente: {{contract_number}}',
+    bodyHtml: '<p>El contrato {{contract_number}} finaliza el {{end_date}}. Inicia ya la conversación de renovación.</p>',
+  },
   'crm.deal_stalled': {
     label: 'Oportunidad estancada',
     subject: 'Oportunidad estancada: {{name}}',

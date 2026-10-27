@@ -26,7 +26,7 @@ import {
  *   - `billing_handoff_closed_won`          — an opportunity ENTERS `closed_won`
  *     (this file; `crm_opportunity` is the sales package's object)
  *   - `billing_handoff_contract_activated`  — a contract ENTERS `activated`
- *     (`src/revenue/flows/billing-handoff-contract-activated.flow.ts`)
+ *     (`src/sales/flows/billing-handoff-contract-activated.flow.ts`)
  *
  * Each POSTs one JSON document — the record, its account, and its line items —
  * to {@link BILLING_HANDOFF_ENDPOINT}, through the platform's **durable HTTP

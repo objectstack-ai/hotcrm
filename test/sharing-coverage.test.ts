@@ -29,7 +29,7 @@ import stack from './helpers/composed-stack';
  *      new child object (or a rule added/removed) has to update it knowingly;
  *   2. the admin docs — the prose that describes who sees what has to keep
  *      matching the metadata. The gap in #549 was reported as a *promise*
- *      problem: `content/docs/revenue/contracts.mdx` told admins "contracts
+ *      problem: `content/docs/sales/contracts.mdx` told admins "contracts
  *      follow the account's sharing" while the metadata delivered own-only.
  *
  * `test/authorization-coverage.test.ts` (#488/#547) covers the object-grant
@@ -353,7 +353,7 @@ describe('the admin docs describe the sharing the app actually ships', () => {
     // sharing" while `crm_contract` shipped private + own-only. Any doc making
     // that promise for a ledger'd own-only object is the same defect.
     const PAGES = [
-      ['content/docs/revenue/contracts.mdx', 'crm_contract'],
+      ['content/docs/sales/contracts.mdx', 'crm_contract'],
       ['content/docs/sales/quotes.mdx', 'crm_quote'],
       ['content/docs/sales/activities.mdx', 'crm_task'],
     ] as const;

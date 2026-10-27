@@ -8,8 +8,9 @@ import { definePicklist } from '@objectstack/spec/data';
  * One list, referenced by name from both fields: an accepted quote's terms
  * carry over to the contract, so the contract vocabulary must cover every
  * quote value (`due_on_receipt` was Quote-only before the two were unified).
- * Both fields are this package's, so the list is too — the lowest package all
- * its consumers depend on.
+ * The contract is this package's and the quote is the revenue module's, which
+ * depends on this one, so the list lives here — the lowest package all its
+ * consumers depend on (`module-split-plan.md` item 11).
  *
  * The carry-over is `quote_accepted_contract_draft` in
  * `src/revenue/objects/quote.hook.ts`, named here because this rationale spent

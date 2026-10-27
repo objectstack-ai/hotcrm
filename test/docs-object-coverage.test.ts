@@ -133,7 +133,7 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   crm_event_attendee: { page: 'sales/meetings-and-calls' },
   crm_campaign: { page: 'marketing/campaigns' },
   crm_campaign_member: { page: 'marketing/campaign-members' },
-  crm_contract: { page: 'revenue/contracts' },
+  crm_contract: { page: 'sales/contracts' },
   crm_product: { page: 'revenue/products' },
   // #2313 — a book and its entries, on one page: an entry is only ever read
   // inside the book it prices.
