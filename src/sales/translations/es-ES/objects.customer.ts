@@ -42,9 +42,10 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       approval_status: {
         label: 'Estado de Aprobación',
-        help: 'En qué punto de su aprobación está esta cuenta. Una cuenta nueva comienza Pendiente y se decide en la bandeja de aprobaciones.',
+        help: 'En qué punto de su aprobación está esta cuenta. Una cuenta nueva comienza Pendiente y se decide en la bandeja de aprobaciones. Una cuenta creada por Convertir Prospecto no pasa por aprobación y queda vacía.',
         options: { pending: 'Pendiente', approved: 'Aprobada', rejected: 'Rechazada' },
       },
+      converted_from_lead_id: { label: 'Convertida desde Prospecto', help: 'El prospecto a partir del cual Convertir Prospecto creó esta cuenta. Solo lo escribe la conversión de prospectos.' },
       name: { label: 'Nombre de Cuenta', help: 'Nombre legal de la empresa u organización' },
       name_normalized: {
         label: 'Nombre de Cuenta (Normalizado)',

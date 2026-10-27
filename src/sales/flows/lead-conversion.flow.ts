@@ -585,6 +585,11 @@ export const LeadConversionFlow: Flow = {
           number_of_employees: cel`has(leadRecord.number_of_employees) ? leadRecord.number_of_employees : null`,
           billing_address: cel`has(leadRecord.address) ? leadRecord.address : null`,
           owner_id: cel`current_user.id`, is_active: true,
+          // The lead this account comes from (#2285): `account_approval`
+          // starts no approval for an account carrying it, because qualifying
+          // the lead was the gate. Only a flow run may write it, which
+          // `account_protection` enforces; the note is on the field.
+          converted_from_lead_id: cel`recordId`,
         },
         outputVariable: 'createdAccount',
       },
