@@ -586,6 +586,8 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_event_attendee: { en: 'Event Attendee', 'zh-Hans': '活动参与者', 'zh-Hant': '活動參與者' },
   crm_forecast: { en: 'Forecast', 'zh-Hans': '预测', 'zh-Hant': '預測' },
   crm_product: { en: 'Product', 'zh-Hans': '产品', 'zh-Hant': '產品' },
+  crm_price_book: { en: 'Price Book', 'zh-Hans': '价格表', 'zh-Hant': '價格表' },
+  crm_price_book_entry: { en: 'Price Book Entry', 'zh-Hans': '价格表条目', 'zh-Hant': '價格表條目' },
   // zh-Hans is 「营销活动」, the label the locale pack ships (`zh-CN.ts`
   // `objects.crm_campaign.label`) and the word the zh-Hans doc pages already
   // use. This row read 「市场活动」 until #830, which left the master spelled
@@ -631,13 +633,13 @@ describe('the OWD table lists every registered object, in every locale', () => {
    * `docs-drift.test.ts` uses for `CRON_LABEL`.
    */
   const COUNT_WORD: Record<Locale, Record<number, string>> = {
-    en: { 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight' },
-    'zh-Hans': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八' },
-    'zh-Hant': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八' },
+    en: { 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine' },
+    'zh-Hans': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九' },
+    'zh-Hant': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九' },
   };
 
   it('the row ledger answers exactly the objects this app registers', () => {
-    // Anti-vacuum, both halves. 19 objects ship today, 8 of them parent-derived;
+    // Anti-vacuum, both halves. 20 objects ship today, 9 of them parent-derived;
     // a ledger compared against an empty derived set would pass by checking
     // nothing at all, and so would every rule below.
     expect(

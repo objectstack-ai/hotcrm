@@ -36,6 +36,15 @@ export const SalesManagerProfile = {
     // this off the super-user bypass. `test/contract-write-depth.test.ts`.
     crm_contract:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_product:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    // Price books (#2313): the same shape as the catalogue above. A manager
+    // creates a book (a partner tier, a promotion) and edits the books they own;
+    // the seeded Standard book is the admin's, so its prices move with the
+    // admin's catalogue, not with a manager's edit. Entries are
+    // `controlled_by_parent`: no scope to author, and adding, repricing or
+    // removing one is an edit of its book, so delete is granted on entries and
+    // not on books.
+    crm_price_book:  { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    crm_price_book_entry: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_campaign:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_case:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_task:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },

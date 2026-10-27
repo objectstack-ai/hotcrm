@@ -4,9 +4,11 @@ import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInpu
 
 import { RevenueEmailTemplates } from './email-templates/index.js';
 import { QuoteExpirationFlow } from './flows/index.js';
-import { OpportunityLineItem, Product, Quote, QuoteLineItem } from './objects/index.js';
 import {
-  opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
+  OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem,
+} from './objects/index.js';
+import {
+  opportunityLineItemHook, priceBookEntryHook, priceBookHook, productHook, quoteHook, quoteLineItemHook,
 } from './objects/hooks.js';
 import { ProductViews, QuoteViews } from './views/index.js';
 
@@ -19,7 +21,7 @@ import { ProductViews, QuoteViews } from './views/index.js';
  * `*.hook.ts` may default-export an ARRAY of hooks.
  */
 export const revenueHooks = [
-  opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
+  opportunityLineItemHook, priceBookHook, priceBookEntryHook, productHook, quoteHook, quoteLineItemHook,
 ].flat();
 
 /**
@@ -48,10 +50,10 @@ export type HotCrmRevenueCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * (ADR-0130 D4, `module-split-plan.md` decision 5): the unit ADR-0130 §1.3(c)
  * says must be sellable on its own.
  *
- * It owns `crm_product`, `crm_opportunity_line_item`, `crm_quote` and
- * `crm_quote_line_item`, and the items authored against them: their hooks and
- * views, the quote-expiry flow, the quote notification template and their seed
- * rows. `crm_contract` and everything authored against it — hook, views, the
+ * It owns `crm_product`, `crm_price_book`, `crm_price_book_entry`,
+ * `crm_opportunity_line_item`, `crm_quote` and `crm_quote_line_item`, and the
+ * items authored against them: their hooks and views, the quote-expiry flow,
+ * the quote notification template and their seed rows. `crm_contract` and everything authored against it — hook, views, the
  * three contract flows, the `payment_terms` option list, the two contract
  * notification templates and the contract seed rows — moved to the app
  * package (`module-split-plan.md` item 11): the contract references only
@@ -87,20 +89,20 @@ export const createHotCrmRevenueStack = (
     // holds it, and the range below, to the app package's.
     version: '6.0.0',
     type: 'module',
-    description: 'HotCRM revenue module — products, opportunity line items and quotes.',
+    description: 'HotCRM revenue module — products, price books, opportunity line items and quotes.',
     engines: { protocol: '^18.2.0' },
     // The App package this module extends — and nothing else: the graph is a
     // star (plan decision 5), ⛔ no edge to another module.
     dependencies: { 'app.objectstack.hotcrm': '^6.0.0' },
 
     /**
-     * The two entries this module puts into the app's Sales group.
+     * The three entries this module puts into the app's Sales group.
      *
      * Rule R3: the app's own `navigation` may not name this package's objects,
      * so the group stays the app's and this module fills it. A contributed item
-     * lands after the group's own children, so Quotes and Products follow
-     * Sales Performance and Contracts (#2270) — the same rule that put My Cases
-     * last in *My Work* (#1907). Contracts is the app's own entry since
+     * lands after the group's own children, so Quotes, Products and Price
+     * Books follow Sales Performance and Contracts (#2270) — the same rule that
+     * put My Cases last in *My Work* (#1907). Contracts is the app's own entry since
      * `crm_contract` moved there (`module-split-plan.md` item 11). ⛔ No
      * per-item `order` to restore the old position: see the navigation note in
      * `src/service/index.ts`.
@@ -115,6 +117,9 @@ export const createHotCrmRevenueStack = (
           // In Sales, not Marketing (#1259): products are the revenue master
           // data every quote line and opportunity line item points at.
           { id: 'nav_product',  type: 'object', objectName: 'crm_product',  label: 'Products',  icon: 'package' },
+          // The catalogue's prices, beside it (#2313). Its entries are reached
+          // through their book, as a line item is through its quote.
+          { id: 'nav_price_book', type: 'object', objectName: 'crm_price_book', label: 'Price Books', icon: 'book-open' },
         ],
       },
     ],
@@ -125,7 +130,7 @@ export const createHotCrmRevenueStack = (
   // here.)
   requires: ['automation', 'triggers'],
 
-  objects: [OpportunityLineItem, Product, Quote, QuoteLineItem],
+  objects: [OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem],
   hooks: revenueHooks,
   views: [ProductViews, QuoteViews],
   flows: revenueFlows,

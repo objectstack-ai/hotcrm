@@ -39,6 +39,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_quote: { label: '見積' },
         nav_contract: { label: '契約' },
         nav_product: { label: '製品' },
+        nav_price_book: { label: '価格表' },
         nav_sales_dashboard: { label: '営業実績' },
 
         group_work: { label: 'マイワーク' },

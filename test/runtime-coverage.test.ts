@@ -117,6 +117,10 @@ const RUNTIME_TEST_FILES = [
   // keeps it and the manager it is handed to, and the tasks the close must
   // leave alone.
   'escalation-task-on-close.test.ts',
+  // #2313 — the two price-book hooks (one standard book, one entry per
+  // product per book) and who may write the books, one feature's runtime
+  // evidence in one file, as the lines above.
+  'price-book-hooks.test.ts',
 ];
 
 /**
