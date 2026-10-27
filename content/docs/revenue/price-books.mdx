@@ -11,12 +11,14 @@ A price book holds one **price book entry** per product: the product, its **List
 
 ## The standard price book
 
-Exactly one price book is the **Standard** book. It holds the price every product is published at, and HotCRM keeps it single:
+Exactly one price book is the **Standard** book, and HotCRM keeps it single:
 
 - A second book cannot be marked **Standard**. The save is refused and names the book that already is.
 - **Standard** cannot be turned off on the standard book, and the standard book cannot be deleted. To stop using it, turn off **Active**.
 
 HotCRM's sample data includes a book named **Standard** with one entry for every product in the sample catalog, at that product's **List Price**. A single-organization installation that already has data gets the same book once, on its first start after the upgrade; after that, prices you change in it stay changed.
+
+The Standard book is filled from the catalog that one time only. A product added later gets no Standard entry automatically: add its entry by hand until quotes read price books, the next step of this feature.
 
 The product's own **List Price** stays where it is, with its rule that the price is not below **Cost**.
 
