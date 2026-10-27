@@ -1,7 +1,7 @@
 # #2320 browser pass — track 1 (CRM · Sales)
 
 
-- **Tested sha:** hotcrm `main` `1f3f888` (`@objectstack/*` 18.2.0), checked again after the 09:36Z worker restart: `origin/main` still `1f3f888`.
+- **Tested sha:** hotcrm `main` `1f3f888` (`@objectstack/*` 18.2.0), checked again after the 09:36Z worker restart: `origin/main` still `1f3f888`. By the end of the pass `origin/main` had moved to `afdf9a0` (#2323 contract move, #2324 price books); neither touches a file this report names as a landing spot for D1–D6.
 - **Boot:** `pnpm install --frozen-lockfile` exit 0 · `pnpm dev` healthy on `:4001` (44 plugins, seed settled in background) · `pnpm demo:staff` exit 0 (na.rep, eu.rep, sales.manager, service.agent, service.manager).
 - **Browser:** preinstalled Chromium via `require('playwright')`, desktop 1440×900, phone 390×844 (`isMobile`, touch).
 - **Personas used:** dev admin (`admin@objectos.ai`), sales rep Nina Reyes (`na.rep`), anonymous visitor (web-to-lead). Sales manager (`sales.manager`), eu.rep and service.manager where a row names them.
@@ -56,7 +56,17 @@
 
 ## Coverage — CON (contracts)
 
-CON-001 … CON-007 are track 2 (seat ruling); not driven here.
+Seat ruling: contracts are track 2 (Revenue). Not driven here.
+
+| Row | Result | Evidence / reason |
+| --- | --- | --- |
+| CON-001 contract object | track 2 | moved to track 2 by the seat ruling |
+| CON-002 contract state machine | track 2 | moved to track 2 by the seat ruling |
+| CON-003 term consistency | track 2 | moved to track 2 by the seat ruling |
+| CON-004 activation follow-ups | track 2 | moved to track 2 by the seat ruling |
+| CON-005 auto-expiry | track 2 | moved to track 2 by the seat ruling |
+| CON-006 renewal reminder and auto-renew | track 2 | moved to track 2 by the seat ruling |
+| CON-007 contract views | track 2 | moved to track 2 by the seat ruling |
 
 ## Coverage — OPP (opportunities)
 
