@@ -3,7 +3,7 @@
 - **Tested sha:** hotcrm `main` `afdf9a0` (`@objectstack/*` 18.2.0; includes #2323 contract move and #2324 price books).
 - **Install:** fresh `pnpm dev` DB, dev admin, `pnpm demo:staff` exit 0. Playwright on the preinstalled Chromium, 1440×900 (dashboards 1440×2600).
 - **Personas:** dev admin, `na.rep` (Nina Reyes), `sales.manager` (Marta Quinn), `service.agent` (reports nav only).
-- **Stopped early:** the seat asked every track to stop for the maintainer's usage limit at 14:08Z. The APR rows and the phone-width pass were not reached and are marked so below.
+- **Two sittings:** part 1 stopped at 14:08Z for the maintainer's usage limit (report comment 6444188882). Part 2 resumed at 18:13Z on `main` `ea567f2` (#2333, a contract signed_date fix, landed in between) with a fresh DB and `demo:staff` exit 0, and covers APR-001..005, the other approval gates, FCT-006 and the 390×844 pass.
 - Screenshots sit beside this file, and also in project files `qa-2320/2-revenue/`.
 
 ## Coverage
@@ -36,13 +36,19 @@
 | FCT-003 nightly snapshot | not reachable | scheduled flow, same gate as QUO-008. |
 | FCT-004 category buckets | pass | opportunity stage→forecast_category consistent across 17 rows (e.g. negotiation→commit, needs_analysis→best_case); the dashboard's category tile uses the same buckets. |
 | FCT-005 forecast views | pass | All (grouped by period), This Quarter (empty state, then the Q4 row), My Forecast (rep sees only their own) (`fct-01-*`, `fct-14-*`). |
-| FCT-006 AI forecasting skill | not tested | no assistant surface on this install (track 5 D9); stopped for the usage limit. |
+| FCT-006 AI forecasting skill | not reachable | the skill is authored (`revenue_forecasting`), but the console offers no assistant control on Forecasts or in the header, and the command palette finds only objects and articles (`fct-40`); same cause as track 5 D9. |
 | FCT-007 Sales Performance | pass | admin, manager and rep: every dataset query 200, 17–20 chart marks drawn, no no-access tile (`fct-20`, `fct-21`). |
 | FCT-008 Executive and CRM Overview | pass | same probe for both dashboards × 3 personas. |
 | FCT-009 forecast_metrics | pass | Quota Attainment by Rep shows the current quarter only (`fct-20-sales_dashboard-admin`). |
 | FCT-010 reports nav | pass | Reports group collapsed by default; admin 10 entries, rep 7 (no case reports), service agent 6 (no opportunity reports) (`fct-30-*`). |
-| APR-001..005 | not tested | stopped for the usage limit. The Setup Packaged Automation page shows all five approval flows On (`apr-00`); the Inbox entry is in My Work for every sales persona (visible in every sidebar screenshot). |
-| Phone width 390×844 | not tested | stopped for the usage limit. |
+| APR-001 large-deal two tiers | pass | rep saved a 150,000 deal → "Large Deal Approval (on create) · Sales Manager Review" waiting on the manager (`apr-11`, `apr-12`); a 600,000 deal, once the manager approved, moved to "Sales Director Sign-off" (`apr-20..22`). |
+| APR-002 behaviour | pass | first response decides; the record shows "Locked for approval", Edit disabled, Recall/Reply for the submitter (`apr-11`); approval_status mirrors pending → approved / rejected. |
+| APR-003 outcomes | pass with defect | approve: approved_date stamped, owner gets "Deal approved" (`apr-13`, `apr-14`); reject: approval_status rejected, owner gets the warning "Review and revise before resubmitting" (`apr-24`, `apr-25`). Resubmitting does not exist (D6). |
+| APR-004 empty bench | pass | no one holds Sales Director, so the step went to the dev admin as rescue approver and appeared in the admin's inbox (`apr-22`); the admin's decision resolved it. |
+| APR-005 inbox | pass | My Work → Inbox opens the approvals inbox for rep, manager and admin; My Pending / Submitted by me / All, approve and reject dialogs with comment and attachments (`apr-12`, `apr-13-*-dialog`, `apr-28`). |
+| Account approval (not an inventory row) | pass | a rep's new account was born pending, the manager approved it from the inbox, the owner was notified (`apr-40..42`). |
+| Lead conversion, qualification and status-change gates | inert as shipped | each verdict field ships `not_required` and the request control is disabled (`apr-26`); arming needs a field-default change, which no console screen offers on a HotCRM object (track 6 D2). |
+| Phone width 390×844 | pass | 11 revenue screens as the rep: quote list, pipeline, record, related; product catalog; price books; contracts and timeline; forecasts; Sales Performance; inbox. No page or main-pane horizontal overflow (`phone-01..11`). Suggestions S22. |
 
 ## Defects
 
@@ -55,6 +61,8 @@
 **D4 — platform (unique-index refusal): the duplicate message does not name the field.** As the manager, New Product with SKU `QA-2320-SKU` when that SKU exists → "A record with this value already exists", with no field highlighted. Evidence `prd-12-create-dup-sku.png`. Dedupe: unique constraint message field name, record with this value already exists.
 
 **D5 — HotCRM docs (`docs/feature-inventory.md` CON-001): the row says 私有共享 (private).** `src/sales/objects/contract.object.ts:20` is `controlled_by_parent` (reach follows the account). Dedupe: contract sharing private controlled_by_parent inventory.
+
+**D6 — HotCRM (`src/sales/flows/opportunity-approval.flow.ts:90`, `content/docs/revenue/approvals.mdx:63,128`): a rejected large deal can never be resubmitted, and closes won without approval.** As `na.rep`: save a 600,000 deal; the manager approves; the admin (rescue) rejects. The rejection notice says "Review and revise before resubmitting", and the docs say "revise and save again to re-submit". Actual: changing the amount to 550,000 and saving leaves approval_status `rejected` and opens no request (the flow starts only from `not_required` or null); there is no Resubmit control on the record or in "Submitted by me" (`apr-26..29`). The rep then moved the deal to Negotiation and Closed Won (550,000, win reason Better Product), and it saved with the "Large deal won" toast (`apr-31`, `apr-32`): a deal whose approval was rejected closed won with no approval. Dedupe: rejected opportunity resubmit approval, approval_status rejected closed won.
 
 ## UI / UX suggestions
 
@@ -79,6 +87,11 @@
 | S17 | Forecast list | double grouping (Period Start "Oct 1" then "Oct 2026"), each with one row; new manual forecast defaults Source "Scheduled snapshot"; validation messages joined as "….; …" | group by period label only; default Source Manual entry for a person; separate messages | managers | `fct-01-mgr-view1`, `fct-10`, `fct-11` |
 | S18 | Dashboards | Win/Loss tables cut the last column; the tallest Top Products bar loses its value label; bar labels unformatted (174000); "Top Products" says revenue but sums catalogue list prices; Revenue Trend skips months with no revenue | fit tables; format labels; retitle the tile "List price by category"; plot empty months as 0 | managers, executives | `fct-20-*` |
 
+| S19 | Opportunity under approval | Generate Quote stays the primary button while the record is locked; Recall / Reply float in a bar above the title | demote actions that cannot run while locked; put Recall / Reply beside the lock badge | reps | `apr-11` |
+| S20 | Rescue approver | the admin's inbox row and notice look like any other request; nothing says the Sales Director bench is empty | label rescue requests ("no one holds Sales Director") with a link to the position | admins | `apr-22`, `apr-23` |
+| S21 | Decision notices | each decision sends two notices (the platform's "Request approved" and the flow's "Deal approved") | keep one | reps | `apr-14`, `apr-25` |
+| S22 | Phone width | quote cards show no Total Price; record titles clip mid-word without an ellipsis; dashboard axis labels truncate ("Prospect…") | add total to the card; wrap or ellipsize titles; shorter axis labels | reps on phones | `phone-01`, `phone-03`, `phone-10` |
+
 ## Data left by the pass
 
-Not cleaned up because the pass stopped early: opportunity "QA-2320 Revenue Journey" (closed won), quotes QTE-0007 (accepted) and QTE-0008 (draft, back-dated), contracts CTR-0005 (draft) and CTR-0006 (terminated), forecast "Q4 2026" for Nina Reyes, Globex Industries type changed prospect→customer by CTR-0006's activation. Removed: product PRD-0014, price book "QA-2320 Partner" and its entry. All on the local dev DB only.
+Part 1 data went with the part 1 DB (part 2 booted a fresh DB). Part 2 leaves: opportunities "QA-2320 APR Manager Tier" (approved) and "QA-2320 APR Director Tier" (rejected, then closed won by D6), account ACC-000010 "QA-2320 Approval Test Co" (approved). Part 1 had left, before the DB was replaced: opportunity "QA-2320 Revenue Journey" (closed won), quotes QTE-0007 (accepted) and QTE-0008 (draft, back-dated), contracts CTR-0005 (draft) and CTR-0006 (terminated), forecast "Q4 2026" for Nina Reyes, Globex Industries type changed prospect→customer by CTR-0006's activation. Removed: product PRD-0014, price book "QA-2320 Partner" and its entry. All on the local dev DB only.
