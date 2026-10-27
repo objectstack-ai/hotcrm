@@ -11,11 +11,14 @@ import { avgDealSizeMetricWidget, pipelineByStageWidget } from './shared-widgets
  * https://github.com/objectstack-ai/objectui/tree/main/examples/crm.
  *
  * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
- * so it has to come from a real comparison query (widget `compareTo`) once the
- * renderer supports it for dataset metrics — the percentages this file used to
- * carry were typed by hand and recomputed by nothing, so they kept asserting
- * the same "+8.4% vs last quarter" on any data, including an empty database.
- * Same rule as the executive dashboard (#500, #587).
+ * so it comes from a real comparison query: Open Pipeline declares
+ * `compareTo: { kind: 'previousPeriod' }` (#2296) and follows the date picker
+ * (bare number at All time, objectstack#25970). The QTD tiles carry none: a
+ * one-bound `{ $gte }` filter has no end to shift, and the executor refuses it
+ * on every load. The percentages this file used to carry were typed by hand
+ * and recomputed by nothing, so they kept asserting the same "+8.4% vs last
+ * quarter" on any data, including an empty database. Same rule as the
+ * executive dashboard (#500, #587).
  */
 export const SalesDashboard: Dashboard = {
   name: 'sales_dashboard',
@@ -75,6 +78,7 @@ export const SalesDashboard: Dashboard = {
       title: 'Open Pipeline (Selected Period)',
       description: 'Value of open opportunities closing in the selected period',
       type: 'metric',
+      compareTo: { kind: 'previousPeriod' },
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['total_amount'],

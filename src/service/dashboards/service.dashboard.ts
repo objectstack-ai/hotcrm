@@ -17,11 +17,13 @@ const dataset = 'case_metrics';
  * reference at https://github.com/objectstack-ai/objectui/tree/main/examples/crm.
  *
  * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
- * so it has to come from a real comparison query (widget `compareTo`) once the
- * renderer supports it for dataset metrics — the percentages this file used to
- * carry were typed by hand and recomputed by nothing, so they kept asserting
- * the same "-6.2% vs last week" on any data, including an empty database.
- * Same rule as the executive dashboard (#500, #587).
+ * so it comes from a real comparison query: Open Cases, Avg Resolution Time
+ * and SLA Violations declare `compareTo: { kind: 'previousPeriod' }` (#2296)
+ * over the date picker's `created_at` window (bare number at All time,
+ * objectstack#25970). The percentages this file used to carry were typed by
+ * hand and recomputed by nothing, so they kept asserting the same "-6.2% vs
+ * last week" on any data, including an empty database. Same rule as the
+ * executive dashboard (#500, #587).
  */
 export const ServiceDashboard: Dashboard = {
   name: 'service_dashboard',
@@ -90,6 +92,7 @@ export const ServiceDashboard: Dashboard = {
       title: 'Open Cases',
       description: 'Cases that are not yet closed',
       type: 'metric',
+      compareTo: { kind: 'previousPeriod' },
       filter: { is_closed: false },
       colorVariant: 'orange',
       dataset, values: ['case_count'],
@@ -110,6 +113,7 @@ export const ServiceDashboard: Dashboard = {
       title: 'Avg Resolution Time',
       description: 'Mean time to close, in hours',
       type: 'metric',
+      compareTo: { kind: 'previousPeriod' },
       filter: { is_closed: true },
       colorVariant: 'blue',
       dataset, values: ['avg_resolution'],
@@ -120,6 +124,11 @@ export const ServiceDashboard: Dashboard = {
       title: 'SLA Violations',
       description: 'Cases that breached their SLA',
       type: 'metric',
+      // `dimension` names the window to shift: this filter also dates
+      // `sla_due_date` (`{now}`, inside `$or`), so without it the console
+      // would still ask for a comparison when the picker is at All time and
+      // the executor would refuse it ("compareTo needs a dated window").
+      compareTo: { kind: 'previousPeriod', dimension: 'created_at' },
       // Counted at READ time (#2070): a case already flagged, OR a case still
       // open whose deadline has passed. The second branch is the selection
       // `case_sla_monitor` sweeps — same status set, same strict `$lt` at the
