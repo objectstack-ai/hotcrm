@@ -45,19 +45,13 @@ const MARKETING_OBJECTS = ['crm_campaign', 'crm_campaign_member'];
 const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS];
 
 /**
- * The assignment rule's one roster of deliberate exceptions (AGENTS.md rule 11):
- * module items the APP package registers because the platform judges the
- * reference to them one package at a time (objectstack#25514) — the other half
- * is `appRegisteredModuleItems` in `objectstack.composition.ts`. Maintainer
- * ruling 2026-10-24 on #2270, option 1. Of the four, only the dataset names
- * its object; the three flows carry no top-level object, so this sweep cannot
- * see them and `appRegisteredModuleItems` is their record. Emptied when a
- * published platform release carries #25514 and the four move to their
- * modules.
+ * The assignment rule's roster of deliberate exceptions (AGENTS.md rule 11) —
+ * empty. The four module items the app package once registered
+ * (`quote_generation`, the two member-enroll flows, `product_metrics`) moved
+ * to their modules once 18.2.0 carried objectstack#25514 (#2276); a new entry
+ * needs a ruling of its own.
  */
-const APP_REGISTERED_MODULE_ITEMS = [
-  `${APP_ID}: dataset "product_metrics" is authored against crm_product`,
-];
+const APP_REGISTERED_MODULE_ITEMS: string[] = [];
 
 const bodies: AnyRec[] = (((artifact as AnyRec).packages ?? []) as AnyRec[]).map(
   (entry) => (entry?.manifest ?? {}) as AnyRec,
@@ -155,6 +149,29 @@ describe('every object has exactly one owner', () => {
     }
     expect(strays, `items shipped in a package that does not own their object:\n  ${strays.join('\n  ')}`)
       .toEqual(APP_REGISTERED_MODULE_ITEMS);
+  });
+
+  it('a module item an app action or tile reaches ships in its module (objectstack#25514, #2276)', () => {
+    // The sweep above cannot see the three flows: a flow carries no top-level
+    // object. So the reference is read from the app side, and its target found
+    // in the module that owns it — and in no other package.
+    const appActions = (body(APP_ID).actions ?? []) as AnyRec[];
+    const flowOf = (action: string) => appActions.find((a) => a.name === action)?.target;
+    const widget = ((body(APP_ID).dashboards ?? []) as AnyRec[])
+      .find((d) => d.name === 'crm_overview_dashboard')?.widgets?.find((w: AnyRec) => w.id === 'top_products');
+    const reached: Array<[string, string, unknown]> = [
+      [REVENUE_ID, 'flows', flowOf('generate_quote')],
+      [MARKETING_ID, 'flows', flowOf('create_campaign')],
+      [MARKETING_ID, 'flows', flowOf('add_contact_to_campaign')],
+      [REVENUE_ID, 'datasets', widget?.dataset],
+    ];
+    expect(reached.map(([, , name]) => name)).toEqual([
+      'quote_generation', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll', 'product_metrics',
+    ]);
+    for (const [owner, key, name] of reached) {
+      const carriers = bodies.filter((b) => namesOf(b[key]).includes(String(name))).map((b) => b.id);
+      expect(carriers, `${key} "${name}"`).toEqual([owner]);
+    }
   });
 
   it('the permission sets stay whole in the app package (ADR-0130, 2026-09-02 addendum)', () => {
