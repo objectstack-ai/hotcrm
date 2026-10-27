@@ -2,6 +2,9 @@
 "hotcrm": patch
 ---
 
+Clause-②: no
+Metadata-protocol: none
+
 **A campaign member created by hand now meets the same two rules as Add to Campaign and Enroll Members (#2344).**
 
 Since #2336, **Add to Campaign** and **Enroll Members** refuse a campaign that is not *Planning* or *In Progress* and a person whose **Email Opt Out** is ticked. A member created any other way skipped both rules: **New** on a campaign's Campaign Members list, a data import, and `POST /api/v1/data/crm_campaign_member` all saved a member of a *Completed* campaign naming an opted-out lead, and that campaign's closed figures moved.
