@@ -26,7 +26,7 @@ Open http://localhost:4001. The app boots with seed data on first start.
 
 ## Repository shape
 
-HotCRM builds **one** ObjectStack artifact that carries **four packages** (ADR-0130): `app.objectstack.hotcrm`, the `type: app` package in `src/sales/`, and three modules — service in `src/service/`, revenue in `src/revenue/` and marketing in `src/marketing/`. Each has an `index.ts` with its own `defineStack()`; `objectstack.composition.ts` builds the four stacks and `objectstack.config.ts` composes them into the artifact. A directory under `src/` is a package. Three flows and one dataset authored in `src/revenue/` and `src/marketing/` are still registered by the app package, because the platform judges a sales action's flow and a dashboard's dataset one package at a time (objectstack#25514); they move to their modules once a platform release carries that fix. A file may import from its own directory or from `src/sales/` — never sideways between modules.
+HotCRM builds **one** ObjectStack artifact that carries **four packages** (ADR-0130): `app.objectstack.hotcrm`, the `type: app` package in `src/sales/`, and three modules — service in `src/service/`, revenue in `src/revenue/` and marketing in `src/marketing/`. Each has an `index.ts` with its own `defineStack()`; `objectstack.composition.ts` builds the four stacks and `objectstack.config.ts` composes them into the artifact. A directory under `src/` is a package. Every item registers with the package of its directory: an app action that launches a module's flow, or an app dashboard tile that binds a module's dataset, reaches it across the artifact. A file may import from its own directory or from `src/sales/` — never sideways between modules.
 
 ```text
 hotcrm/

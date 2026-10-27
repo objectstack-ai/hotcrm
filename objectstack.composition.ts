@@ -64,12 +64,6 @@ import {
   createHotCrmMarketingStack, marketingHooks, marketingFlows, marketingSharingRules,
 } from './src/marketing/index.js';
 
-// The module items the app package still registers — see
-// `appRegisteredModuleItems` below.
-import { QuoteGenerationFlow } from './src/revenue/flows/index.js';
-import { ProductDataset } from './src/revenue/datasets/index.js';
-import { CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow } from './src/marketing/flows/index.js';
-
 import * as salesObjects from './src/sales/objects/index.js';
 
 import * as salesPicklists from './src/sales/picklists/index.js';
@@ -172,38 +166,6 @@ const byExportName = <T>(merged: Record<string, T>): T[] =>
 /* ─── The app package's collections ──────────────────────────────────────── */
 
 /**
- * The module items the APP package registers, although their files live in a
- * module directory — the one place this artifact departs from the assignment
- * rule, and on purpose.
- *
- * Each is named by an app-package item, and the platform judges that reference
- * one package at a time, so it refuses the reference when the target ships in
- * another package of the same artifact (objectstack#25514):
- *
- *  - `quote_generation` (revenue) — launched by `generate_quote` on
- *    `crm_opportunity`; `campaign_lead_member_enroll` and
- *    `campaign_contact_member_enroll` (marketing) — launched by
- *    `create_campaign` on `crm_lead` and `add_contact_to_campaign` on
- *    `crm_contact`. `defineStack` checks a `type: 'flow'` action's target
- *    against its own stack's `flows` only.
- *  - `product_metrics` (revenue, on `crm_product`) — bound by the CRM Overview
- *    dashboard's Top Products tile; `os validate` / `os build` run
- *    `widget-dataset-unknown` on each package body alone.
- *
- * Maintainer ruling 2026-10-24 on #2270, option 1, verbatim 「1」: package
- * revenue and marketing now, keep these four in the app package, and move them
- * back to their modules once a PUBLISHED platform release carries #25514 —
- * a registration move, no file moves. `test/package-ownership.test.ts` names
- * the same four in its assignment-rule roster (AGENTS.md rule 11), so
- * the deviation is written down twice. ⛔ Do not grow this list: a new
- * cross-package refusal stops the card it is found on.
- */
-export const appRegisteredModuleItems = {
-  flows: [QuoteGenerationFlow, CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow],
-  datasets: [ProductDataset],
-};
-
-/**
  * Every CRM lifecycle hook the APP PACKAGE registers, in the order
  * `src/hooks/index.ts` registered them (by hook source file name) — see the
  * ORDER note at the top of this file.
@@ -257,7 +219,6 @@ export const appFlows = [
   ContractRenewalFlow,
   ContractExpirationFlow,
   BillingHandoffContractActivatedFlow,
-  ...appRegisteredModuleItems.flows,
 ];
 
 /**
@@ -292,11 +253,8 @@ export const appActions = byExportName({ ...salesActions });
 /** Its dashboards — the cross-domain ones included (plan item 4). */
 export const appDashboards = byExportName({ ...salesDashboards });
 
-/**
- * Its analytics datasets (ADR-0021) — `product_metrics` among them for now
- * (see {@link appRegisteredModuleItems}).
- */
-export const appDatasets = [...byExportName({ ...salesDatasets }), ...appRegisteredModuleItems.datasets];
+/** Its analytics datasets (ADR-0021). */
+export const appDatasets = byExportName({ ...salesDatasets });
 
 /** Its reports. */
 export const appReports = byExportName({ ...salesReports });
@@ -591,8 +549,9 @@ export const moduleStacks = [serviceStack, revenueStack, marketingStack];
 
 /**
  * `app.objectstack.hotcrm` — see `src/sales/index.ts`, including why it is
- * handed `artifactObjects`: its permission sets stay whole here and grant on
- * every module's objects too.
+ * handed `artifactObjects` (its permission sets stay whole here and grant on
+ * every module's objects too) and `artifactFlows` (three of its actions launch
+ * a module's flow).
  */
 export const appStack = createHotCrmAppStack(
   {
@@ -643,7 +602,10 @@ export const appStack = createHotCrmAppStack(
     // business-unit tree, which this app does not model).
     positions: CrmPositions,
   },
-  { artifactObjects: moduleStacks.flatMap((stack) => (stack.objects ?? []).map((object) => object.name)) },
+  {
+    artifactObjects: moduleStacks.flatMap((stack) => (stack.objects ?? []).map((object) => object.name)),
+    artifactFlows: moduleStacks.flatMap((stack) => (stack.flows ?? []).map((flow) => flow.name)),
+  },
 );
 
 /** All four package stacks, the app last — what `objectstack.config.ts` composes. */

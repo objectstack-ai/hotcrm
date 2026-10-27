@@ -3,7 +3,9 @@
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { EnrollLeadsAction, MarkRespondedAction } from './actions/index.js';
-import { CampaignEnrollmentFlow, CampaignCompletionFlow } from './flows/index.js';
+import {
+  CampaignEnrollmentFlow, CampaignCompletionFlow, CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow,
+} from './flows/index.js';
 import { Campaign, CampaignMember } from './objects/index.js';
 import { campaignHook, campaignMemberHook } from './objects/hooks.js';
 import { CampaignLeadershipSharingRules } from './sharing/index.js';
@@ -22,17 +24,15 @@ export const marketingHooks = [campaignHook, campaignMemberHook].flat();
 /**
  * This package's flows — see {@link marketingHooks}.
  *
- * ⚠️ The two member-enroll flows (`campaign_lead_member_enroll`,
- * `campaign_contact_member_enroll`) are NOT here although their file is: the
- * app package registers them, because the sales actions that launch them
+ * The two member-enroll flows (`campaign_lead_member_enroll`,
+ * `campaign_contact_member_enroll`) are launched by app-package actions
  * (`create_campaign` on `crm_lead`, `add_contact_to_campaign` on
- * `crm_contact`) are refused by `defineStack` when the flow they name belongs
- * to another package of the artifact (objectstack#25514). Maintainer ruling
- * 2026-10-24 on #2270, option 1: keep them in the app package until a
- * published platform release carries that fix, then register them here. See
- * `appRegisteredModuleItems` in `objectstack.composition.ts`.
+ * `crm_contact`); the app stack resolves those targets through
+ * `artifactFlows` (see `src/sales/index.ts`).
  */
-export const marketingFlows = [CampaignEnrollmentFlow, CampaignCompletionFlow];
+export const marketingFlows = [
+  CampaignEnrollmentFlow, CampaignCompletionFlow, CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow,
+];
 
 /** This package's sharing rules — see {@link marketingHooks}. */
 export const marketingSharingRules = [...CampaignLeadershipSharingRules];
@@ -45,10 +45,9 @@ export type HotCrmMarketingCollections = Pick<ObjectStackDefinitionInput, 'data'
  * (ADR-0130 D4, `module-split-plan.md` decision 5).
  *
  * It owns `crm_campaign` and `crm_campaign_member`, and every item authored
- * against them: their hooks and views, the enrollment and completion flows
- * (the two member-enroll flows excepted, see {@link marketingFlows}), the two
- * campaign actions, the campaign-leadership sharing rules and
- * the campaign seed rows.
+ * against them: their hooks and views, the enrollment, completion and two
+ * member-enroll flows (see {@link marketingFlows}), the two campaign actions,
+ * the campaign-leadership sharing rules and the campaign seed rows.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and a `requires`
