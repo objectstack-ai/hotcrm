@@ -11,11 +11,14 @@ import { avgDealSizeMetricWidget, pipelineByStageWidget } from './shared-widgets
  * https://github.com/objectstack-ai/objectui/tree/main/examples/crm.
  *
  * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
- * so it has to come from a real comparison query (widget `compareTo`) once the
- * renderer supports it for dataset metrics — the percentages this file used to
- * carry were typed by hand and recomputed by nothing, so they kept asserting
- * the same "+8.4% vs last quarter" on any data, including an empty database.
- * Same rule as the executive dashboard (#500, #587).
+ * so it comes from a real comparison query: Open Pipeline declares
+ * `compareTo: { kind: 'previousPeriod' }` (#2296) and follows the date picker
+ * (bare number at All time, objectstack#25970); the two QTD tiles compare
+ * with the same span last year over a window that states its end. The
+ * percentages this file used to carry were typed by hand and recomputed by
+ * nothing, so they kept asserting the same "+8.4% vs last quarter" on any
+ * data, including an empty database. Same rule as the executive dashboard
+ * (#500, #587).
  */
 export const SalesDashboard: Dashboard = {
   name: 'sales_dashboard',
@@ -75,6 +78,7 @@ export const SalesDashboard: Dashboard = {
       title: 'Open Pipeline (Selected Period)',
       description: 'Value of open opportunities closing in the selected period',
       type: 'metric',
+      compareTo: { kind: 'previousPeriod' },
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', values: ['total_amount'],
@@ -85,7 +89,10 @@ export const SalesDashboard: Dashboard = {
       title: 'Closed Won (QTD)',
       description: 'Revenue closed this quarter',
       type: 'metric',
-      filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
+      // Same quarter-to-date span last year (#2296); the window states its end
+      // for the reason Executive Total Revenue (YTD) gives.
+      compareTo: { kind: 'previousYear' },
+      filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}', $lte: '{today}' } },
       filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['total_amount'],
@@ -104,7 +111,8 @@ export const SalesDashboard: Dashboard = {
     avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 1 }, {
       title: 'Avg Deal Size (QTD)', // CRM Overview's follows the picker; this one is pinned (#2291)
       description: 'Average value of closed-won deals this quarter',
-      filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}' } },
+      compareTo: { kind: 'previousYear' }, // as Closed Won (QTD)
+      filter: { stage: 'closed_won', close_date: { $gte: '{current_quarter_start}', $lte: '{today}' } },
       filterBindings: { dateRange: false }, // self-scoped to QTD — the date picker must not re-window it
       colorVariant: 'purple',
     }),

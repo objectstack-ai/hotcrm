@@ -662,6 +662,28 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         status_review: { label: '状态变更审核' },
       },
     },
+    campaign_lead_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "所选营销活动" }} 不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+        },
+        refuse_lead_opted_out: {
+          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} 已退订邮件，因此该线索没有被加入营销活动。',
+        },
+      },
+    },
+    campaign_contact_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "所选营销活动" }} 不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+        },
+        refuse_contact_opted_out: {
+          message: '{{ contactRecord.full_name | default: "该联系人" }} 已退订邮件，因此该联系人没有被加入营销活动。',
+        },
+      },
+    },
     campaign_enrollment: {
       label: '将成员加入营销活动',
       successMessage: '符合条件的成员已加入营销活动。',

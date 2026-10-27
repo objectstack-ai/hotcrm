@@ -50,9 +50,9 @@ describe('metric tiles carry no fabricated trend deltas', () => {
    * reasoning (#500); the CRM, Sales and Service tiles kept theirs until #587.
    *
    * The honest source of a delta is a real comparison query (widget
-   * `compareTo`) once the renderer supports it for dataset metrics. Until then
-   * a tile shows the number it actually measured and nothing else, so this
-   * guard rejects the literal — anywhere in a widget, under any nesting, since
+   * `compareTo`, pinned in `dashboard-compare-to.test.ts`). A tile without one
+   * shows the number it actually measured and nothing else, so this guard
+   * rejects the literal — anywhere in a widget, under any nesting, since
    * the console reads `options` as a free-form bag and a hand-written trend can
    * reappear at any depth.
    */
