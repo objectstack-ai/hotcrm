@@ -3,7 +3,8 @@
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { RevenueEmailTemplates } from './email-templates/index.js';
-import { QuoteExpirationFlow } from './flows/index.js';
+import { ProductDataset } from './datasets/index.js';
+import { QuoteExpirationFlow, QuoteGenerationFlow } from './flows/index.js';
 import {
   OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem,
 } from './objects/index.js';
@@ -27,15 +28,11 @@ export const revenueHooks = [
 /**
  * This package's flows — see {@link revenueHooks}.
  *
- * ⚠️ `quote_generation` is NOT here although its file is: the app package
- * registers it, because the sales action that launches it (`generate_quote`
- * on `crm_opportunity`) is refused by `defineStack` when the flow it names
- * belongs to another package of the artifact (objectstack#25514). Maintainer
- * ruling 2026-10-24 on #2270, option 1: keep it in the app package until a
- * published platform release carries that fix, then register it here. See
- * `appRegisteredModuleItems` in `objectstack.composition.ts`.
+ * `quote_generation` is launched by an app-package action (`generate_quote`
+ * on `crm_opportunity`); the app stack resolves that target through
+ * `artifactFlows` (see `src/sales/index.ts`).
  */
-export const revenueFlows = [QuoteExpirationFlow];
+export const revenueFlows = [QuoteExpirationFlow, QuoteGenerationFlow];
 
 /**
  * What this package registers but does not assemble: its seed rows, which the
@@ -52,8 +49,9 @@ export type HotCrmRevenueCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  *
  * It owns `crm_product`, `crm_price_book`, `crm_price_book_entry`,
  * `crm_opportunity_line_item`, `crm_quote` and `crm_quote_line_item`, and the
- * items authored against them: their hooks and views, the quote-expiry flow,
- * the quote notification template and their seed rows. `crm_contract` and everything authored against it — hook, views, the
+ * items authored against them: their hooks and views, the quote-generation
+ * and quote-expiry flows, the `product_metrics` dataset, the quote
+ * notification template and their seed rows. `crm_contract` and everything authored against it — hook, views, the
  * three contract flows, the `payment_terms` option list, the two contract
  * notification templates and the contract seed rows — moved to the app
  * package (`module-split-plan.md` item 11): the contract references only
@@ -62,12 +60,10 @@ export type HotCrmRevenueCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * draft (`quote_accepted_contract_draft`) is now a write along this module's
  * edge into the app package.
  *
- * Two items authored here are registered by the app package for now —
- * `quote_generation` (see {@link revenueFlows}) and `product_metrics`, which
- * the app's CRM Overview dashboard binds: `os validate` judges each package
- * alone and refuses a widget naming another package's dataset
- * (objectstack#25514). Both move here once a published release carries that
- * fix (maintainer ruling 2026-10-24 on #2270).
+ * Two of them are reached from the app package: `quote_generation` (see
+ * {@link revenueFlows}) and `product_metrics`, which the app's CRM Overview
+ * Top Products tile binds — a widget reference `os validate` resolves against
+ * the artifact's packages since objectstack#25514.
  *
  * It is packaged exactly as `src/service/index.ts` is, and that file carries
  * the reasoning for each load-bearing property — the app package's
@@ -126,14 +122,18 @@ export const createHotCrmRevenueStack = (
   },
 
   // What THIS package's metadata needs: `automation` and `triggers` for the
-  // scheduled quote-expiry flow — each refused by name when deleted. (`analytics` joins when `product_metrics` registers
-  // here.)
-  requires: ['automation', 'triggers'],
+  // scheduled quote-expiry flow — each refused by name when deleted — and
+  // `analytics` for `product_metrics`, as `src/service/index.ts` declares it
+  // for `case_metrics`. Nothing refuses that one when deleted (measured on
+  // 18.2.0: validate, lint and build all exit 0 without it); it is declared
+  // because the dataset needs it, not because a gate asks.
+  requires: ['automation', 'triggers', 'analytics'],
 
   objects: [OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem],
   hooks: revenueHooks,
   views: [ProductViews, QuoteViews],
   flows: revenueFlows,
+  datasets: [ProductDataset],
   emailTemplates: RevenueEmailTemplates,
 
   ...collections,

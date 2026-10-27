@@ -573,9 +573,13 @@ decisions left to the compile path and this ruling settles.
 
      > 「1」
 
-     So those four stay registered by the app package (`appRegisteredModuleItems` in
-     `objectstack.composition.ts`, the roster in `test/package-ownership.test.ts`) and
-     move to their modules once a platform release carries #25514. The page related
+     So those four stayed registered by the app package (`appRegisteredModuleItems` in
+     `objectstack.composition.ts`, the roster in `test/package-ownership.test.ts`) until
+     a platform release carried #25514. **✅ Moved by #2276** on the 18.2.0 pin: each
+     registers with its module, the app stack resolves the three action targets through
+     `artifactFlows`, and the Top Products tile binds revenue's `product_metrics` with no
+     option at all; both lists are gone, and the tile's rows and the three actions'
+     launches measured the same before and after. The page related
      lists, the `crm_product` picker and the app → module lookup were measured accepted;
      the inventory's 2026-10-24 `$hand_edits` entry records all of it. Sidebar effect:
      Quotes, Contracts and Products now follow Sales Performance in *Sales*, by the same
