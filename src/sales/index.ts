@@ -32,15 +32,11 @@ export type HotCrmAppCollections = Omit<
  *
  * `objectstack.composition.ts` assembles them, and two reasons keep it there.
  * The `HOTCRM_COMPOSITION` knob selects this package's permission sets and
- * seed families at the root (below). And four items whose files sit in
- * `src/revenue/` and `src/marketing/` are still registered by this package —
- * three flows that sales actions launch and the dataset the CRM Overview
- * dashboard binds — because the platform judges those references one package
- * at a time (objectstack#25514, maintainer ruling 2026-10-24 on #2270). A file
- * under `src/sales/` may not import from a module directory (AGENTS.md
- * *Project Architecture* rule 2: own directory or `src/sales/`, never
- * sideways), so their assembly happens in the root module, which may see
- * every package (`appRegisteredModuleItems` there).
+ * seed families at the root (below). And the two `artifact*` options are read
+ * off the module stacks: a file under `src/sales/` may not import from a
+ * module directory (AGENTS.md *Project Architecture* rule 2: own directory or
+ * `src/sales/`, never sideways), so they are computed in the root module,
+ * which may see every package.
  *
  * ## `artifactObjects` — the permission sets stay whole here
  *
@@ -60,6 +56,23 @@ export type HotCrmAppCollections = Omit<
  * or an app navigation entry on another package's object stays refused;
  * navigation crosses only through the module's `navigationContributions`.
  *
+ * ## `artifactFlows` — three actions launch a module's flow
+ *
+ * `generate_quote` on `crm_opportunity` launches revenue's `quote_generation`;
+ * `create_campaign` on `crm_lead` and `add_contact_to_campaign` on
+ * `crm_contact` launch marketing's `campaign_lead_member_enroll` and
+ * `campaign_contact_member_enroll`. `defineStack` checks a `type: 'flow'`
+ * action's target against this package's own `flows`, widened by
+ * `artifactFlows` — the flow names the other packages of this artifact
+ * register (objectstack#25514, released in 18.2.0). Measured on 18.2.0:
+ * without it, those three actions are refused ("defineStack cross-reference
+ * validation failed (3 issues)"); with it, none. Verified like
+ * `artifactObjects`: a target that resolved only through the list and that no
+ * package defines is refused by `composeStacks`. The dashboard half of the
+ * same fix needs no option — the CRM Overview Top Products tile binds
+ * revenue's `product_metrics`, which `os validate` now resolves against the
+ * artifact's packages.
+ *
  * ## What is deliberately NOT here
  *
  * The `HOTCRM_COMPOSITION` knob (#1361). It selects permission sets and seed
@@ -70,7 +83,7 @@ export type HotCrmAppCollections = Omit<
  */
 export const createHotCrmAppStack = (
   collections: HotCrmAppCollections,
-  options: { artifactObjects: readonly string[] },
+  options: { artifactObjects: readonly string[]; artifactFlows: readonly string[] },
 ): ObjectStackDefinition =>
   defineStack({
     manifest: {
@@ -174,4 +187,4 @@ export const createHotCrmAppStack = (
     },
 
     ...collections,
-  }, { artifactObjects: options.artifactObjects });
+  }, { artifactObjects: options.artifactObjects, artifactFlows: options.artifactFlows });

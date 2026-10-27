@@ -41,7 +41,9 @@ shared files as `issue-2311-ledger/scratch-knob.patch`):
 
 Two shapes per module: **A** = the module stack absent, `appRegisteredModuleItems` as today; **B** = the
 module stack absent together with its app-registered items (the shape after objectstack#25514 sends
-them home). Revenue and marketing were run in both; service has no app-registered item.
+them home). Revenue and marketing were run in both; service has no app-registered item. Since #2276 the
+four items register with their module and `appRegisteredModuleItems` is gone, so **B** is the shape of
+`main`; the shape-A rows stay as measured.
 
 A gate reports everything at its own level and nothing beyond, so later rows are reached by **peeling**:
 the scratch tree removes the referrers whose refusal is already recorded, and the next gate shows. Each
@@ -88,7 +90,8 @@ paused screen) followed by `POST /api/v1/automation/FLOW/runs/RUN/resume` with `
 - **move** — fixed inside this repository by moving or re-registering an item into the package that owns
   its target. No platform change needed.
 - **#25514** — already covered: the app-registered module items return to their module once a published
-  platform release carries objectstack#25514.
+  platform release carries objectstack#25514. **resolved (#2276)** marks a row that card closed: 18.2.0
+  carries the fix and the items register with their module.
 - **platform** — the platform refuses or breaks, and nothing this repository may write (no guard, no
   try/catch, no copy) fixes it. The letter names the upstream finding listed at the end; the seat files
   it, and it gates #2271 with a `Blocked-by:` line where marked.
@@ -107,11 +110,11 @@ paused screen) followed by `POST /api/v1/automation/FLOW/runs/RUN/resume` with `
 | R5 | `src/sales/profiles/service-agent.profile.ts` | `crm_product` | P0 | G1 ×1 | platform **F1** |
 | R6 | `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts:66–69,76–77` → `*/objects.commerce.ts`, `*/objects.pipeline.ts` | the six revenue objects | P1 | G2 `translation-target-unknown` at `translations[0].LOCALE.objects.crm_quote` …, 6 objects × 4 locales = 24 | **move** — the per-domain object packs register with the revenue package |
 | R7 | `src/sales/translations/zh-CN/app.ts:49–52` (and the es-ES, ja-JP twins) | contributed nav ids `nav_quote`, `nav_product`, `nav_price_book` | P1 | G2 `translation-target-unknown` at `apps.crm_enterprise.navigation.nav_quote` …, 3 ids × 3 locales = 9 | **move** — a contributing package translates its own contributed ids (`os explain translation-target-unknown`) |
-| R8 | `objectstack.composition.ts:201` `appRegisteredModuleItems.datasets` → `ProductDataset` | dataset `product_metrics` on `crm_product` | A, P2 | G2 `object-reference-unknown` at `datasets[7].object`: "dataset base object "crm_product" resolves to no object defined in this stack" | **#25514** |
+| R8 | `objectstack.composition.ts:201` `appRegisteredModuleItems.datasets` → `ProductDataset` | dataset `product_metrics` on `crm_product` | A, P2 | G2 `object-reference-unknown` at `datasets[7].object`: "dataset base object "crm_product" resolves to no object defined in this stack" | **resolved (#2276)** — `product_metrics` registers with revenue and leaves with it; R9 remains |
 | R9 | `src/sales/dashboards/crm.dashboard.ts:150` `top_products` widget | dataset `product_metrics` | B (or A, P3) | G2 `widget-dataset-unknown` at `dashboards[1].widgets[7]`: "dataset "product_metrics" does not resolve to a declared dataset" | platform **F4** (gates #2271) |
 | R10 | `src/sales/translations/*/app.ts` `dashboards.crm_overview_dashboard.widgets.top_products` (en `:88`, zh-CN `:142`) | the widget above | A/B, P3 | G2 `translation-target-unknown` ×4 once the widget is gone | follows R9 |
 | R11 | `src/sales/actions/opportunity.actions.ts:234` `generate_quote` (`type: 'flow'`) | flow `quote_generation` | B, P1 | G1: "Action 'generate_quote' references flow 'quote_generation' which is not defined in flows." | platform **F3** (gates #2271) |
-| R12 | the same action, shape A | `quote_generation` still app-registered, writes `crm_quote` | A, P3 | boots; the *Generate Quote* header button draws on an open opportunity; `POST /api/v1/actions/crm_opportunity/generate_quote/ID` → 200 paused on *Quote Details*; resume → **400** `FLOW_FAILED` "Node 'create_quote' failed: create_record(crm_quote) failed: Object 'crm_quote' not found" | **#25514**, then R11 |
+| R12 | the same action, shape A | `quote_generation` still app-registered, writes `crm_quote` | A, P3 | boots; the *Generate Quote* header button draws on an open opportunity; `POST /api/v1/actions/crm_opportunity/generate_quote/ID` → 200 paused on *Quote Details*; resume → **400** `FLOW_FAILED` "Node 'create_quote' failed: create_record(crm_quote) failed: Object 'crm_quote' not found" | **resolved (#2276)** — `quote_generation` registers with revenue, so with revenue absent the action meets R11 |
 | R13 | `src/sales/pages/opportunity_detail.page.ts:64` header action list | action `generate_quote` | B, P3 | G2 `action-name-undefined` at `pages[3]…properties.actions[0]`: "names action "generate_quote", which no action in this stack defines" | follows R11 |
 | R14 | `src/sales/translations/*` `objects.crm_opportunity._actions.generate_quote`, `flows.quote_generation` (zh-CN `app.ts:780`) | the action and flow | B, P3 | G2 `translation-target-unknown` ×7 | follows R11 / **move** |
 | R15 | `src/sales/objects/contact.hook.ts:146` `beforeDelete` counts open `crm_quote` | `crm_quote` | A, P3 | **every** `DELETE /api/v1/data/crm_contact/ID` → **404** `OBJECT_NOT_FOUND` "Object 'crm_quote' not found"; the contact stays. Control: 200 | platform **F5** (gates #2271) |
