@@ -8,8 +8,9 @@ import type { HookApi } from './_hook-api';
  *
  * - Validates `end_date` ≈ `start_date + contract_term_months`.
  * - Rejects shrinking `end_date` after activation.
- * - On `activated`: stamps `signed_date` (if missing) and promotes the account
- *   to `customer`. Renewal reminders are owned by the `contract_renewal` flow.
+ * - On `activated`: stamps `signed_date` (if missing) on the activating write
+ *   itself, then promotes the account to `customer`. Renewal reminders are
+ *   owned by the `contract_renewal` flow.
  */
 
 // NB: helpers used by handlers are declared INSIDE each handler — L2 hook
@@ -98,6 +99,28 @@ const contractValidation: Hook = {
   },
 };
 
+// The stamp rides on the activating write (`beforeUpdate`), not on a second
+// write after it: `billing_handoff_contract_activated` is bound to that write's
+// after-update and reads `signed_date` off the record it saved, so a date
+// written later reached the database but never the billing system (#2325).
+// The value the write will leave behind decides — the patch's, else the stored
+// one — so a date typed in the activating edit, or already on the contract, is
+// kept.
+const contractSignedDateStamp: Hook = {
+  name: 'contract_signed_date_stamp',
+  object: 'crm_contract',
+  events: ['beforeUpdate'],
+  priority: 300,
+  description: 'On the transition into activated: stamp signed_date on the activating write when none is present.',
+  handler: async (ctx: HookContext) => {
+    const { input, previous } = ctx;
+    if (input.status !== 'activated' || previous?.status === 'activated') return;
+    const signed = 'signed_date' in input ? input.signed_date : previous?.signed_date;
+    if (typeof signed === 'string' && signed !== '') return;
+    input.signed_date = new Date().toISOString().slice(0, 10);
+  },
+};
+
 const contractActivation: Hook = {
   name: 'contract_on_activation',
   object: 'crm_contract',
@@ -105,22 +128,14 @@ const contractActivation: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
-  description: 'On activation: stamp signed_date, promote account.',
+  description: 'On activation: promote account.',
   handler: async (ctx: HookContext) => {
     const { input, previous } = ctx;
     if (input.status !== 'activated' || previous?.status === 'activated') return;
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
 
-    const id = [input.id, previous?.id].find((v): v is string => typeof v === 'string' && v !== '');
     const accountId = [input.crm_account, previous?.crm_account].find((v): v is string => typeof v === 'string' && v !== '');
-
-    if (id && !input.signed_date && !previous?.signed_date) {
-      await api.object('crm_contract').update(
-        { id, signed_date: new Date().toISOString().slice(0, 10) },
-        { where: { id } },
-      );
-    }
 
     if (accountId) {
       const account = await api.object('crm_account').findOne({ where: { id: accountId } });
@@ -139,4 +154,4 @@ const contractActivation: Hook = {
   },
 };
 
-export default [contractValidation, contractActivation];
+export default [contractValidation, contractSignedDateStamp, contractActivation];
