@@ -1,6 +1,5 @@
 # #2320 browser pass — track 1 (CRM · Sales)
 
-> Work in progress: pushed after each inventory prefix. Phone-width pass still to come.
 
 - **Tested sha:** hotcrm `main` `1f3f888` (`@objectstack/*` 18.2.0), checked again after the 09:36Z worker restart: `origin/main` still `1f3f888`.
 - **Boot:** `pnpm install --frozen-lockfile` exit 0 · `pnpm dev` healthy on `:4001` (44 plugins, seed settled in background) · `pnpm demo:staff` exit 0 (na.rep, eu.rep, sales.manager, service.agent, service.manager).
@@ -72,7 +71,7 @@ CON-001 … CON-007 are track 2 (seat ruling); not driven here.
 | OPP-007 line items roll up | pass | Northwind Grid Modernization: Related → Products → New, Standard Support × 3 → amount 86,500 → 113,500 · `opp-15-*` |
 | OPP-008 price fill | pass | picking the product left Sales Price empty in the form (list price not shown, S26); on insert `unit_price` defaulted to the catalogue 9,000 |
 | OPP-009 pipeline kanban | pass | Sales Pipeline tab: stage columns with amount sums, closed deals excluded · `opp-01-02-*` |
-| OPP-010 opportunity views | pass, with defect D4 | 9 tabs: Open Deals, Sales Pipeline, Close Date Calendar, Deal Timeline (D4), Deal Gallery, My Open Deals (overflow, S27), Stale, Tender This Quarter (empty state), Closing This Quarter · `opp-01-*` |
+| OPP-010 opportunity views | pass, with defect D4 | Open Deals (default) + All Opportunities, Sales Pipeline, Forecast Calendar, Deal Timeline (D4), Deal Cards, My Open Deals (overflow, S27), ⚠️ Stale Opportunities · Longest in Stage First, Tender This Quarter (empty state), Closing This Quarter · `opp-01-*` |
 | OPP-011 mass update stage | pass in Open Deals, defect D6 elsewhere | Open Deals → select 2 → bulk bar Update Stage → confirm → "Succeeded 2 / 2", then reverted · `opp-14-*`, `opp-14r-*`. The header-toolbar copy of the action refuses 2 rows and opens on 0 rows (D6) · `opp-13-*` |
 | OPP-012 clone | pass | "Copy of Globex Manufacturing Suite", prospecting, close date +90 days, same amount, account, source; no confirmation or toast (S28) · `opp-07-*` |
 | OPP-013 stagnation daily scan | **not reachable** | the boot log says "8 flows declare a 'schedule' trigger but are NOT bound — disabled by deployment policy … (OS_AUTOMATION_SCHEDULED_WORK_ENABLED is unset or not truthy)", `opportunity_stagnation` among them. The Stale view (OPP-010) is the reachable part |
@@ -80,6 +79,23 @@ CON-001 … CON-007 are track 2 (seat ruling); not driven here.
 | OPP-015 private deal | pass | na.rep ticked Private on Initech Cloud Migration: sales.manager, eu.rep and service.manager read `total 0` over REST; sales.manager's record URL shows "Record not found" and the deal is gone from All Opportunities; sales.manager's Opportunities by Stage counts Needs Analysis 93,000 (the private 80,000 left out). Admin still sees it. Unticked again and verified · `opp-16-*` |
 | OPP-016 record page | pass | header Generate Quote / Clone Opportunity / Log a Call / Edit, 7-step path with Closed Won and Closed Lost apart, Details / Related / Activity, reference rail · `opp-02-*` |
 | OPP-017 opportunity analytics | pass | as sales.manager: Opportunities by Stage (6 stages, total 3,442,500), Won Opportunities by Owner (Nina 1,435,000 · Emil 70,000), Pipeline Coverage by Forecast × Quarter (matrix 2026-Q4 / 2027-Q1, total 2,017,500), Opportunity Funnel by Owner → Stage (S13) · `opp-17-*`. No report shows the dataset's `win_rate` |
+
+## Phone width (390×844, touch) — as na.rep
+
+| Screen | Result | Screenshot |
+| --- | --- | --- |
+| Sales Home | usable; no horizontal page scroll. The four KPI tiles stack one per row and fill the first screen; the My Leads / My Open Deals / My Open Tasks tabs run off the right edge (S29) | `phone-01-sales-home.png`, `phone-01-sales-home-full.png` |
+| Lead list | cards (name – company, status chip, email); floating + button | `phone-02-lead-list.png` |
+| Lead record | header Convert Lead / Edit / … fit; path fits; the History tab is cut at the right edge | `phone-03-lead-record.png` |
+| Conversion wizard | opens as a centred sheet; text, checkbox, Submit / Cancel all reachable | `phone-04-convert-wizard.png` |
+| Web-to-lead form | single column, labels and required marks readable | `lea-19-webform-phone-1-blank.png` |
+| Account list / record | cards; record header Log a Call / Edit / … fit; the + button covers the Type chip of the card under it | `phone-05-account-list.png`, `phone-06-account-record.png` |
+| Contact list | **stays a wide table** (grouped by account): the first visible columns are an empty Profile Picture and Actions, the name shows as "John" with the rest cut; reading a contact needs a sideways scroll inside the grid (S30) | `phone-07-contact-list.png` |
+| Opportunity list | cards (name, amount, stage chip, probability, account); views move into a "Switch view" menu with all 10 views | `phone-08-opp-list.png`, `phone-09a-opp-view-switcher.png` |
+| Opportunity kanban | one stage column per screen with page dots; na.rep's first column (Prospecting) is empty, so the board opens on "No cards" (S31) | `phone-09-opp-kanban.png` |
+| Opportunity record | header fits; the 7-step path runs off the right edge ("Proposal  N…") with no cue to scroll (S32) | `phone-10-opp-record.png` |
+
+No page on the list had a horizontal page scroll (`scrollWidth` 390 everywhere); no API error on any phone screen.
 
 ## Defects
 
@@ -157,6 +173,10 @@ CON-001 … CON-007 are track 2 (seat ruling); not driven here.
 | S26 | Line item form | picking a product shows no list price; the price appears only after save | Fill List Price / Sales Price in the form on pick | reps | `opp-15-line-after-product.png` |
 | S27 | Opportunity tabs | "My Open Deals" sits in the overflow for the admin, behind presentation views | Put My Open Deals right after Open Deals | reps | `opp-01-06-my-open-deals.png` |
 | S28 | Clone Opportunity | no confirm and no toast; the user lands on the copy without being told | Toast "Copied — this is the new deal" with a link back | reps | `opp-07-clone-after.png` |
+| S29 | Sales Home on a phone | four KPI tiles one per row fill the whole first screen; the tab strip below runs off the edge | Two tiles per row on phones; scroll cue or wrap on the tab strip | reps on the move | `phone-01-sales-home.png` |
+| S30 | Contact list on a phone | the grouped table is kept, so the name is cut and an empty Profile Picture column comes first | Use the card layout the lead / account / opportunity lists already switch to | reps on the move | `phone-07-contact-list.png` |
+| S31 | Pipeline kanban on a phone | opens on the first stage even when it is empty | Open on the first stage with cards, or show counts in the page dots | reps | `phone-09-opp-kanban.png` |
+| S32 | Opportunity path on a phone | 7 steps run off the right edge with no scroll cue (the lead's 5 steps fit) | Show current step ± 1 with arrows, or a compact "Needs Analysis · 3 of 7" | reps | `phone-10-opp-record.png` |
 
 ## Test data: reverts and what is left
 
