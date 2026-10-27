@@ -44,6 +44,17 @@ const HOTCRM_ICON =
  * read. Since objectui#12426 (in the 18.0.0-next.2 console) the gate moves the
  * landing too: the console opens an app on the first entry the member is
  * SHOWN, not the first one served.
+ *
+ * Two dashboards stay open to the marketing user, measured on 18.2.0 (#2338
+ * item 1). Sales Activity carries no gate: every member reads their own events
+ * and tasks through `crm_user`, so its tiles answer, and the zeros a marketer
+ * sees are their own activity, not a refusal. Sales Performance refuses that
+ * member 1 of its 15 tiles, Quota Attainment by Rep (`forecast_metrics`; the
+ * set grants no `crm_forecast`), and is kept open like Customer Churn Signals
+ * below rather than hidden for one tile. No tile can be gated on read here: a
+ * widget's `requiresObject` asks whether the object is installed (the console
+ * filters on the served object list, which `/meta/object` serves whole to the
+ * marketing user), and a widget takes no `visible`.
  */
 
 /**
