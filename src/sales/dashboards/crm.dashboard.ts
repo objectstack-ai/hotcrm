@@ -112,7 +112,7 @@ export const CrmOverviewDashboard: Dashboard = {
         showLegend: false,
         showDataLabels: false,
         colors: ['#10B981'],
-        interaction: { tooltips: true, brush: true },
+        interaction: { tooltips: true },
       },
       options: { dateGranularity: 'month' },
     },
