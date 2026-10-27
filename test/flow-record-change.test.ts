@@ -666,7 +666,7 @@ describe('insert-time twin flows', () => {
         ...parent,
         source: flat(String(parent.source))
           .replace(' || record.approval_status == "rejected")', ')')
-          .replace(' && (!has(vars.previous) || !has(vars.previous.approval_status) || vars.previous.approval_status != "pending")', ''),
+          .replace(' && (!has(previous.approval_status) || previous.approval_status != "pending")', ''),
       };
     },
   };

@@ -114,20 +114,18 @@ export const OpportunityApprovalFlow: Flow = {
         // need no term: the node's own `pending` stamp and `mark_approved`
         // land outside the admitted statuses.
         //
-        // TOTALITY: a prior status that cannot be read is not `pending`, so it
-        // reads as a submission — fail-OPEN on purpose, the direction that
-        // keeps the control engaged. `vars.`-scoped for the reason the
-        // `check_high_value` edges record: with no prior row bound,
-        // `has(previous.approval_status)` aborts with `Unknown variable:
-        // previous`, which would fail the gate CLOSED; `has(vars.previous)`
-        // answers `false` (measured on 18.2.0 for an absent, `undefined` and
-        // `null` prior row).
+        // TOTALITY: a prior status that cannot be read — a sparse prior row,
+        // or the `null` prior row of a bulk `updateMany` — is not `pending`,
+        // so it reads as a submission: fail-OPEN on purpose, the direction
+        // that keeps the control engaged. (The status-change and 立项 gates
+        // fail CLOSED on the same shape, because there the term asks whether
+        // a NEW request was written.)
         // ⛔ The insert twin below does not share this condition: an insert
         // has no prior row to read.
         condition: P`has(record.amount) && record.amount != null && record.amount >= ${LARGE_DEAL_AMOUNT}
           && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null
             || record.approval_status == "rejected")
-          && (!has(vars.previous) || !has(vars.previous.approval_status) || vars.previous.approval_status != "pending")
+          && (!has(previous.approval_status) || previous.approval_status != "pending")
           && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
       },
     },

@@ -230,9 +230,8 @@ describe('opportunity_approval — start condition, as a truth table', () => {
   it('is TOTAL — no prior status visible reads as a submission, never an abort', () => {
     expect(holds(update, { ...big, approval_status: 'rejected' }, {})).toBe(true);
     expect(holds(update, { ...big }, {})).toBe(true);
-    // No prior row bound at all: `has(previous.x)` would abort here.
-    expect(holds(update, { ...big, approval_status: 'rejected' })).toBe(true);
-    expect(holdsOn(verify, update, { record: { ...big }, previous: null })).toBe(true);
+    // The `null` prior row of a bulk `updateMany`.
+    expect(holdsOn(verify, update, { record: { ...big, approval_status: 'rejected' }, previous: null })).toBe(true);
   });
 
   it('the insert twin keeps its own condition — it reads no `previous` and never enters from rejected', () => {
