@@ -84,10 +84,15 @@ describe('the deal timeline starts from a date that exists', () => {
     expect(timelineViews.length, 'no timeline or calendar view on crm_opportunity').toBeGreaterThan(0);
   });
 
-  it('deal_timeline reads created_at', () => {
+  it('deal_timeline marks each deal on its close date, with no range to run backwards (#2338 item 7)', () => {
+    // It ran `created_at` → `close_date`, and a close date earlier than the
+    // creation stamp drew the bar backwards. `close_date` is required, so the
+    // single mark exists on every deal; no end field means no range at all.
     const timeline = (opportunityView?.listViews ?? {}).deal_timeline as AnyRec | undefined;
     expect(timeline, 'deal_timeline view missing').toBeTruthy();
-    expect(timeline!.timeline?.startDateField).toBe('created_at');
+    expect(timeline!.timeline?.startDateField).toBe('close_date');
+    expect(timeline!.timeline?.endDateField).toBeUndefined();
+    expect(opportunity?.fields?.close_date?.required).toBe(true);
   });
 
   it('no date-driven opportunity view points at a field the object does not have', () => {
