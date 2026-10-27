@@ -237,13 +237,13 @@ export const Opportunity = ObjectSchema.create({
       // — colors and the default mean something only here. A single field
       // owns it, so it is inline rather than a shared `picklist` (#2000).
       options: [
-        { label: 'Prospecting', value: 'prospecting', color: '#808080', default: true },
-        { label: 'Qualification', value: 'qualification', color: '#FFA500' },
-        { label: 'Needs Analysis', value: 'needs_analysis', color: '#FFD700' },
-        { label: 'Proposal', value: 'proposal', color: '#4169E1' },
-        { label: 'Negotiation', value: 'negotiation', color: '#9370DB' },
-        { label: 'Closed Won', value: 'closed_won', color: '#00AA00' },
-        { label: 'Closed Lost', value: 'closed_lost', color: '#FF0000' },
+        { label: 'Prospecting', value: 'prospecting', color: '#808080', kind: 'open', default: true },
+        { label: 'Qualification', value: 'qualification', color: '#FFA500', kind: 'open' },
+        { label: 'Needs Analysis', value: 'needs_analysis', color: '#FFD700', kind: 'open' },
+        { label: 'Proposal', value: 'proposal', color: '#4169E1', kind: 'open' },
+        { label: 'Negotiation', value: 'negotiation', color: '#9370DB', kind: 'open' },
+        { label: 'Closed Won', value: 'closed_won', color: '#00AA00', kind: 'won' },
+        { label: 'Closed Lost', value: 'closed_lost', color: '#FF0000', kind: 'lost' },
       ],
     }),
 
