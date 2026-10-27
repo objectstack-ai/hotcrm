@@ -211,6 +211,21 @@ export const EventAttendee = ObjectSchema.create({
       required: true,
       deleteBehavior: 'restrict',
       storage: { notNull: true },
+
+      // Curates the attendee panel on a meeting (#2338 item 8). Without it the
+      // panel fell back to `highlightFields` minus this lookup — Attendee Type,
+      // Response, Organizer — and could not say WHO was attending. The four
+      // party columns lead, in `ATTENDEE_RESOLUTIONS` order; a row fills
+      // exactly one of them, and the panel drops a column that is empty on
+      // every fetched row, so a meeting of contacts only shows one name column.
+      // ⛔ Not solved in `highlightFields`: that strip is the record header,
+      // where four mostly-empty party fields would crowd out the event.
+      relatedListColumns: [
+        ...ATTENDEE_RESOLUTIONS.map((r) => r.column),
+        'attendee_type',
+        'response',
+        'is_organizer',
+      ],
     }),
 
     // The discriminator says which of the four columns below is the live one. It

@@ -123,7 +123,7 @@ export const CaseViews = defineView({
         // `created_at`, the platform's own creation stamp — the object's
         // duplicate `created_date` was removed in #1992 because nothing wrote
         // it on a real case, so every user-created case started its bar at
-        // null. Same spelling as `deal_timeline` on crm_opportunity (#575 B2).
+        // null. Same spelling as `crm_lead`'s activity calendar.
         startDateField: 'created_at',
         endDateField: 'closed_date',
         titleField: 'subject',

@@ -459,7 +459,7 @@ export const CrmApp = App.create({
         { id: 'nav_report_won_by_owner',           type: 'report', reportName: 'won_opportunities_by_owner',     label: 'Won Opportunities by Owner',    icon: 'trophy',        visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_report_pipeline_coverage',      type: 'report', reportName: 'pipeline_coverage_by_quarter',   label: 'Pipeline Coverage',             icon: 'columns-3',     visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_report_funnel_by_owner',        type: 'report', reportName: 'opportunity_funnel_owner_stage', label: 'Opportunity Funnel by Owner',   icon: 'funnel',        visible: OPPORTUNITY_AUDIENCE },
-        { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Inflow',                   icon: 'trending-up',   visible: READS_LEADS },
+        { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Engagement',               icon: 'trending-up',   visible: READS_LEADS },
         { id: 'nav_report_accounts_by_industry',   type: 'report', reportName: 'accounts_by_industry_type',      label: 'Accounts by Industry & Type',   icon: 'building',      visible: READS_ACCOUNTS },
         { id: 'nav_report_churn_signals',          type: 'report', reportName: 'customer_churn_signals',         label: 'Customer Churn Signals',        icon: 'heart-pulse',   visible: READS_ACCOUNTS },
       ],

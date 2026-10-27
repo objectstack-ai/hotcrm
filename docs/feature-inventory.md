@@ -128,7 +128,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| CON-001 | 合同对象 | 法律协议(`crm_contract`):CTR-{0000} 编号即标题,必填客户/联系人/期限/起止日/合同额,签署与计费字段,私有共享,启用附件 | `src/sales/objects/contract.object.ts` |
+| CON-001 | 合同对象 | 法律协议(`crm_contract`):CTR-{0000} 编号即标题,必填客户/联系人/期限/起止日/合同额,签署与计费字段,共享随所属客户(`controlled_by_parent`),启用附件 | `src/sales/objects/contract.object.ts` |
 | CON-002 | 合同状态机 | `draft → in_approval → activated → expired/terminated`;两个终态,续约=新建合同而非复活旧行 | `src/sales/objects/contract.object.ts`(validations) |
 | CON-003 | 期限一致性校验 | 起止日与 `contract_term_months` 偏差 >1 个月即拒绝;激活后禁止缩短 `end_date`(应走终止/变更) | `src/sales/objects/contract.hook.ts`(`contract_validation`) |
 | CON-004 | 激活后置动作 | 激活的同一次写入补 `signed_date`(如未填,计费推送因此带上该日期),随后把客户升级为 customer | `src/sales/objects/contract.hook.ts`(`contract_signed_date_stamp`、`contract_on_activation`) |
@@ -175,7 +175,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| MKT-001 | 活动对象 | 市场活动(`crm_campaign`):CPG-{0000} 编号,类型/渠道,预算四件套与 `response_rate`/`roi` 公式,父活动层级,全组织可读 | `src/marketing/objects/campaign.object.ts` |
+| MKT-001 | 活动对象 | 市场活动(`crm_campaign`):CPG-{0000} 编号,类型/渠道,预算四件套与 `response_rate`/`roi` 公式,无父活动层级,全组织可读 | `src/marketing/objects/campaign.object.ts` |
 | MKT-002 | 活动校验 | 结束日须晚于开始日、进入 in_progress 须起止日齐备、实际成本超预算告警 | `src/marketing/objects/campaign.hook.ts` + validations |
 | MKT-003 | 活动成员联结对象 | `crm_campaign_member`:挂 Lead 或 Contact(二选一强制),4 状态响应生命周期(sent → responded / converted / unsubscribed —— 每个值都有真实写入方),受父活动控共享;人物删除级联(GDPR) | `src/marketing/objects/campaign_member.object.ts` + `campaign_member.hook.ts` |
 | MKT-004 | 批量入组成员 | 屏幕流(以调用者身份运行):线索按状态、联系人按部门筛选(均要求有邮箱、未退订;线索另须未转化,上限 1000),逐人经 `campaign_lead_member_enroll`/`campaign_contact_member_enroll` 子流程去重插入成员,`added_date` 由字段默认值盖戳;无成员创建权者逐人被拒,结束消息给出两个计数;单条加入走 `create_campaign`(线索)/`add_contact_to_campaign`(联系人),同经这两个子流程 | `src/marketing/flows/campaign-enrollment.flow.ts` + `src/marketing/flows/campaign-member-enroll.flow.ts` + `src/marketing/actions/campaign.actions.ts`(`enroll_leads`) |
@@ -237,7 +237,7 @@
 | PRM-003 | 字段级安全 | 如 `annual_revenue`/`health_score` 对销售只读、`crm_case.internal_notes` 对销售完全遮蔽、坐席可读写 | `src/sales/profiles/*.profile.ts`(fieldPermissions) |
 | PRM-004 | 导出权限闸门 | `allowExport` 是真实闸门(未设即拒):仅在有读权限且视图提供导出界面的五个对象上授予,服务端 `canExport` 把关 | `src/sales/profiles/index.ts` |
 | PRM-005 | 所有权转移轴 | `allowTransfer` 控制把记录种到/改到他人名下:管理员全量、经理随 modifyAll、坐席仅在任务上窄授权(工单升级派单所需) | `src/sales/profiles/index.ts` |
-| PRM-006 | 十一条条件共享规则 | 客户团队(customer→经理可编辑)、NA/EU 区域(按 `territory`)、活动领导层(经理/总监)、工单升级(critical→服务经理可编辑、服务总监只读)、无主工单分诊(→坐席可编辑)、升级前负责人(`escalated_from`,只读)、大单(≥$100K→总监/高管只读) | `src/*/sharing/` |
+| PRM-006 | 十二条条件共享规则 | 客户团队(customer→经理可编辑)、NA/EU 区域(按 `territory`)、活动领导层(经理/总监)、工单升级(critical→服务经理可编辑、服务总监只读)、无主工单分诊(→坐席可编辑)、升级前负责人(`escalated_from`,只读)、大单(≥$100K→总监/高管只读)、预测(→销售经理可编辑、不可删除) | `src/*/sharing/` |
 | PRM-007 | 扁平岗位结构 | 12 个岗位(销售/服务/营销三线 + NA/EU 区域组),无层级、可见性不向上滚动,每个层级各带自己的授权 | `src/sales/sharing/positions.ts` |
 | PRM-008 | 行级安全(RLS) | 私密商机仅 owner 可见(经理与营销两份 select 规则);营销对活动/成员的 update 放宽 | `src/sales/profiles/sales-manager.profile.ts`、`src/sales/profiles/marketing-user.profile.ts` |
 | PRM-009 | OWD 共享模型分布 | 销售/服务核心对象 private;产品/活动/知识库 public_read;联系人与四个明细/联结对象 controlled_by_parent | `src/*/objects/*.object.ts`(sharingModel) |

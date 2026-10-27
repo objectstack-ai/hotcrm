@@ -198,12 +198,17 @@ export const OpportunityViews = defineView({
       data: { provider: 'object', object: 'crm_opportunity' },
       columns: ['name', 'crm_account', 'amount'],
       timeline: {
-        // `created_at`, the platform's own creation stamp — the object's
-        // duplicate `created_date` was removed in #575 B2 because nothing ever
-        // wrote it, so this timeline started every bar at null. Same spelling
-        // as the lead activity calendar.
-        startDateField: 'created_at',
-        endDateField: 'close_date',
+        // One mark per deal, on its close date, and no end field (#2338
+        // item 7). It used to run each deal from `created_at` to `close_date`,
+        // and nothing orders those two: `close_date` is the date a rep TYPES
+        // (the expected close, or the real one once the deal is closed), so a
+        // deal entered after it closed, a backdated close, or an overdue open
+        // deal drew its bar backwards — measured on the seeded book as
+        // "10/27/2026 → 9/7/2026". No stored date is earlier than `close_date`
+        // on every deal (`stage_entry_date` moves with each stage), so a range
+        // could not be made safe. `close_date` is required and NOT NULL, so
+        // every deal has its mark.
+        startDateField: 'close_date',
         titleField: 'name',
         groupByField: 'owner_id',
         colorField: 'stage',

@@ -579,6 +579,10 @@ describe('an ordinary user edit to a settled record is still refused', () => {
     expect(err!.message).not.toContain(opportunity.id);
     expect(err!.message).toContain('only description, next_step, notes may be edited');
     expect(err!.message).toContain('Attempted: amount');
+    // What the console shows: the same refusal in labels (#2338 item 12).
+    expect((err as Error & { userMessage?: string }).userMessage).toBe(
+      `Opportunity Settled Deal ${n} is closed (Closed Won); only its Description and Next Steps can still be edited.`,
+    );
     // Refused for real, not merely announced.
     expect((await rowOf('crm_opportunity', opportunity.id)).amount).toBe(1000);
   });
@@ -615,6 +619,10 @@ describe('an ordinary user edit to a settled record is still refused', () => {
     expect(err!.message).not.toContain(quote.id);
     expect(err!.message).toContain('only internal_notes may be edited');
     expect(err!.message).toContain('Attempted: crm_opportunity');
+    // What the console shows: the same refusal in labels (#2338 item 12).
+    expect((err as Error & { userMessage?: string }).userMessage).toMatch(
+      new RegExp(`^Quote QTE-\\d+ - QR-${n} is Accepted; only its Internal Notes can still be edited\\.$`),
+    );
   });
 });
 

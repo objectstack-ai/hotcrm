@@ -31,21 +31,22 @@ import { defineView } from '@objectstack/spec/ui';
  *
  * **`list` — not what the related list reads.** A detail-page related list
  * takes its columns from the CHILD's lookup field — `relatedListColumns` on
- * `crm_event`, which this app authors nowhere — and falls back to the child
+ * `crm_event`, authored since #2338 — and falls back to the child
  * object's `highlightFields` minus the parent lookup, capped at six, with
  * columns that are empty on every fetched row dropped. Only an object with no
  * `highlightFields` reaches the last resort, and that is a heuristic over the
  * field map (title-ish names first, audit columns last, `rich_text` / `html` /
  * `json` excluded) — not declaration order, and never this view. So the
- * attendee panel on a meeting shows `attendee_type`, `response` and
- * `is_organizer`, straight off `crm_event_attendee.highlightFields`, whatever
- * the columns below say.
+ * attendee panel on a meeting shows the columns `relatedListColumns` names
+ * (the party columns, then type, response and organizer), whatever the
+ * columns below say. Until #2338 it fell back to `highlightFields` and showed
+ * `attendee_type`, `response` and `is_organizer` with no attendee name.
  *
  * The grid is therefore reachable only at this object's own list URL, which no
  * navigation entry links to. It is kept as the curated answer to "what do you
- * show about an attendee", and it is what a future `relatedListColumns` would
- * be copied from — but nothing in this repo may cite it as what makes a
- * related list readable. The load-bearing metadata is `highlightFields`, and
+ * show about an attendee", and `relatedListColumns` was copied from it — but
+ * nothing in this repo may cite it as what makes a related list readable. The
+ * fallback metadata is `highlightFields`, and
  * `test/view-references.test.ts` pins it for every object reached only through
  * a parent: strip it and the panel really does fall to the heuristic, which
  * leads with the autonumber these objects use as their `nameField`.
