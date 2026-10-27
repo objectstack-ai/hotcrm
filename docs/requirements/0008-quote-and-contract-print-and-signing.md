@@ -4,7 +4,7 @@
 - **Source**: Maintainer (internal) — product direction from the 2026-10-26 module-expansion review, not a customer intake
 - **Raised**: 2026-10-26
 - **Disposition**: **B standard-enhancement** inside the packages that own the objects — `revenue` for `crm_quote`, the app package for `crm_contract` (after `module-split-plan.md` item 11). No new package.
-- **Traceability**: design — this record's *Product response*; cards and changesets — to be filled in per phase.
+- **Traceability**: design — this record's *Product response*; cards — hotcrm#2312 (phase 1), hotcrm#2316 (phases 2–3); changesets — to be filled in per phase.
 
 ## Requirement
 

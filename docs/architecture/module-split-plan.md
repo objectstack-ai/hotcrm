@@ -642,7 +642,9 @@ item below says otherwise.
     carrying objectstack#25792, #26054 and #25514, and the pin bump; (b) PR 0.5 above; (c) the
     hard-edge ledger — every app → module reference listed with its destination, measured on a
     booted stack with the module absent, platform refusals filed upstream (⛔ no existence guard,
-    try/catch or copied dataset in this repository). O2C's decisions 2 and 3 of 2026-10-23 and
+    try/catch or copied dataset in this repository). Cards (filed 2026-10-27, held until the
+    maintainer lifts 「暂时 hotcrm 不派发」): PR 0.5 is hotcrm#2310, the ledger hotcrm#2311, marketing's
+    carve-out hotcrm#2314, O2C hotcrm#2315, PSA hotcrm#2317. O2C's decisions 2 and 3 of 2026-10-23 and
     PSA's `+ revenue` dependency line are superseded by items 10 and 11 (recorded in each plan).
 
 14. **Multi-currency waits for the platform; price books do not.** On `@objectstack/spec` 18.1.0 a
