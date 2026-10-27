@@ -76,7 +76,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_report_won_by_owner: { label: '各负责人成交商机' },
         nav_report_pipeline_coverage: { label: '管道覆盖率' },
         nav_report_funnel_by_owner: { label: '各负责人商机漏斗' },
-        nav_report_lead_inflow: { label: '线索流入' },
+        nav_report_lead_inflow: { label: '线索跟进' },
         nav_report_accounts_by_industry: { label: '客户行业与类型' },
         nav_report_churn_signals: { label: '客户流失信号' },
         nav_report_cases_by_status: { label: '工单状态与优先级' },

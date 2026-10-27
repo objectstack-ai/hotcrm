@@ -71,7 +71,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_report_won_by_owner: { label: 'Ganadas por Propietario' },
         nav_report_pipeline_coverage: { label: 'Cobertura del Pipeline' },
         nav_report_funnel_by_owner: { label: 'Embudo por Propietario' },
-        nav_report_lead_inflow: { label: 'Entrada de Prospectos' },
+        nav_report_lead_inflow: { label: 'Interacción con Prospectos' },
         nav_report_accounts_by_industry: { label: 'Cuentas por Industria y Tipo' },
         nav_report_churn_signals: { label: 'Señales de Abandono' },
         nav_report_cases_by_status: { label: 'Casos por Estado y Prioridad' },

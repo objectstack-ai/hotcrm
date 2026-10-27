@@ -71,7 +71,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_report_won_by_owner: { label: '担当者別成立商談' },
         nav_report_pipeline_coverage: { label: 'パイプラインカバレッジ' },
         nav_report_funnel_by_owner: { label: '担当者別商談ファネル' },
-        nav_report_lead_inflow: { label: 'リード流入' },
+        nav_report_lead_inflow: { label: 'リード対応' },
         nav_report_accounts_by_industry: { label: '業種・種別別取引先' },
         nav_report_churn_signals: { label: '顧客離反シグナル' },
         nav_report_cases_by_status: { label: 'ステータス・優先度別ケース' },
