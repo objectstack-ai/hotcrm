@@ -215,7 +215,7 @@ export const ServiceDashboard: Dashboard = {
         showLegend: false,
         showDataLabels: false,
         colors: ['#0EA5E9'],
-        interaction: { tooltips: true, brush: true },
+        interaction: { tooltips: true },
       },
       options: { dateGranularity: 'day' },
     },

@@ -182,7 +182,7 @@ export const SalesDashboard: Dashboard = {
         // crm_forecast.quota (seeded 500k–1.5M — the old hardcoded 100000 was
         // fiction). Quota vs. actual is the quota_attainment_by_rep table
         // below, bound to the forecast_metrics dataset.
-        interaction: { tooltips: true, brush: true },
+        interaction: { tooltips: true },
       },
       options: { dateGranularity: 'month' },
     },
