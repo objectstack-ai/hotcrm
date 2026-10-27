@@ -190,6 +190,8 @@ const contactGuard = hookNamed('contact_integrity');
 const oppGuard = hookNamed('opportunity_lifecycle');
 const productGuard = hookNamed('product_catalog');
 const taskGuard = hookNamed('task_do_not_call_guard');
+const leadGuard = hookNamed('lead_automation');
+const lineGuard = hookNamed('opportunity_line_item_freeze');
 
 /**
  * The real app — booted through `@objectstack/verify`'s handle — and the rows
@@ -224,6 +226,19 @@ beforeAll(async () => {
   row.lead = await create('crm_lead', {
     first_name: 'Dee', last_name: 'Nc', company: 'Envelope Co', email: 'dee@acme.example.com', do_not_call: true,
   });
+  // A deal that closed, for the line-item freeze (#2338 item 15), and a lead
+  // the conversion flow would have left behind, for the converted-lead lock
+  // (item 14) — the lead written as the system, the way that flow writes it.
+  row.closedDeal = await create('crm_opportunity', {
+    name: 'Won Deal', crm_account: row.account, stage: 'proposal', amount: 100, close_date: today(),
+  });
+  await verify.hooks.run('crm_opportunity', 'update', { id: row.closedDeal, stage: 'closed_won', win_reason: 'better_price' }, { as: rep.token });
+  const [converted] = await verify.seed('crm_lead', [{
+    first_name: 'Ada', last_name: 'Lovelace', company: 'Acme', email: 'ada@acme.example.com', owner_id: rep.id,
+    is_converted: true, status: 'converted', converted_date: '2026-01-01',
+    converted_account: row.account, converted_contact: row.contact, converted_opportunity: row.opportunity,
+  }]);
+  row.convertedLead = String(converted!.id);
 }, 180_000);
 
 /** Run a hook's SHIPPED body and return the error it threw, or null if it did not. */
@@ -305,6 +320,25 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
       as: rep.token,
     });
     expectEnvelope(err, 'locked', 'opportunity_lifecycle', /is closed \(closed_won\)/, /is closed \(Closed Won\); only its Description and Next Steps can still be edited\.$/);
+  });
+
+  it('locked — lead_automation freezes a converted lead', async () => {
+    const err = await refusalFrom(leadGuard, {
+      event: 'beforeUpdate',
+      input: { id: row.convertedLead, company: 'Globex' },
+      previous: { id: row.convertedLead, first_name: 'Ada', last_name: 'Lovelace', company: 'Acme', is_converted: true },
+      as: rep.token,
+    });
+    expectEnvelope(err, 'locked', 'lead_automation', /\(attempted: company\)/, /^Cannot change Company on converted lead Ada Lovelace - Acme;/);
+  });
+
+  it('locked — opportunity_line_item_freeze freezes the lines of a closed deal', async () => {
+    const err = await refusalFrom(lineGuard, {
+      event: 'beforeInsert',
+      input: { crm_opportunity: row.closedDeal, crm_product: row.product, quantity: 1, unit_price: 10 },
+      as: rep.token,
+    });
+    expectEnvelope(err, 'locked', 'opportunity_line_item_freeze', /is closed \(closed_won\)/, /is closed \(Closed Won\), so its line items/);
   });
 
   it('delete_restricted — product_catalog holds a referenced product', async () => {
@@ -411,6 +445,26 @@ describe('the same envelope on the in-process path (#1075)', () => {
       'locked',
       /is closed \(closed_won\)/,
       /is closed \(Closed Won\); only its Description and Next Steps can still be edited\.$/,
+    );
+  });
+
+  it('locked — the converted-lead lock in lead_automation', async () => {
+    expectInProcess(
+      await inProcess('crm_lead', 'update', { id: row.convertedLead, company: 'Globex' }),
+      'locked',
+      /\(attempted: company\)/,
+      /^Cannot change Company on converted lead Ada Lovelace - Acme;/,
+    );
+  });
+
+  it('locked — opportunity_line_item_freeze', async () => {
+    expectInProcess(
+      await inProcess('crm_opportunity_line_item', 'insert', {
+        crm_opportunity: row.closedDeal, crm_product: row.product, quantity: 1, unit_price: 10,
+      }),
+      'locked',
+      /is closed \(closed_won\)/,
+      /is closed \(Closed Won\), so its line items/,
     );
   });
 

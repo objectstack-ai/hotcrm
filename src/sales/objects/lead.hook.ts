@@ -442,11 +442,46 @@ const leadHook: Hook = {
           const company =
             typeof previous?.company === 'string' ? previous.company.trim() : '';
           const label = [person, company].filter(Boolean).join(' - ');
+          const lead = label ? `converted lead ${label}` : 'a converted lead';
+
+          // Two sentences, one per reader (#2338 item 14), the shape the
+          // closed-deal freeze took for item 12. The message is the diagnostic
+          // and keeps the attempted API keys — nothing gets a turn after this
+          // throw, so it is the only place a log or an API caller learns which
+          // key tripped the lock, and `test/converted-lead-guard.test.ts` pins
+          // it. The `userMessage` is what the console shows, and it names the
+          // same fields by their labels: users were shown "(attempted:
+          // company)". A lowered body cannot read the object's metadata, so the
+          // labels are written out here, one per field the lock holds;
+          // `test/refusal-labels.test.ts` reads them off `crm_lead` and fails
+          // when a field is added, relabelled or dropped without this table.
+          const FIELD_LABELS: Record<string, string> = {
+            salutation: 'Salutation', first_name: 'First Name', last_name: 'Last Name',
+            full_name: 'Full Name', company: 'Company', company_normalized: 'Company (Normalized)',
+            title: 'Job Title', industry: 'Industry', email: 'Email', phone: 'Phone',
+            mobile: 'Mobile', website: 'Website', status: 'Lead Status', rating: 'Lead Score',
+            lead_source: 'Lead Source', need_type: 'Need Type', estimated_amount: 'Estimated Amount',
+            conversion_approval_status: 'Conversion Approval', is_converted: 'Converted',
+            converted_account: 'Converted Account', converted_contact: 'Converted Contact',
+            converted_opportunity: 'Converted Opportunity', converted_date: 'Converted Date',
+            address: 'Address', annual_revenue: 'Annual Revenue',
+            number_of_employees: 'Number of Employees', do_not_call: 'Do Not Call',
+            email_opt_out: 'Email Opt Out', next_followup_date: 'Next Follow-up Date',
+            last_contacted_date: 'Last Contacted', disqualification_reason: 'Disqualification Reason',
+            duplicate_of_type: 'Duplicate Of', duplicate_of_lead: 'Duplicate Of Lead',
+            duplicate_of_contact: 'Duplicate Of Contact', duplicate_status: 'Duplicate Status',
+          };
+          // A key that is no field of `crm_lead` has no label, and keeps its spelling.
+          const attempted = [...new Set(violating.map((k) => FIELD_LABELS[k] ?? k))];
+          const named = attempted.length > 1
+            ? `${attempted.slice(0, -1).join(', ')} and ${attempted[attempted.length - 1]}`
+            : attempted[0];
 
           throw refuse(
-            `Cannot edit ${label ? `converted lead ${label}` : 'a converted lead'} (attempted: ${violating.join(', ')}). Make changes on the converted records instead.`,
+            `Cannot edit ${lead} (attempted: ${violating.join(', ')}). Make changes on the converted records instead.`,
             'RECORD_LOCKED',
             409,
+            `Cannot change ${named} on ${lead}; only its Description and Notes can still be edited. Make changes on the converted records instead.`,
           );
         }
       }
