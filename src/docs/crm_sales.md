@@ -95,7 +95,10 @@ off.
 While an approval is pending, the opportunity is **locked** and its
 **Approval Status** shows the live state. On full approval it is stamped
 **Approved** (with date) and you're notified. On rejection it is stamped
-**Rejected** — revise and resubmit. Approvers act from their **Approvals → Inbox**.
+**Rejected** — the deal is unlocked; revise it and save to resubmit, since a rejected
+deal of $100K or more cannot be closed won until a new request is approved. The
+submitter can also **Recall** a pending request to unlock the deal; the next save
+resubmits it. Approvers act from their **Approvals → Inbox**.
 
 ## 5. Quotes
 
