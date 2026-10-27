@@ -17,8 +17,12 @@ import { avgDealSizeMetricWidget, pipelineByStageWidget } from './shared-widgets
  * rather than ad-hoc hex strings stuffed into `options.color`.
  *
  * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
- * so it has to come from a real comparison query (widget `compareTo`) once the
- * renderer supports it for dataset metrics — the percentages this file used to
+ * so it comes from a real comparison query: the revenue, won and deal-size
+ * tiles declare `compareTo: { kind: 'previousPeriod' }` (#2296), and the
+ * console re-runs each one over the window just before the one the date
+ * picker selects. With the picker at All time there is no window to shift and
+ * the tile shows its bare number (objectstack#25970). Open Deals stays bare:
+ * it is not one of the tiles #2296 names. The percentages this file used to
  * carry were typed by hand and recomputed by nothing, so they kept asserting
  * the same "+12.5% vs last month" on any data, including an empty database.
  * Same rule as the executive dashboard (#500, #587).
@@ -67,6 +71,7 @@ export const CrmOverviewDashboard: Dashboard = {
       title: 'Total Revenue (Selected Period)',
       description: 'Closed-won revenue in the selected period',
       type: 'metric',
+      compareTo: { kind: 'previousPeriod' },
       filter: { stage: 'closed_won' },
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['total_amount'],
@@ -87,6 +92,7 @@ export const CrmOverviewDashboard: Dashboard = {
       title: 'Deals Won (Selected Period)',
       description: 'Closed-won deals in the selected period',
       type: 'metric',
+      compareTo: { kind: 'previousPeriod' },
       filter: { stage: 'closed_won' },
       colorVariant: 'purple',
       dataset: 'opportunity_metrics', values: ['opp_count'],
@@ -95,6 +101,7 @@ export const CrmOverviewDashboard: Dashboard = {
     avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 1 }, {
       title: 'Avg Deal Size (Selected Period)',
       description: 'Average value of closed-won deals in the selected period',
+      compareTo: { kind: 'previousPeriod' },
     }),
 
     // ─── Charts Row 1 ─────────────────────────────────────────────────
