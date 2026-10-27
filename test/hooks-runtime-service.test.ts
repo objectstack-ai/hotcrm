@@ -1505,6 +1505,24 @@ describe('task_completion', () => {
     expect(done.is_completed).toBe(true);
   });
 
+  it('clears completed_date when a completed task is reopened (#2338 item 9)', async () => {
+    const task = await taskOf({ status: 'in_progress' });
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'completed' }, as(rep));
+    expect((await stored('crm_task', task.id)).completed_date).toBeTruthy();
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'in_progress' }, as(rep));
+    const reopened = await stored('crm_task', task.id);
+    expect(reopened.completed_date ?? null).toBeNull();
+    expect(reopened.is_completed).toBe(false);
+  });
+
+  it('keeps completed_date on an edit that leaves a completed task completed', async () => {
+    const task = await taskOf({ status: 'in_progress' });
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'completed' }, as(rep));
+    const stamp = (await stored('crm_task', task.id)).completed_date;
+    await verify.hooks.run('crm_task', 'update', { id: task.id, description: 'Follow-up notes' }, as(rep));
+    expect((await stored('crm_task', task.id)).completed_date).toBe(stamp);
+  });
+
   it('flags an overdue open task and clears the flag once completed', async () => {
     const task = await taskOf({ due_date: daysFromNow(-3), status: 'not_started' });
     await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'in_progress' }, as(rep));
