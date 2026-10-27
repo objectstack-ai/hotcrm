@@ -35,7 +35,10 @@ const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID];
 
 /** Each module's objects — `module-split-plan.md` decision 5. */
 const SERVICE_OBJECTS = ['crm_article_feedback', 'crm_case', 'crm_knowledge_article'];
-const REVENUE_OBJECTS = ['crm_contract', 'crm_opportunity_line_item', 'crm_product', 'crm_quote', 'crm_quote_line_item'];
+const REVENUE_OBJECTS = [
+  'crm_contract', 'crm_opportunity_line_item', 'crm_price_book', 'crm_price_book_entry', 'crm_product', 'crm_quote',
+  'crm_quote_line_item',
+];
 const MARKETING_OBJECTS = ['crm_campaign', 'crm_campaign_member'];
 const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS];
 
@@ -94,7 +97,7 @@ describe('every object has exactly one owner', () => {
     expect(namesOf(body(SERVICE_ID).objects)).toEqual(SERVICE_OBJECTS);
   });
 
-  it('the revenue module owns the product, line-item, quote and contract objects', () => {
+  it('the revenue module owns the product, price-book, line-item, quote and contract objects', () => {
     expect(namesOf(body(REVENUE_ID).objects)).toEqual(REVENUE_OBJECTS);
   });
 

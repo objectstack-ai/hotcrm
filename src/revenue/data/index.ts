@@ -10,4 +10,5 @@
  */
 export { products, catalogPrice, lineItemRecords } from './catalog.seed';
 export { opportunityLineItems } from './opportunity-line-item.seed';
+export { priceBooks, priceBookEntries } from './price-book.seed';
 export { contracts, quotes, quoteLineItems } from './revenue.seed';

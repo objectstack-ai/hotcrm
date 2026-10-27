@@ -139,11 +139,12 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // refusal of an acceptance the deal's approval holds to `quote_workflow`;
     // 23 until #2060 added the settled-quote line freeze to `quote_workflow`;
     // 24 until #2077 added the closed-deal line freeze; 25 until #2191 added
-    // the approval-locked deal's line hold beside it.
+    // the approval-locked deal's line hold beside it; 26 until #2313 added the
+    // standard price book's three refusals and the one-entry-per-product one.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(26);
+    expect(sites).toHaveLength(30);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

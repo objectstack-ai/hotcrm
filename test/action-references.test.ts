@@ -107,8 +107,10 @@ describe('navigation reaches everything the app ships', () => {
         // on exactly that reasoning: a vote is reached through the article it
         // is about, it is `controlled_by_parent` too, and "Article Feedback" as
         // a top-level destination would be a list of verdicts detached from the
-        // things they are verdicts on.
-        !/_line_item$|_member$|_attendee$|_feedback$/.test(name) && !reachable.has(name));
+        // things they are verdicts on. `_entry` joined it with
+        // `crm_price_book_entry` (#2313): a price is reached through the book it
+        // is in, which has its own entry, and it is `controlled_by_parent` too.
+        !/_line_item$|_member$|_attendee$|_feedback$|_entry$/.test(name) && !reachable.has(name));
     expect(stranded, `objects with no navigation entry:\n  ${stranded.join('\n  ')}`).toEqual([]);
   });
 

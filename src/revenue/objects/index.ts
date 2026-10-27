@@ -12,6 +12,8 @@
 
 export { Contract } from './contract.object';
 export { OpportunityLineItem } from './opportunity_line_item.object';
+export { PriceBook } from './price_book.object';
+export { PriceBookEntry } from './price_book_entry.object';
 export { Product } from './product.object';
 export { Quote } from './quote.object';
 export { QuoteLineItem } from './quote_line_item.object';

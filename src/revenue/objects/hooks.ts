@@ -8,6 +8,8 @@
 
 export { default as contractHook } from './contract.hook';
 export { default as opportunityLineItemHook } from './opportunity_line_item.hook';
+export { default as priceBookHook } from './price_book.hook';
+export { default as priceBookEntryHook } from './price_book_entry.hook';
 export { default as productHook } from './product.hook';
 export { default as quoteHook } from './quote.hook';
 export { default as quoteLineItemHook } from './quote_line_item.hook';

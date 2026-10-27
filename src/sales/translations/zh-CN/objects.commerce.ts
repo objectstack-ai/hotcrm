@@ -6,7 +6,8 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * 简体中文 (zh-CN) — `objects` translations for the COMMERCE family:
  * what gets sold and on what paper — quotes, contracts, products.
  *
- * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`.
+ * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`,
+ * `crm_price_book`, `crm_price_book_entry`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -233,6 +234,49 @@ export const commerce: Record<string, ObjectTranslationData> = {
       product_info: { label: '产品信息' },
       pricing_info: { label: '定价' },
       media: { label: '媒体' },
+    },
+  },
+  crm_price_book: {
+    _validations: {
+      valid_to_after_valid_from: {
+        message: '有效期至不能早于有效期自',
+      },
+    },
+    label: '价格表',
+    pluralLabel: '价格表',
+    description: '一组命名的产品价格：标准价、伙伴或区域价，或促销价',
+    fields: {
+      owner_id: { label: '价格表负责人' },
+      name: { label: '价格表名称' },
+      description: { label: '描述' },
+      is_active: { label: '是否启用' },
+      is_standard: { label: '标准价格表' },
+      valid_from: { label: '有效期自' },
+      valid_to: { label: '有效期至' },
+    },
+    _sections: {
+      basic: { label: '价格表信息' },
+      validity: { label: '有效期' },
+    },
+  },
+  crm_price_book_entry: {
+    _validations: {
+      price_not_negative: {
+        message: '标价不能为负数',
+      },
+    },
+    label: '价格表条目',
+    pluralLabel: '价格表条目',
+    description: '某个产品在某个价格表中的价格',
+    fields: {
+      entry_number: { label: '条目编号' },
+      crm_price_book: { label: '价格表' },
+      crm_product: { label: '产品' },
+      list_price: { label: '标价' },
+      is_active: { label: '是否启用' },
+    },
+    _sections: {
+      basic: { label: '条目信息' },
     },
   },
 };

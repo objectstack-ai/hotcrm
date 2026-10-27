@@ -4,6 +4,7 @@
   "pages": [
     "index",
     "products",
+    "price-books",
     "contracts",
     "approvals",
     "billing-handoff"

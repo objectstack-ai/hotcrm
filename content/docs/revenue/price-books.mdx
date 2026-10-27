@@ -1,0 +1,47 @@
+---
+title: Price Books
+description: More than one price per product — a standard list, a partner tier, a regional price or a promotion.
+---
+
+# Price Books
+
+A **price book** is a named list of product prices. Every product has one **List Price** on the catalog; a price book lets the same product carry a different price for a different audience — a partner tier, a region, or a promotion that runs between two dates.
+
+A price book holds one **price book entry** per product: the product, its **List Price** in that book, and whether the entry is **Active**.
+
+## The standard price book
+
+Exactly one price book is the **Standard** book. It holds the price every product is published at, and HotCRM keeps it single:
+
+- A second book cannot be marked **Standard**. The save is refused and names the book that already is.
+- **Standard** cannot be turned off on the standard book, and the standard book cannot be deleted. To stop using it, turn off **Active**.
+
+HotCRM's sample data includes a book named **Standard** with one entry for every product in the sample catalog, at that product's **List Price**. A single-organization installation that already has data gets the same book once, on its first start after the upgrade; after that, prices you change in it stay changed.
+
+The product's own **List Price** stays where it is, with its rule that the price is not below **Cost**.
+
+## One entry per product
+
+A price book prices each product once. Adding a second entry for a product the book already prices is refused, and the message names the book and the product, so you know which entry to edit instead. The same product can of course have an entry in every book.
+
+## Validity
+
+**Valid From** and **Valid To** record the window a book is meant for — a promotion's start and end. Either may be left empty for an open-ended book, and **Valid To** may not fall before **Valid From**.
+
+## Who can change price books
+
+| Role | Price books and their entries |
+| --- | --- |
+| **System administrator** | Create, edit and delete any book and any entry. |
+| **Sales manager** | Create books, and edit the books they own: add, reprice and remove their entries. |
+| **Sales rep** | Read every book and every entry. |
+
+Every price book is visible to everyone who can read it — the same sharing as the product catalog — and an entry is visible and editable to whoever can see and edit its book.
+
+## Currency
+
+A price book has no currency of its own. Every price in every book is in your organization's default currency, as every amount in HotCRM is. Multi-currency pricing waits for the ObjectStack platform to support per-record currency and exchange rates.
+
+## What comes next
+
+Quotes do not read price books yet: a quote line still takes its list price from the product. Choosing a book on a quote, and pricing its lines from that book, is the next step of this feature.

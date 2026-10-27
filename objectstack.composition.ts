@@ -135,7 +135,9 @@ import {
   accounts, contacts, leads, opportunities,
   tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers, forecasts,
 } from './src/sales/data/index.js';
-import { products, opportunityLineItems, contracts, quotes, quoteLineItems } from './src/revenue/data/index.js';
+import {
+  products, priceBooks, priceBookEntries, opportunityLineItems, contracts, quotes, quoteLineItems,
+} from './src/revenue/data/index.js';
 import { cases, knowledgeArticles } from './src/service/data/index.js';
 import { campaigns, campaignMembersFromLeads, campaignMembersFromContacts } from './src/marketing/data/index.js';
 
@@ -422,6 +424,9 @@ export const CrmSeedData = [
   leads,
   opportunities,
   products,
+  // The standard price book prices the catalogue, so it follows it.
+  priceBooks,
+  priceBookEntries,
   opportunityLineItems,
   tasks,
   cases,
@@ -488,9 +493,9 @@ export const SaasTenantSeedData = [products];
  */
 export const ServiceSeedData = CrmSeedData.filter((family) => [cases, knowledgeArticles].includes(family));
 
-/** The REVENUE package's families — the catalogue, line items, contracts and quotes. */
+/** The REVENUE package's families — the catalogue, its standard price book, line items, contracts and quotes. */
 export const RevenueSeedData = CrmSeedData.filter((family) =>
-  [products, opportunityLineItems, contracts, quotes, quoteLineItems].includes(family));
+  [products, priceBooks, priceBookEntries, opportunityLineItems, contracts, quotes, quoteLineItems].includes(family));
 
 /** The MARKETING package's families — the campaigns and their members. */
 export const MarketingSeedData = CrmSeedData.filter((family) =>

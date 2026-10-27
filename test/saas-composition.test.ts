@@ -119,7 +119,8 @@ describe('the default composition is the community app, untouched', () => {
     expect(objectsOf(serviceStack.data)).toEqual(['crm_case', 'crm_knowledge_article']);
     expect(objectsOf(revenueStack.data)).toEqual(objectsOf(RevenueSeedData));
     expect(objectsOf(revenueStack.data)).toEqual([
-      'crm_product', 'crm_opportunity_line_item', 'crm_contract', 'crm_quote', 'crm_quote_line_item',
+      'crm_product', 'crm_price_book', 'crm_price_book_entry', 'crm_opportunity_line_item', 'crm_contract', 'crm_quote',
+      'crm_quote_line_item',
     ]);
     expect(objectsOf(marketingStack.data)).toEqual(objectsOf(MarketingSeedData));
     expect(objectsOf(marketingStack.data)).toEqual(['crm_campaign', 'crm_campaign_member', 'crm_campaign_member']);
