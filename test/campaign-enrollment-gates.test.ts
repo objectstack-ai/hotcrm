@@ -232,14 +232,16 @@ describe('converting a lead that is a campaign member still promotes the members
     const lead = await leadOf({ status: 'qualified', company: `Gates Convert ${++k}` }, manager);
     const [member] = await verify.seed('crm_campaign_member', [{ crm_campaign: campaign.id, crm_lead: lead.id, status: 'responded' }]);
 
-    const started = await verify.flows.run('lead_conversion', { recordId: lead.id }, { as: manager.token }) as Rec;
+    const started = await verify.flows.run('lead_conversion', { recordId: lead.id }, { as: manager.token });
+    const opened = started as unknown as Rec;
     const prefilled: Rec = {};
-    for (const f of ((started.screen ?? started.output?.screen)?.fields ?? []) as Rec[]) {
+    for (const f of ((opened.screen ?? opened.output?.screen)?.fields ?? []) as Rec[]) {
       if (f.defaultValue !== undefined) prefilled[f.name] = f.defaultValue;
     }
-    let done = await verify.flows.resume(started, { ...prefilled, createOpportunity: false }, { as: manager.token }) as Rec;
-    // A result screen, where the flow shows one, pauses once more.
-    if (done.status === 'paused') done = await verify.flows.resume(done, {}, { as: manager.token }) as Rec;
+    let run = await verify.flows.resume(started, { ...prefilled, createOpportunity: false }, { as: manager.token });
+    // The conversion ends on a result screen (#2297), which pauses once more.
+    if ((run as unknown as Rec).status === 'paused') run = await verify.flows.resume(run, {}, { as: manager.token });
+    const done = run as unknown as Rec;
     expect(done.error ?? null).toBeNull();
     const [converted] = await verify.rows('crm_lead', { id: lead.id });
     expect(converted!.is_converted, 'fixture: the lead converted').toBe(true);
