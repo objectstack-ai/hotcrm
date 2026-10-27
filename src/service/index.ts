@@ -86,8 +86,19 @@ export type HotCrmServiceCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  */
 const NOT_A_SALES_REP = P`!("sales_rep" in current_user.positions)`;
 
-/** The read gate on this package's report entries (#2073 item 1), narrowed to the audience above. */
-const CASE_REPORT_AUDIENCE = P`current_user.can("crm_case", "read") && !("sales_rep" in current_user.positions)`;
+/**
+ * The read gate on this package's dashboard and report entries (#2073 item 1,
+ * #2338 item 1), narrowed to the audience above.
+ *
+ * The console prunes an object entry by read access, but not a dashboard or a
+ * report entry. Service Overview carried `NOT_A_SALES_REP` alone until #2338,
+ * so a member who reads no cases (the marketing user, whose set "see[s] no
+ * cases") was offered it, and every one of its tiles answered "You don't have
+ * permission to view the data behind this widget" (14 refused dataset queries,
+ * measured on 18.2.0). Cases and My Cases were already hidden from that member
+ * by the prune. The dashboard now asks the question the case reports ask.
+ */
+const CASE_READ_AUDIENCE = P`current_user.can("crm_case", "read") && !("sales_rep" in current_user.positions)`;
 
 /**
  * `app.objectstack.hotcrm.service` — the SUPPORT module of this artifact
@@ -187,9 +198,10 @@ export const createHotCrmServiceStack = (
      * anywhere, and adding one to work around a platform merge rule is what
      * AGENTS.md forbids.
      *
-     * The report entries ask for case read: the console prunes object entries
-     * by read access but not report entries, so a member who reads no cases
-     * (the marketing user) would otherwise get three pages of 403s. The app's
+     * The dashboard and report entries ask for case read: the console prunes
+     * object entries by read access but not dashboard or report entries, so a
+     * member who reads no cases (the marketing user) would otherwise get a
+     * dashboard and three pages of 403s (`CASE_READ_AUDIENCE` above). The app's
      * `READS_OPPORTUNITIES` note in `crm.app.ts` says why it is `visible` and
      * not `requiredPermissions`. Every case entry but Knowledge also asks that
      * the member is not a sales rep (`NOT_A_SALES_REP` above, #2244).
@@ -206,7 +218,7 @@ export const createHotCrmServiceStack = (
         // first group and declares no children, so this item is the first
         // entry a service agent or manager is shown, and the app opens on it.
         items: [
-          { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge', visible: NOT_A_SALES_REP },
+          { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge', visible: CASE_READ_AUDIENCE },
           { id: 'nav_case',      type: 'object', objectName: 'crm_case',              label: 'Cases',     icon: 'life-buoy', visible: NOT_A_SALES_REP },
           { id: 'nav_knowledge', type: 'object', objectName: 'crm_knowledge_article', label: 'Knowledge', icon: 'book-open' },
         ],
@@ -226,9 +238,9 @@ export const createHotCrmServiceStack = (
         group: 'group_reports',
         priority: 30,
         items: [
-          { id: 'nav_report_cases_by_status',     type: 'report', reportName: 'cases_by_status_priority',     label: 'Cases by Status and Priority', icon: 'chart-column',  visible: CASE_REPORT_AUDIENCE },
-          { id: 'nav_report_sla',                 type: 'report', reportName: 'sla_performance',              label: 'SLA Performance',              icon: 'timer',         visible: CASE_REPORT_AUDIENCE },
-          { id: 'nav_report_cases_opened_by_day', type: 'report', reportName: 'cases_opened_by_day_priority', label: 'Cases Opened by Day',          icon: 'calendar-days', visible: CASE_REPORT_AUDIENCE },
+          { id: 'nav_report_cases_by_status',     type: 'report', reportName: 'cases_by_status_priority',     label: 'Cases by Status and Priority', icon: 'chart-column',  visible: CASE_READ_AUDIENCE },
+          { id: 'nav_report_sla',                 type: 'report', reportName: 'sla_performance',              label: 'SLA Performance',              icon: 'timer',         visible: CASE_READ_AUDIENCE },
+          { id: 'nav_report_cases_opened_by_day', type: 'report', reportName: 'cases_opened_by_day_priority', label: 'Cases Opened by Day',          icon: 'calendar-days', visible: CASE_READ_AUDIENCE },
         ],
       },
     ],
