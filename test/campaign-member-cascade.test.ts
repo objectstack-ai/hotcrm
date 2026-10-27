@@ -256,32 +256,27 @@ describe('deleting an enrolled person', () => {
   });
 
   /**
-   * The one semantic cost of cascading on BOTH lookups, measured and written
-   * down rather than left for the next reader to trip over: a row naming a lead
-   * AND a contact is removed when EITHER party is deleted, even though the
-   * other party still exists.
+   * The one semantic cost of cascading on BOTH lookups was that a row naming
+   * a lead AND a contact would be removed when EITHER party is deleted, even
+   * though the other party still exists. Measured and accepted while no such
+   * row was reachable by any writer.
    *
-   * It is accepted because no such row is reachable today — the enrollment flow
-   * and `enroll_leads` write `crm_lead` only, `lead_conversion` never touches
-   * this object, and `content/docs/marketing/campaign-members.mdx` states the
-   * intended semantics as "either a lead or a contact — but not both". If a
-   * future change (e.g. #597) starts writing both, this test is the place that
-   * says what has to be decided again.
+   * Since #2336 no such row can be stored at all: `lead_and_contact_exclusive`
+   * refuses it (an edit had reached it through the member form). So the cost
+   * has no row to land on, and this pins that the row is refused instead.
    */
-  it('removes a both-parties row on either delete (documented consequence)', async () => {
+  it('refuses a both-parties row, so neither delete can take a live other party with it (#2336)', async () => {
     const campaign = await newCampaign();
     const lead = await newLead();
     const contact = await newContact();
-    await api.object('crm_campaign_member').insert({
+    const rule = (CAMPAIGN_MEMBER.validations ?? []).find((v: AnyRec) => v.name === 'lead_and_contact_exclusive');
+    expect(rule?.severity).toBe('error');
+    await expect(api.object('crm_campaign_member').insert({
       crm_campaign: campaign.id,
       crm_lead: lead.id,
       crm_contact: contact.id,
       status: 'sent',
-    });
-
-    await api.object('crm_lead').delete({ where: { id: lead.id } });
-
+    })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
     expect(await members()).toHaveLength(0);
-    expect(await api.object('crm_contact').find({ where: { id: contact.id } })).toHaveLength(1);
   });
 });
