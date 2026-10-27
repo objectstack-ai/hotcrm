@@ -754,6 +754,19 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: 'Fecha de Cierre' },
           },
         },
+        // The result screen (#2297). Same two-hole shape as `screen_1`: exactly
+        // one hole holds the account's name, and each `default:` is the OTHER
+        // state's words. Keep both holes, in this order, with a `default:` each
+        // (see `result` in `lead-conversion.flow.ts`).
+        result: {
+          title: 'Prospecto convertido',
+          description: '{{ pendingApprovalAccountName | default:"No hay ninguna aprobación de cuenta pendiente para " }}{{ noApprovalAccountName | default:" está pendiente de la aprobación de cuenta de un gerente de ventas" }}.',
+          fields: {
+            accountLink: { label: 'Cuenta' },
+            contactLink: { label: 'Contacto' },
+            opportunityLink: { label: 'Oportunidad' },
+          },
+        },
       },
       refusals: {
         refuse_confirmed_duplicate: {

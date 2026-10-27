@@ -761,6 +761,19 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: '预计成交日期' },
           },
         },
+        // The result screen (#2297). Same two-hole shape as `screen_1`: exactly
+        // one hole holds the account's name, and each `default:` is the OTHER
+        // state's words. Keep both holes, in this order, with a `default:` each
+        // (see `result` in `lead-conversion.flow.ts`).
+        result: {
+          title: '线索已转化',
+          description: '{{ pendingApprovalAccountName | default:"没有待处理的客户审批：" }}{{ noApprovalAccountName | default:" 正在等待销售经理的客户审批" }}。',
+          fields: {
+            accountLink: { label: '客户' },
+            contactLink: { label: '联系人' },
+            opportunityLink: { label: '商机' },
+          },
+        },
       },
       refusals: {
         refuse_confirmed_duplicate: {
