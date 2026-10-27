@@ -657,6 +657,28 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         status_review: { label: 'ステータス変更レビュー' },
       },
     },
+    campaign_lead_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "選択したキャンペーン" }} はメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
+        },
+        refuse_lead_opted_out: {
+          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} はメールの配信を停止しているため、このリードはキャンペーンに追加されませんでした。',
+        },
+      },
+    },
+    campaign_contact_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "選択したキャンペーン" }} はメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
+        },
+        refuse_contact_opted_out: {
+          message: '{{ contactRecord.full_name | default: "この取引先責任者" }} はメールの配信を停止しているため、この取引先責任者はキャンペーンに追加されませんでした。',
+        },
+      },
+    },
     campaign_enrollment: {
       label: 'キャンペーンにメンバーを登録',
       successMessage: '対象メンバーをキャンペーンに登録しました。',

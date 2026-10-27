@@ -140,6 +140,16 @@ export const CampaignMember = ObjectSchema.create({
       // from every detail page (`field-group-shadowed`, the trap the note
       // above this object's `fieldGroups` records being rescued from).
       relatedListColumns: ['crm_lead', 'crm_contact', 'added_date', 'status', 'response_date'],
+
+      // The picker offers only the campaigns that take members, the open set
+      // the two enroll flows admit (#2336). It lives on the FIELD because the
+      // Add to Campaign actions' campaign param is field-backed on this field,
+      // and `ActionParamSchema` has no filter key of its own: the row-menu
+      // dialog resolves the param from this field and keeps `lookupFilters`.
+      // The member form's picker narrows the same way. The selection bar's
+      // dialog drops it (the 18.2.0 spec's `bulk-action.zod.ts` note), so
+      // there the flow's refusal is what stops a closed campaign.
+      lookupFilters: [{ field: 'status', operator: 'in', value: ['planning', 'in_progress'] }],
     }),
 
     // `deleteBehavior: 'cascade'` on BOTH party lookups (#696). A lookup
@@ -283,6 +293,21 @@ export const CampaignMember = ObjectSchema.create({
       severity: 'error',
       message: 'A campaign member must reference either a Lead or a Contact',
       condition: P`(!has(record.crm_lead) || isBlank(record.crm_lead)) && (!has(record.crm_contact) || isBlank(record.crm_contact))`,
+    },
+    {
+      // The other half of "a Lead OR a Contact" (#2336): a membership is one
+      // person's, and the enrollment dedupe, the seed keys and the campaign
+      // metrics all read the two sides as different memberships. Until #2336
+      // an edit could add a Lead to a contact member and store both.
+      //
+      // Lead conversion does not trip it: `campaign_lead_conversion_refresh`
+      // promotes a converting lead's members by writing `status` alone, so
+      // the member keeps its Lead and gains no Contact.
+      name: 'lead_and_contact_exclusive',
+      type: 'script',
+      severity: 'error',
+      message: 'A campaign member references a Lead or a Contact, not both',
+      condition: P`has(record.crm_lead) && !isBlank(record.crm_lead) && has(record.crm_contact) && !isBlank(record.crm_contact)`,
     },
   ],
 });

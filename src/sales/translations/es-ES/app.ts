@@ -655,6 +655,28 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         status_review: { label: 'Revisión del Cambio de Estado' },
       },
     },
+    campaign_lead_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "La campaña elegida" }} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
+        },
+        refuse_lead_opted_out: {
+          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} se dio de baja del correo electrónico, así que el prospecto no se añadió a la campaña.',
+        },
+      },
+    },
+    campaign_contact_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "La campaña elegida" }} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
+        },
+        refuse_contact_opted_out: {
+          message: '{{ contactRecord.full_name | default: "Este contacto" }} se dio de baja del correo electrónico, así que el contacto no se añadió a la campaña.',
+        },
+      },
+    },
     campaign_enrollment: {
       label: 'Inscribir miembros en la campaña',
       successMessage: 'Miembros elegibles inscritos en la campaña.',
