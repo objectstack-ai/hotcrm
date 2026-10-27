@@ -22,6 +22,18 @@ const DUPLICATE_STATUS_HELP = '「已确认重复」表示有人核对过这两�
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
  * `src/sales/translations/zh-CN.ts`.
  */
+/**
+ * The bulk Delete on every opportunity grid list (#2338 item 4, `GRID_BAR` in
+ * `src/sales/views/opportunity.view.ts`), translated once and named by each view.
+ */
+const OPPORTUNITY_BULK_DELETE = {
+  delete: {
+    label: '删除',
+    confirmLabel: '删除',
+    confirmText: '确定要永久删除 {{count}} 个商机吗？此操作无法撤销。',
+  },
+};
+
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
     _validations: {
@@ -381,21 +393,23 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     _views: {
       tender_this_quarter: {
         label: '本季度预计招标',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: '本季度暂无预计招标的商机',
           message: '本标签页列出客户侧预计招标日期落在当前季度内的进行中商机。在商机上填写“预计招标日期”后，它就会出现在这里。',
         },
       },
-      open_opportunities: { label: '进行中商机' },
-      all_opportunities: { label: '全部商机' },
+      open_opportunities: { label: '进行中商机', bulkActions: OPPORTUNITY_BULK_DELETE },
+      all_opportunities: { label: '全部商机', bulkActions: OPPORTUNITY_BULK_DELETE },
       pipeline_kanban: { label: '销售流水线' },
       close_date_calendar: { label: '预测日历' },
       deal_timeline: { label: '商机时间线' },
       deal_gallery: { label: '商机卡片' },
-      my_open_deals: { label: '我的进行中商机' },
-      stale_opportunities: { label: '⚠️ 停滞商机 · 按阶段停留时间排序' },
+      my_open_deals: { label: '我的进行中商机', bulkActions: OPPORTUNITY_BULK_DELETE },
+      stale_opportunities: { label: '⚠️ 停滞商机 · 按阶段停留时间排序', bulkActions: OPPORTUNITY_BULK_DELETE },
       closing_this_quarter: {
         label: '本季度待成交商机',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: '本季度暂无待成交商机',
           message: '本标签页列出预计成交日期落在当前季度内、且处于承诺（Commit）或最佳可能（Best Case）的进行中商机。当前没有符合条件的记录——预计成交日期更晚的商机请见“进行中商机”标签页。',

@@ -204,7 +204,8 @@ export const MassUpdateStageAction: Action = {
   // Headless (#2338 item 4): drawn only on the SELECTION BAR, which the
   // opportunity list opens by naming this action in its `bulkActionDefs`
   // (`src/sales/views/opportunity.view.ts`) and which places it by name, with
-  // no location here. Every list view of the object inherits that def.
+  // no location here. List views do not inherit the def: each grid list of
+  // the object declares it itself, through `GRID_BAR` in that file.
   // ⛔ Do not add `list_toolbar` back. Measured on 18.2.0, the console's server
   // dispatch from the list header injects no `_selectedIds`: with two rows
   // ticked it refused ("This action runs on a single record — select exactly
