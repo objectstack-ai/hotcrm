@@ -363,6 +363,21 @@ describe('nothing else in the app re-states a large-deal amount', () => {
     'src/sales/data/forecast.seed.ts',
   ]);
 
+  /**
+   * Hook bodies that DO mean the large-deal line and cannot import it (#2334).
+   * A hook handler is lowered to a body that runs in QuickJS with no module
+   * scope, so the constant cannot reach it; each of these declares one local
+   * copy, and the case below holds that copy to the constant and to the
+   * inclusive cut. Exempt from the sweep only because they are pinned here.
+   */
+  const HOOK_COPIES: Record<string, string> = {
+    // `opportunity_lifecycle`: no close-won while the Large Deal Approval is
+    // pending or rejected, at or over the line.
+    'src/sales/objects/opportunity.hook.ts': 'the close-won refusal',
+    // `quote_workflow`: refuses the acceptance that close-won would follow.
+    'src/revenue/objects/quote.hook.ts': 'the acceptance mirror of that refusal',
+  };
+
   const walk = (dir: string): string[] =>
     readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
       const full = join(dir, e.name);
@@ -374,7 +389,7 @@ describe('nothing else in the app re-states a large-deal amount', () => {
     const hits: string[] = [];
     for (const file of walk(join(REPO_ROOT, 'src'))) {
       const rel = relative(REPO_ROOT, file);
-      if (ALLOWED.has(rel)) continue;
+      if (ALLOWED.has(rel) || rel in HOOK_COPIES) continue;
       const text = stripComments(readFileSync(file, 'utf8'));
       for (const value of VALUES) {
         // Word-bounded so 1_100_000 / 2_500_000 are not read as 100000.
@@ -390,6 +405,15 @@ describe('nothing else in the app re-states a large-deal amount', () => {
         'ALLOWED with the reason:\n  ' +
         hits.join('\n  '),
     ).toEqual([]);
+  });
+
+  it.each(Object.entries(HOOK_COPIES))('%s carries exactly one copy of the line (%s), equal to it and cut inclusively', (rel) => {
+    const text = stripComments(readFileSync(join(REPO_ROOT, rel), 'utf8'));
+    expect(text.match(/const LARGE_DEAL_AMOUNT = [\d_]+;/g), `${rel} must declare the line once`).toEqual([
+      `const LARGE_DEAL_AMOUNT = ${LARGE_DEAL_AMOUNT};`,
+    ]);
+    expect(text, `${rel} must compare at >= the line (#1087)`).toMatch(/>= LARGE_DEAL_AMOUNT\b/);
+    expect(text, `${rel} compares against the line with another operator`).not.toMatch(/(?:[^>]>|<=?) LARGE_DEAL_AMOUNT\b/);
   });
 
   it('the sweep can actually see the constants module — anti-vacuity', () => {
