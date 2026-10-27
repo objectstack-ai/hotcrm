@@ -53,9 +53,9 @@ type AnyRec = Record<string, any>;
 
 /**
  * The navigation AS SERVED — the app's own groups with each module's
- * contributions folded in (`servedApp`). Quotes, Contracts and Products are
- * the revenue module's since #2270 and Campaigns the marketing module's, so the
- * app's authored tree alone no longer holds them; a reader's sidebar does.
+ * contributions folded in (`servedApp`). Quotes and Products are the revenue
+ * module's since #2270 and Campaigns the marketing module's, so the app's
+ * authored tree alone no longer holds them; a reader's sidebar does.
  */
 const NAV = ((servedApp('crm_enterprise').navigation ?? []) as AnyRec[]);
 
@@ -188,21 +188,23 @@ describe('the source facts that section now rests on (#997)', () => {
       'Contacts',
       'Opportunities',
       'Sales Performance',
-      'Quotes',
       'Contracts',
+      'Quotes',
       'Products',
     ]);
   });
 
-  it('Quotes, Contracts and Products are contributed by the revenue module, after the app\'s own entries (#2270)', () => {
+  it('Quotes and Products are contributed by the revenue module, after the app\'s own entries (#2270)', () => {
     // A contributed item lands after the group's own children (the rule that
     // put My Cases last in My Work, #1907), which is why Sales Performance now
-    // precedes them.
+    // precedes them. Contracts is the app's own entry since `crm_contract`
+    // moved to the app package (`module-split-plan.md` item 11), so it is the
+    // last of those children.
     const authored = ((CrmApp as AnyRec).navigation as AnyRec[]).find((n) => n.id === 'group_sales');
     expect(((authored?.children ?? []) as AnyRec[]).map((c) => c.id)).toEqual([
-      'nav_lead', 'nav_account', 'nav_contact', 'nav_opportunity', 'nav_sales_dashboard',
+      'nav_lead', 'nav_account', 'nav_contact', 'nav_opportunity', 'nav_sales_dashboard', 'nav_contract',
     ]);
-    expect(SALES_CHILDREN.slice(-3).map((c) => c.id)).toEqual(['nav_quote', 'nav_contract', 'nav_product']);
+    expect(SALES_CHILDREN.slice(-2).map((c) => c.id)).toEqual(['nav_quote', 'nav_product']);
   });
 
   it('seven of them open an object list; one opens something else', () => {
@@ -211,8 +213,8 @@ describe('the source facts that section now rests on (#997)', () => {
       'Accounts',
       'Contacts',
       'Opportunities',
-      'Quotes',
       'Contracts',
+      'Quotes',
       'Products',
     ]);
     expect(OTHER_ENTRIES.map((c) => c.label)).toEqual(['Sales Performance']);

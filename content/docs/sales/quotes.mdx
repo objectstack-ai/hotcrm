@@ -81,7 +81,7 @@ Two things readers often expect at this point happen **later, when someone activ
 - **The account is promoted at activation, not at acceptance.** Moving an account from *Prospect* to *Customer* is a write that runs on contract activation, and what acceptance produces is a *Draft*. Until a Sales Manager or an admin activates that contract, the account is still a *Prospect*.
 - **The renewal reminder is not scheduled here, and it is not a 60-day one.** Renewal reminders come from the daily renewal sweep, a scheduled flow that runs only where scheduled work is switched on. It reads *Activated* contracts only and uses each contract's own **Renewal Notice (Days)** — **30** by default, and set per contract. A contract still sitting in *Draft* is invisible to that sweep, so it has no reminder at all.
 
-Both are described in full on the [Contracts](/docs/revenue/contracts) page.
+Both are described in full on the [Contracts](/docs/sales/contracts) page.
 
 The links are copied across, not invented: the drafted contract requires a **Primary Contact** and takes it from the quote, and the close-won step acts on the quote's **related opportunity**. What the quote does not carry, acceptance cannot pass on.
 

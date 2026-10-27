@@ -20,7 +20,7 @@ import stack from './helpers/composed-stack';
  *   - **Half the rows were missing.** The header said `(11)` on the English page
  *     and `(10 个)` / `(10 個)` on the two Chinese ones, while the compiled stack
  *     shipped 24 flows. Contract auto-expiration was among the missing — and
- *     `content/docs/revenue/contracts.mdx` sends admins to this very table to
+ *     `content/docs/sales/contracts.mdx` sends admins to this very table to
  *     find it (#823/#805).
  *   - **A row's TRIGGER was wrong.** `campaign_enrollment` was a Monday-9-AM
  *     schedule flow until it was rewritten as a screen flow (a cron seeds no
