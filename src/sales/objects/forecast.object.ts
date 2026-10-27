@@ -135,7 +135,7 @@ export const Forecast = ObjectSchema.create({
     // keeps an ownerless row from reading "Q4 2026 · ".
     //
     // The name is copied in when the row is written, so renaming the user
-    // re-titles a forecast only at its next write (measured on 18.1.0).
+    // re-titles a forecast only at its next write (measured on 18.1.0 and 18.2.0).
     // The seed-ownership claim on a fresh boot is such a write: since
     // objectstack#25668 (in 18.2.0) it re-owns seeded rows by id, so each
     // seeded forecast is titled with the admin it was handed to.
