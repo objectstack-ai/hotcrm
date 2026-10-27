@@ -122,8 +122,11 @@ export const createHotCrmRevenueStack = (
   },
 
   // What THIS package's metadata needs: `automation` and `triggers` for the
-  // scheduled quote-expiry flow, `analytics` for `product_metrics` — each
-  // refused by name when deleted.
+  // scheduled quote-expiry flow — each refused by name when deleted — and
+  // `analytics` for `product_metrics`, as `src/service/index.ts` declares it
+  // for `case_metrics`. Nothing refuses that one when deleted (measured on
+  // 18.2.0: validate, lint and build all exit 0 without it); it is declared
+  // because the dataset needs it, not because a gate asks.
   requires: ['automation', 'triggers', 'analytics'],
 
   objects: [OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem],

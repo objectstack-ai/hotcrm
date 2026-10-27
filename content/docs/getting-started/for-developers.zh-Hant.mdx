@@ -28,7 +28,7 @@ pnpm dev
 
 ## 倉庫結構
 
-HotCRM 建置出**一個** ObjectStack 產物，裡面裝著**四個套件**（ADR-0130）：`src/sales/` 裡的 `type: app` 套件 `app.objectstack.hotcrm`，以及三個模組——`src/service/` 裡的服務模組、`src/revenue/` 裡的收入模組和 `src/marketing/` 裡的行銷模組。每個套件各有一個 `index.ts`，各自呼叫 `defineStack()`；`objectstack.composition.ts` 建置這四個套件，`objectstack.config.ts` 把它們組合成產物。`src/` 下的一個目錄就是一個套件。`src/revenue/` 和 `src/marketing/` 裡寫的三個 flow 和一個資料集目前仍由 app 套件註冊，因為平台對銷售動作引用的 flow、儀表板引用的資料集是逐套件判定的（objectstack#25514）；平台發布帶這項修復的版本後，它們再歸回各自的模組。一個檔案只能從自己的目錄或 `src/sales/` 匯入，模組之間不得橫向匯入。
+HotCRM 建置出**一個** ObjectStack 產物，裡面裝著**四個套件**（ADR-0130）：`src/sales/` 裡的 `type: app` 套件 `app.objectstack.hotcrm`，以及三個模組——`src/service/` 裡的服務模組、`src/revenue/` 裡的收入模組和 `src/marketing/` 裡的行銷模組。每個套件各有一個 `index.ts`，各自呼叫 `defineStack()`；`objectstack.composition.ts` 建置這四個套件，`objectstack.config.ts` 把它們組合成產物。`src/` 下的一個目錄就是一個套件。每一項都由其所在目錄的套件註冊：app 套件的動作啟動模組的 flow、app 套件的儀表板磁貼綁定模組的資料集，都在產物內跨套件解析。一個檔案只能從自己的目錄或 `src/sales/` 匯入，模組之間不得橫向匯入。
 
 ```text
 hotcrm/
