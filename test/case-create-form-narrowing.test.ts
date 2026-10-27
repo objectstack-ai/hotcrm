@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
+import { ExpressionEngine } from '@objectstack/formula';
 import { CaseViews } from '../src/service/views/case.view';
 import { Case } from '../src/service/objects/case.object';
 import { CaseDetailPage } from '../src/service/pages/case_detail.page';
@@ -46,10 +47,39 @@ type AnyRec = Record<string, any>;
 const fieldNamesOf = (section: AnyRec): string[] =>
   (section.fields ?? []).map((f: any) => (typeof f === 'string' ? f : f?.field)).filter(Boolean);
 
-const formFields = (): string[] =>
-  ((CaseViews as AnyRec).form?.sections ?? []).flatMap(fieldNamesOf);
-
 const objectFields = (Case as AnyRec).fields as Record<string, AnyRec>;
+
+/** The form's entries, each as `{ field, visibleWhen? }`. */
+const formEntries = (): AnyRec[] =>
+  ((CaseViews as AnyRec).form?.sections ?? [])
+    .flatMap((s: AnyRec) => s.fields ?? [])
+    .map((f: unknown) => (typeof f === 'string' ? { field: f } : (f as AnyRec)));
+
+/** Does `entry` show for `record`, as the console evaluates a field's `visibleWhen`? */
+const shows = (entry: AnyRec, record: AnyRec): boolean => {
+  if (entry.visibleWhen === undefined) return true;
+  const result = ExpressionEngine.evaluate<boolean>(entry.visibleWhen as never, { record } as never);
+  expect(result.ok, `${entry.field}.visibleWhen did not evaluate on ${JSON.stringify(record)}: ${JSON.stringify(result)}`).toBe(true);
+  return (result as AnyRec).value === true;
+};
+
+/**
+ * A new case as the create dialog opens it: every select at its default. Only
+ * `status` matters to a gate on this form today (#2338 item 2).
+ */
+const NEW_CASE: AnyRec = Object.fromEntries(
+  Object.entries(objectFields)
+    .map(([name, f]) => [name, (f.options ?? []).find((o: AnyRec) => o.default === true)?.value])
+    .filter(([, value]) => value !== undefined),
+);
+
+/**
+ * The fields the CREATE dialog shows: every entry of the one form whose
+ * `visibleWhen`, if any, holds for a new case, and for a record with no keys
+ * at all (a gate must not depend on a default being filled in to stay shut).
+ */
+const formFields = (): string[] =>
+  formEntries().filter((e) => shows(e, NEW_CASE) || shows(e, {})).map((e) => e.field as string);
 
 /**
  * The fields a person raising a case actually has in hand. CLOSED on purpose:
@@ -130,6 +160,8 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
     keeps: ['detail.details'],
   },
   resolution: {
+    // On the one form since #2338 item 2, behind a status gate that keeps it
+    // off the create dialog (`formFields` reads only what a new case shows).
     why: 'authored when CLOSING a case, not when raising one',
     keeps: ['detail.details'],
   },
@@ -368,5 +400,45 @@ describe('crm_case create form — retention direction', () => {
   it('the queue still sorts on the SLA deadline', () => {
     const sort = ((CaseViews as AnyRec).list?.sort ?? []).map((x: any) => x.field);
     expect(sort).toContain('sla_due_date');
+  });
+});
+
+/**
+ * The edit form offers Resolution once the status says the case is being
+ * resolved (#2338 item 2).
+ *
+ * `resolution_required_for_closed` refuses a closed case with no resolution,
+ * and this form offers Status "Closed". With Resolution off the form, that save
+ * was a dead end: refused with "Resolution is required when closing a case",
+ * and nothing on the form to fill in. The same form is the create dialog, so
+ * the field is gated rather than always on; the removal direction above
+ * already pins that a new case does not show it.
+ */
+describe('crm_case edit form — Resolution when closing (#2338 item 2)', () => {
+  const resolution = (): AnyRec | undefined => formEntries().find((e) => e.field === 'resolution');
+  const STATUSES: string[] = (objectFields.status?.options ?? []).map((o: AnyRec) => o.value);
+
+  it('the object refuses a closed case with no resolution, so the form that offers Closed must offer the field', () => {
+    const rule = ((Case as AnyRec).validations ?? []).find((v: AnyRec) => v.name === 'resolution_required_for_closed');
+    expect(rule, 'resolution_required_for_closed is gone: this suite judges nothing').toBeDefined();
+    expect(STATUSES).toEqual(expect.arrayContaining(['resolved', 'closed']));
+    expect(resolution(), 'the case form no longer offers Resolution').toBeDefined();
+  });
+
+  it.each(['resolved', 'closed'])('shows on a case moved to %s', (status) => {
+    expect(shows(resolution()!, { ...NEW_CASE, status })).toBe(true);
+  });
+
+  it('stays off for every other status, for a new case and for a record with no status', () => {
+    const others = STATUSES.filter((s) => s !== 'resolved' && s !== 'closed');
+    expect(others.length).toBeGreaterThan(3);
+    for (const status of others) expect(shows(resolution()!, { status }), status).toBe(false);
+    expect(NEW_CASE.status).toBe('new');
+    expect(shows(resolution()!, NEW_CASE)).toBe(false);
+    expect(shows(resolution()!, {})).toBe(false);
+  });
+
+  it('is not required on the form: the object asks for it on closed only', () => {
+    expect(resolution()!.required === true).toBe(false);
   });
 });

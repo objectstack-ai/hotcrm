@@ -115,6 +115,12 @@ beforeAll(async () => {
     });
     who[key] = { ...person, positions, objects: await permissionsOf(person.token) };
   }
+  // Staffed by nobody in the demo, so signed up here the same way (#2338 item 1).
+  const marketer = await signUpPerson(verify, 'marketing_user@nav-audience.test', {
+    name: 'Nav marketing_user', positions: ['marketing_user'],
+    permissionSets: CrmPositions.find((c) => c.name === 'marketing_user')?.permissionSets ?? [],
+  });
+  who.marketing_user = { ...marketer, positions: ['marketing_user'], objects: await permissionsOf(marketer.token) };
   const token = await verify.signIn();
   const context = (await verify.contextFor(token)) as Rec;
   who.admin = {
@@ -267,6 +273,42 @@ describe('a service persona is not shown the opportunity dashboards and reports 
 });
 
 /**
+ * Service Overview is offered only to a member who reads cases (#2338 item 1).
+ *
+ * The console prunes an object entry by read access, but not a dashboard
+ * entry. The marketing user reads no cases, so Cases and My Cases were already
+ * pruned from their sidebar, while Service Overview, gated on the rep position
+ * alone (`BEFORE_2338`), was offered and refused every tile (measured on
+ * 18.2.0). It now asks the read question the case reports ask.
+ */
+describe('a member who reads no cases is not offered Service Overview (#2338 item 1)', () => {
+  const BEFORE_2338: Record<string, unknown> = { nav_service_dashboard: P`!("sales_rep" in current_user.positions)` };
+  const OTHERS = [...PERSONAS, 'admin'];
+
+  it('the marketing user reads no cases and holds no sales_rep position', () => {
+    expect(who.marketing_user!.objects.crm_case?.allowRead === true).toBe(false);
+    expect(who.marketing_user!.positions).not.toContain('sales_rep');
+  });
+
+  it('the gate before #2338 offered them Service Overview, beside no Cases and no My Cases', () => {
+    const before = shownTo('marketing_user', BEFORE_2338);
+    expect(before).toContain('nav_service_dashboard');
+    expect(before).not.toContain('nav_case');
+    expect(before).not.toContain('nav_my_cases');
+  });
+
+  it('they are shown their old sidebar less Service Overview, nothing else', () => {
+    expect(shownTo('marketing_user')).toEqual(
+      shownTo('marketing_user', BEFORE_2338).filter((id) => id !== 'nav_service_dashboard'),
+    );
+  });
+
+  it.each(OTHERS)('%s is shown exactly the sidebar it was shown before', (persona) => {
+    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2338));
+  });
+});
+
+/**
  * A member who holds no HotCRM grant lands on the platform's access page, not
  * on Service Overview (#2250, the HotCRM half of objectstack#25338).
  *
@@ -331,8 +373,12 @@ describe('a member with no HotCRM grant lands on the platform access page (#2250
     expect(NAMED_OBJECTS.filter((o) => who.no_grant!.objects[o]?.allowRead === true)).toEqual([]);
   });
 
-  it('the gates alone would open the app on Service Overview: the reported first screen', () => {
-    expect(shownTo('no_grant')[0]).toBe('nav_service_dashboard');
+  // Service Overview was the reported first screen. Since #2338 it asks for
+  // case read, so the gates alone now open the app further down, on the
+  // Approvals Inbox, which is still a HotCRM entry the platform page preempts.
+  it('the gates alone would open the app on a HotCRM entry: the Approvals Inbox since #2338', () => {
+    expect(shownTo('no_grant')).not.toContain('nav_service_dashboard');
+    expect(shownTo('no_grant')[0]).toBe('nav_approval_requests');
   });
 
   it('so the member lands on the platform access page, not on any HotCRM entry', () => {

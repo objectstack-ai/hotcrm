@@ -251,19 +251,28 @@ const refusalFrom = async (hook: AnyRec, opts: AnyRec): Promise<AnyRec | null> =
  * would see. `userMessage` is pinned EQUAL to `innerMessage`: since #1869
  * `refuse()` marks the sentence, and that mark is the half a consumer can read
  * without the wrapper. `innerMessage` is not a wire field, so asserting only it
- * would leave the user-facing outcome unpinned.
+ * would leave the user-facing outcome unpinned. A site that passes its own
+ * `userMessage` (the diagnostic keeps API names, the user sentence uses labels,
+ * #2338 item 12) names that sentence as `userWording`, and the pin becomes:
+ * the marked channel carries THAT sentence, not the diagnostic.
  */
 const expectEnvelope = (
   err: AnyRec | null,
   cls: keyof typeof REFUSAL_CODES,
   hookName: string,
   wording: RegExp,
+  userWording?: RegExp,
 ): void => {
   expect(err, `expected ${hookName} to refuse`).toBeTruthy();
   expect(err!.name, 'the shipped path re-throws as SandboxError').toBe('SandboxError');
   expect([err!.code, err!.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
   expect(String(err!.innerMessage)).toMatch(wording);
   expect(String(err!.message)).toBe(`hook '${hookName}' threw: Error: ${err!.innerMessage}`);
+  if (userWording) {
+    expect(String(err!.userMessage), 'the marked channel carries the user sentence').toMatch(userWording);
+    expect(err!.userMessage).not.toBe(String(err!.innerMessage));
+    return;
+  }
   expect(err!.userMessage, 'the marked channel carries the sentence, unwrapped').toBe(
     String(err!.innerMessage),
   );
@@ -297,7 +306,7 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
       previous: { id: row.opportunity, name: 'Big Deal', stage: 'closed_won', amount: 100 },
       as: rep.token,
     });
-    expectEnvelope(err, 'locked', 'opportunity_lifecycle', /is closed \(closed_won\)/);
+    expectEnvelope(err, 'locked', 'opportunity_lifecycle', /is closed \(closed_won\)/, /is closed \(Closed Won\); only its Description and Next Steps can still be edited\.$/);
   });
 
   it('delete_restricted — product_catalog holds a referenced product', async () => {
@@ -347,6 +356,7 @@ const expectInProcess = (
   err: unknown,
   cls: keyof typeof REFUSAL_CODES,
   wording: RegExp,
+  userWording?: RegExp,
 ): void => {
   expect(err, `expected a refusal matching ${wording}`).toBeInstanceOf(Error);
   const e = err as AnyRec;
@@ -355,7 +365,13 @@ const expectInProcess = (
   expect(e.innerMessage, 'only the sandbox adds innerMessage').toBeUndefined();
   expect([e.code, e.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
   // The mark is written by `refuse()`, so it is identical on both paths — here
-  // `message` is unrewritten, so the two are the same string.
+  // `message` is unrewritten, so the two are the same string, unless the site
+  // passed its own user sentence (see `expectEnvelope`).
+  if (userWording) {
+    expect(String(e.userMessage)).toMatch(userWording);
+    expect(e.userMessage).not.toBe(e.message);
+    return;
+  }
   expect(e.userMessage, 'refuse() marks the sentence on both paths').toBe(e.message);
 };
 
@@ -396,6 +412,7 @@ describe('the same envelope on the in-process path (#1075)', () => {
       await inProcess('crm_opportunity', 'update', { id: opp.id, amount: 999 }),
       'locked',
       /is closed \(closed_won\)/,
+      /is closed \(Closed Won\); only its Description and Next Steps can still be edited\.$/,
     );
   });
 

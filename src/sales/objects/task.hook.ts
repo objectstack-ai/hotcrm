@@ -102,6 +102,20 @@ const taskValidation: Hook = {
       if (typeof input.progress_percent !== 'number') input.progress_percent = 100;
     }
 
+    // Reopening clears the stamp (#2338 item 9). A task moved from Completed
+    // back to an open status kept its Completed Date, and the field is
+    // readonly, so nobody could clear it by hand: an open task read as
+    // finished on the date it had been closed. Same shape as the member
+    // lifecycle hook clearing `response_date` on leaving a responded state.
+    // The key is hook-written, so the readonly strip leaves it alone.
+    if (
+      previous?.status === 'completed' &&
+      typeof input.status === 'string' &&
+      input.status !== 'completed'
+    ) {
+      input.completed_date = null;
+    }
+
     // Derived flags.
     const effStatus =
       (typeof input.status === 'string' && input.status) ||

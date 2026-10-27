@@ -22,6 +22,18 @@ const DUPLICATE_STATUS_HELP = 'Confirmado significa que una persona revisó los 
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
  * `src/sales/translations/es-ES.ts`.
  */
+/**
+ * The bulk Delete on every opportunity grid list (#2338 item 4, `GRID_BAR` in
+ * `src/sales/views/opportunity.view.ts`), translated once and named by each view.
+ */
+const OPPORTUNITY_BULK_DELETE = {
+  delete: {
+    label: 'Eliminar',
+    confirmLabel: 'Eliminar',
+    confirmText: '¿Eliminar permanentemente {{count}} oportunidad(es)? Esta acción no se puede deshacer.',
+  },
+};
+
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
     _validations: {
@@ -412,26 +424,28 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     _views: {
       tender_this_quarter: {
         label: 'Licitaciones de Este Trimestre',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: 'No hay licitaciones previstas este trimestre',
           message: 'Esta pestaña muestra los negocios abiertos cuya fecha de licitación del cliente cae dentro del trimestre actual. Registra la Fecha Prevista de Licitación en un negocio para verlo aquí.',
         },
       },
-      open_opportunities: { label: 'Oportunidades Abiertas' },
-      all_opportunities: { label: 'Todas las Oportunidades' },
+      open_opportunities: { label: 'Oportunidades Abiertas', bulkActions: OPPORTUNITY_BULK_DELETE },
+      all_opportunities: { label: 'Todas las Oportunidades', bulkActions: OPPORTUNITY_BULK_DELETE },
       pipeline_kanban: { label: 'Pipeline de Ventas' },
       close_date_calendar: { label: 'Calendario de Pronóstico' },
       deal_timeline: { label: 'Línea de Tiempo' },
       deal_gallery: { label: 'Galería de Negocios' },
-      my_open_deals: { label: 'Mis Negocios Abiertos' },
+      my_open_deals: { label: 'Mis Negocios Abiertos', bulkActions: OPPORTUNITY_BULK_DELETE },
       closing_this_quarter: {
         label: 'Cierres de Este Trimestre',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: 'No hay negocios que cierren este trimestre',
           message: 'Esta pestaña muestra los negocios abiertos en categoría Compromiso o Mejor Caso cuya fecha de cierre cae dentro del trimestre actual. Ahora mismo no hay ninguno; los negocios que cierran más adelante están en la pestaña Negocios Abiertos.',
         },
       },
-      stale_opportunities: { label: '⚠️ Oportunidades Estancadas · Más Tiempo en Etapa Primero' },
+      stale_opportunities: { label: '⚠️ Oportunidades Estancadas · Más Tiempo en Etapa Primero', bulkActions: OPPORTUNITY_BULK_DELETE },
     },
     _sections: {
       // Claves de sección del objeto (opportunity.object.ts) que usan los

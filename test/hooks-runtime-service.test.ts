@@ -314,12 +314,12 @@ describe('contract_validation', () => {
     await expect(managerContract({ start_date: '2026-01-01', end_date: '2026-12-15', contract_term_months: 12 })).resolves.toBeTruthy();
   });
 
-  it('refuses to shrink end_date after activation', async () => {
+  it('refuses to move End Date earlier after activation, naming the field by its label', async () => {
     // Shrunk within the term's one-month tolerance, so the shrink rule is the
     // one that answers.
     const contract = await contractOf({ status: 'activated', start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 });
     await expect(verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2026-12-15' }, as(manager)))
-      .rejects.toThrow(/Cannot shrink end_date/);
+      .rejects.toThrow(/End Date cannot move earlier/);
   });
 
   it('allows extending end_date after activation', async () => {
@@ -1503,6 +1503,24 @@ describe('task_completion', () => {
     expect(done.completed_date).toBeTruthy();
     expect(done.progress_percent).toBe(100);
     expect(done.is_completed).toBe(true);
+  });
+
+  it('clears completed_date when a completed task is reopened (#2338 item 9)', async () => {
+    const task = await taskOf({ status: 'in_progress' });
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'completed' }, as(rep));
+    expect((await stored('crm_task', task.id)).completed_date).toBeTruthy();
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'in_progress' }, as(rep));
+    const reopened = await stored('crm_task', task.id);
+    expect(reopened.completed_date ?? null).toBeNull();
+    expect(reopened.is_completed).toBe(false);
+  });
+
+  it('keeps completed_date on an edit that leaves a completed task completed', async () => {
+    const task = await taskOf({ status: 'in_progress' });
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'completed' }, as(rep));
+    const stamp = (await stored('crm_task', task.id)).completed_date;
+    await verify.hooks.run('crm_task', 'update', { id: task.id, description: 'Follow-up notes' }, as(rep));
+    expect((await stored('crm_task', task.id)).completed_date).toBe(stamp);
   });
 
   it('flags an overdue open task and clears the flag once completed', async () => {

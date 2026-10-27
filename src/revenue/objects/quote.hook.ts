@@ -220,8 +220,21 @@ const quoteValidation: Hook = {
           );
           if (isReferenceCleanup) return;
 
+          // Two sentences, one per reader (#2338 item 12): the diagnostic keeps
+          // API names and the attempted keys, and the `userMessage` the console
+          // shows uses labels — users were shown "…is accepted; only
+          // internal_notes may be edited. Attempted: discount.". The full
+          // reasoning is on the opportunity freeze; the labels are written out
+          // because a lowered body cannot read the object's metadata, and
+          // `test/refusal-labels.test.ts` reads them off `crm_quote`.
+          const STATUS_LABELS: Record<string, string> = { accepted: 'Accepted', expired: 'Expired' };
           const what = `${subject()} is ${previous.status as string}`;
-          throw refuse(`${what}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`, 'RECORD_LOCKED', 409);
+          throw refuse(
+            `${what}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`,
+            'RECORD_LOCKED',
+            409,
+            `${subject()} is ${STATUS_LABELS[previous.status as string]}; only its Internal Notes can still be edited.`,
+          );
         }
       }
 

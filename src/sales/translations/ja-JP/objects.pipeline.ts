@@ -28,6 +28,18 @@ const opportunityStageOptions = {
   negotiation: '交渉', closed_won: '成立', closed_lost: '不成立',
 };
 
+/**
+ * The bulk Delete on every opportunity grid list (#2338 item 4, `GRID_BAR` in
+ * `src/sales/views/opportunity.view.ts`), translated once and named by each view.
+ */
+const OPPORTUNITY_BULK_DELETE = {
+  delete: {
+    label: '削除',
+    confirmLabel: '削除',
+    confirmText: '{{count}} 件の商談を完全に削除しますか？この操作は取り消せません。',
+  },
+};
+
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
     _validations: {
@@ -391,21 +403,23 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     _views: {
       tender_this_quarter: {
         label: '今四半期に入札予定',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: '今四半期に入札予定の商談はありません',
           message: 'このタブには、顧客側の入札予定日が今四半期内にあるオープン商談が表示されます。商談に「入札予定日」を入力すると、ここに表示されます。',
         },
       },
-      open_opportunities: { label: '進行中の商談' },
-      all_opportunities: { label: '全商談' },
+      open_opportunities: { label: '進行中の商談', bulkActions: OPPORTUNITY_BULK_DELETE },
+      all_opportunities: { label: '全商談', bulkActions: OPPORTUNITY_BULK_DELETE },
       pipeline_kanban: { label: 'セールスパイプライン' },
       close_date_calendar: { label: '予測カレンダー' },
       deal_timeline: { label: '商談タイムライン' },
       deal_gallery: { label: '商談カード' },
-      my_open_deals: { label: '私のオープン商談' },
-      stale_opportunities: { label: '⚠️ 停滞商談 · ステージ滞在が長い順' },
+      my_open_deals: { label: '私のオープン商談', bulkActions: OPPORTUNITY_BULK_DELETE },
+      stale_opportunities: { label: '⚠️ 停滞商談 · ステージ滞在が長い順', bulkActions: OPPORTUNITY_BULK_DELETE },
       closing_this_quarter: {
         label: '今四半期にクローズ予定',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: '今四半期にクローズ予定の商談はありません',
           message: 'このタブには、完了予定日が今四半期内にあるコミット／ベストケースのオープン商談が表示されます。現在該当する商談はありません。それ以降にクローズする商談は「オープン商談」タブにあります。',

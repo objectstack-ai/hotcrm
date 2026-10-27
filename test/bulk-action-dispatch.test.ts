@@ -83,6 +83,36 @@ describe('bulk dispatch is declared the way the renderer reads it', () => {
     ).toEqual([]);
   });
 
+  // #2338 item 4. Measured on 18.2.0: a named list view does not inherit the
+  // `list` view's `bulkActionDefs` (All Opportunities' bar offered Delete
+  // only), and the list-header copy that every view did show failed on any
+  // selection, so it was dropped. Each grid list therefore declares the bar
+  // entry itself. A grid list is the kind the console draws row selection on;
+  // kanban, calendar, timeline and gallery lists draw none. Any authored bulk
+  // entry hides the console's default bulk Delete, so each list also declares
+  // Delete itself; losing it is as much a regression as losing Update Stage.
+  it('every opportunity grid list offers Update Stage and Delete on its selection bar (#2338 item 4)', () => {
+    const oppView = views.find((v) => (v.list?.data?.object ?? v.object) === 'crm_opportunity');
+    const grids = listsOf(oppView!).filter((l) => (l.type ?? 'grid') === 'grid');
+    expect(grids.length, 'the opportunity views ship fewer grid lists than when this was pinned').toBeGreaterThanOrEqual(6);
+    const missing = grids
+      .filter((l) => !((l.bulkActionDefs ?? []) as AnyRec[]).some(
+        (d) => d?.name === 'mass_update_stage' && d.operation === 'custom' && d.execution === 'aggregate',
+      ))
+      .map((l) => l.name);
+    expect(missing, 'these opportunity grid lists offer no Update Stage on the selection bar').toEqual([]);
+    const noDelete = grids
+      .filter((l) => !((l.bulkActionDefs ?? []) as AnyRec[]).some((d) => d?.operation === 'delete'))
+      .map((l) => l.name);
+    expect(noDelete, 'these opportunity grid lists lost the bulk Delete on the selection bar').toEqual([]);
+  });
+
+  it('mass_update_stage is not drawn in the list header, where it gets no selection (#2338 item 4)', () => {
+    const action = actions.find((a) => a.name === 'mass_update_stage');
+    expect(action, 'no mass_update_stage action').toBeTruthy();
+    expect(action!.locations ?? []).not.toContain('list_toolbar');
+  });
+
   it('every custom bulk def names a real action', () => {
     // Coverage nothing else has. The guard in `metadata-references.test.ts`
     // ("every rowAction / bulkAction names a defined action") reads

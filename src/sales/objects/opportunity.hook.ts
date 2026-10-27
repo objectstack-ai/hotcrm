@@ -339,10 +339,26 @@ const opportunityValidationHook: Hook = {
           // the record id — it matches none of them.
           const name = typeof previous.name === 'string' ? previous.name.trim() : '';
           const subject = name ? `Opportunity ${name}` : 'Opportunity';
+          // Two sentences, one per reader (#2338 item 12). The message is the
+          // diagnostic and keeps API names, including the attempted keys —
+          // nothing gets a turn after this throw, so it is the only place a
+          // log or an API caller learns which key tripped the freeze. The
+          // `userMessage` is what the console shows, and it names the stage
+          // and the fields by their labels: users were shown "closed
+          // (closed_won); only description, next_step, notes may be edited.
+          // Attempted: amount". A lowered body cannot read the object's
+          // metadata, so the labels are written out here;
+          // `test/refusal-labels.test.ts` reads them off `crm_opportunity` and
+          // fails when a label and this sentence part ways. `notes` has no
+          // label because the object has no such field.
+          const STAGE_LABELS: Record<string, string> = { closed_won: 'Closed Won', closed_lost: 'Closed Lost' };
+          const NARRATIVE_LABELS: Record<string, string> = { description: 'Description', next_step: 'Next Steps' };
+          const editable = [...NARRATIVE_FIELDS].map((k) => NARRATIVE_LABELS[k]).filter(Boolean).join(' and ');
           throw refuse(
             `${subject} is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
             'RECORD_LOCKED',
             409,
+            `${subject} is closed (${STAGE_LABELS[prevStage as string]}); only its ${editable} can still be edited.`,
           );
         }
       }

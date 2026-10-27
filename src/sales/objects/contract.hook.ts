@@ -90,7 +90,9 @@ const contractValidation: Hook = {
         input.end_date < previous.end_date
       ) {
         throw refuse(
-          `Cannot shrink end_date (${previous.end_date as string} → ${input.end_date}) after activation. Use a termination/amendment workflow instead.`,
+          // The field by its label, never its API name (#2338 item 12);
+          // `test/refusal-labels.test.ts` reads the label off `crm_contract`.
+          `An activated contract's End Date cannot move earlier (${previous.end_date as string} → ${input.end_date}). Use a termination/amendment workflow instead.`,
           'RECORD_LOCKED',
           409,
         );
