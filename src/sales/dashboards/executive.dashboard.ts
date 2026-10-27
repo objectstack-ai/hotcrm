@@ -51,14 +51,14 @@ const LEAD_SOURCE_FILTER_LABELS: Record<
  * High-level revenue, customer, and pipeline KPIs for company leadership.
  *
  * Widgets here are dataset-bound (ADR-0021), and the console's dataset widget
- * reads ONLY: type, dataset, dimensions, values, filter, filterBindings, and
- * layout. It builds charts and tables from the dataset's own field metadata
- * (labels, formats), so per-widget `chartConfig`, `colorVariant`, widget-level
+ * reads ONLY: type, dataset, dimensions, values, filter, filterBindings,
+ * compareTo and layout. It builds charts and tables from the dataset's own
+ * field metadata (labels, formats), so per-widget `chartConfig`, `colorVariant`, widget-level
  * `action*`, and free-form `options` (icons, formats, static trends, table
  * column specs) are never read — don't re-add them. In particular, metric-tile
- * trend deltas must come from real comparison queries (widget `compareTo`)
- * once the renderer supports them for dataset metrics; hardcoded percentages
- * previously carried here were fabrications and were removed (#500).
+ * trend deltas come from real comparison queries (widget `compareTo`, on
+ * Total Revenue (YTD) since #2296); hardcoded percentages previously carried
+ * here were fabrications and were removed (#500).
  * Date bucketing is likewise server-side (a dataset dimension's
  * `dateGranularity`, not widget options) — but see the note in
  * `opportunity_metrics` for why the trend widgets still group by raw dates.
@@ -116,7 +116,12 @@ export const ExecutiveDashboard: Dashboard = {
       title: 'Total Revenue (YTD)',
       description: 'Closed-won revenue this year',
       type: 'metric',
-      filter: { stage: 'closed_won', close_date: { $gte: '{current_year_start}' } },
+      // Compared with the same calendar span last year (#2296). The window
+      // states its end (`{today}`) because a comparison shifts a closed window
+      // only: on a one-bound `$gte` the executor refuses it and the tile shows
+      // a 400 instead of its number (measured on 18.2.0, objectstack#25970).
+      compareTo: { kind: 'previousYear' },
+      filter: { stage: 'closed_won', close_date: { $gte: '{current_year_start}', $lte: '{today}' } },
       // Self-scoped to YTD; without this the injected dashboard dateRange
       // (default this_quarter) is ANDed in and the tile shows quarter revenue.
       filterBindings: { dateRange: false },
