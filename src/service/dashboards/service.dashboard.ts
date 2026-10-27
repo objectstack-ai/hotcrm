@@ -303,7 +303,11 @@ export const ServiceDashboard: Dashboard = {
       title: 'Top Resolving Articles',
       description: 'Knowledge articles ranked by the closed cases they resolved',
       type: 'table',
-      filter: { is_closed: true },
+      // Only cases an article resolved (#2338 item 11). Without the second
+      // key every closed case with no article formed a blank bucket, drawn as
+      // a "—" row with a count of 0 (0, because `kb_resolved_count` counts
+      // the article column, which that bucket never fills).
+      filter: { is_closed: true, resolved_by_article: { $ne: null } },
       colorVariant: 'default',
       dataset, dimensions: ['resolved_article'], values: ['kb_resolved_count'],
       layout: { x: 0, y: 12, w: 12, h: 4 },
