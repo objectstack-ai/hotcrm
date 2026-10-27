@@ -88,15 +88,14 @@ export const BILLING_HANDOFF_LINE_ITEM_LIMIT = 200;
  * ─── The payload halves both hand-off events share ─────────────────────────
  *
  * These sat in `billing-handoff.flow.ts` while both flows lived in one file.
- * The ADR-0130 layout puts a flow with its trigger object, and the two events
- * trigger on objects in different packages — `crm_opportunity` is sales',
- * `crm_contract` is revenue's — so the flows are now
- * `src/sales/flows/billing-handoff-closed-won.flow.ts` and
- * `src/sales/flows/billing-handoff-contract-activated.flow.ts`. The shared
- * half moved HERE rather than being copied into each: it is the same contract
- * with the same receiver, and two copies of a contract is how a receiver ends
- * up with two shapes. Revenue reads it along the revenue -> sales edge, the
- * one direction ADR-0130 allows.
+ * The ADR-0130 layout puts a flow with its trigger object, so the two events
+ * are two files — `src/sales/flows/billing-handoff-closed-won.flow.ts` on
+ * `crm_opportunity` and `src/sales/flows/billing-handoff-contract-activated.flow.ts`
+ * on `crm_contract`. Both objects are the app package's since the contract
+ * moved here from revenue (`module-split-plan.md` item 11), so both flows read
+ * this file from their own directory. The shared half lives HERE rather than
+ * being copied into each: it is the same contract with the same receiver, and
+ * two copies of a contract is how a receiver ends up with two shapes.
  */
 
 /** Account fields the billing system needs to open a customer. */

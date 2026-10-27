@@ -131,7 +131,7 @@ export const ContractViews = defineView({
       {
         // The contract's two markdown bodies, together and in the order a
         // reader needs them — the question #1826 asked this form to answer.
-        // They are not redundant, and `content/docs/revenue/contracts.mdx`
+        // They are not redundant, and `content/docs/sales/contracts.mdx`
         // already rules which is which: **Description** is the plain summary
         // of what this contract is (declared on the `basic` group, listed
         // there under "Contract Information"), while **Special Terms** is
