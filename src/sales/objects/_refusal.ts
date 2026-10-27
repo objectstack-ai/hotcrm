@@ -77,8 +77,10 @@
  *      author prose on the wire; it puts the sentence on the one channel no
  *      boundary rewraps, which is what the platform declares the key FOR.
  *   3. The argument is therefore the seam for DIVERGENCE, not the opt-in: pass
- *      it where the diagnostic and the user-facing sentence must differ. No
- *      site needs that today, and one that does no longer costs an API change.
+ *      it where the diagnostic and the user-facing sentence must differ. Two
+ *      sites do since #2338: the closed-deal and settled-quote freezes keep
+ *      API names and the attempted keys in the diagnostic, and give the user
+ *      the same refusal in field and status labels.
  *
  * ⛔ A blank or whitespace-only override is dropped at the boundary, so it
  * suppresses nothing — it only returns the reader to the wrapper. The answer

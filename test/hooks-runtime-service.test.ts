@@ -314,12 +314,12 @@ describe('contract_validation', () => {
     await expect(managerContract({ start_date: '2026-01-01', end_date: '2026-12-15', contract_term_months: 12 })).resolves.toBeTruthy();
   });
 
-  it('refuses to shrink end_date after activation', async () => {
+  it('refuses to move End Date earlier after activation, naming the field by its label', async () => {
     // Shrunk within the term's one-month tolerance, so the shrink rule is the
     // one that answers.
     const contract = await contractOf({ status: 'activated', start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 });
     await expect(verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2026-12-15' }, as(manager)))
-      .rejects.toThrow(/Cannot shrink end_date/);
+      .rejects.toThrow(/End Date cannot move earlier/);
   });
 
   it('allows extending end_date after activation', async () => {
