@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, predicateUpdate, flowRuns, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, predicateUpdate, flowRuns, today, type Person } from './helpers/verify-stack';
 import { BillingHandoffClosedWonFlow } from '../src/sales/flows/billing-handoff-closed-won.flow';
 import { BillingHandoffContractActivatedFlow } from '../src/sales/flows/billing-handoff-contract-activated.flow';
 import {
@@ -367,6 +367,35 @@ describe('billing hand-off — contract activation (#600)', () => {
     await activate(contract.id);
     await verify.hooks.run('crm_contract', 'update', { id: contract.id, special_terms: 'Amended Schedule A' }, as(manager));
     expect(await deliveriesFor(contract.id), 'only the activation itself').toHaveLength(1);
+  });
+
+  // #2325. The stamp is what lets a manager activate without typing a Signed
+  // Date, which is the common path — so the hand-off must carry the stamped
+  // date, not the null the activating write was saved with. It does only if the
+  // stamp rides on that write (`beforeUpdate`): the flow is bound to the
+  // activating write's after-update and reads `signed_date` off that record, so
+  // a stamp written by a second, later write reaches the database and never the
+  // billing system.
+  it('carries the stamped signed_date when the activation types none (#2325)', async () => {
+    const contract = await contractInApproval();
+    await verify.hooks.run('crm_contract', 'update', { id: contract.id, status: 'activated' }, as(manager));
+
+    const deliveries = await deliveriesFor(contract.id);
+    expect(deliveries).toHaveLength(1);
+    expect(deliveries[0]!.payload.contract.signed_date, 'billing was sent no signature date').toBe(today());
+    const [stored] = await verify.rows('crm_contract', { id: contract.id });
+    expect(stored!.signed_date, 'the record and the hand-off disagree').toBe(today());
+  });
+
+  it('keeps a typed signed_date, in the record and in the hand-off (#2325)', async () => {
+    const contract = await contractInApproval();
+    await activate(contract.id);
+
+    const [stored] = await verify.rows('crm_contract', { id: contract.id });
+    expect(stored!.signed_date).toBe('2026-08-31');
+    const deliveries = await deliveriesFor(contract.id);
+    expect(deliveries).toHaveLength(1);
+    expect(deliveries[0]!.payload.contract.signed_date).toBe('2026-08-31');
   });
 });
 
