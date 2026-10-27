@@ -790,13 +790,80 @@ export const LeadConversionFlow: Flow = {
         actionUrl: '/crm_account/{{accountId}}',
       },
     },
+    {
+      // The account as it stands AFTER the conversion, read for the result
+      // screen's approval sentence (#2297). ⛔ Not `createdAccount`: that is
+      // the row as `create_account` inserted it, and `approval_status` is
+      // written after the insert by `account_approval`'s approval node (its
+      // `approvalStatusField` mirror), so only a fresh read can say whether
+      // the account is waiting on a decision. One read covers both account
+      // branches, because `accountId` is already normalized onto one id.
+      //
+      // The row is always there for this user: a new account is theirs
+      // (`owner_id` is the converting user), and a reused one is the very row
+      // `find_account` found under their own read access.
+      id: 'get_result_account', type: 'get_record', label: 'Read Converted Account',
+      config: { objectName: 'crm_account', filter: { id: cel`accountId` }, outputVariable: 'resultAccount' },
+    },
+    {
+      // The approval sentence's two values, in the shape `compose_account_notice`
+      // uses for the same reason: no locale pack reaches a variable's text, so
+      // the sentence lives whole in the screen's translated template and these
+      // only carry the account's name into exactly one of its two holes. The
+      // other is `null`, which the template's `default:` turns into that
+      // branch's words.
+      //
+      // Read from the account, ⛔ never assumed from the branch: whether a new
+      // account goes through `account_approval` is decided by that flow and by
+      // `account_protection`, not here, and an existing account can still be
+      // waiting on the approval opened when it was created. The screen states
+      // what holds for the record the rep is about to open.
+      id: 'compose_result_notice', type: 'assignment', label: 'Compose Approval Notice',
+      config: {
+        assignments: {
+          pendingApprovalAccountName: cel`has(resultAccount.approval_status) && resultAccount.approval_status == 'pending' ? resultAccount.name : null`,
+          noApprovalAccountName: cel`has(resultAccount.approval_status) && resultAccount.approval_status == 'pending' ? null : resultAccount.name`,
+        },
+      },
+    },
+    {
+      // THE RESULT SCREEN (#2285 ruling B, second half; #2297). The run ends
+      // here instead of on a toast: the rep sees the records the conversion
+      // created or reused, each as a link to its page, and whether the
+      // account is waiting on an approval.
+      //
+      // Every write is behind this screen, so it changes nothing: Submit only
+      // completes the run, and a rep who closes the dialog instead leaves a
+      // lead that is already fully converted. A `record_link` field (spec
+      // 18.2.0) takes no input, so the screen also pauses a headless caller —
+      // the REST door and the `action_convert_lead` AI tool get the run back
+      // `paused` on this screen, the conversion already written, and the
+      // links' ids are what they read.
+      //
+      // The opportunity link is always declared. With no opportunity,
+      // `opportunityId` is `null` and the console shows "—" with no link, which
+      // says what happened. It cannot be hidden instead: a screen field's
+      // `visibleWhen` reads only the values the dialog collects, and the
+      // dialog never seeds a `record_link` field's value.
+      //
+      // Translated as `screens.result` in the packs.
+      id: 'result', type: 'screen', label: 'Lead Converted',
+      config: {
+        description: '{{ pendingApprovalAccountName | default:"No account approval is pending for " }}{{ noApprovalAccountName | default:" is waiting for account approval by a sales manager" }}.',
+        fields: [
+          { name: 'accountLink', label: 'Account', type: 'record_link', reference: 'crm_account', defaultValue: cel`accountId` },
+          { name: 'contactLink', label: 'Contact', type: 'record_link', reference: 'crm_contact', defaultValue: cel`contactId` },
+          { name: 'opportunityLink', label: 'Opportunity', type: 'record_link', reference: 'crm_opportunity', defaultValue: cel`opportunityId` },
+        ],
+      },
+    },
     { id: 'end', type: 'end', label: 'End' },
   ],
 
   edges: [
     // ⛔ A retired edge's id stays VACANT and every surviving edge keeps the id
-    // it has always had — `e1`, `e2`, `e3`, `e4`, `e7`, `e12`, `e15`, `e26`,
-    // `e30`, `e31`, `e33` and `e44` are gaps on purpose.
+    // it has always had — `e1`, `e2`, `e3`, `e4`, `e7`, `e12`, `e15`, `e20`,
+    // `e26`, `e30`, `e31`, `e33` and `e44` are gaps on purpose.
     // Renumbering to close a gap rewrites ids that other notes, tests and run
     // logs refer to.
     { id: 'e0', source: 'start', target: 'get_lead', type: 'default' },
@@ -805,8 +872,8 @@ export const LeadConversionFlow: Flow = {
     // A duplicate id is INERT (traversal filters out-edges by `source`, never
     // by `id`), so nothing fails and the collision survives to trap the next
     // editor picking out of the sequence. `e1`, `e2`, `e3`, `e4`, `e7`, `e12`,
-    // `e15`, `e26`, `e30`, `e31`, `e33` and `e44` are vacant retired ids and stay
-    // that way; `e27` is above the highest live id, not a gap-fill.
+    // `e15`, `e20`, `e26`, `e30`, `e31`, `e33` and `e44` are vacant retired ids
+    // and stay that way; `e27` is above the highest live id, not a gap-fill.
     { id: 'e27', source: 'get_lead', target: 'decision_approval', type: 'default' },
     // ── The approval gate (REQ-0005 step 7) ────────────────────────────
     //
@@ -939,6 +1006,11 @@ export const LeadConversionFlow: Flow = {
     { id: 'e18a', source: 'use_new_opportunity', target: 'mark_converted', type: 'default' },
     { id: 'e18b', source: 'no_opportunity', target: 'mark_converted', type: 'default' },
     { id: 'e19', source: 'mark_converted', target: 'send_notification', type: 'default' },
-    { id: 'e20', source: 'send_notification', target: 'end', type: 'default' },
+    // `e20` (send_notification → end) is RETIRED and stays vacant (#2297): the
+    // run ends on the result screen now, after a fresh read of the account.
+    { id: 'e52', source: 'send_notification', target: 'get_result_account', type: 'default' },
+    { id: 'e53', source: 'get_result_account', target: 'compose_result_notice', type: 'default' },
+    { id: 'e54', source: 'compose_result_notice', target: 'result', type: 'default' },
+    { id: 'e55', source: 'result', target: 'end', type: 'default' },
   ],
 };
