@@ -649,8 +649,9 @@ item below says otherwise.
     `currency` field's value is a bare number, `currencyConfig.currencyMode` is `dynamic` (tenant
     default) or `fixed` (one currency per field), and there is no per-record currency, no exchange-
     rate table and no report conversion. All three are platform capability (AGENTS.md *Scope* rules
-    1 and 2): a platform card is filed and nothing is simulated here. Price books (REQ-0009) are
-    plain metadata inside `revenue` and proceed.
+    1 and 2): the platform card is objectstack#8345 (on hold since 2026-10-08 by the maintainer's own
+    word), and nothing is simulated here. Price books (REQ-0009) are plain metadata inside `revenue`
+    and proceed.
 
 ## References
 

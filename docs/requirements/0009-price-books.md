@@ -3,7 +3,7 @@
 - **Status**: Triaged
 - **Source**: Maintainer (internal) — product direction from the 2026-10-26 module-expansion review, not a customer intake
 - **Raised**: 2026-10-26
-- **Disposition**: **B standard-enhancement** inside `revenue`. One item is **D defer** — multi-currency — with a platform card as its trigger.
+- **Disposition**: **B standard-enhancement** inside `revenue`. One item is **D defer** — multi-currency — with the platform card objectstack-ai/objectstack#8345 as its trigger.
 - **Traceability**: design — this record's *Product response*; cards and changesets — to be filled in per phase.
 
 ## Requirement
@@ -43,8 +43,9 @@ pure metadata on the pin: two objects, one lookup on the quote, one rule on the 
 **D — multi-currency, deferred to the platform.** Per-record currency, exchange rates and converted
 reporting are platform capability (AGENTS.md *Scope* rules 1 and 2). ⛔ Not simulated here with a
 text field and a rate field. **Revisit trigger**: a published `@objectstack/*` release carrying a
-per-record currency and an exchange-rate table — the platform card filed from this record. Until
-then a price book has no currency of its own; every amount is in the tenant default currency, as
+per-record currency and an exchange-rate table — the platform card is objectstack-ai/objectstack#8345
+(exchange rates, home-currency conversion, converted roll-ups; `pm:on-hold` since 2026-10-08 on the
+maintainer's word 「8345 多币种暂时不是重点，暂停」, so no second card is filed). Until then a price book has no currency of its own; every amount is in the tenant default currency, as
 every amount in HotCRM is today.
 
 ## Product response
@@ -72,5 +73,5 @@ every amount in HotCRM is today.
   show the two list prices; quoting a product the partner book lacks is refused naming the book;
   an existing quote's lines keep their prices after the book is edited. `pnpm verify` green; one
   changeset per PR; the browser pass recorded in each PR.
-- The deferred item is closed by the platform card's release and a separate record, not by this one.
+- The deferred item is closed by objectstack-ai/objectstack#8345's release and a separate record, not by this one.
 - This record is closed as **Shipped** when phase 3 is on `main`.
