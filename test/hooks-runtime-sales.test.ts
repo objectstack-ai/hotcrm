@@ -9,6 +9,7 @@ import { hookNamed } from './helpers/composed-stack';
 import { Product } from '../src/revenue/objects/product.object';
 import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
 import { QuoteLineItem } from '../src/revenue/objects/quote_line_item.object';
+import { LARGE_DEAL_AMOUNT } from '../src/sales/objects/_thresholds';
 
 type Rec = Record<string, any>;
 
@@ -448,8 +449,9 @@ describe('quote_workflow refuses an acceptance the deal’s approval holds (#201
    * "Held" means exactly what makes the rep's own close-won fail — no wider.
    * Each state is measured both ways on twin deals: the rep closing one by
    * hand is the control, and the acceptance on the other must be refused in
-   * exactly the same states. A `rejected` Large Deal Approval is what a recall
-   * leaves too (measured), and it holds nothing.
+   * exactly the same states. These deals sit under the large-deal line, where a
+   * `rejected` Large Deal Approval holds nothing; over it, it does (#2334, the
+   * case below the table).
    */
   it.each([
     ['the shipped default', {}, false],
@@ -478,6 +480,25 @@ describe('quote_workflow refuses an acceptance the deal’s approval holds (#201
       await vi.waitFor(async () => expect((await stored('crm_opportunity', deal.id)).stage).toBe('closed_won'),
         { timeout: 10_000, interval: 50 });
     }
+  });
+
+  it('a rejected Large Deal Approval over the line: the acceptance is refused exactly as the rep’s own close-won is (#2334)', async () => {
+    // Seeded rejected: a seed write fires no record flow, so no request opens
+    // and the deal stands where an approver's "no" left it.
+    const rejected = async (): Promise<Rec> => dealOf({ stage: 'negotiation', amount: LARGE_DEAL_AMOUNT, approval_status: 'rejected' });
+    const twin = await rejected();
+    expect(await refusalOf(repUpdates('crm_opportunity', twin.id, { stage: 'closed_won', win_reason: 'better_price' })),
+      'the control is off: the rep closed a rejected large deal won').toMatchObject({ code: 'RECORD_LOCKED', status: 409 });
+
+    const deal = await rejected();
+    const quote = await presentedOn(deal);
+    const refusal = await refusalOf(repUpdates('crm_quote', quote.id, { status: 'accepted' }));
+    expect(refusal, 'a quote on a rejected large deal was accepted').toMatchObject({ code: 'RECORD_LOCKED', status: 409 });
+    expect(String(refusal!.message)).toContain('Approval Status is Rejected');
+    await new Promise((r) => setTimeout(r, 400));
+    expect((await stored('crm_quote', quote.id)).status).toBe('presented');
+    expect((await stored('crm_opportunity', deal.id)).stage).toBe('negotiation');
+    expect(await verify.rows('crm_contract', { crm_opportunity: deal.id })).toHaveLength(0);
   });
 });
 

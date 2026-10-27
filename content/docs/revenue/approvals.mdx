@@ -61,11 +61,18 @@ The process uses **first-response** behavior — the first approver to respond a
 ### ❌ Rejected (at any tier)
 - The run ends immediately as rejected — a reject at the Manager tier never reaches the Director.
 - `approval_status` is stamped **rejected** and the owner is notified to revise and resubmit.
+- The deal is unlocked so the owner can revise it, and **the next save sends it for approval again** as a new request.
+- Until a later request is approved, a deal of $100K or more whose approval was rejected **cannot be closed won**: moving it to *Closed Won*, or accepting a quote on it, is refused. Closing it as lost is still allowed.
+
+### ↩️ Recalled
+- While a request is pending, the person who submitted it can withdraw it with **Recall** on the request.
+- The deal is unlocked and goes back to the approval status it had before that request, and no new request opens.
+- As after a rejection, the next save sends the deal for approval again. A recalled resubmission is still *rejected*, so it still cannot be closed won.
 - The rejection is captured in the approval request's history.
 
 ## Record locking
 
-Each approval node sets `lockRecord: true`, so while a step is pending the opportunity is **locked by the approval engine** — edits are blocked until the step resolves. The lock is released automatically on the final approve/reject.
+Each approval node sets `lockRecord: true`, so while a step is pending the opportunity is **locked by the approval engine** — edits are blocked until the step resolves. The lock is released automatically on the final approve/reject, or when the request is recalled.
 
 ## The approval audit trail
 
@@ -125,7 +132,7 @@ The three names this page used to list — *Pending My Approval*, *Submitted by 
 
 - ✅ **Mind the thresholds** — an amount of $100K or more (and especially over $500K) will auto-launch approval the moment you save. A deal priced at exactly $100,000 is on the approval side of the line. Plan for the review window before promising a close date.
 - ✅ **Get the deal right before saving at or above the threshold** — the record locks while a tier is pending; you can't tweak it mid-review.
-- ✅ **Watch for the rejection notification** — a reject ends the run; revise and save again to re-submit.
+- ✅ **Watch for the rejection notification** — a reject ends the run and unlocks the deal; revise it and save again to re-submit. A rejected large deal cannot be closed won until a new request is approved.
 
 ## Tips for managers
 

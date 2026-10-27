@@ -242,9 +242,13 @@ const quoteValidation: Hook = {
       //   • `approval_status` `pending`: the Large Deal Approval's request is
       //     open, and its approval node locks the record (`lockRecord: true`)
       //     → the platform's RECORD_LOCKED. The column is the node's own
-      //     mirror of the live request (`approvalStatusField`); a recalled or
-      //     decided request leaves it `rejected` / `approved`, and neither
-      //     holds the deal (the close goes through on both);
+      //     mirror of the live request (`approvalStatusField`);
+      //   • `approval_status` `rejected` on a deal at or over the large-deal
+      //     line → `opportunity_lifecycle`'s refusal of a close-won (#2334).
+      //     Under the line a rejection holds nothing, and neither does
+      //     `approved` or a recall's `not_required`. The line is a COPY of
+      //     `LARGE_DEAL_AMOUNT`, as in that hook (a lowered body cannot import
+      //     it); `test/deal-threshold-parity.test.ts` holds both copies to it;
       //   • `status_change_approval_status` `pending` or `rejected` (REQ-0006,
       //     once an install arms it) → `opportunity_lifecycle`'s refusal of a
       //     direct close; with a request open the platform lock holds too;
@@ -266,15 +270,17 @@ const quoteValidation: Hook = {
         const deal = dealId
           ? await (ctx.api as HookApi | undefined)?.object('crm_opportunity').findOne({
             where: { id: dealId },
-            fields: ['stage', 'approval_status', 'status_change_approval_status', 'qualification_approval_status'],
+            fields: ['stage', 'amount', 'approval_status', 'status_change_approval_status', 'qualification_approval_status'],
           }).catch(() => null)
           : null;
         // Each hold is named by the field label and value the rep sees on the
         // deal itself, so the sentence points at where to look. A `rejected`
-        // Large Deal Approval holds nothing (measured: the close goes through).
+        // Large Deal Approval holds only a deal at or over the line (#2334).
+        const LARGE_DEAL_AMOUNT = 100000;
+        const large = deal ? Number(deal.amount) >= LARGE_DEAL_AMOUNT : false;
         const held = deal && !String(deal.stage).startsWith('closed_')
           ? [['approval_status', 'Approval Status'], ['status_change_approval_status', 'Status Change Approval'], ['qualification_approval_status', 'Qualification Approval']]
-            .filter(([f]) => deal[f] === 'pending' || (deal[f] === 'rejected' && f !== 'approval_status'))
+            .filter(([f]) => deal[f] === 'pending' || (deal[f] === 'rejected' && (f !== 'approval_status' || large)))
             .map(([f, label]) => `${label} is ${deal[f] === 'pending' ? 'Pending' : 'Rejected'}`)
           : [];
         // The quote has exactly one opportunity, so "its opportunity" names the

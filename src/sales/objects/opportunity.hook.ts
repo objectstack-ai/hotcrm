@@ -212,6 +212,44 @@ const opportunityValidationHook: Hook = {
       }
     }
 
+    // ─── Large Deal Approval: no close-won without it (#2334) ───────────
+    //
+    // `opportunity_approval` sends a deal at or over the large-deal line for
+    // approval, and its verdict lands in `approval_status`. While that verdict
+    // is `pending` the approval node's lock already holds the deal; once it is
+    // `rejected` nothing did, so one rejection followed by a direct close won
+    // the deal with no approval at all. The sibling gates above refuse the
+    // same move in the same two states, for the reason they record: an
+    // approver's "no" is not a release. From `rejected` the way forward is a
+    // NEW request — the rep's next save opens it (the flow's start condition)
+    // — never a direct close.
+    //   • `closed_won` only: losing a deal needs no approval;
+    //   • at or over the line, read INPUT-FIRST like the verdict: a deal
+    //     revised under the line in the same write needs none. A
+    //     hand-supplied verdict is stripped before this hook runs (the field
+    //     is `readonly`), and no approval write carries `stage` (#2222);
+    //   • USER writes only (`ctx.user?.id`), the boundary every guard in this
+    //     hook draws;
+    //   • RECORD_LOCKED / 409 (`REFUSAL_CODES.locked`).
+    // ⚠️ The line is a COPY of `LARGE_DEAL_AMOUNT` (`_thresholds.ts`): a
+    // lowered body cannot import it. `test/deal-threshold-parity.test.ts`
+    // holds this copy and the `quote_workflow` one to the constant.
+    if (event === 'beforeUpdate' && previous && ctx.user?.id) {
+      const LARGE_DEAL_AMOUNT = 100000;
+      const verdict = (input.approval_status ?? previous.approval_status) as string | undefined;
+      const dealAmount = Number(input.amount ?? previous.amount);
+      const winning = input.stage === 'closed_won' && input.stage !== previous.stage;
+      if (winning && (verdict === 'pending' || verdict === 'rejected') && dealAmount >= LARGE_DEAL_AMOUNT) {
+        throw refuse(
+          verdict === 'rejected'
+            ? 'This deal\'s Large Deal Approval was rejected, so it cannot be closed won. Revise the deal and save it to send it for approval again; it can be closed won once approved.'
+            : 'This deal is waiting on its Large Deal Approval, so it cannot be closed won until the request is approved.',
+          'RECORD_LOCKED',
+          409,
+        );
+      }
+    }
+
     // Freeze closed opportunities — but guard ONLY genuine USER edits. A write
     // with no authenticated user (`ctx.user?.id` absent) is a system / seed /
     // backfill write and must pass: the seed's `close_date: daysAgo(15)`

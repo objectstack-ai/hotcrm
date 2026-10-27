@@ -30,7 +30,9 @@ type Flow = Automation.Flow;
  *
  * `approval_status` mirrors the live request status, and the record is locked
  * while a step is pending. The mirror alone writes a rejection; on full
- * approval `mark_approved` adds `approved_date`.
+ * approval `mark_approved` adds `approved_date`. A rejected or recalled deal is
+ * handed back to the rep unlocked, and their next save sends it for approval
+ * again (#2334). Until then `opportunity_lifecycle` refuses its close-won.
  */
 export const OpportunityApprovalFlow: Flow = {
   name: 'opportunity_approval',
@@ -65,9 +67,8 @@ export const OpportunityApprovalFlow: Flow = {
       id: 'start',
       type: 'start',
       label: 'Start',
-      // Trigger wiring (7.4): bind to afterUpdate; gate on crossing the entry
-      // threshold while not already in an approval state. The `not_required`
-      // guard stops the flow's own approval_status writes from re-triggering it.
+      // Trigger wiring (7.4): bind to afterUpdate; gate on a save of a deal at
+      // or over the entry threshold that no request holds and none has granted.
       config: {
         objectName: 'crm_opportunity',
         triggerType: 'record-after-update',
@@ -87,8 +88,44 @@ export const OpportunityApprovalFlow: Flow = {
         // predicate. An absent `approval_status` reads the same as the null
         // this condition already tolerates; an absent `stage` is not a settled
         // stage, so it must not block approval.
+        //
+        // ── Which saves are a submission (#2334) ──
+        // `rejected` enters as `not_required` does: a rejection is not a
+        // release, and the way on from it is a NEW request. Before #2334 only
+        // `not_required`/null entered, so no save could ever send a rejected
+        // deal back, and `opportunity_lifecycle` had nothing to refuse its
+        // close-won with either.
+        //
+        // ⚠️ `previous.approval_status != "pending"` is the one term that
+        // tells a write that ENDS a request from a later save, and both halves
+        // of #2334 turn on it. The platform writes the end of a request onto
+        // the deal itself, through `approvalStatusField`, and the deal was
+        // `pending` an instant before: a reject writes `rejected`, and a recall
+        // restores the status the request was submitted from — `not_required`,
+        // or `rejected` for a resubmission (`mirroredStatusValue`,
+        // `@objectstack/plugin-approvals` 18.2.0, which leaves whether the
+        // record re-enters to "the app's own gate"). Without the term both
+        // writes re-entered: a recall opened a fresh request in the same
+        // second and kept the deal locked (#2320 Sales D5, measured), and
+        // `rejected` could not be admitted at all. No user save starts from
+        // `pending`, because the approval node's lock refuses it. So the
+        // writes that end a request open nothing, and the save after them —
+        // the rep's revision — is the resubmission. The other approval writes
+        // need no term: the node's own `pending` stamp and `mark_approved`
+        // land outside the admitted statuses.
+        //
+        // TOTALITY: a prior status that cannot be read — a sparse prior row,
+        // or the `null` prior row of a bulk `updateMany` — is not `pending`,
+        // so it reads as a submission: fail-OPEN on purpose, the direction
+        // that keeps the control engaged. (The status-change and 立项 gates
+        // fail CLOSED on the same shape, because there the term asks whether
+        // a NEW request was written.)
+        // ⛔ The insert twin below does not share this condition: an insert
+        // has no prior row to read.
         condition: P`has(record.amount) && record.amount != null && record.amount >= ${LARGE_DEAL_AMOUNT}
-          && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null)
+          && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null
+            || record.approval_status == "rejected")
+          && (!has(previous.approval_status) || previous.approval_status != "pending")
           && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
       },
     },
@@ -258,9 +295,12 @@ export const OpportunityApprovalFlow: Flow = {
  * opportunities BORN over the threshold — flow-created deals (contract
  * renewals, lead conversion) and API inserts. ⛔ Do not delete this twin
  * expecting the afterUpdate flow to cover them; that population is exactly what
- * the start condition's null-tolerance is written for. Same nodes/edges, only
- * the start node is rebound to afterInsert (mirrors `CaseEscalationOnCreateFlow`).
- * The stage guard carries over, keeping seeded/imported closed deals out.
+ * the start condition's null-tolerance is written for. Same nodes/edges; the
+ * start node is rebound to afterInsert (mirrors `CaseEscalationOnCreateFlow`)
+ * and keeps the entry condition the update flow had before #2334. An insert has
+ * no prior row, so the `previous` term has nothing to read, and a deal is never
+ * born `rejected`. The stage guard carries over, keeping seeded/imported closed
+ * deals out.
  */
 export const OpportunityApprovalOnCreateFlow: Flow = {
   ...OpportunityApprovalFlow,
@@ -269,7 +309,16 @@ export const OpportunityApprovalOnCreateFlow: Flow = {
   description: 'Approval intake for opportunities created above the threshold (insert-time twin of opportunity_approval).',
   nodes: OpportunityApprovalFlow.nodes.map((n) =>
     n.id === 'start'
-      ? { ...n, config: { ...n.config, triggerType: 'record-after-create' } }
+      ? {
+        ...n,
+        config: {
+          ...n.config,
+          triggerType: 'record-after-create',
+          condition: P`has(record.amount) && record.amount != null && record.amount >= ${LARGE_DEAL_AMOUNT}
+            && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null)
+            && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
+        },
+      }
       : n,
   ),
 };
