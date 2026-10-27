@@ -589,10 +589,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_my_leads: { label: '私のリード' },
         home_my_deals: { label: '私のオープン商談' },
         home_my_tasks: { label: '私のオープンタスク' },
-        ai_briefing: {
-          title: 'AI アシスタントに質問',
-          label: '今日の AI アシスタント',
-        },
         upcoming_events: { title: '今後の予定', label: '今後の予定' },
       },
     },

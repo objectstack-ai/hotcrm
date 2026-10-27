@@ -587,10 +587,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_my_leads: { label: 'Mis Prospectos' },
         home_my_deals: { label: 'Mis Negocios Abiertos' },
         home_my_tasks: { label: 'Mis Tareas Abiertas' },
-        ai_briefing: {
-          title: 'Pregúntale al Asistente de IA',
-          label: 'Hoy con el Asistente de IA',
-        },
         upcoming_events: { title: 'Próximos Eventos', label: 'Próximos Eventos' },
       },
     },

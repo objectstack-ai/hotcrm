@@ -594,10 +594,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_my_leads: { label: '我的线索' },
         home_my_deals: { label: '我的进行中商机' },
         home_my_tasks: { label: '我的待办任务' },
-        ai_briefing: {
-          title: '询问 AI 助手',
-          label: 'AI 助手今日速览',
-        },
         upcoming_events: { title: '即将开始的活动', label: '即将开始的活动' },
       },
     },
