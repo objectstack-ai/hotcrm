@@ -11,16 +11,6 @@ import type { EmailTemplatePack } from '../../sales/email-templates/_bundle';
  * resolution-ladder note on `bundle()`.
  */
 export const en: EmailTemplatePack = {
-  'crm.contract_expired': {
-    label: 'Contract Expired',
-    subject: 'Contract expired: {{contract_number}}',
-    bodyHtml: '<p>Contract {{contract_number}} reached its end date and has been marked expired.</p>',
-  },
-  'crm.contract_renewal': {
-    label: 'Contract Renewal Due',
-    subject: 'Contract renewal due: {{contract_number}}',
-    bodyHtml: '<p>Contract {{contract_number}} ends on {{end_date}}. Start the renewal conversation now.</p>',
-  },
   'crm.quote_created': {
     label: 'Quote Created',
     subject: 'Quote created: {{quote_name}}',

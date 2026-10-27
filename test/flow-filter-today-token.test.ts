@@ -6,7 +6,7 @@ import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import { AutomationEngine, installBuiltinNodes } from '@objectstack/service-automation';
 import type * as Automation from '@objectstack/spec/automation';
 import { allFlows } from '../objectstack.composition';
-import { ContractExpirationFlow } from '../src/revenue/flows/contract-expiration.flow';
+import { ContractExpirationFlow } from '../src/sales/flows/contract-expiration.flow';
 import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 
 /**

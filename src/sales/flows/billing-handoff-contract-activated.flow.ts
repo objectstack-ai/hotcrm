@@ -13,7 +13,7 @@ import {
   LINE_ITEM_FIELDS,
   billingBody,
   loadAccountNode,
-} from '../../sales/flows/_billing-endpoint';
+} from './_billing-endpoint';
 
 /**
  * ═══ Billing hand-off — where HotCRM's revenue scope ends ══════════════════

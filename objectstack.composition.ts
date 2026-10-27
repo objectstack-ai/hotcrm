@@ -98,7 +98,7 @@ import { TenantAdminProfile } from './src/sales/profiles/tenant-admin.profile.js
 
 // Hooks — the sales barrel, assembled below in source-file-name order.
 import {
-  accountHook, contactHook, eventHook, forecastHook, leadHook,
+  accountHook, contactHook, contractHook, eventHook, forecastHook, leadHook,
   leadCampaignMetricsHook, opportunityHook, opportunityCampaignMetricsHook, taskHook,
 } from './src/sales/objects/hooks.js';
 
@@ -111,6 +111,7 @@ import {
   OpportunityStatusChangeApprovalFlow, OpportunityQualificationApprovalFlow,
   OpportunityStagnationFlow, OpportunityWonAlertFlow, ScheduleFollowUpFlow,
   TaskDueReminderFlow, TaskUrgentAlertFlow, BillingHandoffClosedWonFlow,
+  ContractRenewalFlow, ContractExpirationFlow, BillingHandoffContractActivatedFlow,
 } from './src/sales/flows/index.js';
 
 // Skills — likewise.
@@ -134,8 +135,9 @@ import {
   resolveComposition,
   accounts, contacts, leads, opportunities,
   tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers, forecasts,
+  contracts,
 } from './src/sales/data/index.js';
-import { products, opportunityLineItems, contracts, quotes, quoteLineItems } from './src/revenue/data/index.js';
+import { products, opportunityLineItems, quotes, quoteLineItems } from './src/revenue/data/index.js';
 import { cases, knowledgeArticles } from './src/service/data/index.js';
 import { campaigns, campaignMembersFromLeads, campaignMembersFromContacts } from './src/marketing/data/index.js';
 
@@ -216,6 +218,7 @@ export const appHooks = [
   opportunityCampaignMetricsHook,
   leadCampaignMetricsHook,
   contactHook,
+  contractHook,
   eventHook,
   forecastHook,
   leadHook,
@@ -246,6 +249,12 @@ export const appFlows = [
   TaskUrgentAlertFlow,
   TaskDueReminderFlow,
   BillingHandoffClosedWonFlow,
+  // The contract's three flows, which moved here with `crm_contract`
+  // (`module-split-plan.md` item 11), in the order the revenue package
+  // registered them.
+  ContractRenewalFlow,
+  ContractExpirationFlow,
+  BillingHandoffContractActivatedFlow,
   ...appRegisteredModuleItems.flows,
 ];
 
@@ -267,8 +276,9 @@ export const appObjects = byExportName({ ...salesObjects });
 /**
  * Every shared option list (`*.picklist.ts`) it registers — the lists a select
  * field references by name with `Field.select({ picklist })` instead of copying
- * options. Each list registers with the package whose fields reference it:
- * these with sales, `payment_terms` with revenue (`src/revenue/index.ts`). A
+ * options. Each list registers with the lowest package all its fields depend
+ * on, which for every list today is sales — `payment_terms` included, whose
+ * `crm_quote` field reaches it along the revenue module's edge. A
  * field naming a list registered by nothing is refused by `pnpm validate` and
  * fails the boot, so this line is load-bearing.
  */
@@ -488,9 +498,9 @@ export const SaasTenantSeedData = [products];
  */
 export const ServiceSeedData = CrmSeedData.filter((family) => [cases, knowledgeArticles].includes(family));
 
-/** The REVENUE package's families — the catalogue, line items, contracts and quotes. */
+/** The REVENUE package's families — the catalogue, line items and quotes. */
 export const RevenueSeedData = CrmSeedData.filter((family) =>
-  [products, opportunityLineItems, contracts, quotes, quoteLineItems].includes(family));
+  [products, opportunityLineItems, quotes, quoteLineItems].includes(family));
 
 /** The MARKETING package's families — the campaigns and their members. */
 export const MarketingSeedData = CrmSeedData.filter((family) =>

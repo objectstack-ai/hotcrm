@@ -128,13 +128,13 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| CON-001 | 合同对象 | 法律协议(`crm_contract`):CTR-{0000} 编号即标题,必填客户/联系人/期限/起止日/合同额,签署与计费字段,私有共享,启用附件 | `src/revenue/objects/contract.object.ts` |
-| CON-002 | 合同状态机 | `draft → in_approval → activated → expired/terminated`;两个终态,续约=新建合同而非复活旧行 | `src/revenue/objects/contract.object.ts`(validations) |
-| CON-003 | 期限一致性校验 | 起止日与 `contract_term_months` 偏差 >1 个月即拒绝;激活后禁止缩短 `end_date`(应走终止/变更) | `src/revenue/objects/contract.hook.ts`(`contract_validation`) |
-| CON-004 | 激活后置动作 | 激活时补 `signed_date`(如未填)并把客户升级为 customer | `src/revenue/objects/contract.hook.ts`(`contract_on_activation`) |
-| CON-005 | 合同自动过期 | 每日 00:00 把过了 `end_date` 的 activated 合同置 expired 并通知 owner | `src/revenue/flows/contract-expiration.flow.ts` |
-| CON-006 | 续约提醒与自动续约 | 每日 08:00 按每份合同的 `renewal_notice_days` 幂等创建续约任务并通知;`auto_renewal` 合同自动开出续约商机(proposal,金额=合同额) | `src/revenue/flows/contract-renewal.flow.ts` |
-| CON-007 | 合同视图 | 到期日日历、合同期 gantt、按客户分组的季度 timeline、按最快到期排序的列表 | `src/revenue/views/contract.view.ts` |
+| CON-001 | 合同对象 | 法律协议(`crm_contract`):CTR-{0000} 编号即标题,必填客户/联系人/期限/起止日/合同额,签署与计费字段,私有共享,启用附件 | `src/sales/objects/contract.object.ts` |
+| CON-002 | 合同状态机 | `draft → in_approval → activated → expired/terminated`;两个终态,续约=新建合同而非复活旧行 | `src/sales/objects/contract.object.ts`(validations) |
+| CON-003 | 期限一致性校验 | 起止日与 `contract_term_months` 偏差 >1 个月即拒绝;激活后禁止缩短 `end_date`(应走终止/变更) | `src/sales/objects/contract.hook.ts`(`contract_validation`) |
+| CON-004 | 激活后置动作 | 激活时补 `signed_date`(如未填)并把客户升级为 customer | `src/sales/objects/contract.hook.ts`(`contract_on_activation`) |
+| CON-005 | 合同自动过期 | 每日 00:00 把过了 `end_date` 的 activated 合同置 expired 并通知 owner | `src/sales/flows/contract-expiration.flow.ts` |
+| CON-006 | 续约提醒与自动续约 | 每日 08:00 按每份合同的 `renewal_notice_days` 幂等创建续约任务并通知;`auto_renewal` 合同自动开出续约商机(proposal,金额=合同额) | `src/sales/flows/contract-renewal.flow.ts` |
+| CON-007 | 合同视图 | 到期日日历、合同期 gantt、按客户分组的季度 timeline、按最快到期排序的列表 | `src/sales/views/contract.view.ts` |
 
 ## SVC — 服务与 SLA
 

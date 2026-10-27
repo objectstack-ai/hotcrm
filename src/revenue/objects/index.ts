@@ -10,7 +10,6 @@
  * `src/sales/objects/index.ts`.
  */
 
-export { Contract } from './contract.object';
 export { OpportunityLineItem } from './opportunity_line_item.object';
 export { Product } from './product.object';
 export { Quote } from './quote.object';

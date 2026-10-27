@@ -690,7 +690,7 @@ export const Account = ObjectSchema.create({
 
     // ⛔ No account-level renewal model here, on purpose. Renewal is a
     // CONTRACT-level process with exactly one home — `crm_contract.end_date` +
-    // `renewal_notice_days`, swept daily by `src/revenue/flows/contract-renewal.flow.ts`,
+    // `renewal_notice_days`, swept daily by `src/sales/flows/contract-renewal.flow.ts`,
     // which books the task and notifies the CONTRACT owner; the user-facing
     // queue is that object's `renewal_calendar` view. A `renewal_owner` /
     // `next_renewal_date` pair here would be declared and inert, telling an

@@ -32,6 +32,16 @@ export const en: EmailTemplatePack = {
     subject: 'New contact: {{first_name}} {{last_name}}',
     bodyHtml: '<p>{{first_name}} {{last_name}} was added as a contact. Reach out to welcome them.</p>',
   },
+  'crm.contract_expired': {
+    label: 'Contract Expired',
+    subject: 'Contract expired: {{contract_number}}',
+    bodyHtml: '<p>Contract {{contract_number}} reached its end date and has been marked expired.</p>',
+  },
+  'crm.contract_renewal': {
+    label: 'Contract Renewal Due',
+    subject: 'Contract renewal due: {{contract_number}}',
+    bodyHtml: '<p>Contract {{contract_number}} ends on {{end_date}}. Start the renewal conversation now.</p>',
+  },
   'crm.deal_stalled': {
     label: 'Stalled Deal',
     subject: 'Stalled deal: {{name}}',

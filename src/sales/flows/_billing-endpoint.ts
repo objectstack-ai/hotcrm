@@ -92,7 +92,7 @@ export const BILLING_HANDOFF_LINE_ITEM_LIMIT = 200;
  * trigger on objects in different packages — `crm_opportunity` is sales',
  * `crm_contract` is revenue's — so the flows are now
  * `src/sales/flows/billing-handoff-closed-won.flow.ts` and
- * `src/revenue/flows/billing-handoff-contract-activated.flow.ts`. The shared
+ * `src/sales/flows/billing-handoff-contract-activated.flow.ts`. The shared
  * half moved HERE rather than being copied into each: it is the same contract
  * with the same receiver, and two copies of a contract is how a receiver ends
  * up with two shapes. Revenue reads it along the revenue -> sales edge, the

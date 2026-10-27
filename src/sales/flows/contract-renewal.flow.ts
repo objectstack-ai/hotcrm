@@ -2,7 +2,7 @@
 
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
-import { guarded } from '../../sales/flows/_guarded-iteration';
+import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
 /**

@@ -92,7 +92,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 
 本節曾經列出的三份合約報表哪兒都沒有發布，而且按它們寫的口徑一份都建不出來，原因是同一個：**沒有合約資料集**。`crm_contract` 不在 `src/*/datasets/` 讀取的那些物件之列，所以分析側根本無法對合約計數、求和或分組。
 
-- *Contracts Expiring* —— 問題本身是真實的，回答它的是**檢視**而不是報表：**Renewal Calendar**（合約上同名的那個標籤頁）把每份合約按 **End Date** 擺在日曆上，**Contract Terms** 則把同樣的合約期畫成甘特圖（`src/revenue/views/contract.view.ts`）。兩者都在列記錄，都不做合計 —— 因為它們背後沒有可供合計的資料集。
+- *Contracts Expiring* —— 問題本身是真實的，回答它的是**檢視**而不是報表：**Renewal Calendar**（合約上同名的那個標籤頁）把每份合約按 **End Date** 擺在日曆上，**Contract Terms** 則把同樣的合約期畫成甘特圖（`src/sales/views/contract.view.ts`）。兩者都在列記錄，都不做合計 —— 因為它們背後沒有可供合計的資料集。
 - *Active Contracts by Product* —— 兩頭都夠不著：既沒有合約資料集，`product_metrics` 又只是產品目錄的彙總，它從不跨到合約，也不跨到行項目。
 - *Renewal Pipeline* —— 按它寫的口徑（*與續約合約關聯的商機*）建不出來：這條關聯是反著走的（`crm_contract.crm_opportunity`），而且沒有任何維度把它暴露出來。不過續約管道本身建得出來：**Deal Type** 是 `opportunity_metrics` 上的維度，**Existing Customer - Renewal** 正是它的取值之一。
 

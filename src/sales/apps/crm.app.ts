@@ -260,10 +260,15 @@ export const CrmApp = App.create({
         // "My Work" items below, which are all object + `viewName`.
         { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
         { id: 'nav_sales_dashboard', type: 'dashboard', dashboardName: 'sales_dashboard', label: 'Sales Performance', icon: 'chart-line', visible: OPPORTUNITY_AUDIENCE },
-        // Quotes, Contracts and Products follow, contributed by the revenue
-        // module (`src/revenue/index.ts`): the app's own navigation may not
-        // name another package's object (rule R3), and a contributed item
-        // lands after the group's own children (#2270).
+        // Contracts close the sales cycle: quote → signed agreement → renewal.
+        // The app's own entry since `crm_contract` moved into this package
+        // (`module-split-plan.md` item 11), so it is the last of the group's
+        // own children, beside the revenue entries that follow it.
+        { id: 'nav_contract',    type: 'object', objectName: 'crm_contract',    label: 'Contracts',     icon: 'file-signature' },
+        // Quotes and Products follow, contributed by the revenue module
+        // (`src/revenue/index.ts`): the app's own navigation may not name
+        // another package's object (rule R3), and a contributed item lands
+        // after the group's own children (#2270).
       ],
     },
 

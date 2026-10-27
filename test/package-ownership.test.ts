@@ -33,9 +33,12 @@ const REVENUE_ID = 'app.objectstack.hotcrm.revenue';
 const MARKETING_ID = 'app.objectstack.hotcrm.marketing';
 const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID];
 
-/** Each module's objects — `module-split-plan.md` decision 5. */
+/**
+ * Each module's objects — `module-split-plan.md` decision 5, amended by item 11
+ * (2026-10-26): `crm_contract` is the app package's, not revenue's.
+ */
 const SERVICE_OBJECTS = ['crm_article_feedback', 'crm_case', 'crm_knowledge_article'];
-const REVENUE_OBJECTS = ['crm_contract', 'crm_opportunity_line_item', 'crm_product', 'crm_quote', 'crm_quote_line_item'];
+const REVENUE_OBJECTS = ['crm_opportunity_line_item', 'crm_product', 'crm_quote', 'crm_quote_line_item'];
 const MARKETING_OBJECTS = ['crm_campaign', 'crm_campaign_member'];
 const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS];
 
@@ -94,7 +97,7 @@ describe('every object has exactly one owner', () => {
     expect(namesOf(body(SERVICE_ID).objects)).toEqual(SERVICE_OBJECTS);
   });
 
-  it('the revenue module owns the product, line-item, quote and contract objects', () => {
+  it('the revenue module owns the product, line-item and quote objects', () => {
     expect(namesOf(body(REVENUE_ID).objects)).toEqual(REVENUE_OBJECTS);
   });
 
@@ -102,9 +105,23 @@ describe('every object has exactly one owner', () => {
     expect(namesOf(body(MARKETING_ID).objects)).toEqual(MARKETING_OBJECTS);
   });
 
+  it('the app package owns the contract — one dependency level (`module-split-plan.md` items 10, 11)', () => {
+    // O2C and PSA hang off the contract; owned by revenue, it would put a
+    // second level under both. Its references all point at app-package
+    // objects, so the move adds no edge back into a module.
+    expect(namesOf(body(APP_ID).objects)).toContain('crm_contract');
+    expect(namesOf(body(APP_ID).picklists)).toContain('payment_terms');
+    for (const id of MODULE_IDS) {
+      expect(namesOf(body(id).picklists), id).toEqual([]);
+      expect(((body(id).navigationContributions ?? []) as AnyRec[])
+        .flatMap((c) => (c.items ?? []) as AnyRec[])
+        .map((item) => item.objectName), id).not.toContain('crm_contract');
+    }
+  });
+
   it('the app package owns every other object of the app', () => {
     const appObjects = namesOf(body(APP_ID).objects);
-    expect(appObjects).toHaveLength(8);
+    expect(appObjects).toHaveLength(9);
     expect(appObjects.filter((name) => MODULE_OBJECTS.includes(name))).toEqual([]);
     expect([...appObjects, ...MODULE_OBJECTS].sort()).toEqual(namesOf((composed as AnyRec).objects));
   });

@@ -10,7 +10,7 @@ import { esES } from './es-ES';
 /**
  * Revenue — every `sys_email_template` row this package's `notify` nodes name.
  *
- * Four locale packs crossed with three template names. `bundle()` is imported
+ * Four locale packs crossed with one template name, `crm.quote_created`. `bundle()` is imported
  * along this module's edge into sales, the one deterministic home for a source
  * more than one package needs.
  */

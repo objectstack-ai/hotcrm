@@ -90,7 +90,7 @@ The five other reports this section used to list are published nowhere, and most
 
 The three contract reports this section used to list are published nowhere, and none of them can be built as written, for one shared reason: **there is no contract dataset**. `crm_contract` is not one of the objects `src/*/datasets/` reads, so nothing in analytics counts, sums or groups a contract.
 
-- *Contracts Expiring* — the question is real and it is answered by a **view**, not a report: **Renewal Calendar** (the tab of that name on Contracts) plots every contract on its **End Date**, and **Contract Terms** shows the same terms as a Gantt (`src/revenue/views/contract.view.ts`). Both list records; neither totals them, because there is no dataset behind them to total.
+- *Contracts Expiring* — the question is real and it is answered by a **view**, not a report: **Renewal Calendar** (the tab of that name on Contracts) plots every contract on its **End Date**, and **Contract Terms** shows the same terms as a Gantt (`src/sales/views/contract.view.ts`). Both list records; neither totals them, because there is no dataset behind them to total.
 - *Active Contracts by Product* — unreachable twice over: no contract dataset, and `product_metrics` is a product-catalogue rollup that never crosses to contracts or to line items.
 - *Renewal Pipeline* — as written, *opportunities tied to renewing contracts*, it cannot be built: the link runs the other way (`crm_contract.crm_opportunity`) and no dimension exposes it. The renewal pipeline itself is buildable, though: **Deal Type** is a dimension on `opportunity_metrics`, and **Existing Customer - Renewal** is one of its values.
 
