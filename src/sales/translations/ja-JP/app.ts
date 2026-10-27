@@ -734,6 +734,19 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: '完了予定日' },
           },
         },
+        // The result screen (#2297). Same two-hole shape as `screen_1`: exactly
+        // one hole holds the account's name, and each `default:` is the OTHER
+        // state's words. Keep both holes, in this order, with a `default:` each
+        // (see `result` in `lead-conversion.flow.ts`).
+        result: {
+          title: 'リードを変換しました',
+          description: '{{ pendingApprovalAccountName | default:"承認待ちの取引先承認はありません：" }}{{ noApprovalAccountName | default:" は、営業マネージャーによる取引先承認を待っています" }}。',
+          fields: {
+            accountLink: { label: '取引先' },
+            contactLink: { label: '取引先責任者' },
+            opportunityLink: { label: '商談' },
+          },
+        },
       },
       refusals: {
         refuse_confirmed_duplicate: {

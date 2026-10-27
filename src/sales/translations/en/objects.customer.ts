@@ -41,9 +41,10 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       approval_status: {
         label: 'Approval Status',
-        help: 'Where this account stands in its sign-off. A new account starts Pending and is decided in the approval inbox.',
+        help: 'Where this account stands in its sign-off. A new account starts Pending and is decided in the approval inbox. An account created by Convert Lead skips approval and stays empty.',
         options: { pending: 'Pending', approved: 'Approved', rejected: 'Rejected' },
       },
+      converted_from_lead_id: { label: 'Converted From Lead', help: 'The lead Convert Lead created this account from. Set only by lead conversion.' },
       name: { label: 'Account Name', help: 'Legal name of the company or organization' },
       type: {
         label: 'Type',
