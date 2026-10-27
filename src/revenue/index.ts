@@ -13,7 +13,7 @@ import { Contract, OpportunityLineItem, Product, Quote, QuoteLineItem } from './
 import {
   contractHook, opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
 } from './objects/hooks.js';
-import { QuotePrintPage } from './pages/index.js';
+import { QuoteDetailPage, QuotePrintPage } from './pages/index.js';
 import { PaymentTermsPicklist } from './picklists/index.js';
 import { ContractViews, ProductViews, QuoteViews } from './views/index.js';
 
@@ -136,7 +136,7 @@ export const createHotCrmRevenueStack = (
   views: [ContractViews, ProductViews, QuoteViews],
   flows: revenueFlows,
   emailTemplates: RevenueEmailTemplates,
-  pages: [QuotePrintPage],
+  pages: [QuoteDetailPage, QuotePrintPage],
   actions: [PrintQuoteAction],
   plugins: [new PrintServicePlugin()],
 

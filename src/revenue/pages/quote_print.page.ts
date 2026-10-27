@@ -19,14 +19,16 @@ import { Page } from '@objectstack/spec/ui';
  * ⚠️ NOT the quote's default record page, deliberately (maintainer ruling on
  * #2312, option B). The quote's working record page — title, highlights,
  * status path, Details / Related / Attachments tabs, discussion — stays the
- * derived one; a print page holds only the printable blocks
- * (`PRINTABLE_PAGE_COMPONENT_TYPES`, `os validate` refuses any other), so
- * making this the default would replace all of that for every rep, every day.
- * The cost, measured on 18.1.0: the print service prints only an object's
- * DEFAULT record page and answers any other page with `VALIDATION_ERROR` /
- * 400 ("is not the default record page … (isDefault: true)"), so Print Quote
- * is refused until the platform prints a named record page
- * (objectstack#26583). Nothing here works around that.
+ * synthesized one, which `quote_detail_page` (`./quote_detail.page.ts`) holds
+ * as the default: with no default, the console's record route would draw the
+ * object's FIRST record page, this one. A print page holds only the printable
+ * blocks (`PRINTABLE_PAGE_COMPONENT_TYPES`, `os validate` refuses any other),
+ * so drawing it as the record page would replace all of that for every rep,
+ * every day. The cost, measured on 18.1.0 and 18.2.0: the print service
+ * prints only an object's DEFAULT record page and answers any other page with
+ * `VALIDATION_ERROR` / 400 ("is not the default record page … (isDefault:
+ * true)"), so Print Quote is refused until the platform prints a named record
+ * page (objectstack#26583). Nothing here works around that.
  *
  * Every block is printable. The `header` region repeats on every sheet, and
  * each sheet carries its page number.

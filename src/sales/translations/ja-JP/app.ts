@@ -555,6 +555,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         opp_main_tabs: { items: { details: { label: '詳細' }, related: { label: '関連' }, activity: { label: '活動' } } },
       },
     },
+    quote_detail_page: {
+      label: '見積詳細',
+      description: '見積のレコードページ：自動生成のレイアウトをそのまま使い、スロットは上書きしません。',
+    },
     quote_print_page: {
       label: '見積書ドキュメント',
       description: '印刷用の見積書：ヘッダー、顧客、見積明細、価格、条件。',

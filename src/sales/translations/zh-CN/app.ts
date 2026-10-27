@@ -560,6 +560,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         opp_main_tabs: { items: { details: { label: '明细' }, related: { label: '相关' }, activity: { label: '互动' } } },
       },
     },
+    quote_detail_page: {
+      label: '报价详情',
+      description: '报价的记录页：使用系统生成的布局，不覆盖任何插槽。',
+    },
     quote_print_page: {
       label: '报价文档',
       description: '可打印的报价文档：抬头、客户、行项目、价格与条款。',

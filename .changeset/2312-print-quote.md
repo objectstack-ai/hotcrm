@@ -17,7 +17,9 @@ attachments, in the name of the rep who printed it. The rep downloads it from th
   *Draft → Presented* is now a legal move on the quote's status path. The contact rule still holds:
   a quote with no **Contact** is printed and filed, and stays where it was.
 - **The printed page is its own page.** The quote's record page is unchanged; the document is a
-  separate print page, `quote_print_page`.
+  separate print page, `quote_print_page`. The quote now declares its default record page,
+  `quote_detail_page`, which overrides nothing: without it the console would open every quote on
+  the print page, the first record page the quote has.
 - **The deployment provides the browser.** Printing runs on the server in headless Chromium, through
   `@objectstack/service-print`, now a dependency: set `OS_PRINT_CHROMIUM_PATH` or
   `OS_PRINT_BROWSER_ENDPOINT`, and `OS_PRINT_CONSOLE_URL`. Without them **Print Quote** answers an

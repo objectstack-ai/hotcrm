@@ -196,6 +196,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         opp_stage_path: { label: 'Opportunity Stage Path' },
       },
     },
+    quote_detail_page: {
+      label: 'Quote Detail',
+      description: "The quote's record page: the synthesized layout, with no slot overridden.",
+    },
     quote_print_page: {
       label: 'Quote Document',
       description: 'The quote as a printable document: header, customer, line items, pricing and terms.',
