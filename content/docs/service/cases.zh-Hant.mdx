@@ -108,7 +108,7 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 
 ## 內建規則
 
-- **已關閉工單必須有解決方案**——解決方案欄位為空時無法關閉工單。
+- **已關閉工單必須有解決方案**——解決方案欄位為空時無法關閉工單。編輯表單在狀態選為 *Resolved* 或 *Closed* 時就會顯示解決方案欄位，可以在同一次儲存裡填寫；新建工單時不顯示它。
 - **升級工單必須有升級原因**——解釋為何引入了資深客服。
 - **狀態推進是建議，不是閘門**——轉換表寫的是 *New* 之後可以去 *In Progress*、*Waiting on Customer*、*Escalated* 或 *Closed*，所以直接跳到 *Resolved* 是走出了這張表。但這攔不下儲存：工單照樣以 *Resolved* 落庫，引擎只在伺服器日誌裡寫一行 `WARN Validation rule 'case_status_progression' (warning): Invalid status transition`。與上面兩條不同——那兩條是 `error` 級、確實會拒絕儲存——這一條只做提示。轉換表到底有什麼用，見[狀態機](/zh-Hant/docs/administration/state-machines)。
 

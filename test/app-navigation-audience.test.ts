@@ -373,8 +373,12 @@ describe('a member with no HotCRM grant lands on the platform access page (#2250
     expect(NAMED_OBJECTS.filter((o) => who.no_grant!.objects[o]?.allowRead === true)).toEqual([]);
   });
 
-  it('the gates alone would open the app on Service Overview: the reported first screen', () => {
-    expect(shownTo('no_grant')[0]).toBe('nav_service_dashboard');
+  // Service Overview was the reported first screen. Since #2338 it asks for
+  // case read, so the gates alone now open the app further down, on the
+  // Approvals Inbox, which is still a HotCRM entry the platform page preempts.
+  it('the gates alone would open the app on a HotCRM entry: the Approvals Inbox since #2338', () => {
+    expect(shownTo('no_grant')).not.toContain('nav_service_dashboard');
+    expect(shownTo('no_grant')[0]).toBe('nav_approval_requests');
   });
 
   it('so the member lands on the platform access page, not on any HotCRM entry', () => {
