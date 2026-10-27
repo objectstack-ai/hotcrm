@@ -56,9 +56,9 @@ hotcrm/
 ├── objectstack.config.ts      # composeStacks() over the four package stacks — the artifact, nothing else
 ├── objectstack.composition.ts # The four package stacks built; the composition knob
 ├── src/
-│   ├── sales/              # The `type: app` package — account, contact, lead, opportunity, forecast, task, event, event_attendee
+│   ├── sales/              # The `type: app` package — account, contact, contract, lead, opportunity, forecast, task, event, event_attendee
 │   ├── service/            # The service module — case, knowledge_article, article_feedback
-│   ├── revenue/            # The revenue module — product, opportunity_line_item, quote, quote_line_item, contract
+│   ├── revenue/            # The revenue module — product, price_book, price_book_entry, opportunity_line_item, quote, quote_line_item
 │   ├── marketing/          # The marketing module — campaign, campaign_member
 │   └── docs/               # In-product package docs (ADR-0046) — see the note below
 ├── content/docs/           # Product documentation site (Fumadocs): en, zh-Hans, zh-Hant
@@ -122,7 +122,7 @@ it reports is the app package, and ⛔ it is not an instruction to move them —
 2. **The `crm_` prefix is written out, everywhere.** Business object names are `snake_case` with an explicit `crm_` prefix
    (`crm_account`); the runtime injects nothing, so the name in source = at runtime = in the DB = in the REST URL = in the docs, and
    every reference — lookup / master-detail targets, cube `sql`, view, hook, action, navigation, dashboard and translation keys — uses
-   it. Platform objects keep `sys_*`; the file stays unprefixed (`src/revenue/objects/contract.object.ts` declares `name: 'crm_contract'`); the
+   it. Platform objects keep `sys_*`; the file stays unprefixed (`src/sales/objects/contract.object.ts` declares `name: 'crm_contract'`); the
    roster is `src/*/objects/*.object.ts`, ⛔ never restated in prose. The `os lint` `naming/namespace-prefix` warning on non-object items
    is advisory (ADR-0048): ⛔ do not mass-rename to chase it.
 3. **Data access is ObjectQL through `ctx.api`** — there is no `broker`. Shape:
