@@ -13,6 +13,21 @@ import { defineView } from '@objectstack/spec/ui';
  *   • timeline — chronological deal flow grouped by owner
  *   • gallery  — pinboard / executive review cards
  */
+/**
+ * The selection bar's Update Stage, declared on every grid list of the object
+ * (#2338 item 4). The full note on the dispatch contract is on `list` below.
+ *
+ * A named list view does NOT inherit the `list` view's `bulkActionDefs`
+ * (measured on 18.2.0: All Opportunities' bar offered only Delete). While
+ * `mass_update_stage` was also drawn in the list header, every view showed an
+ * Update Stage button, but that copy failed on any selection (see `locations`
+ * on the action), so it was dropped, and each grid list declares the bar entry
+ * instead. Kanban, calendar, timeline and gallery lists have no row selection.
+ */
+const UPDATE_STAGE_BAR = [
+  { name: 'mass_update_stage', operation: 'custom', execution: 'aggregate' },
+] as const;
+
 export const OpportunityViews = defineView({
   // The landing view is OPEN deals, not every deal ever recorded.
   //
@@ -93,9 +108,7 @@ export const OpportunityViews = defineView({
     // promoted from the action itself by the renderer, so the dialog and the
     // toolbar button cannot drift apart — and the label stays i18n-resolved,
     // which an inline `label:` here would not be.
-    bulkActionDefs: [
-      { name: 'mass_update_stage', operation: 'custom', execution: 'aggregate' },
-    ],
+    bulkActionDefs: [...UPDATE_STAGE_BAR],
   },
 
   listViews: {
@@ -108,6 +121,7 @@ export const OpportunityViews = defineView({
      */
     all_opportunities: {
       name: 'all_opportunities',
+      bulkActionDefs: [...UPDATE_STAGE_BAR],
       type: 'grid',
       label: 'All Opportunities',
       userActions: { editInline: true, hideFields: true },
@@ -198,6 +212,7 @@ export const OpportunityViews = defineView({
     /** Personal pipeline */
     my_open_deals: {
       name: 'my_open_deals',
+      bulkActionDefs: [...UPDATE_STAGE_BAR],
       type: 'grid',
       label: 'My Open Deals',
       userActions: { editInline: true, hideFields: true },
@@ -216,6 +231,7 @@ export const OpportunityViews = defineView({
     /** Stale Opportunities — still-open deals, longest-parked first */
     stale_opportunities: {
       name: 'stale_opportunities',
+      bulkActionDefs: [...UPDATE_STAGE_BAR],
       type: 'grid',
       // Honest label: this view does not apply the 14-day cut its automation
       // twin (`opportunity_stagnation`, STALE_THRESHOLD_DAYS = 14) uses, and
@@ -290,6 +306,7 @@ export const OpportunityViews = defineView({
      */
     tender_this_quarter: {
       name: 'tender_this_quarter',
+      bulkActionDefs: [...UPDATE_STAGE_BAR],
       type: 'grid',
       label: 'Tender This Quarter',
       userActions: { editInline: true, hideFields: true },
@@ -314,6 +331,7 @@ export const OpportunityViews = defineView({
     /** Closing this quarter (commit + best_case) — sales-manager forecast */
     closing_this_quarter: {
       name: 'closing_this_quarter',
+      bulkActionDefs: [...UPDATE_STAGE_BAR],
       type: 'grid',
       label: 'Closing This Quarter',
       userActions: { editInline: true, hideFields: true },
