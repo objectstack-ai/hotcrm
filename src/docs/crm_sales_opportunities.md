@@ -1,6 +1,6 @@
 ---
 title: Opportunities — Stages, Alerts & Approvals
-description: Opportunity stages, the stalled-deal nudge, the won-deal alert, large-deal approvals and urgent tasks — every automated rule and threshold.
+description: Opportunity stages, the stalled-deal nudge, the won-deal alert and large-deal approvals — every automated rule and threshold.
 order: 2
 # sources: flows/objects this doc documents. Thresholds here are guarded by
 # test/docs-drift.test.ts; build ignores unknown frontmatter keys.
@@ -8,9 +8,7 @@ sources:
   - flow:opportunity_approval
   - flow:opportunity_stagnation
   - flow:opportunity_won_alert
-  - flow:task_urgent_alert
   - object:crm_opportunity
-  - object:crm_task
 ---
 
 # Opportunities — Stages, Alerts & Approvals
@@ -86,14 +84,9 @@ deal of $100K or more cannot be closed won until a new request is approved. The
 submitter can also **Recall** a pending request to unlock the deal; the next save
 resubmits it. Approvers act from their **Approvals → Inbox**.
 
-## Tasks
-
-Creating a task with **Urgent** priority immediately notifies its owner. Routine
-follow-up tasks (e.g. from the stalled-deal nudge) are created as **High**
-priority.
-
 ---
 
 **Related:** a deal starts life as a lead — see [Leads](./crm_sales_leads.md);
 once it is won, the relationship continues as a contract — see
-[Contracts](./crm_sales_contracts.md).
+[Contracts](./crm_sales_contracts.md); the tasks, calls and meetings that move
+it along — see [Activities](./crm_sales_activities.md).
