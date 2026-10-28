@@ -7,7 +7,7 @@ import { ErrorCode } from '@objectstack/spec/api';
 import { allHooks } from '../objectstack.composition';
 import { REFUSAL_CODES, REFUSE_HELPER } from '../src/sales/objects/_refusal';
 import { hookNamed } from './helpers/composed-stack';
-import { hotcrmStack, signUpPerson, runShippedHook, today, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, today, type Person } from './helpers/verify-stack';
 
 /**
  * The refusal envelope, pinned where it actually ships (#1075 + #1167).
@@ -194,6 +194,7 @@ const productGuard = hookNamed('product_catalog');
 const taskGuard = hookNamed('task_do_not_call_guard');
 const leadGuard = hookNamed('lead_automation');
 const lineGuard = hookNamed('opportunity_line_item_freeze');
+const quoteGuard = hookNamed('quote_workflow');
 
 /**
  * The real app — booted through `@objectstack/verify`'s handle — and the rows
@@ -241,6 +242,14 @@ beforeAll(async () => {
     converted_account: row.account, converted_contact: row.contact, converted_opportunity: row.opportunity,
   }]);
   row.convertedLead = String(converted!.id);
+  // A quote that expired, for its line freeze (#2338 item 16) — settled the
+  // way the expiry sweep settles one, as the system.
+  const [quote] = await verify.seed('crm_quote', [{
+    name: 'Envelope Quote', crm_account: row.account, crm_contact: row.contact, owner_id: rep.id,
+    status: 'draft', quote_date: '2026-01-01', expiration_date: '2030-12-31', discount: 0, tax: 0, shipping_handling: 0,
+  }]);
+  row.expiredQuote = String(quote!.id);
+  await systemUpdate(verify, 'crm_quote', { id: row.expiredQuote, status: 'expired' });
 }, 180_000);
 
 /** Run a hook's SHIPPED body and return the error it threw, or null if it did not. */
@@ -341,6 +350,16 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
       as: rep.token,
     });
     expectEnvelope(err, 'locked', 'opportunity_line_item_freeze', /is closed \(closed_won\)/, /is closed \(Closed Won\), so its line items/);
+  });
+
+  it('locked — quote_workflow freezes the lines of a settled quote', async () => {
+    const err = await refusalFrom(quoteGuard, {
+      event: 'beforeInsert',
+      object: 'crm_quote_line_item',
+      input: { crm_quote: row.expiredQuote, crm_product: row.product, quantity: 1, unit_price: 10 },
+      as: rep.token,
+    });
+    expectEnvelope(err, 'locked', 'quote_workflow', / - Envelope Quote is expired, so its line items/, / - Envelope Quote is Expired, so its line items/);
   });
 
   it('delete_restricted — product_catalog holds a referenced product', async () => {
@@ -467,6 +486,17 @@ describe('the same envelope on the in-process path (#1075)', () => {
       'locked',
       /is closed \(closed_won\)/,
       /is closed \(Closed Won\), so its line items/,
+    );
+  });
+
+  it('locked — the settled-quote line freeze in quote_workflow', async () => {
+    expectInProcess(
+      await inProcess('crm_quote_line_item', 'insert', {
+        crm_quote: row.expiredQuote, crm_product: row.product, quantity: 1, unit_price: 10,
+      }),
+      'locked',
+      / - Envelope Quote is expired, so its line items/,
+      / - Envelope Quote is Expired, so its line items/,
     );
   });
 

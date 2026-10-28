@@ -61,6 +61,13 @@ const quoteValidation: Hook = {
       err.userMessage = userMessage;
       return err;
     }
+    // The settled statuses by the labels the user sees, for the two freeze
+    // refusals below (#2338 items 12 and 16): each keeps the status's API value
+    // in its diagnostic and names it by its label in the `userMessage` the
+    // console shows. The labels are written out because a lowered body cannot
+    // read the object's metadata; `test/refusal-labels.test.ts` reads them off
+    // `crm_quote`.
+    const STATUS_LABELS: Record<string, string> = { accepted: 'Accepted', expired: 'Expired' };
     const { event, input, previous } = ctx;
 
     // ─── A settled quote's LINES are frozen with it (#2060 item 1, B-09) ──
@@ -102,7 +109,16 @@ const quoteValidation: Hook = {
           ? await (ctx.api as HookApi | undefined)?.object('crm_quote').findOne({ where: { id }, fields: ['quote_number', 'name', 'status'] })
           : null;
         if (q?.status === 'accepted' || q?.status === 'expired') {
-          throw refuse(`Quote ${String(q.quote_number)} - ${String(q.name)} is ${q.status}, so its line items can no longer be added, changed or removed.`, 'RECORD_LOCKED', 409);
+          // Two sentences, one per reader (#2338 item 16), as the quote's own
+          // freeze below and the closed deal's line freeze (item 15) do.
+          const what = `Quote ${String(q.quote_number)} - ${String(q.name)} is`;
+          const rest = 'so its line items can no longer be added, changed or removed.';
+          throw refuse(
+            `${what} ${q.status}, ${rest}`,
+            'RECORD_LOCKED',
+            409,
+            `${what} ${STATUS_LABELS[q.status]}, ${rest}`,
+          );
         }
       }
       return;
@@ -224,10 +240,8 @@ const quoteValidation: Hook = {
           // API names and the attempted keys, and the `userMessage` the console
           // shows uses labels — users were shown "…is accepted; only
           // internal_notes may be edited. Attempted: discount.". The full
-          // reasoning is on the opportunity freeze; the labels are written out
-          // because a lowered body cannot read the object's metadata, and
-          // `test/refusal-labels.test.ts` reads them off `crm_quote`.
-          const STATUS_LABELS: Record<string, string> = { accepted: 'Accepted', expired: 'Expired' };
+          // reasoning is on the opportunity freeze; `STATUS_LABELS` is at the
+          // top of the handler, shared with the line freeze.
           const what = `${subject()} is ${previous.status as string}`;
           throw refuse(
             `${what}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`,

@@ -9,14 +9,15 @@ import { Quote } from '../src/revenue/objects/quote.object';
 import { Lead } from '../src/sales/objects/lead.object';
 
 /**
- * Five freeze refusals name fields and states by the labels the user sees
- * (#2338 items 12, 14 and 15).
+ * Six freeze refusals name fields and states by the labels the user sees
+ * (#2338 items 12, 14, 15 and 16).
  *
  * They used to show API names: "…is accepted; only internal_notes may be
  * edited. Attempted: discount.", "Cannot shrink end_date (…)", "closed
  * (closed_won); only description, next_step, notes may be edited", "Cannot
- * edit converted lead … (attempted: company)", and "closed (closed_won), so its
- * line items can no longer be added, changed or removed". A lowered
+ * edit converted lead … (attempted: company)", "closed (closed_won), so its
+ * line items can no longer be added, changed or removed", and "Quote … is
+ * accepted, so its line items can no longer be added, changed or removed". A lowered
  * hook body cannot read the object's metadata, so each body writes its labels
  * out — the same route `campaign_validation` took for #2060 item 12. This file
  * reads those written-out labels back out of the LOWERED bodies and holds them
@@ -56,6 +57,9 @@ describe('freeze refusals use the labels the user sees (#2338 item 12)', () => {
 
   it('quote_workflow: the frozen statuses and the one editable field', () => {
     const source = lowered('quote_workflow');
+    // One table for both freezes, the quote's and its lines' (item 16): a
+    // second copy would be read by neither assertion below.
+    expect(source.match(/STATUS_LABELS\s*=/g)).toHaveLength(1);
     const statuses = table(source, 'STATUS_LABELS');
     expect(statuses.map(([k]) => k).sort()).toEqual(['accepted', 'expired']);
     for (const [value, label] of statuses) expect(label, value).toBe(optionLabel(Quote, 'status', value));
