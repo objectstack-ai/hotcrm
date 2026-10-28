@@ -34,6 +34,18 @@
     {
       "pattern": "^\\./(crm_admin_[a-z_]+\\.md)$",
       "replacement": "{{BASEURL}}/src/docs/$1"
+    },
+    {
+      "pattern": "^\\./(crm_getting_[a-z_]+\\.md)$",
+      "replacement": "{{BASEURL}}/src/docs/$1"
+    },
+    {
+      "pattern": "^\\./(crm_analytics_[a-z_]+\\.md)$",
+      "replacement": "{{BASEURL}}/src/docs/$1"
+    },
+    {
+      "pattern": "^\\./(crm_ai_[a-z_]+\\.md)$",
+      "replacement": "{{BASEURL}}/src/docs/$1"
     }
   ]
 }

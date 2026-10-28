@@ -80,7 +80,6 @@ not there.
 
 ## Help
 
-**Help**, the last group in the sidebar, holds the manuals. The **User Manual**
-is this one. Administrators also see the **Admin Manual**, and installs with
-the revenue module see a **Revenue Manual** for quotes and pricing. The group
-starts collapsed; click **Help** to open it.
+**Help**, the last group in the sidebar, holds the manuals, this one included;
+which guide to read for your job is in the [Overview](./crm_overview.md). The
+group starts collapsed: click **Help** to open it.
