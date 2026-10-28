@@ -76,3 +76,36 @@ describe('the assistant page covers the registered skills (#2329)', () => {
     });
   }
 });
+
+/**
+ * The case-triage page (#2330) says where the assistant stops: it holds no
+ * tool that writes, so setting the priority, escalating and closing are the
+ * person's, through the case's own buttons. Both halves are read from the
+ * compiled stack — the skill's tools, and the labels of the two buttons its
+ * instructions point at — so a triage skill that gains a write tool, or a
+ * renamed button, turns the page red.
+ */
+describe('the case-triage page states where a person takes over (#2330)', () => {
+  const TRIAGE = SKILLS.find((s) => s.name === 'case_triage');
+  const READ_TOOLS = ['describe_object', 'get_record', 'query_records', 'aggregate_data'];
+
+  it('the triage skill holds read tools only', () => {
+    expect(TRIAGE, 'case_triage is registered').toBeDefined();
+    expect(((TRIAGE!.tools ?? []) as string[]).filter((t) => !READ_TOOLS.includes(t))).toEqual([]);
+  });
+
+  for (const L of LOCALES) {
+    const file = `src/service/docs/crm_service_triage${L.suffix}`;
+    it(`${file} names the buttons the skill points at`, () => {
+      const text = readFileSync(join(REPO_ROOT, file), 'utf8');
+      const missing = ['escalate_case', 'close_case']
+        .map((name) => ACTIONS.find((a) => a.name === name))
+        .map((a, i) => {
+          if (!a) throw new Error(`no registered action ${['escalate_case', 'close_case'][i]}`);
+          return L.actionLabel(a);
+        })
+        .filter((label) => !text.includes(`**${label}**`));
+      expect(missing).toEqual([]);
+    });
+  }
+});

@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { resolveMetadataFile } from './helpers/src-roster';
-import stack from './helpers/composed-stack';
+import stack, { packFor } from './helpers/composed-stack';
 
 /*
  * ─── SPLIT BY FAMILY (#1196) ─────────────────────────────────────────────────
@@ -89,6 +89,8 @@ const SALES_LEADS = 'docs/crm_sales_leads.md';
 const ADMIN_KNOBS = 'docs/crm_admin_automation.md';
 const QUOTES = 'revenue/docs/crm_revenue_quotes.md';
 const CASES = 'service/docs/crm_service_cases.md';
+const BILLING = 'revenue/docs/crm_revenue_billing_handoff.md';
+const CAMPAIGN_FLOWS = 'marketing/docs/crm_marketing_automation.md';
 
 /** cron → the human label the docs use. Unknown cron ⇒ deliberate failure. */
 const CRON_LABEL: Record<string, string[]> = {
@@ -97,6 +99,7 @@ const CRON_LABEL: Record<string, string[]> = {
   '0 * * * *': ['hourly', '每小时'],
   '0 8 * * *': ['08:00'],
   '0 0 * * *': ['00:00'],
+  '0 2 * * *': ['02:00'],
 };
 
 type Rule = {
@@ -152,6 +155,19 @@ const capCel = (flowName: string, re: RegExp): string => {
   const m = conditionsOf(flowName).match(re);
   if (!m) throw new Error(`drift test out of date: pattern ${re} not found in the conditions of "${flowName}"`);
   return m[1];
+};
+
+/**
+ * A select value → the bold label the pages give it: the object's own label for
+ * the English page, the zh-CN pack's for `.zh.md` (#2330). Either spelling
+ * satisfies a rule; `withZh` lists both pages, so each must carry its own.
+ */
+const optionLabel = (objectName: string, field: string) => (raw: string): string[] => {
+  const object = (((stack as AnyRec).objects ?? []) as AnyRec[]).find((o) => o.name === objectName);
+  const option = ((object?.fields?.[field]?.options ?? []) as AnyRec[]).find((o) => o.value === raw);
+  if (!option) throw new Error(`drift test out of date: ${objectName}.${field} has no option "${raw}"`);
+  const zh = packFor('zh-CN')?.objects?.[objectName]?.fields?.[field]?.options?.[raw];
+  return [`**${option.label}**`, ...(zh ? [`**${zh}**`] : [])];
 };
 
 const money = (raw: string) => [`$${Number(raw).toLocaleString('en-US')}`, Number(raw).toLocaleString('en-US')];
@@ -237,6 +253,26 @@ const RULES: Rule[] = [
     extract: () => cap('contract-renewal.flow.ts', /schedule: '([^']+)'/),
     display: cronDisplay,
     docs: withZh(ADMIN_KNOBS),
+  },
+  {
+    label: 'campaign auto-completion schedule',
+    extract: () => cap('campaign-completion.flow.ts', /schedule: '([^']+)'/),
+    display: cronDisplay,
+    docs: withZh(CAMPAIGN_FLOWS),
+  },
+  {
+    // The moment a won deal is handed to billing (#2330): the stage the
+    // start condition's TRANSITION tests, named by its label on the page.
+    label: 'billing hand-off: the deal stage that sends it',
+    extract: () => capCel('billing_handoff_closed_won', /record\.stage == "([a-z_]+)"/),
+    display: optionLabel('crm_opportunity', 'stage'),
+    docs: withZh(BILLING),
+  },
+  {
+    label: 'billing hand-off: the contract status that sends it',
+    extract: () => capCel('billing_handoff_contract_activated', /record\.status == "([a-z_]+)"/),
+    display: optionLabel('crm_contract', 'status'),
+    docs: withZh(BILLING),
   },
   {
     label: 'contract expiration sweep schedule',

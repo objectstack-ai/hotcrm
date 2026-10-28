@@ -101,7 +101,9 @@ describe('the lifecycle diagrams in the package docs draw the real state machine
     const others = [
       'docs/crm_overview', 'docs/crm_admin_access', 'docs/crm_admin_automation', 'service/docs/crm_service_knowledge',
       'docs/crm_getting_started', 'docs/crm_sales_activities', 'docs/crm_analytics_metrics', 'docs/crm_ai_skills',
-      'docs/crm_admin_setup', 'docs/crm_admin_data_import',
+      'docs/crm_admin_setup', 'docs/crm_admin_data_import', 'service/docs/crm_service_triage',
+      'revenue/docs/crm_revenue_billing_handoff', 'revenue/docs/crm_revenue_products',
+      'marketing/docs/crm_marketing_campaigns', 'marketing/docs/crm_marketing_automation',
     ].flatMap((p) => [`src/${p}.md`, `src/${p}.zh.md`]);
     expect(others.filter((f) => diagramsIn(readFileSync(join(REPO_ROOT, f), 'utf8')).length > 0)).toEqual([]);
   });

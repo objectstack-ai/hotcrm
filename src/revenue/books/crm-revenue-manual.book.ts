@@ -13,10 +13,10 @@ import { defineBook } from '@objectstack/spec';
 export const CrmRevenueManual = defineBook({
   name: 'crm_revenue_manual',
   label: 'HotCRM Revenue Manual',
-  description: 'Quotes: what the system fills in for you and what it does on its own.',
+  description: 'Quotes, products and price books, and the hand-off of a won deal to billing.',
   icon: 'receipt',
   order: 3,
   groups: [
-    { key: 'revenue', label: 'Quotes', order: 1, include: 'crm_revenue_*' },
+    { key: 'revenue', label: 'Revenue', order: 1, include: 'crm_revenue_*' },
   ],
 });
