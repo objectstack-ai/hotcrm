@@ -7,7 +7,7 @@ import type { HookApi } from './_hook-api';
  * Task lifecycle hook.
  *
  * - On `completed` transition, stamps `completed_date` and `progress_percent=100`.
- * - Warns when `reminder_date` is after `due_date`.
+ * - Refuses (`VALIDATION_FAILED` / 400) when `reminder_date` is after `due_date`.
  * - Bubbles activity to the polymorphic parent (account `last_activity_date`,
  *   lead `last_contacted_date`).
  * - Refuses to SCHEDULE a phone touch against a person flagged `do_not_call`

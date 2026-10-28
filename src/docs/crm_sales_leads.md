@@ -29,11 +29,17 @@ automatically:
 **Lead Score** is the 1–5 star field on each lead (shown as *Lead Score* in the
 UI). A score of 4★ or more marks the lead "hot" and triggers the 1-day SLA.
 
-A lead created without an owner (web-to-lead, CSV import, API capture) is
-**auto-assigned to the sales rep with the fewest open leads** — a self-balancing
-round-robin over everyone holding the *Sales Rep* position. Leads created in the
-UI keep their creator as owner. Only when no rep pool exists yet does a lead
-stay ownerless for a manager to claim.
+A lead submitted through a web-to-lead form arrives with nobody behind it, so
+it is **auto-assigned to the sales rep with the fewest open leads** — a
+self-balancing round-robin over everyone holding the *Sales Rep* position. Only
+when no rep pool exists yet does such a lead stay ownerless for a manager to
+claim.
+
+A lead that a person puts in keeps that person as owner: one created in the UI,
+one sent through the API under their sign-in or API key, and one imported from
+a file. A file import never goes to the round-robin — a row with a blank owner
+is owned by whoever ran the import, and the leads can be reassigned afterwards
+(see the administrator's [Importing Data](./crm_admin_data_import.md) page).
 
 ## Lead status
 
