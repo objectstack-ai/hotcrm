@@ -22,12 +22,178 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *   metric block on every membership change, which is what makes a live
  *   campaign show live numbers.
  *
+ * - `campaign_member_enrollment_gate` (before) — refuses a user's own create
+ *   of a member, or move of one, into a campaign that is not open or for a
+ *   person who opted out of email: the enroll flows' two gates, held on the
+ *   object for the doors that skip those flows (#2344).
+ *
  * ⚠️ The recompute block below is written out here and three more times in
  * `campaign.hook.ts`, deliberately: a sandboxed hook body cannot reach module
  * scope, so a shared import would stop the handler lowering to metadata (see
  * that file's header for the full reasoning). All four copies are asserted
  * character-identical by `test/campaign-member-lifecycle.test.ts`.
  */
+
+/**
+ * The enroll flows' two gates, on the object itself (#2344).
+ *
+ * `campaign_lead_member_enroll` and `campaign_contact_member_enroll` refuse a
+ * campaign that is not Planning or In Progress (or no longer exists) and a
+ * person with Email Opt Out ticked (#2336). Enroll Members and Add to Campaign
+ * reach the insert only through them. A member created any other way did not:
+ * the campaign's Campaign Members panel's **New**, a data import run as the
+ * user, and `POST /api/v1/data/crm_campaign_member` all answered 201 on a
+ * Completed campaign with an opted-out lead (measured on 18.2.0 at `0f17c6c`).
+ * So this hook refuses the same two things on the object, for every user write.
+ *
+ * Why a `before*` hook and not something smaller, measured on 18.2.0:
+ *
+ *   - a `validations[]` rule sees only the member's own columns, and both
+ *     gates read another record (the campaign's status, the person's flag);
+ *   - there is no before-save flow trigger, so the flows' `end` refusals
+ *     cannot be reused at the insert.
+ *
+ * What passes:
+ *
+ *   - system writes, which carry no `ctx.user` (this repo's system-write
+ *     signal): the seed, an import run as system, and
+ *     `campaign_lead_conversion_refresh`, whose promotion writes `status`
+ *     alone and so is no enrollment either;
+ *   - the enroll flows' own insert. It carries `ctx.provenance.flowRunId`
+ *     (measured), but it is ⛔ deliberately not exempted on that mark: the
+ *     flow has already checked the same two things a moment earlier, so this
+ *     check answers the same and the insert goes through. Exempting every
+ *     flow-run write would let the next flow that writes a member skip both
+ *     gates, the same hole as before in a new place;
+ *   - an edit that does not move the member, e.g. Mark Responded on a member
+ *     of a Completed campaign, or Unsubscribed on a person who opted out.
+ *
+ * An edit that MOVES a member (a new campaign, Lead or Contact) is a new
+ * enrollment, so it is checked like a create, on the record it would become.
+ *
+ * Reads run as the caller, as the flows' reads do: `crm_campaign` is
+ * `public_read`, and a person the caller cannot read passes here as it passes
+ * there.
+ *
+ * The codes follow the house refusal envelope (`src/sales/objects/_refusal.ts`):
+ *
+ *   - a campaign that is not open: `VALIDATION_FAILED` / 400. The campaign
+ *     lookup's own `lookupFilters` already declare only Planning and In
+ *     Progress campaigns as values for this field, so a closed one is a
+ *     submitted value the object's own rules reject;
+ *   - an opted-out person: `FORBIDDEN` / 403, a compliance flag that
+ *     prohibits the write outright, the code `task_do_not_call_guard` and
+ *     `event_do_not_call_guard` give Do Not Call, its phone-side twin.
+ *
+ * ⚠️ TWO COPIES, HELD TOGETHER BY A TEST. The open statuses, the `=== true`
+ * opt-out reading and the three sentences are written out here and again as
+ * CEL and templates in `src/marketing/flows/campaign-member-enroll.flow.ts`. A
+ * lowered body cannot import, and a flow edge cannot call a hook, so they
+ * cannot share one source. `test/campaign-member-direct-create-gates.test.ts`
+ * drives both doors over every campaign status the object declares and both
+ * opt-out states, and fails when their verdicts or their sentences part ways.
+ * The English sentences are the flows' own; the flows' translations do not
+ * reach a hook refusal, which 18.2.0 gives no translation key.
+ */
+const campaignMemberEnrollmentGate: Hook = {
+  name: 'campaign_member_enrollment_gate',
+  object: 'crm_campaign_member',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 100,
+  description: 'Refuse a user enrolling a person in a campaign that is not open, or a person who opted out of email.',
+  handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(
+      message: string,
+      code: string,
+      status: number,
+      userMessage: string = message,
+    ): Error {
+      const err = new Error(message) as Error & {
+        code: string;
+        status: number;
+        userMessage: string;
+      };
+      err.code = code;
+      err.status = status;
+      err.userMessage = userMessage;
+      return err;
+    }
+    if (!ctx.user?.id) return;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const input = ctx.input ?? {};
+    const previous = (ctx.previous ?? {}) as Record<string, unknown>;
+    const idOf = (value: unknown): string => (typeof value === 'string' ? value : '');
+
+    // An update enrolls only when it moves the member. A key the write does
+    // not carry, or carries unchanged (an edit form re-sends every field),
+    // moves nothing.
+    if (ctx.event === 'beforeUpdate') {
+      const moves = ['crm_campaign', 'crm_lead', 'crm_contact'].some(
+        (key) => key in input && idOf(input[key]) !== idOf(previous[key]),
+      );
+      if (!moves) return;
+    }
+    const pick = (key: string): string => idOf(key in input ? input[key] : previous[key]);
+    const campaignId = pick('crm_campaign');
+    const leadId = pick('crm_lead');
+    const contactId = pick('crm_contact');
+
+    // The campaign first, as the flows check it first. A blank campaign is
+    // the required field's to refuse; an id that names no campaign is
+    // refused here, as the flows refuse it.
+    if (campaignId) {
+      const campaign = await api.object('crm_campaign').findOne({
+        where: { id: campaignId }, fields: ['id', 'status', 'display_title'],
+      });
+      const status = campaign && typeof campaign.status === 'string' ? campaign.status : '';
+      if (status !== 'planning' && status !== 'in_progress') {
+        const title = campaign && typeof campaign.display_title === 'string' && campaign.display_title !== ''
+          ? campaign.display_title
+          : 'The chosen campaign';
+        throw refuse(
+          `${title} is not open for enrollment, or no longer exists: only a Planning or In Progress campaign takes members. Nobody was enrolled.`,
+          'VALIDATION_FAILED',
+          400,
+        );
+      }
+    }
+
+    // Then the person. Refused only on a stored `true`, as the flows read it.
+    if (leadId) {
+      const lead = await api.object('crm_lead').findOne({
+        where: { id: leadId }, fields: ['id', 'first_name', 'last_name', 'email_opt_out'],
+      });
+      if (lead?.email_opt_out === true) {
+        const first = typeof lead.first_name === 'string' ? lead.first_name : '';
+        const last = typeof lead.last_name === 'string' ? lead.last_name : '';
+        throw refuse(
+          `${first} ${last} has opted out of email, so the lead was not added to the campaign.`,
+          'FORBIDDEN',
+          403,
+        );
+      }
+    }
+    if (contactId) {
+      const contact = await api.object('crm_contact').findOne({
+        where: { id: contactId }, fields: ['id', 'full_name', 'email_opt_out'],
+      });
+      if (contact?.email_opt_out === true) {
+        const name = typeof contact.full_name === 'string' && contact.full_name !== ''
+          ? contact.full_name
+          : 'This contact';
+        throw refuse(
+          `${name} has opted out of email, so the contact was not added to the campaign.`,
+          'FORBIDDEN',
+          403,
+        );
+      }
+    }
+  },
+};
 
 /**
  * Keep the response summary fields honest, on every write path.
@@ -254,6 +420,7 @@ const campaignMemberMetricsRefresh: Hook = {
 };
 
 export default [
+  campaignMemberEnrollmentGate,
   campaignMemberLifecycle,
   campaignMemberOptOutSync,
   campaignMemberMetricsRefresh,

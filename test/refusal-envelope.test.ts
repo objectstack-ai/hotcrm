@@ -143,11 +143,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // standard price book's three refusals and the one-entry-per-product one;
     // 30 until #2285 added the conversion-marker refusal to
     // `account_protection`; 31 until #2334 added the large-deal close-won
-    // refusal to `opportunity_lifecycle`.
+    // refusal to `opportunity_lifecycle`; 32 until #2344 added
+    // `campaign_member_enrollment_gate`'s three (a closed campaign, an
+    // opted-out lead, an opted-out contact).
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(32);
+    expect(sites).toHaveLength(35);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
