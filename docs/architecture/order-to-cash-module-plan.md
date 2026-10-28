@@ -282,6 +282,17 @@ first draft, set the scope — decisions 4 and 5.
 | 7 | **A bill as a standard payment method** (proposed above), with its life cycle and national e-invoice detail left to a customer's repository — confirm | Phase 1 |
 | 8 | **PSA's billing milestones** are this module's plan steps, reached through the project's contract, with no edge between PSA and this module (proposed) | PSA v2 |
 
+### Recorded 2026-10-26 — supersedes decisions 2 and 3
+
+Ruled with the module split (`module-split-plan.md`, *Decisions recorded (2026-10-26)*, items 10,
+11 and 13): the module is **born standalone** — its own artifact, consumer-installable
+(`type: 'app'`, id unchanged), installed beside HotCRM under ADR-0141's pre-install check — so
+decision 2's "present in every install and used by permission" shape is not built; and it
+**depends only on `app.objectstack.hotcrm`**, because `crm_contract` moves into the app package
+(item 11), so decision 3's later edge to revenue never exists. Everything else above stands:
+the name, the scope, the lean first version, and the contract and account fields through
+`objectExtensions` — now extending app-package objects.
+
 ## Upstream asks
 
 - **Per-tenant enablement of a module inside an App** (or the inter-App dependencies ADR-0019
