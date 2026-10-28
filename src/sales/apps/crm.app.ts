@@ -138,8 +138,9 @@ const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !(
  * view no view file defines.
  *
  * What is NOT trimmed is the demonstration. This is the exemplar app, and
- * nav items come in six kinds — plain `object`, object + `viewName` (a view
- * entry), `page`, `dashboard`, `report`, `component`. **Every kind keeps at
+ * nav items come in seven kinds — plain `object`, object + `viewName` (a view
+ * entry), `page`, `dashboard`, `report`, `component`, and `doc` (the *Help*
+ * manuals, #2327). **Every kind keeps at
  * least one entry**, because showing an author what each kind looks like is
  * part of what this app is for. `test/app-navigation-shape.test.ts` pins that
  * floor, so a future slimming pass cannot delete the last exemplar of a kind
@@ -462,6 +463,31 @@ export const CrmApp = App.create({
         { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Engagement',               icon: 'trending-up',   visible: READS_LEADS },
         { id: 'nav_report_accounts_by_industry',   type: 'report', reportName: 'accounts_by_industry_type',      label: 'Accounts by Industry & Type',   icon: 'building',      visible: READS_ACCOUNTS },
         { id: 'nav_report_churn_signals',          type: 'report', reportName: 'customer_churn_signals',         label: 'Customer Churn Signals',        icon: 'heart-pulse',   visible: READS_ACCOUNTS },
+      ],
+    },
+
+    {
+      // The in-app manuals (#2327, ADR-0046 §6): one `type: 'doc'` entry per
+      // book, each opening its book on the first page the member may read.
+      //
+      // LAST and collapsed on purpose. The order above is every persona's
+      // landing (the note at the top of this array), and an entry added after
+      // all of it moves no landing; collapsed, it costs the sidebar one row.
+      //
+      // The entries carry no `visible`: a `doc` entry inherits the book's
+      // audience. The Admin Manual is gated on the administrator's set
+      // (`src/sales/books/crm-admin-manual.book.ts`), and the server drops the
+      // entry from the tree it serves anyone else (measured on 18.2.0). The
+      // revenue module contributes its own manual here, after these two
+      // (`src/revenue/index.ts`), so the anchor stays even if the module goes.
+      id: 'group_help',
+      type: 'group',
+      label: 'Help',
+      icon: 'circle-help',
+      expanded: false,
+      children: [
+        { id: 'nav_help_manual', type: 'doc', book: 'crm_manual',       label: 'User Manual',  icon: 'book-open' },
+        { id: 'nav_help_admin',  type: 'doc', book: 'crm_admin_manual', label: 'Admin Manual', icon: 'shield-check' },
       ],
     },
 

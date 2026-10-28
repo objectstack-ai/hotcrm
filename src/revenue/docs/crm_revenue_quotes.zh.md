@@ -1,0 +1,50 @@
+---
+title: 报价单——生成与过期
+description: 从商机生成报价单、总额如何计算、报价单状态，以及自动过期。
+---
+
+# 报价单——生成与过期
+
+面向销售代表和销售经理。报价单为客户给一笔交易定价；本指南讲的是系统替你填写什么，以及它会自己做什么。
+
+## 生成报价单
+
+在商机上点击**生成报价单**。**报价单详情**界面会询问：
+
+- **报价名称**
+- **有效期（天）**——默认 **30**
+- **折扣 %**——默认 **0**
+
+计算由系统完成：小计 = 商机金额，折扣金额 = 小计 × 折扣 %，**总金额 = 金额 × (1 − 折扣%)**。
+
+## 报价单状态
+
+报价单通常沿下图流转。偏离箭头的变更照样会保存，应用只记一条警告。**已接受**和**已过期**是报价单的终点；被拒绝的报价单可以退回**草稿**重新修改。
+
+```mermaid
+stateDiagram-v2
+  state "草稿" as draft
+  state "审核中" as in_review
+  state "已提交" as presented
+  state "已接受" as accepted
+  state "已拒绝" as rejected
+  state "已过期" as expired
+  draft --> in_review
+  draft --> expired
+  in_review --> draft
+  in_review --> presented
+  in_review --> rejected
+  in_review --> expired
+  presented --> accepted
+  presented --> rejected
+  presented --> expired
+  rejected --> draft
+```
+
+## 报价单自动过期（自动）
+
+在开启了计划任务的部署上，每天 **01:00** 的任务会把已过到期日期、仍未结束的报价单标记为**已过期**。默认安装启动时这个任务未绑定，过期的报价单会保持原状态，直到有人修改它。如果交易仍在进行，请重新出一份报价单。
+
+---
+
+**相关：** 报价单所定价的那笔商机——见[商机](./crm_sales_opportunities.md)。

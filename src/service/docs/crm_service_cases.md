@@ -1,26 +1,54 @@
 ---
-title: Service Process & SLA Rules
-description: Case priority, SLA breach handling, and automatic escalation — the rules behind the Service desk.
+title: Cases — Priority, SLA & Escalation
+description: Case status, how the SLA due date is set, SLA breach handling, and automatic escalation — the rules behind the Service desk.
+order: 1
 # sources: flows/objects this doc documents. Schedules/rules here are guarded by
 # test/docs-drift.test.ts; build ignores unknown frontmatter keys.
 sources:
   - flow:case_sla_monitor
   - flow:case_escalation
   - object:crm_case
-  - object:crm_knowledge_article
 ---
 
-# Service Process & SLA Rules
+# Cases — Priority, SLA & Escalation
 
 For service agents and service managers. Cases move from intake to resolution,
 and the system enforces SLAs and escalations automatically — this guide explains
 exactly when and how.
 
-## Case priority
+## Case status
 
-Every case carries a **priority** that drives its urgency:
+A case usually moves along these arrows. Every open status can also go straight
+to **Escalated** or **Closed**, and a closed case can be reopened. A move off
+the usual path still saves, and the app only logs a warning.
 
-`Low → Medium → High → Critical`
+```mermaid
+stateDiagram-v2
+  state "New" as new
+  state "In Progress" as in_progress
+  state "Waiting on Customer" as waiting_customer
+  state "Waiting on Support" as waiting_support
+  state "Escalated" as escalated
+  state "Resolved" as resolved
+  state "Closed" as closed
+  new --> in_progress
+  in_progress --> waiting_customer
+  waiting_customer --> in_progress
+  in_progress --> waiting_support
+  waiting_support --> in_progress
+  in_progress --> escalated
+  escalated --> in_progress
+  in_progress --> resolved
+  escalated --> resolved
+  resolved --> closed
+  resolved --> in_progress
+  closed --> in_progress
+```
+
+## Case priority and the SLA due date
+
+Every case carries a **priority**, from **Low** to **Critical**, that drives its
+urgency.
 
 Each case also carries an **SLA Due Date** — the deadline to resolve it. It is
 set automatically when the case is logged, from a **priority × account-tier
@@ -49,9 +77,8 @@ the system automatically:
 Where the sweep runs, you never have to manually catch a missed SLA — but you
 should work cases before the due date, because a breach is recorded permanently
 on the case. A default install boots the sweep unbound (scheduled work is off
-until the deployment turns it on; see **[Administration](crm_admin.md)**), so
-there no open case is flagged or escalated and nobody is alerted: watch the
-**SLA Due Date** yourself.
+until your administrator turns it on), so there no open case is flagged or
+escalated and nobody is alerted: watch the **SLA Due Date** yourself.
 
 On every install, sweep or no sweep, a case that is resolved or closed after
 its **SLA Due Date** is marked **SLA Violated** on that save — it is not
@@ -75,39 +102,7 @@ for the SLA clock:
 > the Service Manager pool, and alert the agent it came from — and both leave it
 > where it is when that pool is unstaffed.
 
-## Knowledge articles
-
-**Knowledge** articles are your searchable library of solutions — for agents to
-reference while resolving a case and for customers to self-serve. Keeping
-articles current and well-titled is the main lever for deflection and faster
-resolution times.
-
-A case now records the article that resolved it. **Resolved by Article**, in the
-case's Resolution group, is offered on the **Close Case** screen and can be set
-on the record at any time. It is separate from **Originating Case** on the
-article, which points the other way — the case an article was *written from*.
-The two answer different questions, and a good article usually has one origin
-and many resolutions.
-
-That link is what makes deflection measurable. The Service dashboard shows a
-**KB Deflection Rate** — the share of closed cases that name a resolving
-article — with **Resolved by KB** and **Closed Cases** printed beside it so the
-percentage can be checked, and a **Top Resolving Articles** table ranking
-articles by the cases they closed. Articles nobody resolves anything with are
-candidates for a rewrite; articles at the top are the ones worth keeping current.
-
-Readers rate articles with **Helpful** / **Not Helpful** on any published
-article. Each press records one **Article Feedback** row per reader, and the
-article's two vote counts are recounted from those rows — so they mean *how
-many people*, not how many clicks, and changing your mind moves your own verdict
-instead of adding another.
-
-> *Public* audience is still a statement of intent rather than a publication
-> channel: no customer-facing surface serves articles today, and the guest
-> permission set cannot read the object at all, by design.
-
 ---
 
-**Related:** who can see and edit which cases (escalation sharing), and how to
-change SLA timing or escalation behavior, are covered in
-**[Administration](crm_admin.md)**.
+**Related:** recording which article solved a case — see
+[Knowledge](./crm_service_knowledge.md).

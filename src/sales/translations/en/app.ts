@@ -28,6 +28,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_sales: { label: 'Sales' },
         group_service: { label: 'Service' },
         group_marketing: { label: 'Marketing' },
+        group_help: { label: 'Help' },
       },
     },
   },

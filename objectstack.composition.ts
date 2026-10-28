@@ -87,6 +87,9 @@ import * as salesPages from './src/sales/pages/index.js';
 
 import * as salesEmailTemplates from './src/sales/email-templates/index.js';
 
+import * as salesBooks from './src/sales/books/index.js';
+import { CrmAdminManual } from './src/sales/books/index.js';
+
 import { SystemAdminProfile } from './src/sales/profiles/index.js';
 import { TenantAdminProfile } from './src/sales/profiles/tenant-admin.profile.js';
 
@@ -270,6 +273,15 @@ export const appMappings = byExportName({ ...mappings });
 
 /** The app itself, and its navigation GROUPS (the containers modules aim at). */
 export const appApps = byExportName({ ...apps });
+
+/**
+ * Its doc books (ADR-0046 §6, #2327): the User Manual and the Admin Manual,
+ * over `src/docs/*.md` and the service module's `src/service/docs/*.md`. The
+ * revenue module registers its own manual. Under the SaaS composition the
+ * Admin Manual's audience follows the admin set swap below
+ * ({@link compositionBooks}).
+ */
+export const appBooks = byExportName({ ...salesBooks });
 
 /** The locale packs — whole in the app package (plan item 4), service labels included. */
 export const appTranslations = byExportName({ ...translations });
@@ -506,7 +518,7 @@ export const seedDataFor = (composition: HotCrmComposition): PackageSeedData =>
 // but it has no per-family or per-tenant selection and none is chartered — so
 // WHAT gets replayed is decided once, here, for every tenant alike.
 //
-// Two things change, and nothing else. There is no runtime branch anywhere in
+// Three things change, and nothing else. There is no runtime branch anywhere in
 // `src/`, and no enterprise package is imported: an artifact built either way
 // runs on the community runtime. Both shapes register the same flows: the one
 // flow the SaaS shape used to drop, the `demo_bootstrap` ownership sweep, is
@@ -521,6 +533,10 @@ export const seedDataFor = (composition: HotCrmComposition): PackageSeedData =>
 //     org-scoped `manage_org_users` instead of platform-scope `manage_users`.
 //     Read `src/sales/profiles/tenant-admin.profile.ts` for the full audit, including
 //     what `view_all_data` / `modify_all_data` mean under the wall.
+//  3. `books` — the Admin Manual's audience follows (2): it names `tenant_admin`.
+//     A book gated on a set the install does not register is readable by
+//     nobody, the administrator included (measured on 18.2.0, #2327), so the
+//     audience moves with the set or the manual goes dark.
 const composition = resolveComposition();
 const isSaas = composition === 'saas';
 const seedData = seedDataFor(composition);
@@ -532,6 +548,16 @@ const seedData = seedDataFor(composition);
 const compositionPermissions = isSaas
   ? [...Object.values(allProfiles).filter((set) => set !== SystemAdminProfile), TenantAdminProfile]
   : Object.values(allProfiles);
+
+/**
+ * Doc books this composition registers: the Admin Manual is gated on the
+ * administrator's set, so its audience is swapped exactly where the set is.
+ * Matched by IDENTITY, as the sets are above.
+ */
+const compositionBooks = isSaas
+  ? appBooks.map((book) =>
+      book === CrmAdminManual ? { ...book, audience: { permissionSet: TenantAdminProfile.name } } : book)
+  : appBooks;
 
 /* ─── The four package stacks `objectstack.config.ts` composes ──────────── */
 
@@ -574,6 +600,8 @@ export const appStack = createHotCrmAppStack(
     skills: appSkills,
     permissions: compositionPermissions,
     apps: appApps,
+    // The User Manual and the Admin Manual, opened from *Help* (#2327).
+    books: compositionBooks,
     views: appViews,
     pages: appPages,
     // Approvals are modeled as `record_change` flows with `approval` nodes

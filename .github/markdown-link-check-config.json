@@ -13,5 +13,27 @@
     {
       "pattern": "^https?://localhost"
     }
+  ],
+  "replacementPatterns": [
+    {
+      "pattern": "^\\./(crm_service_[a-z_]+\\.md)$",
+      "replacement": "{{BASEURL}}/src/service/docs/$1"
+    },
+    {
+      "pattern": "^\\./(crm_revenue_[a-z_]+\\.md)$",
+      "replacement": "{{BASEURL}}/src/revenue/docs/$1"
+    },
+    {
+      "pattern": "^\\./(crm_overview\\.md)$",
+      "replacement": "{{BASEURL}}/src/docs/$1"
+    },
+    {
+      "pattern": "^\\./(crm_sales_[a-z_]+\\.md)$",
+      "replacement": "{{BASEURL}}/src/docs/$1"
+    },
+    {
+      "pattern": "^\\./(crm_admin_[a-z_]+\\.md)$",
+      "replacement": "{{BASEURL}}/src/docs/$1"
+    }
   ]
 }

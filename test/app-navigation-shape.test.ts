@@ -34,7 +34,7 @@ const setsOf = (position: string): AnyRec[] =>
  *
  *  1. **A FLOOR on variety.** HotCRM is the exemplar app: an author reading it
  *     is reading it to learn what each kind of nav item looks like. Nav items
- *     come in six kinds and every one of them must keep at least one entry —
+ *     come in seven kinds and every one of them must keep at least one entry —
  *     `component` is down to a single exemplar, so the next slimming pass is
  *     one deletion away from removing a demonstration silently. That is the failure this half exists to make loud.
  *
@@ -80,8 +80,8 @@ const LEAVES: AnyRec[] = (() => {
 const kindOf = (n: AnyRec): string =>
   n.type === 'object' && n.viewName ? 'view' : String(n.type);
 
-/** The six kinds the app is meant to demonstrate. */
-const REQUIRED_KINDS = ['object', 'view', 'page', 'dashboard', 'report', 'component'] as const;
+/** The seven kinds the app is meant to demonstrate — `doc` since the Help manuals (#2327). */
+const REQUIRED_KINDS = ['object', 'view', 'page', 'dashboard', 'report', 'component', 'doc'] as const;
 
 describe('the app navigation keeps one exemplar of every nav-item kind (#1259)', () => {
   it('the walk finds a real navigation tree', () => {
@@ -134,6 +134,8 @@ describe('the app navigation opens each destination once (#1259)', () => {
         n.dashboardName ?? '',
         n.reportName ?? '',
         n.componentRef ?? '',
+        n.book ?? '',
+        n.doc ?? '',
       ].join('|');
       const owner = seen.get(target);
       if (owner) bad.push(`${n.id} opens the same destination as ${owner}`);
