@@ -65,7 +65,9 @@ What follows from that is on the SLA side: deadlines run on **calendar hours**. 
 
 ### 8. Lead routing — nothing to configure
 
-**There is no Setup → Lead Settings screen**, and there are no routing rules to write. An ownerless lead — web-to-lead, CSV import, API capture — is assigned on insert by `src/sales/objects/lead.hook.ts`: it goes to whichever holder of the `sales_rep` position has the **fewest open leads**. That is a self-balancing round-robin, not a rule matching region, industry or source; there is no territory routing, no queue, and no auto-response email to the submitter. If nobody holds `sales_rep` the hook does nothing and the lead stays ownerless until someone claims it.
+**There is no Setup → Lead Settings screen**, and there are no routing rules to write. Web-to-lead is the one way into the round-robin: a lead submitted through the public web form arrives with nobody behind it, so it is assigned on insert by `src/sales/objects/lead.hook.ts` to whichever holder of the `sales_rep` position has the **fewest open leads**. That is a self-balancing round-robin, not a rule matching region, industry or source; there is no territory routing, no queue, and no auto-response email to the submitter. If nobody holds `sales_rep` the hook does nothing and the lead stays ownerless until someone claims it.
+
+Every other way a lead comes in has a person behind it, and that person becomes the owner: a lead created in the app, one sent through the API under someone's sign-in or API key, and one imported from a CSV or JSON file. An import never goes to the round-robin — a row with a blank owner is owned by whoever ran the import, so plan to reassign imported leads afterwards. See [Owners](/docs/guides/importing-your-data#owners) in *Import your own data*.
 
 - [ ] Assign the `sales_rep` position to every rep who should receive intake — that pool *is* the routing table
 - [ ] Read what happens next in the `lead_assignment` flow (a rating-based follow-up date, and an alert to the new owner) at **Studio → Automation → Flows**

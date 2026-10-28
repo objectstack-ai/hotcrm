@@ -52,7 +52,7 @@ The **Campaign Code** is auto-generated (e.g., CAMP-000123) so every campaign ha
 
 ## Built-in rules
 
-- **End date must be on or after the start date** — basic sanity check.
+- **End date must be after the start date** — a campaign that ends on the day it starts is refused, so even a one-day event runs from its start date to the next day.
 - **Over-budget warning** — if actual cost exceeds budgeted cost, a warning shows on the record. Doesn't block saves, but flags the campaign for finance review.
 
 ## What happens automatically
@@ -95,7 +95,7 @@ The numbers live on the campaign record itself — the counters and the response
 
 ## Attribution: from campaign to revenue
 
-The link is the **Source Campaign** lookup on the opportunity. When a sales rep converts a lead that came from a campaign — or manually sets the source campaign on an opportunity — the system credits the revenue back to the campaign.
+The link is the **Campaign** lookup on the opportunity, and it is set by hand. Converting a lead does not fill it in, even when the lead is a member of a campaign: the lead's membership is marked *Converted* and the campaign counts a converted lead, but the opportunity the conversion creates names no campaign, so neither the deal nor its revenue is credited to the campaign. The conversion screen has no Campaign field, so set **Campaign** on the opportunity afterwards; from then on the campaign counts the deal and, once it is won, its revenue.
 
 For deals influenced by multiple campaigns (multi-touch), the convention is to record the **last-touch** campaign (the one closest to conversion). For full multi-touch attribution, consider extending the model with a campaign-influence join object — see [Customization](/docs/customization/extending-objects).
 
@@ -126,7 +126,7 @@ Campaigns are **public read-only** for the whole organisation. Anyone in sales c
 ## Tips for sales reps
 
 - ✅ When a lead arrives, check whether they're in a campaign — it tells you which campaigns they were sent, and how they answered.
-- ✅ Set **Source Campaign** on opportunities you closed — marketing can't measure ROI without this.
+- ✅ Set **Campaign** on the opportunities that came from a campaign, including the ones you converted from a lead — nothing sets it for you, and marketing can't measure ROI without it.
 
 ## Tips for admins
 
