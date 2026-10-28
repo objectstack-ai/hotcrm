@@ -73,8 +73,9 @@ recently.
 Where your deployment runs the platform's assistant (ObjectOS Cloud and
 Enterprise), you can ask it about your CRM in plain language: "which of my
 deals are at risk?", "give me the full picture of Acme", "qualify this lead".
-It reads only what you can read and changes nothing without asking you first.
-What it can do here is described in [Using the assistant](./crm_ai_skills.md).
+It reads only what you can read, and the few changes it can make go through
+the same buttons you would press. What it can do here, and which buttons, is in
+[Using the assistant](./crm_ai_skills.md).
 A self-hosted open-source install ships without the assistant, so the panel is
 not there.
 
