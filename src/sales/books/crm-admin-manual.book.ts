@@ -4,8 +4,10 @@ import { defineBook } from '@objectstack/spec';
 import { SystemAdminProfile } from '../profiles/system-admin.profile';
 
 /**
- * The Admin Manual (#2327) — who sees whose records, and where every automated
- * threshold lives. Opened from *Help*, and only by an administrator.
+ * The Admin Manual (#2327) — the go-live order, who sees whose records, where
+ * every automated threshold lives, and how data comes in (#2329). Opened from
+ * *Help*, and only by an administrator. The pages order themselves by their
+ * `order:` frontmatter: the go-live checklist first, data import last.
  *
  * ## The audience is the administrator's permission set
  *
@@ -27,7 +29,7 @@ import { SystemAdminProfile } from '../profiles/system-admin.profile';
 export const CrmAdminManual = defineBook({
   name: 'crm_admin_manual',
   label: 'HotCRM Admin Manual',
-  description: 'Access, sharing and every automated threshold — for administrators.',
+  description: 'Going live, access, every automated threshold and data import — for administrators.',
   icon: 'shield-check',
   order: 2,
   audience: { permissionSet: SystemAdminProfile.name },

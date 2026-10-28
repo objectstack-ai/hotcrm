@@ -63,11 +63,9 @@ renewal reminder goes out. The times above are what runs once the switch is on.
 HotCRM ships **skills**, not assistants of its own. The platform provides the
 assistant (ObjectStack ADR-0063: the runtime owns exactly two agents and the
 surface you are in binds one); an app extends it by authoring skills that
-attach by surface affinity. HotCRM's six — live data, lead qualification, case
-triage, email drafting, revenue forecasting, customer 360 — operate over live
-CRM data and reach anything that *changes* state through the same Actions the
-UI buttons use, so permissions and audit are identical. The end user simply
-asks — no agent selection required.
+attach by surface affinity. There is nothing to switch on per skill: which
+skills exist is decided by the app. What each one does, and the buttons it may
+press, is in [Using the Assistant](./crm_ai_skills.md).
 
 ---
 
