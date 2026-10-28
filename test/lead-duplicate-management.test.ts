@@ -345,7 +345,11 @@ describe('the duplicate link is declarative metadata', () => {
     const hookSource = readFileSync(join(REPO_ROOT, 'src/sales/objects/lead.hook.ts'), 'utf8')
       .split('\n')
       .map((line) => (/^\s*(\/\/|\*|\/\*)/.test(line) ? '' : line))
-      .join('\n');
+      .join('\n')
+      // The converted-lead lock names every field it holds by its label
+      // (#2338 item 14), this one included; a label is not an adjudication.
+      .replace(/const FIELD_LABELS: Record<string, string> = \{[^}]*\};/, '');
+    expect(hookSource).toContain('Cannot change ${named}');
     expect(hookSource).not.toContain('disqualification_reason');
     expect(hookSource).not.toMatch(/throw new Error\([^)]*duplicate/i);
   });
