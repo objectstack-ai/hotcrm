@@ -128,6 +128,33 @@ export const buildArtifactAgain = async (): Promise<typeof artifact> => {
 };
 
 /**
+ * The app with the lead conversion gate ARMED, the one way an install arms it:
+ * `crm_lead.conversion_approval_status` defaults to `pending`. The gate ships
+ * OFF (REQ-0005), so on the shipped default no lead is ever born `pending` and
+ * `lead_conversion_approval` never opens a request. Pass it a fresh build
+ * ({@link buildArtifactAgain}): one configuration object holds one live kernel.
+ */
+export const armedLeadGate = (base: typeof artifact): typeof artifact => {
+  const a = base as unknown as Row;
+  return {
+    ...a,
+    packages: (a.packages as Row[]).map((p) => ({
+      ...p,
+      manifest: {
+        ...p.manifest,
+        objects: ((p.manifest.objects ?? []) as Row[]).map((o) => (o.name !== 'crm_lead' ? o : {
+          ...o,
+          fields: {
+            ...o.fields,
+            conversion_approval_status: { ...o.fields.conversion_approval_status, defaultValue: 'pending' },
+          },
+        })),
+      },
+    })),
+  } as typeof artifact;
+};
+
+/**
  * The names of every object the booted runtime registers that this app does
  * not author — the platform's objects, read from the registry rather than from
  * any package roster.

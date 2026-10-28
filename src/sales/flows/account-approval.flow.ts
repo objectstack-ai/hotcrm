@@ -192,7 +192,14 @@ export const AccountApprovalFlow: Flow = {
     // Approval-node branch labels — the engine resumes down the out-edge whose
     // `label` matches the recorded decision.
     { id: 'e3', source: 'account_review', target: 'notify_approved', type: 'default', label: 'approve' },
-    { id: 'e4', source: 'account_review', target: 'notify_rejected', type: 'default', label: 'reject' },
+    // A recall resumes down `reject` as well, with `decision: 'recall'`: it
+    // ends the run without the rejection's notice. The pair partitions, and an
+    // unreadable decision notifies (#2349, the full note on
+    // `opportunity_approval`'s `e4`).
+    { id: 'e4', source: 'account_review', target: 'notify_rejected', type: 'conditional', label: 'reject',
+      condition: P`!has(vars.account_review) || !has(vars.account_review.decision) || vars.account_review.decision != "recall"` },
+    { id: 'e4_recall', source: 'account_review', target: 'end', type: 'conditional', label: 'reject',
+      condition: P`has(vars.account_review) && has(vars.account_review.decision) && vars.account_review.decision == "recall"` },
     { id: 'e6', source: 'notify_approved', target: 'end', type: 'default' },
     { id: 'e8', source: 'notify_rejected', target: 'end', type: 'default' },
   ],
