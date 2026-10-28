@@ -212,6 +212,21 @@ describe('the hook is the guard that actually speaks', () => {
     });
   });
 
+  it('tells the user the same refusal in field labels (#2338 item 14)', async () => {
+    // The diagnostic above keeps the API keys; what the console shows is
+    // `userMessage`, and a user reads "Company", not "company".
+    const refusalOf = (p: Promise<unknown>): Promise<AnyRec> => p.then(() => ({}), (e: AnyRec) => e);
+    const lead = await convertedLead();
+    const one = await refusalOf(edit(lead, { company: 'Globex' }));
+    expect([one.code, one.status]).toEqual(['RECORD_LOCKED', 409]);
+    expect(one.message).toMatch(/\(attempted: company\b/);
+    expect(one.userMessage).toBe(
+      'Cannot change Company on converted lead Ada Lovelace - Acme; only its Description and Notes can still be edited. Make changes on the converted records instead.',
+    );
+    const two = await refusalOf(edit(lead, { email: 'changed@globex.example.com', rating: 5 }));
+    expect(two.userMessage).toMatch(/^Cannot change Email and Lead Score on converted lead Ada Lovelace - Acme;/);
+  });
+
   it('still rejects fields the deleted validation never covered', async () => {
     await expect(editConverted({ rating: 5 })).rejects.toThrow(/attempted: rating/);
   });

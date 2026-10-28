@@ -342,10 +342,18 @@ describe('the duplicate link is declarative metadata', () => {
     // The lesson of `cannot_edit_converted` (#575 B1) and `revenue_positive`
     // (#571): two implementations of one rule, one of them dead and free to
     // drift. The hook may WRITE a suspicion; it may not adjudicate one.
-    const hookSource = readFileSync(join(REPO_ROOT, 'src/sales/objects/lead.hook.ts'), 'utf8')
+    const uncommented = readFileSync(join(REPO_ROOT, 'src/sales/objects/lead.hook.ts'), 'utf8')
       .split('\n')
       .map((line) => (/^\s*(\/\/|\*|\/\*)/.test(line) ? '' : line))
       .join('\n');
+    // The converted-lead lock names every field it holds by its label (#2338
+    // item 14), this one included; a label is not an adjudication. Exactly that
+    // one named table is left out of the scan — a `{…}` with no nested brace —
+    // so the strip cannot widen to code that reads the field.
+    const LABEL_TABLE = /const FIELD_LABELS: Record<string, string> = \{[^{}]*\};/g;
+    expect(uncommented.match(LABEL_TABLE), 'the label table, exactly once').toHaveLength(1);
+    const hookSource = uncommented.replace(LABEL_TABLE, '');
+    expect(hookSource, 'the scan still reads the lock').toContain('Cannot change ${named}');
     expect(hookSource).not.toContain('disqualification_reason');
     expect(hookSource).not.toMatch(/throw new Error\([^)]*duplicate/i);
   });

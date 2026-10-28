@@ -154,7 +154,19 @@ const opportunityLineItemFreeze: Hook = {
       const name = typeof deal?.name === 'string' ? deal.name.trim() : '';
       const subject = name ? `Opportunity ${name}` : 'Opportunity';
       if (deal?.stage === 'closed_won' || deal?.stage === 'closed_lost') {
-        throw refuse(`${subject} is closed (${deal.stage}), so its line items can no longer be added, changed or removed.`, 'RECORD_LOCKED', 409);
+        // Two sentences, one per reader (#2338 item 15), as the deal's own
+        // freeze does (item 12): the diagnostic keeps the stage's API value,
+        // and the `userMessage` the console shows names it by its label. The
+        // labels are written out because a lowered body cannot read the
+        // object's metadata; `test/refusal-labels.test.ts` reads them off
+        // `crm_opportunity`.
+        const STAGE_LABELS: Record<string, string> = { closed_won: 'Closed Won', closed_lost: 'Closed Lost' };
+        throw refuse(
+          `${subject} is closed (${deal.stage}), so its line items can no longer be added, changed or removed.`,
+          'RECORD_LOCKED',
+          409,
+          `${subject} is closed (${STAGE_LABELS[deal.stage]}), so its line items can no longer be added, changed or removed.`,
+        );
       }
       const locked = deal?.approval_status === 'pending'
         || (deal?.status_change_approval_status === 'pending' && typeof deal.requested_status === 'string' && deal.requested_status !== '');
