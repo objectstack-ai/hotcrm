@@ -45,7 +45,7 @@ Categories and families let you slice reports by product mix — *"how much SMB-
 | **List Price** | Standard published price — what shows up on a quote by default |
 | **Cost** | Your cost — used for margin calculation |
 
-The system warns you if Cost is greater than List Price (which would be a losing sale).
+Cost may not be greater than List Price: a save that would make it so is refused, since every sale would lose money.
 
 **Tax is a quote-level figure, and the catalog carries no rate.** A quote's total is *subtotal − discount + Tax + Shipping*, where **Tax** is an amount you type on the quote itself; a quote line item carries no tax of its own. A product record stores nothing about tax.
 
@@ -64,8 +64,8 @@ Nothing reads the file's contents. There is no *Product Information* knowledge b
 
 ## Built-in rules
 
-- **List price must be greater than zero** — you can't sell a free product (use a $0.01 list price with a 100% discount if you really need to).
-- **Cost cannot exceed list price** — warning only, doesn't block save.
+- **List price cannot be negative** — a negative List Price is refused. Zero is accepted, so a free product can sit in the catalog at a list price of 0.
+- **Cost cannot exceed list price** — a save with Cost above List Price is refused, whether it is a new product or a change to either price. A cost equal to the list price saves.
 - **Unit price on opportunity / quote line items must be zero or positive** — basic validation.
 
 ## Sharing — products are public by default
