@@ -2,6 +2,7 @@
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
+import { CrmRevenueManual } from './books/index.js';
 import { RevenueEmailTemplates } from './email-templates/index.js';
 import { ProductDataset } from './datasets/index.js';
 import { QuoteExpirationFlow, QuoteGenerationFlow } from './flows/index.js';
@@ -92,7 +93,8 @@ export const createHotCrmRevenueStack = (
     dependencies: { 'app.objectstack.hotcrm': '^6.0.0' },
 
     /**
-     * The three entries this module puts into the app's Sales group.
+     * The three entries this module puts into the app's Sales group, and its
+     * manual under Help (below).
      *
      * Rule R3: the app's own `navigation` may not name this package's objects,
      * so the group stays the app's and this module fills it. A contributed item
@@ -118,6 +120,17 @@ export const createHotCrmRevenueStack = (
           { id: 'nav_price_book', type: 'object', objectName: 'crm_price_book', label: 'Price Books', icon: 'book-open' },
         ],
       },
+      // This module's manual, under the app's *Help* group (#2327): the app
+      // declares `group_help` last and collapsed, and this entry lands after
+      // its two manuals. It leaves with the module, as the book does.
+      {
+        app: 'crm_enterprise',
+        group: 'group_help',
+        priority: 40,
+        items: [
+          { id: 'nav_help_revenue', type: 'doc', book: 'crm_revenue_manual', label: 'Revenue Manual', icon: 'receipt' },
+        ],
+      },
     ],
   },
 
@@ -135,6 +148,8 @@ export const createHotCrmRevenueStack = (
   flows: revenueFlows,
   datasets: [ProductDataset],
   emailTemplates: RevenueEmailTemplates,
+  // Its manual (#2327), over `src/revenue/docs/`. See the book's own note.
+  books: [CrmRevenueManual],
 
   ...collections,
 });
