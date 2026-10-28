@@ -87,6 +87,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_help_manual: { label: '使用手册' },
         nav_help_admin: { label: '管理员手册' },
         nav_help_revenue: { label: '收入手册' },
+        nav_help_marketing: { label: '营销手册' },
       },
     },
   },

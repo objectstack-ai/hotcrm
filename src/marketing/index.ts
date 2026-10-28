@@ -3,6 +3,7 @@
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { EnrollLeadsAction, MarkRespondedAction } from './actions/index.js';
+import { CrmMarketingManual } from './books/index.js';
 import {
   CampaignEnrollmentFlow, CampaignCompletionFlow, CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow,
 } from './flows/index.js';
@@ -75,7 +76,8 @@ export const createHotCrmMarketingStack = (
     /**
      * The one entry this module puts into the app's Marketing group, which the
      * app keeps with no children of its own — as it keeps `group_service` — so
-     * the sidebar reads exactly as before. Rule R3; see `src/service/index.ts`.
+     * the sidebar reads exactly as before, and its manual under Help (below).
+     * Rule R3; see `src/service/index.ts`.
      */
     navigationContributions: [
       {
@@ -84,6 +86,18 @@ export const createHotCrmMarketingStack = (
         priority: 50,
         items: [
           { id: 'nav_campaign', type: 'object', objectName: 'crm_campaign', label: 'Campaigns', icon: 'megaphone' },
+        ],
+      },
+      // This module's manual, under the app's *Help* group (#2330), as the
+      // revenue module contributes its own (`src/revenue/index.ts`): it lands
+      // after the app's two manuals and the Revenue Manual, and it leaves with
+      // the module, as the book does.
+      {
+        app: 'crm_enterprise',
+        group: 'group_help',
+        priority: 50,
+        items: [
+          { id: 'nav_help_marketing', type: 'doc', book: 'crm_marketing_manual', label: 'Marketing Manual', icon: 'megaphone' },
         ],
       },
     ],
@@ -101,6 +115,8 @@ export const createHotCrmMarketingStack = (
   flows: marketingFlows,
   actions: [EnrollLeadsAction, MarkRespondedAction],
   sharingRules: marketingSharingRules,
+  // Its manual (#2330), over `src/marketing/docs/`. See the book's own note.
+  books: [CrmMarketingManual],
 
   ...collections,
 });

@@ -24,6 +24,10 @@
       "replacement": "{{BASEURL}}/src/revenue/docs/$1"
     },
     {
+      "pattern": "^\\./(crm_marketing_[a-z_]+\\.md)$",
+      "replacement": "{{BASEURL}}/src/marketing/docs/$1"
+    },
+    {
       "pattern": "^\\./(crm_overview\\.md)$",
       "replacement": "{{BASEURL}}/src/docs/$1"
     },
