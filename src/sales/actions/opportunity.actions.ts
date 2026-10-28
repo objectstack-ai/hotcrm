@@ -57,7 +57,7 @@ export const CloneOpportunityAction: Action = {
         lead_source: src.lead_source ?? null,
         crm_campaign: src.crm_campaign ?? null,
         // A copy of a PRIVATE deal is private too. A deal flagged Private is
-        // visible only to its owner (\`src/docs/crm_admin.md\`), and the copy
+        // visible only to its owner (\`src/docs/crm_admin_access.md\`), and the copy
         // carries its name and amount, so it keeps the flag; the person cloning
         // owns the copy and can clear it there. Only \`true\` counts, the field's
         // own boolean (\`test/private-opportunity-derived-records.test.ts\`).

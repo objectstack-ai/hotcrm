@@ -59,10 +59,11 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 | **Marketing** | Campaigns |
 | **Insights** | CRM Overview、Forecasts |
 | **Reports** | Opportunities by Stage、Won Opportunities by Owner、Pipeline Coverage、Opportunity Funnel by Owner、Lead Inflow、Accounts by Industry & Type、Customer Churn Signals、Cases by Status and Priority、SLA Performance、Cases Opened by Day |
+| **Help** | User Manual、Admin Manual、Revenue Manual |
 
 上表用的是源码里的英文 label，也就是英文界面上看到的名字。简体中文界面下，它们显示为语言包里的译名——例如 **Inbox** 显示为「待我审批」、**Knowledge** 显示为「知识库」、**My Work** 显示为「我的工作」。
 
-**Reports** 这个分组在应用加载时是折叠的——**Service**、**Sales**、**My Work**、**Activity**、**Marketing**、**Insights** 都会自动展开。先把它点开，再判断某份报表在不在这里。
+**Reports** 和 **Help** 这两个分组在应用加载时是折叠的——**Service**、**Sales**、**My Work**、**Activity**、**Marketing**、**Insights** 都会自动展开。先把 **Reports** 点开，再判断某份报表在不在这里。**Help** 打开应用内手册；**Admin Manual** 只对管理员显示。
 
 建立在商机之上的条目——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview**，以及 **Reports** 下的四张商机报表——不能读取商机的人在侧边栏里看不到；服务坐席与服务经理也按岗位看不到它们：他们仍可从 **Opportunities** 与 **My Deals** 打开自己的商机，但这些仪表盘与报表不对他们显示。其余报表对各自的数据也是同样的要求：服务坐席照样看得到线索、客户与工单报表，而不能读取工单的人看不到那三张工单报表。销售代表也看不到 **Home**，所以销售代表的侧边栏从 **Sales Home** 开始。销售代表不处理工单，所以销售代表的侧边栏也看不到 **Service Overview**、**Cases**、**My Cases** 以及那三张工单报表——**Cases by Status and Priority**、**SLA Performance**、**Cases Opened by Day**；**Knowledge** 仍然保留，因为销售时也要查阅知识文章。**Service** 排在所有分组之首，是因为应用打开时落在侧边栏显示的第一个条目上：对服务坐席与服务经理来说，那就是 **Service Overview**。
 

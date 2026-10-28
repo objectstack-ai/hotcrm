@@ -13,7 +13,7 @@ type Rec = Record<string, any>;
 /**
  * Records the app DERIVES from a private opportunity do not carry its name.
  *
- * `src/docs/crm_admin.md` declares that "a deal flagged Private is visible only
+ * `src/docs/crm_admin_access.md` declares that "a deal flagged Private is visible only
  * to its owner, including to the sets that hold org-wide opportunity read
  * (Sales Manager, Marketing User)". The deal itself is held back by the
  * `opportunity_private_owner_only` row policies; this file pins the other half

@@ -77,6 +77,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_report_cases_by_status: { label: 'ステータス・優先度別ケース' },
         nav_report_sla: { label: 'SLA 実績' },
         nav_report_cases_opened_by_day: { label: '日別新規ケース' },
+
+        group_help: { label: 'ヘルプ' },
+        nav_help_manual: { label: 'ユーザーマニュアル' },
+        nav_help_admin: { label: '管理者マニュアル' },
+        nav_help_revenue: { label: '収益マニュアル' },
       },
     },
   },

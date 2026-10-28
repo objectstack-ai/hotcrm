@@ -77,6 +77,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_report_cases_by_status: { label: 'Casos por Estado y Prioridad' },
         nav_report_sla: { label: 'Cumplimiento de SLA' },
         nav_report_cases_opened_by_day: { label: 'Casos Abiertos por Día' },
+
+        group_help: { label: 'Ayuda' },
+        nav_help_manual: { label: 'Manual de Usuario' },
+        nav_help_admin: { label: 'Manual de Administración' },
+        nav_help_revenue: { label: 'Manual de Ingresos' },
       },
     },
   },

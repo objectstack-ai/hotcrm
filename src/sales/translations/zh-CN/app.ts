@@ -82,6 +82,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_report_cases_by_status: { label: '工单状态与优先级' },
         nav_report_sla: { label: 'SLA 达成' },
         nav_report_cases_opened_by_day: { label: '每日新建工单' },
+
+        group_help: { label: '帮助' },
+        nav_help_manual: { label: '使用手册' },
+        nav_help_admin: { label: '管理员手册' },
+        nav_help_revenue: { label: '收入手册' },
       },
     },
   },

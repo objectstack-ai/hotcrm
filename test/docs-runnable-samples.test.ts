@@ -57,7 +57,7 @@ describe('documented agent names resolve to a platform agent', () => {
   /** Files whose whole body is code — no fence to unwrap. */
   const SCRIPT_DIRS = ['scripts'];
   /** Prose files: only the fenced blocks are samples someone will run. */
-  const DOC_DIRS = ['content/docs', 'src/docs'];
+  const DOC_DIRS = ['content/docs', 'src/docs', 'src/service/docs', 'src/revenue/docs', 'src/marketing/docs'];
 
   /**
    * Depth-first walk returning REPO_ROOT-relative paths. Hand-rolled rather

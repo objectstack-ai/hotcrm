@@ -312,7 +312,7 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 });
 
 describe('the source facts the quick-tour table now rests on (#960)', () => {
-  it('the app has two pinned top-level entries and seven groups', () => {
+  it('the app has two pinned top-level entries and eight groups', () => {
     expect(PINNED.map((p) => p.label)).toEqual(['Home', 'Sales Home']);
     // Service leads the groups (#2060 item 5): its first entry, Service
     // Overview, is where a service persona lands — see `crm.app.ts`.
@@ -324,6 +324,7 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
       'Marketing',
       'Insights',
       'Reports',
+      'Help',
     ]);
   });
 
@@ -332,8 +333,8 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     expect(PINNED[0].dashboardName).toBe(ExecutiveDashboard.name);
   });
 
-  it('Reports is the only group that stays collapsed (#2295)', () => {
-    expect(COLLAPSED).toEqual(['Reports']);
+  it('Reports and Help are the groups that stay collapsed (#2295, #2327)', () => {
+    expect(COLLAPSED).toEqual(['Reports', 'Help']);
     expect(EXPANDED).toEqual(['Service', 'Sales', 'My Work', 'Activity', 'Marketing', 'Insights']);
   });
 
