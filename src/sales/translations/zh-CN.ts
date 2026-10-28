@@ -6,9 +6,7 @@ import { appSurface } from './zh-CN/app';
 import { customer } from './zh-CN/objects.customer';
 import { pipeline } from './zh-CN/objects.pipeline';
 import { commerce } from './zh-CN/objects.commerce';
-import { service } from './zh-CN/objects.service';
 import { activity } from './zh-CN/objects.activity';
-import { marketing } from './zh-CN/objects.marketing';
 
 /**
  * 简体中文 (zh-CN) — CRM App Translations
@@ -56,24 +54,13 @@ export const zhCN: TranslationData = {
   objects: {
     crm_account: customer.crm_account,
     crm_contact: customer.crm_contact,
-    crm_knowledge_article: service.crm_knowledge_article,
     crm_forecast: pipeline.crm_forecast,
     crm_lead: pipeline.crm_lead,
-    crm_quote: commerce.crm_quote,
     crm_contract: commerce.crm_contract,
-    crm_case: service.crm_case,
     crm_task: activity.crm_task,
-    crm_campaign: marketing.crm_campaign,
-    crm_product: commerce.crm_product,
-    crm_price_book: commerce.crm_price_book,
-    crm_price_book_entry: commerce.crm_price_book_entry,
     crm_opportunity: pipeline.crm_opportunity,
     crm_event: activity.crm_event,
     crm_event_attendee: activity.crm_event_attendee,
-    crm_article_feedback: service.crm_article_feedback,
-    crm_campaign_member: marketing.crm_campaign_member,
-    crm_opportunity_line_item: pipeline.crm_opportunity_line_item,
-    crm_quote_line_item: commerce.crm_quote_line_item,
   },
   ...appSurface,
 };

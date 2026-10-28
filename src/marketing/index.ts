@@ -9,6 +9,7 @@ import {
 import { Campaign, CampaignMember } from './objects/index.js';
 import { campaignHook, campaignMemberHook } from './objects/hooks.js';
 import { CampaignLeadershipSharingRules } from './sharing/index.js';
+import { MarketingTranslations } from './translations/index.js';
 import { CampaignViews } from './views/index.js';
 
 /**
@@ -101,6 +102,7 @@ export const createHotCrmMarketingStack = (
   flows: marketingFlows,
   actions: [EnrollLeadsAction, MarkRespondedAction],
   sharingRules: marketingSharingRules,
+  translations: [MarketingTranslations],
 
   ...collections,
 });

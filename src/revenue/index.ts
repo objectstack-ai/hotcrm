@@ -11,6 +11,7 @@ import {
 import {
   opportunityLineItemHook, priceBookEntryHook, priceBookHook, productHook, quoteHook, quoteLineItemHook,
 } from './objects/hooks.js';
+import { RevenueTranslations } from './translations/index.js';
 import { ProductViews, QuoteViews } from './views/index.js';
 
 /**
@@ -135,6 +136,7 @@ export const createHotCrmRevenueStack = (
   flows: revenueFlows,
   datasets: [ProductDataset],
   emailTemplates: RevenueEmailTemplates,
+  translations: [RevenueTranslations],
 
   ...collections,
 });

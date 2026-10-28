@@ -2,8 +2,6 @@
 
 import type { TranslationData } from '@objectstack/spec/system';
 
-import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
-
 /**
  * 日本語 (ja-JP) — every translation namespace EXCEPT `objects`:
  * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`,
@@ -36,17 +34,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_account: { label: '取引先' },
         nav_contact: { label: '取引先責任者' },
         nav_opportunity: { label: '商談' },
-        nav_quote: { label: '見積' },
         nav_contract: { label: '契約' },
-        nav_product: { label: '製品' },
-        nav_price_book: { label: '価格表' },
         nav_sales_dashboard: { label: '営業実績' },
 
         group_work: { label: 'マイワーク' },
         nav_my_tasks: { label: '私のタスク' },
         nav_my_deals: { label: '私の商談' },
         nav_my_leads: { label: '私のリード' },
-        nav_my_cases: { label: '私のケース' },
         nav_my_calendar: { label: 'マイカレンダー' },
         nav_approval_requests: { label: '受信トレイ' },
 
@@ -55,12 +49,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_activity_dashboard: { label: '営業活動' },
 
         group_marketing: { label: 'マーケティング' },
-        nav_campaign: { label: 'キャンペーン' },
 
         group_service: { label: 'サービス' },
-        nav_case: { label: 'ケース' },
-        nav_knowledge: { label: 'ナレッジベース' },
-        nav_service_dashboard: { label: 'サービス概要' },
 
         group_insights: { label: 'インサイト' },
         nav_crm_dashboard: { label: 'CRM 概要' },
@@ -74,9 +64,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_report_lead_inflow: { label: 'リード対応' },
         nav_report_accounts_by_industry: { label: '業種・種別別取引先' },
         nav_report_churn_signals: { label: '顧客離反シグナル' },
-        nav_report_cases_by_status: { label: 'ステータス・優先度別ケース' },
-        nav_report_sla: { label: 'SLA 実績' },
-        nav_report_cases_opened_by_day: { label: '日別新規ケース' },
       },
     },
   },
@@ -176,26 +163,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         loss_reason_breakdown: { title: '失注の理由', description: '直近12か月の失注商談を理由別に集計' },
       },
     },
-    service_dashboard: {
-      label: 'カスタマーサービス',
-      description: 'ケース負荷、SLA健全性、解決パフォーマンス',
-      widgets: {
-        open_cases: { title: 'オープンケース', description: 'まだクローズされていないケース' },
-        critical_cases: { title: '重大ケース', description: '優先度「重大」のオープンケース' },
-        avg_resolution_time: { title: '平均解決時間', description: 'クローズまでの平均時間（時）' },
-        sla_violations: { title: 'SLA 違反', description: 'SLA を超過したケース' },
-        cases_by_status: { title: 'ステータス別ケース', description: 'パイプライン全体のワークロード分布' },
-        cases_by_priority: { title: '優先度別ケース', description: '緊急度別のオープンケース構成' },
-        cases_by_origin: { title: '発生源別ケース', description: 'ケースの流入チャネル' },
-        daily_case_volume: { title: '日次ケース件数', description: '過去30日間の新規ケース' },
-        sla_compliance_gauge: { title: 'SLA 達成率', description: '当期 SLA 内に解決したケースの割合' },
-        kb_deflection_rate: { title: 'ナレッジ解決率', description: 'クローズしたケースのうちナレッジ記事で解決した割合' },
-        kb_resolved_cases: { title: 'ナレッジで解決', description: '解決した記事が紐づくクローズ済みケース' },
-        closed_cases_total: { title: 'クローズ済みケース', description: 'ナレッジ解決率の分母' },
-        top_resolving_articles: { title: '解決件数の多い記事', description: '解決したクローズ済みケース数で並べたナレッジ記事' },
-        my_open_cases_by_priority: { title: '優先度別の私のオープンケース', description: 'あなたのオープンケースとそのSLA違反率を優先度別に集計' },
-      },
-    },
   },
   // `title` / `subtitle` translate the page's `page:header`; `title` falls back
   // to `label` when omitted, so it is authored only where the two differ.
@@ -223,56 +190,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         },
         annual_revenue_sum: {
           label: '年間売上',
-        },
-      },
-    },
-    case_metrics: {
-      label: 'ケース指標',
-      description: 'ケース数・解決時間・SLA を集計するセマンティックレイヤー',
-      dimensions: {
-        created_at: {
-          label: '作成日',
-        },
-        origin: {
-          label: '発生元',
-        },
-        priority: {
-          label: '優先度',
-        },
-        resolved_article: {
-          label: '解決に使用したナレッジ記事',
-        },
-        status: {
-          label: 'ステータス',
-        },
-        type: {
-          label: '種別',
-        },
-      },
-      measures: {
-        avg_resolution: {
-          label: '平均解決時間（時間）',
-        },
-        avg_sla_violated: {
-          label: 'SLA 違反率',
-        },
-        case_count: {
-          label: 'ケース数',
-        },
-        closed_count: {
-          label: 'クローズ済みケース',
-        },
-        kb_deflection_rate: {
-          label: 'ナレッジベース自己解決率',
-        },
-        kb_resolved_count: {
-          label: 'ナレッジベースで解決した件数',
-        },
-        sla_compliance_rate: {
-          label: 'SLA 遵守率',
-        },
-        sla_met_count: {
-          label: 'SLA を満たしたケース',
         },
       },
     },
@@ -443,23 +360,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         },
       },
     },
-    product_metrics: {
-      label: '製品指標',
-      description: '製品カタログの件数と定価を集計するセマンティックレイヤー',
-      dimensions: {
-        category: {
-          label: 'カテゴリ',
-        },
-      },
-      measures: {
-        list_price_sum: {
-          label: '定価合計',
-        },
-        product_count: {
-          label: '製品数',
-        },
-      },
-    },
     task_metrics: {
       label: 'タスク指標',
       description: 'タスクの作業量と完了状況を集計するセマンティックレイヤー',
@@ -509,20 +409,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     account_workbench: {
       label: '取引先ワークベンチ',
       description: '営業チーム向けに厳選した取引先リスト。クイックフィルターのみで、ビュー管理は行いません。',
-    },
-    case_detail_page: {
-      label: 'ケース詳細',
-      description: 'サービス担当者向けのケースレコードページ：ハイライト、SLA パス、詳細、活動タイムライン。',
-      title: '{case_number} · {subject}',
-      subtitle: '{crm_account}',
-      components: {
-        case_highlights: { label: '重要情報' },
-        case_status_path: { label: 'ケースステータスの進捗' },
-        case_details: { label: 'ケース詳細情報' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        case_main_tabs: { items: { details: { label: '詳細' }, related: { label: '関連' }, activity: { label: '活動' } } },
-      },
     },
     lead_detail_page: {
       label: 'リード詳細',
@@ -609,8 +495,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // an authored screen `description`, and a refusing `end` node's
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
-  // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
-  // retyped: the number lives in `_thresholds.ts` alone (#1711).
   flows: {
     // Approval flows (#2060 item 13, C-15): the flow's own `label`, and each
     // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
@@ -651,85 +535,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '商談のステータス変更承認',
       approvals: {
         status_review: { label: 'ステータス変更レビュー' },
-      },
-    },
-    campaign_lead_member_enroll: {
-      refusals: {
-        refuse_campaign_not_open: {
-          message:
-            '{{ campaignRecord.display_title | default: "選択したキャンペーン" }} はメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
-        },
-        refuse_lead_opted_out: {
-          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} はメールの配信を停止しているため、このリードはキャンペーンに追加されませんでした。',
-        },
-      },
-    },
-    campaign_contact_member_enroll: {
-      refusals: {
-        refuse_campaign_not_open: {
-          message:
-            '{{ campaignRecord.display_title | default: "選択したキャンペーン" }} はメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
-        },
-        refuse_contact_opted_out: {
-          message: '{{ contactRecord.full_name | default: "この取引先責任者" }} はメールの配信を停止しているため、この取引先責任者はキャンペーンに追加されませんでした。',
-        },
-      },
-    },
-    campaign_enrollment: {
-      label: 'キャンペーンにメンバーを登録',
-      successMessage: '対象メンバーをキャンペーンに登録しました。',
-      refusals: {
-        end_refused: {
-          message:
-            '選択された人のうち {{refusedCount}} 人の登録が拒否されました：登録 {{enrolledCount}} 人、拒否 {{refusedCount}} 人。拒否された人はキャンペーンに追加されていません。理由はフローの実行ログに一人ずつ記録されています。',
-        },
-        refuse_not_open: {
-          message:
-            'このキャンペーンはメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
-        },
-      },
-      screens: {
-        screen_1: {
-          title: '登録条件',
-          fields: {
-            memberSource: { label: '登録するメンバーの種類', options: { leads: 'リード', contacts: '取引先責任者' } },
-            leadStatus: { label: '登録するリードのステータス', options: { new: '新規', contacted: 'コンタクト済み', qualified: '適格' } },
-            contactDepartment: {
-              label: '登録する取引先責任者の部門',
-              options: { executive: '経営層', sales: '営業部', marketing: 'マーケティング部', engineering: 'エンジニアリング部', support: 'サポート部', finance: '経理部', hr: '人事部', operations: 'オペレーション部' },
-            },
-          },
-        },
-      },
-    },
-    escalate_case: {
-      label: 'ケースをエスカレート',
-      screens: { screen_1: { title: 'ケースをエスカレート', fields: { reason: { label: 'エスカレーション理由' } } } },
-    },
-    close_case: {
-      label: 'ケースをクローズ',
-      screens: {
-        screen_1: {
-          title: 'ケースをクローズ',
-          fields: {
-            resolution: { label: '解決内容' },
-            resolved_by_article: { label: '解決に使ったナレッジ記事（任意）' },
-          },
-        },
-      },
-    },
-    claim_case: {
-      label: 'ケースを引き受ける',
-      screens: {
-        screen_1: {
-          title: 'ケースを引き受ける',
-          fields: {
-            claimStatus: {
-              label: '対応状況',
-              options: { in_progress: '対応中', waiting_customer: '顧客の回答待ち', waiting_support: 'サポートの回答待ち' },
-            },
-          },
-        },
       },
     },
     lead_conversion: {
@@ -799,20 +604,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             },
             priority: { label: '優先度', options: { low: '低', normal: '通常', high: '高', urgent: '緊急' } },
             notes: { label: 'メモ' },
-          },
-        },
-      },
-    },
-    quote_generation: {
-      label: '商談から見積を作成',
-      refusals: { refuse_held: { message: '先に案件化承認が必要です。「案件化承認を申請」にチェックを入れてください。何も作成されていません。' } },
-      screens: {
-        screen_1: {
-          title: '見積詳細',
-          fields: {
-            quoteName: { label: '見積名' },
-            expirationDays: { label: '有効期間（日）' },
-            discount: { label: `割引率 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
           },
         },
       },
@@ -890,18 +681,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     won_opportunities_by_owner: {
       label: '担当者別成立商談',
       description: '所有者別にまとめた成立済み商談',
-    },
-    cases_by_status_priority: {
-      label: 'ステータス・優先度別ケース',
-      description: 'ステータスと優先度別のケースのサマリー',
-    },
-    sla_performance: {
-      label: 'SLA 実績レポート',
-      description: 'SLA 遵守状況の分析',
-    },
-    cases_opened_by_day_priority: {
-      label: '優先度 × 日別新規ケース',
-      description: '1 日ごとの新規ケース数を優先度別に表示',
     },
   },
   // Setup → Positions (`src/sales/sharing/positions.ts`).

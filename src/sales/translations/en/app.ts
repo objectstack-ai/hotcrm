@@ -127,26 +127,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         loss_reason_breakdown: { title: 'Why We Lose', description: 'Lost deals by reason — last 12 months' },
       },
     },
-    service_dashboard: {
-      label: 'Customer Service',
-      description: 'Case load, SLA health, and resolution performance',
-      widgets: {
-        open_cases: { title: 'Open Cases', description: 'Cases that are not yet closed' },
-        critical_cases: { title: 'Critical Cases', description: 'Open cases marked as critical priority' },
-        avg_resolution_time: { title: 'Avg Resolution Time', description: 'Mean time to close, in hours' },
-        sla_violations: { title: 'SLA Violations', description: 'Cases that breached their SLA' },
-        cases_by_status: { title: 'Cases by Status', description: 'Workload distribution across the pipeline' },
-        cases_by_priority: { title: 'Cases by Priority', description: 'Open case mix by urgency' },
-        cases_by_origin: { title: 'Cases by Origin', description: 'Where our cases are coming from' },
-        daily_case_volume: { title: 'Daily Case Volume', description: 'New cases created over the last 30 days' },
-        sla_compliance_gauge: { title: 'SLA Compliance', description: 'Percent of cases resolved within SLA this period' },
-        kb_deflection_rate: { title: 'KB Deflection Rate', description: 'Share of closed cases resolved with a knowledge article' },
-        kb_resolved_cases: { title: 'Resolved by KB', description: 'Closed cases pointing at the article that resolved them' },
-        closed_cases_total: { title: 'Closed Cases', description: 'The denominator behind the deflection rate' },
-        top_resolving_articles: { title: 'Top Resolving Articles', description: 'Knowledge articles ranked by the closed cases they resolved' },
-        my_open_cases_by_priority: { title: 'My Open Cases by Priority', description: 'Your open cases and their SLA-violation rate, broken down by priority' },
-      },
-    },
   },
   pages: {
     account_detail_page: {
@@ -161,16 +141,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     account_workbench: {
       label: 'Account Workbench',
       description: 'Curated account list for the sales team: quick filters only, no view management.',
-    },
-    case_detail_page: {
-      label: 'Case Detail',
-      description: 'Service-agent case record: highlights, SLA path, details and activity timeline.',
-      title: '{case_number} · {subject}',
-      subtitle: '{crm_account}',
-      components: {
-        case_highlights: { label: 'Key Information' },
-        case_status_path: { label: 'Case Status Path' },
-      },
     },
     lead_detail_page: {
       label: 'Lead Detail',

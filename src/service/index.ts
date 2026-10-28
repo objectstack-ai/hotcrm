@@ -24,6 +24,7 @@ import {
   CaseDirectorSharingRule, CaseEscalatedFromSharingRule, CaseEscalationSharingRule, CaseUnassignedTriageSharingRule,
 } from './sharing/index.js';
 import { CaseTriageSkill } from './skills/index.js';
+import { ServiceTranslations } from './translations/index.js';
 import { CaseViews, KnowledgeArticleViews } from './views/index.js';
 
 /**
@@ -127,8 +128,8 @@ const CASE_READ_AUDIENCE = P`current_user.can("crm_case", "read") && !("sales_re
  * ⛔ No `i18n` here: it is a `'single'`-disposition stack key, so two stacks
  * declaring DIFFERENT values make `composeStacks` throw and declaring identical
  * ones twice is a second place to drift. The app package declares it once, for
- * the artifact — and the locale packs that label this package's objects stay
- * whole in the app package with it.
+ * the artifact. `translations` is the opposite, a `'concat'` key: this package
+ * registers the rows for its own items itself (`./translations/index.ts`).
  *
  * `requires` is the opposite: `defineStack` validates trigger capability PER
  * STACK, so a package whose own flows declare `record_change` / `schedule`
@@ -265,6 +266,7 @@ export const createHotCrmServiceStack = (
   skills: serviceSkills,
   sharingRules: serviceSharingRules,
   emailTemplates: ServiceEmailTemplates,
+  translations: [ServiceTranslations],
 
   ...collections,
 });

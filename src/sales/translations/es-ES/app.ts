@@ -2,8 +2,6 @@
 
 import type { TranslationData } from '@objectstack/spec/system';
 
-import { QUOTE_DISCOUNT_CEILING } from '../../objects/_thresholds';
-
 /**
  * Español (es-ES) — every translation namespace EXCEPT `objects`:
  * `apps`, `messages`, `dashboards`, `datasets`, `pages`, `flows`, `picklists`,
@@ -41,26 +39,18 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_account: { label: 'Cuentas' },
         nav_contact: { label: 'Contactos' },
         nav_opportunity: { label: 'Oportunidades' },
-        nav_quote: { label: 'Cotizaciones' },
         nav_contract: { label: 'Contratos' },
-        nav_product: { label: 'Productos' },
-        nav_price_book: { label: 'Listas de Precios' },
         nav_sales_dashboard: { label: 'Rendimiento de Ventas' },
 
         group_work: { label: 'Mi Trabajo' },
         nav_my_tasks: { label: 'Mis Tareas' },
         nav_my_deals: { label: 'Mis Negocios' },
         nav_my_leads: { label: 'Mis Prospectos' },
-        nav_my_cases: { label: 'Mis Casos' },
         nav_approval_requests: { label: 'Bandeja de Entrada' },
 
         group_service: { label: 'Servicio' },
-        nav_case: { label: 'Casos' },
-        nav_knowledge: { label: 'Conocimiento' },
-        nav_service_dashboard: { label: 'Resumen de Servicio' },
 
         group_marketing: { label: 'Marketing' },
-        nav_campaign: { label: 'Campañas' },
 
         group_insights: { label: 'Análisis' },
         nav_crm_dashboard: { label: 'Resumen CRM' },
@@ -74,9 +64,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_report_lead_inflow: { label: 'Interacción con Prospectos' },
         nav_report_accounts_by_industry: { label: 'Cuentas por Industria y Tipo' },
         nav_report_churn_signals: { label: 'Señales de Abandono' },
-        nav_report_cases_by_status: { label: 'Casos por Estado y Prioridad' },
-        nav_report_sla: { label: 'Cumplimiento de SLA' },
-        nav_report_cases_opened_by_day: { label: 'Casos Abiertos por Día' },
       },
     },
   },
@@ -176,26 +163,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         loss_reason_breakdown: { title: 'Por qué perdemos', description: 'Negocios perdidos por motivo — últimos 12 meses' },
       },
     },
-    service_dashboard: {
-      label: 'Servicio al cliente',
-      description: 'Carga de casos, salud del SLA y rendimiento de resolución',
-      widgets: {
-        open_cases: { title: 'Casos abiertos', description: 'Casos que aún no se han cerrado' },
-        critical_cases: { title: 'Casos críticos', description: 'Casos abiertos marcados como prioridad crítica' },
-        avg_resolution_time: { title: 'Tiempo medio de resolución', description: 'Tiempo medio hasta el cierre, en horas' },
-        sla_violations: { title: 'Incumplimientos de SLA', description: 'Casos que incumplieron su SLA' },
-        cases_by_status: { title: 'Casos por estado', description: 'Distribución de la carga a lo largo del pipeline' },
-        cases_by_priority: { title: 'Casos por prioridad', description: 'Mezcla de casos abiertos por urgencia' },
-        cases_by_origin: { title: 'Casos por origen', description: 'De dónde provienen nuestros casos' },
-        daily_case_volume: { title: 'Volumen diario de casos', description: 'Casos nuevos creados en los últimos 30 días' },
-        sla_compliance_gauge: { title: 'Cumplimiento de SLA', description: 'Porcentaje de casos resueltos dentro del SLA en este período' },
-        kb_deflection_rate: { title: 'Tasa de Desvío por KB', description: 'Proporción de casos cerrados resueltos con un artículo de la base de conocimiento' },
-        kb_resolved_cases: { title: 'Resueltos por KB', description: 'Casos cerrados que señalan el artículo que los resolvió' },
-        closed_cases_total: { title: 'Casos Cerrados', description: 'El denominador de la tasa de desvío' },
-        top_resolving_articles: { title: 'Artículos que Más Resuelven', description: 'Artículos de la base de conocimiento ordenados por los casos cerrados que resolvieron' },
-        my_open_cases_by_priority: { title: 'Mis casos abiertos por prioridad', description: 'Tus casos abiertos y su tasa de incumplimiento de SLA, desglosados por prioridad' },
-      },
-    },
   },
   // `title` / `subtitle` son las propiedades del componente `page:header`.
   // Los marcadores `{…}` se sustituyen sobre la cadena TRADUCIDA, así que el
@@ -221,56 +188,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         },
         annual_revenue_sum: {
           label: 'Ingresos anuales',
-        },
-      },
-    },
-    case_metrics: {
-      label: 'Métricas de casos',
-      description: 'Capa semántica para el recuento de casos, el tiempo de resolución y el SLA',
-      dimensions: {
-        created_at: {
-          label: 'Creado',
-        },
-        origin: {
-          label: 'Origen',
-        },
-        priority: {
-          label: 'Prioridad',
-        },
-        resolved_article: {
-          label: 'Artículo de resolución',
-        },
-        status: {
-          label: 'Estado',
-        },
-        type: {
-          label: 'Tipo',
-        },
-      },
-      measures: {
-        avg_resolution: {
-          label: 'Resolución media (h)',
-        },
-        avg_sla_violated: {
-          label: 'Tasa de incumplimiento del SLA',
-        },
-        case_count: {
-          label: 'Casos',
-        },
-        closed_count: {
-          label: 'Casos cerrados',
-        },
-        kb_deflection_rate: {
-          label: 'Tasa de desvío por base de conocimiento',
-        },
-        kb_resolved_count: {
-          label: 'Resueltos por base de conocimiento',
-        },
-        sla_compliance_rate: {
-          label: 'Tasa de cumplimiento del SLA',
-        },
-        sla_met_count: {
-          label: 'Casos dentro del SLA',
         },
       },
     },
@@ -441,23 +358,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         },
       },
     },
-    product_metrics: {
-      label: 'Métricas de productos',
-      description: 'Capa semántica para el recuento del catálogo y el precio de lista',
-      dimensions: {
-        category: {
-          label: 'Categoría',
-        },
-      },
-      measures: {
-        list_price_sum: {
-          label: 'Precio de lista total',
-        },
-        product_count: {
-          label: 'Productos',
-        },
-      },
-    },
     task_metrics: {
       label: 'Métricas de tareas',
       description: 'Capa semántica para la carga de trabajo y la finalización de tareas',
@@ -507,20 +407,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     account_workbench: {
       label: 'Mesa de Trabajo de Cuentas',
       description: 'Lista de cuentas curada para el equipo comercial: solo filtros rápidos, sin gestión de vistas.',
-    },
-    case_detail_page: {
-      label: 'Detalle de Caso',
-      description: 'Página de caso para el agente de servicio: datos destacados, progreso del SLA, detalles y cronología de actividad.',
-      title: '{case_number} · {subject}',
-      subtitle: '{crm_account}',
-      components: {
-        case_highlights: { label: 'Información Clave' },
-        case_status_path: { label: 'Progreso del Estado del Caso' },
-        case_details: { label: 'Detalles del Caso' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        case_main_tabs: { items: { details: { label: 'Detalles' }, related: { label: 'Relacionado' }, activity: { label: 'Actividad' } } },
-      },
     },
     lead_detail_page: {
       label: 'Detalle de Prospecto',
@@ -607,8 +493,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // an authored screen `description`, and a refusing `end` node's
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
-  // The discount ceiling is interpolated from `QUOTE_DISCOUNT_CEILING`, never
-  // retyped: the number lives in `_thresholds.ts` alone (#1711).
   flows: {
     // Approval flows (#2060 item 13, C-15): the flow's own `label`, and each
     // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
@@ -649,85 +533,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Aprobación del Cambio de Estado de la Oportunidad',
       approvals: {
         status_review: { label: 'Revisión del Cambio de Estado' },
-      },
-    },
-    campaign_lead_member_enroll: {
-      refusals: {
-        refuse_campaign_not_open: {
-          message:
-            '{{ campaignRecord.display_title | default: "La campaña elegida" }} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
-        },
-        refuse_lead_opted_out: {
-          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} se dio de baja del correo electrónico, así que el prospecto no se añadió a la campaña.',
-        },
-      },
-    },
-    campaign_contact_member_enroll: {
-      refusals: {
-        refuse_campaign_not_open: {
-          message:
-            '{{ campaignRecord.display_title | default: "La campaña elegida" }} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
-        },
-        refuse_contact_opted_out: {
-          message: '{{ contactRecord.full_name | default: "Este contacto" }} se dio de baja del correo electrónico, así que el contacto no se añadió a la campaña.',
-        },
-      },
-    },
-    campaign_enrollment: {
-      label: 'Inscribir miembros en la campaña',
-      successMessage: 'Miembros elegibles inscritos en la campaña.',
-      refusals: {
-        end_refused: {
-          message:
-            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} inscritas, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
-        },
-        refuse_not_open: {
-          message:
-            'Esta campaña no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
-        },
-      },
-      screens: {
-        screen_1: {
-          title: 'Criterios de Inscripción',
-          fields: {
-            memberSource: { label: 'Tipo de miembro a inscribir', options: { leads: 'Prospectos', contacts: 'Contactos' } },
-            leadStatus: { label: 'Inscribir prospectos con estado', options: { new: 'Nuevo', contacted: 'Contactado', qualified: 'Calificado' } },
-            contactDepartment: {
-              label: 'Inscribir contactos del departamento',
-              options: { executive: 'Ejecutivo', sales: 'Ventas', marketing: 'Marketing', engineering: 'Ingeniería', support: 'Soporte', finance: 'Finanzas', hr: 'Recursos Humanos', operations: 'Operaciones' },
-            },
-          },
-        },
-      },
-    },
-    escalate_case: {
-      label: 'Escalar Caso',
-      screens: { screen_1: { title: 'Escalar Caso', fields: { reason: { label: 'Motivo de Escalación' } } } },
-    },
-    close_case: {
-      label: 'Cerrar Caso',
-      screens: {
-        screen_1: {
-          title: 'Cerrar Caso',
-          fields: {
-            resolution: { label: 'Resolución' },
-            resolved_by_article: { label: 'Resuelto con artículo (opcional)' },
-          },
-        },
-      },
-    },
-    claim_case: {
-      label: 'Tomar Caso',
-      screens: {
-        screen_1: {
-          title: 'Tomar Caso',
-          fields: {
-            claimStatus: {
-              label: 'Estado de trabajo',
-              options: { in_progress: 'En Curso', waiting_customer: 'Esperando al Cliente', waiting_support: 'Esperando a Soporte' },
-            },
-          },
-        },
       },
     },
     lead_conversion: {
@@ -797,20 +602,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             },
             priority: { label: 'Prioridad', options: { low: 'Baja', normal: 'Normal', high: 'Alta', urgent: 'Urgente' } },
             notes: { label: 'Notas' },
-          },
-        },
-      },
-    },
-    quote_generation: {
-      label: 'Generar cotización desde la oportunidad',
-      refusals: { refuse_held: { message: 'Primero va la aprobación de calificación: marque Solicitar Aprobación de Calificación. No se creó nada.' } },
-      screens: {
-        screen_1: {
-          title: 'Detalles de la Cotización',
-          fields: {
-            quoteName: { label: 'Nombre de Cotización' },
-            expirationDays: { label: 'Válida por (días)' },
-            discount: { label: `Descuento % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
           },
         },
       },
@@ -888,18 +679,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     won_opportunities_by_owner: {
       label: 'Oportunidades Ganadas por Propietario',
       description: 'Oportunidades ganadas agrupadas por propietario',
-    },
-    cases_by_status_priority: {
-      label: 'Casos por Estado y Prioridad',
-      description: 'Resumen de casos por estado y prioridad',
-    },
-    sla_performance: {
-      label: 'Informe de Cumplimiento de SLA',
-      description: 'Análisis del cumplimiento de los SLA',
-    },
-    cases_opened_by_day_priority: {
-      label: 'Casos Abiertos por Prioridad × Día',
-      description: 'Entrada diaria de casos desglosada por prioridad',
     },
   },
   // Setup → Positions (`src/sales/sharing/positions.ts`).

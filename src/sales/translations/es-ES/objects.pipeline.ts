@@ -498,32 +498,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
     },
   },
-  crm_opportunity_line_item: {
-    _validations: {
-      unit_price_positive: {
-        message: 'El precio de venta no puede ser negativo',
-      },
-    },
-    label: 'Línea de Oportunidad',
-    pluralLabel: 'Líneas de Oportunidad',
-    description: 'Líneas de precio por producto dentro de una oportunidad',
-    fields: {
-      crm_opportunity: { label: 'Oportunidad' },
-      crm_product: { label: 'Producto' },
-      description: { label: 'Descripción' },
-      product_title: { label: 'Título del producto', help: 'El título del producto, sincronizado con el producto. Da nombre a esta línea.' },
-      quantity: { label: 'Cantidad' },
-      list_price: { label: 'Precio de Lista', help: 'Se rellena automáticamente desde el Precio de Lista del producto.' },
-      unit_price: { label: 'Precio de Venta', help: 'Precio unitario negociado (puede diferir del precio de lista)' },
-      discount: { label: 'Descuento (%)' },
-      total_price: { label: 'Total' },
-      line_number: { label: 'Nº de Línea' },
-    },
-    _sections: {
-      basic: { label: 'Línea' },
-      pricing: { label: 'Precios' },
-    },
-  },
   crm_forecast: {
     _validations: {
       period_end_after_start: {

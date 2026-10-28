@@ -6,9 +6,7 @@ import { appSurface } from './es-ES/app';
 import { customer } from './es-ES/objects.customer';
 import { pipeline } from './es-ES/objects.pipeline';
 import { commerce } from './es-ES/objects.commerce';
-import { service } from './es-ES/objects.service';
 import { activity } from './es-ES/objects.activity';
-import { marketing } from './es-ES/objects.marketing';
 
 /**
  * Español (es-ES) — CRM App Translations
@@ -56,24 +54,13 @@ export const esES: TranslationData = {
   objects: {
     crm_account: customer.crm_account,
     crm_contact: customer.crm_contact,
-    crm_knowledge_article: service.crm_knowledge_article,
     crm_forecast: pipeline.crm_forecast,
     crm_lead: pipeline.crm_lead,
     crm_opportunity: pipeline.crm_opportunity,
-    crm_case: service.crm_case,
     crm_contract: commerce.crm_contract,
-    crm_product: commerce.crm_product,
-    crm_price_book: commerce.crm_price_book,
-    crm_price_book_entry: commerce.crm_price_book_entry,
-    crm_quote: commerce.crm_quote,
     crm_task: activity.crm_task,
-    crm_campaign: marketing.crm_campaign,
     crm_event: activity.crm_event,
     crm_event_attendee: activity.crm_event_attendee,
-    crm_article_feedback: service.crm_article_feedback,
-    crm_campaign_member: marketing.crm_campaign_member,
-    crm_opportunity_line_item: pipeline.crm_opportunity_line_item,
-    crm_quote_line_item: commerce.crm_quote_line_item,
   },
   ...appSurface,
 };
