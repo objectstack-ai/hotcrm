@@ -44,6 +44,20 @@ beforeAll(async () => {
 }, 120_000);
 
 /**
+ * The budget of every case that seeds a `world()`, against vitest's 5 s
+ * default. A run enrols every eligible person the marketer can see, not only
+ * its own world's, and each `world()` adds two eligible leads and two eligible
+ * contacts: so the Nth enrolling run inserts a member per person through a
+ * per-person subflow, and the file's runs grow from 7 members to 51 (the #2241
+ * leads case, the last one). Measured: the enrolling cases take 0.5 s to 2.5 s
+ * alone and 0.8 s to 4.9 s in a full local `test:coverage` run (as CI runs the
+ * suite), and that #2241 leads case ran past 5 s on main CI twice (#2357).
+ * Refused runs enrol nobody and stay under 0.3 s. Same size as `ENROLL_BUDGET_MS` in
+ * test/campaign-enrollment-doors.test.ts, for the same growth.
+ */
+const WORLD_BUDGET_MS = 30_000;
+
+/**
  * One campaign and the people who could be enrolled in it — the eligible ones
  * and one of every ineligible shape — written as the system, owned by the
  * marketer.
@@ -168,7 +182,7 @@ describe('campaign_enrollment — screen action', () => {
       expect(m.status).toBe('sent');
       expect(m.added_date, 'added_date should be stamped').toBeTruthy();
     }
-  });
+  }, WORLD_BUDGET_MS);
 
   it('never enrols an opted-out, converted or off-status lead, and an email-less one cannot be stored', async () => {
     const w = await world();
@@ -177,7 +191,7 @@ describe('campaign_enrollment — screen action', () => {
     for (const key of ['l_optout', 'l_converted', 'l_other']) {
       expect(enrolled, `${key} must not be enrolled`).not.toContain(key);
     }
-  });
+  }, WORLD_BUDGET_MS);
 
   it('tops up rather than double-enrolling on a re-run', async () => {
     // Duplicate member rows inflated num_sent and the response rate.
@@ -187,7 +201,7 @@ describe('campaign_enrollment — screen action', () => {
     expect(members.filter((m) => m.crm_lead === w.leads.l_new!.id), 'l_new was enrolled twice').toHaveLength(1);
     // …and the not-yet-enrolled lead still gets added.
     expect(enrolledKeys(w, members, 'crm_lead')).toContain('l_new2');
-  });
+  }, WORLD_BUDGET_MS);
 
   it('does not treat an enrolment in ANOTHER campaign as a duplicate', async () => {
     const w = await world();
@@ -198,12 +212,12 @@ describe('campaign_enrollment — screen action', () => {
       members.filter((m) => m.crm_lead === w.leads.l_new!.id),
       'a member row for a different campaign blocked enrolment',
     ).toHaveLength(1);
-  });
+  }, WORLD_BUDGET_MS);
 
   it('enrols into a campaign still in planning', async () => {
     const w = await world({ status: 'planning' });
     expect(enrolledKeys(w, await enrol(w), 'crm_lead').length).toBeGreaterThan(0);
-  });
+  }, WORLD_BUDGET_MS);
 });
 
 describe('campaign_enrollment — contacts (#597)', () => {
@@ -219,7 +233,7 @@ describe('campaign_enrollment — contacts (#597)', () => {
       expect(m.status).toBe('sent');
       expect(m.added_date, 'added_date should be stamped').toBeTruthy();
     }
-  });
+  }, WORLD_BUDGET_MS);
 
   it('never enrols an opted-out or off-segment contact, and an email-less one cannot be stored', async () => {
     const w = await world();
@@ -228,7 +242,7 @@ describe('campaign_enrollment — contacts (#597)', () => {
     for (const key of ['c_optout', 'c_other']) {
       expect(enrolled, `${key} must not be enrolled`).not.toContain(key);
     }
-  });
+  }, WORLD_BUDGET_MS);
 
   it('tops up rather than double-enrolling a contact on a re-run', async () => {
     const w = await world();
@@ -239,7 +253,7 @@ describe('campaign_enrollment — contacts (#597)', () => {
       'c_eng was enrolled twice',
     ).toHaveLength(1);
     expect(enrolledKeys(w, members, 'crm_contact')).toContain('c_eng2');
-  });
+  }, WORLD_BUDGET_MS);
 
   it('does not treat a LEAD enrolment as a duplicate of a contact enrolment', async () => {
     // Two different records of two different relationships; the seed datasets
@@ -255,17 +269,17 @@ describe('campaign_enrollment — contacts (#597)', () => {
     await existingMember(w.campaign, { crm_lead: twin!.id });
     const members = await enrol(w, asContacts());
     expect(members.filter((m) => m.crm_contact === w.contacts.c_eng!.id)).toHaveLength(1);
-  });
+  }, WORLD_BUDGET_MS);
 
   it('the two branches are exclusive — picking contacts enrols no leads', async () => {
     const w = await world();
     expect((await enrol(w, asContacts())).filter((m) => m.crm_lead)).toHaveLength(0);
-  });
+  }, WORLD_BUDGET_MS);
 
   it('…and picking leads enrols no contacts', async () => {
     const w = await world();
     expect((await enrol(w)).filter((m) => m.crm_contact)).toHaveLength(0);
-  });
+  }, WORLD_BUDGET_MS);
 });
 
 /**
@@ -322,7 +336,7 @@ describe('campaign_enrollment — a campaign that is not open, or no longer exis
     const w = await world({ status });
     expect(await ending(w.campaign.id, { ...SCREEN, memberSource }))
       .toEqual({ ...REFUSED, refusalMessage: refusal });
-  });
+  }, WORLD_BUDGET_MS);
 
   it.each(['leads', 'contacts'] as const)('a campaign id that names no campaign (%s) is refused, and nobody is enrolled', async (memberSource) => {
     const missing = `no-such-campaign-${++k}`;
@@ -342,7 +356,7 @@ describe('campaign_enrollment — a campaign that is not open, or no longer exis
       success: true, status: undefined, refusalMessage: undefined,
       successMessage: CampaignEnrollmentFlow.successMessage, ran, members: true,
     });
-  });
+  }, WORLD_BUDGET_MS);
 });
 
 /**
@@ -412,21 +426,21 @@ describe('campaign_enrollment — only the chosen source\'s criterion shows, and
     const screen = ((run as Rec).screen ?? (run as Rec).output?.screen) as Rec | undefined;
     expect(screen?.fields, 'the paused run carries no screen descriptor').toBeTruthy();
     expect(visibleFields(screen!, { memberSource })).toEqual(shown);
-  });
+  }, WORLD_BUDGET_MS);
 
   it('a contacts run with no lead status submits and enrols the chosen department', async () => {
     const w = await world();
     const members = await enrol(w, { memberSource: 'contacts', contactDepartment: 'engineering' });
     expect(enrolledKeys(w, members, 'crm_contact')).toEqual(['c_eng', 'c_eng2']);
     expect(members.filter((m) => m.crm_lead), 'a contacts run enrolled a lead').toHaveLength(0);
-  });
+  }, WORLD_BUDGET_MS);
 
   it('a leads run with no department submits and enrols the chosen status', async () => {
     const w = await world();
     const members = await enrol(w, { memberSource: 'leads', leadStatus: 'new' });
     expect(enrolledKeys(w, members, 'crm_lead')).toEqual(['l_new', 'l_new2']);
     expect(members.filter((m) => m.crm_contact), 'a leads run enrolled a contact').toHaveLength(0);
-  });
+  }, WORLD_BUDGET_MS);
 
   it.each([
     ['contacts', 'contactDepartment', { memberSource: 'contacts', leadStatus: 'new' }],
@@ -444,5 +458,5 @@ describe('campaign_enrollment — only the chosen source\'s criterion shows, and
     expect(JSON.stringify({ code: refusal?.code, error: refusal?.error, message: refusal?.message }))
       .toContain(`Screen field \\"${missing}\\" is required`);
     expect(await verify.rows('crm_campaign_member', { crm_campaign: w.campaign.id })).toHaveLength(0);
-  });
+  }, WORLD_BUDGET_MS);
 });
