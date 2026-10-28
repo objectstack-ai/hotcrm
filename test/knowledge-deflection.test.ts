@@ -392,6 +392,9 @@ describe('the service dashboard reads the deflection metric', () => {
     expect(w, 'service_dashboard has no top_resolving_articles widget').toBeTruthy();
     expect(w.dimensions).toEqual(['resolved_article']);
     expect(w.filter).toMatchObject({ is_closed: true });
+    // A closed case with no article is not a ranked article: the blank bucket
+    // drew a "—" row with 0 (#2338 item 11).
+    expect(w.filter).toMatchObject({ resolved_by_article: { $ne: null } });
   });
 
   /**

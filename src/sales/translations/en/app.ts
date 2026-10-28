@@ -212,10 +212,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             my_open_tasks: { label: 'My Open Tasks' },
           },
         },
-        ai_briefing: {
-          title: 'Ask the AI Assistant',
-          label: 'Today with the AI Assistant',
-        },
         upcoming_events: { title: 'Upcoming Events', label: 'Upcoming Events' },
       },
     },

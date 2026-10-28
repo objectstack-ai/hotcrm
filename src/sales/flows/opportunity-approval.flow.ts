@@ -10,7 +10,9 @@ type Flow = Automation.Flow;
  *
  * Expressed as **Approval nodes** (`type: 'approval'`, ADR-0019): the engine
  * opens an approval request on entry, suspends the run, and resumes down the
- * out-edge whose `label` matches the decision (`approve` / `reject`).
+ * out-edge whose `label` matches the decision (`approve` / `reject`). A
+ * recall resumes down `reject` too, and ends the run there without the
+ * rejection's notice (#2349).
  * Notifications use the **`notify` node** (ADR-0012). ⛔ Neither a
  * `connector_action` nor a standalone `ApprovalProcess` is available — both
  * authoring surfaces were removed in ObjectStack 7.4.
@@ -249,7 +251,22 @@ export const OpportunityApprovalFlow: Flow = {
 
     // Manager decision (approval-node branch labels)
     { id: 'e3', source: 'manager_review', target: 'check_high_value', type: 'default', label: 'approve' },
-    { id: 'e4', source: 'manager_review', target: 'notify_rejected', type: 'default', label: 'reject' },
+
+    // ── A recall is not a rejection (#2349) ──
+    // The platform resumes a RECALLED request down this same `reject` edge
+    // (`ApprovalService.recall`, `@objectstack/plugin-approvals` 18.2.0), so
+    // the label alone sent the rep a "rejected" notice for a request nobody
+    // decided. What tells the two apart is the decision the resume lands as
+    // `vars.<nodeId>.decision`: `'recall'` for a recall, `'reject'` for an
+    // approver's rejection or an auto-rejection. Both edges carry the label
+    // (the resume picks among them by it), and their conditions PARTITION in
+    // opposite polarity, as `e5`/`e6` do. A decision that cannot be read
+    // notifies: an unreadable decision is today's behaviour, not a silent
+    // loss of a real rejection's notice.
+    { id: 'e4', source: 'manager_review', target: 'notify_rejected', type: 'conditional', label: 'reject',
+      condition: P`!has(vars.manager_review) || !has(vars.manager_review.decision) || vars.manager_review.decision != "recall"` },
+    { id: 'e4_recall', source: 'manager_review', target: 'end', type: 'conditional', label: 'reject',
+      condition: P`has(vars.manager_review) && has(vars.manager_review.decision) && vars.manager_review.decision == "recall"` },
 
     // Tier gate (decision-node conditional branches). These EDGES are the live
     // sites — the engine never evaluates a `decision` node's singular
@@ -278,9 +295,14 @@ export const OpportunityApprovalFlow: Flow = {
     { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.amount)
       || vars.oppRecord.amount == null || vars.oppRecord.amount <= ${HIGH_VALUE_DEAL_AMOUNT}`, label: 'Standard (≤ $500K)' },
 
-    // Director decision (approval-node branch labels)
+    // Director decision (approval-node branch labels). A recall here — the
+    // rep withdrawing a deal the manager already approved — ends the run the
+    // same way (see `e4`).
     { id: 'e7', source: 'director_signoff', target: 'mark_approved', type: 'default', label: 'approve' },
-    { id: 'e8', source: 'director_signoff', target: 'notify_rejected', type: 'default', label: 'reject' },
+    { id: 'e8', source: 'director_signoff', target: 'notify_rejected', type: 'conditional', label: 'reject',
+      condition: P`!has(vars.director_signoff) || !has(vars.director_signoff.decision) || vars.director_signoff.decision != "recall"` },
+    { id: 'e8_recall', source: 'director_signoff', target: 'end', type: 'conditional', label: 'reject',
+      condition: P`has(vars.director_signoff) && has(vars.director_signoff.decision) && vars.director_signoff.decision == "recall"` },
 
     // Terminal branches
     { id: 'e9', source: 'mark_approved', target: 'notify_approved', type: 'default' },

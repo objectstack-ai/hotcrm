@@ -106,7 +106,7 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 
 ## 内置规则
 
-- **已关闭工单必须有解决方案**——解决方案字段为空时无法关闭工单。
+- **已关闭工单必须有解决方案**——解决方案字段为空时无法关闭工单。编辑表单在状态选为「已解决」或「已关闭」时就会显示解决方案字段，可以在同一次保存里填写；新建工单时不显示它。
 - **升级工单必须有升级原因**——解释为何引入了资深客服。
 - **状态推进是建议，不是闸门**——转换表写的是 *New* 之后可以去 *In Progress*、*Waiting on Customer*、*Escalated* 或 *Closed*，所以直接跳到 *Resolved* 是走出了这张表。但这拦不下保存：工单照样以 *Resolved* 落库，引擎只在服务端日志里写一行 `WARN Validation rule 'case_status_progression' (warning): Invalid status transition`。与上面两条不同——那两条是 `error` 级、确实会拒绝保存——这一条只做提示。转换表到底有什么用，见[状态机](/zh-Hans/docs/administration/state-machines)。
 

@@ -106,7 +106,7 @@ The two are not one screen wearing different chrome — they overlap in only sev
 
 ## Built-in rules
 
-- **Closed cases must have a resolution** — you can't close a case with an empty Resolution field.
+- **Closed cases must have a resolution** — you can't close a case with an empty Resolution field. The edit form shows **Resolution** as soon as **Status** is set to *Resolved* or *Closed*, so you can fill it in on the same save; a new case does not show it.
 - **Escalated cases must have an escalation reason** — explains why a senior agent was pulled in.
 - **Status progression is advice, not a gate** — the transition table says *New* leads to *In Progress*, *Waiting on Customer*, *Escalated* or *Closed*, so jumping straight to *Resolved* is outside it. That does not stop the save: the case is stored as *Resolved* and the engine writes one line to the server log, `WARN Validation rule 'case_status_progression' (warning): Invalid status transition`. Unlike the two rules above — both `error` severity, both of which do reject the save — this one only advises. See [State Machines](/docs/administration/state-machines) for what the table is good for.
 

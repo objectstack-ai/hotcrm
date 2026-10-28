@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
 
 /**
@@ -122,7 +123,7 @@ export const CaseViews = defineView({
         // `created_at`, the platform's own creation stamp — the object's
         // duplicate `created_date` was removed in #1992 because nothing wrote
         // it on a real case, so every user-created case started its bar at
-        // null. Same spelling as `deal_timeline` on crm_opportunity (#575 B2).
+        // null. Same spelling as `crm_lead`'s activity calendar.
         startDateField: 'created_at',
         endDateField: 'closed_date',
         titleField: 'subject',
@@ -343,6 +344,7 @@ export const CaseViews = defineView({
    *
    * ⇒ Therefore the create-safe field set has to BE this form's field set.
    * That is why the SLA and Resolution sections are gone rather than gated.
+   * One field came back, gated (#2338 item 2): `resolution`, see below.
    *
    * ## ⛔ Why the tab strip was not the object's `fieldGroups`
    *
@@ -398,9 +400,9 @@ export const CaseViews = defineView({
    *   is_escalated, escalation_reason  written by `case_escalation` /
    *                                    `case_sla_monitor` / `escalate_case`;
    *                                    detail page's Status & SLA section
-   *   resolution                       detail page's Description section
-   *                                    (the `resolution_required_on_close`
-   *                                    validation still has its surface)
+   *   resolution                       detail page's Description section,
+   *                                    and back on this form behind a status
+   *                                    gate since #2338 item 2 (below)
    *   is_closed                        readonly; derived from `status`
    *
    * ⚠️ `internal_notes`, `customer_rating` and `customer_feedback` left with
@@ -460,6 +462,24 @@ export const CaseViews = defineView({
           'supplied_name',
           'supplied_email',
           { field: 'status', required: true },
+          // Offered once the status says the case is being resolved (#2338
+          // item 2). This is the edit form, and it offers Status "Closed",
+          // which `resolution_required_for_closed` on `crm_case` refuses
+          // without a resolution. With the field off this form that save was a
+          // dead end ("Resolution is required when closing a case", nothing to
+          // fill in, the record page hiding its Resolution section while
+          // empty), so the only way out was Cancel, then Close Case. Gated,
+          // not always on, because this form is also the create dialog, and a
+          // new case is `new`. The predicate is TOTAL (`has()` first): an
+          // unevaluable one fails OPEN in the console (the house rule at the
+          // top of `lead.view.ts`), which would only show the field. Not
+          // `required` here: the object's rule asks for it on `closed` only,
+          // and a client-side `required` would also demand it on `resolved`.
+          {
+            field: 'resolution',
+            span: 'full',
+            visibleWhen: P`has(record.status) && (record.status == "resolved" || record.status == "closed")`,
+          },
           'priority',
           'origin',
           'owner_id',

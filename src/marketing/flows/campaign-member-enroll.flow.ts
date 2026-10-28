@@ -10,14 +10,22 @@ type Flow = Automation.Flow;
  *
  * ## Who calls these
  *
- * Every enrollment door in the app reaches the membership INSERT through one
- * of these two flows, and only through them:
+ * Every enrollment door the app ships reaches the membership INSERT through
+ * one of these two flows:
  *
  *   - **Enroll Members** (`campaign_enrollment`) calls them per eligible
  *     person through its `subflow` nodes;
  *   - **Add to Campaign** on a lead (`create_campaign`) and on a contact
  *     (`add_contact_to_campaign`) is a `type: 'flow'` action that starts the
  *     side's flow directly, once per selected row.
+ *
+ * A member created without them (New on a campaign's Campaign Members
+ * panel, an import run as the user, a REST create) meets the same two gates
+ * on the object instead: `campaign_member_enrollment_gate` in
+ * `src/marketing/objects/campaign_member.hook.ts` is this flow pair's
+ * object-side twin (#2344). It is a second copy of the gates, held to these
+ * flows' verdicts and sentences by
+ * `test/campaign-member-direct-create-gates.test.ts`.
  *
  * ## `runAs: 'user'` — the object's own `allowCreate` is the one gate (#2167)
  *

@@ -90,8 +90,10 @@ export const CloneOpportunityAction: Action = {
  *
  * Both invocation halves work:
  *
- *   - SINGLE record (row selection / toolbar with one row): the console POSTs
- *     `{ recordId, params: { stage } }` and the body reads `ctx.recordId`.
+ *   - SINGLE record (a REST or MCP caller naming one `recordId`; the list
+ *     header copy that also reached this half is gone, see `locations`): the
+ *     call carries `{ recordId, params: { stage } }` and the body reads
+ *     `ctx.recordId`.
  *   - MULTI record: the selection arrives in the BUILT-IN `_selectedIds`
  *     param — leading underscore — injected by the grid renderer for the
  *     view's `bulkActionDefs` entry with `execution: 'aggregate'`, which
@@ -199,7 +201,18 @@ export const MassUpdateStageAction: Action = {
     capabilities: ['api.write'],
     timeoutMs: 10000,
   },
-  locations: ['list_toolbar'],
+  // Headless (#2338 item 4): drawn only on the SELECTION BAR, which the
+  // opportunity list opens by naming this action in its `bulkActionDefs`
+  // (`src/sales/views/opportunity.view.ts`) and which places it by name, with
+  // no location here. List views do not inherit the def: each grid list of
+  // the object declares it itself, through `GRID_BAR` in that file.
+  // ⛔ Do not add `list_toolbar` back. Measured on 18.2.0, the console's server
+  // dispatch from the list header injects no `_selectedIds`: with two rows
+  // ticked it refused ("This action runs on a single record — select exactly
+  // one row"), and with none it opened the New Stage dialog over no record and
+  // the body threw. The header copy failed on every selection, while the bar's
+  // aggregate run moved them all.
+  locations: [],
   params: [
     {
       name: 'stage',

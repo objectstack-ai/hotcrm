@@ -20,8 +20,9 @@
  * A position names the permission sets it distributes in its own
  * `permissionSets` (ADR-0131 D3/D4): every holder holds every set listed, and
  * Setup shows the binding on the position's page and the holders on each set's
- * Assigned Users panel. Five positions distribute a set. Until #2200 they
- * declared none and reached their sets only through the platform's undeclared
+ * Assigned Users panel. Seven positions distribute a set: five since #2200,
+ * and the two marketing rungs since #2338. Until #2200 those five declared
+ * none and reached their sets only through the platform's undeclared
  * fold of a held position's name onto a same-named set, which logs
  * `position_name_fold_grant` on every boot and which the platform has ruled to
  * retire (objectstack#13419, ruling B). A position added here that should grant
@@ -90,15 +91,28 @@ export const CrmPositions = [
     description: 'Handles customer cases, receives new cases by round-robin assignment and pulls unassigned cases from triage.',
     permissionSets: ['service_agent'],
   },
+  // The two marketing rungs hold the marketing staff set (#2338 item 3). They
+  // declared none, so a holder carried `crm_user` alone, whose campaign grant
+  // is read-only: the object-level gate refused every campaign update with
+  // 403 before the `campaign_leadership_*` edit share
+  // (`src/marketing/sharing/campaign.sharing.ts`) was ever consulted, and the
+  // campaign record offered no Edit and no Enroll. A rung that leads the
+  // marketers does the marketers' work, enrolling members and tracking
+  // responses included, so the existing set is bound rather than a new one
+  // made. Measured on 18.2.0: that set alone writes every campaign (live and
+  // completed alike), so for these two rungs the leadership share now grants
+  // nothing beyond it.
   {
     name: 'marketing_director',
     label: 'Marketing Director',
     description: 'Leads marketing and edits every live campaign, whoever owns it.',
+    permissionSets: ['marketing_user'],
   },
   {
     name: 'marketing_manager',
     label: 'Marketing Manager',
     description: 'Manages marketing campaigns and edits every live campaign, whoever owns it.',
+    permissionSets: ['marketing_user'],
   },
   {
     name: 'marketing_user',

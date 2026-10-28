@@ -121,6 +121,10 @@ const RUNTIME_TEST_FILES = [
   // product per book) and who may write the books, one feature's runtime
   // evidence in one file, as the lines above.
   'price-book-hooks.test.ts',
+  // #2344 — `campaign_member_enrollment_gate`: the direct doors against the
+  // flow door over every campaign status, the system-write and no-move
+  // controls, the moving edits, and the lowered body.
+  'campaign-member-direct-create-gates.test.ts',
 ];
 
 /**

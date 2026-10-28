@@ -42,8 +42,8 @@ export const Forecast = ObjectSchema.create({
   // OWD is an authored decision (ADR-0090 D1/D7). Forecasts are personal to the
   // owner.
   sharingModel: 'private',
-  // ADR-0079 record title. ⚠️ An expression cannot dot-walk a lookup (ADR-0072),
-  // so `display_title` composes local fields only: period_label + (period_start).
+  // ADR-0079 record title: the period label and the owner's name, read one
+  // hop through the `owner_id` lookup (#2242). See `display_title` below.
   nameField: 'display_title',
   // Explicit search targets (ADR-0061): the real columns the lookup picker
   // and global search match. Until #2230 they were required, because the
@@ -125,17 +125,21 @@ export const Forecast = ObjectSchema.create({
       group: 'basic',
     }),
 
-    // ADR-0079 record title. ⚠️ An expression cannot dot-walk a lookup (ADR-0072),
-    // so this composes local fields only; `period_start` (a date) is
-    // string()-coerced for concat.
+    // ADR-0079 record title: "Q4 2026 · Nina Reyes" (#2242, the #2194 T1-U08
+    // ruling). A forecast is one row per owner × period, so the period alone
+    // left two reps' Q4 rows reading the same in Recent items and in a lookup.
+    // The owner's name is read one hop through the `owner_id` lookup, never a
+    // copied text column; measured on 18.1.0 and 18.2.0, the engine resolves
+    // `record.owner_id.name` when it computes the stored value. With no owner
+    // the title is the period label alone: the `?.` / `orValue("")` guard
+    // keeps an ownerless row from reading "Q4 2026 · ".
     //
-    // ⚠️ The coercion is `string()`, NOT `text()`. `text` is not a registered
-    // CEL function — it is absent from `CEL_STDLIB_FUNCTIONS` — so an expression
-    // using it faults at runtime and leaves the record's `nameField` null. The
-    // author-time `expression-invalid` rule now REPORTS it ("found no matching
-    // overload for 'text(dyn)'") instead of letting a broken expression through to
-    // null silently. `string` is the catalog's coercion, alongside
-    // `int`/`bool`/`double`/`timestamp`.
+    // The name is copied in when the row is written, so renaming the user
+    // re-titles a forecast only at its next write (measured on 18.1.0 and 18.2.0).
+    // The seed-ownership claim on a fresh boot is such a write: since
+    // objectstack#25668 (in 18.2.0) it re-owns seeded rows by id, so each
+    // seeded forecast is titled with the admin it was handed to.
+    //
     // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
     // computes the expression on every insert and every update by id and
     // stores the result, so an import matches a lookup cell against this title
@@ -145,7 +149,7 @@ export const Forecast = ObjectSchema.create({
     display_title: Field.text({
       readonly: true,
       label: 'Display Title',
-      expression: F`record.period_label + " (" + string(record.period_start) + ")"`,
+      expression: F`record.?owner_id.?name.orValue("") == "" ? record.period_label : record.period_label + " · " + record.?owner_id.?name.orValue("")`,
       group: 'basic',
     }),
 

@@ -199,7 +199,8 @@ const utcNoonDaysAgo = (offset: number): string => {
  * dashboard actually authors are understood — field equality, a
  * `{N_days_ago}` floor on the range field, and the SLA Violations tile's `$or`
  * of the flag with "open and past due" (`$nin` on `status`, `$lt '{now}'` on
- * `sla_due_date`, #2070). Anything else THROWS, so a widget filter this
+ * `sla_due_date`, #2070), and a `$ne: null` "has a value" key (Top Resolving
+ * Articles, #2338 item 11). Anything else THROWS, so a widget filter this
  * function silently mis-models cannot pass by accident.
  */
 const truthMatches = (row: FixtureCase, filter: AnyRec | undefined): boolean => {
@@ -216,6 +217,11 @@ const truthMatches = (row: FixtureCase, filter: AnyRec | undefined): boolean => 
     if (field === 'sla_due_date' && ops === '$lt' && (cond as AnyRec).$lt === '{now}') {
       // A missing deadline never compares: SQL NULL, and no clock to have run out.
       if (row.due === null || row.due >= 0) return false;
+      continue;
+    }
+    if (ops === '$ne' && (cond as AnyRec).$ne === null) {
+      // The driver reads `$ne: null` as IS NOT NULL (measured on 18.2.0): a null never passes.
+      if ((row as AnyRec)[field] === null) return false;
       continue;
     }
     if (field === AGENT_FIELD) {

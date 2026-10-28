@@ -44,6 +44,17 @@ const HOTCRM_ICON =
  * read. Since objectui#12426 (in the 18.0.0-next.2 console) the gate moves the
  * landing too: the console opens an app on the first entry the member is
  * SHOWN, not the first one served.
+ *
+ * Two dashboards stay open to the marketing user, measured on 18.2.0 (#2338
+ * item 1). Sales Activity carries no gate: every member reads their own events
+ * and tasks through `crm_user`, so its tiles answer, and the zeros a marketer
+ * sees are their own activity, not a refusal. Sales Performance refuses that
+ * member 1 of its 15 tiles, Quota Attainment by Rep (`forecast_metrics`; the
+ * set grants no `crm_forecast`), and is kept open like Customer Churn Signals
+ * below rather than hidden for one tile. No tile can be gated on read here: a
+ * widget's `requiresObject` asks whether the object is installed (the console
+ * filters on the served object list, which `/meta/object` serves whole to the
+ * marketing user), and a widget takes no `visible`.
  */
 
 /**
@@ -449,7 +460,7 @@ export const CrmApp = App.create({
         { id: 'nav_report_won_by_owner',           type: 'report', reportName: 'won_opportunities_by_owner',     label: 'Won Opportunities by Owner',    icon: 'trophy',        visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_report_pipeline_coverage',      type: 'report', reportName: 'pipeline_coverage_by_quarter',   label: 'Pipeline Coverage',             icon: 'columns-3',     visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_report_funnel_by_owner',        type: 'report', reportName: 'opportunity_funnel_owner_stage', label: 'Opportunity Funnel by Owner',   icon: 'funnel',        visible: OPPORTUNITY_AUDIENCE },
-        { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Inflow',                   icon: 'trending-up',   visible: READS_LEADS },
+        { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Engagement',               icon: 'trending-up',   visible: READS_LEADS },
         { id: 'nav_report_accounts_by_industry',   type: 'report', reportName: 'accounts_by_industry_type',      label: 'Accounts by Industry & Type',   icon: 'building',      visible: READS_ACCOUNTS },
         { id: 'nav_report_churn_signals',          type: 'report', reportName: 'customer_churn_signals',         label: 'Customer Churn Signals',        icon: 'heart-pulse',   visible: READS_ACCOUNTS },
       ],
