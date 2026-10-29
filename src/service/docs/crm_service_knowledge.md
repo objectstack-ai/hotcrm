@@ -41,6 +41,11 @@ article's two vote counts are recounted from those rows — so they mean *how
 many people*, not how many clicks, and changing your mind moves your own verdict
 instead of adding another.
 
+After each press a message says whether your vote was recorded, changed, or was
+already that verdict, with the article's current **Helpful** and **Not
+Helpful** counts. The same two counts sit in the article's header, next to its
+category, status and audience; the article page opens on its body.
+
 > *Public* audience is still a statement of intent rather than a publication
 > channel: no customer-facing surface serves articles today, and the guest
 > permission set cannot read the object at all, by design.

@@ -100,6 +100,10 @@ const CREATOR_AUTHORABLE = new Set([
   'supplied_email',
   'status',
   'priority',
+  // What kind of request it is (#2369 row 6): the public support form asks a
+  // guest for it, and a staff-created case saved `type: null` with no field
+  // to set it.
+  'type',
   'origin',
   'owner_id',
   'description',
@@ -147,7 +151,10 @@ const LIFECYCLE_MAINTAINED: Record<string, { why: string; keeps: string[] }> = {
   },
   is_sla_violated: {
     why: 'derived from the SLA sweep, never authored',
-    keeps: ['list.columns', 'detail.highlights'],
+    // Off the highlights strip since #2369 row 6 (a boolean there is drawn as
+    // a red "No" on every case on track): the breach is the record alert, and
+    // the flag stays in the `sla` group on the Details tab.
+    keeps: ['list.columns', 'detail.alert', 'detail.details'],
   },
   is_escalated: {
     // readonly since #1434 — stamped by `case_escalation`, `case_sla_monitor`
@@ -188,6 +195,7 @@ const surfaces = (): Record<string, Set<string>> => {
 
   const detailFields = new Set<string>();
   const highlightFields = new Set<string>();
+  const alertFields = new Set<string>();
   const walk = (node: any, into: 'highlights' | 'details' | null): void => {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) {
@@ -195,6 +203,12 @@ const surfaces = (): Record<string, Set<string>> => {
       return;
     }
     let next = into;
+    // A `record:alert` reads its fields through its `visible` predicate.
+    if (node.type === 'record:alert') {
+      for (const [, name] of JSON.stringify(node.properties?.visible ?? '').matchAll(/record\.(\w+)/g)) {
+        alertFields.add(name);
+      }
+    }
     if (node.type === 'record:highlights') next = 'highlights';
     else if (node.type === 'record:details') next = 'details';
     if (next && Array.isArray(node.fields)) {
@@ -225,6 +239,7 @@ const surfaces = (): Record<string, Set<string>> => {
     'my_open_cases.filter': names(lv.my_open_cases?.filter, (f: any) => f?.field),
     'escalated_cases.filter': names(lv.escalated_cases?.filter, (f: any) => f?.field),
     'detail.highlights': highlightFields,
+    'detail.alert': alertFields,
     'detail.details': detailFields,
   };
 };

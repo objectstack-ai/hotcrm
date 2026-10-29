@@ -102,6 +102,7 @@ export const ACTIVITY_TARGETS: Record<string, string> = {
   crm_case: 'related_to_case',
 };
 
+
 /** JS string literal, safely quoted for splicing into a body source. */
 const lit = (value: string): string => JSON.stringify(value);
 
@@ -447,6 +448,14 @@ function activityAction(spec: ActivitySpec, objectName: string, nameField: strin
         reference: 'crm_contact',
         multiple: true,
         required: false,
+        // Says what the body does with the record itself (#2369 row 8): on a
+        // contact or a lead that person is added as an attendee (the attendees
+        // step above) while this picker stays empty. One sentence true on all
+        // five objects, because the locale packs share one params block.
+        // ⛔ Not a prefill: on 18.2.0 the dialog gets no row from the record
+        // header or the list row menu, so `defaultFromRow` fills nothing and a
+        // `{{ record.x }}` hole prints raw (measured; platform finding).
+        helpText: 'The contact or lead you log this on is added automatically. Add anyone else here.',
       },
       {
         name: 'attendee_users',

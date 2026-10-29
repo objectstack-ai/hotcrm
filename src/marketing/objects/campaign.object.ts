@@ -27,8 +27,11 @@ export const Campaign = ObjectSchema.create({
   searchableFields: ['name', 'campaign_code'],
   // The record header's strip (#2369 row 5): the title already reads
   // "CPG-0001 - Name". The Add to Campaign picker shows the same fields under
-  // each campaign, where the code used to repeat the title.
-  highlightFields: ['type', 'status', 'start_date', 'end_date', 'owner_id'],
+  // each campaign, where the code used to repeat the title. `end_date` and
+  // `owner_id` stay in the body: each is the last visible member of its group
+  // ("schedule", "assignment"), which would then never render on the detail
+  // page (lint `field-group-shadowed`).
+  highlightFields: ['type', 'status', 'start_date', 'budgeted_cost'],
 
   // Every other business object with a detail page groups its fields; campaign
   // was one of the two that did not, so its detail page fell back to one flat

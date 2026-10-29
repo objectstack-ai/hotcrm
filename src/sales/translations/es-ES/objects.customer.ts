@@ -246,6 +246,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       send_email: {
         label: 'Enviar Correo',
+        description: 'Se envía a la dirección de correo de este contacto. Se pone en cola y luego se registra en la cronología del contacto.',
         params: {
           subject: { label: 'Asunto' },
           body: { label: 'Cuerpo' },

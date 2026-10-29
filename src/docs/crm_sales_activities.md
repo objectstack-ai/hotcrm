@@ -25,7 +25,8 @@ Leads, contacts, accounts, opportunities and cases each carry three buttons:
 
 - **Log a Call** and **Log a Meeting** record something that already happened.
   The event is saved as **held**, and the people you name are added as its
-  attendees.
+  attendees. You are added as the organizer, and the contact or lead you start
+  from is added for you, so **Contact Attendees** is only for anyone else.
 - **Schedule a Meeting** books one in the future. It is saved as **planned**
   and appears in **My Calendar**.
 

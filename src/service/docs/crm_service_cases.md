@@ -99,6 +99,9 @@ its **SLA Due Date** is marked **SLA Violated** on that save — it is not
 escalated and nobody is alerted, because the work is already done, but the SLA
 report and the compliance gauge count it.
 
+A case marked **SLA Violated** shows a red **SLA breached** banner under its
+header. A case on track shows none; the header strip keeps the **SLA Due Date**.
+
 ## Critical cases escalate instantly (automatic)
 
 The moment a case is set to **Critical** priority, it escalates without waiting

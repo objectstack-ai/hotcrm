@@ -529,6 +529,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       subtitle: '{crm_account}',
       components: {
         case_highlights: { label: '关键信息' },
+        case_sla_breached: { label: '已违反 SLA' },
         case_status_path: { label: '工单状态进度' },
         case_details: { label: '工单明细' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,

@@ -402,7 +402,7 @@ export const CaseViews = defineView({
    *                                    detail-page highlights
    *   first_response_date              `event.hook.ts` is its SINGLE writer
    *   resolution_time_hours            readonly; derived at close; detail page
-   *   is_sla_violated                  list column + detail-page highlights
+   *   is_sla_violated                  list column + detail-page SLA alert
    *   is_escalated, escalation_reason  written by `case_escalation` /
    *                                    `case_sla_monitor` / `escalate_case`;
    *                                    detail page's Status & SLA section
@@ -487,6 +487,10 @@ export const CaseViews = defineView({
             visibleWhen: P`has(record.status) && (record.status == "resolved" || record.status == "closed")`,
           },
           'priority',
+          // Beside Priority (#2369 row 6): the public support form asks a
+          // guest for the case type, and staff cases had no field for it, so
+          // they saved `type: null`, blank in the case dataset's Type dimension.
+          'type',
           'origin',
           'owner_id',
           // Required on the object with no default — a form without it could

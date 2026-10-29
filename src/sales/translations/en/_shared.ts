@@ -33,7 +33,10 @@ export const activityActions = {
     params: {
       subject: { label: 'Call Subject' },
       duration: { label: 'Duration (minutes)' },
-      attendee_contacts: { label: 'Contact Attendees' },
+      attendee_contacts: {
+        label: 'Contact Attendees',
+        helpText: 'The contact or lead you log this on is added automatically. Add anyone else here.',
+      },
       attendee_users: { label: 'Internal Attendees' },
       notes: { label: 'Call Notes' },
     },
@@ -44,7 +47,10 @@ export const activityActions = {
     params: {
       subject: { label: 'Meeting Subject' },
       duration: { label: 'Duration (minutes)' },
-      attendee_contacts: { label: 'Contact Attendees' },
+      attendee_contacts: {
+        label: 'Contact Attendees',
+        helpText: 'The contact or lead you log this on is added automatically. Add anyone else here.',
+      },
       attendee_users: { label: 'Internal Attendees' },
       notes: { label: 'Meeting Notes' },
     },
@@ -58,7 +64,10 @@ export const activityActions = {
       start_time: { label: 'Start Time (UTC)' },
       location: { label: 'Location' },
       duration: { label: 'Duration (minutes)' },
-      attendee_contacts: { label: 'Contact Attendees' },
+      attendee_contacts: {
+        label: 'Contact Attendees',
+        helpText: 'The contact or lead you log this on is added automatically. Add anyone else here.',
+      },
       attendee_users: { label: 'Internal Attendees' },
       notes: { label: 'Agenda' },
     },

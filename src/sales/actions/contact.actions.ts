@@ -127,10 +127,13 @@ export const AddContactToCampaignAction: Action = {
 export const SendEmailAction: Action = {
   name: 'send_email',
   label: 'Send Email',
-  // The dialog's line under the title (#2369 row 3): who the email goes to.
-  // Without it the dialog read the platform's generic "Please provide the
-  // required information to continue." The holes read the clicked contact.
-  description: 'To: {{ record.full_name }} <{{ record.email }}>',
+  // The line under the dialog's title (#2369 row 3), which read the platform's
+  // generic "Please provide the required information to continue.": where the
+  // email goes and what happens to it. It names no address: on 18.2.0 the
+  // dialog gets no row from the record header or the list row menu, so a
+  // `{{ record.email }}` hole prints raw and a `defaultFromRow` param stays
+  // empty (measured; platform finding).
+  description: "Goes to this contact's email address. It is queued, then logged on the contact's timeline.",
   objectName: 'crm_contact',
   icon: 'mail',
   // script, not modal: modal submits die on GET /api/v1/meta/object/<target>

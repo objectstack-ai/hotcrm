@@ -171,6 +171,45 @@ describe('the feedback actions record a row (they cannot bump a counter)', () =>
     expect(await feedbackOn(ka)).toHaveLength(1);
   });
 
+  /**
+   * The toast is the only place a reader learns what their click did (#2369
+   * row 7): the header buttons show neither a count nor the reader's own vote.
+   * The console picks `outcomeMessages[result.outcome]` and fills
+   * `{{ result.helpful }}` / `{{ result.notHelpful }}`, so the body must return
+   * all three, and each outcome it returns must have a message.
+   */
+  it('returns the outcome and the article’s tally for the toast', async () => {
+    const ka = await publishedArticle();
+    const other = await signUpPerson(verify, `other${n}@knowledge-feedback.test`, {
+      name: 'Otto Other', positions: ['service_agent'], permissionSets: ['service_agent'],
+    });
+    await verify.actions.run('crm_knowledge_article', 'mark_article_helpful', { as: other.token, recordId: ka });
+
+    // `actions.run` resolves with the body's own return value.
+    const results = [
+      await vote('mark_article_helpful', ka),
+      await vote('mark_article_helpful', ka),
+      await vote('mark_article_not_helpful', ka),
+    ] as Rec[];
+
+    expect(results.map((r) => [r.outcome, r.helpful, r.notHelpful])).toEqual([
+      ['recorded', 2, 0],
+      ['already', 2, 0],
+      ['changed', 1, 1],
+    ]);
+    for (const action of [MarkArticleHelpfulAction, MarkArticleNotHelpfulAction]) {
+      expect(Object.keys(action.outcomeMessages ?? {}).sort()).toEqual(['already', 'changed', 'recorded']);
+      // The console interpolates `${result.x}` (measured: `{{ result.x }}`
+      // printed raw), and each hole must name a key the body returns.
+      for (const message of Object.values(action.outcomeMessages ?? {})) {
+        expect(String(message)).not.toMatch(/\{\{/);
+        const holes = [...String(message).matchAll(/\$\{result\.(\w+)\}/g)].map(([, k]) => k);
+        expect(holes.length).toBeGreaterThan(0);
+        for (const k of holes) expect(Object.keys(results[0]!)).toContain(k);
+      }
+    }
+  });
+
   it('refuses an unauthenticated vote rather than writing an ownerless row', async () => {
     // The body refuses a caller with no user ("Sign in to rate an article").
     // Through the real door an anonymous vote is refused one step earlier — the

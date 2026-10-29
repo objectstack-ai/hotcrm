@@ -170,6 +170,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       subtitle: '{crm_account}',
       components: {
         case_highlights: { label: 'Key Information' },
+        case_sla_breached: { label: 'SLA Breached' },
         case_status_path: { label: 'Case Status Path' },
       },
     },
