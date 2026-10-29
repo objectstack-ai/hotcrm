@@ -56,6 +56,10 @@ export const CampaignViews = defineView({
         startDateField: 'start_date',
         endDateField: 'end_date',
         titleField: 'name',
+        // Opens at Month (#2367 row 4). Without it the chart opened at Day,
+        // a one-week window, and a campaign runs for weeks: every bar ran off
+        // both edges. The viewer's own zoom, once saved, still wins over this.
+        viewMode: 'month',
       },
     },
 

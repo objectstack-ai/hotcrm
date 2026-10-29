@@ -65,6 +65,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_service: { label: '服务' },
         nav_case: { label: '工单' },
         nav_knowledge: { label: '知识库' },
+        nav_knowledge_published: { label: '知识库' },
         nav_service_dashboard: { label: '服务概览' },
 
         group_insights: { label: '数据洞察' },

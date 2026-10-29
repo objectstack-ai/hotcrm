@@ -106,14 +106,30 @@ const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("s
  * `EXECUTIVE_AUDIENCE` above says why they are asked by position. Since #2231
  * the read term alone showed them all seven, each scoped to the deals they
  * own. A rep keeps them: Sales Home is a rep's landing. ⛔ Do not narrow
- * `crm_user` instead (#2231); the object entries (Opportunities, My Deals,
- * Leads…) keep no position term and stay visible to them.
+ * `crm_user` instead (#2231). The two opportunity object entries ask the
+ * position half only (`NOT_SERVICE_STAFF` below); the other object entries
+ * (Leads, Accounts…) keep no position term and stay visible to them.
  *
  * Each gate spells the positions out: `P` interpolates a value as a literal,
  * never as an expression, so a sub-predicate cannot be shared by reference.
  * One constant is shared by the seven entries instead.
  */
 const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+
+/**
+ * The two opportunity OBJECT entries, Opportunities and My Deals (#2367
+ * row 6): everyone but the two service personas, as #2268 did for the
+ * opportunity dashboards and reports above. Since #2231 a service persona
+ * reads the deals they own through `crm_user`, and they own none, so both
+ * lists were always empty for them. Tidying, not a boundary (#2287): the
+ * object stays readable by URL, from an account's related list and over
+ * REST, exactly as before.
+ *
+ * No read term: an object entry is pruned by read access already (the note
+ * on `OPPORTUNITY_AUDIENCE` above), so the position half is the whole of what
+ * this gate adds.
+ */
+const NOT_SERVICE_STAFF = P`!("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
 
 /**
  * HotCRM — navigation.
@@ -270,7 +286,7 @@ export const CrmApp = App.create({
         // zero clicks further than a second sidebar row. The
         // view-entry exemplar duty this item used to carry now sits with the
         // "My Work" items below, which are all object + `viewName`.
-        { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
+        { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target', visible: NOT_SERVICE_STAFF },
         { id: 'nav_sales_dashboard', type: 'dashboard', dashboardName: 'sales_dashboard', label: 'Sales Performance', icon: 'chart-line', visible: OPPORTUNITY_AUDIENCE },
         // Contracts close the sales cycle: quote → signed agreement → renewal.
         // The app's own entry since `crm_contract` moved into this package
@@ -305,7 +321,7 @@ export const CrmApp = App.create({
       // `component` entry, and the app's only one.
       children: [
         { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
-        { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target' },
+        { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target', visible: NOT_SERVICE_STAFF },
         { id: 'nav_my_leads', type: 'object', objectName: 'crm_lead', viewName: 'my_leads', label: 'My Leads', icon: 'user-plus' },
         // #592 — the rep's own calendar: a list of events, so a view, not a
         // dashboard.

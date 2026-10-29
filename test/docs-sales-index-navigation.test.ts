@@ -99,7 +99,7 @@ const PAGES = [
     lang: 'en',
     heading: '## Where to find things',
     /** The group size, stated in prose. */
-    count: /nine entries/,
+    count: /ten entries/,
     /** The en page names the object entries in English, so they are checked verbatim. */
     checkObjectLabels: true,
   },
@@ -107,14 +107,14 @@ const PAGES = [
     file: 'content/docs/sales/index.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 在哪里找到这些功能',
-    count: /九个条目/,
+    count: /十个条目/,
     checkObjectLabels: false,
   },
   {
     file: 'content/docs/sales/index.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 在哪裡找到這些功能',
-    count: /九個條目/,
+    count: /十個條目/,
     checkObjectLabels: false,
   },
 ] as const;
@@ -181,7 +181,10 @@ describe('sales/index lists the whole Sales navigation group (#997)', () => {
 });
 
 describe('the source facts that section now rests on (#997)', () => {
-  it('the Sales group holds nine entries, in this order', () => {
+  // Ten since #2367 row 1: a rep's Knowledge, folded in from the Service
+  // group the rep is no longer shown. The group holds it for every member;
+  // only a rep is shown it (`app-navigation-audience.test.ts`).
+  it('the Sales group holds ten entries, in this order', () => {
     expect(SALES_CHILDREN.map((c) => c.label)).toEqual([
       'Leads',
       'Accounts',
@@ -192,6 +195,7 @@ describe('the source facts that section now rests on (#997)', () => {
       'Quotes',
       'Products',
       'Price Books',
+      'Knowledge',
     ]);
   });
 
@@ -205,10 +209,10 @@ describe('the source facts that section now rests on (#997)', () => {
     expect(((authored?.children ?? []) as AnyRec[]).map((c) => c.id)).toEqual([
       'nav_lead', 'nav_account', 'nav_contact', 'nav_opportunity', 'nav_sales_dashboard', 'nav_contract',
     ]);
-    expect(SALES_CHILDREN.slice(-3).map((c) => c.id)).toEqual(['nav_quote', 'nav_product', 'nav_price_book']);
+    expect(SALES_CHILDREN.slice(-4).map((c) => c.id)).toEqual(['nav_quote', 'nav_product', 'nav_price_book', 'nav_knowledge_published']);
   });
 
-  it('eight of them open an object list; one opens something else', () => {
+  it('eight of them open an object list; two open something else', () => {
     expect(OBJECT_ENTRIES.map((c) => c.label)).toEqual([
       'Leads',
       'Accounts',
@@ -219,7 +223,7 @@ describe('the source facts that section now rests on (#997)', () => {
       'Products',
       'Price Books',
     ]);
-    expect(OTHER_ENTRIES.map((c) => c.label)).toEqual(['Sales Performance']);
+    expect(OTHER_ENTRIES.map((c) => c.label)).toEqual(['Sales Performance', 'Knowledge']);
   });
 
   it('Products is a Sales entry, not a Marketing one (#1259)', () => {

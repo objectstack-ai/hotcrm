@@ -26,9 +26,11 @@ the job you hold:
 | A service agent or service manager | **Service Overview** — the case dashboard, at the top of **Service** |
 | A sales manager, a marketer or an administrator | **Home** — the **Executive Overview** dashboard |
 
-The sidebar only shows what you are allowed to read: a sales rep sees no cases,
-and a service agent sees no pipeline dashboards. If you expected an entry and it
-is not there, your access is the reason, not a fault — ask your administrator.
+The sidebar only shows what you are allowed to read and what your job uses: a
+sales rep sees no cases, and finds **Knowledge** at the end of **Sales** rather
+than under **Service**; a service agent sees no pipeline dashboards and no deal
+lists. If you expected an entry and it is not there, your access is the reason,
+not a fault — ask your administrator.
 
 ## Your own work: My Work
 
@@ -38,7 +40,8 @@ for them:
 - **My Tasks** — your open tasks, the next thing to do first. Tasks the system
   creates for you (a follow-up on a stalled deal, an escalation) land here too;
   see [Activities](./crm_sales_activities.md).
-- **My Deals** and **My Leads** — the opportunities and leads you own.
+- **My Deals** and **My Leads** — the opportunities and leads you own. Service
+  staff, who own no deals, see **My Leads** only.
 - **My Calendar** — your meetings and calls.
 - **Inbox** — approval requests waiting on you (below).
 - **My Cases** — the cases you own, for service staff.

@@ -128,6 +128,29 @@ export const OpportunityViews = defineView({
   },
 
   listViews: {
+    /** Personal pipeline */
+    // My Open Deals comes straight after Open Deals, the primary list (#2367
+    // row 2): declaration order IS tab order, and behind the board, the
+    // calendar, the timeline and the cards a rep's own queue sat in the
+    // overflow menu at 1280px.
+    my_open_deals: {
+      name: 'my_open_deals',
+      bulkActionDefs: [...GRID_BAR],
+      type: 'grid',
+      label: 'My Open Deals',
+      userActions: { editInline: true, hideFields: true },
+      data: { provider: 'object', object: 'crm_opportunity' },
+      columns: ['name', 'crm_account', 'stage', 'amount', 'close_date'],
+      // "Open" has to exclude BOTH closed stages. Excluding only closed_won
+      // meant a rep's own queue opened on their lost deals, sorted to the top
+      // by close_date — the least actionable rows in the system.
+      filter: [
+        { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
+        { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
+      ],
+      sort: [{ field: 'close_date', order: 'asc' }],
+    },
+
     /**
      * All Opportunities — the unfiltered book, including closed business.
      *
@@ -228,25 +251,6 @@ export const OpportunityViews = defineView({
         titleField: 'name',
         visibleFields: ['crm_account', 'amount', 'stage', 'probability', 'close_date', 'owner_id'],
       },
-    },
-
-    /** Personal pipeline */
-    my_open_deals: {
-      name: 'my_open_deals',
-      bulkActionDefs: [...GRID_BAR],
-      type: 'grid',
-      label: 'My Open Deals',
-      userActions: { editInline: true, hideFields: true },
-      data: { provider: 'object', object: 'crm_opportunity' },
-      columns: ['name', 'crm_account', 'stage', 'amount', 'close_date'],
-      // "Open" has to exclude BOTH closed stages. Excluding only closed_won
-      // meant a rep's own queue opened on their lost deals, sorted to the top
-      // by close_date — the least actionable rows in the system.
-      filter: [
-        { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
-        { field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] },
-      ],
-      sort: [{ field: 'close_date', order: 'asc' }],
     },
 
     /** Stale Opportunities — still-open deals, longest-parked first */

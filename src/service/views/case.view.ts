@@ -105,6 +105,12 @@ export const CaseViews = defineView({
       label: 'SLA Calendar',
       data,
       columns: ['case_number', 'subject', 'priority'],
+      // Live cases only (#2367 row 3), the same cut as My Open Cases and SLA at
+      // Risk: a resolved or closed case keeps its `sla_due_date`, and the
+      // calendar drew those beside the live ones, so an agent planning the day
+      // read deadlines that no longer bind anyone. `is_closed` alone would keep
+      // the resolved ones (it is derived from `closed` only).
+      filter: [{ field: 'status', operator: 'not_in', value: ['resolved', 'closed'] }],
       calendar: {
         startDateField: 'sla_due_date',
         titleField: 'subject',

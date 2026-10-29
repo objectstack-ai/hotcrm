@@ -78,13 +78,32 @@ export type HotCrmServiceCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * position out each: `P` interpolates a value as a literal, never as an
  * expression, so the sub-predicate cannot be shared by reference.
  *
- * Knowledge stays open to a rep: articles are read while selling too.
+ * Knowledge asks it too since #2367 row 1, and a rep gets it in the Sales
+ * group instead (`SALES_REP` below). It had stayed in the Service group for a
+ * rep, since articles are read while selling, which left a rep a Service group
+ * of that one entry between Sales Home and the Sales group. A group whose
+ * every entry is hidden is not drawn, so a rep's sidebar now runs Sales Home,
+ * then Sales.
  *
  * Landing (#2060 item 5) is unmoved: a rep's first shown entry is Sales Home,
  * ahead of the Service group, and a service persona or the administrator
  * holds no `sales_rep` position, so the dashboard still leads for them.
  */
 const NOT_A_SALES_REP = P`!("sales_rep" in current_user.positions)`;
+
+/**
+ * The rep's own Knowledge entry, folded into the Sales group (#2367 row 1):
+ * exactly the members `NOT_A_SALES_REP` refuses, so every member is shown one
+ * Knowledge entry and no member two.
+ *
+ * Folded, not hidden: the console's search box (⌘K) looks for records only in
+ * the objects of the entries the member is shown (measured on 18.2.0, its
+ * `GET /api/v1/search?objects=…`), so a rep with no Knowledge entry could no
+ * longer find an article by its title. The entry opens the Published view,
+ * the articles a rep reads, which also keeps it a different destination from
+ * the Service group's plain list (`test/app-navigation-shape.test.ts`, #1259).
+ */
+const SALES_REP = P`"sales_rep" in current_user.positions`;
 
 /**
  * The read gate on this package's dashboard and report entries (#2073 item 1,
@@ -175,7 +194,7 @@ export const createHotCrmServiceStack = (
     dependencies: { 'app.objectstack.hotcrm': '^6.0.0' },
 
     /**
-     * The seven navigation entries this module puts into the app's menu
+     * The eight navigation entries this module puts into the app's menu
      * (ADR-0029 D7).
      *
      * Not a design choice: an app's own `navigation` may not name another
@@ -183,8 +202,9 @@ export const createHotCrmServiceStack = (
      * `module-split-plan.md`), so this package's entries became contributions
      * the moment `crm_case`, `crm_knowledge_article`, `service_dashboard` and
      * the case reports left the app package. The app keeps the GROUPS
-     * (`group_service`, `group_work`, `group_reports`) — a container a module
-     * cannot declare inside an app it does not own — and this module fills them.
+     * (`group_service`, `group_sales`, `group_work`, `group_reports`) — a
+     * container a module cannot declare inside an app it does not own — and
+     * this module fills them.
      *
      * `app` is the app's bare `name` (`crm_enterprise`), not the manifest id: a
      * dotted id is refused as a non-snake_case identifier.
@@ -203,8 +223,9 @@ export const createHotCrmServiceStack = (
      * member who reads no cases (the marketing user) would otherwise get a
      * dashboard and three pages of 403s (`CASE_READ_AUDIENCE` above). The app's
      * `READS_OPPORTUNITIES` note in `crm.app.ts` says why it is `visible` and
-     * not `requiredPermissions`. Every case entry but Knowledge also asks that
-     * the member is not a sales rep (`NOT_A_SALES_REP` above, #2244).
+     * not `requiredPermissions`. Every entry of the Service group, and My Cases,
+     * also asks that the member is not a sales rep (`NOT_A_SALES_REP` above,
+     * #2244; Knowledge since #2367).
      */
     navigationContributions: [
       {
@@ -220,7 +241,18 @@ export const createHotCrmServiceStack = (
         items: [
           { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge', visible: CASE_READ_AUDIENCE },
           { id: 'nav_case',      type: 'object', objectName: 'crm_case',              label: 'Cases',     icon: 'life-buoy', visible: NOT_A_SALES_REP },
-          { id: 'nav_knowledge', type: 'object', objectName: 'crm_knowledge_article', label: 'Knowledge', icon: 'book-open' },
+          { id: 'nav_knowledge', type: 'object', objectName: 'crm_knowledge_article', label: 'Knowledge', icon: 'book-open', visible: NOT_A_SALES_REP },
+        ],
+      },
+      {
+        app: 'crm_enterprise',
+        // A rep's Knowledge (#2367 row 1, `SALES_REP` above), last in Sales:
+        // after the app's own children and after the revenue module's entries
+        // (priority 40).
+        group: 'group_sales',
+        priority: 60,
+        items: [
+          { id: 'nav_knowledge_published', type: 'object', objectName: 'crm_knowledge_article', viewName: 'published_articles', label: 'Knowledge', icon: 'book-open', visible: SALES_REP },
         ],
       },
       {
