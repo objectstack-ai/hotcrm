@@ -19,7 +19,7 @@
 - **Views, dashboards and translations are projections of it.** List views, record pages, 5 dashboards and the app's navigation, in 4 languages (en, zh-CN, es-ES, ja-JP): the surfaces people use the ontology through, not a second copy of it.
 
 > [!NOTE]
-> **Small enough for an agent to hold whole.** The sales package carries its whole business semantics (objects, flows, actions, hooks) in **~64k tokens**, and its whole interaction layer (views, pages, dashboards, app shell) in another **~29k**.
+> **Small enough for an agent to hold whole.** The sales package carries its whole business semantics (objects, flows, actions, hooks) in **~68k tokens**, and its whole interaction layer (views, pages, dashboards, app shell) in another **~31k**.
 > Measured, not estimated: `node scripts/check-source-token-ratchet.mjs` prints both figures, and every other package's, and CI fails when a package's business semantics, interaction layer or authored total grows past its committed ceiling. Comments and blank lines are stripped; translations and seed data are outside the count — a fifth locale is not business logic.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
