@@ -371,10 +371,11 @@ describe('nothing else in the app re-states a large-deal amount', () => {
    * inclusive cut. Exempt from the sweep only because they are pinned here.
    */
   const HOOK_COPIES: Record<string, string> = {
-    // `opportunity_lifecycle`: no close-won while the Large Deal Approval is
-    // pending or rejected, at or over the line.
+    // `opportunity_lifecycle`: at or over the line, no close-won unless the
+    // Large Deal Approval is approved (#2334, #2350).
     'src/sales/objects/opportunity.hook.ts': 'the close-won refusal',
-    // `quote_workflow`: refuses the acceptance that close-won would follow.
+    // `quote_workflow`: refuses the acceptance that close-won would follow,
+    // in the same states.
     'src/revenue/objects/quote.hook.ts': 'the acceptance mirror of that refusal',
   };
 

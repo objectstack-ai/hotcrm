@@ -110,7 +110,7 @@ The division of labour on forecasts is worth calling out, because it is the patt
 
 Since ObjectStack 7.4, approvals are modeled as **`approval` nodes inside a flow** (ADR-0019) rather than a standalone approval-process type. On entry the node opens an approval request, **locks the record** while the step is pending, mirrors the live status onto an `approval_status` field, and resumes down the *approve* / *reject* branch.
 
-HotCRM's built-in **Opportunity Approval** flow chains two approval nodes for tiered sign-off (manager → director). See [Revenue › Approvals](/docs/revenue/approvals) for thresholds, what approvers see, and the audit trail.
+HotCRM's built-in **Opportunity Approval** flow chains two approval nodes for tiered sign-off (manager → director). See [Revenue › Approvals](/docs/revenue/approvals) for thresholds, what approvers see, and the audit trail. A deal of $100K or more can be closed won only once this flow has approved it, so switching the flow off leaves no way to close such a deal won by hand: the rule cannot tell that the flow is off (see [Closing a large deal won](/docs/revenue/approvals#closing-a-large-deal-won)).
 
 A second, independent gate — **Opportunity Status Change Approval** — asks for sign-off before a deal is declared won or lost. It ships switched off and keeps its verdict in its own field, so arming it never changes the amount-based sign-off. A third, **Opportunity Qualification Approval**, is the qualification (立项) sign-off a new deal needs before its stage or won/lost call may change; it too ships off, and with both armed it comes first. See [Sales › Opportunity Qualification](/docs/sales/opportunity-qualification).
 

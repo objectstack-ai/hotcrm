@@ -84,10 +84,22 @@ off.
 While an approval is pending, the opportunity is **locked** and its
 **Approval Status** shows the live state. On full approval it is stamped
 **Approved** (with date) and you're notified. On rejection it is stamped
-**Rejected** — the deal is unlocked; revise it and save to resubmit, since a rejected
-deal of $100K or more cannot be closed won until a new request is approved. The
+**Rejected** — the deal is unlocked; revise it and save to resubmit. The
 submitter can also **Recall** a pending request to unlock the deal; the next save
 resubmits it. Approvers act from their **Approvals → Inbox**.
+
+**A deal of $100K or more is won only once it is approved.** Moving it to
+**Closed Won** is refused unless its **Approval Status** is **Approved** —
+whether the request is pending, was rejected, was recalled, or was never sent
+(**Not Required**, as on a deal that was imported, or raised over the line in
+the same save that closes it). Save the deal without closing it to send it for
+approval, then close it once approved. Accepting a quote closes its deal as
+won, so the same rule holds a quote's acceptance. Losing a deal needs no
+approval.
+
+> **Known limit.** The rule does not know whether the Large Deal Approval flow
+> is switched on. If an administrator switches that flow off, no deal of $100K
+> or more can be closed won by hand, because nothing can approve it.
 
 ---
 
