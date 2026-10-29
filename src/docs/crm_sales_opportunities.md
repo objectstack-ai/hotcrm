@@ -20,8 +20,10 @@ applies automatically along the way.
 ## Stages
 
 Opportunities advance through these stages. The arrows are the moves the app
-treats as normal; a move off them still saves, and the app only logs a warning.
-**Closed Won** and **Closed Lost** are where a deal ends.
+treats as normal; a move off them still saves, and the save comes back with a
+warning. Any open stage can close straight to **Closed Won** or **Closed Lost**,
+so a deal won early saves without one. **Closed Won** and **Closed Lost** are
+where a deal ends.
 
 ```mermaid
 stateDiagram-v2
@@ -34,11 +36,14 @@ stateDiagram-v2
   state "Closed Lost" as closed_lost
   prospecting --> qualification
   prospecting --> proposal
+  prospecting --> closed_won
   prospecting --> closed_lost
   qualification --> needs_analysis
   qualification --> proposal
+  qualification --> closed_won
   qualification --> closed_lost
   needs_analysis --> proposal
+  needs_analysis --> closed_won
   needs_analysis --> closed_lost
   proposal --> negotiation
   proposal --> closed_won
@@ -77,9 +82,16 @@ off.
 | **> $500,000** | Sales Manager **and** Sales Director sign-off |
 
 While an approval is pending, the opportunity is **locked** and its
-**Approval Status** shows the live state. On full approval it is stamped
-**Approved** (with date) and you're notified. On rejection it is stamped
-**Rejected** — the deal is unlocked; revise it and save to resubmit. The
+**Approval Status** shows the live state. A blue banner under the stage path
+says the deal was sent for approval, to whom (a Sales Manager, or a Sales
+Manager and then a Sales Director over $500,000), and that **Recall**, above
+the title, withdraws the request. On full approval it is stamped
+**Approved** (with date). On rejection it is stamped **Rejected** — the deal
+is unlocked; revise it and save to resubmit. Either way you hear the outcome
+once in the app — **Request approved** or **Request rejected**, with the
+approver's comment — and once by email. If someone else's save sent your deal
+for approval, that notice goes to them, and you get **Deal approved** or
+**Deal rejected** in the app instead. The
 submitter can also **Recall** a pending request to unlock the deal; the next save
 resubmits it. Approvers act from their **Approvals → Inbox**.
 
@@ -97,6 +109,15 @@ approval.
 > or more can be closed won by hand, because nothing can approve it.
 
 ---
+
+## Private deals
+
+Tick **Private** on a deal and only its owner can see it. That includes the
+people who otherwise read every deal in the organisation, such as a Sales
+Manager or a Marketing User: the deal drops out of their lists and reports, and
+a link to it opens a page saying the record does not exist or may have been
+deleted. Nothing is wrong with the deal; it is hidden from them. To share it
+again, the owner clears **Private**.
 
 **Related:** a deal starts life as a lead — see [Leads](./crm_sales_leads.md);
 once it is won, the relationship continues as a contract — see

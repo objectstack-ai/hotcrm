@@ -36,3 +36,4 @@ export { BillingHandoffClosedWonFlow } from './billing-handoff-closed-won.flow';
 export { ContractRenewalFlow } from './contract-renewal.flow';
 export { ContractExpirationFlow } from './contract-expiration.flow';
 export { BillingHandoffContractActivatedFlow } from './billing-handoff-contract-activated.flow';
+export { ContractDraftedNoticeFlow } from './contract-drafted-notice.flow';

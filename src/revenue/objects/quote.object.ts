@@ -432,7 +432,16 @@ export const Quote = ObjectSchema.create({
       name: 'quote_status_progression',
       type: 'state_machine',
       severity: 'warning',
-      message: 'Invalid quote status transition',
+      // The path in business words, by the status labels (#2371 row 7). It
+      // read "Invalid quote status transition", naming neither the move nor
+      // the moves allowed. A state-machine message takes no holes on 18.2.0,
+      // so it cannot name THIS move's two statuses; the response's
+      // `constraint` carries `from` / `to`, and the console shows only this
+      // sentence. So it states the whole graph below, as
+      // `contract_status_progression` does. Each locale pack restates it with
+      // its own option labels, held to them by `test/refusal-labels.test.ts`.
+      message:
+        "This status change is off the quote's usual path: Draft → In Review → Presented → Accepted. In Review can also go back to Draft or be Rejected, Presented can be Rejected, and a Rejected quote returns to Draft. Draft, In Review or Presented can become Expired. Accepted and Expired are final.",
       field: 'status',
       transitions: {
         // `→ expired` is legal from every UNSETTLED state: the quote_expiration

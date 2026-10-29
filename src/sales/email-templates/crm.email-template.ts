@@ -10,7 +10,7 @@ import { esES } from './es-ES';
 /**
  * Sales — every `sys_email_template` row this package's `notify` nodes name.
  *
- * Four locale packs crossed with sixteen template names: the rows a
+ * Four locale packs crossed with seventeen template names: the rows a
  * recipient's own `sys_user.locale` is resolved against, per recipient, after
  * fan-out. Assembled here the way `translations/crm.translation.ts` assembles
  * the UI locale packs — one file per language, one file that collects them.

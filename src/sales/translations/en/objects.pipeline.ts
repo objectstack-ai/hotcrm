@@ -180,7 +180,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: 'Add to Campaign',
-        successMessage: 'Leads added to campaign!',
+        successMessage: '{{ result.output.campaignName }}: {{ result.output.addedCount }} added, {{ result.output.alreadyCount }} already a member.',
         params: {
           campaignId: { label: 'Campaign' },
         },
@@ -351,7 +351,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: 'Clone Opportunity',
-        successMessage: 'Opportunity cloned successfully!',
+        successMessage: 'Created "{{ result.name }}". You are now on the copy.',
       },
       mass_update_stage: {
         label: 'Update Stage',

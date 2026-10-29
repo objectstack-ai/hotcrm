@@ -84,4 +84,11 @@ export const jaJP: EmailTemplatePack = {
     subject: '緊急の ToDo: {{subject}}',
     bodyHtml: '<p>緊急の ToDo「{{subject}}」が割り当てられました。対応をお願いします。</p>',
   },
+  // Sent by `contract_drafted_notice` when accepting a quote drafts its
+  // contract (#2371 row 6).
+  'crm.contract_drafted': {
+    label: '契約を起草しました',
+    subject: '契約を起草しました: {{contract_number}}',
+    bodyHtml: '<p>見積の承諾により契約 {{contract_number}} を起草しました。期間と契約種別は初期値です。有効化する前に確認してください。</p>',
+  },
 };

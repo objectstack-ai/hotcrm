@@ -273,7 +273,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: 'Agregar a Campaña',
-        successMessage: '¡Prospecto agregado a la campaña!',
+        successMessage: '{{ result.output.campaignName }}: {{ result.output.addedCount }} agregado(s), {{ result.output.alreadyCount }} ya era(n) miembro(s).',
         params: {
           campaignId: { label: 'Campaña' },
         },
@@ -475,7 +475,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: 'Clonar Oportunidad',
-        successMessage: '¡Oportunidad clonada con éxito!',
+        successMessage: 'Se creó «{{ result.name }}». Ahora está en la copia.',
       },
       mass_update_stage: {
         label: 'Actualizar Etapa',
@@ -536,7 +536,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         message: 'El inicio del periodo debe ser el primer día del periodo: p. ej. 2026-08-01 para agosto de 2026.',
       },
       quarter_starts_on_quarter_boundary: {
-        message: 'Una previsión trimestral debe comenzar en un límite de trimestre: 1 de enero, 1 de abril, 1 de julio o 1 de octubre.',
+        message: 'En una previsión trimestral, el Inicio del periodo debe caer en un límite de trimestre: 1 de enero, 1 de abril, 1 de julio o 1 de octubre.',
       },
       snapshot_amounts_non_negative: {
         message: 'Los importes de la instantánea no pueden ser negativos.',

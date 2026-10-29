@@ -27,10 +27,14 @@ Generate a quote from an opportunity. The quote screen asks for:
 The system computes the math for you: subtotal = the opportunity amount,
 discount amount = subtotal × discount %, and **total = amount × (1 − discount%)**.
 
+When you submit, the dialog shows **Quote Created**: the quote is saved as a
+**Draft**, and its name is a link that opens it. **Submit** on that screen just
+closes the dialog; the quote is already there either way.
+
 ## Quote status
 
 A quote usually moves along these arrows. A move off them still saves, and the
-app only logs a warning. **Accepted** and **Expired** are where a quote ends; a
+save comes back with a warning that spells out the usual path. **Accepted** and **Expired** are where a quote ends; a
 rejected quote can go back to **Draft** to be reworked.
 
 ```mermaid
@@ -74,6 +78,13 @@ An **Accepted**, **Rejected** or **Expired** quote is settled. It shows no
 **Edit**, and its line items show no **New**. Only its **Internal Notes** can
 still be changed. A **Rejected** quote is reworked by clicking **Revise**: it goes
 back to **Draft**, where its fields and lines can be edited again.
+
+## When a quote is accepted
+
+Accepting a quote wins its opportunity and drafts a **contract** from it. A
+moment later you get a notice, **Contract drafted**, with the contract number
+and a **View** link to it. The contract's term and contract type are starting
+values, so check them before you activate it.
 
 ## Quote auto-expiration (automatic)
 

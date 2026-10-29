@@ -56,11 +56,11 @@ The process uses **first-response** behavior — the first approver to respond a
 ### ✅ Approved (all required tiers)
 1. The opportunity is **unlocked**.
 2. `approval_status` is stamped **approved** and `approved_date` is set to today.
-3. The owner is notified (*"Deal approved"*).
+3. The owner hears it once in the app and once by email. The in-app notice is the platform's *"Request approved"*, which goes to whoever submitted the request, with the approver's comment; the email is HotCRM's *"Deal approved"*. When someone other than the owner sent the deal for approval, the owner gets HotCRM's *"Deal approved"* in the app as well, since the platform's notice went to that person.
 
 ### ❌ Rejected (at any tier)
 - The run ends immediately as rejected — a reject at the Manager tier never reaches the Director.
-- `approval_status` is stamped **rejected** and the owner is notified to revise and resubmit.
+- `approval_status` is stamped **rejected** and the owner is told to revise and resubmit, the same way as an approval: the platform's *"Request rejected"* in the app, with the approver's comment, and HotCRM's email.
 - The deal is unlocked so the owner can revise it, and **the next save sends it for approval again** as a new request.
 - Until a later request is approved, the deal **cannot be closed won** (see [Closing a large deal won](#closing-a-large-deal-won)). Closing it as lost is still allowed.
 

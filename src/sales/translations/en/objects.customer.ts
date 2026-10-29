@@ -208,7 +208,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       add_contact_to_campaign: {
         label: 'Add to Campaign',
-        successMessage: 'Contacts added to campaign!',
+        successMessage: '{{ result.output.campaignName }}: {{ result.output.addedCount }} added, {{ result.output.alreadyCount }} already a member.',
         params: {
           campaignId: { label: 'Campaign' },
         },

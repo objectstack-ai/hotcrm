@@ -84,4 +84,11 @@ export const zhCN: EmailTemplatePack = {
     subject: '紧急任务：{{subject}}',
     bodyHtml: '<p>一项紧急任务“{{subject}}”已分配给您，需要尽快处理。</p>',
   },
+  // Sent by `contract_drafted_notice` when accepting a quote drafts its
+  // contract (#2371 row 6).
+  'crm.contract_drafted': {
+    label: '合同已起草',
+    subject: '合同已起草：{{contract_number}}',
+    bodyHtml: '<p>接受报价单后已起草合同 {{contract_number}}。其中的期限和合同类型只是初始值，激活前请先核对。</p>',
+  },
 };

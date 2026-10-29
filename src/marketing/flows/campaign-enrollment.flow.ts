@@ -55,7 +55,12 @@ export const CampaignEnrollmentFlow: Flow = {
   // as `flows.campaign_enrollment.successMessage` in the packs). A plain
   // string; the engine interpolates nothing here, which is why the counts
   // live on the refused ending instead.
-  successMessage: 'Eligible members enrolled in campaign.',
+  // Neutral on purpose (#2371 row 1): the result screen below carries the
+  // counts, and this sentence follows it whatever they were. It used to say
+  // the members were enrolled whether or not anyone was. A screen flow's
+  // `successMessage` cannot read the run's variables on 18.2.0 (measured: the
+  // holes render raw), so the counts cannot live here.
+  successMessage: 'Campaign enrollment finished.',
 
   variables: [
     // `recordId` matches the console's flow-action trigger contract
@@ -118,6 +123,13 @@ export const CampaignEnrollmentFlow: Flow = {
     // business seeding a count.
     { name: 'enrolledCount', type: 'number', isInput: false, isOutput: false, defaultValue: 0 },
     { name: 'refusedCount', type: 'number', isInput: false, isOutput: false, defaultValue: 0 },
+    // The other two counts the result names (#2371 row 1): people the segment
+    // matched who were already on the campaign, and people it matched who
+    // were left out before the loop because they opted out of email or have
+    // no email address (the eligibility filters on `query_leads` /
+    // `query_contacts`).
+    { name: 'alreadyCount', type: 'number', isInput: false, isOutput: false, defaultValue: 0 },
+    { name: 'skippedCount', type: 'number', isInput: false, isOutput: false, defaultValue: 0 },
   ],
 
   nodes: [
@@ -234,6 +246,22 @@ export const CampaignEnrollmentFlow: Flow = {
       },
     },
     {
+      // The same segment without the eligibility filters, read only to count
+      // who those filters left out (#2371 row 1). Same limit as the eligible
+      // query, so the difference is the people this run skipped.
+      id: 'query_lead_segment', type: 'get_record', label: 'Find Leads in Segment',
+      config: {
+        objectName: 'crm_lead',
+        filter: { status: cel`leadStatus`, is_converted: false },
+        limit: 1000,
+        outputVariable: 'leadSegment',
+      },
+    },
+    {
+      id: 'count_skipped_leads', type: 'assignment', label: 'Count Skipped',
+      config: { assignments: { skippedCount: cel`size(leadSegment) - size(leadList)` } },
+    },
+    {
       id: 'loop_leads', type: 'loop', label: 'Process Each Lead',
       config: {
         collection: cel`leadList`,
@@ -262,14 +290,27 @@ export const CampaignEnrollmentFlow: Flow = {
               id: 'count_enrolled_lead', type: 'assignment', label: 'Count Enrolled',
               config: { assignments: { enrolledCount: cel`enrolledCount + 1` } },
             },
+            {
+              id: 'count_already_lead', type: 'assignment', label: 'Count Already a Member',
+              config: { assignments: { alreadyCount: cel`alreadyCount + 1` } },
+            },
+            // The region's one exit: a guarded region must be single-exit, so
+            // the two counts join here before the next lead.
+            { id: 'counted_lead', type: 'assignment', label: 'Counted' },
           ],
           edges: [
             { id: 'b1', source: 'create_campaign_member', target: 'check_lead_enrolled', type: 'default' },
-            // Already enrolled → no edge → next lead, counted as neither.
+            // Already enrolled → `b3`, counted as already a member.
             // `leadEnrolment` is the callee's output map, so its field read
             // carries both `has()` guards like any other variable field read
             // (test/flow-variable-conditions.test.ts).
             { id: 'b2', source: 'check_lead_enrolled', target: 'count_enrolled_lead', type: 'conditional', condition: P`has(vars.leadEnrolment) && has(vars.leadEnrolment.enrolled) && vars.leadEnrolment.enrolled == true`, label: 'Enrolled' },
+            // A subflow that came back without refusing and without enrolling
+            // found the lead already on the campaign (#2371 row 1): `b2`'s
+            // exact negation, so the two partition.
+            { id: 'b3', source: 'check_lead_enrolled', target: 'count_already_lead', type: 'conditional', condition: P`!(has(vars.leadEnrolment) && has(vars.leadEnrolment.enrolled) && vars.leadEnrolment.enrolled == true)`, label: 'Already a member' },
+            { id: 'b4', source: 'count_enrolled_lead', target: 'counted_lead', type: 'default' },
+            { id: 'b5', source: 'count_already_lead', target: 'counted_lead', type: 'default' },
           ],
         // A refused lead is caught here and counted.
         }, { refusedCount: cel`refusedCount + 1` }),
@@ -289,6 +330,19 @@ export const CampaignEnrollmentFlow: Flow = {
         limit: 1000,
         outputVariable: 'contactList',
       },
+    },
+    {
+      id: 'query_contact_segment', type: 'get_record', label: 'Find Contacts in Segment',
+      config: {
+        objectName: 'crm_contact',
+        filter: { department: cel`contactDepartment` },
+        limit: 1000,
+        outputVariable: 'contactSegment',
+      },
+    },
+    {
+      id: 'count_skipped_contacts', type: 'assignment', label: 'Count Skipped',
+      config: { assignments: { skippedCount: cel`size(contactSegment) - size(contactList)` } },
     },
     {
       id: 'loop_contacts', type: 'loop', label: 'Process Each Contact',
@@ -313,10 +367,23 @@ export const CampaignEnrollmentFlow: Flow = {
               id: 'count_enrolled_contact', type: 'assignment', label: 'Count Enrolled',
               config: { assignments: { enrolledCount: cel`enrolledCount + 1` } },
             },
+            {
+              id: 'count_already_contact', type: 'assignment', label: 'Count Already a Member',
+              config: { assignments: { alreadyCount: cel`alreadyCount + 1` } },
+            },
+            // The region's one exit: a guarded region must be single-exit, so
+            // the two counts join here before the next contact.
+            { id: 'counted_contact', type: 'assignment', label: 'Counted' },
           ],
           edges: [
             { id: 'c1', source: 'create_contact_member', target: 'check_contact_enrolled', type: 'default' },
             { id: 'c2', source: 'check_contact_enrolled', target: 'count_enrolled_contact', type: 'conditional', condition: P`has(vars.contactEnrolment) && has(vars.contactEnrolment.enrolled) && vars.contactEnrolment.enrolled == true`, label: 'Enrolled' },
+            // A subflow that came back without refusing and without enrolling
+            // found the contact already on the campaign (#2371 row 1): `c2`'s
+            // exact negation, so the two partition.
+            { id: 'c3', source: 'check_contact_enrolled', target: 'count_already_contact', type: 'conditional', condition: P`!(has(vars.contactEnrolment) && has(vars.contactEnrolment.enrolled) && vars.contactEnrolment.enrolled == true)`, label: 'Already a member' },
+            { id: 'c4', source: 'count_enrolled_contact', target: 'counted_contact', type: 'default' },
+            { id: 'c5', source: 'count_already_contact', target: 'counted_contact', type: 'default' },
           ],
         }, { refusedCount: cel`refusedCount + 1` }),
       },
@@ -330,7 +397,22 @@ export const CampaignEnrollmentFlow: Flow = {
       id: 'end_refused', type: 'end', label: 'Enrollment Refused',
       config: {
         outcome: 'refused',
-        message: 'Enrollment refused for {{refusedCount}} of the people selected: {{enrolledCount}} enrolled, {{refusedCount}} refused. A refused person was not added to the campaign; the flow run log records why for each one.',
+        message: 'Enrollment refused for {{refusedCount}} of the people selected: {{enrolledCount}} added, {{alreadyCount}} already members, {{skippedCount}} skipped because they opted out of email or have no email address, {{refusedCount}} refused. A refused person was not added to the campaign; the flow run log records why for each one.',
+      },
+    },
+    // THE RESULT SCREEN (#2371 row 1, the #2297 shape). The run used to end on
+    // the static toast above, which said the members were enrolled whether or
+    // not anyone was. It now pauses, after every write, on the three counts
+    // and a link back to the campaign. The link is what makes it pause for
+    // every caller (a `record_link` takes no input); Submit only completes
+    // the run. Translated as `screens.result` in the packs.
+    {
+      id: 'result', type: 'screen', label: 'Enrollment Result',
+      config: {
+        description: '{{enrolledCount}} added to the campaign, {{alreadyCount}} already members, {{skippedCount}} skipped because they opted out of email or have no email address.',
+        fields: [
+          { name: 'campaignLink', label: 'Campaign', type: 'record_link', reference: 'crm_campaign', defaultValue: cel`recordId` },
+        ],
       },
     },
     { id: 'end', type: 'end', label: 'End' },
@@ -368,7 +450,9 @@ export const CampaignEnrollmentFlow: Flow = {
     { id: 'e4', source: 'check_campaign_open', target: 'query_leads', type: 'conditional', condition: P`has(vars.campaignRecord) && has(vars.campaignRecord.status)
       && (vars.campaignRecord.status == "planning" || vars.campaignRecord.status == "in_progress")
       && vars.memberSource != "contacts"`, label: 'Open · Leads' },
-    { id: 'e5', source: 'query_leads', target: 'loop_leads', type: 'default' },
+    { id: 'e5', source: 'query_leads', target: 'query_lead_segment', type: 'default' },
+    { id: 'e13', source: 'query_lead_segment', target: 'count_skipped_leads', type: 'default' },
+    { id: 'e14', source: 'count_skipped_leads', target: 'loop_leads', type: 'default' },
     { id: 'e6', source: 'loop_leads', target: 'check_refused', type: 'default' },
     // The contact branch. `memberSource` carries no `has()` guard on either
     // edge, deliberately: its `flow.variables` declaration carries
@@ -392,7 +476,9 @@ export const CampaignEnrollmentFlow: Flow = {
     // them; and Studio's Problems panel flags a decision with no default edge
     // however its guards partition.
     { id: 'e12', source: 'check_campaign_open', target: 'refuse_not_open', type: 'default', isDefault: true, label: 'Not open' },
-    { id: 'e8', source: 'query_contacts', target: 'loop_contacts', type: 'default' },
+    { id: 'e8', source: 'query_contacts', target: 'query_contact_segment', type: 'default' },
+    { id: 'e15', source: 'query_contact_segment', target: 'count_skipped_contacts', type: 'default' },
+    { id: 'e16', source: 'count_skipped_contacts', target: 'loop_contacts', type: 'default' },
     { id: 'e9', source: 'loop_contacts', target: 'check_refused', type: 'default' },
     // One conditional and its default (#2227), the same form as
     // `check_campaign_open`'s `e12`. This decision declares no
@@ -410,6 +496,7 @@ export const CampaignEnrollmentFlow: Flow = {
     // variable can hold where an ordering test aborts on a null
     // (test/flow-variable-conditions.test.ts).
     { id: 'e10', source: 'check_refused', target: 'end_refused', type: 'conditional', condition: P`vars.refusedCount != 0`, label: 'Refused' },
-    { id: 'e11', source: 'check_refused', target: 'end', type: 'default', isDefault: true, label: 'Clean' },
+    { id: 'e11', source: 'check_refused', target: 'result', type: 'default', isDefault: true, label: 'Clean' },
+    { id: 'e17', source: 'result', target: 'end', type: 'default' },
   ],
 };

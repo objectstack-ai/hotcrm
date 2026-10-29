@@ -27,7 +27,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         message: 'La fecha de vencimiento debe ser posterior a la de la cotización',
       },
       quote_status_progression: {
-        message: 'Transición de estado de cotización no válida',
+        message: 'Este cambio de estado se sale del recorrido habitual de la cotización: Borrador → En Revisión → Presentada → Aceptada. En Revisión también puede volver a Borrador o pasar a Rechazada, una Presentada puede pasar a Rechazada y una Rechazada vuelve a Borrador. Borrador, En Revisión o Presentada pueden pasar a Expirada. Aceptada y Expirada son definitivos.',
       },
     },
     label: 'Cotización',

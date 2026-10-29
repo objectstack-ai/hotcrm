@@ -273,7 +273,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: 'キャンペーンに追加',
-        successMessage: 'キャンペーンに追加しました！',
+        successMessage: '{{ result.output.campaignName }}: 追加 {{ result.output.addedCount }} 件、既にメンバー {{ result.output.alreadyCount }} 件。',
         params: {
           campaignId: { label: 'キャンペーン' },
         },
@@ -448,7 +448,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: '商談を複製',
-        successMessage: '商談を複製しました！',
+        successMessage: '「{{ result.name }}」を作成しました。表示中のページはその複製です。',
       },
       mass_update_stage: {
         label: 'ステージ更新',
@@ -504,7 +504,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         message: '期間開始はその期間の初日である必要があります。例：2026 年 8 月なら 2026-08-01。',
       },
       quarter_starts_on_quarter_boundary: {
-        message: '四半期フォーキャストは四半期の境界（1 月 1 日、4 月 1 日、7 月 1 日、10 月 1 日）から開始する必要があります。',
+        message: '四半期フォーキャストの期間開始は四半期の境界（1 月 1 日、4 月 1 日、7 月 1 日、10 月 1 日）である必要があります。',
       },
       snapshot_amounts_non_negative: {
         message: 'スナップショット金額は負の値にできません。',

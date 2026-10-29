@@ -554,6 +554,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: 'Información Clave' },
         opp_stage_path: { label: 'Progreso de Etapa de la Oportunidad' },
+        opp_approval_pending_manager: { label: 'Pendiente de aprobación del Gerente de Ventas' },
+        opp_approval_pending_director: { label: 'Pendiente de aprobación del Gerente y del Director de Ventas' },
         opp_details: { label: 'Detalles de la Oportunidad' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
         // `pages.PAGE.components.TABS.items.VALUE.label`).
@@ -681,11 +683,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     campaign_enrollment: {
       label: 'Inscribir miembros en la campaña',
-      successMessage: 'Miembros elegibles inscritos en la campaña.',
+      successMessage: 'Inscripción en la campaña terminada.',
       refusals: {
         end_refused: {
           message:
-            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} inscritas, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
+            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} agregadas, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se dieron de baja del correo o no tienen dirección de correo, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
         },
         refuse_not_open: {
           message:
@@ -703,6 +705,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
               options: { executive: 'Ejecutivo', sales: 'Ventas', marketing: 'Marketing', engineering: 'Ingeniería', support: 'Soporte', finance: 'Finanzas', hr: 'Recursos Humanos', operations: 'Operaciones' },
             },
           },
+        },
+        result: {
+          title: 'Resultado de la inscripción',
+          description: '{{enrolledCount}} agregadas a la campaña, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se dieron de baja del correo o no tienen dirección de correo.',
+          fields: { campaignLink: { label: 'Campaña' } },
         },
       },
     },
@@ -817,6 +824,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             quoteName: { label: 'Nombre de Cotización' },
             expirationDays: { label: 'Válida por (días)' },
             discount: { label: `Descuento % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
+          },
+        },
+        result: {
+          title: 'Cotización creada',
+          description: 'La cotización «{{ quoteName }}» se creó como borrador. Ábrala para revisar el precio y continuar.',
+          fields: {
+            quoteLink: { label: 'Cotización' },
           },
         },
       },

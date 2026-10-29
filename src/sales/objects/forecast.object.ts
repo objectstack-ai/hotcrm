@@ -346,21 +346,31 @@ export const Forecast = ObjectSchema.create({
     // that writes a JS `Date` object is the one shape `string()` has no overload
     // for; the engine then rejects that write naming the rule rather than
     // admitting it, and no writer in this app does that.
+    //
+    // ONE START, ONE MESSAGE (#2371 row 8). The two start rules PARTITION by
+    // `period`: this one judges every forecast that is not quarterly, the next
+    // one judges the quarterly ones, each in full. Before, this rule judged
+    // every row, so a quarter starting 2026-08-15 broke both and the form
+    // showed the two sentences run together ("…Aug 2026.; A quarterly
+    // forecast…" — the platform joins a write's refusals into one line), the
+    // first of them advice about MONTHS on a quarterly row. An absent or null
+    // `period` stays on this side, as it was judged before.
     {
       name: 'period_start_first_of_period',
       type: 'script',
       severity: 'error',
       message: 'Period Start must be the first day of the period — e.g. 2026-08-01 for Aug 2026.',
-      condition: P`has(record.period_start) && record.period_start != null && !matches(string(record.period_start), "^[0-9]{4}-[0-9]{2}-01")`,
+      condition: P`(!has(record.period) || record.period != "quarter") && has(record.period_start) && record.period_start != null && !matches(string(record.period_start), "^[0-9]{4}-[0-9]{2}-01")`,
     },
     {
       name: 'quarter_starts_on_quarter_boundary',
       type: 'script',
       severity: 'error',
-      // The month rule above already rejects any non-1st day, so this one only
-      // ever adds the quarter-month half: 2026-08-01 is a valid month start and
+      // The quarterly half of the partition: any start that is not the first
+      // day of a quarter, a mid-month day included, since the month rule above
+      // no longer judges a quarterly row. 2026-08-01 is a valid month start and
       // not a valid quarter start.
-      message: 'A quarterly forecast must start on a quarter boundary — January 1, April 1, July 1 or October 1.',
+      message: "A quarterly forecast's Period Start must be on a quarter boundary — January 1, April 1, July 1 or October 1.",
       condition: P`has(record.period) && record.period == "quarter" && has(record.period_start) && record.period_start != null && !matches(string(record.period_start), "^[0-9]{4}-(01|04|07|10)-01")`,
     },
     // …and the OTHER end of the same window. The two rules above pin the START;

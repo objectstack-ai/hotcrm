@@ -556,6 +556,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: '重要情報' },
         opp_stage_path: { label: '商談ステージの進捗' },
+        opp_approval_pending_manager: { label: '営業マネージャーの承認待ち' },
+        opp_approval_pending_director: { label: '営業マネージャーと営業ディレクターの承認待ち' },
         opp_details: { label: '商談詳細情報' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
         // `pages.PAGE.components.TABS.items.VALUE.label`).
@@ -683,11 +685,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     campaign_enrollment: {
       label: 'キャンペーンにメンバーを登録',
-      successMessage: '対象メンバーをキャンペーンに登録しました。',
+      successMessage: 'キャンペーンへのメンバー登録が完了しました。',
       refusals: {
         end_refused: {
           message:
-            '選択された人のうち {{refusedCount}} 人の登録が拒否されました：登録 {{enrolledCount}} 人、拒否 {{refusedCount}} 人。拒否された人はキャンペーンに追加されていません。理由はフローの実行ログに一人ずつ記録されています。',
+            '選択された人のうち {{refusedCount}} 人の登録が拒否されました：新規追加 {{enrolledCount}} 人、既にメンバー {{alreadyCount}} 人、メール配信停止またはメールアドレスなしでスキップ {{skippedCount}} 人、拒否 {{refusedCount}} 人。拒否された人はキャンペーンに追加されていません。理由はフローの実行ログに一人ずつ記録されています。',
         },
         refuse_not_open: {
           message:
@@ -705,6 +707,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
               options: { executive: '経営層', sales: '営業部', marketing: 'マーケティング部', engineering: 'エンジニアリング部', support: 'サポート部', finance: '経理部', hr: '人事部', operations: 'オペレーション部' },
             },
           },
+        },
+        result: {
+          title: '登録結果',
+          description: 'キャンペーンに新規追加 {{enrolledCount}} 人、既にメンバー {{alreadyCount}} 人、メール配信停止またはメールアドレスなしでスキップ {{skippedCount}} 人。',
+          fields: { campaignLink: { label: 'キャンペーン' } },
         },
       },
     },
@@ -819,6 +826,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             quoteName: { label: '見積名' },
             expirationDays: { label: '有効期間（日）' },
             discount: { label: `割引率 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
+          },
+        },
+        result: {
+          title: '見積を作成しました',
+          description: '見積「{{ quoteName }}」を下書きとして作成しました。開いて価格を確認し、次の手続きへ進めてください。',
+          fields: {
+            quoteLink: { label: '見積' },
           },
         },
       },

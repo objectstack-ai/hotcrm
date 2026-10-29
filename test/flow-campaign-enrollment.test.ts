@@ -307,13 +307,18 @@ describe('campaign_enrollment — a campaign that is not open, or no longer exis
   async function ending(recordId: string, screen: Rec) {
     const run = await verify.flows.run('campaign_enrollment', { recordId }, { as: marketer.token });
     expect(run.status, 'campaign_enrollment did not pause on its screen').toBe('paused');
-    const result = (await verify.flows.resume(run, screen, { as: marketer.token })) as Rec;
+    let result = (await verify.flows.resume(run, screen, { as: marketer.token })) as Rec;
+    // A clean run pauses on its result screen (#2371 row 1); Submit on it
+    // completes the run, which is the ending read below.
+    const resultScreen = result.status === 'paused' ? (result.screen ?? result.output?.screen)?.nodeId : undefined;
+    if (resultScreen) result = (await verify.flows.resume(result as never, {}, { as: marketer.token })) as Rec;
     const ran = new Set(((result.summary?.nodes ?? []) as Rec[]).filter((n) => n.runs > 0).map((n) => String(n.nodeId)));
     return {
       success: result.success,
       // Set on a refusal only: the clean ending answers `success` and the
       // flow's `successMessage`, with no `status`.
       status: result.status,
+      resultScreen,
       refusalMessage: result.refusalMessage,
       successMessage: result.successMessage,
       ran: { query_leads: ran.has('query_leads'), query_contacts: ran.has('query_contacts') },
@@ -322,7 +327,7 @@ describe('campaign_enrollment — a campaign that is not open, or no longer exis
   }
 
   const REFUSED = {
-    success: true, status: 'refused', successMessage: undefined,
+    success: true, status: 'refused', resultScreen: undefined, successMessage: undefined,
     ran: { query_leads: false, query_contacts: false }, members: 0,
   };
 
@@ -353,7 +358,7 @@ describe('campaign_enrollment — a campaign that is not open, or no longer exis
     const w = await world({ status });
     const out = await ending(w.campaign.id, { ...SCREEN, memberSource });
     expect({ ...out, members: out.members > 0 }).toEqual({
-      success: true, status: undefined, refusalMessage: undefined,
+      success: true, status: undefined, resultScreen: 'result', refusalMessage: undefined,
       successMessage: CampaignEnrollmentFlow.successMessage, ran, members: true,
     });
   }, WORLD_BUDGET_MS);
@@ -382,7 +387,8 @@ describe('campaign_enrollment — `check_refused` takes its default edge on a cl
       .map((e) => ({ id: e.id, target: e.target, isDefault: e.isDefault === true, conditional: e.condition !== undefined }));
     expect(out).toEqual([
       { id: 'e10', target: 'end_refused', isDefault: false, conditional: true },
-      { id: 'e11', target: 'end', isDefault: true, conditional: false },
+      // The clean side ends on the result screen since #2371 row 1.
+      { id: 'e11', target: 'result', isDefault: true, conditional: false },
     ]);
   });
 });

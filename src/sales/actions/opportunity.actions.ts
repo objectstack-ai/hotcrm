@@ -45,8 +45,9 @@ export const CloneOpportunityAction: Action = {
       // whenever the clone instant is within an hour of a UTC day boundary.
       const horizon = new Date();
       horizon.setUTCDate(horizon.getUTCDate() + 90);
+      const name = 'Copy of ' + (src.name ?? ('opportunity ' + id));
       const inserted = await ctx.api.object('crm_opportunity').insert({
-        name: 'Copy of ' + (src.name ?? ('opportunity ' + id)),
+        name,
         crm_account: src.crm_account,
         primary_contact: src.primary_contact ?? null,
         amount: src.amount ?? 1,
@@ -66,13 +67,18 @@ export const CloneOpportunityAction: Action = {
         // \`owner_id\` for it — see the note in activity-actions.ts (#548).
         owner_id: ctx.user?.id ?? null,
       });
-      return { id: inserted?.id ?? null };
+      // \`name\` feeds the success toast below, so the rep knows the page
+      // they land on is the copy (#2371 row 4).
+      return { id: inserted?.id ?? null, name };
     `,
     capabilities: ['api.read', 'api.write'],
     timeoutMs: 5000,
   },
   locations: ['record_header', 'record_more'],
-  successMessage: 'Opportunity cloned successfully!',
+  // Names the copy: the runner navigates to it straight after, and the
+  // record page looks like the source but for the "Copy of" prefix and the
+  // stage (#2371 row 4). `result` is the body's return value.
+  successMessage: 'Created "{{ result.name }}". You are now on the copy.',
   // Open the clone once it exists: the body returns `{ id }`, and the
   // console's ActionRunner resolves `${result.id}` against that result and
   // navigates in the same tab (`openIn` defaults to 'self'). No

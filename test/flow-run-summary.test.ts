@@ -161,9 +161,14 @@ describe('flow run summary — the three flows the silent-no-op incident covered
     expect(paused.status, 'the screen flow did not pause at its screen').toBe('paused');
     expect((paused as Rec).summary, 'a paused run must not claim a summary — it has not finished').toBeUndefined();
 
-    const s = summaryOf(await verify.flows.resume(paused, {
+    // The criteria screen, then the result screen (#2371 row 1): the run is
+    // terminal, with its summary, only once the result screen is submitted.
+    const onResult = await verify.flows.resume(paused, {
       memberSource: 'leads', leadStatus: 'new', contactDepartment: 'engineering',
-    }, { as: admin }));
+    }, { as: admin });
+    expect(onResult.status, 'the run did not pause on its result screen').toBe('paused');
+    expect((onResult as Rec).summary, 'a run paused on its result screen must not claim a summary').toBeUndefined();
+    const s = summaryOf(await verify.flows.resume(onResult, {}, { as: admin }));
     const members = await verify.rows('crm_campaign_member', { crm_campaign: campaign!.id });
     expect(members.length, 'the enrolment wrote no members').toBeGreaterThanOrEqual(2);
     expect(s.acted, 'the summary does not count the members the enrolment wrote').toBe(members.length);

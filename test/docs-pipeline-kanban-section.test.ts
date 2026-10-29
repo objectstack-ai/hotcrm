@@ -284,9 +284,11 @@ describe('the source facts those three claims now rest on (#996)', () => {
     expect(STAGE_MACHINE.field).toBe('stage');
   });
 
-  it('leaves Prospecting → Closed Won outside the table, which is why it is the example', () => {
+  it('leaves Prospecting → Negotiation outside the table, which is why it is the example', () => {
+    // Prospecting → Closed Won was the example until #2371 row 3 put the early
+    // win on the path; a forward skip within the open stages still warns.
     expect((STAGE_MACHINE.transitions as Record<string, string[]>).prospecting).not.toContain(
-      'closed_won',
+      'negotiation',
     );
   });
 });

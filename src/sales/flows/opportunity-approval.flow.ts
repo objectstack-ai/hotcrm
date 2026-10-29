@@ -36,6 +36,16 @@ type Flow = Automation.Flow;
  * handed back to the rep unlocked, and their next save sends it for approval
  * again (#2334). Until then `opportunity_lifecycle` refuses its close-won.
  */
+/**
+ * Whether the deal's owner is the user whose save fired the run, and so the
+ * submitter the platform tells the outcome (#2371 row 5). Each term is
+ * guarded, so the pair partitions every run.
+ */
+const OWNER_SUBMITTED = P`has(vars.oppRecord) && has(vars.oppRecord.owner_id) && vars.oppRecord.owner_id != null
+  && has(record.updated_by) && record.updated_by != null && record.updated_by == vars.oppRecord.owner_id`;
+const OWNER_DID_NOT_SUBMIT = P`!has(vars.oppRecord) || !has(vars.oppRecord.owner_id) || vars.oppRecord.owner_id == null
+  || !has(record.updated_by) || record.updated_by == null || record.updated_by != vars.oppRecord.owner_id`;
+
 export const OpportunityApprovalFlow: Flow = {
   name: 'opportunity_approval',
   label: 'Large Deal Approval',
@@ -207,12 +217,23 @@ export const OpportunityApprovalFlow: Flow = {
       },
     },
     {
+      // ── One notice per decision (#2371 row 5) ──
+      // The platform already tells the SUBMITTER the outcome in the inbox
+      // ("Request approved — Your Opportunity … was approved.", with the
+      // approver's comment): `ApprovalService.notifyDecisionOutcome`,
+      // `@objectstack/plugin-approvals` 18.2.0, topic `approval.approved` /
+      // `approval.rejected`, inbox only. This node's inbox copy was the same
+      // news a second time for the usual submitter, the deal's own rep. So
+      // the owner's email stays here (the platform sends none), and the
+      // owner's inbox notice is sent only when the platform's does not reach
+      // them: when someone else's save sent the deal for approval
+      // (`check_owner_submitted_*` below).
       id: 'notify_approved',
       type: 'notify',
-      label: 'Notify Owner — Approved',
+      label: 'Email Owner — Approved',
       config: {
         recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
-        channels: ['inbox', 'email'],
+        channels: ['email'],
         topic: 'opportunity_approved',
         template: 'crm.opportunity_approved',
         templateData: { name: cel`oppRecord.name` },
@@ -228,12 +249,52 @@ export const OpportunityApprovalFlow: Flow = {
     // changing no value. Measured on 18.0.0-next.3, pinned in
     // `test/approval-decision-attribution.test.ts`.
     {
+      // Email only, as `notify_approved` (#2371 row 5).
       id: 'notify_rejected',
+      type: 'notify',
+      label: 'Email Owner — Rejected',
+      config: {
+        recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
+        channels: ['email'],
+        severity: 'warning',
+        topic: 'opportunity_rejected',
+        template: 'crm.opportunity_rejected',
+        templateData: { name: cel`oppRecord.name` },
+        actionUrl: '/crm_opportunity/{{record.id}}',
+      },
+    },
+
+    // ── The owner's inbox notice, when the platform's misses them ──
+    // The platform's notice goes to the request's submitter, the user whose
+    // save fired this run (`runTriggerUser`). That save stamped
+    // `record.updated_by` (on an insert, `record.created_by` too), so an
+    // owner who is not that user — a manager raised the rep's amount, or a
+    // system write with no user started the run — hears it here instead.
+    // TOTALITY: an unreadable writer or owner reads as "not the owner", so
+    // the inbox notice is sent: a duplicate is the old behaviour, a missed
+    // notice is not.
+    { id: 'check_owner_submitted_approved', type: 'decision', label: 'Owner Submitted?' },
+    {
+      id: 'notify_approved_inbox',
+      type: 'notify',
+      label: 'Notify Owner — Approved',
+      config: {
+        recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
+        channels: ['inbox'],
+        topic: 'opportunity_approved',
+        template: 'crm.opportunity_approved',
+        templateData: { name: cel`oppRecord.name` },
+        actionUrl: '/crm_opportunity/{{record.id}}',
+      },
+    },
+    { id: 'check_owner_submitted_rejected', type: 'decision', label: 'Owner Submitted?' },
+    {
+      id: 'notify_rejected_inbox',
       type: 'notify',
       label: 'Notify Owner — Rejected',
       config: {
         recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
-        channels: ['inbox', 'email'],
+        channels: ['inbox'],
         severity: 'warning',
         topic: 'opportunity_rejected',
         template: 'crm.opportunity_rejected',
@@ -306,8 +367,21 @@ export const OpportunityApprovalFlow: Flow = {
 
     // Terminal branches
     { id: 'e9', source: 'mark_approved', target: 'notify_approved', type: 'default' },
-    { id: 'e10', source: 'notify_approved', target: 'end', type: 'default' },
-    { id: 'e12', source: 'notify_rejected', target: 'end', type: 'default' },
+    { id: 'e10', source: 'notify_approved', target: 'check_owner_submitted_approved', type: 'default' },
+    { id: 'e12', source: 'notify_rejected', target: 'check_owner_submitted_rejected', type: 'default' },
+
+    // The owner's inbox notice (#2371 row 5): partitioned in opposite
+    // polarity, as `e5`/`e6` are.
+    { id: 'e13', source: 'check_owner_submitted_approved', target: 'end', type: 'conditional',
+      label: 'Owner submitted', condition: OWNER_SUBMITTED },
+    { id: 'e14', source: 'check_owner_submitted_approved', target: 'notify_approved_inbox', type: 'conditional',
+      label: 'Someone else submitted', condition: OWNER_DID_NOT_SUBMIT },
+    { id: 'e15', source: 'notify_approved_inbox', target: 'end', type: 'default' },
+    { id: 'e16', source: 'check_owner_submitted_rejected', target: 'end', type: 'conditional',
+      label: 'Owner submitted', condition: OWNER_SUBMITTED },
+    { id: 'e17', source: 'check_owner_submitted_rejected', target: 'notify_rejected_inbox', type: 'conditional',
+      label: 'Someone else submitted', condition: OWNER_DID_NOT_SUBMIT },
+    { id: 'e18', source: 'notify_rejected_inbox', target: 'end', type: 'default' },
   ],
 };
 

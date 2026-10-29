@@ -35,10 +35,14 @@ now a contact. Each new member starts at **Sent**.
 
 **What it skips and refuses:** anyone already on the campaign is skipped, so
 running it again tops the campaign up and never counts a person twice. If the
-campaign is no longer open, nobody is added and the run says so. If anyone in
-the segment is refused (for example, by permission), the run ends with both
-counts, how many were enrolled and how many were refused, and the refused
-people are not on the campaign.
+campaign is no longer open, nobody is added and the run says so.
+
+**What it tells you:** the run ends on an **Enrollment Result** screen with
+three counts: how many were added, how many were already members, and how many
+were skipped because they opted out of email or have no email address. The
+campaign's name on that screen links back to it. If anyone in the segment is
+refused (for example, by permission), the run ends with those three counts and
+how many were refused instead, and the refused people are not on the campaign.
 
 ## Add to Campaign — the people you picked
 
@@ -48,8 +52,12 @@ toolbar, or run it on one row from that row's menu. You pick the campaign. It
 is offered to the same people as **Enroll Members**.
 
 **What it does:** adds each person you picked as a member at **Sent**, one by
-one. Someone already on that campaign is skipped, and the run still reports
-success for them.
+one. Someone already on that campaign is skipped. Run on one row, the message
+names the campaign and says whether the person was added or was already a
+member, for example *Spring Launch: 0 added, 1 already a member.* Run from the
+selection toolbar, the dialog counts the rows the action ran on (*Succeeded 2 /
+2*), which includes people who were already members; for a count of who was
+added, use **Enroll Members** on the campaign.
 
 **What it refuses:** a campaign that is not **Planning** or **In Progress**, and
 a person who has opted out of email. Nobody is added, the campaign's numbers do

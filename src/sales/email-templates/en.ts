@@ -106,4 +106,11 @@ export const en: EmailTemplatePack = {
     subject: 'Urgent task: {{subject}}',
     bodyHtml: '<p>An urgent task "{{subject}}" was assigned to you and needs attention.</p>',
   },
+  // Sent by `contract_drafted_notice` when accepting a quote drafts its
+  // contract (#2371 row 6).
+  'crm.contract_drafted': {
+    label: 'Contract Drafted',
+    subject: 'Contract drafted: {{contract_number}}',
+    bodyHtml: '<p>Accepting the quote drafted contract {{contract_number}}. Its term and contract type are starting values: check them before you activate it.</p>',
+  },
 };

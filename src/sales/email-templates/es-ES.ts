@@ -84,4 +84,11 @@ export const esES: EmailTemplatePack = {
     subject: 'Tarea urgente: {{subject}}',
     bodyHtml: '<p>Se te ha asignado una tarea urgente "{{subject}}" que requiere atención.</p>',
   },
+  // Sent by `contract_drafted_notice` when accepting a quote drafts its
+  // contract (#2371 row 6).
+  'crm.contract_drafted': {
+    label: 'Contrato redactado',
+    subject: 'Contrato redactado: {{contract_number}}',
+    bodyHtml: '<p>Al aceptar la cotización se redactó el contrato {{contract_number}}. Su plazo y su tipo de contrato son valores iniciales: revíselos antes de activarlo.</p>',
+  },
 };

@@ -253,6 +253,7 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   },
   contract_expiration: { 'zh-Hans': '合同自动到期', 'zh-Hant': '合約自動到期' },
   quote_expiration: { 'zh-Hans': '报价自动过期', 'zh-Hant': '報價自動過期' },
+  contract_drafted_notice: { 'zh-Hans': '合同起草通知', 'zh-Hant': '合約起草通知' },
   campaign_completion: { 'zh-Hans': '营销活动自动完成', 'zh-Hant': '行銷活動自動完成' },
   forecast_snapshot: { 'zh-Hans': '预测快照', 'zh-Hant': '預測快照' },
   opportunity_stagnation: { 'zh-Hans': '停滞商机提醒', 'zh-Hant': '停滯商機提醒' },

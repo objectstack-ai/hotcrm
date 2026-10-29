@@ -561,6 +561,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: '关键信息' },
         opp_stage_path: { label: '商机阶段进度' },
+        opp_approval_pending_manager: { label: '等待销售经理审批' },
+        opp_approval_pending_director: { label: '等待销售经理和销售总监审批' },
         opp_details: { label: '商机明细' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
         // `pages.PAGE.components.TABS.items.VALUE.label`).
@@ -688,11 +690,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     campaign_enrollment: {
       label: '将成员加入营销活动',
-      successMessage: '符合条件的成员已加入营销活动。',
+      successMessage: '营销活动成员加入已完成。',
       refusals: {
         end_refused: {
           message:
-            '有 {{refusedCount}} 人被拒绝加入：已加入 {{enrolledCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
+            '有 {{refusedCount}} 人被拒绝加入：新加入 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因退订邮件或没有邮箱地址而跳过 {{skippedCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
         },
         refuse_not_open: {
           message:
@@ -710,6 +712,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
               options: { executive: '管理层', sales: '销售部', marketing: '市场部', engineering: '工程部', support: '支持部', finance: '财务部', hr: '人力资源', operations: '运营部' },
             },
           },
+        },
+        result: {
+          title: '加入结果',
+          description: '新加入营销活动 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因退订邮件或没有邮箱地址而跳过 {{skippedCount}} 人。',
+          fields: { campaignLink: { label: '营销活动' } },
         },
       },
     },
@@ -824,6 +831,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             quoteName: { label: '报价名称' },
             expirationDays: { label: '有效期（天）' },
             discount: { label: `折扣 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
+          },
+        },
+        result: {
+          title: '报价单已创建',
+          description: '报价单「{{ quoteName }}」已作为草稿创建。打开它核对价格，再继续推进。',
+          fields: {
+            quoteLink: { label: '报价单' },
           },
         },
       },
