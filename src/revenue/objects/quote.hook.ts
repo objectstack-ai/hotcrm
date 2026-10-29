@@ -6,11 +6,15 @@ import type { HookApi } from '../../sales/objects/_hook-api';
 /**
  * Quote workflow hook.
  *
- * - Freezes quotes once `accepted` or `expired` — against USER edits only: a
- *   write that is purely the engine clearing a link is let through. The
- *   freeze covers the quote's LINE ITEMS too (#2060, #2088): a user may not
- *   add a line to a settled quote, change one of its lines or remove one,
- *   while deleting the quote itself still takes its lines with it.
+ * - Freezes quotes once `accepted`, `rejected` or `expired` — against USER
+ *   edits only: a write that is purely the engine clearing a link is let
+ *   through. The freeze covers the quote's LINE ITEMS too (#2060, #2088): a
+ *   user may not add a line to a settled quote, change one of its lines or
+ *   remove one, while deleting the quote itself still takes its lines with it.
+ *   A rejected quote still takes its status (#2366 row 2): the rep moves it
+ *   back to Draft (`revise_quote`) and revises it there.
+ * - Refuses a user's create at a settled status (#2366 row 3): a quote starts
+ *   as Draft, In Review or Presented.
  * - Refuses a user's acceptance while the linked opportunity is held by an
  *   approval, because acceptance closes that deal as won (#2014).
  * - Derives `discount_amount` / `total_price` on a create carrying a
@@ -40,7 +44,7 @@ const quoteValidation: Hook = {
   // delete fires it too and is let through below, unjudged.
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
-  description: 'Freeze accepted/expired quotes and their lines; derive the header totals.',
+  description: 'Freeze settled quotes and their lines; refuse a settled create; derive the header totals.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope. ⚠️ Mirrored from `src/sales/objects/_refusal.ts` because a lowered
     // body has no module scope and `extractHookBody` THROWS on an import;
@@ -61,13 +65,13 @@ const quoteValidation: Hook = {
       err.userMessage = userMessage;
       return err;
     }
-    // The settled statuses by the labels the user sees, for the two freeze
+    // The settled statuses by the labels the user sees, for the freeze
     // refusals below (#2338 items 12 and 16): each keeps the status's API value
     // in its diagnostic and names it by its label in the `userMessage` the
     // console shows. The labels are written out because a lowered body cannot
     // read the object's metadata; `test/refusal-labels.test.ts` reads them off
-    // `crm_quote`.
-    const STATUS_LABELS: Record<string, string> = { accepted: 'Accepted', expired: 'Expired' };
+    // `crm_quote`. `rejected` joined the settled set with #2366 row 2.
+    const STATUS_LABELS: Record<string, string> = { accepted: 'Accepted', rejected: 'Rejected', expired: 'Expired' };
     const { event, input, previous } = ctx;
 
     // ─── A settled quote's LINES are frozen with it (#2060 item 1, B-09) ──
@@ -108,16 +112,18 @@ const quoteValidation: Hook = {
         const q = changed && ctx.user?.id && typeof id === 'string' && id
           ? await (ctx.api as HookApi | undefined)?.object('crm_quote').findOne({ where: { id }, fields: ['quote_number', 'name', 'status'] })
           : null;
-        if (q?.status === 'accepted' || q?.status === 'expired') {
+        if (q?.status === 'accepted' || q?.status === 'rejected' || q?.status === 'expired') {
           // Two sentences, one per reader (#2338 item 16), as the quote's own
-          // freeze below and the closed deal's line freeze (item 15) do.
+          // freeze below and the closed deal's line freeze (item 15) do. A
+          // rejected quote's lines are revised once it is back at Draft.
           const what = `Quote ${String(q.quote_number)} - ${String(q.name)} is`;
           const rest = 'so its line items can no longer be added, changed or removed.';
+          const revise = q.status === 'rejected' ? ' Revise it back to Draft to change them.' : '';
           throw refuse(
-            `${what} ${q.status}, ${rest}`,
+            `${what} ${q.status}, ${rest}${revise}`,
             'RECORD_LOCKED',
             409,
-            `${what} ${STATUS_LABELS[q.status]}, ${rest}`,
+            `${what} ${STATUS_LABELS[q.status]}, ${rest}${revise}`,
           );
         }
       }
@@ -128,6 +134,27 @@ const quoteValidation: Hook = {
     // records a settled quote references deletable, and #2078 excluded
     // forbidding it. Its lines go with it, through the leg above.
     if (event === 'beforeDelete') return;
+
+    // ─── A quote starts unsettled (#2366 row 3) ─────────────────────────
+    //
+    // Measured on 18.2.0 before this: a rep's New Quote form offered
+    // Accepted, Rejected and Expired, and a REST create at any of them
+    // answered 201 — an accepted quote nobody reviewed, presented or got an
+    // answer to. The form now withholds the three (`quote.object.ts`, the
+    // options' `visibleWhen`), and this is the guard behind it: a USER's create
+    // at a settled status is refused. A system write is let through, like the
+    // freeze below — the seed and a system import carry settled history.
+    // The `userMessage` names the statuses by label.
+    if (event === 'beforeInsert' && ctx.user?.id && typeof input.status === 'string' && STATUS_LABELS[input.status]) {
+      const named = typeof input.name === 'string' && input.name.trim() ? `Quote ${input.name.trim()}` : 'A new quote';
+      const tail = 'A quote starts as Draft, In Review or Presented, and is accepted, rejected or expired from there.';
+      throw refuse(
+        `${named} cannot be created as ${input.status}. ${tail}`,
+        'VALIDATION_FAILED',
+        400,
+        `${named} cannot be created as ${STATUS_LABELS[input.status]}. ${tail}`,
+      );
+    }
 
     // The quote as every quote surface titles it. `crm_quote.display_title` is
     // `quote_number - name`; compose the same pair from the two stored columns
@@ -151,14 +178,20 @@ const quoteValidation: Hook = {
     // guarding them throws boot-time BodyRunner errors. Matches the system-write
     // convention used across the case/lead/opportunity hooks.
     if (event === 'beforeUpdate' && previous && ctx.user?.id) {
-      const frozen = previous.status === 'accepted' || previous.status === 'expired';
+      const frozen = previous.status === 'accepted' || previous.status === 'rejected' || previous.status === 'expired';
       if (frozen) {
         // `display_title` is the engine's, not the user's (#2230): the stored
         // title's expression is computed before this hook, so a write carries it
         // whenever the stored value differs from the computed one. That is only
         // ever a row stored before the title was (the backfill's re-save of an
         // unchanged `name`), because its inputs are frozen below.
-        const allowed = new Set(['internal_notes', 'display_title']);
+        //
+        // A REJECTED quote also takes its `status` (#2366 row 2): it is not
+        // terminal — the rep revises it by moving it back to Draft, and that
+        // move is the one way out. Which moves are legal stays the state
+        // machine's (`quote_status_progression`); this freeze judges only that
+        // nothing else changes on the same write.
+        const allowed = new Set(['internal_notes', 'display_title', ...(previous.status === 'rejected' ? ['status'] : [])]);
         // Framework-managed columns (ownership, audit timestamps) are re-stamped
         // by the 9.x runtime — never treat those system writes as edits to a
         // frozen quote, only user changes to business fields.
@@ -243,11 +276,16 @@ const quoteValidation: Hook = {
           // reasoning is on the opportunity freeze; `STATUS_LABELS` is at the
           // top of the handler, shared with the line freeze.
           const what = `${subject()} is ${previous.status as string}`;
+          const rejected = previous.status === 'rejected';
           throw refuse(
-            `${what}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`,
+            rejected
+              ? `${what}; only internal_notes and status may be edited — revise it back to draft first. Attempted: ${violating.join(', ')}.`
+              : `${what}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`,
             'RECORD_LOCKED',
             409,
-            `${subject()} is ${STATUS_LABELS[previous.status as string]}; only its Internal Notes can still be edited.`,
+            rejected
+              ? `${subject()} is Rejected; revise it back to Draft to change it. Until then only its Internal Notes can be edited.`
+              : `${subject()} is ${STATUS_LABELS[previous.status as string]}; only its Internal Notes can still be edited.`,
           );
         }
       }

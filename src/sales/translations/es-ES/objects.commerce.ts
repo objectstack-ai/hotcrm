@@ -84,6 +84,17 @@ export const commerce: Record<string, ObjectTranslationData> = {
       quote_terms: { label: 'Términos' },
       addresses_and_notes: { label: 'Direcciones y Notas' },
     },
+    _actions: {
+      submit_quote_for_review: { label: 'Enviar a Revisión', successMessage: 'Cotización {{ record.display_title }} enviada a revisión.' },
+      mark_quote_presented: { label: 'Marcar como Presentada', successMessage: 'Cotización {{ record.display_title }} marcada como presentada.' },
+      accept_quote: {
+        label: 'Aceptar',
+        confirmText: '¿Aceptar esta cotización? Queda congelada, su oportunidad se cierra como ganada y se redacta un contrato.',
+        successMessage: 'Cotización {{ record.display_title }} aceptada.',
+      },
+      reject_quote: { label: 'Rechazar', successMessage: 'Cotización {{ record.display_title }} rechazada. Revísela para hacer una nueva oferta.' },
+      revise_quote: { label: 'Revisar', successMessage: 'La cotización {{ record.display_title }} vuelve a Borrador.' },
+    },
   },
   crm_quote_line_item: {
     _validations: {

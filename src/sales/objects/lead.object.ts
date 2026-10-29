@@ -628,6 +628,20 @@ export const Lead = ObjectSchema.create({
   enable: {
     apiEnabled: true,
   },
+
+  // A converted lead offers no Edit (#2366 row 1). The converted-lead lock in
+  // `lead.hook.ts` refuses every user change but Description and Notes, so the
+  // form led a rep through every field and then refused the save. The guard is
+  // the hook's; this is the courtesy half. The lead's record page shows what it
+  // became under Conversion (account, contact, opportunity), where the work
+  // continues. The predicate reads `is_converted`, the flag the lock keys on
+  // (#2189), and is total: an absent flag (the page's first render) offers
+  // Edit. Pinned in `test/converted-lead-guard.test.ts`.
+  userActions: {
+    edit: {
+      visibleWhen: P`!(has(record.is_converted) && record.is_converted == true)`,
+    },
+  },
   
   // ADR-0079 record title — the stored `display_title` field defined above.
   nameField: 'display_title',

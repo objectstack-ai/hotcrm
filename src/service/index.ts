@@ -3,7 +3,7 @@
 import { defineStack, P, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import {
-  EscalateCaseAction, CloseCaseAction, ClaimCaseAction,
+  EscalateCaseAction, CloseCaseAction, ClaimCaseAction, ReopenCaseAction,
   LogCallAction, LogMeetingAction, CaseScheduleMeetingAction,
   MarkArticleHelpfulAction, MarkArticleNotHelpfulAction,
 } from './actions/index.js';
@@ -255,7 +255,7 @@ export const createHotCrmServiceStack = (
   pages: [CaseDetailPage],
   flows: serviceFlows,
   actions: [
-    EscalateCaseAction, CloseCaseAction, ClaimCaseAction,
+    EscalateCaseAction, CloseCaseAction, ClaimCaseAction, ReopenCaseAction,
     LogCallAction, LogMeetingAction, CaseScheduleMeetingAction,
     MarkArticleHelpfulAction, MarkArticleNotHelpfulAction,
   ],

@@ -53,6 +53,19 @@ export const QuoteLineItem = ObjectSchema.create({
   // through `crm_product`. Read the long note on the twin. Its writers are
   // `quote_line_item_product_title`, `product_title_mirror` and
   // `scripts/backfill-line-product-title.ts`.
+  // No New on a settled quote's line items (#2366 row 2). A related list's
+  // create toolbar evaluates this against the HOST record, the quote, so the
+  // predicate is `crm_quote.userActions.edit`'s, verbatim: `quote_workflow`
+  // refuses a user's line added to an Accepted, Rejected or Expired quote, and
+  // the button only led to that refusal. On a list with no quote in scope the
+  // predicate cannot bind and the platform hides New (fail-closed); HotCRM
+  // ships no such list — a line is added from its quote. Pinned in
+  // `test/quote-settled-actions.test.ts`.
+  userActions: {
+    create: {
+      visibleWhen: P`!(has(record.status) && (record.status == "accepted" || record.status == "rejected" || record.status == "expired"))`,
+    },
+  },
   nameField: 'product_title',
   searchableFields: ['product_title', 'description'],
 

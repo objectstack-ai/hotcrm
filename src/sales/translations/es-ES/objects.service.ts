@@ -140,6 +140,10 @@ export const service: Record<string, ObjectTranslationData> = {
         label: 'Tomar Caso',
         successMessage: 'Caso tomado: ahora es suyo.',
       },
+      reopen_case: {
+        label: 'Reabrir Caso',
+        successMessage: 'Caso {{ record.display_title }} reabierto.',
+      },
     },
   },
   crm_knowledge_article: {

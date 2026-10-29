@@ -117,6 +117,10 @@ export const service: Record<string, ObjectTranslationData> = {
         label: 'Claim Case',
         successMessage: 'Case claimed — it is yours now.',
       },
+      reopen_case: {
+        label: 'Reopen Case',
+        successMessage: 'Case {{ record.display_title }} reopened.',
+      },
     },
   },
   crm_knowledge_article: {
