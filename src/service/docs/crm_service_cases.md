@@ -59,6 +59,16 @@ What reopening does to the SLA:
 - Resolving or closing it again after the due date marks it **SLA Violated**
   on that save, as for any case.
 
+What reopening does to the close:
+
+- **Closed Date** and **Resolution Time (Hours)** are cleared, so a reopened
+  case carries no close while it is open again.
+- Closing it again stamps both afresh: the new **Closed Date** is the moment of
+  that close, and **Resolution Time (Hours)** runs from the case's creation to
+  it. Average resolution figures count each case at its latest close.
+- This holds however the case is reopened: the **Reopen Case** button, or
+  setting the status back to an open one in **Edit**.
+
 ## Case priority and the SLA due date
 
 Every case carries a **priority**, from **Low** to **Critical**, that drives its

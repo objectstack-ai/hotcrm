@@ -90,12 +90,16 @@ export const Contract = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       group: 'status',
+      // Lifecycle `kind` (#2375): Activated is the contract's successful end,
+      // and Expired and Terminated are its unsuccessful ones, so the record
+      // path draws each from this declaration instead of guessing from the
+      // value's spelling.
       options: [
-        { label: 'Draft', value: 'draft', color: '#999999', default: true },
-        { label: 'In Approval', value: 'in_approval', color: '#FFA500' },
-        { label: 'Activated', value: 'activated', color: '#00AA00' },
-        { label: 'Expired', value: 'expired', color: '#FF0000' },
-        { label: 'Terminated', value: 'terminated', color: '#666666' },
+        { label: 'Draft', value: 'draft', color: '#999999', kind: 'open', default: true },
+        { label: 'In Approval', value: 'in_approval', color: '#FFA500', kind: 'open' },
+        { label: 'Activated', value: 'activated', color: '#00AA00', kind: 'won' },
+        { label: 'Expired', value: 'expired', color: '#FF0000', kind: 'lost' },
+        { label: 'Terminated', value: 'terminated', color: '#666666', kind: 'lost' },
       ],
       required: true,
       storage: { notNull: true },

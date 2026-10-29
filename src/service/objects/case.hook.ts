@@ -374,15 +374,40 @@ const caseValidation: Hook = {
     if (typeof effStatus === 'string') input.is_closed = effStatus === 'closed';
 
     if (!isGuestSubmission) {
+      // ── A reopen clears the close (#2375) ──
+      //
+      // A reopen is any move from a settled status (`CLOSED_CASE_STATUSES`,
+      // spelled inline as below) to an open one, whichever door it comes
+      // through: Reopen Case, Edit, the Status dropdown or REST all reach this
+      // hook as the same status change, so the clear lives here and not in
+      // the action. Before it, a reopened case kept the first close's
+      // `closed_date` while it was open again, the stamp below skipped the
+      // next close because a date was already stored, and
+      // `resolution_time_hours` kept measuring to that first close. Cleared,
+      // the next close stamps both afresh. A move between the two settled
+      // statuses is not a reopen and keeps them. The SLA fields are not
+      // touched: the due date, and a breach already recorded, stay.
+      const reopenFrom = ['resolved', 'closed'];
+      const reopened =
+        typeof input.status === 'string' &&
+        !reopenFrom.includes(input.status) &&
+        reopenFrom.includes(String(ctx.previous?.status));
+      if (reopened) {
+        input.closed_date = null;
+        input.resolution_time_hours = null;
+      }
+
       const becameClosed = input.status === 'closed' && ctx.previous?.status !== 'closed';
       if (becameClosed && !input.closed_date && !ctx.previous?.closed_date) {
         input.closed_date = new Date().toISOString();
       }
 
-      const closedDate =
-        (typeof input.closed_date === 'string' && input.closed_date) ||
-        (typeof ctx.previous?.closed_date === 'string' && (ctx.previous.closed_date as string)) ||
-        undefined;
+      // A reopen reads no stored date: the stored one is the close it clears.
+      const closedDate = reopened
+        ? undefined
+        : (typeof input.closed_date === 'string' && input.closed_date) ||
+          (typeof ctx.previous?.closed_date === 'string' && (ctx.previous.closed_date as string)) ||
+          undefined;
       // The creation instant is the platform's `created_at` (#1992): stamped
       // by `sys_stamp_audit_insert` before this hook runs on an insert (a
       // seed row keeps its authored value), and read back off the stored row
