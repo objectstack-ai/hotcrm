@@ -828,6 +828,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             discount: { label: `折扣 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
           },
         },
+        result: {
+          title: '报价单已创建',
+          description: '报价单「{{ quoteName }}」已作为草稿创建。打开它核对价格，再继续推进。',
+          fields: {
+            quoteLink: { label: '报价单' },
+          },
+        },
       },
     },
   },

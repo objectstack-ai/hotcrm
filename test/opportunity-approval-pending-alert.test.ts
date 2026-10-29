@@ -20,7 +20,7 @@ import { packFor, type AnyRec } from './helpers/composed-stack';
 
 type Rec = Record<string, unknown>;
 
-const components: AnyRec[] = OpportunityDetailPage.regions.flatMap((r) => (r.components ?? []) as AnyRec[]);
+const components: AnyRec[] = (OpportunityDetailPage.regions ?? []).flatMap((r) => (r.components ?? []) as AnyRec[]);
 const alert = (id: string): AnyRec => {
   const found = components.find((c) => c.id === id);
   if (!found) throw new Error(`opportunity_detail_page has no component ${id}`);

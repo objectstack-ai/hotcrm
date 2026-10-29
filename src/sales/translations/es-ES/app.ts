@@ -821,6 +821,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             discount: { label: `Descuento % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
           },
         },
+        result: {
+          title: 'Cotización creada',
+          description: 'La cotización «{{ quoteName }}» se creó como borrador. Ábrala para revisar el precio y continuar.',
+          fields: {
+            quoteLink: { label: 'Cotización' },
+          },
+        },
       },
     },
   },

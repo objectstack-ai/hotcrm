@@ -823,6 +823,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             discount: { label: `割引率 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
           },
         },
+        result: {
+          title: '見積を作成しました',
+          description: '見積「{{ quoteName }}」を下書きとして作成しました。開いて価格を確認し、次の手続きへ進めてください。',
+          fields: {
+            quoteLink: { label: '見積' },
+          },
+        },
       },
     },
   },

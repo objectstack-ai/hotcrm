@@ -225,6 +225,26 @@ export const QuoteGenerationFlow: Flow = {
         actionUrl: '/crm_quote/{{quoteId.id}}',
       },
     },
+    // THE RESULT SCREEN (#2371 row 6, the #2297 shape). Generate Quote used
+    // to close on a toast and leave the rep on the opportunity, with the new
+    // quote reachable only through the related list. The run now pauses,
+    // after every write, on a screen naming the quote with a link to it.
+    // Submit only completes the run; a rep who closes the dialog instead
+    // loses nothing. A `record_link` field takes no input, so the screen
+    // pauses every caller: a REST or AI-tool resume of `screen_1` gets the
+    // run back `paused` here with the quote's id on the link, and one more
+    // resume with no values completes it.
+    //
+    // Translated as `screens.result` in the packs.
+    {
+      id: 'result', type: 'screen', label: 'Quote Created',
+      config: {
+        description: 'Quote "{{ quoteName }}" was created as a draft. Open it to review the price and send it on.',
+        fields: [
+          { name: 'quoteLink', label: 'Quote', type: 'record_link', reference: 'crm_quote', defaultValue: cel`quoteId.id` },
+        ],
+      },
+    },
     { id: 'end', type: 'end', label: 'End' },
   ],
 
@@ -278,6 +298,7 @@ export const QuoteGenerationFlow: Flow = {
     { id: 'e4a', source: 'check_stage', target: 'update_opportunity', type: 'conditional', condition: expression(ADVANCE, 'cel'), label: 'Advance' },
     { id: 'e4b', source: 'check_stage', target: 'notify_owner', type: 'conditional', condition: expression(`!(${ADVANCE})`, 'cel'), label: 'Keep stage' },
     { id: 'e5', source: 'update_opportunity', target: 'notify_owner', type: 'default' },
-    { id: 'e6', source: 'notify_owner', target: 'end', type: 'default' },
+    { id: 'e6', source: 'notify_owner', target: 'result', type: 'default' },
+    { id: 'e12', source: 'result', target: 'end', type: 'default' },
   ],
 };
