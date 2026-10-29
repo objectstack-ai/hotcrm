@@ -106,7 +106,7 @@ const taskValidation: Hook = {
     // back to an open status kept its Completed Date, and the field is
     // readonly, so nobody could clear it by hand: an open task read as
     // finished on the date it had been closed. Same shape as the member
-    // lifecycle hook clearing `response_date` on leaving a responded state.
+    // lifecycle hook clearing `response_date` on a reset to `sent`.
     // The key is hook-written, so the readonly strip leaves it alone.
     if (
       previous?.status === 'completed' &&
