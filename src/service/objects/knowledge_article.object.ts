@@ -209,11 +209,14 @@ export const KnowledgeArticle = ObjectSchema.create({
       storage: { notNull: true },
       group: 'basic',
       trackHistory: true,
+      // `kind` (#2366 row 10): Published is the article's successful end and
+      // Archived its retired end, drawn apart from the path rather than as a
+      // step after Published. `test/status-option-kinds.test.ts`.
       options: [
-        { label: 'Draft',      value: 'draft',     color: '#94A3B8', default: true },
-        { label: 'In Review',  value: 'in_review', color: '#F59E0B' },
-        { label: 'Published',  value: 'published', color: '#10B981' },
-        { label: 'Archived',   value: 'archived',  color: '#475569' },
+        { label: 'Draft',      value: 'draft',     color: '#94A3B8', default: true, kind: 'open' },
+        { label: 'In Review',  value: 'in_review', color: '#F59E0B', kind: 'open' },
+        { label: 'Published',  value: 'published', color: '#10B981', kind: 'won' },
+        { label: 'Archived',   value: 'archived',  color: '#475569', kind: 'lost' },
       ],
     }),
 

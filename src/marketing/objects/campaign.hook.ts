@@ -125,6 +125,16 @@ const campaignValidation: Hook = {
  * which meant a campaign reported zeros for its entire useful life and became
  * accurate on the day everybody stopped looking at it. Completion is now simply
  * one of the transitions this catches.
+ *
+ * `runAs: 'system'` (#2366 row 4, AGENTS.md rule 9), as its three siblings
+ * have been since #2014 and for their reason: a rollup must not depend on who
+ * fired it — run as the marketer moving the status, it counted only the deals
+ * that marketer may see. It is also what lets its write land since the metric
+ * block became `readonly` (`campaign.object.ts`): a readonly field is stripped
+ * from a non-system write. Organization (rule 10): every read is keyed to this
+ * campaign's id (and the leads its members name), and the elevated `ctx.api`
+ * keeps the trigger's tenant. The campaign's own status write stays the
+ * caller's.
  */
 const campaignMetricsRefresh: Hook = {
   name: 'campaign_metrics_refresh',
@@ -133,6 +143,7 @@ const campaignMetricsRefresh: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
+  runAs: 'system',
   description: 'Recompute the campaign metric block whenever the campaign status moves.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;

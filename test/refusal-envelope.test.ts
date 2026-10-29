@@ -145,11 +145,12 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // `account_protection`; 31 until #2334 added the large-deal close-won
     // refusal to `opportunity_lifecycle`; 32 until #2344 added
     // `campaign_member_enrollment_gate`'s three (a closed campaign, an
-    // opted-out lead, an opted-out contact).
+    // opted-out lead, an opted-out contact); 35 until #2366 added
+    // `quote_workflow`'s refusal of a quote created at a settled status.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(35);
+    expect(sites).toHaveLength(36);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

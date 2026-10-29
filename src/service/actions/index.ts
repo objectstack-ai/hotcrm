@@ -8,6 +8,6 @@
  * same file-by-file registration. The three activity actions come from the
  * sales factory but are authored against `crm_case`, so they register here.
  */
-export { EscalateCaseAction, CloseCaseAction, ClaimCaseAction } from './case.actions';
+export { EscalateCaseAction, CloseCaseAction, ClaimCaseAction, ReopenCaseAction } from './case.actions';
 export { LogCallAction, LogMeetingAction, CaseScheduleMeetingAction } from './case-activity.actions';
 export { MarkArticleHelpfulAction, MarkArticleNotHelpfulAction } from './knowledge_article.actions';

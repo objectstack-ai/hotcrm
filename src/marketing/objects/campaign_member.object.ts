@@ -254,20 +254,34 @@ export const CampaignMember = ObjectSchema.create({
       storage: { notNull: true },
       group: 'response',
       trackHistory: true,
+      // `kind` (#2366 row 10): Converted is the member's successful end and
+      // Unsubscribed its unsuccessful one, so the record path stops drawing
+      // Unsubscribed as a fourth step after Converted.
+      // `test/status-option-kinds.test.ts`.
       options: [
-        { label: 'Sent',      value: 'sent',      default: true, color: '#A0A0A0' },
-        { label: 'Responded', value: 'responded', color: '#00AA00' },
-        { label: 'Converted', value: 'converted', color: '#7C3AED' },
-        { label: 'Unsubscribed', value: 'unsubscribed', color: '#FF0000' },
+        { label: 'Sent',      value: 'sent',      default: true, color: '#A0A0A0', kind: 'open' },
+        { label: 'Responded', value: 'responded', color: '#00AA00', kind: 'open' },
+        { label: 'Converted', value: 'converted', color: '#7C3AED', kind: 'won' },
+        { label: 'Unsubscribed', value: 'unsubscribed', color: '#FF0000', kind: 'lost' },
       ],
     }),
 
-    // Written by the `mark_responded` action, and by
-    // `campaign_member_lifecycle` when it back-fills a member whose response
-    // was recorded by flipping `status` directly.
+    // Stamped by `campaign_member_lifecycle` on the write that moves the
+    // member into Responded or Converted — whichever door set the status, the
+    // `mark_responded` action included — and cleared with the response on a
+    // reset to Sent.
+    //
+    // `readonly`, with `has_responded` below (#2366 row 4): both are the
+    // lifecycle hook's, derived from the status. The form offered them, and a
+    // hand-set flag disagreed with the status until the next status write
+    // (#2320 Marketing S7). A `readonly` value is stripped from a user's write
+    // before the hook runs, and the hook's own stamp on the same write is
+    // kept (the engine strips caller keys, not what a `before*` hook sets), so
+    // the derivation is unchanged. `test/campaign-metric-fields-readonly.test.ts`.
     response_date: Field.datetime({
       label: 'Response Date',
       group: 'response',
+      readonly: true,
     }),
 
     // "Did this person ever respond", kept by `campaign_member_lifecycle`
@@ -280,6 +294,7 @@ export const CampaignMember = ObjectSchema.create({
       label: 'Has Responded',
       defaultValue: false,
       group: 'response',
+      readonly: true,
     }),
   },
 

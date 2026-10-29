@@ -72,6 +72,17 @@ export const commerce: Record<string, ObjectTranslationData> = {
       quote_terms: { label: 'Terms' },
       addresses_and_notes: { label: 'Addresses & Notes' },
     },
+    _actions: {
+      submit_quote_for_review: { label: 'Submit for Review', successMessage: 'Quote {{ record.display_title }} submitted for review.' },
+      mark_quote_presented: { label: 'Mark Presented', successMessage: 'Quote {{ record.display_title }} marked as presented.' },
+      accept_quote: {
+        label: 'Accept',
+        confirmText: 'Accept this quote? It is frozen, its opportunity is closed as won and a contract is drafted.',
+        successMessage: 'Quote {{ record.display_title }} accepted.',
+      },
+      reject_quote: { label: 'Reject', successMessage: 'Quote {{ record.display_title }} rejected. Revise it to make a new offer.' },
+      revise_quote: { label: 'Revise', successMessage: 'Quote {{ record.display_title }} is back at Draft.' },
+    },
   },
   crm_quote_line_item: {
     label: 'Quote Line Item',

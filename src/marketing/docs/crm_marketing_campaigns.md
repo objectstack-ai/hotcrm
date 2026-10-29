@@ -59,6 +59,9 @@ answering and a lead converting, and those are the statuses it has.
 The numbers sit on the campaign itself, and they are kept current as members
 are added, answer or leave, as their leads convert, and as deals name the
 campaign. A running campaign shows real figures; you do not wait for it to end.
+The system keeps them, so they are read-only on the campaign's form. On a
+member, **Response Date** and **Has Responded** are read-only the same way: they
+follow the member's status, which **Mark Responded** sets.
 
 - **Number Sent** — every member of the campaign, whatever their status.
 - **Number of Responses** — members who responded, whatever their status now:

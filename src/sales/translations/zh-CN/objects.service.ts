@@ -124,6 +124,10 @@ export const service: Record<string, ObjectTranslationData> = {
         label: '认领工单',
         successMessage: '工单已认领，现在归你负责。',
       },
+      reopen_case: {
+        label: '重新打开工单',
+        successMessage: '工单 {{ record.display_title }} 已重新打开。',
+      },
     },
     _sections: {
       // case.view.ts 表单区块名称 (#1100)。

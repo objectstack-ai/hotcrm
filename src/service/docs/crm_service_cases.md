@@ -45,6 +45,20 @@ stateDiagram-v2
   closed --> in_progress
 ```
 
+### Reopening a case
+
+A **Resolved** or **Closed** case shows a **Reopen Case** button to anyone who
+may edit cases. It puts the case back to **In Progress**, and the case counts as
+open again.
+
+What reopening does to the SLA:
+
+- The **SLA Due Date** is kept. The clock is not restarted, so a case reopened
+  after its due date is overdue the moment it is reopened.
+- A breach already recorded stays recorded: **SLA Violated** is not cleared.
+- Resolving or closing it again after the due date marks it **SLA Violated**
+  on that save, as for any case.
+
 ## Case priority and the SLA due date
 
 Every case carries a **priority**, from **Low** to **Critical**, that drives its
