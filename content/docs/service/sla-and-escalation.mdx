@@ -47,7 +47,7 @@ The breach flag is **read-only for agents** — they can't fudge it. Nobody type
 
 Two views help with that, neither of them a timer:
 
-- **SLA Calendar** lays cases out on their **SLA Due Date**, so in practice it shows the Critical ones and whatever else was dated by hand.
+- **SLA Calendar** lays the live cases out on their **SLA Due Date**: every case carries one, and resolved and closed cases are left out, so it shows the open backlog's deadlines.
 - **SLA at Risk** lists open **High and Critical** cases sorted by due date, soonest first. It selects on priority, not on how close the deadline is — so it is a priority queue that happens to be ordered by deadline, and Medium and Low cases never appear in it however close they are to breaching.
 
 ## SLA performance reporting

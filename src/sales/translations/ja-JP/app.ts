@@ -60,6 +60,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_service: { label: 'サービス' },
         nav_case: { label: 'ケース' },
         nav_knowledge: { label: 'ナレッジベース' },
+        nav_knowledge_published: { label: 'ナレッジベース' },
         nav_service_dashboard: { label: 'サービス概要' },
 
         group_insights: { label: 'インサイト' },

@@ -174,7 +174,7 @@ Nothing else claims a case, and each exclusion is deliberate:
 | --- | --- |
 | **All Cases** | Every case, sorted by priority then SLA due date; a case flagged **SLA Violated** is tinted red, every other row stays plain |
 | **Service Workflow** | Kanban of open cases, grouped by status |
-| **SLA Calendar** | Cases laid out on their **SLA Due Date** — every case carries one now, so the calendar shows the whole open backlog |
+| **SLA Calendar** | Live cases laid out on their **SLA Due Date** — every case carries one, and resolved and closed cases are left out, so the calendar shows the open backlog's deadlines |
 | **Case Timeline** | Cases on a *created → closed* timeline, grouped by owner |
 | **Escalated Cases** | `is_escalated` is true |
 | **Unassigned — triage** | Open cases with no owner at all, urgent first then soonest due — where a web-to-case submission lands when nobody holds the Service Agent position (see [Case routing](/docs/administration/setup#12-case-routing--nothing-to-configure)) |

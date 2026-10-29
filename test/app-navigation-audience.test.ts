@@ -172,10 +172,10 @@ describe('a sales rep is not shown the service entries (#2244)', () => {
     },
   );
 
-  it('the two reps are shown the same sidebar: the sales manager\'s, less Home, the six and (#2367) Knowledge', () => {
+  it('the two reps are shown the same sidebar: the sales manager\'s, less Home and the six (and, since #2367, Knowledge moved into Sales)', () => {
     const manager = shownTo('sales_manager');
     for (const rep of REPS) {
-      expect(shownTo(rep), rep).toEqual(
+      expect(shownTo(rep).filter((id) => id !== 'nav_knowledge_published'), rep).toEqual(
         manager.filter((id) => id !== 'nav_home' && id !== 'nav_knowledge' && !SERVICE_ONLY.includes(id)),
       );
     }
@@ -286,11 +286,18 @@ describe('a service persona is not shown the opportunity dashboards and reports 
  * Sales. Knowledge now asks the rep position too, so a rep is shown no entry
  * of the group, and a group with no entry shown is not drawn (measured in the
  * 18.2.0 console on the PR): the rep's sidebar runs Sales Home, then Sales.
+ * The rep's Knowledge is folded into Sales instead of dropped, as a Published
+ * entry only a rep is shown: the console's search box looks for records only
+ * in the objects of the entries shown, so without it a rep could no longer
+ * find an article.
  *
- * `BEFORE_2367` is the gates the three entries carried before: none.
+ * `BEFORE_2367` is the gates the three entries carried before (none), and
+ * the folded entry, which did not exist, as an entry nobody is shown.
  */
 describe("each persona's own work first: service staff lose the empty deal lists, a rep the one-entry Service group (#2367)", () => {
-  const BEFORE_2367: Record<string, unknown> = { nav_opportunity: undefined, nav_my_deals: undefined, nav_knowledge: undefined };
+  const BEFORE_2367: Record<string, unknown> = {
+    nav_opportunity: undefined, nav_my_deals: undefined, nav_knowledge: undefined, nav_knowledge_published: P`false`,
+  };
   const DEALS = ['nav_opportunity', 'nav_my_deals'];
   const SERVICE = ['service_agent', 'service_manager'];
   const OTHERS = ['sales_manager', 'admin', 'marketing_user'];
@@ -322,11 +329,31 @@ describe("each persona's own work first: service staff lose the empty deal lists
     expect(service.entries.filter((id) => before.includes(id))).toEqual(['nav_knowledge']);
   });
 
-  it.each(REPS)('%s is shown its old sidebar less Knowledge, and no Service group: Sales follows Sales Home', (rep) => {
-    expect(shownTo(rep)).toEqual(shownTo(rep, BEFORE_2367).filter((id) => id !== 'nav_knowledge'));
+  it.each(REPS)('%s is shown no Service group: Sales follows Sales Home, and ends with Knowledge', (rep) => {
     expect(groupsShownTo(rep)).not.toContain('group_service');
     expect(groupsShownTo(rep)[0]).toBe('group_sales');
     expect(shownTo(rep).slice(0, 2)).toEqual(['nav_sales_home', 'nav_lead']);
+    const sales = GROUPS.find((g) => g.id === 'group_sales')!.entries.filter((id) => shownTo(rep).includes(id));
+    expect(sales.at(-1)).toBe('nav_knowledge_published');
+  });
+
+  it.each(REPS)('%s is shown its old sidebar with Knowledge moved, nothing else', (rep) => {
+    expect(shownTo(rep).filter((id) => id !== 'nav_knowledge_published')).toEqual(
+      shownTo(rep, BEFORE_2367).filter((id) => id !== 'nav_knowledge'),
+    );
+    expect(shownTo(rep).filter((id) => id.startsWith('nav_knowledge'))).toEqual(['nav_knowledge_published']);
+  });
+
+  it('the folded entry opens the published articles, on the object the Service group\'s entry opens', () => {
+    const folded = LEAVES.find((n) => n.id === 'nav_knowledge_published')!;
+    const plain = LEAVES.find((n) => n.id === 'nav_knowledge')!;
+    expect(folded).toMatchObject({ type: 'object', objectName: plain.objectName, viewName: 'published_articles' });
+  });
+
+  it.each(ALL)('%s is shown exactly one Knowledge entry', (persona) => {
+    expect(shownTo(persona).filter((id) => id.startsWith('nav_knowledge')), persona).toHaveLength(
+      who[persona]!.objects.crm_knowledge_article?.allowRead === true ? 1 : 0,
+    );
   });
 
   it.each(OTHERS)('%s is shown exactly the sidebar it was shown before', (persona) => {
