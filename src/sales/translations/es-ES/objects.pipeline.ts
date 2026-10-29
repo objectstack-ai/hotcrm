@@ -475,7 +475,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: 'Clonar Oportunidad',
-        successMessage: '¡Oportunidad clonada con éxito!',
+        successMessage: 'Se creó «{{ result.name }}». Ahora está en la copia.',
       },
       mass_update_stage: {
         label: 'Actualizar Etapa',

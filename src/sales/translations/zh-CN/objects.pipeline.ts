@@ -438,7 +438,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: '克隆商机',
-        successMessage: '商机克隆成功！',
+        successMessage: '已创建「{{ result.name }}」，当前页面就是这份副本。',
       },
       generate_quote: {
         label: '生成报价单',

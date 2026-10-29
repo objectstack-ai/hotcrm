@@ -448,7 +448,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: '商談を複製',
-        successMessage: '商談を複製しました！',
+        successMessage: '「{{ result.name }}」を作成しました。表示中のページはその複製です。',
       },
       mass_update_stage: {
         label: 'ステージ更新',
