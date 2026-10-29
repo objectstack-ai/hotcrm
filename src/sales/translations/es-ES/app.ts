@@ -554,6 +554,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: 'Información Clave' },
         opp_stage_path: { label: 'Progreso de Etapa de la Oportunidad' },
+        opp_approval_pending_manager: { label: 'Pendiente de aprobación del Gerente de Ventas' },
+        opp_approval_pending_director: { label: 'Pendiente de aprobación del Gerente y del Director de Ventas' },
         opp_details: { label: 'Detalles de la Oportunidad' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
         // `pages.PAGE.components.TABS.items.VALUE.label`).

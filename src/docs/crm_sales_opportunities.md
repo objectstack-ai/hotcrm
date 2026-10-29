@@ -82,7 +82,10 @@ off.
 | **> $500,000** | Sales Manager **and** Sales Director sign-off |
 
 While an approval is pending, the opportunity is **locked** and its
-**Approval Status** shows the live state. On full approval it is stamped
+**Approval Status** shows the live state. A blue banner under the stage path
+says the deal was sent for approval, to whom (a Sales Manager, or a Sales
+Manager and then a Sales Director over $500,000), and that **Recall**, above
+the title, withdraws the request. On full approval it is stamped
 **Approved** (with date). On rejection it is stamped **Rejected** — the deal
 is unlocked; revise it and save to resubmit. Either way you hear the outcome
 once in the app — **Request approved** or **Request rejected**, with the

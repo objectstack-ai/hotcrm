@@ -195,6 +195,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: 'Key Information' },
         opp_stage_path: { label: 'Opportunity Stage Path' },
+        opp_approval_pending_manager: { label: 'Waiting on Sales Manager Approval' },
+        opp_approval_pending_director: { label: 'Waiting on Sales Manager and Sales Director Approval' },
       },
     },
     sales_home_page: {
