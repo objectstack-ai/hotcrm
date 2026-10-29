@@ -635,9 +635,10 @@ describe('the source facts the quick-tour landing section now rests on (#971)', 
       'industry',
       'stage',
     ]);
+    // No `close_date`: CRM Overview's revenue trend moved to Executive
+    // Overview, its one home (#2370 row 2).
     expect(dims(CrmOverviewDashboard as AnyRec)).toEqual([
       'category',
-      'close_date',
       'lead_source',
       'owner',
       'stage',

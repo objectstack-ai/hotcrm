@@ -577,7 +577,7 @@ decisions left to the compile path and this ruling settles.
      `objectstack.composition.ts`, the roster in `test/package-ownership.test.ts`) until
      a platform release carried #25514. **✅ Moved by #2276** on the 18.2.0 pin: each
      registers with its module, the app stack resolves the three action targets through
-     `artifactFlows`, and the Top Products tile binds revenue's `product_metrics` with no
+     `artifactFlows`, and the List Price by Category tile binds revenue's `product_metrics` with no
      option at all; both lists are gone, and the tile's rows and the three actions'
      launches measured the same before and after. The page related
      lists, the `crm_product` picker and the app → module lookup were measured accepted;

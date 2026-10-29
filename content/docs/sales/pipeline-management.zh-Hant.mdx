@@ -71,12 +71,12 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 ## 值得收藏的銷售管道報告
 
-這五張都在側邊欄的 **Reports** 群組裡：應用自帶的每一張報表都在這個群組下，它在應用載入時是摺疊的。這裡用的是報表庫列出的 label，它未必等於導航項上那個更短的名字。
+這五張都在側邊欄的 **Reports** 群組裡：應用自帶的每一張報表都在這個群組下，它在應用載入時是摺疊的。這裡用的是報表標題，每個導航項上寫的也是同一個名字。
 
 | 報告 | 它顯示什麼 |
 | --- | --- |
-| **Pipeline Coverage by Forecast × Quarter** | 我們對即將到來的季度是否覆蓋了 3 倍配額？未結管道的矩陣：列是預測類別，欄是預計成交季度。它在側邊欄上的導航項寫作 **Pipeline Coverage**。 |
-| **Opportunity Funnel by Owner → Stage** | 每位銷售代表的漏斗健康——發現漏水的階段。 |
+| **Pipeline Coverage by Quarter** | 我們對即將到來的季度是否覆蓋了 3 倍配額？未結管道的矩陣：列是預測類別，欄是預計成交季度。 |
+| **Opportunity Funnel by Owner** | 每位銷售代表的漏斗健康——發現漏水的階段。 |
 | **Opportunities by Stage** | 按階段的銷售管道柱狀圖。 |
 | **Won Opportunities by Owner** | 用於季末表彰的排行榜。 |
 | **Customer Churn Signals** | 面向主動挽留、上下疊放的四塊面板：**CSM-Flagged Accounts**（CSM 手動標記的客戶）、**At-Risk Accounts**（60 天以上無活動）、**Silent High-Value Accounts**（策略級與企業級客戶沉默 90 天以上）與 **Recently Lost Opportunities**（最近 30 天丟單）。 |
@@ -89,7 +89,7 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 | --- | --- |
 | **每日** | 打開 **Opportunities**，切到**銷售流水線**標籤頁。找出停滯的卡片（階段內 > 14 天）。推進或關閉。 |
 | **每週** | 執行 *Pipeline Coverage*。向 AI 助手提問：*"what's at risk?"* |
-| **每月** | 執行 *Opportunity Funnel by Owner → Stage*。對漏斗漏水的銷售代表進行一對一輔導。 |
+| **每月** | 執行 *Opportunity Funnel by Owner*。對漏斗漏水的銷售代表進行一對一輔導。 |
 | **季末** | 執行 *Won Opportunities by Owner* 以計算提成。歸檔*失敗*的交易並附上*丟單原因*。 |
 
 ## 預測彙總
@@ -98,7 +98,7 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 - **Opportunity Metrics** dataset（`opportunity_metrics`）—— 度量 **Total Amount**（金額之和），維度 **Stage**
 - **Sales Performance** 儀表板（`sales_dashboard`）—— 小工具包括按階段的銷售管道、贏單率、按負責人的在飛管道
-- **Pipeline Coverage** 報告（`pipeline_coverage_by_quarter`，報表自身的 label 寫作 **Pipeline Coverage by Forecast × Quarter**）—— 未結管道的矩陣：列是預測類別，欄是預計成交季度
+- **Pipeline Coverage by Quarter** 報告（`pipeline_coverage_by_quarter`）—— 未結管道的矩陣：列是預測類別，欄是預計成交季度
 
 它們共同回答：*"我們是否有足夠的銷售管道來完成本季度，以及風險在哪裡？"*
 
@@ -112,7 +112,7 @@ description: 銷售管道的日常運作方式——推進交易、自動機率�
 
 ## 給銷售經理的提示
 
-- ✅ 每月執行 *Opportunity Funnel by Owner → Stage*，以發現漏斗漏水的銷售代表。
+- ✅ 每月執行 *Opportunity Funnel by Owner*，以發現漏斗漏水的銷售代表。
 - ✅ 在 QBR 中使用 *Pipeline Coverage* 來設定下一季度的目標。
 - ✅ 輔導銷售代表在每筆成交時都填寫結束原因——贏單填*贏單原因*，丟單填*丟單原因*，兩種情況都可以填自由文字*贏/丟單詳情*——這些是應用裡僅有的競爭資料。
 

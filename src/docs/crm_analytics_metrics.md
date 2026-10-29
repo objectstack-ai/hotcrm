@@ -72,18 +72,18 @@ in the pipeline.
 | **Attainment** | **Closed** ÷ **Quota**. The amounts are added up before dividing, so a large quota weighs more than a small one. |
 | **Attainment %** | On one forecast record: **Closed Won** ÷ **Quota**. It reads 0% until a quota is set. |
 | **Coverage Ratio** | On one forecast record: **Pipeline** ÷ (**Quota** − **Closed Won**), whether enough pipeline remains to cover what is still missing. It reads 0 once the quota is met. |
-| **Quota Attainment by Rep** | **Quota**, **Closed** and **Attainment** per owner, from the **Quarter** forecasts of the current quarter only. |
+| **Quota Attainment by Rep** | **Quota**, **Closed** and **Attainment** per owner, from the **Quarter** forecasts of the current quarter only. It stays empty until the nightly forecast snapshot has opened the current quarter and a manager has set each quota. |
 
 A period is always pinned. Adding a quarter's quota to a month's quota gives a
 number that means nothing, so every quota figure either shows one period or
 lists the periods side by side.
 
-Under **Reports**, **Pipeline Coverage** asks the same question for the whole
+Under **Reports**, **Pipeline Coverage by Quarter** asks the same question for the whole
 team:
 
 | Report | What it counts |
 |---|---|
-| **Pipeline Coverage by Forecast × Quarter** | **Total Amount** and **Opportunities** of the deals not at **Closed Won** or **Closed Lost**, by **Forecast Category** and **Close Quarter**. |
+| **Pipeline Coverage by Quarter** | **Total Amount** and **Opportunities** of the deals not at **Closed Won** or **Closed Lost**, by **Forecast Category** and **Close Quarter**. |
 
 ## Activity
 

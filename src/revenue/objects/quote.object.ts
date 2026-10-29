@@ -219,6 +219,11 @@ export const Quote = ObjectSchema.create({
     quote_date: Field.date({
       label: 'Quote Date',
       group: 'terms',
+      // Dated with the year, never "Yesterday" (#2370 row 9): a quote's dates
+      // bound a commitment, and the console's default style read them
+      // relative within a week and dropped the year for this year's dates.
+      // `short` reads "Sep 14, '26" (docs/developers/number-formats.md).
+      format: 'short',
       required: true,
       storage: { notNull: true },
       defaultValue: cel`today()`,
@@ -243,6 +248,7 @@ export const Quote = ObjectSchema.create({
     expiration_date: Field.date({
       label: 'Expiration Date',
       group: 'terms',
+      format: 'short', // with the year, as `quote_date` above
       required: true,
       storage: { notNull: true },
       defaultValue: cel`addDays(record.quote_date, 30)`,

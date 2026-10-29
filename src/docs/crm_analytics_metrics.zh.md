@@ -51,15 +51,15 @@ description: 赢率、管道、配额达成、覆盖倍数和客户流失信号�
 | **Attainment** | **Closed** ÷ **Quota**。先把金额加总再相除，所以配额大的人权重更大。 |
 | **达成率（%）** | 单条销售预测上的 **已成交金额** ÷ **配额**。设置配额之前显示 0%。 |
 | **覆盖倍数** | 单条销售预测上的 **管道金额** ÷（**配额** − **已成交金额**），即剩下的管道够不够填补还差的部分。配额已完成后显示 0。 |
-| **Quota Attainment by Rep** | 每位负责人的 **Quota**、**Closed** 和 **Attainment**，只取本季度的**季度**预测。 |
+| **Quota Attainment by Rep** | 每位负责人的 **Quota**、**Closed** 和 **Attainment**，只取本季度的**季度**预测。要等夜间预测快照开出本季度、并由经理设好每个配额之后才有数据。 |
 
 周期始终是固定的。把一个季度的配额和一个月的配额加在一起，得到的数字没有意义，所以每个配额数字要么只显示一个周期，要么把各个周期并排列出。
 
-在**报表**下，**管道覆盖率**用整个团队回答同一个问题：
+在**报表**下，**季度管道覆盖率**用整个团队回答同一个问题：
 
 | 报表 | 统计内容 |
 |---|---|
-| **Pipeline Coverage by Forecast × Quarter** | 不处于**成交**或**失败**的商机的 **Total Amount** 和 **Opportunities**，按 **Forecast Category** 和 **Close Quarter** 分列。 |
+| **Pipeline Coverage by Quarter** | 不处于**成交**或**失败**的商机的 **Total Amount** 和 **Opportunities**，按 **Forecast Category** 和 **Close Quarter** 分列。 |
 
 ## 互动
 

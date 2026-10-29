@@ -98,7 +98,7 @@ describe('crm_case has no duplicate creation field', () => {
 /**
  * The property the card is about, EXECUTED rather than read: a case written
  * with no date at all — the shape a UI or REST create has — is counted by
- * "Cases Opened by Priority × Day" and inside the service dashboard's range,
+ * "Cases Opened by Day" and inside the service dashboard's range,
  * and a seeded case keeps the creation day it was authored with.
  *
  * The shipped stack runs on a real kernel so the platform's own
@@ -216,7 +216,7 @@ describe('a case created without any date is counted', () => {
     ).toBe(authoredSeedInstant);
   });
 
-  it('counts both cases in "Cases Opened by Priority × Day", each on its own day', async () => {
+  it('counts both cases in "Cases Opened by Day", each on its own day', async () => {
     const rows = await runReport();
     const column = String((CasesOpenedByDayPriorityReport.columns ?? [])[0]);
     const cell = (priority: string): AnyRec[] => rows.filter((r) => r.priority === priority);

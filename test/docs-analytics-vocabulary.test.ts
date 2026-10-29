@@ -93,7 +93,7 @@ const REPORT_LABELS: string[] = Object.values(reports as Record<string, AnyRec>)
 const DATASET_LIST = Object.values(datasets as Record<string, AnyRec>);
 
 // The SERVED navigation: the service module contributes *Service Overview* and
-// *SLA Performance* into the app's groups (`servedApp()` folds them in the
+// *SLA on Closed Cases* into the app's groups (`servedApp()` folds them in the
 // way the console does), so they are navigation labels like any other.
 const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
 const GROUPS = NAV.filter((n) => n.type === 'group');

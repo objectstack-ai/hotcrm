@@ -11,7 +11,7 @@ Reports are filterable, exportable lists with grouping and summary totals. Where
 
 Every report below has an entry in the sidebar's **Reports** group. The group is collapsed when the app loads, so click it open first; ⌘K also finds a report by its sidebar name. You only get an entry for a report whose records you can read: a service agent, who reads no opportunities, has no entry for the four opportunity reports, and a user who reads no cases has none for the three case reports.
 
-Some sidebar names are shorter than the report titles this page uses: **Pipeline Coverage** opens **Pipeline Coverage by Forecast × Quarter**, **Opportunity Funnel by Owner** opens **Opportunity Funnel by Owner → Stage**, **Lead Engagement** opens **Lead Engagement by Month × Source**, **Accounts by Industry & Type** opens **Accounts by Industry and Type**, **SLA Performance** opens **SLA Performance Report**, and **Cases Opened by Day** opens **Cases Opened by Priority × Day**.
+Each sidebar entry carries its report's own title, in every language the app ships, so the name you click is the name on the report you open. `test/app-navigation-shape.test.ts` holds the two together.
 
 ## Standard reports
 
@@ -25,8 +25,8 @@ HotCRM ships **ten** reports out of the box — the two report barrels, `src/sal
 | --- | --- |
 | **Opportunities by Stage** | Pipeline amount and average probability by stage, over deals closing this year and excluding closed-lost — with a bar chart of amount by stage |
 | **Won Opportunities by Owner** | Closed-won amount per rep, charted as **Revenue by Sales Rep** |
-| **Pipeline Coverage by Forecast × Quarter** | A matrix of open pipeline: forecast category down the rows, close quarter across the columns, with amount and deal count in each cell |
-| **Opportunity Funnel by Owner → Stage** | Each rep's book of business broken down stage by stage, with amount, deal count and average probability, excluding closed-lost — with a horizontal bar chart of amount by stage across all reps |
+| **Pipeline Coverage by Quarter** | A matrix of open pipeline: forecast category down the rows, close quarter across the columns, with amount and deal count in each cell |
+| **Opportunity Funnel by Owner** | A matrix of open pipeline amount, excluding closed-lost: one row per rep, one column per stage, and a **Total** column that is each rep's whole book — with a horizontal bar chart of amount by rep |
 
 All four bind `opportunity_metrics` (`src/sales/datasets/opportunity.dataset.ts`), which is what makes *pipeline* mean the same number here as on the dashboards.
 
@@ -34,7 +34,7 @@ The eight names this section used to list are published nowhere. Two of them are
 
 - **Pipeline by Stage** is a dashboard **tile** and a chart title, not a report. The tile is the open-pipeline horizontal bar chart that **CRM Overview**, **Sales Performance** and **Executive Overview** all share (`src/sales/dashboards/shared-widgets.ts`); the chart is the bar chart on **Opportunities by Stage** above, whose title reads **Pipeline by Stage**. Searching the report library for the name finds nothing; the report you want is **Opportunities by Stage**.
 - **Stale Opportunities** is a **list view** on the opportunity — **⚠️ Stale Opportunities · Longest in Stage First**, and that is what its tab reads (`src/sales/views/opportunity.view.ts`) — and it does not apply the 14-day cut this table claimed. It lists **every** open deal, ordered by **Stage Entry Date** ascending, so the longest-parked sit on top; the 14 days belongs to the `opportunity_stagnation` flow that nudges owners, not to the view. Analytics cannot rebuild it either: **Days in Current Stage** is a formula evaluated after the query, so nothing can group, filter or sort on it, and no dataset exposes it.
-- *Top Performing Reps* exists, under its real name: **Won Opportunities by Owner** is the bookings leaderboard, and **Opportunity Funnel by Owner → Stage** is the same ranking with each rep's stages underneath it. `opportunity_metrics` declares an **Owner** dimension — unlike `case_metrics`, which is why the service side has no agent ranking.
+- *Top Performing Reps* exists, under its real name: **Won Opportunities by Owner** is the bookings leaderboard, and **Opportunity Funnel by Owner** is the same ranking with each rep's stages underneath it. `opportunity_metrics` declares an **Owner** dimension — unlike `case_metrics`, which is why the service side has no agent ranking.
 
 Of the five that are simply absent, three are a custom report away and two are not:
 
@@ -50,7 +50,7 @@ Of the five that are simply absent, three are a custom report away and two are n
 
 | Report | What it shows |
 | --- | --- |
-| **Lead Engagement by Month × Source** | A matrix of contacted-lead volume — lead source down the rows, the month of **Last Contacted** across the columns. Leads nobody has contacted are excluded; they have no engagement month |
+| **Lead Engagement by Month** | A matrix of contacted-lead volume — lead source down the rows, the month of **Last Contacted** across the columns. Leads nobody has contacted are excluded; they have no engagement month |
 
 The three reports this section used to list are published nowhere, and two of them named a lead status that does not exist:
 
@@ -66,8 +66,8 @@ The lead count is the one lead number anything else reads: the **Open Leads** ti
 | Report | What it shows |
 | --- | --- |
 | **Cases by Status and Priority** | Case count and average resolution time, grouped by status and then priority, with a bar chart of cases by status |
-| **SLA Performance Report** | Case count, **SLA Violation Rate** and average resolution time, by priority — over closed cases only |
-| **Cases Opened by Priority × Day** | A matrix of daily inflow: priority down the rows, the day each case was opened across the columns |
+| **SLA on Closed Cases** | Case count, **SLA Violation Rate** and average resolution time, by priority — over closed cases only |
+| **Cases Opened by Day** | A matrix of daily inflow: priority down the rows, the day each case was opened across the columns |
 
 The five other reports this section used to list are published nowhere, and most of them ask the semantic layer for something it does not carry. `case_metrics` (`src/service/datasets/case.dataset.ts`) reads `crm_case` alone — no join, no second object — and each bullet below names the one thing that stops it. What the dataset does answer is on [Cubes](/docs/analytics/cubes); the dimensions and measures themselves are declared in `src/service/datasets/case.dataset.ts`, which is the only place that stays current.
 
@@ -77,7 +77,7 @@ The five other reports this section used to list are published nowhere, and most
 - *Reopened Cases* counts something nothing records. Cases do reopen — the state machine allows **Resolved** and **Closed** back to **In Progress** — but no field marks a case as having been reopened, and no measure counts it.
 - *CSAT by Agent* has neither half. There is no satisfaction data at all — the case object's *Customer Satisfaction* rating was retired because nothing in the product ever collected it — and there is no agent dimension to group by.
 
-**SLA Performance Report carries no first-response figure either**, and its SLA number is a violation *rate* — the average of the **SLA Violated** flag — rather than an on-time percentage. (The on-time percentage itself is declared: **SLA Compliance Rate**, which the Service dashboard's SLA gauge plots. This report simply does not carry it.) Nothing in this app measures first response at all: **First Response Date** is stamped on a case the first time a call or meeting that already took place is logged on it, and it is then never compared against a target; `case_metrics` declares no first-response measure, so no report and no dashboard tile can report one. See [SLA & Escalation](/docs/service/sla-and-escalation).
+**SLA on Closed Cases carries no first-response figure either**, and its SLA number is a violation *rate* — the average of the **SLA Violated** flag — rather than an on-time percentage. (The on-time percentage itself is declared: **SLA Compliance Rate**, which the Service dashboard's SLA gauge plots. This report simply does not carry it.) Nothing in this app measures first response at all: **First Response Date** is stamped on a case the first time a call or meeting that already took place is logged on it, and it is then never compared against a target; `case_metrics` declares no first-response measure, so no report and no dashboard tile can report one. See [SLA & Escalation](/docs/service/sla-and-escalation).
 
 ### 💰 Customer and revenue reports
 
@@ -152,8 +152,8 @@ The most common way to consume reports is by **email subscription**:
 A common pattern:
 
 - **Opportunities by Stage** → Mondays 8 AM to the sales team.
-- **SLA Performance Report** → daily 6 PM to the service manager.
-- **Cases Opened by Priority × Day** → Fridays 4 PM to the customer success team.
+- **SLA on Closed Cases** → daily 6 PM to the service manager.
+- **Cases Opened by Day** → Fridays 4 PM to the customer success team.
 
 ## Tips for users
 
@@ -163,7 +163,7 @@ A common pattern:
 
 ## Tips for managers
 
-- ✅ Schedule **Opportunity Funnel by Owner → Stage** weekly to your team — it forces follow-up discipline, rep by rep. For the stalled deals themselves, send people to the **⚠️ Stale Opportunities · Longest in Stage First** tab on Opportunities: it is a list view, so it cannot be scheduled, but it is where the parked deals are ranked.
+- ✅ Schedule **Opportunity Funnel by Owner** weekly to your team — it forces follow-up discipline, rep by rep. For the stalled deals themselves, send people to the **⚠️ Stale Opportunities · Longest in Stage First** tab on Opportunities: it is a list view, so it cannot be scheduled, but it is where the parked deals are ranked.
 - ✅ There is no win/loss report to schedule, but the analysis is a custom report away — group `opportunity_metrics` by **Loss Reason** and read **Lost Deals** next to **Win Rate**. Run it monthly with sales coaches; it is the single best coaching tool.
 
 ## Tips for admins

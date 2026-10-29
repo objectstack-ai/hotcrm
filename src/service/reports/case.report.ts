@@ -16,8 +16,10 @@ export const CasesByStatusPriorityReport: Report = {
 
 export const SlaPerformanceReport: Report = {
   name: 'sla_performance',
-  label: 'SLA Performance Report',
-  description: 'Analysis of SLA compliance',
+  // Says its base (#2370 rows 1 and 6): closed cases only, as `runtimeFilter`
+  // below scopes it; the sidebar entry carries the same name.
+  label: 'SLA on Closed Cases',
+  description: 'SLA violation rate and average resolution time of closed cases, by priority',
   // 'avg_sla_violated' (not a duplicated 'case_count') — the table showed two
   // identical Cases columns and no violation measure; the chart's yAxis must
   // name a dataset MEASURE, not a raw field ('is_sla_violated' leaked the
@@ -25,7 +27,7 @@ export const SlaPerformanceReport: Report = {
   dataset: 'case_metrics', rows: ['priority'], values: ['case_count', 'avg_sla_violated', 'avg_resolution'],
   type: 'summary',
   runtimeFilter: { is_closed: true },
-  chart: { type: 'column', title: 'SLA Violations by Priority', showLegend: false, xAxis: 'priority', yAxis: 'avg_sla_violated' }
+  chart: { type: 'column', title: 'SLA Violation Rate by Priority', showLegend: false, xAxis: 'priority', yAxis: 'avg_sla_violated' }
 };
 
 /**
@@ -45,7 +47,7 @@ export const SlaPerformanceReport: Report = {
  */
 export const CasesOpenedByDayPriorityReport: Report = {
   name: 'cases_opened_by_day_priority',
-  label: 'Cases Opened by Priority × Day',
+  label: 'Cases Opened by Day',
   description: 'Daily case inflow split by priority',
   dataset: 'case_metrics', rows: ['priority'], columns: ['created_at'], values: ['case_count'],
   type: 'matrix',
