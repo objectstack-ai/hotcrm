@@ -66,6 +66,8 @@ beforeAll(async () => {
 }, 180_000);
 
 const stored = async (object: string, id: string): Promise<Rec> => (await verify.rows(object, { id }))[0]!;
+// Each case waits on async refresh hooks (up to 10 s), so the runtime
+// describes carry a 30 s budget rather than vitest's 5 s default (#2357).
 const settlesAt = (campaignId: string, expected: Rec) =>
   vi.waitFor(async () => expect(await stored('crm_campaign', campaignId)).toMatchObject(expected), { timeout: 10_000, interval: 50 });
 
@@ -86,7 +88,7 @@ const liveCampaign = async (): Promise<{ campaign: Rec; member: Rec }> => {
   return { campaign: campaign!, member };
 };
 
-describe('a person cannot type the numbers in', () => {
+describe('a person cannot type the numbers in', { timeout: 30_000 }, () => {
   it('drops the marketer’s write of a count and of Actual Revenue, and keeps the rest of the same write', async () => {
     const { campaign } = await liveCampaign();
     await verify.hooks.run('crm_campaign', 'update', {
@@ -108,7 +110,7 @@ describe('a person cannot type the numbers in', () => {
   });
 });
 
-describe('the writers still land', () => {
+describe('the writers still land', { timeout: 30_000 }, () => {
   it('Mark Responded stamps the response, and the campaign counts it', async () => {
     const { campaign, member } = await liveCampaign();
     await verify.actions.run('crm_campaign_member', 'mark_responded', { as: marketer.token, recordId: member.id });
