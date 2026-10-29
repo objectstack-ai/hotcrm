@@ -212,25 +212,40 @@ const opportunityValidationHook: Hook = {
       }
     }
 
-    // ─── Large Deal Approval: no close-won without it (#2334) ───────────
+    // ─── Large Deal Approval: no close-won without it (#2334, #2350) ────
     //
     // `opportunity_approval` sends a deal at or over the large-deal line for
-    // approval, and its verdict lands in `approval_status`. While that verdict
-    // is `pending` the approval node's lock already holds the deal; once it is
-    // `rejected` nothing did, so one rejection followed by a direct close won
-    // the deal with no approval at all. The sibling gates above refuse the
-    // same move in the same two states, for the reason they record: an
-    // approver's "no" is not a release. From `rejected` the way forward is a
-    // NEW request — the rep's next save opens it (the flow's start condition)
-    // — never a direct close.
+    // approval, and its verdict lands in `approval_status`. A deal at or over
+    // the line is won only once that verdict is `approved` (#2350, ruling B):
+    // every other value refuses a user's move to `closed_won`, and that is
+    // deliberately wider than "pending or rejected" (#2334), which left two
+    // ways for a rep alone to win a large deal with no approval:
+    //   • recall, then close — the platform's recall hands the deal back at
+    //     `not_required`, and a save that moves the stage to Closed Won is not
+    //     a submission (the flow's start condition excludes closed stages);
+    //   • raise and close in one save — a deal under the line is
+    //     `not_required`, and one write that sets the amount over the line and
+    //     the stage to Closed Won opens no request.
+    // So `not_required`, an unset verdict, `pending` and `rejected` all
+    // refuse. From any of them the way forward is a save that leaves the stage
+    // open: the flow's start condition sends the deal for approval (from
+    // `rejected` too, #2334) — never a direct close.
     //   • `closed_won` only: losing a deal needs no approval;
     //   • at or over the line, read INPUT-FIRST like the verdict: a deal
     //     revised under the line in the same write needs none. A
     //     hand-supplied verdict is stripped before this hook runs (the field
     //     is `readonly`), and no approval write carries `stage` (#2222);
     //   • USER writes only (`ctx.user?.id`), the boundary every guard in this
-    //     hook draws;
+    //     hook draws: a seed, an import replay or a system sweep is not judged;
     //   • RECORD_LOCKED / 409 (`REFUSAL_CODES.locked`).
+    // ⚠️ KNOWN LIMIT, measured on 18.2.0 (#2350): the refusal does not know
+    // whether `opportunity_approval` is switched on. A packaged flow is
+    // switched off in the platform's activation ledger
+    // (`sys_metadata_activation`, `POST /automation/:name/toggle`), and this
+    // body reads under the caller, who may not read that ledger (a rep's read
+    // answers PERMISSION_DENIED). An install that switches the flow off can
+    // therefore close no large deal won by hand. ⛔ No setting stands in for
+    // that reading.
     // ⚠️ The line is a COPY of `LARGE_DEAL_AMOUNT` (`_thresholds.ts`): a
     // lowered body cannot import it. `test/deal-threshold-parity.test.ts`
     // holds this copy and the `quote_workflow` one to the constant.
@@ -239,13 +254,25 @@ const opportunityValidationHook: Hook = {
       const verdict = (input.approval_status ?? previous.approval_status) as string | undefined;
       const dealAmount = Number(input.amount ?? previous.amount);
       const winning = input.stage === 'closed_won' && input.stage !== previous.stage;
-      if (winning && (verdict === 'pending' || verdict === 'rejected') && dealAmount >= LARGE_DEAL_AMOUNT) {
+      if (winning && verdict !== 'approved' && dealAmount >= LARGE_DEAL_AMOUNT) {
+        // Two sentences, one per reader (#2338 items 12, 14-16): the message
+        // is the diagnostic and keeps API names; the `userMessage` is what the
+        // console shows and names the stage, the field and its value by the
+        // labels on `crm_opportunity` (`test/refusal-labels.test.ts` holds
+        // them to the object). The line is printed from the one copy above.
+        const VERDICT_LABELS: Record<string, string> = { not_required: 'Not Required', pending: 'Pending', rejected: 'Rejected' };
+        const line = String(LARGE_DEAL_AMOUNT).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const shown = VERDICT_LABELS[verdict as string] ?? VERDICT_LABELS.not_required;
+        const next = verdict === 'pending'
+          ? 'It can be Closed Won once the request is approved.'
+          : verdict === 'rejected'
+            ? 'Revise the deal and save it to send it for approval again; it can be Closed Won once approved.'
+            : 'Save the deal without closing it to send it for approval; it can be Closed Won once approved.';
         throw refuse(
-          verdict === 'rejected'
-            ? 'This deal\'s Large Deal Approval was rejected, so it cannot be closed won. Revise the deal and save it to send it for approval again; it can be closed won once approved.'
-            : 'This deal is waiting on its Large Deal Approval, so it cannot be closed won until the request is approved.',
+          `A deal of LARGE_DEAL_AMOUNT (${LARGE_DEAL_AMOUNT}) or more moves to closed_won only once approval_status is approved; amount is ${dealAmount}, approval_status is ${verdict ?? 'unset'}.`,
           'RECORD_LOCKED',
           409,
+          `A deal of ${line} or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is ${shown}. ${next}`,
         );
       }
     }

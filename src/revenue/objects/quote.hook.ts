@@ -270,10 +270,12 @@ const quoteValidation: Hook = {
       //     open, and its approval node locks the record (`lockRecord: true`)
       //     → the platform's RECORD_LOCKED. The column is the node's own
       //     mirror of the live request (`approvalStatusField`);
-      //   • `approval_status` `rejected` on a deal at or over the large-deal
-      //     line → `opportunity_lifecycle`'s refusal of a close-won (#2334).
-      //     Under the line a rejection holds nothing, and neither does
-      //     `approved` or a recall's `not_required`. The line is a COPY of
+      //   • `approval_status` anything but `approved` on a deal at or over the
+      //     large-deal line → `opportunity_lifecycle`'s refusal of a close-won
+      //     (#2334, widened by #2350 ruling B to `not_required` and an unset
+      //     verdict too, so a recalled deal or one never sent for approval is
+      //     held). Under the line only `pending` holds (the lock), and
+      //     `approved` never does. The line is a COPY of
       //     `LARGE_DEAL_AMOUNT`, as in that hook (a lowered body cannot import
       //     it); `test/deal-threshold-parity.test.ts` holds both copies to it;
       //   • `status_change_approval_status` `pending` or `rejected` (REQ-0006,
@@ -301,20 +303,32 @@ const quoteValidation: Hook = {
           }).catch(() => null)
           : null;
         // Each hold is named by the field label and value the rep sees on the
-        // deal itself, so the sentence points at where to look. A `rejected`
-        // Large Deal Approval holds only a deal at or over the line (#2334).
+        // deal itself, so the sentence points at where to look. At or over the
+        // line, the Large Deal Approval holds every verdict but `approved`
+        // (#2334, #2350); under it, only a `pending` one (the lock).
         const LARGE_DEAL_AMOUNT = 100000;
         const large = deal ? Number(deal.amount) >= LARGE_DEAL_AMOUNT : false;
+        const VALUE_LABELS: Record<string, string> = { not_required: 'Not Required', pending: 'Pending', rejected: 'Rejected' };
+        const holds = (f: string): boolean => f === 'approval_status'
+          ? deal[f] === 'pending' || (large && deal[f] !== 'approved')
+          : deal[f] === 'pending' || deal[f] === 'rejected';
         const held = deal && !String(deal.stage).startsWith('closed_')
           ? [['approval_status', 'Approval Status'], ['status_change_approval_status', 'Status Change Approval'], ['qualification_approval_status', 'Qualification Approval']]
-            .filter(([f]) => deal[f] === 'pending' || (deal[f] === 'rejected' && (f !== 'approval_status' || large)))
-            .map(([f, label]) => `${label} is ${deal[f] === 'pending' ? 'Pending' : 'Rejected'}`)
+            .filter(([f]) => holds(f))
+            .map(([f, label]) => `${label} is ${VALUE_LABELS[deal[f] as string] ?? VALUE_LABELS.not_required}`)
           : [];
+        // A large deal no request holds (`not_required`, unset) is waiting on
+        // nothing: what moves it on is a save of the deal, which sends it for
+        // approval — so the sentence says that instead of "once granted".
+        const unsent = large && (deal.approval_status == null || deal.approval_status === 'not_required');
         // The quote has exactly one opportunity, so "its opportunity" names the
         // deal unambiguously — and ⛔ never by its record id.
         if (held.length > 0) {
           const what = `${subject()} cannot be accepted while its opportunity is held by an approval`;
-          throw refuse(`${what} (${held.join('; ')}): accepting it would close that deal as won. Accept it once the approval is granted.`, 'RECORD_LOCKED', 409);
+          const next = unsent
+            ? 'Save the opportunity to send it for approval, then accept the quote once it is approved.'
+            : 'Accept it once the approval is granted.';
+          throw refuse(`${what} (${held.join('; ')}): accepting it would close that deal as won. ${next}`, 'RECORD_LOCKED', 409);
         }
       }
     }
