@@ -61,8 +61,9 @@ are added, answer or leave, as their leads convert, and as deals name the
 campaign. A running campaign shows real figures; you do not wait for it to end.
 
 - **Number Sent** — every member of the campaign, whatever their status.
-- **Number of Responses** — members at **Responded** or **Converted**: a member
-  whose lead converted answered too.
+- **Number of Responses** — members who responded, whatever their status now:
+  **Responded** and **Converted** members, and a member who responded and later
+  became **Unsubscribed** still counts as a response.
 - **Response Rate %** — responses as a share of the number sent.
 - **Number of Leads** — the different leads among the members.
 - **Converted Leads** — how many of those leads have been converted.
