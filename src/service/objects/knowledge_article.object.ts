@@ -110,11 +110,16 @@ export const KnowledgeArticle = ObjectSchema.create({
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
   searchableFields: ['title', 'article_number', 'summary'],
-  highlightFields: ['article_number', 'title', 'category', 'status', 'audience'],
+  // The record header's strip (#2369 rows 5 and 7): the title already reads
+  // "KA-0001 - Title", so the strip carries what it does not, the vote counts
+  // among them.
+  highlightFields: ['category', 'status', 'audience', 'helpful_count', 'not_helpful_count'],
 
+  // `content` leads (#2369 row 7): the record page draws the groups in this
+  // order, and a reader opens an article for its body, not its metadata.
   fieldGroups: [
-    { key: 'basic',     label: 'Article Information', icon: 'info' },
     { key: 'content',   label: 'Content',             icon: 'file-text' },
+    { key: 'basic',     label: 'Article Information', icon: 'info' },
     { key: 'taxonomy',  label: 'Categorization',      icon: 'tag' },
     { key: 'metrics',   label: 'Engagement',          icon: 'activity', collapse: 'collapsed' },
   ],
@@ -247,6 +252,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       label: 'Originating Case',
       description: 'Case this article was authored from (optional).',
       group: 'content',
+      relatedListColumns: ['article_number', 'title', 'category', 'status', 'audience'],
     }),
 
 

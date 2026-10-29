@@ -221,10 +221,20 @@ export const service: Record<string, ObjectTranslationData> = {
       mark_article_helpful: {
         label: 'Útil',
         successMessage: 'Gracias — registrado como útil.',
+        outcomeMessages: {
+          recorded: 'Gracias — registrado como útil. Útil: ${result.helpful} · No útil: ${result.notHelpful}.',
+          changed: 'Tu voto ahora es Útil. Útil: ${result.helpful} · No útil: ${result.notHelpful}.',
+          already: 'Ya marcaste este artículo como útil. Útil: ${result.helpful} · No útil: ${result.notHelpful}.',
+        },
       },
       mark_article_not_helpful: {
         label: 'No útil',
         successMessage: 'Gracias — registrado como no útil.',
+        outcomeMessages: {
+          recorded: 'Gracias — registrado como no útil. Útil: ${result.helpful} · No útil: ${result.notHelpful}.',
+          changed: 'Tu voto ahora es No útil. Útil: ${result.helpful} · No útil: ${result.notHelpful}.',
+          already: 'Ya marcaste este artículo como no útil. Útil: ${result.helpful} · No útil: ${result.notHelpful}.',
+        },
       },
     },
   },

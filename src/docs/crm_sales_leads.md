@@ -28,6 +28,8 @@ automatically:
 
 **Lead Score** is the 1–5 star field on each lead (shown as *Lead Score* in the
 UI). A score of 4★ or more marks the lead "hot" and triggers the 1-day SLA.
+Leave it blank on a new lead and HotCRM fills it from the email domain, phone,
+job title, industry and company size; a score you type stands.
 
 A lead submitted through a web-to-lead form arrives with nobody behind it, so
 it is **auto-assigned to the sales rep with the fewest open leads** — a

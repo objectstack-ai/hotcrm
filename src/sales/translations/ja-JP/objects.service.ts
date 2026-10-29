@@ -218,10 +218,20 @@ export const service: Record<string, ObjectTranslationData> = {
       mark_article_helpful: {
         label: '役に立った',
         successMessage: '「役に立った」として記録しました。ありがとうございます。',
+        outcomeMessages: {
+          recorded: '「役に立った」として記録しました。ありがとうございます。役に立った：${result.helpful} · 役に立たなかった：${result.notHelpful}。',
+          changed: '投票を「役に立った」に変更しました。役に立った：${result.helpful} · 役に立たなかった：${result.notHelpful}。',
+          already: 'この記事はすでに「役に立った」と評価済みです。役に立った：${result.helpful} · 役に立たなかった：${result.notHelpful}。',
+        },
       },
       mark_article_not_helpful: {
         label: '役に立たなかった',
         successMessage: '「役に立たなかった」として記録しました。ありがとうございます。',
+        outcomeMessages: {
+          recorded: '「役に立たなかった」として記録しました。ありがとうございます。役に立った：${result.helpful} · 役に立たなかった：${result.notHelpful}。',
+          changed: '投票を「役に立たなかった」に変更しました。役に立った：${result.helpful} · 役に立たなかった：${result.notHelpful}。',
+          already: 'この記事はすでに「役に立たなかった」と評価済みです。役に立った：${result.helpful} · 役に立たなかった：${result.notHelpful}。',
+        },
       },
     },
   },

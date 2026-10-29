@@ -255,7 +255,9 @@ export const Lead = ObjectSchema.create({
 
     rating: Field.rating(5, {
       label: 'Lead Score',
-      description: 'Lead quality score (1-5 stars)',
+      // Says what a blank does (#2369 row 2): `lead_automation` scores a lead
+      // created without one (`computeRating` in `lead.hook.ts`).
+      description: 'Leave blank and a new lead is scored for you (1-5 stars) from its email domain, phone, job title, industry and company size.',
       group: 'qualification',
     }),
 

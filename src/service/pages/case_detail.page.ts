@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Page } from '@objectstack/spec/ui';
+import { P } from '@objectstack/spec';
 
 /**
  * Case Detail Record Page
@@ -85,14 +86,43 @@ export const CaseDetailPage: Page = {
             // `is_sla_violated` flag — the split response/resolution deadlines
             // named here do not exist, so the agent's most time-critical fact
             // was missing from the strip entirely.
+            //
+            // `is_sla_violated` left the strip (#2369 row 6). The console draws
+            // a boolean false as a red "× No" and true as a green "✓ Yes"
+            // whatever the field means, so every case on track wore a red pill
+            // and every breached one a green tick. The breach is the alert
+            // below instead, and the strip keeps the due date.
             fields: [
               'status',
               'priority',
               'sla_due_date',
-              'is_sla_violated',
               'owner_id',
               'crm_account',
             ],
+          },
+        },
+        {
+          // Shown only on a breached case (#2369 row 6), so a case on track
+          // shows nothing red. `has()` first: this renderer fails soft to
+          // SHOWN on an unevaluable predicate (see lead_detail.page.ts).
+          type: 'record:alert',
+          id: 'case_sla_breached',
+          label: 'SLA Breached',
+          properties: {
+            severity: 'error',
+            visible: P`has(record.is_sla_violated) && record.is_sla_violated == true`,
+            title: {
+              en: 'SLA breached',
+              'zh-CN': '已违反 SLA',
+              'ja-JP': 'SLA違反',
+              'es-ES': 'SLA incumplido',
+            },
+            body: {
+              en: 'This case was not resolved by its SLA due date.',
+              'zh-CN': '该工单未在 SLA 截止时间前解决。',
+              'ja-JP': 'このケースは SLA 期限までに解決されませんでした。',
+              'es-ES': 'Este caso no se resolvió antes de su fecha límite de SLA.',
+            },
           },
         },
         {
@@ -160,8 +190,8 @@ export const CaseDetailPage: Page = {
                       //
                       // The highlights strip still wins (#1211): the renderer
                       // drops what `record:highlights` registered (`status`,
-                      // `priority`, `sla_due_date`, `is_sla_violated`,
-                      // `owner_id`, `crm_account`) and the title candidate
+                      // `priority`, `sla_due_date`, `owner_id`,
+                      // `crm_account`) and the title candidate
                       // `subject` from the derived members.
                       //
                       // `escalated_date` — written by three flows and shown
@@ -224,6 +254,11 @@ export const CaseDetailPage: Page = {
                           // `page:accordion` does not. Nothing addresses these
                           // panels, so the identifier has nowhere to land.
                           label: 'Open Tasks',
+                          // Open on arrival (#2369 row 9): the tab's only
+                          // panel started shut, so the Related tab looked
+                          // empty. The renderer opens an item only on a strict
+                          // `collapsed === false` (see opportunity_detail.page.ts).
+                          collapsed: false,
                           children: [
                             {
                               type: 'record:related_list',

@@ -213,6 +213,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       send_email: {
         label: '发送邮件',
+        description: '发送到该联系人的邮箱地址。邮件先进入发送队列，随后记录在联系人的时间线上。',
         params: {
           subject: { label: '主题' },
           body: { label: '正文' },

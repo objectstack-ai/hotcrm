@@ -89,16 +89,24 @@ export const ContactViews = defineView({
     type: 'tabbed',
     sections: [
       {
+        // The first tab holds everything Create requires (#2369 row 1).
+        // `email` is required on the object, and on the Contact Info tab
+        // Create jumped there with "Email is required" after the rep had
+        // filled this one. Three columns put the three name parts on one row
+        // (Last Name used to take a whole row of its own), then the account,
+        // then how to reach the person.
         name: 'identity',
         label: 'Identity',
-        columns: 2,
+        columns: 3,
         fields: [
           'salutation',
           { field: 'first_name', required: true },
-          { field: 'last_name', required: true, span: 'full' },
+          { field: 'last_name', required: true },
           { field: 'crm_account', required: true },
           'title',
           'department',
+          'email',
+          'phone',
           'owner_id',
         ],
       },
@@ -133,7 +141,7 @@ export const ContactViews = defineView({
         name: 'contact_details',
         label: 'Contact Info',
         columns: 2,
-        fields: ['email', 'phone', 'mobile', 'avatar'],
+        fields: ['mobile', 'avatar'],
       },
       {
         // Named `mailing_address` — deliberately the SAME key as the

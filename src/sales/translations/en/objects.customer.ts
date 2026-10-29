@@ -200,6 +200,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       send_email: {
         label: 'Send Email',
+        description: 'Goes to this contact\'s email address. It is queued, then logged on the contact\'s timeline.',
         params: {
           subject: { label: 'Subject' },
           body: { label: 'Body' },

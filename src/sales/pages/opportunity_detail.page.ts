@@ -278,6 +278,7 @@ export const OpportunityDetailPage: Page = {
                     type: 'page:accordion',
                     id: 'opp_related_accordion',
                     properties: {
+                      allowMultiple: true,
                       items: [
                         {
                           // Accordion item `key` is DELETED, not renamed to
@@ -304,26 +305,19 @@ export const OpportunityDetailPage: Page = {
                           // and the component's own designer text says the same
                           // ("collapsed: false opens a panel by default").
                           //
-                          // ⚠️ ONLY the first panel, and that is the renderer's
-                          // choice rather than a preference: with `allowMultiple`
-                          // absent (it defaults false) the accordion mounts as
-                          // `type="single"` and takes `defaultValue={open[0]}` —
-                          // one panel, the first in declaration order. Marking
-                          // Products or Open Tasks too would change nothing on
-                          // screen. Opening more than one means declaring
-                          // `allowMultiple: true`, which changes the interaction
-                          // model (panels stop closing each other) and is not
-                          // this card's ask.
+                          // EVERY panel opens (#2369 row 9), the lead page's
+                          // shape: `allowMultiple: true` above mounts the
+                          // accordion as `type="multiple"`, so the renderer
+                          // opens each item marked `collapsed: false` instead of
+                          // only the first. Before, Products and Open Tasks
+                          // started shut and closed each other, and a deal's
+                          // line items (and their Add) sat behind a click.
                           //
-                          // ⛔ NOT "default-open the sections that have rows",
-                          // which the card asked for first: that is not
-                          // expressible here. `collapsed` is a static boolean on
-                          // a strict item shape (`label` / `icon` / `collapsed` /
-                          // `children` — nothing else parses), the page is
-                          // authored metadata evaluated before any row is read,
-                          // and the related lists below fetch their own rows
-                          // after mount. Reported rather than worked around; ⛔
-                          // the component is not this repo's to change.
+                          // ⛔ Still NOT "open the sections that have rows":
+                          // `collapsed` is a static boolean on a strict item
+                          // shape (`label` / `icon` / `collapsed` / `children`),
+                          // the page is evaluated before any row is read, and
+                          // the related lists fetch their own rows after mount.
                           collapsed: false,
                           children: [
                             {
@@ -340,6 +334,7 @@ export const OpportunityDetailPage: Page = {
                         },
                         {
                           label: 'Products',
+                          collapsed: false,
                           children: [
                             {
                               type: 'record:related_list',
@@ -435,6 +430,7 @@ export const OpportunityDetailPage: Page = {
                         },
                         {
                           label: 'Open Tasks',
+                          collapsed: false,
                           children: [
                             {
                               type: 'record:related_list',

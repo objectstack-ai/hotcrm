@@ -222,10 +222,20 @@ export const service: Record<string, ObjectTranslationData> = {
       mark_article_helpful: {
         label: '有用',
         successMessage: '已记录为「有用」，谢谢反馈。',
+        outcomeMessages: {
+          recorded: '已记录为「有用」，谢谢反馈。有用：${result.helpful} · 没用：${result.notHelpful}。',
+          changed: '你的投票已改为「有用」。有用：${result.helpful} · 没用：${result.notHelpful}。',
+          already: '你已标记过这篇文章「有用」。有用：${result.helpful} · 没用：${result.notHelpful}。',
+        },
       },
       mark_article_not_helpful: {
         label: '没用',
         successMessage: '已记录为「没用」，谢谢反馈。',
+        outcomeMessages: {
+          recorded: '已记录为「没用」，谢谢反馈。有用：${result.helpful} · 没用：${result.notHelpful}。',
+          changed: '你的投票已改为「没用」。有用：${result.helpful} · 没用：${result.notHelpful}。',
+          already: '你已标记过这篇文章「没用」。有用：${result.helpful} · 没用：${result.notHelpful}。',
+        },
       },
     },
   },

@@ -45,7 +45,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       industry: { label: 'Industry' },
       mobile: { label: 'Mobile' },
       website: { label: 'Website' },
-      rating: { label: 'Lead Score', help: 'Lead quality score (1-5 stars)' },
+      rating: { label: 'Lead Score', help: 'Leave blank and a new lead is scored for you (1-5 stars) from its email domain, phone, job title, industry and company size.' },
       converted_account: { label: 'Converted Account' },
       converted_contact: { label: 'Converted Contact' },
       converted_opportunity: { label: 'Converted Opportunity' },

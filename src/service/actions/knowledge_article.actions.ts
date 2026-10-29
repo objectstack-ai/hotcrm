@@ -53,23 +53,44 @@ const feedbackBody = (verdict: 'helpful' | 'not_helpful'): string => `
         where: { crm_knowledge_article: id, owner_id: userId },
       });
 
+      // \`outcome\` keys the action's \`outcomeMessages\` (#2369 row 7): the
+      // reader learns whether this click recorded, moved or repeated their vote.
+      let outcome = 'recorded';
+      let feedbackId = null;
       if (existing && existing.id) {
+        feedbackId = existing.id;
         if (existing.verdict === '${verdict}') {
-          return { ok: true, id: existing.id, verdict: '${verdict}', changed: false };
+          outcome = 'already';
+        } else {
+          await ctx.api.object('crm_article_feedback').update(
+            { id: existing.id, verdict: '${verdict}' },
+            { where: { id: existing.id } },
+          );
+          outcome = 'changed';
         }
-        await ctx.api.object('crm_article_feedback').update(
-          { id: existing.id, verdict: '${verdict}' },
-          { where: { id: existing.id } },
-        );
-        return { ok: true, id: existing.id, verdict: '${verdict}', changed: true };
+      } else {
+        const inserted = await ctx.api.object('crm_article_feedback').insert({
+          crm_knowledge_article: id,
+          verdict: '${verdict}',
+          owner_id: userId,
+        });
+        feedbackId = inserted?.id ?? null;
       }
 
-      const inserted = await ctx.api.object('crm_article_feedback').insert({
-        crm_knowledge_article: id,
-        verdict: '${verdict}',
-        owner_id: userId,
+      // Where the article stands once this vote is in, for the same message:
+      // the header buttons can show neither a count nor the reader's own vote.
+      // Counted from the rows, as \`article_feedback_metrics_refresh\` counts.
+      // Double-quoted on purpose: the two bodies must differ only in the
+      // single-quoted verdict above (test/knowledge-feedback.test.ts).
+      const tally = (v) => ctx.api.object('crm_article_feedback').count({
+        where: { crm_knowledge_article: id, verdict: v },
       });
-      return { ok: true, id: inserted?.id ?? null, verdict: '${verdict}', changed: true };
+      const helpful = await tally("helpful");
+      const notHelpful = await tally("not_helpful");
+      return {
+        ok: true, id: feedbackId, verdict: '${verdict}', changed: outcome !== 'already',
+        outcome, helpful, notHelpful,
+      };
     `;
 
 /**
@@ -94,6 +115,13 @@ export const MarkArticleHelpfulAction: Action = {
   locations: ['record_header'],
   visible: publishedOnly,
   successMessage: 'Thanks — recorded as helpful.',
+  // By the body's `outcome` (#2369 row 7), with the article's tally. The
+  // console fills `${result.x}` here; a `{{ result.x }}` hole prints raw.
+  outcomeMessages: {
+    recorded: 'Thanks — recorded as helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
+    changed: 'Your vote is now Helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
+    already: 'You already marked this article helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
+  },
   refreshAfter: true,
 };
 
@@ -112,5 +140,10 @@ export const MarkArticleNotHelpfulAction: Action = {
   locations: ['record_header'],
   visible: publishedOnly,
   successMessage: 'Thanks — recorded as not helpful.',
+  outcomeMessages: {
+    recorded: 'Thanks — recorded as not helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
+    changed: 'Your vote is now Not Helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
+    already: 'You already marked this article not helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
+  },
   refreshAfter: true,
 };

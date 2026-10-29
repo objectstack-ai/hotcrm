@@ -232,6 +232,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       send_email: {
         label: 'メール送信',
+        description: 'この取引先責任者のメールアドレスに送信されます。送信キューに入った後、取引先責任者のタイムラインに記録されます。',
         params: {
           subject: { label: '件名' },
           body: { label: '本文' },
