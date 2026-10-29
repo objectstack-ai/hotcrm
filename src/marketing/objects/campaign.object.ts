@@ -126,11 +126,14 @@ export const Campaign = ObjectSchema.create({
     status: Field.select({
       group: 'basic',
       label: 'Status',
+      // `kind` (#2366 row 10, the same defect on the campaign's own path):
+      // Aborted is drawn as the unsuccessful end, not as a step after
+      // Completed. `test/status-option-kinds.test.ts`.
       options: [
-        { label: 'Planning', value: 'planning', color: '#999999', default: true },
-        { label: 'In Progress', value: 'in_progress', color: '#FFA500' },
-        { label: 'Completed', value: 'completed', color: '#00AA00' },
-        { label: 'Aborted', value: 'aborted', color: '#FF0000' },
+        { label: 'Planning', value: 'planning', color: '#999999', default: true, kind: 'open' },
+        { label: 'In Progress', value: 'in_progress', color: '#FFA500', kind: 'open' },
+        { label: 'Completed', value: 'completed', color: '#00AA00', kind: 'won' },
+        { label: 'Aborted', value: 'aborted', color: '#FF0000', kind: 'lost' },
       ],
       required: true,
       storage: { notNull: true },
@@ -171,26 +174,25 @@ export const Campaign = ObjectSchema.create({
       min: 0,
     }),
     
-    // ⛔ NOT `readonly` (here and on the num_* snapshot fields below), and the
-    // reason holds on the pinned engine rather than on the retired 16.x claim
-    // this note used to carry. The metric block — `CAMPAIGN_METRIC_FIELDS` in
-    // `campaign.hook.ts` — is written by FOUR refresh hooks, not by the
-    // long-retired `campaign_snapshot_metrics`: `campaign_metrics_refresh`,
-    // `campaign_attribution_refresh`, `campaign_lead_conversion_refresh` and
-    // `campaign_member_metrics_refresh`. Every one of them writes
-    // `api.object('crm_campaign').update(...)`, and none declares `Hook.runAs`,
-    // which defaults to `'inherit'` — so `ctx.api` is a `ScopedContext` over the
-    // ACTING USER's context, and the keys are CALLER-supplied to a
-    // non-`isSystem` UPDATE, exactly what `stripReadonlyFields` deletes. Their
-    // least-privileged trigger is an ordinary user edit — a rep moving a
-    // campaign's status, saving an opportunity, enrolling a member — so
-    // `readonly` here would freeze the whole block at its seeded values.
-    // Measured in `test/activity-recency.test.ts`, which runs this same
-    // `ctx.api` shape through the real engine under a plain user context.
+    // `readonly` (#2366 row 4), here and on the six `num_*` counts below: the
+    // metric block — `CAMPAIGN_METRIC_FIELDS` in `campaign.hook.ts` — is the
+    // four refresh hooks' to write, never a person's. On the form they were
+    // editable, and a 999 typed into Number Sent stayed until the next member
+    // write recomputed it (measured on 18.2.0, #2320 Marketing S3).
+    //
+    // The hooks still land their writes because all four declare
+    // `runAs: 'system'`: a `readonly` field is stripped from a non-system
+    // write (`FieldSchema.readonly`), and an elevated hook's `ctx.api` is a
+    // system write. Three were elevated by #2014 so a rollup does not depend on
+    // who fired it; `campaign_metrics_refresh` joined them with this change,
+    // for the same reason and because it would otherwise be stripped. Its note
+    // says so. `test/campaign-metric-fields-readonly.test.ts` pins both halves:
+    // a user's write of a count is dropped, and every refresh still lands.
     actual_revenue: Field.currency({ 
       group: 'budget',
       label: 'Actual Revenue',
       min: 0,
+      readonly: true,
     }),
     
     // Metrics
@@ -201,43 +203,49 @@ export const Campaign = ObjectSchema.create({
       min: 0,
     }),
     
-    // NOT `readonly`: written by the same four refresh hooks, and for the same
-    // reason — see the note on `actual_revenue` above.
+    // `readonly`, written by the same four refresh hooks — see the note on
+    // `actual_revenue` above.
     // Definition: total members enrolled.
     num_sent: Field.number({
       group: 'metrics',
       label: 'Number Sent',
       min: 0,
+      readonly: true,
     }),
     
     num_responses: Field.number({
       group: 'metrics',
       label: 'Number of Responses',
       min: 0,
+      readonly: true,
     }),
     
     num_leads: Field.number({
       group: 'metrics',
       label: 'Number of Leads',
       min: 0,
+      readonly: true,
     }),
     
     num_converted_leads: Field.number({
       group: 'metrics',
       label: 'Converted Leads',
       min: 0,
+      readonly: true,
     }),
     
     num_opportunities: Field.number({
       group: 'metrics',
       label: 'Opportunities Created',
       min: 0,
+      readonly: true,
     }),
     
     num_won_opportunities: Field.number({
       group: 'metrics',
       label: 'Won Opportunities',
       min: 0,
+      readonly: true,
     }),
     
     // Calculated Metrics (Formula Fields)

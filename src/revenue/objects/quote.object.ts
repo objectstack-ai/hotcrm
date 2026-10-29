@@ -183,13 +183,25 @@ export const Quote = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       group: 'basic',
+      // `kind` (#2366 row 10): the record path draws Accepted as the quote's
+      // successful end and Rejected / Expired as its unsuccessful ends, not as
+      // later steps after Accepted. `test/status-option-kinds.test.ts`.
+      //
+      // The three settled options are offered on an EXISTING quote only
+      // (#2366 row 3): `record.id` is absent on the New form, so a new quote
+      // starts at Draft, In Review or Presented. The predicate is total and
+      // true for every stored row, so it never refuses a write to one; the
+      // refusal of a user's create at a settled status is `quote_workflow`'s
+      // (`quote.hook.ts`), which names the quote and says what to do instead
+      // — this option rule's own refusal is the platform's fixed "option is
+      // not available". Pinned in `test/quote-settled-actions.test.ts`.
       options: [
-        { label: 'Draft', value: 'draft', color: '#999999', default: true },
-        { label: 'In Review', value: 'in_review', color: '#FFA500' },
-        { label: 'Presented', value: 'presented', color: '#4169E1' },
-        { label: 'Accepted', value: 'accepted', color: '#00AA00' },
-        { label: 'Rejected', value: 'rejected', color: '#FF0000' },
-        { label: 'Expired', value: 'expired', color: '#666666' },
+        { label: 'Draft', value: 'draft', color: '#999999', default: true, kind: 'open' },
+        { label: 'In Review', value: 'in_review', color: '#FFA500', kind: 'open' },
+        { label: 'Presented', value: 'presented', color: '#4169E1', kind: 'open' },
+        { label: 'Accepted', value: 'accepted', color: '#00AA00', kind: 'won', visibleWhen: P`has(record.created_at)` },
+        { label: 'Rejected', value: 'rejected', color: '#FF0000', kind: 'lost', visibleWhen: P`has(record.created_at)` },
+        { label: 'Expired', value: 'expired', color: '#666666', kind: 'lost', visibleWhen: P`has(record.created_at)` },
       ],
       required: true,
       storage: { notNull: true },
@@ -329,6 +341,22 @@ export const Quote = ObjectSchema.create({
     { fields: ['quote_date'] },
   ],
   
+  // A settled quote (Accepted, Rejected, Expired) offers no Edit (#2366 row 2).
+  // `quote_workflow` (`quote.hook.ts`) refuses a user's edit of one, so the
+  // button only led to a form that was refused at save. The guard is the
+  // hook's; this is the courtesy half. What a settled quote still takes —
+  // Internal Notes, and a Rejected quote's move back to Draft — stays open to
+  // the API, and the move is the `revise_quote` action
+  // (`src/revenue/actions/quote.actions.ts`). The predicate is total: an
+  // absent status (the page's first render) offers Edit, as before. The same
+  // predicate gates New on the quote's line items, in
+  // `quote_line_item.object.ts`. Pinned in `test/quote-settled-actions.test.ts`.
+  userActions: {
+    edit: {
+      visibleWhen: P`!(has(record.status) && (record.status == "accepted" || record.status == "rejected" || record.status == "expired"))`,
+    },
+  },
+
   // Enable advanced features
   // API surface. History → Field.trackHistory (ADR-0052).
   enable: {

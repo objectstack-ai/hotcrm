@@ -83,6 +83,17 @@ export const commerce: Record<string, ObjectTranslationData> = {
       quote_terms: { label: '条款' },
       addresses_and_notes: { label: '地址与备注' },
     },
+    _actions: {
+      submit_quote_for_review: { label: '提交审核', successMessage: '报价单 {{ record.display_title }} 已提交审核。' },
+      mark_quote_presented: { label: '标记为已提交', successMessage: '报价单 {{ record.display_title }} 已标记为已提交。' },
+      accept_quote: {
+        label: '接受',
+        confirmText: '接受此报价？报价将被冻结，其商机关闭为赢单，并起草一份合同。',
+        successMessage: '报价单 {{ record.display_title }} 已接受。',
+      },
+      reject_quote: { label: '拒绝', successMessage: '报价单 {{ record.display_title }} 已拒绝。修订后可重新报价。' },
+      revise_quote: { label: '修订', successMessage: '报价单 {{ record.display_title }} 已退回草稿。' },
+    },
   },
   crm_quote_line_item: {
     _validations: {

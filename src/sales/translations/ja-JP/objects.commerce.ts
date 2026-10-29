@@ -83,6 +83,17 @@ export const commerce: Record<string, ObjectTranslationData> = {
       quote_terms: { label: '契約条件' },
       addresses_and_notes: { label: '住所と備考' },
     },
+    _actions: {
+      submit_quote_for_review: { label: 'レビューに提出', successMessage: '見積 {{ record.display_title }} をレビューに提出しました。' },
+      mark_quote_presented: { label: '提示済みにする', successMessage: '見積 {{ record.display_title }} を提示済みにしました。' },
+      accept_quote: {
+        label: '承認',
+        confirmText: 'この見積を承認しますか？見積は凍結され、商談は受注でクローズされ、契約が起案されます。',
+        successMessage: '見積 {{ record.display_title }} を承認しました。',
+      },
+      reject_quote: { label: '却下', successMessage: '見積 {{ record.display_title }} を却下しました。改訂して新しい提案ができます。' },
+      revise_quote: { label: '改訂', successMessage: '見積 {{ record.display_title }} を下書きに戻しました。' },
+    },
   },
   crm_quote_line_item: {
     _validations: {

@@ -125,6 +125,10 @@ const RUNTIME_TEST_FILES = [
   // flow door over every campaign status, the system-write and no-move
   // controls, the moving edits, and the lowered body.
   'campaign-member-direct-create-gates.test.ts',
+  // #2371 row 6 — `contract_drafted_notice`: a quote accepted on the booted
+  // app drafts a contract and the accepting rep gets one inbox notice; a
+  // contract written by hand gets none.
+  'contract-drafted-notice.test.ts',
 ];
 
 /**

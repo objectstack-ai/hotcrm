@@ -68,9 +68,31 @@ const EXPECTED: Array<[string, string, Record<string, string>]> = [
     'status',
     { not_started: 'open', in_progress: 'open', waiting: 'open', completed: 'won', deferred: 'open' },
   ],
+  // #2366 row 10. A Rejected or Expired quote is lost, as an unsubscribed member
+  // and an aborted campaign are; an Archived article is retired, not published.
+  [
+    'crm_quote',
+    'status',
+    { draft: 'open', in_review: 'open', presented: 'open', accepted: 'won', rejected: 'lost', expired: 'lost' },
+  ],
+  [
+    'crm_campaign_member',
+    'status',
+    { sent: 'open', responded: 'open', converted: 'won', unsubscribed: 'lost' },
+  ],
+  [
+    'crm_campaign',
+    'status',
+    { planning: 'open', in_progress: 'open', completed: 'won', aborted: 'lost' },
+  ],
+  [
+    'crm_knowledge_article',
+    'status',
+    { draft: 'open', in_review: 'open', published: 'won', archived: 'lost' },
+  ],
 ];
 
-describe('lifecycle kind on status options (#2326)', () => {
+describe('lifecycle kind on status options (#2326, #2366)', () => {
   it.each(EXPECTED)('%s.%s declares the ruled kind on every option', (objectName, field, expected) => {
     expect(kindsOf(objectName, field)).toStrictEqual(expected);
   });

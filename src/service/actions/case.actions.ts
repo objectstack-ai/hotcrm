@@ -108,3 +108,36 @@ export const ClaimCaseAction: Action = {
   successMessage: 'Case claimed — it is yours now.',
   refreshAfter: true,
 };
+
+/**
+ * Reopen Case (#2366 row 8) — a resolved or closed case back to In Progress,
+ * the one move `case_status_progression` (`case.object.ts`) allows out of
+ * either. Before this the move was Edit and the Status dropdown.
+ *
+ * A declarative update, as `complete_task` (`src/sales/actions/task.actions.ts`)
+ * is and for its reason: the platform's action door writes the patch AS THE
+ * CALLER, so the case's permissions and sharing judge it as they judge the same
+ * status set by Edit, and `case_sla_defaults` derives `is_closed` back to
+ * false on the same write. The patch is the status alone.
+ *
+ * What a reopen does to the SLA is NOT changed here, only stated (the Service
+ * Manual, `src/service/docs/crm_service_cases.md`): the case keeps the SLA Due
+ * Date it had, the clock is not restarted, a breach already recorded stays
+ * recorded, and a reopened case past its due date is overdue live work again.
+ * `test/case-reopen-action.test.ts` reads each of those back after a real run.
+ *
+ * Offered by the grant Escalate Case and Close Case read (see the header): a
+ * reopen edits the case. No `confirmText`: closing it again undoes it.
+ */
+export const ReopenCaseAction: Action = {
+  name: 'reopen_case',
+  label: 'Reopen Case',
+  objectName: 'crm_case',
+  icon: 'rotate-ccw',
+  operation: 'update',
+  patch: { status: 'in_progress' },
+  locations: ['record_header'],
+  visible: P`has(record.status) && (record.status == "resolved" || record.status == "closed") && current_user.can("crm_case", "edit")`,
+  successMessage: 'Case {{ record.display_title }} reopened.',
+  refreshAfter: true,
+};

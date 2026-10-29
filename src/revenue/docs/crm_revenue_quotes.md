@@ -57,6 +57,28 @@ stateDiagram-v2
   rejected --> draft
 ```
 
+### Moving a quote along
+
+Each arrow you take by hand has a button on the quote, shown only on the
+statuses it leaves from: **Submit for Review** on a Draft, **Mark Presented** on
+a quote In Review, **Accept** on a Presented quote, **Reject** on a quote In
+Review or Presented, and **Revise** (back to Draft) on a quote In Review or
+Rejected. **Accept** asks first, because it cannot be walked back from the
+quote: it freezes the quote, closes its opportunity as won and drafts a
+contract. The buttons are offered to whoever may edit the quote. The move to
+**Expired** has no button; the daily job below makes it.
+
+A new quote starts as **Draft**, **In Review** or **Presented**. The New form
+does not offer Accepted, Rejected or Expired, and a save that creates a quote at
+one of them is refused.
+
+### Settled quotes
+
+An **Accepted**, **Rejected** or **Expired** quote is settled. It shows no
+**Edit**, and its line items show no **New**. Only its **Internal Notes** can
+still be changed. A **Rejected** quote is reworked by clicking **Revise**: it goes
+back to **Draft**, where its fields and lines can be edited again.
+
 ## When a quote is accepted
 
 Accepting a quote wins its opportunity and drafts a **contract** from it. A

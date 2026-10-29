@@ -137,6 +137,10 @@ export const service: Record<string, ObjectTranslationData> = {
         label: 'ケースを引き受ける',
         successMessage: 'ケースを引き受けました。担当者はあなたです。',
       },
+      reopen_case: {
+        label: 'ケースを再オープン',
+        successMessage: 'ケース {{ record.display_title }} を再オープンしました。',
+      },
     },
   },
   crm_knowledge_article: {

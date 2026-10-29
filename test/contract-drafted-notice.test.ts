@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { VerifyStack } from '@objectstack/verify';
-import { AUTO_DRAFTED_PREFIX } from '../src/sales/flows/contract-drafted-notice.flow';
+import { AUTO_DRAFTED_PREFIX, ContractDraftedNoticeFlow } from '../src/sales/flows/contract-drafted-notice.flow';
 import { REPO_ROOT } from './helpers/repo-root';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
@@ -43,6 +43,8 @@ describe('the trigger reads the sentence the hook writes', () => {
 
 describe('the rep who accepts a quote is told its contract was drafted (#2371 row 6)', () => {
   it('one inbox notice, linking the drafted contract by its number', async () => {
+    // The flow under test, by the name the runtime-coverage guard reads.
+    expect(ContractDraftedNoticeFlow.name).toBe('contract_drafted_notice');
     const create = async (object: string, doc: Rec) =>
       String((await verify.hooks.run(object, 'insert', doc, { as: rep.token })).id);
     const account = await create('crm_account', { name: 'Drafted Notice Co' });

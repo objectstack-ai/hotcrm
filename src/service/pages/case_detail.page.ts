@@ -68,9 +68,12 @@ export const CaseDetailPage: Page = {
             // draws three buttons inline and folds the rest into ⋯: on an
             // ownerless case claiming is the gesture, and on an owned one it
             // is hidden, so the inline three stay escalate / close / call.
+            // `reopen_case` (#2366 row 8) goes second for the same reason: it
+            // shows only on a resolved or closed case, where reopening is the
+            // gesture, and on an open case the inline three are unchanged.
             // `test/action-references.test.ts` holds this list to every
             // crm_case action placed at `record_header`.
-            actions: ['claim_case', 'escalate_case', 'close_case', 'log_call', 'log_meeting', 'schedule_meeting'],
+            actions: ['claim_case', 'reopen_case', 'escalate_case', 'close_case', 'log_call', 'log_meeting', 'schedule_meeting'],
           },
         },
         {

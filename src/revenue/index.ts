@@ -2,6 +2,9 @@
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
+import {
+  SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
+} from './actions/index.js';
 import { CrmRevenueManual } from './books/index.js';
 import { RevenueEmailTemplates } from './email-templates/index.js';
 import { ProductDataset } from './datasets/index.js';
@@ -145,6 +148,10 @@ export const createHotCrmRevenueStack = (
   objects: [OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem],
   hooks: revenueHooks,
   views: [ProductViews, QuoteViews],
+  // The quote's lifecycle steps (#2366 row 9), authored against `crm_quote`.
+  actions: [
+    SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
+  ],
   flows: revenueFlows,
   datasets: [ProductDataset],
   emailTemplates: RevenueEmailTemplates,

@@ -64,9 +64,11 @@ describe('freeze refusals use the labels the user sees (#2338 item 12)', () => {
     // second copy would be read by neither assertion below.
     expect(source.match(/STATUS_LABELS\s*=/g)).toHaveLength(1);
     const statuses = table(source, 'STATUS_LABELS');
-    expect(statuses.map(([k]) => k).sort()).toEqual(['accepted', 'expired']);
+    expect(statuses.map(([k]) => k).sort()).toEqual(['accepted', 'expired', 'rejected']);
     for (const [value, label] of statuses) expect(label, value).toBe(optionLabel(Quote, 'status', value));
     expect(source).toContain(`only its ${fieldLabel(Quote, 'internal_notes')} can still be edited`);
+    // A Rejected quote's own sentence (#2366): the way out, then the one field.
+    expect(source).toContain(`only its ${fieldLabel(Quote, 'internal_notes')} can be edited`);
   });
 
   it('contract_validation: the end date', () => {
