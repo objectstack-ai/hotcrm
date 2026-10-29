@@ -450,8 +450,8 @@ describe('quote_workflow refuses an acceptance the deal’s approval holds (#201
    * Each state is measured both ways on twin deals: the rep closing one by
    * hand is the control, and the acceptance on the other must be refused in
    * exactly the same states. These deals sit under the large-deal line, where a
-   * `rejected` Large Deal Approval holds nothing; over it, it does (#2334, the
-   * case below the table).
+   * `rejected` Large Deal Approval holds nothing; over it, every verdict but
+   * `approved` does (#2334, #2350, the cases below the table).
    */
   it.each([
     ['the shipped default', {}, false],
@@ -499,6 +499,38 @@ describe('quote_workflow refuses an acceptance the deal’s approval holds (#201
     expect((await stored('crm_quote', quote.id)).status).toBe('presented');
     expect((await stored('crm_opportunity', deal.id)).stage).toBe('negotiation');
     expect(await verify.rows('crm_contract', { crm_opportunity: deal.id })).toHaveLength(0);
+  });
+
+  it('a large deal no request holds (a recall’s or an import’s Not Required): the acceptance is refused exactly as the rep’s own close-won is (#2350)', async () => {
+    const verdict = 'not_required';
+    // Seeded at the verdict: a seed write fires no record flow, so no request
+    // opens and nothing locks the deal (a later system update would fire it).
+    const unsent = async (): Promise<Rec> => dealOf({ stage: 'negotiation', amount: LARGE_DEAL_AMOUNT, approval_status: verdict });
+    const twin = await unsent();
+    expect((await stored('crm_opportunity', twin.id)).approval_status ?? null, 'fixture: the seed did not keep the verdict').toBe(verdict);
+    expect(await refusalOf(repUpdates('crm_opportunity', twin.id, { stage: 'closed_won', win_reason: 'better_price' })),
+      'the control is off: the rep closed an unapproved large deal won').toMatchObject({ code: 'RECORD_LOCKED', status: 409 });
+
+    const deal = await unsent();
+    const quote = await presentedOn(deal);
+    const refusal = await refusalOf(repUpdates('crm_quote', quote.id, { status: 'accepted' }));
+    expect(refusal, 'a quote on an unapproved large deal was accepted').toMatchObject({ code: 'RECORD_LOCKED', status: 409 });
+    expect(String(refusal!.message)).toContain('Approval Status is Not Required');
+    // Nothing is pending, so the way on is a save of the deal, not a wait.
+    expect(String(refusal!.message)).toContain('Save the opportunity to send it for approval');
+    await new Promise((r) => setTimeout(r, 400));
+    expect((await stored('crm_quote', quote.id)).status).toBe('presented');
+    expect((await stored('crm_opportunity', deal.id)).stage).toBe('negotiation');
+    expect(await verify.rows('crm_contract', { crm_opportunity: deal.id })).toHaveLength(0);
+  });
+
+  it('an APPROVED large deal: the acceptance goes through and closes it won (#2350)', async () => {
+    const deal = await dealOf({ stage: 'negotiation', amount: LARGE_DEAL_AMOUNT, approval_status: 'approved' });
+    const quote = await presentedOn(deal);
+    const refusal = await refusalOf(repUpdates('crm_quote', quote.id, { status: 'accepted' }));
+    expect(refusal, `an approved large deal's quote was refused: ${String(refusal?.message)}`).toBeNull();
+    await vi.waitFor(async () => expect((await stored('crm_opportunity', deal.id)).stage).toBe('closed_won'),
+      { timeout: 10_000, interval: 50 });
   });
 });
 

@@ -69,7 +69,7 @@ Total Price    = Subtotal − Discount + Tax + Shipping & Handling
 - **到期日期必須晚於報價日期**——不能建立即到期的報價。
 - **折扣不能超過 60%。** 這是一條硬上限，不是提醒：**折扣 %** 高於 60 的報價在儲存時就會被拒絕，報錯 *"Discount cannot exceed 60%"*。沒有任何審批能放行它——該怎麼辦見下面的[折扣上限](#折扣上限)。（超過 100% 的折扣本來就不可能——欄位本身只接受 0–100。）
 - **單行也不能超過 60%。** 同一條上限、同一個 60，也作用在每個行項目自己的**折扣 %** 上：超限的行在儲存時被拒絕，報錯 *"Line discount cannot exceed 60%"*。兩個數都得管，因為報價的總額是把它們**先後**用兩次的——先按行折扣算出各行金額，加總之後再減去報價層級的百分比。所以一份報價層級折扣寫著 0%、每一行卻打一折的報價，實際就是一折成交，而報價層級那條規則完全挑不出毛病。
-- **商機被審批卡住時，報價不能被接受。** 接受一份報價就會把它的商機推進為*成交*，所以當這筆交易還在等大額審批（**Approval Status** 為 *Pending*）時，或者金額 $100K 及以上的交易大額審批被駁回（**Approval Status** 為 *Rejected*）時——或者在管理員啟用了狀態變更審批、立項審批的部署裡，當 **Status Change Approval** 或 **Qualification Approval** 為 *Pending* 或 *Rejected* 時——把報價改為*已接受*的那次儲存會被拒絕，報錯會點名卡住這筆交易的那項審批（例如 *"Approval Status is Pending"*）。其他什麼都不會變：報價仍是*已提交*，商機保持原階段，也不會起草合約。等那項審批核准之後再記錄接受。
+- **商機被審批卡住時，報價不能被接受。** 接受一份報價就會把它的商機推進為*成交*，所以當這筆交易還在等大額審批（**Approval Status** 為 *Pending*）時，或者金額 $100K 及以上的交易尚未獲批（**Approval Status** 為 *Rejected*，或撤回、匯入之後的 *Not Required*；見[大額商機的成交](/zh-Hant/docs/revenue/approvals#closing-a-large-deal-won)）時——或者在管理員啟用了狀態變更審批、立項審批的部署裡，當 **Status Change Approval** 或 **Qualification Approval** 為 *Pending* 或 *Rejected* 時——把報價改為*已接受*的那次儲存會被拒絕，報錯會點名卡住這筆交易的那項審批（例如 *"Approval Status is Pending"*）；如果是一筆還沒有任何請求的大額交易，報錯會提示你先儲存商機以送審。其他什麼都不會變：報價仍是*已提交*，商機保持原階段，也不會起草合約。等那項審批核准之後再記錄接受。
 
 ## 自動發生的事
 

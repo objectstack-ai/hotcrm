@@ -62,13 +62,25 @@ The process uses **first-response** behavior — the first approver to respond a
 - The run ends immediately as rejected — a reject at the Manager tier never reaches the Director.
 - `approval_status` is stamped **rejected** and the owner is notified to revise and resubmit.
 - The deal is unlocked so the owner can revise it, and **the next save sends it for approval again** as a new request.
-- Until a later request is approved, a deal of $100K or more whose approval was rejected **cannot be closed won**: moving it to *Closed Won*, or accepting a quote on it, is refused. Closing it as lost is still allowed.
+- Until a later request is approved, the deal **cannot be closed won** (see [Closing a large deal won](#closing-a-large-deal-won)). Closing it as lost is still allowed.
 
 ### ↩️ Recalled
 - While a request is pending, the person who submitted it can withdraw it with **Recall** on the request.
 - The deal is unlocked and goes back to the approval status it had before that request, and no new request opens.
-- As after a rejection, the next save sends the deal for approval again. A recalled resubmission is still *rejected*, so it still cannot be closed won.
+- As after a rejection, the next save sends the deal for approval again. A recalled deal cannot be closed won either, whichever status it went back to.
 - The rejection is captured in the approval request's history.
+
+## Closing a large deal won
+
+A deal of $100K or more is won only once it is approved. Moving it to *Closed Won* is refused unless its **Approval Status** is **Approved**, whatever else it says:
+
+- **Pending**: the request is still open.
+- **Rejected**: an approver said no.
+- **Not Required**: no request holds the deal. That is the state after a recall, on a deal that was imported, or on a deal raised over the line in the same save that closes it.
+
+The way forward is the same in every case: save the deal without closing it, which sends it for approval, then close it once approved. Accepting a quote closes its deal as won, so a quote on such a deal cannot be accepted either. Closing the deal as lost needs no approval.
+
+> **Known limit.** The rule does not know whether the *Large Deal Approval* flow is switched on: an administrator switches a packaged flow off in a ledger that a sales user's save cannot read. If the flow is switched off, no deal of $100K or more can be closed won by hand, because nothing can approve it.
 
 ## Record locking
 
@@ -132,7 +144,7 @@ The three names this page used to list — *Pending My Approval*, *Submitted by 
 
 - ✅ **Mind the thresholds** — an amount of $100K or more (and especially over $500K) will auto-launch approval the moment you save. A deal priced at exactly $100,000 is on the approval side of the line. Plan for the review window before promising a close date.
 - ✅ **Get the deal right before saving at or above the threshold** — the record locks while a tier is pending; you can't tweak it mid-review.
-- ✅ **Watch for the rejection notification** — a reject ends the run and unlocks the deal; revise it and save again to re-submit. A rejected large deal cannot be closed won until a new request is approved.
+- ✅ **Watch for the rejection notification** — a reject ends the run and unlocks the deal; revise it and save again to re-submit. A large deal cannot be closed won until a request is approved.
 
 ## Tips for managers
 

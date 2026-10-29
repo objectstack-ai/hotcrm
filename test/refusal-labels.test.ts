@@ -93,3 +93,24 @@ describe('freeze refusals use the labels the user sees (#2338 items 14 and 15)',
     for (const [value, label] of stages) expect(label, value).toBe(optionLabel(Opportunity, 'stage', value));
   });
 });
+
+describe('the large-deal close-won refusal uses the labels the user sees (#2350)', () => {
+  it('opportunity_lifecycle: the stage, the verdict field and every verdict that refuses', () => {
+    const source = lowered('opportunity_lifecycle');
+    const verdicts = table(source, 'VERDICT_LABELS');
+    // Every verdict but `approved` refuses, so the table names exactly those.
+    expect(verdicts.map(([k]) => k).sort()).toEqual(['not_required', 'pending', 'rejected']);
+    for (const [value, label] of verdicts) expect(label, value).toBe(optionLabel(Opportunity, 'approval_status', value));
+    expect(source).toContain(`and its ${fieldLabel(Opportunity, 'approval_status')} is \${shown}`);
+    expect(source).toContain(`before it can be ${optionLabel(Opportunity, 'stage', 'closed_won')}`);
+  });
+
+  it('quote_workflow: the deal verdicts its acceptance mirror names', () => {
+    const source = lowered('quote_workflow');
+    const values = table(source, 'VALUE_LABELS');
+    expect(values.map(([k]) => k).sort()).toEqual(['not_required', 'pending', 'rejected']);
+    for (const [value, label] of values) expect(label, value).toBe(optionLabel(Opportunity, 'approval_status', value));
+    // The lowered body is reprinted, so the quote style is not the source's.
+    expect(source).toMatch(new RegExp(`\\[\\s*['"]approval_status['"],\\s*['"]${fieldLabel(Opportunity, 'approval_status')}['"]\\s*\\]`));
+  });
+});

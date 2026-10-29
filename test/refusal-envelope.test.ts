@@ -333,6 +333,20 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
     expectEnvelope(err, 'locked', 'opportunity_lifecycle', /is closed \(closed_won\)/, /is closed \(Closed Won\); only its Description and Next Steps can still be edited\.$/);
   });
 
+  it('locked — opportunity_lifecycle refuses a large close-won its approval has not granted (#2350)', async () => {
+    const err = await refusalFrom(oppGuard, {
+      event: 'beforeUpdate',
+      input: { id: row.opportunity, stage: 'closed_won', amount: 150000 },
+      previous: { id: row.opportunity, name: 'Big Deal', stage: 'proposal', amount: 100, approval_status: 'not_required' },
+      as: rep.token,
+    });
+    expectEnvelope(
+      err, 'locked', 'opportunity_lifecycle',
+      /moves to closed_won only once approval_status is approved; amount is 150000, approval_status is not_required\.$/,
+      /^A deal of 100,000 or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is Not Required\. Save the deal without closing it to send it for approval;/,
+    );
+  });
+
   it('locked — lead_automation freezes a converted lead', async () => {
     const err = await refusalFrom(leadGuard, {
       event: 'beforeUpdate',
@@ -466,6 +480,20 @@ describe('the same envelope on the in-process path (#1075)', () => {
       'locked',
       /is closed \(closed_won\)/,
       /is closed \(Closed Won\); only its Description and Next Steps can still be edited\.$/,
+    );
+  });
+
+  it('locked — the large-deal close-won in opportunity_lifecycle (#2350)', async () => {
+    // Seeded over the line: a seed write fires no record flow, so the deal
+    // stands at `not_required` with no request — a recall's or an import's state.
+    const [opp] = await verify.seed('crm_opportunity', [{
+      name: `Large Deal ${++k}`, crm_account: row.account, stage: 'proposal', amount: 150000, close_date: today(), owner_id: rep.id,
+    }]);
+    expectInProcess(
+      await inProcess('crm_opportunity', 'update', { id: opp!.id, stage: 'closed_won', win_reason: 'better_price' }),
+      'locked',
+      /approval_status is not_required\.$/,
+      /and its Approval Status is Not Required\. Save the deal without closing it to send it for approval;/,
     );
   });
 

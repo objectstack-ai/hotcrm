@@ -26,8 +26,9 @@ import { hotcrmStack, signUpPerson, systemUpdate, conditionHolds as holdsOn, typ
  * save: the platform writes the end of a request (recall, reject) onto a deal
  * that was `pending` a moment before, and nothing else does. From `rejected`,
  * the next save is the resubmission. `opportunity_lifecycle` refuses a user's
- * move to `closed_won` while the verdict is `pending` or `rejected` at or above
- * `LARGE_DEAL_AMOUNT`, with the sibling gates' envelope.
+ * move to `closed_won` at or above `LARGE_DEAL_AMOUNT` unless the verdict is
+ * `approved` (#2350, ruling B: `pending`, `rejected`, `not_required` and an
+ * unset verdict alike), with the sibling gates' envelope.
  */
 
 type Rec = Record<string, any>;
@@ -201,6 +202,87 @@ describe('closing won — opportunity_lifecycle refuses a large deal its approva
     await act(id, manager, 'reject');
     await expect(systemUpdate(verify, 'crm_opportunity', { id, stage: 'closed_won', win_reason: 'best_fit' })).resolves.toBeTruthy();
   });
+});
+
+/**
+ * #2350, ruling B: a deal at or over the line is won only once its approval
+ * is `approved`. Before it, the refusal held `pending` and `rejected` only, and
+ * a rep alone could still win a large deal with no approval by two routes:
+ * recall the request and close, or raise the amount and close in one save.
+ */
+describe('closing won at or over the line needs an APPROVED verdict (#2350)', () => {
+  const expectLocked = (err: Rec | null, what: string): void => {
+    expect(err, what).toBeTruthy();
+    expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
+  };
+
+  it('recall, then close won: refused, and the deal stays open and handed back', async () => {
+    const id = await dealInApproval();
+    await act(id, rep, 'recall');
+    expect((await stored(id)).approval_status, 'fixture: the recall hands the deal back').toBe('not_required');
+    expectLocked(await refusalOf(closeWon(id)), 'a recalled large deal closed won with no approval');
+    const after = await stored(id);
+    expect(after.stage).toBe('proposal');
+    expect(after.approval_status).toBe('not_required');
+  });
+
+  it('raise the amount over the line and close won in ONE save: refused, and nothing of the save is stored', async () => {
+    const [deal] = await verify.seed('crm_opportunity', [{
+      name: `Raise And Close ${++k}`, stage: 'proposal', amount: 42_000, close_date: '2030-06-30',
+      crm_account: accountId, owner_id: rep.id,
+    }]);
+    const id = String(deal!.id);
+    expect((await stored(id)).approval_status, 'fixture: a deal under the line needs no approval').toBe('not_required');
+    expectLocked(
+      await refusalOf(verify.hooks.run('crm_opportunity', 'update', {
+        id, amount: LARGE_DEAL_AMOUNT, stage: 'closed_won', win_reason: 'best_fit',
+      }, as(rep))),
+      'a deal raised over the line closed won in the same save',
+    );
+    await settle();
+    expect(await stored(id)).toMatchObject({ stage: 'proposal', amount: 42_000, approval_status: 'not_required' });
+    expect(await requests(id), 'the refused save opened a request').toHaveLength(0);
+  });
+
+  it('a large deal no request ever held (a seed or an import): refused, and a save that leaves it open sends it for approval', async () => {
+    // A seed write fires no record flow, so the deal stands at the default.
+    const [deal] = await verify.seed('crm_opportunity', [{
+      name: `Imported Large ${++k}`, stage: 'negotiation', amount: 250_000, close_date: '2030-06-30',
+      crm_account: accountId, owner_id: rep.id,
+    }]);
+    const id = String(deal!.id);
+    expect((await stored(id)).approval_status).toBe('not_required');
+    expectLocked(await refusalOf(closeWon(id)), 'an imported large deal closed won with no approval');
+    // The way forward the refusal names: save the deal without closing it.
+    await verify.hooks.run('crm_opportunity', 'update', { id, next_step: 'Send for approval' }, as(rep));
+    await vi.waitFor(async () => expect(await pending(id), 'the save did not send the deal for approval').toHaveLength(1),
+      { timeout: 15_000, interval: 100 });
+  });
+
+  it('an approved large deal closes won', async () => {
+    const id = await dealInApproval(LARGE_DEAL_AMOUNT);
+    await act(id, manager, 'approve');
+    expect((await stored(id)).approval_status).toBe('approved');
+    await expect(closeWon(id)).resolves.toBeTruthy();
+    expect((await stored(id)).stage).toBe('closed_won');
+  });
+
+  it.each([['not_required'], ['pending'], ['rejected'], ['approved'], [null]] as const)(
+    'a deal under the line closes won as before, whatever its verdict (%s)',
+    async (verdict) => {
+      const [deal] = await verify.seed('crm_opportunity', [{
+        name: `Small Deal ${++k}`, stage: 'proposal', amount: LARGE_DEAL_AMOUNT - 1, close_date: '2030-06-30',
+        crm_account: accountId, owner_id: rep.id,
+      }]);
+      const id = String(deal!.id);
+      // The verdict column is readonly, so the fixture writes it as the system;
+      // no request is opened, so nothing locks the record.
+      await systemUpdate(verify, 'crm_opportunity', { id, approval_status: verdict });
+      expect((await stored(id)).approval_status ?? null).toBe(verdict);
+      await expect(closeWon(id)).resolves.toBeTruthy();
+      expect((await stored(id)).stage).toBe('closed_won');
+    },
+  );
 });
 
 describe('opportunity_approval — start condition, as a truth table', () => {
