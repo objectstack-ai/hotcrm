@@ -209,10 +209,14 @@ describe('the gate still stands where #1017 put it', () => {
     expect(after!.crm_contact).toBe(quote.crm_contact);
   });
 
-  it('refuses a quote born accepted with no contact (an insert has no previous row)', async () => {
+  // Born PRESENTED, not accepted: since #2366 a user cannot create a quote as
+  // Accepted at all (`quote_workflow` refuses it before this rule is reached,
+  // pinned in `test/quote-settled-actions.test.ts`), so presented is the
+  // insert this gate still judges.
+  it('refuses a quote born presented with no contact (an insert has no previous row)', async () => {
     const { account } = await build('draft');
     const res = await rest('POST', '/data/crm_quote', {
-      name: `EQ-${k}-born`, status: 'accepted', crm_account: account.id,
+      name: `EQ-${k}-born`, status: 'presented', crm_account: account.id,
       quote_date: '2026-01-01', expiration_date: '2030-12-31',
     });
     expectContactRequired(res);

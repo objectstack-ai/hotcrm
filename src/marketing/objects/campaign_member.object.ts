@@ -277,7 +277,7 @@ export const CampaignMember = ObjectSchema.create({
     // (#2320 Marketing S7). A `readonly` value is stripped from a user's write
     // before the hook runs, and the hook's own stamp on the same write is
     // kept (the engine strips caller keys, not what a `before*` hook sets), so
-    // the derivation is unchanged. `test/campaign-member-lifecycle.test.ts`.
+    // the derivation is unchanged. `test/campaign-metric-fields-readonly.test.ts`.
     response_date: Field.datetime({
       label: 'Response Date',
       group: 'response',

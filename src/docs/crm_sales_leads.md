@@ -77,4 +77,8 @@ opportunity (and for its name and amount). On confirm, the system creates:
 - optionally an **Opportunity** with the name/amount you entered.
 
 You don't re-key anything — company and contact details carry over from the lead.
+
+A converted lead is locked: its page shows no **Edit**, and its fields cannot be
+changed inline. Its **Conversion** section links to the account, contact and
+opportunity it became; keep working there.
 What happens to the deal next is in [Opportunities](./crm_sales_opportunities.md).
