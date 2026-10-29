@@ -28,7 +28,11 @@ export const Quote = ObjectSchema.create({
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
   searchableFields: ['name', 'quote_number'],
-  highlightFields: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
+  // The record header's strip (#2369 row 5): the title already reads
+  // "QTE-0003 - Name", so the strip carries what it does not. The quote panels
+  // on an account, a contact and an opportunity keep their old columns through
+  // `relatedListColumns` on the three lookups below.
+  highlightFields: ['crm_account', 'crm_opportunity', 'status', 'total_price', 'expiration_date'],
 
   fieldGroups: [
     { key: 'basic',     label: 'Quote Information', icon: 'info' },
@@ -86,11 +90,13 @@ export const Quote = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
+      relatedListColumns: ['quote_number', 'name', 'status', 'total_price'],
     }),
     
     crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
       group: 'basic',
+      relatedListColumns: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
       // A TRANSITION GATE, not an invariant (#1017, narrowed by #2161; AGENTS.md
       // Metadata semantics rule 7). Optional at draft time. Required on the
       // write that takes the quote INTO `presented` or `accepted`, and on every
@@ -176,6 +182,7 @@ export const Quote = ObjectSchema.create({
       group: 'basic',
       // Scope opportunities to the quote's account (was dead referenceFilters).
       dependsOn: ['crm_account'],
+      relatedListColumns: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
     }),
 
 

@@ -22,7 +22,12 @@ export const Account = ObjectSchema.create({
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
   searchableFields: ['name', 'account_number', 'registration_number'],
-  highlightFields: ['account_number', 'name', 'type', 'owner_id'],
+  // The record header's strip (#2369 row 5): what the title does not say. The
+  // page header shows the name and `{industry} · {type}` (account_detail.page.ts),
+  // so the strip carries the number, the tier, the health, the revenue and the
+  // owner. The child-account panel keeps its old columns through
+  // `relatedListColumns` on `parent_account`.
+  highlightFields: ['account_number', 'tier', 'health_score', 'annual_revenue', 'owner_id'],
   // The record's picture (#1199): the record chrome draws the logo beside the
   // title in every account page header. No logo, no picture: the platform
   // draws no placeholder or initials in its place.
@@ -546,6 +551,9 @@ export const Account = ObjectSchema.create({
       label: 'Parent Account',
       description: 'Parent company in hierarchy',
       group: 'ownership',
+      // The child-account panel's columns. Without them it falls back to
+      // `highlightFields` minus this lookup, which is the header strip.
+      relatedListColumns: ['account_number', 'name', 'type', 'owner_id'],
     }),
 
     // Boolean field

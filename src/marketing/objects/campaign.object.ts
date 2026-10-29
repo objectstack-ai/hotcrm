@@ -25,7 +25,10 @@ export const Campaign = ObjectSchema.create({
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
   searchableFields: ['name', 'campaign_code'],
-  highlightFields: ['campaign_code', 'name', 'type', 'status', 'start_date'],
+  // The record header's strip (#2369 row 5): the title already reads
+  // "CPG-0001 - Name". The Add to Campaign picker shows the same fields under
+  // each campaign, where the code used to repeat the title.
+  highlightFields: ['type', 'status', 'start_date', 'end_date', 'owner_id'],
 
   // Every other business object with a detail page groups its fields; campaign
   // was one of the two that did not, so its detail page fell back to one flat

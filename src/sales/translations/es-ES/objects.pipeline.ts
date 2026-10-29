@@ -90,7 +90,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       industry: { label: 'Industria' },
       mobile: { label: 'Móvil' },
       website: { label: 'Sitio Web' },
-      rating: { label: 'Puntuación de Prospecto', help: 'Puntuación de calidad del prospecto (1-5 estrellas)' },
+      rating: { label: 'Puntuación de Prospecto', help: 'Si se deja en blanco, el prospecto nuevo se puntúa automáticamente (1-5 estrellas) según el dominio del correo, el teléfono, el cargo, el sector y el tamaño de la empresa.' },
       next_followup_date: { label: 'Próxima Fecha de Seguimiento' },
       last_contacted_date: { label: 'Último Contacto' },
       need_type: {

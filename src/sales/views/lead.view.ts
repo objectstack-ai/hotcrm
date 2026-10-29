@@ -248,7 +248,10 @@ export const LeadViews = defineView({
         label: 'Contact Information',
         collapsible: true,
         collapsed: false,
-        columns: 2, // 2-column layout
+        // Three columns put Salutation, First Name and Last Name on one row
+        // (#2369 row 2). On two, Salutation took half a row and Last Name a
+        // whole one. The nine fields fill three rows exactly.
+        columns: 3,
         fields: [
           {
             field: 'salutation',
@@ -260,7 +263,6 @@ export const LeadViews = defineView({
           {
             field: 'last_name',
             required: true,
-            span: 'full',
           },
           'company',
           'title',

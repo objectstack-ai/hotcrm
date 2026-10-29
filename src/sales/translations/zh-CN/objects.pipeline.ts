@@ -84,7 +84,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       description: { label: '描述' },
       mobile: { label: '手机' },
       website: { label: '网站' },
-      rating: { label: '线索评分', help: '线索质量评分（1-5 星）' },
+      rating: { label: '线索评分', help: '留空时，新线索会根据邮箱域名、电话、职位、行业和公司规模自动评分（1-5 星）。' },
       converted_account: { label: '转化客户' },
       converted_contact: { label: '转化联系人' },
       converted_opportunity: { label: '转化商机' },

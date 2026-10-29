@@ -93,7 +93,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       description: { label: '説明' },
       mobile: { label: '携帯電話' },
       website: { label: 'Webサイト' },
-      rating: { label: 'リードスコア', help: 'リードの品質スコア（1〜5 段階）' },
+      rating: { label: 'リードスコア', help: '空欄のままにすると、新しいリードはメールのドメイン、電話番号、役職、業種、会社規模から自動で採点されます（1〜5 段階）。' },
       converted_account: { label: '変換後の取引先' },
       converted_contact: { label: '変換後の取引先責任者' },
       converted_opportunity: { label: '変換後の商談' },

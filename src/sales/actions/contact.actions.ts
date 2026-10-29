@@ -127,6 +127,10 @@ export const AddContactToCampaignAction: Action = {
 export const SendEmailAction: Action = {
   name: 'send_email',
   label: 'Send Email',
+  // The dialog's line under the title (#2369 row 3): who the email goes to.
+  // Without it the dialog read the platform's generic "Please provide the
+  // required information to continue." The holes read the clicked contact.
+  description: 'To: {{ record.full_name }} <{{ record.email }}>',
   objectName: 'crm_contact',
   icon: 'mail',
   // script, not modal: modal submits die on GET /api/v1/meta/object/<target>

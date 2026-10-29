@@ -224,6 +224,11 @@ export const CaseDetailPage: Page = {
                           // `page:accordion` does not. Nothing addresses these
                           // panels, so the identifier has nowhere to land.
                           label: 'Open Tasks',
+                          // Open on arrival (#2369 row 9): the tab's only
+                          // panel started shut, so the Related tab looked
+                          // empty. The renderer opens an item only on a strict
+                          // `collapsed === false` (see opportunity_detail.page.ts).
+                          collapsed: false,
                           children: [
                             {
                               type: 'record:related_list',
