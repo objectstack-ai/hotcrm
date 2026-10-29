@@ -200,9 +200,14 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
     const other = LEAVES.filter(
       (n) => n.type !== 'report' && n.visible !== undefined && sourceOf(n.visible) !== GATE,
     ).map((n) => n.id);
-    expect(other, 'entries gated on something else').toEqual(['nav_home']);
-    for (const id of other) {
-      expect(String(sourceOf(LEAVES.find((n) => n.id === id)?.visible)), id).toMatch(/^current_user\.can\("crm_opportunity", "read"\) && /);
+    expect(other, 'entries gated on something else').toEqual(['nav_home', 'nav_opportunity', 'nav_my_deals']);
+    expect(String(sourceOf(NAV[0].visible)), 'nav_home').toMatch(/^current_user\.can\("crm_opportunity", "read"\) && /);
+    // The two opportunity OBJECT entries ask the position half alone (#2367
+    // row 6): the console prunes an object entry by read access already.
+    for (const id of ['nav_opportunity', 'nav_my_deals']) {
+      expect(String(sourceOf(LEAVES.find((n) => n.id === id)?.visible)), id).toBe(
+        '!("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)',
+      );
     }
   });
 

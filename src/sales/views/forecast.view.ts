@@ -36,31 +36,22 @@ export const ForecastViews = defineView({
       { field: 'period_start',  order: 'desc' },
       { field: 'owner_id',         order: 'asc' },
     ],
-    // Newest period first, each under a heading a manager can read (#2060
-    // item 11, C-09). A grouping field orders its groups by its OWN value, and
-    // nothing else: the spec's `GroupingFieldSchema` is `field` / `order` /
-    // `collapsed`, with no key that orders one field's groups by another. So
-    // grouping on the text `period_label` sorted the periods as text ("Sep
-    // 2026 → Q4 2026 → Q4 2025 …"). Hence two levels:
+    // Newest period first, one heading per period, titled by its label (#2060
+    // item 11, then #2367 row 5). A grouping field orders its groups by its
+    // own value unless `orderBy` names another: grouping on the text
+    // `period_label` alone ran the periods as text ("Sep 2026 → Q4 2026 →
+    // Q4 2025 …"), so until 18.2.0 the view grouped twice, `period_start`
+    // then `period_label`, and every period drew two nested headings over one
+    // row. `orderBy` (objectstack#25786, in 18.2.0) places each label's group
+    // where its newest `period_start` falls, so one level does both jobs.
     //
-    //   • `period_start` desc puts the periods in time order. Its heading is
-    //     the stored date as the console draws a date key today: raw
-    //     (`2026-10-01`, measured on 18.0.0-next.5), not the column's "Oct 1".
-    //   • `period_label` names the period under it ("Q4 2026"). It cannot be
-    //     dropped: a quarter and the month that opens it start on the same
-    //     day (Q4 2026 and Oct 2026), so `period_start` alone would put a
-    //     quarter's row and a month's row under one heading. `desc` puts the
-    //     quarter's heading ahead of that month's ("Q" sorts after every
-    //     month that opens a quarter).
-    //
-    // The single-level form (one heading per period, ordered by
-    // `period_start`, titled by `period_label`) is not expressible in the
-    // spec today; it is a platform gap, reported on the card rather than
-    // routed around here (AGENTS.md "Scope").
+    // The label is the group key, not the date: a quarter and the month that
+    // opens it start on the same day (Q4 2026 and Oct 2026), and grouping by
+    // `period_start` would put both rows under one heading. Those two tie on
+    // the order key; their relative order is the platform's.
     grouping: {
       fields: [
-        { field: 'period_start', order: 'desc' },
-        { field: 'period_label', order: 'desc' },
+        { field: 'period_label', order: 'desc', orderBy: 'period_start' },
       ],
     },
     pagination: { pageSize: 50 },

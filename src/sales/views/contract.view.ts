@@ -73,6 +73,9 @@ export const ContractViews = defineView({
         startDateField: 'start_date',
         endDateField: 'end_date',
         titleField: 'contract_number',
+        // Opens at Quarter (#2367 row 4): a contract term runs a year or
+        // more, so the Day default showed one week of one bar.
+        viewMode: 'quarter',
       },
     },
 

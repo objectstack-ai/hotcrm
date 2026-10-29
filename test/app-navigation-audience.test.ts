@@ -59,7 +59,7 @@ const LEAVES: Rec[] = (() => {
   return walk(NAV);
 })();
 
-/** The six entries a rep no longer sees (#2244). Knowledge is not one of them. */
+/** The six entries a rep no longer sees (#2244). Knowledge was not one of them; it left with #2367 (its block below). */
 const SERVICE_ONLY = [
   'nav_service_dashboard', 'nav_case', 'nav_my_cases',
   'nav_report_cases_by_status', 'nav_report_sla', 'nav_report_cases_opened_by_day',
@@ -160,10 +160,8 @@ describe('a sales rep is not shown the service entries (#2244)', () => {
     }
   });
 
-  it.each(REPS)('%s is shown none of the six, and still Knowledge', (rep) => {
-    const shown = shownTo(rep);
-    expect(shown.filter((id) => SERVICE_ONLY.includes(id))).toEqual([]);
-    expect(shown).toContain('nav_knowledge');
+  it.each(REPS)('%s is shown none of the six', (rep) => {
+    expect(shownTo(rep).filter((id) => SERVICE_ONLY.includes(id))).toEqual([]);
   });
 
   it.each(['sales_manager', 'service_agent', 'service_manager', 'admin'])(
@@ -174,10 +172,12 @@ describe('a sales rep is not shown the service entries (#2244)', () => {
     },
   );
 
-  it('the two reps are shown the same sidebar: the sales manager\'s, less Home and the six', () => {
+  it('the two reps are shown the same sidebar: the sales manager\'s, less Home, the six and (#2367) Knowledge', () => {
     const manager = shownTo('sales_manager');
     for (const rep of REPS) {
-      expect(shownTo(rep), rep).toEqual(manager.filter((id) => id !== 'nav_home' && !SERVICE_ONLY.includes(id)));
+      expect(shownTo(rep), rep).toEqual(
+        manager.filter((id) => id !== 'nav_home' && id !== 'nav_knowledge' && !SERVICE_ONLY.includes(id)),
+      );
     }
   });
 });
@@ -255,10 +255,12 @@ describe('a service persona is not shown the opportunity dashboards and reports 
     expect(shownTo(persona).filter((id) => OPPORTUNITY_ONLY.includes(id))).toEqual([]);
   });
 
-  it.each(SERVICE)('%s is shown its old sidebar less the six, nothing else, and the object entries stay', (persona) => {
+  it.each(SERVICE)('%s is shown its old sidebar less the six, nothing else, and the other object entries stay', (persona) => {
     const shown = shownTo(persona);
     expect(shown).toEqual(shownTo(persona, BEFORE_2268).filter((id) => !OPPORTUNITY_ONLY.includes(id)));
-    expect(shown).toEqual(expect.arrayContaining(['nav_opportunity', 'nav_my_deals', 'nav_lead']));
+    // The object entries stayed with #2268. Two of them, Opportunities and My
+    // Deals, left with #2367 (its block below); the rest stay.
+    expect(shown).toEqual(expect.arrayContaining(['nav_lead', 'nav_account', 'nav_contact']));
   });
 
   it.each(SERVICE)('%s still lands on Service Overview', (persona) => {
@@ -269,6 +271,70 @@ describe('a service persona is not shown the opportunity dashboards and reports 
     const shown = shownTo(persona);
     expect(OPPORTUNITY_ONLY.filter((id) => !shown.includes(id))).toEqual([]);
     expect(shown).toEqual(shownTo(persona, BEFORE_2268));
+  });
+});
+
+/**
+ * Each persona's own work first (#2367, UX card 3, rows 1 and 6).
+ *
+ * Row 6: Opportunities and My Deals are not offered to the two service
+ * personas. They read opportunities through `crm_user` (#2231) and own none,
+ * so both lists were always empty for them; the entries now ask the position,
+ * as #2268 did for the opportunity dashboards and reports.
+ *
+ * Row 1: a rep's Service group held Knowledge alone, between Sales Home and
+ * Sales. Knowledge now asks the rep position too, so a rep is shown no entry
+ * of the group, and a group with no entry shown is not drawn (measured in the
+ * 18.2.0 console on the PR): the rep's sidebar runs Sales Home, then Sales.
+ *
+ * `BEFORE_2367` is the gates the three entries carried before: none.
+ */
+describe("each persona's own work first: service staff lose the empty deal lists, a rep the one-entry Service group (#2367)", () => {
+  const BEFORE_2367: Record<string, unknown> = { nav_opportunity: undefined, nav_my_deals: undefined, nav_knowledge: undefined };
+  const DEALS = ['nav_opportunity', 'nav_my_deals'];
+  const SERVICE = ['service_agent', 'service_manager'];
+  const OTHERS = ['sales_manager', 'admin', 'marketing_user'];
+  const ALL = [...PERSONAS, 'admin', 'marketing_user'];
+
+  /** The served groups, each with the ids of its entries. */
+  const GROUPS = NAV.filter((n) => n.type === 'group').map((g) => ({
+    id: g.id as string,
+    entries: ((g.children ?? []) as Rec[]).map((c) => c.id as string),
+  }));
+  /** The groups `persona` is shown at least one entry of. */
+  const groupsShownTo = (persona: string, before?: Record<string, unknown>): string[] => {
+    const shown = shownTo(persona, before);
+    return GROUPS.filter((g) => g.entries.some((id) => shown.includes(id))).map((g) => g.id);
+  };
+
+  it.each(SERVICE)('%s reads opportunities, and the gates before #2367 showed it both deal lists', (persona) => {
+    expect(who[persona]!.objects.crm_opportunity?.allowRead).toBe(true);
+    expect(DEALS.filter((id) => !shownTo(persona, BEFORE_2367).includes(id))).toEqual([]);
+  });
+
+  it.each(SERVICE)('%s is shown its old sidebar less the two deal lists, nothing else', (persona) => {
+    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2367).filter((id) => !DEALS.includes(id)));
+  });
+
+  it.each(REPS)('the gates before #2367 showed %s a Service group of Knowledge alone', (rep) => {
+    const before = shownTo(rep, BEFORE_2367);
+    const service = GROUPS.find((g) => g.id === 'group_service')!;
+    expect(service.entries.filter((id) => before.includes(id))).toEqual(['nav_knowledge']);
+  });
+
+  it.each(REPS)('%s is shown its old sidebar less Knowledge, and no Service group: Sales follows Sales Home', (rep) => {
+    expect(shownTo(rep)).toEqual(shownTo(rep, BEFORE_2367).filter((id) => id !== 'nav_knowledge'));
+    expect(groupsShownTo(rep)).not.toContain('group_service');
+    expect(groupsShownTo(rep)[0]).toBe('group_sales');
+    expect(shownTo(rep).slice(0, 2)).toEqual(['nav_sales_home', 'nav_lead']);
+  });
+
+  it.each(OTHERS)('%s is shown exactly the sidebar it was shown before', (persona) => {
+    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2367));
+  });
+
+  it.each(ALL)('%s lands where it landed before', (persona) => {
+    expect(shownTo(persona)[0]).toBe(shownTo(persona, BEFORE_2367)[0]);
   });
 });
 

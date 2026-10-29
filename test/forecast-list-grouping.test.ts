@@ -5,18 +5,19 @@ import { ForecastViews } from '../src/sales/views/forecast.view';
 import { Forecast } from '../src/sales/objects/forecast.object';
 
 /**
- * All Forecasts lists its periods newest first, each under a heading a manager
- * can read (#2060 item 11, C-09).
+ * All Forecasts lists its periods newest first, each under one heading a
+ * manager can read (#2060 item 11, then #2367 row 5).
  *
  * The list grouped by the TEXT `period_label`, descending, so the periods ran
  * as text: "Sep 2026 → Q4 2026 → Q4 2025 → Q3 2026 … → Oct 2026 → Aug 2026"
- * (measured in the console on 18.0.0-next.5). A grouping field orders its
- * groups by its own value and the spec offers no key to order one field's
- * groups by another, so the view groups on two levels: `period_start`
- * (a date, so `desc` is time order) and, under it, `period_label`, the heading
- * that names the period. The second level is not decoration: a quarter and
- * the month that opens it share a `period_start`, and without it their rows
- * would sit under one heading.
+ * (measured in the console on 18.0.0-next.5). The spec then offered no key to
+ * order one field's groups by another, so the view grouped on two levels,
+ * `period_start` then `period_label`, and every period drew two nested
+ * headings over one row (the #2320 browser pass, 18.2.0). The grouping field's
+ * `orderBy` (objectstack#25786, in 18.2.0) orders the label's groups by
+ * `period_start`, so one level does both jobs. The group key stays the label:
+ * a quarter and the month that opens it share a `period_start`, and grouping
+ * by the date would put both rows under one heading.
  *
  * What the console draws from this declaration was measured in a browser and
  * is recorded on the PR, not re-implemented here: the header rows and their
@@ -27,22 +28,21 @@ import { Forecast } from '../src/sales/objects/forecast.object';
 const allForecasts = ForecastViews.list as unknown as {
   name: string;
   sort: Array<{ field: string; order: string }>;
-  grouping: { fields: Array<{ field: string; order?: string }> };
+  grouping: { fields: Array<{ field: string; order?: string; orderBy?: string }> };
 };
 
-describe('All Forecasts groups its periods in time order (#2060 item 11)', () => {
+describe('All Forecasts groups its periods once, in time order (#2060 item 11, #2367 row 5)', () => {
   it('is the view this pin is about', () => {
     expect(allForecasts.name).toBe('all_forecasts');
   });
 
-  it('groups by Period Start, newest first, and names each period under it by its label', () => {
-    expect(allForecasts.grouping.fields.map((g) => [g.field, g.order])).toEqual([
-      ['period_start', 'desc'],
-      ['period_label', 'desc'],
+  it('groups once, by the period label, ordered by Period Start, newest first', () => {
+    expect(allForecasts.grouping.fields.map((g) => [g.field, g.order, g.orderBy])).toEqual([
+      ['period_label', 'desc', 'period_start'],
     ]);
   });
 
-  it('the outer level is a date, so its descending order is time order, and the inner level is the text label', () => {
+  it('the order key is a date, so its descending order is time order, and the group key is the text label', () => {
     const fields = Forecast.fields as Record<string, { type: string }>;
     expect(fields.period_start!.type).toBe('date');
     expect(fields.period_label!.type).toBe('text');

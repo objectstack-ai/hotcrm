@@ -93,6 +93,79 @@ export const AccountViews = defineView({
   },
 
   listViews: {
+    // The working lists lead the strip, a rep's own first (#2367 row 2):
+    // declaration order IS tab order, and behind the gallery and the map
+    // My Accounts sat in the "1 more" overflow at 1280px. The same correction
+    // `lead.view.ts` made for My Leads. The gallery and the map follow.
+    my_accounts: {
+      name: 'my_accounts',
+      type: 'grid',
+      label: 'My Accounts',
+      userActions: { editInline: true, hideFields: true },
+      data: { provider: 'object', object: 'crm_account' },
+      columns: ['name', 'industry', 'annual_revenue', 'phone', 'last_activity_date'],
+      filter: [{ field: 'owner_id', operator: 'equals', value: '{current_user_id}' }],
+      sort: [{ field: 'last_activity_date', order: 'desc' }],
+    },
+
+    // The `renewals_due` view is gone with the fields it was built on (#1181):
+    // both its `is_not_null` filter and its sort key were
+    // `crm_account.next_renewal_date`, so the view could not outlive the field.
+    // Nothing is lost — `crm_contract` ships the renewals queue that the daily
+    // sweep actually acts on (`renewal_calendar`, over `end_date`).
+
+    /** At-risk customers — CSM action queue */
+    at_risk_accounts: {
+      name: 'at_risk_accounts',
+      type: 'grid',
+      label: '⚠️ At-Risk Accounts',
+      userActions: { editInline: true, hideFields: true },
+      data: { provider: 'object', object: 'crm_account' },
+      columns: ['name', 'tier', 'health_score', 'segment', 'last_activity_date'],
+      filter: [
+        { field: 'type', operator: 'equals', value: 'customer' },
+        { field: 'health_score', operator: 'in', value: ['at_risk', 'churning'] },
+      ],
+      sort: [{ field: 'health_score', order: 'desc' }],
+    },
+
+    /** Tier accounts: Enterprise (>= $10M ARR) */
+    enterprise_accounts: {
+      name: 'enterprise_accounts',
+      type: 'grid',
+      label: 'Enterprise Accounts',
+      userActions: { editInline: true, hideFields: true },
+      data: { provider: 'object', object: 'crm_account' },
+      columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner_id'],
+      filter: [{ field: 'annual_revenue', operator: 'greater_than_or_equal', value: 10000000 }],
+      sort: [{ field: 'annual_revenue', order: 'desc' }],
+
+      // ADR-0047 end-user quick filters (Airtable "User filters", Elements:
+      // dropdowns). `element: 'dropdown'`, deliberately — on an object list
+      // the view SWITCHER owns the tab bar (it builds one entry per `list` /
+      // `listViews` descriptor), so a quick-filter block shaped as tabs is
+      // dropped there: the console logs `defines userFilters (element:
+      // "tabs"), which are ignored on an object list view (ADR-0047 "views"
+      // mode — the view switcher owns the tab bar here)` and renders nothing.
+      // Dropdowns sit beside the switcher and are unaffected.
+      // `owner_id` is the platform ownership lookup (#548) — it renders as a
+      // record-picker dropdown.
+      // NOTE: requires @objectstack/spec > 9.2.0 (ADR-0047 UserFiltersSchema);
+      // on older specs defineStack strips this block — harmless no-op.
+      ...({
+        userFilters: {
+          element: 'dropdown',
+          fields: [
+            { field: 'industry', showCount: true },
+            { field: 'type' },
+            { field: 'owner_id' },
+          ],
+        },
+        // typed via spread-as-any until @objectstack/spec ships ADR-0047
+        // (UserFiltersSchema is in framework main, > 9.2.0)
+      } as any),
+    },
+
     /** Branded account cards */
     account_gallery: {
       name: 'account_gallery',
@@ -138,75 +211,6 @@ export const AccountViews = defineView({
       data: { provider: 'object', object: 'crm_account' },
       columns: ['name', 'industry', 'office_location', 'billing_address'],
       map: { locationField: 'office_location', titleField: 'name' },
-    },
-
-    /** Tier accounts: Enterprise (>= $10M ARR) */
-    enterprise_accounts: {
-      name: 'enterprise_accounts',
-      type: 'grid',
-      label: 'Enterprise Accounts',
-      userActions: { editInline: true, hideFields: true },
-      data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'industry', 'annual_revenue', 'number_of_employees', 'owner_id'],
-      filter: [{ field: 'annual_revenue', operator: 'greater_than_or_equal', value: 10000000 }],
-      sort: [{ field: 'annual_revenue', order: 'desc' }],
-
-      // ADR-0047 end-user quick filters (Airtable "User filters", Elements:
-      // dropdowns). `element: 'dropdown'`, deliberately — on an object list
-      // the view SWITCHER owns the tab bar (it builds one entry per `list` /
-      // `listViews` descriptor), so a quick-filter block shaped as tabs is
-      // dropped there: the console logs `defines userFilters (element:
-      // "tabs"), which are ignored on an object list view (ADR-0047 "views"
-      // mode — the view switcher owns the tab bar here)` and renders nothing.
-      // Dropdowns sit beside the switcher and are unaffected.
-      // `owner_id` is the platform ownership lookup (#548) — it renders as a
-      // record-picker dropdown.
-      // NOTE: requires @objectstack/spec > 9.2.0 (ADR-0047 UserFiltersSchema);
-      // on older specs defineStack strips this block — harmless no-op.
-      ...({
-        userFilters: {
-          element: 'dropdown',
-          fields: [
-            { field: 'industry', showCount: true },
-            { field: 'type' },
-            { field: 'owner_id' },
-          ],
-        },
-        // typed via spread-as-any until @objectstack/spec ships ADR-0047
-        // (UserFiltersSchema is in framework main, > 9.2.0)
-      } as any),
-    },
-
-    my_accounts: {
-      name: 'my_accounts',
-      type: 'grid',
-      label: 'My Accounts',
-      userActions: { editInline: true, hideFields: true },
-      data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'industry', 'annual_revenue', 'phone', 'last_activity_date'],
-      filter: [{ field: 'owner_id', operator: 'equals', value: '{current_user_id}' }],
-      sort: [{ field: 'last_activity_date', order: 'desc' }],
-    },
-
-    // The `renewals_due` view is gone with the fields it was built on (#1181):
-    // both its `is_not_null` filter and its sort key were
-    // `crm_account.next_renewal_date`, so the view could not outlive the field.
-    // Nothing is lost — `crm_contract` ships the renewals queue that the daily
-    // sweep actually acts on (`renewal_calendar`, over `end_date`).
-
-    /** At-risk customers — CSM action queue */
-    at_risk_accounts: {
-      name: 'at_risk_accounts',
-      type: 'grid',
-      label: '⚠️ At-Risk Accounts',
-      userActions: { editInline: true, hideFields: true },
-      data: { provider: 'object', object: 'crm_account' },
-      columns: ['name', 'tier', 'health_score', 'segment', 'last_activity_date'],
-      filter: [
-        { field: 'type', operator: 'equals', value: 'customer' },
-        { field: 'health_score', operator: 'in', value: ['at_risk', 'churning'] },
-      ],
-      sort: [{ field: 'health_score', order: 'desc' }],
     },
   },
 
