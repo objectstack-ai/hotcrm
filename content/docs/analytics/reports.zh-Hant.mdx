@@ -13,7 +13,7 @@ description: 標準報表庫——HotCRM 就商機、潛在客戶、工單與客
 
 下面每一份報表在側邊欄的 **Reports** 群組裡都有一個條目。這個群組在應用載入時是摺疊的，先把它點開；⌘K 也能按側邊欄上的名字找到一份報表。只有你能讀取其記錄的報表才會出現條目：服務專員讀不了商機，看不到那四張商機報表的條目；讀不了工單的人看不到那三張工單報表的條目。
 
-有幾個側邊欄名字比本頁用的報表標題短：**Pipeline Coverage** 打開 **Pipeline Coverage by Forecast × Quarter**，**Opportunity Funnel by Owner** 打開 **Opportunity Funnel by Owner → Stage**，**Lead Engagement** 打開 **Lead Engagement by Month × Source**，**Accounts by Industry & Type** 打開 **Accounts by Industry and Type**，**SLA Performance** 打開 **SLA Performance Report**，**Cases Opened by Day** 打開 **Cases Opened by Priority × Day**。
+每個側邊欄條目都用它所打開報表自己的標題，應用內建的每種語言都是如此，所以你點的名字就是打開的報表上的名字。`test/app-navigation-shape.test.ts` 保證兩者一致。
 
 ## 標準報表
 
@@ -27,8 +27,8 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 | --- | --- |
 | **Opportunities by Stage** | 按階段的管道金額與平均贏單機率，只算今年內成交的、並排除已丟單的交易 —— 附一張按階段的金額長條圖 |
 | **Won Opportunities by Owner** | 每位銷售代表的贏單金額，圖表標題是 **Revenue by Sales Rep** |
-| **Pipeline Coverage by Forecast × Quarter** | 未結管道的矩陣：列是預測類別，欄是預計成交季度，每格給出金額與商機數 |
-| **Opportunity Funnel by Owner → Stage** | 每位代表的商機盤子再按階段拆開，帶金額、商機數與平均機率，排除已丟單的交易 —— 附一張按階段的金額橫條圖，彙總所有代表 |
+| **Pipeline Coverage by Quarter** | 未結管道的矩陣：列是預測類別，欄是預計成交季度，每格給出金額與商機數 |
+| **Opportunity Funnel by Owner** | 未結管道金額的矩陣，排除已丟單的交易：每位代表一列，每個階段一欄，另有一欄 **Total** 是該代表的全部盤子 —— 附一張按代表的金額橫條圖 |
 
 四份都繫結 `opportunity_metrics`（`src/sales/datasets/opportunity.dataset.ts`），這也正是「管道」在這裡和在儀表板上是同一個數字的原因。
 
@@ -36,7 +36,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 
 - **Pipeline by Stage** 是儀表板**磁貼**標題和圖表標題，不是報表。磁貼是 **CRM Overview**、**Sales Performance** 與 **Executive Overview** 三個儀表板共用的未結管道橫條圖（`src/sales/dashboards/shared-widgets.ts`）；圖表則是上面 **Opportunities by Stage** 那張長條圖，它的標題就寫作 **Pipeline by Stage**。在報表庫裡按這個名字搜，一份都搜不到；你要的那份叫 **Opportunities by Stage**。
 - **Stale Opportunities** 是商機上的**清單檢視** —— **⚠️ Stale Opportunities · Longest in Stage First**，標籤頁上寫的也是這個名字（`src/sales/views/opportunity.view.ts`）—— 而且它並不施加本表所說的 14 天篩選。它列出**所有**未結交易，按 **Stage Entry Date** 升冪排，停留最久的排在最上面；那 14 天屬於負責催辦的 `opportunity_stagnation` 流程，不屬於這個檢視。分析側也重建不出來：**Days in Current Stage** 是查詢之後才求值的公式，任何東西都無法按它分組、篩選或排序，也沒有任何資料集把它暴露出來。
-- *Top Performing Reps* 是存在的，只是真名不同：**Won Opportunities by Owner** 就是贏單排行榜，**Opportunity Funnel by Owner → Stage** 則是同一份排名再把每人的各階段攤開。`opportunity_metrics` 宣告了 **Owner** 維度 —— 這一點和 `case_metrics` 不同，也正是服務側沒有客服排行的原因。
+- *Top Performing Reps* 是存在的，只是真名不同：**Won Opportunities by Owner** 就是贏單排行榜，**Opportunity Funnel by Owner** 則是同一份排名再把每人的各階段攤開。`opportunity_metrics` 宣告了 **Owner** 維度 —— 這一點和 `case_metrics` 不同，也正是服務側沒有客服排行的原因。
 
 剩下五個只是單純不存在，其中三個自己建得出來、兩個建不出來：
 
@@ -52,7 +52,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 
 | 報表 | 顯示內容 |
 | --- | --- |
-| **Lead Engagement by Month × Source** | 已聯絡潛在客戶數量的矩陣 —— 橫列是潛在客戶來源，直欄是 **Last Contacted** 所在的月份。從未聯絡過的潛在客戶被排除在外：它們沒有互動月份 |
+| **Lead Engagement by Month** | 已聯絡潛在客戶數量的矩陣 —— 橫列是潛在客戶來源，直欄是 **Last Contacted** 所在的月份。從未聯絡過的潛在客戶被排除在外：它們沒有互動月份 |
 
 本節曾經列出的三份報表，一份都沒有發布，其中兩份還用了一個並不存在的潛在客戶狀態：
 
@@ -68,8 +68,8 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 | 報表 | 顯示內容 |
 | --- | --- |
 | **Cases by Status and Priority** | 工單數與平均解決時長，先按狀態、再按優先順序分組，並帶一張「按狀態的工單數」長條圖 |
-| **SLA Performance Report** | 工單數、**SLA 違約率** 與平均解決時長，按優先順序 —— 只統計已關閉的工單 |
-| **Cases Opened by Priority × Day** | 每日新增工單的矩陣：橫列是優先順序，直欄是工單開出來的那一天 |
+| **SLA on Closed Cases** | 工單數、**SLA 違約率** 與平均解決時長，按優先順序 —— 只統計已關閉的工單 |
+| **Cases Opened by Day** | 每日新增工單的矩陣：橫列是優先順序，直欄是工單開出來的那一天 |
 
 本節曾經列出的另外五份報表哪兒都沒有發布，而且其中多數是在向語義層要它根本沒有的東西。`case_metrics`（`src/service/datasets/case.dataset.ts`）只讀 `crm_case` 一個物件 —— 不聯結、也不跨第二個物件 —— 而下面每一條都點名了卡住它的那一件事。它能答的那些問題在 [多維資料集](/zh-Hant/docs/analytics/cubes) 上；維度與度量本身則宣告在 `src/service/datasets/case.dataset.ts` 裡，那是唯一會保持最新的地方。
 
@@ -79,7 +79,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 - *Reopened Cases* 數的是沒有任何東西在記的事。工單確實會重開 —— 狀態機允許 **Resolved** 與 **Closed** 回到 **In Progress** —— 但沒有任何欄位標記一張工單曾被重開，也沒有任何度量在數它。
 - *CSAT by Agent* 兩頭都不成立：根本沒有滿意度資料 —— 工單物件上的*客戶滿意度*評分因為產品裡從來沒有任何環節採集它而被退役 —— 也沒有「客服」這一維可分組。
 
-**SLA Performance Report 裡同樣沒有任何首次回應數字**，而且它那個 SLA 數字是 **SLA Violated** 標誌的平均值，也就是違約 *率*，不是準時率。（準時率本身是有宣告的：**SLA Compliance Rate**，服務儀表板的 SLA 儀表圖畫的就是它。只是這份報表沒有帶上它。）本應用根本不度量首次回應：**First Response Date** 只在工單上第一次記錄 *已經發生過* 的通話或會議時被蓋上，此後從不與任何目標比較；`case_metrics` 沒有宣告任何首次回應度量，所以沒有報表、也沒有儀表板磁貼能報出一個來。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
+**SLA on Closed Cases 裡同樣沒有任何首次回應數字**，而且它那個 SLA 數字是 **SLA Violated** 標誌的平均值，也就是違約 *率*，不是準時率。（準時率本身是有宣告的：**SLA Compliance Rate**，服務儀表板的 SLA 儀表圖畫的就是它。只是這份報表沒有帶上它。）本應用根本不度量首次回應：**First Response Date** 只在工單上第一次記錄 *已經發生過* 的通話或會議時被蓋上，此後從不與任何目標比較；`case_metrics` 沒有宣告任何首次回應度量，所以沒有報表、也沒有儀表板磁貼能報出一個來。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
 
 ### 💰 客戶與收入報表
 
@@ -154,8 +154,8 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 一種常見模式：
 
 - **Opportunities by Stage** → 週一早上 8 點發給銷售團隊。
-- **SLA Performance Report** → 每日下午 6 點發給服務經理。
-- **Cases Opened by Priority × Day** → 週五下午 4 點發給客戶成功團隊。
+- **SLA on Closed Cases** → 每日下午 6 點發給服務經理。
+- **Cases Opened by Day** → 週五下午 4 點發給客戶成功團隊。
 
 ## 給使用者的提示
 
@@ -165,7 +165,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 
 ## 給經理的提示
 
-- ✅ 每週向你的團隊安排 **Opportunity Funnel by Owner → Stage**——它能逐人強制跟進紀律。至於停滯的交易本身，請把人指到商機的 **⚠️ Stale Opportunities · Longest in Stage First** 標籤頁：它是清單檢視，定時推送不了，但停擺最久的交易就排在那兒。
+- ✅ 每週向你的團隊安排 **Opportunity Funnel by Owner**——它能逐人強制跟進紀律。至於停滯的交易本身，請把人指到商機的 **⚠️ Stale Opportunities · Longest in Stage First** 標籤頁：它是清單檢視，定時推送不了，但停擺最久的交易就排在那兒。
 - ✅ 沒有贏單/丟單報表可以安排，但這份分析只差一份自建報表——把 `opportunity_metrics` 按 **Loss Reason** 分組，並把 **Lost Deals** 與 **Win Rate** 並排看。每月與銷售教練一起跑，它是最好的單一輔導工具。
 
 ## 給管理員的提示

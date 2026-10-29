@@ -169,33 +169,11 @@ export const SalesDashboard: Dashboard = {
       layout: { x: 8, y: 2, w: 4, h: 1 },
     },
 
-    // ─── Row 3: Pipeline & Trends ─────────────────────────────────────
+    // ─── Row 3: Pipeline ──────────────────────────────────────────────
+    // No revenue trend here (#2370 row 2): the same 12-month closed-won
+    // area chart sat on Executive Overview, CRM Overview and this dashboard.
+    // It has one home now, Executive Overview's Revenue Analysis row.
     pipelineByStageWidget({ x: 0, y: 4, w: 6, h: 4 }),
-    {
-      id: 'monthly_revenue_trend',
-      title: 'Monthly Revenue Trend',
-      description: 'Closed-won revenue, last 12 months',
-      type: 'area',
-      filter: { stage: 'closed_won', close_date: { $gte: '{12_months_ago}' } },
-      filterBindings: { dateRange: false }, // self-scoped to 12 months — the date picker must not narrow it
-      colorVariant: 'success',
-      dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
-      layout: { x: 6, y: 4, w: 6, h: 4 },
-      chartConfig: {
-        showLegend: false,
-        showDataLabels: false,
-        colors: ['#10B981'],
-        // No quota annotation line: ChartAnnotationSchema only takes a STATIC
-        // value, and the real quotas live per-owner/per-period in
-        // crm_forecast.quota (seeded 500k–1.5M — the old hardcoded 100000 was
-        // fiction). Quota vs. actual is the quota_attainment_by_rep table
-        // below, bound to the forecast_metrics dataset.
-        interaction: { tooltips: true },
-      },
-      options: { dateGranularity: 'month' },
-    },
-
-    // ─── Row 4: Performance Breakdown ─────────────────────────────────
     {
       id: 'pipeline_by_forecast_category',
       title: 'Pipeline by Forecast Category',
@@ -204,13 +182,14 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'blue',
       dataset: 'opportunity_metrics', dimensions: ['forecast_category'], values: ['total_amount'],
-      layout: { x: 0, y: 8, w: 6, h: 4 },
+      layout: { x: 6, y: 4, w: 6, h: 4 },
       chartConfig: {
         showLegend: false,
         showDataLabels: true,
         colors: ['#4F46E5'],
       },
     },
+    // ─── Row 4: Where pipeline comes from, and why deals are lost ─────
     {
       id: 'lead_source_breakdown',
       title: 'Lead Source',
@@ -219,11 +198,39 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_lost'] } },
       colorVariant: 'purple',
       dataset: 'opportunity_metrics', dimensions: ['lead_source'], values: ['total_amount'],
-      layout: { x: 6, y: 8, w: 6, h: 4 },
+      layout: { x: 0, y: 8, w: 6, h: 4 },
       chartConfig: {
         showLegend: true,
         showDataLabels: true,
         colors: ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
+      },
+    },
+
+    {
+      // The loss-reason breakdown the fields were declared for and never got.
+      //
+      // `loss_reason` is mandatory on every `closed_lost` record (see
+      // crm_opportunity), so this chart has no "unattributed" slice to
+      // apologise for — an empty chart here means no losses in the window,
+      // never "nobody filled the field in".
+      //
+      // Counts, not amounts: the question a loss review asks is "how often did
+      // we lose for this reason", and one large lost deal should not outweigh
+      // five recurring feature gaps. `lost_amount` is declared on the dataset
+      // for the revenue view of the same question.
+      id: 'loss_reason_breakdown',
+      title: 'Why We Lose',
+      description: 'Lost deals by reason — last 12 months',
+      type: 'donut',
+      filter: { stage: 'closed_lost', close_date: { $gte: '{12_months_ago}' } },
+      filterBindings: { dateRange: false },
+      colorVariant: 'orange',
+      dataset: 'opportunity_metrics', dimensions: ['loss_reason'], values: ['opp_count'],
+      layout: { x: 6, y: 8, w: 6, h: 4 },
+      chartConfig: {
+        showLegend: true,
+        showDataLabels: true,
+        colors: ['#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4', '#4F46E5', '#10B981', '#64748B'],
       },
     },
 
@@ -257,7 +264,12 @@ export const SalesDashboard: Dashboard = {
     {
       id: 'quota_attainment_by_rep',
       title: 'Quota Attainment by Rep',
-      description: 'Current-quarter quota, closed revenue and attainment per rep, from forecast snapshots',
+      // The description says when the table fills (#2370 row 5): on a fresh
+      // demo org it is empty, because the current quarter has one producer,
+      // the nightly `forecast_snapshot` sweep (#702, so the seed may not open
+      // it), and `quota` has no automated writer. The console shows a widget's
+      // description in its header, above the empty state.
+      description: 'Current-quarter quota, closed revenue and attainment per rep. Fills once the nightly forecast snapshot opens the quarter and a manager sets each quota',
       type: 'table',
       colorVariant: 'default',
       // crm_forecast has neither `close_date` nor `type`; opt out of the
@@ -324,7 +336,8 @@ export const SalesDashboard: Dashboard = {
 
     // ─── Row 7: Win / Loss analysis ───────────────────────────────────
     //
-    // Three widgets over the settled half of the pipeline (#593). Each of the
+    // Two tables over the settled half of the pipeline (#593); Why We Lose,
+    // the third, sits beside Lead Source in row 4 since #2370. Each of the
     // two win-rate breakdowns is a TABLE, not a bar chart, and that is the
     // whole design: a bar of "67%" is unfalsifiable, whereas a row reading
     // "Won 2 · Lost 1 · Settled 3 · 67%" carries its own proof. Perturb either
@@ -337,7 +350,7 @@ export const SalesDashboard: Dashboard = {
     // "this quarter" on a demo database is computed from whichever one or two
     // deals happen to have settled inside it, which is noise wearing the
     // costume of a KPI. Twelve months is the same window the row-2 tiles and
-    // the revenue trend use, so the dashboard tells one consistent story.
+    // Why We Lose use, so the dashboard tells one consistent story.
     {
       id: 'win_rate_by_owner',
       title: 'Win / Loss by Rep',
@@ -374,35 +387,7 @@ export const SalesDashboard: Dashboard = {
         limit: 12,
       },
     },
-    {
-      // The loss-reason breakdown the fields were declared for and never got.
-      //
-      // `loss_reason` is mandatory on every `closed_lost` record (see
-      // crm_opportunity), so this chart has no "unattributed" slice to
-      // apologise for — an empty chart here means no losses in the window,
-      // never "nobody filled the field in".
-      //
-      // Counts, not amounts: the question a loss review asks is "how often did
-      // we lose for this reason", and one large lost deal should not outweigh
-      // five recurring feature gaps. `lost_amount` is declared on the dataset
-      // for the revenue view of the same question.
-      id: 'loss_reason_breakdown',
-      title: 'Why We Lose',
-      description: 'Lost deals by reason — last 12 months',
-      type: 'donut',
-      filter: { stage: 'closed_lost', close_date: { $gte: '{12_months_ago}' } },
-      filterBindings: { dateRange: false },
-      colorVariant: 'orange',
-      dataset: 'opportunity_metrics', dimensions: ['loss_reason'], values: ['opp_count'],
-      layout: { x: 0, y: 24, w: 12, h: 4 },
-      chartConfig: {
-        showLegend: true,
-        showDataLabels: true,
-        colors: ['#EF4444', '#F59E0B', '#8B5CF6', '#06B6D4', '#4F46E5', '#10B981', '#64748B'],
-      },
-    },
-
-    // ─── Row 9: Pivot — Stage × Lead Source ───────────────────────────
+    // ─── Row 8: Pivot — Stage × Lead Source ───────────────────────────
     {
       id: 'pipeline_stage_by_source',
       title: 'Pipeline by Stage × Lead Source',
@@ -411,7 +396,7 @@ export const SalesDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'default',
       dataset: 'opportunity_metrics', dimensions: ['stage', 'lead_source'], values: ['total_amount'],
-      layout: { x: 0, y: 28, w: 12, h: 4 },
+      layout: { x: 0, y: 24, w: 12, h: 4 },
     },
   ],
 };

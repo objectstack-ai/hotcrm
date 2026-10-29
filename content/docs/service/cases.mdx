@@ -185,7 +185,7 @@ Nothing else claims a case, and each exclusion is deliberate:
 
 Of the **seven** names this section used to list, only **My Open Cases** was real — it survives in the table above. The other six are not views at all:
 
-- **Critical Cases** is a metric tile, not a list. *Breached SLA* is not a name this app carries at all: the tile that counts breaches is **SLA Violations**. [Service Overview](/docs/analytics/dashboards) — the dashboard's own title is **Customer Service** — carries **Critical Cases** (open and Critical) and **SLA Violations** (flagged **SLA Violated**, or still open past its **SLA Due Date**, counted when the tile is read); no list view in this app filters on a breach. For a list you can actually work through, use **Escalated Cases** — the SLA sweep escalates every case it flags, so each breach it flags lands there.
+- **Critical Cases** is a metric tile, not a list. *Breached SLA* is not a name this app carries at all: the tile that counts breaches is **Open Cases Past SLA**. [Service Overview](/docs/analytics/dashboards) — the dashboard's own title is **Customer Service** — carries **Critical Cases** (open and Critical) and **Open Cases Past SLA** (open, and flagged **SLA Violated** or past its **SLA Due Date**, counted when the tile is read); no list view in this app filters on a breach. For a list you can actually work through, use **Escalated Cases** — the SLA sweep escalates every case it flags, so each breach it flags lands there.
 - **Service Board** is not this app's name for anything. The kanban is **Service Workflow**, and that is what its tab reads.
 - **Cases Due Today**, **Recently Closed** and **By Account** do not exist in any form: no view filters on today's due date or on `closed_date`, and `crm_case` has no grouped view.
 
@@ -237,7 +237,7 @@ If the Copilot decides the priority is *Critical*, it will also recommend immedi
 
 ## Tips for service managers
 
-- ✅ There is no *Breached SLA* view to watch, and no red badge either — but a breach does show on *All Cases*: a case flagged **SLA Violated** is a red row, and it stays red once resolved or closed, because a late close records the breach. Work **Escalated Cases** daily, and read the **SLA Violations** tile on Service Overview for the count.
+- ✅ There is no *Breached SLA* view to watch, and no red badge either — but a breach does show on *All Cases*: a case flagged **SLA Violated** is a red row, and it stays red once resolved or closed, because a late close records the breach. Work **Escalated Cases** daily, and read the **Open Cases Past SLA** tile on Service Overview for the count.
 - ✅ Use the kanban for daily standups — it is named **Service Workflow** and reaches the case list as the **Service Workflow** tab.
 - ✅ Coach agents whose **Resolution Time** trends up — but you will be reading it off the cases themselves. There is no agent leaderboard: `case_metrics`, the dataset behind every service report and dashboard widget, declares Status, Priority, Origin, Type, Created and Resolving Article as its only dimensions, so nothing in analytics can group cases by agent.
 

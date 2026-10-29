@@ -187,7 +187,7 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 
 本節原先列的七個名字裡，有六個根本不是檢視：
 
-- **Critical Cases** 是指標磁貼，不是列表。*Breached SLA* 這個名字本應用根本沒有：按違約計數的是 **SLA Violations** 磁貼。[服務概覽](/zh-Hant/docs/analytics/dashboards)（Service Overview；該儀表板自身的標題是 **Customer Service**）上有 **Critical Cases**（未結且 Critical）和 **SLA Violations**（已標記 **SLA Violated**，或仍未結且 **SLA 截止日期**已過，讀取磁貼時計數）兩個磁貼；本應用裡沒有任何一個列表檢視按違約過濾。真要有一份能逐條處理的清單，用 **已升級工單**——SLA 掃描會把它標記的每一條都升級，所以它標記的每次違約都會落到那裡。
+- **Critical Cases** 是指標磁貼，不是列表。*Breached SLA* 這個名字本應用根本沒有：按違約計數的是 **Open Cases Past SLA** 磁貼。[服務概覽](/zh-Hant/docs/analytics/dashboards)（Service Overview；該儀表板自身的標題是 **Customer Service**）上有 **Critical Cases**（未結且 Critical）和 **Open Cases Past SLA**（未結，且已標記 **SLA Violated** 或 **SLA 截止日期**已過，讀取磁貼時計數）兩個磁貼；本應用裡沒有任何一個列表檢視按違約過濾。真要有一份能逐條處理的清單，用 **已升級工單**——SLA 掃描會把它標記的每一條都升級，所以它標記的每次違約都會落到那裡。
 - **Service Board** 不是本應用裡任何東西的名字。看板叫 **服務流轉**，頁籤上寫的也是這個名字。
 - **Cases Due Today**、**Recently Closed** 與 **By Account** 以任何形式都不存在：沒有任何檢視按「截止日期 = 今天」或 `closed_date` 過濾，`crm_case` 上也沒有任何分組檢視。
 
@@ -239,7 +239,7 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將三�
 
 ## 給服務經理的提示
 
-- ✅ 沒有 *Breached SLA* 這個檢視可看，也沒有什麼紅色徽章——但違約在 *全部工單* 上看得見：已標記 **SLA Violated** 的工單是一列紅色，解決或關閉之後依然是紅的，因為逾期關閉會記下這次違約。每天看 **已升級工單**，數量則看服務概覽上的 **SLA Violations** 磁貼。
+- ✅ 沒有 *Breached SLA* 這個檢視可看，也沒有什麼紅色徽章——但違約在 *全部工單* 上看得見：已標記 **SLA Violated** 的工單是一列紅色，解決或關閉之後依然是紅的，因為逾期關閉會記下這次違約。每天看 **已升級工單**，數量則看服務概覽上的 **Open Cases Past SLA** 磁貼。
 - ✅ 用看板開每日站會——它叫 **服務流轉**，在工單列表的 **服務流轉** 頁籤上。
 - ✅ 輔導那些 **Resolution Time** 趨勢上升的客服——但這個趨勢只能從工單本身讀出來。不存在什麼客服排行榜：`case_metrics` 這個資料集（服務側每一張報表和每一個儀表板部件都建在它上面）只宣告了 Status、Priority、Origin、Type、Created、Resolving Article 六個維度，所以分析層裡沒有任何東西能按客服分組。
 

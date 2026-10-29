@@ -69,7 +69,7 @@ export type HotCrmAppCollections = Omit<
  * validation failed (3 issues)"); with it, none. Verified like
  * `artifactObjects`: a target that resolved only through the list and that no
  * package defines is refused by `composeStacks`. The dashboard half of the
- * same fix needs no option — the CRM Overview Top Products tile binds
+ * same fix needs no option — the CRM Overview List Price by Category tile binds
  * revenue's `product_metrics`, which `os validate` now resolves against the
  * artifact's packages.
  *

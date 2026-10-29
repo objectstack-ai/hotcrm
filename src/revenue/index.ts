@@ -66,7 +66,7 @@ export type HotCrmRevenueCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  *
  * Two of them are reached from the app package: `quote_generation` (see
  * {@link revenueFlows}) and `product_metrics`, which the app's CRM Overview
- * Top Products tile binds — a widget reference `os validate` resolves against
+ * List Price by Category tile binds — a widget reference `os validate` resolves against
  * the artifact's packages since objectstack#25514.
  *
  * It is packaged exactly as `src/service/index.ts` is, and that file carries

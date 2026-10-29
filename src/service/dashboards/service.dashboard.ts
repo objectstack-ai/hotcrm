@@ -18,7 +18,7 @@ const dataset = 'case_metrics';
  *
  * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
  * so it comes from a real comparison query: Open Cases, Avg Resolution Time
- * and SLA Violations declare `compareTo: { kind: 'previousPeriod' }` (#2296)
+ * and Open Cases Past SLA declare `compareTo: { kind: 'previousPeriod' }` (#2296)
  * over the date picker's `created_at` window (bare number at All time,
  * objectstack#25970). The percentages this file used to carry were typed by
  * hand and recomputed by nothing, so they kept asserting the same "-6.2% vs
@@ -121,26 +121,33 @@ export const ServiceDashboard: Dashboard = {
     },
     {
       id: 'sla_violations',
-      title: 'SLA Violations',
-      description: 'Cases that breached their SLA',
+      // The title states its base (#2370 row 1): this tile counts OPEN cases,
+      // the gauge below counts CLOSED ones, and the two sat side by side as
+      // "SLA Violations 4" and "SLA Compliance 100%" with neither saying so.
+      title: 'Open Cases Past SLA',
+      description: 'Open cases whose SLA deadline has passed',
       type: 'metric',
       // `dimension` names the window to shift: this filter also dates
       // `sla_due_date` (`{now}`, inside `$or`), so without it the console
       // would still ask for a comparison when the picker is at All time and
       // the executor would refuse it ("compareTo needs a dated window").
       compareTo: { kind: 'previousPeriod', dimension: 'created_at' },
-      // Counted at READ time (#2070): a case already flagged, OR a case still
-      // open whose deadline has passed. The second branch is the selection
+      // Counted at READ time (#2070), over OPEN cases only (#2370 row 1): a
+      // case still open that is already flagged, OR whose deadline has passed.
+      // The open set and the deadline branch are the selection
       // `case_sla_monitor` sweeps — same status set, same strict `$lt` at the
       // current instant (`{now}` is that instant in a query filter; `{NOW()}`
       // in a flow template) — so the tile reads true on a deployment that runs
       // no scheduled work, where nothing flags an open breach. It counts; it
       // does not act: escalation and the owner's alert still need the sweep.
+      // A case resolved or closed late is no longer counted here: it is a
+      // missed SLA on the gauge, whose base is closed cases.
       // `test/case-sla-breach-on-close.test.ts` pins the two to one selection.
       filter: {
+        status: { $nin: ['resolved', 'closed'] },
         $or: [
           { is_sla_violated: true },
-          { status: { $nin: ['resolved', 'closed'] }, sla_due_date: { $lt: '{now}' } },
+          { sla_due_date: { $lt: '{now}' } },
         ],
       },
       colorVariant: 'warning',
@@ -230,8 +237,10 @@ export const ServiceDashboard: Dashboard = {
     },
     {
       id: 'sla_compliance_gauge',
-      title: 'SLA Compliance',
-      description: 'Percent of cases resolved within SLA this period',
+      // Base in the title (#2370 row 1): closed cases, beside the open ones
+      // the Open Cases Past SLA tile counts.
+      title: 'SLA Met (Closed Cases)',
+      description: 'Share of closed cases that met their SLA',
       type: 'gauge',
       filter: { is_closed: true },
       colorVariant: 'success',

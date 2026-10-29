@@ -91,11 +91,17 @@ export const PriceBook = ObjectSchema.create({
     valid_from: Field.date({
       label: 'Valid From',
       group: 'validity',
+      // A validity window is read as dates (#2370 row 9): the console's
+      // default style said "In 5 days" inside a week of today and dropped the
+      // year for this year's dates. `short` always reads "Nov 3, '26"
+      // (docs/developers/number-formats.md). Same on `valid_to`.
+      format: 'short',
     }),
 
     valid_to: Field.date({
       label: 'Valid To',
       group: 'validity',
+      format: 'short',
     }),
   },
 

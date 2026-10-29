@@ -41,7 +41,7 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 每個工單上有兩個欄位：
 
 - **SLA 截止日期**（`sla_due_date`）——工單必須在何時之前解決。凡是優先順序能在矩陣裡查到的工單都會被打戳。**調高優先順序會重新推導它**：工單得到*目前時間 + 新優先順序的小時數*，所以一張升級為 Critical 的 Medium 工單，截止時間是升級之後四小時，而不是建單之後 36 小時。新的時限從改動那一刻起算，而不是從建單起算——若從建單起算，一張升級得晚的工單在升級的那一刻就已經逾期——而且它只會把期限往**前**拉：如果工單現有的日期更早（在舊時限的最後幾小時裡才調高的工單，或者已經逾期的工單），就保留那個日期，違約也隨之保留。**調低**優先順序不會移動截止時間——應用從不自行把期限往後推——任何其他編輯也不會。有人手工設定的截止日期（經理可以重新商定一個）在其他任何編輯下都保持不變，只有帶來更早日期的優先順序調高才會替換它。
-- **SLA 已違約**（`is_sla_violated`）——並不存在一個叫 *SLA 已違約？* 的欄位；客服看到的那個勾選框，標籤就是 **SLA 已違約**。它會在兩處被置為 `true`，兩處用的是同一條規則：**SLA 截止日期**在工單結束之前就已經過去。工單仍然打開（狀態既不是 *Resolved* 也不是 *Closed*）時，每小時一輪的 `case_sla_monitor` 掃描會在截止日期過去之後把它置位；把工單解決或關閉的那一次儲存，則在那一刻已晚於截止日期時把它置位——所以超時才結束的工單，即使從沒被哪一輪掃描看到過，也會被標記。沒有截止日期的工單永遠不會被標記；按時解決、之後才關閉的工單，關閉時也不會被標記；標記一旦置上，就不會再被清除。給已經結束的工單置位既不會升級它，也不會提醒任何人——工作已經做完，這個標記是給 **SLA Performance Report** 與 **SLA Compliance** 磁貼計數用的。
+- **SLA 已違約**（`is_sla_violated`）——並不存在一個叫 *SLA 已違約？* 的欄位；客服看到的那個勾選框，標籤就是 **SLA 已違約**。它會在兩處被置為 `true`，兩處用的是同一條規則：**SLA 截止日期**在工單結束之前就已經過去。工單仍然打開（狀態既不是 *Resolved* 也不是 *Closed*）時，每小時一輪的 `case_sla_monitor` 掃描會在截止日期過去之後把它置位；把工單解決或關閉的那一次儲存，則在那一刻已晚於截止日期時把它置位——所以超時才結束的工單，即使從沒被哪一輪掃描看到過，也會被標記。沒有截止日期的工單永遠不會被標記；按時解決、之後才關閉的工單，關閉時也不會被標記；標記一旦置上，就不會再被清除。給已經結束的工單置位既不會升級它，也不會提醒任何人——工作已經做完，這個標記是給 **SLA on Closed Cases** 與 **SLA Met (Closed Cases)** 磁貼計數用的。
 
 違約標記對客服是**唯讀的**——他們無法篡改。這個值從來不由人填寫：`case_sla_monitor` 以系統身分寫入它；`case_sla_defaults` 鉤子則把它寫進客服自己那次解決或關閉的儲存裡——那是鉤子推導出的值，不是客服提交的值，所以下面這道遮罩不會因此拒絕那次儲存。不過這道門是欄位層級安全，不是欄位上的 readonly：服務專員權限設定檔把 `crm_case.is_sla_violated` 遮罩成可讀不可編輯，所以客服能在工單上看到這個勾選框（表單的 **SLA** 頁籤、詳情頁的 **Status & SLA** 分區），卻改不動它。隨產品提供的遮罩清單見[權限設定檔](/zh-Hant/docs/administration/profiles)。
 
@@ -52,15 +52,15 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 - **SLA Calendar** 按 **SLA 截止日期**把未結工單鋪在日曆上：每張工單都帶截止日期，已解決和已關閉的工單不顯示，所以它顯示的是未結積壓的截止日。
 - **SLA at Risk** 列出打開的 **High 與 Critical** 工單，按截止日期升序排列。它篩的是優先順序，不是"離截止還有多近"——所以它是一個恰好按期限排序的優先順序佇列，Medium 與 Low 工單無論離違約多近都不會出現在裡面。
 
-## SLA 表現報表
+## SLA 達標報表
 
-**SLA 表現**報表只按**一個**維度細分：**優先順序**。它的 `rows` 就是 `['priority']`，沒有別的（`src/service/reports/case.report.ts`）。而且它報的也不是"在目標內解決的百分比"，而是 **SLA 違約率**——**SLA 已違約**標記的平均值——與工單數、平均解決時長並列，並且只統計**已關閉的工單**（`runtimeFilter: { is_closed: true }`）。（準時率本身是有宣告的：**SLA Compliance Rate**，服務概覽上的 **SLA Compliance** 儀表圖畫的就是它。只是這份報表沒有帶上它。）所以本頁過去許諾的四個問題，它只回答其中一個：*哪個優先順序桶在漏單？*
+**已關閉工單的 SLA**（SLA on Closed Cases）報表只按**一個**維度細分：**優先順序**。它的 `rows` 就是 `['priority']`，沒有別的（`src/service/reports/case.report.ts`）。而且它報的也不是"在目標內解決的百分比"，而是 **SLA 違約率**——**SLA 已違約**標記的平均值——與工單數、平均解決時長並列，並且只統計**已關閉的工單**（`runtimeFilter: { is_closed: true }`）。（準時率本身是有宣告的：**SLA Compliance Rate**，服務概覽上的 **SLA Met (Closed Cases)** 儀表圖畫的就是它。只是這份報表沒有帶上它。）所以本頁過去許諾的四個問題，它只回答其中一個：*哪個優先順序桶在漏單？*
 
 另外三個不只是"報表裡沒放"，而是在它底下的語意層裡根本搆不著。`case_metrics` 資料集（`src/service/datasets/case.dataset.ts`）總共宣告了六個維度——**狀態**、**優先順序**、**來源**、**類型**、**建立時間**、**解決所用文章**——因此：
 
 - **客服**——不存在負責人或客服維度。`owner_id` 是工單上的欄位，但資料集沒有把它暴露成維度，所以沒有任何報表、也沒有任何儀表板部件能按它分組。
 - **帳戶等級**——`crm_account.tier` 確實存在於帳戶物件上，但 `case_metrics` 只讀 `crm_case`，從不跨到帳戶上去取它，所以分析側任何地方都選不到帳戶等級。
-- **月份**——**建立時間**這個維度按**天**分桶（`dateGranularity: 'day'`），不是按月；而且 SLA 表現報表壓根沒把它放進 `rows`。真正用到它的是**按優先順序 × 天的建單量**報表，那是一張優先順序對天的矩陣。
+- **月份**——**建立時間**這個維度按**天**分桶（`dateGranularity: 'day'`），不是按月；而且這份報表壓根沒把它放進 `rows`。真正用到它的是**按優先順序 × 天的建單量**報表，那是一張優先順序對天的矩陣。
 
 想要這三個裡的任何一個，都得先改 `case_metrics`；報表本身沒有任何設定能把它們變出來。
 
@@ -143,11 +143,11 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 | 角色 | 查看什麼 | 何時 |
 | --- | --- | --- |
 | **客服** | My Open Cases——一個按優先順序排的佇列，不是按截止時間排的佇列 | 當班期間每小時 |
-| **服務經理** | Escalated Cases 與 SLA at Risk 兩個檢視，外加服務概覽（Service Overview）上的 **SLA Violations** 磁貼——該儀表板自身的標題是 **Customer Service** | 每天一早 |
-| **服務總監** | SLA 表現報表 | 每週 |
+| **服務經理** | Escalated Cases 與 SLA at Risk 兩個檢視，外加服務概覽（Service Overview）上的 **Open Cases Past SLA** 磁貼——該儀表板自身的標題是 **Customer Service** | 每天一早 |
+| **服務總監** | SLA on Closed Cases 報表 | 每週 |
 | **高管** | 服務概覽 | 每週 |
 
-這張表過去寫的兩個名字根本不是檢視。**Breached SLA** 與 **Critical Cases** 都不存在於列表檢視裡：`crm_case` 隨產品提供的檢視一共八個——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Unassigned — triage*、*Escalated Cases* 與 *⏰ SLA at Risk*（`src/service/views/case.view.ts`）——其中沒有任何一個以 **SLA 已違約**為過濾條件。真正按違約過濾的只有[服務概覽](/zh-Hant/docs/analytics/dashboards)上的兩個指標磁貼：**SLA Violations**（已標記 **SLA 已違約**，或仍未結且 **SLA 截止日期**已過——讀取磁貼時才計數，所以有沒有掃描它都是準的；升級這些工單的仍然是掃描）與 **Critical Cases**（未結 + Critical）。如果你要的是一份能逐條處理的列表，**Escalated Cases** 是最接近的那個：`case_sla_monitor` 會把它標記為違約的每一個工單都升級掉，所以工單仍然打開時發現的每一次違約都會落進這個檢視——只是會和那些僅因優先順序而升級的工單混在一起。（在解決或關閉的那次儲存裡因超時而被標記的工單已經結束：**SLA Violations** 磁貼會把它計入，但它已經沒有什麼可再處理的了。）
+這張表過去寫的兩個名字根本不是檢視。**Breached SLA** 與 **Critical Cases** 都不存在於列表檢視裡：`crm_case` 隨產品提供的檢視一共八個——*All Cases*、*Service Workflow*、*SLA Calendar*、*Case Timeline*、*My Open Cases*、*Unassigned — triage*、*Escalated Cases* 與 *⏰ SLA at Risk*（`src/service/views/case.view.ts`）——其中沒有任何一個以 **SLA 已違約**為過濾條件。真正按違約過濾的只有[服務概覽](/zh-Hant/docs/analytics/dashboards)上的兩個指標磁貼：**Open Cases Past SLA**（未結，且已標記 **SLA 已違約** 或 **SLA 截止日期**已過——讀取磁貼時才計數，所以有沒有掃描它都是準的；升級這些工單的仍然是掃描）與 **Critical Cases**（未結 + Critical）。如果你要的是一份能逐條處理的列表，**Escalated Cases** 是最接近的那個：`case_sla_monitor` 會把它標記為違約的每一個工單都升級掉，所以工單仍然打開時發現的每一次違約都會落進這個檢視——只是會和那些僅因優先順序而升級的工單混在一起。（在解決或關閉的那次儲存裡因超時而被標記的工單已經結束：它離開 **Open Cases Past SLA** 磁貼，計入已結束工作所在的地方——**SLA Met (Closed Cases)** 量表圖和 **SLA on Closed Cases** 報表。）
 
 **My Open Cases 是按優先順序排序的，不是按 SLA 截止日期。** 它的排序鍵是 `priority_rank` 降序在先、`sla_due_date` 升序僅作次級鍵（`src/service/views/case.view.ts`）——所以一個一小時後就到期的 Low 工單，仍然排在每一個 Critical 工單下面。不過次級鍵現在在每一檔裡都有值可排了，同一檔內最早到期的排在最前面。如果你是按截止時間在幹活，請在它旁邊同時開著 **SLA at Risk** 或 **SLA Calendar**。
 
@@ -159,7 +159,7 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 
 ## 給服務經理的提示
 
-- ✅ 沒有 **Breached SLA** 這個列表檢視可以執行。改去處理 **Escalated Cases** 檢視——SLA 掃描標記的每一個工單都會被升級進這個檢視——數量則看服務概覽上的 **SLA Violations** 磁貼。
+- ✅ 沒有 **Breached SLA** 這個列表檢視可以執行。改去處理 **Escalated Cases** 檢視——SLA 掃描標記的每一個工單都會被升級進這個檢視——數量則看服務概覽上的 **Open Cases Past SLA** 磁貼。
 - ✅ 每日站會用那塊看板，但它叫 **Service Workflow**（`case_workflow`），在工單列表上以 **Service Workflow** 頁籤出現。本應用裡不存在叫 *Service Board* 的東西。
 - ✅ 輔導那些違約率趨升的客服——在它形成模式之前於 1:1 中提出。
 

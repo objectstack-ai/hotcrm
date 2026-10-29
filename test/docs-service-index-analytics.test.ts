@@ -194,9 +194,9 @@ describe('service/index names the dashboard and reports that exist (#948)', () =
     it('does not resurrect the claims #948 removed', () => {
       const text = section();
       expect(retired.filter((phrase) => text.includes(phrase))).toEqual([]);
-      // `SLA Performance` alone is the retired short name; the report is
-      // `SLA Performance Report`.
-      expect(text).not.toMatch(/SLA Performance(?!\s+Report)/);
+      // `SLA Performance` is a retired name; the report is `SLA on Closed
+      // Cases`, which states its base (#2370).
+      expect(text).not.toMatch(/SLA Performance/);
     });
 
     it('states why an agent ranking cannot be built, not merely that it is absent', () => {
@@ -259,6 +259,6 @@ describe('the source facts those four bullets now rest on (#948)', () => {
   it('the daily-inflow report puts priority in the rows and the day in the columns', () => {
     expect(CasesOpenedByDayPriorityReport.rows).toEqual(['priority']);
     expect(CasesOpenedByDayPriorityReport.columns).toEqual(['created_at']);
-    expect(CasesOpenedByDayPriorityReport.label).toBe('Cases Opened by Priority × Day');
+    expect(CasesOpenedByDayPriorityReport.label).toBe('Cases Opened by Day');
   });
 });

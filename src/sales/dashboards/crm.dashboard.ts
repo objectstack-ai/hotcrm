@@ -9,8 +9,9 @@ import { avgDealSizeMetricWidget, pipelineByStageWidget } from './shared-widgets
  * Single-page snapshot of revenue, pipeline, and customer activity. Designed
  * to mirror the polished CRM dashboard reference at
  * https://github.com/objectstack-ai/objectui/tree/main/examples/crm/src/dashboards
- * — KPI tiles, an area-chart revenue trend, a lead-source donut, a
- * pipeline-by-stage bar chart, and a recent-deals table.
+ * — KPI tiles, a pipeline-by-stage bar chart, a lead-source donut, and a
+ * pipeline-by-owner table. The revenue trend it used to carry lives on
+ * Executive Overview alone (#2370 row 2).
  *
  * This dashboard intentionally uses the framework's first-class metadata fields
  * (colorVariant, chartConfig, header, dateRange, descriptions, action buttons)
@@ -105,24 +106,10 @@ export const CrmOverviewDashboard: Dashboard = {
     }),
 
     // ─── Charts Row 1 ─────────────────────────────────────────────────
-    {
-      id: 'revenue_trends',
-      title: 'Revenue Trends',
-      description: 'Closed-won revenue over the last 12 months',
-      type: 'area',
-      filter: { stage: 'closed_won', close_date: { $gte: '{12_months_ago}' } },
-      filterBindings: { dateRange: false }, // self-scoped to 12 months — the date picker must not narrow it
-      colorVariant: 'success',
-      dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
-      layout: { x: 0, y: 2, w: 9, h: 4 },
-      chartConfig: {
-        showLegend: false,
-        showDataLabels: false,
-        colors: ['#10B981'],
-        interaction: { tooltips: true },
-      },
-      options: { dateGranularity: 'month' },
-    },
+    // No revenue trend here (#2370 row 2): the same 12-month closed-won area
+    // chart was on Executive Overview, Sales Performance and this dashboard.
+    // Its one home is Executive Overview.
+    pipelineByStageWidget({ x: 0, y: 2, w: 6, h: 4 }),
     {
       id: 'lead_source',
       title: 'Lead Source',
@@ -130,7 +117,7 @@ export const CrmOverviewDashboard: Dashboard = {
       type: 'donut',
       colorVariant: 'purple',
       dataset: 'opportunity_metrics', dimensions: ['lead_source'], values: ['total_amount'],
-      layout: { x: 9, y: 2, w: 3, h: 4 },
+      layout: { x: 6, y: 2, w: 6, h: 4 },
       chartConfig: {
         showLegend: true,
         showDataLabels: true,
@@ -139,11 +126,15 @@ export const CrmOverviewDashboard: Dashboard = {
     },
 
     // ─── Charts Row 2 ─────────────────────────────────────────────────
-    pipelineByStageWidget({ x: 0, y: 6, w: 6, h: 4 }),
     {
       id: 'top_products',
-      title: 'Top Products',
-      description: 'Total list-price revenue by product category',
+      // It sums CATALOG list prices, so it says so (#2370 row 3). It was
+      // titled "Top Products" with a "revenue" description, which read as
+      // sales. Summing what was sold is not on offer: a line's `total_price`
+      // is a `formula`, and a dataset refuses `sum` over a formula field
+      // (DATASET_INVALID, measured on 18.2.0); no stored per-line amount exists.
+      title: 'List Price by Category',
+      description: 'Catalog list prices summed per product category, not sales',
       type: 'bar',
       colorVariant: 'blue',
       // crm_product has no `close_date`, so the date picker would fail it with
@@ -155,7 +146,7 @@ export const CrmOverviewDashboard: Dashboard = {
       // column records whoever created the entry.
       filterBindings: { dateRange: false, owner_id: false },
       dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
-      layout: { x: 6, y: 6, w: 6, h: 4 },
+      layout: { x: 0, y: 6, w: 12, h: 4 },
       chartConfig: {
         showLegend: false,
         showDataLabels: true,
