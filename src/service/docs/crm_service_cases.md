@@ -116,6 +116,21 @@ for the SLA clock:
 > the Service Manager pool, and alert the agent it came from — and both leave it
 > where it is when that pool is unstaffed.
 
+## Cases from the public support form
+
+Visitors who are not signed in raise cases on the public support form
+(**Contact Support**, at `/forms/support`). It asks for their name and email
+(**Your name** and **Your email**, stored on the case as **Supplied Name** and
+**Supplied Email**), a subject, a description and a case type, and above the
+fields it reads: *For an urgent outage, call the service hotline.*
+
+The form does not ask for a priority. A web case arrives at **Low**, with
+**Case Origin** set to **Web**, and you triage it from there. A visitor can never
+open a **Critical** case: the app holds a visitor's case at **High** at most, so
+a web case never escalates on arrival and never goes to the Service Manager pool
+by itself. Critical is a staff decision. When a visitor's problem really is
+urgent, raise the priority yourself and the escalation above runs.
+
 ---
 
 **Related:** recording which article solved a case — see
