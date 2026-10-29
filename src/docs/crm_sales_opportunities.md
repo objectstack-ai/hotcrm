@@ -83,8 +83,12 @@ off.
 
 While an approval is pending, the opportunity is **locked** and its
 **Approval Status** shows the live state. On full approval it is stamped
-**Approved** (with date) and you're notified. On rejection it is stamped
-**Rejected** — the deal is unlocked; revise it and save to resubmit. The
+**Approved** (with date). On rejection it is stamped **Rejected** — the deal
+is unlocked; revise it and save to resubmit. Either way you hear the outcome
+once in the app — **Request approved** or **Request rejected**, with the
+approver's comment — and once by email. If someone else's save sent your deal
+for approval, that notice goes to them, and you get **Deal approved** or
+**Deal rejected** in the app instead. The
 submitter can also **Recall** a pending request to unlock the deal; the next save
 resubmits it. Approvers act from their **Approvals → Inbox**.
 

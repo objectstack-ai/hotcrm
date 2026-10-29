@@ -62,6 +62,15 @@ const act = async (s: VerifyStack, id: string, who: Person, verb: Verb): Promise
 const noticesAbout = async (s: VerifyStack, owner: Person, topic: string, object: string, id: string): Promise<Rec[]> =>
   (await notificationsTo(s, owner.id, topic)).filter((n) => n.payload?.actionUrl === `/${object}/${id}`);
 
+/**
+ * The `topic` emails the record's owner was sent about this one record. The
+ * deal flow's rejection reaches the rep's inbox from the platform since
+ * #2371 row 5, and from the flow by email only (`test/approval-one-notice.test.ts`).
+ */
+const emailsAbout = async (s: VerifyStack, owner: Person, topic: string, object: string, id: string): Promise<Rec[]> =>
+  (await s.rows('sys_notification_delivery', { recipient_id: owner.id, channel: 'email', topic }))
+    .filter((n) => n.payload?.actionUrl === `/${object}/${id}`);
+
 /** The run behind the record, finished, and whether its `notify_rejected` node ran. */
 const finishedRun = async (s: VerifyStack, flow: string, id: string): Promise<{ notifiedRejected: boolean }> => {
   const runs = await flowRuns(s, flow, id);
@@ -103,7 +112,7 @@ describe('opportunity_approval: a recall ends the run without the rejected notic
     const id = await dealInApproval(120_000);
     await act(verify, id, who.rep, 'recall');
     expect((await verify.rows('sys_approval_request', { record_id: id })).map((r) => r.status)).toEqual(['recalled']);
-    expect(await noticesAbout(verify, who.rep, 'opportunity_rejected', 'crm_opportunity', id)).toEqual([]);
+    expect(await emailsAbout(verify, who.rep, 'opportunity_rejected', 'crm_opportunity', id)).toEqual([]);
     expect(await finishedRun(verify, 'opportunity_approval', id)).toEqual({ notifiedRejected: false });
   });
 
@@ -112,14 +121,14 @@ describe('opportunity_approval: a recall ends the run without the rejected notic
     await act(verify, id, who.manager, 'approve');
     await act(verify, id, who.rep, 'recall');
     expect((await verify.rows('sys_approval_request', { record_id: id })).map((r) => r.status).sort()).toEqual(['approved', 'recalled']);
-    expect(await noticesAbout(verify, who.rep, 'opportunity_rejected', 'crm_opportunity', id)).toEqual([]);
+    expect(await emailsAbout(verify, who.rep, 'opportunity_rejected', 'crm_opportunity', id)).toEqual([]);
     expect(await finishedRun(verify, 'opportunity_approval', id)).toEqual({ notifiedRejected: false });
   });
 
   it('a Sales Manager\'s rejection still notifies the owner, once', async () => {
     const id = await dealInApproval(120_000);
     await act(verify, id, who.manager, 'reject');
-    expect(await noticesAbout(verify, who.rep, 'opportunity_rejected', 'crm_opportunity', id)).toHaveLength(1);
+    expect(await emailsAbout(verify, who.rep, 'opportunity_rejected', 'crm_opportunity', id)).toHaveLength(1);
     expect(await finishedRun(verify, 'opportunity_approval', id)).toEqual({ notifiedRejected: true });
   });
 
@@ -127,7 +136,7 @@ describe('opportunity_approval: a recall ends the run without the rejected notic
     const id = await dealInApproval(600_000);
     await act(verify, id, who.manager, 'approve');
     await act(verify, id, director, 'reject');
-    expect(await noticesAbout(verify, who.rep, 'opportunity_rejected', 'crm_opportunity', id)).toHaveLength(1);
+    expect(await emailsAbout(verify, who.rep, 'opportunity_rejected', 'crm_opportunity', id)).toHaveLength(1);
     expect(await finishedRun(verify, 'opportunity_approval', id)).toEqual({ notifiedRejected: true });
   });
 });
