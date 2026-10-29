@@ -309,18 +309,18 @@ const quoteValidation: Hook = {
         const LARGE_DEAL_AMOUNT = 100000;
         const large = deal ? Number(deal.amount) >= LARGE_DEAL_AMOUNT : false;
         const VALUE_LABELS: Record<string, string> = { not_required: 'Not Required', pending: 'Pending', rejected: 'Rejected' };
-        const holds = (f: string): boolean => f === 'approval_status'
-          ? deal[f] === 'pending' || (large && deal[f] !== 'approved')
-          : deal[f] === 'pending' || deal[f] === 'rejected';
+        const holds = (d: Record<string, unknown>, f: string): boolean => f === 'approval_status'
+          ? d[f] === 'pending' || (large && d[f] !== 'approved')
+          : d[f] === 'pending' || d[f] === 'rejected';
         const held = deal && !String(deal.stage).startsWith('closed_')
           ? [['approval_status', 'Approval Status'], ['status_change_approval_status', 'Status Change Approval'], ['qualification_approval_status', 'Qualification Approval']]
-            .filter(([f]) => holds(f))
+            .filter(([f]) => holds(deal, f))
             .map(([f, label]) => `${label} is ${VALUE_LABELS[deal[f] as string] ?? VALUE_LABELS.not_required}`)
           : [];
         // A large deal no request holds (`not_required`, unset) is waiting on
         // nothing: what moves it on is a save of the deal, which sends it for
         // approval — so the sentence says that instead of "once granted".
-        const unsent = large && (deal.approval_status == null || deal.approval_status === 'not_required');
+        const unsent = !!deal && large && (deal.approval_status == null || deal.approval_status === 'not_required');
         // The quote has exactly one opportunity, so "its opportunity" names the
         // deal unambiguously — and ⛔ never by its record id.
         if (held.length > 0) {
