@@ -240,7 +240,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       add_contact_to_campaign: {
         label: 'キャンペーンに追加',
-        successMessage: '取引先責任者をキャンペーンに追加しました！',
+        successMessage: '{{ result.output.campaignName }}: 追加 {{ result.output.addedCount }} 件、既にメンバー {{ result.output.alreadyCount }} 件。',
         params: {
           campaignId: { label: 'キャンペーン' },
         },

@@ -110,6 +110,26 @@ const MEMBERSHIP_FIELDS = {
 const ENROLLED = { name: 'enrolled', type: 'boolean', isInput: false, isOutput: true, defaultValue: false };
 
 /**
+ * What Add to Campaign's success toast says (#2371 row 1): the campaign, and
+ * how many were added and how many were already on it, the same two counts
+ * Enroll Members reports. On 18.2.0 the toast read "Leads added to campaign!"
+ * whether the run added the person or found them already a member. An
+ * autolaunched flow's outputs reach the action's `successMessage` as
+ * `result.output.<name>` (measured), so the counts are outputs here and the
+ * sentence is the action's, translated in the packs. Exactly one of the two
+ * counts ends at 1 on a run that is not refused.
+ */
+const RESULT_OUTPUTS = [
+  { name: 'campaignName', type: 'text', isInput: false, isOutput: true },
+  { name: 'addedCount', type: 'number', isInput: false, isOutput: true, defaultValue: 0 },
+  { name: 'alreadyCount', type: 'number', isInput: false, isOutput: true, defaultValue: 0 },
+];
+
+/** The two ends of a run that is not refused: added, or already on the campaign. */
+const ADDED = { enrolled: true, addedCount: 1, campaignName: cel`campaignRecord.name` };
+const ALREADY = { alreadyCount: 1, campaignName: cel`campaignRecord.name` };
+
+/**
  * The campaign gate, read as the caller. `crm_campaign` is `public_read`, so
  * a caller who may enroll can read the campaign they picked.
  */
@@ -159,6 +179,7 @@ export const CampaignLeadMemberEnrollFlow: Flow = {
     { name: 'campaignId', type: 'text', isInput: true, isOutput: false },
     { name: 'leadId', type: 'text', isInput: true, isOutput: false },
     ENROLLED,
+    ...RESULT_OUTPUTS,
   ],
 
   nodes: [
@@ -200,7 +221,8 @@ export const CampaignLeadMemberEnrollFlow: Flow = {
         fields: { crm_campaign: cel`campaignId`, crm_lead: cel`leadId`, ...MEMBERSHIP_FIELDS },
       },
     },
-    { id: 'mark_enrolled', type: 'assignment', label: 'Enrolled', config: { assignments: { enrolled: true } } },
+    { id: 'mark_enrolled', type: 'assignment', label: 'Enrolled', config: { assignments: ADDED } },
+    { id: 'mark_already', type: 'assignment', label: 'Already a Member', config: { assignments: ALREADY } },
     { id: 'end', type: 'end', label: 'End' },
   ],
 
@@ -219,6 +241,10 @@ export const CampaignLeadMemberEnrollFlow: Flow = {
     { id: 'e9', source: 'check_not_enrolled', target: 'create_campaign_member', type: 'conditional', condition: P`existingMember == null`, label: 'Enroll' },
     { id: 'e10', source: 'create_campaign_member', target: 'mark_enrolled', type: 'default' },
     { id: 'e11', source: 'mark_enrolled', target: 'end', type: 'default' },
+    // The other half of `e9`: until #2371 row 1 an existing member ended the
+    // run at the decision, with nothing for the toast to count.
+    { id: 'e12', source: 'check_not_enrolled', target: 'mark_already', type: 'conditional', condition: P`existingMember != null`, label: 'Already a member' },
+    { id: 'e13', source: 'mark_already', target: 'end', type: 'default' },
   ],
 };
 
@@ -236,6 +262,7 @@ export const CampaignContactMemberEnrollFlow: Flow = {
     { name: 'campaignId', type: 'text', isInput: true, isOutput: false },
     { name: 'contactId', type: 'text', isInput: true, isOutput: false },
     ENROLLED,
+    ...RESULT_OUTPUTS,
   ],
 
   nodes: [
@@ -274,7 +301,8 @@ export const CampaignContactMemberEnrollFlow: Flow = {
         fields: { crm_campaign: cel`campaignId`, crm_contact: cel`contactId`, ...MEMBERSHIP_FIELDS },
       },
     },
-    { id: 'mark_contact_enrolled', type: 'assignment', label: 'Enrolled', config: { assignments: { enrolled: true } } },
+    { id: 'mark_contact_enrolled', type: 'assignment', label: 'Enrolled', config: { assignments: ADDED } },
+    { id: 'mark_contact_already', type: 'assignment', label: 'Already a Member', config: { assignments: ALREADY } },
     { id: 'end', type: 'end', label: 'End' },
   ],
 
@@ -290,5 +318,7 @@ export const CampaignContactMemberEnrollFlow: Flow = {
     { id: 'e9', source: 'check_contact_not_enrolled', target: 'create_contact_member', type: 'conditional', condition: P`existingContactMember == null`, label: 'Enroll' },
     { id: 'e10', source: 'create_contact_member', target: 'mark_contact_enrolled', type: 'default' },
     { id: 'e11', source: 'mark_contact_enrolled', target: 'end', type: 'default' },
+    { id: 'e12', source: 'check_contact_not_enrolled', target: 'mark_contact_already', type: 'conditional', condition: P`existingContactMember != null`, label: 'Already a member' },
+    { id: 'e13', source: 'mark_contact_already', target: 'end', type: 'default' },
   ],
 };

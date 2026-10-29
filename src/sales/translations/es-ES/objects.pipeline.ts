@@ -273,7 +273,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: 'Agregar a Campaña',
-        successMessage: '¡Prospecto agregado a la campaña!',
+        successMessage: '{{ result.output.campaignName }}: {{ result.output.addedCount }} agregado(s), {{ result.output.alreadyCount }} ya era(n) miembro(s).',
         params: {
           campaignId: { label: 'Campaña' },
         },

@@ -685,11 +685,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     campaign_enrollment: {
       label: 'キャンペーンにメンバーを登録',
-      successMessage: '対象メンバーをキャンペーンに登録しました。',
+      successMessage: 'キャンペーンへのメンバー登録が完了しました。',
       refusals: {
         end_refused: {
           message:
-            '選択された人のうち {{refusedCount}} 人の登録が拒否されました：登録 {{enrolledCount}} 人、拒否 {{refusedCount}} 人。拒否された人はキャンペーンに追加されていません。理由はフローの実行ログに一人ずつ記録されています。',
+            '選択された人のうち {{refusedCount}} 人の登録が拒否されました：新規追加 {{enrolledCount}} 人、既にメンバー {{alreadyCount}} 人、メール配信停止またはメールアドレスなしでスキップ {{skippedCount}} 人、拒否 {{refusedCount}} 人。拒否された人はキャンペーンに追加されていません。理由はフローの実行ログに一人ずつ記録されています。',
         },
         refuse_not_open: {
           message:
@@ -707,6 +707,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
               options: { executive: '経営層', sales: '営業部', marketing: 'マーケティング部', engineering: 'エンジニアリング部', support: 'サポート部', finance: '経理部', hr: '人事部', operations: 'オペレーション部' },
             },
           },
+        },
+        result: {
+          title: '登録結果',
+          description: 'キャンペーンに新規追加 {{enrolledCount}} 人、既にメンバー {{alreadyCount}} 人、メール配信停止またはメールアドレスなしでスキップ {{skippedCount}} 人。',
+          fields: { campaignLink: { label: 'キャンペーン' } },
         },
       },
     },

@@ -273,7 +273,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: 'キャンペーンに追加',
-        successMessage: 'キャンペーンに追加しました！',
+        successMessage: '{{ result.output.campaignName }}: 追加 {{ result.output.addedCount }} 件、既にメンバー {{ result.output.alreadyCount }} 件。',
         params: {
           campaignId: { label: 'キャンペーン' },
         },

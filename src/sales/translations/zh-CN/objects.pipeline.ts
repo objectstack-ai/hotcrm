@@ -266,7 +266,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: '加入营销活动',
-        successMessage: '已将线索加入营销活动！',
+        successMessage: '{{ result.output.campaignName }}：新加入 {{ result.output.addedCount }} 人，已是成员 {{ result.output.alreadyCount }} 人。',
         params: {
           campaignId: { label: '营销活动' },
         },

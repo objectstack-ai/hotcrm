@@ -144,15 +144,28 @@ describe('Add to Campaign refuses a person who opted out of email (#2336 D1)', (
  * removed: the run ended `refused`, the opted-out leads counted as refused).
  */
 describe('Enroll Members counts an opted-out person as skipped, not refused (#2336)', () => {
-  it('a segment holding an opted-out lead ends clean, with the static success message', async () => {
+  it('a segment holding an opted-out lead ends clean, and the result screen counts the skip', async () => {
     const campaign = await campaignOf('in_progress');
     const status = 'contacted';
     const optedIn = await leadOf({ status });
     const optedOut = await leadOf({ status, email_opt_out: true });
     const run = await verify.flows.run('campaign_enrollment', { recordId: campaign.id }, { as: marketer.token });
-    const result = await verify.flows.resume(run, { memberSource: 'leads', leadStatus: status, contactDepartment: 'engineering' }, { as: marketer.token }) as Rec;
-    expect(result.status, 'a skipped person ended the run refused').not.toBe('refused');
-    expect(result.successMessage).toBe('Eligible members enrolled in campaign.');
+    const paused = await verify.flows.resume(run, { memberSource: 'leads', leadStatus: status, contactDepartment: 'engineering' }, { as: marketer.token }) as Rec;
+    expect(paused.status, 'a skipped person ended the run refused').not.toBe('refused');
+    // The result screen names the three counts (#2371 row 1). Every lead in
+    // the segment is either added, already a member or skipped: the counts
+    // add up to the segment, and the opted-out lead is among the skipped.
+    const screen = (paused.screen ?? paused.output?.screen) as Rec;
+    expect(screen?.nodeId, 'the run did not stop on its result screen').toBe('result');
+    const m = /^(\d+) added to the campaign, (\d+) already members, (\d+) skipped/.exec(String(screen.description));
+    expect(m, `no counts on the result screen: ${String(screen.description)}`).toBeTruthy();
+    const [added, already, skipped] = [Number(m![1]), Number(m![2]), Number(m![3])];
+    const segment = (await verify.rows('crm_lead', { status })).filter((l) => !l.is_converted);
+    expect(added + already + skipped, 'the counts do not add up to the segment').toBe(segment.length);
+    expect(skipped, 'the opted-out lead was not counted as skipped').toBeGreaterThanOrEqual(1);
+    expect(added).toBe((await membersOf(campaign.id)).length);
+    const result = await verify.flows.resume(paused as never, {}, { as: marketer.token }) as Rec;
+    expect(result.successMessage).toBe('Campaign enrollment finished.');
     const enrolled = (await membersOf(campaign.id)).map((m) => m.crm_lead);
     expect(enrolled).toContain(optedIn.id);
     expect(enrolled).not.toContain(optedOut.id);

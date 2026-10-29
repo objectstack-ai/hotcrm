@@ -30,7 +30,7 @@ type Rec = Record<string, any>;
  *
  * Q2 letter a: when anyone was refused, Enroll Members ends with outcome
  * `refused` and a message giving both counts; a clean run ends `completed`
- * with the flow's static `successMessage`.
+ * with the flow's static `successMessage`, after the result screen (#2371 row 1).
  *
  * Every door is driven the way its caller drives it, through
  * `@objectstack/verify` over the shipped app, and the stored rows are read
@@ -122,11 +122,14 @@ async function enrollMembers(as: Person, campaignId: string, memberSource: 'lead
   return (await verify.flows.resume(run, { memberSource, leadStatus: 'new', contactDepartment: 'engineering' }, { as: as.token })) as Rec;
 }
 
-/** The counts the refused ending reports, read off its message. */
-const countsIn = (message: unknown): { enrolled: number; refused: number } => {
-  const m = /: (\d+) enrolled, (\d+) refused\./.exec(String(message));
+/**
+ * The counts the refused ending reports, read off its message. Since #2371
+ * row 1 it names all four: added, already members, skipped, refused.
+ */
+const countsIn = (message: unknown): { enrolled: number; already: number; skipped: number; refused: number } => {
+  const m = /: (\d+) added, (\d+) already members, (\d+) skipped because they opted out of email or have no email address, (\d+) refused\./.exec(String(message));
   expect(m, `no counts in the refusal message: ${String(message)}`).toBeTruthy();
-  return { enrolled: Number(m![1]), refused: Number(m![2]) };
+  return { enrolled: Number(m![1]), already: Number(m![2]), skipped: Number(m![3]), refused: Number(m![4]) };
 };
 
 describe('a profile without allowCreate is refused at every enrollment door (#2167)', () => {
@@ -181,7 +184,10 @@ describe('a profile with allowCreate enrolls through every door, as itself (#216
   it.each(ALLOWED)('%s: Add to Campaign on a lead enrolls it, and a second run skips it', async (persona) => {
     const w = await world(who[persona]!);
     const first = await addLead(who[persona]!, w.leadA.id, w.campaign.id) as Rec;
-    expect(first).toMatchObject({ success: true, output: { enrolled: true } });
+    // The success toast's counts (#2371 row 1): one added, none already on it.
+    expect(first).toMatchObject({
+      success: true, output: { enrolled: true, addedCount: 1, alreadyCount: 0, campaignName: w.campaign.name },
+    });
     const rows = await membersOf(w.campaign.id);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ crm_lead: w.leadA.id, status: 'sent' });
@@ -191,32 +197,47 @@ describe('a profile with allowCreate enrolls through every door, as itself (#216
     expect(rows[0]!.created_by).toBe(who[persona]!.id);
 
     const again = await addLead(who[persona]!, w.leadA.id, w.campaign.id) as Rec;
-    expect(again).toMatchObject({ success: true, output: { enrolled: false } });
+    // A re-run says so instead of "added" (#2371 row 1).
+    expect(again).toMatchObject({
+      success: true, output: { enrolled: false, addedCount: 0, alreadyCount: 1, campaignName: w.campaign.name },
+    });
     expect(await membersOf(w.campaign.id), 'a re-run double-enrolled the lead').toHaveLength(1);
   });
 
   it.each(ALLOWED)('%s: Add to Campaign on a contact enrolls it with no lead, and a second run skips it', async (persona) => {
     const w = await world(who[persona]!);
     const first = await addContact(who[persona]!, w.contact.id, w.campaign.id) as Rec;
-    expect(first).toMatchObject({ success: true, output: { enrolled: true } });
+    expect(first).toMatchObject({
+      success: true, output: { enrolled: true, addedCount: 1, alreadyCount: 0, campaignName: w.campaign.name },
+    });
     const rows = await membersOf(w.campaign.id);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ crm_contact: w.contact.id, status: 'sent' });
     expect(rows[0]!.crm_lead ?? null, 'a contact member must not also claim a lead').toBeNull();
 
     const again = await addContact(who[persona]!, w.contact.id, w.campaign.id) as Rec;
-    expect(again).toMatchObject({ success: true, output: { enrolled: false } });
+    expect(again).toMatchObject({
+      success: true, output: { enrolled: false, addedCount: 0, alreadyCount: 1, campaignName: w.campaign.name },
+    });
     expect(await membersOf(w.campaign.id)).toHaveLength(1);
   });
 
-  it.each(ALLOWED)('%s: a clean Enroll Members run completes with the static success message', async (persona) => {
+  it.each(ALLOWED)('%s: a clean Enroll Members run ends on its result screen, then completes', async (persona) => {
     const w = await world(who[persona]!);
-    const result = await enrollMembers(who[persona]!, w.campaign.id);
+    const paused = await enrollMembers(who[persona]!, w.campaign.id);
+    // The counts are on the result screen (#2371 row 1), with a link back to
+    // the campaign; Submit completes the run with a neutral sentence.
+    expect(paused.status, 'a clean run did not stop on its result screen').toBe('paused');
+    const screen = (paused.screen ?? paused.output?.screen) as Rec;
+    expect(screen?.nodeId).toBe('result');
+    expect(String(screen.description)).toMatch(/^\d+ added to the campaign, \d+ already members, \d+ skipped because they opted out of email or have no email address\.$/);
+    expect((screen.fields as Rec[]).find((f) => f.name === 'campaignLink')?.defaultValue).toBe(w.campaign.id);
+    const result = (await verify.flows.resume(paused as never, {}, { as: who[persona]!.token })) as Rec;
     expect(result.success).toBe(true);
     expect(result.status, 'a clean run is a terminal success, not a refusal').not.toBe('refused');
     expect(result.refusalMessage).toBeUndefined();
     expect(result.successMessage).toBe(CampaignEnrollmentFlow.successMessage);
-    expect(result.successMessage).toBe('Eligible members enrolled in campaign.');
+    expect(result.successMessage).toBe('Campaign enrollment finished.');
     const enrolled = (await membersOf(w.campaign.id)).map((m) => m.crm_lead);
     expect(enrolled).toEqual(expect.arrayContaining([w.leadA.id, w.leadB.id]));
   }, ENROLL_BUDGET_MS);
@@ -289,9 +310,11 @@ describe('a partly refused Enroll Members run reports both counts (#2167, Q2 let
 
     expect(result!).toMatchObject({ success: true, status: 'refused' });
     const rows = await membersOf(w.campaign.id);
-    expect(countsIn(result!.refusalMessage)).toEqual({ enrolled: rows.length, refused: 1 });
+    const counts = countsIn(result!.refusalMessage);
+    expect({ enrolled: counts.enrolled, already: counts.already, refused: counts.refused }).toEqual({ enrolled: rows.length, already: 0, refused: 1 });
     expect(result!.refusalMessage).toBe(
-      `Enrollment refused for 1 of the people selected: ${rows.length} enrolled, 1 refused. `
+      `Enrollment refused for 1 of the people selected: ${rows.length} added, 0 already members, `
+        + `${counts.skipped} skipped because they opted out of email or have no email address, 1 refused. `
         + 'A refused person was not added to the campaign; the flow run log records why for each one.',
     );
     const leads = rows.map((m) => m.crm_lead);

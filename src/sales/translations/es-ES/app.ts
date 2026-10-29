@@ -683,11 +683,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     campaign_enrollment: {
       label: 'Inscribir miembros en la campaña',
-      successMessage: 'Miembros elegibles inscritos en la campaña.',
+      successMessage: 'Inscripción en la campaña terminada.',
       refusals: {
         end_refused: {
           message:
-            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} inscritas, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
+            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} agregadas, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se dieron de baja del correo o no tienen dirección de correo, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
         },
         refuse_not_open: {
           message:
@@ -705,6 +705,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
               options: { executive: 'Ejecutivo', sales: 'Ventas', marketing: 'Marketing', engineering: 'Ingeniería', support: 'Soporte', finance: 'Finanzas', hr: 'Recursos Humanos', operations: 'Operaciones' },
             },
           },
+        },
+        result: {
+          title: 'Resultado de la inscripción',
+          description: '{{enrolledCount}} agregadas a la campaña, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se dieron de baja del correo o no tienen dirección de correo.',
+          fields: { campaignLink: { label: 'Campaña' } },
         },
       },
     },

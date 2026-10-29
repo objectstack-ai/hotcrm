@@ -690,11 +690,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     campaign_enrollment: {
       label: '将成员加入营销活动',
-      successMessage: '符合条件的成员已加入营销活动。',
+      successMessage: '营销活动成员加入已完成。',
       refusals: {
         end_refused: {
           message:
-            '有 {{refusedCount}} 人被拒绝加入：已加入 {{enrolledCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
+            '有 {{refusedCount}} 人被拒绝加入：新加入 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因退订邮件或没有邮箱地址而跳过 {{skippedCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
         },
         refuse_not_open: {
           message:
@@ -712,6 +712,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
               options: { executive: '管理层', sales: '销售部', marketing: '市场部', engineering: '工程部', support: '支持部', finance: '财务部', hr: '人力资源', operations: '运营部' },
             },
           },
+        },
+        result: {
+          title: '加入结果',
+          description: '新加入营销活动 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因退订邮件或没有邮箱地址而跳过 {{skippedCount}} 人。',
+          fields: { campaignLink: { label: '营销活动' } },
         },
       },
     },

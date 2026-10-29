@@ -180,7 +180,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: 'Add to Campaign',
-        successMessage: 'Leads added to campaign!',
+        successMessage: '{{ result.output.campaignName }}: {{ result.output.addedCount }} added, {{ result.output.alreadyCount }} already a member.',
         params: {
           campaignId: { label: 'Campaign' },
         },
