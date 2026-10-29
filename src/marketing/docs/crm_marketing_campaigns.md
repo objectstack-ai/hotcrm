@@ -51,6 +51,11 @@ is converted becomes **Converted** for you; an **Unsubscribed** member never
 does. Setting a member to **Unsubscribed** also ticks **Email Opt Out** on that
 lead or contact, which keeps them out of every later campaign.
 
+Deleting a lead or a contact also deletes every campaign membership it holds,
+on every campaign, and those campaigns' numbers recount without it within a few
+seconds. The delete confirmation does not mention the memberships, so check the
+**Campaign Members** list on the person's record first if the campaign figures matter.
+
 HotCRM does not track opens, clicks or bounces. What it can observe is a person
 answering and a lead converting, and those are the statuses it has.
 

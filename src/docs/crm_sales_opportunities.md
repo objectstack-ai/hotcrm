@@ -110,6 +110,15 @@ approval.
 
 ---
 
+## Private deals
+
+Tick **Private** on a deal and only its owner can see it. That includes the
+people who otherwise read every deal in the organisation, such as a Sales
+Manager or a Marketing User: the deal drops out of their lists and reports, and
+a link to it opens a page saying the record does not exist or may have been
+deleted. Nothing is wrong with the deal; it is hidden from them. To share it
+again, the owner clears **Private**.
+
 **Related:** a deal starts life as a lead — see [Leads](./crm_sales_leads.md);
 once it is won, the relationship continues as a contract — see
 [Contracts](./crm_sales_contracts.md); the tasks, calls and meetings that move
