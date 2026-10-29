@@ -20,8 +20,10 @@ applies automatically along the way.
 ## Stages
 
 Opportunities advance through these stages. The arrows are the moves the app
-treats as normal; a move off them still saves, and the app only logs a warning.
-**Closed Won** and **Closed Lost** are where a deal ends.
+treats as normal; a move off them still saves, and the save comes back with a
+warning. Any open stage can close straight to **Closed Won** or **Closed Lost**,
+so a deal won early saves without one. **Closed Won** and **Closed Lost** are
+where a deal ends.
 
 ```mermaid
 stateDiagram-v2
@@ -34,11 +36,14 @@ stateDiagram-v2
   state "Closed Lost" as closed_lost
   prospecting --> qualification
   prospecting --> proposal
+  prospecting --> closed_won
   prospecting --> closed_lost
   qualification --> needs_analysis
   qualification --> proposal
+  qualification --> closed_won
   qualification --> closed_lost
   needs_analysis --> proposal
+  needs_analysis --> closed_won
   needs_analysis --> closed_lost
   proposal --> negotiation
   proposal --> closed_won

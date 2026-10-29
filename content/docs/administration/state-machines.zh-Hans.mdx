@@ -58,11 +58,8 @@ HotCRM 在 **五个** 对象上使用状态机：
 
 ```
 Prospecting → Qualification → Needs Analysis → Proposal → Negotiation
-                                                  │            │
-                                                  └─────┬──────┘
-                                                        ▼
-                                                   Closed Won
 
+Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Won
 Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Lost
 ```
 
@@ -72,15 +69,15 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 | 从 | 可以移动到 | 说明 |
 | --- | --- | --- |
-| Prospecting | Qualification、Proposal、Closed Lost | |
-| Qualification | Needs Analysis、Proposal、Closed Lost | |
-| Needs Analysis | Proposal、Closed Lost | 默认赢率 40%，预测类别为 *Best Case* |
+| Prospecting | Qualification、Proposal、Closed Won、Closed Lost | |
+| Qualification | Needs Analysis、Proposal、Closed Won、Closed Lost | |
+| Needs Analysis | Proposal、Closed Won、Closed Lost | 默认赢率 40%，预测类别为 *Best Case* |
 | Proposal | Negotiation、Closed Won、Closed Lost | |
 | Negotiation | Closed Won、Closed Lost | |
 | Closed Won | — | 终态 |
 | Closed Lost | — | 终态 |
 
-其中两条边是为 CPQ 路径存在的，不是给销售一个阶段一个阶段点出来的：*→ Proposal* 从每一个 Proposal 之前的阶段都合法，因为 `quote_generation` 流程一旦生成报价就把交易快进到 *Proposal*，而生成报价在任何开放阶段都可能发生——不过如果你们的组织要求立项，交易在立项通过之前不能生成报价（[商机资格评估](/zh-Hans/docs/sales/opportunity-qualification#qualification-approval)）；*Proposal → Closed Won* 合法，则是因为 `quote_on_accepted` 钩子会从一份被接受的报价上直接赢下关联交易，中间不再经过一次谈判。
+其中两条边是为 CPQ 路径存在的，不是给销售一个阶段一个阶段点出来的：*→ Proposal* 从每一个 Proposal 之前的阶段都合法，因为 `quote_generation` 流程一旦生成报价就把交易快进到 *Proposal*，而生成报价在任何开放阶段都可能发生——不过如果你们的组织要求立项，交易在立项通过之前不能生成报价（[商机资格评估](/zh-Hans/docs/sales/opportunity-qualification#qualification-approval)）；*Proposal → Closed Won* 合法，则是因为 `quote_on_accepted` 钩子会从一份被接受的报价上直接赢下关联交易，中间不再经过一次谈判。此外，每个未关闭的阶段都可以直接关闭：*→ Closed Won* 和 *→ Closed Lost* 一样，从任何未关闭阶段都合法，所以提前赢下的交易保存时不带警告。
 
 这一步成交永远不是绕过审批的路。只要审批还卡着这笔交易——大额审批在审批中，或者在启用了它们的部署里，状态变更审批、立项审批在审批中或已驳回——接受报价这一步本身就会被拒绝，所以不会出现一份已接受的报价挂在一笔关不掉的交易上。见[报价](/zh-Hans/docs/sales/quotes#内置规则)。
 
@@ -99,7 +96,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 ## 状态机给你的是什么
 
-五条中有四条不是拦截——合同的转换表是会拒绝变更的那一条（见上文）。在另外四条上，本节原先列为「不会发生」的几件事，在转换表声明之后照样发生：代表仍可能不小心把潜在客户标记为 *Converted*，商机仍可以从 *Prospecting* 直接跳到 *Closed Won*，记录仍会跳过阶段。这些写入各自只在服务端日志里留下一条警告，然后照样落库。所以漏斗报表并不会因为存在一张表就 **反映现实** —— 它报的是记录实际走过的那些阶段。
+五条中有四条不是拦截——合同的转换表是会拒绝变更的那一条（见上文）。在另外四条上，本节原先列为「不会发生」的几件事，在转换表声明之后照样发生：代表仍可能不小心把潜在客户标记为 *Converted*，商机仍可以从 *Prospecting* 直接跳到 *Negotiation*，记录仍会跳过阶段。这些写入各自只在服务端日志里留下一条警告，然后照样落库。所以漏斗报表并不会因为存在一张表就 **反映现实** —— 它报的是记录实际走过的那些阶段。
 
 转换表真正给你的，就是这条路线本身 —— **写在一个机器能读的地方**：
 

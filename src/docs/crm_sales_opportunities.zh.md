@@ -9,7 +9,7 @@ description: 商机阶段、停滞商机提醒、大单成交提醒和大额商�
 
 ## 阶段
 
-商机沿下图推进。箭头是应用视为正常的变更；偏离箭头的变更照样会保存，应用只记一条警告。**成交**和**失败**是商机的终点。
+商机沿下图推进。箭头是应用视为正常的变更；偏离箭头的变更照样会保存，保存结果会附带一条警告。任何未关闭的阶段都可以直接转为**成交**或**失败**，所以提前赢下的商机保存时不会再出现警告。**成交**和**失败**是商机的终点。
 
 ```mermaid
 stateDiagram-v2
@@ -22,11 +22,14 @@ stateDiagram-v2
   state "失败" as closed_lost
   prospecting --> qualification
   prospecting --> proposal
+  prospecting --> closed_won
   prospecting --> closed_lost
   qualification --> needs_analysis
   qualification --> proposal
+  qualification --> closed_won
   qualification --> closed_lost
   needs_analysis --> proposal
+  needs_analysis --> closed_won
   needs_analysis --> closed_lost
   proposal --> negotiation
   proposal --> closed_won

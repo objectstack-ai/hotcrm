@@ -706,9 +706,15 @@ export const Opportunity = ObjectSchema.create({
         // `→ proposal` is legal from every pre-proposal stage: the
         // quote_generation flow fast-forwards the deal to `proposal` when a
         // quote is generated, which can happen at any open stage.
-        prospecting: ['qualification', 'proposal', 'closed_lost'],
-        qualification: ['needs_analysis', 'proposal', 'closed_lost'],
-        needs_analysis: ['proposal', 'closed_lost'],
+        //
+        // `→ closed_won` is legal from every open stage too (#2371 row 3): a
+        // rep who wins a deal early used to get a "Saved — with warnings"
+        // toast on top of the save toast for a move the business accepts.
+        // `→ closed_lost` was already legal from every open stage; the
+        // warning still catches skipping forward within the open stages.
+        prospecting: ['qualification', 'proposal', 'closed_won', 'closed_lost'],
+        qualification: ['needs_analysis', 'proposal', 'closed_won', 'closed_lost'],
+        needs_analysis: ['proposal', 'closed_won', 'closed_lost'],
         // `proposal → closed_won` is legal: the quote_on_accepted hook closes
         // the linked deal directly from the CPQ path (quote_generation parks
         // the opportunity at `proposal`; an accepted quote wins it without a
