@@ -37,10 +37,9 @@ The cross-functional home dashboard — revenue, pipeline and deal mix on one pa
 - **Open Deals (Selected Period)** — open opportunities whose close date falls in the selected period.
 - **Deals Won (Selected Period)** — closed-won deals in the selected period.
 - **Avg Deal Size (Selected Period)** — average value of the deals closed won in the selected period.
-- **Revenue Trends** — closed-won revenue over the last 12 months (area chart).
-- **Lead Source** — pipeline value by acquisition channel (donut).
 - **Pipeline by Stage** — open opportunity value at each sales stage (horizontal bar chart).
-- **Top Products** — total list-price revenue by product category (bar).
+- **Lead Source** — pipeline value by acquisition channel (donut).
+- **List Price by Category** — catalog list prices summed per product category. It reads the price book, not sales: no tile on this page sums sold line items (bar).
 - **Pipeline by Owner** — open pipeline value, deal count and average deal size per rep (table).
 
 **Controls**: a date-range picker over the opportunity close date (defaults to this quarter) and an Owner filter.
@@ -61,11 +60,10 @@ The sales team's daily operational dashboard.
 - **Deals Won (12M)** — the numerator behind that percentage.
 - **Deals Lost (12M)** — the other half of its denominator, so both numbers are always on screen next to the rate.
 - **Pipeline by Stage** — open opportunity value at each sales stage (horizontal bar chart).
-- **Monthly Revenue Trend** — closed-won revenue, last 12 months.
 - **Pipeline by Forecast Category** — open pipeline grouped by forecast category.
 - **Lead Source** — where the pipeline is coming from (donut).
 - **Open Pipeline by Owner** — in-flight value, deal count and average win probability per rep (table).
-- **Quota Attainment by Rep** — current-quarter quota, closed revenue and attainment per rep, read from the forecast snapshots.
+- **Quota Attainment by Rep** — current-quarter quota, closed revenue and attainment per rep, read from the forecast snapshots. It stays empty until the nightly forecast snapshot has opened the current quarter and a manager has set each rep's quota; the demo data does not open one for you.
 - **Win / Loss by Rep** — won, lost, settled, win rate and won revenue per rep (table).
 - **Win / Loss by Lead Source** — the same breakdown by acquisition channel: which sources produce deals that actually close.
 - **Why We Lose** — lost deals by loss reason. Every closed-lost deal carries a reason (it is [required at close](/docs/sales/opportunities)), so this chart has no "unattributed" slice — an empty chart means no losses in the window, not an unfilled field.
@@ -106,12 +104,12 @@ The service team's daily ops view.
 - **Open Cases** — cases that are not yet closed.
 - **Critical Cases** — open cases at critical priority.
 - **Avg Resolution Time** — mean time to close, in hours.
-- **SLA Violations** — cases that breached their SLA.
+- **Open Cases Past SLA** — open cases whose SLA deadline has passed. Its base is open cases only: a case closed late leaves this count when it closes.
 - **Cases by Status** — workload distribution across the pipeline (donut).
 - **Cases by Priority** — open case mix by urgency (pie).
 - **Cases by Origin** — Email / Phone / Web / Chat / Portal (bar).
 - **Daily Case Volume** — new cases created over the last 30 days.
-- **SLA Compliance** — share of cases resolved within SLA, against a 95% target line (gauge).
+- **SLA Met (Closed Cases)** — share of closed cases that met their SLA, against a 95% target line (gauge). Its base is closed cases only: an open case is in neither the numerator nor the denominator.
 - **My Open Cases by Priority** — the signed-in user's own open cases and their SLA-violation rate per priority (table). It ignores the Agent filter: it always shows your own cases.
 
 **Controls**: a date-range picker over the date a case was created (defaults to the last 90 days), Agent and Priority filters, and a one-minute refresh — service desks need fresh numbers. It is the only picker that windows a case date rather than the opportunity close date, and the only one that does not default to this quarter, so every number on this page is bounded by the last 90 days until you widen it. Daily Case Volume opts out of the picker and keeps its own 30-day window, so the chart under that title always covers the 30 days it names.
@@ -126,7 +124,7 @@ The exec / finance view of the business.
 - **Active Accounts** — customers with at least one active relationship.
 - **Total Contacts** — people in the address book.
 - **Open Leads** — unconverted leads in the funnel.
-- **Revenue Trend** — closed-won revenue over the last 12 months.
+- **Revenue Trend** — closed-won revenue over the last 12 months. This is the only dashboard that carries the trend, so it has one home.
 - **Revenue by Industry** — YTD closed-won revenue split by customer industry (donut).
 - **Pipeline by Stage** — open opportunity value at each sales stage (horizontal bar chart).
 - **New Accounts** — account creation cadence over the last 6 months.
@@ -144,7 +142,7 @@ This dashboard is the basis for the weekly leadership review.
 
 A dashboard filter is matched against the **object** behind each widget's dataset, not against that dataset's declared dimensions, and it is ANDed into the query of every widget bound to it. That is why Customer Service can offer an Agent filter even though `case_metrics` declares no owner dimension: `owner_id` is a field on the case, and the filter needs nothing more than that. Filtering is all it buys — a widget still cannot **group by** a field the dataset does not declare, which is how [SLA & Escalation](/docs/service/sla-and-escalation) can say, correctly, that no report and no dashboard widget breaks cases down by agent, on the same app whose service desk filters by one. It cuts the other way too: a filter naming a field a widget's own object lacks would ask that widget's query for a column that does not exist, so a widget that cannot answer a filter opts out of it by name (`filterBindings`) instead of quietly ignoring it.
 
-Some tiles opt out of the dashboard's own filters on purpose. The 12-month revenue trends, Top Products and Quota Attainment by Rep keep the window they are labelled with, so a narrower date picker cannot silently redefine the number under its own title.
+Some tiles opt out of the dashboard's own filters on purpose. Revenue Trend, List Price by Category and Quota Attainment by Rep keep the window they are labelled with, so a narrower date picker cannot silently redefine the number under its own title.
 
 ## Where the numbers come from
 
@@ -158,5 +156,5 @@ The window is not shared, and each KPI title says which one it reads. *(Selected
 
 - ✅ Before a pipeline review, read **Win / Loss by Rep** next to **Why We Lose** — the first says who is converting, the second says what is beating you.
 - ✅ Work the **Quiet 90+ Days** tile weekly. An account with no logged interaction in a quarter is either dormant or already gone, and the tile is only as good as the interactions your team logs.
-- ✅ On the service desk, watch **SLA Violations** (the count of breaches) alongside the **SLA Compliance** tile (the rate against target) — a small count on a small volume is not the same as a healthy rate.
+- ✅ On the service desk, read the two SLA tiles as two different populations: **Open Cases Past SLA** counts open cases that are already late (work to do now), while **SLA Met (Closed Cases)** is the rate over cases already closed (how the desk did). A late case moves from the first to the second when it closes.
 - ✅ Read **Interactions on Deals** against **Open Deals**: the ratio, not either number alone, is the coverage question.

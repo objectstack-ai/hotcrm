@@ -232,7 +232,7 @@ describe('the SLA surfaces count the late finishes, through the dataset query pa
     return (res.rows ?? []) as Rec[];
   };
 
-  it('the SLA Performance report reads the late closes as violations', async () => {
+  it('the SLA on Closed Cases report reads the late closes as violations', async () => {
     const report = item('report', 'sla_performance');
     const rows = await query({ dimensions: report.rows, measures: report.values, filter: report.runtimeFilter });
     // Three CLOSED cases (two late, one on time); the late resolve is not
