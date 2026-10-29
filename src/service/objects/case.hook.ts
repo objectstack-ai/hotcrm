@@ -126,8 +126,8 @@ const caseValidation: Hook = {
     // staff-side (`case_escalation`, `case_sla_monitor`, the `escalate_case`
     // screen flow). The public `web_to_case` form (`src/service/views/case.view.ts`)
     // collects exactly `supplied_name`, `supplied_email`, `subject`,
-    // `description`, `type` and `priority`, so nulling this drops nothing any
-    // guest surface asks for. ⛔ The two `supplied_*` columns (#2190) are NOT
+    // `description` and `type`, so nulling this drops nothing any guest
+    // surface asks for. ⛔ The two `supplied_*` columns (#2190) are NOT
     // in the strip below, deliberately: they are the visitor's own name and
     // reply address, the one fact about themselves the form exists to collect,
     // and nothing downstream reads them as verified. `guest_portal`
@@ -198,14 +198,17 @@ const caseValidation: Hook = {
       // A guest picks at most High (#2368, maintainer ruling). Critical
       // escalates on insert (`case_escalation_on_create`), hands the case to
       // the service manager pool and takes the 4-hour SLA row, so it is a
-      // staff decision. The public form offers only Low/Medium/High, but the
-      // door (`POST /forms/support/submit`) checks the posted value against
-      // the OBJECT's options, not the form row's subset, so a crafted
-      // `critical` reaches this line. It is CAPPED rather than refused: the
+      // staff decision. A form row's `options` subset does not narrow the
+      // door (`POST /forms/support/submit`): the posted value is validated
+      // against the OBJECT's options, so a form that asks for priority lets a
+      // crafted `critical` reach this line. It is CAPPED rather than refused: the
       // visitor's case is real and the hotline hint tells them how to get a
       // P1 handled; refusing would lose the case to save a staff re-triage.
       // Capping here, before `priority` is read below, keeps the rank, the SLA
       // row and every after-insert flow on the stored `high`.
+      // On 18.2.0 the form asks no priority at all (no per-form option subset
+      // exists), so the door's allow-list drops a posted one first; this line
+      // is the layer that holds the day the form's list moves (#1505).
       if (input.priority === 'critical') input.priority = 'high';
       input.owner_id          = null;
       input.is_escalated      = false;
