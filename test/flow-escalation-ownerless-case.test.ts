@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/service/flows/case-escalation.flow';
 import {
-  hotcrmStack, signUpPerson, guestInsert, systemUpdate, flowRuns, notificationsTo,
+  hotcrmStack, signUpPerson, guestInsert, systemInsert, systemUpdate, flowRuns, notificationsTo,
   runRecordFlow, type Person,
 } from './helpers/verify-stack';
 
@@ -65,8 +65,10 @@ beforeAll(async () => {
 /**
  * A critical case that fires `flowName`, raised the way that flow is reached:
  *
- *  - `case_escalation_on_create` — a web-to-case submission (a GUEST insert)
- *    arriving critical. A guest submission carries no owner;
+ *  - `case_escalation_on_create` — a case arriving critical from a SYSTEM
+ *    insert (an integration or a backfill), which carries no owner. A guest
+ *    submission no longer reaches this flow: the guest branch caps a guest's
+ *    critical at high (#2368, `web-to-case-guest-priority.test.ts`);
  *  - `case_escalation` — an ownerless case already in the queue, given
  *    `owner` by a system write (a backfill or an integration — a person's
  *    write is held to a real user, see below), then raised to critical by a
@@ -78,7 +80,7 @@ async function raise(stack: VerifyStack, flowName: FlowName, owner?: unknown) {
   const doc = { subject: `Server down ${++k}`, description: 'Everything is on fire.', status: 'new' };
   let id: string;
   if (flowName === 'case_escalation_on_create') {
-    id = String((await guestInsert(stack, 'crm_case', { ...doc, priority: 'critical' })).id);
+    id = String((await systemInsert(stack, 'crm_case', { ...doc, priority: 'critical' })).id);
   } else {
     id = String((await guestInsert(stack, 'crm_case', { ...doc, priority: 'medium' })).id);
     if (owner !== undefined) await systemUpdate(stack, 'crm_case', { id, owner_id: owner });
@@ -114,9 +116,8 @@ const OWNERLESS: Record<string, { stack: () => VerifyStack; owner?: unknown; flo
   // so '   ' reaches it as the same empty slate as an absent key. A system
   // write stores it as given (a person's write is refused — see below). A
   // gate testing only `!= ""` opens here — `'   ' != ""` is TRUE in CEL — and
-  // reproduces the defect one input narrower. Only `case_escalation` can meet
-  // it: the insert-time twin is reached by a guest submission, which carries
-  // no owner at all.
+  // reproduces the defect one input narrower. Only `case_escalation` is
+  // driven with it: the insert-time twin is driven by an ownerless insert.
   'owner blank whitespace (system-written)': { stack: () => sql, owner: '   ', flows: ['case_escalation'] },
 };
 
