@@ -461,8 +461,10 @@ export const Quote = ObjectSchema.create({
         // to `internal_notes` and nothing else.
         accepted: [],
         expired: [],
-        // A rejected quote is not frozen: the rep revises the numbers and
-        // re-issues, which starts again at `draft`.
+        // A rejected quote is frozen like an accepted one (#2366), except
+        // that its `status` stays open beside Internal Notes: **Revise**
+        // takes it back to `draft`, where the rep changes the numbers and
+        // re-issues it.
         rejected: ['draft'],
       },
     },

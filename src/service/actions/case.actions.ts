@@ -124,6 +124,9 @@ export const ClaimCaseAction: Action = {
  * Manual, `src/service/docs/crm_service_cases.md`): the case keeps the SLA Due
  * Date it had, the clock is not restarted, a breach already recorded stays
  * recorded, and a reopened case past its due date is overdue live work again.
+ * What it does to the close is not changed here either: `case_sla_defaults`
+ * clears Closed Date and Resolution Time on any move back to an open status,
+ * this button's or Edit's alike, and the next close stamps both afresh (#2375).
  * `test/case-reopen-action.test.ts` reads each of those back after a real run.
  *
  * Offered by the grant Escalate Case and Close Case read (see the header): a

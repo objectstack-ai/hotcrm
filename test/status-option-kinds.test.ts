@@ -90,9 +90,15 @@ const EXPECTED: Array<[string, string, Record<string, string>]> = [
     'status',
     { draft: 'open', in_review: 'open', published: 'won', archived: 'lost' },
   ],
+  // #2375. An Activated contract is won; an Expired or Terminated one is lost.
+  [
+    'crm_contract',
+    'status',
+    { draft: 'open', in_approval: 'open', activated: 'won', expired: 'lost', terminated: 'lost' },
+  ],
 ];
 
-describe('lifecycle kind on status options (#2326, #2366)', () => {
+describe('lifecycle kind on status options (#2326, #2366, #2375)', () => {
   it.each(EXPECTED)('%s.%s declares the ruled kind on every option', (objectName, field, expected) => {
     expect(kindsOf(objectName, field)).toStrictEqual(expected);
   });
