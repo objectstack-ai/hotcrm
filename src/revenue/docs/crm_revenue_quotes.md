@@ -57,6 +57,13 @@ stateDiagram-v2
   rejected --> draft
 ```
 
+## When a quote is accepted
+
+Accepting a quote wins its opportunity and drafts a **contract** from it. A
+moment later you get a notice, **Contract drafted**, with the contract number
+and a **View** link to it. The contract's term and contract type are starting
+values, so check them before you activate it.
+
 ## Quote auto-expiration (automatic)
 
 Where the deployment has switched scheduled work on, a daily **01:00** job marks
