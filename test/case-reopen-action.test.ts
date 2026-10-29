@@ -21,7 +21,12 @@ import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
  *  - the WRITE, through the action door as the agent who owns the case: back
  *    to In Progress, `is_closed` derived false;
  *  - the SLA, as the Service Manual states it: the due date is kept (the clock
- *    is not restarted), and a breach already recorded stays recorded.
+ *    is not restarted), and a breach already recorded stays recorded;
+ *  - the CLOSE, cleared by any reopen (#2375): Closed Date and Resolution Time
+ *    go empty whichever door moves the case back to an open status — the
+ *    action or the agent's own Edit — and the next close stamps both afresh.
+ *    Before it, a reopened case kept the first close's Closed Date while open,
+ *    and closing it again kept that date and its Resolution Time.
  */
 
 type Rec = Record<string, any>;
@@ -95,6 +100,76 @@ const settledCase = async (status: 'resolved' | 'closed', breached: boolean): Pr
   sla_due_date: '2026-01-02T00:00:00.000Z', closed_date: status === 'closed' ? '2026-01-03T00:00:00.000Z' : null,
   is_sla_violated: breached,
 }]))[0]!;
+
+/** A closed case the agent owns, opened and closed at authored instants. */
+const closedLongAgo = async (): Promise<Rec> => (await verify.seed('crm_case', [{
+  subject: `Closed long ago ${++k}`, description: 'It broke.', crm_account: accountId, priority: 'medium',
+  status: 'closed', resolution: 'Restarted the service.', owner_id: agent.id,
+  created_at: '2026-01-01T00:00:00.000Z', closed_date: '2026-01-03T00:00:00.000Z',
+}]))[0]!;
+
+const patchAs = async (p: Person, id: string, doc: Rec): Promise<void> => {
+  const res = await verify.apiAs(p.token, 'PATCH', `/data/crm_case/${id}`, doc);
+  expect(res.status, await res.clone().text()).toBe(200);
+};
+
+describe('the close, which any reopen clears (#2375)', () => {
+  it('stores the first close as seeded: the premise of every case below', async () => {
+    const c = await stored((await closedLongAgo()).id);
+    expect(String(c.closed_date)).toBe('2026-01-03T00:00:00.000Z');
+    expect(Number(c.resolution_time_hours)).toBe(48);
+  });
+
+  it('clears Closed Date and Resolution Time when Reopen Case runs', async () => {
+    const c = await closedLongAgo();
+    await verify.actions.run('crm_case', 'reopen_case', { as: agent.token, recordId: c.id });
+    const after = await stored(c.id);
+    expect(after.status).toBe('in_progress');
+    expect(after.closed_date ?? null).toBeNull();
+    expect(after.resolution_time_hours ?? null).toBeNull();
+  });
+
+  it('clears them when the agent sets the status back by Edit', async () => {
+    const c = await closedLongAgo();
+    await patchAs(agent, c.id, { status: 'in_progress' });
+    const after = await stored(c.id);
+    expect(after.closed_date ?? null).toBeNull();
+    expect(after.resolution_time_hours ?? null).toBeNull();
+  });
+
+  it('clears them on a resolved case reopened, which a seeded settled case carries', async () => {
+    const [c] = await verify.seed('crm_case', [{
+      subject: `Resolved long ago ${++k}`, description: 'It broke.', crm_account: accountId, priority: 'medium',
+      status: 'resolved', owner_id: agent.id,
+      created_at: '2026-01-01T00:00:00.000Z', closed_date: '2026-01-02T00:00:00.000Z',
+    }]);
+    expect(Number((await stored(c!.id)).resolution_time_hours)).toBe(24);
+    await patchAs(agent, c!.id, { status: 'in_progress' });
+    const after = await stored(c!.id);
+    expect(after.closed_date ?? null).toBeNull();
+    expect(after.resolution_time_hours ?? null).toBeNull();
+  });
+
+  it('stamps both afresh when the reopened case is closed again', async () => {
+    const c = await closedLongAgo();
+    await verify.actions.run('crm_case', 'reopen_case', { as: agent.token, recordId: c.id });
+    const before = Date.now();
+    await patchAs(agent, c.id, { status: 'closed' });
+    const after = await stored(c.id);
+    const closedAt = Date.parse(String(after.closed_date));
+    expect(closedAt).toBeGreaterThanOrEqual(before - 1_000);
+    const expected = Math.round(((closedAt - Date.parse('2026-01-01T00:00:00.000Z')) / 3_600_000) * 10) / 10;
+    expect(Number(after.resolution_time_hours)).toBe(expected);
+  });
+
+  it('keeps them on a move between the two settled statuses, which is no reopen', async () => {
+    const c = await closedLongAgo();
+    await patchAs(agent, c.id, { status: 'resolved' });
+    const after = await stored(c.id);
+    expect(String(after.closed_date)).toBe('2026-01-03T00:00:00.000Z');
+    expect(Number(after.resolution_time_hours)).toBe(48);
+  });
+});
 
 describe('the write, and what it does to the SLA', () => {
   it.each(['resolved', 'closed'] as const)('takes a %s case back to In Progress as the agent who owns it', async (status) => {
