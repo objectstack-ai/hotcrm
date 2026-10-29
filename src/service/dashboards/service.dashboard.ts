@@ -18,7 +18,7 @@ const dataset = 'case_metrics';
  *
  * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
  * so it comes from a real comparison query: Open Cases, Avg Resolution Time
- * and SLA Violations declare `compareTo: { kind: 'previousPeriod' }` (#2296)
+ * and Open Cases Past SLA declare `compareTo: { kind: 'previousPeriod' }` (#2296)
  * over the date picker's `created_at` window (bare number at All time,
  * objectstack#25970). The percentages this file used to carry were typed by
  * hand and recomputed by nothing, so they kept asserting the same "-6.2% vs

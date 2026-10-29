@@ -25,9 +25,9 @@ HotCRM 內建五個儀表板。每個都為特定角色而建構，回答該角�
 
 **隱藏的儀表板不等於上鎖的儀表板。** Executive Overview 還對持有 `sales_rep`、`service_agent` 或 `service_manager` 職位的人不出現在側邊欄裡，這樣他們打開應用時落在為自己日常工作準備的頁面上——銷售代表落在 **Sales Home**——而不是公司層面的總覽。這只是為了聚焦而縮短選單，不是存取限制：銷售代表直接打開這個儀表板的連結，仍然能看到它。任何儀表板顯示什麼，由記錄可見性決定，而記錄可見性由 [共享規則](/zh-Hant/docs/administration/sharing-and-security#how-the-layers-combine) 設定：每個數字只彙總檢視者有權讀取的記錄，所以銷售代表看到的是高管版面下自己那一份資料，看不到任何他自己打不開的交易。
 
-### 沒有任何磁貼顯示趨勢箭頭
+### 趨勢箭頭來自真實的對比查詢
 
-在任何一個儀表板上，KPI 磁貼都不顯示"對比上期"的漲跌幅。跨期對比是一次測量：它必須來自一次真實的對比查詢。在渲染器能為綁定資料集的指標跑出這樣一次查詢之前，磁貼上的百分比只會是手動敲進去的數字，沒有任何資料能改變它——資料庫塞得滿滿的時候和一筆記錄都沒有的時候，它讀起來一模一樣。所以磁貼只呈現真正查詢出來的那個數，此外什麼都不加。
+KPI 磁貼只有在宣告了對比時，才顯示「對比上期」或「對比去年」的漲跌幅，console 會再對更早的那個時間窗跑一次查詢。CRM Overview 上是 Total Revenue、Deals Won 和 Avg Deal Size；Sales Performance 上是 Open Pipeline、Closed Won 和 Avg Deal Size；Customer Service 上是 Open Cases、Avg Resolution Time 和 Open Cases Past SLA；Executive Overview 上是 Total Revenue (YTD)。*(Selected Period)* 磁貼對比的是日期選擇器所選時間窗之前、同樣長度的那個時間窗，所以選擇器在 All time 時沒有更早的時間窗，磁貼只顯示數字本身。沒有任何百分比是手動敲進去的：每一個都隨資料變化。
 
 ## 🏠 CRM Overview
 

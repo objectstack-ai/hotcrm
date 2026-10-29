@@ -23,9 +23,9 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 
 **隐藏的仪表盘不等于上锁的仪表盘。** Executive Overview 还对持有 `sales_rep`、`service_agent` 或 `service_manager` 岗位的人不出现在侧边栏里，这样他们打开应用时落在为自己日常工作准备的页面上——销售代表落在 **Sales Home**——而不是公司层面的总览。这只是为了聚焦而缩短菜单，不是访问限制：销售代表直接打开这个仪表盘的链接，仍然能看到它。任何仪表盘显示什么，由记录可见性决定，而记录可见性由 [共享规则](/zh-Hans/docs/administration/sharing-and-security#how-the-layers-combine) 设定：每个数字只汇总查看者有权读取的记录，所以销售代表看到的是高管版式下自己那一份数据，看不到任何他自己打不开的交易。
 
-### 没有任何磁贴显示趋势箭头
+### 趋势箭头来自真实的对比查询
 
-在任何一个仪表盘上，KPI 磁贴都不显示"对比上期"的涨跌幅。跨期对比是一次测量：它必须来自一次真实的对比查询。在渲染器能为数据集绑定的指标跑出这样一次查询之前，磁贴上的百分比只会是手工敲进去的数字，没有任何数据能改变它——数据库塞得满满的时候和一条记录都没有的时候，它读起来一模一样。所以磁贴只呈现真正查询出来的那个数，此外什么都不加。
+KPI 磁贴只有在声明了对比时，才显示「对比上期」或「对比去年」的涨跌幅，console 会再对更早的那个时间窗跑一次查询。CRM Overview 上是 Total Revenue、Deals Won 和 Avg Deal Size；Sales Performance 上是 Open Pipeline、Closed Won 和 Avg Deal Size；Customer Service 上是 Open Cases、Avg Resolution Time 和 Open Cases Past SLA；Executive Overview 上是 Total Revenue (YTD)。*(Selected Period)* 磁贴对比的是日期选择器所选时间窗之前、同样长度的那个时间窗，所以选择器在 All time 时没有更早的时间窗，磁贴只显示数字本身。没有任何百分比是手工敲进去的：每一个都随数据变化。
 
 ## 🏠 CRM Overview
 

@@ -23,9 +23,9 @@ All five respect [sharing rules](/docs/administration/sharing-and-security) — 
 
 **A hidden dashboard is not a locked one.** Executive Overview is also left out of the sidebar for anyone holding the `sales_rep`, `service_agent` or `service_manager` position, so their app opens on a page built for their day — **Sales Home** for a rep — instead of the company-level view. That is a shorter menu for focus, not an access restriction: a rep who opens the dashboard's link still sees it. What any dashboard shows is decided by record visibility, which [sharing rules](/docs/administration/sharing-and-security#how-the-layers-combine) set: every number adds up only the records the viewer may read, so a rep sees the executive layout over their own share of the data, never a deal they could not open themselves.
 
-### No tile shows a trend arrow
+### A trend arrow is a real comparison
 
-None of the KPI tiles displays a "vs last period" delta, on any dashboard. A period-over-period comparison is a measurement: it has to come from a real comparison query, and until the renderer can run one for dataset-bound metrics, a percentage on the tile would be a number typed by hand that no data can change — it would read the same on a full database and an empty one. So the tiles show the figure that was actually queried, and nothing else.
+A KPI tile shows a "vs previous period" or "vs previous year" delta only when it declares a comparison, and the console then runs a second query over the earlier window. On CRM Overview that is Total Revenue, Deals Won and Avg Deal Size; on Sales Performance, Open Pipeline, Closed Won and Avg Deal Size; on Customer Service, Open Cases, Avg Resolution Time and Open Cases Past SLA; on Executive Overview, Total Revenue (YTD). A *(Selected Period)* tile compares with the window of the same length just before the picker's, so with the picker at All time there is no earlier window and the tile shows its bare number. No percentage is typed by hand: every one changes with the data.
 
 ## 🏠 CRM Overview
 
