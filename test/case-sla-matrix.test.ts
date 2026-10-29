@@ -170,9 +170,17 @@ describe('every priority now gets a clock', () => {
 
   it('a critical case needs no account and no read at all', async () => {
     // The flat row means the tier lookup is skipped entirely for critical, so
-    // this path is byte-for-byte the old behaviour — including for the
-    // anonymous web-to-case submitter, who can read nothing.
-    expectHours(await stampFor('critical', undefined, { guest: true }), 4, 'critical, anonymous, no account');
+    // this path is byte-for-byte the old behaviour.
+    expectHours(await stampFor('critical', undefined, { accountId: null }), 4, 'critical, no account');
+  });
+
+  it('an anonymous critical is capped at high first, and takes the high row (#2368)', async () => {
+    // A guest may not choose Critical: the guest branch caps it before the
+    // matrix is read, so the anonymous submitter, who can read nothing, gets
+    // the no-account (`smb`) cell of the HIGH row.
+    const res = await stampFor('critical', undefined, { guest: true });
+    expect(res.row.priority).toBe('high');
+    expectHours(res, EXPECTED.high.smb, 'critical capped, anonymous, no account');
   });
 });
 

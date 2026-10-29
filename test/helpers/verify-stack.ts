@@ -377,6 +377,13 @@ export const systemUpdate = (stack: VerifyStack, object: string, doc: Row): Prom
   stack.kernel.getService<Row>('objectql').update(object, doc, { where: { id: doc.id }, context: SYSTEM });
 
 /**
+ * A system-context INSERT (no user, no session) that, unlike `seed`, fires the
+ * record-change flows: an integration's or a backfill's write.
+ */
+export const systemInsert = (stack: VerifyStack, object: string, doc: Row): Promise<Row> =>
+  stack.kernel.getService<Row>('objectql').insert(object, doc, { context: SYSTEM });
+
+/**
  * A PREDICATE (bulk) UPDATE as `as`: one payload for every row `where`
  * matches (`multi: true`) — the engine's `updateMany` dispatch. `hooks.run`
  * addresses exactly one row by `input.id`, and the REST bulk ingress

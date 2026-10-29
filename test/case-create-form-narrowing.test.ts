@@ -272,7 +272,9 @@ describe('crm_case create form — removal direction', () => {
     const fields = (wtc?.sections ?? []).flatMap(fieldNamesOf);
     // The two `supplied_*` fields are who to answer (#2190); the public door
     // admits exactly this list, so a field added here is a field a guest writes.
-    expect(new Set(fields)).toEqual(new Set(['supplied_name', 'supplied_email', 'subject', 'description', 'type', 'priority']));
+    // `priority` left it in #2368: a guest may not choose Critical, and 18.2.0
+    // has no per-form option subset (`web-to-case-guest-priority.test.ts`).
+    expect(new Set(fields)).toEqual(new Set(['supplied_name', 'supplied_email', 'subject', 'description', 'type']));
   });
 
   it('the public form requires the reply address; the object requires neither supplied field (#2190)', () => {

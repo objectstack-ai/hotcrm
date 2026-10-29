@@ -505,10 +505,11 @@ export const CaseViews = defineView({
    * a help center. Guests can ONLY submit — the `guest_portal` profile
    * denies read/edit/delete on `crm_case`. Internal fields (status, origin,
    * owner_id, SLA) are stamped by `case.hook.ts` after a guest submission.
-   * `priority` is NOT one of them: this form asks the guest for it, and an
-   * unset one is filled by the `low` option `crm_case.priority` declares
-   * `default: true`. Field defaults are applied before `beforeInsert`, so the
-   * hook only ever reads `priority` (to derive `priority_rank`).
+   * `priority` is not on the form (#2368): a web case takes the `low` option
+   * `crm_case.priority` declares `default: true`, and staff re-triage it.
+   * Field defaults are applied before `beforeInsert`, so the hook reads
+   * `priority` to derive `priority_rank`, and caps a guest's `critical` at
+   * `high`.
    */
   formViews: {
     web_to_case: {
@@ -521,6 +522,9 @@ export const CaseViews = defineView({
         {
           name: 'how_can_we_help',
           label: 'How can we help?',
+          // The hotline hint stands where every visitor reads it (#2368):
+          // the form has no priority field to hang it on any more.
+          description: 'For an urgent outage, call the service hotline.',
           columns: 1,
           fields: [
             // Who to answer (#2190): a web case carries no contact, so this
@@ -528,8 +532,13 @@ export const CaseViews = defineView({
             // here, like web-to-lead's — the door refuses a submission
             // without it — and optional on the object, so a staff-created
             // case needs neither.
-            'supplied_name',
-            { field: 'supplied_email', required: true },
+            //
+            // The labels are the visitor's (#2368): the object calls these
+            // columns "Supplied Name" / "Supplied Email" because that is what
+            // an agent reads on the case, while the person filling the form in
+            // is the one supplying them.
+            { field: 'supplied_name', label: 'Your name' },
+            { field: 'supplied_email', required: true, label: 'Your email' },
             {
               field: 'subject',
               required: true,
@@ -544,10 +553,17 @@ export const CaseViews = defineView({
               field: 'type',
               helpText: 'Pick the option that best matches your issue.',
             },
-            {
-              field: 'priority',
-              helpText: 'Critical issues should also be reported via phone.',
-            },
+            // ⛔ No `priority` here (#2368, maintainer ruling: a guest picks at
+            // most High). Critical escalates on insert and notifies the service
+            // manager. 18.2.0 offers no per-form option subset: a form row's
+            // `options` list parses and is served by `GET /forms/support`, but
+            // the public renderer still lists all four object options, and the
+            // door validates a posted value against the object, not the row.
+            // So the ruling's fallback holds: the field is off the form, the
+            // door's allow-list drops a posted `priority`, and the case takes
+            // the object default (`low`). The guest branch of
+            // `case_sla_defaults` also caps `critical` at `high`, for the day
+            // this list moves.
           ],
         },
       ],
