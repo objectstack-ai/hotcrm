@@ -32,7 +32,7 @@ The member status is the response lifecycle, and every value on it has something
 | 🟣 **Converted** | Their lead went on to become a customer | Automatic, when that lead is converted |
 | 🔴 **Unsubscribed** | They asked to stop hearing from you | A user who may edit campaign members, on the member record |
 
-These four are not a ladder that only climbs. Most members stay at *Sent*; one who answers moves to *Responded*, and a member still at *Sent* or *Responded* whose lead is later converted is promoted to *Converted* for you. Moving a member back — a mis-click corrected, or a reset to *Sent* for a re-send — clears the response stamp with it. An *Unsubscribed* member is never promoted by that conversion sweep: an opt-out is not overwritten by a marketing outcome.
+These four are not a ladder that only climbs. Most members stay at *Sent*; one who answers moves to *Responded*, and a member still at *Sent* or *Responded* whose lead is later converted is promoted to *Converted* for you. Moving a member back — a mis-click corrected, or a reset to *Sent* for a re-send — clears the response stamp with it. Unsubscribing a member who had responded does not: the response stays on the member and still counts as one of the campaign's responses. An *Unsubscribed* member is never promoted by that conversion sweep: an opt-out is not overwritten by a marketing outcome.
 
 ## Why both lead and contact?
 
@@ -56,7 +56,7 @@ If a lead is later converted to a contact, the existing campaign memberships sta
 | Added Date | When the person was enrolled — stamped automatically the moment the membership is saved, whichever of the three ways above created it, and read-only afterwards |
 | Status | Where the person got to (the four above) |
 | Response Date | When they responded, stamped the first time they reach a responded status |
-| Has Responded | The yes/no shortcut, kept in step with *Status* for you — *Converted* counts as responded |
+| Has Responded | Whether the person ever responded, kept for you — *Converted* counts as responded, a reset to *Sent* clears it, and a member who responded keeps it after unsubscribing |
 
 ## What is tracked, and what is not
 
@@ -75,7 +75,7 @@ The campaign detail page rolls up its members:
 
 ```
 Sent          = every member of the campaign
-Responses     = members at Responded or Converted
+Responses     = members who ever responded (Has Responded), unsubscribed ones included
 Response rate = Responses ÷ Sent, as a percentage
 ```
 
@@ -90,7 +90,7 @@ On the campaign detail page, under the **Related** tab, in a panel titled **Camp
 Two things readers arrive expecting, and where they really are:
 
 - There is no *Members* tab. Campaign membership is one panel among the campaign's other related records on the shared *Related* tab.
-- There are no saved member list views — not *All Members*, *Responded*, *Unsubscribed* or *Converted to Opportunity*. Campaign Member ships no list views at all, and a related-list panel would not read them if it did: the panel's columns are curated on the campaign link itself, never from a view. Nothing ships that narrows the panel to one status, and no report ships over Campaign Member either, so "everyone who responded" is a number on the campaign rather than a list you can open: see [How the metrics roll up](#how-the-metrics-roll-up), where the response rate is computed live from member status.
+- There are no saved member list views — not *All Members*, *Responded*, *Unsubscribed* or *Converted to Opportunity*. Campaign Member ships no list views at all, and a related-list panel would not read them if it did: the panel's columns are curated on the campaign link itself, never from a view. Nothing ships that narrows the panel to one status, and no report ships over Campaign Member either, so "everyone who responded" is a number on the campaign rather than a list you can open: see [How the metrics roll up](#how-the-metrics-roll-up), where the response rate is computed live from the members' responses.
 
 ## Tips for marketers
 

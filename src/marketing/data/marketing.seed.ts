@@ -46,7 +46,11 @@ type CampaignMemberSpec = {
   readonly contact?: string;
   readonly status: 'sent' | 'responded' | 'unsubscribed';
   readonly addedDaysAgo: number;
-  /** Days ago the member responded. Required by `responded`, absent otherwise. */
+  /**
+   * Days ago the member responded. Required by `responded`, absent on `sent`,
+   * and optional on `unsubscribed`: a member who responded and later
+   * unsubscribed keeps the response (#2365).
+   */
   readonly respondedDaysAgo?: number;
 };
 
@@ -79,7 +83,9 @@ const CAMPAIGN_MEMBERS: Record<string, readonly CampaignMemberSpec[]> = {
   'Developer Content Marketing Push': [
     { lead: 'lena.fischer@graniteinsurance.example.com', status: 'responded', addedDaysAgo: 33, respondedDaysAgo: 27 },
     { lead: 'kai.watanabe@coralreefhotels.example.com', status: 'sent', addedDaysAgo: 33 },
-    { lead: 'mira.costa@atlasconstruction.example.com', status: 'unsubscribed', addedDaysAgo: 33 },
+    // Responded, then asked to stop hearing from you: still one of the
+    // campaign's responses (#2365).
+    { lead: 'mira.costa@atlasconstruction.example.com', status: 'unsubscribed', addedDaysAgo: 33, respondedDaysAgo: 29 },
     { lead: 'pia.anand@citrinefinance.example.com', status: 'responded', addedDaysAgo: 32, respondedDaysAgo: 24 },
     { lead: 'marco.ricci@auroratravel.example.com', status: 'sent', addedDaysAgo: 32 },
     { lead: 'lisa.t@cloudfirst.example.com', status: 'responded', addedDaysAgo: 30, respondedDaysAgo: 21 },
@@ -154,11 +160,10 @@ const campaignMetrics = (campaignName: string) => {
   return {
     // "Total members enrolled" — campaign.hook.ts's single definition of num_sent.
     num_sent: members.length,
-    // `responded` or `converted`, as in `computeCampaignMetrics`. The seed set
-    // holds no `converted` member (see the note on CAMPAIGN_MEMBERS), so the
-    // two predicates coincide on this data — spelled the narrow way because
-    // widening it here would suggest a seeded state that does not exist.
-    num_responses: members.filter((m) => m.status === 'responded').length,
+    // Members who ever responded — the hooks count `has_responded`, which the
+    // member rows below derive from `respondedDaysAgo` — so an unsubscribed
+    // member who had responded still counts (#2365).
+    num_responses: members.filter((m) => m.respondedDaysAgo !== undefined).length,
     num_leads: leadKeys.size,
     num_converted_leads: convertedLeads,
     num_opportunities: attributed.length,
@@ -311,10 +316,12 @@ const memberRecords = (
         ...(kind === 'lead' ? { crm_lead: m.lead } : { crm_contact: m.contact }),
         status: m.status,
         added_date: celDaysAgo(m.addedDaysAgo),
-        // `has_responded` / `response_date` track the `responded` status
-        // exactly — a responded member with no response date is a shape the
-        // response-tracking surfaces cannot render.
-        has_responded: m.status === 'responded',
+        // `has_responded` / `response_date` record that the person responded:
+        // set on every `responded` member, never on a `sent` one, and kept on
+        // an `unsubscribed` member who had responded (#2365). A responded
+        // member with no response date is a shape the response-tracking
+        // surfaces cannot render.
+        has_responded: m.respondedDaysAgo !== undefined,
         ...(m.respondedDaysAgo !== undefined ? { response_date: celDaysAgo(m.respondedDaysAgo) } : {}),
       })),
   );

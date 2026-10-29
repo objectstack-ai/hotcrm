@@ -209,7 +209,9 @@ const campaignMemberEnrollmentGate: Hook = {
  *
  * `converted` counts as responded too: a member cannot convert without having
  * responded first, and `has_responded` is the "did this person ever engage"
- * flag the response surfaces filter on.
+ * flag the response surfaces filter on. Because it means EVER, a responded
+ * member who later unsubscribes keeps it (#2365); only a reset to `sent`
+ * clears it, and the campaign's `num_responses` counts this flag.
  */
 const campaignMemberLifecycle: Hook = {
   name: 'campaign_member_lifecycle',
@@ -251,12 +253,17 @@ const campaignMemberLifecycle: Hook = {
       return;
     }
 
-    // Moving BACK out of a responded state (a mis-click corrected, or a member
-    // reset to `sent` for a re-send) clears the summary with it. Leaving
-    // `has_responded: true` behind on a `sent` member is the same disagreement
-    // in the other direction, and it inflates nothing visible — which is
-    // exactly why it would survive review.
-    if (wasResponded && typeof input.status === 'string') {
+    // Moving BACK to `sent` (a mis-click corrected, or a member reset for a
+    // re-send) clears the summary with it: `sent` means "never engaged", and
+    // `has_responded: true` left on a `sent` member is the same disagreement in
+    // the other direction. A move to `unsubscribed` is NOT a move back (#2365,
+    // ruled D4): the person did respond, and opting out afterwards does not
+    // undo that, so the flag and the original `response_date` stay — and the
+    // campaign's `num_responses`, which counts the flag, does not drop on every
+    // unsubscribe. A member that responded, unsubscribed and is then reset to
+    // `sent` is cleared too, hence the check on the stored flag.
+    const hadResponse = wasResponded || previous?.has_responded === true;
+    if (status === 'sent' && hadResponse && typeof input.status === 'string') {
       input.has_responded = false;
       input.response_date = null;
       return;
@@ -388,7 +395,7 @@ const campaignMemberMetricsRefresh: Hook = {
     for (const id of campaignIds) {
       // ── recompute ── identical in all four refresh hooks; see the header.
       const memberRows = await api.object('crm_campaign_member').find({
-        where: { crm_campaign: id }, fields: ['crm_lead', 'status'], top: 5000,
+        where: { crm_campaign: id }, fields: ['crm_lead', 'has_responded'], top: 5000,
       });
       const leadIds = Array.from(new Set(
         memberRows.map((r) => (typeof r.crm_lead === 'string' ? r.crm_lead : '')).filter(Boolean),
@@ -407,7 +414,7 @@ const campaignMemberMetricsRefresh: Hook = {
       await api.object('crm_campaign').update({
         id,
         num_sent: memberRows.length,
-        num_responses: memberRows.filter((r) => r.status === 'responded' || r.status === 'converted').length,
+        num_responses: memberRows.filter((r) => r.has_responded === true).length,
         num_leads: leadIds.length,
         num_converted_leads: convertedLeads,
         num_opportunities: numOpportunities,

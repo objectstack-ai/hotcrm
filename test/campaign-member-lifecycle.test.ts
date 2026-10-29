@@ -190,6 +190,50 @@ describe('campaign_member_lifecycle', () => {
     expect(row.response_date ?? null).toBeNull();
   });
 
+  /**
+   * #2365, ruled (marketing D4): an unsubscribe does not erase the fact that
+   * the person responded. Before the ruling, any move out of `responded`
+   * cleared both fields, `unsubscribed` included.
+   */
+  it('keeps the response when a member who responded unsubscribes', async () => {
+    const m = await member();
+    await editMember(m.id, { status: 'responded' });
+    const answered = await stored('crm_campaign_member', m.id);
+    expect(typeof answered.response_date, 'the response was stamped first').toBe('string');
+    await editMember(m.id, { status: 'unsubscribed' });
+    const row = await stored('crm_campaign_member', m.id);
+    expect(row.status).toBe('unsubscribed');
+    expect(row.has_responded, 'the person did respond').toBe(true);
+    expect(row.response_date, 'the original stamp, not a new one and not a cleared one').toBe(answered.response_date);
+  });
+
+  it('a converted member who unsubscribes keeps the response too', async () => {
+    const m = await member();
+    await editMember(m.id, { status: 'converted' });
+    await editMember(m.id, { status: 'unsubscribed' });
+    expect((await stored('crm_campaign_member', m.id)).has_responded).toBe(true);
+  });
+
+  it('a member who never responded stays unflagged when they unsubscribe', async () => {
+    const m = await member();
+    await editMember(m.id, { status: 'unsubscribed' });
+    const row = await stored('crm_campaign_member', m.id);
+    expect(row.has_responded).toBe(false);
+    expect(row.response_date ?? null).toBeNull();
+  });
+
+  it('a reset to sent clears a response kept through an unsubscribe', async () => {
+    // `sent` means "never engaged", whatever status the member left: the
+    // stored flag, not only the prior status, decides whether to clear.
+    const m = await member();
+    await editMember(m.id, { status: 'responded' });
+    await editMember(m.id, { status: 'unsubscribed' });
+    await editMember(m.id, { status: 'sent' });
+    const row = await stored('crm_campaign_member', m.id);
+    expect(row.has_responded).toBe(false);
+    expect(row.response_date ?? null).toBeNull();
+  });
+
   it('defaults has_responded on a fresh enrollment', async () => {
     const row = await stored('crm_campaign_member', (await member()).id);
     expect(row.has_responded).toBe(false);
@@ -431,6 +475,28 @@ describe('campaign_member_metrics_refresh — LIVE, not at completion', () => {
     // response_rate is a FORMULA over these two; a live num_sent of 2 with one
     // response is the 50% the ROI dashboard renders.
     expect(row.num_sent).toBe(2);
+  });
+
+  /**
+   * #2365: `num_responses` counts `has_responded`, not the status, so the
+   * response rate is "ever responded". Counted by status, an unsubscribe of a
+   * responded member took the response away with it.
+   */
+  it('an unsubscribe keeps num_responses; a reset to sent lowers it', async () => {
+    const { campaign, m1, m2 } = await live();
+    await editMember(m1.id, { status: 'responded' });
+    await editMember(m2.id, { status: 'responded' });
+    await settlesAt(campaign.id, { num_responses: 2 });
+    // "Unchanged" is only evidence once the recompute has run: wait for the
+    // engine to receive the campaign write this unsubscribe triggers.
+    const engine = await engineWritesDuring(() => editMember(m1.id, { status: 'unsubscribed' }));
+    expect(
+      engine.of('crm_campaign', 'update').filter((w) => (w.args[1] as Rec).id === campaign.id),
+      'the unsubscribe did not trigger a recompute, so this case would prove nothing',
+    ).not.toHaveLength(0);
+    expect((await stored('crm_campaign', campaign.id)).num_responses).toBe(2);
+    await editMember(m2.id, { status: 'sent' });
+    await settlesAt(campaign.id, { num_responses: 1, num_sent: 2 });
   });
 
   it('removing a member decrements it, again with no status transition', async () => {

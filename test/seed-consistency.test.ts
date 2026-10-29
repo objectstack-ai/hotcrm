@@ -329,7 +329,9 @@ describe('the campaign metric refresh would be a no-op over the seeds', () => {
       const won = attributed.filter((o) => String(o.stage) === 'closed_won');
       const expected: Record<string, number> = {
         num_sent: enrolled.length,
-        num_responses: enrolled.filter((m) => String(m.status) === 'responded').length,
+        // The hooks count the flag, not the status (#2365): an unsubscribed
+        // member who had responded is still a response.
+        num_responses: enrolled.filter((m) => m.has_responded === true).length,
         num_leads: leadIds.size,
         num_converted_leads: convertedLeads,
         num_opportunities: attributed.length,
@@ -416,21 +418,33 @@ describe('campaign members only use lifecycle values a writer produces (#597)', 
     expect(bad, `fields with no writer: ${[...new Set(bad)].join(', ')}`).toEqual([]);
   });
 
-  it('has_responded and response_date track the responded status exactly', () => {
+  // `campaign_member_lifecycle`'s rule since #2365 (marketing D4): responded
+  // and converted carry the flag, `sent` never does, and `unsubscribed` may be
+  // either — a person who responded and then opted out keeps the response.
+  it('has_responded follows the status, and response_date goes with has_responded', () => {
     const problems: string[] = [];
     for (const m of members) {
-      const responded = String(m.status) === 'responded';
-      if (Boolean(m.has_responded) !== responded) {
-        problems.push(`${String(m.crm_campaign)}: has_responded ${String(m.has_responded)} for status ${String(m.status)}`);
+      const status = String(m.status);
+      const flagged = m.has_responded === true;
+      if ((status === 'responded' || status === 'converted') && !flagged) {
+        problems.push(`${String(m.crm_campaign)}: ${status} member without has_responded`);
       }
-      if (responded && m.response_date == null) {
+      if (status === 'sent' && flagged) {
+        problems.push(`${String(m.crm_campaign)}: has_responded on a sent member`);
+      }
+      if (flagged && m.response_date == null) {
         problems.push(`${String(m.crm_campaign)}: responded member without a response_date`);
       }
-      if (!responded && m.response_date != null) {
-        problems.push(`${String(m.crm_campaign)}: response_date on a ${String(m.status)} member`);
+      if (!flagged && m.response_date != null) {
+        problems.push(`${String(m.crm_campaign)}: response_date on a ${status} member that never responded`);
       }
     }
     expect(problems, problems.join('\n')).toEqual([]);
+  });
+
+  it('seeds an unsubscribed member who had responded, so the rule is exercised', () => {
+    const kept = members.filter((m) => String(m.status) === 'unsubscribed' && m.has_responded === true);
+    expect(kept.length, 'no seeded member responded and then unsubscribed').toBeGreaterThan(0);
   });
 
   it('every member carries an added_date (the enrollment stamp)', () => {

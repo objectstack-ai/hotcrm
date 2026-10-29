@@ -270,11 +270,12 @@ export const CampaignMember = ObjectSchema.create({
       group: 'response',
     }),
 
-    // Kept in lockstep with `status == "responded"` by
-    // `campaign_member_lifecycle` (beforeInsert/beforeUpdate) — a boolean that
-    // disagrees with the status it summarises is the shape the response
-    // surfaces cannot render, and it is what `test/seed-consistency.test.ts`
-    // already pins on the seed side.
+    // "Did this person ever respond", kept by `campaign_member_lifecycle`
+    // (beforeInsert/beforeUpdate): set on `responded` / `converted`, cleared
+    // on a reset to `sent`, and KEPT when a member who responded unsubscribes
+    // (#2365) — the campaign's `num_responses` counts this flag, so an opt-out
+    // does not erase a response. `test/seed-consistency.test.ts` pins the same
+    // rule on the seed side.
     has_responded: Field.boolean({
       label: 'Has Responded',
       defaultValue: false,
