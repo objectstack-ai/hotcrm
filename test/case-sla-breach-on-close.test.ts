@@ -35,10 +35,11 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, runScheduledFl
  * The truth table is spelled out longhand rather than recomputed from the
  * hook: the expected verdict of each row is what `caseSlaBreached` answers.
  *
- * Section 4 is the parity pin for the rule's THIRD reader. The SLA Violations
- * tile counts at read time — a flagged case, or an open case past its due date
- * — so it reads true where no sweep runs (#2070, acceptance 3, ruled C). Its
- * open-case branch is pinned to the selection `case_sla_monitor` makes, first
+ * Section 4 is the parity pin for the rule's THIRD reader. The Open Cases Past
+ * SLA tile (titled SLA Violations until #2370) counts at read time — an open
+ * case that is flagged or past its due date — so it reads true where no sweep
+ * runs (#2070, acceptance 3, ruled C). Its open set and deadline branch are
+ * pinned to the selection `case_sla_monitor` makes, first
  * as metadata and then by running the sweep over the cases the tile counted:
  * the sweep must flag exactly those, and the tile's number must not move.
  */
@@ -250,10 +251,13 @@ describe('the SLA surfaces count the late finishes, through the dataset query pa
     expect(Number(row!.sla_compliance_rate)).toBeCloseTo(1 / 3, 5);
   });
 
-  it('the SLA Violations tile counts every late finish, resolved or closed', async () => {
+  it('the Open Cases Past SLA tile counts none of the late finishes: its base is open cases (#2370)', async () => {
+    // It counted all three until #2370 row 1, which put "SLA Violations 4"
+    // beside "SLA Compliance 100%" with neither title naming its base. The
+    // late closes are the gauge's to count, as missed SLAs over closed cases.
     const tile = widget('sla_violations');
     const [row] = await query({ measures: tile.values, filter: tile.filter });
-    expect(row!.case_count).toBe(3);
+    expect(Number(row?.case_count ?? 0)).toBe(0);
   });
 });
 
@@ -280,24 +284,26 @@ describe('the sweep, the close-time stamp and the tile draw one boundary', () =>
     expect(sweepSelection().sla_due_date).toEqual({ $lt: '{now}' });
   });
 
-  it('the SLA Violations tile counts the flag, or exactly the sweep\'s own selection', () => {
+  it('the Open Cases Past SLA tile counts the sweep\'s open set, flagged or past due', () => {
     // The sweep selects "open, past due, not yet flagged"; the tile counts
-    // "flagged, or open and past due" — the same selection with the flag
-    // clause folded into the other branch. Since 18.0.0-next.0 the two spell
-    // the instant the same way too: a flow filter operand refuses the
-    // `{NOW()}` template token, and the sweep reads the query engine's own
-    // `{now}` placeholder, which the tile reads. So the tile's second branch
-    // IS the sweep's selection, compared whole: a `$lte` on either side, a
-    // different status set, another spelling of the instant, or a third
-    // clause on the sweep turns this red.
-    const { is_sla_violated: unflagged, ...selection } = sweepSelection();
+    // "open, and flagged or past due" — the same open set, with the flag
+    // clause beside the deadline one. Since 18.0.0-next.0 the two spell the
+    // instant the same way too: a flow filter operand refuses the `{NOW()}`
+    // template token, and the sweep reads the query engine's own `{now}`
+    // placeholder, which the tile reads. So the tile's status set and its
+    // deadline branch ARE the sweep's, compared whole: a `$lte` on either
+    // side, a different status set, another spelling of the instant, or a
+    // third clause on the sweep turns this red. Open only since #2370 row 1.
+    const { is_sla_violated: unflagged, status, sla_due_date, ...rest } = sweepSelection();
     expect(unflagged, 'the sweep no longer selects unflagged cases only').toBe(false);
-    const operators = Object.keys(selection.sla_due_date ?? {});
+    expect(rest, 'the sweep selects on a clause the tile does not carry').toEqual({});
+    const operators = Object.keys(sla_due_date ?? {});
     expect(operators, 'the sweep compares sla_due_date with something other than one operator').toHaveLength(1);
     expect(tileFilter()).toEqual({
+      status,
       $or: [
         { is_sla_violated: true },
-        selection,
+        { sla_due_date },
       ],
     });
   });
@@ -305,7 +311,7 @@ describe('the sweep, the close-time stamp and the tile draw one boundary', () =>
 
 // ──────────────── 5. the tile counts an open breach nothing flagged, and the sweep agrees ──
 
-describe('the SLA Violations tile counts open breaches at read time, with no sweep', () => {
+describe('the Open Cases Past SLA tile counts open breaches at read time, with no sweep', () => {
   /**
    * Cases in every state the tile has to tell apart, none of them flagged by
    * a sweep — nothing in this file has run one yet. Each row's verdict is

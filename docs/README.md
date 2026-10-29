@@ -27,6 +27,7 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | Customer requirements and product disposition | [requirements/README.md](requirements/README.md) |
 | Where object and field metadata is declared | [developers/api_reference.md](developers/api_reference.md) |
 | ObjectStack code examples | [developers/code_examples.md](developers/code_examples.md) |
+| How amounts, quantities, percentages and dates are shown, and which key carries each | [developers/number-formats.md](developers/number-formats.md) |
 
 ## Documentation Boundaries
 

@@ -13,7 +13,7 @@ import type { Report } from '@objectstack/spec/ui';
  */
 export const LeadInflowByMonthSourceReport: Report = {
   name: 'lead_inflow_by_month_source',
-  label: 'Lead Engagement by Month × Source',
+  label: 'Lead Engagement by Month',
   description: 'Contacted-lead volume per month, broken down by acquisition channel',
   dataset: 'lead_metrics', rows: ['lead_source'], columns: ['last_contacted_date'], values: ['lead_count'],
   type: 'matrix',

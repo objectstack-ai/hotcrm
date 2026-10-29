@@ -178,6 +178,11 @@ export const SalesHomePage: Page = {
             // date picker or a fixed window and show smaller numbers (#2291).
             // Open Leads is a current-state count on every page and needs no
             // window.
+            //
+            // The two amounts carry `format: '0,0'`, the dashboards' KPI face
+            // (#2370 row 7): whole units, with the tenant currency the console
+            // adds. Without it they read "1,220,000.00" beside the dashboards'
+            // "1,220,000" (docs/developers/number-formats.md).
             children: [
               {
                 type: 'object-metric',
@@ -187,6 +192,7 @@ export const SalesHomePage: Page = {
                   label: 'Total Revenue (All Time)',
                   icon: 'dollar-sign',
                   aggregate: { field: 'amount', function: 'sum' },
+                  format: '0,0',
                   filter: [{ field: 'stage', operator: 'equals', value: 'closed_won' }],
                 },
               },
@@ -209,6 +215,7 @@ export const SalesHomePage: Page = {
                   label: 'Open Pipeline (All Time)',
                   icon: 'briefcase',
                   aggregate: { field: 'amount', function: 'sum' },
+                  format: '0,0',
                   filter: [{ field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] }],
                 },
               },

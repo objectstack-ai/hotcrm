@@ -462,6 +462,11 @@ export const CrmApp = App.create({
       // `test/app-navigation-shape.test.ts` requires an entry for each report
       // either package registers, so a new report without one goes red.
       //
+      // Each entry's label IS its report's own `label`, here and in every
+      // locale pack (#2370 row 6): the sidebar said "Pipeline Coverage" and
+      // the report page "Pipeline Coverage by Forecast × Quarter", two names
+      // for one report. The same test pins the pair.
+      //
       // The only group collapsed on load: opened, it lists one row per report
       // (ten for an administrator, seven for a rep, measured on 18.1.0), which
       // would push everything under it down a screen, and the *All reports*
@@ -474,10 +479,10 @@ export const CrmApp = App.create({
       children: [
         { id: 'nav_report_opportunities_by_stage', type: 'report', reportName: 'opportunities_by_stage',         label: 'Opportunities by Stage',        icon: 'chart-column',  visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_report_won_by_owner',           type: 'report', reportName: 'won_opportunities_by_owner',     label: 'Won Opportunities by Owner',    icon: 'trophy',        visible: OPPORTUNITY_AUDIENCE },
-        { id: 'nav_report_pipeline_coverage',      type: 'report', reportName: 'pipeline_coverage_by_quarter',   label: 'Pipeline Coverage',             icon: 'columns-3',     visible: OPPORTUNITY_AUDIENCE },
+        { id: 'nav_report_pipeline_coverage',      type: 'report', reportName: 'pipeline_coverage_by_quarter',   label: 'Pipeline Coverage by Quarter',  icon: 'columns-3',     visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_report_funnel_by_owner',        type: 'report', reportName: 'opportunity_funnel_owner_stage', label: 'Opportunity Funnel by Owner',   icon: 'funnel',        visible: OPPORTUNITY_AUDIENCE },
-        { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Engagement',               icon: 'trending-up',   visible: READS_LEADS },
-        { id: 'nav_report_accounts_by_industry',   type: 'report', reportName: 'accounts_by_industry_type',      label: 'Accounts by Industry & Type',   icon: 'building',      visible: READS_ACCOUNTS },
+        { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Engagement by Month',      icon: 'trending-up',   visible: READS_LEADS },
+        { id: 'nav_report_accounts_by_industry',   type: 'report', reportName: 'accounts_by_industry_type',      label: 'Accounts by Industry and Type', icon: 'building',      visible: READS_ACCOUNTS },
         { id: 'nav_report_churn_signals',          type: 'report', reportName: 'customer_churn_signals',         label: 'Customer Churn Signals',        icon: 'heart-pulse',   visible: READS_ACCOUNTS },
       ],
     },

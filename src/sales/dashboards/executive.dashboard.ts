@@ -165,6 +165,9 @@ export const ExecutiveDashboard: Dashboard = {
     },
 
     // ─── Row 2: Revenue Analysis ──────────────────────────────────────
+    // The revenue trend's one home (#2370 row 2). CRM Overview and Sales
+    // Performance each carried the same 12-month closed-won chart; leadership
+    // reads it here, on the dashboard the app opens on.
     {
       id: 'revenue_trend',
       title: 'Revenue Trend',

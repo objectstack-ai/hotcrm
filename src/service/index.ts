@@ -271,7 +271,7 @@ export const createHotCrmServiceStack = (
         priority: 30,
         items: [
           { id: 'nav_report_cases_by_status',     type: 'report', reportName: 'cases_by_status_priority',     label: 'Cases by Status and Priority', icon: 'chart-column',  visible: CASE_READ_AUDIENCE },
-          { id: 'nav_report_sla',                 type: 'report', reportName: 'sla_performance',              label: 'SLA Performance',              icon: 'timer',         visible: CASE_READ_AUDIENCE },
+          { id: 'nav_report_sla',                 type: 'report', reportName: 'sla_performance',              label: 'SLA on Closed Cases',          icon: 'timer',         visible: CASE_READ_AUDIENCE },
           { id: 'nav_report_cases_opened_by_day', type: 'report', reportName: 'cases_opened_by_day_priority', label: 'Cases Opened by Day',          icon: 'calendar-days', visible: CASE_READ_AUDIENCE },
         ],
       },

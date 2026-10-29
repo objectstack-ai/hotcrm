@@ -9,7 +9,7 @@ import { MarketingUserProfile } from '../src/sales/profiles/marketing-user.profi
 import { CrmUserProfile } from '../src/sales/profiles/crm-user.profile';
 import { CrmPositions } from '../src/sales/sharing/positions';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
-import composedStack, { servedApp } from './helpers/composed-stack';
+import composedStack, { servedApp, localePacks } from './helpers/composed-stack';
 
 /** The sets a persona's position declares (`permissionSets`, #2200): what a holder of it is granted. */
 const SETS: Record<string, AnyRec> = Object.fromEntries(
@@ -267,6 +267,29 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
       .filter(([, count]) => count !== 1)
       .map(([name, count]) => `${name}: ${count} entries`);
     expect(bad, `reports without exactly one nav entry:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  // One name per report (#2370 row 6): the sidebar said "Pipeline Coverage"
+  // and the report page "Pipeline Coverage by Forecast × Quarter". The entry's
+  // label is the report's own, in English and in every locale pack that
+  // carries either one.
+  it('each entry is labelled with its report\'s own name, in every locale', () => {
+    const bad: string[] = [];
+    for (const { n } of REPORT_ENTRIES) {
+      const report = REPORTS.find((r) => r.name === n.reportName);
+      if (n.label !== report?.label) bad.push(`en ${n.id}: "${n.label}" vs report "${report?.label}"`);
+    }
+    for (const [locale, pack] of localePacks) {
+      const nav = pack?.apps?.[(CrmApp as AnyRec).name]?.navigation ?? {};
+      for (const { n } of REPORT_ENTRIES) {
+        const entry = nav[n.id]?.label;
+        const report = pack?.reports?.[n.reportName]?.label;
+        if ((entry !== undefined || report !== undefined) && entry !== report) {
+          bad.push(`${locale} ${n.id}: "${entry}" vs report "${report}"`);
+        }
+      }
+    }
+    expect(bad, `report entries named differently from their report:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('every report entry is in the Reports group, which the app declares collapsed', () => {
