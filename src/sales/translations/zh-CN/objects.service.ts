@@ -134,11 +134,14 @@ export const service: Record<string, ObjectTranslationData> = {
       case: { label: '工单' },
       how_can_we_help: {
         label: '我们能帮您什么？',
+        description: '紧急故障请拨打服务热线。',
         fields: {
           subject: { placeholder: '问题的简要概述' },
           description: { placeholder: '复现步骤、错误信息、截图……' },
           type: { helpText: '请选择最符合您问题的选项。' },
-          priority: { helpText: '严重问题请同时致电报告。' },
+          // 访客视角的称呼 (#2368)：对象字段名「提交人姓名 / 提交人邮箱」是给坐席看的。
+          supplied_name: { label: '您的姓名' },
+          supplied_email: { label: '您的邮箱' },
         },
       },
       // Object-level section keys (case.object.ts), used by record forms and

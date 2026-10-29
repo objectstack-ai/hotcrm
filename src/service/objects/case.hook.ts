@@ -194,6 +194,19 @@ const caseValidation: Hook = {
       // medium") that the app does not honour. Whether a web-submitted case
       // SHOULD outrank a staff-created one is a product question, and it is not
       // settled by leaving dead code here that says it already is.
+      //
+      // A guest picks at most High (#2368, maintainer ruling). Critical
+      // escalates on insert (`case_escalation_on_create`), hands the case to
+      // the service manager pool and takes the 4-hour SLA row, so it is a
+      // staff decision. The public form offers only Low/Medium/High, but the
+      // door (`POST /forms/support/submit`) checks the posted value against
+      // the OBJECT's options, not the form row's subset, so a crafted
+      // `critical` reaches this line. It is CAPPED rather than refused: the
+      // visitor's case is real and the hotline hint tells them how to get a
+      // P1 handled; refusing would lose the case to save a staff re-triage.
+      // Capping here, before `priority` is read below, keeps the rank, the SLA
+      // row and every after-insert flow on the stored `high`.
+      if (input.priority === 'critical') input.priority = 'high';
       input.owner_id          = null;
       input.is_escalated      = false;
       input.escalation_reason = null;
