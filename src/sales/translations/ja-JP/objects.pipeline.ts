@@ -504,7 +504,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         message: '期間開始はその期間の初日である必要があります。例：2026 年 8 月なら 2026-08-01。',
       },
       quarter_starts_on_quarter_boundary: {
-        message: '四半期フォーキャストは四半期の境界（1 月 1 日、4 月 1 日、7 月 1 日、10 月 1 日）から開始する必要があります。',
+        message: '四半期フォーキャストの期間開始は四半期の境界（1 月 1 日、4 月 1 日、7 月 1 日、10 月 1 日）である必要があります。',
       },
       snapshot_amounts_non_negative: {
         message: 'スナップショット金額は負の値にできません。',

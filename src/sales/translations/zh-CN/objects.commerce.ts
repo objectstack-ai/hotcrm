@@ -27,7 +27,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         message: '失效日期必须晚于报价日期',
       },
       quote_status_progression: {
-        message: '无效的报价单状态流转',
+        message: '这次状态变更不在报价单的常规路径上：草稿 → 审核中 → 已提交 → 已接受。审核中也可以退回草稿或变为已拒绝，已提交可以变为已拒绝，已拒绝的报价单回到草稿。草稿、审核中或已提交可以变为已过期。已接受和已过期是最终状态。',
       },
     },
     label: '报价单',

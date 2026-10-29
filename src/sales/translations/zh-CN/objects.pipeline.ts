@@ -498,7 +498,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         message: '周期开始必须是该周期的第一天——例如 2026 年 8 月对应 2026-08-01。',
       },
       quarter_starts_on_quarter_boundary: {
-        message: '季度预测必须从季度边界开始——1 月 1 日、4 月 1 日、7 月 1 日或 10 月 1 日。',
+        message: '季度预测的「周期起始」必须在季度边界上——1 月 1 日、4 月 1 日、7 月 1 日或 10 月 1 日。',
       },
       snapshot_amounts_non_negative: {
         message: '快照金额不能为负数。',

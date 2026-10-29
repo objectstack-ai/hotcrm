@@ -536,7 +536,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         message: 'El inicio del periodo debe ser el primer día del periodo: p. ej. 2026-08-01 para agosto de 2026.',
       },
       quarter_starts_on_quarter_boundary: {
-        message: 'Una previsión trimestral debe comenzar en un límite de trimestre: 1 de enero, 1 de abril, 1 de julio o 1 de octubre.',
+        message: 'En una previsión trimestral, el Inicio del periodo debe caer en un límite de trimestre: 1 de enero, 1 de abril, 1 de julio o 1 de octubre.',
       },
       snapshot_amounts_non_negative: {
         message: 'Los importes de la instantánea no pueden ser negativos.',

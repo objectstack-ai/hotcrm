@@ -7,6 +7,9 @@ import { Opportunity } from '../src/sales/objects/opportunity.object';
 import { Contract } from '../src/sales/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
 import { Lead } from '../src/sales/objects/lead.object';
+import { commerce as zhCommerce } from '../src/sales/translations/zh-CN/objects.commerce';
+import { commerce as esCommerce } from '../src/sales/translations/es-ES/objects.commerce';
+import { commerce as jaCommerce } from '../src/sales/translations/ja-JP/objects.commerce';
 
 /**
  * Six freeze refusals name fields and states by the labels the user sees
@@ -92,4 +95,37 @@ describe('freeze refusals use the labels the user sees (#2338 items 14 and 15)',
     expect(stages.map(([k]) => k).sort()).toEqual(['closed_lost', 'closed_won']);
     for (const [value, label] of stages) expect(label, value).toBe(optionLabel(Opportunity, 'stage', value));
   });
+});
+
+/**
+ * The quote's status warning states the path by the status labels (#2371 row
+ * 7). It read "Invalid quote status transition", which named neither the move
+ * nor the moves allowed. A state-machine message takes no holes on 18.2.0, so
+ * it names every status of the graph instead; each locale pack restates it in
+ * its own option labels. A status renamed on the object or in a pack without
+ * the sentence turns this red.
+ */
+describe('the quote status warning names the statuses by their labels (#2371 row 7)', () => {
+  const rule = (Quote.validations as AnyRec[]).find((v) => v.name === 'quote_status_progression')!;
+  const statuses = (Quote.fields.status.options as AnyRec[]).map((o) => String(o.value));
+
+  it('is still the warning-severity machine over status, with every status in its table', () => {
+    expect({ type: rule.type, field: rule.field, severity: rule.severity })
+      .toEqual({ type: 'state_machine', field: 'status', severity: 'warning' });
+    expect(Object.keys(rule.transitions).sort()).toEqual([...statuses].sort());
+  });
+
+  it('names every status by its label in the authored sentence', () => {
+    for (const value of statuses) expect(rule.message, value).toContain(optionLabel(Quote, 'status', value));
+    expect(rule.message).not.toMatch(/invalid|transition|in_review/i);
+  });
+
+  it.each([['zh-CN', zhCommerce], ['es-ES', esCommerce], ['ja-JP', jaCommerce]] as const)(
+    '%s: the pack sentence names every status by the pack\'s own option label',
+    (_locale, pack) => {
+      const quote = (pack as AnyRec).crm_quote;
+      const message = String(quote._validations.quote_status_progression.message);
+      for (const value of statuses) expect(message, value).toContain(quote.fields.status.options[value]);
+    },
+  );
 });
