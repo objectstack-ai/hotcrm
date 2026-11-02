@@ -145,6 +145,12 @@ export const CrmOverviewDashboard: Dashboard = {
       // resolve — it just means nothing on a shared product catalog, where the
       // column records whoever created the entry.
       filterBindings: { dateRange: false, owner_id: false },
+      // `product_metrics` ships in the revenue module, so the tile asks for
+      // that dataset's object and is left out when revenue is disabled (#2383).
+      // Measured on 18.2.0: a disabled package's objects drop out of the served
+      // object list this key is checked against; without it the tile drew a
+      // red "Dataset "product_metrics" is not defined in this environment".
+      requiresObject: 'crm_product',
       dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
       layout: { x: 0, y: 6, w: 12, h: 4 },
       chartConfig: {
