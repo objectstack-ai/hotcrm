@@ -104,6 +104,14 @@ approval, then close it once approved. Accepting a quote closes its deal as
 won, so the same rule holds a quote's acceptance. Losing a deal needs no
 approval.
 
+**Only an administrator can create a deal of $100K or more already won.** An
+administrator (the organization's owner, an organization admin or a platform
+administrator) can create such a deal directly at **Closed Won**, for instance
+to import historical won deals. Anyone else's create is refused, from the New
+form and from an import alike: create the deal at an open stage, which sends it
+for approval, and close it once approved. Moving an existing deal to **Closed
+Won** still needs the approval, for an administrator too.
+
 > **Known limit.** The rule does not know whether the Large Deal Approval flow
 > is switched on. If an administrator switches that flow off, no deal of $100K
 > or more can be closed won by hand, because nothing can approve it.
