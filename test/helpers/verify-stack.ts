@@ -575,6 +575,21 @@ export async function runShippedHook(
   // engine hands every hook, which is what the sandbox's `ctx.api` reads under.
   const executionContext = ctx.as ? await stack.contextFor(ctx.as) : undefined;
   const user = executionContext?.userId ? { id: executionContext.userId } : undefined;
+  // `ctx.session`, projected from that context the way the engine projects it
+  // for every hook (`buildSession`, `@objectstack/objectql`
+  // `engine-execution-plumbing.ts`, not exported): the caller's id, active
+  // organization and positions, built-in identities included. The sandbox
+  // reads its own `session` off this key, so without it a body that tells an
+  // administrator apart by `positions` (#2387) saw no caller at all here
+  // while the served path hands it one (measured on 18.2.0).
+  const session = executionContext
+    ? {
+        userId: executionContext.userId,
+        organizationId: executionContext.tenantId,
+        positions: executionContext.positions,
+        ...(executionContext.isSystem ? { isSystem: true } : {}),
+      }
+    : undefined;
   const input: Row = { ...(ctx.input ?? {}) };
   // The engine dispatches ONE object per write, so a hook naming several
   // (`quote_workflow`, #2060) is told which one with `ctx.object`.
@@ -585,7 +600,7 @@ export async function runShippedHook(
   // mark (`flowRunId` on a flow data node's write), handed over the same way;
   // since 18.2.0 the runtime carries it into the body (#2285).
   await handler({
-    event: ctx.event, input, previous: ctx.previous, result: ctx.result, user, executionContext,
+    event: ctx.event, input, previous: ctx.previous, result: ctx.result, user, session, executionContext,
     object: ctx.object ?? hook.object, referentialCascadeDelete: ctx.referentialCascadeDelete,
     provenance: ctx.provenance,
   });
