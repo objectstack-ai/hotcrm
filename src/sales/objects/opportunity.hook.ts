@@ -246,15 +246,48 @@ const opportunityValidationHook: Hook = {
     // answers PERMISSION_DENIED). An install that switches the flow off can
     // therefore close no large deal won by hand. ⛔ No setting stands in for
     // that reading.
+    // ─── …and no deal created at Closed Won by a non-administrator (#2387)
+    //
+    // A deal CREATED at `closed_won` at or over the line has the same hole:
+    // the write has no prior stage, no request ever opens (the on-create
+    // flow's start condition excludes closed stages), and the deal lands won
+    // at `not_required`. Measured on 18.2.0 before this change: a rep's REST
+    // create, JSON import, CSV import and console New form of a 250,000 deal
+    // at Closed Won all answered 201/created. Maintainer ruling (2026-11-02,
+    // 「只拦非管理员」): refuse that create for every user but an
+    // administrator, so an administrator can still load historical won deals.
+    //   • The administrator signal is `ctx.session.positions`, which the
+    //     platform fills from `sys_user_position` PLUS its built-in identity
+    //     projection (`ExecutionContext.positions`, ADR-0090 D3); the three
+    //     administrator identities are `platform_admin`, `org_owner` and
+    //     `org_admin` (`BUILTIN_IDENTITY_NAMES`, `@objectstack/spec`). No app
+    //     position can spell them: `sys_user_position` refuses a reserved
+    //     name. Measured on 18.2.0 through the SHIPPED body (lowered, QuickJS)
+    //     on all four doors above alike: the dev admin reads
+    //     `[platform_admin, org_owner, everyone]`, a member promoted to org
+    //     admin `[org_admin, everyone]`, a rep
+    //     `[org_member, sales_rep, na_sales_team, everyone]`. ⛔ Not keyed on
+    //     a name or email, and not on a permission set: the hook context
+    //     carries no permission list.
+    //   • The exemption is the CREATE's alone. On an update an administrator
+    //     is held to ruling B like everyone else.
+    //   • A system write (seed, a flow or sweep with no user) is not judged,
+    //     the boundary above, so the seed's closed-won deals keep loading.
     // ⚠️ The line is a COPY of `LARGE_DEAL_AMOUNT` (`_thresholds.ts`): a
     // lowered body cannot import it. `test/deal-threshold-parity.test.ts`
-    // holds this copy and the `quote_workflow` one to the constant.
-    if (event === 'beforeUpdate' && previous && ctx.user?.id) {
+    // holds this copy and the `quote_workflow` one to the constant; the
+    // create and the update share it, so there is one copy, not two.
+    const creating = event === 'beforeInsert';
+    if ((creating || (event === 'beforeUpdate' && previous)) && ctx.user?.id) {
       const LARGE_DEAL_AMOUNT = 100000;
-      const verdict = (input.approval_status ?? previous.approval_status) as string | undefined;
-      const dealAmount = Number(input.amount ?? previous.amount);
-      const winning = input.stage === 'closed_won' && input.stage !== previous.stage;
-      if (winning && verdict !== 'approved' && dealAmount >= LARGE_DEAL_AMOUNT) {
+      const ADMIN_IDENTITIES = ['platform_admin', 'org_owner', 'org_admin'];
+      const prior = (previous ?? {}) as Record<string, unknown>;
+      const verdict = (input.approval_status ?? prior.approval_status) as string | undefined;
+      const dealAmount = Number(input.amount ?? prior.amount);
+      const winning = input.stage === 'closed_won' && (creating || input.stage !== prior.stage);
+      const positions = (ctx.session?.positions ?? []) as string[];
+      const exempt = creating && positions.some((p) => ADMIN_IDENTITIES.includes(p));
+      if (winning && !exempt && verdict !== 'approved' && dealAmount >= LARGE_DEAL_AMOUNT) {
         // Two sentences, one per reader (#2338 items 12, 14-16): the message
         // is the diagnostic and keeps API names; the `userMessage` is what the
         // console shows and names the stage, the field and its value by the
@@ -263,13 +296,17 @@ const opportunityValidationHook: Hook = {
         const VERDICT_LABELS: Record<string, string> = { not_required: 'Not Required', pending: 'Pending', rejected: 'Rejected' };
         const line = String(LARGE_DEAL_AMOUNT).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         const shown = VERDICT_LABELS[verdict as string] ?? VERDICT_LABELS.not_required;
-        const next = verdict === 'pending'
-          ? 'It can be Closed Won once the request is approved.'
-          : verdict === 'rejected'
-            ? 'Revise the deal and save it to send it for approval again; it can be Closed Won once approved.'
-            : 'Save the deal without closing it to send it for approval; it can be Closed Won once approved.';
+        const next = creating
+          ? 'Create it at an open stage to send it for approval; it can be Closed Won once approved. Only an administrator can create it already won.'
+          : verdict === 'pending'
+            ? 'It can be Closed Won once the request is approved.'
+            : verdict === 'rejected'
+              ? 'Revise the deal and save it to send it for approval again; it can be Closed Won once approved.'
+              : 'Save the deal without closing it to send it for approval; it can be Closed Won once approved.';
         throw refuse(
-          `A deal of LARGE_DEAL_AMOUNT (${LARGE_DEAL_AMOUNT}) or more moves to closed_won only once approval_status is approved; amount is ${dealAmount}, approval_status is ${verdict ?? 'unset'}.`,
+          creating
+            ? `A deal of LARGE_DEAL_AMOUNT (${LARGE_DEAL_AMOUNT}) or more is created at closed_won only by an administrator (position platform_admin, org_owner or org_admin); amount is ${dealAmount}, approval_status is ${verdict ?? 'unset'}.`
+            : `A deal of LARGE_DEAL_AMOUNT (${LARGE_DEAL_AMOUNT}) or more moves to closed_won only once approval_status is approved; amount is ${dealAmount}, approval_status is ${verdict ?? 'unset'}.`,
           'RECORD_LOCKED',
           409,
           `A deal of ${line} or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is ${shown}. ${next}`,
