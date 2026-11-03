@@ -70,7 +70,11 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *      `service_agent.crm_task.allowTransfer`.
  *   ③ A caller-supplied `owner_id` is refused INSIDE the middleware, upstream
  *      of the hook phase — the hook never fires at all. No hook can approve,
- *      launder or adjudicate a payload that carries the key.
+ *      launder or adjudicate a payload that carries the key. One exception
+ *      since @objectstack 18.3.0 (ADR-0142 ownership queues): the gate admits
+ *      a CLAIM, `owner_id` from empty to the caller's own id, when the sharing
+ *      model allows the caller the record — so an agent's `{ owner_id: <self> }`
+ *      on an unowned open case now lands, with the gesture's own outcome.
  *
  * ⇒ "An agent may set `owner_id` to themselves" is not implementable as an
  * adjudicated write. It IS implementable one level up, as a GESTURE the hook
@@ -462,7 +466,9 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
  * INSIDE the operation middleware, upstream of the hook phase — the hook never
  * fires, so it cannot approve, launder or adjudicate such a write (door ③ in
  * this module's header). "Let the agent write `{ owner_id: <self> }` and have a
- * hook vet it" is therefore not implementable at all.
+ * hook vet it" is therefore not implementable at all. (Through 18.2.0 that
+ * write was refused outright; since 18.3.0 the platform admits it as its own
+ * claim, door ③. The gesture below stays the console's spelling.)
  *
  * So the claim is spelled as a MOVE: the caller puts an unowned open case into
  * a status meaning they picked it up ({@link CLAIMABLE_TARGET_STATUSES}) and
@@ -480,7 +486,8 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
  * | --- | --- |
  * | `{ status: 'in_progress' }` on an unowned OPEN case | claimed — owner becomes the caller |
  * | the same on a case owned by SOMEBODY ELSE           | refused: no reach, and guard 3 below |
- * | `{ owner_id: <anyone> }`, unowned or not            | refused by the transfer gate, upstream |
+ * | `{ owner_id: <somebody else> }`, unowned or not     | refused by the transfer gate, upstream |
+ * | `{ owner_id: <self> }` on an unowned OPEN case      | admitted since 18.3.0 — the platform's own claim (ADR-0142) |
  * | the same on an unowned CLOSED case                  | refused: not shared, and guard 4 below |
  *
  * Each guard is doubled on purpose: `case_unassigned_triage_sharing` already

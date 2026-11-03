@@ -890,6 +890,25 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     customer_churn_signals: {
       label: '顧客離反シグナル',
       description: '能動的な顧客維持のための 4 つの早期警告パネル：CSM が離反リスクありまたは離反中とフラグを付けた取引先、最近活動のない有効な取引先、動きのない高価値取引先、最近失注した商談。',
+      // Joined-report block headings (translatable since @objectstack/spec 18.3.0).
+      blocks: {
+        csm_flagged_accounts: {
+          label: 'CSM がフラグを付けた取引先',
+          description: 'CSM が手動でリスクありまたは解約進行中とフラグを付けた取引先（種別ごと）— 人の判断に基づき、活動の時計とは無関係です。',
+        },
+        at_risk_accounts: {
+          label: 'リスクのある取引先',
+          description: '60 日以上活動のないアクティブな取引先（業種ごと）。',
+        },
+        silent_high_value: {
+          label: '沈黙している高価値取引先',
+          description: '90 日以上動きのない戦略顧客・エンタープライズの取引先（種別ごと）。',
+        },
+        recently_closed_lost: {
+          label: '最近失注した商談',
+          description: '過去 30 日以内に失注した商談 — 顧客が完全に離れる前に原因を調べてください。',
+        },
+      },
     },
     lead_inflow_by_month_source: {
       label: '月別リード対応',
@@ -924,7 +943,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '1 日ごとの新規ケース数を優先度別に表示',
     },
   },
-  // Setup → Positions (`src/sales/sharing/positions.ts`).
+  // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
     executive: {
       label: 'エグゼクティブ',
@@ -975,7 +994,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '欧州テリトリーのチーム：欧州（EMEA）テリトリーの取引先をすべて編集します。',
     },
   },
-  // Setup → Permission Sets (`src/sales/profiles/*.profile.ts`).
+  // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
     crm_user: {
       label: 'CRM ユーザー',
@@ -1004,6 +1023,40 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     system_admin: {
       label: 'システム管理者',
       description: '単一組織インストールの運用者：すべての業務レコードを完全に管理し、ユーザー・セキュリティモデル・設定を管理します。',
+    },
+  },
+  // Doc book titles and group headings (translatable since @objectstack/spec 18.3.0).
+  books: {
+    crm_manual: {
+      label: 'HotCRM ユーザーマニュアル',
+      description: '営業とサービスで HotCRM がどう動くか：画面の背後にあるルール。',
+      groups: {
+        start: { label: 'はじめに' },
+        sales: { label: '営業' },
+        service: { label: 'サービス' },
+        analytics: { label: '分析' },
+      },
+    },
+    crm_admin_manual: {
+      label: 'HotCRM 管理者マニュアル',
+      description: '本番稼働、アクセス権、すべての自動化しきい値とデータインポート — 管理者向け。',
+      groups: {
+        admin: { label: '管理' },
+      },
+    },
+    crm_revenue_manual: {
+      label: 'HotCRM 収益マニュアル',
+      description: '見積、製品と価格表、そして受注した商談の請求部門への引き継ぎ。',
+      groups: {
+        revenue: { label: '収益' },
+      },
+    },
+    crm_marketing_manual: {
+      label: 'HotCRM マーケティングマニュアル',
+      description: 'キャンペーン：各数値が数えているもの、そして自動で動くもの。',
+      groups: {
+        marketing: { label: 'キャンペーン' },
+      },
     },
   },
 };

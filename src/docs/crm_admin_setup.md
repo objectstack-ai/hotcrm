@@ -43,8 +43,8 @@ access page instead of an empty app.
 ## 3. Give each person a position
 
 Positions decide most of what a person can do, and they drive the automation
-too. Open **Setup → Access Control → Positions**, open a position, and add its
-holders. A person may hold more than one. Holding a position gives its
+too. Open **Setup → People & Organization → Position Holders**, pick a
+position, and add its holders. A person may hold more than one. Holding a position gives its
 permission sets to the holder; a position with no permission set only widens
 which records a holder can see.
 
@@ -66,8 +66,9 @@ What each position opens up is in [Access](./crm_admin_access.md).
 
 ## 4. Check the permission sets
 
-Positions hand out the everyday sets. Two sets are worth checking by hand under
-**Setup → Access Control → Permission Sets**:
+Positions hand out the everyday sets. Two sets are worth checking by hand: read
+them under **Studio → All Metadata Types → Permission Set**, and give one to a
+person under **Setup → People & Organization → Permission Set Assignment**:
 
 - **System Administrator** — give it to the people who run HotCRM. It opens
   this manual and grants list export, which the platform's own administrator

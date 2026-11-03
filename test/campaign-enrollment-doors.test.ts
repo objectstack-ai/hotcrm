@@ -256,33 +256,32 @@ describe('a profile with allowCreate enrolls through every door, as itself (#216
  * every later write that touched it.
  *
  * Written as the caller now, the flow's insert would meet that check. Since
- * #2336 the run does not reach the insert: the flow reads the campaign first,
- * finds none, and ends refused at its open-campaign gate, saying so. Nothing
- * names the lead at all. The value sent is the campaign's own name, which is
- * the shape the hosted pass typed. The control is the block above: the same
- * door, with the campaign's id, enrolls.
+ * #2336 the run does not reach the insert: the flow reads the campaign first.
+ * Since @objectstack 18.3.0 (runtime dfbe34d, objectstack#29050) it does not
+ * even start: a start input the flow reads as a record id is loaded in the
+ * caller's own scope before the run exists, and one that does not resolve is
+ * refused `404 RECORD_NOT_FOUND` (through 18.2.0 the run ended refused at the
+ * open-campaign gate). Nothing names the lead at all. The value sent is the
+ * campaign's own name, which is the shape the hosted pass typed. The control
+ * is the block above: the same door, with the campaign's id, enrolls.
  *
  * The rows are read as the SYSTEM (`verify.rows` without `as`). Such a row is
  * invisible to every user: its access derives from a master that does not
  * exist, so a read as the caller would come back empty either way.
  */
 describe('a campaign id that names no campaign is refused at both Add to Campaign doors (#2073 item 6)', () => {
-  it.each(ALLOWED)('%s: Add to Campaign on a lead is refused at the campaign gate, and no member is written', async (persona) => {
+  it.each(ALLOWED)('%s: Add to Campaign on a lead is refused before the run, and no member is written', async (persona) => {
     const w = await world(who[persona]!);
     const typed = String(w.campaign.name);
-    const answer = await addLead(who[persona]!, w.leadA.id, typed) as Rec;
-    expect(answer).toMatchObject({ success: true, status: 'refused', output: { enrolled: false } });
-    expect(answer.refusalMessage, 'the refusal says why').toBeTruthy();
+    await expect(addLead(who[persona]!, w.leadA.id, typed)).rejects.toMatchObject({ code: 'RECORD_NOT_FOUND', status: 404 });
     expect(await membersOf(typed), 'a member row names a campaign that does not exist').toHaveLength(0);
     expect(await verify.rows('crm_campaign_member', { crm_lead: w.leadA.id })).toHaveLength(0);
   });
 
-  it.each(ALLOWED)('%s: Add to Campaign on a contact is refused at the campaign gate, and no member is written', async (persona) => {
+  it.each(ALLOWED)('%s: Add to Campaign on a contact is refused before the run, and no member is written', async (persona) => {
     const w = await world(who[persona]!);
     const typed = String(w.campaign.name);
-    const answer = await addContact(who[persona]!, w.contact.id, typed) as Rec;
-    expect(answer).toMatchObject({ success: true, status: 'refused', output: { enrolled: false } });
-    expect(answer.refusalMessage, 'the refusal says why').toBeTruthy();
+    await expect(addContact(who[persona]!, w.contact.id, typed)).rejects.toMatchObject({ code: 'RECORD_NOT_FOUND', status: 404 });
     expect(await membersOf(typed), 'a member row names a campaign that does not exist').toHaveLength(0);
     expect(await verify.rows('crm_campaign_member', { crm_contact: w.contact.id })).toHaveLength(0);
   });

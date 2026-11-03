@@ -343,11 +343,19 @@ describe('campaign_enrollment — a campaign that is not open, or no longer exis
       .toEqual({ ...REFUSED, refusalMessage: refusal });
   }, WORLD_BUDGET_MS);
 
-  it.each(['leads', 'contacts'] as const)('a campaign id that names no campaign (%s) is refused, and nobody is enrolled', async (memberSource) => {
+  // Since @objectstack 18.3.0 (runtime c347d22 / dfbe34d, objectstack#29050)
+  // every door that starts a flow by name loads the record it hands the run in
+  // the caller's own scope, and refuses one that does not resolve BEFORE the
+  // run exists: `404 RECORD_NOT_FOUND`. The run therefore never reaches the
+  // `refuse_not_open` gate on a missing id (through 18.2.0 it did, and ended
+  // refused with that gate's message). What this pins is unchanged in
+  // substance: the run is refused and nobody is enrolled.
+  it.each(['leads', 'contacts'] as const)('a campaign id that names no campaign (%s) is refused before the run exists, and nobody is enrolled', async (memberSource) => {
     const missing = `no-such-campaign-${++k}`;
     expect(await verify.rows('crm_campaign', { id: missing }), 'the missing campaign exists').toHaveLength(0);
-    expect(await ending(missing, { ...SCREEN, memberSource }))
-      .toEqual({ ...REFUSED, refusalMessage: refusal });
+    await expect(ending(missing, { ...SCREEN, memberSource }))
+      .rejects.toMatchObject({ code: 'RECORD_NOT_FOUND', status: 404 });
+    expect(await verify.rows('crm_campaign_member', { crm_campaign: missing })).toHaveLength(0);
   });
 
   it.each([

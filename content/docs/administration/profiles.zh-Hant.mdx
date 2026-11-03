@@ -73,7 +73,7 @@ description: 六種內建權限集，以及每一種能檢視、編輯和執行�
 - 讀取 **知識文章**
 - 不能刪除記錄
 
-**marketing_manager** 與 **marketing_director** 兩個職位會把這個權限設定檔授予職位上的每個人，所以帶領行銷團隊的人能做行銷人員能做的一切，包括編輯任意行銷活動、登記活動成員。在 **Setup → Positions** 裡把人加進這兩個職位之一就夠了，不需要再手動指派權限設定檔。
+**marketing_manager** 與 **marketing_director** 兩個職位會把這個權限設定檔授予職位上的每個人，所以帶領行銷團隊的人能做行銷人員能做的一切，包括編輯任意行銷活動、登記活動成員。在 **Setup → Position Holders** 裡把人加進這兩個職位之一就夠了，不需要再手動指派權限設定檔。
 
 ### 🌐 Guest (Public Forms)
 
@@ -114,11 +114,11 @@ description: 六種內建權限集，以及每一種能檢視、編輯和執行�
 
 如果某個內建權限設定檔 *幾乎* 合適但需要微調：
 
-1. **Setup → Permission Sets** —— 這個畫面叫 *Permission Sets*；Setup 裡沒有 *Profiles* 這個入口。
-2. 開啟權限集並點擊 **複製**。
+1. **Studio → All Metadata Types**，再選 *Permission Set* —— 權限集定義在 Studio 的環境目錄裡（自 ObjectStack 18.3 起 Setup 裡不再列出權限集），兩個應用裡都沒有 *Profiles* 入口。
+2. 開啟權限集並點擊 **New similar**。
 3. 重新命名（例如 *「資深銷售代表」*）。
 4. 調整權限。
-5. 儲存並指派給使用者。
+5. 儲存，然後在 **Setup → Permission Set Assignment** 裡指派給使用者。
 
 ⚠️ **不要修改內建權限設定檔** —— 複製它們。HotCRM 的更新可能會重設內建權限設定檔的設定。
 

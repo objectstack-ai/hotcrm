@@ -895,6 +895,25 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     customer_churn_signals: {
       label: '客户流失信号',
       description: '四个堆叠的预警面板，用于主动挽留客户：客户成功经理标记为有风险或正在流失的客户、近期没有活动的活跃客户、沉寂的高价值客户，以及最近丢单的商机。',
+      // Joined-report block headings (translatable since @objectstack/spec 18.3.0).
+      blocks: {
+        csm_flagged_accounts: {
+          label: '客户成功经理标记的客户',
+          description: '客户成功经理手动标记为有风险或正在流失的客户，按类型分组——基于人的判断，与活动时钟无关。',
+        },
+        at_risk_accounts: {
+          label: '有风险的客户',
+          description: '60 天以上没有活动的活跃客户，按行业分组。',
+        },
+        silent_high_value: {
+          label: '沉寂的高价值客户',
+          description: '90 天以上没有动静的战略客户和企业客户，按类型分组。',
+        },
+        recently_closed_lost: {
+          label: '最近丢单的商机',
+          description: '最近 30 天内丢单的商机——在客户彻底流失之前查明原因。',
+        },
+      },
     },
     lead_inflow_by_month_source: {
       label: '每月线索跟进',
@@ -929,7 +948,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '每日新建工单数，按优先级细分',
     },
   },
-  // Setup → Positions (`src/sales/sharing/positions.ts`).
+  // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
     executive: {
       label: '高管',
@@ -980,7 +999,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '欧洲区域团队：可编辑欧洲（EMEA）区域内的每一个客户。',
     },
   },
-  // Setup → Permission Sets (`src/sales/profiles/*.profile.ts`).
+  // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
     crm_user: {
       label: 'CRM 用户',
@@ -1009,6 +1028,40 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     system_admin: {
       label: '系统管理员',
       description: '单组织部署的运营者：完全控制每一条业务记录，并负责用户、安全模型和系统设置的管理。',
+    },
+  },
+  // Doc book titles and group headings (translatable since @objectstack/spec 18.3.0).
+  books: {
+    crm_manual: {
+      label: 'HotCRM 使用手册',
+      description: 'HotCRM 在销售和服务中如何运作：界面背后的规则。',
+      groups: {
+        start: { label: '入门' },
+        sales: { label: '销售' },
+        service: { label: '服务' },
+        analytics: { label: '分析' },
+      },
+    },
+    crm_admin_manual: {
+      label: 'HotCRM 管理员手册',
+      description: '上线、权限、每一个自动化阈值和数据导入——面向管理员。',
+      groups: {
+        admin: { label: '管理' },
+      },
+    },
+    crm_revenue_manual: {
+      label: 'HotCRM 收入手册',
+      description: '报价单、产品和价格表，以及赢单后向计费系统的交接。',
+      groups: {
+        revenue: { label: '收入' },
+      },
+    },
+    crm_marketing_manual: {
+      label: 'HotCRM 营销手册',
+      description: '营销活动：各项数字统计的是什么，以及哪些环节会自动运行。',
+      groups: {
+        marketing: { label: '营销活动' },
+      },
     },
   },
 };
