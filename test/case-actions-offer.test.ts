@@ -131,11 +131,23 @@ describe('the Escalate Case offer agrees with the write it starts (#2060 item 8)
     }
   };
 
-  it.each(NOT_OFFERED)('%s: refused at the escalate node, and the case is left as it was', async (persona) => {
+  // A reader who cannot READ cases at all (the marketing user) is refused one
+  // door earlier since @objectstack 18.3.0 (runtime c347d22, objectstack#29050):
+  // a door that starts a flow loads the record it hands the run in the
+  // caller's own scope and refuses one the caller cannot read before the run
+  // exists, `404 RECORD_NOT_FOUND`. A reader who can read but not edit still
+  // reaches the escalate node and is refused there.
+  const CANNOT_READ = new Set<string>(['marketing_user']);
+
+  it.each(NOT_OFFERED)('%s: refused (at the escalate node, or before the run when the case is unreadable), and the case is left as it was', async (persona) => {
     const kase = await openCaseOf(persona);
     const refusal = await escalate(persona, kase.id);
-    expect(refusal).toMatchObject({ code: 'FLOW_FAILED', status: 400 });
-    expect(refusal!.message).toContain("Node 'escalate' failed");
+    if (CANNOT_READ.has(persona)) {
+      expect(refusal).toMatchObject({ code: 'RECORD_NOT_FOUND', status: 404 });
+    } else {
+      expect(refusal).toMatchObject({ code: 'FLOW_FAILED', status: 400 });
+      expect(refusal!.message).toContain("Node 'escalate' failed");
+    }
     const [row] = await verify.rows('crm_case', { id: kase.id });
     expect(row).toMatchObject({ status: 'new', priority: 'medium', is_escalated: false });
   });

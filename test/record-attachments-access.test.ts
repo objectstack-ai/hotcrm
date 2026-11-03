@@ -75,15 +75,21 @@ const insert = async (object: string, doc: AnyRec): Promise<string> => {
   return String(row?.id);
 };
 
-/** A committed attachments-scope file, as the upload door leaves one. */
-const fileRow = (name: string) =>
+/**
+ * A committed attachments-scope file, as the upload door leaves one. `owner`
+ * is who uploaded it: since @objectstack 18.3.0 (service-storage 1fd68ea) the
+ * `sys_attachment` write gate admits a caller only to a file they may open, so
+ * a file the rep attaches is the rep's own upload, as it is in the console.
+ */
+const fileRow = (name: string, owner?: string) =>
   insert('sys_file', {
     key: `attachments/${name}`, name, mime_type: 'application/pdf', size: 1, scope: 'attachments', status: 'committed',
+    ...(owner ? { owner_id: owner } : {}),
   });
 
 /** The fields an Attachments-panel upload posts, for a record (a quote unless named). */
-const attachmentOn = async (parentId: string, name: string, parentObject = 'crm_quote') => ({
-  parent_object: parentObject, parent_id: parentId, file_id: await fileRow(name),
+const attachmentOn = async (parentId: string, name: string, parentObject = 'crm_quote', owner?: string) => ({
+  parent_object: parentObject, parent_id: parentId, file_id: await fileRow(name, owner),
   file_name: name, mime_type: 'application/pdf', size: 1,
 });
 
@@ -194,7 +200,7 @@ const asRep = async (method: string, path: string, payload?: unknown) => {
 
 describe('a sales rep uploads and deletes where they can edit the record (#2038)', () => {
   it('uploads to a quote they can edit, and deletes their own file', async () => {
-    const posted = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.quote_US, 'rep-upload.pdf'));
+    const posted = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.quote_US, 'rep-upload.pdf', 'crm_quote', rep.id));
     // Before #2038: 403 PERMISSION_DENIED, the grant was read only.
     expect(posted.status, JSON.stringify(posted.body)).toBe(201);
     const [mine] = await verify.rows('sys_attachment', { parent_id: id.quote_US, file_name: 'rep-upload.pdf' });
@@ -216,11 +222,11 @@ describe('a sales rep uploads and deletes where they can edit the record (#2038)
   it('is refused an upload to a contract they only read, and to a quote they cannot reach', async () => {
     // The rep holds create on sys_attachment, so the refusal is the platform's
     // parent gate, not the object gate.
-    const contract = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.contract_US, 'stray-contract.pdf', 'crm_contract'));
+    const contract = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.contract_US, 'stray-contract.pdf', 'crm_contract', rep.id));
     expect({ status: contract.status, code: contract.code }, JSON.stringify(contract.body)).toEqual({
       status: 403, code: 'ATTACHMENT_PARENT_ACCESS',
     });
-    const quote = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.quote_JP, 'stray-quote.pdf'));
+    const quote = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.quote_JP, 'stray-quote.pdf', 'crm_quote', rep.id));
     expect({ status: quote.status, code: quote.code }, JSON.stringify(quote.body)).toEqual({
       status: 403, code: 'ATTACHMENT_PARENT_ACCESS',
     });

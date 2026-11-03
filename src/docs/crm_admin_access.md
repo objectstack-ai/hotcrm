@@ -24,8 +24,8 @@ visible by clicking around: **who can see whose data**, and why.
 
 ## Positions
 
-Positions are the groups that distribute record access. **Setup → Positions**
-lists them: a director, a manager and a front-line rung for each of sales,
+Positions are the groups that distribute record access. **Setup → People &
+Organization → Position Holders** lists them, with who holds each: a director, a manager and a front-line rung for each of sales,
 service and marketing, an **Executive** position, and two territory
 groupings (**NA Sales Team** and **EU Sales Team**).
 

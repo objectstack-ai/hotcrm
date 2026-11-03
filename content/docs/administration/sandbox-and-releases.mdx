@@ -7,7 +7,7 @@ description: Make configuration changes safely — what release management for H
 
 Never make config changes directly in production. This page covers the safe workflow: build in a sandbox, test, package, promote to production, rollback if needed.
 
-**None of the screens named below exist.** Setup ships no *Sandbox Management*, no *Change Packages* and no *Git Sync* entry — its navigation is Overview, Apps, People & Organization, Access Control, Approvals, Configuration, Diagnostics, Integrations and Advanced, and nothing under them provisions a tenant or assembles a change set. What follows is the intended shape of release management, kept because the discipline it teaches is the right one. What HotCRM does today: its metadata is TypeScript under `src/`, reviewed in git and shipped with the app; installed packages are listed at **Setup → Packages**.
+**None of the screens named below exist.** Setup ships no *Sandbox Management*, no *Change Packages* and no *Git Sync* entry — its navigation is Overview, Apps, People & Organization, Access Control, Approvals, Configuration, Diagnostics, Integrations and Advanced, and nothing under them provisions a tenant or assembles a change set. What follows is the intended shape of release management, kept because the discipline it teaches is the right one. What HotCRM does today: its metadata is TypeScript under `src/`, reviewed in git and shipped with the app; installed packages are listed at **Setup → Installed Apps** (choose *Show all*).
 
 > **Every claim below was measured, and most did not survive.** The page was checked
 > claim by claim against the app's own metadata (`src/`, `objectstack.config.ts`) and the
@@ -102,7 +102,7 @@ That artefact is real, and this is the one place the page's mental model is clos
 
 The intended flow: a *Change Packages → New* screen taking a name and description, components added by hand / by tag / automatically since the last package, then **Validate** for consistency and **Save**.
 
-There is no such screen. A package here is the platform's own unit — listed at **Setup → Packages** and **Studio → Packages** — and HotCRM's own metadata is packaged from source at build time, never assembled in the UI.
+There is no such screen. A package here is the platform's own unit — listed at **Setup → Installed Apps** and **Studio → Packages** — and HotCRM's own metadata is packaged from source at build time, never assembled in the UI.
 
 ### Deploying a package
 

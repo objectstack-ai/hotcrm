@@ -364,12 +364,20 @@ const leadWith = async (doc: Rec): Promise<Rec> => verify.hooks.run('crm_lead', 
 /**
  * A whitespace-only name is refused by the engine (`name` / `company` are
  * required, and blank is not a value) before any hook could fold it — so that
- * case pins the refusal. A non-string one is NOT refused: the hook sees the
- * number and folds it to `null`, and the engine then stores the text `42` —
- * measured, both columns, so the `null` branch is reachable through a write.
+ * case pins the refusal. A non-string one is NOT refused, and since
+ * @objectstack 18.3.0 (objectql 04e0c2c) the write door turns a number written
+ * to a text field into the string the validator judged BEFORE the hook phase:
+ * the hook sees `"42"` and folds it to `"42"`. Through 18.2.0 the hook saw the
+ * number and folded it to `null`. So through a write the non-string case reads
+ * as its text, and the hook's `null` branch for a non-string is no longer
+ * reached from a write.
  */
 const UNWRITABLE = new Set(['a whitespace-only value']);
-const WRITABLE_FOLDS = FOLDING_CASES.filter(([label]) => !UNWRITABLE.has(label));
+const THROUGH_A_WRITE: Record<string, unknown> = { 'a non-string value': '42' };
+const WRITABLE_FOLDS = FOLDING_CASES
+  .filter(([label]) => !UNWRITABLE.has(label))
+  .map(([label, value, expected]): [string, unknown, unknown] =>
+    [label, value, label in THROUGH_A_WRITE ? THROUGH_A_WRITE[label] : expected]);
 const UNWRITABLE_FOLDS = FOLDING_CASES.filter(([label]) => UNWRITABLE.has(label));
 
 describe('account_protection folds name into name_normalized', () => {

@@ -116,11 +116,12 @@ export const MarkArticleHelpfulAction: Action = {
   visible: publishedOnly,
   successMessage: 'Thanks — recorded as helpful.',
   // By the body's `outcome` (#2369 row 7), with the article's tally. The
-  // console fills `${result.x}` here; a `{{ result.x }}` hole prints raw.
+  // entry is a `template` slot since @objectstack/spec 18.3.0: `{{ result.x }}`
+  // holes, and the doors refuse `${…}`.
   outcomeMessages: {
-    recorded: 'Thanks — recorded as helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
-    changed: 'Your vote is now Helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
-    already: 'You already marked this article helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
+    recorded: 'Thanks — recorded as helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+    changed: 'Your vote is now Helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+    already: 'You already marked this article helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
   },
   refreshAfter: true,
 };
@@ -141,9 +142,9 @@ export const MarkArticleNotHelpfulAction: Action = {
   visible: publishedOnly,
   successMessage: 'Thanks — recorded as not helpful.',
   outcomeMessages: {
-    recorded: 'Thanks — recorded as not helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
-    changed: 'Your vote is now Not Helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
-    already: 'You already marked this article not helpful. Helpful: ${result.helpful} · Not helpful: ${result.notHelpful}.',
+    recorded: 'Thanks — recorded as not helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+    changed: 'Your vote is now Not Helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+    already: 'You already marked this article not helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
   },
   refreshAfter: true,
 };

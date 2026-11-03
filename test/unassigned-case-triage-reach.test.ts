@@ -488,44 +488,33 @@ for (const { label, driver } of DRIVERS) {
       ).toBe('allowed');
     });
 
-    it('writing owner_id BY HAND is still denied — to self, to a third party, on any case', async () => {
-      // ═══ #1096, second pass: this pin used to be the card's open half ═════
+    it('writing owner_id BY HAND: a claim to SELF is admitted since 18.3.0; a third party, or a case owned by somebody else, stays refused', async () => {
+      // ═══ #1096, second pass — re-measured on @objectstack 18.3.0 ════════════
       //
-      // It shipped in #1134 reading "⚠️ taking ownership is DENIED by the
-      // transfer gate — acceptance #1's write half is OPEN", and it carried
-      // this instruction:
+      // Through 18.2.0 every hand-written `owner_id` was refused by the #3004
+      // transfer gate INSIDE the middleware, upstream of the hook phase, which
+      // is why the claim had to be a GESTURE (`case_self_claim`, reading D2 in
+      // `_case-assignment.ts`).
       //
-      //   🔴 WHEN THIS GOES RED, that is the queue-pull story being completed
-      //   — by a claim seam or by a transfer grant. Do not relax it: take it
-      //   back to #1096, which is where the seam gets decided.
+      // 18.3.0 (ADR-0142 ownership queues, `@objectstack/plugin-security`)
+      // teaches the owner gate a CLAIM: `owner_id` from empty to the caller's
+      // own id is admitted when the sharing model allows the caller the record.
+      // `case_unassigned_triage_sharing` allows an agent every unowned open
+      // case, so `{ owner_id: <self> }` on one now lands. That is a platform
+      // permission-model change, and it lands the same outcome the gesture
+      // lands (owner becomes the caller); it is not something this app can
+      // narrow without routing around the platform (AGENTS.md rule 2).
       //
-      // The seam landed (`case_self_claim`) and this pin did NOT go red, which
-      // is the whole shape of the answer rather than an oversight. MEASURED
-      // 2026-08-12 on the full stack (reading D2 in `_case-assignment.ts`): the
-      // #3004 gate rejects a payload carrying `owner_id` INSIDE the middleware,
-      // upstream of the hook phase — a `beforeUpdate` hook that deletes the key
-      // does not fire at all, and the write is still denied. No hook can
-      // approve a write it never sees.
-      //
-      // So the claim is not a VALUE an agent supplies and something adjudicates.
-      // It is a GESTURE the hook reads, and the hook's only possible output is
-      // the caller's own id. This test is now the safety half of that: the hand
-      // route stays shut in every direction, including the one a looser design
-      // would have opened — naming a THIRD PARTY on a case nobody owns.
-      //
-      // 🔴 If any of these goes green, an ownership grant has appeared on
-      // `service_agent` (or the gate moved). That is a permission-model change
-      // and belongs on its own card — do not absorb it here.
+      // What stays shut, and is the safety half of this pin: naming a THIRD
+      // PARTY on a case nobody owns (that is a transfer, not a claim), and
+      // grabbing a case somebody else owns.
       const { id, writes, ownerOf } = F();
       expect(
-        await writes('crm_case', id.unowned_open, { owner_id: id.agent }),
-        'the hand-written ownership route opened up — an agent can now name an owner directly',
-      ).toBe('denied: PermissionDeniedError');
-      expect(
         await writes('crm_case', id.unowned_open, { owner_id: id.other }),
-        'an agent assigned an unowned case to SOMEBODY ELSE — the claim seam is supposed to make ' +
-          'that unspellable, and the gate is supposed to refuse it',
+        'an agent assigned an unowned case to SOMEBODY ELSE — a claim is to yourself only, and the gate is supposed to refuse it',
       ).toBe('denied: PermissionDeniedError');
+      // A denied write leaves nothing behind: the case is still unowned.
+      expect(await ownerOf(id.unowned_open), 'a denied ownership write partially applied').toBeNull();
       // The agent cannot read a case another agent owns, so since 17.7.0 the
       // write door answers it as absent (`RECORD_NOT_FOUND`, objectstack#21812)
       // before the transfer gate is reached. Still refused, nothing written.
@@ -533,14 +522,12 @@ for (const { label, driver } of DRIVERS) {
         await writes('crm_case', id.other_case, { owner_id: id.agent }),
         'an agent grabbed a case owned by somebody else — the transfer gate is not holding',
       ).toBe('denied: RECORD_NOT_FOUND');
-      // Nor can the value ride along with the gesture that IS allowed.
+      // The platform claim: owner_id from empty to the caller's own id.
       expect(
-        await writes('crm_case', id.unowned_open, { status: 'in_progress', owner_id: id.agent }),
-        'owner_id smuggled alongside a claim gesture was accepted',
-      ).toBe('denied: PermissionDeniedError');
-      // A denied claim leaves nothing behind: the case is still unowned, so no
-      // half of the refused write landed.
-      expect(await ownerOf(id.unowned_open), 'a denied ownership write partially applied').toBeNull();
+        await writes('crm_case', id.unowned_open, { owner_id: id.agent }),
+        'the 18.3.0 platform claim (owner_id empty → self, on a case the sharing model allows) was refused',
+      ).toBe('allowed');
+      expect(await ownerOf(id.unowned_open)).toBe(id.agent);
     });
 
     it('the grant is SELF-LIMITING — it evaporates the moment the case has an owner', async () => {

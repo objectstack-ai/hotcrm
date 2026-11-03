@@ -199,11 +199,12 @@ describe('the feedback actions record a row (they cannot bump a counter)', () =>
     ]);
     for (const action of [MarkArticleHelpfulAction, MarkArticleNotHelpfulAction]) {
       expect(Object.keys(action.outcomeMessages ?? {}).sort()).toEqual(['already', 'changed', 'recorded']);
-      // The console interpolates `${result.x}` (measured: `{{ result.x }}`
-      // printed raw), and each hole must name a key the body returns.
+      // Since @objectstack/spec 18.3.0 an `outcomeMessages` entry is a
+      // `template` slot: it reads `{{ result.x }}` holes and the doors refuse
+      // `${…}`. Each hole must name a key the body returns.
       for (const message of Object.values(action.outcomeMessages ?? {})) {
-        expect(String(message)).not.toMatch(/\{\{/);
-        const holes = [...String(message).matchAll(/\$\{result\.(\w+)\}/g)].map(([, k]) => k);
+        expect(String(message)).not.toMatch(/\$\{/);
+        const holes = [...String(message).matchAll(/\{\{\s*result\.(\w+)\s*\}\}/g)].map(([, k]) => k);
         expect(holes.length).toBeGreaterThan(0);
         for (const k of holes) expect(Object.keys(results[0]!)).toContain(k);
       }

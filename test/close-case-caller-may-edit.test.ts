@@ -91,7 +91,16 @@ async function escalate(id: string): Promise<void> {
 
 /** Run Close Case on `id` as `who`; resolve with the refusal's envelope, or `null` when it closed. */
 async function closeCase(who: Person, id: string, screen: Rec = { resolution: 'Replaced the faulty unit' }): Promise<Rec | null> {
-  const run = await verify.flows.run('close_case', { recordId: id }, { as: who.token });
+  // Since @objectstack 18.3.0 (runtime c347d22, objectstack#29050) the door
+  // that starts a flow loads its record in the caller's own scope and refuses
+  // a record the caller cannot read before the run exists.
+  let run: Awaited<ReturnType<typeof verify.flows.run>>;
+  try {
+    run = await verify.flows.run('close_case', { recordId: id }, { as: who.token });
+  } catch (e) {
+    const err = e as Rec;
+    return { code: err?.code, status: err?.status, nodes: [], beforeRun: true };
+  }
   expect(run.runId, 'close_case did not start').toBeTruthy();
   return verify.flows.resume(run, screen, { as: who.token }).then(
     () => null,
@@ -136,9 +145,15 @@ describe('Close Case changes a case only for a caller who may edit it', () => {
 
       const refusal = await closeCase(who(), id);
       expect(refusal, 'Close Case must refuse a caller who may not edit the case').not.toBeNull();
-      expect({ code: refusal!.code, status: refusal!.status }).toEqual({ code: 'FLOW_FAILED', status: 400 });
-      // Refused at the caller's own write, not at the screen contract.
-      expect(refusal!.nodes).toContainEqual(expect.objectContaining({ nodeId: 'close', status: 'failure' }));
+      if (expected.read !== 200) {
+        // Cannot read the case: refused before the run exists (18.3.0).
+        expect({ code: refusal!.code, status: refusal!.status, beforeRun: refusal!.beforeRun })
+          .toEqual({ code: 'RECORD_NOT_FOUND', status: 404, beforeRun: true });
+      } else {
+        expect({ code: refusal!.code, status: refusal!.status }).toEqual({ code: 'FLOW_FAILED', status: 400 });
+        // Refused at the caller's own write, not at the screen contract.
+        expect(refusal!.nodes).toContainEqual(expect.objectContaining({ nodeId: 'close', status: 'failure' }));
+      }
       expect(await stored(id), 'a refused close must leave the case unchanged').toEqual(before);
     });
   });

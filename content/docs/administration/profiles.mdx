@@ -71,7 +71,7 @@ Besides the six profiles above, HotCRM ships one more permission set, **CRM User
 - Read **knowledge articles**
 - Cannot delete records
 
-The **marketing_manager** and **marketing_director** positions give this profile to everyone who holds them, so the people who lead marketing can do everything a marketer does, editing any campaign and enrolling members included. Adding someone to either position in **Setup → Positions** is enough; there is no profile to assign by hand.
+The **marketing_manager** and **marketing_director** positions give this profile to everyone who holds them, so the people who lead marketing can do everything a marketer does, editing any campaign and enrolling members included. Adding someone to either position in **Setup → Position Holders** is enough; there is no profile to assign by hand.
 
 ### 🌐 Guest (Public Forms)
 
@@ -112,11 +112,11 @@ To grant extra permissions on top of a user's base profile, assign an additional
 
 If a built-in profile is *almost* right but needs tweaking:
 
-1. **Setup → Permission Sets** — the screen is called *Permission Sets*; Setup has no *Profiles* entry.
-2. Open the permission set and click **Clone**.
+1. **Studio → All Metadata Types**, then *Permission Set* — permission sets are defined in Studio's environment catalog (Setup lists none since ObjectStack 18.3), and neither app has a *Profiles* entry.
+2. Open the permission set and click **New similar**.
 3. Rename (e.g. *"Senior Sales Rep"*).
 4. Adjust permissions.
-5. Save and assign to users.
+5. Save, then assign it to users in **Setup → Permission Set Assignment**.
 
 ⚠️ **Do not modify built-in profiles** — clone them. Updates to HotCRM may reset built-in profile settings.
 

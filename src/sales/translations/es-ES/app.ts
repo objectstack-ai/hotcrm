@@ -888,6 +888,25 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     customer_churn_signals: {
       label: 'Señales de Abandono',
       description: 'Cuatro paneles apilados de alerta temprana para la retención proactiva: cuentas que un CSM marcó en riesgo o en abandono, cuentas activas sin actividad reciente, cuentas de alto valor silenciosas y oportunidades perdidas recientemente.',
+      // Joined-report block headings (translatable since @objectstack/spec 18.3.0).
+      blocks: {
+        csm_flagged_accounts: {
+          label: 'Cuentas marcadas por el CSM',
+          description: 'Cuentas que un CSM ha marcado a mano como en riesgo o en abandono, agrupadas por tipo: juicio humano, independiente del reloj de actividad.',
+        },
+        at_risk_accounts: {
+          label: 'Cuentas en riesgo',
+          description: 'Cuentas activas sin actividad en 60 días o más, agrupadas por sector.',
+        },
+        silent_high_value: {
+          label: 'Cuentas de alto valor en silencio',
+          description: 'Cuentas de nivel Estratégico y Gran Empresa sin actividad desde hace 90 días o más, agrupadas por tipo.',
+        },
+        recently_closed_lost: {
+          label: 'Oportunidades perdidas recientemente',
+          description: 'Oportunidades cerradas como perdidas en los últimos 30 días: investígalas antes de que el cliente se vaya del todo.',
+        },
+      },
     },
     lead_inflow_by_month_source: {
       label: 'Interacción con Prospectos por Mes',
@@ -922,7 +941,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: 'Entrada diaria de casos desglosada por prioridad',
     },
   },
-  // Setup → Positions (`src/sales/sharing/positions.ts`).
+  // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
     executive: {
       label: 'Ejecutivo',
@@ -973,7 +992,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: 'Equipo territorial de Europa: edita todas las cuentas del territorio de Europa (EMEA).',
     },
   },
-  // Setup → Permission Sets (`src/sales/profiles/*.profile.ts`).
+  // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
     crm_user: {
       label: 'Usuario de CRM',
@@ -1002,6 +1021,40 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     system_admin: {
       label: 'Administrador del Sistema',
       description: 'El operador de una instalación de una sola organización: control total de todos los registros de negocio, más la administración de usuarios, del modelo de seguridad y de la configuración.',
+    },
+  },
+  // Doc book titles and group headings (translatable since @objectstack/spec 18.3.0).
+  books: {
+    crm_manual: {
+      label: 'Manual de Usuario de HotCRM',
+      description: 'Cómo funciona HotCRM en ventas y servicio: las reglas detrás de las pantallas.',
+      groups: {
+        start: { label: 'Primeros pasos' },
+        sales: { label: 'Ventas' },
+        service: { label: 'Servicio' },
+        analytics: { label: 'Análisis' },
+      },
+    },
+    crm_admin_manual: {
+      label: 'Manual de Administración de HotCRM',
+      description: 'Puesta en marcha, accesos, cada umbral automatizado y la importación de datos, para administradores.',
+      groups: {
+        admin: { label: 'Administración' },
+      },
+    },
+    crm_revenue_manual: {
+      label: 'Manual de Ingresos de HotCRM',
+      description: 'Cotizaciones, productos y listas de precios, y el traspaso a facturación de una oportunidad ganada.',
+      groups: {
+        revenue: { label: 'Ingresos' },
+      },
+    },
+    crm_marketing_manual: {
+      label: 'Manual de Marketing de HotCRM',
+      description: 'Campañas: qué cuentan las cifras y qué se ejecuta por sí solo.',
+      groups: {
+        marketing: { label: 'Campañas' },
+      },
     },
   },
 };

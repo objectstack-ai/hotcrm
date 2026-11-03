@@ -5,7 +5,7 @@
 Clause-②: no
 Metadata-protocol: none
 
-HotCRM runs on ObjectStack 18.2.0, and reports, positions, permission sets and the web forms' hints are translated
+HotCRM moved to ObjectStack 18.2.0 (and on to 18.3.0, in its own entry), and reports, positions, permission sets and the web forms' hints are translated
 
 **ObjectStack 18.2.0 (#2319).** All 23 `@objectstack/*` dependencies move from 18.1.0 to 18.2.0
 together, pinned exact, and `specVersion` and `engines.protocol` (in `objectstack.manifest.json` and in
