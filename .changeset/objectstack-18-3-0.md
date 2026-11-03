@@ -38,8 +38,8 @@ What changes for people because of the platform release, not because of HotCRM:
   picking it up (moving it to *In Progress*). Assigning an unowned case to somebody else, or taking a
   case another agent owns, is still refused.
 - **Starting a flow on a record you cannot read is refused up front.** Escalate Case, Close Case and Add
-  to Campaign now answer "not found" before the dialog opens for a record (or a campaign) the person
-  cannot read or that does not exist, instead of failing at the final step. Nothing is written either
+  to Campaign now answer "not found" when the record (or the campaign) does not exist or the person
+  cannot read it, before the flow runs, instead of failing at its last step. Nothing is written either
   way.
 - **Charts over dates show the empty months.** A trend over a date dimension now draws a zero for a
   month (or day) that holds no record, instead of joining its neighbours.
