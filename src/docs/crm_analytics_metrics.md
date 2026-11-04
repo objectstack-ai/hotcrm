@@ -92,7 +92,7 @@ team:
 | **Activities** | Calls and meetings, one per event. |
 | **Minutes** | The sum of **Duration (minutes)**. |
 | **Interactions Logged** | **Activities** whose status is **Held**: contact that actually happened. |
-| **Meetings Booked** | **Activities** of type **Meeting** whose status is **Planned** and whose start time has not passed yet: meetings still ahead. |
+| **Meetings Booked** | **Activities** of type **Meeting** whose status is **Planned** and whose **Start** has not passed yet: meetings still ahead. |
 | **Customer Minutes** | **Minutes** of the events whose status is **Held**. |
 | **Tasks Completed** | **Tasks** whose **Is Completed** box is ticked. |
 
