@@ -122,12 +122,19 @@ export const QuoteGenerationFlow: Flow = {
           // `min` / `max` are the bound, and the screen is where it must be
           // checked (#2396). The engine judges a screen field's bounds on
           // resume BEFORE it consumes the suspended run (`INVALID_SCREEN_INPUT`,
-          // retryable): the dialog keeps the rep's answers and Submit, and the
-          // console checks the same bound at the input before any request.
-          // Left to the object rule alone, 75 reached `create_quote`, the
-          // insert was refused AFTER the resume had consumed the run, and the
-          // run failed (`FLOW_FAILED`): the dialog offered only Close and no
-          // client could resubmit it. Measured on 18.3.0 through REST.
+          // retryable), so the same run takes a corrected answer. Left to the
+          // object rule alone, 75 reached `create_quote`, the insert was
+          // refused AFTER the resume had consumed the run, and the run failed
+          // (`FLOW_FAILED`): no client could resubmit it. Measured on 18.3.0
+          // through REST, where the bound holds.
+          //
+          // ⚠️ In the console the bound does not hold yet on 18.3.0, and it is
+          // the platform's to fix (objectstack-ai/objectstack#30178): the flat
+          // screen renders `percent` as a text input and posts "75" as a
+          // string, and both the dialog's check and the engine's compare only
+          // a number, so 75 still reaches the object rule there. ⛔ Do not
+          // switch this field to `type: 'number'` to dodge it (AGENTS.md
+          // scope rule 2); the bound goes live in the console with the fix.
           //
           // The object rule stays as the last guard: it is the invariant every
           // door to `crm_quote` meets (a direct edit, an import, the API), and
