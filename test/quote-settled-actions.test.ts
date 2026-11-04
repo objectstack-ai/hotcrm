@@ -5,7 +5,7 @@ import { ExpressionEngine } from '@objectstack/formula';
 import type { VerifyStack } from '@objectstack/verify';
 import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
 import stack from './helpers/composed-stack';
-import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, committedFile, type Person } from './helpers/verify-stack';
 
 /**
  * A settled quote offers only what it can still take (#2366 rows 2 and 3).
@@ -139,7 +139,7 @@ describe('the guard: a user cannot create a quote at a settled status', () => {
 
   it('CONTROL — a system write still stores a settled quote (the seed carries settled history)', async () => {
     const c = await customer();
-    const [row] = await verify.seed('crm_quote', [{ ...quoteBody(c, 'accepted'), owner_id: rep.id }]);
+    const [row] = await verify.seed('crm_quote', [{ ...quoteBody(c, 'accepted'), owner_id: rep.id, signed_copy: await committedFile(verify, rep.id) }]);
     expect((await stored('crm_quote', row!.id)).status).toBe('accepted');
   });
 });

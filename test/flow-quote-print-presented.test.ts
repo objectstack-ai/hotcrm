@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, flowRuns, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, flowRuns, committedFile, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -40,11 +40,12 @@ beforeAll(async () => {
   contactId = String(contact!.id);
 }, 120_000);
 
-/** A quote of the rep's, seeded straight into `status`. */
+/** A quote of the rep's, seeded straight into `status` (an accepted one with its signed copy, #2317). */
 const quote = async (status: string, withContact = true): Promise<string> => {
   const [row] = await verify.seed('crm_quote', [{
     name: `Print Quote ${++k}`, crm_account: accountId, owner_id: rep.id, status,
     ...(withContact ? { crm_contact: contactId } : {}),
+    ...(status === 'accepted' ? { signed_copy: await committedFile(verify, rep.id) } : {}),
     quote_date: '2030-01-01', expiration_date: '2030-02-01',
   }]);
   return String(row!.id);

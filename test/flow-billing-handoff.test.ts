@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, predicateUpdate, flowRuns, today, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, predicateUpdate, flowRuns, today, committedFile, type Person } from './helpers/verify-stack';
 import { BillingHandoffClosedWonFlow } from '../src/sales/flows/billing-handoff-closed-won.flow';
 import { BillingHandoffContractActivatedFlow } from '../src/sales/flows/billing-handoff-contract-activated.flow';
 import {
@@ -291,6 +291,12 @@ async function contractInApproval(opts: { withDeal?: boolean } = {}): Promise<Re
     auto_renewal: true,
   }, as(manager));
   await verify.hooks.run('crm_contract', 'update', { id: contract.id, status: 'in_approval' }, as(manager));
+  // Activated requires the signed copy (#2317). It is filed at the DRIVER, past
+  // the hooks: the upload's own Signed Date fill (`contract_signed_copy_date`)
+  // would otherwise date the contract here, and the cases below pin the date
+  // the ACTIVATING write stamps (#2325).
+  const ql = verify.kernel.getService<Rec>('objectql');
+  await ql.getDriverForObject('crm_contract').update('crm_contract', contract.id, { signed_copy: await committedFile(verify, manager.id) });
   return { ...contract, account, opp };
 }
 

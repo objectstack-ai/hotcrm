@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import type { VerifyStack } from '@objectstack/verify';
 import { AUTO_DRAFTED_PREFIX, ContractDraftedNoticeFlow } from '../src/sales/flows/contract-drafted-notice.flow';
 import { REPO_ROOT } from './helpers/repo-root';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, committedFile, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -59,7 +59,9 @@ describe('the rep who accepts a quote is told its contract was drafted (#2371 ro
       quote_date: today(), expiration_date: '2030-12-31',
     });
     for (const status of ['in_review', 'presented', 'accepted']) {
-      await verify.hooks.run('crm_quote', 'update', { id, status }, { as: rep.token });
+      // Accepted requires the signed copy (#2317): the rep files it on that save.
+      const signed = status === 'accepted' ? { signed_copy: await committedFile(verify, rep.id) } : {};
+      await verify.hooks.run('crm_quote', 'update', { id, status, ...signed }, { as: rep.token });
     }
 
     const notices = await vi.waitFor(async () => {

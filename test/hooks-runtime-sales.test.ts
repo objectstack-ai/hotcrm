@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, signUpPerson, systemUpdate, recordEngineWrites, runShippedHook, today, daysFromNow, type Person,
+  hotcrmStack, signUpPerson, systemUpdate, recordEngineWrites, runShippedHook, today, daysFromNow, committedFile, type Person,
 } from './helpers/verify-stack';
 import { hookNamed } from './helpers/composed-stack';
 import { Product } from '../src/revenue/objects/product.object';
@@ -309,12 +309,13 @@ const repQuotes = async (doc: Rec = {}): Promise<Rec> => {
   }, as(rep));
 };
 
-/** A quote of the rep's in `status`, written as the system. */
+/** A quote of the rep's in `status`, written as the system (with its signed copy, #2317). */
 const settledQuote = async (status: string): Promise<Rec> => {
   const { account, contact, opp } = await quoteParties();
   return (await verify.seed('crm_quote', [{
     name: `Q-${++k}`, status, crm_account: account.id, crm_contact: contact.id, crm_opportunity: opp.id,
     quote_date: '2026-01-01', expiration_date: '2030-12-31', discount: 0, owner_id: rep.id,
+    signed_copy: await committedFile(verify, rep.id),
   }]))[0]!;
 };
 
@@ -394,6 +395,8 @@ describe('quote_workflow refuses an acceptance the deal’s approval holds (#201
     return (await verify.seed('crm_quote', [{
       name: `Held Q-${k}`, status: 'presented', crm_account: deal.crm_account, crm_contact: contact!.id, crm_opportunity: deal.id,
       quote_date: today(), expiration_date: '2030-12-31', owner_id: rep.id,
+      // Filed, so an acceptance is judged by the deal's hold alone (#2317).
+      signed_copy: await committedFile(verify, rep.id),
     }]))[0]!;
   };
   /** A deal of the rep's at negotiation, put in `state` by a system write (the verdict columns are readonly). */
@@ -561,6 +564,8 @@ const acceptQuote = async (stage = 'proposal') => {
   for (const status of ['in_review', 'presented']) {
     await verify.hooks.run('crm_quote', 'update', { id: quote, status }, as(rep));
   }
+  // The customer's signed copy, which Accepted requires (#2317).
+  await verify.hooks.run('crm_quote', 'update', { id: quote, signed_copy: await committedFile(verify, rep.id) }, as(rep));
   const engine = recordEngineWrites(verify);
   try {
     await verify.hooks.run('crm_quote', 'update', { id: quote, status: 'accepted' }, as(rep));
@@ -752,10 +757,11 @@ describe('account_protection', () => {
       const contactOf = async (accountId: string) => (await verify.seed('crm_contact', [{
         first_name: 'Cara', last_name: `Contract ${++k}`, email: `cara${k}@hooks-runtime-sales.test`, crm_account: accountId, owner_id: rep.id,
       }]))[0]!;
+      const signedCopy = await committedFile(verify, rep.id); // an activated contract carries one (#2317)
       const contract = (accountId: string, contactId: string, status: string) => ({
         status, crm_account: accountId, crm_contact: contactId, owner_id: rep.id, contract_type: 'subscription',
         contract_value: 1_000, contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
-        billing_frequency: 'monthly', payment_terms: 'net_30',
+        billing_frequency: 'monthly', payment_terms: 'net_30', signed_copy: signedCopy,
       });
       const mine = await contactOf(acct.id);
       const theirs = await contactOf(other.id);
@@ -1049,13 +1055,14 @@ describe('contact_integrity', () => {
       await verify.seed('crm_quote', [{
         name: `Q-${k}`, status: refs.quote, crm_account: acct.id, crm_contact: contact!.id, crm_opportunity: opp!.id,
         quote_date: '2026-01-01', expiration_date: '2030-12-31', owner_id: rep.id,
+        signed_copy: await committedFile(verify, rep.id), // #2317
       }]);
     }
     if (refs.contract) {
       await verify.seed('crm_contract', [{
         status: refs.contract, crm_account: acct.id, crm_contact: contact!.id, owner_id: rep.id, contract_type: 'subscription',
         contract_value: 1_000, contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
-        billing_frequency: 'monthly', payment_terms: 'net_30',
+        billing_frequency: 'monthly', payment_terms: 'net_30', signed_copy: await committedFile(verify, rep.id), // #2317
       }]);
     }
     return contact!;

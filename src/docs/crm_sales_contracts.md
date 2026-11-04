@@ -54,8 +54,10 @@ when it was another day.
 **A contract is activated only with its signed copy.** The save that moves a
 contract to **Activated** is refused, naming **Signed Copy**, until the file is
 there, and the file cannot be removed from an activated contract. A contract
-that was already activated before this rule keeps saving other changes and
-still expires or is terminated as before.
+that was already activated before this rule still expires or is terminated as
+before, and an import or an integration still saves its other changes. The
+**Edit** form asks for the **Signed Copy** before it saves any change to such a
+contract, so upload the copy first.
 
 ## Renewals and expiration are watched for you
 

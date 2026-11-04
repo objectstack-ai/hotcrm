@@ -11,7 +11,7 @@ import { CrmFlows as allFlows } from './helpers/src-roster';
 import { regionsOf } from './helpers/flow-regions';
 import {
   hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, systemUpdate, notificationsTo, runScheduledFlow,
-  settleNotificationDeliveries, type Person,
+  settleNotificationDeliveries, committedFile, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -309,6 +309,7 @@ describe('quote_expiration — daily auto-expiry', () => {
     const quote = async (status: string, expirationDays: number) => String((await verify.seed('crm_quote', [{
       name: `Q ${status} ${++k}`, status, expiration_date: day(expirationDays), quote_date: day(-60),
       crm_opportunity: opp!.id, crm_account: acct.id, crm_contact: contact.id, owner_id: rep.id,
+      ...(status === 'accepted' ? { signed_copy: await committedFile(verify, rep.id) } : {}), // #2317
     }]))[0]!.id);
     const ids = {
       q_past: await quote('presented', -1),       // expire
@@ -347,7 +348,9 @@ const contract = async (over: Rec = {}): Promise<Rec> => {
     status: 'activated', crm_account: acct.id, crm_contact: contact.id, owner_id: rep.id,
     contract_type: 'subscription', contract_value: 90_000, auto_renewal: false, renewal_notice_days: 30,
     contract_term_months: 12, start_date: day(endDays - 365), end_date: day(endDays),
-    billing_frequency: 'monthly', payment_terms: 'net_30', ...rest,
+    billing_frequency: 'monthly', payment_terms: 'net_30',
+    ...((rest.status ?? 'activated') === 'activated' ? { signed_copy: await committedFile(verify, rep.id) } : {}), // #2317
+    ...rest,
   }]))[0]!;
 };
 

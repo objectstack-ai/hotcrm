@@ -5,7 +5,7 @@ import { cel } from '@objectstack/spec';
 import type { VerifyStack } from '@objectstack/verify';
 import { FLOW_REGION_SLOTS_BY_TYPE } from '@objectstack/spec/automation';
 import { CrmFlows as allFlows } from './helpers/src-roster';
-import { hotcrmStack, signUpPerson, runScheduledFlow, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, runScheduledFlow, committedFile, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -253,6 +253,7 @@ describe('the declared organization_id actually resolves (#700)', () => {
       status: 'activated', crm_account: acct.id, crm_contact: contact!.id, owner_id: who.id, organization_id: org,
       contract_type: 'subscription', contract_value: 90_000, auto_renewal: true, renewal_notice_days: 30,
       contract_term_months: 12, start_date: day(-345), end_date: day(+20), billing_frequency: 'monthly', payment_terms: 'net_30',
+      signed_copy: await committedFile(verify, who.id, { organization_id: org }), // activated carries its signed copy (#2317)
     }]);
     await runScheduledFlow(verify, 'contract_renewal');
 

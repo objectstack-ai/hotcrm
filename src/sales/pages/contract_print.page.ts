@@ -89,12 +89,16 @@ export const ContractPrintPage: Page = {
           // Term, value and billing, and the renewal terms: every member of
           // these groups is something the customer signs, so the group
           // reference is enough (rung 2).
+          // One block per group, not one block of three: `avoidBreakInside`
+          // keeps a block on one page, so a single tall block left most of
+          // page 1 blank and pushed the signatures onto a page of their own
+          // (measured: three pages, now two).
           type: 'record:details',
           id: 'contract_print_terms',
-          properties: {
-            sections: [{ group: 'terms' }, { group: 'value' }, { group: 'renewal' }],
-          },
+          properties: { sections: [{ group: 'terms' }] },
         },
+        { type: 'record:details', id: 'contract_print_value', properties: { sections: [{ group: 'value' }] } },
+        { type: 'record:details', id: 'contract_print_renewal', properties: { sections: [{ group: 'renewal' }] } },
         {
           // The signature block: a line each for the customer and for the
           // seller, left blank for ink. What comes back signed is filed as the

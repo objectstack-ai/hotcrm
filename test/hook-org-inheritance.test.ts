@@ -223,7 +223,9 @@ describe('hook-created records inherit the triggering organization', () => {
     })) as AnyRec;
     expect(quote.organization_id).toBe(ORG_A);
 
-    await a.object('crm_quote').update({ id: quote.id, status: 'accepted' });
+    // Accepted needs the signed copy (#2317). This kernel has no file
+    // service, so the id is a placeholder: nothing here resolves it.
+    await a.object('crm_quote').update({ id: quote.id, status: 'accepted', signed_copy: 'signed_copy_fixture' });
 
     const contract = await awaitRow(
       'auto-drafted contract',

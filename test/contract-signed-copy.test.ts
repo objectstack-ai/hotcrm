@@ -9,6 +9,8 @@ import { PrintContractAction } from '../src/sales/actions/contract.actions';
 import { PrintQuoteAction } from '../src/revenue/actions/quote.actions';
 import { Contract } from '../src/sales/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
+import { ContractViews } from '../src/sales/views/contract.view';
+import { QuoteViews } from '../src/revenue/views/quote.view';
 import { hotcrmStack, signUpPerson, committedFile, today, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -59,13 +61,13 @@ describe('the contract record page and its print page (#2317)', () => {
     expect(page.print).toMatchObject({ pageNumbers: true, repeatHeader: true });
     const main = (page.regions as Rec[]).find((r) => r.name === 'main')!;
     const ids = (main.components as Rec[]).map((c) => c.id);
-    expect(ids).toEqual(['contract_print_parties', 'contract_print_terms', 'contract_print_signatures']);
+    expect(ids).toEqual(['contract_print_parties', 'contract_print_terms', 'contract_print_value', 'contract_print_renewal', 'contract_print_signatures']);
     const parties = (main.components as Rec[])[0]!.properties.sections[0].fields as string[];
     // Every field it names is a field of the contract, and the internal deal
     // link is not one of them.
     for (const f of parties) expect(Object.keys(Contract.fields), f).toContain(f);
     expect(parties).not.toContain('crm_opportunity');
-    expect((main.components as Rec[])[1]!.properties.sections).toEqual([{ group: 'terms' }, { group: 'value' }, { group: 'renewal' }]);
+    expect((main.components as Rec[]).slice(1, 4).map((c) => c.properties.sections)).toEqual([[{ group: 'terms' }], [{ group: 'value' }], [{ group: 'renewal' }]]);
   });
 });
 
@@ -289,5 +291,12 @@ describe('the requirement is the field’s, as declared', () => {
     expect(field.type).toBe('file');
     expect(field.required ?? false).toBe(false);
     expect(String(field.requiredWhen?.source ?? field.requiredWhen)).toContain(`record.status == "${status}"`);
+  });
+
+  // Measured in the browser pass: a field no form section lists has no
+  // upload control on Edit, so the rep could never file it from the console.
+  it.each([['crm_contract', ContractViews], ['crm_quote', QuoteViews]] as const)('%s: the edit form offers the upload', (_object, views) => {
+    const fields = ((views as Rec).form.sections as Rec[]).flatMap((s) => s.fields.map((f: Rec | string) => (typeof f === 'string' ? f : f.field)));
+    expect(fields).toContain('signed_copy');
   });
 });

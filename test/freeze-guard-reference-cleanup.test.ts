@@ -12,7 +12,7 @@ import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
 import oppHooks from '../src/sales/objects/opportunity.hook';
 import quoteHooks from '../src/revenue/objects/quote.hook';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, committedFile, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 const hookNamed = (hooks: unknown, name: string): AnyRec => {
@@ -238,6 +238,8 @@ type AnyRec = Record<string, any>;
 process.env.OS_REGISTRY_LOG ??= 'silent';
 
 const SYS = { isSystem: true } as AnyRec;
+/** Accepted needs a signed copy (#2317); this kernel has no file service, so a placeholder id. */
+const SIGNED_COPY = 'signed_copy_fixture';
 
 let kernel: AnyRec;
 let ql: AnyRec;
@@ -416,7 +418,7 @@ describe('deleting an opportunity an ACCEPTED quote points at', () => {
       crm_contact: contact.id, status: 'draft',
       quote_date: '2026-01-01', expiration_date: '2026-02-01',
     });
-    await ql.update('crm_quote', { id: quote.id, status: 'accepted' }, { context: SYS });
+    await ql.update('crm_quote', { id: quote.id, status: 'accepted', signed_copy: SIGNED_COPY }, { context: SYS });
 
     expect(await deleteAndCatch('crm_opportunity', opportunity.id)).toBeNull();
     expect(await rowsOf('crm_opportunity', opportunity.id)).toHaveLength(0);
@@ -605,7 +607,7 @@ describe('an ordinary user edit to a settled record is still refused', () => {
       name: `QR-${n}`, crm_account: account.id, crm_contact: contact.id,
       status: 'draft', quote_date: '2026-01-01', expiration_date: '2026-02-01',
     });
-    await ql.update('crm_quote', { id: quote.id, status: 'accepted' }, { context: SYS });
+    await ql.update('crm_quote', { id: quote.id, status: 'accepted', signed_copy: SIGNED_COPY }, { context: SYS });
 
     const err = await ql
       .update('crm_quote', { id: quote.id, crm_opportunity: other.id }, { context: userCtx })
@@ -730,6 +732,7 @@ const GUARDS: GuardCase[] = [
       const [quote] = await verify.seed('crm_quote', [{
         name: `Q-1001-${n}`, status: 'accepted', crm_account: t.account.id, crm_contact: t.contacts[0]!.id,
         quote_date: '2026-01-01', expiration_date: '2030-12-31', tax: 100, owner_id: rep.id,
+        signed_copy: await committedFile(verify, rep.id), // accepted carries its signed copy (#2317)
         ...(withLink ? { crm_opportunity: t.deals[0]!.id } : {}),
       }]);
       return { id: String(quote!.id), other: String(t.deals[1]!.id) };

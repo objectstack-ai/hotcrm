@@ -3,7 +3,8 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, today, type Person,
+  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, today, committedFile,
+  type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -190,7 +191,8 @@ describe('quote_total_rollup', () => {
     }]);
     return (await verify.seed('crm_quote', [{
       name: `Q-${k}`, crm_account: acct.id, crm_contact: contact!.id, crm_opportunity: deal!.id,
-      quote_date: '2026-01-01', expiration_date: '2030-12-31', owner_id: rep.id, ...over,
+      quote_date: '2026-01-01', expiration_date: '2030-12-31', owner_id: rep.id,
+      signed_copy: await committedFile(verify, rep.id), ...over, // what Accepted requires (#2317)
     }]))[0]!;
   };
 

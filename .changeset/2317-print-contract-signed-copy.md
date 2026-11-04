@@ -33,9 +33,13 @@ edit the contract and attach files to it (a Sales Manager or a System Administra
 - **Accepted requires it.** A save that moves a quote to *Accepted*, the **Accept** button's
   included, is refused on **Signed Copy** until a file is there; no contract is drafted and the
   deal keeps its stage.
-- **Existing records are not touched.** Both are transition gates: a contract already *Activated*
-  and a quote already *Accepted* without a signed copy keep saving their other edits, and a contract
-  still expires or is terminated as before. An import or integration that writes contracts straight
-  in as *Activated*, or quotes as *Accepted*, must now carry the file.
+- **Existing records are not touched on the server.** Both are transition gates: a contract
+  already *Activated* and a quote already *Accepted* without a signed copy keep saving their other
+  edits through an import, an integration or the API, and a contract still expires or is terminated
+  as before. The console's Edit form is stricter on such a contract: it asks for the Signed Copy
+  before it saves any change, so the copy is uploaded first. An import or integration that writes
+  contracts straight in as *Activated*, or quotes as *Accepted*, must now carry the file.
+- **The Edit forms offer the upload.** The contract form's Signing & Documents tab and the quote
+  form's first tab list Signed Copy.
 - **Demo data.** The seeded activated contract and accepted quote carry a labelled sample PDF
   (`assets/seed-files/`), stored at boot by the platform's seed-file loader.
