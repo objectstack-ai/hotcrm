@@ -89,7 +89,6 @@ export const jaJP: TranslationData = {
       },
       _views: {
         all_price_books: { label: 'すべての価格表' },
-        active_price_books: { label: '有効な価格表' },
       },
       _actions: {
         add_price_book_products: { label: '製品を追加' },

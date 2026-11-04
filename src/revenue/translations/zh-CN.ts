@@ -168,7 +168,6 @@ export const zhCN: TranslationData = {
       },
       _views: {
         all_price_books: { label: '全部价格表' },
-        active_price_books: { label: '启用的价格表' },
       },
       _actions: {
         add_price_book_products: { label: '添加产品' },

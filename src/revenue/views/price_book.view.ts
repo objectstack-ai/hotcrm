@@ -6,8 +6,13 @@ import { defineView } from '@objectstack/spec/ui';
  * Price Book Views (REQ-0009 phase 3, #2318)
  *
  *   • grid — every price book: which one is standard, which are active, and
- *     the window each is meant for
- *   • grid — the active books, the ones a quote can choose
+ *     the window each is meant for. Inline edit, as every grid here: a rep
+ *     reads books and edits none, and the grant, not the grid, decides.
+ *
+ * No "active books" list view: a list filter wants a form field that sets it
+ * (`test/metadata-references.test.ts`), and this object's form is derived,
+ * not enumerated. The Active column, and the quote's own picker, which offers
+ * only active books, carry that.
  *
  * No form is authored: the form and the record page derive from the object's
  * `fieldGroups` (AGENTS.md, escape hatches). A book's prices are its entries,
@@ -20,6 +25,7 @@ export const PriceBookViews = defineView({
     type: 'grid',
     name: 'all_price_books',
     label: 'All Price Books',
+    userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_price_book' },
     columns: [
       { field: 'name', width: 240, link: true, pinned: 'left', sortable: true },
@@ -31,18 +37,5 @@ export const PriceBookViews = defineView({
     ],
     sort: [{ field: 'name', order: 'asc' }],
     pagination: { pageSize: 50 },
-  },
-
-  listViews: {
-    /** The books a quote can choose: its picker offers only these. */
-    active_price_books: {
-      name: 'active_price_books',
-      type: 'grid',
-      label: 'Active Price Books',
-      data: { provider: 'object', object: 'crm_price_book' },
-      columns: ['name', 'is_standard', 'valid_from', 'valid_to', 'description'],
-      filter: [{ field: 'is_active', operator: 'equals', value: true }],
-      sort: [{ field: 'name', order: 'asc' }],
-    },
   },
 });

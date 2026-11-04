@@ -71,7 +71,6 @@ export const en: TranslationData = {
       },
       _views: {
         all_price_books: { label: 'All Price Books' },
-        active_price_books: { label: 'Active Price Books' },
       },
       _actions: {
         add_price_book_products: { label: 'Add Products' },

@@ -89,7 +89,6 @@ export const esES: TranslationData = {
       },
       _views: {
         all_price_books: { label: 'Todas las Listas de Precios' },
-        active_price_books: { label: 'Listas de Precios Activas' },
       },
       _actions: {
         add_price_book_products: { label: 'Añadir Productos' },

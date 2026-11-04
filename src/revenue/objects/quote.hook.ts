@@ -200,7 +200,7 @@ const quoteValidation: Hook = {
         );
         if (violating.length > 0) {
           // Every lookup on `crm_quote` a referential clear can attack.
-          const REFERENCE_FIELDS = new Set(['crm_account', 'crm_contact', 'crm_opportunity']);
+          const REFERENCE_FIELDS = new Set(['crm_account', 'crm_contact', 'crm_opportunity', 'crm_price_book']);
           // ───────────────────────────────────── the reference-cleanup yield ──
           // #720. The engine implements `deleteBehavior: 'set_null'` by UPDATING
           // the row that HOLDS the lookup, so deleting the opportunity (or the

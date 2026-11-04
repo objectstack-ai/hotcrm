@@ -76,7 +76,7 @@ const book = (doc: Rec, by: Person | string = manager): Promise<Rec> =>
 const entry = (doc: Rec, by: Person | string = manager): Promise<Rec> =>
   verify.hooks.run('crm_price_book_entry', 'insert', { is_active: true, ...doc }, as(by));
 
-describe('a new quote prices from the standard book', () => {
+describe('quote_price_book and product_standard_price: a new quote prices from the standard book', () => {
   it('a rep\'s quote created without a book gets the standard book', async () => {
     const q = await quote();
     expect((await stored('crm_quote', q.id)).crm_price_book).toBe(standard.id);
@@ -164,7 +164,7 @@ describe('REQ-0009 Acceptance', () => {
   });
 });
 
-describe('what a quote may do with its book', () => {
+describe('quote_price_book and price_book_standard: what a quote may do with its book', () => {
   it('an inactive entry is no price: the line is refused', async () => {
     const p = await product(300);
     const b = await book({});
