@@ -98,6 +98,14 @@ paused screen) followed by `POST /api/v1/automation/FLOW/runs/RUN/resume` with `
 - **tolerated** — the platform copes; the row stays, with what a user sees.
 - **dormant** — the code path cannot be reached once the gating row's resolution lands.
 - **resolved by move** — same-package since an earlier card.
+- **resolved (#2352)** — the row moved into the owning module's own locale bundle
+  (`src/MODULE/translations/`), which registers with that module and leaves with it;
+  `test/i18n-package-ownership.test.ts` keeps every package's packs to the items it registers. Re-measured
+  2026-11-04 on `main` `44a4588`, `@objectstack/*` 18.3.0, with the same scratch-tree G2 (P1 grant peel plus
+  the peel of the app actions that launch an absent module's flow): `translation-target-unknown` with service
+  absent 58 → 0, revenue absent 46 → 4, marketing absent 34 → 8. The remainders are exactly the rows that
+  stay: R14's action half (`objects.crm_opportunity` ×4) and M9 (`objects.crm_lead`, `objects.crm_contact`
+  ×4 each), app objects that follow R11 and M5–M7.
 
 ## Rows — revenue absent
 
@@ -108,15 +116,15 @@ paused screen) followed by `POST /api/v1/automation/FLOW/runs/RUN/resume` with `
 | R3 | `src/sales/profiles/system-admin.profile.ts` | the same six | P0 | G1 ×6 | platform **F1** |
 | R4 | `src/sales/profiles/crm-user.profile.ts` | `crm_product` | P0 | G1 ×1 | platform **F1** |
 | R5 | `src/sales/profiles/service-agent.profile.ts` | `crm_product` | P0 | G1 ×1 | platform **F1** |
-| R6 | `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts:66–69,76–77` → `*/objects.commerce.ts`, `*/objects.pipeline.ts` | the six revenue objects | P1 | G2 `translation-target-unknown` at `translations[0].LOCALE.objects.crm_quote` …, 6 objects × 4 locales = 24 | **move** — the per-domain object packs register with the revenue package |
-| R7 | `src/sales/translations/zh-CN/app.ts:49–52` (and the es-ES, ja-JP twins) | contributed nav ids `nav_quote`, `nav_product`, `nav_price_book` | P1 | G2 `translation-target-unknown` at `apps.crm_enterprise.navigation.nav_quote` …, 3 ids × 3 locales = 9 | **move** — a contributing package translates its own contributed ids (`os explain translation-target-unknown`) |
+| R6 | `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts:66–69,76–77` → `*/objects.commerce.ts`, `*/objects.pipeline.ts` | the six revenue objects | P1 | G2 `translation-target-unknown` at `translations[0].LOCALE.objects.crm_quote` …, 6 objects × 4 locales = 24 | **resolved (#2352)** |
+| R7 | `src/sales/translations/zh-CN/app.ts:49–52` (and the es-ES, ja-JP twins) | contributed nav ids `nav_quote`, `nav_product`, `nav_price_book` | P1 | G2 `translation-target-unknown` at `apps.crm_enterprise.navigation.nav_quote` …, 3 ids × 3 locales = 9 | **resolved (#2352)** — a contributing package translates its own contributed ids (`os explain translation-target-unknown`); `nav_help_revenue` (#2327) and `books.crm_revenue_manual` moved with them, 12 + 3 on 18.3.0 |
 | R8 | `objectstack.composition.ts:201` `appRegisteredModuleItems.datasets` → `ProductDataset` | dataset `product_metrics` on `crm_product` | A, P2 | G2 `object-reference-unknown` at `datasets[7].object`: "dataset base object "crm_product" resolves to no object defined in this stack" | **resolved (#2276)** — `product_metrics` registers with revenue and leaves with it; R9 remains |
 | R9 | `src/sales/dashboards/crm.dashboard.ts:150` `top_products` widget | dataset `product_metrics` | B (or A, P3) | G2 `widget-dataset-unknown` at `dashboards[1].widgets[7]`: "dataset "product_metrics" does not resolve to a declared dataset" | platform **F4** (gates #2271) |
 | R10 | `src/sales/translations/*/app.ts` `dashboards.crm_overview_dashboard.widgets.top_products` (en `:88`, zh-CN `:142`) | the widget above | A/B, P3 | G2 `translation-target-unknown` ×4 once the widget is gone | follows R9 |
 | R11 | `src/sales/actions/opportunity.actions.ts:234` `generate_quote` (`type: 'flow'`) | flow `quote_generation` | B, P1 | G1: "Action 'generate_quote' references flow 'quote_generation' which is not defined in flows." | platform **F3** (gates #2271) |
 | R12 | the same action, shape A | `quote_generation` still app-registered, writes `crm_quote` | A, P3 | boots; the *Generate Quote* header button draws on an open opportunity; `POST /api/v1/actions/crm_opportunity/generate_quote/ID` → 200 paused on *Quote Details*; resume → **400** `FLOW_FAILED` "Node 'create_quote' failed: create_record(crm_quote) failed: Object 'crm_quote' not found" | **resolved (#2276)** — `quote_generation` registers with revenue, so with revenue absent the action meets R11 |
 | R13 | `src/sales/pages/opportunity_detail.page.ts:64` header action list | action `generate_quote` | B, P3 | G2 `action-name-undefined` at `pages[3]…properties.actions[0]`: "names action "generate_quote", which no action in this stack defines" | follows R11 |
-| R14 | `src/sales/translations/*` `objects.crm_opportunity._actions.generate_quote`, `flows.quote_generation` (zh-CN `app.ts:780`) | the action and flow | B, P3 | G2 `translation-target-unknown` ×7 | follows R11 / **move** |
+| R14 | `src/sales/translations/*` `objects.crm_opportunity._actions.generate_quote`, `flows.quote_generation` (zh-CN `app.ts:780`) | the action and flow | B, P3 | G2 `translation-target-unknown` ×7 | action half follows R11 (stays in the app pack, ×4); flow half **resolved (#2352)** |
 | R15 | `src/sales/objects/contact.hook.ts:146` `beforeDelete` counts open `crm_quote` | `crm_quote` | A, P3 | **every** `DELETE /api/v1/data/crm_contact/ID` → **404** `OBJECT_NOT_FOUND` "Object 'crm_quote' not found"; the contact stays. Control: 200 | platform **F5** (gates #2271) |
 | R16 | `src/sales/flows/billing-handoff-closed-won.flow.ts:132` `load_line_items` | `crm_opportunity_line_item` | A, P3 | `PATCH crm_opportunity` to `closed_won` → 200; the run **fails**: "get_record(crm_opportunity_line_item) failed: Object 'crm_opportunity_line_item' not found"; boot log `ERROR Trigger-fired run … failed … nothing retries the run`; no hand-off sent. Control: `completed` | platform **F6** (gates #2271) |
 | R17 | `src/sales/flows/billing-handoff-contract-activated.flow.ts:132` `load_line_items` | `crm_opportunity_line_item` | A, P3 | `PATCH crm_contract` CTR-0002 to `activated` → 200; the run **fails** with the same message | platform **F6** |
@@ -130,8 +138,8 @@ paused screen) followed by `POST /api/v1/automation/FLOW/runs/RUN/resume` with `
 |---|---|---|---|---|---|
 | M1 | `src/sales/profiles/{marketing-user,sales-manager,sales-rep,system-admin}.profile.ts` | `crm_campaign`, `crm_campaign_member` | P0 | G1 ×8 | platform **F1** |
 | M2 | `src/sales/profiles/crm-user.profile.ts` | `crm_campaign` | P0 | G1 ×1 | platform **F1** |
-| M3 | `src/sales/translations/*.ts:71,75` → `*/objects.marketing.ts:20…` | `crm_campaign`, `crm_campaign_member` | P1 | G2 `translation-target-unknown` ×8 | **move** |
-| M4 | `src/sales/translations/*/app.ts` `navigation.nav_campaign` (zh-CN `:63`), `flows.campaign_enrollment` (es-ES `:658`) | contributed nav id, marketing flow | P1 | G2 ×6 | **move** |
+| M3 | `src/sales/translations/*.ts:71,75` → `*/objects.marketing.ts:20…` | `crm_campaign`, `crm_campaign_member` | P1 | G2 `translation-target-unknown` ×8 | **resolved (#2352)** |
+| M4 | `src/sales/translations/*/app.ts` `navigation.nav_campaign` (zh-CN `:63`), `flows.campaign_enrollment` (es-ES `:658`) | contributed nav id, marketing flow | P1 | G2 ×6 | **resolved (#2352)** — re-counted 12 on `08bbdd5` (the two enroll flows since #2336); on 18.3.0 also `nav_help_marketing` (#2330) and `books.crm_marketing_manual`, 18 in all |
 | M5 | `src/sales/objects/opportunity.object.ts:360` `crm_campaign: Field.lookup('crm_campaign')` | `crm_campaign` | P2 | G2 `object-reference-unknown` at `objects[7].fields.crm_campaign.reference` | platform **F2** |
 | M6 | `src/sales/actions/lead.actions.ts:215`, `contact.actions.ts:102` `objectOverride: 'crm_campaign_member'` (stack actions and their object-embedded copies) | `crm_campaign_member` | A, P2 | G2 `object-reference-unknown` at `actions[3]…objectOverride`, `actions[10]…`, `objects[1].actions[0]…`, `objects[6].actions[1]…` ×4 | platform **F3** |
 | M7 | `src/sales/actions/lead.actions.ts:184` `create_campaign`, `contact.actions.ts:82` `add_contact_to_campaign` (`type: 'flow'`) | flows `campaign_lead_member_enroll`, `campaign_contact_member_enroll` | B, P1 | G1: "Action 'create_campaign' references flow 'campaign_lead_member_enroll' which is not defined in flows." ×2 | platform **F3** |
@@ -148,8 +156,8 @@ paused screen) followed by `POST /api/v1/automation/FLOW/runs/RUN/resume` with `
 |---|---|---|---|---|---|
 | S1 | `src/sales/profiles/{sales-manager,sales-rep,service-agent,system-admin}.profile.ts` | `crm_case`, `crm_article_feedback`, `crm_knowledge_article` | P0 | G1 ×12 | platform **F1** |
 | S2 | `src/sales/profiles/{crm-user,guest-portal,marketing-user}.profile.ts` | `crm_knowledge_article`; `crm_case`; `crm_article_feedback` + `crm_knowledge_article` | P0 | G1 ×4 | platform **F1** |
-| S3 | `src/sales/translations/*.ts:60,64,74` → `*/objects.service.ts:22…` | the three service objects | P1 | G2 `translation-target-unknown` ×12 | **move** |
-| S4 | `src/sales/translations/*/app.ts` `navigation.nav_case/nav_knowledge/nav_my_cases/nav_service_dashboard/nav_report_*` (zh-CN `:59–83`), `dashboards.service_dashboard`, `reports.cases_by_status_priority/sla_performance/cases_opened_by_day_priority` (zh-CN `:868–872`), `flows.claim_case/close_case/escalate_case` (zh-CN `:696–708`) | service nav ids, dashboard, reports, flows | P1 | G2 `translation-target-unknown` ×36 | **move** |
+| S3 | `src/sales/translations/*.ts:60,64,74` → `*/objects.service.ts:22…` | the three service objects | P1 | G2 `translation-target-unknown` ×12 | **resolved (#2352)** |
+| S4 | `src/sales/translations/*/app.ts` `navigation.nav_case/nav_knowledge/nav_my_cases/nav_service_dashboard/nav_report_*` (zh-CN `:59–83`), `dashboards.service_dashboard`, `reports.cases_by_status_priority/sla_performance/cases_opened_by_day_priority` (zh-CN `:868–872`), `flows.claim_case/close_case/escalate_case` (zh-CN `:696–708`) | service nav ids, dashboard, reports, flows | P1 | G2 `translation-target-unknown` ×36 | **resolved (#2352)** — re-counted 43 on `08bbdd5`, 46 on 18.3.0 (`nav_knowledge_published`) |
 | S5 | `src/sales/objects/task.object.ts:178`, `event.object.ts:199` `related_to_case: Field.lookup('crm_case')` | `crm_case` | P2 | G2 `object-reference-unknown` at `objects[3].fields.related_to_case.reference`, `objects[8]…` | platform **F2** |
 | S6 | `crm_task` / `crm_event` `validations[related_to_required]` (reads `record.related_to_case`) | the S5 field | P3 | G2 `expression-invalid`: "unknown field `related_to_case` on `crm_event`" — only when the field is removed rather than demoted | follows S5 |
 | S7 | `src/sales/translations/*` `objects.crm_task.fields.related_to_case`, `objects.crm_event.fields.related_to_case` | the S5 field | P3 | G2 `translation-target-unknown` ×8 once the field is removed | follows S5 |
@@ -197,5 +205,5 @@ F7 is deliberately unused so that the letters stay stable if a finding is merged
 ## What this means for #2271 and the marketing carve-out
 
 The app cannot ship without revenue (or marketing, or service) until F1–F6 are answered on the
-platform; the **move** rows (R6, R7, R14, M3, M4, S3, S4 — the per-domain locale files moving to the
-package that owns their objects) are this repository's own work and can be carded now. F8 is cosmetic.
+platform; the **move** rows (R6, R7, R14's flow half, M3, M4, S3, S4 — the per-domain locale files moving
+to the package that owns their objects) were this repository's own work and are resolved (#2352). F8 is cosmetic.

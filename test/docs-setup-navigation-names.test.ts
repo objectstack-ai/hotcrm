@@ -9,9 +9,8 @@ import {
   SETUP_NAV_CONTRIBUTIONS,
   SetupAppTranslations,
 } from '@objectstack/platform-objects/apps';
-import { servedApp } from './helpers/composed-stack';
+import { localePacks, packFor, servedApp } from './helpers/composed-stack';
 import { CrmApp } from '../src/sales/apps';
-import { CrmTranslations } from '../src/sales/translations';
 import { REPO_ROOT } from './helpers/repo-root';
 
 /**
@@ -267,15 +266,18 @@ type AnyRec = Record<string, any>;
 /** Locale bundles the platform ships for the Setup / Studio / Account apps. */
 const SHIPPED_LOCALES = Object.keys(SetupAppTranslations as AnyRec);
 
-/** Locale bundles THIS app ships for its own navigation (`src/translations/`). */
-const CRM_LOCALES = Object.keys(CrmTranslations as AnyRec);
+/**
+ * Locale bundles THIS app ships for its own navigation: the app package's packs
+ * and each module's, folded per locale (`src/PACKAGE/translations/`, #2352).
+ */
+const CRM_LOCALES = localePacks.map(([locale]) => locale);
 
 /** The app id `src/translations/*` files their navigation overrides under. */
 const CRM_APP_ID = (CrmApp as AnyRec).name as string;
 
 /** One locale's navigation overrides for this app, `id → { label }`. */
 const crmNavOverrides = (locale: string): Record<string, AnyRec> =>
-  ((CrmTranslations as AnyRec)[locale]?.apps?.[CRM_APP_ID]?.navigation ?? {}) as Record<
+  ((packFor(locale) as AnyRec)?.apps?.[CRM_APP_ID]?.navigation ?? {}) as Record<
     string,
     AnyRec
   >;
