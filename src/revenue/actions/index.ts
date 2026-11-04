@@ -11,3 +11,4 @@ export {
   SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
   PrintQuoteAction,
 } from './quote.actions';
+export { AddPriceBookProductsAction } from './price_book.actions';

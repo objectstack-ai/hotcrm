@@ -5,6 +5,7 @@
  * `src/sales/flows/index.ts` for why the registration order is assembled in
  * `objectstack.composition.ts` rather than here.
  */
+export { PriceBookAddProductsFlow } from './price-book-add-products.flow';
 export { QuoteGenerationFlow } from './quote-generation.flow';
 export { QuoteExpirationFlow } from './quote-expiration.flow';
 export { QuotePrintPresentedFlow } from './quote-print-presented.flow';
