@@ -32,7 +32,7 @@ export const jaJP: EmailTemplatePack = {
   'crm.deal_stalled': {
     label: '停滞中の商談',
     subject: '停滞中の商談: {{name}}',
-    bodyHtml: '<p>商談 {{name}} は「{{stage}}」に {{days_in_stage}} 日間留まっています。次の段階に進めるか、再評価してください。</p>',
+    bodyHtml: '<p>商談 {{name}} は「{{stage_label.ja_JP}}」に {{days_in_stage}} 日間留まっています。次の段階に進めるか、再評価してください。</p>',
   },
   'crm.large_deal_won': {
     label: '大型商談の受注',

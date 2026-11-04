@@ -3,6 +3,8 @@
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from '../../sales/flows/_guarded-iteration';
+import { optionLabelsByLocale } from '../../sales/flows/_option-labels';
+import { ServiceTranslations } from '../translations';
 type Flow = Automation.Flow;
 
 /**
@@ -346,8 +348,10 @@ export const CaseSlaMonitorFlow: Flow = {
                 severity: 'critical',
                 topic: 'case_sla_breach',
                 template: 'crm.case_sla_breach',
+                // The priority by its label, one per language (#2391).
                 templateData: {
-                  case_number: cel`currentCase.case_number`, priority: cel`currentCase.priority`,
+                  case_number: cel`currentCase.case_number`,
+                  priority_label: optionLabelsByLocale(ServiceTranslations, 'crm_case', 'priority', 'currentCase.priority'),
                 },
                 actionUrl: '/crm_case/{{currentCase.id}}',
                 // A schedule run has no organization: since 18.0.0-next.1 the
