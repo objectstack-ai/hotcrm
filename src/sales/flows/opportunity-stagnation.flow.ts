@@ -3,6 +3,8 @@
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
+import { optionLabelsByLocale } from './_option-labels';
+import { CrmTranslations } from '../translations';
 type Flow = Automation.Flow;
 
 /**
@@ -146,8 +148,11 @@ export const OpportunityStagnationFlow: Flow = {
                 channels: ['inbox', 'email'],
                 topic: 'deal_stalled',
                 template: 'crm.deal_stalled',
+                // The stage by its label, one per language (#2391): each
+                // locale's template reads its own key (`_option-labels.ts`).
                 templateData: {
-                  name: cel`currentOpp.name`, stage: cel`currentOpp.stage`,
+                  name: cel`currentOpp.name`,
+                  stage_label: optionLabelsByLocale(CrmTranslations, 'crm_opportunity', 'stage', 'currentOpp.stage'),
                   days_in_stage: cel`currentOpp.days_in_stage`,
                 },
                 actionUrl: '/crm_opportunity/{{currentOpp.id}}',

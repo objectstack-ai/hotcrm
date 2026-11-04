@@ -32,7 +32,7 @@ export const zhCN: EmailTemplatePack = {
   'crm.deal_stalled': {
     label: '商机停滞',
     subject: '停滞商机：{{name}}',
-    bodyHtml: '<p>商机 {{name}} 已在“{{stage}}”阶段停留 {{days_in_stage}} 天。请推进或重新评估。</p>',
+    bodyHtml: '<p>商机 {{name}} 已在“{{stage_label.zh_CN}}”阶段停留 {{days_in_stage}} 天。请推进或重新评估。</p>',
   },
   'crm.large_deal_won': {
     label: '大额商机赢单',

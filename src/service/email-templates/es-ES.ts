@@ -7,11 +7,11 @@ export const esES: EmailTemplatePack = {
   'crm.case_escalated': {
     label: 'Caso escalado',
     subject: 'Caso escalado: {{case_number}}',
-    bodyHtml: '<p>El caso {{case_number}} ({{priority}}) se ha escalado automáticamente por prioridad crítica. La propiedad pasa al responsable de servicio con menos carga; mientras nadie ocupe ese puesto, el caso sigue siendo tuyo. Abre el caso para ver quién lo tiene ahora.</p>',
+    bodyHtml: '<p>El caso {{case_number}} ({{priority_label.es_ES}}) se ha escalado automáticamente por prioridad crítica. La propiedad pasa al responsable de servicio con menos carga; mientras nadie ocupe ese puesto, el caso sigue siendo tuyo. Abre el caso para ver quién lo tiene ahora.</p>',
   },
   'crm.case_sla_breach': {
     label: 'SLA del caso incumplido',
     subject: 'SLA incumplido: caso {{case_number}}',
-    bodyHtml: '<p>El caso {{case_number}} ({{priority}}) superó su fecha límite de SLA y se ha escalado automáticamente.</p>',
+    bodyHtml: '<p>El caso {{case_number}} ({{priority_label.es_ES}}) superó su fecha límite de SLA y se ha escalado automáticamente.</p>',
   },
 };

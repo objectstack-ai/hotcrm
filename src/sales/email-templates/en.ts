@@ -45,7 +45,7 @@ export const en: EmailTemplatePack = {
   'crm.deal_stalled': {
     label: 'Stalled Deal',
     subject: 'Stalled deal: {{name}}',
-    bodyHtml: '<p>Opportunity {{name}} has sat in {{stage}} for {{days_in_stage}} days. Time to advance or re-qualify it.</p>',
+    bodyHtml: '<p>Opportunity {{name}} has sat in {{stage_label.en}} for {{days_in_stage}} days. Time to advance or re-qualify it.</p>',
   },
   // `{{amount | number:2}}`: the hole goes through the renderer's `number`
   // formatter (ADR-0053), in the recipient's locale, so the amount reads

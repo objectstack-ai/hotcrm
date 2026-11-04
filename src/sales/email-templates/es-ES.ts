@@ -32,7 +32,7 @@ export const esES: EmailTemplatePack = {
   'crm.deal_stalled': {
     label: 'Oportunidad estancada',
     subject: 'Oportunidad estancada: {{name}}',
-    bodyHtml: '<p>La oportunidad {{name}} lleva {{days_in_stage}} días en {{stage}}. Es hora de avanzarla o volver a cualificarla.</p>',
+    bodyHtml: '<p>La oportunidad {{name}} lleva {{days_in_stage}} días en {{stage_label.es_ES}}. Es hora de avanzarla o volver a cualificarla.</p>',
   },
   'crm.large_deal_won': {
     label: 'Gran operación ganada',

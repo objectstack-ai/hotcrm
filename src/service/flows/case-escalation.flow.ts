@@ -2,6 +2,8 @@
 
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { optionLabelsByLocale } from '../../sales/flows/_option-labels';
+import { ServiceTranslations } from '../translations';
 type Flow = Automation.Flow;
 
 /** Case Escalation — auto-escalate high-priority cases */
@@ -188,7 +190,11 @@ export const CaseEscalationFlow: Flow = {
         // So it states the rule and points at the record for the answer, in
         // every language.
         template: 'crm.case_escalated',
-        templateData: { case_number: cel`caseRecord.case_number`, priority: cel`caseRecord.priority` },
+        // The priority by its label, one per language (#2391).
+        templateData: {
+          case_number: cel`caseRecord.case_number`,
+          priority_label: optionLabelsByLocale(ServiceTranslations, 'crm_case', 'priority', 'caseRecord.priority'),
+        },
         actionUrl: '/crm_case/{{record.id}}',
       },
     },

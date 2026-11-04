@@ -14,11 +14,11 @@ export const en: EmailTemplatePack = {
   'crm.case_escalated': {
     label: 'Case Escalated',
     subject: 'Case escalated: {{case_number}}',
-    bodyHtml: '<p>Case {{case_number}} ({{priority}}) has been auto-escalated on critical priority. Ownership passes to the service manager with the lightest load; while nobody holds that position the case stays with you. Open the case to see who owns it now.</p>',
+    bodyHtml: '<p>Case {{case_number}} ({{priority_label.en}}) has been auto-escalated on critical priority. Ownership passes to the service manager with the lightest load; while nobody holds that position the case stays with you. Open the case to see who owns it now.</p>',
   },
   'crm.case_sla_breach': {
     label: 'Case SLA Breached',
     subject: 'SLA breached: case {{case_number}}',
-    bodyHtml: '<p>Case {{case_number}} ({{priority}}) passed its SLA due date and has been auto-escalated.</p>',
+    bodyHtml: '<p>Case {{case_number}} ({{priority_label.en}}) passed its SLA due date and has been auto-escalated.</p>',
   },
 };
