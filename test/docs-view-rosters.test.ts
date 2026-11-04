@@ -4,8 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
-import stack from './helpers/composed-stack';
-import { zhCN } from '../src/sales/translations/zh-CN';
+import stack, { packFor } from './helpers/composed-stack';
 
 type AnyRec = Record<string, any>;
 
@@ -498,7 +497,7 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
    * zh-Hans page can print and still be searchable in the UI.
    */
   const packLabel = (object: string, key: string): string | undefined => {
-    const entry = (((zhCN as AnyRec).objects?.[object]?._views ?? {}) as AnyRec)[key];
+    const entry = (((packFor('zh-CN') as AnyRec).objects?.[object]?._views ?? {}) as AnyRec)[key];
     return typeof entry?.label === 'string' && entry.label.length > 0 ? entry.label : undefined;
   };
 

@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { packFor } from './helpers/composed-stack';
@@ -268,6 +268,11 @@ const TEST_ROOT = join(REPO_ROOT, 'test');
  * strings and the barrel does not import it, the family files do. The next
  * module added under `zh-CN/` is picked up with no edit here, which is exactly
  * the property the literal lacked.
+ *
+ * Each module package registers its own zh-CN pack (#2352), so the strings for
+ * the objects it owns live in `src/PACKAGE/translations/zh-CN.ts`. Those are
+ * derived the same way — every top-level package directory that has one —
+ * so a term moved with its object is still scanned.
  */
 const PACK_BARREL = 'src/sales/translations/zh-CN.ts';
 const PACK_ROOT = join(REPO_ROOT, 'src/sales/translations/zh-CN');
@@ -284,7 +289,16 @@ const read = (f: string): string => readFileSync(join(REPO_ROOT, f), 'utf8');
 const HANS_PAGES = walk(DOCS_ROOT).filter((f) => f.endsWith('.zh-Hans.mdx')).map(rel);
 const HANT_PAGES = walk(DOCS_ROOT).filter((f) => f.endsWith('.zh-Hant.mdx')).map(rel);
 const TEST_FILES = walk(TEST_ROOT).filter((f) => f.endsWith('.test.ts')).map(rel);
-const PACK_FILES = [PACK_BARREL, ...walk(PACK_ROOT).filter((f) => f.endsWith('.ts')).map(rel)];
+const MODULE_PACKS = readdirSync(join(REPO_ROOT, 'src'), { withFileTypes: true })
+  .filter((e) => e.isDirectory() && e.name !== 'sales')
+  .map((e) => `src/${e.name}/translations/zh-CN.ts`)
+  .filter((f) => existsSync(join(REPO_ROOT, f)))
+  .sort();
+const PACK_FILES = [
+  PACK_BARREL,
+  ...walk(PACK_ROOT).filter((f) => f.endsWith('.ts')).map(rel),
+  ...MODULE_PACKS,
+];
 const ZH_PAGES = [...HANS_PAGES, ...HANT_PAGES];
 
 /**
@@ -618,5 +632,15 @@ describe('mechanism prose is spared by word grain, not by markup position (#802)
         `${root} no longer appears on any zh-Hans page — re-derive #802's criterion`,
       ).toBeGreaterThan(1);
     }
+  });
+});
+
+describe('the pack surface the rules scan (#2352)', () => {
+  it('includes each module package\'s own zh-CN pack', () => {
+    // Vacuity: a module pack that stops being found takes its objects' terms
+    // out of every pack rule above without turning any of them red.
+    expect(MODULE_PACKS).toEqual([
+      'src/marketing/translations/zh-CN.ts', 'src/revenue/translations/zh-CN.ts', 'src/service/translations/zh-CN.ts',
+    ]);
   });
 });
