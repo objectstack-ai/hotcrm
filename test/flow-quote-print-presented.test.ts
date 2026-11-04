@@ -12,13 +12,12 @@ type Rec = Record<string, any>;
  * the quote's PDF, and does nothing for any other attachment or any other
  * status.
  *
- * The print service is not what this suite drives: it needs a browser, and on
- * the pinned release it refuses to print a page that is not the object's
- * default record page (objectstack#26583). What it leaves behind is one
- * `sys_attachment` row, written AS the printing user, parented on the quote and
- * named `<page>-<recordId>.pdf` — measured on 18.1.0 with `pnpm dev`, a local
- * Chromium and the page as the default (`quote_print_page-<id>.pdf`, written by
- * the rep who clicked). So each case makes that write, as the rep, through the
+ * The print service is not what this suite drives: it needs a browser. What
+ * it leaves behind is one `sys_attachment` row, written AS the printing user,
+ * parented on the quote and named `<page>-<recordId>.pdf` — measured with
+ * `pnpm dev` and a local Chromium on 18.1.0 with the page as the default, and
+ * on 18.3.0 by name (`quote_print_page-<id>.pdf`, written by the user who
+ * clicked). So each case makes that write, as the rep, through the
  * handle's write door, and reads the quote and the run history afterwards.
  */
 

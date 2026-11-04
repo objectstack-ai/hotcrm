@@ -24,11 +24,11 @@ import { Page } from '@objectstack/spec/ui';
  * object's FIRST record page, this one. A print page holds only the printable
  * blocks (`PRINTABLE_PAGE_COMPONENT_TYPES`, `os validate` refuses any other),
  * so drawing it as the record page would replace all of that for every rep,
- * every day. The cost, measured on 18.1.0 and 18.2.0: the print service
- * prints only an object's DEFAULT record page and answers any other page with
- * `VALIDATION_ERROR` / 400 ("is not the default record page … (isDefault:
- * true)"), so Print Quote is refused until the platform prints a named record
- * page (objectstack#26583). Nothing here works around that.
+ * every day. The print service prints this page by name: since 18.3.0 it
+ * prints any record page of the object that declares `print`
+ * (objectstack#26583). On 18.1.0 and 18.2.0 it printed only the DEFAULT record
+ * page and answered this one with `VALIDATION_ERROR` / 400, which is why the
+ * card waited for that release rather than make this page the default.
  *
  * Every block is printable. The `header` region repeats on every sheet, and
  * each sheet carries its page number.

@@ -25,6 +25,5 @@ attachments, in the name of the rep who printed it. The rep downloads it from th
   `OS_PRINT_BROWSER_ENDPOINT`, and `OS_PRINT_CONSOLE_URL`. Without them **Print Quote** answers an
   error and nothing is filed.
 
-⚠️ On ObjectStack 18.2.0 the print service prints only an object's default record page, so **Print
-Quote** is refused until the platform prints a named page (objectstack#26583); this change ships with
-the release that carries it.
+It needs ObjectStack 18.3.0 or later: earlier releases print only an object's default record page
+(objectstack#26583), and the print page is deliberately not the quote's default.
