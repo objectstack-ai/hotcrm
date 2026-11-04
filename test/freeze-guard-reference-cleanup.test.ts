@@ -22,6 +22,7 @@ const hookNamed = (hooks: unknown, name: string): AnyRec => {
 };
 import { extractHookBody } from '@objectstack/cli/hook-body';
 import { createIdentityObjectsPlugin } from '@objectstack/plugin-auth';
+import { withoutOwnershipQueues } from './helpers/bare-kernel-stack';
 
 /**
  * A frozen record must not make the people it references undeletable (#720).
@@ -285,7 +286,7 @@ beforeAll(async () => {
   // The app's own metadata is the subject — objects and hooks exactly as
   // `objectstack.config.ts` declares them (the rig `cascade-guard-messages`
   // uses, which is the rig #720 was measured with).
-  await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
+  await kernel.use(new AppPlugin(withoutOwnershipQueues(artifact) as never, undefined as never, { skipSeedData: true } as never));
   await kernel.bootstrap();
   ql = kernel.getService('objectql');
   // The install's one organization. Since 18.0.0-next.0 a system write on a

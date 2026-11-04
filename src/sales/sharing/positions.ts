@@ -63,7 +63,7 @@ export const CrmPositions = [
   {
     name: 'sales_rep',
     label: 'Sales Representative',
-    description: 'Works leads and opportunities day to day and receives new leads by round-robin assignment.',
+    description: 'Works leads and opportunities day to day and receives new leads from the Lead Intake queue.',
     permissionSets: ['sales_rep'],
   },
   {
@@ -88,7 +88,7 @@ export const CrmPositions = [
   {
     name: 'service_agent',
     label: 'Service Agent',
-    description: 'Handles customer cases, receives new cases by round-robin assignment and pulls unassigned cases from triage.',
+    description: 'Handles customer cases, receives new cases from the Support Intake queue and claims the ones still waiting there.',
     permissionSets: ['service_agent'],
   },
   // The two marketing rungs hold the marketing staff set (#2338 item 3). They

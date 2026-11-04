@@ -144,6 +144,20 @@ a web case never escalates on arrival and never goes to the Service Manager pool
 by itself. Critical is a staff decision. When a visitor's problem really is
 urgent, raise the priority yourself and the escalation above runs.
 
+## Who owns a new case, and claiming one
+
+A case you create is yours. A case that arrives with no owner (a web form
+submission, an integration, an import) goes to the **Service Agent** with the
+fewest open cases. When nobody holds that position, the case waits in the
+**Support Intake** queue instead and shows up in the **Unassigned — triage**
+list, where every Service Agent can see it.
+
+To take a waiting case, open it and click **Claim** in the record header. You
+become its owner, and nothing else changes: the status stays where it was, so
+move it to **In Progress** yourself when you start. Changing the status of a
+waiting case does not claim it. Only one agent can claim a case; if a colleague
+got there first, your click is refused and the case stays with them.
+
 ---
 
 **Related:** recording which article solved a case — see

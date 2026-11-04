@@ -2,11 +2,7 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from '../../sales/objects/_hook-api';
-import {
-  createCaseRoundRobinAssign,
-  createCaseEscalationReassign,
-  createCaseSelfClaim,
-} from './_case-assignment';
+import { createCaseEscalationReassign } from './_case-assignment';
 
 /**
  * Case SLA & escalation hook.
@@ -26,13 +22,13 @@ import {
  * - On `closed`: completes the case's open escalation follow-up task(s) — its
  *   own hook, `case_close_escalation_task`, elevated for the same reason.
  *
- * ⚠️ Ownership assignment is NOT here: all three answers to "who should own
- * this case" live in `_case-assignment.ts` — the ownerless-intake round-robin,
- * the escalation hand-off to the `service_manager` pool, and the triage
- * self-claim. One module, so the app never grows two independently-authored
- * ownership paths on `crm_case`; its hooks are composed into this module's
- * default export below, so the registry still sees one `crm_case` hook set. In
- * particular the escalation hand-off is deliberately NOT a branch of
+ * ⚠️ Ownership assignment is NOT here. Who owns a NEW case is the platform's
+ * answer (ADR-0142): `case_intake_assignment` routes an ownerless case into
+ * the `case_intake` queue, and an agent takes a parked case with the console's
+ * Claim. The one owner writer this app keeps — the escalation hand-off to the
+ * `service_manager` pool — lives in `_case-assignment.ts` and is composed into
+ * this module's default export below, so the registry still sees one
+ * `crm_case` hook set. In particular the escalation hand-off is deliberately NOT a branch of
  * `case_status_side_effects` below: that hook writes through `ctx.api`, a seam
  * the #3004 transfer guard CAN see (which would demand
  * `crm_case.allowTransfer`) and a second write that re-enters the record-change
@@ -84,7 +80,6 @@ const caseValidation: Hook = {
     //
     // ⛔ The trap arriving is NOT a licence to spell this block with `delete`.
     // What these lines WRITE is load-bearing independently of how it is spelled:
-    // `case_auto_assign` stands down only on a non-empty STRING `owner_id`, so
     // the column must arrive `null` rather than ABSENT (see the `null` note
     // below). Removing a key and writing `null` are different downstream, so
     // switching to `delete` would be a behaviour change on the public-form
@@ -95,10 +90,11 @@ const caseValidation: Hook = {
     // in a lookup — see `case_resolution_article_normalize` below), and
     // `undefined` stores the KEY with an undefined value rather than omitting
     // it, which is not the same as absent and is what a `has()`-guarded CEL
-    // predicate then trips over. `null` is also what the downstream owner
-    // writer reads as "ownerless": `case_auto_assign` stands down only on a
-    // non-empty STRING `owner_id`, so a nulled column still reaches the
-    // round-robin.
+    // predicate then trips over. `null` is also what the platform's
+    // assignment step reads as "ownerless" (ADR-0142 D5, measured on 18.3.0:
+    // a guest submission with a spoofed owner is stored `owner_id` null and
+    // routed by `case_intake_assignment`), and that step runs after every
+    // beforeInsert hook, so the strip always precedes it.
     //
     // ⚠️ `!ctx.session?.isSystem` is load-bearing. A predicate of
     // `!ctx.previous && !ctx.user?.id` conflates the two callers that both
@@ -109,8 +105,8 @@ const caseValidation: Hook = {
     // `lead_automation`'s converted-lead lock treats `!ctx.user?.id` as "system
     // write, allow it". Without the narrowing, a system insert that names an
     // owner has that owner blanked and every seeded or backfilled case lands
-    // ownerless (eight cases in `test/unassigned-case-triage-reach.test.ts`
-    // insert owned cases exactly that way). `ctx.session.isSystem` is the
+    // ownerless (the seed loader and `verify.seed` insert owned cases exactly
+    // that way). `ctx.session.isSystem` is the
     // discriminator: a system context arrives as `session: { isSystem: true }`
     // and an anonymous one carries no session at all. Narrowing only ever
     // REMOVES callers from the branch, so nothing sanitised today stops being.
@@ -366,9 +362,8 @@ const caseValidation: Hook = {
     // `is_closed` is DERIVED from `status`, on every write including a guest's.
     // ⛔ Never make the recompute conditional on the caller: a guest's
     // `status: 'closed'` stored alongside `is_closed: false` contradicts
-    // itself, and every consumer keyed on the flag — the pinned
-    // `unassigned_triage` view, the `case_unassigned_triage_sharing` rule —
-    // reads such a case as open backlog forever. A derived column is derived on
+    // itself, and every consumer keyed on the flag — the manager and director
+    // sharing rules on critical cases — reads such a case as open forever. A derived column is derived on
     // every write or it is not derived at all; the guest's own `is_closed` is
     // still ignored, because this recompute overwrites whatever they sent.
     if (typeof effStatus === 'string') input.is_closed = effStatus === 'closed';
@@ -684,16 +679,6 @@ const caseCloseEscalationTask: Hook = {
 };
 
 /**
- * Ownerless-intake round-robin, composed from `_case-assignment.ts`.
- *
- * ⚠️ Listed AFTER `case_sla_defaults` here for readability only — runtime
- * ordering is decided by `priority` (250 vs 200), not by array position, and it
- * is load-bearing: `case_sla_defaults` strips a guest-supplied `owner_id` and
- * this hook must run after the strip, never before it.
- */
-const caseAutoAssign: Hook = createCaseRoundRobinAssign();
-
-/**
  * Escalation hand-off to the `service_manager` pool, composed from
  * `_case-assignment.ts`.
  *
@@ -702,18 +687,6 @@ const caseAutoAssign: Hook = createCaseRoundRobinAssign();
  * surface.
  */
 const caseEscalationReassign: Hook = createCaseEscalationReassign();
-
-/**
- * Triage self-claim, composed from `_case-assignment.ts`.
- *
- * An agent who moves an unowned open case into a worked status becomes its
- * owner. ⚠️ Priority 260 puts it AFTER the escalation hand-off (250), and it
- * stands down whenever `owner_id` is already in the payload — so the two
- * ownership writers on this seam cannot both speak. Like the hand-off it issues
- * no operation of its own; unlike either sibling it reads no pool, because the
- * only user id it can write is the caller's own.
- */
-const caseSelfClaim: Hook = createCaseSelfClaim();
 
 /**
  * Normalise a BLANK `resolved_by_article` to NULL.
@@ -776,9 +749,7 @@ const caseResolutionArticleNormalize: Hook = {
 
 export default [
   caseValidation,
-  caseAutoAssign,
   caseEscalationReassign,
-  caseSelfClaim,
   caseResolutionArticleNormalize,
   caseSideEffects,
   caseResolutionAccountActivity,

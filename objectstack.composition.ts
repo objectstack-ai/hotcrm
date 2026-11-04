@@ -88,6 +88,9 @@ import * as salesPages from './src/sales/pages/index.js';
 import * as salesEmailTemplates from './src/sales/email-templates/index.js';
 
 import * as salesBooks from './src/sales/books/index.js';
+// Ownership queues and the assignment rules that route intake into them (ADR-0142).
+import * as salesQueues from './src/sales/queues/index.js';
+import * as salesAssignmentRules from './src/sales/assignment-rules/index.js';
 import { CrmAdminManual } from './src/sales/books/index.js';
 
 import { SystemAdminProfile } from './src/sales/profiles/index.js';
@@ -285,6 +288,12 @@ export const appApps = byExportName({ ...apps });
  * ({@link compositionBooks}).
  */
 export const appBooks = byExportName({ ...salesBooks });
+
+/** The app package's ownership queues — Lead Intake (ADR-0142 D1). */
+export const appQueues = byExportName({ ...salesQueues });
+
+/** The app package's assignment rules — ownerless new leads into Lead Intake (ADR-0142 D5). */
+export const appAssignmentRules = byExportName({ ...salesAssignmentRules });
 
 /** The locale packs — whole in the app package (plan item 4), service labels included. */
 export const appTranslations = byExportName({ ...translations });
@@ -628,6 +637,10 @@ export const appStack = createHotCrmAppStack(
     emailTemplates: appEmailTemplates,
 
     sharingRules: appSharingRules,
+    // ADR-0142: ownerless new leads wait in Lead Intake and go to its
+    // least-loaded rep; a rep takes one with the console's Claim.
+    queues: appQueues,
+    assignmentRules: appAssignmentRules,
     // ADR-0090 D3: positions are flat capability-distribution groups — the v1
     // role hierarchy's parent links are gone (hierarchy belongs to the
     // business-unit tree, which this app does not model).

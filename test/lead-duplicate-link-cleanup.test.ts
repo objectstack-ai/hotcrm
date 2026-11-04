@@ -7,6 +7,7 @@ import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
 import stack from '../objectstack.config';
 import { createIdentityObjectsPlugin } from '@objectstack/plugin-auth';
+import { withoutOwnershipQueues } from './helpers/bare-kernel-stack';
 
 /**
  * A lead flagged as a duplicate must not make the record it duplicates
@@ -192,7 +193,7 @@ beforeAll(async () => {
   // show any of this: only the engine decides that `set_null` reaches the lead
   // as a `beforeUpdate` at all, and the value of the change is that these
   // DELETEs complete.
-  await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
+  await kernel.use(new AppPlugin(withoutOwnershipQueues(stack) as never, undefined as never, { skipSeedData: true } as never));
   await kernel.bootstrap();
   ql = kernel.getService('objectql');
   // The install's one organization. Since 18.0.0-next.0 a system write on a

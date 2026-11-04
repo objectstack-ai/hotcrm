@@ -722,7 +722,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_rep: {
       label: '営業担当者',
-      description: 'リードと商談を日々担当し、ラウンドロビン割り当てで新しいリードを受け取ります。',
+      description: 'リードと商談を日々担当し、リード受付キューから新しいリードを受け取ります。',
     },
     service_director: {
       label: 'サービスディレクター',
@@ -734,7 +734,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     service_agent: {
       label: 'サービス担当者',
-      description: '顧客のケースに対応し、ラウンドロビン割り当てで新しいケースを受け取り、トリアージから未割り当てのケースを引き取ります。',
+      description: '顧客のケースに対応し、サポート受付キューから新しいケースを受け取り、キューで待っているケースを担当します。',
     },
     marketing_director: {
       label: 'マーケティングディレクター',

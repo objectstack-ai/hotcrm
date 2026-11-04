@@ -226,26 +226,23 @@ describe('what a shared account carries into its related lists', () => {
 });
 
 /**
- * `crm_case`'s four grants, named — including the triage widening (#1096).
+ * `crm_case`'s three grants, named.
  *
  * The ledger above answers `crm_case: 'partial'`, and 'partial' says only "some
- * rule widens some records". That was true before #1096 and is true after it,
- * so the ledger alone cannot notice a grant arriving or leaving — and the one
- * that arrived is the app's only grant over records with **no owner at all**.
+ * rule widens some records", so the ledger alone cannot notice a grant arriving
+ * or leaving. The roster is pinned by name.
  *
- * So the roster is pinned by name. `service_agent` is the entry that matters:
- * unlike the manager and director rungs, an agent's reach here is not "the same
- * cases, one rung up" — it is a set of rows that had no reader whatsoever, and
- * it is the one grant whose criteria matches on the ABSENCE of a value.
- *
- * Declared shape only. What it delivers on a running engine — on both the
- * sparse (absent-key) and column-complete (NULL) row shapes — is measured in
- * `test/unassigned-case-triage-reach.test.ts`.
+ * There used to be a fourth, `case_unassigned_triage_sharing` (#1096): EDIT on
+ * every open, unowned case for every `service_agent`. #2395 deleted it. Since
+ * ObjectStack 18.3.0 (ADR-0142) an ownerless case sits in the `case_intake`
+ * queue, and the queue's members read and claim it through the queue itself —
+ * so no sharing rule may answer "who sees unowned work" again. The behaviour is
+ * measured in `test/ownership-queues.test.ts`.
  */
 describe('who can read a case they do not own', () => {
   const caseRules = () => rulesOn('crm_case');
 
-  it('exactly four rules widen crm_case, and each names its recipient', () => {
+  it('exactly three rules widen crm_case, and each names its recipient', () => {
     const roster = caseRules()
       .map((r) => `${r.name}→${r.sharedWith?.value}:${r.accessLevel ?? 'read'}`)
       .sort();
@@ -259,34 +256,24 @@ describe('who can read a case they do not own', () => {
       // A FIELD recipient (#2060 item 3): the one user the case names, not a position.
       'case_escalated_from_sharing→escalated_from:read',
       'case_escalation_sharing→service_manager:edit',
-      'case_unassigned_triage_sharing→service_agent:edit',
     ]);
   });
 
-  it('the triage rule is the ONLY one that matches on the absence of an owner', () => {
-    // A second rule keying off `owner_id == null` would be a second, unreviewed
-    // answer to "who sees unowned work" — the shape that later has to be
-    // converged by deleting one of them. Across the WHOLE stack, not just
-    // crm_case: nothing else in this app shares records by ownerlessness.
+  it('no rule matches on the absence of an owner — the queue answers that (#2395)', () => {
+    // Across the WHOLE stack, not just crm_case: a rule keying off
+    // `owner_id == null` would be a second answer to "who sees unowned work",
+    // beside the platform's queue membership.
     const ownerless = sharingRules
       .filter((r) => /record\.owner_id\s*==\s*null/.test(r.condition?.source ?? ''))
       .map((r) => r.name as string);
-    expect(ownerless, 'more than one rule now grants sight of unowned records').toEqual([
-      'case_unassigned_triage_sharing',
-    ]);
+    expect(ownerless, 'a sharing rule grants sight of unowned records again').toEqual([]);
   });
 
-  it('no rule hands an agent a case that HAS an owner — acceptance #2, at the metadata layer', () => {
-    // The runtime proof is in the reach test; this is the authoring-time
-    // counterpart, and it is the cheaper of the two to keep honest. Any
-    // `service_agent`-targeted rule on crm_case must carry the ownerless
-    // condition — a second one that did not would grant owned rows, which is
-    // exactly what #1096 rejected option C for.
+  it('no rule widens crm_case to service_agent — agents reach unowned cases through the queue', () => {
     const bad = caseRules()
       .filter((r) => r.sharedWith?.type === 'position' && r.sharedWith?.value === 'service_agent')
-      .filter((r) => !/record\.owner_id\s*==\s*null/.test(r.condition?.source ?? ''))
-      .map((r) => `${r.name}: grants agents cases without requiring the case to be unowned`);
-    expect(bad, `agent-targeted case rules that reach owned records:\n  ${bad.join('\n  ')}`).toEqual([]);
+      .map((r) => r.name as string);
+    expect(bad, 'an agent-targeted case sharing rule is back').toEqual([]);
   });
 });
 
@@ -803,7 +790,7 @@ describe('the OWD table lists every registered object, in every locale', () => {
  * The card asking for this (#809, filed 2026-08-05) had compared both Chinese
  * tables against `src/sharing/` row by row and found them clean, and filed the
  * gap as dormant. It did not stay dormant. On 2026-08-12 commit `4a0e1de`
- * (#1096) added `case_unassigned_triage_sharing` **and** its English row —
+ * (#1096) added `case_unassigned_triage_sharing` (deleted again in #2395) **and** its English row —
  * `| Unassigned Cases — Triage | Case | Edit | ... |` — and never touched the
  * two Chinese pages. So widening these rules goes RED on `main`, on both Chinese
  * pages, naming the rule they are missing.

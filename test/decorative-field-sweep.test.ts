@@ -25,6 +25,7 @@ import { localePacks, type AnyRec } from './helpers/composed-stack';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { withoutOwnershipQueues } from './helpers/bare-kernel-stack';
 
 /**
  * The organization every write here carries: since 18.1.0 the driver creates
@@ -226,7 +227,7 @@ describe('the roll-up actually computes, and keeps computing (#1182)', () => {
     await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_sweep' } as never));
     // The app's own metadata is the subject. Seed data is skipped — the three
     // accounts below are the whole population, so the sums are unambiguous.
-    await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
+    await kernel.use(new AppPlugin(withoutOwnershipQueues(stack) as never, undefined as never, { skipSeedData: true } as never));
     await kernel.bootstrap();
     ql = kernel.getService('objectql');
 

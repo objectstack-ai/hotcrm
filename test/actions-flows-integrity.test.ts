@@ -241,13 +241,6 @@ describe('lead conversion dedupes the contact too', () => {
   });
 });
 
-describe('lead auto-assignment', () => {
-  it('a beforeInsert hook assigns ownerless leads', () => {
-    const h = hookNamed('lead_auto_assign');
-    expect(h.events).toContain('beforeInsert');
-  });
-});
-
 describe('search works via explicit searchableFields', () => {
   it('objects with a formula nameField declare real searchableFields', () => {
     // The formula nameField (display_title/full_name) can't be searched; each

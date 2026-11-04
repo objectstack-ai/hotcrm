@@ -2,14 +2,15 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { ClaimCaseFlow, CloseCaseFlow, EscalateCaseFlow } from '../src/service/flows/case-actions.flow';
+import { CloseCaseFlow, EscalateCaseFlow } from '../src/service/flows/case-actions.flow';
 import { CaseEscalationStampFlow } from '../src/service/flows/case-escalation-stamp.flow';
-import { hotcrmStack, signUpPerson, recordEngineWrites, guestInsert, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
 /**
- * Runtime tests for the three case screen-flow actions.
+ * Runtime tests for the case screen-flow actions (escalate and close; Claim is
+ * the console's own button since #2395).
  *
  * These are the console's record-action buttons. Two things about them are
  * silently breakable and neither is visible to metadata validation:
@@ -37,32 +38,13 @@ let verify: VerifyStack;
 let agent: Person;
 let accountId: string;
 let k = 0;
-/** Unowned open cases for the claim block — see `unownedCase` below. */
-const UNOWNED_CASES = 5;
-const unowned: Rec[] = [];
 beforeAll(async () => {
   verify = await hotcrmStack();
-  // The agent's grants first, their place on the `service_agent` rota LAST:
-  // the claim block's unowned cases are written while the rota is empty.
   agent = await signUpPerson(verify, 'agent@flow-case-actions.test', {
     name: 'Case Agent', permissionSets: ['service_agent'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Case Actions Co', owner_id: agent.id }]);
   accountId = String(account!.id);
-  for (let i = 0; i < UNOWNED_CASES; i++) {
-    unowned.push(await guestInsert(verify, 'crm_case', {
-      subject: `Unowned ${i}`, description: 'Came in through the web form.',
-      status: 'new', priority: 'medium',
-    }));
-  }
-  await verify.seed('sys_user_position', [{ user_id: agent.id, position: 'service_agent' }]);
-  // The triage grant (`case_unassigned_triage_sharing`) expands its
-  // `service_agent` recipients when it is evaluated, and the cases above were
-  // written while that position was empty. Reconcile it now that the agent
-  // holds it — the reconcile the platform runs on every boot. The sharing
-  // service is a kernel service the handle does not front, so it is driven
-  // directly, as `test/unassigned-case-triage-reach.test.ts` does.
-  await verify.kernel.getService<Rec>('sharingRules').evaluateRule('case_unassigned_triage_sharing', { isSystem: true });
 }, 120_000);
 
 /** A new, medium-priority case the agent opened and works. */
@@ -211,96 +193,5 @@ describe('close_case — screen action', () => {
     const other = await stored(neighbour.id);
     expect(other.status).toBe('new');
     expect(other.is_closed).toBe(false);
-  });
-});
-
-/**
- * `claim_case` (#1144) — the button over the claim seam.
- *
- * The flow is NOT a second writer of ownership: its one write is the status
- * the agent picked, and `case_self_claim` (`src/service/objects/_case-assignment.ts`)
- * — the seam — stamps the CALLER as owner inside that same write. On the real
- * engine both happen in one update, so the stored row cannot tell them apart;
- * what tells them apart is the payload the FLOW handed the engine, read off
- * the engine's own `update` before its hooks write into it
- * (`recordEngineWrites`). That payload must carry no `owner_id` — and the seam
- * yields to any payload that does (`'owner_id' in input` returns early), so a
- * flow that wrote ownership itself would silently replace the caller-only
- * stamp.
- *
- * The positive half at the seam's own boundaries — every guard, both row
- * shapes — runs in `test/unassigned-case-triage-reach.test.ts`, which owns the
- * seam; `claim-case-one-owner-writer` guards the flow's field map as metadata.
- * This file owns the button.
- *
- * The unowned cases are written before anyone holds the `service_agent`
- * position (see `beforeAll`): `case_auto_assign` round-robins a new case onto
- * that pool, so with the agent on it there would be nothing unowned to claim.
- * That is the first-install state #596 describes — an empty rota is the norm.
- */
-const unownedCase = async (): Promise<Rec> => {
-  const kase = unowned.shift();
-  if (!kase) throw new Error('raise UNOWNED_CASES: the claim block used more unowned cases than beforeAll wrote');
-  expect(kase.owner_id ?? null, 'the fixture case already has an owner').toBeNull();
-  return kase;
-};
-
-/** Claim `caseId` to `claimStatus` as the agent; return what the flow handed the engine for it. */
-async function claim(caseId: string, claimStatus: string): Promise<Rec[]> {
-  const engine = recordEngineWrites(verify);
-  try {
-    await runScreen('claim_case', caseId, { claimStatus });
-  } finally {
-    engine.restore();
-  }
-  return engine.of('crm_case', 'update')
-    .filter((w) => (w.args[2] as Rec | undefined)?.where?.id === caseId)
-    .map((w) => w.args[1] as Rec);
-}
-
-describe('claim_case — screen action', () => {
-  it('seeds its input from the console’s `recordId` contract', () => {
-    const names = (ClaimCaseFlow.variables ?? []).map((v) => v.name);
-    expect(names, 'the console only seeds `recordId`').toContain('recordId');
-  });
-
-  it('moves the case to the status the agent picked, and writes nothing else', async () => {
-    const kase = await unownedCase();
-    const payloads = await claim(kase.id, 'in_progress');
-
-    expect(payloads.length, 'claim_case wrote nothing to the case').toBeGreaterThan(0);
-    for (const payload of payloads) {
-      expect(
-        payload,
-        'claim_case wrote ownership itself. The status move is the whole write; the seam owns ' +
-          '`owner_id` and stamps the CALLER (see test/unassigned-case-triage-reach.test.ts).',
-      ).not.toHaveProperty('owner_id');
-      expect(payload, 'claim_case touched the lifecycle flag').not.toHaveProperty('is_closed');
-    }
-    const updated = await stored(kase.id);
-    expect(updated.status).toBe('in_progress');
-    // …and the seam did its half: the caller, and only the caller, owns it now.
-    expect(updated.owner_id).toBe(agent.id);
-    expect(Boolean(updated.is_closed), 'the claim closed the case').toBe(false);
-  });
-
-  it('carries every status the seam reads as a claim, not just the default', async () => {
-    // The picker offers three, and a flow that only ever moved to the default
-    // would pass the case above while quietly ignoring the other two.
-    for (const status of ['waiting_customer', 'waiting_support'] as const) {
-      const kase = await unownedCase();
-      const payloads = await claim(kase.id, status);
-      expect((await stored(kase.id)).status, `claim to ${status} did not land`).toBe(status);
-      for (const payload of payloads) expect(payload).not.toHaveProperty('owner_id');
-    }
-  });
-
-  it('leaves other cases untouched', async () => {
-    const kase = await unownedCase();
-    const neighbour = await unownedCase();
-    await claim(kase.id, 'in_progress');
-    const other = await stored(neighbour.id);
-    expect(other.status).toBe('new');
-    expect(other.owner_id ?? null).toBeNull();
   });
 });

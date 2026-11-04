@@ -15,7 +15,8 @@ type Flow = Automation.Flow;
  *   insert when the writer gave none), so the owner hears it even for a lead
  *   they typed in themselves.
  * - a STANDARD lead alerts its owner only when someone ELSE put it in their
- *   name: `lead_auto_assign`'s pick on web-to-lead or a user-less import, an
+ *   name: `lead_intake_assignment`'s pick on web-to-lead or a user-less import
+ *   (the platform's assignment rule, ADR-0142 D5), an
  *   integration's named owner, a colleague with transfer rights logging it for
  *   them. A write that carries a user is stamped with that user as owner, so
  *   before the creator test on `e10` every lead a rep created told that same
@@ -27,13 +28,14 @@ type Flow = Automation.Flow;
  * position note below), so an "awaiting assignment" alert has nobody to go to.
  *
  * A lead with NO owner gets its SLA stamp and no alert, and the run ends
- * there successfully (#2060 item 6). Web-to-lead lands ownerless whenever
- * `lead_auto_assign` stands down (an empty `sales_rep` pool, or a pool the
- * writer cannot read), and so can a seed or integration write. There is
- * nobody to alert: the business declares no recipient for ownerless intake
- * (no queue, no position — `content/docs/administration/setup.mdx` §8), and
- * `notify` REFUSES an audience that evaluates to nothing, so before the owner
- * gates below the run FAILED at the notify node, after the stamp had landed.
+ * there successfully (#2060 item 6). Web-to-lead lands ownerless — parked in
+ * the `lead_intake` queue — whenever nobody holds `sales_rep`, and so can a
+ * seed or integration write. There is nobody to alert: a queue routes records,
+ * it is not a messaging audience (ADR-0142 merge question 8, a parked record's
+ * `owner_of:` reaches nobody), and `notify` REFUSES an audience that evaluates
+ * to nothing, so before the owner gates below the run FAILED at the notify
+ * node, after the stamp had landed. The reps who staff the queue see the lead
+ * in it and claim it.
  *
  * ⛔ Never address a CRM position (`sales_manager` and friends) as a recipient.
  * Positions are not a messaging audience: the messaging service resolves
@@ -41,8 +43,8 @@ type Flow = Automation.Flow;
  * name is stored verbatim as `sys_inbox_message.user_id`, matching no real user,
  * so the alert reaches nobody. `role:` is organization membership
  * (owner / admin / member), not a sales rung, and this app seeds no `team:`.
- * With no territory / round-robin table modelled, the owner is the correct
- * recipient. (Swap to a `team:`/`role:` audience once a manager group is seeded.)
+ * The owner — whoever the assignment rule or the writer made it — is the
+ * correct recipient. (Swap to a `team:`/`role:` audience once a manager group is seeded.)
  *
  * Trigger wiring: the `start` node declares `triggerType: 'record-after-create'`
  * so the record-change trigger provider binds it to the ObjectQL `afterInsert`
@@ -103,8 +105,9 @@ export const LeadAssignmentFlow: Flow = {
         // 'sales_manager' was stored verbatim as sys_inbox_message.user_id,
         // matching no real user, so these alerts reached nobody. A write that
         // carries a user is stamped with that user as owner, and
-        // `lead_auto_assign` fills an ownerless one from the rep pool when it
-        // can; a lead still ownerless never reaches this node (`owner_hot`).
+        // `lead_intake_assignment` fills an ownerless one from the rep pool
+        // when anyone holds `sales_rep`; a lead still ownerless (parked in the
+        // queue) never reaches this node (`owner_hot`).
         // Unlike `notify_std`, a lead its owner wrote still comes here — see
         // the header.
         recipients: [cel`record.owner_id`],
@@ -188,7 +191,7 @@ export const LeadAssignmentFlow: Flow = {
     // `created_by` is the platform's insert stamp of the writing user: equal
     // to `owner_id` when a person created the lead for themselves (their own
     // owner stamp), and blank or absent on a write with no user (web-to-lead,
-    // an import or integration), whose owner is then the round-robin's pick or
+    // an import or integration), whose owner is then the assignment rule's pick or
     // the one the writer named. A colleague who logs a lead for a rep differs
     // from the owner too. Only the owner's own lead takes the default edge.
     { id: 'e8', source: 'owner_hot', target: 'notify_hot', type: 'conditional', condition: P`has(record.owner_id) && !isBlank(record.owner_id)`, label: 'Owned' },

@@ -19,127 +19,15 @@ import type { HookApi } from './_hook-api';
 // copy is dead code that silently diverges from the copy that actually runs.
 
 /**
- * Lead auto-assignment (load-balanced round-robin).
- *
- * A lead created without an owner (CSV import, web-to-lead, API capture) is
- * assigned to the sales rep with the FEWEST open leads — a self-balancing
- * round-robin that needs no rotation counter. It writes `owner_id`, the platform
- * ownership anchor that OWD, sharing and the "My Leads" view all read, so the
- * assigned rep really owns the lead rather than merely being named on it.
- *
- * ⚠️ Writing a FOREIGN owner is normally an ownership transfer, denied without
- * `allowTransfer` (#3004). It passes here because of WHERE this runs, not what
- * it is granted: a `beforeInsert` hook mutates `opCtx.data` INSIDE the operation
- * the security middleware already wrapped, so the guard read (and stamped) the
- * payload before this line changed it. `test/ownership-model.test.ts` pins that
- * ordering against a real ObjectQL — an assumption here would be the difference
- * between round-robin working and every web-to-lead submission 403-ing.
- *
- * The rep pool is whoever holds the `sales_rep` position (`sys_user_position`).
- * When that pool is empty (a fresh org before positions are assigned) the hook
- * is a NO-OP and the lead keeps whatever owner it had — it never blocks lead
- * creation. UI-created leads already carry `owner_id` = creator (the
- * middleware's insert-time stamp), so this only fires on genuinely ownerless
- * intake.
- *
- * Runs beforeInsert so the downstream `lead_assignment` flow (afterInsert) sees
- * the assigned owner and routes its SLA alert to that rep.
- *
- * ⚠️ Priority 250 — hooks run in ASCENDING priority order, so this must run
- * AFTER `lead_automation` (200), whose guest branch strips a client-spoofed
- * `owner_id` from anonymous Web-to-Lead submissions. Assigning first and being
- * stripped afterwards lands every web-to-lead ownerless — the exact case this
- * hook exists for. It is also what keeps the elevation below from letting an
- * anonymous client choose the owner: the strip runs first, so this hook only
- * ever writes the pool's choice.
- *
- * ## `runAs: 'system'` (#2014, AGENTS.md rule 9), and the organization pin
- *
- * Web-to-lead is the intake this hook exists for, and as the caller it never
- * reached the pool: the anonymous form writes under `guest_portal`, which
- * reads nothing, so the pool read came back empty and every web lead landed
- * ownerless with reps staffed (measured on 17.7.0 and again on 18.0.0-next.0).
- * Who works an enquiry is the business's routing, not the submitter's
- * privilege, so the hook elevates. Elevation reaches the two READS only: the
- * owner is still stamped on the payload in flight (no write of its own, no
- * transfer grant), and a person's own insert never gets here.
- *
- * What elevation reads never reaches the submitter. Maintainer ruling on
- * #2014 (item 4, B): the platform fixed the door first — since
- * objectstack#22437 (18.0.0-next.0) the anonymous form answers the new
- * record's id and nothing else, so the owner chosen here stays inside the CRM.
- * `test/hooks-runtime.test.ts` pins that answer through the real door.
- *
- * AGENTS.md rule 10: the pool and the load counts are organization-NEUTRAL
- * predicates, so both are pinned to the new lead's `organization_id` when the
- * writer named one (a system import into one organization of several). The
- * anonymous form names none here — the platform stamps the organization after
- * the beforeInsert hooks (ADR-0131) — and an organization-less insert lands
- * only on an install with exactly one organization (with two, the platform
- * refuses it), so an unpinned read has no other organization to reach.
+ * Who owns a NEW lead is not this file's answer. Since @objectstack 18.3.0 the
+ * declared assignment rule `lead_intake_assignment`
+ * (`src/sales/assignment-rules/lead.assignment-rule.ts`, ADR-0142 D5) routes an
+ * ownerless new lead into the `lead_intake` queue and hands it to the
+ * least-loaded rep, after every beforeInsert hook here has run — so the guest
+ * owner strip in `lead_automation` below always precedes it. The app's former
+ * round-robin hook, `lead_auto_assign`, was deleted with that adoption
+ * (hotcrm#2395).
  */
-const leadAutoAssignHook: Hook = {
-  name: 'lead_auto_assign',
-  object: 'crm_lead',
-  events: ['beforeInsert'],
-  priority: 250,
-  runAs: 'system',
-  description: 'Assign ownerless new leads to the least-loaded sales rep.',
-  handler: async (ctx: HookContext) => {
-    const { input } = ctx;
-    // Respect an explicit / creator-assigned owner. On a write that carries a
-    // user the security middleware has ALREADY stamped `owner_id` to that user
-    // by the time this runs, so this is also what makes the hook a no-op for
-    // ordinary UI creation — only genuinely ownerless intake falls through.
-    if (typeof input.owner_id === 'string' && input.owner_id) return;
-    const api = ctx.api as HookApi | undefined;
-    if (!api) return;
-
-    // The rule-10 pin on both reads below: the organization the writer named
-    // on the new lead, when it named one (see the note above the hook).
-    const organizationId =
-      typeof input.organization_id === 'string' && input.organization_id !== ''
-        ? input.organization_id
-        : undefined;
-    const inOrganization: Record<string, string> = organizationId ? { organization_id: organizationId } : {};
-
-    // Auto-assignment is a best-effort ENHANCEMENT — it must NEVER block lead
-    // creation. So the pool lookup + load balancing are wrapped: on ANY error
-    // the lead is still captured, ownerless.
-    try {
-      // Rep pool = holders of the sales_rep position.
-      const holders = await api.object('sys_user_position').find({
-        where: { position: 'sales_rep', ...inOrganization }, fields: ['user_id'], top: 1000,
-      });
-      const repIds = Array.from(
-        new Set(
-          (holders ?? [])
-            .map((r) => (typeof r.user_id === 'string' ? r.user_id : ''))
-            .filter(Boolean),
-        ),
-      );
-      if (repIds.length === 0) return; // no pool → leave ownerless (no-op)
-
-      // Pick the rep with the fewest OPEN (non-converted) leads.
-      let best: string | undefined;
-      let bestCount = Infinity;
-      for (const repId of repIds) {
-        const openCount = await api.object('crm_lead').count({
-          where: { owner_id: repId, is_converted: false, ...inOrganization },
-        });
-        if (openCount < bestCount) {
-          bestCount = openCount;
-          best = repId;
-        }
-      }
-      if (best) input.owner_id = best;
-    } catch {
-      // Swallow: auto-assignment must never block the insert — the lead is
-      // still captured, ownerless. (No `console` here — the L2 hook sandbox
-      // doesn't define it.)
-    }
-  },
-};
 
 const leadHook: Hook = {
   name: 'lead_automation',
@@ -230,8 +118,9 @@ const leadHook: Hook = {
         // the measurement; `test/hook-input-shape.test.ts` pins the new contract.
         //
         // `null` is the no-value spelling throughout, and it is load-bearing
-        // twice over: `lead_auto_assign` stands down only on a non-empty STRING
-        // `owner_id`, and `lead_duplicate_check` stands down only on a NON-BLANK
+        // twice over: the platform's assignment step routes a lead whose
+        // `owner_id` is empty (ADR-0142 D5, `lead_intake_assignment`), and
+        // `lead_duplicate_check` stands down only on a NON-BLANK
         // `duplicate_status` / `duplicate_of_type` — where its own `isBlank`
         // counts `null` as blank. Both therefore still run on a sanitised guest
         // submission, which is exactly what the removed deletes were for.
@@ -549,8 +438,8 @@ const leadHook: Hook = {
           priority: 'high',
           type: 'follow_up',
           due_date: dueDate.toISOString().slice(0, 10),
-          // Unlike `lead_auto_assign` above, this is a SEPARATE insert on
-          // `ctx.api` — a new operation carrying the caller's context, so the
+          // Unlike a payload stamp in a beforeInsert hook, this is a SEPARATE
+          // insert on `ctx.api` — a new operation carrying the caller's context, so the
           // #3004 transfer guard does apply to it. When the qualifier is the
           // lead's own rep (`owner_id` == caller) it is not a transfer at all;
           // a manager qualifying a rep's lead holds `allowTransfer`. Any other
@@ -637,8 +526,9 @@ const leadHook: Hook = {
  * `organization_id` when the writer named one, so a match is never found in
  * another organization. A person's write is confined by their own tenant,
  * which the elevated `ctx.api` keeps; the anonymous form names none here, and
- * lands only on an install with exactly one organization (see
- * `lead_auto_assign`).
+ * lands only on an install with exactly one organization (with two, the
+ * platform refuses an organization-less insert), so an unpinned read has no
+ * other organization to reach.
  */
 const leadDuplicateCheckHook: Hook = {
   name: 'lead_duplicate_check',
@@ -850,8 +740,7 @@ const leadDuplicateCheckHook: Hook = {
         : undefined;
     const inOrganization: Record<string, string> = organizationId ? { organization_id: organizationId } : {};
 
-    // Best-effort ENHANCEMENT, never a gate on the write — identical to
-    // `lead_auto_assign` above. A failed read must not reject the very
+    // Best-effort ENHANCEMENT, never a gate on the write. A failed read must not reject the very
     // submission this feature exists to accept, so the duplicate lands
     // unflagged rather than not landing at all.
     try {
@@ -889,4 +778,4 @@ const leadDuplicateCheckHook: Hook = {
   },
 };
 
-export default [leadAutoAssignHook, leadHook, leadDuplicateCheckHook];
+export default [leadHook, leadDuplicateCheckHook];

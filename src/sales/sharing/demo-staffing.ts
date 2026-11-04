@@ -81,12 +81,14 @@ import type { Territory } from '../objects/_territory';
  *     which is the whole point.
  *   - the sales manager makes `opportunity_approval`'s `manager_review` resolve
  *     to a non-empty slate for the first time.
- *   - the service AGENT is the case INTAKE POOL. `case_auto_assign`
- *     (`src/service/objects/_case-assignment.ts`) round-robins an ownerless case — a
- *     web-to-case submission, an email import — to the least-loaded holder of
- *     `service_agent`. With nobody holding it the hook took its no-op path on
- *     every demo box and the `unassigned_triage` tab was the entire story. The
- *     same row gives `case_unassigned_triage_sharing` its first recipient.
+ *   - the service AGENT is the case INTAKE POOL. `case_intake_assignment`
+ *     (`src/service/assignment-rules/case.assignment-rule.ts`, the platform's
+ *     assignment rule) hands an ownerless case — a web-to-case submission, an
+ *     email import — to the least-loaded member of the `case_intake` queue,
+ *     whose members are the holders of `service_agent`. With nobody holding it
+ *     every such case parks in the queue and the `unassigned_triage` tab is the
+ *     entire story. The same row makes her the queue's first member, so she
+ *     sees the parked cases and can claim them.
  *   - the service MANAGER is the ESCALATION POOL. `case_escalation_reassign`
  *     hands a case being escalated to the least-loaded `service_manager`, and
  *     `case_escalation_sharing` grants that position edit on open critical
@@ -96,8 +98,8 @@ import type { Territory } from '../objects/_territory';
  * ⚠️ Measured, and written down because the card that authorised those two
  * rows over-counted: staffing them does NOT light `case_director_sharing`. That
  * rule's recipient is `service_director`, which the same ruling leaves empty.
- * The fourth mechanism these two rows actually reach is
- * `case_unassigned_triage_sharing`, not the director rule.
+ * The fourth mechanism these two rows actually reach is the `case_intake`
+ * queue's membership, not the director rule.
  *
  * The other six positions (`sales_director`, `executive`, `service_director`,
  * `marketing_manager`, `marketing_director`, `marketing_user`) stay UNSTAFFED
@@ -234,9 +236,8 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
     password: 'demo1234',
     positions: ['service_agent'],
     demonstrates:
-      'case_auto_assign: an ownerless case round-robins onto her as the least-loaded holder of ' +
-      'the service_agent pool, and case_unassigned_triage_sharing gives her edit on the open ' +
-      'cases nobody owns.',
+      'case_intake_assignment: an ownerless case is handed to her as the least-loaded member of ' +
+      'the case_intake queue, and as a member she sees the cases parked in it and can claim them.',
   },
   {
     key: 'service_manager',
@@ -388,7 +389,9 @@ export type DemoOwnershipRoute =
  * Before this row existed no seeded case was routed at all, so which persona
  * owned the demo's 38 cases depended on timing. Measured on 18.0.0, fresh
  * `pnpm dev`: run `demo:staff` while the seed was still writing and
- * `case_auto_assign` round-robined all 38 onto the service agent (the only
+ * `case_auto_assign` (the app's intake round-robin hook then; the platform's
+ * `case_intake_assignment` rule since #2395) round-robined all 38 onto the
+ * service agent (the only
  * holder of the intake pool, so the manager got none, escalated ones
  * included); run it after the seed settled and all 38 stayed with the dev
  * admin, so the agent landed on a Customer Service page of zeros.

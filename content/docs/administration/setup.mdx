@@ -63,13 +63,13 @@ What follows from that is on the SLA side: deadlines run on **calendar hours**. 
 - [ ] Decide org-wide default for accounts and contacts (private vs public read vs public read/write) — see [Sharing & security](/docs/administration/sharing-and-security)
 - [ ] Configure account teams if you sell as pods rather than solo reps
 
-### 8. Lead routing — nothing to configure
+### 8. Lead routing — a queue and a rule
 
-**There is no Setup → Lead Settings screen**, and there are no routing rules to write. Web-to-lead is the one way into the round-robin: a lead submitted through the public web form arrives with nobody behind it, so it is assigned on insert by `src/sales/objects/lead.hook.ts` to whichever holder of the `sales_rep` position has the **fewest open leads**. That is a self-balancing round-robin, not a rule matching region, industry or source; there is no territory routing, no queue, and no auto-response email to the submitter. If nobody holds `sales_rep` the hook does nothing and the lead stays ownerless until someone claims it.
+**There is no Setup → Lead Settings screen.** Lead routing is two pieces of metadata the app ships. The **Lead Intake** queue (`lead_intake`) has the `sales_rep` position as its members. The assignment rule `lead_intake_assignment` sends every lead that arrives with no owner to the member with the **fewest unconverted leads**. Web-to-lead is the usual way such a lead arrives. The rule balances load; it does not match region, industry or source. There is no territory routing and no auto-response email to the submitter. If the queue has no members, the lead gets no owner and waits in **Lead Intake**. Any sales rep can open it there and click **Claim**.
 
-Every other way a lead comes in has a person behind it, and that person becomes the owner: a lead created in the app, one sent through the API under someone's sign-in or API key, and one imported from a CSV or JSON file. An import never goes to the round-robin — a row with a blank owner is owned by whoever ran the import, so plan to reassign imported leads afterwards. See [Owners](/docs/guides/importing-your-data#owners) in *Import your own data*.
+Every other way a lead comes in has a person behind it, and that person becomes the owner: a lead created in the app, one sent through the API under someone's sign-in or API key, and one imported from a CSV or JSON file. An import never goes to the queue — a row with a blank owner is owned by whoever ran the import, so plan to reassign imported leads afterwards. See [Owners](/docs/guides/importing-your-data#owners) in *Import your own data*.
 
-- [ ] Assign the `sales_rep` position to every rep who should receive intake — that pool *is* the routing table
+- [ ] Assign the `sales_rep` position to every rep who should receive intake, or add a row under **Setup → Access Control → Queue Members** with Queue `lead_intake` and the person as Member. The queue's members are the routing table
 - [ ] Read what happens next in the `lead_assignment` flow (a rating-based follow-up date, and an alert to the new owner) at **Studio → Automation → Flows**
 
 ### 9. Product catalog
@@ -113,12 +113,19 @@ Confirm the default [SLA matrix](/docs/service/sla-and-escalation):
 
 Adjust if your support promise differs — the sixteen numbers live in `src/service/objects/_case-sla.ts` and a matching table inside `src/service/objects/case.hook.ts`, not on a Setup screen, and both copies have to change together.
 
-### 12. Case routing — nothing to configure
+### 12. Case routing — a queue and a rule
 
-**There is no Setup → Case Settings screen**, and there are no routing rules to write. An ownerless case — a web-to-case submission is the usual way one arrives — is assigned on insert by `case_auto_assign` (`src/service/objects/_case-assignment.ts`): it goes to whichever holder of the `service_agent` position has the **fewest open cases**, counting every case whose status is neither *Resolved* nor *Closed*. It is the same self-balancing round-robin leads get: least-loaded wins, not a rotation and not a rule matching product, region or origin; there is no territory routing and no queue. It runs **on insert only**, and only on a case that arrives with no owner — it never takes a case off an owner later, and it never fires on a case an agent creates, because the platform has already stamped that agent as the owner by the time the hook runs. It never blocks intake either: if the pool cannot be read, the case is still captured, just ownerless. A case from the anonymous web-to-case form is routed like any other — the visitor is only told the case was received, never who it went to. And if nobody holds `service_agent` the hook does nothing, so the case stays ownerless and waits in the **Unassigned — triage** tab on [Cases](/docs/service/cases). That tab is this hook's do-nothing path made visible, which makes staffing the position a behaviour change in itself: new cases stop arriving ownerless, and stop appearing there. **This is not the escalation hand-off**, which is a different pool at a different moment — that one rides on the transition to *Escalated* and moves the case to the least-loaded holder of `service_manager` (see [SLA & escalation](/docs/service/sla-and-escalation)).
+**There is no Setup → Case Settings screen.** Case routing is two pieces of metadata the app ships. The **Support Intake** queue (`case_intake`) has the `service_agent` position as its members. The assignment rule `case_intake_assignment` sends every case that arrives with no owner to the member with the **fewest open cases**, counting every case whose status is neither *Resolved* nor *Closed*. A web-to-case submission is the usual way such a case arrives. The rule balances load; it is not a rotation and it does not match product, region or origin.
 
-- [ ] Assign the `service_agent` position to every agent who should receive intake — that pool *is* the routing table
-- [ ] While nobody holds it, watch the **Unassigned — triage** tab on Cases: it lists exactly the cases this hook could not place
+- **It runs on insert only**, and only on a case that arrives with neither an owner nor a queue. It never takes a case away from an owner later. It never fires on a case an agent creates, because that agent is already the owner.
+- **A case from the anonymous web form is routed like any other.** The visitor is only told the case was received, never who it went to.
+- **With no members, the case waits in the queue.** It gets no owner and appears in the **Unassigned — triage** tab on [Cases](/docs/service/cases). Every Service Agent can open it there and click **Claim**. So staffing the queue changes behaviour: new cases stop waiting there and go straight to an agent.
+
+**This is not the escalation hand-off.** That is a different pool at a different moment: it runs on the change to *Escalated* and moves the case to the least-loaded holder of `service_manager` (see [SLA & escalation](/docs/service/sla-and-escalation)).
+
+- [ ] Assign the `service_agent` position to every agent who should receive intake, or add a row under **Setup → Access Control → Queue Members** with Queue `case_intake` and the person as Member. (Both queues ship with the app, so they are not listed under **Setup → Access Control → Queues**.) The queue's members are the routing table
+- [ ] While the queue has no members, watch the **Unassigned — triage** tab on Cases: it lists exactly the cases waiting to be claimed
+- [ ] Upgrading from a version before the queue: run `pnpm exec tsx scripts/backfill-intake-queue.ts --apply` once as an administrator, so open cases and leads that nobody owns are put in their queue and agents can see them again
 
 ### 13. Approval process
 

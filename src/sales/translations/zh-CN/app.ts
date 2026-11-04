@@ -727,7 +727,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_rep: {
       label: '销售代表',
-      description: '日常跟进线索和商机，并通过轮询分配接收新线索。',
+      description: '日常跟进线索和商机，并从「线索受理」队列接收新线索。',
     },
     service_director: {
       label: '服务总监',
@@ -739,7 +739,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     service_agent: {
       label: '客服专员',
-      description: '处理客户工单，通过轮询分配接收新工单，并从待分诊队列中领取未分配的工单。',
+      description: '处理客户工单，从「支持受理」队列接收新工单，并认领仍在队列中等候的工单。',
     },
     marketing_director: {
       label: '市场总监',
