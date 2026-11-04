@@ -199,6 +199,28 @@ export const Quote = ObjectSchema.create({
       storage: { notNull: true },
       trackHistory: true,
     }),
+
+    // The quote as the customer countersigned it (REQ-0008 phase 3, #2317).
+    // Print Quote (`print_quote`) files the document that goes out; this is
+    // what comes back, uploaded by the rep while the quote is Presented.
+    //
+    // A TRANSITION GATE, not an invariant (AGENTS.md Metadata semantics rule
+    // 7): Accepted requires it, the same way Activated requires the
+    // contract's (`crm_contract.signed_copy`). The engine refuses the write
+    // that takes a quote INTO `accepted` without one — the Accept button's
+    // write included, which is a declarative update judged like Edit — and
+    // names this field by its label. A quote already accepted without one when
+    // this rule shipped is exempt (the engine passes a row that was already
+    // outside the requirement), and it was frozen by `quote_workflow` before
+    // and stays so.
+    //
+    // The read is guarded (#630): `has(record.status)` first.
+    signed_copy: Field.file({
+      label: 'Signed Copy',
+      group: 'basic',
+      requiredWhen: P`has(record.status) && record.status == "accepted"`,
+      description: 'The quote as the customer signed it. Required to accept the quote.',
+    }),
     
     // Dates
     quote_date: Field.date({

@@ -64,10 +64,19 @@ export const commerce: Record<string, ObjectTranslationData> = {
       },
       signed_date: { label: '署名日' },
       signed_by: { label: '署名者' },
+      // The countersigned copy (#2317).
+      signed_copy: {
+        label: '署名済みコピー',
+        help: 'お客様が署名した契約書。契約を有効にするには必須です。アップロード時に署名日が空であれば当日の日付が入ります。',
+      },
       document_url: { label: '契約書類' },
       special_terms: { label: '特約事項' },
       description: { label: '説明' },
       billing_address: { label: '請求先住所' },
+    },
+    // Print Contract (#2317).
+    _actions: {
+      print_contract: { label: '契約書を印刷', successMessage: '契約書の PDF を添付しました。' },
     },
     _views: {
       all_contracts: { label: '全契約' },

@@ -13,3 +13,6 @@ export { OpportunityDetailPage } from './opportunity_detail.page';
 export { AccountDetailPage } from './account_detail.page';
 export { AccountWorkbenchPage } from './account_workbench.page';
 export { SalesHomePage } from './home.page';
+// The contract's working page (explicit default) and its print page (#2317).
+export { ContractDetailPage } from './contract_detail.page';
+export { ContractPrintPage } from './contract_print.page';

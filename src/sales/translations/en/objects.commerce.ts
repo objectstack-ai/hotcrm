@@ -57,10 +57,19 @@ export const commerce: Record<string, ObjectTranslationData> = {
       },
       signed_date: { label: 'Signed Date' },
       signed_by: { label: 'Signed By' },
+      // The countersigned copy (#2317).
+      signed_copy: {
+        label: 'Signed Copy',
+        help: 'The contract as the customer signed it. Required to activate the contract; uploading it fills Signed Date when that is empty.',
+      },
       document_url: { label: 'Contract Document' },
       special_terms: { label: 'Special Terms' },
       description: { label: 'Description' },
       billing_address: { label: 'Billing Address' },
+    },
+    // Print Contract (#2317).
+    _actions: {
+      print_contract: { label: 'Print Contract', successMessage: 'Contract PDF attached to the contract.' },
     },
     _views: {
       all_contracts: { label: 'All Contracts' },

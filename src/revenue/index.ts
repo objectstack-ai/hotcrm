@@ -1,7 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
-import { PrintServicePlugin } from '@objectstack/service-print';
 
 import {
   SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
@@ -165,9 +164,9 @@ export const createHotCrmRevenueStack = (
   books: [CrmRevenueManual],
   translations: [RevenueTranslations],
   // The quote's working page (explicit default) and its print page (#2312).
+  // Print Quote's door, `POST /api/v1/print/records`, is mounted by the app
+  // package (`src/sales/index.ts`), which Print Contract needs too (#2317).
   pages: [QuoteDetailPage, QuotePrintPage],
-  // Mounts `POST /api/v1/print/records`, the door Print Quote calls.
-  plugins: [new PrintServicePlugin()],
 
   ...collections,
 });

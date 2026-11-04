@@ -115,9 +115,16 @@ export const Contract = ObjectSchema.create({
       min: 1,
     }),
     
+    // Dated with the year, never "Yesterday" (#2317): the term's two dates are
+    // printed on the contract document (`contract_print_page`), and the
+    // console's default style reads a date within a week as a relative word
+    // (measured on 18.3.0: a printed contract started "Yesterday"). `short`
+    // reads "Sep 14, '26", as the quote's dates do (#2370 row 9,
+    // docs/developers/number-formats.md).
     start_date: Field.date({
       label: 'Start Date',
       group: 'terms',
+      format: 'short',
       required: true,
       storage: { notNull: true },
     }),
@@ -125,6 +132,7 @@ export const Contract = ObjectSchema.create({
     end_date: Field.date({
       label: 'End Date',
       group: 'terms',
+      format: 'short',
       required: true,
       storage: { notNull: true },
     }),
@@ -197,6 +205,30 @@ export const Contract = ObjectSchema.create({
       label: 'Signed By',
       group: 'status',
       maxLength: 255,
+    }),
+
+    // The countersigned copy the customer sends back (REQ-0008 phase 3,
+    // #2317): Print Contract (`print_contract`) files the document that goes
+    // out; this is what comes back, uploaded by the rep. Writing it fills
+    // `signed_date` when that is empty (`contract_signed_copy_date`,
+    // `contract.hook.ts`).
+    //
+    // A TRANSITION GATE, not an invariant (AGENTS.md Metadata semantics rule
+    // 7): Activated requires it. The engine refuses the write that takes a
+    // contract INTO `activated` without a signed copy, an insert born
+    // activated without one, and a write that clears it from an activated
+    // contract — each against this field, by its label. A contract that was
+    // already activated without one when this rule shipped keeps saving
+    // unrelated edits, and leaves `activated` for `expired` or `terminated`
+    // as before: the engine exempts a row that was already outside the
+    // requirement, and neither end state is inside it.
+    //
+    // The read is guarded (#630): `has(record.status)` first.
+    signed_copy: Field.file({
+      label: 'Signed Copy',
+      group: 'status',
+      requiredWhen: P`has(record.status) && record.status == "activated"`,
+      description: 'The contract as the customer signed it. Required to activate the contract; uploading it fills Signed Date when that is empty.',
     }),
     
     document_url: Field.url({

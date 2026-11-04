@@ -6,7 +6,7 @@
  * Split out of the former monolithic `src/data/index.ts` (#635). Seed doctrine
  * lives in `src/sales/data/_shared.ts`.
  */
-import { defineSeed } from '@objectstack/spec/data';
+import { defineSeed, seedFile } from '@objectstack/spec/data';
 import { cel } from '@objectstack/spec';
 import { Quote } from '../objects/quote.object';
 import { QuoteLineItem } from '../objects/quote_line_item.object';
@@ -120,6 +120,10 @@ export const quotes = defineSeed(Quote, {
       // every non-Acme quote here bills 8%.
       ...quoteTotals('Acme Annual Renewal 2025 Quote', { discount: 0, tax: 18700, shipping_handling: 0 }),
       payment_terms: 'net_30',
+      // Accepted requires the signed copy (#2317, `crm_quote.signed_copy`), a
+      // seed's insert included: a labelled SAMPLE the package ships, stored
+      // by the seed loader as a file this row owns (`seedFile`).
+      signed_copy: seedFile('assets/seed-files/quote-signed-copy-sample.pdf', { name: 'Acme Annual Renewal 2025 Quote - signed (sample).pdf' }),
       description: 'Annual renewal — three production tenants, premium support and the EMEA seat expansion.',
     },
     {

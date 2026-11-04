@@ -140,6 +140,11 @@ export const esES: TranslationData = {
             accepted: 'Aceptada', rejected: 'Rechazada', expired: 'Expirada',
           },
         },
+        // The countersigned copy (#2317).
+        signed_copy: {
+          label: 'Copia firmada',
+          help: 'La cotización tal como la firmó el cliente. Obligatoria para aceptar la cotización.',
+        },
         quote_date: { label: 'Fecha de Cotización' },
         expiration_date: { label: 'Fecha de Expiración' },
         subtotal: { label: 'Subtotal' },

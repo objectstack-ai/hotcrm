@@ -64,9 +64,18 @@ export const commerce: Record<string, ObjectTranslationData> = {
       },
       signed_date: { label: '签署日期' },
       signed_by: { label: '签署人' },
+      // The countersigned copy (#2317).
+      signed_copy: {
+        label: '签署副本',
+        help: '客户签回的合同。激活合同前必须上传；上传时如签署日期为空，会自动填为当天。',
+      },
       document_url: { label: '合同文档' },
       special_terms: { label: '特殊条款' },
       billing_address: { label: '账单地址' },
+    },
+    // Print Contract (#2317).
+    _actions: {
+      print_contract: { label: '打印合同', successMessage: '合同 PDF 已归档到附件。' },
     },
     _views: {
       all_contracts: { label: '全部合同' },
