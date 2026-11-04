@@ -63,6 +63,8 @@ export const esES: TranslationData = {
     crm_case: service.crm_case,
     crm_contract: commerce.crm_contract,
     crm_product: commerce.crm_product,
+    crm_price_book: commerce.crm_price_book,
+    crm_price_book_entry: commerce.crm_price_book_entry,
     crm_quote: commerce.crm_quote,
     crm_task: activity.crm_task,
     crm_campaign: marketing.crm_campaign,

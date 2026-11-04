@@ -6,11 +6,15 @@ import type { HookApi } from '../../sales/objects/_hook-api';
 /**
  * Quote workflow hook.
  *
- * - Freezes quotes once `accepted` or `expired` — against USER edits only: a
- *   write that is purely the engine clearing a link is let through. The
- *   freeze covers the quote's LINE ITEMS too (#2060, #2088): a user may not
- *   add a line to a settled quote, change one of its lines or remove one,
- *   while deleting the quote itself still takes its lines with it.
+ * - Freezes quotes once `accepted`, `rejected` or `expired` — against USER
+ *   edits only: a write that is purely the engine clearing a link is let
+ *   through. The freeze covers the quote's LINE ITEMS too (#2060, #2088): a
+ *   user may not add a line to a settled quote, change one of its lines or
+ *   remove one, while deleting the quote itself still takes its lines with it.
+ *   A rejected quote still takes its status (#2366 row 2): the rep moves it
+ *   back to Draft (`revise_quote`) and revises it there.
+ * - Refuses a user's create at a settled status (#2366 row 3): a quote starts
+ *   as Draft, In Review or Presented.
  * - Refuses a user's acceptance while the linked opportunity is held by an
  *   approval, because acceptance closes that deal as won (#2014).
  * - Derives `discount_amount` / `total_price` on a create carrying a
@@ -40,7 +44,7 @@ const quoteValidation: Hook = {
   // delete fires it too and is let through below, unjudged.
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
-  description: 'Freeze accepted/expired quotes and their lines; derive the header totals.',
+  description: 'Freeze settled quotes and their lines; refuse a settled create; derive the header totals.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope. ⚠️ Mirrored from `src/sales/objects/_refusal.ts` because a lowered
     // body has no module scope and `extractHookBody` THROWS on an import;
@@ -61,6 +65,13 @@ const quoteValidation: Hook = {
       err.userMessage = userMessage;
       return err;
     }
+    // The settled statuses by the labels the user sees, for the freeze
+    // refusals below (#2338 items 12 and 16): each keeps the status's API value
+    // in its diagnostic and names it by its label in the `userMessage` the
+    // console shows. The labels are written out because a lowered body cannot
+    // read the object's metadata; `test/refusal-labels.test.ts` reads them off
+    // `crm_quote`. `rejected` joined the settled set with #2366 row 2.
+    const STATUS_LABELS: Record<string, string> = { accepted: 'Accepted', rejected: 'Rejected', expired: 'Expired' };
     const { event, input, previous } = ctx;
 
     // ─── A settled quote's LINES are frozen with it (#2060 item 1, B-09) ──
@@ -101,8 +112,19 @@ const quoteValidation: Hook = {
         const q = changed && ctx.user?.id && typeof id === 'string' && id
           ? await (ctx.api as HookApi | undefined)?.object('crm_quote').findOne({ where: { id }, fields: ['quote_number', 'name', 'status'] })
           : null;
-        if (q?.status === 'accepted' || q?.status === 'expired') {
-          throw refuse(`Quote ${String(q.quote_number)} - ${String(q.name)} is ${q.status}, so its line items can no longer be added, changed or removed.`, 'RECORD_LOCKED', 409);
+        if (q?.status === 'accepted' || q?.status === 'rejected' || q?.status === 'expired') {
+          // Two sentences, one per reader (#2338 item 16), as the quote's own
+          // freeze below and the closed deal's line freeze (item 15) do. A
+          // rejected quote's lines are revised once it is back at Draft.
+          const what = `Quote ${String(q.quote_number)} - ${String(q.name)} is`;
+          const rest = 'so its line items can no longer be added, changed or removed.';
+          const revise = q.status === 'rejected' ? ' Revise it back to Draft to change them.' : '';
+          throw refuse(
+            `${what} ${q.status}, ${rest}${revise}`,
+            'RECORD_LOCKED',
+            409,
+            `${what} ${STATUS_LABELS[q.status]}, ${rest}${revise}`,
+          );
         }
       }
       return;
@@ -112,6 +134,27 @@ const quoteValidation: Hook = {
     // records a settled quote references deletable, and #2078 excluded
     // forbidding it. Its lines go with it, through the leg above.
     if (event === 'beforeDelete') return;
+
+    // ─── A quote starts unsettled (#2366 row 3) ─────────────────────────
+    //
+    // Measured on 18.2.0 before this: a rep's New Quote form offered
+    // Accepted, Rejected and Expired, and a REST create at any of them
+    // answered 201 — an accepted quote nobody reviewed, presented or got an
+    // answer to. The form now withholds the three (`quote.object.ts`, the
+    // options' `visibleWhen`), and this is the guard behind it: a USER's create
+    // at a settled status is refused. A system write is let through, like the
+    // freeze below — the seed and a system import carry settled history.
+    // The `userMessage` names the statuses by label.
+    if (event === 'beforeInsert' && ctx.user?.id && typeof input.status === 'string' && STATUS_LABELS[input.status]) {
+      const named = typeof input.name === 'string' && input.name.trim() ? `Quote ${input.name.trim()}` : 'A new quote';
+      const tail = 'A quote starts as Draft, In Review or Presented, and is accepted, rejected or expired from there.';
+      throw refuse(
+        `${named} cannot be created as ${input.status}. ${tail}`,
+        'VALIDATION_FAILED',
+        400,
+        `${named} cannot be created as ${STATUS_LABELS[input.status]}. ${tail}`,
+      );
+    }
 
     // The quote as every quote surface titles it. `crm_quote.display_title` is
     // `quote_number - name`; compose the same pair from the two stored columns
@@ -135,14 +178,20 @@ const quoteValidation: Hook = {
     // guarding them throws boot-time BodyRunner errors. Matches the system-write
     // convention used across the case/lead/opportunity hooks.
     if (event === 'beforeUpdate' && previous && ctx.user?.id) {
-      const frozen = previous.status === 'accepted' || previous.status === 'expired';
+      const frozen = previous.status === 'accepted' || previous.status === 'rejected' || previous.status === 'expired';
       if (frozen) {
         // `display_title` is the engine's, not the user's (#2230): the stored
         // title's expression is computed before this hook, so a write carries it
         // whenever the stored value differs from the computed one. That is only
         // ever a row stored before the title was (the backfill's re-save of an
         // unchanged `name`), because its inputs are frozen below.
-        const allowed = new Set(['internal_notes', 'display_title']);
+        //
+        // A REJECTED quote also takes its `status` (#2366 row 2): it is not
+        // terminal — the rep revises it by moving it back to Draft, and that
+        // move is the one way out. Which moves are legal stays the state
+        // machine's (`quote_status_progression`); this freeze judges only that
+        // nothing else changes on the same write.
+        const allowed = new Set(['internal_notes', 'display_title', ...(previous.status === 'rejected' ? ['status'] : [])]);
         // Framework-managed columns (ownership, audit timestamps) are re-stamped
         // by the 9.x runtime — never treat those system writes as edits to a
         // frozen quote, only user changes to business fields.
@@ -220,8 +269,24 @@ const quoteValidation: Hook = {
           );
           if (isReferenceCleanup) return;
 
+          // Two sentences, one per reader (#2338 item 12): the diagnostic keeps
+          // API names and the attempted keys, and the `userMessage` the console
+          // shows uses labels — users were shown "…is accepted; only
+          // internal_notes may be edited. Attempted: discount.". The full
+          // reasoning is on the opportunity freeze; `STATUS_LABELS` is at the
+          // top of the handler, shared with the line freeze.
           const what = `${subject()} is ${previous.status as string}`;
-          throw refuse(`${what}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`, 'RECORD_LOCKED', 409);
+          const rejected = previous.status === 'rejected';
+          throw refuse(
+            rejected
+              ? `${what}; only internal_notes and status may be edited — revise it back to draft first. Attempted: ${violating.join(', ')}.`
+              : `${what}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`,
+            'RECORD_LOCKED',
+            409,
+            rejected
+              ? `${subject()} is Rejected; revise it back to Draft to change it. Until then only its Internal Notes can be edited.`
+              : `${subject()} is ${STATUS_LABELS[previous.status as string]}; only its Internal Notes can still be edited.`,
+          );
         }
       }
 
@@ -242,9 +307,15 @@ const quoteValidation: Hook = {
       //   • `approval_status` `pending`: the Large Deal Approval's request is
       //     open, and its approval node locks the record (`lockRecord: true`)
       //     → the platform's RECORD_LOCKED. The column is the node's own
-      //     mirror of the live request (`approvalStatusField`); a recalled or
-      //     decided request leaves it `rejected` / `approved`, and neither
-      //     holds the deal (the close goes through on both);
+      //     mirror of the live request (`approvalStatusField`);
+      //   • `approval_status` anything but `approved` on a deal at or over the
+      //     large-deal line → `opportunity_lifecycle`'s refusal of a close-won
+      //     (#2334, widened by #2350 ruling B to `not_required` and an unset
+      //     verdict too, so a recalled deal or one never sent for approval is
+      //     held). Under the line only `pending` holds (the lock), and
+      //     `approved` never does. The line is a COPY of
+      //     `LARGE_DEAL_AMOUNT`, as in that hook (a lowered body cannot import
+      //     it); `test/deal-threshold-parity.test.ts` holds both copies to it;
       //   • `status_change_approval_status` `pending` or `rejected` (REQ-0006,
       //     once an install arms it) → `opportunity_lifecycle`'s refusal of a
       //     direct close; with a request open the platform lock holds too;
@@ -266,22 +337,36 @@ const quoteValidation: Hook = {
         const deal = dealId
           ? await (ctx.api as HookApi | undefined)?.object('crm_opportunity').findOne({
             where: { id: dealId },
-            fields: ['stage', 'approval_status', 'status_change_approval_status', 'qualification_approval_status'],
+            fields: ['stage', 'amount', 'approval_status', 'status_change_approval_status', 'qualification_approval_status'],
           }).catch(() => null)
           : null;
         // Each hold is named by the field label and value the rep sees on the
-        // deal itself, so the sentence points at where to look. A `rejected`
-        // Large Deal Approval holds nothing (measured: the close goes through).
+        // deal itself, so the sentence points at where to look. At or over the
+        // line, the Large Deal Approval holds every verdict but `approved`
+        // (#2334, #2350); under it, only a `pending` one (the lock).
+        const LARGE_DEAL_AMOUNT = 100000;
+        const large = deal ? Number(deal.amount) >= LARGE_DEAL_AMOUNT : false;
+        const VALUE_LABELS: Record<string, string> = { not_required: 'Not Required', pending: 'Pending', rejected: 'Rejected' };
+        const holds = (d: Record<string, unknown>, f: string): boolean => f === 'approval_status'
+          ? d[f] === 'pending' || (large && d[f] !== 'approved')
+          : d[f] === 'pending' || d[f] === 'rejected';
         const held = deal && !String(deal.stage).startsWith('closed_')
           ? [['approval_status', 'Approval Status'], ['status_change_approval_status', 'Status Change Approval'], ['qualification_approval_status', 'Qualification Approval']]
-            .filter(([f]) => deal[f] === 'pending' || (deal[f] === 'rejected' && f !== 'approval_status'))
-            .map(([f, label]) => `${label} is ${deal[f] === 'pending' ? 'Pending' : 'Rejected'}`)
+            .filter(([f]) => holds(deal, f))
+            .map(([f, label]) => `${label} is ${VALUE_LABELS[deal[f] as string] ?? VALUE_LABELS.not_required}`)
           : [];
+        // A large deal no request holds (`not_required`, unset) is waiting on
+        // nothing: what moves it on is a save of the deal, which sends it for
+        // approval — so the sentence says that instead of "once granted".
+        const unsent = !!deal && large && (deal.approval_status == null || deal.approval_status === 'not_required');
         // The quote has exactly one opportunity, so "its opportunity" names the
         // deal unambiguously — and ⛔ never by its record id.
         if (held.length > 0) {
           const what = `${subject()} cannot be accepted while its opportunity is held by an approval`;
-          throw refuse(`${what} (${held.join('; ')}): accepting it would close that deal as won. Accept it once the approval is granted.`, 'RECORD_LOCKED', 409);
+          const next = unsent
+            ? 'Save the opportunity to send it for approval, then accept the quote once it is approved.'
+            : 'Accept it once the approval is granted.';
+          throw refuse(`${what} (${held.join('; ')}): accepting it would close that deal as won. ${next}`, 'RECORD_LOCKED', 409);
         }
       }
     }
@@ -430,7 +515,7 @@ const quoteAcceptedContractDraft: Hook = {
      * `crm_contract.payment_terms`'s own option default `net_30` on every
      * accepted quote, including one negotiated at `due_on_receipt`; and the
      * contract's `payment_terms` is one of the fields
-     * `src/revenue/flows/billing-handoff-contract-activated.flow.ts` POSTs to
+     * `src/sales/flows/billing-handoff-contract-activated.flow.ts` POSTs to
      * billing when the contract activates, so a defaulted term becomes an
      * invoicing term.
      *
@@ -460,7 +545,7 @@ const quoteAcceptedContractDraft: Hook = {
      *     auto-drafted contract in the app is a subscription and the other
      *     five types are unreachable on this path. It does not stay here
      *     either —
-     *     `src/revenue/flows/billing-handoff-contract-activated.flow.ts`
+     *     `src/sales/flows/billing-handoff-contract-activated.flow.ts`
      *     POSTs `contract_type` to billing when the contract activates;
      *   - `start_date` — the one member that is not a literal: the date the
      *     quote happened to be ACCEPTED, which is not necessarily the date the

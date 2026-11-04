@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
+import { ExpressionEngine } from '@objectstack/formula';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
@@ -212,6 +213,21 @@ describe('the hook is the guard that actually speaks', () => {
     });
   });
 
+  it('tells the user the same refusal in field labels (#2338 item 14)', async () => {
+    // The diagnostic above keeps the API keys; what the console shows is
+    // `userMessage`, and a user reads "Company", not "company".
+    const refusalOf = (p: Promise<unknown>): Promise<AnyRec> => p.then(() => ({}), (e: AnyRec) => e);
+    const lead = await convertedLead();
+    const one = await refusalOf(edit(lead, { company: 'Globex' }));
+    expect([one.code, one.status]).toEqual(['RECORD_LOCKED', 409]);
+    expect(one.message).toMatch(/\(attempted: company\b/);
+    expect(one.userMessage).toBe(
+      'Cannot change Company on converted lead Ada Lovelace - Acme; only its Description and Notes can still be edited. Make changes on the converted records instead.',
+    );
+    const two = await refusalOf(edit(lead, { email: 'changed@globex.example.com', rating: 5 }));
+    expect(two.userMessage).toMatch(/^Cannot change Email and Lead Score on converted lead Ada Lovelace - Acme;/);
+  });
+
   it('still rejects fields the deleted validation never covered', async () => {
     await expect(editConverted({ rating: 5 })).rejects.toThrow(/attempted: rating/);
   });
@@ -229,5 +245,29 @@ describe('the hook is the guard that actually speaks', () => {
       first_name: 'Ada', last_name: 'Open', company: 'Acme', email: `open${++k}@acme.example.com`, status: 'qualified', owner_id: rep.id,
     }]);
     expect((await edit(lead!, { company: 'Globex' })).company).toBe('Globex');
+  });
+});
+
+describe('the record page offers no Edit on a converted lead (#2366 row 1)', () => {
+  // The lock above is the guard; this is the offer. Before it, a converted lead
+  // drew Edit (and inline editing) and every save but Description and Notes
+  // ended in the 409 above. Hiding Edit also removes inline editing (measured on
+  // 18.2.0); the two narrative fields stay writable through the API, where the
+  // lock lets them through.
+  const editWhen = (): unknown => lead?.userActions?.edit?.visibleWhen;
+  const offered = (record: AnyRec): boolean => {
+    const result = ExpressionEngine.evaluate<boolean>(editWhen() as never, { record });
+    expect(result.ok, JSON.stringify(result)).toBe(true);
+    return (result as AnyRec).value === true;
+  };
+
+  it('hides Edit on a converted lead', () => {
+    expect(editWhen(), 'crm_lead.userActions.edit.visibleWhen').toBeTruthy();
+    expect(offered({ is_converted: true, status: 'converted' })).toBe(false);
+  });
+
+  it('CONTROL — offers Edit on an unconverted lead, and on the first render before the record loads', () => {
+    expect(offered({ is_converted: false, status: 'qualified' })).toBe(true);
+    expect(offered({})).toBe(true);
   });
 });

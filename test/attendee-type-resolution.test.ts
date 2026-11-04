@@ -112,6 +112,13 @@ describe('the four resolutions are one declared correspondence', () => {
     }
   });
 
+  it('shows every resolution column in the attendee panel on a meeting (#2338 item 8)', () => {
+    // The panel reads `relatedListColumns` on this lookup. Without it, it fell
+    // back to `highlightFields` and showed no name at all.
+    const columns = (EVENT_ATTENDEE.fields.crm_event.relatedListColumns ?? []) as string[];
+    expect(columns.slice(0, ATTENDEE_RESOLUTIONS.length)).toEqual(ATTENDEE_RESOLUTIONS.map((r) => r.column));
+  });
+
   it('reads every resolution column in both rules, and pairs it with its own type', () => {
     // The mechanical guard against a fifth resolution being added to the table
     // while a hand-written rule branch is forgotten — the #740 failure exactly.

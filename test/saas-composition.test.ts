@@ -16,8 +16,10 @@ import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
  * The SaaS / multi-org composition (#1361).
  *
  * `HOTCRM_COMPOSITION=saas` assembles the shape a multi-org operator deploys on
- * the enterprise runtime under a walled tenancy posture. Two registrations
- * differ from the community app and nothing else does; these tests pin BOTH
+ * the enterprise runtime under a walled tenancy posture. Three registrations
+ * differ from the community app — the seed families, the admin permission set,
+ * and the Admin Manual's audience, which follows that set (#2327) — and
+ * nothing else does; these tests pin BOTH
  * directions, because the two failure modes are opposite and equally bad:
  *
  *  - the SaaS shape quietly keeping something (a tenant receives another
@@ -119,7 +121,7 @@ describe('the default composition is the community app, untouched', () => {
     expect(objectsOf(serviceStack.data)).toEqual(['crm_case', 'crm_knowledge_article']);
     expect(objectsOf(revenueStack.data)).toEqual(objectsOf(RevenueSeedData));
     expect(objectsOf(revenueStack.data)).toEqual([
-      'crm_product', 'crm_opportunity_line_item', 'crm_contract', 'crm_quote', 'crm_quote_line_item',
+      'crm_product', 'crm_price_book', 'crm_price_book_entry', 'crm_opportunity_line_item', 'crm_quote', 'crm_quote_line_item',
     ]);
     expect(objectsOf(marketingStack.data)).toEqual(objectsOf(MarketingSeedData));
     expect(objectsOf(marketingStack.data)).toEqual(['crm_campaign', 'crm_campaign_member', 'crm_campaign_member']);
@@ -136,7 +138,7 @@ describe('the default composition is the community app, untouched', () => {
       'crm_account',      // sales
       'crm_case',         // service
       'crm_campaign',     // marketing
-      'crm_contract',     // revenue
+      'crm_contract',     // contracts — the app package's since plan item 11
     ]) {
       expect(objects.has(object), `the default composition dropped ${object} seeds`).toBe(true);
     }
@@ -220,6 +222,18 @@ describe('HOTCRM_COMPOSITION=saas', () => {
     expect(setNames).toEqual(
       [...communityNames.filter((n) => n !== 'system_admin'), 'tenant_admin'].sort(),
     );
+  });
+
+  it('gates the Admin Manual on tenant_admin, the admin set this shape registers (#2327)', () => {
+    // A book gated on a set the install does not register is readable by
+    // nobody, the administrator included (measured on 18.2.0), so the audience
+    // must move with the set — in both directions.
+    const audienceOf = (books: AnyRec[] = []) => books.find((b) => b.name === 'crm_admin_manual')?.audience;
+    expect(audienceOf(saas.books as AnyRec[])).toEqual({ permissionSet: 'tenant_admin' });
+    expect(audienceOf((defaultStack as AnyRec).books as AnyRec[])).toEqual({ permissionSet: 'system_admin' });
+    // The other books are the community app's, unchanged.
+    const others = (books: AnyRec[] = []) => books.filter((b) => b.name !== 'crm_admin_manual');
+    expect(others(saas.books as AnyRec[])).toEqual(others((defaultStack as AnyRec).books as AnyRec[]));
   });
 
   it('keeps the demo staffing table out of the stack here too (#640)', () => {

@@ -22,6 +22,18 @@ const DUPLICATE_STATUS_HELP = 'Confirmado significa que una persona revisó los 
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
  * `src/sales/translations/es-ES.ts`.
  */
+/**
+ * The bulk Delete on every opportunity grid list (#2338 item 4, `GRID_BAR` in
+ * `src/sales/views/opportunity.view.ts`), translated once and named by each view.
+ */
+const OPPORTUNITY_BULK_DELETE = {
+  delete: {
+    label: 'Eliminar',
+    confirmLabel: 'Eliminar',
+    confirmText: '¿Eliminar permanentemente {{count}} oportunidad(es)? Esta acción no se puede deshacer.',
+  },
+};
+
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
     _validations: {
@@ -78,7 +90,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       industry: { label: 'Industria' },
       mobile: { label: 'Móvil' },
       website: { label: 'Sitio Web' },
-      rating: { label: 'Puntuación de Prospecto', help: 'Puntuación de calidad del prospecto (1-5 estrellas)' },
+      rating: { label: 'Puntuación de Prospecto', help: 'Si se deja en blanco, el prospecto nuevo se puntúa automáticamente (1-5 estrellas) según el dominio del correo, el teléfono, el cargo, el sector y el tamaño de la empresa.' },
       next_followup_date: { label: 'Próxima Fecha de Seguimiento' },
       last_contacted_date: { label: 'Último Contacto' },
       need_type: {
@@ -261,7 +273,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: 'Agregar a Campaña',
-        successMessage: '¡Prospecto agregado a la campaña!',
+        successMessage: '{{ result.output.campaignName }}: {{ result.output.addedCount }} agregado(s), {{ result.output.alreadyCount }} ya era(n) miembro(s).',
         params: {
           campaignId: { label: 'Campaña' },
         },
@@ -412,26 +424,28 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     _views: {
       tender_this_quarter: {
         label: 'Licitaciones de Este Trimestre',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: 'No hay licitaciones previstas este trimestre',
           message: 'Esta pestaña muestra los negocios abiertos cuya fecha de licitación del cliente cae dentro del trimestre actual. Registra la Fecha Prevista de Licitación en un negocio para verlo aquí.',
         },
       },
-      open_opportunities: { label: 'Oportunidades Abiertas' },
-      all_opportunities: { label: 'Todas las Oportunidades' },
+      open_opportunities: { label: 'Oportunidades Abiertas', bulkActions: OPPORTUNITY_BULK_DELETE },
+      all_opportunities: { label: 'Todas las Oportunidades', bulkActions: OPPORTUNITY_BULK_DELETE },
       pipeline_kanban: { label: 'Pipeline de Ventas' },
       close_date_calendar: { label: 'Calendario de Pronóstico' },
       deal_timeline: { label: 'Línea de Tiempo' },
       deal_gallery: { label: 'Galería de Negocios' },
-      my_open_deals: { label: 'Mis Negocios Abiertos' },
+      my_open_deals: { label: 'Mis Negocios Abiertos', bulkActions: OPPORTUNITY_BULK_DELETE },
       closing_this_quarter: {
         label: 'Cierres de Este Trimestre',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: 'No hay negocios que cierren este trimestre',
           message: 'Esta pestaña muestra los negocios abiertos en categoría Compromiso o Mejor Caso cuya fecha de cierre cae dentro del trimestre actual. Ahora mismo no hay ninguno; los negocios que cierran más adelante están en la pestaña Negocios Abiertos.',
         },
       },
-      stale_opportunities: { label: '⚠️ Oportunidades Estancadas · Más Tiempo en Etapa Primero' },
+      stale_opportunities: { label: '⚠️ Oportunidades Estancadas · Más Tiempo en Etapa Primero', bulkActions: OPPORTUNITY_BULK_DELETE },
     },
     _sections: {
       // Claves de sección del objeto (opportunity.object.ts) que usan los
@@ -461,7 +475,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: 'Clonar Oportunidad',
-        successMessage: '¡Oportunidad clonada con éxito!',
+        successMessage: 'Se creó «{{ result.name }}». Ahora está en la copia.',
       },
       mass_update_stage: {
         label: 'Actualizar Etapa',
@@ -522,7 +536,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         message: 'El inicio del periodo debe ser el primer día del periodo: p. ej. 2026-08-01 para agosto de 2026.',
       },
       quarter_starts_on_quarter_boundary: {
-        message: 'Una previsión trimestral debe comenzar en un límite de trimestre: 1 de enero, 1 de abril, 1 de julio o 1 de octubre.',
+        message: 'En una previsión trimestral, el Inicio del periodo debe caer en un límite de trimestre: 1 de enero, 1 de abril, 1 de julio o 1 de octubre.',
       },
       snapshot_amounts_non_negative: {
         message: 'Los importes de la instantánea no pueden ser negativos.',

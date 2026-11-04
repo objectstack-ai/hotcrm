@@ -26,6 +26,15 @@ type Flow = Automation.Flow;
  * default, a new account is born blank, and the start condition below fires on
  * the blank.
  *
+ * ## An account lead conversion creates is not submitted (#2285)
+ *
+ * Maintainer ruling B on #2285: an account whose `converted_from_lead_id` is
+ * set skips this flow. The lead was already qualified, so a conversion is not
+ * a second application, and the rep was never told one had been opened. Such
+ * an account stays blank in `approval_status`, which is what "no request was
+ * ever opened" reads as everywhere else. Every other account, from the New
+ * form, a REST create or an import, enters exactly as before.
+ *
  * ## `pending` is written by the request, not by the field default (#2067)
  *
  * The approval node's `approvalStatusField` mirror writes `pending` onto the
@@ -94,7 +103,14 @@ export const AccountApprovalFlow: Flow = {
         // table. A flow condition is strict CEL on every run, and an unguarded
         // read against a driver that omits absent columns aborts — which from
         // 17.0.0-rc.2 FAILS THE RUN rather than skipping it.
-        condition: P`!has(record.approval_status) || isBlank(record.approval_status)`,
+        //
+        // An account Convert Lead CREATED is not submitted (#2285 ruling B):
+        // qualifying the lead was the gate, and converting it is not a second
+        // application. `create_account` writes `converted_from_lead_id` in the
+        // same insert, and `account_protection` lets nothing but a flow run
+        // write it, so the New form and a REST create still land here. Same
+        // TOTAL "x holds no value" form as the first term.
+        condition: P`(!has(record.approval_status) || isBlank(record.approval_status)) && (!has(record.converted_from_lead_id) || isBlank(record.converted_from_lead_id))`,
       },
     },
     {
@@ -176,7 +192,14 @@ export const AccountApprovalFlow: Flow = {
     // Approval-node branch labels — the engine resumes down the out-edge whose
     // `label` matches the recorded decision.
     { id: 'e3', source: 'account_review', target: 'notify_approved', type: 'default', label: 'approve' },
-    { id: 'e4', source: 'account_review', target: 'notify_rejected', type: 'default', label: 'reject' },
+    // A recall resumes down `reject` as well, with `decision: 'recall'`: it
+    // ends the run without the rejection's notice. The pair partitions, and an
+    // unreadable decision notifies (#2349, the full note on
+    // `opportunity_approval`'s `e4`).
+    { id: 'e4', source: 'account_review', target: 'notify_rejected', type: 'conditional', label: 'reject',
+      condition: P`!has(vars.account_review) || !has(vars.account_review.decision) || vars.account_review.decision != "recall"` },
+    { id: 'e4_recall', source: 'account_review', target: 'end', type: 'conditional', label: 'reject',
+      condition: P`has(vars.account_review) && has(vars.account_review.decision) && vars.account_review.decision == "recall"` },
     { id: 'e6', source: 'notify_approved', target: 'end', type: 'default' },
     { id: 'e8', source: 'notify_rejected', target: 'end', type: 'default' },
   ],

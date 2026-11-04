@@ -19,7 +19,7 @@ HotCRM uses state machines on **five** objects:
 
 All five are declared the same way — a named `state_machine` validation rule on the object, over that object's lifecycle field (`status`, or `stage` on opportunities). Cases, contracts and quotes are not a lighter mechanism than leads and opportunities; they are the same one. The top-level `stateMachines` key was removed in platform 7.7 and every machine moved onto its object.
 
-**A declared route is advice, not a gate — except on contracts.** The lead, opportunity, case and quote rules carry **warning** severity, so a move outside the transition table is written to the server log — *"Invalid quote status transition"*, and so on — and **the save still goes through**. The contract rule, `contract_status_progression`, carries **error** severity: a move outside its table is refused and the contract keeps its status. Contracts are the exception because both of their end states are final — a renewal is a new contract, never a revived one — and activation promotes the account and hands the contract to billing, so a contract that skipped approval or came back from *Expired* would count as live everywhere downstream. On every object, a rule judges only a change of the status: an edit that leaves it as it is never meets the rule. Nor is a record checked when it is *created*: the rules compare a new value against the previous one, so they only run on update, and a record imported straight into a late state passes untouched — a contract included. What a warning-level table buys you is a declared, machine-readable route that automation, reports and the Copilot can rely on — not a lock on the field.
+**A declared route is advice, not a gate — except on contracts.** The lead, opportunity, case and quote rules carry **warning** severity, so a move outside the transition table is written to the server log — *"Invalid opportunity stage transition"*, and so on — and **the save still goes through**. The contract rule, `contract_status_progression`, carries **error** severity: a move outside its table is refused and the contract keeps its status. Contracts are the exception because both of their end states are final — a renewal is a new contract, never a revived one — and activation promotes the account and hands the contract to billing, so a contract that skipped approval or came back from *Expired* would count as live everywhere downstream. On every object, a rule judges only a change of the status: an edit that leaves it as it is never meets the rule. Nor is a record checked when it is *created*: the rules compare a new value against the previous one, so they only run on update, and a record imported straight into a late state passes untouched — a contract included. What a warning-level table buys you is a declared, machine-readable route that automation, reports and the Copilot can rely on — not a lock on the field.
 
 **Campaigns have no state machine, and that is deliberate.** A campaign's status is descriptive (*Planning / In Progress / Completed / Aborted*) rather than a controlled lifecycle, and the same is true of the status fields on campaign members, events, knowledge articles and tasks. A transition table on any of them would warn on ordinary edits and teach users to ignore the warning.
 
@@ -58,11 +58,8 @@ Two of those edges have machinery behind them. Moving to *Unqualified* needs a *
 
 ```
 Prospecting → Qualification → Needs Analysis → Proposal → Negotiation
-                                                  │            │
-                                                  └─────┬──────┘
-                                                        ▼
-                                                   Closed Won
 
+Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Won
 Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Lost
 ```
 
@@ -72,15 +69,15 @@ There are **two** closed stages, not three: *Closed Won* and *Closed Lost*. Ther
 
 | From | May move to | Notes |
 | --- | --- | --- |
-| Prospecting | Qualification, Proposal, Closed Lost | |
-| Qualification | Needs Analysis, Proposal, Closed Lost | |
-| Needs Analysis | Proposal, Closed Lost | 40% default probability, *Best Case* forecast category |
+| Prospecting | Qualification, Proposal, Closed Won, Closed Lost | |
+| Qualification | Needs Analysis, Proposal, Closed Won, Closed Lost | |
+| Needs Analysis | Proposal, Closed Won, Closed Lost | 40% default probability, *Best Case* forecast category |
 | Proposal | Negotiation, Closed Won, Closed Lost | |
 | Negotiation | Closed Won, Closed Lost | |
 | Closed Won | — | Terminal |
 | Closed Lost | — | Terminal |
 
-Two of those edges exist for the CPQ path rather than for a rep clicking through stages: *→ Proposal* is legal from every pre-proposal stage because the `quote_generation` flow fast-forwards the deal to *Proposal* the moment a quote is generated, which can happen at any open stage — though where your organisation requires qualification approval (立项), not before the deal is approved ([Opportunity Qualification](/docs/sales/opportunity-qualification#qualification-approval)); and *Proposal → Closed Won* is legal because the `quote_on_accepted` hook wins the linked deal straight from an accepted quote, with no separate negotiation step.
+Two of those edges exist for the CPQ path rather than for a rep clicking through stages: *→ Proposal* is legal from every pre-proposal stage because the `quote_generation` flow fast-forwards the deal to *Proposal* the moment a quote is generated, which can happen at any open stage — though where your organisation requires qualification approval (立项), not before the deal is approved ([Opportunity Qualification](/docs/sales/opportunity-qualification#qualification-approval)); and *Proposal → Closed Won* is legal because the `quote_on_accepted` hook wins the linked deal straight from an accepted quote, with no separate negotiation step. And every open stage may close: *→ Closed Won* is legal from each of them, as *→ Closed Lost* is, so a deal won early saves without the warning.
 
 That close is never the way around an approval. While an approval holds the deal — its large-deal approval pending, or, where they are switched on, its status-change or qualification approval pending or rejected — accepting the quote is itself refused, so an accepted quote never sits on a deal it could not close. See [Quotes](/docs/sales/quotes#built-in-rules).
 
@@ -99,7 +96,7 @@ The heading is fair for the first three, unlike the transition tables above them
 
 ## What a state machine buys you
 
-Not prevention, on four of the five — the contract's table is the one that refuses a move (see above). On the other four, everything this section used to list as impossible still happens exactly as it did before the table was declared: a rep can mark a lead *Converted* by accident, an opportunity can go from *Prospecting* straight to *Closed Won*, and records can skip stages. Each of those writes one warning to the server log and is then saved. So a funnel report does **not** "reflect reality" by virtue of a table existing — it reports whatever stages the records actually passed through.
+Not prevention, on four of the five — the contract's table is the one that refuses a move (see above). On the other four, everything this section used to list as impossible still happens exactly as it did before the table was declared: a rep can mark a lead *Converted* by accident, an opportunity can go from *Prospecting* straight to *Negotiation*, and records can skip stages. Each of those writes one warning to the server log and is then saved. So a funnel report does **not** "reflect reality" by virtue of a table existing — it reports whatever stages the records actually passed through.
 
 What the table does buy you is the route itself, **written down in one machine-readable place**:
 

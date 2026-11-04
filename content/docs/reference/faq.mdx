@@ -149,7 +149,7 @@ Nothing logs it, and nothing will until an inbox connector ships. HotCRM has no 
 
 ### My DocuSign envelope isn't updating the contract.
 
-Nothing sent that envelope, and nothing is listening for one. HotCRM has no DocuSign connector — `src/` carries no connector metadata and no installed platform package supplies one — so there is no integration log to open and no webhook delivery to retry. **Setup → Integrations** is a real group, but as this app ships it holds exactly the two entries the platform contributes — *Connect an Agent* and *Datasources* — and no vendor mounts anything under it. The DocuSign row on [Integrations](/docs/guides/integrations) is design intent, not a switch. Until it ships, a quote's or a contract's status is a field someone sets by hand and the signed document is a file someone attaches — see [Contracts](/docs/revenue/contracts).
+Nothing sent that envelope, and nothing is listening for one. HotCRM has no DocuSign connector — `src/` carries no connector metadata and no installed platform package supplies one — so there is no integration log to open and no webhook delivery to retry. **Setup → Integrations** is a real group, but as this app ships it holds exactly the two entries the platform contributes — *Connect an Agent* and *Datasources* — and no vendor mounts anything under it. The DocuSign row on [Integrations](/docs/guides/integrations) is design intent, not a switch. Until it ships, a quote's or a contract's status is a field someone sets by hand and the signed document is a file someone attaches — see [Contracts](/docs/sales/contracts).
 
 ### Stripe says customer X exists; HotCRM says no.
 

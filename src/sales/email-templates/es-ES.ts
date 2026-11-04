@@ -19,6 +19,16 @@ export const esES: EmailTemplatePack = {
     subject: 'Nuevo contacto: {{first_name}} {{last_name}}',
     bodyHtml: '<p>{{first_name}} {{last_name}} se ha añadido como contacto. Ponte en contacto para darle la bienvenida.</p>',
   },
+  'crm.contract_expired': {
+    label: 'Contrato vencido',
+    subject: 'Contrato vencido: {{contract_number}}',
+    bodyHtml: '<p>El contrato {{contract_number}} alcanzó su fecha de fin y se ha marcado como vencido.</p>',
+  },
+  'crm.contract_renewal': {
+    label: 'Renovación de contrato pendiente',
+    subject: 'Renovación de contrato pendiente: {{contract_number}}',
+    bodyHtml: '<p>El contrato {{contract_number}} finaliza el {{end_date}}. Inicia ya la conversación de renovación.</p>',
+  },
   'crm.deal_stalled': {
     label: 'Oportunidad estancada',
     subject: 'Oportunidad estancada: {{name}}',
@@ -73,5 +83,12 @@ export const esES: EmailTemplatePack = {
     label: 'Tarea urgente',
     subject: 'Tarea urgente: {{subject}}',
     bodyHtml: '<p>Se te ha asignado una tarea urgente "{{subject}}" que requiere atención.</p>',
+  },
+  // Sent by `contract_drafted_notice` when accepting a quote drafts its
+  // contract (#2371 row 6).
+  'crm.contract_drafted': {
+    label: 'Contrato redactado',
+    subject: 'Contrato redactado: {{contract_number}}',
+    bodyHtml: '<p>Al aceptar la cotización se redactó el contrato {{contract_number}}. Su plazo y su tipo de contrato son valores iniciales: revíselos antes de activarlo.</p>',
   },
 };

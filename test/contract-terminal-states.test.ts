@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { Contract } from '../src/revenue/objects/contract.object';
+import { Contract } from '../src/sales/objects/contract.object';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**

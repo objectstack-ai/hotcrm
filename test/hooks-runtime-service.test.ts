@@ -314,12 +314,12 @@ describe('contract_validation', () => {
     await expect(managerContract({ start_date: '2026-01-01', end_date: '2026-12-15', contract_term_months: 12 })).resolves.toBeTruthy();
   });
 
-  it('refuses to shrink end_date after activation', async () => {
+  it('refuses to move End Date earlier after activation, naming the field by its label', async () => {
     // Shrunk within the term's one-month tolerance, so the shrink rule is the
     // one that answers.
     const contract = await contractOf({ status: 'activated', start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 });
     await expect(verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2026-12-15' }, as(manager)))
-      .rejects.toThrow(/Cannot shrink end_date/);
+      .rejects.toThrow(/End Date cannot move earlier/);
   });
 
   it('allows extending end_date after activation', async () => {
@@ -335,17 +335,24 @@ describe('contract_validation', () => {
   });
 });
 
-describe('contract_on_activation', () => {
+describe('contract_signed_date_stamp', () => {
   const TERM = { start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 };
-  // Activation from In Approval, the one edge into `activated` the status
-  // table holds (#2192): `contract_status_progression` refuses draft → activated.
-  const activate = (id: string) => verify.hooks.run('crm_contract', 'update', { id, status: 'activated' }, as(manager));
+  const activate = (id: string, patch: Rec = {}) =>
+    verify.hooks.run('crm_contract', 'update', { id, status: 'activated', ...patch }, as(manager));
 
-  it('stamps signed_date and promotes the account to customer', async () => {
+  it('stamps signed_date on the activating write itself, in one contract write (#2325)', async () => {
+    // Read straight after the save, with no settling: the date is on the row
+    // the activation wrote, which is the row the billing hand-off flow reads.
     const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'prospect' });
-    await activate(contract.id);
-    await settles('crm_contract', contract.id, (c) => expect(c.signed_date).toBe(today()));
-    await settles('crm_account', String(contract.crm_account), (a) => expect(a.type).toBe('customer'));
+    const engine = await engineWritesDuring(() => activate(contract.id));
+    expect((await stored('crm_contract', contract.id)).signed_date).toBe(today());
+    expect(engine.of('crm_contract', 'update'), 'a second write stamped the date after the activation').toHaveLength(1);
+  });
+
+  it('keeps a signed_date typed in the activating edit', async () => {
+    const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'customer' });
+    await activate(contract.id, { signed_date: '2025-06-06' });
+    expect((await stored('crm_contract', contract.id)).signed_date).toBe('2025-06-06');
   });
 
   it('does not overwrite an existing signed_date', async () => {
@@ -358,13 +365,32 @@ describe('contract_on_activation', () => {
     expect((await stored('crm_contract', contract.id)).signed_date).toBe('2025-05-05');
   });
 
+  it('stamps nothing on a save that does not activate', async () => {
+    const contract = await contractOf({ status: 'draft', ...TERM }, { type: 'prospect' });
+    await verify.hooks.run('crm_contract', 'update', { id: contract.id, status: 'in_approval' }, as(manager));
+    expect((await stored('crm_contract', contract.id)).signed_date ?? null).toBeNull();
+  });
+});
+
+describe('contract_on_activation', () => {
+  const TERM = { start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 };
+  // Activation from In Approval, the one edge into `activated` the status
+  // table holds (#2192): `contract_status_progression` refuses draft → activated.
+  const activate = (id: string) => verify.hooks.run('crm_contract', 'update', { id, status: 'activated' }, as(manager));
+
+  it('promotes the account to customer', async () => {
+    const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'prospect' });
+    await activate(contract.id);
+    await settles('crm_account', String(contract.crm_account), (a) => expect(a.type).toBe('customer'));
+  });
+
   it('creates NO renewal task — that belongs to the contract_renewal flow', async () => {
     // The activation-time task this hook used to create hardcoded a 60-day
     // notice and duplicated the flow, which honours renewal_notice_days.
     const contract = await contractOf({ status: 'in_approval', ...TERM }, { type: 'prospect' });
     const engine = await engineWritesDuring(async () => {
       await activate(contract.id);
-      await settles('crm_contract', contract.id, (c) => expect(c.signed_date).toBe(today()));
+      await settles('crm_account', String(contract.crm_account), (a) => expect(a.type).toBe('customer'));
     });
     expect(engine.of('crm_task', 'insert')).toHaveLength(0);
   });
@@ -1477,6 +1503,24 @@ describe('task_completion', () => {
     expect(done.completed_date).toBeTruthy();
     expect(done.progress_percent).toBe(100);
     expect(done.is_completed).toBe(true);
+  });
+
+  it('clears completed_date when a completed task is reopened (#2338 item 9)', async () => {
+    const task = await taskOf({ status: 'in_progress' });
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'completed' }, as(rep));
+    expect((await stored('crm_task', task.id)).completed_date).toBeTruthy();
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'in_progress' }, as(rep));
+    const reopened = await stored('crm_task', task.id);
+    expect(reopened.completed_date ?? null).toBeNull();
+    expect(reopened.is_completed).toBe(false);
+  });
+
+  it('keeps completed_date on an edit that leaves a completed task completed', async () => {
+    const task = await taskOf({ status: 'in_progress' });
+    await verify.hooks.run('crm_task', 'update', { id: task.id, status: 'completed' }, as(rep));
+    const stamp = (await stored('crm_task', task.id)).completed_date;
+    await verify.hooks.run('crm_task', 'update', { id: task.id, description: 'Follow-up notes' }, as(rep));
+    expect((await stored('crm_task', task.id)).completed_date).toBe(stamp);
   });
 
   it('flags an overdue open task and clears the flag once completed', async () => {

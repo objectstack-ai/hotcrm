@@ -6,7 +6,8 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * 简体中文 (zh-CN) — `objects` translations for the COMMERCE family:
  * what gets sold and on what paper — quotes, contracts, products.
  *
- * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`.
+ * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`,
+ * `crm_price_book`, `crm_price_book_entry`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -26,7 +27,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         message: '失效日期必须晚于报价日期',
       },
       quote_status_progression: {
-        message: '无效的报价单状态流转',
+        message: '这次状态变更不在报价单的常规路径上：草稿 → 审核中 → 已提交 → 已接受。审核中也可以退回草稿或变为已拒绝，已提交可以变为已拒绝，已拒绝的报价单回到草稿。草稿、审核中或已提交可以变为已过期。已接受和已过期是最终状态。',
       },
     },
     label: '报价单',
@@ -83,10 +84,16 @@ export const commerce: Record<string, ObjectTranslationData> = {
       addresses_and_notes: { label: '地址与备注' },
     },
     _actions: {
-      print_quote: {
-        label: '打印报价',
-        successMessage: '报价 PDF 已归档到附件。',
+      submit_quote_for_review: { label: '提交审核', successMessage: '报价单 {{ record.display_title }} 已提交审核。' },
+      mark_quote_presented: { label: '标记为已提交', successMessage: '报价单 {{ record.display_title }} 已标记为已提交。' },
+      accept_quote: {
+        label: '接受',
+        confirmText: '接受此报价？报价将被冻结，其商机关闭为赢单，并起草一份合同。',
+        successMessage: '报价单 {{ record.display_title }} 已接受。',
       },
+      reject_quote: { label: '拒绝', successMessage: '报价单 {{ record.display_title }} 已拒绝。修订后可重新报价。' },
+      revise_quote: { label: '修订', successMessage: '报价单 {{ record.display_title }} 已退回草稿。' },
+      print_quote: { label: '打印报价', successMessage: '报价 PDF 已归档到附件。' },
     },
   },
   crm_quote_line_item: {
@@ -239,6 +246,49 @@ export const commerce: Record<string, ObjectTranslationData> = {
       product_info: { label: '产品信息' },
       pricing_info: { label: '定价' },
       media: { label: '媒体' },
+    },
+  },
+  crm_price_book: {
+    _validations: {
+      valid_to_after_valid_from: {
+        message: '有效期至不能早于有效期自',
+      },
+    },
+    label: '价格表',
+    pluralLabel: '价格表',
+    description: '一组命名的产品价格：标准价、伙伴或区域价，或促销价',
+    fields: {
+      owner_id: { label: '价格表负责人' },
+      name: { label: '价格表名称' },
+      description: { label: '描述' },
+      is_active: { label: '是否启用' },
+      is_standard: { label: '标准价格表' },
+      valid_from: { label: '有效期自' },
+      valid_to: { label: '有效期至' },
+    },
+    _sections: {
+      basic: { label: '价格表信息' },
+      validity: { label: '有效期' },
+    },
+  },
+  crm_price_book_entry: {
+    _validations: {
+      price_not_negative: {
+        message: '标价不能为负数',
+      },
+    },
+    label: '价格表条目',
+    pluralLabel: '价格表条目',
+    description: '某个产品在某个价格表中的价格',
+    fields: {
+      entry_number: { label: '条目编号' },
+      crm_price_book: { label: '价格表' },
+      crm_product: { label: '产品' },
+      list_price: { label: '标价' },
+      is_active: { label: '是否启用' },
+    },
+    _sections: {
+      basic: { label: '条目信息' },
     },
   },
 };

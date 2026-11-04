@@ -3,19 +3,22 @@
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 import { PrintServicePlugin } from '@objectstack/service-print';
 
-import { PrintQuoteAction } from './actions/index.js';
+import {
+  SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
+  PrintQuoteAction,
+} from './actions/index.js';
+import { CrmRevenueManual } from './books/index.js';
 import { RevenueEmailTemplates } from './email-templates/index.js';
+import { ProductDataset } from './datasets/index.js';
+import { QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow } from './flows/index.js';
 import {
-  ContractRenewalFlow, QuoteExpirationFlow, ContractExpirationFlow, BillingHandoffContractActivatedFlow,
-  QuotePrintPresentedFlow,
-} from './flows/index.js';
-import { Contract, OpportunityLineItem, Product, Quote, QuoteLineItem } from './objects/index.js';
+  OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem,
+} from './objects/index.js';
 import {
-  contractHook, opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
+  opportunityLineItemHook, priceBookEntryHook, priceBookHook, productHook, quoteHook, quoteLineItemHook,
 } from './objects/hooks.js';
 import { QuoteDetailPage, QuotePrintPage } from './pages/index.js';
-import { PaymentTermsPicklist } from './picklists/index.js';
-import { ContractViews, ProductViews, QuoteViews } from './views/index.js';
+import { ProductViews, QuoteViews } from './views/index.js';
 
 /**
  * The collections of this package that the artifact-wide sweeps also read,
@@ -26,24 +29,17 @@ import { ContractViews, ProductViews, QuoteViews } from './views/index.js';
  * `*.hook.ts` may default-export an ARRAY of hooks.
  */
 export const revenueHooks = [
-  contractHook, opportunityLineItemHook, productHook, quoteHook, quoteLineItemHook,
+  opportunityLineItemHook, priceBookHook, priceBookEntryHook, productHook, quoteHook, quoteLineItemHook,
 ].flat();
 
 /**
  * This package's flows — see {@link revenueHooks}.
  *
- * ⚠️ `quote_generation` is NOT here although its file is: the app package
- * registers it, because the sales action that launches it (`generate_quote`
- * on `crm_opportunity`) is refused by `defineStack` when the flow it names
- * belongs to another package of the artifact (objectstack#25514). Maintainer
- * ruling 2026-10-24 on #2270, option 1: keep it in the app package until a
- * published platform release carries that fix, then register it here. See
- * `appRegisteredModuleItems` in `objectstack.composition.ts`.
+ * `quote_generation` is launched by an app-package action (`generate_quote`
+ * on `crm_opportunity`); the app stack resolves that target through
+ * `artifactFlows` (see `src/sales/index.ts`).
  */
-export const revenueFlows = [
-  ContractRenewalFlow, QuoteExpirationFlow, ContractExpirationFlow, BillingHandoffContractActivatedFlow,
-  QuotePrintPresentedFlow,
-];
+export const revenueFlows = [QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow];
 
 /**
  * What this package registers but does not assemble: its seed rows, which the
@@ -58,18 +54,23 @@ export type HotCrmRevenueCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * (ADR-0130 D4, `module-split-plan.md` decision 5): the unit ADR-0130 §1.3(c)
  * says must be sellable on its own.
  *
- * It owns `crm_product`, `crm_opportunity_line_item`, `crm_quote`,
- * `crm_quote_line_item` and `crm_contract`, and the items authored against
- * them: their hooks and views, the `payment_terms` option list, the contract
- * and quote-expiry flows, the quote and contract notification templates and
- * their seed rows.
+ * It owns `crm_product`, `crm_price_book`, `crm_price_book_entry`,
+ * `crm_opportunity_line_item`, `crm_quote` and `crm_quote_line_item`, and the
+ * items authored against them: their hooks and views, the quote-generation
+ * and quote-expiry flows, the `product_metrics` dataset, the quote
+ * notification template and their seed rows. `crm_contract` and everything authored against it — hook, views, the
+ * three contract flows, the `payment_terms` option list, the two contract
+ * notification templates and the contract seed rows — moved to the app
+ * package (`module-split-plan.md` item 11): the contract references only
+ * app-package objects, and O2C and PSA hang off it, so it lives where every
+ * add-on can reach it in one dependency level. The quote-accepted contract
+ * draft (`quote_accepted_contract_draft`) is now a write along this module's
+ * edge into the app package.
  *
- * Two items authored here are registered by the app package for now —
- * `quote_generation` (see {@link revenueFlows}) and `product_metrics`, which
- * the app's CRM Overview dashboard binds: `os validate` judges each package
- * alone and refuses a widget naming another package's dataset
- * (objectstack#25514). Both move here once a published release carries that
- * fix (maintainer ruling 2026-10-24 on #2270).
+ * Two of them are reached from the app package: `quote_generation` (see
+ * {@link revenueFlows}) and `product_metrics`, which the app's CRM Overview
+ * List Price by Category tile binds — a widget reference `os validate` resolves against
+ * the artifact's packages since objectstack#25514.
  *
  * It is packaged exactly as `src/service/index.ts` is, and that file carries
  * the reasoning for each load-bearing property — the app package's
@@ -91,21 +92,24 @@ export const createHotCrmRevenueStack = (
     // holds it, and the range below, to the app package's.
     version: '6.0.0',
     type: 'module',
-    description: 'HotCRM revenue module — products, opportunity line items, quotes, and contracts.',
-    engines: { protocol: '^18.2.0' },
+    description: 'HotCRM revenue module — products, price books, opportunity line items and quotes.',
+    engines: { protocol: '^18.3.0' },
     // The App package this module extends — and nothing else: the graph is a
     // star (plan decision 5), ⛔ no edge to another module.
     dependencies: { 'app.objectstack.hotcrm': '^6.0.0' },
 
     /**
-     * The three entries this module puts into the app's Sales group.
+     * The three entries this module puts into the app's Sales group, and its
+     * manual under Help (below).
      *
      * Rule R3: the app's own `navigation` may not name this package's objects,
      * so the group stays the app's and this module fills it. A contributed item
-     * lands after the group's own children, so Quotes, Contracts and Products
-     * now follow Sales Performance (#2270) — the same rule that put My Cases
-     * last in *My Work* (#1907). ⛔ No per-item `order` to restore the old
-     * position: see the navigation note in `src/service/index.ts`.
+     * lands after the group's own children, so Quotes, Products and Price
+     * Books follow Sales Performance and Contracts (#2270) — the same rule that
+     * put My Cases last in *My Work* (#1907). Contracts is the app's own entry since
+     * `crm_contract` moved there (`module-split-plan.md` item 11). ⛔ No
+     * per-item `order` to restore the old position: see the navigation note in
+     * `src/service/index.ts`.
      */
     navigationContributions: [
       {
@@ -114,30 +118,53 @@ export const createHotCrmRevenueStack = (
         priority: 40,
         items: [
           { id: 'nav_quote',    type: 'object', objectName: 'crm_quote',    label: 'Quotes',    icon: 'receipt' },
-          // Contracts close the sales cycle: quote → signed agreement → renewal.
-          { id: 'nav_contract', type: 'object', objectName: 'crm_contract', label: 'Contracts', icon: 'file-signature' },
           // In Sales, not Marketing (#1259): products are the revenue master
           // data every quote line and opportunity line item points at.
           { id: 'nav_product',  type: 'object', objectName: 'crm_product',  label: 'Products',  icon: 'package' },
+          // The catalogue's prices, beside it (#2313). Its entries are reached
+          // through their book, as a line item is through its quote.
+          { id: 'nav_price_book', type: 'object', objectName: 'crm_price_book', label: 'Price Books', icon: 'book-open' },
+        ],
+      },
+      // This module's manual, under the app's *Help* group (#2327): the app
+      // declares `group_help` last and collapsed, and this entry lands after
+      // its two manuals. It leaves with the module, as the book does.
+      {
+        app: 'crm_enterprise',
+        group: 'group_help',
+        priority: 40,
+        items: [
+          { id: 'nav_help_revenue', type: 'doc', book: 'crm_revenue_manual', label: 'Revenue Manual', icon: 'receipt' },
         ],
       },
     ],
   },
 
   // What THIS package's metadata needs: `automation` and `triggers` for the
-  // record-change and scheduled contract and quote flows — each refused by
-  // name when deleted. (`analytics` joins when `product_metrics` registers
-  // here.)
-  requires: ['automation', 'triggers'],
+  // scheduled quote-expiry flow — each refused by name when deleted — and
+  // `analytics` for `product_metrics`, as `src/service/index.ts` declares it
+  // for `case_metrics`. Nothing refuses that one when deleted (measured on
+  // 18.2.0: validate, lint and build all exit 0 without it); it is declared
+  // because the dataset needs it, not because a gate asks.
+  requires: ['automation', 'triggers', 'analytics'],
 
-  objects: [Contract, OpportunityLineItem, Product, Quote, QuoteLineItem],
-  picklists: [PaymentTermsPicklist],
+  objects: [OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem],
   hooks: revenueHooks,
-  views: [ContractViews, ProductViews, QuoteViews],
+  views: [ProductViews, QuoteViews],
+  // The quote's lifecycle steps (#2366 row 9), authored against `crm_quote`.
+  actions: [
+    SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
+    // Print Quote (#2312): prints `quote_print_page` through the print door.
+    PrintQuoteAction,
+  ],
   flows: revenueFlows,
+  datasets: [ProductDataset],
   emailTemplates: RevenueEmailTemplates,
+  // Its manual (#2327), over `src/revenue/docs/`. See the book's own note.
+  books: [CrmRevenueManual],
+  // The quote's working page (explicit default) and its print page (#2312).
   pages: [QuoteDetailPage, QuotePrintPage],
-  actions: [PrintQuoteAction],
+  // Mounts `POST /api/v1/print/records`, the door Print Quote calls.
   plugins: [new PrintServicePlugin()],
 
   ...collections,

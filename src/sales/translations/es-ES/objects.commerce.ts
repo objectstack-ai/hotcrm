@@ -6,7 +6,8 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * Español (es-ES) — `objects` translations for the COMMERCE family:
  * what gets sold and on what paper — quotes, contracts, products.
  *
- * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`.
+ * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`,
+ * `crm_price_book`, `crm_price_book_entry`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -26,7 +27,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         message: 'La fecha de vencimiento debe ser posterior a la de la cotización',
       },
       quote_status_progression: {
-        message: 'Transición de estado de cotización no válida',
+        message: 'Este cambio de estado se sale del recorrido habitual de la cotización: Borrador → En Revisión → Presentada → Aceptada. En Revisión también puede volver a Borrador o pasar a Rechazada, una Presentada puede pasar a Rechazada y una Rechazada vuelve a Borrador. Borrador, En Revisión o Presentada pueden pasar a Expirada. Aceptada y Expirada son definitivos.',
       },
     },
     label: 'Cotización',
@@ -84,10 +85,16 @@ export const commerce: Record<string, ObjectTranslationData> = {
       addresses_and_notes: { label: 'Direcciones y Notas' },
     },
     _actions: {
-      print_quote: {
-        label: 'Imprimir Cotización',
-        successMessage: 'PDF de la cotización adjuntado a la cotización.',
+      submit_quote_for_review: { label: 'Enviar a Revisión', successMessage: 'Cotización {{ record.display_title }} enviada a revisión.' },
+      mark_quote_presented: { label: 'Marcar como Presentada', successMessage: 'Cotización {{ record.display_title }} marcada como presentada.' },
+      accept_quote: {
+        label: 'Aceptar',
+        confirmText: '¿Aceptar esta cotización? Queda congelada, su oportunidad se cierra como ganada y se redacta un contrato.',
+        successMessage: 'Cotización {{ record.display_title }} aceptada.',
       },
+      reject_quote: { label: 'Rechazar', successMessage: 'Cotización {{ record.display_title }} rechazada. Revísela para hacer una nueva oferta.' },
+      revise_quote: { label: 'Revisar', successMessage: 'La cotización {{ record.display_title }} vuelve a Borrador.' },
+      print_quote: { label: 'Imprimir Cotización', successMessage: 'PDF de la cotización adjuntado a la cotización.' },
     },
   },
   crm_quote_line_item: {
@@ -242,6 +249,49 @@ export const commerce: Record<string, ObjectTranslationData> = {
       product_info: { label: 'Información del Producto' },
       pricing_info: { label: 'Precios' },
       media: { label: 'Multimedia' },
+    },
+  },
+  crm_price_book: {
+    _validations: {
+      valid_to_after_valid_from: {
+        message: 'Válido hasta debe ser igual o posterior a Válido desde',
+      },
+    },
+    label: 'Lista de Precios',
+    pluralLabel: 'Listas de Precios',
+    description: 'Una lista de precios de productos con nombre: la lista estándar, un nivel de socio o regional, o una promoción',
+    fields: {
+      owner_id: { label: 'Propietario de Lista de Precios' },
+      name: { label: 'Nombre de la Lista de Precios' },
+      description: { label: 'Descripción' },
+      is_active: { label: 'Activa' },
+      is_standard: { label: 'Estándar' },
+      valid_from: { label: 'Válido desde' },
+      valid_to: { label: 'Válido hasta' },
+    },
+    _sections: {
+      basic: { label: 'Información de la Lista de Precios' },
+      validity: { label: 'Vigencia' },
+    },
+  },
+  crm_price_book_entry: {
+    _validations: {
+      price_not_negative: {
+        message: 'El Precio de Lista no puede ser negativo',
+      },
+    },
+    label: 'Entrada de Lista de Precios',
+    pluralLabel: 'Entradas de Lista de Precios',
+    description: 'El precio de un producto en una lista de precios',
+    fields: {
+      entry_number: { label: 'Nº de Entrada' },
+      crm_price_book: { label: 'Lista de Precios' },
+      crm_product: { label: 'Producto' },
+      list_price: { label: 'Precio de Lista' },
+      is_active: { label: 'Activa' },
+    },
+    _sections: {
+      basic: { label: 'Información de la Entrada' },
     },
   },
 };

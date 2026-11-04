@@ -23,9 +23,9 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 
 **隐藏的仪表盘不等于上锁的仪表盘。** Executive Overview 还对持有 `sales_rep`、`service_agent` 或 `service_manager` 岗位的人不出现在侧边栏里，这样他们打开应用时落在为自己日常工作准备的页面上——销售代表落在 **Sales Home**——而不是公司层面的总览。这只是为了聚焦而缩短菜单，不是访问限制：销售代表直接打开这个仪表盘的链接，仍然能看到它。任何仪表盘显示什么，由记录可见性决定，而记录可见性由 [共享规则](/zh-Hans/docs/administration/sharing-and-security#how-the-layers-combine) 设定：每个数字只汇总查看者有权读取的记录，所以销售代表看到的是高管版式下自己那一份数据，看不到任何他自己打不开的交易。
 
-### 没有任何磁贴显示趋势箭头
+### 趋势箭头来自真实的对比查询
 
-在任何一个仪表盘上，KPI 磁贴都不显示"对比上期"的涨跌幅。跨期对比是一次测量：它必须来自一次真实的对比查询。在渲染器能为数据集绑定的指标跑出这样一次查询之前，磁贴上的百分比只会是手工敲进去的数字，没有任何数据能改变它——数据库塞得满满的时候和一条记录都没有的时候，它读起来一模一样。所以磁贴只呈现真正查询出来的那个数，此外什么都不加。
+KPI 磁贴只有在声明了对比时，才显示「对比上期」或「对比去年」的涨跌幅，console 会再对更早的那个时间窗跑一次查询。CRM Overview 上是 Total Revenue、Deals Won 和 Avg Deal Size；Sales Performance 上是 Open Pipeline、Closed Won 和 Avg Deal Size；Customer Service 上是 Open Cases、Avg Resolution Time 和 Open Cases Past SLA；Executive Overview 上是 Total Revenue (YTD)。*(Selected Period)* 磁贴对比的是日期选择器所选时间窗之前、同样长度的那个时间窗，所以选择器在 All time 时没有更早的时间窗，磁贴只显示数字本身。没有任何百分比是手工敲进去的：每一个都随数据变化。
 
 ## 🏠 CRM Overview
 
@@ -37,10 +37,9 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **Open Deals (Selected Period)** — 预计成交日期落在所选周期内的进行中商机。
 - **Deals Won (Selected Period)** — 所选周期内成交赢单的交易。
 - **Avg Deal Size (Selected Period)** — 所选周期内成交赢单交易的平均金额。
-- **Revenue Trends** — 近 12 个月的成交赢单收入（面积图）。
-- **Lead Source** — 按获客渠道统计的管道金额（环形图）。
 - **Pipeline by Stage** — 各销售阶段的进行中商机金额（条形图）。
-- **Top Products** — 按产品类别统计的标价收入合计（柱状图）。
+- **Lead Source** — 按获客渠道统计的管道金额（环形图）。
+- **List Price by Category** — 按产品类别合计的目录标价。它读的是价格表，不是销售：本页没有任何磁贴汇总已售出的明细行（柱状图）。
 - **Pipeline by Owner** — 每位销售代表的进行中管道金额、交易数和平均交易规模（表格）。
 
 **控件**：一个基于商机预计成交日期的日期范围选择器（默认本季度），以及一个 Owner 筛选器。
@@ -61,11 +60,10 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **Deals Won (12M)** — 这个百分比背后的分子。
 - **Deals Lost (12M)** — 分母的另一半，好让分子和分母始终陈列在赢率旁边。
 - **Pipeline by Stage** — 各销售阶段的进行中商机金额（条形图）。
-- **Monthly Revenue Trend** — 近 12 个月的成交赢单收入。
 - **Pipeline by Forecast Category** — 按预测类别分组的进行中管道。
 - **Lead Source** — 管道是从哪里来的（环形图）。
 - **Open Pipeline by Owner** — 每位销售代表进行中的金额、交易数和平均赢单概率（表格）。
-- **Quota Attainment by Rep** — 每位销售代表当季的配额、已成交收入与达成率，读取自预测快照。
+- **Quota Attainment by Rep** — 每位销售代表当季的配额、已成交收入与达成率，读取自预测快照。要等夜间预测快照开出当前季度、并由经理为每位代表设好配额之后它才有数据；演示数据不会替你开出当前季度。
 - **Win / Loss by Rep** — 每位销售代表的赢单数、丢单数、已结案数、赢率和赢单金额（表格）。
 - **Win / Loss by Lead Source** — 同一份拆分换成按获客渠道来看：哪些来源带来的商机真正能成交。
 - **Why We Lose** — 按丢单原因统计的丢单数。每条丢单商机都必须填写原因（[关单时强制](/zh-Hans/docs/sales/opportunities)），因此图中不存在"未归因"切片——图为空表示该时间窗内没有丢单，而不是没人填字段。
@@ -106,12 +104,12 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **Open Cases** — 尚未关闭的工单。
 - **Critical Cases** — 优先级为 critical 的未结工单。
 - **Avg Resolution Time** — 平均关单时长（小时）。
-- **SLA Violations** — 违反了 SLA 的工单。
+- **Open Cases Past SLA** — SLA 截止时间已过的未结工单。它的基数只有未结工单：逾期结案的工单在结案时就离开这个计数。
 - **Cases by Status** — 工作量在流程各状态上的分布（环形图）。
 - **Cases by Priority** — 未结工单按紧急程度的构成（饼图）。
 - **Cases by Origin** — Email / Phone / Web / Chat / Portal（柱状图）。
 - **Daily Case Volume** — 近 30 天每天新建的工单数。
-- **SLA Compliance** — 在 SLA 内解决的工单占比，对比 95% 的目标线（仪表图）。
+- **SLA Met (Closed Cases)** — 已结案工单中满足 SLA 的占比，对比 95% 的目标线（仪表图）。它的基数只有已结案工单：未结工单既不在分子也不在分母里。
 - **My Open Cases by Priority** — 当前登录用户自己名下、每个优先级的未结工单数及其 SLA 违约率（表格）。它不受 Agent 筛选影响，始终显示你自己的工单。
 
 **控件**：一个基于工单创建日期的日期范围选择器（默认最近 90 天），外加 Agent 和 Priority 筛选器，以及每分钟一次的刷新——服务台需要新鲜的数字。它是唯一一个按工单日期、而不是按商机预计成交日期取窗的选择器，也是唯一一个不默认本季度的，所以在你把窗口放宽之前，这一页上的每一个数字都被最近 90 天限定着。Daily Case Volume 退出了这个选择器，保留自带的 30 天时间窗，因此那张图始终覆盖它标题上写的 30 天。
@@ -126,7 +124,7 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 - **Active Accounts** — 至少还有一段有效关系的客户。
 - **Total Contacts** — 通讯录里的人。
 - **Open Leads** — 漏斗中尚未转化的线索。
-- **Revenue Trend** — 近 12 个月的成交赢单收入。
+- **Revenue Trend** — 近 12 个月的成交赢单收入。只有这个仪表盘放了收入趋势，它只有这一个位置。
 - **Revenue by Industry** — 年初至今的成交赢单收入按客户行业拆分（环形图）。
 - **Pipeline by Stage** — 各销售阶段的进行中商机金额（条形图）。
 - **New Accounts** — 近 6 个月的客户新建节奏。
@@ -144,7 +142,7 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 
 仪表盘的筛选器匹配的是每个部件所绑数据集背后的那个**对象**，而不是该数据集声明的维度，并且它会被 AND 进每个受它约束的部件的查询里。所以 Customer Service 能提供 Agent 筛选器，哪怕 `case_metrics` 没有声明任何负责人维度：`owner_id` 是工单上的字段，筛选器要的就只是这个。但它买到的只有筛选这一件事——部件依然不能按数据集没有声明的字段**分组**，所以 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation) 说"没有任何报表、也没有任何仪表盘部件能按它分组"是对的，它和同一个应用里按 Agent 筛选的服务台仪表盘并不矛盾。反过来同样成立：筛选器若点名了某个部件自己的对象没有的字段，那个部件的查询就会去要一个并不存在的列，所以答不了某个筛选器的部件会按名字显式退出它（`filterBindings`），而不是默默忽略它。
 
-有些磁贴刻意不接受所在仪表盘的筛选器。12 个月的收入趋势、Top Products 和 Quota Attainment by Rep 都保持自己标题上写明的那个时间窗，这样更窄的日期选择器就无法在标题不变的情况下悄悄改掉数字的定义。
+有些磁贴刻意不接受所在仪表盘的筛选器。Revenue Trend、List Price by Category 和 Quota Attainment by Rep 都保持自己标题上写明的那个时间窗，这样更窄的日期选择器就无法在标题不变的情况下悄悄改掉数字的定义。
 
 ## 数字是从哪里来的
 
@@ -158,5 +156,5 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 
 - ✅ 管道评审之前，把 **Win / Loss by Rep** 和 **Why We Lose** 放在一起读——前者说谁在转化，后者说是什么在打败你。
 - ✅ 每周都处理一次 **Quiet 90+ Days** 磁贴。一个季度都没有任何已记录互动的客户，要么已经休眠，要么早就走了；而这个磁贴的价值上限，就是你的团队真正记录下来的互动量。
-- ✅ 在服务台，把 **SLA Violations**（违约的绝对条数）和 **SLA Compliance** 磁贴（对比目标的达标率）一起看——小基数上的一个小数字，和一个健康的达标率不是一回事。
+- ✅ 在服务台，把两个 SLA 磁贴当作两个不同的群体来读：**Open Cases Past SLA** 数的是已经逾期的未结工单（现在要处理的活），**SLA Met (Closed Cases)** 是已结案工单上的达标率（服务台做得怎样）。一张逾期工单结案时，就从前者移到后者。
 - ✅ 把 **Interactions on Deals** 对着 **Open Deals** 读：覆盖度问题的答案是这两者的比值，而不是其中任何一个单独的数字。

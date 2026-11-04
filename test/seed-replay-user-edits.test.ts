@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import artifact from '../objectstack.config';
 import { CrmSeedData } from '../objectstack.composition';
-import { contracts } from '../src/revenue/data/revenue.seed';
+import { contracts } from '../src/sales/data/contract.seed';
 import { leadInteractionPointers, tasks } from '../src/sales/data/activity.seed';
 import { bootOptions, buildArtifactAgain } from './helpers/verify-stack';
 

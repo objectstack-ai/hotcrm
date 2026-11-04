@@ -157,12 +157,15 @@ export const OpportunityLineItem = ObjectSchema.create({
       description: "The product's title, kept in step with the product. It names this line.",
     }),
 
+    // A count of units, so a whole number (#2370 row 8; the convention is
+    // `docs/developers/number-formats.md`): `scale: 0` makes it read "4", not
+    // "4.00", on every face, and the engine refuses a fractional quantity.
     quantity: Field.number({
       label: 'Quantity',
       group: 'pricing',
       required: true,
       storage: { notNull: true },
-      scale: 2,
+      scale: 0,
       min: 0,
       defaultValue: 1,
       trackHistory: true,
@@ -210,6 +213,11 @@ export const OpportunityLineItem = ObjectSchema.create({
     total_price: Field.formula({
       label: 'Total',
       group: 'pricing',
+      // An amount of money, declared as one (#2370 row 8): the spec's money
+      // formula, in the tenant currency like every amount here. Measured on
+      // 18.2.0: the console's formula cell does not read it yet and draws
+      // "24,000" beside "$6,000.00" (reported upstream with the card).
+      returnType: 'currency',
       expression: F`record.quantity * record.unit_price * (1 - record.discount / 100)`,
     }),
 

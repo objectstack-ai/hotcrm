@@ -32,6 +32,16 @@ export const en: EmailTemplatePack = {
     subject: 'New contact: {{first_name}} {{last_name}}',
     bodyHtml: '<p>{{first_name}} {{last_name}} was added as a contact. Reach out to welcome them.</p>',
   },
+  'crm.contract_expired': {
+    label: 'Contract Expired',
+    subject: 'Contract expired: {{contract_number}}',
+    bodyHtml: '<p>Contract {{contract_number}} reached its end date and has been marked expired.</p>',
+  },
+  'crm.contract_renewal': {
+    label: 'Contract Renewal Due',
+    subject: 'Contract renewal due: {{contract_number}}',
+    bodyHtml: '<p>Contract {{contract_number}} ends on {{end_date}}. Start the renewal conversation now.</p>',
+  },
   'crm.deal_stalled': {
     label: 'Stalled Deal',
     subject: 'Stalled deal: {{name}}',
@@ -95,5 +105,12 @@ export const en: EmailTemplatePack = {
     label: 'Urgent Task',
     subject: 'Urgent task: {{subject}}',
     bodyHtml: '<p>An urgent task "{{subject}}" was assigned to you and needs attention.</p>',
+  },
+  // Sent by `contract_drafted_notice` when accepting a quote drafts its
+  // contract (#2371 row 6).
+  'crm.contract_drafted': {
+    label: 'Contract Drafted',
+    subject: 'Contract drafted: {{contract_number}}',
+    bodyHtml: '<p>Accepting the quote drafted contract {{contract_number}}. Its term and contract type are starting values: check them before you activate it.</p>',
   },
 };

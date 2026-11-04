@@ -24,6 +24,7 @@
 
 export { default as accountHook } from './account.hook';
 export { default as contactHook } from './contact.hook';
+export { default as contractHook } from './contract.hook';
 export { default as eventHook } from './event.hook';
 export { default as forecastHook } from './forecast.hook';
 export { default as leadHook } from './lead.hook';

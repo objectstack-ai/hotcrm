@@ -42,8 +42,8 @@ export const Forecast = ObjectSchema.create({
   // OWD is an authored decision (ADR-0090 D1/D7). Forecasts are personal to the
   // owner.
   sharingModel: 'private',
-  // ADR-0079 record title. ⚠️ An expression cannot dot-walk a lookup (ADR-0072),
-  // so `display_title` composes local fields only: period_label + (period_start).
+  // ADR-0079 record title: the period label and the owner's name, read one
+  // hop through the `owner_id` lookup (#2242). See `display_title` below.
   nameField: 'display_title',
   // Explicit search targets (ADR-0061): the real columns the lookup picker
   // and global search match. Until #2230 they were required, because the
@@ -125,17 +125,21 @@ export const Forecast = ObjectSchema.create({
       group: 'basic',
     }),
 
-    // ADR-0079 record title. ⚠️ An expression cannot dot-walk a lookup (ADR-0072),
-    // so this composes local fields only; `period_start` (a date) is
-    // string()-coerced for concat.
+    // ADR-0079 record title: "Q4 2026 · Nina Reyes" (#2242, the #2194 T1-U08
+    // ruling). A forecast is one row per owner × period, so the period alone
+    // left two reps' Q4 rows reading the same in Recent items and in a lookup.
+    // The owner's name is read one hop through the `owner_id` lookup, never a
+    // copied text column; measured on 18.1.0 and 18.2.0, the engine resolves
+    // `record.owner_id.name` when it computes the stored value. With no owner
+    // the title is the period label alone: the `?.` / `orValue("")` guard
+    // keeps an ownerless row from reading "Q4 2026 · ".
     //
-    // ⚠️ The coercion is `string()`, NOT `text()`. `text` is not a registered
-    // CEL function — it is absent from `CEL_STDLIB_FUNCTIONS` — so an expression
-    // using it faults at runtime and leaves the record's `nameField` null. The
-    // author-time `expression-invalid` rule now REPORTS it ("found no matching
-    // overload for 'text(dyn)'") instead of letting a broken expression through to
-    // null silently. `string` is the catalog's coercion, alongside
-    // `int`/`bool`/`double`/`timestamp`.
+    // The name is copied in when the row is written, so renaming the user
+    // re-titles a forecast only at its next write (measured on 18.1.0 and 18.2.0).
+    // The seed-ownership claim on a fresh boot is such a write: since
+    // objectstack#25668 (in 18.2.0) it re-owns seeded rows by id, so each
+    // seeded forecast is titled with the admin it was handed to.
+    //
     // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
     // computes the expression on every insert and every update by id and
     // stores the result, so an import matches a lookup cell against this title
@@ -145,7 +149,7 @@ export const Forecast = ObjectSchema.create({
     display_title: Field.text({
       readonly: true,
       label: 'Display Title',
-      expression: F`record.period_label + " (" + string(record.period_start) + ")"`,
+      expression: F`record.?owner_id.?name.orValue("") == "" ? record.period_label : record.period_label + " · " + record.?owner_id.?name.orValue("")`,
       group: 'basic',
     }),
 
@@ -342,21 +346,31 @@ export const Forecast = ObjectSchema.create({
     // that writes a JS `Date` object is the one shape `string()` has no overload
     // for; the engine then rejects that write naming the rule rather than
     // admitting it, and no writer in this app does that.
+    //
+    // ONE START, ONE MESSAGE (#2371 row 8). The two start rules PARTITION by
+    // `period`: this one judges every forecast that is not quarterly, the next
+    // one judges the quarterly ones, each in full. Before, this rule judged
+    // every row, so a quarter starting 2026-08-15 broke both and the form
+    // showed the two sentences run together ("…Aug 2026.; A quarterly
+    // forecast…" — the platform joins a write's refusals into one line), the
+    // first of them advice about MONTHS on a quarterly row. An absent or null
+    // `period` stays on this side, as it was judged before.
     {
       name: 'period_start_first_of_period',
       type: 'script',
       severity: 'error',
       message: 'Period Start must be the first day of the period — e.g. 2026-08-01 for Aug 2026.',
-      condition: P`has(record.period_start) && record.period_start != null && !matches(string(record.period_start), "^[0-9]{4}-[0-9]{2}-01")`,
+      condition: P`(!has(record.period) || record.period != "quarter") && has(record.period_start) && record.period_start != null && !matches(string(record.period_start), "^[0-9]{4}-[0-9]{2}-01")`,
     },
     {
       name: 'quarter_starts_on_quarter_boundary',
       type: 'script',
       severity: 'error',
-      // The month rule above already rejects any non-1st day, so this one only
-      // ever adds the quarter-month half: 2026-08-01 is a valid month start and
+      // The quarterly half of the partition: any start that is not the first
+      // day of a quarter, a mid-month day included, since the month rule above
+      // no longer judges a quarterly row. 2026-08-01 is a valid month start and
       // not a valid quarter start.
-      message: 'A quarterly forecast must start on a quarter boundary — January 1, April 1, July 1 or October 1.',
+      message: "A quarterly forecast's Period Start must be on a quarter boundary — January 1, April 1, July 1 or October 1.",
       condition: P`has(record.period) && record.period == "quarter" && has(record.period_start) && record.period_start != null && !matches(string(record.period_start), "^[0-9]{4}-(01|04|07|10)-01")`,
     },
     // …and the OTHER end of the same window. The two rules above pin the START;

@@ -213,7 +213,7 @@ type AnyRec = Record<string, any>;
  *     cases.zh-Hans.mdx names "全部工單", which is not the zh-CN spelling of any
  *     view crm_case ships`*, and nothing else — 1 failed, 8 passed.
  *   - **the glyph-derived name a derivation would have produced.**
- *     `revenue/contracts.zh-Hant` 合約條款 → 合同條款 fails the zh-Hant rule
+ *     `sales/contracts.zh-Hant` 合約條款 → 合同條款 fails the zh-Hant rule
  *     with *`… names "合同條款", which is in no pinned Traditional roster for
  *     crm_contract`*. That is the exact mistake the ⛔ above forbids, caught.
  *   - **a rename in the producer, which is the property the derived side
@@ -316,7 +316,7 @@ type AnyRec = Record<string, any>;
  *   - **the same shape where the prose still names the dropped view.**
  *     `service/cases.zh-Hans` **已升级工单** → **全部工单** fails the same rule
  *     naming 已升级工单, which is the case a body-shaped rule stayed green on.
- *   - **the card's shape on zh-Hant.** `revenue/contracts.zh-Hant`
+ *   - **the card's shape on zh-Hant.** `sales/contracts.zh-Hant`
  *     **合約時間線** → **全部合約** fails with *`… never names "合約時間線",
  *     the pinned Traditional name of a view crm_contract ships`*.
  *   - **vacuity, on each face.** Renaming the roster heading on one page fails
@@ -452,7 +452,7 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
     'content/docs/sales/quotes.mdx': 'crm_quote',
     'content/docs/service/cases.mdx': 'crm_case',
     'content/docs/marketing/campaigns.mdx': 'crm_campaign',
-    'content/docs/revenue/contracts.mdx': 'crm_contract',
+    'content/docs/sales/contracts.mdx': 'crm_contract',
     'content/docs/revenue/products.mdx': 'crm_product',
   };
 
@@ -649,7 +649,7 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
    * Body rows of every markdown table inside a roster section — the header row
    * and the delimiter row under it dropped, so what is left is one line per
    * roster entry. Detecting the header by the delimiter BELOW it rather than by
-   * its wording is what lets `revenue/contracts` head its first column *Tab*
+   * its wording is what lets `sales/contracts` head its first column *Tab*
    * and `sales/leads` head its own *View* without either being written down.
    */
   const tableBodyRows = (body: string): string[] => {

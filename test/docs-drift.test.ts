@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { resolveMetadataFile } from './helpers/src-roster';
-import stack from './helpers/composed-stack';
+import stack, { packFor } from './helpers/composed-stack';
 
 /*
  * ─── SPLIT BY FAMILY (#1196) ─────────────────────────────────────────────────
@@ -46,7 +46,8 @@ import stack from './helpers/composed-stack';
 /**
  * Docs ↔ source drift guard (the AI-era safety net).
  *
- * The package docs under `src/docs/*.md` deliberately state the business-rule
+ * The package docs under `src/docs/*.md` and the modules' `src/<dir>/docs/*.md`
+ * (and their `.zh.md` siblings, #2327) deliberately state the business-rule
  * thresholds that live in the flows (approval amounts, the stale-deal window,
  * sweep schedules, …). That is their whole value — and their whole risk: if a
  * flow changes and the prose doesn't, the doc silently starts lying.
@@ -74,15 +75,31 @@ import stack from './helpers/composed-stack';
 type AnyRec = Record<string, any>;
 
 const FLOWS = (f: string) => readFileSync(join(REPO_ROOT, resolveMetadataFile('flows', f)), 'utf8');
-const DOC = (f: string) => readFileSync(join(REPO_ROOT, 'src/docs', f), 'utf8');
+// Paths under `src/`: the app package's pages are `docs/…`, a module's are
+// `<dir>/docs/…` (ADR-0046 per-package docs, #2327). Each English page and its
+// `.zh.md` sibling are listed side by side — the numbers, amounts and times
+// are spelled the same in both, so one display list serves both.
+const DOC = (f: string) => readFileSync(join(REPO_ROOT, 'src', f), 'utf8');
+
+/** A page and its Chinese sibling. */
+const withZh = (...pages: string[]): string[] => pages.flatMap((p) => [p, p.replace(/\.md$/, '.zh.md')]);
+
+const SALES_OPPS = 'docs/crm_sales_opportunities.md';
+const SALES_LEADS = 'docs/crm_sales_leads.md';
+const ADMIN_KNOBS = 'docs/crm_admin_automation.md';
+const QUOTES = 'revenue/docs/crm_revenue_quotes.md';
+const CASES = 'service/docs/crm_service_cases.md';
+const BILLING = 'revenue/docs/crm_revenue_billing_handoff.md';
+const CAMPAIGN_FLOWS = 'marketing/docs/crm_marketing_automation.md';
 
 /** cron → the human label the docs use. Unknown cron ⇒ deliberate failure. */
-const CRON_LABEL: Record<string, string> = {
-  '30 7 * * *': '07:30',
-  '0 1 * * *': '01:00',
-  '0 * * * *': 'hourly',
-  '0 8 * * *': '08:00',
-  '0 0 * * *': '00:00',
+const CRON_LABEL: Record<string, string[]> = {
+  '30 7 * * *': ['07:30'],
+  '0 1 * * *': ['01:00'],
+  '0 * * * *': ['hourly', '每小时'],
+  '0 8 * * *': ['08:00'],
+  '0 0 * * *': ['00:00'],
+  '0 2 * * *': ['02:00'],
 };
 
 type Rule = {
@@ -140,11 +157,24 @@ const capCel = (flowName: string, re: RegExp): string => {
   return m[1];
 };
 
+/**
+ * A select value → the bold label the pages give it: the object's own label for
+ * the English page, the zh-CN pack's for `.zh.md` (#2330). Either spelling
+ * satisfies a rule; `withZh` lists both pages, so each must carry its own.
+ */
+const optionLabel = (objectName: string, field: string) => (raw: string): string[] => {
+  const object = (((stack as AnyRec).objects ?? []) as AnyRec[]).find((o) => o.name === objectName);
+  const option = ((object?.fields?.[field]?.options ?? []) as AnyRec[]).find((o) => o.value === raw);
+  if (!option) throw new Error(`drift test out of date: ${objectName}.${field} has no option "${raw}"`);
+  const zh = packFor('zh-CN')?.objects?.[objectName]?.fields?.[field]?.options?.[raw];
+  return [`**${option.label}**`, ...(zh ? [`**${zh}**`] : [])];
+};
+
 const money = (raw: string) => [`$${Number(raw).toLocaleString('en-US')}`, Number(raw).toLocaleString('en-US')];
 const cronDisplay = (raw: string) => {
   const label = CRON_LABEL[raw];
   if (!label) throw new Error(`schedule '${raw}' changed — add it to CRON_LABEL and update the docs`);
-  return [label];
+  return label;
 };
 
 const RULES: Rule[] = [
@@ -163,72 +193,92 @@ const RULES: Rule[] = [
     // A `>=?` would keep matching through an operator flip and quietly publish
     // the same number under a changed meaning; as written, flipping the gate
     // fails here as "pattern not found in the conditions of …", which is the
-    // right kind of loud — the published table in `crm_sales.md` / `crm_admin.md`
+    // right kind of loud — the published table in `crm_sales_opportunities.md` / `crm_admin_automation.md`
     // states the operator as well as the value, and both have to move together.
     extract: () => capCel('opportunity_approval', /record\.amount >= (\d+)/),
     display: money,
-    docs: ['crm_sales.md', 'crm_admin.md'],
+    docs: withZh(SALES_OPPS, ADMIN_KNOBS),
   },
   {
     label: 'director approval threshold',
     extract: () => capCel('opportunity_approval', /oppRecord\.amount > (\d+)/),
     display: money,
-    docs: ['crm_sales.md', 'crm_admin.md'],
+    docs: withZh(SALES_OPPS, ADMIN_KNOBS),
   },
   {
     label: 'won-deal alert threshold',
     // `>=` since #1087, for the reason spelled out on the manager rule above.
     extract: () => capCel('opportunity_won_alert', /record\.amount >= (\d+)/),
     display: money,
-    docs: ['crm_sales.md', 'crm_admin.md'],
+    docs: withZh(SALES_OPPS, ADMIN_KNOBS),
   },
   {
     label: 'stalled-deal window (days)',
     extract: () => cap('opportunity-stagnation.flow.ts', /STALE_THRESHOLD_DAYS = (\d+)/),
-    display: (v) => [`${v} days`, `${v}-day`],
-    docs: ['crm_sales.md', 'crm_admin.md'],
+    display: (v) => [`${v} days`, `${v}-day`, `${v} 天`],
+    docs: withZh(SALES_OPPS, ADMIN_KNOBS),
   },
   {
     label: 'quote default validity (days)',
     extract: () => cap('quote-generation.flow.ts', /expirationDays'[\s\S]*?defaultValue: (\d+)/),
-    display: (v) => [`**${v}**`, `${v} days`],
-    docs: ['crm_sales.md', 'crm_admin.md'],
+    display: (v) => [`**${v}**`, `${v} days`, `${v} 天`],
+    docs: withZh(QUOTES, ADMIN_KNOBS),
   },
   {
     label: 'hot-lead score threshold',
     extract: () => cap('lead-assignment.flow.ts', /record\.rating >= (\d+)/),
     display: (v) => [`${v}★`, `${v} of 5`],
-    docs: ['crm_sales.md'],
+    docs: withZh(SALES_LEADS, ADMIN_KNOBS),
   },
   {
     label: 'stalled-deal sweep schedule',
     extract: () => cap('opportunity-stagnation.flow.ts', /schedule: '([^']+)'/),
     display: cronDisplay,
-    docs: ['crm_sales.md', 'crm_admin.md'],
+    docs: withZh(SALES_OPPS, ADMIN_KNOBS),
   },
   {
     label: 'quote-expiration sweep schedule',
     extract: () => cap('quote-expiration.flow.ts', /schedule: '([^']+)'/),
     display: cronDisplay,
-    docs: ['crm_sales.md', 'crm_admin.md'],
+    docs: withZh(QUOTES, ADMIN_KNOBS),
   },
   {
     label: 'case SLA sweep schedule',
     extract: () => cap('case-sla-monitor.flow.ts', /schedule: '([^']+)'/),
     display: cronDisplay,
-    docs: ['crm_service.md', 'crm_admin.md'],
+    docs: withZh(CASES, ADMIN_KNOBS),
   },
   {
     label: 'contract renewal sweep schedule',
     extract: () => cap('contract-renewal.flow.ts', /schedule: '([^']+)'/),
     display: cronDisplay,
-    docs: ['crm_admin.md'],
+    docs: withZh(ADMIN_KNOBS),
+  },
+  {
+    label: 'campaign auto-completion schedule',
+    extract: () => cap('campaign-completion.flow.ts', /schedule: '([^']+)'/),
+    display: cronDisplay,
+    docs: withZh(CAMPAIGN_FLOWS),
+  },
+  {
+    // The moment a won deal is handed to billing (#2330): the stage the
+    // start condition's TRANSITION tests, named by its label on the page.
+    label: 'billing hand-off: the deal stage that sends it',
+    extract: () => capCel('billing_handoff_closed_won', /record\.stage == "([a-z_]+)"/),
+    display: optionLabel('crm_opportunity', 'stage'),
+    docs: withZh(BILLING),
+  },
+  {
+    label: 'billing hand-off: the contract status that sends it',
+    extract: () => capCel('billing_handoff_contract_activated', /record\.status == "([a-z_]+)"/),
+    display: optionLabel('crm_contract', 'status'),
+    docs: withZh(BILLING),
   },
   {
     label: 'contract expiration sweep schedule',
     extract: () => cap('contract-expiration.flow.ts', /schedule: '([^']+)'/),
     display: cronDisplay,
-    docs: ['crm_admin.md'],
+    docs: withZh(ADMIN_KNOBS),
   },
 ];
 

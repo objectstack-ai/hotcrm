@@ -53,6 +53,19 @@ export const QuoteLineItem = ObjectSchema.create({
   // through `crm_product`. Read the long note on the twin. Its writers are
   // `quote_line_item_product_title`, `product_title_mirror` and
   // `scripts/backfill-line-product-title.ts`.
+  // No New on a settled quote's line items (#2366 row 2). A related list's
+  // create toolbar evaluates this against the HOST record, the quote, so the
+  // predicate is `crm_quote.userActions.edit`'s, verbatim: `quote_workflow`
+  // refuses a user's line added to an Accepted, Rejected or Expired quote, and
+  // the button only led to that refusal. On a list with no quote in scope the
+  // predicate cannot bind and the platform hides New (fail-closed); HotCRM
+  // ships no such list — a line is added from its quote. Pinned in
+  // `test/quote-settled-actions.test.ts`.
+  userActions: {
+    create: {
+      visibleWhen: P`!(has(record.status) && (record.status == "accepted" || record.status == "rejected" || record.status == "expired"))`,
+    },
+  },
   nameField: 'product_title',
   searchableFields: ['product_title', 'description'],
 
@@ -88,13 +101,18 @@ export const QuoteLineItem = ObjectSchema.create({
       // mechanism that panel reads first (#944; the long note is on
       // `crm_campaign_member.crm_campaign`). A SUPERSET of the fallback it
       // replaces (`highlightFields` minus this lookup: Product / Quantity /
-      // Sales Price / Total) plus `subtotal`, the line's price after its own
-      // discount — the formula was evaluated on every read and shown in no list.
+      // Sales Price / Total) plus the line's own discount.
+      //
+      // `discount`, not `subtotal` (#2370 row 8): `subtotal` was added here as
+      // "the line's price after its own discount", but a line carries no tax,
+      // so its expression is `total_price`'s and the panel showed one amount
+      // twice. What the panel lacked is the discount that turns Sales Price
+      // into Total, so that column takes the slot.
       //
       // ⛔ Not added to `highlightFields`: the detail page hoists the first
       // four of that strip, so a fifth entry never reaches the strip, and
       // reordering it would evict `total_price` from the record's header.
-      relatedListColumns: ['crm_product', 'quantity', 'unit_price', 'subtotal', 'total_price'],
+      relatedListColumns: ['crm_product', 'quantity', 'unit_price', 'discount', 'total_price'],
     }),
 
     // Left on the restricting default on purpose — see the twin object: a
@@ -121,12 +139,15 @@ export const QuoteLineItem = ObjectSchema.create({
       description: "The product's title, kept in step with the product. It names this line.",
     }),
 
+    // A count of units, so a whole number (#2370 row 8; the convention is
+    // `docs/developers/number-formats.md`): `scale: 0` makes it read "4", not
+    // "4.00", on every face, and the engine refuses a fractional quantity.
     quantity: Field.number({
       label: 'Quantity',
       group: 'pricing',
       required: true,
       storage: { notNull: true },
-      scale: 2,
+      scale: 0,
       min: 0,
       defaultValue: 1,
       trackHistory: true,
@@ -164,6 +185,7 @@ export const QuoteLineItem = ObjectSchema.create({
     subtotal: Field.formula({
       label: 'Subtotal',
       group: 'pricing',
+      returnType: 'currency', // money, as `total_price` below
       expression: F`record.quantity * record.unit_price * (1 - record.discount / 100)`,
     }),
 
@@ -173,6 +195,11 @@ export const QuoteLineItem = ObjectSchema.create({
     total_price: Field.formula({
       label: 'Total',
       group: 'pricing',
+      // An amount of money, declared as one (#2370 row 8): the spec's money
+      // formula, in the tenant currency like every amount here. Measured on
+      // 18.2.0: the console's formula cell does not read it yet and draws
+      // "24,000" beside "$6,000.00" (reported upstream with the card).
+      returnType: 'currency',
       expression: F`record.quantity * record.unit_price * (1 - record.discount / 100)`,
     }),
 

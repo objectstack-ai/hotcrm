@@ -39,6 +39,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_quote: { label: '見積' },
         nav_contract: { label: '契約' },
         nav_product: { label: '製品' },
+        nav_price_book: { label: '価格表' },
         nav_sales_dashboard: { label: '営業実績' },
 
         group_work: { label: 'マイワーク' },
@@ -59,6 +60,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_service: { label: 'サービス' },
         nav_case: { label: 'ケース' },
         nav_knowledge: { label: 'ナレッジベース' },
+        nav_knowledge_published: { label: 'ナレッジベース' },
         nav_service_dashboard: { label: 'サービス概要' },
 
         group_insights: { label: 'インサイト' },
@@ -68,14 +70,20 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_reports: { label: 'レポート' },
         nav_report_opportunities_by_stage: { label: 'ステージ別商談' },
         nav_report_won_by_owner: { label: '担当者別成立商談' },
-        nav_report_pipeline_coverage: { label: 'パイプラインカバレッジ' },
+        nav_report_pipeline_coverage: { label: '四半期別パイプラインカバレッジ' },
         nav_report_funnel_by_owner: { label: '担当者別商談ファネル' },
-        nav_report_lead_inflow: { label: 'リード流入' },
+        nav_report_lead_inflow: { label: '月別リード対応' },
         nav_report_accounts_by_industry: { label: '業種・種別別取引先' },
         nav_report_churn_signals: { label: '顧客離反シグナル' },
         nav_report_cases_by_status: { label: 'ステータス・優先度別ケース' },
-        nav_report_sla: { label: 'SLA 実績' },
+        nav_report_sla: { label: 'クローズ済みケースの SLA' },
         nav_report_cases_opened_by_day: { label: '日別新規ケース' },
+
+        group_help: { label: 'ヘルプ' },
+        nav_help_manual: { label: 'ユーザーマニュアル' },
+        nav_help_admin: { label: '管理者マニュアル' },
+        nav_help_revenue: { label: '収益マニュアル' },
+        nav_help_marketing: { label: 'マーケティングマニュアル' },
       },
     },
   },
@@ -130,10 +138,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         active_deals: { title: 'オープン商談（選択期間）', description: '選択期間内に完了予定のオープン商談' },
         won_deals: { title: '成立商談数（選択期間）', description: '選択期間に成立した商談の数' },
         avg_deal_size: { title: '平均商談規模（選択期間）', description: '選択期間の成立済み商談の平均金額' },
-        revenue_trends: { title: '売上トレンド', description: '過去12か月の成立済み売上' },
         lead_source: { title: 'リードソース', description: '獲得チャネル別のパイプライン金額' },
         pipeline_by_stage: { title: 'ステージ別パイプライン', description: '各営業ステージのオープン商談金額' },
-        top_products: { title: '売れ筋製品', description: '製品カテゴリ別の定価ベース売上' },
+        top_products: { title: 'カテゴリ別定価合計', description: '製品カテゴリごとのカタログ定価の合計（売上ではありません）' },
         pipeline_by_owner: { title: '担当者別パイプライン', description: '営業担当者ごとのオープンパイプライン金額と商談数' },
       },
     },
@@ -161,11 +168,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         open_opportunities: { title: 'オープン商談（選択期間）', description: '選択期間内に完了予定のオープン商談' },
         avg_deal_size: { title: '平均商談規模（今四半期）', description: '今四半期の成立済み商談の平均金額' },
         pipeline_by_stage: { title: 'ステージ別パイプライン', description: '各営業ステージのオープン商談金額' },
-        monthly_revenue_trend: { title: '月次売上トレンド', description: '過去12か月の成立済み売上' },
         pipeline_by_forecast_category: { title: '予測カテゴリ別パイプライン', description: '売上予測カテゴリ別のオープンパイプライン金額' },
         lead_source_breakdown: { title: 'リードソース', description: 'パイプラインの流入元' },
         open_pipeline_by_owner: { title: '担当者別オープンパイプライン', description: '営業担当者ごとの進行中パイプライン金額・商談数・平均勝率' },
-        quota_attainment_by_rep: { title: '担当者別ノルマ達成状況', description: '予測スナップショットに基づく担当者別の今四半期ノルマ・成約収益・達成率' },
+        quota_attainment_by_rep: { title: '担当者別ノルマ達成状況', description: '担当者別の今四半期ノルマ・成約収益・達成率。夜間の予測スナップショットが今四半期の行を作成し、マネージャーがノルマを設定すると表示されます' },
         pipeline_stage_by_source: { title: 'ステージ × リードソース', description: 'ステージとソース別の進行中商談金額のクロス集計' },
         win_rate_12m: { title: '勝率（直近12か月）', description: '直近12か月に決着した商談のうち成立した割合' },
         won_deals_12m: { title: '成立商談数（直近12か月）', description: '勝率の分子' },
@@ -182,12 +188,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         open_cases: { title: 'オープンケース', description: 'まだクローズされていないケース' },
         critical_cases: { title: '重大ケース', description: '優先度「重大」のオープンケース' },
         avg_resolution_time: { title: '平均解決時間', description: 'クローズまでの平均時間（時）' },
-        sla_violations: { title: 'SLA 違反', description: 'SLA を超過したケース' },
+        sla_violations: { title: 'SLA 超過中の未解決ケース', description: 'SLA 期限を過ぎた未解決のケース' },
         cases_by_status: { title: 'ステータス別ケース', description: 'パイプライン全体のワークロード分布' },
         cases_by_priority: { title: '優先度別ケース', description: '緊急度別のオープンケース構成' },
         cases_by_origin: { title: '発生源別ケース', description: 'ケースの流入チャネル' },
         daily_case_volume: { title: '日次ケース件数', description: '過去30日間の新規ケース' },
-        sla_compliance_gauge: { title: 'SLA 達成率', description: '当期 SLA 内に解決したケースの割合' },
+        sla_compliance_gauge: { title: 'SLA 達成率（クローズ済みケース）', description: 'クローズ済みケースのうち SLA を満たした割合' },
         kb_deflection_rate: { title: 'ナレッジ解決率', description: 'クローズしたケースのうちナレッジ記事で解決した割合' },
         kb_resolved_cases: { title: 'ナレッジで解決', description: '解決した記事が紐づくクローズ済みケース' },
         closed_cases_total: { title: 'クローズ済みケース', description: 'ナレッジ解決率の分母' },
@@ -516,6 +522,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       subtitle: '{crm_account}',
       components: {
         case_highlights: { label: '重要情報' },
+        case_sla_breached: { label: 'SLA違反' },
         case_status_path: { label: 'ケースステータスの進捗' },
         case_details: { label: 'ケース詳細情報' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
@@ -549,6 +556,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: '重要情報' },
         opp_stage_path: { label: '商談ステージの進捗' },
+        opp_approval_pending_manager: { label: '営業マネージャーの承認待ち' },
+        opp_approval_pending_director: { label: '営業マネージャーと営業ディレクターの承認待ち' },
         opp_details: { label: '商談詳細情報' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
         // `pages.PAGE.components.TABS.items.VALUE.label`).
@@ -599,10 +608,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_my_leads: { label: '私のリード' },
         home_my_deals: { label: '私のオープン商談' },
         home_my_tasks: { label: '私のオープンタスク' },
-        ai_briefing: {
-          title: 'AI アシスタントに質問',
-          label: '今日の AI アシスタント',
-        },
         upcoming_events: { title: '今後の予定', label: '今後の予定' },
       },
     },
@@ -667,13 +672,35 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         status_review: { label: 'ステータス変更レビュー' },
       },
     },
+    campaign_lead_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "選択したキャンペーン" }} はメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
+        },
+        refuse_lead_opted_out: {
+          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} はメールの配信を停止しているため、このリードはキャンペーンに追加されませんでした。',
+        },
+      },
+    },
+    campaign_contact_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "選択したキャンペーン" }} はメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
+        },
+        refuse_contact_opted_out: {
+          message: '{{ contactRecord.full_name | default: "この取引先責任者" }} はメールの配信を停止しているため、この取引先責任者はキャンペーンに追加されませんでした。',
+        },
+      },
+    },
     campaign_enrollment: {
       label: 'キャンペーンにメンバーを登録',
-      successMessage: '対象メンバーをキャンペーンに登録しました。',
+      successMessage: 'キャンペーンへのメンバー登録が完了しました。',
       refusals: {
         end_refused: {
           message:
-            '選択された人のうち {{refusedCount}} 人の登録が拒否されました：登録 {{enrolledCount}} 人、拒否 {{refusedCount}} 人。拒否された人はキャンペーンに追加されていません。理由はフローの実行ログに一人ずつ記録されています。',
+            '選択された人のうち {{refusedCount}} 人の登録が拒否されました：新規追加 {{enrolledCount}} 人、既にメンバー {{alreadyCount}} 人、メール配信停止またはメールアドレスなしでスキップ {{skippedCount}} 人、拒否 {{refusedCount}} 人。拒否された人はキャンペーンに追加されていません。理由はフローの実行ログに一人ずつ記録されています。',
         },
         refuse_not_open: {
           message:
@@ -691,6 +718,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
               options: { executive: '経営層', sales: '営業部', marketing: 'マーケティング部', engineering: 'エンジニアリング部', support: 'サポート部', finance: '経理部', hr: '人事部', operations: 'オペレーション部' },
             },
           },
+        },
+        result: {
+          title: '登録結果',
+          description: 'キャンペーンに新規追加 {{enrolledCount}} 人、既にメンバー {{alreadyCount}} 人、メール配信停止またはメールアドレスなしでスキップ {{skippedCount}} 人。',
+          fields: { campaignLink: { label: 'キャンペーン' } },
         },
       },
     },
@@ -744,6 +776,19 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: '完了予定日' },
           },
         },
+        // The result screen (#2297). Same two-hole shape as `screen_1`: exactly
+        // one hole holds the account's name, and each `default:` is the OTHER
+        // state's words. Keep both holes, in this order, with a `default:` each
+        // (see `result` in `lead-conversion.flow.ts`).
+        result: {
+          title: 'リードを変換しました',
+          description: '{{ pendingApprovalAccountName | default:"承認待ちの取引先承認はありません：" }}{{ noApprovalAccountName | default:" は、営業マネージャーによる取引先承認を待っています" }}。',
+          fields: {
+            accountLink: { label: '取引先' },
+            contactLink: { label: '取引先責任者' },
+            opportunityLink: { label: '商談' },
+          },
+        },
       },
       refusals: {
         refuse_confirmed_duplicate: {
@@ -792,6 +837,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             quoteName: { label: '見積名' },
             expirationDays: { label: '有効期間（日）' },
             discount: { label: `割引率 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
+          },
+        },
+        result: {
+          title: '見積を作成しました',
+          description: '見積「{{ quoteName }}」を下書きとして作成しました。開いて価格を確認し、次の手続きへ進めてください。',
+          fields: {
+            quoteLink: { label: '見積' },
           },
         },
       },
@@ -849,9 +901,28 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     customer_churn_signals: {
       label: '顧客離反シグナル',
       description: '能動的な顧客維持のための 4 つの早期警告パネル：CSM が離反リスクありまたは離反中とフラグを付けた取引先、最近活動のない有効な取引先、動きのない高価値取引先、最近失注した商談。',
+      // Joined-report block headings (translatable since @objectstack/spec 18.3.0).
+      blocks: {
+        csm_flagged_accounts: {
+          label: 'CSM がフラグを付けた取引先',
+          description: 'CSM が手動でリスクありまたは解約進行中とフラグを付けた取引先（種別ごと）— 人の判断に基づき、活動の時計とは無関係です。',
+        },
+        at_risk_accounts: {
+          label: 'リスクのある取引先',
+          description: '60 日以上活動のないアクティブな取引先（業種ごと）。',
+        },
+        silent_high_value: {
+          label: '沈黙している高価値取引先',
+          description: '90 日以上動きのない戦略顧客・エンタープライズの取引先（種別ごと）。',
+        },
+        recently_closed_lost: {
+          label: '最近失注した商談',
+          description: '過去 30 日以内に失注した商談 — 顧客が完全に離れる前に原因を調べてください。',
+        },
+      },
     },
     lead_inflow_by_month_source: {
-      label: '月 × ソース別リード対応',
+      label: '月別リード対応',
       description: '月ごとのコンタクト済みリード数を獲得チャネル別に表示',
     },
     opportunities_by_stage: {
@@ -859,11 +930,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: 'ステージ別に集計した商談のサマリー',
     },
     opportunity_funnel_owner_stage: {
-      label: '担当者 → ステージ別商談ファネル',
+      label: '担当者別商談ファネル',
       description: '営業担当者ごとのステージ別パイプラインファネル',
     },
     pipeline_coverage_by_quarter: {
-      label: 'フォーキャスト区分 × 四半期別パイプラインカバレッジ',
+      label: '四半期別パイプラインカバレッジ',
       description: '進行中のパイプライン金額をフォーキャスト区分別に、完了予定の四半期ごとに集計',
     },
     won_opportunities_by_owner: {
@@ -875,15 +946,15 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: 'ステータスと優先度別のケースのサマリー',
     },
     sla_performance: {
-      label: 'SLA 実績レポート',
-      description: 'SLA 遵守状況の分析',
+      label: 'クローズ済みケースの SLA',
+      description: 'クローズ済みケースの優先度別 SLA 違反率と平均解決時間',
     },
     cases_opened_by_day_priority: {
-      label: '優先度 × 日別新規ケース',
+      label: '日別新規ケース',
       description: '1 日ごとの新規ケース数を優先度別に表示',
     },
   },
-  // Setup → Positions (`src/sales/sharing/positions.ts`).
+  // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
     executive: {
       label: 'エグゼクティブ',
@@ -934,7 +1005,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '欧州テリトリーのチーム：欧州（EMEA）テリトリーの取引先をすべて編集します。',
     },
   },
-  // Setup → Permission Sets (`src/sales/profiles/*.profile.ts`).
+  // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
     crm_user: {
       label: 'CRM ユーザー',
@@ -963,6 +1034,40 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     system_admin: {
       label: 'システム管理者',
       description: '単一組織インストールの運用者：すべての業務レコードを完全に管理し、ユーザー・セキュリティモデル・設定を管理します。',
+    },
+  },
+  // Doc book titles and group headings (translatable since @objectstack/spec 18.3.0).
+  books: {
+    crm_manual: {
+      label: 'HotCRM ユーザーマニュアル',
+      description: '営業とサービスで HotCRM がどう動くか：画面の背後にあるルール。',
+      groups: {
+        start: { label: 'はじめに' },
+        sales: { label: '営業' },
+        service: { label: 'サービス' },
+        analytics: { label: '分析' },
+      },
+    },
+    crm_admin_manual: {
+      label: 'HotCRM 管理者マニュアル',
+      description: '本番稼働、アクセス権、すべての自動化しきい値とデータインポート — 管理者向け。',
+      groups: {
+        admin: { label: '管理' },
+      },
+    },
+    crm_revenue_manual: {
+      label: 'HotCRM 収益マニュアル',
+      description: '見積、製品と価格表、そして受注した商談の請求部門への引き継ぎ。',
+      groups: {
+        revenue: { label: '収益' },
+      },
+    },
+    crm_marketing_manual: {
+      label: 'HotCRM マーケティングマニュアル',
+      description: 'キャンペーン：各数値が数えているもの、そして自動で動くもの。',
+      groups: {
+        marketing: { label: 'キャンペーン' },
+      },
     },
   },
 };

@@ -9,16 +9,21 @@ import { avgDealSizeMetricWidget, pipelineByStageWidget } from './shared-widgets
  * Single-page snapshot of revenue, pipeline, and customer activity. Designed
  * to mirror the polished CRM dashboard reference at
  * https://github.com/objectstack-ai/objectui/tree/main/examples/crm/src/dashboards
- * — KPI tiles, an area-chart revenue trend, a lead-source donut, a
- * pipeline-by-stage bar chart, and a recent-deals table.
+ * — KPI tiles, a pipeline-by-stage bar chart, a lead-source donut, and a
+ * pipeline-by-owner table. The revenue trend it used to carry lives on
+ * Executive Overview alone (#2370 row 2).
  *
  * This dashboard intentionally uses the framework's first-class metadata fields
  * (colorVariant, chartConfig, header, dateRange, descriptions, action buttons)
  * rather than ad-hoc hex strings stuffed into `options.color`.
  *
  * No KPI tile declares a `trend`. A period-over-period delta is a measurement,
- * so it has to come from a real comparison query (widget `compareTo`) once the
- * renderer supports it for dataset metrics — the percentages this file used to
+ * so it comes from a real comparison query: the revenue, won and deal-size
+ * tiles declare `compareTo: { kind: 'previousPeriod' }` (#2296), and the
+ * console re-runs each one over the window just before the one the date
+ * picker selects. With the picker at All time there is no window to shift and
+ * the tile shows its bare number (objectstack#25970). Open Deals stays bare:
+ * it is not one of the tiles #2296 names. The percentages this file used to
  * carry were typed by hand and recomputed by nothing, so they kept asserting
  * the same "+12.5% vs last month" on any data, including an empty database.
  * Same rule as the executive dashboard (#500, #587).
@@ -67,6 +72,7 @@ export const CrmOverviewDashboard: Dashboard = {
       title: 'Total Revenue (Selected Period)',
       description: 'Closed-won revenue in the selected period',
       type: 'metric',
+      compareTo: { kind: 'previousPeriod' },
       filter: { stage: 'closed_won' },
       colorVariant: 'success',
       dataset: 'opportunity_metrics', values: ['total_amount'],
@@ -87,6 +93,7 @@ export const CrmOverviewDashboard: Dashboard = {
       title: 'Deals Won (Selected Period)',
       description: 'Closed-won deals in the selected period',
       type: 'metric',
+      compareTo: { kind: 'previousPeriod' },
       filter: { stage: 'closed_won' },
       colorVariant: 'purple',
       dataset: 'opportunity_metrics', values: ['opp_count'],
@@ -95,27 +102,14 @@ export const CrmOverviewDashboard: Dashboard = {
     avgDealSizeMetricWidget({ x: 9, y: 0, w: 3, h: 1 }, {
       title: 'Avg Deal Size (Selected Period)',
       description: 'Average value of closed-won deals in the selected period',
+      compareTo: { kind: 'previousPeriod' },
     }),
 
     // ─── Charts Row 1 ─────────────────────────────────────────────────
-    {
-      id: 'revenue_trends',
-      title: 'Revenue Trends',
-      description: 'Closed-won revenue over the last 12 months',
-      type: 'area',
-      filter: { stage: 'closed_won', close_date: { $gte: '{12_months_ago}' } },
-      filterBindings: { dateRange: false }, // self-scoped to 12 months — the date picker must not narrow it
-      colorVariant: 'success',
-      dataset: 'opportunity_metrics', dimensions: ['close_date'], values: ['total_amount'],
-      layout: { x: 0, y: 2, w: 9, h: 4 },
-      chartConfig: {
-        showLegend: false,
-        showDataLabels: false,
-        colors: ['#10B981'],
-        interaction: { tooltips: true },
-      },
-      options: { dateGranularity: 'month' },
-    },
+    // No revenue trend here (#2370 row 2): the same 12-month closed-won area
+    // chart was on Executive Overview, Sales Performance and this dashboard.
+    // Its one home is Executive Overview.
+    pipelineByStageWidget({ x: 0, y: 2, w: 6, h: 4 }),
     {
       id: 'lead_source',
       title: 'Lead Source',
@@ -123,7 +117,7 @@ export const CrmOverviewDashboard: Dashboard = {
       type: 'donut',
       colorVariant: 'purple',
       dataset: 'opportunity_metrics', dimensions: ['lead_source'], values: ['total_amount'],
-      layout: { x: 9, y: 2, w: 3, h: 4 },
+      layout: { x: 6, y: 2, w: 6, h: 4 },
       chartConfig: {
         showLegend: true,
         showDataLabels: true,
@@ -132,11 +126,15 @@ export const CrmOverviewDashboard: Dashboard = {
     },
 
     // ─── Charts Row 2 ─────────────────────────────────────────────────
-    pipelineByStageWidget({ x: 0, y: 6, w: 6, h: 4 }),
     {
       id: 'top_products',
-      title: 'Top Products',
-      description: 'Total list-price revenue by product category',
+      // It sums CATALOG list prices, so it says so (#2370 row 3). It was
+      // titled "Top Products" with a "revenue" description, which read as
+      // sales. Summing what was sold is not on offer: a line's `total_price`
+      // is a `formula`, and a dataset refuses `sum` over a formula field
+      // (DATASET_INVALID, measured on 18.2.0); no stored per-line amount exists.
+      title: 'List Price by Category',
+      description: 'Catalog list prices summed per product category, not sales',
       type: 'bar',
       colorVariant: 'blue',
       // crm_product has no `close_date`, so the date picker would fail it with
@@ -147,8 +145,14 @@ export const CrmOverviewDashboard: Dashboard = {
       // resolve — it just means nothing on a shared product catalog, where the
       // column records whoever created the entry.
       filterBindings: { dateRange: false, owner_id: false },
+      // `product_metrics` ships in the revenue module, so the tile asks for
+      // that dataset's object and is left out when revenue is disabled (#2383).
+      // Measured on 18.2.0: a disabled package's objects drop out of the served
+      // object list this key is checked against; without it the tile drew a
+      // red "Dataset "product_metrics" is not defined in this environment".
+      requiresObject: 'crm_product',
       dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
-      layout: { x: 6, y: 6, w: 6, h: 4 },
+      layout: { x: 0, y: 6, w: 12, h: 4 },
       chartConfig: {
         showLegend: false,
         showDataLabels: true,

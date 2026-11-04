@@ -49,6 +49,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_quote: { label: '报价' },
         nav_contract: { label: '合同' },
         nav_product: { label: '产品' },
+        nav_price_book: { label: '价格表' },
         nav_sales_dashboard: { label: '销售业绩' },
 
         group_work: { label: '我的工作' },
@@ -64,6 +65,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_service: { label: '服务' },
         nav_case: { label: '工单' },
         nav_knowledge: { label: '知识库' },
+        nav_knowledge_published: { label: '知识库' },
         nav_service_dashboard: { label: '服务概览' },
 
         group_insights: { label: '数据洞察' },
@@ -73,14 +75,20 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_reports: { label: '报表' },
         nav_report_opportunities_by_stage: { label: '各阶段商机' },
         nav_report_won_by_owner: { label: '各负责人成交商机' },
-        nav_report_pipeline_coverage: { label: '管道覆盖率' },
+        nav_report_pipeline_coverage: { label: '季度管道覆盖率' },
         nav_report_funnel_by_owner: { label: '各负责人商机漏斗' },
-        nav_report_lead_inflow: { label: '线索流入' },
+        nav_report_lead_inflow: { label: '每月线索跟进' },
         nav_report_accounts_by_industry: { label: '客户行业与类型' },
         nav_report_churn_signals: { label: '客户流失信号' },
         nav_report_cases_by_status: { label: '工单状态与优先级' },
-        nav_report_sla: { label: 'SLA 达成' },
+        nav_report_sla: { label: '已关闭工单的 SLA' },
         nav_report_cases_opened_by_day: { label: '每日新建工单' },
+
+        group_help: { label: '帮助' },
+        nav_help_manual: { label: '使用手册' },
+        nav_help_admin: { label: '管理员手册' },
+        nav_help_revenue: { label: '收入手册' },
+        nav_help_marketing: { label: '营销手册' },
       },
     },
   },
@@ -135,10 +143,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         active_deals: { title: '进行中商机（所选期间）', description: '预计在所选期间内成交的进行中商机' },
         won_deals: { title: '赢单数（所选期间）', description: '所选期间内赢单的商机数' },
         avg_deal_size: { title: '平均订单金额（所选期间）', description: '所选期间内已成交商机的平均金额' },
-        revenue_trends: { title: '收入趋势', description: '过去 12 个月的已成交收入' },
         lead_source: { title: '线索来源', description: '按获客渠道统计的管道金额' },
         pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
-        top_products: { title: '热门产品', description: '按产品类别统计的目录价收入' },
+        top_products: { title: '各类别目录价合计', description: '按产品类别汇总的目录价，不是销售额' },
         pipeline_by_owner: { title: '按负责人统计管道', description: '各销售负责人的进行中管道金额与商机数' },
       },
     },
@@ -166,11 +173,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         open_opportunities: { title: '进行中商机（所选期间）', description: '预计在所选期间内成交的进行中商机' },
         avg_deal_size: { title: '平均订单金额（本季度）', description: '本季度已成交商机的平均金额' },
         pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
-        monthly_revenue_trend: { title: '月度收入趋势', description: '过去 12 个月的已成交收入' },
         pipeline_by_forecast_category: { title: '预测类别管道分布', description: '按预测类别统计的进行中管道金额' },
         lead_source_breakdown: { title: '线索来源分布', description: '按来源统计的线索数量' },
         open_pipeline_by_owner: { title: '按负责人统计进行中管道', description: '各销售负责人的进行中管道金额、商机数与平均赢单概率' },
-        quota_attainment_by_rep: { title: '按销售代表统计配额达成', description: '来自预测快照的各销售代表本季度配额、已成交收入与达成率' },
+        quota_attainment_by_rep: { title: '按销售代表统计配额达成', description: '各销售代表本季度配额、已成交收入与达成率。每晚的预测快照建好本季度记录、经理填好配额后才有数据' },
         pipeline_stage_by_source: { title: '阶段 × 线索来源', description: '按阶段和来源交叉统计进行中商机金额' },
         win_rate_12m: { title: '赢率（近 12 个月）', description: '近 12 个月已结单商机中赢单所占的比例' },
         won_deals_12m: { title: '赢单数（近 12 个月）', description: '赢率的分子' },
@@ -187,12 +193,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         open_cases: { title: '未关闭工单', description: '尚未关闭的工单' },
         critical_cases: { title: '严重工单', description: '标记为严重优先级的未关闭工单' },
         avg_resolution_time: { title: '平均解决时长', description: '关闭工单的平均处理时长（小时）' },
-        sla_violations: { title: 'SLA 违约', description: '已超出 SLA 的工单' },
+        sla_violations: { title: '已超 SLA 的未结工单', description: 'SLA 截止时间已过、尚未解决的工单' },
         cases_by_status: { title: '按状态分布', description: '工单在各处理阶段的分布' },
         cases_by_priority: { title: '按优先级分布', description: '未关闭工单按紧急程度的分布' },
         cases_by_origin: { title: '按来源分布', description: '工单的来源渠道' },
         daily_case_volume: { title: '每日工单量', description: '过去 30 天的新建工单' },
-        sla_compliance_gauge: { title: 'SLA 达成率', description: '本期 SLA 内解决工单的占比' },
+        sla_compliance_gauge: { title: 'SLA 达成率（已关闭工单）', description: '已关闭工单中达成 SLA 的占比' },
         kb_deflection_rate: { title: '知识库转移率', description: '已关闭工单中由知识文章解决的占比' },
         kb_resolved_cases: { title: '知识库解决数', description: '已关联解决文章的已关闭工单' },
         closed_cases_total: { title: '已关闭工单', description: '转移率的分母' },
@@ -521,6 +527,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       subtitle: '{crm_account}',
       components: {
         case_highlights: { label: '关键信息' },
+        case_sla_breached: { label: '已违反 SLA' },
         case_status_path: { label: '工单状态进度' },
         case_details: { label: '工单明细' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
@@ -554,6 +561,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: '关键信息' },
         opp_stage_path: { label: '商机阶段进度' },
+        opp_approval_pending_manager: { label: '等待销售经理审批' },
+        opp_approval_pending_director: { label: '等待销售经理和销售总监审批' },
         opp_details: { label: '商机明细' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
         // `pages.PAGE.components.TABS.items.VALUE.label`).
@@ -604,10 +613,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_my_leads: { label: '我的线索' },
         home_my_deals: { label: '我的进行中商机' },
         home_my_tasks: { label: '我的待办任务' },
-        ai_briefing: {
-          title: '询问 AI 助手',
-          label: 'AI 助手今日速览',
-        },
         upcoming_events: { title: '即将开始的活动', label: '即将开始的活动' },
       },
     },
@@ -672,13 +677,35 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         status_review: { label: '状态变更审核' },
       },
     },
+    campaign_lead_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "所选营销活动" }} 不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+        },
+        refuse_lead_opted_out: {
+          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} 已退订邮件，因此该线索没有被加入营销活动。',
+        },
+      },
+    },
+    campaign_contact_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "所选营销活动" }} 不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+        },
+        refuse_contact_opted_out: {
+          message: '{{ contactRecord.full_name | default: "该联系人" }} 已退订邮件，因此该联系人没有被加入营销活动。',
+        },
+      },
+    },
     campaign_enrollment: {
       label: '将成员加入营销活动',
-      successMessage: '符合条件的成员已加入营销活动。',
+      successMessage: '营销活动成员加入已完成。',
       refusals: {
         end_refused: {
           message:
-            '有 {{refusedCount}} 人被拒绝加入：已加入 {{enrolledCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
+            '有 {{refusedCount}} 人被拒绝加入：新加入 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因退订邮件或没有邮箱地址而跳过 {{skippedCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
         },
         refuse_not_open: {
           message:
@@ -696,6 +723,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
               options: { executive: '管理层', sales: '销售部', marketing: '市场部', engineering: '工程部', support: '支持部', finance: '财务部', hr: '人力资源', operations: '运营部' },
             },
           },
+        },
+        result: {
+          title: '加入结果',
+          description: '新加入营销活动 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因退订邮件或没有邮箱地址而跳过 {{skippedCount}} 人。',
+          fields: { campaignLink: { label: '营销活动' } },
         },
       },
     },
@@ -749,6 +781,19 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: '预计成交日期' },
           },
         },
+        // The result screen (#2297). Same two-hole shape as `screen_1`: exactly
+        // one hole holds the account's name, and each `default:` is the OTHER
+        // state's words. Keep both holes, in this order, with a `default:` each
+        // (see `result` in `lead-conversion.flow.ts`).
+        result: {
+          title: '线索已转化',
+          description: '{{ pendingApprovalAccountName | default:"没有待处理的客户审批：" }}{{ noApprovalAccountName | default:" 正在等待销售经理的客户审批" }}。',
+          fields: {
+            accountLink: { label: '客户' },
+            contactLink: { label: '联系人' },
+            opportunityLink: { label: '商机' },
+          },
+        },
       },
       refusals: {
         refuse_confirmed_duplicate: {
@@ -797,6 +842,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             quoteName: { label: '报价名称' },
             expirationDays: { label: '有效期（天）' },
             discount: { label: `折扣 % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
+          },
+        },
+        result: {
+          title: '报价单已创建',
+          description: '报价单「{{ quoteName }}」已作为草稿创建。打开它核对价格，再继续推进。',
+          fields: {
+            quoteLink: { label: '报价单' },
           },
         },
       },
@@ -854,9 +906,28 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     customer_churn_signals: {
       label: '客户流失信号',
       description: '四个堆叠的预警面板，用于主动挽留客户：客户成功经理标记为有风险或正在流失的客户、近期没有活动的活跃客户、沉寂的高价值客户，以及最近丢单的商机。',
+      // Joined-report block headings (translatable since @objectstack/spec 18.3.0).
+      blocks: {
+        csm_flagged_accounts: {
+          label: '客户成功经理标记的客户',
+          description: '客户成功经理手动标记为有风险或正在流失的客户，按类型分组——基于人的判断，与活动时钟无关。',
+        },
+        at_risk_accounts: {
+          label: '有风险的客户',
+          description: '60 天以上没有活动的活跃客户，按行业分组。',
+        },
+        silent_high_value: {
+          label: '沉寂的高价值客户',
+          description: '90 天以上没有动静的战略客户和企业客户，按类型分组。',
+        },
+        recently_closed_lost: {
+          label: '最近丢单的商机',
+          description: '最近 30 天内丢单的商机——在客户彻底流失之前查明原因。',
+        },
+      },
     },
     lead_inflow_by_month_source: {
-      label: '按月份 × 来源统计线索跟进',
+      label: '每月线索跟进',
       description: '每月已联系线索的数量，按获客渠道细分',
     },
     opportunities_by_stage: {
@@ -864,11 +935,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '按阶段分组汇总商机',
     },
     opportunity_funnel_owner_stage: {
-      label: '各负责人商机漏斗（按阶段）',
+      label: '各负责人商机漏斗',
       description: '每位销售代表逐阶段的管道漏斗',
     },
     pipeline_coverage_by_quarter: {
-      label: '按预测类别 × 季度统计管道覆盖率',
+      label: '季度管道覆盖率',
       description: '按预测类别统计进行中的管道金额，并按预计成交季度分段',
     },
     won_opportunities_by_owner: {
@@ -880,15 +951,15 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '按状态和优先级汇总工单',
     },
     sla_performance: {
-      label: 'SLA 达成报表',
-      description: 'SLA 达成情况分析',
+      label: '已关闭工单的 SLA',
+      description: '已关闭工单按优先级的 SLA 违约率与平均解决时长',
     },
     cases_opened_by_day_priority: {
-      label: '按优先级 × 日期统计新建工单',
+      label: '每日新建工单',
       description: '每日新建工单数，按优先级细分',
     },
   },
-  // Setup → Positions (`src/sales/sharing/positions.ts`).
+  // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
     executive: {
       label: '高管',
@@ -939,7 +1010,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: '欧洲区域团队：可编辑欧洲（EMEA）区域内的每一个客户。',
     },
   },
-  // Setup → Permission Sets (`src/sales/profiles/*.profile.ts`).
+  // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
     crm_user: {
       label: 'CRM 用户',
@@ -968,6 +1039,40 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     system_admin: {
       label: '系统管理员',
       description: '单组织部署的运营者：完全控制每一条业务记录，并负责用户、安全模型和系统设置的管理。',
+    },
+  },
+  // Doc book titles and group headings (translatable since @objectstack/spec 18.3.0).
+  books: {
+    crm_manual: {
+      label: 'HotCRM 使用手册',
+      description: 'HotCRM 在销售和服务中如何运作：界面背后的规则。',
+      groups: {
+        start: { label: '入门' },
+        sales: { label: '销售' },
+        service: { label: '服务' },
+        analytics: { label: '分析' },
+      },
+    },
+    crm_admin_manual: {
+      label: 'HotCRM 管理员手册',
+      description: '上线、权限、每一个自动化阈值和数据导入——面向管理员。',
+      groups: {
+        admin: { label: '管理' },
+      },
+    },
+    crm_revenue_manual: {
+      label: 'HotCRM 收入手册',
+      description: '报价单、产品和价格表，以及赢单后向计费系统的交接。',
+      groups: {
+        revenue: { label: '收入' },
+      },
+    },
+    crm_marketing_manual: {
+      label: 'HotCRM 营销手册',
+      description: '营销活动：各项数字统计的是什么，以及哪些环节会自动运行。',
+      groups: {
+        marketing: { label: '营销活动' },
+      },
     },
   },
 };

@@ -44,6 +44,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_quote: { label: 'Cotizaciones' },
         nav_contract: { label: 'Contratos' },
         nav_product: { label: 'Productos' },
+        nav_price_book: { label: 'Listas de Precios' },
         nav_sales_dashboard: { label: 'Rendimiento de Ventas' },
 
         group_work: { label: 'Mi Trabajo' },
@@ -56,6 +57,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_service: { label: 'Servicio' },
         nav_case: { label: 'Casos' },
         nav_knowledge: { label: 'Conocimiento' },
+        nav_knowledge_published: { label: 'Conocimiento' },
         nav_service_dashboard: { label: 'Resumen de Servicio' },
 
         group_marketing: { label: 'Marketing' },
@@ -67,15 +69,21 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
 
         group_reports: { label: 'Informes' },
         nav_report_opportunities_by_stage: { label: 'Oportunidades por Etapa' },
-        nav_report_won_by_owner: { label: 'Ganadas por Propietario' },
-        nav_report_pipeline_coverage: { label: 'Cobertura del Pipeline' },
+        nav_report_won_by_owner: { label: 'Oportunidades Ganadas por Propietario' },
+        nav_report_pipeline_coverage: { label: 'Cobertura del Pipeline por Trimestre' },
         nav_report_funnel_by_owner: { label: 'Embudo por Propietario' },
-        nav_report_lead_inflow: { label: 'Entrada de Prospectos' },
+        nav_report_lead_inflow: { label: 'Interacción con Prospectos por Mes' },
         nav_report_accounts_by_industry: { label: 'Cuentas por Industria y Tipo' },
         nav_report_churn_signals: { label: 'Señales de Abandono' },
         nav_report_cases_by_status: { label: 'Casos por Estado y Prioridad' },
-        nav_report_sla: { label: 'Cumplimiento de SLA' },
+        nav_report_sla: { label: 'SLA de Casos Cerrados' },
         nav_report_cases_opened_by_day: { label: 'Casos Abiertos por Día' },
+
+        group_help: { label: 'Ayuda' },
+        nav_help_manual: { label: 'Manual de Usuario' },
+        nav_help_admin: { label: 'Manual de Administración' },
+        nav_help_revenue: { label: 'Manual de Ingresos' },
+        nav_help_marketing: { label: 'Manual de Marketing' },
       },
     },
   },
@@ -130,10 +138,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         active_deals: { title: 'Negocios abiertos (período seleccionado)', description: 'Oportunidades abiertas con cierre previsto en el período seleccionado' },
         won_deals: { title: 'Negocios ganados (período seleccionado)', description: 'Negocios cerrados ganados en el período seleccionado' },
         avg_deal_size: { title: 'Tamaño medio del negocio (período seleccionado)', description: 'Valor medio de los negocios cerrados ganados en el período seleccionado' },
-        revenue_trends: { title: 'Tendencia de ingresos', description: 'Ingresos cerrados ganados de los últimos 12 meses' },
         lead_source: { title: 'Origen del prospecto', description: 'Valor del pipeline por canal de adquisición' },
         pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas en cada etapa de venta' },
-        top_products: { title: 'Productos principales', description: 'Ingresos a precio de lista por categoría de producto' },
+        top_products: { title: 'Precio de lista por categoría', description: 'Suma de los precios de lista del catálogo por categoría de producto, no ventas' },
         pipeline_by_owner: { title: 'Pipeline por responsable', description: 'Valor del pipeline abierto y número de negocios por comercial' },
       },
     },
@@ -161,11 +168,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         open_opportunities: { title: 'Negocios abiertos (período seleccionado)', description: 'Oportunidades abiertas con cierre previsto en el período seleccionado' },
         avg_deal_size: { title: 'Tamaño medio del negocio (trimestre)', description: 'Valor medio de los negocios cerrados ganados este trimestre' },
         pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas en cada etapa de venta' },
-        monthly_revenue_trend: { title: 'Tendencia mensual de ingresos', description: 'Ingresos cerrados ganados de los últimos 12 meses' },
         pipeline_by_forecast_category: { title: 'Pipeline por categoría de pronóstico', description: 'Pipeline abierto agrupado por categoría de pronóstico de ventas' },
         lead_source_breakdown: { title: 'Origen del prospecto', description: 'De dónde proviene nuestro pipeline' },
         open_pipeline_by_owner: { title: 'Pipeline abierto por responsable', description: 'Valor del pipeline en curso, número de negocios y probabilidad media de cierre por comercial' },
-        quota_attainment_by_rep: { title: 'Cumplimiento de cuota por representante', description: 'Cuota del trimestre actual, ingresos cerrados y cumplimiento por representante, según instantáneas de pronóstico' },
+        quota_attainment_by_rep: { title: 'Cumplimiento de cuota por representante', description: 'Cuota del trimestre actual, ingresos cerrados y cumplimiento por representante. Se llena cuando la instantánea nocturna de pronóstico abre el trimestre y un gerente fija cada cuota' },
         pipeline_stage_by_source: { title: 'Pipeline por Etapa × Origen', description: 'Tabla cruzada del importe de oportunidades abiertas por etapa y origen' },
         win_rate_12m: { title: 'Tasa de éxito (12M)', description: 'Negocios ganados como porcentaje de todos los negocios resueltos en los últimos 12 meses' },
         won_deals_12m: { title: 'Negocios ganados (12M)', description: 'El numerador de la tasa de éxito' },
@@ -182,12 +188,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         open_cases: { title: 'Casos abiertos', description: 'Casos que aún no se han cerrado' },
         critical_cases: { title: 'Casos críticos', description: 'Casos abiertos marcados como prioridad crítica' },
         avg_resolution_time: { title: 'Tiempo medio de resolución', description: 'Tiempo medio hasta el cierre, en horas' },
-        sla_violations: { title: 'Incumplimientos de SLA', description: 'Casos que incumplieron su SLA' },
+        sla_violations: { title: 'Casos abiertos fuera de SLA', description: 'Casos abiertos cuyo plazo de SLA ya venció' },
         cases_by_status: { title: 'Casos por estado', description: 'Distribución de la carga a lo largo del pipeline' },
         cases_by_priority: { title: 'Casos por prioridad', description: 'Mezcla de casos abiertos por urgencia' },
         cases_by_origin: { title: 'Casos por origen', description: 'De dónde provienen nuestros casos' },
         daily_case_volume: { title: 'Volumen diario de casos', description: 'Casos nuevos creados en los últimos 30 días' },
-        sla_compliance_gauge: { title: 'Cumplimiento de SLA', description: 'Porcentaje de casos resueltos dentro del SLA en este período' },
+        sla_compliance_gauge: { title: 'SLA cumplido (casos cerrados)', description: 'Proporción de casos cerrados que cumplieron su SLA' },
         kb_deflection_rate: { title: 'Tasa de Desvío por KB', description: 'Proporción de casos cerrados resueltos con un artículo de la base de conocimiento' },
         kb_resolved_cases: { title: 'Resueltos por KB', description: 'Casos cerrados que señalan el artículo que los resolvió' },
         closed_cases_total: { title: 'Casos Cerrados', description: 'El denominador de la tasa de desvío' },
@@ -514,6 +520,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       subtitle: '{crm_account}',
       components: {
         case_highlights: { label: 'Información Clave' },
+        case_sla_breached: { label: 'SLA incumplido' },
         case_status_path: { label: 'Progreso del Estado del Caso' },
         case_details: { label: 'Detalles del Caso' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
@@ -547,6 +554,8 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       components: {
         opp_highlights: { label: 'Información Clave' },
         opp_stage_path: { label: 'Progreso de Etapa de la Oportunidad' },
+        opp_approval_pending_manager: { label: 'Pendiente de aprobación del Gerente de Ventas' },
+        opp_approval_pending_director: { label: 'Pendiente de aprobación del Gerente y del Director de Ventas' },
         opp_details: { label: 'Detalles de la Oportunidad' },
         // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
         // `pages.PAGE.components.TABS.items.VALUE.label`).
@@ -597,10 +606,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         home_my_leads: { label: 'Mis Prospectos' },
         home_my_deals: { label: 'Mis Negocios Abiertos' },
         home_my_tasks: { label: 'Mis Tareas Abiertas' },
-        ai_briefing: {
-          title: 'Pregúntale al Asistente de IA',
-          label: 'Hoy con el Asistente de IA',
-        },
         upcoming_events: { title: 'Próximos Eventos', label: 'Próximos Eventos' },
       },
     },
@@ -665,13 +670,35 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         status_review: { label: 'Revisión del Cambio de Estado' },
       },
     },
+    campaign_lead_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "La campaña elegida" }} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
+        },
+        refuse_lead_opted_out: {
+          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} se dio de baja del correo electrónico, así que el prospecto no se añadió a la campaña.',
+        },
+      },
+    },
+    campaign_contact_member_enroll: {
+      refusals: {
+        refuse_campaign_not_open: {
+          message:
+            '{{ campaignRecord.display_title | default: "La campaña elegida" }} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
+        },
+        refuse_contact_opted_out: {
+          message: '{{ contactRecord.full_name | default: "Este contacto" }} se dio de baja del correo electrónico, así que el contacto no se añadió a la campaña.',
+        },
+      },
+    },
     campaign_enrollment: {
       label: 'Inscribir miembros en la campaña',
-      successMessage: 'Miembros elegibles inscritos en la campaña.',
+      successMessage: 'Inscripción en la campaña terminada.',
       refusals: {
         end_refused: {
           message:
-            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} inscritas, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
+            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} agregadas, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se dieron de baja del correo o no tienen dirección de correo, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
         },
         refuse_not_open: {
           message:
@@ -689,6 +716,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
               options: { executive: 'Ejecutivo', sales: 'Ventas', marketing: 'Marketing', engineering: 'Ingeniería', support: 'Soporte', finance: 'Finanzas', hr: 'Recursos Humanos', operations: 'Operaciones' },
             },
           },
+        },
+        result: {
+          title: 'Resultado de la inscripción',
+          description: '{{enrolledCount}} agregadas a la campaña, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se dieron de baja del correo o no tienen dirección de correo.',
+          fields: { campaignLink: { label: 'Campaña' } },
         },
       },
     },
@@ -742,6 +774,19 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             closeDate: { label: 'Fecha de Cierre' },
           },
         },
+        // The result screen (#2297). Same two-hole shape as `screen_1`: exactly
+        // one hole holds the account's name, and each `default:` is the OTHER
+        // state's words. Keep both holes, in this order, with a `default:` each
+        // (see `result` in `lead-conversion.flow.ts`).
+        result: {
+          title: 'Prospecto convertido',
+          description: '{{ pendingApprovalAccountName | default:"No hay ninguna aprobación de cuenta pendiente para " }}{{ noApprovalAccountName | default:" está pendiente de la aprobación de cuenta de un gerente de ventas" }}.',
+          fields: {
+            accountLink: { label: 'Cuenta' },
+            contactLink: { label: 'Contacto' },
+            opportunityLink: { label: 'Oportunidad' },
+          },
+        },
       },
       refusals: {
         refuse_confirmed_duplicate: {
@@ -790,6 +835,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
             quoteName: { label: 'Nombre de Cotización' },
             expirationDays: { label: 'Válida por (días)' },
             discount: { label: `Descuento % (≤ ${QUOTE_DISCOUNT_CEILING})`, placeholder: `0-${QUOTE_DISCOUNT_CEILING}` },
+          },
+        },
+        result: {
+          title: 'Cotización creada',
+          description: 'La cotización «{{ quoteName }}» se creó como borrador. Ábrala para revisar el precio y continuar.',
+          fields: {
+            quoteLink: { label: 'Cotización' },
           },
         },
       },
@@ -847,9 +899,28 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     customer_churn_signals: {
       label: 'Señales de Abandono',
       description: 'Cuatro paneles apilados de alerta temprana para la retención proactiva: cuentas que un CSM marcó en riesgo o en abandono, cuentas activas sin actividad reciente, cuentas de alto valor silenciosas y oportunidades perdidas recientemente.',
+      // Joined-report block headings (translatable since @objectstack/spec 18.3.0).
+      blocks: {
+        csm_flagged_accounts: {
+          label: 'Cuentas marcadas por el CSM',
+          description: 'Cuentas que un CSM ha marcado a mano como en riesgo o en abandono, agrupadas por tipo: juicio humano, independiente del reloj de actividad.',
+        },
+        at_risk_accounts: {
+          label: 'Cuentas en riesgo',
+          description: 'Cuentas activas sin actividad en 60 días o más, agrupadas por sector.',
+        },
+        silent_high_value: {
+          label: 'Cuentas de alto valor en silencio',
+          description: 'Cuentas de nivel Estratégico y Gran Empresa sin actividad desde hace 90 días o más, agrupadas por tipo.',
+        },
+        recently_closed_lost: {
+          label: 'Oportunidades perdidas recientemente',
+          description: 'Oportunidades cerradas como perdidas en los últimos 30 días: investígalas antes de que el cliente se vaya del todo.',
+        },
+      },
     },
     lead_inflow_by_month_source: {
-      label: 'Interacción con Prospectos por Mes × Origen',
+      label: 'Interacción con Prospectos por Mes',
       description: 'Volumen mensual de prospectos contactados, desglosado por canal de adquisición',
     },
     opportunities_by_stage: {
@@ -857,11 +928,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: 'Resumen de oportunidades agrupadas por etapa',
     },
     opportunity_funnel_owner_stage: {
-      label: 'Embudo de Oportunidades por Propietario → Etapa',
+      label: 'Embudo por Propietario',
       description: 'Embudo del pipeline etapa por etapa para cada representante',
     },
     pipeline_coverage_by_quarter: {
-      label: 'Cobertura del Pipeline por Previsión × Trimestre',
+      label: 'Cobertura del Pipeline por Trimestre',
       description: 'Importe del pipeline abierto por categoría de previsión, agrupado por trimestre de cierre',
     },
     won_opportunities_by_owner: {
@@ -873,15 +944,15 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: 'Resumen de casos por estado y prioridad',
     },
     sla_performance: {
-      label: 'Informe de Cumplimiento de SLA',
-      description: 'Análisis del cumplimiento de los SLA',
+      label: 'SLA de Casos Cerrados',
+      description: 'Tasa de incumplimiento de SLA y tiempo medio de resolución de los casos cerrados, por prioridad',
     },
     cases_opened_by_day_priority: {
-      label: 'Casos Abiertos por Prioridad × Día',
+      label: 'Casos Abiertos por Día',
       description: 'Entrada diaria de casos desglosada por prioridad',
     },
   },
-  // Setup → Positions (`src/sales/sharing/positions.ts`).
+  // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
     executive: {
       label: 'Ejecutivo',
@@ -932,7 +1003,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       description: 'Equipo territorial de Europa: edita todas las cuentas del territorio de Europa (EMEA).',
     },
   },
-  // Setup → Permission Sets (`src/sales/profiles/*.profile.ts`).
+  // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
     crm_user: {
       label: 'Usuario de CRM',
@@ -961,6 +1032,40 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     system_admin: {
       label: 'Administrador del Sistema',
       description: 'El operador de una instalación de una sola organización: control total de todos los registros de negocio, más la administración de usuarios, del modelo de seguridad y de la configuración.',
+    },
+  },
+  // Doc book titles and group headings (translatable since @objectstack/spec 18.3.0).
+  books: {
+    crm_manual: {
+      label: 'Manual de Usuario de HotCRM',
+      description: 'Cómo funciona HotCRM en ventas y servicio: las reglas detrás de las pantallas.',
+      groups: {
+        start: { label: 'Primeros pasos' },
+        sales: { label: 'Ventas' },
+        service: { label: 'Servicio' },
+        analytics: { label: 'Análisis' },
+      },
+    },
+    crm_admin_manual: {
+      label: 'Manual de Administración de HotCRM',
+      description: 'Puesta en marcha, accesos, cada umbral automatizado y la importación de datos, para administradores.',
+      groups: {
+        admin: { label: 'Administración' },
+      },
+    },
+    crm_revenue_manual: {
+      label: 'Manual de Ingresos de HotCRM',
+      description: 'Cotizaciones, productos y listas de precios, y el traspaso a facturación de una oportunidad ganada.',
+      groups: {
+        revenue: { label: 'Ingresos' },
+      },
+    },
+    crm_marketing_manual: {
+      label: 'Manual de Marketing de HotCRM',
+      description: 'Campañas: qué cuentan las cifras y qué se ejecuta por sí solo.',
+      groups: {
+        marketing: { label: 'Campañas' },
+      },
     },
   },
 };

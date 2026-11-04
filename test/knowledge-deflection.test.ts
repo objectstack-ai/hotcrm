@@ -337,20 +337,23 @@ describe('the deflection measures over sqlite', () => {
   });
 
   /**
-   * The empty string, at the layer that actually counts it. Everything above
-   * would still pass with the normalisation hook deleted — this is the case
-   * that would not.
+   * The empty string, at the layer that actually counts it. Through 18.2.0
+   * the engine stored `''` on the lookup column as written, the measure
+   * counted it as a link, and only `case_resolution_article_normalize` kept
+   * such a row from being written. Since @objectstack 18.3.0 the write door
+   * itself stores `null` for a blank optional single-value reference (the
+   * change `os migrate blank-single-values` is the data step for), so an
+   * empty-string link no longer reaches the numerator even with the hook out
+   * of the path, as it is here.
    */
-  it('counts an EMPTY-STRING link, which is why the hook nulls it', async () => {
+  it('does not count an EMPTY-STRING link: the write door stores it as null', async () => {
     const before = await rate();
-    await addCase(caseRow({ subject: 'c9', is_closed: true, status: 'closed', resolved_by_article: '' }));
+    const stored = await addCase(caseRow({ subject: 'c9', is_closed: true, status: 'closed', resolved_by_article: '' })) as AnyRec;
     const after = await rate();
 
+    expect(stored.resolved_by_article ?? null).toBeNull();
     expect(after.closed_count).toBe((before.closed_count as number) + 1);
-    // The numerator moving here is the DEFECT being demonstrated, not the
-    // behaviour being asked for — `case_resolution_article_normalize` is what
-    // guarantees such a row is never written in the first place.
-    expect(after.kb_resolved_count).toBe((before.kb_resolved_count as number) + 1);
+    expect(after.kb_resolved_count).toBe(before.kb_resolved_count);
   });
 
   it('ranks articles by the closed cases they resolved', async () => {
@@ -392,6 +395,9 @@ describe('the service dashboard reads the deflection metric', () => {
     expect(w, 'service_dashboard has no top_resolving_articles widget').toBeTruthy();
     expect(w.dimensions).toEqual(['resolved_article']);
     expect(w.filter).toMatchObject({ is_closed: true });
+    // A closed case with no article is not a ranked article: the blank bucket
+    // drew a "—" row with 0 (#2338 item 11).
+    expect(w.filter).toMatchObject({ resolved_by_article: { $ne: null } });
   });
 
   /**

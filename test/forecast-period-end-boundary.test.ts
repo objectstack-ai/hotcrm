@@ -466,7 +466,10 @@ describe('the window rule stands down while a start rule fires (#2060 item 7c)',
 
   it.each([
     { period: 'month', period_start: '2026-10-15', why: "the card's row: no Period End, the hook derives one", only: [START] },
-    { period: 'quarter', period_start: '2026-10-15', why: 'mid-month and mid-quarter, no Period End', only: [START, QUARTER] },
+    // One start, one message (#2371 row 8): the start rules partition by
+    // `period`, so a quarterly row is told about QUARTERS only. It drew both
+    // sentences, run together by the platform's "; " join, before.
+    { period: 'quarter', period_start: '2026-10-15', why: 'mid-month and mid-quarter, no Period End', only: [QUARTER] },
     { period: 'month', period_start: '2026-10-15', period_end: '2026-10-31', why: "October's real last day, typed", only: [START] },
     { period: 'quarter', period_start: '2026-08-01', period_end: '2026-09-30', why: "Q3's real end under a month start", only: [QUARTER] },
   ])('refuses $period from $period_start naming the start alone ($why)', async ({ why: _why, only, ...doc }) => {

@@ -7,4 +7,7 @@
  * `src/sales/actions/index.ts`; this file is the revenue package's half of the
  * same file-by-file registration.
  */
-export { PrintQuoteAction } from './quote.actions';
+export {
+  SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
+  PrintQuoteAction,
+} from './quote.actions';

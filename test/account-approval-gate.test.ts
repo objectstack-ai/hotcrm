@@ -226,11 +226,20 @@ describe('WITH approvals in the composition — acceptance 4 is unchanged (#2067
     who = await people(verify, 'with');
   }, 120_000);
 
-  it.each(PATHS)('an account created by %s sits `pending`, with one open request behind it', async (_label, create) => {
-    const id = await create(verify, who, `With Approvals ${_label} Co`);
+  it('an account created by the New form sits `pending`, with one open request behind it', async () => {
+    const id = await byForm(verify, who, 'With Approvals the New form Co');
     // Read after the create returned: the request's mirror has already landed.
     expect(await statusOf(verify, id)).toBe('pending');
     expect(await openRequests(verify, id), 'the account is not in the approval inbox').toHaveLength(1);
+  });
+
+  it('an account created by Convert Lead is not submitted: blank, no request (#2285 ruling B)', async () => {
+    // Qualifying the lead was the gate. The marker that exempts it, and the
+    // guard on who may write that marker, are pinned in
+    // `account-conversion-approval.test.ts`.
+    const id = await byConvertLead(verify, who, 'With Approvals Convert Lead Co');
+    expect(await statusOf(verify, id)).toBeNull();
+    expect(await openRequests(verify, id)).toHaveLength(0);
   });
 
   it('a rep\'s account reaches `approved` only through a Sales Manager\'s decision on that request', async () => {

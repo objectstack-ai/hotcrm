@@ -1,5 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
 
 /**
@@ -104,6 +105,12 @@ export const CaseViews = defineView({
       label: 'SLA Calendar',
       data,
       columns: ['case_number', 'subject', 'priority'],
+      // Live cases only (#2367 row 3), the same cut as My Open Cases and SLA at
+      // Risk: a resolved or closed case keeps its `sla_due_date`, and the
+      // calendar drew those beside the live ones, so an agent planning the day
+      // read deadlines that no longer bind anyone. `is_closed` alone would keep
+      // the resolved ones (it is derived from `closed` only).
+      filter: [{ field: 'status', operator: 'not_in', value: ['resolved', 'closed'] }],
       calendar: {
         startDateField: 'sla_due_date',
         titleField: 'subject',
@@ -122,7 +129,7 @@ export const CaseViews = defineView({
         // `created_at`, the platform's own creation stamp — the object's
         // duplicate `created_date` was removed in #1992 because nothing wrote
         // it on a real case, so every user-created case started its bar at
-        // null. Same spelling as `deal_timeline` on crm_opportunity (#575 B2).
+        // null. Same spelling as `crm_lead`'s activity calendar.
         startDateField: 'created_at',
         endDateField: 'closed_date',
         titleField: 'subject',
@@ -343,6 +350,7 @@ export const CaseViews = defineView({
    *
    * ⇒ Therefore the create-safe field set has to BE this form's field set.
    * That is why the SLA and Resolution sections are gone rather than gated.
+   * One field came back, gated (#2338 item 2): `resolution`, see below.
    *
    * ## ⛔ Why the tab strip was not the object's `fieldGroups`
    *
@@ -394,13 +402,13 @@ export const CaseViews = defineView({
    *                                    detail-page highlights
    *   first_response_date              `event.hook.ts` is its SINGLE writer
    *   resolution_time_hours            readonly; derived at close; detail page
-   *   is_sla_violated                  list column + detail-page highlights
+   *   is_sla_violated                  list column + detail-page SLA alert
    *   is_escalated, escalation_reason  written by `case_escalation` /
    *                                    `case_sla_monitor` / `escalate_case`;
    *                                    detail page's Status & SLA section
-   *   resolution                       detail page's Description section
-   *                                    (the `resolution_required_on_close`
-   *                                    validation still has its surface)
+   *   resolution                       detail page's Description section,
+   *                                    and back on this form behind a status
+   *                                    gate since #2338 item 2 (below)
    *   is_closed                        readonly; derived from `status`
    *
    * ⚠️ `internal_notes`, `customer_rating` and `customer_feedback` left with
@@ -460,7 +468,29 @@ export const CaseViews = defineView({
           'supplied_name',
           'supplied_email',
           { field: 'status', required: true },
+          // Offered once the status says the case is being resolved (#2338
+          // item 2). This is the edit form, and it offers Status "Closed",
+          // which `resolution_required_for_closed` on `crm_case` refuses
+          // without a resolution. With the field off this form that save was a
+          // dead end ("Resolution is required when closing a case", nothing to
+          // fill in, the record page hiding its Resolution section while
+          // empty), so the only way out was Cancel, then Close Case. Gated,
+          // not always on, because this form is also the create dialog, and a
+          // new case is `new`. The predicate is TOTAL (`has()` first): an
+          // unevaluable one fails OPEN in the console (the house rule at the
+          // top of `lead.view.ts`), which would only show the field. Not
+          // `required` here: the object's rule asks for it on `closed` only,
+          // and a client-side `required` would also demand it on `resolved`.
+          {
+            field: 'resolution',
+            span: 'full',
+            visibleWhen: P`has(record.status) && (record.status == "resolved" || record.status == "closed")`,
+          },
           'priority',
+          // Beside Priority (#2369 row 6): the public support form asks a
+          // guest for the case type, and staff cases had no field for it, so
+          // they saved `type: null`, blank in the case dataset's Type dimension.
+          'type',
           'origin',
           'owner_id',
           // Required on the object with no default — a form without it could
@@ -479,10 +509,11 @@ export const CaseViews = defineView({
    * a help center. Guests can ONLY submit — the `guest_portal` profile
    * denies read/edit/delete on `crm_case`. Internal fields (status, origin,
    * owner_id, SLA) are stamped by `case.hook.ts` after a guest submission.
-   * `priority` is NOT one of them: this form asks the guest for it, and an
-   * unset one is filled by the `low` option `crm_case.priority` declares
-   * `default: true`. Field defaults are applied before `beforeInsert`, so the
-   * hook only ever reads `priority` (to derive `priority_rank`).
+   * `priority` is not on the form (#2368): a web case takes the `low` option
+   * `crm_case.priority` declares `default: true`, and staff re-triage it.
+   * Field defaults are applied before `beforeInsert`, so the hook reads
+   * `priority` to derive `priority_rank`, and caps a guest's `critical` at
+   * `high`.
    */
   formViews: {
     web_to_case: {
@@ -495,6 +526,9 @@ export const CaseViews = defineView({
         {
           name: 'how_can_we_help',
           label: 'How can we help?',
+          // The hotline hint stands where every visitor reads it (#2368):
+          // the form has no priority field to hang it on any more.
+          description: 'For an urgent outage, call the service hotline.',
           columns: 1,
           fields: [
             // Who to answer (#2190): a web case carries no contact, so this
@@ -502,8 +536,13 @@ export const CaseViews = defineView({
             // here, like web-to-lead's — the door refuses a submission
             // without it — and optional on the object, so a staff-created
             // case needs neither.
-            'supplied_name',
-            { field: 'supplied_email', required: true },
+            //
+            // The labels are the visitor's (#2368): the object calls these
+            // columns "Supplied Name" / "Supplied Email" because that is what
+            // an agent reads on the case, while the person filling the form in
+            // is the one supplying them.
+            { field: 'supplied_name', label: 'Your name' },
+            { field: 'supplied_email', required: true, label: 'Your email' },
             {
               field: 'subject',
               required: true,
@@ -518,10 +557,17 @@ export const CaseViews = defineView({
               field: 'type',
               helpText: 'Pick the option that best matches your issue.',
             },
-            {
-              field: 'priority',
-              helpText: 'Critical issues should also be reported via phone.',
-            },
+            // ⛔ No `priority` here (#2368, maintainer ruling: a guest picks at
+            // most High). Critical escalates on insert and notifies the service
+            // manager. 18.2.0 offers no per-form option subset: a form row's
+            // `options` list parses and is served by `GET /forms/support`, but
+            // the public renderer still lists all four object options, and the
+            // door validates a posted value against the object, not the row.
+            // So the ruling's fallback holds: the field is off the form, the
+            // door's allow-list drops a posted `priority`, and the case takes
+            // the object default (`low`). The guest branch of
+            // `case_sla_defaults` also caps `critical` at `high`, for the day
+            // this list moves.
           ],
         },
       ],

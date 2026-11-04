@@ -44,8 +44,7 @@ Writing an `emptyState` on every tile, or hand-tuning tile placement to dodge a 
 HotCRM is **one ObjectStack release artifact carrying four packages** (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
 (`src/sales/index.ts`), and three `type: module` packages — `app.objectstack.hotcrm.service`, `.revenue` and `.marketing`
 (`src/<dir>/index.ts`) — one `defineStack` each, composed by `objectstack.config.ts` with `composeStacks(…, { manifest: 'preserve' })`.
-Four items authored in `src/revenue/` and `src/marketing/` are still registered by the app package (`appRegisteredModuleItems` in
-`objectstack.composition.ts`, objectstack#25514): a deliberate, listed exception, ⛔ not a pattern to extend. One `package.json`, one `tsconfig.json`, one build — on the `@objectstack/runtime` dependency, ⛔ never built, patched or
+One `package.json`, one `tsconfig.json`, one build — on the `@objectstack/runtime` dependency, ⛔ never built, patched or
 worked around here.
 
 **A directory under `src/` IS a package.** There is no `packages/` level and no `shared/`; the top-level directories under `src/` are
@@ -56,9 +55,9 @@ hotcrm/
 ├── objectstack.config.ts      # composeStacks() over the four package stacks — the artifact, nothing else
 ├── objectstack.composition.ts # The four package stacks built; the composition knob
 ├── src/
-│   ├── sales/              # The `type: app` package — account, contact, lead, opportunity, forecast, task, event, event_attendee
+│   ├── sales/              # The `type: app` package — account, contact, contract, lead, opportunity, forecast, task, event, event_attendee
 │   ├── service/            # The service module — case, knowledge_article, article_feedback
-│   ├── revenue/            # The revenue module — product, opportunity_line_item, quote, quote_line_item, contract
+│   ├── revenue/            # The revenue module — product, price_book, price_book_entry, opportunity_line_item, quote, quote_line_item
 │   ├── marketing/          # The marketing module — campaign, campaign_member
 │   └── docs/               # In-product package docs (ADR-0046) — see the note below
 ├── content/docs/           # Product documentation site (Fumadocs): en, zh-Hans, zh-Hant
@@ -122,7 +121,7 @@ it reports is the app package, and ⛔ it is not an instruction to move them —
 2. **The `crm_` prefix is written out, everywhere.** Business object names are `snake_case` with an explicit `crm_` prefix
    (`crm_account`); the runtime injects nothing, so the name in source = at runtime = in the DB = in the REST URL = in the docs, and
    every reference — lookup / master-detail targets, cube `sql`, view, hook, action, navigation, dashboard and translation keys — uses
-   it. Platform objects keep `sys_*`; the file stays unprefixed (`src/revenue/objects/contract.object.ts` declares `name: 'crm_contract'`); the
+   it. Platform objects keep `sys_*`; the file stays unprefixed (`src/sales/objects/contract.object.ts` declares `name: 'crm_contract'`); the
    roster is `src/*/objects/*.object.ts`, ⛔ never restated in prose. The `os lint` `naming/namespace-prefix` warning on non-object items
    is advisory (ADR-0048): ⛔ do not mass-rename to chase it.
 3. **Data access is ObjectQL through `ctx.api`** — there is no `broker`. Shape:
@@ -223,7 +222,8 @@ needed; (3) per-field enumeration only in the extreme case, with a comment namin
 - **Object Naming**: `crm_` prefix on every business object, written out (Tech Stack rule 2).
 - **i18n**: every new object ships in all four locale packs, `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` — label, pluralLabel, every field and option label, view labels, navigation labels.
 - **Docs**: every new object or feature gets a user-facing page under `content/docs/` for business users and admins — business concepts,
-  never a hand-copied machine roster; English first, then `.zh-Hans.mdx` and `.zh-Hant.mdx` beside it, under **Documentation discipline** below.
+  never a hand-copied machine roster; English first, then `.zh-Hans.mdx` and `.zh-Hant.mdx` beside it. A feature that adds a rule the
+  screens do not show also updates its package's **in-app docs** in the same PR (rule 7). Both under **Documentation discipline** below.
 - **Validation predicates must be TOTAL**: every `record.x` read in an authored CEL predicate (`validations[].condition`, `requiredWhen`,
   `readonlyWhen`, `visibleWhen`) carries a `has(record.x)` guard.
 - **Dependencies**: the `@objectstack/*` packages in `package.json` are version-locked and bumped together; keep `specVersion` in
@@ -269,6 +269,22 @@ navigation fact may be documented and guarded; a machine semantic layer may not.
   a Traditional translation. Each zh-Hant page carries one identical standing sentence saying
   so; ⛔ no guard asserts free prose (#1646 refused prose guards, #1755 measured an idle one).
   (#1767)
+
+**7. The in-app docs carry the rules the screens do not show, and a feature updates them in the same PR.** When a feature adds
+behaviour a user cannot read off the screen — an automatic assignment, a threshold, an SLA, who can see a record, what a metric
+counts — the same PR updates its own package's in-app page (ADR-0046), opened from *Help*; the screens themselves are not
+re-described (ADR-0051 §1). English first, `<name>.zh.md` beside it. A page files itself into its book by name prefix:
+
+- app package: `src/docs/` (the platform's path, above) — `crm_manual` (`crm_sales_*`, `crm_analytics_*`; Getting Started is the one
+  curated `pages` list) and `crm_admin_manual` (`crm_admin_*`, administrators only), both in `src/sales/books/`;
+- service: `src/service/docs/` — no book of its own; `crm_manual`'s Service group claims `crm_service_*`;
+- revenue: `src/revenue/docs/` — `crm_revenue_manual` (`crm_revenue_*`), `src/revenue/books/`;
+- marketing: `src/marketing/docs/` — `crm_marketing_manual` (`crm_marketing_*`), `src/marketing/books/`.
+
+A machine fact is embedded as a ```` ```metadata ```` block, ⛔ never hand-copied (rule 5); while the pinned platform refuses those
+blocks in this multi-package artifact, a lifecycle is a ```` ```mermaid ```` diagram held to its machine by
+`test/docs-lifecycle-diagrams.test.ts`. ⛔ A page in the app's books never links to a page of a module's own book (Revenue, Marketing):
+that book leaves with its module; the module's pages may link to the app's. (#2328)
 
 ## ⬆️ Platform Upgrades (ObjectStack version bumps)
 

@@ -9,7 +9,7 @@ import { MarketingUserProfile } from '../src/sales/profiles/marketing-user.profi
 import { CrmUserProfile } from '../src/sales/profiles/crm-user.profile';
 import { CrmPositions } from '../src/sales/sharing/positions';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
-import composedStack, { servedApp } from './helpers/composed-stack';
+import composedStack, { servedApp, localePacks } from './helpers/composed-stack';
 
 /** The sets a persona's position declares (`permissionSets`, #2200): what a holder of it is granted. */
 const SETS: Record<string, AnyRec> = Object.fromEntries(
@@ -34,7 +34,7 @@ const setsOf = (position: string): AnyRec[] =>
  *
  *  1. **A FLOOR on variety.** HotCRM is the exemplar app: an author reading it
  *     is reading it to learn what each kind of nav item looks like. Nav items
- *     come in six kinds and every one of them must keep at least one entry —
+ *     come in seven kinds and every one of them must keep at least one entry —
  *     `component` is down to a single exemplar, so the next slimming pass is
  *     one deletion away from removing a demonstration silently. That is the failure this half exists to make loud.
  *
@@ -80,8 +80,8 @@ const LEAVES: AnyRec[] = (() => {
 const kindOf = (n: AnyRec): string =>
   n.type === 'object' && n.viewName ? 'view' : String(n.type);
 
-/** The six kinds the app is meant to demonstrate. */
-const REQUIRED_KINDS = ['object', 'view', 'page', 'dashboard', 'report', 'component'] as const;
+/** The seven kinds the app is meant to demonstrate — `doc` since the Help manuals (#2327). */
+const REQUIRED_KINDS = ['object', 'view', 'page', 'dashboard', 'report', 'component', 'doc'] as const;
 
 describe('the app navigation keeps one exemplar of every nav-item kind (#1259)', () => {
   it('the walk finds a real navigation tree', () => {
@@ -134,6 +134,8 @@ describe('the app navigation opens each destination once (#1259)', () => {
         n.dashboardName ?? '',
         n.reportName ?? '',
         n.componentRef ?? '',
+        n.book ?? '',
+        n.doc ?? '',
       ].join('|');
       const owner = seen.get(target);
       if (owner) bad.push(`${n.id} opens the same destination as ${owner}`);
@@ -198,9 +200,14 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
     const other = LEAVES.filter(
       (n) => n.type !== 'report' && n.visible !== undefined && sourceOf(n.visible) !== GATE,
     ).map((n) => n.id);
-    expect(other, 'entries gated on something else').toEqual(['nav_home']);
-    for (const id of other) {
-      expect(String(sourceOf(LEAVES.find((n) => n.id === id)?.visible)), id).toMatch(/^current_user\.can\("crm_opportunity", "read"\) && /);
+    expect(other, 'entries gated on something else').toEqual(['nav_home', 'nav_opportunity', 'nav_my_deals']);
+    expect(String(sourceOf(NAV[0].visible)), 'nav_home').toMatch(/^current_user\.can\("crm_opportunity", "read"\) && /);
+    // The two opportunity OBJECT entries ask the position half alone (#2367
+    // row 6): the console prunes an object entry by read access already.
+    for (const id of ['nav_opportunity', 'nav_my_deals']) {
+      expect(String(sourceOf(LEAVES.find((n) => n.id === id)?.visible)), id).toBe(
+        '!("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)',
+      );
     }
   });
 
@@ -260,6 +267,29 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
       .filter(([, count]) => count !== 1)
       .map(([name, count]) => `${name}: ${count} entries`);
     expect(bad, `reports without exactly one nav entry:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
+  // One name per report (#2370 row 6): the sidebar said "Pipeline Coverage"
+  // and the report page "Pipeline Coverage by Forecast × Quarter". The entry's
+  // label is the report's own, in English and in every locale pack that
+  // carries either one.
+  it('each entry is labelled with its report\'s own name, in every locale', () => {
+    const bad: string[] = [];
+    for (const { n } of REPORT_ENTRIES) {
+      const report = REPORTS.find((r) => r.name === n.reportName);
+      if (n.label !== report?.label) bad.push(`en ${n.id}: "${n.label}" vs report "${report?.label}"`);
+    }
+    for (const [locale, pack] of localePacks) {
+      const nav = pack?.apps?.[(CrmApp as AnyRec).name]?.navigation ?? {};
+      for (const { n } of REPORT_ENTRIES) {
+        const entry = nav[n.id]?.label;
+        const report = pack?.reports?.[n.reportName]?.label;
+        if ((entry !== undefined || report !== undefined) && entry !== report) {
+          bad.push(`${locale} ${n.id}: "${entry}" vs report "${report}"`);
+        }
+      }
+    }
+    expect(bad, `report entries named differently from their report:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('every report entry is in the Reports group, which the app declares collapsed', () => {

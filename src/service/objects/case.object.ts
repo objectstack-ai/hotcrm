@@ -154,14 +154,16 @@ export const Case = ObjectSchema.create({
       // ("Status: New → Escalated"). Delivers the case timeline declaratively
       // (the hand-coded version was deferred in #396 due to a hook-crash bug).
       trackHistory: true,
+      // Lifecycle `kind` (#2326): Resolved and Closed are both won ends. There
+      // is no cancelled value, so nothing is `lost`.
       options: [
-        { label: 'New', value: 'new', color: '#808080', default: true },
-        { label: 'In Progress', value: 'in_progress', color: '#FFA500' },
-        { label: 'Waiting on Customer', value: 'waiting_customer', color: '#FFD700' },
-        { label: 'Waiting on Support', value: 'waiting_support', color: '#4169E1' },
-        { label: 'Escalated', value: 'escalated', color: '#FF0000' },
-        { label: 'Resolved', value: 'resolved', color: '#00AA00' },
-        { label: 'Closed', value: 'closed', color: '#006400' },
+        { label: 'New', value: 'new', color: '#808080', kind: 'open', default: true },
+        { label: 'In Progress', value: 'in_progress', color: '#FFA500', kind: 'open' },
+        { label: 'Waiting on Customer', value: 'waiting_customer', color: '#FFD700', kind: 'open' },
+        { label: 'Waiting on Support', value: 'waiting_support', color: '#4169E1', kind: 'open' },
+        { label: 'Escalated', value: 'escalated', color: '#FF0000', kind: 'open' },
+        { label: 'Resolved', value: 'resolved', color: '#00AA00', kind: 'won' },
+        { label: 'Closed', value: 'closed', color: '#006400', kind: 'won' },
       ]
     }),
     

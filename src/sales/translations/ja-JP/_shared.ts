@@ -31,7 +31,10 @@ export const activityActions = {
     params: {
       subject: { label: '電話の件名' },
       duration: { label: '所要時間（分）' },
-      attendee_contacts: { label: '取引先責任者の参加者' },
+      attendee_contacts: {
+        label: '取引先責任者の参加者',
+        helpText: '記録先の取引先責任者またはリードは自動的に追加されます。その他の参加者をここに追加してください。',
+      },
       attendee_users: { label: '社内参加者' },
       notes: { label: '通話メモ' },
     },
@@ -42,7 +45,10 @@ export const activityActions = {
     params: {
       subject: { label: '会議の件名' },
       duration: { label: '所要時間（分）' },
-      attendee_contacts: { label: '取引先責任者の参加者' },
+      attendee_contacts: {
+        label: '取引先責任者の参加者',
+        helpText: '記録先の取引先責任者またはリードは自動的に追加されます。その他の参加者をここに追加してください。',
+      },
       attendee_users: { label: '社内参加者' },
       notes: { label: '議事メモ' },
     },
@@ -56,7 +62,10 @@ export const activityActions = {
       start_time: { label: '開始時刻 (UTC)' },
       location: { label: '場所' },
       duration: { label: '所要時間（分）' },
-      attendee_contacts: { label: '取引先責任者の参加者' },
+      attendee_contacts: {
+        label: '取引先責任者の参加者',
+        helpText: '記録先の取引先責任者またはリードは自動的に追加されます。その他の参加者をここに追加してください。',
+      },
       attendee_users: { label: '社内参加者' },
       notes: { label: 'アジェンダ' },
     },

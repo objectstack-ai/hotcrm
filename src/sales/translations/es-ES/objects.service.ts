@@ -107,11 +107,14 @@ export const service: Record<string, ObjectTranslationData> = {
       case: { label: 'Caso' },
       how_can_we_help: {
         label: '¿Cómo podemos ayudarte?',
+        description: 'Para una caída urgente, llama a la línea de soporte.',
         fields: {
           subject: { placeholder: 'Resumen breve del problema' },
           description: { placeholder: 'Pasos para reproducirlo, mensajes de error, capturas de pantalla...' },
           type: { helpText: 'Elige la opción que mejor describa tu problema.' },
-          priority: { helpText: 'Los problemas críticos también deben comunicarse por teléfono.' },
+          // Etiquetas para el visitante (#2368); las del objeto son para el agente.
+          supplied_name: { label: 'Tu nombre' },
+          supplied_email: { label: 'Tu correo electrónico' },
         },
       },
       // Claves de sección del objeto (case.object.ts) que usan los
@@ -139,6 +142,10 @@ export const service: Record<string, ObjectTranslationData> = {
       claim_case: {
         label: 'Tomar Caso',
         successMessage: 'Caso tomado: ahora es suyo.',
+      },
+      reopen_case: {
+        label: 'Reabrir Caso',
+        successMessage: 'Caso {{ record.display_title }} reabierto.',
       },
     },
   },
@@ -214,10 +221,20 @@ export const service: Record<string, ObjectTranslationData> = {
       mark_article_helpful: {
         label: 'Útil',
         successMessage: 'Gracias — registrado como útil.',
+        outcomeMessages: {
+          recorded: 'Gracias — registrado como útil. Útil: {{ result.helpful }} · No útil: {{ result.notHelpful }}.',
+          changed: 'Tu voto ahora es Útil. Útil: {{ result.helpful }} · No útil: {{ result.notHelpful }}.',
+          already: 'Ya marcaste este artículo como útil. Útil: {{ result.helpful }} · No útil: {{ result.notHelpful }}.',
+        },
       },
       mark_article_not_helpful: {
         label: 'No útil',
         successMessage: 'Gracias — registrado como no útil.',
+        outcomeMessages: {
+          recorded: 'Gracias — registrado como no útil. Útil: {{ result.helpful }} · No útil: {{ result.notHelpful }}.',
+          changed: 'Tu voto ahora es No útil. Útil: {{ result.helpful }} · No útil: {{ result.notHelpful }}.',
+          already: 'Ya marcaste este artículo como no útil. Útil: {{ result.helpful }} · No útil: {{ result.notHelpful }}.',
+        },
       },
     },
   },

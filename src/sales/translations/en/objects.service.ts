@@ -117,6 +117,10 @@ export const service: Record<string, ObjectTranslationData> = {
         label: 'Claim Case',
         successMessage: 'Case claimed — it is yours now.',
       },
+      reopen_case: {
+        label: 'Reopen Case',
+        successMessage: 'Case {{ record.display_title }} reopened.',
+      },
     },
   },
   crm_knowledge_article: {
@@ -183,10 +187,20 @@ export const service: Record<string, ObjectTranslationData> = {
       mark_article_helpful: {
         label: 'Helpful',
         successMessage: 'Thanks — recorded as helpful.',
+        outcomeMessages: {
+          recorded: 'Thanks — recorded as helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+          changed: 'Your vote is now Helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+          already: 'You already marked this article helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+        },
       },
       mark_article_not_helpful: {
         label: 'Not Helpful',
         successMessage: 'Thanks — recorded as not helpful.',
+        outcomeMessages: {
+          recorded: 'Thanks — recorded as not helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+          changed: 'Your vote is now Not Helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+          already: 'You already marked this article not helpful. Helpful: {{ result.helpful }} · Not helpful: {{ result.notHelpful }}.',
+        },
       },
     },
   },

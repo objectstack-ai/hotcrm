@@ -28,7 +28,11 @@ export const Quote = ObjectSchema.create({
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
   searchableFields: ['name', 'quote_number'],
-  highlightFields: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
+  // The record header's strip (#2369 row 5): the title already reads
+  // "QTE-0003 - Name", so the strip carries what it does not. The quote panels
+  // on an account, a contact and an opportunity keep their old columns through
+  // `relatedListColumns` on the three lookups below.
+  highlightFields: ['crm_account', 'crm_opportunity', 'status', 'total_price', 'expiration_date'],
 
   fieldGroups: [
     { key: 'basic',     label: 'Quote Information', icon: 'info' },
@@ -86,11 +90,13 @@ export const Quote = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
+      relatedListColumns: ['quote_number', 'name', 'status', 'total_price'],
     }),
     
     crm_contact: Field.lookup('crm_contact', {
       label: 'Contact',
       group: 'basic',
+      relatedListColumns: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
       // A TRANSITION GATE, not an invariant (#1017, narrowed by #2161; AGENTS.md
       // Metadata semantics rule 7). Optional at draft time. Required on the
       // write that takes the quote INTO `presented` or `accepted`, and on every
@@ -176,6 +182,7 @@ export const Quote = ObjectSchema.create({
       group: 'basic',
       // Scope opportunities to the quote's account (was dead referenceFilters).
       dependsOn: ['crm_account'],
+      relatedListColumns: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
     }),
 
 
@@ -183,13 +190,25 @@ export const Quote = ObjectSchema.create({
     status: Field.select({
       label: 'Status',
       group: 'basic',
+      // `kind` (#2366 row 10): the record path draws Accepted as the quote's
+      // successful end and Rejected / Expired as its unsuccessful ends, not as
+      // later steps after Accepted. `test/status-option-kinds.test.ts`.
+      //
+      // The three settled options are offered on an EXISTING quote only
+      // (#2366 row 3): `record.id` is absent on the New form, so a new quote
+      // starts at Draft, In Review or Presented. The predicate is total and
+      // true for every stored row, so it never refuses a write to one; the
+      // refusal of a user's create at a settled status is `quote_workflow`'s
+      // (`quote.hook.ts`), which names the quote and says what to do instead
+      // — this option rule's own refusal is the platform's fixed "option is
+      // not available". Pinned in `test/quote-settled-actions.test.ts`.
       options: [
-        { label: 'Draft', value: 'draft', color: '#999999', default: true },
-        { label: 'In Review', value: 'in_review', color: '#FFA500' },
-        { label: 'Presented', value: 'presented', color: '#4169E1' },
-        { label: 'Accepted', value: 'accepted', color: '#00AA00' },
-        { label: 'Rejected', value: 'rejected', color: '#FF0000' },
-        { label: 'Expired', value: 'expired', color: '#666666' },
+        { label: 'Draft', value: 'draft', color: '#999999', default: true, kind: 'open' },
+        { label: 'In Review', value: 'in_review', color: '#FFA500', kind: 'open' },
+        { label: 'Presented', value: 'presented', color: '#4169E1', kind: 'open' },
+        { label: 'Accepted', value: 'accepted', color: '#00AA00', kind: 'won', visibleWhen: P`has(record.created_at)` },
+        { label: 'Rejected', value: 'rejected', color: '#FF0000', kind: 'lost', visibleWhen: P`has(record.created_at)` },
+        { label: 'Expired', value: 'expired', color: '#666666', kind: 'lost', visibleWhen: P`has(record.created_at)` },
       ],
       required: true,
       storage: { notNull: true },
@@ -200,6 +219,11 @@ export const Quote = ObjectSchema.create({
     quote_date: Field.date({
       label: 'Quote Date',
       group: 'terms',
+      // Dated with the year, never "Yesterday" (#2370 row 9): a quote's dates
+      // bound a commitment, and the console's default style read them
+      // relative within a week and dropped the year for this year's dates.
+      // `short` reads "Sep 14, '26" (docs/developers/number-formats.md).
+      format: 'short',
       required: true,
       storage: { notNull: true },
       defaultValue: cel`today()`,
@@ -224,6 +248,7 @@ export const Quote = ObjectSchema.create({
     expiration_date: Field.date({
       label: 'Expiration Date',
       group: 'terms',
+      format: 'short', // with the year, as `quote_date` above
       required: true,
       storage: { notNull: true },
       defaultValue: cel`addDays(record.quote_date, 30)`,
@@ -287,7 +312,7 @@ export const Quote = ObjectSchema.create({
       label: 'Payment Terms',
       group: 'terms',
       // The list shared with Contract (#490) —
-      // `src/revenue/picklists/payment_terms.picklist.ts`.
+      // `src/sales/picklists/payment_terms.picklist.ts`.
       picklist: 'payment_terms',
     }),
     
@@ -329,6 +354,22 @@ export const Quote = ObjectSchema.create({
     { fields: ['quote_date'] },
   ],
   
+  // A settled quote (Accepted, Rejected, Expired) offers no Edit (#2366 row 2).
+  // `quote_workflow` (`quote.hook.ts`) refuses a user's edit of one, so the
+  // button only led to a form that was refused at save. The guard is the
+  // hook's; this is the courtesy half. What a settled quote still takes —
+  // Internal Notes, and a Rejected quote's move back to Draft — stays open to
+  // the API, and the move is the `revise_quote` action
+  // (`src/revenue/actions/quote.actions.ts`). The predicate is total: an
+  // absent status (the page's first render) offers Edit, as before. The same
+  // predicate gates New on the quote's line items, in
+  // `quote_line_item.object.ts`. Pinned in `test/quote-settled-actions.test.ts`.
+  userActions: {
+    edit: {
+      visibleWhen: P`!(has(record.status) && (record.status == "accepted" || record.status == "rejected" || record.status == "expired"))`,
+    },
+  },
+
   // Enable advanced features
   // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
@@ -411,7 +452,16 @@ export const Quote = ObjectSchema.create({
       name: 'quote_status_progression',
       type: 'state_machine',
       severity: 'warning',
-      message: 'Invalid quote status transition',
+      // The path in business words, by the status labels (#2371 row 7). It
+      // read "Invalid quote status transition", naming neither the move nor
+      // the moves allowed. A state-machine message takes no holes on 18.2.0,
+      // so it cannot name THIS move's two statuses; the response's
+      // `constraint` carries `from` / `to`, and the console shows only this
+      // sentence. So it states the whole graph below, as
+      // `contract_status_progression` does. Each locale pack restates it with
+      // its own option labels, held to them by `test/refusal-labels.test.ts`.
+      message:
+        "This status change is off the quote's usual path: Draft → In Review → Presented → Accepted. In Review can also go back to Draft or be Rejected, Presented can be Rejected, and a Rejected quote returns to Draft. Draft, In Review or Presented can become Expired. Accepted and Expired are final.",
       field: 'status',
       transitions: {
         // `→ expired` is legal from every UNSETTLED state: the quote_expiration
@@ -425,8 +475,10 @@ export const Quote = ObjectSchema.create({
         // to `internal_notes` and nothing else.
         accepted: [],
         expired: [],
-        // A rejected quote is not frozen: the rep revises the numbers and
-        // re-issues, which starts again at `draft`.
+        // A rejected quote is frozen like an accepted one (#2366), except
+        // that its `status` stays open beside Internal Notes: **Revise**
+        // takes it back to `draft`, where the rep changes the numbers and
+        // re-issues it.
         rejected: ['draft'],
       },
     },

@@ -3,7 +3,10 @@
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { EnrollLeadsAction, MarkRespondedAction } from './actions/index.js';
-import { CampaignEnrollmentFlow, CampaignCompletionFlow } from './flows/index.js';
+import { CrmMarketingManual } from './books/index.js';
+import {
+  CampaignEnrollmentFlow, CampaignCompletionFlow, CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow,
+} from './flows/index.js';
 import { Campaign, CampaignMember } from './objects/index.js';
 import { campaignHook, campaignMemberHook } from './objects/hooks.js';
 import { CampaignLeadershipSharingRules } from './sharing/index.js';
@@ -22,17 +25,15 @@ export const marketingHooks = [campaignHook, campaignMemberHook].flat();
 /**
  * This package's flows — see {@link marketingHooks}.
  *
- * ⚠️ The two member-enroll flows (`campaign_lead_member_enroll`,
- * `campaign_contact_member_enroll`) are NOT here although their file is: the
- * app package registers them, because the sales actions that launch them
+ * The two member-enroll flows (`campaign_lead_member_enroll`,
+ * `campaign_contact_member_enroll`) are launched by app-package actions
  * (`create_campaign` on `crm_lead`, `add_contact_to_campaign` on
- * `crm_contact`) are refused by `defineStack` when the flow they name belongs
- * to another package of the artifact (objectstack#25514). Maintainer ruling
- * 2026-10-24 on #2270, option 1: keep them in the app package until a
- * published platform release carries that fix, then register them here. See
- * `appRegisteredModuleItems` in `objectstack.composition.ts`.
+ * `crm_contact`); the app stack resolves those targets through
+ * `artifactFlows` (see `src/sales/index.ts`).
  */
-export const marketingFlows = [CampaignEnrollmentFlow, CampaignCompletionFlow];
+export const marketingFlows = [
+  CampaignEnrollmentFlow, CampaignCompletionFlow, CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow,
+];
 
 /** This package's sharing rules — see {@link marketingHooks}. */
 export const marketingSharingRules = [...CampaignLeadershipSharingRules];
@@ -45,10 +46,9 @@ export type HotCrmMarketingCollections = Pick<ObjectStackDefinitionInput, 'data'
  * (ADR-0130 D4, `module-split-plan.md` decision 5).
  *
  * It owns `crm_campaign` and `crm_campaign_member`, and every item authored
- * against them: their hooks and views, the enrollment and completion flows
- * (the two member-enroll flows excepted, see {@link marketingFlows}), the two
- * campaign actions, the campaign-leadership sharing rules and
- * the campaign seed rows.
+ * against them: their hooks and views, the enrollment, completion and two
+ * member-enroll flows (see {@link marketingFlows}), the two campaign actions,
+ * the campaign-leadership sharing rules and the campaign seed rows.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and a `requires`
@@ -69,14 +69,15 @@ export const createHotCrmMarketingStack = (
     version: '6.0.0',
     type: 'module',
     description: 'HotCRM marketing module — campaigns and campaign members.',
-    engines: { protocol: '^18.2.0' },
+    engines: { protocol: '^18.3.0' },
     // The App package this module extends, and nothing else (the star).
     dependencies: { 'app.objectstack.hotcrm': '^6.0.0' },
 
     /**
      * The one entry this module puts into the app's Marketing group, which the
      * app keeps with no children of its own — as it keeps `group_service` — so
-     * the sidebar reads exactly as before. Rule R3; see `src/service/index.ts`.
+     * the sidebar reads exactly as before, and its manual under Help (below).
+     * Rule R3; see `src/service/index.ts`.
      */
     navigationContributions: [
       {
@@ -85,6 +86,18 @@ export const createHotCrmMarketingStack = (
         priority: 50,
         items: [
           { id: 'nav_campaign', type: 'object', objectName: 'crm_campaign', label: 'Campaigns', icon: 'megaphone' },
+        ],
+      },
+      // This module's manual, under the app's *Help* group (#2330), as the
+      // revenue module contributes its own (`src/revenue/index.ts`): it lands
+      // after the app's two manuals and the Revenue Manual, and it leaves with
+      // the module, as the book does.
+      {
+        app: 'crm_enterprise',
+        group: 'group_help',
+        priority: 50,
+        items: [
+          { id: 'nav_help_marketing', type: 'doc', book: 'crm_marketing_manual', label: 'Marketing Manual', icon: 'megaphone' },
         ],
       },
     ],
@@ -102,6 +115,8 @@ export const createHotCrmMarketingStack = (
   flows: marketingFlows,
   actions: [EnrollLeadsAction, MarkRespondedAction],
   sharingRules: marketingSharingRules,
+  // Its manual (#2330), over `src/marketing/docs/`. See the book's own note.
+  books: [CrmMarketingManual],
 
   ...collections,
 });

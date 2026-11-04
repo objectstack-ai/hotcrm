@@ -125,6 +125,16 @@ const campaignValidation: Hook = {
  * which meant a campaign reported zeros for its entire useful life and became
  * accurate on the day everybody stopped looking at it. Completion is now simply
  * one of the transitions this catches.
+ *
+ * `runAs: 'system'` (#2366 row 4, AGENTS.md rule 9), as its three siblings
+ * have been since #2014 and for their reason: a rollup must not depend on who
+ * fired it — run as the marketer moving the status, it counted only the deals
+ * that marketer may see. It is also what lets its write land since the metric
+ * block became `readonly` (`campaign.object.ts`): a readonly field is stripped
+ * from a non-system write. Organization (rule 10): every read is keyed to this
+ * campaign's id (and the leads its members name), and the elevated `ctx.api`
+ * keeps the trigger's tenant. The campaign's own status write stays the
+ * caller's.
  */
 const campaignMetricsRefresh: Hook = {
   name: 'campaign_metrics_refresh',
@@ -133,6 +143,7 @@ const campaignMetricsRefresh: Hook = {
   priority: 800,
   async: true,
   onError: 'log',
+  runAs: 'system',
   description: 'Recompute the campaign metric block whenever the campaign status moves.',
   handler: async (ctx: HookContext) => {
     const { input } = ctx;
@@ -149,7 +160,7 @@ const campaignMetricsRefresh: Hook = {
     for (const id of [campaignId]) {
       // ── recompute ── identical in all four refresh hooks; see the header.
       const memberRows = await api.object('crm_campaign_member').find({
-        where: { crm_campaign: id }, fields: ['crm_lead', 'status'], top: 5000,
+        where: { crm_campaign: id }, fields: ['crm_lead', 'has_responded'], top: 5000,
       });
       const leadIds = Array.from(new Set(
         memberRows.map((r) => (typeof r.crm_lead === 'string' ? r.crm_lead : '')).filter(Boolean),
@@ -168,7 +179,7 @@ const campaignMetricsRefresh: Hook = {
       await api.object('crm_campaign').update({
         id,
         num_sent: memberRows.length,
-        num_responses: memberRows.filter((r) => r.status === 'responded' || r.status === 'converted').length,
+        num_responses: memberRows.filter((r) => r.has_responded === true).length,
         num_leads: leadIds.length,
         num_converted_leads: convertedLeads,
         num_opportunities: numOpportunities,

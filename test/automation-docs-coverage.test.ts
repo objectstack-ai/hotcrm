@@ -20,7 +20,7 @@ import stack from './helpers/composed-stack';
  *   - **Half the rows were missing.** The header said `(11)` on the English page
  *     and `(10 个)` / `(10 個)` on the two Chinese ones, while the compiled stack
  *     shipped 24 flows. Contract auto-expiration was among the missing — and
- *     `content/docs/revenue/contracts.mdx` sends admins to this very table to
+ *     `content/docs/sales/contracts.mdx` sends admins to this very table to
  *     find it (#823/#805).
  *   - **A row's TRIGGER was wrong.** `campaign_enrollment` was a Monday-9-AM
  *     schedule flow until it was rewritten as a screen flow (a cron seeds no
@@ -253,6 +253,7 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   },
   contract_expiration: { 'zh-Hans': '合同自动到期', 'zh-Hant': '合約自動到期' },
   quote_expiration: { 'zh-Hans': '报价自动过期', 'zh-Hant': '報價自動過期' },
+  contract_drafted_notice: { 'zh-Hans': '合同起草通知', 'zh-Hant': '合約起草通知' },
   campaign_completion: { 'zh-Hans': '营销活动自动完成', 'zh-Hant': '行銷活動自動完成' },
   forecast_snapshot: { 'zh-Hans': '预测快照', 'zh-Hant': '預測快照' },
   opportunity_stagnation: { 'zh-Hans': '停滞商机提醒', 'zh-Hant': '停滯商機提醒' },

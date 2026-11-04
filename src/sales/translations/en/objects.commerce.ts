@@ -6,7 +6,8 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * English (en) — `objects` translations for the COMMERCE family:
  * what gets sold and on what paper — quotes, contracts, products.
  *
- * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`.
+ * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`,
+ * `crm_price_book`, `crm_price_book_entry`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -72,10 +73,16 @@ export const commerce: Record<string, ObjectTranslationData> = {
       addresses_and_notes: { label: 'Addresses & Notes' },
     },
     _actions: {
-      print_quote: {
-        label: 'Print Quote',
-        successMessage: 'Quote PDF attached to the quote.',
+      submit_quote_for_review: { label: 'Submit for Review', successMessage: 'Quote {{ record.display_title }} submitted for review.' },
+      mark_quote_presented: { label: 'Mark Presented', successMessage: 'Quote {{ record.display_title }} marked as presented.' },
+      accept_quote: {
+        label: 'Accept',
+        confirmText: 'Accept this quote? It is frozen, its opportunity is closed as won and a contract is drafted.',
+        successMessage: 'Quote {{ record.display_title }} accepted.',
       },
+      reject_quote: { label: 'Reject', successMessage: 'Quote {{ record.display_title }} rejected. Revise it to make a new offer.' },
+      revise_quote: { label: 'Revise', successMessage: 'Quote {{ record.display_title }} is back at Draft.' },
+      print_quote: { label: 'Print Quote', successMessage: 'Quote PDF attached to the quote.' },
     },
   },
   crm_quote_line_item: {
@@ -206,6 +213,39 @@ export const commerce: Record<string, ObjectTranslationData> = {
       product_info: { label: 'Product Info' },
       pricing_info: { label: 'Pricing' },
       media: { label: 'Media' },
+    },
+  },
+  crm_price_book: {
+    label: 'Price Book',
+    pluralLabel: 'Price Books',
+    description: 'A named list of product prices: the standard list, a partner or regional tier, or a promotion',
+    fields: {
+      owner_id: { label: 'Price Book Owner' },
+      name: { label: 'Price Book Name' },
+      description: { label: 'Description' },
+      is_active: { label: 'Active' },
+      is_standard: { label: 'Standard' },
+      valid_from: { label: 'Valid From' },
+      valid_to: { label: 'Valid To' },
+    },
+    _sections: {
+      basic: { label: 'Price Book Information' },
+      validity: { label: 'Validity' },
+    },
+  },
+  crm_price_book_entry: {
+    label: 'Price Book Entry',
+    pluralLabel: 'Price Book Entries',
+    description: "One product's price in one price book",
+    fields: {
+      entry_number: { label: 'Entry Number' },
+      crm_price_book: { label: 'Price Book' },
+      crm_product: { label: 'Product' },
+      list_price: { label: 'List Price' },
+      is_active: { label: 'Active' },
+    },
+    _sections: {
+      basic: { label: 'Entry Information' },
     },
   },
 };

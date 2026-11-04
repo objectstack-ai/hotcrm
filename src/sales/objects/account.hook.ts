@@ -12,6 +12,8 @@ import type { HookApi } from './_hook-api';
  *   rules filter on (#639).
  * - Folds `name` into the `name_normalized` column lead conversion matches
  *   accounts on (#626).
+ * - Lets only Convert Lead set `converted_from_lead_id`, the marker that
+ *   exempts its account from `account_approval` (#2285).
  * - Refuses to delete a `customer` account that still has opportunities —
  *   open or closed, the account's sales history (#2019) — or activated
  *   contracts — contracts cascade with the account since #549.
@@ -177,6 +179,37 @@ const accountHook: Hook = {
             ? rawName.trim().toLowerCase().replace(/\s+/g, ' ')
             : '';
         input.name_normalized = normalizedName === '' ? null : normalizedName;
+      }
+
+      // ─── Conversion marker (#2285) ─────────────────────────────────────
+      //
+      // `converted_from_lead_id` exempts the account from `account_approval`,
+      // so it is a value only Convert Lead may write. It cannot be `readonly`
+      // (the note on the field), so this block is the guard: a non-blank
+      // value on INSERT must come from a flow run, and once stored it never
+      // changes.
+      //
+      // `ctx.provenance.flowRunId` is the platform's server-stamped mark of a
+      // write made by a flow data node: a REST create or the New form carries
+      // none, and no client can supply it. `lead_conversion` is the only flow
+      // that writes this column, pinned in
+      // `test/account-conversion-approval.test.ts`. A system write (seed
+      // replay, migration) is trusted as the platform trusts it everywhere.
+      //
+      // CLEARING is let through on purpose: deleting the lead makes the
+      // engine null this lookup with an update of the account, and a cleared
+      // marker reopens nothing, because the approval starts on insert only.
+      if ('converted_from_lead_id' in input && !ctx.session?.isSystem) {
+        const marker = input.converted_from_lead_id;
+        const setsValue = marker !== null && marker !== undefined && marker !== '';
+        const stored = event === 'beforeUpdate' ? (ctx.previous ?? {}).converted_from_lead_id : undefined;
+        if (setsValue && (event === 'beforeUpdate' ? marker !== stored : !ctx.provenance?.flowRunId)) {
+          throw refuse(
+            'Converted From Lead is set only by Convert Lead, when it creates the account. Leave it empty; the account goes to approval as a new account.',
+            'VALIDATION_FAILED',
+            400,
+          );
+        }
       }
     }
 

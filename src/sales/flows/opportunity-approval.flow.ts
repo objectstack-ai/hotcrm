@@ -10,7 +10,9 @@ type Flow = Automation.Flow;
  *
  * Expressed as **Approval nodes** (`type: 'approval'`, ADR-0019): the engine
  * opens an approval request on entry, suspends the run, and resumes down the
- * out-edge whose `label` matches the decision (`approve` / `reject`).
+ * out-edge whose `label` matches the decision (`approve` / `reject`). A
+ * recall resumes down `reject` too, and ends the run there without the
+ * rejection's notice (#2349).
  * Notifications use the **`notify` node** (ADR-0012). ⛔ Neither a
  * `connector_action` nor a standalone `ApprovalProcess` is available — both
  * authoring surfaces were removed in ObjectStack 7.4.
@@ -30,8 +32,20 @@ type Flow = Automation.Flow;
  *
  * `approval_status` mirrors the live request status, and the record is locked
  * while a step is pending. The mirror alone writes a rejection; on full
- * approval `mark_approved` adds `approved_date`.
+ * approval `mark_approved` adds `approved_date`. A rejected or recalled deal is
+ * handed back to the rep unlocked, and their next save sends it for approval
+ * again (#2334). Until then `opportunity_lifecycle` refuses its close-won.
  */
+/**
+ * Whether the deal's owner is the user whose save fired the run, and so the
+ * submitter the platform tells the outcome (#2371 row 5). Each term is
+ * guarded, so the pair partitions every run.
+ */
+const OWNER_SUBMITTED = P`has(vars.oppRecord) && has(vars.oppRecord.owner_id) && vars.oppRecord.owner_id != null
+  && has(record.updated_by) && record.updated_by != null && record.updated_by == vars.oppRecord.owner_id`;
+const OWNER_DID_NOT_SUBMIT = P`!has(vars.oppRecord) || !has(vars.oppRecord.owner_id) || vars.oppRecord.owner_id == null
+  || !has(record.updated_by) || record.updated_by == null || record.updated_by != vars.oppRecord.owner_id`;
+
 export const OpportunityApprovalFlow: Flow = {
   name: 'opportunity_approval',
   label: 'Large Deal Approval',
@@ -65,9 +79,8 @@ export const OpportunityApprovalFlow: Flow = {
       id: 'start',
       type: 'start',
       label: 'Start',
-      // Trigger wiring (7.4): bind to afterUpdate; gate on crossing the entry
-      // threshold while not already in an approval state. The `not_required`
-      // guard stops the flow's own approval_status writes from re-triggering it.
+      // Trigger wiring (7.4): bind to afterUpdate; gate on a save of a deal at
+      // or over the entry threshold that no request holds and none has granted.
       config: {
         objectName: 'crm_opportunity',
         triggerType: 'record-after-update',
@@ -87,8 +100,44 @@ export const OpportunityApprovalFlow: Flow = {
         // predicate. An absent `approval_status` reads the same as the null
         // this condition already tolerates; an absent `stage` is not a settled
         // stage, so it must not block approval.
+        //
+        // ── Which saves are a submission (#2334) ──
+        // `rejected` enters as `not_required` does: a rejection is not a
+        // release, and the way on from it is a NEW request. Before #2334 only
+        // `not_required`/null entered, so no save could ever send a rejected
+        // deal back, and `opportunity_lifecycle` had nothing to refuse its
+        // close-won with either.
+        //
+        // ⚠️ `previous.approval_status != "pending"` is the one term that
+        // tells a write that ENDS a request from a later save, and both halves
+        // of #2334 turn on it. The platform writes the end of a request onto
+        // the deal itself, through `approvalStatusField`, and the deal was
+        // `pending` an instant before: a reject writes `rejected`, and a recall
+        // restores the status the request was submitted from — `not_required`,
+        // or `rejected` for a resubmission (`mirroredStatusValue`,
+        // `@objectstack/plugin-approvals` 18.2.0, which leaves whether the
+        // record re-enters to "the app's own gate"). Without the term both
+        // writes re-entered: a recall opened a fresh request in the same
+        // second and kept the deal locked (#2320 Sales D5, measured), and
+        // `rejected` could not be admitted at all. No user save starts from
+        // `pending`, because the approval node's lock refuses it. So the
+        // writes that end a request open nothing, and the save after them —
+        // the rep's revision — is the resubmission. The other approval writes
+        // need no term: the node's own `pending` stamp and `mark_approved`
+        // land outside the admitted statuses.
+        //
+        // TOTALITY: a prior status that cannot be read — a sparse prior row,
+        // or the `null` prior row of a bulk `updateMany` — is not `pending`,
+        // so it reads as a submission: fail-OPEN on purpose, the direction
+        // that keeps the control engaged. (The status-change and 立项 gates
+        // fail CLOSED on the same shape, because there the term asks whether
+        // a NEW request was written.)
+        // ⛔ The insert twin below does not share this condition: an insert
+        // has no prior row to read.
         condition: P`has(record.amount) && record.amount != null && record.amount >= ${LARGE_DEAL_AMOUNT}
-          && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null)
+          && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null
+            || record.approval_status == "rejected")
+          && (!has(previous.approval_status) || previous.approval_status != "pending")
           && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
       },
     },
@@ -168,12 +217,23 @@ export const OpportunityApprovalFlow: Flow = {
       },
     },
     {
+      // ── One notice per decision (#2371 row 5) ──
+      // The platform already tells the SUBMITTER the outcome in the inbox
+      // ("Request approved — Your Opportunity … was approved.", with the
+      // approver's comment): `ApprovalService.notifyDecisionOutcome`,
+      // `@objectstack/plugin-approvals` 18.2.0, topic `approval.approved` /
+      // `approval.rejected`, inbox only. This node's inbox copy was the same
+      // news a second time for the usual submitter, the deal's own rep. So
+      // the owner's email stays here (the platform sends none), and the
+      // owner's inbox notice is sent only when the platform's does not reach
+      // them: when someone else's save sent the deal for approval
+      // (`check_owner_submitted_*` below).
       id: 'notify_approved',
       type: 'notify',
-      label: 'Notify Owner — Approved',
+      label: 'Email Owner — Approved',
       config: {
         recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
-        channels: ['inbox', 'email'],
+        channels: ['email'],
         topic: 'opportunity_approved',
         template: 'crm.opportunity_approved',
         templateData: { name: cel`oppRecord.name` },
@@ -189,12 +249,52 @@ export const OpportunityApprovalFlow: Flow = {
     // changing no value. Measured on 18.0.0-next.3, pinned in
     // `test/approval-decision-attribution.test.ts`.
     {
+      // Email only, as `notify_approved` (#2371 row 5).
       id: 'notify_rejected',
+      type: 'notify',
+      label: 'Email Owner — Rejected',
+      config: {
+        recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
+        channels: ['email'],
+        severity: 'warning',
+        topic: 'opportunity_rejected',
+        template: 'crm.opportunity_rejected',
+        templateData: { name: cel`oppRecord.name` },
+        actionUrl: '/crm_opportunity/{{record.id}}',
+      },
+    },
+
+    // ── The owner's inbox notice, when the platform's misses them ──
+    // The platform's notice goes to the request's submitter, the user whose
+    // save fired this run (`runTriggerUser`). That save stamped
+    // `record.updated_by` (on an insert, `record.created_by` too), so an
+    // owner who is not that user — a manager raised the rep's amount, or a
+    // system write with no user started the run — hears it here instead.
+    // TOTALITY: an unreadable writer or owner reads as "not the owner", so
+    // the inbox notice is sent: a duplicate is the old behaviour, a missed
+    // notice is not.
+    { id: 'check_owner_submitted_approved', type: 'decision', label: 'Owner Submitted?' },
+    {
+      id: 'notify_approved_inbox',
+      type: 'notify',
+      label: 'Notify Owner — Approved',
+      config: {
+        recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
+        channels: ['inbox'],
+        topic: 'opportunity_approved',
+        template: 'crm.opportunity_approved',
+        templateData: { name: cel`oppRecord.name` },
+        actionUrl: '/crm_opportunity/{{record.id}}',
+      },
+    },
+    { id: 'check_owner_submitted_rejected', type: 'decision', label: 'Owner Submitted?' },
+    {
+      id: 'notify_rejected_inbox',
       type: 'notify',
       label: 'Notify Owner — Rejected',
       config: {
         recipients: [cel`has(oppRecord.owner_id) ? oppRecord.owner_id : null`],
-        channels: ['inbox', 'email'],
+        channels: ['inbox'],
         severity: 'warning',
         topic: 'opportunity_rejected',
         template: 'crm.opportunity_rejected',
@@ -212,7 +312,22 @@ export const OpportunityApprovalFlow: Flow = {
 
     // Manager decision (approval-node branch labels)
     { id: 'e3', source: 'manager_review', target: 'check_high_value', type: 'default', label: 'approve' },
-    { id: 'e4', source: 'manager_review', target: 'notify_rejected', type: 'default', label: 'reject' },
+
+    // ── A recall is not a rejection (#2349) ──
+    // The platform resumes a RECALLED request down this same `reject` edge
+    // (`ApprovalService.recall`, `@objectstack/plugin-approvals` 18.2.0), so
+    // the label alone sent the rep a "rejected" notice for a request nobody
+    // decided. What tells the two apart is the decision the resume lands as
+    // `vars.<nodeId>.decision`: `'recall'` for a recall, `'reject'` for an
+    // approver's rejection or an auto-rejection. Both edges carry the label
+    // (the resume picks among them by it), and their conditions PARTITION in
+    // opposite polarity, as `e5`/`e6` do. A decision that cannot be read
+    // notifies: an unreadable decision is today's behaviour, not a silent
+    // loss of a real rejection's notice.
+    { id: 'e4', source: 'manager_review', target: 'notify_rejected', type: 'conditional', label: 'reject',
+      condition: P`!has(vars.manager_review) || !has(vars.manager_review.decision) || vars.manager_review.decision != "recall"` },
+    { id: 'e4_recall', source: 'manager_review', target: 'end', type: 'conditional', label: 'reject',
+      condition: P`has(vars.manager_review) && has(vars.manager_review.decision) && vars.manager_review.decision == "recall"` },
 
     // Tier gate (decision-node conditional branches). These EDGES are the live
     // sites — the engine never evaluates a `decision` node's singular
@@ -241,14 +356,32 @@ export const OpportunityApprovalFlow: Flow = {
     { id: 'e6', source: 'check_high_value', target: 'mark_approved', type: 'conditional', condition: P`!has(vars.oppRecord) || !has(vars.oppRecord.amount)
       || vars.oppRecord.amount == null || vars.oppRecord.amount <= ${HIGH_VALUE_DEAL_AMOUNT}`, label: 'Standard (≤ $500K)' },
 
-    // Director decision (approval-node branch labels)
+    // Director decision (approval-node branch labels). A recall here — the
+    // rep withdrawing a deal the manager already approved — ends the run the
+    // same way (see `e4`).
     { id: 'e7', source: 'director_signoff', target: 'mark_approved', type: 'default', label: 'approve' },
-    { id: 'e8', source: 'director_signoff', target: 'notify_rejected', type: 'default', label: 'reject' },
+    { id: 'e8', source: 'director_signoff', target: 'notify_rejected', type: 'conditional', label: 'reject',
+      condition: P`!has(vars.director_signoff) || !has(vars.director_signoff.decision) || vars.director_signoff.decision != "recall"` },
+    { id: 'e8_recall', source: 'director_signoff', target: 'end', type: 'conditional', label: 'reject',
+      condition: P`has(vars.director_signoff) && has(vars.director_signoff.decision) && vars.director_signoff.decision == "recall"` },
 
     // Terminal branches
     { id: 'e9', source: 'mark_approved', target: 'notify_approved', type: 'default' },
-    { id: 'e10', source: 'notify_approved', target: 'end', type: 'default' },
-    { id: 'e12', source: 'notify_rejected', target: 'end', type: 'default' },
+    { id: 'e10', source: 'notify_approved', target: 'check_owner_submitted_approved', type: 'default' },
+    { id: 'e12', source: 'notify_rejected', target: 'check_owner_submitted_rejected', type: 'default' },
+
+    // The owner's inbox notice (#2371 row 5): partitioned in opposite
+    // polarity, as `e5`/`e6` are.
+    { id: 'e13', source: 'check_owner_submitted_approved', target: 'end', type: 'conditional',
+      label: 'Owner submitted', condition: OWNER_SUBMITTED },
+    { id: 'e14', source: 'check_owner_submitted_approved', target: 'notify_approved_inbox', type: 'conditional',
+      label: 'Someone else submitted', condition: OWNER_DID_NOT_SUBMIT },
+    { id: 'e15', source: 'notify_approved_inbox', target: 'end', type: 'default' },
+    { id: 'e16', source: 'check_owner_submitted_rejected', target: 'end', type: 'conditional',
+      label: 'Owner submitted', condition: OWNER_SUBMITTED },
+    { id: 'e17', source: 'check_owner_submitted_rejected', target: 'notify_rejected_inbox', type: 'conditional',
+      label: 'Someone else submitted', condition: OWNER_DID_NOT_SUBMIT },
+    { id: 'e18', source: 'notify_rejected_inbox', target: 'end', type: 'default' },
   ],
 };
 
@@ -258,9 +391,12 @@ export const OpportunityApprovalFlow: Flow = {
  * opportunities BORN over the threshold — flow-created deals (contract
  * renewals, lead conversion) and API inserts. ⛔ Do not delete this twin
  * expecting the afterUpdate flow to cover them; that population is exactly what
- * the start condition's null-tolerance is written for. Same nodes/edges, only
- * the start node is rebound to afterInsert (mirrors `CaseEscalationOnCreateFlow`).
- * The stage guard carries over, keeping seeded/imported closed deals out.
+ * the start condition's null-tolerance is written for. Same nodes/edges; the
+ * start node is rebound to afterInsert (mirrors `CaseEscalationOnCreateFlow`)
+ * and keeps the entry condition the update flow had before #2334. An insert has
+ * no prior row, so the `previous` term has nothing to read, and a deal is never
+ * born `rejected`. The stage guard carries over, keeping seeded/imported closed
+ * deals out.
  */
 export const OpportunityApprovalOnCreateFlow: Flow = {
   ...OpportunityApprovalFlow,
@@ -269,7 +405,16 @@ export const OpportunityApprovalOnCreateFlow: Flow = {
   description: 'Approval intake for opportunities created above the threshold (insert-time twin of opportunity_approval).',
   nodes: OpportunityApprovalFlow.nodes.map((n) =>
     n.id === 'start'
-      ? { ...n, config: { ...n.config, triggerType: 'record-after-create' } }
+      ? {
+        ...n,
+        config: {
+          ...n.config,
+          triggerType: 'record-after-create',
+          condition: P`has(record.amount) && record.amount != null && record.amount >= ${LARGE_DEAL_AMOUNT}
+            && (!has(record.approval_status) || record.approval_status == "not_required" || record.approval_status == null)
+            && (!has(record.stage) || (record.stage != "closed_won" && record.stage != "closed_lost"))`,
+        },
+      }
       : n,
   ),
 };

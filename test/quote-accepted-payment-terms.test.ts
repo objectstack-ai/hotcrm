@@ -2,9 +2,9 @@
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { Contract } from '../src/revenue/objects/contract.object';
+import { Contract } from '../src/sales/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
-import { PaymentTermsPicklist } from '../src/revenue/picklists/payment_terms.picklist';
+import { PaymentTermsPicklist } from '../src/sales/picklists/payment_terms.picklist';
 import {
   hotcrmStack, signUpPerson, recordEngineWrites, today, type Person,
 } from './helpers/verify-stack';
@@ -30,7 +30,7 @@ import {
  * net_90) produced a contract silently saying 30 days, with nothing marking the
  * value as defaulted. The rep who closed the deal cannot fix it either —
  * `sales-rep.profile.ts` gives them `allowEdit: false` on `crm_contract` — and
- * the value does not stay put: `src/revenue/flows/billing-handoff-contract-activated.flow.ts` POSTs the
+ * the value does not stay put: `src/sales/flows/billing-handoff-contract-activated.flow.ts` POSTs the
  * contract's `payment_terms` to the billing system when the contract activates,
  * so the defaulted term becomes an invoicing term.
  *
@@ -274,8 +274,8 @@ describe('the rationale the shared vocabulary is justified by', () => {
     const { join } = await import('node:path');
     // The picklist and `crm_contract` both make the claim, so both are read.
     for (const file of [
-      'src/revenue/picklists/payment_terms.picklist.ts',
-      'src/revenue/objects/contract.object.ts',
+      'src/sales/picklists/payment_terms.picklist.ts',
+      'src/sales/objects/contract.object.ts',
     ]) {
       expect(
         readFileSync(join(process.cwd(), file), 'utf8'),

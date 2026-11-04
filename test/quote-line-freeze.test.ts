@@ -101,6 +101,10 @@ const refusalOf = (p: Promise<unknown>): Promise<Rec | null> => p.then(() => nul
 
 const sentence = (quote: Rec) =>
   `Quote ${quote.quote_number} - ${quote.name} is ${quote.status}, so its line items can no longer be added, changed or removed.`;
+/** What the console shows: the same sentence with the status's label (#2338 item 16). */
+const STATUS_LABELS: Record<string, string> = { accepted: 'Accepted', expired: 'Expired' };
+const userSentence = (quote: Rec) =>
+  `Quote ${quote.quote_number} - ${quote.name} is ${STATUS_LABELS[quote.status]}, so its line items can no longer be added, changed or removed.`;
 
 /** The freeze's envelope, its wording, and the quote named the way the UI names it. */
 const expectFrozen = (err: Rec | null, quote: Rec): void => {
@@ -108,6 +112,7 @@ const expectFrozen = (err: Rec | null, quote: Rec): void => {
   expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
   expect(String(err!.message)).toContain(sentence(quote));
   expect(String(err!.message)).not.toContain(quote.id);
+  expect(err!.userMessage).toBe(userSentence(quote));
 };
 
 describe('a user cannot change the lines of a settled quote', () => {
@@ -156,7 +161,7 @@ describe('a user cannot change the lines of a settled quote', () => {
     }));
     expect(err?.name).toBe('SandboxError');
     expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
-    expect(String(err!.userMessage)).toBe(sentence(quote));
+    expect(String(err!.userMessage)).toBe(userSentence(quote));
   });
 });
 
@@ -174,7 +179,7 @@ describe('a user cannot remove a line from a settled quote by hand (#2088)', () 
     expect({ status: res.status, code: body.code }, JSON.stringify(body)).toEqual({
       status: REFUSAL_CODES.locked.status, code: REFUSAL_CODES.locked.code,
     });
-    expect(body.userMessage).toBe(sentence(quote));
+    expect(body.userMessage).toBe(userSentence(quote));
     expect(await stored('crm_quote_line_item', line.id)).toBeDefined();
   });
 
@@ -184,7 +189,7 @@ describe('a user cannot remove a line from a settled quote by hand (#2088)', () 
     const err = await refusalOf(runShippedHook(verify, hookNamed('quote_workflow'), handDelete));
     expect(err?.name).toBe('SandboxError');
     expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
-    expect(String(err!.userMessage)).toBe(sentence(quote));
+    expect(String(err!.userMessage)).toBe(userSentence(quote));
     // The same delete, with the one key the engine's cascade adds.
     await expect(runShippedHook(verify, hookNamed('quote_workflow'), { ...handDelete, referentialCascadeDelete: true })).resolves.toBeDefined();
   });

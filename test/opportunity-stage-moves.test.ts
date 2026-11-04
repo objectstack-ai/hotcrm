@@ -129,6 +129,32 @@ describe('an off-path move on an open deal saves (#2234)', () => {
   );
 });
 
+/**
+ * An early win is on the path (#2371 row 3). A rep closing a Prospecting,
+ * Qualification or Needs Analysis deal as won used to get "Saved — with
+ * warnings: Invalid opportunity stage transition" on top of the save toast,
+ * for a move the business accepts. Every open stage may now go to Closed Won,
+ * as every open stage could already go to Closed Lost; take `closed_won` back
+ * out of a row and the warning returns, and this goes red.
+ */
+const EARLY_WIN = ['prospecting', 'qualification', 'needs_analysis'] as const;
+
+describe('an early win saves without a warning (#2371 row 3)', () => {
+  it('lets every open stage close as won or lost', () => {
+    for (const from of ['prospecting', 'qualification', 'needs_analysis', 'proposal', 'negotiation']) {
+      expect(rule.transitions[from], from).toEqual(expect.arrayContaining(['closed_won', 'closed_lost']));
+    }
+  });
+
+  it.each(EARLY_WIN)('the rep: %s → closed_won saves with no warning', async (from) => {
+    const deal = await dealAt(from);
+    const res = await move(people.rep, deal.id, 'closed_won');
+    expect(res.status, res.text).toBe(200);
+    expect(res.body.warnings ?? []).toEqual([]);
+    expect((await stored(deal.id)).stage).toBe('closed_won');
+  });
+});
+
 describe('a closed deal keeps its stage (#2234)', () => {
   it.each(PEOPLE.flatMap(([label, key]) => OUT_OF_CLOSED.map(([from, to]) => [label, from, to, key] as const)))(
     '%s: %s → %s is refused by the closed-deal freeze',

@@ -45,7 +45,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       industry: { label: 'Industry' },
       mobile: { label: 'Mobile' },
       website: { label: 'Website' },
-      rating: { label: 'Lead Score', help: 'Lead quality score (1-5 stars)' },
+      rating: { label: 'Lead Score', help: 'Leave blank and a new lead is scored for you (1-5 stars) from its email domain, phone, job title, industry and company size.' },
       converted_account: { label: 'Converted Account' },
       converted_contact: { label: 'Converted Contact' },
       converted_opportunity: { label: 'Converted Opportunity' },
@@ -180,7 +180,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: 'Add to Campaign',
-        successMessage: 'Leads added to campaign!',
+        successMessage: '{{ result.output.campaignName }}: {{ result.output.addedCount }} added, {{ result.output.alreadyCount }} already a member.',
         params: {
           campaignId: { label: 'Campaign' },
         },
@@ -351,7 +351,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: 'Clone Opportunity',
-        successMessage: 'Opportunity cloned successfully!',
+        successMessage: 'Created "{{ result.name }}". You are now on the copy.',
       },
       mass_update_stage: {
         label: 'Update Stage',

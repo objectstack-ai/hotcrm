@@ -89,9 +89,11 @@ The case form (`src/service/views/case.view.ts`) is **not** tabbed. It is a sing
 
 The platform gives an object one form, so this is the **create** form and the **edit** form both — which is why it stops where it does. What it offers is what the person raising a case actually has in hand at intake; everything the lifecycle fills in later is deliberately absent, because a creator typing an SLA deadline or a resolution time would be authoring state the app is supposed to derive. Those fields are read on the detail screen instead — see *What happens automatically* for who writes each one. **Case Number** is the one exception on the list: it is shown but never typed, because the app allocates it and the field is read-only.
 
-The two are not one screen wearing different chrome — they overlap in only seven fields (Case Number, Subject, Contact, Supplied Name, Supplied Email, Case Origin, Description). **Case Type** is on the detail screen but not on the agent's case form at all. The public support form at `/forms/support` is a third layout again: a single section with six fields (the visitor's name and email, subject, description, type, priority).
+The two are not one screen wearing different chrome — they overlap in only seven fields (Case Number, Subject, Contact, Supplied Name, Supplied Email, Case Origin, Description). **Case Type** is on the detail screen but not on the agent's case form at all. The public support form at `/forms/support` is a third layout again: a single section with five fields (the visitor's name and email, subject, description, type), labelled for the visitor: **Your name** and **Your email** there are the **Supplied Name** and **Supplied Email** an agent reads on the case.
 
 **Who wrote in.** A case from the public support form has no account and no contact, because the visitor is anonymous. So the form asks for their name and email — the email is required, and the form will not send without it — and the case keeps them as **Supplied Name** and **Supplied Email**, beside **Contact**. They are exactly what the visitor typed: nothing checks them, and the app never links the case to a contact or an account because the address matches one. Reply to the supplied address (it is a mail link on the case), and link the case to the right contact once you have confirmed who wrote in. On a case an agent raises, both fields are optional.
+
+**No priority from a visitor.** The public form does not ask for a priority, so a web case arrives at **Low** and the agent triages it. A visitor can never open a **Critical** case, which would escalate on arrival and go to the Service Manager pool: the app holds a visitor's case at **High** at most, whatever the submission says. Critical is set by staff, and a case an agent raises can still be opened at Critical. Above the fields the form reads *For an urgent outage, call the service hotline.* — the way a visitor with a real P1 reaches you.
 
 ## What happens automatically
 
@@ -106,7 +108,7 @@ The two are not one screen wearing different chrome — they overlap in only sev
 
 ## Built-in rules
 
-- **Closed cases must have a resolution** — you can't close a case with an empty Resolution field.
+- **Closed cases must have a resolution** — you can't close a case with an empty Resolution field. The edit form shows **Resolution** as soon as **Status** is set to *Resolved* or *Closed*, so you can fill it in on the same save; a new case does not show it.
 - **Escalated cases must have an escalation reason** — explains why a senior agent was pulled in.
 - **Status progression is advice, not a gate** — the transition table says *New* leads to *In Progress*, *Waiting on Customer*, *Escalated* or *Closed*, so jumping straight to *Resolved* is outside it. That does not stop the save: the case is stored as *Resolved* and the engine writes one line to the server log, `WARN Validation rule 'case_status_progression' (warning): Invalid status transition`. Unlike the two rules above — both `error` severity, both of which do reject the save — this one only advises. See [State Machines](/docs/administration/state-machines) for what the table is good for.
 
@@ -174,7 +176,7 @@ Nothing else claims a case, and each exclusion is deliberate:
 | --- | --- |
 | **All Cases** | Every case, sorted by priority then SLA due date; a case flagged **SLA Violated** is tinted red, every other row stays plain |
 | **Service Workflow** | Kanban of open cases, grouped by status |
-| **SLA Calendar** | Cases laid out on their **SLA Due Date** — every case carries one now, so the calendar shows the whole open backlog |
+| **SLA Calendar** | Live cases laid out on their **SLA Due Date** — every case carries one, and resolved and closed cases are left out, so the calendar shows the open backlog's deadlines |
 | **Case Timeline** | Cases on a *created → closed* timeline, grouped by owner |
 | **Escalated Cases** | `is_escalated` is true |
 | **Unassigned — triage** | Open cases with no owner at all, urgent first then soonest due — where a web-to-case submission lands when nobody holds the Service Agent position (see [Case routing](/docs/administration/setup#12-case-routing--nothing-to-configure)) |
@@ -183,7 +185,7 @@ Nothing else claims a case, and each exclusion is deliberate:
 
 Of the **seven** names this section used to list, only **My Open Cases** was real — it survives in the table above. The other six are not views at all:
 
-- **Critical Cases** is a metric tile, not a list. *Breached SLA* is not a name this app carries at all: the tile that counts breaches is **SLA Violations**. [Service Overview](/docs/analytics/dashboards) — the dashboard's own title is **Customer Service** — carries **Critical Cases** (open and Critical) and **SLA Violations** (flagged **SLA Violated**, or still open past its **SLA Due Date**, counted when the tile is read); no list view in this app filters on a breach. For a list you can actually work through, use **Escalated Cases** — the SLA sweep escalates every case it flags, so each breach it flags lands there.
+- **Critical Cases** is a metric tile, not a list. *Breached SLA* is not a name this app carries at all: the tile that counts breaches is **Open Cases Past SLA**. [Service Overview](/docs/analytics/dashboards) — the dashboard's own title is **Customer Service** — carries **Critical Cases** (open and Critical) and **Open Cases Past SLA** (open, and flagged **SLA Violated** or past its **SLA Due Date**, counted when the tile is read); no list view in this app filters on a breach. For a list you can actually work through, use **Escalated Cases** — the SLA sweep escalates every case it flags, so each breach it flags lands there.
 - **Service Board** is not this app's name for anything. The kanban is **Service Workflow**, and that is what its tab reads.
 - **Cases Due Today**, **Recently Closed** and **By Account** do not exist in any form: no view filters on today's due date or on `closed_date`, and `crm_case` has no grouped view.
 
@@ -235,7 +237,7 @@ If the Copilot decides the priority is *Critical*, it will also recommend immedi
 
 ## Tips for service managers
 
-- ✅ There is no *Breached SLA* view to watch, and no red badge either — but a breach does show on *All Cases*: a case flagged **SLA Violated** is a red row, and it stays red once resolved or closed, because a late close records the breach. Work **Escalated Cases** daily, and read the **SLA Violations** tile on Service Overview for the count.
+- ✅ There is no *Breached SLA* view to watch, and no red badge either — but a breach does show on *All Cases*: a case flagged **SLA Violated** is a red row, and it stays red once resolved or closed, because a late close records the breach. Work **Escalated Cases** daily, and read the **Open Cases Past SLA** tile on Service Overview for the count.
 - ✅ Use the kanban for daily standups — it is named **Service Workflow** and reaches the case list as the **Service Workflow** tab.
 - ✅ Coach agents whose **Resolution Time** trends up — but you will be reading it off the cases themselves. There is no agent leaderboard: `case_metrics`, the dataset behind every service report and dashboard widget, declares Status, Priority, Origin, Type, Created and Resolving Article as its only dimensions, so nothing in analytics can group cases by agent.
 

@@ -368,6 +368,14 @@ function binds(node: AnyRec): string[] {
   if (typeof cfg.outputVariable === 'string' && cfg.outputVariable) out.push(cfg.outputVariable);
   if (typeof cfg.iteratorVariable === 'string' && cfg.iteratorVariable) out.push(cfg.iteratorVariable);
   if (typeof cfg.idVariable === 'string' && cfg.idVariable) out.push(cfg.idVariable);
+  // An `approval` node continues only through a resume, and every resume the
+  // approvals service sends carries `output.decision` (`approve`, `reject`, or
+  // `recall` from `ApprovalService.recall`, `@objectstack/plugin-approvals`
+  // 18.2.0). The engine lands each output key as `<nodeId>.<key>`
+  // (`applyResumeSignal`), so its out-edges read `vars.<nodeId>.decision`.
+  // Measured end-to-end, not assumed: `approval-recall-no-rejected-notice.test.ts`
+  // goes red if a recall's decision stops reaching the edges that read it (#2349).
+  if (node.type === 'approval' && typeof node.id === 'string' && node.id) out.push(node.id);
   const a = cfg.assignments;
   if (Array.isArray(a)) {
     for (const item of a) {

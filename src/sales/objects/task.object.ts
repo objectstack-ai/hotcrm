@@ -70,12 +70,15 @@ export const Task = ObjectSchema.create({
       // from a related list left this required field blank and the rep had to
       // pick "Not Started" by hand every time.
       defaultValue: 'not_started',
+      // Lifecycle `kind` (#2326): Completed is the won end. There is no
+      // cancelled value, so nothing is `lost`; Deferred is postponed, not
+      // abandoned, and stays `open`.
       options: [
-        { label: 'Not Started', value: 'not_started', color: '#808080', default: true },
-        { label: 'In Progress', value: 'in_progress', color: '#FFA500' },
-        { label: 'Waiting', value: 'waiting', color: '#FFD700' },
-        { label: 'Completed', value: 'completed', color: '#00AA00' },
-        { label: 'Deferred', value: 'deferred', color: '#999999' },
+        { label: 'Not Started', value: 'not_started', color: '#808080', kind: 'open', default: true },
+        { label: 'In Progress', value: 'in_progress', color: '#FFA500', kind: 'open' },
+        { label: 'Waiting', value: 'waiting', color: '#FFD700', kind: 'open' },
+        { label: 'Completed', value: 'completed', color: '#00AA00', kind: 'won' },
+        { label: 'Deferred', value: 'deferred', color: '#999999', kind: 'open' },
       ]
     }),
 

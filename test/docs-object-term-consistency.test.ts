@@ -232,7 +232,7 @@ const SPARED: readonly string[] = [
   '自動到期',
   '报价单到期', // getting-started/introduction, the built-in automation list
   '報價單到期',
-  '到期扫描', // revenue/contracts: 每日——到期扫描
+  '到期扫描', // sales/contracts: 每日——到期扫描
   '到期掃描',
   '即将到期', // accounts: 要找即将到期的续约
   '即將到期',

@@ -7,7 +7,7 @@ import type { HookApi } from './_hook-api';
  * Task lifecycle hook.
  *
  * - On `completed` transition, stamps `completed_date` and `progress_percent=100`.
- * - Warns when `reminder_date` is after `due_date`.
+ * - Refuses (`VALIDATION_FAILED` / 400) when `reminder_date` is after `due_date`.
  * - Bubbles activity to the polymorphic parent (account `last_activity_date`,
  *   lead `last_contacted_date`).
  * - Refuses to SCHEDULE a phone touch against a person flagged `do_not_call`
@@ -100,6 +100,20 @@ const taskValidation: Hook = {
         input.completed_date = new Date().toISOString();
       }
       if (typeof input.progress_percent !== 'number') input.progress_percent = 100;
+    }
+
+    // Reopening clears the stamp (#2338 item 9). A task moved from Completed
+    // back to an open status kept its Completed Date, and the field is
+    // readonly, so nobody could clear it by hand: an open task read as
+    // finished on the date it had been closed. Same shape as the member
+    // lifecycle hook clearing `response_date` on a reset to `sent`.
+    // The key is hook-written, so the readonly strip leaves it alone.
+    if (
+      previous?.status === 'completed' &&
+      typeof input.status === 'string' &&
+      input.status !== 'completed'
+    ) {
+      input.completed_date = null;
     }
 
     // Derived flags.

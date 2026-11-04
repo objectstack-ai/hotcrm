@@ -7,7 +7,7 @@ import { ErrorCode } from '@objectstack/spec/api';
 import { allHooks } from '../objectstack.composition';
 import { REFUSAL_CODES, REFUSE_HELPER } from '../src/sales/objects/_refusal';
 import { hookNamed } from './helpers/composed-stack';
-import { hotcrmStack, signUpPerson, runShippedHook, today, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, today, type Person } from './helpers/verify-stack';
 
 /**
  * The refusal envelope, pinned where it actually ships (#1075 + #1167).
@@ -139,11 +139,18 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // refusal of an acceptance the deal's approval holds to `quote_workflow`;
     // 23 until #2060 added the settled-quote line freeze to `quote_workflow`;
     // 24 until #2077 added the closed-deal line freeze; 25 until #2191 added
-    // the approval-locked deal's line hold beside it.
+    // the approval-locked deal's line hold beside it; 26 until #2313 added the
+    // standard price book's three refusals and the one-entry-per-product one;
+    // 30 until #2285 added the conversion-marker refusal to
+    // `account_protection`; 31 until #2334 added the large-deal close-won
+    // refusal to `opportunity_lifecycle`; 32 until #2344 added
+    // `campaign_member_enrollment_gate`'s three (a closed campaign, an
+    // opted-out lead, an opted-out contact); 35 until #2366 added
+    // `quote_workflow`'s refusal of a quote created at a settled status.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(26);
+    expect(sites).toHaveLength(36);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
@@ -186,6 +193,9 @@ const contactGuard = hookNamed('contact_integrity');
 const oppGuard = hookNamed('opportunity_lifecycle');
 const productGuard = hookNamed('product_catalog');
 const taskGuard = hookNamed('task_do_not_call_guard');
+const leadGuard = hookNamed('lead_automation');
+const lineGuard = hookNamed('opportunity_line_item_freeze');
+const quoteGuard = hookNamed('quote_workflow');
 
 /**
  * The real app — booted through `@objectstack/verify`'s handle — and the rows
@@ -220,6 +230,27 @@ beforeAll(async () => {
   row.lead = await create('crm_lead', {
     first_name: 'Dee', last_name: 'Nc', company: 'Envelope Co', email: 'dee@acme.example.com', do_not_call: true,
   });
+  // A deal that closed, for the line-item freeze (#2338 item 15), and a lead
+  // the conversion flow would have left behind, for the converted-lead lock
+  // (item 14) — the lead written as the system, the way that flow writes it.
+  row.closedDeal = await create('crm_opportunity', {
+    name: 'Won Deal', crm_account: row.account, stage: 'proposal', amount: 100, close_date: today(),
+  });
+  await verify.hooks.run('crm_opportunity', 'update', { id: row.closedDeal, stage: 'closed_won', win_reason: 'better_price' }, { as: rep.token });
+  const [converted] = await verify.seed('crm_lead', [{
+    first_name: 'Ada', last_name: 'Lovelace', company: 'Acme', email: 'ada@acme.example.com', owner_id: rep.id,
+    is_converted: true, status: 'converted', converted_date: '2026-01-01',
+    converted_account: row.account, converted_contact: row.contact, converted_opportunity: row.opportunity,
+  }]);
+  row.convertedLead = String(converted!.id);
+  // A quote that expired, for its line freeze (#2338 item 16) — settled the
+  // way the expiry sweep settles one, as the system.
+  const [quote] = await verify.seed('crm_quote', [{
+    name: 'Envelope Quote', crm_account: row.account, crm_contact: row.contact, owner_id: rep.id,
+    status: 'draft', quote_date: '2026-01-01', expiration_date: '2030-12-31', discount: 0, tax: 0, shipping_handling: 0,
+  }]);
+  row.expiredQuote = String(quote!.id);
+  await systemUpdate(verify, 'crm_quote', { id: row.expiredQuote, status: 'expired' });
 }, 180_000);
 
 /** Run a hook's SHIPPED body and return the error it threw, or null if it did not. */
@@ -245,19 +276,28 @@ const refusalFrom = async (hook: AnyRec, opts: AnyRec): Promise<AnyRec | null> =
  * would see. `userMessage` is pinned EQUAL to `innerMessage`: since #1869
  * `refuse()` marks the sentence, and that mark is the half a consumer can read
  * without the wrapper. `innerMessage` is not a wire field, so asserting only it
- * would leave the user-facing outcome unpinned.
+ * would leave the user-facing outcome unpinned. A site that passes its own
+ * `userMessage` (the diagnostic keeps API names, the user sentence uses labels,
+ * #2338 item 12) names that sentence as `userWording`, and the pin becomes:
+ * the marked channel carries THAT sentence, not the diagnostic.
  */
 const expectEnvelope = (
   err: AnyRec | null,
   cls: keyof typeof REFUSAL_CODES,
   hookName: string,
   wording: RegExp,
+  userWording?: RegExp,
 ): void => {
   expect(err, `expected ${hookName} to refuse`).toBeTruthy();
   expect(err!.name, 'the shipped path re-throws as SandboxError').toBe('SandboxError');
   expect([err!.code, err!.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
   expect(String(err!.innerMessage)).toMatch(wording);
   expect(String(err!.message)).toBe(`hook '${hookName}' threw: Error: ${err!.innerMessage}`);
+  if (userWording) {
+    expect(String(err!.userMessage), 'the marked channel carries the user sentence').toMatch(userWording);
+    expect(err!.userMessage).not.toBe(String(err!.innerMessage));
+    return;
+  }
   expect(err!.userMessage, 'the marked channel carries the sentence, unwrapped').toBe(
     String(err!.innerMessage),
   );
@@ -291,7 +331,50 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
       previous: { id: row.opportunity, name: 'Big Deal', stage: 'closed_won', amount: 100 },
       as: rep.token,
     });
-    expectEnvelope(err, 'locked', 'opportunity_lifecycle', /is closed \(closed_won\)/);
+    expectEnvelope(err, 'locked', 'opportunity_lifecycle', /is closed \(closed_won\)/, /is closed \(Closed Won\); only its Description and Next Steps can still be edited\.$/);
+  });
+
+  it('locked — opportunity_lifecycle refuses a large close-won its approval has not granted (#2350)', async () => {
+    const err = await refusalFrom(oppGuard, {
+      event: 'beforeUpdate',
+      input: { id: row.opportunity, stage: 'closed_won', amount: 150000 },
+      previous: { id: row.opportunity, name: 'Big Deal', stage: 'proposal', amount: 100, approval_status: 'not_required' },
+      as: rep.token,
+    });
+    expectEnvelope(
+      err, 'locked', 'opportunity_lifecycle',
+      /moves to closed_won only once approval_status is approved; amount is 150000, approval_status is not_required\.$/,
+      /^A deal of 100,000 or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is Not Required\. Save the deal without closing it to send it for approval;/,
+    );
+  });
+
+  it('locked — lead_automation freezes a converted lead', async () => {
+    const err = await refusalFrom(leadGuard, {
+      event: 'beforeUpdate',
+      input: { id: row.convertedLead, company: 'Globex' },
+      previous: { id: row.convertedLead, first_name: 'Ada', last_name: 'Lovelace', company: 'Acme', is_converted: true },
+      as: rep.token,
+    });
+    expectEnvelope(err, 'locked', 'lead_automation', /\(attempted: company\)/, /^Cannot change Company on converted lead Ada Lovelace - Acme;/);
+  });
+
+  it('locked — opportunity_line_item_freeze freezes the lines of a closed deal', async () => {
+    const err = await refusalFrom(lineGuard, {
+      event: 'beforeInsert',
+      input: { crm_opportunity: row.closedDeal, crm_product: row.product, quantity: 1, unit_price: 10 },
+      as: rep.token,
+    });
+    expectEnvelope(err, 'locked', 'opportunity_line_item_freeze', /is closed \(closed_won\)/, /is closed \(Closed Won\), so its line items/);
+  });
+
+  it('locked — quote_workflow freezes the lines of a settled quote', async () => {
+    const err = await refusalFrom(quoteGuard, {
+      event: 'beforeInsert',
+      object: 'crm_quote_line_item',
+      input: { crm_quote: row.expiredQuote, crm_product: row.product, quantity: 1, unit_price: 10 },
+      as: rep.token,
+    });
+    expectEnvelope(err, 'locked', 'quote_workflow', / - Envelope Quote is expired, so its line items/, / - Envelope Quote is Expired, so its line items/);
   });
 
   it('delete_restricted — product_catalog holds a referenced product', async () => {
@@ -341,6 +424,7 @@ const expectInProcess = (
   err: unknown,
   cls: keyof typeof REFUSAL_CODES,
   wording: RegExp,
+  userWording?: RegExp,
 ): void => {
   expect(err, `expected a refusal matching ${wording}`).toBeInstanceOf(Error);
   const e = err as AnyRec;
@@ -349,7 +433,13 @@ const expectInProcess = (
   expect(e.innerMessage, 'only the sandbox adds innerMessage').toBeUndefined();
   expect([e.code, e.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
   // The mark is written by `refuse()`, so it is identical on both paths — here
-  // `message` is unrewritten, so the two are the same string.
+  // `message` is unrewritten, so the two are the same string, unless the site
+  // passed its own user sentence (see `expectEnvelope`).
+  if (userWording) {
+    expect(String(e.userMessage)).toMatch(userWording);
+    expect(e.userMessage).not.toBe(e.message);
+    return;
+  }
   expect(e.userMessage, 'refuse() marks the sentence on both paths').toBe(e.message);
 };
 
@@ -390,6 +480,52 @@ describe('the same envelope on the in-process path (#1075)', () => {
       await inProcess('crm_opportunity', 'update', { id: opp.id, amount: 999 }),
       'locked',
       /is closed \(closed_won\)/,
+      /is closed \(Closed Won\); only its Description and Next Steps can still be edited\.$/,
+    );
+  });
+
+  it('locked — the large-deal close-won in opportunity_lifecycle (#2350)', async () => {
+    // Seeded over the line: a seed write fires no record flow, so the deal
+    // stands at `not_required` with no request — a recall's or an import's state.
+    const [opp] = await verify.seed('crm_opportunity', [{
+      name: `Large Deal ${++k}`, crm_account: row.account, stage: 'proposal', amount: 150000, close_date: today(), owner_id: rep.id,
+    }]);
+    expectInProcess(
+      await inProcess('crm_opportunity', 'update', { id: opp!.id, stage: 'closed_won', win_reason: 'better_price' }),
+      'locked',
+      /approval_status is not_required\.$/,
+      /and its Approval Status is Not Required\. Save the deal without closing it to send it for approval;/,
+    );
+  });
+
+  it('locked — the converted-lead lock in lead_automation', async () => {
+    expectInProcess(
+      await inProcess('crm_lead', 'update', { id: row.convertedLead, company: 'Globex' }),
+      'locked',
+      /\(attempted: company\)/,
+      /^Cannot change Company on converted lead Ada Lovelace - Acme;/,
+    );
+  });
+
+  it('locked — opportunity_line_item_freeze', async () => {
+    expectInProcess(
+      await inProcess('crm_opportunity_line_item', 'insert', {
+        crm_opportunity: row.closedDeal, crm_product: row.product, quantity: 1, unit_price: 10,
+      }),
+      'locked',
+      /is closed \(closed_won\)/,
+      /is closed \(Closed Won\), so its line items/,
+    );
+  });
+
+  it('locked — the settled-quote line freeze in quote_workflow', async () => {
+    expectInProcess(
+      await inProcess('crm_quote_line_item', 'insert', {
+        crm_quote: row.expiredQuote, crm_product: row.product, quantity: 1, unit_price: 10,
+      }),
+      'locked',
+      / - Envelope Quote is expired, so its line items/,
+      / - Envelope Quote is Expired, so its line items/,
     );
   });
 

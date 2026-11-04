@@ -28,6 +28,18 @@ const opportunityStageOptions = {
   negotiation: '交渉', closed_won: '成立', closed_lost: '不成立',
 };
 
+/**
+ * The bulk Delete on every opportunity grid list (#2338 item 4, `GRID_BAR` in
+ * `src/sales/views/opportunity.view.ts`), translated once and named by each view.
+ */
+const OPPORTUNITY_BULK_DELETE = {
+  delete: {
+    label: '削除',
+    confirmLabel: '削除',
+    confirmText: '{{count}} 件の商談を完全に削除しますか？この操作は取り消せません。',
+  },
+};
+
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
     _validations: {
@@ -81,7 +93,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       description: { label: '説明' },
       mobile: { label: '携帯電話' },
       website: { label: 'Webサイト' },
-      rating: { label: 'リードスコア', help: 'リードの品質スコア（1〜5 段階）' },
+      rating: { label: 'リードスコア', help: '空欄のままにすると、新しいリードはメールのドメイン、電話番号、役職、業種、会社規模から自動で採点されます（1〜5 段階）。' },
       converted_account: { label: '変換後の取引先' },
       converted_contact: { label: '変換後の取引先責任者' },
       converted_opportunity: { label: '変換後の商談' },
@@ -261,7 +273,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: 'キャンペーンに追加',
-        successMessage: 'キャンペーンに追加しました！',
+        successMessage: '{{ result.output.campaignName }}: 追加 {{ result.output.addedCount }} 件、既にメンバー {{ result.output.alreadyCount }} 件。',
         params: {
           campaignId: { label: 'キャンペーン' },
         },
@@ -391,21 +403,23 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     _views: {
       tender_this_quarter: {
         label: '今四半期に入札予定',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: '今四半期に入札予定の商談はありません',
           message: 'このタブには、顧客側の入札予定日が今四半期内にあるオープン商談が表示されます。商談に「入札予定日」を入力すると、ここに表示されます。',
         },
       },
-      open_opportunities: { label: '進行中の商談' },
-      all_opportunities: { label: '全商談' },
+      open_opportunities: { label: '進行中の商談', bulkActions: OPPORTUNITY_BULK_DELETE },
+      all_opportunities: { label: '全商談', bulkActions: OPPORTUNITY_BULK_DELETE },
       pipeline_kanban: { label: 'セールスパイプライン' },
       close_date_calendar: { label: '予測カレンダー' },
       deal_timeline: { label: '商談タイムライン' },
       deal_gallery: { label: '商談カード' },
-      my_open_deals: { label: '私のオープン商談' },
-      stale_opportunities: { label: '⚠️ 停滞商談 · ステージ滞在が長い順' },
+      my_open_deals: { label: '私のオープン商談', bulkActions: OPPORTUNITY_BULK_DELETE },
+      stale_opportunities: { label: '⚠️ 停滞商談 · ステージ滞在が長い順', bulkActions: OPPORTUNITY_BULK_DELETE },
       closing_this_quarter: {
         label: '今四半期にクローズ予定',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: '今四半期にクローズ予定の商談はありません',
           message: 'このタブには、完了予定日が今四半期内にあるコミット／ベストケースのオープン商談が表示されます。現在該当する商談はありません。それ以降にクローズする商談は「オープン商談」タブにあります。',
@@ -434,7 +448,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: '商談を複製',
-        successMessage: '商談を複製しました！',
+        successMessage: '「{{ result.name }}」を作成しました。表示中のページはその複製です。',
       },
       mass_update_stage: {
         label: 'ステージ更新',
@@ -490,7 +504,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         message: '期間開始はその期間の初日である必要があります。例：2026 年 8 月なら 2026-08-01。',
       },
       quarter_starts_on_quarter_boundary: {
-        message: '四半期フォーキャストは四半期の境界（1 月 1 日、4 月 1 日、7 月 1 日、10 月 1 日）から開始する必要があります。',
+        message: '四半期フォーキャストの期間開始は四半期の境界（1 月 1 日、4 月 1 日、7 月 1 日、10 月 1 日）である必要があります。',
       },
       snapshot_amounts_non_negative: {
         message: 'スナップショット金額は負の値にできません。',

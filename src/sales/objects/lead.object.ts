@@ -245,17 +245,19 @@ export const Lead = ObjectSchema.create({
       // need a real defaultValue (see approval_status for the same lesson).
       defaultValue: 'new',
       options: [
-        { label: 'New', value: 'new', color: '#808080', default: true },
-        { label: 'Contacted', value: 'contacted', color: '#FFA500' },
-        { label: 'Qualified', value: 'qualified', color: '#4169E1' },
-        { label: 'Unqualified', value: 'unqualified', color: '#FF0000' },
-        { label: 'Converted', value: 'converted', color: '#00AA00' },
+        { label: 'New', value: 'new', color: '#808080', kind: 'open', default: true },
+        { label: 'Contacted', value: 'contacted', color: '#FFA500', kind: 'open' },
+        { label: 'Qualified', value: 'qualified', color: '#4169E1', kind: 'open' },
+        { label: 'Unqualified', value: 'unqualified', color: '#FF0000', kind: 'lost' },
+        { label: 'Converted', value: 'converted', color: '#00AA00', kind: 'won' },
       ]
     }),
 
     rating: Field.rating(5, {
       label: 'Lead Score',
-      description: 'Lead quality score (1-5 stars)',
+      // Says what a blank does (#2369 row 2): `lead_automation` scores a lead
+      // created without one (`computeRating` in `lead.hook.ts`).
+      description: 'Leave blank and a new lead is scored for you (1-5 stars) from its email domain, phone, job title, industry and company size.',
       group: 'qualification',
     }),
 
@@ -627,6 +629,20 @@ export const Lead = ObjectSchema.create({
   // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
+  },
+
+  // A converted lead offers no Edit (#2366 row 1). The converted-lead lock in
+  // `lead.hook.ts` refuses every user change but Description and Notes, so the
+  // form led a rep through every field and then refused the save. The guard is
+  // the hook's; this is the courtesy half. The lead's record page shows what it
+  // became under Conversion (account, contact, opportunity), where the work
+  // continues. The predicate reads `is_converted`, the flag the lock keys on
+  // (#2189), and is total: an absent flag (the page's first render) offers
+  // Edit. Pinned in `test/converted-lead-guard.test.ts`.
+  userActions: {
+    edit: {
+      visibleWhen: P`!(has(record.is_converted) && record.is_converted == true)`,
+    },
   },
   
   // ADR-0079 record title — the stored `display_title` field defined above.

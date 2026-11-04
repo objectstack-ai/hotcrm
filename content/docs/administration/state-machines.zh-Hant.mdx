@@ -21,7 +21,7 @@ HotCRM 在 **五個** 物件上使用狀態機：
 
 五者的宣告方式完全相同 —— 都是物件上一條具名的 `state_machine` 驗證規則，作用於該物件的生命週期欄位（`status`，商機上是 `stage`）。工單、合約、報價用的不是比潛在客戶和商機更輕的機制，就是同一套機制。頂層 `stateMachines` 鍵在平台 7.7 被移除後，所有狀態機都遷到了各自的物件上。
 
-**宣告出來的路線是建議，不是閘門——合約除外。** 潛在客戶、商機、工單和報價的規則都是 **警告** 級：走出轉換表的狀態變更只會寫進伺服器日誌——比如 *「Invalid quote status transition」*——而 **儲存照樣通過**。合約的規則 `contract_status_progression` 是 **錯誤** 級：走出轉換表的變更會被拒絕，合約保持原來的狀態。合約之所以例外，是因為它的兩個終點都是最終狀態——續約是一份新合約，絕不是把舊合約救活——而啟用會把客戶升級成 *Customer* 並把合約交給計費，跳過審批或從 *Expired* 救活的合約會在下游處處被當成生效中。在每個物件上，規則只判斷狀態的 **變更**：不改狀態的編輯根本碰不到它。記錄在 **新建** 時也根本不受檢查：規則拿新值與前一個值比對，因此只在更新時執行，直接匯入到後期狀態的記錄不會被碰——合約也一樣。警告級的轉換表給你的是一條宣告出來、機器可讀的路線，供自動化、報表和 Copilot 依賴——而不是給欄位上鎖。
+**宣告出來的路線是建議，不是閘門——合約除外。** 潛在客戶、商機、工單和報價的規則都是 **警告** 級：走出轉換表的狀態變更只會寫進伺服器日誌——比如 *「Invalid opportunity stage transition」*——而 **儲存照樣通過**。合約的規則 `contract_status_progression` 是 **錯誤** 級：走出轉換表的變更會被拒絕，合約保持原來的狀態。合約之所以例外，是因為它的兩個終點都是最終狀態——續約是一份新合約，絕不是把舊合約救活——而啟用會把客戶升級成 *Customer* 並把合約交給計費，跳過審批或從 *Expired* 救活的合約會在下游處處被當成生效中。在每個物件上，規則只判斷狀態的 **變更**：不改狀態的編輯根本碰不到它。記錄在 **新建** 時也根本不受檢查：規則拿新值與前一個值比對，因此只在更新時執行，直接匯入到後期狀態的記錄不會被碰——合約也一樣。警告級的轉換表給你的是一條宣告出來、機器可讀的路線，供自動化、報表和 Copilot 依賴——而不是給欄位上鎖。
 
 **行銷活動沒有狀態機，這是有意的。** 行銷活動的狀態是描述性的（*Planning / In Progress / Completed / Aborted*），不是受控的生命週期；行銷活動成員、活動、知識文章和任務的狀態欄位同理。給它們中任何一個加轉換表，只會在正常編輯時報警告，教使用者忽略警告。
 
@@ -60,11 +60,8 @@ HotCRM 在 **五個** 物件上使用狀態機：
 
 ```
 Prospecting → Qualification → Needs Analysis → Proposal → Negotiation
-                                                  │            │
-                                                  └─────┬──────┘
-                                                        ▼
-                                                   Closed Won
 
+Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Won
 Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Lost
 ```
 
@@ -74,15 +71,15 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 | 從 | 可以移動到 | 說明 |
 | --- | --- | --- |
-| Prospecting | Qualification、Proposal、Closed Lost | |
-| Qualification | Needs Analysis、Proposal、Closed Lost | |
-| Needs Analysis | Proposal、Closed Lost | 預設贏率 40%，預測類別為 *Best Case* |
+| Prospecting | Qualification、Proposal、Closed Won、Closed Lost | |
+| Qualification | Needs Analysis、Proposal、Closed Won、Closed Lost | |
+| Needs Analysis | Proposal、Closed Won、Closed Lost | 預設贏率 40%，預測類別為 *Best Case* |
 | Proposal | Negotiation、Closed Won、Closed Lost | |
 | Negotiation | Closed Won、Closed Lost | |
 | Closed Won | — | 終態 |
 | Closed Lost | — | 終態 |
 
-其中兩條邊是為 CPQ 路徑存在的，不是給業務一個階段一個階段點出來的：*→ Proposal* 從每一個 Proposal 之前的階段都合法，因為 `quote_generation` 流程一旦產生報價就把交易快進到 *Proposal*，而產生報價在任何開放階段都可能發生——不過如果你們的組織要求立項，交易在立項通過之前不能產生報價（[商機資格評估](/zh-Hant/docs/sales/opportunity-qualification#qualification-approval)）；*Proposal → Closed Won* 合法，則是因為 `quote_on_accepted` 鉤子會從一份被接受的報價上直接贏下關聯交易，中間不再經過一次談判。
+其中兩條邊是為 CPQ 路徑存在的，不是給業務一個階段一個階段點出來的：*→ Proposal* 從每一個 Proposal 之前的階段都合法，因為 `quote_generation` 流程一旦產生報價就把交易快進到 *Proposal*，而產生報價在任何開放階段都可能發生——不過如果你們的組織要求立項，交易在立項通過之前不能產生報價（[商機資格評估](/zh-Hant/docs/sales/opportunity-qualification#qualification-approval)）；*Proposal → Closed Won* 合法，則是因為 `quote_on_accepted` 鉤子會從一份被接受的報價上直接贏下關聯交易，中間不再經過一次談判。此外，每個未關閉的階段都可以直接關閉：*→ Closed Won* 和 *→ Closed Lost* 一樣，從任何未關閉階段都合法，所以提前贏下的交易儲存時不帶警告。
 
 這一步成交永遠不是繞過審批的路。只要審批還卡著這筆交易——大額審批在審批中，或者在啟用了它們的部署裡，狀態變更審批、立項審批在審批中或已駁回——接受報價這一步本身就會被拒絕，所以不會出現一份已接受的報價掛在一筆關不掉的交易上。見[報價](/zh-Hant/docs/sales/quotes#內建規則)。
 
@@ -101,7 +98,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 ## 狀態機給你的是什麼
 
-五條中有四條不是攔截——合約的轉換表是會拒絕變更的那一條（見上文）。在另外四條上，本節原先列為「不會發生」的幾件事，在轉換表宣告之後照樣發生：代表仍可能不小心把潛在客戶標記為 *Converted*，商機仍可以從 *Prospecting* 直接跳到 *Closed Won*，記錄仍會跳過階段。這些寫入各自只在伺服器日誌裡留下一條警告，然後照樣落庫。所以漏斗報表並不會因為存在一張表就 **反映現實** —— 它報的是記錄實際走過的那些階段。
+五條中有四條不是攔截——合約的轉換表是會拒絕變更的那一條（見上文）。在另外四條上，本節原先列為「不會發生」的幾件事，在轉換表宣告之後照樣發生：代表仍可能不小心把潛在客戶標記為 *Converted*，商機仍可以從 *Prospecting* 直接跳到 *Negotiation*，記錄仍會跳過階段。這些寫入各自只在伺服器日誌裡留下一條警告，然後照樣落庫。所以漏斗報表並不會因為存在一張表就 **反映現實** —— 它報的是記錄實際走過的那些階段。
 
 轉換表真正給你的，就是這條路線本身 —— **寫在一個機器能讀的地方**：
 

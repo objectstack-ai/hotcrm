@@ -94,8 +94,8 @@ export function* walk(node: unknown): Generator<AnyRec> {
  *
  * The modules put their entries into the app's menu through their manifests
  * — service seven (`nav_case`, `nav_knowledge`, `nav_service_dashboard`,
- * `nav_my_cases` and its three case reports), revenue three (`nav_quote`,
- * `nav_contract`, `nav_product`), marketing one (`nav_campaign`) — so the
+ * `nav_my_cases` and its three case reports), revenue two (`nav_quote`,
+ * `nav_product`), marketing one (`nav_campaign`) — so the
  * app's AUTHORED `navigation` no longer carries them, and a suite that walks
  * it alone would call them unreachable. What a user sees is the folded tree:
  * `SchemaRegistry.applyNavContributions` — the method `GET /api/v1/meta/app`

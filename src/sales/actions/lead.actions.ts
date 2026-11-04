@@ -217,6 +217,10 @@ export const CreateCampaignAction: Action = {
       required: true,
     }
   ],
-  successMessage: 'Leads added to campaign!',
+  // Says what the run did (#2371 row 1): the campaign, how many were added
+  // and how many were already on it. It read "Leads added to campaign!" on a run
+  // that found the person already a member. The counts are the enrollment
+  // flow's outputs (`campaign-member-enroll.flow.ts`).
+  successMessage: '{{ result.output.campaignName }}: {{ result.output.addedCount }} added, {{ result.output.alreadyCount }} already a member.',
   refreshAfter: true,
 };

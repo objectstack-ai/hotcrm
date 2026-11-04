@@ -19,6 +19,16 @@ export const jaJP: EmailTemplatePack = {
     subject: '新しい取引先責任者: {{first_name}} {{last_name}}',
     bodyHtml: '<p>{{first_name}} {{last_name}} が取引先責任者として追加されました。ご挨拶の連絡をしてください。</p>',
   },
+  'crm.contract_expired': {
+    label: '契約の満了',
+    subject: '契約が満了しました: {{contract_number}}',
+    bodyHtml: '<p>契約 {{contract_number}} は終了日に達し、満了として記録されました。</p>',
+  },
+  'crm.contract_renewal': {
+    label: '契約更新の時期',
+    subject: '契約の更新時期です: {{contract_number}}',
+    bodyHtml: '<p>契約 {{contract_number}} は {{end_date}} に終了します。更新の相談を始めてください。</p>',
+  },
   'crm.deal_stalled': {
     label: '停滞中の商談',
     subject: '停滞中の商談: {{name}}',
@@ -73,5 +83,12 @@ export const jaJP: EmailTemplatePack = {
     label: '緊急 ToDo',
     subject: '緊急の ToDo: {{subject}}',
     bodyHtml: '<p>緊急の ToDo「{{subject}}」が割り当てられました。対応をお願いします。</p>',
+  },
+  // Sent by `contract_drafted_notice` when accepting a quote drafts its
+  // contract (#2371 row 6).
+  'crm.contract_drafted': {
+    label: '契約を起草しました',
+    subject: '契約を起草しました: {{contract_number}}',
+    bodyHtml: '<p>見積の承諾により契約 {{contract_number}} を起草しました。期間と契約種別は初期値です。有効化する前に確認してください。</p>',
   },
 };

@@ -30,7 +30,10 @@ export const activityActions = {
     params: {
       subject: { label: '通话主题' },
       duration: { label: '时长（分钟）' },
-      attendee_contacts: { label: '联系人参与者' },
+      attendee_contacts: {
+        label: '联系人参与者',
+        helpText: '你正在记录的联系人或线索会自动加入。其他参与者请在此添加。',
+      },
       attendee_users: { label: '内部参与者' },
       notes: { label: '通话记录' },
     },
@@ -41,7 +44,10 @@ export const activityActions = {
     params: {
       subject: { label: '会议主题' },
       duration: { label: '时长（分钟）' },
-      attendee_contacts: { label: '联系人参会人' },
+      attendee_contacts: {
+        label: '联系人参会人',
+        helpText: '你正在记录的联系人或线索会自动加入。其他参与者请在此添加。',
+      },
       attendee_users: { label: '内部参会人' },
       notes: { label: '会议纪要' },
     },
@@ -55,7 +61,10 @@ export const activityActions = {
       start_time: { label: '开始时间（UTC）' },
       location: { label: '地点' },
       duration: { label: '时长（分钟）' },
-      attendee_contacts: { label: '联系人参会人' },
+      attendee_contacts: {
+        label: '联系人参会人',
+        helpText: '你正在记录的联系人或线索会自动加入。其他参与者请在此添加。',
+      },
       attendee_users: { label: '内部参会人' },
       notes: { label: '会议议程' },
     },

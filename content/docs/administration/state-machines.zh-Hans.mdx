@@ -19,7 +19,7 @@ HotCRM 在 **五个** 对象上使用状态机：
 
 五者的声明方式完全相同 —— 都是对象上一条具名的 `state_machine` 验证规则，作用于该对象的生命周期字段（`status`，商机上是 `stage`）。工单、合同、报价用的不是比潜在客户和商机更轻的机制，就是同一套机制。顶层 `stateMachines` 键在平台 7.7 被移除后，所有状态机都迁到了各自的对象上。
 
-**声明出来的路线是建议，不是闸门——合同除外。** 潜在客户、商机、工单和报价的规则都是 **警告** 级：走出转换表的状态变更只会写进服务端日志——比如 *“Invalid quote status transition”*——而 **保存照样通过**。合同的规则 `contract_status_progression` 是 **错误** 级：走出转换表的变更会被拒绝，合同保持原来的状态。合同之所以例外，是因为它的两个终点都是最终状态——续约是一份新合同，绝不是把旧合同救活——而激活会把客户升级成 *Customer* 并把合同交给计费，跳过审批或从 *Expired* 救活的合同会在下游处处被当成生效中。在每个对象上，规则只判断状态的 **变更**：不改状态的编辑根本碰不到它。记录在 **新建** 时也根本不受检查：规则拿新值与前一个值比对，因此只在更新时运行，直接导入到后期状态的记录不会被碰——合同也一样。警告级的转换表给你的是一条声明出来、机器可读的路线，供自动化、报表和 Copilot 依赖——而不是给字段上锁。
+**声明出来的路线是建议，不是闸门——合同除外。** 潜在客户、商机、工单和报价的规则都是 **警告** 级：走出转换表的状态变更只会写进服务端日志——比如 *“Invalid opportunity stage transition”*——而 **保存照样通过**。合同的规则 `contract_status_progression` 是 **错误** 级：走出转换表的变更会被拒绝，合同保持原来的状态。合同之所以例外，是因为它的两个终点都是最终状态——续约是一份新合同，绝不是把旧合同救活——而激活会把客户升级成 *Customer* 并把合同交给计费，跳过审批或从 *Expired* 救活的合同会在下游处处被当成生效中。在每个对象上，规则只判断状态的 **变更**：不改状态的编辑根本碰不到它。记录在 **新建** 时也根本不受检查：规则拿新值与前一个值比对，因此只在更新时运行，直接导入到后期状态的记录不会被碰——合同也一样。警告级的转换表给你的是一条声明出来、机器可读的路线，供自动化、报表和 Copilot 依赖——而不是给字段上锁。
 
 **营销活动没有状态机，这是有意的。** 营销活动的状态是描述性的（*Planning / In Progress / Completed / Aborted*），不是受控的生命周期；营销活动成员、活动、知识文章和任务的状态字段同理。给它们中任何一个加转换表，只会在正常编辑时报警告，教用户忽略警告。
 
@@ -58,11 +58,8 @@ HotCRM 在 **五个** 对象上使用状态机：
 
 ```
 Prospecting → Qualification → Needs Analysis → Proposal → Negotiation
-                                                  │            │
-                                                  └─────┬──────┘
-                                                        ▼
-                                                   Closed Won
 
+Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Won
 Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ Closed Lost
 ```
 
@@ -72,15 +69,15 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 | 从 | 可以移动到 | 说明 |
 | --- | --- | --- |
-| Prospecting | Qualification、Proposal、Closed Lost | |
-| Qualification | Needs Analysis、Proposal、Closed Lost | |
-| Needs Analysis | Proposal、Closed Lost | 默认赢率 40%，预测类别为 *Best Case* |
+| Prospecting | Qualification、Proposal、Closed Won、Closed Lost | |
+| Qualification | Needs Analysis、Proposal、Closed Won、Closed Lost | |
+| Needs Analysis | Proposal、Closed Won、Closed Lost | 默认赢率 40%，预测类别为 *Best Case* |
 | Proposal | Negotiation、Closed Won、Closed Lost | |
 | Negotiation | Closed Won、Closed Lost | |
 | Closed Won | — | 终态 |
 | Closed Lost | — | 终态 |
 
-其中两条边是为 CPQ 路径存在的，不是给销售一个阶段一个阶段点出来的：*→ Proposal* 从每一个 Proposal 之前的阶段都合法，因为 `quote_generation` 流程一旦生成报价就把交易快进到 *Proposal*，而生成报价在任何开放阶段都可能发生——不过如果你们的组织要求立项，交易在立项通过之前不能生成报价（[商机资格评估](/zh-Hans/docs/sales/opportunity-qualification#qualification-approval)）；*Proposal → Closed Won* 合法，则是因为 `quote_on_accepted` 钩子会从一份被接受的报价上直接赢下关联交易，中间不再经过一次谈判。
+其中两条边是为 CPQ 路径存在的，不是给销售一个阶段一个阶段点出来的：*→ Proposal* 从每一个 Proposal 之前的阶段都合法，因为 `quote_generation` 流程一旦生成报价就把交易快进到 *Proposal*，而生成报价在任何开放阶段都可能发生——不过如果你们的组织要求立项，交易在立项通过之前不能生成报价（[商机资格评估](/zh-Hans/docs/sales/opportunity-qualification#qualification-approval)）；*Proposal → Closed Won* 合法，则是因为 `quote_on_accepted` 钩子会从一份被接受的报价上直接赢下关联交易，中间不再经过一次谈判。此外，每个未关闭的阶段都可以直接关闭：*→ Closed Won* 和 *→ Closed Lost* 一样，从任何未关闭阶段都合法，所以提前赢下的交易保存时不带警告。
 
 这一步成交永远不是绕过审批的路。只要审批还卡着这笔交易——大额审批在审批中，或者在启用了它们的部署里，状态变更审批、立项审批在审批中或已驳回——接受报价这一步本身就会被拒绝，所以不会出现一份已接受的报价挂在一笔关不掉的交易上。见[报价](/zh-Hans/docs/sales/quotes#内置规则)。
 
@@ -99,7 +96,7 @@ Prospecting / Qualification / Needs Analysis / Proposal / Negotiation ──▶ 
 
 ## 状态机给你的是什么
 
-五条中有四条不是拦截——合同的转换表是会拒绝变更的那一条（见上文）。在另外四条上，本节原先列为「不会发生」的几件事，在转换表声明之后照样发生：代表仍可能不小心把潜在客户标记为 *Converted*，商机仍可以从 *Prospecting* 直接跳到 *Closed Won*，记录仍会跳过阶段。这些写入各自只在服务端日志里留下一条警告，然后照样落库。所以漏斗报表并不会因为存在一张表就 **反映现实** —— 它报的是记录实际走过的那些阶段。
+五条中有四条不是拦截——合同的转换表是会拒绝变更的那一条（见上文）。在另外四条上，本节原先列为「不会发生」的几件事，在转换表声明之后照样发生：代表仍可能不小心把潜在客户标记为 *Converted*，商机仍可以从 *Prospecting* 直接跳到 *Negotiation*，记录仍会跳过阶段。这些写入各自只在服务端日志里留下一条警告，然后照样落库。所以漏斗报表并不会因为存在一张表就 **反映现实** —— 它报的是记录实际走过的那些阶段。
 
 转换表真正给你的，就是这条路线本身 —— **写在一个机器能读的地方**：
 

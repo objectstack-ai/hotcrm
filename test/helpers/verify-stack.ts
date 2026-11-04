@@ -128,6 +128,33 @@ export const buildArtifactAgain = async (): Promise<typeof artifact> => {
 };
 
 /**
+ * The app with the lead conversion gate ARMED, the one way an install arms it:
+ * `crm_lead.conversion_approval_status` defaults to `pending`. The gate ships
+ * OFF (REQ-0005), so on the shipped default no lead is ever born `pending` and
+ * `lead_conversion_approval` never opens a request. Pass it a fresh build
+ * ({@link buildArtifactAgain}): one configuration object holds one live kernel.
+ */
+export const armedLeadGate = (base: typeof artifact): typeof artifact => {
+  const a = base as unknown as Row;
+  return {
+    ...a,
+    packages: (a.packages as Row[]).map((p) => ({
+      ...p,
+      manifest: {
+        ...p.manifest,
+        objects: ((p.manifest.objects ?? []) as Row[]).map((o) => (o.name !== 'crm_lead' ? o : {
+          ...o,
+          fields: {
+            ...o.fields,
+            conversion_approval_status: { ...o.fields.conversion_approval_status, defaultValue: 'pending' },
+          },
+        })),
+      },
+    })),
+  } as typeof artifact;
+};
+
+/**
  * The names of every object the booted runtime registers that this app does
  * not author — the platform's objects, read from the registry rather than from
  * any package roster.
@@ -350,6 +377,13 @@ export const systemUpdate = (stack: VerifyStack, object: string, doc: Row): Prom
   stack.kernel.getService<Row>('objectql').update(object, doc, { where: { id: doc.id }, context: SYSTEM });
 
 /**
+ * A system-context INSERT (no user, no session) that, unlike `seed`, fires the
+ * record-change flows: an integration's or a backfill's write.
+ */
+export const systemInsert = (stack: VerifyStack, object: string, doc: Row): Promise<Row> =>
+  stack.kernel.getService<Row>('objectql').insert(object, doc, { context: SYSTEM });
+
+/**
  * A PREDICATE (bulk) UPDATE as `as`: one payload for every row `where`
  * matches (`multi: true`) — the engine's `updateMany` dispatch. `hooks.run`
  * addresses exactly one row by `input.id`, and the REST bulk ingress
@@ -525,7 +559,7 @@ let shippedRunner: QuickJSScriptRunner | undefined;
 export async function runShippedHook(
   stack: VerifyStack,
   hook: Row,
-  ctx: { event: string; input?: Row; previous?: Row; result?: Row; as?: string; object?: string; referentialCascadeDelete?: boolean },
+  ctx: { event: string; input?: Row; previous?: Row; result?: Row; as?: string; object?: string; referentialCascadeDelete?: boolean; provenance?: Row },
 ): Promise<Row> {
   const { source, capabilities } = extractHookBody(hook.handler, `hook '${String(hook.name)}'`);
   const bind = hookBodyRunnerFactory((shippedRunner ??= new QuickJSScriptRunner()), {
@@ -541,16 +575,34 @@ export async function runShippedHook(
   // engine hands every hook, which is what the sandbox's `ctx.api` reads under.
   const executionContext = ctx.as ? await stack.contextFor(ctx.as) : undefined;
   const user = executionContext?.userId ? { id: executionContext.userId } : undefined;
+  // `ctx.session`, projected from that context the way the engine projects it
+  // for every hook (`buildSession`, `@objectstack/objectql`
+  // `engine-execution-plumbing.ts`, not exported): the caller's id, active
+  // organization and positions, built-in identities included. The sandbox
+  // reads its own `session` off this key, so without it a body that tells an
+  // administrator apart by `positions` (#2387) saw no caller at all here
+  // while the served path hands it one (measured on 18.2.0).
+  const session = executionContext
+    ? {
+        userId: executionContext.userId,
+        organizationId: executionContext.tenantId,
+        positions: executionContext.positions,
+        ...(executionContext.isSystem ? { isSystem: true } : {}),
+      }
+    : undefined;
   const input: Row = { ...(ctx.input ?? {}) };
   // The engine dispatches ONE object per write, so a hook naming several
   // (`quote_workflow`, #2060) is told which one with `ctx.object`.
   // An `after*` hook reads the stored row from `result` (#2060 item 9).
   // `referentialCascadeDelete` is the engine's declared cascade-delete marker,
   // handed over as the engine hands it; the runtime decides what crosses into
-  // the sandbox (#2088).
+  // the sandbox (#2088). `provenance` is the engine's server-stamped origin
+  // mark (`flowRunId` on a flow data node's write), handed over the same way;
+  // since 18.2.0 the runtime carries it into the body (#2285).
   await handler({
-    event: ctx.event, input, previous: ctx.previous, result: ctx.result, user, executionContext,
+    event: ctx.event, input, previous: ctx.previous, result: ctx.result, user, session, executionContext,
     object: ctx.object ?? hook.object, referentialCascadeDelete: ctx.referentialCascadeDelete,
+    provenance: ctx.provenance,
   });
   return input;
 }

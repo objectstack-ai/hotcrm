@@ -1,0 +1,8 @@
+---
+"hotcrm": minor
+---
+
+Clause-②: no
+Metadata-protocol: none
+
+**Price books: a product can now carry more than one price.** A new **Price Books** entry under **Sales** lists named price lists (a partner tier, a region, a promotion with **Valid From** / **Valid To** dates), each holding one **Price Book Entry** per product with that product's **List Price** in the book. Exactly one book is the **Standard** book: a second standard book is refused, naming the current one, and the standard book can neither lose the flag nor be deleted. A book refuses a second entry for a product it already prices, naming the book and the product. Sales managers create books and edit the ones they own; sales reps read every book; administrators manage all of them. The sample data adds a **Standard** book with every catalog product at its list price, and a single-organization install that already has data gets that book once, on its first start after the upgrade; a price you change in it afterwards stays changed. Quotes still price from the product: choosing a book on a quote is the next step (#2318). Prices are in the organization's default currency; multi-currency waits for the platform (#2313).

@@ -415,7 +415,7 @@ describe('every named list view is reachable', () => {
  *
  * It does not. MEASURED against the shipped Console (17.0.0-rc.3): a
  * detail-page related list takes its columns from the CHILD's lookup field
- * (`relatedListColumns`, which this app authors nowhere), then falls back to
+ * (`relatedListColumns`), then falls back to
  * the child object's `highlightFields` minus the lookup the panel is scoped
  * by — capped at six, with columns empty on every fetched row dropped. Only
  * with neither of those does it reach a heuristic over the whole field map.

@@ -41,8 +41,9 @@ export const EnrollLeadsAction: Action = {
  *
  * The writer for the `responded` status, on the member row rather than on the
  * campaign: a rep hears back from one person, and one membership changes.
- * `num_responses` and `response_rate` are computed off that status, so an app
- * with no writer for it reports a structural zero on every campaign.
+ * `num_responses` and `response_rate` count the `has_responded` flag that
+ * status stamps, so an app with no writer for it reports a structural zero on
+ * every campaign.
  *
  * A declarative update (`operation: 'update'`), written AS THE CALLER (#2167):
  * the member's own `allowEdit` decides who may record a response, exactly as

@@ -6,6 +6,10 @@ import { ActionSchema } from '@objectstack/spec/ui';
 import stack from './helpers/composed-stack';
 import { CloneOpportunityAction } from '../src/sales/actions/opportunity.actions';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { pipeline as en } from '../src/sales/translations/en/objects.pipeline';
+import { pipeline as zh } from '../src/sales/translations/zh-CN/objects.pipeline';
+import { pipeline as es } from '../src/sales/translations/es-ES/objects.pipeline';
+import { pipeline as ja } from '../src/sales/translations/ja-JP/objects.pipeline';
 
 type Rec = Record<string, any>;
 
@@ -81,8 +85,32 @@ describe('the result the template reads names the new opportunity', () => {
     expect(result.id).not.toBe(source!.id);
     const [copy] = await verify.rows('crm_opportunity', { id: result.id });
     expect(copy?.name).toBe('Copy of Harbor Fit-out');
+    // `{{ result.name }}` in the success toast reads this (#2371 row 4).
+    expect(result.name, 'no name for {{ result.name }} to render').toBe(copy?.name);
     expect(copy?.crm_account).toBe(account!.id);
     expect(copy?.amount).toBe(31_000);
     expect(copy?.stage).toBe('prospecting');
+  });
+});
+
+/**
+ * The toast names the copy (#2371 row 4). The runner navigates to the clone
+ * straight after the toast, and the clone's page looks like the source but
+ * for the "Copy of" prefix and the stage, so "Opportunity cloned
+ * successfully!" left a rep unsure which deal they were on. Every locale's
+ * message renders `{{ result.name }}`; a pack without it would win over the
+ * source and drop the name again.
+ */
+describe('the clone toast names the copy (#2371 row 4)', () => {
+  const packs: Array<[string, Rec]> = [['en', en], ['zh-CN', zh], ['es-ES', es], ['ja-JP', ja]];
+
+  it('declares a success message that renders the copy\'s name', () => {
+    expect(CloneOpportunityAction.successMessage).toContain('{{ result.name }}');
+    expect(CloneOpportunityAction.successMessage).not.toMatch(/cloned successfully/i);
+  });
+
+  it.each(packs)('%s pack renders the copy\'s name too', (_locale, pack) => {
+    const msg = (pack as Rec).crm_opportunity?._actions?.clone_opportunity?.successMessage;
+    expect(msg).toContain('{{ result.name }}');
   });
 });

@@ -44,6 +44,17 @@ const HOTCRM_ICON =
  * read. Since objectui#12426 (in the 18.0.0-next.2 console) the gate moves the
  * landing too: the console opens an app on the first entry the member is
  * SHOWN, not the first one served.
+ *
+ * Two dashboards stay open to the marketing user, measured on 18.2.0 (#2338
+ * item 1). Sales Activity carries no gate: every member reads their own events
+ * and tasks through `crm_user`, so its tiles answer, and the zeros a marketer
+ * sees are their own activity, not a refusal. Sales Performance refuses that
+ * member 1 of its 15 tiles, Quota Attainment by Rep (`forecast_metrics`; the
+ * set grants no `crm_forecast`), and is kept open like Customer Churn Signals
+ * below rather than hidden for one tile. No tile can be gated on read here: a
+ * widget's `requiresObject` asks whether the object is installed (the console
+ * filters on the served object list, which `/meta/object` serves whole to the
+ * marketing user), and a widget takes no `visible`.
  */
 
 /**
@@ -95,14 +106,30 @@ const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("s
  * `EXECUTIVE_AUDIENCE` above says why they are asked by position. Since #2231
  * the read term alone showed them all seven, each scoped to the deals they
  * own. A rep keeps them: Sales Home is a rep's landing. ⛔ Do not narrow
- * `crm_user` instead (#2231); the object entries (Opportunities, My Deals,
- * Leads…) keep no position term and stay visible to them.
+ * `crm_user` instead (#2231). The two opportunity object entries ask the
+ * position half only (`NOT_SERVICE_STAFF` below); the other object entries
+ * (Leads, Accounts…) keep no position term and stay visible to them.
  *
  * Each gate spells the positions out: `P` interpolates a value as a literal,
  * never as an expression, so a sub-predicate cannot be shared by reference.
  * One constant is shared by the seven entries instead.
  */
 const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+
+/**
+ * The two opportunity OBJECT entries, Opportunities and My Deals (#2367
+ * row 6): everyone but the two service personas, as #2268 did for the
+ * opportunity dashboards and reports above. Since #2231 a service persona
+ * reads the deals they own through `crm_user`, and they own none, so both
+ * lists were always empty for them. Tidying, not a boundary (#2287): the
+ * object stays readable by URL, from an account's related list and over
+ * REST, exactly as before.
+ *
+ * No read term: an object entry is pruned by read access already (the note
+ * on `OPPORTUNITY_AUDIENCE` above), so the position half is the whole of what
+ * this gate adds.
+ */
+const NOT_SERVICE_STAFF = P`!("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
 
 /**
  * HotCRM — navigation.
@@ -127,8 +154,9 @@ const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !(
  * view no view file defines.
  *
  * What is NOT trimmed is the demonstration. This is the exemplar app, and
- * nav items come in six kinds — plain `object`, object + `viewName` (a view
- * entry), `page`, `dashboard`, `report`, `component`. **Every kind keeps at
+ * nav items come in seven kinds — plain `object`, object + `viewName` (a view
+ * entry), `page`, `dashboard`, `report`, `component`, and `doc` (the *Help*
+ * manuals, #2327). **Every kind keeps at
  * least one entry**, because showing an author what each kind looks like is
  * part of what this app is for. `test/app-navigation-shape.test.ts` pins that
  * floor, so a future slimming pass cannot delete the last exemplar of a kind
@@ -258,12 +286,17 @@ export const CrmApp = App.create({
         // zero clicks further than a second sidebar row. The
         // view-entry exemplar duty this item used to carry now sits with the
         // "My Work" items below, which are all object + `viewName`.
-        { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
+        { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target', visible: NOT_SERVICE_STAFF },
         { id: 'nav_sales_dashboard', type: 'dashboard', dashboardName: 'sales_dashboard', label: 'Sales Performance', icon: 'chart-line', visible: OPPORTUNITY_AUDIENCE },
-        // Quotes, Contracts and Products follow, contributed by the revenue
-        // module (`src/revenue/index.ts`): the app's own navigation may not
-        // name another package's object (rule R3), and a contributed item
-        // lands after the group's own children (#2270).
+        // Contracts close the sales cycle: quote → signed agreement → renewal.
+        // The app's own entry since `crm_contract` moved into this package
+        // (`module-split-plan.md` item 11), so it is the last of the group's
+        // own children, beside the revenue entries that follow it.
+        { id: 'nav_contract',    type: 'object', objectName: 'crm_contract',    label: 'Contracts',     icon: 'file-signature' },
+        // Quotes and Products follow, contributed by the revenue module
+        // (`src/revenue/index.ts`): the app's own navigation may not name
+        // another package's object (rule R3), and a contributed item lands
+        // after the group's own children (#2270).
       ],
     },
 
@@ -288,7 +321,7 @@ export const CrmApp = App.create({
       // `component` entry, and the app's only one.
       children: [
         { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
-        { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target' },
+        { id: 'nav_my_deals', type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals', label: 'My Deals', icon: 'target', visible: NOT_SERVICE_STAFF },
         { id: 'nav_my_leads', type: 'object', objectName: 'crm_lead', viewName: 'my_leads', label: 'My Leads', icon: 'user-plus' },
         // #592 — the rep's own calendar: a list of events, so a view, not a
         // dashboard.
@@ -429,6 +462,11 @@ export const CrmApp = App.create({
       // `test/app-navigation-shape.test.ts` requires an entry for each report
       // either package registers, so a new report without one goes red.
       //
+      // Each entry's label IS its report's own `label`, here and in every
+      // locale pack (#2370 row 6): the sidebar said "Pipeline Coverage" and
+      // the report page "Pipeline Coverage by Forecast × Quarter", two names
+      // for one report. The same test pins the pair.
+      //
       // The only group collapsed on load: opened, it lists one row per report
       // (ten for an administrator, seven for a rep, measured on 18.1.0), which
       // would push everything under it down a screen, and the *All reports*
@@ -441,11 +479,36 @@ export const CrmApp = App.create({
       children: [
         { id: 'nav_report_opportunities_by_stage', type: 'report', reportName: 'opportunities_by_stage',         label: 'Opportunities by Stage',        icon: 'chart-column',  visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_report_won_by_owner',           type: 'report', reportName: 'won_opportunities_by_owner',     label: 'Won Opportunities by Owner',    icon: 'trophy',        visible: OPPORTUNITY_AUDIENCE },
-        { id: 'nav_report_pipeline_coverage',      type: 'report', reportName: 'pipeline_coverage_by_quarter',   label: 'Pipeline Coverage',             icon: 'columns-3',     visible: OPPORTUNITY_AUDIENCE },
+        { id: 'nav_report_pipeline_coverage',      type: 'report', reportName: 'pipeline_coverage_by_quarter',   label: 'Pipeline Coverage by Quarter',  icon: 'columns-3',     visible: OPPORTUNITY_AUDIENCE },
         { id: 'nav_report_funnel_by_owner',        type: 'report', reportName: 'opportunity_funnel_owner_stage', label: 'Opportunity Funnel by Owner',   icon: 'funnel',        visible: OPPORTUNITY_AUDIENCE },
-        { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Inflow',                   icon: 'trending-up',   visible: READS_LEADS },
-        { id: 'nav_report_accounts_by_industry',   type: 'report', reportName: 'accounts_by_industry_type',      label: 'Accounts by Industry & Type',   icon: 'building',      visible: READS_ACCOUNTS },
+        { id: 'nav_report_lead_inflow',            type: 'report', reportName: 'lead_inflow_by_month_source',    label: 'Lead Engagement by Month',      icon: 'trending-up',   visible: READS_LEADS },
+        { id: 'nav_report_accounts_by_industry',   type: 'report', reportName: 'accounts_by_industry_type',      label: 'Accounts by Industry and Type', icon: 'building',      visible: READS_ACCOUNTS },
         { id: 'nav_report_churn_signals',          type: 'report', reportName: 'customer_churn_signals',         label: 'Customer Churn Signals',        icon: 'heart-pulse',   visible: READS_ACCOUNTS },
+      ],
+    },
+
+    {
+      // The in-app manuals (#2327, ADR-0046 §6): one `type: 'doc'` entry per
+      // book, each opening its book on the first page the member may read.
+      //
+      // LAST and collapsed on purpose. The order above is every persona's
+      // landing (the note at the top of this array), and an entry added after
+      // all of it moves no landing; collapsed, it costs the sidebar one row.
+      //
+      // The entries carry no `visible`: a `doc` entry inherits the book's
+      // audience. The Admin Manual is gated on the administrator's set
+      // (`src/sales/books/crm-admin-manual.book.ts`), and the server drops the
+      // entry from the tree it serves anyone else (measured on 18.2.0). The
+      // revenue module contributes its own manual here, after these two
+      // (`src/revenue/index.ts`), so the anchor stays even if the module goes.
+      id: 'group_help',
+      type: 'group',
+      label: 'Help',
+      icon: 'circle-help',
+      expanded: false,
+      children: [
+        { id: 'nav_help_manual', type: 'doc', book: 'crm_manual',       label: 'User Manual',  icon: 'book-open' },
+        { id: 'nav_help_admin',  type: 'doc', book: 'crm_admin_manual', label: 'Admin Manual', icon: 'shield-check' },
       ],
     },
 

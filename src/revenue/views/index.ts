@@ -8,6 +8,5 @@
  * the same file-by-file registration.
  */
 
-export { ContractViews } from './contract.view';
 export { ProductViews } from './product.view';
 export { QuoteViews } from './quote.view';

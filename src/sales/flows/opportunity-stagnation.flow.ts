@@ -24,7 +24,7 @@ const STALE_THRESHOLD_DAYS = 14;
 /**
  * The stall task's title. It names the deal — except a PRIVATE one.
  *
- * A deal flagged Private is visible only to its owner (`src/docs/crm_admin.md`),
+ * A deal flagged Private is visible only to its owner (`src/docs/crm_admin_access.md`),
  * and that promise covers what the app derives from it. Who may read the stall
  * task is decided by `crm_task`'s own grants and its owner, not by the deal's,
  * so the title is written for every reader of the task: a private deal's task

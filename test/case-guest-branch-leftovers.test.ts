@@ -51,16 +51,18 @@ import stack from './helpers/composed-stack';
  *
  * ⛔ The answer is PER-COLUMN, and flattening it into one reassuring sentence
  * gets one of the two columns below wrong. `web_to_case` declares exactly
- * `supplied_name`, `supplied_email` (#2190), `subject`, `description`, `type`
- * and `priority` (`src/views/case.view.ts` — that list WAS re-read here, unlike
- * the route readings above), so against the
- * allow-list mechanism the two columns this file pins land differently:
+ * `supplied_name`, `supplied_email` (#2190), `subject`, `description` and
+ * `type` (`src/service/views/case.view.ts`, re-read for #2368), so against the
+ * allow-list mechanism neither column this file pins is reachable by a guest
+ * today, for two different reasons:
  *
- *   escalation_reason  NOT declared ⇒ dropped before ObjectQL and before the
- *                      hook, so a guest does not reach it on the shipped app.
- *   priority           DECLARED ⇒ the form ASKS the guest for it, so a guest
- *                      DOES reach it — by design, and that is exactly what
- *                      item 2 below is about.
+ *   escalation_reason  pipeline, never a guest's fact ⇒ dropped at the door and
+ *                      nulled by the branch.
+ *   priority           asked until #2368, which took it off the form (a guest
+ *                      may not choose Critical) ⇒ dropped at the door; the
+ *                      object default fills it, which is what item 2 below
+ *                      is about, and the branch caps a guest's `critical` at
+ *                      `high` for the day the form asks again.
  *
  * ⛔ Nor do those 401s make this branch redundant. What holds is that declared
  * field list — a product decision, not a security declaration — and #1515
@@ -76,8 +78,8 @@ import stack from './helpers/composed-stack';
  * every real writer of the column is staff-side (`case_escalation`,
  * `case_sla_monitor`, the `escalate_case` screen flow), and the public
  * `web_to_case` form view collects exactly the submitter's `supplied_name` and
- * `supplied_email` (#2190), `subject`, `description`, `type` and `priority` —
- * so nulling it drops nothing any guest surface asks for.
+ * `supplied_email` (#2190), `subject`, `description` and `type` — so nulling
+ * it drops nothing any guest surface asks for.
  *
  * After #1133 the incoherence is the sharper argument: `is_escalated` is
  * cleaned and the prose EXPLAINING that flag was not, so a case could carry a

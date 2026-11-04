@@ -95,6 +95,9 @@ export const marketing: Record<string, ObjectTranslationData> = {
       lead_or_contact_required: {
         message: '营销活动成员必须关联线索或联系人之一',
       },
+      lead_and_contact_exclusive: {
+        message: '营销活动成员只能关联线索或联系人之一，不能同时关联两者',
+      },
     },
     // 「营销活动成员」, not 「活动成员」: this object's master is `crm_campaign`
     // (营销活动), while 「活动」 is already this pack's label for `crm_event` and

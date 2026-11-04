@@ -274,6 +274,19 @@ describe('the two line-item price-fill hooks share one implementation', () => {
     });
   });
 
+  it.each(KINDS)('%s line item counts whole units: a fractional quantity is refused, a whole one stored as written', async (kind) => {
+    // `quantity` is `Field.number({ scale: 0 })` (#2370 row 8): a line counts
+    // units, so `2.5` is refused at the write door instead of being stored and
+    // shown as `2.50`.
+    const product = (await productAt(250)).id;
+    await expect(repLine(kind, { ...(await parentOf(kind)), crm_product: product, quantity: 2.5 })).rejects.toMatchObject({
+      code: 'VALIDATION_FAILED',
+      fields: expect.arrayContaining([expect.objectContaining({ field: 'quantity' })]),
+    });
+    const line = await repLine(kind, { ...(await parentOf(kind)), crm_product: product, quantity: 4 });
+    expect(line.quantity).toBe(4);
+  });
+
   it('a product with no catalog price cannot exist — the no-price branch has no row either', async () => {
     // `crm_product.list_price` is required, for the system's writes too.
     await expect(verify.seed('crm_product', [{ name: `Unpriced ${++k}`, product_code: `UP-${k}`, is_active: true }]))

@@ -105,11 +105,14 @@ export const service: Record<string, ObjectTranslationData> = {
       case: { label: 'ケース' },
       how_can_we_help: {
         label: 'どのようなご用件でしょうか？',
+        description: '緊急の障害はサービスホットラインにお電話ください。',
         fields: {
           subject: { placeholder: '問題の簡単な概要' },
           description: { placeholder: '再現手順、エラーメッセージ、スクリーンショットなど…' },
           type: { helpText: 'お問い合わせ内容に最も近い選択肢をお選びください。' },
-          priority: { helpText: '重大な問題は電話でもご連絡ください。' },
+          // 訪問者向けのラベル (#2368)。オブジェクトのラベルは担当者向け。
+          supplied_name: { label: 'お名前' },
+          supplied_email: { label: 'メールアドレス' },
         },
       },
       // オブジェクト定義のセクションキー（case.object.ts）— 入力フォームと、
@@ -136,6 +139,10 @@ export const service: Record<string, ObjectTranslationData> = {
       claim_case: {
         label: 'ケースを引き受ける',
         successMessage: 'ケースを引き受けました。担当者はあなたです。',
+      },
+      reopen_case: {
+        label: 'ケースを再オープン',
+        successMessage: 'ケース {{ record.display_title }} を再オープンしました。',
       },
     },
   },
@@ -211,10 +218,20 @@ export const service: Record<string, ObjectTranslationData> = {
       mark_article_helpful: {
         label: '役に立った',
         successMessage: '「役に立った」として記録しました。ありがとうございます。',
+        outcomeMessages: {
+          recorded: '「役に立った」として記録しました。ありがとうございます。役に立った：{{ result.helpful }} · 役に立たなかった：{{ result.notHelpful }}。',
+          changed: '投票を「役に立った」に変更しました。役に立った：{{ result.helpful }} · 役に立たなかった：{{ result.notHelpful }}。',
+          already: 'この記事はすでに「役に立った」と評価済みです。役に立った：{{ result.helpful }} · 役に立たなかった：{{ result.notHelpful }}。',
+        },
       },
       mark_article_not_helpful: {
         label: '役に立たなかった',
         successMessage: '「役に立たなかった」として記録しました。ありがとうございます。',
+        outcomeMessages: {
+          recorded: '「役に立たなかった」として記録しました。ありがとうございます。役に立った：{{ result.helpful }} · 役に立たなかった：{{ result.notHelpful }}。',
+          changed: '投票を「役に立たなかった」に変更しました。役に立った：{{ result.helpful }} · 役に立たなかった：{{ result.notHelpful }}。',
+          already: 'この記事はすでに「役に立たなかった」と評価済みです。役に立った：{{ result.helpful }} · 役に立たなかった：{{ result.notHelpful }}。',
+        },
       },
     },
   },

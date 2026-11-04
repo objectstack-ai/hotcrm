@@ -120,6 +120,18 @@ const RUNTIME_TEST_FILES = [
   // keeps it and the manager it is handed to, and the tasks the close must
   // leave alone.
   'escalation-task-on-close.test.ts',
+  // #2313 — the two price-book hooks (one standard book, one entry per
+  // product per book) and who may write the books, one feature's runtime
+  // evidence in one file, as the lines above.
+  'price-book-hooks.test.ts',
+  // #2344 — `campaign_member_enrollment_gate`: the direct doors against the
+  // flow door over every campaign status, the system-write and no-move
+  // controls, the moving edits, and the lowered body.
+  'campaign-member-direct-create-gates.test.ts',
+  // #2371 row 6 — `contract_drafted_notice`: a quote accepted on the booted
+  // app drafts a contract and the accepting rep gets one inbox notice; a
+  // contract written by hand gets none.
+  'contract-drafted-notice.test.ts',
 ];
 
 /**

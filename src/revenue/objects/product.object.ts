@@ -25,7 +25,10 @@ export const Product = ObjectSchema.create({
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
   searchableFields: ['name', 'product_code', 'sku'],
-  highlightFields: ['product_code', 'name', 'category', 'is_active'],
+  // The record header's strip (#2369 row 5): the title already reads
+  // "PRD-0001 - Name". The lookup picker shows the same fields under each
+  // product, so a line item's product picker now shows the list price.
+  highlightFields: ['category', 'list_price', 'is_active'],
 
   fieldGroups: [
     { key: 'basic',    label: 'Product Information', icon: 'info' },

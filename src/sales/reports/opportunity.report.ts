@@ -34,7 +34,7 @@ export const WonOpportunitiesByOwnerReport: Report = {
  */
 export const PipelineCoverageByQuarterReport: Report = {
   name: 'pipeline_coverage_by_quarter',
-  label: 'Pipeline Coverage by Forecast × Quarter',
+  label: 'Pipeline Coverage by Quarter',
   description: 'Open pipeline amount by forecast category, bucketed by close quarter',
   dataset: 'opportunity_metrics', rows: ['forecast_category'], columns: ['close_quarter'], values: ['total_amount', 'opp_count'],
   type: 'matrix',
@@ -42,28 +42,32 @@ export const PipelineCoverageByQuarterReport: Report = {
 };
 
 /**
- * Sales-rep funnel — two-level summary that mirrors how reps drill into their
- * own book of business. Exercises multi-level `rows` grouping (owner → stage)
- * over the dataset's measures.
+ * Sales-rep funnel — one row per rep, one column per stage (#2370 row 4).
+ *
+ * It was a two-level `summary` (owner → stage), and the 18.2.0 report page
+ * drew that as a table repeating the owner's name on every stage row with no
+ * per-owner subtotal (the spec has no subtotal key), over a chart of amount by
+ * stage summed across every rep, so the "by owner" half was nowhere on the
+ * chart. As a `matrix` the table carries each rep once, the stages run across
+ * in the stage field's option order, and the row's Total IS the rep's
+ * subtotal, with a grand total beneath. One measure, the amount: the summary's
+ * deal count and average probability would put three columns under each of
+ * seven stages; Opportunities by Stage carries those.
+ *
+ * The chart is one bar per rep, so the report's question ("whose pipeline?")
+ * is on the chart too. A bar split by stage within each rep is not
+ * expressible in 18.2.0: a report chart takes one `xAxis` dimension and one
+ * `yAxis` measure, and a chart series is a measure, never a dimension's
+ * values. Horizontal bars for the reason #2073 item 10 gave: every rep name
+ * drawn whole. "Funnel" in the label is the sales word for the stage-by-stage
+ * pipeline, not the chart's shape.
  */
 export const OpportunityFunnelByOwnerStageReport: Report = {
   name: 'opportunity_funnel_owner_stage',
-  label: 'Opportunity Funnel by Owner → Stage',
+  label: 'Opportunity Funnel by Owner',
   description: 'Per-rep stage-by-stage pipeline funnel',
-  dataset: 'opportunity_metrics', rows: ['owner', 'stage'], values: ['total_amount', 'opp_count', 'avg_probability'],
-  type: 'summary',
+  dataset: 'opportunity_metrics', rows: ['owner'], columns: ['stage'], values: ['total_amount'],
+  type: 'matrix',
   runtimeFilter: { stage: { $ne: 'closed_lost' } },
-  // A horizontal bar chart of amount by stage, not a funnel (#2073 item 10, the
-  // remedy #2073 item 2 gave the Pipeline by Stage tile). A funnel draws each
-  // stage as wide as its value, so it reads as one only when the values shrink
-  // stage by stage, and these do not: measured on 18.0.0-next.5, the shipped
-  // seed gives 139,500 / 174,000 / 173,000 / 237,000 / 1,294,000 / 1,290,000
-  // from Prospecting to Closed Won, the shape pinched and flared, and the
-  // Negotiation label was not drawn. Horizontal bars run top to bottom in the
-  // stage field's option order, though the dataset answers alphabetically, and
-  // draw every stage name whole; a vertical `bar` rotates them and cuts each to
-  // 12 characters ("Qualificati…" on Opportunities by Stage above). "Funnel" in
-  // the label, description and title is the sales word for the stage-by-stage
-  // pipeline, not the chart's shape, so it stays.
-  chart: { type: 'horizontal-bar', title: 'Pipeline Funnel', showLegend: false, xAxis: 'stage', yAxis: 'total_amount' },
+  chart: { type: 'horizontal-bar', title: 'Amount by Owner', showLegend: false, xAxis: 'owner', yAxis: 'total_amount' },
 };

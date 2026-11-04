@@ -17,8 +17,12 @@ import * as revenueSeed from '../src/revenue/data/revenue.seed';
 // activity rows and the forecast snapshots are sales'. Enrolled here so this
 // guard still sees every authored dataset, not the six modules it used to.
 import * as lineItemSeed from '../src/revenue/data/opportunity-line-item.seed';
+import * as priceBookSeed from '../src/revenue/data/price-book.seed';
 import * as activitySeed from '../src/sales/data/activity.seed';
 import * as forecastSeed from '../src/sales/data/forecast.seed';
+// Split out of `revenue.seed.ts` when `crm_contract` moved to the app package
+// (`module-split-plan.md` item 11).
+import * as contractSeed from '../src/sales/data/contract.seed';
 import { hotcrmStack } from './helpers/verify-stack';
 
 /**
@@ -245,8 +249,10 @@ describe('every family module dataset is wired into CrmSeedData (#635 split)', (
     'marketing.seed': marketingSeed,
     'revenue.seed': revenueSeed,
     'opportunity-line-item.seed': lineItemSeed,
+    'price-book.seed': priceBookSeed,
     'activity.seed': activitySeed,
     'forecast.seed': forecastSeed,
+    'contract.seed': contractSeed,
   };
 
   const isDataset = (value: unknown): value is Dataset =>

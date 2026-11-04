@@ -92,6 +92,13 @@ One new package, composed into the artifact HotCRM already ships:
 | `navigationContributions` | one entry into a group the app publishes | R2 — the only way a module reaches the menu (see *Navigation*). |
 | Version | the artifact's | ADR-0130 D6: one artifact, one version, no per-module hot-fix. |
 
+**Dependencies, amended 2026-10-26.** `module-split-plan.md` *Decisions recorded (2026-10-26)*
+items 10, 11 and 13 apply: PSA depends on `app.objectstack.hotcrm` only — `crm_contract` is the
+app package's from PR 0.5 on, so the `+ app.objectstack.hotcrm.revenue` entry in the table above
+is never declared — and PSA is born as its own installable artifact rather than one more
+directory of the HotCRM artifact. The layout, the import rule and the navigation contribution
+are unchanged.
+
 **Source layout — a directory is a package (2026-09-14, `module-split-plan.md` item 6).**
 PSA is `src/psa/`: one `index.ts` calling `defineStack` with the manifest above, and the
 metadata-type subdirectories it uses — `objects/` (each `*.hook.ts` beside its

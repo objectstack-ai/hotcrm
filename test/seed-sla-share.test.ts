@@ -84,7 +84,7 @@ describe('a fresh demo seed after its first SLA sweep (#2288)', () => {
   /**
    * Open work is young, so the timing puts the generated inflow closer to
    * today than one case per day. The daily volume chart and the Cases Opened
-   * by Priority × Day matrix bucket `created_at` by day. Whatever hour of the
+   * by Day matrix bucket `created_at` by day. Whatever hour of the
    * UTC day the seed loads, no day holds more than 5 of the 30 generated
    * cases. The first cut of this change put up to 12 on one day.
    */

@@ -10,11 +10,8 @@ FOUR packages (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
 (`src/sales/index.ts`), and three `type: module` packages — `app.objectstack.hotcrm.service`
 (`src/service/index.ts`), `app.objectstack.hotcrm.revenue` (`src/revenue/index.ts`) and
 `app.objectstack.hotcrm.marketing` (`src/marketing/index.ts`). The four directories under
-the local `src/` tree are the four packages. Three flows and one dataset authored in
-`src/revenue/` and `src/marketing/` are still registered by the app package, because the
-platform judges a sales action's flow and a dashboard's dataset one package at a time
-(objectstack#25514); they move to their modules once a platform release carries that fix.
-[`objectstack.composition.ts`](../objectstack.composition.ts) builds the four package stacks
+the local `src/` tree are the four packages, and every item registers with the package of
+its directory. [`objectstack.composition.ts`](../objectstack.composition.ts) builds the four package stacks
 and [`objectstack.config.ts`](../objectstack.config.ts) composes them with
 `composeStacks(…, { manifest: 'preserve' })`.
 

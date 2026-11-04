@@ -29,8 +29,7 @@ import * as marketingFlows from '../src/marketing/flows';
  *     sufficient: the entry must also be written into its package's list by
  *     hand. The app package's list exists because it keeps the order the
  *     single-tree barrels had (see the ORDER note at the top of
- *     `objectstack.composition.ts`), and because it carries the three module
- *     flows the app still registers (`appRegisteredModuleItems`).
+ *     `objectstack.composition.ts`).
  *
  * Nothing failed on the second kind. A flow exported from its package barrel
  * but absent from `allFlows` is handed to `defineStack()` by nobody: it is

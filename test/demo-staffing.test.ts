@@ -455,7 +455,7 @@ describe('staffing lines up with the rules that grant, and the nodes that route'
  * roster pin alone.
  */
 describe('each position names the sets it distributes, and none is reached by the name fold (#2200)', () => {
-  it('declares the five bindings, each to a set the app ships', () => {
+  it('declares the seven bindings, each to a set the app ships', () => {
     const declared = Object.fromEntries(
       [...positionNames].filter((p) => declaredSets(p).length > 0).map((p) => [p, declaredSets(p)]),
     );
@@ -465,6 +465,9 @@ describe('each position names the sets it distributes, and none is reached by th
       // The #1779 ruling: the escalation pool works tickets with the agent's grants.
       service_manager: ['service_agent'],
       service_agent: ['service_agent'],
+      // The two marketing rungs lead the marketers and hold their set (#2338 item 3).
+      marketing_director: ['marketing_user'],
+      marketing_manager: ['marketing_user'],
       marketing_user: ['marketing_user'],
     });
     expect(Object.values(declared).flat().filter((s) => !shippedSetNames.has(s)), 'a binding names a set the app does not ship').toEqual([]);

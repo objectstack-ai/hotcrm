@@ -22,6 +22,18 @@ const DUPLICATE_STATUS_HELP = '「已确认重复」表示有人核对过这两�
  * advisory band `pnpm hygiene` prints. Full rule and rationale:
  * `src/sales/translations/zh-CN.ts`.
  */
+/**
+ * The bulk Delete on every opportunity grid list (#2338 item 4, `GRID_BAR` in
+ * `src/sales/views/opportunity.view.ts`), translated once and named by each view.
+ */
+const OPPORTUNITY_BULK_DELETE = {
+  delete: {
+    label: '删除',
+    confirmLabel: '删除',
+    confirmText: '确定要永久删除 {{count}} 个商机吗？此操作无法撤销。',
+  },
+};
+
 export const pipeline: Record<string, ObjectTranslationData> = {
   crm_lead: {
     _validations: {
@@ -72,7 +84,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       description: { label: '描述' },
       mobile: { label: '手机' },
       website: { label: '网站' },
-      rating: { label: '线索评分', help: '线索质量评分（1-5 星）' },
+      rating: { label: '线索评分', help: '留空时，新线索会根据邮箱域名、电话、职位、行业和公司规模自动评分（1-5 星）。' },
       converted_account: { label: '转化客户' },
       converted_contact: { label: '转化联系人' },
       converted_opportunity: { label: '转化商机' },
@@ -254,7 +266,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       create_campaign: {
         label: '加入营销活动',
-        successMessage: '已将线索加入营销活动！',
+        successMessage: '{{ result.output.campaignName }}：新加入 {{ result.output.addedCount }} 人，已是成员 {{ result.output.alreadyCount }} 人。',
         params: {
           campaignId: { label: '营销活动' },
         },
@@ -381,21 +393,23 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     _views: {
       tender_this_quarter: {
         label: '本季度预计招标',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: '本季度暂无预计招标的商机',
           message: '本标签页列出客户侧预计招标日期落在当前季度内的进行中商机。在商机上填写“预计招标日期”后，它就会出现在这里。',
         },
       },
-      open_opportunities: { label: '进行中商机' },
-      all_opportunities: { label: '全部商机' },
+      open_opportunities: { label: '进行中商机', bulkActions: OPPORTUNITY_BULK_DELETE },
+      all_opportunities: { label: '全部商机', bulkActions: OPPORTUNITY_BULK_DELETE },
       pipeline_kanban: { label: '销售流水线' },
       close_date_calendar: { label: '预测日历' },
       deal_timeline: { label: '商机时间线' },
       deal_gallery: { label: '商机卡片' },
-      my_open_deals: { label: '我的进行中商机' },
-      stale_opportunities: { label: '⚠️ 停滞商机 · 按阶段停留时间排序' },
+      my_open_deals: { label: '我的进行中商机', bulkActions: OPPORTUNITY_BULK_DELETE },
+      stale_opportunities: { label: '⚠️ 停滞商机 · 按阶段停留时间排序', bulkActions: OPPORTUNITY_BULK_DELETE },
       closing_this_quarter: {
         label: '本季度待成交商机',
+        bulkActions: OPPORTUNITY_BULK_DELETE,
         emptyState: {
           title: '本季度暂无待成交商机',
           message: '本标签页列出预计成交日期落在当前季度内、且处于承诺（Commit）或最佳可能（Best Case）的进行中商机。当前没有符合条件的记录——预计成交日期更晚的商机请见“进行中商机”标签页。',
@@ -424,7 +438,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       ...activityActions,
       clone_opportunity: {
         label: '克隆商机',
-        successMessage: '商机克隆成功！',
+        successMessage: '已创建「{{ result.name }}」，当前页面就是这份副本。',
       },
       generate_quote: {
         label: '生成报价单',
@@ -484,7 +498,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         message: '周期开始必须是该周期的第一天——例如 2026 年 8 月对应 2026-08-01。',
       },
       quarter_starts_on_quarter_boundary: {
-        message: '季度预测必须从季度边界开始——1 月 1 日、4 月 1 日、7 月 1 日或 10 月 1 日。',
+        message: '季度预测的「周期起始」必须在季度边界上——1 月 1 日、4 月 1 日、7 月 1 日或 10 月 1 日。',
       },
       snapshot_amounts_non_negative: {
         message: '快照金额不能为负数。',

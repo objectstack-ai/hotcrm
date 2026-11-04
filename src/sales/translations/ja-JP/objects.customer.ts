@@ -42,9 +42,10 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       approval_status: {
         label: '承認ステータス',
-        help: 'この取引先の承認状況。新規取引先は承認待ちで作成され、承認トレイで判断されます。',
+        help: 'この取引先の承認状況。新規取引先は承認待ちで作成され、承認トレイで判断されます。「リード変換」で作成された取引先は承認を経ず、空のままです。',
         options: { pending: '承認待ち', approved: '承認済み', rejected: '却下' },
       },
+      converted_from_lead_id: { label: '変換元リード', help: '「リード変換」でこの取引先を作成した元のリード。リード変換のみが設定します。' },
       name: { label: '取引先名', help: '会社または組織の正式名称' },
       name_normalized: {
         label: '取引先名（正規化）',
@@ -231,6 +232,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       send_email: {
         label: 'メール送信',
+        description: 'この取引先責任者のメールアドレスに送信されます。送信キューに入った後、取引先責任者のタイムラインに記録されます。',
         params: {
           subject: { label: '件名' },
           body: { label: '本文' },
@@ -239,7 +241,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       add_contact_to_campaign: {
         label: 'キャンペーンに追加',
-        successMessage: '取引先責任者をキャンペーンに追加しました！',
+        successMessage: '{{ result.output.campaignName }}: 追加 {{ result.output.addedCount }} 件、既にメンバー {{ result.output.alreadyCount }} 件。',
         params: {
           campaignId: { label: 'キャンペーン' },
         },

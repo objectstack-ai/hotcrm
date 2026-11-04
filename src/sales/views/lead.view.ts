@@ -111,7 +111,8 @@ const DUPLICATE_LINK_FIELDS = [
  * Lead Views - Comprehensive UI Showcase
  * 
  * This file demonstrates:
- * 1. All 6 FormView layout types (simple, tabbed, wizard, split, drawer, modal)
+ * 1. All 3 FormView layout types (simple, tabbed, wizard; split, drawer and
+ *    modal were retired in @objectstack/spec 18.3.0)
  * 2. Section features (collapsible, 1-4 column layouts)
  * 3. Field-level controls (readonly, required, hidden, span, visibleWhen, dependsOn, custom widget)
  * 4. Multiple named formViews for different scenarios
@@ -248,7 +249,10 @@ export const LeadViews = defineView({
         label: 'Contact Information',
         collapsible: true,
         collapsed: false,
-        columns: 2, // 2-column layout
+        // Three columns put Salutation, First Name and Last Name on one row
+        // (#2369 row 2). On two, Salutation took half a row and Last Name a
+        // whole one. The nine fields fill three rows exactly.
+        columns: 3,
         fields: [
           {
             field: 'salutation',
@@ -260,7 +264,6 @@ export const LeadViews = defineView({
           {
             field: 'last_name',
             required: true,
-            span: 'full',
           },
           'company',
           'title',
@@ -740,11 +743,12 @@ export const LeadViews = defineView({
     },
     
     /**
-     * 4. SPLIT Layout
-     * Master-detail split view
+     * 4. Two-section edit (was `type: 'split'`, retired in @objectstack/spec
+     * 18.3.0: a form's `type` is its layout only, and whether a record opens
+     * beside its list is each reader's Display-menu preference). Kept as a
+     * `simple` form so the named view and its sections stay addressable.
      */
     split_edit: {
-      type: 'split',
       data: {
         provider: 'object',
         object: 'crm_lead',
@@ -789,11 +793,11 @@ export const LeadViews = defineView({
     },
     
     /**
-     * 5. DRAWER Layout
-     * Side panel form (typically opened from list view)
+     * 5. Quick edit, single column (was `type: 'drawer'`, retired in
+     * @objectstack/spec 18.3.0: where a form opens is decided by whoever opens
+     * it — a list opens a clicked record in the drawer via `navigation.mode`).
      */
     quick_edit_drawer: {
-      type: 'drawer',
       data: {
         provider: 'object',
         object: 'crm_lead',
@@ -832,11 +836,11 @@ export const LeadViews = defineView({
     },
     
     /**
-     * 6. MODAL Layout
-     * Dialog-based form for quick actions
+     * 6. Status update (was `type: 'modal'`, retired in @objectstack/spec
+     * 18.3.0: the console's New / Edit dialogs open the record form
+     * themselves, sized by the form's `modalSize`).
      */
     status_update_modal: {
-      type: 'modal',
       data: {
         provider: 'object',
         object: 'crm_lead',

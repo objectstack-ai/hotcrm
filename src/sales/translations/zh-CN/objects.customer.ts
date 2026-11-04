@@ -42,9 +42,10 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       approval_status: {
         label: '审批状态',
-        help: '该客户的审批进展。新建客户初始为待审批，并在审批收件箱中裁定。',
+        help: '该客户的审批进展。新建客户初始为待审批，并在审批收件箱中裁定。由「转化线索」创建的客户免于审批，此处保持为空。',
         options: { pending: '待审批', approved: '已通过', rejected: '已驳回' },
       },
+      converted_from_lead_id: { label: '来源线索', help: '「转化线索」创建本客户时所依据的线索。仅由线索转化写入。' },
       name: { label: '客户名称', help: '公司或组织的法定名称' },
       type: {
         label: '类型',
@@ -212,6 +213,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       send_email: {
         label: '发送邮件',
+        description: '发送到该联系人的邮箱地址。邮件先进入发送队列，随后记录在联系人的时间线上。',
         params: {
           subject: { label: '主题' },
           body: { label: '正文' },
@@ -220,7 +222,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       add_contact_to_campaign: {
         label: '加入营销活动',
-        successMessage: '联系人已加入营销活动！',
+        successMessage: '{{ result.output.campaignName }}：新加入 {{ result.output.addedCount }} 人，已是成员 {{ result.output.alreadyCount }} 人。',
         params: {
           campaignId: { label: '营销活动' },
         },

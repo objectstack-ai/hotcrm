@@ -651,6 +651,26 @@ describe('insert-time twin flows', () => {
     { twin: OpportunityApprovalOnCreateFlow, parent: OpportunityApprovalFlow, name: 'opportunity_approval_on_create' },
   ] as const;
 
+  /**
+   * A twin whose start condition deliberately differs: the parent's, minus the
+   * terms only an UPDATE can carry. `opportunity_approval` admits `rejected` and
+   * reads `previous` to tell the write that ends a request from a later save
+   * (#2334); an insert has no prior row and no deal is born `rejected`, so the
+   * twin keeps the condition both shared before. Stated as a transformation of
+   * the parent, so any OTHER drift between the two still fails.
+   */
+  const UPDATE_ONLY_TERMS: Partial<Record<string, (parent: Rec) => Rec>> = {
+    opportunity_approval_on_create: (parent) => {
+      const flat = (s: string) => s.replace(/\s+/g, ' ');
+      return {
+        ...parent,
+        source: flat(String(parent.source))
+          .replace(' || record.approval_status == "rejected")', ')')
+          .replace(' && (!has(previous.approval_status) || previous.approval_status != "pending")', ''),
+      };
+    },
+  };
+
   it.each(TWINS)('$name is registered under its own name', ({ twin, parent, name }) => {
     expect(twin.name).toBe(name);
     expect(twin.name, 'twin collides with its parent').not.toBe(parent.name);
@@ -670,7 +690,10 @@ describe('insert-time twin flows', () => {
     expect(t.edges).toEqual(p.edges);
 
     const cond = (f: Rec) => (f.nodes as Rec[]).find((n) => n.id === 'start')!.config.condition;
-    expect(cond(t), 'twin drifted from its parent’s start condition').toEqual(cond(p));
+    const flatCond = (c: Rec) => ({ ...c, source: String(c.source).replace(/\s+/g, ' ') });
+    const expected = UPDATE_ONLY_TERMS[t.name as string];
+    expect(expected ? flatCond(cond(t)) : cond(t), 'twin drifted from its parent’s start condition')
+      .toEqual(expected ? expected(cond(p)) : cond(p));
 
     // Every non-start node must be byte-identical to the parent's.
     for (const node of t.nodes as Rec[]) {

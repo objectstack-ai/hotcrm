@@ -32,7 +32,8 @@
  * A "large deal" — the amount at which an opportunity stops being routine.
  *
  * Consumed by the approval entry gate, the won-deal alert and both large-deal
- * sharing rules. `src/docs/crm_sales.md` and `src/docs/crm_admin.md` publish
+ * sharing rules. `src/docs/crm_sales_opportunities.md` and
+ * `src/docs/crm_admin_automation.md` (and their `.zh.md` siblings) publish
  * this number to users, and `test/docs-drift.test.ts` fails if they drift from
  * what the flows actually ship.
  */

@@ -6,7 +6,8 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * 日本語 (ja-JP) — `objects` translations for the COMMERCE family:
  * what gets sold and on what paper — quotes, contracts, products.
  *
- * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`.
+ * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`,
+ * `crm_price_book`, `crm_price_book_entry`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
  * Everything that is not `objects` lives in `./app.ts`; `objects` — 69-78% of
@@ -26,7 +27,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
         message: '有効期限は見積日より後である必要があります',
       },
       quote_status_progression: {
-        message: '無効な見積ステータス遷移です',
+        message: 'このステータス変更は見積の通常の流れから外れています：下書き → レビュー中 → 提示済み → 承認済み。レビュー中は下書きに戻すことも却下にすることもでき、提示済みは却下にでき、却下された見積は下書きに戻ります。下書き・レビュー中・提示済みは期限切れになることがあります。承認済みと期限切れは最終状態です。',
       },
     },
     label: '見積',
@@ -83,10 +84,16 @@ export const commerce: Record<string, ObjectTranslationData> = {
       addresses_and_notes: { label: '住所と備考' },
     },
     _actions: {
-      print_quote: {
-        label: '見積書を印刷',
-        successMessage: '見積書の PDF を添付しました。',
+      submit_quote_for_review: { label: 'レビューに提出', successMessage: '見積 {{ record.display_title }} をレビューに提出しました。' },
+      mark_quote_presented: { label: '提示済みにする', successMessage: '見積 {{ record.display_title }} を提示済みにしました。' },
+      accept_quote: {
+        label: '承認',
+        confirmText: 'この見積を承認しますか？見積は凍結され、商談は受注でクローズされ、契約が起案されます。',
+        successMessage: '見積 {{ record.display_title }} を承認しました。',
       },
+      reject_quote: { label: '却下', successMessage: '見積 {{ record.display_title }} を却下しました。改訂して新しい提案ができます。' },
+      revise_quote: { label: '改訂', successMessage: '見積 {{ record.display_title }} を下書きに戻しました。' },
+      print_quote: { label: '見積書を印刷', successMessage: '見積書の PDF を添付しました。' },
     },
   },
   crm_quote_line_item: {
@@ -240,6 +247,49 @@ export const commerce: Record<string, ObjectTranslationData> = {
       product_info: { label: '製品情報' },
       pricing_info: { label: '価格' },
       media: { label: 'メディア' },
+    },
+  },
+  crm_price_book: {
+    _validations: {
+      valid_to_after_valid_from: {
+        message: '有効期間（終了）は有効期間（開始）以降の日付にしてください',
+      },
+    },
+    label: '価格表',
+    pluralLabel: '価格表',
+    description: '名前付きの製品価格の一覧：標準価格、パートナー・地域別価格、またはプロモーション価格',
+    fields: {
+      owner_id: { label: '価格表担当者' },
+      name: { label: '価格表名' },
+      description: { label: '説明' },
+      is_active: { label: '有効' },
+      is_standard: { label: '標準' },
+      valid_from: { label: '有効期間（開始）' },
+      valid_to: { label: '有効期間（終了）' },
+    },
+    _sections: {
+      basic: { label: '価格表情報' },
+      validity: { label: '有効期間' },
+    },
+  },
+  crm_price_book_entry: {
+    _validations: {
+      price_not_negative: {
+        message: '定価にマイナスの値は指定できません',
+      },
+    },
+    label: '価格表エントリ',
+    pluralLabel: '価格表エントリ',
+    description: '1つの価格表における1つの製品の価格',
+    fields: {
+      entry_number: { label: 'エントリ番号' },
+      crm_price_book: { label: '価格表' },
+      crm_product: { label: '製品' },
+      list_price: { label: '定価' },
+      is_active: { label: '有効' },
+    },
+    _sections: {
+      basic: { label: 'エントリ情報' },
     },
   },
 };

@@ -237,13 +237,13 @@ export const Opportunity = ObjectSchema.create({
       // — colors and the default mean something only here. A single field
       // owns it, so it is inline rather than a shared `picklist` (#2000).
       options: [
-        { label: 'Prospecting', value: 'prospecting', color: '#808080', default: true },
-        { label: 'Qualification', value: 'qualification', color: '#FFA500' },
-        { label: 'Needs Analysis', value: 'needs_analysis', color: '#FFD700' },
-        { label: 'Proposal', value: 'proposal', color: '#4169E1' },
-        { label: 'Negotiation', value: 'negotiation', color: '#9370DB' },
-        { label: 'Closed Won', value: 'closed_won', color: '#00AA00' },
-        { label: 'Closed Lost', value: 'closed_lost', color: '#FF0000' },
+        { label: 'Prospecting', value: 'prospecting', color: '#808080', kind: 'open', default: true },
+        { label: 'Qualification', value: 'qualification', color: '#FFA500', kind: 'open' },
+        { label: 'Needs Analysis', value: 'needs_analysis', color: '#FFD700', kind: 'open' },
+        { label: 'Proposal', value: 'proposal', color: '#4169E1', kind: 'open' },
+        { label: 'Negotiation', value: 'negotiation', color: '#9370DB', kind: 'open' },
+        { label: 'Closed Won', value: 'closed_won', color: '#00AA00', kind: 'won' },
+        { label: 'Closed Lost', value: 'closed_lost', color: '#FF0000', kind: 'lost' },
       ],
     }),
 
@@ -268,7 +268,7 @@ export const Opportunity = ObjectSchema.create({
     // every object, and this duplicate had no writer at all — not the seed
     // data, not a hook, not a flow — so it was permanently null while
     // `created_at` carried the real value (#575 B2). Surfaces that need the
-    // creation instant read `created_at` (see the deal_timeline view).
+    // creation instant read `created_at`.
     //
     // Stage-age clock (#489). This is the STORED half of the pair: a real,
     // indexed date column, so it is what automation and views may filter and
@@ -706,9 +706,15 @@ export const Opportunity = ObjectSchema.create({
         // `→ proposal` is legal from every pre-proposal stage: the
         // quote_generation flow fast-forwards the deal to `proposal` when a
         // quote is generated, which can happen at any open stage.
-        prospecting: ['qualification', 'proposal', 'closed_lost'],
-        qualification: ['needs_analysis', 'proposal', 'closed_lost'],
-        needs_analysis: ['proposal', 'closed_lost'],
+        //
+        // `→ closed_won` is legal from every open stage too (#2371 row 3): a
+        // rep who wins a deal early used to get a "Saved — with warnings"
+        // toast on top of the save toast for a move the business accepts.
+        // `→ closed_lost` was already legal from every open stage; the
+        // warning still catches skipping forward within the open stages.
+        prospecting: ['qualification', 'proposal', 'closed_won', 'closed_lost'],
+        qualification: ['needs_analysis', 'proposal', 'closed_won', 'closed_lost'],
+        needs_analysis: ['proposal', 'closed_won', 'closed_lost'],
         // `proposal → closed_won` is legal: the quote_on_accepted hook closes
         // the linked deal directly from the CPQ path (quote_generation parks
         // the opportunity at `proposal`; an accepted quote wins it without a

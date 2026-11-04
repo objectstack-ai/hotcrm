@@ -42,7 +42,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * 转换 / 轉換 is deliberately untouched and MUST stay reachable: it names the
  * state-machine mechanism (state transition) on
  * `content/docs/administration/state-machines`, type coercion in the import
- * guides, and contract activation on `content/docs/revenue/contracts` — a
+ * guides, and contract activation on `content/docs/sales/contracts` — a
  * different word that happens to share a spelling with the retired convert
  * translation. #844 drew that line; this test does not move it, and widening
  * the pattern to bare 转换 would turn every one of those pages red.

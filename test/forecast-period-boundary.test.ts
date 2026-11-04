@@ -323,7 +323,9 @@ describe('the write is REFUSED on a real SQLite database too', () => {
       viaHook(desk, 'insert', { ...BASE, period: 'quarter', period_start: '2026-08-15' }),
     );
     expect(env.code).toBe('VALIDATION_FAILED');
-    expect(env.message).toMatch(/first day of the period/i);
+    // A quarterly row is judged by the quarter rule alone (#2371 row 8).
+    expect(env.message).toMatch(/quarter boundary/i);
+    expect(env.message).not.toMatch(/first day of the period/i);
 
     const row = await viaHook(desk, 'insert', { ...BASE, period: 'quarter', period_start: '2026-07-01' });
     const stored = await storedForecast(desk, row.id);

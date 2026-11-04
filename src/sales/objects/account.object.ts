@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F } from '@objectstack/spec';
+import { F, P } from '@objectstack/spec';
 import { TERRITORY_OPTIONS } from './_territory';
 
 export const Account = ObjectSchema.create({
@@ -22,7 +22,12 @@ export const Account = ObjectSchema.create({
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
   searchableFields: ['name', 'account_number', 'registration_number'],
-  highlightFields: ['account_number', 'name', 'type', 'owner_id'],
+  // The record header's strip (#2369 row 5): what the title does not say. The
+  // page header shows the name and `{industry} · {type}` (account_detail.page.ts),
+  // so the strip carries the number, the tier, the health, the revenue and the
+  // owner. The child-account panel keeps its old columns through
+  // `relatedListColumns` on `parent_account`.
+  highlightFields: ['account_number', 'tier', 'health_score', 'annual_revenue', 'owner_id'],
   // The record's picture (#1199): the record chrome draws the logo beside the
   // title in every account page header. No logo, no picture: the platform
   // draws no placeholder or initials in its place.
@@ -546,6 +551,9 @@ export const Account = ObjectSchema.create({
       label: 'Parent Account',
       description: 'Parent company in hierarchy',
       group: 'ownership',
+      // The child-account panel's columns. Without them it falls back to
+      // `highlightFields` minus this lookup, which is the header strip.
+      relatedListColumns: ['account_number', 'name', 'type', 'owner_id'],
     }),
 
     // Boolean field
@@ -604,6 +612,37 @@ export const Account = ObjectSchema.create({
         { label: 'Approved', value: 'approved', color: '#00AA00' },
         { label: 'Rejected', value: 'rejected', color: '#FF0000' },
       ],
+    }),
+
+    /**
+     * The lead this account was created from, when Convert Lead created it
+     * (#2285 ruling B). `account_approval` reads it: qualifying the lead was
+     * the gate, so the account a conversion creates starts no second approval.
+     * An account Convert Lead only REUSED keeps whatever it already had.
+     *
+     * ⚠️ Writable, NOT `readonly`, and that is forced, the reason recorded on
+     * `crm_lead.is_converted`: `lead_conversion` runs as the user, and the
+     * platform strips every readonly key a non-system caller supplies, on
+     * insert too, so `create_account` could never set it. Elevating the create
+     * to get past the strip is what house rule 9 forbids.
+     *
+     * So the column is guarded where a writable column can be: the
+     * `account_protection` hook refuses a value that does not come from a
+     * flow run (`ctx.provenance.flowRunId`, which the platform stamps and no
+     * client can supply), and refuses any change once set. Without that guard
+     * a rep would skip the approval by filling it in on the New form or in a
+     * REST create. Rule 11's second copy is the roster entry in
+     * `test/account-conversion-approval.test.ts`.
+     *
+     * `visibleWhen` keeps it off the New form and off every hand-created
+     * account, where it could only ever be empty; on a converted account it is
+     * the link back to the lead.
+     */
+    converted_from_lead_id: Field.lookup('crm_lead', {
+      label: 'Converted From Lead',
+      description: 'The lead Convert Lead created this account from. Set only by lead conversion.',
+      group: 'ownership',
+      visibleWhen: P`has(record.converted_from_lead_id) && !isBlank(record.converted_from_lead_id)`,
     }),
 
     // Brand color (new field type)
@@ -690,7 +729,7 @@ export const Account = ObjectSchema.create({
 
     // ⛔ No account-level renewal model here, on purpose. Renewal is a
     // CONTRACT-level process with exactly one home — `crm_contract.end_date` +
-    // `renewal_notice_days`, swept daily by `src/revenue/flows/contract-renewal.flow.ts`,
+    // `renewal_notice_days`, swept daily by `src/sales/flows/contract-renewal.flow.ts`,
     // which books the task and notifies the CONTRACT owner; the user-facing
     // queue is that object's `renewal_calendar` view. A `renewal_owner` /
     // `next_renewal_date` pair here would be declared and inert, telling an

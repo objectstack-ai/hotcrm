@@ -31,7 +31,10 @@ export const activityActions = {
     params: {
       subject: { label: 'Asunto de la llamada' },
       duration: { label: 'Duración (minutos)' },
-      attendee_contacts: { label: 'Contactos participantes' },
+      attendee_contacts: {
+        label: 'Contactos participantes',
+        helpText: 'El contacto o lead en el que lo registras se añade automáticamente. Añade aquí a cualquier otra persona.',
+      },
       attendee_users: { label: 'Participantes internos' },
       notes: { label: 'Notas de la llamada' },
     },
@@ -42,7 +45,10 @@ export const activityActions = {
     params: {
       subject: { label: 'Asunto de la reunión' },
       duration: { label: 'Duración (minutos)' },
-      attendee_contacts: { label: 'Contactos participantes' },
+      attendee_contacts: {
+        label: 'Contactos participantes',
+        helpText: 'El contacto o lead en el que lo registras se añade automáticamente. Añade aquí a cualquier otra persona.',
+      },
       attendee_users: { label: 'Participantes internos' },
       notes: { label: 'Notas de la reunión' },
     },
@@ -56,7 +62,10 @@ export const activityActions = {
       start_time: { label: 'Hora de inicio (UTC)' },
       location: { label: 'Ubicación' },
       duration: { label: 'Duración (minutos)' },
-      attendee_contacts: { label: 'Contactos participantes' },
+      attendee_contacts: {
+        label: 'Contactos participantes',
+        helpText: 'El contacto o lead en el que lo registras se añade automáticamente. Añade aquí a cualquier otra persona.',
+      },
       attendee_users: { label: 'Participantes internos' },
       notes: { label: 'Agenda' },
     },

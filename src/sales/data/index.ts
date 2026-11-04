@@ -21,13 +21,15 @@
  *   - `sales.seed.ts`     accounts, contacts, leads, opportunities
  *   - `activity.seed.ts`  tasks, events, event attendees
  *   - `forecast.seed.ts`  forecast snapshots
- *   - `src/revenue/data/` products, opportunity lines, contracts, quotes, quote lines
+ *   - `contract.seed.ts`  contracts
+ *   - `src/revenue/data/` products, opportunity lines, quotes, quote lines
  *   - `src/service/data/` cases, knowledge articles
  *   - `src/marketing/data/` campaigns, campaign members
  */
 export { accounts, contacts, leads, opportunities, OPPORTUNITY_LINES } from './sales.seed';
 export { tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers } from './activity.seed';
 export { forecasts } from './forecast.seed';
+export { contracts } from './contract.seed';
 export { celDaysAgo, celDaysFromNow, lineTotal, linesTotal, type LineSpec } from './_shared';
 
 // ─────────────────────────────────────── the SaaS / multi-org composition ──

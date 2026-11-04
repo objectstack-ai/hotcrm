@@ -140,6 +140,16 @@ export const CampaignMember = ObjectSchema.create({
       // from every detail page (`field-group-shadowed`, the trap the note
       // above this object's `fieldGroups` records being rescued from).
       relatedListColumns: ['crm_lead', 'crm_contact', 'added_date', 'status', 'response_date'],
+
+      // The picker offers only the campaigns that take members, the open set
+      // the two enroll flows admit (#2336). It lives on the FIELD because the
+      // Add to Campaign actions' campaign param is field-backed on this field,
+      // and `ActionParamSchema` has no filter key of its own: the row-menu
+      // dialog resolves the param from this field and keeps `lookupFilters`.
+      // The member form's picker narrows the same way. The selection bar's
+      // dialog drops it (the 18.2.0 spec's `bulk-action.zod.ts` note), so
+      // there the flow's refusal is what stops a closed campaign.
+      lookupFilters: [{ field: 'status', operator: 'in', value: ['planning', 'in_progress'] }],
     }),
 
     // `deleteBehavior: 'cascade'` on BOTH party lookups (#696). A lookup
@@ -244,31 +254,47 @@ export const CampaignMember = ObjectSchema.create({
       storage: { notNull: true },
       group: 'response',
       trackHistory: true,
+      // `kind` (#2366 row 10): Converted is the member's successful end and
+      // Unsubscribed its unsuccessful one, so the record path stops drawing
+      // Unsubscribed as a fourth step after Converted.
+      // `test/status-option-kinds.test.ts`.
       options: [
-        { label: 'Sent',      value: 'sent',      default: true, color: '#A0A0A0' },
-        { label: 'Responded', value: 'responded', color: '#00AA00' },
-        { label: 'Converted', value: 'converted', color: '#7C3AED' },
-        { label: 'Unsubscribed', value: 'unsubscribed', color: '#FF0000' },
+        { label: 'Sent',      value: 'sent',      default: true, color: '#A0A0A0', kind: 'open' },
+        { label: 'Responded', value: 'responded', color: '#00AA00', kind: 'open' },
+        { label: 'Converted', value: 'converted', color: '#7C3AED', kind: 'won' },
+        { label: 'Unsubscribed', value: 'unsubscribed', color: '#FF0000', kind: 'lost' },
       ],
     }),
 
-    // Written by the `mark_responded` action, and by
-    // `campaign_member_lifecycle` when it back-fills a member whose response
-    // was recorded by flipping `status` directly.
+    // Stamped by `campaign_member_lifecycle` on the write that moves the
+    // member into Responded or Converted — whichever door set the status, the
+    // `mark_responded` action included — and cleared with the response on a
+    // reset to Sent.
+    //
+    // `readonly`, with `has_responded` below (#2366 row 4): both are the
+    // lifecycle hook's, derived from the status. The form offered them, and a
+    // hand-set flag disagreed with the status until the next status write
+    // (#2320 Marketing S7). A `readonly` value is stripped from a user's write
+    // before the hook runs, and the hook's own stamp on the same write is
+    // kept (the engine strips caller keys, not what a `before*` hook sets), so
+    // the derivation is unchanged. `test/campaign-metric-fields-readonly.test.ts`.
     response_date: Field.datetime({
       label: 'Response Date',
       group: 'response',
+      readonly: true,
     }),
 
-    // Kept in lockstep with `status == "responded"` by
-    // `campaign_member_lifecycle` (beforeInsert/beforeUpdate) — a boolean that
-    // disagrees with the status it summarises is the shape the response
-    // surfaces cannot render, and it is what `test/seed-consistency.test.ts`
-    // already pins on the seed side.
+    // "Did this person ever respond", kept by `campaign_member_lifecycle`
+    // (beforeInsert/beforeUpdate): set on `responded` / `converted`, cleared
+    // on a reset to `sent`, and KEPT when a member who responded unsubscribes
+    // (#2365) — the campaign's `num_responses` counts this flag, so an opt-out
+    // does not erase a response. `test/seed-consistency.test.ts` pins the same
+    // rule on the seed side.
     has_responded: Field.boolean({
       label: 'Has Responded',
       defaultValue: false,
       group: 'response',
+      readonly: true,
     }),
   },
 
@@ -283,6 +309,21 @@ export const CampaignMember = ObjectSchema.create({
       severity: 'error',
       message: 'A campaign member must reference either a Lead or a Contact',
       condition: P`(!has(record.crm_lead) || isBlank(record.crm_lead)) && (!has(record.crm_contact) || isBlank(record.crm_contact))`,
+    },
+    {
+      // The other half of "a Lead OR a Contact" (#2336): a membership is one
+      // person's, and the enrollment dedupe, the seed keys and the campaign
+      // metrics all read the two sides as different memberships. Until #2336
+      // an edit could add a Lead to a contact member and store both.
+      //
+      // Lead conversion does not trip it: `campaign_lead_conversion_refresh`
+      // promotes a converting lead's members by writing `status` alone, so
+      // the member keeps its Lead and gains no Contact.
+      name: 'lead_and_contact_exclusive',
+      type: 'script',
+      severity: 'error',
+      message: 'A campaign member references a Lead or a Contact, not both',
+      condition: P`has(record.crm_lead) && !isBlank(record.crm_lead) && has(record.crm_contact) && !isBlank(record.crm_contact)`,
     },
   ],
 });

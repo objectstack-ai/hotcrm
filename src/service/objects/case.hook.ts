@@ -126,8 +126,8 @@ const caseValidation: Hook = {
     // staff-side (`case_escalation`, `case_sla_monitor`, the `escalate_case`
     // screen flow). The public `web_to_case` form (`src/service/views/case.view.ts`)
     // collects exactly `supplied_name`, `supplied_email`, `subject`,
-    // `description`, `type` and `priority`, so nulling this drops nothing any
-    // guest surface asks for. ⛔ The two `supplied_*` columns (#2190) are NOT
+    // `description` and `type`, so nulling this drops nothing any guest
+    // surface asks for. ⛔ The two `supplied_*` columns (#2190) are NOT
     // in the strip below, deliberately: they are the visitor's own name and
     // reply address, the one fact about themselves the form exists to collect,
     // and nothing downstream reads them as verified. `guest_portal`
@@ -194,6 +194,22 @@ const caseValidation: Hook = {
       // medium") that the app does not honour. Whether a web-submitted case
       // SHOULD outrank a staff-created one is a product question, and it is not
       // settled by leaving dead code here that says it already is.
+      //
+      // A guest picks at most High (#2368, maintainer ruling). Critical
+      // escalates on insert (`case_escalation_on_create`), hands the case to
+      // the service manager pool and takes the 4-hour SLA row, so it is a
+      // staff decision. A form row's `options` subset does not narrow the
+      // door (`POST /forms/support/submit`): the posted value is validated
+      // against the OBJECT's options, so a form that asks for priority lets a
+      // crafted `critical` reach this line. It is CAPPED rather than refused: the
+      // visitor's case is real and the hotline hint tells them how to get a
+      // P1 handled; refusing would lose the case to save a staff re-triage.
+      // Capping here, before `priority` is read below, keeps the rank, the SLA
+      // row and every after-insert flow on the stored `high`.
+      // On 18.2.0 the form asks no priority at all (no per-form option subset
+      // exists), so the door's allow-list drops a posted one first; this line
+      // is the layer that holds the day the form's list moves (#1505).
+      if (input.priority === 'critical') input.priority = 'high';
       input.owner_id          = null;
       input.is_escalated      = false;
       input.escalation_reason = null;
@@ -358,15 +374,40 @@ const caseValidation: Hook = {
     if (typeof effStatus === 'string') input.is_closed = effStatus === 'closed';
 
     if (!isGuestSubmission) {
+      // ── A reopen clears the close (#2375) ──
+      //
+      // A reopen is any move from a settled status (`CLOSED_CASE_STATUSES`,
+      // spelled inline as below) to an open one, whichever door it comes
+      // through: Reopen Case, Edit, the Status dropdown or REST all reach this
+      // hook as the same status change, so the clear lives here and not in
+      // the action. Before it, a reopened case kept the first close's
+      // `closed_date` while it was open again, the stamp below skipped the
+      // next close because a date was already stored, and
+      // `resolution_time_hours` kept measuring to that first close. Cleared,
+      // the next close stamps both afresh. A move between the two settled
+      // statuses is not a reopen and keeps them. The SLA fields are not
+      // touched: the due date, and a breach already recorded, stay.
+      const reopenFrom = ['resolved', 'closed'];
+      const reopened =
+        typeof input.status === 'string' &&
+        !reopenFrom.includes(input.status) &&
+        reopenFrom.includes(String(ctx.previous?.status));
+      if (reopened) {
+        input.closed_date = null;
+        input.resolution_time_hours = null;
+      }
+
       const becameClosed = input.status === 'closed' && ctx.previous?.status !== 'closed';
       if (becameClosed && !input.closed_date && !ctx.previous?.closed_date) {
         input.closed_date = new Date().toISOString();
       }
 
-      const closedDate =
-        (typeof input.closed_date === 'string' && input.closed_date) ||
-        (typeof ctx.previous?.closed_date === 'string' && (ctx.previous.closed_date as string)) ||
-        undefined;
+      // A reopen reads no stored date: the stored one is the close it clears.
+      const closedDate = reopened
+        ? undefined
+        : (typeof input.closed_date === 'string' && input.closed_date) ||
+          (typeof ctx.previous?.closed_date === 'string' && (ctx.previous.closed_date as string)) ||
+          undefined;
       // The creation instant is the platform's `created_at` (#1992): stamped
       // by `sys_stamp_audit_insert` before this hook runs on an insert (a
       // seed row keeps its authored value), and read back off the stored row

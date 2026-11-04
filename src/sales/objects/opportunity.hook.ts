@@ -212,6 +212,108 @@ const opportunityValidationHook: Hook = {
       }
     }
 
+    // ─── Large Deal Approval: no close-won without it (#2334, #2350) ────
+    //
+    // `opportunity_approval` sends a deal at or over the large-deal line for
+    // approval, and its verdict lands in `approval_status`. A deal at or over
+    // the line is won only once that verdict is `approved` (#2350, ruling B):
+    // every other value refuses a user's move to `closed_won`, and that is
+    // deliberately wider than "pending or rejected" (#2334), which left two
+    // ways for a rep alone to win a large deal with no approval:
+    //   • recall, then close — the platform's recall hands the deal back at
+    //     `not_required`, and a save that moves the stage to Closed Won is not
+    //     a submission (the flow's start condition excludes closed stages);
+    //   • raise and close in one save — a deal under the line is
+    //     `not_required`, and one write that sets the amount over the line and
+    //     the stage to Closed Won opens no request.
+    // So `not_required`, an unset verdict, `pending` and `rejected` all
+    // refuse. From any of them the way forward is a save that leaves the stage
+    // open: the flow's start condition sends the deal for approval (from
+    // `rejected` too, #2334) — never a direct close.
+    //   • `closed_won` only: losing a deal needs no approval;
+    //   • at or over the line, read INPUT-FIRST like the verdict: a deal
+    //     revised under the line in the same write needs none. A
+    //     hand-supplied verdict is stripped before this hook runs (the field
+    //     is `readonly`), and no approval write carries `stage` (#2222);
+    //   • USER writes only (`ctx.user?.id`), the boundary every guard in this
+    //     hook draws: a seed, an import replay or a system sweep is not judged;
+    //   • RECORD_LOCKED / 409 (`REFUSAL_CODES.locked`).
+    // ⚠️ KNOWN LIMIT, measured on 18.2.0 (#2350): the refusal does not know
+    // whether `opportunity_approval` is switched on. A packaged flow is
+    // switched off in the platform's activation ledger
+    // (`sys_metadata_activation`, `POST /automation/:name/toggle`), and this
+    // body reads under the caller, who may not read that ledger (a rep's read
+    // answers PERMISSION_DENIED). An install that switches the flow off can
+    // therefore close no large deal won by hand. ⛔ No setting stands in for
+    // that reading.
+    // ─── …and no deal created at Closed Won by a non-administrator (#2387)
+    //
+    // A deal CREATED at `closed_won` at or over the line has the same hole:
+    // the write has no prior stage, no request ever opens (the on-create
+    // flow's start condition excludes closed stages), and the deal lands won
+    // at `not_required`. Measured on 18.2.0 before this change: a rep's REST
+    // create, JSON import, CSV import and console New form of a 250,000 deal
+    // at Closed Won all answered 201/created. Maintainer ruling (2026-11-02,
+    // 「只拦非管理员」): refuse that create for every user but an
+    // administrator, so an administrator can still load historical won deals.
+    //   • The administrator signal is `ctx.session.positions`, which the
+    //     platform fills from `sys_user_position` PLUS its built-in identity
+    //     projection (`ExecutionContext.positions`, ADR-0090 D3); the three
+    //     administrator identities are `platform_admin`, `org_owner` and
+    //     `org_admin` (`BUILTIN_IDENTITY_NAMES`, `@objectstack/spec`). No app
+    //     position can spell them: `sys_user_position` refuses a reserved
+    //     name. Measured on 18.2.0 through the SHIPPED body (lowered, QuickJS)
+    //     on all four doors above alike: the dev admin reads
+    //     `[platform_admin, org_owner, everyone]`, a member promoted to org
+    //     admin `[org_admin, everyone]`, a rep
+    //     `[org_member, sales_rep, na_sales_team, everyone]`. ⛔ Not keyed on
+    //     a name or email, and not on a permission set: the hook context
+    //     carries no permission list.
+    //   • The exemption is the CREATE's alone. On an update an administrator
+    //     is held to ruling B like everyone else.
+    //   • A system write (seed, a flow or sweep with no user) is not judged,
+    //     the boundary above, so the seed's closed-won deals keep loading.
+    // ⚠️ The line is a COPY of `LARGE_DEAL_AMOUNT` (`_thresholds.ts`): a
+    // lowered body cannot import it. `test/deal-threshold-parity.test.ts`
+    // holds this copy and the `quote_workflow` one to the constant; the
+    // create and the update share it, so there is one copy, not two.
+    const creating = event === 'beforeInsert';
+    if ((creating || (event === 'beforeUpdate' && previous)) && ctx.user?.id) {
+      const LARGE_DEAL_AMOUNT = 100000;
+      const ADMIN_IDENTITIES = ['platform_admin', 'org_owner', 'org_admin'];
+      const prior = (previous ?? {}) as Record<string, unknown>;
+      const verdict = (input.approval_status ?? prior.approval_status) as string | undefined;
+      const dealAmount = Number(input.amount ?? prior.amount);
+      const winning = input.stage === 'closed_won' && (creating || input.stage !== prior.stage);
+      const positions = (ctx.session?.positions ?? []) as string[];
+      const exempt = creating && positions.some((p) => ADMIN_IDENTITIES.includes(p));
+      if (winning && !exempt && verdict !== 'approved' && dealAmount >= LARGE_DEAL_AMOUNT) {
+        // Two sentences, one per reader (#2338 items 12, 14-16): the message
+        // is the diagnostic and keeps API names; the `userMessage` is what the
+        // console shows and names the stage, the field and its value by the
+        // labels on `crm_opportunity` (`test/refusal-labels.test.ts` holds
+        // them to the object). The line is printed from the one copy above.
+        const VERDICT_LABELS: Record<string, string> = { not_required: 'Not Required', pending: 'Pending', rejected: 'Rejected' };
+        const line = String(LARGE_DEAL_AMOUNT).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const shown = VERDICT_LABELS[verdict as string] ?? VERDICT_LABELS.not_required;
+        const next = creating
+          ? 'Create it at an open stage to send it for approval; it can be Closed Won once approved. Only an administrator can create it already won.'
+          : verdict === 'pending'
+            ? 'It can be Closed Won once the request is approved.'
+            : verdict === 'rejected'
+              ? 'Revise the deal and save it to send it for approval again; it can be Closed Won once approved.'
+              : 'Save the deal without closing it to send it for approval; it can be Closed Won once approved.';
+        throw refuse(
+          creating
+            ? `A deal of LARGE_DEAL_AMOUNT (${LARGE_DEAL_AMOUNT}) or more is created at closed_won only by an administrator (position platform_admin, org_owner or org_admin); amount is ${dealAmount}, approval_status is ${verdict ?? 'unset'}.`
+            : `A deal of LARGE_DEAL_AMOUNT (${LARGE_DEAL_AMOUNT}) or more moves to closed_won only once approval_status is approved; amount is ${dealAmount}, approval_status is ${verdict ?? 'unset'}.`,
+          'RECORD_LOCKED',
+          409,
+          `A deal of ${line} or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is ${shown}. ${next}`,
+        );
+      }
+    }
+
     // Freeze closed opportunities — but guard ONLY genuine USER edits. A write
     // with no authenticated user (`ctx.user?.id` absent) is a system / seed /
     // backfill write and must pass: the seed's `close_date: daysAgo(15)`
@@ -301,10 +403,26 @@ const opportunityValidationHook: Hook = {
           // the record id — it matches none of them.
           const name = typeof previous.name === 'string' ? previous.name.trim() : '';
           const subject = name ? `Opportunity ${name}` : 'Opportunity';
+          // Two sentences, one per reader (#2338 item 12). The message is the
+          // diagnostic and keeps API names, including the attempted keys —
+          // nothing gets a turn after this throw, so it is the only place a
+          // log or an API caller learns which key tripped the freeze. The
+          // `userMessage` is what the console shows, and it names the stage
+          // and the fields by their labels: users were shown "closed
+          // (closed_won); only description, next_step, notes may be edited.
+          // Attempted: amount". A lowered body cannot read the object's
+          // metadata, so the labels are written out here;
+          // `test/refusal-labels.test.ts` reads them off `crm_opportunity` and
+          // fails when a label and this sentence part ways. `notes` has no
+          // label because the object has no such field.
+          const STAGE_LABELS: Record<string, string> = { closed_won: 'Closed Won', closed_lost: 'Closed Lost' };
+          const NARRATIVE_LABELS: Record<string, string> = { description: 'Description', next_step: 'Next Steps' };
+          const editable = [...NARRATIVE_FIELDS].map((k) => NARRATIVE_LABELS[k]).filter(Boolean).join(' and ');
           throw refuse(
             `${subject} is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
             'RECORD_LOCKED',
             409,
+            `${subject} is closed (${STAGE_LABELS[prevStage as string]}); only its ${editable} can still be edited.`,
           );
         }
       }
@@ -441,7 +559,7 @@ const opportunityWonHook: Hook = {
     // nowhere at all.
     //
     // ⛔ Except when the deal is PRIVATE. A deal flagged Private is visible only
-    // to its owner (`src/docs/crm_admin.md`), and that promise covers what the
+    // to its owner (`src/docs/crm_admin_access.md`), and that promise covers what the
     // app derives from it. Who may read THIS task is decided by `crm_task`'s own
     // grants and its owner, not by the deal's, so its title is written for every
     // reader of the task: a private deal's task reads

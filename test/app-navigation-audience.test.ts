@@ -59,7 +59,7 @@ const LEAVES: Rec[] = (() => {
   return walk(NAV);
 })();
 
-/** The six entries a rep no longer sees (#2244). Knowledge is not one of them. */
+/** The six entries a rep no longer sees (#2244). Knowledge was not one of them; it left with #2367 (its block below). */
 const SERVICE_ONLY = [
   'nav_service_dashboard', 'nav_case', 'nav_my_cases',
   'nav_report_cases_by_status', 'nav_report_sla', 'nav_report_cases_opened_by_day',
@@ -115,6 +115,12 @@ beforeAll(async () => {
     });
     who[key] = { ...person, positions, objects: await permissionsOf(person.token) };
   }
+  // Staffed by nobody in the demo, so signed up here the same way (#2338 item 1).
+  const marketer = await signUpPerson(verify, 'marketing_user@nav-audience.test', {
+    name: 'Nav marketing_user', positions: ['marketing_user'],
+    permissionSets: CrmPositions.find((c) => c.name === 'marketing_user')?.permissionSets ?? [],
+  });
+  who.marketing_user = { ...marketer, positions: ['marketing_user'], objects: await permissionsOf(marketer.token) };
   const token = await verify.signIn();
   const context = (await verify.contextFor(token)) as Rec;
   who.admin = {
@@ -154,10 +160,8 @@ describe('a sales rep is not shown the service entries (#2244)', () => {
     }
   });
 
-  it.each(REPS)('%s is shown none of the six, and still Knowledge', (rep) => {
-    const shown = shownTo(rep);
-    expect(shown.filter((id) => SERVICE_ONLY.includes(id))).toEqual([]);
-    expect(shown).toContain('nav_knowledge');
+  it.each(REPS)('%s is shown none of the six', (rep) => {
+    expect(shownTo(rep).filter((id) => SERVICE_ONLY.includes(id))).toEqual([]);
   });
 
   it.each(['sales_manager', 'service_agent', 'service_manager', 'admin'])(
@@ -168,10 +172,12 @@ describe('a sales rep is not shown the service entries (#2244)', () => {
     },
   );
 
-  it('the two reps are shown the same sidebar: the sales manager\'s, less Home and the six', () => {
+  it('the two reps are shown the same sidebar: the sales manager\'s, less Home and the six (and, since #2367, Knowledge moved into Sales)', () => {
     const manager = shownTo('sales_manager');
     for (const rep of REPS) {
-      expect(shownTo(rep), rep).toEqual(manager.filter((id) => id !== 'nav_home' && !SERVICE_ONLY.includes(id)));
+      expect(shownTo(rep).filter((id) => id !== 'nav_knowledge_published'), rep).toEqual(
+        manager.filter((id) => id !== 'nav_home' && id !== 'nav_knowledge' && !SERVICE_ONLY.includes(id)),
+      );
     }
   });
 });
@@ -249,10 +255,12 @@ describe('a service persona is not shown the opportunity dashboards and reports 
     expect(shownTo(persona).filter((id) => OPPORTUNITY_ONLY.includes(id))).toEqual([]);
   });
 
-  it.each(SERVICE)('%s is shown its old sidebar less the six, nothing else, and the object entries stay', (persona) => {
+  it.each(SERVICE)('%s is shown its old sidebar less the six, nothing else, and the other object entries stay', (persona) => {
     const shown = shownTo(persona);
     expect(shown).toEqual(shownTo(persona, BEFORE_2268).filter((id) => !OPPORTUNITY_ONLY.includes(id)));
-    expect(shown).toEqual(expect.arrayContaining(['nav_opportunity', 'nav_my_deals', 'nav_lead']));
+    // The object entries stayed with #2268. Two of them, Opportunities and My
+    // Deals, left with #2367 (its block below); the rest stay.
+    expect(shown).toEqual(expect.arrayContaining(['nav_lead', 'nav_account', 'nav_contact']));
   });
 
   it.each(SERVICE)('%s still lands on Service Overview', (persona) => {
@@ -263,6 +271,133 @@ describe('a service persona is not shown the opportunity dashboards and reports 
     const shown = shownTo(persona);
     expect(OPPORTUNITY_ONLY.filter((id) => !shown.includes(id))).toEqual([]);
     expect(shown).toEqual(shownTo(persona, BEFORE_2268));
+  });
+});
+
+/**
+ * Each persona's own work first (#2367, UX card 3, rows 1 and 6).
+ *
+ * Row 6: Opportunities and My Deals are not offered to the two service
+ * personas. They read opportunities through `crm_user` (#2231) and own none,
+ * so both lists were always empty for them; the entries now ask the position,
+ * as #2268 did for the opportunity dashboards and reports.
+ *
+ * Row 1: a rep's Service group held Knowledge alone, between Sales Home and
+ * Sales. Knowledge now asks the rep position too, so a rep is shown no entry
+ * of the group, and a group with no entry shown is not drawn (measured in the
+ * 18.2.0 console on the PR): the rep's sidebar runs Sales Home, then Sales.
+ * The rep's Knowledge is folded into Sales instead of dropped, as a Published
+ * entry only a rep is shown: the console's search box looks for records only
+ * in the objects of the entries shown, so without it a rep could no longer
+ * find an article.
+ *
+ * `BEFORE_2367` is the gates the three entries carried before (none), and
+ * the folded entry, which did not exist, as an entry nobody is shown.
+ */
+describe("each persona's own work first: service staff lose the empty deal lists, a rep the one-entry Service group (#2367)", () => {
+  const BEFORE_2367: Record<string, unknown> = {
+    nav_opportunity: undefined, nav_my_deals: undefined, nav_knowledge: undefined, nav_knowledge_published: P`false`,
+  };
+  const DEALS = ['nav_opportunity', 'nav_my_deals'];
+  const SERVICE = ['service_agent', 'service_manager'];
+  const OTHERS = ['sales_manager', 'admin', 'marketing_user'];
+  const ALL = [...PERSONAS, 'admin', 'marketing_user'];
+
+  /** The served groups, each with the ids of its entries. */
+  const GROUPS = NAV.filter((n) => n.type === 'group').map((g) => ({
+    id: g.id as string,
+    entries: ((g.children ?? []) as Rec[]).map((c) => c.id as string),
+  }));
+  /** The groups `persona` is shown at least one entry of. */
+  const groupsShownTo = (persona: string, before?: Record<string, unknown>): string[] => {
+    const shown = shownTo(persona, before);
+    return GROUPS.filter((g) => g.entries.some((id) => shown.includes(id))).map((g) => g.id);
+  };
+
+  it.each(SERVICE)('%s reads opportunities, and the gates before #2367 showed it both deal lists', (persona) => {
+    expect(who[persona]!.objects.crm_opportunity?.allowRead).toBe(true);
+    expect(DEALS.filter((id) => !shownTo(persona, BEFORE_2367).includes(id))).toEqual([]);
+  });
+
+  it.each(SERVICE)('%s is shown its old sidebar less the two deal lists, nothing else', (persona) => {
+    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2367).filter((id) => !DEALS.includes(id)));
+  });
+
+  it.each(REPS)('the gates before #2367 showed %s a Service group of Knowledge alone', (rep) => {
+    const before = shownTo(rep, BEFORE_2367);
+    const service = GROUPS.find((g) => g.id === 'group_service')!;
+    expect(service.entries.filter((id) => before.includes(id))).toEqual(['nav_knowledge']);
+  });
+
+  it.each(REPS)('%s is shown no Service group: Sales follows Sales Home, and ends with Knowledge', (rep) => {
+    expect(groupsShownTo(rep)).not.toContain('group_service');
+    expect(groupsShownTo(rep)[0]).toBe('group_sales');
+    expect(shownTo(rep).slice(0, 2)).toEqual(['nav_sales_home', 'nav_lead']);
+    const sales = GROUPS.find((g) => g.id === 'group_sales')!.entries.filter((id) => shownTo(rep).includes(id));
+    expect(sales.at(-1)).toBe('nav_knowledge_published');
+  });
+
+  it.each(REPS)('%s is shown its old sidebar with Knowledge moved, nothing else', (rep) => {
+    expect(shownTo(rep).filter((id) => id !== 'nav_knowledge_published')).toEqual(
+      shownTo(rep, BEFORE_2367).filter((id) => id !== 'nav_knowledge'),
+    );
+    expect(shownTo(rep).filter((id) => id.startsWith('nav_knowledge'))).toEqual(['nav_knowledge_published']);
+  });
+
+  it('the folded entry opens the published articles, on the object the Service group\'s entry opens', () => {
+    const folded = LEAVES.find((n) => n.id === 'nav_knowledge_published')!;
+    const plain = LEAVES.find((n) => n.id === 'nav_knowledge')!;
+    expect(folded).toMatchObject({ type: 'object', objectName: plain.objectName, viewName: 'published_articles' });
+  });
+
+  it.each(ALL)('%s is shown exactly one Knowledge entry', (persona) => {
+    expect(shownTo(persona).filter((id) => id.startsWith('nav_knowledge')), persona).toHaveLength(
+      who[persona]!.objects.crm_knowledge_article?.allowRead === true ? 1 : 0,
+    );
+  });
+
+  it.each(OTHERS)('%s is shown exactly the sidebar it was shown before', (persona) => {
+    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2367));
+  });
+
+  it.each(ALL)('%s lands where it landed before', (persona) => {
+    expect(shownTo(persona)[0]).toBe(shownTo(persona, BEFORE_2367)[0]);
+  });
+});
+
+/**
+ * Service Overview is offered only to a member who reads cases (#2338 item 1).
+ *
+ * The console prunes an object entry by read access, but not a dashboard
+ * entry. The marketing user reads no cases, so Cases and My Cases were already
+ * pruned from their sidebar, while Service Overview, gated on the rep position
+ * alone (`BEFORE_2338`), was offered and refused every tile (measured on
+ * 18.2.0). It now asks the read question the case reports ask.
+ */
+describe('a member who reads no cases is not offered Service Overview (#2338 item 1)', () => {
+  const BEFORE_2338: Record<string, unknown> = { nav_service_dashboard: P`!("sales_rep" in current_user.positions)` };
+  const OTHERS = [...PERSONAS, 'admin'];
+
+  it('the marketing user reads no cases and holds no sales_rep position', () => {
+    expect(who.marketing_user!.objects.crm_case?.allowRead === true).toBe(false);
+    expect(who.marketing_user!.positions).not.toContain('sales_rep');
+  });
+
+  it('the gate before #2338 offered them Service Overview, beside no Cases and no My Cases', () => {
+    const before = shownTo('marketing_user', BEFORE_2338);
+    expect(before).toContain('nav_service_dashboard');
+    expect(before).not.toContain('nav_case');
+    expect(before).not.toContain('nav_my_cases');
+  });
+
+  it('they are shown their old sidebar less Service Overview, nothing else', () => {
+    expect(shownTo('marketing_user')).toEqual(
+      shownTo('marketing_user', BEFORE_2338).filter((id) => id !== 'nav_service_dashboard'),
+    );
+  });
+
+  it.each(OTHERS)('%s is shown exactly the sidebar it was shown before', (persona) => {
+    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2338));
   });
 });
 
@@ -331,8 +466,12 @@ describe('a member with no HotCRM grant lands on the platform access page (#2250
     expect(NAMED_OBJECTS.filter((o) => who.no_grant!.objects[o]?.allowRead === true)).toEqual([]);
   });
 
-  it('the gates alone would open the app on Service Overview: the reported first screen', () => {
-    expect(shownTo('no_grant')[0]).toBe('nav_service_dashboard');
+  // Service Overview was the reported first screen. Since #2338 it asks for
+  // case read, so the gates alone now open the app further down, on the
+  // Approvals Inbox, which is still a HotCRM entry the platform page preempts.
+  it('the gates alone would open the app on a HotCRM entry: the Approvals Inbox since #2338', () => {
+    expect(shownTo('no_grant')).not.toContain('nav_service_dashboard');
+    expect(shownTo('no_grant')[0]).toBe('nav_approval_requests');
   });
 
   it('so the member lands on the platform access page, not on any HotCRM entry', () => {

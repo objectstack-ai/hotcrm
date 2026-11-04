@@ -27,6 +27,7 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | Customer requirements and product disposition | [requirements/README.md](requirements/README.md) |
 | Where object and field metadata is declared | [developers/api_reference.md](developers/api_reference.md) |
 | ObjectStack code examples | [developers/code_examples.md](developers/code_examples.md) |
+| How amounts, quantities, percentages and dates are shown, and which key carries each | [developers/number-formats.md](developers/number-formats.md) |
 
 ## Documentation Boundaries
 
@@ -48,7 +49,7 @@ hotcrm/
 ├── src/
 │   ├── sales/          # the `type: app` package (ADR-0130) — a directory under src/ IS a package
 │   ├── service/        # the service module — case, knowledge_article, article_feedback
-│   ├── revenue/        # the revenue module — product, opportunity_line_item, quote, quote_line_item, contract
+│   ├── revenue/        # the revenue module — product, opportunity_line_item, quote, quote_line_item
 │   ├── marketing/      # the marketing module — campaign, campaign_member
 │   └── docs/           # package docs (ADR-0046), read from this fixed path by the builder
 ├── content/docs/       # Product documentation site content

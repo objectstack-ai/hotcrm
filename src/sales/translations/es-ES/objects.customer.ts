@@ -42,9 +42,10 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       approval_status: {
         label: 'Estado de Aprobación',
-        help: 'En qué punto de su aprobación está esta cuenta. Una cuenta nueva comienza Pendiente y se decide en la bandeja de aprobaciones.',
+        help: 'En qué punto de su aprobación está esta cuenta. Una cuenta nueva comienza Pendiente y se decide en la bandeja de aprobaciones. Una cuenta creada por Convertir Prospecto no pasa por aprobación y queda vacía.',
         options: { pending: 'Pendiente', approved: 'Aprobada', rejected: 'Rechazada' },
       },
+      converted_from_lead_id: { label: 'Convertida desde Prospecto', help: 'El prospecto a partir del cual Convertir Prospecto creó esta cuenta. Solo lo escribe la conversión de prospectos.' },
       name: { label: 'Nombre de Cuenta', help: 'Nombre legal de la empresa u organización' },
       name_normalized: {
         label: 'Nombre de Cuenta (Normalizado)',
@@ -245,6 +246,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       send_email: {
         label: 'Enviar Correo',
+        description: 'Se envía a la dirección de correo de este contacto. Se pone en cola y luego se registra en la cronología del contacto.',
         params: {
           subject: { label: 'Asunto' },
           body: { label: 'Cuerpo' },
@@ -253,7 +255,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       },
       add_contact_to_campaign: {
         label: 'Añadir a Campaña',
-        successMessage: '¡Contactos añadidos a la campaña!',
+        successMessage: '{{ result.output.campaignName }}: {{ result.output.addedCount }} agregado(s), {{ result.output.alreadyCount }} ya era(n) miembro(s).',
         params: {
           campaignId: { label: 'Campaña' },
         },

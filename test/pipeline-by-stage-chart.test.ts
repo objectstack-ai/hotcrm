@@ -74,32 +74,32 @@ describe('the Pipeline by Stage tile', () => {
 });
 
 /**
- * The same remedy on a report: the chart of **Opportunity Funnel by Owner →
- * Stage** (#2073 item 10).
+ * The same remedy on a report: **Opportunity Funnel by Owner** (#2073 item 10),
+ * reshaped by #2370 row 4.
  *
- * Its chart sums amount by stage over every stage but Closed Lost, so Closed Won
- * is drawn too. Measured on 18.0.0-next.5, opened from its Reports entry on a
- * fresh boot: 139,500 / 174,000 / 173,000 / 237,000 / 1,294,000 / 1,290,000 from
- * Prospecting to Closed Won. As a funnel it pinched and flared (trapezoids 139 /
- * 139 / 189 / 1034 / 1034 / 1031 px wide), and the Negotiation label was not
- * drawn. As horizontal bars, all six stages are drawn top to bottom in the stage
- * field's option order, each with its whole name, in en-US and zh-CN alike.
- *
- * The report keeps its label and description: "funnel" there is the sales word
- * for the stage-by-stage pipeline, not the chart's shape.
+ * #2073 item 10 made its chart horizontal bars, because as a funnel the
+ * amounts by stage pinched and flared and the Negotiation label was not drawn
+ * (measured on 18.0.0-next.5). #2370 then made the report answer its own
+ * question: a matrix with each rep once down the side and the stages across
+ * (the row Total is the rep's subtotal), and one bar per rep on the chart.
+ * Measured on 18.2.0 from its Reports entry: three rep rows (Marta Quinn,
+ * Nina Reyes, Emil Roth), six stage columns from Prospecting to Closed Won in
+ * the stage field's option order, a Total column and a Total row
+ * (3,307,500), and three rep names drawn whole beside their bars.
  */
-describe('the Opportunity Funnel by Owner → Stage report', () => {
+describe('the Opportunity Funnel by Owner report', () => {
   const reports: AnyRec[] = (stack as any).reports ?? [];
   const report = reports.find((r) => r.name === 'opportunity_funnel_owner_stage');
 
-  it('charts amount by stage as a horizontal bar chart', () => {
+  it('is a rep × stage matrix of amount, charted as one horizontal bar per rep', () => {
     expect(report, 'no opportunity_funnel_owner_stage report registered').toBeTruthy();
-    expect(report!.chart).toMatchObject({ type: 'horizontal-bar', xAxis: 'stage', yAxis: 'total_amount' });
+    expect(report!).toMatchObject({ type: 'matrix', rows: ['owner'], columns: ['stage'], values: ['total_amount'] });
+    expect(report!.chart).toMatchObject({ type: 'horizontal-bar', xAxis: 'owner', yAxis: 'total_amount' });
     expect(report!.dataset).toBe('opportunity_metrics');
     expect(report!.runtimeFilter).toEqual({ stage: { $ne: 'closed_lost' } });
   });
 
-  it('declares no order, the state the stage-order bars were measured in', () => {
+  it('declares no order, the state the stage-order columns were measured in', () => {
     expect(report!.order).toBeUndefined();
   });
 });

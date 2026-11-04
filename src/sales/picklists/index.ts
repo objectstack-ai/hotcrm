@@ -11,7 +11,10 @@
  * under `picklists.<name>` in each locale pack.
  *
  * A list lives in the lowest package all its fields depend on, which for these
- * four is sales: every field that references them is a sales object's. A list
+ * five is sales. Four are referenced by sales objects only; `payment_terms` is
+ * referenced by `crm_contract.payment_terms` here and by the revenue module's
+ * `crm_quote.payment_terms`, a reference along the module's edge into this
+ * package (`module-split-plan.md` item 11). A list
  * only ONE field offers is not a picklist at all — it stays inline on that
  * field, where the reader of the object finds it.
  *
@@ -25,5 +28,6 @@
 
 export { IndustryPicklist } from './industry.picklist';
 export { LeadSourcePicklist } from './lead_source.picklist';
+export { PaymentTermsPicklist } from './payment_terms.picklist';
 export { RelatedToTypePicklist } from './related_to_type.picklist';
 export { SalutationPicklist } from './salutation.picklist';

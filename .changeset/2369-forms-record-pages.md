@@ -1,0 +1,8 @@
+---
+"hotcrm": patch
+---
+
+Clause-②: no
+Metadata-protocol: none
+
+**Forms and record pages are laid out for the work done on them (#2369).** **New Contact** asks for Email and Phone on its first tab, beside the required names, so a bad email is flagged where you are typing. **New Lead** puts Salutation, First Name and Last Name on one row, and **Lead Score** says that a blank score is filled in for you. The **Send Email** dialog says where the email goes. The record headers of accounts, quotes, products, campaigns and knowledge articles show what the title does not: tier, health and revenue on an account; account, deal, status, total and expiry on a quote; type, status, start date and budget on a campaign; and List Price on a product, which the product picker on a line item now shows too. The related lists that used to borrow those headers keep their columns. A staff-created case can now set **Case Type**. A case on track no longer shows a red "× No" for SLA Violated; a breached case shows a red **SLA breached** banner (「已违反 SLA」) instead. A knowledge article opens on its body and shows its Helpful and Not Helpful counts in the header, and after a vote the message says whether it was recorded, changed or already your verdict, with the current counts. **Log a Call**, **Log a Meeting** and **Schedule a Meeting** say that the contact or lead you start from is added for you. The Related tabs of opportunities and cases open their Quotes, Products and Open Tasks panels. New and changed text is in English, Chinese, Spanish and Japanese, and the Sales, Service and Knowledge manual pages describe the new behaviour.

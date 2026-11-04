@@ -99,6 +99,9 @@ export const marketing: Record<string, ObjectTranslationData> = {
       lead_or_contact_required: {
         message: 'キャンペーンメンバーはリードまたは取引先責任者のいずれかを参照する必要があります',
       },
+      lead_and_contact_exclusive: {
+        message: 'キャンペーンメンバーはリードまたは取引先責任者のどちらか一方のみを参照できます。両方は参照できません',
+      },
     },
     label: 'キャンペーンメンバー',
     pluralLabel: 'キャンペーンメンバー',

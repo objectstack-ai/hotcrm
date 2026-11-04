@@ -64,12 +64,6 @@ import {
   createHotCrmMarketingStack, marketingHooks, marketingFlows, marketingSharingRules,
 } from './src/marketing/index.js';
 
-// The module items the app package still registers — see
-// `appRegisteredModuleItems` below.
-import { QuoteGenerationFlow } from './src/revenue/flows/index.js';
-import { ProductDataset } from './src/revenue/datasets/index.js';
-import { CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow } from './src/marketing/flows/index.js';
-
 import * as salesObjects from './src/sales/objects/index.js';
 
 import * as salesPicklists from './src/sales/picklists/index.js';
@@ -93,12 +87,15 @@ import * as salesPages from './src/sales/pages/index.js';
 
 import * as salesEmailTemplates from './src/sales/email-templates/index.js';
 
+import * as salesBooks from './src/sales/books/index.js';
+import { CrmAdminManual } from './src/sales/books/index.js';
+
 import { SystemAdminProfile } from './src/sales/profiles/index.js';
 import { TenantAdminProfile } from './src/sales/profiles/tenant-admin.profile.js';
 
 // Hooks — the sales barrel, assembled below in source-file-name order.
 import {
-  accountHook, contactHook, eventHook, forecastHook, leadHook,
+  accountHook, contactHook, contractHook, eventHook, forecastHook, leadHook,
   leadCampaignMetricsHook, opportunityHook, opportunityCampaignMetricsHook, taskHook,
 } from './src/sales/objects/hooks.js';
 
@@ -111,6 +108,8 @@ import {
   OpportunityStatusChangeApprovalFlow, OpportunityQualificationApprovalFlow,
   OpportunityStagnationFlow, OpportunityWonAlertFlow, ScheduleFollowUpFlow,
   TaskDueReminderFlow, TaskUrgentAlertFlow, BillingHandoffClosedWonFlow,
+  ContractRenewalFlow, ContractExpirationFlow, BillingHandoffContractActivatedFlow,
+  ContractDraftedNoticeFlow,
 } from './src/sales/flows/index.js';
 
 // Skills — likewise.
@@ -134,8 +133,11 @@ import {
   resolveComposition,
   accounts, contacts, leads, opportunities,
   tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers, forecasts,
+  contracts,
 } from './src/sales/data/index.js';
-import { products, opportunityLineItems, contracts, quotes, quoteLineItems } from './src/revenue/data/index.js';
+import {
+  products, priceBooks, priceBookEntries, opportunityLineItems, quotes, quoteLineItems,
+} from './src/revenue/data/index.js';
 import { cases, knowledgeArticles } from './src/service/data/index.js';
 import { campaigns, campaignMembersFromLeads, campaignMembersFromContacts } from './src/marketing/data/index.js';
 
@@ -168,38 +170,6 @@ const byExportName = <T>(merged: Record<string, T>): T[] =>
 /* ─── The app package's collections ──────────────────────────────────────── */
 
 /**
- * The module items the APP package registers, although their files live in a
- * module directory — the one place this artifact departs from the assignment
- * rule, and on purpose.
- *
- * Each is named by an app-package item, and the platform judges that reference
- * one package at a time, so it refuses the reference when the target ships in
- * another package of the same artifact (objectstack#25514):
- *
- *  - `quote_generation` (revenue) — launched by `generate_quote` on
- *    `crm_opportunity`; `campaign_lead_member_enroll` and
- *    `campaign_contact_member_enroll` (marketing) — launched by
- *    `create_campaign` on `crm_lead` and `add_contact_to_campaign` on
- *    `crm_contact`. `defineStack` checks a `type: 'flow'` action's target
- *    against its own stack's `flows` only.
- *  - `product_metrics` (revenue, on `crm_product`) — bound by the CRM Overview
- *    dashboard's Top Products tile; `os validate` / `os build` run
- *    `widget-dataset-unknown` on each package body alone.
- *
- * Maintainer ruling 2026-10-24 on #2270, option 1, verbatim 「1」: package
- * revenue and marketing now, keep these four in the app package, and move them
- * back to their modules once a PUBLISHED platform release carries #25514 —
- * a registration move, no file moves. `test/package-ownership.test.ts` names
- * the same four in its assignment-rule roster (AGENTS.md rule 11), so
- * the deviation is written down twice. ⛔ Do not grow this list: a new
- * cross-package refusal stops the card it is found on.
- */
-export const appRegisteredModuleItems = {
-  flows: [QuoteGenerationFlow, CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow],
-  datasets: [ProductDataset],
-};
-
-/**
  * Every CRM lifecycle hook the APP PACKAGE registers, in the order
  * `src/hooks/index.ts` registered them (by hook source file name) — see the
  * ORDER note at the top of this file.
@@ -216,6 +186,7 @@ export const appHooks = [
   opportunityCampaignMetricsHook,
   leadCampaignMetricsHook,
   contactHook,
+  contractHook,
   eventHook,
   forecastHook,
   leadHook,
@@ -246,7 +217,14 @@ export const appFlows = [
   TaskUrgentAlertFlow,
   TaskDueReminderFlow,
   BillingHandoffClosedWonFlow,
-  ...appRegisteredModuleItems.flows,
+  // The contract's three flows, which moved here with `crm_contract`
+  // (`module-split-plan.md` item 11), in the order the revenue package
+  // registered them.
+  ContractRenewalFlow,
+  ContractExpirationFlow,
+  BillingHandoffContractActivatedFlow,
+  // Tells whoever accepted a quote that it drafted this contract (#2371 row 6).
+  ContractDraftedNoticeFlow,
 ];
 
 /**
@@ -267,8 +245,9 @@ export const appObjects = byExportName({ ...salesObjects });
 /**
  * Every shared option list (`*.picklist.ts`) it registers — the lists a select
  * field references by name with `Field.select({ picklist })` instead of copying
- * options. Each list registers with the package whose fields reference it:
- * these with sales, `payment_terms` with revenue (`src/revenue/index.ts`). A
+ * options. Each list registers with the lowest package all its fields depend
+ * on, which for every list today is sales — `payment_terms` included, whose
+ * `crm_quote` field reaches it along the revenue module's edge. A
  * field naming a list registered by nothing is refused by `pnpm validate` and
  * fails the boot, so this line is load-bearing.
  */
@@ -280,11 +259,8 @@ export const appActions = byExportName({ ...salesActions });
 /** Its dashboards — the cross-domain ones included (plan item 4). */
 export const appDashboards = byExportName({ ...salesDashboards });
 
-/**
- * Its analytics datasets (ADR-0021) — `product_metrics` among them for now
- * (see {@link appRegisteredModuleItems}).
- */
-export const appDatasets = [...byExportName({ ...salesDatasets }), ...appRegisteredModuleItems.datasets];
+/** Its analytics datasets (ADR-0021). */
+export const appDatasets = byExportName({ ...salesDatasets });
 
 /** Its reports. */
 export const appReports = byExportName({ ...salesReports });
@@ -300,6 +276,15 @@ export const appMappings = byExportName({ ...mappings });
 
 /** The app itself, and its navigation GROUPS (the containers modules aim at). */
 export const appApps = byExportName({ ...apps });
+
+/**
+ * Its doc books (ADR-0046 §6, #2327): the User Manual and the Admin Manual,
+ * over `src/docs/*.md` and the service module's `src/service/docs/*.md`. The
+ * revenue module registers its own manual. Under the SaaS composition the
+ * Admin Manual's audience follows the admin set swap below
+ * ({@link compositionBooks}).
+ */
+export const appBooks = byExportName({ ...salesBooks });
 
 /** The locale packs — whole in the app package (plan item 4), service labels included. */
 export const appTranslations = byExportName({ ...translations });
@@ -422,6 +407,9 @@ export const CrmSeedData = [
   leads,
   opportunities,
   products,
+  // The standard price book prices the catalogue, so it follows it.
+  priceBooks,
+  priceBookEntries,
   opportunityLineItems,
   tasks,
   cases,
@@ -488,9 +476,9 @@ export const SaasTenantSeedData = [products];
  */
 export const ServiceSeedData = CrmSeedData.filter((family) => [cases, knowledgeArticles].includes(family));
 
-/** The REVENUE package's families — the catalogue, line items, contracts and quotes. */
+/** The REVENUE package's families — the catalogue, its standard price book, line items and quotes. */
 export const RevenueSeedData = CrmSeedData.filter((family) =>
-  [products, opportunityLineItems, contracts, quotes, quoteLineItems].includes(family));
+  [products, priceBooks, priceBookEntries, opportunityLineItems, quotes, quoteLineItems].includes(family));
 
 /** The MARKETING package's families — the campaigns and their members. */
 export const MarketingSeedData = CrmSeedData.filter((family) =>
@@ -533,7 +521,7 @@ export const seedDataFor = (composition: HotCrmComposition): PackageSeedData =>
 // but it has no per-family or per-tenant selection and none is chartered — so
 // WHAT gets replayed is decided once, here, for every tenant alike.
 //
-// Two things change, and nothing else. There is no runtime branch anywhere in
+// Three things change, and nothing else. There is no runtime branch anywhere in
 // `src/`, and no enterprise package is imported: an artifact built either way
 // runs on the community runtime. Both shapes register the same flows: the one
 // flow the SaaS shape used to drop, the `demo_bootstrap` ownership sweep, is
@@ -548,6 +536,10 @@ export const seedDataFor = (composition: HotCrmComposition): PackageSeedData =>
 //     org-scoped `manage_org_users` instead of platform-scope `manage_users`.
 //     Read `src/sales/profiles/tenant-admin.profile.ts` for the full audit, including
 //     what `view_all_data` / `modify_all_data` mean under the wall.
+//  3. `books` — the Admin Manual's audience follows (2): it names `tenant_admin`.
+//     A book gated on a set the install does not register is readable by
+//     nobody, the administrator included (measured on 18.2.0, #2327), so the
+//     audience moves with the set or the manual goes dark.
 const composition = resolveComposition();
 const isSaas = composition === 'saas';
 const seedData = seedDataFor(composition);
@@ -559,6 +551,16 @@ const seedData = seedDataFor(composition);
 const compositionPermissions = isSaas
   ? [...Object.values(allProfiles).filter((set) => set !== SystemAdminProfile), TenantAdminProfile]
   : Object.values(allProfiles);
+
+/**
+ * Doc books this composition registers: the Admin Manual is gated on the
+ * administrator's set, so its audience is swapped exactly where the set is.
+ * Matched by IDENTITY, as the sets are above.
+ */
+const compositionBooks = isSaas
+  ? appBooks.map((book) =>
+      book === CrmAdminManual ? { ...book, audience: { permissionSet: TenantAdminProfile.name } } : book)
+  : appBooks;
 
 /* ─── The four package stacks `objectstack.config.ts` composes ──────────── */
 
@@ -576,8 +578,9 @@ export const moduleStacks = [serviceStack, revenueStack, marketingStack];
 
 /**
  * `app.objectstack.hotcrm` — see `src/sales/index.ts`, including why it is
- * handed `artifactObjects`: its permission sets stay whole here and grant on
- * every module's objects too.
+ * handed `artifactObjects` (its permission sets stay whole here and grant on
+ * every module's objects too) and `artifactFlows` (three of its actions launch
+ * a module's flow).
  */
 export const appStack = createHotCrmAppStack(
   {
@@ -600,6 +603,8 @@ export const appStack = createHotCrmAppStack(
     skills: appSkills,
     permissions: compositionPermissions,
     apps: appApps,
+    // The User Manual and the Admin Manual, opened from *Help* (#2327).
+    books: compositionBooks,
     views: appViews,
     pages: appPages,
     // Approvals are modeled as `record_change` flows with `approval` nodes
@@ -628,7 +633,10 @@ export const appStack = createHotCrmAppStack(
     // business-unit tree, which this app does not model).
     positions: CrmPositions,
   },
-  { artifactObjects: moduleStacks.flatMap((stack) => (stack.objects ?? []).map((object) => object.name)) },
+  {
+    artifactObjects: moduleStacks.flatMap((stack) => (stack.objects ?? []).map((object) => object.name)),
+    artifactFlows: moduleStacks.flatMap((stack) => (stack.flows ?? []).map((flow) => flow.name)),
+  },
 );
 
 /** All four package stacks, the app last — what `objectstack.config.ts` composes. */

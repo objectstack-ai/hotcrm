@@ -178,6 +178,11 @@ export const SalesHomePage: Page = {
             // date picker or a fixed window and show smaller numbers (#2291).
             // Open Leads is a current-state count on every page and needs no
             // window.
+            //
+            // The two amounts carry `format: '0,0'`, the dashboards' KPI face
+            // (#2370 row 7): whole units, with the tenant currency the console
+            // adds. Without it they read "1,220,000.00" beside the dashboards'
+            // "1,220,000" (docs/developers/number-formats.md).
             children: [
               {
                 type: 'object-metric',
@@ -187,6 +192,7 @@ export const SalesHomePage: Page = {
                   label: 'Total Revenue (All Time)',
                   icon: 'dollar-sign',
                   aggregate: { field: 'amount', function: 'sum' },
+                  format: '0,0',
                   filter: [{ field: 'stage', operator: 'equals', value: 'closed_won' }],
                 },
               },
@@ -209,6 +215,7 @@ export const SalesHomePage: Page = {
                   label: 'Open Pipeline (All Time)',
                   icon: 'briefcase',
                   aggregate: { field: 'amount', function: 'sum' },
+                  format: '0,0',
                   filter: [{ field: 'stage', operator: 'not_in', value: ['closed_won', 'closed_lost'] }],
                 },
               },
@@ -290,46 +297,14 @@ export const SalesHomePage: Page = {
       name: 'aside',
       width: 'medium',
       components: [
-        {
-          type: 'page:card',
-          id: 'ai_briefing',
-          // The assistant is the PLATFORM's (`ask`), not an app-owned persona:
-          // HotCRM contributes skills, the agent lives in the cloud side
-          // (maintainer ruling on #612, 2026-08-04). The retired `sales_copilot`
-          // agent (#512, ADR-0063 §2) must not be named in live UI copy — and
-          // the entry point is the assistant panel the platform opens from the
-          // right edge of every page, which is the wording
-          // `content/docs/ai-copilot/index.mdx` landed in #611/PR #1001.
-          label: 'Today with the AI Assistant',
-          properties: {
-            title: 'Ask the AI Assistant',
-            bordered: true,
-            // The paragraph is an `element:text` child (#1581). It used to be
-            // `properties.description`, which `page:card` does not declare, so
-            // the card rendered as a title over nothing. `content` is not on
-            // the locale pack's page-component face, so the four languages
-            // live here as an inline locale map, the spec's route for page
-            // prose. The #1002 persona guard in
-            // `test/metadata-references.test.ts` reads this child.
-            children: [
-              {
-                type: 'element:text',
-                id: 'ai_briefing_text',
-                properties: {
-                  content: {
-                    en: 'Open the assistant panel from the right edge of the page and ask "what should I focus on today?" — it sees your live pipeline, schema, and accounts.',
-                    'zh-CN':
-                      '从页面右侧打开助手面板，询问"我今天应该关注什么？"——它可以实时查看您的销售管道、架构与客户信息。',
-                    'es-ES':
-                      'Abra el panel del asistente desde el borde derecho de la página y pregunte "¿en qué debería concentrarme hoy?" — ve su flujo de ventas, esquema y cuentas en tiempo real.',
-                    'ja-JP':
-                      'ページ右端からアシスタントパネルを開き、「今日は何に集中すべきか？」と尋ねてください — リアルタイムのパイプライン、スキーマ、取引先情報を把握しています。',
-                  },
-                },
-              },
-            ],
-          },
-        },
+        // No AI card (#2338 item 5). `ai_briefing` told every user to "open the
+        // assistant panel from the right edge of the page", and an install
+        // without the platform's assistant has no such panel (measured on
+        // 18.2.0: `GET /api/v1/ai/agents` answers `[]`), so the card sent
+        // people looking for a control that was not there. A page component
+        // cannot be shown only where the `ai` capability is present, so the
+        // card is dropped rather than reworded; the assistant documents
+        // itself where it exists (`content/docs/ai-copilot/`).
         {
           type: 'page:card',
           id: 'upcoming_events',

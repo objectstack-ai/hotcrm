@@ -100,6 +100,9 @@ export const marketing: Record<string, ObjectTranslationData> = {
       lead_or_contact_required: {
         message: 'Un miembro de campaña debe referenciar un prospecto o un contacto',
       },
+      lead_and_contact_exclusive: {
+        message: 'Un miembro de campaña referencia un prospecto o un contacto, no ambos',
+      },
     },
     label: 'Miembro de Campaña',
     pluralLabel: 'Miembros de Campaña',

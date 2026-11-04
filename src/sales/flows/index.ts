@@ -33,3 +33,7 @@ export { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';
 export { TaskUrgentAlertFlow } from './task-urgent-alert.flow';
 export { TaskDueReminderFlow } from './task-due-reminder.flow';
 export { BillingHandoffClosedWonFlow } from './billing-handoff-closed-won.flow';
+export { ContractRenewalFlow } from './contract-renewal.flow';
+export { ContractExpirationFlow } from './contract-expiration.flow';
+export { BillingHandoffContractActivatedFlow } from './billing-handoff-contract-activated.flow';
+export { ContractDraftedNoticeFlow } from './contract-drafted-notice.flow';

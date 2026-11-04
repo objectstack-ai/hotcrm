@@ -101,7 +101,7 @@ const campaignLeadConversionRefresh: Hook = {
     for (const id of campaignIds) {
       // ── recompute ── identical in all four refresh hooks; see the header.
       const memberRows = await api.object('crm_campaign_member').find({
-        where: { crm_campaign: id }, fields: ['crm_lead', 'status'], top: 5000,
+        where: { crm_campaign: id }, fields: ['crm_lead', 'has_responded'], top: 5000,
       });
       const leadIds = Array.from(new Set(
         memberRows.map((r) => (typeof r.crm_lead === 'string' ? r.crm_lead : '')).filter(Boolean),
@@ -120,7 +120,7 @@ const campaignLeadConversionRefresh: Hook = {
       await api.object('crm_campaign').update({
         id,
         num_sent: memberRows.length,
-        num_responses: memberRows.filter((r) => r.status === 'responded' || r.status === 'converted').length,
+        num_responses: memberRows.filter((r) => r.has_responded === true).length,
         num_leads: leadIds.length,
         num_converted_leads: convertedLeads,
         num_opportunities: numOpportunities,

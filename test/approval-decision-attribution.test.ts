@@ -2,9 +2,8 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
-import artifact from '../objectstack.config';
 import {
-  hotcrmStack, buildArtifactAgain, bootOptions, signUpPerson, systemUpdate, flowRuns, type Person,
+  hotcrmStack, buildArtifactAgain, armedLeadGate, bootOptions, signUpPerson, systemUpdate, flowRuns, type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -148,33 +147,6 @@ describe('opportunity_qualification_approval: an approval is the approver\'s', (
     expect(after.updated_by, 'a post-decision write re-stamped the submitter').toBe(manager.id);
   });
 });
-
-/**
- * The lead gate ships OFF (REQ-0005), so it is measured on an install that has
- * armed it, the one way an install does: `crm_lead.conversion_approval_status`
- * defaults to `pending`. A second boot, from a fresh build of the app's
- * configuration (`buildArtifactAgain`), because one configuration object holds
- * one live kernel.
- */
-const armedLeadGate = (base: typeof artifact): typeof artifact => {
-  const a = base as unknown as Rec;
-  return {
-    ...a,
-    packages: (a.packages as Rec[]).map((p) => ({
-      ...p,
-      manifest: {
-        ...p.manifest,
-        objects: ((p.manifest.objects ?? []) as Rec[]).map((o) => (o.name !== 'crm_lead' ? o : {
-          ...o,
-          fields: {
-            ...o.fields,
-            conversion_approval_status: { ...o.fields.conversion_approval_status, defaultValue: 'pending' },
-          },
-        })),
-      },
-    })),
-  } as typeof artifact;
-};
 
 describe('lead_conversion_approval (gate armed): both decisions are the approver\'s', () => {
   let armed: VerifyStack;
