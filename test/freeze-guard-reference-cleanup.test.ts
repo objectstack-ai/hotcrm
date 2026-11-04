@@ -615,13 +615,13 @@ describe('an ordinary user edit to a settled record is still refused', () => {
     // a real engine, so the number is the one the autonumber sequence issued
     // (#1243). Matching it loosely keeps the assertion about the SHAPE rather
     // than about which position this quote took in the sequence.
-    expect(err!.message).toMatch(new RegExp(`Quote QTE-\\d+ - QR-${n} is accepted`));
+    expect(err!.message).toMatch(new RegExp(`Quote QR-${n} is accepted`));
     expect(err!.message).not.toContain(quote.id);
     expect(err!.message).toContain('only internal_notes may be edited');
     expect(err!.message).toContain('Attempted: crm_opportunity');
     // What the console shows: the same refusal in labels (#2338 item 12).
     expect((err as Error & { userMessage?: string }).userMessage).toMatch(
-      new RegExp(`^Quote QTE-\\d+ - QR-${n} is Accepted; only its Internal Notes can still be edited\\.$`),
+      new RegExp(`^Quote QR-${n} is Accepted; only its Internal Notes can still be edited\\.$`),
     );
   });
 });
@@ -738,7 +738,7 @@ const GUARDS: GuardCase[] = [
     // drops a rep's value before the freeze could see it.
     businessField: 'tax',
     businessValue: 1,
-    refusal: /Quote QTE-\d+ - Q-1001-\d+ is accepted; only internal_notes may be edited/,
+    refusal: /Quote Q-1001-\d+ is accepted; only internal_notes may be edited/,
   },
   {
     label: 'lead_automation',

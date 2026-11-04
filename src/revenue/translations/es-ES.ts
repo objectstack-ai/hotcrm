@@ -27,7 +27,6 @@ export const esES: TranslationData = {
       description: 'Productos y servicios que ofrece la empresa',
       fields: {
         product_code: { label: 'Código de Producto' },
-        display_title: { label: 'Título Mostrado' },
         name: { label: 'Nombre de Producto' },
         description: { label: 'Descripción' },
         category: {
@@ -126,7 +125,6 @@ export const esES: TranslationData = {
       description: 'Cotizaciones de precios para clientes',
       fields: {
         quote_number: { label: 'Número de Cotización' },
-        display_title: { label: 'Título Mostrado' },
         name: { label: 'Nombre de Cotización' },
         crm_account: { label: 'Cuenta' },
         crm_contact: {
@@ -176,15 +174,15 @@ export const esES: TranslationData = {
         addresses_and_notes: { label: 'Direcciones y Notas' },
       },
       _actions: {
-        submit_quote_for_review: { label: 'Enviar a Revisión', successMessage: 'Cotización {{ record.display_title }} enviada a revisión.' },
-        mark_quote_presented: { label: 'Marcar como Presentada', successMessage: 'Cotización {{ record.display_title }} marcada como presentada.' },
+        submit_quote_for_review: { label: 'Enviar a Revisión', successMessage: 'Cotización {{ record.name }} enviada a revisión.' },
+        mark_quote_presented: { label: 'Marcar como Presentada', successMessage: 'Cotización {{ record.name }} marcada como presentada.' },
         accept_quote: {
           label: 'Aceptar',
           confirmText: '¿Aceptar esta cotización? Queda congelada, su oportunidad se cierra como ganada y se redacta un contrato.',
-          successMessage: 'Cotización {{ record.display_title }} aceptada.',
+          successMessage: 'Cotización {{ record.name }} aceptada.',
         },
-        reject_quote: { label: 'Rechazar', successMessage: 'Cotización {{ record.display_title }} rechazada. Revísela para hacer una nueva oferta.' },
-        revise_quote: { label: 'Revisar', successMessage: 'La cotización {{ record.display_title }} vuelve a Borrador.' },
+        reject_quote: { label: 'Rechazar', successMessage: 'Cotización {{ record.name }} rechazada. Revísela para hacer una nueva oferta.' },
+        revise_quote: { label: 'Revisar', successMessage: 'La cotización {{ record.name }} vuelve a Borrador.' },
       },
     },
     crm_opportunity_line_item: {

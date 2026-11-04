@@ -254,7 +254,7 @@ describe('refusals a user reads name the record they are about', () => {
     const err = await refusalFrom(
       () => update('crm_quote', { id: quote.id, expiration_date: '2031-01-31' }, manager), 'quote_workflow',
     );
-    expect(err.message).toContain(`Quote ${quote.quote_number} - Skyline Media Renewal is accepted`);
+    expect(err.message).toContain('Quote Skyline Media Renewal is accepted');
     expect(err.message).not.toContain(quote.id);
   });
 

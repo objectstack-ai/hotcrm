@@ -200,9 +200,9 @@ export const AccountViews = defineView({
      * object's `Field.location(...)`, which is the one field on `crm_account`
      * carrying coordinates; `billing_address` is an `address` field and is a
      * postal shape, not a coordinate one, so it stays a column rather than the
-     * binding. `titleField` names the marker label — `name`, not the object's
-     * `nameField` (`display_title`), because the map's own `columns` show
-     * `name` and the two should agree.
+     * binding. `titleField` names the marker label — `name`, which is also the
+     * object's `nameField` (#2369 row 10) and what the map's own `columns`
+     * show.
      */
     account_map: {
       name: 'account_map',

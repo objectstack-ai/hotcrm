@@ -110,13 +110,14 @@ const quoteValidation: Hook = {
         : Object.keys(input).some((k) => !['id', 'updated_at', 'updated_by', 'line_number', 'product_title'].includes(k) && input[k] !== previous?.[k]);
       for (const id of new Set([input.crm_quote, previous?.crm_quote])) {
         const q = changed && ctx.user?.id && typeof id === 'string' && id
-          ? await (ctx.api as HookApi | undefined)?.object('crm_quote').findOne({ where: { id }, fields: ['quote_number', 'name', 'status'] })
+          ? await (ctx.api as HookApi | undefined)?.object('crm_quote').findOne({ where: { id }, fields: ['name', 'status'] })
           : null;
         if (q?.status === 'accepted' || q?.status === 'rejected' || q?.status === 'expired') {
           // Two sentences, one per reader (#2338 item 16), as the quote's own
           // freeze below and the closed deal's line freeze (item 15) do. A
-          // rejected quote's lines are revised once it is back at Draft.
-          const what = `Quote ${String(q.quote_number)} - ${String(q.name)} is`;
+          // rejected quote's lines are revised once it is back at Draft. The
+          // quote is named as its title names it, by its name (#2369 row 10).
+          const what = `Quote ${String(q.name)} is`;
           const rest = 'so its line items can no longer be added, changed or removed.';
           const revise = q.status === 'rejected' ? ' Revise it back to Draft to change them.' : '';
           throw refuse(
@@ -156,15 +157,11 @@ const quoteValidation: Hook = {
       );
     }
 
-    // The quote as every quote surface titles it. `crm_quote.display_title` is
-    // `quote_number - name`; compose the same pair from the two stored columns
-    // rather than appending the record id. The title is stored since #2230,
-    // but a row stored before its backfill holds none, and both of its sources
-    // are already on the pre-image — the number is an engine-issued
-    // autonumber, so it is read from `previous` only. Both refusals below name
-    // the quote with it.
+    // The quote as every quote surface titles it: its name alone
+    // (`crm_quote.nameField`, #2369 row 10), never the record id. Both
+    // refusals below name the quote with it.
     function subject(): string {
-      const label = [previous?.quote_number, previous?.name].map((v) => (typeof v === 'string' ? v.trim() : '')).filter(Boolean).join(' - ');
+      const label = typeof previous?.name === 'string' ? previous.name.trim() : '';
       return label ? `Quote ${label}` : 'Quote';
     }
 
@@ -180,18 +177,12 @@ const quoteValidation: Hook = {
     if (event === 'beforeUpdate' && previous && ctx.user?.id) {
       const frozen = previous.status === 'accepted' || previous.status === 'rejected' || previous.status === 'expired';
       if (frozen) {
-        // `display_title` is the engine's, not the user's (#2230): the stored
-        // title's expression is computed before this hook, so a write carries it
-        // whenever the stored value differs from the computed one. That is only
-        // ever a row stored before the title was (the backfill's re-save of an
-        // unchanged `name`), because its inputs are frozen below.
-        //
         // A REJECTED quote also takes its `status` (#2366 row 2): it is not
         // terminal — the rep revises it by moving it back to Draft, and that
         // move is the one way out. Which moves are legal stays the state
         // machine's (`quote_status_progression`); this freeze judges only that
         // nothing else changes on the same write.
-        const allowed = new Set(['internal_notes', 'display_title', ...(previous.status === 'rejected' ? ['status'] : [])]);
+        const allowed = new Set(['internal_notes', ...(previous.status === 'rejected' ? ['status'] : [])]);
         // Framework-managed columns (ownership, audit timestamps) are re-stamped
         // by the 9.x runtime — never treat those system writes as edits to a
         // frozen quote, only user changes to business fields.
@@ -575,14 +566,15 @@ const quoteAcceptedContractDraft: Hook = {
 
     // The contract's ONE field explaining where it came from. ⛔ Never a record
     // id: `Auto-drafted from accepted quote MvNopWgEDZwm2T5L` names a string no
-    // surface in this app ever shows, on a quote every screen calls `QTE-0006`.
-    // Name it the way `crm_quote.display_title` does. Unlike the task sites in
-    // this class there is no relationship field to hold the id afterwards —
-    // `crm_contract` links account, contact and opportunity but not the quote —
-    // so this sentence is the whole provenance record and had better be
-    // readable. `quote_number` is an engine-issued autonumber and never appears
-    // on an update payload, so it is read from the pre-image alone; `name` can
-    // be changing in this very write.
+    // surface in this app ever shows. Name it by number and name, though the
+    // quote's title is its name alone (#2369 row 10): quote names may repeat,
+    // and unlike the task sites in this class there is no relationship field
+    // to hold the id afterwards — `crm_contract` links account, contact and
+    // opportunity but not the quote — so this sentence is the whole provenance
+    // record, and the number, a list column on every quote list, is what makes
+    // it name one quote. `quote_number` is an engine-issued autonumber and
+    // never appears on an update payload, so it is read from the pre-image
+    // alone; `name` can be changing in this very write.
     const trimmed = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
     const quoteLabel = [trimmed(previous?.quote_number), [input.name, previous?.name].map(trimmed).find(Boolean)].filter(Boolean).join(' - ');
 
@@ -630,8 +622,8 @@ const quoteAcceptedContractDraft: Hook = {
       //
       // DELIBERATELY BARE, like the close-won one in `quote_on_accepted`: a
       // cascade fault the accepting user neither caused nor can act on, so a
-      // 500, never a 4xx refusal envelope (#1075). It names the quote the way
-      // every screen does — the label composed above — never by its id (#1243).
+      // 500, never a 4xx refusal envelope (#1075). It names the quote by number
+      // and name — the label composed above — never by its id (#1243).
       throw new Error(`could not draft the contract for quote ${quoteLabel}: ${(err as Error).message}`);
     }
   },

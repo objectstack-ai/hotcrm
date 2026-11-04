@@ -19,7 +19,8 @@ import { hookNamed, type AnyRec } from './helpers/composed-stack';
 
 type Line = { id: string; crm_product: string; product_title: string | null };
 
-const TITLE = 'PRD-0005 - AI Agent Seat (Annual)';
+// The product's title is its name (#2369 row 10).
+const TITLE = 'AI Agent Seat (Annual)';
 
 function store(opts: { opportunityLines: number; quoteLines?: number; refuse?: Set<string>; writesStick?: boolean }) {
   const rows: Record<string, Line[]> = {
@@ -30,7 +31,7 @@ function store(opts: { opportunityLines: number; quoteLines?: number; refuse?: S
   let onTouch: (() => Promise<void>) | undefined;
   const api = {
     object: (name: string) => ({
-      findOne: async () => ({ id: 'p1', name: 'AI Agent Seat (Annual)', display_title: TITLE }),
+      findOne: async () => ({ id: 'p1', name: TITLE }),
       find: async (q: AnyRec) => (rows[name] ?? []).filter((r) => r.crm_product === q.where.crm_product).map((r) => ({ ...r })),
       count: async () => 0,
       insert: async () => ({}),
@@ -101,14 +102,13 @@ describe('product_title_mirror: one pass, a bounded share of the lines (#2168)',
 
 describe('line_item_product_title_backfill: an untitled line, read, starts its product\'s re-stamp (#2168)', () => {
   const backfill = hookNamed('line_item_product_title_backfill');
-  const touches = (untitled: string[] = []) => {
+  const touches = (unnamed: string[] = []) => {
     const touched: string[] = [];
     const api = {
       object: (name: string) => ({
         findOne: async (q: AnyRec) => ({
           id: q.where.id,
-          name: `Product ${q.where.id}`,
-          display_title: untitled.includes(q.where.id) ? '' : `PRD - Product ${q.where.id}`,
+          name: unnamed.includes(q.where.id) ? '' : `Product ${q.where.id}`,
         }),
         find: async () => [],
         count: async () => 0,
@@ -132,9 +132,34 @@ describe('line_item_product_title_backfill: an untitled line, read, starts its p
       { id: 'l1', crm_product: 'p1', product_title: null },
       { id: 'l2', crm_product: 'p1', product_title: '' },
       { id: 'l3', crm_product: 'p2', product_title: null },
-      { id: 'l4', crm_product: 'p3', product_title: 'PRD-3 - Titled' },
+      { id: 'l4', crm_product: 'p3', product_title: 'Product p3' },
     ]);
     expect(t.touched).toEqual(['p1', 'p2']);
+  });
+
+  it('re-sends the name of a product behind a copy of its old title, `PRD-0001 - Name` (#2369 row 10)', async () => {
+    const t = touches();
+    await read(t.api, [
+      { id: 'l1', crm_product: 'p1', product_title: 'PRD-0001 - Product p1' },
+      { id: 'l2', crm_product: 'p2', product_title: 'Product p2' },
+      { id: 'l3', crm_product: 'p3', product_title: 'Widget - PRD-0003 - not the old shape' },
+    ]);
+    expect(t.touched).toEqual(['p1']);
+  });
+
+  it('leaves a product alone whose own name has the old shape — the copy is already its title', async () => {
+    const t = touches();
+    await read(t.api, [{ id: 'l1', crm_product: 'p1', product_title: 'Product p1' }]);
+    const named = {
+      api: {
+        object: (name: string) => ({
+          ...t.api.object(name),
+          findOne: async (q: AnyRec) => ({ id: q.where.id, name: 'PRD-0001 - Product p1' }),
+        }),
+      },
+    };
+    await read(named.api, [{ id: 'l1', crm_product: 'p1', product_title: 'PRD-0001 - Product p1' }]);
+    expect(t.touched).toEqual([]);
   });
 
   it('ignores a row whose projection left out product_title or crm_product — the shape of the app\'s own reads', async () => {
@@ -159,7 +184,7 @@ describe('line_item_product_title_backfill: an untitled line, read, starts its p
     expect(t.touched).toEqual(['p9']);
   });
 
-  it('never touches a product whose title is empty — the mirror would stamp nothing, and every read would write it again', async () => {
+  it('never touches a product whose name is empty — the mirror would stamp nothing, and every read would write it again', async () => {
     const t = touches(['p2']);
     await read(t.api, [
       { id: 'l1', crm_product: 'p1', product_title: null },

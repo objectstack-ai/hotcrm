@@ -111,11 +111,12 @@ describe('the Products related list authors an add picker', () => {
     // literal is the tempting "clarification" that would fork it.
     expect(add.picker.valueField).toBeUndefined();
     expect(add.picker.labelField).toBeUndefined();
-    expect(PRODUCT.nameField).toBe('display_title');
-    // That title is a FORMULA, so the picker's own search reaches it only
-    // through explicit `searchableFields`. The product object already declares
-    // them; dropping them would make the picker search return zero.
-    expect(PRODUCT.searchableFields).toContain('name');
+    expect(PRODUCT.nameField).toBe('name');
+    // The title is the name alone (#2369 row 10); the picker's search reaches
+    // the code too through explicit `searchableFields`, and the code shows under
+    // each row because it leads `highlightFields`.
+    expect(PRODUCT.searchableFields).toEqual(expect.arrayContaining(['name', 'product_code']));
+    expect(PRODUCT.highlightFields?.[0]).toBe('product_code');
   });
 
   it('offers active products only, and that narrowing does not empty the catalog', () => {

@@ -158,7 +158,7 @@ const REFUSE_CAMPAIGN_NOT_OPEN = {
   id: 'refuse_campaign_not_open', type: 'end', label: 'Campaign Not Open',
   config: {
     outcome: 'refused',
-    message: '{{ campaignRecord.display_title | default: "The chosen campaign" }} is not open for enrollment, or no longer exists: only a Planning or In Progress campaign takes members. Nobody was enrolled.',
+    message: '{{ campaignRecord.name | default: "The chosen campaign" }} is not open for enrollment, or no longer exists: only a Planning or In Progress campaign takes members. Nobody was enrolled.',
   },
 };
 

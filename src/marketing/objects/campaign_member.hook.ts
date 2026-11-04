@@ -147,12 +147,13 @@ const campaignMemberEnrollmentGate: Hook = {
     // refused here, as the flows refuse it.
     if (campaignId) {
       const campaign = await api.object('crm_campaign').findOne({
-        where: { id: campaignId }, fields: ['id', 'status', 'display_title'],
+        where: { id: campaignId }, fields: ['id', 'status', 'name'],
       });
       const status = campaign && typeof campaign.status === 'string' ? campaign.status : '';
       if (status !== 'planning' && status !== 'in_progress') {
-        const title = campaign && typeof campaign.display_title === 'string' && campaign.display_title !== ''
-          ? campaign.display_title
+        // The campaign as its title names it: the name alone (#2369 row 10).
+        const title = campaign && typeof campaign.name === 'string' && campaign.name !== ''
+          ? campaign.name
           : 'The chosen campaign';
         throw refuse(
           `${title} is not open for enrollment, or no longer exists: only a Planning or In Progress campaign takes members. Nobody was enrolled.`,

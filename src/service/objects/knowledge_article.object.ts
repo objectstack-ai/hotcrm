@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P } from '@objectstack/spec';
+import { P } from '@objectstack/spec';
 
 /**
  * Knowledge Article Object
@@ -101,19 +101,18 @@ export const KnowledgeArticle = ObjectSchema.create({
     redactFields: ['owner_id', 'related_to_case', 'last_reviewed_at'],
   },
 
-  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
-  // which names a real field. The former template composed two local fields, so
-  // a stored `display_title` field reproduces it for the record title.
-  nameField: 'display_title',
+  // The record title is the name alone (#2369 row 10, ruling A): `article_number`
+  // is a list column and leads `highlightFields`, so the lookup picker shows
+  // it under the name. Names may repeat, so an import cell that must name one
+  // record names it by its record id.
+  nameField: 'title',
   // Explicit search targets (ADR-0061): the real columns the lookup picker
-  // and global search match. Until #2230 they were required, because the
-  // title was a formula with no column for `$search` to default to. The
-  // title is stored now; these stay because they name what is searched.
+  // and global search match, so the number finds the record as well as its name.
   searchableFields: ['title', 'article_number', 'summary'],
-  // The record header's strip (#2369 rows 5 and 7): the title already reads
-  // "KA-0001 - Title", so the strip carries what it does not, the vote counts
-  // among them.
-  highlightFields: ['category', 'status', 'audience', 'helpful_count', 'not_helpful_count'],
+  // The record header's strip (#2369 rows 5, 7 and 10): what the title, the
+  // article's own title alone, does not say, the number first and the vote
+  // counts among them.
+  highlightFields: ['article_number', 'category', 'status', 'audience', 'helpful_count', 'not_helpful_count'],
 
   // `content` leads (#2369 row 7): the record page draws the groups in this
   // order, and a reader opens an article for its body, not its metadata.
@@ -146,20 +145,6 @@ export const KnowledgeArticle = ObjectSchema.create({
       storage: { notNull: true },
       searchable: true,
       maxLength: 255,
-      group: 'basic',
-    }),
-
-    // ADR-0079 record title (was titleFormat '{article_number} - {title}').
-    // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
-    // computes the expression on every insert and every update by id and
-    // stores the result, so an import matches a lookup cell against this title
-    // and sort and search read a real column. `readonly` keeps it off the
-    // forms; a value a client sends never stands. Rows stored before #2230
-    // are titled by `scripts/backfill-record-titles.ts`.
-    display_title: Field.text({
-      readonly: true,
-      label: 'Display Title',
-      expression: F`record.article_number + " - " + record.title`,
       group: 'basic',
     }),
 

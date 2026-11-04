@@ -28,7 +28,6 @@ export const jaJP: TranslationData = {
       fields: {
         product_code: { label: '製品コード' },
         name: { label: '製品名' },
-        display_title: { label: '表示名' },
         description: { label: '説明' },
         category: {
           label: 'カテゴリ',
@@ -127,7 +126,6 @@ export const jaJP: TranslationData = {
       fields: {
         quote_number: { label: '見積番号' },
         name: { label: '見積名' },
-        display_title: { label: '表示名' },
         crm_account: { label: '取引先' },
         crm_contact: {
           label: '取引先責任者',
@@ -175,15 +173,15 @@ export const jaJP: TranslationData = {
         addresses_and_notes: { label: '住所と備考' },
       },
       _actions: {
-        submit_quote_for_review: { label: 'レビューに提出', successMessage: '見積 {{ record.display_title }} をレビューに提出しました。' },
-        mark_quote_presented: { label: '提示済みにする', successMessage: '見積 {{ record.display_title }} を提示済みにしました。' },
+        submit_quote_for_review: { label: 'レビューに提出', successMessage: '見積 {{ record.name }} をレビューに提出しました。' },
+        mark_quote_presented: { label: '提示済みにする', successMessage: '見積 {{ record.name }} を提示済みにしました。' },
         accept_quote: {
           label: '承認',
           confirmText: 'この見積を承認しますか？見積は凍結され、商談は受注でクローズされ、契約が起案されます。',
-          successMessage: '見積 {{ record.display_title }} を承認しました。',
+          successMessage: '見積 {{ record.name }} を承認しました。',
         },
-        reject_quote: { label: '却下', successMessage: '見積 {{ record.display_title }} を却下しました。改訂して新しい提案ができます。' },
-        revise_quote: { label: '改訂', successMessage: '見積 {{ record.display_title }} を下書きに戻しました。' },
+        reject_quote: { label: '却下', successMessage: '見積 {{ record.name }} を却下しました。改訂して新しい提案ができます。' },
+        revise_quote: { label: '改訂', successMessage: '見積 {{ record.name }} を下書きに戻しました。' },
       },
     },
     crm_opportunity_line_item: {

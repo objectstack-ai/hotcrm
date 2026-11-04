@@ -16,22 +16,21 @@ export const Campaign = ObjectSchema.create({
 
   // ADR-0090 D1/D7: OWD is an authored decision. Campaign catalog is org-visible; only owners edit.
   sharingModel: 'public_read',
-  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
-  // which names a real field. The former template composed two local fields, so
-  // a stored `display_title` field reproduces it for the record title.
-  nameField: 'display_title',
+  // The record title is the name alone (#2369 row 10, ruling A): `campaign_code`
+  // is a list column and leads `highlightFields`, so the lookup picker shows
+  // it under the name. Names may repeat, so an import cell that must name one
+  // record names it by its record id.
+  nameField: 'name',
   // Explicit search targets (ADR-0061): the real columns the lookup picker
-  // and global search match. Until #2230 they were required, because the
-  // title was a formula with no column for `$search` to default to. The
-  // title is stored now; these stay because they name what is searched.
+  // and global search match, so the number finds the record as well as its name.
   searchableFields: ['name', 'campaign_code'],
-  // The record header's strip (#2369 row 5): the title already reads
-  // "CPG-0001 - Name". The Add to Campaign picker shows the same fields under
-  // each campaign, where the code used to repeat the title. `end_date` and
+  // The record header's strip (#2369 rows 5 and 10): what the title, the name
+  // alone, does not say. The Add to Campaign picker shows the same fields under
+  // each campaign, the code first. `end_date` and
   // `owner_id` stay in the body: each is the last visible member of its group
   // ("schedule", "assignment"), which would then never render on the detail
   // page (lint `field-group-shadowed`).
-  highlightFields: ['type', 'status', 'start_date', 'budgeted_cost'],
+  highlightFields: ['campaign_code', 'type', 'status', 'start_date', 'budgeted_cost'],
 
   // Every other business object with a detail page groups its fields; campaign
   // was one of the two that did not, so its detail page fell back to one flat
@@ -74,25 +73,6 @@ export const Campaign = ObjectSchema.create({
       storage: { notNull: true },
       searchable: true,
       maxLength: 255,
-    }),
-
-    // ADR-0079 record title (was titleFormat '{campaign_code} - {name}').
-    // A record with no `campaign_code` is titled by its name, as `crm_product` is
-    // (#2168). The number is an autonumber the engine issues on insert, so only
-    // rows older than the autonumber lack one; measured on staging after the
-    // 6.0.0 upgrade, the concatenation faulted there (`dyn<null> + string`) and
-    // left the record untitled (#2230).
-    // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
-    // computes the expression on every insert and every update by id and
-    // stores the result, so an import matches a lookup cell against this title
-    // and sort and search read a real column. `readonly` keeps it off the
-    // forms; a value a client sends never stands. Rows stored before #2230
-    // are titled by `scripts/backfill-record-titles.ts`.
-    display_title: Field.text({
-      readonly: true,
-      group: 'basic',
-      label: 'Display Title',
-      expression: F`has(record.campaign_code) && record.campaign_code != null && record.campaign_code != "" ? record.campaign_code + " - " + record.name : record.name`,
     }),
 
     description: Field.markdown({

@@ -91,7 +91,6 @@ export const customer: Record<string, ObjectTranslationData> = {
         label: 'Account Name (Normalized)',
         help: 'Match key for lead conversion: Account Name lower-cased, trimmed, with internal whitespace collapsed. Maintained by the account_protection hook — never edit directly.',
       },
-      display_title: { label: 'Display Title' },
     },
     _views: {
       all_accounts: { label: 'All Accounts', description: 'Primary account list with revenue & industry summaries' },

@@ -25,7 +25,6 @@ export const esES: TranslationData = {
       description: 'Respuestas y guías reutilizables para clientes y agentes',
       fields: {
         article_number: { label: 'N.º Artículo' },
-        display_title: { label: 'Título Mostrado' },
         title: { label: 'Título' },
         summary: { label: 'Resumen', help: 'Resumen de un párrafo que se muestra en los resultados de búsqueda y en las citas de la IA.' },
         body: { label: 'Contenido', help: 'Contenido completo del artículo (Markdown).' },

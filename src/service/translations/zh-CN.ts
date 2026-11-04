@@ -59,7 +59,6 @@ export const zhCN: TranslationData = {
         last_reviewed_at: { label: '最近复核' },
         helpful_count: { label: '有用', help: '由 crm_article_feedback 重新统计得出，不可手工填写。' },
         not_helpful_count: { label: '没用', help: '由 crm_article_feedback 重新统计得出，不可手工填写。' },
-        display_title: { label: '显示名称' },
       },
       _views: {
         all_articles: { label: '全部文章' },

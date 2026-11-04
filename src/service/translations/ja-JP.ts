@@ -26,7 +26,6 @@ export const jaJP: TranslationData = {
       fields: {
         article_number: { label: '記事番号' },
         title: { label: 'タイトル' },
-        display_title: { label: '表示名' },
         summary: { label: '要約', help: '検索結果や AI の引用に表示される 1 段落の要約。' },
         body: { label: '本文', help: '記事の本文（Markdown）。' },
         category: {

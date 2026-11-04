@@ -116,7 +116,7 @@ describe('price_book_entry_unique holds one entry per product per book', () => {
     await expect(second).rejects.toMatchObject(refusal);
     const message = String(await second.catch((err: Error) => err.message));
     expect(message).toContain('Partner Tier');
-    expect(message).toContain(String(platform.display_title));
+    expect(message).toContain(String(platform.name));
     expect(await verify.rows('crm_price_book_entry', { crm_price_book: partner.id, crm_product: platform.id })).toHaveLength(1);
   });
 

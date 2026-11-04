@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P } from '@objectstack/spec';
+import { P } from '@objectstack/spec';
 
 /**
  * Product Object
@@ -16,19 +16,18 @@ export const Product = ObjectSchema.create({
 
   // ADR-0090 D1/D7: OWD is an authored decision. Product catalog is org-visible; only owners edit.
   sharingModel: 'public_read',
-  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
-  // which names a real field. The former template composed two local fields, so
-  // a stored `display_title` field reproduces it for the record title.
-  nameField: 'display_title',
+  // The record title is the name alone (#2369 row 10, ruling A): `product_code`
+  // is a list column and leads `highlightFields`, so the lookup picker shows
+  // it under the name. Names may repeat, so an import cell that must name one
+  // record names it by its record id.
+  nameField: 'name',
   // Explicit search targets (ADR-0061): the real columns the lookup picker
-  // and global search match. Until #2230 they were required, because the
-  // title was a formula with no column for `$search` to default to. The
-  // title is stored now; these stay because they name what is searched.
+  // and global search match, so the number finds the record as well as its name.
   searchableFields: ['name', 'product_code', 'sku'],
-  // The record header's strip (#2369 row 5): the title already reads
-  // "PRD-0001 - Name". The lookup picker shows the same fields under each
-  // product, so a line item's product picker now shows the list price.
-  highlightFields: ['category', 'list_price', 'is_active'],
+  // The record header's strip (#2369 rows 5 and 10): what the title, the name
+  // alone, does not say. The lookup picker shows the same fields under each
+  // product: the code first, then the list price a line item's picker needs.
+  highlightFields: ['product_code', 'category', 'list_price', 'is_active'],
 
   fieldGroups: [
     { key: 'basic',    label: 'Product Information', icon: 'info' },
@@ -52,24 +51,6 @@ export const Product = ObjectSchema.create({
       storage: { notNull: true },
       searchable: true,
       maxLength: 255,
-    }),
-
-    // ADR-0079 record title (was titleFormat '{product_code} - {name}').
-    // A product with no code is titled by its name (#2168). `product_code` is
-    // an autonumber the engine issues on insert, so only rows older than the
-    // autonumber lack one; on those the concatenation evaluated to nothing,
-    // leaving the product, and every line item that copies this title, unnamed.
-    // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
-    // computes the expression on every insert and every update by id and
-    // stores the result, so an import matches a lookup cell against this title
-    // and sort and search read a real column. `readonly` keeps it off the
-    // forms; a value a client sends never stands. Rows stored before #2230
-    // are titled by `scripts/backfill-record-titles.ts`.
-    display_title: Field.text({
-      readonly: true,
-      label: 'Display Title',
-      group: 'basic',
-      expression: F`has(record.product_code) && record.product_code != null && record.product_code != "" ? record.product_code + " - " + record.name : record.name`,
     }),
 
     description: Field.markdown({

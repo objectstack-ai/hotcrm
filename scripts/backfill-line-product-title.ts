@@ -1,16 +1,18 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 //
 // One-time product-title backfill (#2086): give every line item created before
-// `product_title` existed the title that names it.
+// `product_title` existed, or stamped with the product's old title before
+// #2369 row 10, the title that names it now.
 //
 //   pnpm exec tsx scripts/backfill-line-product-title.ts --url https://<your-org> --email <admin> --password <pw>
 //   pnpm exec tsx scripts/backfill-line-product-title.ts ... --apply   # without this it only reports
 //
 // `product_title` is the `nameField` of `crm_opportunity_line_item` and
-// `crm_quote_line_item`: a stored copy of the product's `display_title`. On a
-// database upgraded to this version, every existing line holds no copy yet.
-// Its record header and its entry in an opportunity's rail would fall back to
-// the record id. On a dev database the seed replay re-writes the seeded lines
+// `crm_quote_line_item`: a stored copy of the product's title, its `name`
+// (#2369 row 10). On a database upgraded past #2086, every existing line held
+// no copy yet, and its record header and its entry in an opportunity's rail
+// fell back to the record id. On one upgraded past #2369 row 10, every line
+// still holds the old `PRD-0001 - Name` copy. On a dev database the seed replay re-writes the seeded lines
 // at boot, through the line-side hook. A line a person created has no such
 // path, and this script is its writer.
 //
@@ -31,8 +33,9 @@
 //   • rerunnable: a second pass over a converged org reports zero lines.
 //
 // A hosted environment needs no script (#2168): the first read that shows an
-// untitled line re-sends that line's product name (`line_item_product_title_backfill`
-// in `src/revenue/objects/product.hook.ts`). This script is for self-hosted
+// untitled line, or one holding the old `PRD-0001 - Name` copy, re-sends that
+// line's product name (`line_item_product_title_backfill` in
+// `src/revenue/objects/product.hook.ts`). This script is for self-hosted
 // operators who want every line titled now rather than on first view.
 //
 // The re-stamp is `async`, so the PATCH answers before the lines are written.
@@ -130,16 +133,16 @@ interface Stale {
 
 /** Every line whose copy is missing or differs from its product's title, and the products' titles. */
 async function staleLines(api: Api): Promise<{ stale: Stale[]; total: Record<string, number>; products: Map<string, Json> }> {
-  // `display_title` is a formula; the engine computes it on read, so this is
-  // the title every product surface shows.
-  const products = new Map((await api.all('crm_product', ['id', 'name', 'display_title'])).map((p) => [String(p.id), p]));
+  // The product's title is its `name` (#2369 row 10), the title every
+  // product surface shows.
+  const products = new Map((await api.all('crm_product', ['id', 'name'])).map((p) => [String(p.id), p]));
   const stale: Stale[] = [];
   const total: Record<string, number> = {};
   for (const object of LINE_OBJECTS) {
     const rows = await api.all(object, ['id', 'crm_product', 'product_title']);
     total[object] = rows.length;
     for (const r of rows) {
-      const title = products.get(String(r.crm_product))?.display_title;
+      const title = products.get(String(r.crm_product))?.name;
       if (typeof title === 'string' && title !== '' && r.product_title !== title) {
         stale.push({ object, id: String(r.id), product: String(r.crm_product) });
       }

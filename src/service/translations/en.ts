@@ -55,7 +55,6 @@ export const en: TranslationData = {
         last_reviewed_at: { label: 'Last Reviewed' },
         helpful_count: { label: 'Helpful', help: 'Recounted from crm_article_feedback — never typed in.' },
         not_helpful_count: { label: 'Not Helpful', help: 'Recounted from crm_article_feedback — never typed in.' },
-        display_title: { label: 'Display Title' },
       },
       _views: {
         all_articles: { label: 'All Articles' },

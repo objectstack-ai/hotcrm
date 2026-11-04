@@ -74,7 +74,8 @@ describe('each action is a declared step of the quote machine', () => {
   it.each(ACTIONS)('%s is withheld before the record has loaded, and names the quote when it succeeds', (name) => {
     expect(offered(name, {})).toBe(false);
     const message = actionNamed(name).successMessage;
-    expect(String(message?.source ?? message)).toContain('{{ record.display_title }}');
+    // By its title, the name alone (#2369 row 10).
+    expect(String(message?.source ?? message)).toContain('{{ record.name }}');
   });
 
   it('only Accept asks first: it cannot be walked back from the quote', () => {

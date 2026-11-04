@@ -332,7 +332,8 @@ describe('quote_workflow', () => {
   });
 
   /** The quote as every quote surface titles it — what the freeze's sentence names. */
-  const titleOf = async (quote: Rec) => String((await stored('crm_quote', quote.id)).display_title);
+  // A quote's title is its name alone (#2369 row 10).
+  const titleOf = async (quote: Rec) => String((await stored('crm_quote', quote.id)).name);
   const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   it.each(['accepted', 'expired'])('freezes a %s quote against user edits', async (status) => {
@@ -430,7 +431,7 @@ describe('quote_workflow refuses an acceptance the deal’s approval holds (#201
     // It names the quote as every screen does and the hold by the field the
     // rep sees on the deal — never a record id.
     const message = String(refusal!.message);
-    expect(message).toContain(`Quote ${String((await stored('crm_quote', quote.id)).display_title)}`);
+    expect(message).toContain(`Quote ${String((await stored('crm_quote', quote.id)).name)}`);
     expect(message).toContain('Approval Status is Pending');
     expect(message).not.toContain(deal.id);
 

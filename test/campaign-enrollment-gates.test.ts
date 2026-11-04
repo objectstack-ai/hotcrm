@@ -93,7 +93,7 @@ describe('Add to Campaign refuses a campaign that is not open (#2336 D1)', () =>
       const answer = await s.add(person.id, campaign.id);
 
       expect(answer).toMatchObject({ success: true, status: 'refused', output: { enrolled: false } });
-      expect(answer.refusalMessage, 'the refusal names the campaign').toContain(String(closed!.display_title));
+      expect(answer.refusalMessage, 'the refusal names the campaign').toContain(String(closed!.name));
       const rows = (await membersOf(campaign.id)).filter((m) => m[s.column] === person.id);
       expect(rows, `the ${status} campaign took a member`).toHaveLength(0);
       expect(await metricsOf(campaign.id), `the ${status} campaign's recorded metrics moved`).toEqual(before);
