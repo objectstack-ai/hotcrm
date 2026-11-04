@@ -16,14 +16,13 @@ import { INDUSTRY_SYNONYMS, LEAD_SOURCE_SYNONYMS } from './_shared';
  *   so importing a mid-lifecycle status is a normal write here, not a
  *   transition.
  * - **A blank owner lands with the IMPORTER, not with auto-assignment.**
- *   `lead_auto_assign` (`src/sales/objects/lead.hook.ts`) only routes a lead whose
- *   `owner_id` is still empty when the hook runs — and the import write carries
- *   the importer's own context, so the security middleware has ALREADY stamped
- *   `owner_id` to them by the time `beforeInsert` runs (the guard is an
+ *   `lead_intake_assignment` (the platform's assignment rule, ADR-0142 D5) only
+ *   routes a lead whose `owner_id` is still empty after the beforeInsert hooks —
+ *   and the import write carries the importer's own context, so the security
+ *   middleware has ALREADY stamped `owner_id` to them (the guard is an
  *   operation middleware, outside the hook phase). Measured on a real import
- *   before #548, when a field `defaultValue` produced the same outcome one step
- *   earlier: all 50 template rows landed owned by the importing user, none by
- *   the round-robin. Fill "Lead Owner Email" when the source file knows who
+ *   before #548: all 50 template rows landed owned by the importing user, none
+ *   by the round-robin hook this app had then. Fill "Lead Owner Email" when the source file knows who
  *   owns the lead; otherwise reassign after the import.
  */
 export const LeadImportMapping = defineMapping({

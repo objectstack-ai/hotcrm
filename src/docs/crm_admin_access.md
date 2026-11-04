@@ -11,7 +11,6 @@ sources:
   - sharing_rule:case_escalation_sharing
   - sharing_rule:case_director_sharing
   - sharing_rule:case_escalated_from_sharing
-  - sharing_rule:case_unassigned_triage_sharing
   - sharing_rule:campaign_leadership_manager
   - sharing_rule:campaign_leadership_director
   - position:crm_positions
@@ -53,9 +52,23 @@ Ownership-based access is widened by these rules:
 | Case Escalation | Case | **Edit** | Escalated cases become editable by the escalation handler. |
 | Escalated Cases — Service Director | Case | **Read** | Service Director sees what the manager is paged about. |
 | Escalated Cases — Previous Owner | Case | **Read** | The agent an escalation took the case from keeps sight of it until it is closed. |
-| Unassigned Cases — Triage | Case | **Edit** | Every Service Agent sees and can claim an open case nobody owns yet; the case leaves the rule once it has an owner or is resolved or closed. |
 | Live Campaigns — Marketing Manager / Director | Campaign | **Edit** | Marketing leadership works any live campaign. |
 | Forecasts — Sales Manager Edit | Forecast | **Edit** | Sales Managers adjust any rep's forecast. An edit share never grants delete, so forecasts stay undeletable for them. |
+
+## Queues — records nobody owns yet
+
+A new case or lead that arrives with no owner goes to a queue, not to a sharing
+rule. HotCRM ships two: **Support Intake** (`case_intake`, members: everyone
+holding *Service Agent*) and **Lead Intake** (`lead_intake`, members: everyone
+holding *Sales Rep*). An assignment rule hands each new ownerless record to the
+member with the least open work. When the queue has no members, the record
+waits there with no owner: every member can open it and click **Claim** to
+become its owner, and nothing else on the record changes.
+
+To add one person to a queue without giving them the position, go to
+**Setup → Access Control → Queue Members** and add a row with the queue's name
+(`case_intake` or `lead_intake`) and the person as member. The two queues ship
+with the app, so **Setup → Access Control → Queues** does not list them.
 
 Detail objects — opportunity line items, quote line items, campaign members and
 contacts — carry **no** sharing rules by design: their record access derives

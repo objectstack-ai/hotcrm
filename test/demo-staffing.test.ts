@@ -262,7 +262,7 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
     expect(
       holdersOf('service_agent').length,
       'the case INTAKE pool must hold exactly one demo agent (2026-08-31: the minimum that lights ' +
-      'case_auto_assign, not an org chart)',
+      'case_intake_assignment, not an org chart)',
     ).toBe(1);
     expect(
       holdersOf('service_manager').length,
@@ -300,8 +300,8 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
       `\n` +
       `  WHY TWO POSITIONS ARE STAFFED AND THESE SIX ARE NOT. Exactly two have ever crossed this ` +
       `fence — service_agent and service_manager, maintainer ruling 2026-08-31 — and the bar they ` +
-      `cleared is the only one that opens it: a shipped HOOK PICKS AN OWNER out of that pool ` +
-      `(case_auto_assign #596, case_escalation_reassign #1070 — src/objects/_case-assignment.ts), ` +
+      `cleared is the only one that opens it: a shipped mechanism PICKS AN OWNER out of that pool ` +
+      `(the case_intake_assignment rule #596/#2395, the case_escalation_reassign hook #1070), ` +
       `so an empty pool was not a bench nobody sits on but a code path that never ran on a demo ` +
       `box at all.\n` +
       `  Every position above fails that bar. Each one only RECEIVES a share or an approval — a ` +
@@ -596,7 +596,7 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
     return String(id);
   };
 
-  it('round-robins an ownerless case onto the demo service agent (#596)', async () => {
+  it('routes an ownerless case onto the demo service agent (#596, #2395)', async () => {
     // Ownerless intake: a case the system writes (an email-to-case
     // integration, an import). An anonymous web form's case reaches the same
     // pool, read elevated (#2014; pinned in case-assignment.test.ts).
@@ -606,8 +606,8 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
     const [stored] = await verify.rows('crm_case', { id: kase!.id });
     expect(
       stored!.owner_id,
-      `case_auto_assign left the case OWNERLESS against the demo org's own position rows — the ` +
-      `service_agent pool is empty again, so intake round-robin is back to the no-op path on every ` +
+      `case_intake_assignment left the case OWNERLESS against the demo org's own position rows — the ` +
+      `service_agent pool is empty again, so every new case parks in the case_intake queue on every ` +
       `demo box and the unassigned_triage tab is the whole story.`,
     ).toBe(holderOf('service_agent'));
   });
@@ -669,10 +669,11 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
     // part is the ZERO. The ruling that authorised this staffing counted FOUR
     // mechanisms lit, `case_director_sharing` among them — measured, that one
     // is NOT lit: its recipient is `service_director`, which the same ruling
-    // leaves empty. The fourth mechanism these rows actually reach is
-    // `case_unassigned_triage_sharing` (#1096's read side), which the ruling
-    // did not name. Staffing service_director to "finish the set" is the
-    // org-chart move the fence above exists to stop.
+    // leaves empty. (The agent's row once lit `case_unassigned_triage_sharing`
+    // too; #2395 deleted it, because the `case_intake` queue's members read the
+    // cases sitting in it through the queue itself, not a sharing rule.)
+    // Staffing service_director to "finish the set" is the org-chart move the
+    // fence above exists to stop.
     const census = sharingRules
       .filter((r) => r.object === 'crm_case' && r.sharedWith?.type === 'position')
       .map((r) => `${String(r.name)}\u2192${String(r.sharedWith.value)}: ${holdersOf(String(r.sharedWith.value)).length} holder(s)`)
@@ -680,7 +681,6 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
     expect(census).toEqual([
       'case_director_sharing\u2192service_director: 0 holder(s)',
       'case_escalation_sharing\u2192service_manager: 1 holder(s)',
-      'case_unassigned_triage_sharing\u2192service_agent: 1 holder(s)',
     ]);
   });
 });
@@ -770,7 +770,8 @@ describe('pnpm demo:staff on the shipped app: the hand-over opens each large-dea
  *
  * Until `crm_case` was routed, which persona owned the demo's cases depended on
  * timing. Measured on 18.0.0, fresh `pnpm dev`: run while the seed was still
- * writing, `case_auto_assign` put all 38 on the service agent; run after it
+ * writing, the app's `case_auto_assign` hook (replaced by the platform's
+ * `case_intake_assignment` rule in #2395) put all 38 on the service agent; run after it
  * settled, all 38 stayed with the dev admin, and the agent's
  * `GET /api/v1/data/crm_case` answered `total: 0`. The script now waits for the
  * seed and hands each case to its desk (`CASE_DESK`): escalated and critical

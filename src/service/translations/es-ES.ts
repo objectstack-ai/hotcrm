@@ -176,7 +176,7 @@ export const esES: TranslationData = {
           label: 'Sin asignar — triaje',
           emptyState: {
             title: 'Nada pendiente de triaje',
-            message: 'Todos los casos tienen propietario. Los casos aparecen aquí cuando llegan sin propietario — normalmente un envío web-a-caso recibido mientras nadie ocupaba el puesto de Agente de Servicio.',
+            message: 'Todos los casos tienen propietario. Un caso espera aquí, en la cola de Recepción de Soporte, cuando llega mientras nadie ocupa el puesto de Agente de Servicio. Ábralo y pulse Reclamar para quedárselo.',
           },
         },
         escalated_cases: { label: 'Casos Escalados' },
@@ -219,10 +219,6 @@ export const esES: TranslationData = {
           label: 'Cerrar Caso',
           confirmText: '¿Está seguro de querer cerrar este caso?',
           successMessage: '¡Caso cerrado con éxito!',
-        },
-        claim_case: {
-          label: 'Tomar Caso',
-          successMessage: 'Caso tomado: ahora es suyo.',
         },
         reopen_case: {
           label: 'Reabrir Caso',
@@ -367,20 +363,6 @@ export const esES: TranslationData = {
           fields: {
             resolution: { label: 'Resolución' },
             resolved_by_article: { label: 'Resuelto con artículo (opcional)' },
-          },
-        },
-      },
-    },
-    claim_case: {
-      label: 'Tomar Caso',
-      screens: {
-        screen_1: {
-          title: 'Tomar Caso',
-          fields: {
-            claimStatus: {
-              label: 'Estado de trabajo',
-              options: { in_progress: 'En Curso', waiting_customer: 'Esperando al Cliente', waiting_support: 'Esperando a Soporte' },
-            },
           },
         },
       },

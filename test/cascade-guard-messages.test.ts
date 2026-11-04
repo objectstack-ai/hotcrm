@@ -7,6 +7,7 @@ import { ObjectQLPlugin } from '@objectstack/objectql';
 import { MetadataPlugin } from '@objectstack/metadata';
 import stack from '../objectstack.config';
 import { createIdentityObjectsPlugin } from '@objectstack/plugin-auth';
+import { withoutOwnershipQueues } from './helpers/bare-kernel-stack';
 
 /**
  * A guard's refusal must name the record that is refusing — never the record
@@ -119,7 +120,7 @@ beforeAll(async () => {
   // The app's own metadata is the subject — objects and hooks exactly as
   // `objectstack.config.ts` declares them. Seed data is skipped; each test
   // builds the population it needs.
-  await kernel.use(new AppPlugin(stack as never, undefined as never, { skipSeedData: true } as never));
+  await kernel.use(new AppPlugin(withoutOwnershipQueues(stack) as never, undefined as never, { skipSeedData: true } as never));
   await kernel.bootstrap();
   ql = kernel.getService('objectql');
   // The install's one organization. Since 18.0.0-next.0 a system write on a

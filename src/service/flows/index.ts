@@ -6,6 +6,6 @@
  * `src/service/index.ts`.
  */
 export { CaseEscalationFlow, CaseEscalationOnCreateFlow } from './case-escalation.flow';
-export { EscalateCaseFlow, CloseCaseFlow, ClaimCaseFlow } from './case-actions.flow';
+export { EscalateCaseFlow, CloseCaseFlow } from './case-actions.flow';
 export { CaseEscalationStampFlow } from './case-escalation-stamp.flow';
 export { CaseSlaMonitorFlow } from './case-sla-monitor.flow';

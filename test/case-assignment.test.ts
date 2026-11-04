@@ -8,14 +8,11 @@ import { extractHookBody } from '@objectstack/cli/hook-body';
 import stack, { localePacks } from './helpers/composed-stack';
 import caseHooks from '../src/service/objects/case.hook';
 import {
-  SERVICE_AGENT_POSITION,
   SERVICE_MANAGER_POSITION,
-  CLOSED_CASE_STATUSES,
   POOL_QUERY_LIMIT,
 } from '../src/service/objects/_case-assignment';
-import artifact from '../objectstack.config';
 import {
-  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, type Person,
+  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, systemUpdate, recordEngineWrites, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -28,50 +25,44 @@ const ORG = 'org_1';
 type Rec = Record<string, any>;
 
 /**
- * ═══ Case intake assignment — the app-level queue substitute (#596) ════════
+ * The agent position, named here rather than imported: since #2395 no app code
+ * reads it on the case path (the `case_intake` queue declares it as its
+ * member), and the escalation hand-off below must never fall back to it.
+ */
+const SERVICE_AGENT_POSITION = 'service_agent';
+
+/**
+ * ═══ Case intake — the platform's queue since #2395 ═══════════════════════
  *
- * ObjectStack has no queue engine (`sys_queue` does not exist; the `queue`
- * sharing-recipient and approver enum members are deprecated upstream), so a
- * web-to-case submission — whose `owner_id` the guest-sanitisation branch of
- * `case_sla_defaults` deliberately strips — used to land ownerless with nobody
- * accountable for it and no view that could even show it.
- *
- * `src/objects/_case-assignment.ts` substitutes a load-balanced round-robin,
- * and `unassigned_triage` on `crm_case` is the second half: the empty pool is
- * the FIRST-INSTALL NORM, not an edge case, and the whole point of the card is
- * that the no-op path is VISIBLE rather than silent. Both paths are covered
- * here, and neither one is the happy path alone.
- *
- * The file opens with the precondition the ruling made blocking: whether a
- * hook-stamped `owner_id` passes the platform's `allowTransfer` write gate.
- * That question decides whether this feature is a hook change or a
- * permission-model widening, so it is MEASURED against a real engine rather
- * than inherited from the `lead_auto_assign` precedent — the guard's verdict is
- * a property of the SEAM, and `crm_case` had never been measured on it.
+ * Who owns a NEW case is no longer answered here. The app-level round-robin
+ * (`case_auto_assign`, #596) and its triage sharing grant were deleted when
+ * ObjectStack 18.3.0 shipped ownership queues (ADR-0142): `case_intake_assignment`
+ * routes an ownerless insert to the least-loaded `service_agent`, or parks it in
+ * the `case_intake` queue when nobody holds the position. That behaviour is
+ * pinned in `test/ownership-queues.test.ts`. What stays here is the second
+ * deliverable of #596, the `unassigned_triage` view, which now lists exactly the
+ * cases sitting in that queue.
  *
  * ═══ Escalation hand-off to the `service_manager` pool (#1070) ═════════════
  *
- * The second half of the same question — "who should own this case" — and it
- * lives in the same module and the same test file for the reason that module's
- * header gives: two independently-authored ownership paths on `crm_case` is the
- * shape that has to be converged later by deleting one.
+ * The other half of "who should own this case", and the one the platform does
+ * not answer: an assignment rule runs once, on insert, so an escalation (an
+ * update) is still handed to the `service_manager` pool by the app's hook.
  *
- * Its own blocking precondition is measured below in the same style, because
- * the gate's verdict is a property of the seam and the UPDATE door had never
- * been measured either: `beforeUpdate` input mutation (invisible), a caller's
+ * Its blocking precondition is measured below, because the gate's verdict is a
+ * property of the seam: `beforeUpdate` input mutation (invisible), a caller's
  * own `owner_id` on that door (visible — the negative control), and the
  * `ctx.api` update an `afterUpdate` hook would issue (visible, and therefore
  * the shape that would have needed `crm_case.allowTransfer`).
  *
  * ═══ Measured on the shipped app ═══════════════════════════════════════════
  *
- * The two seam measurements keep their recording middleware (they measure the
- * platform's gate, with the app's hook shapes). Every behaviour of the two
- * hooks is a real write on the app booted by `@objectstack/verify`: the pools
- * are real sign-ups holding the position, their load is cases they own, and
- * the intake / escalation is written by the writer each path is for — the
- * system's import and sweep, a person's own save, an anonymous form
- * submission. What is asserted is the row the engine stored.
+ * The seam measurement keeps its recording middleware (it measures the
+ * platform's gate, with the app's hook shape). Every behaviour of the hook is
+ * a real write on the app booted by `@objectstack/verify`: the pool is real
+ * sign-ups holding the position, their load is cases they own, and the
+ * escalation is written by the writer each path is for — the system's sweep
+ * and a person's own save. What is asserted is the row the engine stored.
  */
 
 type AnyRec = Record<string, any>;
@@ -81,7 +72,6 @@ const hookNamed = (name: string): AnyRec => {
   if (!hook) throw new Error(`hook "${name}" not found`);
   return hook;
 };
-const assign = hookNamed('case_auto_assign');
 const slaDefaults = hookNamed('case_sla_defaults');
 const escalationReassign = hookNamed('case_escalation_reassign');
 
@@ -134,335 +124,10 @@ async function staff(position: string, backlog: Array<{ open?: number; done?: nu
 /** The body `objectstack build` ships for `hook` — what a parity pin reads. */
 const shippedBody = (hook: AnyRec): string => extractHookBody(hook.handler, `hook '${String(hook.name)}'`).source;
 
-// ─────────────────────────── the blocking precondition, measured ──
 
-describe('the transfer gate cannot see a beforeInsert owner_id stamp on crm_case', () => {
-  let ql: AnyRec;
-  /** Every operation the middleware seam observed, with the payload as it was THEN. */
-  let seen: { object: string; operation: string; data: AnyRec }[];
+// ───────────────────────────── the triage view over the intake queue ──
 
-  beforeAll(async () => {
-    seen = [];
-    ql = (await ObjectQL.create({
-      datasources: { default: new SqliteWasmDriver({ filename: ':memory:' }) },
-      objects: {
-        crm_case: {
-          name: 'crm_case',
-          fields: {
-            id: { type: 'text' },
-            subject: { type: 'text' },
-            status: { type: 'text' },
-            owner_id: { type: 'lookup', reference: 'sys_user' },
-          },
-        },
-      } as never,
-    })) as never;
-    await ql.syncSchemas();
-
-    // The SAME seam `@objectstack/plugin-security` registers the #3004 owner_id
-    // write guard on. A RECORDER, not a gate: what is being measured is
-    // VISIBILITY, not the verdict — what this can see, the guard can see, and
-    // what it cannot see, the guard cannot either. (Standing the real plugin up
-    // would test the platform's code rather than ours; same reasoning, and the
-    // same technique, as `test/ownership-model.test.ts`.)
-    ql.registerMiddleware(async (opCtx: AnyRec, next: () => Promise<void>) => {
-      seen.push({
-        object: opCtx.object,
-        operation: opCtx.operation,
-        data: JSON.parse(JSON.stringify(opCtx.data ?? {})) as AnyRec,
-      });
-      return next();
-    });
-
-    ql.registerHook?.('beforeInsert', async (ctx: AnyRec) => {
-      if (ctx.object !== 'crm_case') return;
-      const data = ctx.input?.data ?? ctx.data;
-      if (data && !data.owner_id) data.owner_id = 'agent_round_robin';
-    }, { object: 'crm_case' });
-  });
-
-  afterAll(async () => {
-    await ql?.close();
-  });
-
-  it('the stamp never reaches the middleware, and still reaches storage', async () => {
-    // Predicted direction, stated before running: the middleware sees NO
-    // `owner_id`, and the STORED row carries the hook's agent. Measured
-    // 2026-08-11 on @objectstack/* 17.0.0-rc.6 — the middleware observed
-    //   {"object":"crm_case","operation":"insert","data":{"subject":"…","status":"new"}}
-    // and the stored row came back with `owner_id: "agent_round_robin"`.
-    //
-    // So round-robin intake assignment needs NO `crm_case.allowTransfer` grant,
-    // and this feature is not a permission-model widening. ⛔ If a future
-    // platform release moves the guard downstream of the hook phase, the first
-    // expectation below flips and this test goes red. That is the signal to
-    // grant `allowTransfer` deliberately, or to stop assigning in a hook — NOT
-    // to widen the permission model in order to make a red test green.
-    const api = ql.createContext({ userId: 'usr_guest_form', tenantId: ORG });
-    const row = await api.object('crm_case').insert({ subject: 'Printer on fire', status: 'new' });
-
-    const observed = seen.filter((s) => s.object === 'crm_case' && s.operation === 'insert').pop();
-    expect(observed, 'the middleware seam never fired for the insert').toBeTruthy();
-    expect(
-      observed!.data.owner_id,
-      'the guard COULD see the hook-assigned owner — case round-robin now needs crm_case.allowTransfer, ' +
-        'which is a permission-model change and not a hook change',
-    ).toBeUndefined();
-
-    const stored = await api.object('crm_case').findOne({ where: { id: row.id } });
-    expect(stored?.owner_id, 'the hook’s assignment did not survive to storage')
-      .toBe('agent_round_robin');
-  });
-
-  it('negative control: the recorder is not simply blind to owner_id', async () => {
-    // Guards the guard. The assertion above is an ABSENCE, and an absence
-    // proves nothing if the recorder could never have seen the key in the first
-    // place. A caller-supplied `owner_id` on the same object, through the same
-    // seam, must be visible — that is what makes "the hook's stamp is invisible"
-    // a statement about the hook phase rather than about this test.
-    const api = ql.createContext({ userId: 'usr_admin', tenantId: ORG });
-    await api.object('crm_case').insert({
-      subject: 'Manually owned', status: 'new', owner_id: 'agent_explicit',
-    });
-    const observed = seen.filter((s) => s.object === 'crm_case' && s.operation === 'insert').pop();
-    expect(
-      observed!.data.owner_id,
-      'the recorder cannot see owner_id AT ALL — the invisibility measurement above is vacuous',
-    ).toBe('agent_explicit');
-  });
-});
-
-// ───────────────────────────────── the round-robin, both paths ──
-
-describe('case_auto_assign', () => {
-  /** Ownerless intake that reaches the pool: a case the system writes (an email integration, an import). */
-  const systemIntake = async (over: Rec = {}): Promise<Rec> =>
-    storedCase(String((await verify.seed('crm_case', [{
-      subject: `Intake ${++k}`, description: 'Arrived by email.', status: 'new', ...over,
-    }]))[0]!.id));
-
-  it('assigns an ownerless case to the least-loaded agent — the assigned path', async () => {
-    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 2 }, { open: 1 }]);
-    try {
-      const kase = await systemIntake();
-      expect(kase.owner_id, 'did not assign the least-loaded service agent').toBe(pool.people[1]!.id);
-      expect('owner' in kase, 'wrote a second, unread ownership column (#548)').toBe(false);
-    } finally {
-      await pool.release();
-    }
-  });
-
-  it('reads the SERVICE_AGENT_POSITION pool, and only that pool', async () => {
-    // The parity pin the module's header promises. The hook body must spell its
-    // position literal inline — L2 bodies run body-only in QuickJS and cannot
-    // reach the exported constant — so the shipped body is read for the
-    // literal and the read bound, and the behaviour is driven with other
-    // positions' holders present: none of them may be picked.
-    const body = shippedBody(assign);
-    expect(body, 'the position literal in the hook body drifted from SERVICE_AGENT_POSITION')
-      .toContain(`position: "${SERVICE_AGENT_POSITION}"`);
-    expect(body, 'the pool read bound drifted from POOL_QUERY_LIMIT').toMatch(new RegExp(`top: (${POOL_QUERY_LIMIT}|${POOL_QUERY_LIMIT.toExponential().replace('+', '')})\\b`));
-
-    const others = [
-      await signUpPerson(verify, `rep.${++k}@case-assignment.test`, { name: 'Other Rep', positions: ['sales_rep'] }),
-      await signUpPerson(verify, `mgr.${++k}@case-assignment.test`, { name: 'Other Manager', positions: [SERVICE_MANAGER_POSITION] }),
-    ];
-    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 1 }]);
-    try {
-      expect((await systemIntake()).owner_id).toBe(pool.people[0]!.id);
-    } finally {
-      await pool.release();
-      for (const row of await verify.rows('sys_user_position', { user_id: { $in: others.map((o) => o.id) } })) {
-        await verify.hooks.run('sys_user_position', 'delete', { id: row.id }, { as: admin });
-      }
-    }
-  });
-
-  it('counts OPEN cases only — a resolved case stops counting against its agent', async () => {
-    // `is_closed` would be the wrong predicate: it only flips on `closed`, so a
-    // pile of resolved cases keeps an agent looking busy forever. Here agent A
-    // has three cases but all are finished, and agent B has one live case — so
-    // agent A must win.
-    const pool = await staff(SERVICE_AGENT_POSITION, [{ done: 3 }, { open: 1 }]);
-    try {
-      expect((await systemIntake()).owner_id, 'resolved/closed cases are still counting as load').toBe(pool.people[0]!.id);
-    } finally {
-      await pool.release();
-    }
-  });
-
-  it('the closed-status vocabulary it counts by is exactly CLOSED_CASE_STATUSES', () => {
-    // Both names are real options on the object, so the predicate cannot be
-    // filtering on a status that no case can ever hold — the way a load count
-    // silently degrades to "count everything".
-    const caseObject = ((stack as AnyRec).objects ?? [])
-      .find((o: AnyRec) => o.name === 'crm_case');
-    const declared = (caseObject?.fields?.status?.options ?? [])
-      .map((o: AnyRec) => o.value);
-    for (const status of CLOSED_CASE_STATUSES) {
-      expect(declared, `"${status}" is not a declared crm_case status`).toContain(status);
-    }
-  });
-
-  it('stands down when the middleware already stamped an owner', async () => {
-    // On any write that carries a user, `owner_id` is already the creator by the
-    // time this hook runs — which is what keeps the round-robin scoped to
-    // genuinely ownerless intake instead of re-routing every agent-created case.
-    // The creator is the MORE loaded agent, so a round-robin would have moved it.
-    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 2 }, { open: 0 }]);
-    try {
-      const creator = pool.people[0]!;
-      const kase = await verify.hooks.run('crm_case', 'insert', {
-        subject: 'Agent-created', description: 'Logged from a phone call.',
-      }, { as: creator.token });
-      expect((await storedCase(kase.id)).owner_id).toBe(creator.id);
-    } finally {
-      await pool.release();
-    }
-  });
-
-  // ── the empty-pool path: a first install, not an edge case ──
-
-  it('is a NO-OP when nobody holds the service_agent position — the pool-empty path', async () => {
-    // `sys_user_position` membership is runtime data, so a fresh org has an
-    // empty pool by construction. The case must still be created, ownerless,
-    // and the `unassigned_triage` view is what makes that visible. Holders of
-    // other positions are present, and none may be picked.
-    const others = await staff(SERVICE_MANAGER_POSITION, [{ open: 0 }]);
-    try {
-      const kase = await systemIntake();
-      expect(kase.owner_id ?? null, 'invented an owner out of an empty pool').toBeNull();
-    } finally {
-      await others.release();
-    }
-  });
-
-  it('routes an anonymous submission like any other intake — the reads are elevated (#2014)', async () => {
-    // The anonymous form's own grant (`guest_portal`) reads nothing, so as the
-    // caller the pool came back empty and every web case landed in triage.
-    // The hook declares `runAs: 'system'`: the reads are the business's, and
-    // the least-loaded agent gets the case.
-    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 1 }, { open: 0 }]);
-    try {
-      const asTheForm = { publicFormGrant: { object: 'crm_case' }, permissions: ['guest_portal'], anonymous: true };
-      const guestRead = await verify.kernel.getService<Rec>('objectql')
-        .find('sys_user_position', { where: { position: SERVICE_AGENT_POSITION }, context: asTheForm })
-        .catch((error: unknown) => error);
-      expect(JSON.stringify(guestRead ?? null), 'the form’s own grant reads the pool, so this case proves nothing')
-        .not.toContain(pool.people[1]!.id);
-      const written = await guestInsert(verify, 'crm_case', { subject: 'Anonymous submission', description: 'Help.' });
-      expect((await storedCase(written.id)).owner_id, 'a web case was not routed to the least-loaded agent')
-        .toBe(pool.people[1]!.id);
-    } finally {
-      await pool.release();
-    }
-  });
-
-  it('stays inside the new case’s organization (AGENTS.md rule 10)', async () => {
-    // Elevated, the pool and the load counts are organization-neutral, so the
-    // hook pins both to the organization the writer named on the case. Two
-    // organizations, one agent each: the other organization's agent is the
-    // LESS loaded one, so an unpinned read picks them. On a boot of its own
-    // (and a build of its own), as the escalation case below explains.
-    const twoOrgs = await bootStack(await buildArtifactAgain(), bootOptions());
-    const orgs = await twoOrgs.seed('sys_organization', [
-      { name: 'Intake Org', slug: 'intake-org' }, { name: 'Other Org', slug: 'other-org' },
-    ]);
-    const [own, other] = [String(orgs[0]!.id), String(orgs[1]!.id)];
-    const ownAgent = await signUpPerson(twoOrgs, 'own.agent@case-assignment.test', { name: 'Own Agent' });
-    const otherAgent = await signUpPerson(twoOrgs, 'other.agent@case-assignment.test', { name: 'Other Agent' });
-    await twoOrgs.seed('sys_user_position', [
-      { user_id: ownAgent.id, position: SERVICE_AGENT_POSITION, organization_id: own },
-      { user_id: otherAgent.id, position: SERVICE_AGENT_POSITION, organization_id: other },
-    ]);
-    await twoOrgs.seed('crm_case', [{ subject: 'Own load', description: 'x', status: 'new', owner_id: ownAgent.id, organization_id: own }]);
-    const [kase] = await twoOrgs.seed('crm_case', [{ subject: 'Org intake', description: 'x', status: 'new', organization_id: own }]);
-    const [after] = await twoOrgs.rows('crm_case', { id: kase!.id });
-    expect(after!.owner_id, 'the intake crossed into another organization’s pool').toBe(ownAgent.id);
-  }, 120_000);
-
-  it('never blocks intake, whoever writes it', async () => {
-    // The `!ctx.api` stand-down has no door on the shipped app — the engine
-    // hands every insert a read door — so what is pinned is the property it
-    // protected: a case from each writer lands.
-    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 0 }]);
-    try {
-      const agent = pool.people[0]!;
-      const ids = [
-        (await verify.hooks.run('crm_case', 'insert', { subject: 'By an agent', description: 'x' }, { as: agent.token })).id,
-        (await systemIntake()).id,
-        (await guestInsert(verify, 'crm_case', { subject: 'By a guest', description: 'x' })).id,
-      ];
-      for (const id of ids) expect(await storedCase(String(id)), 'a case was lost').toBeTruthy();
-    } finally {
-      await pool.release();
-    }
-  });
-});
-
-// ─────────────────── ordering: the strip must run BEFORE the assign ──
-
-describe('the guest strip and the assignment are ordered, not merely coexisting', () => {
-  it('case_auto_assign runs after case_sla_defaults', () => {
-    // Hooks run in ASCENDING priority order. `lead_auto_assign` shipped at 150,
-    // BELOW the guest-strip hook, and every web-to-lead landed ownerless because
-    // the strip deleted the owner the round-robin had just assigned — the exact
-    // defect this card is about, on the sibling object. Pinning the relation
-    // rather than the numbers: what matters is which side of the strip this
-    // runs on.
-    expect(assign.priority, 'case_auto_assign must run after the guest strip')
-      .toBeGreaterThan(slaDefaults.priority as number);
-    expect(assign.events).toEqual(['beforeInsert']);
-  });
-
-  it('a guest submission’s spoofed owner is stripped before anything reads it', async () => {
-    // The shape a web-to-case submission actually takes, including the spoofed
-    // owner a public form can always post. Nulled, not removed (#1133) — and
-    // the elevated round-robin after it writes the POOL's choice, never the
-    // submitter's: the victim is a member of the pool, and the more loaded one.
-    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 1 }, { open: 0 }]);
-    try {
-      const written = await guestInsert(verify, 'crm_case', { subject: 'Spoofed', description: 'x', owner_id: pool.people[0]!.id });
-      const kase = await storedCase(written.id);
-      expect(kase.owner_id, 'an anonymous client chose the owner').toBe(pool.people[1]!.id);
-      expect(kase.origin, 'guest defaults regressed').toBe('web');
-    } finally {
-      await pool.release();
-    }
-  });
-
-  /**
-   * The acceptance of #2014's F9 at the platform's own anonymous door,
-   * `POST /forms/:slug/submit` (`verify.api` serves it since 18.0.0-next.0).
-   * The round-robin exists for exactly this submission, and it reaches the
-   * pool elevated; what elevation found must not reach the submitter. Since
-   * objectstack#22437 the door answers the new record's id and nothing else
-   * (maintainer ruling on #2014, item 4 B: the platform fixed the door first).
-   */
-  it('a web-to-case submission is round-robined, and the anonymous answer carries only its id (#2014)', async () => {
-    const pool = await staff(SERVICE_AGENT_POSITION, [{ open: 0 }]);
-    try {
-      const res = await verify.api('/forms/support/submit', {
-        method: 'POST', headers: { 'content-type': 'application/json' },
-        // `supplied_email` is required on the form since #2190 — the door
-        // refuses a submission without it.
-        body: JSON.stringify({ supplied_email: 'visitor@case-assignment.test', subject: 'Web submission', description: 'Printer on fire.', priority: 'high' }),
-      });
-      expect(res.status).toBe(201);
-      const answer = await res.json() as Rec;
-      expect(Object.keys(answer), 'the anonymous answer carries more than the new id').toEqual(['id']);
-      const kase = await storedCase(String(answer.id));
-      expect(kase.origin, 'not the guest submission this case is about').toBe('web');
-      expect(kase.owner_id, 'a web submission was not routed to the staffed agent').toBe(pool.people[0]!.id);
-    } finally {
-      await pool.release();
-    }
-  });
-});
-
-// ─────────────────────── the second deliverable: the triage view ──
-
-describe('unassigned_triage makes the empty-pool path visible', () => {
+describe('unassigned_triage lists the cases sitting in the case_intake queue', () => {
   const caseViews = ((stack as AnyRec).views ?? [])
     .find((v: AnyRec) => v.list?.data?.object === 'crm_case');
   const triage = caseViews?.listViews?.unassigned_triage;
@@ -494,6 +159,12 @@ describe('unassigned_triage makes the empty-pool path visible', () => {
     // driver-memory as well as a NULL one on SQL, and only the operator form
     // answers the same way for both.
     expect(owner!.operator, 'an equals-null filter cannot see an absent column').toBe('is_null');
+    // Ownerless AND in the intake queue: the ADR-0142 meaning of "sits in a
+    // queue" (#2395). A case nobody owns that names no queue is not waiting to
+    // be claimed, and the backfill script gives the pre-18.3 backlog its queue.
+    expect(byField.get('queue'), 'the view no longer reads the intake queue').toMatchObject({
+      operator: 'equals', value: 'case_intake',
+    });
     // `status not_in ['resolved','closed']`, NOT `is_closed == false` (#1145):
     // `is_closed` is derived as `status === 'closed'` and never flips on
     // `resolved`, so a resolved ownerless case used to satisfy both filters and
@@ -981,10 +652,9 @@ describe('case_escalation_reassign', () => {
     // there would demand `crm_case.allowTransfer` on `service_agent`.
     expect(escalationReassign.events).toEqual(['beforeUpdate']);
     expect(escalationReassign.object).toBe('crm_case');
-    // It shares the intake hook's priority band, on the far side of the guest
-    // strip. Nothing on the update path depends on that ordering today — the
-    // strip is insert-only — but the two ownership writers stay in step.
-    expect(escalationReassign.priority).toBe(assign.priority);
+    // It runs on the far side of the guest strip. Nothing on the update path
+    // depends on that ordering today — the strip is insert-only — but the
+    // ownership writer stays after the hook that sanitises its input.
     expect(escalationReassign.priority as number).toBeGreaterThan(slaDefaults.priority as number);
   });
 });

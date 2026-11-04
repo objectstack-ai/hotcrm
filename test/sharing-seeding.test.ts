@@ -460,20 +460,6 @@ const RULE_WITNESSES: Record<string, { reaches: AnyRec; misses: AnyRec[] }> = {
     reaches: { is_closed: false },
     misses: [{ is_closed: true }],
   },
-  case_unassigned_triage_sharing: {
-    // `owner_id == null` is the one rule whose witness turns on a null, and
-    // null semantics are exactly where drivers have been measured to disagree
-    // (objectstack#11065). The assertion is on the ROW that comes back, never
-    // on a null value — an unowned open case is reachable, an owned one is not.
-    // The second clause is `status`, not `is_closed` (#1145) — the derived flag
-    // never flips on `resolved`, so it could not express "no longer live work".
-    reaches: { owner_id: null, status: 'new' },
-    misses: [
-      { owner_id: 'usr_1', status: 'new' },
-      { owner_id: null, status: 'resolved' },
-      { owner_id: null, status: 'closed' },
-    ],
-  },
   opportunity_sales_sharing: {
     reaches: { stage: 'proposal', amount: 250000 },
     misses: [

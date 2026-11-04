@@ -15,7 +15,7 @@ type Rec = Record<string, any>;
  * Cancel. Until #2240 each action also declared a `confirmText`, so the
  * console put "This will escalate the case… Continue?" in front of the form:
  * two dialogs and three clicks before any input. The form IS the
- * confirmation, the rule `claim_case` already ships under.
+ * confirmation.
  *
  * `confirmText` is the UI prompt only. What an AI caller is asked to confirm is
  * `ai.requiresConfirmation` (#1578): on `@objectstack/runtime` 18.0.0,

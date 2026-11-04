@@ -23,7 +23,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
                    ╲ Escalated ────────────╱
 ```
 
-1. **创建工单**（通过电子邮件、网页表单、电话记录，或由 **AI 助手**对来访消息进行分流）。到达时没有负责人的那些，会在插入时分配给负载最轻的**服务坐席**——见[工单路由](/zh-Hans/docs/administration/setup#12-工单路由--没有需要配置的东西)。
+1. **创建工单**（通过电子邮件、网页表单、电话记录，或由 **AI 助手**对来访消息进行分流）。到达时没有负责人的那些，会在插入时分配给负载最轻的**服务坐席**——见[工单路由](/zh-Hans/docs/administration/setup#12-工单路由--一个队列加一条规则)。
 2. **分配优先级**——Low、Medium、High 或 Critical。*Critical* 会立即提醒**工单负责人**，而不是支持经理：这条提醒的收件人列表只有 `{caseRecord.owner_id}` 一项。
 3. **计算 SLA 目标**——每个工单都会根据优先级获得一个截止时间。
 4. **客服处理工单**，随进度推进状态。
@@ -36,7 +36,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 - **自动升级**——只针对 Critical 工单：流程把它们标记为 *Escalated*、提醒原来那位客服，并把工单交给未结工单最少的那位服务经理（若无人持有该岗位，则原地不动）。High 工单永远不会被自动升级，无论账户是什么：要升级它，靠的是手动的 **Escalate Case** 按钮。
 - **严重时通知**——每当工单被设为 Critical 时，站内消息 + 邮件只发给**工单负责人**。这就是工单升级流程的 notify 节点，其收件人列表只有 `{caseRecord.owner_id}` 一项；本应用中不存在 `support_manager@example.com` 这个收件人。
 - **升级时通知**——不会给任何升级团队发邮件：`escalation_team@example.com` 在本应用中根本不存在。状态转为 *Escalated* 真正触发的，是 `case_status_side_effects` 钩子开出的那条**次日到期、优先级为紧急、归账户负责人的跟进任务**。
-- **谁接手就归谁**——停在 **Unassigned — triage** 里的工单，只要你把它转到 *In Progress*、*Waiting on Customer* 或 *Waiting on Support*，它就归你，并转入 **My Open Cases**。见[认领待分流的工单](/zh-Hans/docs/service/cases)。
+- **谁认领就归谁**——停在 **未分派 — 待分诊** 里的工单，你打开它并点击**认领**，它就归你，并转入 **我的待处理工单**，状态保持不变。见[从队列里认领工单](/zh-Hans/docs/service/cases)。
 - **标记解决时间**——工单关闭时自动标记。
 - **标记 SLA 违约**——一旦 SLA 目标时间过去，工单会被标记为 **SLA 已违约**并升级，其负责人收到站内消息 + 邮件提醒。没有红色横幅：本应用没有任何横幅机制。
 - **阻止错误关闭**——未填写解决方案就不能将工单标记为已关闭。

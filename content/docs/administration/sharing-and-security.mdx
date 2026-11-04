@@ -97,7 +97,6 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Large Open Deals — Executive | Opportunity | Read | `executive` — the same deals, one rung up |
 | Escalated Cases Sharing | Case | Edit | `service_manager` — open critical cases |
 | Escalated Cases — Service Director | Case | Read | `service_director` — the same cases, one rung up |
-| Unassigned Cases — Triage | Case | Edit | `service_agent` — unowned cases, until they are Resolved or Closed |
 | Escalated Cases — Previous Owner | Case | Read | the user in the case's `escalated_from` field — the agent an escalation took it from, until it is Closed |
 | Live Campaigns — Marketing Manager | Campaign | Edit | `marketing_manager` — planning / in-progress campaigns |
 | Live Campaigns — Marketing Director | Campaign | Edit | `marketing_director` — the same campaigns |
@@ -115,27 +114,20 @@ Create your own in **Setup → Sharing Rules**.
 > UI marks such a rule as broken, so when a team reports missing records, check
 > that every field the rule names is a plain field on the object.
 
-### A grant meant to be spent: *Unassigned Cases — Triage*
+### Cases and leads waiting in a queue
 
-Most sharing rules are standing openings: a rule that matches a record today matches it again tomorrow, and the recipients keep the access for as long as the record fits the criteria. *Unassigned Cases — Triage* is the one rule built to be **used up**. It grants every `service_agent` **Edit** on cases that have no owner and are neither *Resolved* nor *Closed* — the grant behind the case list's **Unassigned — triage** tab — and it exists so that an agent can take one of those cases. Taking it is what ends the grant:
+A case or lead that arrives with **no owner** waits in a queue: **Support Intake** for cases, **Lead Intake** for leads (see [Case routing](/docs/administration/setup#12-case-routing--a-queue-and-a-rule)). No sharing rule is involved. The platform lets every **member** of the queue read and edit a record while it waits there. The members of Support Intake are everyone holding `service_agent`, and the members of Lead Intake are everyone holding `sales_rep`, plus anyone an administrator adds under **Setup → Access Control → Queue Members**.
 
-1. A case arrives with **no owner** — a web-to-case submission that landed while nobody held the Service Agent position. The rule matches it, so every service agent can see and edit it.
-2. An agent moves it to **In Progress**, **Waiting on Customer** or **Waiting on Support**. The app stamps that agent as the case's **Owner** in the same save.
-3. The case now has an owner, so the rule no longer matches. It drops out of the shared pool and out of the tab, and the agent holds it the ordinary way — as its owner.
+1. A case arrives with no owner, for example a web-to-case submission while nobody holds Service Agent. It waits in Support Intake, so every service agent can see it in the **Unassigned — triage** tab.
+2. An agent opens it and clicks **Claim**. That agent becomes the **Owner**, and nothing else on the case changes.
+3. The case now has an owner, so it no longer waits in the queue. The other agents stop seeing it, and the claimant holds it the ordinary way, as its owner.
 
-> **The claim writes Owner without anyone holding a transfer permission, and
-> that is the design rather than a gap.** Service Agent may reassign tasks only
-> (see *Ownership and transfers* below), and a save that carries Owner is
-> refused for an agent whatever name it holds — their own included. So the claim
-> is not an owner edit that got approved: it is a **status move the app reads as
-> "I am taking this"**, and the only name it can write is the caller's own, onto
-> a case that has no owner yet. *Claim it for somebody else* and *claim a case
-> somebody already owns* have no spelling at all, which is why the gesture needs
-> no new permission. It is not agent-only either: anyone who moves an unowned
-> open case into one of those three statuses claims it that way, an
-> administrator or a service manager included. Automation does not — a seeded or
-> system write leaves the case ownerless, which is what keeps first-install
-> intake visible in the tab.
+> **A claim needs no transfer permission.** Service Agent may reassign tasks
+> only (see *Ownership and transfers* below). Claim is the one Owner write the
+> platform admits without that permission: it writes the caller's own name, onto
+> a record that has no owner and sits in a queue the caller belongs to. Claiming
+> for somebody else, or claiming a record somebody already owns, is refused. If
+> two members claim the same record at once, one wins and the other is refused.
 
 ### A rule widens one object, not the records underneath it
 
@@ -200,13 +192,13 @@ Four everyday actions are **not** transfers and need no such permission:
   you never pick yourself.
 - **Saving a form** without touching Owner, even though the form submits the
   field.
-- **Automation acting on your behalf** — the round-robin that routes an incoming
-  lead, the nightly sweeps that book renewal and follow-up tasks.
-- **Claiming an unowned case.** Moving a case that has nobody on it into *In
-  Progress*, *Waiting on Customer* or *Waiting on Support* makes you its owner
-  (see *A grant meant to be spent* above). Owner does change — but the move
-  names no one, takes the record away from no one, and works only while the case
-  is ownerless, so it is not a reassignment and needs no reassignment right.
+- **Automation acting on your behalf** — the assignment rules that route an
+  incoming case or lead, the nightly sweeps that book renewal and follow-up tasks.
+- **Claiming a record from a queue.** Clicking **Claim** on a case or lead that
+  waits in a queue you belong to makes you its owner (see *Cases and leads
+  waiting in a queue* above). Owner does change, but the claim names only you,
+  takes the record away from no one, and works only while the record has no
+  owner, so it is not a reassignment and needs no reassignment right.
 
 A user without the permission who tries to reassign gets a clear refusal rather
 than a silent no-op. If you need to move a book of business, ask an

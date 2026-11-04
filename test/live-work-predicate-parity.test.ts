@@ -24,6 +24,8 @@ import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
  *   | `unassigned_triage` (view)        | `is_closed == false`      |
  *   | `case_unassigned_triage_sharing`  | `is_closed == false`      |
  *   | `case_auto_assign` load balancing | `status $nin [...]`       |
+ *   (both deleted in #2395; `case_intake_assignment`'s `load` took the
+ *   load-balancing row's place, and the triage view reads the queue)
  *   | `case_escalation_reassign`        | `status $nin [...]`       |
  *   | `case_sla_monitor` (flow)         | `status $nin [...]`       |
  *
@@ -83,9 +85,10 @@ import { CLOSED_CASE_STATUSES } from '../src/service/objects/_case-assignment';
  * `plugin-sharing`'s seeder calls) and the set is read off the result. That
  * survives a future re-spelling of any one consumer and still holds the set.
  *
- * `test/unassigned-case-triage-reach.test.ts` is the behavioural half — it
- * boots the real stack on both drivers and asks what an agent can actually see
- * and claim. This file is the metadata half, and neither replaces the other.
+ * `test/ownership-queues.test.ts` is the behavioural half for intake — it boots
+ * the real stack and asks which case the platform hands to whom, and what an
+ * agent can see and claim. This file is the metadata half, and neither
+ * replaces the other.
  */
 
 type AnyRec = Record<string, any>;
@@ -154,6 +157,7 @@ const sharingRules: AnyRec[] = ((stack as AnyRec).sharingRules ?? []) as AnyRec[
 const flows: AnyRec[] = ((stack as AnyRec).flows ?? []) as AnyRec[];
 const hooks: AnyRec[] = ((stack as AnyRec).hooks ?? []) as AnyRec[];
 const dashboards: AnyRec[] = ((stack as AnyRec).dashboards ?? []) as AnyRec[];
+const assignmentRules: AnyRec[] = ((stack as AnyRec).assignmentRules ?? []) as AnyRec[];
 
 /** A view's `filter[]`, lowered rule by rule into one `$and`. */
 function loweredViewFilter(viewName: string): unknown {
@@ -168,6 +172,19 @@ function loweredSharingCondition(ruleName: string): unknown {
   const rule = sharingRules.find((r) => r.name === ruleName);
   if (!rule) return undefined;
   const source = typeof rule.condition === 'string' ? rule.condition : String(rule.condition?.source ?? '');
+  const compiled = compileCelToFilter(source, { variables: {} });
+  return compiled.ok ? compiled.filter : undefined;
+}
+
+/**
+ * An assignment-rule entry's `load` (CEL), through the compiler the platform's
+ * least_loaded strategy itself calls to count each member's open work.
+ */
+function loweredAssignmentLoad(ruleName: string, entryName: string): unknown {
+  const rule = assignmentRules.find((r) => r.name === ruleName);
+  const entry = ((rule?.entries ?? []) as AnyRec[]).find((e) => e.name === entryName);
+  if (!entry?.load) return undefined;
+  const source = typeof entry.load === 'string' ? entry.load : String(entry.load?.source ?? '');
   const compiled = compileCelToFilter(source, { variables: {} });
   return compiled.ok ? compiled.filter : undefined;
 }
@@ -202,7 +219,7 @@ function widgetFilter(dashboardName: string, widgetId: string): unknown {
  * The `$nin` a sandboxed hook body spells INLINE.
  *
  * `_case-assignment.ts` exports `CLOSED_CASE_STATUSES`, but the L2 sandbox
- * gives a handler no module scope, so the two load-balancing handlers write the
+ * gives a handler no module scope, so the escalation load-balancing handler writes the
  * literals out. Read them off the REGISTERED handler rather than off the file,
  * so a hook that fell out of the stack fails this lookup instead of passing on
  * the strength of a source file nothing mounts.
@@ -265,14 +282,12 @@ const LIVE_WORK_CONSUMERS: { name: string; surface: string; excluded: () => stri
     excluded: () => excludedValues(loweredViewFilter('escalated_cases'), 'status'),
   },
   {
-    name: 'case_unassigned_triage_sharing',
-    surface: 'sharing condition (CEL) — src/sharing/case.sharing.ts',
-    excluded: () => excludedValues(loweredSharingCondition('case_unassigned_triage_sharing'), 'status'),
-  },
-  {
-    name: 'case_auto_assign',
-    surface: 'load-balancing count — src/objects/_case-assignment.ts',
-    excluded: () => hookInlineStatusExclusions('case_auto_assign'),
+    // The platform's intake routing (#2395): least_loaded counts each agent's
+    // cases matching `load`. A resolved case counting as load would starve the
+    // agent who closes the most.
+    name: 'case_intake_assignment',
+    surface: 'assignment rule load (CEL) — src/service/assignment-rules/case.assignment-rule.ts',
+    excluded: () => excludedValues(loweredAssignmentLoad('case_intake_assignment', 'least_loaded_agent'), 'status'),
   },
   {
     name: 'case_escalation_reassign',
@@ -360,9 +375,8 @@ describe('the "no longer live work" predicate is ONE set, and the roster is by n
       const fields = narrowedFields(loweredViewFilter(name));
       if (fields.includes('is_closed')) offenders.push(`${name} (view filter)`);
     }
-    for (const name of ['case_unassigned_triage_sharing']) {
-      const fields = narrowedFields(loweredSharingCondition(name));
-      if (fields.includes('is_closed')) offenders.push(`${name} (sharing condition)`);
+    if (narrowedFields(loweredAssignmentLoad('case_intake_assignment', 'least_loaded_agent')).includes('is_closed')) {
+      offenders.push('case_intake_assignment (assignment load)');
     }
     expect(
       offenders,

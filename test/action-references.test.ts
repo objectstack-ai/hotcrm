@@ -428,8 +428,8 @@ describe('record-page header action references resolve', () => {
     // The #2072 shape, on the real case header: take one action off its list.
     const caseHeader = recordHeaders.find(({ page }) => page.name === 'case_detail_page');
     const listed: string[] = caseHeader?.component.properties?.actions ?? [];
-    expect(listed).toContain('claim_case');
-    expect(unlistedHeaderActions('crm_case', listed.filter((n) => n !== 'claim_case'))).toEqual(['claim_case']);
+    expect(listed).toContain('escalate_case');
+    expect(unlistedHeaderActions('crm_case', listed.filter((n) => n !== 'escalate_case'))).toEqual(['escalate_case']);
   });
 });
 

@@ -8,6 +8,7 @@ import { MetadataPlugin } from '@objectstack/metadata';
 import stack from './helpers/composed-stack';
 import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
 import { Quote } from '../src/revenue/objects/quote.object';
+import { withoutOwnershipQueues } from './helpers/bare-kernel-stack';
 
 /**
  * The organization every write here carries: since 18.1.0 the driver creates
@@ -166,7 +167,7 @@ async function bootKernel(driver: string, config: AnyRec, withInjector: boolean)
   const app: AnyRec = withInjector
     ? { ...(stack as AnyRec), hooks: [...((stack as AnyRec).hooks ?? []), injectorHook] }
     : (stack as AnyRec);
-  await kernel.use(new AppPlugin(app as never, undefined as never, { skipSeedData: true } as never));
+  await kernel.use(new AppPlugin(withoutOwnershipQueues(app) as never, undefined as never, { skipSeedData: true } as never));
   await kernel.bootstrap();
   return kernel;
 }

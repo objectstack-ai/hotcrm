@@ -64,7 +64,8 @@ beforeAll(async () => {
     name: 'Sweep Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
   // Service grants, but NOT on the `service_agent` rota: a case the agent
-  // opens stays the agent's (`case_auto_assign` round-robins the rota).
+  // opens stays the agent's (`case_intake_assignment` hands ownerless cases
+  // to the rota).
   agent = await signUpPerson(verify, 'agent@flow-scheduled.test', {
     name: 'Sweep Agent', permissionSets: ['service_agent'],
   });

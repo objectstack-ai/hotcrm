@@ -19,7 +19,7 @@ type Rec = Record<string, any>;
  *
  * Of the 24 hooks this app registers, only four had runtime coverage
  * (`opportunity_amount_rollup`, `opportunity_line_item_price_fill`,
- * `quote_total_rollup`, `lead_auto_assign`). Everything asserted below — the
+ * `quote_total_rollup`, and the since-deleted `lead_auto_assign`). Everything asserted below — the
  * whole opportunity lifecycle, the closed-record freeze, quote acceptance
  * drafting a contract, the delete-protection guards on account / contact /
  * product — was previously proven only to be *wired*, never to *work*.

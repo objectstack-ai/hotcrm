@@ -207,8 +207,8 @@ describe('pool NON-EMPTY: the ownerless breach is assigned, then that owner is a
    * "write a constant", and the agent row is what fails a read that took every
    * row in the table instead of filtering by position. The pool is staffed
    * AFTER this branch's cases are written: a case written while a
-   * `service_agent` holds the rota is round-robined onto them by
-   * `case_auto_assign`, and would not be ownerless at all.
+   * `service_agent` holds the rota is handed to them by
+   * `case_intake_assignment`, and would not be ownerless at all.
    *
    * ⚠️ The pin below deliberately does NOT name which manager gets which case.
    * Least-loaded is recomputed per case against LIVE counts, so the sweep

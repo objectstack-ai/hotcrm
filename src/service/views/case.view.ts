@@ -173,63 +173,46 @@ export const CaseViews = defineView({
     },
 
     /**
-     * Unassigned — triage (#596). The second half of the queue substitute.
+     * Unassigned — triage: the cases waiting in the Support Intake queue.
      *
-     * `case_auto_assign` (`src/service/objects/_case-assignment.ts`) is a NO-OP whenever
-     * the `service_agent` pool is empty, and an empty pool is the FIRST-INSTALL
-     * NORM rather than an edge case: `sys_user_position` membership is runtime
-     * data, so on a fresh org — and any time every agent has been unassigned
-     * from the position — an inbound web-to-case lands ownerless. Best-effort
-     * assignment also stands down when its pool read fails.
+     * Since @objectstack 18.3.0 a case nobody owns SITS in a queue (ADR-0142
+     * D3): `case_intake_assignment` routes every ownerless new case into
+     * `case_intake`, and with nobody holding `service_agent` — the
+     * FIRST-INSTALL NORM, since position membership is runtime data — the case
+     * parks there instead of being handed to an agent. This tab is that queue's
+     * standing view: its row count IS the intake backlog. An agent opens a row
+     * and presses the console's **Claim**; the case then has an owner and
+     * leaves the tab.
      *
-     * Those cases used to be invisible: no view filtered on the absence of an
-     * owner, so an unowned case appeared in `All Cases` with a blank Owner
-     * column and nothing distinguished it from the rest. This view is the
-     * standing answer — silence replaced by a pinned tab whose row count IS the
-     * intake backlog.
-     *
-     * `is_null` on `owner_id`, not `equals: null`: the ownerless shape is an
-     * ABSENT column on driver-memory (see the totality note in
-     * `case-escalation.flow.ts`, where `record.escalated_date == null` aborted
-     * with `No such key`) as well as a NULL one on SQL, and only the operator
-     * form answers the same way for both.
+     * The filter is the platform's own meaning of "sits in": `owner_id` empty
+     * AND `queue` names the queue (ADR-0142 D8 re-pointed it here). `is_null`
+     * on `owner_id`, not `equals: null`: the ownerless shape is an ABSENT column
+     * on driver-memory as well as a NULL one on SQL, and only the operator form
+     * answers the same way for both. A case that was ownerless before the
+     * upgrade has no `queue` until `scripts/backfill-intake-queue.ts` sets it.
      *
      * The predicate for "no longer live work" is `status not_in ['resolved',
      * 'closed']`, NOT `is_closed == false`. `is_closed` is derived by
      * `case_sla_defaults` as `effStatus === 'closed'`, so it never flips on
-     * `resolved` — and a resolved ownerless case satisfied both of this view's
-     * old filters and sat here forever, which is neither "arrives with no
-     * owner" nor "work waiting for a human". `not_in` lowers to the `$nin` the
-     * load-balancing hooks and `case_sla_monitor` already use for the same
-     * concept, so the four consumers now state one predicate; the roster that
-     * holds them together by NAME is `test/live-work-predicate-parity.test.ts`.
-     * `closed` stays excluded for the reason it always was: history, not
-     * backlog.
+     * `resolved`. The queue's read path shows its members EVERY case sitting in
+     * it, resolved and closed ones included (ADR-0142 D8: the deleted triage
+     * sharing rule hid those, the platform path does not), so this filter is
+     * what keeps the tab meaning "work waiting for a human". `not_in` lowers to
+     * the `$nin` `case_intake_assignment`'s `load` and `case_sla_monitor` use for
+     * the same concept; the roster that holds them together by NAME is
+     * `test/live-work-predicate-parity.test.ts`.
      *
-     * ⚠️ WHO ACTUALLY SEES ROWS HERE is decided by record-level access, not by
-     * this view, and the answer today is narrower than the tab suggests. A
-     * view tab carries no role scoping — `ViewTabSchema` has `pinned`,
-     * `isDefault` and a boolean `visible`, and nothing per-profile — so this is
-     * pinned for everyone who can open Cases, while the ROWS resolve per
-     * profile:
+     * WHO SEES ROWS HERE is decided by record-level access, not by this view.
+     * A view tab carries no role scoping, so it is pinned for everyone who can
+     * open Cases, while the rows resolve per person:
      *
-     *   - `system_admin` — `viewAllRecords`, so the full backlog. This is the
-     *     persona the empty-pool state is FOR: an empty `service_agent` pool is
-     *     fixed by staffing `sys_user_position`, which only an admin can do.
-     *   - `sales_manager` — `viewAllRecords`, read-only.
-     *   - a service manager / director — the critical, open slice only, via the
-     *     existing `case_escalation_sharing` / `case_director_sharing` criteria
-     *     rules (`src/service/sharing/case.sharing.ts`).
-     *   - `service_agent` — `readScope: 'own'` on `crm_case`, and an unowned
-     *     row is owned by nobody, so **an agent's triage tab is empty**.
-     *
-     * The last line is a real gap for the "agent pulls from the queue" story
-     * and is deliberately NOT closed here: granting service roles sight of
-     * unowned cases is a sharing-model change (a new criteria rule, or a
-     * `readScope` widening), which is outside this card's file surface and is
-     * exactly the kind of quiet permission widening the #596 ruling rules out.
-     * Filed as #1096 for a decision, with the reach table above and the three
-     * options priced.
+     *   - a holder of `service_agent` — a member of `case_intake`, so every
+     *     case sitting in it, through `current_user.queues`;
+     *   - `system_admin` and `sales_manager` — `viewAllRecords`;
+     *   - a service manager / director — not a queue member (the queue names
+     *     the `service_agent` position), so the critical, open slice only,
+     *     through `case_escalation_sharing` / `case_director_sharing`
+     *     (`src/service/sharing/case.sharing.ts`).
      */
     unassigned_triage: {
       name: 'unassigned_triage',
@@ -242,6 +225,7 @@ export const CaseViews = defineView({
       columns: ['case_number', 'subject', 'crm_account', 'crm_contact', 'supplied_name', 'supplied_email', 'priority', 'status', 'origin', 'sla_due_date'],
       filter: [
         { field: 'owner_id', operator: 'is_null' },
+        { field: 'queue', operator: 'equals', value: 'case_intake' },
         { field: 'status', operator: 'not_in', value: ['resolved', 'closed'] },
       ],
       // Same ordering as the main queue: urgency first (on the materialised
@@ -257,13 +241,13 @@ export const CaseViews = defineView({
       // fetch for this view selects `is_sla_violated` (measured).
       rowColor: { field: 'is_sla_violated', colors: { true: 'red' } },
       // The empty state carries the operational instruction, because "no rows"
-      // here is ambiguous on its own: it means either "the round-robin placed
-      // everything" (good) or "no case has arrived yet" (also fine) — and the
-      // reader most likely to be looking is someone who just found the tab
-      // full and needs to know why.
+      // here is ambiguous on its own: it means either "the assignment rule
+      // placed everything" (good) or "no case has arrived yet" (also fine) —
+      // and the reader most likely to be looking is someone who just found the
+      // tab full and needs to know why.
       emptyState: {
         title: 'Nothing waiting for triage',
-        message: 'Every case has an owner. Cases appear here when they arrive with no owner — typically a web-to-case submission that arrived while nobody held the Service Agent position.',
+        message: 'Every case has an owner. A case waits here in the Support Intake queue when it arrives while nobody holds the Service Agent position. Open it and press Claim to take it.',
         icon: 'inbox',
       },
     },
