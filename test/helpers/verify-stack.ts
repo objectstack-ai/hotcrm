@@ -12,6 +12,7 @@ import { EmailServicePlugin, resolveEmailCapabilityArg, type EmailServicePluginO
 import { resolveCapabilityArgument } from '@objectstack/core';
 import artifact from '../../objectstack.config';
 import { placeSeedFiles } from './seed-files';
+import { knowledgeArticles } from '../../src/service/data/service.seed';
 
 /**
  * The app, booted through the platform's own in-process handle.
@@ -123,11 +124,17 @@ placeSeedFiles(artifact as Record<string, any>);
  * probe because every one of them is seeded ownerless and claimed.
  */
 export const seedClaimSettled = async (stack: VerifyStack): Promise<void> => {
+  // Once per boot, and only the SEEDED articles: a suite writes ownerless
+  // articles of its own after the first wait.
+  if (claimSettled.has(stack)) return;
+  const seeded = new Set((knowledgeArticles.records as Row[]).map((r) => String(r.title)));
   await vi.waitFor(async () => {
-    const unowned = (await stack.rows('crm_knowledge_article')).filter((r) => r.owner_id == null);
+    const unowned = (await stack.rows('crm_knowledge_article')).filter((r) => seeded.has(String(r.title)) && r.owner_id == null);
     if (unowned.length > 0) throw new Error(`${unowned.length} seeded knowledge article(s) still unowned`);
   }, { timeout: 60_000, interval: 100 });
+  claimSettled.add(stack);
 };
+const claimSettled = new WeakSet<VerifyStack>();
 
 export const hotcrmStack = async (): Promise<VerifyStack> => {
   const stack = await bootStackOnce(artifact, HOTCRM_BOOT);
