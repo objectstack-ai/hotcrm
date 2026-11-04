@@ -50,11 +50,17 @@ const quote = async (status: string, withContact = true): Promise<string> => {
   return String(row!.id);
 };
 
-/** The `sys_attachment` row a file write leaves on the quote, written as the rep. */
+/**
+ * The `sys_attachment` row a file write leaves on the quote, written as the rep.
+ * The file is the rep's own (`owner_id`), as the print service leaves it
+ * (measured on 18.3.0: the archived `sys_file` is owned by the user who
+ * printed) — and since 18.3.0 the attachment write admits a caller only to a
+ * file they may open.
+ */
 const attach = async (quoteId: string, fileName: string): Promise<string> => {
   const [file] = await verify.seed('sys_file', [{
     key: `attachments/${fileName}`, name: fileName, mime_type: 'application/pdf', size: 1,
-    scope: 'attachments', status: 'committed',
+    scope: 'attachments', status: 'committed', owner_id: rep.id,
   }]);
   const row = await verify.hooks.run('sys_attachment', 'insert', {
     parent_object: 'crm_quote', parent_id: quoteId, file_id: String(file!.id),
