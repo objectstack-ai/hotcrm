@@ -592,6 +592,73 @@ verdict does not gate a module booted from an artifact — the version table in
 `psa-module-plan.md`, *Where PSA sits*, cites the changelog entries. PR 1 is still the
 measurement that proves it here.
 
+## Decisions recorded (2026-10-26) — one dependency level; the contract is the app package's; Service stays
+
+Ruled by the maintainer in one project session on 2026-10-26, on a plan for making each package of
+the artifact independently installable under ADR-0141 (objectstack#25403 B′, the runtime card
+objectstack#25792). The rulings, verbatim and untranslated, in the order given:
+
+> 「同意拆包，但是是否建议只做一层依赖」
+> 「同意」 (on: one dependency level, and the contract moving into the app package)
+> 「暂不拆，随 HotCRM 一起装」 (the decision card on Service)
+> 「多币种是否建议等平台扩展功能」 → wait for the platform (recorded under item 14)
+
+The sections above are left as written; decisions 4–9 of 2026-09-14 still hold except where an
+item below says otherwise.
+
+10. **One dependency level.** Every add-on package declares exactly one entry in
+    `manifest.dependencies`: `app.objectstack.hotcrm`. The app package depends on nothing of this
+    artifact; add-on packages never depend on each other. The reason is what ADR-0141 D3 defers —
+    cascade install, uninstall protection, upgrade interception: with one level an administrator
+    installs HotCRM and then any add-on in any order, removing one add-on strands none, and the
+    sibling arm of ADR-0141 D5 is the only co-ownership path a module ever needs. A source more
+    than one add-on needs sinks into the app package (item 7's rule, now applied to objects too);
+    ⛔ never an edge between add-ons.
+
+11. **`crm_contract` moves from `revenue` to the app package.** The object, its hook, its views,
+    its three flows (`contract-expiration`, `contract-renewal`, `billing-handoff-contract-activated`)
+    and the `payment_terms` picklist move from `src/revenue/` to `src/sales/`; the object name is
+    unchanged, its owning package becomes `app.objectstack.hotcrm`. Measured before the ruling: the
+    contract's own references all point at app-package objects (`crm_account` master-detail,
+    `crm_contact`, `crm_opportunity`, `sys_user`) and none at a revenue object, so the move creates
+    no reverse edge; the quote-accepted draft of a contract (`src/revenue/objects/quote.hook.ts`)
+    becomes a write along the revenue → app edge, which is legal. It also retires two of the
+    app → module hard edges `account.hook.ts` and `contact.hook.ts` carried (the activated-contract
+    counts before a delete). This is why item 10 holds for O2C and PSA: both needed revenue only for
+    the contract. **Done while the artifact is still one** (PR 0.5 below), so an installed tenant
+    takes the move in one upgrade. Decision 5's object list for `revenue` is amended accordingly:
+    `crm_product`, `crm_opportunity_line_item`, `crm_quote`, `crm_quote_line_item`.
+
+12. **Service stays in the base artifact.** `app.objectstack.hotcrm.service` remains a
+    `type: module` package shipped inside the HotCRM artifact, not an independently installable
+    app. Measured reason: the app package's own items reach into service most — `crm_task` and
+    `crm_event` each carry a `related_to_case` lookup, the activity-action factory hosts
+    `crm_case`, the Customer 360 skill reads cases and articles, and every permission set grants on
+    its objects — so carving it out needs the page- and field-extension capabilities the platform
+    has not shipped. Revisit trigger: a customer asking to buy service separately.
+
+13. **Carve-out sequence, superseding the tail of item 9.** Revenue first (hotcrm#2271), marketing
+    second, each as its own artifact whose consumer-installable package is `type: 'app'` with the
+    id it has today (ADR-0141 D7); O2C and PSA are born standalone and never ship inside the HotCRM
+    artifact. HotCRM goes to **7.0.0** in the release that stops carrying revenue — an installed
+    tenant's upgrade path from a 6.x full artifact is **unmeasured** and is the first measurement
+    of hotcrm#2271. The three unlock conditions, in order: (a) a published `@objectstack/*` release
+    carrying objectstack#25792, #26054 and #25514, and the pin bump; (b) PR 0.5 above; (c) the
+    hard-edge ledger — every app → module reference listed with its destination, measured on a
+    booted stack with the module absent, platform refusals filed upstream (⛔ no existence guard,
+    try/catch or copied dataset in this repository). Cards (filed 2026-10-27, held until the
+    maintainer lifts 「暂时 hotcrm 不派发」): PR 0.5 is hotcrm#2310, the ledger hotcrm#2311, marketing's
+    carve-out hotcrm#2314, O2C hotcrm#2315, PSA hotcrm#2317. O2C's decisions 2 and 3 of 2026-10-23 and
+    PSA's `+ revenue` dependency line are superseded by items 10 and 11 (recorded in each plan).
+
+14. **Multi-currency waits for the platform; price books do not.** On `@objectstack/spec` 18.1.0 a
+    `currency` field's value is a bare number, `currencyConfig.currencyMode` is `dynamic` (tenant
+    default) or `fixed` (one currency per field), and there is no per-record currency, no exchange-
+    rate table and no report conversion. All three are platform capability (AGENTS.md *Scope* rules
+    1 and 2): the platform card is objectstack#8345 (on hold since 2026-10-08 by the maintainer's own
+    word), and nothing is simulated here. Price books (REQ-0009) are plain metadata inside `revenue`
+    and proceed.
+
 ## References
 
 - ADR-0130 — the release artifact is the co-ownership boundary (one artifact, N packages)
