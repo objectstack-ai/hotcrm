@@ -18,6 +18,7 @@ import {
   opportunityLineItemHook, priceBookEntryHook, priceBookHook, productHook, quoteHook, quoteLineItemHook,
 } from './objects/hooks.js';
 import { QuoteDetailPage, QuotePrintPage } from './pages/index.js';
+import { RevenueTranslations } from './translations/index.js';
 import { ProductViews, QuoteViews } from './views/index.js';
 
 /**
@@ -162,6 +163,7 @@ export const createHotCrmRevenueStack = (
   emailTemplates: RevenueEmailTemplates,
   // Its manual (#2327), over `src/revenue/docs/`. See the book's own note.
   books: [CrmRevenueManual],
+  translations: [RevenueTranslations],
   // The quote's working page (explicit default) and its print page (#2312).
   pages: [QuoteDetailPage, QuotePrintPage],
   // Mounts `POST /api/v1/print/records`, the door Print Quote calls.

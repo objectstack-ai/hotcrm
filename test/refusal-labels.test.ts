@@ -7,9 +7,9 @@ import { Opportunity } from '../src/sales/objects/opportunity.object';
 import { Contract } from '../src/sales/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
 import { Lead } from '../src/sales/objects/lead.object';
-import { commerce as zhCommerce } from '../src/sales/translations/zh-CN/objects.commerce';
-import { commerce as esCommerce } from '../src/sales/translations/es-ES/objects.commerce';
-import { commerce as jaCommerce } from '../src/sales/translations/ja-JP/objects.commerce';
+import { zhCN as zhRevenue } from '../src/revenue/translations/zh-CN';
+import { esES as esRevenue } from '../src/revenue/translations/es-ES';
+import { jaJP as jaRevenue } from '../src/revenue/translations/ja-JP';
 
 /**
  * Six freeze refusals name fields and states by the labels the user sees
@@ -143,10 +143,10 @@ describe('the quote status warning names the statuses by their labels (#2371 row
     expect(rule.message).not.toMatch(/invalid|transition|in_review/i);
   });
 
-  it.each([['zh-CN', zhCommerce], ['es-ES', esCommerce], ['ja-JP', jaCommerce]] as const)(
+  it.each([['zh-CN', zhRevenue], ['es-ES', esRevenue], ['ja-JP', jaRevenue]] as const)(
     '%s: the pack sentence names every status by the pack\'s own option label',
     (_locale, pack) => {
-      const quote = (pack as AnyRec).crm_quote;
+      const quote = (pack as AnyRec).objects.crm_quote;
       const message = String(quote._validations.quote_status_progression.message);
       for (const value of statuses) expect(message, value).toContain(quote.fields.status.options[value]);
     },

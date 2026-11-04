@@ -466,32 +466,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
     },
   },
-  crm_opportunity_line_item: {
-    _validations: {
-      unit_price_positive: {
-        message: '販売価格を負の値にすることはできません',
-      },
-    },
-    label: '商談商品明細',
-    pluralLabel: '商談商品明細',
-    description: '商談配下の製品別価格明細行',
-    fields: {
-      crm_opportunity: { label: '商談' },
-      crm_product: { label: '製品' },
-      description: { label: '説明' },
-      product_title: { label: '製品タイトル', help: '製品のタイトル。製品と同期して更新され、この明細行の名前になります。' },
-      quantity: { label: '数量' },
-      list_price: { label: '定価', help: '製品のカタログ価格から自動入力されます' },
-      unit_price: { label: '販売価格', help: '交渉後の単価（定価と異なる場合があります）' },
-      discount: { label: '割引率（%）' },
-      total_price: { label: '合計' },
-      line_number: { label: '行番号' },
-    },
-    _sections: {
-      basic: { label: '明細行' },
-      pricing: { label: '価格' },
-    },
-  },
   crm_forecast: {
     _validations: {
       period_end_after_start: {
