@@ -114,6 +114,31 @@ Two record-level rules sit on top of the object grants:
   Manager), `crm_case.internal_notes` (service-only; hidden from Sales Rep),
   `crm_account.annual_revenue` and the computed case SLA fields.
 
+## Turning a module off
+
+HotCRM ships as the core app plus three modules — **HotCRM Service**,
+**HotCRM Revenue** and **HotCRM Marketing** — and a module you do not use can be
+turned off at **Setup → Installed Apps**: choose *Show all*, open the module
+and choose **Disable**. **Enable** turns it back on.
+
+While a module is off, nobody sees it, administrators included:
+
+- Its entries leave the sidebar — the Service group and *My Cases* for
+  Service, *Quotes*, *Products* and *Price Books* for Revenue, *Campaigns* for
+  Marketing — and its records cannot be opened.
+- The core app stops offering the buttons that lead into it: **Add to
+  Campaign** on leads and contacts while Marketing is off, **Generate Quote**
+  on opportunities while Revenue is off. The CRM Overview's *List Price by
+  Category* tile is left out while Revenue is off.
+- A field that points into the module, such as an opportunity's *Campaign* or
+  the case a task is related to, keeps the value it already has on the record
+  page, but its picker offers nothing new. The module's related lists read
+  empty.
+
+Turning a module off deletes nothing: its records stay in the database, and
+turning the module back on brings them, its sidebar entries and its buttons
+back.
+
 ---
 
 **Related:** where every automated threshold lives — see
