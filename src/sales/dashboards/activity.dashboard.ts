@@ -95,7 +95,10 @@ export const ActivityDashboard: Dashboard = {
       title: 'Meetings Booked',
       description: 'Meetings on the calendar that have not happened yet',
       type: 'metric',
-      filter: { status: 'planned', type: 'meeting' },
+      // `status: planned` alone counted every booking nobody marked held, so
+      // the tile grew with last month's meetings; the start-time bound keeps
+      // the description true (#2393, the same cut as `upcoming_events`).
+      filter: { status: 'planned', type: 'meeting', start_datetime: { $gte: '{now}' } },
       colorVariant: 'blue',
       dataset: 'event_metrics', values: ['event_count'],
       layout: { x: 3, y: 0, w: 3, h: 1 },

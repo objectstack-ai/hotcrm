@@ -212,8 +212,8 @@ export const Event = ObjectSchema.create({
     // happened yet" is stale the moment the clock passes it, and the app has
     // already been burnt by exactly that (`crm_task.is_overdue` — see the
     // `overdue_tasks` view's label note). `status` is the authored, non-decaying
-    // signal, and the upcoming/past views filter on it and sort by
-    // `start_datetime` instead.
+    // signal; the upcoming view adds a read-time `start_datetime >= {now}` cut
+    // beside it (#2393), which is computed per query and so cannot go stale.
   },
 
   // API surface. History → Field.trackHistory (ADR-0052).

@@ -68,7 +68,7 @@ description: 赢率、管道、配额达成、覆盖倍数和客户流失信号�
 | **Activities** | 电话和会议，每个活动算一次。 |
 | **Minutes** | **时长（分钟）**之和。 |
 | **Interactions Logged** | 状态为**已举行**的 **Activities**：真正发生过的接触。 |
-| **Meetings Booked** | 类型为**会议**、状态为**已计划**的 **Activities**：还没到来的会议。 |
+| **Meetings Booked** | 类型为**会议**、状态为**已计划**且**开始时间**还没到的 **Activities**：还没到来的会议。 |
 | **Customer Minutes** | 状态为**已举行**的活动的 **Minutes**。 |
 | **Tasks Completed** | 勾选了**是否完成**的 **Tasks**。 |
 

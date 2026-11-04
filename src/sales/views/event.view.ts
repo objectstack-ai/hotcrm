@@ -9,18 +9,32 @@ import { defineView } from '@objectstack/spec/ui';
  *   • calendar — the schedule, start → end (the platform view type the issue asks for)
  *   • timeline — the same rows laid out per rep
  *   • mine     — my calendar
- *   • upcoming — what is booked but has not happened yet
+ *   • upcoming — what is booked and has not started yet
  *   • held     — what actually happened, the interaction history
  *
- * # Why no "past events" filter on a date
+ * # Upcoming is a date cut, not only a status
  *
- * The list-view data path resolves ONLY the user tokens (`{current_user_id}`);
- * date macros ship to the server as literal strings, and because
- * `'2026-…' < '{…'` is lexicographically true, a `start_datetime < {today}`
- * filter matches the FUTURE rows instead of the past ones — inverted, not
- * merely empty (the same trap `overdue_tasks` documents). So the past/future
- * split is expressed with `status`, which is authored and does not decay, and
- * the ordering does the rest.
+ * `upcoming_events` is `status = planned` AND `start_datetime >= {now}` (#2393).
+ * `status` alone is not enough: nothing flips a booking to `held` when its time
+ * passes, so a meeting nobody logged stays `planned` for ever, and the seeded
+ * bookings (1-7 days after install) had all gone stale a week in. The home
+ * page's Upcoming Events card reads this view, so every user saw last month's
+ * meetings under that title.
+ *
+ * What stood here said a date filter could not be written: that the list read
+ * path resolved only `{current_user_id}`, so `{today}` would ship as a literal
+ * and compare lexicographically, inverted. That was a 16.x reading. The ObjectQL
+ * read path has run `resolveFilterTokens()` since 17.0.0-rc.0, and `{now}` is
+ * in the vocabulary (`task.view.ts` and `opportunity.view.ts` carry the same
+ * correction for `{today}` / `{14_days_ago}`). On 18.3.0 `{now}` reaches the
+ * driver as the current instant in ISO form, measured against a real engine in
+ * `test/upcoming-events-view.test.ts`.
+ *
+ * `{now}`, not `{today}`: the field is a datetime, and a meeting that started
+ * at 09:00 is no longer upcoming at 15:00 the same day. An event in progress
+ * drops off the list at its start time; the calendar views still show it.
+ * `held_events` stays a status cut: what happened is authored, and a past
+ * booking nobody marked held is not history either.
  */
 export const EventViews = defineView({
   list: {
@@ -107,7 +121,7 @@ export const EventViews = defineView({
       },
     },
 
-    /** Booked, not yet held — soonest first. */
+    /** Booked and not started yet — soonest first. */
     upcoming_events: {
       name: 'upcoming_events',
       type: 'grid',
@@ -115,7 +129,12 @@ export const EventViews = defineView({
       userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_event' },
       columns: ['subject', 'type', 'start_datetime', 'location', 'related_to_type', 'owner_id'],
-      filter: [{ field: 'status', operator: 'equals', value: 'planned' }],
+      // Both halves are needed: see "Upcoming is a date cut" at the top of
+      // this file. Canonical operator spelling (`VIEW_FILTER_OPERATORS`).
+      filter: [
+        { field: 'status', operator: 'equals', value: 'planned' },
+        { field: 'start_datetime', operator: 'greater_than_or_equal', value: '{now}' },
+      ],
       sort: [{ field: 'start_datetime', order: 'asc' }],
     },
 

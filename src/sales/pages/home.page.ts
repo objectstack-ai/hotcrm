@@ -317,8 +317,8 @@ export const SalesHomePage: Page = {
           // says: `my_events` is scoped to the current user but carries no date
           // filter, no sort and no date column (27 seeded rows, mostly `held`
           // interactions from the past), while `upcoming_events` is
-          // `status: 'planned'` sorted by `start_datetime` ascending with the
-          // date on the row. Narrowing either one to today would mean retyping
+          // `status: 'planned'` starting at or after `{now}` (#2393), sorted by
+          // `start_datetime` ascending with the date on the row. Narrowing either one to today would mean retyping
           // a filter in this page — the second definition the helper above
           // exists to prevent — so the title says "upcoming" instead of
           // promising a day this page cannot compute.

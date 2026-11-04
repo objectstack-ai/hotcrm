@@ -69,6 +69,8 @@ const LOCALES: Locale[] = [
     window: {
       '{12_months_ago}': 'last 12 months', '{30_days_ago}': '30 days', '{60_days_ago}': '60 days',
       '{90_days_ago}': '90 days', '{current_quarter_start}': 'current quarter', '{current_year_start}': 'current year',
+      // A lower bound at the current instant: "not started yet" (#2393).
+      '{now}': 'has not passed',
     },
   },
   {
@@ -78,6 +80,7 @@ const LOCALES: Locale[] = [
     window: {
       '{12_months_ago}': '最近 12 个月', '{30_days_ago}': '30 天', '{60_days_ago}': '60 天',
       '{90_days_ago}': '90 天', '{current_quarter_start}': '本季度', '{current_year_start}': '本年',
+      '{now}': '还没到',
     },
   },
 ];
