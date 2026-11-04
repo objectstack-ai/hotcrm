@@ -278,7 +278,8 @@ function seededKeysByObject(): Map<string, { field: string; keys: Set<string> }>
  * of it at +39 s. A run started inside that window routed what had landed and
  * nothing else: `crm_task` and `crm_event` "routed no rows at all" (exit 1),
  * and the cases, inserted after the staffing, were round-robined onto the
- * service agent by `case_auto_assign` instead of routed. That is why this wait
+ * service agent by `case_auto_assign` (the intake round-robin hook then; the
+ * platform's `case_intake_assignment` rule since #2395) instead of routed. That is why this wait
  * comes BEFORE step 0, not just before the hand-over.
  *
  * ### What "settled" means here

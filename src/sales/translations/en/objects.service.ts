@@ -81,7 +81,7 @@ export const service: Record<string, ObjectTranslationData> = {
         label: 'Unassigned — triage',
         emptyState: {
           title: 'Nothing waiting for triage',
-          message: 'Every case has an owner. Cases appear here when they arrive with no owner — typically a web-to-case submission that arrived while nobody held the Service Agent position.',
+          message: 'Every case has an owner. A case waits here in the Support Intake queue when it arrives while nobody holds the Service Agent position. Open it and press Claim to take it.',
         },
       },
       escalated_cases: { label: 'Escalated Cases' },
@@ -112,10 +112,6 @@ export const service: Record<string, ObjectTranslationData> = {
         label: 'Close Case',
         confirmText: 'Are you sure you want to close this case?',
         successMessage: 'Case closed successfully!',
-      },
-      claim_case: {
-        label: 'Claim Case',
-        successMessage: 'Case claimed — it is yours now.',
       },
       reopen_case: {
         label: 'Reopen Case',

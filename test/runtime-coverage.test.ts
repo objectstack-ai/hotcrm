@@ -67,14 +67,12 @@ const RUNTIME_TEST_FILES = [
   // measures through the real analytics executor on both drivers.
   'knowledge-feedback.test.ts',
   'knowledge-deflection.test.ts',
-  // #1096 — the triage claim seam. Same precedent as the lines above, and a
-  // stronger case for it than most: `case_self_claim` cannot be exercised by a
-  // hook harness at all, because the behaviour under test is what the PLATFORM
-  // does either side of the hook (the transfer gate refusing a hand-written
-  // `owner_id` upstream of the hook phase, and accepting the hook's own stamp).
-  // Only a boot of the real stack can ask that, so the hook's runtime evidence
-  // lives beside the sharing rule it completes.
-  'unassigned-case-triage-reach.test.ts',
+  // #2395 — the ownership queues. Same precedent as the lines above: the
+  // behaviour under test is what the PLATFORM does with the app's declared
+  // queues and assignment rules (routing on insert, the queue's read path, the
+  // claim through the transfer gate), so only a boot of the real stack can ask
+  // it, and the evidence lives beside the declarations it measures.
+  'ownership-queues.test.ts',
   // #1180 — the `do_not_call` guards on `crm_task` and `crm_event`. Same
   // precedent as the feature files above: one field's enforcement is one story,
   // and it is only legible with both halves side by side — the refusals AND the

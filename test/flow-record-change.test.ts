@@ -48,7 +48,8 @@ beforeAll(async () => {
     name: 'Record Change Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
   });
   // Service grants, but NOT on the `service_agent` rota: a case the agent
-  // opens stays the agent's (`case_auto_assign` round-robins the rota).
+  // opens stays the agent's (`case_intake_assignment` hands ownerless cases
+  // to the rota).
   agent = await signUpPerson(verify, 'agent@flow-record-change.test', {
     name: 'Record Change Agent', permissionSets: ['service_agent'],
   });
@@ -499,10 +500,10 @@ describe('lead_assignment — who the routing alert reaches (#2073 item 7)', () 
 /**
  * A lead with NO owner (#2060 item 6).
  *
- * Web-to-lead lands ownerless whenever `lead_auto_assign` stands down (an
- * empty `sales_rep` pool, or a pool read that fails — the hook reads it
- * elevated since #2014, so the form's own grant no longer decides it), and a
- * seed or integration write carries whatever owner it was given. The SLA stamp
+ * Web-to-lead lands ownerless — parked in the `lead_intake` queue — whenever
+ * `lead_intake_assignment` finds nobody holding `sales_rep` (or its pool read
+ * fails; the platform reads it as a system step, so the form's own grant does
+ * not decide it), and a seed or integration write carries whatever owner it was given. The SLA stamp
  * is the routing decision about the lead and lands either way; the alert has
  * nobody to go to. `notify` refuses an audience that evaluates to nothing, so
  * without the owner gates the run FAILED at the notify node after the stamp
@@ -844,8 +845,9 @@ describe('record-change flows under a user-less trigger (#684)', () => {
     expect(run?.status, String(run?.error ?? '')).toBe('completed');
     const [stored] = await verify.rows('crm_lead', { id: lead.id });
     expect(stored!.next_followup_date, 'hot lead got no SLA date').toBeTruthy();
-    // `lead_auto_assign` reads the rep pool elevated (#2014), so the web lead
-    // lands on the file's one rep — and the hot-lead alert reaches them.
+    // `lead_intake_assignment` reads the rep pool as a platform step (ADR-0142
+    // D5), so the web lead lands on the file's one rep — and the hot-lead alert
+    // reaches them.
     expect(stored!.owner_id, 'a web lead was not routed to the rep').toBe(rep.id);
     expect(await notified(rep.id, 'lead_routing', `/crm_lead/${lead.id}`), 'the web lead alerted nobody').toHaveLength(1);
   });

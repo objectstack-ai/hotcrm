@@ -341,12 +341,14 @@ describe('opportunity_line_item_price_fill', () => {
   });
 });
 
-describe('lead_auto_assign', () => {
+describe('lead_intake_assignment — ownerless lead intake (ADR-0142 D5)', () => {
   /**
-   * The pool is the two reps; `rep` already carries two open leads to `rep2`'s
-   * one, so the least-loaded rep is `rep2`. Ownerless intake is a SYSTEM write
-   * (an import, a seed load — the seed door); a person's write is stamped with
-   * its creator before this hook runs.
+   * The declared assignment rule that replaced the app's `lead_auto_assign`
+   * hook (#2395): ownerless intake goes into the `lead_intake` queue, owned by
+   * its least-loaded member. The pool is the two reps; `rep` already carries
+   * two open leads to `rep2`'s one, so the least-loaded rep is `rep2`.
+   * Ownerless intake is a SYSTEM write (an import, a seed load — the seed
+   * door); a person's write is stamped with its creator before the rule runs.
    */
   let n = 0;
   const lead = (over: Rec = {}): Rec => ({
@@ -358,10 +360,12 @@ describe('lead_auto_assign', () => {
 
   it('assigns an ownerless lead to the rep with the fewest open leads', async () => {
     const [written] = await verify.seed('crm_lead', [lead()]); // no owner
-    expect((await stored('crm_lead', written!.id)).owner_id).toBe(rep2.id); // least-loaded
+    const row = await stored('crm_lead', written!.id);
+    expect(row.owner_id).toBe(rep2.id); // least-loaded
+    expect(row.queue, 'the routed lead carries no home queue').toBe('lead_intake');
   });
 
-  it('is a no-op when there is no rep pool (never blocks intake)', async () => {
+  it('parks the lead in the queue when there is no rep pool (never blocks intake)', async () => {
     // The app on its own datasource, where nobody holds `sales_rep` yet. The
     // SQL in-memory one: `driver-memory` refuses every tenant-scoped call since
     // 18.0.0-next.0 (verify 34dba5a, until ADR-0131 C8), and a build of its own,
@@ -369,7 +373,9 @@ describe('lead_auto_assign', () => {
     const empty = await bootStack(await buildArtifactAgain(), bootOptions());
     expect(await empty.rows('sys_user_position', { position: 'sales_rep' }), 'the empty boot has a rep pool').toEqual([]);
     const [written] = await empty.seed('crm_lead', [lead()]);
-    expect((await empty.rows('crm_lead', { id: written!.id }))[0]!.owner_id ?? null).toBeNull();
+    const parked = (await empty.rows('crm_lead', { id: written!.id }))[0]!;
+    expect(parked.owner_id ?? null).toBeNull();
+    expect(parked.queue, 'an unplaceable lead did not park in Lead Intake').toBe('lead_intake');
   }, 120_000);
 
   it('respects an explicit owner', async () => {
@@ -380,8 +386,8 @@ describe('lead_auto_assign', () => {
 
   it('routes an anonymous Web-to-Lead submission into the rep pool (#2014)', async () => {
     // The form's own grant reads nothing, so as the caller the pool read came
-    // back empty and every web lead landed ownerless. The hook declares
-    // `runAs: 'system'`: who works an enquiry is the business's routing.
+    // back empty and every web lead landed ownerless. The platform evaluates
+    // the rule as a system step: who works an enquiry is the business's routing.
     const written = await guestInsert(verify, 'crm_lead', lead({ company: 'FromWebForm' }));
     const row = await stored('crm_lead', written.id);
     expect(row.lead_source, 'not the guest submission this case is about').toBe('web');
@@ -391,7 +397,8 @@ describe('lead_auto_assign', () => {
   /**
    * The acceptance of #2014's F9 at the platform's own anonymous door,
    * `POST /forms/:slug/submit` (`verify.api` serves it since 18.0.0-next.0).
-   * Both elevated hooks find something about this submission — an owner, and
+   * The assignment rule and the elevated duplicate hook both find something
+   * about this submission — an owner, and
    * the contact it repeats — and neither finding may reach the submitter:
    * since objectstack#22437 the door answers the new record's id and nothing
    * else, so no public form is an email-existence oracle (maintainer ruling on
@@ -416,10 +423,10 @@ describe('lead_auto_assign', () => {
     expect(row.duplicate_of_contact).toBe(known!.id);
   });
 
-  it('both lead intake hooks stay inside the new lead’s organization (AGENTS.md rule 10)', async () => {
+  it('the assignment rule and the duplicate scan stay inside the new lead’s organization (AGENTS.md rule 10)', async () => {
     // Elevated, the rep pool, the load counts and the duplicate scan are
     // organization-neutral, so each is pinned to the organization the writer
-    // named on the lead. Two organizations: the other one's rep is the LESS
+    // named on the lead (the rule's reads by the platform, ADR-0142 D5). Two organizations: the other one's rep is the LESS
     // loaded, and the other one holds a contact at the same address — an
     // unpinned read picks that rep and flags that contact. A boot (and a
     // build) of its own: once an install holds two organizations, every

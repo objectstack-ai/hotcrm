@@ -32,14 +32,14 @@ Leave it blank on a new lead and HotCRM fills it from the email domain, phone,
 job title, industry and company size; a score you type stands.
 
 A lead submitted through a web-to-lead form arrives with nobody behind it, so
-it is **auto-assigned to the sales rep with the fewest open leads** — a
-self-balancing round-robin over everyone holding the *Sales Rep* position. Only
-when no rep pool exists yet does such a lead stay ownerless for a manager to
-claim.
+it is **auto-assigned to the sales rep with the fewest unconverted leads**
+among the members of the **Lead Intake** queue (everyone holding the *Sales
+Rep* position). Only when that queue has no members does such a lead wait in it
+with no owner; any rep can then open it and click **Claim** to take it.
 
 A lead that a person puts in keeps that person as owner: one created in the UI,
 one sent through the API under their sign-in or API key, and one imported from
-a file. A file import never goes to the round-robin — a row with a blank owner
+a file. A file import never goes to the queue — a row with a blank owner
 is owned by whoever ran the import, and the leads can be reassigned afterwards
 (see the administrator's [Importing Data](./crm_admin_data_import.md) page).
 

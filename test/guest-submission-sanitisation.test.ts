@@ -120,7 +120,8 @@ beforeAll(async () => {
   // platform admin), so the agent's writes go through the same enforcement a
   // real staff edit would.
   //
-  // Pool membership for `case_auto_assign`: it is what makes "the guest's
+  // Pool membership for `case_intake_assignment` (the `case_intake` queue's
+  // member position, #2395): it is what makes "the guest's
   // planted owner did not survive" provable by a POSITIVE value (the case is
   // owned by the real agent) rather than by an absence.
   agent = await signUpPerson(verify, 'agent@guest-sanitisation.test', {
@@ -204,10 +205,10 @@ describe('crm_case — guest submission sanitisation', () => {
       ).not.toHaveProperty(retired);
     }
 
-    // The planted owner is gone. `case_auto_assign` runs after this strip, on
-    // the case the strip left ownerless, and reads the agent pool elevated
-    // (#2014) — so the case is owned by the real agent: a POSITIVE value, not
-    // an absence.
+    // The planted owner is gone. The platform's `case_intake_assignment` rule
+    // runs after every beforeInsert hook, on the case the strip left ownerless,
+    // and routes it to the queue's only member — so the case is owned by the
+    // real agent: a POSITIVE value, not an absence.
     expect(stored.owner_id).not.toBe('planted_user');
     expect(stored.owner_id).toBe(id.agent);
   }, 60_000);
@@ -223,8 +224,8 @@ describe('crm_case — guest submission sanitisation', () => {
     expect(stored.origin).toBe('web'); // positive control
     expect(stored.status).toBe('new');
     // Derived from the stored status, not taken from the payload. A stored
-    // `is_closed: true` on a `new` case would park it out of the pinned
-    // `unassigned_triage` view and out of `case_unassigned_triage_sharing`.
+    // `is_closed: true` on a `new` case would read as closed to every consumer
+    // that keys on the flag (the closed-case reports and list filters).
     expect(stored.is_closed).toBe(false);
   }, 60_000);
 

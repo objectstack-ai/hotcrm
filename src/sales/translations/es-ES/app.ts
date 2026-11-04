@@ -729,20 +729,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         },
       },
     },
-    claim_case: {
-      label: 'Tomar Caso',
-      screens: {
-        screen_1: {
-          title: 'Tomar Caso',
-          fields: {
-            claimStatus: {
-              label: 'Estado de trabajo',
-              options: { in_progress: 'En Curso', waiting_customer: 'Esperando al Cliente', waiting_support: 'Esperando a Soporte' },
-            },
-          },
-        },
-      },
-    },
     lead_conversion: {
       label: 'Proceso de conversión de prospecto',
       screens: {
@@ -957,7 +943,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_rep: {
       label: 'Representante de Ventas',
-      description: 'Trabaja prospectos y oportunidades a diario y recibe prospectos nuevos por asignación rotativa.',
+      description: 'Trabaja prospectos y oportunidades a diario y recibe prospectos nuevos de la cola de Recepción de Prospectos.',
     },
     service_director: {
       label: 'Director de Servicio',
@@ -969,7 +955,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     service_agent: {
       label: 'Agente de Servicio',
-      description: 'Atiende casos de clientes, recibe casos nuevos por asignación rotativa y toma casos sin asignar de la cola de clasificación.',
+      description: 'Atiende casos de clientes, recibe casos nuevos de la cola de Recepción de Soporte y reclama los que siguen esperando en ella.',
     },
     marketing_director: {
       label: 'Director de Marketing',

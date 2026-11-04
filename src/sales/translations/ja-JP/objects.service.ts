@@ -93,7 +93,7 @@ export const service: Record<string, ObjectTranslationData> = {
         label: '未割り当て — トリアージ',
         emptyState: {
           title: 'トリアージ待ちはありません',
-          message: 'すべてのケースに所有者がいます。所有者のないケースはここに表示されます — 通常は、サービスエージェントの職位を誰も保持していない間に届いた Web-to-Case の送信です。',
+          message: 'すべてのケースに所有者がいます。サービスエージェントの職位を誰も保持していない間に届いたケースは、サポート受付キューでここに待機します。開いて「担当する」を押すと引き受けられます。',
         },
       },
       escalated_cases: { label: 'エスカレートしたケース' },
@@ -135,10 +135,6 @@ export const service: Record<string, ObjectTranslationData> = {
         label: 'ケースをクローズ',
         confirmText: 'このケースをクローズしてもよろしいですか？',
         successMessage: 'ケースをクローズしました！',
-      },
-      claim_case: {
-        label: 'ケースを引き受ける',
-        successMessage: 'ケースを引き受けました。担当者はあなたです。',
       },
       reopen_case: {
         label: 'ケースを再オープン',

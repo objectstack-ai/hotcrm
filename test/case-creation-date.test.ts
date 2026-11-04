@@ -13,6 +13,7 @@ import stack from './helpers/composed-stack';
 import { CaseDataset } from '../src/service/datasets/case.dataset';
 import { CasesOpenedByDayPriorityReport } from '../src/service/reports/case.report';
 import { ServiceDashboard } from '../src/service/dashboards/service.dashboard';
+import { withoutOwnershipQueues } from './helpers/bare-kernel-stack';
 
 /**
  * `crm_case` has one creation stamp, and the platform owns it (#1992).
@@ -125,7 +126,7 @@ describe('a case created without any date is counted', () => {
     await kernel.use(new ObjectQLPlugin({ environmentId: 'proj_test' } as never));
     // 17.7.0 refuses an object name the registry does not hold (objectstack#21545).
     await kernel.use(createIdentityObjectsPlugin() as never);
-    await kernel.use(new AppPlugin(artifact as never, undefined as never, { skipSeedData: true } as never));
+    await kernel.use(new AppPlugin(withoutOwnershipQueues(artifact) as never, undefined as never, { skipSeedData: true } as never));
     await kernel.bootstrap();
     ql = kernel.getService('objectql');
     // The install's one organization. Since 18.0.0-next.0 a system write on a

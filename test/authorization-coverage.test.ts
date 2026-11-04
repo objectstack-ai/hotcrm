@@ -401,82 +401,33 @@ describe('sharing rules and positions line up', () => {
   });
 
   /**
-   * The triage grant is AUTHORED, not implied (#1096).
+   * Unowned cases reach the agents who triage them through the platform's
+   * ownership queue, not through an app sharing rule (#1096 → #2395).
    *
    * `service_agent` holds `crm_case` with `readScope: 'own'`, and an unowned row
-   * matches nobody's own-scope — so the `Unassigned — triage` view #596 pinned
-   * in every Cases list returned zero rows for the persona it was built for.
-   * `case_unassigned_triage_sharing` is the ruled fix, and this block is the
-   * reason the widening cannot be lost silently: a permission grant nobody
-   * asserts is a grant nobody notices losing.
-   *
-   * What is pinned here is the DECLARED shape — the object, the criteria, the
-   * access level and the recipient. What it delivers on a running engine, on
-   * both the sparse (absent-key) and column-complete (NULL) row shapes, is
-   * measured in `test/unassigned-case-triage-reach.test.ts`; that it survives
-   * `plugin-sharing`'s CEL→filter compiler at all is pinned in
-   * `test/sharing-seeding.test.ts`.
+   * matches nobody's own-scope. Since @objectstack 18.3.0 a case nobody owns
+   * SITS in a queue (ADR-0142 D3), and the queue's members read and edit what
+   * sits in it through `current_user.queues`. So the reach is the DECLARED
+   * queue's membership, pinned here, and the former criteria rule
+   * `case_unassigned_triage_sharing` must not come back beside it — two
+   * answers to one question is the shape #2395 deleted. What it delivers on a
+   * running engine is measured in `test/ownership-queues.test.ts`.
    */
-  describe('#1096: unowned open cases reach the agents who triage them', () => {
-    const rule = () => sharingRules.find((r) => r.name === 'case_unassigned_triage_sharing');
-
-    it('the rule exists, on crm_case, granting edit to the service_agent position', () => {
-      const r = rule();
-      expect(
-        r,
-        'case_unassigned_triage_sharing is gone — the Unassigned — triage tab is empty again ' +
-          'for the only persona it is pinned for (#1096)',
-      ).toBeDefined();
-      expect(r!.object).toBe('crm_case');
-      expect(r!.type).toBe('criteria');
-      // `edit`, not `read`: triage is a pull queue, and an agent who cannot
-      // write the row cannot work it.
-      expect(r!.accessLevel).toBe('edit');
-      expect(r!.sharedWith).toEqual({ type: 'position', value: 'service_agent' });
+  describe('#2395: unowned cases reach the agents who triage them through the intake queue', () => {
+    it('the case_intake queue exists and its members are exactly the service_agent position', () => {
+      const queue = (((stack as any).queues ?? []) as AnyRec[]).find((q) => q.name === 'case_intake');
+      expect(queue, 'the case_intake queue is gone — ownerless cases have nowhere to sit').toBeDefined();
+      expect(queue!.members).toEqual([{ type: 'position', value: 'service_agent' }]);
     });
 
-    it('its criteria is exactly "unowned AND live work" — both halves, and nothing wider', () => {
-      // Asserted verbatim, because every token is load-bearing and each fails
-      // differently: drop `owner_id == null` and the rule shares the whole case
-      // table with every agent (option C by accident); drop the status clause
-      // and finished work joins the backlog, so the tab's row count stops
-      // meaning "work waiting for a human"; and `!= null` in place of
-      // `== null` inverts the grant into precisely the leak acceptance #2
-      // forbids.
-      //
-      // ⚠️ The second half is `status`, not `is_closed` (#1145), and that made
-      // this grant NARROWER: `is_closed` is derived as `status === 'closed'`
-      // and never flips on `resolved`, so the old spelling handed every agent
-      // `edit` on every resolved ownerless case forever. The set is
-      // `CLOSED_CASE_STATUSES`, shared with the load-balancing hooks and
-      // `case_sla_monitor`; `test/live-work-predicate-parity.test.ts` holds all
-      // five consumers to it by name.
-      //
-      // The `!=` chain rather than `!(record.status in [...])` is measured, not
-      // stylistic — the membership form lowers to a top-level `$not` wrapping
-      // an `$in`, which is not in the operator matrix at the head of
-      // `test/sharing-seeding.test.ts`, and an uncompilable or unexecutable
-      // sharing condition is DROPPED silently rather than failing loudly.
-      expect(String(rule()!.condition?.source ?? '')).toBe(
-        'record.owner_id == null && record.status != "resolved" && record.status != "closed"',
-      );
+    it('no sharing rule re-implements the queue — the triage rule stays deleted', () => {
+      expect(sharingRules.map((r) => r.name)).not.toContain('case_unassigned_triage_sharing');
     });
 
-    it('carries NO has() guard — one would make it untranslatable and silently unseeded', () => {
-      // ⚠️ The inverse of the house rule, and deliberate. AGENTS.md's totality
-      // rule (#630) governs the INTERPRETED CEL surfaces; a sharing condition is
-      // compiled to a pushdown filter instead, and `compileCelToFilter` rejects
-      // the whole function-call class — so a guard here would make the rule
-      // undeployable rather than safe (#621's defect, reintroduced). Totality is
-      // answered by the operator: `== null` lowers to `{ $null: true }`, which
-      // reads an absent key and a NULL column alike.
-      expect(String(rule()!.condition?.source ?? '')).not.toMatch(/\bhas\s*\(/);
-    });
-
-    it('the widening is a SHARING rule — the profile stays own-scoped', () => {
-      // The other half of "authored, not implied": option C (`viewAllRecords`
-      // on the profile) was rejected on sight and stays rejected, so if it ever
-      // arrives this fails rather than passing quietly alongside the rule.
+    it('the reach is the queue — the profile stays own-scoped', () => {
+      // `viewAllRecords` on the profile (#1096 option C) was rejected on sight
+      // and stays rejected, so if it ever arrives this fails rather than
+      // passing quietly alongside the queue.
       const perm = (setByName.get('service_agent')?.objects ?? {}).crm_case ?? {};
       expect(perm.readScope, 'service_agent.crm_case stopped being own-scoped').toBe('own');
       expect(

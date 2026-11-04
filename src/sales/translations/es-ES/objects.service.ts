@@ -95,7 +95,7 @@ export const service: Record<string, ObjectTranslationData> = {
         label: 'Sin asignar — triaje',
         emptyState: {
           title: 'Nada pendiente de triaje',
-          message: 'Todos los casos tienen propietario. Los casos aparecen aquí cuando llegan sin propietario — normalmente un envío web-a-caso recibido mientras nadie ocupaba el puesto de Agente de Servicio.',
+          message: 'Todos los casos tienen propietario. Un caso espera aquí, en la cola de Recepción de Soporte, cuando llega mientras nadie ocupa el puesto de Agente de Servicio. Ábralo y pulse Reclamar para quedárselo.',
         },
       },
       escalated_cases: { label: 'Casos Escalados' },
@@ -138,10 +138,6 @@ export const service: Record<string, ObjectTranslationData> = {
         label: 'Cerrar Caso',
         confirmText: '¿Está seguro de querer cerrar este caso?',
         successMessage: '¡Caso cerrado con éxito!',
-      },
-      claim_case: {
-        label: 'Tomar Caso',
-        successMessage: 'Caso tomado: ahora es suyo.',
       },
       reopen_case: {
         label: 'Reabrir Caso',

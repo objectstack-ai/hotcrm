@@ -45,7 +45,7 @@
 | LEA-002 | 线索状态机 | `new → contacted → qualified → unqualified → converted` 转换表(warning 级),converted 为终态、unqualified 可回 new | `src/sales/objects/lead.object.ts`(validations) |
 | LEA-003 | 失格原因强制 | status=unqualified 必填 `disqualification_reason`;以 duplicate 失格必须指定幸存记录且人工确认 | `src/sales/objects/lead.object.ts`(validations) |
 | LEA-004 | 自动线索评分 | 未显式给分时按企业邮箱/电话/职位/行业/规模/营收加权计算 rating(1–5 整星) | `src/sales/objects/lead.hook.ts`(`lead_automation`) |
-| LEA-005 | 轮询自动派单 | 无主线索按"未转化线索最少"分配给 `sales_rep` 岗位人员池,失败不阻断插入 | `src/sales/objects/lead.hook.ts`(`lead_auto_assign`) |
+| LEA-005 | 线索受理队列与派单 | 平台所有权队列(ADR-0142,#2395):`lead_intake` 队列成员为 `sales_rep`;分配规则 `lead_intake_assignment` 把无主线索按"未转化线索最少"(least_loaded)派给成员,无成员时线索无主留在队列里,成员点「认领」接手 | `src/sales/queues/lead.queue.ts`、`src/sales/assignment-rules/lead.assignment-rule.ts` |
 | LEA-006 | Web-to-Lead 公开表单 | 匿名表单 `/forms/contact-us`(`allowAnonymous`),hook 补访客默认值并剥离伪造的转化/归属/查重字段 | `src/sales/views/lead.view.ts`(`web_to_lead`)+ `src/sales/objects/lead.hook.ts` |
 | LEA-007 | 规范化与软性查重 | 邮箱小写化、公司名归一化(`company_normalized`);插入时按邮箱先查联系人后查线索,命中标 `suspected` | `src/sales/objects/lead.hook.ts`(`lead_duplicate_check`) |
 | LEA-008 | 已转换线索锁定 | 转化后除叙述字段外冻结,引用字段置空按"链接不可清除"报错(级联删除误报修复) | `src/sales/objects/lead.hook.ts`(`lead_automation`) |
@@ -158,6 +158,7 @@
 | SVC-016 | 工单时间线里程碑 | 声明式里程碑:escalated/resolved/closed 三个状态转换自动发时间线条目 | `src/service/objects/case.object.ts`(activityMilestones) |
 | SVC-017 | AI 工单分诊技能 | 只读技能:建议优先级并给出唯一驱动理由,把用户指向升级/关闭按钮(刻意无变更工具) | `src/service/skills/case-triage.skill.ts` |
 | SVC-018 | 服务分析 | 服务仪表板(60s 刷新、SLA 达标仪表盘、10 widget)+ `case_metrics` 数据集 + 状态×优先级/SLA/开单日矩阵 3 个报表 | `src/service/dashboards/service.dashboard.ts`、`src/service/datasets/case.dataset.ts`、`src/service/reports/case.report.ts` |
+| SVC-019 | 工单受理队列与认领 | 平台所有权队列(ADR-0142,#2395):`case_intake` 队列成员为 `service_agent`;分配规则 `case_intake_assignment` 把无主工单按"未结工单最少"派给成员,无成员时停在队列里、显示在「未分派 — 待分诊」;成员在记录头部点控制台自带的「认领」,只写负责人(裁定 A);积压回填脚本 `scripts/backfill-intake-queue.ts` | `src/service/queues/case.queue.ts`、`src/service/assignment-rules/case.assignment-rule.ts` |
 
 ## KB — 知识库
 

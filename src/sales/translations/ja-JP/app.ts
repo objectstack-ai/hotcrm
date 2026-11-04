@@ -731,20 +731,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         },
       },
     },
-    claim_case: {
-      label: 'ケースを引き受ける',
-      screens: {
-        screen_1: {
-          title: 'ケースを引き受ける',
-          fields: {
-            claimStatus: {
-              label: '対応状況',
-              options: { in_progress: '対応中', waiting_customer: '顧客の回答待ち', waiting_support: 'サポートの回答待ち' },
-            },
-          },
-        },
-      },
-    },
     lead_conversion: {
       label: 'リード変換プロセス',
       screens: {
@@ -959,7 +945,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_rep: {
       label: '営業担当者',
-      description: 'リードと商談を日々担当し、ラウンドロビン割り当てで新しいリードを受け取ります。',
+      description: 'リードと商談を日々担当し、リード受付キューから新しいリードを受け取ります。',
     },
     service_director: {
       label: 'サービスディレクター',
@@ -971,7 +957,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     service_agent: {
       label: 'サービス担当者',
-      description: '顧客のケースに対応し、ラウンドロビン割り当てで新しいケースを受け取り、トリアージから未割り当てのケースを引き取ります。',
+      description: '顧客のケースに対応し、サポート受付キューから新しいケースを受け取り、キューで待っているケースを担当します。',
     },
     marketing_director: {
       label: 'マーケティングディレクター',

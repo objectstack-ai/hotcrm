@@ -101,7 +101,7 @@ export const service: Record<string, ObjectTranslationData> = {
         label: '未分派 — 待分诊',
         emptyState: {
           title: '没有待分诊的工单',
-          message: '所有工单都有负责人。当工单到达时没有负责人，就会出现在这里 —— 通常是在无人担任「客服专员」职位期间提交的网页转工单。',
+          message: '所有工单都有负责人。无人担任「客服专员」职位期间到达的工单会在「支持受理」队列里等候，显示在这里。打开工单并点击「认领」即可接手。',
         },
       },
       escalated_cases: { label: '已升级工单' },
@@ -119,10 +119,6 @@ export const service: Record<string, ObjectTranslationData> = {
         label: '关闭工单',
         confirmText: '确定要关闭此工单吗？',
         successMessage: '工单已成功关闭！',
-      },
-      claim_case: {
-        label: '认领工单',
-        successMessage: '工单已认领，现在归你负责。',
       },
       reopen_case: {
         label: '重新打开工单',

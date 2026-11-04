@@ -3,7 +3,7 @@
 import { defineStack, P, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import {
-  EscalateCaseAction, CloseCaseAction, ClaimCaseAction, ReopenCaseAction,
+  EscalateCaseAction, CloseCaseAction, ReopenCaseAction,
   LogCallAction, LogMeetingAction, CaseScheduleMeetingAction,
   MarkArticleHelpfulAction, MarkArticleNotHelpfulAction,
 } from './actions/index.js';
@@ -12,7 +12,7 @@ import { CaseDataset } from './datasets/index.js';
 import { ServiceEmailTemplates } from './email-templates/index.js';
 import {
   CaseEscalationFlow, CaseEscalationOnCreateFlow, EscalateCaseFlow, CloseCaseFlow,
-  ClaimCaseFlow, CaseEscalationStampFlow, CaseSlaMonitorFlow,
+  CaseEscalationStampFlow, CaseSlaMonitorFlow,
 } from './flows/index.js';
 import { ArticleFeedback, Case, KnowledgeArticle } from './objects/index.js';
 import { articleFeedbackHook, caseHook, knowledgeArticleHook } from './objects/hooks.js';
@@ -21,8 +21,10 @@ import {
   CasesByStatusPriorityReport, SlaPerformanceReport, CasesOpenedByDayPriorityReport,
 } from './reports/index.js';
 import {
-  CaseDirectorSharingRule, CaseEscalatedFromSharingRule, CaseEscalationSharingRule, CaseUnassignedTriageSharingRule,
+  CaseDirectorSharingRule, CaseEscalatedFromSharingRule, CaseEscalationSharingRule,
 } from './sharing/index.js';
+import { CaseIntakeAssignmentRule } from './assignment-rules/index.js';
+import { CaseIntakeQueue } from './queues/index.js';
 import { CaseTriageSkill } from './skills/index.js';
 import { CaseViews, KnowledgeArticleViews } from './views/index.js';
 
@@ -42,7 +44,7 @@ export const serviceHooks = [articleFeedbackHook, caseHook, knowledgeArticleHook
 /** This package's flows — see {@link serviceHooks}. */
 export const serviceFlows = [
   CaseEscalationFlow, CaseEscalationOnCreateFlow, EscalateCaseFlow, CloseCaseFlow,
-  ClaimCaseFlow, CaseEscalationStampFlow, CaseSlaMonitorFlow,
+  CaseEscalationStampFlow, CaseSlaMonitorFlow,
 ];
 
 /** This package's skills — see {@link serviceHooks}. */
@@ -50,7 +52,7 @@ export const serviceSkills = [CaseTriageSkill];
 
 /** This package's sharing rules — see {@link serviceHooks}. */
 export const serviceSharingRules = [
-  CaseEscalationSharingRule, CaseDirectorSharingRule, CaseUnassignedTriageSharingRule, CaseEscalatedFromSharingRule,
+  CaseEscalationSharingRule, CaseDirectorSharingRule, CaseEscalatedFromSharingRule,
 ];
 
 /**
@@ -287,7 +289,7 @@ export const createHotCrmServiceStack = (
   pages: [CaseDetailPage],
   flows: serviceFlows,
   actions: [
-    EscalateCaseAction, CloseCaseAction, ClaimCaseAction, ReopenCaseAction,
+    EscalateCaseAction, CloseCaseAction, ReopenCaseAction,
     LogCallAction, LogMeetingAction, CaseScheduleMeetingAction,
     MarkArticleHelpfulAction, MarkArticleNotHelpfulAction,
   ],
@@ -296,6 +298,10 @@ export const createHotCrmServiceStack = (
   dashboards: [ServiceDashboard],
   skills: serviceSkills,
   sharingRules: serviceSharingRules,
+  // ADR-0142: ownerless new cases wait in Support Intake and go to its
+  // least-loaded member; an agent takes one with the console's Claim.
+  queues: [CaseIntakeQueue],
+  assignmentRules: [CaseIntakeAssignmentRule],
   emailTemplates: ServiceEmailTemplates,
 
   ...collections,

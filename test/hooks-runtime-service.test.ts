@@ -1465,13 +1465,17 @@ describe('lead_duplicate_check', () => {
   });
 });
 
-describe('lead_auto_assign — the anonymous door', () => {
-  it('routes an anonymous Web-to-Lead submission to the rep pool (#2014)', async () => {
-    // The public-form grant reads nothing; the hook reads the pool elevated.
+describe('lead_intake_assignment — the anonymous door', () => {
+  it('routes an anonymous Web-to-Lead submission to the rep pool (#2014, #2395)', async () => {
+    // The public-form grant reads nothing; the platform's assignment step
+    // reads the pool as a system step pinned to the row's organization
+    // (ADR-0142 D5), and the lead is stamped with its home queue.
     const written = await guestInsert(verify, 'crm_lead', {
       first_name: 'Web', last_name: `Form ${++k}`, company: 'FromWebForm', email: `form${k}@hooks-runtime-service.test`,
     });
-    expect((await stored('crm_lead', written.id)).owner_id).toBe(rep.id);
+    const lead = await stored('crm_lead', written.id);
+    expect(lead.owner_id).toBe(rep.id);
+    expect(lead.queue).toBe('lead_intake');
   });
 });
 

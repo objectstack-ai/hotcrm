@@ -46,8 +46,9 @@ const ORG = 'org_1';
  *
  *   1. a `beforeInsert` hook mutating `input` — INVISIBLE to the gate, because
  *      the gate is an operation middleware wrapping the whole call and the hook
- *      phase runs inside it. This is why `lead_auto_assign` can round-robin a
- *      lead onto another rep with no transfer grant.
+ *      phase runs inside it. This is why the app's old round-robin hooks could
+ *      hand a record to another rep with no transfer grant (they were replaced
+ *      by declared assignment rules in #2395; the seam is still measured).
  *   2. a hook's `ctx.api` write — a NEW operation carrying the SAME context, so
  *      the gate does see it. This is why `case.hook.ts` opening an escalation
  *      task under the account owner needs `service_agent.crm_task.allowTransfer`.
@@ -240,8 +241,8 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
   });
 
   it('a beforeInsert hook’s owner_id stamp never reaches the middleware', async () => {
-    // Seam 1. `lead_auto_assign` assigns a FOREIGN rep — the whole point of a
-    // round-robin — which the #3004 guard denies without `allowTransfer`. It
+    // Seam 1. A round-robin hook (the since-deleted `lead_auto_assign`)
+    // assigns a FOREIGN rep — the whole point of a round-robin — which the #3004 guard denies without `allowTransfer`. It
     // works anyway because the hook phase runs INSIDE the operation the
     // middleware already wrapped: by the time the hook writes, the guard has
     // read and released the payload.
@@ -250,8 +251,7 @@ describe('the transfer gate sees a hook’s ctx.api write, and not a beforeInser
     // `owner_id`, and the STORED row has the hook's rep. If a future platform
     // release moves the guard downstream of the hook phase, the first
     // expectation flips and this test goes red — which is the signal to give
-    // the sales_rep / public-form paths a transfer grant, or to stop
-    // round-robining in a hook.
+    // any hook that hands ownership to someone else a transfer grant.
     ql.registerHook?.('beforeInsert', async (ctx: AnyRec) => {
       if (ctx.object !== 'crm_lead') return;
       const data = ctx.input?.data ?? ctx.data;
@@ -444,12 +444,13 @@ describe('every owner-facing surface points at the one column', () => {
   });
 });
 
-// ─────────────────────────────────────── the round-robin, end to end ──
+// ───────────────────────────────── the assignment rule, end to end ──
 
-describe('lead_auto_assign assigns the platform column', () => {
+describe('lead_intake_assignment assigns the platform column', () => {
   /**
    * On the shipped app booted by `@objectstack/verify`: two sales reps hold
-   * the `sales_rep` position — the round-robin's pool — and rep A already
+   * the `sales_rep` position — the members of the declared `lead_intake`
+   * queue the platform's assignment rule routes to (#2395) — and rep A already
    * carries two open leads to rep B's one, so the least-loaded rep is B.
    */
   let verify: VerifyStack;
@@ -483,7 +484,7 @@ describe('lead_auto_assign assigns the platform column', () => {
 
   it('stands down when the middleware already stamped an owner', async () => {
     // On any write that carries a user, `owner_id` is already the creator by
-    // the time this hook runs — which is what keeps the round-robin scoped to
+    // the time the rule would run — which is what keeps the rule scoped to
     // genuinely ownerless intake (import, web-to-lead, API capture). Rep A is
     // the MORE loaded rep, so a round-robin would have moved this lead to B.
     const written = await verify.hooks.run('crm_lead', 'insert', lead(), { as: repA.token });
