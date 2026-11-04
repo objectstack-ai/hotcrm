@@ -371,3 +371,45 @@ describe('quote_generation flow — the Quote Name prefill (#2239)', () => {
     expect(quotes.map((q) => q.name)).toEqual(['Q-TYPED']);
   });
 });
+
+/**
+ * #2396 — a number the rules refuse is refused AT THE SCREEN, where the rep
+ * can fix it. The screen's `min` / `max` are judged on resume before the
+ * engine consumes the suspended run, so the refusal is `INVALID_SCREEN_INPUT`
+ * and the SAME run takes a corrected answer. Without them the answer reached
+ * `create_quote`, `crm_quote`'s rule refused the insert after the run had
+ * been consumed, and the run failed: measured on 18.3.0, Discount 75
+ * answered `FLOW_FAILED` 400 ("Discount cannot exceed 60%") and the corrected
+ * resubmit `RUN_NOT_FOUND` 404, so the dialog could only be closed.
+ */
+describe('quote_generation flow — a refused number keeps the screen (#2396)', () => {
+  /** The thrown resume's envelope, or a failure naming what came back instead. */
+  const refusalOf = async (run: Rec, screen: Rec): Promise<Rec> => {
+    try {
+      const answered = await verify.flows.resume(run as never, screen, { as: rep.token });
+      throw new Error(`the resume was not refused: status ${String(answered.status)}`);
+    } catch (err) {
+      return err as Rec;
+    }
+  };
+
+  it.each([
+    ['a discount above the ceiling', { discount: 75 }, { discount: 60 }],
+    ['a validity of zero days', { expirationDays: 0 }, { expirationDays: 1 }],
+  ])('refuses %s on the screen, and the same run takes the corrected answer', async (_case, wrong, right) => {
+    const opp = await opportunity({ name: 'Bounded Deal', amount: 50000, primary_contact: null });
+    const run = await verify.flows.run('quote_generation', { recordId: opp.id }, { as: rep.token });
+    const screen = { quoteName: 'Q-BOUND', expirationDays: 30, discount: 0 };
+
+    const refused = await refusalOf(run, { ...screen, ...wrong });
+    expect(refused.code, String(refused.message)).toBe('INVALID_SCREEN_INPUT');
+    expect(refused.status).toBe(400);
+    expect(await verify.rows('crm_quote', { crm_opportunity: opp.id }), 'a quote was created').toHaveLength(0);
+
+    const done = await verify.flows.resume(run, { ...screen, ...right }, { as: rep.token });
+    expect(done.success, 'the corrected answer did not go through').toBe(true);
+    const quotes = await verify.rows('crm_quote', { crm_opportunity: opp.id });
+    expect(quotes).toHaveLength(1);
+    if ('discount' in right) expect(quotes[0]!.discount).toBe(right.discount);
+  });
+});

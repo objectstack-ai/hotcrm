@@ -106,33 +106,44 @@ export const QuoteGenerationFlow: Flow = {
           // on a miss (a deal the rep cannot read), so the read is guarded and
           // that run reaches the form empty, failing where it always did.
           { name: 'quoteName', label: 'Quote Name', type: 'text', required: true, defaultValue: cel`vars.dealName != null ? vars.dealName.name : null` },
-          { name: 'expirationDays', label: 'Valid For (Days)', type: 'number', required: true, defaultValue: 30 },
+          // `min: 1` is `crm_quote.expiration_after_quote` said at the screen:
+          // `create_quote` writes `expiration_date = today + expirationDays`
+          // beside `quote_date = today`, and the rule refuses an expiration on
+          // or before the quote date, so 0 or fewer days can never save. For
+          // why the bound lives HERE and not only on the object, see `discount`
+          // below — the same failure, the same fix (#2396).
+          { name: 'expirationDays', label: 'Valid For (Days)', type: 'number', required: true, defaultValue: 30, min: 1 },
           // The ceiling is a HARD block with no override
-          // (`crm_quote.discount_within_ceiling`), so until it is written here
-          // a rep meets the number only by having the quote refused. Both
-          // strings below interpolate `QUOTE_DISCOUNT_CEILING` — imported,
-          // never retyped, the same rule the two object rules follow — so the
-          // hint cannot drift from the rule it describes.
+          // (`crm_quote.discount_within_ceiling`). Every carrier below
+          // interpolates `QUOTE_DISCOUNT_CEILING` — imported, never retyped,
+          // the same rule the two object rules follow — so the screen cannot
+          // drift from the rule it states.
           //
-          // ⛔ There is deliberately NO `max`, and adding one does not work:
-          // `ScreenFieldConfigSchema` is STRICT at 17.3.0 and its entire key
-          // set is `name` / `label` / `type` / `required` / `options` /
-          // `defaultValue` / `placeholder` / `visibleWhen`. `max` is rejected
-          // BY NAME (`Unrecognized key(s) on this screen field: max`), so
-          // it fails `pnpm validate` rather than quietly doing nothing, and
-          // the executor forwards no such key into the `ScreenSpec` the client
-          // renders. `helpText` is rejected the same way — the console's
-          // dialog would render one, but no flow screen can carry it there.
+          // `min` / `max` are the bound, and the screen is where it must be
+          // checked (#2396). The engine judges a screen field's bounds on
+          // resume BEFORE it consumes the suspended run (`INVALID_SCREEN_INPUT`,
+          // retryable): the dialog keeps the rep's answers and Submit, and the
+          // console checks the same bound at the input before any request.
+          // Left to the object rule alone, 75 reached `create_quote`, the
+          // insert was refused AFTER the resume had consumed the run, and the
+          // run failed (`FLOW_FAILED`): the dialog offered only Close and no
+          // client could resubmit it. Measured on 18.3.0 through REST.
           //
-          // That leaves two carriers, and the label is the load-bearing one:
-          // `placeholder` renders only while the input is empty and
-          // `defaultValue: 0` seeds it, so it surfaces for the moment the rep
-          // clears the box to type — real, but not enough on its own.
+          // The object rule stays as the last guard: it is the invariant every
+          // door to `crm_quote` meets (a direct edit, an import, the API), and
+          // this bound covers this one screen. `min: 0` is the floor of the
+          // same domain the object field declares (`Field.percent`, 0–100).
+          //
+          // The label keeps the ceiling in words because a bound alone is
+          // silent until the rep breaks it; `placeholder` shows only while the
+          // box is empty.
           {
             name: 'discount',
             label: `Discount % (≤ ${QUOTE_DISCOUNT_CEILING})`,
             type: 'percent',
             defaultValue: 0,
+            min: 0,
+            max: QUOTE_DISCOUNT_CEILING,
             placeholder: `0-${QUOTE_DISCOUNT_CEILING}`,
           },
         ],
