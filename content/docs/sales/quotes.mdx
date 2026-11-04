@@ -13,7 +13,7 @@ A **quote** is a formal pricing proposal sent to a customer. Quotes always belon
 | --- | --- |
 | ⚪ **Draft** | Being prepared internally *(default for new quotes)* |
 | 🟠 **In Review** | Pending internal review (e.g., discount approval) |
-| 🔵 **Presented** | Sent to the customer |
+| 🔵 **Presented** | Sent to the customer *(set when you print the quote)* |
 | 🟢 **Accepted** | Customer agreed — automatically triggers contract creation |
 | 🔴 **Rejected** | Customer declined |
 | ⚪ **Expired** | Validity period passed without a decision |
@@ -106,11 +106,17 @@ When you submit it, the system:
 
 Generating a quote stamps no activity date. The opportunity has no last-activity field, and the account's **Last Activity Date** stays as it was.
 
-The rep then reviews the draft, attaches the quote document (a PDF) to the quote, and changes the status to *Presented* when it goes to the customer.
+The rep then reviews the draft and, when it is ready to go out, prints it with **Print Quote**, which files the PDF on the quote and marks it *Presented* (see [Sending a quote to the customer](#sending-a-quote-to-the-customer)).
 
 ## Sending a quote to the customer
 
-HotCRM does not send the quote for you. The quote record has no send button, and the app neither produces a quote PDF nor ships an email template for one. You send the document to the customer yourself, then record that it went out: on the quote, click **Edit**, set **Status** to *Presented* and click **Update**. That save is refused unless **Contact** is filled in (see [Built-in rules](#built-in-rules)), and it emails no one.
+HotCRM prints the quote for you; sending it is still yours. On the quote's record page, click **Print Quote** (it is also in the row menu of the quote list). HotCRM lays the quote out as a document — the account and contact, the line items, the pricing and the terms, with a page number on every sheet — and files the PDF under the quote's **Attachments**, in your name. Download it from there and send it to the customer.
+
+**Printing is presenting.** When the PDF is filed, a quote in *Draft* or *In Review* moves to *Presented*. A quote that is already *Presented*, *Accepted*, *Rejected* or *Expired* keeps its status, so you can print it again as often as you need. A file you attach to the quote yourself changes nothing.
+
+The move to *Presented* is an ordinary save made by you, so the [Built-in rules](#built-in-rules) still apply. A quote with no **Contact** is printed and its PDF filed, but it stays where it was, and nothing but its status tells you so: check the status after printing. Fill in the contact and print again to present it.
+
+**Print Quote** is offered to whoever may edit the quote and attach files to it. You can still record the status by hand: **Edit** the quote, set **Status** to *Presented* and click **Update** — the same contact rule applies. Neither way emails anyone.
 
 To write the covering email inside HotCRM, use **Send Email** on the customer's contact record. You type the subject and body yourself, nothing is attached, and the message leaves only if your deployment has outgoing mail set up (see [Email & Calendar](/docs/guides/email-and-calendar)). The AI assistant can draft that text for you — *"Draft a cover note for this quote"* — and hands it back for you to paste; it does not send anything.
 
@@ -164,7 +170,8 @@ A brand-new org has no quotes at all — they are generated from opportunities, 
 ## Tips for admins
 
 - The daily expiration sweep runs at 1 AM, and only on a deployment that has switched scheduled work on: a default install boots with the `quote_expiration` flow unbound, and the switch is described in [Administration › Automation](/docs/administration/automation#scheduled-automation). The time lives in source, not in Setup: it is the `schedule: '0 1 * * *'` on the start node of the `quote_expiration` flow (`src/revenue/flows/quote-expiration.flow.ts`). Changing it is a code change plus a redeploy — there is no setting to adjust on the quote object.
-- There is no quote PDF template to configure. HotCRM does not produce the quote document (the PDF a rep sends is made outside the app), and the one quote email template it ships is *Quote Created*, the notification a rep receives after **Generate Quote**.
+- The printed quote is a page of its own, separate from the quote's record page: what it prints, the paper size and the margins live in source (`src/revenue/pages/quote_print.page.ts`), and changing them is a code change plus a redeploy — there is no template to edit in Setup. The one quote email template HotCRM ships is still *Quote Created*, the notification a rep receives after **Generate Quote**.
+- Printing runs on the server, in a headless Chromium browser your deployment provides: set `OS_PRINT_CHROMIUM_PATH` (a Chromium on the server) or `OS_PRINT_BROWSER_ENDPOINT` (a remote browser), plus `OS_PRINT_CONSOLE_URL`. Without them **Print Quote** answers with an error and nothing is filed. Install a CJK font on the browser's host if your quotes carry Chinese, Japanese or Korean text, or those characters print as empty boxes.
 - The Contact requirement is checked **when a quote moves into Presented or Accepted** (and, while it is Presented, on any save that would empty it), not on every save. A quote that was already sitting in *Presented* without a contact before this rule shipped keeps working normally — you can read and edit it, and filling the Contact in is an ordinary edit. It is the only case that can still reach *Accepted* without a recipient, and there it behaves as it always did: the contract cannot be drafted, and the reason lands in the server log. HotCRM's own demo data contains no such quote.
 - The Discount ceiling is checked on **every save**, not only on a status change — the opposite boundary to the Contact requirement above, and deliberately so. "The discount may never exceed 60%" is an invariant; "a quote must have a recipient by the time it is presented" is a condition on a transition. The consequence worth knowing: a quote stored above the ceiling before this rule shipped would be frozen to every edit except lowering its discount, which is always allowed. HotCRM's own demo data contains no such quote — the deepest discount it seeds is 20%.
 - The line-item ceiling behaves the same way and reaches the same legacy case: a line stored above 60 before the rule shipped is refused on its next edit until its discount comes down. One boundary is worth knowing: a validation is evaluated against the record being saved, so an over-ceiling *line* freezes that line, not its parent quote — the quote can still change status. Nothing HotCRM ships is in that state (the deepest line discount it seeds is 20%), and after this rule a line above the ceiling cannot be written at all.

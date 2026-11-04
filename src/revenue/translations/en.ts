@@ -150,6 +150,8 @@ export const en: TranslationData = {
         },
         reject_quote: { label: 'Reject', successMessage: 'Quote {{ record.display_title }} rejected. Revise it to make a new offer.' },
         revise_quote: { label: 'Revise', successMessage: 'Quote {{ record.display_title }} is back at Draft.' },
+        // Print Quote (#2312).
+        print_quote: { label: 'Print Quote', successMessage: 'Quote PDF attached to the quote.' },
       },
     },
     crm_opportunity_line_item: {
@@ -196,6 +198,20 @@ export const en: TranslationData = {
       _sections: {
         basic: { label: 'Line Item' },
         pricing: { label: 'Pricing' },
+      },
+    },
+  },
+  // The quote's two record pages (#2312): its working page and its print page.
+  pages: {
+    quote_detail_page: {
+      label: 'Quote Detail',
+      description: "The quote's record page: the synthesized layout, with no slot overridden.",
+    },
+    quote_print_page: {
+      label: 'Quote Document',
+      description: 'The quote as a printable document: header, customer, line items, pricing and terms.',
+      components: {
+        quote_print_lines: { title: 'Line Items' },
       },
     },
   },

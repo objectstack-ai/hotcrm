@@ -15,7 +15,7 @@ HotCRM 在 **五个** 对象上使用状态机：
 - **商机** —— 经过 7 个阶段 *Prospecting → Qualification → Needs Analysis → Proposal → Negotiation → Closed Won / Closed Lost*
 - **工单** —— *New → In Progress → Resolved → Closed*；*Waiting on Customer* 与 *Waiting on Support* 用来把未结案的工单挂起，*Escalated* 从任何未解决的状态都能进入，*Resolved* 与 *Closed* 都可以重新打开回 *In Progress*
 - **合同** —— *Draft → In Approval → Activated → Expired*；*In Approval* 可以把文件退回 *Draft*，三种在途状态都能直接走到 *Terminated*，*Expired* 与 *Terminated* 都是终点
-- **报价** —— *Draft → In Review → Presented → Accepted*；*In Review* 可以退回 *Draft*，*Rejected* 会回到 *Draft* 重来，*Expired* 可从 *Draft*、*In Review*、*Presented* 进入，*Accepted* 与 *Expired* 都是终点
+- **报价** —— *Draft → In Review → Presented → Accepted*；*In Review* 可以退回 *Draft*，*Draft* 可以直接进入 *Presented*（打印报价单就是这样），*Rejected* 会回到 *Draft* 重来，*Expired* 可从 *Draft*、*In Review*、*Presented* 进入，*Accepted* 与 *Expired* 都是终点
 
 五者的声明方式完全相同 —— 都是对象上一条具名的 `state_machine` 验证规则，作用于该对象的生命周期字段（`status`，商机上是 `stage`）。工单、合同、报价用的不是比潜在客户和商机更轻的机制，就是同一套机制。顶层 `stateMachines` 键在平台 7.7 被移除后，所有状态机都迁到了各自的对象上。
 

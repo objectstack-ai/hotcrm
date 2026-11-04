@@ -419,13 +419,32 @@ describe('case escalation trigger does not fight the close action', () => {
 describe('record-change flows declare their execution identity (#684)', () => {
   const recordChangeFlows = flows.filter((f) => f.type === 'record_change');
 
+  /**
+   * The record-change flows that act as the TRIGGERING USER, each with the
+   * reason it may (Metadata semantics rule 11: the deviation is written beside
+   * the flow's `runAs` and here). The hazard above is a trigger write that
+   * carries no session; a flow belongs here only when every write that can
+   * fire it does carry one.
+   */
+  const USER_IDENTITY_FLOWS: Record<string, string> = {
+    // Fired by the `sys_attachment` row the print service writes when it
+    // archives a quote PDF, and the service prints for a signed-in user acting
+    // for themselves only (it refuses a system, agent, service or guest
+    // principal before it renders). So the trigger user is always the rep who
+    // printed, and the status move is their own write, under their own rights
+    // and every rule on the quote (rule 9: elevate as little as possible). A
+    // session-less upload under the print's exact file name is refused in the
+    // run history, which is the right answer for it.
+    quote_print_presented: 'the print service writes its archive as the signed-in user only',
+  };
+
   it('there are record-change flows to check (the filter still matches)', () => {
     // Cheap canary: if `type` were ever renamed or the flows re-typed, every
     // assertion below would pass vacuously over an empty list.
     expect(recordChangeFlows.length).toBeGreaterThanOrEqual(9);
   });
 
-  it.each(recordChangeFlows.map((f) => f.name))(
+  it.each(recordChangeFlows.map((f) => f.name).filter((n) => !(n in USER_IDENTITY_FLOWS)))(
     '%s declares runAs:"system"',
     (name) => {
       const f = flow(name)!;
@@ -440,6 +459,14 @@ describe('record-change flows declare their execution identity (#684)', () => {
       ).toBe('system');
     },
   );
+
+  it.each(Object.keys(USER_IDENTITY_FLOWS))('%s acts as the triggering user, by the roster above', (name) => {
+    // The roster names shipped flows only, and each one really is on `user`:
+    // an entry for a flow that moved to `system`, or left, is a stale excuse.
+    expect(flow(name), `${name} is in USER_IDENTITY_FLOWS but not registered`).toBeDefined();
+    expect(flow(name)!.type).toBe('record_change');
+    expect(flow(name)!.runAs).toBe('user');
+  });
 
   it('the insert-time twins inherit the parent’s identity rather than restating it', () => {
     // Both twins are built by spreading their parent, so `runAs` rides along.
@@ -469,13 +496,15 @@ describe('record-change flows declare their execution identity (#684)', () => {
       // these rationales cite each other and every scheduled precedent, so a
       // substring search lands inside a comment and reports the file as
       // undocumented (it did, on four of the seven, first run).
-      const at = lines.findIndex((l) => /^\s*runAs:\s*'system'\s*,\s*$/.test(l));
-      if (at < 0) { missing.push(`${file}: no runAs: 'system' declaration`); continue; }
+      const userAt = lines.findIndex((l) => /^\s*runAs:\s*'user'\s*,\s*$/.test(l));
+      const exempt = Object.keys(USER_IDENTITY_FLOWS).some((n) => lines.some((l) => l.includes(`name: '${n}'`)));
+      const at = exempt ? userAt : lines.findIndex((l) => /^\s*runAs:\s*'system'\s*,\s*$/.test(l));
+      if (at < 0) { missing.push(`${file}: no runAs: '${exempt ? 'user' : 'system'}' declaration`); continue; }
       // Walk back over the contiguous comment block directly above it.
       let comment = 0;
       for (let i = at - 1; i >= 0 && /^\s*(\/\/|\*|\/\*)/.test(lines[i]); i--) comment++;
       if (comment < 3) {
-        missing.push(`${file}: runAs: 'system' carries ${comment} line(s) of rationale above it, expected >= 3`);
+        missing.push(`${file}: its runAs carries ${comment} line(s) of rationale above it, expected >= 3`);
       }
     }
     expect(missing, missing.join('\n')).toEqual([]);

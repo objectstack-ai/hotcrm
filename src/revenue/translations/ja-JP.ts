@@ -184,6 +184,8 @@ export const jaJP: TranslationData = {
         },
         reject_quote: { label: '却下', successMessage: '見積 {{ record.display_title }} を却下しました。改訂して新しい提案ができます。' },
         revise_quote: { label: '改訂', successMessage: '見積 {{ record.display_title }} を下書きに戻しました。' },
+        // Print Quote (#2312).
+        print_quote: { label: '見積書を印刷', successMessage: '見積書の PDF を添付しました。' },
       },
     },
     crm_opportunity_line_item: {
@@ -301,6 +303,20 @@ export const jaJP: TranslationData = {
       description: '見積、製品と価格表、そして受注した商談の請求部門への引き継ぎ。',
       groups: {
         revenue: { label: '収益' },
+      },
+    },
+  },
+  // The quote's two record pages (#2312): its working page and its print page.
+  pages: {
+    quote_detail_page: {
+      label: '見積詳細',
+      description: '見積のレコードページ：自動生成のレイアウトをそのまま使い、スロットは上書きしません。',
+    },
+    quote_print_page: {
+      label: '見積書ドキュメント',
+      description: '印刷用の見積書：ヘッダー、顧客、見積明細、価格、条件。',
+      components: {
+        quote_print_lines: { title: '見積明細' },
       },
     },
   },
