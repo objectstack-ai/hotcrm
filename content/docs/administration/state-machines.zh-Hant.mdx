@@ -17,7 +17,7 @@ HotCRM 在 **五個** 物件上使用狀態機：
 - **商機** —— 經過 7 個階段 *Prospecting → Qualification → Needs Analysis → Proposal → Negotiation → Closed Won / Closed Lost*
 - **工單** —— *New → In Progress → Resolved → Closed*；*Waiting on Customer* 與 *Waiting on Support* 用來把未結案的工單掛起，*Escalated* 從任何未解決的狀態都能進入，*Resolved* 與 *Closed* 都可以重新開啟回 *In Progress*
 - **合約** —— *Draft → In Approval → Activated → Expired*；*In Approval* 可以把文件退回 *Draft*，三種在途狀態都能直接走到 *Terminated*，*Expired* 與 *Terminated* 都是終點
-- **報價** —— *Draft → In Review → Presented → Accepted*；*In Review* 可以退回 *Draft*，*Rejected* 會回到 *Draft* 重來，*Expired* 可從 *Draft*、*In Review*、*Presented* 進入，*Accepted* 與 *Expired* 都是終點
+- **報價** —— *Draft → In Review → Presented → Accepted*；*In Review* 可以退回 *Draft*，*Draft* 可以直接進入 *Presented*（列印報價就是這樣），*Rejected* 會回到 *Draft* 重來，*Expired* 可從 *Draft*、*In Review*、*Presented* 進入，*Accepted* 與 *Expired* 都是終點
 
 五者的宣告方式完全相同 —— 都是物件上一條具名的 `state_machine` 驗證規則，作用於該物件的生命週期欄位（`status`，商機上是 `stage`）。工單、合約、報價用的不是比潛在客戶和商機更輕的機制，就是同一套機制。頂層 `stateMachines` 鍵在平台 7.7 被移除後，所有狀態機都遷到了各自的物件上。
 

@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
-import stack from './helpers/composed-stack';
+import stack, { localePacks } from './helpers/composed-stack';
 
 /**
  * The organization every write here carries: since 18.1.0 the driver creates
@@ -97,9 +97,6 @@ const ORG = 'org_1';
 type AnyRec = Record<string, any>;
 
 const views: AnyRec[] = (stack as any).views ?? [];
-const localePacks: [string, AnyRec][] = ((stack as any).translations ?? []).flatMap(
-  (bundle: AnyRec) => Object.entries(bundle) as [string, AnyRec][],
-);
 
 /**
  * Phrases that claim a CURRENT calendar period, per period and per locale, and

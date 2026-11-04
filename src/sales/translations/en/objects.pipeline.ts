@@ -366,30 +366,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
     },
   },
-  crm_opportunity_line_item: {
-    label: 'Opportunity Line Item',
-    pluralLabel: 'Opportunity Line Items',
-    description: 'Per-product pricing lines under an opportunity',
-    fields: {
-      crm_opportunity: { label: 'Opportunity' },
-      crm_product: { label: 'Product' },
-      description: { label: 'Description' },
-      product_title: { label: 'Product Title', help: "The product's title, kept in step with the product. It names this line." },
-      quantity: { label: 'Quantity' },
-      list_price: { label: 'List Price', help: "Auto-populated from the product's List Price." },
-      unit_price: {
-        label: 'Sales Price',
-        help: 'Negotiated unit price (may differ from list price)',
-      },
-      discount: { label: 'Discount %' },
-      total_price: { label: 'Total' },
-      line_number: { label: 'Line #' },
-    },
-    _sections: {
-      basic: { label: 'Line Item' },
-      pricing: { label: 'Pricing' },
-    },
-  },
   crm_forecast: {
     label: 'Forecast',
     pluralLabel: 'Forecasts',

@@ -18,8 +18,9 @@ import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
  *
  *  - the MACHINE AGREES: every status an action is offered on, read off its
  *    `visible` by evaluating it, is a status its patch is a declared move
- *    from — and every declared move but `→ expired` (the sweep's) has an
- *    action. The machine is read off the object, so a change to either side
+ *    from — and every declared move but `→ expired` (the sweep's) and
+ *    `draft → presented` (printing's, #2312) has an action. The machine is
+ *    read off the object, so a change to either side
  *    that the other does not follow turns this red;
  *  - the OFFER follows the grant: a persona whose sets may not edit a quote is
  *    offered none of them, by the effective permissions the server publishes;
@@ -65,10 +66,27 @@ describe('each action is a declared step of the quote machine', () => {
     for (const status of from) expect(machine[status], `${name}: ${status} → ${to} is not a declared move`).toContain(to);
   });
 
-  it('every declared move but the expiry sweep has its action', () => {
+  // The moves no button makes, each with the writer that makes it instead:
+  // `→ expired` is the sweep's, and `draft → presented` is printing's (#2312):
+  // Print Quote files the PDF and `quote_print_presented` presents the quote.
+  // A Mark Presented on a Draft would present a quote nobody printed.
+  const MOVES_WITHOUT_A_BUTTON: Record<string, string> = { 'draft→presented': 'print_quote' };
+
+  it('every declared move but the expiry sweep and printing has its action', () => {
     const covered = new Set(ACTIONS.flatMap((name) => fromStatuses(name).map((from) => `${from}→${actionNamed(name).patch.status}`)));
     const declared = Object.entries(machine).flatMap(([from, tos]) => tos.filter((to) => to !== 'expired').map((to) => `${from}→${to}`));
-    expect(declared.filter((move) => !covered.has(move))).toEqual([]);
+    expect(declared.filter((move) => !covered.has(move) && !(move in MOVES_WITHOUT_A_BUTTON))).toEqual([]);
+  });
+
+  it('printing makes the one move no button makes, and only that one', () => {
+    for (const [move, writer] of Object.entries(MOVES_WITHOUT_A_BUTTON)) {
+      const [from, to] = move.split('→');
+      expect(machine[from!], `${move} is not a declared move`).toContain(to);
+      expect(fromStatuses('mark_quote_presented'), `a button now makes ${move}`).not.toContain(from);
+      expect(actionNamed(writer).type).toBe('api');
+    }
+    const flows: Rec[] = (stack as Rec).flows ?? [];
+    expect(flows.map((f) => f.name)).toContain('quote_print_presented');
   });
 
   it.each(ACTIONS)('%s is withheld before the record has loaded, and names the quote when it succeeds', (name) => {

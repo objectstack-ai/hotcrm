@@ -7,3 +7,4 @@
  */
 export { QuoteGenerationFlow } from './quote-generation.flow';
 export { QuoteExpirationFlow } from './quote-expiration.flow';
+export { QuotePrintPresentedFlow } from './quote-print-presented.flow';

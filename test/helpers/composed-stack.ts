@@ -1,5 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { deepMerge } from '@objectstack/core';
 import { composeStacks } from '@objectstack/spec';
 import { SchemaRegistry } from '@objectstack/objectql';
 import { packageStacks } from '../../objectstack.composition';
@@ -58,9 +59,24 @@ export type AnyRec = Record<string, any>;
  * Read off the composed view rather than the booted registry on purpose: the
  * handle's `metadata` carries no translation type (`metadata.types()` lists
  * none), and the locale packs are authored app metadata, not a runtime fact.
+ *
+ * Every package registers its own bundle (#2352), so the composed view holds
+ * four, and a locale's rows are spread across them. Each locale is folded into
+ * ONE pack with `@objectstack/core`'s `deepMerge` — the function the runtime's
+ * `loadTranslations` folds bundles with, so a suite reads the tree
+ * `GET /api/v1/i18n/translations/LOCALE` serves. Taking the first bundle per
+ * locale instead would hand a suite one module's rows and nothing else.
  */
-export const localePacks: [string, AnyRec][] = ((composedStack as AnyRec).translations ?? []).flatMap(
-  (bundle: AnyRec) => Object.entries(bundle) as [string, AnyRec][],
+export const localePacks: [string, AnyRec][] = Object.entries(
+  ((composedStack as AnyRec).translations ?? []).reduce(
+    (byLocale: Record<string, AnyRec>, bundle: AnyRec) => {
+      for (const [locale, pack] of Object.entries(bundle) as [string, AnyRec][]) {
+        byLocale[locale] = deepMerge(byLocale[locale] ?? {}, pack);
+      }
+      return byLocale;
+    },
+    {} as Record<string, AnyRec>,
+  ) as Record<string, AnyRec>,
 );
 export const packFor = (locale: string): AnyRec | undefined =>
   localePacks.find(([name]) => name === locale)?.[1];
