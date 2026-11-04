@@ -222,7 +222,8 @@ needed; (3) per-field enumeration only in the extreme case, with a comment namin
 - **Object Naming**: `crm_` prefix on every business object, written out (Tech Stack rule 2).
 - **i18n**: every new object ships in all four locale packs, `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` — label, pluralLabel, every field and option label, view labels, navigation labels.
 - **Docs**: every new object or feature gets a user-facing page under `content/docs/` for business users and admins — business concepts,
-  never a hand-copied machine roster; English first, then `.zh-Hans.mdx` and `.zh-Hant.mdx` beside it, under **Documentation discipline** below.
+  never a hand-copied machine roster; English first, then `.zh-Hans.mdx` and `.zh-Hant.mdx` beside it. A feature that adds a rule the
+  screens do not show also updates its package's **in-app docs** in the same PR (rule 7). Both under **Documentation discipline** below.
 - **Validation predicates must be TOTAL**: every `record.x` read in an authored CEL predicate (`validations[].condition`, `requiredWhen`,
   `readonlyWhen`, `visibleWhen`) carries a `has(record.x)` guard.
 - **Dependencies**: the `@objectstack/*` packages in `package.json` are version-locked and bumped together; keep `specVersion` in
@@ -268,6 +269,22 @@ navigation fact may be documented and guarded; a machine semantic layer may not.
   a Traditional translation. Each zh-Hant page carries one identical standing sentence saying
   so; ⛔ no guard asserts free prose (#1646 refused prose guards, #1755 measured an idle one).
   (#1767)
+
+**7. The in-app docs carry the rules the screens do not show, and a feature updates them in the same PR.** When a feature adds
+behaviour a user cannot read off the screen — an automatic assignment, a threshold, an SLA, who can see a record, what a metric
+counts — the same PR updates its own package's in-app page (ADR-0046), opened from *Help*; the screens themselves are not
+re-described (ADR-0051 §1). English first, `<name>.zh.md` beside it. A page files itself into its book by name prefix:
+
+- app package: `src/docs/` (the platform's path, above) — `crm_manual` (`crm_sales_*`, `crm_analytics_*`; Getting Started is the one
+  curated `pages` list) and `crm_admin_manual` (`crm_admin_*`, administrators only), both in `src/sales/books/`;
+- service: `src/service/docs/` — no book of its own; `crm_manual`'s Service group claims `crm_service_*`;
+- revenue: `src/revenue/docs/` — `crm_revenue_manual` (`crm_revenue_*`), `src/revenue/books/`;
+- marketing: `src/marketing/docs/` — `crm_marketing_manual` (`crm_marketing_*`), `src/marketing/books/`.
+
+A machine fact is embedded as a ```` ```metadata ```` block, ⛔ never hand-copied (rule 5); while the pinned platform refuses those
+blocks in this multi-package artifact, a lifecycle is a ```` ```mermaid ```` diagram held to its machine by
+`test/docs-lifecycle-diagrams.test.ts`. ⛔ A page in the app's books never links to a page of a module's own book (Revenue, Marketing):
+that book leaves with its module; the module's pages may link to the app's. (#2328)
 
 ## ⬆️ Platform Upgrades (ObjectStack version bumps)
 
