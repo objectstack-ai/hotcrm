@@ -64,7 +64,7 @@ Each arrow you take by hand has a button on the quote, shown only on the
 statuses it leaves from: **Submit for Review** on a Draft, **Mark Presented** on
 a quote In Review, **Accept** on a Presented quote, **Reject** on a quote In
 Review or Presented, and **Revise** (back to Draft) on a quote In Review or
-Rejected. **Accept** asks first, because it cannot be walked back from the
+Rejected. **Accept** needs the quote's signed copy (below) and asks first, because it cannot be walked back from the
 quote: it freezes the quote, closes its opportunity as won and drafts a
 contract. The buttons are offered to whoever may edit the quote. The move to
 **Expired** has no button; the daily job below makes it. The move from **Draft**
@@ -93,6 +93,14 @@ print it again as often as you need, and a file you attach yourself changes
 nothing. The move is an ordinary save made by you, so a quote with no
 **Contact** is printed and filed but stays where it was, with no message that
 says so. Check the status after printing; fill in the contact and print again.
+
+## Filing the signed copy
+
+When the customer signs the quote, upload what they sent back to the quote's
+**Signed Copy** while it is **Presented**. **A quote is accepted only with its
+signed copy:** **Accept**, like any save that moves the quote to **Accepted**,
+is refused and names **Signed Copy** until the file is there. A quote accepted
+before this rule stays accepted as it was.
 
 ## When a quote is accepted
 

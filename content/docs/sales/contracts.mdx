@@ -1,6 +1,6 @@
 ---
 title: Contracts
-description: Signed agreements with customers — terms, value, renewals and the automatic expiration sweep.
+description: Signed agreements with customers — terms, value, printing and the signed copy, renewals and the automatic expiration sweep.
 ---
 
 # Contracts
@@ -40,7 +40,7 @@ A contract record declares its fields in **six groups**. The contract form shows
 | **Parties** | Contract Owner, Account, Primary Contact, Related Opportunity — the contact and opportunity pickers are scoped to the account you pick first |
 | **Terms & Dates** | Contract Term (Months), Start Date, End Date, Special Terms |
 | **Contract Value** | Contract Value, Billing Frequency, Payment Terms, Billing Address |
-| **Status & Approval** | Status, Signed Date, Signed By |
+| **Status & Approval** | Status, Signed Date, Signed By, Signed Copy |
 | **Renewal** | Auto Renewal, Renewal Notice (Days) |
 
 Account, Primary Contact, Contract Term, Start Date, End Date, Contract Value and Status are all **required** — a contract cannot be saved without them.
@@ -51,7 +51,15 @@ Three field names people go looking for and do not find:
 - **Renewal Terms.** Renewal is exactly the two fields above. Free-text renewal instructions belong in **Special Terms**, which travels with the contract.
 - **Account Exec.** Ownership is the single **Contract Owner** lookup; a contract carries no second ownership field.
 
-**Contract Document** is a **link**, not an upload — it holds a URL pointing at wherever the document lives. The executed PDF itself goes on the record as an **attachment**; files are enabled on Contract, which is what makes that possible. There is no separate *Order Form* field.
+**Contract Document** is a **link**, not an upload — it holds a URL pointing at wherever the document lives in another system. The contract HotCRM prints goes on the record as an **attachment**, and the copy the customer signs and sends back goes in **Signed Copy**, an upload — see *Printing a contract and the signed copy* below. There is no separate *Order Form* field.
+
+## Printing a contract and the signed copy
+
+**Print Contract**, on the contract's record page and in the contract list's row menu, prints the contract as a document and files the PDF under the contract's **Attachments**, in your name. The document carries the parties (contract number and type, account, primary contact and contract owner), the **Terms & Dates**, **Contract Value** and **Renewal** groups, and a signature block for each side; each sheet repeats the header and carries its page number. Printing changes nothing else on the contract, so a contract can be printed as often as it needs to be. The button is offered to whoever may edit the contract and attach files to it — a **Sales Manager** or a **System Administrator**, not a **Sales Rep** (see *Who can edit which contract* below).
+
+What the customer signs and sends back is uploaded to **Signed Copy**, in the **Status & Approval** group. The save that files it fills **Signed Date** with today's date when Signed Date is empty; a date already on the contract, or typed in the same save, is kept.
+
+**Activated requires the signed copy.** The save that moves a contract to *Activated* is refused on **Signed Copy** — *"Signed Copy is required"* — until a file is there, whether it comes from the Edit form or the REST API (`400 VALIDATION_FAILED`). An *Activated* contract cannot have its signed copy removed either: that save is refused the same way. A contract that was already *Activated* without a signed copy when this rule arrived is not touched by it: its other edits save, and it still expires or is terminated as before. Printing needs a print engine on the server (`OS_PRINT_CHROMIUM_PATH` or `OS_PRINT_BROWSER_ENDPOINT`, plus `OS_PRINT_CONSOLE_URL`); without one, Print Contract reports the error and files nothing.
 
 ## Billing frequency
 
@@ -92,7 +100,7 @@ When a contract enters its renewal window, the system files a follow-up task and
 ### On contract activation
 Changing a contract's status **to** *Activated* runs two writes, and only these two:
 
-1. **Signed Date** stamped on the contract — today's date, and only when the contract has none yet. Set Signed Date in the same edit that activates the contract and your date is kept.
+1. **Signed Date** stamped on the contract — today's date, and only when the contract has none yet. Set Signed Date in the same edit that activates the contract and your date is kept. Filing the **Signed Copy** has usually filled it already (see *Printing a contract and the signed copy* above).
 2. **Account type → Customer** — every account that is not already a *Customer* is promoted, so this catches a *Partner* or a *Former Customer* just as it catches a *Prospect*.
 
 Nothing is sent and nobody is told. Activation raises no notification for the contract owner or the account owner, and no message goes to the primary contact — there is no outbound customer email here, and no setting behind one. There is no *Customer Since* field on the account either: an account keeps no date of its own for when it became a customer, so cohort reporting has to read the contract's signed date or start date.
@@ -135,12 +143,13 @@ Terminating a contract is a status change to *Terminated*, and two things about 
 
 ## Built-in rules
 
-Four rules reject a save outright:
+Five rules reject a save outright:
 
 - **End date must be after start date** — a validation rule on the object.
 - **The term must match the dates** — the contract hook counts the months between **Start Date** and **End Date** and rejects anything more than **one month** away from **Contract Term (Months)**: *"Contract term (12 months) does not match date range (6 months from … to …)."* Term and dates move together, or the save bounces.
 - **An activated contract's end date cannot be pulled in** — once the contract is *Activated*, an edit that moves **End Date** earlier is refused (*"Cannot shrink end_date … after activation"*). Pushing it out is fine; shortening a live agreement is a termination or an amendment, not an edit.
-- **The status progression is a gate.** The route is *Draft* → *In Approval* → *Activated* → *Expired* or *Terminated*, with *In Approval* able to go back to *Draft*, *Terminated* reachable from all three live statuses, and *Expired* and *Terminated* both final: a renewal is a new contract, never a revived one. A status change off that route — *Draft* straight to *Activated*, *Activated* back to *Draft*, or reviving an *Expired* or *Terminated* contract — is refused on **Status** with *"This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; In Approval can go back to Draft, and Draft, In Approval or Activated can be Terminated. Expired and Terminated are final: a renewal is a new contract."*, and the contract keeps its status, whether the change comes from the Edit form or the REST API (`400 VALIDATION_FAILED`). Only a change of the status is judged: any other edit saves on any contract, an expired or terminated one included. A contract *created* directly as *Activated* or *Expired* is not checked at all, which is the same import path that skips the activation writes described above.
+- **Activated requires a signed copy** — a save that moves a contract to *Activated*, or creates one already *Activated*, without a **Signed Copy** is refused on that field; see *Printing a contract and the signed copy* above.
+- **The status progression is a gate.** The route is *Draft* → *In Approval* → *Activated* → *Expired* or *Terminated*, with *In Approval* able to go back to *Draft*, *Terminated* reachable from all three live statuses, and *Expired* and *Terminated* both final: a renewal is a new contract, never a revived one. A status change off that route — *Draft* straight to *Activated*, *Activated* back to *Draft*, or reviving an *Expired* or *Terminated* contract — is refused on **Status** with *"This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; In Approval can go back to Draft, and Draft, In Approval or Activated can be Terminated. Expired and Terminated are final: a renewal is a new contract."*, and the contract keeps its status, whether the change comes from the Edit form or the REST API (`400 VALIDATION_FAILED`). Only a change of the status is judged: any other edit saves on any contract, an expired or terminated one included. A contract *created* directly as *Activated* or *Expired* is not checked by this rule, which is the same import path that skips the activation writes described above; one created *Activated* still needs its **Signed Copy**.
 
 One more thing is often read as a rule and is not:
 
@@ -182,7 +191,7 @@ None of the four filters anything, so **every contract you can see appears in al
 
 ## Tips for contract owners
 
-- ✅ **Attach the signed PDF** when activating — auditors will thank you.
+- ✅ **Upload the signed copy before you activate** — Activation waits for it, and the upload fills Signed Date for you.
 - ✅ **Set Renewal Notice (Days) = 90** for enterprise deals — gives you a full quarter to negotiate, and the sweep looks far enough ahead to honour it.
 - ✅ **Record what you agreed in Special Terms** — "price-locked for 3 years; 5% uplift on renewal". There is no *Renewal Terms* field, and Special Terms is the note that will still be on the contract when the reminder lands.
 
