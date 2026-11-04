@@ -402,12 +402,12 @@ export const OpportunityDetailPage: Page = {
                                 // defaults to `id`, which is what the `crm_product`
                                 // lookup stores, and `labelField` defaults to the
                                 // picked object's own title field — `crm_product`
-                                // declares `nameField: 'display_title'` (ADR-0079),
-                                // so the picker labels rows "PRD-0001 - Widget" and
+                                // declares `nameField: 'name'` (#2369 row 10), so
+                                // the picker labels rows by the product's name and
                                 // keeps ONE source of truth for a product's title.
-                                // That formula title is searchable only because the
-                                // object also declares `searchableFields`, which it
-                                // already does for exactly this reason.
+                                // The code stays searchable because the object
+                                // declares `searchableFields`, and shows under each
+                                // row because it leads `highlightFields`.
                                 add: {
                                   picker: {
                                     object: 'crm_product',

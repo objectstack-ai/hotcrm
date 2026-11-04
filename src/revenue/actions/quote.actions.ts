@@ -42,7 +42,7 @@ import { P } from '@objectstack/spec';
  *
  * # Wording
  *
- * Each success message names the quote by its title (`{{ record.display_title }}`,
+ * Each success message names the quote by its title, its name (`{{ record.name }}`,
  * the action's own record). Accept alone asks first: it cannot be undone from
  * the quote — the quote freezes, its opportunity closes as won and a contract
  * is drafted. Every other move can be walked back by another action.
@@ -58,7 +58,7 @@ export const SubmitQuoteForReviewAction: Action = {
   locations: ['record_header', 'list_item'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "draft" && current_user.can("crm_quote", "edit")`,
-  successMessage: 'Quote {{ record.display_title }} submitted for review.',
+  successMessage: 'Quote {{ record.name }} submitted for review.',
   refreshAfter: true,
 };
 
@@ -72,7 +72,7 @@ export const MarkQuotePresentedAction: Action = {
   locations: ['record_header', 'list_item'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "in_review" && current_user.can("crm_quote", "edit")`,
-  successMessage: 'Quote {{ record.display_title }} marked as presented.',
+  successMessage: 'Quote {{ record.name }} marked as presented.',
   refreshAfter: true,
 };
 
@@ -87,7 +87,7 @@ export const AcceptQuoteAction: Action = {
   variant: 'primary',
   visible: P`has(record.status) && record.status == "presented" && current_user.can("crm_quote", "edit")`,
   confirmText: 'Accept this quote? It is frozen, its opportunity is closed as won and a contract is drafted.',
-  successMessage: 'Quote {{ record.display_title }} accepted.',
+  successMessage: 'Quote {{ record.name }} accepted.',
   refreshAfter: true,
 };
 
@@ -100,7 +100,7 @@ export const RejectQuoteAction: Action = {
   patch: { status: 'rejected' },
   locations: ['record_header', 'list_item'],
   visible: P`has(record.status) && (record.status == "in_review" || record.status == "presented") && current_user.can("crm_quote", "edit")`,
-  successMessage: 'Quote {{ record.display_title }} rejected. Revise it to make a new offer.',
+  successMessage: 'Quote {{ record.name }} rejected. Revise it to make a new offer.',
   refreshAfter: true,
 };
 
@@ -113,7 +113,7 @@ export const ReviseQuoteAction: Action = {
   patch: { status: 'draft' },
   locations: ['record_header', 'list_item'],
   visible: P`has(record.status) && (record.status == "in_review" || record.status == "rejected") && current_user.can("crm_quote", "edit")`,
-  successMessage: 'Quote {{ record.display_title }} is back at Draft.',
+  successMessage: 'Quote {{ record.name }} is back at Draft.',
   refreshAfter: true,
 };
 

@@ -37,7 +37,6 @@ export const en: TranslationData = {
         product_manager: { label: 'Product Manager' },
         image: { label: 'Product Image' },
         datasheet: { label: 'Datasheet' },
-        display_title: { label: 'Display Title' },
       },
       _views: {
         all_products: { label: 'All Products' },
@@ -120,7 +119,6 @@ export const en: TranslationData = {
         shipping_address: { label: 'Shipping Address' },
         description: { label: 'Description' },
         internal_notes: { label: 'Internal Notes' },
-        display_title: { label: 'Display Title' },
       },
       _views: {
         all_quotes: { label: 'All Quotes' },
@@ -141,15 +139,15 @@ export const en: TranslationData = {
         addresses_and_notes: { label: 'Addresses & Notes' },
       },
       _actions: {
-        submit_quote_for_review: { label: 'Submit for Review', successMessage: 'Quote {{ record.display_title }} submitted for review.' },
-        mark_quote_presented: { label: 'Mark Presented', successMessage: 'Quote {{ record.display_title }} marked as presented.' },
+        submit_quote_for_review: { label: 'Submit for Review', successMessage: 'Quote {{ record.name }} submitted for review.' },
+        mark_quote_presented: { label: 'Mark Presented', successMessage: 'Quote {{ record.name }} marked as presented.' },
         accept_quote: {
           label: 'Accept',
           confirmText: 'Accept this quote? It is frozen, its opportunity is closed as won and a contract is drafted.',
-          successMessage: 'Quote {{ record.display_title }} accepted.',
+          successMessage: 'Quote {{ record.name }} accepted.',
         },
-        reject_quote: { label: 'Reject', successMessage: 'Quote {{ record.display_title }} rejected. Revise it to make a new offer.' },
-        revise_quote: { label: 'Revise', successMessage: 'Quote {{ record.display_title }} is back at Draft.' },
+        reject_quote: { label: 'Reject', successMessage: 'Quote {{ record.name }} rejected. Revise it to make a new offer.' },
+        revise_quote: { label: 'Revise', successMessage: 'Quote {{ record.name }} is back at Draft.' },
         // Print Quote (#2312).
         print_quote: { label: 'Print Quote', successMessage: 'Quote PDF attached to the quote.' },
       },

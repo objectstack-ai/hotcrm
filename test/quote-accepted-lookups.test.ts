@@ -148,8 +148,15 @@ const accept = async (q: QuoteFixture, fault?: Parameters<typeof recordEngineWri
   }
 };
 
-/** The quote as every screen titles it (`quote_number - name`) — what a diagnostic names it by. */
-const titleOf = async (id: string): Promise<string> => String((await verify.rows('crm_quote', { id }))[0]!.display_title);
+/**
+ * The quote by number and name (`quote_number - name`) — what a diagnostic and
+ * the contract's provenance name it by. Its record title is the name alone
+ * (#2369 row 10), but names may repeat and the number names one quote.
+ */
+const titleOf = async (id: string): Promise<string> => {
+  const q = (await verify.rows('crm_quote', { id }))[0]!;
+  return `${q.quote_number} - ${q.name}`;
+};
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** The stored opportunity, read fresh. */

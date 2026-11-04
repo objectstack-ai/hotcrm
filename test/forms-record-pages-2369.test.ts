@@ -78,12 +78,15 @@ describe('row 3: the Send Email dialog says where the email goes', () => {
 describe('rows 4 and 5: the record header and pickers lead with what people scan for', () => {
   it.each([
     ['crm_account', Account, ['account_number', 'tier', 'health_score', 'annual_revenue', 'owner_id']],
-    ['crm_quote', Quote, ['crm_account', 'crm_opportunity', 'status', 'total_price', 'expiration_date']],
-    // The product picker's subtitle is [name, ...highlightFields]: List Price
-    // shows while picking a product for a quote line (row 4).
-    ['crm_product', Product, ['category', 'list_price', 'is_active']],
-    ['crm_campaign', Campaign, ['type', 'status', 'start_date', 'budgeted_cost']],
-    ['crm_knowledge_article', KnowledgeArticle, ['category', 'status', 'audience', 'helpful_count', 'not_helpful_count']],
+    // Row 10 (ruling A): the title is the name alone, so the number leads the
+    // strip and is the lookup picker's subtitle under the name.
+    ['crm_quote', Quote, ['quote_number', 'crm_account', 'crm_opportunity', 'status', 'total_price', 'expiration_date']],
+    // The product picker's table is [name, ...highlightFields] up to four
+    // columns: List Price still shows while picking a product for a quote line
+    // (row 4), after the code (row 10).
+    ['crm_product', Product, ['product_code', 'category', 'list_price', 'is_active']],
+    ['crm_campaign', Campaign, ['campaign_code', 'type', 'status', 'start_date', 'budgeted_cost']],
+    ['crm_knowledge_article', KnowledgeArticle, ['article_number', 'category', 'status', 'audience', 'helpful_count', 'not_helpful_count']],
   ])('%s highlights', (_name, object, expected) => {
     expect((object as AnyRec).highlightFields).toEqual(expected);
   });

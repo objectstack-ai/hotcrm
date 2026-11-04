@@ -267,10 +267,12 @@ repeat or to run over every row rather than hunting for the empty ones.
 
 ### 3.4 Backfilling the stored record titles (#2230)
 
-Nine objects title their records with a stored field the engine computes from
-the row's own columns (`display_title`; `full_name` on `crm_contact`). They were
-formulas before #2230, computed on read and stored nowhere, so the import could
-not match a lookup cell against them (objectstack#24981 ruling A).
+Four objects title their records with a stored field the engine computes from
+the row's own columns (`display_title`; `full_name` on `crm_contact`): contact,
+lead, forecast and case. Nine did until #2369 row 10 moved five of them to their
+name (§3.5). They were formulas before #2230, computed on read and stored
+nowhere, so the import could not match a lookup cell against them
+(objectstack#24981 ruling A).
 
 A **fresh install needs nothing**: every insert stores the title, the seed's
 included.
@@ -287,10 +289,32 @@ rows came up untitled.
 row it re-sends one of the row's own fields unchanged, so the update recomputes
 the title; the field it re-sends per object is its `TITLES` table. On that
 database it titled 134 of 134 rows with exactly the value the formula had
-answered, including an accepted and an expired quote (their freeze lets the
+answered, including an accepted and an expired quote (their freeze then let the
 engine's own title through, `quote.hook.ts`; the converted-lead freeze in
 `lead.hook.ts` does the same). The re-save is an ordinary update, so the
 script's header names the one automation that can act on it.
+
+### 3.5 Titles that became the name (#2369 row 10)
+
+Account, product, quote, campaign and knowledge article are titled by their
+name alone (`title` on the article); the stored `display_title` field is gone
+from all five. Their title needs no backfill: every row already stores its name.
+
+**The old column stays in the database.** Measured on ObjectStack 18.3.0, a
+database created before this change and served after it: boot is not refused,
+and the boot log names each of the five `display_title` columns as
+`[schema-drift] … column exists in the database but not in metadata
+(orphaned)`. Reads no longer return it and writes no longer touch it. Dropping
+it is an operator's choice, never automatic:
+`os migrate apply --allow-destructive`.
+
+**Line items catch up on their own.** Each opportunity and quote line stores a
+copy of its product's title (`product_title`). On the same database the lines
+still held the old `PRD-0001 - Name` copies after boot; the first reads of the
+line lists re-sent each product's name and the mirror re-stamped every line to
+the name (`line_item_product_title_backfill`, `src/revenue/objects/product.hook.ts`).
+To finish them in one go instead, run `scripts/backfill-line-product-title.ts`,
+which now compares each line against the product's name.
 
 ## 4. Seed-data staleness — the #1 HotCRM pitfall
 

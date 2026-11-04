@@ -59,7 +59,6 @@ export const zhCN: TranslationData = {
         billing_address: { label: '账单地址' },
         shipping_address: { label: '收货地址' },
         internal_notes: { label: '内部备注' },
-        display_title: { label: '显示名称' },
       },
       _views: {
         all_quotes: { label: '全部报价单' },
@@ -79,15 +78,15 @@ export const zhCN: TranslationData = {
         addresses_and_notes: { label: '地址与备注' },
       },
       _actions: {
-        submit_quote_for_review: { label: '提交审核', successMessage: '报价单 {{ record.display_title }} 已提交审核。' },
-        mark_quote_presented: { label: '标记为已提交', successMessage: '报价单 {{ record.display_title }} 已标记为已提交。' },
+        submit_quote_for_review: { label: '提交审核', successMessage: '报价单 {{ record.name }} 已提交审核。' },
+        mark_quote_presented: { label: '标记为已提交', successMessage: '报价单 {{ record.name }} 已标记为已提交。' },
         accept_quote: {
           label: '接受',
           confirmText: '接受此报价？报价将被冻结，其商机关闭为赢单，并起草一份合同。',
-          successMessage: '报价单 {{ record.display_title }} 已接受。',
+          successMessage: '报价单 {{ record.name }} 已接受。',
         },
-        reject_quote: { label: '拒绝', successMessage: '报价单 {{ record.display_title }} 已拒绝。修订后可重新报价。' },
-        revise_quote: { label: '修订', successMessage: '报价单 {{ record.display_title }} 已退回草稿。' },
+        reject_quote: { label: '拒绝', successMessage: '报价单 {{ record.name }} 已拒绝。修订后可重新报价。' },
+        revise_quote: { label: '修订', successMessage: '报价单 {{ record.name }} 已退回草稿。' },
         // Print Quote (#2312).
         print_quote: { label: '打印报价', successMessage: '报价 PDF 已归档到附件。' },
       },
@@ -129,7 +128,6 @@ export const zhCN: TranslationData = {
         product_manager: { label: '产品经理' },
         image: { label: '产品图片' },
         datasheet: { label: '规格书' },
-        display_title: { label: '显示名称' },
       },
       _views: {
         all_products: { label: '全部产品' },

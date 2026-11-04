@@ -90,14 +90,13 @@ const productHook: Hook = {
  * A renamed product renames its line items (#2086).
  *
  * Both line objects name a line by `product_title`, a stored copy of this
- * product's `display_title` (`product_code - name`). The rename side of the
+ * product's title, its `name` (#2369 row 10). The rename side of the
  * governing table in `skills/objectstack-data/SKILL.md` ("mirror the value,
  * always") is this hook. The line side is `*_line_item_product_title`
  * (`_line-item-price-fill.ts`).
  *
- * It acts only on a write that carries `name`. `product_code` is an
- * autonumber the engine issues once. It re-reads the title as the engine
- * computes it, and re-writes only lines whose copy differs. So an edit that
+ * It acts only on a write that carries `name`. It re-reads the stored name,
+ * and re-writes only lines whose copy differs. So an edit that
  * resends an unchanged name reads the lines and writes none.
  * `scripts/backfill-line-product-title.ts` relies on that: it resends each
  * product's own name to stamp the lines that predate the field.
@@ -155,8 +154,8 @@ const productTitleMirror: Hook = {
     const id = ctx.previous?.id ?? ctx.input?.id;
     if (!api || typeof id !== 'string' || !id) return;
     if (!ctx.input || !Object.prototype.hasOwnProperty.call(ctx.input, 'name')) return;
-    const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'name', 'display_title'] });
-    const title = product && typeof product.display_title === 'string' ? product.display_title.trim() : '';
+    const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'name'] });
+    const title = product && typeof product.name === 'string' ? product.name.trim() : '';
     if (!title) return;
     const staleLines = async (): Promise<Array<{ object: string; id: string }>> => {
       const out: Array<{ object: string; id: string }> = [];
@@ -206,7 +205,9 @@ const productTitleMirror: Hook = {
  * An untitled line, read, starts its product's re-stamp (#2168).
  *
  * Lines created before 5.1.0 hold no `product_title`, so they are named by
- * their record id until something writes them. Self-hosted operators can run
+ * their record id until something writes them. Lines written before #2369
+ * row 10 hold the old title, `PRD-0001 - Name`, while the product is now
+ * titled by its name alone; such a copy is stale in the same way. Self-hosted operators can run
  * `scripts/backfill-line-product-title.ts`. A hosted environment cannot: that
  * script signs in with a password, and the platform gives an installed package
  * no upgrade-time code path (package `migrations` are retired, `onEnable` does
@@ -221,7 +222,10 @@ const productTitleMirror: Hook = {
  * upgrade still shows the id and the next one shows the name.
  *
  * It acts only on a row that carries BOTH `crm_product` and an empty
- * `product_title`, the shape of a record page, a list or an API read. None of
+ * `product_title`, or a copy in the old `PRD-<digits> - ` shape, the shape of a
+ * record page, a list or an API read. An old-shape copy is checked against
+ * the product's name first, so a product whose own name has that shape is
+ * left alone instead of being re-sent on every read. None of
  * the app's own reads of a line projects both: the mirror reads `id` and
  * `product_title`, the rollups read the figures, numbering reads
  * `line_number`. So the re-stamp's own reads never trigger another re-stamp.
@@ -241,7 +245,7 @@ const lineProductTitleBackfill: Hook = {
   runAs: 'system',
   async: true,
   onError: 'log',
-  description: "Re-send the product's name for every untitled line a read returns, so product_title_mirror titles them.",
+  description: "Re-send the product's name for every untitled or old-titled line a read returns, so product_title_mirror titles them.",
   handler: async (ctx: HookContext) => {
     // Inside the handler, not at module scope: a lowered body has none.
     const PRODUCTS_PER_READ = 5;
@@ -249,25 +253,33 @@ const lineProductTitleBackfill: Hook = {
     if (!api) return;
     const result = (ctx as { result?: unknown }).result;
     const rows: unknown[] = Array.isArray(result) ? result : result && typeof result === 'object' ? [result] : [];
+    // The title every line carried before #2369 row 10: `product_code - name`.
+    const OLD_TITLE = /^PRD-\d+ - /;
     const products: string[] = [];
+    const copies: Record<string, string> = {};
     for (const row of rows) {
       if (!row || typeof row !== 'object') continue;
       const r = row as Record<string, unknown>;
       if (!Object.prototype.hasOwnProperty.call(r, 'product_title') || !Object.prototype.hasOwnProperty.call(r, 'crm_product')) continue;
-      if (typeof r.product_title === 'string' && r.product_title.trim() !== '') continue;
+      const copy = typeof r.product_title === 'string' ? r.product_title.trim() : '';
+      if (copy !== '' && !OLD_TITLE.test(copy)) continue;
       const ref = r.crm_product;
       const productId = typeof ref === 'string'
         ? ref
         : ref && typeof ref === 'object' && typeof (ref as Record<string, unknown>).id === 'string' ? String((ref as Record<string, unknown>).id) : '';
-      if (productId && !products.includes(productId)) products.push(productId);
+      if (productId && !products.includes(productId)) {
+        products.push(productId);
+        copies[productId] = copy;
+      }
       if (products.length >= PRODUCTS_PER_READ) break;
     }
     for (const id of products) {
-      const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'name', 'display_title'] });
-      // A product with no title gives the mirror nothing to stamp. Touching it
+      const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'name'] });
+      // A product with no name gives the mirror nothing to stamp. Touching it
       // would write the product on every read and title nothing.
-      if (!product || typeof product.name !== 'string') continue;
-      if (typeof product.display_title !== 'string' || product.display_title.trim() === '') continue;
+      if (!product || typeof product.name !== 'string' || product.name.trim() === '') continue;
+      // The copy already is the name: nothing is stale.
+      if (copies[id] === product.name.trim()) continue;
       await api.object('crm_product').update({ id, name: product.name }, { where: { id } });
     }
   },

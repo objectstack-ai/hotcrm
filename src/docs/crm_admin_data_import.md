@@ -88,6 +88,13 @@ and run it again. The ones you will meet most:
   still unknown fails the row rather than being dropped.
 - **A reference matches nothing** — an account name on a contact, or an owner
   email, that names no existing record.
+- **A reference matches more than one record** — a lookup cell names a record
+  by its name, and product, quote, campaign and knowledge-article names may
+  repeat. When two records share the name in the cell, the row is refused
+  rather than guessed. Name such a record by its number instead (**Product
+  Code**, **Quote Number**, **Campaign Code**, **Article Number**) or by its
+  record ID. Account names are unique, so an account name always names one
+  account.
 - **A website is not a full address** — write it with `https://`.
 
 Business rules run during an import exactly as they do on a save: a new lead

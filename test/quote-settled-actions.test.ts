@@ -162,7 +162,7 @@ describe('the guard: a Rejected quote is revised at Draft, not in place', () => 
     const err = await refusalOf(verify.hooks.run('crm_quote', 'update', { id: quote.id, discount: 5 }, { as: rep.token }));
     expect([err?.code, err?.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
     expect(err!.userMessage).toBe(
-      `Quote ${quote.quote_number} - ${quote.name} is Rejected; revise it back to Draft to change it. Until then only its Internal Notes can be edited.`,
+      `Quote ${quote.name} is Rejected; revise it back to Draft to change it. Until then only its Internal Notes can be edited.`,
     );
     expect(Number((await stored('crm_quote', quote.id)).discount)).toBe(0);
   });
@@ -174,7 +174,7 @@ describe('the guard: a Rejected quote is revised at Draft, not in place', () => 
     }, { as: rep.token }));
     expect([err?.code, err?.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
     expect(err!.userMessage).toBe(
-      `Quote ${quote.quote_number} - ${quote.name} is Rejected, so its line items can no longer be added, changed or removed. Revise it back to Draft to change them.`,
+      `Quote ${quote.name} is Rejected, so its line items can no longer be added, changed or removed. Revise it back to Draft to change them.`,
     );
     expect(await verify.rows('crm_quote_line_item', { crm_quote: quote.id })).toHaveLength(1);
   });

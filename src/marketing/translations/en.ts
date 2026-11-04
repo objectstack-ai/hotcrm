@@ -56,7 +56,6 @@ export const en: TranslationData = {
         owner_id: { label: 'Campaign Owner' },
         landing_page_url: { label: 'Landing Page' },
         is_active: { label: 'Active' },
-        display_title: { label: 'Display Title' },
       },
       _views: {
         all_campaigns: { label: 'All Campaigns' },

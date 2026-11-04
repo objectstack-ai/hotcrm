@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F, P } from '@objectstack/spec';
+import { P } from '@objectstack/spec';
 import { TERRITORY_OPTIONS } from './_territory';
 
 export const Account = ObjectSchema.create({
@@ -13,14 +13,14 @@ export const Account = ObjectSchema.create({
 
   // ADR-0090 D1/D7: OWD is an authored decision. Owner + sharing rules (team/territory grants below).
   sharingModel: 'private',
-  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`,
-  // which names a real field. The former template composed two local fields, so
-  // a stored `display_title` field reproduces it for the record title.
-  nameField: 'display_title',
+  // The record title is the name alone (#2369 row 10, ruling A): the number
+  // is a list column and leads `highlightFields`, so the lookup picker shows
+  // it under the name. Account names are unique per org (`name` is `unique`),
+  // so an import cell matches an account by its name.
+  nameField: 'name',
   // Explicit search targets (ADR-0061): the real columns the lookup picker
-  // and global search match. Until #2230 they were required, because the
-  // title was a formula with no column for `$search` to default to. The
-  // title is stored now; these stay because they name what is searched.
+  // and global search match, so a number or a registration number finds the
+  // account as well as its name.
   searchableFields: ['name', 'account_number', 'registration_number'],
   // The record header's strip (#2369 row 5): what the title does not say. The
   // page header shows the name and `{industry} · {type}` (account_detail.page.ts),
@@ -175,25 +175,6 @@ export const Account = ObjectSchema.create({
       hidden: true,
       maxLength: 255,
       group: 'system',
-    }),
-
-    // ADR-0079 record title (was titleFormat '{account_number} - {name}').
-    // A record with no `account_number` is titled by its name, as `crm_product` is
-    // (#2168). The number is an autonumber the engine issues on insert, so only
-    // rows older than the autonumber lack one; measured on staging after the
-    // 6.0.0 upgrade, the concatenation faulted there (`dyn<null> + string`) and
-    // left the record untitled (#2230).
-    // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
-    // computes the expression on every insert and every update by id and
-    // stores the result, so an import matches a lookup cell against this title
-    // and sort and search read a real column. `readonly` keeps it off the
-    // forms; a value a client sends never stands. Rows stored before #2230
-    // are titled by `scripts/backfill-record-titles.ts`.
-    display_title: Field.text({
-      readonly: true,
-      label: 'Display Title',
-      expression: F`has(record.account_number) && record.account_number != null && record.account_number != "" ? record.account_number + " - " + record.name : record.name`,
-      group: 'basic',
     }),
 
     /**

@@ -70,8 +70,8 @@ export const QuotePrintPage: Page = {
           // rung 3 of the layout ladder; rule 11). This block is what the
           // CUSTOMER reads, and `{ group: 'basic' }` would print the quote's
           // internal fields with it: `status` (a document printed while the
-          // quote is `in_review` must not say so), `crm_opportunity`, the
-          // `display_title` duplicate of number and name, and `description`.
+          // quote is `in_review` must not say so), `crm_opportunity` and
+          // `description`.
           // The section key is `quote` so its label is the one the packs
           // already carry for the quote form's `quote` section.
           type: 'record:details',

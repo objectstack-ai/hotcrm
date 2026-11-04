@@ -51,7 +51,6 @@ export const customer: Record<string, ObjectTranslationData> = {
         label: 'Nombre de Cuenta (Normalizado)',
         help: 'Clave de coincidencia para la conversión de prospectos: el Nombre de Cuenta en minúsculas, sin espacios sobrantes y con los espacios internos reducidos a uno. Lo mantiene el hook account_protection — nunca lo edite directamente.',
       },
-      display_title: { label: 'Título Mostrado' },
       type: {
         label: 'Tipo',
         // `former` is 'Former Customer' in account.object.ts; the `en` bundle

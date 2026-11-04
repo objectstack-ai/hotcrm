@@ -100,11 +100,11 @@ const quoteWithLine = async (status: string): Promise<{ quote: Rec; line: Rec; p
 const refusalOf = (p: Promise<unknown>): Promise<Rec | null> => p.then(() => null, (e: Rec) => e);
 
 const sentence = (quote: Rec) =>
-  `Quote ${quote.quote_number} - ${quote.name} is ${quote.status}, so its line items can no longer be added, changed or removed.`;
+  `Quote ${quote.name} is ${quote.status}, so its line items can no longer be added, changed or removed.`;
 /** What the console shows: the same sentence with the status's label (#2338 item 16). */
 const STATUS_LABELS: Record<string, string> = { accepted: 'Accepted', expired: 'Expired' };
 const userSentence = (quote: Rec) =>
-  `Quote ${quote.quote_number} - ${quote.name} is ${STATUS_LABELS[quote.status]}, so its line items can no longer be added, changed or removed.`;
+  `Quote ${quote.name} is ${STATUS_LABELS[quote.status]}, so its line items can no longer be added, changed or removed.`;
 
 /** The freeze's envelope, its wording, and the quote named the way the UI names it. */
 const expectFrozen = (err: Rec | null, quote: Rec): void => {

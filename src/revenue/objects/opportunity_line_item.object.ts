@@ -146,9 +146,10 @@ export const OpportunityLineItem = ObjectSchema.create({
       maxLength: 500,
     }),
 
-    // The line's title, which is the product's `display_title` (`product_code - name`).
+    // The line's title, which is the product's title: its `name` (#2369 row 10).
     // `readonly`: the hooks named on `nameField` above are its only writers.
-    // 300 is room for the product's 255-character name plus its code.
+    // 300 was sized for the name plus its code, which the title carried until
+    // #2369 row 10; the name alone is at most 255.
     product_title: Field.text({
       label: 'Product Title',
       group: 'basic',

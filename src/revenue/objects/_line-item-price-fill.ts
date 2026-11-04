@@ -115,20 +115,19 @@ export function createLineItemNumbering(objectName: string, hookName: string): H
  * Shared product-title writer (#2086). `product_title` is each line object's
  * `nameField`, and this hook writes it from the line side.
  *
- * It writes the product's `display_title` (`product_code - name`) in three
- * cases. A product is part of THIS write: an insert, or a re-point to another
+ * It writes the product's `name`, the product's record title (#2369 row 10),
+ * in three cases. A product is part of THIS write: an insert, or a re-point to another
  * product. Or an update reaches a row that has no title yet, which is what
  * heals a line older than the field. The rename half lives on `crm_product`
  * (`product_title_mirror`, `product.hook.ts`), so the governing table in
  * `skills/objectstack-data/SKILL.md` is covered on both sides.
  *
- * The title is read as a column, `fields: ['display_title']`. The engine
- * computes a formula on read, so the line carries exactly what the product's
- * own surfaces show. `ctx.title('crm_product')` would follow the product's
- * `nameField` pointer instead. The hook does not use it, because the hook
- * context under `@objectstack/verify` has no `ctx.title`
- * (objectstack-ai/objectstack#24289). Until that ships, a test pins
- * `crm_product.nameField` to `display_title`, so the two cannot drift apart.
+ * The title is read as a column, `fields: ['name']`, so the line carries
+ * exactly what the product's own surfaces show. `ctx.title('crm_product')`
+ * would follow the product's `nameField` pointer instead. The hook does not
+ * use it, because the hook context under `@objectstack/verify` has no
+ * `ctx.title` (objectstack-ai/objectstack#24289). Until that ships, a test pins
+ * `crm_product.nameField` to `name`, so the two cannot drift apart.
  *
  * A no-user write that carries its own title keeps it. That is
  * `product_title_mirror` re-stamping after a rename. A user's value is never
@@ -164,9 +163,9 @@ export function createLineItemProductTitle(objectName: string, hookName: string)
       }
       if (!productId) return;
       const product = await api.object('crm_product').findOne({
-        where: { id: productId }, fields: ['id', 'display_title'],
+        where: { id: productId }, fields: ['id', 'name'],
       });
-      const title = product && typeof product.display_title === 'string' ? product.display_title.trim() : '';
+      const title = product && typeof product.name === 'string' ? product.name.trim() : '';
       if (title) input.product_title = title;
     },
   };

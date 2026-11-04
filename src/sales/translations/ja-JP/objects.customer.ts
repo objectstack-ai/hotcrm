@@ -51,7 +51,6 @@ export const customer: Record<string, ObjectTranslationData> = {
         label: '取引先名（正規化）',
         help: 'リード変換の照合キー。取引先名を小文字化し、前後の空白を除去して、内部の連続する空白を 1 つにまとめたもの。account_protection フックが自動で維持します — 直接編集しないでください。',
       },
-      display_title: { label: '表示名' },
       type: {
         label: 'タイプ',
         options: { prospect: '見込み客', customer: '顧客', partner: 'パートナー', former: '過去の取引先' },

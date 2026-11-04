@@ -89,7 +89,6 @@ export const customer: Record<string, ObjectTranslationData> = {
         options: { healthy: '健康', watching: '关注', at_risk: '风险', churning: '流失中' },
       },
       name_normalized: { label: '客户名称（规范化）', help: '线索转化的匹配键：客户名称转小写、去除首尾空格、内部连续空白合并为一个空格。由 account_protection 钩子维护——请勿直接编辑。' },
-      display_title: { label: '显示名称' },
     },
     _views: {
       all_accounts: {

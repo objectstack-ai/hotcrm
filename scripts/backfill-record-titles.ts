@@ -6,14 +6,17 @@
 //   pnpm exec tsx scripts/backfill-record-titles.ts --url https://<your-org> --email <admin> --password <pw>
 //   pnpm exec tsx scripts/backfill-record-titles.ts ... --apply   # without this it only reports
 //
-// Nine objects title their records with a field the engine computes from the
+// Four objects title their records with a field the engine computes from the
 // row's own columns: `display_title` (`full_name` on a contact). Until #2230
 // those were `formula` fields, computed on read and stored nowhere. They are
 // now stored `text` fields carrying the same `expression`, which the engine
 // computes and stores on every insert and every update by id
 // (objectstack#24981 ruling A: an import matches a lookup cell against a
-// STORED title only, and sort and search read stored columns). On a database
-// upgraded to this version every existing row of the nine holds no title yet,
+// STORED title only, and sort and search read stored columns). Five more did
+// until #2369 row 10: account, product, quote, campaign and knowledge article
+// are titled by their own name column now, which every row already stores, so
+// they need no backfill and are not listed below. On a database upgraded to
+// #2230 every existing row of the four holds no title yet,
 // so its record header, its lookup chip and its search hit fall back to the
 // record id, and an exported lookup column does not import back. A row
 // created or edited after the upgrade is titled by that write. Rows nobody
@@ -26,8 +29,7 @@
 // write is an update by id, so the engine computes the title from the stored
 // row and stores it. Nothing else about the row changes.
 //
-// Rows that are otherwise frozen are included: an accepted or expired quote, a
-// closed case, a converted lead. Their freezes refuse a change to a business
+// Rows that are otherwise frozen are included: a closed case, a converted lead. Their freezes refuse a change to a business
 // field, and re-sending a value unchanged is not a change.
 //
 // Safe by construction:
@@ -49,15 +51,10 @@ const DEFAULT_URL = 'http://localhost:4001';
 
 /** Each object: the title field, and the field the backfill re-sends. */
 const TITLES: ReadonlyArray<{ object: string; title: string; resend: string }> = [
-  { object: 'crm_account', title: 'display_title', resend: 'name' },
   { object: 'crm_contact', title: 'full_name', resend: 'last_name' },
   { object: 'crm_lead', title: 'display_title', resend: 'company' },
   { object: 'crm_forecast', title: 'display_title', resend: 'period_label' },
-  { object: 'crm_product', title: 'display_title', resend: 'name' },
-  { object: 'crm_quote', title: 'display_title', resend: 'name' },
-  { object: 'crm_campaign', title: 'display_title', resend: 'name' },
   { object: 'crm_case', title: 'display_title', resend: 'subject' },
-  { object: 'crm_knowledge_article', title: 'display_title', resend: 'title' },
 ];
 
 /** `--flag value` / `--flag=value`, else the env var, else the fallback. */

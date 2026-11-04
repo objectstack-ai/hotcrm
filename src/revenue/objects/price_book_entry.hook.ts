@@ -68,12 +68,11 @@ const priceBookEntryHook: Hook = {
 
     const [bookRow, productRow] = await Promise.all([
       api.object('crm_price_book').findOne({ where: { id: book }, fields: ['id', 'name'] }),
-      api.object('crm_product').findOne({ where: { id: product }, fields: ['id', 'name', 'display_title'] }),
+      api.object('crm_product').findOne({ where: { id: product }, fields: ['id', 'name'] }),
     ]);
     const bookName = typeof bookRow?.name === 'string' && bookRow.name.trim() !== '' ? bookRow.name : 'This price book';
-    const productName = typeof productRow?.display_title === 'string' && productRow.display_title.trim() !== ''
-      ? productRow.display_title
-      : typeof productRow?.name === 'string' ? productRow.name : 'this product';
+    // The product as its record title names it: the name alone (#2369 row 10).
+    const productName = typeof productRow?.name === 'string' && productRow.name.trim() !== '' ? productRow.name : 'this product';
     throw refuse(
       `${bookName} already has a price for ${productName}. A price book holds one entry per product: edit that entry instead.`,
       'DUPLICATE_VALUE',

@@ -374,7 +374,7 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
       input: { crm_quote: row.expiredQuote, crm_product: row.product, quantity: 1, unit_price: 10 },
       as: rep.token,
     });
-    expectEnvelope(err, 'locked', 'quote_workflow', / - Envelope Quote is expired, so its line items/, / - Envelope Quote is Expired, so its line items/);
+    expectEnvelope(err, 'locked', 'quote_workflow', /Quote Envelope Quote is expired, so its line items/, /Quote Envelope Quote is Expired, so its line items/);
   });
 
   it('delete_restricted — product_catalog holds a referenced product', async () => {
@@ -524,8 +524,8 @@ describe('the same envelope on the in-process path (#1075)', () => {
         crm_quote: row.expiredQuote, crm_product: row.product, quantity: 1, unit_price: 10,
       }),
       'locked',
-      / - Envelope Quote is expired, so its line items/,
-      / - Envelope Quote is Expired, so its line items/,
+      /Quote Envelope Quote is expired, so its line items/,
+      /Quote Envelope Quote is Expired, so its line items/,
     );
   });
 
