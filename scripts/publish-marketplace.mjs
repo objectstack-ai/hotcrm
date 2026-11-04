@@ -15,8 +15,11 @@
  *   4. Flatten it to the bundle the marketplace reads, and refuse — before any
  *      HTTP call, DRY_RUN included — a bundle missing any object the build
  *      carries (`scripts/lib/marketplace-bundle.mjs`, #2053)
- *   5. POST {OS_CLOUD_URL}/api/v1/cloud/packages          → idempotent upsert of sys_package
- *   6. POST {OS_CLOUD_URL}/api/v1/cloud/packages/:id/versions
+ *   5. Resolve the manifest's per-locale listing `translations` (readme paths
+ *      read from disk) and refuse, DRY_RUN included, a map that does not parse
+ *      as `PackageTranslationsSchema` (`scripts/lib/marketplace-listing.mjs`, #2392)
+ *   6. POST {OS_CLOUD_URL}/api/v1/cloud/packages          → idempotent upsert of sys_package
+ *   7. POST {OS_CLOUD_URL}/api/v1/cloud/packages/:id/versions
  *      → creates sys_package_version. 409 (duplicate) is treated as a no-op so
  *        re-running is safe when nothing changed.
  *
@@ -41,6 +44,12 @@ import {
   describeBundle,
   flattenArtifact,
 } from './lib/marketplace-bundle.mjs';
+import {
+  ListingError,
+  describeTranslations,
+  packageUpsertBody,
+  resolveListingTranslations,
+} from './lib/marketplace-listing.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -218,21 +227,22 @@ async function main() {
     ? await readFile(join(ROOT, mp.readmePath ?? 'README.md'), 'utf8')
     : undefined;
 
+  // Per-locale listing copy (zh-CN description, tagline and readme, #2392),
+  // checked before the first request like the bundle above.
+  let translations;
+  try {
+    translations = resolveListingTranslations(mp.translations, dirname(manifestPath));
+  } catch (err) {
+    if (err instanceof ListingError) die(`refusing to publish: ${err.message}`);
+    throw err;
+  }
+  for (const line of describeTranslations(translations)) log(`  ${line}`);
+
   // Step 1 — upsert sys_package (marketplace visibility).
-  const upsertRes = await postJson('/api/v1/cloud/packages', {
-    manifest_id: manifestId,
-    visibility: 'marketplace',
-    display_name: mp.displayName,
-    description: mp.description,
-    category: mp.category,
-    tags: mp.tags,
-    is_starter: mp.isStarter ?? false,
-    publisher: mp.publisher,
-    icon_url: mp.iconUrl,
-    homepage_url: mp.homepageUrl,
-    license: mp.license ?? pkg.license,
-    readme,
-  });
+  const upsertRes = await postJson(
+    '/api/v1/cloud/packages',
+    packageUpsertBody({ manifestId, manifest: mp, license: mp.license ?? pkg.license, readme, translations }),
+  );
   if (!upsertRes.ok) die(`upsert failed (${upsertRes.status}): ${JSON.stringify(upsertRes.json).slice(0, 400)}`);
   const pkgId = upsertRes.json?.data?.id;
   log(`  ${upsertRes.json?.data?.created ? '✓ created' : '✓ patched'} sys_package id=${pkgId}`);
