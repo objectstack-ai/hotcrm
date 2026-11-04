@@ -15,7 +15,7 @@ HotCRM uses state machines on **five** objects:
 - **Opportunities** — through the 7 stages *Prospecting → Qualification → Needs Analysis → Proposal → Negotiation → Closed Won / Closed Lost*
 - **Cases** — *New → In Progress → Resolved → Closed*, with *Waiting on Customer* and *Waiting on Support* to park an open case, *Escalated* reachable from any unresolved status, and both *Resolved* and *Closed* able to reopen to *In Progress*
 - **Contracts** — *Draft → In Approval → Activated → Expired*, with *In Approval* able to send the paperwork back to *Draft*, *Terminated* reachable from all three live statuses, and *Expired* and *Terminated* both final
-- **Quotes** — *Draft → In Review → Presented → Accepted*, with *In Review* able to return to *Draft*, *Rejected* starting over at *Draft*, *Expired* reachable from *Draft*, *In Review* and *Presented*, and *Accepted* and *Expired* both final
+- **Quotes** — *Draft → In Review → Presented → Accepted*, with *In Review* able to return to *Draft*, *Draft* able to go straight to *Presented* (printing the quote does that), *Rejected* starting over at *Draft*, *Expired* reachable from *Draft*, *In Review* and *Presented*, and *Accepted* and *Expired* both final
 
 All five are declared the same way — a named `state_machine` validation rule on the object, over that object's lifecycle field (`status`, or `stage` on opportunities). Cases, contracts and quotes are not a lighter mechanism than leads and opportunities; they are the same one. The top-level `stateMachines` key was removed in platform 7.7 and every machine moved onto its object.
 

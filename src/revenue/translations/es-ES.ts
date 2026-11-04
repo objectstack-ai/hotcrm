@@ -183,6 +183,8 @@ export const esES: TranslationData = {
         },
         reject_quote: { label: 'Rechazar', successMessage: 'Cotización {{ record.name }} rechazada. Revísela para hacer una nueva oferta.' },
         revise_quote: { label: 'Revisar', successMessage: 'La cotización {{ record.name }} vuelve a Borrador.' },
+        // Print Quote (#2312).
+        print_quote: { label: 'Imprimir Cotización', successMessage: 'PDF de la cotización adjuntado a la cotización.' },
       },
     },
     crm_opportunity_line_item: {
@@ -300,6 +302,20 @@ export const esES: TranslationData = {
       description: 'Cotizaciones, productos y listas de precios, y el traspaso a facturación de una oportunidad ganada.',
       groups: {
         revenue: { label: 'Ingresos' },
+      },
+    },
+  },
+  // The quote's two record pages (#2312): its working page and its print page.
+  pages: {
+    quote_detail_page: {
+      label: 'Detalle de Cotización',
+      description: 'La página de registro de la cotización: el diseño generado, sin reemplazar ninguna ranura.',
+    },
+    quote_print_page: {
+      label: 'Documento de Cotización',
+      description: 'La cotización como documento imprimible: encabezado, cliente, líneas, precios y términos.',
+      components: {
+        quote_print_lines: { title: 'Líneas de Cotización' },
       },
     },
   },

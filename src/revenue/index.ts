@@ -1,20 +1,23 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
+import { PrintServicePlugin } from '@objectstack/service-print';
 
 import {
   SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
+  PrintQuoteAction,
 } from './actions/index.js';
 import { CrmRevenueManual } from './books/index.js';
 import { RevenueEmailTemplates } from './email-templates/index.js';
 import { ProductDataset } from './datasets/index.js';
-import { QuoteExpirationFlow, QuoteGenerationFlow } from './flows/index.js';
+import { QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow } from './flows/index.js';
 import {
   OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem,
 } from './objects/index.js';
 import {
   opportunityLineItemHook, priceBookEntryHook, priceBookHook, productHook, quoteHook, quoteLineItemHook,
 } from './objects/hooks.js';
+import { QuoteDetailPage, QuotePrintPage } from './pages/index.js';
 import { RevenueTranslations } from './translations/index.js';
 import { ProductViews, QuoteViews } from './views/index.js';
 
@@ -37,7 +40,7 @@ export const revenueHooks = [
  * on `crm_opportunity`); the app stack resolves that target through
  * `artifactFlows` (see `src/sales/index.ts`).
  */
-export const revenueFlows = [QuoteExpirationFlow, QuoteGenerationFlow];
+export const revenueFlows = [QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow];
 
 /**
  * What this package registers but does not assemble: its seed rows, which the
@@ -152,6 +155,8 @@ export const createHotCrmRevenueStack = (
   // The quote's lifecycle steps (#2366 row 9), authored against `crm_quote`.
   actions: [
     SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
+    // Print Quote (#2312): prints `quote_print_page` through the print door.
+    PrintQuoteAction,
   ],
   flows: revenueFlows,
   datasets: [ProductDataset],
@@ -159,6 +164,10 @@ export const createHotCrmRevenueStack = (
   // Its manual (#2327), over `src/revenue/docs/`. See the book's own note.
   books: [CrmRevenueManual],
   translations: [RevenueTranslations],
+  // The quote's working page (explicit default) and its print page (#2312).
+  pages: [QuoteDetailPage, QuotePrintPage],
+  // Mounts `POST /api/v1/print/records`, the door Print Quote calls.
+  plugins: [new PrintServicePlugin()],
 
   ...collections,
 });

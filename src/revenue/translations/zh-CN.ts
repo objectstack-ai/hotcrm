@@ -87,6 +87,8 @@ export const zhCN: TranslationData = {
         },
         reject_quote: { label: '拒绝', successMessage: '报价单 {{ record.name }} 已拒绝。修订后可重新报价。' },
         revise_quote: { label: '修订', successMessage: '报价单 {{ record.name }} 已退回草稿。' },
+        // Print Quote (#2312).
+        print_quote: { label: '打印报价', successMessage: '报价 PDF 已归档到附件。' },
       },
     },
     crm_product: {
@@ -299,6 +301,20 @@ export const zhCN: TranslationData = {
       description: '报价单、产品和价格表，以及赢单后向计费系统的交接。',
       groups: {
         revenue: { label: '收入' },
+      },
+    },
+  },
+  // The quote's two record pages (#2312): its working page and its print page.
+  pages: {
+    quote_detail_page: {
+      label: '报价详情',
+      description: '报价的记录页：使用系统生成的布局，不覆盖任何插槽。',
+    },
+    quote_print_page: {
+      label: '报价文档',
+      description: '可打印的报价文档：抬头、客户、行项目、价格与条款。',
+      components: {
+        quote_print_lines: { title: '行项目' },
       },
     },
   },

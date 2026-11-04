@@ -9,4 +9,5 @@
  */
 export {
   SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
+  PrintQuoteAction,
 } from './quote.actions';

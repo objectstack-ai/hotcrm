@@ -46,6 +46,7 @@ stateDiagram-v2
   state "Rejected" as rejected
   state "Expired" as expired
   draft --> in_review
+  draft --> presented
   draft --> expired
   in_review --> draft
   in_review --> presented
@@ -66,7 +67,8 @@ Review or Presented, and **Revise** (back to Draft) on a quote In Review or
 Rejected. **Accept** asks first, because it cannot be walked back from the
 quote: it freezes the quote, closes its opportunity as won and drafts a
 contract. The buttons are offered to whoever may edit the quote. The move to
-**Expired** has no button; the daily job below makes it.
+**Expired** has no button; the daily job below makes it. The move from **Draft**
+straight to **Presented** is made by printing the quote (below).
 
 A new quote starts as **Draft**, **In Review** or **Presented**. The New form
 does not offer Accepted, Rejected or Expired, and a save that creates a quote at
@@ -78,6 +80,19 @@ An **Accepted**, **Rejected** or **Expired** quote is settled. It shows no
 **Edit**, and its line items show no **New**. Only its **Internal Notes** can
 still be changed. A **Rejected** quote is reworked by clicking **Revise**: it goes
 back to **Draft**, where its fields and lines can be edited again.
+
+## Printing a quote
+
+**Print Quote**, on the quote and in the quote list's row menu, prints the quote
+as a document and files the PDF under the quote's **Attachments**, in your name.
+It is offered to whoever may edit the quote and attach files to it.
+
+Printing is presenting: when the PDF is filed, a **Draft** or **In Review**
+quote moves to **Presented**. A quote in any other status keeps it, so you can
+print it again as often as you need, and a file you attach yourself changes
+nothing. The move is an ordinary save made by you, so a quote with no
+**Contact** is printed and filed but stays where it was, with no message that
+says so. Check the status after printing; fill in the contact and print again.
 
 ## When a quote is accepted
 
