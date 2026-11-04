@@ -23,5 +23,12 @@
     "objectstack-automation",
     "objectstack-ai"
   ],
-  "readmePath": "README.md"
+  "readmePath": "README.md",
+  "translations": {
+    "zh-CN": {
+      "description": "ObjectStack 应用市场上的 AI 原生 CRM：客户、联系人、线索、商机、工单、知识文章、销售预测、营销活动与合同，集于一个可投入生产的工作空间。",
+      "tagline": "可投入生产的 AI 原生 CRM，从客户到销售预测。",
+      "readme": "README.zh-CN.md"
+    }
+  }
 }
