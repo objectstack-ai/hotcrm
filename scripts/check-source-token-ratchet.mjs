@@ -574,7 +574,7 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  * this run; every other committed ceiling is RULED and outside the ledger of
  * declined re-anchorings (#1601).
  *
- *   node scripts/check-source-token-ratchet.mjs   # 2026-11-05 17:20 UTC, `claude/project-thread-0qk9jf` at 6961ab1
+ *   node scripts/check-source-token-ratchet.mjs   # 2026-11-05 16:05 UTC, `claude/project-thread-0qk9jf` at 7ea9296
  *     #2315 — Order to Cash's first reading, on the phase 1a tree
  *     src/o2c        business semantics ~4,296 · interaction layer ~996 · authored total ~6,469
  *
