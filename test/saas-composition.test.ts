@@ -162,7 +162,12 @@ describe('HOTCRM_COMPOSITION=saas', () => {
 
   it('replays the CATALOGUE family, its standard price book (#2318), and nothing else', () => {
     const objects = ((saas.data ?? []) as AnyRec[]).map((d) => String(d.object));
-    expect(objects).toEqual(['crm_product', 'crm_price_book', 'crm_price_book_entry']);
+    // Twice: the English catalogue and its Simplified Chinese twin (#2411),
+    // each scoped by `Seed.locale`, so a tenant receives one of the two.
+    expect(objects).toEqual([
+      'crm_product', 'crm_price_book', 'crm_price_book_entry',
+      'crm_product', 'crm_price_book', 'crm_price_book_entry',
+    ]);
     // Same length as the module's own declaration — so a family added to
     // `SaasTenantSeedData` has to be added deliberately, and lands here.
     expect((saas.data as AnyRec[]).length).toBe(SaasTenantSeedData.length);
@@ -174,7 +179,10 @@ describe('HOTCRM_COMPOSITION=saas', () => {
     // so under `saas` revenue is the one package with rows.
     const built = await loadUnder('saas', '../objectstack.composition');
     const objectsOf = (stack: AnyRec) => ((stack.data ?? []) as AnyRec[]).map((d) => String(d.object));
-    expect(objectsOf(built.revenueStack)).toEqual(['crm_product', 'crm_price_book', 'crm_price_book_entry']);
+    expect(objectsOf(built.revenueStack)).toEqual([
+      'crm_product', 'crm_price_book', 'crm_price_book_entry',
+      'crm_product', 'crm_price_book', 'crm_price_book_entry',
+    ]);
     expect(objectsOf(built.serviceStack)).toEqual([]);
     expect(objectsOf(built.marketingStack)).toEqual([]);
     expect(objectsOf(built.appStack)).toEqual([]);

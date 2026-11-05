@@ -6,6 +6,7 @@ import {
   allSkills,
   CrmSharingRules,
   CrmSeedData,
+  SaasTenantSeedData,
   CrmPositions,
 } from '../objectstack.composition';
 import stack from './helpers/composed-stack';
@@ -233,7 +234,7 @@ const SPECS: Spec[] = [
   {
     noun: 'seed family',
     nouns: 'seed families',
-    listName: 'CrmSeedData',
+    listName: 'CrmSeedData / SaasTenantSeedData',
     kind: 'data',
     barrelFile: 'index.ts',
     barrels: {
@@ -242,7 +243,9 @@ const SPECS: Spec[] = [
       revenue: revenueData,
       marketing: marketingData,
     },
-    list: CrmSeedData,
+    // Both compositions' unions: the SaaS shape registers the catalogue once
+    // per language market (#2411), families CrmSeedData does not carry.
+    list: [...CrmSeedData, ...SaasTenantSeedData],
     isEntry: isSeed,
     grouped: false,
     exemptions: SEED_EXEMPTIONS,

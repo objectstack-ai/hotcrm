@@ -140,6 +140,7 @@ import {
 } from './src/sales/data/index.js';
 import {
   products, priceBooks, priceBookEntries, opportunityLineItems, quotes, quoteLineItems,
+  productsEn, priceBooksEn, priceBookEntriesEn, productsZhCN, priceBooksZhCN, priceBookEntriesZhCN,
 } from './src/revenue/data/index.js';
 import { cases, knowledgeArticles } from './src/service/data/index.js';
 import { campaigns, campaignMembersFromLeads, campaignMembersFromContacts } from './src/marketing/data/index.js';
@@ -480,8 +481,22 @@ export const CrmSeedData = [
  * book to default to, and products it adds later have no standard price to be
  * kept in (`product_standard_price`). It too resolves nothing outside the
  * catalogue.
+ *
+ * The catalogue ships in two languages (#2411, maintainer ruling 2026-11-05,
+ * option A): the English sets scoped to every supported locale but `zh-CN`, and
+ * their Simplified Chinese twins scoped to `zh-CN`. A tenant receives exactly
+ * one of the two, chosen by the platform's `Seed.locale` filter — so one
+ * standard book either way. Why the default composition stays unscoped, and
+ * the platform card this waits on: `src/revenue/data/catalog-by-locale.seed.ts`.
  */
-export const SaasTenantSeedData = [products, priceBooks, priceBookEntries];
+export const SaasTenantSeedData = [
+  productsEn,
+  priceBooksEn,
+  priceBookEntriesEn,
+  productsZhCN,
+  priceBooksZhCN,
+  priceBookEntriesZhCN,
+];
 
 /**
  * The seed families of the SERVICE package — the rows whose object it owns.

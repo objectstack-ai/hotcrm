@@ -71,7 +71,10 @@ promotion. A book holds one **entry** per product, with that product's
 - **One standard book.** Exactly one book is marked **Standard**. A second book
   cannot be marked **Standard**, and the standard book can neither lose the mark
   nor be deleted; to stop using it, turn off **Active**. HotCRM's sample data
-  includes a book named *Standard* with an entry for every sample product. The
+  includes a book named *Standard* with an entry for every sample product. In a
+  multi-organization install, an organization working in Simplified Chinese
+  starts from the same sample catalogue with Chinese names instead, and its book
+  is named *标准价格表*. The
   standard book follows the catalogue: a product you add gets its entry there
   at its **List Price** when it is saved, and a change of the product's
   **List Price** reprices that entry.
