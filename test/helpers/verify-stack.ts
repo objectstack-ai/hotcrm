@@ -377,6 +377,23 @@ export const systemUpdate = (stack: VerifyStack, object: string, doc: Row): Prom
   stack.kernel.getService<Row>('objectql').update(object, doc, { where: { id: doc.id }, context: SYSTEM });
 
 /**
+ * A committed `sys_file` owned by `ownerId` — what an upload leaves behind —
+ * and its id, the value a `file` field stores (ADR-0104 D3 wave 2). The
+ * engine admits a person's write of a file id only when the file is one they
+ * may open, so the file is the writer's own, as an upload makes it. Used for
+ * the Signed Copy a contract or quote records (#2317).
+ */
+export const committedFile = async (stack: VerifyStack, ownerId: string): Promise<string> => {
+  const name = 'signed-copy.pdf';
+  const [row] = await stack.seed('sys_file', [{
+    key: `attachments/${ownerId}-${++fileSeq}-${name}`, name, mime_type: 'application/pdf', size: 1,
+    scope: 'attachments', status: 'committed', owner_id: ownerId,
+  }]);
+  return String(row!.id);
+};
+let fileSeq = 0;
+
+/**
  * A system-context INSERT (no user, no session) that, unlike `seed`, fires the
  * record-change flows: an integration's or a backfill's write.
  */

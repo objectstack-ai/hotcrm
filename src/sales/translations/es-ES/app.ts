@@ -398,6 +398,15 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
   },
   pages: {
+    // The contract's two record pages (#2317): its working page and its print page.
+    contract_detail_page: {
+      label: 'Detalle del Contrato',
+      description: 'La página de registro del contrato: el diseño generado, sin ningún espacio reemplazado.',
+    },
+    contract_print_page: {
+      label: 'Documento del Contrato',
+      description: 'El contrato como documento imprimible: partes, plazo, valor, facturación, condiciones y firmas.',
+    },
     account_detail_page: {
       label: 'Detalle de Cuenta',
       description: 'Página de registro de cuenta por slots: cabecera personalizada + feed de discusión permanente.',

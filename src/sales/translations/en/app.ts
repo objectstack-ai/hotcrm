@@ -129,6 +129,15 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
   },
   pages: {
+    // The contract's two record pages (#2317): its working page and its print page.
+    contract_detail_page: {
+      label: 'Contract Detail',
+      description: "The contract's record page: the synthesized layout, with no slot overridden.",
+    },
+    contract_print_page: {
+      label: 'Contract Document',
+      description: 'The contract as a printable document: parties, term, value, billing, terms and signatures.',
+    },
     account_detail_page: {
       label: 'Account Detail',
       description: 'Slotted account record page — custom header + persistent discussion feed.',

@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
+import { PrintServicePlugin } from '@objectstack/service-print';
 
 /**
  * Everything the app package REGISTERS, as opposed to what it IS.
@@ -185,6 +186,16 @@ export const createHotCrmAppStack = (
       supportedLocales: ['en', 'zh-CN', 'ja-JP', 'es-ES'],
       fallbackLocale: 'en',
     },
+
+    // `@objectstack/service-print`'s door, `POST /api/v1/print/records`, which
+    // Print Contract (`print_contract`, on this package's `crm_contract`) and
+    // the revenue module's Print Quote both call. It is mounted HERE, once: a
+    // stack's `plugins` concatenate across `composeStacks` (an envelope key,
+    // not a package body), so a second copy in a module would mount the door
+    // twice, and the app package is the one every module depends on (AGENTS.md
+    // Project Architecture rule 2), so a module's print keeps its door without
+    // the app depending on that module (#2317; it lived in revenue for #2312).
+    plugins: [new PrintServicePlugin()],
 
     ...collections,
   }, { artifactObjects: options.artifactObjects, artifactFlows: options.artifactFlows });

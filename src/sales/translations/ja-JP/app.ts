@@ -400,6 +400,15 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
   },
   pages: {
+    // The contract's two record pages (#2317): its working page and its print page.
+    contract_detail_page: {
+      label: '契約詳細',
+      description: '契約のレコードページ：システムが生成するレイアウトで、スロットは上書きしません。',
+    },
+    contract_print_page: {
+      label: '契約書類',
+      description: '印刷用の契約書：当事者、期間、金額、請求、条件、署名欄。',
+    },
     account_detail_page: {
       label: '取引先詳細',
       description: 'スロット構成の取引先レコードページ — カスタムヘッダーと常設のディスカッションフィード。',

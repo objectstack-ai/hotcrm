@@ -146,6 +146,11 @@ export const esES: TranslationData = {
             accepted: 'Aceptada', rejected: 'Rechazada', expired: 'Expirada',
           },
         },
+        // The countersigned copy (#2317).
+        signed_copy: {
+          label: 'Copia firmada',
+          help: 'La cotización tal como la firmó el cliente.',
+        },
         quote_date: { label: 'Fecha de Cotización' },
         expiration_date: { label: 'Fecha de Expiración' },
         crm_price_book: { label: 'Lista de Precios', help: 'Las líneas de esta cotización toman su Precio de Lista de esta lista de precios. Si se deja vacía en una cotización nueva, es la lista de precios estándar.' },

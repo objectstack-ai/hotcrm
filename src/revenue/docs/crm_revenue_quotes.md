@@ -94,6 +94,13 @@ nothing. The move is an ordinary save made by you, so a quote with no
 **Contact** is printed and filed but stays where it was, with no message that
 says so. Check the status after printing; fill in the contact and print again.
 
+## Filing the signed copy
+
+When the customer signs the quote, upload what they sent back to the quote's
+**Signed Copy**, best while it is still **Presented**: once accepted, a quote is
+frozen. The signed copy is recorded, not yet required: **Accept** still works
+without one.
+
 ## When a quote is accepted
 
 Accepting a quote wins its opportunity and drafts a **contract** from it. A

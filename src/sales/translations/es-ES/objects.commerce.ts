@@ -65,10 +65,19 @@ export const commerce: Record<string, ObjectTranslationData> = {
       },
       signed_date: { label: 'Fecha de Firma' },
       signed_by: { label: 'Firmado Por' },
+      // The countersigned copy (#2317).
+      signed_copy: {
+        label: 'Copia firmada',
+        help: 'El contrato tal como lo firmó el cliente. Al subirla se rellena la Fecha de Firma si está vacía.',
+      },
       document_url: { label: 'Documento de Contrato' },
       special_terms: { label: 'Términos Especiales' },
       description: { label: 'Descripción' },
       billing_address: { label: 'Dirección de Facturación' },
+    },
+    // Print Contract (#2317).
+    _actions: {
+      print_contract: { label: 'Imprimir Contrato', successMessage: 'PDF del contrato adjuntado al contrato.' },
     },
     _views: {
       all_contracts: { label: 'Todos los Contratos' },

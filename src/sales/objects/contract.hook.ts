@@ -8,6 +8,8 @@ import type { HookApi } from './_hook-api';
  *
  * - Validates `end_date` ≈ `start_date + contract_term_months`.
  * - Rejects shrinking `end_date` after activation.
+ * - On a write that files the signed copy (`signed_copy`): fills
+ *   `signed_date` when it is empty (#2317).
  * - On `activated`: stamps `signed_date` (if missing) on the activating write
  *   itself, then promotes the account to `customer`. Renewal reminders are
  *   owned by the `contract_renewal` flow.
@@ -123,6 +125,31 @@ const contractSignedDateStamp: Hook = {
   },
 };
 
+// The signed copy dates the signature (REQ-0008 phase 3, #2317). A write that
+// carries a file in `signed_copy` fills `signed_date` with today when the
+// value the write leaves behind — the patch's, else the stored one — is empty,
+// so a date typed on the same save, or already on the contract, is kept. It
+// rides on the filing write itself (before-hooks), as the activation stamp
+// below does, so the billing hand-off that reads `signed_date` off the
+// activating write sees it. A write that clears the file leaves the date
+// alone: when the contract was signed did not change.
+const contractSignedCopyDate: Hook = {
+  name: 'contract_signed_copy_date',
+  object: 'crm_contract',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 290,
+  description: 'When the signed copy is filed: fill signed_date with today when it is empty; a set date is left alone.',
+  handler: async (ctx: HookContext) => {
+    const { input, previous } = ctx;
+    if (!('signed_copy' in input)) return;
+    const file = input.signed_copy;
+    if (file === null || file === undefined || file === '') return;
+    const signed = 'signed_date' in input ? input.signed_date : previous?.signed_date;
+    if (typeof signed === 'string' && signed !== '') return;
+    input.signed_date = new Date().toISOString().slice(0, 10);
+  },
+};
+
 const contractActivation: Hook = {
   name: 'contract_on_activation',
   object: 'crm_contract',
@@ -156,4 +183,4 @@ const contractActivation: Hook = {
   },
 };
 
-export default [contractValidation, contractSignedDateStamp, contractActivation];
+export default [contractValidation, contractSignedCopyDate, contractSignedDateStamp, contractActivation];

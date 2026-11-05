@@ -199,6 +199,23 @@ export const Quote = ObjectSchema.create({
       storage: { notNull: true },
       trackHistory: true,
     }),
+
+    // The quote as the customer countersigned it (REQ-0008 phase 3, #2317).
+    // Print Quote (`print_quote`) files the document that goes out; this is
+    // what comes back, uploaded by the rep while the quote is Presented.
+    //
+    // RECORDED, NOT YET REQUIRED (ruling on #2317, 2026-11-05). The gate
+    // `requiredWhen: has(record.status) && record.status == "accepted"` is
+    // held until objectstack-ai/objectstack#30184 lands, with the contract's
+    // (`crm_contract.signed_copy`): the console's Edit form checks a
+    // `requiredWhen` on every save while the engine judges it as a transition
+    // gate. Add it back here once #30184 ships, with the seeded accepted
+    // quote's `seedFile` sample.
+    signed_copy: Field.file({
+      label: 'Signed Copy',
+      group: 'basic',
+      description: 'The quote as the customer signed it.',
+    }),
     
     // Dates
     quote_date: Field.date({

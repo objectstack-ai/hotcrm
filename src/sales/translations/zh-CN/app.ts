@@ -405,6 +405,15 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
   },
   pages: {
+    // The contract's two record pages (#2317): its working page and its print page.
+    contract_detail_page: {
+      label: '合同详情',
+      description: '合同的记录页：使用系统生成的布局，不覆盖任何插槽。',
+    },
+    contract_print_page: {
+      label: '合同文档',
+      description: '可打印的合同文档：签约方、期限、金额、计费、条款与签署栏。',
+    },
     account_detail_page: {
       label: '客户详情',
       description: '插槽式客户记录页——自定义页头 + 常驻讨论区。',

@@ -51,6 +51,9 @@ const RUNTIME_TEST_FILES = [
   // #2312 — printing a quote presents it: the print archive's attachment write
   // fires `quote_print_presented`, and nothing else does.
   'flow-quote-print-presented.test.ts',
+  // #2317 — filing a contract's signed copy dates the signature
+  // (`contract_signed_copy_date`), beside the two signed-copy gates it serves.
+  'contract-signed-copy.test.ts',
   // #592 — the activity model's own runtime file: both `crm_event` hooks, the
   // parity check that keeps the duplicated bubble body from drifting, and the
   // readonly-strip regression proof against a real engine.
