@@ -87,6 +87,12 @@ export const jaJP: TranslationData = {
         basic: { label: '価格表情報' },
         validity: { label: '有効期間' },
       },
+      _views: {
+        all_price_books: { label: 'すべての価格表' },
+      },
+      _actions: {
+        add_price_book_products: { label: '製品を追加' },
+      },
     },
     crm_price_book_entry: {
       _validations: {
@@ -142,6 +148,7 @@ export const jaJP: TranslationData = {
         },
         quote_date: { label: '見積日' },
         expiration_date: { label: '有効期限' },
+        crm_price_book: { label: '価格表', help: 'この見積の明細の定価は、この価格表から取られます。新しい見積で空のままにすると、標準価格表になります。' },
         subtotal: { label: '小計' },
         discount: { label: '割引率(%)' },
         discount_amount: { label: '割引額' },
@@ -230,7 +237,7 @@ export const jaJP: TranslationData = {
         description: { label: '説明' },
         product_title: { label: '製品タイトル', help: '製品のタイトル。製品と同期して更新され、この明細行の名前になります。' },
         quantity: { label: '数量' },
-        list_price: { label: '定価' },
+        list_price: { label: '定価', help: '見積で選んだ価格表における、この製品の価格です。' },
         unit_price: { label: '販売価格' },
         discount: { label: '割引率（%）' },
         subtotal: { label: '小計' },
@@ -273,6 +280,30 @@ export const jaJP: TranslationData = {
     },
   },
   flows: {
+    price_book_add_products: {
+      label: '価格表に製品を追加',
+      successMessage: '製品を価格表に追加しました。',
+      refusals: {
+        refuse_no_book: { message: 'この価格表はもう存在しないか、開く権限がありません。製品は追加されませんでした。' },
+        end_refused: { message: '{{refusedCount}} 件の製品を価格表に追加できませんでした：追加 {{addedCount}} 件、価格設定済み {{alreadyCount}} 件、拒否 {{refusedCount}} 件。価格表に価格を追加できるのは、その所有者か管理者だけです。製品ごとの理由はフロー実行ログに記録されています。' },
+      },
+      screens: {
+        screen_1: {
+          title: '製品の価格設定',
+          description: '{{ bookRecord.name }} でまだ価格のない有効な製品すべてに、定価に対するこの割合でエントリを追加します。価格設定済みの製品は元の価格のままです。',
+          fields: {
+            percentOfList: { label: '定価に対する %', placeholder: '1-1000' },
+          },
+        },
+        result: {
+          title: '製品を追加しました',
+          description: '{{ bookRecord.name }} に {{addedCount}} 件の製品を追加しました。{{alreadyCount}} 件は価格設定済みです。',
+          fields: {
+            bookLink: { label: '価格表' },
+          },
+        },
+      },
+    },
     quote_generation: {
       label: '商談から見積を作成',
       refusals: { refuse_held: { message: '先に案件化承認が必要です。「案件化承認を申請」にチェックを入れてください。何も作成されていません。' } },

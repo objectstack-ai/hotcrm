@@ -27,6 +27,9 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *   (#1129) — and pushes the linked opportunity to `closed_won`. Two hooks,
  *   `quote_accepted_contract_draft` and `quote_on_accepted`, because only the
  *   draft is elevated (#2014; see its note).
+ * - `quote_price_book` (#2318): a new quote prices from the standard price
+ *   book unless it names another; an inactive book is refused, and so is a
+ *   book change on a quote that already has line items.
  */
 
 // ⚠️ Helpers used by handlers are declared INSIDE each handler — L2 hook bodies
@@ -197,7 +200,7 @@ const quoteValidation: Hook = {
         );
         if (violating.length > 0) {
           // Every lookup on `crm_quote` a referential clear can attack.
-          const REFERENCE_FIELDS = new Set(['crm_account', 'crm_contact', 'crm_opportunity']);
+          const REFERENCE_FIELDS = new Set(['crm_account', 'crm_contact', 'crm_opportunity', 'crm_price_book']);
           // ───────────────────────────────────── the reference-cleanup yield ──
           // #720. The engine implements `deleteBehavior: 'set_null'` by UPDATING
           // the row that HOLDS the lookup, so deleting the opportunity (or the
@@ -685,4 +688,116 @@ const quoteAccepted: Hook = {
   },
 };
 
-export default [quoteValidation, quoteAcceptedContractDraft, quoteAccepted];
+/**
+ * A quote's price book (REQ-0009 phase 2, #2318).
+ *
+ * - A quote created without a book gets the organization's active standard
+ *   book, so its lines price from it. The field is not `required` for this
+ *   reason (the note on `crm_quote.crm_price_book`). The standard-book read is
+ *   scoped to the organization the write belongs to, as `price_book_standard`
+ *   scopes its own (`price_book.hook.ts`); a system write whose organization
+ *   cannot be resolved stamps nothing, and its lines fall back to the
+ *   standard book or the product price (`_line-item-price-fill.ts`).
+ * - A person may not choose an inactive book; the picker withholds them
+ *   (`lookupFilters`), and this refuses one written past it.
+ * - A person may not change the book of a quote that already has line items:
+ *   each line was priced from the old book, and repricing them silently is a
+ *   change to negotiated figures. Removing the lines first is the way through.
+ *
+ * Priority 210, after `quote_workflow` (200): on a settled quote the freeze's
+ * refusal is the one a person reads. USER writes only for both refusals, the
+ * boundary the freeze draws: a seed or import carries its own history.
+ */
+const quotePriceBook: Hook = {
+  name: 'quote_price_book',
+  object: 'crm_quote',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 210,
+  description: "Default a new quote to the standard price book; refuse an inactive book, and a book change on a quote with line items.",
+  handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(
+      message: string,
+      code: string,
+      status: number,
+      userMessage: string = message,
+    ): Error {
+      const err = new Error(message) as Error & {
+        code: string;
+        status: number;
+        userMessage: string;
+      };
+      err.code = code;
+      err.status = status;
+      err.userMessage = userMessage;
+      return err;
+    }
+    // A reference arrives as an id, or expanded as `{ id }`.
+    function refId(value: unknown): string {
+      if (typeof value === 'string') return value;
+      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+        return String((value as Record<string, unknown>).id);
+      }
+      return '';
+    }
+    const { event, input, previous } = ctx;
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    if (event !== 'beforeInsert' && event !== 'beforeUpdate') return;
+    const has = (key: string): boolean => Object.prototype.hasOwnProperty.call(input, key);
+
+    if (event === 'beforeInsert' && !refId(input.crm_price_book)) {
+      const organizationId = [
+        ctx.user?.organizationId,
+        ctx.session?.organizationId,
+        input.organization_id,
+      ].find((candidate): candidate is string => typeof candidate === 'string' && candidate !== '');
+      if (!organizationId && !ctx.user?.id) return;
+      const where: Record<string, unknown> = organizationId
+        ? { organization_id: organizationId, is_standard: true, is_active: true }
+        : { is_standard: true, is_active: true };
+      const [standard] = await api.object('crm_price_book').find({ where, fields: ['id'], top: 1 });
+      if (standard && typeof standard.id === 'string') input.crm_price_book = standard.id;
+      return;
+    }
+
+    // D3: a predicate update hands every row one payload, and the line check
+    // below reads `previous` (the note in `forecast.hook.ts`).
+    if (!ctx.user?.id || !has('crm_price_book') || ctx.dispatch?.mode === 'per-row') return;
+    const next = refId(input.crm_price_book);
+    const before = refId(previous?.crm_price_book);
+    if (event === 'beforeUpdate' && next === before) return;
+    const quoteName = [input.name, previous?.name].find((v) => typeof v === 'string' && v.trim() !== '');
+    const subject = quoteName ? `Quote ${String(quoteName).trim()}` : 'This quote';
+
+    if (next) {
+      const book = await api.object('crm_price_book').findOne({ where: { id: next }, fields: ['id', 'name', 'is_active'] });
+      if (book && book.is_active === false) {
+        throw refuse(
+          `${String(book.name)} is not active, and a quote prices only from an active price book. Choose another price book for ${subject.replace(/^This quote$/, 'this quote')}.`,
+          'VALIDATION_FAILED',
+          400,
+        );
+      }
+    }
+
+    if (event === 'beforeUpdate' && typeof previous?.id === 'string') {
+      const lines = await api.object('crm_quote_line_item').count({ where: { crm_quote: previous.id } });
+      if (lines > 0) {
+        const old = before
+          ? await api.object('crm_price_book').findOne({ where: { id: before }, fields: ['id', 'name'] })
+          : null;
+        const from = typeof old?.name === 'string' && old.name.trim() !== '' ? ` from ${old.name.trim()}` : '';
+        throw refuse(
+          `${subject} already has ${lines} ${lines === 1 ? 'line item' : 'line items'} priced${from}, so its price book cannot change. Remove the line items first, then choose the price book and add them again.`,
+          'VALIDATION_FAILED',
+          400,
+        );
+      }
+    }
+  },
+};
+
+export default [quoteValidation, quotePriceBook, quoteAcceptedContractDraft, quoteAccepted];

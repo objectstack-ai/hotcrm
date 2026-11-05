@@ -18,9 +18,7 @@ Exactly one price book is the **Standard** book, and HotCRM keeps it single:
 
 HotCRM's sample data includes a book named **Standard** with one entry for every product in the sample catalog, at that product's **List Price**. A single-organization installation that already has data gets the same book once, on its first start after the upgrade; after that, prices you change in it stay changed.
 
-The Standard book is filled from the catalog that one time only. A product added later gets no Standard entry automatically: add its entry by hand until quotes read price books, the next step of this feature.
-
-The product's own **List Price** stays where it is, with its rule that the price is not below **Cost**.
+After that, the Standard book follows the catalog. A product added later gets its Standard entry when it is saved, at its **List Price**, and changing a product's **List Price** reprices its Standard entry. The product's **List Price** is the standard price, with its rule that the price is not below **Cost**: change the standard price on the product.
 
 ## One entry per product
 
@@ -30,20 +28,39 @@ A price book prices each product once. Adding a second entry for a product the b
 
 **Valid From** and **Valid To** record the window a book is meant for — a promotion's start and end. Either may be left empty for an open-ended book, and **Valid To** may not fall before **Valid From**.
 
+## Quoting from a price book
+
+Every quote prices from one price book, shown as **Price Book** on the quote.
+
+- **A new quote starts on the Standard book.** Leave **Price Book** empty and the quote is saved with the Standard book. To quote from another book, pick it on the quote before adding line items. Only an active book can be picked.
+- **A line takes its list price from the book.** When you pick a product on a quote line, its **List Price** is that product's price in the quote's book, and on a new line **Sales Price** starts at that price too. Negotiate from there as before.
+- **A product the book does not price is refused.** If the quote's book has no active entry for the product, the line is not saved, and the message names the book and the product. Add the product to the book, or quote from another book.
+- **Changing the book.** A quote's book can change while the quote has no line items. Once it has some, they were priced from the old book, so the change is refused: remove the line items, choose the book, and add them again.
+- **Prices already quoted stay.** Repricing an entry, or editing the book, changes only lines written afterwards. A line keeps the price it was given, as it does when a product's **List Price** changes.
+- **Settled quotes keep their book.** Once a quote is accepted, rejected or expired it is frozen, its **Price Book** with it.
+
+A book that any quote prices from cannot be deleted; the message says how many quotes use it. To stop quoting from it, turn off **Active**: it leaves the quote's picker, and the quotes already on it keep it.
+
+Deals do not read price books. An opportunity's line items still take their list price from the product, that is, from the standard price.
+
+A quote that was created before price books priced quotes has no **Price Book** of its own. Its new line items price from the Standard book.
+
+## Adding products to a book
+
+On a price book's record page, **Add Products** prices the catalog in that book in one step. You enter one figure, **Price as % of List Price**: 80 for a partner tier 20% below the standard price, 110 for a region priced above it. Every active product the book does not price yet gets an entry at that share of its **List Price**, rounded to the cent. Products the book already prices keep their price, so running it again after new products arrive only tops the book up. The result screen says how many products were added and how many were already priced.
+
+To set one product's price by hand, open the book's **Price Book Entries** tab and edit that entry, or add a new one there. A product's record page lists its entries in every book under **Price Book Entries**.
+
 ## Who can change price books
 
 | Role | Price books and their entries |
 | --- | --- |
 | **System administrator** | Create, edit and delete any book and any entry. |
-| **Sales manager** | Create books, and edit the books they own: add, reprice and remove their entries. |
-| **Sales rep** | Read every book and every entry. |
+| **Sales manager** | Create books, and edit the books they own: add, reprice and remove their entries, and run **Add Products** on them. |
+| **Sales rep** | Read every book and every entry, and choose a book on their quotes. |
 
-Every price book is visible to everyone who can read it — the same sharing as the product catalog — and an entry is visible and editable to whoever can see and edit its book.
+Every price book is visible to everyone who can read it — the same sharing as the product catalog — and an entry is visible and editable to whoever can see and edit its book. **Add Products** adds each entry as the person running it: on a book they may not edit, every product is refused, and the run ends with the counts.
 
 ## Currency
 
 A price book has no currency of its own. Every price in every book is in your organization's default currency, as every amount in HotCRM is. Multi-currency pricing waits for the ObjectStack platform to support per-record currency and exchange rates.
-
-## What comes next
-
-Quotes do not read price books yet: a quote line still takes its list price from the product. Choosing a book on a quote, and pricing its lines from that book, is the next step of this feature.

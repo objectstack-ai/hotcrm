@@ -66,6 +66,9 @@ export const PriceBookEntry = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
+      // The entries panel on a product's detail page (#2318): which book
+      // prices it, and at what.
+      relatedListColumns: ['crm_price_book', 'list_price', 'is_active'],
     }),
 
     list_price: Field.currency({

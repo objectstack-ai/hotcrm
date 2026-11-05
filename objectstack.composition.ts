@@ -456,7 +456,7 @@ export const CrmSeedData = [
  * ruling wants: uniform for every tenant, with no per-tenant opt-in mechanism
  * to author, mis-set, or support.
  *
- * Why the catalogue and only the catalogue:
+ * Why the catalogue, its standard price book, and nothing else:
  *
  *  - A catalogue is the one family that is genuinely a starting point. A new
  *    tenant needs priceable products before they can quote anything, and the
@@ -473,8 +473,15 @@ export const CrmSeedData = [
  * ⛔ Not a place to grow a "starter data" bundle. A family added here ships
  * into every tenant of every SaaS deployment; the bar is "a tenant cannot
  * operate without it", not "it looks nice on day one".
+ *
+ * The standard price book rides with the catalogue (#2318; phase-1 seat note,
+ * item 2): it is the catalogue's own price list, built from the same rows, and
+ * the book every new quote prices from. Without it a tenant's quotes have no
+ * book to default to, and products it adds later have no standard price to be
+ * kept in (`product_standard_price`). It too resolves nothing outside the
+ * catalogue.
  */
-export const SaasTenantSeedData = [products];
+export const SaasTenantSeedData = [products, priceBooks, priceBookEntries];
 
 /**
  * The seed families of the SERVICE package — the rows whose object it owns.

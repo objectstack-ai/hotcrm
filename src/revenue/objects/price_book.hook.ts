@@ -6,14 +6,17 @@ import type { HookApi } from '../../sales/objects/_hook-api';
 /**
  * Exactly one standard price book (REQ-0009, phase 1).
  *
- * The standard book is the one every product's `list_price` is published in,
- * and the book a quote will default to (#2318). So there is never a second
+ * The standard book is the catalogue's own price list, and the book a new
+ * quote defaults to (`quote_price_book`, #2318). So there is never a second
  * one, and once a book is standard it stays standard:
  *
  * - a book saved as Standard while another book is Standard is refused, naming
  *   the standard book;
  * - clearing Standard on the standard book is refused;
  * - deleting the standard book is refused.
+ *
+ * And any book that a quote prices from is refused a delete, naming how many
+ * quotes hold it (#2318).
  *
  * A tenant with no standard book yet (seeds off) may mark one. The seed's own
  * `Standard` row passes through here like any other insert.
@@ -30,7 +33,7 @@ const priceBookHook: Hook = {
   object: 'crm_price_book',
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
-  description: 'Keep exactly one standard price book: refuse a second one, and refuse un-marking or deleting it.',
+  description: 'Keep exactly one standard price book: refuse a second one, and refuse un-marking or deleting it; refuse deleting a book quotes price from.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -66,6 +69,19 @@ const priceBookHook: Hook = {
         throw refuse(
           `Cannot delete ${String(row.name ?? 'the standard price book')}: it is the standard price book. To stop quoting from it, turn off Active.`,
           'RECORD_LOCKED',
+          409,
+        );
+      }
+      // A book quotes price from stays (#2318): each such quote names it as
+      // the source of its prices. `crm_quote.crm_price_book` is `restrict`,
+      // and this says why in words before the engine's refusal does. The
+      // count is the caller's to read; quotes they cannot see still hold the
+      // book through `restrict`.
+      const quotes = await api.object('crm_quote').count({ where: { crm_price_book: id } }).catch(() => 0);
+      if (quotes > 0) {
+        throw refuse(
+          `Cannot delete ${String(row?.name ?? 'this price book')}: ${quotes} ${quotes === 1 ? 'quote prices' : 'quotes price'} from it. To stop quoting from it, turn off Active.`,
+          'DELETE_RESTRICTED',
           409,
         );
       }

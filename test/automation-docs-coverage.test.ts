@@ -207,6 +207,9 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   account_approval: { 'zh-Hans': '客户审批', 'zh-Hant': '客戶審批' },
   lead_conversion_approval: { 'zh-Hans': '线索转化审批', 'zh-Hant': '線索轉化審批' },
   quote_generation: { 'zh-Hans': '由商机生成报价', 'zh-Hant': '由商機產生報價' },
+  // The zh-CN pack's flow label (#2318); 新增 in zh-Hant, the Traditional
+  // pages' word for adding a record.
+  price_book_add_products: { 'zh-Hans': '向价格表添加产品', 'zh-Hant': '向價格表新增產品' },
   schedule_followup: { 'zh-Hans': '安排跟进', 'zh-Hant': '安排跟進' },
   // 营销活动, not 活动: 「活动」 is the locale pack's label for `crm_event`, and this
   // page's own table sits one section from the campaign rows. Naming the master

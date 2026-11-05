@@ -146,11 +146,16 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // refusal to `opportunity_lifecycle`; 32 until #2344 added
     // `campaign_member_enrollment_gate`'s three (a closed campaign, an
     // opted-out lead, an opted-out contact); 35 until #2366 added
-    // `quote_workflow`'s refusal of a quote created at a settled status.
+    // `quote_workflow`'s refusal of a quote created at a settled status; 36
+    // until #2318 added the price book's five: a quote line whose book has no
+    // price for its product (one call in the shared price fill, swept once
+    // per line object, so two), `quote_price_book`'s inactive-book and
+    // book-change refusals, and `price_book_standard`'s refusal to delete a
+    // book quotes price from.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(36);
+    expect(sites).toHaveLength(41);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

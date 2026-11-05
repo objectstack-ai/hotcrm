@@ -257,6 +257,34 @@ export const Quote = ObjectSchema.create({
     // the column keeps the derived figure) while the derivation lands. A system
     // write (a seed, an import) is not stripped at all. `subtotal` stays
     // editable: on a quote with no line items it is the rep's own number.
+    // The price book the quote's lines take their list price from (REQ-0009
+    // phase 2, #2318). Named `crm_price_book` like every lookup on this
+    // object, after its target.
+    //
+    // Not `required`, though every quote carries one: a lookup has no query
+    // default, so a required field would make the New Quote form demand a
+    // pick on every quote instead of showing the standard book. The default
+    // is `quote_price_book` (`quote.hook.ts`), which writes the organization's
+    // active standard book onto a quote created without one. A quote with no
+    // book (one older than this field, or an organization with no standard
+    // book) prices its lines from the standard book, and with none from the
+    // product's own List Price (`_line-item-price-fill.ts`).
+    //
+    // `restrict`: a book a quote priced from is not deleted under it, so the
+    // quote keeps saying where its prices came from. `price_book_standard`
+    // refuses that delete first, in words. Frozen with the quote: the freeze
+    // in `quote_workflow` takes every field but Internal Notes.
+    crm_price_book: Field.lookup('crm_price_book', {
+      label: 'Price Book',
+      group: 'pricing',
+      deleteBehavior: 'restrict',
+      // The picker offers the books a quote can price from. A hook refuses an
+      // inactive one written past the picker (`quote_price_book`).
+      lookupFilters: [{ field: 'is_active', operator: 'eq', value: true }],
+      relatedListColumns: ['quote_number', 'name', 'crm_account', 'status', 'total_price'],
+      description: "The price book this quote's line items take their List Price from. Left empty on a new quote, it is the standard price book.",
+    }),
+
     subtotal: Field.currency({
       label: 'Subtotal',
       group: 'pricing',
@@ -334,6 +362,7 @@ export const Quote = ObjectSchema.create({
   indexes: [
     { fields: ['crm_account'] },
     { fields: ['crm_opportunity'] },
+    { fields: ['crm_price_book'] },
     { fields: ['owner_id'] },
     { fields: ['status'] },
     { fields: ['quote_date'] },

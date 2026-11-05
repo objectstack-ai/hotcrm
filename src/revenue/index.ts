@@ -5,12 +5,14 @@ import { PrintServicePlugin } from '@objectstack/service-print';
 
 import {
   SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
-  PrintQuoteAction,
+  PrintQuoteAction, AddPriceBookProductsAction,
 } from './actions/index.js';
 import { CrmRevenueManual } from './books/index.js';
 import { RevenueEmailTemplates } from './email-templates/index.js';
 import { ProductDataset } from './datasets/index.js';
-import { QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow } from './flows/index.js';
+import {
+  PriceBookAddProductsFlow, QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow,
+} from './flows/index.js';
 import {
   OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem,
 } from './objects/index.js';
@@ -19,7 +21,7 @@ import {
 } from './objects/hooks.js';
 import { QuoteDetailPage, QuotePrintPage } from './pages/index.js';
 import { RevenueTranslations } from './translations/index.js';
-import { ProductViews, QuoteViews } from './views/index.js';
+import { PriceBookViews, ProductViews, QuoteViews } from './views/index.js';
 
 /**
  * The collections of this package that the artifact-wide sweeps also read,
@@ -40,7 +42,7 @@ export const revenueHooks = [
  * on `crm_opportunity`); the app stack resolves that target through
  * `artifactFlows` (see `src/sales/index.ts`).
  */
-export const revenueFlows = [QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow];
+export const revenueFlows = [PriceBookAddProductsFlow, QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow];
 
 /**
  * What this package registers but does not assemble: its seed rows, which the
@@ -151,12 +153,14 @@ export const createHotCrmRevenueStack = (
 
   objects: [OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem],
   hooks: revenueHooks,
-  views: [ProductViews, QuoteViews],
+  views: [PriceBookViews, ProductViews, QuoteViews],
   // The quote's lifecycle steps (#2366 row 9), authored against `crm_quote`.
   actions: [
     SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
     // Print Quote (#2312): prints `quote_print_page` through the print door.
     PrintQuoteAction,
+    // Add Products (#2318): prices the catalogue in a price book.
+    AddPriceBookProductsAction,
   ],
   flows: revenueFlows,
   datasets: [ProductDataset],

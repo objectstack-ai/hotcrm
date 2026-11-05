@@ -12,6 +12,8 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *   line item (historical included — deals keep their line history); suggests
  *   deactivating (turning off Active, `is_active`) instead.
  * - `product_title_mirror`: keeps a renamed product's title on its line items.
+ * - `product_standard_price`: keeps the product's entry in the standard price
+ *   book at its List Price (#2318).
  */
 
 const productHook: Hook = {
@@ -285,4 +287,68 @@ const lineProductTitleBackfill: Hook = {
   },
 };
 
-export default [productHook, productTitleMirror, lineProductTitleBackfill];
+/**
+ * A product's price in the standard price book follows its List Price
+ * (REQ-0009, #2318; the phase-1 seat note, item 3).
+ *
+ * `crm_product.list_price` is the standard book's source (REQ-0009 *Product
+ * response*, phase 1). The seed builds the standard book from the catalogue
+ * once; this keeps it whole afterwards. A product created later gets its entry
+ * in the standard book, and a change of its List Price reprices that entry.
+ * Without it, a product added after the seed could not go on a quote: a quote
+ * line takes its list price from its book's entry, and refuses a product the
+ * book does not price (`_line-item-price-fill.ts`).
+ *
+ * Lines already written keep their price, as they always have: an entry
+ * change reaches only a line that picks its product again.
+ *
+ * `runAs: 'system'`, and nothing else elevated (AGENTS.md rule 9): the
+ * standard book is its owner's, and a person who may edit products may not
+ * edit that book. Rule 10: the elevated read of the standard book pins the
+ * product's own organization, and a write with no organization to read does
+ * nothing. Synchronous, so the entry exists when the product's save returns
+ * and the product can go on a quote at once.
+ */
+const productStandardPrice: Hook = {
+  name: 'product_standard_price',
+  object: 'crm_product',
+  events: ['afterInsert', 'afterUpdate'],
+  priority: 250,
+  runAs: 'system',
+  description: "Keep the product's entry in the standard price book at its List Price.",
+  handler: async (ctx: HookContext) => {
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const { event, input, previous } = ctx;
+    if (event !== 'afterInsert' && event !== 'afterUpdate') return;
+    if (event === 'afterUpdate' && !Object.prototype.hasOwnProperty.call(input, 'list_price')) return;
+    const result = ctx.result as Record<string, unknown> | undefined;
+    const id = [result?.id, previous?.id, input.id].find((v): v is string => typeof v === 'string' && v !== '');
+    if (!id) return;
+    const product = await api.object('crm_product').findOne({ where: { id }, fields: ['id', 'list_price', 'organization_id'] });
+    const price = product && typeof product.list_price === 'number' ? product.list_price : undefined;
+    if (price === undefined) return;
+    if (event === 'afterUpdate' && previous?.list_price === price) return;
+    const organizationId = [product?.organization_id, ctx.user?.organizationId, ctx.session?.organizationId]
+      .find((candidate): candidate is string => typeof candidate === 'string' && candidate !== '');
+    if (!organizationId) return;
+    const [standard] = await api.object('crm_price_book').find({
+      where: { organization_id: organizationId, is_standard: true }, fields: ['id'], top: 1,
+    });
+    if (!standard || typeof standard.id !== 'string') return;
+    const [entry] = await api.object('crm_price_book_entry').find({
+      where: { crm_price_book: standard.id, crm_product: id }, fields: ['id', 'list_price'], top: 1,
+    });
+    if (entry) {
+      if (entry.list_price !== price) {
+        await api.object('crm_price_book_entry').update({ id: String(entry.id), list_price: price }, { where: { id: String(entry.id) } });
+      }
+      return;
+    }
+    await api.object('crm_price_book_entry').insert({
+      crm_price_book: standard.id, crm_product: id, list_price: price, is_active: true,
+    });
+  },
+};
+
+export default [productHook, productTitleMirror, lineProductTitleBackfill, productStandardPrice];
