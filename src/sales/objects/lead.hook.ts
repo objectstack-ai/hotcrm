@@ -2,6 +2,7 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from './_hook-api';
+import { createRecordTitleBackfill } from './_record-title-backfill';
 
 /**
  * Lead automation hook.
@@ -778,4 +779,7 @@ const leadDuplicateCheckHook: Hook = {
   },
 };
 
-export default [leadHook, leadDuplicateCheckHook];
+/** An untitled lead, read, is titled: `display_title` from its stored name and company (#2414). */
+const leadTitleBackfill: Hook = createRecordTitleBackfill('lead_title_backfill', 'crm_lead');
+
+export default [leadHook, leadDuplicateCheckHook, leadTitleBackfill];

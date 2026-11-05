@@ -3,6 +3,7 @@
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from '../../sales/objects/_hook-api';
 import { createCaseEscalationReassign } from './_case-assignment';
+import { createRecordTitleBackfill } from '../../sales/objects/_record-title-backfill';
 
 /**
  * Case SLA & escalation hook.
@@ -754,4 +755,6 @@ export default [
   caseSideEffects,
   caseResolutionAccountActivity,
   caseCloseEscalationTask,
+  // An untitled case, read, is titled: `display_title` from its number and subject (#2414).
+  createRecordTitleBackfill('case_title_backfill', 'crm_case'),
 ];

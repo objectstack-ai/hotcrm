@@ -657,7 +657,8 @@ describe('insert-time twin flows', () => {
    * terms only an UPDATE can carry. `opportunity_approval` admits `rejected` and
    * reads `previous` to tell the write that ends a request from a later save
    * (#2334); an insert has no prior row and no deal is born `rejected`, so the
-   * twin keeps the condition both shared before. Stated as a transformation of
+   * twin keeps the condition both shared before. `case_escalation` reads
+   * `previous.display_title` to sit out the record-title fill (#2414). Stated as a transformation of
    * the parent, so any OTHER drift between the two still fails.
    */
   const UPDATE_ONLY_TERMS: Partial<Record<string, (parent: Rec) => Rec>> = {
@@ -670,6 +671,13 @@ describe('insert-time twin flows', () => {
           .replace(' && (!has(previous.approval_status) || previous.approval_status != "pending")', ''),
       };
     },
+    // #2414: the parent sits out the write that first stores a pre-6.1.0
+    // case's title (the record-title fill); an insert is titled by itself.
+    case_escalation_on_create: (parent) => ({
+      ...parent,
+      source: String(parent.source).replace(/\s+/g, ' ')
+        .replace(' && (!has(previous.display_title) || (previous.display_title != null && previous.display_title != ""))', ''),
+    }),
   };
 
   it.each(TWINS)('$name is registered under its own name', ({ twin, parent, name }) => {

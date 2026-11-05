@@ -128,17 +128,27 @@ with its own entry in `CHANGELOG.md`.
 **Check these before and after upgrading to 6.1.0:**
 
 - **Upgrade the host to ObjectStack 18.3.0 first.** The manifest declares `^18.3.0`.
-- **Run the two backfills once, as an administrator.** Each only reports until you pass
-  `--apply`, and each is safe to run again:
+- **Contacts, leads, cases and forecasts saved before this release get their title on their own
+  (6.1.1 and later).** The title is now stored, and those records had none. The first time a list,
+  a record page or a lookup shows such a record, it is titled in the background: that screen may
+  still show the id or another field, the next one shows the name. A hosted environment needs no
+  step. A case titled this way is not escalated by it; its next edit escalates it as any edit
+  would. On 6.1.0 itself, or to title every record at once on your own server, run the script
+  as an administrator (it only reports until you pass `--apply`, and is safe to run again):
 
   ```bash
   pnpm exec tsx scripts/backfill-record-titles.ts --url https://<your-org> --email <admin> --password <pw> --apply
+  ```
+
+- **Run `backfill-intake-queue.ts` once, as an administrator.** It only reports until you pass
+  `--apply`, and is safe to run again:
+
+  ```bash
   pnpm exec tsx scripts/backfill-intake-queue.ts --url https://<your-org> --email <admin> --password <pw> --apply
   ```
 
-  The first stores the title of every record saved before this release; until it runs, such a
-  record shows its id in headers, lookup chips and search. The second puts each open case and
-  lead that nobody owns into its queue; until it runs, agents cannot see them.
+  It puts each open case and lead that nobody owns into its queue; until it runs, agents cannot
+  see them.
 - **An import file taken before this release** that names a product, quote, campaign or
   article as "PRD-0001 - Name" no longer matches. Use the name, the number or the record id.
 - **Set the organization's default currency.** On 18.3.0, amounts read as plain numbers until

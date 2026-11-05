@@ -75,10 +75,24 @@ export const CaseEscalationFlow: Flow = {
         // `escalated_date` absent means the same as null ("never escalated");
         // an absent `status` cannot be a terminal status, so it must not
         // suppress the escalation.
+        //
+        // The last term keeps the record-title fill (#2414) from escalating:
+        // a case written before 6.1.0 holds no stored `display_title`, and
+        // the first write it gets after the upgrade is the one that stores it
+        // — the read-time fill (`case_title_backfill`) or the self-hosted
+        // script, both re-sending the case's own subject unchanged. Only that
+        // first write sees an empty title in `previous`, so this flow sits it
+        // out and acts on the case's next write as before. Every case created
+        // on 6.1.0 or later is titled by its insert, so the term is true for
+        // all of them. Guarded FAIL-OPEN (`!has(previous.display_title) ||`):
+        // a write whose `previous` lacks the key is not the fill, and must
+        // escalate as it always did. The insert-time twin below has no
+        // `previous` and does not carry this term.
         condition: P`has(record.priority) && record.priority == "critical"
           && (!has(record.escalated_date) || record.escalated_date == null)
           && (!has(record.status)
-            || (record.status != "escalated" && record.status != "resolved" && record.status != "closed"))`,
+            || (record.status != "escalated" && record.status != "resolved" && record.status != "closed"))
+          && (!has(previous.display_title) || (previous.display_title != null && previous.display_title != ""))`,
       },
     },
     {
@@ -259,7 +273,8 @@ export const CaseEscalationFlow: Flow = {
  * hook event, so the afterUpdate flow above never sees cases that are BORN
  * critical (phone-in P1s — the common path). Same nodes/edges, only the start
  * node is rebound to afterInsert. The `escalated_date == null` + status guard
- * carries over untouched (a case born critical has neither).
+ * carries over untouched (a case born critical has neither); the parent's
+ * title-fill term does not (an insert has no previous row).
  */
 export const CaseEscalationOnCreateFlow: Flow = {
   ...CaseEscalationFlow,
@@ -268,7 +283,20 @@ export const CaseEscalationOnCreateFlow: Flow = {
   description: 'Escalate cases created critical (insert-time twin of case_escalation)',
   nodes: CaseEscalationFlow.nodes.map((n) =>
     n.id === 'start'
-      ? { ...n, config: { ...n.config, triggerType: 'record-after-create' } }
+      ? {
+          ...n,
+          config: {
+            ...n.config,
+            triggerType: 'record-after-create',
+            // The parent's condition without its `previous.display_title`
+            // term (#2414): an insert has no previous row and is titled by
+            // its own write.
+            condition: P`has(record.priority) && record.priority == "critical"
+              && (!has(record.escalated_date) || record.escalated_date == null)
+              && (!has(record.status)
+                || (record.status != "escalated" && record.status != "resolved" && record.status != "closed"))`,
+          },
+        }
       : n,
   ),
 };

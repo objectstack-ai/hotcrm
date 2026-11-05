@@ -2,6 +2,7 @@
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
 import type { HookApi } from './_hook-api';
+import { createRecordTitleBackfill } from './_record-title-backfill';
 
 /**
  * Contact integrity hook.
@@ -294,4 +295,7 @@ const contactPrimaryPerAccount: Hook = {
   },
 };
 
-export default [contactHook, contactPrimaryPerAccount];
+/** An untitled contact, read, is titled: `full_name` from its stored names (#2414). */
+const contactTitleBackfill: Hook = createRecordTitleBackfill('contact_title_backfill', 'crm_contact');
+
+export default [contactHook, contactPrimaryPerAccount, contactTitleBackfill];

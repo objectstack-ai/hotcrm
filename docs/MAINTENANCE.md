@@ -294,6 +294,26 @@ engine's own title through, `quote.hook.ts`; the converted-lead freeze in
 `lead.hook.ts` does the same). The re-save is an ordinary update, so the
 script's header names the one automation that can act on it.
 
+A hosted environment cannot run the script: it signs in with a password, and
+hosted sign-in is SSO only (#2414, staging os-05ayzz after 6.0.0 → 6.1.0:
+contacts 9/9, leads 21/21, cases 68/68, forecasts 7/10 untitled). From 6.1.1
+the same write is made on read: `createRecordTitleBackfill`
+(`src/sales/objects/_record-title-backfill.ts`) builds one `afterFind` hook per
+object, beside its object, and each re-sends the script's field for every
+untitled row a person's read returns, at most ten per read, off the response
+path. It skips a system read, which is also how the re-send's own read-back is
+kept from starting a second pass. The first screen may still show the empty
+title; the next one shows it. An opportunity read that expands its Primary
+Contact is a trigger too (measured on 18.3.0), so the screen the card reported
+heals itself. The #2168 reasons apply unchanged: an installed package has no
+upgrade-time code path, and a hook's `ctx.api` write cannot carry the engine's
+`skipAutomations`. So `case_escalation` sits out the write that first stores a
+case's title (its condition reads `previous.display_title`); the platform's own
+fill, `os migrate stored-expressions` (objectstack#29961), was in no release on
+the 18.3.0 pin and is a command, not an upgrade step. When a hosted upgrade runs
+it, the read-time hooks become idle (they make no database call while every
+row they are shown is titled) and can be retired.
+
 ### 3.5 Titles that became the name (#2369 row 10)
 
 Account, product, quote, campaign and knowledge article are titled by their

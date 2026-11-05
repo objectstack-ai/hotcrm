@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import { createRecordTitleBackfill } from './_record-title-backfill';
 
 /**
  * Forecast lifecycle hook.
@@ -132,4 +133,7 @@ const forecastDerive: Hook = {
   },
 };
 
-export default forecastDerive;
+/** An untitled forecast, read, is titled: `display_title` from its period label and owner (#2414). */
+const forecastTitleBackfill: Hook = createRecordTitleBackfill('forecast_title_backfill', 'crm_forecast');
+
+export default [forecastDerive, forecastTitleBackfill];

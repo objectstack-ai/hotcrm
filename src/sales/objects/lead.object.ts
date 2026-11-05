@@ -133,7 +133,9 @@ export const Lead = ObjectSchema.create({
     // stores the result, so an import matches a lookup cell against this title
     // and sort and search read a real column. `readonly` keeps it off the
     // forms; a value a client sends never stands. Rows stored before #2230
-    // are titled by `scripts/backfill-record-titles.ts`.
+    // are titled when a person's read first shows them (#2414,
+    // `_record-title-backfill.ts`), or all at once by
+    // `scripts/backfill-record-titles.ts`.
     display_title: Field.text({
       readonly: true,
       label: 'Display Title',

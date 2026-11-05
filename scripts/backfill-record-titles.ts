@@ -37,13 +37,21 @@
 //   • it touches only rows whose title is missing;
 //   • rerunnable: a second pass over a converged org reports zero rows.
 //
+// A hosted environment does not need it (#2414): its sign-in is SSO only, so
+// from 6.1.1 each of the four hooks `createRecordTitleBackfill` builds
+// (`src/sales/objects/_record-title-backfill.ts`) makes this same write for
+// every untitled row a person's read returns. This script titles every row at
+// once, on a server you can sign in to with a password, or on 6.1.0 itself.
+//
 // Side effect worth knowing: the write is an ordinary update, so the
 // `record-after-update` automation bound to these objects runs, exactly as a
-// person's edit would. The one that can act on a re-save is `case_escalation`
-// (`src/service/flows/case-escalation.flow.ts`): an open Critical case that was
-// never escalated is escalated and reassigned. Its `record-after-create` twin
-// already escalated every Critical case when it was created, so a case it
-// would act on here is one that was bypassed at creation.
+// person's edit would. The one that could act on a re-save is `case_escalation`
+// (`src/service/flows/case-escalation.flow.ts`), and from 6.1.1 it sits this
+// write out: its condition skips the update that first stores a case's title.
+// An open Critical case that was never escalated is titled and left as it is;
+// its next edit escalates it as before. The others on these objects act on a
+// change of a field this write does not carry. The write does move
+// `updated_at`, and the audit log records the title it stores.
 
 type Json = Record<string, any>;
 
