@@ -40,6 +40,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_sales_home: { label: '销售主页' },
 
         group_sales: { label: '销售' },
+        group_order_to_cash: { label: '订单与回款' },
         nav_lead: { label: '线索' },
         nav_account: { label: '客户' },
         nav_contact: { label: '联系人' },

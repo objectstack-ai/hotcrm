@@ -301,6 +301,23 @@ export const CrmApp = App.create({
     },
 
     {
+      // Order to Cash (REQ-0007) — the anchor for `app.objectstack.hotcrm.o2c`,
+      // a standalone app installed BESIDE HotCRM, never inside this artifact
+      // (`src/o2c/index.ts`). It fills the group through
+      // `navigationContributions`, as the marketing module fills Marketing.
+      // On a tenant without it the group has no entry, and the console shows
+      // no empty group. ⛔ Do not tidy the empty group away: the contributed
+      // items would land at the app's top level with a
+      // `nav_contribution_group_missing` warning.
+      id: 'group_order_to_cash',
+      type: 'group',
+      label: 'Order to Cash',
+      icon: 'receipt',
+      expanded: true,
+      children: [],
+    },
+
+    {
       // Everything a rep owes someone. `crm_task` had views, seed data, a
       // recurrence hook and two reminder flows, and no entry point — the only
       // way to see a task was to open the record it hung off.
