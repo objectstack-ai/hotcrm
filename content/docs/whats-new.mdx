@@ -63,23 +63,96 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v6.0.0 — Latest release
+## v6.1.0 — Latest release
 
-**HotCRM 6.0.0** shipped on **ObjectStack 18.0.0**, the platform's first
-general-availability release of major 18, across every `@objectstack/*` package.
-The release after it runs on **ObjectStack 18.3.0**, by way of 18.1.0 and 18.2.0, and its
-manifest declares the matching `^18.3.0` protocol range, so a runtime on a different protocol
-major — a 17.x host included — refuses the load up front with a structured
-diagnostic instead of failing deep in a schema parse. 5.1.2,
-5.1.1 and 5.1.0 shipped on ObjectStack 18.0.0-next.3, 5.0.0 on ObjectStack
+**HotCRM 6.1.0** runs on **ObjectStack 18.3.0**, by way of 18.1.0 and 18.2.0, across every
+`@objectstack/*` package, and its manifest declares the matching `^18.3.0` protocol range, so a
+runtime on a different protocol major — a 17.x host included — refuses the load up front with a
+structured diagnostic instead of failing deep in a schema parse. 6.0.0 shipped on ObjectStack
+18.0.0, 5.1.2, 5.1.1 and 5.1.0 on ObjectStack 18.0.0-next.3, 5.0.0 on ObjectStack
 18.0.0-next.2, and 4.0.1 on ObjectStack 17.7.0.
 
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 6.0.0 are
+> entry every pull request adds. The versions between v1.0 and 6.1.0 are
 > recorded there and are deliberately not re-listed here — a hand-maintained
 > copy of that history is exactly how this section came to advertise a "v5.0"
 > while the app was at 2.2.2, on a platform major that never shipped it.
+
+### What 6.1.0 changes
+
+The platform moves from ObjectStack 18.0.0 to 18.3.0, every `@objectstack/*` package together.
+Two upgrades take a one-time backfill, and the checks at the end of this section say which.
+
+- **Quotes price from price books.** A new **Price Books** entry under **Sales** holds named
+  price lists, with one **Standard** book that follows the product catalog. A new quote starts
+  on Standard, a rep can pick another active book before adding lines, and a product the book
+  does not price is refused with a message naming the book. **Add Products** fills a book at a
+  percentage of each product's list price.
+- **Quotes and contracts print to PDF.** **Print Quote** and **Print Contract** file the PDF
+  on the record's attachments. Both record the customer's **Signed Copy**, and uploading one
+  fills an empty **Signed Date**.
+- **New cases and leads route through platform queues.** **Support Intake** and **Lead
+  Intake** still hand each arrival to the least-loaded agent or rep. When nobody holds the
+  position, it waits in its queue and any member takes it with **Claim**.
+- **Record titles are stored**, so an exported lookup column imports back. Accounts,
+  products, quotes, campaigns and knowledge articles are titled by their name alone, and a
+  forecast by its period and owner ("Q4 2026 · Nina Reyes").
+- **Reps, managers, marketing users and agents upload and delete attachments** on a record
+  they can edit, and delete its comments. The default **CRM User** set alone still only reads
+  and downloads them.
+- **Convert Lead ends on a screen that links the account, contact and opportunity it
+  created**, and an account it creates skips account approval.
+- **Record pages offer only the actions a record can still take.** Quotes and cases get
+  buttons for their status moves, and each persona's own work comes first in the sidebar
+  and in the default views.
+- **In-app manuals under Help**: the User, Admin, Revenue and Marketing manuals, each with a
+  Chinese version.
+- **Dashboards say what they count.** KPI tiles name their period and say whether the number
+  went up or down, and amounts, quantities and dates read one way across the app.
+- **Large deals follow their approval.** A deal of 100,000 or more closes won only once its
+  Large Deal Approval is approved, a rejected one can be sent back for approval, and only an
+  administrator can create one already Closed Won.
+- **More of the app reads in your language**: reports, positions, permission sets, approval
+  names, the manuals' titles, the stage and priority in notices, the public forms' hints, and
+  the marketplace listing in Chinese.
+- **HotCRM installs as one artifact carrying four packages**: the app and its Service, Revenue
+  and Marketing modules. With a module turned off, the app no longer offers the buttons that
+  lead into it.
+
+Plus a long tail of fixes — a reopened case drops its first close, Upcoming Events shows only
+events still to come, Add to Campaign refuses a closed campaign and a person who opted out,
+refusals name fields and stages by their labels, and docs re-measured against the app — each
+with its own entry in `CHANGELOG.md`.
+
+**Check these before and after upgrading to 6.1.0:**
+
+- **Upgrade the host to ObjectStack 18.3.0 first.** The manifest declares `^18.3.0`.
+- **Run the two backfills once, as an administrator.** Each only reports until you pass
+  `--apply`, and each is safe to run again:
+
+  ```bash
+  pnpm exec tsx scripts/backfill-record-titles.ts --url https://<your-org> --email <admin> --password <pw> --apply
+  pnpm exec tsx scripts/backfill-intake-queue.ts --url https://<your-org> --email <admin> --password <pw> --apply
+  ```
+
+  The first stores the title of every record saved before this release; until it runs, such a
+  record shows its id in headers, lookup chips and search. The second puts each open case and
+  lead that nobody owns into its queue; until it runs, agents cannot see them.
+- **An import file taken before this release** that names a product, quote, campaign or
+  article as "PRD-0001 - Name" no longer matches. Use the name, the number or the record id.
+- **Set the organization's default currency.** On 18.3.0, amounts read as plain numbers until
+  an administrator sets it; 18.3.0 asks for it on first visit.
+- **Sales managers no longer delete forecasts**, and a service agent takes a waiting case with
+  **Claim**: moving an unowned case to *In Progress* no longer makes it theirs.
+- **Integrations.** Setting **Converted From Lead** by hand is refused with `400`. A caller that
+  drives Convert Lead through the REST door or the AI tool gets the run back paused on the
+  result screen, and one more resume with no values completes it. A campaign member that holds
+  both a Lead and a Contact is refused on its next save until one is cleared.
+- **The five retitled objects' old `display_title` column** stays in the database, unused, and
+  the server logs it once at boot as an orphaned column. `os migrate apply --allow-destructive`
+  drops it if you want it gone.
+- **Coming from 5.x**, everything under "What 6.0.0 changes" below applies as well.
 
 ### What 6.0.0 changes
 
