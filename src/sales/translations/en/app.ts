@@ -26,6 +26,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       navigation: {
         group_activity: { label: 'Activity' },
         group_sales: { label: 'Sales' },
+        group_order_to_cash: { label: 'Order to Cash' },
         group_service: { label: 'Service' },
         group_marketing: { label: 'Marketing' },
         group_help: { label: 'Help' },

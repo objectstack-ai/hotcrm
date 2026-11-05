@@ -35,6 +35,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_sales_home: { label: 'Inicio de Ventas' },
 
         group_sales: { label: 'Ventas' },
+        group_order_to_cash: { label: 'Del pedido al cobro' },
         nav_lead: { label: 'Prospectos' },
         nav_account: { label: 'Cuentas' },
         nav_contact: { label: 'Contactos' },

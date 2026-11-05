@@ -7,18 +7,19 @@ import composed from './helpers/composed-stack';
 /**
  * Which package of the artifact owns what (ADR-0130 D4, #1907).
  *
- * HotCRM ships ONE release artifact carrying FOUR packages that share the `crm`
+ * HotCRM ships ONE release artifact carrying FIVE packages that share the `crm`
  * namespace: `app.objectstack.hotcrm` (`src/sales/index.ts`, the `type: 'app'`
- * package a customer installs) and three modules —
+ * package a customer installs) and four modules —
  * `app.objectstack.hotcrm.service` (`src/service/index.ts`),
- * `app.objectstack.hotcrm.revenue` (`src/revenue/index.ts`) and
- * `app.objectstack.hotcrm.marketing` (`src/marketing/index.ts`). Per-package ownership is what
+ * `app.objectstack.hotcrm.revenue` (`src/revenue/index.ts`),
+ * `app.objectstack.hotcrm.marketing` (`src/marketing/index.ts`) and
+ * `app.objectstack.hotcrm.o2c` (`src/o2c/index.ts`, no object until its phase 1, #2315). Per-package ownership is what
  * `ObjectQL.registerApp` stamps on every object at install, what
  * `GET /api/v1/packages` reports, and what Studio groups by — so which package
  * an object lands in is a fact about this app, pinned here off the artifact
  * itself rather than off the source that is meant to produce it.
  *
- * The suites read `test/helpers/composed-stack.ts` — the same four package
+ * The suites read `test/helpers/composed-stack.ts` — the same five package
  * stacks, flattened by the platform's own composition — because the artifact
  * carries no flattened collections beside `packages[]` (ADR-0130 D4, 2026-09-22
  * addendum). The last block holds the two views to the same contents, so that
@@ -31,7 +32,8 @@ const APP_ID = 'app.objectstack.hotcrm';
 const SERVICE_ID = 'app.objectstack.hotcrm.service';
 const REVENUE_ID = 'app.objectstack.hotcrm.revenue';
 const MARKETING_ID = 'app.objectstack.hotcrm.marketing';
-const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID];
+const O2C_ID = 'app.objectstack.hotcrm.o2c';
+const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID, O2C_ID];
 
 /**
  * Each module's objects — `module-split-plan.md` decision 5, amended by item 11
@@ -64,8 +66,8 @@ const body = (id: string): AnyRec => {
 const namesOf = (items: unknown): string[] =>
   ((Array.isArray(items) ? items : []) as AnyRec[]).map((item) => String(item?.name)).sort();
 
-describe('one artifact, four packages', () => {
-  it('carries exactly the three modules and the app package, the app last', () => {
+describe('one artifact, five packages', () => {
+  it('carries exactly the four modules and the app package, the app last', () => {
     expect(bodies.map((b) => b.id)).toEqual([...MODULE_IDS, APP_ID]);
     expect(body(APP_ID).type).toBe('app');
     for (const id of MODULE_IDS) expect(body(id).type, id).toBe('module');
@@ -80,7 +82,7 @@ describe('one artifact, four packages', () => {
   });
 
   it('shares one namespace, so no object is renamed (ADR-0130 D1)', () => {
-    expect(bodies.map((b) => b.namespace)).toEqual(['crm', 'crm', 'crm', 'crm']);
+    expect(bodies.map((b) => b.namespace)).toEqual(['crm', 'crm', 'crm', 'crm', 'crm']);
   });
 
   it('declares the edges: every module depends on the app package and nothing else (a star)', () => {

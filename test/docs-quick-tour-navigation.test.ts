@@ -86,7 +86,11 @@ type AnyRec = Record<string, any>;
  * row of *My Work* and the case reports close *Reports*.
  */
 const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
-const GROUPS = NAV.filter((n) => n.type === 'group');
+// A group with no served entry is not drawn — the console renders no empty
+// group (measured for `group_order_to_cash`, #2315: its module contributes no
+// item until phase 1) — so the tour, which says what the sidebar shows, leaves
+// it out until something fills it.
+const GROUPS = NAV.filter((n) => n.type === 'group' && ((n.children ?? []) as AnyRec[]).length > 0);
 const PINNED = NAV.filter((n) => n.type !== 'group');
 
 const childLabels = (g: AnyRec): string[] =>

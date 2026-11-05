@@ -10,7 +10,10 @@
   revenue-scope ruling** rather than reversing it: the core packages still model no orders,
   invoices or payments; the module shows their status.
 - **Traceability**: design — [`../architecture/order-to-cash-module-plan.md`](../architecture/order-to-cash-module-plan.md);
-  cards — hotcrm#2315 (phases 0–1, filed 2026-10-27); changesets / PRs — to be filled in per phase.
+  cards — hotcrm#2315 (phases 0–1, filed 2026-10-27; on 2026-11-05 the maintainer ruled the module a
+  package of the one HotCRM artifact, disabled per tenant — the design's *Recorded 2026-11-05*);
+  changesets / PRs — phase 0: the package and its menu anchor (`.changeset/o2c-phase-0-module.md`);
+  phase 1 to follow.
 
 ## Requirement
 

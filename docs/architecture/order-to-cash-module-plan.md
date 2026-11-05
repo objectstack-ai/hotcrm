@@ -1,9 +1,11 @@
 # HotCRM order-to-cash module — what sales must see after the contract
 
-> **Status**: design only. Nothing in `src/` moves on the strength of this document; every
-> phase below lands through its own PR, `pnpm verify` and changeset. Decisions 1–5 (name, what
-> "optional" means, the revenue dependency, the scope, a lean first version) were recorded on
-> 2026-10-23; 6–8 are open.
+> **Status**: design, with phase 0 (the package and its menu anchor, no object) landing through
+> hotcrm#2315. Nothing else in `src/` moves on the strength of this document; every phase below lands
+> through its own PR, `pnpm verify` and changeset. Decisions 1–5 (name, what "optional" means, the
+> revenue dependency, the scope, a lean first version) were recorded on 2026-10-23; the 2026-10-26
+> record superseded 2 and 3, and the 2026-11-05 record supersedes its born-standalone line; 6–8
+> are open.
 > **Measured against**: `origin/main` at `4166f21`, `@objectstack/*` **18.0.0** (the pin); the
 > platform facts cited from source were read at `@objectstack/spec` 18.0.0.
 > **Companions**: [`../requirements/0007-order-to-cash-module.md`](../requirements/0007-order-to-cash-module.md)
@@ -248,6 +250,29 @@ open until the previous one is on `main`.
 
 *Later* items each open their own record or reopen REQ-0007 when a customer needs them.
 
+### Phase 0 readings — hotcrm#2315, `@objectstack/*` 18.3.0
+
+Measured on `pnpm dev` (`objectstack dev --seed-admin`, demo staffed), with throw-away metadata in
+`src/o2c/index.ts` (a `crm_o2c_probe` master-detail of `crm_contract` with a lookup to
+`crm_account`, two summaries and one text field through `objectExtensions`, a navigation item) and in
+the app's `sales_rep` / `sales_manager` sets, all reverted. Each reading names its command; the PR
+body carries the full observations.
+
+| Item | Reading | Verdict |
+| --- | --- | --- |
+| Join | `packages[]` carries `app.objectstack.hotcrm.o2c` (`type: 'module'`, `6.0.0`, one dependency); `pnpm build` 20 objects, as before; no `nav_contribution_group_missing` on boot | ✅ |
+| **(a)** roll-up | `POST /data/crm_o2c_probe` ×2 (1000, 250.5) under one contract: `crm_contract.o2c_probe_total` 1250.5 and `crm_account.o2c_probe_account_total` 1250.5; `PATCH` 1000 → 2000: 2250.5; `DELETE` the 250.5 row: 2000 | ✅ |
+| **(b)** app-set field permission | `'crm_contract.o2c_probe_note'` in `sales_rep` / `sales_manager` `fields`: `pnpm build` and `objectstack dev` exit 1, `security-fls-unknown-field` — "crm_contract declares no field o2c_probe_note". The rule's object graph reads the stack's own `objects` and never folds a sibling package's `objectExtensions`, though the registry serves the field | ⛔ refused at author time — platform card |
+| **(c)** related list | the derived contract page shows an *O2C Probes* tab and side card; the account page an *O2C Probes* tab | ✅ |
+| **(d)** without a grant | an extension field no held set names is read by every contract reader (`na.rep` reads `o2c_probe_total` 2000); field-level security is open on an unauthored field | the 2026-10-23 condition does not hold; the 2026-11-05 ruling replaces it |
+| **(e)** module disabled | `PATCH /api/v1/packages/app.objectstack.hotcrm.o2c/disable` 200: the menu entry and the whole *Order to Cash* group go, `crm_o2c_probe` answers 404 `OBJECT_PACKAGE_DISABLED`, the contract page loses the tab — but `o2c_probe_total` stays in `GET /meta/object/crm_contract`, in `GET /data/crm_contract` and on the contract page (2,000.00) | ⚠️ fields not withheld — platform card |
+| Empty group | with no entry to show (module disabled), the console renders no *Order to Cash* header | ✅ |
+
+Phase 1 depends on both refusals: the ruled field access lives in app-package sets ((b)), and a
+tenant without O2C hides the contract and account fields by disabling the module ((e)). Each goes
+upstream as its own platform card, and phase 1 carries a `Blocked-by:` line to it (AGENTS.md
+*Scope* rule 2).
+
 ## Decisions
 
 ### Recorded 2026-10-23
@@ -292,6 +317,21 @@ decision 2's "present in every install and used by permission" shape is not buil
 (item 11), so decision 3's later edge to revenue never exists. Everything else above stands:
 the name, the scope, the lean first version, and the contract and account fields through
 `objectExtensions` — now extending app-package objects.
+
+### Recorded 2026-11-05 — supersedes the 2026-10-26 born-standalone line
+
+Ruled by the maintainer on hotcrm#2315, option A 「套件内模块」, on the phase 0 reading that a
+separately built app cannot hold a lookup or master-detail into a HotCRM object on 18.3.0
+(`os build`: `object-reference-unknown`; objectstack#25805 closed `not_planned` under the
+2026-10-29 direction 「大包 + 设置里启用模块」). The module is a **`type: 'module'` package of the one
+HotCRM artifact**, as revenue and marketing are: `objectstack.composition.ts` composes it, it takes
+the artifact's version, and its one dependency stays `app.objectstack.hotcrm` (item 10 holds). A
+tenant that does not use it **disables the package** (`PATCH /api/v1/packages/:id/disable`); there is
+no separate install. For the contract and account fields: a tenant without O2C hides them by that
+disable, and a tenant with O2C gets their access authored in the app-package permission sets (reps
+read, finance edits) — ⛔ no `readable: false` rows in `crm_user` or the persona sets. The name, the
+scope, the lean first version and the fields through `objectExtensions` stand. The phase 0 readings
+above record the two platform gaps this ruling meets.
 
 ## Upstream asks
 
