@@ -87,6 +87,12 @@ export const esES: TranslationData = {
         basic: { label: 'Información de la Lista de Precios' },
         validity: { label: 'Vigencia' },
       },
+      _views: {
+        all_price_books: { label: 'Todas las Listas de Precios' },
+      },
+      _actions: {
+        add_price_book_products: { label: 'Añadir Productos' },
+      },
     },
     crm_price_book_entry: {
       _validations: {
@@ -147,6 +153,7 @@ export const esES: TranslationData = {
         },
         quote_date: { label: 'Fecha de Cotización' },
         expiration_date: { label: 'Fecha de Expiración' },
+        crm_price_book: { label: 'Lista de Precios', help: 'Las líneas de esta cotización toman su Precio de Lista de esta lista de precios. Si se deja vacía en una cotización nueva, es la lista de precios estándar.' },
         subtotal: { label: 'Subtotal' },
         discount: { label: 'Descuento %' },
         discount_amount: { label: 'Monto de Descuento' },
@@ -236,7 +243,7 @@ export const esES: TranslationData = {
         description: { label: 'Descripción' },
         product_title: { label: 'Título del producto', help: 'El título del producto, sincronizado con el producto. Da nombre a esta línea.' },
         quantity: { label: 'Cantidad' },
-        list_price: { label: 'Precio de Lista' },
+        list_price: { label: 'Precio de Lista', help: 'El precio de este producto en la lista de precios de la cotización.' },
         unit_price: { label: 'Precio de Venta' },
         discount: { label: 'Descuento (%)' },
         subtotal: { label: 'Subtotal' },
@@ -279,6 +286,30 @@ export const esES: TranslationData = {
     },
   },
   flows: {
+    price_book_add_products: {
+      label: 'Añadir Productos a la Lista de Precios',
+      successMessage: 'Productos añadidos a la lista de precios.',
+      refusals: {
+        refuse_no_book: { message: 'Esta lista de precios ya no existe, o no puede abrirla. No se añadió ningún producto.' },
+        end_refused: { message: 'No se pudieron añadir {{refusedCount}} productos a la lista de precios: {{addedCount}} añadidos, {{alreadyCount}} ya tenían precio, {{refusedCount}} rechazados. Solo el propietario de una lista de precios, o un administrador, puede añadir sus precios; el registro de ejecución del flujo indica el motivo de cada producto.' },
+      },
+      screens: {
+        screen_1: {
+          title: 'Poner Precio a los Productos',
+          description: 'Cada producto activo que {{ bookRecord.name }} aún no tiene recibe una entrada a este porcentaje de su Precio de Lista. Los productos que ya tienen precio lo conservan.',
+          fields: {
+            percentOfList: { label: 'Precio como % del Precio de Lista', placeholder: '1-1000' },
+          },
+        },
+        result: {
+          title: 'Productos Añadidos',
+          description: '{{addedCount}} productos añadidos a {{ bookRecord.name }}, {{alreadyCount}} ya tenían precio.',
+          fields: {
+            bookLink: { label: 'Lista de Precios' },
+          },
+        },
+      },
+    },
     quote_generation: {
       label: 'Generar cotización desde la oportunidad',
       refusals: { refuse_held: { message: 'Primero va la aprobación de calificación: marque Solicitar Aprobación de Calificación. No se creó nada.' } },

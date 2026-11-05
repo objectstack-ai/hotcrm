@@ -55,6 +55,7 @@ export const zhCN: TranslationData = {
           help: '客户签回的报价。',
         },
         quote_date: { label: '报价日期' },
+        crm_price_book: { label: '价格表', help: '本报价单各行的标价取自这本价格表。新建报价单时留空，即为标准价格表。' },
         subtotal: { label: '小计' },
         discount_amount: { label: '折扣金额' },
         tax: { label: '税额' },
@@ -170,6 +171,12 @@ export const zhCN: TranslationData = {
         basic: { label: '价格表信息' },
         validity: { label: '有效期' },
       },
+      _views: {
+        all_price_books: { label: '全部价格表' },
+      },
+      _actions: {
+        add_price_book_products: { label: '添加产品' },
+      },
     },
     crm_price_book_entry: {
       _validations: {
@@ -235,7 +242,7 @@ export const zhCN: TranslationData = {
         description: { label: '描述' },
         product_title: { label: '产品标题', help: '产品的标题，随产品同步更新，用作此明细行的名称。' },
         quantity: { label: '数量' },
-        list_price: { label: '标价' },
+        list_price: { label: '标价', help: '该产品在报价单所选价格表中的价格。' },
         unit_price: { label: '销售单价' },
         discount: { label: '折扣（%）' },
         subtotal: { label: '小计' },
@@ -278,6 +285,30 @@ export const zhCN: TranslationData = {
     },
   },
   flows: {
+    price_book_add_products: {
+      label: '向价格表添加产品',
+      successMessage: '产品已添加到价格表。',
+      refusals: {
+        refuse_no_book: { message: '这本价格表已不存在，或你无权打开它。没有添加任何产品。' },
+        end_refused: { message: '有 {{refusedCount}} 个产品未能添加到价格表：已添加 {{addedCount}} 个，已有价格 {{alreadyCount}} 个，被拒绝 {{refusedCount}} 个。只有价格表的负责人或管理员可以添加其价格；流程运行日志记录了每个产品被拒的原因。' },
+      },
+      screens: {
+        screen_1: {
+          title: '为产品定价',
+          description: '{{ bookRecord.name }} 中尚未定价的每个启用产品，都会按其标价的这个百分比新增一个条目。已有价格的产品保持原价。',
+          fields: {
+            percentOfList: { label: '价格占标价的 %', placeholder: '1-1000' },
+          },
+        },
+        result: {
+          title: '产品已添加',
+          description: '已向 {{ bookRecord.name }} 添加 {{addedCount}} 个产品，{{alreadyCount}} 个已有价格。',
+          fields: {
+            bookLink: { label: '价格表' },
+          },
+        },
+      },
+    },
     quote_generation: {
       label: '从商机生成报价单',
       refusals: { refuse_held: { message: '需先完成立项审批：请勾选「申请立项审批」。尚未创建任何内容。' } },

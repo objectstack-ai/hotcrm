@@ -1,6 +1,6 @@
 ---
 title: Products & Price Books — The Catalog Behind Every Line
-description: What a product carries, how its price reaches a deal or a quote, how to retire one, and what price books do today.
+description: What a product carries, how its price reaches a deal or a quote through a price book, how to retire one, and how price books work.
 order: 2
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
@@ -37,15 +37,19 @@ see [Billing Hand-off](./crm_revenue_billing_handoff.md).
 
 ## How a product's price reaches a line
 
-When you pick a product on a deal's line item or a quote's line item, the
-line's **List Price** is copied from the product. On a new line, **Sales Price**
-starts at that list price too; change it to the price you negotiated, and it
-stays yours.
+When you pick a product on a line, the line's **List Price** is filled in:
 
-Later changes to the catalog do not reach lines already written. Raise a
-product's **List Price** and the deals and quotes you have already priced keep
-the price they were given; a line picks up the new list price only when its
-product is picked again. A product's name is the one exception: rename a product
+- on a **deal's** line item, from the product's own **List Price**;
+- on a **quote's** line item, from the product's entry in the quote's
+  **Price Book** (see *Quoting from a price book* below).
+
+On a new line, **Sales Price** starts at that list price too; change it to the
+price you negotiated, and it stays yours.
+
+Later price changes do not reach lines already written. Raise a product's
+**List Price**, or reprice its entry in a book, and the deals and quotes you
+have already priced keep the price they were given; a line picks up the new
+list price only when its product is picked again. A product's name is the one exception: rename a product
 and every line that sold it shows the new name, closed deals and settled quotes
 included, because a name is not a figure.
 
@@ -67,8 +71,10 @@ promotion. A book holds one **entry** per product, with that product's
 - **One standard book.** Exactly one book is marked **Standard**. A second book
   cannot be marked **Standard**, and the standard book can neither lose the mark
   nor be deleted; to stop using it, turn off **Active**. HotCRM's sample data
-  includes a book named *Standard* with an entry for every sample product. A
-  product you add later gets no entry in it by itself: add one by hand.
+  includes a book named *Standard* with an entry for every sample product. The
+  standard book follows the catalogue: a product you add gets its entry there
+  at its **List Price** when it is saved, and a change of the product's
+  **List Price** reprices that entry.
 - **One entry per product, per book.** A second entry for a product the book
   already prices is refused, and the message names the book and the product so
   you can edit the existing entry instead. The same product can have an entry in
@@ -78,11 +84,25 @@ promotion. A book holds one **entry** per product, with that product's
   **Valid From**. Nothing switches a book on or off by these dates yet.
 - **Who maintains them.** Administrators, and sales managers for the books
   they own; sales reps read every book.
+- **Add Products.** On a book's page, **Add Products** gives every active
+  product the book does not price yet an entry at one percentage of its
+  **List Price** (80 for 20% below it). Products the book already prices keep
+  their price. It adds each entry as you, so it works only on a book you may
+  edit; on any other book every product is refused, and the run says so.
 
-**What price books do not do yet:** quotes and deals do not read them. A line
-still takes its list price from the product, as described above. Choosing a
-book on a quote, and pricing its lines from that book, is the next step of this
-feature; this page will describe it when it ships.
+## Quoting from a price book
+
+- **A new quote prices from the standard book** unless you pick another active
+  book in its **Price Book** field before adding lines.
+- **A product the quote's book does not price is refused** on the line, naming
+  the book and the product. An inactive entry counts as no price.
+- **A quote's book cannot change once it has line items**: remove them, change
+  the book, and add them again. A settled quote's book is frozen with it.
+- **A book any quote prices from cannot be deleted**; turn off **Active** to
+  take it out of the quote's picker.
+- **Deals do not read books**: a deal's line takes the product's **List Price**.
+- A quote created before quotes read price books has no **Price Book**; its new
+  lines price from the standard book.
 
 ---
 

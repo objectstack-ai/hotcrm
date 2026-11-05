@@ -6,13 +6,27 @@ import type { HookApi } from '../../sales/objects/_hook-api';
 /**
  * Shared line-item price fill.
  *
- * `list_price` on both line-item objects is documented as "auto-populated from
- * product.list_price", and nothing implemented it until this hook. On write,
- * when a product is part of THIS change, it stamps the catalog `list_price`;
- * on INSERT it also defaults the negotiated `unit_price` to the list price when
- * the rep left it blank (they can still override). On update the negotiated
- * `unit_price` is left alone, so a re-synced catalog price never clobbers a
- * price someone actually negotiated.
+ * On write, when a product is part of THIS change, it stamps the line's
+ * `list_price`; on INSERT it also defaults the negotiated `unit_price` to the
+ * list price when the rep left it blank (they can still override). On update
+ * the negotiated `unit_price` is left alone, so a re-synced price never
+ * clobbers a price someone actually negotiated.
+ *
+ * Where the list price comes from differs by object (REQ-0009 phase 2, #2318):
+ *
+ * - an OPPORTUNITY line takes the product's own `list_price`, as it always has
+ *   (the card's recorded assumption: deals do not choose a price book);
+ * - a QUOTE line takes the ACTIVE entry for its product in the quote's price
+ *   book (`crm_quote.crm_price_book`). A quote with no book (one older than the
+ *   field) prices from the organization's active standard book. A book with no
+ *   active entry for the product refuses the line, naming the book and the
+ *   product. Only with no book at all, neither the quote's nor a standard one,
+ *   does a quote line fall back to the product's `list_price` (phase-1 seat
+ *   note item 1: an organization the standard-book seed never reached).
+ *
+ * Only a write that names a product reprices, so a line already written keeps
+ * its price when its book's entry is edited later: a line is a record of what
+ * was quoted, as it is of the catalogue price today.
  *
  * Why it lives here rather than twice: `crm_opportunity_line_item` and
  * `crm_quote_line_item` carried near-verbatim copies of this handler that
@@ -43,8 +57,35 @@ export function createLineItemPriceFill(objectName: string, hookName: string): H
     object: objectName,
     events: ['beforeInsert', 'beforeUpdate'],
     priority: 100,
-    description: 'Default list_price / unit_price from the chosen product.',
+    description: "Default list_price / unit_price: a quote line from its quote's price book, an opportunity line from the product.",
     handler: async (ctx: HookContext) => {
+      // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
+      // lowered body has no module scope and `extractHookBody` THROWS on an
+      // import; `test/refusal-envelope.test.ts` pins every copy against it.
+      function refuse(
+        message: string,
+        code: string,
+        status: number,
+        userMessage: string = message,
+      ): Error {
+        const err = new Error(message) as Error & {
+          code: string;
+          status: number;
+          userMessage: string;
+        };
+        err.code = code;
+        err.status = status;
+        err.userMessage = userMessage;
+        return err;
+      }
+      // A reference arrives as an id, or expanded as `{ id }`.
+      function refId(value: unknown): string {
+        if (typeof value === 'string') return value;
+        if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+          return String((value as Record<string, unknown>).id);
+        }
+        return '';
+      }
       const { event, input } = ctx;
       const api = ctx.api as HookApi | undefined;
       if (!api) return;
@@ -52,11 +93,55 @@ export function createLineItemPriceFill(objectName: string, hookName: string): H
       const productId = typeof input.crm_product === 'string' ? input.crm_product : undefined;
       if (!productId) return;
       const product = await api.object('crm_product').findOne({
-        where: { id: productId }, fields: ['id', 'list_price'],
+        where: { id: productId }, fields: ['id', 'name', 'list_price'],
       });
-      const listPrice = product && typeof product.list_price === 'number' ? product.list_price : undefined;
+      let listPrice = product && typeof product.list_price === 'number' ? product.list_price : undefined;
+
+      // A quote line: the price book decides (REQ-0009 phase 2; header note).
+      if (ctx.object === 'crm_quote_line_item') {
+        const quoteId = refId(input.crm_quote) || refId(ctx.previous?.crm_quote);
+        const quote = quoteId
+          ? await api.object('crm_quote').findOne({ where: { id: quoteId }, fields: ['id', 'crm_price_book', 'organization_id'] })
+          : null;
+        let bookId = refId(quote?.crm_price_book);
+        if (!bookId) {
+          // The organization's standard book, scoped as `price_book_standard`
+          // scopes its read (`price_book.hook.ts`): a system write whose
+          // organization cannot be resolved reads none, and falls back.
+          const organizationId = [
+            ctx.user?.organizationId,
+            ctx.session?.organizationId,
+            quote?.organization_id,
+            input.organization_id,
+          ].find((candidate): candidate is string => typeof candidate === 'string' && candidate !== '');
+          if (organizationId || ctx.user?.id) {
+            const where: Record<string, unknown> = organizationId
+              ? { organization_id: organizationId, is_standard: true, is_active: true }
+              : { is_standard: true, is_active: true };
+            const [standard] = await api.object('crm_price_book').find({ where, fields: ['id'], top: 1 });
+            bookId = refId(standard?.id);
+          }
+        }
+        if (bookId) {
+          const [entry] = await api.object('crm_price_book_entry').find({
+            where: { crm_price_book: bookId, crm_product: productId, is_active: true }, fields: ['id', 'list_price'], top: 1,
+          });
+          if (!entry || typeof entry.list_price !== 'number') {
+            const book = await api.object('crm_price_book').findOne({ where: { id: bookId }, fields: ['id', 'name'] });
+            const bookName = typeof book?.name === 'string' && book.name.trim() !== '' ? book.name.trim() : 'The price book';
+            // The product as its record title names it: the name alone (#2369 row 10).
+            const productName = typeof product?.name === 'string' && product.name.trim() !== '' ? product.name.trim() : 'this product';
+            throw refuse(
+              `${bookName} has no active price for ${productName}. Add the product to ${bookName}, or choose another price book on the quote.`,
+              'VALIDATION_FAILED',
+              400,
+            );
+          }
+          listPrice = entry.list_price;
+        }
+      }
       if (listPrice === undefined) return;
-      // Catalog reference always tracks the product.
+      // The list price always tracks the product picked in this write.
       input.list_price = listPrice;
       // Negotiated price defaults to list on create when left blank; never
       // overwritten on update (respect a rep's negotiated figure).

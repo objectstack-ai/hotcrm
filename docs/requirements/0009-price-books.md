@@ -1,10 +1,10 @@
 # REQ-0009: Price books — more than one price per product, chosen per quote; multi-currency waits for the platform
 
-- **Status**: Triaged
+- **Status**: Shipped — phase 1 by hotcrm#2313, phases 2–3 by hotcrm#2318 (2026-11-04). The deferred item (multi-currency) stays open on objectstack-ai/objectstack#8345.
 - **Source**: Maintainer (internal) — product direction from the 2026-10-26 module-expansion review, not a customer intake
 - **Raised**: 2026-10-26
 - **Disposition**: **B standard-enhancement** inside `revenue`. One item is **D defer** — multi-currency — with the platform card objectstack-ai/objectstack#8345 as its trigger.
-- **Traceability**: design — this record's *Product response*; cards — hotcrm#2313 (phase 1), hotcrm#2318 (phases 2–3); changesets — to be filled in per phase.
+- **Traceability**: design — this record's *Product response*; cards — hotcrm#2313 (phase 1), hotcrm#2318 (phases 2–3); changesets — `.changeset/2313-price-books.md`, `.changeset/2318-quote-price-books.md`.
 
 ## Requirement
 
@@ -75,3 +75,26 @@ every amount in HotCRM is today.
   changeset per PR; the browser pass recorded in each PR.
 - The deferred item is closed by objectstack-ai/objectstack#8345's release and a separate record, not by this one.
 - This record is closed as **Shipped** when phase 3 is on `main`.
+
+## As shipped (phases 2–3, hotcrm#2318)
+
+Where the shipped behaviour departs from, or adds to, the *Product response* above. Each is the
+card's recorded decision, with the phase-1 seat note's four items (hotcrm#2318, comment 6442475801):
+
+- **The lookup is `crm_quote.crm_price_book`**, named after its target like every lookup on the
+  quote, and it is **not `required`**: a lookup has no query default, so a required field would make
+  the New Quote form demand a pick on every quote. A hook writes the organization's active standard
+  book onto a quote created without one; a quote with no book (older than the field) prices its lines
+  from the standard book.
+- **No standard book at all** (seat note item 1, option B): a quote line falls back to the product's
+  `list_price`, so an organization the standard-book seed never reached still quotes as before.
+- **The standard book follows the catalogue** (item 3, option A): a product added later gets its
+  standard entry at its `list_price`, and a `list_price` change reprices that entry
+  (`product_standard_price`).
+- **SaaS tenants get the standard book** with the catalogue seed (item 2, option A).
+- **Added edges:** a quote's book cannot change once it has lines; only an active book, and only an
+  active entry, price a line; a book any quote prices from cannot be deleted.
+- **Add Products** prices every active product a book lacks at one percentage of its `list_price`;
+  a product already in the book keeps its price.
+- **`crm_opportunity_line_item` is unchanged**: a deal's line takes the product's `list_price`.
+

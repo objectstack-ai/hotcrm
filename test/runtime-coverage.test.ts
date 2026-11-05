@@ -87,6 +87,12 @@ const RUNTIME_TEST_FILES = [
   // hooks run their SHIPPED lowered bodies through the real QuickJS runner
   // there, not their handlers.
   'do-not-call-enforcement.test.ts',
+  // REQ-0009 phases 2–3 (#2318) — a quote prices from its price book:
+  // `quote_price_book` (the default book, the refusals), the quote-line price
+  // fill reading the book, `product_standard_price` keeping the standard
+  // book whole, and the Add Products screen flow, run as the console runs it.
+  'quote-price-book.test.ts',
+  'flow-price-book-add-products.test.ts',
   // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
   // files above, and the same reason: the gate is authored on four surfaces
   // (the field default, `convert_lead.visible`, `lead_conversion`'s

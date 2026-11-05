@@ -8,5 +8,6 @@
  * the same file-by-file registration.
  */
 
+export { PriceBookViews } from './price_book.view';
 export { ProductViews } from './product.view';
 export { QuoteViews } from './quote.view';

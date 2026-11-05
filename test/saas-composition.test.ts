@@ -160,9 +160,9 @@ describe('HOTCRM_COMPOSITION=saas', () => {
     saas = await loadStack('saas');
   }, 60_000);
 
-  it('replays the CATALOGUE family and nothing else', () => {
+  it('replays the CATALOGUE family, its standard price book (#2318), and nothing else', () => {
     const objects = ((saas.data ?? []) as AnyRec[]).map((d) => String(d.object));
-    expect(objects).toEqual(['crm_product']);
+    expect(objects).toEqual(['crm_product', 'crm_price_book', 'crm_price_book_entry']);
     // Same length as the module's own declaration — so a family added to
     // `SaasTenantSeedData` has to be added deliberately, and lands here.
     expect((saas.data as AnyRec[]).length).toBe(SaasTenantSeedData.length);
@@ -170,11 +170,11 @@ describe('HOTCRM_COMPOSITION=saas', () => {
 
   it('the catalogue registers with the revenue package, and no other package registers any rows', async () => {
     // A seed family registers with the package that owns its object, under
-    // either shape; `crm_product` is revenue's, so under `saas` revenue is the
-    // one package with rows.
+    // either shape; `crm_product` and the standard price book are revenue's,
+    // so under `saas` revenue is the one package with rows.
     const built = await loadUnder('saas', '../objectstack.composition');
     const objectsOf = (stack: AnyRec) => ((stack.data ?? []) as AnyRec[]).map((d) => String(d.object));
-    expect(objectsOf(built.revenueStack)).toEqual(['crm_product']);
+    expect(objectsOf(built.revenueStack)).toEqual(['crm_product', 'crm_price_book', 'crm_price_book_entry']);
     expect(objectsOf(built.serviceStack)).toEqual([]);
     expect(objectsOf(built.marketingStack)).toEqual([]);
     expect(objectsOf(built.appStack)).toEqual([]);
@@ -195,15 +195,19 @@ describe('HOTCRM_COMPOSITION=saas', () => {
   });
 
   it('the catalogue seeds carry no cross-object reference to strand', () => {
-    // Why the shrink is safe: `crm_product` resolves nothing against another
-    // object, so no lookup is left pointing at a family that no longer ships.
-    // Every other family does reference one, which is why they cannot be
-    // cherry-picked back in individually.
+    // Why the shrink is safe: the catalogue and its standard price book
+    // resolve nothing outside themselves — `crm_product` names no other
+    // object, and a standard entry names its book and its product, both
+    // shipped beside it (#2318) — so no lookup is left pointing at a family
+    // that no longer ships. Every other family references one, which is why
+    // they cannot be cherry-picked back in individually.
+    const shipped = new Set(((saas.data ?? []) as AnyRec[]).map((d) => String(d.object)));
     const referenceValues = ((saas.data ?? []) as AnyRec[])
       .flatMap((d) => (Array.isArray(d.records) ? (d.records as AnyRec[]) : []))
       .flatMap((r) => Object.keys(r))
       .filter((key) => key.startsWith('crm_'));
-    expect(referenceValues).toEqual([]);
+    expect([...new Set(referenceValues)].sort()).toEqual(['crm_price_book', 'crm_product']);
+    for (const target of referenceValues) expect(shipped.has(target), `${target} is not shipped beside it`).toBe(true);
   });
 
   it('registers exactly the flows the community app does', () => {

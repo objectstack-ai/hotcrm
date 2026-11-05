@@ -93,7 +93,9 @@ export const QuoteViews = defineView({
         name: 'totals',
         label: 'Totals',
         columns: 2,
-        fields: ['subtotal', 'discount', 'discount_amount', 'tax', 'shipping_handling', 'total_price'],
+        // The price book first (#2318): it is where the lines' list prices
+        // come from, and it is chosen before any line is added.
+        fields: [{ field: 'crm_price_book', span: 'full' }, 'subtotal', 'discount', 'discount_amount', 'tax', 'shipping_handling', 'total_price'],
       },
       {
         // Named `quote_terms`, not `terms` — `terms` is already a distinct

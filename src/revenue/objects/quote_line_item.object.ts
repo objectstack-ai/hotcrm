@@ -153,10 +153,13 @@ export const QuoteLineItem = ObjectSchema.create({
       trackHistory: true,
     }),
 
+    // Written by `quote_line_item_price_fill` from the quote's price book
+    // (#2318, `_line-item-price-fill.ts`); a person never types it.
     list_price: Field.currency({
       label: 'List Price',
       group: 'pricing',
       readonly: true,
+      description: "This product's price in the quote's price book.",
     }),
 
     // A NOT NULL column the server fills, ⛔ not `required` (#2060 item 7b),

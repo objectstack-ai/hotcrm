@@ -69,6 +69,12 @@ export const en: TranslationData = {
         basic: { label: 'Price Book Information' },
         validity: { label: 'Validity' },
       },
+      _views: {
+        all_price_books: { label: 'All Price Books' },
+      },
+      _actions: {
+        add_price_book_products: { label: 'Add Products' },
+      },
     },
     crm_price_book_entry: {
       label: 'Price Book Entry',
@@ -112,6 +118,7 @@ export const en: TranslationData = {
         },
         quote_date: { label: 'Quote Date' },
         expiration_date: { label: 'Expiration Date' },
+        crm_price_book: { label: 'Price Book', help: "This quote's line items take their List Price from this price book. Left empty on a new quote, it is the standard price book." },
         subtotal: { label: 'Subtotal' },
         discount: { label: 'Discount %' },
         discount_amount: { label: 'Discount Amount' },
@@ -191,7 +198,7 @@ export const en: TranslationData = {
         description: { label: 'Description' },
         product_title: { label: 'Product Title', help: "The product's title, kept in step with the product. It names this line." },
         quantity: { label: 'Quantity' },
-        list_price: { label: 'List Price' },
+        list_price: { label: 'List Price', help: "This product's price in the quote's price book." },
         unit_price: { label: 'Sales Price' },
         discount: { label: 'Discount %' },
         subtotal: { label: 'Subtotal' },
