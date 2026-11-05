@@ -26,10 +26,12 @@ type Rec = Record<string, any>;
  *     The door is mounted once, by the app package, for both prints.
  *  2. Filing the signed copy fills `signed_date` when it is empty
  *     (`contract_signed_copy_date`), in the filing write itself.
- *  3. `signed_copy` is a transition gate (`requiredWhen`, AGENTS.md Metadata
- *     semantics rule 7): Activated (contract) and Accepted (quote) are refused
- *     without one, on that field, and accepted with one; a row already past the
- *     gate without one — the data that predates the rule — is left alone.
+ *  3. `signed_copy` is RECORDED, NOT YET REQUIRED (ruling on #2317,
+ *     2026-11-05): Activated (contract) and Accepted (quote) still save
+ *     without one, and a contract activated without one saves every other
+ *     edit. The `requiredWhen` gate waits on objectstack-ai/objectstack#30184
+ *     (the console's Edit form checks it on every save); when it comes back,
+ *     these cases turn into the gate's.
  */
 
 // ───────────────────────────────────────────────────────── metadata ──
@@ -108,7 +110,6 @@ beforeAll(async () => {
 
 const as = (who: Person) => ({ as: who.token });
 const stored = async (object: string, id: string): Promise<Rec> => (await verify.rows(object, { id }))[0]!;
-const refusal = (p: Promise<unknown>): Promise<Rec | null> => p.then(() => null, (e: Rec) => e);
 const TERM = { start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 };
 
 /** An account and contact of the rep's, written as the system. */
@@ -127,26 +128,6 @@ const contractOf = async (doc: Rec): Promise<Rec> => {
     crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
     owner_id: manager.id, ...TERM, ...doc,
   }]))[0]!;
-};
-
-/**
- * A row that was ALREADY past the gate without a file when the rule shipped —
- * the data that predates it. No write through the engine can make one now (the
- * gate refuses it), so the stored column is cleared beneath the engine, on the
- * driver, the way the row existed before this change.
- */
-const predating = async (object: string, id: string): Promise<void> => {
-  const ql = verify.kernel.getService<Rec>('objectql');
-  const driver = ql.getDriverForObject(object) as Rec;
-  await driver.update(object, id, { signed_copy: null });
-  expect((await stored(object, id)).signed_copy ?? null, 'the fixture row still holds a file').toBeNull();
-};
-
-/** The engine's refusal of a missing signed copy: a validation error on that field. */
-const expectSignedCopyRefusal = (err: Rec | null) => {
-  expect(err, 'the write was accepted without a signed copy').toBeTruthy();
-  expect(err!.code).toBe('VALIDATION_FAILED');
-  expect(JSON.stringify(err!.fields ?? err!.details ?? null)).toContain('signed_copy');
 };
 
 describe('contract_signed_copy_date — filing the signed copy dates the signature', () => {
@@ -189,108 +170,46 @@ describe('contract_signed_copy_date — filing the signed copy dates the signatu
   });
 });
 
-describe('Activated requires the signed copy (crm_contract.signed_copy, a transition gate)', () => {
-  it('refuses activation without a signed copy, on that field, and keeps the status', async () => {
+describe('a signed copy is recorded, not yet required (held on objectstack#30184)', () => {
+  it('activates a contract without a signed copy', async () => {
     const c = await contractOf({ status: 'in_approval' });
-    expectSignedCopyRefusal(await refusal(verify.hooks.run('crm_contract', 'update', { id: c.id, status: 'activated' }, as(manager))));
-    expect((await stored('crm_contract', c.id)).status).toBe('in_approval');
-  });
-
-  it('answers 400 VALIDATION_FAILED over REST, naming Signed Copy', async () => {
-    const c = await contractOf({ status: 'in_approval' });
-    const res = await verify.apiAs(manager.token, 'PATCH', `/data/crm_contract/${c.id}`, { status: 'activated' });
-    const body = await res.json() as Rec;
-    expect(res.status).toBe(400);
-    expect(JSON.stringify(body)).toContain('VALIDATION_FAILED');
-    expect(JSON.stringify(body)).toContain('Signed Copy');
-    expect((await stored('crm_contract', c.id)).status).toBe('in_approval');
-  });
-
-  it('activates once the signed copy is filed, in the same save or before it', async () => {
-    const before = await contractOf({ status: 'in_approval' });
-    await verify.hooks.run('crm_contract', 'update', { id: before.id, signed_copy: await committedFile(verify, manager.id) }, as(manager));
-    await verify.hooks.run('crm_contract', 'update', { id: before.id, status: 'activated' }, as(manager));
-    expect((await stored('crm_contract', before.id)).status).toBe('activated');
-
-    const same = await contractOf({ status: 'in_approval' });
-    await verify.hooks.run('crm_contract', 'update', {
-      id: same.id, status: 'activated', signed_copy: await committedFile(verify, manager.id),
-    }, as(manager));
-    const row = await stored('crm_contract', same.id);
+    await verify.hooks.run('crm_contract', 'update', { id: c.id, status: 'activated' }, as(manager));
+    const row = await stored('crm_contract', c.id);
     expect(row.status).toBe('activated');
-    expect(row.signed_date).toBe(today());
+    expect(row.signed_copy ?? null).toBeNull();
   });
 
-  it('refuses a contract created already activated without one, a system write included', async () => {
-    const { account, contact } = await parties();
-    expectSignedCopyRefusal(await refusal(verify.seed('crm_contract', [{
-      crm_account: account.id, crm_contact: contact.id, contract_value: 1, owner_id: manager.id, status: 'activated', ...TERM,
-    }])));
-  });
-
-  it('refuses clearing the signed copy off an activated contract', async () => {
-    const c = await contractOf({ status: 'activated', signed_copy: await committedFile(verify, manager.id) });
-    expectSignedCopyRefusal(await refusal(verify.hooks.run('crm_contract', 'update', { id: c.id, signed_copy: null }, as(manager))));
-  });
-
-  it('leaves a contract activated before the rule alone: other edits save, and it still ends', async () => {
-    const c = await contractOf({ status: 'activated', signed_copy: await committedFile(verify, manager.id) });
-    await predating('crm_contract', c.id);
-    await verify.hooks.run('crm_contract', 'update', { id: c.id, special_terms: 'Renewal at list.' }, as(manager));
+  it('saves an unrelated edit on an activated contract with no copy, over REST, and it still ends', async () => {
+    // The row a legacy contract is: activated, never given a copy. Over REST
+    // and through the engine its other edits save; the console's Edit form is
+    // where the held gate would have refused them (objectstack#30184).
+    const c = await contractOf({ status: 'activated' });
+    const res = await verify.apiAs(manager.token, 'PATCH', `/data/crm_contract/${c.id}`, { special_terms: 'Renewal at list.' });
+    expect(res.status).toBe(200);
     expect((await stored('crm_contract', c.id)).special_terms).toBe('Renewal at list.');
     await verify.hooks.run('crm_contract', 'update', { id: c.id, status: 'terminated' }, as(manager));
     expect((await stored('crm_contract', c.id)).status).toBe('terminated');
   });
-});
 
-describe('Accepted requires the signed copy (crm_quote.signed_copy, a transition gate)', () => {
-  /** A presented quote of the rep's, written as the system. */
-  const presentedQuote = async (doc: Rec = {}): Promise<Rec> => {
+  it('accepts a quote through the Accept button without a signed copy', async () => {
     const { account, contact } = await parties();
-    return (await verify.seed('crm_quote', [{
+    const [q] = await verify.seed('crm_quote', [{
       name: `Signed Quote ${++k}`, crm_account: account.id, crm_contact: contact.id, owner_id: rep.id, status: 'presented',
-      quote_date: '2030-01-01', expiration_date: '2030-02-01', ...doc,
-    }]))[0]!;
-  };
-  const accept = (id: string) => verify.actions.run('crm_quote', 'accept_quote', { as: rep.token, recordId: id });
-
-  it('refuses the Accept button without a signed copy, on that field, and keeps the quote presented', async () => {
-    const q = await presentedQuote();
-    expectSignedCopyRefusal(await refusal(accept(q.id)));
-    expect((await stored('crm_quote', q.id)).status).toBe('presented');
-  });
-
-  it('refuses an Edit to Accepted without one, over REST', async () => {
-    const q = await presentedQuote();
-    const res = await verify.apiAs(rep.token, 'PATCH', `/data/crm_quote/${q.id}`, { status: 'accepted' });
-    expect(res.status).toBe(400);
-    expect(JSON.stringify(await res.json())).toContain('Signed Copy');
-    expect((await stored('crm_quote', q.id)).status).toBe('presented');
-  });
-
-  it('accepts once the rep files the signed copy on the presented quote', async () => {
-    const q = await presentedQuote();
-    await verify.hooks.run('crm_quote', 'update', { id: q.id, signed_copy: await committedFile(verify, rep.id) }, as(rep));
-    await accept(q.id);
-    expect((await stored('crm_quote', q.id)).status).toBe('accepted');
-  });
-
-  it('leaves a quote accepted before the rule alone', async () => {
-    const q = await presentedQuote({ status: 'accepted', signed_copy: await committedFile(verify, rep.id) });
-    await predating('crm_quote', q.id);
-    // A settled quote takes only Internal Notes (`quote_workflow`), and that
-    // edit still saves.
-    await verify.hooks.run('crm_quote', 'update', { id: q.id, internal_notes: 'Countersigned on paper.' }, as(rep));
-    expect((await stored('crm_quote', q.id)).internal_notes).toBe('Countersigned on paper.');
+      quote_date: '2030-01-01', expiration_date: '2030-02-01',
+    }]);
+    await verify.actions.run('crm_quote', 'accept_quote', { as: rep.token, recordId: q!.id });
+    const row = await stored('crm_quote', q!.id);
+    expect(row.status).toBe('accepted');
+    expect(row.signed_copy ?? null).toBeNull();
   });
 });
 
-describe('the requirement is the field’s, as declared', () => {
-  it.each([[Contract, 'activated'], [Quote, 'accepted']] as const)('%#: signed_copy is a file field gated on one status', (object, status) => {
+describe('signed_copy, as declared', () => {
+  it.each([[Contract], [Quote]] as const)('%#: a plain, optional file field, with no requiredWhen until #30184', (object) => {
     const field = (object.fields as Rec).signed_copy;
     expect(field.type).toBe('file');
     expect(field.required ?? false).toBe(false);
-    expect(String(field.requiredWhen?.source ?? field.requiredWhen)).toContain(`record.status == "${status}"`);
+    expect(field.requiredWhen).toBeUndefined();
   });
 
   // Measured in the browser pass: a field no form section lists has no

@@ -60,7 +60,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // The countersigned copy (#2317).
       signed_copy: {
         label: 'Signed Copy',
-        help: 'The contract as the customer signed it. Required to activate the contract; uploading it fills Signed Date when that is empty.',
+        help: 'The contract as the customer signed it. Uploading it fills Signed Date when that is empty.',
       },
       document_url: { label: 'Contract Document' },
       special_terms: { label: 'Special Terms' },

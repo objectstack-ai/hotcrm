@@ -5,7 +5,7 @@
 Clause-②: no
 Metadata-protocol: none
 
-Contracts can be printed to a PDF filed on the contract, and a signed copy is what activates a contract and accepts a quote
+Contracts can be printed to a PDF filed on the contract, and both contracts and quotes record the customer's signed copy
 
 **Print Contract (#2317, REQ-0008 phase 2).** A contract's record page, and the row menu of the
 contract list, carry **Print Contract**. It prints the contract as a document — the parties, the
@@ -26,20 +26,13 @@ edit the contract and attach files to it (a Sales Manager or a System Administra
 
 **The signed copy (REQ-0008 phase 3).** Contracts and quotes gain a **Signed Copy** file field.
 
-- **Activated requires it.** A save that moves a contract to *Activated* — or creates one already
-  *Activated* — is refused on **Signed Copy** until a file is there, and an activated contract's
-  signed copy cannot be removed. Uploading it fills **Signed Date** with today's date when Signed
-  Date is empty; a date already set is kept.
-- **Accepted requires it.** A save that moves a quote to *Accepted*, the **Accept** button's
-  included, is refused on **Signed Copy** until a file is there; no contract is drafted and the
-  deal keeps its stage.
-- **Existing records are not touched on the server.** Both are transition gates: a contract
-  already *Activated* and a quote already *Accepted* without a signed copy keep saving their other
-  edits through an import, an integration or the API, and a contract still expires or is terminated
-  as before. The console's Edit form is stricter on such a contract: it asks for the Signed Copy
-  before it saves any change, so the copy is uploaded first. An import or integration that writes
-  contracts straight in as *Activated*, or quotes as *Accepted*, must now carry the file.
+- **Recorded, not yet required.** A contract still activates, and a quote is still accepted (the
+  **Accept** button's included), without a signed copy, and every record keeps saving as before.
+  The rule that would make the copy a condition of *Activated* and *Accepted* is held until
+  objectstack-ai/objectstack#30184 ships: on this platform the console's Edit form would check it
+  on every save, so a contract activated without a copy could save no edit at all from the
+  console.
+- **Uploading it dates the signature.** Filing the copy on a contract fills **Signed Date** with
+  today's date when Signed Date is empty; a date already set, or typed in the same save, is kept.
 - **The Edit forms offer the upload.** The contract form's Signing & Documents tab and the quote
   form's first tab list Signed Copy.
-- **Demo data.** The seeded activated contract and accepted quote carry a labelled sample PDF
-  (`assets/seed-files/`), stored at boot by the platform's seed-file loader.

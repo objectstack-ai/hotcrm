@@ -67,7 +67,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // The countersigned copy (#2317).
       signed_copy: {
         label: '署名済みコピー',
-        help: 'お客様が署名した契約書。契約を有効にするには必須です。アップロード時に署名日が空であれば当日の日付が入ります。',
+        help: 'お客様が署名した契約書。アップロード時に署名日が空であれば当日の日付が入ります。',
       },
       document_url: { label: '契約書類' },
       special_terms: { label: '特約事項' },

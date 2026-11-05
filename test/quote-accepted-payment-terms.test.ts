@@ -6,7 +6,7 @@ import { Contract } from '../src/sales/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
 import { PaymentTermsPicklist } from '../src/sales/picklists/payment_terms.picklist';
 import {
-  hotcrmStack, signUpPerson, recordEngineWrites, today, committedFile, type Person,
+  hotcrmStack, signUpPerson, recordEngineWrites, today, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -118,7 +118,6 @@ const accepted = async (quote: Rec, stored: Rec = {}): Promise<{ doc: Rec; row: 
   const id = await create('crm_quote', {
     name: `Terms quote ${n}`, crm_account: account, crm_contact: contact,
     quote_date: today(), expiration_date: '2030-12-31',
-    signed_copy: await committedFile(verify, rep.id), // what Accepted requires (#2317)
     ...storedRest, ...(cleared || storedTerms === undefined ? {} : { payment_terms: storedTerms }),
   });
   if (cleared) await verify.hooks.run('crm_quote', 'update', { id, payment_terms: storedTerms }, { as: rep.token });

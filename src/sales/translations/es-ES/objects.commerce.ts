@@ -68,7 +68,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // The countersigned copy (#2317).
       signed_copy: {
         label: 'Copia firmada',
-        help: 'El contrato tal como lo firmó el cliente. Obligatoria para activar el contrato; al subirla se rellena la Fecha de Firma si está vacía.',
+        help: 'El contrato tal como lo firmó el cliente. Al subirla se rellena la Fecha de Firma si está vacía.',
       },
       document_url: { label: 'Documento de Contrato' },
       special_terms: { label: 'Términos Especiales' },

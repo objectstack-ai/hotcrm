@@ -52,7 +52,7 @@ export const zhCN: TranslationData = {
         // The countersigned copy (#2317).
         signed_copy: {
           label: '签署副本',
-          help: '客户签回的报价。接受报价前必须上传。',
+          help: '客户签回的报价。',
         },
         quote_date: { label: '报价日期' },
         subtotal: { label: '小计' },

@@ -213,22 +213,18 @@ export const Contract = ObjectSchema.create({
     // `signed_date` when that is empty (`contract_signed_copy_date`,
     // `contract.hook.ts`).
     //
-    // A TRANSITION GATE, not an invariant (AGENTS.md Metadata semantics rule
-    // 7): Activated requires it. The engine refuses the write that takes a
-    // contract INTO `activated` without a signed copy, an insert born
-    // activated without one, and a write that clears it from an activated
-    // contract — each against this field, by its label. A contract that was
-    // already activated without one when this rule shipped keeps saving
-    // unrelated edits, and leaves `activated` for `expired` or `terminated`
-    // as before: the engine exempts a row that was already outside the
-    // requirement, and neither end state is inside it.
-    //
-    // The read is guarded (#630): `has(record.status)` first.
+    // RECORDED, NOT YET REQUIRED (ruling on #2317, 2026-11-05). The gate
+    // `requiredWhen: has(record.status) && record.status == "activated"` is
+    // held until objectstack-ai/objectstack#30184 lands: on 18.3.0 the engine
+    // judges it as a transition gate, but the console's Edit form checks it on
+    // every save, so a contract activated without a copy could save no console
+    // edit at all. Add the gate back here once #30184 ships — and with it the
+    // seeded activated contract's `seedFile` sample, which an insert born
+    // activated would then need.
     signed_copy: Field.file({
       label: 'Signed Copy',
       group: 'status',
-      requiredWhen: P`has(record.status) && record.status == "activated"`,
-      description: 'The contract as the customer signed it. Required to activate the contract; uploading it fills Signed Date when that is empty.',
+      description: 'The contract as the customer signed it. Uploading it fills Signed Date when that is empty.',
     }),
     
     document_url: Field.url({

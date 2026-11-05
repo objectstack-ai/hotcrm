@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { ExpressionEngine } from '@objectstack/formula';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
-import { hotcrmStack, signUpPerson, committedFile, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * The quote's lifecycle actions (#2366 row 9).
@@ -172,8 +172,6 @@ describe('the write is the caller’s', () => {
     expect((await stored(q.id)).status).toBe('in_review');
     await run('mark_quote_presented', q.id);
     expect((await stored(q.id)).status).toBe('presented');
-    // Accept needs the signed copy on file (#2317).
-    await verify.hooks.run('crm_quote', 'update', { id: q.id, signed_copy: await committedFile(verify, rep.id) }, { as: rep.token });
     await run('accept_quote', q.id);
     expect((await stored(q.id)).status).toBe('accepted');
   });

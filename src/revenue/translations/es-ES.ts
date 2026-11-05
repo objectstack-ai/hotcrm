@@ -143,7 +143,7 @@ export const esES: TranslationData = {
         // The countersigned copy (#2317).
         signed_copy: {
           label: 'Copia firmada',
-          help: 'La cotización tal como la firmó el cliente. Obligatoria para aceptar la cotización.',
+          help: 'La cotización tal como la firmó el cliente.',
         },
         quote_date: { label: 'Fecha de Cotización' },
         expiration_date: { label: 'Fecha de Expiración' },

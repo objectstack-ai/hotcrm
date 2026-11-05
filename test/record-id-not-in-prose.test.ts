@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, signUpPerson, recordEngineWrites, systemUpdate, today, committedFile, type Person,
+  hotcrmStack, signUpPerson, recordEngineWrites, systemUpdate, today, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -184,7 +184,6 @@ const acceptQuote = async (stored: Rec = {}) => {
   const quote = await create('crm_quote', {
     name: 'Skyline Media Renewal', crm_account: account.id, crm_contact: contact.id,
     crm_opportunity: opp.id, quote_date: today(), expiration_date: '2030-12-31',
-    signed_copy: await committedFile(verify, manager.id), // what Accepted requires (#2317)
   }, manager);
   for (const status of ['in_review', 'presented']) await update('crm_quote', { id: quote.id, status }, manager);
   if (Object.keys(stored).length > 0) await systemUpdate(verify, 'crm_quote', { id: quote.id, ...stored });
@@ -313,7 +312,6 @@ describe('refusals a user reads name the record they are about', () => {
     await verify.seed('crm_contract', [{
       crm_account: account.id, crm_contact: contact.id, status: 'activated', contract_type: 'subscription',
       contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1_000,
-      signed_copy: await committedFile(verify, manager.id), // activated carries its signed copy (#2317)
     }]);
     const err = await refusalFrom(
       () => verify.hooks.run('crm_contact', 'delete', { id: contact.id }, { as: manager.token }), 'contact_integrity',

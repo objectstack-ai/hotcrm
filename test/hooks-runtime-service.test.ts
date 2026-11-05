@@ -9,7 +9,7 @@ import knowledgeArticlePublish from '../src/service/objects/knowledge_article.ho
 import { knowledgeArticles } from '../src/service/data/service.seed';
 import {
   hotcrmStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, runShippedHook, today, daysFromNow,
-  committedFile, type Person,
+  type Person,
 } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -294,19 +294,10 @@ const managerContract = async (doc: Rec, accountOver: Rec = {}): Promise<Rec> =>
 /** A contract in `doc`'s stored state, written as the system. */
 const contractOf = async (doc: Rec, accountOver: Rec = {}): Promise<Rec> => {
   const { account, contact } = await contractParties(accountOver);
-  // Activation requires the signed copy (#2317). A row born activated carries
-  // it on the seed; any other is filed past the hooks, so the upload's own
-  // Signed Date fill does not date it before the stamp cases below.
-  const signed_copy = await committedFile(verify, manager.id);
-  const [row] = await verify.seed('crm_contract', [{
+  return (await verify.seed('crm_contract', [{
     crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
     billing_frequency: 'monthly', payment_terms: 'net_30', owner_id: manager.id, ...doc,
-    ...(doc.status === 'activated' ? { signed_copy } : {}),
-  }]);
-  if (doc.status !== 'activated') {
-    await verify.kernel.getService<Rec>('objectql').getDriverForObject('crm_contract').update('crm_contract', row!.id, { signed_copy });
-  }
-  return row!;
+  }]))[0]!;
 };
 
 describe('contract_validation', () => {

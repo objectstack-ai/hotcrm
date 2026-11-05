@@ -67,7 +67,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // The countersigned copy (#2317).
       signed_copy: {
         label: '签署副本',
-        help: '客户签回的合同。激活合同前必须上传；上传时如签署日期为空，会自动填为当天。',
+        help: '客户签回的合同。上传时如签署日期为空，会自动填为当天。',
       },
       document_url: { label: '合同文档' },
       special_terms: { label: '特殊条款' },

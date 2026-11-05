@@ -7,7 +7,7 @@ import quoteHooks from '../src/revenue/objects/quote.hook';
 import { Contract } from '../src/sales/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
 import {
-  hotcrmStack, signUpPerson, recordEngineWrites, today, committedFile, type Person,
+  hotcrmStack, signUpPerson, recordEngineWrites, today, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -113,9 +113,7 @@ const draftFor = async (quote: Rec = {}, stored: Rec = {}): Promise<Rec> => {
   });
   const id = await create('crm_quote', {
     name: `Draft quote ${n}`, crm_account: account, crm_contact: contact, crm_opportunity: opportunity,
-    quote_date: today(), expiration_date: '2030-12-31',
-    signed_copy: await committedFile(verify, rep.id), // what Accepted requires (#2317)
-    ...stored,
+    quote_date: today(), expiration_date: '2030-12-31', ...stored,
   });
   for (const status of ['in_review', 'presented']) {
     await verify.hooks.run('crm_quote', 'update', { id, status }, { as: rep.token });

@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, signUpPerson, recordEngineWrites, systemUpdate, today, committedFile, type Person,
+  hotcrmStack, signUpPerson, recordEngineWrites, systemUpdate, today, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -100,7 +100,6 @@ const presentedQuote = async (links: { contact?: boolean; opportunity?: boolean;
   });
   const id = await create('crm_quote', {
     name: `Lookup quote ${n}`, crm_account: account, quote_date: today(), expiration_date: '2030-12-31',
-    signed_copy: await committedFile(verify, rep.id), // what Accepted requires (#2317)
     ...(contact ? { crm_contact: contact } : {}), ...(opportunity ? { crm_opportunity: opportunity } : {}),
   });
   // A quote's total is the rollup of its lines: one line at 1,000.

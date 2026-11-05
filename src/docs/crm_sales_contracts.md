@@ -51,13 +51,8 @@ When the customer sends the contract back signed, upload it to the contract's
 that save; a date that is already there is kept, so type the real signing date
 when it was another day.
 
-**A contract is activated only with its signed copy.** The save that moves a
-contract to **Activated** is refused, naming **Signed Copy**, until the file is
-there, and the file cannot be removed from an activated contract. A contract
-that was already activated before this rule still expires or is terminated as
-before, and an import or an integration still saves its other changes. The
-**Edit** form asks for the **Signed Copy** before it saves any change to such a
-contract, so upload the copy first.
+The signed copy is recorded, not yet required: a contract still activates
+without one, and every contract keeps saving its changes as before.
 
 ## Renewals and expiration are watched for you
 

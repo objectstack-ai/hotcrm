@@ -204,22 +204,17 @@ export const Quote = ObjectSchema.create({
     // Print Quote (`print_quote`) files the document that goes out; this is
     // what comes back, uploaded by the rep while the quote is Presented.
     //
-    // A TRANSITION GATE, not an invariant (AGENTS.md Metadata semantics rule
-    // 7): Accepted requires it, the same way Activated requires the
-    // contract's (`crm_contract.signed_copy`). The engine refuses the write
-    // that takes a quote INTO `accepted` without one — the Accept button's
-    // write included, which is a declarative update judged like Edit — and
-    // names this field by its label. A quote already accepted without one when
-    // this rule shipped is exempt (the engine passes a row that was already
-    // outside the requirement), and it was frozen by `quote_workflow` before
-    // and stays so.
-    //
-    // The read is guarded (#630): `has(record.status)` first.
+    // RECORDED, NOT YET REQUIRED (ruling on #2317, 2026-11-05). The gate
+    // `requiredWhen: has(record.status) && record.status == "accepted"` is
+    // held until objectstack-ai/objectstack#30184 lands, with the contract's
+    // (`crm_contract.signed_copy`): the console's Edit form checks a
+    // `requiredWhen` on every save while the engine judges it as a transition
+    // gate. Add it back here once #30184 ships, with the seeded accepted
+    // quote's `seedFile` sample.
     signed_copy: Field.file({
       label: 'Signed Copy',
       group: 'basic',
-      requiredWhen: P`has(record.status) && record.status == "accepted"`,
-      description: 'The quote as the customer signed it. Required to accept the quote.',
+      description: 'The quote as the customer signed it.',
     }),
     
     // Dates

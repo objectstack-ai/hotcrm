@@ -246,9 +246,7 @@ describe('the write is REFUSED, not warned about', () => {
       .object('crm_quote')
       .insert({ ...DRAFT, name: 'Proper Quote', crm_contact: 'con_stub' });
     await api.object('crm_quote').update({ status: 'presented' }, { where: { id: row.id } });
-    // Accepted also needs the signed copy (#2317); a placeholder id, since
-    // this kernel has no file service to resolve it.
-    await api.object('crm_quote').update({ status: 'accepted', signed_copy: 'signed_copy_fixture' }, { where: { id: row.id } });
+    await api.object('crm_quote').update({ status: 'accepted' }, { where: { id: row.id } });
     const after = await api.object('crm_quote').findOne({ where: { id: row.id } });
     expect(after?.status).toBe('accepted');
     expect(after?.crm_contact).toBe('con_stub');
@@ -434,7 +432,7 @@ describe('a row that was ALREADY presented when the rule landed', () => {
     // rule arrived; a quote created under this schema cannot get here, because
     // the draft → presented write is refused (see the enforcement suites above).
     const { ql, api, row } = await legacyRow();
-    await api.object('crm_quote').update({ status: 'accepted', signed_copy: 'signed_copy_fixture' }, { where: { id: row.id } }); // #2317
+    await api.object('crm_quote').update({ status: 'accepted' }, { where: { id: row.id } });
     const after = await api.object('crm_quote').findOne({ where: { id: row.id } });
     expect(after?.status).toBe('accepted');
     await ql.close();

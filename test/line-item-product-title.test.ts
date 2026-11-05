@@ -5,7 +5,7 @@ import type { VerifyStack } from '@objectstack/verify';
 import { extractHookBody } from '@objectstack/cli/hook-body';
 import stack, { hookNamed, type AnyRec } from './helpers/composed-stack';
 import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
-import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, committedFile, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } from './helpers/verify-stack';
 
 /**
  * A line item is named after its product (#2086).
@@ -191,9 +191,7 @@ describe('frozen parents: the title follows, every other change is refused (#208
   const frozenLine = async (object: string, parentKey: string, settle: Rec): Promise<{ line: Rec; product: Rec }> => {
     const [product, parent] = [await newProduct(), (await parents())[parentKey]!];
     const line = await verify.hooks.run(object, 'insert', { [parentKey]: parent.id, crm_product: product.id }, as(rep));
-    // An accepted quote carries its signed copy (#2317).
-    const signed = parentKey === 'crm_quote' ? { signed_copy: await committedFile(verify, rep.id) } : {};
-    await systemUpdate(verify, parentKey, { id: parent.id, ...settle, ...signed });
+    await systemUpdate(verify, parentKey, { id: parent.id, ...settle });
     return { line, product };
   };
   const titleOf = async (object: string, id: string) => (await stored(object, id)).product_title ?? null;

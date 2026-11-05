@@ -7,7 +7,7 @@
  * (`module-split-plan.md` item 11): a seed family is registered by the package
  * that owns its object. Seed doctrine lives in `./_shared.ts`.
  */
-import { defineSeed, seedFile } from '@objectstack/spec/data';
+import { defineSeed } from '@objectstack/spec/data';
 import { cel } from '@objectstack/spec';
 import { Contract } from '../objects/contract.object';
 
@@ -64,12 +64,6 @@ export const contracts = defineSeed(Contract, {
       contract_type: 'subscription',
       signed_date: cel`daysAgo(15)`,
       signed_by: 'John Smith',
-      // Activated requires the signed copy (#2317, `crm_contract.signed_copy`),
-      // and the engine refuses an insert born activated without one, a seed's
-      // included. The file is a labelled SAMPLE the package ships
-      // (`seedFile`, objectstack#25779): `os build` bundles its bytes and the
-      // seed loader stores it as a `sys_file` this row owns.
-      signed_copy: seedFile('assets/seed-files/contract-signed-copy-sample.pdf', { name: 'Acme Corporation - signed contract (sample).pdf' }),
       description: 'Annual platform subscription with premium support tier.',
     },
     {
