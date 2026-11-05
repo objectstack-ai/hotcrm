@@ -273,6 +273,29 @@ tenant without O2C hides the contract and account fields by disabling the module
 upstream as its own platform card, and phase 1 carries a `Blocked-by:` line to it (AGENTS.md
 *Scope* rule 2).
 
+### Phase 1a readings — hotcrm#2315, `@objectstack/*` 18.3.0
+
+Phase 1 ships in two parts. **1a** (this card) is everything the module owns: the three objects,
+the plan-step stamp, the two rep views, the import mappings, the `ar_accountant` position and set,
+the permission rows, navigation and docs. **1b** (hotcrm#2416) is the contract and account totals
+through `objectExtensions`, held on the two phase 0 platform gaps. Measured on `pnpm dev`
+(`objectstack dev --seed-admin`, demo staffed) with REST probes and a browser pass; the PR body
+carries the commands.
+
+| Item | Reading | Verdict |
+| --- | --- | --- |
+| Account stamp | each of the three objects takes `crm_account` from its contract on insert and on a contract change (`*_row_stamp`, priority 50) | ✅ |
+| Due date | an invoice with no due date takes issue date + the contract's payment terms (`net_60`: 2026-09-26 → 2026-11-25) | ✅ |
+| Plan figures | one-hop summaries: *Invoiced* sums `issued` invoices only, *Received* sums payments; *Open* = planned − received. A four-step plan on CTR-0002 read 360,000 / 360,000 / 100,000 / 260,000 on the first step after one invoice and one payment | ✅ |
+| Invoice open amount | stored and hook-stamped, not a formula: a formula field refuses a filter (`INVALID_FIELD`), and the overdue view filters on it. The engine recomputes `paid_amount` through `update(parent)`, so the invoice's own `beforeUpdate` re-stamps `open_amount` on every payment write (360,000 → 260,000); a cancelled invoice reads 0 | ✅ |
+| Plan step from the invoice | a payment naming an invoice takes the invoice's plan step; an invoice of another contract is refused 400 | ✅ |
+| Relative dates in a list view | `{today}`, `{current_month_start}` and `{next_month_start}` in a view filter resolve on the read path — *Overdue invoices* and *Planned this month* need no schedule flow | ✅ |
+| Import | `crm_invoice_import` / `crm_payment_import`, upsert on `erp_ref`: the same file imported twice gives one row (created, then updated), stamped `source = import` with `synced_at`; contract, step and invoice cells resolve by number/name | ✅ |
+| Bill | `method = bill` requires a maturity date (`requiredWhen`), refused 400 without one | ✅ |
+| App-set field rows on module fields | `'crm_invoice.erp_ref': { readable: false }` in the app's `sales_rep` set: builds, boots, and `na.rep`'s read of an invoice omits `erp_ref` (reverted) — unlike phase 0 (b), a module object's **own** field is in the rule's object graph | ✅ |
+| Module disabled | the *Order to Cash* group goes, the three objects answer 404 `OBJECT_PACKAGE_DISABLED`, the contract and account pages lose the tabs; enable restores all three | ✅ |
+| Rep reads, finance writes | reps and managers read invoices and payments, `na.rep` gets 403 on creating either. **But** `controlled_by_parent` refuses a child write without EDIT on the master (ADR-0055): `na.rep` creating a plan step on a contract they read gets 403 "requires edit access to its master record (no edit permission on master 'crm_contract')", and the finance user (`ar_accountant`, read on contracts) gets the same on an invoice. Modify All on the child does not lift it | ⛔ platform — held for the maintainer's ruling |
+
 ## Decisions
 
 ### Recorded 2026-10-23

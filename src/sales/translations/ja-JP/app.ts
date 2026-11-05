@@ -758,6 +758,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'マーケティングユーザー',
       description: 'キャンペーンとそのメンバーを日々企画・運用します。',
     },
+    ar_accountant: {
+      label: '売掛金担当',
+      description: '経理：営業が各契約で見る請求書と入金を入力・インポートします。',
+    },
     na_sales_team: {
       label: '北米営業チーム',
       description: '北米テリトリーのチーム：北米テリトリーの取引先をすべて編集します。',
@@ -769,6 +773,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
+    ar_accountant: {
+      label: '売掛金担当',
+      description: '経理：すべての契約の請求書と入金を入力・インポートし、その背後の契約、取引先、回収計画を参照します。',
+    },
     crm_user: {
       label: 'CRM ユーザー',
       description: '全メンバーの既定セット：自分のリード・取引先・商談・活動と読み取り専用のカタログ。削除・エクスポート・すべて表示・システム権限はありません。',

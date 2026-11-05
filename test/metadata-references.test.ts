@@ -865,6 +865,11 @@ describe('forms can actually author the data the views depend on', () => {
       const objectName = viewObjectOf(v);
       const objDef = objects.find((o) => o.name === objectName);
       if (!objDef) continue;
+      // A view that authors no form leaves the object's form DERIVED, and a
+      // derived form offers every field (grouped by `fieldGroups`) — so no
+      // filter field can be missing from it. Order to Cash's views are the
+      // first in this app to rely on that (#2315).
+      if (!v.form && !Object.keys(v.formViews ?? {}).length) continue;
       const editable = formFieldsOf(v);
       const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
       const filtered = new Set<string>();

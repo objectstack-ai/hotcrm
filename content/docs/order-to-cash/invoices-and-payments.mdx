@@ -1,0 +1,72 @@
+---
+title: Invoices and Payments
+description: How finance enters and imports invoices and payments, how a due date is set, what Overdue Invoices lists, and how a bill is recorded.
+---
+
+# Invoices and Payments
+
+An **invoice** here is the record of an invoice finance issued in its own system; a **payment** is the record of money received. Finance writes both, by entry or by import. Sales reads them on the contract, on the account and in the **Order to Cash** lists.
+
+## Invoices [#invoices]
+
+| Field | What it holds |
+| --- | --- |
+| **Invoice Number** | The number on the invoice, as finance issued it |
+| **Contract** | The contract it was issued against |
+| **Billing Milestone** | The plan step it bills, if any. Only the steps of the invoice's contract are offered |
+| **Issue Date** | The day it was issued |
+| **Due Date** | The day payment is due (see below) |
+| **Amount** | As issued, tax included |
+| **Status** | **Issued**, or **Cancelled** |
+| **Paid** | The total of the payments made against this invoice |
+| **Open** | **Amount** minus **Paid**; nothing for a cancelled invoice |
+| **Invoice File** | The invoice document, if you attach one |
+
+**The due date.** Leave **Due Date** empty and it is set when you save: the **Issue Date** plus the contract's **Payment Terms** (Net 15, 30, 60 or 90 days; Due on Receipt is the issue date itself). Enter a date and it is kept as entered.
+
+**Cancelled invoices.** An invoice cancelled or fully credited at the source is set to **Cancelled** here. It then leaves every figure: its plan step stops counting it as invoiced, and it is open for nothing.
+
+## Overdue Invoices [#overdue-invoices]
+
+The **Overdue Invoices** list under **Order to Cash → Invoices** shows every invoice you can see that is **Issued**, whose **Due Date** is before today, and that still has an **Open** amount, oldest due date first. An invoice leaves the list the day its payments cover it, or when finance cancels it.
+
+## Payments [#payments]
+
+| Field | What it holds |
+| --- | --- |
+| **Payment Number** | Numbered for you: PAY-00001, PAY-00002… |
+| **Contract** | The contract the money was received for |
+| **Invoice** | The invoice it pays, if any. Only the invoices of the payment's contract are offered |
+| **Billing Milestone** | The plan step it counts toward. Filled in from the invoice when there is one; set it yourself for an advance paid before its invoice |
+| **Payment Date** | The day the money was received |
+| **Amount** | How much was received |
+| **Method** | **Bank Transfer**, **Bill** or **Other** |
+| **Bill Maturity Date** | For a bill: the day it turns into cash |
+
+**One row per invoice.** A receipt that pays several invoices is recorded as one payment per invoice, split the way finance already split it. There is no allocation step in HotCRM.
+
+**An advance before its invoice.** Record the payment against the plan step. When the invoice is issued, fill in **Invoice** on the same payment.
+
+**A payment against another contract's invoice is refused**, with a message naming the invoice. This can only happen through an import, since the form offers only the contract's own invoices.
+
+**Bills.** An acceptance bill, a bill of exchange or a promissory note counts as received on the day it is received: record it with **Method** set to **Bill** and its **Bill Maturity Date**, which is then required. The maturity date tells sales when the bill turns into cash. What happens to the bill after that (endorsement, discounting) is finance's, and is not recorded here.
+
+## Importing [#importing]
+
+Finance can load invoices and payments from a spreadsheet, an accounting package's export or an ERP's, with the two import mappings **Invoice Import (CSV)** and **Payment Import (CSV)**. Templates with the right column headers are `invoices.csv` and `payments.csv` in `assets/import-templates/`.
+
+| Column | Invoices | Payments |
+| --- | --- | --- |
+| ERP Reference | ✓ the key | ✓ the key |
+| Contract | ✓ the contract number, such as CTR-0001 | ✓ |
+| Invoice Number | ✓ | — |
+| Invoice | — | ✓ the invoice number |
+| Billing Milestone | ✓ the step's name | ✓ |
+| Issue Date, Due Date, Amount, Status | ✓ | — |
+| Payment Date, Amount, Method, Bill Maturity Date | — | ✓ |
+
+- **The ERP Reference is the key.** Importing a row whose **ERP Reference** is already on an invoice updates that invoice instead of adding a second one, so the same file can be imported again after finance changes it. An ERP writing through the API uses the same key.
+- **Every imported row is marked.** Its **Source** reads **Import** and its **Synced At** is the moment of the import, so a reader can see where a figure came from and how old it is. A row entered by hand reads **Manual entry**.
+- **References resolve by name.** A contract number, invoice number or step name that matches nothing fails that row, and the import report names it.
+
+Amounts are in your company's currency, like every amount in HotCRM. Convert before importing.

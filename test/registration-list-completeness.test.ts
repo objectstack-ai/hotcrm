@@ -26,6 +26,7 @@ import * as salesHooks from '../src/sales/objects/hooks';
 import * as serviceHooks from '../src/service/objects/hooks';
 import * as revenueHooks from '../src/revenue/objects/hooks';
 import * as marketingHooks from '../src/marketing/objects/hooks';
+import * as o2cHooks from '../src/o2c/objects/hooks';
 
 import * as salesSkills from '../src/sales/skills';
 import * as serviceSkills from '../src/service/skills';
@@ -188,6 +189,7 @@ const SPECS: Spec[] = [
       service: serviceHooks,
       revenue: revenueHooks,
       marketing: marketingHooks,
+      o2c: o2cHooks,
     },
     list: allHooks,
     isEntry: isHook,

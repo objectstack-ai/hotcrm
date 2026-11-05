@@ -5,7 +5,7 @@ description: Where HotCRM's revenue scope ends — the two outbound events that 
 
 # Billing Hand-off
 
-HotCRM runs the **commercial** side of revenue: finding the customer, agreeing the price, signing the contract. It does not run the **financial** side. There is no Order, no Invoice, no Payment object in this app, and none is planned.
+HotCRM runs the **commercial** side of revenue: finding the customer, agreeing the price, signing the contract. It does not run the **financial** side: the sales, service, revenue and marketing modules model no order, invoice or payment, and issue none.
 
 That is a deliberate boundary, not a gap. Billing, tax, collections and revenue recognition are a different system's job, and a CRM that half-models them ends up with two disagreeing sets of numbers. What HotCRM owes that system is one thing done properly: a **reliable hand-off** at the two moments money becomes real.
 
@@ -23,7 +23,7 @@ That is a deliberate boundary, not a gap. Billing, tax, collections and revenue 
 Two consequences worth stating plainly, because people look for them:
 
 - **HotCRM holds no stock figure at all.** A product carries no quantity on hand, and closing a deal decrements nothing. Inventory is the fulfilment system’s record, and this app deliberately keeps no second copy of it.
-- **Payment status is never mirrored back.** Nothing in HotCRM tells you whether an invoice was paid. A future inbound integration could, but it does not exist today, and no field pretends otherwise.
+- **Payment status comes back only through Order to Cash.** The two events below go out; nothing comes back on them. Where your company uses the [Order to Cash](/docs/order-to-cash) module, finance enters or imports its invoices and payments there, so sales can see what is invoiced, paid and overdue on each contract. That module is a window onto finance's books, not a second set of them.
 
 ## The two events
 

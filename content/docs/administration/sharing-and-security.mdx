@@ -30,6 +30,9 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | Quote | Controlled by Parent (Account) | A quote is priced for an account and follows the account's sharing — see *Controlled by Parent, in practice* below |
 | Quote Line Item | Controlled by Parent (Quote) | A line is part of the quote |
 | Contract | Controlled by Parent (Account) | A contract *is* account data and follows the account's sharing — see *Controlled by Parent, in practice* below |
+| Billing Milestone | Controlled by Parent (Contract) | A step of the contract's collection plan; it follows the contract, so the account |
+| Invoice | Controlled by Parent (Contract) | Finance's record of an invoice issued against the contract; it follows the contract |
+| Payment | Controlled by Parent (Contract) | Finance's record of money received on the contract; it follows the contract |
 | Case | Private | An agent's queue is their own; escalations are shared |
 | Task | Private | Personal activity items |
 | Event | Private | Personal activity items, like tasks |
@@ -47,7 +50,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 
 ### Controlled by Parent, in practice
 
-For the nine parent-derived objects above, there is nothing to configure per user: access is *computed*.
+For the twelve parent-derived objects above, there is nothing to configure per user: access is *computed*.
 
 - **Read** — you see the rows whose parent you can see, and "can see" means every route that would let you open the parent directly: you own it, a sharing rule granted it, or someone shared it with you by hand. Measured against the shipped stack (platform 17.0.0-rc.4): a rep who can read exactly one account reads **that** account's contacts, quotes and contracts and no others, and reads the line items of exactly those quotes — the chain quote line item → quote → account is resolved level by level (platform 17.4.0, objectstack-ai/objectstack#11082). The account reaching that rep only through a territory rule is the point — a parent held by a share counts as a parent you can see.
 - **Write** — adding, changing or removing a row requires **edit** access to the parent, resolved the same way as reads. A row under a parent you cannot edit is refused, naming the parent that stopped it.
@@ -58,13 +61,14 @@ Because access is derived, ownership of the child row is irrelevant — a quote 
 
 ## Layer 2 — Positions
 
-A **position** is a flat group used to distribute access. HotCRM ships twelve:
+A **position** is a flat group used to distribute access. HotCRM ships thirteen:
 
 ```
 executive
 sales_director      sales_manager      sales_rep
 service_director    service_manager    service_agent
 marketing_director  marketing_manager  marketing_user
+ar_accountant
 na_sales_team       eu_sales_team          (territory groupings)
 ```
 
@@ -131,7 +135,7 @@ A case or lead that arrives with **no owner** waits in a queue: **Support Intake
 
 ### A rule widens one object, not the records underneath it
 
-Sharing rules are authored **per object**. Widening `Account` widens accounts — the records hanging off a shared account keep their own baseline, except the three derived from it (Contact, Quote, Contract):
+Sharing rules are authored **per object**. Widening `Account` widens accounts — the records hanging off a shared account keep their own baseline, except the ones derived from it (Contact, Quote, Contract, and through the contract its Billing Milestones, Invoices and Payments):
 
 | Related list on a shared account | What the recipient sees |
 | --- | --- |
@@ -139,6 +143,9 @@ Sharing rules are authored **per object**. Widening `Account` widens accounts �
 | Opportunities | Their own deals only, plus open deals ≥ $100,000 if they hold `sales_director` or `executive` |
 | Quotes | This account's quotes — Quote follows the account, and so do the quotes' line items |
 | Contracts | This account's contracts — Contract follows the account; whether they can *edit* one is the object-level right on their profile (a Sales Rep cannot) |
+| Billing Milestones | This account's plan steps — Billing Milestone follows the contract, which follows the account |
+| Invoices | This account's invoices — Invoice follows the contract, which follows the account |
+| Payments | This account's payments — Payment follows the contract, which follows the account |
 | Cases | Their own only, plus open critical cases if they hold `service_manager` or `service_director` |
 | Tasks | Their own only |
 | Events | Their own only |

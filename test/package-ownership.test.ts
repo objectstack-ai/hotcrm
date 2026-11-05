@@ -44,7 +44,8 @@ const REVENUE_OBJECTS = [
   'crm_opportunity_line_item', 'crm_price_book', 'crm_price_book_entry', 'crm_product', 'crm_quote', 'crm_quote_line_item',
 ];
 const MARKETING_OBJECTS = ['crm_campaign', 'crm_campaign_member'];
-const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS];
+const O2C_OBJECTS = ['crm_billing_milestone', 'crm_invoice', 'crm_payment'];
+const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS, ...O2C_OBJECTS];
 
 /**
  * The assignment rule's roster of deliberate exceptions (AGENTS.md rule 11) —
@@ -101,6 +102,10 @@ describe('every object has exactly one owner', () => {
 
   it('the marketing module owns the campaign and campaign-member objects', () => {
     expect(namesOf(body(MARKETING_ID).objects)).toEqual(MARKETING_OBJECTS);
+  });
+
+  it('the Order to Cash module owns the collection plan, invoice and payment objects (#2315)', () => {
+    expect(namesOf(body(O2C_ID).objects)).toEqual(O2C_OBJECTS);
   });
 
   it('the app package owns the contract — one dependency level (`module-split-plan.md` items 10, 11)', () => {
@@ -202,6 +207,7 @@ describe('every object has exactly one owner', () => {
     expect(grantingOn(SERVICE_OBJECTS).length, 'no app-owned set grants on a service object').toBeGreaterThan(0);
     expect(grantingOn(REVENUE_OBJECTS).length, 'no app-owned set grants on a revenue object').toBeGreaterThan(0);
     expect(grantingOn(MARKETING_OBJECTS).length, 'no app-owned set grants on a marketing object').toBeGreaterThan(0);
+    expect(grantingOn(O2C_OBJECTS).length, 'no app-owned set grants on an Order to Cash object').toBeGreaterThan(0);
   });
 });
 

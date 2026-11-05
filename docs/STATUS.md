@@ -19,10 +19,10 @@ loader registers:
 
 ```text
 HotCRM v6.1.0
-Data: 20 Objects  373 Fields
-UI: 1 Apps  15 Views  10 Pages  5 Dashboards  10 Reports  40 Actions
+Data: 23 Objects  409 Fields
+UI: 1 Apps  18 Views  10 Pages  5 Dashboards  10 Reports  40 Actions
 Logic: 35 Flows
-Security: 12 Positions  7 Permissions
+Security: 13 Positions  8 Permissions
 ```
 
 Validation command:

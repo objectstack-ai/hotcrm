@@ -93,6 +93,9 @@ const RUNTIME_TEST_FILES = [
   // book whole, and the Add Products screen flow, run as the console runs it.
   'quote-price-book.test.ts',
   'flow-price-book-add-products.test.ts',
+  // REQ-0007 phase 1a (#2315) — Order to Cash's five hooks and the plan
+  // figures they keep beside the summaries, on the booted app.
+  'o2c-collection-plan.test.ts',
   // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
   // files above, and the same reason: the gate is authored on four surfaces
   // (the field default, `convert_lead.visible`, `lead_conversion`'s

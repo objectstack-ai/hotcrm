@@ -87,9 +87,9 @@ type AnyRec = Record<string, any>;
  */
 const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
 // A group with no served entry is not drawn — the console renders no empty
-// group (measured for `group_order_to_cash`, #2315: its module contributes no
-// item until phase 1) — so the tour, which says what the sidebar shows, leaves
-// it out until something fills it.
+// group (measured for `group_order_to_cash`, #2315, before its module
+// contributed an item) — so the tour, which says what the sidebar shows, leaves
+// such a group out until something fills it.
 const GROUPS = NAV.filter((n) => n.type === 'group' && ((n.children ?? []) as AnyRec[]).length > 0);
 const PINNED = NAV.filter((n) => n.type !== 'group');
 
@@ -316,13 +316,14 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 });
 
 describe('the source facts the quick-tour table now rests on (#960)', () => {
-  it('the app has two pinned top-level entries and eight groups', () => {
+  it('the app has two pinned top-level entries and nine groups', () => {
     expect(PINNED.map((p) => p.label)).toEqual(['Home', 'Sales Home']);
     // Service leads the groups (#2060 item 5): its first entry, Service
     // Overview, is where a service persona lands — see `crm.app.ts`.
     expect(GROUP_LABELS).toEqual([
       'Service',
       'Sales',
+      'Order to Cash',
       'My Work',
       'Activity',
       'Marketing',
@@ -339,7 +340,7 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
 
   it('Reports and Help are the groups that stay collapsed (#2295, #2327)', () => {
     expect(COLLAPSED).toEqual(['Reports', 'Help']);
-    expect(EXPANDED).toEqual(['Service', 'Sales', 'My Work', 'Activity', 'Marketing', 'Insights']);
+    expect(EXPANDED).toEqual(['Service', 'Sales', 'Order to Cash', 'My Work', 'Activity', 'Marketing', 'Insights']);
   });
 
   it('carries no navigation label matching any name the page calls a phantom', () => {
