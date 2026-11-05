@@ -756,6 +756,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Usuario de Marketing',
       description: 'Planifica y gestiona a diario las campañas de marketing y sus miembros.',
     },
+    ar_accountant: {
+      label: 'Cuentas por cobrar',
+      description: 'Finanzas: registra e importa las facturas y los cobros que ventas ve en cada contrato.',
+    },
     na_sales_team: {
       label: 'Equipo de Ventas de Norteamérica',
       description: 'Equipo territorial de Norteamérica: edita todas las cuentas del territorio de Norteamérica.',
@@ -767,6 +771,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
+    ar_accountant: {
+      label: 'Cuentas por cobrar',
+      description: 'Finanzas: registra e importa las facturas y los cobros de cada contrato, y lee los contratos, las cuentas y los planes de cobro que los respaldan.',
+    },
     crm_user: {
       label: 'Usuario de CRM',
       description: 'El valor predeterminado de cada miembro: sus propios prospectos, cuentas, oportunidades y actividades, y catálogos de solo lectura, sin eliminar, exportar, Ver todo ni permisos de sistema.',

@@ -90,6 +90,13 @@ export const SalesManagerProfile = {
     // anyway — so the intended derivation would return the same rows. See
     // `campaign_member.object.ts` and objectstack-ai/objectstack#5386 (#694).
     crm_campaign_member:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // Order to Cash (#2315): the rep's shape — see `sales-rep.profile.ts`. All
+    // three are `controlled_by_parent` under the contract, whose write gate asks
+    // for edit on the account, which this set holds org-wide, so a manager keeps
+    // any team contract's plan; invoices and payments stay finance's.
+    crm_billing_milestone: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
+    crm_invoice:           { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    crm_payment:           { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     // Line items: full CRUD so a manager can fix pricing on any rep's deal or
     // quote. Both objects are `controlled_by_parent`, so there is no scope to
     // author — but that derivation does not narrow these rows to the deals and
