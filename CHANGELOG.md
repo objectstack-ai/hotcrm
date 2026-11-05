@@ -1,5 +1,648 @@
 # Changelog
 
+## 6.1.0
+
+### Minor Changes
+
+- 700b567: **Record editors upload and delete attachments, and delete comments (#2038).** A sales rep, a sales manager, a marketing user, a service agent and an administrator can now upload a file to the Attachments panel of a record they can edit (a quote PDF, an executed contract, a case screenshot) and delete files there. Until now only the platform administrator could: the profiles granted the panel read only. The same profiles can now also delete a comment in a record's Discussion.
+  
+  Where an upload or a delete is accepted is decided by the record, as the Files & Comments guide says. You upload only to a record you can edit. You delete a file you uploaded, or any file on a record you can edit. You delete a comment you wrote, or any comment on a record you can edit. A rep who reads a contract but cannot edit it is refused an upload there, and a delete of someone else's file or comment there. These rules are the platform's, from ObjectStack 18.1.0, which this app already runs on.
+  
+  A member who holds only the default **CRM User** set still sees and downloads files but uploads and deletes none. Nothing changes for anonymous web-form visitors.
+- a4b3560: Record titles are stored, so an exported lookup column imports back, and the app moves to ObjectStack 18.1.0
+  
+  **Nine record titles are stored fields now, not formulas (#2230).** Account, contact, lead,
+  forecast, product, quote, campaign, case and knowledge article each title their records with a
+  field the platform computes from the record's own columns (for example `ACC-000004 - Stark
+  Medical`, or a contact's full name). Until now that title was computed each time it was read and
+  stored nowhere, so the import could not match it. It is now computed when the record is written and
+  stored with it, with the same wording as before:
+  
+  - **An export imports back.** A contact export whose *Account* column reads `ACC-000004 - Stark
+    Medical` now links each row to that account on re-import. Before, every such row was refused with
+    "no record matches". The same holds for every lookup to one of the nine objects.
+  - **A new record's title carries its number.** A case created today is titled `CASE-00039 -
+    <subject>` the moment it is saved.
+  - **An account or campaign with no number is titled by its name**, as a product already was.
+    Before, such a record had no title at all.
+  - The title stays read-only and is not offered on any form.
+  
+  **Upgrading an existing database needs one step.** Records stored before this release have no
+  stored title yet, so until they are next edited their header, lookup chip and search hit fall back
+  to the record id. Run the backfill once after the upgrade, report-only first:
+  
+  ```bash
+  pnpm exec tsx scripts/backfill-record-titles.ts --url https://<your-org> --email <admin> --password <pw>
+  pnpm exec tsx scripts/backfill-record-titles.ts --url https://<your-org> --email <admin> --password <pw> --apply
+  ```
+  
+  It re-saves one unchanged field on each untitled record, so the platform computes and stores the
+  title, and it is safe to run again. A new install needs nothing. See `docs/MAINTENANCE.md`.
+  
+  **ObjectStack 18.1.0.** All 23 `@objectstack/*` dependencies move from 18.0.0 to 18.1.0 together,
+  pinned exact, and `specVersion` and `engines.protocol` follow to `^18.1.0`. 18.1.0 carries the two
+  platform fixes the stored titles need: a stored title that reads an autonumber is computed with the
+  number (objectstack-ai/objectstack#25073), and the import matches a lookup cell by the target's
+  stored title (objectstack-ai/objectstack#25033).
+  
+  - **Approval names are translated.** The language packs now name the six approval processes and
+    their steps in Chinese, Japanese and Spanish, and 18.1.0 serves an approval request with them in
+    the reader's language, for example *大额商机审批 · 销售经理审核* for *Large Deal Approval · Sales
+    Manager Review*.
+  - **The Details, Related and Activity tabs** of the opportunity and case record pages are translated
+    in the same three languages.
+- b3df069: **Closing a deal no longer fails the first save.** On the opportunity Edit and New form, **Win Reason** now appears right beside **Stage** as soon as you pick **Closed Won**, and **Loss Reason** as soon as you pick **Closed Lost**. Before, both sat on the last tab (**Win / Loss**, collapsed), so picking Closed Won and pressing Update always failed once with "Please check the highlighted fields: Win Reason" and jumped to that tab.
+  
+  The rule itself is unchanged: a deal still cannot close without its reason. **Loss/Win Details** stays on the **Win / Loss** tab. On the opportunity detail page, both reasons are now listed under **Sales Process** with Stage instead of under **Classification**.
+- b8332aa: Clause-②: no
+  Metadata-protocol: none
+  
+  **A forecast is titled by its period and its owner: "Q4 2026 · Nina Reyes" (#2242).** A forecast is one row per owner and period, but its title named the period only ("Q4 2026 (2026-10-01)"), so two reps' forecasts for the same quarter read the same on the record, in Recent items and in a lookup. The title now names the owner after the period label. The name is read from the forecast's **Owner**, so a forecast handed to another owner is re-titled by that save. A forecast with no owner is titled by its period label alone ("Q4 2026").
+  
+  The owner's name is copied into the title when the forecast is saved, so renaming a user re-titles their forecasts at each forecast's next save, not at once.
+  
+  **FROM → TO.** "Q4 2026 (2026-10-01)" → "Q4 2026 · Nina Reyes". No step is needed on upgrade: forecasts saved before the stored record titles of #2230 have no title yet, and `scripts/backfill-record-titles.ts` (described there) titles them in the new form. A development database created since #2230 keeps the old form on each forecast until it is next saved; `pnpm demo:reset` re-seeds it.
+- 72f31cd: **A sales manager edits every forecast and can no longer delete one (#2277).**
+  
+  Who can do what on forecasts:
+  
+  - A Sales Manager still reads every rep's forecast and edits any of them, and can still reassign one to another owner.
+  - Deleting a forecast is now an administrator action only. A sales manager's delete is refused (403).
+  
+  **Why it changed.** The Sales Manager profile said "no delete" on forecasts. But it also granted *Modify All*, and *Modify All* includes delete, so a manager could in fact delete any forecast. The documentation already said a manager cannot delete one. Now the product matches it. The edit reach comes from a new built-in sharing rule, **Forecasts — Sales Manager Edit**. It grants edit on every forecast to the `sales_manager` position. An edit share never grants delete. Forecasts stay private to their owners for everyone else.
+  
+  **FROM → TO.** A sales manager who deleted forecasts, for example to hand a hand-entered quarter back to the nightly snapshot, now asks an administrator to do it. Nothing else changes, and no data migration is needed.
+  
+  This also clears the profile entry that `@objectstack/spec` after 18.1.0 refuses at build: `allowDelete: false` beside `modifyAllRecords: true` (objectstack-ai/objectstack#25707).
+- 270bedf: **An account created by Convert Lead no longer goes to account approval (#2285).**
+  
+  Converting a lead used to send the new account to the Sales Manager's approval inbox, without telling the rep who converted it. Qualifying the lead is already the check, so converting it is not a second application.
+  
+  - An account that **Convert Lead** creates starts no approval. Its **Approval Status** stays blank and nothing reaches the approval inbox.
+  - The account gets a new field, **Converted From Lead**, which links back to the lead. It shows only on converted accounts.
+  - Every other new account goes to approval as before: the New form, an import, a REST create. A conversion that reuses an existing account leaves that account's approval status unchanged.
+  
+  **Only the conversion can set Converted From Lead.** A create or edit that tries to fill it in by hand, from a form or through the API, is refused with `VALIDATION_FAILED` (400). Once it is set it cannot be pointed at another lead. Without this, filling the field in would skip the approval.
+  
+  **FROM → TO.** Accounts converted before this release keep the approval request they already have, and that request is decided as before. No data migration is needed.
+- bbd375b: **Ten KPI tiles now say whether the number went up or down (#2296).** The comparison is computed by the platform from the data, not typed into the dashboard.
+  
+  - Tiles that follow the date picker compare with the window just before the one the picker selects ("16% vs previous period"): on CRM Overview, Total Revenue, Deals Won and Avg Deal Size (Selected Period); on Sales Performance, Open Pipeline (Selected Period); on Customer Service, Open Cases, Avg Resolution Time and SLA Violations. When the reader picks All time there is nothing to compare with, and the tile shows its number alone.
+  - Tiles with their own calendar window compare with the same span last year ("vs last year"): Total Revenue (YTD) on Executive Overview, Closed Won (QTD) and Avg Deal Size (QTD) on Sales Performance. Their windows now end today, which is what year-to-date and quarter-to-date always meant.
+  
+  A tile whose comparison window has no records shows a dash instead of a percentage. The tiles on Sales Activity and Sales Home have no date window, so they still show the number alone.
+- 60d745b: Clause-②: no
+  Metadata-protocol: none
+  
+  **Convert Lead ends on a result screen that links what it created (#2297).** The conversion used to finish on a "Lead converted successfully!" toast and leave the rep on the lead, with no link to the new account, contact or opportunity and no word that the account had gone to a sales manager's approval inbox. It now ends on a screen that lists the account, the contact and, when one was created, the opportunity, each by name as a link to its page; with no opportunity that line shows a dash. The screen also says whether the account is waiting for account approval, read from the account itself after the conversion. Everything is written before the screen appears: Submit finishes the run and refreshes the lead, and closing the screen any other way undoes nothing. The screen is translated in all four locales.
+  
+  A caller that drives the conversion through the REST door or the `action_convert_lead` AI tool's `resume_run` now gets the run back paused on this screen after answering the conversion screen, with every write already done, instead of completed; one more resume with no values completes the run.
+- 5eb2f0d: Clause-②: no
+  Metadata-protocol: none
+  
+  **Contracts now belong to the HotCRM app package, not the revenue module (#2310).** The contract object (`crm_contract`) keeps its name, its fields and every record. What changes is which package of the HotCRM artifact owns it: `app.objectstack.hotcrm` instead of `app.objectstack.hotcrm.revenue`, as `GET /api/v1/packages` and Studio now report. Everything built on the contract moved with it: its activation hook, its list views, the expiry, renewal and billing hand-off flows, the shared **Payment Terms** option list, the two contract notification emails and the demo contracts. An installed tenant takes the move in this one upgrade, while HotCRM still ships as one artifact.
+  
+  Why: every add-on package is to depend on the HotCRM app package and nothing else (module-split plan, items 10 and 11, ruled 2026-10-26). The planned order-to-cash and project-delivery add-ons both hang off the contract, so leaving it in revenue would have made them depend on revenue too. The contract only points at app-package objects (account, contact, opportunity, user), so the move adds no reference back into a module. Accepting a quote still drafts its contract, and the account and contact delete guards still count activated contracts.
+  
+  One visible change in the sidebar: under **Sales**, **Contracts** now comes right after **Sales Performance** and before **Quotes**, because it is the app's own entry now and the revenue module's **Quotes** and **Products** follow the app's entries. The Contracts guide moved from the Revenue section of the documentation to the Sales section (English, Simplified and Traditional Chinese).
+- afdf9a0: Clause-②: no
+  Metadata-protocol: none
+  
+  **Price books: a product can now carry more than one price.** A new **Price Books** entry under **Sales** lists named price lists (a partner tier, a region, a promotion with **Valid From** / **Valid To** dates), each holding one **Price Book Entry** per product with that product's **List Price** in the book. Exactly one book is the **Standard** book: a second standard book is refused, naming the current one, and the standard book can neither lose the flag nor be deleted. A book refuses a second entry for a product it already prices, naming the book and the product. Sales managers create books and edit the ones they own; sales reps read every book; administrators manage all of them. The sample data adds a **Standard** book with every catalog product at its list price, and a single-organization install that already has data gets that book once, on its first start after the upgrade; a price you change in it afterwards stays changed. Quotes still price from the product: choosing a book on a quote is the next step (#2318). Prices are in the organization's default currency; multi-currency waits for the platform (#2313).
+- f340e63: Clause-②: no
+  Metadata-protocol: none
+  
+  **Quotes now price from a price book (#2318).** A quote carries a **Price Book**: a new quote starts on the **Standard** book, and a rep can pick another active book before adding line items. A quote line's **List Price** is now the product's price in that book (its **Sales Price** still starts there and stays negotiable), and a product the book does not price, or prices with an inactive entry, is refused on the line with a message naming the book and the product. Lines already written keep their prices when a book's entries change later. A quote's book cannot change once it has line items, is frozen with a settled quote, and a book any quote uses cannot be deleted (turn off **Active** instead). Opportunity line items still take the product's own **List Price**.
+  
+  The **Standard** book now follows the catalog: a product added later gets its Standard entry at its **List Price**, and changing a product's **List Price** reprices that entry. Quotes created before this release have no **Price Book**; their new lines price from the Standard book. A SaaS tenant's starting catalog now includes the Standard book.
+  
+  A price book's page gains **Add Products**, which gives every active product the book does not price yet an entry at one percentage of its **List Price** (80 for a partner tier 20% below it), leaving existing entries alone. Price books get an **All Price Books** list, and a product's page lists its entries in every book with their price. All of it is translated in the four locale packs, and the Price Books and Quotes guides describe it (#2318).
+- 173b488: Clause-②: no
+  Metadata-protocol: none
+  
+  **In-app manuals under a new Help group.** The last entry of the HotCRM sidebar is now **Help** (collapsed), with the **User Manual** for every member, the **Admin Manual** for administrators only, and the **Revenue Manual**, which the revenue module adds and takes with it when it is uninstalled. Every persona still opens the app where it did.
+  
+  The four package docs are split into nine pages by topic, each with a Chinese version that opens when the user's language is Chinese:
+  
+  - User Manual: Overview; Leads; Opportunities (including the approval rules for rejected and recalled deals); Contracts; Cases & SLAs; Knowledge.
+  - Admin Manual: Access (positions, sharing rules, permission sets); Automation (where every threshold lives).
+  - Revenue Manual: Quotes.
+  
+  The Admin Manual is published to the System Administrator permission set (Tenant Administrator in the multi-organization composition): other members neither see the entry nor can read its pages. The lifecycle diagrams of leads, opportunities, contracts, quotes and cases are drawn from each object's real state machine.
+  
+  Removed doc names: `crm_sales`, `crm_admin` and `crm_service` are replaced by the pages above. A link to one of them now shows "not found".
+- 0312803: Clause-②: no
+  Metadata-protocol: none
+  
+  **Six more manual pages, each with a Chinese version.** The in-app manuals under **Help** gain the pages a new member and a new administrator reach for first:
+  
+  - User Manual, Getting Started: **Getting Started — Your First Day** (where HotCRM opens for each role, My Work, the approval inbox, notifications, search, Help) and **Using the Assistant** (what each HotCRM skill of the platform assistant does on ObjectOS Cloud and Enterprise, and which buttons it may press).
+  - User Manual, Sales: **Activities** (logging calls and meetings, the activity clock held meetings keep, Schedule Follow-up, tasks, reminders, Do Not Call). The Tasks section of the Opportunities page moves here.
+  - User Manual, new **Analytics** group: **Metrics** (what each dashboard measure, tile and report counts, from win rate to quiet accounts).
+  - Admin Manual: **Go-Live Checklist** (demo data, people, positions, permission sets, scheduled work, import, checking as a user), which the Admin Manual now opens on, and **Importing Data** (order, the key each row is matched on, suspected duplicate leads, owners, common refusals).
+  
+  The Automation page's list of AI skills is replaced by a link to Using the Assistant. The metrics, skills and import-matching statements are each checked against the compiled app, so a renamed measure, skill action or import key fails the build until the page follows.
+- 6c52f22: Clause-②: no
+  Metadata-protocol: none
+  
+  **A Marketing Manual under Help, and five more module pages, each with a Chinese version.** The service, revenue and marketing modules now explain their own rules in the app:
+  
+  - User Manual, Service: **Case Triage** (what the assistant reads when it triages a case, the order it weighs things in, and why setting the priority, escalating and closing stay with a person).
+  - Revenue Manual: **Products & Price Books** (what a product carries, how its price reaches a deal or quote line, why a sold product is retired rather than deleted, and what price books do today) and **Billing Hand-off** (the two moments a won deal or an activated contract is sent to your billing system, and what travels with it). The Revenue Manual's one group is now titled *Revenue* rather than *Quotes*.
+  - New **Marketing Manual**, opened from **Help** after the Revenue Manual: **Campaigns** (statuses, member statuses, what each number counts and what ROI includes) and **Campaign Automation** (when Enroll Members, Add to Campaign and the nightly auto-completion run, and what each refuses). The manual and its Help entry belong to the marketing module and leave with it.
+  
+  The billing hand-off's two moments, the auto-completion time and the buttons the triage page names are checked against the compiled app, so a changed flow or a renamed button fails the build until the page follows.
+- 21664f7: Clause-②: no
+  Metadata-protocol: none
+  
+  **Record pages offer only the actions a record can still take, and quotes and cases get buttons for their status moves (#2366).** Who may do what is unchanged.
+  
+  - **Quotes:** each status move made by hand has a button, shown only on the statuses it leaves from: **Submit for Review**, **Mark Presented**, **Accept** (asks first), **Reject** and **Revise** (back to Draft). An Accepted, Rejected or Expired quote shows no **Edit**, and its line items show no **New**. A Rejected quote is now frozen like an Accepted one until **Revise** takes it back to Draft: only Internal Notes can change, and its lines take no change. A new quote can no longer be created as Accepted, Rejected or Expired: the New form does not offer them, and the save is refused.
+  - **Cases:** a Resolved or Closed case has a **Reopen Case** button, offered to whoever may edit cases. It moves the case back to In Progress. The SLA Due Date is kept and a recorded breach stays recorded; the Service Manual says so.
+  - **Leads:** a converted lead shows no **Edit** and cannot be edited inline. The lock behind it is unchanged.
+  - **Campaigns:** Number Sent, Responses, Leads, Converted Leads, Opportunities, Won Opportunities and Actual Revenue are read-only, and so are a member's Response Date and Has Responded. The system keeps all of them, and a value typed through the API is now dropped instead of standing until the next recompute.
+  - **Status colours:** the status options of quotes, campaigns, campaign members and knowledge articles declare whether each one is open, won or lost, so a record's path draws each one from that declaration instead of guessing from the value's name.
+  
+  The in-app Sales, Service and Marketing manuals describe each change in English and Chinese, and the documentation site's Quotes page says how a rejected quote is revised.
+- 52083a5: Clause-②: no
+  Metadata-protocol: none
+  
+  **Each persona's own work comes first in the sidebar and in the default views (#2367).** Who may read what is unchanged, and every persona opens the app where it did before.
+  
+  - **Sales reps:** the sidebar runs **Sales Home**, then **Sales**. The **Service** group, which held only **Knowledge** for a rep, is no longer shown to a rep; a rep's **Knowledge** is the last entry of **Sales** and opens the published articles, so the search box still finds articles by title.
+  - **Service agents and service managers:** **Opportunities** and **My Deals** are no longer in their sidebar. Both lists were always empty for them; the deals stay readable from an account's related list.
+  - **Accounts:** the tabs open with **My Accounts**, **At-Risk Accounts** and **Enterprise Accounts**, ahead of the card and map views, so a rep's own list is no longer in the overflow menu.
+  - **Opportunities:** **My Open Deals** follows **Open Deals**, ahead of the board, calendar, timeline and card views.
+  - **SLA Calendar:** shows open cases only; resolved and closed cases are left out.
+  - **Campaign Schedule** opens at Month zoom and **Contract Terms** at Quarter zoom, instead of Day.
+  - **All Forecasts:** one heading per period, newest first, instead of two nested headings over each row.
+  
+  The documentation site's quick tour, Sales, Cases, SLA and Forecasting pages and the in-app Getting Started page say what each surface does now, in English and Chinese.
+- 8820270: Clause-②: no
+  Metadata-protocol: none
+  
+  **Accounts, products, quotes, campaigns and knowledge articles are titled by their name alone (#2369 row 10).** Their title used to put the number first, "ACC-000002 - Globex Industries", so the name was cut short in lookups, lists and the record header. The title is now just the name, "Globex Industries" (the article's own title on a knowledge article). The number has not gone anywhere: it stays a list column, it leads the summary strip under the record header, and the lookup picker shows it under each name ("Account Number: ACC-000002"). Search still finds a record by its number. Cases keep their number first, because agents speak by case number.
+  
+  - **Messages name the record the same way.** Quote messages ("Quote Globex Manufacturing Suite Proposal accepted."), the frozen-quote refusals, the closed-campaign enrollment refusal and the duplicate price-book entry refusal now name the record by its name. A contract drafted from an accepted quote still names the quote by number and name, because quote names may repeat and the contract does not link back to the quote.
+  - **Line items follow their product.** An opportunity or quote line is named after its product, so it now reads "Premium Support" instead of "PRD-0009 - Premium Support".
+  - **Importing: a shared name is refused, not guessed.** A lookup cell names a record by its name. Account names are unique, but product, quote, campaign and article names may repeat; when two records share the name in a cell, the row is refused as ambiguous. Name such a record by its number (Product Code, Quote Number, Campaign Code, Article Number) or its record id. An export taken before this release that names these records as "PRD-0001 - Name" no longer matches; use the name, the number or the id.
+  
+  **Upgrading.** Nothing to run. The five objects' old `display_title` column stays in the database, unused, and the server logs it once at boot as an orphaned column; drop it with `os migrate apply --allow-destructive` if you want it gone. Existing line items still carry the old "PRD-0001 - Name" copy until they are first read, which re-titles them; `scripts/backfill-line-product-title.ts --apply` does them all at once. `scripts/backfill-record-titles.ts` no longer lists the five objects. See `docs/MAINTENANCE.md` §3.5.
+- c362ccd: **Dashboards say what they count, and amounts, quantities and dates read one way (#2370).**
+  
+  - The two SLA tiles on Customer Service state their base. **Open Cases Past SLA** counts open cases only, so a case closed late leaves the count when it closes. **SLA Met (Closed Cases)** is the rate over closed cases. The SLA report is now **SLA on Closed Cases**.
+  - **Revenue Trend** appears once, on Executive Overview. CRM Overview and Sales Performance no longer repeat it.
+  - The CRM Overview tile that summed catalog list prices is now **List Price by Category**, with a description saying it is not sales.
+  - **Opportunity Funnel by Owner** is split by owner: one row per rep, one column per stage, a Total per rep, and a bar chart of amount by rep.
+  - **Quota Attainment by Rep** says when it fills: after the nightly forecast snapshot opens the quarter and a manager sets each quota.
+  - Each report's sidebar entry carries the report's own title, in every language the app ships.
+  - Sales Home's amount KPIs read in whole units, like the dashboards. Line item quantities are whole numbers, and a fractional quantity is refused. Quote dates and price book validity show the year and are never relative. A quote line's related list shows the discount instead of a second subtotal.
+  
+  The currency symbol on every amount comes from **Setup → Settings → Localization → Default currency**. See `docs/developers/number-formats.md`.
+- 495bff5: **Ten UX gaps from the feedback round, each answered on screen (#2371).**
+  
+  - **Enrolling people in a campaign says what happened.** The row action on a lead or contact reads "Q3 Enterprise Email Nurture: 1 added, 0 already a member." The campaign's **Enroll** flow ends on a result screen that counts the people added, the ones already enrolled and the ones skipped because they opted out of email or have no address, with a link back to the campaign.
+  - **A deal waiting for sign-off says so.** While a large deal waits for approval, its page shows a blue banner naming who must approve it (a Sales Manager, then also a Sales Director above $500,000), that the deal is locked until they decide, and that **Recall** pulls the request back.
+  - **An early win saves cleanly.** A deal moved from Prospecting, Qualification or Needs Analysis straight to **Closed Won** no longer saves with a warning.
+  - **Cloning a deal names the copy.** The toast reads `Created "Copy of …". You are now on the copy.`
+  - **One approval notice, not two.** A rep who raised their own deal for approval gets the platform's approved/rejected notice plus the email; the in-app notice from the approval flow now goes only when someone else raised the deal.
+  - **A generated quote and an auto-drafted contract are announced.** **Generate Quote** ends on a result screen linking the new draft quote. Accepting a quote that drafts a contract sends whoever accepted it an in-app notice linking the contract (new flow **Contract Drafted Notice**, 34 flows).
+  - **Refusals name the way forward.** A quote moved off its usual path is warned with that path spelled out by status label, not "Invalid quote status transition". A quarterly forecast that starts mid-quarter gets one refusal naming the four quarter starts, not two joined refusals.
+  - **The manual explains two quiet behaviours.** Only a deal's owner sees a deal marked **Private**, and deleting a lead or contact also deletes its campaign memberships.
+  
+  The README's sales-package token banner is restated to the measured ~68k / ~31k.
+- f98025c: **New cases and leads route through platform queues, and agents take a waiting case with the Claim button (#2395, #2283).** HotCRM now uses the ownership queues ObjectStack 18.3.0 provides, in place of its own stand-ins.
+  
+  - **Routing.** A case that arrives with no owner goes to the Service Agent with the fewest open cases, and a lead to the Sales Rep with the fewest unconverted leads, as before. The routing is now two declared queues, **Support Intake** (`case_intake`) and **Lead Intake** (`lead_intake`), and two assignment rules, in place of the app's `case_auto_assign` and `lead_auto_assign` hooks. One small difference: when two people carry the same load, the platform picks between them by user id.
+  - **Claim.** When nobody holds the position, a new case or lead waits in its queue with no owner. Every member sees it (cases in **Unassigned — triage**), opens it and clicks **Claim** (认领). The claimant becomes the owner and nothing else changes; the status stays where it was. If two people claim at once, one wins and the other is refused. The **Claim Case** screen action is gone, and so is the old gesture where moving an unowned case to *In Progress* made you its owner: a status change no longer claims.
+  - **Who sees waiting cases.** Queue membership now gives agents sight of a waiting case, so the *Unassigned Cases — Triage* sharing rule is removed. Administrators can add a person to a queue without a position under **Setup → Access Control → Queue Members** (queue `case_intake` or `lead_intake`).
+  - **Escalation is unchanged.** An escalated case still goes to the least-loaded Service Manager.
+  
+  **Upgrading:** open cases and leads that nobody owns were created before the queues existed, so they name no queue, and agents cannot see them until they do. Run the backfill once as an administrator. It only reports until you pass `--apply`, and it writes the queue and nothing else:
+  
+  ```bash
+  pnpm exec tsx scripts/backfill-intake-queue.ts --url https://<your-org> --email <admin> --password <pw> --apply
+  ```
+
+### Patch Changes
+
+- 873ab4c: **The opportunities page now says which stage changes the app refuses.** No behaviour changes.
+  
+  - **Stage path.** The page (en, zh-Hans, zh-Hant) said reps cannot skip forward and that the system blocks invalid jumps. The usual path is a guide, not a rule: a forward skip such as Prospecting → Negotiation, or a step back on an open deal, still saves — the save comes back with the warning "Invalid opportunity stage transition", and Probability follows the new stage.
+  - **Closed deals.** What is refused is any stage change on a Closed Won or Closed Lost deal — reopening it, or switching won to lost — because a closed deal is locked.
+- 7ce4543: **Generate Quote opens with the Quote Name filled in.** The name is prefilled with the opportunity's name, so submitting the form without typing one creates the quote; a name you type still wins. Before, the field started empty and was required, so the first Submit of every quote failed with "Please complete the required fields: Quote Name". The prefill is the opportunity's name alone, without a " Quote" suffix: the default cannot follow the user's language today, and an English word would appear in every language (#2239).
+- f5dd2d8: **Escalate Case and Close Case open their form directly.** Before, each button first showed a "Confirm Action — … Continue?" dialog and only then the form that asks for the escalation reason or the resolution, which has its own Cancel: two dialogs and three clicks before any input. The form is now the only dialog, the way Claim Case already worked; Cancel on it leaves the case unchanged. What an AI assistant is asked to confirm does not change: that is set by the action's AI settings, which these two actions do not declare (#2240).
+- c14ffde: **Enroll Members asks only for the criterion of the source you pick.** Before, the dialog showed both "Enroll leads in status" and "Enroll contacts in department", and required both, whatever "Enroll" was set to, so enrolling contacts by department still asked for a lead status the run ignores. Now Leads shows only the lead status and Contacts only the department, and the dialog submits without the other one. The criterion you do see is still required (#2241).
+- 6fdc34a: Convert Lead now proposes an Opportunity Name that tells the new deal from the account's others: "<company> – <need type>" (for example "Acme Corporation – Expansion"), or "<company> – <conversion date>" when the lead has no need type. It used to propose the company name alone, so a fourth Acme deal read exactly like the other three in the account's Related list and in every picker. The need type is shown by its label, not its stored value, and the rep can still overwrite the name before converting; account matching and the rest of the wizard are unchanged (#2243).
+- 41f2394: **A sales rep's sidebar no longer shows the service entries.** Service Overview, Cases, My Cases and the three case reports (Cases by Status and Priority, SLA Performance, Cases Opened by Day) are hidden from anyone holding the Sales Representative position. A rep owns no case and cannot create one, and the overview read all zeros. Knowledge stays in a rep's sidebar.
+  
+  The service agent, the service manager, the sales manager and the administrator see the same sidebar as before, and every persona still opens the app where it did: a rep on Sales Home.
+- 6dd09ae: **Cases → Escalated Cases now lists only escalated cases that are still open.** A case that was escalated and then resolved or closed used to stay on the tab forever, because the tab filtered on the escalation flag alone, so a service manager's escalation queue kept growing with finished work. The tab now also leaves out cases whose status is *Resolved* or *Closed*, the same rule **⏰ SLA at Risk** uses. The escalation itself (the flag, the hand-off to a service manager, the sharing rules) is unchanged.
+- 45413be: **Clone Opportunity now opens the clone.** After cloning, the console goes straight to the new opportunity's record page instead of leaving you on the source deal, where the copy could be found only through the list. The copy's fields are unchanged: same account, contact, amount, type, lead source, campaign and privacy, a fresh Prospecting stage and a 90-day close date.
+- a7faf81: Every position carries a one-sentence description of what it is for
+  
+  **The twelve positions now say what they are for (#2249).** Each position is served with a
+  one-sentence business description, so an administrator can tell who belongs in it before assigning
+  anyone. For example, *Sales Manager* reads "Runs a sales team: approves new accounts, lead
+  conversions and large deals, and edits every active customer account.", and *NA Sales Team* reads
+  "Territory team for North America: edits every account in the North America territory." Nothing
+  about what a position grants has changed.
+  
+  On ObjectStack 18.1.0 the Setup → Positions list shows each position's holders and permission sets
+  but no description column yet; the descriptions appear there once the console lists them.
+  
+  The platform could not translate positions when this was written; the 18.2.0 upgrade in this
+  release translates the position names and descriptions in Chinese, Japanese and Spanish.
+- b25a32e: The service agent and the service manager open the app on Service Overview again (#2262). Since the default `crm_user` permission set gave every member read on their own opportunities, both service personas passed the opportunity read gate on Home and Sales Home and landed on Home (Executive Overview). Home and Sales Home now also ask that the member does not hold the `service_agent` or `service_manager` position. Nothing else in either persona's sidebar changes, and reps, the sales manager and administrators land where they did.
+- 4464f26: **The quick tour now says a sales rep's sidebar leaves out the service entries.** No behaviour changes.
+  
+  - **Quick tour, sidebar section (en, zh-Hans, zh-Hant).** The paragraph on who is not shown which entries now says that a sales rep, who works no cases, is not shown Service Overview, Cases, My Cases or the three case reports (Cases by Status and Priority, SLA Performance, Cases Opened by Day), and that Knowledge stays in a rep's sidebar. This matches the sidebar change that shipped with #2244.
+- 5cba770: HotCRM now ships as one artifact carrying four packages: the HotCRM app and its Service, Revenue and Marketing modules. It still installs as one app, and the one change a user sees is the order of the **Sales** menu: **Quotes**, **Contracts** and **Products** now come after **Sales Performance**.
+  
+  **What changes for an installation.** The artifact still installs as one app, **HotCRM** (`app.objectstack.hotcrm`), and every object keeps its name, its table and its REST path. Inside it, products, opportunity line items, quotes, quote line items and contracts now belong to **HotCRM Revenue** (`app.objectstack.hotcrm.revenue`), and campaigns and campaign members to **HotCRM Marketing** (`app.objectstack.hotcrm.marketing`), both modules of the app like **HotCRM Service**. The package list (`GET /api/v1/packages`, and the package picker in Studio) shows all four rows, and each object reports the package that owns it.
+  
+  **One navigation difference.** The Revenue module puts **Quotes**, **Contracts** and **Products** into the **Sales** group, and the Marketing module puts **Campaigns** into **Marketing**. A module's entries come after the app's own entries in a group, so the **Sales** group now reads: Leads, Accounts, Account Workbench, Contacts, Opportunities, Sales Performance, Quotes, Contracts, Products. Before, **Sales Performance** was last. **Marketing** still holds only **Campaigns**, and every other menu entry is where it was.
+  
+  **What does not change.** The permission sets stay whole in the HotCRM app package, so no one's access moves. Translations, the CRM Overview dashboard and the opportunity and lead record pages stay in the app package too. Seeded demo data is the same, row for row. Four items authored for the new modules are still part of the app package for now — the Generate Quote flow, the two flows that add a lead or a contact to a campaign, and the product metrics behind CRM Overview's **Top Products** tile — because the platform does not yet let an app action or dashboard reach them in another package (objectstack-ai/objectstack#25514). They move to their modules in a later release, with no change a user sees.
+- a8eaa41: Clause-②: no
+  Metadata-protocol: none
+  
+  **The last four revenue and marketing items now belong to their modules (#2276).** The **Generate Quote** flow and the **Product Metrics** dataset behind the CRM Overview **Top Products** tile now ship in **HotCRM Revenue** (`app.objectstack.hotcrm.revenue`), and the two flows that add a lead or a contact to a campaign ship in **HotCRM Marketing** (`app.objectstack.hotcrm.marketing`), as `GET /api/v1/packages` and Studio report. Until now the HotCRM app package registered them, because the platform judged an app action's flow and a dashboard tile's dataset one package at a time (objectstack-ai/objectstack#25514). ObjectStack 18.2.0, which HotCRM already runs on, resolves both against the whole artifact.
+  
+  Nothing a user sees changes. **Generate Quote** on an opportunity, and **Add to Campaign** on a lead or a contact, open the same flows; the **Top Products** tile shows the same totals per product category.
+- 8f52859: The Sales Home tabs and the two public forms are translated, and the en pack carries the approval flow names
+  
+  **Sales Home tab labels (#2284).** The **My Leads**, **My Open Deals** and **My Open Tasks** tabs
+  on Sales Home stayed English in Chinese, Japanese and Spanish: a tab is translated under its
+  `value`, and these three had none. Each tab now has one (its URL `?tab=` token, the key of the
+  view it embeds), and the four locale packs label it, with the wording each pack already uses for
+  that view.
+  
+  **Public form titles (#2284).** The Web-to-Lead form at `/forms/contact-us` is headed **Contact
+  Us**, and the Web-to-Case form at `/forms/support` **Contact Support**. Neither form had a title
+  before, so a visitor saw English or the object name; the platform serves the title in the
+  visitor's language, and each pack translates both (zh-CN 联系我们 / 联系支持团队, ja-JP
+  お問い合わせ / サポートへのお問い合わせ, es-ES Contáctenos / Contactar con Soporte).
+  
+  **Approval flow and step names.** The Chinese, Japanese and Spanish packs already translated the
+  six approval flows and their steps (shipped with the 18.1.0 upgrade); the English pack now
+  carries the same keys with the source wording.
+- 42c34c9: **One Accounts entry in the Sales sidebar.** The **Account Workbench** entry is gone from the **Sales** group. It opened the same accounts, with the same columns and sort, as **Accounts** directly above it, so the sidebar showed two entries that looked identical. The group now has eight entries. The Account Workbench page itself still ships as HotCRM's example of an interface page (quick filters for industry, type and owner over the **All Accounts** view), and opens from its own address in the app, ending in `/page/account_workbench`. The Sales overview and Quick Tour docs are updated in all three languages (#2286).
+- 731b53e: Clause-②: no
+  Metadata-protocol: none
+  
+  **A fresh demo database shows a support desk that keeps most of its SLAs (#2288).** The demo cases used to be created whole days ago while their SLA clocks run in hours, so every open case was past due the moment it was seeded: after the first hourly SLA sweep, 29 of the 38 cases were marked as SLA violated and the Cases list was almost all red, seven of the red rows already closed or resolved. Each case the sweep escalated also opened its own urgent "Escalated: …" task due tomorrow, so the admin's task list filled with near-identical rows.
+  
+  The demo cases now follow how a real desk looks. Open cases were raised in the last few days and are still inside their SLA window. Closed and resolved cases finished on time, to the hour. A few old open cases are deliberate breaches. A fresh seed now shows 7 of 38 cases violated (18%), none of them closed or resolved, and one escalation task, from the sweep escalating "Login issues after platform upgrade". The Daily Case Volume chart and the Cases Opened by Priority × Day report still spread the cases across the month. Recent days are busier because open work is recent, but no day holds more than five of the generated cases. Because no seeded closed case finished late, the SLA compliance gauge reads 100% on a fresh seed, from the cases' own dates. SLA clocks keep running after the seed loads: an open case breaches when its window ends, and the hourly sweep escalates it, as on a real desk. Run `pnpm demo:reset` to start again from a fresh seed.
+  
+  Only the demo seed changes. Existing databases keep their cases: the case seed is insert-only.
+- c765457: Clause-②: no
+  Metadata-protocol: none
+  
+  **Contacts opens with contact rows on screen (#2290).** The **All Contacts** list still groups people by account, but the groups now start open. Before, every group started collapsed, so the first screen showed only account headers and no contact: with one or two contacts per account, as in the demo data, finding a person meant expanding groups one by one. Each account's group still reads as a map of who decides and who is on our side, and you can still fold the accounts you are not working on. The Contacts and Buying Centre guides (English, Simplified and Traditional Chinese) say so.
+- d91c7b0: **KPI tiles now say which period they count.** The same figure used to carry different numbers on different pages with nothing on the tile to explain why: Sales Home counts every record, CRM Overview and Sales Performance follow the dashboard's date picker (this quarter by default), and some tiles are pinned to a fixed window. Each KPI title now names its window, and the same measure over the same window has the same title everywhere. No number changes.
+  
+  - **Sales Home:** Revenue (Won), Deals Won and Pipeline Value are now **Total Revenue (All Time)**, **Deals Won (All Time)** and **Open Pipeline (All Time)**.
+  - **CRM Overview:** Total Revenue, Active Deals, Won Deals and Avg Deal Size are now **Total Revenue (Selected Period)**, **Open Deals (Selected Period)**, **Deals Won (Selected Period)** and **Avg Deal Size (Selected Period)**.
+  - **Sales Performance:** Total Pipeline and Open Opportunities are now **Open Pipeline (Selected Period)** and **Open Deals (Selected Period)**; its Avg Deal Size, which was always pinned to this quarter, is now **Avg Deal Size (QTD)**.
+  - **Executive Overview** is unchanged: Total Revenue (YTD) already named its window.
+  
+  The Chinese, Spanish and Japanese labels move with them, and the Dashboards, Quick Tour, Activities and Pipeline Management docs are updated in all three languages (#2291).
+- 3e9057f: **The account, case and quote screens put what you scan by on the first screen.** An account's Description now has its own section after Ownership & Status, so a long narrative no longer pushes Financials, Contact Information (phone, website) and Ownership & Status (health) below the fold. The All Cases list shows eight columns (number, subject, account, priority, status, SLA due date, SLA violated, owner), so priority, status and SLA fit on a 1440 px screen; contact, the web submitter's name and email, and origin stay on the Unassigned — triage list and on the case record. The All Quotes list shows eight columns that all fit, discount included; quote date, subtotal and tax stay on the quote record, and the list is still ordered by quote date (#2292).
+  
+  Clause-②: no
+  Metadata-protocol: none
+- 382ba4b: Every HotCRM permission set carries a one-sentence description of who holds it
+  
+  **Setup → Permission Sets now tells HotCRM's sets apart (#2294).** Each of HotCRM's permission sets
+  carries one business sentence saying who holds it, what it opens and what it withholds, so an
+  administrator picking a set for a new user can tell a sales rep from a sales manager from the list.
+  For example, *Sales Representative* reads "Sales reps: work their own book of leads, accounts,
+  opportunities, quotes and activities and read the catalogues, but delete no customer record.", and
+  *CRM User* and *Guest (Public Forms)* replace their earlier multi-line paragraphs with one sentence
+  of the same meaning. Nothing about what a set grants has changed.
+  
+  ObjectStack 18.1.0 could not translate permission sets when this was written; the 18.2.0 upgrade in
+  this release translates their names and descriptions in Chinese, Japanese and Spanish. The sets the platform itself ships (such as *Administrator — Full
+  Access* and *Organization Administrator*) are described by the platform, not by HotCRM.
+- 9464673: Clause-②: no
+  Metadata-protocol: none
+  
+  **Marketing and Insights open with the app, so Campaigns, CRM Overview and Forecasts show in the sidebar without a click (#2295).** Before, both groups started collapsed and nothing on the first screen said those three entries existed. **Reports** still starts collapsed: opened, it lists one row per report (ten for an administrator), and the console's own *All reports* row below the navigation already reaches every report without a click. The Quick tour, Analytics, Marketing and Revenue guides (English, Simplified and Traditional Chinese) now say which groups open on load, and the Marketing guide no longer lists Products under Marketing: its entry is under Sales.
+- f48c49f: **Four dashboard trend charts no longer draw a range slider under the chart.** Monthly Revenue Trend (Sales Performance), Revenue Trends (CRM Overview), Activity Volume by Week (Sales Activity) and Daily Case Volume (Service) each drew the grey two-handle zoom slider under a series of a few points to a few dozen, where there is nothing to zoom: it took about a tenth of the card and, on a phone, sat over the axis labels. The charts now match the Executive dashboard's revenue trend, which never had one. Hover tooltips are unchanged.
+- ce0c55f: Clause-②: no
+  Metadata-protocol: none
+  
+  Quotes can be printed to a PDF that is filed on the quote, and printing a quote presents it
+  
+  **Print Quote (#2312, REQ-0008 phase 1).** A quote's record page, and the row menu of the quote list,
+  carry **Print Quote**. It prints the quote as a document — the account and contact, the line items,
+  the pricing and the terms, with a page number on every sheet — and files the PDF in the quote's
+  attachments, in the name of the rep who printed it. The rep downloads it from there and sends it.
+  
+  - **Printing is presenting.** When the PDF is filed, a *Draft* or *In Review* quote moves to
+    *Presented*; a quote in any other status keeps it, and a file attached by hand changes nothing.
+    *Draft → Presented* is now a legal move on the quote's status path. The contact rule still holds:
+    a quote with no **Contact** is printed and filed, and stays where it was.
+  - **The printed page is its own page.** The quote's record page is unchanged; the document is a
+    separate print page, `quote_print_page`. The quote now declares its default record page,
+    `quote_detail_page`, which overrides nothing: without it the console would open every quote on
+    the print page, the first record page the quote has.
+  - **The deployment provides the browser.** Printing runs on the server in headless Chromium, through
+    `@objectstack/service-print`, now a dependency: set `OS_PRINT_CHROMIUM_PATH` or
+    `OS_PRINT_BROWSER_ENDPOINT`, and `OS_PRINT_CONSOLE_URL`. Without them **Print Quote** answers an
+    error and nothing is filed.
+  
+  It needs ObjectStack 18.3.0 or later: earlier releases print only an object's default record page
+  (objectstack#26583), and the print page is deliberately not the quote's default.
+- 6731b31: Clause-②: no
+  Metadata-protocol: none
+  
+  Contracts can be printed to a PDF filed on the contract, and both contracts and quotes record the customer's signed copy
+  
+  **Print Contract (#2317, REQ-0008 phase 2).** A contract's record page, and the row menu of the
+  contract list, carry **Print Contract**. It prints the contract as a document — the parties, the
+  term and dates, the value and billing, the renewal terms and a signature block for each side, with a
+  page number on every sheet — and files the PDF in the contract's attachments, in the name of the
+  person who printed it. Printing changes nothing else on the contract. It is offered to whoever may
+  edit the contract and attach files to it (a Sales Manager or a System Administrator).
+  
+  - **The printed page is its own page.** The contract's record page is unchanged: the document is a
+    separate print page, `contract_print_page`, and the contract now declares its default record
+    page, `contract_detail_page`, which overrides nothing.
+  - **One print service for both documents.** `PrintServicePlugin`, which Print Quote brought in, is
+    now composed by the app package rather than the revenue module, so Print Contract and Print Quote
+    share one `POST /api/v1/print/records`. The deployment still provides the browser
+    (`OS_PRINT_CHROMIUM_PATH` or `OS_PRINT_BROWSER_ENDPOINT`, and `OS_PRINT_CONSOLE_URL`).
+  - **Contract dates print with the year.** Start Date and End Date use the short date style
+    ("Sep 14, '26") instead of words such as "Yesterday", on screen as on paper.
+  
+  **The signed copy (REQ-0008 phase 3).** Contracts and quotes gain a **Signed Copy** file field.
+  
+  - **Recorded, not yet required.** A contract still activates, and a quote is still accepted (the
+    **Accept** button's included), without a signed copy, and every record keeps saving as before.
+    The rule that would make the copy a condition of *Activated* and *Accepted* is held until
+    objectstack-ai/objectstack#30184 ships: on this platform the console's Edit form would check it
+    on every save, so a contract activated without a copy could save no edit at all from the
+    console.
+  - **Uploading it dates the signature.** Filing the copy on a contract fills **Signed Date** with
+    today's date when Signed Date is empty; a date already set, or typed in the same save, is kept.
+  - **The Edit forms offer the upload.** The contract form's Signing & Documents tab and the quote
+    form's first tab list Signed Copy.
+- 1f3f888: Clause-②: no
+  Metadata-protocol: none
+  
+  HotCRM moved to ObjectStack 18.2.0 (and on to 18.3.0, in its own entry), and reports, positions, permission sets and the web forms' hints are translated
+  
+  **ObjectStack 18.2.0 (#2319).** All 23 `@objectstack/*` dependencies move from 18.1.0 to 18.2.0
+  together, pinned exact, and `specVersion` and `engines.protocol` (in `objectstack.manifest.json` and in
+  each of the four packages) follow to `^18.2.0`. Nothing about what a user can do or see changes from
+  the upgrade alone; what the new version lets HotCRM show is below.
+  
+  - **Reports have their names in every language.** The report index (*All reports*) and each report's
+    page heading now list HotCRM's ten reports in Chinese, Japanese and Spanish, with the names the
+    sidebar's Reports group already uses, for example *各阶段商机* for *Opportunities by Stage*.
+    Before, the index listed them in English in every language.
+  - **Setup → Positions and Setup → Permission Sets are translated.** The twelve positions and the
+    seven permission sets carry their names and one-line descriptions in Chinese, Japanese and Spanish,
+    for example *客服专员* for *Service Agent*.
+  - **The public web forms and the lead forms show their hints in the visitor's language.** The
+    Web-to-Case form's placeholders and hints (*Short summary of the issue*, *Critical issues should
+    also be reported via phone.*), the Web-to-Lead form's *A sales representative will get back to you
+    within one business day.*, and the hints on the lead forms (the duplicate status, the status-change
+    form, the convert step and the privacy preferences) are translated.
+  
+  `objectstack lint --strict` on 18.2.0 reports each of these as untranslated, so the upgrade carries
+  them in the same release.
+  
+  **Tests that read a platform message now read the platform's answer (#2308).** On 18.2.0 a cleared
+  Sales Price on a deal or quote line is refused with the record validator's "Sales Price is required
+  and cannot be cleared" instead of the database's text, an action's success message is stored as a
+  template, and a permission set with a hierarchy read scope is refused at publish on an edition with
+  no hierarchy resolver. Each test keeps the protection it pins: the price is still refused and kept,
+  and a manager still cannot read a report's deal on this edition.
+- ea567f2: Clause-②: no
+  Metadata-protocol: none
+  
+  **The billing hand-off of an activated contract carries its signed date (#2325).** When a contract is activated without a Signed Date typed in, HotCRM stamps today's date on it. That stamp used to be written by a second save after the activation, so the `crm.contract.activated` event sent to your billing endpoint had already been built from the activating save and carried `"signed_date": null`, although the contract itself showed the date. The stamp is now part of the activating save, so the event carries the same date the contract stores. A date typed in the activating edit, or already on the contract, is kept unchanged in both places. Nothing else in the payload changes, and the account still moves to *Customer* as before.
+- 0f17c6c: Clause-②: no
+  Metadata-protocol: none
+  
+  **A lead's status path draws Unqualified apart from the steps, because the status options now say which one is the lost end (#2326).** The lead record's stage path drew New ✓ → Contacted → Qualified → Converted → Unqualified, with Unqualified as a fifth step after Converted. The platform reads each option's lifecycle `kind` (`open`, `won` or `lost`) to tell the steps of a path from its end, and no option declared one, so the path guessed from the spelling, and *Unqualified* matches no spelling it knows.
+  
+  Every option of four lifecycle fields now declares its kind:
+  
+  - **Lead Status**: *Converted* is won and *Unqualified* is lost.
+  - **Opportunity Stage**: *Closed Won* is won and *Closed Lost* is lost.
+  - **Case Status**: *Resolved* and *Closed* are won.
+  - **Task Status**: *Completed* is won. *Deferred* stays open, because a deferred task is postponed, not given up.
+  
+  Every other option is declared open. Case and task have no cancelled value, so neither has a lost option. No option was added, renamed or reordered, and stored values do not change, so no data migration is needed.
+- a31d91a: Clause-②: no
+  Metadata-protocol: none
+  
+  **A large deal whose approval was rejected can be sent back for approval, and can no longer be closed won without one (#2334).** Once an approver rejected a deal of $100,000 or more, no save could open a new approval request, and nothing stopped the rep from moving the deal straight to *Closed Won*: one rejection was enough to skip the approval for good. Now the deal is unlocked after a rejection and the rep's next save, once they have revised it, sends it for approval again as a new request. Until a later request is approved, moving the deal to *Closed Won*, or accepting a quote on it, is refused with a message that says how to send it back. Closing it as lost is still allowed, and a deal under $100,000 is not affected.
+  
+  **Recall hands a large deal back instead of re-submitting it.** Recalling a pending large-deal approval used to open a new request in the same second, so the deal stayed locked and the rep could never take it back to edit. A recall now leaves the deal unlocked with no request open; the rep's next save sends it for approval again.
+- 65507bd: **Add to Campaign now refuses a closed campaign and a person who opted out of email, and a campaign member holds a Lead or a Contact, not both (#2336).**
+  
+  Until now only **Enroll Members** checked these two rules. **Add to Campaign** on a lead or a contact did not, so it could add a lead to a *Completed* campaign and change the sent, lead and response figures that campaign had closed with. It could also add a person who had opted out of email.
+  
+  - **Add to Campaign** refuses a campaign that is not *Planning* or *In Progress*, and a person whose **Email Opt Out** is ticked. Nobody is added, the campaign's numbers do not move, and the message names the closed campaign or the person who opted out. This holds from a row's ⋮ menu and from the selection toolbar.
+  - The campaign picker on a row's ⋮ menu lists only *Planning* and *In Progress* campaigns.
+  - **Enroll Members** works as before: opted-out people are left out of the segment, and they are not counted as refused.
+  - A campaign member can no longer be saved with both a Lead and a Contact. The save is refused with `VALIDATION_FAILED` (400). Converting a lead still promotes its campaign members to *Converted*, because that promotion changes only the member's status.
+  
+  **FROM → TO.** Members already enrolled stay as they are. A member that already holds both a Lead and a Contact is refused on its next save until one of the two is cleared. No data migration is needed.
+- b65c403: Clause-②: no
+  Metadata-protocol: none
+  
+  **Four dead ends from the 18.2.0 browser pass are gone (#2338 items 1–4).**
+  
+  - **Service Overview is offered only to people who can read cases.** A marketing user, who reads no cases, was offered it in the sidebar, and every tile said "You don't have permission to view the data behind this widget". It now asks the same question the three case reports already ask. Sales Activity stays open to marketing users: it reads their own activity, so it works. Sales Performance also stays open; one of its tiles, Quota Attainment by Rep, still refuses a member who cannot read forecasts, because the platform cannot hide a single tile by access yet.
+  - **Edit Case shows Resolution when you close the case.** Picking Status "Closed" on the edit form used to end in "Resolution is required when closing a case" with nowhere to type one. The form now shows Resolution as soon as Status is Resolved or Closed. A new case still opens without it.
+  - **Marketing Managers and Marketing Directors can edit campaigns.** Both positions now give their holders the Marketing User profile, so the people who lead marketing can edit a live campaign a marketer owns and enroll its members, as their position descriptions promise. Before, they could only read campaigns.
+  - **"Update Stage" is no longer a list header button on opportunities.** That button failed whatever was ticked: with two rows it said it runs on a single record, and with none it opened a dialog that targeted nothing. Tick the deals and use **Update Stage** on the selection bar, which moves them all in one run. It is now on the selection bar of every opportunity table list, not only Open Deals, and so is **Delete**, which Open Deals had lost.
+- 52a6fb2: **Seven small fixes from the 18.2.0 browser pass: copy that pointed nowhere, a timeline that ran backwards, an attendee list with no names, and refusals that showed API names (#2338, items 5 and 7–13).**
+  
+  - **Sales Home** no longer shows the *Ask the AI Assistant* card. It told every user to open an assistant panel from the right edge of the page, and an install without the platform's assistant has no such panel.
+  - **Deal Timeline** marks each deal on its **Close Date**. It used to draw each deal from the day it was created to its close date, so a deal closed before it was entered read backwards ("10/27/2026 → 9/7/2026").
+  - The **Event Attendees** list on a meeting now shows who is attending: the **Contact**, **Lead**, **User** or **External Attendee** column, then type, response and organizer. A column nobody on that meeting fills is left out.
+  - Moving a completed task back to an open status clears its **Completed Date**. Before, the date stayed and nobody could clear it by hand, because the field is read-only.
+  - The **Reports** sidebar entry **Lead Inflow** is now **Lead Engagement**. Its report has always counted leads by the month they were last contacted, not the month they arrived.
+  - **Top Resolving Articles** on the Service dashboard no longer lists a "—" row with 0 for closed cases that no article resolved.
+  - When a closed deal, an accepted or expired quote, or an activated contract refuses an edit, the message the user sees names fields and statuses by their labels ("is closed (Closed Won); only its Description and Next Steps can still be edited"). The error code is still `RECORD_LOCKED` (409). For the deal and the quote, the diagnostic `message` that API callers and logs read still carries the API names and the attempted fields; the user sentence rides `userMessage`. The contract's single message changed from "Cannot shrink end_date (…)" to "An activated contract's End Date cannot move earlier (…)".
+  - The admin guide lists the twelfth sharing rule, **Forecasts — Sales Manager Edit**.
+  
+  **FROM → TO.** A tool that matched the contract refusal's old wording should match on the `RECORD_LOCKED` code instead. No data migration is needed; a task reopened before this release keeps its old Completed Date until it is completed and reopened again.
+- 08bbdd5: **Two more refusals show users field and stage labels instead of API names (#2338, items 14 and 15).**
+  
+  - Editing a converted lead's identity or conversion fields now tells the user which fields by their labels: "Cannot change Company on converted lead Ada Lovelace - Acme; only its Description and Notes can still be edited. Make changes on the converted records instead." Before, the console showed "(attempted: company)".
+  - Adding, changing or removing a line item on a closed deal now names the stage by its label: "Opportunity Acme Renewal is closed (Closed Won), so its line items can no longer be added, changed or removed." Before, it showed "closed (closed_won)".
+  
+  Both keep the error code `RECORD_LOCKED` (409). The diagnostic `message` that API callers and logs read is unchanged and still carries the API names and the attempted fields; the user sentence rides `userMessage`, as it already did for the closed-deal and settled-quote freezes. No data migration is needed.
+- f660fd8: **A settled quote's line-item refusal names the status by its label (#2338, item 16).**
+  
+  Adding, changing or removing a line item on an accepted or expired quote now tells the user "Quote QTE-0007 - Acme Renewal is Accepted, so its line items can no longer be added, changed or removed." Before, the console showed the status's API value, "is accepted".
+  
+  The error code stays `RECORD_LOCKED` (409). The diagnostic `message` that API callers and logs read is unchanged and still carries the API value; the user sentence rides `userMessage`, as it already does for the quote's own freeze and the closed-deal line freeze. No data migration is needed.
+- 1f1ea12: Clause-②: no
+  Metadata-protocol: none
+  
+  **A campaign member created by hand now meets the same two rules as Add to Campaign and Enroll Members (#2344).**
+  
+  Since #2336, **Add to Campaign** and **Enroll Members** refuse a campaign that is not *Planning* or *In Progress* and a person whose **Email Opt Out** is ticked. A member created any other way skipped both rules: **New** on a campaign's Campaign Members list, a data import, and `POST /api/v1/data/crm_campaign_member` all saved a member of a *Completed* campaign naming an opted-out lead, and that campaign's closed figures moved.
+  
+  - Saving a new member on a campaign that is not *Planning* or *In Progress*, or that no longer exists, is refused with `VALIDATION_FAILED` (400). The message is the one Add to Campaign shows, naming the campaign.
+  - Saving a new member for a Lead or Contact whose **Email Opt Out** is ticked is refused with `FORBIDDEN` (403), the code a Do Not Call refusal uses. The message is the one Add to Campaign shows, naming the person.
+  - Moving an existing member to another campaign, Lead or Contact is checked the same way. Editing a member without moving it is not: marking a *Completed* campaign's member *Responded*, or a member *Unsubscribed*, still saves.
+  - System writes still pass: seed data, imports run as the system, and the promotion of a converting lead's members to *Converted*.
+  
+  These two messages are in English in every language for now, because a refusal raised while saving a record has no translation key yet. The same refusals from Add to Campaign stay translated.
+  
+  **FROM → TO.** Members already stored stay as they are. No data migration is needed.
+- 3801c17: Clause-②: no
+  Metadata-protocol: none
+  
+  **Recalling an approval request no longer tells you it was rejected (#2349).** When a rep recalled their own pending request (the Recall button on the request, or `POST /api/v1/approvals/requests/{id}/recall`), HotCRM sent them the flow's rejection notice, for example "Deal rejected: NAME — Your opportunity NAME was not approved", in the inbox and, for a deal, by email. Nobody had rejected anything. The platform resumes a recalled request down the approval's reject path, and three approval flows sent their notice there without looking at why.
+  
+  Large Deal Approval (at both the Sales Manager and the Sales Director step), Account Approval and Lead Conversion Approval now end quietly on a recall. A rejection by an approver still sends the notice exactly as before. Qualification Approval and Stage Change Approval never sent a notice on reject and are unchanged.
+- 44d2d90: Clause-②: no
+  Metadata-protocol: none
+  
+  **A deal of $100,000 or more can be closed won only once its Large Deal Approval is approved (#2350).** Until now only a pending or rejected approval stopped the close. A rep could still win a large deal with no approval at all in two ways: recall the request (which hands the deal back as *Not Required*) and then close it, or raise the amount over the line and close the deal in the same save. Now moving a deal at or over the line to *Closed Won* is refused unless its **Approval Status** is *Approved*, whatever else it says, and the message tells the rep to save the deal without closing it to send it for approval. Accepting a quote on such a deal is refused the same way, so an accepted quote never sits on a deal it could not close. Closing a deal as lost, and any deal under $100,000, are not affected.
+  
+  Known limit: the rule cannot tell whether the *Large Deal Approval* flow is switched on, so an install that switches that flow off can no longer close a large deal won by hand.
+- 65666e8: Clause-②: no
+  Metadata-protocol: none
+  
+  Each module package now registers its own translations, so a module can be left out of an install without breaking the app's language packs
+  
+  **No visible change: every label reads exactly as before, in all four languages (#2352).** The
+  Service, Revenue and Marketing modules each carry their own English, Simplified Chinese, Spanish
+  and Japanese labels for the records, navigation entries, dashboards, reports, flows and manuals
+  they own, in `src/service/translations/`, `src/revenue/translations/` and
+  `src/marketing/translations/`. Until now the app package's language packs held all of them. The
+  strings moved unchanged; nothing was re-translated.
+  
+  Why: with a module left out of the install, every one of those labels pointed at something that no
+  longer existed, and the build refused it. Measured with the platform's validator, the refusals
+  drop from 58 to 0 with Service absent, from 46 to 4 with Revenue absent, and from 34 to 8 with
+  Marketing absent. The ones that remain label app records (the opportunity's *Generate Quote*
+  action, the lead and contact campaign actions), which wait on platform fixes before they can leave
+  with their module.
+- 353dace: Clause-②: no
+  Metadata-protocol: none
+  
+  **The documentation site now states four rules the way the app enforces them.** Nothing in the app changes; the pages were wrong, in English and both Chinese versions.
+  
+  - **Setup checklist, lead routing:** only a lead from the public web-to-lead form goes to the sales-rep round-robin. A lead created in the app, sent through the API, or imported from a CSV or JSON file is owned by the person who put it in, and the page links the import guide's section on owners.
+  - **Products:** a List Price of zero is accepted and only a negative one is refused; a Cost above the List Price is refused rather than warned about.
+  - **Campaigns:** the End Date must be after the Start Date, so a campaign that ends on the day it starts is refused.
+  - **Campaigns, attribution:** converting a lead does not set the Campaign on the opportunity it creates, even when the lead is a member of a campaign, so the deal is credited only once someone sets Campaign on it. The field is named by its real label, *Campaign*, instead of *Source Campaign*.
+- 66c63cb: Clause-②: no
+  Metadata-protocol: none
+  
+  **A visitor on the public support form can no longer open a Critical case, and the form reads as written for them (#2368).** Until now the **Contact Support** form at `/forms/support` let anyone pick **Critical**, which escalates the case on arrival and hands it to the Service Manager pool. The form no longer asks for a priority: a web case arrives at **Low** and the service team triages it. Even a submission sent past the form that names Critical is stored at **High** at most, so a web case never escalates by itself. Staff can still open and raise cases at Critical. Above the fields the form now reads "For an urgent outage, call the service hotline." (「紧急故障请拨打服务热线。」), and the name and email fields are labelled **Your name** and **Your email** (「您的姓名」「您的邮箱」) instead of the agent-side **Supplied Name** and **Supplied Email**, in English, Chinese, Spanish and Japanese. The Service Manual and the Cases page describe the form as it now is.
+- d963020: Clause-②: no
+  Metadata-protocol: none
+  
+  **Forms and record pages are laid out for the work done on them (#2369).** **New Contact** asks for Email and Phone on its first tab, beside the required names, so a bad email is flagged where you are typing. **New Lead** puts Salutation, First Name and Last Name on one row, and **Lead Score** says that a blank score is filled in for you. The **Send Email** dialog says where the email goes. The record headers of accounts, quotes, products, campaigns and knowledge articles show what the title does not: tier, health and revenue on an account; account, deal, status, total and expiry on a quote; type, status, start date and budget on a campaign; and List Price on a product, which the product picker on a line item now shows too. The related lists that used to borrow those headers keep their columns. A staff-created case can now set **Case Type**. A case on track no longer shows a red "× No" for SLA Violated; a breached case shows a red **SLA breached** banner (「已违反 SLA」) instead. A knowledge article opens on its body and shows its Helpful and Not Helpful counts in the header, and after a vote the message says whether it was recorded, changed or already your verdict, with the current counts. **Log a Call**, **Log a Meeting** and **Schedule a Meeting** say that the contact or lead you start from is added for you. The Related tabs of opportunities and cases open their Quotes, Products and Open Tasks panels. New and changed text is in English, Chinese, Spanish and Japanese, and the Sales, Service and Knowledge manual pages describe the new behaviour.
+- 47a0666: Clause-②: no
+  Metadata-protocol: none
+  
+  **A reopened case no longer keeps its first close (#2375).** Before, a Resolved or Closed case moved back to an open status kept the first close's **Closed Date** while it was open again, and closing it again kept that date and its **Resolution Time (Hours)**, so the resolution figures and the average-resolution tile and reports read the first close. Now any move back to an open status clears both, whether through **Reopen Case**, **Edit** or the API, and the next close stamps both afresh. The SLA is unchanged by this: the SLA Due Date is kept and a recorded breach stays recorded. The in-app Service Manual says so in English and Chinese.
+  
+  Contract statuses now declare whether each one is open, won or lost (Draft and In Approval open, Activated won, Expired and Terminated lost), so a contract's path draws each one from that declaration instead of guessing from the value's name.
+- 314d991: Clause-②: no
+  Metadata-protocol: none
+  
+  **With a module turned off, the app no longer offers the buttons that lead into it, and the Admin Manual says what turning a module off does (#2383).** On ObjectStack 18.3.0 an administrator can disable the Service, Revenue or Marketing module at Setup → Installed Apps. With Marketing off, **Add to Campaign** leaves the lead and contact row menus; with Revenue off, **Generate Quote** leaves the opportunity's record header and row menu. The platform withholds them itself (it no longer grants a disabled module's objects), so the app adds no gate of its own, and a new test pins all three with the module off and on. The module's sidebar entries leave too. One leftover remains on the platform side: on the All Leads and All Contacts lists, ticking rows still shows a "Create Campaign" / "Add Contact To Campaign" button in the selection bar, which answers with an error; that is reported to the platform.
+  
+  The Admin Manual's *Access* page has a new section, *Turning a module off*, in English and Chinese: where the switch is, what disappears while a module is off, what the fields that point into it show, and that turning it back on brings everything back because nothing is deleted.
+- d4ffe99: Clause-②: no
+  Metadata-protocol: none
+  
+  **The List Price by Category tile is left out when the revenue module is disabled (#2383).** The tile on the CRM Overview dashboard reads revenue's product catalogue. When revenue is disabled, the platform stops serving that module's objects and datasets, and the tile drew a red "Dataset "product_metrics" is not defined in this environment" error. It now asks for the product object first, so the dashboard simply leaves it out and the other tiles fill the page. With revenue enabled, nothing changes: the tile draws as before.
+  
+  The other screens of the app that reach a disabled module were measured on ObjectStack 18.2.0 too. The Campaign lookup on the opportunity form and the Related Case lookup on tasks and events show their value on the record page. On the edit form they read empty, with an empty picker, and saving keeps the stored value. The related lists (campaign members on a lead, quotes and line items on an opportunity) read empty. None of these raises an error. **Add to Campaign** on leads and contacts and **Generate Quote** on opportunities still show when their module is off and fail when used. Hiding them needs a platform change, because the permission check those buttons read still grants a disabled module's objects. That change is reported to the platform.
+- 27f310f: Clause-②: no
+  Metadata-protocol: none
+  
+  **Only an administrator can create a deal of 100,000 or more already Closed Won (#2387).** Before, anyone could create such a deal directly at **Closed Won**, from the New form, the API or an import: no approval ever started and the deal stood won at **Not Required**, a way past the rule that a large deal is won only once its Large Deal Approval is approved (#2350). Now that create is refused for everyone but an administrator (the organization's owner, an organization admin or a platform administrator), with the same message as the refused move to Closed Won, so an administrator can still load historical won deals. Creating the deal at an open stage sends it for approval as before. Seed data and other system writes are unaffected, and moving an existing deal to Closed Won still needs the approval, for an administrator too. The Sales Manual and the Approvals page say so in English and Chinese.
+- 428d318: Clause-②: no
+  Metadata-protocol: none
+  
+  **Notices name the stage and the priority by their labels, in the reader's language (#2391).** The stalled-deal notice said "Opportunity Apex Logistics Data Hub has sat in needs_analysis for 33 days", and the Chinese one 「已在“needs_analysis”阶段停留」: the stage's stored value, not the name the screens show. It now reads "has sat in Needs Analysis" in English, 「已在“需求分析”阶段停留」 in Chinese, "Análisis de Necesidades" in Spanish and 「ニーズ分析」 in Japanese, the same words the stage picker shows. The case escalation and SLA breach notices printed the priority the same way, "Case CS-0001 (critical)", and now say "(Critical)", 「（严重）」, "(Crítica)", 「（重大）」. The inbox and the email carry the same text.
+  
+  **Upgrading.** Nothing to run. The three templates take new variables: `crm.deal_stalled` reads `stage_label`, and `crm.case_escalated` and `crm.case_sla_breach` read `priority_label`, each holding the label in every language the app ships (`{{stage_label.en}}`, `{{stage_label.zh_CN}}`, `{{stage_label.es_ES}}`, `{{stage_label.ja_JP}}`). The old `stage` and `priority` variables are no longer passed, so a copy of one of these templates edited in Studio that still prints `{{stage}}` or `{{priority}}` shows a blank there; change it to the label variable of its language.
+- 85a5284: Clause-②: no
+  Metadata-protocol: none
+  
+  **The marketplace listing reads in Chinese for a Chinese console (#2392).** The HotCRM card and its detail page in **Setup › Marketplace** showed the English description and the English engineering README to a zh-CN user. The listing now carries a zh-CN description, tagline and a short Chinese introduction (`README.zh-CN.md`) in `objectstack.manifest.json` → `translations`, and `pnpm publish:marketplace` sends them with the package. A Chinese console (`zh-CN` or `zh`) shows them; every other language keeps the English listing, and the name stays **HotCRM**. The listing changes at the next marketplace publish. The publish refuses, before any request and in a DRY_RUN too, a translation the marketplace schema would reject (an over-long description or tagline, an unreadable readme file).
+- 7e3a2d6: Clause-②: no
+  Metadata-protocol: none
+  
+  **Upcoming Events shows only events that have not started yet (#2393).** The **Upcoming Events** card on **Sales Home** and the **📅 Upcoming · Soonest First** tab under **Events** listed every planned event, however long ago it was booked for. Nothing marks a meeting held when its time passes, so a booking nobody logged stayed on the card for ever, and a week after install the demo data showed only past meetings there. Both now list planned events whose start time is now or later, soonest first. The **Meetings Booked** tile on the **Sales Activity** dashboard counts the same way.
+  
+  A planned event whose time has passed keeps its **Planned** status; it only leaves the upcoming list. Set it to **Held** or **Cancelled** to record what happened. **Interaction History** still lists held events only.
+- 142a25b: Clause-②: no
+  Metadata-protocol: none
+  
+  **Generate Quote refuses an impossible validity on the field, and keeps the form open (#2396).** On an opportunity, **Generate Quote** with **Valid For (Days)** at 0 or fewer used to fail the whole quote ("Expiration Date must be after Quote Date") and leave only **Close**, so the rep had to start again. The form now refuses the number on the field, keeps every answer and **Next**, and the rep corrects it and goes on.
+  
+  **Discount %** now declares the 60% ceiling on the form field too. A caller that submits the form through the API or an AI agent is refused on the field with the form kept, and can resubmit a corrected discount. In the console a discount above 60% still ends the dialog with "Discount cannot exceed 60%" for now: the platform sends the percent box's value as text, which its field check does not read. The console picks up the field check once the platform fix (objectstack-ai/objectstack#30178) ships. The 60% ceiling itself is unchanged, and a quote edited directly is still held to it.
+- 7f3a431: **A campaign member who responded and then unsubscribes still counts as a response.** Before, moving a member from *Responded* or *Converted* to *Unsubscribed* cleared **Has Responded** and **Response Date**, and the campaign's **Number of Responses** counted members by status, so every unsubscribe lowered the campaign's **Response Rate %**. Now the member keeps **Has Responded** and the original **Response Date** when they unsubscribe, and **Number of Responses** counts members who ever responded (**Has Responded**), so the response rate is "ever responded". Resetting a member to *Sent* still clears both. The demo data now includes one member who responded and later unsubscribed. The Marketing Manual and the Campaigns and Campaign Members docs say so in English and Chinese.
+- d5f6270: Clause-②: no
+  Metadata-protocol: none
+  
+  **The Leads help page no longer says imported leads are spread across the sales reps (#2360).** It listed CSV import and API capture among the ways a lead arrives without an owner and is round-robined to the least-loaded rep. Measured on ObjectStack 18.2.0, only a web-to-lead form submission arrives ownerless and reaches the round-robin. A lead created in the UI, sent through the API under a sign-in or API key, or imported from a file is owned by the person who put it in. For an import that is the person who ran it. The English and Chinese pages now say so, and they link the Admin Manual's *Importing Data* page, which already described this. Lead assignment itself is unchanged.
+- f3369aa: Clause-②: no
+  Metadata-protocol: none
+  
+  HotCRM runs on ObjectStack 18.3.0; book titles and the Customer Churn Signals panels are translated, and the admin docs follow Setup's new navigation
+  
+  **ObjectStack 18.3.0.** All 23 `@objectstack/*` dependencies move from 18.2.0 to 18.3.0 together, pinned
+  exact, and `specVersion` and `engines.protocol` (in `objectstack.manifest.json` and in each of the four
+  packages) follow to `^18.3.0`.
+  
+  - **Book titles and report panels in every language.** The four in-app manuals (*HotCRM User Manual*,
+    *Admin Manual*, *Revenue Manual*, *Marketing Manual*) and their section headings now read in Chinese,
+    Japanese and Spanish, for example *HotCRM 使用手册*, and so do the four panels of the **Customer Churn
+    Signals** report (*客户成功经理标记的客户*, …). 18.3.0 made both translatable; before, they read in
+    English in every language.
+  - **The Knowledge "Helpful" / "Not Helpful" toast keeps its tally.** 18.3.0 reads an action's outcome
+    messages as `{{ }}` templates and refuses the old `${…}` spelling, so the six messages (and their
+    three translations) are respelled. The toast still reads "Thanks — recorded as helpful. Helpful: 1 ·
+    Not helpful: 0."
+  - **The lead form layouts named `split`, `drawer` and `modal` are plain forms now.** 18.3.0 retired
+    those three form `type`s (where a record opens is the reader's choice now, and a list opens it in a
+    side drawer by default). The three named lead forms keep their sections and fields.
+  - **The admin docs point at Setup's new entries.** 18.3.0 moved positions and permission sets out of
+    Setup: who holds a position is **Setup → Position Holders**, a permission set is given under
+    **Setup → Permission Set Assignment**, and the sets themselves are read and copied (**New similar**)
+    in **Studio → All Metadata Types → Permission Set**. Email is **Setup → Mail Delivery**, and installed
+    packages are **Setup → Installed Apps**. The docs site (English, Simplified and Traditional Chinese)
+    and the in-app Admin Manual now say so.
+  
+  What changes for people because of the platform release, not because of HotCRM:
+  
+  - **A service agent can take an unassigned case by setting its owner to themselves.** 18.3.0's
+    ownership rules admit a *claim*: setting the owner of an unowned record to yourself, on a record you
+    can see. Agents see every open unassigned case, so they can now claim one that way as well as by
+    picking it up (moving it to *In Progress*). Assigning an unowned case to somebody else, or taking a
+    case another agent owns, is still refused.
+  - **Starting a flow on a record you cannot read is refused up front.** Escalate Case, Close Case and Add
+    to Campaign now answer "not found" when the record (or the campaign) does not exist or the person
+    cannot read it, before the flow runs, instead of failing at its last step. Nothing is written either
+    way.
+  - **Charts over dates show the empty months.** A trend over a date dimension now draws a zero for a
+    month (or day) that holds no record, instead of joining its neighbours.
+  - **Amounts have no currency symbol until an administrator sets the default currency.** 18.3.0 asks an
+    administrator for it on first visit; until it is set, amounts read as plain numbers.
+- 57686e0: **Send Email on a contact now says what it did.** After sending, the toast reads "Email queued to this contact." instead of the generic "Action completed successfully", like the contact's other actions ("Contact marked as primary!"). It says *queued* because the email is handed to the mail service for delivery. Translated in en, zh-CN, es-ES and ja-JP.
+- 8a14b56: The service agent and the service manager are no longer shown Sales Performance, CRM Overview or the four opportunity reports (Opportunities by Stage, Won Opportunities by Owner, Pipeline Coverage, Opportunity Funnel by Owner) (#2268). Since every member holds `crm_user` and so reads their own opportunities (#2231), the read gate on these six entries no longer kept them from the two service positions. They now share Sales Home's audience, which also asks the position. The service personas still land on Service Overview and keep the Opportunities and My Deals entries. Sales reps, the sales manager and administrators see the same sidebar as before. The quick tour and the Service page, in English, Simplified and Traditional Chinese, no longer say that the service personas read no opportunities, and the Service page now says that a sales rep is shown only Knowledge in the Service group.
+
 ## 6.0.0
 
 ### Major Changes
