@@ -115,9 +115,16 @@ export const Contract = ObjectSchema.create({
       min: 1,
     }),
     
+    // Dated with the year, never "Yesterday" (#2317): the term's two dates are
+    // printed on the contract document (`contract_print_page`), and the
+    // console's default style reads a date within a week as a relative word
+    // (measured on 18.3.0: a printed contract started "Yesterday"). `short`
+    // reads "Sep 14, '26", as the quote's dates do (#2370 row 9,
+    // docs/developers/number-formats.md).
     start_date: Field.date({
       label: 'Start Date',
       group: 'terms',
+      format: 'short',
       required: true,
       storage: { notNull: true },
     }),
@@ -125,6 +132,7 @@ export const Contract = ObjectSchema.create({
     end_date: Field.date({
       label: 'End Date',
       group: 'terms',
+      format: 'short',
       required: true,
       storage: { notNull: true },
     }),
@@ -197,6 +205,26 @@ export const Contract = ObjectSchema.create({
       label: 'Signed By',
       group: 'status',
       maxLength: 255,
+    }),
+
+    // The countersigned copy the customer sends back (REQ-0008 phase 3,
+    // #2317): Print Contract (`print_contract`) files the document that goes
+    // out; this is what comes back, uploaded by the rep. Writing it fills
+    // `signed_date` when that is empty (`contract_signed_copy_date`,
+    // `contract.hook.ts`).
+    //
+    // RECORDED, NOT YET REQUIRED (ruling on #2317, 2026-11-05). The gate
+    // `requiredWhen: has(record.status) && record.status == "activated"` is
+    // held until objectstack-ai/objectstack#30184 lands: on 18.3.0 the engine
+    // judges it as a transition gate, but the console's Edit form checks it on
+    // every save, so a contract activated without a copy could save no console
+    // edit at all. Add the gate back here once #30184 ships — and with it the
+    // seeded activated contract's `seedFile` sample, which an insert born
+    // activated would then need.
+    signed_copy: Field.file({
+      label: 'Signed Copy',
+      group: 'status',
+      description: 'The contract as the customer signed it. Uploading it fills Signed Date when that is empty.',
     }),
     
     document_url: Field.url({

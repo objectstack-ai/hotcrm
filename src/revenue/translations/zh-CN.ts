@@ -49,6 +49,11 @@ export const zhCN: TranslationData = {
           help: '把报价改为「已提交」或「已接受」的那次保存必须填写 —— 起草的合同从这里取主要联系人。',
         },
         owner_id: { label: '报价负责人' },
+        // The countersigned copy (#2317).
+        signed_copy: {
+          label: '签署副本',
+          help: '客户签回的报价。',
+        },
         quote_date: { label: '报价日期' },
         crm_price_book: { label: '价格表', help: '本报价单各行的标价取自这本价格表。新建报价单时留空，即为标准价格表。' },
         subtotal: { label: '小计' },

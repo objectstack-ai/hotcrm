@@ -146,6 +146,11 @@ export const jaJP: TranslationData = {
             accepted: '承認済み', rejected: '却下', expired: '期限切れ',
           },
         },
+        // The countersigned copy (#2317).
+        signed_copy: {
+          label: '署名済みコピー',
+          help: 'お客様が署名した見積書。',
+        },
         quote_date: { label: '見積日' },
         expiration_date: { label: '有効期限' },
         crm_price_book: { label: '価格表', help: 'この見積の明細の定価は、この価格表から取られます。新しい見積で空のままにすると、標準価格表になります。' },

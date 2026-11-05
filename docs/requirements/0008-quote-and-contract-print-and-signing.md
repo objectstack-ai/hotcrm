@@ -1,10 +1,10 @@
 # REQ-0008: A quote and a contract the customer can receive — a printed PDF, and the signed copy filed back
 
-- **Status**: Triaged
+- **Status**: In progress — phase 1 shipped by hotcrm#2312 (PR #2401); phase 2 and phase 3's signed copy by hotcrm#2317. The signed copy is recorded, not yet required: the gate that makes it a condition of activating a contract and accepting a quote is held until objectstack-ai/objectstack#30184 lands (ruling on #2317, 2026-11-05). A printed contract moves no status.
 - **Source**: Maintainer (internal) — product direction from the 2026-10-26 module-expansion review, not a customer intake
 - **Raised**: 2026-10-26
 - **Disposition**: **B standard-enhancement** inside the packages that own the objects — `revenue` for `crm_quote`, the app package for `crm_contract` (after `module-split-plan.md` item 11). No new package.
-- **Traceability**: design — this record's *Product response*; cards — hotcrm#2312 (phase 1), hotcrm#2316 (phases 2–3); changesets — to be filled in per phase.
+- **Traceability**: design — this record's *Product response*; cards — hotcrm#2312 (phase 1), hotcrm#2317 (phases 2–3); changesets — `.changeset/2312-print-quote.md`, `.changeset/2317-print-contract-signed-copy.md`.
 
 ## Requirement
 

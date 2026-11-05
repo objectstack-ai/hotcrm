@@ -29,3 +29,5 @@ export { CloneOpportunityAction, MassUpdateStageAction, GenerateQuoteAction } fr
 // A declarative update (`operation: 'update'`): no body, the platform writes
 // its `patch` as the caller.
 export { CompleteTaskAction } from './task.actions';
+// Print Contract (#2317): an `api` action on the print service's door.
+export { PrintContractAction } from './contract.actions';

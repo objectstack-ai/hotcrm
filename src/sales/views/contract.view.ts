@@ -129,7 +129,9 @@ export const ContractViews = defineView({
         name: 'signing_and_documents',
         label: 'Signing & Documents',
         columns: 2,
-        fields: ['signed_date', 'signed_by', 'document_url'],
+        // The Signed Copy first: uploading it fills Signed Date, and an
+        // activation requires it (#2317).
+        fields: ['signed_copy', 'signed_date', 'signed_by', 'document_url'],
       },
       {
         // The contract's two markdown bodies, together and in the order a

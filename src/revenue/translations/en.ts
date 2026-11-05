@@ -111,6 +111,11 @@ export const en: TranslationData = {
             accepted: 'Accepted', rejected: 'Rejected', expired: 'Expired',
           },
         },
+        // The countersigned copy (#2317).
+        signed_copy: {
+          label: 'Signed Copy',
+          help: 'The quote as the customer signed it.',
+        },
         quote_date: { label: 'Quote Date' },
         expiration_date: { label: 'Expiration Date' },
         crm_price_book: { label: 'Price Book', help: "This quote's line items take their List Price from this price book. Left empty on a new quote, it is the standard price book." },

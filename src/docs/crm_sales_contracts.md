@@ -1,6 +1,6 @@
 ---
 title: Contracts — Renewals & Expiration
-description: The contract lifecycle after a win, renewal reminders, auto-renewal deals and automatic expiration.
+description: The contract lifecycle after a win, printing and the signed copy, renewal reminders, auto-renewal deals and automatic expiration.
 order: 3
 # sources: flows/objects this doc documents. Schedules here are guarded by
 # test/docs-drift.test.ts; build ignores unknown frontmatter keys.
@@ -36,6 +36,23 @@ stateDiagram-v2
   activated --> expired
   activated --> terminated
 ```
+
+## Printing a contract and filing the signed copy
+
+**Print Contract**, on the contract and in the contract list's row menu, prints
+the contract as a document — the parties, the term, the value and billing, the
+renewal terms and a signature block for each side — and files the PDF under the
+contract's **Attachments**, in your name. It is offered to whoever may edit the
+contract and attach files to it. Printing changes nothing else on the contract,
+so print it as often as you need.
+
+When the customer sends the contract back signed, upload it to the contract's
+**Signed Copy**. If **Signed Date** is empty, it is filled with today's date on
+that save; a date that is already there is kept, so type the real signing date
+when it was another day.
+
+The signed copy is recorded, not yet required: a contract still activates
+without one, and every contract keeps saving its changes as before.
 
 ## Renewals and expiration are watched for you
 

@@ -122,8 +122,8 @@ export const ReviseQuoteAction: Action = {
  * rep who clicks it (REQ-0008 phase 1, #2312).
  *
  * The target is `@objectstack/service-print`'s door, `POST
- * /api/v1/print/records`, which `PrintServicePlugin` mounts (composed in
- * `../index.ts`). The door prints the record on `quote_print_page`
+ * /api/v1/print/records`, which `PrintServicePlugin` mounts (composed by the
+ * app package, `src/sales/index.ts`, beside Print Contract). The door prints the record on `quote_print_page`
  * (`../pages/quote_print.page.ts`) in headless Chromium under the caller's own
  * principal, and the service archives the PDF on the quote ONCE, as the
  * caller. The body is the door's whole request: the clicked record's id
