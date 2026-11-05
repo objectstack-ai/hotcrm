@@ -122,6 +122,10 @@ const RUNTIME_TEST_FILES = [
   // objects (in-process and the lowered body) and `product_title_mirror`, the
   // rename writer on `crm_product`.
   'line-item-product-title.test.ts',
+  // #2414 — the four record-title fills on read (`*_title_backfill`): each
+  // object over REST, the lookup expand, what they leave alone, the bound,
+  // the lowered body, and the case escalation they must not trigger.
+  'record-title-backfill.test.ts',
   // #2073 item 3 — `case_close_escalation_task`: both doors that close an
   // escalated case (Close Case and the owner's own edit), for the agent who
   // keeps it and the manager it is handed to, and the tasks the close must
