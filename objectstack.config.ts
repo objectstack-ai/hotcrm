@@ -2,14 +2,14 @@
 
 import { composeStacks } from '@objectstack/spec';
 
-// The four package stacks, built — see `objectstack.composition.ts`, which also
+// The five package stacks, built — see `objectstack.composition.ts`, which also
 // resolves the `HOTCRM_COMPOSITION` knob and records why that work cannot live
 // in this file (⛔ this module may carry no named export: the build parses it
 // against a `.strict` stack schema and fails on any key but the default).
 import { packageStacks } from './objectstack.composition.js';
 
 /**
- * ONE release artifact, FOUR packages (ADR-0130 D4).
+ * ONE release artifact, FIVE packages (ADR-0130 D4).
  *
  *  - `app.objectstack.hotcrm` (`src/sales/index.ts`) — the `type: 'app'`
  *    package a customer installs: sales, the app and its navigation groups,
@@ -20,6 +20,9 @@ import { packageStacks } from './objectstack.composition.js';
  *    line items, quotes and contracts.
  *  - `app.objectstack.hotcrm.marketing` (`src/marketing/index.ts`) — campaigns
  *    and campaign members.
+ *  - `app.objectstack.hotcrm.o2c` (`src/o2c/index.ts`) — Order to Cash: the
+ *    collection plan, invoice and payment status on a contract; a tenant that
+ *    does not use it disables the package.
  *
  * Each module puts its navigation entries into the app's groups through its
  * manifest's `navigationContributions`.

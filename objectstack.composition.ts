@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 /**
- * The four packages, built into the four package stacks this artifact carries.
+ * The five packages, built into the five package stacks this artifact carries.
  *
  * A directory under `src/` IS a package (ADR-0130, `module-split-plan.md`
  * items 4–9), and each is a package of the ARTIFACT too:
@@ -10,13 +10,13 @@
  *     artifact takes its identity from. Its `defineStack` is the factory in
  *     `src/sales/index.ts`, and this file hands it its collections, assembled
  *     from the sales barrels.
- *   - `src/service/`, `src/revenue/`, `src/marketing/` — the three
+ *   - `src/service/`, `src/revenue/`, `src/marketing/`, `src/o2c/` — the four
  *     `type: 'module'` packages (`app.objectstack.hotcrm.service`, `.revenue`,
- *     `.marketing`). Each `defineStack` is that directory's `index.ts`, which
+ *     `.marketing`, `.o2c`). Each `defineStack` is that directory's `index.ts`, which
  *     assembles its own collections from its own barrels; this file hands each
  *     only the seed rows the composition knob selects.
  *
- * `objectstack.config.ts` composes the four into ONE release artifact. This
+ * `objectstack.config.ts` composes the five into ONE release artifact. This
  * file builds them, because it is the one place that may see every package AND
  * carry named exports.
  *
@@ -36,10 +36,10 @@
  *     upstream of `defineStack()`, which is the only side of that call where
  *     `CrmSeedData` and the stack's `data` are distinguishable at all (see the
  *     note in `test/saas-composition.test.ts`);
- *   - the four BUILT package stacks — a multi-package artifact carries every
+ *   - the five BUILT package stacks — a multi-package artifact carries every
  *     collection once, inside its package's body in `packages[]`, and no longer
  *     beside them at the top level (ADR-0130 D4, 2026-09-22 addendum), so a
- *     suite that reads "every object of the app" composes these four itself.
+ *     suite that reads "every object of the app" composes these five itself.
  *
  * ## Order
  *
@@ -63,6 +63,7 @@ import { createHotCrmRevenueStack, revenueHooks, revenueFlows } from './src/reve
 import {
   createHotCrmMarketingStack, marketingHooks, marketingFlows, marketingSharingRules,
 } from './src/marketing/index.js';
+import { createHotCrmO2cStack } from './src/o2c/index.js';
 
 import * as salesObjects from './src/sales/objects/index.js';
 
@@ -346,7 +347,7 @@ export { CrmPositions };
 /* ─── Artifact-wide sweeps — what the suites read ───────────────────────── */
 
 /**
- * Every hook in the ARTIFACT, all four packages.
+ * Every hook in the ARTIFACT, every package (Order to Cash authors none yet).
  *
  * The suites that sweep hooks (`test/refusal-envelope.test.ts`,
  * `test/runtime-coverage.test.ts`, `test/freeze-guard-reference-cleanup.test.ts`,
@@ -357,13 +358,13 @@ export { CrmPositions };
  */
 export const allHooks = [...appHooks, ...revenueHooks, ...marketingHooks, ...serviceHooks];
 
-/** Every flow in the artifact, all four packages — same reason as {@link allHooks}. */
+/** Every flow in the artifact, every package — same reason as {@link allHooks}. */
 export const allFlows = [...appFlows, ...revenueFlows, ...marketingFlows, ...serviceFlows];
 
 /** Every skill in the artifact — same reason as {@link allHooks}. Revenue and marketing author none. */
 export const allSkills = [...appSkills, ...serviceSkills];
 
-/** Every sharing rule in the artifact, all four packages — same reason as {@link allHooks}. */
+/** Every sharing rule in the artifact, every package — same reason as {@link allHooks}. */
 export const CrmSharingRules = [...appSharingRules, ...marketingSharingRules, ...serviceSharingRules];
 
 
@@ -578,7 +579,7 @@ const compositionBooks = isSaas
       book === CrmAdminManual ? { ...book, audience: { permissionSet: TenantAdminProfile.name } } : book)
   : appBooks;
 
-/* ─── The four package stacks `objectstack.config.ts` composes ──────────── */
+/* ─── The five package stacks `objectstack.config.ts` composes ──────────── */
 
 /** `app.objectstack.hotcrm.service` — see `src/service/index.ts`. */
 export const serviceStack = createHotCrmServiceStack({ data: seedData.service });
@@ -589,8 +590,14 @@ export const revenueStack = createHotCrmRevenueStack({ data: seedData.revenue })
 /** `app.objectstack.hotcrm.marketing` — see `src/marketing/index.ts`. */
 export const marketingStack = createHotCrmMarketingStack({ data: seedData.marketing });
 
-/** The three module stacks, in the order the artifact lists them. */
-export const moduleStacks = [serviceStack, revenueStack, marketingStack];
+/**
+ * `app.objectstack.hotcrm.o2c` — see `src/o2c/index.ts`. Phase 0 carries no
+ * object and no seed row, so it is handed nothing.
+ */
+export const o2cStack = createHotCrmO2cStack();
+
+/** The four module stacks, in the order the artifact lists them. */
+export const moduleStacks = [serviceStack, revenueStack, marketingStack, o2cStack];
 
 /**
  * `app.objectstack.hotcrm` — see `src/sales/index.ts`, including why it is
@@ -659,5 +666,5 @@ export const appStack = createHotCrmAppStack(
   },
 );
 
-/** All four package stacks, the app last — what `objectstack.config.ts` composes. */
+/** All five package stacks, the app last — what `objectstack.config.ts` composes. */
 export const packageStacks = [...moduleStacks, appStack];

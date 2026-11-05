@@ -301,12 +301,11 @@ export const CrmApp = App.create({
     },
 
     {
-      // Order to Cash (REQ-0007) — the anchor for `app.objectstack.hotcrm.o2c`,
-      // a standalone app installed BESIDE HotCRM, never inside this artifact
-      // (`src/o2c/index.ts`). It fills the group through
+      // Order to Cash (REQ-0007) — the anchor for the `app.objectstack.hotcrm.o2c`
+      // module (`src/o2c/index.ts`), which fills the group through
       // `navigationContributions`, as the marketing module fills Marketing.
-      // On a tenant without it the group has no entry, and the console shows
-      // no empty group. ⛔ Do not tidy the empty group away: the contributed
+      // While the group has no entry — phase 0, or a tenant that disabled the
+      // module — the console shows no empty group (measured, #2315). ⛔ Do not tidy the empty group away: the contributed
       // items would land at the app's top level with a
       // `nav_contribution_group_missing` warning.
       id: 'group_order_to_cash',
