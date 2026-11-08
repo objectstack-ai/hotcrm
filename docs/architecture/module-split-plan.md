@@ -637,7 +637,8 @@ item below says otherwise.
     its objects — so carving it out needs the page- and field-extension capabilities the platform
     has not shipped. Revisit trigger: a customer asking to buy service separately.
 
-13. **Carve-out sequence, superseding the tail of item 9.** Revenue first (hotcrm#2271), marketing
+13. **Carve-out sequence, superseding the tail of item 9.** *(Superseded by item 15, 2026-11-08:
+    there is no carve-out; the text below stays as it was ruled.)* Revenue first (hotcrm#2271), marketing
     second, each as its own artifact whose consumer-installable package is `type: 'app'` with the
     id it has today (ADR-0141 D7); O2C and PSA are born standalone and never ship inside the HotCRM
     artifact. HotCRM goes to **7.0.0** in the release that stops carrying revenue — an installed
@@ -658,6 +659,48 @@ item below says otherwise.
     1 and 2): the platform card is objectstack#8345 (on hold since 2026-10-08 by the maintainer's own
     word), and nothing is simulated here. Price books (REQ-0009) are plain metadata inside `revenue`
     and proceed.
+
+## Decisions recorded (2026-11-08) — one suite; no module leaves the artifact
+
+Ruled by the maintainer on [objectstack#26986](https://github.com/objectstack-ai/objectstack/issues/26986)
+(its first question: is the module-*absent* shape still a goal), verbatim:
+
+> 「所以hotcrm 以套件的形式发布就没有后续的问题了对吧，」
+> 「A」 (option A: the absent shape is not a goal; keep the 2026-10-29 suite direction)
+
+15. **No carve-out. HotCRM ships as one suite artifact, and a module a tenant does not use is
+    disabled, not uninstalled. Supersedes item 13.** The reading behind the ruling
+    ([objectstack#26986 comment 6716259819](https://github.com/objectstack-ai/objectstack/issues/26986#issuecomment-6716259819),
+    objectstack `main` `604a2b3b`, both shapes measured): with a module **disabled**, F3–F6 of
+    [the hard-edge ledger](./module-split-hard-edges.md) no longer occur and F2 leaves one tail
+    (below); with a module **absent**, all five still fail and three of them (F4, F5, F6) need
+    platform protocol changes, one of them reversing ADR-0130 R4. This extends to revenue and
+    marketing the direction already taken for O2C (the 2026-11-05 record in
+    [`order-to-cash-module-plan.md`](./order-to-cash-module-plan.md)) and for cross-repo app
+    dependencies (objectstack#25805, closed `not_planned` under 「大包 + 设置里启用模块」;
+    the disable path is objectstack#28117).
+    - Service, revenue and marketing stay `type: 'module'` packages of the one artifact, composed
+      by `objectstack.composition.ts`. A tenant that does not use one disables it (Setup →
+      Installed Apps, or `PATCH /api/v1/packages/:id/disable`); its records stay, and enabling it
+      brings them back. What leaves while a module is off is measured in #2404 and documented for
+      administrators in `src/docs/crm_admin_access.md`.
+    - There is no standalone revenue or marketing artifact and no 7.0.0 for dropping revenue.
+      hotcrm#2271 (revenue) and hotcrm#2314 (marketing) are closed `not_planned`. Of item 13's
+      unlock conditions, (b) PR 0.5 (#2310) and (c) the hard-edge ledger (#2311) landed and stay
+      as records; nothing waits on them any more.
+    - Items 10 (one dependency level) and 11 (the contract in the app package) stand: they keep
+      the seam the disable path relies on. Item 12's reasoning for service now holds for every
+      module.
+    - The app-package permission sets keep granting on module objects through `artifactObjects`;
+      moving those grants into module-owned sets (the ledger's F1) is not owed.
+    - **F2's tail.** An app-object lookup into a disabled module's object
+      (`crm_opportunity.crm_campaign`, `crm_task.related_to_case`, `crm_event.related_to_case`)
+      stays on the form and can be edited, and its picker finds no record. Accepted as measured;
+      the clean answer, if it is ever wanted, is to move each field into the owning module's
+      `objectExtensions` so the field leaves with the module.
+    - **Deferred, not rejected.** The absent shape comes back only if an app in another repository
+      depends on HotCRM. The per-gap options for that day (lookups, actions, widgets, guard
+      hooks, record-change flows) are analysed on objectstack#26986 and are not re-derived here.
 
 ## References
 

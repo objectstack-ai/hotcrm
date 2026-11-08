@@ -7,6 +7,9 @@ destination, measured on a booted stack with the module absent, platform refusal
 existence guard, try/catch or copied dataset in this repository)." It is what #2271 (revenue leaves the
 artifact) and the marketing carve-out read before they move anything.
 
+> **2026-11-08:** the absent shape is not a goal (objectstack#26986, ruling A); see
+> [the last section](#what-this-means-for-2271-and-the-marketing-carve-out). The rows stay as measured.
+
 Measured 2026-10-27 on `main` `ea567f2` (revenue also on `afdf9a0`), `@objectstack/*` 18.2.0, a fresh
 database for every boot (`objectstack dev --fresh`), dev admin.
 
@@ -204,6 +207,15 @@ F7 is deliberately unused so that the letters stay stable if a finding is merged
 
 ## What this means for #2271 and the marketing carve-out
 
-The app cannot ship without revenue (or marketing, or service) until F1–F6 are answered on the
-platform; the **move** rows (R6, R7, R14's flow half, M3, M4, S3, S4 — the per-domain locale files moving
+As measured, the app cannot ship without revenue (or marketing, or service) until F1–F6 are answered on
+the platform; the **move** rows (R6, R7, R14's flow half, M3, M4, S3, S4 — the per-domain locale files moving
 to the package that owns their objects) were this repository's own work and are resolved (#2352). F8 is cosmetic.
+
+**Ruled 2026-11-08: there is no carve-out.** The maintainer chose, on objectstack#26986, not to pursue the
+module-absent shape this ledger measures: HotCRM ships as one suite artifact and a module a tenant does not
+use is **disabled** (`module-split-plan.md` item 15). Measured on objectstack `main` `604a2b3b`
+([comment 6716259819](https://github.com/objectstack-ai/objectstack/issues/26986#issuecomment-6716259819)),
+the disabled shape answers F3–F6 and leaves F2 a tail (the lookup stays editable with an empty picker); the
+absent shape still fails all five. So #2271 and #2314 are closed `not_planned`, F1–F6 gate nothing, and no
+platform card is owed for them. The rows above stay as measured: they are the starting point if an app in
+another repository ever depends on HotCRM and the absent shape returns.
