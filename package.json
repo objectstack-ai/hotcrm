@@ -67,7 +67,7 @@
     "@objectstack/verify": "18.3.0",
     "@playwright/test": "^1.64.1",
     "@vitest/coverage-v8": "^4.1.10",
-    "fumadocs-core": "16.17.7",
+    "fumadocs-core": "16.18.0",
     "remark": "^15.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx": "^3.1.1",
