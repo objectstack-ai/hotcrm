@@ -28,6 +28,13 @@ administrator. There is no switch in Setup for this; the build decides:
 - the multi-organization build gives each new organization the product
   catalogue and nothing else.
 
+The demo comes in one language. An organization installing HotCRM gets it in
+Simplified Chinese when its language is Simplified Chinese (the organization's
+language setting, or, when it has none, the language of the person installing),
+and in English otherwise. The two are the same story in other words: the same
+records, statuses, amounts and dates, so every dashboard reads the same. A
+self-hosted single-organization install starts with the English demo.
+
 The demo's dates are counted from the day it is seeded: its open deals close
 in the coming weeks, most of its open cases are inside their SLA, and its
 activity runs up to today. After that the records keep the dates they were

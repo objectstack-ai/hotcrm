@@ -23,6 +23,7 @@ import { Task } from '../objects/task.object';
 import { Event } from '../objects/event.object';
 import { EventAttendee } from '../objects/event_attendee.object';
 import { celDaysAgo } from './_shared';
+import { SEED_EN_LOCALES } from './_locale';
 
 // ─── Tasks ────────────────────────────────────────────────────────────
 // Polymorphic parents need BOTH halves: `related_to_type` names the parent
@@ -36,6 +37,7 @@ import { celDaysAgo } from './_shared';
 // mechanism and the price: beside `leads` in `./sales.seed.ts`.
 export const tasks = defineSeed(Task, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'subject',
   records: [
     {
@@ -511,6 +513,7 @@ const endClock = (spec: EventSpec): readonly [number, number] => {
 // `./sales.seed.ts`.
 export const events = defineSeed(Event, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'subject',
   records: EVENT_SPECS.map((spec) => {
     const [endHour, endMinute] = endClock(spec);
@@ -602,12 +605,14 @@ const attendeeRecords = (kind: 'contact' | 'lead') =>
 // answer, and under `upsert` the next boot wrote the seeded `response` back.
 export const eventAttendeesFromContacts = defineSeed(EventAttendee, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: ['crm_event', 'crm_contact'],
   records: attendeeRecords('contact'),
 });
 
 export const eventAttendeesFromLeads = defineSeed(EventAttendee, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: ['crm_event', 'crm_lead'],
   records: attendeeRecords('lead'),
 });
@@ -662,6 +667,7 @@ const LOGGED_SUMMARY_PREFIX: Partial<Record<EventSpec['type'], string>> = {
 export const leadInteractionPointers = {
   object: 'sys_activity',
   mode: 'ignore' as const,
+  locale: SEED_EN_LOCALES,
   // One timeline pointer per rich source record, exactly as the action writes
   // it. Matched on the RESOLVED ids, so replay boots dedupe.
   externalId: ['source_object', 'source_id'],

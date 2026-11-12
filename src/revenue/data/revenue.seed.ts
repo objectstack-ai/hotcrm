@@ -13,6 +13,7 @@ import { QuoteLineItem } from '../objects/quote_line_item.object';
 import { linesTotal, type LineSpec } from '../../sales/data/_shared';
 import { lineItemRecords } from './catalog.seed';
 import { OPPORTUNITY_LINES } from '../../sales/data/sales.seed';
+import { SEED_EN_LOCALES } from '../../sales/data/_locale';
 
 // ─── Quotes ───────────────────────────────────────────────────────────
 // `quote_number` is a runtime-owned autonumber and is NOT seeded (#490);
@@ -76,6 +77,7 @@ const quoteTotals = (
 // price: beside `leads` in `src/sales/data/sales.seed.ts`.
 export const quotes = defineSeed(Quote, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'name',
   records: [
     {
@@ -181,6 +183,7 @@ export const quotes = defineSeed(Quote, {
 // under `upsert` the next boot wrote the seeded line back.
 export const quoteLineItems = defineSeed(QuoteLineItem, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: ['crm_quote', 'crm_product'],
   records: lineItemRecords('crm_quote', QUOTE_LINES),
 });

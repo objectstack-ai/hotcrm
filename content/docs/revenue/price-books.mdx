@@ -16,7 +16,7 @@ Exactly one price book is the **Standard** book, and HotCRM keeps it single:
 - A second book cannot be marked **Standard**. The save is refused and names the book that already is.
 - **Standard** cannot be turned off on the standard book, and the standard book cannot be deleted. To stop using it, turn off **Active**.
 
-HotCRM's sample data includes a book named **Standard** with one entry for every product in the sample catalog, at that product's **List Price**. A single-organization installation that already has data gets the same book once, on its first start after the upgrade; after that, prices you change in it stay changed.
+HotCRM's sample data includes a book named **Standard** with one entry for every product in the sample catalog, at that product's **List Price**. An organization whose sample data is in Simplified Chinese gets the same catalog with Chinese product names and descriptions instead, at the same prices, and its book is named **标准价格表**. A single-organization installation that already has data gets the same book once, on its first start after the upgrade; after that, prices you change in it stay changed.
 
 After that, the Standard book follows the catalog. A product added later gets its Standard entry when it is saved, at its **List Price**, and changing a product's **List Price** reprices its Standard entry. The product's **List Price** is the standard price, with its rule that the price is not below **Cost**: change the standard price on the product.
 

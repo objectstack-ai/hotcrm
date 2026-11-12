@@ -87,3 +87,11 @@ export function resolveComposition(
       `Expected one of: ${HOTCRM_COMPOSITIONS.join(', ')} (or leave it unset for 'default').`,
   );
 }
+
+// ─────────────────────────────── the demo, once per language market (#2411) ──
+export { SEED_EN_LOCALES, SEED_ZH_CN_LOCALES, zhCNTwin } from './_locale';
+export { accountsZhCN, contactsZhCN, leadsZhCN, opportunitiesZhCN } from './sales.zh-CN.seed';
+export {
+  tasksZhCN, eventsZhCN, eventAttendeesFromContactsZhCN, eventAttendeesFromLeadsZhCN, leadInteractionPointersZhCN,
+} from './activity.zh-CN.seed';
+export { contractsZhCN, forecastsZhCN } from './contract.zh-CN.seed';

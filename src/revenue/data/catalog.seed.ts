@@ -10,6 +10,7 @@
 import { defineSeed } from '@objectstack/spec/data';
 import { Product } from '../objects/product.object';
 import type { LineSpec } from '../../sales/data/_shared';
+import { SEED_EN_LOCALES } from '../../sales/data/_locale';
 
 // ─── Products ─────────────────────────────────────────────────────────
 // The catalog is what every line item below prices against, so it has to be
@@ -29,6 +30,7 @@ import type { LineSpec } from '../../sales/data/_shared';
 // beside `leads` in `src/sales/data/sales.seed.ts`.
 export const products = defineSeed(Product, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'name',
   records: [
     {
