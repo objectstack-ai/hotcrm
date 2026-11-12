@@ -69,6 +69,16 @@ stateDiagram-v2
   unqualified --> new
 ```
 
+## How a person's name is written
+
+A lead's and a contact's name is built from its **First Name** and **Last
+Name**, and that one name is what the record's header, lists, lookups, search
+and notifications show. When the last name (the family name) is written in
+Chinese, Japanese or Korean script, the family name comes first with no space:
+last name 张 and first name 伟 read **张伟**. Any other name reads first name,
+space, last name — *Ada Lovelace*. The rule follows the name, not the language
+you use the app in, so everyone sees the same name.
+
 ## Converting a qualified lead
 
 Use **Convert** on a qualified lead. A short screen asks whether to create an

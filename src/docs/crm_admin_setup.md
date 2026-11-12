@@ -28,6 +28,16 @@ administrator. There is no switch in Setup for this; the build decides:
 - the multi-organization build gives each new organization the product
   catalogue and nothing else.
 
+The demo's dates are counted from the day it is seeded: its open deals close
+in the coming weeks, most of its open cases are inside their SLA, and its
+activity runs up to today. After that the records keep the dates they were
+given, so a demo organization a month old shows a month-old story — deals past
+their close date and cases past their SLA. Seeding again does not refresh it:
+apart from the forecast snapshots, demo records already in place are left as
+they are. To show the demo
+fresh, seed a new organization (on a self-hosted install, `pnpm demo:reset`
+starts the database again).
+
 On the standard build, clear out the demo records you do not want **before**
 you import your own: an import matches rows to the records already there, so
 a real account that shares a demo account's name would update the demo record
