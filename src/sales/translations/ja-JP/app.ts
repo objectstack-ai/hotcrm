@@ -441,7 +441,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     lead_detail_page: {
       label: 'リード詳細',
       description: 'ハイライト・詳細・関連情報を備えたリードの総合詳細ページ。',
-      title: '{first_name} {last_name}',
+      title: '{full_name}',
       subtitle: '{company}',
       components: {
         lead_duplicate_alert_confirmed: { label: '重複確定の警告' },

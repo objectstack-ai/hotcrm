@@ -13,6 +13,11 @@ import { ContactWelcomeFlow } from '../src/sales/flows/contact-welcome.flow';
 import { LeadAssignmentFlow } from '../src/sales/flows/lead-assignment.flow';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import { LeadConversionApprovalFlow } from '../src/sales/flows/lead-conversion-approval.flow';
+import { LeadDetailPage } from '../src/sales/pages/lead_detail.page';
+import { en as enPack } from '../src/sales/translations/en';
+import { zhCN as zhCNPack } from '../src/sales/translations/zh-CN';
+import { esES as esESPack } from '../src/sales/translations/es-ES';
+import { jaJP as jaJPPack } from '../src/sales/translations/ja-JP';
 import { hotcrmStack, signUpPerson, notificationsTo, type Person } from './helpers/verify-stack';
 
 /**
@@ -91,6 +96,23 @@ describe('the lead: header title and full name', () => {
     const res = await rest('PATCH', `/data/crm_lead/${lead.id}`, { first_name: '伟', last_name: '张' });
     expect(res.status, JSON.stringify(res.body)).toBe(200);
     expect((await stored('crm_lead', String(lead.id))).display_title).toBe(`张伟 - ${company}`);
+  });
+});
+
+describe('the lead record page header', () => {
+  // Measured in the console on a fresh zh-CN boot (#2431): with the stored
+  // titles fixed, the lead page's own header still read 「伟 张」, because the
+  // page composed `{first_name} {last_name}` itself — in the page and in each
+  // locale pack's copy of its title.
+  it('the page and every locale pack title the header by full_name', () => {
+    const header = (LeadDetailPage.regions ?? [])
+      .flatMap((r) => (r.components ?? []) as Rec[])
+      .find((c) => c.type === 'page:header');
+    expect(header?.properties?.title).toBe('{full_name}');
+    for (const [locale, pack] of Object.entries({ en: enPack, 'zh-CN': zhCNPack, 'es-ES': esESPack, 'ja-JP': jaJPPack })) {
+      const page = (pack as Rec).pages?.lead_detail_page as Rec | undefined;
+      expect(page?.title, `${locale}: lead_detail_page.title`).toBe('{full_name}');
+    }
   });
 });
 
