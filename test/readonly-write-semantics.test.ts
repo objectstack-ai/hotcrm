@@ -185,7 +185,12 @@ const writerFlow = (name: string, runAs: 'system' | 'user'): Flow =>
     ],
   }) as AnyRec as Flow;
 
-/** The same write behind a screen node — the `escalate_case` shape exactly. */
+/**
+ * The same write behind a screen node — the `escalate_case` shape exactly.
+ * Its `confirm` field is `text`, so every resume answers it with a string:
+ * objectstack 18.4.0 refuses a resume whose value does not match the field's
+ * type (`INVALID_SCREEN_INPUT`), and the run would stop before its write.
+ */
 const screenFlow = (name: string, runAs: 'system' | 'user'): Flow =>
   ({
     name, label: name, type: 'screen', status: 'active', runAs,
@@ -327,7 +332,7 @@ describe('writer: a screen flow (the escalate_case shape)', () => {
       params: { rowId: id }, userId: 'user_1', event: 'manual',
     } as never);
     const runId = started?.runId ?? started?.run?.id;
-    if (runId) await engine.resume(runId, { variables: { confirm: true } } as never);
+    if (runId) await engine.resume(runId, { variables: { confirm: 'yes' } } as never);
     const after = await readBack(id);
     expect(after.open_flag, 'the CONTROL column did not land — harness fault, not a strip').toBe(true);
     expect(after.locked_flag).toBe(true);
@@ -340,7 +345,7 @@ describe('writer: a screen flow (the escalate_case shape)', () => {
       params: { rowId: id }, userId: 'user_1', event: 'manual',
     } as never);
     const runId = started?.runId ?? started?.run?.id;
-    if (runId) await engine.resume(runId, { variables: { confirm: true } } as never);
+    if (runId) await engine.resume(runId, { variables: { confirm: 'yes' } } as never);
     const after = await readBack(id);
     expect(after.open_flag, 'the CONTROL column did not land — harness fault, not a strip').toBe(true);
     expect(after.locked_flag).toBe(false);
@@ -617,7 +622,7 @@ async function runPair(childRunAs: 'system' | 'user', tag: string): Promise<AnyR
     params: { rowId: id }, userId: 'user_1', event: 'manual',
   } as never);
   const runId = started?.runId ?? started?.run?.id;
-  if (runId) await engine.resume(runId, { variables: { confirm: true } } as never);
+  if (runId) await engine.resume(runId, { variables: { confirm: 'yes' } } as never);
   return await readBack(id);
 }
 

@@ -85,6 +85,14 @@ describe('the translations the publish script sends', () => {
     expect(body.display_name).toBe('HotCRM');
   });
 
+  it('sends the publisher and the starter flag the publish always sent, from the script, not the manifest (#2420)', () => {
+    const mp = manifest();
+    expect(mp).not.toHaveProperty('publisher');
+    expect(mp).not.toHaveProperty('isStarter');
+    const body = packageUpsertBody({ manifestId: mp.manifestId, manifest: mp, license: mp.license, readme: 'R', translations: undefined });
+    expect({ publisher: body.publisher, is_starter: body.is_starter }).toEqual({ publisher: 'objectstack', is_starter: false });
+  });
+
   it('is printed by the DRY_RUN log, readme by length', () => {
     const lines = describeTranslations(sent);
     expect(lines).toHaveLength(1);

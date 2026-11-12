@@ -45,8 +45,13 @@ const quote: Rec = ((stack as Rec).objects as Rec[]).find((o) => o.name === 'crm
 const machine: Record<string, string[]> =
   (quote.validations as Rec[]).find((v) => v.name === 'quote_status_progression')!.transitions;
 
-/** Evaluate an action's `visible` the way the console does. */
-const offered = (name: string, record: Rec, permissions: Rec = { crm_quote: { allowEdit: true } }): boolean => {
+/**
+ * Evaluate an action's `visible` the way the console does. The default map is
+ * an editor's as a session publishes it: read beside edit, since
+ * `current_user.can(object, 'edit')` answers edit only together with read
+ * (objectstack 18.4.0, `objectPermissionGrants`).
+ */
+const offered = (name: string, record: Rec, permissions: Rec = { crm_quote: { allowRead: true, allowEdit: true } }): boolean => {
   const result = ExpressionEngine.evaluate<boolean>(actionNamed(name).visible, {
     user: { id: 'u1', positions: [] }, record, permissions: permissions as never,
   });
