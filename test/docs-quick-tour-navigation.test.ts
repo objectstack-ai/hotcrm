@@ -44,7 +44,7 @@ import { CrmPositions } from '../src/sales/sharing/positions';
  *    italics — the convention is to say where a reader's name really lives, not
  *    to delete it silently — and no phantom may ever appear in bold.
  *  - exists ⇒ listed: the table's rows are compared against the served
- *    navigation (`CrmApp.navigation` plus the module contributions, see `NAV`)
+ *    navigation (`CrmApp.navigation` plus the module contributions, see `tourOf`)
  *    group-for-group, child-for-child, in source order. Add a nav item without
  *    touching the tour and this file goes red at PR time, in all three locales.
  *
@@ -132,7 +132,6 @@ const tourOf = (name: string) => {
 const TOUR_APPS = [(CrmApp as AnyRec).name as string, 'crm_service', 'crm_marketing'].map(tourOf);
 const SALES = TOUR_APPS[0]!;
 
-const NAV = SALES.nav;
 const GROUPS = SALES.groups;
 const PINNED = SALES.pinned;
 const GROUP_LABELS: string[] = SALES.groupLabels;

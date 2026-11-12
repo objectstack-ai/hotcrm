@@ -5,7 +5,6 @@ import { ExpressionEngine } from '@objectstack/formula';
 import { P } from '@objectstack/spec';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import { SecurityPlugin } from '@objectstack/plugin-security';
-import { CrmApp } from '../src/sales/apps/crm.app';
 import { CrmPositions } from '../src/sales/sharing/positions';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 import { servedApp } from './helpers/composed-stack';
@@ -68,8 +67,6 @@ const TREES = Object.fromEntries(APPS.map((app) => {
   const nav = (servedApp(app).navigation ?? []) as Rec[];
   return [app, { nav, leaves: walkLeaves(nav) }];
 })) as Record<AppName, { nav: Rec[]; leaves: Rec[] }>;
-/** the Sales app: the app this file pinned before #2417. */
-const NAV = TREES[(CrmApp as Rec).name as AppName].nav;
 /** Every entry of the three apps, once per id: for "is it served at all" questions. */
 const LEAVES: Rec[] = APPS.flatMap((app) => TREES[app].leaves)
   .filter((n, i, all) => all.findIndex((o) => o.id === n.id) === i);
