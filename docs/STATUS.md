@@ -10,7 +10,7 @@
 
 ## Summary
 
-HotCRM is a single ObjectStack marketplace app at version `6.1.1`, shipped as one release artifact carrying five packages in the namespace `crm` (ADR-0130 D4). The app manifest — id `app.objectstack.hotcrm`, the artifact's own identity — is defined in [`src/sales/index.ts`](../src/sales/index.ts); the four modules in [`src/service/index.ts`](../src/service/index.ts), [`src/revenue/index.ts`](../src/revenue/index.ts), [`src/marketing/index.ts`](../src/marketing/index.ts) and [`src/o2c/index.ts`](../src/o2c/index.ts) (Order to Cash, which carries no object yet); [`objectstack.config.ts`](../objectstack.config.ts) composes the five.
+HotCRM is a single ObjectStack marketplace app at version `6.1.2`, shipped as one release artifact carrying five packages in the namespace `crm` (ADR-0130 D4). The app manifest — id `app.objectstack.hotcrm`, the artifact's own identity — is defined in [`src/sales/index.ts`](../src/sales/index.ts); the four modules in [`src/service/index.ts`](../src/service/index.ts), [`src/revenue/index.ts`](../src/revenue/index.ts), [`src/marketing/index.ts`](../src/marketing/index.ts) and [`src/o2c/index.ts`](../src/o2c/index.ts) (Order to Cash, which carries no object yet); [`objectstack.config.ts`](../objectstack.config.ts) composes the five.
 
 ## ObjectStack Validation
 
@@ -18,7 +18,7 @@ The summary `pnpm validate` prints — every figure read straight off the stack 
 loader registers:
 
 ```text
-HotCRM v6.1.1
+HotCRM v6.1.2
 Data: 20 Objects  373 Fields
 UI: 1 Apps  15 Views  10 Pages  5 Dashboards  10 Reports  40 Actions
 Logic: 35 Flows
