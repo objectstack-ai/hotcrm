@@ -5,7 +5,6 @@ import { ExpressionEngine } from '@objectstack/formula';
 import { P } from '@objectstack/spec';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import { SecurityPlugin } from '@objectstack/plugin-security';
-import { CrmApp } from '../src/sales/apps/crm.app';
 import { CrmPositions } from '../src/sales/sharing/positions';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
 import { servedApp } from './helpers/composed-stack';
@@ -50,14 +49,30 @@ type Rec = Record<string, any>;
  * #2250 adds the member who holds no HotCRM grant at all (see its block at the
  * end of this file): the console sends them to the platform's access page
  * before it consults this order.
+ *
+ * #2417 split the one menu into three apps: the Sales app (`crm_enterprise`),
+ * the Service app and the Marketing app. Every entry kept its gate and moved
+ * whole, so each pin above still holds, asked in the app the entry now lives
+ * in: `shownTo` reads one app's served tree, by default the persona's HOME
+ * app, the one its launcher offers first (`HOME_APP`). Which apps a
+ * persona's launcher offers is measured at `/me/apps` (the last block).
  */
 
-const NAV = (servedApp((CrmApp as Rec).name).navigation ?? []) as Rec[];
-const LEAVES: Rec[] = (() => {
-  const walk = (nodes: Rec[]): Rec[] =>
-    nodes.flatMap((n) => (n.type === 'group' ? walk((n.children ?? []) as Rec[]) : [n]));
-  return walk(NAV);
-})();
+const APPS = ['crm_enterprise', 'crm_service', 'crm_marketing'] as const;
+type AppName = (typeof APPS)[number];
+const walkLeaves = (nodes: Rec[]): Rec[] =>
+  nodes.flatMap((n) => (n.type === 'group' ? walkLeaves((n.children ?? []) as Rec[]) : [n]));
+/** Each app's served tree, top level and leaves. */
+const TREES = Object.fromEntries(APPS.map((app) => {
+  const nav = (servedApp(app).navigation ?? []) as Rec[];
+  return [app, { nav, leaves: walkLeaves(nav) }];
+})) as Record<AppName, { nav: Rec[]; leaves: Rec[] }>;
+/** Every entry of the three apps, once per id: for "is it served at all" questions. */
+const LEAVES: Rec[] = APPS.flatMap((app) => TREES[app].leaves)
+  .filter((n, i, all) => all.findIndex((o) => o.id === n.id) === i);
+/** The app a persona's launcher offers first; everyone else's is the Sales app. */
+const HOME_APP: Record<string, AppName> = { service_agent: 'crm_service', service_manager: 'crm_service' };
+const homeOf = (persona: string): AppName => HOME_APP[persona] ?? 'crm_enterprise';
 
 /** The six entries a rep no longer sees (#2244). Knowledge was not one of them; it left with #2367 (its block below). */
 const SERVICE_ONLY = [
@@ -131,10 +146,14 @@ beforeAll(async () => {
   };
 }, 180_000);
 
-/** The entries `persona` is shown, in sidebar order; `before` evaluates the entries it names with those gates instead. */
-const shownTo = (persona: string, before?: Record<string, unknown>): string[] => {
+/**
+ * The entries `persona` is shown in `app` (its home app by default), in
+ * sidebar order; `before` evaluates the entries it names with those gates
+ * instead.
+ */
+const shownTo = (persona: string, before?: Record<string, unknown>, app: AppName = homeOf(persona)): string[] => {
   const p = who[persona]!;
-  return LEAVES.filter((n) => {
+  return TREES[app].leaves.filter((n) => {
     if (n.type === 'object' && p.objects[n.objectName]?.allowRead !== true) return false;
     const visible = before && n.id in before ? before[n.id] : n.visible;
     if (visible === undefined) return true;
@@ -160,15 +179,20 @@ describe('a sales rep is not shown the service entries (#2244)', () => {
     }
   });
 
-  it.each(REPS)('%s is shown none of the six', (rep) => {
+  it('all six live in the Service app since #2417', () => {
+    expect(SERVICE_ONLY.filter((id) => !TREES.crm_service.leaves.some((n) => n.id === id))).toEqual([]);
+  });
+
+  it.each(REPS)('%s is shown none of the six, in either app', (rep) => {
     expect(shownTo(rep).filter((id) => SERVICE_ONLY.includes(id))).toEqual([]);
+    expect(shownTo(rep, undefined, 'crm_service').filter((id) => SERVICE_ONLY.includes(id))).toEqual([]);
   });
 
   it.each(['sales_manager', 'service_agent', 'service_manager', 'admin'])(
     '%s is shown all six, as before',
     (persona) => {
       expect(who[persona]!.positions, persona).not.toContain('sales_rep');
-      expect(SERVICE_ONLY.filter((id) => !shownTo(persona).includes(id))).toEqual([]);
+      expect(SERVICE_ONLY.filter((id) => !shownTo(persona, undefined, 'crm_service').includes(id))).toEqual([]);
     },
   );
 
@@ -187,16 +211,20 @@ describe("no other persona's sidebar or landing moves (#2060 item 5, #2244)", ()
 
   it('the pre-#2244 gates showed every persona all six (a rep included), so the comparison is real', () => {
     for (const persona of ALL) {
-      expect(SERVICE_ONLY.filter((id) => !shownTo(persona, BEFORE).includes(id)), persona).toEqual([]);
+      expect(SERVICE_ONLY.filter((id) => !shownTo(persona, BEFORE, 'crm_service').includes(id)), persona).toEqual([]);
     }
   });
 
-  it.each(['sales_manager', 'service_agent', 'service_manager', 'admin'])('%s is shown exactly the sidebar it was shown before', (persona) => {
-    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE));
+  it.each(['sales_manager', 'service_agent', 'service_manager', 'admin'])('%s is shown exactly the sidebar it was shown before, in both apps', (persona) => {
+    for (const app of ['crm_enterprise', 'crm_service'] as const) {
+      expect(shownTo(persona, undefined, app), app).toEqual(shownTo(persona, BEFORE, app));
+    }
   });
 
-  it.each(REPS)('%s is shown its old sidebar less the six, nothing else', (rep) => {
-    expect(shownTo(rep)).toEqual(shownTo(rep, BEFORE).filter((id) => !SERVICE_ONLY.includes(id)));
+  it.each(REPS)('%s is shown its old sidebar less the six, nothing else, in both apps', (rep) => {
+    for (const app of ['crm_enterprise', 'crm_service'] as const) {
+      expect(shownTo(rep, undefined, app), app).toEqual(shownTo(rep, BEFORE, app).filter((id) => !SERVICE_ONLY.includes(id)));
+    }
   });
 
   it.each(ALL)('%s lands where it landed before', (persona) => {
@@ -225,12 +253,16 @@ describe('a service persona lands on Service Overview again (#2262)', () => {
     expect(who[persona]!.objects.crm_opportunity?.allowRead).toBe(true);
   });
 
+  // Asked in the Sales app, where the two entries live: the service personas'
+  // launcher no longer offers it (#2417), but its address still opens it.
   it.each(SERVICE)('the gates before #2262 opened %s on Home', (persona) => {
-    expect(shownTo(persona, BEFORE_2262)[0]).toBe('nav_home');
+    expect(shownTo(persona, BEFORE_2262, 'crm_enterprise')[0]).toBe('nav_home');
   });
 
   it.each(SERVICE)('%s is shown its old sidebar less Home and Sales Home, nothing else', (persona) => {
-    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2262).filter((id) => !PINNED.includes(id)));
+    expect(shownTo(persona, undefined, 'crm_enterprise')).toEqual(
+      shownTo(persona, BEFORE_2262, 'crm_enterprise').filter((id) => !PINNED.includes(id)),
+    );
   });
 
   it.each([...REPS, 'sales_manager', 'admin'])('%s is shown exactly the sidebar it was shown before', (persona) => {
@@ -246,18 +278,21 @@ describe('a service persona is not shown the opportunity dashboards and reports 
     expect(OPPORTUNITY_ONLY.filter((id) => !LEAVES.some((n) => n.id === id))).toEqual([]);
   });
 
+  // The six live in the Sales app, so they are asked there (#2417).
+  const SALES = 'crm_enterprise';
+
   it.each(SERVICE)('the gate before #2268 showed %s all six: it reads opportunities through crm_user', (persona) => {
     expect(who[persona]!.objects.crm_opportunity?.allowRead).toBe(true);
-    expect(OPPORTUNITY_ONLY.filter((id) => !shownTo(persona, BEFORE_2268).includes(id))).toEqual([]);
+    expect(OPPORTUNITY_ONLY.filter((id) => !shownTo(persona, BEFORE_2268, SALES).includes(id))).toEqual([]);
   });
 
   it.each(SERVICE)('%s is shown none of the six', (persona) => {
-    expect(shownTo(persona).filter((id) => OPPORTUNITY_ONLY.includes(id))).toEqual([]);
+    expect(shownTo(persona, undefined, SALES).filter((id) => OPPORTUNITY_ONLY.includes(id))).toEqual([]);
   });
 
   it.each(SERVICE)('%s is shown its old sidebar less the six, nothing else, and the other object entries stay', (persona) => {
-    const shown = shownTo(persona);
-    expect(shown).toEqual(shownTo(persona, BEFORE_2268).filter((id) => !OPPORTUNITY_ONLY.includes(id)));
+    const shown = shownTo(persona, undefined, SALES);
+    expect(shown).toEqual(shownTo(persona, BEFORE_2268, SALES).filter((id) => !OPPORTUNITY_ONLY.includes(id)));
     // The object entries stayed with #2268. Two of them, Opportunities and My
     // Deals, left with #2367 (its block below); the rest stay.
     expect(shown).toEqual(expect.arrayContaining(['nav_lead', 'nav_account', 'nav_contact']));
@@ -303,29 +338,34 @@ describe("each persona's own work first: service staff lose the empty deal lists
   const OTHERS = ['sales_manager', 'admin', 'marketing_user'];
   const ALL = [...PERSONAS, 'admin', 'marketing_user'];
 
-  /** The served groups, each with the ids of its entries. */
-  const GROUPS = NAV.filter((n) => n.type === 'group').map((g) => ({
+  /** An app's served groups, each with the ids of its entries. */
+  const groupsOf = (app: AppName) => TREES[app].nav.filter((n) => n.type === 'group').map((g) => ({
     id: g.id as string,
     entries: ((g.children ?? []) as Rec[]).map((c) => c.id as string),
   }));
-  /** The groups `persona` is shown at least one entry of. */
+  const GROUPS = groupsOf('crm_enterprise');
+  /** The groups of the Sales app `persona` is shown at least one entry of. */
   const groupsShownTo = (persona: string, before?: Record<string, unknown>): string[] => {
-    const shown = shownTo(persona, before);
+    const shown = shownTo(persona, before, 'crm_enterprise');
     return GROUPS.filter((g) => g.entries.some((id) => shown.includes(id))).map((g) => g.id);
   };
 
+  // The deal lists live in the Sales app and the Service group in HotCRM
+  // Service since #2417: each is asked where it lives.
   it.each(SERVICE)('%s reads opportunities, and the gates before #2367 showed it both deal lists', (persona) => {
     expect(who[persona]!.objects.crm_opportunity?.allowRead).toBe(true);
-    expect(DEALS.filter((id) => !shownTo(persona, BEFORE_2367).includes(id))).toEqual([]);
+    expect(DEALS.filter((id) => !shownTo(persona, BEFORE_2367, 'crm_enterprise').includes(id))).toEqual([]);
   });
 
   it.each(SERVICE)('%s is shown its old sidebar less the two deal lists, nothing else', (persona) => {
-    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2367).filter((id) => !DEALS.includes(id)));
+    expect(shownTo(persona, undefined, 'crm_enterprise')).toEqual(
+      shownTo(persona, BEFORE_2367, 'crm_enterprise').filter((id) => !DEALS.includes(id)),
+    );
   });
 
   it.each(REPS)('the gates before #2367 showed %s a Service group of Knowledge alone', (rep) => {
-    const before = shownTo(rep, BEFORE_2367);
-    const service = GROUPS.find((g) => g.id === 'group_service')!;
+    const before = shownTo(rep, BEFORE_2367, 'crm_service');
+    const service = groupsOf('crm_service').find((g) => g.id === 'group_service')!;
     expect(service.entries.filter((id) => before.includes(id))).toEqual(['nav_knowledge']);
   });
 
@@ -350,9 +390,22 @@ describe("each persona's own work first: service staff lose the empty deal lists
     expect(folded).toMatchObject({ type: 'object', objectName: plain.objectName, viewName: 'published_articles' });
   });
 
-  it.each(ALL)('%s is shown exactly one Knowledge entry', (persona) => {
-    expect(shownTo(persona).filter((id) => id.startsWith('nav_knowledge')), persona).toHaveLength(
-      who[persona]!.objects.crm_knowledge_article?.allowRead === true ? 1 : 0,
+  // Across the apps the persona's launcher offers (#2417, measured at
+  // `/me/apps` in the last block): a rep's Published entry in Sales, the
+  // Service group's entry for everyone the Service app is offered to. The
+  // marketing user is offered Sales and Marketing, neither of which carries
+  // Knowledge: they read the articles, and find them by the Service app's
+  // address, not their launcher.
+  const OFFERED: Record<string, AppName[]> = {
+    na_rep: ['crm_enterprise'], eu_rep: ['crm_enterprise'],
+    sales_manager: [...APPS], admin: [...APPS],
+    service_agent: ['crm_service'], service_manager: ['crm_service'],
+    marketing_user: ['crm_enterprise', 'crm_marketing'],
+  };
+  it.each(ALL)('%s is shown exactly one Knowledge entry across its apps (none for the marketing user)', (persona) => {
+    const shown = OFFERED[persona]!.flatMap((app) => shownTo(persona, undefined, app));
+    expect(shown.filter((id) => id.startsWith('nav_knowledge')), persona).toHaveLength(
+      persona !== 'marketing_user' && who[persona]!.objects.crm_knowledge_article?.allowRead === true ? 1 : 0,
     );
   });
 
@@ -383,21 +436,22 @@ describe('a member who reads no cases is not offered Service Overview (#2338 ite
     expect(who.marketing_user!.positions).not.toContain('sales_rep');
   });
 
+  // Asked in the Service app, where Service Overview lives since #2417.
   it('the gate before #2338 offered them Service Overview, beside no Cases and no My Cases', () => {
-    const before = shownTo('marketing_user', BEFORE_2338);
+    const before = shownTo('marketing_user', BEFORE_2338, 'crm_service');
     expect(before).toContain('nav_service_dashboard');
     expect(before).not.toContain('nav_case');
     expect(before).not.toContain('nav_my_cases');
   });
 
   it('they are shown their old sidebar less Service Overview, nothing else', () => {
-    expect(shownTo('marketing_user')).toEqual(
-      shownTo('marketing_user', BEFORE_2338).filter((id) => id !== 'nav_service_dashboard'),
+    expect(shownTo('marketing_user', undefined, 'crm_service')).toEqual(
+      shownTo('marketing_user', BEFORE_2338, 'crm_service').filter((id) => id !== 'nav_service_dashboard'),
     );
   });
 
-  it.each(OTHERS)('%s is shown exactly the sidebar it was shown before', (persona) => {
-    expect(shownTo(persona)).toEqual(shownTo(persona, BEFORE_2338));
+  it.each(OTHERS)('%s is shown exactly the sidebar it was shown before, in the Service app', (persona) => {
+    expect(shownTo(persona, undefined, 'crm_service')).toEqual(shownTo(persona, BEFORE_2338, 'crm_service'));
   });
 });
 
@@ -429,12 +483,15 @@ describe('a member who reads no cases is not offered Service Overview (#2338 ite
  * object the served tree names is unread, otherwise the first entry shown.
  */
 const PLATFORM_ACCESS_PAGE = 'platform:no-readable-object';
-const NAMED_OBJECTS = [...new Set(LEAVES.filter((n) => n.type === 'object').map((n) => n.objectName as string))];
+/** The objects an app's served tree names: the console asks its question per app. */
+const namedObjects = (app: AppName): string[] =>
+  [...new Set(TREES[app].leaves.filter((n) => n.type === 'object').map((n) => n.objectName as string))];
+const NAMED_OBJECTS = [...new Set(APPS.flatMap(namedObjects))];
 
-const landingOf = (persona: string): string => {
+const landingOf = (persona: string, app: AppName = homeOf(persona)): string => {
   const p = who[persona]!;
-  if (NAMED_OBJECTS.every((o) => p.objects[o]?.allowRead !== true)) return PLATFORM_ACCESS_PAGE;
-  return shownTo(persona)[0]!;
+  if (namedObjects(app).every((o) => p.objects[o]?.allowRead !== true)) return PLATFORM_ACCESS_PAGE;
+  return shownTo(persona, undefined, app)[0]!;
 };
 
 describe('a member with no HotCRM grant lands on the platform access page (#2250)', () => {
@@ -474,8 +531,8 @@ describe('a member with no HotCRM grant lands on the platform access page (#2250
     expect(shownTo('no_grant')[0]).toBe('nav_approval_requests');
   });
 
-  it('so the member lands on the platform access page, not on any HotCRM entry', () => {
-    expect(landingOf('no_grant')).toBe(PLATFORM_ACCESS_PAGE);
+  it('so the member lands on the platform access page, not on any HotCRM entry, in every app', () => {
+    for (const app of APPS) expect(landingOf('no_grant', app), app).toBe(PLATFORM_ACCESS_PAGE);
   });
 
   it.each([
@@ -488,5 +545,44 @@ describe('a member with no HotCRM grant lands on the platform access page (#2250
   ])('%s still lands on %s', (persona, landing) => {
     expect(landingOf(persona)).toBe(landing);
     expect(landingOf(persona)).toBe(shownTo(persona)[0]);
+  });
+});
+
+/**
+ * Which apps each persona's launcher offers (#2417).
+ *
+ * Visibility, not access: the permission sets' `tabPermissions` make
+ * `/me/apps` (what the launcher and the app switcher draw) leave an app out,
+ * and its address still opens it. Sets merge most-visible-wins, and every
+ * member also holds `crm_user`, which says nothing about apps, so a set's
+ * `hidden` is not undone by it (measured on 18.3.0 in a browser, the
+ * screenshots are on the PR).
+ */
+describe("each persona's launcher offers the apps its work needs (#2417)", () => {
+  const appsOf = async (persona: string): Promise<string[]> => {
+    const res = await verify.apiAs(who[persona]!.token, 'GET', '/me/apps');
+    expect(res.status, await res.clone().text()).toBe(200);
+    const body: Rec = await res.json();
+    const list = ((body.data ?? body).apps ?? body.data ?? body) as Rec[];
+    return list.map((a) => String(a.name)).filter((name) => (APPS as readonly string[]).includes(name)).sort();
+  };
+
+  it.each([
+    ['na_rep', ['crm_enterprise']],
+    ['eu_rep', ['crm_enterprise']],
+    ['sales_manager', ['crm_enterprise', 'crm_marketing', 'crm_service']],
+    ['service_agent', ['crm_service']],
+    ['service_manager', ['crm_service']],
+    ['marketing_user', ['crm_enterprise', 'crm_marketing']],
+    ['admin', ['crm_enterprise', 'crm_marketing', 'crm_service']],
+  ])('%s is offered %j', async (persona, apps) => {
+    expect(await appsOf(persona)).toEqual(apps);
+  });
+
+  it.each(['na_rep', 'service_agent'])('an app left off the launcher still opens for %s by its name: visibility, not access', async (persona) => {
+    for (const app of APPS) {
+      const res = await verify.apiAs(who[persona]!.token, 'GET', `/meta/app/${app}`);
+      expect(res.status, `${persona} ${app}: ${await res.clone().text()}`).toBe(200);
+    }
   });
 });

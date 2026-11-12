@@ -9,7 +9,7 @@ A guided tour through the screens you'll use every day.
 
 ## 1. The home dashboard
 
-The app opens on the first entry your sidebar shows, so where you land depends on who you are. A sales manager or an administrator lands on **Home**, the first of two pinned entries. A sales rep's sidebar has no **Home**: it starts at **Sales Home**, the rep's own page, and that is where a rep lands. Neither pinned entry is shown to a service agent or service manager — both are hidden from those two positions — so they land on **Service Overview**, the first entry under **Service**. **Home** opens the **Executive Overview** dashboard — nine tiles of revenue, customer and pipeline numbers:
+HotCRM is three apps (section 2), and each opens on the first entry your sidebar shows, so where you land depends on who you are. In **Sales**, a sales manager or an administrator lands on **Home**, the first of two pinned entries. A sales rep's sidebar has no **Home**: it starts at **Sales Home**, the rep's own page, and that is where a rep lands. A service agent or service manager works in **Service**, which opens on **Service Overview**. **Home** opens the **Executive Overview** dashboard — nine tiles of revenue, customer and pipeline numbers:
 
 | Tile | What it shows |
 | --- | --- |
@@ -41,27 +41,29 @@ Four things this page used to promise are on no tile here, and one name it used 
 
 ## 2. The app launcher
 
-Click the **app launcher** (top-left grid icon) to switch between apps:
+Click the **app launcher** (top-left grid icon) to switch between apps. HotCRM ships one app per line of work, so the console opens on its home page, whose *Your apps* row lists the apps your launcher offers; click one to open it:
 
-- **HotCRM** — the main app with all CRM functionality.
+- **Sales** — leads, accounts, opportunities, quotes and contracts: the sales team's app.
+- **Service** — cases, the knowledge base and the customers they belong to.
+- **Marketing** — campaigns and the leads, contacts and accounts they reach, while the marketing module is enabled.
 - **Admin** — for system administrators.
 
-Inside HotCRM, the left nav opens with two pinned items — **Home**, which is the **Executive Overview** dashboard, and **Sales Home**, a rep's own page of pipeline figures, leads, open deals, open tasks and upcoming events — and everything else sits in seven groups:
+Your launcher offers the apps your work needs: a sales rep gets **Sales**, a service agent or service manager **Service**, a marketing user **Sales** and **Marketing**, and a sales manager or an administrator all three. That decides what the launcher shows, not what you may open: an app left off your launcher still opens from its address, and a link to a record opens it in the app you are in.
+
+Inside Sales, the left nav opens with two pinned items — **Home**, which is the **Executive Overview** dashboard, and **Sales Home**, a rep's own page of pipeline figures, leads, open deals, open tasks and upcoming events — and everything else sits in six groups:
 
 | Group | Contents |
 | --- | --- |
-| **Service** | Service Overview, Cases, Knowledge |
 | **Sales** | Leads, Accounts, Contacts, Opportunities, Sales Performance, Contracts, Quotes, Products, Price Books, Knowledge |
-| **My Work** | My Tasks, My Deals, My Leads, My Calendar, Inbox, My Cases |
+| **My Work** | My Tasks, My Deals, My Leads, My Calendar, Inbox |
 | **Activity** | Events, Sales Activity |
-| **Marketing** | Campaigns |
 | **Insights** | CRM Overview, Forecasts |
-| **Reports** | Opportunities by Stage, Won Opportunities by Owner, Pipeline Coverage by Quarter, Opportunity Funnel by Owner, Lead Engagement by Month, Accounts by Industry and Type, Customer Churn Signals, Cases by Status and Priority, SLA on Closed Cases, Cases Opened by Day |
-| **Help** | User Manual, Admin Manual, Service Manual, Revenue Manual, Marketing Manual |
+| **Reports** | Opportunities by Stage, Won Opportunities by Owner, Pipeline Coverage by Quarter, Opportunity Funnel by Owner, Lead Engagement by Month, Accounts by Industry and Type, Customer Churn Signals |
+| **Help** | User Manual, Admin Manual, Revenue Manual |
 
-**Reports** and **Help** are collapsed when the app loads — **Service**, **Sales**, **My Work**, **Activity**, **Marketing** and **Insights** open themselves. Click **Reports** open before deciding a report isn't there. **Help** opens the in-app manuals; **Admin Manual** is shown to administrators only.
+**Reports** and **Help** are collapsed when the app loads — **Sales**, **My Work**, **Activity** and **Insights** open themselves. Click **Reports** open before deciding a report isn't there. **Help** opens the in-app manuals; **Admin Manual** is shown to administrators only.
 
-The entries built on opportunities — **Home**, **Sales Home**, **Sales Performance**, **CRM Overview** and the four opportunity reports under **Reports** — are left out of the sidebar for anyone who cannot read opportunities, and for a service agent or service manager by position: and as they own no deals, **Opportunities** and **My Deals**, which were always empty for them, are not shown to them either. Every other report asks the same of its own records: a service agent still gets the lead, account and case reports, and a user who cannot read cases does not get **Service Overview** or the three case reports. **Home** is left out for a sales rep as well, which is why a rep's sidebar starts at **Sales Home**. A sales rep works no cases, so a rep's sidebar also leaves out **Service Overview**, **Cases**, **My Cases** and the three case reports — **Cases by Status and Priority**, **SLA on Closed Cases** and **Cases Opened by Day**. A rep's **Knowledge** is the last entry of **Sales** instead, opening the published articles, so a rep's sidebar has no **Service** group at all. Everyone else finds **Knowledge** under **Service**. **Service** is the first group because the app opens on the first entry a sidebar shows: for a service agent or service manager that is **Service Overview**.
+The entries built on opportunities — **Home**, **Sales Home**, **Sales Performance**, **CRM Overview** and the four opportunity reports under **Reports** — are left out of the sidebar for anyone who cannot read opportunities, and for a service agent or service manager by position, should they open the Sales app from its address: and as they own no deals, **Opportunities** and **My Deals**, which were always empty for them, are not shown to them either. Every other report asks the same of its own records. **Home** is left out for a sales rep as well, which is why a rep's sidebar starts at **Sales Home**. The **Knowledge** entry at the end of **Sales** is a rep's: it opens the published articles, and only a sales rep is shown it. Everyone else finds **Knowledge** in **Service**.
 
 One sidebar row per destination is deliberate. Where an object offers several ways of looking at the same records, those live as tabs across the top of that object's list page, not as extra rows in the nav — so the sidebar stays short enough to scan.
 
@@ -72,10 +74,33 @@ Five group names this page used to list are not in the app at all, and several i
 - Four item names this page used to list have left the sidebar without leaving the product — each is now a tab on the list page it belongs to. *Pipeline* is the Sales Pipeline tab on **Opportunities**; *Calendar* and *Interaction History* are the Event Calendar and ✅ Interaction History tabs on **Events**; *All Tasks* is the first tab on the page **My Tasks** opens.
 - *Activities* is not a group; the real one is **Activity**, and tasks are not in it. `crm_task` reaches the sidebar as **My Tasks**, under **My Work**.
 - *Analytics* is not a group. The cross-functional dashboard, **CRM Overview**, is under **Insights**, and every report the app ships is under **Reports**, each listed above under its own name. Nothing is called *Dashboards*.
-- *AI* is not a group, and no sidebar item is called *Copilot* or *Knowledge Bases*. The Copilot is the right-side chat panel on every page (section 6 below), and the knowledge articles are **Knowledge** under **Service**.
-- *Knowledge Base* is not a label this app carries. The **Service** entry is **Knowledge**, and the service dashboard beside it is **Service Overview** — see [Service](/docs/service/index).
+- *AI* is not a group, and no sidebar item is called *Copilot* or *Knowledge Bases*. The Copilot is the right-side chat panel on every page (section 6 below), and the knowledge articles are **Knowledge** under **Service**, in **Service**.
+- *Knowledge Base* is not a label HotCRM carries. In **Service** the entry is **Knowledge**, and the dashboard the app opens on is **Service Overview** — see [Service](/docs/service/index).
 - *Campaign Members* is not a sidebar item. Campaign membership is reached from the campaign detail page or from global search — see [Campaign Members](/docs/marketing/campaign-members).
 - *Approval Requests* and *Action History* are not items either: **Inbox** is the only approvals entry the app carries. The approval audit trail is real data — the approvals plugin stores it as `sys_approval_action` — but no navigation entry in this app opens it.
+
+Inside Service, the left nav opens on **Service Overview**, the service team's dashboard, and everything else sits in five groups:
+
+| Group | Contents |
+| --- | --- |
+| **Service** | Cases, Knowledge |
+| **Customers** | Accounts, Contacts |
+| **My Work** | My Cases, Inbox, My Tasks, My Calendar |
+| **Reports** | Cases by Status and Priority, SLA on Closed Cases, Cases Opened by Day, Customer Churn Signals |
+| **Help** | Service Manual |
+
+**Reports** and **Help** are collapsed when the app loads — **Service**, **Customers** and **My Work** open themselves. A user who cannot read cases is not shown **Service Overview** or the three case reports, and a sales rep who opens the app from its address is shown no case entry at all.
+
+Inside Marketing, the left nav opens on **Campaigns**, and everything else sits in four groups:
+
+| Group | Contents |
+| --- | --- |
+| **Audience** | Leads, Contacts, Accounts |
+| **My Work** | Inbox, My Tasks |
+| **Reports** | Lead Engagement by Month |
+| **Help** | Marketing Manual |
+
+**Reports** and **Help** are collapsed when the app loads — **Audience** and **My Work** open themselves. **Lead Engagement by Month** and **Customer Churn Signals** each sit in two apps; either entry opens the same report.
 
 ## 3. Your first lead
 

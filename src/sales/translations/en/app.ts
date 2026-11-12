@@ -21,14 +21,12 @@ import type { TranslationData } from '@objectstack/spec/system';
 export const appSurface: Omit<TranslationData, 'objects'> = {
   apps: {
     crm_enterprise: {
-      label: 'HotCRM',
-      description: 'Customer relationship management for sales, service, and marketing',
+      label: 'Sales',
+      description: 'Leads, accounts, opportunities and quotes for the sales team',
       navigation: {
         group_activity: { label: 'Activity' },
         group_sales: { label: 'Sales' },
         group_order_to_cash: { label: 'Order to Cash' },
-        group_service: { label: 'Service' },
-        group_marketing: { label: 'Marketing' },
         group_help: { label: 'Help' },
       },
     },

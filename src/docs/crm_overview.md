@@ -24,11 +24,12 @@ something escalates, what threshold triggers an approval).
 - **Sales** — leads, accounts, contacts, opportunities and contracts: the
   motion from a first enquiry to a signed agreement and its renewal.
 - **Service** — cases and the knowledge base: support after the sale, with
-  SLA clocks and escalation. It has a manual of its own under **Help**.
+  SLA clocks and escalation. It has an app of its own, the Service app, with
+  its manual under **Help**.
 - **Revenue** — products, price books and quotes: what a deal is priced at.
   It is an add-on module with a manual of its own under **Help**.
 - **Marketing** — campaigns and their members: where leads come from. It is
-  an add-on module too.
+  an add-on module too, with an app of its own, the Marketing app.
 
 ## The customer lifecycle, end to end
 

@@ -230,8 +230,10 @@ describe('the source facts that section now rests on (#997)', () => {
     // The catalogue is the master data quote lines and opportunity line items
     // point at — revenue, not campaigns. It sat under Marketing because that
     // is where it was first filed, and the sales index said nothing about it.
-    const marketing = NAV.find((n) => n.type === 'group' && n.label === 'Marketing');
-    expect(((marketing?.children ?? []) as AnyRec[]).map((c) => c.id)).toEqual(['nav_campaign']);
+    // Since #2417 Marketing is an app of its own, the Marketing app, and
+    // Campaigns its first entry; the Sales app has no Marketing group.
+    expect(NAV.find((n) => n.type === 'group' && n.label === 'Marketing')).toBeUndefined();
+    expect(((servedApp('crm_marketing').navigation ?? []) as AnyRec[])[0]?.id).toBe('nav_campaign');
     const product = SALES_CHILDREN.find((c) => c.id === 'nav_product');
     expect(product?.objectName).toBe('crm_product');
     expect(product?.viewName, 'Products opens the object list, so it belongs in the shared bullet')

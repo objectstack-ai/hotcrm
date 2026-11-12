@@ -22,8 +22,8 @@ import type { TranslationData } from '@objectstack/spec/system';
 export const appSurface: Omit<TranslationData, 'objects'> = {
   apps: {
     crm_enterprise: {
-      label: 'HotCRM',
-      description: 'Gestión de relaciones con clientes para ventas, servicio y marketing',
+      label: 'Ventas',
+      description: 'Prospectos, cuentas, oportunidades y presupuestos para el equipo de ventas',
       // Indexado por el `id` del nodo de navegación (espacio de nombres plano,
       // sea cual sea la profundidad del nodo).
       navigation: {
@@ -49,10 +49,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_my_leads: { label: 'Mis Prospectos' },
         nav_approval_requests: { label: 'Bandeja de Entrada' },
 
-        group_service: { label: 'Servicio' },
-
-        group_marketing: { label: 'Marketing' },
-
         group_insights: { label: 'Análisis' },
         nav_crm_dashboard: { label: 'Resumen CRM' },
         nav_forecast: { label: 'Previsiones' },
@@ -69,6 +65,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_help: { label: 'Ayuda' },
         nav_help_manual: { label: 'Manual de Usuario' },
         nav_help_admin: { label: 'Manual de Administración' },
+      },
+    },
+    crm_service: {
+      // The ids this package contributes into the Service app (#2417).
+      navigation: {
+        nav_account: { label: 'Cuentas' },
+        nav_contact: { label: 'Contactos' },
+        nav_my_tasks: { label: 'Mis Tareas' },
+        nav_my_calendar: { label: 'Mi Calendario' },
+        nav_report_churn_signals: { label: 'Señales de Abandono' },
+      },
+    },
+    crm_marketing: {
+      // The ids this package contributes into the Marketing app (#2417).
+      navigation: {
+        nav_lead: { label: 'Prospectos' },
+        nav_contact: { label: 'Contactos' },
+        nav_account: { label: 'Cuentas' },
+        nav_my_tasks: { label: 'Mis Tareas' },
+        nav_report_lead_inflow: { label: 'Interacción con Prospectos por Mes' },
       },
     },
   },

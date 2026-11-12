@@ -5,6 +5,12 @@ export const MarketingUserProfile = {
   label: 'Marketing User',
   description:
     'Marketing staff: run campaigns and their members and read every lead, contact, account and opportunity for targeting, but see no cases and delete no CRM record.',
+  // Which HotCRM apps the holder's launcher offers (#2417). Visibility, not
+  // access: a hidden app still opens from its address, and records link
+  // across apps. Sets merge most-visible-wins, and every member also holds
+  // `crm_user`, which says nothing here, so silence never re-shows an app.
+  // Marketing keeps Sales beside Marketing: the leads and deals it targets.
+  tabPermissions: { crm_service: 'hidden' as const },
   objects: {
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. Lead and contact list exports are marketing's
