@@ -7,6 +7,7 @@ import { Forecast } from '../src/sales/objects/forecast.object';
 import { ForecastSnapshotFlow } from '../src/sales/flows/forecast-snapshot.flow';
 import { flowNodesDeep, regionsOf } from './helpers/flow-regions';
 import { ExpressionEngine } from '@objectstack/formula';
+import { isSeedExpression, resolveSeedRecords } from './helpers/seed-values';
 
 /**
  * Forecast seed calendar-alignment guards (#530).
@@ -41,16 +42,8 @@ const forecastSeed = CrmSeedData.find((s: any) => s.object === 'crm_forecast') a
  * loads it too, and froze the build day into the artifact a tenant installs.
  */
 const rawRecords: SeedRec[] = forecastSeed?.records ?? [];
-const isExpression = (v: unknown): v is { dialect: string; source: string } =>
-  typeof v === 'object' && v !== null && typeof (v as { source?: unknown }).source === 'string';
-const resolveAt = (now: Date): SeedRec[] => rawRecords.map((r) => Object.fromEntries(
-  Object.entries(r).map(([k, v]) => {
-    if (!isExpression(v)) return [k, v];
-    const out = ExpressionEngine.evaluate(v as never, { now, record: {} }) as { ok: boolean; value?: unknown; error?: unknown };
-    if (!out.ok) throw new Error(`${String(r.seed_key)}.${k} does not resolve: ${JSON.stringify(out.error)}`);
-    return [k, out.value];
-  }),
-));
+const isExpression = isSeedExpression;
+const resolveAt = (now: Date): SeedRec[] => resolveSeedRecords(rawRecords, now);
 const records: SeedRec[] = resolveAt(new Date());
 const quarterRecs = records.filter((r) => r.period === 'quarter');
 const monthRecs = records.filter((r) => r.period === 'month');

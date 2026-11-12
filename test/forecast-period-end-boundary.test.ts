@@ -11,6 +11,7 @@ import artifact from '../objectstack.config';
 import stack from './helpers/composed-stack';
 import forecastHook from '../src/sales/objects/forecast.hook';
 import { forecasts } from '../src/sales/data/forecast.seed';
+import { resolveSeedRecords } from './helpers/seed-values';
 import { bootOptions, buildArtifactAgain, hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
@@ -705,7 +706,7 @@ describe('everything this app already writes clears the new rule', () => {
    * The seed rows are recomputed against `new Date()` on every import, so this
    * has to be an assertion, not an inspection of literals.
    */
-  const records = ((forecasts as AnyRec).records ?? []) as AnyRec[];
+  const records = resolveSeedRecords(((forecasts as AnyRec).records ?? []) as AnyRec[]);
 
   const calendarEnd = (period: string, startStr: string) => {
     const s = new Date(`${startStr}T00:00:00Z`);
