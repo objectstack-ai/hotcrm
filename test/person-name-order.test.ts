@@ -141,6 +141,39 @@ describe('the contact: stored title, search, and a conversion', () => {
   });
 });
 
+describe('a row stored before #2431 is re-titled by the backfill\'s re-save', () => {
+  // `scripts/backfill-record-titles.ts` re-sends one unchanged field of each
+  // contact or lead whose family name is CJK and whose stored title is still
+  // in the old order. The re-send is an update by id that names a field the
+  // title reads, so the engine recomputes the title with the new rule.
+  const oldOrder = async (object: string, id: string, title: string, value: string): Promise<void> => {
+    const ql = verify.kernel.getService<Rec>('objectql');
+    await ql.getDriverForObject(object).update(object, id, { [title]: value });
+    expect((await stored(object, id))[title]).toBe(value);
+  };
+
+  it('a contact titled 「伟 张」 reads 「张伟」 after its last name is re-sent', async () => {
+    const contact = await insert('crm_contact', {
+      first_name: '伟', last_name: '张', email: `legacy${++k}@person-name-order.test`, crm_account: await account(),
+    });
+    await oldOrder('crm_contact', String(contact.id), 'full_name', '伟 张');
+    const res = await rest('PATCH', `/data/crm_contact/${contact.id}`, { last_name: '张' });
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect((await stored('crm_contact', String(contact.id))).full_name).toBe('张伟');
+  });
+
+  it('a lead titled 「伟 张 - Co」 reads 「张伟 - Co」 after its company is re-sent', async () => {
+    const company = `Legacy Lead Co ${++k}`;
+    const lead = await insert('crm_lead', {
+      first_name: '伟', last_name: '张', company, email: `legacylead${k}@person-name-order.test`, status: 'new',
+    });
+    await oldOrder('crm_lead', String(lead.id), 'display_title', `伟 张 - ${company}`);
+    const res = await rest('PATCH', `/data/crm_lead/${lead.id}`, { company });
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+    expect((await stored('crm_lead', String(lead.id))).display_title).toBe(`张伟 - ${company}`);
+  });
+});
+
 describe('the sentences the hooks write name the person the same way', () => {
   it('a duplicate-email refusal names 「张伟」', async () => {
     const email = `dup${++k}@person-name-order.test`;

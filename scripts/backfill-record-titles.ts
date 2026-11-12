@@ -34,7 +34,8 @@
 //
 // Safe by construction:
 //   • report-only unless `--apply` is passed;
-//   • it touches only rows whose title is missing;
+//   • it touches only rows whose title is missing, or (a contact or lead with
+//     a CJK family name) still in the pre-#2431 name order;
 //   • rerunnable: a second pass over a converged org reports zero rows.
 //
 // Side effect worth knowing: the write is an ordinary update, so the
@@ -45,14 +46,26 @@
 // already escalated every Critical case when it was created, so a case it
 // would act on here is one that was bypassed at creation.
 
+import { CJK_FAMILY_NAME_CLASS } from '../src/sales/objects/_person-name';
+
 type Json = Record<string, any>;
 
 const DEFAULT_URL = 'http://localhost:4001';
 
-/** Each object: the title field, and the field the backfill re-sends. */
-const TITLES: ReadonlyArray<{ object: string; title: string; resend: string }> = [
-  { object: 'crm_contact', title: 'full_name', resend: 'last_name' },
-  { object: 'crm_lead', title: 'display_title', resend: 'company' },
+/**
+ * Each object: the title field, the field the backfill re-sends, and — for the
+ * two titled by a PERSON — how the title is composed from the name.
+ *
+ * #2431 changed that composition: a family name in CJK script now comes first
+ * with no space (「张伟」, not 「伟 张」, `src/sales/objects/_person-name.ts`).
+ * A contact or lead stored before it keeps the old title until something
+ * re-saves it, so for those two a row also counts as stale when its family
+ * name is CJK and its stored title is not the one the rule composes. Every
+ * other row's title is unchanged by #2431 and is left alone.
+ */
+const TITLES: ReadonlyArray<{ object: string; title: string; resend: string; person?: { withCompany: boolean } }> = [
+  { object: 'crm_contact', title: 'full_name', resend: 'last_name', person: { withCompany: false } },
+  { object: 'crm_lead', title: 'display_title', resend: 'company', person: { withCompany: true } },
   { object: 'crm_forecast', title: 'display_title', resend: 'period_label' },
   { object: 'crm_case', title: 'display_title', resend: 'subject' },
 ];
@@ -130,6 +143,30 @@ class Api {
 
 const untitled = (row: Json, title: string): boolean => typeof row[title] !== 'string' || row[title] === '';
 
+const CJK_FAMILY_NAME = new RegExp(`^${CJK_FAMILY_NAME_CLASS}`);
+const part = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
+
+/**
+ * A CJK-family-name row whose stored title predates #2431's order. Mirrors
+ * `personNameSource` for exactly the rows it changed: family + given, no space.
+ */
+const misordered = (row: Json, title: string, person: { withCompany: boolean } | undefined): boolean => {
+  if (!person) return false;
+  const family = part(row.last_name);
+  if (!CJK_FAMILY_NAME.test(family)) return false;
+  const name = `${family}${part(row.first_name)}`;
+  const expected = person.withCompany ? `${name} - ${row.company ?? ''}` : name;
+  return row[title] !== expected;
+};
+
+const stale = (row: Json, entry: (typeof TITLES)[number]): boolean =>
+  untitled(row, entry.title) || misordered(row, entry.title, entry.person);
+
+const fieldsFor = (entry: (typeof TITLES)[number]): string[] => [...new Set([
+  'id', entry.title, entry.resend,
+  ...(entry.person ? ['first_name', 'last_name', ...(entry.person.withCompany ? ['company'] : [])] : []),
+])];
+
 async function main(): Promise<void> {
   const url = arg('url', 'HOTCRM_URL', DEFAULT_URL);
   const email = arg('email', 'HOTCRM_ADMIN_EMAIL', 'admin@objectos.ai');
@@ -142,13 +179,16 @@ async function main(): Promise<void> {
 
   let failed = 0;
   let left = 0;
-  for (const { object, title, resend } of TITLES) {
-    const rows = await api.all(object, ['id', title, resend]);
-    const stale = rows.filter((r) => untitled(r, title));
-    console.log(`${object}: ${rows.length} row(s), ${stale.length} without a stored ${title}.`);
-    if (!APPLY || stale.length === 0) continue;
+  for (const entry of TITLES) {
+    const { object, title, resend } = entry;
+    const rows = await api.all(object, fieldsFor(entry));
+    const todo = rows.filter((r) => stale(r, entry));
+    const misordered = todo.filter((r) => !untitled(r, title)).length;
+    console.log(`${object}: ${rows.length} row(s), ${todo.length - misordered} without a stored ${title}`
+      + (entry.person ? `, ${misordered} titled in the pre-#2431 name order.` : '.'));
+    if (!APPLY || todo.length === 0) continue;
 
-    for (const r of stale) {
+    for (const r of todo) {
       try {
         await api.patch(object, String(r.id), { [resend]: r[resend] ?? null });
       } catch (err) {
@@ -158,9 +198,9 @@ async function main(): Promise<void> {
     }
     // Read back rather than trusting the PATCH answers: only a re-read says
     // whether the row now stores its title.
-    const after = (await api.all(object, ['id', title])).filter((r) => untitled(r, title));
+    const after = (await api.all(object, fieldsFor(entry))).filter((r) => stale(r, entry));
     left += after.length;
-    console.log(`  backfilled ${stale.length - after.length}/${stale.length}; ${after.length} still without a ${title}.`);
+    console.log(`  backfilled ${todo.length - after.length}/${todo.length}; ${after.length} still stale.`);
   }
   if (!APPLY) {
     console.log('\nReport only. Re-run with --apply to write.');
