@@ -33,7 +33,25 @@ const forecastSeed = CrmSeedData.find((s: any) => s.object === 'crm_forecast') a
   | { records: SeedRec[]; mode?: string; externalId?: string | string[] }
   | undefined;
 
-const records: SeedRec[] = forecastSeed?.records ?? [];
+/**
+ * The authored rows, and the rows as the seed loader writes them on a given
+ * day. Since #2431 every calendar value is a CEL expression the loader
+ * resolves when it writes the rows (install, reseed, or a dev boot) rather
+ * than a literal the module computed when it loaded: `objectstack build`
+ * loads it too, and froze the build day into the artifact a tenant installs.
+ */
+const rawRecords: SeedRec[] = forecastSeed?.records ?? [];
+const isExpression = (v: unknown): v is { dialect: string; source: string } =>
+  typeof v === 'object' && v !== null && typeof (v as { source?: unknown }).source === 'string';
+const resolveAt = (now: Date): SeedRec[] => rawRecords.map((r) => Object.fromEntries(
+  Object.entries(r).map(([k, v]) => {
+    if (!isExpression(v)) return [k, v];
+    const out = ExpressionEngine.evaluate(v as never, { now, record: {} }) as { ok: boolean; value?: unknown; error?: unknown };
+    if (!out.ok) throw new Error(`${String(r.seed_key)}.${k} does not resolve: ${JSON.stringify(out.error)}`);
+    return [k, out.value];
+  }),
+));
+const records: SeedRec[] = resolveAt(new Date());
 const quarterRecs = records.filter((r) => r.period === 'quarter');
 const monthRecs = records.filter((r) => r.period === 'month');
 
@@ -50,7 +68,14 @@ describe('forecast seed periods are calendar-true (#530)', () => {
     expect(monthRecs.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('every period_start is a concrete ISO date, not a relative-date macro', () => {
+  it('every calendar value is resolved when the seed is written, never frozen when the module loads (#2431)', () => {
+    const frozen = rawRecords.flatMap((r) => (['period_start', 'period_end', 'period_label'] as const)
+      .filter((k) => !isExpression(r[k]))
+      .map((k) => `${String(r.seed_key)}.${k} = ${JSON.stringify(r[k])}`));
+    expect(frozen, `literal calendar values, frozen into the built artifact:\n  ${frozen.join('\n  ')}`).toEqual([]);
+  });
+
+  it('every period_start resolves to a concrete ISO date', () => {
     const bad = records
       .filter((r) => typeof r.period_start !== 'string' || !ISO_DATE.test(r.period_start as string))
       .map((r) => `${r.period_label}: ${String(r.period_start)}`);
@@ -471,5 +496,43 @@ describe('every seeded snapshot demonstrates the forecast columns (#1244)', () =
       .filter(({ r, f }) => Number.isFinite(num(r, f)) && num(r, f) < 0)
       .map(({ r, f }) => `${String(r.seed_key)}: ${f} = ${String(r[f])}`);
     expect(negative, `negative seeded amounts:\n  ${negative.join('\n  ')}`).toEqual([]);
+  });
+});
+
+/**
+ * The same calendar invariants on the day a tenant installs, whatever day that
+ * is (#2431). The rows used to be computed when the module loaded, so a test
+ * run on the build day could not see what an install months later got; now
+ * they resolve at seed time, and are resolved here at quarter and year
+ * boundaries.
+ */
+describe('the seeds stay calendar-true on any install day (#2431)', () => {
+  const DAYS = ['2027-01-01', '2027-03-31', '2027-04-01', '2027-06-15', '2027-09-30', '2027-10-01', '2027-12-31', '2028-02-29'];
+  const sweptPeriod = String(
+    (flowNodesDeep(ForecastSnapshotFlow as any).find((node) => node?.id === 'find_forecast')?.config?.filter ?? {}).period ?? '',
+  );
+
+  it.each(DAYS)('installed on %s', (day) => {
+    const now = new Date(`${day}T09:30:00Z`);
+    const today = day;
+    const rows = resolveAt(now);
+    const bad: string[] = [];
+    for (const r of rows) {
+      const start = parseUtc(String(r.period_start));
+      const months = r.period === 'quarter' ? 3 : 1;
+      if (start.getUTCDate() !== 1 || (r.period === 'quarter' && start.getUTCMonth() % 3 !== 0)) bad.push(`${String(r.seed_key)}: start ${String(r.period_start)}`);
+      const end = isoDate(new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + months, 0)));
+      if (r.period_end !== end) bad.push(`${String(r.seed_key)}: end ${String(r.period_end)}, expected ${end}`);
+      const label = r.period === 'quarter'
+        ? `Q${Math.floor(start.getUTCMonth() / 3) + 1} ${start.getUTCFullYear()}`
+        : `${MONTHS[start.getUTCMonth()]} ${start.getUTCFullYear()}`;
+      if (r.period_label !== label) bad.push(`${String(r.seed_key)}: label ${String(r.period_label)}, expected ${label}`);
+      if (r.period === sweptPeriod && !(String(r.period_end) < today)) bad.push(`${String(r.seed_key)}: ${sweptPeriod} not settled on ${today} (#702)`);
+    }
+    const currentMonth = rows.find((r) => r.period === 'month' && String(r.period_start) <= today && today <= String(r.period_end));
+    if (!currentMonth) bad.push(`no month row covers ${today}`);
+    const labels = rows.map((r) => String(r.period_label));
+    if (new Set(labels).size !== labels.length) bad.push(`duplicate labels: ${labels.join(', ')}`);
+    expect(bad, bad.join('\n')).toEqual([]);
   });
 });

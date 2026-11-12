@@ -10,7 +10,7 @@
  * Seed doctrine lives in `./_shared.ts`.
  */
 import { defineSeed } from '@objectstack/spec/data';
-import { cel } from '@objectstack/spec';
+import { cel, expression } from '@objectstack/spec';
 import { Forecast } from '../objects/forecast.object';
 
 // ─── Forecasts ────────────────────────────────────────────────────────
@@ -80,33 +80,52 @@ import { Forecast } from '../objects/forecast.object';
 // filter itself was removed from the view in #515 and only came back in #730;
 // and matching is the outcome #702 rules out.)
 //
-// Computed in plain TS (UTC, mirroring the hook's helpers): this module is
-// evaluated when the app bundle loads, the same moment the cel`...` seeds
-// are resolved.
+// Resolved at SEED time, not at build time (#2431). These values used to be
+// computed in plain TS when this module loaded, which in a dev boot is the
+// boot — but `objectstack build` loads it too, and the artifact a marketplace
+// tenant installs carries what the BUILD computed: an artifact built in
+// November seeded "Nov 2026" as the current month whenever it was installed,
+// and its "settled" quarters walked into the current quarter #702 reserves
+// for `forecast_snapshot` once the install was a quarter later. Each value is
+// now a CEL expression the seed loader resolves when the rows are written,
+// exactly like the `daysAgo()` / `daysFromNow()` dates of every other dataset.
+//
+// The calendar stays true (#530): every start is a real first day, computed
+// from `today()` (a UTC midnight) by stepping back to the first of the month
+// (`getDayOfMonth()` is 0-based) and then whole months; every end is the day
+// before the next period opens; the labels are the hook's dialect
+// ('Q3 2026' / 'Aug 2026'). `test/forecast-seeds.test.ts` resolves them at
+// several calendar dates, quarter and year boundaries included.
 const FORECAST_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const forecastIsoDate = (d: Date) =>
-  `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-const forecastQuarterLabel = (d: Date) => `Q${Math.floor(d.getUTCMonth() / 3) + 1} ${d.getUTCFullYear()}`;
-const forecastMonthLabel = (d: Date) => `${FORECAST_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-const forecastNow = new Date();
-const forecastYear = forecastNow.getUTCFullYear();
-const forecastMonth = forecastNow.getUTCMonth();
-const forecastQuarterMonth = Math.floor(forecastMonth / 3) * 3;
-// No `thisQuarterStart` / `thisQuarterEnd`: that window is `forecast_snapshot`'s
-// and nothing here may open a row in it (#702, note above).
-const thisMonthStart = new Date(Date.UTC(forecastYear, forecastMonth, 1));
-const thisMonthEnd = new Date(Date.UTC(forecastYear, forecastMonth + 1, 0));
-const lastQuarterStart = new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3, 1));
-const lastQuarterEnd = new Date(Date.UTC(forecastYear, forecastQuarterMonth, 0));
+/** CEL: the first day of the current month, as a timestamp. */
+const MONTH_START = 'addDays(today(), -today().getDayOfMonth())';
+/** CEL: the first day of the current quarter, as a timestamp. */
+const QUARTER_START = `addMonths(${MONTH_START}, -(today().getMonth() % 3))`;
+
+/** A period, as three CEL timestamp sources: its first day, its last day, and its start for labelling. */
+interface CelPeriod { readonly start: string; readonly end: string; readonly kind: 'month' | 'quarter' }
+const monthAgo = (n: number): CelPeriod => {
+  const start = `addMonths(${MONTH_START}, ${-n})`;
+  return { start, end: `addDays(addMonths(${start}, 1), -1)`, kind: 'month' };
+};
+const quarterAgo = (n: number): CelPeriod => {
+  const start = `addMonths(${QUARTER_START}, ${-3 * n})`;
+  return { start, end: `addDays(addMonths(${start}, 3), -1)`, kind: 'quarter' };
+};
+const isoOf = (timestamp: string) => expression(`isoDate(${timestamp})`);
+const labelOf = (p: CelPeriod) => expression(p.kind === 'quarter'
+  ? `'Q' + string(${p.start}.getMonth() / 3 + 1) + ' ' + string(${p.start}.getFullYear())`
+  : `${JSON.stringify(FORECAST_MONTHS).replace(/"/g, "'")}[${p.start}.getMonth()] + ' ' + string(${p.start}.getFullYear())`);
+
+// No current quarter: that window is `forecast_snapshot`'s and nothing here
+// may open a row in it (#702, note above).
+const thisMonth = monthAgo(0);
+const lastQuarter = quarterAgo(1);
 // Deeper history: quota-attainment and coverage trends need more than a single
 // prior period to plot (#591). These are all SETTLED periods — deliberately so:
 // the forecast snapshot sweep upserts the CURRENT quarter, so historical rows
 // can never collide with what it writes. That rule is now the whole rule for
 // quarters (#702): every quarterly seed below is settled.
-const quarterStartAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3 * n, 1));
-const quarterEndAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastQuarterMonth - 3 * (n - 1), 0));
-const monthStartAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastMonth - n, 1));
-const monthEndAgo = (n: number) => new Date(Date.UTC(forecastYear, forecastMonth - n + 1, 0));
 
 /**
  * The three open-pipeline buckets of a settled snapshot, in the shape the
@@ -141,20 +160,18 @@ type OpenBuckets = { pipeline: number; bestCase: number; commit: number };
  */
 const closedPeriod = (
   seed_key: string,
-  period: 'month' | 'quarter',
-  start: Date,
-  end: Date,
+  at: CelPeriod,
   quota: number,
   closed: number,
   open: OpenBuckets,
   notes: string,
 ) => ({
   seed_key,
-  period,
-  period_label: period === 'quarter' ? forecastQuarterLabel(start) : forecastMonthLabel(start),
-  period_start: forecastIsoDate(start),
-  period_end: forecastIsoDate(end),
-  snapshot_date: forecastIsoDate(end),
+  period: at.kind,
+  period_label: labelOf(at),
+  period_start: isoOf(at.start),
+  period_end: isoOf(at.end),
+  snapshot_date: isoOf(at.end),
   quota,
   pipeline_amount: open.pipeline,
   best_case_amount: open.bestCase,
@@ -173,8 +190,8 @@ const closedPeriod = (
 // `seed_key` declaration in `src/sales/objects/forecast.object.ts`.
 //
 // The keys are POSITIONAL ('current month', 'two quarters back'), not calendar
-// values, because the records are positional — recomputed against `new Date()`
-// on every import. A positional key keeps the demo at exactly these seven rows
+// values, because the records are positional — their CEL dates resolve
+// against `today()` on every seed load. A positional key keeps the demo at exactly these seven rows
 // as the calendar rolls forward, re-pointing each at its new period; a
 // calendar-derived key would strand last quarter's demo row and add one row per
 // re-seed.
@@ -196,9 +213,9 @@ export const forecasts = defineSeed(Forecast, {
     {
       seed_key: 'demo_month_current',
       period: 'month',
-      period_label: forecastMonthLabel(thisMonthStart),
-      period_start: forecastIsoDate(thisMonthStart),
-      period_end: forecastIsoDate(thisMonthEnd),
+      period_label: labelOf(thisMonth),
+      period_start: isoOf(thisMonth.start),
+      period_end: isoOf(thisMonth.end),
       snapshot_date: cel`today()`,
       quota: 500000,
       pipeline_amount: 760000,
@@ -211,10 +228,10 @@ export const forecasts = defineSeed(Forecast, {
     {
       seed_key: 'demo_quarter_minus_1',
       period: 'quarter',
-      period_label: forecastQuarterLabel(lastQuarterStart),
-      period_start: forecastIsoDate(lastQuarterStart),
-      period_end: forecastIsoDate(lastQuarterEnd),
-      snapshot_date: forecastIsoDate(lastQuarterEnd),
+      period_label: labelOf(lastQuarter),
+      period_start: isoOf(lastQuarter.start),
+      period_end: isoOf(lastQuarter.end),
+      snapshot_date: isoOf(lastQuarter.end),
       quota: 1400000,
       pipeline_amount: 240000,
       best_case_amount: 150000,
@@ -223,19 +240,19 @@ export const forecasts = defineSeed(Forecast, {
       source: 'scheduled',
       notes: 'Closed at 106% of quota.',
     },
-    closedPeriod('demo_quarter_minus_2', 'quarter', quarterStartAgo(2), quarterEndAgo(2), 1300000, 1196000,
+    closedPeriod('demo_quarter_minus_2', quarterAgo(2), 1300000, 1196000,
       { pipeline: 285000, bestCase: 190000, commit: 120000 },
       'Closed at 92% of quota — two enterprise deals slipped into the next quarter.'),
-    closedPeriod('demo_quarter_minus_3', 'quarter', quarterStartAgo(3), quarterEndAgo(3), 1200000, 1308000,
+    closedPeriod('demo_quarter_minus_3', quarterAgo(3), 1200000, 1308000,
       { pipeline: 195000, bestCase: 130000, commit: 85000 },
       'Closed at 109% of quota, carried by the enterprise renewal cohort.'),
-    closedPeriod('demo_quarter_minus_4', 'quarter', quarterStartAgo(4), quarterEndAgo(4), 1100000, 1045000,
+    closedPeriod('demo_quarter_minus_4', quarterAgo(4), 1100000, 1045000,
       { pipeline: 165000, bestCase: 110000, commit: 70000 },
       'Closed at 95% of quota in the first quarter on the new territory model.'),
-    closedPeriod('demo_month_minus_1', 'month', monthStartAgo(1), monthEndAgo(1), 480000, 505000,
+    closedPeriod('demo_month_minus_1', monthAgo(1), 480000, 505000,
       { pipeline: 96000, bestCase: 62000, commit: 40000 },
       'Closed at 105% of quota; the expansion motion covered a soft new-business month.'),
-    closedPeriod('demo_month_minus_2', 'month', monthStartAgo(2), monthEndAgo(2), 460000, 414000,
+    closedPeriod('demo_month_minus_2', monthAgo(2), 460000, 414000,
       { pipeline: 92000, bestCase: 58000, commit: 35000 },
       'Closed at 90% of quota — summer slowdown across the mid-market segment.'),
   ]
