@@ -1,5 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { expression, type EvaluatedExpression } from '@objectstack/spec';
+
 /**
  * How a person's two name fields become the one name every surface shows
  * (#2431): the contact's stored `full_name`, the lead's `full_name` and
@@ -26,7 +28,8 @@
  *
  * ### One expression, three consumers
  *
- * {@link personNameCel} is the single spelling. The two objects store it,
+ * {@link personNameSource} is the single spelling ({@link personName} wraps
+ * it as a CEL expression). The two objects store it,
  * and the flows pass it to the notification templates as `person_name`.
  * The hook bodies cannot import it — a hook runs body-only in a QuickJS
  * sandbox with no module scope (AGENTS.md, Tech Stack rule 3) — so each one
@@ -57,7 +60,18 @@ export const CJK_FAMILY_NAME_CLASS = '[぀-ヿ㐀-䶿一-鿿豈-﫿가-힯]';
  * (AGENTS.md, "Validation predicates must be TOTAL"). `joinNonEmpty` already
  * skips a missing or blank part.
  */
-export const personNameCel = (row: string): string =>
+export const personNameSource = (row: string): string =>
   `(has(${row}.last_name) && matches(${row}.last_name, '^${CJK_FAMILY_NAME_CLASS}')` +
   ` ? joinNonEmpty([${row}.last_name, ${row}.first_name], '')` +
   ` : joinNonEmpty([${row}.first_name, ${row}.last_name], ' '))`;
+
+/**
+ * {@link personNameSource} as a CEL expression envelope — the form a field's
+ * `expression` and a notify node's `templateData` take.
+ *
+ * Built with `expression()`, not the `cel` tag: the tag JSON-quotes an
+ * interpolated string (it splices VALUES into a source), so
+ * ``cel`${personNameSource('record')}` `` would store the source text itself
+ * as a string literal.
+ */
+export const personName = (row: string): EvaluatedExpression => expression(personNameSource(row));

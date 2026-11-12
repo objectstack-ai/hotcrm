@@ -17,7 +17,7 @@ import type { EmailTemplatePack } from './_bundle';
  * A person is printed as `{{person_name}}`, in every locale pack (#2431). It
  * used to be `{{first_name}} {{last_name}}`, which printed 姓「张」名「伟」as
  * 「伟 张」. The six templates that name a lead or a contact take the name
- * composed by `personNameCel` (`src/sales/objects/_person-name.ts`), the rule
+ * composed by `personNameSource` (`src/sales/objects/_person-name.ts`), the rule
  * the stored titles use: family name first with no space for a CJK family
  * name. A hole cannot branch or fall back on @objectstack 18.3.0 (the
  * renderer prints a missing value as nothing), so the order is decided by the

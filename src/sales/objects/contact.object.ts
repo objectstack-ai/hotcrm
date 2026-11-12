@@ -1,8 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F } from '@objectstack/spec';
-import { personNameCel } from './_person-name';
+import { personName } from './_person-name';
 
 export const Contact = ObjectSchema.create({
   name: 'crm_contact',
@@ -74,7 +73,7 @@ export const Contact = ObjectSchema.create({
     full_name: Field.text({
       readonly: true,
       label: 'Full Name',
-      expression: F`${personNameCel('record')}`,
+      expression: personName('record'),
       group: 'identity',
     }),
 
@@ -332,7 +331,10 @@ export const Contact = ObjectSchema.create({
   // and global search match. Until #2230 they were required, because the
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
-  searchableFields: ['first_name', 'last_name', 'email'],
+  // `full_name` too (#2431): a search splits its text on whitespace and
+  // matches each word inside one field, so 「张伟」 — the name as the header
+  // writes it, with no space — matched neither 「张」 nor 「伟」 alone.
+  searchableFields: ['first_name', 'last_name', 'full_name', 'email'],
   highlightFields: ['full_name', 'email', 'crm_account', 'phone'],
   
   // ⚠️ No standalone `type: 'unique'` validation exists on this platform

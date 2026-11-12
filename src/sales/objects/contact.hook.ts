@@ -116,7 +116,7 @@ const contactHook: Hook = {
             // read a formula field. No second read pays for it: the `findOne`
             // above carries no projection, so the whole row is already in hand.
             // A CJK family name comes first, with no space (#2431): the rule of
-            // `personNameCel` (`./_person-name.ts`), whose character class
+            // `personNameSource` (`./_person-name.ts`), whose character class
             // `test/person-name-order.test.ts` holds this literal equal to.
             const [given, family] = [dupRow?.first_name, dupRow?.last_name]
               .map((part) => (typeof part === 'string' ? part.trim() : ''));
@@ -171,7 +171,7 @@ const contactHook: Hook = {
         // record. Naming the contact and both consequences is true in either
         // context.
         // A CJK family name comes first, with no space (#2431): the rule of
-        // `personNameCel` (`./_person-name.ts`), whose character class
+        // `personNameSource` (`./_person-name.ts`), whose character class
         // `test/person-name-order.test.ts` holds this literal equal to.
         const [given, family] = [ctx.previous?.first_name, ctx.previous?.last_name]
           .map((part) => (typeof part === 'string' ? part.trim() : ''));

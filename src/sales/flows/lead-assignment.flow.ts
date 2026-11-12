@@ -2,7 +2,7 @@
 
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
-import { personNameCel } from '../objects/_person-name';
+import { personName } from '../objects/_person-name';
 type Flow = Automation.Flow;
 
 /**
@@ -117,7 +117,7 @@ export const LeadAssignmentFlow: Flow = {
         topic: 'lead_routing',
         template: 'crm.lead_routing_hot',
         templateData: {
-          person_name: cel`${personNameCel('record')}`,
+          person_name: personName('record'),
           first_name: cel`record.first_name`, last_name: cel`record.last_name`,
           company: cel`record.company`, rating: cel`record.rating`,
         },
@@ -145,7 +145,7 @@ export const LeadAssignmentFlow: Flow = {
         topic: 'lead_routing',
         template: 'crm.lead_routing_new',
         templateData: {
-          person_name: cel`${personNameCel('record')}`,
+          person_name: personName('record'),
           first_name: cel`record.first_name`, last_name: cel`record.last_name`, company: cel`record.company`,
         },
         actionUrl: '/crm_lead/{{record.id}}',

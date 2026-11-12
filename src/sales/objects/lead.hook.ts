@@ -197,7 +197,7 @@ const leadHook: Hook = {
         // Name the lead the way `display_title` does — see the converted-lead
         // lock below for why an id never appears in a sentence a user reads.
         // A CJK family name comes first, with no space (#2431): the rule of
-        // `personNameCel` (`./_person-name.ts`), whose character class
+        // `personNameSource` (`./_person-name.ts`), whose character class
         // `test/person-name-order.test.ts` holds this literal equal to.
         const [given, family] = [previous?.first_name, previous?.last_name]
           .map((part) => (typeof part === 'string' ? part.trim() : ''));
@@ -331,7 +331,7 @@ const leadHook: Hook = {
           // lead `Ada Lovelace - Acme`. Composed from the two stored columns
           // because a lead stored before its title was (#2230) holds none.
           // A CJK family name comes first, with no space (#2431): the rule of
-          // `personNameCel` (`./_person-name.ts`), whose character class
+          // `personNameSource` (`./_person-name.ts`), whose character class
           // `test/person-name-order.test.ts` holds this literal equal to.
           const [given, family] = [previous?.first_name, previous?.last_name]
             .map((part) => (typeof part === 'string' ? part.trim() : ''));
@@ -427,7 +427,7 @@ const leadHook: Hook = {
       // follow-up task and no trace. Truncating the TAIL keeps the
       // discriminating head intact.
       // A CJK family name comes first, with no space (#2431): the rule of
-      // `personNameCel` (`./_person-name.ts`), whose character class
+      // `personNameSource` (`./_person-name.ts`), whose character class
       // `test/person-name-order.test.ts` holds this literal equal to.
       const [given, family] = [
         (typeof input.first_name === 'string' && input.first_name) || previous?.first_name,
