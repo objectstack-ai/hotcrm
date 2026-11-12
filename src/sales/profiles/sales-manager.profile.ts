@@ -11,6 +11,13 @@ export const SalesManagerProfile = {
   label: 'Sales Manager',
   description:
     "Sales managers: read, edit, reassign and delete every rep's leads, accounts, opportunities, quotes and activities, without system administration.",
+  // Which HotCRM apps the holder's launcher offers (#2417). Visibility, not
+  // access: a hidden app still opens from its address, and records link
+  // across apps. Sets merge most-visible-wins, and every member also holds
+  // `crm_user`, which says nothing here, so silence never re-shows an app.
+  // A manager sees all three, stated rather than left silent so a manager
+  // who also holds a set that hides one keeps it (most-visible-wins).
+  tabPermissions: { crm_enterprise: 'visible' as const, crm_service: 'visible' as const, crm_marketing: 'visible' as const },
   objects: {
     // `allowTransfer` on the objects this set holds `modifyAllRecords` on —
     // the sales book a manager reassigns — plus `crm_forecast`, which kept it

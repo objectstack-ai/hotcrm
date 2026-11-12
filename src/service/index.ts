@@ -1,6 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { defineStack, P, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
+import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import {
   EscalateCaseAction, CloseCaseAction, ReopenCaseAction,
@@ -8,6 +8,7 @@ import {
   MarkArticleHelpfulAction, MarkArticleNotHelpfulAction,
 } from './actions/index.js';
 import { ServiceDashboard } from './dashboards/index.js';
+import { ServiceApp, SALES_REP } from './apps/index.js';
 import { CrmServiceManual } from './books/index.js';
 import { CaseDataset } from './datasets/index.js';
 import { ServiceEmailTemplates } from './email-templates/index.js';
@@ -68,60 +69,6 @@ export const serviceSharingRules = [
  * `objectstack.composition.ts`.
  */
 export type HotCrmServiceCollections = Pick<ObjectStackDefinitionInput, 'data'>;
-
-/**
- * Who this package's case entries are for (#2244): everyone but a sales rep.
- *
- * A rep's permission set reads cases (an account's history is part of selling
- * to it), so the read gate alone kept Service Overview, Cases, My Cases and the
- * three case reports in a rep's sidebar: no case of their own, none they can
- * create, an overview of zeros. What a rep IS, is the holder of the
- * `sales_rep` position — the same question the app's Home gate asks
- * (`EXECUTIVE_AUDIENCE` in `src/sales/apps/crm.app.ts`, which says why no
- * `current_user.can(…)` term can tell a rep apart). The two gates spell the
- * position out each: `P` interpolates a value as a literal, never as an
- * expression, so the sub-predicate cannot be shared by reference.
- *
- * Knowledge asks it too since #2367 row 1, and a rep gets it in the Sales
- * group instead (`SALES_REP` below). It had stayed in the Service group for a
- * rep, since articles are read while selling, which left a rep a Service group
- * of that one entry between Sales Home and the Sales group. A group whose
- * every entry is hidden is not drawn, so a rep's sidebar now runs Sales Home,
- * then Sales.
- *
- * Landing (#2060 item 5) is unmoved: a rep's first shown entry is Sales Home,
- * ahead of the Service group, and a service persona or the administrator
- * holds no `sales_rep` position, so the dashboard still leads for them.
- */
-const NOT_A_SALES_REP = P`!("sales_rep" in current_user.positions)`;
-
-/**
- * The rep's own Knowledge entry, folded into the Sales group (#2367 row 1):
- * exactly the members `NOT_A_SALES_REP` refuses, so every member is shown one
- * Knowledge entry and no member two.
- *
- * Folded, not hidden: the console's search box (⌘K) looks for records only in
- * the objects of the entries the member is shown (measured on 18.2.0, its
- * `GET /api/v1/search?objects=…`), so a rep with no Knowledge entry could no
- * longer find an article by its title. The entry opens the Published view,
- * the articles a rep reads, which also keeps it a different destination from
- * the Service group's plain list (`test/app-navigation-shape.test.ts`, #1259).
- */
-const SALES_REP = P`"sales_rep" in current_user.positions`;
-
-/**
- * The read gate on this package's dashboard and report entries (#2073 item 1,
- * #2338 item 1), narrowed to the audience above.
- *
- * The console prunes an object entry by read access, but not a dashboard or a
- * report entry. Service Overview carried `NOT_A_SALES_REP` alone until #2338,
- * so a member who reads no cases (the marketing user, whose set "see[s] no
- * cases") was offered it, and every one of its tiles answered "You don't have
- * permission to view the data behind this widget" (14 refused dataset queries,
- * measured on 18.2.0). Cases and My Cases were already hidden from that member
- * by the prune. The dashboard now asks the question the case reports ask.
- */
-const CASE_READ_AUDIENCE = P`current_user.can("crm_case", "read") && !("sales_rep" in current_user.positions)`;
 
 /**
  * `app.objectstack.hotcrm.service` — the SUPPORT module of this artifact
@@ -198,95 +145,28 @@ export const createHotCrmServiceStack = (
     dependencies: { 'app.objectstack.hotcrm': '^6.1.2' },
 
     /**
-     * The eight navigation entries this module puts into the app's menu
-     * (ADR-0029 D7).
+     * The one entry this module puts into the Sales app (ADR-0029 D7): a
+     * rep's Knowledge (#2367 row 1), the Published view, last in Sales after
+     * the revenue module's entries (priority 40). Folded, not hidden: the
+     * console's ⌘K looks for records only in the objects of the entries the
+     * member is shown (measured on 18.2.0), so without it a rep could not
+     * find an article by its title.
      *
-     * Not a design choice: an app's own `navigation` may not name another
-     * package's object or report (ADR-0130 §1.5, rule R3 of
-     * `module-split-plan.md`), so this package's entries became contributions
-     * the moment `crm_case`, `crm_knowledge_article`, `service_dashboard` and
-     * the case reports left the app package. The app keeps the GROUPS
-     * (`group_service`, `group_sales`, `group_work`, `group_reports`) — a
-     * container a module cannot declare inside an app it does not own — and
-     * this module fills them.
+     * Everything else this package shows lives in its own app, the Service app
+     * (`./apps/service.app.ts`, #2417), which names this package's items
+     * directly; the customers and the member's own tasks reach that app the
+     * other way, contributed by `src/sales/index.ts`.
      *
-     * `app` is the app's bare `name` (`crm_enterprise`), not the manifest id: a
-     * dotted id is refused as a non-snake_case identifier.
-     *
-     * ⚠️ `priority` orders CONTRIBUTIONS against each other inside a group. It
-     * does NOT interleave them with the app's own children — a contributed item
-     * is appended after everything the app itself declares in that group. So
-     * `nav_my_cases` is last in *My Work*, and the case reports follow the
-     * sales reports in *Reports*. ⛔ Do not compensate with a per-item
-     * `order`: that key sorts in the renderer only, this app authors none
-     * anywhere, and adding one to work around a platform merge rule is what
-     * AGENTS.md forbids.
-     *
-     * The dashboard and report entries ask for case read: the console prunes
-     * object entries by read access but not dashboard or report entries, so a
-     * member who reads no cases (the marketing user) would otherwise get a
-     * dashboard and three pages of 403s (`CASE_READ_AUDIENCE` above). The app's
-     * `READS_OPPORTUNITIES` note in `crm.app.ts` says why it is `visible` and
-     * not `requiredPermissions`. Every entry of the Service group, and My Cases,
-     * also asks that the member is not a sales rep (`NOT_A_SALES_REP` above,
-     * #2244; Knowledge since #2367).
+     * `app` is the app's bare `name` (`crm_enterprise`), not the manifest id:
+     * a dotted id is refused as a non-snake_case identifier.
      */
     navigationContributions: [
       {
         app: 'crm_enterprise',
-        group: 'group_service',
-        // Stated rather than defaulted so that the day a second package
-        // contributes into one of these groups, the order is an authored fact
-        // instead of a registration-order accident.
-        priority: 10,
-        // The dashboard leads (#2060 item 5): `group_service` is the app's
-        // first group and declares no children, so this item is the first
-        // entry a service agent or manager is shown, and the app opens on it.
-        items: [
-          { id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard', label: 'Service Overview', icon: 'gauge', visible: CASE_READ_AUDIENCE },
-          { id: 'nav_case',      type: 'object', objectName: 'crm_case',              label: 'Cases',     icon: 'life-buoy', visible: NOT_A_SALES_REP },
-          { id: 'nav_knowledge', type: 'object', objectName: 'crm_knowledge_article', label: 'Knowledge', icon: 'book-open', visible: NOT_A_SALES_REP },
-        ],
-      },
-      {
-        app: 'crm_enterprise',
-        // A rep's Knowledge (#2367 row 1, `SALES_REP` above), last in Sales:
-        // after the app's own children and after the revenue module's entries
-        // (priority 40).
         group: 'group_sales',
         priority: 60,
         items: [
           { id: 'nav_knowledge_published', type: 'object', objectName: 'crm_knowledge_article', viewName: 'published_articles', label: 'Knowledge', icon: 'book-open', visible: SALES_REP },
-        ],
-      },
-      {
-        app: 'crm_enterprise',
-        group: 'group_work',
-        priority: 20,
-        items: [
-          { id: 'nav_my_cases', type: 'object', objectName: 'crm_case', viewName: 'my_open_cases', label: 'My Cases', icon: 'life-buoy', visible: NOT_A_SALES_REP },
-        ],
-      },
-      {
-        app: 'crm_enterprise',
-        // Every shipped report has an entry in the app's Reports group
-        // (#2073 item 1); this package's three land after the sales ones.
-        group: 'group_reports',
-        priority: 30,
-        items: [
-          { id: 'nav_report_cases_by_status',     type: 'report', reportName: 'cases_by_status_priority',     label: 'Cases by Status and Priority', icon: 'chart-column',  visible: CASE_READ_AUDIENCE },
-          { id: 'nav_report_sla',                 type: 'report', reportName: 'sla_performance',              label: 'SLA on Closed Cases',          icon: 'timer',         visible: CASE_READ_AUDIENCE },
-          { id: 'nav_report_cases_opened_by_day', type: 'report', reportName: 'cases_opened_by_day_priority', label: 'Cases Opened by Day',          icon: 'calendar-days', visible: CASE_READ_AUDIENCE },
-        ],
-      },
-      {
-        app: 'crm_enterprise',
-        // The Service Manual (#2415) opens from Help like the revenue and
-        // marketing manuals, ahead of them (priority 30 < 40 < 50).
-        group: 'group_help',
-        priority: 30,
-        items: [
-          { id: 'nav_help_service', type: 'doc', book: 'crm_service_manual', label: 'Service Manual', icon: 'headset' },
         ],
       },
     ],
@@ -296,6 +176,7 @@ export const createHotCrmServiceStack = (
   requires: ['automation', 'triggers', 'analytics', 'sharing'],
 
   objects: [ArticleFeedback, Case, KnowledgeArticle],
+  apps: [ServiceApp],
   hooks: serviceHooks,
   views: [CaseViews, KnowledgeArticleViews],
   pages: [CaseDetailPage],

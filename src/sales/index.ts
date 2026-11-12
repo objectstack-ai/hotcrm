@@ -2,6 +2,7 @@
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 import { PrintServicePlugin } from '@objectstack/service-print';
+import { READS_ACCOUNTS, READS_LEADS } from './apps/crm.app.js';
 
 /**
  * Everything the app package REGISTERS, as opposed to what it IS.
@@ -107,6 +108,78 @@ export const createHotCrmAppStack = (
       // of this artifact states the same protocol; `src/service/index.ts`
       // repeats it for the same reason.
       engines: { protocol: '^18.3.0' },
+
+      /**
+       * The app package's entries in the two module apps (#2417, ADR-0029 D7).
+       *
+       * the Service app and the Marketing app are declared by their modules
+       * (`src/service/apps/`, `src/marketing/apps/`), and an app's own
+       * `navigation` may not name another package's object (ADR-0130). So
+       * each module app declares ANCHOR groups and this package fills them
+       * with the customers, the member's own work and the reports that cross
+       * functions: the mirror of how the modules filled this app's Service
+       * and Marketing groups before the split (accepted and served on 18.3.0,
+       * measured). Same ids and gates as the Sales app's own entries: one
+       * destination per app, the same object in two apps.
+       *
+       * A contributed item lands after the group's own children, so My Tasks
+       * follows My Cases and the Inbox, and the churn report follows the
+       * case reports.
+       */
+      navigationContributions: [
+        {
+          app: 'crm_service',
+          group: 'group_customers',
+          priority: 10,
+          items: [
+            { id: 'nav_account', type: 'object', objectName: 'crm_account', label: 'Accounts', icon: 'building' },
+            { id: 'nav_contact', type: 'object', objectName: 'crm_contact', label: 'Contacts', icon: 'user' },
+          ],
+        },
+        {
+          app: 'crm_service',
+          group: 'group_work',
+          priority: 10,
+          items: [
+            { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
+            { id: 'nav_my_calendar', type: 'object', objectName: 'crm_event', viewName: 'my_events', label: 'My Calendar', icon: 'calendar-days' },
+          ],
+        },
+        {
+          app: 'crm_service',
+          group: 'group_reports',
+          priority: 10,
+          items: [
+            { id: 'nav_report_churn_signals', type: 'report', reportName: 'customer_churn_signals', label: 'Customer Churn Signals', icon: 'heart-pulse', visible: READS_ACCOUNTS },
+          ],
+        },
+        {
+          app: 'crm_marketing',
+          group: 'group_audience',
+          priority: 10,
+          items: [
+            { id: 'nav_lead', type: 'object', objectName: 'crm_lead', label: 'Leads', icon: 'user-plus' },
+            { id: 'nav_contact', type: 'object', objectName: 'crm_contact', label: 'Contacts', icon: 'user' },
+            { id: 'nav_account', type: 'object', objectName: 'crm_account', label: 'Accounts', icon: 'building' },
+          ],
+        },
+        {
+          app: 'crm_marketing',
+          group: 'group_work',
+          priority: 10,
+          items: [
+            { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
+          ],
+        },
+        {
+          app: 'crm_marketing',
+          group: 'group_reports',
+          priority: 10,
+          items: [
+            { id: 'nav_report_lead_inflow', type: 'report', reportName: 'lead_inflow_by_month_source', label: 'Lead Engagement by Month', icon: 'trending-up', visible: READS_LEADS },
+          ],
+        },
+      ],
     },
 
     // ─── Platform capabilities this app needs ─────────────────────────

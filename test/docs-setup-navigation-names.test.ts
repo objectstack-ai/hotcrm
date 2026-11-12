@@ -276,8 +276,8 @@ const CRM_LOCALES = localePacks.map(([locale]) => locale);
 const CRM_APP_ID = (CrmApp as AnyRec).name as string;
 
 /** One locale's navigation overrides for this app, `id → { label }`. */
-const crmNavOverrides = (locale: string): Record<string, AnyRec> =>
-  ((packFor(locale) as AnyRec)?.apps?.[CRM_APP_ID]?.navigation ?? {}) as Record<
+const crmNavOverrides = (locale: string, app: string = CRM_APP_ID): Record<string, AnyRec> =>
+  ((packFor(locale) as AnyRec)?.apps?.[app]?.navigation ?? {}) as Record<
     string,
     AnyRec
   >;
@@ -393,17 +393,21 @@ const crmPairKey = (group: string, child: string): string => `${group} → ${chi
  * module contributes *Cases*, *Knowledge* and *Service Overview* into
  * **Service** (and two more items elsewhere), so `Service → Knowledge` is a
  * real pair although `src/sales/apps/crm.app.ts` no longer lists it.
+ *
+ * Since #2417 HotCRM is three apps, the Sales app, the Service app and HotCRM
+ * Marketing, and **Service** is a group of the Service app; a pair is real when
+ * any of the three ships it, each resolved against its own locale rows.
  */
-const CRM_SERVED_APP: AnyRec = servedApp(CRM_APP_ID);
+const CRM_SERVED_APPS: AnyRec[] = [CRM_APP_ID, 'crm_service', 'crm_marketing'].map((name) => servedApp(name));
 
 const { CRM_GROUP_LABELS, CRM_PAIRS, CRM_LABELS } = (() => {
   const groups = new Set<string>();
   const pairs = new Set<string>();
   const all = new Set<string>();
-  for (const locale of CRM_LOCALES) {
-    const nav = crmNavOverrides(locale);
+  for (const locale of CRM_LOCALES) for (const app of CRM_SERVED_APPS) {
+    const nav = crmNavOverrides(locale, app.name as string);
     const labelOf = (id: string, fallback: string): string => nav[id]?.label ?? fallback;
-    for (const entry of (CRM_SERVED_APP.navigation ?? []) as AnyRec[]) {
+    for (const entry of (app.navigation ?? []) as AnyRec[]) {
       if (!entry?.label) continue;
       const entryLabel = labelOf(entry.id, entry.label);
       all.add(entryLabel);

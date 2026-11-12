@@ -248,10 +248,22 @@ export const zhCN: TranslationData = {
   apps: {
     crm_enterprise: {
       navigation: {
+        nav_knowledge_published: { label: '知识库' },
+      },
+    },
+    crm_service: {
+      label: '服务',
+      description: '工单、知识库及其所属的客户',
+      navigation: {
+        group_service: { label: '服务' },
+        group_customers: { label: '客户与联系人' },
+        group_work: { label: '我的工作' },
+        group_reports: { label: '报表' },
+        group_help: { label: '帮助' },
+        nav_approval_requests: { label: '待我审批' },
         nav_service_dashboard: { label: '服务概览' },
         nav_case: { label: '工单' },
         nav_knowledge: { label: '知识库' },
-        nav_knowledge_published: { label: '知识库' },
         nav_my_cases: { label: '我的工单' },
         nav_report_cases_by_status: { label: '工单状态与优先级' },
         nav_report_sla: { label: '已关闭工单的 SLA' },

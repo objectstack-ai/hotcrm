@@ -127,8 +127,15 @@ export const esES: TranslationData = {
     },
   },
   apps: {
-    crm_enterprise: {
+    crm_marketing: {
+      label: 'Marketing',
+      description: 'Campañas y los prospectos, contactos y cuentas a los que llegan',
       navigation: {
+        group_audience: { label: 'Audiencia' },
+        group_work: { label: 'Mi Trabajo' },
+        group_reports: { label: 'Informes' },
+        group_help: { label: 'Ayuda' },
+        nav_approval_requests: { label: 'Bandeja de Entrada' },
         nav_campaign: { label: 'Campañas' },
         nav_help_marketing: { label: 'Manual de Marketing' },
       },

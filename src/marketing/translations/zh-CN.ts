@@ -126,8 +126,15 @@ export const zhCN: TranslationData = {
     },
   },
   apps: {
-    crm_enterprise: {
+    crm_marketing: {
+      label: '营销',
+      description: '营销活动及其触达的线索、联系人和客户',
       navigation: {
+        group_audience: { label: '受众' },
+        group_work: { label: '我的工作' },
+        group_reports: { label: '报表' },
+        group_help: { label: '帮助' },
+        nav_approval_requests: { label: '待我审批' },
         nav_campaign: { label: '营销活动' },
         nav_help_marketing: { label: '营销手册' },
       },

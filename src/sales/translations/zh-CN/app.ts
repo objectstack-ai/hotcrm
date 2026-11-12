@@ -22,8 +22,8 @@ import type { TranslationData } from '@objectstack/spec/system';
 export const appSurface: Omit<TranslationData, 'objects'> = {
   apps: {
     crm_enterprise: {
-      label: 'HotCRM',
-      description: '涵盖销售、服务和市场营销的客户关系管理系统',
+      label: '销售',
+      description: '面向销售团队的线索、客户、商机与报价',
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
       navigation: {
         // The group and its Events item are two words, as in every other pack
@@ -54,10 +54,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_my_leads: { label: '我的线索' },
         nav_approval_requests: { label: '待我审批' },
 
-        group_marketing: { label: '市场营销' },
-
-        group_service: { label: '服务' },
-
         group_insights: { label: '数据洞察' },
         nav_crm_dashboard: { label: 'CRM 总览' },
         nav_forecast: { label: '销售预测' },
@@ -74,6 +70,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_help: { label: '帮助' },
         nav_help_manual: { label: '使用手册' },
         nav_help_admin: { label: '管理员手册' },
+      },
+    },
+    crm_service: {
+      // The ids this package contributes into the Service app (#2417).
+      navigation: {
+        nav_account: { label: '客户' },
+        nav_contact: { label: '联系人' },
+        nav_my_tasks: { label: '我的任务' },
+        nav_my_calendar: { label: '我的日历' },
+        nav_report_churn_signals: { label: '客户流失信号' },
+      },
+    },
+    crm_marketing: {
+      // The ids this package contributes into the Marketing app (#2417).
+      navigation: {
+        nav_lead: { label: '线索' },
+        nav_contact: { label: '联系人' },
+        nav_account: { label: '客户' },
+        nav_my_tasks: { label: '我的任务' },
+        nav_report_lead_inflow: { label: '每月线索跟进' },
       },
     },
   },

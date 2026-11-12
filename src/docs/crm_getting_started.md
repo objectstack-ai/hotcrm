@@ -6,6 +6,8 @@ order: 2
 # frontmatter keys.
 sources:
   - app:crm_enterprise
+  - app:crm_service
+  - app:crm_marketing
 ---
 
 # Getting Started — Your First Day
@@ -17,20 +19,26 @@ stuck.
 
 ## Where HotCRM opens
 
-The app opens on the first entry your sidebar shows, and that entry depends on
-the job you hold:
+HotCRM is three apps, one per line of work: the Sales app, the Service app and
+the Marketing app (while the marketing module is enabled). Your launcher offers
+the ones your job uses. HotCRM opens on the home page, whose *Your apps* row
+lists them; the app switcher moves you between them. Each app opens on the
+first entry your sidebar shows:
 
-| You are | HotCRM opens on |
-|---|---|
-| A sales rep | **Sales Home** — your own figures, your leads, open deals and open tasks, and your upcoming events |
-| A service agent or service manager | **Service Overview** — the case dashboard, at the top of **Service** |
-| A sales manager, a marketer or an administrator | **Home** — the **Executive Overview** dashboard |
+| You are | Your launcher offers | The app opens on |
+|---|---|---|
+| A sales rep | the Sales app | **Sales Home** — your own figures, your leads, open deals and open tasks, and your upcoming events |
+| A service agent or service manager | the Service app | **Service Overview** — the case dashboard, the app's first entry |
+| A marketer | the Sales app and the Marketing app | **Home** (the **Executive Overview** dashboard) in Sales, **Campaigns** in Marketing |
+| A sales manager or an administrator | all three | **Home** in Sales, **Service Overview** in Service, **Campaigns** in Marketing |
 
 The sidebar only shows what you are allowed to read and what your job uses: a
-sales rep sees no cases, and finds **Knowledge** at the end of **Sales** rather
-than under **Service**; a service agent sees no pipeline dashboards and no deal
-lists. If you expected an entry and it is not there, your access is the reason,
-not a fault — ask your administrator.
+sales rep sees no cases, and finds **Knowledge** at the end of **Sales**; a
+service agent sees no pipeline dashboards and no deal lists. The launcher is
+about what your job uses, not what you may open: an app it leaves out still
+opens from its address, and a link to a record opens it in the app you are in.
+If you expected an entry and it is not there, your access is the reason, not a
+fault — ask your administrator.
 
 ## Your own work: My Work
 
@@ -45,6 +53,10 @@ for them:
 - **My Calendar** — your meetings and calls.
 - **Inbox** — approval requests waiting on you (below).
 - **My Cases** — the cases you own, for service staff.
+
+Each app has a **My Work** of its own. The Sales app holds all of these but
+**My Cases**; the Service app holds **My Cases**, **Inbox**, **My Tasks** and
+**My Calendar**; the Marketing app holds **Inbox** and **My Tasks**.
 
 Each of these opens a list page whose tabs across the top offer other views of
 the same records, such as all tasks or the pipeline board. A different view is
@@ -84,6 +96,8 @@ not there.
 
 ## Help
 
-**Help**, the last group in the sidebar, holds the manuals, this one included;
-which guide to read for your job is in the [Overview](./crm_overview.md). The
-group starts collapsed: click **Help** to open it.
+**Help**, the last group in each app's sidebar, holds that app's manuals: in
+the Sales app this one, the Admin Manual and the Revenue Manual; in the
+Service app the Service Manual; in the Marketing app the Marketing Manual. Which
+guide to read for your job is in the [Overview](./crm_overview.md). The group
+starts collapsed: click **Help** to open it.

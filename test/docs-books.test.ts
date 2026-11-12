@@ -5,9 +5,8 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveBookClaimedDocs, resolveDocAudiences, type AudienceBook } from '@objectstack/spec/system';
 import { REPO_ROOT } from './helpers/repo-root';
-import stack, { servedApp } from './helpers/composed-stack';
+import stack, { servedApps } from './helpers/composed-stack';
 import { packageStacks } from '../objectstack.composition';
-import { CrmApp } from '../src/sales/apps/crm.app';
 import { SystemAdminProfile } from '../src/sales/profiles/system-admin.profile';
 
 /**
@@ -65,7 +64,9 @@ const RESOLVER_DOCS = PAGES.map((p) => ({ name: p.name, packageId: p.packageId }
 const docEntries = (): AnyRec[] => {
   const walk = (nodes: AnyRec[]): AnyRec[] =>
     nodes.flatMap((n) => (n.type === 'group' ? walk((n.children ?? []) as AnyRec[]) : [n]));
-  return walk((servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[]).filter((n) => n.type === 'doc');
+  // Every app's Help group (#2417): the Service and Marketing manuals open from
+  // their own apps, the rest from the Sales app.
+  return servedApps().flatMap((app) => walk((app.navigation ?? []) as AnyRec[])).filter((n) => n.type === 'doc');
 };
 
 describe('the in-app manuals claim every page (#2327)', () => {

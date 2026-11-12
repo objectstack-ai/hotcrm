@@ -22,8 +22,8 @@ import type { TranslationData } from '@objectstack/spec/system';
 export const appSurface: Omit<TranslationData, 'objects'> = {
   apps: {
     crm_enterprise: {
-      label: 'HotCRM',
-      description: '営業・サービス・マーケティング向け顧客関係管理システム',
+      label: '営業',
+      description: '営業チームのためのリード・取引先・商談・見積',
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
       navigation: {
         nav_home: { label: 'ホーム' },
@@ -49,10 +49,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_event: { label: 'イベント' },
         nav_activity_dashboard: { label: '営業活動' },
 
-        group_marketing: { label: 'マーケティング' },
-
-        group_service: { label: 'サービス' },
-
         group_insights: { label: 'インサイト' },
         nav_crm_dashboard: { label: 'CRM 概要' },
         nav_forecast: { label: 'フォーキャスト' },
@@ -69,6 +65,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_help: { label: 'ヘルプ' },
         nav_help_manual: { label: 'ユーザーマニュアル' },
         nav_help_admin: { label: '管理者マニュアル' },
+      },
+    },
+    crm_service: {
+      // The ids this package contributes into the Service app (#2417).
+      navigation: {
+        nav_account: { label: '取引先' },
+        nav_contact: { label: '取引先責任者' },
+        nav_my_tasks: { label: '私のタスク' },
+        nav_my_calendar: { label: 'マイカレンダー' },
+        nav_report_churn_signals: { label: '顧客離反シグナル' },
+      },
+    },
+    crm_marketing: {
+      // The ids this package contributes into the Marketing app (#2417).
+      navigation: {
+        nav_lead: { label: 'リード' },
+        nav_contact: { label: '取引先責任者' },
+        nav_account: { label: '取引先' },
+        nav_my_tasks: { label: '私のタスク' },
+        nav_report_lead_inflow: { label: '月別リード対応' },
       },
     },
   },

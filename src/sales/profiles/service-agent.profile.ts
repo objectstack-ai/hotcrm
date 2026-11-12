@@ -11,6 +11,13 @@ export const ServiceAgentProfile = {
   label: 'Service Agent',
   description:
     'Service agents and managers: work their own cases, read the accounts, contacts and leads behind them and write knowledge articles, but see no opportunities.',
+  // Which HotCRM apps the holder's launcher offers (#2417). Visibility, not
+  // access: a hidden app still opens from its address, and records link
+  // across apps. Sets merge most-visible-wins, and every member also holds
+  // `crm_user`, which says nothing here, so silence never re-shows an app.
+  // Service agents and managers work in the Service app, which carries the
+  // customers and their own tasks.
+  tabPermissions: { crm_enterprise: 'hidden' as const, crm_marketing: 'hidden' as const },
   objects: {
     // Reference context an agent needs to work ANY ticket — a customer's cases
     // are meaningless without seeing the account/contact behind them, so these

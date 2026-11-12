@@ -247,10 +247,22 @@ export const esES: TranslationData = {
   apps: {
     crm_enterprise: {
       navigation: {
+        nav_knowledge_published: { label: 'Conocimiento' },
+      },
+    },
+    crm_service: {
+      label: 'Servicio',
+      description: 'Casos, la base de conocimiento y los clientes a los que pertenecen',
+      navigation: {
+        group_service: { label: 'Servicio' },
+        group_customers: { label: 'Clientes' },
+        group_work: { label: 'Mi Trabajo' },
+        group_reports: { label: 'Informes' },
+        group_help: { label: 'Ayuda' },
+        nav_approval_requests: { label: 'Bandeja de Entrada' },
         nav_service_dashboard: { label: 'Resumen de Servicio' },
         nav_case: { label: 'Casos' },
         nav_knowledge: { label: 'Conocimiento' },
-        nav_knowledge_published: { label: 'Conocimiento' },
         nav_my_cases: { label: 'Mis Casos' },
         nav_report_cases_by_status: { label: 'Casos por Estado y Prioridad' },
         nav_report_sla: { label: 'SLA de Casos Cerrados' },

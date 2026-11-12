@@ -10,7 +10,7 @@ import { esES } from './es-ES';
  * The marketing module's translations, in the four locales the app declares.
  *
  * A package translates the items it registers: its objects, the navigation
- * ids it contributes into the app (`apps.crm_enterprise.navigation.ID`, the
+ * ids it contributes into an app (`apps.<app>.navigation.ID`, the
  * contributed ids alone), its datasets and flows.
  * While these rows sat in the app package's packs, `os validate` with this
  * module absent refused every one of them as `translation-target-unknown`

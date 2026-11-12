@@ -92,20 +92,28 @@ const REPORT_LABELS: string[] = Object.values(reports as Record<string, AnyRec>)
 );
 const DATASET_LIST = Object.values(datasets as Record<string, AnyRec>);
 
-// The SERVED navigation: the service module contributes *Service Overview* and
-// *SLA on Closed Cases* into the app's groups (`servedApp()` folds them in the
-// way the console does), so they are navigation labels like any other.
-const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
+// The SERVED navigation of all three apps (#2417): the Sales app, plus HotCRM
+// Service, where *Service Overview* and the case reports live, and HotCRM
+// Marketing. `servedApp()` folds each package's contributions in the way the
+// console does, so every entry is a navigation label like any other.
+const APP_NAVS = [(CrmApp as AnyRec).name as string, 'crm_service', 'crm_marketing']
+  .map((name) => (servedApp(name).navigation ?? []) as AnyRec[]);
+const NAV = APP_NAVS.flat();
 const GROUPS = NAV.filter((n) => n.type === 'group');
 const INSIGHTS = GROUPS.find((g) => g.label === 'Insights') as AnyRec | undefined;
 const INSIGHTS_CHILDREN: string[] = ((INSIGHTS?.children ?? []) as AnyRec[]).map(
   (c) => c.label as string,
 );
-/** The group holding every shipped report (#2073 item 1), contributed entries included. */
+/**
+ * The groups holding every shipped report (#2073 item 1), contributed entries
+ * included: one Reports group per app since #2417, a report shared by two apps
+ * counted once.
+ */
 const REPORTS_GROUP = GROUPS.find((g) => g.id === 'group_reports') as AnyRec | undefined;
-const REPORTS_CHILDREN: string[] = ((REPORTS_GROUP?.children ?? []) as AnyRec[]).map(
-  (c) => c.label as string,
-);
+const REPORTS_CHILDREN: string[] = [...new Set(
+  GROUPS.filter((g) => g.id === 'group_reports')
+    .flatMap((g) => ((g.children ?? []) as AnyRec[]).map((c) => c.label as string)),
+)];
 
 /** Every navigation label in the app, at any depth. */
 const ALL_NAV_LABELS: string[] = (() => {

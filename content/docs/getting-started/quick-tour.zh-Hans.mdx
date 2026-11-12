@@ -9,7 +9,7 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 ## 1. 主页仪表盘
 
-应用打开时落在你的侧边栏显示的第一个条目上，所以你落在哪里取决于你是谁。销售经理或管理员落在 **Home**，即两个固定条目中的第一个。销售代表的侧边栏里没有 **Home**：它从 **Sales Home**（销售代表自己的页面）开始，销售代表就落在那里。两个固定条目都按岗位对服务坐席与服务经理隐藏，于是他们落在 **Service Overview**，即 **Service** 分组下的第一个条目。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
+HotCRM 是三个应用（见第 2 节），每个应用打开时都落在你的侧边栏显示的第一个条目上，所以你落在哪里取决于你是谁。在 **Sales** 里，销售经理或管理员落在 **Home**，即两个固定条目中的第一个。销售代表的侧边栏里没有 **Home**：它从 **Sales Home**（销售代表自己的页面）开始，销售代表就落在那里。服务坐席与服务经理在 **Service** 里工作，它打开时落在 **Service Overview**。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
 
 | 磁贴 | 它显示什么 |
 | --- | --- |
@@ -43,29 +43,31 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 ## 2. 应用启动器
 
-点击**应用启动器**（左上角网格图标）以在应用之间切换：
+点击**应用启动器**（左上角网格图标）以在应用之间切换。HotCRM 按业务线分成多个应用，所以控制台打开时停在首页，首页的 *Your apps* 一栏列出你的启动器提供的应用，点一个即可进入：
 
-- **HotCRM** —— 包含所有 CRM 功能的主应用。
+- **Sales** —— 线索、客户、商机、报价与合同：销售团队的应用。
+- **Service** —— 工单、知识库，以及它们所属的客户。
+- **Marketing** —— 营销活动，以及它触达的线索、联系人与客户；营销模块启用时才有。
 - **Admin** —— 面向系统管理员。
 
-在 HotCRM 内，左侧导航最上面是两个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；**Sales Home**，销售代表自己的页面，汇总管道数字、线索、未结商机、未完成任务与即将到来的活动；其余内容分在 7 个分组里：
+启动器只列出你的工作需要的应用：销售代表看到 **Sales**，服务坐席与服务经理看到 **Service**，市场人员看到 **Sales** 与 **Marketing**，销售经理与管理员三个都看得到。这决定的是启动器显示什么，而不是你能打开什么：启动器上没有的应用，用它的地址照样能打开；记录链接会在你当前所在的应用里打开。
+
+在 Sales 内，左侧导航最上面是两个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；**Sales Home**，销售代表自己的页面，汇总管道数字、线索、未结商机、未完成任务与即将到来的活动；其余内容分在 6 个分组里：
 
 | 分组 | 内容 |
 | --- | --- |
-| **Service** | Service Overview、Cases、Knowledge |
 | **Sales** | Leads、Accounts、Contacts、Opportunities、Sales Performance、Contracts、Quotes、Products、Price Books、Knowledge |
-| **My Work** | My Tasks、My Deals、My Leads、My Calendar、Inbox、My Cases |
+| **My Work** | My Tasks、My Deals、My Leads、My Calendar、Inbox |
 | **Activity** | Events、Sales Activity |
-| **Marketing** | Campaigns |
 | **Insights** | CRM Overview、Forecasts |
-| **Reports** | Opportunities by Stage、Won Opportunities by Owner、Pipeline Coverage by Quarter、Opportunity Funnel by Owner、Lead Engagement by Month、Accounts by Industry and Type、Customer Churn Signals、Cases by Status and Priority、SLA on Closed Cases、Cases Opened by Day |
-| **Help** | User Manual、Admin Manual、Service Manual、Revenue Manual、Marketing Manual |
+| **Reports** | Opportunities by Stage、Won Opportunities by Owner、Pipeline Coverage by Quarter、Opportunity Funnel by Owner、Lead Engagement by Month、Accounts by Industry and Type、Customer Churn Signals |
+| **Help** | User Manual、Admin Manual、Revenue Manual |
 
 上表用的是源码里的英文 label，也就是英文界面上看到的名字。简体中文界面下，它们显示为语言包里的译名——例如 **Inbox** 显示为「待我审批」、**Knowledge** 显示为「知识库」、**My Work** 显示为「我的工作」。
 
-**Reports** 和 **Help** 这两个分组在应用加载时是折叠的——**Service**、**Sales**、**My Work**、**Activity**、**Marketing**、**Insights** 都会自动展开。先把 **Reports** 点开，再判断某份报表在不在这里。**Help** 打开应用内手册；**Admin Manual** 只对管理员显示。
+**Reports** 和 **Help** 这两个分组在应用加载时是折叠的——**Sales**、**My Work**、**Activity**、**Insights** 都会自动展开。先把 **Reports** 点开，再判断某份报表在不在这里。**Help** 打开应用内手册；**Admin Manual** 只对管理员显示。
 
-建立在商机之上的条目——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview**，以及 **Reports** 下的四张商机报表——不能读取商机的人在侧边栏里看不到；服务坐席与服务经理也按岗位看不到它们：他们名下没有商机，**Opportunities** 与 **My Deals** 对他们总是空的，所以这两个条目也不对他们显示。其余报表对各自的数据也是同样的要求：服务坐席照样看得到线索、客户与工单报表，而不能读取工单的人看不到 **Service Overview** 和那三张工单报表。销售代表也看不到 **Home**，所以销售代表的侧边栏从 **Sales Home** 开始。销售代表不处理工单，所以销售代表的侧边栏也看不到 **Service Overview**、**Cases**、**My Cases** 以及那三张工单报表——**Cases by Status and Priority**、**SLA on Closed Cases**、**Cases Opened by Day**。销售代表的 **Knowledge** 改为 **Sales** 的最后一项，打开已发布的文章，所以销售代表的侧边栏里没有 **Service** 分组。其他人仍在 **Service** 下找到 **Knowledge**。**Service** 排在所有分组之首，是因为应用打开时落在侧边栏显示的第一个条目上：对服务坐席与服务经理来说，那就是 **Service Overview**。
+建立在商机之上的条目——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview**，以及 **Reports** 下的四张商机报表——不能读取商机的人在侧边栏里看不到；服务坐席与服务经理即使用地址打开 Sales 应用，也按岗位看不到它们：他们名下没有商机，**Opportunities** 与 **My Deals** 对他们总是空的，所以这两个条目也不对他们显示。其余报表对各自的数据也是同样的要求。销售代表也看不到 **Home**，所以销售代表的侧边栏从 **Sales Home** 开始。**Sales** 最后一项 **Knowledge** 是给销售代表的：它打开已发布的文章，只对销售代表显示。其他人在 **Service** 里找到 **Knowledge**。
 
 一个去处只占一行，这是刻意的。同一个对象如果有多种查看方式，它们是该对象列表页顶部的标签页，而不是导航里另起一行——这样侧边栏才短到能一眼扫完。
 
@@ -76,10 +78,33 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 - 本页过去列出的 4 个条目名已经不在侧边栏了，但功能一个都没少——它们各自成了所属列表页上的一个标签页：*Pipeline* 是 **Opportunities** 页面上的 Sales Pipeline 标签页；*Calendar* 与 *Interaction History* 是 **Events** 页面上的 Event Calendar 与 ✅ Interaction History 标签页；*All Tasks* 则是 **My Tasks** 打开的那个页面的第一个标签页。
 - *Activities* 不是分组，真实的分组叫 **Activity**，而且任务不在里面。`crm_task` 在侧边栏上就是 **My Work** 分组下的 **My Tasks** 一项。
 - *Analytics* 不是分组。跨职能的仪表盘 **CRM Overview** 在 **Insights** 分组下，应用自带的每一张报表都在 **Reports** 分组下，上表已按各自的名字列出。没有任何条目叫 *Dashboards*。
-- *AI* 不是分组，也没有叫 *Copilot* 或 *Knowledge Bases* 的侧边栏条目。Copilot 是每个页面右侧的聊天面板（见下文第 6 节），知识文章则是 **Service** 分组下的 **Knowledge**。
-- *Knowledge Base* 不是本应用使用的 label。**Service** 分组下的条目叫 **Knowledge**，与它并列的服务仪表盘叫 **Service Overview**——参见 [Service](/zh-Hans/docs/service/index)。
+- *AI* 不是分组，也没有叫 *Copilot* 或 *Knowledge Bases* 的侧边栏条目。Copilot 是每个页面右侧的聊天面板（见下文第 6 节），知识文章则是 **Service** 里 **Service** 分组下的 **Knowledge**。
+- *Knowledge Base* 不是 HotCRM 使用的 label。在 **Service** 里，这个条目叫 **Knowledge**，应用打开时落在的仪表盘叫 **Service Overview**——参见 [Service](/zh-Hans/docs/service/index)。
 - *Campaign Members* 不是侧边栏条目。营销活动成员要从营销活动详情页或全局搜索进入——参见 [Campaign Members](/zh-Hans/docs/marketing/campaign-members)。
 - *Approval Requests* 与 *Action History* 也都不是条目：本应用在审批侧只有 **Inbox** 这一个入口。审批的操作留痕本身是真实数据，由审批插件以 `sys_approval_action` 存储，但本应用里没有任何导航条目能打开它。
+
+在 Service 内，左侧导航最上面是 **Service Overview**，即服务团队的仪表盘；其余内容分在 5 个分组里：
+
+| 分组 | 内容 |
+| --- | --- |
+| **Service** | Cases、Knowledge |
+| **Customers** | Accounts、Contacts |
+| **My Work** | My Cases、Inbox、My Tasks、My Calendar |
+| **Reports** | Cases by Status and Priority、SLA on Closed Cases、Cases Opened by Day、Customer Churn Signals |
+| **Help** | Service Manual |
+
+**Reports** 和 **Help** 这两个分组在应用加载时是折叠的——**Service**、**Customers**、**My Work** 都会自动展开。不能读取工单的人看不到 **Service Overview** 和那三张工单报表；销售代表即使用地址打开这个应用，也看不到任何工单条目。
+
+在 Marketing 内，左侧导航最上面是 **Campaigns**；其余内容分在 4 个分组里：
+
+| 分组 | 内容 |
+| --- | --- |
+| **Audience** | Leads、Contacts、Accounts |
+| **My Work** | Inbox、My Tasks |
+| **Reports** | Lead Engagement by Month |
+| **Help** | Marketing Manual |
+
+**Reports** 和 **Help** 这两个分组在应用加载时是折叠的——**Audience**、**My Work** 都会自动展开。**Lead Engagement by Month** 与 **Customer Churn Signals** 各出现在两个应用里；两处条目打开的是同一份报表。
 
 ## 3. 你的第一条线索
 

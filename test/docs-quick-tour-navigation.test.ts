@@ -78,6 +78,18 @@ import { CrmPositions } from '../src/sales/sharing/positions';
 type AnyRec = Record<string, any>;
 
 /**
+ * ## Three apps since #2417
+ *
+ * The one menu became three apps: the Sales app (`crm_enterprise`, its name
+ * read from `CrmApp.label` and never written down here, #998), the Service app
+ * and the Marketing app.
+ * The page gives each its own guarded block (`Inside <label>,` up to the next
+ * block or `## `), and every rule below runs once per app against that app's
+ * served tree ({@link TOUR_APPS}). The Sales block keeps the retired-name
+ * list; the bold rule accepts any name any of the three apps carries.
+ */
+
+/**
  * The sidebar AS SERVED — `CrmApp.navigation` with every package's
  * `navigationContributions` folded in by the platform (`servedApp()`), because
  * that is what "here is what the sidebar holds" means. The service module
@@ -85,35 +97,54 @@ type AnyRec = Record<string, any>;
  * lands after the group's own children, which is why *My Cases* is the last
  * row of *My Work* and the case reports close *Reports*.
  */
-const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
-// A group with no served entry is not drawn — the console renders no empty
-// group (measured for `group_order_to_cash`, #2315: its module contributes no
-// item until phase 1) — so the tour, which says what the sidebar shows, leaves
-// it out until something fills it.
-const GROUPS = NAV.filter((n) => n.type === 'group' && ((n.children ?? []) as AnyRec[]).length > 0);
-const PINNED = NAV.filter((n) => n.type !== 'group');
-
 const childLabels = (g: AnyRec): string[] =>
   ((g.children ?? []) as AnyRec[]).map((c) => c.label as string);
 
-const GROUP_LABELS: string[] = GROUPS.map((g) => g.label as string);
-const ALL_NAV_LABELS: string[] = [
-  ...PINNED.map((p) => p.label as string),
-  ...GROUP_LABELS,
-  ...GROUPS.flatMap(childLabels),
-];
+/** One app's served sidebar, cut the way the tour describes it. */
+const tourOf = (name: string) => {
+  const app = servedApp(name);
+  const nav = (app.navigation ?? []) as AnyRec[];
+  // A group with no served entry is not drawn — the console renders no empty
+  // group (measured for `group_order_to_cash`, #2315: its module contributes no
+  // item until phase 1) — so the tour, which says what the sidebar shows, leaves
+  // it out until something fills it.
+  const groups = nav.filter((n) => n.type === 'group' && ((n.children ?? []) as AnyRec[]).length > 0);
+  const pinned = nav.filter((n) => n.type !== 'group');
+  return {
+    name,
+    label: app.label as string,
+    nav,
+    groups,
+    pinned,
+    groupLabels: groups.map((g) => g.label as string),
+    /** Groups that do NOT set `expanded: true` — `GroupNavItemSchema.expanded` defaults to false. */
+    collapsed: groups.filter((g) => g.expanded !== true).map((g) => g.label as string),
+    expanded: groups.filter((g) => g.expanded === true).map((g) => g.label as string),
+    labels: [
+      ...pinned.map((p) => p.label as string),
+      ...groups.map((g) => g.label as string),
+      ...groups.flatMap(childLabels),
+    ],
+  };
+};
 
-/** Groups that do NOT set `expanded: true` — `GroupNavItemSchema.expanded` defaults to false. */
-const COLLAPSED: string[] = GROUPS.filter((g) => g.expanded !== true).map((g) => g.label as string);
-const EXPANDED: string[] = GROUPS.filter((g) => g.expanded === true).map((g) => g.label as string);
+/** the Sales app first: the block that keeps the retired-name list. */
+const TOUR_APPS = [(CrmApp as AnyRec).name as string, 'crm_service', 'crm_marketing'].map(tourOf);
+const SALES = TOUR_APPS[0]!;
 
-/** The name the app ships under — `src/apps/crm.app.ts`, never written down here (#998). */
-const APP_LABEL = (CrmApp as AnyRec).label as string;
+const NAV = SALES.nav;
+const GROUPS = SALES.groups;
+const PINNED = SALES.pinned;
+const GROUP_LABELS: string[] = SALES.groupLabels;
+const COLLAPSED: string[] = SALES.collapsed;
+const EXPANDED: string[] = SALES.expanded;
+/** Every label any of the three apps carries. */
+const ALL_NAV_LABELS: string[] = TOUR_APPS.flatMap((t) => t.labels);
 
 const ALLOWED_BOLD = new Set<string>([
   ...ALL_NAV_LABELS,
   ExecutiveDashboard.label as string,
-  APP_LABEL,
+  ...TOUR_APPS.map((t) => t.label),
 ]);
 
 /**
@@ -158,41 +189,52 @@ const PHANTOMS = [
  */
 const RETIRED_GROUP_NAMES = ['Products', 'Approvals'] as const;
 
-const PAGES = [
+const LOCALES = [
   {
     file: 'content/docs/getting-started/quick-tour.mdx',
     lang: 'en',
-    /** First line of the guarded block; the block runs to the next `## `. */
-    start: `Inside ${APP_LABEL},`,
+    /** First line of an app's guarded block; the block runs to the next block or `## `. */
+    startOf: (label: string) => `Inside ${label},`,
     sep: ', ',
     collapse: /collapsed when the app loads/,
-    /** The app-launcher bullet; capture group 1 is the name it gives this app. */
-    launcher: /^- \*\*(.+?)\*\* — the main app with all CRM functionality\./m,
+    /** The app-launcher bullet that names an app. */
+    launcherOf: (label: string) => `- **${label}** — `,
   },
   {
     file: 'content/docs/getting-started/quick-tour.zh-Hans.mdx',
     lang: 'zh-Hans',
-    start: `在 ${APP_LABEL} 内，`,
+    startOf: (label: string) => `在 ${label} 内，`,
     sep: '、',
     collapse: /在应用加载时是折叠的/,
-    launcher: /^- \*\*(.+?)\*\* —— 包含所有 CRM 功能的主应用。/m,
+    launcherOf: (label: string) => `- **${label}** —— `,
   },
   {
     file: 'content/docs/getting-started/quick-tour.zh-Hant.mdx',
     lang: 'zh-Hant',
-    start: `在 ${APP_LABEL} 內，`,
+    startOf: (label: string) => `在 ${label} 內，`,
     sep: '、',
     collapse: /在應用載入時是摺疊的/,
-    launcher: /^- \*\*(.+?)\*\* —— 包含所有 CRM 功能的主應用。/m,
+    launcherOf: (label: string) => `- **${label}** —— `,
   },
 ] as const;
 
-const blockOf = (file: string, start: string): string => {
+/** Every (page, app) pair: one guarded block each. */
+const PAGES = LOCALES.flatMap((l) =>
+  TOUR_APPS.map((app) => ({
+    ...l,
+    app,
+    start: l.startOf(app.label),
+    starts: TOUR_APPS.map((a) => l.startOf(a.label)),
+    launcher: l.launcherOf(app.label),
+  })),
+);
+
+const blockOf = (file: string, start: string, starts: readonly string[] = [start]): string => {
   const lines = readFileSync(join(REPO_ROOT, file), 'utf8').split('\n');
   const from = lines.findIndex((l) => l.startsWith(start));
   expect(from, `${file}: block start '${start}' not found`).toBeGreaterThanOrEqual(0);
   const rest = lines.slice(from);
-  const end = rest.findIndex((l, i) => i > 0 && l.startsWith('## '));
+  const end = rest.findIndex((l, i) => i > 0 && (l.startsWith('## ') || starts.some((s) => l.startsWith(s))));
   return (end === -1 ? rest : rest.slice(0, end)).join('\n');
 };
 
@@ -225,34 +267,28 @@ const italicNames = (block: string): string[] =>
   [...block.replace(/\*\*[^*\n]+\*\*/g, '').matchAll(/\*([^*\n]+)\*/g)].map((m) => m[1].trim());
 
 describe('getting-started/quick-tour names the navigation the app really ships (#960)', () => {
-  describe.each(PAGES)('$file', ({ file, start, sep, collapse, launcher }) => {
-    const block = () => blockOf(file, start);
+  describe.each(PAGES)('$file — $app.name', ({ file, start, starts, sep, collapse, launcher, app }) => {
+    const block = () => blockOf(file, start, starts);
+    const isSales = app.name === SALES.name;
 
     it('the app-launcher list calls this app by the label the app ships (#998)', () => {
       const text = readFileSync(join(REPO_ROOT, file), 'utf8');
-      const found = launcher.exec(text);
       expect(
-        found,
-        `${file}: the app-launcher bullet for this app is gone (pattern ${launcher}) — this ` +
-          'rule has gone blind. Re-take the pattern against the page rather than deleting it.',
-      ).not.toBeNull();
-      expect(
-        found?.[1],
-        `${file}: the app-launcher list — the very screen a new user opens — calls this app ` +
-          `something other than the name it ships. \`CrmApp.label\` is '${APP_LABEL}', and the ` +
-          'launcher shows that string; a page that spells it differently is naming an app ' +
-          'nobody can find.',
-      ).toBe(APP_LABEL);
+        text.split('\n').some((l) => l.startsWith(launcher)),
+        `${file}: the app-launcher list — the very screen a new user opens — has no bullet ` +
+          `naming '${app.label}', the label ${app.name} ships; a page that spells it ` +
+          'differently is naming an app nobody can find.',
+      ).toBe(true);
     });
 
     it('lists every group, in source order, with exactly its children', () => {
       const rows = tableRows(block());
       expect(
         rows.map((r) => r[0]),
-        `${file}: the table's group column must be every CrmApp group, in source order`,
-      ).toEqual(GROUP_LABELS.map((l) => `**${l}**`));
+        `${file}: the table's group column must be every ${app.name} group, in source order`,
+      ).toEqual(app.groupLabels.map((l) => `**${l}**`));
 
-      GROUPS.forEach((g, i) => {
+      app.groups.forEach((g, i) => {
         expect(
           rows[i][1].split(sep).map((s) => s.trim()),
           `${file}: contents of the ${g.label} row`,
@@ -262,12 +298,12 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 
     it('names the pinned top-level entry and the dashboard it opens', () => {
       const text = block();
-      PINNED.forEach((p) => {
+      app.pinned.forEach((p) => {
         expect(text, `${file}: pinned nav item '${p.label}' is not named`).toContain(
           `**${p.label}**`,
         );
       });
-      expect(text).toContain(`**${ExecutiveDashboard.label}**`);
+      if (isSales) expect(text).toContain(`**${ExecutiveDashboard.label}**`);
     });
 
     it('bolds only names the app actually carries', () => {
@@ -280,7 +316,7 @@ describe('getting-started/quick-tour names the navigation the app really ships (
       ).toEqual([]);
     });
 
-    it('still names every retired name, in italics, and never in bold', () => {
+    it.runIf(isSales)('still names every retired name, in italics, and never in bold', () => {
       const text = block();
       const italics = italicNames(text);
       const bold = boldNames(text);
@@ -303,12 +339,12 @@ describe('getting-started/quick-tour names the navigation the app really ships (
       const text = block();
       expect(text, `${file}: the default-collapse note is missing`).toMatch(collapse);
       const line = text.split('\n').find((l) => collapse.test(l)) ?? '';
-      COLLAPSED.forEach((l) =>
+      app.collapsed.forEach((l) =>
         expect(line, `${file}: '${l}' is collapsed on load but the note omits it`).toContain(
           `**${l}**`,
         ),
       );
-      EXPANDED.forEach((l) =>
+      app.expanded.forEach((l) =>
         expect(line, `${file}: '${l}' opens itself but the note omits it`).toContain(`**${l}**`),
       );
     });
@@ -316,20 +352,26 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 });
 
 describe('the source facts the quick-tour table now rests on (#960)', () => {
-  it('the app has two pinned top-level entries and eight groups', () => {
+  it('the Sales app has two pinned top-level entries and six groups', () => {
     expect(PINNED.map((p) => p.label)).toEqual(['Home', 'Sales Home']);
-    // Service leads the groups (#2060 item 5): its first entry, Service
-    // Overview, is where a service persona lands — see `crm.app.ts`.
+    // Service and Marketing left with #2417, each to an app of its own.
     expect(GROUP_LABELS).toEqual([
-      'Service',
       'Sales',
       'My Work',
       'Activity',
-      'Marketing',
       'Insights',
       'Reports',
       'Help',
     ]);
+  });
+
+  it('the Service app opens on Service Overview, the Marketing app on Campaigns (#2417)', () => {
+    const [, service, marketing] = TOUR_APPS;
+    expect(service!.pinned.map((p) => p.label)).toEqual(['Service Overview']);
+    expect(service!.groupLabels).toEqual(['Service', 'Customers', 'My Work', 'Reports', 'Help']);
+    expect(marketing!.pinned.map((p) => p.label)).toEqual(['Campaigns']);
+    expect(marketing!.groupLabels).toEqual(['Audience', 'My Work', 'Reports', 'Help']);
+    for (const t of [service!, marketing!]) expect(t.collapsed, t.name).toEqual(['Reports', 'Help']);
   });
 
   it('Home opens the executive dashboard, not the CRM overview one', () => {
@@ -339,7 +381,7 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
 
   it('Reports and Help are the groups that stay collapsed (#2295, #2327)', () => {
     expect(COLLAPSED).toEqual(['Reports', 'Help']);
-    expect(EXPANDED).toEqual(['Service', 'Sales', 'My Work', 'Activity', 'Marketing', 'Insights']);
+    expect(EXPANDED).toEqual(['Sales', 'My Work', 'Activity', 'Insights']);
   });
 
   it('carries no navigation label matching any name the page calls a phantom', () => {
@@ -347,13 +389,13 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     expect(PHANTOMS.filter((n) => labels.has(n))).toEqual([]);
   });
 
-  it('routes crm_task through My Work only, and reaches campaign members from no nav item', () => {
+  it.each(TOUR_APPS.map((t) => [t.name, t] as const))('%s routes crm_task through My Work only, and reaches campaign members from no nav item', (_name, t) => {
     const walk = (nodes: AnyRec[]): AnyRec[] =>
       nodes.flatMap((n) => [n, ...walk((n.children ?? []) as AnyRec[])]);
-    const all = walk(NAV);
+    const all = walk(t.nav);
     expect(all.filter((n) => n.objectName === 'crm_campaign_member')).toEqual([]);
 
-    const taskOwners = GROUPS.filter((g) =>
+    const taskOwners = t.groups.filter((g) =>
       ((g.children ?? []) as AnyRec[]).some((c) => c.objectName === 'crm_task'),
     ).map((g) => g.label);
     expect(taskOwners).toEqual(['My Work']);
@@ -373,7 +415,7 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
       ((): AnyRec[] => {
         const walk = (nodes: AnyRec[]): AnyRec[] =>
           nodes.flatMap((n) => [n, ...walk((n.children ?? []) as AnyRec[])]);
-        return walk(NAV);
+        return TOUR_APPS.flatMap((t) => walk(t.nav));
       })().map((n) => [n.id as string, n]),
     );
     expect(byId.get('nav_knowledge')?.label).toBe('Knowledge');
@@ -444,6 +486,7 @@ const EXEC_FILTER_LABELS = (((ExecutiveDashboard as AnyRec).globalFilters ?? [])
 
 const ALLOWED_BOLD_SECTION1 = new Set<string>([
   ...ALL_NAV_LABELS,
+  ...TOUR_APPS.map((t) => t.label),
   ...EXEC_TILES,
   ...tileTitles(CrmOverviewDashboard as AnyRec),
   ...tileTitles(ServiceDashboard as AnyRec),
