@@ -148,3 +148,37 @@ describe('the check before any HTTP call', () => {
     expect(locale).toBeInstanceOf(ListingError);
   });
 });
+
+/**
+ * The listing is classified by `businessFunctions`, never by `category`
+ * (#2426). Since the cloud's taxonomy release the package upsert refuses a
+ * body carrying `category` ("Package refused — nothing stored"), which kept
+ * 6.1.0 off the production marketplace and every later version off both
+ * planes. The values and the wire key `business_functions` are the
+ * platform's (objectstack `main`, #32448: `taxonomy.zod.ts`,
+ * `CreatePackageRequestSchema`, the CLI's `TAXONOMY_WIRE_KEYS`); the pinned
+ * spec 18.3.0 carries no taxonomy, so no schema parse of the body is
+ * reachable here yet, and these cases pin HotCRM's own declaration and what
+ * the publish script sends for it.
+ */
+describe('the marketplace classification', () => {
+  it('the manifest declares businessFunctions, primary first, and no category', () => {
+    const mp = manifest();
+    expect(mp).not.toHaveProperty('category');
+    expect(mp.businessFunctions).toEqual(['sales', 'customer_service', 'marketing']);
+  });
+
+  it('the package upsert body carries business_functions and no category', () => {
+    const mp = manifest();
+    const body = packageUpsertBody({ manifestId: mp.manifestId, manifest: mp, license: mp.license, readme: 'R', translations: undefined });
+    expect(body).not.toHaveProperty('category');
+    expect(body).not.toHaveProperty('businessFunctions');
+    expect(body.business_functions).toEqual(mp.businessFunctions);
+  });
+
+  it('a manifest that declares no businessFunctions sends none, leaving the stored value alone', () => {
+    const { businessFunctions: _omitted, ...mp } = manifest();
+    const body = packageUpsertBody({ manifestId: 'x', manifest: mp, license: 'MIT', readme: 'R', translations: undefined });
+    expect(body).not.toHaveProperty('business_functions');
+  });
+});
