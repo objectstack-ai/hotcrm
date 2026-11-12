@@ -800,11 +800,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   books: {
     crm_manual: {
       label: 'Manual de Usuario de HotCRM',
-      description: 'Cómo funciona HotCRM en ventas y servicio: las reglas detrás de las pantallas.',
+      description: 'Cómo funciona HotCRM en ventas: las reglas detrás de las pantallas.',
       groups: {
         start: { label: 'Primeros pasos' },
         sales: { label: 'Ventas' },
-        service: { label: 'Servicio' },
         analytics: { label: 'Análisis' },
       },
     },

@@ -255,6 +255,7 @@ export const esES: TranslationData = {
         nav_report_cases_by_status: { label: 'Casos por Estado y Prioridad' },
         nav_report_sla: { label: 'SLA de Casos Cerrados' },
         nav_report_cases_opened_by_day: { label: 'Casos Abiertos por Día' },
+        nav_help_service: { label: 'Manual de Servicio' },
       },
     },
   },
@@ -379,6 +380,15 @@ export const esES: TranslationData = {
     cases_opened_by_day_priority: {
       label: 'Casos Abiertos por Día',
       description: 'Entrada diaria de casos desglosada por prioridad',
+    },
+  },
+  books: {
+    crm_service_manual: {
+      label: 'Manual de Servicio de HotCRM',
+      description: 'Casos y SLA, la base de conocimiento y cómo se clasifican los casos entrantes.',
+      groups: {
+        service: { label: 'Servicio' },
+      },
     },
   },
 };

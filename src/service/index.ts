@@ -8,6 +8,7 @@ import {
   MarkArticleHelpfulAction, MarkArticleNotHelpfulAction,
 } from './actions/index.js';
 import { ServiceDashboard } from './dashboards/index.js';
+import { CrmServiceManual } from './books/index.js';
 import { CaseDataset } from './datasets/index.js';
 import { ServiceEmailTemplates } from './email-templates/index.js';
 import {
@@ -278,6 +279,16 @@ export const createHotCrmServiceStack = (
           { id: 'nav_report_cases_opened_by_day', type: 'report', reportName: 'cases_opened_by_day_priority', label: 'Cases Opened by Day',          icon: 'calendar-days', visible: CASE_READ_AUDIENCE },
         ],
       },
+      {
+        app: 'crm_enterprise',
+        // The Service Manual (#2415) opens from Help like the revenue and
+        // marketing manuals, ahead of them (priority 30 < 40 < 50).
+        group: 'group_help',
+        priority: 30,
+        items: [
+          { id: 'nav_help_service', type: 'doc', book: 'crm_service_manual', label: 'Service Manual', icon: 'headset' },
+        ],
+      },
     ],
   },
 
@@ -304,6 +315,7 @@ export const createHotCrmServiceStack = (
   queues: [CaseIntakeQueue],
   assignmentRules: [CaseIntakeAssignmentRule],
   emailTemplates: ServiceEmailTemplates,
+  books: [CrmServiceManual],
   translations: [ServiceTranslations],
 
   ...collections,

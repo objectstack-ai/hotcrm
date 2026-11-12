@@ -24,7 +24,7 @@ something escalates, what threshold triggers an approval).
 - **Sales** — leads, accounts, contacts, opportunities and contracts: the
   motion from a first enquiry to a signed agreement and its renewal.
 - **Service** — cases and the knowledge base: support after the sale, with
-  SLA clocks and escalation.
+  SLA clocks and escalation. It has a manual of its own under **Help**.
 - **Revenue** — products, price books and quotes: what a deal is priced at.
   It is an add-on module with a manual of its own under **Help**.
 - **Marketing** — campaigns and their members: where leads come from. It is
@@ -56,9 +56,9 @@ surprise.
 | You are | Read |
 |---|---|
 | A sales rep or sales manager | [Leads](./crm_sales_leads.md), [Opportunities](./crm_sales_opportunities.md) and [Contracts](./crm_sales_contracts.md) |
-| A service agent or service manager | [Cases & SLAs](./crm_service_cases.md) and [Knowledge](./crm_service_knowledge.md) |
+| A service agent or service manager | the **Service Manual** under **Help**: [Cases & SLAs](./crm_service_cases.md) and [Knowledge](./crm_service_knowledge.md) |
 | Building quotes | the **Revenue Manual** under **Help** |
-| An administrator | the **Admin Manual** under **Help**: who sees whose records, and where every threshold is tuned |
+| An administrator of a self-hosted install | the **Admin Manual** under **Help**: who sees whose records, and where every threshold is tuned |
 
 Tuning any of these rules (approval amounts, SLA timing, stale-deal windows)
 is an administrator task, so ask your administrator when a number here does

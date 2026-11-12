@@ -71,7 +71,7 @@ const docEntries = (): AnyRec[] => {
 describe('the in-app manuals claim every page (#2327)', () => {
   it('reads real pages and real books', () => {
     expect(PAGES.length, 'no package docs found under src/').toBeGreaterThanOrEqual(9);
-    expect(BOOKS.map((b) => b.name).sort()).toEqual(['crm_admin_manual', 'crm_manual', 'crm_marketing_manual', 'crm_revenue_manual']);
+    expect(BOOKS.map((b) => b.name).sort()).toEqual(['crm_admin_manual', 'crm_manual', 'crm_marketing_manual', 'crm_revenue_manual', 'crm_service_manual']);
     // The four packages that ship pages (#2330 added marketing), so the module directories are really read.
     expect(new Set(PAGES.map((p) => p.packageId)).size).toBe(4);
   });
@@ -92,6 +92,34 @@ describe('the in-app manuals claim every page (#2327)', () => {
       expect(entries.filter((e) => e.book === book.name).map((e) => e.id), `entries opening ${book.name}`).toHaveLength(1);
     }
     expect(entries.filter((e) => !BOOKS.some((b) => b.name === e.book)).map((e) => e.id)).toEqual([]);
+  });
+});
+
+describe('the manuals file every page on a flattened install too (#2415)', () => {
+  // The hosted marketplace publishes the four packages flattened into one
+  // (cloud#3636): every book and every page then belongs to the app package.
+  // A group that names `package` ties itself to a sub-package identity that is
+  // gone there — the Service group did, and its three pages fell under
+  // UNCATEGORIZED. Each module keeps its own book instead.
+  it('no book group names a package', () => {
+    const named = BOOKS.flatMap((b) => ((b as AnyRec).groups ?? []).filter((g: AnyRec) => g.package).map((g: AnyRec) => `${b.name}.${g.key} → ${g.package}`));
+    expect(named).toEqual([]);
+  });
+
+  it('with every book and page owned by the app package, every page is still claimed', () => {
+    const flatBooks = BOOKS.map((b) => ({ ...b, packageId: APP_ID }));
+    const flatDocs = PAGES.map((p) => ({ name: p.name, packageId: APP_ID }));
+    const claimed = new Set(flatBooks.flatMap((b) => [...resolveBookClaimedDocs(b, flatDocs, APP_ID)]));
+    expect(PAGES.filter((p) => !claimed.has(p.name)).map((p) => p.file)).toEqual([]);
+  });
+
+  it('the service pages are filed by the Service Manual, flattened or not', () => {
+    const service = BOOKS.find((b) => b.name === 'crm_service_manual')!;
+    const servicePages = PAGES.filter((p) => p.name.startsWith('crm_service_')).map((p) => p.name).sort();
+    expect(servicePages.length).toBeGreaterThan(0);
+    expect([...resolveBookClaimedDocs(service, RESOLVER_DOCS, service.packageId)].sort()).toEqual(servicePages);
+    const flatDocs = PAGES.map((p) => ({ name: p.name, packageId: APP_ID }));
+    expect([...resolveBookClaimedDocs(service, flatDocs, APP_ID)].sort()).toEqual(servicePages);
   });
 });
 
