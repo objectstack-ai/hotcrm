@@ -802,11 +802,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   books: {
     crm_manual: {
       label: 'HotCRM ユーザーマニュアル',
-      description: '営業とサービスで HotCRM がどう動くか：画面の背後にあるルール。',
+      description: '営業で HotCRM がどう動くか：画面の背後にあるルール。',
       groups: {
         start: { label: 'はじめに' },
         sales: { label: '営業' },
-        service: { label: 'サービス' },
         analytics: { label: '分析' },
       },
     },

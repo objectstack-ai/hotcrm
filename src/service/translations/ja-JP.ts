@@ -252,6 +252,7 @@ export const jaJP: TranslationData = {
         nav_report_cases_by_status: { label: 'ステータス・優先度別ケース' },
         nav_report_sla: { label: 'クローズ済みケースの SLA' },
         nav_report_cases_opened_by_day: { label: '日別新規ケース' },
+        nav_help_service: { label: 'サービスマニュアル' },
       },
     },
   },
@@ -376,6 +377,15 @@ export const jaJP: TranslationData = {
     cases_opened_by_day_priority: {
       label: '日別新規ケース',
       description: '1 日ごとの新規ケース数を優先度別に表示',
+    },
+  },
+  books: {
+    crm_service_manual: {
+      label: 'HotCRM サービスマニュアル',
+      description: 'ケースと SLA、ナレッジベース、そして新しいケースの振り分け方。',
+      groups: {
+        service: { label: 'サービス' },
+      },
     },
   },
 };

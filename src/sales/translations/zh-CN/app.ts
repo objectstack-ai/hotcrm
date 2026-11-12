@@ -807,11 +807,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   books: {
     crm_manual: {
       label: 'HotCRM 使用手册',
-      description: 'HotCRM 在销售和服务中如何运作：界面背后的规则。',
+      description: 'HotCRM 在销售中如何运作：界面背后的规则。',
       groups: {
         start: { label: '入门' },
         sales: { label: '销售' },
-        service: { label: '服务' },
         analytics: { label: '分析' },
       },
     },

@@ -20,22 +20,22 @@ import { defineBook } from '@objectstack/spec';
  * first-day page, then the assistant — an order a name glob cannot express
  * (#2329). Analytics files its pages by rule like Sales.
  *
- * The Service group reaches into the service module through `package`: its
- * docs live in `src/service/docs/` and belong to that package, and a group
- * rule matches only its own book's package unless it names another. Revenue
- * keeps a book of its own (`src/revenue/books/`), because the module can be
- * uninstalled and the app's manual must not depend on it.
+ * Every module keeps a book of its own — Service (`src/service/books/`, #2415),
+ * Revenue and Marketing — so this manual holds only the app package's pages.
+ * ⛔ Do not reach into a module with a group `package`: that ties the group to
+ * a package IDENTITY, which the hosted marketplace flattens away (cloud#3636).
+ * The Service group did exactly that and showed empty on hosted, its pages
+ * under UNCATEGORIZED (#2415).
  */
 export const CrmManual = defineBook({
   name: 'crm_manual',
   label: 'HotCRM User Manual',
-  description: 'How HotCRM works for sales and service: the rules behind the screens.',
+  description: 'How HotCRM works for sales: the rules behind the screens.',
   icon: 'book-open',
   order: 1,
   groups: [
     { key: 'start', label: 'Getting Started', order: 1, pages: ['crm_overview', 'crm_getting_started', 'crm_ai_skills'] },
     { key: 'sales', label: 'Sales', order: 2, include: 'crm_sales_*' },
-    { key: 'service', label: 'Service', order: 3, include: 'crm_service_*', package: 'app.objectstack.hotcrm.service' },
-    { key: 'analytics', label: 'Analytics', order: 4, include: 'crm_analytics_*' },
+    { key: 'analytics', label: 'Analytics', order: 3, include: 'crm_analytics_*' },
   ],
 });

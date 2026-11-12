@@ -256,6 +256,7 @@ export const zhCN: TranslationData = {
         nav_report_cases_by_status: { label: '工单状态与优先级' },
         nav_report_sla: { label: '已关闭工单的 SLA' },
         nav_report_cases_opened_by_day: { label: '每日新建工单' },
+        nav_help_service: { label: '服务手册' },
       },
     },
   },
@@ -380,6 +381,15 @@ export const zhCN: TranslationData = {
     cases_opened_by_day_priority: {
       label: '每日新建工单',
       description: '每日新建工单数，按优先级细分',
+    },
+  },
+  books: {
+    crm_service_manual: {
+      label: 'HotCRM 服务手册',
+      description: '工单与 SLA、知识库，以及新工单如何分诊。',
+      groups: {
+        service: { label: '服务' },
+      },
     },
   },
 };
