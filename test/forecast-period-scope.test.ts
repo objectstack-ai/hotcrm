@@ -7,6 +7,7 @@ import { AnalyticsService } from '@objectstack/service-analytics';
 import stack from './helpers/composed-stack';
 import { ForecastDataset } from '../src/sales/datasets/forecast.dataset';
 import { CrmSeedData } from '../objectstack.composition';
+import { resolveSeedRecords } from './helpers/seed-values';
 
 /**
  * The organization every write here carries: since 18.1.0 the driver creates
@@ -165,9 +166,13 @@ describe('every forecast_metrics consumer pins a single period (#614)', () => {
 const quotaWidget: AnyRec = (dashboards.find((d) => d.name === 'sales_dashboard')?.widgets ?? [])
   .find((w: AnyRec) => w.id === 'quota_attainment_by_rep');
 
-const forecastSeed = CrmSeedData.find((s: any) => s.object === 'crm_forecast') as
+// Resolved as the seed loader writes them (#2431): the period values are CEL.
+const forecastSeedRaw = CrmSeedData.find((s: any) => s.object === 'crm_forecast') as
   | { records: AnyRec[] }
   | undefined;
+const forecastSeed = forecastSeedRaw
+  ? { records: resolveSeedRecords(forecastSeedRaw.records) as AnyRec[] }
+  : undefined;
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const isoDate = (d: Date) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;

@@ -14,6 +14,16 @@ import type { EmailTemplatePack } from './_bundle';
  * renderer fills from that node's `templateData`. A conversion, not a rewrite:
  * no notification said anything new. A text changed since says why beside it.
  *
+ * A person is printed as `{{person_name}}`, in every locale pack (#2431). It
+ * used to be `{{first_name}} {{last_name}}`, which printed 姓「张」名「伟」as
+ * 「伟 张」. The six templates that name a lead or a contact take the name
+ * composed by `personNameSource` (`src/sales/objects/_person-name.ts`), the rule
+ * the stored titles use: family name first with no space for a CJK family
+ * name. A hole cannot branch or fall back on @objectstack 18.3.0 (the
+ * renderer prints a missing value as nothing), so the order is decided by the
+ * flow that sends the notice. Every shipped flow passes `person_name` beside
+ * `first_name` / `last_name`; `test/person-name-order.test.ts` pins that.
+ *
  * ⚠️ Registered under `en-US`, not `en` — see the ladder note on `bundle()`.
  */
 export const en: EmailTemplatePack = {
@@ -29,8 +39,8 @@ export const en: EmailTemplatePack = {
   },
   'crm.contact_welcome': {
     label: 'New Contact',
-    subject: 'New contact: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} was added as a contact. Reach out to welcome them.</p>',
+    subject: 'New contact: {{person_name}}',
+    bodyHtml: '<p>{{person_name}} was added as a contact. Reach out to welcome them.</p>',
   },
   'crm.contract_expired': {
     label: 'Contract Expired',
@@ -59,18 +69,18 @@ export const en: EmailTemplatePack = {
   },
   'crm.lead_conversion_approved': {
     label: 'Lead Approved for Conversion',
-    subject: 'Lead approved for conversion: {{first_name}} {{last_name}}',
+    subject: 'Lead approved for conversion: {{person_name}}',
     bodyHtml: '<p>This lead has been signed off. You can convert it into an account, contact and opportunity.</p>',
   },
   'crm.lead_conversion_rejected': {
     label: 'Lead Not Approved',
-    subject: 'Lead not approved: {{first_name}} {{last_name}}',
+    subject: 'Lead not approved: {{person_name}}',
     bodyHtml: '<p>Conversion of this lead was not approved. Keep working it, or disqualify it with a reason.</p>',
   },
   'crm.lead_converted': {
     label: 'Lead Converted',
-    subject: 'Lead converted: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>Lead {{first_name}} {{last_name}} was converted into an account and contact.</p>',
+    subject: 'Lead converted: {{person_name}}',
+    bodyHtml: '<p>Lead {{person_name}} was converted into an account and contact.</p>',
   },
   // The two routing alerts go to the lead's OWNER (`lead_assignment`), so they
   // say the lead is theirs to follow up. They used to read as an assigner's
@@ -78,13 +88,13 @@ export const en: EmailTemplatePack = {
   // lead was already assigned to (#2073 item 7).
   'crm.lead_routing_hot': {
     label: 'Hot Lead Routing',
-    subject: 'Hot lead — follow up within 24h: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} from {{company}} (rating {{rating}}) is yours. Follow up by tomorrow.</p>',
+    subject: 'Hot lead — follow up within 24h: {{person_name}}',
+    bodyHtml: '<p>{{person_name}} from {{company}} (rating {{rating}}) is yours. Follow up by tomorrow.</p>',
   },
   'crm.lead_routing_new': {
     label: 'New Lead Routing',
-    subject: 'New lead assigned to you: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} from {{company}} is now yours. Follow up within 3 days.</p>',
+    subject: 'New lead assigned to you: {{person_name}}',
+    bodyHtml: '<p>{{person_name}} from {{company}} is now yours. Follow up within 3 days.</p>',
   },
   'crm.opportunity_approved': {
     label: 'Deal Approved',

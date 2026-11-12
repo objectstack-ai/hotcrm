@@ -16,8 +16,8 @@ export const jaJP: EmailTemplatePack = {
   },
   'crm.contact_welcome': {
     label: '新規取引先責任者',
-    subject: '新しい取引先責任者: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} が取引先責任者として追加されました。ご挨拶の連絡をしてください。</p>',
+    subject: '新しい取引先責任者: {{person_name}}',
+    bodyHtml: '<p>{{person_name}} が取引先責任者として追加されました。ご挨拶の連絡をしてください。</p>',
   },
   'crm.contract_expired': {
     label: '契約の満了',
@@ -41,28 +41,28 @@ export const jaJP: EmailTemplatePack = {
   },
   'crm.lead_conversion_approved': {
     label: 'リード変換の承認',
-    subject: 'リードの変換が承認されました: {{first_name}} {{last_name}}',
+    subject: 'リードの変換が承認されました: {{person_name}}',
     bodyHtml: '<p>このリードは承認されました。取引先、取引先責任者、商談に変換できます。</p>',
   },
   'crm.lead_conversion_rejected': {
     label: 'リード未承認',
-    subject: 'リードが承認されませんでした: {{first_name}} {{last_name}}',
+    subject: 'リードが承認されませんでした: {{person_name}}',
     bodyHtml: '<p>このリードの変換は承認されませんでした。引き続き対応するか、理由を付けて対象外にしてください。</p>',
   },
   'crm.lead_converted': {
     label: 'リード変換済み',
-    subject: 'リードを変換しました: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>リード {{first_name}} {{last_name}} を取引先と取引先責任者に変換しました。</p>',
+    subject: 'リードを変換しました: {{person_name}}',
+    bodyHtml: '<p>リード {{person_name}} を取引先と取引先責任者に変換しました。</p>',
   },
   'crm.lead_routing_hot': {
     label: 'ホットリードの割り当て',
-    subject: 'ホットリード — 24 時間以内にフォローアップ: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{company}} の {{first_name}} {{last_name}}（評価 {{rating}}）はあなたの担当です。明日までにフォローアップしてください。</p>',
+    subject: 'ホットリード — 24 時間以内にフォローアップ: {{person_name}}',
+    bodyHtml: '<p>{{company}} の {{person_name}}（評価 {{rating}}）はあなたの担当です。明日までにフォローアップしてください。</p>',
   },
   'crm.lead_routing_new': {
     label: '新規リードの割り当て',
-    subject: '新規リードがあなたに割り当てられました: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{company}} の {{first_name}} {{last_name}} があなたの担当になりました。3 日以内にフォローアップしてください。</p>',
+    subject: '新規リードがあなたに割り当てられました: {{person_name}}',
+    bodyHtml: '<p>{{company}} の {{person_name}} があなたの担当になりました。3 日以内にフォローアップしてください。</p>',
   },
   'crm.opportunity_approved': {
     label: '商談承認済み',

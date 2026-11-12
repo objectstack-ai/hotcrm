@@ -446,7 +446,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     lead_detail_page: {
       label: '线索详情',
       description: '完整的线索详情页，包含关键信息、明细与相关记录。',
-      title: '{first_name} {last_name}',
+      title: '{full_name}',
       subtitle: '{company}',
       components: {
         lead_duplicate_alert_confirmed: { label: '已确认重复提醒' },

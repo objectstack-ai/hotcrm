@@ -5,6 +5,7 @@ import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import forecastHook from '../src/sales/objects/forecast.hook';
 import { forecasts } from '../src/sales/data/forecast.seed';
+import { resolveSeedRecords } from './helpers/seed-values';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
@@ -386,7 +387,7 @@ describe('everything this app already writes clears the new rule', () => {
   it('every seeded forecast starts on a calendar boundary', () => {
     // The zero-stock-cost premise of the ruling, re-measured here rather than
     // taken on trust: a tightening that reddens the seeds is a different card.
-    const records = ((forecasts as AnyRec).records ?? []) as AnyRec[];
+    const records = resolveSeedRecords(((forecasts as AnyRec).records ?? []) as AnyRec[]);
     expect(records.length).toBeGreaterThan(0);
     for (const r of records) {
       const start = String(r.period_start);

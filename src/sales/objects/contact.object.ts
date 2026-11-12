@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { F } from '@objectstack/spec';
+import { personName } from './_person-name';
 
 export const Contact = ObjectSchema.create({
   name: 'crm_contact',
@@ -67,10 +67,13 @@ export const Contact = ObjectSchema.create({
     // and sort and search read a real column. `readonly` keeps it off the
     // forms; a value a client sends never stands. Rows stored before #2230
     // are titled by `scripts/backfill-record-titles.ts`.
+    // A CJK family name is written first with no space — 「张伟」, not
+    // 「伟 张」 (#2431); the rule and why it reads the name rather than a
+    // locale live in `./_person-name.ts`.
     full_name: Field.text({
       readonly: true,
       label: 'Full Name',
-      expression: F`joinNonEmpty([record.first_name, record.last_name], ' ')`,
+      expression: personName('record'),
       group: 'identity',
     }),
 
@@ -328,7 +331,10 @@ export const Contact = ObjectSchema.create({
   // and global search match. Until #2230 they were required, because the
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
-  searchableFields: ['first_name', 'last_name', 'email'],
+  // `full_name` too (#2431): a search splits its text on whitespace and
+  // matches each word inside one field, so 「张伟」 — the name as the header
+  // writes it, with no space — matched neither 「张」 nor 「伟」 alone.
+  searchableFields: ['first_name', 'last_name', 'full_name', 'email'],
   highlightFields: ['full_name', 'email', 'crm_account', 'phone'],
   
   // ⚠️ No standalone `type: 'unique'` validation exists on this platform

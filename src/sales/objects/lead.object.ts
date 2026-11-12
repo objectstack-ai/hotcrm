@@ -2,7 +2,8 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import type { SelectOption } from '@objectstack/spec/data';
-import { F, P } from '@objectstack/spec';
+import { P, expression } from '@objectstack/spec';
+import { personName, personNameSource } from './_person-name';
 
 /**
  * Duplicate Of — `crm_lead.duplicate_of_type`, the discriminator half of the
@@ -118,10 +119,11 @@ export const Lead = ObjectSchema.create({
     // ⚠️ `salutation` is a picklist, so a formula sees the raw VALUE (`ms`,
     // `dr`), not the label — including it renders names as "ms Emily Davis" in
     // lists and details. Dropped here and from `display_title` below, matching
-    // Contact.
+    // Contact. A CJK family name is written first with no space (#2431,
+    // `./_person-name.ts`), the same rule Contact's stored `full_name` uses.
     full_name: Field.formula({
       label: 'Full Name',
-      expression: F`joinNonEmpty([record.first_name, record.last_name], ' ')`,
+      expression: personName('record'),
       group: 'identity',
     }),
 
@@ -137,7 +139,7 @@ export const Lead = ObjectSchema.create({
     display_title: Field.text({
       readonly: true,
       label: 'Display Title',
-      expression: F`joinNonEmpty([record.first_name, record.last_name], ' ') + " - " + record.company`,
+      expression: expression(`${personNameSource('record')} + " - " + record.company`),
       group: 'identity',
     }),
 
@@ -651,7 +653,10 @@ export const Lead = ObjectSchema.create({
   // and global search match. Until #2230 they were required, because the
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
-  searchableFields: ['first_name', 'last_name', 'company', 'email'],
+  // `display_title` too (#2431): a search splits its text on whitespace and
+  // matches each word inside one field, so 「张伟」 — the name as the header
+  // writes it, with no space — matched neither 「张」 nor 「伟」 alone.
+  searchableFields: ['first_name', 'last_name', 'display_title', 'company', 'email'],
   highlightFields: ['full_name', 'company', 'email', 'status', 'owner_id'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition

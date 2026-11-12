@@ -60,7 +60,10 @@ export const LeadDetailPage: Page = {
           id: 'lead_header',
           label: 'Lead Information',
           properties: {
-            title: '{first_name} {last_name}',
+            // The person, as `full_name` composes it (#2431): a CJK family
+            // name first with no space, 「张伟」 — this header used to join
+            // `{first_name} {last_name}` itself and read 「伟 张」.
+            title: '{full_name}',
             subtitle: '{company}',
             // `icon` removed from `page:header` in @objectstack/spec 17.0.0
             // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on

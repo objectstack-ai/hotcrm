@@ -152,7 +152,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     lead_detail_page: {
       label: 'Lead Detail',
       description: 'Comprehensive lead detail page with highlights, details, and related information',
-      title: '{first_name} {last_name}',
+      title: '{full_name}',
       subtitle: '{company}',
       components: {
         lead_duplicate_alert_confirmed: { label: 'Confirmed Duplicate Alert' },

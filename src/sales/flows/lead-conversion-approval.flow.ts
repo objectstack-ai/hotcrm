@@ -2,6 +2,7 @@
 
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { personName } from '../objects/_person-name';
 type Flow = Automation.Flow;
 
 /**
@@ -137,7 +138,10 @@ export const LeadConversionApprovalFlow: Flow = {
         channels: ['inbox'],
         topic: 'lead_conversion_approved',
         template: 'crm.lead_conversion_approved',
-        templateData: { first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name` },
+        templateData: {
+          person_name: personName('leadRecord'),
+          first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name`,
+        },
         actionUrl: '/crm_lead/{{record.id}}',
       },
     },
@@ -151,7 +155,10 @@ export const LeadConversionApprovalFlow: Flow = {
         severity: 'warning',
         topic: 'lead_conversion_rejected',
         template: 'crm.lead_conversion_rejected',
-        templateData: { first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name` },
+        templateData: {
+          person_name: personName('leadRecord'),
+          first_name: cel`leadRecord.first_name`, last_name: cel`leadRecord.last_name`,
+        },
         actionUrl: '/crm_lead/{{record.id}}',
       },
     },
