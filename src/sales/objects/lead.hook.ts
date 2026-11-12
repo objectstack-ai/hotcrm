@@ -196,9 +196,14 @@ const leadHook: Hook = {
       if (isConverting && (verdict === 'pending' || verdict === 'rejected')) {
         // Name the lead the way `display_title` does — see the converted-lead
         // lock below for why an id never appears in a sentence a user reads.
-        const person = [previous?.first_name, previous?.last_name]
-          .filter((part) => typeof part === 'string' && part.trim() !== '')
-          .join(' ');
+        // A CJK family name comes first, with no space (#2431): the rule of
+        // `personNameCel` (`./_person-name.ts`), whose character class
+        // `test/person-name-order.test.ts` holds this literal equal to.
+        const [given, family] = [previous?.first_name, previous?.last_name]
+          .map((part) => (typeof part === 'string' ? part.trim() : ''));
+        const person = /^[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(family)
+          ? `${family}${given}`
+          : [given, family].filter(Boolean).join(' ');
         const company =
           typeof previous?.company === 'string' ? previous.company.trim() : '';
         const label = [person, company].filter(Boolean).join(' - ');
@@ -325,9 +330,14 @@ const leadHook: Hook = {
           // page, list view, breadcrumb, lookup picker), all of which title a
           // lead `Ada Lovelace - Acme`. Composed from the two stored columns
           // because a lead stored before its title was (#2230) holds none.
-          const person = [previous?.first_name, previous?.last_name]
-            .filter((part) => typeof part === 'string' && part.trim() !== '')
-            .join(' ');
+          // A CJK family name comes first, with no space (#2431): the rule of
+          // `personNameCel` (`./_person-name.ts`), whose character class
+          // `test/person-name-order.test.ts` holds this literal equal to.
+          const [given, family] = [previous?.first_name, previous?.last_name]
+            .map((part) => (typeof part === 'string' ? part.trim() : ''));
+          const person = /^[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(family)
+            ? `${family}${given}`
+            : [given, family].filter(Boolean).join(' ');
           const company =
             typeof previous?.company === 'string' ? previous.company.trim() : '';
           const label = [person, company].filter(Boolean).join(' - ');
@@ -416,12 +426,17 @@ const leadHook: Hook = {
       // rejected, and the `catch` below swallows that rejection, leaving no
       // follow-up task and no trace. Truncating the TAIL keeps the
       // discriminating head intact.
-      const person = [
+      // A CJK family name comes first, with no space (#2431): the rule of
+      // `personNameCel` (`./_person-name.ts`), whose character class
+      // `test/person-name-order.test.ts` holds this literal equal to.
+      const [given, family] = [
         (typeof input.first_name === 'string' && input.first_name) || previous?.first_name,
         (typeof input.last_name === 'string' && input.last_name) || previous?.last_name,
       ]
-        .filter((part) => typeof part === 'string' && part.trim() !== '')
-        .join(' ');
+        .map((part) => (typeof part === 'string' ? part.trim() : ''));
+      const person = /^[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(family)
+        ? `${family}${given}`
+        : [given, family].filter(Boolean).join(' ');
       const company =
         (typeof input.company === 'string' && input.company.trim()) ||
         (typeof previous?.company === 'string' && previous.company.trim()) ||

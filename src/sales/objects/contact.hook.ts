@@ -115,9 +115,14 @@ const contactHook: Hook = {
             // from the same two stored columns here — a lowered hook body cannot
             // read a formula field. No second read pays for it: the `findOne`
             // above carries no projection, so the whole row is already in hand.
-            const dupName = [dupRow?.first_name, dupRow?.last_name]
-              .filter((part) => typeof part === 'string' && part.trim() !== '')
-              .join(' ');
+            // A CJK family name comes first, with no space (#2431): the rule of
+            // `personNameCel` (`./_person-name.ts`), whose character class
+            // `test/person-name-order.test.ts` holds this literal equal to.
+            const [given, family] = [dupRow?.first_name, dupRow?.last_name]
+              .map((part) => (typeof part === 'string' ? part.trim() : ''));
+            const dupName = /^[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(family)
+              ? `${family}${given}`
+              : [given, family].filter(Boolean).join(' ');
             throw refuse(
               dupName
                 ? `Another contact (${dupName}) with email ${email} already exists.`
@@ -165,9 +170,14 @@ const contactHook: Hook = {
         // asked to delete a contact, and sent them looking for the wrong
         // record. Naming the contact and both consequences is true in either
         // context.
-        const name = [ctx.previous?.first_name, ctx.previous?.last_name]
-          .filter((part) => typeof part === 'string' && part.trim() !== '')
-          .join(' ');
+        // A CJK family name comes first, with no space (#2431): the rule of
+        // `personNameCel` (`./_person-name.ts`), whose character class
+        // `test/person-name-order.test.ts` holds this literal equal to.
+        const [given, family] = [ctx.previous?.first_name, ctx.previous?.last_name]
+          .map((part) => (typeof part === 'string' ? part.trim() : ''));
+        const name = /^[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(family)
+          ? `${family}${given}`
+          : [given, family].filter(Boolean).join(' ');
         // Named, never keyed (#1243). `id` still does the work it is good at —
         // it is what the three counts above were queried by — but the sentence
         // the user reads names the contact the way `nameField` does. A contact

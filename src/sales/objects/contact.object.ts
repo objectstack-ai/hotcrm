@@ -2,6 +2,7 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F } from '@objectstack/spec';
+import { personNameCel } from './_person-name';
 
 export const Contact = ObjectSchema.create({
   name: 'crm_contact',
@@ -67,10 +68,13 @@ export const Contact = ObjectSchema.create({
     // and sort and search read a real column. `readonly` keeps it off the
     // forms; a value a client sends never stands. Rows stored before #2230
     // are titled by `scripts/backfill-record-titles.ts`.
+    // A CJK family name is written first with no space — 「张伟」, not
+    // 「伟 张」 (#2431); the rule and why it reads the name rather than a
+    // locale live in `./_person-name.ts`.
     full_name: Field.text({
       readonly: true,
       label: 'Full Name',
-      expression: F`joinNonEmpty([record.first_name, record.last_name], ' ')`,
+      expression: F`${personNameCel('record')}`,
       group: 'identity',
     }),
 
