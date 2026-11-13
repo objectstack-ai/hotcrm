@@ -46,13 +46,13 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@hooks-runtime-sales.test', {
-    name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Sales Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   rep2 = await signUpPerson(verify, 'rep2@hooks-runtime-sales.test', {
-    name: 'Second Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Second Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   manager = await signUpPerson(verify, 'manager@hooks-runtime-sales.test', {
-    name: 'Sales Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Sales Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 120_000);
 

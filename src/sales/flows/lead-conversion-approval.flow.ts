@@ -103,7 +103,7 @@ export const LeadConversionApprovalFlow: Flow = {
         // ships is the manager bench this app already declares approvers
         // against. A second tier, or a different position, is overlay
         // configuration — the same status as the need-type vocabulary.
-        approvers: [{ type: 'position', value: 'sales_manager' }],
+        approvers: [{ type: 'position', value: 'crm_sales_manager' }],
         // Explicit though it is the schema default, exactly as
         // `opportunity_approval` authors it: approvers snapshot at request
         // creation, so an empty bench would otherwise leave the request

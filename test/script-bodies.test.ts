@@ -58,10 +58,10 @@ const stored = async (object: string, id: string): Promise<AnyRec> =>
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@script-bodies.test', {
-    name: 'Ada Lovelace', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Ada Lovelace', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   agent = await signUpPerson(verify, 'agent@script-bodies.test', {
-    name: 'Sam Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Sam Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
 
   record.crm_account = await create('crm_account', { name: 'Script Body Co' });

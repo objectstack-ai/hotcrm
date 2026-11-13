@@ -111,16 +111,16 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@quote-lifecycle.test', {
-    name: 'Life Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Life Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   otherRep = await signUpPerson(verify, 'other@quote-lifecycle.test', {
-    name: 'Other Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Other Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   marketer = await signUpPerson(verify, 'mkt@quote-lifecycle.test', {
-    name: 'Life Marketer', positions: ['marketing_user'], permissionSets: ['marketing_user'],
+    name: 'Life Marketer', positions: ['crm_marketing_user'], permissionSets: ['marketing_user'],
   });
   agent = await signUpPerson(verify, 'agent@quote-lifecycle.test', {
-    name: 'Life Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Life Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
 }, 180_000);
 

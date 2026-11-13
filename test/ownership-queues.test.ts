@@ -15,9 +15,9 @@ type Rec = Record<string, any>;
  * gesture `case_self_claim`, the `claim_case` screen flow and the
  * `case_unassigned_triage_sharing` grant. What the app declares now:
  *
- *   - `case_intake` (members: `service_agent`) and `case_intake_assignment`
+ *   - `case_intake` (members: `crm_service_agent`) and `case_intake_assignment`
  *     (least_loaded over open cases);
- *   - `lead_intake` (members: `sales_rep`) and `lead_intake_assignment`
+ *   - `lead_intake` (members: `crm_sales_rep`) and `lead_intake_assignment`
  *     (least_loaded over unconverted leads).
  *
  * The platform's contract, measured here on the shipped app: a rule runs once
@@ -86,8 +86,8 @@ describe('the declarations reach the registry', () => {
 
 describe('an empty pool parks the new record in its queue — the first-install norm', () => {
   beforeAll(async () => {
-    expect(await verify.rows('sys_user_position', { position: 'service_agent' }), 'the agent pool is not empty').toEqual([]);
-    expect(await verify.rows('sys_user_position', { position: 'sales_rep' }), 'the rep pool is not empty').toEqual([]);
+    expect(await verify.rows('sys_user_position', { position: 'crm_service_agent' }), 'the agent pool is not empty').toEqual([]);
+    expect(await verify.rows('sys_user_position', { position: 'crm_sales_rep' }), 'the rep pool is not empty').toEqual([]);
   });
 
   it('a case the system writes (an integration, an import) parks in case_intake', async () => {
@@ -132,7 +132,7 @@ describe('with members, least_loaded routes like the deleted round-robin did', (
 
   beforeAll(async () => {
     const agent = (n: string) => signUpPerson(verify, `agent-${n}.${++k}@ownership-queues.test`, {
-      name: `Agent ${n}`, positions: ['service_agent'], permissionSets: ['service_agent'],
+      name: `Agent ${n}`, positions: ['crm_service_agent'], permissionSets: ['service_agent'],
     });
     a = await agent('a');
     b = await agent('b');
@@ -151,7 +151,7 @@ describe('with members, least_loaded routes like the deleted round-robin did', (
   }, 120_000);
 
   afterAll(async () => {
-    await releasePositions('service_agent');
+    await releasePositions('crm_service_agent');
   });
 
   it('hands consecutive ownerless cases to the least-loaded agent, resolved work not counting', async () => {
@@ -186,10 +186,10 @@ describe('claiming from the queue (ruling A: the claim writes the owner only)', 
 
   beforeAll(async () => {
     a = await signUpPerson(verify, `claim-a.${++k}@ownership-queues.test`, {
-      name: 'Claimer A', positions: ['service_agent'], permissionSets: ['service_agent'],
+      name: 'Claimer A', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
     });
     b = await signUpPerson(verify, `claim-b.${++k}@ownership-queues.test`, {
-      name: 'Claimer B', positions: ['service_agent'], permissionSets: ['service_agent'],
+      name: 'Claimer B', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
     });
     // Holds the support permission set but is not a queue member: what a
     // member reads, it reads through the queue, not through the profile.
@@ -199,7 +199,7 @@ describe('claiming from the queue (ruling A: the claim writes the owner only)', 
   }, 120_000);
 
   afterAll(async () => {
-    await releasePositions('service_agent');
+    await releasePositions('crm_service_agent');
   });
 
   it('a member sees a parked case; a non-member does not', async () => {
@@ -267,15 +267,15 @@ describe('claiming from the queue (ruling A: the claim writes the owner only)', 
 
 describe('the escalation hand-off is untouched (case_escalation_reassign stays)', () => {
   afterAll(async () => {
-    await releasePositions('service_agent', 'service_manager');
+    await releasePositions('crm_service_agent', 'crm_service_manager');
   });
 
   it('an escalated case still goes to the least-loaded service manager', async () => {
     const agent = await signUpPerson(verify, `esc-agent.${++k}@ownership-queues.test`, {
-      name: 'Escalating Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+      name: 'Escalating Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
     });
     const manager = await signUpPerson(verify, `esc-manager.${++k}@ownership-queues.test`, {
-      name: 'Escalation Manager', positions: ['service_manager'], permissionSets: ['service_agent'],
+      name: 'Escalation Manager', positions: ['crm_service_manager'], permissionSets: ['service_agent'],
     });
     const [kase] = await verify.seed('crm_case', [newCase({ status: 'in_progress', owner_id: agent.id })]);
     await systemUpdate(verify, 'crm_case', { id: kase!.id, status: 'escalated', escalation_reason: 'Customer waiting.' });
@@ -289,12 +289,12 @@ describe('the escalation hand-off is untouched (case_escalation_reassign stays)'
 
 describe('leads route the same way', () => {
   afterAll(async () => {
-    await releasePositions('sales_rep');
+    await releasePositions('crm_sales_rep');
   });
 
   it('an ownerless lead goes to the rep with fewer unconverted leads', async () => {
     const rep = (n: string) => signUpPerson(verify, `rep-${n}.${++k}@ownership-queues.test`, {
-      name: `Rep ${n}`, positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: `Rep ${n}`, positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     const busy = await rep('busy');
     const free = await rep('free');

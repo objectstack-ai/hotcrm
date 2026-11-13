@@ -63,7 +63,7 @@ beforeAll(async () => {
     extraPlugins: [...(base.extraPlugins ?? []), new StorageServicePlugin({ local: { rootDir: storageRoot } })],
   });
   rep = await signUpPerson(verify, 'rep@quote-print.test', {
-    name: 'Quote Print Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Quote Print Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Quote Print Co', owner_id: rep.id }]);
   accountId = String(account!.id);

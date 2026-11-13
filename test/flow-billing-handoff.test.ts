@@ -59,12 +59,12 @@ beforeAll(async () => {
   vi.stubGlobal('fetch', async () => new Response('receiver down', { status: 503 }));
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@flow-billing-handoff.test', {
-    name: 'Billing Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Billing Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   // A contract is drafted and activated by a sales manager: `sales_rep` may read
   // `crm_contract` but not create or edit it.
   manager = await signUpPerson(verify, 'manager@flow-billing-handoff.test', {
-    name: 'Billing Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Billing Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   products = await verify.seed('crm_product', [
     { name: 'Platform subscription', product_code: 'BH-SUB', list_price: 20000, is_active: true },

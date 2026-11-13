@@ -124,7 +124,7 @@ export const OpportunityQualificationApprovalFlow: Flow = {
         // shape core ships is the manager bench both sibling gates route to. A
         // second tier, or a different position, is overlay configuration
         // (REQ-0006: the named approval chains are C).
-        approvers: [{ type: 'position', value: 'sales_manager' }],
+        approvers: [{ type: 'position', value: 'crm_sales_manager' }],
         // Explicit though it is the schema default, as every sibling authors
         // it: an empty bench would leave the request undecidable — here, a
         // deal that can never move its stage.

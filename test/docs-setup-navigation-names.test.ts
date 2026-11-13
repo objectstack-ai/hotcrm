@@ -811,10 +811,14 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
 
     it('covers every locale the platform ships', () => {
       expect(SHIPPED_LOCALES).toEqual(expect.arrayContaining(['en', 'zh-CN']));
-      // The docs ship a zh-Hant locale the platform does not. Recording it here
-      // is why every Hant nav string in KNOWN_UNRESOLVED is unresolvable by
-      // construction rather than by drift.
-      expect(SHIPPED_LOCALES).not.toContain('zh-Hant');
+      // Which locales the PLATFORM ships is the platform's fact, not this
+      // repo's: 18.4.0 added a zh-Hant Setup bundle, and pinning its absence
+      // here went red at the bump (#2442). What HotCRM's docs rest on is its
+      // OWN fact — this app ships no Traditional-Chinese pack, so its own
+      // navigation falls back to Simplified on a zh-Hant console, which is
+      // the reason zh-Hant pages name navigation in English (#1368, #1767;
+      // ruled to stand on #2442: 「繁体中文暂时不加」). Pin that instead.
+      expect(CRM_LOCALES).not.toContain('zh-Hant');
     });
   });
 
@@ -914,7 +918,16 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
     it('resolves an app-switcher roster live, in every shipped locale', () => {
       // Same vacuity guard as the two rosters above: if the app shells or the
       // locale bundles move, every assertion below would judge an empty set.
-      expect(APP_LABELS.setup.size).toBeGreaterThanOrEqual(SHIPPED_LOCALES.length);
+      // Count LOCALES, not distinct labels: two locales may share one spelling
+      // (18.4.0's zh-Hant and another bundle do, #2442), so the size of the
+      // label set says nothing about coverage. Each shipped locale's own Setup
+      // label must be in the roster instead.
+      expect(SHIPPED_LOCALES.length).toBeGreaterThan(0);
+      const unrostered = SHIPPED_LOCALES.filter((locale) => {
+        const label = (SetupAppTranslations as AnyRec)[locale]?.apps?.setup?.label;
+        return typeof label !== 'string' || !APP_LABELS.setup.has(label);
+      });
+      expect(unrostered, `no Setup app label rostered for locale(s) ${unrostered.join(', ')}`).toEqual([]);
       expect(APP_LABELS.studio.size).toBeGreaterThan(0);
       for (const [app, label] of [
         ['setup', 'Setup'],

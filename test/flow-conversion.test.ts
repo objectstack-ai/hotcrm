@@ -45,7 +45,7 @@ beforeAll(async () => {
   // into a NEW account was refused (#2016). The rep's own conversion into a
   // new account is pinned in its own block below.
   rep = await signUpPerson(verify, 'manager@flow-conversion.test', {
-    name: 'Conversion Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Conversion Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 120_000);
 
@@ -176,7 +176,7 @@ describe('lead_conversion — the contact keeps the lead’s consent and person 
   let salesRep: Person;
   beforeAll(async () => {
     salesRep = await signUpPerson(verify, 'rep@flow-conversion.test', {
-      name: 'Conversion Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Conversion Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
   }, 120_000);
 
@@ -472,7 +472,7 @@ describe('lead_conversion — a rep converts into a NEW account, and the revenue
   let admin: string;
   beforeAll(async () => {
     salesRep = await signUpPerson(verify, 'rep-new-account@flow-conversion.test', {
-      name: 'New Account Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'New Account Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     marketer = await signUpPerson(verify, 'marketer@flow-conversion.test', {
       name: 'Conversion Marketer', permissionSets: ['marketing_user'],
@@ -616,7 +616,7 @@ describe('lead_conversion — a contacted lead ends at status converted for ever
   const people: Record<string, Person> = {};
   beforeAll(async () => {
     people.rep = await signUpPerson(verify, 'rep-contacted@flow-conversion.test', {
-      name: 'Contacted Lead Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Contacted Lead Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     people.manager = rep;
     const admin = await verify.signIn();
@@ -656,7 +656,7 @@ describe('lead_conversion — the converted contact is the account’s primary o
   let salesRep: Person;
   beforeAll(async () => {
     salesRep = await signUpPerson(verify, 'rep-primary@flow-conversion.test', {
-      name: 'Primary Contact Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Primary Contact Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
   }, 120_000);
 

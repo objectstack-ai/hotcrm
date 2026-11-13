@@ -228,7 +228,7 @@ describe.each(PAIRS)('$object — the assigner ships body-only', ({ object, pare
   beforeAll(async () => {
     verify = await hotcrmStack();
     rep = await signUpPerson(verify, `rep-${object}@line-item-line-number.test`, {
-      name: 'Line Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Line Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     const create = async (o: string, doc: AnyRec) => String((await verify.hooks.run(o, 'insert', doc, { as: rep.token })).id);
     const account = await create('crm_account', { name: `Line Co (${object})` });

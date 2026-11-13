@@ -16,11 +16,11 @@ import { defineAssignmentRule } from '@objectstack/spec/automation';
  * `least_loaded` counts each agent's cases matching `load` — open work, so a
  * resolved case stops counting against its agent the moment it is resolved,
  * which is the same arithmetic `case_sla_monitor` uses for live work. With
- * nobody holding `service_agent` the case parks in the queue, visible to
+ * nobody holding `crm_service_agent` the case parks in the queue, visible to
  * whoever administers it, and intake is never refused.
  *
  * Escalation is not here: an assignment rule runs on insert only, so the
- * hand-off to the `service_manager` desk stays `case_escalation_reassign`
+ * hand-off to the `crm_service_manager` desk stays `case_escalation_reassign`
  * (`src/service/objects/_case-assignment.ts`; ADR-0142 merge question 5).
  */
 export const CaseIntakeAssignmentRule = defineAssignmentRule({

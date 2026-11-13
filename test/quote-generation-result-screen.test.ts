@@ -80,7 +80,7 @@ describe('as a sales rep, Generate Quote ends on the quote (#2371 row 6)', () =>
   beforeAll(async () => {
     verify = await hotcrmStack();
     rep = await signUpPerson(verify, 'rep@quote-generation-result-screen.test', {
-      name: 'Quote Result Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Quote Result Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
   }, 120_000);
 

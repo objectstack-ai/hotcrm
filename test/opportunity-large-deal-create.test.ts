@@ -33,7 +33,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@opportunity-large-deal-create.test', {
-    name: 'Create Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Create Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   // The dev admin: the platform projects `platform_admin` and `org_owner` into its positions.
   admin = await verify.signIn();

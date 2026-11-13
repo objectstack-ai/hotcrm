@@ -47,12 +47,12 @@ let k = 0;
 
 const people = async (s: VerifyStack, tag: string) => ({
   rep: await signUpPerson(s, `rep-${tag}@approval-decision-attribution.test`, {
-    name: 'Attribution Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Attribution Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   }),
   // Holds the bench every one of these approval nodes routes to, so the
   // decision is a real approver's, not an admin rescue.
   manager: await signUpPerson(s, `manager-${tag}@approval-decision-attribution.test`, {
-    name: 'Attribution Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Attribution Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   }),
 });
 

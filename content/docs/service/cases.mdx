@@ -154,7 +154,7 @@ Only one agent can claim a case. If a colleague claimed it after you opened it, 
 ## Sharing — who can see which case
 
 - By default, cases are **private** — only the owner. Positions are flat and **nothing rolls up**, so no manager sees a case by sitting above its owner.
-- **Critical open cases** are auto-shared by two rules, one per rung: *Escalated Cases Sharing* grants read/edit to `service_manager`, and *Escalated Cases — Service Director* grants read to `service_director`. Both rungs are named explicitly because neither inherits from the other.
+- **Critical open cases** are auto-shared by two rules, one per rung: *Escalated Cases Sharing* grants read/edit to `crm_service_manager`, and *Escalated Cases — Service Director* grants read to `crm_service_director`. Both rungs are named explicitly because neither inherits from the other.
 - **Cases waiting in the Support Intake queue** are visible to every member of that queue (everyone holding Service Agent), read and edit. That reach comes from the queue itself, not from a sharing rule, and it ends when somebody claims the case: from then on the claimant holds it the ordinary way, as its owner.
 - **An escalated case stays readable by the agent it was taken from.** The hand-off records that agent in **Escalated From**, and *Escalated Cases — Previous Owner* shares the case with them, read-only, until it is *Closed* — so the agent who logs a Critical case or presses **Escalate Case** can still open it. Working it is the manager's: the agent cannot edit it.
 

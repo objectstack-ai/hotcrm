@@ -216,7 +216,7 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@refusal-envelope.test', {
-    name: 'Envelope Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Envelope Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   const create = async (object: string, doc: AnyRec) =>
     String((await verify.hooks.run(object, 'insert', doc, { as: rep.token })).id);

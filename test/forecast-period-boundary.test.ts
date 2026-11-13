@@ -98,7 +98,7 @@ const deskOn = (boot: () => Promise<VerifyStack>, label: string) => {
   beforeAll(async () => {
     desk.verify = await boot();
     desk.manager = await signUpPerson(desk.verify, `manager.${label}@forecast-period-boundary.test`, {
-      name: 'Forecast Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+      name: 'Forecast Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
     });
   }, 120_000);
   return desk;

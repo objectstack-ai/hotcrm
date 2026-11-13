@@ -130,7 +130,7 @@ beforeAll(async () => {
   // platform admin). `sys_user_position.position` holds the position NAME —
   // see `signUpPerson`.
   rep = await signUpPerson(verify, 'rep@parent-reach.test', {
-    name: 'Territory Rep', positions: ['sales_rep', 'na_sales_team'], permissionSets: ['sales_rep'],
+    name: 'Territory Rep', positions: ['crm_sales_rep', 'crm_na_sales_team'], permissionSets: ['sales_rep'],
   });
   id.rep = rep.id;
   id.owner = await insert('sys_user', { name: 'Another Owner', email: 'owner@parent-reach.test' });
@@ -241,7 +241,7 @@ describe('the harness enforces (negative controls)', () => {
     );
     // The resolver's admin verdict is the context's `posture`.
     expect(repCtx.posture).toBe('MEMBER');
-    expect(repCtx.positions).toContain('na_sales_team');
+    expect(repCtx.positions).toContain('crm_na_sales_team');
   });
 
   it('a private account reaches the rep only through the territory rule', async () => {

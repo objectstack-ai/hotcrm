@@ -65,11 +65,11 @@ What follows from that is on the SLA side: deadlines run on **calendar hours**. 
 
 ### 8. Lead routing — a queue and a rule
 
-**There is no Setup → Lead Settings screen.** Lead routing is two pieces of metadata the app ships. The **Lead Intake** queue (`lead_intake`) has the `sales_rep` position as its members. The assignment rule `lead_intake_assignment` sends every lead that arrives with no owner to the member with the **fewest unconverted leads**. Web-to-lead is the usual way such a lead arrives. The rule balances load; it does not match region, industry or source. There is no territory routing and no auto-response email to the submitter. If the queue has no members, the lead gets no owner and waits in **Lead Intake**. Any sales rep can open it there and click **Claim**.
+**There is no Setup → Lead Settings screen.** Lead routing is two pieces of metadata the app ships. The **Lead Intake** queue (`lead_intake`) has the `crm_sales_rep` position as its members. The assignment rule `lead_intake_assignment` sends every lead that arrives with no owner to the member with the **fewest unconverted leads**. Web-to-lead is the usual way such a lead arrives. The rule balances load; it does not match region, industry or source. There is no territory routing and no auto-response email to the submitter. If the queue has no members, the lead gets no owner and waits in **Lead Intake**. Any sales rep can open it there and click **Claim**.
 
 Every other way a lead comes in has a person behind it, and that person becomes the owner: a lead created in the app, one sent through the API under someone's sign-in or API key, and one imported from a CSV or JSON file. An import never goes to the queue — a row with a blank owner is owned by whoever ran the import, so plan to reassign imported leads afterwards. See [Owners](/docs/guides/importing-your-data#owners) in *Import your own data*.
 
-- [ ] Assign the `sales_rep` position to every rep who should receive intake, or add a row under **Setup → Access Control → Queue Members** with Queue `lead_intake` and the person as Member. The queue's members are the routing table
+- [ ] Assign the `crm_sales_rep` position to every rep who should receive intake, or add a row under **Setup → Access Control → Queue Members** with Queue `lead_intake` and the person as Member. The queue's members are the routing table
 - [ ] Read what happens next in the `lead_assignment` flow (a rating-based follow-up date, and an alert to the new owner) at **Studio → Automation → Flows**
 
 ### 9. Product catalog
@@ -115,15 +115,15 @@ Adjust if your support promise differs — the sixteen numbers live in `src/serv
 
 ### 12. Case routing — a queue and a rule
 
-**There is no Setup → Case Settings screen.** Case routing is two pieces of metadata the app ships. The **Support Intake** queue (`case_intake`) has the `service_agent` position as its members. The assignment rule `case_intake_assignment` sends every case that arrives with no owner to the member with the **fewest open cases**, counting every case whose status is neither *Resolved* nor *Closed*. A web-to-case submission is the usual way such a case arrives. The rule balances load; it is not a rotation and it does not match product, region or origin.
+**There is no Setup → Case Settings screen.** Case routing is two pieces of metadata the app ships. The **Support Intake** queue (`case_intake`) has the `crm_service_agent` position as its members. The assignment rule `case_intake_assignment` sends every case that arrives with no owner to the member with the **fewest open cases**, counting every case whose status is neither *Resolved* nor *Closed*. A web-to-case submission is the usual way such a case arrives. The rule balances load; it is not a rotation and it does not match product, region or origin.
 
 - **It runs on insert only**, and only on a case that arrives with neither an owner nor a queue. It never takes a case away from an owner later. It never fires on a case an agent creates, because that agent is already the owner.
 - **A case from the anonymous web form is routed like any other.** The visitor is only told the case was received, never who it went to.
 - **With no members, the case waits in the queue.** It gets no owner and appears in the **Unassigned — triage** tab on [Cases](/docs/service/cases). Every Service Agent can open it there and click **Claim**. So staffing the queue changes behaviour: new cases stop waiting there and go straight to an agent.
 
-**This is not the escalation hand-off.** That is a different pool at a different moment: it runs on the change to *Escalated* and moves the case to the least-loaded holder of `service_manager` (see [SLA & escalation](/docs/service/sla-and-escalation)).
+**This is not the escalation hand-off.** That is a different pool at a different moment: it runs on the change to *Escalated* and moves the case to the least-loaded holder of `crm_service_manager` (see [SLA & escalation](/docs/service/sla-and-escalation)).
 
-- [ ] Assign the `service_agent` position to every agent who should receive intake, or add a row under **Setup → Access Control → Queue Members** with Queue `case_intake` and the person as Member. (Both queues ship with the app, so they are not listed under **Setup → Access Control → Queues**.) The queue's members are the routing table
+- [ ] Assign the `crm_service_agent` position to every agent who should receive intake, or add a row under **Setup → Access Control → Queue Members** with Queue `case_intake` and the person as Member. (Both queues ship with the app, so they are not listed under **Setup → Access Control → Queues**.) The queue's members are the routing table
 - [ ] While the queue has no members, watch the **Unassigned — triage** tab on Cases: it lists exactly the cases waiting to be claimed
 - [ ] Upgrading from a version before the queue: run `pnpm exec tsx scripts/backfill-intake-queue.ts --apply` once as an administrator, so open cases and leads that nobody owns are put in their queue and agents can see them again
 

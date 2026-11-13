@@ -58,5 +58,5 @@ You never set this field yourself — it is filled in by the approval, and it is
 
 - Both fields sit in the lead's **Qualification** group, and both are columns on **All Leads**, so the list can be filtered and grouped by either one.
 - The **Need Type** list is ordinary picklist configuration — see [Customization › Extending Objects](/docs/customization/extending-objects) to replace the starter values with your own demand taxonomy.
-- The gate is **off by default** and is armed by changing the default value of the lead's **Conversion Approval** field from *Not Required* to *Pending*. From then on each new lead opens an approval request, routed to the holders of the `sales_manager` position; the flow behind it is **Lead Conversion Approval**, listed in [Administration › Automation](/docs/administration/automation).
+- The gate is **off by default** and is armed by changing the default value of the lead's **Conversion Approval** field from *Not Required* to *Pending*. From then on each new lead opens an approval request, routed to the holders of the `crm_sales_manager` position; the flow behind it is **Lead Conversion Approval**, listed in [Administration › Automation](/docs/administration/automation).
 - Staff that position before you arm the gate. An approval routed to an empty bench has nobody to decide it.
