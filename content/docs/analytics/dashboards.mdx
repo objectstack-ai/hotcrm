@@ -1,15 +1,15 @@
 ---
 title: Dashboards
-description: Five ready-made dashboards — CRM overview, sales performance, sales activity, customer service, and executive overview.
+description: Six ready-made dashboards — CRM overview, sales performance, sales activity, customer service, executive overview, and product catalog.
 ---
 
 # Dashboards
 
-HotCRM ships with five dashboards. Each one is built for a specific role and answers the questions that role asks every day.
+HotCRM ships with six dashboards. Each one is built for a specific role and answers the questions that role asks every day.
 
 Every tile listed on this page is a tile the app actually ships. The lists are checked against the dashboard metadata in CI (`test/docs-dashboard-tiles.test.ts`), so a tile that is renamed, added or removed in the product makes this page fail the build rather than quietly start lying.
 
-## The five dashboards
+## The six dashboards
 
 | Dashboard | Built for | Answers |
 | --- | --- | --- |
@@ -18,8 +18,9 @@ Every tile listed on this page is a tile the app actually ships. The lists are c
 | ☎️ **Sales Activity** | Sales managers, account teams | "Who is talking to customers, and which accounts have gone quiet?" |
 | 🎧 **Customer Service** | Service agents, managers | "How are we doing on cases and SLAs?" |
 | 👔 **Executive Overview** | Execs, finance | "Are we hitting the number?" |
+| 📦 **Product Catalog** | Sales reps, pricing owners | "What does the catalog list, category by category?" |
 
-All five respect [sharing rules](/docs/administration/sharing-and-security) — what you see depends on your role. The three built on opportunities — CRM Overview, Sales Performance and Executive Overview — are left out of the sidebar for anyone who cannot read opportunities, and for a service agent or service manager by position.
+All six respect [sharing rules](/docs/administration/sharing-and-security) — what you see depends on your role. The three built on opportunities — CRM Overview, Sales Performance and Executive Overview — are left out of the sidebar for anyone who cannot read opportunities, and for a service agent or service manager by position.
 
 **A hidden dashboard is not a locked one.** Executive Overview is also left out of the sidebar for anyone holding the `crm_sales_rep`, `crm_service_agent` or `crm_service_manager` position, so their app opens on a page built for their day — **Sales Home** for a rep — instead of the company-level view. That is a shorter menu for focus, not an access restriction: a rep who opens the dashboard's link still sees it. What any dashboard shows is decided by record visibility, which [sharing rules](/docs/administration/sharing-and-security#how-the-layers-combine) set: every number adds up only the records the viewer may read, so a rep sees the executive layout over their own share of the data, never a deal they could not open themselves.
 
@@ -39,7 +40,6 @@ The cross-functional home dashboard — revenue, pipeline and deal mix on one pa
 - **Avg Deal Size (Selected Period)** — average value of the deals closed won in the selected period.
 - **Pipeline by Stage** — open opportunity value at each sales stage (horizontal bar chart).
 - **Lead Source** — pipeline value by acquisition channel (donut).
-- **List Price by Category** — catalog list prices summed per product category. It reads the price book, not sales: no tile on this page sums sold line items (bar).
 - **Pipeline by Owner** — open pipeline value, deal count and average deal size per rep (table).
 
 **Controls**: a date-range picker over the opportunity close date (defaults to this quarter) and an Owner filter.
@@ -134,15 +134,25 @@ The exec / finance view of the business.
 
 This dashboard is the basis for the weekly leadership review.
 
+## 📦 Product Catalog
+
+The product catalog's one chart, in the Sales group beside Products and Price Books. It ships with the revenue module, so it leaves the sidebar when that module is turned off. It used to be a tile on CRM Overview; since ObjectStack 18.4.0 a dashboard reads only the datasets of its own package and the packages that package depends on, and the product dataset belongs to the revenue module.
+
+**Tiles**:
+
+- **List Price by Category** — catalog list prices summed per product category. It reads the product catalog, not sales: no tile in HotCRM sums sold line items (bar).
+
+**Controls**: none. A product has no close date to window, and the catalog is shared, so an owner filter would mean only who created the entry.
+
 ## What you can change
 
-- **Date range** — four of the five dashboards carry a picker, and all four accept a custom range. CRM Overview, Sales Performance and Executive Overview window the opportunity close date and default to this quarter; Customer Service windows the date a case was created and defaults to the last 90 days. Sales Activity is the only dashboard with no picker, for the reason given in its section above. Every window is resolved on the server, on UTC calendar days: "last 7 days" means the seven UTC calendar days ending with today's UTC date, both ends inclusive. Your own clock does not enter into it — a reader in UTC+8 opening a dashboard at 03:00 local time is looking at a window that ended at the previous UTC midnight, not at their own.
+- **Date range** — four of the six dashboards carry a picker, and all four accept a custom range. CRM Overview, Sales Performance and Executive Overview window the opportunity close date and default to this quarter; Customer Service windows the date a case was created and defaults to the last 90 days. Sales Activity and Product Catalog carry none, for the reasons given in their sections above. Every window is resolved on the server, on UTC calendar days: "last 7 days" means the seven UTC calendar days ending with today's UTC date, both ends inclusive. Your own clock does not enter into it — a reader in UTC+8 opening a dashboard at 03:00 local time is looking at a window that ended at the previous UTC midnight, not at their own.
 - **Filters** — each dashboard declares its own: Owner everywhere, plus Deal Type on Sales Performance, Priority on Customer Service, and Lead Source on Executive Overview.
-- **Refresh** — Customer Service refreshes every minute, Sales Performance every three, the other three every five.
+- **Refresh** — Customer Service refreshes every minute, Sales Performance every three, the other four every five.
 
 A dashboard filter is matched against the **object** behind each widget's dataset, not against that dataset's declared dimensions, and it is ANDed into the query of every widget bound to it. That is why Customer Service can offer an Agent filter even though `case_metrics` declares no owner dimension: `owner_id` is a field on the case, and the filter needs nothing more than that. Filtering is all it buys — a widget still cannot **group by** a field the dataset does not declare, which is how [SLA & Escalation](/docs/service/sla-and-escalation) can say, correctly, that no report and no dashboard widget breaks cases down by agent, on the same app whose service desk filters by one. It cuts the other way too: a filter naming a field a widget's own object lacks would ask that widget's query for a column that does not exist, so a widget that cannot answer a filter opts out of it by name (`filterBindings`) instead of quietly ignoring it.
 
-Some tiles opt out of the dashboard's own filters on purpose. Revenue Trend, List Price by Category and Quota Attainment by Rep keep the window they are labelled with, so a narrower date picker cannot silently redefine the number under its own title.
+Some tiles opt out of the dashboard's own filters on purpose. Revenue Trend and Quota Attainment by Rep keep the window they are labelled with, so a narrower date picker cannot silently redefine the number under its own title.
 
 ## Where the numbers come from
 

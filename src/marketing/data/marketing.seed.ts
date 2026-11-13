@@ -15,6 +15,7 @@ import { Campaign } from '../objects/campaign.object';
 import { CampaignMember } from '../objects/campaign_member.object';
 import { celDaysAgo } from '../../sales/data/_shared';
 import { leads, opportunities } from '../../sales/data/sales.seed';
+import { SEED_EN_LOCALES } from '../../sales/data/_locale';
 
 // ─── Campaign membership ──────────────────────────────────────────────
 /**
@@ -179,6 +180,7 @@ const campaignMetrics = (campaignName: string) => {
 // the price: beside `leads` in `src/sales/data/sales.seed.ts`.
 export const campaigns = defineSeed(Campaign, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'name',
   records: [
     {
@@ -331,12 +333,14 @@ const memberRecords = (
 // boot wrote the seeded `status` back.
 export const campaignMembersFromLeads = defineSeed(CampaignMember, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: ['crm_campaign', 'crm_lead'],
   records: memberRecords('lead'),
 });
 
 export const campaignMembersFromContacts = defineSeed(CampaignMember, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: ['crm_campaign', 'crm_contact'],
   records: memberRecords('contact'),
 });

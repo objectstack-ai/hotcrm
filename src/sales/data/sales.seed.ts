@@ -19,6 +19,7 @@ import { Contact } from '../objects/contact.object';
 import { Lead } from '../objects/lead.object';
 import { Opportunity } from '../objects/opportunity.object';
 import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
+import { SEED_EN_LOCALES } from './_locale';
 
 // ─── Accounts ─────────────────────────────────────────────────────────
 //
@@ -189,6 +190,7 @@ import { celDaysAgo, linesTotal, type LineSpec } from './_shared';
 // the price are written once, beside `leads` below.
 export const accounts = defineSeed(Account, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'name',
   records: [
     {
@@ -448,6 +450,7 @@ three regional teams (NA, EMEA, APAC).
 // (`contact_primary_per_account`) then cleared the rep's choice.
 export const contacts = defineSeed(Contact, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'email',
   records: [
     {
@@ -592,6 +595,7 @@ const DISQUALIFICATION_REASONS = [
 // the other insert-once datasets in `test/seed-replay-user-edits.test.ts`.
 export const leads = defineSeed(Lead, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'email',
   records: [
     {
@@ -883,6 +887,7 @@ const dealValue = (opportunityName: string, probability: number) => {
 // writes skip it). Mechanism and price: beside `leads` above.
 export const opportunities = defineSeed(Opportunity, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'name',
   records: [
     {

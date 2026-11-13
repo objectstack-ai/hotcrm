@@ -70,10 +70,11 @@ export type HotCrmAppCollections = Omit<
  * without it, those three actions are refused ("defineStack cross-reference
  * validation failed (3 issues)"); with it, none. Verified like
  * `artifactObjects`: a target that resolved only through the list and that no
- * package defines is refused by `composeStacks`. The dashboard half of the
- * same fix needs no option — the CRM Overview List Price by Category tile binds
- * revenue's `product_metrics`, which `os validate` now resolves against the
- * artifact's packages.
+ * package defines is refused by `composeStacks`. ⛔ No dashboard of this
+ * package binds a module's dataset: from objectstack 18.4.0 a dataset is read
+ * only from inside the reader's dependency closure (objectstack#32929), so
+ * revenue's `product_metrics` is shown by revenue's own Product Catalog
+ * dashboard (#2436).
  *
  * ## What is deliberately NOT here
  *
@@ -100,14 +101,14 @@ export const createHotCrmAppStack = (
       // participates in the check — a runtime on a different major refuses the
       // load with a structured OS_PROTOCOL_INCOMPATIBLE diagnostic (naming the
       // `objectstack migrate meta` replay) instead of failing deep in a schema
-      // parse. Bump together with `specVersion` on every platform upgrade
-      // (docs/MAINTENANCE.md §3) — `test/docs-declared-versions.test.ts` now
-      // enforces that pairing against `objectstack.manifest.json` instead of
+      // parse. Bump together with `engines.protocol` in
+      // `objectstack.manifest.json` on every platform upgrade (docs/MAINTENANCE.md
+      // §3) — `test/docs-declared-versions.test.ts` enforces that pairing instead of
       // trusting this comment, because two platform upgrades in a row (rc.2, then
       // rc.3) moved the manifest and left this line behind (#728). Every package
       // of this artifact states the same protocol; `src/service/index.ts`
       // repeats it for the same reason.
-      engines: { protocol: '^18.3.0' },
+      engines: { protocol: '^18.4.0' },
 
       /**
        * The app package's entries in the two module apps (#2417, ADR-0029 D7).

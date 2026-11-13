@@ -338,7 +338,9 @@ describe('the docs print the version the manifest declares (#612)', () => {
  * `@objectstack/*` line the metadata is authored against. All three state the
  * same protocol version, and `objectstack.config.ts`'s own comment has said so
  * since it was written: "Bump together with `specVersion` on every platform
- * upgrade (docs/MAINTENANCE.md §3)".
+ * upgrade (docs/MAINTENANCE.md §3)". `specVersion` itself left the template
+ * manifest at 18.4.0 (`TemplateManifestSchema` refuses it, ADR-0049): the
+ * template's `engines.protocol` now carries the one fact both fields stated.
  *
  * A comment is not a gate. Two consecutive platform upgrades moved the template
  * manifest and the dependency line and left `objectstack.config.ts` behind — the
@@ -362,7 +364,6 @@ describe('one protocol version, declared in three files (#728)', () => {
 
   const configProtocol: string | undefined = (((stack as any).manifest ?? {}).engines ?? {}).protocol;
   const template = JSON.parse(readFileSync(join(REPO_ROOT, TEMPLATE), 'utf8')) as {
-    specVersion?: string;
     engines?: { protocol?: string };
   };
   const pkg = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as {
@@ -380,7 +381,6 @@ describe('one protocol version, declared in three files (#728)', () => {
     // compare '' with '' and pass over nothing at all.
     const sources: [string, string | undefined][] = [
       ['the app package (src/sales/index.ts) manifest.engines.protocol', configProtocol],
-      [`${TEMPLATE} specVersion`, template.specVersion],
       [`${TEMPLATE} engines.protocol`, template.engines?.protocol],
       ['package.json dependencies["@objectstack/spec"]', installedSpec],
     ];
@@ -415,22 +415,14 @@ describe('one protocol version, declared in three files (#728)', () => {
     }
   });
 
-  it('the template manifest states one version in both of its fields', () => {
-    expect(
-      bare(template.specVersion),
-      `${TEMPLATE} states specVersion ${template.specVersion} and engines.protocol ` +
-        `${template.engines?.protocol} — one file, two spellings of a single fact.`,
-    ).toBe(bare(template.engines?.protocol));
-  });
-
   it('the declared protocol is the @objectstack/spec version package.json installs', () => {
-    // AGENTS.md §Constraint Checklist → Dependencies: "Keep `specVersion` in
-    // `objectstack.manifest.json` aligned with the installed `@objectstack/spec`."
+    // AGENTS.md §Constraint Checklist → Dependencies: keep the template
+    // manifest's `engines.protocol` aligned with the installed `@objectstack/spec`.
     // This is the half that catches an upgrade moving the dependency line and
     // forgetting the metadata — the shape of #728 on both the rc.2 and rc.3 bumps.
     expect(
-      bare(template.specVersion),
-      `${TEMPLATE} declares ${template.specVersion} but package.json installs ` +
+      bare(template.engines?.protocol),
+      `${TEMPLATE} declares ${template.engines?.protocol} but package.json installs ` +
         `@objectstack/spec ${installedSpec}. The app claims to be authored against a spec ` +
         'version it does not depend on (AGENTS.md §Constraint Checklist → Dependencies).',
     ).toBe(bare(installedSpec));

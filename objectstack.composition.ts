@@ -138,12 +138,19 @@ import {
   accounts, contacts, leads, opportunities,
   tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers, forecasts,
   contracts,
+  accountsZhCN, contactsZhCN, leadsZhCN, opportunitiesZhCN,
+  tasksZhCN, eventsZhCN, eventAttendeesFromContactsZhCN, eventAttendeesFromLeadsZhCN, leadInteractionPointersZhCN,
+  forecastsZhCN, contractsZhCN,
 } from './src/sales/data/index.js';
 import {
   products, priceBooks, priceBookEntries, opportunityLineItems, quotes, quoteLineItems,
+  productsZhCN, priceBooksZhCN, priceBookEntriesZhCN, opportunityLineItemsZhCN, quotesZhCN, quoteLineItemsZhCN,
 } from './src/revenue/data/index.js';
-import { cases, knowledgeArticles } from './src/service/data/index.js';
-import { campaigns, campaignMembersFromLeads, campaignMembersFromContacts } from './src/marketing/data/index.js';
+import { cases, knowledgeArticles, casesZhCN, knowledgeArticlesZhCN } from './src/service/data/index.js';
+import {
+  campaigns, campaignMembersFromLeads, campaignMembersFromContacts,
+  campaignsZhCN, campaignMembersFromLeadsZhCN, campaignMembersFromContactsZhCN,
+} from './src/marketing/data/index.js';
 
 /**
  * One registration array out of the merged per-package barrels of a metadata
@@ -443,6 +450,49 @@ export const CrmSeedData = [
 ];
 
 /**
+ * The Simplified Chinese twin of {@link CrmSeedData}, dataset for dataset and in
+ * the same replay order (#2411, maintainer ruling 2026-11-05, option A).
+ *
+ * Every English dataset above is declared for `SEED_EN_LOCALES` and every twin
+ * here for `zh-CN` (`src/sales/data/_locale.ts`), so a load gets one story or
+ * the other, chosen by the platform's `Seed.locale` filter. A twin is built
+ * from its English dataset: same records, same order, same statuses, amounts
+ * and relative dates, only the words and the natural-key references
+ * translated. The two stories reference nothing across each other.
+ *
+ * ⚠️ Blocked-by objectstack#30281: on 18.3.0 only the boot seed filters by
+ * locale, and a marketplace install or package apply loads both stories. The
+ * PR stays a draft until the pinned release carries it.
+ */
+export const CrmSeedDataZhCN = [
+  accountsZhCN,
+  contactsZhCN,
+  leadsZhCN,
+  opportunitiesZhCN,
+  productsZhCN,
+  priceBooksZhCN,
+  priceBookEntriesZhCN,
+  opportunityLineItemsZhCN,
+  tasksZhCN,
+  casesZhCN,
+  eventsZhCN,
+  eventAttendeesFromContactsZhCN,
+  eventAttendeesFromLeadsZhCN,
+  leadInteractionPointersZhCN,
+  campaignsZhCN,
+  campaignMembersFromLeadsZhCN,
+  campaignMembersFromContactsZhCN,
+  contractsZhCN,
+  quotesZhCN,
+  quoteLineItemsZhCN,
+  forecastsZhCN,
+  knowledgeArticlesZhCN,
+];
+
+/** Both stories: what the default composition's four package stacks register between them. */
+export const CrmSeedDataAllLocales = [...CrmSeedData, ...CrmSeedDataZhCN];
+
+/**
  * The seed datasets a SaaS tenant gets: the product CATALOGUE, and nothing else.
  *
  * Maintainer ruling, 2026-08-27 (objectstack#12701, quoted untranslated):
@@ -483,8 +533,15 @@ export const CrmSeedData = [
  * book to default to, and products it adds later have no standard price to be
  * kept in (`product_standard_price`). It too resolves nothing outside the
  * catalogue.
+ *
+ * Twice, once per language market (#2411): the English catalogue for
+ * `SEED_EN_LOCALES` and its Simplified Chinese twin for `zh-CN`, so a tenant
+ * receives one of the two (`src/revenue/data/catalog.zh-CN.seed.ts`).
  */
-export const SaasTenantSeedData = [products, priceBooks, priceBookEntries];
+export const SaasTenantSeedData = [
+  products, priceBooks, priceBookEntries,
+  productsZhCN, priceBooksZhCN, priceBookEntriesZhCN,
+];
 
 /**
  * The seed families of the SERVICE package — the rows whose object it owns.
@@ -493,21 +550,28 @@ export const SaasTenantSeedData = [products, priceBooks, priceBookEntries];
  * module's families are cut out of {@link CrmSeedData} here, beside the replay
  * order, so the two cannot drift apart: the split is a property of that list.
  */
-export const ServiceSeedData = CrmSeedData.filter((family) => [cases, knowledgeArticles].includes(family));
+export const ServiceSeedData = CrmSeedDataAllLocales.filter((family) =>
+  [cases, knowledgeArticles, casesZhCN, knowledgeArticlesZhCN].includes(family));
 
 /** The REVENUE package's families — the catalogue, its standard price book, line items and quotes. */
-export const RevenueSeedData = CrmSeedData.filter((family) =>
-  [products, priceBooks, priceBookEntries, opportunityLineItems, quotes, quoteLineItems].includes(family));
+export const RevenueSeedData = CrmSeedDataAllLocales.filter((family) =>
+  [
+    products, priceBooks, priceBookEntries, opportunityLineItems, quotes, quoteLineItems,
+    productsZhCN, priceBooksZhCN, priceBookEntriesZhCN, opportunityLineItemsZhCN, quotesZhCN, quoteLineItemsZhCN,
+  ].includes(family));
 
 /** The MARKETING package's families — the campaigns and their members. */
-export const MarketingSeedData = CrmSeedData.filter((family) =>
-  [campaigns, campaignMembersFromLeads, campaignMembersFromContacts].includes(family));
+export const MarketingSeedData = CrmSeedDataAllLocales.filter((family) =>
+  [
+    campaigns, campaignMembersFromLeads, campaignMembersFromContacts,
+    campaignsZhCN, campaignMembersFromLeadsZhCN, campaignMembersFromContactsZhCN,
+  ].includes(family));
 
-/** Everything else — the app package's own families, in {@link CrmSeedData} order. */
-export const AppSeedData = CrmSeedData.filter((family) =>
+/** Everything else — the app package's own families, in {@link CrmSeedDataAllLocales} order. */
+export const AppSeedData = CrmSeedDataAllLocales.filter((family) =>
   ![...ServiceSeedData, ...RevenueSeedData, ...MarketingSeedData].includes(family));
 
-type PackageSeedData = Record<'app' | 'service' | 'revenue' | 'marketing', typeof CrmSeedData>;
+type PackageSeedData = Record<'app' | 'service' | 'revenue' | 'marketing', typeof CrmSeedDataAllLocales>;
 
 /**
  * The seed datasets each package registers under a composition.

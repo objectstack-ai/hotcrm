@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
-import { CrmSeedData } from '../objectstack.composition';
+import { CrmSeedData, CrmSeedDataAllLocales } from '../objectstack.composition';
 import { CASE_DESK, caseDeskOf, DemoAdminPermissionSets, DemoOrgStaffing, DemoPipelineOwnership } from '../src/sales/sharing/demo-staffing';
 import * as salesSeeds from '../src/sales/data';
 import * as serviceSeeds from '../src/service/data';
@@ -787,14 +787,15 @@ describe('pnpm demo:staff hands every seeded case to its service desk (#2206)', 
 
   it("waits on every routed object's whole seed: the barrels it reads carry all of CrmSeedData's rows for them", () => {
     // `scripts/demo-staff.ts` reads the two seed barrels rather than `CrmSeedData`
-    // (see `seededKeysByObject`). A routed object seeded from anywhere else would
-    // be routed without being waited for, which is the #2206 race again.
+    // (see `seededKeysByStory`). A routed object seeded from anywhere else would
+    // be routed without being waited for, which is the #2206 race again. Both
+    // language stories count (#2411): the script waits on whichever one a boot writes.
     const rowsOf = (datasets: ReadonlyArray<unknown>, object: string) =>
       (datasets as AnyRec[]).filter((d) => d?.object === object).reduce((n, d) => n + (d.records?.length ?? 0), 0);
     const barrels = Object.values({ ...salesSeeds, ...serviceSeeds });
     for (const { object } of DemoPipelineOwnership) {
-      const seeded = rowsOf(CrmSeedData, object);
-      expect(seeded, `${object} is routed but CrmSeedData seeds no row of it`).toBeGreaterThan(0);
+      expect(rowsOf(CrmSeedData, object), `${object} is routed but CrmSeedData seeds no row of it`).toBeGreaterThan(0);
+      const seeded = rowsOf(CrmSeedDataAllLocales, object);
       expect(rowsOf(barrels, object), `${object}: the seed barrels the script reads miss some of its seeded rows`).toBe(seeded);
     }
   });

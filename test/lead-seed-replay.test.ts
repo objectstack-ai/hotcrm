@@ -46,7 +46,13 @@ const seeded = (status: string): Rec[] =>
 /**
  * The artifact with one more seed row in `object`'s dataset: what the next
  * version shipping a new seed row boots. A fresh object over the same packages.
+ * Only the dataset the boot's locale loads grows (`en`, the artifact's
+ * `i18n.defaultLocale`): a dataset scoped to other locales (a `zh-CN` twin,
+ * #2411) is not replayed by this boot.
  */
+/** Whether the boot (locale `en`) loads this dataset: unscoped, or scoped to a list naming `en`. */
+const loadsForBootLocale = (d: Rec): boolean => !Array.isArray(d.locale) || (d.locale as string[]).includes('en');
+
 const withExtraSeedRow = (base: typeof artifact, object: string, row: Rec): typeof artifact => {
   const a = base as unknown as Rec;
   let grown = 0;
@@ -54,7 +60,7 @@ const withExtraSeedRow = (base: typeof artifact, object: string, row: Rec): type
     ...p,
     manifest: {
       ...p.manifest,
-      data: (p.manifest.data as Rec[]).map((d) => d.object !== object ? d : (grown += 1, { ...d, records: [...(d.records as Rec[]), row] })),
+      data: (p.manifest.data as Rec[]).map((d) => d.object !== object || !loadsForBootLocale(d) ? d : (grown += 1, { ...d, records: [...(d.records as Rec[]), row] })),
     },
   });
   expect(grown, `fixture: one ${object} dataset grows a row`).toBe(1);

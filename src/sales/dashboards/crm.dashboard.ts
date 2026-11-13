@@ -125,40 +125,11 @@ export const CrmOverviewDashboard: Dashboard = {
       },
     },
 
-    // ─── Charts Row 2 ─────────────────────────────────────────────────
-    {
-      id: 'top_products',
-      // It sums CATALOG list prices, so it says so (#2370 row 3). It was
-      // titled "Top Products" with a "revenue" description, which read as
-      // sales. Summing what was sold is not on offer: a line's `total_price`
-      // is a `formula`, and a dataset refuses `sum` over a formula field
-      // (DATASET_INVALID, measured on 18.2.0); no stored per-line amount exists.
-      title: 'List Price by Category',
-      description: 'Catalog list prices summed per product category, not sales',
-      type: 'bar',
-      colorVariant: 'blue',
-      // crm_product has no `close_date`, so the date picker would fail it with
-      // `no such column`. ObjectStack 15 (framework#2501) injects every dashboard
-      // filter (dateRange + globalFilters) into each widget's query.
-      // The `owner_id` opt-out is SEMANTIC, not structural: since #548 every
-      // business object carries the injected `owner_id`, so the filter would now
-      // resolve — it just means nothing on a shared product catalog, where the
-      // column records whoever created the entry.
-      filterBindings: { dateRange: false, owner_id: false },
-      // `product_metrics` ships in the revenue module, so the tile asks for
-      // that dataset's object and is left out when revenue is disabled (#2383).
-      // Measured on 18.2.0: a disabled package's objects drop out of the served
-      // object list this key is checked against; without it the tile drew a
-      // red "Dataset "product_metrics" is not defined in this environment".
-      requiresObject: 'crm_product',
-      dataset: 'product_metrics', dimensions: ['category'], values: ['list_price_sum'],
-      layout: { x: 0, y: 6, w: 12, h: 4 },
-      chartConfig: {
-        showLegend: false,
-        showDataLabels: true,
-        colors: ['#4F46E5'],
-      },
-    },
+    // The List Price by Category tile that stood here moved to the revenue
+    // module's Product Catalog dashboard (#2436): it binds `product_metrics`,
+    // which lives with `crm_product` in that module, and from 18.4.0 a
+    // dataset is read only from inside the reader's dependency closure
+    // (objectstack#32929, ADR-0150 D3). This package cannot depend on a module.
 
     // ─── Pipeline by Owner ────────────────────────────────────────────
     // A dashboard `table` binds to an analytics dataset (a cube), so it must
@@ -176,7 +147,7 @@ export const CrmOverviewDashboard: Dashboard = {
       filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
       colorVariant: 'default',
       dataset: 'opportunity_metrics', dimensions: ['owner'], values: ['total_amount', 'opp_count', 'avg_amount'],
-      layout: { x: 0, y: 10, w: 12, h: 4 },
+      layout: { x: 0, y: 6, w: 12, h: 4 },
       options: {
         sortBy: 'total_amount',
         sortOrder: 'desc',

@@ -54,9 +54,10 @@ can silently invalidate existing metadata or **seed data** (see §4). Treat ever
 
 1. Bump all `@objectstack/*` deps in [`package.json`](../package.json) together —
    they are released in lockstep, so keep them on one version line.
-2. Update `specVersion` in [`objectstack.manifest.json`](../objectstack.manifest.json)
-   to match the installed `@objectstack/spec` (e.g. `^10.0.0`), and the
-   `engines.protocol` range declared in every package manifest
+2. Update `engines.protocol` in [`objectstack.manifest.json`](../objectstack.manifest.json)
+   to match the installed `@objectstack/spec` (e.g. `^18.4.0`; the template manifest
+   carries no `specVersion` since 18.4.0, ADR-0049), and the same
+   range declared in every package manifest
    ([`src/sales/index.ts`](../src/sales/index.ts),
    [`src/service/index.ts`](../src/service/index.ts)) and the manifest to the
    new protocol major (ADR-0087; the runtime refuses to load the app under a
