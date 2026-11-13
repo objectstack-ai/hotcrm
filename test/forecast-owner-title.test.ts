@@ -76,7 +76,7 @@ beforeAll(async () => {
   admin = await verify.signIn();
 }, 180_000);
 
-describe('the forecast title names the period and the owner', () => {
+describe('forecast_owner_name: the forecast title names the period and the owner', () => {
   it("two owners' forecasts for the same quarter have different titles", async () => {
     const ninas = await stored(await q4({ owner_id: nina.id }));
     const omars = await stored(await q4({ owner_id: omar.id }));
@@ -155,7 +155,7 @@ describe('the forecast title names the period and the owner', () => {
   });
 });
 
-describe('a renamed owner re-titles their forecasts (#2435)', () => {
+describe('forecast_owner_rename: a renamed owner re-titles their forecasts (#2435)', () => {
   it("an administrator's rename of the user re-titles that user's forecasts", async () => {
     const rep = await person('Rita Lane');
     const first = await q4({ owner_id: rep.id });
