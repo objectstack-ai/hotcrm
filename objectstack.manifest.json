@@ -1,9 +1,7 @@
 {
   "$schema": "https://schemas.objectstack.dev/template-manifest.json",
-  "name": "hotcrm",
-  "specVersion": "^18.3.0",
   "engines": {
-    "protocol": "^18.3.0"
+    "protocol": "^18.4.0"
   },
   "manifestId": "app.objectstack.hotcrm",
   "displayName": "HotCRM",
@@ -14,13 +12,6 @@
   "iconUrl": "https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg",
   "homepageUrl": "https://github.com/objectstack-ai/hotcrm",
   "tags": ["crm", "sales", "accounts", "leads", "opportunities", "cases", "campaigns"],
-  "skills": [
-    "objectstack-platform",
-    "objectstack-data",
-    "objectstack-ui",
-    "objectstack-automation",
-    "objectstack-ai"
-  ],
   "readmePath": "README.md",
   "translations": {
     "zh-CN": {

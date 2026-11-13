@@ -96,7 +96,7 @@ export const createHotCrmRevenueStack = (
     version: '6.1.2',
     type: 'module',
     description: 'HotCRM revenue module — products, price books, opportunity line items and quotes.',
-    engines: { protocol: '^18.3.0' },
+    engines: { protocol: '^18.4.0' },
     // The App package this module extends — and nothing else: the graph is a
     // star (plan decision 5), ⛔ no edge to another module.
     dependencies: { 'app.objectstack.hotcrm': '^6.1.2' },
