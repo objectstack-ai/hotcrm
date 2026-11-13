@@ -281,22 +281,33 @@ describe('the stamp is best-effort, like the rest of the bubble', () => {
 
 /**
  * #2014. The bubble used to write as the person who logged the interaction,
- * so a writer who cannot see the case recorded the call and the metric did
- * not move — the read came back filtered and the hook found nothing to stamp.
- * The interaction happened, and a first response is the case's fact, not the
- * writer's privilege: the bubble declares `runAs: 'system'` now.
+ * so a writer whose read of the case came back filtered recorded the call and
+ * the metric did not move: the hook found nothing to stamp. The interaction
+ * happened, and a first response is the case's fact, not the writer's
+ * privilege: the bubble declares `runAs: 'system'` now.
+ *
+ * Re-stated for #2440. This case used to be logged by someone who could not
+ * read the case at all. From 18.4.0 a person may link a record only to one
+ * they can read (objectstack#29029), so that call is refused at its own write
+ * and never reaches the bubble; the maintainer accepted that rule for HotCRM
+ * (#2440, option A). The writer the elevated bubble still serves is the one
+ * who reads the case and may not edit it: a Sales Manager reads every case
+ * and edits none (`sales-manager.profile.ts`), so their own update of the
+ * case is refused, and their held call stamps it all the same.
  */
 describe('the stamp is the case’s fact, not the writer’s grant (#2014)', () => {
-  it('a held call by someone who cannot read the case still stamps its first response', async () => {
-    const outsider = await signUpPerson(verify, `outsider${++k}@case-first-response.test`, {
-      name: 'Other Agent', permissionSets: ['service_agent'],
+  it('a held call by someone who reads the case and may not edit it still stamps its first response', async () => {
+    const manager = await signUpPerson(verify, `manager${++k}@case-first-response.test`, {
+      name: 'Sales Manager', permissionSets: ['sales_manager'],
     });
     const kase = await openCase();
-    expect(await verify.rows('crm_case', { id: kase.id }, { as: outsider.token }), 'the outsider can read the case').toEqual([]);
+    expect(await verify.rows('crm_case', { id: kase.id }, { as: manager.token }), 'fixture: the manager reads the case').toHaveLength(1);
+    const edit = await verify.apiAs(manager.token, 'PATCH', `/data/crm_case/${kase.id}`, { subject: 'Edited by the manager' });
+    expect(edit.status, 'fixture: the manager may not edit the case').toBe(403);
     const event = await verify.hooks.run('crm_event', 'insert', {
-      subject: 'Called about a case I cannot see', type: 'call', status: 'held', start_datetime: new Date().toISOString(),
+      subject: 'Called about a case I read and may not edit', type: 'call', status: 'held', start_datetime: new Date().toISOString(),
       related_to_type: 'crm_case', related_to_case: kase.id,
-    }, { as: outsider.token });
+    }, { as: manager.token });
     expect((await verify.rows('crm_event', { id: event.id }))[0], 'the event write was lost').toBeTruthy();
     await vi.waitFor(async () => expect(await stampOf(kase.id), 'the first response was never stamped').toBeTruthy(),
       { timeout: 10_000, interval: 50 });
