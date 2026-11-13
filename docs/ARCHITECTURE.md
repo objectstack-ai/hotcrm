@@ -63,7 +63,7 @@ depends on the app package. `engines.protocol` is deliberately **not** transcrib
 that table. The protocol major this app's metadata is authored against is declared in
 each package manifest (`src/sales/index.ts`, `src/service/index.ts`,
 `manifest.engines.protocol`) and restated by `objectstack.manifest.json`
-(`engines.protocol` and `specVersion`) and by the `@objectstack/spec` range
+(`engines.protocol`) and by the `@objectstack/spec` range
 `package.json` installs. `test/docs-declared-versions.test.ts` pins every package of the
 artifact `objectstack.config.ts` composes and those files to each other, so the fact is
 already gated where it lives — a copy here would be the one copy nothing compares against.

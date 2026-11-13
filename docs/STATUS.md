@@ -20,7 +20,7 @@ loader registers:
 ```text
 HotCRM v6.1.2
 Data: 20 Objects  374 Fields
-UI: 3 Apps  15 Views  10 Pages  5 Dashboards  10 Reports  40 Actions
+UI: 3 Apps  15 Views  10 Pages  6 Dashboards  10 Reports  40 Actions
 Logic: 36 Flows
 Security: 12 Positions  7 Permissions
 ```
@@ -73,7 +73,7 @@ pnpm verify
 | --- | --- |
 | Node.js | `^22.11 \|\| ^24 \|\| >=26` |
 | pnpm | `>=10.0.0` |
-| ObjectStack packages | `18.3.0` |
+| ObjectStack packages | `18.4.0` |
 | Local dev port | `4001` |
 
 Each row above is asserted against `package.json` (`engines`, the `@objectstack/*`

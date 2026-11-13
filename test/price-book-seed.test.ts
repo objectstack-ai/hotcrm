@@ -30,6 +30,10 @@ type Rec = Record<string, any>;
  *   platform remembers which seed rows landed and leaves one a person deleted
  *   deleted (objectstack#31021, #2439);
  * - an entry a person repriced keeps its price (`mode: 'ignore'`);
+ * - an entry a person deleted stays deleted: the replay honours the
+ *   organization's record of landed seed rows (`sys_seed_landed_key`,
+ *   objectstack#31021), and only the deliberate re-seed, `seed-replayer` with
+ *   `{ reseed: true }` (a host's "restore sample data"), writes it back;
  * - nothing is duplicated: still one Standard book, one entry per product.
  */
 
@@ -67,6 +71,9 @@ const withoutSeedRow = (base: typeof artifact, object: string, isRow: (r: Rec) =
   return { ...a, packages } as typeof artifact;
 };
 
+// The entry a person deletes before the restart.
+const DELETED = 'Analytics Add-on';
+
 const standardOf = async (stack: VerifyStack): Promise<{ book: Rec; entries: Rec[] }> => {
   const books = await stack.rows('crm_price_book', { name: STANDARD_PRICE_BOOK });
   expect(books, 'one Standard book').toHaveLength(1);
@@ -84,6 +91,8 @@ describe('the seeded Standard price book across a restart', () => {
   let firstBoot: { book: Rec; entries: Rec[] };
   // The fresh book's prices, by product name.
   let firstPrices: Map<string, number>;
+  // The organization the book is seeded in, for the deliberate re-seed.
+  let organizationId: string;
 
   beforeAll(async () => {
     dir = mkdtempSync(join(tmpdir(), 'price-book-seed-'));
@@ -108,6 +117,12 @@ describe('the seeded Standard price book across a restart', () => {
     const smbId = await productId(before, SMB);
     const [smbEntry] = entries.filter((e) => e.crm_product === smbId);
     await before.hooks.run('crm_price_book_entry', 'update', { id: smbEntry!.id, list_price: 17000 }, { as: admin });
+    const deletedId = await productId(before, DELETED);
+    const [deletedEntry] = entries.filter((e) => e.crm_product === deletedId);
+    expect(deletedEntry, `fixture: the book holds an entry for ${DELETED}`).toBeDefined();
+    organizationId = String(deletedEntry!.organization_id);
+    await before.hooks.run('crm_price_book_entry', 'delete', { id: deletedEntry!.id }, { as: admin });
+    expect(await before.rows('crm_price_book_entry', { id: deletedEntry!.id }), 'fixture: the entry was not deleted').toHaveLength(0);
     await before.stop();
 
     after = await bootStack(await buildArtifactAgain(), bootOptions({ databaseFile }));
@@ -140,10 +155,31 @@ describe('the seeded Standard price book across a restart', () => {
     expect(entries.filter((e) => e.crm_product === smbId).map((e) => e.list_price)).toEqual([17000]);
   });
 
-  it('nothing is duplicated: one standard book, one entry per product', async () => {
+  it('a deleted entry stays deleted across the restart', async () => {
+    const { entries } = await standardOf(after!);
+    const deletedId = await productId(after!, DELETED);
+    expect(entries.filter((e) => e.crm_product === deletedId)).toHaveLength(0);
+  });
+
+  it('nothing is duplicated: one standard book, one entry per product it still prices', async () => {
     expect(await after!.rows('crm_price_book', { is_standard: true })).toHaveLength(1);
     const { entries } = await standardOf(after!);
+    expect(entries).toHaveLength(catalogue.length - 1);
+    expect(new Set(entries.map((e) => e.crm_product)).size).toBe(catalogue.length - 1);
+  });
+
+  // Last: it writes to the restarted database the cases above read.
+  it('the deliberate re-seed restores the deleted entry at the catalogue price, and keeps the repriced one', async () => {
+    const replay = after!.kernel.getService('seed-replayer') as
+      (organizationId: string, options?: { reseed?: boolean }) => Promise<{ errors: unknown[] }>;
+    expect(typeof replay, 'fixture: the platform registers the seed replayer').toBe('function');
+    expect((await replay(organizationId, { reseed: true })).errors).toEqual([]);
+    const { entries } = await standardOf(after!);
+    const deletedId = await productId(after!, DELETED);
+    expect(entries.filter((e) => e.crm_product === deletedId).map((e) => e.list_price))
+      .toEqual([catalogue.find((p) => p.name === DELETED)!.list_price]);
+    const smbId = await productId(after!, SMB);
+    expect(entries.filter((e) => e.crm_product === smbId).map((e) => e.list_price)).toEqual([17000]);
     expect(entries).toHaveLength(catalogue.length);
-    expect(new Set(entries.map((e) => e.crm_product)).size).toBe(catalogue.length);
   });
 });

@@ -110,7 +110,11 @@ administrator) can create such a deal directly at **Closed Won**, for instance
 to import historical won deals. Anyone else's create is refused, from the New
 form and from an import alike: create the deal at an open stage, which sends it
 for approval, and close it once approved. Moving an existing deal to **Closed
-Won** still needs the approval, for an administrator too.
+Won** still needs the approval, for an administrator too. As with every record
+a person links to, the deal's account must be one its creator can open: an
+organization admin who holds no other permission set opens only the accounts
+they own, so the person who loads historical won deals across every account
+holds **System Administrator**.
 
 > **Known limit.** The rule does not know whether the Large Deal Approval flow
 > is switched on. If an administrator switches that flow off, no deal of $100K

@@ -141,7 +141,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: '平均商談規模（選択期間）', description: '選択期間の成立済み商談の平均金額' },
         lead_source: { title: 'リードソース', description: '獲得チャネル別のパイプライン金額' },
         pipeline_by_stage: { title: 'ステージ別パイプライン', description: '各営業ステージのオープン商談金額' },
-        top_products: { title: 'カテゴリ別定価合計', description: '製品カテゴリごとのカタログ定価の合計（売上ではありません）' },
         pipeline_by_owner: { title: '担当者別パイプライン', description: '営業担当者ごとのオープンパイプライン金額と商談数' },
       },
     },
