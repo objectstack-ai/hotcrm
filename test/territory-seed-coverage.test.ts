@@ -71,7 +71,7 @@ import { hotcrmStack } from './helpers/verify-stack';
  * ### What is NOT covered here
  *
  * A matching account still materialises no `sys_record_share` row, because on a
- * fresh install `sys_user_position` is empty — nobody holds `na_sales_team` or
+ * fresh install `sys_user_position` is empty — nobody holds `crm_na_sales_team` or
  * `eu_sales_team` (measured: 0 rows, 0 shares). That is a separate gap, filed
  * separately; it is not something the seed data can fix, since a seed cannot
  * name a user (see the note beside `CrmSeedData` in `objectstack.composition.ts`).

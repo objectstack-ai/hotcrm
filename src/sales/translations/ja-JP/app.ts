@@ -141,7 +141,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: '平均商談規模（選択期間）', description: '選択期間の成立済み商談の平均金額' },
         lead_source: { title: 'リードソース', description: '獲得チャネル別のパイプライン金額' },
         pipeline_by_stage: { title: 'ステージ別パイプライン', description: '各営業ステージのオープン商談金額' },
-        top_products: { title: 'カテゴリ別定価合計', description: '製品カテゴリごとのカタログ定価の合計（売上ではありません）' },
         pipeline_by_owner: { title: '担当者別パイプライン', description: '営業担当者ごとのオープンパイプライン金額と商談数' },
       },
     },
@@ -734,51 +733,51 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
-    executive: {
+    crm_executive: {
       label: 'エグゼクティブ',
       description: '経営層：パイプライン全体の進行中の大型商談をすべて閲覧できます。商談の所有権は商談チームに残ります。',
     },
-    sales_director: {
+    crm_sales_director: {
       label: '営業ディレクター',
       description: '営業組織を率い、最大規模の商談の最終承認を行い、進行中の大型商談をすべて閲覧します。',
     },
-    sales_manager: {
+    crm_sales_manager: {
       label: '営業マネージャー',
       description: '営業チームを率い、新規取引先・リード変換・大型商談を承認し、有効な取引先をすべて編集します。',
     },
-    sales_rep: {
+    crm_sales_rep: {
       label: '営業担当者',
       description: 'リードと商談を日々担当し、リード受付キューから新しいリードを受け取ります。',
     },
-    service_director: {
+    crm_service_director: {
       label: 'サービスディレクター',
       description: 'カスタマーサービスを統括し、サービスマネージャーが対応中の未解決の重大ケースをすべて閲覧します。',
     },
-    service_manager: {
+    crm_service_manager: {
       label: 'サービスマネージャー',
       description: 'エスカレーション窓口を担当します。エスカレーションされたケースはこの役職に引き渡され、未解決の重大ケースをすべて編集できます。',
     },
-    service_agent: {
+    crm_service_agent: {
       label: 'サービス担当者',
       description: '顧客のケースに対応し、サポート受付キューから新しいケースを受け取り、キューで待っているケースを担当します。',
     },
-    marketing_director: {
+    crm_marketing_director: {
       label: 'マーケティングディレクター',
       description: 'マーケティングを率い、所有者にかかわらず実施中のキャンペーンをすべて編集します。',
     },
-    marketing_manager: {
+    crm_marketing_manager: {
       label: 'マーケティングマネージャー',
       description: 'キャンペーンを管理し、所有者にかかわらず実施中のキャンペーンをすべて編集します。',
     },
-    marketing_user: {
+    crm_marketing_user: {
       label: 'マーケティングユーザー',
       description: 'キャンペーンとそのメンバーを日々企画・運用します。',
     },
-    na_sales_team: {
+    crm_na_sales_team: {
       label: '北米営業チーム',
       description: '北米テリトリーのチーム：北米テリトリーの取引先をすべて編集します。',
     },
-    eu_sales_team: {
+    crm_eu_sales_team: {
       label: '欧州営業チーム',
       description: '欧州テリトリーのチーム：欧州（EMEA）テリトリーの取引先をすべて編集します。',
     },

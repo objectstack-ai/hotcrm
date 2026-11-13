@@ -100,7 +100,7 @@ for (const [driverName, boot] of [['sqlite', hotcrmStack]] as const) {
       verify = await boot();
       // The person who opens and works cases.
       const agent = await signUpPerson(verify, `agent-${driverName}@sla-at-risk-live-work.test`, {
-        name: 'At-Risk Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+        name: 'At-Risk Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
       });
       for (const over of [
         // The row the tab exists for.

@@ -98,10 +98,10 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   // Service grants with no position: a case the agent opens stays theirs.
   agent = await signUpPerson(verify, 'agent@escalation-task-on-close.test', { name: 'Case Agent', permissionSets: ['service_agent'] });
-  // The grants now; the `service_manager` position (the escalation pool) only from the second block on.
+  // The grants now; the `crm_service_manager` position (the escalation pool) only from the second block on.
   manager = await signUpPerson(verify, 'manager@escalation-task-on-close.test', { name: 'Service Manager', permissionSets: ['service_agent'] });
   rep = await signUpPerson(verify, 'rep@escalation-task-on-close.test', {
-    name: 'Account Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Account Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Escalated Close Co', tier: 'enterprise', owner_id: rep.id }]);
   accountId = String(account!.id);
@@ -143,7 +143,7 @@ describe('with a Service Manager on the bench', { timeout: WAIT_BUDGET_MS }, () 
     // The position row as `signUpPerson` writes one: carrying the person's organization.
     const context = await verify.contextFor(manager.token);
     const organization = context.tenantId ? { organization_id: String(context.tenantId) } : {};
-    await verify.seed('sys_user_position', [{ user_id: manager.id, position: 'service_manager', ...organization }]);
+    await verify.seed('sys_user_position', [{ user_id: manager.id, position: 'crm_service_manager', ...organization }]);
   });
 
   describe('the escalation hands the case to the manager, who closes it', () => {

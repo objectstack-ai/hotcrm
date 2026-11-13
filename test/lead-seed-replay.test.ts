@@ -29,25 +29,65 @@ type Rec = Record<string, any>;
  * admin converts a seeded lead through Convert Lead's flow, the kernel stops, and
  * the app cold-boots over the same file (`databaseFile`, the handle's restart
  * seam), replaying the seed.
+ *
+ * The control that the cold boot replayed the lead dataset at all is a seed
+ * lead the first boot never had: the restart boots an artifact whose lead
+ * dataset carries one more row, as the next version shipping a new seed lead
+ * would, so the replay must insert a key that never landed in the organization.
+ * A deleted seeded lead is not that control: from 18.4.0 the platform remembers
+ * which seed rows landed and leaves one a person deleted deleted
+ * (objectstack#31021, #2439).
  */
 
 /** Seeded leads, by their stage — read off the dataset rather than restated. */
 const seeded = (status: string): Rec[] =>
   (leads.records as Rec[]).filter((r) => r.status === status && typeof r.email === 'string');
 
+/**
+ * The artifact with one more seed row in `object`'s dataset: what the next
+ * version shipping a new seed row boots. A fresh object over the same packages.
+ * Only the dataset the boot's locale loads grows (`en`, the artifact's
+ * `i18n.defaultLocale`): a dataset scoped to other locales (a `zh-CN` twin,
+ * #2411) is not replayed by this boot.
+ */
+/** Whether the boot (locale `en`) loads this dataset: unscoped, or scoped to a list naming `en`. */
+const loadsForBootLocale = (d: Rec): boolean => !Array.isArray(d.locale) || (d.locale as string[]).includes('en');
+
+const withExtraSeedRow = (base: typeof artifact, object: string, row: Rec): typeof artifact => {
+  const a = base as unknown as Rec;
+  let grown = 0;
+  const packages = (a.packages as Rec[]).map((p) => !Array.isArray(p.manifest?.data) ? p : {
+    ...p,
+    manifest: {
+      ...p.manifest,
+      data: (p.manifest.data as Rec[]).map((d) => d.object !== object || !loadsForBootLocale(d) ? d : (grown += 1, { ...d, records: [...(d.records as Rec[]), row] })),
+    },
+  });
+  expect(grown, `fixture: one ${object} dataset grows a row`).toBe(1);
+  return { ...a, packages } as typeof artifact;
+};
+
+/** The new seed lead the restart ships, shaped like a seeded new lead. */
+const NEW_LEAD: Rec = {
+  ...seeded('new').at(-1),
+  first_name: 'Rhea', last_name: 'Lindqvist', company: 'Fjord Ferries',
+  email: 'rhea.lindqvist@fjordferries.example.com', website: 'https://fjordferries.example.com',
+};
+
 describe('a seeded lead keeps its conversion across a restart (#2134)', () => {
   let dir: string;
   let after: VerifyStack | undefined;
   // The seeded lead converted before the restart, and its row then.
   let converted: Rec;
-  // The control: a seeded lead deleted before the restart. Its return proves
-  // the cold boot really replayed the lead dataset, so the conversion surviving
-  // is not a boot that seeded nothing.
-  let deletedEmail: string;
+  // The control: a seed lead only the restart ships. Its arrival proves the
+  // cold boot really replayed the lead dataset, so the conversion surviving is
+  // not a boot that seeded nothing.
+  const newEmail = String(NEW_LEAD.email);
 
   beforeAll(async () => {
     dir = mkdtempSync(join(tmpdir(), 'lead-seed-replay-'));
     const databaseFile = join(dir, 'crm.db');
+    expect((leads.records as Rec[]).map((r) => r.email), 'fixture: the new seed lead is not already seeded').not.toContain(newEmail);
     const before = await bootStack(artifact, bootOptions({ databaseFile }));
     const admin = await before.signIn();
 
@@ -70,15 +110,10 @@ describe('a seeded lead keeps its conversion across a restart (#2134)', () => {
     expect({ status: converted?.status, isConverted: converted?.is_converted }, 'the conversion did not convert')
       .toEqual({ status: 'converted', isConverted: true });
 
-    const control = seeded('new').at(-1);
-    expect(control, 'fixture: the lead dataset seeds a new lead').toBeDefined();
-    deletedEmail = String(control!.email);
-    const [doomed] = await before.rows('crm_lead', { email: deletedEmail });
-    await before.hooks.run('crm_lead', 'delete', { id: doomed!.id }, { as: admin });
-    expect(await before.rows('crm_lead', { email: deletedEmail }), 'fixture: the control lead was not deleted').toHaveLength(0);
+    expect(await before.rows('crm_lead', { email: newEmail }), 'fixture: the first boot has no new seed lead').toHaveLength(0);
     await before.stop();
 
-    after = await bootStack(await buildArtifactAgain(), bootOptions({ databaseFile }));
+    after = await bootStack(withExtraSeedRow(await buildArtifactAgain(), 'crm_lead', NEW_LEAD), bootOptions({ databaseFile }));
   }, 240_000);
 
   afterAll(async () => {
@@ -86,8 +121,8 @@ describe('a seeded lead keeps its conversion across a restart (#2134)', () => {
     if (dir) rmSync(dir, { recursive: true, force: true });
   });
 
-  it('control: the restart replayed the lead dataset — the deleted seeded lead is back', async () => {
-    expect(await after!.rows('crm_lead', { email: deletedEmail })).toHaveLength(1);
+  it('control: the restart replayed the lead dataset — the new seed lead is written', async () => {
+    expect(await after!.rows('crm_lead', { email: newEmail })).toHaveLength(1);
   });
 
   it('the converted lead still reads converted, with its conversion links', async () => {

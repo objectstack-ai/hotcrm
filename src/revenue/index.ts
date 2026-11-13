@@ -1,6 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
+import { defineStack, P, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import {
   SubmitQuoteForReviewAction, MarkQuotePresentedAction, AcceptQuoteAction, RejectQuoteAction, ReviseQuoteAction,
@@ -8,6 +8,7 @@ import {
 } from './actions/index.js';
 import { CrmRevenueManual } from './books/index.js';
 import { RevenueEmailTemplates } from './email-templates/index.js';
+import { ProductCatalogDashboard } from './dashboards/index.js';
 import { ProductDataset } from './datasets/index.js';
 import {
   PriceBookAddProductsFlow, QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow,
@@ -69,18 +70,18 @@ export type HotCrmRevenueCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * draft (`quote_accepted_contract_draft`) is now a write along this module's
  * edge into the app package.
  *
- * Two of them are reached from the app package: `quote_generation` (see
- * {@link revenueFlows}) and `product_metrics`, which the app's CRM Overview
- * List Price by Category tile binds — a widget reference `os validate` resolves against
- * the artifact's packages since objectstack#25514.
+ * One of them is reached from the app package: `quote_generation` (see
+ * {@link revenueFlows}). `product_metrics` is read by this module's own
+ * Product Catalog dashboard (#2436); the app's CRM Overview bound it until
+ * objectstack 18.4.0, which reads a dataset only from inside the reader's
+ * dependency closure (objectstack#32929), and the app may not depend on a module.
  *
  * It is packaged exactly as `src/service/index.ts` is, and that file carries
  * the reasoning for each load-bearing property — the app package's
  * `namespace`, `dependencies` as the edge, no `i18n`, and a `requires` of this
  * package's own. What stays in the app package although it reads these
- * objects: the permission sets (whole by the ADR-0130 2026-09-02 addendum),
- * the CRM Overview dashboard, and the opportunity record page that lists
- * quotes and line items.
+ * objects: the permission sets (whole by the ADR-0130 2026-09-02 addendum)
+ * and the opportunity record page that lists quotes and line items.
  */
 export const createHotCrmRevenueStack = (
   collections: HotCrmRevenueCollections,
@@ -95,7 +96,7 @@ export const createHotCrmRevenueStack = (
     version: '6.1.2',
     type: 'module',
     description: 'HotCRM revenue module — products, price books, opportunity line items and quotes.',
-    engines: { protocol: '^18.3.0' },
+    engines: { protocol: '^18.4.0' },
     // The App package this module extends — and nothing else: the graph is a
     // star (plan decision 5), ⛔ no edge to another module.
     dependencies: { 'app.objectstack.hotcrm': '^6.1.2' },
@@ -126,6 +127,13 @@ export const createHotCrmRevenueStack = (
           // The catalogue's prices, beside it (#2313). Its entries are reached
           // through their book, as a line item is through its quote.
           { id: 'nav_price_book', type: 'object', objectName: 'crm_price_book', label: 'Price Books', icon: 'book-open' },
+          // The catalogue's one chart, beside the catalogue (#2436): the module's
+          // own dashboard, since the app's CRM Overview cannot read this
+          // module's `product_metrics` from 18.4.0 (objectstack#32929).
+          // A dashboard entry is not pruned by read access as an object entry
+          // is (`src/sales/apps/crm.app.ts`, the `OPPORTUNITY_AUDIENCE` note),
+          // so it asks the read its one tile needs.
+          { id: 'nav_product_catalog_dashboard', type: 'dashboard', dashboardName: 'product_catalog_dashboard', label: 'Product Catalog', icon: 'chart-bar', visible: P`current_user.can("crm_product", "read")` },
         ],
       },
       // This module's manual, under the app's *Help* group (#2327): the app
@@ -163,6 +171,7 @@ export const createHotCrmRevenueStack = (
   ],
   flows: revenueFlows,
   datasets: [ProductDataset],
+  dashboards: [ProductCatalogDashboard],
   emailTemplates: RevenueEmailTemplates,
   // Its manual (#2327), over `src/revenue/docs/`. See the book's own note.
   books: [CrmRevenueManual],

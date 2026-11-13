@@ -212,6 +212,15 @@ export const en: TranslationData = {
     },
   },
   // The quote's two record pages (#2312): its working page and its print page.
+  dashboards: {
+    product_catalog_dashboard: {
+      label: 'Product Catalog',
+      description: 'Catalog list prices per product category',
+      widgets: {
+        top_products: { title: 'List Price by Category', description: 'Catalog list prices summed per product category, not sales' },
+      },
+    },
+  },
   pages: {
     quote_detail_page: {
       label: 'Quote Detail',

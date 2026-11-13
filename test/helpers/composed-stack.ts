@@ -3,6 +3,7 @@
 import { deepMerge } from '@objectstack/core';
 import { composeStacks } from '@objectstack/spec';
 import { SchemaRegistry } from '@objectstack/objectql';
+import { resolveArtifactCollections } from '@objectstack/runtime';
 import { packageStacks } from '../../objectstack.composition';
 
 /**
@@ -17,21 +18,32 @@ import { packageStacks } from '../../objectstack.composition';
  * almost every suite here asks — they pin this app's business facts, and the
  * app a customer installs is the whole artifact, all four packages.
  *
- * So this composes the SAME four built stacks with the platform's own
- * `composeStacks` in its default, flattening mode: every collection
- * concatenated in stack order (the three modules first, the app last), objects merged
- * under the default `objectConflict: 'error'`, and the singular `manifest`
- * picked by the default `'last'` rule — the app package's, exactly as the
- * artifact's own `manifest` is. ⛔ Nothing here re-implements a platform
- * reader: it is the platform's composition over the very values the config
+ * So this composes the SAME built stacks the same way the config does,
+ * `composeStacks(…, { manifest: 'preserve' })`, and reads every collection of
+ * the result through `@objectstack/runtime`'s `resolveArtifactCollections`, the
+ * platform's one reader of a composed artifact's collections (objectstack#32827):
+ * the artifact's own top level first, then each `packages[]` body in the
+ * platform's package order. The singular `manifest` is the last input's — the
+ * app package's, exactly as the artifact's own `manifest` is. ⛔ Nothing here
+ * re-implements a platform reader or its merge: it is the platform's
+ * composition, read by the platform's reader, over the very values the config
  * composes, and `test/package-ownership.test.ts` holds the two views to the
  * same contents.
+ *
+ * ⛔ Not the default, flattening `composeStacks(packageStacks)`: since
+ * objectstack#32810 that keeps ONE manifest, puts every package's app under
+ * the app package's id, and is refused with `STACK_SINGLE_APP_VIOLATION`.
  *
  * Two things this view deliberately does NOT carry, so a suite that needs them
  * reads them where they live:
  *
  *  - PER-PACKAGE ownership — read `objectstack.config`'s `packages[]`, or
- *    the package stacks from `objectstack.composition.ts`.
+ *    the package stacks from `objectstack.composition.ts`. The resolved
+ *    artifact still carries `packages[]` beside the collections it read out of
+ *    them; this view leaves it out, so it stays one stack: a walk over the view
+ *    reaches each definition at its collection (not first through a package
+ *    body), and a suite booting the view does not register every package body
+ *    a second time underneath what it handed in.
  *  - the modules' `navigationContributions` — they are part of each module's
  *    manifest, and the singular manifest here is the app's. Read
  *    {@link servedApps}, which folds them in.
@@ -40,7 +52,9 @@ import { packageStacks } from '../../objectstack.composition';
  * `objectstack.config`, not this view: the registration path is part of what
  * such a suite measures.
  */
-const composedStack = composeStacks(packageStacks);
+const { packages: _packageBodies, ...composedStack } = resolveArtifactCollections(
+  composeStacks(packageStacks, { manifest: 'preserve' }),
+);
 
 export default composedStack;
 

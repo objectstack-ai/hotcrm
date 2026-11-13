@@ -33,7 +33,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@opportunity-large-deal-create.test', {
-    name: 'Create Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Create Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   // The dev admin: the platform projects `platform_admin` and `org_owner` into its positions.
   admin = await verify.signIn();
@@ -83,13 +83,23 @@ describe('creating a large deal already Closed Won — opportunity_lifecycle (#2
   });
 
   it('accepts an organization admin\'s create: a member promoted to admin, no other grant', async () => {
+    // Re-stated for #2440: the deal sits on an account the admin owns. From
+    // 18.4.0 a person may name in a lookup only a record they can read
+    // (objectstack#29029), and an organization admin with no CRM permission
+    // set reads only their own accounts (every member's default set), so the
+    // rep's account the other cases use is refused as `reference_not_found`
+    // before this rule is asked. The maintainer accepted that rule for HotCRM
+    // (#2440, option A); the person loading history across every account
+    // holds System Administrator, which the administrator cases above cover.
     const token = await verify.signUp('org.admin@opportunity-large-deal-create.test', undefined, 'Create Org Admin');
     const { userId } = await verify.contextFor(token);
     const [member] = await verify.rows('sys_member', { user_id: String(userId) });
     const promoted = await verify.apiAs(admin, 'POST', '/auth/organization/update-member-role', { memberId: member!.id, role: 'admin' });
     expect(promoted.status, 'fixture: the dev admin promotes the member').toBe(200);
     expect((await verify.contextFor(token)).positions, 'fixture: the platform projects org_admin').toContain('org_admin');
-    const doc = deal();
+    const [own] = await verify.seed('crm_account', [{ name: 'Org Admin Own Co', owner_id: String(userId), approval_status: 'approved' }]);
+    expect(await verify.rows('crm_account', { id: own!.id }, { as: token }), 'fixture: the admin reads their own account').toHaveLength(1);
+    const doc = deal({ crm_account: String(own!.id) });
     expect((await create(token, doc)).status).toBe(201);
     expect((await byName(doc.name))[0]?.stage).toBe('closed_won');
   });

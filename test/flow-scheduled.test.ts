@@ -61,9 +61,9 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   await verify.signIn(); // the harness admin, as before: the sweeps no longer run as anyone
   rep = await signUpPerson(verify, 'rep@flow-scheduled.test', {
-    name: 'Sweep Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Sweep Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
-  // Service grants, but NOT on the `service_agent` rota: a case the agent
+  // Service grants, but NOT on the `crm_service_agent` rota: a case the agent
   // opens stays the agent's (`case_intake_assignment` hands ownerless cases
   // to the rota).
   agent = await signUpPerson(verify, 'agent@flow-scheduled.test', {

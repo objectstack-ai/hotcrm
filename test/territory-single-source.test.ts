@@ -233,7 +233,7 @@ describe('the hook body carries the module mapping and no other', () => {
   beforeAll(async () => {
     verify = await hotcrmStack();
     rep = await signUpPerson(verify, 'rep@territory-single-source.test', {
-      name: 'Territory Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Territory Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
   }, 120_000);
   const create = (doc: AnyRec) => verify.hooks.run('crm_account', 'insert', doc, { as: rep.token });

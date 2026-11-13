@@ -45,8 +45,13 @@ const quote: Rec = ((stack as Rec).objects as Rec[]).find((o) => o.name === 'crm
 const machine: Record<string, string[]> =
   (quote.validations as Rec[]).find((v) => v.name === 'quote_status_progression')!.transitions;
 
-/** Evaluate an action's `visible` the way the console does. */
-const offered = (name: string, record: Rec, permissions: Rec = { crm_quote: { allowEdit: true } }): boolean => {
+/**
+ * Evaluate an action's `visible` the way the console does. The default map is
+ * an editor's as a session publishes it: read beside edit, since
+ * `current_user.can(object, 'edit')` answers edit only together with read
+ * (objectstack 18.4.0, `objectPermissionGrants`).
+ */
+const offered = (name: string, record: Rec, permissions: Rec = { crm_quote: { allowRead: true, allowEdit: true } }): boolean => {
   const result = ExpressionEngine.evaluate<boolean>(actionNamed(name).visible, {
     user: { id: 'u1', positions: [] }, record, permissions: permissions as never,
   });
@@ -111,16 +116,16 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@quote-lifecycle.test', {
-    name: 'Life Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Life Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   otherRep = await signUpPerson(verify, 'other@quote-lifecycle.test', {
-    name: 'Other Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Other Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   marketer = await signUpPerson(verify, 'mkt@quote-lifecycle.test', {
-    name: 'Life Marketer', positions: ['marketing_user'], permissionSets: ['marketing_user'],
+    name: 'Life Marketer', positions: ['crm_marketing_user'], permissionSets: ['marketing_user'],
   });
   agent = await signUpPerson(verify, 'agent@quote-lifecycle.test', {
-    name: 'Life Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Life Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
 }, 180_000);
 

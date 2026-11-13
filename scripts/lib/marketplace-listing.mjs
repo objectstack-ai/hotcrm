@@ -125,6 +125,11 @@ export function describeTranslations(translations) {
   });
 }
 
+/** HotCRM is a full product, not a starter template (#2420). */
+export const HOTCRM_IS_STARTER = false;
+/** The publisher HotCRM's service-mode publish names on its listing (#2420). */
+export const HOTCRM_PUBLISHER = 'objectstack';
+
 /**
  * The body of `POST /api/v1/cloud/packages`. `translations` is left out when
  * the manifest declares none, so an upsert never clears a stored map by
@@ -152,8 +157,12 @@ export function packageUpsertBody({ manifestId, manifest, license, readme, trans
     display_name: manifest.displayName,
     description: manifest.description,
     tags: manifest.tags,
-    is_starter: manifest.isStarter ?? false,
-    publisher: manifest.publisher,
+    // First-party constants of HotCRM's service-mode publish, not manifest
+    // keys: `@objectstack/spec` 18.4.0 refuses `publisher` and `isStarter` on
+    // the template manifest (they are the platform's to decide, objectstack
+    // #31035), and this publish keeps sending the values it always sent (#2420).
+    is_starter: HOTCRM_IS_STARTER,
+    publisher: HOTCRM_PUBLISHER,
     icon_url: manifest.iconUrl,
     homepage_url: manifest.homepageUrl,
     license,

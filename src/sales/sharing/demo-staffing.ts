@@ -34,7 +34,7 @@ import type { Territory } from '../objects/_territory';
  * fresh 17.0.0-rc.1 install, `sys_record_share` had 0 rows and every
  * position-based rule this app ships granted nobody anything. The same hole ran
  * through `opportunity_approval` — its `manager_review` node routes to the
- * `sales_manager` position, so submitting a deal opened a request with an empty
+ * `crm_sales_manager` position, so submitting a deal opened a request with an empty
  * approver slate while `lockRecord: true` held the record hostage.
  *
  * ### Why this is a TABLE and not code
@@ -85,19 +85,19 @@ import type { Territory } from '../objects/_territory';
  *     (`src/service/assignment-rules/case.assignment-rule.ts`, the platform's
  *     assignment rule) hands an ownerless case — a web-to-case submission, an
  *     email import — to the least-loaded member of the `case_intake` queue,
- *     whose members are the holders of `service_agent`. With nobody holding it
+ *     whose members are the holders of `crm_service_agent`. With nobody holding it
  *     every such case parks in the queue and the `unassigned_triage` tab is the
  *     entire story. The same row makes her the queue's first member, so she
  *     sees the parked cases and can claim them.
  *   - the service MANAGER is the ESCALATION POOL. `case_escalation_reassign`
- *     hands a case being escalated to the least-loaded `service_manager`, and
+ *     hands a case being escalated to the least-loaded `crm_service_manager`, and
  *     `case_escalation_sharing` grants that position edit on open critical
  *     cases. Both had zero holders, so escalating a case moved nothing and
  *     granted nobody anything.
  *
  * ⚠️ Measured, and written down because the card that authorised those two
  * rows over-counted: staffing them does NOT light `case_director_sharing`. That
- * rule's recipient is `service_director`, which the same ruling leaves empty.
+ * rule's recipient is `crm_service_director`, which the same ruling leaves empty.
  * The fourth mechanism these two rows actually reach is the `case_intake`
  * queue's membership, not the director rule.
  *
@@ -204,7 +204,7 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
     name: 'Nina Reyes',
     email: 'na.rep@objectos.ai',
     password: 'demo1234',
-    positions: ['sales_rep', 'na_sales_team'],
+    positions: ['crm_sales_rep', 'crm_na_sales_team'],
     demonstrates:
       'north_america_territory: reads the 6 US/CA/MX accounts she does not own, and neither ' +
       'the 2 EU accounts nor the 1 account in no territory.',
@@ -214,7 +214,7 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
     name: 'Emil Roth',
     email: 'eu.rep@objectos.ai',
     password: 'demo1234',
-    positions: ['sales_rep', 'eu_sales_team'],
+    positions: ['crm_sales_rep', 'crm_eu_sales_team'],
     demonstrates:
       'europe_territory: reads the 2 UK/DE accounts he does not own, and neither the 6 NA ' +
       'accounts nor the 1 account in no territory.',
@@ -224,7 +224,7 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
     name: 'Marta Quinn',
     email: 'sales.manager@objectos.ai',
     password: 'demo1234',
-    positions: ['sales_manager'],
+    positions: ['crm_sales_manager'],
     demonstrates:
       "opportunity_approval's manager_review node resolves to a non-empty approver slate, and " +
       'account_team_sharing hands her the active customer accounts.',
@@ -234,7 +234,7 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
     name: 'Priya Raman',
     email: 'service.agent@objectos.ai',
     password: 'demo1234',
-    positions: ['service_agent'],
+    positions: ['crm_service_agent'],
     demonstrates:
       'case_intake_assignment: an ownerless case is handed to her as the least-loaded member of ' +
       'the case_intake queue, and as a member she sees the cases parked in it and can claim them.',
@@ -244,10 +244,10 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
     name: 'Tomas Okafor',
     email: 'service.manager@objectos.ai',
     password: 'demo1234',
-    positions: ['service_manager'],
+    positions: ['crm_service_manager'],
     demonstrates:
       'case_escalation_reassign: a case moves to him on the escalation transition as the ' +
-      'least-loaded holder of the service_manager pool, and case_escalation_sharing grants him ' +
+      'least-loaded holder of the crm_service_manager pool, and case_escalation_sharing grants him ' +
       'edit on the open critical cases he does not own.',
   },
 ];
@@ -398,7 +398,7 @@ export type DemoOwnershipRoute =
  *
  * The escalation desk takes what the app's own escalation hands it: a case
  * already escalated, and a case at Critical priority, which the Case
- * Escalation flow hands to the least-loaded `service_manager` (on a never
+ * Escalation flow hands to the least-loaded `crm_service_manager` (on a never
  * escalated open one, on the hand-over's own save). The intake desk takes
  * everything else.
  */

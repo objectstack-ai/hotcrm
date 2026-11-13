@@ -29,7 +29,7 @@ type Rec = Record<string, any>;
  * reads it on the case path (the `case_intake` queue declares it as its
  * member), and the escalation hand-off below must never fall back to it.
  */
-const SERVICE_AGENT_POSITION = 'service_agent';
+const SERVICE_AGENT_POSITION = 'crm_service_agent';
 
 /**
  * ═══ Case intake — the platform's queue since #2395 ═══════════════════════
@@ -37,17 +37,17 @@ const SERVICE_AGENT_POSITION = 'service_agent';
  * Who owns a NEW case is no longer answered here. The app-level round-robin
  * (`case_auto_assign`, #596) and its triage sharing grant were deleted when
  * ObjectStack 18.3.0 shipped ownership queues (ADR-0142): `case_intake_assignment`
- * routes an ownerless insert to the least-loaded `service_agent`, or parks it in
+ * routes an ownerless insert to the least-loaded `crm_service_agent`, or parks it in
  * the `case_intake` queue when nobody holds the position. That behaviour is
  * pinned in `test/ownership-queues.test.ts`. What stays here is the second
  * deliverable of #596, the `unassigned_triage` view, which now lists exactly the
  * cases sitting in that queue.
  *
- * ═══ Escalation hand-off to the `service_manager` pool (#1070) ═════════════
+ * ═══ Escalation hand-off to the `crm_service_manager` pool (#1070) ═════════════
  *
  * The other half of "who should own this case", and the one the platform does
  * not answer: an assignment rule runs once, on insert, so an escalation (an
- * update) is still handed to the `service_manager` pool by the app's hook.
+ * update) is still handed to the `crm_service_manager` pool by the app's hook.
  *
  * Its blocking precondition is measured below, because the gate's verdict is a
  * property of the seam: `beforeUpdate` input mutation (invisible), a caller's

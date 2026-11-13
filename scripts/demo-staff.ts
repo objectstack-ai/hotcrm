@@ -766,7 +766,7 @@ async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]
         `to the seed-ownership claim's first administrator; staffing must not move it.`,
       );
     }
-    if (member.positions.includes('na_sales_team') || member.positions.includes('eu_sales_team')) {
+    if (member.positions.includes('crm_na_sales_team') || member.positions.includes('crm_eu_sales_team')) {
       if (rows.length === 0) {
         failures.push(
           `${member.email} holds a territory position but reads no account at all — the rule ` +
@@ -779,7 +779,7 @@ async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]
       // country is added (#639). There is no list here now: the recipient's
       // position names one territory value, and every row they can read must
       // carry it.
-      const wanted = member.positions.includes('na_sales_team') ? 'na' : 'emea';
+      const wanted = member.positions.includes('crm_na_sales_team') ? 'na' : 'emea';
       const strays = rows
         .filter((r) => String(r.territory ?? '') !== wanted)
         .map((r) => `${String(r.name)}: ${String(r.territory ?? 'none')}`);
@@ -911,7 +911,7 @@ async function main(): Promise<number> {
   // snippets, and "echo the credential you just used" is the one shape this
   // reference app should not be teaching. (CodeQL says the same thing:
   // js/clear-text-logging of sensitive information.)
-  const manager = DemoOrgStaffing.find((m) => m.positions.includes('sales_manager'))?.email;
+  const manager = DemoOrgStaffing.find((m) => m.positions.includes('crm_sales_manager'))?.email;
   const listOf = (ids: string[]) => [...new Set(ids)].map(emailOf).join(' · ') || 'nobody';
   console.log(
     `\n🎉 demo org staffed. Sign in as any of: ` +

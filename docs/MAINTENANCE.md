@@ -54,9 +54,10 @@ can silently invalidate existing metadata or **seed data** (see §4). Treat ever
 
 1. Bump all `@objectstack/*` deps in [`package.json`](../package.json) together —
    they are released in lockstep, so keep them on one version line.
-2. Update `specVersion` in [`objectstack.manifest.json`](../objectstack.manifest.json)
-   to match the installed `@objectstack/spec` (e.g. `^10.0.0`), and the
-   `engines.protocol` range declared in every package manifest
+2. Update `engines.protocol` in [`objectstack.manifest.json`](../objectstack.manifest.json)
+   to match the installed `@objectstack/spec` (e.g. `^18.4.0`; the template manifest
+   carries no `specVersion` since 18.4.0, ADR-0049), and the same
+   range declared in every package manifest
    ([`src/sales/index.ts`](../src/sales/index.ts),
    [`src/service/index.ts`](../src/service/index.ts)) and the manifest to the
    new protocol major (ADR-0087; the runtime refuses to load the app under a
@@ -293,6 +294,15 @@ answered, including an accepted and an expired quote (their freeze then let the
 engine's own title through, `quote.hook.ts`; the converted-lead freeze in
 `lead.hook.ts` does the same). The re-save is an ordinary update, so the
 script's header names the one automation that can act on it.
+
+**A forecast's owner name (#2435).** A forecast's title names its owner from
+`owner_name`, a copy of the owner's name the row stores, which the
+`forecast_owner_rename` flow rewrites when the user is renamed. A database
+upgraded to #2435 holds no copy on older rows: their stored title still reads
+the name it was written with, so nothing looks wrong, but a later rename of
+that user leaves them behind. Each such row heals at its next save; the same
+script heals them all at once, since it also counts a forecast with an owner
+and no `owner_name` as stale and re-sends its `period_label`.
 
 ### 3.5 Titles that became the name (#2369 row 10)
 

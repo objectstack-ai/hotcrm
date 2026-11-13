@@ -99,7 +99,7 @@ const PAGES = [
     lang: 'en',
     heading: '## Where to find things',
     /** The group size, stated in prose. */
-    count: /ten entries/,
+    count: /eleven entries/,
     /** The en page names the object entries in English, so they are checked verbatim. */
     checkObjectLabels: true,
   },
@@ -107,14 +107,14 @@ const PAGES = [
     file: 'content/docs/sales/index.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 在哪里找到这些功能',
-    count: /十个条目/,
+    count: /十一个条目/,
     checkObjectLabels: false,
   },
   {
     file: 'content/docs/sales/index.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 在哪裡找到這些功能',
-    count: /十個條目/,
+    count: /十一個條目/,
     checkObjectLabels: false,
   },
 ] as const;
@@ -184,7 +184,8 @@ describe('the source facts that section now rests on (#997)', () => {
   // Ten since #2367 row 1: a rep's Knowledge, folded in from the Service
   // group the rep is no longer shown. The group holds it for every member;
   // only a rep is shown it (`app-navigation-audience.test.ts`).
-  it('the Sales group holds ten entries, in this order', () => {
+  // Eleven since #2436: revenue's Product Catalog dashboard, after Price Books.
+  it('the Sales group holds eleven entries, in this order', () => {
     expect(SALES_CHILDREN.map((c) => c.label)).toEqual([
       'Leads',
       'Accounts',
@@ -195,11 +196,12 @@ describe('the source facts that section now rests on (#997)', () => {
       'Quotes',
       'Products',
       'Price Books',
+      'Product Catalog',
       'Knowledge',
     ]);
   });
 
-  it('Quotes, Products and Price Books are contributed by the revenue module, after the app\'s own entries (#2270)', () => {
+  it('Quotes, Products, Price Books and Product Catalog are contributed by the revenue module, after the app\'s own entries (#2270)', () => {
     // A contributed item lands after the group's own children (the rule that
     // put My Cases last in My Work, #1907), which is why Sales Performance now
     // precedes them. Contracts is the app's own entry since `crm_contract`
@@ -209,10 +211,10 @@ describe('the source facts that section now rests on (#997)', () => {
     expect(((authored?.children ?? []) as AnyRec[]).map((c) => c.id)).toEqual([
       'nav_lead', 'nav_account', 'nav_contact', 'nav_opportunity', 'nav_sales_dashboard', 'nav_contract',
     ]);
-    expect(SALES_CHILDREN.slice(-4).map((c) => c.id)).toEqual(['nav_quote', 'nav_product', 'nav_price_book', 'nav_knowledge_published']);
+    expect(SALES_CHILDREN.slice(-5).map((c) => c.id)).toEqual(['nav_quote', 'nav_product', 'nav_price_book', 'nav_product_catalog_dashboard', 'nav_knowledge_published']);
   });
 
-  it('eight of them open an object list; two open something else', () => {
+  it('eight of them open an object list; three open something else', () => {
     expect(OBJECT_ENTRIES.map((c) => c.label)).toEqual([
       'Leads',
       'Accounts',
@@ -223,7 +225,7 @@ describe('the source facts that section now rests on (#997)', () => {
       'Products',
       'Price Books',
     ]);
-    expect(OTHER_ENTRIES.map((c) => c.label)).toEqual(['Sales Performance', 'Knowledge']);
+    expect(OTHER_ENTRIES.map((c) => c.label)).toEqual(['Sales Performance', 'Product Catalog', 'Knowledge']);
   });
 
   it('Products is a Sales entry, not a Marketing one (#1259)', () => {

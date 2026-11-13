@@ -262,6 +262,7 @@ export const esES: TranslationData = {
         nav_quote: { label: 'Cotizaciones' },
         nav_product: { label: 'Productos' },
         nav_price_book: { label: 'Listas de Precios' },
+        nav_product_catalog_dashboard: { label: 'Catálogo de Productos' },
         nav_help_revenue: { label: 'Manual de Ingresos' },
       },
     },
@@ -342,6 +343,15 @@ export const esES: TranslationData = {
     },
   },
   // The quote's two record pages (#2312): its working page and its print page.
+  dashboards: {
+    product_catalog_dashboard: {
+      label: 'Catálogo de Productos',
+      description: 'Precios de lista del catálogo por categoría de producto',
+      widgets: {
+        top_products: { title: 'Precio de lista por categoría', description: 'Suma de los precios de lista del catálogo por categoría de producto, no ventas' },
+      },
+    },
+  },
   pages: {
     quote_detail_page: {
       label: 'Detalle de Cotización',

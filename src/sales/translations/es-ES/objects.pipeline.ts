@@ -532,6 +532,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       period_label: { label: 'Etiqueta del periodo', help: 'Etiqueta legible, p. ej. «T3 2026» o «Ago 2026».' },
       display_title: { label: 'Título Mostrado' },
+      owner_name: { label: 'Nombre del Propietario', help: 'El nombre del propietario, sincronizado con el registro de usuario. Forma parte del título de la previsión.' },
       snapshot_date: { label: 'Fecha de instantánea', help: 'El día en que se capturó esta instantánea.' },
       source: {
         label: 'Origen',

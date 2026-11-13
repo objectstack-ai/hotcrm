@@ -51,7 +51,7 @@ export const ServiceAgentProfile = {
     // "assign work to a colleague", not "reassign the ticket": the agent holds
     // no transfer grant on `crm_case` or any customer record.
     //
-    // ⚠️ Escalation DOES now move a case to the `service_manager` pool (#1070),
+    // ⚠️ Escalation DOES now move a case to the `crm_service_manager` pool (#1070),
     // and it does so with no `crm_case` grant here — deliberately. That
     // hand-off runs on the `beforeUpdate` seam, which the #3004 guard cannot
     // see (measured, three readings, in `_case-assignment.ts`'s header and

@@ -15,7 +15,7 @@ export const OpportunitySalesSharingRule = {
   type: 'criteria' as const,
   condition: P`!(record.stage in ["closed_won", "closed_lost"]) && record.amount >= ${LARGE_DEAL_AMOUNT}`,
   accessLevel: 'read' as const,
-  sharedWith: { type: 'position' as const, value: 'sales_director' },
+  sharedWith: { type: 'position' as const, value: 'crm_sales_director' },
 };
 
 /**
@@ -33,5 +33,5 @@ export const OpportunityExecutiveSharingRule = {
   type: 'criteria' as const,
   condition: P`!(record.stage in ["closed_won", "closed_lost"]) && record.amount >= ${LARGE_DEAL_AMOUNT}`,
   accessLevel: 'read' as const,
-  sharedWith: { type: 'position' as const, value: 'executive' },
+  sharedWith: { type: 'position' as const, value: 'crm_executive' },
 };

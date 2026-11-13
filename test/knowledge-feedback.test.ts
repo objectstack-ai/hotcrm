@@ -96,7 +96,7 @@ describe('the feedback actions record a row (they cannot bump a counter)', () =>
   beforeAll(async () => {
     verify = await hotcrmStack();
     reader = await signUpPerson(verify, 'reader@knowledge-feedback.test', {
-      name: 'Rita Reader', positions: ['service_agent'], permissionSets: ['service_agent'],
+      name: 'Rita Reader', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
     });
   }, 120_000);
 
@@ -181,7 +181,7 @@ describe('the feedback actions record a row (they cannot bump a counter)', () =>
   it('returns the outcome and the article’s tally for the toast', async () => {
     const ka = await publishedArticle();
     const other = await signUpPerson(verify, `other${n}@knowledge-feedback.test`, {
-      name: 'Otto Other', positions: ['service_agent'], permissionSets: ['service_agent'],
+      name: 'Otto Other', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
     });
     await verify.actions.run('crm_knowledge_article', 'mark_article_helpful', { as: other.token, recordId: ka });
 
@@ -261,7 +261,7 @@ describe('article_feedback_metrics_refresh recounts the article’s verdicts', (
     admin = await verify.signIn();
     for (const name of ['u1', 'u2', 'u3']) {
       readers.push(await signUpPerson(verify, `${name}@knowledge-feedback-recount.test`, {
-        name: `Reader ${name}`, positions: ['service_agent'], permissionSets: ['service_agent'],
+        name: `Reader ${name}`, positions: ['crm_service_agent'], permissionSets: ['service_agent'],
       }));
     }
   }, 120_000);

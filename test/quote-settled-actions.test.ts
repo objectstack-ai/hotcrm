@@ -94,7 +94,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@quote-settled-actions.test', {
-    name: 'Settle Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Settle Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 180_000);
 

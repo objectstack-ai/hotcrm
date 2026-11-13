@@ -69,6 +69,20 @@ import artifact from '../../objectstack.config';
 process.env.OS_REGISTRY_LOG ??= 'silent';
 
 /**
+ * A mail transport that accepts every message and sends none — the test
+ * stack's stand-in for a configured provider (see `bootOptions`). Not
+ * `LogTransport`, on purpose: that one marks the service unconfigured.
+ */
+class NowhereEmailTransport {
+  private sent = 0;
+
+  async send(): Promise<{ messageId: string }> {
+    this.sent += 1;
+    return { messageId: `<test-${this.sent}@hotcrm.test>` };
+  }
+}
+
+/**
  * The app's boot options, with fresh plugin instances — a plugin instance
  * belongs to the one kernel it is registered on. `overrides` is for a suite
  * whose subject IS another boot dimension (the datasource, say), and that
@@ -93,11 +107,23 @@ export const bootOptions = (overrides: Partial<BootOptions> = {}): BootOptions =
     // setup (`OS_EMAIL_PROVIDER=smtp`, `OS_EMAIL_SMTP_*`, `OS_EMAIL_API_KEY`,
     // `OS_EMAIL_FROM`) would make the suite deliver through that transport, and
     // a refusing one turns this boot's mail `failed` on that machine alone. The
-    // argument models an unconfigured install instead, whatever the machine's
-    // `OS_EMAIL_*`.
-    new EmailServicePlugin(resolveCapabilityArgument('email', {
-      stack: artifact, packageRoot: process.cwd(), providerModule: { resolveEmailCapabilityArg }, env: {},
-    }).argument as EmailServicePluginOptions),
+    // argument models an install with no mail settings instead, whatever the
+    // machine's `OS_EMAIL_*`.
+    //
+    // Its transport is then replaced by one that delivers to nowhere but is
+    // not the log transport: since objectstack 18.4.0 the email channel asks
+    // `isConfigured()`, which the log transport answers `false`, and a
+    // notification then writes no email delivery at all (it records
+    // `suppressed_channels: [{ channel: 'email', reason:
+    // 'transport_not_configured' }]`). The suites that prove a flow emails
+    // someone read that delivery, so they run as an install whose mail is set
+    // up. Nothing leaves the process.
+    new EmailServicePlugin({
+      ...(resolveCapabilityArgument('email', {
+        stack: artifact, packageRoot: process.cwd(), providerModule: { resolveEmailCapabilityArg }, env: {},
+      }).argument as EmailServicePluginOptions),
+      transport: new NowhereEmailTransport(),
+    }),
     new RecordChangeTriggerPlugin(),
   ],
   ...overrides,

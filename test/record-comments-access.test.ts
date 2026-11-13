@@ -66,7 +66,7 @@ beforeAll(async () => {
   verify = await hotcrmStack();
 
   rep = await signUpPerson(verify, 'rep@comments.test', {
-    name: 'Discussion Rep', positions: ['sales_rep', 'na_sales_team'],
+    name: 'Discussion Rep', positions: ['crm_sales_rep', 'crm_na_sales_team'],
   });
   id.owner = await insert('sys_user', { name: 'Another Owner', email: 'owner@comments.test' });
 

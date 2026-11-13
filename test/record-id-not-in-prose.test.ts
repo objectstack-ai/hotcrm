@@ -51,13 +51,13 @@ let manager: Person;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@record-id-not-in-prose.test', {
-    name: 'Prose Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Prose Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   // Accepting a quote drafts a contract only for a caller who may create one
   // (on 17.7.0 a rep may not — see `quote-accepted-draft-defaults`), and
   // deleting a contact is a manager's grant; both acts run as a manager.
   manager = await signUpPerson(verify, 'manager@record-id-not-in-prose.test', {
-    name: 'Prose Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Prose Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 120_000);
 

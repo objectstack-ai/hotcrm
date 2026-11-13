@@ -54,7 +54,7 @@ let agent: Person;
 let k = 0;
 beforeAll(async () => {
   sql = await hotcrmStack();
-  // An agent with the service grants but NOT on the `service_agent` rota: the
+  // An agent with the service grants but NOT on the `crm_service_agent` rota: the
   // cases below are raised while that rota is empty, so `case_intake_assignment`
   // parks them ownerless in the queue — and a case the agent opens stays theirs.
   agent = await signUpPerson(sql, 'agent@flow-escalation-ownerless-case.test', {

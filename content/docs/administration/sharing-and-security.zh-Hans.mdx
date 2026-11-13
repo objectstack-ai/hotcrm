@@ -61,11 +61,11 @@ OWD 是每个对象的 *最严格* 设置，其他一切都在此之上放宽。
 **岗位（position）** 是用于分发访问权限的扁平群体。HotCRM 内置十二个：
 
 ```
-executive
-sales_director      sales_manager      sales_rep
-service_director    service_manager    service_agent
-marketing_director  marketing_manager  marketing_user
-na_sales_team       eu_sales_team          （区域分组）
+crm_executive
+crm_sales_director      crm_sales_manager       crm_sales_rep
+crm_service_director    crm_service_manager     crm_service_agent
+crm_marketing_director  crm_marketing_manager   crm_marketing_user
+crm_na_sales_team       crm_eu_sales_team       （区域分组）
 ```
 
 岗位 **在设计上是扁平的** —— 没有层级，**什么都不会上卷**。销售总监不会继承销售经理的访问权限；每个需要某条记录的层级都由它自己的共享规则点名。这就是下面若干规则成对出现的原因。
@@ -89,17 +89,17 @@ na_sales_team       eu_sales_team          （区域分组）
 
 | 规则 | 对象 | 授予 | 给谁 |
 | --- | --- | --- | --- |
-| Account Team Sharing | 客户 | 编辑 | `sales_manager` —— 活跃的客户型客户 |
-| North America Territory | 客户 | 编辑 | `na_sales_team` —— 销售区域为 `na` 的客户 |
-| Europe Territory | 客户 | 编辑 | `eu_sales_team` —— 销售区域为 `emea` 的客户 |
-| Forecasts — Sales Manager Edit | 预测 | 编辑 | `sales_manager` —— 每一份预测（可以编辑，从不能删除） |
-| Opportunity Sales Team Sharing | 商机 | 读取 | `sales_director` —— 金额 ≥ $100,000 的进行中交易 |
-| Large Open Deals — Executive | 商机 | 读取 | `executive` —— 同一批交易，上一层级 |
-| Escalated Cases Sharing | 工单 | 编辑 | `service_manager` —— 未关闭的严重工单 |
-| Escalated Cases — Service Director | 工单 | 读取 | `service_director` —— 同一批工单，上一层级 |
+| Account Team Sharing | 客户 | 编辑 | `crm_sales_manager` —— 活跃的客户型客户 |
+| North America Territory | 客户 | 编辑 | `crm_na_sales_team` —— 销售区域为 `na` 的客户 |
+| Europe Territory | 客户 | 编辑 | `crm_eu_sales_team` —— 销售区域为 `emea` 的客户 |
+| Forecasts — Sales Manager Edit | 预测 | 编辑 | `crm_sales_manager` —— 每一份预测（可以编辑，从不能删除） |
+| Opportunity Sales Team Sharing | 商机 | 读取 | `crm_sales_director` —— 金额 ≥ $100,000 的进行中交易 |
+| Large Open Deals — Executive | 商机 | 读取 | `crm_executive` —— 同一批交易，上一层级 |
+| Escalated Cases Sharing | 工单 | 编辑 | `crm_service_manager` —— 未关闭的严重工单 |
+| Escalated Cases — Service Director | 工单 | 读取 | `crm_service_director` —— 同一批工单，上一层级 |
 | Escalated Cases — Previous Owner | 工单 | 读取 | 工单 `escalated_from` 字段里的那个人 —— 升级从他手上转走的工单，直到它被 Closed |
-| Live Campaigns — Marketing Manager | 营销活动 | 编辑 | `marketing_manager` —— 筹划中 / 进行中的活动 |
-| Live Campaigns — Marketing Director | 营销活动 | 编辑 | `marketing_director` —— 同一批活动 |
+| Live Campaigns — Marketing Manager | 营销活动 | 编辑 | `crm_marketing_manager` —— 筹划中 / 进行中的活动 |
+| Live Campaigns — Marketing Director | 营销活动 | 编辑 | `crm_marketing_director` —— 同一批活动 |
 
 在 **系统设置 → 共享规则** 中创建你自己的规则。
 
@@ -107,7 +107,7 @@ na_sales_team       eu_sales_team          （区域分组）
 
 ### 在队列里等待的工单和线索
 
-到达时**没有负责人**的工单或线索会在队列里等待：工单在 **Support Intake**（支持受理），线索在 **Lead Intake**（线索受理）（参见[工单路由](/zh-Hans/docs/administration/setup#12-工单路由--一个队列加一条规则)）。这里不涉及任何共享规则。记录在队列里等待期间，平台允许该队列的每一位**成员**查看和编辑它。Support Intake 的成员是所有持有 `service_agent` 的人，Lead Intake 的成员是所有持有 `sales_rep` 的人，另外还有管理员在**系统设置 → 访问控制 → 队列成员**里加入的人。
+到达时**没有负责人**的工单或线索会在队列里等待：工单在 **Support Intake**（支持受理），线索在 **Lead Intake**（线索受理）（参见[工单路由](/zh-Hans/docs/administration/setup#12-工单路由--一个队列加一条规则)）。这里不涉及任何共享规则。记录在队列里等待期间，平台允许该队列的每一位**成员**查看和编辑它。Support Intake 的成员是所有持有 `crm_service_agent` 的人，Lead Intake 的成员是所有持有 `crm_sales_rep` 的人，另外还有管理员在**系统设置 → 访问控制 → 队列成员**里加入的人。
 
 1. 一张工单没有负责人地到达，比如没有人担任客服专员时提交进来的网页工单。它在 Support Intake 里等待，所以每一位客服都能在 **未分派 — 待分诊** 页签里看到它。
 2. 某位客服打开它并点击**认领**。这位客服成为**负责人**，工单上的其他内容都不变。
@@ -122,10 +122,10 @@ na_sales_team       eu_sales_team          （区域分组）
 | 已共享客户上的相关列表 | 接收者实际看到的 |
 | --- | --- |
 | 联系人 | 这个客户的联系人 —— Contact 是“由父级控制”，而共享过来的客户就算作他们能看到的父记录 |
-| 商机 | 只有自己的交易；若持有 `sales_director` 或 `executive`，另加金额 ≥ $100,000 的未结交易 |
+| 商机 | 只有自己的交易；若持有 `crm_sales_director` 或 `crm_executive`，另加金额 ≥ $100,000 的未结交易 |
 | 报价 | 这个客户的报价 —— Quote 跟随客户，报价的行项也随之而来 |
 | 合同 | 这个客户的合同 —— Contract 跟随客户；能不能*编辑*某一份，由 profile 上的对象级权限决定（Sales Rep 不能） |
-| 工单 | 只有自己的；若持有 `service_manager` 或 `service_director`，另加未关闭的严重工单 |
+| 工单 | 只有自己的；若持有 `crm_service_manager` 或 `crm_service_director`，另加未关闭的严重工单 |
 | 任务 | 只有自己的 |
 | 活动 | 只有自己的 |
 
@@ -137,7 +137,7 @@ na_sales_team       eu_sales_team          （区域分组）
 
 **手工共享** 在上述一切之上，把某一条记录的 **读取** 或 **读写** 权限授予某个用户或用户组。共享按记录存储。自平台 17.0.0-rc.4 起，手工共享同样会带上这条记录下由父级派生的子记录：共享一个客户就交出了它的联系人，因为派生会像解析其它途径一样把共享授权折算进去（见 *“由父级控制”在实践中*）。
 
-HotCRM **不提供客户团队对象** —— 客户上没有团队名单，也没有“团队”页签。上表中那条名为 *Account Team Sharing* 的规则就是一条普通的条件规则：它把活跃客户类账户的编辑权授予每一位 `sales_manager`，而不是按记录组建的小组。以小组方式作战的组织，可以把小组建模为一个岗位并为其编写共享规则，或者在客户上使用手工共享。
+HotCRM **不提供客户团队对象** —— 客户上没有团队名单，也没有“团队”页签。上表中那条名为 *Account Team Sharing* 的规则就是一条普通的条件规则：它把活跃客户类账户的编辑权授予每一位 `crm_sales_manager`，而不是按记录组建的小组。以小组方式作战的组织，可以把小组建模为一个岗位并为其编写共享规则，或者在客户上使用手工共享。
 
 ## 这些层级如何组合 [#how-the-layers-combine]
 

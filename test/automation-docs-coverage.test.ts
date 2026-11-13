@@ -268,6 +268,8 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   },
   // REQ-0008 phase 1 (#2312): 已提交 is the zh-CN pack's word for `presented`.
   quote_print_presented: { 'zh-Hans': '报价打印后转为已提交', 'zh-Hant': '報價打印後轉為已提交' },
+  // #2435: 负责人, the zh-CN pack's word for a forecast's `owner_id`.
+  forecast_owner_rename: { 'zh-Hans': '预测负责人改名', 'zh-Hant': '預測負責人改名' },
 };
 
 /** How each page spells the two counts. An unmapped count throws — see the header. */

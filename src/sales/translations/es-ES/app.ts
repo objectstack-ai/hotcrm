@@ -141,7 +141,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: 'Tamaño medio del negocio (período seleccionado)', description: 'Valor medio de los negocios cerrados ganados en el período seleccionado' },
         lead_source: { title: 'Origen del prospecto', description: 'Valor del pipeline por canal de adquisición' },
         pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas en cada etapa de venta' },
-        top_products: { title: 'Precio de lista por categoría', description: 'Suma de los precios de lista del catálogo por categoría de producto, no ventas' },
         pipeline_by_owner: { title: 'Pipeline por responsable', description: 'Valor del pipeline abierto y número de negocios por comercial' },
       },
     },
@@ -732,51 +731,51 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
-    executive: {
+    crm_executive: {
       label: 'Ejecutivo',
       description: 'Dirección de la empresa: lee todas las grandes oportunidades abiertas de todo el pipeline, mientras el equipo de la oportunidad conserva la propiedad.',
     },
-    sales_director: {
+    crm_sales_director: {
       label: 'Director de Ventas',
       description: 'Dirige la organización de ventas, da el visto bueno final a las mayores oportunidades y lee todas las grandes oportunidades abiertas.',
     },
-    sales_manager: {
+    crm_sales_manager: {
       label: 'Gerente de Ventas',
       description: 'Dirige un equipo de ventas: aprueba cuentas nuevas, conversiones de prospectos y grandes oportunidades, y edita todas las cuentas de clientes activas.',
     },
-    sales_rep: {
+    crm_sales_rep: {
       label: 'Representante de Ventas',
       description: 'Trabaja prospectos y oportunidades a diario y recibe prospectos nuevos de la cola de Recepción de Prospectos.',
     },
-    service_director: {
+    crm_service_director: {
       label: 'Director de Servicio',
       description: 'Supervisa la atención al cliente y lee todos los casos críticos abiertos mientras un gerente de servicio los atiende.',
     },
-    service_manager: {
+    crm_service_manager: {
       label: 'Gerente de Servicio',
       description: 'Atiende la bolsa de escalados: los casos escalados se asignan a este puesto, que edita todos los casos críticos abiertos.',
     },
-    service_agent: {
+    crm_service_agent: {
       label: 'Agente de Servicio',
       description: 'Atiende casos de clientes, recibe casos nuevos de la cola de Recepción de Soporte y reclama los que siguen esperando en ella.',
     },
-    marketing_director: {
+    crm_marketing_director: {
       label: 'Director de Marketing',
       description: 'Dirige marketing y edita todas las campañas activas, sea quien sea su propietario.',
     },
-    marketing_manager: {
+    crm_marketing_manager: {
       label: 'Gerente de Marketing',
       description: 'Gestiona las campañas de marketing y edita todas las campañas activas, sea quien sea su propietario.',
     },
-    marketing_user: {
+    crm_marketing_user: {
       label: 'Usuario de Marketing',
       description: 'Planifica y gestiona a diario las campañas de marketing y sus miembros.',
     },
-    na_sales_team: {
+    crm_na_sales_team: {
       label: 'Equipo de Ventas de Norteamérica',
       description: 'Equipo territorial de Norteamérica: edita todas las cuentas del territorio de Norteamérica.',
     },
-    eu_sales_team: {
+    crm_eu_sales_team: {
       label: 'Equipo de Ventas de Europa',
       description: 'Equipo territorial de Europa: edita todas las cuentas del territorio de Europa (EMEA).',
     },

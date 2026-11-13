@@ -508,6 +508,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       coverage_ratio: { label: '覆盖倍数', help: '管道金额 ÷（配额 − 已成交）——判断剩余缺口是否有足够管道覆盖。配额已达成时显示 0。' },
       notes: { label: '备注' },
       display_title: { label: '显示名称' },
+      owner_name: { label: '负责人姓名', help: '负责人的姓名，与用户记录保持一致。它是预测标题的一部分。' },
       seed_key: { label: '种子标识', help: '演示数据标识。仅由种子加载器写入；真实快照上始终为空。' },
     },
     _views: {
