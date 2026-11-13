@@ -213,10 +213,10 @@ beforeAll(async () => {
   // Fresh sign-ups are plain members (the stack's first user is its own
   // platform admin), given exactly the standing the fixture names.
   mgr = await signUpPerson(verify, 'mgr@contract-depth.test', {
-    name: 'Sales Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Sales Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   rep = await signUpPerson(verify, 'rep@contract-depth.test', {
-    name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Sales Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   id.mgr = mgr.id;
   id.rep = rep.id;

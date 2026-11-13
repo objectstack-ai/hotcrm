@@ -57,7 +57,7 @@ export const CaseEscalationSharingRule = {
   type: 'criteria' as const,
   condition: P`record.priority == "critical" && record.is_closed == false`,
   accessLevel: 'edit' as const,
-  sharedWith: { type: 'position' as const, value: 'service_manager' },
+  sharedWith: { type: 'position' as const, value: 'crm_service_manager' },
 };
 
 /**
@@ -87,7 +87,7 @@ export const CaseDirectorSharingRule = {
   type: 'criteria' as const,
   condition: P`record.priority == "critical" && record.is_closed == false`,
   accessLevel: 'read' as const,
-  sharedWith: { type: 'position' as const, value: 'service_director' },
+  sharedWith: { type: 'position' as const, value: 'crm_service_director' },
 };
 
 /**

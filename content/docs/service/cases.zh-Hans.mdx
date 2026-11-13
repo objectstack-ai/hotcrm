@@ -154,7 +154,7 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 ## 共享——谁可以看到哪个工单
 
 - 默认情况下，工单是**私有的**——只有所有者可见。岗位是扁平的，**什么都不会上卷**，没有哪位经理因为“在所有者之上”就能看到某个工单。
-- **严重未结工单**由两条规则自动共享，一个层级一条：*Escalated Cases Sharing* 把读/写授予 `service_manager`，*Escalated Cases — Service Director* 把读授予 `service_director`。两个层级都被显式点名，因为谁也不会从对方那里继承。
+- **严重未结工单**由两条规则自动共享，一个层级一条：*Escalated Cases Sharing* 把读/写授予 `crm_service_manager`，*Escalated Cases — Service Director* 把读授予 `crm_service_director`。两个层级都被显式点名，因为谁也不会从对方那里继承。
 - **在 Support Intake 队列里等待的工单**对该队列的每一位成员（所有持有客服专员岗位的人）可见，读 + 编辑。这份可见性来自队列本身，而不是共享规则；有人认领后它就结束了：从那一刻起，认领人以负责人的身份、用最普通的方式持有这张工单。
 - **升级后的工单，被转走的那位客服仍能查看。** 交接会把这位客服记在**升级前负责人**里，*Escalated Cases — Previous Owner* 把工单以只读方式共享给他，直到它被 *Closed*——所以登记 Critical 工单或点了 **Escalate Case** 的客服仍能打开它。处理它是经理的事：这位客服不能编辑。
 

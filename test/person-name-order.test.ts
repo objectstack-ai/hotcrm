@@ -44,7 +44,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   manager = await signUpPerson(verify, 'manager@person-name-order.test', {
-    name: 'Name Order Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Name Order Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 180_000);
 

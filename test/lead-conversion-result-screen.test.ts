@@ -102,7 +102,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@lead-conversion-result-screen.test', {
-    name: 'Result Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Result Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 120_000);
 

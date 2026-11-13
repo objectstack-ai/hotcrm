@@ -63,11 +63,11 @@ OWD 是每個物件的 *最嚴格* 設定，其他一切都在此之上放寬。
 **職位（position）** 是用於分發存取權限的扁平群體。HotCRM 內建十二個：
 
 ```
-executive
-sales_director      sales_manager      sales_rep
-service_director    service_manager    service_agent
-marketing_director  marketing_manager  marketing_user
-na_sales_team       eu_sales_team          （區域分組）
+crm_executive
+crm_sales_director      crm_sales_manager       crm_sales_rep
+crm_service_director    crm_service_manager     crm_service_agent
+crm_marketing_director  crm_marketing_manager   crm_marketing_user
+crm_na_sales_team       crm_eu_sales_team       （區域分組）
 ```
 
 職位 **在設計上是扁平的** —— 沒有階層，**什麼都不會上捲**。銷售總監不會繼承銷售經理的存取權限；每個需要某條記錄的層級都由它自己的共用規則點名。這就是下面若干規則成對出現的原因。
@@ -91,17 +91,17 @@ na_sales_team       eu_sales_team          （區域分組）
 
 | 規則 | 物件 | 授予 | 給誰 |
 | --- | --- | --- | --- |
-| Account Team Sharing | 客戶 | 編輯 | `sales_manager` —— 活躍的客戶型客戶 |
-| North America Territory | 客戶 | 編輯 | `na_sales_team` —— 銷售區域為 `na` 的客戶 |
-| Europe Territory | 客戶 | 編輯 | `eu_sales_team` —— 銷售區域為 `emea` 的客戶 |
-| Forecasts — Sales Manager Edit | 預測 | 編輯 | `sales_manager` —— 每一份預測（可以編輯，從不能刪除） |
-| Opportunity Sales Team Sharing | 商機 | 讀取 | `sales_director` —— 金額 ≥ $100,000 的進行中交易 |
-| Large Open Deals — Executive | 商機 | 讀取 | `executive` —— 同一批交易，上一層級 |
-| Escalated Cases Sharing | 工單 | 編輯 | `service_manager` —— 未關閉的嚴重工單 |
-| Escalated Cases — Service Director | 工單 | 讀取 | `service_director` —— 同一批工單，上一層級 |
+| Account Team Sharing | 客戶 | 編輯 | `crm_sales_manager` —— 活躍的客戶型客戶 |
+| North America Territory | 客戶 | 編輯 | `crm_na_sales_team` —— 銷售區域為 `na` 的客戶 |
+| Europe Territory | 客戶 | 編輯 | `crm_eu_sales_team` —— 銷售區域為 `emea` 的客戶 |
+| Forecasts — Sales Manager Edit | 預測 | 編輯 | `crm_sales_manager` —— 每一份預測（可以編輯，從不能刪除） |
+| Opportunity Sales Team Sharing | 商機 | 讀取 | `crm_sales_director` —— 金額 ≥ $100,000 的進行中交易 |
+| Large Open Deals — Executive | 商機 | 讀取 | `crm_executive` —— 同一批交易，上一層級 |
+| Escalated Cases Sharing | 工單 | 編輯 | `crm_service_manager` —— 未關閉的嚴重工單 |
+| Escalated Cases — Service Director | 工單 | 讀取 | `crm_service_director` —— 同一批工單，上一層級 |
 | Escalated Cases — Previous Owner | 工單 | 讀取 | 工單 `escalated_from` 欄位裡的那個人 —— 升級從他手上轉走的工單，直到它被 Closed |
-| Live Campaigns — Marketing Manager | 行銷活動 | 編輯 | `marketing_manager` —— 籌劃中 / 進行中的活動 |
-| Live Campaigns — Marketing Director | 行銷活動 | 編輯 | `marketing_director` —— 同一批活動 |
+| Live Campaigns — Marketing Manager | 行銷活動 | 編輯 | `crm_marketing_manager` —— 籌劃中 / 進行中的活動 |
+| Live Campaigns — Marketing Director | 行銷活動 | 編輯 | `crm_marketing_director` —— 同一批活動 |
 
 在 **Setup → Sharing Rules** 中建立你自己的規則。
 
@@ -109,7 +109,7 @@ na_sales_team       eu_sales_team          （區域分組）
 
 ### 在佇列裡等待的工單和潛在客戶
 
-到達時**沒有負責人**的工單或潛在客戶會在佇列裡等待：工單在 **Support Intake**，潛在客戶在 **Lead Intake**（參見[工單路由](/zh-Hant/docs/administration/setup#12-工單路由--一個佇列加一條規則)）。這裡不涉及任何共用規則。記錄在佇列裡等待期間，平台允許該佇列的每一位**成員**檢視和編輯它。Support Intake 的成員是所有持有 `service_agent` 的人，Lead Intake 的成員是所有持有 `sales_rep` 的人，另外還有管理員在 **Setup → Access Control → Queue Members** 裡加入的人。
+到達時**沒有負責人**的工單或潛在客戶會在佇列裡等待：工單在 **Support Intake**，潛在客戶在 **Lead Intake**（參見[工單路由](/zh-Hant/docs/administration/setup#12-工單路由--一個佇列加一條規則)）。這裡不涉及任何共用規則。記錄在佇列裡等待期間，平台允許該佇列的每一位**成員**檢視和編輯它。Support Intake 的成員是所有持有 `crm_service_agent` 的人，Lead Intake 的成員是所有持有 `crm_sales_rep` 的人，另外還有管理員在 **Setup → Access Control → Queue Members** 裡加入的人。
 
 1. 一張工單沒有負責人地到達，比如沒有人擔任客服專員時提交進來的網頁工單。它在 Support Intake 裡等待，所以每一位客服都能在 **未分派 — 待分診** 頁籤裡看到它。
 2. 某位客服打開它並點選 **Claim**（認領）。這位客服成為**負責人**，工單上的其他內容都不變。
@@ -124,10 +124,10 @@ na_sales_team       eu_sales_team          （區域分組）
 | 已共用客戶上的相關清單 | 接收者實際看到的 |
 | --- | --- |
 | 聯絡人 | 這個客戶的聯絡人 —— Contact 是「由父層控制」，而共用過來的客戶就算作他們能看到的父記錄 |
-| 商機 | 只有自己的交易；若持有 `sales_director` 或 `executive`，另加金額 ≥ $100,000 的未結交易 |
+| 商機 | 只有自己的交易；若持有 `crm_sales_director` 或 `crm_executive`，另加金額 ≥ $100,000 的未結交易 |
 | 報價 | 這個客戶的報價 —— Quote 跟隨客戶，報價的明細也隨之而來 |
 | 合約 | 這個客戶的合約 —— Contract 跟隨客戶；能不能*編輯*某一份，由 profile 上的物件級權限決定（Sales Rep 不能） |
-| 工單 | 只有自己的；若持有 `service_manager` 或 `service_director`，另加未關閉的嚴重工單 |
+| 工單 | 只有自己的；若持有 `crm_service_manager` 或 `crm_service_director`，另加未關閉的嚴重工單 |
 | 任務 | 只有自己的 |
 | 活動 | 只有自己的 |
 
@@ -139,7 +139,7 @@ na_sales_team       eu_sales_team          （區域分組）
 
 **手動共用** 在上述一切之上，把某一條記錄的 **讀取** 或 **讀寫** 權限授予某個使用者或群組。共用按記錄儲存。自平台 17.0.0-rc.4 起，手動共用同樣會帶上這條記錄底下由父層衍生的子記錄：共用一個客戶就交出了它的聯絡人，因為衍生會像解析其它途徑一樣把共用授權折算進去（見 *「由父層控制」在實務中*）。
 
-HotCRM **不提供客戶團隊物件** —— 客戶上沒有團隊名單，也沒有「團隊」頁籤。上表中那條名為 *Account Team Sharing* 的規則就是一條普通的條件規則：它把活躍客戶類帳戶的編輯權授予每一位 `sales_manager`，而不是按記錄組成的小組。以小組方式作戰的組織，可以把小組建模為一個職位並為其撰寫共用規則，或者在客戶上使用手動共用。
+HotCRM **不提供客戶團隊物件** —— 客戶上沒有團隊名單，也沒有「團隊」頁籤。上表中那條名為 *Account Team Sharing* 的規則就是一條普通的條件規則：它把活躍客戶類帳戶的編輯權授予每一位 `crm_sales_manager`，而不是按記錄組成的小組。以小組方式作戰的組織，可以把小組建模為一個職位並為其撰寫共用規則，或者在客戶上使用手動共用。
 
 ## 這些層級如何組合 [#how-the-layers-combine]
 

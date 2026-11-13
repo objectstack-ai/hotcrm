@@ -39,7 +39,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   marketer = await signUpPerson(verify, 'marketer@flow-campaign-enrollment.test', {
-    name: 'Enrolment Marketer', positions: ['marketing_user'], permissionSets: ['marketing_user'],
+    name: 'Enrolment Marketer', positions: ['crm_marketing_user'], permissionSets: ['marketing_user'],
   });
 }, 120_000);
 

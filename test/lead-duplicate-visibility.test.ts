@@ -418,7 +418,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   converter = await signUpPerson(verify, 'manager@lead-duplicate-visibility.test', {
-    name: 'Converting Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Converting Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   const [survivorLead] = await verify.seed('crm_lead', [{
     first_name: 'Theo', last_name: 'Park', company: 'Skyline Media Survivor', email: 'survivor@skylinemedia.example.com',

@@ -61,11 +61,11 @@ Because access is derived, ownership of the child row is irrelevant — a quote 
 A **position** is a flat group used to distribute access. HotCRM ships twelve:
 
 ```
-executive
-sales_director      sales_manager      sales_rep
-service_director    service_manager    service_agent
-marketing_director  marketing_manager  marketing_user
-na_sales_team       eu_sales_team          (territory groupings)
+crm_executive
+crm_sales_director      crm_sales_manager       crm_sales_rep
+crm_service_director    crm_service_manager     crm_service_agent
+crm_marketing_director  crm_marketing_manager   crm_marketing_user
+crm_na_sales_team       crm_eu_sales_team       (territory groupings)
 ```
 
 Positions are **flat by design** — there is no hierarchy and **nothing rolls up**. A sales director does not inherit a sales manager's access; each rung that needs a record is named by its own sharing rule. That is why several rules below come in pairs.
@@ -89,17 +89,17 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 
 | Rule | Object | Grants | To |
 | --- | --- | --- | --- |
-| Account Team Sharing | Account | Edit | `sales_manager` — active customer accounts |
-| North America Territory | Account | Edit | `na_sales_team` — accounts whose Territory is `na` |
-| Europe Territory | Account | Edit | `eu_sales_team` — accounts whose Territory is `emea` |
-| Forecasts — Sales Manager Edit | Forecast | Edit | `sales_manager` — every forecast (it can edit them, never delete one) |
-| Opportunity Sales Team Sharing | Opportunity | Read | `sales_director` — open deals ≥ $100,000 |
-| Large Open Deals — Executive | Opportunity | Read | `executive` — the same deals, one rung up |
-| Escalated Cases Sharing | Case | Edit | `service_manager` — open critical cases |
-| Escalated Cases — Service Director | Case | Read | `service_director` — the same cases, one rung up |
+| Account Team Sharing | Account | Edit | `crm_sales_manager` — active customer accounts |
+| North America Territory | Account | Edit | `crm_na_sales_team` — accounts whose Territory is `na` |
+| Europe Territory | Account | Edit | `crm_eu_sales_team` — accounts whose Territory is `emea` |
+| Forecasts — Sales Manager Edit | Forecast | Edit | `crm_sales_manager` — every forecast (it can edit them, never delete one) |
+| Opportunity Sales Team Sharing | Opportunity | Read | `crm_sales_director` — open deals ≥ $100,000 |
+| Large Open Deals — Executive | Opportunity | Read | `crm_executive` — the same deals, one rung up |
+| Escalated Cases Sharing | Case | Edit | `crm_service_manager` — open critical cases |
+| Escalated Cases — Service Director | Case | Read | `crm_service_director` — the same cases, one rung up |
 | Escalated Cases — Previous Owner | Case | Read | the user in the case's `escalated_from` field — the agent an escalation took it from, until it is Closed |
-| Live Campaigns — Marketing Manager | Campaign | Edit | `marketing_manager` — planning / in-progress campaigns |
-| Live Campaigns — Marketing Director | Campaign | Edit | `marketing_director` — the same campaigns |
+| Live Campaigns — Marketing Manager | Campaign | Edit | `crm_marketing_manager` — planning / in-progress campaigns |
+| Live Campaigns — Marketing Director | Campaign | Edit | `crm_marketing_director` — the same campaigns |
 
 Create your own in **Setup → Sharing Rules**.
 
@@ -116,7 +116,7 @@ Create your own in **Setup → Sharing Rules**.
 
 ### Cases and leads waiting in a queue
 
-A case or lead that arrives with **no owner** waits in a queue: **Support Intake** for cases, **Lead Intake** for leads (see [Case routing](/docs/administration/setup#12-case-routing--a-queue-and-a-rule)). No sharing rule is involved. The platform lets every **member** of the queue read and edit a record while it waits there. The members of Support Intake are everyone holding `service_agent`, and the members of Lead Intake are everyone holding `sales_rep`, plus anyone an administrator adds under **Setup → Access Control → Queue Members**.
+A case or lead that arrives with **no owner** waits in a queue: **Support Intake** for cases, **Lead Intake** for leads (see [Case routing](/docs/administration/setup#12-case-routing--a-queue-and-a-rule)). No sharing rule is involved. The platform lets every **member** of the queue read and edit a record while it waits there. The members of Support Intake are everyone holding `crm_service_agent`, and the members of Lead Intake are everyone holding `crm_sales_rep`, plus anyone an administrator adds under **Setup → Access Control → Queue Members**.
 
 1. A case arrives with no owner, for example a web-to-case submission while nobody holds Service Agent. It waits in Support Intake, so every service agent can see it in the **Unassigned — triage** tab.
 2. An agent opens it and clicks **Claim**. That agent becomes the **Owner**, and nothing else on the case changes.
@@ -136,10 +136,10 @@ Sharing rules are authored **per object**. Widening `Account` widens accounts �
 | Related list on a shared account | What the recipient sees |
 | --- | --- |
 | Contacts | This account's contacts — Contact is Controlled by Parent, and the shared account counts as a parent they can see |
-| Opportunities | Their own deals only, plus open deals ≥ $100,000 if they hold `sales_director` or `executive` |
+| Opportunities | Their own deals only, plus open deals ≥ $100,000 if they hold `crm_sales_director` or `crm_executive` |
 | Quotes | This account's quotes — Quote follows the account, and so do the quotes' line items |
 | Contracts | This account's contracts — Contract follows the account; whether they can *edit* one is the object-level right on their profile (a Sales Rep cannot) |
-| Cases | Their own only, plus open critical cases if they hold `service_manager` or `service_director` |
+| Cases | Their own only, plus open critical cases if they hold `crm_service_manager` or `crm_service_director` |
 | Tasks | Their own only |
 | Events | Their own only |
 
@@ -151,7 +151,7 @@ Making a child object follow the account is a deliberate widening, not a config 
 
 A **manual share** grants one user or group **Read** or **Read/Write** on a single record, on top of everything above. Shares live per record. Since platform 17.0.0-rc.4 a manual share also carries the parent-derived children of that record: sharing an account hands over its contacts, because the derivation resolves the parent through share grants like any other route (see *Controlled by Parent, in practice*).
 
-HotCRM ships **no account-team object** — there is no team roster on the account and no Team tab. The rule named *Account Team Sharing* in the table above is an ordinary criteria rule: it gives every `sales_manager` edit on active customer accounts, not a per-record pod. An org that sells in pods models the pod as a position with its own sharing rule, or as manual shares on the account.
+HotCRM ships **no account-team object** — there is no team roster on the account and no Team tab. The rule named *Account Team Sharing* in the table above is an ordinary criteria rule: it gives every `crm_sales_manager` edit on active customer accounts, not a per-record pod. An org that sells in pods models the pod as a position with its own sharing rule, or as manual shares on the account.
 
 ## How the layers combine
 

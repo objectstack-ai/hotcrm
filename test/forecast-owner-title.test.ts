@@ -43,10 +43,10 @@ const q4 = async (over: Rec = {}): Promise<string> => {
 beforeAll(async () => {
   verify = await hotcrmStack();
   nina = await signUpPerson(verify, 'nina@forecast-owner-title.test', {
-    name: 'Nina Reyes', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Nina Reyes', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   omar = await signUpPerson(verify, 'omar@forecast-owner-title.test', {
-    name: 'Omar Diaz', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Omar Diaz', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   admin = await verify.signIn();
 }, 180_000);

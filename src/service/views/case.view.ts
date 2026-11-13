@@ -177,7 +177,7 @@ export const CaseViews = defineView({
      *
      * Since @objectstack 18.3.0 a case nobody owns SITS in a queue (ADR-0142
      * D3): `case_intake_assignment` routes every ownerless new case into
-     * `case_intake`, and with nobody holding `service_agent` — the
+     * `case_intake`, and with nobody holding `crm_service_agent` — the
      * FIRST-INSTALL NORM, since position membership is runtime data — the case
      * parks there instead of being handed to an agent. This tab is that queue's
      * standing view: its row count IS the intake backlog. An agent opens a row
@@ -206,11 +206,11 @@ export const CaseViews = defineView({
      * A view tab carries no role scoping, so it is pinned for everyone who can
      * open Cases, while the rows resolve per person:
      *
-     *   - a holder of `service_agent` — a member of `case_intake`, so every
+     *   - a holder of `crm_service_agent` — a member of `case_intake`, so every
      *     case sitting in it, through `current_user.queues`;
      *   - `system_admin` and `sales_manager` — `viewAllRecords`;
      *   - a service manager / director — not a queue member (the queue names
-     *     the `service_agent` position), so the critical, open slice only,
+     *     the `crm_service_agent` position), so the critical, open slice only,
      *     through `case_escalation_sharing` / `case_director_sharing`
      *     (`src/service/sharing/case.sharing.ts`).
      */

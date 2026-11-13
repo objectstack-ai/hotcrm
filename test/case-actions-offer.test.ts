@@ -44,11 +44,11 @@ const actionNamed = (name: string): Rec => {
 
 /** Each persona's position and set, as the demo staffing binds them. */
 const PERSONAS: Record<string, { positions: string[]; set: string }> = {
-  sales_rep: { positions: ['sales_rep', 'na_sales_team'], set: 'sales_rep' },
-  sales_manager: { positions: ['sales_manager'], set: 'sales_manager' },
-  marketing_user: { positions: ['marketing_user'], set: 'marketing_user' },
-  service_agent: { positions: ['service_agent'], set: 'service_agent' },
-  service_manager: { positions: ['service_manager'], set: 'service_agent' },
+  sales_rep: { positions: ['crm_sales_rep', 'crm_na_sales_team'], set: 'sales_rep' },
+  sales_manager: { positions: ['crm_sales_manager'], set: 'sales_manager' },
+  marketing_user: { positions: ['crm_marketing_user'], set: 'marketing_user' },
+  service_agent: { positions: ['crm_service_agent'], set: 'service_agent' },
+  service_manager: { positions: ['crm_service_manager'], set: 'service_agent' },
 };
 
 /** The personas whose sets may not edit a case, and those whose sets may. */

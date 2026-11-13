@@ -35,10 +35,10 @@ type Rec = Record<string, any>;
 
 const people = async (s: VerifyStack, tag: string) => ({
   rep: await signUpPerson(s, `rep-${tag}@approval-recall.test`, {
-    name: 'Recall Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Recall Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   }),
   manager: await signUpPerson(s, `manager-${tag}@approval-recall.test`, {
-    name: 'Recall Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Recall Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   }),
 });
 
@@ -91,7 +91,7 @@ describe('opportunity_approval: a recall ends the run without the rejected notic
     who = await people(verify, 'opp');
     // `director_signoff` routes here, so the second tier is a real approver's.
     director = await signUpPerson(verify, 'director-opp@approval-recall.test', {
-      name: 'Recall Director', positions: ['sales_director'], permissionSets: ['sales_manager'],
+      name: 'Recall Director', positions: ['crm_sales_director'], permissionSets: ['sales_manager'],
     });
     const [account] = await verify.seed('crm_account', [{ name: 'Recall Co', owner_id: who.rep.id, approval_status: 'approved' }]);
     accountId = String(account!.id);

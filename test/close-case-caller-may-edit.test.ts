@@ -54,11 +54,11 @@ beforeAll(async () => {
   otherAgent = await signUpPerson(verify, 'other-agent@close-case-caller-may-edit.test', { name: 'Other Agent', permissionSets: ['service_agent'] });
   // On the Service Manager bench from the start: an escalation hands the case to them.
   manager = await signUpPerson(verify, 'manager@close-case-caller-may-edit.test', {
-    name: 'Service Manager', positions: ['service_manager'], permissionSets: ['service_agent'],
+    name: 'Service Manager', positions: ['crm_service_manager'], permissionSets: ['service_agent'],
   });
-  rep = await signUpPerson(verify, 'rep@close-case-caller-may-edit.test', { name: 'Account Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'] });
+  rep = await signUpPerson(verify, 'rep@close-case-caller-may-edit.test', { name: 'Account Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'] });
   salesManager = await signUpPerson(verify, 'sales-manager@close-case-caller-may-edit.test', {
-    name: 'Sales Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Sales Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   marketer = await signUpPerson(verify, 'marketer@close-case-caller-may-edit.test', { name: 'Marketer', permissionSets: ['marketing_user'] });
   admin = await signUpPerson(verify, 'admin@close-case-caller-may-edit.test', { name: 'Administrator', permissionSets: ['system_admin'] });

@@ -102,7 +102,7 @@ interface Desk {
 /** Sign up the sales manager on `verify`. */
 const managerOn = (verify: VerifyStack, label: string): Promise<Person> =>
   signUpPerson(verify, `manager.${label}@forecast-period-end-boundary.test`, {
-    name: 'Forecast Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Forecast Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 
 /** Boot `boot` and sign up the manager, once for the enclosing block. */
