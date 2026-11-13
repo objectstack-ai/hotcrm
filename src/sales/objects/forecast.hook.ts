@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from './_hook-api';
 
 /**
  * Forecast lifecycle hook.
@@ -132,4 +133,58 @@ const forecastDerive: Hook = {
   },
 };
 
-export default forecastDerive;
+/**
+ * The owner's name, copied onto the forecast (#2435, ruling D).
+ *
+ * `owner_name` is the half of the record title that comes from another record,
+ * the user who owns the row, and `display_title` reads it as one of this row's
+ * own columns. This hook writes it from the forecast side, the same shape as
+ * the line items' product title (`_line-item-price-fill.ts`). The rename side
+ * is the `forecast_owner_rename` flow on the user record.
+ *
+ * It writes the owner's `name` in two cases. An owner is part of THIS write: an
+ * insert, a hand-over to another owner (an empty owner clears the copy). Or an
+ * update reaches a row that has an owner and no copy yet, which heals a row
+ * stored before the field. Any other write leaves the copy alone, so the flow's
+ * own write of a new name stands.
+ *
+ * A PREDICATE update hands every row one shared payload (ADR-0058 Addendum II
+ * D3, see `forecast_derive_period` above). The heal reads `ctx.previous`, so it
+ * stands down there. An owner named in that payload is the same for every row,
+ * so its name still lands: the platform's seed-ownership claim is such a write.
+ *
+ * The name is read as the writer, as the engine read it through the lookup
+ * before. A writer who may not read that user stores no name, and the title is
+ * the period alone. Body-only rule: the body closes over `ctx` alone.
+ */
+const forecastOwnerName: Hook = {
+  name: 'forecast_owner_name',
+  object: 'crm_forecast',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 210,
+  description: "Copy the owner's name onto the forecast; it is part of the forecast's title.",
+  handler: async (ctx: HookContext) => {
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const { event, input } = ctx;
+    const prev = ctx.previous;
+    let ownerId: string | undefined;
+    if (Object.prototype.hasOwnProperty.call(input, 'owner_id')) {
+      if (typeof input.owner_id !== 'string' || input.owner_id === '') {
+        input.owner_name = null;
+        return;
+      }
+      ownerId = input.owner_id;
+    } else if (event === 'beforeUpdate' && ctx.dispatch?.mode !== 'per-row'
+      && (typeof prev?.owner_name !== 'string' || prev.owner_name.trim() === '')
+      && typeof prev?.owner_id === 'string' && prev.owner_id !== '') {
+      ownerId = prev.owner_id;
+    }
+    if (!ownerId) return;
+    const owner = await api.object('sys_user').findOne({ where: { id: ownerId }, fields: ['id', 'name'] });
+    const name = owner && typeof owner.name === 'string' ? owner.name.trim() : '';
+    input.owner_name = name === '' ? null : name;
+  },
+};
+
+export default [forecastDerive, forecastOwnerName];

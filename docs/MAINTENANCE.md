@@ -294,6 +294,15 @@ engine's own title through, `quote.hook.ts`; the converted-lead freeze in
 `lead.hook.ts` does the same). The re-save is an ordinary update, so the
 script's header names the one automation that can act on it.
 
+**A forecast's owner name (#2435).** A forecast's title names its owner from
+`owner_name`, a copy of the owner's name the row stores, which the
+`forecast_owner_rename` flow rewrites when the user is renamed. A database
+upgraded to #2435 holds no copy on older rows: their stored title still reads
+the name it was written with, so nothing looks wrong, but a later rename of
+that user leaves them behind. Each such row heals at its next save; the same
+script heals them all at once, since it also counts a forecast with an owner
+and no `owner_name` as stale and re-sends its `period_label`.
+
 ### 3.5 Titles that became the name (#2369 row 10)
 
 Account, product, quote, campaign and knowledge article are titled by their
