@@ -9,3 +9,4 @@
  * live there rather than in a package barrel.
  */
 export { campaigns, campaignMembersFromLeads, campaignMembersFromContacts } from './marketing.seed';
+export { campaignsZhCN, campaignMembersFromLeadsZhCN, campaignMembersFromContactsZhCN } from './marketing.zh-CN.seed';

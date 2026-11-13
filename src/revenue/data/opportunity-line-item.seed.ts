@@ -4,6 +4,7 @@ import { defineSeed } from '@objectstack/spec/data';
 import { OpportunityLineItem } from '../objects/opportunity_line_item.object';
 import { lineItemRecords } from './catalog.seed';
 import { OPPORTUNITY_LINES } from '../../sales/data/sales.seed';
+import { SEED_EN_LOCALES } from '../../sales/data/_locale';
 
 /**
  * Opportunity line item seed rows.
@@ -33,6 +34,7 @@ import { OPPORTUNITY_LINES } from '../../sales/data/sales.seed';
  */
 export const opportunityLineItems = defineSeed(OpportunityLineItem, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: ['crm_opportunity', 'crm_product'],
   records: lineItemRecords('crm_opportunity', OPPORTUNITY_LINES),
 });

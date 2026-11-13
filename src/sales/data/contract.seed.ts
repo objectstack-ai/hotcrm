@@ -10,6 +10,7 @@
 import { defineSeed } from '@objectstack/spec/data';
 import { cel } from '@objectstack/spec';
 import { Contract } from '../objects/contract.object';
+import { SEED_EN_LOCALES } from './_locale';
 
 // ─── Contracts ────────────────────────────────────────────────────────
 // `contract_number` is a runtime-owned autonumber and is NOT seeded (#490).
@@ -22,6 +23,7 @@ import { Contract } from '../objects/contract.object';
 // price: beside `leads` in `src/sales/data/sales.seed.ts`.
 export const contracts = defineSeed(Contract, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'description',
   records: [
     // The one ACTIVATED contract in the app — `contract_renewal`,

@@ -12,6 +12,7 @@
 import { defineSeed } from '@objectstack/spec/data';
 import { cel, expression } from '@objectstack/spec';
 import { Forecast } from '../objects/forecast.object';
+import { SEED_EN_LOCALES } from './_locale';
 
 // ─── Forecasts ────────────────────────────────────────────────────────
 // `owner_id` is left unset: a seed cannot name a user and seed writes run
@@ -208,6 +209,7 @@ const closedPeriod = (
 // back on the next boot.
 export const forecasts = defineSeed(Forecast, {
   mode: 'upsert',
+  locale: SEED_EN_LOCALES,
   externalId: 'seed_key',
   records: [
     {

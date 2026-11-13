@@ -159,6 +159,7 @@ const celEscalatedAt = (age: CaseAge, hoursAfter: number) => {
 // price: beside `leads` in `src/sales/data/sales.seed.ts`.
 export const cases = defineSeed(Case, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'subject',
   records: [
     {
@@ -563,6 +564,7 @@ export const cases = defineSeed(Case, {
 //     hook stamps nothing for them either.
 export const knowledgeArticles = defineSeed(KnowledgeArticle, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'title',
   records: [
     {
@@ -972,3 +974,4 @@ support plans.`,
     },
   ]
 });
+import { SEED_EN_LOCALES } from '../../sales/data/_locale';

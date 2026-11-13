@@ -9,3 +9,5 @@
  * live there rather than in a package barrel.
  */
 export { cases, knowledgeArticles } from './service.seed';
+export { casesZhCN } from './service.zh-CN.seed';
+export { knowledgeArticlesZhCN } from './knowledge.zh-CN.seed';
