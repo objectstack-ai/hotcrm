@@ -4,7 +4,6 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { extractHookBody } from '@objectstack/cli/hook-body';
 import type { VerifyStack } from '@objectstack/verify';
 import stack, { hookNamed } from './helpers/composed-stack';
-import { ACTOR_NAME_RESOLUTION_SOURCE } from '../src/sales/actions/activity-actions';
 import { createLineItemPriceFill } from '../src/revenue/objects/_line-item-price-fill';
 import {
   hotcrmStack, signUpPerson, recordEngineWrites, today, type Person,
@@ -256,7 +255,7 @@ describe('what the record actions write', () => {
     expect((await stored('crm_contact', contact.id)).is_primary).toBe(true);
   });
 
-  it('send_email writes the email and its timeline pointer', async () => {
+  it('send_email hands the message to the mail door and its entry to the timeline door', async () => {
     const engine = recordEngineWrites(verify);
     let result: AnyRec;
     try {
@@ -267,16 +266,16 @@ describe('what the record actions write', () => {
     const email = await stored('sys_email', result!.emailId);
     const activity = await stored('sys_activity', result!.activityId);
     expect(email.to_addresses).toBe('ada@example.com');
-    // The body hands the mail over QUEUED; delivering it is the email service's
+    // The door hands the mail over QUEUED; delivering it is the email service's
     // job, and with the platform's service mounted it may already have moved
     // the row on (the dev transport sends at once).
     //
     // The recorder's window is time, not cause. The messaging dispatcher sends
     // an earlier write's notification emails on its own loop, so another
-    // writer's `sys_email` insert can land in the window ahead of the body's
+    // writer's `sys_email` insert can land in the window ahead of the door's
     // (#2175, measured: the `contact_welcome` email for a contact created
     // earlier in this file). The insert read here is the one the engine
-    // answered with the id the body returned, never the window's first.
+    // answered with the id the body got back, never the window's first.
     const answered = await Promise.all(
       engine.of('sys_email', 'insert').map(async (write) => ({ write, answer: await write.settled })),
     );
@@ -285,137 +284,107 @@ describe('what the record actions write', () => {
     const handedOver = own[0]!.write;
     expect((handedOver.args[1] as AnyRec).status).toBe('queued');
     expect(['queued', 'sent']).toContain(email.status);
-    expect(activity.source_object).toBe('sys_email');
-    // The pointer is the id the engine answered the body's `sys_email` insert
-    // with (the row read above), which the body only holds once that first
-    // await has resolved, so this also proves the body's two awaits really
-    // sequenced across the VM boundary.
-    expect(activity.source_id).toBe(email.id);
+
+    // What the mail door says about the message, not the body: the rep is its
+    // sender of record, it goes out from the deployment's configured address
+    // with the rep named in the display name, and a reply reaches the rep.
+    expect(email.sent_by).toBe(rep.id);
+    expect(email.from_address).toContain('Ada Lovelace');
+    expect(email.from_address).not.toContain('rep@script-bodies.test');
+    expect(email.reply_to).toBe('rep@script-bodies.test');
+    expect(email.related_object).toBe('crm_contact');
+    expect(email.related_id).toBe(record.crm_contact!.id);
+
+    // The timeline entry names the contact and carries the mail log row's id in
+    // its metadata. It has no `source`: the timeline door reads a source in the
+    // caller's scope, and a sales rep cannot read the mail log. `email_id` is
+    // not one of the metadata keys the door reserves for the platform (it
+    // refuses those), so the entry it wrote is the measurement.
+    expect(activity.object_name).toBe('crm_contact');
+    expect(activity.record_id).toBe(record.crm_contact!.id);
+    expect(activity.source_object).toBeNull();
+    expect(activity.source_id).toBeNull();
+    // The id is the one the engine answered the door's `sys_email` insert with
+    // (the row read above), which the body only holds once that first await
+    // has resolved, so this also proves the body's two awaits really sequenced
+    // across the VM boundary.
+    expect(JSON.parse(activity.metadata)).toEqual({
+      kind: 'email', to: 'ada@example.com', subject: 'Hello', email_id: email.id,
+    });
+    expect(activity.type).toBe('completed');
+    expect(activity.summary).toBe('Email: Hello');
+    // The door stamps where the entry came from: this action.
+    expect(activity.origin).toMatch(/\/action:send_email$/);
     expect(activity.record_label).toBe(record.crm_contact!.full_name);
     expect(activity.record_label).toBe('Ada Lovelace');
     expect(result!).toEqual({ emailId: email.id, activityId: activity.id });
   });
 });
 
-// ─────────────── send_email's actor is a name, not a raw user id (#678) ──
-
-/**
- * The twin of #673, on the same `sys_activity.actor_name` column.
- *
- * `send_email` stamped `actor_name: ctx.user?.name ?? null`, and on the
- * dispatch path the Console uses that key is not a display name: the REST
- * action dispatcher builds the body's user as `{ id: ec.userId, name: ec.userId,
- * … }`, so the key is PRESENT and carries the id. These run through the REAL
- * dispatcher, which on 17.7.0 still does that (measured: the body issues its
- * `sys_user` read on every send), and the fault cases inject into the real
- * engine — for the body's reads only, which are the reads issued after the
- * route has loaded the subject record.
- */
-async function watchBodyReads(
-  objectName: string,
-  body: () => Promise<AnyRec>,
-  fault?: (object: string) => (() => Promise<unknown>) | undefined,
-) {
-  const ql = verify.kernel.getService<AnyRec>('objectql');
-  const realFind = ql.find.bind(ql);
-  const realFindOne = ql.findOne.bind(ql);
-  let subjectLoaded = false;
-  const bodyReads: string[] = [];
-  const findOne = vi.spyOn(ql, 'findOne').mockImplementation((async (object: string, ...rest: unknown[]) => {
-    const row = await realFindOne(object, ...rest);
-    if (object === objectName) subjectLoaded = true;
-    return row;
-  }) as never);
-  const find = vi.spyOn(ql, 'find').mockImplementation((async (object: string, ...rest: unknown[]) => {
-    if (subjectLoaded) {
-      bodyReads.push(object);
-      const injected = fault?.(object);
-      if (injected) return injected();
-    }
-    return realFind(object, ...rest);
-  }) as never);
-  try {
-    return { result: await body(), bodyReads };
-  } finally {
-    find.mockRestore();
-    findOne.mockRestore();
-  }
-}
+// ───────────────── send_email's entry, as the platform writes it and the rep reads it ──
 
 const sendEmail = () => runAction('crm_contact:send_email', { params: { subject: 'Hello', body: 'Body text' } });
 
-describe('send_email writes a human-readable sys_activity.actor_name (#678)', () => {
-  it('resolves the display name from sys_user instead of stamping the id', async () => {
+/** The contact's newest timeline entries, read the way the record page reads them, as `who`. */
+async function contactTimeline(who: Person): Promise<AnyRec[]> {
+  const res = await verify.apiAs(who.token, 'POST', `/data/crm_contact/${record.crm_contact!.id}/page`, {
+    activity: { top: 50 },
+  });
+  expect(res.status, 'the record page refused the timeline read').toBe(200);
+  const body = (await res.json()) as AnyRec;
+  return (body.data?.activity?.records ?? []) as AnyRec[];
+}
+
+describe('send_email adds its entry through the platform door', () => {
+  it('names the rep by the platform display name, not the raw user id', async () => {
+    // #678 was this column carrying the rep's 32-character id. The door now
+    // stamps the actor and the platform's display name; the body writes neither.
     const result = await sendEmail();
     const activity = await stored('sys_activity', result.activityId);
     expect(activity.actor_id).toBe(rep.id);
     expect(activity.actor_name).toBe('Ada Lovelace');
-    // The regression itself, as its own assertion: whatever else changes, the
-    // contact timeline must never render the opaque id again.
     expect(activity.actor_name).not.toBe(rep.id);
   });
 
-  it('reads sys_user once — and only because the dispatcher delivered no name', async () => {
-    // A dispatcher that DOES deliver a display name is believed as-is: the
-    // lookup is a workaround and has to retire itself the day the platform
-    // starts honouring `ctx.user.name` (objectstack-ai/objectstack#5372). On
-    // 17.7.0 it does not, so the body reads `sys_user` exactly once — the day
-    // this reads 0 with the name still right, the platform has been fixed.
-    const { result, bodyReads } = await watchBodyReads('crm_contact', sendEmail);
-    expect(bodyReads.filter((o) => o === 'sys_user')).toHaveLength(1);
-    expect((await stored('sys_activity', result.activityId)).actor_name).toBe('Ada Lovelace');
-  });
-
-  it('falls back to the id rather than writing a blank actor', async () => {
-    // No `sys_user` row for the sender — a deleted user, or a read this context
-    // is not allowed to satisfy. An opaque id is bad; an activity whose actor is
-    // `null` is worse, because it is not attributable at all.
-    const { result } = await watchBodyReads('crm_contact', sendEmail, (o) => (o === 'sys_user' ? async () => [] : undefined));
-    const activity = await stored('sys_activity', result.activityId);
-    expect(activity.actor_name).toBe(rep.id);
-    expect(activity.actor_name).not.toBeNull();
-  });
-
-  it('never fails the send when the sys_user read throws', async () => {
-    const { result } = await watchBodyReads('crm_contact', sendEmail, (o) => (o === 'sys_user'
-      ? async () => { throw new Error('FORBIDDEN: no read access to sys_user'); }
-      : undefined));
-    // The email the rep just sent outranks the label on its timeline row.
-    expect(result.emailId).toBeTruthy();
-    expect(result.activityId).toBeTruthy();
-    expect((await stored('sys_activity', result.activityId)).actor_name).toBe(rep.id);
+  it("is on the contact's timeline when the rep reads it", async () => {
+    // Measured as the rep, not as an administrator: the entry carries no
+    // `source` because the rep cannot read the mail log, and the rep still has
+    // to see the email on the contact.
+    const result = await sendEmail();
+    const entry = (await contactTimeline(rep)).find((row) => row.id === result.activityId);
+    expect(entry, "the rep does not see the email on the contact's timeline").toBeDefined();
+    expect(entry!.summary).toBe('Email: Hello');
+    const meta = typeof entry!.metadata === 'string' ? JSON.parse(entry!.metadata) : entry!.metadata;
+    expect(meta.email_id).toBe(result.emailId);
   });
 
   /**
-   * The anti-drift guard: the resolution is shared as body SOURCE TEXT
-   * (`ACTOR_NAME_RESOLUTION_SOURCE`), spliced into every writer at authoring
-   * time, because a body runs body-only inside QuickJS and cannot call an
-   * imported helper.
+   * The anti-drift guard. The mail log and the activity feed are append-only
+   * ledgers that their platform services write; a body hands a message to
+   * `ctx.email.send` and a timeline entry to `ctx.activity.append`, and never
+   * inserts into a ledger itself.
    */
-  it('every actor_name writer splices the SAME resolution block', () => {
-    const writers = stackActions.filter((a) => String(a.body?.source ?? '').includes('actor_name:'));
+  it('no shipped body writes an append-only object, and the timeline writers use the door', () => {
+    const appendOnly = verify.metadata.objects()
+      .filter((o) => (o as AnyRec).managedBy === 'append-only')
+      .map((o) => o.name);
+    // Vacuity floor: the two ledgers this file is about are in the set.
+    expect(appendOnly).toEqual(expect.arrayContaining(['sys_activity', 'sys_email']));
+
+    const writesLedger = (source: string) =>
+      appendOnly.some((name) => new RegExp(`object\\(\\s*['"\`]${name}['"\`]\\s*\\)`).test(source));
+    const direct = SCRIPT_ACTIONS.filter((a) => writesLedger(String(a.body.source))).map(keyOf);
+    expect(direct, 'these bodies address an append-only object directly').toEqual([]);
+
+    const timelineWriters = SCRIPT_ACTIONS.filter((a) => String(a.body.source).includes('ctx.activity.append(')).map(keyOf);
     // `send_email` plus the fifteen generated activity bodies.
-    expect(writers.map(keyOf).sort()).toContain('crm_contact:send_email');
-    expect(writers.length).toBeGreaterThan(1);
-
-    const divergent = writers
-      .filter((a) => !String(a.body.source).includes(ACTOR_NAME_RESOLUTION_SOURCE))
-      .map(keyOf);
-    expect(
-      divergent,
-      'these bodies write sys_activity.actor_name without the shared resolution ' +
-        `block — a second copy is a second thing to forget (#673 / #678):\n  ${divergent.join('\n  ')}`,
-    ).toEqual([]);
-
-    // And nobody stamps the raw `ctx.user.name` beside it. Comment lines are
-    // excluded on purpose: the shared block QUOTES that expression in its own
-    // retirement note.
-    const raw = writers.filter((a) =>
-      String(a.body.source)
-        .split('\n')
-        .some((line) => !line.trim().startsWith('//') && /actor_name:\s*ctx\.user/.test(line)),
-    );
-    expect(raw.map(keyOf), 'actor_name is being stamped from ctx.user again').toEqual([]);
+    expect(timelineWriters).toContain('crm_contact:send_email');
+    expect(timelineWriters).toHaveLength(16);
+    for (const a of SCRIPT_ACTIONS.filter((x) => timelineWriters.includes(keyOf(x)))) {
+      expect(a.body.capabilities, keyOf(a)).toContain('activity.append');
+      // The door stamps the actor; no body resolves or writes one.
+      expect(String(a.body.source), keyOf(a)).not.toMatch(/actor_name|sys_user'\)/);
+    }
   });
 });
 

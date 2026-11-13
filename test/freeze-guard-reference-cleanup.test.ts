@@ -827,8 +827,7 @@ describe.each(GUARDS)('$label yields to the cleanup shape and nothing else', (gu
  * one that cannot be lowered), so it cannot call an imported helper — a
  * shared module-scope predicate would be `undefined` at runtime in the shipped
  * artifact. Sharing by copy is only as good as a guard against drift, so this
- * pins the copies against each other, the same way the actions' shared
- * `actor_name` block is pinned.
+ * pins the copies against each other.
  */
 describe('the reference-cleanup predicate is one block in three places', () => {
   const CANONICAL = [
