@@ -31,5 +31,5 @@ export const ForecastManagerSharingRule = {
   type: 'criteria' as const,
   condition: P`record.id != ""`,
   accessLevel: 'edit' as const,
-  sharedWith: { type: 'position' as const, value: 'sales_manager' },
+  sharedWith: { type: 'position' as const, value: 'crm_sales_manager' },
 };

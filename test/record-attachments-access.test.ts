@@ -102,7 +102,7 @@ beforeAll(async () => {
   });
 
   rep = await signUpPerson(verify, 'rep@attachments.test', {
-    name: 'Territory Rep', positions: ['sales_rep', 'na_sales_team'],
+    name: 'Territory Rep', positions: ['crm_sales_rep', 'crm_na_sales_team'],
   });
   id.owner = await insert('sys_user', { name: 'Another Owner', email: 'owner@attachments.test' });
 

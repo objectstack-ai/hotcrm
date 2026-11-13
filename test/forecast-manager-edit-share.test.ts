@@ -23,13 +23,13 @@ import stack from './helpers/composed-stack';
  *   - READ: `viewAllRecords: true`, unchanged;
  *   - EDIT on another person's row: the `forecast_manager_sharing` criteria
  *     share (`src/sales/sharing/forecast.sharing.ts`), `edit` to the
- *     `sales_manager` position on every row. An edit share opens update and
+ *     `crm_sales_manager` position on every row. An edit share opens update and
  *     never delete (ADR-0111 D3);
  *   - DELETE: `allowDelete: false`, now enforced.
  *
  * ### What this file measures, on the booted app, through the REST door
  *
- * As a signed-up member holding the `sales_manager` position and profile,
+ * As a signed-up member holding the `crm_sales_manager` position and profile,
  * against forecasts owned by a REP: GET 200, list sees them, PATCH 200,
  * DELETE 403 with the row still there. Then the ablation: the share's grants
  * are revoked through the sharing service and the same PATCH is refused 403 —
@@ -83,13 +83,13 @@ const rules = (): Rec => verify.kernel.getService('sharingRules') as Rec;
 beforeAll(async () => {
   verify = await hotcrmStack();
   mgr = await signUpPerson(verify, 'mgr@forecast-edit-share.test', {
-    name: 'Forecast Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Forecast Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   rep = await signUpPerson(verify, 'rep@forecast-edit-share.test', {
-    name: 'Forecast Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Forecast Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   rep2 = await signUpPerson(verify, 'rep2@forecast-edit-share.test', {
-    name: 'Forecast Rep Two', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Forecast Rep Two', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   id.repForecast = await forecastOf(rep);
   id.repDeleteTarget = await forecastOf(rep);
@@ -122,7 +122,7 @@ describe('the declaration (#2277, ruling B)', () => {
   it('the write half is an edit share on every forecast to the sales_manager position', () => {
     expect(rule).toMatchObject({
       object: 'crm_forecast', type: 'criteria', accessLevel: 'edit',
-      sharedWith: { type: 'position', value: 'sales_manager' },
+      sharedWith: { type: 'position', value: 'crm_sales_manager' },
     });
     const source = String(rule?.condition?.source ?? rule?.condition ?? '');
     expect(source).toBe('record.id != ""');

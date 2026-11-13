@@ -47,10 +47,10 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   agent = await signUpPerson(verify, 'agent@case-reopen.test', {
-    name: 'Reopen Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Reopen Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   rep = await signUpPerson(verify, 'rep@case-reopen.test', {
-    name: 'Reopen Rep', positions: ['sales_rep', 'na_sales_team'], permissionSets: ['sales_rep'],
+    name: 'Reopen Rep', positions: ['crm_sales_rep', 'crm_na_sales_team'], permissionSets: ['sales_rep'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Reopen Co', owner_id: agent.id }]);
   accountId = String(account!.id);

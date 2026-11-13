@@ -49,13 +49,13 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   owner = await signUpPerson(verify, 'owner@private-opportunity-derived-records.test', {
-    name: 'Deal Owner', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Deal Owner', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   manager = await signUpPerson(verify, 'manager@private-opportunity-derived-records.test', {
-    name: 'Org-wide Reader', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Org-wide Reader', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   marketer = await signUpPerson(verify, 'marketer@private-opportunity-derived-records.test', {
-    name: 'Marketing Reader', positions: ['marketing_user'], permissionSets: ['marketing_user'],
+    name: 'Marketing Reader', positions: ['crm_marketing_user'], permissionSets: ['marketing_user'],
   });
 }, 120_000);
 

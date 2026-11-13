@@ -67,7 +67,7 @@ describe('the result the template reads names the new opportunity', () => {
   beforeAll(async () => {
     verify = await hotcrmStack();
     rep = await signUpPerson(verify, 'rep@clone-opportunity-opens-clone.test', {
-      name: 'Clone Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Clone Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
   }, 120_000);
 

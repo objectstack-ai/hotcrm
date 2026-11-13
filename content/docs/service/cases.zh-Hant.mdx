@@ -156,7 +156,7 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 ## 共享——誰可以看到哪個工單
 
 - 預設情況下，工單是**私有的**——只有所有者可見。職位是扁平的，**什麼都不會上捲**，沒有哪位經理因為「在所有者之上」就能看到某個工單。
-- **嚴重未結工單**由兩條規則自動共享，一個層級一條：*Escalated Cases Sharing* 把讀/寫授予 `service_manager`，*Escalated Cases — Service Director* 把讀授予 `service_director`。兩個層級都被顯式點名，因為誰也不會從對方那裡繼承。
+- **嚴重未結工單**由兩條規則自動共享，一個層級一條：*Escalated Cases Sharing* 把讀/寫授予 `crm_service_manager`，*Escalated Cases — Service Director* 把讀授予 `crm_service_director`。兩個層級都被顯式點名，因為誰也不會從對方那裡繼承。
 - **在 Support Intake 佇列裡等待的工單**對該佇列的每一位成員（所有持有客服專員職位的人）可見，讀 + 編輯。這份可見性來自佇列本身，而不是共用規則；有人認領後它就結束了：從那一刻起，認領人以負責人的身分、用最普通的方式持有這張工單。
 - **升級後的工單，被轉走的那位客服仍能檢視。** 交接會把這位客服記在**升級前負責人**裡，*Escalated Cases — Previous Owner* 把工單以唯讀方式共用給他，直到它被 *Closed*——所以登記 Critical 工單或點了 **Escalate Case** 的客服仍能開啟它。處理它是經理的事：這位客服不能編輯。
 

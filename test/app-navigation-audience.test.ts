@@ -18,7 +18,7 @@ type Rec = Record<string, any>;
  * A sales rep's permission set reads cases, so until #2244 the case read gate
  * kept Service Overview, Cases, My Cases and the three case reports in a rep's
  * sidebar: 6 of 34 entries for work a rep does not do. The service module now
- * also asks that the member does not hold the `sales_rep` position, the same
+ * also asks that the member does not hold the `crm_sales_rep` position, the same
  * question the app's Home gate asks.
  *
  * This pins the sidebar each persona is SHOWN, the way the console draws it:
@@ -89,7 +89,7 @@ const BEFORE: Record<string, unknown> = {
 
 /** The gates Home and Sales Home carried before #2262: neither asked a service position. */
 const BEFORE_2262: Record<string, unknown> = {
-  nav_home: P`current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions)`,
+  nav_home: P`current_user.can("crm_opportunity", "read") && !("crm_sales_rep" in current_user.positions)`,
   nav_sales_home: P`current_user.can("crm_opportunity", "read")`,
 };
 
@@ -132,10 +132,10 @@ beforeAll(async () => {
   }
   // Staffed by nobody in the demo, so signed up here the same way (#2338 item 1).
   const marketer = await signUpPerson(verify, 'marketing_user@nav-audience.test', {
-    name: 'Nav marketing_user', positions: ['marketing_user'],
-    permissionSets: CrmPositions.find((c) => c.name === 'marketing_user')?.permissionSets ?? [],
+    name: 'Nav marketing_user', positions: ['crm_marketing_user'],
+    permissionSets: CrmPositions.find((c) => c.name === 'crm_marketing_user')?.permissionSets ?? [],
   });
-  who.marketing_user = { ...marketer, positions: ['marketing_user'], objects: await permissionsOf(marketer.token) };
+  who.marketing_user = { ...marketer, positions: ['crm_marketing_user'], objects: await permissionsOf(marketer.token) };
   const token = await verify.signIn();
   const context = (await verify.contextFor(token)) as Rec;
   who.admin = {
@@ -174,7 +174,7 @@ describe('a sales rep is not shown the service entries (#2244)', () => {
 
   it('both demo reps hold the sales_rep position and read cases, so the position is what hides them', () => {
     for (const rep of REPS) {
-      expect(who[rep]!.positions, rep).toContain('sales_rep');
+      expect(who[rep]!.positions, rep).toContain('crm_sales_rep');
       expect(who[rep]!.objects.crm_case?.allowRead, rep).toBe(true);
     }
   });
@@ -191,7 +191,7 @@ describe('a sales rep is not shown the service entries (#2244)', () => {
   it.each(['sales_manager', 'service_agent', 'service_manager', 'admin'])(
     '%s is shown all six, as before',
     (persona) => {
-      expect(who[persona]!.positions, persona).not.toContain('sales_rep');
+      expect(who[persona]!.positions, persona).not.toContain('crm_sales_rep');
       expect(SERVICE_ONLY.filter((id) => !shownTo(persona, undefined, 'crm_service').includes(id))).toEqual([]);
     },
   );
@@ -249,7 +249,7 @@ describe('a service persona lands on Service Overview again (#2262)', () => {
   const PINNED = ['nav_home', 'nav_sales_home'];
 
   it.each(SERVICE)('%s reads opportunities (crm_user, since #2231), so its position is what hides Home and Sales Home', (persona) => {
-    expect(who[persona]!.positions).toContain(persona);
+    expect(who[persona]!.positions).toContain(`crm_${persona}`);
     expect(who[persona]!.objects.crm_opportunity?.allowRead).toBe(true);
   });
 
@@ -428,12 +428,12 @@ describe("each persona's own work first: service staff lose the empty deal lists
  * 18.2.0). It now asks the read question the case reports ask.
  */
 describe('a member who reads no cases is not offered Service Overview (#2338 item 1)', () => {
-  const BEFORE_2338: Record<string, unknown> = { nav_service_dashboard: P`!("sales_rep" in current_user.positions)` };
+  const BEFORE_2338: Record<string, unknown> = { nav_service_dashboard: P`!("crm_sales_rep" in current_user.positions)` };
   const OTHERS = [...PERSONAS, 'admin'];
 
   it('the marketing user reads no cases and holds no sales_rep position', () => {
     expect(who.marketing_user!.objects.crm_case?.allowRead === true).toBe(false);
-    expect(who.marketing_user!.positions).not.toContain('sales_rep');
+    expect(who.marketing_user!.positions).not.toContain('crm_sales_rep');
   });
 
   // Asked in the Service app, where Service Overview lives since #2417.

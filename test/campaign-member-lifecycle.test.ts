@@ -57,7 +57,7 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   marketer = await signUpPerson(verify, 'marketer@campaign-member-lifecycle.test', {
-    name: 'Marketing User', positions: ['marketing_user'], permissionSets: ['marketing_user'],
+    name: 'Marketing User', positions: ['crm_marketing_user'], permissionSets: ['marketing_user'],
   });
 }, 120_000);
 
@@ -516,7 +516,7 @@ describe('campaign_member_metrics_refresh — LIVE, not at completion', () => {
     const campaign = await campaignOf();
     const [account] = await verify.seed('crm_account', [{ name: `Attributed Co ${++k}`, owner_id: marketer.id }]);
     const owner = await signUpPerson(verify, `owner${k}@campaign-member-lifecycle.test`, {
-      name: 'Deal Owner', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Deal Owner', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     await verify.seed('crm_opportunity', [100, 1_000].map((amount) => ({
       name: `Attributed ${k}.${amount}`, amount, stage: 'closed_won', win_reason: 'better_price', close_date: daysFromNow(-1),

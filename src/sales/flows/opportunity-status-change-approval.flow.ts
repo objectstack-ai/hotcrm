@@ -130,7 +130,7 @@ export const OpportunityStatusChangeApprovalFlow: Flow = {
         // ships is the manager bench this app already declares approvers
         // against. A second tier, or a different position, is overlay
         // configuration (REQ-0006 acceptance 5).
-        approvers: [{ type: 'position', value: 'sales_manager' }],
+        approvers: [{ type: 'position', value: 'crm_sales_manager' }],
         // Explicit though it is the schema default, exactly as both sibling
         // approvals author it: approvers snapshot at request creation, so an
         // empty bench would leave the request undecidable — and here that

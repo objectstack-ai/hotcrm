@@ -125,7 +125,7 @@ beforeAll(async () => {
   // planted owner did not survive" provable by a POSITIVE value (the case is
   // owned by the real agent) rather than by an absence.
   agent = await signUpPerson(verify, 'agent@guest-sanitisation.test', {
-    name: 'Service Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Service Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   id.agent = agent.id;
 }, 120_000);

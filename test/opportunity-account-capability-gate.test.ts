@@ -54,10 +54,10 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@opportunity-account-capability-gate.test', {
-    name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Sales Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   outsider = await signUpPerson(verify, 'outsider@opportunity-account-capability-gate.test', {
-    name: 'Other Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Other Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   [RESTRICTED, OPEN] = (await verify.seed('crm_account', [
     { name: 'Tender Agency Ltd', account_number: 'ACC-000042', commercial_capability: 'settlement_only', owner_id: rep.id },

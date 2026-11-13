@@ -46,7 +46,7 @@ beforeAll(async () => {
   const adminToken = await verify.signIn();
   people.admin = { token: adminToken, id: String((await verify.contextFor(adminToken)).userId) };
   people.manager = await signUpPerson(verify, 'manager@contract-terminal-states.test', {
-    name: 'Contract Status Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Contract Status Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 120_000);
 

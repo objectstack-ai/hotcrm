@@ -28,7 +28,7 @@ type Rec = Record<string, any>;
  * campaign, and is quoted in the PR.
  */
 
-const RUNGS = ['marketing_manager', 'marketing_director'] as const;
+const RUNGS = ['crm_marketing_manager', 'crm_marketing_director'] as const;
 const declaredSets = (position: string): string[] =>
   ((CrmPositions.find((p) => p.name === position) as Rec | undefined)?.permissionSets ?? []) as string[];
 
@@ -40,7 +40,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   specialist = await signUpPerson(verify, 'specialist@marketing-leadership.test', {
-    name: 'Leadership Specialist', positions: ['marketing_user'],
+    name: 'Leadership Specialist', positions: ['crm_marketing_user'],
   });
   for (const position of RUNGS) {
     rung[position] = await signUpPerson(verify, `${position}@marketing-leadership.test`, {

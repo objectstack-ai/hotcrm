@@ -31,17 +31,17 @@ import {
 type Rec = Record<string, any>;
 
 let verify: VerifyStack;
-/** The two holders of the `sales_rep` position — the round-robin's whole pool. */
+/** The two holders of the `crm_sales_rep` position — the round-robin's whole pool. */
 let rep: Person;
 let rep2: Person;
 let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@hooks-runtime.test', {
-    name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Sales Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   rep2 = await signUpPerson(verify, 'rep2@hooks-runtime.test', {
-    name: 'Second Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Second Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 120_000);
 
@@ -366,12 +366,12 @@ describe('lead_intake_assignment — ownerless lead intake (ADR-0142 D5)', () =>
   });
 
   it('parks the lead in the queue when there is no rep pool (never blocks intake)', async () => {
-    // The app on its own datasource, where nobody holds `sales_rep` yet. The
+    // The app on its own datasource, where nobody holds `crm_sales_rep` yet. The
     // SQL in-memory one: `driver-memory` refuses every tenant-scoped call since
     // 18.0.0-next.0 (verify 34dba5a, until ADR-0131 C8), and a build of its own,
     // as one configuration holds one live kernel (objectstack#22301).
     const empty = await bootStack(await buildArtifactAgain(), bootOptions());
-    expect(await empty.rows('sys_user_position', { position: 'sales_rep' }), 'the empty boot has a rep pool').toEqual([]);
+    expect(await empty.rows('sys_user_position', { position: 'crm_sales_rep' }), 'the empty boot has a rep pool').toEqual([]);
     const [written] = await empty.seed('crm_lead', [lead()]);
     const parked = (await empty.rows('crm_lead', { id: written!.id }))[0]!;
     expect(parked.owner_id ?? null).toBeNull();
@@ -439,8 +439,8 @@ describe('lead_intake_assignment — ownerless lead intake (ADR-0142 D5)', () =>
     const ownRep = await signUpPerson(twoOrgs, 'own.rep@hooks-runtime.test', { name: 'Own Rep' });
     const otherRep = await signUpPerson(twoOrgs, 'other.rep@hooks-runtime.test', { name: 'Other Rep' });
     await twoOrgs.seed('sys_user_position', [
-      { user_id: ownRep.id, position: 'sales_rep', organization_id: own },
-      { user_id: otherRep.id, position: 'sales_rep', organization_id: other },
+      { user_id: ownRep.id, position: 'crm_sales_rep', organization_id: own },
+      { user_id: otherRep.id, position: 'crm_sales_rep', organization_id: other },
     ]);
     await twoOrgs.seed('crm_lead', [lead({ owner_id: ownRep.id, organization_id: own })]);
     const contactIn = async (organization_id: string, email: string) => {

@@ -55,7 +55,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   agent = await signUpPerson(verify, 'agent@case-sla-breach-on-close.test', {
-    name: 'Breach Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Breach Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
 }, 120_000);
 

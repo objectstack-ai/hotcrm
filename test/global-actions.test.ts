@@ -73,10 +73,10 @@ const displayName: Record<string, string> = {};
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'ada@global-actions.test', {
-    name: 'Ada Lovelace', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Ada Lovelace', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   agent = await signUpPerson(verify, 'sam@global-actions.test', {
-    name: 'Sam Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Sam Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   colleague = await signUpPerson(verify, 'grace@global-actions.test', { name: 'Grace Hopper' });
   Object.assign(displayName, { [rep.id]: 'Ada Lovelace', [agent.id]: 'Sam Agent' });

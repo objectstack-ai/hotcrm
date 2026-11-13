@@ -25,7 +25,7 @@ type Rec = Record<string, any>;
  * The assignment is NOT authored in the flow. `flag_breach` writes
  * `status: 'escalated'`, which is the escalation TRANSITION
  * `case_escalation_reassign` (`src/objects/_case-assignment.ts`, `beforeUpdate`,
- * priority 250) fires on — it stamps the least-loaded `service_manager` onto the
+ * priority 250) fires on — it stamps the least-loaded `crm_service_manager` onto the
  * payload of the update already in flight. So the sweep reaches the assignment
  * by PERFORMING the transition, and the flow's own contribution is the RE-READ
  * (`reload_case`) that lets the notify node address the owner the write just
@@ -199,7 +199,7 @@ describe('pool EMPTY: a graceful no-op — unowned, unnotified, and the run surv
 
 describe('pool NON-EMPTY: the ownerless breach is assigned, then that owner is alerted', () => {
   /**
-   * The pool the assignment reads: holders of `service_manager` in
+   * The pool the assignment reads: holders of `crm_service_manager` in
    * `sys_user_position`.
    *
    * TWO holders, and a `service_agent` holder beside them. Both are
@@ -236,11 +236,11 @@ describe('pool NON-EMPTY: the ownerless breach is assigned, then that owner is a
       // assigning session's organization, where a system seed stamps none.
       const organization_id = String((await verify.contextFor(mgrBusy.token)).tenantId);
       await verify.seed('sys_user_position', [
-        { user_id: mgrBusy.id, position: 'service_manager', organization_id },
-        { user_id: mgrFree.id, position: 'service_manager', organization_id },
+        { user_id: mgrBusy.id, position: 'crm_service_manager', organization_id },
+        { user_id: mgrFree.id, position: 'crm_service_manager', organization_id },
         // A service AGENT in the same table: the pool read must filter by
         // position, not take every row it finds.
-        { user_id: agent.id, position: 'service_agent', organization_id },
+        { user_id: agent.id, position: 'crm_service_agent', organization_id },
       ]);
     });
   }, 120_000);

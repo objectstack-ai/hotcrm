@@ -41,11 +41,11 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   agent = await signUpPerson(verify, 'agent@web-to-case-guest-priority.test', {
-    name: 'Priority Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Priority Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   // The escalation pool: a case that escalated would be handed to this person.
   manager = await signUpPerson(verify, 'manager@web-to-case-guest-priority.test', {
-    name: 'Priority Manager', positions: ['service_manager'], permissionSets: ['service_agent'],
+    name: 'Priority Manager', positions: ['crm_service_manager'], permissionSets: ['service_agent'],
   });
 }, 120_000);
 
