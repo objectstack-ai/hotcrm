@@ -32,10 +32,19 @@
 // Rows that are otherwise frozen are included: a closed case, a converted lead. Their freezes refuse a change to a business
 // field, and re-sending a value unchanged is not a change.
 //
+// A forecast's title also names its owner, from `owner_name`, the owner's name
+// the row stores (#2435). An upgraded database holds no copy on rows written
+// before that field, so a forecast with an owner and no `owner_name` counts as
+// stale too: its title still reads the name it was stored with, and a rename of
+// that user would leave it behind. The same re-save heals it: an update of a row
+// with an owner and no copy lets `forecast_owner_name` (`forecast.hook.ts`)
+// write the owner's current name, and the title is computed from it.
+//
 // Safe by construction:
 //   • report-only unless `--apply` is passed;
-//   • it touches only rows whose title is missing, or (a contact or lead with
-//     a CJK family name) still in the pre-#2431 name order;
+//   • it touches only rows whose title is missing, (a contact or lead with
+//     a CJK family name) still in the pre-#2431 name order, or (a forecast)
+//     with an owner and no copy of the owner's name;
 //   • rerunnable: a second pass over a converged org reports zero rows.
 //
 // Side effect worth knowing: the write is an ordinary update, so the
@@ -63,10 +72,10 @@ const DEFAULT_URL = 'http://localhost:4001';
  * name is CJK and its stored title is not the one the rule composes. Every
  * other row's title is unchanged by #2431 and is left alone.
  */
-const TITLES: ReadonlyArray<{ object: string; title: string; resend: string; person?: { withCompany: boolean } }> = [
+const TITLES: ReadonlyArray<{ object: string; title: string; resend: string; person?: { withCompany: boolean }; ownerName?: true }> = [
   { object: 'crm_contact', title: 'full_name', resend: 'last_name', person: { withCompany: false } },
   { object: 'crm_lead', title: 'display_title', resend: 'company', person: { withCompany: true } },
-  { object: 'crm_forecast', title: 'display_title', resend: 'period_label' },
+  { object: 'crm_forecast', title: 'display_title', resend: 'period_label', ownerName: true },
   { object: 'crm_case', title: 'display_title', resend: 'subject' },
 ];
 
@@ -159,12 +168,21 @@ const misordered = (row: Json, title: string, person: { withCompany: boolean } |
   return row[title] !== expected;
 };
 
+/** A reference column as the query door returns it: the id, or an expanded `{ id }`. */
+const refId = (v: unknown): string =>
+  typeof v === 'string' ? v.trim() : v && typeof v === 'object' ? part((v as Json).id) : '';
+
+/** A forecast with an owner and no stored copy of the owner's name (#2435). */
+const ownerUncopied = (row: Json, ownerName: true | undefined): boolean =>
+  ownerName === true && refId(row.owner_id) !== '' && part(row.owner_name) === '';
+
 const stale = (row: Json, entry: (typeof TITLES)[number]): boolean =>
-  untitled(row, entry.title) || misordered(row, entry.title, entry.person);
+  untitled(row, entry.title) || misordered(row, entry.title, entry.person) || ownerUncopied(row, entry.ownerName);
 
 const fieldsFor = (entry: (typeof TITLES)[number]): string[] => [...new Set([
   'id', entry.title, entry.resend,
   ...(entry.person ? ['first_name', 'last_name', ...(entry.person.withCompany ? ['company'] : [])] : []),
+  ...(entry.ownerName ? ['owner_id', 'owner_name'] : []),
 ])];
 
 async function main(): Promise<void> {
@@ -185,7 +203,9 @@ async function main(): Promise<void> {
     const todo = rows.filter((r) => stale(r, entry));
     const misordered = todo.filter((r) => !untitled(r, title)).length;
     console.log(`${object}: ${rows.length} row(s), ${todo.length - misordered} without a stored ${title}`
-      + (entry.person ? `, ${misordered} titled in the pre-#2431 name order.` : '.'));
+      + (entry.person ? `, ${misordered} titled in the pre-#2431 name order.` : '')
+      + (entry.ownerName ? `, ${misordered} with an owner and no stored owner name.` : '')
+      + (entry.person || entry.ownerName ? '' : '.'));
     if (!APPLY || todo.length === 0) continue;
 
     for (const r of todo) {
