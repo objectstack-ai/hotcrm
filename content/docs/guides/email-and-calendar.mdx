@@ -21,8 +21,8 @@ HotCRM turns customer conversations into **records you can query**: an email you
 **Send Email** is registered on the **contact** record, and it is hidden on a contact with *Email Opt Out* ticked. Opportunities and cases carry the three activity actions below, not this one.
 
 1. The action asks for a **Subject** and a **Body**. The recipient is the contact's own email address; there is no template picker and no merge-field expansion.
-2. On submit an email row is written with status **Queued**, sent from your user's email address and linked back to the contact under *Related Object*.
-3. The contact's **Activity** timeline gains an entry — `Email: <subject>` — that points at that email row, so the drill-through opens the message rather than a summary string.
+2. On submit the platform's mail service writes an email row with status **Queued**. The message goes out from your deployment's configured sender address, with your name in the sender's display name, and a reply comes back to your own address. The row is linked back to the contact under *Related Object* and records you as its sender.
+3. The contact's **Activity** timeline gains an entry under your name — `Email: <subject>`. The entry carries the message's id in its details; it does not link to the email row, which a sales rep cannot open.
 4. The contact's **Last Contacted Date**, and the parent account's **Last Activity Date**, are stamped. An email is an interaction, even though it is not a calendar slot, so it refreshes the same recency clock a held meeting does — see [Meetings & Calls](/docs/sales/meetings-and-calls).
 
 Delivery belongs to the platform's email service, which owns the states the row moves through: **Queued → Sent**, or **Failed** with the transport's error message and an attempt count. Whether the message leaves the building depends on the transport your deployment configures — with no provider configured the platform falls back to a log-only transport, which records the message and sends nothing.

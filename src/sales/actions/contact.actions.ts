@@ -2,7 +2,6 @@
 
 import type { Action } from '@objectstack/spec/ui';
 import { P } from '@objectstack/spec';
-import { ACTOR_NAME_RESOLUTION_SOURCE } from './activity-actions';
 
 /**
  * Mark Contact as Primary.
@@ -121,8 +120,24 @@ export const AddContactToCampaignAction: Action = {
 /**
  * Send Email to Contact.
  *
- * Modal-typed action: collects subject + body, then logs an `activity`
- * record via the metadata body. Runs sandboxed under `api.write`.
+ * Script action: collects subject + body, hands the message to the platform's
+ * mail door and adds the send to the contact's activity timeline.
+ *
+ * Both writes go through the platform's doors, never a raw insert into the
+ * ledgers: `ctx.email.send` (capability `email.send`) for the message and
+ * `ctx.activity.append` (capability `activity.append`) for the timeline entry.
+ * The mail log (`sys_email`) and the activity feed (`sys_activity`) are
+ * append-only objects their platform services write; the doors stamp what the
+ * platform says about the write: the sender is the deployment's configured
+ * address, with the rep named in its display name, the message is recorded as
+ * sent by the rep under the rep's organization, and the entry's actor and
+ * origin are the platform's. `replyTo` is the rep's own address, so a reply
+ * still reaches the rep.
+ *
+ * The timeline entry names the contact and carries the mail log row's id in
+ * its `metadata` (`email_id`), not as its `source`: the door reads a `source`
+ * in the caller's scope, and a sales rep cannot read the mail log, so an entry
+ * pointing there would be refused after the message had already gone.
  */
 export const SendEmailAction: Action = {
   name: 'send_email',
@@ -145,40 +160,32 @@ export const SendEmailAction: Action = {
       const record = ctx.record ?? {};
       const recipientId = ctx.recordId ?? record.id ?? null;
       const to = record.email ? String(record.email) : '';
-      const from = ctx.user?.email ?? 'noreply@hotcrm.local';
-      const userId = ctx.user?.id ?? null;
+      const replyTo = ctx.user?.email ? String(ctx.user.email) : '';
       const subject = input.subject ? String(input.subject) : ('Email to ' + to);
       const body = input.body ? String(input.body) : '';
-      const email = await ctx.api.object('sys_email').insert({
-        from_address: from,
-        to_addresses: to,
-        subject,
-        body_text: body,
-        status: 'queued',
-        related_object: 'crm_contact',
-        related_id: recipientId,
-        sent_by: userId,
-      });
-
-      ${ACTOR_NAME_RESOLUTION_SOURCE}
+      const message = { to, subject, text: body };
+      if (replyTo) message.replyTo = replyTo;
+      if (recipientId) message.related = { object: 'crm_contact', id: String(recipientId) };
+      const email = await ctx.email.send(message);
 
       // Surface the email on the contact's unified activity timeline
       // (the audit writer only logs generic CRUD; this is the semantic event).
-      const activity = await ctx.api.object('sys_activity').insert({
-        type: 'completed',
-        summary: 'Email: ' + subject,
-        actor_id: userId,
-        actor_name: actorName,
-        object_name: 'crm_contact',
-        record_id: recipientId,
-        record_label: record.full_name ?? record.name ?? to,
-        // ADR-0052 ActivityPointer: structured pointer to the rich source entity
-        // (the sys_email row) so the timeline renders a "View source →" drill to
-        // the full email — the queryable replacement for stashing the id in metadata.
-        source_object: 'sys_email',
-        source_id: email?.id ?? null,
-        metadata: JSON.stringify({ kind: 'email', to, subject }),
-      });
+      // The door stamps the actor (the rep, with the platform's display name)
+      // and the origin; the summary and the label are held to the timeline's
+      // column bounds (500 and 255 characters).
+      let activity = null;
+      if (recipientId) {
+        const label = record.full_name ?? record.name ?? to;
+        const entry = {
+          object: 'crm_contact',
+          recordId: String(recipientId),
+          type: 'completed',
+          summary: ('Email: ' + subject).slice(0, 500),
+          metadata: { kind: 'email', to, subject, email_id: email?.id ?? null },
+        };
+        if (label) entry.recordLabel = String(label).slice(0, 255);
+        activity = await ctx.activity.append(entry);
+      }
       // #592 scope item 3: every activity writer bumps interaction recency.
       // An email is an interaction but NOT a calendar slot, so it writes no
       // \`crm_event\` — which means it cannot ride the event hook's bubble and
@@ -206,7 +213,7 @@ export const SendEmailAction: Action = {
       }
       return { emailId: email?.id, activityId: activity?.id };
     `,
-    capabilities: ['api.read', 'api.write'],
+    capabilities: ['api.write', 'email.send', 'activity.append'],
     timeoutMs: 5000,
   },
   locations: ['record_header', 'list_item'],
@@ -215,7 +222,7 @@ export const SendEmailAction: Action = {
     { name: 'subject', label: 'Subject', type: 'text', required: true },
     { name: 'body', label: 'Body', type: 'textarea', required: true },
   ],
-  // "queued", not "sent": the body inserts the `sys_email` row with
+  // "queued", not "sent": the mail door writes the `sys_email` row with
   // `status: 'queued'` and delivery happens after the action returns (#2246).
   successMessage: 'Email queued to this contact.',
   refreshAfter: false,
