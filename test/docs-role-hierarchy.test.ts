@@ -30,7 +30,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * that people above the owner can see the owner's records.
  *
  * That is not stale naming, it is a **false permission promise**, and the way it
- * fails is silent: an admin who puts someone in `sales_manager` expecting them to
+ * fails is silent: an admin who puts someone in `crm_sales_manager` expecting them to
  * pick up their reps' accounts gets no error and no records — the UI simply shows
  * an empty list. #549 is the runtime shape of the same family.
  *

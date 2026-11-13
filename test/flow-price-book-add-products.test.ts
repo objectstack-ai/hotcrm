@@ -29,10 +29,10 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   manager = await signUpPerson(verify, 'manager@flow-price-book-add-products.test', {
-    name: 'Adding Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Adding Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   other = await signUpPerson(verify, 'other@flow-price-book-add-products.test', {
-    name: 'Other Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Other Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 120_000);
 

@@ -81,7 +81,7 @@ export const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
  * term can tell the two apart: the only candidates are grants a rep happens
  * to lack (`transfer`, `delete`), which say "cannot reassign deals", not "is a
  * rep", and the marketing user lacks them too. What a rep IS, is the holder
- * of the `sales_rep` position (`src/sales/sharing/positions.ts`; it binds the
+ * of the `crm_sales_rep` position (`src/sales/sharing/positions.ts`; it binds the
  * `sales_rep` permission set by name). So the role is asked by position, and
  * the access half stays the same object-permission question as above.
  *
@@ -90,14 +90,14 @@ export const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
  * which reads the member's own opportunities: a service agent and a service
  * manager answer the read question exactly as a manager does, so it no longer
  * keeps Home from them, and they opened the app on Home instead of Service
- * Overview. What they ARE is the holder of the `service_agent` or the
- * `service_manager` position. ⛔ Do not narrow `crm_user` to restore the old
+ * Overview. What they ARE is the holder of the `crm_service_agent` or the
+ * `crm_service_manager` position. ⛔ Do not narrow `crm_user` to restore the old
  * answer: #2231 requires a member holding only it to read opportunities.
  *
  * Managers, administrators and the marketing user keep Home first. A member
  * whose positions are unknown evaluates `[]`, so the gate keeps Home for them.
  */
-const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions) && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("crm_sales_rep" in current_user.positions) && !("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)`;
 
 /**
  * The audience of Sales Home (#2262) and of the six opportunity entries
@@ -114,7 +114,7 @@ const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("s
  * never as an expression, so a sub-predicate cannot be shared by reference.
  * One constant is shared by the seven entries instead.
  */
-const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)`;
 
 /**
  * The two opportunity OBJECT entries, Opportunities and My Deals (#2367
@@ -129,7 +129,7 @@ const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !(
  * on `OPPORTUNITY_AUDIENCE` above), so the position half is the whole of what
  * this gate adds.
  */
-const NOT_SERVICE_STAFF = P`!("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+const NOT_SERVICE_STAFF = P`!("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)`;
 
 /**
  * the Sales app — navigation.

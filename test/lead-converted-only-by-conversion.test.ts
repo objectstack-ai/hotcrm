@@ -52,10 +52,10 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   people.rep = await signUpPerson(verify, 'rep@lead-converted-only-by-conversion.test', {
-    name: 'Converted Status Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Converted Status Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   people.manager = await signUpPerson(verify, 'manager@lead-converted-only-by-conversion.test', {
-    name: 'Converted Status Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Converted Status Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 120_000);
 

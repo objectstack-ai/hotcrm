@@ -32,7 +32,7 @@ type Rec = Record<string, any>;
  * `test/flow-sla-ownerless-assignment.test.ts`, which drives both ruled
  * branches with the app's real `crm_case` hooks installed.
  *
- * This file runs the sweep with NOBODY in the `service_manager` position — the
+ * This file runs the sweep with NOBODY in the `crm_service_manager` position — the
  * shape where no assignment can happen: the app's real case hooks run, and
  * every ownerless case reaches the second gate still ownerless. That makes it
  * the survival pin — the sweep completes and flags every case even when nothing
@@ -176,7 +176,7 @@ describe.each(DATASOURCES)('case_sla_monitor — an ownerless breached case (#14
     expect(gate?.skipped, 'the gate did not account for the ownerless cases').toBe(OWNERLESS.length);
     // …and the second gate accounts for the same cases again, after the
     // re-read found no owner to have been assigned. Two named skips per case,
-    // not one — nobody holds `service_manager`, so nothing could place them.
+    // not one — nobody holds `crm_service_manager`, so nothing could place them.
     expect(gates.find((g: Rec) => g.edgeId === 'b5')?.skipped).toBe(OWNERLESS.length);
     const notify = nodeOf('notify_team');
     expect(notify?.status, 'notify recorded a failure').toBe('success');

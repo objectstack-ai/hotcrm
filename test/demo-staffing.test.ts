@@ -188,7 +188,7 @@ const holdersOf = (position: string) => DemoOrgStaffing.filter((m) => m.position
 
 /** Someone whose visible rows are supposed to be bounded by a territory rule. */
 const territorial = (m: { positions: readonly string[] }) =>
-  m.positions.some((p) => p === 'na_sales_team' || p === 'eu_sales_team');
+  m.positions.some((p) => p === 'crm_na_sales_team' || p === 'crm_eu_sales_team');
 
 /**
  * Identity/access tables only the platform may write. A seed dataset or flow
@@ -247,33 +247,33 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
     // The five people are exactly the ones that turn a dark mechanism on: two
     // territory holders (who must not own the accounts), one approver, and the
     // two case-routing pools a shipped hook picks an owner out of.
-    expect(holdersOf('na_sales_team').length, 'nobody holds na_sales_team').toBe(1);
-    expect(holdersOf('eu_sales_team').length, 'nobody holds eu_sales_team').toBe(1);
-    expect(holdersOf('sales_manager').length, 'nobody holds sales_manager').toBe(1);
+    expect(holdersOf('crm_na_sales_team').length, 'nobody holds crm_na_sales_team').toBe(1);
+    expect(holdersOf('crm_eu_sales_team').length, 'nobody holds crm_eu_sales_team').toBe(1);
+    expect(holdersOf('crm_sales_manager').length, 'nobody holds crm_sales_manager').toBe(1);
     expect(
-      holdersOf('na_sales_team')[0].email,
+      holdersOf('crm_na_sales_team')[0].email,
       'the two territories must be held by DIFFERENT people, or neither rule is distinguishable',
-    ).not.toBe(holdersOf('eu_sales_team')[0].email);
+    ).not.toBe(holdersOf('crm_eu_sales_team')[0].email);
 
     // ONE is the whole allowance the 2026-08-31 ruling granted — "the minimum
     // that lights the mechanism, NOT an org chart". A second holder in either
     // pool is org-chart growth and needs the same conversation the first one
     // had, so it fails here rather than arriving as a tidy-up.
     expect(
-      holdersOf('service_agent').length,
+      holdersOf('crm_service_agent').length,
       'the case INTAKE pool must hold exactly one demo agent (2026-08-31: the minimum that lights ' +
       'case_intake_assignment, not an org chart)',
     ).toBe(1);
     expect(
-      holdersOf('service_manager').length,
+      holdersOf('crm_service_manager').length,
       'the ESCALATION pool must hold exactly one demo manager (2026-08-31: the minimum that lights ' +
       'case_escalation_reassign, not an org chart)',
     ).toBe(1);
     expect(
-      holdersOf('service_agent')[0].email,
+      holdersOf('crm_service_agent')[0].email,
       'one person holding BOTH case pools would make intake and escalation indistinguishable — the ' +
       'case would land on the same desk either way, and neither hook would prove anything',
-    ).not.toBe(holdersOf('service_manager')[0].email);
+    ).not.toBe(holdersOf('crm_service_manager')[0].email);
   });
 
   it('leaves the leadership bench empty on purpose', () => {
@@ -285,12 +285,12 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
     //
     // The list is SIX, not the eight it was, and the two that left it are why
     // this message now draws a DISTINCTION instead of stating a blanket. The
-    // 2026-08-31 ruling staffed `service_agent` and `service_manager` for a
+    // 2026-08-31 ruling staffed `crm_service_agent` and `crm_service_manager` for a
     // reason none of the six shares — see the failure text, which is where the
     // next agent standing at this fence will actually read it.
     const DELIBERATELY_UNSTAFFED = [
-      'executive', 'sales_director', 'service_director',
-      'marketing_director', 'marketing_manager', 'marketing_user',
+      'crm_executive', 'crm_sales_director', 'crm_service_director',
+      'crm_marketing_director', 'crm_marketing_manager', 'crm_marketing_user',
     ];
     const surprises = DELIBERATELY_UNSTAFFED.filter((p) => staffedPositions.has(p));
     expect(
@@ -315,7 +315,7 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
   it('pairs each territory position with a functional one that carries a permission set', () => {
     // A territory position is a RECORD grouping: no permission set binds to
     // `na_sales_team` / `eu_sales_team`, so on its own it says nothing about
-    // what a user may DO. Measured: a user holding only `eu_sales_team` still
+    // what a user may DO. Measured: a user holding only `crm_eu_sales_team` still
     // reads the 2 EU accounts — the object door is opened by the platform's
     // additive `member_default` baseline (ADR-0090 D5) and the rows come from
     // the share — i.e. the demo would show a generic org member who happens to
@@ -419,7 +419,7 @@ describe('staffing lines up with the rules that grant, and the nodes that route'
   });
 
   it('keeps an empty-bench policy on the approval nodes it does NOT staff', () => {
-    // `director_signoff` routes to `sales_director`, deliberately unstaffed. That
+    // `director_signoff` routes to `crm_sales_director`, deliberately unstaffed. That
     // is only safe because the node declares what happens when the bench is
     // empty; without it the record locks undecidably.
     const bad: string[] = [];
@@ -460,15 +460,15 @@ describe('each position names the sets it distributes, and none is reached by th
       [...positionNames].filter((p) => declaredSets(p).length > 0).map((p) => [p, declaredSets(p)]),
     );
     expect(declared).toEqual({
-      sales_manager: ['sales_manager'],
-      sales_rep: ['sales_rep'],
+      crm_sales_manager: ['sales_manager'],
+      crm_sales_rep: ['sales_rep'],
       // The #1779 ruling: the escalation pool works tickets with the agent's grants.
-      service_manager: ['service_agent'],
-      service_agent: ['service_agent'],
+      crm_service_manager: ['service_agent'],
+      crm_service_agent: ['service_agent'],
       // The two marketing rungs lead the marketers and hold their set (#2338 item 3).
-      marketing_director: ['marketing_user'],
-      marketing_manager: ['marketing_user'],
-      marketing_user: ['marketing_user'],
+      crm_marketing_director: ['marketing_user'],
+      crm_marketing_manager: ['marketing_user'],
+      crm_marketing_user: ['marketing_user'],
     });
     expect(Object.values(declared).flat().filter((s) => !shippedSetNames.has(s)), 'a binding names a set the app does not ship').toEqual([]);
   });
@@ -609,12 +609,12 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
       `case_intake_assignment left the case OWNERLESS against the demo org's own position rows — the ` +
       `service_agent pool is empty again, so every new case parks in the case_intake queue on every ` +
       `demo box and the unassigned_triage tab is the whole story.`,
-    ).toBe(holderOf('service_agent'));
+    ).toBe(holderOf('crm_service_agent'));
   });
 
   /** A case the demo agent opened and works. */
   const agentsCase = async (): Promise<{ agent: Person; id: string }> => {
-    const agent = staffed[holdersOf('service_agent')[0]!.key]!;
+    const agent = staffed[holdersOf('crm_service_agent')[0]!.key]!;
     const kase = await verify.hooks.run('crm_case', 'insert', {
       subject: 'Escalate me', description: 'Customer is waiting.', status: 'in_progress',
     }, { as: agent.token });
@@ -633,7 +633,7 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
       `case_escalation_reassign moved NOTHING against the demo org's own position rows — the ` +
       `service_manager pool is empty again, so escalation is only a flag and a status and the ` +
       `agent who could not get to the case in time stays the only person who can work it.`,
-    ).toBe(holderOf('service_manager'));
+    ).toBe(holderOf('crm_service_manager'));
   });
 
   /**
@@ -654,21 +654,21 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
       stored!.owner_id,
       `case_escalation_reassign left the agent's own escalation on the agent — the hand-off no longer ` +
       `reaches the service_manager pool from a person's write, only from the SLA sweep's.`,
-    ).toBe(holderOf('service_manager'));
+    ).toBe(holderOf('crm_service_manager'));
   });
 
   it('lands intake and escalation on DIFFERENT desks', async () => {
     // The negative control for the two assertions above: if one person held
     // both pools, each hook would still look like it worked while proving
     // nothing about which pool it read.
-    expect(holderOf('service_agent')).not.toBe(holderOf('service_manager'));
+    expect(holderOf('crm_service_agent')).not.toBe(holderOf('crm_service_manager'));
   });
 
   it('gives each crm_case position rule its first holder — and names the one it does NOT', () => {
     // The mechanism census, pinned as an exact list because the interesting
     // part is the ZERO. The ruling that authorised this staffing counted FOUR
     // mechanisms lit, `case_director_sharing` among them — measured, that one
-    // is NOT lit: its recipient is `service_director`, which the same ruling
+    // is NOT lit: its recipient is `crm_service_director`, which the same ruling
     // leaves empty. (The agent's row once lit `case_unassigned_triage_sharing`
     // too; #2395 deleted it, because the `case_intake` queue's members read the
     // cases sitting in it through the queue itself, not a sharing rule.)
@@ -679,8 +679,8 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
       .map((r) => `${String(r.name)}\u2192${String(r.sharedWith.value)}: ${holdersOf(String(r.sharedWith.value)).length} holder(s)`)
       .sort();
     expect(census).toEqual([
-      'case_director_sharing\u2192service_director: 0 holder(s)',
-      'case_escalation_sharing\u2192service_manager: 1 holder(s)',
+      'case_director_sharing\u2192crm_service_director: 0 holder(s)',
+      'case_escalation_sharing\u2192crm_service_manager: 1 holder(s)',
     ]);
   });
 });
@@ -719,7 +719,7 @@ describe('pnpm demo:staff on the shipped app: the hand-over opens each large-dea
   it("opens each large deal's request on the hand-over, waiting on the sales manager", async () => {
     const adminId = String((await verify.contextFor(admin)).userId);
     const personaIds = new Set(Object.values(staffed).map((p) => p.id));
-    const manager = staffed[holdersOf('sales_manager')[0]!.key]!.id;
+    const manager = staffed[holdersOf('crm_sales_manager')[0]!.key]!.id;
     const deals = await verify.rows('crm_opportunity', { name: { $in: LARGE_OPEN_DEALS } });
     expect(deals.map((d) => String(d.name)).sort(), 'the seeded large open deals are not both there').toEqual(
       [...LARGE_OPEN_DEALS].sort(),

@@ -412,6 +412,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       notes: { label: 'Notes' },
       display_title: { label: 'Display Title' },
+      owner_name: { label: 'Owner Name', help: "The owner's name, kept in step with the user record. It is part of the forecast's title." },
       seed_key: {
         label: 'Seed Key',
         help: 'Demo-fixture identity. Written only by the seed loader; empty on every real snapshot.',

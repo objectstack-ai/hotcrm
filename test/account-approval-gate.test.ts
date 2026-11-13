@@ -207,10 +207,10 @@ const PATHS: [string, CreatePath][] = [['the New form', byForm], ['Convert Lead'
 
 const people = async (s: VerifyStack, tag: string) => ({
   rep: await signUpPerson(s, `rep-${tag}@account-approval-gate.test`, {
-    name: 'Approval Gate Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Approval Gate Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   }),
   manager: await signUpPerson(s, `manager-${tag}@account-approval-gate.test`, {
-    name: 'Approval Gate Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Approval Gate Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   }),
 });
 
@@ -247,7 +247,7 @@ describe('WITH approvals in the composition — acceptance 4 is unchanged (#2067
     const [request] = await openRequests(verify, id);
     expect(request, 'no open request to decide').toBeTruthy();
     expect(await statusOf(verify, id)).toBe('pending');
-    // The node routes to the `sales_manager` bench, which `who.manager` staffs.
+    // The node routes to the `crm_sales_manager` bench, which `who.manager` staffs.
     const res = await verify.apiAs(who.manager.token, 'POST', `/approvals/requests/${request!.id}/approve`, { comment: 'approved.' });
     expect(res.status, await res.clone().text()).toBe(200);
     expect(await statusOf(verify, id)).toBe('approved');

@@ -658,7 +658,7 @@ let n = 0;
 beforeAll(async () => {
   sql.verify = await hotcrmStack();
   sql.rep = await signUpPerson(sql.verify, 'rep@freeze-guard-units.test', {
-    name: 'Freeze Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Freeze Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 180_000);
 

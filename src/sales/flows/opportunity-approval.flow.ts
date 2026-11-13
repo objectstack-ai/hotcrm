@@ -162,7 +162,7 @@ export const OpportunityApprovalFlow: Flow = {
         // `{ type: 'org_membership_level', value: 'owner' }` entry overshoots:
         // with `behavior: 'first_response'` it makes an org owner a routine
         // approver for every deal, not a rescue when the bench is empty.
-        approvers: [{ type: 'position', value: 'sales_manager' }],
+        approvers: [{ type: 'position', value: 'crm_sales_manager' }],
         // Explicit even though `admin_rescue` is the schema default — this is
         // the mechanism the node depends on, so it is authored, not inherited.
         onEmptyApprovers: 'admin_rescue',
@@ -190,7 +190,7 @@ export const OpportunityApprovalFlow: Flow = {
       label: 'Sales Director Sign-off',
       config: {
         // Same node policy as manager_review — see the note there.
-        approvers: [{ type: 'position', value: 'sales_director' }],
+        approvers: [{ type: 'position', value: 'crm_sales_director' }],
         onEmptyApprovers: 'admin_rescue',
         behavior: 'first_response',
         lockRecord: true,

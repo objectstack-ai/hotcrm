@@ -29,7 +29,7 @@ let rep: Person;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@contract-drafted-notice.test', {
-    name: 'Drafted Notice Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Drafted Notice Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 120_000);
 

@@ -104,10 +104,10 @@ describe('the save lands, the value is supplied, and the protection stays', () =
   beforeAll(async () => {
     verify = await hotcrmStack();
     rep = await signUpPerson(verify, 'rep@form-required-server-defaults.test', {
-      name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Sales Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     manager = await signUpPerson(verify, 'manager@form-required-server-defaults.test', {
-      name: 'Sales Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+      name: 'Sales Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
     });
   }, 120_000);
 

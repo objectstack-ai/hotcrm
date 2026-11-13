@@ -56,7 +56,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   manager = await signUpPerson(verify, 'manager@accepted-quote-frees-contact.test', {
-    name: 'Erasure Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Erasure Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 180_000);
 

@@ -11,7 +11,7 @@ export const AccountTeamSharingRule = {
   type: 'criteria' as const,
   condition: P`record.type == "customer" && record.is_active == true`,
   accessLevel: 'edit' as const,
-  sharedWith: { type: 'position' as const, value: 'sales_manager' },
+  sharedWith: { type: 'position' as const, value: 'crm_sales_manager' },
 };
 
 /**
@@ -56,7 +56,7 @@ export const TerritorySharingRules = [
     type: 'criteria' as const,
     condition: P`record.territory == ${TERRITORY.NA}`,
     accessLevel: 'edit' as const,
-    sharedWith: { type: 'position' as const, value: 'na_sales_team' },
+    sharedWith: { type: 'position' as const, value: 'crm_na_sales_team' },
   },
   {
     name: 'europe_territory',
@@ -65,6 +65,6 @@ export const TerritorySharingRules = [
     type: 'criteria' as const,
     condition: P`record.territory == ${TERRITORY.EMEA}`,
     accessLevel: 'edit' as const,
-    sharedWith: { type: 'position' as const, value: 'eu_sales_team' },
+    sharedWith: { type: 'position' as const, value: 'crm_eu_sales_team' },
   },
 ];

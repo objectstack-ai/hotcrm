@@ -106,7 +106,7 @@ export const CaseEscalationFlow: Flow = {
         // need to happen here: this very update fires the
         // `case_escalation_reassign` beforeUpdate hook
         // (`src/service/objects/_case-assignment.ts`), which puts the case with the
-        // least-loaded holder of the flat `service_manager` position — a pool,
+        // least-loaded holder of the flat `crm_service_manager` position — a pool,
         // which the app can resolve, rather than a manager chain, which it
         // cannot. With that pool unstaffed the case keeps its owner and this
         // write is unchanged.
@@ -186,7 +186,7 @@ export const CaseEscalationFlow: Flow = {
         // row per locale — must stay true on BOTH outcomes. "It remains
         // assigned to you" is false whenever the hand-off finds a manager; the
         // opposite claim ("it has been reassigned") is false whenever the
-        // `service_manager` pool is unstaffed, which is the first-install norm.
+        // `crm_service_manager` pool is unstaffed, which is the first-install norm.
         // So it states the rule and points at the record for the answer, in
         // every language.
         template: 'crm.case_escalated',

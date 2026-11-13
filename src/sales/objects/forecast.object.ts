@@ -19,6 +19,8 @@ import { F, P, cel } from '@objectstack/spec';
  *   • `forecast.hook.ts` derives the period family on every write; it creates
  *     nothing on its own. `snapshot_date` defaults to today through its own
  *     `defaultValue` below.
+ *   • `forecast_owner_rename` (`src/sales/flows/`) writes `owner_name` on a
+ *     user's forecasts when that user is renamed (#2435).
  *
  * Forecast categories follow the standard Salesforce ladder, and the buckets
  * are CUMULATIVE — each is a subset of the one above it:
@@ -42,8 +44,8 @@ export const Forecast = ObjectSchema.create({
   // OWD is an authored decision (ADR-0090 D1/D7). Forecasts are personal to the
   // owner.
   sharingModel: 'private',
-  // ADR-0079 record title: the period label and the owner's name, read one
-  // hop through the `owner_id` lookup (#2242). See `display_title` below.
+  // ADR-0079 record title: the period label and the owner's name (#2242),
+  // both this row's own columns. See `display_title` below.
   nameField: 'display_title',
   // Explicit search targets (ADR-0061): the real columns the lookup picker
   // and global search match. Until #2230 they were required, because the
@@ -125,20 +127,38 @@ export const Forecast = ObjectSchema.create({
       group: 'basic',
     }),
 
+    // The owner's name as this row stores it: the half of the record title
+    // that comes from another record (#2435, ruling D). A copy, kept in step
+    // with the user record by two writers:
+    //   • `forecast_owner_name` (`forecast.hook.ts`) on a save that names an
+    //     owner (an insert, a hand-over to another owner) or that reaches a row
+    //     with no copy yet, which is what heals a row older than this field;
+    //   • `forecast_owner_rename` (`src/sales/flows/`) when the user is
+    //     renamed: it rewrites the copy on that user's forecasts in each
+    //     organization they belong to.
+    // Rows stored before this field get it from the next save, or all at once
+    // from `scripts/backfill-record-titles.ts`. `readonly`: a form never offers
+    // it and a value a person sends is dropped; the hook's write stands.
+    owner_name: Field.text({
+      label: 'Owner Name',
+      description: "The owner's name, kept in step with the user record. It is part of the forecast's title.",
+      readonly: true,
+      maxLength: 255,
+      group: 'meta',
+    }),
+
     // ADR-0079 record title: "Q4 2026 · Nina Reyes" (#2242, the #2194 T1-U08
     // ruling). A forecast is one row per owner × period, so the period alone
     // left two reps' Q4 rows reading the same in Recent items and in a lookup.
-    // The owner's name is read one hop through the `owner_id` lookup, never a
-    // copied text column; measured on 18.1.0 and 18.2.0, the engine resolves
-    // `record.owner_id.name` when it computes the stored value. With no owner
-    // the title is the period label alone: the `?.` / `orValue("")` guard
-    // keeps an ownerless row from reading "Q4 2026 · ".
+    // With no owner name (absent, null or empty) the title is the period label
+    // alone, so an ownerless row never reads "Q4 2026 · ".
     //
-    // The name is copied in when the row is written, so renaming the user
-    // re-titles a forecast only at its next write (measured on 18.1.0 and 18.2.0).
-    // The seed-ownership claim on a fresh boot is such a write: since
-    // objectstack#25668 (in 18.2.0) it re-owns seeded rows by id, so each
-    // seeded forecast is titled with the admin it was handed to.
+    // It reads this row's own columns only (#2435, ruling D). Until then it
+    // read the name one hop through `owner_id`, which the engine copies in at
+    // the row's write and never again: a renamed user's forecasts kept the old
+    // name, and `objectstack lint --strict` warns on that shape from 18.4.0
+    // (`stored-expression-cross-record-input`). The name is now `owner_name`,
+    // a copy the rename flow keeps current, so the title follows a rename.
     //
     // Stored, not a formula (#2230, objectstack#24981 ruling A): the engine
     // computes the expression on every insert and every update by id and
@@ -149,7 +169,7 @@ export const Forecast = ObjectSchema.create({
     display_title: Field.text({
       readonly: true,
       label: 'Display Title',
-      expression: F`record.?owner_id.?name.orValue("") == "" ? record.period_label : record.period_label + " · " + record.?owner_id.?name.orValue("")`,
+      expression: F`has(record.owner_name) && record.owner_name != null && record.owner_name != "" ? record.period_label + " · " + record.owner_name : record.period_label`,
       group: 'basic',
     }),
 

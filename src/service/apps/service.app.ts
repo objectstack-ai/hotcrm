@@ -5,7 +5,7 @@ import { App } from '@objectstack/spec/ui';
 import { HOTCRM_ICON } from '../../sales/apps/crm.app';
 
 /**
- * Who holds the `sales_rep` position (`src/sales/sharing/positions.ts`). The
+ * Who holds the `crm_sales_rep` position (`src/sales/sharing/positions.ts`). The
  * entries below ask it the way the app's Home gate does
  * (`EXECUTIVE_AUDIENCE` in `src/sales/apps/crm.app.ts` says why a rep is asked
  * by position, not by grant). `P` interpolates a value as a literal, never as
@@ -16,13 +16,13 @@ import { HOTCRM_ICON } from '../../sales/apps/crm.app';
  * what #2244 showed them, the customers and their own tasks, and no case
  * entry.
  */
-export const NOT_A_SALES_REP = P`!("sales_rep" in current_user.positions)`;
+export const NOT_A_SALES_REP = P`!("crm_sales_rep" in current_user.positions)`;
 
 /**
  * The rep's own Knowledge entry in the Sales app (#2367 row 1): exactly the
  * members `NOT_A_SALES_REP` refuses. Contributed from `src/service/index.ts`.
  */
-export const SALES_REP = P`"sales_rep" in current_user.positions`;
+export const SALES_REP = P`"crm_sales_rep" in current_user.positions`;
 
 /**
  * The read gate on this package's dashboard and report entries (#2073 item 1,
@@ -30,7 +30,7 @@ export const SALES_REP = P`"sales_rep" in current_user.positions`;
  * dashboard or a report entry, so a member who reads no cases would be offered
  * tiles that all refuse.
  */
-export const CASE_READ_AUDIENCE = P`current_user.can("crm_case", "read") && !("sales_rep" in current_user.positions)`;
+export const CASE_READ_AUDIENCE = P`current_user.can("crm_case", "read") && !("crm_sales_rep" in current_user.positions)`;
 
 /**
  * the Service app (#2417) — the service team's app, declared by the service

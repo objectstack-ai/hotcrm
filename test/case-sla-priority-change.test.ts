@@ -46,7 +46,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   agent = await signUpPerson(verify, 'agent@case-sla-priority-change.test', {
-    name: 'Priority Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Priority Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   for (const tier of ['strategic', 'enterprise', 'mid_market', 'smb']) {
     const [account] = await verify.seed('crm_account', [{ name: `Priority ${tier} Co`, tier, owner_id: agent.id }]);

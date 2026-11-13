@@ -49,10 +49,10 @@ let k = 0;
 
 beforeAll(async () => {
   verify = await hotcrmStack();
-  // In the `service_agent` pool, so a web case is round-robined to a KNOWN
+  // In the `crm_service_agent` pool, so a web case is round-robined to a KNOWN
   // owner — the planted owner's absence is then a positive value, not a null.
   agent = await signUpPerson(verify, 'agent@web-to-case-reply.test', {
-    name: 'Reply Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Reply Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   // A real user who holds no position: the owner a visitor might plant.
   outsider = await signUpPerson(verify, 'outsider@web-to-case-reply.test', { name: 'Not The Pool' });

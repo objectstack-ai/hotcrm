@@ -63,7 +63,7 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  */
 
 /** The position ESCALATED cases are routed to. */
-export const SERVICE_MANAGER_POSITION = 'service_manager';
+export const SERVICE_MANAGER_POSITION = 'crm_service_manager';
 
 /**
  * Statuses that mean "this case is no longer live work".
@@ -213,11 +213,11 @@ export function createCaseEscalationReassign(hookName = 'case_escalation_reassig
       const inOrganization: Record<string, string> = organizationId ? { organization_id: organizationId } : {};
 
       try {
-        // The pool = holders of the `service_manager` position. This literal is
+        // The pool = holders of the `crm_service_manager` position. This literal is
         // the exported SERVICE_MANAGER_POSITION; the sandbox forbids reading the
         // constant here, and `test/case-assignment.test.ts` pins the parity.
         const holders = await api.object('sys_user_position').find({
-          where: { position: 'service_manager', ...inOrganization }, fields: ['user_id'], top: 1000,
+          where: { position: 'crm_service_manager', ...inOrganization }, fields: ['user_id'], top: 1000,
         });
         const managerIds = Array.from(
           new Set(

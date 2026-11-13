@@ -738,51 +738,51 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
-    executive: {
+    crm_executive: {
       label: '高管',
       description: '公司管理层：可查看整个销售管道中每一笔进行中的大额商机，商机仍归原商机团队负责。',
     },
-    sales_director: {
+    crm_sales_director: {
       label: '销售总监',
       description: '领导销售组织，对最大的商机做最终签批，并可查看每一笔进行中的大额商机。',
     },
-    sales_manager: {
+    crm_sales_manager: {
       label: '销售经理',
       description: '管理销售团队：审批新客户、线索转化和大额商机，并可编辑每一个活跃客户。',
     },
-    sales_rep: {
+    crm_sales_rep: {
       label: '销售代表',
       description: '日常跟进线索和商机，并从「线索受理」队列接收新线索。',
     },
-    service_director: {
+    crm_service_director: {
       label: '服务总监',
       description: '统管客户服务，在服务经理处理期间可查看每一个未关闭的严重工单。',
     },
-    service_manager: {
+    crm_service_manager: {
       label: '服务经理',
       description: '负责升级处理池：升级的工单会交给此岗位，可编辑每一个未关闭的严重工单。',
     },
-    service_agent: {
+    crm_service_agent: {
       label: '客服专员',
       description: '处理客户工单，从「支持受理」队列接收新工单，并认领仍在队列中等候的工单。',
     },
-    marketing_director: {
+    crm_marketing_director: {
       label: '市场总监',
       description: '领导市场营销，可编辑每一个进行中的营销活动，无论负责人是谁。',
     },
-    marketing_manager: {
+    crm_marketing_manager: {
       label: '市场经理',
       description: '管理营销活动，可编辑每一个进行中的营销活动，无论负责人是谁。',
     },
-    marketing_user: {
+    crm_marketing_user: {
       label: '市场专员',
       description: '日常策划和执行营销活动及其成员。',
     },
-    na_sales_team: {
+    crm_na_sales_team: {
       label: '北美销售团队',
       description: '北美区域团队：可编辑北美区域内的每一个客户。',
     },
-    eu_sales_team: {
+    crm_eu_sales_team: {
       label: '欧洲销售团队',
       description: '欧洲区域团队：可编辑欧洲（EMEA）区域内的每一个客户。',
     },

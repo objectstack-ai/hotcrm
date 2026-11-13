@@ -52,7 +52,7 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@opportunity-qualification-approval-gate.test', {
-    name: 'Gate Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Gate Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Qualification Gate Co', owner_id: rep.id }]);
   accountId = String(account!.id);
@@ -75,7 +75,7 @@ const dealIn = async (previous: AnyRec): Promise<string> => {
   return String(deal!.id);
 };
 
-/** Decide the deal's one open approval request as the admin (nobody holds `sales_manager`). */
+/** Decide the deal's one open approval request as the admin (nobody holds `crm_sales_manager`). */
 const decide = async (dealId: string, decision: 'approve' | 'reject'): Promise<void> => {
   const open = (await verify.rows('sys_approval_request', { record_id: dealId })).filter((r) => r.status === 'pending');
   expect(open, 'the deal has no single open approval request').toHaveLength(1);
@@ -154,7 +154,7 @@ describe('opportunity_qualification_approval — start condition', () => {
     expect(FLOW.runAs).toBe('system');
     expect(startNode?.config?.objectName).toBe('crm_opportunity');
     expect(startNode?.config?.triggerType).toBe('record-after-update');
-    expect(reviewNode?.config?.approvers).toEqual([{ type: 'position', value: 'sales_manager' }]);
+    expect(reviewNode?.config?.approvers).toEqual([{ type: 'position', value: 'crm_sales_manager' }]);
     expect(reviewNode?.config?.onEmptyApprovers).toBe('admin_rescue');
     // 「新增商机可跟进」: the platform lock would refuse every user edit while
     // the request is open; the three gated acts are the hook's job either way.

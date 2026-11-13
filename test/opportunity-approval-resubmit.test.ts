@@ -41,11 +41,11 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@opportunity-approval-resubmit.test', {
-    name: 'Resubmit Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Resubmit Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   // The bench `manager_review` routes to, so a decision is a real approver's.
   manager = await signUpPerson(verify, 'manager@opportunity-approval-resubmit.test', {
-    name: 'Resubmit Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Resubmit Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Resubmit Co', owner_id: rep.id, approval_status: 'approved' }]);
   accountId = String(account!.id);

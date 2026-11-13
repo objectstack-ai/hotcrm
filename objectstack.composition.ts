@@ -105,7 +105,7 @@ import {
 
 // Flows — the registration order the single `allFlows` array used to hold.
 import {
-  ContactWelcomeFlow, ForecastSnapshotFlow, LeadAssignmentFlow,
+  ContactWelcomeFlow, ForecastSnapshotFlow, ForecastOwnerRenameFlow, LeadAssignmentFlow,
   AccountApprovalFlow,
   LeadConversionFlow, LeadConversionAccountRevenueFlow, LeadConversionApprovalFlow,
   OpportunityApprovalFlow, OpportunityApprovalOnCreateFlow,
@@ -215,6 +215,8 @@ export const appFlows = [
   OpportunityQualificationApprovalFlow,
   OpportunityStagnationFlow,
   ForecastSnapshotFlow,
+  // Re-titles a renamed user's forecasts (#2435).
+  ForecastOwnerRenameFlow,
   LeadAssignmentFlow,
   ContactWelcomeFlow,
   OpportunityWonAlertFlow,

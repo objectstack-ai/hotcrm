@@ -51,10 +51,10 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@activity-recency.test', {
-    name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Sales Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   agent = await signUpPerson(verify, 'agent@activity-recency.test', {
-    name: 'Service Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Service Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
 }, 120_000);
 
