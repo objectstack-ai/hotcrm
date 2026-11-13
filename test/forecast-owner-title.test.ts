@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemInsert, systemUpdate, predicateUpdate, type Person } from './helpers/verify-stack';
 
 /**
  * A forecast is titled by its period and its owner: "Q4 2026 · Nina Reyes"
@@ -109,6 +109,23 @@ describe('the forecast title names the period and the owner', () => {
     expect(res.status, await res.text()).toBe(200);
     expect((await stored(id)).owner_name ?? null).toBeNull();
     expect((await stored(id)).display_title).toBe('Q4 2026');
+  });
+
+  it('a system write with no user (the nightly snapshot, an integration) names the owner too', async () => {
+    const row = await systemInsert(verify, 'crm_forecast', {
+      period: 'quarter', period_start: '2026-10-01', source: 'scheduled', owner_id: omar.id,
+    });
+    const id = String(row.id ?? row.record?.id);
+    expect((await stored(id)).owner_name).toBe('Omar Diaz');
+    expect((await stored(id)).display_title).toBe('Q4 2026 · Omar Diaz');
+  });
+
+  it('one update that hands many rows to one owner (the seed-ownership claim) names that owner on each', async () => {
+    const a = await q4();
+    const b = await q4();
+    await predicateUpdate(verify, 'crm_forecast', { owner_id: nina.id }, { id: { $in: [a, b] } }, admin);
+    expect((await stored(a)).display_title).toBe('Q4 2026 · Nina Reyes');
+    expect((await stored(b)).display_title).toBe('Q4 2026 · Nina Reyes');
   });
 
   it('handing the row to another owner re-titles it', async () => {
