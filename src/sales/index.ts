@@ -70,10 +70,11 @@ export type HotCrmAppCollections = Omit<
  * without it, those three actions are refused ("defineStack cross-reference
  * validation failed (3 issues)"); with it, none. Verified like
  * `artifactObjects`: a target that resolved only through the list and that no
- * package defines is refused by `composeStacks`. The dashboard half of the
- * same fix needs no option — the CRM Overview List Price by Category tile binds
- * revenue's `product_metrics`, which `os validate` now resolves against the
- * artifact's packages.
+ * package defines is refused by `composeStacks`. ⛔ No dashboard of this
+ * package binds a module's dataset: from objectstack 18.4.0 a dataset is read
+ * only from inside the reader's dependency closure (objectstack#32929), so
+ * revenue's `product_metrics` is shown by revenue's own Product Catalog
+ * dashboard (#2436).
  *
  * ## What is deliberately NOT here
  *

@@ -141,7 +141,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: 'Tamaño medio del negocio (período seleccionado)', description: 'Valor medio de los negocios cerrados ganados en el período seleccionado' },
         lead_source: { title: 'Origen del prospecto', description: 'Valor del pipeline por canal de adquisición' },
         pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas en cada etapa de venta' },
-        top_products: { title: 'Precio de lista por categoría', description: 'Suma de los precios de lista del catálogo por categoría de producto, no ventas' },
         pipeline_by_owner: { title: 'Pipeline por responsable', description: 'Valor del pipeline abierto y número de negocios por comercial' },
       },
     },

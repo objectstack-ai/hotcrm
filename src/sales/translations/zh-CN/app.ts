@@ -146,7 +146,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: '平均订单金额（所选期间）', description: '所选期间内已成交商机的平均金额' },
         lead_source: { title: '线索来源', description: '按获客渠道统计的管道金额' },
         pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
-        top_products: { title: '各类别目录价合计', description: '按产品类别汇总的目录价，不是销售额' },
         pipeline_by_owner: { title: '按负责人统计管道', description: '各销售负责人的进行中管道金额与商机数' },
       },
     },

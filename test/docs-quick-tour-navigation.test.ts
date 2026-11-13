@@ -659,7 +659,6 @@ describe('the source facts the quick-tour landing section now rests on (#971)', 
     ]);
     expect(datasets(CrmOverviewDashboard as AnyRec).sort()).toEqual([
       'opportunity_metrics',
-      'product_metrics',
     ]);
     // The tiles the section re-points to, on the dashboards that do carry them.
     expect(datasets(ServiceDashboard as AnyRec)).toContain('case_metrics');
@@ -684,7 +683,6 @@ describe('the source facts the quick-tour landing section now rests on (#971)', 
     // No `close_date`: CRM Overview's revenue trend moved to Executive
     // Overview, its one home (#2370 row 2).
     expect(dims(CrmOverviewDashboard as AnyRec)).toEqual([
-      'category',
       'lead_source',
       'owner',
       'stage',

@@ -1,15 +1,15 @@
 ---
 title: 仪表盘
-description: 五个开箱即用的仪表盘——CRM 概览、销售业绩、销售活动、客户服务和高管概览。
+description: 六个开箱即用的仪表盘——CRM 概览、销售业绩、销售活动、客户服务、高管概览和产品目录。
 ---
 
 # 仪表盘
 
-HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角色每天提出的问题。
+HotCRM 内置六个仪表盘。每个都为特定角色而构建，回答该角色每天提出的问题。
 
 本页列出的每一个磁贴，都是应用真正发布的磁贴。这些清单会在 CI 里与仪表盘元数据逐条比对（`test/docs-dashboard-tiles.test.ts`），所以产品中的磁贴一旦被改名、新增或删除，本页就会直接让构建失败，而不是悄悄开始说假话。
 
-## 五个仪表盘
+## 六个仪表盘
 
 | 仪表盘 | 面向 | 回答 |
 | --- | --- | --- |
@@ -18,8 +18,9 @@ HotCRM 内置五个仪表盘。每个都为特定角色而构建，回答该角�
 | ☎️ **Sales Activity** | 销售经理、客户团队 | "谁在和客户打交道？哪些客户已经没了动静？" |
 | 🎧 **Customer Service** | 服务客服、经理 | "我们在工单和 SLA 上表现如何？" |
 | 👔 **Executive Overview** | 高管、财务 | "我们达成目标了吗？" |
+| 📦 **Product Catalog** | 销售代表、定价负责人 | "产品目录按类别都列了些什么？" |
 
-五者都遵守 [共享规则](/zh-Hans/docs/administration/sharing-and-security)——你看到的内容取决于你的角色。建立在商机之上的三块——CRM Overview、Sales Performance 与 Executive Overview——对不能读取商机的人不出现在侧边栏里，也按岗位对服务坐席与服务经理不出现。
+六者都遵守 [共享规则](/zh-Hans/docs/administration/sharing-and-security)——你看到的内容取决于你的角色。建立在商机之上的三块——CRM Overview、Sales Performance 与 Executive Overview——对不能读取商机的人不出现在侧边栏里，也按岗位对服务坐席与服务经理不出现。
 
 **隐藏的仪表盘不等于上锁的仪表盘。** Executive Overview 还对持有 `sales_rep`、`service_agent` 或 `service_manager` 岗位的人不出现在侧边栏里，这样他们打开应用时落在为自己日常工作准备的页面上——销售代表落在 **Sales Home**——而不是公司层面的总览。这只是为了聚焦而缩短菜单，不是访问限制：销售代表直接打开这个仪表盘的链接，仍然能看到它。任何仪表盘显示什么，由记录可见性决定，而记录可见性由 [共享规则](/zh-Hans/docs/administration/sharing-and-security#how-the-layers-combine) 设定：每个数字只汇总查看者有权读取的记录，所以销售代表看到的是高管版式下自己那一份数据，看不到任何他自己打不开的交易。
 
@@ -39,7 +40,6 @@ KPI 磁贴只有在声明了对比时，才显示「对比上期」或「对比�
 - **Avg Deal Size (Selected Period)** — 所选周期内成交赢单交易的平均金额。
 - **Pipeline by Stage** — 各销售阶段的进行中商机金额（条形图）。
 - **Lead Source** — 按获客渠道统计的管道金额（环形图）。
-- **List Price by Category** — 按产品类别合计的目录标价。它读的是价格表，不是销售：本页没有任何磁贴汇总已售出的明细行（柱状图）。
 - **Pipeline by Owner** — 每位销售代表的进行中管道金额、交易数和平均交易规模（表格）。
 
 **控件**：一个基于商机预计成交日期的日期范围选择器（默认本季度），以及一个 Owner 筛选器。
@@ -134,15 +134,25 @@ KPI 磁贴只有在声明了对比时，才显示「对比上期」或「对比�
 
 此仪表盘是每周领导层评审的基础。
 
+## 📦 Product Catalog
+
+产品目录的那张图，放在 Sales 分组里，紧挨 Products 和 Price Books。它随营收模块一起发布，所以该模块关闭时它也会从侧边栏消失。它原本是 CRM Overview 上的一块磁贴；从 ObjectStack 18.4.0 起，仪表盘只能读取自己所在包及其依赖包的数据集，而产品数据集属于营收模块。
+
+**磁贴**：
+
+- **List Price by Category** — 按产品类别合计的目录标价。它读的是产品目录，不是销售：HotCRM 里没有任何磁贴汇总已售出的明细行（柱状图）。
+
+**控件**：没有。产品没有可取窗的成交日期，产品目录又是共享的，负责人筛选只能说明是谁录入了条目。
+
 ## 你可以改什么
 
-- **日期范围** — 五个仪表盘里有四个带选择器，且四个都支持自定义区间。CRM Overview、Sales Performance 和 Executive Overview 基于商机预计成交日期取窗，默认本季度；Customer Service 基于工单创建日期取窗，默认最近 90 天。Sales Activity 是唯一没有选择器的，原因见上面它自己的章节。每一个时间窗都由服务端解析，按 UTC 日历日算："最近 7 天"指的是以今天的 UTC 日期结尾的那七个 UTC 日历日，两端都含。你自己的时钟不参与其中——一位在 UTC+8 的读者在当地时间凌晨 3 点打开仪表盘，看到的窗口是在上一个 UTC 午夜结束的，而不是在他自己的午夜。
+- **日期范围** — 六个仪表盘里有四个带选择器，且四个都支持自定义区间。CRM Overview、Sales Performance 和 Executive Overview 基于商机预计成交日期取窗，默认本季度；Customer Service 基于工单创建日期取窗，默认最近 90 天。Sales Activity 和 Product Catalog 没有选择器，原因见上面各自的章节。每一个时间窗都由服务端解析，按 UTC 日历日算："最近 7 天"指的是以今天的 UTC 日期结尾的那七个 UTC 日历日，两端都含。你自己的时钟不参与其中——一位在 UTC+8 的读者在当地时间凌晨 3 点打开仪表盘，看到的窗口是在上一个 UTC 午夜结束的，而不是在他自己的午夜。
 - **筛选器** — 每个仪表盘声明自己的一套：Owner 各处都有，另外 Sales Performance 有 Deal Type、Customer Service 有 Priority、Executive Overview 有 Lead Source。
-- **刷新** — Customer Service 每分钟刷新一次，Sales Performance 每三分钟，其余三个每五分钟。
+- **刷新** — Customer Service 每分钟刷新一次，Sales Performance 每三分钟，其余四个每五分钟。
 
 仪表盘的筛选器匹配的是每个部件所绑数据集背后的那个**对象**，而不是该数据集声明的维度，并且它会被 AND 进每个受它约束的部件的查询里。所以 Customer Service 能提供 Agent 筛选器，哪怕 `case_metrics` 没有声明任何负责人维度：`owner_id` 是工单上的字段，筛选器要的就只是这个。但它买到的只有筛选这一件事——部件依然不能按数据集没有声明的字段**分组**，所以 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation) 说"没有任何报表、也没有任何仪表盘部件能按它分组"是对的，它和同一个应用里按 Agent 筛选的服务台仪表盘并不矛盾。反过来同样成立：筛选器若点名了某个部件自己的对象没有的字段，那个部件的查询就会去要一个并不存在的列，所以答不了某个筛选器的部件会按名字显式退出它（`filterBindings`），而不是默默忽略它。
 
-有些磁贴刻意不接受所在仪表盘的筛选器。Revenue Trend、List Price by Category 和 Quota Attainment by Rep 都保持自己标题上写明的那个时间窗，这样更窄的日期选择器就无法在标题不变的情况下悄悄改掉数字的定义。
+有些磁贴刻意不接受所在仪表盘的筛选器。Revenue Trend 和 Quota Attainment by Rep 都保持自己标题上写明的那个时间窗，这样更窄的日期选择器就无法在标题不变的情况下悄悄改掉数字的定义。
 
 ## 数字是从哪里来的
 

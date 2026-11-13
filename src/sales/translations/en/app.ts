@@ -84,7 +84,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: 'Avg Deal Size (Selected Period)', description: 'Average value of closed-won deals in the selected period' },
         lead_source: { title: 'Lead Source', description: 'Pipeline value by acquisition channel' },
         pipeline_by_stage: { title: 'Pipeline by Stage', description: 'Open opportunity value at each sales stage' },
-        top_products: { title: 'List Price by Category', description: 'Catalog list prices summed per product category, not sales' },
         pipeline_by_owner: { title: 'Pipeline by Owner', description: 'Open pipeline value and deal count per sales rep' },
       },
     },
