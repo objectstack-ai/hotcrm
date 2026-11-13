@@ -64,12 +64,12 @@ describe('the deal page says a deal is waiting on approval (#2371 row 2)', () =>
   // the packs publish.
   const RECALL: Record<string, string> = { en: 'Recall', 'zh-CN': '撤回', 'ja-JP': '取り下げ', 'es-ES': 'Retirar' };
   const position = (locale: string, name: string): string =>
-    locale === 'en' ? ({ sales_manager: 'Sales Manager', sales_director: 'Sales Director' } as Rec)[name] as string
+    locale === 'en' ? ({ crm_sales_manager: 'Sales Manager', crm_sales_director: 'Sales Director' } as Rec)[name] as string
       : String(packFor(locale)?.positions?.[name]?.label);
 
   it.each(Object.keys(RECALL))('%s: names the approver, the lock and what Recall does', (locale) => {
-    const manager = position(locale, 'sales_manager');
-    const director = position(locale, 'sales_director');
+    const manager = position(locale, 'crm_sales_manager');
+    const director = position(locale, 'crm_sales_director');
     expect(manager, `${locale} pack has no sales_manager label`).not.toBe('undefined');
     for (const c of [MANAGER, DIRECTOR]) {
       const text = `${c.properties.title[locale]} ${c.properties.body[locale]}`;

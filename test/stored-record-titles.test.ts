@@ -63,7 +63,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   manager = await signUpPerson(verify, 'manager@stored-record-titles.test', {
-    name: 'Title Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Title Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   admin = await verify.signIn();
 }, 180_000);

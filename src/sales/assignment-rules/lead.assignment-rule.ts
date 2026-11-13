@@ -11,7 +11,7 @@ import { defineAssignmentRule } from '@objectstack/spec/automation';
  * submission (the guest branch of `lead_automation` strips a supplied owner)
  * or a system import. A person's own create, and every REST or CSV import, is
  * stamped with the writer and never routed. `load` counts a rep's leads that
- * are not yet converted. With nobody holding `sales_rep` the lead parks in the
+ * are not yet converted. With nobody holding `crm_sales_rep` the lead parks in the
  * queue; intake is never refused.
  *
  * The `lead_assignment` flow (`src/sales/flows/lead-assignment.flow.ts`) then

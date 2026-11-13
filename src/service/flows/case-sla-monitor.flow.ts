@@ -21,7 +21,7 @@ type Flow = Automation.Flow;
  * A breached case with NO owner is the hard case, and it is answered in two
  * halves. The escalation the sweep writes is itself what gives the case an
  * owner — `case_escalation_reassign` rides on that update and hands the case to
- * the least-loaded `service_manager` — so this flow re-reads the case
+ * the least-loaded `crm_service_manager` — so this flow re-reads the case
  * afterwards and alerts whoever it now belongs to. When the pool is empty the
  * assignment is a no-op, the case stays unowned, the alert is skipped at a
  * named gate, and the RUN SURVIVES: the breach is still recorded and every
@@ -255,7 +255,7 @@ export const CaseSlaMonitorFlow: Flow = {
               // escalation transition `case_escalation_reassign`
               // (`src/service/objects/_case-assignment.ts`, `beforeUpdate`, priority
               // 250) fires on: it stamps the least-loaded holder of the
-              // `service_manager` position onto the payload of the update
+              // `crm_service_manager` position onto the payload of the update
               // already in flight. So the sweep does not need a seam to "call"
               // the assignment — performing the transition IS putting the case
               // through it, and the app keeps ONE answer to "who should own
@@ -294,7 +294,7 @@ export const CaseSlaMonitorFlow: Flow = {
               // Gateway only — the predicate lives on the out-edge.
               //
               // The ruled empty-pool clause, as a gate rather than a failure:
-              // when the `service_manager` pool resolves empty the hook assigns
+              // when the `crm_service_manager` pool resolves empty the hook assigns
               // nobody, the re-read case is still ownerless, no edge matches and
               // the iteration ends. The breach stays on the record and in the
               // run summary, the notification is skipped at a NAMED gate, and
@@ -318,7 +318,7 @@ export const CaseSlaMonitorFlow: Flow = {
               // ruling 2026-09-07, option A. On a breached
               // case that ALREADY HAS AN OWNER, the breach write carries
               // `status: 'escalated'` and `case_escalation_reassign` hands the
-              // case to the least-loaded `service_manager` inside that same
+              // case to the least-loaded `crm_service_manager` inside that same
               // write — yet this node addresses `currentCase` as
               // `query_breached` bound it, BEFORE the hand-off. So the breach
               // alert deliberately reaches the agent the case is being taken

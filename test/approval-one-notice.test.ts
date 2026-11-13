@@ -49,10 +49,10 @@ describe('the approval flow notifies the owner once per decision (#2371 row 5)',
     const adminToken = await verify.signIn();
     admin = { token: adminToken, id: String((await verify.contextFor(adminToken)).userId) } as Person;
     rep = await signUpPerson(verify, 'rep@approval-one-notice.test', {
-      name: 'One Notice Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'One Notice Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     manager = await signUpPerson(verify, 'manager@approval-one-notice.test', {
-      name: 'One Notice Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+      name: 'One Notice Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
     });
     const [account] = await verify.seed('crm_account', [{ name: 'One Notice Co', owner_id: rep.id, approval_status: 'approved' }]);
     accountId = String(account!.id);

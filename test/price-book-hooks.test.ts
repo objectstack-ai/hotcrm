@@ -35,10 +35,10 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   manager = await signUpPerson(verify, 'manager@price-book-hooks.test', {
-    name: 'Pricing Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Pricing Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   rep = await signUpPerson(verify, 'rep@price-book-hooks.test', {
-    name: 'Quoting Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Quoting Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   const books = await verify.rows('crm_price_book', { is_standard: true });
   expect(books, 'fixture: the seed holds one standard book').toHaveLength(1);

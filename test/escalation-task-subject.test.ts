@@ -50,10 +50,10 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   // The person this is about: a service agent escalating a case they work.
   agent = await signUpPerson(verify, 'agent@escalation-task-subject.test', {
-    name: 'Escalating Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Escalating Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   const rep = await signUpPerson(verify, 'rep@escalation-task-subject.test', {
-    name: 'Account Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Account Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Escalation Co', owner_id: rep.id }]);
   accountId = String(account.id);

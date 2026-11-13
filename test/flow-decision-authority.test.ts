@@ -240,7 +240,7 @@ describe('the mechanism, on the real engine', () => {
   const stalledDeal = async () => {
     const i = ++n;
     const rep = await signUpPerson(verify, `rep${i}@flow-decision-authority.test`, {
-      name: `Stalled Rep ${i}`, positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: `Stalled Rep ${i}`, positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     const [account] = await verify.seed('crm_account', [{ name: `Stalled Co ${i}`, owner_id: rep.id }]);
     const [opp] = await verify.seed('crm_opportunity', [{

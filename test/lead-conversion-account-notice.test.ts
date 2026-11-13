@@ -137,10 +137,10 @@ beforeAll(async () => {
   // Two reps who own their own accounts and nothing else: `crm_account` is
   // `sharingModel: 'private'`, so neither reads the other's.
   rep = await signUpPerson(verify, 'rep@lead-conversion-account-notice.test', {
-    name: 'Notice Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Notice Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   colleague = await signUpPerson(verify, 'colleague@lead-conversion-account-notice.test', {
-    name: 'Notice Colleague', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Notice Colleague', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 120_000);
 

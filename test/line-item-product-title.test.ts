@@ -85,7 +85,7 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@line-item-product-title.test', {
-    name: 'Title Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Title Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 180_000);
 

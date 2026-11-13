@@ -38,7 +38,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   marketer = await signUpPerson(verify, 'marketer@campaign-member-direct-create-gates.test', {
-    name: 'Direct Marketer', positions: ['marketing_user'], permissionSets: ['marketing_user'],
+    name: 'Direct Marketer', positions: ['crm_marketing_user'], permissionSets: ['marketing_user'],
   });
 }, 180_000);
 

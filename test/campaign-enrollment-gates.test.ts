@@ -32,10 +32,10 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   marketer = await signUpPerson(verify, 'marketer@campaign-enrollment-gates.test', {
-    name: 'Gates Marketer', positions: ['marketing_user'], permissionSets: ['marketing_user'],
+    name: 'Gates Marketer', positions: ['crm_marketing_user'], permissionSets: ['marketing_user'],
   });
   manager = await signUpPerson(verify, 'manager@campaign-enrollment-gates.test', {
-    name: 'Gates Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Gates Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 180_000);
 

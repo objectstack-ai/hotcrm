@@ -51,7 +51,7 @@ const q4 = async (over: Rec = {}): Promise<string> => {
 /** A person of their own, so a rename in one case never moves another case's titles. */
 const person = (name: string): Promise<Person> =>
   signUpPerson(verify, `p${++k}@forecast-owner-title.test`, {
-    name, positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name, positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 
 /** The organization the person's session works in, the one their sign-up made them a member of. */
@@ -65,13 +65,13 @@ const titleBecomes = (id: string, title: string) => vi.waitFor(async () => {
 beforeAll(async () => {
   verify = await hotcrmStack();
   nina = await signUpPerson(verify, 'nina@forecast-owner-title.test', {
-    name: 'Nina Reyes', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Nina Reyes', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   omar = await signUpPerson(verify, 'omar@forecast-owner-title.test', {
-    name: 'Omar Diaz', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Omar Diaz', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   manager = await signUpPerson(verify, 'maya@forecast-owner-title.test', {
-    name: 'Maya Chen', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Maya Chen', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
   admin = await verify.signIn();
 }, 180_000);

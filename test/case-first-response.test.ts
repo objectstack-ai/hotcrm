@@ -59,7 +59,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   agent = await signUpPerson(verify, 'agent@case-first-response.test', {
-    name: 'Service Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Service Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Acme Corporation (first response)' }]);
   accountId = String(account!.id);

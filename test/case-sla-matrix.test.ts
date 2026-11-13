@@ -52,7 +52,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   agent = await signUpPerson(verify, 'agent@case-sla-matrix.test', {
-    name: 'SLA Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'SLA Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   for (const tier of CASE_SLA_TIERS) {
     const [account] = await verify.seed('crm_account', [{ name: `Tier ${tier} Co`, tier }]);

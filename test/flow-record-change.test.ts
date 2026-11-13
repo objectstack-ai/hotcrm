@@ -45,9 +45,9 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@flow-record-change.test', {
-    name: 'Record Change Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Record Change Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
-  // Service grants, but NOT on the `service_agent` rota: a case the agent
+  // Service grants, but NOT on the `crm_service_agent` rota: a case the agent
   // opens stays the agent's (`case_intake_assignment` hands ownerless cases
   // to the rota).
   agent = await signUpPerson(verify, 'agent@flow-record-change.test', {
@@ -501,7 +501,7 @@ describe('lead_assignment — who the routing alert reaches (#2073 item 7)', () 
  * A lead with NO owner (#2060 item 6).
  *
  * Web-to-lead lands ownerless — parked in the `lead_intake` queue — whenever
- * `lead_intake_assignment` finds nobody holding `sales_rep` (or its pool read
+ * `lead_intake_assignment` finds nobody holding `crm_sales_rep` (or its pool read
  * fails; the platform reads it as a system step, so the form's own grant does
  * not decide it), and a seed or integration write carries whatever owner it was given. The SLA stamp
  * is the routing decision about the lead and lands either way; the alert has

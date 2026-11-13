@@ -88,7 +88,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   agent = await signUpPerson(verify, 'agent@knowledge-deflection.test', {
-    name: 'Deflecting Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Deflecting Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Deflection Co', owner_id: agent.id }]);
   accountId = String(account!.id);
