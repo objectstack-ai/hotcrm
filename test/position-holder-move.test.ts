@@ -1,134 +1,183 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import type { VerifyStack } from '@objectstack/verify';
-import { CrmPositions, CRM_POSITION_FORMER_NAMES } from '../src/sales/sharing/positions';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
-import { REPO_ROOT } from './helpers/repo-root';
+import { bootStack, type VerifyStack } from '@objectstack/verify';
+import artifact from '../objectstack.config';
+import { CrmPositions } from '../src/sales/sharing/positions';
+import { bootOptions, buildArtifactAgain } from './helpers/verify-stack';
 
 /**
- * The twelve positions took the `crm_` prefix (#2437), and the people who held
- * them under the old names are moved by `scripts/migrate-position-holders.ts`.
+ * The people who held a position before 6.2.0 still hold it after the upgrade
+ * (#2458).
  *
- * Why a move is needed at all, measured here rather than assumed: an
- * assignment (`sys_user_position`) stores the position's NAME, and the
- * platform does not carry it across a rename. A person whose assignment still
- * reads `sales_rep` after the upgrade holds a position that no longer exists,
- * so the `sales_rep` permission set the position distributes is not theirs.
+ * 6.2.0 gave all twelve positions the `crm_` prefix (#2437). An assignment
+ * (`sys_user_position`) stores the position's NAME, so an installed
+ * organization's holders kept naming positions that no longer existed and lost
+ * every permission set those positions gave them. Each position now declares
+ * its earlier name in `renamedFrom`, and the platform moves the holders at boot
+ * (ObjectStack 18.4.0).
  *
- * The rows written under old names are fixture setup, written as the system:
- * that is the state an installed organization is in after the upgrade, and a
- * non-system write of an old name is now refused by the platform (the name
- * resolves to no position). The move itself runs the operator's script,
- * unchanged, against the booted app's own HTTP door, signed in as the dev
- * administrator the way an operator signs in.
+ * Measured the way an install meets it: one database file, two boots.
+ *
+ *  1. The ablation. The app as 6.2.0 shipped it, every `renamedFrom` taken
+ *     out, boots over a database whose holder rows still name the old
+ *     positions. Those rows are fixture setup written as the system: that is
+ *     the state any organization assigned on 6.1.x is in, and a non-system
+ *     write of an old name is refused now (the name resolves to no position).
+ *     The rows stay where they are and grant nothing, which is the defect
+ *     measured on staging.
+ *  2. The fix. The kernel stops, and the shipped app cold-boots over the same
+ *     file (`databaseFile`, the handle's restart seam).
+ *
+ * People sign in by password on both boots, so the reading after the restart
+ * is a new session over the moved rows, not a token minted before it.
  */
 
-type Row = Record<string, unknown>;
+type Row = Record<string, any>;
 
-let verify: VerifyStack;
-let rep: Person;
-let agent: Person;
-let organization: Row;
+/**
+ * The twelve position names HotCRM shipped through 6.1.2, before the `crm_`
+ * prefix. Frozen history, written out here on purpose: it is what an
+ * organization installed on 6.1.x has in `sys_user_position`, so it does not
+ * follow the source.
+ */
+const NAMES_BEFORE_6_2 = [
+  'executive', 'sales_director', 'sales_manager', 'sales_rep',
+  'service_director', 'service_manager', 'service_agent',
+  'marketing_director', 'marketing_manager', 'marketing_user',
+  'na_sales_team', 'eu_sales_team',
+];
 
-const positionsOf = async (p: Person): Promise<string[]> =>
-  (await verify.rows('sys_user_position', { user_id: p.id })).map((r) => String(r.position)).sort();
+describe('every position declares the name it had before 6.2.0', () => {
+  it('each old name is claimed by exactly one position, its crm_ name, and nothing else is claimed', () => {
+    const claims = CrmPositions.flatMap((p) => ((p as Row).renamedFrom ?? []).map((old: string) => [old, p.name]));
+    expect(Object.fromEntries(claims)).toEqual(Object.fromEntries(NAMES_BEFORE_6_2.map((old) => [old, `crm_${old}`])));
+    expect(claims, 'an old name is claimed twice, so the platform carries neither').toHaveLength(NAMES_BEFORE_6_2.length);
+  });
 
-const setsOf = async (p: Person): Promise<string[]> => {
-  const res = await verify.apiAs(p.token, 'GET', '/auth/me/permissions');
-  expect(res.status, await res.clone().text()).toBe(200);
-  const body = (await res.json()) as Row;
-  return ((body.data ?? body) as Row).permissionSets as string[];
+  it('no old name is still a position, or the platform would refuse to carry it', () => {
+    const declared = CrmPositions.map((p) => p.name);
+    for (const old of NAMES_BEFORE_6_2) expect(declared, `${old} is still declared`).not.toContain(old);
+  });
+});
+
+/** The shipped artifact without any `renamedFrom`: the positions as 6.2.0 shipped them. */
+const withoutRenamedFrom = (base: typeof artifact): typeof artifact => {
+  const a = base as unknown as Row;
+  let stripped = 0;
+  const packages = (a.packages as Row[]).map((p) => !Array.isArray(p.manifest?.positions) ? p : {
+    ...p,
+    manifest: {
+      ...p.manifest,
+      positions: (p.manifest.positions as Row[]).map(({ renamedFrom, ...rest }) => {
+        if (renamedFrom !== undefined) stripped += 1;
+        return rest;
+      }),
+    },
+  });
+  expect(stripped, 'fixture: the shipped positions declare renamedFrom').toBe(NAMES_BEFORE_6_2.length);
+  return { ...a, packages } as typeof artifact;
 };
 
-/** Run the script once, as an operator would, with `fetch` pointed at the booted app. */
-async function runScript(argv: string[]): Promise<{ log: string[]; errors: unknown[][]; exitCode: number | undefined }> {
-  const log: string[] = [];
-  vi.spyOn(console, 'log').mockImplementation((...a: unknown[]) => { log.push(a.join(' ')); });
-  const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
-  vi.stubGlobal('fetch', async (input: string | URL, init?: RequestInit) => {
-    const url = new URL(String(input));
-    return verify.raw(url.pathname + url.search, init);
-  });
-  const saved = { argv: process.argv, exitCode: process.exitCode };
-  process.argv = [saved.argv[0]!, 'migrate-position-holders', ...argv];
-  process.exitCode = undefined;
-  try {
-    vi.resetModules();
-    const mod = (await import(pathToFileURL(join(REPO_ROOT, 'scripts', 'migrate-position-holders.ts')).href)) as { done: Promise<void> };
-    await mod.done;
-    return { log, errors: errors.mock.calls, exitCode: process.exitCode as number | undefined };
-  } finally {
-    process.argv = saved.argv;
-    process.exitCode = saved.exitCode;
-  }
+const PASSWORD = 'Position-move-2458';
+
+interface Reading {
+  positions: string[];
+  sets: string[];
+  forecastStatus: number;
 }
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
+/** What a person holds and reaches, read through a fresh password sign-in. */
+async function readingOf(stack: VerifyStack, email: string, userId: string): Promise<Reading> {
+  const token = await stack.signIn(email, PASSWORD);
+  const perms = await stack.apiAs(token, 'GET', '/auth/me/permissions');
+  expect(perms.status, await perms.clone().text()).toBe(200);
+  const body = (await perms.json()) as Row;
+  const forecasts = await stack.apiAs(token, 'GET', '/data/crm_forecast');
+  return {
+    positions: (await stack.rows('sys_user_position', { user_id: userId })).map((r) => String(r.position)).sort(),
+    sets: [...(((body.data ?? body) as Row).permissionSets as string[])].sort(),
+    forecastStatus: forecasts.status,
+  };
+}
 
-describe('the rename table', () => {
-  it('maps every position from its old name to its crm_ name, and names nothing else', () => {
-    const declared = CrmPositions.map((p) => p.name).sort();
-    expect(Object.values(CRM_POSITION_FORMER_NAMES).sort()).toEqual(declared);
-    for (const [oldName, newName] of Object.entries(CRM_POSITION_FORMER_NAMES)) {
-      expect(newName).toBe(`crm_${oldName}`);
-      expect(declared, `${oldName} is still declared as a position`).not.toContain(oldName);
-    }
-  });
-});
+describe('holders of the old names move to the crm_ positions at boot', () => {
+  let dir: string;
+  let after: VerifyStack | undefined;
+  const people: Record<'manager' | 'rep' | 'agent', { email: string; id: string }> = {
+    manager: { email: 'manager@position-move.test', id: '' },
+    rep: { email: 'rep@position-move.test', id: '' },
+    agent: { email: 'agent@position-move.test', id: '' },
+  };
+  const before: Partial<Record<keyof typeof people, Reading>> = {};
+  let managerRowBefore: Row | undefined;
 
-describe('moving the holders of the old names', () => {
   beforeAll(async () => {
-    verify = await hotcrmStack();
-    rep = await signUpPerson(verify, 'rep@position-move.test', { name: 'Moved Rep' });
-    agent = await signUpPerson(verify, 'agent@position-move.test', { name: 'Twice Agent' });
-    const context = await verify.contextFor(rep.token);
-    organization = context.tenantId ? { organization_id: String(context.tenantId) } : {};
-    // An installed organization after the upgrade: assignments still under the old names.
-    await verify.seed('sys_user_position', [
-      { user_id: rep.id, position: 'sales_rep', ...organization },
-      { user_id: rep.id, position: 'na_sales_team', ...organization },
-      // Someone an administrator already re-assigned by hand: the old row is left for them to review.
-      { user_id: agent.id, position: 'service_agent', ...organization },
-      { user_id: agent.id, position: 'crm_service_agent', ...organization },
+    dir = mkdtempSync(join(tmpdir(), 'position-holder-move-'));
+    const databaseFile = join(dir, 'crm.db');
+
+    const ablation = await bootStack(withoutRenamedFrom(await buildArtifactAgain()), bootOptions({ databaseFile }));
+    for (const [key, person] of Object.entries(people)) {
+      const token = await ablation.signUp(person.email, PASSWORD, `Moved ${key}`);
+      person.id = String((await ablation.contextFor(token)).userId);
+    }
+    const context = await ablation.contextFor(await ablation.signIn(people.manager.email, PASSWORD));
+    const organization = context.tenantId ? { organization_id: String(context.tenantId) } : {};
+    // An organization assigned on 6.1.x: every row still names an old position.
+    await ablation.seed('sys_user_position', [
+      { user_id: people.manager.id, position: 'sales_manager', ...organization },
+      { user_id: people.rep.id, position: 'sales_rep', ...organization },
+      { user_id: people.rep.id, position: 'na_sales_team', ...organization },
+      // Someone an administrator already assigned again by hand under the new name.
+      { user_id: people.agent.id, position: 'service_agent', ...organization },
+      { user_id: people.agent.id, position: 'crm_service_agent', ...organization },
     ]);
-  }, 180_000);
+    for (const key of Object.keys(people) as (keyof typeof people)[]) {
+      before[key] = await readingOf(ablation, people[key].email, people[key].id);
+    }
+    [managerRowBefore] = await ablation.rows('sys_user_position', { user_id: people.manager.id });
+    await ablation.stop();
 
-  it('an assignment under an old name grants nothing until it is moved', async () => {
-    expect(await positionsOf(rep)).toEqual(['na_sales_team', 'sales_rep']);
-    expect(await setsOf(rep)).not.toContain('sales_rep');
+    after = await bootStack(await buildArtifactAgain(), bootOptions({ databaseFile }));
+  }, 300_000);
+
+  afterAll(async () => {
+    await after?.stop();
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('ablation: without renamedFrom the rows keep the old names and grant nothing', () => {
+    expect(before.manager).toEqual({ positions: ['sales_manager'], sets: expect.not.arrayContaining(['sales_manager']), forecastStatus: 403 });
+    expect(before.rep?.positions).toEqual(['na_sales_team', 'sales_rep']);
+    expect(before.rep?.sets).not.toContain('sales_rep');
+  });
+
+  it('a sales manager holds crm_sales_manager after the restart and reads forecasts again', async () => {
+    const reading = await readingOf(after!, people.manager.email, people.manager.id);
+    expect(reading.positions).toEqual(['crm_sales_manager']);
+    expect(reading.sets).toContain('sales_manager');
+    expect(reading.forecastStatus).toBe(200);
   }, 60_000);
 
-  it('report-only names what it would move and writes nothing', async () => {
-    const run = await runScript([]);
-    expect(run.errors).toEqual([]);
-    expect(run.log.join('\n')).toContain('sales_rep → crm_sales_rep: 1 to move');
-    expect(run.log.join('\n')).toContain('na_sales_team → crm_na_sales_team: 1 to move');
-    expect(await positionsOf(rep)).toEqual(['na_sales_team', 'sales_rep']);
+  it('a rep with two old positions holds both crm_ positions, and the rep set again', async () => {
+    const reading = await readingOf(after!, people.rep.email, people.rep.id);
+    expect(reading.positions).toEqual(['crm_na_sales_team', 'crm_sales_rep']);
+    expect(reading.sets).toContain('sales_rep');
   }, 60_000);
 
-  it('--apply moves each holder to the new name, and the position grants again', async () => {
-    const run = await runScript(['--apply']);
-    expect(run.errors).toEqual([]);
-    expect(run.exitCode, run.log.join('\n')).toBeUndefined();
-    expect(await positionsOf(rep)).toEqual(['crm_na_sales_team', 'crm_sales_rep']);
-    expect(await setsOf(rep)).toContain('sales_rep');
+  it('a person already reassigned by hand keeps both rows, and nothing is deleted', async () => {
+    const reading = await readingOf(after!, people.agent.email, people.agent.id);
+    expect(reading.positions).toEqual(['crm_service_agent', 'service_agent']);
+    expect(reading.sets).toContain('service_agent');
   }, 60_000);
 
-  it('leaves alone an old row whose holder already holds the new position', async () => {
-    expect(await positionsOf(agent)).toEqual(['crm_service_agent', 'service_agent']);
-  }, 60_000);
-
-  it('a second pass finds nothing left to move', async () => {
-    const run = await runScript(['--apply']);
-    expect(run.errors).toEqual([]);
-    expect(run.exitCode, run.log.join('\n')).toBeUndefined();
-    expect(run.log.join('\n')).not.toMatch(/to move$/m);
-    expect(run.log.join('\n')).toContain('moved 0/0');
-  }, 60_000);
+  it('the move rewrites the row in place: same id, holder and organization, only the position changes', async () => {
+    const [row] = await after!.rows('sys_user_position', { user_id: people.manager.id });
+    const pick = (r: Row | undefined) => ({ id: r?.id, user_id: r?.user_id, organization_id: r?.organization_id ?? null });
+    expect(pick(row)).toEqual(pick(managerRowBefore));
+    expect({ before: managerRowBefore?.position, after: row?.position }).toEqual({ before: 'sales_manager', after: 'crm_sales_manager' });
+  });
 });

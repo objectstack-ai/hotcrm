@@ -81,6 +81,16 @@ largest deals. Put your regional reps in **NA Sales Team** or **EU Sales Team**
 as well, so they can edit the accounts in their territory.
 What each position opens up is in [Access](./crm_admin_access.md).
 
+Coming from a version before 6.2? The positions took the `crm_` prefix in
+6.2 (`sales_rep` became `crm_sales_rep`; the labels did not change). From
+6.2.1, the first time HotCRM starts after the upgrade it moves everyone who
+held a position under its old name to the new one, in every organization, so
+there is nothing to reassign. An environment that installs the upgrade while
+running moves them at its next restart. The move covers the people who hold a
+position only: a sharing rule, queue member or record share you added here
+under an old position name keeps that name, so re-point it to the renamed
+position.
+
 ## 4. Check the permission sets
 
 Positions hand out the everyday sets. Two sets are worth checking by hand: read

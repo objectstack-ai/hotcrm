@@ -100,17 +100,22 @@ ObjectStack 18.3.0, 6.0.0 on ObjectStack
   Every other name still reads *first last*.
 - **Positions carry the `crm_` prefix.** The twelve positions are renamed (`sales_rep` →
   `crm_sales_rep`), because from ObjectStack 18.4.0 a position name is shared by every app in an
-  environment. Labels do not change. Existing assignments must be moved once after the upgrade
-  (see the checks below).
+  environment. Labels do not change. From 6.2.1 every position names its earlier name, and the
+  platform moves the people who held it to the new name at the first boot after the upgrade. 6.2.0
+  itself did not: on it, an assignment made under an old name grants nothing (see the checks below).
 - **ObjectStack 18.4.0.** A record a person links to must be one they can open; the List Price by
   Category chart moves to its own **Product Catalog** dashboard; a forecast's title follows a
   rename of its owner; and Send Email goes out from the deployment's sender address with the rep
   as reply-to. `CHANGELOG.md` has each entry in full.
 
 **Check these before and after upgrading to 6.2.0:** upgrade the host to ObjectStack 18.4.0 first,
-and on PostgreSQL or MySQL run `os migrate apply` with it. Right after installing 6.2.0, run
-`scripts/migrate-position-holders.ts` once per organization as its administrator (report first,
-then `--apply`); until then the old position assignments grant nothing. Then sign in as a sales
+and on PostgreSQL or MySQL run `os migrate apply` with it. Install 6.2.1 rather than 6.2.0: its
+first boot moves every position holder to the `crm_` name, in every organization, with nothing to
+run. The move happens at boot, so an environment that installs the upgrade while running moves
+them at its next restart; until then the old assignments grant nothing. Afterwards **Setup →
+People & Organization → Position Holders** lists the people under the new names. A sharing rule,
+queue member or record share you added in Setup under an old position name keeps that name:
+re-point it to the renamed position. Then sign in as a sales
 rep and see the Sales app on the launcher, and as an administrator see all three apps. Coming from
 6.1.1 or 6.0.0, the checks under the earlier sections apply as well.
 

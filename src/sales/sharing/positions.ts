@@ -42,32 +42,60 @@
  * The descriptions, like the labels, are English only: the platform's
  * translation bundle has no namespace for positions, so the four locale packs
  * translate neither (the same holds for the labels today).
+ *
+ * ### Every position names the name it had before 6.2.0 (#2458)
+ *
+ * All twelve took the `crm_` prefix in 6.2.0 (#2437): from ObjectStack 18.4.0 a
+ * position is one slot per name in the whole environment (ADR-0150 D7), so
+ * `os lint --strict` asks every position to carry its package's prefix. An
+ * assignment (`sys_user_position`) stores the position's NAME, so after that
+ * upgrade every holder of an old name held a position that no longer exists,
+ * and lost every permission set and sharing rule it gave them, silently.
+ *
+ * Each position therefore declares its earlier name in `renamedFrom`
+ * (`PositionSchema`, 18.4.0). At every boot the platform moves each holder row
+ * of an old name to the new one, in every organization, as the system; once
+ * moved, nothing is left to move, so the next boot writes nothing. It moves
+ * holders only: a sharing rule, queue member or record share an administrator
+ * added in Setup under an old name keeps it, and the boot log names each one.
+ * It runs at boot, so an install that upgrades without restarting moves the
+ * holders at its next start. `test/position-holder-move.test.ts` pins the
+ * twelve declarations and measures the move over a database file.
+ *
+ * ⛔ Keep an entry once it ships: an organization that skips a version still
+ * has its holders under the old name. A position renamed again lists both
+ * earlier names.
  */
 export const CrmPositions = [
   {
     name: 'crm_executive',
+    renamedFrom: ['executive'],
     label: 'Executive',
     description: 'Company leadership: reads every large open deal across the pipeline, while the deal team keeps ownership.',
   },
   {
     name: 'crm_sales_director',
+    renamedFrom: ['sales_director'],
     label: 'Sales Director',
     description: 'Leads the sales organization, gives the final sign-off on the largest deals and reads every large open opportunity.',
   },
   {
     name: 'crm_sales_manager',
+    renamedFrom: ['sales_manager'],
     label: 'Sales Manager',
     description: 'Runs a sales team: approves new accounts, lead conversions and large deals, and edits every active customer account.',
     permissionSets: ['sales_manager'],
   },
   {
     name: 'crm_sales_rep',
+    renamedFrom: ['sales_rep'],
     label: 'Sales Representative',
     description: 'Works leads and opportunities day to day and receives new leads from the Lead Intake queue.',
     permissionSets: ['sales_rep'],
   },
   {
     name: 'crm_service_director',
+    renamedFrom: ['service_director'],
     label: 'Service Director',
     description: 'Oversees customer service and reads every open critical case while a service manager handles it.',
   },
@@ -81,12 +109,14 @@ export const CrmPositions = [
   // with its puller named, and only then as a set of its own.
   {
     name: 'crm_service_manager',
+    renamedFrom: ['service_manager'],
     label: 'Service Manager',
     description: 'Works the escalation pool: escalated cases are handed to this position, which edits every open critical case.',
     permissionSets: ['service_agent'],
   },
   {
     name: 'crm_service_agent',
+    renamedFrom: ['service_agent'],
     label: 'Service Agent',
     description: 'Handles customer cases, receives new cases from the Support Intake queue and claims the ones still waiting there.',
     permissionSets: ['service_agent'],
@@ -104,18 +134,21 @@ export const CrmPositions = [
   // nothing beyond it.
   {
     name: 'crm_marketing_director',
+    renamedFrom: ['marketing_director'],
     label: 'Marketing Director',
     description: 'Leads marketing and edits every live campaign, whoever owns it.',
     permissionSets: ['marketing_user'],
   },
   {
     name: 'crm_marketing_manager',
+    renamedFrom: ['marketing_manager'],
     label: 'Marketing Manager',
     description: 'Manages marketing campaigns and edits every live campaign, whoever owns it.',
     permissionSets: ['marketing_user'],
   },
   {
     name: 'crm_marketing_user',
+    renamedFrom: ['marketing_user'],
     label: 'Marketing User',
     description: 'Plans and runs marketing campaigns and their members day to day.',
     permissionSets: ['marketing_user'],
@@ -123,43 +156,14 @@ export const CrmPositions = [
   // Territory groupings referenced by the account sharing rules.
   {
     name: 'crm_na_sales_team',
+    renamedFrom: ['na_sales_team'],
     label: 'NA Sales Team',
     description: 'Territory team for North America: edits every account in the North America territory.',
   },
   {
     name: 'crm_eu_sales_team',
+    renamedFrom: ['eu_sales_team'],
     label: 'EU Sales Team',
     description: 'Territory team for Europe: edits every account in the Europe (EMEA) territory.',
   },
 ];
-
-/**
- * The name each position carried before it took the `crm_` prefix (#2437).
- *
- * From ObjectStack 18.4.0 a position is one slot per name in the whole
- * environment (ADR-0150 D7): a second package that ships a position of the same
- * name is refused at install, so `os lint --strict` asks every position to carry
- * its package's prefix. All twelve were renamed together.
- *
- * The platform does not carry a position's holders across a rename: an
- * assignment (`sys_user_position`) stores the position's NAME, so after the
- * upgrade every assignment written under an old name names a position that no
- * longer exists and grants nothing. `scripts/migrate-position-holders.ts` moves
- * them to the new names, one organization at a time, and reads this table to
- * know which. `test/position-rename-map.test.ts` pins that it covers every
- * position, old name to new, and nothing else.
- */
-export const CRM_POSITION_FORMER_NAMES: Readonly<Record<string, string>> = {
-  executive: 'crm_executive',
-  sales_director: 'crm_sales_director',
-  sales_manager: 'crm_sales_manager',
-  sales_rep: 'crm_sales_rep',
-  service_director: 'crm_service_director',
-  service_manager: 'crm_service_manager',
-  service_agent: 'crm_service_agent',
-  marketing_director: 'crm_marketing_director',
-  marketing_manager: 'crm_marketing_manager',
-  marketing_user: 'crm_marketing_user',
-  na_sales_team: 'crm_na_sales_team',
-  eu_sales_team: 'crm_eu_sales_team',
-};
