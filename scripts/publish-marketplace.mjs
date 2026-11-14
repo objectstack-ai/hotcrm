@@ -12,9 +12,9 @@
  *   1. Read `package.json`               → version
  *   2. Read `objectstack.manifest.json`  → marketplace meta
  *   3. Read `dist/objectstack.json`      → compiled artifact (run `pnpm build` first)
- *   4. Flatten it to the bundle the marketplace reads, and refuse — before any
- *      HTTP call, DRY_RUN included — a bundle missing any object the build
- *      carries (`scripts/lib/marketplace-bundle.mjs`, #2053)
+ *   4. Post it as built — the composed artifact, one `packages[]` entry per
+ *      package — and refuse, before any HTTP call, DRY_RUN included, a build
+ *      that carries no objects (`scripts/lib/marketplace-bundle.mjs`, #2059)
  *   5. Resolve the manifest's per-locale listing `translations` (readme paths
  *      read from disk) and refuse, DRY_RUN included, a map that does not parse
  *      as `PackageTranslationsSchema` (`scripts/lib/marketplace-listing.mjs`, #2392)
@@ -40,9 +40,10 @@ import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   BundleError,
-  assertBundleCarriesEveryObject,
+  assertArtifactCarriesObjects,
   describeBundle,
-  flattenArtifact,
+  describePackages,
+  versionBody,
 } from './lib/marketplace-bundle.mjs';
 import {
   ListingError,
@@ -201,27 +202,22 @@ async function main() {
   if (!existsSync(distPath)) die(`missing ${distPath} — did you run "pnpm build"?`);
   const artifact = await readJson(distPath);
 
-  // The bundle cloud stores is the bundle posted here, so it is built and
-  // checked before the first request: v4.0.0 posted the composed artifact as
-  // built, cloud kept none of its objects, and the POST still answered 201.
-  let bundle;
+  // The bundle cloud stores is the artifact as built, composed (#2059); it is
+  // checked before the first request.
   try {
-    bundle = flattenArtifact(artifact);
-    assertBundleCarriesEveryObject(bundle, artifact);
+    assertArtifactCarriesObjects(artifact);
   } catch (err) {
     if (err instanceof BundleError) die(`refusing to publish: ${err.message}`);
     throw err;
   }
 
-  const manifestId = mp.manifestId ?? bundle?.manifest?.id;
-  if (!manifestId) die('no manifestId (set manifestId in objectstack.manifest.json or bundle.manifest.id)');
+  const manifestId = mp.manifestId ?? artifact?.manifest?.id;
+  if (!manifestId) die('no manifestId (set manifestId in objectstack.manifest.json or the artifact manifest.id)');
 
   log(`── ${mp.displayName ?? pkg.name} (${manifestId}) @ ${ver}`);
   if (DRY_RUN) log('DRY_RUN=1 — no HTTP calls will be made.');
-  log(
-    `  bundle${bundle === artifact ? '' : ` (flattened from ${artifact.packages.length} packages)`}: ` +
-      describeBundle(bundle).join(' · '),
-  );
+  log(`  bundle (as built): ${describeBundle(artifact).join(' · ')}`);
+  for (const line of describePackages(artifact)) log(`    package ${line}`);
 
   const readme = existsSync(join(ROOT, mp.readmePath ?? 'README.md'))
     ? await readFile(join(ROOT, mp.readmePath ?? 'README.md'), 'utf8')
@@ -253,12 +249,10 @@ async function main() {
   // Step 2 — create sys_package_version (idempotent by 409). auto_approve is
   // honoured for service-mode callers (our CI's OS_CLOUD_API_KEY); without it
   // the version lands as draft and the public catalog hides it.
-  const verRes = await postJson(`/api/v1/cloud/packages/${encodeURIComponent(pkgId)}/versions`, {
-    version: ver,
-    bundle,
-    release_notes: notes,
-    auto_approve: true,
-  });
+  const verRes = await postJson(
+    `/api/v1/cloud/packages/${encodeURIComponent(pkgId)}/versions`,
+    versionBody({ version: ver, artifact, releaseNotes: notes }),
+  );
   if (verRes.status === 409) {
     log(`  = version ${ver} already published — no-op`);
     process.exit(0);
