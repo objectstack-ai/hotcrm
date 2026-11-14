@@ -5,8 +5,7 @@ import { defineView } from '@objectstack/spec/ui';
 /**
  * Payment Views
  *
- *   • grid — every payment the reader can see, newest first. A bill shows its
- *     maturity date: the day it turns into cash.
+ *   • grid — every payment the reader can see, newest first.
  *
  * No form is authored: the form and the record page derive from the object's
  * `fieldGroups`. Finance enters payments there or imports them
@@ -27,7 +26,6 @@ export const PaymentViews = defineView({
       { field: 'payment_date', width: 120, sortable: true },
       { field: 'amount', width: 140, align: 'right', summary: 'sum' },
       { field: 'method', width: 130 },
-      { field: 'bill_maturity_date', width: 140 },
     ],
     sort: [{ field: 'payment_date', order: 'desc' }],
     pagination: { pageSize: 50 },

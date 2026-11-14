@@ -178,13 +178,8 @@ export const zhCN: TranslationData = {
           label: '方式',
           options: {
             bank_transfer: '银行转账',
-            bill: '票据',
             other: '其他',
           },
-        },
-        bill_maturity_date: {
-          label: '票据到期日',
-          help: '票据兑付为现金的日期。方式为票据时必填。',
         },
         source: {
           label: '来源',
@@ -209,9 +204,6 @@ export const zhCN: TranslationData = {
       _sections: {
         basic: {
           label: '回款',
-        },
-        bill: {
-          label: '票据',
         },
         source: {
           label: '来源',

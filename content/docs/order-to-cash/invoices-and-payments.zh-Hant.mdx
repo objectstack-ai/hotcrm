@@ -1,6 +1,6 @@
 ---
 title: 發票與回款
-description: 財務如何輸入和匯入發票與回款、到期日如何確定、「逾期發票」列出什麼，以及如何記錄票據。
+description: 財務如何輸入和匯入發票與回款、到期日如何確定、「逾期發票」列出什麼，以及如何匯入回款。
 ---
 
 # 發票與回款
@@ -42,16 +42,13 @@ description: 財務如何輸入和匯入發票與回款、到期日如何確定�
 | **Billing Milestone** | 這筆款項計入的節點。有發票時從發票帶入；開票前收到的預付款，請自行選擇 |
 | **Payment Date** | 收到款項的日期 |
 | **Amount** | 收到多少 |
-| **Method** | **Bank Transfer**、**Bill** 或 **Other** |
-| **Bill Maturity Date** | 票據兌付為現金的日期 |
+| **Method** | **Bank Transfer** 或 **Other** |
 
 **每張發票一行。** 一筆收款支付了多張發票時，按財務已有的拆分，每張發票記錄一筆回款。HotCRM 中沒有分攤這一步。
 
 **開票前的預付款。** 把回款記錄到回款節點上。發票開立後，在同一筆回款上填寫 **Invoice**。
 
 **針對其他合約發票的回款會被拒絕**，提示會寫明是哪張發票。這只可能發生在匯入中，因為表單只提供本合約的發票。
-
-**票據。** 銀行承兌匯票、商業匯票或本票，在收到當天即計為已回款：記錄時把 **Method** 設為 **Bill**，並填寫 **Bill Maturity Date**（此時為必填）。到期日告訴業務票據何時兌付為現金。票據之後的流轉（背書、貼現）屬於財務，不在這裡記錄。
 
 ## 匯入 [#importing]
 
@@ -65,7 +62,7 @@ description: 財務如何輸入和匯入發票與回款、到期日如何確定�
 | Invoice | — | ✓ 發票號碼 |
 | Billing Milestone | ✓ 節點名稱 | ✓ |
 | Issue Date、Due Date、Amount、Status | ✓ | — |
-| Payment Date、Amount、Method、Bill Maturity Date | — | ✓ |
+| Payment Date、Amount、Method | — | ✓ |
 
 - **ERP Reference 是唯一鍵。** 匯入一行時，如果它的 **ERP Reference** 已在某張發票上，就更新這張發票，而不會再新增一張。因此財務修改檔案後可以再次匯入。ERP 透過介面寫入時使用同一個編號。
 - **每一筆匯入的紀錄都有標記。** 它的 **Source** 為 **Import**，**Synced At** 為匯入的時刻，讀者可以看出數字從哪裡來、有多新。手動輸入的紀錄，**Source** 為 **Manual entry**。

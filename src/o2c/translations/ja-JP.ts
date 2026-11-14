@@ -178,13 +178,8 @@ export const jaJP: TranslationData = {
           label: '方法',
           options: {
             bank_transfer: '銀行振込',
-            bill: '手形',
             other: 'その他',
           },
-        },
-        bill_maturity_date: {
-          label: '手形期日',
-          help: '手形が現金化される日。手形の場合は必須。',
         },
         source: {
           label: 'ソース',
@@ -209,9 +204,6 @@ export const jaJP: TranslationData = {
       _sections: {
         basic: {
           label: '入金',
-        },
-        bill: {
-          label: '手形',
         },
         source: {
           label: 'ソース',

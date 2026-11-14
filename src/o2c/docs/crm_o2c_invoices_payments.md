@@ -1,6 +1,6 @@
 ---
 title: Invoices and Payments — Who Writes Them and What Overdue Means
-description: Finance's records on a contract, how a due date is filled, when an invoice is overdue, bills, and importing.
+description: Finance's records on a contract, how a due date is filled, when an invoice is overdue, and importing.
 order: 2
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
@@ -30,9 +30,6 @@ so every figure a rep sees is one finance wrote.
   payment row per invoice; there is no allocation.
 - **A payment's invoice must belong to its contract.** Otherwise the save is
   refused, naming the invoice.
-- **Bills.** With **Method** set to **Bill**, the **Bill Maturity Date** is
-  required: the money counts as received on the payment date, and the maturity
-  date says when it turns into cash.
 
 ## Importing
 

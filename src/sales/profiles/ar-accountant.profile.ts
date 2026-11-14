@@ -17,11 +17,12 @@
  *   - `crm_invoice`, `crm_payment` — full grants with Modify All: finance
  *     books every customer's invoices and receipts. ⛔ No transfer: the rows
  *     are not owned by anyone who could lose them. ⚠️ Both are
- *     `controlled_by_parent` under the contract, and on 18.3.0 the platform
- *     refuses a child write without EDIT on the master — Modify All on the
- *     child does not lift it (measured, the plan's *Phase 1a readings*). So
- *     until that is settled finance's writes answer 403; the set is authored
- *     as ruled, not bent around the gap by an edit grant on the contract.
+ *     `controlled_by_parent` under the contract, and the platform refuses a
+ *     child insert without EDIT on the master — Modify All on the child does
+ *     not lift it (measured on 18.3.0 and again on 18.4.0, the plan's
+ *     *Phase 1a readings*). Ruled 2026-11-14: the platform adds a per-object
+ *     opt-in, read on the master is enough (objectstack#33250); until it
+ *     lands finance's inserts answer 403. ⛔ No edit grant on the contract.
  *   - `crm_billing_milestone` — read: the plan is sales'. Finance links an
  *     invoice or payment to a step, which is a write on the invoice or the
  *     payment, never on the step.

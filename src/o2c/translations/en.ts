@@ -178,13 +178,8 @@ export const en: TranslationData = {
           label: 'Method',
           options: {
             bank_transfer: 'Bank Transfer',
-            bill: 'Bill',
             other: 'Other',
           },
-        },
-        bill_maturity_date: {
-          label: 'Bill Maturity Date',
-          help: 'When the bill turns into cash. Required for a bill.',
         },
         source: {
           label: 'Source',
@@ -209,9 +204,6 @@ export const en: TranslationData = {
       _sections: {
         basic: {
           label: 'Payment',
-        },
-        bill: {
-          label: 'Bill',
         },
         source: {
           label: 'Source',

@@ -1,7 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { P } from '@objectstack/spec';
 
 /**
  * Payment — money received against a contract (REQ-0007, plan *The data
@@ -30,7 +29,6 @@ export const Payment = ObjectSchema.create({
 
   fieldGroups: [
     { key: 'basic',  label: 'Payment', icon: 'banknote' },
-    { key: 'bill',   label: 'Bill',    icon: 'file-text' },
     { key: 'source', label: 'Source',  icon: 'refresh-ccw', collapse: 'collapsed' },
   ],
 
@@ -86,26 +84,17 @@ export const Payment = ObjectSchema.create({
       min: 0,
     }),
 
-    // `bill` (plan decision 7): an acceptance bill, a bill of exchange or a
-    // promissory note counts as received on the day it is received; its
-    // maturity date tells sales when it turns into cash. What happens to the
-    // bill afterwards is finance's.
+    // The methods every market shares (plan decision 7, ruled B under
+    // "global customers first", 2026-11-14): a bill and its maturity date are
+    // a customer's own shape, added in its own repository.
     method: Field.select({
       label: 'Method',
       group: 'basic',
       options: [
         { label: 'Bank Transfer', value: 'bank_transfer', default: true },
-        { label: 'Bill', value: 'bill' },
         { label: 'Other', value: 'other' },
       ],
       required: true,
-    }),
-
-    bill_maturity_date: Field.date({
-      label: 'Bill Maturity Date',
-      group: 'bill',
-      description: 'When the bill turns into cash. Required for a bill.',
-      requiredWhen: P`has(record.method) && record.method == "bill"`,
     }),
 
     source: Field.select({

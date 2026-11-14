@@ -29,9 +29,8 @@ export const PaymentImportMapping = defineMapping({
       source: 'Method',
       target: 'method',
       transform: 'map',
-      params: { valueMap: { 'Bank Transfer': 'bank_transfer', Wire: 'bank_transfer', Bill: 'bill', Other: 'other' } },
+      params: { valueMap: { 'Bank Transfer': 'bank_transfer', Wire: 'bank_transfer', Other: 'other' } },
     },
-    { source: 'Bill Maturity Date', target: 'bill_maturity_date' },
     { source: 'Source', target: 'source', transform: 'constant', params: { value: 'import' } },
   ],
 });

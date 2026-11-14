@@ -178,13 +178,8 @@ export const esES: TranslationData = {
           label: 'Método',
           options: {
             bank_transfer: 'Transferencia bancaria',
-            bill: 'Efecto',
             other: 'Otro',
           },
-        },
-        bill_maturity_date: {
-          label: 'Vencimiento del efecto',
-          help: 'Cuándo el efecto se convierte en efectivo. Obligatorio para un efecto.',
         },
         source: {
           label: 'Origen',
@@ -209,9 +204,6 @@ export const esES: TranslationData = {
       _sections: {
         basic: {
           label: 'Cobro',
-        },
-        bill: {
-          label: 'Efecto',
         },
         source: {
           label: 'Origen',

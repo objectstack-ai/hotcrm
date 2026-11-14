@@ -115,7 +115,7 @@ is its own collection plan.
   ([`order-to-cash-module-plan.md`](../architecture/order-to-cash-module-plan.md)); in shape:
   - `crm_billing_milestone`, the contract's collection plan, kept by sales;
   - `crm_invoice` and `crm_payment`, records written by finance (or by an ERP through the same
-    import key), read-only to sales; a payment may be a bill, with its maturity date;
+    import key), read-only to sales;
   - four figures added to `crm_contract` and one to `crm_account` from the module through
     `objectExtensions`;
   - list views for the rep's overdue invoices and this month's planned collections.

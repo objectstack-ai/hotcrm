@@ -1,6 +1,6 @@
 ---
 title: Invoices and Payments
-description: How finance enters and imports invoices and payments, how a due date is set, what Overdue Invoices lists, and how a bill is recorded.
+description: How finance enters and imports invoices and payments, how a due date is set, what Overdue Invoices lists, and how payments are imported.
 ---
 
 # Invoices and Payments
@@ -40,16 +40,13 @@ The **Overdue Invoices** list under **Order to Cash → Invoices** shows every i
 | **Billing Milestone** | The plan step it counts toward. Filled in from the invoice when there is one; set it yourself for an advance paid before its invoice |
 | **Payment Date** | The day the money was received |
 | **Amount** | How much was received |
-| **Method** | **Bank Transfer**, **Bill** or **Other** |
-| **Bill Maturity Date** | For a bill: the day it turns into cash |
+| **Method** | **Bank Transfer** or **Other** |
 
 **One row per invoice.** A receipt that pays several invoices is recorded as one payment per invoice, split the way finance already split it. There is no allocation step in HotCRM.
 
 **An advance before its invoice.** Record the payment against the plan step. When the invoice is issued, fill in **Invoice** on the same payment.
 
 **A payment against another contract's invoice is refused**, with a message naming the invoice. This can only happen through an import, since the form offers only the contract's own invoices.
-
-**Bills.** An acceptance bill, a bill of exchange or a promissory note counts as received on the day it is received: record it with **Method** set to **Bill** and its **Bill Maturity Date**, which is then required. The maturity date tells sales when the bill turns into cash. What happens to the bill after that (endorsement, discounting) is finance's, and is not recorded here.
 
 ## Importing [#importing]
 
@@ -63,7 +60,7 @@ Finance can load invoices and payments from a spreadsheet, an accounting package
 | Invoice | — | ✓ the invoice number |
 | Billing Milestone | ✓ the step's name | ✓ |
 | Issue Date, Due Date, Amount, Status | ✓ | — |
-| Payment Date, Amount, Method, Bill Maturity Date | — | ✓ |
+| Payment Date, Amount, Method | — | ✓ |
 
 - **The ERP Reference is the key.** Importing a row whose **ERP Reference** is already on an invoice updates that invoice instead of adding a second one, so the same file can be imported again after finance changes it. An ERP writing through the API uses the same key.
 - **Every imported row is marked.** Its **Source** reads **Import** and its **Synced At** is the moment of the import, so a reader can see where a figure came from and how old it is. A row entered by hand reads **Manual entry**.
