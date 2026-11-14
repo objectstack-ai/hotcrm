@@ -34,9 +34,12 @@ All three hang off a **contract**. Open a contract and its **Billing Milestones*
 
 | Person | Collection plan | Invoices and payments |
 | --- | --- | --- |
-| Sales rep, sales manager | Create, edit and delete the steps of the contracts whose account they may edit | Read |
-| Accounts Receivable (finance) | Read | Enter, import, edit and delete, on every contract |
+| Sales rep | Read — for now (see below) | Read |
+| Sales manager | Create, edit and delete the steps of the contracts they may edit | Read |
+| Accounts Receivable (finance) | Read | Read — for now (see below) |
 | Administrator | Everything | Everything |
+
+**For now**, a platform rule asks for edit access to a contract before anyone writes its plan, invoices or payments, and reps and finance read contracts without editing them. So a sales manager or an administrator builds the plan, and an administrator enters and imports invoices and payments. A platform update will let reps keep the plan of every contract they read and finance enter and import on every contract; this page will say so when it ships.
 
 Everyone else who can read a contract reads its plan, invoices and payments with it: the three records follow the contract's sharing. Finance gets its access from the **Accounts Receivable** position; an administrator assigns it under **Setup → Position Holders**.
 
