@@ -369,6 +369,12 @@ The maintainer restarted the module on hotcrm#2315 with one direction, 「先考
   per-object opt-in, "read on the master is enough to insert and update the detail, under the
   detail's own grants" — objectstack-ai/objectstack#33250 — and phase 1a is Blocked-by it. HotCRM
   grants no contract edit and keeps `controlled_by_parent`.
+- **Land phase 1a now (22:40Z).** Asked why 1a waits for the platform release, the maintainer ruled
+  it lands on 18.4.0 with the gap documented: until a release carries #33250, a sales manager or an
+  administrator builds the plan and enters invoices and payments, an administrator imports them,
+  and the rep and finance pages say so. When the release ships, the three objects declare
+  `sharing.controlledByParent.writeRequiresMasterRead: true`, the pin moves, and the docs drop the
+  note. No temporary contract edit is granted.
 
 ## Upstream asks
 

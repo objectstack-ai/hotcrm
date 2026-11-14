@@ -14,8 +14,8 @@
   package of the one HotCRM artifact, disabled per tenant — the design's *Recorded 2026-11-05*);
   changesets / PRs — phase 0: the package and its menu anchor (`.changeset/o2c-phase-0-module.md`,
   #2413); phase 1a: the plan, invoice and payment objects, views, imports and `ar_accountant`
-  (`.changeset/o2c-phase-1a-collection-plan.md`, #2418), held on the master-edit gate in the design's
-  *Phase 1a readings*; phase 1b: the contract and account totals (#2416).
+  (`.changeset/o2c-phase-1a-collection-plan.md`, #2418), landed on 18.4.0 with the master-edit gate
+  documented (the design's *Recorded 2026-11-14*; the opt-in follows objectstack#33250); phase 1b: the contract and account totals (#2416).
 
 ## Requirement
 

@@ -111,7 +111,10 @@ export const SalesRepProfile = {
     // Order to Cash (#2315, plan *Permissions and sharing*). All three are
     // `controlled_by_parent` under the contract, so no readScope: a rep reaches
     // the plan, invoices and payments of the contracts they can read. The rep
-    // keeps the collection plan, on contracts whose account they may edit;
+    // keeps the collection plan; on 18.4.0 the platform still asks edit on the
+    // contract for that write, which a rep lacks (#549), so the rep's insert
+    // answers 403 until the objects opt into objectstack#33250's
+    // `writeRequiresMasterRead` (landed with the gap documented, 2026-11-14);
     // invoices and payments are finance's figures, read only here, so a figure
     // a rep sees is never one a rep typed.
     crm_billing_milestone:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },

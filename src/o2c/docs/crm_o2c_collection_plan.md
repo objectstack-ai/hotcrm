@@ -18,8 +18,10 @@ milestones**.
 
 ## Who may change the plan
 
-You may add, change and remove the milestones of any contract whose account
-you may edit. Everyone who can read a contract reads its milestones. Finance
+You may add, change and remove the milestones of any contract you may edit.
+For now that leaves reps out: a rep reads contracts without editing them, so a
+sales manager or an administrator builds the plan. A platform update will let
+anyone who reads the contract keep its plan. Everyone who can read a contract reads its milestones. Finance
 reads them and never changes them.
 
 ## What the figures count
