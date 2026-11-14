@@ -3,33 +3,37 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { ArtifactPackageSchema, ObjectStackDefinitionSchema } from '@objectstack/spec';
 import { REPO_ROOT } from './helpers/repo-root';
 import artifact from '../objectstack.config';
 import {
   BundleError,
-  assertBundleCarriesEveryObject,
+  assertArtifactCarriesObjects,
   countArtifactObjects,
-  flattenArtifact,
+  describePackages,
+  versionBody,
 } from '../scripts/lib/marketplace-bundle.mjs';
 
 /**
- * The marketplace publishes the whole app (#2053).
+ * The marketplace receives HotCRM as built: one `packages[]` entry per package
+ * (#2059, H1 of cloud#3636).
  *
- * v4.0.0's staging publish posted the COMPOSED artifact `objectstack build`
- * writes — every collection inside `packages[]` — to an ingest that reads the
- * flat 3.x shape, and cloud stored an app with no objects while the POST
- * answered 201. `scripts/publish-marketplace.mjs` now flattens the artifact
- * and refuses, before any HTTP call, a bundle missing any object the build
- * carries. These cases pin both halves over a two-package fixture, and over
- * HotCRM's own composition so a third package that cannot be flattened goes
- * red here rather than at a release tag.
+ * `scripts/publish-marketplace.mjs` used to flatten the composed artifact into
+ * one package (#2053). A flattened HotCRM carries three apps in one package,
+ * which the marketplace refuses, and it loses which package owns which app,
+ * book and navigation. The version body now carries the artifact unchanged, as
+ * the platform's own publisher (`objectstack package publish`) sends
+ * `dist/objectstack.json`.
+ *
+ * ⚠️ The cloud ingest contract (cloud#3677) lives in a repository these cases
+ * cannot read. They hold the body to the platform's published artifact schemas
+ * instead; the staging upload is the proof against the ingest itself.
  */
 
 type AnyRec = Record<string, any>;
 
 const FIXTURE = join(REPO_ROOT, 'test/fixtures/composed-artifact.json');
 const composed = (): AnyRec => JSON.parse(readFileSync(FIXTURE, 'utf8'));
-const bodyOf = (a: AnyRec, id: string): AnyRec => a.packages.find((p: AnyRec) => p.manifest.id === id).manifest;
 
 /** The error `fn` throws; fails the case when it throws nothing. */
 function refusal(fn: () => unknown): Error {
@@ -41,109 +45,69 @@ function refusal(fn: () => unknown): Error {
   throw new Error('expected a refusal, but the call returned');
 }
 
-/** Every navigation item id in a tree, depth first. */
-const navIds = (items: AnyRec[] = []): string[] => items.flatMap((i) => [i.id, ...navIds(i.children)]);
-
-describe('flattening a composed artifact', () => {
-  it('holds the union of the collections of both packages, app package first', () => {
-    const flat = flattenArtifact(composed());
-    expect(flat.packages).toBeUndefined();
-    expect(flat.objects.map((o: AnyRec) => o.name)).toEqual(['ex_account', 'ex_contact', 'ex_case']);
-    // Same action name on two objects: two actions, not a collision.
-    expect(flat.actions.map((a: AnyRec) => `${a.objectName}:${a.name}`)).toEqual([
-      'ex_account:log_call',
-      'ex_case:log_call',
+describe('the version body', () => {
+  it('carries the composed artifact as built, packages[] and all', () => {
+    const a = composed();
+    const body = versionBody({ version: '1.0.0', artifact: a, releaseNotes: 'notes' });
+    expect(body).toEqual({ version: '1.0.0', bundle: a, release_notes: 'notes', auto_approve: true });
+    expect(body.bundle).toBe(a);
+    expect(body.bundle.packages.map((p: AnyRec) => p.manifest.id)).toEqual([
+      'app.example.crm.service',
+      'app.example.crm',
     ]);
-    // The same capability required by both packages is carried once.
-    expect(flat.requires).toEqual(['automation', 'sharing', 'ui']);
-    expect(flat.i18n).toEqual(composed().i18n);
-    expect(flat.docs.map((d: AnyRec) => d.name)).toEqual(['ex_overview']);
-  });
-
-  it('takes its identity from the app package', () => {
-    const flat = flattenArtifact(composed());
-    expect(flat.manifest).toEqual(composed().manifest);
-    expect(flat.manifest).toMatchObject({ id: 'app.example.crm', type: 'app' });
-    // The module's dependency on the app is internal to the artifact.
-    expect(JSON.stringify(flat)).not.toContain('"dependencies"');
-  });
-
-  it('folds the navigation contribution of the module into the app it targets', () => {
-    const flat = flattenArtifact(composed());
-    const group = flat.apps[0].navigation.find((i: AnyRec) => i.id === 'group_service');
-    expect(group.children.map((i: AnyRec) => i.id)).toEqual(['nav_case']);
-    expect(JSON.stringify(flat)).not.toContain('navigationContributions');
-  });
-
-  it('passes a flat artifact through unchanged', () => {
-    const flat = flattenArtifact(composed());
-    expect(flattenArtifact(flat)).toBe(flat);
-  });
-
-  it('refuses two different items under one name', () => {
-    const a = composed();
-    bodyOf(a, 'app.example.crm.service').objects.push({
-      name: 'ex_account',
-      label: 'Another Account',
-      fields: { title: { type: 'text', label: 'Title' } },
-    });
-    const err = refusal(() => flattenArtifact(a));
-    expect(err).toBeInstanceOf(BundleError);
-    expect(err.message).toContain("'ex_account'");
-  });
-
-  it('refuses a module manifest key the app does not share', () => {
-    const a = composed();
-    bodyOf(a, 'app.example.crm.service').namespace = 'other';
-    const err = refusal(() => flattenArtifact(a));
-    expect(err).toBeInstanceOf(BundleError);
-    expect(err.message).toContain("'namespace'");
+    // Nothing is folded across packages: the module keeps its own contribution.
+    expect(body.bundle.packages[0].manifest.navigationContributions).toHaveLength(1);
+    expect(body.bundle.objects).toBeUndefined();
   });
 });
 
 describe('the guard before any HTTP call', () => {
-  it('passes the flattened bundle', () => {
-    const a = composed();
-    expect(() => assertBundleCarriesEveryObject(flattenArtifact(a), a)).not.toThrow();
-  });
-
-  it('refuses the composed artifact posted without flattening (negative control)', () => {
+  it('passes a composed artifact whose objects live in its package bodies', () => {
     const a = composed();
     expect(a.objects).toBeUndefined();
     expect(countArtifactObjects(a)).toBe(3);
-    expect(refusal(() => assertBundleCarriesEveryObject(a, a))).toBeInstanceOf(BundleError);
+    expect(() => assertArtifactCarriesObjects(a)).not.toThrow();
   });
 
-  it('refuses a bundle carrying fewer objects than the build', () => {
+  it('refuses an artifact that carries no objects', () => {
     const a = composed();
-    const flat = flattenArtifact(a);
-    const partial = { ...flat, objects: flat.objects.slice(1) };
-    expect(refusal(() => assertBundleCarriesEveryObject(partial, a))).toBeInstanceOf(BundleError);
+    for (const entry of a.packages) delete entry.manifest.objects;
+    expect(refusal(() => assertArtifactCarriesObjects(a))).toBeInstanceOf(BundleError);
   });
 });
 
 describe('the composition HotCRM builds', () => {
   const real = artifact as AnyRec;
+  const body = versionBody({ version: real.manifest.version, artifact: real, releaseNotes: undefined });
 
-  it('flattens to every object of every package', () => {
-    const bodies: AnyRec[] = real.packages.map((p: AnyRec) => p.manifest);
-    expect(bodies.length, 'the artifact carries no packages[]: this case is vacuous').toBeGreaterThan(1);
-    const flat = flattenArtifact(real);
-    expect(flat.manifest.id).toBe('app.objectstack.hotcrm');
-    expect(flat.objects.length).toBe(countArtifactObjects(real));
-    expect(new Set(flat.objects.map((o: AnyRec) => o.name))).toEqual(
-      new Set(bodies.flatMap((b) => (b.objects ?? []).map((o: AnyRec) => o.name))),
+  it('is posted as one package per source package, each with its own apps', () => {
+    const ids: string[] = body.bundle.packages.map((p: AnyRec) => p.manifest.id);
+    expect(ids.length, 'the artifact carries no packages[]: this case is vacuous').toBeGreaterThan(1);
+    expect(ids).toContain(real.manifest.id);
+    const appOwners = Object.fromEntries(
+      body.bundle.packages.flatMap((p: AnyRec) => (p.manifest.apps ?? []).map((app: AnyRec) => [app.name, p.manifest.id])),
     );
-    expect(() => assertBundleCarriesEveryObject(flat, real)).not.toThrow();
+    // The three apps of #2417, each filed under the package that owns it.
+    expect(appOwners).toEqual({
+      crm_enterprise: 'app.objectstack.hotcrm',
+      crm_service: 'app.objectstack.hotcrm.service',
+      crm_marketing: 'app.objectstack.hotcrm.marketing',
+    });
+    expect(describePackages(body.bundle)).toHaveLength(ids.length);
+    expect(() => assertArtifactCarriesObjects(body.bundle)).not.toThrow();
   });
 
-  it('carries every contributed navigation item inside the app', () => {
-    const contributed = real.packages
-      .flatMap((p: AnyRec) => p.manifest.navigationContributions ?? [])
-      .flatMap((c: AnyRec) => c.items.map((i: AnyRec) => i.id));
-    expect(contributed.length, 'no package contributes navigation: this case is vacuous').toBeGreaterThan(0);
-    const flat = flattenArtifact(real);
-    const ids = flat.apps.flatMap((app: AnyRec) => navIds(app.navigation));
-    expect(contributed.filter((id: string) => !ids.includes(id))).toEqual([]);
+  it('parses as the platform artifact, and every packages[] entry as an artifact package', () => {
+    const whole = ObjectStackDefinitionSchema.safeParse(body.bundle);
+    expect(whole.success, JSON.stringify(whole.error?.issues?.slice(0, 3))).toBe(true);
+    for (const entry of body.bundle.packages) {
+      const parsed = ArtifactPackageSchema.safeParse(entry);
+      expect(parsed.success, `${entry.manifest.id}: ${JSON.stringify(parsed.error?.issues?.slice(0, 3))}`).toBe(true);
+    }
+  });
+
+  it('refuses an entry inlined without its manifest wrapper (negative control)', () => {
+    const { manifest: inlined } = body.bundle.packages[0];
+    expect(ArtifactPackageSchema.safeParse(inlined).success).toBe(false);
   });
 });
