@@ -210,6 +210,44 @@ export const jaJP: TranslationData = {
         },
       },
     },
+    // The contract's and the account's receivables figures, added by this
+    // package through `objectExtensions` (#2416).
+    crm_contract: {
+      fields: {
+        planned_amount: {
+          label: '回収予定',
+          help: '回収計画の各ステップの予定金額の合計。',
+        },
+        invoiced_amount: {
+          label: '請求済',
+          help: '発行済み請求書の金額の合計。取消済みの請求書は含みません。',
+        },
+        received_amount: {
+          label: '入金済',
+          help: '受領した入金の合計。',
+        },
+        receivable_balance: {
+          label: '売掛金残高',
+          help: '請求済から入金済を引いた額：発行済み請求書について顧客がまだ支払っていない金額。',
+        },
+      },
+    },
+    crm_account: {
+      fields: {
+        invoiced_amount: {
+          label: '請求済',
+          help: '発行済み請求書の金額の合計。取消済みの請求書は含みません。',
+        },
+        received_amount: {
+          label: '入金済',
+          help: '受領した入金の合計。',
+        },
+        receivable_balance: {
+          label: '売掛金残高',
+          help: '請求済から入金済を引いた額：発行済み請求書について顧客がまだ支払っていない金額。',
+        },
+      },
+    },
   },
   apps: {
     crm_enterprise: {

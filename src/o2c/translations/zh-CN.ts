@@ -210,6 +210,44 @@ export const zhCN: TranslationData = {
         },
       },
     },
+    // The contract's and the account's receivables figures, added by this
+    // package through `objectExtensions` (#2416).
+    crm_contract: {
+      fields: {
+        planned_amount: {
+          label: '计划回款',
+          help: '回款计划各节点的计划金额合计。',
+        },
+        invoiced_amount: {
+          label: '已开票',
+          help: '已开具发票的金额合计，已作废的发票不计入。',
+        },
+        received_amount: {
+          label: '已回款',
+          help: '已收到回款的金额合计。',
+        },
+        receivable_balance: {
+          label: '应收余额',
+          help: '已开票减已回款：客户在已开发票上仍欠的金额。',
+        },
+      },
+    },
+    crm_account: {
+      fields: {
+        invoiced_amount: {
+          label: '已开票',
+          help: '已开具发票的金额合计，已作废的发票不计入。',
+        },
+        received_amount: {
+          label: '已回款',
+          help: '已收到回款的金额合计。',
+        },
+        receivable_balance: {
+          label: '应收余额',
+          help: '已开票减已回款：客户在已开发票上仍欠的金额。',
+        },
+      },
+    },
   },
   apps: {
     crm_enterprise: {

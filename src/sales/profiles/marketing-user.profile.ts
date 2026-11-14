@@ -1,5 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
+
 export const MarketingUserProfile = {
   name: 'marketing_user',
   label: 'Marketing User',
@@ -19,6 +21,14 @@ export const MarketingUserProfile = {
     crm_lead:        { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     // Create/edit `false` is overridden by the `crm_user` floor for OWN accounts (#2231).
     crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
+    // Order to Cash (#2416): read on invoices and payments, so the account's
+    // receivables figures sum rows this set may read (`os lint`
+    // `security-rollup-source-unreadable`). Both are `controlled_by_parent`
+    // under the contract, which this set does not read: the grant opens no
+    // invoice until a set the member also holds reads the contract — whoever
+    // reads the contract reads its invoices (ADR-0055), and no one else.
+    crm_invoice:     { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    crm_payment:     { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_contact:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_campaign:    { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // Org-wide read: marketing attributes campaign → pipeline ROI, which needs
@@ -61,6 +71,9 @@ export const MarketingUserProfile = {
     sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
+    // The Order to Cash figures on the account (#2416); this set reads no
+    // contracts, so the contract's figures are not authored here.
+    ...O2C_ACCOUNT_FIGURE_FIELDS,
     // Marketing reads pipeline for campaign ROI but never prices a deal, and
     // account health is the renewal team's call — read, never write (#488).
     'crm_opportunity.amount':   { readable: true, editable: false },

@@ -294,6 +294,21 @@ carries the commands.
 | Module disabled | the *Order to Cash* group goes, the three objects answer 404 `OBJECT_PACKAGE_DISABLED`, the contract and account pages lose the tabs; enable restores all three | ✅ |
 | Rep reads, finance writes | reps and managers read invoices and payments, `na.rep` gets 403 on creating either. **But** `controlled_by_parent` refuses a child write without EDIT on the master (ADR-0055): `na.rep` creating a plan step on a contract they read gets 403 "requires edit access to its master record (no edit permission on master 'crm_contract')", and the finance user (`ar_accountant`, read on contracts) gets the same on an invoice. Modify All on the child does not lift it | ⛔ platform — held for the maintainer's ruling |
 
+### Phase 1b readings — hotcrm#2416, `@objectstack/*` 18.4.0
+
+The contract and account totals, through `objectExtensions` from the module
+(`src/o2c/extensions/contract-account.extension.ts`), on the pin that carries objectstack#30303 and
+#30304. Measured by `test/o2c-receivables.test.ts` on the booted app and in the browser pass.
+
+| Item | Reading | Verdict |
+| --- | --- | --- |
+| The fields | `crm_contract` gains `planned_amount`, `invoiced_amount`, `received_amount` (summaries) and `receivable_balance` (formula, invoiced − received); `crm_account` gains the last three over the account-stamped rows. One hop each; *Invoiced* sums `issued` invoices only | ✅ |
+| Roll-up | a 400,000 step, a 120,000 issued and a 9,000 cancelled invoice, a 50,000 payment: the contract and the account move by 400,000 / 120,000 / 50,000, balance = invoiced − received | ✅ |
+| Field rows in app-package sets (#30303) | `'crm_contract.planned_amount'` and the rest named in `sales_rep`, `sales_manager` (contract only: Modify All on the account makes an account row inert, `os lint`), `ar_accountant`, and the account's three in `marketing_user` and `service_agent` (they read no contracts; a row on an object the set cannot read is an orphan, `test/authorization-coverage.test.ts`): builds, `os lint --strict` clean. `crm_user` names none (the default set authors no field-level security), so every member reads them | ✅ |
+| Roll-up over unreadable rows | `os lint` `security-rollup-source-unreadable` flagged the account's summaries for `crm_user`, `marketing_user` and `service_agent`, which read the account but not invoices or payments. Answered by granting them read on `crm_invoice` / `crm_payment` — inert without contract read, since both are `controlled_by_parent` under the contract (measured: a `crm_user`-only owner of the account reads its balance and no invoice, and a holder of each of the three sets alone reads no invoice and no payment). ⛔ No `readable: false` rows (2026-11-05 ruling) | ✅ |
+| Module disabled (#30304) | `PATCH /packages/app.objectstack.hotcrm.o2c/disable`: `GET /meta/object/crm_contract` no longer lists `planned_amount` or `receivable_balance`; `enable` brings them back | ✅ |
+| Placement | decision 6 A: no group, so the fields sit outside the contract's sections. An extension still cannot contribute `fieldGroups` on 18.4.0 (`ObjectExtensionSchema`); recorded, not worked around | ✅ as ruled |
+
 ## Decisions
 
 ### Recorded 2026-10-23

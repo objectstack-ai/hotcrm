@@ -54,12 +54,12 @@ const walkNav = (nodes: AnyRec[] | undefined): void => {
 for (const app of (appStack.apps ?? []) as AnyRec[]) walkNav(app.navigation);
 
 /** Every `kind:name` key a package's bundles translate, per locale. */
-const rowsOf = (stack: AnyRec): { locale: string; key: string }[] => {
-  const rows: { locale: string; key: string }[] = [];
+const rowsOf = (stack: AnyRec): { locale: string; key: string; row?: AnyRec }[] => {
+  const rows: { locale: string; key: string; row?: AnyRec }[] = [];
   for (const bundle of (stack.translations ?? []) as AnyRec[]) {
     for (const [locale, pack] of Object.entries(bundle) as [string, AnyRec][]) {
       for (const ns of NAMESPACES) {
-        for (const name of Object.keys(pack[ns] ?? {})) rows.push({ locale, key: `${ns}:${name}` });
+        for (const [name, row] of Object.entries(pack[ns] ?? {})) rows.push({ locale, key: `${ns}:${name}`, row: row as AnyRec });
       }
       for (const nid of Object.keys(pack.apps?.[APP_NAME]?.navigation ?? {})) rows.push({ locale, key: `nav:${nid}` });
     }
@@ -68,6 +68,30 @@ const rowsOf = (stack: AnyRec): { locale: string; key: string }[] => {
 };
 
 const modules = stacks.filter((s) => s.manifest.type === 'module');
+
+/**
+ * The fields a package contributes to another package's object through
+ * `objectExtensions` (Order to Cash's totals on `crm_contract` / `crm_account`,
+ * #2416). Their labels belong in the contributing module's pack: they come and
+ * go with the module, exactly like its own objects.
+ */
+const extensionFieldsOf = (stack: AnyRec, objectName: string): Set<string> =>
+  new Set(
+    ((stack.objectExtensions ?? []) as AnyRec[])
+      .filter((ext) => ext.extend === objectName)
+      .flatMap((ext) => Object.keys(ext.fields ?? {})),
+  );
+
+/** A row that labels ONLY fields this package contributes to that object, and nothing of the object itself. */
+const labelsOnlyOwnExtensionFields = (stack: AnyRec, key: string, row: AnyRec | undefined): boolean => {
+  if (!key.startsWith('objects:') || !row) return false;
+  const contributed = extensionFieldsOf(stack, key.slice('objects:'.length));
+  if (contributed.size === 0) return false;
+  const fieldNames = Object.keys(row.fields ?? {});
+  return Object.keys(row).every((k) => k === 'fields')
+    && fieldNames.length > 0
+    && fieldNames.every((f) => contributed.has(f));
+};
 
 describe('locale packs: each package translates only what it registers (#2352)', () => {
   it('reads four modules and the app, and every module with objects registers a bundle in the app\'s four locales', () => {
@@ -99,11 +123,27 @@ describe('locale packs: each package translates only what it registers (#2352)',
     }
   });
 
+  it('a module labels the fields it contributes to another package\'s object, in every locale', () => {
+    // The positive control for the extension-field allowance below.
+    const o2c = modules.find((s) => idOf(s) === 'app.objectstack.hotcrm.o2c')!;
+    for (const locale of ['en', 'zh-CN', 'es-ES', 'ja-JP']) {
+      for (const objectName of ['crm_contract', 'crm_account']) {
+        const row = rowsOf(o2c).find((r) => r.locale === locale && r.key === `objects:${objectName}`)?.row;
+        expect(Object.keys(row?.fields ?? {}).sort(), `${locale} ${objectName}`)
+          .toEqual([...extensionFieldsOf(o2c, objectName)].sort());
+      }
+    }
+  });
+
   it('no pack carries a row for an item another package registers', () => {
     const strays: string[] = [];
     for (const stack of stacks) {
-      for (const { locale, key } of rowsOf(stack)) {
+      for (const { locale, key, row } of rowsOf(stack)) {
         const registeredBy = owner.get(key);
+        // A module labels the fields it contributes to another package's
+        // object; anything else in that row (the object's label, a field it
+        // does not contribute) is still a stray.
+        if (registeredBy !== idOf(stack) && labelsOnlyOwnExtensionFields(stack, key, row)) continue;
         // A module may only translate what it registers; the app may also
         // translate items no package of this artifact registers (platform rows).
         const foreign = stack.manifest.type === 'module'

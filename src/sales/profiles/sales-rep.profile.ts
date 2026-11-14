@@ -1,5 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { O2C_FIGURE_FIELDS } from './_o2c-figures';
+
 export const SalesRepProfile = {
   name: 'sales_rep',
   label: 'Sales Representative',
@@ -132,6 +134,8 @@ export const SalesRepProfile = {
     sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
+    // The Order to Cash figures on the contract and the account (#2416).
+    ...O2C_FIGURE_FIELDS,
     'crm_account.annual_revenue':     { readable: true, editable: false },
     'crm_account.description':        { readable: true, editable: true },
     'crm_opportunity.amount':         { readable: true, editable: true },
