@@ -565,6 +565,22 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  * is to run `--json`, apply `anchor()` to each reading and add its rows, with
  * no ruling needed, because no committed number moves. ⛔ Do not instead delete
  * the package from a roster — there is none to delete it from, deliberately.
+ *
+ * ## 2026-11-05 — `src/o2c` anchors its first three (#2315)
+ *
+ * Order to Cash took its first objects, hooks and views in phase 1a, so it now
+ * owes ceilings. A first ceiling is an anchoring, so these three are ANCHORED
+ * and the tightening advisory applies to them. Only `src/o2c` is anchored on
+ * this run; every other committed ceiling is RULED and outside the ledger of
+ * declined re-anchorings (#1601).
+ *
+ *   node scripts/check-source-token-ratchet.mjs   # 2026-11-05 16:05 UTC, `claude/project-thread-0qk9jf` at 7ea9296
+ *     #2315 — Order to Cash's first reading, on the phase 1a tree
+ *     src/o2c        business semantics ~4,296 · interaction layer ~996 · authored total ~6,469
+ *
+ *   src/o2c        business semantics    4,296 × 1.05 =   4,511 -> ceil 1k ->   5,000  (headroom 704, 16.4%)  2026-11-05
+ *   src/o2c        interaction layer       996 × 1.05 =   1,046 -> ceil 1k ->   2,000  (headroom 1,004, 100.8%)  2026-11-05
+ *   src/o2c        authored total        6,469 × 1.05 =   6,792 -> ceil 1k ->   7,000  (headroom 531, 8.2%)  2026-11-05
  */
 const CEILING_KIND = { ANCHORED: 'anchored', RULED: 'ruled' };
 
@@ -590,6 +606,9 @@ const COMMITTED = [
   { module: 'src/marketing', label: 'business semantics', ceiling: 13500, kind: CEILING_KIND.RULED },
   { module: 'src/marketing', label: 'interaction layer', ceiling: 1500, kind: CEILING_KIND.RULED },
   { module: 'src/marketing', label: 'authored total', ceiling: 15000, kind: CEILING_KIND.RULED },
+  { module: 'src/o2c', label: 'business semantics', ceiling: 5000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/o2c', label: 'interaction layer', ceiling: 2000, kind: CEILING_KIND.ANCHORED },
+  { module: 'src/o2c', label: 'authored total', ceiling: 7000, kind: CEILING_KIND.ANCHORED },
 ];
 
 // Every committed ceiling declares a kind this module recognises. A ceiling

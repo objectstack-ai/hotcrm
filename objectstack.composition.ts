@@ -63,7 +63,7 @@ import { createHotCrmRevenueStack, revenueHooks, revenueFlows } from './src/reve
 import {
   createHotCrmMarketingStack, marketingHooks, marketingFlows, marketingSharingRules,
 } from './src/marketing/index.js';
-import { createHotCrmO2cStack } from './src/o2c/index.js';
+import { createHotCrmO2cStack, o2cHooks } from './src/o2c/index.js';
 
 import * as salesObjects from './src/sales/objects/index.js';
 
@@ -284,7 +284,7 @@ export const appViews = byExportName({ ...salesViews });
 /** Its page layouts — `home` among them. */
 export const appPages = byExportName({ ...salesPages });
 
-/** Every import mapping — sales only; nothing else authors one. */
+/** The app package's import mappings. Order to Cash registers its own two with its module. */
 export const appMappings = byExportName({ ...mappings });
 
 /** The app itself, and its navigation GROUPS (the containers modules aim at). */
@@ -356,7 +356,7 @@ export { CrmPositions };
 /* ─── Artifact-wide sweeps — what the suites read ───────────────────────── */
 
 /**
- * Every hook in the ARTIFACT, every package (Order to Cash authors none yet).
+ * Every hook in the ARTIFACT, every package.
  *
  * The suites that sweep hooks (`test/refusal-envelope.test.ts`,
  * `test/runtime-coverage.test.ts`, `test/freeze-guard-reference-cleanup.test.ts`,
@@ -365,7 +365,7 @@ export { CrmPositions };
  * assembled here from each package's own. That every hook still lowers is
  * `pnpm lint`'s to say (`hook-body/not-lowerable`), over the built stack.
  */
-export const allHooks = [...appHooks, ...revenueHooks, ...marketingHooks, ...serviceHooks];
+export const allHooks = [...appHooks, ...revenueHooks, ...marketingHooks, ...serviceHooks, ...o2cHooks];
 
 /** Every flow in the artifact, every package — same reason as {@link allHooks}. */
 export const allFlows = [...appFlows, ...revenueFlows, ...marketingFlows, ...serviceFlows];
@@ -657,8 +657,8 @@ export const revenueStack = createHotCrmRevenueStack({ data: seedData.revenue })
 export const marketingStack = createHotCrmMarketingStack({ data: seedData.marketing });
 
 /**
- * `app.objectstack.hotcrm.o2c` — see `src/o2c/index.ts`. Phase 0 carries no
- * object and no seed row, so it is handed nothing.
+ * `app.objectstack.hotcrm.o2c` — see `src/o2c/index.ts`. Phase 1a ships no
+ * seed row, so it is handed nothing.
  */
 export const o2cStack = createHotCrmO2cStack();
 

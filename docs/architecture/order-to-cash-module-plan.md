@@ -59,7 +59,7 @@ The rest of the module's eventual shape, and where each piece would land:
 | A "generate plan" action for subscriptions, from `billing_frequency` and the term | the standard module |
 | An integration identity separate from finance, for an ERP that writes by interface | the standard module |
 | Order and shipment status for goods sellers | the standard module, once a second goods seller needs it; v1's invoice master (`crm_contract`) is revisited then, since a goods seller's invoice may cover several orders or none |
-| Credit limit and credit used; the life of a bill (endorsement, discounting); month-end invoicing; national e-invoice detail | a customer's repository (C) until shared |
+| Credit limit and credit used; a bill as a payment method and its life (maturity, endorsement, discounting); month-end invoicing; national e-invoice detail | a customer's repository (C) until shared |
 
 Out for good: invoice requests and approvals, issuing or correcting invoices, allocating receipts,
 reconciliation, customer statements and dunning, shipment notices, returns, inventory, revenue
@@ -147,11 +147,9 @@ same row.
   `cancelled` — an invoice cancelled or fully credited at the source is set `cancelled` and leaves
   every figure), the invoice file (optional); read-only `paid_amount`, `open_amount`; `source`,
   `erp_ref` (unique), `synced_at`.
-- **`crm_payment`** — `payment_date`, `amount`, `method` (`bank_transfer` · `bill` · `other`),
-  `bill_maturity_date` (required when `method = bill`); `source`, `erp_ref` (unique), `synced_at`.
-  A bill — an acceptance bill, a bill of exchange, a promissory note — counts as received on the day
-  it is received, and its maturity date tells sales when it turns into cash; what happens to the
-  bill afterwards is finance's (decision 7). Sales does not record payments: a figure sales sees is
+- **`crm_payment`** — `payment_date`, `amount`, `method` (`bank_transfer` · `other`); `source`,
+  `erp_ref` (unique), `synced_at`. A bill as a payment method, with its maturity date, is a
+  customer's own shape, not the standard module's (decision 7, B as built since 2026-11-14). Sales does not record payments: a figure sales sees is
   always one finance wrote, so a commission plan built on collections never reads a number the rep
   typed.
 
@@ -212,7 +210,7 @@ contract's derived layout from the module side. Decision 6.
 
 ## Permissions and sharing
 
-- **Position** (app package, `src/sales/sharing/positions.ts`): `ar_accountant`. If PSA's
+- **Position** (app package, `src/sales/sharing/positions.ts`): `crm_ar_accountant` (the `crm_` prefix since 18.4.0, #2437). If PSA's
   `finance_controller` lands first, it gains read on the module's objects.
 - **Permission sets** (app package, `src/sales/profiles/`), rows to add:
   - **`sales_rep`, `sales_manager`** — create and edit plan steps on contracts they can edit; read
@@ -273,6 +271,29 @@ tenant without O2C hides the contract and account fields by disabling the module
 upstream as its own platform card, and phase 1 carries a `Blocked-by:` line to it (AGENTS.md
 *Scope* rule 2).
 
+### Phase 1a readings — hotcrm#2315, `@objectstack/*` 18.3.0
+
+Phase 1 ships in two parts. **1a** (this card) is everything the module owns: the three objects,
+the plan-step stamp, the two rep views, the import mappings, the `ar_accountant` position and set,
+the permission rows, navigation and docs. **1b** (hotcrm#2416) is the contract and account totals
+through `objectExtensions`, held on the two phase 0 platform gaps. Measured on `pnpm dev`
+(`objectstack dev --seed-admin`, demo staffed) with REST probes and a browser pass; the PR body
+carries the commands.
+
+| Item | Reading | Verdict |
+| --- | --- | --- |
+| Account stamp | each of the three objects takes `crm_account` from its contract on insert and on a contract change (`*_row_stamp`, priority 50) | ✅ |
+| Due date | an invoice with no due date takes issue date + the contract's payment terms (`net_60`: 2026-09-26 → 2026-11-25) | ✅ |
+| Plan figures | one-hop summaries: *Invoiced* sums `issued` invoices only, *Received* sums payments; *Open* = planned − received. A four-step plan on CTR-0002 read 360,000 / 360,000 / 100,000 / 260,000 on the first step after one invoice and one payment | ✅ |
+| Invoice open amount | stored and hook-stamped, not a formula: a formula field refuses a filter (`INVALID_FIELD`), and the overdue view filters on it. The engine recomputes `paid_amount` through `update(parent)`, so the invoice's own `beforeUpdate` re-stamps `open_amount` on every payment write (360,000 → 260,000); a cancelled invoice reads 0 | ✅ |
+| Plan step from the invoice | a payment naming an invoice takes the invoice's plan step; an invoice of another contract is refused 400 | ✅ |
+| Relative dates in a list view | `{today}`, `{current_month_start}` and `{next_month_start}` in a view filter resolve on the read path — *Overdue invoices* and *Planned this month* need no schedule flow | ✅ |
+| Import | `crm_invoice_import` / `crm_payment_import`, upsert on `erp_ref`: the same file imported twice gives one row (created, then updated), stamped `source = import` with `synced_at`; contract, step and invoice cells resolve by number/name | ✅ |
+| Bill | `method = bill` required a maturity date (`requiredWhen`), refused 400 without one (measured as built under decision 7 option A; the method was dropped on 2026-11-14, B) | ✅ then removed |
+| App-set field rows on module fields | `'crm_invoice.erp_ref': { readable: false }` in the app's `sales_rep` set: builds, boots, and `na.rep`'s read of an invoice omits `erp_ref` (reverted) — unlike phase 0 (b), a module object's **own** field is in the rule's object graph | ✅ |
+| Module disabled | the *Order to Cash* group goes, the three objects answer 404 `OBJECT_PACKAGE_DISABLED`, the contract and account pages lose the tabs; enable restores all three | ✅ |
+| Rep reads, finance writes | reps and managers read invoices and payments, `na.rep` gets 403 on creating either. **But** `controlled_by_parent` refuses a child write without EDIT on the master (ADR-0055): `na.rep` creating a plan step on a contract they read gets 403 "requires edit access to its master record (no edit permission on master 'crm_contract')", and the finance user (`ar_accountant`, read on contracts) gets the same on an invoice. Modify All on the child does not lift it | ⛔ platform — held for the maintainer's ruling |
+
 ## Decisions
 
 ### Recorded 2026-10-23
@@ -303,8 +324,6 @@ first draft, set the scope — decisions 4 and 5.
 
 | # | Question | Needed by |
 | --- | --- | --- |
-| 6 | **The contract fields' place on the contract page** — accept the default placement a field outside any group gets, or let revenue declare one empty `receivables` group on `crm_contract` (a one-line change to a core object, contrary to "the core gains no field" in spirit if not in letter) | Phase 1 |
-| 7 | **A bill as a standard payment method** (proposed above), with its life cycle and national e-invoice detail left to a customer's repository — confirm | Phase 1 |
 | 8 | **PSA's billing milestones** are this module's plan steps, reached through the project's contract, with no edge between PSA and this module (proposed) | PSA v2 |
 
 ### Recorded 2026-10-26 — supersedes decisions 2 and 3
@@ -333,6 +352,24 @@ read, finance edits) — ⛔ no `readable: false` rows in `crm_user` or the pers
 scope, the lean first version and the fields through `objectExtensions` stand. The phase 0 readings
 above record the two platform gaps this ruling meets.
 
+### Recorded 2026-11-14 — decisions 6 and 7, and the child-write gate
+
+The maintainer restarted the module on hotcrm#2315 with one direction, 「先考虑全球客户的通用功能」
+(generic features for global customers first), and ruled three questions on it:
+
+- **Decision 6 — A.** The contract fields 1b adds take the default placement a field outside any
+  group gets; `crm_contract` gains no group. (`fieldGroups` still do not travel through
+  `objectExtensions` on 18.4.0.)
+- **Decision 7 — B.** No bill in the standard module: `crm_payment.method` is `bank_transfer` ·
+  `other`, with no maturity date. A bill, its maturity and its life are a customer's own shape, in
+  its own repository. (Built as A on 2026-11-05 and measured, *Phase 1a readings*; removed.)
+- **The child-write gate — A.** `controlled_by_parent` asks EDIT on the master for every insert
+  (re-measured on 18.4.0: a rep's plan step and finance's invoice on a contract they read answer
+  403; `sharing.controlledByParent.ownerMayEdit` covers an owner's update only). The platform adds a
+  per-object opt-in, "read on the master is enough to insert and update the detail, under the
+  detail's own grants" — objectstack-ai/objectstack#33250 — and phase 1a is Blocked-by it. HotCRM
+  grants no contract edit and keeps `controlled_by_parent`.
+
 ## Upstream asks
 
 - **Per-tenant enablement of a module inside an App** (or the inter-App dependencies ADR-0019
@@ -341,8 +378,8 @@ above record the two platform gaps this ruling meets.
   migration.
 - **Whatever Phase 0 refuses** among the four measurements is filed as its own platform card, and the
   phase waits for the fix in the pin (AGENTS.md *Scope* rule 2) or takes the recorded fallback.
-- **`fieldGroups` through `objectExtensions`** — if decision 6 wants the contract fields grouped
-  without touching the owning object.
+- **`fieldGroups` through `objectExtensions`** — not needed: decision 6 took the default placement.
+- **Read on the master is enough to write a detail** — objectstack-ai/objectstack#33250 (2026-11-14).
 
 ## References
 

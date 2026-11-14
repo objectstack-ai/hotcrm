@@ -12,8 +12,10 @@
 - **Traceability**: design — [`../architecture/order-to-cash-module-plan.md`](../architecture/order-to-cash-module-plan.md);
   cards — hotcrm#2315 (phases 0–1, filed 2026-10-27; on 2026-11-05 the maintainer ruled the module a
   package of the one HotCRM artifact, disabled per tenant — the design's *Recorded 2026-11-05*);
-  changesets / PRs — phase 0: the package and its menu anchor (`.changeset/o2c-phase-0-module.md`);
-  phase 1 to follow.
+  changesets / PRs — phase 0: the package and its menu anchor (`.changeset/o2c-phase-0-module.md`,
+  #2413); phase 1a: the plan, invoice and payment objects, views, imports and `ar_accountant`
+  (`.changeset/o2c-phase-1a-collection-plan.md`, #2418), held on the master-edit gate in the design's
+  *Phase 1a readings*; phase 1b: the contract and account totals (#2416).
 
 ## Requirement
 
@@ -113,7 +115,7 @@ is its own collection plan.
   ([`order-to-cash-module-plan.md`](../architecture/order-to-cash-module-plan.md)); in shape:
   - `crm_billing_milestone`, the contract's collection plan, kept by sales;
   - `crm_invoice` and `crm_payment`, records written by finance (or by an ERP through the same
-    import key), read-only to sales; a payment may be a bill, with its maturity date;
+    import key), read-only to sales;
   - four figures added to `crm_contract` and one to `crm_account` from the module through
     `objectExtensions`;
   - list views for the rep's overdue invoices and this month's planned collections.

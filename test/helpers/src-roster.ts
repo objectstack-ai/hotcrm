@@ -8,6 +8,7 @@ import * as salesObjects from '../../src/sales/objects';
 import * as serviceObjects from '../../src/service/objects';
 import * as revenueObjects from '../../src/revenue/objects';
 import * as marketingObjects from '../../src/marketing/objects';
+import * as o2cObjects from '../../src/o2c/objects';
 
 import * as salesFlows from '../../src/sales/flows';
 import * as serviceFlows from '../../src/service/flows';
@@ -18,6 +19,7 @@ import * as salesViews from '../../src/sales/views';
 import * as serviceViews from '../../src/service/views';
 import * as revenueViews from '../../src/revenue/views';
 import * as marketingViews from '../../src/marketing/views';
+import * as o2cViews from '../../src/o2c/views';
 
 import * as salesDashboards from '../../src/sales/dashboards';
 import * as serviceDashboards from '../../src/service/dashboards';
@@ -170,6 +172,7 @@ const BARRELS: Readonly<
     service: serviceObjects,
     revenue: revenueObjects,
     marketing: marketingObjects,
+    o2c: o2cObjects,
   },
   flows: {
     sales: salesFlows,
@@ -182,6 +185,7 @@ const BARRELS: Readonly<
     service: serviceViews,
     revenue: revenueViews,
     marketing: marketingViews,
+    o2c: o2cViews,
   },
   dashboards: { sales: salesDashboards, service: serviceDashboards, revenue: revenueDashboards },
   datasets: { sales: salesDatasets, service: serviceDatasets, revenue: revenueDatasets },

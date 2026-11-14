@@ -20,8 +20,8 @@
  * A position names the permission sets it distributes in its own
  * `permissionSets` (ADR-0131 D3/D4): every holder holds every set listed, and
  * Setup shows the binding on the position's page and the holders on each set's
- * Assigned Users panel. Seven positions distribute a set: five since #2200,
- * and the two marketing rungs since #2338. Until #2200 those five declared
+ * Assigned Users panel. Eight positions distribute a set: five since #2200,
+ * the two marketing rungs since #2338, and `crm_ar_accountant` since #2315. Until #2200 those five declared
  * none and reached their sets only through the platform's undeclared
  * fold of a held position's name onto a same-named set, which logs
  * `position_name_fold_grant` on every boot and which the platform has ruled to
@@ -152,6 +152,14 @@ export const CrmPositions = [
     label: 'Marketing User',
     description: 'Plans and runs marketing campaigns and their members day to day.',
     permissionSets: ['marketing_user'],
+  },
+  // Finance's position for the Order to Cash module (#2315): it distributes
+  // the `ar_accountant` set, which writes invoices and payments.
+  {
+    name: 'crm_ar_accountant',
+    label: 'Accounts Receivable',
+    description: 'Finance: enters and imports the invoices and payments that sales sees on each contract.',
+    permissionSets: ['ar_accountant'],
   },
   // Territory groupings referenced by the account sharing rules.
   {

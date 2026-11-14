@@ -147,6 +147,11 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   // the article it is about, and a standalone page would document a row nobody
   // navigates to.
   crm_article_feedback: { page: 'service/knowledge-base', term: 'Article Feedback' },
+  // #2315 — the Order to Cash module: the plan on its own page, finance's two
+  // records on one page, since a payment is only ever read beside its invoice.
+  crm_billing_milestone: { page: 'order-to-cash/collection-plan' },
+  crm_invoice: { page: 'order-to-cash/invoices-and-payments' },
+  crm_payment: { page: 'order-to-cash/invoices-and-payments' },
 };
 
 /** Sections written for developers — see check 4 in the header note. */

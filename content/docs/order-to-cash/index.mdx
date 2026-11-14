@@ -1,0 +1,51 @@
+---
+title: Order to Cash
+description: What sales sees after the contract is signed — the collection plan, and the invoices and payments finance records against it.
+---
+
+# Order to Cash
+
+Order to Cash answers the three questions a rep asks once a contract is signed: **has it been invoiced, has it been paid, and is anything overdue?** It is a module of HotCRM, under **Order to Cash** in the sidebar.
+
+## A window, not a book
+
+Every invoice and every payment is kept where finance keeps its books: the ERP, the accounting package, or finance's own records. Order to Cash is how sales **sees** them. Finance enters them on the record page or imports them, and an ERP can write them through the same import key. A figure is never corrected in HotCRM: it is corrected at the source and arrives again the same way.
+
+So the module carries no bookkeeping. It does not issue or approve invoices, allocate receipts, reconcile with the bank, chase customers or recognise revenue. The [Billing Hand-off](/docs/revenue/billing-handoff) still tells your billing system when a deal is won and a contract activated.
+
+The one thing sales keeps here is its own **collection plan**.
+
+## What is in it
+
+| Record | What it is | Who writes it |
+| --- | --- | --- |
+| **Billing Milestone** | One step of a contract's collection plan: an advance, go-live, acceptance, retention or a subscription period | The contract's sales team |
+| **Invoice** | An invoice finance issued against a contract | Finance |
+| **Payment** | Money received against a contract, an invoice or a plan step | Finance |
+
+All three hang off a **contract**. Open a contract and its **Billing Milestones**, **Invoices** and **Payments** tabs list them; an account's page lists the same records for all of its contracts.
+
+| Page | What it covers |
+| --- | --- |
+| [The Collection Plan](./collection-plan) | Planning a contract's steps, and what Invoiced, Received and Open count |
+| [Invoices and Payments](./invoices-and-payments) | Entering and importing invoices and payments, due dates, overdue invoices |
+
+## Who can do what
+
+| Person | Collection plan | Invoices and payments |
+| --- | --- | --- |
+| Sales rep, sales manager | Create, edit and delete the steps of the contracts whose account they may edit | Read |
+| Accounts Receivable (finance) | Read | Enter, import, edit and delete, on every contract |
+| Administrator | Everything | Everything |
+
+Everyone else who can read a contract reads its plan, invoices and payments with it: the three records follow the contract's sharing. Finance gets its access from the **Accounts Receivable** position; an administrator assigns it under **Setup → Position Holders**.
+
+Sales never records a payment. A figure a rep sees is always one finance wrote, so a commission plan built on collections never reads a number the rep typed.
+
+## Not every customer uses it
+
+A company that does not want Order to Cash has an administrator disable the module. Its menu entries, its records and its tabs on the contract and account pages go with it.
+
+## Coming next
+
+Totals on the contract and account records themselves (planned, invoiced, received and the open receivable) arrive in a later update (hotcrm#2416). Until then, each tab on the contract page carries its own amounts.

@@ -53,6 +53,30 @@ const EXPECTED: Array<{ name: string; object: string; template: string; key: str
   { name: 'crm_lead_import', object: 'crm_lead', template: 'leads.csv', key: ['email'] },
 ];
 
+/**
+ * Order to Cash's two finance mappings (#2315). They take every check on the
+ * mapping itself, but not the three that describe the CRM onboarding set:
+ * an owner column (an invoice or payment is owned by its contract), fifty
+ * example rows (the template is a column guide for an ERP export, one row), and
+ * a section in the CRM import guide — the module's own page documents them,
+ * which the last block below pins instead.
+ */
+const O2C_EXPECTED: Array<{ name: string; object: string; template: string; key: string[] }> = [
+  { name: 'crm_invoice_import', object: 'crm_invoice', template: 'invoices.csv', key: ['erp_ref'] },
+  { name: 'crm_payment_import', object: 'crm_payment', template: 'payments.csv', key: ['erp_ref'] },
+];
+
+const ALL_EXPECTED = [...EXPECTED, ...O2C_EXPECTED];
+
+/**
+ * The columns a template must carry: every source a mapping entry reads, except
+ * a `constant` entry's, which writes its value with no column (measured on
+ * 18.3.0 for `source = import`, #2315) — a template column for it would be a
+ * cell the import ignores.
+ */
+const columnSources = (m: AnyRec): string[] =>
+  (m.fieldMapping as AnyRec[]).filter((e) => e.transform !== 'constant').flatMap((e) => all(e.source));
+
 const mappingByName = (name: string): AnyRec => {
   const m = mappings.find((x) => x.name === name);
   expect(m, `mapping '${name}' is not registered on the stack`).toBeDefined();
@@ -109,11 +133,11 @@ const templateDataRowCount = (file: string): number =>
     .filter((l) => l.trim() !== '').length;
 
 describe('import mappings — registration', () => {
-  it('registers exactly the three expected mappings', () => {
-    expect(mappings.map((m) => m.name).sort()).toEqual(EXPECTED.map((e) => e.name).sort());
+  it('registers exactly the five expected mappings', () => {
+    expect(mappings.map((m) => m.name).sort()).toEqual(ALL_EXPECTED.map((e) => e.name).sort());
   });
 
-  it.each(EXPECTED)('$name targets $object with upsert on $key', ({ name, object, key }) => {
+  it.each(ALL_EXPECTED)('$name targets $object with upsert on $key', ({ name, object, key }) => {
     const m = mappingByName(name);
     expect(m.targetObject).toBe(object);
     expect(objectByName.has(m.targetObject), `${m.targetObject} is not a declared object`).toBe(true);
@@ -129,7 +153,7 @@ describe('import mappings — registration', () => {
 });
 
 describe('import mappings — every target is a real field', () => {
-  it.each(EXPECTED)('$name maps only fields that exist on $object', ({ name, object }) => {
+  it.each(ALL_EXPECTED)('$name maps only fields that exist on $object', ({ name, object }) => {
     const m = mappingByName(name);
     const def = objectByName.get(object)!;
     // The platform's own verdict, the one the import endpoint asks before any
@@ -143,7 +167,7 @@ describe('import mappings — every target is a real field', () => {
     expect(unknown, `unknown target field(s) on ${object}`).toEqual([]);
   });
 
-  it.each(EXPECTED)('$name never writes a readonly or formula field on $object', ({ name, object }) => {
+  it.each(ALL_EXPECTED)('$name never writes a readonly or formula field on $object', ({ name, object }) => {
     const m = mappingByName(name);
     const fields = objectByName.get(object)!.fields as Record<string, AnyRec>;
     const bad = m.fieldMapping
@@ -157,7 +181,7 @@ describe('import mappings — every target is a real field', () => {
     expect(bad, `computed / readonly target(s) on ${object}`).toEqual([]);
   });
 
-  it.each(EXPECTED)('$name has a unique source header per column', ({ name }) => {
+  it.each(ALL_EXPECTED)('$name has a unique source header per column', ({ name }) => {
     const m = mappingByName(name);
     const sources = m.fieldMapping.flatMap((e: AnyRec) => all(e.source));
     expect(sources.length).toBe(new Set(sources).size);
@@ -165,7 +189,7 @@ describe('import mappings — every target is a real field', () => {
 });
 
 describe('import mappings — transforms the import path can execute', () => {
-  it.each(EXPECTED)('$name uses no javascript transform', ({ name }) => {
+  it.each(ALL_EXPECTED)('$name uses no javascript transform', ({ name }) => {
     // The endpoint 400s on `javascript` (no server-side sandbox), and
     // `defineStack` fails the build for it — pinned here so the reason is
     // visible at the mapping, not only in a build log.
@@ -173,7 +197,7 @@ describe('import mappings — transforms the import path can execute', () => {
     expect(m.fieldMapping.filter((e: AnyRec) => e.transform === 'javascript')).toEqual([]);
   });
 
-  it.each(EXPECTED)('$name maps synonyms onto legal option values of $object', ({ name, object }) => {
+  it.each(ALL_EXPECTED)('$name maps synonyms onto legal option values of $object', ({ name, object }) => {
     const m = mappingByName(name);
     const fields = objectByName.get(object)!.fields as Record<string, AnyRec>;
     const offenders: string[] = [];
@@ -191,7 +215,7 @@ describe('import mappings — transforms the import path can execute', () => {
     expect(offenders, `valueMap entries pointing at non-existent options on ${object}`).toEqual([]);
   });
 
-  it.each(EXPECTED)('$name resolves reference columns through lookup targets on $object', ({ name, object }) => {
+  it.each(ALL_EXPECTED)('$name resolves reference columns through lookup targets on $object', ({ name, object }) => {
     const m = mappingByName(name);
     const fields = objectByName.get(object)!.fields as Record<string, AnyRec>;
     const REFERENCE_TYPES = new Set(['lookup', 'master_detail', 'user']);
@@ -225,9 +249,9 @@ describe('import mappings — transforms the import path can execute', () => {
 });
 
 describe('import mappings — a template CSV imports without hand-mapping', () => {
-  it.each(EXPECTED)('$template headers match $name exactly', ({ name, template }) => {
+  it.each(ALL_EXPECTED)('$template headers match $name exactly', ({ name, template }) => {
     const m = mappingByName(name);
-    const declared = (m.fieldMapping as AnyRec[]).flatMap((e) => all(e.source)).sort();
+    const declared = columnSources(m).sort();
     const headers = templateHeaders(template).sort();
     // Both directions: a header with no mapping entry is a column the customer
     // fills in that silently goes nowhere; a mapping entry with no header is a
@@ -239,7 +263,7 @@ describe('import mappings — a template CSV imports without hand-mapping', () =
     expect(templateDataRowCount(template)).toBeGreaterThanOrEqual(50);
   });
 
-  it.each(EXPECTED)('every cell of $template coerces through $name with no error', async ({ name, object, template }) => {
+  it.each(ALL_EXPECTED)('every cell of $template coerces through $name with no error', async ({ name, object, template }) => {
     // The template is the first file a new customer imports, so every one of
     // its rows must land (#1998: six `Department: "HR"` rows failed with
     // `invalid_option`, because the import matches an option VALUE exactly and
@@ -268,7 +292,7 @@ describe('import mappings — a template CSV imports without hand-mapping', () =
     expect(failures, `${template} rows that fail cell coercion`).toEqual([]);
   });
 
-  it.each(EXPECTED)('$name covers every field $object requires on create', ({ name, object }) => {
+  it.each(ALL_EXPECTED)('$name covers every field $object requires on create', ({ name, object }) => {
     const m = mappingByName(name);
     const fields = objectByName.get(object)!.fields as Record<string, AnyRec>;
     const mapped = new Set((m.fieldMapping as AnyRec[]).flatMap((e) => all(e.target)));
@@ -308,6 +332,17 @@ describe('import mappings — the docs describe what ships', () => {
     void name;
     for (const header of templateHeaders(template)) {
       expect(doc, `header "${header}" is missing from the import guide`).toContain(`\`${header}\``);
+    }
+  });
+});
+
+describe('import mappings — the Order to Cash page describes its two (#2315)', () => {
+  const page = readFileSync(join(REPO_ROOT, 'content/docs/order-to-cash/invoices-and-payments.mdx'), 'utf8');
+
+  it.each(O2C_EXPECTED)('names $template and every one of its columns', ({ template }) => {
+    expect(page).toContain(template);
+    for (const header of templateHeaders(template)) {
+      expect(page, `header "${header}" is missing from the Order to Cash import section`).toContain(header);
     }
   });
 });
