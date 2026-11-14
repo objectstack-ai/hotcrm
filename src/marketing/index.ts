@@ -68,12 +68,12 @@ export const createHotCrmMarketingStack = (
     namespace: 'crm',
     // The ARTIFACT's version (ADR-0130 D6) — `test/docs-declared-versions.test.ts`
     // holds it, and the range below, to the app package's.
-    version: '6.2.0',
+    version: '6.2.1',
     type: 'module',
     description: 'HotCRM marketing module — campaigns and campaign members.',
     engines: { protocol: '^18.4.0' },
     // The App package this module extends, and nothing else (the star).
-    dependencies: { 'app.objectstack.hotcrm': '^6.2.0' },
+    dependencies: { 'app.objectstack.hotcrm': '^6.2.1' },
 
     // No `navigationContributions` since #2417: this package's entries live
     // in its own app, the Marketing app (`./apps/marketing.app.ts`), which
