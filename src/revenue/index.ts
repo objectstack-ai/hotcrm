@@ -93,13 +93,13 @@ export const createHotCrmRevenueStack = (
     namespace: 'crm',
     // The ARTIFACT's version (ADR-0130 D6) — `test/docs-declared-versions.test.ts`
     // holds it, and the range below, to the app package's.
-    version: '6.1.2',
+    version: '6.2.0',
     type: 'module',
     description: 'HotCRM revenue module — products, price books, opportunity line items and quotes.',
     engines: { protocol: '^18.4.0' },
     // The App package this module extends — and nothing else: the graph is a
     // star (plan decision 5), ⛔ no edge to another module.
-    dependencies: { 'app.objectstack.hotcrm': '^6.1.2' },
+    dependencies: { 'app.objectstack.hotcrm': '^6.2.0' },
 
     /**
      * The three entries this module puts into the app's Sales group, and its
