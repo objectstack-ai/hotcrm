@@ -1,5 +1,90 @@
 # Changelog
 
+## 6.2.0
+
+### Minor Changes
+
+- 967a371: Clause-②: no
+  Metadata-protocol: none
+  
+  **A Chinese organization gets its demo data in Chinese (#2411).** Every sample dataset now ships twice, declared by language on the platform's per-dataset locale filter (`Seed.locale`): the English story for `en`, `ja-JP` and `es-ES`, and a Simplified Chinese twin for `zh-CN`. An organization receives one of the two. The Chinese twin is the same story in other words, record for record: the same accounts, deals, quotes, cases, campaigns, activities and knowledge articles, with the same statuses, amounts, SLA clocks and relative dates, so every dashboard reads the same in both languages. Names, descriptions and notes are written in Chinese, people's names put the family name in **Last Name** (张伟), the thirty generated service cases read as real support tickets instead of "Demo case NN", and the Standard price book is **标准价格表**. The multi-organization (SaaS) shape ships its starter catalogue the same way.
+  
+  Requires an `@objectstack` release that carries objectstack#30281, under which marketplace install, sample-data reseed and per-organization replay choose datasets by the organization's language. On a release without it those paths load both stories.
+- 83f12a2: Clause-②: no
+  Metadata-protocol: none
+  
+  **HotCRM's twelve positions carry the `crm_` prefix (#2437).** FROM `executive`, `sales_director`, `sales_manager`, `sales_rep`, `service_director`, `service_manager`, `service_agent`, `marketing_director`, `marketing_manager`, `marketing_user`, `na_sales_team`, `eu_sales_team` TO the same names with `crm_` in front (`sales_rep` → `crm_sales_rep`). From ObjectStack 18.4.0 a position is one slot per name in the whole environment, so a second app that shipped its own `sales_rep` would be refused at install, and `os lint --strict` asks every app's positions to carry its prefix. Labels and descriptions do not change, and neither do the permission sets that share some of these names (`sales_rep`, `sales_manager`, `service_agent`, `marketing_user` stay as they are). Every sharing rule, approval step, queue and navigation gate HotCRM ships now names the new positions, and the administration docs in all three languages use the new names.
+  
+  ⚠️ Upgrading an installed organization: the platform keeps who holds a position by the position's name and does not follow a rename, so after the upgrade every existing assignment still names the old position and grants nothing (no permission sets, no sharing, no approvals, no queue) until it is moved. Right after installing this version, run once per organization, signed in as that organization's administrator:
+  
+  ```
+  pnpm exec tsx scripts/migrate-position-holders.ts --url https://<your-org> --email <admin> --password <pw>          # report
+  pnpm exec tsx scripts/migrate-position-holders.ts --url https://<your-org> --email <admin> --password <pw> --apply  # move
+  ```
+  
+  It rewrites each assignment's position to the new name and nothing else (holder, organization, business unit, validity dates and delegation stay), skips a holder who already holds the new position, and is safe to run again. It also lists, without changing them, queue members and sharing rules your organization added in Setup that still name an old position: pick the new position there. A formula or condition of your own that tests `"sales_rep" in current_user.positions` (or any other old name) needs the new name too.
+- 4f0ffd8: Clause-②: no
+  Metadata-protocol: none
+  
+  **HotCRM runs on ObjectStack 18.4.0.** Every `@objectstack/*` package moves from 18.3.0 to 18.4.0 together, and every package manifest and `objectstack.manifest.json` declare `^18.4.0`. Upgrade the host to ObjectStack 18.4.0 first. On PostgreSQL or MySQL, run `os migrate apply` with the upgrade, as the platform's release notes ask. An installed organization also runs `scripts/migrate-position-holders.ts` once, for the `crm_` position names (#2437).
+  
+  What 18.4.0 changes for HotCRM users, each with its own entry: the List Price by Category chart is on the Product Catalog dashboard (#2436); a record a person links to must be one they can open (#2440); a seed row an administrator deleted stays deleted across restarts, and a reseed brings it back (#2439). `objectstack.manifest.json` no longer carries `name`, `specVersion` or `skills`, which 18.4.0's manifest schema refuses (ADR-0049); the marketplace listing sends the same values as before (#2420). The test harness composes the artifact the way 18.4.0 requires (#2450).
+- 41d301a: Clause-②: no
+  Metadata-protocol: none
+  
+  **HotCRM is now three apps: Sales, Service and Marketing (#2417).** The one long menu that every persona shared is split by line of work. Sales (`crm_enterprise`, the same app, renamed from *HotCRM*) keeps leads, accounts, deals, quotes, contracts, activity, insights and the sales reports. the Service app, the service package's own app, opens on Service Overview and holds cases, knowledge, the customers, My Cases and the case reports, with the Service Manual under Help. the Marketing app, the marketing package's own app, opens on Campaigns and holds the audience (leads, contacts, accounts), with the Marketing Manual under Help; it comes and goes with the marketing module. Each persona's launcher offers the apps its work needs (permission-set `tabPermissions`): a sales rep the Sales app, service staff the Service app, a marketing user Sales and Marketing, a sales manager or an administrator all three. That is visibility, not access: an app left off the launcher still opens from its address, and every entry keeps the gate it had. The console opens on its home page, whose *Your apps* row lists the member's apps (one for a sales rep or service staff). Labels in en, zh-CN, es-ES and ja-JP; the quick tour, the analytics, service, marketing and sales indexes, the search guide and the in-app Getting Started describe the three apps.
+
+### Patch Changes
+
+- 4f0ffd8: Clause-②: no
+  Metadata-protocol: none
+  
+  **A record a person links to must be one they can open (#2440).** From ObjectStack 18.4.0 a person's save, import or API write may link a record (an account, a case, a file) only to one that person can read (objectstack#29029); HotCRM accepts that rule and its docs now say so. Two things change for users:
+  
+  - **Logging a call on a case you cannot open.** FROM: through the API or an import, a person who could not open a case could still log a held call against it, and the case's **First Response Date** was stamped. TO: that call is refused (*Related Case: no crm_case record has id …*). Anyone who can open the case logs the call and the stamp is written as before, including a reader who may not edit the case, such as a Sales Manager. Nothing changes on the screens, where Log a Call sits on a case you have open.
+  - **An organization admin creating a large won deal.** FROM: an organization admin with no other permission set could create a deal of $100K or more already at *Closed Won* on any account. TO: on an account they can open, which without another permission set means one they own. The person who loads historical won deals across every account holds **System Administrator** (the revenue approvals guide and the in-app Opportunities page say so).
+  
+  The data import guide adds that a reference naming a record the importer cannot open is refused as matching nothing. The Attachments panel is unchanged for users: on 18.4.0 it attaches a file in the same call that completes its upload.
+- 8277e61: Clause-②: no
+  Metadata-protocol: none
+  
+  **Chinese, Japanese and Korean names read family name first, and the demo's forecast periods follow the install day (#2431).** A lead or contact whose last name (the family name) is written in CJK script is now titled family name first with no space: last name 张 and first name 伟 read **张伟**, not 「伟 张」. Every other name still reads *first last*. The rule follows the name, not the viewer's language, so the stored title (contact `full_name`, lead `display_title`), the lead's `full_name`, lists, lookups, the lead page's header (which composed `{first_name} {last_name}` itself, in the page and in each language pack), the converted contact and the refusal sentences all agree. Search now also matches the stored title (`searchableFields` gains `full_name` on contacts and `display_title` on leads), because a search splits on spaces and 「张伟」 matched neither name field alone; 「伟」 or "Zhang" still find the record through the name fields.
+  
+  The six lead and contact notifications (*New contact*, *Lead approved / not approved for conversion*, *Lead converted*, *Hot lead*, *New lead assigned to you*) now print `{{person_name}}` instead of `{{first_name}} {{last_name}}`, in all four languages. Every shipped flow passes `person_name` and still passes `first_name` / `last_name`. ⚠️ Self-hosted customers: a flow of your own that sends one of these six templates must add `person_name` to its `templateData`, because a template hole cannot fall back to another value and would print an empty name.
+  
+  Upgrading: contacts and leads saved before this release keep their old title until they are next saved. `scripts/backfill-record-titles.ts` now also re-titles a contact or lead with a CJK family name whose stored title is in the old order (report first, then `--apply`).
+  
+  The demo forecast snapshots (current month, last four quarters, last two months) used to be computed when the app was built, so an install months after a build got a "current month" in the past. They now resolve when the seed is written, like every other demo date. Each demo date counts from the day it is seeded, and the admin setup guide now explains why a demo organization a month old shows deals past their close date, and how to start a fresh one.
+- e5a69e9: Clause-②: no
+  Metadata-protocol: none
+  
+  **The marketplace receives HotCRM as built, one package per module (#2059).** FROM: the publish script flattened the release artifact into a single package before posting it, so a hosted install saw one package holding every object, app, book and navigation item. TO: the artifact goes to the marketplace exactly as `pnpm build` writes it, with one `packages[]` entry for the app and one for each module, the way `objectstack package publish` sends it. A hosted organization therefore gets the Sales, Service and Marketing apps each filed under the package that owns it, and disabling a module takes its app, books and navigation with it. The publish still refuses, before any request, a build that carries no objects, and the listing checks (`business_functions`, `publisher`, `is_starter`, translations) are unchanged.
+- 0009f58: Clause-②: no
+  Metadata-protocol: none
+  
+  **A forecast's title follows a rename of its owner (#2435).** A forecast is titled by its period and its owner, "Q4 2026 · Nina Reyes". Until now the owner's name was copied in when the forecast was saved, so after Nina was renamed her older forecasts kept the old name until someone saved each one again.
+  
+  Now the forecast stores the owner's name in its own **Owner Name** field, and a new flow, **Forecast Owner Renamed**, writes the new name onto every forecast the user owns, in each organization they are a member of, as soon as the user is renamed: by an administrator or in the user's own profile. Past quarters and hand-entered forecasts follow too. A forecast in an organization the user is no longer a member of keeps the name it had.
+  
+  The title now reads only the forecast's own fields, so the stricter metadata check that arrives with ObjectStack 18.4.0 (`stored-expression-cross-record-input`) has nothing to warn about here.
+  
+  **Upgrading:** forecasts saved before this release get their Owner Name at their next save. To fill them all at once, run `scripts/backfill-record-titles.ts` (report-only without `--apply`); it now also picks up forecasts that have an owner and no stored owner name.
+- 92519d8: Clause-②: no
+  Metadata-protocol: none
+  
+  **Send Email and the activity actions hand their mail and timeline entries to the platform.** Send Email gives its message to the platform's mail service and adds its timeline entry through the platform's activity service. Log a Call, Log a Meeting and Schedule a Meeting add their timeline entry the same way. An app action no longer writes the mail log or the activity feed itself; the platform records who sent or logged it, under which organization, and which action added the entry.
+  
+  **What a user sees changes in one place.** An email sent with Send Email now goes out from the deployment's configured sender address, with the rep named in the sender's display name (the rep's name, then "via" and the organization's name), instead of from the rep's own address. Replies still reach the rep: the rep's address is the message's reply-to.
+  
+  The timeline entries look as before and name the rep by their display name. An email's entry no longer links to the mail log row, which a sales rep cannot open; it carries the message's id in its details. A logged call's or meeting's entry keeps the first 4,000 characters of its notes in its details; the event keeps all of them.
+  
+  Requires ObjectStack 18.4.0.
+- 4f0ffd8: Clause-②: no
+  Metadata-protocol: none
+  
+  **The List Price by Category chart moves to its own Product Catalog dashboard (#2436).** It was a tile on CRM Overview; on ObjectStack 18.4.0 it drew an error there, because a dashboard reads only the datasets of its own package and the packages that package depends on (objectstack#32929), and the product dataset belongs to the revenue module. The chart is unchanged and now sits on the revenue module's Product Catalog dashboard, in the Sales group beside Products and Price Books; like the tile, it leaves the sidebar when the revenue module is turned off. CRM Overview keeps its other tiles, with Pipeline by Owner moved up into the freed row. Labels in en, zh-CN, es-ES and ja-JP; the dashboards guide, quick tour, docs index and README now count six dashboards.
+- a75b28d: Docs guard: the Setup-navigation test no longer asserts that the platform ships no Traditional-Chinese (zh-Hant) console locale. ObjectStack 18.4.0 adds one, and HotCRM's zh-Hant doc convention rests on HotCRM's own fact instead — the app ships no zh-Hant pack, so its navigation falls back to Simplified. The app-switcher roster check now counts locales rather than distinct labels, since two locales can share one spelling. No change to the app or its docs.
+
 ## 6.1.2
 
 ### Patch Changes
