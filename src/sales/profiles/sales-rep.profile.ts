@@ -5,6 +5,12 @@ export const SalesRepProfile = {
   label: 'Sales Representative',
   description:
     'Sales reps: work their own book of leads, accounts, opportunities, quotes and activities and read the catalogues, but delete no customer record.',
+  // Which HotCRM apps the holder's launcher offers (#2417). Visibility, not
+  // access: a hidden app still opens from its address, and records link
+  // across apps. Sets merge most-visible-wins, and every member also holds
+  // `crm_user`, which says nothing here, so silence never re-shows an app.
+  // A rep works in the Sales app alone.
+  tabPermissions: { crm_service: 'hidden' as const, crm_marketing: 'hidden' as const },
   // A rep's book of business is private by design (own records + whatever a
   // sharing rule or team grant extends). The objects below carry an explicit
   // `readScope: 'own'` so the intent is authored, not inferred — this both

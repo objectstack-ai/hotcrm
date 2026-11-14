@@ -92,20 +92,28 @@ const REPORT_LABELS: string[] = Object.values(reports as Record<string, AnyRec>)
 );
 const DATASET_LIST = Object.values(datasets as Record<string, AnyRec>);
 
-// The SERVED navigation: the service module contributes *Service Overview* and
-// *SLA on Closed Cases* into the app's groups (`servedApp()` folds them in the
-// way the console does), so they are navigation labels like any other.
-const NAV = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
+// The SERVED navigation of all three apps (#2417): the Sales app, plus HotCRM
+// Service, where *Service Overview* and the case reports live, and HotCRM
+// Marketing. `servedApp()` folds each package's contributions in the way the
+// console does, so every entry is a navigation label like any other.
+const APP_NAVS = [(CrmApp as AnyRec).name as string, 'crm_service', 'crm_marketing']
+  .map((name) => (servedApp(name).navigation ?? []) as AnyRec[]);
+const NAV = APP_NAVS.flat();
 const GROUPS = NAV.filter((n) => n.type === 'group');
 const INSIGHTS = GROUPS.find((g) => g.label === 'Insights') as AnyRec | undefined;
 const INSIGHTS_CHILDREN: string[] = ((INSIGHTS?.children ?? []) as AnyRec[]).map(
   (c) => c.label as string,
 );
-/** The group holding every shipped report (#2073 item 1), contributed entries included. */
+/**
+ * The groups holding every shipped report (#2073 item 1), contributed entries
+ * included: one Reports group per app since #2417, a report shared by two apps
+ * counted once.
+ */
 const REPORTS_GROUP = GROUPS.find((g) => g.id === 'group_reports') as AnyRec | undefined;
-const REPORTS_CHILDREN: string[] = ((REPORTS_GROUP?.children ?? []) as AnyRec[]).map(
-  (c) => c.label as string,
-);
+const REPORTS_CHILDREN: string[] = [...new Set(
+  GROUPS.filter((g) => g.id === 'group_reports')
+    .flatMap((g) => ((g.children ?? []) as AnyRec[]).map((c) => c.label as string)),
+)];
 
 /** Every navigation label in the app, at any depth. */
 const ALL_NAV_LABELS: string[] = (() => {
@@ -128,7 +136,7 @@ const REFRESH_INTERVALS: number[] = [
 const PAGES = [
   {
     file: 'content/docs/analytics/index.mdx',
-    five: 'Five',
+    six: 'Six',
     ten: 'Ten',
     nine: 'Nine',
     noContract: 'There is no contract report',
@@ -136,7 +144,7 @@ const PAGES = [
   },
   {
     file: 'content/docs/analytics/index.zh-Hans.mdx',
-    five: '五个',
+    six: '六个',
     ten: '十份',
     nine: '九个',
     noContract: '这里没有合同报表',
@@ -144,7 +152,7 @@ const PAGES = [
   },
   {
     file: 'content/docs/analytics/index.zh-Hant.mdx',
-    five: '五個',
+    six: '六個',
     ten: '十份',
     nine: '九個',
     noContract: '這裡沒有合約報表',
@@ -204,10 +212,10 @@ const italicNames = (text: string): string[] =>
   [...text.replace(/\*\*[^*\n]+\*\*/g, '').matchAll(/\*([^*\n]+)\*/g)].map((m) => m[1].trim());
 
 describe('analytics/index states the counts and names the app really ships (#976)', () => {
-  describe.each(PAGES)('$file', ({ file, five, ten, nine, noContract, navHeading }) => {
-    it('names all five dashboards, and says five', () => {
+  describe.each(PAGES)('$file', ({ file, six, ten, nine, noContract, navHeading }) => {
+    it('names all six dashboards, and says six', () => {
       const text = read(file);
-      expect(text, `${file}: the dashboard count is not stated as "${five}"`).toContain(five);
+      expect(text, `${file}: the dashboard count is not stated as "${six}"`).toContain(six);
       const missing = DASHBOARD_LABELS.filter((l) => !text.includes(l));
       expect(
         missing,
@@ -432,8 +440,9 @@ describe('the cube vocabulary retired with src/cubes/ is gone from the docs (#97
 });
 
 describe('the source facts these pages now rest on (#976, #977)', () => {
-  it('the app ships five dashboards, one of them Sales Activity', () => {
-    expect(DASHBOARD_LABELS).toHaveLength(5);
+  // Six since #2436: revenue's Product Catalog.
+  it('the app ships six dashboards, one of them Sales Activity', () => {
+    expect(DASHBOARD_LABELS).toHaveLength(6);
     expect(DASHBOARD_LABELS).toContain('Sales Activity');
   });
 

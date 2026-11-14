@@ -417,7 +417,7 @@ describe('sharing rules and positions line up', () => {
     it('the case_intake queue exists and its members are exactly the service_agent position', () => {
       const queue = (((stack as any).queues ?? []) as AnyRec[]).find((q) => q.name === 'case_intake');
       expect(queue, 'the case_intake queue is gone — ownerless cases have nowhere to sit').toBeDefined();
-      expect(queue!.members).toEqual([{ type: 'position', value: 'service_agent' }]);
+      expect(queue!.members).toEqual([{ type: 'position', value: 'crm_service_agent' }]);
     });
 
     it('no sharing rule re-implements the queue — the triage rule stays deleted', () => {

@@ -52,7 +52,7 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@opportunity-status-change-approval-gate.test', {
-    name: 'Gate Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Gate Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Status Gate Co', owner_id: rep.id }]);
   accountId = String(account!.id);
@@ -240,7 +240,7 @@ describe('the write path — opportunity_lifecycle refuses a direct close while 
     // triggering user (elevation is not anonymity). Reading `previous` first
     // would see `pending` and refuse the flow's own decision. Run end to end:
     // the rep asks for the close on an armed deal, the approval opens, the
-    // admin (nobody holds `sales_manager`, so the request is the admin's to
+    // admin (nobody holds `crm_sales_manager`, so the request is the admin's to
     // decide) approves it through the approvals door, and the flow's own write
     // must land.
     const id = await dealIn({ status_change_approval_status: 'pending' });

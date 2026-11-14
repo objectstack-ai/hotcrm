@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  MarketplaceBusinessFunctionsSchema,
   PackageTranslationsSchema,
   TemplateManifestSchema,
   resolvePackageL10nField,
@@ -85,6 +86,14 @@ describe('the translations the publish script sends', () => {
     expect(body.display_name).toBe('HotCRM');
   });
 
+  it('sends the publisher and the starter flag the publish always sent, from the script, not the manifest (#2420)', () => {
+    const mp = manifest();
+    expect(mp).not.toHaveProperty('publisher');
+    expect(mp).not.toHaveProperty('isStarter');
+    const body = packageUpsertBody({ manifestId: mp.manifestId, manifest: mp, license: mp.license, readme: 'R', translations: undefined });
+    expect({ publisher: body.publisher, is_starter: body.is_starter }).toEqual({ publisher: 'objectstack', is_starter: false });
+  });
+
   it('is printed by the DRY_RUN log, readme by length', () => {
     const lines = describeTranslations(sent);
     expect(lines).toHaveLength(1);
@@ -146,5 +155,41 @@ describe('the check before any HTTP call', () => {
 
     const locale = refusal(() => resolveListingTranslations({ zh_CN: { description: '中文' } }, '/repo'));
     expect(locale).toBeInstanceOf(ListingError);
+  });
+});
+
+/**
+ * The listing is classified by `businessFunctions`, never by `category`
+ * (#2426). Since the cloud's taxonomy release the package upsert refuses a
+ * body carrying `category` ("Package refused — nothing stored"), which kept
+ * 6.1.0 off the production marketplace and every later version off both
+ * planes. The values and the wire key `business_functions` are the
+ * platform's (objectstack `main`, #32448: `taxonomy.zod.ts`,
+ * `CreatePackageRequestSchema`, the CLI's `TAXONOMY_WIRE_KEYS`). Spec 18.3.0
+ * carried no taxonomy; since the 18.4.0 bump the declaration is also parsed
+ * against the platform's `MarketplaceBusinessFunctionsSchema`, beside the
+ * cases that pin HotCRM's own declaration and what the publish script sends.
+ */
+describe('the marketplace classification', () => {
+  it('the manifest declares businessFunctions, primary first, and no category', () => {
+    const mp = manifest();
+    expect(mp).not.toHaveProperty('category');
+    expect(mp.businessFunctions).toEqual(['sales', 'customer_service', 'marketing']);
+    const parsed = MarketplaceBusinessFunctionsSchema.safeParse(mp.businessFunctions);
+    expect(parsed.success, JSON.stringify(parsed.error?.issues)).toBe(true);
+  });
+
+  it('the package upsert body carries business_functions and no category', () => {
+    const mp = manifest();
+    const body = packageUpsertBody({ manifestId: mp.manifestId, manifest: mp, license: mp.license, readme: 'R', translations: undefined });
+    expect(body).not.toHaveProperty('category');
+    expect(body).not.toHaveProperty('businessFunctions');
+    expect(body.business_functions).toEqual(mp.businessFunctions);
+  });
+
+  it('a manifest that declares no businessFunctions sends none, leaving the stored value alone', () => {
+    const { businessFunctions: _omitted, ...mp } = manifest();
+    const body = packageUpsertBody({ manifestId: 'x', manifest: mp, license: 'MIT', readme: 'R', translations: undefined });
+    expect(body).not.toHaveProperty('business_functions');
   });
 });

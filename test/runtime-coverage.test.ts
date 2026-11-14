@@ -51,6 +51,10 @@ const RUNTIME_TEST_FILES = [
   // #2312 — printing a quote presents it: the print archive's attachment write
   // fires `quote_print_presented`, and nothing else does.
   'flow-quote-print-presented.test.ts',
+  // #2435 — a forecast's title follows a rename of its owner: the
+  // `forecast_owner_name` hook and the `forecast_owner_rename` flow on the user
+  // record, run against the booted app in one file.
+  'forecast-owner-title.test.ts',
   // #2317 — filing a contract's signed copy dates the signature
   // (`contract_signed_copy_date`), beside the two signed-copy gates it serves.
   'contract-signed-copy.test.ts',

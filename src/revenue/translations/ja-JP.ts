@@ -261,6 +261,7 @@ export const jaJP: TranslationData = {
         nav_quote: { label: '見積' },
         nav_product: { label: '製品' },
         nav_price_book: { label: '価格表' },
+        nav_product_catalog_dashboard: { label: '製品カタログ' },
         nav_help_revenue: { label: '収益マニュアル' },
       },
     },
@@ -341,6 +342,15 @@ export const jaJP: TranslationData = {
     },
   },
   // The quote's two record pages (#2312): its working page and its print page.
+  dashboards: {
+    product_catalog_dashboard: {
+      label: '製品カタログ',
+      description: '製品カテゴリ別のカタログ定価',
+      widgets: {
+        top_products: { title: 'カテゴリ別定価合計', description: '製品カテゴリごとのカタログ定価の合計（売上ではありません）' },
+      },
+    },
+  },
   pages: {
     quote_detail_page: {
       label: '見積詳細',

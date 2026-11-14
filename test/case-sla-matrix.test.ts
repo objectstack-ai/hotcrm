@@ -8,7 +8,7 @@ import {
 import { extractHookBody } from '@objectstack/cli/hook-body';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, type Person,
+  hotcrmStack, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, runShippedHook, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -52,7 +52,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   agent = await signUpPerson(verify, 'agent@case-sla-matrix.test', {
-    name: 'SLA Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'SLA Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   for (const tier of CASE_SLA_TIERS) {
     const [account] = await verify.seed('crm_account', [{ name: `Tier ${tier} Co`, tier }]);
@@ -197,13 +197,29 @@ describe('tier resolution falls back the way the docs say', () => {
     expectHours(await stampFor('medium', undefined, { accountId: String(account!.id) }), EXPECTED.medium.smb, 'blank tier');
   });
 
-  it('uses the smb column when the account cannot be read at all', async () => {
-    // The anonymous web-to-case grant can create a case and read nothing else.
-    // A denial there must neither reject the submission nor invent a tighter
-    // deadline than the customer's contract — it degrades to the loosest cell.
-    const res = await stampFor('high', 'strategic', { guest: true });
-    expect(res.row.crm_account, 'the submission lost its account — this would be the no-account path').toBe(accountByTier.strategic);
-    expectHours(res, EXPECTED.high.smb, 'denied read');
+  it('uses the smb column when the writer cannot read the account', async () => {
+    // A read the writer is denied must neither reject the case nor invent a
+    // tighter deadline than the customer's contract: it degrades to the
+    // loosest cell. Re-stated for #2440: this used to be an anonymous
+    // submission naming a strategic account. From 18.4.0 a person's write may
+    // name in a lookup only a record they can read (objectstack#29029), so
+    // that submission is refused at its own write and never reaches the hook
+    // (the shipped Contact Support form asks for no account anyway); the
+    // maintainer accepted the rule for HotCRM (#2440, option A). Every person
+    // who may log or edit a case in this app reads every account, so no write
+    // that rule admits leaves the hook an account it cannot read. The branch
+    // stays the hook's own guard, so it is proven on the shipped (lowered)
+    // body, under a caller whose read of the account comes back empty.
+    const outsider = await signUpPerson(verify, `outsider${++k}@case-sla-matrix.test`, { name: 'No Account Read' });
+    expect(await verify.rows('crm_account', { id: accountByTier.strategic }, { as: outsider.token }), 'fixture: the caller reads the account')
+      .toEqual([]);
+    const atMs = Date.now();
+    const stamped = await runShippedHook(verify, hook, {
+      event: 'beforeInsert', as: outsider.token,
+      input: { subject: `Something broke ${++k}`, description: 'It stopped working.', priority: 'high', crm_account: accountByTier.strategic },
+    });
+    expect(stamped.crm_account, 'the hook dropped the account: this would be the no-account path').toBe(accountByTier.strategic);
+    expectHours({ dueMs: Date.parse(String(stamped.sla_due_date)), atMs }, EXPECTED.high.smb, 'denied read');
   });
 
   it('a tier value the matrix does not know cannot be stored at all', async () => {

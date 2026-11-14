@@ -73,10 +73,10 @@ const displayName: Record<string, string> = {};
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'ada@global-actions.test', {
-    name: 'Ada Lovelace', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Ada Lovelace', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   agent = await signUpPerson(verify, 'sam@global-actions.test', {
-    name: 'Sam Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Sam Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   colleague = await signUpPerson(verify, 'grace@global-actions.test', { name: 'Grace Hopper' });
   Object.assign(displayName, { [rep.id]: 'Ada Lovelace', [agent.id]: 'Sam Agent' });
@@ -126,46 +126,6 @@ async function run(objectName: string, kind: string, opts: { input?: AnyRec; as?
   const attendees = await verify.rows('crm_event_attendee', { crm_event: result.eventId });
   const [activity] = await verify.rows('sys_activity', { id: result.activityId });
   return { result, event: event!, attendees, activity: activity!, who };
-}
-
-/**
- * Watch — and optionally fault — the reads the action BODY makes, on the real
- * engine. Everything the route does before the body (resolving the caller,
- * loading the subject record under their scope) happens before that subject
- * load returns, so only engine reads issued after it are the body's. Measured
- * on 17.7.0: a `log_call` makes exactly one such `sys_user` read, at system
- * context, before its first write.
- */
-async function watchBodyReads(
-  objectName: string,
-  body: () => Promise<unknown>,
-  fault?: (object: string) => (() => Promise<unknown>) | undefined,
-) {
-  const ql = verify.kernel.getService<AnyRec>('objectql');
-  const realFind = ql.find.bind(ql);
-  const realFindOne = ql.findOne.bind(ql);
-  let subjectLoaded = false;
-  const bodyReads: string[] = [];
-  const findOne = vi.spyOn(ql, 'findOne').mockImplementation((async (object: string, ...rest: unknown[]) => {
-    const row = await realFindOne(object, ...rest);
-    if (object === objectName) subjectLoaded = true;
-    return row;
-  }) as never);
-  const find = vi.spyOn(ql, 'find').mockImplementation((async (object: string, ...rest: unknown[]) => {
-    if (subjectLoaded) {
-      bodyReads.push(object);
-      const injected = fault?.(object);
-      if (injected) return injected();
-    }
-    return realFind(object, ...rest);
-  }) as never);
-  try {
-    const out = await body();
-    return { out, bodyReads };
-  } finally {
-    find.mockRestore();
-    findOne.mockRestore();
-  }
 }
 
 // ────────────────────────────────────── the family exists, per object ──
@@ -438,26 +398,16 @@ describe('activity actions stamp a real record_label (#514 item 2)', () => {
   });
 });
 
-// ──────────────────── actor_name is a name, not a raw user id (#673) ──
+// ──────────── the timeline entry goes through the platform door (#673) ──
 
 /**
- * The timeline used to render a 32-character id where the actor's name belongs.
- *
- * The cause is upstream and worth stating precisely, because the guards below
- * only make sense against it: `@objectstack/runtime`'s REST action dispatcher —
- * the path the Console uses — builds the body's user as
- * `{ id: ec.userId, name: ec.userId, … }` (17.0.0-rc.2, `dist/index.js:5397`),
- * so `ctx.user?.name` is PRESENT and is the id. Not absent, not null: a
- * plausible-looking string that no `??` could catch. (The MCP dispatcher at
- * `dist/index.js:1776` prefers `ec.userName ?? ec.userDisplayName`, but nothing
- * in the platform populates either, so it lands on the id as well.)
- *
- * Which is exactly why a guard written against a hand-built user
- * (`{ id, name: 'Ada Lovelace' }`) stayed green through the whole bug: that is
- * a shape the REST dispatcher never produces. These run through the REAL
- * dispatcher (`actions.run`), which on 17.7.0 still hands the body the id as
- * the name — measured: the body issues its `sys_user` read on every action —
- * and assert on the resolved value.
+ * The timeline used to render a 32-character id where the actor's name belongs
+ * (#673): the action dispatcher hands a body the user's id as its name, and the
+ * bodies wrote `actor_name` themselves. They no longer write it. Each body
+ * hands its entry to `ctx.activity.append`, and the platform's writer stamps
+ * the actor, the platform's display name for them, the organization and the
+ * entry's origin. These run through the REAL dispatcher (`actions.run`) as the
+ * people who use the actions, and assert on what the door stored.
  */
 
 /**
@@ -468,8 +418,8 @@ describe('activity actions stamp a real record_label (#514 item 2)', () => {
 const inputFor = (kind: string): AnyRec =>
   kind === 'schedule_meeting' ? { subject: 'Quarterly sync', start_date: '2026-09-01', start_time: '09:00' } : {};
 
-describe('sys_activity.actor_name is a human-readable name (#673)', () => {
-  it('resolves the display name for every activity action on every target', async () => {
+describe('the activity actions add their entry through the platform door (#673)', () => {
+  it('names the actor and the action on every entry, for every action on every target', async () => {
     for (const objectName of TARGETS) {
       for (const kind of KINDS) {
         const { activity, who } = await run(objectName, kind, { input: inputFor(kind) });
@@ -479,50 +429,22 @@ describe('sys_activity.actor_name is a human-readable name (#673)', () => {
         // The regression itself, stated as its own assertion: whatever else
         // changes, the timeline must never render the opaque id again.
         expect(activity.actor_name, where).not.toBe(who.id);
+        // The door stamps where the entry came from: this action.
+        expect(activity.origin, where).toMatch(new RegExp(`/action:${kind}$`));
       }
     }
   });
 
-  it('reads sys_user once — and only because the dispatcher delivered no name', async () => {
-    // The lookup is a workaround, and it has to disappear on its own the day
-    // the platform starts honouring `ctx.user.name`: the body believes a
-    // delivered display name as-is. On 17.7.0 the real dispatcher still
-    // delivers the id, so the body reads `sys_user` exactly once per action —
-    // the day this reads 0 with the name still right, the dispatcher has been
-    // fixed upstream and the workaround can go.
-    const { out, bodyReads } = await watchBodyReads('crm_account', () => run('crm_account', 'log_call'));
-    expect(bodyReads.filter((o) => o === 'sys_user'), 'the body did not read sys_user once').toHaveLength(1);
-    expect((out as Awaited<ReturnType<typeof run>>).activity.actor_name).toBe('Ada Lovelace');
-  });
-
-  it('falls back to the id rather than writing a blank actor', async () => {
-    // No `sys_user` row for the caller — a deleted user, or a read the caller's
-    // context is not allowed to satisfy. An opaque id is bad; an activity whose
-    // actor is `null` is worse, because it is not attributable at all. The empty
-    // read is injected into the real engine, for the body's read only.
-    const { out } = await watchBodyReads(
-      'crm_case',
-      () => run('crm_case', 'log_meeting'),
-      (object) => (object === 'sys_user' ? async () => [] : undefined),
-    );
-    const { activity } = out as Awaited<ReturnType<typeof run>>;
-    expect(activity.actor_name).toBe(agent.id);
-    expect(activity.actor_name).not.toBeNull();
-  });
-
-  it('never fails the log when the sys_user read throws', async () => {
-    const { out } = await watchBodyReads(
-      'crm_contact',
-      () => run('crm_contact', 'log_call'),
-      (object) => (object === 'sys_user'
-        ? async () => { throw new Error('FORBIDDEN: no read access to sys_user'); }
-        : undefined),
-    );
-    const { result, activity } = out as Awaited<ReturnType<typeof run>>;
-    // The interaction the rep just recorded outranks the label on it.
-    expect(result.eventId).toBeTruthy();
-    expect(result.activityId).toBeTruthy();
-    expect(activity.actor_name).toBe(rep.id);
+  it('resolves no actor in the body', () => {
+    // The door owns the actor, so a body that still resolved one would be a
+    // second, divergent answer to "who did this".
+    for (const objectName of TARGETS) {
+      for (const kind of KINDS) {
+        const body = action(objectName, kind).body;
+        expect(body.capabilities, `${objectName}:${kind}`).toContain('activity.append');
+        expect(String(body.source), `${objectName}:${kind}`).not.toMatch(/actor_name|object\('sys_user'\)/);
+      }
+    }
   });
 });
 
@@ -598,10 +520,13 @@ describe('the activity actions stay twins (#514 item 15)', () => {
     // stamps, `timestamp`); those differ between any two rows and say nothing
     // about the twins.
     const shape = (row: AnyRec) => {
-      const { summary, metadata, source_id, id, created_at, updated_at, timestamp, ...rest } = row;
+      const { summary, metadata, source_id, id, created_at, updated_at, timestamp, origin, ...rest } = row;
       return rest;
     };
     expect(shape(meeting.activity)).toEqual(shape(call.activity));
+    // The origin the door stamps names each twin's own action, under one package.
+    expect(call.activity.origin).toMatch(/\/action:log_call$/);
+    expect(meeting.activity.origin).toBe(call.activity.origin.replace(/log_call$/, 'log_meeting'));
 
     expect(call.activity.summary).toBe('Quarterly sync (30 min)');
     expect(meeting.activity.summary).toBe('Meeting: Quarterly sync (30 min)');

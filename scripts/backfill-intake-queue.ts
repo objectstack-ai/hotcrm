@@ -10,7 +10,7 @@
 // when its platform `queue` column names one, and only then: the queue's
 // members read it, the console offers them Claim (认领) on it, and the
 // Unassigned — triage list shows it. HotCRM declares two queues, `case_intake`
-// (members: service_agent) and `lead_intake` (members: sales_rep), and the
+// (members: crm_service_agent) and `lead_intake` (members: crm_sales_rep), and the
 // assignment rules fill `queue` on every new ownerless record.
 //
 // Rows written BEFORE the upgrade carry no queue. On HotCRM those are the

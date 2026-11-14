@@ -12,3 +12,5 @@ export { products, catalogPrice, lineItemRecords } from './catalog.seed';
 export { opportunityLineItems } from './opportunity-line-item.seed';
 export { priceBooks, priceBookEntries } from './price-book.seed';
 export { quotes, quoteLineItems } from './revenue.seed';
+export { productsZhCN, priceBooksZhCN, priceBookEntriesZhCN, STANDARD_PRICE_BOOK_ZH_CN } from './catalog.zh-CN.seed';
+export { opportunityLineItemsZhCN, quotesZhCN, quoteLineItemsZhCN } from './revenue.zh-CN.seed';

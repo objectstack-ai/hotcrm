@@ -26,11 +26,11 @@ let k = 0;
 
 beforeAll(async () => {
   verify = await hotcrmStack();
-  const asAgent = { positions: ['service_agent'], permissionSets: ['service_agent'] };
+  const asAgent = { positions: ['crm_service_agent'], permissionSets: ['service_agent'] };
   agent = await signUpPerson(verify, 'agent@escalated-from.test', { name: 'Logging Agent', ...asAgent });
   other = await signUpPerson(verify, 'other@escalated-from.test', { name: 'Other Agent', ...asAgent });
   manager = await signUpPerson(verify, 'manager@escalated-from.test', {
-    name: 'Pool Manager', positions: ['service_manager'], permissionSets: ['service_agent'],
+    name: 'Pool Manager', positions: ['crm_service_manager'], permissionSets: ['service_agent'],
   });
 }, 120_000);
 

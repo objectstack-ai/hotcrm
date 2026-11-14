@@ -41,7 +41,7 @@ The Copilot respects your sharing — if you can't see it, neither can it. Verif
 
 ### I created a lead but it's assigned to someone else — why?
 
-Auto-assignment ran. **There is no Setup → Lead Settings screen and there are no assignment rules to check** — a lead that arrives without an owner is handed on insert to whichever holder of the `sales_rep` position has the fewest open leads (`src/sales/objects/lead.hook.ts`). It load-balances; it does not match region or territory. So the owner you see is the least-loaded rep, not the nearest one.
+Auto-assignment ran. **There is no Setup → Lead Settings screen and there are no assignment rules to check** — a lead that arrives without an owner is handed on insert to whichever holder of the `crm_sales_rep` position has the fewest open leads (`src/sales/objects/lead.hook.ts`). It load-balances; it does not match region or territory. So the owner you see is the least-loaded rep, not the nearest one.
 
 ### My opportunity won't move to Closed Won.
 

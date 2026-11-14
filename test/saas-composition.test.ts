@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { PLATFORM_CAPABILITIES } from '@objectstack/spec/security';
 import defaultStack from './helpers/composed-stack';
 import {
-  CrmSeedData, SaasTenantSeedData, ServiceSeedData, RevenueSeedData, MarketingSeedData, AppSeedData,
+  CrmSeedDataAllLocales, SaasTenantSeedData, ServiceSeedData, RevenueSeedData, MarketingSeedData, AppSeedData,
   serviceStack, revenueStack, marketingStack, appStack,
 } from '../objectstack.composition';
 import { COMPOSITION_ENV_VAR, resolveComposition } from '../src/sales/data/index';
@@ -105,10 +105,12 @@ describe('the default composition is the community app, untouched', () => {
     // the service package's families first and the app package's after them.
     const objectsOf = (list: AnyRec[]) => list.map((d) => String(d.object));
     const registered = objectsOf((defaultStack as AnyRec).data as AnyRec[]);
-    expect([...registered].sort()).toEqual(objectsOf(CrmSeedData as AnyRec[]).sort());
+    // Both language markets' stories (#2411): the English datasets and their
+    // zh-CN twins, each scoped by `Seed.locale`, so a load gets one of the two.
+    expect([...registered].sort()).toEqual(objectsOf(CrmSeedDataAllLocales as AnyRec[]).sort());
     const rows = (list: AnyRec[]) =>
       list.reduce((n, d) => n + (Array.isArray(d.records) ? d.records.length : 0), 0);
-    expect(rows((defaultStack as AnyRec).data as AnyRec[])).toBe(rows(CrmSeedData as AnyRec[]));
+    expect(rows((defaultStack as AnyRec).data as AnyRec[])).toBe(rows(CrmSeedDataAllLocales as AnyRec[]));
   });
 
   it('registers each family with the package that owns its object, in replay order', () => {
@@ -118,17 +120,22 @@ describe('the default composition is the community app, untouched', () => {
     // `CrmSeedData` gives its families.
     const objectsOf = (list: readonly unknown[] = []) => (list as AnyRec[]).map((d) => String(d.object));
     expect(objectsOf(serviceStack.data)).toEqual(objectsOf(ServiceSeedData));
-    expect(objectsOf(serviceStack.data)).toEqual(['crm_case', 'crm_knowledge_article']);
+    // Each family twice: the English story, then its zh-CN twin (#2411).
+    expect(objectsOf(serviceStack.data)).toEqual(['crm_case', 'crm_knowledge_article', 'crm_case', 'crm_knowledge_article']);
     expect(objectsOf(revenueStack.data)).toEqual(objectsOf(RevenueSeedData));
     expect(objectsOf(revenueStack.data)).toEqual([
       'crm_product', 'crm_price_book', 'crm_price_book_entry', 'crm_opportunity_line_item', 'crm_quote', 'crm_quote_line_item',
+      'crm_product', 'crm_price_book', 'crm_price_book_entry', 'crm_opportunity_line_item', 'crm_quote', 'crm_quote_line_item',
     ]);
     expect(objectsOf(marketingStack.data)).toEqual(objectsOf(MarketingSeedData));
-    expect(objectsOf(marketingStack.data)).toEqual(['crm_campaign', 'crm_campaign_member', 'crm_campaign_member']);
+    expect(objectsOf(marketingStack.data)).toEqual([
+      'crm_campaign', 'crm_campaign_member', 'crm_campaign_member',
+      'crm_campaign', 'crm_campaign_member', 'crm_campaign_member',
+    ]);
     expect(objectsOf(appStack.data)).toEqual(objectsOf(AppSeedData));
     expect(
       [serviceStack, revenueStack, marketingStack, appStack].flatMap((stack) => objectsOf(stack.data)).sort(),
-    ).toEqual(objectsOf(CrmSeedData).sort());
+    ).toEqual(objectsOf(CrmSeedDataAllLocales).sort());
   });
 
   it('still ships every seed family, storytelling included', () => {
@@ -162,7 +169,12 @@ describe('HOTCRM_COMPOSITION=saas', () => {
 
   it('replays the CATALOGUE family, its standard price book (#2318), and nothing else', () => {
     const objects = ((saas.data ?? []) as AnyRec[]).map((d) => String(d.object));
-    expect(objects).toEqual(['crm_product', 'crm_price_book', 'crm_price_book_entry']);
+    // Twice: the English catalogue and its zh-CN twin (#2411), each scoped by
+    // `Seed.locale`, so a tenant receives one of the two.
+    expect(objects).toEqual([
+      'crm_product', 'crm_price_book', 'crm_price_book_entry',
+      'crm_product', 'crm_price_book', 'crm_price_book_entry',
+    ]);
     // Same length as the module's own declaration — so a family added to
     // `SaasTenantSeedData` has to be added deliberately, and lands here.
     expect((saas.data as AnyRec[]).length).toBe(SaasTenantSeedData.length);
@@ -174,7 +186,10 @@ describe('HOTCRM_COMPOSITION=saas', () => {
     // so under `saas` revenue is the one package with rows.
     const built = await loadUnder('saas', '../objectstack.composition');
     const objectsOf = (stack: AnyRec) => ((stack.data ?? []) as AnyRec[]).map((d) => String(d.object));
-    expect(objectsOf(built.revenueStack)).toEqual(['crm_product', 'crm_price_book', 'crm_price_book_entry']);
+    expect(objectsOf(built.revenueStack)).toEqual([
+      'crm_product', 'crm_price_book', 'crm_price_book_entry',
+      'crm_product', 'crm_price_book', 'crm_price_book_entry',
+    ]);
     expect(objectsOf(built.serviceStack)).toEqual([]);
     expect(objectsOf(built.marketingStack)).toEqual([]);
     expect(objectsOf(built.appStack)).toEqual([]);

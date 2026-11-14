@@ -61,7 +61,7 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   marketer = await signUpPerson(verify, 'mkt@campaign-metric-readonly.test', {
-    name: 'Metric Marketer', positions: ['marketing_user'], permissionSets: ['marketing_user'],
+    name: 'Metric Marketer', positions: ['crm_marketing_user'], permissionSets: ['marketing_user'],
   });
 }, 180_000);
 

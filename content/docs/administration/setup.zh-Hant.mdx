@@ -67,11 +67,11 @@ description: 讓 HotCRM 為你的團隊做好生產準備的第一週任務。
 
 ### 8. 潛在客戶路由 —— 一個佇列加一條規則
 
-**不存在「Setup → Lead Settings」這個畫面。**潛在客戶路由是應用自帶的兩項中繼資料。**Lead Intake** 佇列（`lead_intake`）以 `sales_rep` 職位為成員。指派規則 `lead_intake_assignment` 把每一筆到達時沒有所有者的潛在客戶，交給成員中**未轉換潛在客戶最少**的那一位。最常見的來路是網頁表單（web-to-lead）。這條規則比的是負載，不按區域、行業或來源比對；沒有區域路由，也沒有發給提交者的自動回覆郵件。如果佇列裡沒有成員，潛在客戶就沒有所有者，留在 **Lead Intake** 裡等待，任何一位業務代表都可以打開它並點選 **Claim**（認領）。
+**不存在「Setup → Lead Settings」這個畫面。**潛在客戶路由是應用自帶的兩項中繼資料。**Lead Intake** 佇列（`lead_intake`）以 `crm_sales_rep` 職位為成員。指派規則 `lead_intake_assignment` 把每一筆到達時沒有所有者的潛在客戶，交給成員中**未轉換潛在客戶最少**的那一位。最常見的來路是網頁表單（web-to-lead）。這條規則比的是負載，不按區域、行業或來源比對；沒有區域路由，也沒有發給提交者的自動回覆郵件。如果佇列裡沒有成員，潛在客戶就沒有所有者，留在 **Lead Intake** 裡等待，任何一位業務代表都可以打開它並點選 **Claim**（認領）。
 
 其他所有來路的潛在客戶背後都有一個人，這個人就是所有者：在應用裡新建的潛在客戶、用某人的登入或 API 金鑰透過 API 提交的潛在客戶，以及從 CSV 或 JSON 檔案匯入的潛在客戶。匯入從不進入佇列 —— 所有者留空的列歸執行匯入的人所有，所以匯入潛在客戶之後要安排重新指派。參見[匯入你自己的資料](/zh-Hant/docs/guides/importing-your-data)中的「關於負責人」一節。
 
-- [ ] 把 `sales_rep` 職位指派給每一位應當接收潛在客戶的業務代表，或者在 **Setup → Access Control → Queue Members** 裡新增一列，Queue 填 `lead_intake`，Member 選具體的人。佇列的成員*就是*路由表
+- [ ] 把 `crm_sales_rep` 職位指派給每一位應當接收潛在客戶的業務代表，或者在 **Setup → Access Control → Queue Members** 裡新增一列，Queue 填 `lead_intake`，Member 選具體的人。佇列的成員*就是*路由表
 - [ ] 在 **Studio → Automation → Flows** 中查看接下來 `lead_assignment` 流程做了什麼（按評級設定跟進日期，並提醒新的所有者）
 
 ### 9. 產品目錄
@@ -117,15 +117,15 @@ description: 讓 HotCRM 為你的團隊做好生產準備的第一週任務。
 
 ### 12. 工單路由 —— 一個佇列加一條規則
 
-**不存在「Setup → Case Settings」這個畫面。**工單路由是應用自帶的兩項中繼資料。**Support Intake** 佇列（`case_intake`）以 `service_agent` 職位為成員。指派規則 `case_intake_assignment` 把每一張到達時沒有所有者的工單，交給成員中**未結工單最少**的那一位，這裡的「未結」指狀態既不是 *Resolved* 也不是 *Closed*。最常見的來路是網頁轉工單（web-to-case）提交。這條規則比的是負載，不按次序輪換，也不按產品、區域或來源比對。
+**不存在「Setup → Case Settings」這個畫面。**工單路由是應用自帶的兩項中繼資料。**Support Intake** 佇列（`case_intake`）以 `crm_service_agent` 職位為成員。指派規則 `case_intake_assignment` 把每一張到達時沒有所有者的工單，交給成員中**未結工單最少**的那一位，這裡的「未結」指狀態既不是 *Resolved* 也不是 *Closed*。最常見的來路是網頁轉工單（web-to-case）提交。這條規則比的是負載，不按次序輪換，也不按產品、區域或來源比對。
 
 - **它只在插入時執行**，而且只處理到達時既沒有所有者、也沒有佇列的工單。它不會在之後把工單從某個人手裡拿走，也不會在客服自己新建工單時觸發，因為那位客服已經是所有者。
 - **匿名網頁表單提交的工單和其他來路一樣參與指派。**提交者只會得知工單已收到，永遠看不到它分給了誰。
 - **佇列裡沒有成員時，工單留在佇列裡等待。**它沒有所有者，出現在[工單](/zh-Hant/docs/service/cases)頁面的 **未分派 — 待分診** 頁籤裡，每一位客服專員都可以打開它並點選 **Claim**（認領）。所以給佇列配上人本身就是一次行為變化：新工單不再在那裡等待，而是直接交給某位客服。
 
-**這不是升級交接。**那是另一個人員池、另一個時機：它在狀態改為 *Escalated* 時執行，把工單交給持有 `service_manager` 職位的人當中負載最輕的那一位（參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)）。
+**這不是升級交接。**那是另一個人員池、另一個時機：它在狀態改為 *Escalated* 時執行，把工單交給持有 `crm_service_manager` 職位的人當中負載最輕的那一位（參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)）。
 
-- [ ] 把 `service_agent` 職位指派給每一位應當接收工單的客服，或者在 **Setup → Access Control → Queue Members** 裡新增一列，Queue 填 `case_intake`，Member 選具體的人。（這兩個佇列隨應用宣告，不會出現在 **Setup → Access Control → Queues** 的列表裡。）佇列的成員*就是*路由表
+- [ ] 把 `crm_service_agent` 職位指派給每一位應當接收工單的客服，或者在 **Setup → Access Control → Queue Members** 裡新增一列，Queue 填 `case_intake`，Member 選具體的人。（這兩個佇列隨應用宣告，不會出現在 **Setup → Access Control → Queues** 的列表裡。）佇列的成員*就是*路由表
 - [ ] 佇列還沒有成員的時候，盯住工單頁面的 **未分派 — 待分診** 頁籤：它列出的正是等待認領的工單
 - [ ] 從引入佇列之前的版本升級上來時：以管理員身分執行一次 `pnpm exec tsx scripts/backfill-intake-queue.ts --apply`，把沒有所有者的未結工單和潛在客戶放進各自的佇列，客服才能重新看到它們
 

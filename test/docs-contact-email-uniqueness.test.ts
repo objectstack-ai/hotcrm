@@ -114,7 +114,7 @@ describe('the enforcement the contact docs now describe (#648)', () => {
     // another of their accounts, with an address already on file.
     const verify = await hotcrmStack();
     const rep = await signUpPerson(verify, 'rep@docs-contact-email-uniqueness.test', {
-      name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Sales Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     const [accA, accB] = await verify.seed('crm_account', [
       { name: 'Board Co A', owner_id: rep.id }, { name: 'Board Co B', owner_id: rep.id },

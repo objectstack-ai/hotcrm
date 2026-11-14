@@ -30,11 +30,21 @@ import * as salesObjects from '../objects';
  *     other object a rep sells to, and an object-less one is unreachable
  *     everywhere.
  *  2. **Shape.** Each of these actions inserts a real `crm_event`, real
- *     `crm_event_attendee` rows, and keeps the `sys_activity` row purely as the
- *     unified-timeline pointer (ADR-0052 `source_object` / `source_id`), the
- *     same way `send_email` points at its `sys_email`. ⛔ Never move that
- *     structure back into a `metadata` JSON blob: a blob is not data — no view
- *     filters it, no dataset groups by it, no report counts it.
+ *     `crm_event_attendee` rows, and keeps the timeline entry purely as the
+ *     unified-timeline pointer (ADR-0052 `source_object` / `source_id`) to that
+ *     event. ⛔ Never move that structure back into a `metadata` JSON blob: a
+ *     blob is not data — no view filters it, no dataset groups by it, no report
+ *     counts it.
+ *
+ * # The timeline entry goes through the platform's door
+ *
+ * The entry is added with `ctx.activity.append` (capability `activity.append`),
+ * never a raw insert into `sys_activity`: the activity feed is an append-only
+ * object its platform service writes. The door stamps the actor (the acting
+ * user, with the platform's display name), the organization, the time and the
+ * origin, reads the record and the event in the caller's own scope, and holds
+ * the timeline's bounds (a 500-character summary, a 255-character label,
+ * 8,000 characters of metadata as JSON).
  *
  * # Live platform workaround
  *
@@ -107,73 +117,6 @@ export const ACTIVITY_TARGETS: Record<string, string> = {
 const lit = (value: string): string => JSON.stringify(value);
 
 /**
- * The acting user's display name, as action-body SOURCE TEXT.
- *
- * Shared verbatim by every body that writes `sys_activity.actor_name`: the
- * activity family below and `send_email` in `contact.actions.ts`.
- *
- * # Why a string and not a function
- *
- * An action body is shipped BODY-ONLY and evaluated in a QuickJS sandbox with
- * no module scope, so a shared helper called from a body is not a closure at
- * runtime — it is a `ReferenceError` (`_line-item-price-fill.ts` states the
- * same constraint for the shared line-item price fill). A string spliced at
- * AUTHORING time, while Node builds the metadata, has no such problem: what
- * reaches the sandbox is one self-contained body with this text inlined,
- * exactly as if it had been typed there. `test/script-bodies.test.ts` runs
- * the bodies through the real action door AND pins that every `actor_name`
- * writer still contains this constant, so the call sites cannot drift into
- * disagreeing.
- *
- * # Contract for a splice site
- *
- * Splice into a body that has already declared `userId` (`ctx.user?.id ?? null`)
- * and whose action declares `api.read`. Afterwards `actorName` holds a
- * non-blank display name — the id only as a last resort, never `null`.
- */
-export const ACTOR_NAME_RESOLUTION_SOURCE = `// The acting user's DISPLAY name, for the sys_activity row (#673 / #678).
-      //
-      // PLATFORM WORKAROUND. \`ctx.user.name\` is not a display name on the
-      // dispatch path the Console uses: the REST action dispatcher builds the
-      // body's user as \`{ id: ec.userId, name: ec.userId, … }\` — the key is
-      // present and carries the raw id, so \`ctx.user?.name\` reads as a
-      // plausible string and silently wrote ids like
-      // "grDEyLoIgnunJ2M7Y2muLgcuQbDUT0s2" into \`sys_activity.actor_name\`
-      // (@objectstack/runtime 17.0.0-rc.2, dist/index.js:5397-5399). The MCP
-      // dispatcher does try a display name first
-      // (\`ec.userName ?? ec.userDisplayName ?? ec.userId\`, dist/index.js:1776)
-      // but nothing in the installed platform ever populates either field, so
-      // it falls back to the id too.
-      //
-      // So the name is resolved HERE, from \`sys_user.name\` (the column the
-      // platform itself treats as the profile display name), with the id kept
-      // as the last resort — an opaque id is bad, a blank actor is worse.
-      // A name that differs from the id is taken as already-resolved, which is
-      // what makes this one query and not a query per activity write.
-      //
-      // DELETE THIS once the platform delivers a display name on ctx.user.name
-      // for REST-dispatched action bodies: every splice site collapses back to
-      // \`actor_name: ctx.user?.name\` (objectstack-ai/objectstack#5372).
-      const ctxName = ctx.user?.name ? String(ctx.user.name).trim() : '';
-      let actorName = ctxName && ctxName !== userId ? ctxName : '';
-      if (!actorName && userId) {
-        try {
-          const found = await ctx.api.object('sys_user').find({
-            where: { id: userId },
-            fields: ['name'],
-            top: 1,
-          });
-          const users = Array.isArray(found) ? found : (found?.records ?? []);
-          const resolved = users.length && users[0].name ? String(users[0].name).trim() : '';
-          if (resolved) actorName = resolved;
-        } catch (e) {
-          // A denied or unavailable sys_user read must not fail the log — the
-          // interaction the rep just recorded matters more than its label.
-        }
-      }
-      if (!actorName) actorName = userId;`;
-
-/**
  * The authored difference between one activity action and the next.
  *
  * Everything the variants share lives in {@link activityAction}; this type is
@@ -244,8 +187,6 @@ function activityAction(spec: ActivitySpec, objectName: string, nameField: strin
       const recordId = ctx.recordId ?? record.id ?? null;
       const userId = ctx.user?.id ?? null;
       const nowIso = new Date().toISOString();
-
-      ${ACTOR_NAME_RESOLUTION_SOURCE}
 
       const subject = input.subject ? String(input.subject) : ${lit(spec.defaultSubject)};
       const duration = input.duration ? Number(input.duration) : 0;
@@ -350,29 +291,34 @@ function activityAction(spec: ActivitySpec, objectName: string, nameField: strin
         if (row?.id) attendeeIds.push(row.id);
       }
 
-      // 3. the unified-timeline pointer.
+      // 3. the unified-timeline pointer, through the activity door.
       // \`metadata\` no longer carries the attendee list: it is a display hint
       // beside a real record now, not the record itself. ADR-0052
       // source_object/source_id is the queryable drill to the crm_event row.
+      // The door stamps the actor and the origin; the summary and the label are
+      // held to the timeline's column bounds, and the notes in the hint to a
+      // share of its metadata bound (the full notes are the event's description).
       const summary = duration ? subject + ' (' + duration + ' min)' : subject;
-      const activity = await ctx.api.object('sys_activity').insert({
-        type: EVENT_STATUS === 'held' ? 'completed' : 'scheduled',
-        summary: ${lit(spec.summaryPrefix)} + summary,
-        actor_id: userId,
-        actor_name: actorName,
-        object_name: OBJECT_NAME,
-        record_id: recordId,
+      let activity = null;
+      if (recordId) {
+        const entry = {
+          object: OBJECT_NAME,
+          recordId: String(recordId),
+          type: EVENT_STATUS === 'held' ? 'completed' : 'scheduled',
+          summary: (${lit(spec.summaryPrefix)} + summary).slice(0, 500),
+          metadata: {
+            kind: EVENT_TYPE,
+            duration_minutes: duration,
+            notes: notes.slice(0, 4000),
+            attendee_count: attendeeIds.length,
+          },
+        };
         // #514 item 2: the object's DECLARED nameField, not a hardcoded name.
-        record_label: record[NAME_FIELD] ?? null,
-        source_object: 'crm_event',
-        source_id: eventId,
-        metadata: JSON.stringify({
-          kind: EVENT_TYPE,
-          duration_minutes: duration,
-          notes: notes,
-          attendee_count: attendeeIds.length,
-        }),
-      });
+        const label = record[NAME_FIELD];
+        if (label !== null && label !== undefined && label !== '') entry.recordLabel = String(label).slice(0, 255);
+        if (eventId) entry.source = { object: 'crm_event', id: String(eventId) };
+        activity = await ctx.activity.append(entry);
+      }
 
       // 4. SLA first-response stamp — NOT here. #575 B2 originally stamped
       // \`crm_case.first_response_date\` from this body, which meant the metric
@@ -389,7 +335,7 @@ function activityAction(spec: ActivitySpec, objectName: string, nameField: strin
 
       return { eventId: eventId, activityId: activity?.id ?? null, attendeeIds: attendeeIds };
     `,
-      capabilities: ['api.read', 'api.write'],
+      capabilities: ['api.write', 'activity.append'],
       timeoutMs: 5000,
     },
     locations: ['record_header', 'list_item', 'record_related'],

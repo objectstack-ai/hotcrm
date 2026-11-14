@@ -2,6 +2,7 @@
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 import { PrintServicePlugin } from '@objectstack/service-print';
+import { READS_ACCOUNTS, READS_LEADS } from './apps/crm.app.js';
 
 /**
  * Everything the app package REGISTERS, as opposed to what it IS.
@@ -69,10 +70,11 @@ export type HotCrmAppCollections = Omit<
  * without it, those three actions are refused ("defineStack cross-reference
  * validation failed (3 issues)"); with it, none. Verified like
  * `artifactObjects`: a target that resolved only through the list and that no
- * package defines is refused by `composeStacks`. The dashboard half of the
- * same fix needs no option — the CRM Overview List Price by Category tile binds
- * revenue's `product_metrics`, which `os validate` now resolves against the
- * artifact's packages.
+ * package defines is refused by `composeStacks`. ⛔ No dashboard of this
+ * package binds a module's dataset: from objectstack 18.4.0 a dataset is read
+ * only from inside the reader's dependency closure (objectstack#32929), so
+ * revenue's `product_metrics` is shown by revenue's own Product Catalog
+ * dashboard (#2436).
  *
  * ## What is deliberately NOT here
  *
@@ -90,7 +92,7 @@ export const createHotCrmAppStack = (
     manifest: {
       id: 'app.objectstack.hotcrm',
       namespace: 'crm',
-      version: '6.1.0',
+      version: '6.2.1',
       type: 'app',
       name: 'HotCRM',
       description: 'AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, Contracts.',
@@ -99,14 +101,86 @@ export const createHotCrmAppStack = (
       // participates in the check — a runtime on a different major refuses the
       // load with a structured OS_PROTOCOL_INCOMPATIBLE diagnostic (naming the
       // `objectstack migrate meta` replay) instead of failing deep in a schema
-      // parse. Bump together with `specVersion` on every platform upgrade
-      // (docs/MAINTENANCE.md §3) — `test/docs-declared-versions.test.ts` now
-      // enforces that pairing against `objectstack.manifest.json` instead of
+      // parse. Bump together with `engines.protocol` in
+      // `objectstack.manifest.json` on every platform upgrade (docs/MAINTENANCE.md
+      // §3) — `test/docs-declared-versions.test.ts` enforces that pairing instead of
       // trusting this comment, because two platform upgrades in a row (rc.2, then
       // rc.3) moved the manifest and left this line behind (#728). Every package
       // of this artifact states the same protocol; `src/service/index.ts`
       // repeats it for the same reason.
-      engines: { protocol: '^18.3.0' },
+      engines: { protocol: '^18.4.0' },
+
+      /**
+       * The app package's entries in the two module apps (#2417, ADR-0029 D7).
+       *
+       * the Service app and the Marketing app are declared by their modules
+       * (`src/service/apps/`, `src/marketing/apps/`), and an app's own
+       * `navigation` may not name another package's object (ADR-0130). So
+       * each module app declares ANCHOR groups and this package fills them
+       * with the customers, the member's own work and the reports that cross
+       * functions: the mirror of how the modules filled this app's Service
+       * and Marketing groups before the split (accepted and served on 18.3.0,
+       * measured). Same ids and gates as the Sales app's own entries: one
+       * destination per app, the same object in two apps.
+       *
+       * A contributed item lands after the group's own children, so My Tasks
+       * follows My Cases and the Inbox, and the churn report follows the
+       * case reports.
+       */
+      navigationContributions: [
+        {
+          app: 'crm_service',
+          group: 'group_customers',
+          priority: 10,
+          items: [
+            { id: 'nav_account', type: 'object', objectName: 'crm_account', label: 'Accounts', icon: 'building' },
+            { id: 'nav_contact', type: 'object', objectName: 'crm_contact', label: 'Contacts', icon: 'user' },
+          ],
+        },
+        {
+          app: 'crm_service',
+          group: 'group_work',
+          priority: 10,
+          items: [
+            { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
+            { id: 'nav_my_calendar', type: 'object', objectName: 'crm_event', viewName: 'my_events', label: 'My Calendar', icon: 'calendar-days' },
+          ],
+        },
+        {
+          app: 'crm_service',
+          group: 'group_reports',
+          priority: 10,
+          items: [
+            { id: 'nav_report_churn_signals', type: 'report', reportName: 'customer_churn_signals', label: 'Customer Churn Signals', icon: 'heart-pulse', visible: READS_ACCOUNTS },
+          ],
+        },
+        {
+          app: 'crm_marketing',
+          group: 'group_audience',
+          priority: 10,
+          items: [
+            { id: 'nav_lead', type: 'object', objectName: 'crm_lead', label: 'Leads', icon: 'user-plus' },
+            { id: 'nav_contact', type: 'object', objectName: 'crm_contact', label: 'Contacts', icon: 'user' },
+            { id: 'nav_account', type: 'object', objectName: 'crm_account', label: 'Accounts', icon: 'building' },
+          ],
+        },
+        {
+          app: 'crm_marketing',
+          group: 'group_work',
+          priority: 10,
+          items: [
+            { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
+          ],
+        },
+        {
+          app: 'crm_marketing',
+          group: 'group_reports',
+          priority: 10,
+          items: [
+            { id: 'nav_report_lead_inflow', type: 'report', reportName: 'lead_inflow_by_month_source', label: 'Lead Engagement by Month', icon: 'trending-up', visible: READS_LEADS },
+          ],
+        },
+      ],
     },
 
     // ─── Platform capabilities this app needs ─────────────────────────

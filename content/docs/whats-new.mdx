@@ -63,21 +63,110 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v6.1.0 — Latest release
+## v6.2.1 — Latest release
 
-**HotCRM 6.1.0** runs on **ObjectStack 18.3.0**, by way of 18.1.0 and 18.2.0, across every
-`@objectstack/*` package, and its manifest declares the matching `^18.3.0` protocol range, so a
+**HotCRM 6.2.1** runs on **ObjectStack 18.4.0** across every `@objectstack/*` package, and its
+manifest declares the matching `^18.4.0` protocol range, so a
 runtime on a different protocol major — a 17.x host included — refuses the load up front with a
-structured diagnostic instead of failing deep in a schema parse. 6.0.0 shipped on ObjectStack
+structured diagnostic instead of failing deep in a schema parse. 6.2.0 shipped on ObjectStack
+18.4.0 too; 6.1.2, 6.1.1 and 6.1.0 shipped on
+ObjectStack 18.3.0, 6.0.0 on ObjectStack
 18.0.0, 5.1.2, 5.1.1 and 5.1.0 on ObjectStack 18.0.0-next.3, 5.0.0 on ObjectStack
 18.0.0-next.2, and 4.0.1 on ObjectStack 17.7.0.
 
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 6.1.0 are
+> entry every pull request adds. The versions between v1.0 and 6.2.1 are
 > recorded there and are deliberately not re-listed here — a hand-maintained
 > copy of that history is exactly how this section came to advertise a "v5.0"
 > while the app was at 2.2.2, on a platform major that never shipped it.
+
+### What 6.2.1 changes
+
+- **People keep their positions across the 6.2 rename.** 6.2.0 renamed the twelve positions with the
+  `crm_` prefix without telling the platform they were the same positions, so everyone assigned to
+  a position before the upgrade silently lost what it gave them. Each position now names its
+  earlier name, and the first boot of 6.2.1 moves every holder of an old name to the new one, in
+  every organization, as the system: nothing to run, on a hosted environment as on a self-hosted
+  server. An organization that already upgraded to 6.2.0 gets its people back the same way. The
+  password-based `scripts/migrate-position-holders.ts` is gone.
+
+**Check these before and after upgrading to 6.2.1:** the move happens **at boot**. An environment
+that installs the upgrade while it is running moves its position holders at its next restart, so
+restart it after the upgrade (carrying holders on a live install is a platform change, tracked as
+[objectstack#33238](https://github.com/objectstack-ai/objectstack/issues/33238)). Then open
+**Setup → People & Organization → Position Holders** and see the people under the `crm_` names, and
+sign in as a sales manager and see the accounts, deals and forecasts they saw before. A sharing
+rule, queue member or record share you added in Setup under an old position name keeps that name:
+re-point it to the renamed position. Coming from 6.1.2 or earlier, the checks under "What 6.2.0
+changes" apply as well.
+
+### What 6.2.0 changes
+
+- **Three apps: Sales, Service and Marketing.** The one long menu every persona shared is split by
+  line of work. **Sales** (the former *HotCRM* app) keeps leads, accounts, deals, quotes, contracts,
+  activity, insights and the sales reports. **Service** opens on Service Overview and holds cases,
+  knowledge, the customers and the case reports, with the Service Manual under *Help*.
+  **Marketing** opens on Campaigns and holds the audience, with the Marketing Manual under *Help*;
+  it comes and goes with the marketing module. Each persona's launcher offers the apps its work
+  needs: a sales rep Sales, service staff Service, a marketing user Sales and Marketing, a sales
+  manager or an administrator all three. On the marketplace each app is filed under the package
+  that owns it, so disabling a module takes its app with it.
+- **A Chinese organization gets its demo data in Chinese.** Every sample dataset ships in English
+  and in Simplified Chinese, and an organization receives the one that matches its language: the
+  same accounts, deals, cases and campaigns, with the same amounts and dates, so every dashboard
+  reads the same in both.
+- **Chinese, Japanese and Korean names read family name first.** A contact or lead whose last name
+  is written in CJK script is titled 张伟, not 「伟 张」, in lists, lookups, page headers and search.
+  Every other name still reads *first last*.
+- **Positions carry the `crm_` prefix.** The twelve positions are renamed (`sales_rep` →
+  `crm_sales_rep`), because from ObjectStack 18.4.0 a position name is shared by every app in an
+  environment. Labels do not change. From 6.2.1 every position names its earlier name, and the
+  platform moves the people who held it to the new name at the first boot after the upgrade. 6.2.0
+  itself did not: on it, an assignment made under an old name grants nothing (see the checks below).
+- **ObjectStack 18.4.0.** A record a person links to must be one they can open; the List Price by
+  Category chart moves to its own **Product Catalog** dashboard; a forecast's title follows a
+  rename of its owner; and Send Email goes out from the deployment's sender address with the rep
+  as reply-to. `CHANGELOG.md` has each entry in full.
+
+**Check these before and after upgrading to 6.2.0:** upgrade the host to ObjectStack 18.4.0 first,
+and on PostgreSQL or MySQL run `os migrate apply` with it. Install 6.2.1 rather than 6.2.0: its
+first boot moves every position holder to the `crm_` name, in every organization, with nothing to
+run. The move happens at boot, so an environment that installs the upgrade while running moves
+them at its next restart; until then the old assignments grant nothing. Afterwards **Setup →
+People & Organization → Position Holders** lists the people under the new names. A sharing rule,
+queue member or record share you added in Setup under an old position name keeps that name:
+re-point it to the renamed position. Then sign in as a sales
+rep and see the Sales app on the launcher, and as an administrator see all three apps. Coming from
+6.1.1 or 6.0.0, the checks under the earlier sections apply as well.
+
+### What 6.1.2 changes
+
+- **Service staff get a manual of their own.** *Help* now lists the **Service Manual**: cases and
+  SLAs, the knowledge base, and how incoming cases are triaged. On marketplace installs these
+  three pages used to sit under *Uncategorized* in the User Manual, with its *Service* group empty.
+  The User Manual keeps Getting Started, Sales and Analytics.
+- **The overview says where the Admin Manual is.** It ships with self-hosted installs, and the
+  overview now says so instead of pointing every administrator to it.
+
+**Check these before and after upgrading to 6.1.2:** open *Help → Service Manual* and see the
+three service pages; the User Manual shows no *Uncategorized* group. Coming from 6.0.0, the
+checks under "What 6.1.1 changes" and "What 6.1.0 changes" apply as well.
+
+### What 6.1.1 changes
+
+- **HotCRM is back on the marketplace.** The marketplace now files a listing under the business
+  functions it serves rather than one category, and refused HotCRM 6.1.0 because it still named
+  the old "CRM" category. 6.1.1 is listed under **Sales**, **Customer service** and **Marketing**,
+  and publishes again to both marketplaces. 6.1.0 never reached the production marketplace, so an
+  environment there goes from 6.0.0 straight to 6.1.1, and everything under "What 6.1.0 changes"
+  below arrives with it.
+- **The artifact carries a fifth package, Order to Cash**, with nothing in it yet. Its sidebar
+  group stays hidden until the package contributes its first entry, so nobody sees a change. A
+  tenant that will not use it can disable the package.
+
+**Check these before and after upgrading to 6.1.1:** nothing beyond 6.1.0's own list. Coming
+from 6.0.0, every check under "What 6.1.0 changes" applies.
 
 ### What 6.1.0 changes
 

@@ -23,6 +23,7 @@ import * as o2cViews from '../../src/o2c/views';
 
 import * as salesDashboards from '../../src/sales/dashboards';
 import * as serviceDashboards from '../../src/service/dashboards';
+import * as revenueDashboards from '../../src/revenue/dashboards';
 
 import * as salesDatasets from '../../src/sales/datasets';
 import * as serviceDatasets from '../../src/service/datasets';
@@ -186,7 +187,7 @@ const BARRELS: Readonly<
     marketing: marketingViews,
     o2c: o2cViews,
   },
-  dashboards: { sales: salesDashboards, service: serviceDashboards },
+  dashboards: { sales: salesDashboards, service: serviceDashboards, revenue: revenueDashboards },
   datasets: { sales: salesDatasets, service: serviceDatasets, revenue: revenueDatasets },
   reports: { sales: salesReports, service: serviceReports },
   sharing: { sales: salesSharing, service: serviceSharing, marketing: marketingSharing },

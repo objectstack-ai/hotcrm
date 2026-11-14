@@ -1,28 +1,17 @@
 {
   "$schema": "https://schemas.objectstack.dev/template-manifest.json",
-  "name": "hotcrm",
-  "specVersion": "^18.3.0",
   "engines": {
-    "protocol": "^18.3.0"
+    "protocol": "^18.4.0"
   },
   "manifestId": "app.objectstack.hotcrm",
   "displayName": "HotCRM",
   "description": "AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, and Contracts in one production-grade workspace.",
   "tagline": "Production AI-native CRM — accounts to forecasts.",
-  "category": "crm",
-  "isStarter": false,
-  "publisher": "objectstack",
+  "businessFunctions": ["sales", "customer_service", "marketing"],
   "license": "Apache-2.0",
   "iconUrl": "https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg",
   "homepageUrl": "https://github.com/objectstack-ai/hotcrm",
   "tags": ["crm", "sales", "accounts", "leads", "opportunities", "cases", "campaigns"],
-  "skills": [
-    "objectstack-platform",
-    "objectstack-data",
-    "objectstack-ui",
-    "objectstack-automation",
-    "objectstack-ai"
-  ],
   "readmePath": "README.md",
   "translations": {
     "zh-CN": {

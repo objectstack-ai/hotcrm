@@ -125,10 +125,27 @@ export function describeTranslations(translations) {
   });
 }
 
+/** HotCRM is a full product, not a starter template (#2420). */
+export const HOTCRM_IS_STARTER = false;
+/** The publisher HotCRM's service-mode publish names on its listing (#2420). */
+export const HOTCRM_PUBLISHER = 'objectstack';
+
 /**
  * The body of `POST /api/v1/cloud/packages`. `translations` is left out when
  * the manifest declares none, so an upsert never clears a stored map by
  * sending an empty one.
+ *
+ * The listing is classified by `businessFunctions`, sent under the wire key
+ * `business_functions` (#2426). The single `category` it replaced is never
+ * sent: the cloud refuses a body that carries it ("Package refused — nothing
+ * stored"), which kept 6.1.0 off the production marketplace. The facet, its
+ * values and the wire key are the platform's: `taxonomy.zod.ts` and
+ * `CreatePackageRequestSchema` in `@objectstack/spec/marketplace`, and
+ * `TAXONOMY_WIRE_KEYS` in the CLI's `package publish`, on objectstack `main`
+ * since #32448 — no released spec carries them yet (18.3.0, the pin, does
+ * not), so the body is not schema-parsed here. A manifest that declares no
+ * `businessFunctions` sends none, and a re-publish leaves the stored value
+ * alone.
  *
  * @returns {Record<string, any>}
  */
@@ -139,15 +156,19 @@ export function packageUpsertBody({ manifestId, manifest, license, readme, trans
     visibility: 'marketplace',
     display_name: manifest.displayName,
     description: manifest.description,
-    category: manifest.category,
     tags: manifest.tags,
-    is_starter: manifest.isStarter ?? false,
-    publisher: manifest.publisher,
+    // First-party constants of HotCRM's service-mode publish, not manifest
+    // keys: `@objectstack/spec` 18.4.0 refuses `publisher` and `isStarter` on
+    // the template manifest (they are the platform's to decide, objectstack
+    // #31035), and this publish keeps sending the values it always sent (#2420).
+    is_starter: HOTCRM_IS_STARTER,
+    publisher: HOTCRM_PUBLISHER,
     icon_url: manifest.iconUrl,
     homepage_url: manifest.homepageUrl,
     license,
     readme,
   };
+  if (manifest.businessFunctions !== undefined) body.business_functions = manifest.businessFunctions;
   if (translations) body.translations = translations;
   return body;
 }

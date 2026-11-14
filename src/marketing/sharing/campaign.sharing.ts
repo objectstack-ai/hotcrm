@@ -22,7 +22,7 @@ import { P } from '@objectstack/spec';
  * only, and the sharing layer's write-owned baseline still refuses the update.
  *
  * MEASURED on 17.0.0-rc.2 against this app's own metadata (#724), for a user
- * holding the `marketing_user` set plus position `marketing_manager` and owning
+ * holding the `marketing_user` set plus position `crm_marketing_manager` and owning
  * no campaign: reads return EVERY campaign at all times; before these rules
  * materialise, `buildWriteFilter` is `{ owner_id: specialist }` and updating a
  * specialist-owned campaign is FORBIDDEN; after, the filter gains
@@ -44,7 +44,7 @@ export const CampaignLeadershipSharingRules = [
     type: 'criteria' as const,
     condition: P`record.status in ["planning", "in_progress"] && record.is_active == true`,
     accessLevel: 'edit' as const,
-    sharedWith: { type: 'position' as const, value: 'marketing_manager' },
+    sharedWith: { type: 'position' as const, value: 'crm_marketing_manager' },
   },
   {
     name: 'campaign_leadership_director',
@@ -53,6 +53,6 @@ export const CampaignLeadershipSharingRules = [
     type: 'criteria' as const,
     condition: P`record.status in ["planning", "in_progress"] && record.is_active == true`,
     accessLevel: 'edit' as const,
-    sharedWith: { type: 'position' as const, value: 'marketing_director' },
+    sharedWith: { type: 'position' as const, value: 'crm_marketing_director' },
   },
 ];

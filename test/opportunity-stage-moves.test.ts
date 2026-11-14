@@ -56,7 +56,7 @@ beforeAll(async () => {
   const adminToken = await verify.signIn();
   people.admin = { token: adminToken, id: String((await verify.contextFor(adminToken)).userId) } as Person;
   people.rep = await signUpPerson(verify, 'rep@opportunity-stage-moves.test', {
-    name: 'Stage Moves Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Stage Moves Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Stage Moves Co', owner_id: people.rep.id, approval_status: 'approved' }]);
   accountId = String(account!.id);

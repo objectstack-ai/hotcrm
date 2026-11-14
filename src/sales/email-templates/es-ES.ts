@@ -16,8 +16,8 @@ export const esES: EmailTemplatePack = {
   },
   'crm.contact_welcome': {
     label: 'Nuevo contacto',
-    subject: 'Nuevo contacto: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} se ha añadido como contacto. Ponte en contacto para darle la bienvenida.</p>',
+    subject: 'Nuevo contacto: {{person_name}}',
+    bodyHtml: '<p>{{person_name}} se ha añadido como contacto. Ponte en contacto para darle la bienvenida.</p>',
   },
   'crm.contract_expired': {
     label: 'Contrato vencido',
@@ -41,28 +41,28 @@ export const esES: EmailTemplatePack = {
   },
   'crm.lead_conversion_approved': {
     label: 'Cliente potencial aprobado para conversión',
-    subject: 'Cliente potencial aprobado para conversión: {{first_name}} {{last_name}}',
+    subject: 'Cliente potencial aprobado para conversión: {{person_name}}',
     bodyHtml: '<p>Este cliente potencial ha sido aprobado. Puedes convertirlo en cuenta, contacto y oportunidad.</p>',
   },
   'crm.lead_conversion_rejected': {
     label: 'Cliente potencial no aprobado',
-    subject: 'Cliente potencial no aprobado: {{first_name}} {{last_name}}',
+    subject: 'Cliente potencial no aprobado: {{person_name}}',
     bodyHtml: '<p>La conversión de este cliente potencial no fue aprobada. Sigue trabajándolo o descalifícalo indicando un motivo.</p>',
   },
   'crm.lead_converted': {
     label: 'Cliente potencial convertido',
-    subject: 'Cliente potencial convertido: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>El cliente potencial {{first_name}} {{last_name}} se convirtió en cuenta y contacto.</p>',
+    subject: 'Cliente potencial convertido: {{person_name}}',
+    bodyHtml: '<p>El cliente potencial {{person_name}} se convirtió en cuenta y contacto.</p>',
   },
   'crm.lead_routing_hot': {
     label: 'Asignación de cliente potencial caliente',
-    subject: 'Cliente potencial caliente — haz el seguimiento en 24 h: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} de {{company}} (puntuación {{rating}}) es tuyo. Haz el seguimiento antes de que termine mañana.</p>',
+    subject: 'Cliente potencial caliente — haz el seguimiento en 24 h: {{person_name}}',
+    bodyHtml: '<p>{{person_name}} de {{company}} (puntuación {{rating}}) es tuyo. Haz el seguimiento antes de que termine mañana.</p>',
   },
   'crm.lead_routing_new': {
     label: 'Asignación de cliente potencial',
-    subject: 'Nuevo cliente potencial asignado a ti: {{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} de {{company}} ahora es tuyo. Haz el seguimiento en los próximos 3 días.</p>',
+    subject: 'Nuevo cliente potencial asignado a ti: {{person_name}}',
+    bodyHtml: '<p>{{person_name}} de {{company}} ahora es tuyo. Haz el seguimiento en los próximos 3 días.</p>',
   },
   'crm.opportunity_approved': {
     label: 'Oportunidad aprobada',

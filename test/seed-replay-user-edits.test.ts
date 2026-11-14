@@ -32,6 +32,14 @@ type Rec = Record<string, any>;
  * demo environment's next restart usually does: relative seed dates then
  * resolve to new values, which is what a later boot's replay meets.
  *
+ * The control that the cold boot replayed the seed at all is a seeded task
+ * the first boot never had: the database is first built from the artifact with
+ * that one row held back, as a database built before the row shipped was, and
+ * the restart boots the whole artifact, so the replay must insert a key that
+ * never landed in the organization. A deleted seeded task is not that control:
+ * from 18.4.0 the platform remembers which seed rows landed and leaves one a
+ * person deleted deleted (objectstack#31021, #2439).
+ *
  * `leadInteractionPointers` has no editor: it is insert-once because it
  * mirrors `events`, and the pin for it is that each pointer still reads its
  * event's end after that later boot. `forecasts` stays `upsert` (positional
@@ -124,6 +132,28 @@ const resolveKey = async (stack: VerifyStack, key: Rec): Promise<Rec> => {
   return where;
 };
 
+/**
+ * The artifact with one seed row of `object` held back: what a database built
+ * before that row shipped was seeded from. A fresh object over the same
+ * packages; the next boot of the whole artifact meets the row as new.
+ */
+const withoutSeedRow = (base: typeof artifact, object: string, isRow: (r: Rec) => boolean): typeof artifact => {
+  const a = base as unknown as Rec;
+  let held = 0;
+  const packages = (a.packages as Rec[]).map((p) => !Array.isArray(p.manifest?.data) ? p : {
+    ...p,
+    manifest: {
+      ...p.manifest,
+      data: (p.manifest.data as Rec[]).map((d) => d.object !== object ? d : {
+        ...d,
+        records: (d.records as Rec[]).filter((r) => (isRow(r) ? (held += 1, false) : true)),
+      }),
+    },
+  });
+  expect(held, `fixture: exactly one ${object} seed row is held back`).toBe(1);
+  return { ...a, packages } as typeof artifact;
+};
+
 const ACME = 'Acme Corporation';
 const DAY_MS = 86_400_000;
 // A contact the rep adds and marks primary. Not a seeded row: the seeded
@@ -137,15 +167,20 @@ describe('a user edit to a seeded record survives a restart (#2139)', () => {
   const edited: Rec[] = [];
   let acmeId: string;
   let newPrimaryId: string;
-  // The control: a seeded task deleted before the restart. Its return proves
-  // the cold boot really replayed the seed, so the edits surviving are not a
-  // boot that seeded nothing.
-  let deletedSubject: string;
+  // The control: a seeded task the first boot never had (no other dataset
+  // names it, and no edit below works it). Its arrival proves the cold boot
+  // really replayed the seed, so the edits surviving are not a boot that
+  // seeded nothing.
+  let newSubject: string;
 
   beforeAll(async () => {
     dir = mkdtempSync(join(tmpdir(), 'seed-replay-user-edits-'));
     const databaseFile = join(dir, 'crm.db');
-    const before = await bootStack(artifact, bootOptions({ databaseFile }));
+    const others = JSON.stringify([...(CrmSeedData as Rec[]).filter((d) => d.object !== 'crm_task'), EDITS]);
+    const control = (tasks.records as Rec[]).filter((r) => !others.includes(`"${String(r.subject)}"`)).at(-1);
+    expect(control, 'fixture: the task dataset seeds a task nothing else names').toBeDefined();
+    newSubject = String(control!.subject);
+    const before = await bootStack(withoutSeedRow(artifact, 'crm_task', (r) => r.subject === newSubject), bootOptions({ databaseFile }));
     const admin = await before.signIn();
 
     for (const edit of EDITS) {
@@ -177,12 +212,7 @@ describe('a user edit to a seeded record survives a restart (#2139)', () => {
     const primaries = await before.rows('crm_contact', { crm_account: acmeId, is_primary: true });
     expect(primaries.map((c) => c.id), 'the new contact did not become Acme\'s one primary').toEqual([newPrimaryId]);
 
-    const control = (tasks.records as Rec[]).at(-1);
-    expect(control, 'fixture: the task dataset seeds a task').toBeDefined();
-    deletedSubject = String(control!.subject);
-    const [doomed] = await before.rows('crm_task', { subject: deletedSubject });
-    await before.hooks.run('crm_task', 'delete', { id: doomed!.id }, { as: admin });
-    expect(await before.rows('crm_task', { subject: deletedSubject }), 'fixture: the control task was not deleted').toHaveLength(0);
+    expect(await before.rows('crm_task', { subject: newSubject }), 'fixture: the first boot seeded the held-back task').toHaveLength(0);
     await before.stop();
 
     // The next restart, a day later. Only `Date` is faked, and it keeps
@@ -213,8 +243,8 @@ describe('a user edit to a seeded record survives a restart (#2139)', () => {
     }
   });
 
-  it('control: the restart replayed the seed — the deleted seeded task is back', async () => {
-    expect(await after!.rows('crm_task', { subject: deletedSubject })).toHaveLength(1);
+  it('control: the restart replayed the seed — the seeded task the database lacked is written', async () => {
+    expect(await after!.rows('crm_task', { subject: newSubject })).toHaveLength(1);
   });
 
   it.each(EDITS.map((edit, i) => [edit.label, i] as const))('%s: the edit survives', async (_label, i) => {

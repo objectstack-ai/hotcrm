@@ -22,8 +22,8 @@ import type { TranslationData } from '@objectstack/spec/system';
 export const appSurface: Omit<TranslationData, 'objects'> = {
   apps: {
     crm_enterprise: {
-      label: 'HotCRM',
-      description: '営業・サービス・マーケティング向け顧客関係管理システム',
+      label: '営業',
+      description: '営業チームのためのリード・取引先・商談・見積',
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
       navigation: {
         nav_home: { label: 'ホーム' },
@@ -49,10 +49,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_event: { label: 'イベント' },
         nav_activity_dashboard: { label: '営業活動' },
 
-        group_marketing: { label: 'マーケティング' },
-
-        group_service: { label: 'サービス' },
-
         group_insights: { label: 'インサイト' },
         nav_crm_dashboard: { label: 'CRM 概要' },
         nav_forecast: { label: 'フォーキャスト' },
@@ -69,6 +65,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_help: { label: 'ヘルプ' },
         nav_help_manual: { label: 'ユーザーマニュアル' },
         nav_help_admin: { label: '管理者マニュアル' },
+      },
+    },
+    crm_service: {
+      // The ids this package contributes into the Service app (#2417).
+      navigation: {
+        nav_account: { label: '取引先' },
+        nav_contact: { label: '取引先責任者' },
+        nav_my_tasks: { label: '私のタスク' },
+        nav_my_calendar: { label: 'マイカレンダー' },
+        nav_report_churn_signals: { label: '顧客離反シグナル' },
+      },
+    },
+    crm_marketing: {
+      // The ids this package contributes into the Marketing app (#2417).
+      navigation: {
+        nav_lead: { label: 'リード' },
+        nav_contact: { label: '取引先責任者' },
+        nav_account: { label: '取引先' },
+        nav_my_tasks: { label: '私のタスク' },
+        nav_report_lead_inflow: { label: '月別リード対応' },
       },
     },
   },
@@ -125,7 +141,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: '平均商談規模（選択期間）', description: '選択期間の成立済み商談の平均金額' },
         lead_source: { title: 'リードソース', description: '獲得チャネル別のパイプライン金額' },
         pipeline_by_stage: { title: 'ステージ別パイプライン', description: '各営業ステージのオープン商談金額' },
-        top_products: { title: 'カテゴリ別定価合計', description: '製品カテゴリごとのカタログ定価の合計（売上ではありません）' },
         pipeline_by_owner: { title: '担当者別パイプライン', description: '営業担当者ごとのオープンパイプライン金額と商談数' },
       },
     },
@@ -425,7 +440,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     lead_detail_page: {
       label: 'リード詳細',
       description: 'ハイライト・詳細・関連情報を備えたリードの総合詳細ページ。',
-      title: '{first_name} {last_name}',
+      title: '{full_name}',
       subtitle: '{company}',
       components: {
         lead_duplicate_alert_confirmed: { label: '重複確定の警告' },
@@ -718,55 +733,55 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
-    executive: {
+    crm_executive: {
       label: 'エグゼクティブ',
       description: '経営層：パイプライン全体の進行中の大型商談をすべて閲覧できます。商談の所有権は商談チームに残ります。',
     },
-    sales_director: {
+    crm_sales_director: {
       label: '営業ディレクター',
       description: '営業組織を率い、最大規模の商談の最終承認を行い、進行中の大型商談をすべて閲覧します。',
     },
-    sales_manager: {
+    crm_sales_manager: {
       label: '営業マネージャー',
       description: '営業チームを率い、新規取引先・リード変換・大型商談を承認し、有効な取引先をすべて編集します。',
     },
-    sales_rep: {
+    crm_sales_rep: {
       label: '営業担当者',
       description: 'リードと商談を日々担当し、リード受付キューから新しいリードを受け取ります。',
     },
-    service_director: {
+    crm_service_director: {
       label: 'サービスディレクター',
       description: 'カスタマーサービスを統括し、サービスマネージャーが対応中の未解決の重大ケースをすべて閲覧します。',
     },
-    service_manager: {
+    crm_service_manager: {
       label: 'サービスマネージャー',
       description: 'エスカレーション窓口を担当します。エスカレーションされたケースはこの役職に引き渡され、未解決の重大ケースをすべて編集できます。',
     },
-    service_agent: {
+    crm_service_agent: {
       label: 'サービス担当者',
       description: '顧客のケースに対応し、サポート受付キューから新しいケースを受け取り、キューで待っているケースを担当します。',
     },
-    marketing_director: {
+    crm_marketing_director: {
       label: 'マーケティングディレクター',
       description: 'マーケティングを率い、所有者にかかわらず実施中のキャンペーンをすべて編集します。',
     },
-    marketing_manager: {
+    crm_marketing_manager: {
       label: 'マーケティングマネージャー',
       description: 'キャンペーンを管理し、所有者にかかわらず実施中のキャンペーンをすべて編集します。',
     },
-    marketing_user: {
+    crm_marketing_user: {
       label: 'マーケティングユーザー',
       description: 'キャンペーンとそのメンバーを日々企画・運用します。',
     },
-    ar_accountant: {
+    crm_ar_accountant: {
       label: '売掛金担当',
       description: '経理：営業が各契約で見る請求書と入金を入力・インポートします。',
     },
-    na_sales_team: {
+    crm_na_sales_team: {
       label: '北米営業チーム',
       description: '北米テリトリーのチーム：北米テリトリーの取引先をすべて編集します。',
     },
-    eu_sales_team: {
+    crm_eu_sales_team: {
       label: '欧州営業チーム',
       description: '欧州テリトリーのチーム：欧州（EMEA）テリトリーの取引先をすべて編集します。',
     },
@@ -810,11 +825,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   books: {
     crm_manual: {
       label: 'HotCRM ユーザーマニュアル',
-      description: '営業とサービスで HotCRM がどう動くか：画面の背後にあるルール。',
+      description: '営業で HotCRM がどう動くか：画面の背後にあるルール。',
       groups: {
         start: { label: 'はじめに' },
         sales: { label: '営業' },
-        service: { label: 'サービス' },
         analytics: { label: '分析' },
       },
     },

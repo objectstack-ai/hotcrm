@@ -22,8 +22,8 @@ import type { TranslationData } from '@objectstack/spec/system';
 export const appSurface: Omit<TranslationData, 'objects'> = {
   apps: {
     crm_enterprise: {
-      label: 'HotCRM',
-      description: 'Gestión de relaciones con clientes para ventas, servicio y marketing',
+      label: 'Ventas',
+      description: 'Prospectos, cuentas, oportunidades y presupuestos para el equipo de ventas',
       // Indexado por el `id` del nodo de navegación (espacio de nombres plano,
       // sea cual sea la profundidad del nodo).
       navigation: {
@@ -49,10 +49,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_my_leads: { label: 'Mis Prospectos' },
         nav_approval_requests: { label: 'Bandeja de Entrada' },
 
-        group_service: { label: 'Servicio' },
-
-        group_marketing: { label: 'Marketing' },
-
         group_insights: { label: 'Análisis' },
         nav_crm_dashboard: { label: 'Resumen CRM' },
         nav_forecast: { label: 'Previsiones' },
@@ -69,6 +65,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_help: { label: 'Ayuda' },
         nav_help_manual: { label: 'Manual de Usuario' },
         nav_help_admin: { label: 'Manual de Administración' },
+      },
+    },
+    crm_service: {
+      // The ids this package contributes into the Service app (#2417).
+      navigation: {
+        nav_account: { label: 'Cuentas' },
+        nav_contact: { label: 'Contactos' },
+        nav_my_tasks: { label: 'Mis Tareas' },
+        nav_my_calendar: { label: 'Mi Calendario' },
+        nav_report_churn_signals: { label: 'Señales de Abandono' },
+      },
+    },
+    crm_marketing: {
+      // The ids this package contributes into the Marketing app (#2417).
+      navigation: {
+        nav_lead: { label: 'Prospectos' },
+        nav_contact: { label: 'Contactos' },
+        nav_account: { label: 'Cuentas' },
+        nav_my_tasks: { label: 'Mis Tareas' },
+        nav_report_lead_inflow: { label: 'Interacción con Prospectos por Mes' },
       },
     },
   },
@@ -125,7 +141,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: 'Tamaño medio del negocio (período seleccionado)', description: 'Valor medio de los negocios cerrados ganados en el período seleccionado' },
         lead_source: { title: 'Origen del prospecto', description: 'Valor del pipeline por canal de adquisición' },
         pipeline_by_stage: { title: 'Pipeline por etapa', description: 'Valor de oportunidades abiertas en cada etapa de venta' },
-        top_products: { title: 'Precio de lista por categoría', description: 'Suma de los precios de lista del catálogo por categoría de producto, no ventas' },
         pipeline_by_owner: { title: 'Pipeline por responsable', description: 'Valor del pipeline abierto y número de negocios por comercial' },
       },
     },
@@ -423,7 +438,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     lead_detail_page: {
       label: 'Detalle de Prospecto',
       description: 'Página completa de detalle del prospecto, con datos destacados, detalles e información relacionada',
-      title: '{first_name} {last_name}',
+      title: '{full_name}',
       subtitle: '{company}',
       components: {
         lead_duplicate_alert_confirmed: { label: 'Aviso de duplicado confirmado' },
@@ -716,55 +731,55 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
-    executive: {
+    crm_executive: {
       label: 'Ejecutivo',
       description: 'Dirección de la empresa: lee todas las grandes oportunidades abiertas de todo el pipeline, mientras el equipo de la oportunidad conserva la propiedad.',
     },
-    sales_director: {
+    crm_sales_director: {
       label: 'Director de Ventas',
       description: 'Dirige la organización de ventas, da el visto bueno final a las mayores oportunidades y lee todas las grandes oportunidades abiertas.',
     },
-    sales_manager: {
+    crm_sales_manager: {
       label: 'Gerente de Ventas',
       description: 'Dirige un equipo de ventas: aprueba cuentas nuevas, conversiones de prospectos y grandes oportunidades, y edita todas las cuentas de clientes activas.',
     },
-    sales_rep: {
+    crm_sales_rep: {
       label: 'Representante de Ventas',
       description: 'Trabaja prospectos y oportunidades a diario y recibe prospectos nuevos de la cola de Recepción de Prospectos.',
     },
-    service_director: {
+    crm_service_director: {
       label: 'Director de Servicio',
       description: 'Supervisa la atención al cliente y lee todos los casos críticos abiertos mientras un gerente de servicio los atiende.',
     },
-    service_manager: {
+    crm_service_manager: {
       label: 'Gerente de Servicio',
       description: 'Atiende la bolsa de escalados: los casos escalados se asignan a este puesto, que edita todos los casos críticos abiertos.',
     },
-    service_agent: {
+    crm_service_agent: {
       label: 'Agente de Servicio',
       description: 'Atiende casos de clientes, recibe casos nuevos de la cola de Recepción de Soporte y reclama los que siguen esperando en ella.',
     },
-    marketing_director: {
+    crm_marketing_director: {
       label: 'Director de Marketing',
       description: 'Dirige marketing y edita todas las campañas activas, sea quien sea su propietario.',
     },
-    marketing_manager: {
+    crm_marketing_manager: {
       label: 'Gerente de Marketing',
       description: 'Gestiona las campañas de marketing y edita todas las campañas activas, sea quien sea su propietario.',
     },
-    marketing_user: {
+    crm_marketing_user: {
       label: 'Usuario de Marketing',
       description: 'Planifica y gestiona a diario las campañas de marketing y sus miembros.',
     },
-    ar_accountant: {
+    crm_ar_accountant: {
       label: 'Cuentas por cobrar',
       description: 'Finanzas: registra e importa las facturas y los cobros que ventas ve en cada contrato.',
     },
-    na_sales_team: {
+    crm_na_sales_team: {
       label: 'Equipo de Ventas de Norteamérica',
       description: 'Equipo territorial de Norteamérica: edita todas las cuentas del territorio de Norteamérica.',
     },
-    eu_sales_team: {
+    crm_eu_sales_team: {
       label: 'Equipo de Ventas de Europa',
       description: 'Equipo territorial de Europa: edita todas las cuentas del territorio de Europa (EMEA).',
     },
@@ -808,11 +823,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   books: {
     crm_manual: {
       label: 'Manual de Usuario de HotCRM',
-      description: 'Cómo funciona HotCRM en ventas y servicio: las reglas detrás de las pantallas.',
+      description: 'Cómo funciona HotCRM en ventas: las reglas detrás de las pantallas.',
       groups: {
         start: { label: 'Primeros pasos' },
         sales: { label: 'Ventas' },
-        service: { label: 'Servicio' },
         analytics: { label: 'Análisis' },
       },
     },

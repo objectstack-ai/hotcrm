@@ -40,12 +40,12 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   rep = await signUpPerson(verify, 'rep@opportunity-line-approval-lock.test', {
-    name: 'Approval Lock Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Approval Lock Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   // The approver bench `opportunity_approval` routes to; with nobody on it the
   // request would go to the admin rescue, which locks the deal the same way.
   manager = await signUpPerson(verify, 'manager@opportunity-line-approval-lock.test', {
-    name: 'Approval Lock Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Approval Lock Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 180_000);
 

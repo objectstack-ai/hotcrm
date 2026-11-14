@@ -261,6 +261,7 @@ export const zhCN: TranslationData = {
         nav_quote: { label: '报价' },
         nav_product: { label: '产品' },
         nav_price_book: { label: '价格表' },
+        nav_product_catalog_dashboard: { label: '产品目录' },
         nav_help_revenue: { label: '收入手册' },
       },
     },
@@ -341,6 +342,15 @@ export const zhCN: TranslationData = {
     },
   },
   // The quote's two record pages (#2312): its working page and its print page.
+  dashboards: {
+    product_catalog_dashboard: {
+      label: '产品目录',
+      description: '按产品类别统计的目录价',
+      widgets: {
+        top_products: { title: '各类别目录价合计', description: '按产品类别汇总的目录价，不是销售额' },
+      },
+    },
+  },
   pages: {
     quote_detail_page: {
       label: '报价详情',

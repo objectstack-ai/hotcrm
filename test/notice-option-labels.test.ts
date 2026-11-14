@@ -71,10 +71,10 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   await verify.signIn();
   enRep = await signUpPerson(verify, 'en@notice-option-labels.test', {
-    name: 'English Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'English Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   zhRep = await signUpPerson(verify, 'zh@notice-option-labels.test', {
-    name: 'Chinese Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Chinese Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   await systemUpdate(verify, 'sys_user', { id: zhRep.id, locale: 'zh-CN' });
 }, 120_000);

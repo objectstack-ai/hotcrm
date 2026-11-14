@@ -226,8 +226,8 @@ needed; (3) per-field enumeration only in the extreme case, with a comment namin
   screens do not show also updates its package's **in-app docs** in the same PR (rule 7). Both under **Documentation discipline** below.
 - **Validation predicates must be TOTAL**: every `record.x` read in an authored CEL predicate (`validations[].condition`, `requiredWhen`,
   `readonlyWhen`, `visibleWhen`) carries a `has(record.x)` guard.
-- **Dependencies**: the `@objectstack/*` packages in `package.json` are version-locked and bumped together; keep `specVersion` in
-  `objectstack.manifest.json` aligned with the installed `@objectstack/spec`.
+- **Dependencies**: the `@objectstack/*` packages in `package.json` are version-locked and bumped together; keep `engines.protocol` in
+  `objectstack.manifest.json` and in every package's manifest aligned with the installed `@objectstack/spec`.
 
 ### Validation predicates must be TOTAL (#630)
 
@@ -290,7 +290,7 @@ that book leaves with its module; the module's pages may link to the app's. (#23
 
 1. **Read the official release notes first** — <https://docs.objectstack.ai/docs/releases> (per-major pages carry the breaking-change list and a migration checklist). ⛔ Do not reverse-engineer breaking changes from changelogs.
 2. Per-package `node_modules/@objectstack/<pkg>/CHANGELOG.md` supplements the release notes, never replaces them.
-3. Bump all `@objectstack/*` packages **together** (they are version-locked), update `specVersion` in `objectstack.manifest.json`, then
+3. Bump all `@objectstack/*` packages **together** (they are version-locked), update `engines.protocol` in `objectstack.manifest.json` and every package manifest, then
    run `pnpm verify` and browser-verify (see below).
 4. Record the upgrade in the PR's **changeset**, ⛔ not in `CHANGELOG.md`: `changeset version` owns that file and splices each release in, so a hand-written entry is published by nothing.
 5. **Re-scope the claims that name the old pin — re-scope, never renumber.** Search version-agnostically, across wrapped lines and comment leaders, for the *shape* of a pin claim, over identifiers **and** human-readable labels; every hit is a candidate to classify by hand — a claim is false only when it asserts the old version **is** the current pin (re-measure it on the new pin, or re-word it to date itself), while "measured on X" is dated truth and stays. (#1681)

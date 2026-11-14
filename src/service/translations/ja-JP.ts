@@ -244,14 +244,27 @@ export const jaJP: TranslationData = {
   apps: {
     crm_enterprise: {
       navigation: {
+        nav_knowledge_published: { label: 'ナレッジベース' },
+      },
+    },
+    crm_service: {
+      label: 'サービス',
+      description: 'ケース、ナレッジベース、そしてそれらが属する顧客',
+      navigation: {
+        group_service: { label: 'サービス' },
+        group_customers: { label: '顧客' },
+        group_work: { label: 'マイワーク' },
+        group_reports: { label: 'レポート' },
+        group_help: { label: 'ヘルプ' },
+        nav_approval_requests: { label: '受信トレイ' },
         nav_service_dashboard: { label: 'サービス概要' },
         nav_case: { label: 'ケース' },
         nav_knowledge: { label: 'ナレッジベース' },
-        nav_knowledge_published: { label: 'ナレッジベース' },
         nav_my_cases: { label: '私のケース' },
         nav_report_cases_by_status: { label: 'ステータス・優先度別ケース' },
         nav_report_sla: { label: 'クローズ済みケースの SLA' },
         nav_report_cases_opened_by_day: { label: '日別新規ケース' },
+        nav_help_service: { label: 'サービスマニュアル' },
       },
     },
   },
@@ -376,6 +389,15 @@ export const jaJP: TranslationData = {
     cases_opened_by_day_priority: {
       label: '日別新規ケース',
       description: '1 日ごとの新規ケース数を優先度別に表示',
+    },
+  },
+  books: {
+    crm_service_manual: {
+      label: 'HotCRM サービスマニュアル',
+      description: 'ケースと SLA、ナレッジベース、そして新しいケースの振り分け方。',
+      groups: {
+        service: { label: 'サービス' },
+      },
     },
   },
 };

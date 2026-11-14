@@ -21,7 +21,7 @@
  * `permissionSets` (ADR-0131 D3/D4): every holder holds every set listed, and
  * Setup shows the binding on the position's page and the holders on each set's
  * Assigned Users panel. Eight positions distribute a set: five since #2200,
- * the two marketing rungs since #2338, and `ar_accountant` since #2315. Until #2200 those five declared
+ * the two marketing rungs since #2338, and `crm_ar_accountant` since #2315. Until #2200 those five declared
  * none and reached their sets only through the platform's undeclared
  * fold of a held position's name onto a same-named set, which logs
  * `position_name_fold_grant` on every boot and which the platform has ruled to
@@ -42,32 +42,60 @@
  * The descriptions, like the labels, are English only: the platform's
  * translation bundle has no namespace for positions, so the four locale packs
  * translate neither (the same holds for the labels today).
+ *
+ * ### Every position names the name it had before 6.2.0 (#2458)
+ *
+ * All twelve took the `crm_` prefix in 6.2.0 (#2437): from ObjectStack 18.4.0 a
+ * position is one slot per name in the whole environment (ADR-0150 D7), so
+ * `os lint --strict` asks every position to carry its package's prefix. An
+ * assignment (`sys_user_position`) stores the position's NAME, so after that
+ * upgrade every holder of an old name held a position that no longer exists,
+ * and lost every permission set and sharing rule it gave them, silently.
+ *
+ * Each position therefore declares its earlier name in `renamedFrom`
+ * (`PositionSchema`, 18.4.0). At every boot the platform moves each holder row
+ * of an old name to the new one, in every organization, as the system; once
+ * moved, nothing is left to move, so the next boot writes nothing. It moves
+ * holders only: a sharing rule, queue member or record share an administrator
+ * added in Setup under an old name keeps it, and the boot log names each one.
+ * It runs at boot, so an install that upgrades without restarting moves the
+ * holders at its next start. `test/position-holder-move.test.ts` pins the
+ * twelve declarations and measures the move over a database file.
+ *
+ * ⛔ Keep an entry once it ships: an organization that skips a version still
+ * has its holders under the old name. A position renamed again lists both
+ * earlier names.
  */
 export const CrmPositions = [
   {
-    name: 'executive',
+    name: 'crm_executive',
+    renamedFrom: ['executive'],
     label: 'Executive',
     description: 'Company leadership: reads every large open deal across the pipeline, while the deal team keeps ownership.',
   },
   {
-    name: 'sales_director',
+    name: 'crm_sales_director',
+    renamedFrom: ['sales_director'],
     label: 'Sales Director',
     description: 'Leads the sales organization, gives the final sign-off on the largest deals and reads every large open opportunity.',
   },
   {
-    name: 'sales_manager',
+    name: 'crm_sales_manager',
+    renamedFrom: ['sales_manager'],
     label: 'Sales Manager',
     description: 'Runs a sales team: approves new accounts, lead conversions and large deals, and edits every active customer account.',
     permissionSets: ['sales_manager'],
   },
   {
-    name: 'sales_rep',
+    name: 'crm_sales_rep',
+    renamedFrom: ['sales_rep'],
     label: 'Sales Representative',
     description: 'Works leads and opportunities day to day and receives new leads from the Lead Intake queue.',
     permissionSets: ['sales_rep'],
   },
   {
-    name: 'service_director',
+    name: 'crm_service_director',
+    renamedFrom: ['service_director'],
     label: 'Service Director',
     description: 'Oversees customer service and reads every open critical case while a service manager handles it.',
   },
@@ -80,13 +108,15 @@ export const CrmPositions = [
   // A manager grant that DIFFERS from an agent's comes back as a product card
   // with its puller named, and only then as a set of its own.
   {
-    name: 'service_manager',
+    name: 'crm_service_manager',
+    renamedFrom: ['service_manager'],
     label: 'Service Manager',
     description: 'Works the escalation pool: escalated cases are handed to this position, which edits every open critical case.',
     permissionSets: ['service_agent'],
   },
   {
-    name: 'service_agent',
+    name: 'crm_service_agent',
+    renamedFrom: ['service_agent'],
     label: 'Service Agent',
     description: 'Handles customer cases, receives new cases from the Support Intake queue and claims the ones still waiting there.',
     permissionSets: ['service_agent'],
@@ -103,19 +133,22 @@ export const CrmPositions = [
   // completed alike), so for these two rungs the leadership share now grants
   // nothing beyond it.
   {
-    name: 'marketing_director',
+    name: 'crm_marketing_director',
+    renamedFrom: ['marketing_director'],
     label: 'Marketing Director',
     description: 'Leads marketing and edits every live campaign, whoever owns it.',
     permissionSets: ['marketing_user'],
   },
   {
-    name: 'marketing_manager',
+    name: 'crm_marketing_manager',
+    renamedFrom: ['marketing_manager'],
     label: 'Marketing Manager',
     description: 'Manages marketing campaigns and edits every live campaign, whoever owns it.',
     permissionSets: ['marketing_user'],
   },
   {
-    name: 'marketing_user',
+    name: 'crm_marketing_user',
+    renamedFrom: ['marketing_user'],
     label: 'Marketing User',
     description: 'Plans and runs marketing campaigns and their members day to day.',
     permissionSets: ['marketing_user'],
@@ -123,19 +156,21 @@ export const CrmPositions = [
   // Finance's position for the Order to Cash module (#2315): it distributes
   // the `ar_accountant` set, which writes invoices and payments.
   {
-    name: 'ar_accountant',
+    name: 'crm_ar_accountant',
     label: 'Accounts Receivable',
     description: 'Finance: enters and imports the invoices and payments that sales sees on each contract.',
     permissionSets: ['ar_accountant'],
   },
   // Territory groupings referenced by the account sharing rules.
   {
-    name: 'na_sales_team',
+    name: 'crm_na_sales_team',
+    renamedFrom: ['na_sales_team'],
     label: 'NA Sales Team',
     description: 'Territory team for North America: edits every account in the North America territory.',
   },
   {
-    name: 'eu_sales_team',
+    name: 'crm_eu_sales_team',
+    renamedFrom: ['eu_sales_team'],
     label: 'EU Sales Team',
     description: 'Territory team for Europe: edits every account in the Europe (EMEA) territory.',
   },

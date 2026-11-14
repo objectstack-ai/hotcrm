@@ -74,7 +74,7 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@flow-run-summary.test', {
-    name: 'Summary Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Summary Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   const [account] = await verify.seed('crm_account', [{ name: 'Run Summary Co', owner_id: rep.id }]);
   accountId = String(account!.id);

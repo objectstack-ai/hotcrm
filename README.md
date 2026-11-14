@@ -14,9 +14,9 @@
 
 **HotCRM is the reference implementation of that statement for a CRM.**
 
-- **Its business ontology is the app.** 23 business objects and the relations between them, **40 actions**, 35 flows, 6 permission sets, 13 positions and 11 sharing rules, and 6 AI skills — typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata under `src/`, checked by `pnpm validate`.
+- **Its business ontology is the app.** 23 business objects and the relations between them, **40 actions**, 36 flows, 6 permission sets, 13 positions and 11 sharing rules, and 6 AI skills — typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata under `src/`, checked by `pnpm validate`.
 - **The database, the API, the console UI and the agent tools derive from it.** One `pnpm dev` boot creates the tables, serves the REST API at `/api/v1/data/crm_account` and its siblings, the Console at `/_console/`, and an MCP server at `/api/v1/mcp`. Nothing under `src/` defines a route handler or a React component.
-- **Views, dashboards and translations are projections of it.** List views, record pages, 5 dashboards and the app's navigation, in 4 languages (en, zh-CN, es-ES, ja-JP): the surfaces people use the ontology through, not a second copy of it.
+- **Views, dashboards and translations are projections of it.** List views, record pages, 6 dashboards and the app's navigation, in 4 languages (en, zh-CN, es-ES, ja-JP): the surfaces people use the ontology through, not a second copy of it.
 
 > [!NOTE]
 > **Small enough for an agent to hold whole.** The sales package carries its whole business semantics (objects, flows, actions, hooks) in **~68k tokens**, and its whole interaction layer (views, pages, dashboards, app shell) in another **~31k**.
@@ -24,7 +24,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](src/sales/index.ts)
-[![Version](https://img.shields.io/badge/version-6.1.0-brightgreen)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-6.2.1-brightgreen)](CHANGELOG.md)
 [![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.app-orange)](https://cloud.objectos.app)
 
 Install it into an ObjectStack environment from the [marketplace](https://cloud.objectos.app), or fork it and build & ask with Claude Code or any coding agent: the agent writes the metadata in your repo, and operates the running app over MCP.
@@ -89,7 +89,7 @@ HotCRM defines no agent of its own; its 6 AI skills are metadata for a platform 
 
 ## ✨ What you get
 
-**23 business objects** across five business domains — sales, service, revenue, marketing and order to cash; the repository layout below says what each package covers, and the roster itself is `src/*/objects/*.object.ts`. Around them: **40 actions**, 35 flows, **5 dashboards**, 10 reports, 9 datasets, 6 AI skills, 4 language bundles (en, zh-CN, es-ES, ja-JP), 6 permission sets, 13 positions and 11 sharing rules. `pnpm build` prints most of these counts on every build.
+**23 business objects** across five business domains — sales, service, revenue, marketing and order to cash; the repository layout below says what each package covers, and the roster itself is `src/*/objects/*.object.ts`. Around them: **40 actions**, 36 flows, **6 dashboards**, 10 reports, 9 datasets, 6 AI skills, 4 language bundles (en, zh-CN, es-ES, ja-JP), 6 permission sets, 13 positions and 11 sharing rules. `pnpm build` prints most of these counts on every build.
 
 > **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
 

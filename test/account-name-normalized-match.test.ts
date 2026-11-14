@@ -50,10 +50,10 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@account-name-normalized-match.test', {
-    name: 'Fold Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Fold Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   manager = await signUpPerson(verify, 'manager@account-name-normalized-match.test', {
-    name: 'Converting Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Converting Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 120_000);
 

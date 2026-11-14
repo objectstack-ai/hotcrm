@@ -2,6 +2,7 @@
 
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { personName } from '../objects/_person-name';
 type Flow = Automation.Flow;
 
 /**
@@ -29,7 +30,7 @@ type Flow = Automation.Flow;
  *
  * A lead with NO owner gets its SLA stamp and no alert, and the run ends
  * there successfully (#2060 item 6). Web-to-lead lands ownerless — parked in
- * the `lead_intake` queue — whenever nobody holds `sales_rep`, and so can a
+ * the `lead_intake` queue — whenever nobody holds `crm_sales_rep`, and so can a
  * seed or integration write. There is nobody to alert: a queue routes records,
  * it is not a messaging audience (ADR-0142 merge question 8, a parked record's
  * `owner_of:` reaches nobody), and `notify` REFUSES an audience that evaluates
@@ -106,7 +107,7 @@ export const LeadAssignmentFlow: Flow = {
         // matching no real user, so these alerts reached nobody. A write that
         // carries a user is stamped with that user as owner, and
         // `lead_intake_assignment` fills an ownerless one from the rep pool
-        // when anyone holds `sales_rep`; a lead still ownerless (parked in the
+        // when anyone holds `crm_sales_rep`; a lead still ownerless (parked in the
         // queue) never reaches this node (`owner_hot`).
         // Unlike `notify_std`, a lead its owner wrote still comes here — see
         // the header.
@@ -116,6 +117,7 @@ export const LeadAssignmentFlow: Flow = {
         topic: 'lead_routing',
         template: 'crm.lead_routing_hot',
         templateData: {
+          person_name: personName('record'),
           first_name: cel`record.first_name`, last_name: cel`record.last_name`,
           company: cel`record.company`, rating: cel`record.rating`,
         },
@@ -143,6 +145,7 @@ export const LeadAssignmentFlow: Flow = {
         topic: 'lead_routing',
         template: 'crm.lead_routing_new',
         templateData: {
+          person_name: personName('record'),
           first_name: cel`record.first_name`, last_name: cel`record.last_name`, company: cel`record.company`,
         },
         actionUrl: '/crm_lead/{{record.id}}',

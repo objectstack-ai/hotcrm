@@ -2,6 +2,7 @@
 
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { personName } from '../objects/_person-name';
 type Flow = Automation.Flow;
 
 /**
@@ -70,7 +71,10 @@ export const ContactWelcomeFlow: Flow = {
         channels: ['inbox', 'email'],
         topic: 'contact_welcome',
         template: 'crm.contact_welcome',
-        templateData: { first_name: cel`record.first_name`, last_name: cel`record.last_name` },
+        templateData: {
+          person_name: personName('record'),
+          first_name: cel`record.first_name`, last_name: cel`record.last_name`,
+        },
         actionUrl: '/crm_contact/{{record.id}}',
       },
     },

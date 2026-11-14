@@ -21,12 +21,14 @@ import { defineSeed } from '@objectstack/spec/data';
 import { PriceBook } from '../objects/price_book.object';
 import { PriceBookEntry } from '../objects/price_book_entry.object';
 import { products } from './catalog.seed';
+import { SEED_EN_LOCALES } from '../../sales/data/_locale';
 
 /** The standard book's name, and its seed identity. */
 export const STANDARD_PRICE_BOOK = 'Standard';
 
 export const priceBooks = defineSeed(PriceBook, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: 'name',
   records: [
     {
@@ -40,6 +42,7 @@ export const priceBooks = defineSeed(PriceBook, {
 
 export const priceBookEntries = defineSeed(PriceBookEntry, {
   mode: 'ignore',
+  locale: SEED_EN_LOCALES,
   externalId: ['crm_price_book', 'crm_product'],
   records: products.records.map((product) => ({
     crm_price_book: STANDARD_PRICE_BOOK,

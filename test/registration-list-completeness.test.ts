@@ -5,7 +5,7 @@ import {
   allHooks,
   allSkills,
   CrmSharingRules,
-  CrmSeedData,
+  CrmSeedDataAllLocales,
   CrmPositions,
 } from '../objectstack.composition';
 import stack from './helpers/composed-stack';
@@ -175,6 +175,10 @@ const SEED_EXEMPTIONS: Record<string, string> = {
   linesTotal: 'seed authoring helper — arithmetic over a list of line specs.',
   catalogPrice: 'seed authoring helper — a price lookup over the catalogue rows.',
   lineItemRecords: 'seed authoring helper — a row builder used by the revenue seed families.',
+  SEED_EN_LOCALES: 'the locale list every English seed family declares (#2411) — a string array.',
+  SEED_ZH_CN_LOCALES: 'the locale list every zh-CN twin declares (#2411) — a string array.',
+  zhCNTwin: 'seed authoring helper — builds a zh-CN twin from an English family (#2411). It builds seeds; it is not one.',
+  STANDARD_PRICE_BOOK_ZH_CN: 'the zh-CN standard price book\'s name and seed identity (#2411) — a string.',
 };
 
 const SPECS: Spec[] = [
@@ -235,7 +239,8 @@ const SPECS: Spec[] = [
   {
     noun: 'seed family',
     nouns: 'seed families',
-    listName: 'CrmSeedData',
+    // Both language markets' stories (#2411): the English union and its zh-CN twin.
+    listName: 'CrmSeedDataAllLocales',
     kind: 'data',
     barrelFile: 'index.ts',
     barrels: {
@@ -244,7 +249,7 @@ const SPECS: Spec[] = [
       revenue: revenueData,
       marketing: marketingData,
     },
-    list: CrmSeedData,
+    list: CrmSeedDataAllLocales,
     isEntry: isSeed,
     grouped: false,
     exemptions: SEED_EXEMPTIONS,

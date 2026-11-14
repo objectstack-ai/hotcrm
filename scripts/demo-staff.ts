@@ -250,19 +250,28 @@ class Api {
  * made this script ~5x slower to start. `test/demo-staffing.test.ts` pins that
  * every routed object is seeded from one of the two. Only datasets keyed by one
  * field take part; every routed object's is.
+ *
+ * Grouped by STORY, one per `Seed.locale` list (#2411): the English datasets
+ * and their zh-CN twins are two stories, and a load writes one of them. A
+ * server seeds the story of its locale, which this script cannot ask, so the
+ * seed has settled when any one story is present and claimed. Mixed into one
+ * key set, an English boot waited for the Chinese keys until the deadline.
  */
-function seededKeysByObject(): Map<string, { field: string; keys: Set<string> }> {
+function seededKeysByStory(): Map<string, Map<string, { field: string; keys: Set<string> }>> {
   const routed = new Set(DemoPipelineOwnership.map((r) => r.object));
-  const out = new Map<string, { field: string; keys: Set<string> }>();
+  const stories = new Map<string, Map<string, { field: string; keys: Set<string> }>>();
   for (const exported of Object.values({ ...salesSeeds, ...serviceSeeds })) {
-    const dataset = exported as { object?: unknown; externalId?: unknown; records?: ReadonlyArray<Json> };
+    const dataset = exported as { object?: unknown; externalId?: unknown; records?: ReadonlyArray<Json>; locale?: unknown };
     if (typeof dataset.object !== 'string' || !routed.has(dataset.object)) continue;
     if (typeof dataset.externalId !== 'string') continue;
+    const story = JSON.stringify(dataset.locale ?? null);
+    const out = stories.get(story) ?? new Map<string, { field: string; keys: Set<string> }>();
     const entry = out.get(dataset.object) ?? { field: dataset.externalId, keys: new Set<string>() };
     for (const record of dataset.records ?? []) entry.keys.add(String(record[dataset.externalId]));
     out.set(dataset.object, entry);
+    stories.set(story, out);
   }
-  return out;
+  return stories;
 }
 
 /**
@@ -300,21 +309,28 @@ function seededKeysByObject(): Map<string, { field: string; keys: Set<string> }>
  * ownership census at the end still judges the outcome.
  */
 async function awaitSeedSettled(api: Api, waitSeconds: number): Promise<void> {
-  const seeded = seededKeysByObject();
+  const stories = [...seededKeysByStory().values()];
   const deadline = Date.now() + waitSeconds * 1000;
   const started = Date.now();
   let lastLine = '';
   for (;;) {
-    const lines: string[] = [];
-    for (const [object, { field, keys }] of seeded) {
-      const rows = await api.query(object, [], ['id', field, 'owner_id']);
-      const present = rows.filter((r) => keys.has(String(r[field])));
-      const ownerless = present.filter((r) => String(r.owner_id ?? '') === '').length;
-      const seen = new Set(present.map((r) => String(r[field]))).size;
-      if (seen < keys.size || ownerless > 0) {
-        lines.push(`${object} ${seen}/${keys.size} seeded rows present${ownerless ? `, ${ownerless} not yet claimed` : ''}`);
+    // The story closest to settled speaks for the wait: an English boot never
+    // writes the Chinese rows, and their absence is not a wait.
+    let lines: string[] | undefined;
+    for (const seeded of stories) {
+      const storyLines: string[] = [];
+      for (const [object, { field, keys }] of seeded) {
+        const rows = await api.query(object, [], ['id', field, 'owner_id']);
+        const present = rows.filter((r) => keys.has(String(r[field])));
+        const ownerless = present.filter((r) => String(r.owner_id ?? '') === '').length;
+        const seen = new Set(present.map((r) => String(r[field]))).size;
+        if (seen < keys.size || ownerless > 0) {
+          storyLines.push(`${object} ${seen}/${keys.size} seeded rows present${ownerless ? `, ${ownerless} not yet claimed` : ''}`);
+        }
       }
+      if (lines === undefined || storyLines.length < lines.length) lines = storyLines;
     }
+    lines ??= [];
     if (lines.length === 0) {
       const waited = Math.round((Date.now() - started) / 1000);
       console.log(`🌱 seed settled${waited ? ` (waited ${waited}s)` : ''}\n`);
@@ -750,7 +766,7 @@ async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]
         `to the seed-ownership claim's first administrator; staffing must not move it.`,
       );
     }
-    if (member.positions.includes('na_sales_team') || member.positions.includes('eu_sales_team')) {
+    if (member.positions.includes('crm_na_sales_team') || member.positions.includes('crm_eu_sales_team')) {
       if (rows.length === 0) {
         failures.push(
           `${member.email} holds a territory position but reads no account at all — the rule ` +
@@ -763,7 +779,7 @@ async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]
       // country is added (#639). There is no list here now: the recipient's
       // position names one territory value, and every row they can read must
       // carry it.
-      const wanted = member.positions.includes('na_sales_team') ? 'na' : 'emea';
+      const wanted = member.positions.includes('crm_na_sales_team') ? 'na' : 'emea';
       const strays = rows
         .filter((r) => String(r.territory ?? '') !== wanted)
         .map((r) => `${String(r.name)}: ${String(r.territory ?? 'none')}`);
@@ -895,7 +911,7 @@ async function main(): Promise<number> {
   // snippets, and "echo the credential you just used" is the one shape this
   // reference app should not be teaching. (CodeQL says the same thing:
   // js/clear-text-logging of sensitive information.)
-  const manager = DemoOrgStaffing.find((m) => m.positions.includes('sales_manager'))?.email;
+  const manager = DemoOrgStaffing.find((m) => m.positions.includes('crm_sales_manager'))?.email;
   const listOf = (ids: string[]) => [...new Set(ids)].map(emailOf).join(' · ') || 'nobody';
   console.log(
     `\n🎉 demo org staffed. Sign in as any of: ` +

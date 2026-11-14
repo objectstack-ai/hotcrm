@@ -92,7 +92,7 @@ beforeAll(async () => {
   // `crm_contract.allowCreate: false`; the draft is the elevated hook's write
   // (`runAs: 'system'`, #2014), not the rep's.
   rep = await signUpPerson(verify, 'rep@quote-accepted-payment-terms.test', {
-    name: 'Quote Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Quote Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 120_000);
 

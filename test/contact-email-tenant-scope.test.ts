@@ -145,7 +145,7 @@ describe('an untenanted (single-organization) install is unchanged', () => {
   beforeAll(async () => {
     plain = await hotcrmStack();
     rep = await signUpPerson(plain, 'rep@contact-email-tenant-scope.test', {
-      name: 'Sales Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Sales Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     accounts = await plain.seed('crm_account', [{ name: 'Account A', owner_id: rep.id }, { name: 'Account B', owner_id: rep.id }]);
   }, 120_000);

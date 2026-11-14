@@ -3,6 +3,7 @@
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { EnrollLeadsAction, MarkRespondedAction } from './actions/index.js';
+import { MarketingApp } from './apps/index.js';
 import { CrmMarketingManual } from './books/index.js';
 import {
   CampaignEnrollmentFlow, CampaignCompletionFlow, CampaignLeadMemberEnrollFlow, CampaignContactMemberEnrollFlow,
@@ -67,41 +68,16 @@ export const createHotCrmMarketingStack = (
     namespace: 'crm',
     // The ARTIFACT's version (ADR-0130 D6) — `test/docs-declared-versions.test.ts`
     // holds it, and the range below, to the app package's.
-    version: '6.1.0',
+    version: '6.2.1',
     type: 'module',
     description: 'HotCRM marketing module — campaigns and campaign members.',
-    engines: { protocol: '^18.3.0' },
+    engines: { protocol: '^18.4.0' },
     // The App package this module extends, and nothing else (the star).
-    dependencies: { 'app.objectstack.hotcrm': '^6.1.0' },
+    dependencies: { 'app.objectstack.hotcrm': '^6.2.1' },
 
-    /**
-     * The one entry this module puts into the app's Marketing group, which the
-     * app keeps with no children of its own — as it keeps `group_service` — so
-     * the sidebar reads exactly as before, and its manual under Help (below).
-     * Rule R3; see `src/service/index.ts`.
-     */
-    navigationContributions: [
-      {
-        app: 'crm_enterprise',
-        group: 'group_marketing',
-        priority: 50,
-        items: [
-          { id: 'nav_campaign', type: 'object', objectName: 'crm_campaign', label: 'Campaigns', icon: 'megaphone' },
-        ],
-      },
-      // This module's manual, under the app's *Help* group (#2330), as the
-      // revenue module contributes its own (`src/revenue/index.ts`): it lands
-      // after the app's two manuals and the Revenue Manual, and it leaves with
-      // the module, as the book does.
-      {
-        app: 'crm_enterprise',
-        group: 'group_help',
-        priority: 50,
-        items: [
-          { id: 'nav_help_marketing', type: 'doc', book: 'crm_marketing_manual', label: 'Marketing Manual', icon: 'megaphone' },
-        ],
-      },
-    ],
+    // No `navigationContributions` since #2417: this package's entries live
+    // in its own app, the Marketing app (`./apps/marketing.app.ts`), which
+    // leaves the launcher with the module when it is disabled.
   },
 
   // What THIS package's metadata needs: `automation` and `triggers` for the
@@ -111,6 +87,7 @@ export const createHotCrmMarketingStack = (
   requires: ['automation', 'triggers', 'sharing'],
 
   objects: [Campaign, CampaignMember],
+  apps: [MarketingApp],
   hooks: marketingHooks,
   views: [CampaignViews],
   flows: marketingFlows,

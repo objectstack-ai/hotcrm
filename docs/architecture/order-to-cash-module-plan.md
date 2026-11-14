@@ -212,7 +212,7 @@ contract's derived layout from the module side. Decision 6.
 
 ## Permissions and sharing
 
-- **Position** (app package, `src/sales/sharing/positions.ts`): `ar_accountant`. If PSA's
+- **Position** (app package, `src/sales/sharing/positions.ts`): `crm_ar_accountant` (the `crm_` prefix since 18.4.0, #2437). If PSA's
   `finance_controller` lands first, it gains read on the module's objects.
 - **Permission sets** (app package, `src/sales/profiles/`), rows to add:
   - **`sales_rep`, `sales_manager`** — create and edit plan steps on contracts they can edit; read

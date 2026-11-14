@@ -357,7 +357,7 @@ describe('allowTransfer is granted deliberately', () => {
     // colleague", NOT "reassign the ticket": the agent holds no transfer grant
     // on `crm_case` or any customer record.
     //
-    // #1070 hands an escalated case to the `service_manager` pool and this list
+    // #1070 hands an escalated case to the `crm_service_manager` pool and this list
     // still reads `['crm_task']` — that is the point, not an oversight. The
     // hand-off runs on the `beforeUpdate` seam, which the gate cannot see (seam
     // 1 above, measured for `crm_case` update in `test/case-assignment.test.ts`
@@ -452,7 +452,7 @@ describe('every owner-facing surface points at the one column', () => {
 describe('lead_intake_assignment assigns the platform column', () => {
   /**
    * On the shipped app booted by `@objectstack/verify`: two sales reps hold
-   * the `sales_rep` position — the members of the declared `lead_intake`
+   * the `crm_sales_rep` position — the members of the declared `lead_intake`
    * queue the platform's assignment rule routes to (#2395) — and rep A already
    * carries two open leads to rep B's one, so the least-loaded rep is B.
    */
@@ -466,10 +466,10 @@ describe('lead_intake_assignment assigns the platform column', () => {
   beforeAll(async () => {
     verify = await hotcrmStack();
     repA = await signUpPerson(verify, 'rep-a@ownership-model.test', {
-      name: 'Rep A', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Rep A', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     repB = await signUpPerson(verify, 'rep-b@ownership-model.test', {
-      name: 'Rep B', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+      name: 'Rep B', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
     await verify.seed('crm_lead', [lead({ owner_id: repA.id }), lead({ owner_id: repA.id }), lead({ owner_id: repB.id })]);
   }, 120_000);

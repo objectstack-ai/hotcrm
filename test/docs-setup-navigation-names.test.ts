@@ -276,8 +276,8 @@ const CRM_LOCALES = localePacks.map(([locale]) => locale);
 const CRM_APP_ID = (CrmApp as AnyRec).name as string;
 
 /** One locale's navigation overrides for this app, `id → { label }`. */
-const crmNavOverrides = (locale: string): Record<string, AnyRec> =>
-  ((packFor(locale) as AnyRec)?.apps?.[CRM_APP_ID]?.navigation ?? {}) as Record<
+const crmNavOverrides = (locale: string, app: string = CRM_APP_ID): Record<string, AnyRec> =>
+  ((packFor(locale) as AnyRec)?.apps?.[app]?.navigation ?? {}) as Record<
     string,
     AnyRec
   >;
@@ -393,17 +393,21 @@ const crmPairKey = (group: string, child: string): string => `${group} → ${chi
  * module contributes *Cases*, *Knowledge* and *Service Overview* into
  * **Service** (and two more items elsewhere), so `Service → Knowledge` is a
  * real pair although `src/sales/apps/crm.app.ts` no longer lists it.
+ *
+ * Since #2417 HotCRM is three apps, the Sales app, the Service app and HotCRM
+ * Marketing, and **Service** is a group of the Service app; a pair is real when
+ * any of the three ships it, each resolved against its own locale rows.
  */
-const CRM_SERVED_APP: AnyRec = servedApp(CRM_APP_ID);
+const CRM_SERVED_APPS: AnyRec[] = [CRM_APP_ID, 'crm_service', 'crm_marketing'].map((name) => servedApp(name));
 
 const { CRM_GROUP_LABELS, CRM_PAIRS, CRM_LABELS } = (() => {
   const groups = new Set<string>();
   const pairs = new Set<string>();
   const all = new Set<string>();
-  for (const locale of CRM_LOCALES) {
-    const nav = crmNavOverrides(locale);
+  for (const locale of CRM_LOCALES) for (const app of CRM_SERVED_APPS) {
+    const nav = crmNavOverrides(locale, app.name as string);
     const labelOf = (id: string, fallback: string): string => nav[id]?.label ?? fallback;
-    for (const entry of (CRM_SERVED_APP.navigation ?? []) as AnyRec[]) {
+    for (const entry of (app.navigation ?? []) as AnyRec[]) {
       if (!entry?.label) continue;
       const entryLabel = labelOf(entry.id, entry.label);
       all.add(entryLabel);
@@ -807,10 +811,14 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
 
     it('covers every locale the platform ships', () => {
       expect(SHIPPED_LOCALES).toEqual(expect.arrayContaining(['en', 'zh-CN']));
-      // The docs ship a zh-Hant locale the platform does not. Recording it here
-      // is why every Hant nav string in KNOWN_UNRESOLVED is unresolvable by
-      // construction rather than by drift.
-      expect(SHIPPED_LOCALES).not.toContain('zh-Hant');
+      // Which locales the PLATFORM ships is the platform's fact, not this
+      // repo's: 18.4.0 added a zh-Hant Setup bundle, and pinning its absence
+      // here went red at the bump (#2442). What HotCRM's docs rest on is its
+      // OWN fact — this app ships no Traditional-Chinese pack, so its own
+      // navigation falls back to Simplified on a zh-Hant console, which is
+      // the reason zh-Hant pages name navigation in English (#1368, #1767;
+      // ruled to stand on #2442: 「繁体中文暂时不加」). Pin that instead.
+      expect(CRM_LOCALES).not.toContain('zh-Hant');
     });
   });
 
@@ -910,7 +918,16 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
     it('resolves an app-switcher roster live, in every shipped locale', () => {
       // Same vacuity guard as the two rosters above: if the app shells or the
       // locale bundles move, every assertion below would judge an empty set.
-      expect(APP_LABELS.setup.size).toBeGreaterThanOrEqual(SHIPPED_LOCALES.length);
+      // Count LOCALES, not distinct labels: two locales may share one spelling
+      // (18.4.0's zh-Hant and another bundle do, #2442), so the size of the
+      // label set says nothing about coverage. Each shipped locale's own Setup
+      // label must be in the roster instead.
+      expect(SHIPPED_LOCALES.length).toBeGreaterThan(0);
+      const unrostered = SHIPPED_LOCALES.filter((locale) => {
+        const label = (SetupAppTranslations as AnyRec)[locale]?.apps?.setup?.label;
+        return typeof label !== 'string' || !APP_LABELS.setup.has(label);
+      });
+      expect(unrostered, `no Setup app label rostered for locale(s) ${unrostered.join(', ')}`).toEqual([]);
       expect(APP_LABELS.studio.size).toBeGreaterThan(0);
       for (const [app, label] of [
         ['setup', 'Setup'],

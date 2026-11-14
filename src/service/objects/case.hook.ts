@@ -26,7 +26,7 @@ import { createCaseEscalationReassign } from './_case-assignment';
  * answer (ADR-0142): `case_intake_assignment` routes an ownerless case into
  * the `case_intake` queue, and an agent takes a parked case with the console's
  * Claim. The one owner writer this app keeps — the escalation hand-off to the
- * `service_manager` pool — lives in `_case-assignment.ts` and is composed into
+ * `crm_service_manager` pool — lives in `_case-assignment.ts` and is composed into
  * this module's default export below, so the registry still sees one
  * `crm_case` hook set. In particular the escalation hand-off is deliberately NOT a branch of
  * `case_status_side_effects` below: that hook writes through `ctx.api`, a seam
@@ -679,7 +679,7 @@ const caseCloseEscalationTask: Hook = {
 };
 
 /**
- * Escalation hand-off to the `service_manager` pool, composed from
+ * Escalation hand-off to the `crm_service_manager` pool, composed from
  * `_case-assignment.ts`.
  *
  * Runs on `beforeUpdate` and mutates the escalation write itself — it issues no

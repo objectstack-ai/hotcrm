@@ -27,6 +27,7 @@ export { OpportunityStatusChangeApprovalFlow } from './opportunity-status-change
 export { OpportunityQualificationApprovalFlow } from './opportunity-qualification-approval.flow';
 export { OpportunityStagnationFlow } from './opportunity-stagnation.flow';
 export { ForecastSnapshotFlow } from './forecast-snapshot.flow';
+export { ForecastOwnerRenameFlow } from './forecast-owner-rename.flow';
 export { LeadAssignmentFlow } from './lead-assignment.flow';
 export { ContactWelcomeFlow } from './contact-welcome.flow';
 export { OpportunityWonAlertFlow } from './opportunity-won-alert.flow';

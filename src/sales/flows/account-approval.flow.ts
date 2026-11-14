@@ -131,7 +131,7 @@ export const AccountApprovalFlow: Flow = {
         // The customer's chain is 销售负责人 → 销售总监; REQ-0003 rules that named
         // chain **C** (overlay — one company's org chart), so core ships the
         // one generic tier against the manager bench this app already declares.
-        approvers: [{ type: 'position', value: 'sales_manager' }],
+        approvers: [{ type: 'position', value: 'crm_sales_manager' }],
         // Explicit though it is the schema default, exactly as both sibling
         // flows author it: approvers snapshot at request creation, so an empty
         // bench would otherwise leave the request undecidable — and here that

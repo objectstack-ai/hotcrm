@@ -14,7 +14,7 @@ import { App } from '@objectstack/spec/ui';
 // and a raw newline is stripped by the URL parser. `assets/icon.svg` stays the
 // single source — `test/app-branding-icon.test.ts` decodes this URI as a browser
 // does and requires the file's exact bytes back, so edit the file, then this.
-const HOTCRM_ICON =
+export const HOTCRM_ICON =
   'data:image/svg+xml,' +
   '<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HotCRM">%0A' +
   '  <rect x="16" y="16" width="224" height="224" rx="56" fill="%23EA580C"/>%0A' +
@@ -68,8 +68,8 @@ const HOTCRM_ICON =
  * Recently Lost Opportunities — a working report, kept open like Sales
  * Activity rather than hidden.
  */
-const READS_LEADS = P`current_user.can("crm_lead", "read")`;
-const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
+export const READS_LEADS = P`current_user.can("crm_lead", "read")`;
+export const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
 
 /**
  * Executive Overview's audience (#2060 item 5): everyone who reads
@@ -81,7 +81,7 @@ const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
  * term can tell the two apart: the only candidates are grants a rep happens
  * to lack (`transfer`, `delete`), which say "cannot reassign deals", not "is a
  * rep", and the marketing user lacks them too. What a rep IS, is the holder
- * of the `sales_rep` position (`src/sales/sharing/positions.ts`; it binds the
+ * of the `crm_sales_rep` position (`src/sales/sharing/positions.ts`; it binds the
  * `sales_rep` permission set by name). So the role is asked by position, and
  * the access half stays the same object-permission question as above.
  *
@@ -90,14 +90,14 @@ const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
  * which reads the member's own opportunities: a service agent and a service
  * manager answer the read question exactly as a manager does, so it no longer
  * keeps Home from them, and they opened the app on Home instead of Service
- * Overview. What they ARE is the holder of the `service_agent` or the
- * `service_manager` position. ⛔ Do not narrow `crm_user` to restore the old
+ * Overview. What they ARE is the holder of the `crm_service_agent` or the
+ * `crm_service_manager` position. ⛔ Do not narrow `crm_user` to restore the old
  * answer: #2231 requires a member holding only it to read opportunities.
  *
  * Managers, administrators and the marketing user keep Home first. A member
  * whose positions are unknown evaluates `[]`, so the gate keeps Home for them.
  */
-const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("sales_rep" in current_user.positions) && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("crm_sales_rep" in current_user.positions) && !("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)`;
 
 /**
  * The audience of Sales Home (#2262) and of the six opportunity entries
@@ -114,7 +114,7 @@ const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("s
  * never as an expression, so a sub-predicate cannot be shared by reference.
  * One constant is shared by the seven entries instead.
  */
-const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)`;
 
 /**
  * The two opportunity OBJECT entries, Opportunities and My Deals (#2367
@@ -129,14 +129,24 @@ const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !(
  * on `OPPORTUNITY_AUDIENCE` above), so the position half is the whole of what
  * this gate adds.
  */
-const NOT_SERVICE_STAFF = P`!("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)`;
+const NOT_SERVICE_STAFF = P`!("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)`;
 
 /**
- * HotCRM — navigation.
+ * the Sales app — navigation.
+ *
+ * One of three HotCRM apps since #2417: this one (the app package's, and the
+ * only one an app package may declare, ADR-0019 D3), the Service app
+ * (`src/service/apps/`) and the Marketing app (`src/marketing/apps/`), each the
+ * short menu of one function over the same data, switched from the console's
+ * launcher. Each member's permission sets hide the apps that are not theirs
+ * (`tabPermissions`, `src/sales/profiles/`); there is no per-position default
+ * app, so `/_console/` opens the launcher (ruling Q2 B on #2417).
  *
  * Intentionally narrow. The app sells one story: "the CRM that rewrites
  * itself when your business changes," and `content/docs/whats-new.mdx`
- * promises a nav "a new user can find their way around in 30 seconds."
+ * promises a nav "a new user can find their way around in 30 seconds." Since
+ * #2417 that holds per app: the three trees together carry the exemplars below,
+ * and each app keeps one entry per destination.
  *
  * ## One entry per destination, one exemplar per nav-item type (#1259)
  *
@@ -166,8 +176,12 @@ const NOT_SERVICE_STAFF = P`!("service_agent" in current_user.positions) && !("s
  * pre-materialising every possible entry for every user.
  */
 export const CrmApp = App.create({
+  // The name stays `crm_enterprise` (#2417): the console routes an app by its
+  // package id and accepts its name as an alias, so every bookmark of the one
+  // HotCRM app keeps opening this one. A renamed app's old address ends on
+  // "This app can't be opened" with no redirect (measured on 18.3.0).
   name: 'crm_enterprise',
-  label: 'HotCRM',
+  label: 'Sales',
   icon: 'briefcase',
   // ADR-0063 §1/§2 — `defaultAgent` is a surface binding, not a custom-agent
   // slot: the only resolvable values are the two PLATFORM agents, `ask` (data
@@ -198,14 +212,13 @@ export const CrmApp = App.create({
     //
     //   sales manager · administrator · marketing user → Home (Executive Overview)
     //   sales rep                                       → Sales Home
-    //   service agent · service manager                 → Service Overview
     //
-    // Both pinned entries are gated away from a service persona by the
-    // position it holds (#2262: since #2231 it reads its own opportunities, so
-    // the read question alone no longer parts it), and the next slot is the
-    // Service group, which the service module fills with its dashboard first.
-    // ⛔ Do not put an entry a service persona can see ahead of the Service
-    // group: it becomes their landing.
+    // The service personas work in the Service app (`src/service/apps/`, #2417),
+    // which opens on Service Overview, and their sets hide this app from their
+    // launcher. Both pinned entries stay gated away from them by the position
+    // they hold (#2262: since #2231 they read their own opportunities, so the
+    // read question alone no longer parts them): one who opens this app by
+    // its address lands on Leads, the first entry shown to them.
     //
     // A member who reads NONE of the objects this tree names (no HotCRM grant
     // yet: `crm_user` not accepted on a managed environment, #2231) is never
@@ -231,36 +244,6 @@ export const CrmApp = App.create({
       label: 'Sales Home',
       icon: 'layout-grid',
       visible: OPPORTUNITY_AUDIENCE,
-    },
-
-    {
-      id: 'group_service',
-      type: 'group',
-      label: 'Service',
-      icon: 'headset',
-      expanded: true,
-      // EMPTY ON PURPOSE — this group is a CONTAINER, not a menu.
-      //
-      // `crm_case`, `crm_knowledge_article`, `service_dashboard` and
-      // `sla_performance` belong to `app.objectstack.hotcrm.service`, and an
-      // app's own `navigation` may not name another package's object (ADR-0130
-      // §1.5): the entry fails at author time with "references object
-      // `crm_case` which is not defined in objects". The module puts all three
-      // back through `navigationContributions` (ADR-0029 D7), and it can only
-      // aim at a group the app DECLARES — a module cannot create one inside an
-      // app it does not own. So the app publishes the anchor and the module
-      // fills it; `src/service/index.ts` holds the other half, and the two
-      // service items of *My Work* and *Insights* come back the same way.
-      //
-      // FIRST of the groups on purpose (#2060 item 5): a contributed item lands
-      // after everything the app declares ahead of it, so this is the only slot
-      // where the module's dashboard can be the first entry a service persona
-      // is shown — below Sales, a service agent opened the app on Leads.
-      //
-      // ⛔ Do not "tidy" the group away: deleting it relocates all three
-      // contributed items to the app's top level with a
-      // `nav_contribution_group_missing` warning.
-      children: [],
     },
 
     {
@@ -303,7 +286,7 @@ export const CrmApp = App.create({
     {
       // Order to Cash (REQ-0007) — the anchor for the `app.objectstack.hotcrm.o2c`
       // module (`src/o2c/index.ts`), which fills the group through
-      // `navigationContributions`, as the marketing module fills Marketing.
+      // `navigationContributions`, as the revenue module fills Sales.
       // While the group has no entry — phase 0, or a tenant that disabled the
       // module — the console shows no empty group (measured, #2315). ⛔ Do not tidy the empty group away: the contributed
       // items would land at the app's top level with a
@@ -356,7 +339,7 @@ export const CrmApp = App.create({
         // is a personal queue — the things waiting on *you* — which is what
         // this group is; a one-item group next to it was structure without a
         // distinction. Dissolving that group is why this entry moved, not any
-        // rule against single-item groups (Marketing is one and stays one).
+        // rule against single-item groups.
         //
         // "Inbox" (zh-CN 待我审批) must land somewhere an approver can actually
         // approve. It used to be `type: 'object'` on `sys_approval_request` —
@@ -425,33 +408,6 @@ export const CrmApp = App.create({
     },
 
     {
-      // Campaigns drive lead_source and the campaign-member records that
-      // "Add to Campaign" writes — with no nav entry the marketing half of
-      // the data model was invisible.
-      //
-      // A single-item group on purpose (#1259). Marketing is a domain of its
-      // own, and a reader scanning the sidebar for "where does campaign work
-      // live" finds it by name. Item-count symmetry is not the goal; the
-      // Approvals group was dissolved because its item *was* personal work,
-      // not because one child is too few.
-      id: 'group_marketing',
-      type: 'group',
-      label: 'Marketing',
-      icon: 'megaphone',
-      // Open on load (#2295), like Insights below: a group with no `expanded`
-      // key renders CLOSED, because the spec defaults the key to `false`
-      // (`GroupNavItemSchema`, 18.1.0), so Campaigns sat behind a click and
-      // the sidebar did not say it existed.
-      expanded: true,
-      // Campaigns is contributed by the marketing module
-      // (`src/marketing/index.ts`) — the app keeps the group as the anchor,
-      // as it keeps `group_service`. ⛔ Do not tidy the empty group away:
-      // the contributed item would land at the app's top level with a
-      // `nav_contribution_group_missing` warning.
-      children: [],
-    },
-
-    {
       id: 'group_insights',
       type: 'group',
       label: 'Insights',
@@ -473,10 +429,10 @@ export const CrmApp = App.create({
       // the group is open or not (measured, #2295).
       //
       // The sales reports are declared below. The case reports belong to the
-      // service module, which contributes them into this group the way it
-      // fills `group_service` (see there), after the app's own children.
+      // service package and sit in the Service app's own Reports group (#2417).
       // `test/app-navigation-shape.test.ts` requires an entry for each report
-      // either package registers, so a new report without one goes red.
+      // any package registers, in some HotCRM app, so a new report without
+      // one goes red.
       //
       // Each entry's label IS its report's own `label`, here and in every
       // locale pack (#2370 row 6): the sidebar said "Pipeline Coverage" and

@@ -48,6 +48,16 @@ import artifact from '../objectstack.config';
  * quote takes the rep's upload and their deletes, the contract and the
  * unreachable quote refuse them.
  *
+ * The rep's upload goes through the panel's own door (#2440). Since 18.4.0
+ * the panel completes its upload with `attachTo` and the server attaches the
+ * file as the user in that call (`POST /api/v1/storage/upload/complete`),
+ * because a person's write may name in a lookup only a record they can read
+ * (objectstack#29029) and a rep does not read `sys_file`: the panel's old
+ * second call, `POST /api/v1/data/sys_attachment` naming the file it had just
+ * uploaded, is refused `reference_not_found` there. So the upload case makes
+ * the panel's three calls: presign in the `attachments` scope, put the bytes,
+ * complete with `attachTo`.
+ *
  * ### Why this suite boots its own stack
  *
  * The parent-derived half lives in `@objectstack/service-storage`, which
@@ -102,7 +112,7 @@ beforeAll(async () => {
   });
 
   rep = await signUpPerson(verify, 'rep@attachments.test', {
-    name: 'Territory Rep', positions: ['sales_rep', 'na_sales_team'],
+    name: 'Territory Rep', positions: ['crm_sales_rep', 'crm_na_sales_team'],
   });
   id.owner = await insert('sys_user', { name: 'Another Owner', email: 'owner@attachments.test' });
 
@@ -198,11 +208,32 @@ const asRep = async (method: string, path: string, payload?: unknown) => {
   return { status: res.status, code: body.code as string | undefined, body };
 };
 
+/**
+ * An upload from the Attachments panel, as the rep: the three calls the
+ * console makes (`@object-ui/data-objectstack`'s upload adapter) — presign in
+ * the `attachments` scope, put the bytes to the URL it answers, then complete
+ * with `attachTo`, which attaches the file to the record as the rep in the
+ * same call. Answers the completion's status and body.
+ */
+const panelUpload = async (parentObject: string, parentId: string, name: string) => {
+  const bytes = Buffer.from('%PDF-1.4\n');
+  const presigned = await asRep('POST', '/storage/upload/presigned', {
+    filename: name, mimeType: 'application/pdf', size: bytes.byteLength, scope: 'attachments',
+  });
+  expect(presigned.status, JSON.stringify(presigned.body)).toBe(200);
+  const { fileId, uploadUrl } = (presigned.body.data ?? presigned.body) as AnyRec;
+  const put = await verify.raw(new URL(String(uploadUrl), 'http://localhost').pathname, {
+    method: 'PUT', body: bytes, headers: { authorization: `Bearer ${rep.token}`, 'content-type': 'application/pdf' },
+  });
+  expect(put.status, await put.clone().text()).toBe(200);
+  return asRep('POST', '/storage/upload/complete', { fileId, attachTo: { parentObject, parentId } });
+};
+
 describe('a sales rep uploads and deletes where they can edit the record (#2038)', () => {
   it('uploads to a quote they can edit, and deletes their own file', async () => {
-    const posted = await asRep('POST', '/data/sys_attachment', await attachmentOn(id.quote_US, 'rep-upload.pdf', 'crm_quote', rep.id));
+    const posted = await panelUpload('crm_quote', id.quote_US, 'rep-upload.pdf');
     // Before #2038: 403 PERMISSION_DENIED, the grant was read only.
-    expect(posted.status, JSON.stringify(posted.body)).toBe(201);
+    expect(posted.status, JSON.stringify(posted.body)).toBe(200);
     const [mine] = await verify.rows('sys_attachment', { parent_id: id.quote_US, file_name: 'rep-upload.pdf' });
     expect(mine?.uploaded_by).toBe(rep.id);
 

@@ -3,7 +3,7 @@
 /**
  * Accounts Receivable — finance's set for the Order to Cash module (#2315,
  * `docs/architecture/order-to-cash-module-plan.md`, *Permissions and sharing*).
- * The `ar_accountant` position distributes it (`src/sales/sharing/positions.ts`).
+ * The `crm_ar_accountant` position distributes it (`src/sales/sharing/positions.ts`).
  *
  * It lives in the APP package although every grant beyond the reads is on a
  * module object: permission sets stay whole here (ADR-0130 addendum,
@@ -37,6 +37,10 @@ export const ArAccountantProfile = {
   label: 'Accounts Receivable',
   description:
     'Finance: enters and imports the invoices and payments of every contract, and reads the contracts, accounts and collection plans behind them.',
+  // Which HotCRM apps the holder's launcher offers (#2417): the Order to Cash
+  // group sits in the Sales app, beside the contracts the invoices hang off,
+  // so finance works there alone. Visibility, not access, as on `sales_rep`.
+  tabPermissions: { crm_service: 'hidden' as const, crm_marketing: 'hidden' as const },
   objects: {
     crm_invoice:           { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },
     crm_payment:           { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },

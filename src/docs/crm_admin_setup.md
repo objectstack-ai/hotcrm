@@ -28,6 +28,23 @@ administrator. There is no switch in Setup for this; the build decides:
 - the multi-organization build gives each new organization the product
   catalogue and nothing else.
 
+The demo comes in one language. An organization installing HotCRM gets it in
+Simplified Chinese when its language is Simplified Chinese (the organization's
+language setting, or, when it has none, the language of the person installing),
+and in English otherwise. The two are the same story in other words: the same
+records, statuses, amounts and dates, so every dashboard reads the same. A
+self-hosted single-organization install starts with the English demo.
+
+The demo's dates are counted from the day it is seeded: its open deals close
+in the coming weeks, most of its open cases are inside their SLA, and its
+activity runs up to today. After that the records keep the dates they were
+given, so a demo organization a month old shows a month-old story — deals past
+their close date and cases past their SLA. Seeding again does not refresh it:
+apart from the forecast snapshots, demo records already in place are left as
+they are. To show the demo
+fresh, seed a new organization (on a self-hosted install, `pnpm demo:reset`
+starts the database again).
+
 On the standard build, clear out the demo records you do not want **before**
 you import your own: an import matches rows to the records already there, so
 a real account that shares a demo account's name would update the demo record
@@ -63,6 +80,16 @@ conversions and large deals, and a **Sales Director** also signs off the
 largest deals. Put your regional reps in **NA Sales Team** or **EU Sales Team**
 as well, so they can edit the accounts in their territory.
 What each position opens up is in [Access](./crm_admin_access.md).
+
+Coming from a version before 6.2? The positions took the `crm_` prefix in
+6.2 (`sales_rep` became `crm_sales_rep`; the labels did not change). From
+6.2.1, the first time HotCRM starts after the upgrade it moves everyone who
+held a position under its old name to the new one, in every organization, so
+there is nothing to reassign. An environment that installs the upgrade while
+running moves them at its next restart. The move covers the people who hold a
+position only: a sharing rule, queue member or record share you added here
+under an old position name keeps that name, so re-point it to the renamed
+position.
 
 ## 4. Check the permission sets
 

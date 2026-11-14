@@ -5,15 +5,16 @@
 ## Release Unit
 
 HotCRM releases as one ObjectStack release artifact, identified by its app package and
-carrying the service module beside it (ADR-0130 D4; one artifact, one version — D6):
+carrying its four modules beside it — service, revenue, marketing and Order to Cash (ADR-0130
+D4; one artifact, one version — D6):
 
 | Field | Value |
 | --- | --- |
 | npm package name | `hotcrm` |
 | ObjectStack manifest id | `app.objectstack.hotcrm` |
-| Packages in the artifact | `app.objectstack.hotcrm` (`type: app`), `app.objectstack.hotcrm.service`, `app.objectstack.hotcrm.revenue`, `app.objectstack.hotcrm.marketing` (`type: module`) |
+| Packages in the artifact | `app.objectstack.hotcrm` (`type: app`), `app.objectstack.hotcrm.service`, `app.objectstack.hotcrm.revenue`, `app.objectstack.hotcrm.marketing`, `app.objectstack.hotcrm.o2c` (`type: module`) |
 | Namespace | `crm` |
-| Current version | `6.1.0` |
+| Current version | `6.2.1` |
 | Publish artifact | output from `pnpm build` |
 
 The active repository is not released as separate scoped npm packages.
@@ -31,7 +32,8 @@ The rest are matched by hand to the version it just wrote:
 
 - the package manifests' `version` — the app package's in `src/sales/index.ts`, and
   each module's `version` and its `dependencies` range on the app in
-  `src/service/index.ts`, `src/revenue/index.ts` and `src/marketing/index.ts`;
+  `src/service/index.ts`, `src/revenue/index.ts`, `src/marketing/index.ts` and
+  `src/o2c/index.ts`;
   `pnpm verify` fails if any of them drifts from `package.json`
 - marketplace publish note
 
@@ -53,8 +55,9 @@ The rest are matched by hand to the version it just wrote:
 
    Then set the package manifests' `version` to the version it just wrote — the
    app package's in `src/sales/index.ts`, each module's `version` and
-   `dependencies` range in `src/service/index.ts`, `src/revenue/index.ts` and
-   `src/marketing/index.ts`. `changeset version` does not touch those files, and
+   `dependencies` range in `src/service/index.ts`, `src/revenue/index.ts`,
+   `src/marketing/index.ts` and `src/o2c/index.ts`. `changeset version` does not
+   touch those files, and
    `pnpm verify` is what catches the drift.
 
 4. Build the artifact:

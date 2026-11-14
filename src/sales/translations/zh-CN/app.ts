@@ -22,8 +22,8 @@ import type { TranslationData } from '@objectstack/spec/system';
 export const appSurface: Omit<TranslationData, 'objects'> = {
   apps: {
     crm_enterprise: {
-      label: 'HotCRM',
-      description: '涵盖销售、服务和市场营销的客户关系管理系统',
+      label: '销售',
+      description: '面向销售团队的线索、客户、商机与报价',
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
       navigation: {
         // The group and its Events item are two words, as in every other pack
@@ -54,10 +54,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_my_leads: { label: '我的线索' },
         nav_approval_requests: { label: '待我审批' },
 
-        group_marketing: { label: '市场营销' },
-
-        group_service: { label: '服务' },
-
         group_insights: { label: '数据洞察' },
         nav_crm_dashboard: { label: 'CRM 总览' },
         nav_forecast: { label: '销售预测' },
@@ -74,6 +70,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         group_help: { label: '帮助' },
         nav_help_manual: { label: '使用手册' },
         nav_help_admin: { label: '管理员手册' },
+      },
+    },
+    crm_service: {
+      // The ids this package contributes into the Service app (#2417).
+      navigation: {
+        nav_account: { label: '客户' },
+        nav_contact: { label: '联系人' },
+        nav_my_tasks: { label: '我的任务' },
+        nav_my_calendar: { label: '我的日历' },
+        nav_report_churn_signals: { label: '客户流失信号' },
+      },
+    },
+    crm_marketing: {
+      // The ids this package contributes into the Marketing app (#2417).
+      navigation: {
+        nav_lead: { label: '线索' },
+        nav_contact: { label: '联系人' },
+        nav_account: { label: '客户' },
+        nav_my_tasks: { label: '我的任务' },
+        nav_report_lead_inflow: { label: '每月线索跟进' },
       },
     },
   },
@@ -130,7 +146,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: '平均订单金额（所选期间）', description: '所选期间内已成交商机的平均金额' },
         lead_source: { title: '线索来源', description: '按获客渠道统计的管道金额' },
         pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
-        top_products: { title: '各类别目录价合计', description: '按产品类别汇总的目录价，不是销售额' },
         pipeline_by_owner: { title: '按负责人统计管道', description: '各销售负责人的进行中管道金额与商机数' },
       },
     },
@@ -430,7 +445,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     lead_detail_page: {
       label: '线索详情',
       description: '完整的线索详情页，包含关键信息、明细与相关记录。',
-      title: '{first_name} {last_name}',
+      title: '{full_name}',
       subtitle: '{company}',
       components: {
         lead_duplicate_alert_confirmed: { label: '已确认重复提醒' },
@@ -723,55 +738,55 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Setup → Position Holders (`src/sales/sharing/positions.ts`).
   positions: {
-    executive: {
+    crm_executive: {
       label: '高管',
       description: '公司管理层：可查看整个销售管道中每一笔进行中的大额商机，商机仍归原商机团队负责。',
     },
-    sales_director: {
+    crm_sales_director: {
       label: '销售总监',
       description: '领导销售组织，对最大的商机做最终签批，并可查看每一笔进行中的大额商机。',
     },
-    sales_manager: {
+    crm_sales_manager: {
       label: '销售经理',
       description: '管理销售团队：审批新客户、线索转化和大额商机，并可编辑每一个活跃客户。',
     },
-    sales_rep: {
+    crm_sales_rep: {
       label: '销售代表',
       description: '日常跟进线索和商机，并从「线索受理」队列接收新线索。',
     },
-    service_director: {
+    crm_service_director: {
       label: '服务总监',
       description: '统管客户服务，在服务经理处理期间可查看每一个未关闭的严重工单。',
     },
-    service_manager: {
+    crm_service_manager: {
       label: '服务经理',
       description: '负责升级处理池：升级的工单会交给此岗位，可编辑每一个未关闭的严重工单。',
     },
-    service_agent: {
+    crm_service_agent: {
       label: '客服专员',
       description: '处理客户工单，从「支持受理」队列接收新工单，并认领仍在队列中等候的工单。',
     },
-    marketing_director: {
+    crm_marketing_director: {
       label: '市场总监',
       description: '领导市场营销，可编辑每一个进行中的营销活动，无论负责人是谁。',
     },
-    marketing_manager: {
+    crm_marketing_manager: {
       label: '市场经理',
       description: '管理营销活动，可编辑每一个进行中的营销活动，无论负责人是谁。',
     },
-    marketing_user: {
+    crm_marketing_user: {
       label: '市场专员',
       description: '日常策划和执行营销活动及其成员。',
     },
-    ar_accountant: {
+    crm_ar_accountant: {
       label: '应收会计',
       description: '财务：录入和导入销售在每份合同上看到的发票与回款。',
     },
-    na_sales_team: {
+    crm_na_sales_team: {
       label: '北美销售团队',
       description: '北美区域团队：可编辑北美区域内的每一个客户。',
     },
-    eu_sales_team: {
+    crm_eu_sales_team: {
       label: '欧洲销售团队',
       description: '欧洲区域团队：可编辑欧洲（EMEA）区域内的每一个客户。',
     },
@@ -815,11 +830,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   books: {
     crm_manual: {
       label: 'HotCRM 使用手册',
-      description: 'HotCRM 在销售和服务中如何运作：界面背后的规则。',
+      description: 'HotCRM 在销售中如何运作：界面背后的规则。',
       groups: {
         start: { label: '入门' },
         sales: { label: '销售' },
-        service: { label: '服务' },
         analytics: { label: '分析' },
       },
     },

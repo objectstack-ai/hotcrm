@@ -45,10 +45,10 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@opportunity-line-freeze.test', {
-    name: 'Line Freeze Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Line Freeze Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   manager = await signUpPerson(verify, 'manager@opportunity-line-freeze.test', {
-    name: 'Line Freeze Manager', positions: ['sales_manager'], permissionSets: ['sales_manager'],
+    name: 'Line Freeze Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
 }, 180_000);
 

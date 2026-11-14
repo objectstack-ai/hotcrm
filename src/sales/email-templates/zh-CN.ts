@@ -16,8 +16,8 @@ export const zhCN: EmailTemplatePack = {
   },
   'crm.contact_welcome': {
     label: '新联系人',
-    subject: '新联系人：{{first_name}} {{last_name}}',
-    bodyHtml: '<p>{{first_name}} {{last_name}} 已添加为联系人。请主动联系并表示欢迎。</p>',
+    subject: '新联系人：{{person_name}}',
+    bodyHtml: '<p>{{person_name}} 已添加为联系人。请主动联系并表示欢迎。</p>',
   },
   'crm.contract_expired': {
     label: '合同已到期',
@@ -41,28 +41,28 @@ export const zhCN: EmailTemplatePack = {
   },
   'crm.lead_conversion_approved': {
     label: '线索转换已批准',
-    subject: '线索转换已批准：{{first_name}} {{last_name}}',
+    subject: '线索转换已批准：{{person_name}}',
     bodyHtml: '<p>该线索已审批通过。您可以将其转换为客户、联系人和商机。</p>',
   },
   'crm.lead_conversion_rejected': {
     label: '线索转换未批准',
-    subject: '线索未通过审批：{{first_name}} {{last_name}}',
+    subject: '线索未通过审批：{{person_name}}',
     bodyHtml: '<p>该线索的转换未获批准。请继续跟进，或注明原因将其取消资格。</p>',
   },
   'crm.lead_converted': {
     label: '线索已转换',
-    subject: '线索已转换：{{first_name}} {{last_name}}',
-    bodyHtml: '<p>线索 {{first_name}} {{last_name}} 已转换为客户和联系人。</p>',
+    subject: '线索已转换：{{person_name}}',
+    bodyHtml: '<p>线索 {{person_name}} 已转换为客户和联系人。</p>',
   },
   'crm.lead_routing_hot': {
     label: '热门线索分配',
-    subject: '热门线索 — 请在 24 小时内跟进：{{first_name}} {{last_name}}',
-    bodyHtml: '<p>来自 {{company}} 的 {{first_name}} {{last_name}}（评分 {{rating}}）由您负责，请最迟明天跟进。</p>',
+    subject: '热门线索 — 请在 24 小时内跟进：{{person_name}}',
+    bodyHtml: '<p>来自 {{company}} 的 {{person_name}}（评分 {{rating}}）由您负责，请最迟明天跟进。</p>',
   },
   'crm.lead_routing_new': {
     label: '新线索分配',
-    subject: '新线索已分配给您：{{first_name}} {{last_name}}',
-    bodyHtml: '<p>来自 {{company}} 的 {{first_name}} {{last_name}} 现已分配给您，请在三天内跟进。</p>',
+    subject: '新线索已分配给您：{{person_name}}',
+    bodyHtml: '<p>来自 {{company}} 的 {{person_name}} 现已分配给您，请在三天内跟进。</p>',
   },
   'crm.opportunity_approved': {
     label: '商机审批通过',

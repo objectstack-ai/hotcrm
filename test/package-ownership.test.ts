@@ -158,22 +158,19 @@ describe('every object has exactly one owner', () => {
       .toEqual(APP_REGISTERED_MODULE_ITEMS);
   });
 
-  it('a module item an app action or tile reaches ships in its module (objectstack#25514, #2276)', () => {
+  it('a module flow an app action reaches ships in its module (objectstack#25514, #2276)', () => {
     // The sweep above cannot see the three flows: a flow carries no top-level
     // object. So the reference is read from the app side, and its target found
     // in the module that owns it — and in no other package.
     const appActions = (body(APP_ID).actions ?? []) as AnyRec[];
     const flowOf = (action: string) => appActions.find((a) => a.name === action)?.target;
-    const widget = ((body(APP_ID).dashboards ?? []) as AnyRec[])
-      .find((d) => d.name === 'crm_overview_dashboard')?.widgets?.find((w: AnyRec) => w.id === 'top_products');
     const reached: Array<[string, string, unknown]> = [
       [REVENUE_ID, 'flows', flowOf('generate_quote')],
       [MARKETING_ID, 'flows', flowOf('create_campaign')],
       [MARKETING_ID, 'flows', flowOf('add_contact_to_campaign')],
-      [REVENUE_ID, 'datasets', widget?.dataset],
     ];
     expect(reached.map(([, , name]) => name)).toEqual([
-      'quote_generation', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll', 'product_metrics',
+      'quote_generation', 'campaign_lead_member_enroll', 'campaign_contact_member_enroll',
     ]);
     for (const [owner, key, name] of reached) {
       const carriers = bodies.filter((b) => namesOf(b[key]).includes(String(name))).map((b) => b.id);
@@ -181,23 +178,29 @@ describe('every object has exactly one owner', () => {
     }
   });
 
-  it('an app tile on a module dataset asks for that dataset\'s object, so a disabled module leaves it out (#2383)', () => {
-    // A disabled package's objects drop out of the served object list a
-    // widget's `requiresObject` is checked against (measured on 18.2.0), so
-    // the tile is omitted instead of drawing "dataset not defined". With the
-    // module on, the object is served and the tile draws as before.
-    const moduleDatasets = new Map<string, { owner: string; object: string }>();
-    for (const id of MODULE_IDS) {
-      for (const ds of (body(id).datasets ?? []) as AnyRec[]) moduleDatasets.set(ds.name, { owner: id, object: ds.object });
+  it('every dashboard tile binds a dataset of its own package or of one it depends on (objectstack#32929, #2436)', () => {
+    // From 18.4.0 a dataset is read only from inside the reader package's
+    // dependency closure (ADR-0150 D3), and the app may not depend on a
+    // module. So an app tile on a module dataset draws an error (409), and the
+    // List Price by Category chart moved with `product_metrics` into revenue's
+    // Product Catalog dashboard.
+    const holder = new Map<string, string>();
+    for (const b of bodies) for (const ds of (b.datasets ?? []) as AnyRec[]) holder.set(ds.name, b.id);
+    const closure = (id: string): string[] => [id, ...Object.keys(body(id).dependencies ?? {})];
+    const outside: string[] = [];
+    for (const b of bodies) {
+      for (const d of (b.dashboards ?? []) as AnyRec[]) {
+        for (const w of (d.widgets ?? []) as AnyRec[]) {
+          if (!w.dataset) continue;
+          const owner = holder.get(w.dataset);
+          if (!owner || !closure(b.id).includes(owner)) outside.push(`${b.id}: ${d.name}.${w.id} → ${w.dataset} (${owner ?? 'no package'})`);
+        }
+      }
     }
-    const tiles = ((body(APP_ID).dashboards ?? []) as AnyRec[]).flatMap((d) =>
-      ((d.widgets ?? []) as AnyRec[]).filter((w) => moduleDatasets.has(w.dataset)).map((w) => ({ dashboard: d.name, w })));
-    expect(tiles.map(({ dashboard, w }) => `${dashboard}.${w.id}`)).toEqual(['crm_overview_dashboard.top_products']);
-    for (const { dashboard, w } of tiles) {
-      const { owner, object } = moduleDatasets.get(w.dataset)!;
-      expect(w.requiresObject, `${dashboard}.${w.id}`).toBe(object);
-      expect(namesOf(body(owner).objects), owner).toContain(object);
-    }
+    expect(outside).toEqual([]);
+    const catalog = ((body(REVENUE_ID).dashboards ?? []) as AnyRec[]).find((d) => d.name === 'product_catalog_dashboard');
+    expect(catalog?.widgets?.map((w: AnyRec) => `${w.id}:${w.dataset}`)).toEqual(['top_products:product_metrics']);
+    expect(holder.get('product_metrics')).toBe(REVENUE_ID);
   });
 
   it('the permission sets stay whole in the app package (ADR-0130, 2026-09-02 addendum)', () => {

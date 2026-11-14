@@ -183,7 +183,7 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
   // let them through it): one gate, `OPPORTUNITY_AUDIENCE`, shared by Sales
   // Home and the six entries below.
   const GATE =
-    'current_user.can("crm_opportunity", "read") && !("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)';
+    'current_user.can("crm_opportunity", "read") && !("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)';
   const GATED = [
     'nav_sales_home',
     'nav_sales_dashboard', 'nav_crm_dashboard',
@@ -206,7 +206,7 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
     // row 6): the console prunes an object entry by read access already.
     for (const id of ['nav_opportunity', 'nav_my_deals']) {
       expect(String(sourceOf(LEAVES.find((n) => n.id === id)?.visible)), id).toBe(
-        '!("service_agent" in current_user.positions) && !("service_manager" in current_user.positions)',
+        '!("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)',
       );
     }
   });
@@ -219,7 +219,7 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
     // their position (#2262). The booted answer is measured in
     // `app-navigation-audience.test.ts`.
     const own = (position: string) => setsOf(position).some((set) => set.objects?.crm_opportunity?.allowRead === true);
-    expect(['sales_rep', 'sales_manager', 'service_agent', 'service_manager'].map(own)).toEqual([true, true, false, false]);
+    expect(['crm_sales_rep', 'crm_sales_manager', 'crm_service_agent', 'crm_service_manager'].map(own)).toEqual([true, true, false, false]);
     expect(CrmUserProfile).toMatchObject({ isDefault: true, objects: { crm_opportunity: { allowRead: true } } });
   });
 
@@ -241,12 +241,23 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
   const DATASETS = new Map(
     (((composedStack as AnyRec).datasets ?? []) as AnyRec[]).map((d) => [d.name as string, d]),
   );
-  const SERVED = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
+  // Three apps since #2417: a report may have an entry in more than one of
+  // them (Customer Churn Signals in Sales and Service, Lead Engagement in Sales
+  // and Marketing), never two in the same app.
+  const APPS = ['crm_enterprise', 'crm_service', 'crm_marketing'];
   const walk = (nodes: AnyRec[], group?: string): Array<{ n: AnyRec; group?: string }> =>
     nodes.flatMap((n) =>
       n.type === 'group' ? walk((n.children ?? []) as AnyRec[], n.id as string) : [{ n, group }],
     );
-  const REPORT_ENTRIES = walk(SERVED).filter(({ n }) => n.type === 'report');
+  const ENTRIES_BY_APP = APPS.map((app) => ({
+    app,
+    entries: walk((servedApp(app).navigation ?? []) as AnyRec[]).filter(({ n }) => n.type === 'report'),
+  }));
+  const ALL_ENTRIES = ENTRIES_BY_APP.flatMap(({ app, entries }) => entries.map((e) => ({ ...e, app })));
+  /** One entry per report: the first app that carries it. The gates are the same wherever it appears. */
+  const REPORT_ENTRIES = ALL_ENTRIES.filter(
+    (e, i) => ALL_ENTRIES.findIndex((o) => o.n.reportName === e.n.reportName) === i,
+  );
 
   /** The objects a report reads: its dataset's, or every block's for a joined report. */
   const objectsOf = (r: AnyRec): string[] =>
@@ -262,11 +273,20 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
     for (const r of REPORTS) expect(objectsOf(r).filter(Boolean), r.name).not.toEqual([]);
   });
 
-  it('each registered report is the target of exactly one entry', () => {
-    const bad = REPORTS.map((r) => [r.name, REPORT_ENTRIES.filter(({ n }) => n.reportName === r.name).length])
-      .filter(([, count]) => count !== 1)
-      .map(([name, count]) => `${name}: ${count} entries`);
-    expect(bad, `reports without exactly one nav entry:\n  ${bad.join('\n  ')}`).toEqual([]);
+  it('each registered report has an entry, and never two in one app', () => {
+    const bad = REPORTS.flatMap((r) => {
+      const counts = ENTRIES_BY_APP.map(({ app, entries }) => [app, entries.filter(({ n }) => n.reportName === r.name).length] as const);
+      const total = counts.reduce((sum, [, c]) => sum + c, 0);
+      return [
+        ...(total === 0 ? [`${r.name}: no entry in any app`] : []),
+        ...counts.filter(([, c]) => c > 1).map(([app, c]) => `${r.name}: ${c} entries in ${app}`),
+      ];
+    });
+    expect(bad, `reports without an entry, or with two in one app:\n  ${bad.join('\n  ')}`).toEqual([]);
+    // The two shared reports, and where (#2417).
+    const appsOf = (report: string) => ALL_ENTRIES.filter(({ n }) => n.reportName === report).map(({ app }) => app);
+    expect(appsOf('customer_churn_signals')).toEqual(['crm_enterprise', 'crm_service']);
+    expect(appsOf('lead_inflow_by_month_source')).toEqual(['crm_enterprise', 'crm_marketing']);
   });
 
   // One name per report (#2370 row 6): the sidebar said "Pipeline Coverage"
@@ -280,32 +300,34 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
       if (n.label !== report?.label) bad.push(`en ${n.id}: "${n.label}" vs report "${report?.label}"`);
     }
     for (const [locale, pack] of localePacks) {
-      const nav = pack?.apps?.[(CrmApp as AnyRec).name]?.navigation ?? {};
-      for (const { n } of REPORT_ENTRIES) {
+      for (const { n, app } of ALL_ENTRIES) {
+        const nav = pack?.apps?.[app]?.navigation ?? {};
         const entry = nav[n.id]?.label;
         const report = pack?.reports?.[n.reportName]?.label;
         if ((entry !== undefined || report !== undefined) && entry !== report) {
-          bad.push(`${locale} ${n.id}: "${entry}" vs report "${report}"`);
+          bad.push(`${locale} ${app} ${n.id}: "${entry}" vs report "${report}"`);
         }
       }
     }
     expect(bad, `report entries named differently from their report:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
-  it('every report entry is in the Reports group, which the app declares collapsed', () => {
-    expect(REPORT_ENTRIES.filter(({ group }) => group !== 'group_reports').map(({ n }) => n.id)).toEqual([]);
-    const declared = NAV.find((n) => n.id === 'group_reports');
-    expect(declared).toMatchObject({ type: 'group', label: 'Reports', expanded: false });
+  it('every report entry is in the Reports group, which each app declares collapsed', () => {
+    expect(ALL_ENTRIES.filter(({ group }) => group !== 'group_reports').map(({ app, n }) => `${app} ${n.id}`)).toEqual([]);
+    for (const app of APPS) {
+      const declared = ((servedApp(app).navigation ?? []) as AnyRec[]).find((n) => n.id === 'group_reports');
+      expect(declared, app).toMatchObject({ type: 'group', label: 'Reports', expanded: false });
+    }
   });
 
   it('each entry asks for read on the object its report reads', () => {
     const bad: string[] = [];
-    for (const { n } of REPORT_ENTRIES) {
+    for (const { n } of ALL_ENTRIES) {
       const report = REPORTS.find((r) => r.name === n.reportName);
       // A case report also asks that the member is not a sales rep (#2244),
       // an opportunity report that the member holds neither service position
       // (#2268); `app-navigation-audience.test.ts` pins who that hides.
-      const asked = /^current_user\.can\("(\w+)", "read"\)(?: && !\("sales_rep" in current_user\.positions\)| && !\("service_agent" in current_user\.positions\) && !\("service_manager" in current_user\.positions\))?$/.exec(String(sourceOf(n.visible)))?.[1];
+      const asked = /^current_user\.can\("(\w+)", "read"\)(?: && !\("crm_sales_rep" in current_user\.positions\)| && !\("crm_service_agent" in current_user\.positions\) && !\("crm_service_manager" in current_user\.positions\))?$/.exec(String(sourceOf(n.visible)))?.[1];
       if (!report || !asked || !objectsOf(report).includes(asked)) {
         bad.push(`${n.id}: gate ${JSON.stringify(sourceOf(n.visible))}, report reads ${report ? objectsOf(report).join(' + ') : '?'}`);
       }
@@ -315,11 +337,11 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
     // panels read: a member without the other gets an access notice on the
     // fourth panel, not a broken page (measured, see `crm.app.ts`).
     expect(
-      REPORT_ENTRIES.filter(({ n }) => String(sourceOf(n.visible)).includes('"sales_rep" in current_user.positions')).map(({ n }) => n.id),
+      REPORT_ENTRIES.filter(({ n }) => String(sourceOf(n.visible)).includes('"crm_sales_rep" in current_user.positions')).map(({ n }) => n.id),
       'report entries that also ask the rep position',
     ).toEqual(['nav_report_cases_by_status', 'nav_report_sla', 'nav_report_cases_opened_by_day']);
     expect(
-      REPORT_ENTRIES.filter(({ n }) => String(sourceOf(n.visible)).includes('"service_agent" in current_user.positions')).map(({ n }) => n.id),
+      REPORT_ENTRIES.filter(({ n }) => String(sourceOf(n.visible)).includes('"crm_service_agent" in current_user.positions')).map(({ n }) => n.id),
       'report entries that also ask the service positions',
     ).toEqual([
       'nav_report_opportunities_by_stage', 'nav_report_won_by_owner',
@@ -341,7 +363,7 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
     const CASES = ['cases_by_status_priority', 'sla_performance', 'cases_opened_by_day_priority'];
     expect(shown(SalesRepProfile)).toEqual(ALL);
     expect(shown(SalesManagerProfile)).toEqual(ALL);
-    for (const position of ['service_agent', 'service_manager']) {
+    for (const position of ['crm_service_agent', 'crm_service_manager']) {
       expect(setsOf(position).map((set) => set.name), position).toEqual(['service_agent']);
       expect(shown(setsOf(position)[0]!), position).toEqual([
         'lead_inflow_by_month_source', 'accounts_by_industry_type', 'customer_churn_signals', ...CASES,
@@ -360,41 +382,42 @@ describe("each persona's first entry is its home (#2060 item 5)", () => {
   // body has the table); these are the source facts that measurement rests on.
   const SERVED = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
 
-  it('the sidebar opens with Home, Sales Home, then the Service group led by its dashboard', () => {
-    expect(SERVED.slice(0, 3).map((n) => n.id)).toEqual(['nav_home', 'nav_sales_home', 'group_service']);
-    // A contributed item lands after the group's own children: the app gives
-    // this group none, so the module's first item is the group's first entry.
-    expect(NAV.find((n) => n.id === 'group_service')?.children).toEqual([]);
-    expect((SERVED[2].children as AnyRec[])[0]).toMatchObject({
+  it('the Sales app opens with Home and Sales Home; the Service app opens on its dashboard (#2417)', () => {
+    expect(SERVED.slice(0, 3).map((n) => n.id)).toEqual(['nav_home', 'nav_sales_home', 'group_sales']);
+    // The service personas' home moved with the Service group into the
+    // service package's own app, where it is the first entry.
+    expect(NAV.find((n) => n.id === 'group_service')).toBeUndefined();
+    expect(((servedApp('crm_service').navigation ?? []) as AnyRec[])[0]).toMatchObject({
       id: 'nav_service_dashboard', type: 'dashboard', dashboardName: 'service_dashboard',
     });
   });
 
   it('Home is the entry a sales rep is not shown, asked by the position a rep holds', () => {
     expect(String(sourceOf(NAV[0].visible))).toMatch(
-      /^current_user\.can\("crm_opportunity", "read"\) && !\("sales_rep" in current_user\.positions\)/,
+      /^current_user\.can\("crm_opportunity", "read"\) && !\("crm_sales_rep" in current_user\.positions\)/,
     );
     // The name in the gate is a declared position, the one both demo reps hold
     // and the manager does not, and it declares the rep's permission set.
-    expect(CrmPositions.map((p) => p.name)).toContain('sales_rep');
-    expect(setsOf('sales_rep')).toEqual([SalesRepProfile]);
-    const holds = (key: string) => DemoOrgStaffing.find((m) => m.key === key)?.positions.includes('sales_rep');
+    expect(CrmPositions.map((p) => p.name)).toContain('crm_sales_rep');
+    expect(setsOf('crm_sales_rep')).toEqual([SalesRepProfile]);
+    const holds = (key: string) => DemoOrgStaffing.find((m) => m.key === key)?.positions.includes('crm_sales_rep');
     expect(['na_rep', 'eu_rep', 'sales_manager'].map(holds)).toEqual([true, true, false]);
   });
 
-  it('a service persona is shown nothing ahead of the Service group (#2262)', () => {
+  it('a service persona who opens the Sales app is shown neither pinned entry (#2262)', () => {
     // Both pinned entries refuse both service positions by name: the read
-    // question alone lets them through since #2231 (asserted above), so the
-    // position is what makes the Service group their first slot.
+    // question alone lets them through since #2231 (asserted above). Their
+    // launcher no longer offers the Sales app (#2417), but its address still
+    // opens it, and these gates are what it then shows them.
     for (const n of SERVED.slice(0, 2)) {
-      for (const position of ['service_agent', 'service_manager']) {
+      for (const position of ['crm_service_agent', 'crm_service_manager']) {
         expect(String(sourceOf(n.visible)), n.id).toContain(`!("${position}" in current_user.positions)`);
       }
     }
-    expect(CrmPositions.map((p) => p.name)).toEqual(expect.arrayContaining(['service_agent', 'service_manager']));
+    expect(CrmPositions.map((p) => p.name)).toEqual(expect.arrayContaining(['crm_service_agent', 'crm_service_manager']));
     const holds = (key: string, position: string) => DemoOrgStaffing.find((m) => m.key === key)?.positions.includes(position);
-    expect([holds('service_agent', 'service_agent'), holds('service_manager', 'service_manager')]).toEqual([true, true]);
+    expect([holds('service_agent', 'crm_service_agent'), holds('service_manager', 'crm_service_manager')]).toEqual([true, true]);
     const readsCases = (position: string) => setsOf(position).some((set) => set.objects?.crm_case?.allowRead === true);
-    expect(['service_agent', 'service_manager'].map(readsCases)).toEqual([true, true]);
+    expect(['crm_service_agent', 'crm_service_manager'].map(readsCases)).toEqual([true, true]);
   });
 });

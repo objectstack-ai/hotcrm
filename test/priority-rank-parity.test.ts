@@ -56,10 +56,10 @@ let k = 0;
 beforeAll(async () => {
   verify = await hotcrmStack();
   agent = await signUpPerson(verify, 'agent@priority-rank-parity.test', {
-    name: 'Rank Agent', positions: ['service_agent'], permissionSets: ['service_agent'],
+    name: 'Rank Agent', positions: ['crm_service_agent'], permissionSets: ['service_agent'],
   });
   rep = await signUpPerson(verify, 'rep@priority-rank-parity.test', {
-    name: 'Rank Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Rank Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 120_000);
 

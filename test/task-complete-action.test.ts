@@ -44,10 +44,10 @@ const complete = (id: string, who: Person = owner): Promise<unknown> =>
 beforeAll(async () => {
   verify = await hotcrmStack();
   owner = await signUpPerson(verify, 'owner@task-complete.test', {
-    name: 'Tess Owner', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Tess Owner', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   otherRep = await signUpPerson(verify, 'other@task-complete.test', {
-    name: 'Otto Other', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Otto Other', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
 }, 180_000);
 

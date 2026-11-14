@@ -89,7 +89,9 @@ and run it again. The ones you will meet most:
   codes, in any letter case, plus the common words other systems use. Anything
   still unknown fails the row rather than being dropped.
 - **A reference matches nothing** — an account name on a contact, or an owner
-  email, that names no existing record.
+  email, that names no existing record. A reference also matches nothing when
+  it names a record you, the person running the import, cannot open: a row
+  links only to records its importer can see.
 - **A reference matches more than one record** — a lookup cell names a record
   by its name, and product, quote, campaign and knowledge-article names may
   repeat. When two records share the name in the cell, the row is refused

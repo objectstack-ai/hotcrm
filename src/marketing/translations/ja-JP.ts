@@ -126,8 +126,15 @@ export const jaJP: TranslationData = {
     },
   },
   apps: {
-    crm_enterprise: {
+    crm_marketing: {
+      label: 'マーケティング',
+      description: 'キャンペーンと、それが届くリード・取引先責任者・取引先',
       navigation: {
+        group_audience: { label: 'オーディエンス' },
+        group_work: { label: 'マイワーク' },
+        group_reports: { label: 'レポート' },
+        group_help: { label: 'ヘルプ' },
+        nav_approval_requests: { label: '受信トレイ' },
         nav_campaign: { label: 'キャンペーン' },
         nav_help_marketing: { label: 'マーケティングマニュアル' },
       },

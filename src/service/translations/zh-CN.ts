@@ -248,14 +248,27 @@ export const zhCN: TranslationData = {
   apps: {
     crm_enterprise: {
       navigation: {
+        nav_knowledge_published: { label: '知识库' },
+      },
+    },
+    crm_service: {
+      label: '服务',
+      description: '工单、知识库及其所属的客户',
+      navigation: {
+        group_service: { label: '服务' },
+        group_customers: { label: '客户与联系人' },
+        group_work: { label: '我的工作' },
+        group_reports: { label: '报表' },
+        group_help: { label: '帮助' },
+        nav_approval_requests: { label: '待我审批' },
         nav_service_dashboard: { label: '服务概览' },
         nav_case: { label: '工单' },
         nav_knowledge: { label: '知识库' },
-        nav_knowledge_published: { label: '知识库' },
         nav_my_cases: { label: '我的工单' },
         nav_report_cases_by_status: { label: '工单状态与优先级' },
         nav_report_sla: { label: '已关闭工单的 SLA' },
         nav_report_cases_opened_by_day: { label: '每日新建工单' },
+        nav_help_service: { label: '服务手册' },
       },
     },
   },
@@ -380,6 +393,15 @@ export const zhCN: TranslationData = {
     cases_opened_by_day_priority: {
       label: '每日新建工单',
       description: '每日新建工单数，按优先级细分',
+    },
+  },
+  books: {
+    crm_service_manual: {
+      label: 'HotCRM 服务手册',
+      description: '工单与 SLA、知识库，以及新工单如何分诊。',
+      groups: {
+        service: { label: '服务' },
+      },
     },
   },
 };

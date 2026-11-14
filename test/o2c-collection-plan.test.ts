@@ -33,7 +33,7 @@ beforeAll(async () => {
   verify = await hotcrmStack();
   admin = await verify.signIn();
   rep = await signUpPerson(verify, 'rep@o2c-collection-plan.test', {
-    name: 'Plan Rep', positions: ['sales_rep'], permissionSets: ['sales_rep'],
+    name: 'Plan Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
   [wayne] = await verify.rows('crm_contract', { payment_terms: 'net_60' });
   [acme] = await verify.rows('crm_contract', { contract_value: 220000 });

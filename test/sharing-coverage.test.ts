@@ -258,10 +258,10 @@ describe('who can read a case they do not own', () => {
         'history; removing one takes a persona back to own-only — both are decisions, and ' +
         'both belong in a PR that also updates the admin docs and this list.',
     ).toEqual([
-      'case_director_sharing→service_director:read',
+      'case_director_sharing→crm_service_director:read',
       // A FIELD recipient (#2060 item 3): the one user the case names, not a position.
       'case_escalated_from_sharing→escalated_from:read',
-      'case_escalation_sharing→service_manager:edit',
+      'case_escalation_sharing→crm_service_manager:edit',
     ]);
   });
 
@@ -277,7 +277,7 @@ describe('who can read a case they do not own', () => {
 
   it('no rule widens crm_case to service_agent — agents reach unowned cases through the queue', () => {
     const bad = caseRules()
-      .filter((r) => r.sharedWith?.type === 'position' && r.sharedWith?.value === 'service_agent')
+      .filter((r) => r.sharedWith?.type === 'position' && r.sharedWith?.value === 'crm_service_agent')
       .map((r) => r.name as string);
     expect(bad, 'an agent-targeted case sharing rule is back').toEqual([]);
   });

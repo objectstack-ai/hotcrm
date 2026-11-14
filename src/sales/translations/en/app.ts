@@ -21,14 +21,12 @@ import type { TranslationData } from '@objectstack/spec/system';
 export const appSurface: Omit<TranslationData, 'objects'> = {
   apps: {
     crm_enterprise: {
-      label: 'HotCRM',
-      description: 'Customer relationship management for sales, service, and marketing',
+      label: 'Sales',
+      description: 'Leads, accounts, opportunities and quotes for the sales team',
       navigation: {
         group_activity: { label: 'Activity' },
         group_sales: { label: 'Sales' },
         group_order_to_cash: { label: 'Order to Cash' },
-        group_service: { label: 'Service' },
-        group_marketing: { label: 'Marketing' },
         group_help: { label: 'Help' },
       },
     },
@@ -86,7 +84,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: 'Avg Deal Size (Selected Period)', description: 'Average value of closed-won deals in the selected period' },
         lead_source: { title: 'Lead Source', description: 'Pipeline value by acquisition channel' },
         pipeline_by_stage: { title: 'Pipeline by Stage', description: 'Open opportunity value at each sales stage' },
-        top_products: { title: 'List Price by Category', description: 'Catalog list prices summed per product category, not sales' },
         pipeline_by_owner: { title: 'Pipeline by Owner', description: 'Open pipeline value and deal count per sales rep' },
       },
     },
@@ -154,7 +151,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     lead_detail_page: {
       label: 'Lead Detail',
       description: 'Comprehensive lead detail page with highlights, details, and related information',
-      title: '{first_name} {last_name}',
+      title: '{full_name}',
       subtitle: '{company}',
       components: {
         lead_duplicate_alert_confirmed: { label: 'Confirmed Duplicate Alert' },
