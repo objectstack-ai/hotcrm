@@ -18,10 +18,13 @@ import {
 /**
  * ═══ Billing hand-off — where HotCRM's revenue scope ends ══════════════════
  *
- * HotCRM owns lead → contract. It does **not** model Orders, Invoices or
- * Payments (maintainer decision, 2026-08-02): billing is an external system's
- * job. What the CRM owes that system is a reliable hand-off, and these two
- * flows are it:
+ * HotCRM owns lead → contract. Its core packages do **not** model Orders,
+ * Invoices or Payments (maintainer decision, 2026-08-02, as revised by
+ * REQ-0007): billing is an external system's job. The revision adds a window,
+ * not a book — the Order to Cash module (`src/o2c/`) shows sales the
+ * collection plan and the invoices and payments finance enters or imports;
+ * it issues nothing and sends nothing. What the CRM owes the billing system is
+ * still a reliable hand-off, and these two flows are it:
  *
  *   - `billing_handoff_closed_won`          — an opportunity ENTERS `closed_won`
  *     (this file; `crm_opportunity` is the sales package's object)

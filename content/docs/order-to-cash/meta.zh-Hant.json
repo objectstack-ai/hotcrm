@@ -1,0 +1,9 @@
+{
+  "title": "訂單與回款",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "collection-plan",
+    "invoices-and-payments"
+  ]
+}

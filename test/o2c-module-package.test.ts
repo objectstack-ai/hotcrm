@@ -40,10 +40,14 @@ describe('Order to Cash ships inside the HotCRM artifact (#2315)', () => {
     expect(Object.keys(o2c!.dependencies ?? {})).toEqual([APP_ID]);
   });
 
-  it('its one navigation contribution fills the app group the app keeps for it', () => {
+  it('it fills the app group the app keeps for it, and adds its manual under Help', () => {
     expect((o2c!.navigationContributions ?? []).map((c: AnyRec) => [c.app, c.group])).toEqual([
       ['crm_enterprise', GROUP],
+      ['crm_enterprise', 'group_help'],
     ]);
+    // Phase 1a (#2315): the group lists the module's three objects.
+    const items = (o2c!.navigationContributions[0].items ?? []) as AnyRec[];
+    expect(items.map((i) => i.objectName)).toEqual(['crm_billing_milestone', 'crm_invoice', 'crm_payment']);
     const group = (servedApp('crm_enterprise').navigation as AnyRec[]).find((n) => n.id === GROUP);
     expect(group?.type).toBe('group');
   });

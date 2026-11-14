@@ -47,6 +47,8 @@ Each saved mapping matches a row to an existing record by a business key:
 | **Account** | **Account Name** | A row naming an account that already exists updates it. Account names are unique within your organization. |
 | **Contact** | **Email** | A row whose email already belongs to a contact updates that contact, including the account it sits under. One email address belongs to one contact in your organization. |
 | **Lead** | **Email** | A row whose email already belongs to a lead updates that lead. |
+| **Invoice** | **ERP Reference** | A row carrying an invoice's ERP reference updates that invoice, so a nightly file from the ERP never doubles an invoice. Imported from **Invoices** (Order to Cash). |
+| **Payment** | **ERP Reference** | The same, for a payment. Imported from **Payments** (Order to Cash). |
 
 So re-running a corrected file updates rather than duplicates. It also means
 a row is matched to a record you did not mean: if the demo company is still

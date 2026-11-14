@@ -105,9 +105,9 @@ const tourOf = (name: string) => {
   const app = servedApp(name);
   const nav = (app.navigation ?? []) as AnyRec[];
   // A group with no served entry is not drawn — the console renders no empty
-  // group (measured for `group_order_to_cash`, #2315: its module contributes no
-  // item until phase 1) — so the tour, which says what the sidebar shows, leaves
-  // it out until something fills it.
+  // group (measured for `group_order_to_cash`, #2315, before its module
+  // contributed an item) — so the tour, which says what the sidebar shows, leaves
+  // such a group out until something fills it.
   const groups = nav.filter((n) => n.type === 'group' && ((n.children ?? []) as AnyRec[]).length > 0);
   const pinned = nav.filter((n) => n.type !== 'group');
   return {
@@ -351,11 +351,12 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 });
 
 describe('the source facts the quick-tour table now rests on (#960)', () => {
-  it('the Sales app has two pinned top-level entries and six groups', () => {
+  it('the Sales app has two pinned top-level entries and seven groups', () => {
     expect(PINNED.map((p) => p.label)).toEqual(['Home', 'Sales Home']);
     // Service and Marketing left with #2417, each to an app of its own.
     expect(GROUP_LABELS).toEqual([
       'Sales',
+      'Order to Cash',
       'My Work',
       'Activity',
       'Insights',
@@ -380,7 +381,7 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
 
   it('Reports and Help are the groups that stay collapsed (#2295, #2327)', () => {
     expect(COLLAPSED).toEqual(['Reports', 'Help']);
-    expect(EXPANDED).toEqual(['Sales', 'My Work', 'Activity', 'Insights']);
+    expect(EXPANDED).toEqual(['Sales', 'Order to Cash', 'My Work', 'Activity', 'Insights']);
   });
 
   it('carries no navigation label matching any name the page calls a phantom', () => {

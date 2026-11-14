@@ -8,9 +8,12 @@ import type * as Automation from '@objectstack/spec/automation';
  * of what is sent to it live.
  *
  * HotCRM's revenue scope ends at the signed contract (maintainer decision,
- * 2026-08-02): no Order / Invoice / Payment objects are modelled here. What the
- * CRM owes the billing system is a **reliable hand-off** — two outbound events,
- * delivered on the platform's durable HTTP outbox.
+ * 2026-08-02, as revised by REQ-0007): the core packages model no Order /
+ * Invoice / Payment objects. The Order to Cash module (`src/o2c/`) is a window
+ * onto finance's invoices and payments, entered or imported by finance, never
+ * a book or a sender. What the CRM owes the billing system is a **reliable
+ * hand-off** — two outbound events, delivered on the platform's durable HTTP
+ * outbox.
  *
  * ## Where the endpoint lives, and why that is a code change
  *

@@ -640,7 +640,8 @@ describe('the pack surface the rules scan (#2352)', () => {
     // Vacuity: a module pack that stops being found takes its objects' terms
     // out of every pack rule above without turning any of them red.
     expect(MODULE_PACKS).toEqual([
-      'src/marketing/translations/zh-CN.ts', 'src/revenue/translations/zh-CN.ts', 'src/service/translations/zh-CN.ts',
+      'src/marketing/translations/zh-CN.ts', 'src/o2c/translations/zh-CN.ts', 'src/revenue/translations/zh-CN.ts',
+      'src/service/translations/zh-CN.ts',
     ]);
   });
 });

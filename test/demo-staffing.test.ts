@@ -451,11 +451,11 @@ describe('staffing lines up with the rules that grant, and the nodes that route'
  * `sales_rep`, `sales_manager`, `service_agent` and `service_manager`, and Setup
  * showed no set on those positions and nobody on each set's Assigned Users panel.
  * The warning is read only for the positions a staffed person holds, the ones
- * this boot resolves; `marketing_user`, staffed by nobody, is held by the
- * roster pin alone.
+ * this boot resolves; `marketing_user` and `crm_ar_accountant`, staffed by nobody,
+ * are held by the roster pin alone.
  */
 describe('each position names the sets it distributes, and none is reached by the name fold (#2200)', () => {
-  it('declares the seven bindings, each to a set the app ships', () => {
+  it('declares the eight bindings, each to a set the app ships', () => {
     const declared = Object.fromEntries(
       [...positionNames].filter((p) => declaredSets(p).length > 0).map((p) => [p, declaredSets(p)]),
     );
@@ -469,6 +469,8 @@ describe('each position names the sets it distributes, and none is reached by th
       crm_marketing_director: ['marketing_user'],
       crm_marketing_manager: ['marketing_user'],
       crm_marketing_user: ['marketing_user'],
+      // Finance's Order to Cash set (#2315); staffed by nobody in the demo.
+      crm_ar_accountant: ['ar_accountant'],
     });
     expect(Object.values(declared).flat().filter((s) => !shippedSetNames.has(s)), 'a binding names a set the app does not ship').toEqual([]);
   });

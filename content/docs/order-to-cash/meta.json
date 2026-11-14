@@ -1,0 +1,9 @@
+{
+  "title": "Order to Cash",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "collection-plan",
+    "invoices-and-payments"
+  ]
+}

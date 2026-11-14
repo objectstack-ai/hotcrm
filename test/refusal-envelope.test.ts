@@ -151,11 +151,12 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // price for its product (one call in the shared price fill, swept once
     // per line object, so two), `quote_price_book`'s inactive-book and
     // book-change refusals, and `price_book_standard`'s refusal to delete a
-    // book quotes price from.
+    // book quotes price from; 41 until #2315 added `payment_plan_step_stamp`'s
+    // refusal of a payment naming another contract's invoice.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(41);
+    expect(sites).toHaveLength(42);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

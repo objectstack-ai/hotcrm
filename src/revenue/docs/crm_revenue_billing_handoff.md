@@ -16,9 +16,11 @@ sources:
 
 For sales representatives, sales managers and the administrator who connects
 HotCRM to billing. HotCRM runs the commercial side of a sale: finding the
-customer, agreeing the price, signing the contract. It does not invoice. There
-are no orders, invoices or payments in HotCRM; your billing system keeps those,
-and HotCRM tells it when there is something to bill.
+customer, agreeing the price, signing the contract. It does not invoice: your
+billing system issues invoices and takes payments, and HotCRM tells it when
+there is something to bill. Where your company uses the Order to Cash module,
+finance records those invoices and payments in HotCRM too, so sales can see
+them; that module has its own manual under Help.
 
 ## The two moments
 

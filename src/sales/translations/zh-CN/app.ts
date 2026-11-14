@@ -778,6 +778,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '市场专员',
       description: '日常策划和执行营销活动及其成员。',
     },
+    crm_ar_accountant: {
+      label: '应收会计',
+      description: '财务：录入和导入销售在每份合同上看到的发票与回款。',
+    },
     crm_na_sales_team: {
       label: '北美销售团队',
       description: '北美区域团队：可编辑北美区域内的每一个客户。',
@@ -789,6 +793,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
+    ar_accountant: {
+      label: '应收会计',
+      description: '财务：录入和导入每份合同的发票与回款，可查看其背后的合同、客户和回款计划。',
+    },
     crm_user: {
       label: 'CRM 用户',
       description: '每位成员的默认权限：自己的线索、客户、商机和活动，以及只读的目录数据；没有删除、导出、查看全部或任何系统权限。',

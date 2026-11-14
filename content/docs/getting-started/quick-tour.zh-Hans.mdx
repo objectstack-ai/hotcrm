@@ -50,22 +50,23 @@ HotCRM 是三个应用（见第 2 节），每个应用打开时都落在你的�
 - **Marketing** —— 营销活动，以及它触达的线索、联系人与客户；营销模块启用时才有。
 - **Admin** —— 面向系统管理员。
 
-启动器只列出你的工作需要的应用：销售代表看到 **Sales**，服务坐席与服务经理看到 **Service**，市场人员看到 **Sales** 与 **Marketing**，销售经理与管理员三个都看得到。这决定的是启动器显示什么，而不是你能打开什么：启动器上没有的应用，用它的地址照样能打开；记录链接会在你当前所在的应用里打开。
+启动器只列出你的工作需要的应用：销售代表看到 **Sales**，服务坐席与服务经理看到 **Service**，市场人员看到 **Sales** 与 **Marketing**，应收会计看到 **Sales**，销售经理与管理员三个都看得到。这决定的是启动器显示什么，而不是你能打开什么：启动器上没有的应用，用它的地址照样能打开；记录链接会在你当前所在的应用里打开。
 
-在 Sales 内，左侧导航最上面是两个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；**Sales Home**，销售代表自己的页面，汇总管道数字、线索、未结商机、未完成任务与即将到来的活动；其余内容分在 6 个分组里：
+在 Sales 内，左侧导航最上面是两个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；**Sales Home**，销售代表自己的页面，汇总管道数字、线索、未结商机、未完成任务与即将到来的活动；其余内容分在 7 个分组里：
 
 | 分组 | 内容 |
 | --- | --- |
 | **Sales** | Leads、Accounts、Contacts、Opportunities、Sales Performance、Contracts、Quotes、Products、Price Books、Product Catalog、Knowledge |
+| **Order to Cash** | Billing Milestones、Invoices、Payments |
 | **My Work** | My Tasks、My Deals、My Leads、My Calendar、Inbox |
 | **Activity** | Events、Sales Activity |
 | **Insights** | CRM Overview、Forecasts |
 | **Reports** | Opportunities by Stage、Won Opportunities by Owner、Pipeline Coverage by Quarter、Opportunity Funnel by Owner、Lead Engagement by Month、Accounts by Industry and Type、Customer Churn Signals |
-| **Help** | User Manual、Admin Manual、Revenue Manual |
+| **Help** | User Manual、Admin Manual、Revenue Manual、Order to Cash Manual |
 
 上表用的是源码里的英文 label，也就是英文界面上看到的名字。简体中文界面下，它们显示为语言包里的译名——例如 **Inbox** 显示为「待我审批」、**Knowledge** 显示为「知识库」、**My Work** 显示为「我的工作」。
 
-**Reports** 和 **Help** 这两个分组在应用加载时是折叠的——**Sales**、**My Work**、**Activity**、**Insights** 都会自动展开。先把 **Reports** 点开，再判断某份报表在不在这里。**Help** 打开应用内手册；**Admin Manual** 只对管理员显示。
+**Reports** 和 **Help** 这两个分组在应用加载时是折叠的——**Sales**、**Order to Cash**、**My Work**、**Activity**、**Insights** 都会自动展开。先把 **Reports** 点开，再判断某份报表在不在这里。**Help** 打开应用内手册；**Admin Manual** 只对管理员显示。
 
 建立在商机之上的条目——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview**，以及 **Reports** 下的四张商机报表——不能读取商机的人在侧边栏里看不到；服务坐席与服务经理即使用地址打开 Sales 应用，也按岗位看不到它们：他们名下没有商机，**Opportunities** 与 **My Deals** 对他们总是空的，所以这两个条目也不对他们显示。其余报表对各自的数据也是同样的要求。销售代表也看不到 **Home**，所以销售代表的侧边栏从 **Sales Home** 开始。**Sales** 最后一项 **Knowledge** 是给销售代表的：它打开已发布的文章，只对销售代表显示。其他人在 **Service** 里找到 **Knowledge**。
 
