@@ -4,7 +4,16 @@
 - **Source**: IT-services / software-outsourcing customer (project-based delivery, monthly timesheets, Bizcase-driven cost baselines). Handed over as a one-sheet spreadsheet, 40 numbered steps across 8 business stages, on 2026-09-14.
 - **Raised**: 2026-09-14
 - **Disposition**: **B standard-enhancement**, in two tracks — steps 1–14 are enhancements to objects the sales module already owns; steps 15–40 are a **new standard PSA module** designed in [`../architecture/psa-module-plan.md`](../architecture/psa-module-plan.md). Individual steps carry **C** (customer overlay) or **D** (declined/deferred) where noted below.
-- **Traceability**: design — `docs/architecture/psa-module-plan.md`; card — hotcrm#2316; changesets / PRs — phase 0 (the module and the Project Delivery app skeleton): `.changeset/psa-phase-0-module.md`, PR to be linked on merge; later phases filled in as they land.
+- **Traceability**: design — `docs/architecture/psa-module-plan.md`; card — hotcrm#2316 (phases 0–1);
+  changesets / PRs — phase 0: the module and the Project Delivery app skeleton
+  (`.changeset/psa-phase-0-module.md`, #2471); phase 1a: the project, team, rate card, timesheet,
+  time entry and expense objects with their positions, permission sets and sharing rules
+  (`.changeset/psa-phase-1a-projects.md`, #2472); phase 1b: initiation, timesheet and expense
+  approvals, budget status with the 80 % / 100 % notices, and the lock
+  (`.changeset/psa-phase-1b-approvals.md`, #2473); phase 1c: the Projects Overview dashboard, the
+  `project_financials` and `time_utilization` datasets and the Project Delivery Manual
+  (`.changeset/psa-phase-1c-overview.md`, #2477); the maintainer's 2026-11-15 ruling that team
+  members read the account but not the opportunity (`.changeset/psa-member-account-read.md`, #2478).
 
 > **Maintainer ruling on how to read this record** (2026-09-14, verbatim, untranslated):
 > 「hotcrm 是标准模版，如果开发 psa 也是应该按标准产品的方向设计，不应该受限于这个 excel」
