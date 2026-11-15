@@ -141,6 +141,13 @@ export const esES: TranslationData = {
       },
     },
   },
+  hooks: {
+    campaign_member_unique: {
+      refusals: {
+        DUPLICATE_VALUE: { message: '{{ person }} ya es miembro de {{ campaign }}. Abra esa membresía en lugar de añadir otra.' },
+      },
+    },
+  },
   flows: {
     campaign_enrollment: {
       label: 'Inscribir miembros en la campaña',
