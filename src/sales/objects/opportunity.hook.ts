@@ -23,6 +23,33 @@ const opportunityValidationHook: Hook = {
   priority: 200,
   description:
     'Recompute expected_revenue, freeze closed opportunities except narrative fields.',
+  // The large-deal and closed-deal sentences name values the handler prints
+  // in English (the amount line, the Approval Status label, the editable
+  // fields); the other languages write their own labels.
+  refusals: {
+    RECORD_LOCKED: {
+      message: "This deal's status change needs approval: set Requested Status (and the win/loss reason) instead. The stage takes effect when the request is approved.",
+      status: 409,
+      params: ['amount', 'status', 'subject', 'name', 'editable'],
+      reasons: {
+        qualification_stage: { message: 'This deal needs qualification approval first: tick Request Qualification Approval. Stage can change once it is approved.' },
+        qualification_requested_status: { message: 'This deal needs qualification approval first: tick Request Qualification Approval. Requested Status can change once it is approved.' },
+        qualification_both: { message: 'This deal needs qualification approval first: tick Request Qualification Approval. Stage and Requested Status can change once it is approved.' },
+        large_create: {
+          message: 'A deal of {{amount}} or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is {{status}}. Create it at an open stage to send it for approval; it can be Closed Won once approved. Only an administrator can create it already won.',
+        },
+        large_pending: { message: 'A deal of {{amount}} or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is {{status}}. It can be Closed Won once the request is approved.' },
+        large_rejected: {
+          message: 'A deal of {{amount}} or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is {{status}}. Revise the deal and save it to send it for approval again; it can be Closed Won once approved.',
+        },
+        large_unsent: {
+          message: 'A deal of {{amount}} or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is {{status}}. Save the deal without closing it to send it for approval; it can be Closed Won once approved.',
+        },
+        closed_won: { message: '{{subject}} is closed (Closed Won); only its {{editable}} can still be edited.' },
+        closed_lost: { message: '{{subject}} is closed (Closed Lost); only its {{editable}} can still be edited.' },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -164,11 +191,11 @@ const opportunityValidationHook: Hook = {
           held.push('Requested Status');
         }
         if (held.length > 0) {
-          throw refuse(
+          throw Object.assign(refuse(
             `This deal needs qualification approval first: tick Request Qualification Approval. ${held.join(' and ')} can change once it is approved.`,
             'RECORD_LOCKED',
             409,
-          );
+          ), { reason: held.length > 1 ? 'qualification_both' : held[0] === 'Stage' ? 'qualification_stage' : 'qualification_requested_status' });
         }
       }
     }
@@ -303,14 +330,17 @@ const opportunityValidationHook: Hook = {
             : verdict === 'rejected'
               ? 'Revise the deal and save it to send it for approval again; it can be Closed Won once approved.'
               : 'Save the deal without closing it to send it for approval; it can be Closed Won once approved.';
-        throw refuse(
+        throw Object.assign(refuse(
           creating
             ? `A deal of LARGE_DEAL_AMOUNT (${LARGE_DEAL_AMOUNT}) or more is created at closed_won only by an administrator (position platform_admin, org_owner or org_admin); amount is ${dealAmount}, approval_status is ${verdict ?? 'unset'}.`
             : `A deal of LARGE_DEAL_AMOUNT (${LARGE_DEAL_AMOUNT}) or more moves to closed_won only once approval_status is approved; amount is ${dealAmount}, approval_status is ${verdict ?? 'unset'}.`,
           'RECORD_LOCKED',
           409,
           `A deal of ${line} or more needs Large Deal Approval before it can be Closed Won, and its Approval Status is ${shown}. ${next}`,
-        );
+        ), {
+          reason: creating ? 'large_create' : verdict === 'pending' ? 'large_pending' : verdict === 'rejected' ? 'large_rejected' : 'large_unsent',
+          params: { amount: line, status: shown },
+        });
       }
     }
 
@@ -418,12 +448,12 @@ const opportunityValidationHook: Hook = {
           const STAGE_LABELS: Record<string, string> = { closed_won: 'Closed Won', closed_lost: 'Closed Lost' };
           const NARRATIVE_LABELS: Record<string, string> = { description: 'Description', next_step: 'Next Steps' };
           const editable = [...NARRATIVE_FIELDS].map((k) => NARRATIVE_LABELS[k]).filter(Boolean).join(' and ');
-          throw refuse(
+          throw Object.assign(refuse(
             `${subject} is closed (${prevStage}); only ${[...NARRATIVE_FIELDS].join(', ')} may be edited. Attempted: ${violating.join(', ')}.`,
             'RECORD_LOCKED',
             409,
             `${subject} is closed (${STAGE_LABELS[prevStage as string]}); only its ${editable} can still be edited.`,
-          );
+          ), { reason: prevStage === 'closed_lost' ? 'closed_lost' : 'closed_won', params: { subject, name, editable } });
         }
       }
     }
@@ -689,6 +719,12 @@ const opportunityAccountCapabilityHook: Hook = {
   runAs: 'system',
   description:
     'Refuse a NEW opportunity linked to an account whose commercial capability is settlement only.',
+  refusals: {
+    VALIDATION_FAILED: {
+      message: 'Cannot open an opportunity against this account: its Commercial Capability is Settlement Only, so it is available for billing and payment but no new business may be booked against it. Pick a different account, or have the account reclassified to Full first.',
+      status: 400,
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an

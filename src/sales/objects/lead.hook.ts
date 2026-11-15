@@ -36,6 +36,20 @@ const leadHook: Hook = {
   priority: 200,
   description:
     'Score new leads, lock converted leads, and create follow-up task on qualification.',
+  // `target`, `subject` and `fields` are the English phrases the handler
+  // composes (with the field labels it writes out); the other languages name
+  // the lead from `lead` and leave the attempted fields to the English log.
+  refusals: {
+    RECORD_LOCKED: {
+      message: 'Cannot change {{fields}} on {{subject}}; only its Description and Notes can still be edited. Make changes on the converted records instead.',
+      status: 409,
+      params: ['target', 'subject', 'fields', 'lead'],
+      reasons: {
+        convert_pending: { message: 'Cannot convert {{target}}: its conversion is still awaiting approval. Conversion opens once an approver signs it off — the Conversion Approval field on the lead shows where it stands.' },
+        convert_rejected: { message: 'Cannot convert {{target}}: its conversion was rejected. Conversion opens once an approver signs it off — the Conversion Approval field on the lead shows where it stands.' },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -208,11 +222,11 @@ const leadHook: Hook = {
           typeof previous?.company === 'string' ? previous.company.trim() : '';
         const label = [person, company].filter(Boolean).join(' - ');
         const state = verdict === 'rejected' ? 'was rejected' : 'is still awaiting approval';
-        throw refuse(
+        throw Object.assign(refuse(
           `Cannot convert ${label ? `lead ${label}` : 'this lead'}: its conversion ${state}. Conversion opens once an approver signs it off — the Conversion Approval field on the lead shows where it stands.`,
           'RECORD_LOCKED',
           409,
-        );
+        ), { reason: verdict === 'rejected' ? 'convert_rejected' : 'convert_pending', params: { target: label ? `lead ${label}` : 'this lead', lead: label } });
       }
     }
 
@@ -376,12 +390,12 @@ const leadHook: Hook = {
             ? `${attempted.slice(0, -1).join(', ')} and ${attempted[attempted.length - 1]}`
             : attempted[0];
 
-          throw refuse(
+          throw Object.assign(refuse(
             `Cannot edit ${lead} (attempted: ${violating.join(', ')}). Make changes on the converted records instead.`,
             'RECORD_LOCKED',
             409,
             `Cannot change ${named} on ${lead}; only its Description and Notes can still be edited. Make changes on the converted records instead.`,
-          );
+          ), { params: { subject: lead, fields: named, lead: label } });
         }
       }
     }

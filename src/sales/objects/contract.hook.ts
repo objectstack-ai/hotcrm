@@ -26,6 +26,18 @@ const contractValidation: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description: 'Enforce contract term math and prevent shrinking end_date once activated.',
+  refusals: {
+    VALIDATION_FAILED: {
+      message: 'Contract term ({{term}} months) does not match date range ({{calc}} months from {{start}} to {{end}}).',
+      status: 400,
+      params: ['term', 'calc', 'start', 'end'],
+    },
+    RECORD_LOCKED: {
+      message: "An activated contract's End Date cannot move earlier ({{from}} → {{to}}). Use a termination/amendment workflow instead.",
+      status: 409,
+      params: ['from', 'to'],
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -77,11 +89,11 @@ const contractValidation: Hook = {
     if (startDate && endDate && term) {
       const calc = monthsBetween(startDate, endDate);
       if (Math.abs(calc - term) > 1) {
-        throw refuse(
+        throw Object.assign(refuse(
           `Contract term (${term} months) does not match date range (${calc} months from ${startDate} to ${endDate}).`,
           'VALIDATION_FAILED',
           400,
-        );
+        ), { params: { term, calc, start: startDate, end: endDate } });
       }
     }
 
@@ -91,13 +103,13 @@ const contractValidation: Hook = {
         typeof previous.end_date === 'string' &&
         input.end_date < previous.end_date
       ) {
-        throw refuse(
+        throw Object.assign(refuse(
           // The field by its label, never its API name (#2338 item 12);
           // `test/refusal-labels.test.ts` reads the label off `crm_contract`.
           `An activated contract's End Date cannot move earlier (${previous.end_date as string} → ${input.end_date}). Use a termination/amendment workflow instead.`,
           'RECORD_LOCKED',
           409,
-        );
+        ), { params: { from: previous.end_date as string, to: input.end_date } });
       }
     }
   },
