@@ -93,6 +93,15 @@ const FILES_ENABLED = [
  */
 const DEFAULT_SET = 'crm_user';
 
+/**
+ * The read-only sets (#2490, #2492, both ruled A: no create, edit, delete or
+ * export anywhere). They read every panel and write none of it themselves.
+ * The parent gate would refuse their upload and delete anyway (they edit no
+ * parent); posting a comment on a record they read is the `crm_user` floor's,
+ * which every member holds, and is unchanged.
+ */
+const READ_ONLY_SETS = new Set(['sales_leadership', 'service_director']);
+
 const filesFlag = (name: string) => objectByName.get(name)?.enable?.files;
 const feedsFlag = (name: string) => objectByName.get(name)?.enable?.feeds;
 
@@ -159,7 +168,7 @@ describe('enable.files is authored exactly where attachments belong', () => {
       const perm = (ps.objects ?? {})[name];
       return perm?.allowRead === true || perm?.viewAllRecords === true;
     };
-    const writes = (name: string) => name !== DEFAULT_SET;
+    const writes = (name: string) => name !== DEFAULT_SET && !READ_ONLY_SETS.has(name);
     const wrong = permissionSets
       .filter((ps) => ps.name !== 'guest_portal')
       .filter((ps) => FILES_ENABLED.some((name) => canRead(ps, name)))
@@ -171,7 +180,7 @@ describe('enable.files is authored exactly where attachments belong', () => {
       .map(({ name }) => name);
     expect(
       wrong,
-      'sets whose sys_attachment grant is not exactly read + create + delete (crm_user: read) — every set ' +
+      'sets whose sys_attachment grant is not exactly read + create + delete (crm_user and the read-only sets: read) — every set ' +
         'that opens a files-enabled record lists, uploads and deletes its attachments, where the parent allows ' +
         `(canonical note in src/sales/objects/index.ts):\n  ${wrong.join('\n  ')}`,
     ).toEqual([]);
@@ -225,7 +234,9 @@ describe('enable.feeds is left at its default', () => {
     // be admitted (objectstack-ai/objectstack#24549, in 18.1.0). The default
     // set carries no delete (see DEFAULT_SET).
     const expected = (name: string): Record<string, AnyRec> => ({
-      sys_comment: { allowRead: true, allowCreate: true, allowEdit: true, allowDelete: name !== DEFAULT_SET, viewAllRecords: false, modifyAllRecords: false },
+      sys_comment: READ_ONLY_SETS.has(name)
+        ? { allowRead: true, allowCreate: false, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false }
+        : { allowRead: true, allowCreate: true, allowEdit: true, allowDelete: name !== DEFAULT_SET, viewAllRecords: false, modifyAllRecords: false },
       sys_activity: { allowRead: true, allowCreate: false, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     });
     const readsARecord = (ps: AnyRec) => businessObjects.some((name) => {
@@ -241,7 +252,7 @@ describe('enable.feeds is left at its default', () => {
         .map(([object]) => `${ps.name as string} → ${object}`));
     expect(
       wrong,
-      'sets whose Discussion grants are not exactly sys_comment read + create + edit + delete (crm_user: no delete) ' +
+      'sets whose Discussion grants are not exactly sys_comment read + create + edit + delete (crm_user: no delete; the read-only sets: read) ' +
         'and sys_activity read ' +
         `(canonical note on enable.feeds in src/sales/objects/index.ts):\n  ${wrong.join('\n  ')}`,
     ).toEqual([]);
