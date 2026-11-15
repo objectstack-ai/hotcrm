@@ -1,5 +1,57 @@
 # Changelog
 
+## 6.4.0
+
+### Minor Changes
+
+- 52f6816: Clause-②: no
+  Metadata-protocol: none
+  
+  **Reps keep the collection plan, and finance enters invoices and payments (#2462).** Billing Milestones, Invoices and Payments now ask only read access to their contract for a write (`writeRequiresMasterRead`, ObjectStack 18.5.0, objectstack#33250). A sales rep adds, edits and removes the plan steps of any contract they can read, and the Accounts Receivable position enters and imports invoices and payments on every contract, without either being given edit on the contract. Each still writes only what their permission set allows: reps never write an invoice or a payment, finance never changes the plan, and someone who cannot read a contract writes none of the three. The "for now, an administrator enters them" notes are gone from the Order to Cash docs and the in-app manual in every language.
+- 81efb1c: Clause-②: no
+  Metadata-protocol: none
+  
+  **Project Delivery joins HotCRM as a module, with its own app (#2316, phase 0).** HotCRM now ships a sixth package, `app.objectstack.hotcrm.psa`, the professional-services (PSA) module the maintainer ruled on 2026-11-15: a suite module with its own **Project Delivery** app (「项目交付」), depending on the HotCRM app package only. In this phase the app is a skeleton: it lists Accounts, Opportunities, Contracts, the approvals Inbox and My Tasks, and every business role's permission set hides it from the launcher, so only members who hold none of those sets see it (administrators, and the executive and director positions, which already see every app); every business role keeps the apps it had. Projects, staffing, rate cards, timesheets, expenses, their approvals and the cost and margin roll-ups arrive in phase 1, which opens the app to the delivery roles. A tenant that disables the module loses the app with it. Labels ship in en, zh-CN, ja-JP and es-ES. No existing object, field or permission changes.
+- 11b0576: Clause-②: no
+  Metadata-protocol: none
+  
+  **Project Delivery gets its records: projects, staffing, rate cards, timesheets and expenses, with cost and margin (#2316, phase 1a).** The Project Delivery module now owns six objects. A **Project** (presales, delivery or internal) hangs off an account and may name its opportunity and contract; people are staffed on it as **Project Members** at a **Rate Card** that holds a cost rate and a bill rate per hour or per day. Each person books hours on a **Timesheet** of **Time Entries** and spending as **Expenses**. A time entry copies its rates when it is written, so a rate change never rewrites past cost. Once a timesheet or expense is approved, the project's Labor Cost, Expense Cost, Actual Cost, Budget Remaining, Budget Used, Gross Margin and Approved to Bill move with it; none of them is typed in. Only the approver stamped on the record (the project's Project Manager when it was created) or an administrator can approve or reject it. Projects are private: the team staffed on a project reads it and its Project Manager edits it. Five new positions (Project Director, PMO, Project Manager, Project Team Member, Finance Controller) carry three new permission sets (`project_manager`, `project_member`, `finance_controller`). Team members never see cost rates, entry cost or project margin. Sales managers now see the Project Delivery app and read every project; sales reps read the projects shared with them and keep the app hidden. Demo data adds six rate cards and six projects in en and zh-CN. User docs ship under *Project Delivery* in en, zh-Hans and zh-Hant, and labels in en, zh-CN, ja-JP and es-ES. Approval routing, budget alerts and the project lock follow in phase 1b.
+- 78a4b5c: Clause-②: no
+  Metadata-protocol: none
+  
+  **Project Delivery approvals and cost control (#2316, phase 1b).** A project is now sent for approval by setting In Approval, and it needs an Approved Budget to go. Every Project Director and PMO holder can decide from their Inbox, and the first decision counts. A budget of 100,000 or more then also goes to a Finance Controller. Once approved, the project manager makes the project Active. A rejected project goes back to Draft for revision, and a recall puts it back to Draft. Submitting a timesheet or an expense now asks its approver (the project manager) in the Inbox. An expense of 2,000 or more then also goes to finance. Nobody is asked to approve their own hours or spend: an administrator decides instead. People no longer set Approved or Rejected by hand. A project, timesheet or expense is locked while it waits. Each project now carries a **Budget Status** (On Track, Warning from 80 % of the Approved Budget, Exceeded from 100 %), kept from approved cost. When the status crosses into Warning or Exceeded, the project manager and every Finance Controller get one inbox notice and one email per crossing, proposing the lock. Ticking **Lock Time and Expenses** on a project blocks every submission on it, while drafts can still be written. From In Approval on, only a Finance Controller can change a project's **Approved Budget** (anyone else is refused and told to ask finance), so a project at 90 % is not put back On Track without finance; until now the field was read-only to everyone, finance included. The user docs under *Project Delivery* describe the new flow in en, zh-Hans and zh-Hant, and labels are in en, zh-CN, ja-JP and es-ES.
+- 49685f1: Clause-②: no
+  Metadata-protocol: none
+  
+  **Project Delivery overview and manual (#2316, phase 1c).** The Project Delivery app now has a **Projects Overview** dashboard under Projects: budget, actual cost, budget used, margin by project, projects by budget status and by status, approved hours by week, and each person's billable share. The money tiles count the projects that are spending (Active, On Hold, Completed) and approved cost only; the hours tiles count approved timesheets only. Budget Used is the portfolio's total cost over its total budget, so a large project weighs more than a small one. The dashboard has no date picker, because a running project would fall out of its own figures. It counts what the viewer can read: a project manager sees the projects they manage, while finance, project directors and the PMO see every project. Someone staffed only as a team member cannot read project cost, so the entry is left out of their sidebar. Two datasets back it, `project_financials` (one row per project) and `time_utilization` (one row per timesheet, by the week it starts), and timesheets gain a **Billable Hours** total beside Total Hours. A **Project Delivery Manual** under Help explains the rules the screens do not show: staffing, how an hour is costed, who approves what, budget status and the lock, and what the dashboard counts. It is in en and zh-CN, the dashboards and cubes pages in the docs cover the new dashboard and datasets in en, zh-Hans and zh-Hant, and labels are in en, zh-CN, ja-JP and es-ES. Nothing changes on the executive dashboard.
+
+### Patch Changes
+
+- 1b95f80: Clause-②: no
+  Metadata-protocol: none
+  
+  **HotCRM runs on ObjectStack 18.5.0.** Every `@objectstack/*` package moves from 18.4.0 to 18.5.0 together, and every package manifest and `objectstack.manifest.json` declare `^18.5.0`. Upgrade the host to ObjectStack 18.5.0 first, and walk the platform's 18.5.0 upgrade checklist. No HotCRM metadata changes with this bump. The Order to Cash write opt-in (#2462) and the PSA weekly-hours dataset (#2483) that 18.5.0 makes possible follow in their own entries.
+- 4ac34fb: Clause-②: no
+  Metadata-protocol: none
+  
+  **Projects Overview counts each approved hour in the week it was worked.** The Time Utilization dataset (`time_utilization`) now reads time entries, with the timesheet included for the person, the project and the approval, so a timesheet that crosses a week is split between the two weeks instead of landing in the week it starts. The Approved Hours by Week and Billable Share by Person tiles filter on the timesheet's status, which ObjectStack 18.5.0 serves across the include (objectstack#33512). Dimension and measure names are unchanged. The analytics pages and the Project Delivery Manual say so (#2483).
+- 19ca031: Clause-②: no
+  Metadata-protocol: none
+  
+  **Project team members see the customer, not the deal (#2316, ruling D).** The Project Member permission set now reads every account, read-only, so a consultant's project page shows its Account by name instead of a restricted-record placeholder. Opportunities stay closed to them: the project's Opportunity field is hidden from the Project Member set, and no opportunity opens for them. The Who can do what section of the Project Delivery docs (en, zh-Hans, zh-Hant) and the in-app Project Delivery Manual (en, zh-CN) say so.
+- 4ecdd8f: Clause-②: no
+  Metadata-protocol: none
+  
+  **A project team member no longer sees an empty Opportunities entry in the Project Delivery app.** Every member reads their own opportunities through the default CRM User set, so the entry stayed in a consultant's menu and opened an empty list. It is now held back from someone staffed only as a project team member (hotcrm#2316 ruling D: a member sees the customer, not the deal); a member who also holds a delivery-management, finance, sales or marketing position keeps it. Visibility only: nothing a member may read changes, and the Sales app's entries are untouched.
+- ee6b962: Clause-②: no
+  Metadata-protocol: none
+  
+  **The README's opening line now states HotCRM's positioning:** "the reference app for AI-written enterprise software: a complete CRM in typed ObjectStack metadata", the same wording as the repository description. The README is also the marketplace listing text. Nothing changes in an installed app.
+- 6ff5e66: Clause-②: no
+  Metadata-protocol: none
+  
+  **The source token ratchet is retired (hotcrm#2468).** HotCRM no longer claims that the whole CRM fits in one AI context window, so the check that held each package's authored size under a fixed ceiling (`scripts/check-source-token-ratchet.mjs`, `pnpm hygiene:tokens`, since #1183) is removed, with its CI steps, its place in `pnpm verify`, its tests, every per-package ceiling and the README's token figures. Package size is no longer gated. Nothing changes for an installed app: no metadata, data or behaviour moves. The entry-point helper `scripts/lib/main-module.mjs` and its guard suite go too, since the ratchet was their last caller. The comment stripper the Chinese-term docs guard relies on now lives in `scripts/lib/strip-comments.mjs`, with its own tests.
+
 ## 6.3.0
 
 ### Minor Changes

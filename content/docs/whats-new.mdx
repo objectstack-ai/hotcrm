@@ -63,23 +63,66 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v6.3.0 — Latest release
+## v6.4.0 — Latest release
 
-**HotCRM 6.3.0**, like 6.2.1 and 6.2.0, shipped on **ObjectStack 18.4.0**. The repository has since
-moved every `@objectstack/*` package to **ObjectStack 18.5.0**, and its manifest declares the matching
-`^18.5.0` protocol range, so a
+**HotCRM 6.4.0** runs on **ObjectStack 18.5.0** across every `@objectstack/*` package, and its
+manifest declares the matching `^18.5.0` protocol range, so a
 runtime on a different protocol major — a 17.x host included — refuses the load up front with a
-structured diagnostic instead of failing deep in a schema parse. 6.1.2, 6.1.1 and 6.1.0 shipped on
+structured diagnostic instead of failing deep in a schema parse. 6.3.0, 6.2.1 and 6.2.0 shipped on
+ObjectStack 18.4.0; 6.1.2, 6.1.1 and 6.1.0 on
 ObjectStack 18.3.0, 6.0.0 on ObjectStack
 18.0.0, 5.1.2, 5.1.1 and 5.1.0 on ObjectStack 18.0.0-next.3, 5.0.0 on ObjectStack
 18.0.0-next.2, and 4.0.1 on ObjectStack 17.7.0.
 
+**6.4.0 is the first version published since 6.2.0.** 6.2.1 and 6.3.0 were cut in the repository
+but never published, so an environment on 6.2.0 gets all three at once: read "What 6.3.0 changes"
+and "What 6.2.1 changes" below as well, and their checks.
+
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 6.3.0 are
+> entry every pull request adds. The versions between v1.0 and 6.4.0 are
 > recorded there and are deliberately not re-listed here — a hand-maintained
 > copy of that history is exactly how this section came to advertise a "v5.0"
 > while the app was at 2.2.2, on a platform major that never shipped it.
+
+### What 6.4.0 changes
+
+- **Project Delivery, a new module with its own app.** HotCRM now ships a sixth package,
+  `app.objectstack.hotcrm.psa`, and the **Project Delivery** app. A **Project** (presales, delivery
+  or internal) hangs off an account and may name its opportunity and contract. People are staffed on
+  it as **Project Members** at a **Rate Card** with a cost rate and a bill rate. They book hours on
+  **Timesheets** and spending as **Expenses**. Approved hours and expenses move the project's cost,
+  budget used and gross margin; none of them is typed in.
+- **Approvals and cost control for projects.** A project needs an Approved Budget and an approval to
+  go Active: a Project Director or PMO, and finance as well from a budget of 100,000. Timesheets go to
+  the project manager, and expenses from 2,000 also to finance. **Budget Status** turns Warning at
+  80 % and Exceeded at 100 % of the budget, and the crossing notifies the project manager and
+  finance. **Lock Time and Expenses** stops new submissions.
+- **Projects Overview and the Project Delivery Manual.** The dashboard shows budget, cost, margin,
+  approved hours by the week they were worked, and each person's billable share, counting what the
+  viewer can read. The manual under Help explains the rules the screens do not show.
+- **Who sees what in Project Delivery.** Five new positions (Project Director, PMO, Project Manager,
+  Project Team Member, Finance Controller) carry three permission sets. Team members read the
+  project's account but not its opportunity, and never see cost rates or margin. Sales managers read
+  every project.
+- **Reps keep the collection plan, and finance enters invoices and payments.** Billing Milestones,
+  Invoices and Payments now ask only read access to their contract. A sales rep writes the plan of
+  any contract they can read, and the Accounts Receivable position enters and imports invoices and
+  payments. Nobody who cannot read a contract writes any of the three. This lifts the gap 6.3.0
+  shipped with.
+- **ObjectStack 18.5.0.** No HotCRM metadata changes with the platform bump itself; the Order to Cash
+  writes and the weekly hours above are what it makes possible.
+
+**Check these before and after upgrading to 6.4.0:**
+
+- **Upgrade the host to ObjectStack 18.5.0 first**, and walk the platform's 18.5.0 upgrade checklist.
+- **Give the delivery roles their positions.** Assign Project Director, PMO, Project Manager,
+  Project Team Member and Finance Controller in **Setup → People & Organization → Position
+  Holders**, then sign in as a project manager and see the Project Delivery app in the launcher.
+- **Finance can now save invoices and payments.** The 6.3.0 note below that an administrator enters
+  them no longer applies. Sign in as an Accounts Receivable member and save an invoice on a contract.
+- **A tenant that does not deliver projects disables the module.** Disabling
+  `app.objectstack.hotcrm.psa` removes the app and its objects with it.
 
 ### What 6.3.0 changes
 
