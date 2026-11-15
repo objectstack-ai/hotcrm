@@ -283,7 +283,10 @@ describe('the mechanism, on the real engine', () => {
         'routing. If this ever fails, the engine gained a reader for the singular ' +
         '`config.condition` on a decision node and this whole file needs re-deriving.',
     ).toEqual(control);
-  });
+    // Four scheduled sweeps and a flow registration on the real engine: past
+    // vitest's 5 s case default on CI (2dbef9e). The suite's boot carries
+    // 120_000; this case gets an explicit budget of its own.
+  }, 30_000);
 
   /**
    * Why the node was NOT made authoritative (#650, option 2a rejected).
@@ -354,5 +357,7 @@ describe('the mechanism, on the real engine', () => {
         'authoritative became safe. Re-open the 2a/2b choice in #650 — do not just ' +
         'delete this case.',
     ).toEqual(['NUDGED']);
-  });
+    // Two flow registrations and runs on the real engine, the same CI budget
+    // as the case above.
+  }, 30_000);
 });
