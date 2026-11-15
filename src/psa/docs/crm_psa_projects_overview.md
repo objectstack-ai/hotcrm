@@ -31,7 +31,8 @@ and hours across every project you can read.
 
 - **Approved timesheets only.** **Approved Hours by Week** and **Billable Share
   by Person** count hours on approved timesheets; submitted and draft hours are
-  left out until they are approved. A timesheet's hours fall in the week the timesheet starts.
+  left out until they are approved. Each hour falls in the week of the day it
+  was worked, so a timesheet that crosses a week is split between the two.
 - **Billable Share** is billable hours over all hours, for each person.
   Hours from a non-billable staffing count in the total, not in the billable
   part.
