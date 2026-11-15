@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import stack from './helpers/composed-stack';
+import { platformMajorOf } from './helpers/platform-version';
 
 /**
  * Date-bucket guard for the analytics semantic layer (#523).
@@ -121,9 +122,11 @@ const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as AnyRec;
 const majorOf = (name: string): number => {
   const range = pkg.dependencies?.[name] ?? pkg.devDependencies?.[name];
   if (!range) throw new Error(`granularity guard out of date: "${name}" is not a dependency`);
-  const m = String(range).match(/(\d+)\./);
-  if (!m) throw new Error(`granularity guard cannot read a major out of "${name}": "${range}"`);
-  return Number(m[1]);
+  // A `next` snapshot pin (`0.0.0-next-…`) reads as the line it is cut from,
+  // not as major 0 (helpers/platform-version.ts).
+  const major = platformMajorOf(String(range));
+  if (Number.isNaN(major)) throw new Error(`granularity guard cannot read a major out of "${name}": "${range}"`);
+  return major;
 };
 
 const platformMajor = Math.min(...GAP_OWNERS.map(majorOf));
