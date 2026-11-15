@@ -43,3 +43,8 @@ record updates that record instead of adding one. Every imported row reads
 **Source: Import** and carries **Synced At**, the time of the import. Contracts
 are named by their number (CTR-0001), invoices by their number and milestones
 by their name.
+
+**A milestone name used on more than one contract fails the row** ("matches
+more than one record"): the import looks the name up across every contract.
+Put the milestone's record ID in that column instead, the end of the address
+of its page.

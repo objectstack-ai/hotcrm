@@ -67,5 +67,6 @@ Finance can load invoices and payments from a spreadsheet, an accounting package
 - **The ERP Reference is the key.** Importing a row whose **ERP Reference** is already on an invoice updates that invoice instead of adding a second one, so the same file can be imported again after finance changes it. An ERP writing through the API uses the same key.
 - **Every imported row is marked.** Its **Source** reads **Import** and its **Synced At** is the moment of the import, so a reader can see where a figure came from and how old it is. A row entered by hand reads **Manual entry**.
 - **References resolve by name.** A contract number, invoice number or step name that matches nothing fails that row, and the import report names it.
+- **A step name used on more than one contract fails the row.** Steps are often named alike ("Advance 30%", "Year 2"), and the import looks the name up across every contract, not only the row's own, so the report reads *matches more than one record*. Put the step's record ID in the **Billing Milestone** column instead; it is at the end of the address of the step's page.
 
 Amounts are in your company's currency, like every amount in HotCRM. Convert before importing.
