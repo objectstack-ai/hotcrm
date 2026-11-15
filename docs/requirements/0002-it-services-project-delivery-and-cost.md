@@ -4,7 +4,7 @@
 - **Source**: IT-services / software-outsourcing customer (project-based delivery, monthly timesheets, Bizcase-driven cost baselines). Handed over as a one-sheet spreadsheet, 40 numbered steps across 8 business stages, on 2026-09-14.
 - **Raised**: 2026-09-14
 - **Disposition**: **B standard-enhancement**, in two tracks — steps 1–14 are enhancements to objects the sales module already owns; steps 15–40 are a **new standard PSA module** designed in [`../architecture/psa-module-plan.md`](../architecture/psa-module-plan.md). Individual steps carry **C** (customer overlay) or **D** (declined/deferred) where noted below.
-- **Traceability**: design — `docs/architecture/psa-module-plan.md`; changesets / PRs — to be filled in per phase.
+- **Traceability**: design — `docs/architecture/psa-module-plan.md`; card — hotcrm#2316; changesets / PRs — phase 0 (the module and the Project Delivery app skeleton): `.changeset/psa-phase-0-module.md`, PR to be linked on merge; later phases filled in as they land.
 
 > **Maintainer ruling on how to read this record** (2026-09-14, verbatim, untranslated):
 > 「hotcrm 是标准模版，如果开发 psa 也是应该按标准产品的方向设计，不应该受限于这个 excel」

@@ -396,10 +396,10 @@ const crmPairKey = (group: string, child: string): string => `${group} → ${chi
  *
  * Since #2417 HotCRM is three apps, the Sales app, the Service app and HotCRM
  * Marketing, and **Service** is a group of the Service app; since #2465 a
- * fourth, Order to Cash. A pair is real when any of them ships it, each
- * resolved against its own locale rows.
+ * fourth, Order to Cash; since #2316 a fifth, Project Delivery. A pair is
+ * real when any of them ships it, each resolved against its own locale rows.
  */
-const CRM_SERVED_APPS: AnyRec[] = [CRM_APP_ID, 'crm_service', 'crm_marketing', 'crm_o2c'].map((name) => servedApp(name));
+const CRM_SERVED_APPS: AnyRec[] = [CRM_APP_ID, 'crm_service', 'crm_marketing', 'crm_o2c', 'crm_psa'].map((name) => servedApp(name));
 
 const { CRM_GROUP_LABELS, CRM_PAIRS, CRM_LABELS } = (() => {
   const groups = new Set<string>();

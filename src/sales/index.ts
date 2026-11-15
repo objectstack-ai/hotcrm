@@ -111,12 +111,12 @@ export const createHotCrmAppStack = (
       engines: { protocol: '^18.4.0' },
 
       /**
-       * The app package's entries in the three module apps (#2417, #2465,
-       * ADR-0029 D7).
+       * The app package's entries in the four module apps (#2417, #2465,
+       * #2316, ADR-0029 D7).
        *
-       * the Service, Marketing and Order to Cash apps are declared by their
-       * modules (`src/service/apps/`, `src/marketing/apps/`, `src/o2c/apps/`),
-       * and an app's own
+       * the Service, Marketing, Order to Cash and Project Delivery apps are
+       * declared by their modules (`src/service/apps/`, `src/marketing/apps/`,
+       * `src/o2c/apps/`, `src/psa/apps/`), and an app's own
        * `navigation` may not name another package's object (ADR-0130). So
        * each module app declares ANCHOR groups and this package fills them
        * with the customers, the member's own work and the reports that cross
@@ -193,6 +193,26 @@ export const createHotCrmAppStack = (
         },
         {
           app: 'crm_o2c',
+          group: 'group_work',
+          priority: 10,
+          items: [
+            { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
+          ],
+        },
+        {
+          // A project belongs to an account, is won on an opportunity and
+          // delivers a contract (#2316, `psa-module-plan.md`).
+          app: 'crm_psa',
+          group: 'group_customers',
+          priority: 10,
+          items: [
+            { id: 'nav_account', type: 'object', objectName: 'crm_account', label: 'Accounts', icon: 'building' },
+            { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
+            { id: 'nav_contract', type: 'object', objectName: 'crm_contract', label: 'Contracts', icon: 'file-signature' },
+          ],
+        },
+        {
+          app: 'crm_psa',
           group: 'group_work',
           priority: 10,
           items: [

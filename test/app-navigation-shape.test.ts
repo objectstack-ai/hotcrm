@@ -244,7 +244,7 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
   // Three apps since #2417, four since #2465: a report may have an entry in
   // more than one of them (Customer Churn Signals in Sales and Service, Lead
   // Engagement in Sales and Marketing), never two in the same app.
-  const APPS = ['crm_enterprise', 'crm_service', 'crm_marketing', 'crm_o2c'];
+  const APPS = ['crm_enterprise', 'crm_service', 'crm_marketing', 'crm_o2c', 'crm_psa'];
   const walk = (nodes: AnyRec[], group?: string): Array<{ n: AnyRec; group?: string }> =>
     nodes.flatMap((n) =>
       n.type === 'group' ? walk((n.children ?? []) as AnyRec[], n.id as string) : [{ n, group }],
@@ -314,9 +314,10 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
 
   it('every report entry is in the Reports group, which each app that offers a report declares collapsed', () => {
     expect(ALL_ENTRIES.filter(({ group }) => group !== 'group_reports').map(({ app, n }) => `${app} ${n.id}`)).toEqual([]);
-    // Order to Cash (#2465) ships no report yet, so it declares no Reports
-    // group: an empty group is not drawn, and it would only be an anchor.
-    expect(ENTRIES_BY_APP.filter(({ entries }) => entries.length === 0).map(({ app }) => app)).toEqual(['crm_o2c']);
+    // Order to Cash (#2465) and Project Delivery (#2316) ship no report yet,
+    // so they declare no Reports group: an empty group is not drawn, and it
+    // would only be an anchor.
+    expect(ENTRIES_BY_APP.filter(({ entries }) => entries.length === 0).map(({ app }) => app)).toEqual(['crm_o2c', 'crm_psa']);
     for (const { app } of ENTRIES_BY_APP.filter(({ entries }) => entries.length > 0)) {
       const declared = ((servedApp(app).navigation ?? []) as AnyRec[]).find((n) => n.id === 'group_reports');
       expect(declared, app).toMatchObject({ type: 'group', label: 'Reports', expanded: false });
