@@ -13,6 +13,21 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  */
 export const jaJP: TranslationData = {
   hooks: {
+    quote_total_rollup: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '見積{{quote}}は承認済みのため、明細を追加・変更・削除できません。',
+          reasons: {
+            rejected: {
+              message: '見積{{quote}}は却下されているため、明細を追加・変更・削除できません。変更するには下書きに戻してください。',
+            },
+            expired: {
+              message: '見積{{quote}}は期限切れのため、明細を追加・変更・削除できません。',
+            },
+          },
+        },
+      },
+    },
     quote_workflow: {
       refusals: {
         RECORD_LOCKED: {

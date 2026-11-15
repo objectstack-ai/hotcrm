@@ -13,6 +13,21 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  */
 export const esES: TranslationData = {
   hooks: {
+    quote_total_rollup: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: 'La cotización {{quote}} está Aceptada, por lo que ya no se pueden añadir, cambiar ni eliminar sus líneas.',
+          reasons: {
+            rejected: {
+              message: 'La cotización {{quote}} está Rechazada, por lo que ya no se pueden añadir, cambiar ni eliminar sus líneas. Vuelva a ponerla en Borrador para cambiarlas.',
+            },
+            expired: {
+              message: 'La cotización {{quote}} está Expirada, por lo que ya no se pueden añadir, cambiar ni eliminar sus líneas.',
+            },
+          },
+        },
+      },
+    },
     quote_workflow: {
       refusals: {
         RECORD_LOCKED: {

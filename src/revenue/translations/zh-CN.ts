@@ -13,6 +13,21 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  */
 export const zhCN: TranslationData = {
   hooks: {
+    quote_total_rollup: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '报价单{{quote}}已接受，因此不能再新增、修改或删除它的明细。',
+          reasons: {
+            rejected: {
+              message: '报价单{{quote}}已拒绝，因此不能再新增、修改或删除它的明细。请先把它修订回草稿再修改。',
+            },
+            expired: {
+              message: '报价单{{quote}}已过期，因此不能再新增、修改或删除它的明细。',
+            },
+          },
+        },
+      },
+    },
     quote_workflow: {
       refusals: {
         RECORD_LOCKED: {

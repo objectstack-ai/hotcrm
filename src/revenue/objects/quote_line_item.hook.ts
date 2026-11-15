@@ -95,6 +95,18 @@ const quoteTotalRollup: Hook = {
   // Blocking, and `abort` (the default) on purpose (#2503): see the header.
   onError: 'abort',
   description: 'Recompute the parent quote subtotal from its line items, in the line write; refuse a person\'s line on a quote settled meanwhile.',
+  // The line freeze's sentences, as `quote_workflow` declares them.
+  refusals: {
+    RECORD_LOCKED: {
+      message: 'Quote {{quote}} is Accepted, so its line items can no longer be added, changed or removed.',
+      status: 409,
+      params: ['quote'],
+      reasons: {
+        rejected: { message: 'Quote {{quote}} is Rejected, so its line items can no longer be added, changed or removed. Revise it back to Draft to change them.' },
+        expired: { message: 'Quote {{quote}} is Expired, so its line items can no longer be added, changed or removed.' },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope. ⚠️ Mirrored from `src/sales/objects/_refusal.ts` because a lowered
     // body has no module scope and `extractHookBody` THROWS on an import;
@@ -150,12 +162,12 @@ const quoteTotalRollup: Hook = {
           const what = `Quote ${String(quote.name)} is`;
           const rest = 'so its line items can no longer be added, changed or removed.';
           const revise = status === 'rejected' ? ' Revise it back to Draft to change them.' : '';
-          throw refuse(
+          throw Object.assign(refuse(
             `${what} ${status}, ${rest}${revise}`,
             'RECORD_LOCKED',
             409,
             `${what} ${STATUS_LABELS[status]}, ${rest}${revise}`,
-          );
+          ), { reason: status === 'accepted' ? undefined : status, params: { quote: String(quote.name) } });
         }
         // A system write leaves settled totals alone; a Rejected quote is
         // revised back to Draft, so its subtotal still follows its lines.
