@@ -24,12 +24,30 @@ import { createLineItemNumbering, createLineItemPriceFill, createLineItemProduct
  *   `amount` is left untouched — zeroing it would trip the `amount > 0`
  *   validation and wipe the manually-entered figure on opportunities that never
  *   used line items at all.
- * - `async: true` + `onError: 'log'` — the rollup is a derived convenience; a
- *   failure must never block the line-item write. Updating the parent does not
- *   re-trigger this hook (different object), so there's no loop. The one
- *   refusal the app can foresee, an approval lock on the deal, is not left to
- *   this log: `opportunity_line_item_freeze` refuses a user's line write on a
- *   deal an approval locks, before anything is stored (#2191).
+ * - Blocking, `onError: 'abort'` (#2493). The amount is not a convenience: it
+ *   is the figure `opportunity_approval` judges and an approver signs, so a
+ *   line is stored only together with the amount it makes. The rollup runs
+ *   inside the line write and rides its unit of work: the line write returns
+ *   once the deal carries the new sum, and once a deal the sum takes across
+ *   the large-deal line has opened its approval and locked. A rollup the
+ *   engine refuses takes the line down with it, and the writer gets the
+ *   refusal, instead of a stored line beside a stale amount.
+ *   Before #2493 this hook was `async: true` + `onError: 'log'`. Measured on
+ *   18.5.0 over a dev server: three line inserts sent back to back on a
+ *   40,000 deal (70,000, 44,000, 48,000) were all stored; the second one's
+ *   rollup opened the approval at 114,000, the third passed
+ *   `opportunity_line_item_freeze` before that lock landed, and its own
+ *   rollup was refused by the lock and logged. The approver was asked to sign
+ *   114,000 while the lines summed to 162,000.
+ *   Two layers now hold the invariant: `opportunity_line_item_freeze`
+ *   refuses a user's line write on a deal an approval already locks, before
+ *   anything is stored (#2191), and this hook refuses the line whose rollup
+ *   meets a lock that landed between that check and the write. Updating the
+ *   parent does not re-trigger this hook (different object), so there is no
+ *   loop.
+ * - A line taken by its deal's own delete (`referentialCascadeDelete`,
+ *   objectstack#23221) rolls nothing up: the deal is going away, and writing
+ *   it would refuse the delete of a deal an approval locks.
  * - On re-parenting (update that moves a line to another opportunity), BOTH the
  *   old and new parents are recomputed.
  */
@@ -182,12 +200,12 @@ const opportunityAmountRollup: Hook = {
   object: 'crm_opportunity_line_item',
   events: ['afterInsert', 'afterUpdate', 'afterDelete'],
   priority: 300,
-  async: true,
-  onError: 'log',
+  onError: 'abort',
   description: 'Recompute parent opportunity.amount from the sum of its line items.',
   handler: async (ctx: HookContext) => {
     const api = ctx.api as HookApi | undefined;
     if (!api) return;
+    if (ctx.referentialCascadeDelete === true) return;
     const { input, previous } = ctx;
     const num = (v: unknown): number => (typeof v === 'number' ? v : 0);
 
@@ -200,8 +218,9 @@ const opportunityAmountRollup: Hook = {
     if (oppIds.size === 0) return;
 
     for (const oppId of oppIds) {
-      // Skip closed deals. The rollup runs in a system context (no ctx.user),
-      // which BYPASSES the opportunity freeze guard — so without this check,
+      // Skip closed deals. A system line write (a seed, a flow's system write)
+      // rolls up in a system context (no ctx.user), which BYPASSES the
+      // opportunity freeze guard — so without this check,
       // editing a line item would silently rewrite a closed-won deal's recorded
       // amount. A closed deal's value is settled; leave it.
       const opp = await api.object('crm_opportunity').findOne({
