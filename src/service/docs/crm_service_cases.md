@@ -21,6 +21,9 @@ exactly when and how.
 A case usually moves along these arrows. Every open status can also go straight
 to **Escalated** or **Closed**, and a closed case can be reopened. A move off
 the usual path still saves, and the app only logs a warning.
+Setting **Escalated** by hand is a full escalation, the same as the **Escalate
+Case** button: the case gets the Escalated flag and date and Critical priority,
+and the save needs an **Escalation Reason**, or it is refused.
 
 ```mermaid
 stateDiagram-v2
