@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
+import { privateOpportunityPolicy } from './_private-opportunity';
 
 export const MarketingUserProfile = {
   name: 'marketing_user',
@@ -84,17 +85,7 @@ export const MarketingUserProfile = {
   // `crm_opportunity.is_private` has to hold back. See sales-manager.profile.ts
   // for the full rationale.
   rowLevelSecurity: [
-    {
-      name: 'opportunity_private_owner_only_marketing',
-      // A deal flagged Private is visible only to its owner, even to holders of
-      // org-wide opportunity read. (`rowLevelSecurity[].label` / `description`
-      // are display copy — the 17.7.0 liveness ledger marks both live: the
-      // permission editor draws them on the policy card. This policy authors
-      // neither, so its intent lives in this comment.)
-      object: 'crm_opportunity',
-      operation: 'select' as const,
-      using: 'is_private == false || owner_id == current_user.id',
-    },
+    privateOpportunityPolicy('opportunity_private_owner_only_marketing'),
     // The platform's `member_default` set carries a wildcard owner-only-writes
     // policy (`created_by == current_user.id` on update), and RLS policies are
     // OR-combined — so without a policy of its own, this set's allowEdit on

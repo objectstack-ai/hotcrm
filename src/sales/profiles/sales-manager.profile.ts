@@ -2,6 +2,7 @@
 
 import { O2C_CONTRACT_FIGURE_FIELDS } from './_o2c-figures';
 import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
+import { privateOpportunityPolicy } from './_private-opportunity';
 
 /**
  * Sales Manager Profile
@@ -153,25 +154,8 @@ export const SalesManagerProfile = {
   },
   // ADR-0058: `crm_opportunity.is_private` is settable in the opportunity form
   // (`opportunity.view.ts`) and, before this rule, was read by nothing — a
-  // checkbox that promised confidentiality and delivered none. Org-wide readers
-  // are exactly who it has to hold back, so the set that grants
-  // `viewAllRecords` on opportunities also carries the row filter that honours
-  // it. Compiles to `{ $or: [{ is_private: false }, { owner_id: <caller> }] }`.
-  //
-  // `owner_id`, not the app-authored `owner` lookup this used to name: #548
-  // retired that field. The predicate now keys on the SAME column the OWD /
-  // sharing owner-match reads, so "its owner" means one thing app-wide.
-  rowLevelSecurity: [
-    {
-      name: 'opportunity_private_owner_only',
-      // A deal flagged Private is visible only to its owner, even to holders of
-      // org-wide opportunity read. (`rowLevelSecurity[].label` / `description`
-      // are display copy — the 17.7.0 liveness ledger marks both live: the
-      // permission editor draws them on the policy card. This policy authors
-      // neither, so its intent lives in this comment.)
-      object: 'crm_opportunity',
-      operation: 'select' as const,
-      using: 'is_private == false || owner_id == current_user.id',
-    },
-  ],
+  // checkbox that promised confidentiality and delivered none. This set reads
+  // opportunities org-wide, so it carries the private-deal row filter; the
+  // predicate and the rule for every such set live in `_private-opportunity.ts`.
+  rowLevelSecurity: [privateOpportunityPolicy('opportunity_private_owner_only')],
 };
