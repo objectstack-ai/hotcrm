@@ -129,10 +129,10 @@ describe('with the module disabled (#2316)', () => {
   beforeAll(async () => {
     verify = await hotcrmStack();
     admin = await verify.signIn();
-  });
+  }, 120_000);
 
   afterAll(async () => {
-    await verify.apiAs(admin, 'PATCH', `${PKG}/enable`);
+    await verify?.apiAs(admin, 'PATCH', `${PKG}/enable`);
   });
 
   const appStatus = async (name: string): Promise<number> => (await verify.apiAs(admin, 'GET', `/meta/app/${name}`)).status;
