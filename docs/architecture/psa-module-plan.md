@@ -26,10 +26,14 @@ the sections below where those disagree, and the three *Decisions needed* of the
    Sales app.
 2. **Restart.** hotcrm#2316 leaves `pm:on-hold` and is queued after hotcrm#2465 (6.3).
 3. **v1 = the standard tier:** `crm_project`, `crm_project_member`, `crm_rate_card`,
-   `crm_timesheet` + `crm_time_entry`, `crm_expense`; four approval points (project
-   initiation, budget — which arrives with phase 2 —, timesheet, expense); actual cost and
-   margin roll-ups; the overrun alert (a machine signal warns, a person's field locks).
-   Budget versions (`crm_project_budget` / `_line`) move to phase 2, with tasks and Gantt.
+   `crm_timesheet` + `crm_time_entry`, `crm_expense`; **three approval points in v1**
+   (project initiation, timesheet, expense), with budget approval becoming the fourth in
+   phase 2; actual cost and margin roll-ups; the overrun alert (a machine signal warns, a
+   person's field locks). Budget versions (`crm_project_budget` / `_line`) move to phase 2,
+   with tasks and Gantt. *Design consequence (not a ruling):* v1 has no budget baseline, so
+   the alert's denominator is an `approved_budget` currency field on `crm_project`, locked
+   when the initiation approval passes; phase 2's baseline approval writes it back (see
+   *The data model*).
 4. **Time-and-materials invoicing stays in Order to Cash.** PSA emits the approved billable
    amount; invoicing is O2C's. How the two modules connect is decided in phase 3 — in v1 PSA
    does not depend on O2C.
@@ -147,10 +151,14 @@ PSA depends on `app.objectstack.hotcrm` for `crm_account`, `crm_opportunity`, `c
 **Navigation (ruled 2026-11-15).** PSA owns its app, 项目交付 (*Project Delivery*), in
 `src/psa/apps/`, built like `ServiceApp`, `MarketingApp` (#2430) and Order to Cash's app
 (#2465): projects, members, rate cards, timesheets, expenses and their approvals, with
-Accounts and Opportunities as read entries and the PSA manual under Help. Who sees it is the
-permission sets' `tabPermissions` (visibility only; the URL still opens). On 18.4.0 a
-module-owned app works, app URLs go by package id, and disabling the module drops its app
-(#2417 readings); phase 0 re-measures the last on PSA. The first draft's `group_projects`
+the PSA manual under Help. A module's own `app.navigation` may not name an object outside its
+package (`defineStack` refuses it; ADR-0130 §1.5, "navigation crosses only through
+contributions"), so Accounts and Opportunities reach the app the way they reach the Service
+app: the PSA app declares an empty anchor group, and the app package fills it with
+`navigationContributions` (`src/service/apps/service.app.ts` `group_customers`, filled from
+`src/sales/index.ts`). Who sees the app is the permission sets' `tabPermissions` (visibility
+only; the URL still opens). On 18.4.0 a module-owned app works, app URLs go by package id, and
+disabling the module drops its app (#2417 readings); phase 0 re-measures the last on PSA. The first draft's `group_projects`
 node in the Sales app is **not built**.
 
 ## The data model — v1
@@ -190,6 +198,12 @@ deliberately v2 — margin is computable without them, and each is a scope of it
   approved → active → on_hold ⇄ active → completed → closed`, with `rejected` reachable from
   `in_approval` and `cancelled` from any open state. `approval_status` and `approved_date`
   are stamped by the approval flow exactly as `crm_opportunity` stamps them today.
+- **v1 budget figure (2026-11-15).** Budget versions are phase 2, so v1's `crm_project`
+  carries `approved_budget`, a currency field set before submission and locked once the
+  initiation approval passes; `budget_consumed_percent` in v1 is `actual_cost /
+  approved_budget`. Phase 2's baseline approval writes the baseline total back into
+  `approved_budget` by flow, so the field never changes type; `baseline_cost` below is the
+  phase-2 design.
 - **Money** — every figure a formula or a summary, never typed in: `baseline_cost` (summary
   over `crm_project_budget.total_cost` with `filter: { is_baseline: true }`),
   `actual_labor_cost` (summary over `crm_timesheet.total_cost` with
@@ -278,8 +292,8 @@ running instance; none is new.
 | Rule | PSA edges | Verdict |
 | --- | --- | --- |
 | **R1** lookup / masterDetail into another package's object | `crm_project` → `crm_account`, `crm_opportunity`, `crm_contract`; six objects → `sys_user`; two → `sys_business_unit` | ✅ ACCEPTED — the same class as the 15 `sys_user` lookups the app has always carried |
-| **R2** `navigationContributions` into the app | none — PSA owns its app (2026-11-15) | n/a |
-| **R3** a module's own app navigating to a foreign object | the 项目交付 app's read entries for `crm_account` and `crm_opportunity` | measured in phase 0 (Order to Cash's app, #2465, is the first instance) |
+| **R2** `navigationContributions` | the app package contributes Accounts and Opportunities into an anchor group of the 项目交付 app | ✅ ACCEPTED — the shape the Service and Marketing apps already use |
+| **R3** a module's own app navigating to a foreign object | none — refused by `defineStack` (ADR-0130 §1.5); R2 carries it | n/a |
 | **R4** a hook attached to another package's object | **none by design.** Every PSA hook attaches to a PSA object; CRM rows are only ever *read* at run time through `ctx.api` | n/a |
 
 **No `objectExtensions` in v1.** The standard product does not push PSA fields into
