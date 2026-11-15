@@ -1,5 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { privateOpportunityPolicy } from './_private-opportunity';
+
 /**
  * Finance Controller — watches delivery cost and margin (hotcrm#2316, plan
  * *Permissions, positions, sharing*). The `crm_finance_controller` position
@@ -43,4 +45,8 @@ export const FinanceControllerProfile = {
     sys_comment:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_activity:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
+  // ADR-0058: this set reads opportunities org-wide, so it carries the
+  // private-deal row filter with it (`_private-opportunity.ts`, hotcrm#2489):
+  // a deal its owner flagged Private stays the owner's.
+  rowLevelSecurity: [privateOpportunityPolicy('opportunity_private_owner_only_finance')],
 };
