@@ -95,6 +95,9 @@ const projectMemberUnique: Hook = {
   object: 'crm_project_member',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
+  refusals: {
+    DUPLICATE_VALUE: { message: 'This person is already staffed on this project. Change their existing staffing row instead of adding another.', status: 409 },
+  },
   description: 'Refuse a second staffing row for the same person on the same project.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a

@@ -31,6 +31,21 @@ const expenseApprover: Hook = {
   object: 'crm_expense',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
+  refusals: {
+    RECORD_LOCKED: {
+      message: 'This expense cannot be changed on this project now.',
+      status: 409,
+      params: ['project'],
+      reasons: {
+        project_locked: { message: '{{project}} is locked for time and expenses, so this expense cannot be submitted. Keep it as a draft, or ask the project manager to untick Lock Time and Expenses on the project.' },
+        closed_takes_no_new: { message: '{{project}} is Closed, so it takes no new expenses. Record the expense on an open project.' },
+        cancelled_takes_no_new: { message: '{{project}} is Cancelled, so it takes no new expenses. Record the expense on an open project.' },
+        closed_no_submit: { message: '{{project}} is Closed, so this expense cannot be submitted. Keep it as a draft, or move it to an open project.' },
+        cancelled_no_submit: { message: '{{project}} is Cancelled, so this expense cannot be submitted. Keep it as a draft, or move it to an open project.' },
+      },
+    },
+    FORBIDDEN: { message: 'An expense is approved or rejected by its approvers, from their Inbox, once it is submitted.', status: 403 },
+  },
   description: 'Stamp the project\'s Project Manager as the expense\'s approver, leave the decision to the approval, refuse a submission on a locked project, and take no expense onto a Closed or Cancelled project.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
@@ -90,20 +105,21 @@ const expenseApprover: Hook = {
     const over = person && project && typeof project.status === 'string' ? PROJECT_OVER[project.status] : undefined;
     if (over) {
       const projectName = String(project?.name ?? 'This project');
-      throw refuse(
-        ctx.event === 'beforeInsert' || moving
+      const fresh = ctx.event === 'beforeInsert' || moving;
+      throw Object.assign(refuse(
+        fresh
           ? `${projectName} is ${over}, so it takes no new expenses. Record the expense on an open project.`
           : `${projectName} is ${over}, so this expense cannot be submitted. Keep it as a draft, or move it to an open project.`,
         'RECORD_LOCKED',
         409,
-      );
+      ), { reason: fresh ? (project?.status === 'closed' ? 'closed_takes_no_new' : 'cancelled_takes_no_new') : (project?.status === 'closed' ? 'closed_no_submit' : 'cancelled_no_submit'), params: { project: projectName } });
     }
     if (submitting && project && project.time_entry_locked === true) {
-      throw refuse(
+      throw Object.assign(refuse(
         `${String(project.name ?? 'This project')} is locked for time and expenses, so this expense cannot be submitted. Keep it as a draft, or ask the project manager to untick Lock Time and Expenses on the project.`,
         'RECORD_LOCKED',
         409,
-      );
+      ), { reason: 'project_locked', params: { project: String(project.name ?? '') } });
     }
     if (ctx.event !== 'beforeInsert') return;
     const manager = refId(project?.project_manager);
