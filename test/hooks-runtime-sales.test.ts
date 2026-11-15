@@ -834,7 +834,9 @@ describe('account_protection', () => {
     await verify.hooks.run('crm_opportunity', 'update', { id: deal!.id, stage: 'closed_lost', loss_reason: 'competitor' }, as(admin));
     const err = await deleteAccount().then(() => null, (e: Error & Rec) => e);
     expect(err, 'the account was deleted with its closed deal still on it').toBeTruthy();
-    expect(err!.message).toBe(refusal);
+    // The sentence the caller reads is the catalogue's (#2496); the log keeps the thrown one.
+    expect(err!.userMessage).toBe(refusal);
+    expect(err!.message).toContain(refusal);
     expect(err).toMatchObject({ code: 'DELETE_RESTRICTED', status: 409 });
 
     await verify.hooks.run('crm_opportunity', 'delete', { id: deal!.id }, as(admin));
