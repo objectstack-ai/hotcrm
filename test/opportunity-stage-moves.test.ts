@@ -162,7 +162,8 @@ describe('a closed deal keeps its stage (#2234)', () => {
       const deal = await dealAt(from);
       const res = await move(people[key], deal.id, to);
       expect({ status: res.status, code: res.body.code }).toEqual({ status: 409, code: 'RECORD_LOCKED' });
-      expect(String(res.body.error)).toContain(`is closed (${from})`);
+      // The caller reads the stage by its label: the hook's declared sentence (#2496).
+      expect(String(res.body.error)).toContain(`is closed (${from === 'closed_won' ? 'Closed Won' : 'Closed Lost'})`);
       expect((await stored(deal.id)).stage).toBe(from);
     },
   );

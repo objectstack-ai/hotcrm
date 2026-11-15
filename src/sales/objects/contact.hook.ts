@@ -47,6 +47,9 @@ import type { HookApi } from './_hook-api';
  * their `primary_contact` lookup.
  */
 
+/** The delete refusal's English sentence; its parts are composed in the handler. */
+const CONTACT_HELD = '{{subject}} is still referenced by {{referents}}, so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. To free the contact, {{todo}}.';
+
 const contactHook: Hook = {
   name: 'contact_integrity',
   object: 'crm_contact',
@@ -54,6 +57,33 @@ const contactHook: Hook = {
   priority: 200,
   description:
     'Dedupe contacts by email and protect referenced contacts from deletion.',
+  // The delete refusal's English sentence is composed in the handler (counts
+  // with their own plurals, a joined list); the other languages write one
+  // sentence per combination of what holds the contact, from the counts.
+  refusals: {
+    DUPLICATE_VALUE: {
+      message: 'Another contact with email {{email}} already exists.',
+      status: 409,
+      params: ['email', 'contact'],
+      reasons: {
+        named: { message: 'Another contact ({{contact}}) with email {{email}} already exists.' },
+      },
+    },
+    DELETE_RESTRICTED: {
+      message: CONTACT_HELD,
+      status: 409,
+      params: ['subject', 'referents', 'todo', 'contact', 'opportunities', 'quotes', 'contracts'],
+      reasons: {
+        opportunities: { message: CONTACT_HELD },
+        quotes: { message: CONTACT_HELD },
+        contracts: { message: CONTACT_HELD },
+        opportunities_quotes: { message: CONTACT_HELD },
+        opportunities_contracts: { message: CONTACT_HELD },
+        quotes_contracts: { message: CONTACT_HELD },
+        all: { message: CONTACT_HELD },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -123,13 +153,13 @@ const contactHook: Hook = {
             const dupName = /^[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(family)
               ? `${family}${given}`
               : [given, family].filter(Boolean).join(' ');
-            throw refuse(
+            throw Object.assign(refuse(
               dupName
                 ? `Another contact (${dupName}) with email ${email} already exists.`
                 : `Another contact with email ${email} already exists.`,
               'DUPLICATE_VALUE',
               409,
-            );
+            ), dupName ? { reason: 'named', params: { email, contact: dupName } } : { params: { email } });
           }
         }
       }
@@ -235,11 +265,16 @@ const contactHook: Hook = {
           remedies.length > 1
             ? `${remedies.slice(0, -1).join('; ')}; and ${remedies[remedies.length - 1]}`
             : remedies[0];
-        throw refuse(
+        throw Object.assign(refuse(
           `${subject} is still referenced by ${referents}, so it cannot be deleted — and neither can its account, because deleting an account deletes its contacts. To free the contact, ${todo}.`,
           'DELETE_RESTRICTED',
           409,
-        );
+        ), {
+          reason: openOpps > 0
+            ? (openQuotes > 0 ? (activeContracts > 0 ? 'all' : 'opportunities_quotes') : (activeContracts > 0 ? 'opportunities_contracts' : 'opportunities'))
+            : (openQuotes > 0 ? (activeContracts > 0 ? 'quotes_contracts' : 'quotes') : 'contracts'),
+          params: { subject, referents, todo, contact: name, opportunities: openOpps, quotes: openQuotes, contracts: activeContracts },
+        });
       }
     }
   },

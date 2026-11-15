@@ -439,6 +439,13 @@ describe('every refusal class survives the QuickJS boundary (#1167)', () => {
  * and `message` IS the original sentence. `code` and `status` must be identical
  * across both, and asserting that here is what would catch an envelope that
  * survives one path and not the other.
+ *
+ * A hook that declares a `refusals` catalogue (#2496) is the exception, by the
+ * platform's design: its refusal is answered from the catalogue, re-thrown as
+ * `SandboxError` whose `message` keeps the thrown sentence (the developer log)
+ * and whose `innerMessage` and `userMessage` carry the declared sentence, in
+ * the caller's language. `test/hook-refusal-catalogue.test.ts` holds what the
+ * catalogue declares; here the envelope is held the same on both kinds.
  */
 const expectInProcess = (
   err: unknown,
@@ -448,6 +455,15 @@ const expectInProcess = (
 ): void => {
   expect(err, `expected a refusal matching ${wording}`).toBeInstanceOf(Error);
   const e = err as AnyRec;
+  if (e.name === 'SandboxError') {
+    // A catalogued hook: the declared sentence is what the caller reads.
+    expect(e.message).toMatch(/^hook '[a-z0-9_]+' threw: /);
+    expect(e.message).toMatch(wording);
+    expect([e.code, e.status]).toEqual([REFUSAL_CODES[cls].code, REFUSAL_CODES[cls].status]);
+    expect(String(e.userMessage)).toMatch(userWording ?? wording);
+    expect(e.userMessage, 'the declared sentence on both channels').toBe(e.innerMessage);
+    return;
+  }
   expect(e.name, 'in-process the error is NOT re-thrown as SandboxError').toBe('Error');
   expect(e.message).toMatch(wording);
   expect(e.innerMessage, 'only the sandbox adds innerMessage').toBeUndefined();
