@@ -76,7 +76,9 @@ describe('the refusal vocabulary is declared once (#1075)', () => {
   const carriers = LOWERED.filter((h) => h.source.includes('function refuse('));
 
   it('is carried by every hook that refuses, and by no other', () => {
-    const callers = LOWERED.filter((h) => /throw refuse\(/.test(h.source)).map((h) => h.name);
+    // `throw Object.assign(refuse(…), { reason, params })` is the catalogued
+    // form (#2496): the same envelope, addressed to a declared sentence.
+    const callers = LOWERED.filter((h) => /throw (Object\.assign\()?refuse\(/.test(h.source)).map((h) => h.name);
     expect(carriers.map((h) => h.name).sort()).toEqual(callers.sort());
     // A floor, not a target: if a guard is deleted this should be re-measured,
     // not quietly lowered.

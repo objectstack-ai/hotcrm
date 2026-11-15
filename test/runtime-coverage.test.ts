@@ -151,6 +151,10 @@ const RUNTIME_TEST_FILES = [
   // app drafts a contract and the accepting rep gets one inbox notice; a
   // contract written by hand gets none.
   'contract-drafted-notice.test.ts',
+  // #2498 — `campaign_member_unique`: a second membership for the same lead or
+  // contact refused on the direct doors, a moving edit and a system write,
+  // translated for a zh-CN caller, beside the flow door's skip.
+  'campaign-member-unique.test.ts',
 ];
 
 /**

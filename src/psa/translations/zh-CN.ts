@@ -8,6 +8,79 @@ import type { TranslationData } from '@objectstack/spec/system';
  * pack: `./index.ts`.
  */
 export const zhCN: TranslationData = {
+  hooks: {
+    timesheet_stamps: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '这个项目上的工时单现在不能这样修改。',
+          reasons: {
+            project_locked: { message: '{{project}}已锁定工时与费用，因此不能提交这张工时单。先保存为草稿，或请项目经理在项目上取消勾选“锁定工时与费用”。' },
+            closed_takes_no_new: { message: '{{project}}已关闭，不再接受新的工时单。请把工时记在进行中的项目上。' },
+            cancelled_takes_no_new: { message: '{{project}}已取消，不再接受新的工时单。请把工时记在进行中的项目上。' },
+            closed_no_submit: { message: '{{project}}已关闭，因此不能提交这张工时单。先保存为草稿，或把它改挂到进行中的项目上。' },
+            cancelled_no_submit: { message: '{{project}}已取消，因此不能提交这张工时单。先保存为草稿，或把它改挂到进行中的项目上。' },
+          },
+        },
+        FORBIDDEN: { message: '工时单提交后，由审批人在收件箱中批准或驳回。' },
+        DUPLICATE_VALUE: {
+          message: '这个项目在这个周期已有一张工时单。请把工时加到那张上。',
+          reasons: {
+            named: { message: '这个项目在这个周期已有一张工时单：{{timesheet}}。请把工时加到那张上。' },
+          },
+        },
+      },
+    },
+    expense_approver: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '这个项目上的费用现在不能这样修改。',
+          reasons: {
+            project_locked: { message: '{{project}}已锁定工时与费用，因此不能提交这笔费用。先保存为草稿，或请项目经理在项目上取消勾选“锁定工时与费用”。' },
+            closed_takes_no_new: { message: '{{project}}已关闭，不再接受新的费用。请把费用记在进行中的项目上。' },
+            cancelled_takes_no_new: { message: '{{project}}已取消，不再接受新的费用。请把费用记在进行中的项目上。' },
+            closed_no_submit: { message: '{{project}}已关闭，因此不能提交这笔费用。先保存为草稿，或把它改挂到进行中的项目上。' },
+            cancelled_no_submit: { message: '{{project}}已取消，因此不能提交这笔费用。先保存为草稿，或把它改挂到进行中的项目上。' },
+          },
+        },
+        FORBIDDEN: { message: '费用提交后，由审批人在收件箱中批准或驳回。' },
+      },
+    },
+    project_status_guard: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '不允许这样修改项目。',
+          reasons: {
+            starts_as_draft: { message: '新项目从草稿开始。先保存，再把状态设为“审批中”以提交审批。' },
+            budget_required: { message: '提交审批前请先填写批准预算：审批针对的就是这个数字。' },
+          },
+        },
+        FORBIDDEN: {
+          message: '你不能这样修改项目。',
+          reasons: {
+            budget_finance_only: { message: '{{project}}已按批准预算获批，现在只有财务控制可以修改。请让财务设定新预算。' },
+            decided_by_approver: { message: '项目由审批人在收件箱中批准或驳回。请把状态设为“审批中”以提交审批。' },
+          },
+        },
+      },
+    },
+    project_member_unique: {
+      refusals: {
+        DUPLICATE_VALUE: { message: '这个人已经在这个项目上了。请修改他现有的人员配置行，不要再新增一行。' },
+      },
+    },
+    time_entry_costing: {
+      refusals: {
+        RECORD_LOCKED: { message: '这张工时单已提交，工时不能再修改。请把它退回草稿后再更正。' },
+        VALIDATION_FAILED: { message: '日期 {{day}} 不在这张工时单的周期内（{{from}} – {{to}}）。' },
+        FORBIDDEN: {
+          message: '只有配置在项目上的人员才能记工时。请让项目经理把你加入项目。',
+          reasons: {
+            named: { message: '只有配置在项目“{{project}}”上的人员才能记工时。请让项目经理把你加入项目。' },
+          },
+        },
+      },
+    },
+  },
   objects: {
     crm_project: {
       label: '项目',

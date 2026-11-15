@@ -34,6 +34,18 @@ const timeEntryCosting: Hook = {
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 100,
   runAs: 'system',
+  refusals: {
+    RECORD_LOCKED: { message: 'This timesheet has been submitted, so its hours cannot change. Send it back to Draft to correct them.', status: 409 },
+    VALIDATION_FAILED: { message: 'The date {{day}} is outside this timesheet\'s period ({{from}} – {{to}}).', status: 400, params: ['day', 'from', 'to'] },
+    FORBIDDEN: {
+      message: 'Hours can only be booked by people staffed on the project. Ask its project manager to add you.',
+      status: 403,
+      params: ['project'],
+      reasons: {
+        named: { message: 'Hours can only be booked by people staffed on the project "{{project}}". Ask its project manager to add you.' },
+      },
+    },
+  },
   description: 'Copy the rate card\'s rates on creation, keep cost and amount to bill, and keep entries inside an open timesheet.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
@@ -93,11 +105,11 @@ const timeEntryCosting: Hook = {
     const from = typeof sheet.period_start === 'string' ? sheet.period_start.slice(0, 10) : '';
     const to = typeof sheet.period_end === 'string' ? sheet.period_end.slice(0, 10) : '';
     if (day && from && to && (day < from || day > to)) {
-      throw refuse(
+      throw Object.assign(refuse(
         `The date ${day} is outside this timesheet's period (${from} – ${to}).`,
         'VALIDATION_FAILED',
         400,
-      );
+      ), { params: { day, from, to } });
     }
 
     let costRate = num(previous.cost_rate);
@@ -118,11 +130,11 @@ const timeEntryCosting: Hook = {
           const project = projectId
             ? await api.object('crm_project').findOne({ where: { id: projectId }, fields: ['id', 'name'] })
             : null;
-          throw refuse(
+          throw Object.assign(refuse(
             `Hours can only be booked by people staffed on the project${project?.name ? ` "${String(project.name)}"` : ''}. Ask its project manager to add you.`,
             'FORBIDDEN',
             403,
-          );
+          ), project?.name ? { reason: 'named', params: { project: String(project.name) } } : {});
         }
         costRate = 0;
         billRate = 0;

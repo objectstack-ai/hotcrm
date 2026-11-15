@@ -132,6 +132,47 @@ describe('escalate_case — screen action', () => {
   });
 });
 
+describe('case_escalation_complete — Status Escalated set by Edit is the same escalation as the action (#2497)', () => {
+  const FIELDS = ['status', 'is_escalated', 'priority', 'escalation_reason'] as const;
+  const shape = (c: Rec): Rec => ({ ...Object.fromEntries(FIELDS.map((f) => [f, c[f]])), dated: Boolean(c.escalated_date) });
+  const edit = (id: string, patch: Rec): Promise<Rec> => verify.hooks.run('crm_case', 'update', { id, ...patch }, { as: agent.token });
+  const escalationTasks = async (caseId: string): Promise<Rec[]> =>
+    (await verify.rows('crm_task', { related_to_case: caseId })).filter((t) => String(t.subject ?? '').startsWith('Escalated'));
+
+  it('refuses a bare Status change to Escalated, and nothing of an escalation happens', async () => {
+    const kase = await openCase({ priority: 'low' });
+    await expect(edit(kase.id, { status: 'escalated' })).rejects.toThrow(/Escalation reason is required/);
+    const after = await stored(kase.id);
+    expect(shape(after)).toEqual({ status: 'new', is_escalated: false, priority: 'low', escalation_reason: null, dated: false });
+    expect(await escalationTasks(kase.id), 'no follow-up task for a refused escalation').toEqual([]);
+  });
+
+  it('with a reason, stores exactly what Escalate Case stores: flag, date, Critical, reason, and the follow-up task', async () => {
+    const byEdit = await openCase({ priority: 'low' });
+    await edit(byEdit.id, { status: 'escalated', escalation_reason: 'Customer down' });
+    const byAction = await openCase({ priority: 'low' });
+    await runScreen('escalate_case', byAction.id, { reason: 'Customer down' });
+
+    const edited = shape(await stored(byEdit.id));
+    expect(edited).toEqual({ status: 'escalated', is_escalated: true, priority: 'critical', escalation_reason: 'Customer down', dated: true });
+    expect(edited, 'the Edit door and the action door agree').toEqual(shape(await stored(byAction.id)));
+    expect(await escalationTasks(byEdit.id)).toHaveLength(1);
+    expect(await escalationTasks(byAction.id)).toHaveLength(1);
+  });
+
+  it('never re-stamps a case escalated before: a reopened case moved back to Escalated keeps its first date and reason', async () => {
+    const kase = await openCase();
+    await edit(kase.id, { status: 'escalated', escalation_reason: 'First time' });
+    const first = await stored(kase.id);
+    await edit(kase.id, { status: 'in_progress' });
+    await edit(kase.id, { status: 'escalated' });
+    const again = await stored(kase.id);
+    expect(again.status).toBe('escalated');
+    expect(again.escalated_date).toBe(first.escalated_date);
+    expect(again.escalation_reason).toBe('First time');
+  });
+});
+
 describe('case_escalation_stamp — the elevated stamping subflow (#1434)', () => {
   it('is the ONE elevated flow, and writes only the two readonly stamps', () => {
     expect(CaseEscalationStampFlow.runAs, 'this flow exists to be the elevation').toBe('system');

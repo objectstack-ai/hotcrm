@@ -140,6 +140,13 @@ export const zhCN: TranslationData = {
       },
     },
   },
+  hooks: {
+    campaign_member_unique: {
+      refusals: {
+        DUPLICATE_VALUE: { message: '{{ person }} 已是 {{ campaign }} 的成员。请打开已有的那条成员记录，不要再添加一条。' },
+      },
+    },
+  },
   flows: {
     campaign_enrollment: {
       label: '将成员加入营销活动',

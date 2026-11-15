@@ -747,8 +747,71 @@ const caseResolutionArticleNormalize: Hook = {
   },
 };
 
+/**
+ * One meaning of "escalated", whichever door sets it (hotcrm#2497).
+ *
+ * **Escalate Case** writes the whole escalation: the agent's reason, priority
+ * Critical, Status Escalated, and (through `case_escalation_stamp`) the
+ * Escalated flag and date. Status Escalated set any other way — Edit, or a
+ * click on the path's stage — wrote the status alone: no reason, no flag, no
+ * date, the priority left as it was, while the hand-off
+ * (`case_escalation_reassign`) and the follow-up task
+ * (`case_status_side_effects`) fired as for a real escalation. Reports, the
+ * critical-case share and the Escalate Case button read the flag, so they
+ * missed the case.
+ *
+ * Chosen: the status transition carries the escalation. A write that moves a
+ * case INTO Escalated without the flag in its own payload is completed here,
+ * in the same write:
+ *
+ *   - `is_escalated` true and `escalated_date` now (the stamps
+ *     `case_escalation_stamp` writes for the action);
+ *   - priority Critical, as the action sets it;
+ *   - and so the reason is required: with the flag set, the object's
+ *     `escalation_reason_required` validation refuses the write when it
+ *     carries no Escalation Reason. Edit with a reason escalates; a bare path
+ *     click is refused with that message.
+ *
+ * It judges a person's write only. A write that carries the flag itself
+ * (`case_escalation`, `case_sla_monitor`) is its author's escalation, and a
+ * system write (an integration, an import, a seed) is its author's to keep
+ * consistent; both are left as written. A case that was
+ * escalated before (the flag is never cleared, a reopen included) is never
+ * re-stamped, so its date and reason stay the first escalation's, as the SLA
+ * sweep's already-escalated branch leaves them. The action's own user write
+ * is completed here too; its stamping subflow then writes the same two
+ * columns again.
+ *
+ * Not elevated: the two stamps are `readonly`, but the platform strips only
+ * the keys the CALLER supplied, and keys a `beforeUpdate` hook adds are
+ * stored (measured on 18.5.0, pinned in `test/flow-case-actions.test.ts`).
+ */
+const caseEscalationComplete: Hook = {
+  name: 'case_escalation_complete',
+  object: 'crm_case',
+  events: ['beforeUpdate'],
+  priority: 120,
+  description: 'Complete a person\'s escalation set through the Status field: stamp the Escalated flag and date, raise the priority to Critical, and so require the reason.',
+  handler: async (ctx: HookContext) => {
+    if (ctx.dispatch?.mode === 'per-row') return;
+    const { input } = ctx;
+    const previous = ctx.previous;
+    if (!input || !previous) return;
+    if (input.status !== 'escalated' || previous.status === 'escalated') return;
+    if (input.is_escalated === true || previous.is_escalated === true) return;
+    // A person's write: Edit, the path, the action's own user step. A system
+    // write (an integration, an import, a test fixture) is its author's to
+    // keep whole, as the flows that escalate on their own do.
+    if (!ctx.user?.id || ctx.session?.isSystem) return;
+    input.is_escalated = true;
+    if (!input.escalated_date) input.escalated_date = new Date().toISOString();
+    input.priority = 'critical';
+  },
+};
+
 export default [
   caseValidation,
+  caseEscalationComplete,
   caseEscalationReassign,
   caseResolutionArticleNormalize,
   caseSideEffects,
