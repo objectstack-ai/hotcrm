@@ -119,7 +119,7 @@ const expenseApprover: Hook = {
         `${String(project.name ?? 'This project')} is locked for time and expenses, so this expense cannot be submitted. Keep it as a draft, or ask the project manager to untick Lock Time and Expenses on the project.`,
         'RECORD_LOCKED',
         409,
-      ), { reason: 'project_locked', params: { project: String(project.name ?? '') } });
+      ), { reason: 'project_locked', params: { project: String(project.name ?? 'This project') } });
     }
     if (ctx.event !== 'beforeInsert') return;
     const manager = refId(project?.project_manager);

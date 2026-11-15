@@ -101,6 +101,27 @@ const campaignMemberEnrollmentGate: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
   description: 'Refuse a user enrolling a person in a campaign that is not open, or a person who opted out of email.',
+  refusals: {
+    VALIDATION_FAILED: {
+      message: 'The chosen campaign is not open for enrollment, or no longer exists: only a Planning or In Progress campaign takes members. Nobody was enrolled.',
+      status: 400,
+      params: ['campaign'],
+      reasons: {
+        named: {
+          message: '{{campaign}} is not open for enrollment, or no longer exists: only a Planning or In Progress campaign takes members. Nobody was enrolled.',
+        },
+      },
+    },
+    FORBIDDEN: {
+      message: '{{lead}} has opted out of email, so the lead was not added to the campaign.',
+      status: 403,
+      params: ['lead', 'contact'],
+      reasons: {
+        contact: { message: 'This contact has opted out of email, so the contact was not added to the campaign.' },
+        contact_named: { message: '{{contact}} has opted out of email, so the contact was not added to the campaign.' },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -155,11 +176,11 @@ const campaignMemberEnrollmentGate: Hook = {
         const title = campaign && typeof campaign.name === 'string' && campaign.name !== ''
           ? campaign.name
           : 'The chosen campaign';
-        throw refuse(
+        throw Object.assign(refuse(
           `${title} is not open for enrollment, or no longer exists: only a Planning or In Progress campaign takes members. Nobody was enrolled.`,
           'VALIDATION_FAILED',
           400,
-        );
+        ), campaign && typeof campaign.name === 'string' && campaign.name !== '' ? { reason: 'named', params: { campaign: campaign.name } } : {});
       }
     }
 
@@ -171,11 +192,11 @@ const campaignMemberEnrollmentGate: Hook = {
       if (lead?.email_opt_out === true) {
         const first = typeof lead.first_name === 'string' ? lead.first_name : '';
         const last = typeof lead.last_name === 'string' ? lead.last_name : '';
-        throw refuse(
+        throw Object.assign(refuse(
           `${first} ${last} has opted out of email, so the lead was not added to the campaign.`,
           'FORBIDDEN',
           403,
-        );
+        ), { params: { lead: `${first} ${last}` } });
       }
     }
     if (contactId) {
@@ -186,11 +207,11 @@ const campaignMemberEnrollmentGate: Hook = {
         const name = typeof contact.full_name === 'string' && contact.full_name !== ''
           ? contact.full_name
           : 'This contact';
-        throw refuse(
+        throw Object.assign(refuse(
           `${name} has opted out of email, so the contact was not added to the campaign.`,
           'FORBIDDEN',
           403,
-        );
+        ), typeof contact.full_name === 'string' && contact.full_name !== '' ? { reason: 'contact_named', params: { contact: contact.full_name } } : { reason: 'contact' });
       }
     }
   },

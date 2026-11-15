@@ -141,6 +141,33 @@ export const zhCN: TranslationData = {
     },
   },
   hooks: {
+    campaign_validation: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '营销活动的开始日期（{{start}}）不能晚于结束日期（{{end}}）。',
+          reasons: {
+            in_progress_dates: { message: '营销活动必须同时填写开始日期和结束日期，才能设为“进行中”。' },
+          },
+        },
+      },
+    },
+    campaign_member_enrollment_gate: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '所选营销活动未开放报名，或已不存在：只有“规划中”或“进行中”的营销活动可以加入成员。没有人被加入。',
+          reasons: {
+            named: { message: '{{campaign}}未开放报名，或已不存在：只有“规划中”或“进行中”的营销活动可以加入成员。没有人被加入。' },
+          },
+        },
+        FORBIDDEN: {
+          message: '{{lead}}已拒收邮件，因此这个线索没有加入营销活动。',
+          reasons: {
+            contact: { message: '这个联系人已拒绝邮件，因此没有加入营销活动。' },
+            contact_named: { message: '{{contact}}已拒绝邮件，因此这个联系人没有加入营销活动。' },
+          },
+        },
+      },
+    },
     campaign_member_unique: {
       refusals: {
         DUPLICATE_VALUE: { message: '{{ person }} 已是 {{ campaign }} 的成员。请打开已有的那条成员记录，不要再添加一条。' },

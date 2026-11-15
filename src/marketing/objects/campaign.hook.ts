@@ -51,6 +51,16 @@ const campaignValidation: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description: 'Validate campaign date range and required fields per status.',
+  refusals: {
+    VALIDATION_FAILED: {
+      message: "The campaign's Start Date ({{start}}) must not be after its End Date ({{end}}).",
+      status: 400,
+      params: ['start', 'end'],
+      reasons: {
+        in_progress_dates: { message: 'A campaign cannot be In Progress without both a Start Date and an End Date.' },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -88,22 +98,22 @@ const campaignValidation: Hook = {
     // `test/hooks-runtime-service.test.ts` reads them off `crm_campaign` and
     // fails when a label and its refusal part ways.
     if (start && end && start > end) {
-      throw refuse(
+      throw Object.assign(refuse(
         `The campaign's Start Date (${start}) must not be after its End Date (${end}).`,
         'VALIDATION_FAILED',
         400,
-      );
+      ), { params: { start, end } });
     }
     const status =
       (typeof input.status === 'string' && input.status) ||
       (typeof previous?.status === 'string' && (previous.status as string)) ||
       undefined;
     if (status === 'in_progress' && (!start || !end)) {
-      throw refuse(
+      throw Object.assign(refuse(
         'A campaign cannot be In Progress without both a Start Date and an End Date.',
         'VALIDATION_FAILED',
         400,
-      );
+      ), { reason: 'in_progress_dates' });
     }
   },
 };

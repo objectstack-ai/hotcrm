@@ -142,6 +142,33 @@ export const esES: TranslationData = {
     },
   },
   hooks: {
+    campaign_validation: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'La Fecha de Inicio de la campaña ({{start}}) no puede ser posterior a su Fecha de Fin ({{end}}).',
+          reasons: {
+            in_progress_dates: { message: 'Una campaña no puede estar En Curso sin una Fecha de Inicio y una Fecha de Fin.' },
+          },
+        },
+      },
+    },
+    campaign_member_enrollment_gate: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'La campaña elegida no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
+          reasons: {
+            named: { message: '{{campaign}} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.' },
+          },
+        },
+        FORBIDDEN: {
+          message: '{{lead}} se ha excluido de los correos, por lo que el prospecto no se añadió a la campaña.',
+          reasons: {
+            contact: { message: 'Este contacto se ha excluido de los correos, por lo que no se añadió a la campaña.' },
+            contact_named: { message: '{{contact}} se ha excluido de los correos, por lo que el contacto no se añadió a la campaña.' },
+          },
+        },
+      },
+    },
     campaign_member_unique: {
       refusals: {
         DUPLICATE_VALUE: { message: '{{ person }} ya es miembro de {{ campaign }}. Abra esa membresía en lugar de añadir otra.' },

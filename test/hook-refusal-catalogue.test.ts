@@ -5,6 +5,10 @@ import { extractHookBody } from '@objectstack/cli/hook-body';
 import type { TranslationBundle } from '@objectstack/spec/system';
 import { psaHooks } from '../src/psa';
 import { PsaTranslations } from '../src/psa/translations';
+import { o2cHooks } from '../src/o2c';
+import { O2cTranslations } from '../src/o2c/translations';
+import { marketingHooks } from '../src/marketing';
+import { MarketingTranslations } from '../src/marketing/translations';
 
 type AnyRec = Record<string, any>;
 
@@ -34,6 +38,8 @@ type AnyRec = Record<string, any>;
 
 const PACKAGES: Array<{ name: string; hooks: AnyRec[]; bundle: TranslationBundle }> = [
   { name: 'psa', hooks: psaHooks as AnyRec[], bundle: PsaTranslations },
+  { name: 'o2c', hooks: o2cHooks as AnyRec[], bundle: O2cTranslations },
+  { name: 'marketing', hooks: marketingHooks as AnyRec[], bundle: MarketingTranslations },
 ];
 
 const LOCALES = ['zh-CN', 'ja-JP', 'es-ES'] as const;
@@ -42,6 +48,8 @@ const LOCALES = ['zh-CN', 'ja-JP', 'es-ES'] as const;
 const CALL = /,\s*"([A-Z][A-Z0-9_]+)",\s*(\d{3})\s*[,)]/g;
 /** A literal reason in the lowered body: `reason: "snake_case"`. */
 const REASON = /reason:\s*"([a-z][a-z0-9_]*)"/g;
+/** A literal code on an error the hook builds itself: `code: "CODE"`. */
+const CODE = /\bcode:\s*"([A-Z][A-Z0-9_]+)"/g;
 const HOLE = /\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/g;
 
 const lowered = (hook: AnyRec): string => extractHookBody(hook.handler, `hook '${hook.name}'`).source;
@@ -51,7 +59,9 @@ const holes = (s: string): string[] => all(HOLE, s);
 describe.each(PACKAGES)('hook refusals of the $name package are catalogued and translated', ({ hooks, bundle }) => {
   const refusing = hooks
     .map((hook) => ({ hook, source: lowered(hook) }))
-    .filter(({ source }) => /throw (refuse\(|Object\.assign\(refuse\()/.test(source));
+    // A hook refuses through the `refuse(…)` envelope, or (like
+    // `campaign_member_unique`) throws an error carrying a declared `code`.
+    .filter(({ hook, source }) => /throw (refuse\(|Object\.assign\(refuse\()/.test(source) || hook.refusals !== undefined);
 
   it('has hooks that refuse, so the guard is guarding', () => {
     expect(refusing.length).toBeGreaterThan(0);
@@ -62,7 +72,7 @@ describe.each(PACKAGES)('hook refusals of the $name package are catalogued and t
     (_name, hook, source) => {
       const catalogue = (hook.refusals ?? {}) as AnyRec;
       expect(Object.keys(catalogue).length, 'no refusals catalogue').toBeGreaterThan(0);
-      for (const code of new Set(all(CALL, source))) {
+      for (const code of new Set([...all(CALL, source), ...all(CODE, source)])) {
         expect(catalogue[code], `throws ${code}, which the catalogue does not declare`).toBeTruthy();
       }
       const reasons = new Set((Object.values(catalogue) as AnyRec[]).flatMap((e) => Object.keys(e.reasons ?? {})));

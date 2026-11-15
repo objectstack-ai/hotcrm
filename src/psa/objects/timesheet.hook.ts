@@ -132,7 +132,7 @@ const timesheetStamps: Hook = {
         `${String(project.name ?? 'This project')} is locked for time and expenses, so this timesheet cannot be submitted. Keep it as a draft, or ask the project manager to untick Lock Time and Expenses on the project.`,
         'RECORD_LOCKED',
         409,
-      ), { reason: 'project_locked', params: { project: String(project.name ?? '') } });
+      ), { reason: 'project_locked', params: { project: String(project.name ?? 'This project') } });
     }
 
     const name = pick('name');

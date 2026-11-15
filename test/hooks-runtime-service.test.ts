@@ -436,10 +436,10 @@ describe('campaign_validation', () => {
   it('rejects a Start Date after the End Date, naming both fields by their labels', async () => {
     const err = await marketerCampaign({ start_date: '2026-06-01', end_date: '2026-01-01' }).then(() => null, (e) => e);
     expect(err).toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
-    expect(err.message).toBe(
+    expect(err.userMessage, 'the declared sentence the caller reads (#2496)').toBe(
       `The campaign's ${label('start_date')} (2026-06-01) must not be after its ${label('end_date')} (2026-01-01).`,
     );
-    expect(err.message).not.toMatch(/start_date|end_date/);
+    expect(err.userMessage).not.toMatch(/start_date|end_date/);
   });
 
   it('refuses a campaign stored as In Progress without both dates, naming the status and the fields by their labels', async () => {
@@ -449,10 +449,10 @@ describe('campaign_validation', () => {
     for (const doc of [{ start_date: '2026-01-01' }, {}]) {
       const err = await marketerCampaign({ status: 'in_progress', ...doc }).then(() => null, (e) => e);
       expect(err).toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
-      expect(err.message).toBe(
+      expect(err.userMessage, 'the declared sentence the caller reads (#2496)').toBe(
         `A campaign cannot be ${statusLabel('in_progress')} without both a ${label('start_date')} and an ${label('end_date')}.`,
       );
-      expect(err.message).not.toMatch(/start_date|end_date|in_progress/);
+      expect(err.userMessage).not.toMatch(/start_date|end_date|in_progress/);
     }
   });
 

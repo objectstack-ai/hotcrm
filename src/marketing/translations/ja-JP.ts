@@ -141,6 +141,33 @@ export const jaJP: TranslationData = {
     },
   },
   hooks: {
+    campaign_validation: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'キャンペーンの開始日（{{start}}）は終了日（{{end}}）より後にできません。',
+          reasons: {
+            in_progress_dates: { message: '開始日と終了日の両方がないキャンペーンは「実施中」にできません。' },
+          },
+        },
+      },
+    },
+    campaign_member_enrollment_gate: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '選択したキャンペーンは参加受付中ではないか、すでに存在しません。メンバーを追加できるのは「計画中」または「実施中」のキャンペーンだけです。誰も追加されていません。',
+          reasons: {
+            named: { message: '{{campaign}}は参加受付中ではないか、すでに存在しません。メンバーを追加できるのは「計画中」または「実施中」のキャンペーンだけです。誰も追加されていません。' },
+          },
+        },
+        FORBIDDEN: {
+          message: '{{lead}}はメール配信停止を選んでいるため、このリードはキャンペーンに追加されませんでした。',
+          reasons: {
+            contact: { message: 'この取引先責任者はメール配信停止を選んでいるため、キャンペーンに追加されませんでした。' },
+            contact_named: { message: '{{contact}}はメール配信停止を選んでいるため、この取引先責任者はキャンペーンに追加されませんでした。' },
+          },
+        },
+      },
+    },
     campaign_member_unique: {
       refusals: {
         DUPLICATE_VALUE: { message: '{{ person }} はすでに {{ campaign }} のメンバーです。もう 1 件追加せず、既存のメンバーを開いてください。' },
