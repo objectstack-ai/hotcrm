@@ -13,7 +13,7 @@ export const SalesRepProfile = {
   // `crm_user`, which says nothing here, so silence never re-shows an app.
   // A rep works in the Sales app alone: the collection plan they write sits
   // there, and the Order to Cash app is finance's (#2465).
-  tabPermissions: { crm_service: 'hidden' as const, crm_marketing: 'hidden' as const, crm_o2c: 'hidden' as const },
+  tabPermissions: { crm_service: 'hidden' as const, crm_marketing: 'hidden' as const, crm_o2c: 'hidden' as const, crm_psa: 'hidden' as const },
   // A rep's book of business is private by design (own records + whatever a
   // sharing rule or team grant extends). The objects below carry an explicit
   // `readScope: 'own'` so the intent is authored, not inferred — this both

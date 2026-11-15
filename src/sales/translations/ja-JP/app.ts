@@ -95,6 +95,15 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_my_tasks: { label: '私のタスク' },
       },
     },
+    crm_psa: {
+      // The ids this package contributes into the Project Delivery app (#2316).
+      navigation: {
+        nav_account: { label: '取引先' },
+        nav_opportunity: { label: '商談' },
+        nav_contract: { label: '契約' },
+        nav_my_tasks: { label: '私のタスク' },
+      },
+    },
   },
   messages: {
     'common.save': '保存',

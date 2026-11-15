@@ -43,7 +43,7 @@ export const ArAccountantProfile = {
   // Which HotCRM apps the holder's launcher offers (#2417, #2465): finance
   // works in the Order to Cash app alone, which carries the contracts and
   // accounts the invoices hang off. Visibility, not access, as on `sales_rep`.
-  tabPermissions: { crm_enterprise: 'hidden' as const, crm_service: 'hidden' as const, crm_marketing: 'hidden' as const },
+  tabPermissions: { crm_enterprise: 'hidden' as const, crm_service: 'hidden' as const, crm_marketing: 'hidden' as const, crm_psa: 'hidden' as const },
   objects: {
     crm_invoice:           { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },
     crm_payment:           { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },

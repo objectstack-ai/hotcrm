@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 /**
- * The five packages, built into the five package stacks this artifact carries.
+ * The six packages, built into the six package stacks this artifact carries.
  *
  * A directory under `src/` IS a package (ADR-0130, `module-split-plan.md`
  * items 4–9), and each is a package of the ARTIFACT too:
@@ -10,13 +10,13 @@
  *     artifact takes its identity from. Its `defineStack` is the factory in
  *     `src/sales/index.ts`, and this file hands it its collections, assembled
  *     from the sales barrels.
- *   - `src/service/`, `src/revenue/`, `src/marketing/`, `src/o2c/` — the four
- *     `type: 'module'` packages (`app.objectstack.hotcrm.service`, `.revenue`,
- *     `.marketing`, `.o2c`). Each `defineStack` is that directory's `index.ts`, which
+ *   - `src/service/`, `src/revenue/`, `src/marketing/`, `src/o2c/`, `src/psa/` —
+ *     the five `type: 'module'` packages (`app.objectstack.hotcrm.service`,
+ *     `.revenue`, `.marketing`, `.o2c`, `.psa`). Each `defineStack` is that directory's `index.ts`, which
  *     assembles its own collections from its own barrels; this file hands each
  *     only the seed rows the composition knob selects.
  *
- * `objectstack.config.ts` composes the five into ONE release artifact. This
+ * `objectstack.config.ts` composes the six into ONE release artifact. This
  * file builds them, because it is the one place that may see every package AND
  * carry named exports.
  *
@@ -36,10 +36,10 @@
  *     upstream of `defineStack()`, which is the only side of that call where
  *     `CrmSeedData` and the stack's `data` are distinguishable at all (see the
  *     note in `test/saas-composition.test.ts`);
- *   - the five BUILT package stacks — a multi-package artifact carries every
+ *   - the six BUILT package stacks — a multi-package artifact carries every
  *     collection once, inside its package's body in `packages[]`, and no longer
  *     beside them at the top level (ADR-0130 D4, 2026-09-22 addendum), so a
- *     suite that reads "every object of the app" composes these five itself.
+ *     suite that reads "every object of the app" composes these six itself.
  *
  * ## Order
  *
@@ -64,6 +64,7 @@ import {
   createHotCrmMarketingStack, marketingHooks, marketingFlows, marketingSharingRules,
 } from './src/marketing/index.js';
 import { createHotCrmO2cStack, o2cHooks } from './src/o2c/index.js';
+import { createHotCrmPsaStack } from './src/psa/index.js';
 
 import * as salesObjects from './src/sales/objects/index.js';
 
@@ -645,7 +646,7 @@ const compositionBooks = isSaas
       book === CrmAdminManual ? { ...book, audience: { permissionSet: TenantAdminProfile.name } } : book)
   : appBooks;
 
-/* ─── The five package stacks `objectstack.config.ts` composes ──────────── */
+/* ─── The six package stacks `objectstack.config.ts` composes ───────────── */
 
 /** `app.objectstack.hotcrm.service` — see `src/service/index.ts`. */
 export const serviceStack = createHotCrmServiceStack({ data: seedData.service });
@@ -662,8 +663,14 @@ export const marketingStack = createHotCrmMarketingStack({ data: seedData.market
  */
 export const o2cStack = createHotCrmO2cStack();
 
-/** The four module stacks, in the order the artifact lists them. */
-export const moduleStacks = [serviceStack, revenueStack, marketingStack, o2cStack];
+/**
+ * `app.objectstack.hotcrm.psa` — see `src/psa/index.ts`. Phase 0 ships no
+ * seed row, so it is handed nothing.
+ */
+export const psaStack = createHotCrmPsaStack();
+
+/** The five module stacks, in the order the artifact lists them. */
+export const moduleStacks = [serviceStack, revenueStack, marketingStack, o2cStack, psaStack];
 
 /**
  * `app.objectstack.hotcrm` — see `src/sales/index.ts`, including why it is
@@ -732,5 +739,5 @@ export const appStack = createHotCrmAppStack(
   },
 );
 
-/** All five package stacks, the app last — what `objectstack.config.ts` composes. */
+/** All six package stacks, the app last — what `objectstack.config.ts` composes. */
 export const packageStacks = [...moduleStacks, appStack];

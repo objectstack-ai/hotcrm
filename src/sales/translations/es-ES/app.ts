@@ -95,6 +95,15 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_my_tasks: { label: 'Mis Tareas' },
       },
     },
+    crm_psa: {
+      // The ids this package contributes into the Project Delivery app (#2316).
+      navigation: {
+        nav_account: { label: 'Cuentas' },
+        nav_opportunity: { label: 'Oportunidades' },
+        nav_contract: { label: 'Contratos' },
+        nav_my_tasks: { label: 'Mis Tareas' },
+      },
+    },
   },
   messages: {
     'common.save': 'Guardar',
