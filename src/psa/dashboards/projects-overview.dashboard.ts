@@ -11,13 +11,15 @@ const DELIVERING = ['active', 'on_hold', 'completed'];
  * Budget, cost, margin and hours across the delivery portfolio. It binds only
  * Project Delivery's own datasets, `project_financials` and `time_utilization`,
  * and lives in the module beside them: a dataset is read only inside the
- * reader's dependency closure on 18.4.0 (phase-0 reading P4), and the
+ * reader's dependency closure (measured on 18.4.0) (phase-0 reading P4), and the
  * dashboard leaves with the module when a tenant disables it.
  *
  * The money tiles cover the projects that are spending (Active, On Hold,
  * Completed); a Draft or In Approval project has a budget but no cost yet, and
  * would only dilute Budget Used. The hours tiles count approved timesheets
- * only, the hours that are cost.
+ * only, the hours that are cost: the filter reads the entry's timesheet
+ * (`crm_timesheet.status`, served across the include from 18.5.0), and a week
+ * is the week the hours were worked.
  *
  * No date picker: a project spans months, and windowing projects by a date
  * would cut a running project out of its own figures. Hours by week are
@@ -139,7 +141,7 @@ export const ProjectsOverviewDashboard: Dashboard = {
       title: 'Approved Hours by Week',
       description: 'Hours on approved timesheets, and the billable part of them',
       type: 'line',
-      filter: { status: 'approved' },
+      filter: { 'crm_timesheet.status': 'approved' },
       colorVariant: 'blue',
       dataset: 'time_utilization', dimensions: ['period_week'], values: ['total_hours', 'billable_hours'],
       layout: { x: 0, y: 9, w: 8, h: 4 },
@@ -153,7 +155,7 @@ export const ProjectsOverviewDashboard: Dashboard = {
       title: 'Billable Share by Person',
       description: 'Approved hours per person and the share billed to customers',
       type: 'table',
-      filter: { status: 'approved' },
+      filter: { 'crm_timesheet.status': 'approved' },
       colorVariant: 'default',
       dataset: 'time_utilization', dimensions: ['person'], values: ['total_hours', 'billable_hours', 'utilization'],
       layout: { x: 8, y: 9, w: 4, h: 4 },

@@ -89,8 +89,8 @@ const INTENDED_BUCKET: Record<string, Granularity> = {
   // (see the Activity dashboard's header note, which now says the same).
   'event_metrics.start_datetime': 'week',
   // #2316 phase 1c, Project Delivery. Projects by the month they are planned
-  // to start, and approved hours by the week (or month) their timesheet
-  // starts: the Projects Overview carries no date range, because windowing a
+  // to start, and approved hours by the week (or month) they were worked
+  // (#2483): the Projects Overview carries no date range, because windowing a
   // project by one date cuts a running project out of its own figures, so the
   // bucket on the axis is the only time cut.
   'project_financials.planned_start': 'month',

@@ -3,4 +3,4 @@
 /** Project Delivery's datasets (#2316 phase 1c), read only by its own dashboard. */
 
 export { ProjectFinancialsDataset } from './project.dataset';
-export { TimeUtilizationDataset } from './timesheet.dataset';
+export { TimeUtilizationDataset } from './time-entry.dataset';

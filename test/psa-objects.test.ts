@@ -232,6 +232,70 @@ describe('expenses (expense_approver)', () => {
   });
 });
 
+/**
+ * Weekly hours by the day they were worked (#2483). `time_utilization` reads
+ * the entry, with the timesheet included for the person, the project and the
+ * approval; the Projects Overview hours tiles filter on the timesheet's
+ * status, which 18.5.0 serves across the include (objectstack#33512). Through
+ * the booted analytics service, the one the REST route calls, scoped to this
+ * suite's project.
+ */
+describe('approved hours by week (time_utilization, #2483)', () => {
+  const tile = (id: string): Rec => {
+    const dashboard = verify.metadata.items<Rec>('dashboard').find((d) => d.name === 'projects_overview');
+    const found = ((dashboard?.widgets ?? []) as Rec[]).find((w) => w.id === id);
+    expect(found, `no ${id} tile on projects_overview`).toBeTruthy();
+    return found!;
+  };
+  const query = async (w: Rec): Promise<Rec[]> => {
+    const dataset = verify.metadata.items<Rec>('dataset').find((d) => d.name === 'time_utilization')!;
+    const analytics = verify.kernel.getService<Rec>('analytics');
+    const res = await analytics.queryDataset(dataset, {
+      dimensions: w.dimensions,
+      measures: w.values,
+      runtimeFilter: { ...(w.filter ?? {}), 'crm_timesheet.crm_project': project.id },
+    }, { isSystem: true });
+    return (res.rows ?? []) as Rec[];
+  };
+
+  beforeAll(async () => {
+    // Thursday to Wednesday: Friday is in week 46, Monday in week 47.
+    const split = await insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-12', period_end: '2026-11-18' }, consultant.token);
+    await insert('crm_time_entry', { crm_timesheet: split.id, entry_date: '2026-11-13', hours: 6 }, consultant.token);
+    await insert('crm_time_entry', { crm_timesheet: split.id, entry_date: '2026-11-16', hours: 2, is_billable: false }, consultant.token);
+    await update('crm_timesheet', { id: split.id, status: 'submitted' }, consultant.token);
+    await decide(split.id, pm.token);
+    // Submitted and never approved: booked time, not cost.
+    const waiting = await insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-19', period_end: '2026-11-25' }, consultant.token);
+    await insert('crm_time_entry', { crm_timesheet: waiting.id, entry_date: '2026-11-20', hours: 4 }, consultant.token);
+    await update('crm_timesheet', { id: waiting.id, status: 'submitted' }, consultant.token);
+  }, 60_000);
+
+  it('the dataset reads the entry and takes the approval from its timesheet', () => {
+    const dataset = verify.metadata.items<Rec>('dataset').find((d) => d.name === 'time_utilization')!;
+    expect(dataset).toMatchObject({ object: 'crm_time_entry', include: ['crm_timesheet'] });
+    for (const id of ['hours_by_week', 'billable_share_by_person']) {
+      expect(tile(id).filter, id).toEqual({ 'crm_timesheet.status': 'approved' });
+    }
+  });
+
+  it('puts each hour in the week it was worked, and leaves out hours not yet approved', async () => {
+    const rows = await query(tile('hours_by_week'));
+    const byWeek = Object.fromEntries(rows.filter((r) => num(r.total_hours) > 0).map((r) => [r.period_week, [num(r.total_hours), num(r.billable_hours)]]));
+    // Week 45: the 8 h approved earlier in this file; the PM's 4 h draft stays out.
+    // Weeks 46 and 47: one timesheet, split by entry date. The waiting 4 h stays out.
+    expect(byWeek).toEqual({ '2026-W45': [8, 8], '2026-W46': [6, 6], '2026-W47': [2, 0] });
+  });
+
+  it('gives each person their billable share of approved hours', async () => {
+    const rows = await query(tile('billable_share_by_person'));
+    expect(rows).toHaveLength(1);
+    expect(num(rows[0]!.total_hours)).toBe(16);
+    expect(num(rows[0]!.billable_hours)).toBe(14);
+    expect(num(rows[0]!.utilization)).toBeCloseTo(14 / 16, 6);
+  });
+});
+
 describe('the delivery launcher', () => {
   const appsOf = async (token: string): Promise<string[]> => {
     const res = await verify.apiAs(token, 'GET', '/me/apps');
