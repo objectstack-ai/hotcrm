@@ -80,7 +80,24 @@ describe('staffing (project_team_sync)', () => {
   it('keeps the project\'s Project Manager and Team', async () => {
     const p = (await row('crm_project', project.id))!;
     expect(p.project_manager).toBe(pm.id);
-    expect([...(p.team_members ?? [])].sort()).toEqual([pm.id, consultant.id].sort());
+    expect(p.team_members, 'the manager is named by project_manager_edit alone').toEqual([consultant.id]);
+  });
+
+  it('lets a project manager who does not own the project edit and staff it', async () => {
+    // Opened by the administrator, so the PM reaches it only through
+    // `project_manager_edit`. With the PM in the Team as well, the team's read
+    // replaced that edit (objectstack#33683) and both writes answered 403.
+    const theirs = await insert('crm_project', {
+      name: `Test Handover ${++k}`, crm_account: account.id, kind: 'delivery', approved_budget: 1000,
+    }, admin);
+    await insert('crm_project_member', { crm_project: theirs.id, person: pm.id, responsibility: 'project_manager', rate_card: daily.id }, admin);
+    const edit = await verify.apiAs(pm.token, 'PATCH', `/data/crm_project/${theirs.id}`, { description: 'Kick-off held.' });
+    expect(edit.status, await edit.clone().text()).toBe(200);
+    const staff = await verify.apiAs(pm.token, 'POST', '/data/crm_project_member', {
+      crm_project: theirs.id, person: consultant.id, responsibility: 'consultant', rate_card: hourly.id,
+    });
+    expect(staff.status, await staff.clone().text()).toBeLessThan(300);
+    expect((await row('crm_project', theirs.id))!.team_members).toEqual([consultant.id]);
   });
 
   it('opens the project to the team and to nobody else', async () => {

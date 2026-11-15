@@ -114,7 +114,7 @@ crm_na_sales_team       crm_eu_sales_team       （區域分組）
 | Escalated Cases — Previous Owner | 工單 | 讀取 | 工單 `escalated_from` 欄位裡的那個人 —— 升級從他手上轉走的工單，直到它被 Closed |
 | Live Campaigns — Marketing Manager | 行銷活動 | 編輯 | `crm_marketing_manager` —— 籌劃中 / 進行中的活動 |
 | Live Campaigns — Marketing Director | 行銷活動 | 編輯 | `crm_marketing_director` —— 同一批活動 |
-| Projects — Team | 項目 | 讀取 | 項目 `team_members` 欄位裡的人 —— 所有被安排在項目上的人 |
+| Projects — Team | 項目 | 讀取 | 項目 `team_members` 欄位裡的人 —— 除項目經理外所有被安排在項目上的人（項目經理用下一條規則） |
 | Projects — Project Manager | 項目 | 編輯 | 項目 `project_manager` 欄位裡的人 |
 | Projects — Finance | 項目 | 編輯 | `crm_finance_controller`、`crm_project_director`、`crm_pmo` —— 每個項目（每個職位一條規則；可以編輯，從不能刪除） |
 | Timesheets — Approver | 工時單 | 編輯 | 工時單 `approver` 欄位裡的人 —— 建立時的項目經理 |

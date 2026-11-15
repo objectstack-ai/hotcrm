@@ -6,10 +6,14 @@ import type { HookApi } from '../../sales/objects/_hook-api';
 /**
  * Keep the project's Team and Project Manager in step with its staffing.
  *
- * After any member is added, changed or removed, the project's `team_members`
- * is set to every person staffed on it, and `project_manager` to the person
- * staffed with the Project Manager responsibility (the earliest such row when there are several;
- * empty when there is none). Both fields are read-only to people, so the
+ * After any member is added, changed or removed, the project's `project_manager`
+ * is set to the person staffed with the Project Manager responsibility (the
+ * earliest such row when there are several; empty when there is none), and
+ * `team_members` to every other person staffed on it. The manager is left out
+ * of the team on purpose: they read and edit through `project_manager_edit`,
+ * so each person on a project is named by exactly one rule (objectstack#33683
+ * keeps one share row per user and record, and a team read written after the
+ * manager's edit would replace it). Both fields are read-only to people, so the
  * project's approver and the team the sharing rules read are typed once, here.
  *
  * `runAs: 'system'` (AGENTS.md rule 9): a read-only field is stripped from a
@@ -52,9 +56,11 @@ const projectTeamSync: Hook = {
       let manager = '';
       for (const m of members) {
         const person = refId(m.person);
-        if (!person) continue;
-        if (team.indexOf(person) < 0) team.push(person);
-        if (!manager && m.responsibility === 'project_manager') manager = person;
+        if (!manager && person && m.responsibility === 'project_manager') manager = person;
+      }
+      for (const m of members) {
+        const person = refId(m.person);
+        if (person && person !== manager && team.indexOf(person) < 0) team.push(person);
       }
       team.sort();
       const project = await api.object('crm_project').findOne({

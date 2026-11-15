@@ -15,7 +15,7 @@ import { P } from '@objectstack/spec';
  * which require a name (a timesheet's is filled on save).
  */
 
-/** Everyone staffed on a project reads it (`team_members`, kept by `project_member.hook.ts`). */
+/** Everyone staffed on a project except its manager reads it (`team_members`, kept by `project_member.hook.ts`). */
 export const ProjectTeamReadSharingRule = {
   name: 'project_team_read',
   label: 'Projects — Team',
