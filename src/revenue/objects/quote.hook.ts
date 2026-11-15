@@ -48,6 +48,34 @@ const quoteValidation: Hook = {
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
   description: 'Freeze settled quotes and their lines; refuse a settled create; derive the header totals.',
+  // `subject` and `holds` are the English the handler composes (the quote's
+  // label, the deal's held fields by label and value); the other languages
+  // name the quote from `quote` and leave the held fields to the English.
+  refusals: {
+    RECORD_LOCKED: {
+      message: '{{subject}} cannot be accepted while its opportunity is held by an approval ({{holds}}): accepting it would close that deal as won. Accept it once the approval is granted.',
+      status: 409,
+      params: ['subject', 'quote', 'holds'],
+      reasons: {
+        held_unsent: { message: '{{subject}} cannot be accepted while its opportunity is held by an approval ({{holds}}): accepting it would close that deal as won. Save the opportunity to send it for approval, then accept the quote once it is approved.' },
+        line_accepted: { message: 'Quote {{quote}} is Accepted, so its line items can no longer be added, changed or removed.' },
+        line_rejected: { message: 'Quote {{quote}} is Rejected, so its line items can no longer be added, changed or removed. Revise it back to Draft to change them.' },
+        line_expired: { message: 'Quote {{quote}} is Expired, so its line items can no longer be added, changed or removed.' },
+        frozen_accepted: { message: '{{subject}} is Accepted; only its Internal Notes can still be edited.' },
+        frozen_rejected: { message: '{{subject}} is Rejected; revise it back to Draft to change it. Until then only its Internal Notes can be edited.' },
+        frozen_expired: { message: '{{subject}} is Expired; only its Internal Notes can still be edited.' },
+      },
+    },
+    VALIDATION_FAILED: {
+      message: '{{subject}} cannot be created as Accepted. A quote starts as Draft, In Review or Presented, and is accepted, rejected or expired from there.',
+      status: 400,
+      params: ['subject', 'quote'],
+      reasons: {
+        created_rejected: { message: '{{subject}} cannot be created as Rejected. A quote starts as Draft, In Review or Presented, and is accepted, rejected or expired from there.' },
+        created_expired: { message: '{{subject}} cannot be created as Expired. A quote starts as Draft, In Review or Presented, and is accepted, rejected or expired from there.' },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope. ⚠️ Mirrored from `src/sales/objects/_refusal.ts` because a lowered
     // body has no module scope and `extractHookBody` THROWS on an import;
@@ -123,12 +151,12 @@ const quoteValidation: Hook = {
           const what = `Quote ${String(q.name)} is`;
           const rest = 'so its line items can no longer be added, changed or removed.';
           const revise = q.status === 'rejected' ? ' Revise it back to Draft to change them.' : '';
-          throw refuse(
+          throw Object.assign(refuse(
             `${what} ${q.status}, ${rest}${revise}`,
             'RECORD_LOCKED',
             409,
             `${what} ${STATUS_LABELS[q.status]}, ${rest}${revise}`,
-          );
+          ), { reason: q.status === 'rejected' ? 'line_rejected' : q.status === 'expired' ? 'line_expired' : 'line_accepted', params: { quote: String(q.name) } });
         }
       }
       return;
@@ -152,12 +180,15 @@ const quoteValidation: Hook = {
     if (event === 'beforeInsert' && ctx.user?.id && typeof input.status === 'string' && STATUS_LABELS[input.status]) {
       const named = typeof input.name === 'string' && input.name.trim() ? `Quote ${input.name.trim()}` : 'A new quote';
       const tail = 'A quote starts as Draft, In Review or Presented, and is accepted, rejected or expired from there.';
-      throw refuse(
+      throw Object.assign(refuse(
         `${named} cannot be created as ${input.status}. ${tail}`,
         'VALIDATION_FAILED',
         400,
         `${named} cannot be created as ${STATUS_LABELS[input.status]}. ${tail}`,
-      );
+      ), {
+        reason: input.status === 'rejected' ? 'created_rejected' : input.status === 'expired' ? 'created_expired' : undefined,
+        params: { subject: named, quote: typeof input.name === 'string' ? input.name.trim() : '' },
+      });
     }
 
     // The quote as every quote surface titles it: its name alone
@@ -271,7 +302,7 @@ const quoteValidation: Hook = {
           // top of the handler, shared with the line freeze.
           const what = `${subject()} is ${previous.status as string}`;
           const rejected = previous.status === 'rejected';
-          throw refuse(
+          throw Object.assign(refuse(
             rejected
               ? `${what}; only internal_notes and status may be edited — revise it back to draft first. Attempted: ${violating.join(', ')}.`
               : `${what}; only internal_notes may be edited. Attempted: ${violating.join(', ')}.`,
@@ -280,7 +311,10 @@ const quoteValidation: Hook = {
             rejected
               ? `${subject()} is Rejected; revise it back to Draft to change it. Until then only its Internal Notes can be edited.`
               : `${subject()} is ${STATUS_LABELS[previous.status as string]}; only its Internal Notes can still be edited.`,
-          );
+          ), {
+            reason: rejected ? 'frozen_rejected' : previous.status === 'expired' ? 'frozen_expired' : 'frozen_accepted',
+            params: { subject: subject(), quote: typeof previous.name === 'string' ? previous.name.trim() : '' },
+          });
         }
       }
 
@@ -360,7 +394,10 @@ const quoteValidation: Hook = {
           const next = unsent
             ? 'Save the opportunity to send it for approval, then accept the quote once it is approved.'
             : 'Accept it once the approval is granted.';
-          throw refuse(`${what} (${held.join('; ')}): accepting it would close that deal as won. ${next}`, 'RECORD_LOCKED', 409);
+          throw Object.assign(refuse(`${what} (${held.join('; ')}): accepting it would close that deal as won. ${next}`, 'RECORD_LOCKED', 409), {
+            reason: unsent ? 'held_unsent' : undefined,
+            params: { subject: subject(), quote: typeof previous.name === 'string' ? previous.name.trim() : '', holds: held.join('; ') },
+          });
         }
       }
     }
@@ -725,6 +762,19 @@ const quotePriceBook: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 210,
   description: "Default a new quote to the standard price book; refuse an inactive book, and a book change on a quote with line items.",
+  refusals: {
+    VALIDATION_FAILED: {
+      message: '{{book}} is not active, and a quote prices only from an active price book. Choose another price book for {{target}}.',
+      status: 400,
+      params: ['book', 'target', 'subject', 'quote', 'count', 'from'],
+      reasons: {
+        line: { message: '{{subject}} already has 1 line item priced, so its price book cannot change. Remove the line items first, then choose the price book and add them again.' },
+        line_from: { message: '{{subject}} already has 1 line item priced from {{from}}, so its price book cannot change. Remove the line items first, then choose the price book and add them again.' },
+        lines: { message: '{{subject}} already has {{count}} line items priced, so its price book cannot change. Remove the line items first, then choose the price book and add them again.' },
+        lines_from: { message: '{{subject}} already has {{count}} line items priced from {{from}}, so its price book cannot change. Remove the line items first, then choose the price book and add them again.' },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -786,11 +836,11 @@ const quotePriceBook: Hook = {
     if (next) {
       const book = await api.object('crm_price_book').findOne({ where: { id: next }, fields: ['id', 'name', 'is_active'] });
       if (book && book.is_active === false) {
-        throw refuse(
+        throw Object.assign(refuse(
           `${String(book.name)} is not active, and a quote prices only from an active price book. Choose another price book for ${subject.replace(/^This quote$/, 'this quote')}.`,
           'VALIDATION_FAILED',
           400,
-        );
+        ), { params: { book: String(book.name), target: subject.replace(/^This quote$/, 'this quote'), quote: quoteName ? String(quoteName).trim() : '' } });
       }
     }
 
@@ -801,11 +851,14 @@ const quotePriceBook: Hook = {
           ? await api.object('crm_price_book').findOne({ where: { id: before }, fields: ['id', 'name'] })
           : null;
         const from = typeof old?.name === 'string' && old.name.trim() !== '' ? ` from ${old.name.trim()}` : '';
-        throw refuse(
+        throw Object.assign(refuse(
           `${subject} already has ${lines} ${lines === 1 ? 'line item' : 'line items'} priced${from}, so its price book cannot change. Remove the line items first, then choose the price book and add them again.`,
           'VALIDATION_FAILED',
           400,
-        );
+        ), {
+          reason: (lines === 1 ? 'line' : 'lines') + (from ? '_from' : ''),
+          params: { subject, quote: quoteName ? String(quoteName).trim() : '', count: lines, from: from ? String(old?.name).trim() : '' },
+        });
       }
     }
   },

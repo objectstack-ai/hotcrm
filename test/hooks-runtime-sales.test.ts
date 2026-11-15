@@ -1350,10 +1350,10 @@ describe('product_catalog', () => {
       await verify.seed('crm_quote_line_item', [{ crm_quote: quote.id, crm_product: product.id, quantity: 1, unit_price: 100 }]);
     }
     const err = await deleteRefusal(product.id);
-    expect(err.message).toBe(
+    expect(err.userMessage, 'the declared sentence the caller reads (#2496)').toBe(
       `Cannot delete product: it is on ${lines(1, OpportunityLineItem)} and ${lines(2, QuoteLineItem)}. ${retire()}`,
     );
-    expect(err.message).not.toMatch(/\(ies\)|\(s\)|is_active/);
+    expect(err.userMessage).not.toMatch(/\(ies\)|\(s\)|is_active/);
   });
 
   it('counts three lines on one opportunity as three line items, and lists no zero', async () => {
@@ -1362,14 +1362,14 @@ describe('product_catalog', () => {
     for (let i = 0; i < 3; i++) {
       await verify.seed('crm_opportunity_line_item', [{ crm_opportunity: opp.id, crm_product: product.id, quantity: 1, unit_price: 100 }]);
     }
-    expect((await deleteRefusal(product.id)).message).toBe(
+    expect((await deleteRefusal(product.id)).userMessage).toBe(
       `Cannot delete product: it is on ${lines(3, OpportunityLineItem)}. ${retire()}`,
     );
 
     const quoted = await adminProduct({ list_price: 100 });
     const quote = await repQuotes();
     await verify.seed('crm_quote_line_item', [{ crm_quote: quote.id, crm_product: quoted.id, quantity: 1, unit_price: 100 }]);
-    expect((await deleteRefusal(quoted.id)).message).toBe(
+    expect((await deleteRefusal(quoted.id)).userMessage).toBe(
       `Cannot delete product: it is on ${lines(1, QuoteLineItem)}. ${retire()}`,
     );
   });

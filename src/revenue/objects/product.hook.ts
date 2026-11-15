@@ -16,12 +16,33 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *   book at its List Price (#2318).
  */
 
+/** The delete refusal's English sentence; `held` is composed in the handler. */
+const PRODUCT_HELD = 'Cannot delete product: it is on {{held}}. To retire it instead, turn off Active.';
+
 const productHook: Hook = {
   name: 'product_catalog',
   object: 'crm_product',
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
   description: 'Pricing sanity, SKU normalization, and protect referenced products from deletion.',
+  // `held` is the English the handler composes (each count with its own
+  // plural); the other languages write the counts into their own sentence.
+  refusals: {
+    VALIDATION_FAILED: {
+      message: 'List Price ({{list_price}}) must be greater than or equal to Cost ({{cost}}).',
+      status: 400,
+      params: ['list_price', 'cost'],
+    },
+    DELETE_RESTRICTED: {
+      message: PRODUCT_HELD,
+      status: 409,
+      params: ['held', 'opportunity_lines', 'quote_lines'],
+      reasons: {
+        quote: { message: PRODUCT_HELD },
+        both: { message: PRODUCT_HELD },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -49,11 +70,11 @@ const productHook: Hook = {
       const listPrice = [input.list_price, previous?.list_price].find((v): v is number => typeof v === 'number');
       const cost = [input.cost, previous?.cost].find((v): v is number => typeof v === 'number');
       if (typeof listPrice === 'number' && typeof cost === 'number' && listPrice < cost) {
-        throw refuse(
+        throw Object.assign(refuse(
           `List Price (${listPrice}) must be greater than or equal to Cost (${cost}).`,
           'VALIDATION_FAILED',
           400,
-        );
+        ), { params: { list_price: listPrice, cost } });
       }
       if (typeof input.sku === 'string') {
         input.sku = input.sku.toUpperCase();
@@ -78,11 +99,14 @@ const productHook: Hook = {
         const held: string[] = [];
         if (oppRefs > 0) held.push(`${oppRefs} opportunity ${oppRefs === 1 ? 'line item' : 'line items'}`);
         if (quoteRefs > 0) held.push(`${quoteRefs} quote ${quoteRefs === 1 ? 'line item' : 'line items'}`);
-        throw refuse(
+        throw Object.assign(refuse(
           `Cannot delete product: it is on ${held.join(' and ')}. To retire it instead, turn off Active.`,
           'DELETE_RESTRICTED',
           409,
-        );
+        ), {
+          reason: oppRefs > 0 ? (quoteRefs > 0 ? 'both' : undefined) : 'quote',
+          params: { held: held.join(' and '), opportunity_lines: oppRefs, quote_lines: quoteRefs },
+        });
       }
     }
   },

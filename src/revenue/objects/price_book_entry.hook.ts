@@ -22,6 +22,13 @@ const priceBookEntryHook: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description: 'Refuse a second entry for the same product in the same price book, naming both.',
+  refusals: {
+    DUPLICATE_VALUE: {
+      message: '{{book}} already has a price for {{product}}. A price book holds one entry per product: edit that entry instead.',
+      status: 409,
+      params: ['book', 'product'],
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -73,11 +80,11 @@ const priceBookEntryHook: Hook = {
     const bookName = typeof bookRow?.name === 'string' && bookRow.name.trim() !== '' ? bookRow.name : 'This price book';
     // The product as its record title names it: the name alone (#2369 row 10).
     const productName = typeof productRow?.name === 'string' && productRow.name.trim() !== '' ? productRow.name : 'this product';
-    throw refuse(
+    throw Object.assign(refuse(
       `${bookName} already has a price for ${productName}. A price book holds one entry per product: edit that entry instead.`,
       'DUPLICATE_VALUE',
       409,
-    );
+    ), { params: { book: bookName, product: productName } });
   },
 };
 

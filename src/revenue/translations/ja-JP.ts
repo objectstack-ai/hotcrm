@@ -12,6 +12,162 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  * package's pack: `./index.ts`.
  */
 export const jaJP: TranslationData = {
+  hooks: {
+    quote_total_rollup: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '見積{{quote}}は承認済みのため、明細を追加・変更・削除できません。',
+          reasons: {
+            rejected: {
+              message: '見積{{quote}}は却下されているため、明細を追加・変更・削除できません。変更するには下書きに戻してください。',
+            },
+            expired: {
+              message: '見積{{quote}}は期限切れのため、明細を追加・変更・削除できません。',
+            },
+          },
+        },
+      },
+    },
+    quote_workflow: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '見積{{quote}}を承認済みにできません。商談が承認プロセスで保留中のため、承認済みにすると商談が成立してしまいます。承認が下りてから承認済みにしてください。',
+          reasons: {
+            held_unsent: {
+              message: '見積{{quote}}を承認済みにできません。商談はまず大口商談承認が必要で、承認済みにすると商談が成立してしまいます。商談を保存して承認に回し、承認後に見積を承認済みにしてください。',
+            },
+            line_accepted: {
+              message: '見積{{quote}}は承認済みのため、明細を追加・変更・削除できません。',
+            },
+            line_rejected: {
+              message: '見積{{quote}}は却下されているため、明細を追加・変更・削除できません。変更するには下書きに戻してください。',
+            },
+            line_expired: {
+              message: '見積{{quote}}は期限切れのため、明細を追加・変更・削除できません。',
+            },
+            frozen_accepted: {
+              message: '見積{{quote}}は承認済みです。編集できるのは内部メモのみです。',
+            },
+            frozen_rejected: {
+              message: '見積{{quote}}は却下されています。変更するには下書きに戻してください。それまでは内部メモのみ編集できます。',
+            },
+            frozen_expired: {
+              message: '見積{{quote}}は期限切れです。編集できるのは内部メモのみです。',
+            },
+          },
+        },
+        VALIDATION_FAILED: {
+          message: '見積{{quote}}を「承認済み」で作成することはできません。見積は「下書き」「レビュー中」「提示済み」から始まり、そこから承認済み・却下・期限切れになります。',
+          reasons: {
+            created_rejected: {
+              message: '見積{{quote}}を「却下」で作成することはできません。見積は「下書き」「レビュー中」「提示済み」から始まり、そこから承認済み・却下・期限切れになります。',
+            },
+            created_expired: {
+              message: '見積{{quote}}を「期限切れ」で作成することはできません。見積は「下書き」「レビュー中」「提示済み」から始まり、そこから承認済み・却下・期限切れになります。',
+            },
+          },
+        },
+      },
+    },
+    quote_price_book: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '価格表{{book}}は有効ではありません。見積は有効な価格表からのみ価格を設定します。見積{{quote}}には別の価格表を選んでください。',
+          reasons: {
+            line: {
+              message: '見積{{quote}}にはすでに価格表で価格設定された明細が1件あるため、価格表を変更できません。先に明細を削除してから、価格表を選んで明細を追加し直してください。',
+            },
+            line_from: {
+              message: '見積{{quote}}にはすでに価格表{{from}}で価格設定された明細が1件あるため、価格表を変更できません。先に明細を削除してから、価格表を選んで明細を追加し直してください。',
+            },
+            lines: {
+              message: '見積{{quote}}にはすでに価格表で価格設定された明細が{{count}}件あるため、価格表を変更できません。先に明細を削除してから、価格表を選んで明細を追加し直してください。',
+            },
+            lines_from: {
+              message: '見積{{quote}}にはすでに価格表{{from}}で価格設定された明細が{{count}}件あるため、価格表を変更できません。先に明細を削除してから、価格表を選んで明細を追加し直してください。',
+            },
+          },
+        },
+      },
+    },
+    price_book_standard: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '{{book}}は標準価格表のため削除できません。見積で使わないようにするには「有効」をオフにしてください。',
+          reasons: {
+            standard_off: {
+              message: '{{book}}は標準価格表で、標準価格表は常に1つ必要です。「標準」はオフにできません。代わりに価格を編集してください。',
+            },
+          },
+        },
+        DELETE_RESTRICTED: {
+          message: '{{book}}を削除できません。見積1件がこの価格表で価格設定しています。見積で使わないようにするには「有効」をオフにしてください。',
+          reasons: {
+            quotes: {
+              message: '{{book}}を削除できません。見積{{count}}件がこの価格表で価格設定しています。見積で使わないようにするには「有効」をオフにしてください。',
+            },
+          },
+        },
+        DUPLICATE_VALUE: {
+          message: '{{book}}がすでに標準価格表で、標準価格表は1つだけです。「標準」をオフにしてこの価格表を保存してください。',
+        },
+      },
+    },
+    price_book_entry_unique: {
+      refusals: {
+        DUPLICATE_VALUE: {
+          message: '{{book}}にはすでに{{product}}の価格があります。価格表には製品ごとに1つのエントリしか持てません。既存のエントリを編集してください。',
+        },
+      },
+    },
+    product_catalog: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '定価（{{list_price}}）はコスト（{{cost}}）以上にしてください。',
+        },
+        DELETE_RESTRICTED: {
+          message: '製品を削除できません。商談商品明細{{opportunity_lines}}件で使われています。製品を使わないようにするには「有効」をオフにしてください。',
+          reasons: {
+            quote: {
+              message: '製品を削除できません。見積明細{{quote_lines}}件で使われています。製品を使わないようにするには「有効」をオフにしてください。',
+            },
+            both: {
+              message: '製品を削除できません。商談商品明細{{opportunity_lines}}件と見積明細{{quote_lines}}件で使われています。製品を使わないようにするには「有効」をオフにしてください。',
+            },
+          },
+        },
+      },
+    },
+    opportunity_line_item_freeze: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '商談{{name}}は承認処理中のためロックされています。承認が完了するまで商品明細を追加・変更・削除できません。',
+          reasons: {
+            closed_won: {
+              message: '商談{{name}}はクローズ済み（成立）のため、商品明細を追加・変更・削除できません。',
+            },
+            closed_lost: {
+              message: '商談{{name}}はクローズ済み（不成立）のため、商品明細を追加・変更・削除できません。',
+            },
+          },
+        },
+      },
+    },
+    quote_line_item_price_fill: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '価格表{{book}}には{{product}}の有効な価格がありません。{{book}}に製品を追加するか、見積で別の価格表を選んでください。',
+        },
+      },
+    },
+    opportunity_line_item_price_fill: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '価格表{{book}}には{{product}}の有効な価格がありません。{{book}}に製品を追加するか、見積で別の価格表を選んでください。',
+        },
+      },
+    },
+  },
   objects: {
     crm_product: {
       _validations: {
