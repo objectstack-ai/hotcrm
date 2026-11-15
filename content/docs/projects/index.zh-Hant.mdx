@@ -29,7 +29,7 @@ description: 贏單之後的客戶項目管理——誰以什麼費率投入項�
 
 | 誰 | 在哪裡 |
 | --- | --- |
-| 項目經理、項目成員、財務控制 | **Project Delivery** 應用：**Projects** 群組下的 **All Projects**、**My Projects** 和 **Staffing**；**Time and Expenses** 群組下的 **My Timesheets**、**My Expenses**、**Timesheets to Approve** 和 **Expenses to Approve**；**Rates** 群組下的 **Rate Cards**；以及項目所屬的 **Accounts**、**Opportunities** 和 **Contracts**。 |
+| 項目經理、項目成員、財務控制 | **Project Delivery** 應用：**Projects** 群組下的 **All Projects**、**My Projects** 和 **Staffing**；**Time and Expenses** 群組下的 **My Timesheets**、**My Expenses**、**Timesheets to Approve** 和 **Expenses to Approve**；**Rates** 群組下的 **Rate Cards**；項目所屬的 **Accounts**、**Opportunities** 和 **Contracts**；以及 **My Work** 群組下的 **Inbox**，項目、工時單和費用都在這裡審批。 |
 | 銷售經理 | 啟動器上有 Project Delivery 應用，並且可以查看每個項目，從而了解團隊贏下的單子交付得怎麼樣。 |
 | 銷售代表、服務、行銷、應收會計 | 啟動器上沒有。 |
 | 管理員 | 全部可見。 |
@@ -44,8 +44,8 @@ description: 贏單之後的客戶項目管理——誰以什麼費率投入項�
 | --- | --- | --- | --- | --- |
 | 項目成員 | 查看自己參與的項目，**看不到成本和毛利** | 查看 | 查看，**看不到成本單價** | 填報自己的 |
 | 項目經理 | 新建項目；編輯自己負責的項目 | 為自己負責的項目安排人員 | 查看 | 填報自己的；審批團隊的 |
-| 財務控制 | 查看每個項目；設定預算 | 查看 | 新建和編輯 | 查看全部 |
-| 項目總監、項目管理辦公室 | 兼有以上兩者 | 兼有 | 兼有 | 兼有 |
+| 財務控制 | 查看每個項目；設定預算；審批 100,000 及以上的項目 | 查看 | 新建和編輯 | 查看全部；審批 2,000 及以上的費用 |
+| 項目總監、項目管理辦公室 | 兼有以上兩者；審批新項目 | 兼有 | 兼有 | 兼有 |
 | 銷售經理 | 查看每個項目 | 查看 | — | 查看全部 |
 | 管理員 | 全部 | 全部 | 全部 | 全部 |
 
@@ -67,6 +67,7 @@ description: 贏單之後的客戶項目管理——誰以什麼費率投入項�
 | **Gross Margin**（毛利） | 計劃收入減實際成本 |
 | **Gross Margin %**（毛利率） | 毛利佔計劃收入的百分比 |
 | **Approved to Bill**（已批准待開票） | 已批准的可計費工時按計費單價計算的金額，加上已批准的可計費費用 |
+| **Budget Status**（預算狀態） | On Track；達到批准預算的 80% 為 Warning，達到 100% 為 Exceeded。進入其中任一狀態都會通知項目經理和財務 |
 
 金額使用貴公司的本位幣。項目只產出 **Approved to Bill** 這個數字：給客戶開票在[訂單與回款](/zh-Hant/docs/order-to-cash)中完成。
 

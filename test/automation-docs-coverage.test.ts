@@ -270,6 +270,13 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   quote_print_presented: { 'zh-Hans': '报价打印后转为已提交', 'zh-Hant': '報價打印後轉為已提交' },
   // #2435: 负责人, the zh-CN pack's word for a forecast's `owner_id`.
   forecast_owner_rename: { 'zh-Hans': '预测负责人改名', 'zh-Hant': '預測負責人改名' },
+  // Project Delivery (#2316 phase 1b): 立项, the zh-CN pack's word for initiation.
+  project_initiation_approval: { 'zh-Hans': '立项审批', 'zh-Hant': '立項審批' },
+  timesheet_approval: { 'zh-Hans': '工时单审批', 'zh-Hant': '工時單審批' },
+  timesheet_approval_on_create: { 'zh-Hans': '工时单审批（新建时）', 'zh-Hant': '工時單審批（新建時）' },
+  expense_approval: { 'zh-Hans': '费用审批', 'zh-Hant': '費用審批' },
+  expense_approval_on_create: { 'zh-Hans': '费用审批（新建时）', 'zh-Hant': '費用審批（新建時）' },
+  project_budget_alert: { 'zh-Hans': '项目预算预警', 'zh-Hant': '項目預算預警' },
 };
 
 /** How each page spells the two counts. An unmapped count throws — see the header. */

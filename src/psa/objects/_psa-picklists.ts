@@ -34,6 +34,16 @@ export const PROJECT_STATUS_OPTIONS = [
   { label: 'Cancelled', value: 'cancelled', color: '#666666', kind: 'lost' as const },
 ];
 
+/**
+ * How much of its Approved Budget a project has spent, kept by
+ * `project.hook.ts` at the lines in `_thresholds.ts` (#2316 phase 1b).
+ */
+export const BUDGET_STATUS_OPTIONS = [
+  { label: 'On Track', value: 'on_track', color: '#16A34A' },
+  { label: 'Warning', value: 'warning', color: '#F59E0B' },
+  { label: 'Exceeded', value: 'exceeded', color: '#DC2626' },
+];
+
 export const PROJECT_RESPONSIBILITY_OPTIONS = [
   { label: 'Project Manager', value: 'project_manager' },
   { label: 'Project Director', value: 'project_director' },

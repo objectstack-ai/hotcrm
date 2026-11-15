@@ -8,6 +8,7 @@ import * as salesFlows from '../src/sales/flows';
 import * as serviceFlows from '../src/service/flows';
 import * as revenueFlows from '../src/revenue/flows';
 import * as marketingFlows from '../src/marketing/flows';
+import * as psaFlows from '../src/psa/flows';
 
 /**
  * Flow registration completeness — the barrel is only HALF the path (#1930).
@@ -69,6 +70,7 @@ const BARRELS: Record<string, Record<string, unknown>> = {
   service: serviceFlows,
   revenue: revenueFlows,
   marketing: marketingFlows,
+  psa: psaFlows,
 };
 
 /** `[package, export name, exported value]` for every flow barrel export. */

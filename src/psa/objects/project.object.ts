@@ -2,7 +2,7 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, P } from '@objectstack/spec';
-import { PROJECT_BILLING_TYPE_OPTIONS, PROJECT_KIND_OPTIONS, PROJECT_STATUS_OPTIONS } from './_psa-picklists';
+import { BUDGET_STATUS_OPTIONS, PROJECT_BILLING_TYPE_OPTIONS, PROJECT_KIND_OPTIONS, PROJECT_STATUS_OPTIONS } from './_psa-picklists';
 
 /**
  * Project — one engagement the delivery team runs for a customer
@@ -256,6 +256,30 @@ export const Project = ObjectSchema.create({
       returnType: 'number',
       scale: 1,
       expression: F`coalesce(record.approved_budget, 0) > 0 ? (coalesce(record.actual_labor_cost, 0) + coalesce(record.actual_expense_cost, 0)) * 100 / record.approved_budget : null`,
+    }),
+
+    // A machine signal (#2316 phase 1b), kept by `project.hook.ts` on every
+    // save from Budget Used %: warning at BUDGET_WARNING_PERCENT, exceeded at
+    // BUDGET_EXCEEDED_PERCENT (`_thresholds.ts`). Stored, not a formula, so
+    // `project_budget_alert` can see it cross and notify once per crossing.
+    budget_status: Field.select({
+      label: 'Budget Status',
+      group: 'financials',
+      readonly: true,
+      options: BUDGET_STATUS_OPTIONS,
+      description: 'On Track below 80 % of the Approved Budget, Warning from 80 %, Exceeded from 100 %.',
+    }),
+
+    // A person's decision, never set by the system (#2316 phase 1b): while it
+    // is ticked, a timesheet or an expense on this project cannot be submitted
+    // (`timesheet.hook.ts`, `expense.hook.ts`). Drafts can still be written.
+    // The budget notice proposes it; the project manager or finance ticks it.
+    time_entry_locked: Field.boolean({
+      label: 'Lock Time and Expenses',
+      group: 'financials',
+      defaultValue: false,
+      trackHistory: true,
+      description: 'While ticked, no timesheet or expense on this project can be submitted. Drafts can still be written.',
     }),
 
     gross_margin: Field.formula({

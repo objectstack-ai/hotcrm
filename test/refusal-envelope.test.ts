@@ -157,11 +157,14 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // one-per-person refusal, the timesheet's
     // duplicate-period and approver-only refusals, the expense's approver-only
     // refusal, and the time entry's submitted-sheet freeze, out-of-period
-    // date and not-staffed refusals.
+    // date and not-staffed refusals; 49 until #2316 phase 1b added
+    // `project_status_guard`'s three (a project created past Draft, Approved or
+    // Rejected set by hand, a project sent for approval with no budget) and the
+    // locked project's refusal of a submitted timesheet and a submitted expense.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(49);
+    expect(sites).toHaveLength(54);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

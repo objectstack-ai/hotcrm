@@ -81,6 +81,19 @@ export const en: TranslationData = {
         actual_cost: { label: 'Actual Cost' },
         cost_variance: { label: 'Budget Remaining' },
         budget_consumed_percent: { label: 'Budget Used %' },
+        budget_status: {
+          label: 'Budget Status',
+          help: 'On Track below 80 % of the Approved Budget, Warning from 80 %, Exceeded from 100 %.',
+          options: {
+            on_track: 'On Track',
+            warning: 'Warning',
+            exceeded: 'Exceeded',
+          },
+        },
+        time_entry_locked: {
+          label: 'Lock Time and Expenses',
+          help: 'While ticked, no timesheet or expense on this project can be submitted. Drafts can still be written.',
+        },
         gross_margin: { label: 'Gross Margin' },
         gross_margin_percent: { label: 'Gross Margin %' },
         project_manager: {
@@ -316,6 +329,39 @@ export const en: TranslationData = {
         expense_status_progression: { message: 'This status change is not allowed. An expense moves Draft → Submitted → Approved or Rejected; a rejected expense goes back to Draft to be corrected.' },
       },
     },
+  },
+  // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
+  flows: {
+    project_initiation_approval: {
+      label: 'Project Initiation Approval',
+      approvals: {
+        leadership_review: { label: 'Project Director Review' },
+        finance_review: { label: 'Finance Controller Review' },
+      },
+    },
+    timesheet_approval: {
+      label: 'Timesheet Approval',
+      approvals: { approver_review: { label: 'Project Manager Review' } },
+    },
+    timesheet_approval_on_create: {
+      label: 'Timesheet Approval (on create)',
+      approvals: { approver_review: { label: 'Project Manager Review' } },
+    },
+    expense_approval: {
+      label: 'Expense Approval',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+        finance_review: { label: 'Finance Controller Review' },
+      },
+    },
+    expense_approval_on_create: {
+      label: 'Expense Approval (on create)',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+        finance_review: { label: 'Finance Controller Review' },
+      },
+    },
+    project_budget_alert: { label: 'Project Budget Alert' },
   },
   apps: {
     // This package's own app (#2316). The contributed entries' labels are the

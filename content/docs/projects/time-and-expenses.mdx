@@ -1,6 +1,6 @@
 ---
 title: Time and Expenses
-description: Booking hours on a timesheet and spending on an expense, submitting them, how the project manager approves them, and how they become the project's cost.
+description: Booking hours on a timesheet and spending on an expense, submitting them, how they are approved from the Inbox, and how they become the project's cost.
 ---
 
 # Time and Expenses
@@ -34,17 +34,23 @@ The timesheet's **Totals** add up its entries: **Total Hours**, **Total Cost** a
 | **Approved** | The hours count in the project's cost. Final |
 | **Rejected** | Sent back. Move it to Draft, correct it and submit again |
 
-When the week is done, set **Status** to **Submitted**. A submitted timesheet's entries can no longer be added, changed or removed; to correct one, move the timesheet back to **Draft** first.
+When the week is done, set **Status** to **Submitted**. A submitted timesheet's entries can no longer be added, changed or removed, and the timesheet itself is locked while it waits.
 
-The approver finds it under **Timesheets to Approve**, opens it and sets **Approved** or **Rejected**.
+The approver decides in their **Inbox** (under **My Work**), with **Approve** or **Reject**. **Timesheets to Approve** lists the same timesheets, to open and read before deciding.
 
-> **Nobody approves their own hours.** Only the timesheet's approver, or an administrator, can set Approved or Rejected. Anyone else who tries is refused, whatever else they may edit.
+- **Approved**: its hours count in the project's cost.
+- **Rejected**: move it back to **Draft**, correct it and submit it again, which asks the approver again.
+- **Changed your mind?** Recall it from your Inbox while it waits. It goes back to **Draft**.
+
+Nobody sets **Approved** or **Rejected** by hand: those are written by the approval. Only an administrator can, to repair a timesheet whose approval cannot run.
+
+> **Nobody approves their own hours.** When the approver submits their own timesheet, they are not asked: it goes to an administrator instead.
 
 ## Expenses
 
 An **Expense** is money one person spent on a project. Open **My Expenses** and choose **New**: the **Description**, the **Project**, the **Date**, the **Category** (Travel, Lodging, Meals, Equipment, Other), the **Amount** and whether it is **Billable** to the customer. Attach the receipt in the **Files** tab.
 
-An expense goes through the same statuses as a timesheet. Its **Approver** is the project's Project Manager when it was created, it appears under **Expenses to Approve**, and only that approver or an administrator can approve or reject it.
+An expense goes through the same statuses as a timesheet and is decided in the same Inbox. Its **Approver** is the project's Project Manager when it was created, and it appears under **Expenses to Approve**. An expense of **2,000** or more then goes to the **Finance Controllers** as well, and counts only once they approve it too.
 
 Amounts are in your organization's currency. Convert a receipt in another currency before you enter it.
 
@@ -57,4 +63,6 @@ Only **Approved** timesheets and expenses count:
 
 Draft, submitted and rejected ones count nowhere. The project's [cost and margin](/docs/projects#money) move the moment one is approved.
 
-> **Approval is a status change for now.** The approver sets the status on the record. A later release adds an approval step with an inbox, budget warnings and a project lock; this page will say so when it ships.
+## When the project is locked
+
+A project manager or finance can tick **Lock Time and Expenses** on a project, usually after a [budget notice](/docs/projects/projects-and-staffing#budget-lock). While it is ticked, submitting a timesheet or an expense on that project is refused, naming the project. Keep it as a draft: once the lock is lifted, submit it as usual.
