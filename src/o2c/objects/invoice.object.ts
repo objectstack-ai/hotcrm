@@ -118,15 +118,29 @@ export const Invoice = ObjectSchema.create({
       },
     }),
 
-    // Amount minus paid, STORED rather than a formula, because the rep's
-    // Overdue Invoices view filters on it and a formula is not a stored column
-    // the engine can filter (INVALID_FIELD). `invoice_figures`
-    // (`invoice.hook.ts`) writes it on every save, the paid-amount recompute
-    // included; a cancelled invoice is open for nothing.
+    // Amount minus paid, never below zero, STORED rather than a formula,
+    // because the rep's Overdue Invoices view filters on it and a formula is
+    // not a stored column the engine can filter (INVALID_FIELD).
+    // `invoice_figures` (`invoice.hook.ts`) writes it on every save, the
+    // paid-amount recompute included; a cancelled invoice is open for nothing.
+    // The contract's and the account's Receivable Balance sum it, so the floor
+    // here is what keeps both from going negative (#2513).
     open_amount: Field.currency({
       label: 'Open',
       group: 'amounts',
       readonly: true,
+    }),
+
+    // Paid minus amount when the payments exceed the invoice, else 0 (#2513).
+    // An overpayment is allowed: the cash is real and an ERP import must not
+    // fail on it. The invoice then counts as fully paid (Open 0) and the
+    // excess shows here. Setting it against other invoices is not done here.
+    // Written by `invoice_figures` beside Open.
+    overpaid_amount: Field.currency({
+      label: 'Overpaid',
+      group: 'amounts',
+      readonly: true,
+      description: 'What was paid above the amount. The invoice counts as fully paid; the excess is not set against other invoices.',
     }),
 
     invoice_file: Field.file({

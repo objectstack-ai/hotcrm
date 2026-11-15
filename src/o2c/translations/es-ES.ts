@@ -121,6 +121,10 @@ export const esES: TranslationData = {
         open_amount: {
           label: 'Pendiente',
         },
+        overpaid_amount: {
+          label: 'Pagado de más',
+          help: 'Lo pagado por encima del importe. La factura cuenta como pagada por completo; el exceso no se aplica a otras facturas.',
+        },
         invoice_file: {
           label: 'Archivo de factura',
         },

@@ -121,6 +121,10 @@ export const zhCN: TranslationData = {
         open_amount: {
           label: '未付',
         },
+        overpaid_amount: {
+          label: '多付',
+          help: '实际付款超出发票金额的部分。发票按已付清处理；多付的金额不会冲抵其他发票。',
+        },
         invoice_file: {
           label: '发票文件',
         },

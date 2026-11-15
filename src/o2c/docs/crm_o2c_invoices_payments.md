@@ -24,9 +24,13 @@ invoices and payments.
 - **Due Date.** Left empty, it is filled on save: the **Issue Date** plus the
   contract's **Payment Terms** (Net 15, 30, 60 or 90 days; Due on Receipt is
   the issue date). A date finance enters is kept.
-- **Open** on an invoice is **Amount** minus **Paid**, kept up to date whenever
-  a payment against it is saved. A **Cancelled** invoice is open for nothing
-  and leaves every figure.
+- **Open** on an invoice is **Amount** minus **Paid**, never below zero, kept
+  up to date whenever a payment against it is saved. A **Cancelled** invoice is
+  open for nothing and leaves every figure.
+- **Overpaid.** A payment above what is open is accepted, typed or imported.
+  The invoice counts as fully paid (**Open** zero) and the excess shows in
+  **Overpaid**. It is not set against other invoices, and no **Receivable
+  Balance** goes below zero because of it.
 - **Overdue.** **Follow-up → Overdue Invoices** in the **Order to Cash** app lists the
   **Issued** invoices whose **Due Date** is before today and that still have an
   **Open** amount.

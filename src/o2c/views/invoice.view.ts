@@ -35,6 +35,8 @@ export const InvoiceViews = defineView({
       { field: 'amount', width: 140, align: 'right' },
       { field: 'paid_amount', width: 130, align: 'right', summary: 'sum' },
       { field: 'open_amount', width: 130, align: 'right', summary: 'sum' },
+      // Paid above the amount (#2513): the invoice is fully paid and Open is 0.
+      { field: 'overpaid_amount', width: 120, align: 'right' },
       { field: 'status', width: 110 },
     ],
     sort: [{ field: 'issue_date', order: 'desc' }],

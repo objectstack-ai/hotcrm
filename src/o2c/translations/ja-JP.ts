@@ -121,6 +121,10 @@ export const jaJP: TranslationData = {
         open_amount: {
           label: '未入金',
         },
+        overpaid_amount: {
+          label: '過入金',
+          help: '請求額を超えて入金された額です。請求書は全額入金済みとして扱われ、超過分は他の請求書に充当されません。',
+        },
         invoice_file: {
           label: '請求書ファイル',
         },
