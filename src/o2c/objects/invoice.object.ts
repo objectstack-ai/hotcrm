@@ -22,8 +22,11 @@ export const Invoice = ObjectSchema.create({
 
   // Whoever reads the contract reads its invoices (ADR-0055). Who may write
   // one is the permission sets' to say: finance (`ar_accountant`) holds Modify
-  // All here, reps read only.
+  // All here, reps read only. Read on the contract is the contract-side
+  // question for a write (objectstack#33250, #2462), so finance, who reads
+  // every contract and edits none, enters invoices.
   sharingModel: 'controlled_by_parent',
+  sharing: { controlledByParent: { writeRequiresMasterRead: true } },
   nameField: 'invoice_number',
   highlightFields: ['amount', 'due_date', 'status', 'open_amount'],
 

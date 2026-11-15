@@ -1,6 +1,6 @@
 # REQ-0007: What sales must see after the contract — collection plan, invoice and payment status as a standard module
 
-- **Status**: Shipped (first version, with phase 1b; the rep and finance writes follow objectstack#33250)
+- **Status**: Shipped (first version, with phase 1b; the rep and finance writes since #2462, on objectstack#33250)
 - **Source**: Maintainer (internal) — product direction, not a customer intake
 - **Raised**: 2026-10-23
 - **Disposition**: **B standard-enhancement — a new standard module**, `app.objectstack.hotcrm.o2c`
@@ -15,7 +15,7 @@
   changesets / PRs — phase 0: the package and its menu anchor (`.changeset/o2c-phase-0-module.md`,
   #2413); phase 1a: the plan, invoice and payment objects, views, imports and `ar_accountant`
   (`.changeset/o2c-phase-1a-collection-plan.md`, #2418), landed on 18.4.0 with the master-edit gate
-  documented (the design's *Recorded 2026-11-14*; the opt-in follows objectstack#33250); phase 1b: the contract and account totals through `objectExtensions`
+  documented (the design's *Recorded 2026-11-14*), lifted by the `writeRequiresMasterRead` opt-in on 18.5.0 (objectstack#33250, #2462); phase 1b: the contract and account totals through `objectExtensions`
   (`.changeset/o2c-phase-1b-receivables.md`, #2416).
 
 ## Requirement

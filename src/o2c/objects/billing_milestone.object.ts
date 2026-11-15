@@ -25,10 +25,13 @@ export const BillingMilestone = ObjectSchema.create({
   icon: 'flag',
   description: 'One step of a contract\'s collection plan: what is due, when, and how much of it is invoiced and received',
 
-  // Plan steps are contract data: whoever reads the contract reads its plan,
-  // whoever can edit the contract's account edits it (ADR-0055 derivation,
-  // the same shape as `crm_contract` under `crm_account`).
+  // Plan steps are contract data: whoever reads the contract reads its plan
+  // (ADR-0055 derivation, the same shape as `crm_contract` under
+  // `crm_account`). Read on the contract is also the contract-side question
+  // for a write (objectstack#33250, #2462): a rep who reads a contract keeps
+  // its plan, as far as the rep's own grants here allow.
   sharingModel: 'controlled_by_parent',
+  sharing: { controlledByParent: { writeRequiresMasterRead: true } },
   nameField: 'name',
   highlightFields: ['planned_amount', 'planned_date', 'received_amount', 'open_amount'],
 

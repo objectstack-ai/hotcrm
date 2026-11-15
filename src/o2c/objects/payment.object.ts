@@ -21,9 +21,10 @@ export const Payment = ObjectSchema.create({
   icon: 'banknote',
   description: 'Money received against a contract, an invoice or a plan step',
 
-  // Whoever reads the contract reads its payments; finance writes them (see
-  // `crm_invoice`).
+  // Whoever reads the contract reads its payments; finance writes them, with
+  // read on the contract as the contract-side question (see `crm_invoice`).
   sharingModel: 'controlled_by_parent',
+  sharing: { controlledByParent: { writeRequiresMasterRead: true } },
   nameField: 'payment_number',
   highlightFields: ['payment_date', 'amount', 'method', 'crm_invoice'],
 

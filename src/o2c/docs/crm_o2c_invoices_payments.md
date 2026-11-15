@@ -15,9 +15,9 @@ and payments are finance's records of what it issued and received in its own
 system. Finance enters or imports them; sales reads them and never writes one,
 so every figure a rep sees is one finance wrote.
 
-**For now, finance cannot save them:** the platform asks for edit access to
-the contract, which the Accounts Receivable position does not hold. Until a
-platform update lifts that, an administrator enters and imports them.
+The Accounts Receivable position enters and imports them on every contract. It
+reads every contract and edits none: reading the contract is enough to write its
+invoices and payments.
 
 ## Rules the screens do not show
 
