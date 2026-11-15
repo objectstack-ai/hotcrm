@@ -8,6 +8,18 @@ import type { TranslationData } from '@objectstack/spec/system';
  * package's pack: `./index.ts`.
  */
 export const jaJP: TranslationData = {
+  hooks: {
+    payment_plan_step_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'この請求書は別の契約のものです。この入金の契約の請求書を選んでください。',
+          reasons: {
+            named: { message: '{{invoice}}は別の契約のものです。この入金の契約の請求書を選んでください。' },
+          },
+        },
+      },
+    },
+  },
   objects: {
     crm_billing_milestone: {
       label: '請求マイルストーン',

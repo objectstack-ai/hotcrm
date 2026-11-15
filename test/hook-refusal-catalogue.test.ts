@@ -5,6 +5,8 @@ import { extractHookBody } from '@objectstack/cli/hook-body';
 import type { TranslationBundle } from '@objectstack/spec/system';
 import { psaHooks } from '../src/psa';
 import { PsaTranslations } from '../src/psa/translations';
+import { o2cHooks } from '../src/o2c';
+import { O2cTranslations } from '../src/o2c/translations';
 
 type AnyRec = Record<string, any>;
 
@@ -34,6 +36,7 @@ type AnyRec = Record<string, any>;
 
 const PACKAGES: Array<{ name: string; hooks: AnyRec[]; bundle: TranslationBundle }> = [
   { name: 'psa', hooks: psaHooks as AnyRec[], bundle: PsaTranslations },
+  { name: 'o2c', hooks: o2cHooks as AnyRec[], bundle: O2cTranslations },
 ];
 
 const LOCALES = ['zh-CN', 'ja-JP', 'es-ES'] as const;

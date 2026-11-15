@@ -8,6 +8,18 @@ import type { TranslationData } from '@objectstack/spec/system';
  * package's pack: `./index.ts`.
  */
 export const esES: TranslationData = {
+  hooks: {
+    payment_plan_step_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'Esta factura pertenece a otro contrato. Elija una factura del contrato de este cobro.',
+          reasons: {
+            named: { message: '{{invoice}} pertenece a otro contrato. Elija una factura del contrato de este cobro.' },
+          },
+        },
+      },
+    },
+  },
   objects: {
     crm_billing_milestone: {
       label: 'Hito de facturación',

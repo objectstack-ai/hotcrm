@@ -23,6 +23,16 @@ const paymentPlanStepStamp: Hook = {
   object: 'crm_payment',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
+  refusals: {
+    VALIDATION_FAILED: {
+      message: 'This invoice belongs to another contract. Choose an invoice of this payment\'s contract.',
+      status: 400,
+      params: ['invoice'],
+      reasons: {
+        named: { message: '{{invoice}} belongs to another contract. Choose an invoice of this payment\'s contract.' },
+      },
+    },
+  },
   description: 'Copy the invoice\'s billing milestone onto the payment; refuse an invoice of another contract.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
@@ -64,11 +74,11 @@ const paymentPlanStepStamp: Hook = {
     const contractId = refId(input.crm_contract) || refId(ctx.previous?.crm_contract);
     if (contractId && refId(invoice.crm_contract) && refId(invoice.crm_contract) !== contractId) {
       const number = typeof invoice.invoice_number === 'string' ? invoice.invoice_number : 'This invoice';
-      throw refuse(
+      throw Object.assign(refuse(
         `${number} belongs to another contract. Choose an invoice of this payment's contract.`,
         'VALIDATION_FAILED',
         400,
-      );
+      ), typeof invoice.invoice_number === 'string' ? { reason: 'named', params: { invoice: invoice.invoice_number } } : {});
     }
     const stepId = refId(invoice.crm_billing_milestone);
     if (stepId) input.crm_billing_milestone = stepId;

@@ -8,6 +8,18 @@ import type { TranslationData } from '@objectstack/spec/system';
  * package's pack: `./index.ts`.
  */
 export const zhCN: TranslationData = {
+  hooks: {
+    payment_plan_step_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '这张发票属于另一份合同。请选择这笔回款所属合同的发票。',
+          reasons: {
+            named: { message: '{{invoice}}属于另一份合同。请选择这笔回款所属合同的发票。' },
+          },
+        },
+      },
+    },
+  },
   objects: {
     crm_billing_milestone: {
       label: '回款节点',
