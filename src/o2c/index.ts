@@ -53,13 +53,13 @@ export const createHotCrmO2cStack = (): ObjectStackDefinition => defineStack({
     namespace: 'crm',
     // The ARTIFACT's version (ADR-0130 D6) — `test/docs-declared-versions.test.ts`
     // holds it, and the range below, to the app package's.
-    version: '6.2.1',
+    version: '6.3.0',
     type: 'module',
     description: 'HotCRM order-to-cash module — the collection plan, invoice and payment status on a contract.',
     engines: { protocol: '^18.4.0' },
     // The App package this module extends, and nothing else
     // (`module-split-plan.md` item 10: one dependency level).
-    dependencies: { 'app.objectstack.hotcrm': '^6.2.1' },
+    dependencies: { 'app.objectstack.hotcrm': '^6.3.0' },
 
     /**
      * The module's seam into the Sales app (rule R2). Finance works in this
