@@ -164,11 +164,12 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // 54 until the 1b review added `project_status_guard`'s refusal of an
     // approved budget changed by anyone but a Finance Controller; 55 until
     // #2491 added the timesheet's and the expense's refusal on a Closed or
-    // Cancelled project.
+    // Cancelled project; 57 until #2503 added `quote_total_rollup`'s second
+    // look at a quote settled after the line freeze let a line in.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(57);
+    expect(sites).toHaveLength(58);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
