@@ -110,6 +110,12 @@
  * contract they only read; `test/record-comments-access.test.ts` measures it.
  * `crm_user` grants no delete: the `everyone` anchor refuses delete on any
  * object.
+ *
+ * **The read-only sets** (`sales_leadership`, `service_director`; #2490,
+ * #2492, ruled A) grant read alone on all three panel objects: they write
+ * nothing anywhere. The parent gate would refuse their upload and delete in
+ * any case, as they edit no parent; a comment on a record they read comes
+ * from the `crm_user` floor every member holds.
  */
 
 export { Account } from './account.object';

@@ -44,6 +44,8 @@ Besides the six profiles above, HotCRM ships one more permission set, **CRM User
 - **Forecasts**: reads every rep's snapshot and adjusts the committed number — the forecast is the manager's own deliverable. A manager edits any rep's forecast but deletes none; deleting a forecast is an admin action
 - Cannot see a deal another user flagged **Private** (see [Sharing & security](/docs/administration/sharing-and-security))
 
+The **crm_executive** and **crm_sales_director** positions give their holders **Sales Leadership** (`sales_leadership`), the read-only twin of this profile: every account, contact, deal, quote, contract, forecast and case a sales manager reads, a deal flagged **Private** still hidden, and no create, edit, delete or export beyond the [default set](#default-set) floor. Adding someone to either position in **Setup → Position Holders** is enough; there is no profile to assign by hand.
+
 ### 💼 Sales Representative
 
 - Create, read and edit their **own** leads, accounts, opportunities and tasks
@@ -61,6 +63,8 @@ Besides the six profiles above, HotCRM ships one more permission set, **CRM User
 - **Knowledge articles**: read every article and author or revise them (the draft → in review → published lifecycle is enforced by the KB flow, not by permissions). Archiving is an admin action
 - Read the **product** catalog
 - No access to opportunities, quotes or forecasts beyond the floor: with the [default set](#default-set) in force, an agent creates, reads and edits only opportunities of their **own**, and still no quote or forecast
+
+The **crm_service_director** position gives its holders **Service Director** (`service_director`), read only: the open critical cases the escalation sharing rule shares to the director, and every account and contact behind them. A director works no case and exports nothing; the [default set](#default-set) floor is unchanged.
 
 ### 📣 Marketing User
 

@@ -51,7 +51,7 @@ description: 谁能看到谁的记录——岗位、扩大所有权访问的共�
 
 在对象授权之上还有两条记录级规则：
 
-- `crm_opportunity.is_private`——标记为私密的商机只有其负责人能看到，持有组织范围商机读取权的权限集（销售经理、市场专员、财务控制、项目经理）也看不到。
+- `crm_opportunity.is_private`——标记为私密的商机只有其负责人能看到，持有组织范围商机读取权的权限集（销售经理、销售管理层、市场专员、财务控制、项目经理）也看不到。
 - 字段级安全屏蔽 `crm_account.health_score`（销售经理以下只读）、`crm_case.internal_notes`（仅服务人员可见；对销售代表隐藏）、`crm_account.annual_revenue` 以及计算出的工单 SLA 字段。
 
 ## 禁用模块

@@ -153,13 +153,15 @@ describe('Project Delivery is its own app (#2316)', () => {
     expect(packFor('zh-CN')?.apps?.[PSA_APP]?.label).toBe('项目交付');
   });
 
-  it('rep, service, marketing and AR sets hide it; the sales manager states it; the delivery sets are silent', () => {
+  it('rep, service, marketing and AR sets hide it; the sales manager and leadership state it; the delivery sets are silent', () => {
     const sets = Object.values(profiles) as AnyRec[];
     const hiding = sets.filter((s) => s.tabPermissions?.[PSA_APP] === 'hidden').map((s) => s.name).sort();
-    expect(hiding).toEqual(['ar_accountant', 'marketing_user', 'sales_rep', 'service_agent']);
+    // The service director sees the Service app only, as the service team (#2490).
+    expect(hiding).toEqual(['ar_accountant', 'marketing_user', 'sales_rep', 'service_agent', 'service_director']);
     // The manager states it beside the other four apps, as for Order to Cash,
     // so a set that hides it cannot take it away (most-visible-wins).
-    expect(sets.filter((s) => s.tabPermissions?.[PSA_APP] === 'visible').map((s) => s.name)).toEqual(['sales_manager']);
+    // Leadership shows the manager's apps (#2492).
+    expect(sets.filter((s) => s.tabPermissions?.[PSA_APP] === 'visible').map((s) => s.name).sort()).toEqual(['sales_leadership', 'sales_manager']);
     for (const name of ['project_manager', 'project_member', 'finance_controller']) {
       const set = sets.find((s) => s.name === name);
       expect(set, name).toBeTruthy();

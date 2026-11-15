@@ -750,11 +750,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   positions: {
     crm_executive: {
       label: 'Ejecutivo',
-      description: 'Dirección de la empresa: lee todas las grandes oportunidades abiertas de todo el pipeline, mientras el equipo de la oportunidad conserva la propiedad.',
+      description: 'Dirección de la empresa, solo lectura: lee todas las cuentas, oportunidades, cotizaciones, contratos, previsiones y casos que lee un gerente de ventas, mientras los equipos conservan la propiedad.',
     },
     crm_sales_director: {
       label: 'Director de Ventas',
-      description: 'Dirige la organización de ventas, da el visto bueno final a las mayores oportunidades y lee todas las grandes oportunidades abiertas.',
+      description: 'Dirige la organización de ventas, da el visto bueno final a las mayores oportunidades y lee, solo lectura, todo lo que lee un gerente de ventas.',
     },
     crm_sales_manager: {
       label: 'Gerente de Ventas',
@@ -862,6 +862,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     service_agent: {
       label: 'Agente de Servicio',
       description: 'Agentes y gerentes de servicio: atienden sus propios casos, leen las cuentas, contactos y prospectos relacionados y redactan artículos de conocimiento, pero no ven oportunidades.',
+    },
+    sales_leadership: {
+      label: 'Dirección Comercial',
+      description: 'Ejecutivos y directores de ventas, solo lectura: leen todas las cuentas, contactos, oportunidades, cotizaciones, contratos, previsiones y casos que lee un gerente de ventas, y no cambian ninguno.',
+    },
+    service_director: {
+      label: 'Director de Servicio',
+      description: 'Dirección de servicio, solo lectura: lee los casos escalados compartidos con el director de servicio, con las cuentas y los contactos que hay detrás.',
     },
     system_admin: {
       label: 'Administrador del Sistema',

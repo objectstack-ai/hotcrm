@@ -43,7 +43,7 @@ const carriesThePolicy = (ps: AnyRec): boolean =>
 describe('every org-wide opportunity reader carries the private-deal filter', () => {
   it('names each set that reads every opportunity, so the guard is guarding', () => {
     expect(permissionSets.filter(readsEveryOpportunity).map((ps) => ps.name).sort())
-      .toEqual(['finance_controller', 'marketing_user', 'project_manager', 'sales_manager', 'system_admin']);
+      .toEqual(['finance_controller', 'marketing_user', 'project_manager', 'sales_leadership', 'sales_manager', 'system_admin']);
   });
 
   it('holds for every one of them but the administrator', () => {
@@ -63,7 +63,7 @@ describe('every org-wide opportunity reader carries the private-deal filter', ()
 describe('a private deal, read through the data API', () => {
   const POSITIONS = [
     'crm_finance_controller', 'crm_project_manager', 'crm_project_director', 'crm_pmo',
-    'crm_sales_manager', 'crm_sales_rep', 'crm_executive', 'crm_marketing_user', 'crm_ar_accountant',
+    'crm_sales_manager', 'crm_sales_rep', 'crm_executive', 'crm_sales_director', 'crm_marketing_user', 'crm_ar_accountant',
   ];
   let verify: VerifyStack;
   let owner: Person;
@@ -106,13 +106,13 @@ describe('a private deal, read through the data API', () => {
 
   it.each([
     'crm_finance_controller', 'crm_project_manager', 'crm_project_director', 'crm_pmo',
-    'crm_sales_manager', 'crm_sales_rep', 'crm_executive', 'crm_marketing_user', 'crm_ar_accountant',
+    'crm_sales_manager', 'crm_sales_rep', 'crm_executive', 'crm_sales_director', 'crm_marketing_user', 'crm_ar_accountant',
   ])('a holder of %s does not', async (position) => {
     expect(await rowsNamed(readers.get(position)!, NAME)).toEqual([]);
   });
 
   it('the org-wide readers still read the same owner\'s deal that is not private', async () => {
-    for (const position of ['crm_finance_controller', 'crm_project_manager', 'crm_sales_manager', 'crm_marketing_user']) {
+    for (const position of ['crm_finance_controller', 'crm_project_manager', 'crm_sales_manager', 'crm_executive', 'crm_sales_director', 'crm_marketing_user']) {
       expect(await rowsNamed(readers.get(position)!, OPEN), position).toHaveLength(1);
     }
   });

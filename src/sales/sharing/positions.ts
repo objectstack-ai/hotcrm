@@ -71,13 +71,17 @@ export const CrmPositions = [
     name: 'crm_executive',
     renamedFrom: ['executive'],
     label: 'Executive',
-    description: 'Company leadership: reads every large open deal across the pipeline, while the deal team keeps ownership.',
+    description: 'Company leadership, read only: reads every account, deal, quote, contract, forecast and case a sales manager reads, while the teams keep ownership.',
+    // Read only (#2492, ruled A). Before it the position held no set: the
+    // large-deal shares, which stay, were all a holder could read.
+    permissionSets: ['sales_leadership'],
   },
   {
     name: 'crm_sales_director',
     renamedFrom: ['sales_director'],
     label: 'Sales Director',
-    description: 'Leads the sales organization, gives the final sign-off on the largest deals and reads every large open opportunity.',
+    description: 'Leads the sales organization, gives the final sign-off on the largest deals and reads everything a sales manager reads, read only.',
+    permissionSets: ['sales_leadership'],
   },
   {
     name: 'crm_sales_manager',
@@ -98,6 +102,10 @@ export const CrmPositions = [
     renamedFrom: ['service_director'],
     label: 'Service Director',
     description: 'Oversees customer service and reads every open critical case while a service manager handles it.',
+    // Read only (#2490, ruled A): the set reads cases with no View All, so
+    // `case_director_sharing` is the reach. Before it the position held no
+    // set, and the share widened nothing.
+    permissionSets: ['service_director'],
   },
   // The escalation pool works tickets with the agent's own grants: the #1779
   // ruling (director seat, decision batch #92, 2026-09-08) bound the EXISTING

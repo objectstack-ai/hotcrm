@@ -98,6 +98,11 @@ import type { Territory } from '../objects/_territory';
  * ⚠️ Measured, and written down because the card that authorised those two
  * rows over-counted: staffing them does NOT light `case_director_sharing`. That
  * rule's recipient is `crm_service_director`, which the same ruling leaves empty.
+ * Since #2490 that position holds the read-only `service_director` set, so a
+ * tenant that staffs its director gets the rule's reach (measured: an open
+ * critical case owned by someone else reads 200, a non-critical or closed one
+ * is not listed). Before it the position held no set and the rule stayed unlit
+ * even when staffed. The demo still leaves it empty, for the reason below.
  * The fourth mechanism these two rows actually reach is the `case_intake`
  * queue's membership, not the director rule.
  *
@@ -108,7 +113,11 @@ import type { Territory } from '../objects/_territory';
  * RECEIVES a share or an approval, a mechanism the staffed reps and sales
  * manager already demonstrate — and the approval nodes that route to them
  * declare `onEmptyApprovers: 'admin_rescue'`, so an empty bench holds for admin
- * takeover instead of stranding the record.
+ * takeover instead of stranding the record. Since #2492 `executive` and
+ * `sales_director` hold the read-only `sales_leadership` set (a sales
+ * manager's read reach, no write), so a tenant that staffs them sees the
+ * accounts, deals, quotes, contracts, forecasts and cases; before it they held
+ * no set and saw only the large-deal shares.
  *
  * ### Why a rep holds TWO positions — and what actually bounds the territory
  *
