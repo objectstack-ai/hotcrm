@@ -12,7 +12,7 @@ export const MarketingUserProfile = {
   // across apps. Sets merge most-visible-wins, and every member also holds
   // `crm_user`, which says nothing here, so silence never re-shows an app.
   // Marketing keeps Sales beside Marketing: the leads and deals it targets.
-  tabPermissions: { crm_service: 'hidden' as const },
+  tabPermissions: { crm_service: 'hidden' as const, crm_o2c: 'hidden' as const },
   objects: {
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. Lead and contact list exports are marketing's

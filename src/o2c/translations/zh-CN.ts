@@ -250,20 +250,35 @@ export const zhCN: TranslationData = {
     },
   },
   apps: {
+    // The ids this package contributes into the Sales app: the collection
+    // plan the reps write, and the manual (#2465).
     crm_enterprise: {
       navigation: {
         nav_billing_milestones: {
-          label: '回款计划',
-        },
-        nav_invoices: {
-          label: '发票',
-        },
-        nav_payments: {
-          label: '回款',
+          label: '回款节点',
         },
         nav_help_o2c: {
           label: '订单与回款手册',
         },
+      },
+    },
+    // This package's own app, finance's (#2465).
+    crm_o2c: {
+      label: '订单与回款',
+      description: '发票、回款和回款计划，以及它们所属的合同和客户',
+      navigation: {
+        group_receivables: { label: '应收' },
+        group_follow_up: { label: '跟进' },
+        group_customers: { label: '合同与客户' },
+        group_work: { label: '我的工作' },
+        group_help: { label: '帮助' },
+        nav_invoices: { label: '发票' },
+        nav_payments: { label: '回款' },
+        nav_billing_milestones: { label: '回款节点' },
+        nav_overdue_invoices: { label: '逾期发票' },
+        nav_planned_this_month: { label: '本月计划回款' },
+        nav_approval_requests: { label: '待我审批' },
+        nav_help_o2c: { label: '订单与回款手册' },
       },
     },
   },

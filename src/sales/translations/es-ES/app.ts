@@ -35,7 +35,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_sales_home: { label: 'Inicio de Ventas' },
 
         group_sales: { label: 'Ventas' },
-        group_order_to_cash: { label: 'Del pedido al cobro' },
+        group_collection_plan: { label: 'Plan de cobro' },
         nav_lead: { label: 'Prospectos' },
         nav_account: { label: 'Cuentas' },
         nav_contact: { label: 'Contactos' },
@@ -85,6 +85,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_account: { label: 'Cuentas' },
         nav_my_tasks: { label: 'Mis Tareas' },
         nav_report_lead_inflow: { label: 'Interacción con Prospectos por Mes' },
+      },
+    },
+    crm_o2c: {
+      // The ids this package contributes into the Order to Cash app (#2465).
+      navigation: {
+        nav_contract: { label: 'Contratos' },
+        nav_account: { label: 'Cuentas' },
+        nav_my_tasks: { label: 'Mis Tareas' },
       },
     },
   },

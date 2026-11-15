@@ -42,7 +42,8 @@ records it; nothing sets it for you.
 
 ## Planned This Month
 
-**Order to Cash → Billing Milestones → Planned This Month** lists the
+**Follow-up → Planned This Month** in the **Order to Cash** app, also a tab of
+**Collection Plan → Billing Milestones** in **Sales**, lists the
 milestones whose **Planned Date** falls in the current calendar month. It
 changes on the first of each month.
 
