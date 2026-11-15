@@ -12,7 +12,7 @@
 
 <sub>The positioning of [ObjectStack](https://github.com/objectstack-ai/objectstack), quoted as its README and the post [The Ontology Is the Software](https://objectstack.ai/blog/the-ontology-is-the-software) state it.</sub>
 
-**HotCRM is the reference implementation of that statement for a CRM.**
+**HotCRM is the reference app for AI-written enterprise software: a complete CRM in typed ObjectStack metadata.** For a CRM, it is the reference implementation of the statement above.
 
 - **Its business ontology is the app.** 29 business objects and the relations between them, **40 actions**, 42 flows, 6 permission sets, 18 positions and 11 sharing rules, and 6 AI skills — typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata under `src/`, checked by `pnpm validate`.
 - **The database, the API, the console UI and the agent tools derive from it.** One `pnpm dev` boot creates the tables, serves the REST API at `/api/v1/data/crm_account` and its siblings, the Console at `/_console/`, and an MCP server at `/api/v1/mcp`. Nothing under `src/` defines a route handler or a React component.
