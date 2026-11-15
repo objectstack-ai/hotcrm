@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { hookNamed } from './helpers/composed-stack';
-import { hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, committedFile, type Person } from './helpers/verify-stack';
 
 /**
  * An accepted quote's totals are its lines' sum, and its contract is drafted at
@@ -109,7 +109,9 @@ const presentedQuote = async (): Promise<{ quote: Rec; product: Rec; account: Re
   await verify.hooks.run('crm_quote_line_item', 'insert', {
     crm_quote: quote!.id, crm_product: product!.id, quantity: 1, unit_price: 19_000,
   }, { as: rep.token });
-  await systemUpdate(verify, 'crm_quote', { id: quote!.id, status: 'presented' });
+  // Presented, with the customer's signed copy on file, so the accept is the
+  // ordinary one (Accepted requires it, #2317).
+  await systemUpdate(verify, 'crm_quote', { id: quote!.id, status: 'presented', signed_copy: await committedFile(verify, rep.id) });
   // Waited for, so the fixture reads the same on main, where the rollup was `async`.
   await vi.waitFor(async () => {
     const q = await stored('crm_quote', quote!.id);

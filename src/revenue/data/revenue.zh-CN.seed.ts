@@ -129,6 +129,10 @@ export const quotesZhCN = zhCNTwin(quotes, {
   words: QUOTES_ZH,
   text: ['name', 'description', 'internal_notes'],
   refs: { crm_account: zhAccountName, crm_contact: zhContactEmail, crm_opportunity: zhOpportunityName },
+  // The signed-copy sample keeps its bytes and takes a Chinese file name (#2317).
+  map: (twin) => (twin.signed_copy && typeof twin.signed_copy === 'object'
+    ? { ...twin, signed_copy: { ...twin.signed_copy, name: `${String(twin.name)} - 已签署（样例）.pdf` } }
+    : twin),
 });
 
 export const quoteLineItemsZhCN = zhCNTwin(quoteLineItems, {

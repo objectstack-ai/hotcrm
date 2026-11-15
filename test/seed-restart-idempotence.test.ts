@@ -9,7 +9,7 @@ import artifact from '../objectstack.config';
 import { CrmSeedData } from '../objectstack.composition';
 import { knowledgeArticles } from '../src/service/data/service.seed';
 import { KnowledgeArticleViews } from '../src/service/views/knowledge_article.view';
-import { bootOptions, buildArtifactAgain } from './helpers/verify-stack';
+import { bootOptions, buildArtifactAgain, seedClaimSettled } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -60,6 +60,7 @@ describe('a restart over a seeded database adds no row (#2129)', () => {
     dir = mkdtempSync(join(tmpdir(), 'seed-restart-idempotence-'));
     const databaseFile = join(dir, 'crm.db');
     const first = await bootStack(artifact, bootOptions({ databaseFile }));
+    await seedClaimSettled(first); // the seed carries files, so it settles after the boot (#2317)
 
     for (const object of OBJECTS) countsBefore[object] = (await first.rows(object, seedScope(object))).length;
     articlesBefore = await first.rows('crm_knowledge_article');
@@ -77,6 +78,7 @@ describe('a restart over a seeded database adds no row (#2129)', () => {
     vi.useFakeTimers({ toFake: ['Date'], shouldAdvanceTime: true });
     vi.setSystemTime(Date.now() + DAY_MS);
     after = await bootStack(await buildArtifactAgain(), bootOptions({ databaseFile }));
+    await seedClaimSettled(after);
   }, 300_000);
 
   afterAll(async () => {

@@ -36,6 +36,10 @@ export const contractsZhCN = zhCNTwin(contracts, {
     crm_opportunity: zhOpportunityName,
     signed_by: (name) => zhContactName(zhLookup('contract signer', SIGNERS)(name)),
   },
+  // The signed-copy sample keeps its bytes and takes a Chinese file name (#2317).
+  map: (twin) => (twin.signed_copy && typeof twin.signed_copy === 'object'
+    ? { ...twin, signed_copy: { ...twin.signed_copy, name: `${String(twin.crm_account)} - 已签合同（样例）.pdf` } }
+    : twin),
 });
 
 const FORECASTS_ZH: Record<string, Record<string, unknown>> = {
