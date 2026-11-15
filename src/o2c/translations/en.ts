@@ -250,20 +250,35 @@ export const en: TranslationData = {
     },
   },
   apps: {
+    // The ids this package contributes into the Sales app: the collection
+    // plan the reps write, and the manual (#2465).
     crm_enterprise: {
       navigation: {
         nav_billing_milestones: {
           label: 'Billing Milestones',
         },
-        nav_invoices: {
-          label: 'Invoices',
-        },
-        nav_payments: {
-          label: 'Payments',
-        },
         nav_help_o2c: {
           label: 'Order to Cash Manual',
         },
+      },
+    },
+    // This package's own app, finance's (#2465).
+    crm_o2c: {
+      label: 'Order to Cash',
+      description: 'Invoices, payments and the collection plan, with the contracts and accounts they belong to',
+      navigation: {
+        group_receivables: { label: 'Receivables' },
+        group_follow_up: { label: 'Follow-up' },
+        group_customers: { label: 'Contracts and Accounts' },
+        group_work: { label: 'My Work' },
+        group_help: { label: 'Help' },
+        nav_invoices: { label: 'Invoices' },
+        nav_payments: { label: 'Payments' },
+        nav_billing_milestones: { label: 'Billing Milestones' },
+        nav_overdue_invoices: { label: 'Overdue Invoices' },
+        nav_planned_this_month: { label: 'Planned This Month' },
+        nav_approval_requests: { label: 'Inbox' },
+        nav_help_o2c: { label: 'Order to Cash Manual' },
       },
     },
   },

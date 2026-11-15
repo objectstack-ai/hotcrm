@@ -40,7 +40,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_sales_home: { label: '销售主页' },
 
         group_sales: { label: '销售' },
-        group_order_to_cash: { label: '订单与回款' },
+        group_collection_plan: { label: '回款计划' },
         nav_lead: { label: '线索' },
         nav_account: { label: '客户' },
         nav_contact: { label: '联系人' },
@@ -90,6 +90,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_account: { label: '客户' },
         nav_my_tasks: { label: '我的任务' },
         nav_report_lead_inflow: { label: '每月线索跟进' },
+      },
+    },
+    crm_o2c: {
+      // The ids this package contributes into the Order to Cash app (#2465).
+      navigation: {
+        nav_contract: { label: '合同' },
+        nav_account: { label: '客户' },
+        nav_my_tasks: { label: '我的任务' },
       },
     },
   },

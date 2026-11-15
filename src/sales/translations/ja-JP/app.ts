@@ -30,7 +30,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_sales_home: { label: '営業ホーム' },
 
         group_sales: { label: '営業' },
-        group_order_to_cash: { label: '受注から入金' },
+        group_collection_plan: { label: '回収計画' },
         nav_lead: { label: 'リード' },
         nav_account: { label: '取引先' },
         nav_contact: { label: '取引先責任者' },
@@ -85,6 +85,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_account: { label: '取引先' },
         nav_my_tasks: { label: '私のタスク' },
         nav_report_lead_inflow: { label: '月別リード対応' },
+      },
+    },
+    crm_o2c: {
+      // The ids this package contributes into the Order to Cash app (#2465).
+      navigation: {
+        nav_contract: { label: '契約' },
+        nav_account: { label: '取引先' },
+        nav_my_tasks: { label: '私のタスク' },
       },
     },
   },

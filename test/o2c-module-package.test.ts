@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import artifact from '../objectstack.config';
+import { packageStacks } from '../objectstack.composition';
 import { servedApp, packFor } from './helpers/composed-stack';
 
 type AnyRec = Record<string, any>;
@@ -21,7 +22,10 @@ type AnyRec = Record<string, any>;
 
 const O2C_ID = 'app.objectstack.hotcrm.o2c';
 const APP_ID = 'app.objectstack.hotcrm';
-const GROUP = 'group_order_to_cash';
+// The Sales app keeps the collection plan only (#2465); finance works in the
+// module's own app.
+const GROUP = 'group_collection_plan';
+const O2C_APP = 'crm_o2c';
 
 const bodies: AnyRec[] = (((artifact as AnyRec).packages ?? []) as AnyRec[]).map(
   (entry) => (entry?.manifest ?? {}) as AnyRec,
@@ -40,14 +44,15 @@ describe('Order to Cash ships inside the HotCRM artifact (#2315)', () => {
     expect(Object.keys(o2c!.dependencies ?? {})).toEqual([APP_ID]);
   });
 
-  it('it fills the app group the app keeps for it, and adds its manual under Help', () => {
+  it('it fills the Sales group the app keeps for the collection plan, and adds its manual under Help', () => {
     expect((o2c!.navigationContributions ?? []).map((c: AnyRec) => [c.app, c.group])).toEqual([
       ['crm_enterprise', GROUP],
       ['crm_enterprise', 'group_help'],
     ]);
-    // Phase 1a (#2315): the group lists the module's three objects.
+    // #2465: the Sales group lists the collection plan alone; invoices and
+    // payments are finance's, in the module's own app.
     const items = (o2c!.navigationContributions[0].items ?? []) as AnyRec[];
-    expect(items.map((i) => i.objectName)).toEqual(['crm_billing_milestone', 'crm_invoice', 'crm_payment']);
+    expect(items.map((i) => i.objectName)).toEqual(['crm_billing_milestone']);
     const group = (servedApp('crm_enterprise').navigation as AnyRec[]).find((n) => n.id === GROUP);
     expect(group?.type).toBe('group');
   });
@@ -57,6 +62,45 @@ describe('Order to Cash ships inside the HotCRM artifact (#2315)', () => {
   });
 
   it('zh-CN uses the name the maintainer chose', () => {
-    expect(packFor('zh-CN')?.apps?.crm_enterprise?.navigation?.[GROUP]?.label).toBe('订单与回款');
+    expect(packFor('zh-CN')?.apps?.crm_enterprise?.navigation?.[GROUP]?.label).toBe('回款计划');
+  });
+});
+
+describe('Order to Cash is its own app, finance\'s (#2465)', () => {
+  const o2c = bodies.find((body) => body.id === O2C_ID);
+  const walk = (nodes: AnyRec[]): AnyRec[] =>
+    nodes.flatMap((n) => (n.type === 'group' ? walk((n.children ?? []) as AnyRec[]) : [n]));
+
+  it('the module declares it, and nothing else declares an app of that name', () => {
+    const owners = (packageStacks as AnyRec[]).filter((e) => ((e.apps ?? []) as AnyRec[]).some((a) => a.name === O2C_APP)).map((e) => e.manifest?.id);
+    expect(owners).toEqual([O2C_ID]);
+    expect(o2c).toBeDefined();
+  });
+
+  it('opens on the invoices, and carries payments, the collection plan, the two working views, contracts, accounts and the manual', () => {
+    const items = walk(servedApp(O2C_APP).navigation as AnyRec[]);
+    expect(items[0]).toMatchObject({ objectName: 'crm_invoice' });
+    const objects = items.filter((i) => i.type === 'object').map((i) => `${i.objectName}${i.viewName ? `/${i.viewName}` : ''}`);
+    expect(objects).toEqual(expect.arrayContaining([
+      'crm_invoice', 'crm_payment', 'crm_billing_milestone',
+      'crm_invoice/overdue_invoices', 'crm_billing_milestone/planned_this_month',
+      'crm_contract', 'crm_account',
+    ]));
+    expect(items.filter((i) => i.type === 'doc').map((i) => i.book)).toEqual(['crm_o2c_manual']);
+  });
+
+  it('the Sales app no longer lists invoices or payments', () => {
+    const objects = walk(servedApp('crm_enterprise').navigation as AnyRec[]).map((i) => i.objectName);
+    expect(objects).not.toContain('crm_invoice');
+    expect(objects).not.toContain('crm_payment');
+    expect(objects).toContain('crm_billing_milestone');
+  });
+
+  it.each(['en', 'zh-CN', 'es-ES', 'ja-JP'])('the %s pack labels the app', (locale) => {
+    expect(packFor(locale)?.apps?.[O2C_APP]?.label).toEqual(expect.any(String));
+  });
+
+  it('zh-CN uses the name the maintainer chose', () => {
+    expect(packFor('zh-CN')?.apps?.[O2C_APP]?.label).toBe('订单与回款');
   });
 });

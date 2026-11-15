@@ -250,20 +250,35 @@ export const jaJP: TranslationData = {
     },
   },
   apps: {
+    // The ids this package contributes into the Sales app: the collection
+    // plan the reps write, and the manual (#2465).
     crm_enterprise: {
       navigation: {
         nav_billing_milestones: {
           label: '請求マイルストーン',
         },
-        nav_invoices: {
-          label: '請求書',
-        },
-        nav_payments: {
-          label: '入金',
-        },
         nav_help_o2c: {
           label: '受注から入金マニュアル',
         },
+      },
+    },
+    // This package's own app, finance's (#2465).
+    crm_o2c: {
+      label: '受注から入金',
+      description: '請求書・入金・回収計画と、それらが属する契約と取引先',
+      navigation: {
+        group_receivables: { label: '売掛金' },
+        group_follow_up: { label: 'フォローアップ' },
+        group_customers: { label: '契約と取引先' },
+        group_work: { label: 'マイワーク' },
+        group_help: { label: 'ヘルプ' },
+        nav_invoices: { label: '請求書' },
+        nav_payments: { label: '入金' },
+        nav_billing_milestones: { label: '請求マイルストーン' },
+        nav_overdue_invoices: { label: '期日超過の請求書' },
+        nav_planned_this_month: { label: '今月の入金予定' },
+        nav_approval_requests: { label: '受信トレイ' },
+        nav_help_o2c: { label: '受注から入金マニュアル' },
       },
     },
   },

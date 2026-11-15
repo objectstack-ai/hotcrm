@@ -284,17 +284,19 @@ export const CrmApp = App.create({
     },
 
     {
-      // Order to Cash (REQ-0007) — the anchor for the `app.objectstack.hotcrm.o2c`
-      // module (`src/o2c/index.ts`), which fills the group through
-      // `navigationContributions`, as the revenue module fills Sales.
-      // While the group has no entry — phase 0, or a tenant that disabled the
-      // module — the console shows no empty group (measured, #2315). ⛔ Do not tidy the empty group away: the contributed
-      // items would land at the app's top level with a
-      // `nav_contribution_group_missing` warning.
-      id: 'group_order_to_cash',
+      // Collection Plan (REQ-0007, hotcrm#2465) — the anchor for the
+      // `app.objectstack.hotcrm.o2c` module (`src/o2c/index.ts`), which fills
+      // it with the collection plan the reps and managers write, as the
+      // revenue module fills Sales. Invoices and payments live in the
+      // module's own Order to Cash app (`src/o2c/apps/`), where finance works.
+      // While the group has no entry — a tenant that disabled the module —
+      // the console shows no empty group (measured, #2315). ⛔ Do not tidy
+      // the empty group away: the contributed item would land at the app's
+      // top level with a `nav_contribution_group_missing` warning.
+      id: 'group_collection_plan',
       type: 'group',
-      label: 'Order to Cash',
-      icon: 'receipt',
+      label: 'Collection Plan',
+      icon: 'flag',
       expanded: true,
       children: [],
     },

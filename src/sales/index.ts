@@ -111,10 +111,12 @@ export const createHotCrmAppStack = (
       engines: { protocol: '^18.4.0' },
 
       /**
-       * The app package's entries in the two module apps (#2417, ADR-0029 D7).
+       * The app package's entries in the three module apps (#2417, #2465,
+       * ADR-0029 D7).
        *
-       * the Service app and the Marketing app are declared by their modules
-       * (`src/service/apps/`, `src/marketing/apps/`), and an app's own
+       * the Service, Marketing and Order to Cash apps are declared by their
+       * modules (`src/service/apps/`, `src/marketing/apps/`, `src/o2c/apps/`),
+       * and an app's own
        * `navigation` may not name another package's object (ADR-0130). So
        * each module app declares ANCHOR groups and this package fills them
        * with the customers, the member's own work and the reports that cross
@@ -178,6 +180,23 @@ export const createHotCrmAppStack = (
           priority: 10,
           items: [
             { id: 'nav_report_lead_inflow', type: 'report', reportName: 'lead_inflow_by_month_source', label: 'Lead Engagement by Month', icon: 'trending-up', visible: READS_LEADS },
+          ],
+        },
+        {
+          app: 'crm_o2c',
+          group: 'group_customers',
+          priority: 10,
+          items: [
+            { id: 'nav_contract', type: 'object', objectName: 'crm_contract', label: 'Contracts', icon: 'file-signature' },
+            { id: 'nav_account', type: 'object', objectName: 'crm_account', label: 'Accounts', icon: 'building' },
+          ],
+        },
+        {
+          app: 'crm_o2c',
+          group: 'group_work',
+          priority: 10,
+          items: [
+            { id: 'nav_my_tasks', type: 'object', objectName: 'crm_task', viewName: 'my_open_tasks', label: 'My Tasks', icon: 'circle-check' },
           ],
         },
       ],
