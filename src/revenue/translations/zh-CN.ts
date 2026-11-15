@@ -12,6 +12,147 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  * package's pack: `./index.ts`.
  */
 export const zhCN: TranslationData = {
+  hooks: {
+    quote_workflow: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '报价单{{quote}}不能接受：它的商机正被审批锁定，接受它会把该商机设为成交。请在审批通过后再接受。',
+          reasons: {
+            held_unsent: {
+              message: '报价单{{quote}}不能接受：它的商机需要先通过大额商机审批，接受它会把该商机设为成交。请先保存商机以提交审批，获批后再接受报价单。',
+            },
+            line_accepted: {
+              message: '报价单{{quote}}已接受，因此不能再新增、修改或删除它的明细。',
+            },
+            line_rejected: {
+              message: '报价单{{quote}}已拒绝，因此不能再新增、修改或删除它的明细。请先把它修订回草稿再修改。',
+            },
+            line_expired: {
+              message: '报价单{{quote}}已过期，因此不能再新增、修改或删除它的明细。',
+            },
+            frozen_accepted: {
+              message: '报价单{{quote}}已接受；只能修改它的内部备注。',
+            },
+            frozen_rejected: {
+              message: '报价单{{quote}}已拒绝；请先把它修订回草稿再修改。在此之前只能修改它的内部备注。',
+            },
+            frozen_expired: {
+              message: '报价单{{quote}}已过期；只能修改它的内部备注。',
+            },
+          },
+        },
+        VALIDATION_FAILED: {
+          message: '报价单{{quote}}不能直接创建为“已接受”。报价单从“草稿”、“审核中”或“已提交”开始，之后才能被接受、拒绝或过期。',
+          reasons: {
+            created_rejected: {
+              message: '报价单{{quote}}不能直接创建为“已拒绝”。报价单从“草稿”、“审核中”或“已提交”开始，之后才能被接受、拒绝或过期。',
+            },
+            created_expired: {
+              message: '报价单{{quote}}不能直接创建为“已过期”。报价单从“草稿”、“审核中”或“已提交”开始，之后才能被接受、拒绝或过期。',
+            },
+          },
+        },
+      },
+    },
+    quote_price_book: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '价格表{{book}}未启用，报价单只能使用已启用的价格表。请为报价单{{quote}}选择其他价格表。',
+          reasons: {
+            line: {
+              message: '报价单{{quote}}已有 1 条明细按价格表定价，因此不能更换价格表。请先删除明细，再选择价格表并重新添加。',
+            },
+            line_from: {
+              message: '报价单{{quote}}已有 1 条明细按价格表{{from}}定价，因此不能更换价格表。请先删除明细，再选择价格表并重新添加。',
+            },
+            lines: {
+              message: '报价单{{quote}}已有 {{count}} 条明细按价格表定价，因此不能更换价格表。请先删除明细，再选择价格表并重新添加。',
+            },
+            lines_from: {
+              message: '报价单{{quote}}已有 {{count}} 条明细按价格表{{from}}定价，因此不能更换价格表。请先删除明细，再选择价格表并重新添加。',
+            },
+          },
+        },
+      },
+    },
+    price_book_standard: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '无法删除{{book}}：它是标准价格表。如果不想再用它报价，请关闭“是否启用”。',
+          reasons: {
+            standard_off: {
+              message: '{{book}}是标准价格表，而标准价格表始终要有一个：不能取消“标准价格表”。请改为修改它的价格。',
+            },
+          },
+        },
+        DELETE_RESTRICTED: {
+          message: '无法删除{{book}}：有 1 份报价单使用它定价。如果不想再用它报价，请关闭“是否启用”。',
+          reasons: {
+            quotes: {
+              message: '无法删除{{book}}：有 {{count}} 份报价单使用它定价。如果不想再用它报价，请关闭“是否启用”。',
+            },
+          },
+        },
+        DUPLICATE_VALUE: {
+          message: '{{book}}已是标准价格表，标准价格表只能有一个。请保存这个价格表时不要勾选“标准价格表”。',
+        },
+      },
+    },
+    price_book_entry_unique: {
+      refusals: {
+        DUPLICATE_VALUE: {
+          message: '{{book}}已有{{product}}的价格。一个价格表中每个产品只能有一个条目：请修改已有的条目。',
+        },
+      },
+    },
+    product_catalog: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '标价（{{list_price}}）必须大于或等于成本（{{cost}}）。',
+        },
+        DELETE_RESTRICTED: {
+          message: '无法删除产品：{{opportunity_lines}} 条商机产品明细在使用它。如果想停用它，请关闭“是否启用”。',
+          reasons: {
+            quote: {
+              message: '无法删除产品：{{quote_lines}} 条报价单明细在使用它。如果想停用它，请关闭“是否启用”。',
+            },
+            both: {
+              message: '无法删除产品：{{opportunity_lines}} 条商机产品明细和 {{quote_lines}} 条报价单明细在使用它。如果想停用它，请关闭“是否启用”。',
+            },
+          },
+        },
+      },
+    },
+    opportunity_line_item_freeze: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '商机{{name}}正在审批中，已被锁定：审批完成前不能新增、修改或删除它的产品明细。',
+          reasons: {
+            closed_won: {
+              message: '商机{{name}}已关闭（成交），因此不能再新增、修改或删除它的产品明细。',
+            },
+            closed_lost: {
+              message: '商机{{name}}已关闭（失败），因此不能再新增、修改或删除它的产品明细。',
+            },
+          },
+        },
+      },
+    },
+    quote_line_item_price_fill: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '价格表{{book}}中没有{{product}}的有效价格。请把这个产品加入{{book}}，或在报价单上选择其他价格表。',
+        },
+      },
+    },
+    opportunity_line_item_price_fill: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '价格表{{book}}中没有{{product}}的有效价格。请把这个产品加入{{book}}，或在报价单上选择其他价格表。',
+        },
+      },
+    },
+  },
   objects: {
     crm_quote: {
       _validations: {

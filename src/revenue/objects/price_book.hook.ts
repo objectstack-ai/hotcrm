@@ -34,6 +34,29 @@ const priceBookHook: Hook = {
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 200,
   description: 'Keep exactly one standard price book: refuse a second one, and refuse un-marking or deleting it; refuse deleting a book quotes price from.',
+  refusals: {
+    RECORD_LOCKED: {
+      message: 'Cannot delete {{book}}: it is the standard price book. To stop quoting from it, turn off Active.',
+      status: 409,
+      params: ['book'],
+      reasons: {
+        standard_off: { message: '{{book}} is the standard price book, and there is always one: Standard cannot be turned off. Edit its prices instead.' },
+      },
+    },
+    DELETE_RESTRICTED: {
+      message: 'Cannot delete {{book}}: 1 quote prices from it. To stop quoting from it, turn off Active.',
+      status: 409,
+      params: ['book', 'count'],
+      reasons: {
+        quotes: { message: 'Cannot delete {{book}}: {{count}} quotes price from it. To stop quoting from it, turn off Active.' },
+      },
+    },
+    DUPLICATE_VALUE: {
+      message: '{{book}} is already the standard price book, and there is only one. Save this book without Standard.',
+      status: 409,
+      params: ['book'],
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -66,11 +89,11 @@ const priceBookHook: Hook = {
         ? previous
         : await api.object('crm_price_book').findOne({ where: { id }, fields: ['id', 'name', 'is_standard'] });
       if (row && row.is_standard === true) {
-        throw refuse(
+        throw Object.assign(refuse(
           `Cannot delete ${String(row.name ?? 'the standard price book')}: it is the standard price book. To stop quoting from it, turn off Active.`,
           'RECORD_LOCKED',
           409,
-        );
+        ), { params: { book: String(row.name ?? 'the standard price book') } });
       }
       // A book quotes price from stays (#2318): each such quote names it as
       // the source of its prices. `crm_quote.crm_price_book` is `restrict`,
@@ -79,11 +102,11 @@ const priceBookHook: Hook = {
       // book through `restrict`.
       const quotes = await api.object('crm_quote').count({ where: { crm_price_book: id } }).catch(() => 0);
       if (quotes > 0) {
-        throw refuse(
+        throw Object.assign(refuse(
           `Cannot delete ${String(row?.name ?? 'this price book')}: ${quotes} ${quotes === 1 ? 'quote prices' : 'quotes price'} from it. To stop quoting from it, turn off Active.`,
           'DELETE_RESTRICTED',
           409,
-        );
+        ), { reason: quotes === 1 ? undefined : 'quotes', params: { book: String(row?.name ?? 'this price book'), count: quotes } });
       }
       return;
     }
@@ -92,11 +115,11 @@ const priceBookHook: Hook = {
     const wasStandard = previous?.is_standard === true;
 
     if (event === 'beforeUpdate' && wasStandard && input.is_standard === false) {
-      throw refuse(
+      throw Object.assign(refuse(
         `${String(previous?.name ?? 'This book')} is the standard price book, and there is always one: Standard cannot be turned off. Edit its prices instead.`,
         'RECORD_LOCKED',
         409,
-      );
+      ), { reason: 'standard_off', params: { book: String(previous?.name ?? 'This book') } });
     }
 
     if (input.is_standard !== true || wasStandard) return;
@@ -114,11 +137,11 @@ const priceBookHook: Hook = {
     const others = (await api.object('crm_price_book').find({ where, fields: ['id', 'name'], top: 2 }))
       .filter((book) => book.id !== selfId);
     if (others.length > 0) {
-      throw refuse(
+      throw Object.assign(refuse(
         `${String(others[0]!.name)} is already the standard price book, and there is only one. Save this book without Standard.`,
         'DUPLICATE_VALUE',
         409,
-      );
+      ), { params: { book: String(others[0]!.name) } });
     }
   },
 };

@@ -58,6 +58,15 @@ export function createLineItemPriceFill(objectName: string, hookName: string): H
     events: ['beforeInsert', 'beforeUpdate'],
     priority: 100,
     description: "Default list_price / unit_price: a quote line from its quote's price book, an opportunity line from the product.",
+    // Both hooks this builds carry the body, so both declare the refusal;
+    // only the quote line reaches it.
+    refusals: {
+      VALIDATION_FAILED: {
+        message: '{{book}} has no active price for {{product}}. Add the product to {{book}}, or choose another price book on the quote.',
+        status: 400,
+        params: ['book', 'product'],
+      },
+    },
     handler: async (ctx: HookContext) => {
       // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
       // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -131,11 +140,11 @@ export function createLineItemPriceFill(objectName: string, hookName: string): H
             const bookName = typeof book?.name === 'string' && book.name.trim() !== '' ? book.name.trim() : 'The price book';
             // The product as its record title names it: the name alone (#2369 row 10).
             const productName = typeof product?.name === 'string' && product.name.trim() !== '' ? product.name.trim() : 'this product';
-            throw refuse(
+            throw Object.assign(refuse(
               `${bookName} has no active price for ${productName}. Add the product to ${bookName}, or choose another price book on the quote.`,
               'VALIDATION_FAILED',
               400,
-            );
+            ), { params: { book: bookName, product: productName } });
           }
           listPrice = entry.list_price;
         }

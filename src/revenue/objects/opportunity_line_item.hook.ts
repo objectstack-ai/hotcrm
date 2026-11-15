@@ -129,6 +129,17 @@ const opportunityLineItemFreeze: Hook = {
   events: ['beforeInsert', 'beforeUpdate', 'beforeDelete'],
   priority: 90,
   description: 'Refuse a user adding, changing, moving or removing a line item of a closed opportunity, or of one an approval locks.',
+  refusals: {
+    RECORD_LOCKED: {
+      message: '{{subject}} is locked while an approval is in progress, so its line items cannot be added, changed or removed until that approval is complete.',
+      status: 409,
+      params: ['subject', 'name'],
+      reasons: {
+        closed_won: { message: '{{subject}} is closed (Closed Won), so its line items can no longer be added, changed or removed.' },
+        closed_lost: { message: '{{subject}} is closed (Closed Lost), so its line items can no longer be added, changed or removed.' },
+      },
+    },
+  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts`
     // because a lowered body has no module scope and `extractHookBody` THROWS on
@@ -179,17 +190,17 @@ const opportunityLineItemFreeze: Hook = {
         // object's metadata; `test/refusal-labels.test.ts` reads them off
         // `crm_opportunity`.
         const STAGE_LABELS: Record<string, string> = { closed_won: 'Closed Won', closed_lost: 'Closed Lost' };
-        throw refuse(
+        throw Object.assign(refuse(
           `${subject} is closed (${deal.stage}), so its line items can no longer be added, changed or removed.`,
           'RECORD_LOCKED',
           409,
           `${subject} is closed (${STAGE_LABELS[deal.stage]}), so its line items can no longer be added, changed or removed.`,
-        );
+        ), { reason: deal.stage, params: { subject, name } });
       }
       const locked = deal?.approval_status === 'pending'
         || (deal?.status_change_approval_status === 'pending' && typeof deal.requested_status === 'string' && deal.requested_status !== '');
       if (locked) {
-        throw refuse(`${subject} is locked while an approval is in progress, so its line items cannot be added, changed or removed until that approval is complete.`, 'RECORD_LOCKED', 409);
+        throw Object.assign(refuse(`${subject} is locked while an approval is in progress, so its line items cannot be added, changed or removed until that approval is complete.`, 'RECORD_LOCKED', 409), { params: { subject, name } });
       }
     }
   },
