@@ -61,5 +61,10 @@ expense on it can be submitted, **whoever submits it**, administrators
 included. Drafts can still be written. Untick it, after finance has set a new
 budget for example, and submissions are taken again.
 
+A **Closed** or **Cancelled** project takes nothing new at all: no timesheet
+or expense can be created on it or moved onto it, and a draft already there
+can be edited but not submitted, administrators included. A **Completed**
+project still takes late bookings; tick the lock to stop them.
+
 The **Projects Overview** dashboard, under **Projects**, shows the same figures
 across every project: what its tiles count is the next page.

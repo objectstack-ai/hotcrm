@@ -17,13 +17,21 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * A locked project takes no submissions: moving an expense to Submitted on a
  * project whose Lock Time and Expenses is ticked is refused, naming the
  * project. Drafts are never refused, and nobody is exempt.
+ *
+ * A project that is over takes no spend (hotcrm#2491): on a Closed or
+ * Cancelled project, a person cannot create an expense, move one onto it, or
+ * submit one, and the refusal names the project and its status. A draft
+ * already there stays readable and editable, and can be moved to an open
+ * project; only its submission is refused. Completed stays open for late
+ * claims, as a timesheet's does (`timesheet.hook.ts`). Judged on a person's
+ * write, administrators included.
  */
 const expenseApprover: Hook = {
   name: 'expense_approver',
   object: 'crm_expense',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
-  description: 'Stamp the project\'s Project Manager as the expense\'s approver, leave the decision to the approval, and refuse a submission on a locked project.',
+  description: 'Stamp the project\'s Project Manager as the expense\'s approver, leave the decision to the approval, refuse a submission on a locked project, and take no expense onto a Closed or Cancelled project.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -69,13 +77,27 @@ const expenseApprover: Hook = {
       }
     }
     const submitting = person && status === 'submitted' && previous.status !== 'submitted';
-    if (ctx.event !== 'beforeInsert' && !submitting) return;
     const projectId = refId('crm_project' in input ? input.crm_project : previous.crm_project);
+    const moving = ctx.event === 'beforeUpdate' && 'crm_project' in input && projectId !== refId(previous.crm_project);
+    if (ctx.event !== 'beforeInsert' && !submitting && !moving) return;
     if (!projectId) return;
     const project = await api.object('crm_project').findOne({
       where: { id: projectId },
-      fields: ['id', 'name', 'project_manager', 'time_entry_locked'],
+      fields: ['id', 'name', 'status', 'project_manager', 'time_entry_locked'],
     });
+    // The statuses of a project that is over, as the console labels them.
+    const PROJECT_OVER: Record<string, string> = { closed: 'Closed', cancelled: 'Cancelled' };
+    const over = person && project && typeof project.status === 'string' ? PROJECT_OVER[project.status] : undefined;
+    if (over) {
+      const projectName = String(project?.name ?? 'This project');
+      throw refuse(
+        ctx.event === 'beforeInsert' || moving
+          ? `${projectName} is ${over}, so it takes no new expenses. Record the expense on an open project.`
+          : `${projectName} is ${over}, so this expense cannot be submitted. Keep it as a draft, or move it to an open project.`,
+        'RECORD_LOCKED',
+        409,
+      );
+    }
     if (submitting && project && project.time_entry_locked === true) {
       throw refuse(
         `${String(project.name ?? 'This project')} is locked for time and expenses, so this expense cannot be submitted. Keep it as a draft, or ask the project manager to untick Lock Time and Expenses on the project.`,
