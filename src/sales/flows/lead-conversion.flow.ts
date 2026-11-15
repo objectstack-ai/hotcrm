@@ -738,6 +738,42 @@ export const LeadConversionFlow: Flow = {
       id: 'decision_opportunity', type: 'decision', label: 'Create Opportunity?',
     },
     {
+      // Campaign attribution (#2515). `crm_lead` has no campaign field: the
+      // lead's campaigns are its `crm_campaign_member` rows. Every membership
+      // the lead ever RESPONDED on (`has_responded`, which an unsubscribe
+      // after a response keeps, #2365) with its response time; a membership
+      // that never responded credits nothing.
+      //
+      // Read AS THE CONVERTING USER, like every read here: a member row is
+      // `controlled_by_parent`, so a converter who cannot read the campaign
+      // finds none of its members and the deal is filed without one — the
+      // flow never names a campaign the user cannot open. `get_record` takes
+      // no sort, so the pick is the next node's; the limit is far above the
+      // memberships one person carries (one per campaign, #2498).
+      id: 'find_responded_memberships', type: 'get_record', label: 'Find Responded Campaign Memberships',
+      config: {
+        objectName: 'crm_campaign_member',
+        filter: { crm_lead: cel`recordId`, has_responded: true, response_date: { $ne: null } },
+        fields: ['crm_campaign', 'response_date'],
+        limit: 500,
+        outputVariable: 'respondedMemberships',
+      },
+    },
+    {
+      // The MOST RECENT response wins (ruling 2026-11-15): the membership no
+      // other one responded after. No responded membership, no campaign —
+      // the deal's Campaign stays empty, never a guess. The deal is new, so
+      // there is no Campaign a rep chose to keep: this is its only write of
+      // the field, and a Campaign set on the deal afterwards is never touched
+      // (no node of this flow updates an opportunity).
+      id: 'pick_opportunity_campaign', type: 'assignment', label: 'Pick Most Recent Responded Campaign',
+      config: {
+        assignments: {
+          opportunityCampaignId: cel`size(respondedMemberships) == 0 ? null : respondedMemberships.filter(m, !respondedMemberships.exists(o, o.response_date > m.response_date))[0].crm_campaign`,
+        },
+      },
+    },
+    {
       // `close_date` comes from the screen field, which is the only layer that
       // can carry the `isoDate(daysFromNow(90))` expression — see the
       // `closeDate` declaration. An unbound `closeDate` fails the run at this
@@ -751,6 +787,7 @@ export const LeadConversionFlow: Flow = {
           amount: cel`opportunityAmount`, stage: 'prospecting', probability: 10,
           lead_source: cel`has(leadRecord.lead_source) ? leadRecord.lead_source : null`,
           close_date: cel`closeDate`, owner_id: cel`current_user.id`,
+          crm_campaign: cel`opportunityCampaignId`,
         },
         outputVariable: 'createdOpportunity',
       },
@@ -1010,7 +1047,10 @@ export const LeadConversionFlow: Flow = {
     { id: 'e38', source: 'decision_contact_email_opt_out', target: 'raise_contact_email_opt_out', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.email_opt_out) && vars.leadRecord.email_opt_out == true`, label: 'Opted out' },
     { id: 'e39', source: 'decision_contact_email_opt_out', target: 'decision_opportunity', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.email_opt_out) || vars.leadRecord.email_opt_out != true`, label: 'Emailable' },
     { id: 'e40', source: 'raise_contact_email_opt_out', target: 'decision_opportunity', type: 'default' },
-    { id: 'e16', source: 'decision_opportunity', target: 'create_opportunity', type: 'default', condition: P`vars.createOpportunity == true`, label: 'Yes' },
+    { id: 'e16', source: 'decision_opportunity', target: 'find_responded_memberships', type: 'default', condition: P`vars.createOpportunity == true`, label: 'Yes' },
+    // #2515: the Yes branch picks the campaign the new deal is credited to.
+    { id: 'e56', source: 'find_responded_memberships', target: 'pick_opportunity_campaign', type: 'default' },
+    { id: 'e57', source: 'pick_opportunity_campaign', target: 'create_opportunity', type: 'default' },
     { id: 'e17', source: 'decision_opportunity', target: 'no_opportunity', type: 'default', condition: P`vars.createOpportunity != true`, label: 'No' },
     { id: 'e18', source: 'create_opportunity', target: 'use_new_opportunity', type: 'default' },
     { id: 'e18a', source: 'use_new_opportunity', target: 'mark_converted', type: 'default' },

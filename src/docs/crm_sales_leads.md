@@ -86,7 +86,9 @@ opportunity (and for its name and amount). On confirm, the system creates:
 
 - an **Account** from the lead's company,
 - a **Contact** from the lead's name and details, and
-- optionally an **Opportunity** with the name/amount you entered.
+- optionally an **Opportunity** with the name/amount you entered. If the lead
+  responded to a campaign, the opportunity's **Campaign** is the one it responded
+  to most recently, so the campaign's results count the deal.
 
 You don't re-key anything — company and contact details carry over from the lead.
 
