@@ -18,8 +18,12 @@
  *   5. Resolve the manifest's per-locale listing `translations` (readme paths
  *      read from disk) and refuse, DRY_RUN included, a map that does not parse
  *      as `PackageTranslationsSchema` (`scripts/lib/marketplace-listing.mjs`, #2392)
- *   6. POST {OS_CLOUD_URL}/api/v1/cloud/packages          → idempotent upsert of sys_package
- *   7. POST {OS_CLOUD_URL}/api/v1/cloud/packages/:id/versions
+ *   6. Read the release notes from `CHANGELOG.md`, spanning every section since
+ *      the last published version when the section declares one, and refuse,
+ *      DRY_RUN included, a declaration that does not parse
+ *      (`scripts/lib/marketplace-release-notes.mjs`, #2501)
+ *   7. POST {OS_CLOUD_URL}/api/v1/cloud/packages          → idempotent upsert of sys_package
+ *   8. POST {OS_CLOUD_URL}/api/v1/cloud/packages/:id/versions
  *      → creates sys_package_version. 409 (duplicate) is treated as a no-op so
  *        re-running is safe when nothing changed.
  *
@@ -51,6 +55,11 @@ import {
   packageUpsertBody,
   resolveListingTranslations,
 } from './lib/marketplace-listing.mjs';
+import {
+  ReleaseNotesError,
+  describeReleaseNotes,
+  releaseNotesFromChangelog,
+} from './lib/marketplace-release-notes.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -153,41 +162,16 @@ async function postJson(path, body) {
  * and the marketplace listing carried no notes at all, while the notes the
  * changesets had already written sat in `CHANGELOG.md` unread.
  *
- * The whole section is the wrong thing to send: 3.0.0's is 649 KB, because it
- * is 292 changesets deep. What an installer needs is the part that changes
- * their deployment, so `### Major Changes` is preferred when the release has
- * one, and the head of the section otherwise. `mp.releaseNotes` still wins if
- * a release ever wants to hand-write them.
+ * Which sections they span, what each contributes and how they fit the cap is
+ * `scripts/lib/marketplace-release-notes.mjs` (#2501): one section, or every
+ * section since the last published version when the section declares it.
+ * `mp.releaseNotes` still wins if a release ever wants to hand-write them.
  */
 async function releaseNotesFor(version, manifestNotes) {
-  if (manifestNotes) return manifestNotes;
+  if (manifestNotes) return { text: manifestNotes, span: [version], versions: [version], omitted: 0 };
   const changelogPath = join(ROOT, 'CHANGELOG.md');
   if (!existsSync(changelogPath)) return undefined;
-  const md = await readFile(changelogPath, 'utf8');
-
-  // The section runs from this version's heading to the next version heading.
-  // Headings are located with ONE static pattern and the version is compared as
-  // a string: building `new RegExp(version)` would need the version escaped, and
-  // hand-escaping only `.` is the incomplete-sanitization shape CodeQL rejects
-  // (js/incomplete-sanitization). Nothing here is a pattern, so nothing needs
-  // escaping.
-  const headings = [...md.matchAll(/^## ([^\s]+)[^\S\n]*$/gm)];
-  const idx = headings.findIndex((h) => h[1] === version);
-  if (idx === -1) return undefined;
-  const start = headings[idx].index;
-  const end = idx + 1 < headings.length ? headings[idx + 1].index : md.length;
-  const section = md.slice(start, end);
-
-  const major = section.match(/^### Major Changes\s*$([\s\S]*?)(?=^### |\Z)/m);
-  const body = (major ? major[1] : section.replace(/^## .*$/m, '')).trim();
-  if (!body) return undefined;
-
-  const CAP = 8000;
-  const trimmed =
-    body.length > CAP
-      ? `${body.slice(0, CAP).trimEnd()}\n\n…truncated — the full entry is CHANGELOG.md in the repository.`
-      : body;
-  return `## ${version}\n\n${trimmed}`;
+  return releaseNotesFromChangelog(await readFile(changelogPath, 'utf8'), version);
 }
 
 async function main() {
@@ -234,6 +218,17 @@ async function main() {
   }
   for (const line of describeTranslations(translations)) log(`  ${line}`);
 
+  // The version's release notes, also before the first request: a section that
+  // declares the versions it spans in a form that cannot be read stops here.
+  let notes;
+  try {
+    notes = await releaseNotesFor(ver, mp.releaseNotes);
+  } catch (err) {
+    if (err instanceof ReleaseNotesError) die(`refusing to publish: ${err.message}`);
+    throw err;
+  }
+  log(`  ${describeReleaseNotes(notes)}`);
+
   // Step 1 — upsert sys_package (marketplace visibility).
   const upsertRes = await postJson(
     '/api/v1/cloud/packages',
@@ -243,15 +238,12 @@ async function main() {
   const pkgId = upsertRes.json?.data?.id;
   log(`  ${upsertRes.json?.data?.created ? '✓ created' : '✓ patched'} sys_package id=${pkgId}`);
 
-  const notes = await releaseNotesFor(ver, mp.releaseNotes);
-  log(`  release notes: ${notes ? `${notes.length} chars` : '(none)'}`);
-
   // Step 2 — create sys_package_version (idempotent by 409). auto_approve is
   // honoured for service-mode callers (our CI's OS_CLOUD_API_KEY); without it
   // the version lands as draft and the public catalog hides it.
   const verRes = await postJson(
     `/api/v1/cloud/packages/${encodeURIComponent(pkgId)}/versions`,
-    versionBody({ version: ver, artifact, releaseNotes: notes }),
+    versionBody({ version: ver, artifact, releaseNotes: notes?.text }),
   );
   if (verRes.status === 409) {
     log(`  = version ${ver} already published — no-op`);
