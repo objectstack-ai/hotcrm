@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { packFor } from './helpers/composed-stack';
-import { stripComments } from '../scripts/check-source-token-ratchet.mjs';
+import { stripComments } from '../scripts/lib/strip-comments.mjs';
 
 /**
  * Chinese product term = the language-pack label (#837), for object names,
@@ -104,8 +104,8 @@ import { stripComments } from '../scripts/check-source-token-ratchet.mjs';
  *    before the scan, so they cost nothing. {@link SPARED} is written in plain
  *    characters on purpose: a spared phrase that DID contain a retired
  *    spelling has to fail, and self-scanning is one of the two ways it does.
- * 2. `.ts` files are scanned COMMENT-STRIPPED, via the token ratchet's own
- *    scanner. That is not a convenience: the three ledgers above now explain
+ * 2. `.ts` files are scanned COMMENT-STRIPPED, via `scripts/lib/strip-comments.mjs`
+ *    (the retired token gate's scanner, kept for this file in #2468). That is not a convenience: the three ledgers above now explain
  *    in prose which spelling they used to carry, and those sentences name the
  *    retired words. What ships to a user is the string literal, so the string
  *    literal is what is judged.

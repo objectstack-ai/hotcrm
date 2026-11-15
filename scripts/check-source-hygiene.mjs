@@ -498,10 +498,10 @@ function check(name, hits, remedy) {
  * — the two lines a reader of the verify log can already mistake for failures
  * are fixture output, and this must not become a third.
  *
- * The shape is the token ratchet's re-anchor nag
- * (`scripts/check-source-token-ratchet.mjs`), which is this repo's existing
- * answer to "warn before the wall": same `ℹ️` marker, same indent under the
- * check it belongs to, and silent when it has nothing to say.
+ * The shape was borrowed from the source token gate's re-anchor nag (#1183,
+ * retired in #2468), then this repo's answer to "warn before the wall": an
+ * `ℹ️` marker, indented under the check it belongs to, and silent when it has
+ * nothing to say.
  */
 function advise(headline, hits, remedy) {
   if (hits.length === 0) return;

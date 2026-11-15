@@ -35,15 +35,7 @@ Please scaffold it using the Architect Guidelines:
    it to the `composeStacks([...])` call in `objectstack.config.ts`, before the app. (A
    directory not yet packaged has its barrels merged into the app package's collections in
    `objectstack.composition.ts` instead — `revenue/` and `marketing/` today.)
-5. Commit the new package's ceilings in `COMMITTED` in
-   `scripts/check-source-token-ratchet.mjs`. The package ROSTER is read off disk
-   there (an `objects/` directory is what makes a directory a package), so nothing
-   needs listing for the gate to SEE the package — but it refuses to run until the
-   package has a ceiling for every scope it owes, because a package with no ceiling
-   reads exactly like a package under its ceiling. Run the gate with `--json`, apply
-   its `anchor()` to each reading, add the rows and a worked line to the header
-   table. A package's FIRST ceiling is an anchoring, not a raise: no ruling needed.
-6. Add the new package's barrels to `BARRELS` in `test/helpers/src-roster.ts`, with an
+5. Add the new package's barrels to `BARRELS` in `test/helpers/src-roster.ts`, with an
    `import * as` for each. The app-wide test sweeps take the package ROSTER off disk — an
    `objects/` directory is what makes a directory a package there, so nothing needs
    listing for those — but the merged views (`CrmObjects`, `CrmFlows`, …) are static

@@ -35,19 +35,19 @@
  * ## Why a sibling module rather than exports on the gate itself
  *
  * Both shapes are route 1 of the card, and the cost that used to rule route 1
- * out is gone: #1321 landed `allowJs` repo-wide, and
- * `test/source-token-ratchet.test.ts` already imports constants from a gate
- * `.mjs` under `strict` with `tsc --noEmit` green. What decides between the two
+ * out is gone: #1321 landed `allowJs` repo-wide, and the source token gate's
+ * suite (retired with the gate in #2468) imported constants from a gate `.mjs`
+ * under `strict` with `tsc --noEmit` green. What decides between the two
  * shapes is side effects. The gate runs its checks at module top level and
  * calls `process.exit(1)`, so importing IT from a suite would run the whole
  * gate over the real repo at import time and could take a vitest worker down
  * with it. Making that safe means wrapping ~90 lines of top-level statements in
- * a `main()` behind `isMainModule()` — which re-indents the gate's banner line,
+ * a `main()` behind an entry-point guard — which re-indents the gate's banner line,
  * and that line belongs to #1339, serialised on this same file.
  *
  * A module with no top-level side effects is importable by construction: no
- * guard to get wrong (`scripts/lib/main-module.mjs` exists because that
- * comparison was hand-rolled wrong twice, #1252), no output, no exit, and the
+ * guard to get wrong (that comparison was hand-rolled wrong twice, #1252; its
+ * shared helper went with its last caller in #2468), no output, no exit, and the
  * gate's executable body is left untouched.
  *
  * ⛔ Keep this file side-effect free and free of first-party dependencies. The

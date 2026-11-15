@@ -25,7 +25,8 @@ import { activityActionsFor } from '../../sales/actions/activity-actions';
  * No `: Action` annotation on the three: `activityActionsFor` already returns
  * `Record<kind, Action>`, so each export is typed `Action` without one (#2072
  * dropped the three, and the type-only import they needed, to pay for the case
- * header's three new action ids under the `src/service` token ceiling).
+ * header's three new action ids under the `src/service` token ceiling, since
+ * retired with its gate in #2468).
  */
 const caseActivityActions = activityActionsFor('crm_case', serviceObjects);
 

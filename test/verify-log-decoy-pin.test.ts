@@ -17,12 +17,12 @@ import { join, relative } from 'node:path';
  * | `✗` lines | test file |
  * | --: | :-- |
  * | 29 | `test/source-hygiene-scan-surface.test.ts` |
- * | 16 | `test/source-token-ratchet.test.ts` |
+ * | 16 | the source token gate's suite — retired with the gate in #2468 |
  * |  7 | `test/source-hygiene-header-position.test.ts` |
  * |  6 | `test/field-consumer-scan.test.ts` — retired in #1543 |
  * |  3 | `test/lint-i18n-gate.test.ts` — retired in #1585 |
- * |  3 | `test/script-main-guard.test.ts` — fixtures are copies of the real gates |
- * |  0 | `test/docs-readme-token-figures.test.ts` — spawns a gate, but only its green leg |
+ * |  3 | `test/script-main-guard.test.ts` — fixtures were copies of the real gates; retired in #2468 |
+ * |  0 | the README token-figure pin — spawned a gate's green leg only; retired in #2468 |
  * |  0 | `test/source-hygiene-size-advisory.test.ts` — already pinned (#1299) |
  * | **64** | **total — reconciles exactly with the whole-run count** |
  *
@@ -82,12 +82,9 @@ const DECOY_LINES_BEFORE = 64;
 
 /** Files known to spawn a gate. The scanner must keep finding all of them. */
 const KNOWN_SPAWNING_FILES = [
-  'test/docs-readme-token-figures.test.ts',
-  'test/script-main-guard.test.ts',
   'test/source-hygiene-header-position.test.ts',
   'test/source-hygiene-scan-surface.test.ts',
   'test/source-hygiene-size-advisory.test.ts',
-  'test/source-token-ratchet.test.ts',
 ];
 
 const TEST_DIR = join(process.cwd(), 'test');
