@@ -92,10 +92,17 @@ describe('staffing (project_team_sync)', () => {
   it('hides cost from a team member', async () => {
     const p = (await row('crm_project', project.id, consultant.token))!;
     expect(p.actual_labor_cost).toBeUndefined();
+    expect(p.actual_expense_cost).toBeUndefined();
     expect(p.gross_margin).toBeUndefined();
+    expect(p.billable_amount, 'the amount to bill stays readable').not.toBeUndefined();
     const card = (await row('crm_rate_card', hourly.id, consultant.token))!;
     expect(card.bill_rate).toBe(120);
     expect(card.cost_rate).toBeUndefined();
+  });
+
+  it('refuses a second staffing row for the same person (project_member_unique)', async () => {
+    await expect(insert('crm_project_member', { crm_project: project.id, person: consultant.id, rate_card: daily.id }, pm.token))
+      .rejects.toThrow(/already staffed on this project/);
   });
 
   it('drops a removed member from the Team', async () => {

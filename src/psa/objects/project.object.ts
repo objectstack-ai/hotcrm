@@ -251,7 +251,7 @@ export const Project = ObjectSchema.create({
     }),
 
     budget_consumed_percent: Field.formula({
-      label: 'Budget Used',
+      label: 'Budget Used %',
       group: 'financials',
       returnType: 'number',
       scale: 1,

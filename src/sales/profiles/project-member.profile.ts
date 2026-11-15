@@ -40,8 +40,10 @@ export const ProjectMemberProfile = {
     'crm_time_entry.cost_amount': { readable: false, editable: false },
     'crm_timesheet.total_cost':   { readable: false, editable: false },
     // The project's cost block, for the same reason: it sums what a member
-    // may not read, and the margin follows from it.
+    // may not read, and the margin follows from it. Expense Cost goes with it,
+    // so the block is hidden whole rather than half.
     'crm_project.actual_labor_cost':       { readable: false, editable: false },
+    'crm_project.actual_expense_cost':     { readable: false, editable: false },
     'crm_project.actual_cost':             { readable: false, editable: false },
     'crm_project.cost_variance':           { readable: false, editable: false },
     'crm_project.budget_consumed_percent': { readable: false, editable: false },

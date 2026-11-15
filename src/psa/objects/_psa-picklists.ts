@@ -23,15 +23,15 @@ export const PROJECT_BILLING_TYPE_OPTIONS = [
 ];
 
 export const PROJECT_STATUS_OPTIONS = [
-  { label: 'Draft', value: 'draft', color: '#94A3B8' },
-  { label: 'In Approval', value: 'in_approval', color: '#F59E0B' },
-  { label: 'Approved', value: 'approved', color: '#2563EB' },
-  { label: 'Rejected', value: 'rejected', color: '#DC2626' },
-  { label: 'Active', value: 'active', color: '#16A34A' },
-  { label: 'On Hold', value: 'on_hold', color: '#EA580C' },
-  { label: 'Completed', value: 'completed', color: '#0D9488' },
-  { label: 'Closed', value: 'closed', color: '#475569' },
-  { label: 'Cancelled', value: 'cancelled', color: '#666666' },
+  { label: 'Draft', value: 'draft', color: '#94A3B8', kind: 'open' as const },
+  { label: 'In Approval', value: 'in_approval', color: '#F59E0B', kind: 'open' as const },
+  { label: 'Approved', value: 'approved', color: '#2563EB', kind: 'open' as const },
+  { label: 'Rejected', value: 'rejected', color: '#DC2626', kind: 'lost' as const },
+  { label: 'Active', value: 'active', color: '#16A34A', kind: 'open' as const },
+  { label: 'On Hold', value: 'on_hold', color: '#EA580C', kind: 'open' as const },
+  { label: 'Completed', value: 'completed', color: '#0D9488', kind: 'won' as const },
+  { label: 'Closed', value: 'closed', color: '#475569', kind: 'won' as const },
+  { label: 'Cancelled', value: 'cancelled', color: '#666666', kind: 'lost' as const },
 ];
 
 export const PROJECT_RESPONSIBILITY_OPTIONS = [
@@ -60,10 +60,10 @@ export const RATE_CARD_UNIT_OPTIONS = [
 
 /** A timesheet's and an expense's own lifecycle: written, sent, decided. */
 export const SUBMISSION_STATUS_OPTIONS = [
-  { label: 'Draft', value: 'draft', color: '#94A3B8' },
-  { label: 'Submitted', value: 'submitted', color: '#F59E0B' },
-  { label: 'Approved', value: 'approved', color: '#16A34A' },
-  { label: 'Rejected', value: 'rejected', color: '#DC2626' },
+  { label: 'Draft', value: 'draft', color: '#94A3B8', kind: 'open' as const },
+  { label: 'Submitted', value: 'submitted', color: '#F59E0B', kind: 'open' as const },
+  { label: 'Approved', value: 'approved', color: '#16A34A', kind: 'won' as const },
+  { label: 'Rejected', value: 'rejected', color: '#DC2626', kind: 'lost' as const },
 ];
 
 export const EXPENSE_CATEGORY_OPTIONS = [

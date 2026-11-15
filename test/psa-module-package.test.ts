@@ -49,13 +49,13 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     expect(Object.keys(psa!.dependencies ?? {})).toEqual([APP_ID]);
   });
 
-  it('it owns its six objects, their four hooks and its seed rows (phase 1a)', () => {
+  it('it owns its six objects, their five hooks and its seed rows (phase 1a)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.objects ?? []) as AnyRec[]).map((o) => o.name).sort()).toEqual([
       'crm_expense', 'crm_project', 'crm_project_member', 'crm_rate_card', 'crm_time_entry', 'crm_timesheet',
     ]);
     expect(((stack.hooks ?? []) as AnyRec[]).map((h) => h.name).sort()).toEqual([
-      'expense_approver', 'project_team_sync', 'time_entry_costing', 'timesheet_stamps',
+      'expense_approver', 'project_member_unique', 'project_team_sync', 'time_entry_costing', 'timesheet_stamps',
     ]);
     expect([...new Set(((stack.data ?? []) as AnyRec[]).map((d) => d.object))].sort()).toEqual(['crm_project', 'crm_rate_card']);
   });

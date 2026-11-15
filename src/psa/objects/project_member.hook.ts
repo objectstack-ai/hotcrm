@@ -75,4 +75,69 @@ const projectTeamSync: Hook = {
   },
 };
 
-export default [projectTeamSync];
+/**
+ * One staffing row per person per project. A second row for the same person
+ * is refused, naming the project: the time entry reads the person's staffing
+ * to pick the rate card, and two rows would make that rate a coin toss.
+ * Change the existing row's responsibility or rate card instead.
+ *
+ * Runs as the caller, before the write: the person staffing a project reads
+ * its staffing rows (they are the project's children).
+ */
+const projectMemberUnique: Hook = {
+  name: 'project_member_unique',
+  object: 'crm_project_member',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 100,
+  description: 'Refuse a second staffing row for the same person on the same project.',
+  handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(
+      message: string,
+      code: string,
+      status: number,
+      userMessage: string = message,
+    ): Error {
+      const err = new Error(message) as Error & {
+        code: string;
+        status: number;
+        userMessage: string;
+      };
+      err.code = code;
+      err.status = status;
+      err.userMessage = userMessage;
+      return err;
+    }
+    function refId(value: unknown): string {
+      if (typeof value === 'string') return value;
+      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+        return String((value as Record<string, unknown>).id);
+      }
+      return '';
+    }
+    const api = ctx.api as HookApi | undefined;
+    const input = ctx.input as Record<string, unknown> | undefined;
+    if (!api || !input) return;
+    if (ctx.event === 'beforeUpdate' && !('person' in input) && !('crm_project' in input)) return;
+    const previous = (ctx.previous ?? {}) as Record<string, unknown>;
+    const projectId = refId('crm_project' in input ? input.crm_project : previous.crm_project);
+    const personId = refId('person' in input ? input.person : previous.person);
+    if (!projectId || !personId) return;
+    const rows = await api.object('crm_project_member').find({
+      where: { crm_project: projectId, person: personId },
+      fields: ['id'],
+      top: 2,
+    });
+    if (rows.some((r) => r.id !== previous.id)) {
+      throw refuse(
+        'This person is already staffed on this project. Change their existing staffing row instead of adding another.',
+        'DUPLICATE_VALUE',
+        409,
+      );
+    }
+  },
+};
+
+export default [projectTeamSync, projectMemberUnique];

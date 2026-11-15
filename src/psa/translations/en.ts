@@ -80,7 +80,7 @@ export const en: TranslationData = {
         },
         actual_cost: { label: 'Actual Cost' },
         cost_variance: { label: 'Budget Remaining' },
-        budget_consumed_percent: { label: 'Budget Used' },
+        budget_consumed_percent: { label: 'Budget Used %' },
         gross_margin: { label: 'Gross Margin' },
         gross_margin_percent: { label: 'Gross Margin %' },
         project_manager: {
