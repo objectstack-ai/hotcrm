@@ -404,6 +404,23 @@ The maintainer restarted the module on hotcrm#2315 with one direction, 「先考
   Finance and SAP keep, receivables and customer deposits as two figures. A separate
   "unapplied advances" total is not part of the ruling and is left for its own card.
 
+### Recorded 2026-11-15 — Order to Cash becomes its own app
+
+- **Option A (02:56Z).** Asked whether Order to Cash should be an app of its own and how peers
+  design it, the maintainer chose a module-owned app, `crm_o2c` (*Order to Cash* /
+  「订单与回款」), for finance (hotcrm#2465). Every multi-app peer gives finance its own workspace,
+  and sales sees money on the account and contract record. The module declares the app
+  (`src/o2c/apps/`), as the service and marketing modules declare theirs; the app package
+  contributes the contracts, accounts and My Tasks into its anchor groups. The Sales app's
+  `group_order_to_cash` became `group_collection_plan` (*Collection Plan* / 「回款计划」), holding the
+  billing milestones alone; the contract page keeps its tabs and the 1b totals.
+- **Who sees it** (`tabPermissions`, visibility only): `ar_accountant` sees this app alone;
+  `sales_rep`, `service_agent` and `marketing_user` hide it; `sales_manager` and the administrator
+  sets see all four apps; `crm_user` stays silent. Disabling the module removes the app
+  (`GET /meta/app/crm_o2c` 404, measured on 18.4.0).
+- **The manual opens from two apps**, its own and the Sales app's Help, because the reps and
+  managers who write the collection plan read it too. No platform change.
+
 ## Upstream asks
 
 - **Per-tenant enablement of a module inside an App** (or the inter-App dependencies ADR-0019

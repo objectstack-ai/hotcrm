@@ -58,7 +58,7 @@ type Rec = Record<string, any>;
  * persona's launcher offers is measured at `/me/apps` (the last block).
  */
 
-const APPS = ['crm_enterprise', 'crm_service', 'crm_marketing'] as const;
+const APPS = ['crm_enterprise', 'crm_service', 'crm_marketing', 'crm_o2c'] as const;
 type AppName = (typeof APPS)[number];
 const walkLeaves = (nodes: Rec[]): Rec[] =>
   nodes.flatMap((n) => (n.type === 'group' ? walkLeaves((n.children ?? []) as Rec[]) : [n]));
@@ -136,6 +136,12 @@ beforeAll(async () => {
     permissionSets: CrmPositions.find((c) => c.name === 'crm_marketing_user')?.permissionSets ?? [],
   });
   who.marketing_user = { ...marketer, positions: ['crm_marketing_user'], objects: await permissionsOf(marketer.token) };
+  // Finance (#2465): asked only which apps its launcher offers.
+  const accountant = await signUpPerson(verify, 'ar_accountant@nav-audience.test', {
+    name: 'Nav ar_accountant', positions: ['crm_ar_accountant'],
+    permissionSets: CrmPositions.find((c) => c.name === 'crm_ar_accountant')?.permissionSets ?? [],
+  });
+  who.ar_accountant = { ...accountant, positions: ['crm_ar_accountant'], objects: await permissionsOf(accountant.token) };
   const token = await verify.signIn();
   const context = (await verify.contextFor(token)) as Rec;
   who.admin = {
@@ -558,7 +564,7 @@ describe('a member with no HotCRM grant lands on the platform access page (#2250
  * `hidden` is not undone by it (measured on 18.3.0 in a browser, the
  * screenshots are on the PR).
  */
-describe("each persona's launcher offers the apps its work needs (#2417)", () => {
+describe("each persona's launcher offers the apps its work needs (#2417, #2465)", () => {
   const appsOf = async (persona: string): Promise<string[]> => {
     const res = await verify.apiAs(who[persona]!.token, 'GET', '/me/apps');
     expect(res.status, await res.clone().text()).toBe(200);
@@ -570,16 +576,18 @@ describe("each persona's launcher offers the apps its work needs (#2417)", () =>
   it.each([
     ['na_rep', ['crm_enterprise']],
     ['eu_rep', ['crm_enterprise']],
-    ['sales_manager', ['crm_enterprise', 'crm_marketing', 'crm_service']],
+    ['sales_manager', ['crm_enterprise', 'crm_marketing', 'crm_o2c', 'crm_service']],
     ['service_agent', ['crm_service']],
     ['service_manager', ['crm_service']],
     ['marketing_user', ['crm_enterprise', 'crm_marketing']],
-    ['admin', ['crm_enterprise', 'crm_marketing', 'crm_service']],
+    // Finance works in Order to Cash alone (#2465).
+    ['ar_accountant', ['crm_o2c']],
+    ['admin', ['crm_enterprise', 'crm_marketing', 'crm_o2c', 'crm_service']],
   ])('%s is offered %j', async (persona, apps) => {
     expect(await appsOf(persona)).toEqual(apps);
   });
 
-  it.each(['na_rep', 'service_agent'])('an app left off the launcher still opens for %s by its name: visibility, not access', async (persona) => {
+  it.each(['na_rep', 'service_agent', 'ar_accountant'])('an app left off the launcher still opens for %s by its name: visibility, not access', async (persona) => {
     for (const app of APPS) {
       const res = await verify.apiAs(who[persona]!.token, 'GET', `/meta/app/${app}`);
       expect(res.status, `${persona} ${app}: ${await res.clone().text()}`).toBe(200);

@@ -862,9 +862,9 @@ describe('every locale is complete on every authored surface', () => {
     // exposes a non-empty `apps.*.navigation` table.
     const declared = declaredNavIds();
     expect(declared.size, 'no apps found in stack.apps').toBeGreaterThan(0);
-    // the Sales app is the big tree; the Service and Marketing apps (#2417)
-    // are smaller by design, so each gets its own floor.
-    const FLOOR: Record<string, number> = { crm_enterprise: 20, crm_service: 15, crm_marketing: 10 };
+    // the Sales app is the big tree; the Service, Marketing (#2417) and Order
+    // to Cash (#2465) apps are smaller by design, so each gets its own floor.
+    const FLOOR: Record<string, number> = { crm_enterprise: 20, crm_service: 15, crm_marketing: 10, crm_o2c: 10 };
     for (const [app, ids] of declared) {
       expect(ids.size, `app "${app}" declares no navigation ids`).toBeGreaterThanOrEqual(FLOOR[app] ?? 20);
     }

@@ -27,7 +27,7 @@ platform update lifts that, an administrator enters and imports them.
 - **Open** on an invoice is **Amount** minus **Paid**, kept up to date whenever
   a payment against it is saved. A **Cancelled** invoice is open for nothing
   and leaves every figure.
-- **Overdue.** **Order to Cash → Invoices → Overdue Invoices** lists the
+- **Overdue.** **Follow-up → Overdue Invoices** in the **Order to Cash** app lists the
   **Issued** invoices whose **Due Date** is before today and that still have an
   **Open** amount.
 - **One payment per invoice.** A receipt that pays several invoices is one

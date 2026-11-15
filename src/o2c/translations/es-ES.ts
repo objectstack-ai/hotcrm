@@ -250,20 +250,35 @@ export const esES: TranslationData = {
     },
   },
   apps: {
+    // The ids this package contributes into the Sales app: the collection
+    // plan the reps write, and the manual (#2465).
     crm_enterprise: {
       navigation: {
         nav_billing_milestones: {
           label: 'Hitos de facturación',
         },
-        nav_invoices: {
-          label: 'Facturas',
-        },
-        nav_payments: {
-          label: 'Cobros',
-        },
         nav_help_o2c: {
           label: 'Manual Del pedido al cobro',
         },
+      },
+    },
+    // This package's own app, finance's (#2465).
+    crm_o2c: {
+      label: 'Del pedido al cobro',
+      description: 'Facturas, cobros y el plan de cobro, con los contratos y las cuentas a los que pertenecen',
+      navigation: {
+        group_receivables: { label: 'Cuentas por cobrar' },
+        group_follow_up: { label: 'Seguimiento' },
+        group_customers: { label: 'Contratos y cuentas' },
+        group_work: { label: 'Mi Trabajo' },
+        group_help: { label: 'Ayuda' },
+        nav_invoices: { label: 'Facturas' },
+        nav_payments: { label: 'Cobros' },
+        nav_billing_milestones: { label: 'Hitos de facturación' },
+        nav_overdue_invoices: { label: 'Facturas vencidas' },
+        nav_planned_this_month: { label: 'Previsto este mes' },
+        nav_approval_requests: { label: 'Bandeja de Entrada' },
+        nav_help_o2c: { label: 'Manual Del pedido al cobro' },
       },
     },
   },

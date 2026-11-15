@@ -65,8 +65,12 @@ const docEntries = (): AnyRec[] => {
   const walk = (nodes: AnyRec[]): AnyRec[] =>
     nodes.flatMap((n) => (n.type === 'group' ? walk((n.children ?? []) as AnyRec[]) : [n]));
   // Every app's Help group (#2417): the Service and Marketing manuals open from
-  // their own apps, the rest from the Sales app.
-  return servedApps().flatMap((app) => walk((app.navigation ?? []) as AnyRec[])).filter((n) => n.type === 'doc');
+  // their own apps, the rest from the Sales app. The Order to Cash manual opens
+  // from two (#2465): its own app, for finance, and the Sales app, for the reps
+  // and managers who write the collection plan it explains.
+  return servedApps()
+    .flatMap((app) => walk((app.navigation ?? []) as AnyRec[]).map((n): AnyRec => ({ ...n, app: app.name as string })))
+    .filter((n) => n.type === 'doc');
 };
 
 describe('the in-app manuals claim every page (#2327)', () => {
@@ -87,10 +91,15 @@ describe('the in-app manuals claim every page (#2327)', () => {
     expect(missing).toEqual([]);
   });
 
-  it('every book is opened by exactly one `doc` entry, and every `doc` entry opens a registered book', () => {
+  it('every book is opened by exactly one `doc` entry in each app that offers it, and every `doc` entry opens a registered book', () => {
     const entries = docEntries();
+    // Books whose readers work in two apps (#2465); every other book opens
+    // from exactly one entry in the whole artifact.
+    const TWO_APPS: Record<string, string[]> = { crm_o2c_manual: ['crm_enterprise', 'crm_o2c'] };
     for (const book of BOOKS) {
-      expect(entries.filter((e) => e.book === book.name).map((e) => e.id), `entries opening ${book.name}`).toHaveLength(1);
+      const opening = entries.filter((e) => e.book === book.name);
+      expect(opening.map((e) => e.app).sort(), `apps opening ${book.name}`).toEqual(TWO_APPS[book.name] ?? [opening[0]?.app]);
+      expect(opening.length, `entries opening ${book.name}`).toBe(TWO_APPS[book.name]?.length ?? 1);
     }
     expect(entries.filter((e) => !BOOKS.some((b) => b.name === e.book)).map((e) => e.id)).toEqual([]);
   });

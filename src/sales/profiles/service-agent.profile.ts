@@ -19,7 +19,7 @@ export const ServiceAgentProfile = {
   // `crm_user`, which says nothing here, so silence never re-shows an app.
   // Service agents and managers work in the Service app, which carries the
   // customers and their own tasks.
-  tabPermissions: { crm_enterprise: 'hidden' as const, crm_marketing: 'hidden' as const },
+  tabPermissions: { crm_enterprise: 'hidden' as const, crm_marketing: 'hidden' as const, crm_o2c: 'hidden' as const },
   objects: {
     // Reference context an agent needs to work ANY ticket — a customer's cases
     // are meaningless without seeing the account/contact behind them, so these

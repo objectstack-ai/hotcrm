@@ -78,11 +78,11 @@ import { CrmPositions } from '../src/sales/sharing/positions';
 type AnyRec = Record<string, any>;
 
 /**
- * ## Three apps since #2417
+ * ## Three apps since #2417, four since #2465
  *
  * The one menu became three apps: the Sales app (`crm_enterprise`, its name
  * read from `CrmApp.label` and never written down here, #998), the Service app
- * and the Marketing app.
+ * and the Marketing app. Order to Cash, finance's, made four (#2465).
  * The page gives each its own guarded block (`Inside <label>,` up to the next
  * block or `## `), and every rule below runs once per app against that app's
  * served tree ({@link TOUR_APPS}). The Sales block keeps the retired-name
@@ -129,7 +129,7 @@ const tourOf = (name: string) => {
 };
 
 /** the Sales app first: the block that keeps the retired-name list. */
-const TOUR_APPS = [(CrmApp as AnyRec).name as string, 'crm_service', 'crm_marketing'].map(tourOf);
+const TOUR_APPS = [(CrmApp as AnyRec).name as string, 'crm_service', 'crm_marketing', 'crm_o2c'].map(tourOf);
 const SALES = TOUR_APPS[0]!;
 
 const GROUPS = SALES.groups;
@@ -356,7 +356,9 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     // Service and Marketing left with #2417, each to an app of its own.
     expect(GROUP_LABELS).toEqual([
       'Sales',
-      'Order to Cash',
+      // The collection plan the reps write (#2465); invoices and payments
+      // moved to the Order to Cash app.
+      'Collection Plan',
       'My Work',
       'Activity',
       'Insights',
@@ -374,6 +376,14 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
     for (const t of [service!, marketing!]) expect(t.collapsed, t.name).toEqual(['Reports', 'Help']);
   });
 
+  it('the Order to Cash app opens on Invoices, with Help the one group collapsed (#2465)', () => {
+    const o2c = TOUR_APPS[3]!;
+    expect(o2c.pinned).toEqual([]);
+    expect(o2c.groupLabels).toEqual(['Receivables', 'Follow-up', 'Contracts and Accounts', 'My Work', 'Help']);
+    expect(childLabels(o2c.groups[0]!)[0]).toBe('Invoices');
+    expect(o2c.collapsed).toEqual(['Help']);
+  });
+
   it('Home opens the executive dashboard, not the CRM overview one', () => {
     expect(PINNED[0].type).toBe('dashboard');
     expect(PINNED[0].dashboardName).toBe(ExecutiveDashboard.name);
@@ -381,7 +391,7 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
 
   it('Reports and Help are the groups that stay collapsed (#2295, #2327)', () => {
     expect(COLLAPSED).toEqual(['Reports', 'Help']);
-    expect(EXPANDED).toEqual(['Sales', 'Order to Cash', 'My Work', 'Activity', 'Insights']);
+    expect(EXPANDED).toEqual(['Sales', 'Collection Plan', 'My Work', 'Activity', 'Insights']);
   });
 
   it('carries no navigation label matching any name the page calls a phantom', () => {

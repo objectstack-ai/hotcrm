@@ -2,6 +2,7 @@
 
 import { defineStack, type ObjectStackDefinition } from '@objectstack/spec';
 
+import { O2cApp } from './apps/index.js';
 import { CrmO2cManual } from './books/index.js';
 import { ContractAccountExtensions } from './extensions/index.js';
 import { InvoiceImportMapping, PaymentImportMapping } from './mappings/index.js';
@@ -37,6 +38,8 @@ export const o2cHooks = [billingMilestoneHook, invoiceHook, paymentHook].flat();
  * finance's in the app's `ar_accountant` set. Phase 1b (#2416) adds the
  * contract and account totals through `objectExtensions`
  * (`./extensions/`), on 18.4.0, which carries objectstack#30303 and #30304.
+ * Since hotcrm#2465 the module declares its own app, Order to Cash, where
+ * finance works; the Sales app keeps only the collection plan.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
@@ -59,21 +62,21 @@ export const createHotCrmO2cStack = (): ObjectStackDefinition => defineStack({
     dependencies: { 'app.objectstack.hotcrm': '^6.2.1' },
 
     /**
-     * The module's seam into the app's menu (rule R2): the app keeps the
-     * `group_order_to_cash` anchor (`src/sales/apps/crm.app.ts`) with no
-     * children of its own, and this module fills it; and its manual under the
-     * app's *Help* group, as the revenue and marketing modules contribute
-     * theirs. Both leave with the module.
+     * The module's seam into the Sales app (rule R2). Finance works in this
+     * module's own app (`./apps/o2c.app.ts`, hotcrm#2465); the Sales app keeps
+     * only the collection plan, which the reps and managers write: the app
+     * keeps the `group_collection_plan` anchor (`src/sales/apps/crm.app.ts`)
+     * with no children of its own, and this module fills it. The manual
+     * stays under the Sales app's *Help* group too, for those who write the
+     * plan. Both leave with the module, as the app does.
      */
     navigationContributions: [
       {
         app: 'crm_enterprise',
-        group: 'group_order_to_cash',
+        group: 'group_collection_plan',
         priority: 50,
         items: [
           { id: 'nav_billing_milestones', type: 'object', objectName: 'crm_billing_milestone', label: 'Billing Milestones', icon: 'flag' },
-          { id: 'nav_invoices', type: 'object', objectName: 'crm_invoice', label: 'Invoices', icon: 'receipt' },
-          { id: 'nav_payments', type: 'object', objectName: 'crm_payment', label: 'Payments', icon: 'banknote' },
         ],
       },
       {
@@ -87,6 +90,8 @@ export const createHotCrmO2cStack = (): ObjectStackDefinition => defineStack({
     ],
   },
 
+  // Finance's app (hotcrm#2465); see the app's own note.
+  apps: [O2cApp],
   objects: [BillingMilestone, Invoice, Payment],
   // The contract's and the account's receivables figures (#2416); see the
   // extension's own note.
