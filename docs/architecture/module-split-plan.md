@@ -68,7 +68,7 @@ The inputs the one-off analysis read were, in order of authority:
    `data.object`, a dataset's `object`, an action's `objectName`) is read from the artifact,
    not from a regex over source. The artifact is what the platform actually registers.
 2. **`src/**`** for file identity and each file's module assignment.
-3. **`scripts/check-source-token-ratchet.mjs`** for token counts — the generator imports that
+3. **`scripts/check-source-token-ratchet.mjs`** (retired in #2468) for token counts — the generator imports that
    script's own exported `authoredText()` and `tokensOf()` and calls them unmodified, so a
    per-module figure is the same measurement the gate makes, only partitioned. The module
    figures reconcile exactly with the gate's whole-tree reading at this commit.
@@ -287,6 +287,11 @@ the shape a first cut should have.
 
 ## The token budget
 
+> **Retired, 2026-11-15 (#2468).** The maintainer retired the context-window claim the gate
+> protected — 「为了让整个 CRM 能放进一个 AI 的上下文窗口，已经不是重点了。」 — so
+> `check-source-token-ratchet.mjs`, its suite and every per-package ceiling were removed. This
+> section is the record of what the split was measured against; nothing in it binds a PR now.
+
 `scripts/check-source-token-ratchet.mjs` reads **~134,174 authored tokens against a 140,000
 ceiling** at this commit — 5,826 of headroom. Three things about the split and that number:
 
@@ -339,7 +344,7 @@ Neither of these is an upstream gap; both are decisions for this repository's ma
    needs the maintainer's amendment before a split PR can be opened, and no agent should read
    this document as that amendment.
 2. **The ratchet's `LAYERS` list** must be re-pointed in the same PR that moves any measured
-   directory (see the token budget above).
+   directory (see the token budget above). Moot since #2468 removed the gate.
 
 <a id="upstream-gaps"></a>
 
@@ -538,6 +543,9 @@ decisions left to the compile path and this ruling settles.
    with an `objects/` directory), so a fifth package is seen the day it lands and the gate
    refuses to run until it has ceilings — committing a package's FIRST ceiling is an
    anchoring, not a raise. The numbers are in that script's header, with a worked row each.
+
+   **Retired, 2026-11-15 (#2468).** 「为了让整个 CRM 能放进一个 AI 的上下文窗口，已经不是重点了。」 The gate, its suite and all twelve
+   ceilings were removed; no package carries a size budget any more.
 
 9. **Sequence — a move PR, then packaging PRs with no moves.**
    - **PR 0 — layout.** Every file moves to its final directory (`git mv`, history kept);

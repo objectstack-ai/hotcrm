@@ -95,7 +95,7 @@ question, not this module's.
 | Labels | *Order to Cash* in `en`; 「订单与回款」 in the zh-CN pack, in the same PR as the group | One name for the menu group and the package's docs section. |
 | Version | the artifact's | ADR-0130 D6. |
 | Source layout | `src/o2c/` with its own `index.ts` and per-type barrels | A directory is a package (`module-split-plan.md`, 2026-09-14 item 6). |
-| Token gate | its own three ceilings, anchored in the PR that lands `src/o2c/objects/` | #1928: every package carries its own; a package's first ceiling is an anchoring, not a raise. |
+| Token gate | none — retired 2026-11-15 (#2468) | The gate and every per-package ceiling were removed with the context-window claim. Until then each package, `src/o2c/` included, carried its own three ceilings (#1928). |
 
 **What "optional" can mean on the pin — measured against the platform, not assumed.** ADR-0019 D2
 makes `type: app` the only consumer-installable unit, and a module ships *inside* it; ADR-0019 lists
@@ -121,7 +121,7 @@ The core packages are untouched either way.
 revenue becomes the one upstream of the post-signature modules, and PSA reaches this module's plan
 through the project's contract with no edge between the two (decision 8). The decision was also
 argued on size — `src/revenue/` reads ~21.5k authored tokens against a ruled ceiling of ~28.5k
-(`scripts/check-source-token-ratchet.mjs`, at `4166f21`). Decisions 4 and 5 make the module much
+(the source token gate, at `4166f21`; the gate was retired in #2468). Decisions 4 and 5 make the module much
 smaller than that argument assumed; the edge and PSA reasons stand on their own, and the decision is
 recorded, not re-opened here.
 

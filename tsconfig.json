@@ -21,17 +21,16 @@
     // ships to the marketplace. Pinning `noEmit` here removes the footgun
     // regardless of how tsc is invoked.
     "noEmit": true,
-    // `test/source-token-ratchet.test.ts` imports `CEILINGS`, `BUFFER`,
-    // `anchor()` and `fmt()` from `scripts/check-source-token-ratchet.mjs` so
-    // that its fixtures and the pin on the gate's worked table are DERIVED from
-    // the producer instead of restating its figures (#1321). tsc resolves that
-    // relative `.mjs` either way, but without `allowJs` it has no types for it
-    // and `strict` turns that into TS7016. Inferring them from the module is
-    // the point: the alternative — a hand-written `.d.mts` beside the script —
-    // is one more hand-maintained copy of exactly the kind this repo keeps
-    // deleting. `checkJs` stays off, so JS is typed but never type-checked, and
-    // no `.js`/`.mjs` file lives under `src/` or `e2e/` for the globs below to
-    // newly sweep in.
+    // Suites import first-party `.mjs` modules from `scripts/` —
+    // `scripts/lib/strip-comments.mjs`, `scripts/lib/source-hygiene-surface.mjs`
+    // and their siblings — so a test reads the producer instead of restating
+    // it (#1321). tsc resolves a relative `.mjs` either way, but without
+    // `allowJs` it has no types for it and `strict` turns that into TS7016.
+    // Inferring them from the module is the point: the alternative — a
+    // hand-written `.d.mts` beside each script — is one more hand-maintained
+    // copy of exactly the kind this repo keeps deleting. `checkJs` stays off,
+    // so JS is typed but never type-checked, and no `.js`/`.mjs` file lives
+    // under `src/` or `e2e/` for the globs below to newly sweep in.
     "allowJs": true,
     "types": ["node"]
   },

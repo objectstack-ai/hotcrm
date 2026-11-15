@@ -20,9 +20,10 @@
  *
  * Writing the `try_catch` out at each of the 22 warned loops re-indents every
  * body by two levels, and the re-indentation ALONE measured ~1,327 tokens over
- * the `business semantics` ceiling of `pnpm hygiene:tokens` — a ceiling that
- * moves only on a maintainer ruling. The ratchet strips comments, so slimming
- * prose cannot buy that back either.
+ * the `business semantics` ceiling of the source token gate (#1183) that held
+ * the authored size down when this helper was written. That gate was retired
+ * in #2468; the helper stays because wrapping from outside keeps each loop body
+ * as it was.
  *
  * This helper wraps the body from OUTSIDE instead. At each site `body: {`
  * becomes `body: guarded('<key>', {` and the closing `},` becomes `}),`, so the

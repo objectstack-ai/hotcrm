@@ -62,6 +62,12 @@
    "issue": 2276,
    "change": "No row changed. The two edge classes the 2026-10-24 entry recorded as REFUSED are now ACCEPTED, measured on the @objectstack 18.2.0 pin, which carries objectstack#25514. 'dashboard widget binds a dataset in another module': with product_metrics registered by app.objectstack.hotcrm.revenue, `os validate` and `os build` resolve crm_overview_dashboard.top_products against the artifact's packages and raise no widget-dataset-unknown; the booted tile returns the same 4 rows as before on the same seed. 'action launches a flow in another module': with quote_generation registered by revenue and campaign_lead_member_enroll and campaign_contact_member_enroll by app.objectstack.hotcrm.marketing, defineStack accepts generate_quote, create_campaign and add_contact_to_campaign once the app stack is handed artifactFlows (the flow names of the module stacks), and all three launch their flow on the booted app. appRegisteredModuleItems is removed and the assignment-rule roster in test/package-ownership.test.ts is empty.",
    "figures_left_as_measured": "Untouched, per do_not_hand_patch: unmeasured_edge_classes, totals, ratchet, edges, modules[] and files[]. Every files[].path still resolves — the move is registration only, no file moved."
+  },
+  {
+   "date": "2026-11-15",
+   "issue": 2468,
+   "change": "No row changed. scripts/check-source-token-ratchet.mjs, the script that measured_at.basis and the ratchet block name, was deleted when the maintainer retired the context-window claim it gated (「为了让整个 CRM 能放进一个 AI 的上下文窗口，已经不是重点了。」). Those two entries now name a file that no longer exists; they stay as the record of how the figures were taken at measured_at.commit, not as a pointer to a live script.",
+   "figures_left_as_measured": "Untouched, per do_not_hand_patch: totals, ratchet, edges, modules[] and every files[].authored_tokens are still the one measurement taken at measured_at.commit."
   }
  ],
  "measured_at": {

@@ -59,6 +59,10 @@ Two consequences, both recorded in [`module-split-plan.md`](./module-split-plan.
    so the ratchet measures `src/sales/`. PSA is outside it, and this document's decision 1
    (partition or raise) is closed.
 
+   **Retired, 2026-11-15 (#2468).** Irene: 「为了让整个 CRM 能放进一个 AI 的上下文窗口，已经不是重点了。」
+   The context-window claim is no longer a goal, so the token gate and every per-package
+   ceiling are removed. PSA's size is not gated.
+
 The first draft argued PSA should be the first cut because it is new — no file moves, no
 navigation conversion, no hook relocation. That argument is kept for the record and is
 **superseded**: a new module proves the pipeline cheaply, but the product needs the base
@@ -385,6 +389,12 @@ records.
 
 ## The token budget — resolved by scoping the gate to `sales`
 
+> **Retired, 2026-11-15 (#2468).** The token gate (`check-source-token-ratchet.mjs`) and
+> every per-package ceiling were removed when the maintainer retired the context-window
+> claim: 「为了让整个 CRM 能放进一个 AI 的上下文窗口，已经不是重点了。」 This section is kept
+> as the record of how the 2026-09-14 and #1928 rulings shaped the plan. PSA's phases
+> commit no ceiling and record no size reading.
+
 The finding that triggered the 2026-09-14 ruling, kept as measured.
 `scripts/check-source-token-ratchet.mjs` at `c716a2c` reads the **whole tree**:
 
@@ -457,7 +467,7 @@ milestones for `fixed_fee` projects, and a project template to seed members and 
 
 The first draft's decision 1 — partition the token gate per package or raise its ceilings —
 is **closed** by the 2026-09-14 rulings (the gate measures `src/sales/`; PSA is outside
-it), and so is the barrel-naming question: a directory is a package, there is no second
+it), and moot since the gate was removed in #2468; so is the barrel-naming question: a directory is a package, there is no second
 barrel. Three remain:
 
 1. **The navigation group**: a new top-level *Projects* group (proposed) versus placing the
