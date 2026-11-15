@@ -1,14 +1,41 @@
 # HotCRM PSA module — a standard-product design, and the first ADR-0130 module cut
 
-> **Status**: design only. Nothing in `src/` moves on the strength of this document; every
-> phase below lands through its own PR, `pnpm verify` and changeset.
-> **Measured against**: `origin/main` at `c716a2c`, `@objectstack/*` **17.4.0** (the pin).
+> **Status**: design only, **restarted 2026-11-15** (see *Recorded 2026-11-15* below). Nothing
+> in `src/` moves on the strength of this document; every phase below lands through its own PR,
+> `pnpm verify` and changeset.
+> **Measured against**: first written against `origin/main` at `c716a2c` on `@objectstack/*`
+> 17.4.0; the 2026-11-15 revision reads `main` at `2492ac6` on **18.4.0** (the pin). Readings
+> below that name 17.x are history; phase 0 re-measures what it relies on.
 > **Companions**: [`module-split-plan.md`](./module-split-plan.md) — the inventory, the
 > four measured edge rules (R1–R4) and the maintainer decisions of 2026-09-02 and
 > 2026-09-14 that this design applies without re-deciding; [`../requirements/0002-it-services-project-delivery-and-cost.md`](../requirements/0002-it-services-project-delivery-and-cost.md)
 > — the customer intake that triggered it.
 > **Upstream**: ADR-0130 (*the release artifact is the co-ownership boundary — one artifact,
 > N packages*), [objectstack#14122](https://github.com/objectstack-ai/objectstack/issues/14122) (epic).
+
+## Recorded 2026-11-15 — PSA restarts, six rulings
+
+The maintainer ruled all six questions of the restart evaluation on 2026-11-15
+(03:48–03:49Z, option A each; evaluation report
+<https://claude.ai/artifact/X8BPYw9KW45x4k6iBSZ6Zu>). Platform side: nothing. They supersede
+the sections below where those disagree, and the three *Decisions needed* of the first draft.
+
+1. **Shape.** PSA is a suite module, `src/psa/`, `type: 'module'`, depending on
+   `app.objectstack.hotcrm` only, with **its own app, 项目交付 (*Project Delivery*)** — the same
+   shape as Order to Cash's own app (hotcrm#2465). This replaces the `group_projects` node in the
+   Sales app.
+2. **Restart.** hotcrm#2316 leaves `pm:on-hold` and is queued after hotcrm#2465 (6.3).
+3. **v1 = the standard tier:** `crm_project`, `crm_project_member`, `crm_rate_card`,
+   `crm_timesheet` + `crm_time_entry`, `crm_expense`; four approval points (project
+   initiation, budget — which arrives with phase 2 —, timesheet, expense); actual cost and
+   margin roll-ups; the overrun alert (a machine signal warns, a person's field locks).
+   Budget versions (`crm_project_budget` / `_line`) move to phase 2, with tasks and Gantt.
+4. **Time-and-materials invoicing stays in Order to Cash.** PSA emits the approved billable
+   amount; invoicing is O2C's. How the two modules connect is decided in phase 3 — in v1 PSA
+   does not depend on O2C.
+5. **The rate card holds both cost price and bill price**, with no dependency on the revenue
+   module's price books.
+6. **One `crm_project` with `kind`** = `presales` / `delivery` / `internal`.
 
 ## Premise — a standard module, not a transcription of one customer's spreadsheet
 
@@ -88,16 +115,17 @@ One new package, composed into the artifact HotCRM already ships:
 | Package id | `app.objectstack.hotcrm.psa` | The id convention `module-split-plan.md` reserved for every module. |
 | `type` | `module` | ADR-0019 D2's internal-contribution tier: shipped inside the App, never installed alone. |
 | `namespace` | `crm` | ADR-0130 D1 co-ownership, so objects are `crm_project` and not `psa_project` — the same prefix rule as every other object here (AGENTS.md, Tech Stack rule 2). |
-| `dependencies` | `{ 'app.objectstack.hotcrm': '^3.0.0' }` (+ `app.objectstack.hotcrm.revenue` once packaged) | The topological edge that registers the app package first (ADR-0130 D5). The array order in `composeStacks` decides nothing. |
-| `navigationContributions` | one entry into a group the app publishes | R2 — the only way a module reaches the menu (see *Navigation*). |
+| `dependencies` | `{ 'app.objectstack.hotcrm': '^<artifact version>' }` | The topological edge that registers the app package first (ADR-0130 D5). The array order in `composeStacks` decides nothing. |
+| `apps` | one module-owned app, 项目交付 (*Project Delivery*) | Ruled 2026-11-15 (see *Navigation*), the shape of Service, Marketing and Order to Cash. |
 | Version | the artifact's | ADR-0130 D6: one artifact, one version, no per-module hot-fix. |
 
 **Dependencies, amended 2026-10-26.** `module-split-plan.md` *Decisions recorded (2026-10-26)*
 items 10, 11 and 13 apply: PSA depends on `app.objectstack.hotcrm` only — `crm_contract` is the
-app package's from PR 0.5 on, so the `+ app.objectstack.hotcrm.revenue` entry in the table above
-is never declared — and PSA is born as its own installable artifact rather than one more
-directory of the HotCRM artifact. The layout, the import rule and the navigation contribution
-are unchanged.
+app package's from PR 0.5 on, so a dependency on `app.objectstack.hotcrm.revenue` is never
+declared. The amendment's "born as its own installable artifact" line is **superseded**
+(2026-11-05, re-ruled on #2315 and applied here; confirmed 2026-11-15): a standalone app cannot
+reference a HotCRM object (`object-reference-unknown`, objectstack#25805 closed not_planned), so
+PSA is one more `type: 'module'` package of the HotCRM artifact, at the artifact's version.
 
 **Source layout — a directory is a package (2026-09-14, `module-split-plan.md` item 6).**
 PSA is `src/psa/`: one `index.ts` calling `defineStack` with the manifest above, and the
@@ -111,24 +139,24 @@ Every guard test that walks the package directories covers PSA metadata from the
 — i18n coverage, object docs coverage, view references, validation-predicate totality — with
 no new guard written (AGENTS.md, Scope rule 3).
 
-**What stays in the sales package** (sales *is* the app package, item 4): the app and its
-navigation groups, the permission sets plus any new role, `positions.ts`, the four locale
-packs, the package docs and the shared sources. PSA depends on `app.objectstack.hotcrm` for
-`crm_account`, `crm_opportunity` and the shared sources, and on
-`app.objectstack.hotcrm.revenue` for `crm_contract` once revenue is packaged (until then the
-contract is registered by the sales stack and the dependency is the app's).
+**What stays in the sales package** (sales *is* the app package, item 4): the Sales app, the
+permission sets plus any new role, `positions.ts`, the package docs and the shared sources.
+PSA depends on `app.objectstack.hotcrm` for `crm_account`, `crm_opportunity`, `crm_contract`
+(the app package's since #2310) and the shared sources.
 
-**Navigation.** The app publishes one new group node (`group_projects`, label *Projects*)
-in `src/sales/apps/crm.app.ts` with no children of its own; the module contributes its items
-into it. Two facts from `module-split-plan.md` are re-stated because they bite here:
-`navigationContributions[].app` is the app's bare `name` (`crm_enterprise`), not the dotted
-manifest id; and a `group` id that names no group the app declares is **relocated to the
-top level with a warning, not refused** (spec docblock, objectstack#14925). Phase 0's
-acceptance therefore includes reading the boot log for `nav_contribution_group_missing`.
+**Navigation (ruled 2026-11-15).** PSA owns its app, 项目交付 (*Project Delivery*), in
+`src/psa/apps/`, built like `ServiceApp`, `MarketingApp` (#2430) and Order to Cash's app
+(#2465): projects, members, rate cards, timesheets, expenses and their approvals, with
+Accounts and Opportunities as read entries and the PSA manual under Help. Who sees it is the
+permission sets' `tabPermissions` (visibility only; the URL still opens). On 18.4.0 a
+module-owned app works, app URLs go by package id, and disabling the module drops its app
+(#2417 readings); phase 0 re-measures the last on PSA. The first draft's `group_projects`
+node in the Sales app is **not built**.
 
 ## The data model — v1
 
-Eight objects. The rule for what made the cut: **a thing is an object in v1 if the standard
+Eight objects designed. **Ruled 2026-11-15: v1 ships six of them**; the two budget objects
+(`crm_project_budget`, `crm_project_budget_line`) move to phase 2. The rule for what made the cut: **a thing is an object in v1 if the standard
 product cannot compute margin without it.** Work breakdown (tasks, milestones), resource
 requests and capacity planning, and billing milestones are real PSA concerns and are
 deliberately v2 — margin is computable without them, and each is a scope of its own.
@@ -250,8 +278,8 @@ running instance; none is new.
 | Rule | PSA edges | Verdict |
 | --- | --- | --- |
 | **R1** lookup / masterDetail into another package's object | `crm_project` → `crm_account`, `crm_opportunity`, `crm_contract`; six objects → `sys_user`; two → `sys_business_unit` | ✅ ACCEPTED — the same class as the 15 `sys_user` lookups the app has always carried |
-| **R2** `navigationContributions` into the app | one contribution into `group_projects` | ✅ ACCEPTED |
-| **R3** a module's own app navigating to a foreign object | none — the module declares no app | n/a |
+| **R2** `navigationContributions` into the app | none — PSA owns its app (2026-11-15) | n/a |
+| **R3** a module's own app navigating to a foreign object | the 项目交付 app's read entries for `crm_account` and `crm_opportunity` | measured in phase 0 (Order to Cash's app, #2465, is the first instance) |
 | **R4** a hook attached to another package's object | **none by design.** Every PSA hook attaches to a PSA object; CRM rows are only ever *read* at run time through `ctx.api` | n/a |
 
 **No `objectExtensions` in v1.** The standard product does not push PSA fields into
@@ -431,21 +459,20 @@ module fits whole in an AI context window*). Consequences:
 
 Each phase is one PR family: `pnpm verify` green, a changeset, product docs in three
 languages for anything a user sees, and a browser pass on `pnpm dev` for anything a user
-clicks (the internal dogfood process). A phase does not open until the previous one is on
-`main` — and Phase 0 does not open until the base CRM split (the layout PR and the
-sales-plus-service packaging PR, `module-split-plan.md` item 9) is on `main`.
+clicks, closed by an analysis report (maintainer, 2026-11-14). A phase does not open until the
+previous one is on `main`. Re-phased 2026-11-15:
 
 | Phase | Ships | Acceptance |
 | --- | --- | --- |
-| **0 — join the artifact** | `src/psa/` with its `index.ts` — the manifest with `dependencies` and one `navigationContributions` entry — added to the composition the base split already established, plus the `group_projects` node in the app | `pnpm build` emits `dist/objectstack.json` whose `packages[]` gains exactly one entry, ordered after `app.objectstack.hotcrm` and the base modules it depends on; `pnpm dev` boots and `GET /api/v1/packages` lists the new row with `writable: false`; the boot log carries no `nav_contribution_group_missing`; every existing object registers bit-identically (ADR-0130 D7 — same FQNs, same owners); the sales gate reading is unchanged; `pnpm verify` green; a measurement of the related-list class (a throw-away page binding `crm_project` from the app package) recorded in the PR body, then reverted |
-| **1 — project core** | `crm_project`, `crm_project_member`, `crm_rate_card`; the project approval flow; list views, a project record page; positions and permission-set rows; seed rows; locales; `content/docs/projects/` index + `projects` + `staffing-and-rates` | A project moves `draft → in_approval → approved → active` through the Console with the approval inbox; the presales/delivery provenance gates refuse an unapproved source; every object has its docs page and four labels (existing guards go green, none added) |
-| **2 — budget** | `crm_project_budget`, `crm_project_budget_line`; baseline and revision approval; `baseline_cost` and margin formulas on the project; `budgets` doc | Version 1 approved sets `is_baseline`; version 2 approved moves it and supersedes version 1; `gross_margin` recomputes; a `labor` line without a rate card is refused at submit, not at draft |
-| **3 — time and expense** | `crm_timesheet`, `crm_time_entry`, `crm_expense`; their approvals; the cost-copy hook; the actual-cost summaries; `budget_status` + alert flow; `time_entry_locked` guard; `time-and-expenses` and `cost-control` docs | Approved hours appear in `actual_labor_cost` at the rate in force when entered; a later rate-card change leaves them unchanged; crossing 80 % notifies once; a submit on a locked project is refused with a message naming the lock; drafts are never refused |
-| **4 — analytics and CRM touchpoints** | `project_financials`, `time_utilization`, the *Projects overview* dashboard; the related lists on account and opportunity pages **if** Phase 0's measurement accepted the class; the billing hand-off extension (approved billable hours and expenses on the contract-activated payload) | Both datasets answer `POST /api/v1/analytics/dataset/query` with rows; the dashboard draws (DOM probe, not a screenshot); the outbox delivery carries the new fields |
+| **0 — join the suite, measure** | `src/psa/` with its `index.ts` (manifest, `dependencies`) composed into the artifact; the 项目交付 app skeleton | `packages[]` gains exactly one entry after `app.objectstack.hotcrm`; existing objects register bit-identically (ADR-0130 D7); a disabled PSA module drops its app, menu, fields and pages; four measurements recorded in the PR body: a summary over a summary, a multi-currency summary, Gantt auto-shifting successor tasks, cross-package dataset binding. ⛔ A refusal gets an objectstack card, never a workaround |
+| **1 — the standard v1** | the six v1 objects (2026-11-15 ruling 3); project, timesheet and expense approvals; actual cost and margin roll-ups; the overrun alert and lock; views, record pages, positions and permission-set rows, `tabPermissions`; seed; four locales; `content/docs/projects/` in three languages | A project moves `draft → in_approval → approved → active` through the console approval inbox; approved hours land in actual cost at the rate in force when entered; crossing the threshold notifies once and a submit on a locked project is refused with a message naming the lock; browser pass and report per role |
+| **2 — budget, tasks and Gantt** | `crm_project_budget`, `crm_project_budget_line`, baseline and revision approval (the fourth approval point); tasks and the Gantt view | Version 2 approved supersedes version 1 as baseline; margin against baseline recomputes; Gantt behaviour as phase 0 measured |
+| **3 — hand-offs and touchpoints** | the O2C hand-off for time-and-materials (approved billable amount → Order to Cash invoicing, connection decided then); project templates; case (工单) time; related lists on account and opportunity pages if phase 0 accepted the class | Defined by that phase's card |
+| **4 — resources and capacity** | resource requests and capacity planning | Waits on the platform; its own design note |
 
-v2 candidates, each its own design note when its turn comes: work breakdown (tasks and
-milestones with planned-vs-actual hours), resource requests and capacity, billing
-milestones for `fixed_fee` projects, and a project template to seed members and budget lines.
+The first draft's v2 candidates are placed by the table above (2026-11-15): work breakdown
+(tasks, Gantt) in phase 2, project templates in phase 3, resource requests and capacity in
+phase 4, and billing milestones in Order to Cash.
 
 > **Note (2026-10-23).** The billing milestones are now designed — not here but in the
 > order-to-cash module ([`order-to-cash-module-plan.md`](./order-to-cash-module-plan.md),
@@ -453,20 +480,13 @@ milestones for `fixed_fee` projects, and a project template to seed members and 
 > `crm_contract`. The same record reopens the 2026-08-02 ruling that rows 37, 38 and 40 of the
 > mapping table above cite: invoice and collection status is that module's, never PSA's.
 
-## Decisions needed from the maintainer before Phase 0
+## Decisions needed from the maintainer before Phase 0 — ruled 2026-11-15
 
-The first draft's decision 1 — partition the token gate per package or raise its ceilings —
-is **closed** by the 2026-09-14 rulings (the gate measures `src/sales/`; PSA is outside
-it), and so is the barrel-naming question: a directory is a package, there is no second
-barrel. Three remain:
-
-1. **The navigation group**: a new top-level *Projects* group (proposed) versus placing the
-   items under the existing *Sales* group.
-2. **v1 scope**: confirm that work breakdown, resource requests and billing milestones are
-   v2 — the "margin is computable without it" rule above.
-3. **One `crm_project` with a `kind`** (proposed) versus separate presales-estimate and
-   delivery-project objects. The single object keeps one timesheet target, one member
-   object and one budget object; two objects would triple those.
+All closed. The first draft's token-gate and barrel questions were closed by the 2026-09-14
+rulings. Its three remaining questions were ruled on 2026-11-15 (*Recorded 2026-11-15* above):
+navigation → PSA's own app rather than a *Projects* group or items under *Sales*; v1 scope →
+the standard tier, with budget versions, tasks and Gantt in phase 2 and billing milestones in
+Order to Cash; one `crm_project` with `kind` (`presales` / `delivery` / `internal`).
 
 ## Upstream asks
 
