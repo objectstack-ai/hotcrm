@@ -1,6 +1,6 @@
 ---
 title: 工時與費用
-description: 在工時單上填報工時、填報費用、提交，項目經理如何審批，以及它們如何成為項目的成本。
+description: 在工時單上填報工時、填報費用、提交，如何在 Inbox 裡審批，以及它們如何成為項目的成本。
 ---
 
 # 工時與費用
@@ -34,17 +34,23 @@ description: 在工時單上填報工時、填報費用、提交，項目經理�
 | **Approved** | 工時計入項目成本。終態 |
 | **Rejected** | 被退回。改回 Draft、修正後再提交 |
 
-一週結束後，把 **Status** 設為 **Submitted**。已提交的工時單不能再新增、修改或刪除明細；要修正，先把工時單退回 **Draft**。
+一週結束後，把 **Status** 設為 **Submitted**。已提交的工時單不能再新增、修改或刪除明細，工時單本身在等待審批期間也被鎖定。
 
-審批人在 **Timesheets to Approve** 中找到它，打開後設為 **Approved** 或 **Rejected**。
+審批人在自己的 **Inbox**（**My Work** 群組下）裡點 **Approve** 或 **Reject**。**Timesheets to Approve** 列出同樣的工時單，方便決定前打開查看。
 
-> **任何人都不能審批自己的工時。**只有工時單的審批人或管理員可以設為 Approved 或 Rejected。其他人這樣做都會被拒絕，無論他還能編輯什麼。
+- **Approved**：工時計入項目成本。
+- **Rejected**：退回 **Draft**，修正後再次提交，會重新交給審批人。
+- **想改主意？**在等待審批時從自己的 Inbox 裡撤回，工時單會回到 **Draft**。
+
+沒有人能手動設定 **Approved** 或 **Rejected**：這兩個狀態只由審批寫入。只有管理員可以手動設定，用來修復審批無法執行的工時單。
+
+> **任何人都不能審批自己的工時。**審批人提交自己的工時單時，不會讓他自己審批，而是交給管理員。
 
 ## 費用
 
 **Expense**（費用）是一個人為項目花的錢。打開 **My Expenses**，點 **New**：填寫 **Description**、**Project**、**Date**、**Category**（Travel、Lodging、Meals、Equipment、Other）、**Amount**，以及是否向客戶 **Billable**。在 **Files** 分頁上傳票據。
 
-費用與工時單的狀態相同。它的 **Approver** 是建立時項目的項目經理，出現在 **Expenses to Approve** 中，只有這位審批人或管理員可以批准或駁回。
+費用與工時單的狀態相同，也在同一個 Inbox 裡決定。它的 **Approver** 是建立時項目的項目經理，費用也會出現在 **Expenses to Approve** 中。金額達到 **2,000** 或以上的費用，隨後還要交給 **Finance Controller** 審批，他們也批准後才計入成本。
 
 金額使用貴公司的本位幣。外幣票據請先換算再錄入。
 
@@ -57,4 +63,6 @@ description: 在工時單上填報工時、填報費用、提交，項目經理�
 
 Draft、Submitted 和 Rejected 的都不計入。一旦批准，項目的[成本和毛利](/zh-Hant/docs/projects#money)立即變化。
 
-> **目前審批就是修改狀態。**審批人直接在紀錄上設定狀態。後續版本會增加帶審批收件匣的審批步驟、預算預警和項目鎖定；上線時本頁會說明。
+## 項目被鎖定時
+
+項目經理或財務可以在項目上勾選 **Lock Time and Expenses**，通常是在收到[預算通知](/zh-Hant/docs/projects/projects-and-staffing#budget-lock)之後。勾選期間，提交這個項目上的工時單或費用都會被拒絕，提示訊息會寫明項目名稱。先儲存為草稿：解除鎖定後照常提交。

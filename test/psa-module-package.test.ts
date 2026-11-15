@@ -49,15 +49,27 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     expect(Object.keys(psa!.dependencies ?? {})).toEqual([APP_ID]);
   });
 
-  it('it owns its six objects, their five hooks and its seed rows (phase 1a)', () => {
+  it('it owns its six objects, their seven hooks and its seed rows (phases 1a and 1b)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.objects ?? []) as AnyRec[]).map((o) => o.name).sort()).toEqual([
       'crm_expense', 'crm_project', 'crm_project_member', 'crm_rate_card', 'crm_time_entry', 'crm_timesheet',
     ]);
     expect(((stack.hooks ?? []) as AnyRec[]).map((h) => h.name).sort()).toEqual([
-      'expense_approver', 'project_member_unique', 'project_team_sync', 'time_entry_costing', 'timesheet_stamps',
+      'expense_approver', 'project_budget_status', 'project_member_unique', 'project_status_guard',
+      'project_team_sync', 'time_entry_costing', 'timesheet_stamps',
     ]);
     expect([...new Set(((stack.data ?? []) as AnyRec[]).map((d) => d.object))].sort()).toEqual(['crm_project', 'crm_rate_card']);
+  });
+
+  it('it owns its approval and budget flows and the budget notices\' templates (phase 1b)', () => {
+    const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
+    expect(((stack.flows ?? []) as AnyRec[]).map((f) => f.name).sort()).toEqual([
+      'expense_approval', 'expense_approval_on_create', 'project_budget_alert',
+      'project_initiation_approval', 'timesheet_approval', 'timesheet_approval_on_create',
+    ]);
+    expect([...new Set(((stack.emailTemplates ?? []) as AnyRec[]).map((t) => t.name))].sort()).toEqual([
+      'crm.project_budget_exceeded', 'crm.project_budget_warning',
+    ]);
   });
 });
 

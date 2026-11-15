@@ -64,7 +64,7 @@ import {
   createHotCrmMarketingStack, marketingHooks, marketingFlows, marketingSharingRules,
 } from './src/marketing/index.js';
 import { createHotCrmO2cStack, o2cHooks } from './src/o2c/index.js';
-import { createHotCrmPsaStack, psaHooks, psaSharingRules } from './src/psa/index.js';
+import { createHotCrmPsaStack, psaFlows, psaHooks, psaSharingRules } from './src/psa/index.js';
 
 import * as salesObjects from './src/sales/objects/index.js';
 
@@ -370,7 +370,7 @@ export { CrmPositions };
 export const allHooks = [...appHooks, ...revenueHooks, ...marketingHooks, ...serviceHooks, ...o2cHooks, ...psaHooks];
 
 /** Every flow in the artifact, every package — same reason as {@link allHooks}. */
-export const allFlows = [...appFlows, ...revenueFlows, ...marketingFlows, ...serviceFlows];
+export const allFlows = [...appFlows, ...revenueFlows, ...marketingFlows, ...serviceFlows, ...psaFlows];
 
 /** Every skill in the artifact — same reason as {@link allHooks}. Revenue and marketing author none. */
 export const allSkills = [...appSkills, ...serviceSkills];

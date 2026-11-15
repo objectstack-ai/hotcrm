@@ -6,20 +6,24 @@ import type { HookApi } from '../../sales/objects/_hook-api';
 /**
  * Stamp an expense's approver when it is created: the project's Project
  * Manager at that moment, as a timesheet's is (`timesheet.hook.ts`).
- * Read-only to people; the approval in phase 1b routes to it.
+ * Read-only to people; `expense_approval` asks them first.
  *
- * Only the approver decides: a person's write that moves the status to
- * Approved or Rejected is refused unless the writer is the expense's approver
- * or an administrator, so nobody approves their own spend into the project's
- * cost. The approver edits the expense through the `expense_approver_edit`
- * share.
+ * The approval decides (#2316 phase 1b): submitting starts `expense_approval`,
+ * which writes Approved or Rejected when the approvers decide. A person who
+ * sets either status is refused, so nobody approves spend into the project's
+ * cost by editing the record; an administrator may, to repair an expense
+ * whose approval cannot run.
+ *
+ * A locked project takes no submissions: moving an expense to Submitted on a
+ * project whose Lock Time and Expenses is ticked is refused, naming the
+ * project. Drafts are never refused, and nobody is exempt.
  */
 const expenseApprover: Hook = {
   name: 'expense_approver',
   object: 'crm_expense',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
-  description: 'Stamp the project\'s Project Manager as the expense\'s approver, and let only the approver decide.',
+  description: 'Stamp the project\'s Project Manager as the expense\'s approver, leave the decision to the approval, and refuse a submission on a locked project.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -51,25 +55,35 @@ const expenseApprover: Hook = {
     const api = ctx.api as HookApi | undefined;
     if (!input || !api) return;
     const previous = (ctx.previous ?? {}) as Record<string, unknown>;
+    const person = Boolean(ctx.user?.id) && !ctx.session?.isSystem;
     const status = input.status;
-    if (ctx.user?.id && (status === 'approved' || status === 'rejected') && status !== previous.status) {
+    if (person && (status === 'approved' || status === 'rejected') && status !== previous.status) {
       const ADMIN_IDENTITIES = ['platform_admin', 'org_owner', 'org_admin'];
       const positions = (ctx.session?.positions ?? []) as string[];
-      const approver = refId('approver' in input ? input.approver : previous.approver);
-      if (approver !== ctx.user.id && !positions.some((p) => ADMIN_IDENTITIES.includes(p))) {
+      if (!positions.some((p) => ADMIN_IDENTITIES.includes(p))) {
         throw refuse(
-          approver
-            ? 'Only the expense\'s approver (the project\'s Project Manager when it was created) can approve or reject it.'
-            : 'This expense has no approver: its project had no Project Manager when it was created. An administrator can approve or reject it.',
+          'An expense is approved or rejected by its approvers, from their Inbox, once it is submitted.',
           'FORBIDDEN',
           403,
         );
       }
     }
-    if (ctx.event !== 'beforeInsert') return;
-    const projectId = refId(input.crm_project);
+    const submitting = person && status === 'submitted' && previous.status !== 'submitted';
+    if (ctx.event !== 'beforeInsert' && !submitting) return;
+    const projectId = refId('crm_project' in input ? input.crm_project : previous.crm_project);
     if (!projectId) return;
-    const project = await api.object('crm_project').findOne({ where: { id: projectId }, fields: ['id', 'project_manager'] });
+    const project = await api.object('crm_project').findOne({
+      where: { id: projectId },
+      fields: ['id', 'name', 'project_manager', 'time_entry_locked'],
+    });
+    if (submitting && project && project.time_entry_locked === true) {
+      throw refuse(
+        `${String(project.name ?? 'This project')} is locked for time and expenses, so this expense cannot be submitted. Keep it as a draft, or ask the project manager to untick Lock Time and Expenses on the project.`,
+        'RECORD_LOCKED',
+        409,
+      );
+    }
+    if (ctx.event !== 'beforeInsert') return;
     const manager = refId(project?.project_manager);
     if (manager) input.approver = manager;
   },

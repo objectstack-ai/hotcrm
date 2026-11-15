@@ -3,8 +3,13 @@
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { PsaApp } from './apps/index.js';
+import { PsaEmailTemplates } from './email-templates/index.js';
+import {
+  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, ProjectBudgetAlertFlow, ProjectInitiationApprovalFlow,
+  TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
+} from './flows/index.js';
 import { Expense, Project, ProjectMember, RateCard, TimeEntry, Timesheet } from './objects/index.js';
-import { expenseHook, projectMemberHook, timeEntryHook, timesheetHook } from './objects/hooks.js';
+import { expenseHook, projectHook, projectMemberHook, timeEntryHook, timesheetHook } from './objects/hooks.js';
 import {
   ExpenseApproverEditSharingRule,
   ProjectFinanceEditSharingRules,
@@ -21,7 +26,18 @@ import { ExpenseViews, ProjectMemberViews, ProjectViews, RateCardViews, TimeEntr
  * `src/service/index.ts` for the arrangement. Every one attaches to a module
  * object (ADR-0130 R4).
  */
-export const psaHooks = [projectMemberHook, timesheetHook, timeEntryHook, expenseHook].flat();
+export const psaHooks = [projectHook, projectMemberHook, timesheetHook, timeEntryHook, expenseHook].flat();
+
+/**
+ * This package's flows (#2316 phase 1b) — see {@link psaHooks}: the three
+ * approvals, the two insert twins and the budget alert.
+ */
+export const psaFlows = [
+  ProjectInitiationApprovalFlow,
+  TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
+  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow,
+  ProjectBudgetAlertFlow,
+];
 
 /** This package's sharing rules — see {@link psaHooks}. */
 export const psaSharingRules = [
@@ -85,12 +101,19 @@ export const createHotCrmPsaStack = (
     dependencies: { 'app.objectstack.hotcrm': '^6.3.0' },
   },
 
+  // What THIS package's metadata needs (see `requires` in
+  // `src/service/index.ts`): `automation` and `triggers` for the record-change
+  // flows, `approvals` for their approval nodes, `sharing` for the rules.
+  requires: ['automation', 'triggers', 'approvals', 'sharing'],
+
   // The delivery team's app; see the app's own note.
   apps: [PsaApp],
   objects: [Project, ProjectMember, RateCard, Timesheet, TimeEntry, Expense],
   hooks: psaHooks,
   views: [ProjectViews, ProjectMemberViews, RateCardViews, TimesheetViews, TimeEntryViews, ExpenseViews],
   sharingRules: psaSharingRules,
+  flows: psaFlows,
+  emailTemplates: PsaEmailTemplates,
   data: collections.data,
   translations: [PsaTranslations],
 });

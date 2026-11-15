@@ -104,6 +104,7 @@ const RUNTIME_TEST_FILES = [
   // #2316 phase 1a — Project Delivery's four hooks, run as the people who use
   // them: staffing, time costing, the timesheet's stamps, the approver gates.
   'psa-objects.test.ts',
+  'psa-approvals.test.ts',
   // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
   // files above, and the same reason: the gate is authored on four surfaces
   // (the field default, `convert_lead.visible`, `lead_conversion`'s

@@ -20,8 +20,9 @@ type Rec = Record<string, any>;
  * - A time entry copies its rates from the staffing's rate card when written
  *   and keeps them (`time_entry.hook.ts`): a day card bills per hour at
  *   rate ÷ HOURS_PER_DAY, and a later rate change rewrites no past cost.
- * - Only approved timesheets and expenses reach the project's cost, and only
- *   the stamped approver (or an administrator) approves.
+ * - Only approved timesheets and expenses reach the project's cost, and they
+ *   are approved from the stamped approver's Inbox (phase 1b; the approvals
+ *   themselves are `test/psa-approvals.test.ts`).
  * - The team member's set hides cost (`project_member` field rows).
  */
 
@@ -42,6 +43,14 @@ const update = (object: string, doc: Rec, as: string): Promise<Rec> => verify.ho
 const row = async (object: string, id: string, as?: string): Promise<Rec | undefined> =>
   (await verify.rows(object, { id }, as ? { as } : undefined))[0];
 const num = (v: unknown): number => Number(v ?? 0);
+
+/** Decide the one open approval request on a record, as `token` (phase 1b: approval is an Inbox decision). */
+const decide = async (recordId: string, token: string, action: 'approve' | 'reject' = 'approve'): Promise<void> => {
+  const [request] = await verify.rows('sys_approval_request', { record_id: recordId, status: 'pending' });
+  expect(request, `no open approval request on ${recordId}`).toBeTruthy();
+  const res = await verify.apiAs(token, 'POST', `/approvals/requests/${request!.id}/${action}`, { comment: `${action}d in test.` });
+  expect(res.status, await res.clone().text()).toBe(200);
+};
 
 beforeAll(async () => {
   verify = await hotcrmStack();
@@ -174,12 +183,12 @@ describe('time (timesheet_stamps, time_entry_costing)', () => {
       .rejects.toThrow(/staffed on the project/);
   });
 
-  it('freezes a submitted timesheet, and lets only the approver approve', async () => {
+  it('freezes a submitted timesheet, and costs it once the approver approves it from the Inbox', async () => {
     await update('crm_timesheet', { id: sheet.id, status: 'submitted' }, consultant.token);
     await expect(update('crm_time_entry', { id: entry.id, hours: 9 }, consultant.token)).rejects.toThrow(/has been submitted/);
-    await expect(update('crm_timesheet', { id: sheet.id, status: 'approved' }, consultant.token)).rejects.toThrow(/Only the timesheet's approver/);
     expect(num((await row('crm_project', project.id))!.actual_labor_cost)).toBe(0);
-    await update('crm_timesheet', { id: sheet.id, status: 'approved' }, pm.token);
+    await decide(sheet.id, pm.token);
+    expect((await row('crm_timesheet', sheet.id))!.status).toBe('approved');
     const p = (await row('crm_project', project.id))!;
     expect(num(p.actual_labor_cost)).toBe(400);
     expect(num(p.billable_amount)).toBe(960);
@@ -195,15 +204,15 @@ describe('time (timesheet_stamps, time_entry_costing)', () => {
 });
 
 describe('expenses (expense_approver)', () => {
-  it('reach the project\'s cost once the approver approves them', async () => {
+  it('reach the project\'s cost once the approver approves them from the Inbox', async () => {
     const before = num((await row('crm_project', project.id))!.actual_expense_cost);
     const exp = await insert('crm_expense', {
       name: `Flight ${++k}`, crm_project: project.id, expense_date: '2026-11-03', category: 'travel', amount: 300, is_billable: true,
     }, consultant.token);
     expect((await row('crm_expense', exp.id))!.approver).toBe(pm.id);
     await update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token);
-    await expect(update('crm_expense', { id: exp.id, status: 'approved' }, consultant.token)).rejects.toThrow(/Only the expense's approver/);
-    await update('crm_expense', { id: exp.id, status: 'approved' }, pm.token);
+    expect(num((await row('crm_project', project.id))!.actual_expense_cost) - before).toBe(0);
+    await decide(exp.id, pm.token);
     expect(num((await row('crm_project', project.id))!.actual_expense_cost) - before).toBe(300);
   });
 });

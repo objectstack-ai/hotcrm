@@ -68,7 +68,7 @@ export const jaJP: TranslationData = {
         },
         approved_budget: {
           label: '承認済み予算',
-          help: 'このプロジェクトで使えるコストです。承認に回す前に設定します。',
+          help: 'このプロジェクトで使えるコストです。承認に回す前に設定します。その後は財務コントローラーだけが変更できます。',
         },
         actual_labor_cost: { label: '人件費' },
         actual_expense_cost: { label: '経費' },
@@ -81,6 +81,19 @@ export const jaJP: TranslationData = {
         actual_cost: { label: '実績コスト' },
         cost_variance: { label: '予算残' },
         budget_consumed_percent: { label: '予算消化率' },
+        budget_status: {
+          label: '予算ステータス',
+          help: '承認済み予算の 80% 未満は順調、80% 以上は警告、100% 以上は超過です。',
+          options: {
+            on_track: '順調',
+            warning: '警告',
+            exceeded: '超過',
+          },
+        },
+        time_entry_locked: {
+          label: '工数と経費をロック',
+          help: 'チェックが入っている間、このプロジェクトの工数表と経費は提出できません。下書きは引き続き作成できます。',
+        },
         gross_margin: { label: '粗利' },
         gross_margin_percent: { label: '粗利率' },
         project_manager: {
@@ -316,6 +329,39 @@ export const jaJP: TranslationData = {
         expense_status_progression: { message: 'このステータス変更はできません。経費は 下書き → 提出済み → 承認済みまたは却下 と進みます。却下された経費は下書きに戻して修正します。' },
       },
     },
+  },
+  // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
+  flows: {
+    project_initiation_approval: {
+      label: 'プロジェクト立ち上げ承認',
+      approvals: {
+        leadership_review: { label: 'プロジェクトディレクター審査' },
+        finance_review: { label: '財務コントローラー審査' },
+      },
+    },
+    timesheet_approval: {
+      label: '工数表承認',
+      approvals: { approver_review: { label: 'プロジェクトマネージャー審査' } },
+    },
+    timesheet_approval_on_create: {
+      label: '工数表承認（作成時）',
+      approvals: { approver_review: { label: 'プロジェクトマネージャー審査' } },
+    },
+    expense_approval: {
+      label: '経費承認',
+      approvals: {
+        approver_review: { label: 'プロジェクトマネージャー審査' },
+        finance_review: { label: '財務コントローラー審査' },
+      },
+    },
+    expense_approval_on_create: {
+      label: '経費承認（作成時）',
+      approvals: {
+        approver_review: { label: 'プロジェクトマネージャー審査' },
+        finance_review: { label: '財務コントローラー審査' },
+      },
+    },
+    project_budget_alert: { label: 'プロジェクト予算アラート' },
   },
   apps: {
     // This package's own app (#2316).

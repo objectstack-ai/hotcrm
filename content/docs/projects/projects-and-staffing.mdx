@@ -36,11 +36,39 @@ A project starts as **Draft** and moves forward one step at a time:
 
 Any other change is refused with a message that lists these steps. A project is never deleted by its manager: a project that will not go ahead is **Cancelled**, and a finished one is **Closed**.
 
+## Sending a project for approval
+
+A new project starts as **Draft**. When its plan and budget are ready, the project manager sets **Status** to **In Approval**. A project with no **Approved Budget** cannot be sent: the approval is of that figure.
+
+1. Every **Project Director** and **PMO** holder finds the project in their **Inbox** (under **My Work**). The first to decide decides for all.
+2. A project whose Approved Budget is **100,000** or more then goes to the **Finance Controllers** as well.
+3. Approved by everyone it went to, the project is **Approved**, and the project manager makes it **Active** when the work starts.
+
+A rejected project is **Rejected**: move it back to **Draft**, revise it and send it again. The project manager can also recall it from their Inbox while it waits, which puts it back to **Draft**.
+
+While it waits, the project is locked and nobody can edit it. Nobody sets **Approved** or **Rejected** by hand either: those are written by the approval. Only an administrator can, to repair a project whose approval cannot run.
+
 ## The budget
 
-**Approved Budget** is the cost the project may spend. Set it while the project is **Draft** or **Rejected**: from **In Approval** onwards it is read-only, because that is the figure the project was approved on. **Planned Revenue** is what the customer pays for the project, and the margin is measured against it.
+**Approved Budget** is the cost the project may spend. Set it while the project is **Draft** or **Rejected**. From **In Approval** onwards it is the figure the project was approved on, and only a **Finance Controller** can change it; anyone else who tries is told to ask finance. **Planned Revenue** is what the customer pays for the project, and the margin is measured against it.
 
 The project's [cost and margin fields](/docs/projects#money) fill themselves as hours and expenses are approved. **Budget Used %** passes 100 % when the project has spent more than its approved budget.
+
+### Budget status and the lock [#budget-lock]
+
+**Budget Status** follows Budget Used % on its own:
+
+| Budget Status | When |
+| --- | --- |
+| **On Track** | Below 80 % of the Approved Budget |
+| **Warning** | From 80 % |
+| **Exceeded** | From 100 % |
+
+The moment it moves into **Warning** or **Exceeded**, the project manager and every Finance Controller get an inbox notice and an email. It comes once per crossing: a project that stays in Warning while more hours are approved sends nothing more.
+
+The notice proposes the lock, and a person decides. Tick **Lock Time and Expenses** on the project and no timesheet or expense on it can be submitted, whoever submits it. People can still write drafts. Untick it, after agreeing a new budget for example, and submissions are taken again.
+
+A new budget is set by a Finance Controller, not by the project manager: raising the Approved Budget moves Budget Status at once, so a project is put back On Track only with finance's say.
 
 ## Staffing a project
 

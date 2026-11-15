@@ -68,7 +68,7 @@ export const esES: TranslationData = {
         },
         approved_budget: {
           label: 'Presupuesto aprobado',
-          help: 'El coste que puede gastar este proyecto. Se fija antes de enviarlo a aprobación.',
+          help: 'El coste que puede gastar este proyecto. Se fija antes de enviarlo a aprobación; después, solo un Controller financiero lo cambia.',
         },
         actual_labor_cost: { label: 'Coste de mano de obra' },
         actual_expense_cost: { label: 'Coste de gastos' },
@@ -81,6 +81,19 @@ export const esES: TranslationData = {
         actual_cost: { label: 'Coste real' },
         cost_variance: { label: 'Presupuesto restante' },
         budget_consumed_percent: { label: 'Presupuesto consumido' },
+        budget_status: {
+          label: 'Estado del presupuesto',
+          help: 'En curso por debajo del 80 % del presupuesto aprobado, Aviso desde el 80 %, Superado desde el 100 %.',
+          options: {
+            on_track: 'En curso',
+            warning: 'Aviso',
+            exceeded: 'Superado',
+          },
+        },
+        time_entry_locked: {
+          label: 'Bloquear horas y gastos',
+          help: 'Mientras esté marcado, no se puede enviar ninguna hoja de horas ni gasto de este proyecto. Los borradores se pueden seguir escribiendo.',
+        },
         gross_margin: { label: 'Margen bruto' },
         gross_margin_percent: { label: 'Margen bruto %' },
         project_manager: {
@@ -316,6 +329,39 @@ export const esES: TranslationData = {
         expense_status_progression: { message: 'Este cambio de estado no está permitido. Un gasto avanza Borrador → Enviado → Aprobado o Rechazado; un gasto rechazado vuelve a Borrador para corregirlo.' },
       },
     },
+  },
+  // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
+  flows: {
+    project_initiation_approval: {
+      label: 'Aprobación de inicio de proyecto',
+      approvals: {
+        leadership_review: { label: 'Revisión del director de proyectos' },
+        finance_review: { label: 'Revisión del controller financiero' },
+      },
+    },
+    timesheet_approval: {
+      label: 'Aprobación de hoja de horas',
+      approvals: { approver_review: { label: 'Revisión del jefe de proyecto' } },
+    },
+    timesheet_approval_on_create: {
+      label: 'Aprobación de hoja de horas (al crear)',
+      approvals: { approver_review: { label: 'Revisión del jefe de proyecto' } },
+    },
+    expense_approval: {
+      label: 'Aprobación de gastos',
+      approvals: {
+        approver_review: { label: 'Revisión del jefe de proyecto' },
+        finance_review: { label: 'Revisión del controller financiero' },
+      },
+    },
+    expense_approval_on_create: {
+      label: 'Aprobación de gastos (al crear)',
+      approvals: {
+        approver_review: { label: 'Revisión del jefe de proyecto' },
+        finance_review: { label: 'Revisión del controller financiero' },
+      },
+    },
+    project_budget_alert: { label: 'Alerta de presupuesto del proyecto' },
   },
   apps: {
     // This package's own app (#2316).

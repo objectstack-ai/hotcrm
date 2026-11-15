@@ -68,7 +68,7 @@ export const zhCN: TranslationData = {
         },
         approved_budget: {
           label: '批准预算',
-          help: '这个项目可以花费的成本。在项目提交审批前填写。',
+          help: '这个项目可以花费的成本。在项目提交审批前填写；之后只有财务控制可以修改。',
         },
         actual_labor_cost: { label: '人工成本' },
         actual_expense_cost: { label: '费用成本' },
@@ -81,6 +81,19 @@ export const zhCN: TranslationData = {
         actual_cost: { label: '实际成本' },
         cost_variance: { label: '剩余预算' },
         budget_consumed_percent: { label: '预算使用率' },
+        budget_status: {
+          label: '预算状态',
+          help: '低于批准预算的 80% 为正常，达到 80% 为预警，达到 100% 为超支。',
+          options: {
+            on_track: '正常',
+            warning: '预警',
+            exceeded: '超支',
+          },
+        },
+        time_entry_locked: {
+          label: '锁定工时与费用',
+          help: '勾选后，这个项目上的工时单和费用都不能提交。草稿仍可填写。',
+        },
         gross_margin: { label: '毛利' },
         gross_margin_percent: { label: '毛利率' },
         project_manager: {
@@ -316,6 +329,39 @@ export const zhCN: TranslationData = {
         expense_status_progression: { message: '不允许这样更改状态。费用按 草稿 → 已提交 → 已批准或已驳回 推进；被驳回的费用退回草稿修改。' },
       },
     },
+  },
+  // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
+  flows: {
+    project_initiation_approval: {
+      label: '立项审批',
+      approvals: {
+        leadership_review: { label: '项目总监审核' },
+        finance_review: { label: '财务控制审核' },
+      },
+    },
+    timesheet_approval: {
+      label: '工时单审批',
+      approvals: { approver_review: { label: '项目经理审核' } },
+    },
+    timesheet_approval_on_create: {
+      label: '工时单审批（创建时）',
+      approvals: { approver_review: { label: '项目经理审核' } },
+    },
+    expense_approval: {
+      label: '费用审批',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+        finance_review: { label: '财务控制审核' },
+      },
+    },
+    expense_approval_on_create: {
+      label: '费用审批（创建时）',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+        finance_review: { label: '财务控制审核' },
+      },
+    },
+    project_budget_alert: { label: '项目预算预警' },
   },
   apps: {
     // This package's own app (#2316); the name is the maintainer's (2026-11-15).
