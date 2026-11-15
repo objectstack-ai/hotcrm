@@ -757,11 +757,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   positions: {
     crm_executive: {
       label: '高管',
-      description: '公司管理层，只读：可查看销售经理能查看的每个客户、商机、报价、合同、销售预测和工单，记录仍归原团队负责。',
+      description: '公司管理层：可查看销售经理能查看的一切，记录仍归原团队负责，只能创建和编辑自己的商机。',
     },
     crm_sales_director: {
       label: '销售总监',
-      description: '领导销售组织，对最大的商机做最终签批，并只读查看销售经理能查看的一切。',
+      description: '领导销售组织，对最大的商机做最终签批，可查看销售经理能查看的一切，只能编辑自己的商机。',
     },
     crm_sales_manager: {
       label: '销售经理',

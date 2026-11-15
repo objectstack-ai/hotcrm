@@ -71,8 +71,9 @@ export const CrmPositions = [
     name: 'crm_executive',
     renamedFrom: ['executive'],
     label: 'Executive',
-    description: 'Company leadership, read only: reads every account, deal, quote, contract, forecast and case a sales manager reads, while the teams keep ownership.',
-    // Read only (#2492, ruled A). Before it the position held no set: the
+    description: 'Company leadership: reads everything a sales manager reads while the teams keep ownership, and creates and edits only its own deals.',
+    // Read only on what the holder does not own (#2492, ruled A; own deals
+    // with the amount since #2514). Before it the position held no set: the
     // large-deal shares, which stay, were all a holder could read.
     permissionSets: ['sales_leadership'],
   },
@@ -80,7 +81,7 @@ export const CrmPositions = [
     name: 'crm_sales_director',
     renamedFrom: ['sales_director'],
     label: 'Sales Director',
-    description: 'Leads the sales organization, gives the final sign-off on the largest deals and reads everything a sales manager reads, read only.',
+    description: 'Leads the sales organization, gives the final sign-off on the largest deals, reads everything a sales manager reads and edits only its own deals.',
     permissionSets: ['sales_leadership'],
   },
   {

@@ -752,11 +752,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   positions: {
     crm_executive: {
       label: 'エグゼクティブ',
-      description: '経営層（閲覧のみ）：営業マネージャーが閲覧できる取引先・商談・見積・契約・売上予測・ケースをすべて閲覧します。所有権は各チームに残ります。',
+      description: '経営層：営業マネージャーが閲覧できるものをすべて閲覧し（所有権は各チームに残ります）、作成・編集できるのは自分の商談だけです。',
     },
     crm_sales_director: {
       label: '営業ディレクター',
-      description: '営業組織を率い、最大規模の商談の最終承認を行い、営業マネージャーが閲覧できるものをすべて閲覧のみで参照します。',
+      description: '営業組織を率い、最大規模の商談の最終承認を行い、営業マネージャーが閲覧できるものをすべて閲覧し、編集できるのは自分の商談だけです。',
     },
     crm_sales_manager: {
       label: '営業マネージャー',
