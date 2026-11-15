@@ -18,13 +18,12 @@ import { O2C_FIGURE_FIELDS } from './_o2c-figures';
  *
  *   - `crm_invoice`, `crm_payment` — full grants with Modify All: finance
  *     books every customer's invoices and receipts. ⛔ No transfer: the rows
- *     are not owned by anyone who could lose them. ⚠️ Both are
- *     `controlled_by_parent` under the contract, and the platform refuses a
- *     child insert without EDIT on the master — Modify All on the child does
- *     not lift it (measured on 18.3.0 and again on 18.4.0, the plan's
- *     *Phase 1a readings*). Ruled 2026-11-14: the platform adds a per-object
- *     opt-in, read on the master is enough (objectstack#33250); until it
- *     lands finance's inserts answer 403. ⛔ No edit grant on the contract.
+ *     are not owned by anyone who could lose them. Both are
+ *     `controlled_by_parent` under the contract and declare
+ *     `writeRequiresMasterRead` (objectstack#33250, #2462): finance's read on
+ *     every contract is enough to write them. Without the opt-in the platform
+ *     asks EDIT on the master and Modify All on the child does not lift it
+ *     (the plan's *Phase 1a readings*). ⛔ No edit grant on the contract.
  *   - `crm_billing_milestone` — read: the plan is sales'. Finance links an
  *     invoice or payment to a step, which is a write on the invoice or the
  *     payment, never on the step.

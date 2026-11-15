@@ -310,6 +310,19 @@ The contract and account totals, through `objectExtensions` from the module
 | Module disabled (#30304) | `PATCH /packages/app.objectstack.hotcrm.o2c/disable`: `GET /meta/object/crm_contract` no longer lists `planned_amount` or `receivable_balance`; `enable` brings them back | ✅ |
 | Placement | decision 6 C (2026-11-15): the contract's four name `value` and sit in its *Contract Value* section; the account's three name `financials` and sit in *Financials*. An extension field may name a group the base object declares (`os validate`, `os lint --strict` clean; the console renders it inside that section). An extension still cannot contribute `fieldGroups` of its own on 18.4.0 (`ObjectExtensionSchema`); `crm_contract` and `crm_account` are unchanged | ✅ as ruled |
 
+### Phase 1c readings — hotcrm#2462, `@objectstack/*` 18.5.0
+
+The three objects declare `sharing: { controlledByParent: { writeRequiresMasterRead: true } }`.
+Measured by `test/o2c-collection-plan.test.ts` (*who writes what*) on the booted app and in the
+browser pass.
+
+| Item | Reading | Verdict |
+| --- | --- | --- |
+| Rep keeps the plan | a rep who owns the account reads its contract and gets 403 editing it; the same rep inserts a plan step and edits it. Without the opt-in the insert is 403 "requires edit access to its master record" | ✅ |
+| Finance writes | `crm_ar_accountant` (read on every contract, no edit) inserts an invoice and a payment against it, and the invoice's open amount follows (1,000 − 400 = 600); its contract edit stays 403 | ✅ |
+| Rep and invoices | a rep who reads the contract still gets 403 on an invoice or a payment: the rep's own grants say no (`allowCreate: false`) | ✅ |
+| Non-reader | a second rep who cannot read the contract gets 403 on a plan step, "requires read access to its master record" | ✅ |
+
 ## Decisions
 
 ### Recorded 2026-10-23
@@ -430,7 +443,7 @@ The maintainer restarted the module on hotcrm#2315 with one direction, 「先考
 - **Whatever Phase 0 refuses** among the four measurements is filed as its own platform card, and the
   phase waits for the fix in the pin (AGENTS.md *Scope* rule 2) or takes the recorded fallback.
 - **`fieldGroups` through `objectExtensions`** — not needed: decision 6 C places the figures in groups the core objects already declare.
-- **Read on the master is enough to write a detail** — objectstack-ai/objectstack#33250 (2026-11-14).
+- **Read on the master is enough to write a detail** — objectstack-ai/objectstack#33250 (2026-11-14). Shipped in 18.5.0; the three objects opt in since #2462 (*Phase 1c readings*).
 
 ## References
 
