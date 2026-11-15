@@ -872,7 +872,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_leadership: {
       label: '销售管理层',
-      description: '高管和销售总监，只读：可查看销售经理能查看的每个客户、联系人、商机、报价、合同、销售预测和工单，不能修改任何记录。',
+      description: '高管和销售总监：可查看销售经理能查看的所有记录，不能修改不属于自己的记录，可创建和编辑自己的商机（含金额）。',
     },
     service_director: {
       label: '服务总监',

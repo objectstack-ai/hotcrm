@@ -9,7 +9,8 @@ type Rec = Record<string, any>;
 
 /**
  * Executives and sales directors read what a sales manager reads, and change
- * none of it (#2492, ruled A 2026-11-15).
+ * none of it they do not own (#2492, ruled A 2026-11-15). Their own deals,
+ * amount included, they create and edit (#2514).
  *
  * Before: `crm_executive` and `crm_sales_director` held no permission set, so
  * a holder carried `crm_user` alone. The large-deal shares showed them the big
@@ -18,7 +19,10 @@ type Rec = Record<string, any>;
  *
  * After: both positions distribute `sales_leadership`: read, at the manager's
  * depth, on every object `sales_manager` reads; the private-deal row filter on
- * the deal View All (ADR-0058); no create, edit, delete, transfer or export.
+ * the deal View All (ADR-0058); no object-level create, edit, delete, transfer
+ * or export. The one field it opens is the deal amount (#2514): the
+ * `crm_user` floor's own-deal create and edit carry it, and a rep's deal
+ * still answers 403.
  *
  * On the shipped app booted by `@objectstack/verify`, REST as each position's
  * holder, over rows a sales rep owns.
@@ -114,10 +118,12 @@ describe('the set is read only, at the manager\'s reach (#2492 ruling A)', () =>
     expect(Object.keys(leadership).filter((o) => !managerReads.some(([m]) => m === o)), 'reads the manager does not').toEqual([]);
   });
 
-  it('edits no field it names, and carries the private-deal row filter', () => {
-    for (const [field, rule] of Object.entries(SalesLeadershipProfile.fields) as [string, Rec][]) {
-      expect(rule.editable ?? false, field).toBe(false);
-    }
+  it('edits no field it names but the deal amount, and carries the private-deal row filter', () => {
+    const editable = (Object.entries(SalesLeadershipProfile.fields) as [string, Rec][])
+      .filter(([, rule]) => rule.editable === true).map(([field]) => field);
+    // #2514: the amount a holder's OWN deal needs; the record reach stays the
+    // floor's own-only, pinned over REST below.
+    expect(editable).toEqual(['crm_opportunity.amount']);
     expect(SalesLeadershipProfile.rowLevelSecurity.map((p) => p.object)).toContain('crm_opportunity');
   });
 });
@@ -168,4 +174,32 @@ describe.each(POSITIONS)('what a %s holder may not do', (position) => {
       expect(await status(leaders[position]!, 'GET', `/data/${object}/export?format=json`)).toBe(403);
     },
   );
+});
+
+describe.each(POSITIONS)('a %s holder\'s own deals (#2514)', (position) => {
+  const deal = () => ({
+    name: `Own deal ${position}`, crm_account: rows.crm_account!.id, amount: 100,
+    stage: 'prospecting', close_date: '2030-09-30',
+  });
+
+  it('creates a deal with an amount, and edits that amount', async () => {
+    const who = leaders[position]!;
+    const created = await verify.apiAs(who.token, 'POST', '/data/crm_opportunity', deal());
+    expect(created.status, await created.clone().text()).toBe(201);
+    const body = (await created.json()) as Rec;
+    const id = String((body.record ?? body.data ?? body).id);
+    const [row] = await verify.rows('crm_opportunity', { id });
+    expect(row?.owner_id).toBe(who.id);
+    expect(Number(row?.amount)).toBe(100);
+
+    const edited = await verify.apiAs(who.token, 'PATCH', `/data/crm_opportunity/${id}`, { amount: 250 });
+    expect(edited.status, await edited.clone().text()).toBe(200);
+    expect(Number((await verify.rows('crm_opportunity', { id }))[0]?.amount)).toBe(250);
+  });
+
+  it('still may not change the amount on a rep\'s deal', async () => {
+    const id = rows.crm_opportunity!.id;
+    expect(await status(leaders[position]!, 'PATCH', `/data/crm_opportunity/${id}`, { amount: 1 })).toBe(403);
+    expect(Number((await verify.rows('crm_opportunity', { id }))[0]?.amount)).toBe(20_000);
+  });
 });
