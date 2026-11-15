@@ -110,12 +110,13 @@ describe('who reads them', () => {
     expect(await verify.rows('crm_invoice', { crm_account: account.id }, { as: member.token })).toEqual([]);
   });
 
-  // crm_user, marketing_user and service_agent grant read on crm_invoice and
-  // crm_payment only so the account's totals have a readable source
-  // (`security-rollup-source-unreadable`). The grant is inert: none of the
-  // three reads contracts, and both objects are `controlled_by_parent` on the
-  // contract, so a holder reads no invoice and no payment at all.
-  it.each(['crm_user', 'marketing_user', 'service_agent'])('a holder of %s alone reads no invoice and no payment', async (set) => {
+  // crm_user, marketing_user, service_agent and project_member (account read
+  // since #2316 ruling D) grant read on crm_invoice and crm_payment only so the
+  // account's totals have a readable source (`security-rollup-source-unreadable`).
+  // The grant is inert: none of the four reads contracts, and both objects are
+  // `controlled_by_parent` on the contract, so a holder reads no invoice and no
+  // payment at all.
+  it.each(['crm_user', 'marketing_user', 'service_agent', 'project_member'])('a holder of %s alone reads no invoice and no payment', async (set) => {
     const holder = await signUpPerson(verify, `${set}@o2c-receivables.test`, { name: `Inert ${set}`, permissionSets: [set] });
     expect((await verify.rows('crm_invoice', {})).length, 'fixture: invoices exist').toBeGreaterThan(0);
     expect((await verify.rows('crm_payment', {})).length, 'fixture: payments exist').toBeGreaterThan(0);

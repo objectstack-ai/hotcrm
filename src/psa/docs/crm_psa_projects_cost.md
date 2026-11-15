@@ -28,6 +28,10 @@ cost too.
 - **Everyone else staffed is the Team**, and reads the project. Removing a
   staffing row takes that access away. The Project Manager is not listed in
   the Team as well.
+- **The Team sees the customer, not the deal.** A team member reads every
+  account, read-only, so the project's Account shows by name. The
+  Opportunity is left off their project page, and no opportunity opens for
+  them.
 - **One row per person per project.** Staffing someone twice is refused.
 - **Staff yourself first.** Until someone is staffed as Project Manager, a
   timesheet or expense written on the project has no approver.

@@ -16,8 +16,8 @@
  * names is read by everyone.
  * A set holding Modify All on the account reads every account field whatever
  * its rows say, so `sales_manager` names the contract's alone (`os lint`
- * reports an account row there as inert). `marketing_user` and
- * `service_agent` read no contracts, so they name the account's alone (an FLS
+ * reports an account row there as inert). `marketing_user`,
+ * `service_agent` and `project_member` read no contracts, so they name the account's alone (an FLS
  * row on an object the set cannot read is an orphan,
  * `test/authorization-coverage.test.ts`).
  */
