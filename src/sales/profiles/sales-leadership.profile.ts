@@ -6,8 +6,8 @@ import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
 import { SalesManagerProfile } from './sales-manager.profile';
 
 /**
- * Sales Leadership — reads what a sales manager reads, and writes nothing
- * (#2492, ruled A by the maintainer 2026-11-15). The `crm_executive` and
+ * Sales Leadership — reads what a sales manager reads, and changes nothing a
+ * holder does not own (#2492, ruled A by the maintainer 2026-11-15; #2514). The `crm_executive` and
  * `crm_sales_director` positions distribute it (`src/sales/sharing/positions.ts`).
  *
  * Both positions held no set, so a holder carried `crm_user` alone: the
@@ -22,10 +22,15 @@ import { SalesManagerProfile } from './sales-manager.profile';
  *   - `crm_opportunity` View All carries the private-deal row filter
  *     (ADR-0058, the shared `privateOpportunityPolicy`): a deal flagged
  *     Private stays its owner's.
- *   - ⛔ No create, edit, delete, transfer or export anywhere. The large-deal
+ *   - ⛔ No object-level create, edit, delete, transfer or export anywhere:
+ *     every record a holder does not own stays read only. The large-deal
  *     shares stay as they are; the `crm_user` floor every member holds is
  *     unchanged (#2231: a member may still create and edit their OWN leads,
- *     accounts and contacts).
+ *     accounts, contacts and deals).
+ *   - `crm_opportunity.amount` is editable (#2514): the floor's own-deal
+ *     create and edit need it, and this set naming the field read only
+ *     refused both (403 "Field write denied … [amount]"). A field grant
+ *     opens no record, so a rep's deal still answers 403 to a holder's edit.
  *   - App visibility as `sales_manager`'s: all five apps.
  */
 const READ_ALL = { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false } as const;
@@ -35,7 +40,7 @@ export const SalesLeadershipProfile = {
   name: 'sales_leadership',
   label: 'Sales Leadership',
   description:
-    'Executives and sales directors, read only: read every account, contact, deal, quote, contract, forecast and case a sales manager reads, and change none.',
+    'Executives and sales directors: read what a sales manager reads, change nothing they do not own, and create and edit their own deals with the amount.',
   tabPermissions: SalesManagerProfile.tabPermissions,
   objects: {
     crm_lead:              READ_ALL,
@@ -71,8 +76,10 @@ export const SalesLeadershipProfile = {
     // set holds no Modify All on the account, so the account's are named too.
     ...O2C_FIGURE_FIELDS,
     // The fields other sets mask, read in full as the manager reads them, and
-    // edited by nobody holding only this set.
-    'crm_opportunity.amount':   { readable: true, editable: false },
+    // edited by nobody holding only this set — except the deal amount, which a
+    // holder's OWN deal needs on create and edit (#2514; the record reach is
+    // the `crm_user` floor's own-only, so others' deals stay read only).
+    'crm_opportunity.amount':   { readable: true, editable: true },
     'crm_account.health_score': { readable: true, editable: false },
     'crm_quote.internal_notes': { readable: true, editable: false },
     'crm_case.internal_notes':  { readable: true, editable: false },

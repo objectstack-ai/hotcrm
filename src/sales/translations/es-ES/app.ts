@@ -865,7 +865,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_leadership: {
       label: 'Dirección Comercial',
-      description: 'Ejecutivos y directores de ventas, solo lectura: leen todas las cuentas, contactos, oportunidades, cotizaciones, contratos, previsiones y casos que lee un gerente de ventas, y no cambian ninguno.',
+      description: 'Ejecutivos y directores de ventas: leen lo que lee un gerente de ventas, no cambian nada que no sea suyo y crean y editan sus propias oportunidades con el importe.',
     },
     service_director: {
       label: 'Director de Servicio',

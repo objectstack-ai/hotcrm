@@ -867,7 +867,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     },
     sales_leadership: {
       label: '営業リーダーシップ',
-      description: '経営層と営業ディレクター（閲覧のみ）：営業マネージャーが閲覧できる取引先・取引先責任者・商談・見積・契約・売上予測・ケースをすべて閲覧し、何も変更しません。',
+      description: '経営層と営業ディレクター：営業マネージャーが閲覧できるレコードをすべて閲覧し、自分が所有しないレコードは変更せず、自分の商談は金額を含めて作成・編集できます。',
     },
     service_director: {
       label: 'サービスディレクター',

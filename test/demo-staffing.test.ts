@@ -468,8 +468,8 @@ describe('each position names the sets it distributes, and none is reached by th
       // The director reads the escalations shared to it, and works none (#2490,
       // ruled A); unstaffed in the demo.
       crm_service_director: ['service_director'],
-      // Leadership reads what a sales manager reads, and writes nothing (#2492,
-      // ruled A); both unstaffed in the demo.
+      // Leadership reads what a sales manager reads, and writes only its own
+      // deals (#2492 ruled A, #2514); both unstaffed in the demo.
       crm_executive: ['sales_leadership'],
       crm_sales_director: ['sales_leadership'],
       // The two marketing rungs lead the marketers and hold their set (#2338 item 3).
