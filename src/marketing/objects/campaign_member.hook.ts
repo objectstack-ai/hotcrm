@@ -427,8 +427,112 @@ const campaignMemberMetricsRefresh: Hook = {
   },
 };
 
+/**
+ * One membership per person per campaign, whichever door writes it (#2498).
+ *
+ * Enroll Members and Add to Campaign skip a person already on the campaign
+ * (`campaign_lead_member_enroll` / `campaign_contact_member_enroll`), but the
+ * object held no such rule, so the campaign's Campaign Members panel's
+ * **New**, an import and `POST /api/v1/data/crm_campaign_member` each answered
+ * 201 for the same lead twice (measured on 18.5.0 at `079228a`). Every count
+ * the campaign shows counts member rows, so a duplicate halved the response
+ * rate and doubled the email.
+ *
+ * Two layers, measured on 18.5.0:
+ *
+ *   - this hook refuses a second member for the same lead, or the same contact,
+ *     in the same campaign, naming the person and the campaign (409
+ *     `DUPLICATE_VALUE`, declared in `refusals` so a zh-CN, ja-JP or es-ES
+ *     caller reads it in their language). It runs on every write, system
+ *     writes included, on an insert and on an edit that moves a member;
+ *   - the object's two `unique: 'organization'` indexes catch the one case a
+ *     hook cannot, two adds racing past this read at once. On its own the
+ *     index answers 409 `UNIQUE_VIOLATION` naming the columns ("A record with
+ *     the same Campaign, Lead already exists"), not the person or the campaign,
+ *     which is why the hook answers first.
+ *
+ * A lead and a contact are separate people here: the same human added once as
+ * a lead and once as a contact holds two memberships, as the enroll flows
+ * count them.
+ *
+ * Rows already stored: the hook judges only the write in hand, so a tenant
+ * that already holds duplicates keeps them, edits them as before, and only a
+ * NEW duplicate is refused. The platform builds the unique index only over
+ * rows that obey it: over existing duplicates it logs the conflicting groups
+ * and leaves that index unbuilt until they are removed (`os migrate plan`
+ * lists them, ADR-0120 D4). The install or upgrade itself is not refused.
+ */
+const campaignMemberUnique: Hook = {
+  name: 'campaign_member_unique',
+  object: 'crm_campaign_member',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 150,
+  description: 'Refuse a second membership for the same lead or contact in the same campaign, naming both.',
+  refusals: {
+    DUPLICATE_VALUE: {
+      message: '{{ person }} is already a member of {{ campaign }}. Open that membership instead of adding another.',
+      status: 409,
+      params: ['person', 'campaign'],
+    },
+  },
+  handler: async (ctx: HookContext) => {
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const input = ctx.input ?? {};
+    const previous = (ctx.previous ?? {}) as Record<string, unknown>;
+    const idOf = (value: unknown): string => {
+      if (typeof value === 'string') return value;
+      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+        return String((value as Record<string, unknown>).id);
+      }
+      return '';
+    };
+    // An edit is judged only when it moves the member: a key the write does
+    // not carry, or carries unchanged (an edit form re-sends every field),
+    // moves nothing, so an existing duplicate stays editable.
+    if (ctx.event === 'beforeUpdate') {
+      const moves = ['crm_campaign', 'crm_lead', 'crm_contact'].some(
+        (key) => key in input && idOf(input[key]) !== idOf(previous[key]),
+      );
+      if (!moves) return;
+    }
+    const pick = (key: string): string => idOf(key in input ? input[key] : previous[key]);
+    const campaignId = pick('crm_campaign');
+    const leadId = pick('crm_lead');
+    const contactId = pick('crm_contact');
+    if (!campaignId || (!leadId && !contactId)) return;
+    const selfId = idOf(previous.id ?? input.id);
+    const where = leadId ? { crm_campaign: campaignId, crm_lead: leadId } : { crm_campaign: campaignId, crm_contact: contactId };
+    const twins = (await api.object('crm_campaign_member').find({ where, fields: ['id'], top: 2 }))
+      .filter((m) => idOf(m.id) !== selfId);
+    if (twins.length === 0) return;
+
+    let person = '';
+    if (leadId) {
+      const lead = await api.object('crm_lead').findOne({ where: { id: leadId }, fields: ['id', 'first_name', 'last_name'] });
+      const first = typeof lead?.first_name === 'string' ? lead.first_name : '';
+      const last = typeof lead?.last_name === 'string' ? lead.last_name : '';
+      person = `${first} ${last}`.trim() || 'This lead';
+    } else {
+      const contact = await api.object('crm_contact').findOne({ where: { id: contactId }, fields: ['id', 'full_name'] });
+      person = typeof contact?.full_name === 'string' && contact.full_name !== '' ? contact.full_name : 'This contact';
+    }
+    const campaign = await api.object('crm_campaign').findOne({ where: { id: campaignId }, fields: ['id', 'name'] });
+    // The campaign as its title names it: the name alone (#2369 row 10).
+    const title = typeof campaign?.name === 'string' && campaign.name !== '' ? campaign.name : 'this campaign';
+    const err = new Error(`${person} is already a member of ${title}. Open that membership instead of adding another.`) as Error & {
+      code: string;
+      params: Record<string, string>;
+    };
+    err.code = 'DUPLICATE_VALUE';
+    err.params = { person, campaign: title };
+    throw err;
+  },
+};
+
 export default [
   campaignMemberEnrollmentGate,
+  campaignMemberUnique,
   campaignMemberLifecycle,
   campaignMemberOptOutSync,
   campaignMemberMetricsRefresh,

@@ -490,13 +490,17 @@ describe('campaign_metrics_refresh', () => {
     const l1 = await leadOf({ is_converted: true, ...(await conversionRecords()) });
     const l2 = await leadOf();
     const l9 = await leadOf();
+    const account = await accountOf();
+    const [contact] = await verify.seed('crm_contact', [{ first_name: 'Junction', last_name: `Contact ${++k}`, email: `junction${k}@hooks-runtime-service.test`, crm_account: account.id, owner_id: rep.id }]);
+    // A contact member beside the two lead members: it counts as sent and as a
+    // response, and not as a lead. (Until #2498 this row was the same lead a
+    // second time, to pin a distinct count; a person now joins a campaign once.)
     await verify.seed('crm_campaign_member', [
       { crm_campaign: campaign.id, crm_lead: l1.id, status: 'responded' },
       { crm_campaign: campaign.id, crm_lead: l2.id, status: 'sent' },
-      { crm_campaign: campaign.id, crm_lead: l2.id, status: 'responded' }, // dup lead
+      { crm_campaign: campaign.id, crm_contact: contact!.id, status: 'responded' },
       { crm_campaign: other.id, crm_lead: l9.id, status: 'responded' },
     ]);
-    const account = await accountOf();
     await verify.seed('crm_opportunity', [
       { name: `Won ${++k}`, crm_campaign: campaign.id, stage: 'closed_won', win_reason: 'better_price', amount: 100, close_date: '2026-01-01', crm_account: account.id, owner_id: rep.id },
       { name: `Open ${k}`, crm_campaign: campaign.id, stage: 'proposal', amount: 50, close_date: '2030-01-01', crm_account: account.id, owner_id: rep.id },

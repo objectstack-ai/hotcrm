@@ -140,6 +140,13 @@ export const jaJP: TranslationData = {
       },
     },
   },
+  hooks: {
+    campaign_member_unique: {
+      refusals: {
+        DUPLICATE_VALUE: { message: '{{ person }} はすでに {{ campaign }} のメンバーです。もう 1 件追加せず、既存のメンバーを開いてください。' },
+      },
+    },
+  },
   flows: {
     campaign_enrollment: {
       label: 'キャンペーンにメンバーを登録',

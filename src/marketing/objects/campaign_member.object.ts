@@ -302,6 +302,19 @@ export const CampaignMember = ObjectSchema.create({
   // rule returns a verdict even when the merged record has no such key. See
   // AGENTS.md "Validation predicates must be TOTAL" and
   // test/object-validation-predicates.test.ts, which fails the build otherwise.
+  // One membership per person per campaign (#2498). `campaign_member_unique`
+  // (`campaign_member.hook.ts`) refuses a duplicate first, naming the person
+  // and the campaign; these indexes catch two adds that race past its read.
+  // A member names a lead or a contact, never both (the validations below),
+  // and a NULL never collides, so each index judges only its own side.
+  // Over rows that already break one, 18.5.0 logs the conflicting groups and
+  // leaves that index unbuilt until they are removed (ADR-0120 D4): an
+  // upgrade is never refused over them.
+  indexes: [
+    { fields: ['crm_campaign', 'crm_lead'], unique: 'organization' },
+    { fields: ['crm_campaign', 'crm_contact'], unique: 'organization' },
+  ],
+
   validations: [
     {
       name: 'lead_or_contact_required',
