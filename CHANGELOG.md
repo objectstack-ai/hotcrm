@@ -1,5 +1,33 @@
 # Changelog
 
+## 6.3.0
+
+### Minor Changes
+
+- cdba71a: Clause-②: no
+  Metadata-protocol: none
+  
+  **Order to Cash is now an app of its own, where finance works (#2465).** The new **Order to Cash** app (「订单与回款」) carries the invoices, payments and collection plan, the Overdue Invoices and Planned This Month lists, the contracts and accounts they belong to, and the Order to Cash manual. An Accounts Receivable member's launcher offers this app alone. The Sales app keeps a **Collection Plan** group with the billing milestones the reps and managers write, and the contract page keeps its tabs and totals. Sales reps, service and marketing users do not see the new app; sales managers and administrators see all four apps. A tenant that disables the module loses the app with it. Labels ship in en, zh-CN, ja-JP and es-ES; the quick tour, the Order to Cash docs and the manual describe the new layout.
+- e01ce2d: Clause-②: no
+  Metadata-protocol: none
+  
+  **Order to Cash now holds a contract's collection plan, its invoices and its payments (REQ-0007, #2315).** Three new objects sit under the contract: *Billing Milestones* (the plan: what is due, when, and how much of it has been invoiced, received and is still open), *Invoices* and *Payments*, each linked to the contract's account. A payment names its invoice and takes the invoice's plan step; an invoice with no due date takes the contract's payment terms. Payment methods are those every market shares, bank transfer and other.
+  
+  Reps get two views, *Overdue Invoices* and *Planned This Month*, and see the plan, invoices and payments as tabs on the contract and account pages. Finance enters invoices and payments by hand or imports them from the ERP; the two import mappings key on the ERP reference, so importing the same file twice updates the rows instead of duplicating them (templates in `assets/import-templates/`). A new *Accounts Receivable* position (`crm_ar_accountant`) and permission set (`ar_accountant`) carry the finance access, in the Sales app, where the *Order to Cash* group sits; reps and managers read invoices and payments and keep the plan. Labels ship in en, zh-CN, ja-JP and es-ES, with an in-app manual and docs under *Order to Cash*.
+  
+  Until a platform release lets a contract's readers write its plan, invoices and payments (objectstack#33250), a sales manager or an administrator builds the plan, and an administrator enters and imports invoices and payments; the manual and the docs say so. The contract and account totals arrive with #2416. A tenant that does not use the module disables the package.
+- 2492ac6: Clause-②: no
+  Metadata-protocol: none
+  
+  **A contract and its account now show what has been planned, invoiced and received, and what is still owed (REQ-0007, #2416).** The contract carries *Planned*, *Invoiced*, *Received* and *Receivable Balance*; the account carries *Invoiced*, *Received* and *Receivable Balance* across all its contracts. *Invoiced* counts issued invoices only, and the balance is what is still open on the issued invoices, so an advance not yet set against an invoice shows in *Received* and leaves the balance alone. On the contract the totals sit in its Contract Value section, on the account in Financials. The Order to Cash module adds the fields to the two core objects, so they leave with it when a tenant disables the module. Everyone who reads the contract or the account reads them, and nobody edits them. Labels ship in en, zh-CN, ja-JP and es-ES; the Order to Cash docs and manual describe them.
+
+### Patch Changes
+
+- 2492ac6: Clause-②: no
+  Metadata-protocol: none
+  
+  **The All Invoices list no longer totals Amount, which counted cancelled invoices (hotcrm#2463).** Its footer now totals Paid and Open only; a cancelled invoice is open for nothing. The invoice and payment import guide and the in-app manual (en, zh-Hans, zh-Hant) also warn that a billing milestone name used on more than one contract fails the import row, and say to put the step's record ID in that column instead, until the platform resolves the name within the row's contract (objectstack#33523).
+
 ## 6.2.1
 
 ### Patch Changes
