@@ -63,12 +63,12 @@ http://localhost:4001 and create the first admin account.
 
 ---
 
-## v6.2.1 — Latest release
+## v6.3.0 — Latest release
 
-**HotCRM 6.2.1** runs on **ObjectStack 18.4.0** across every `@objectstack/*` package, and its
+**HotCRM 6.3.0** runs on **ObjectStack 18.4.0** across every `@objectstack/*` package, and its
 manifest declares the matching `^18.4.0` protocol range, so a
 runtime on a different protocol major — a 17.x host included — refuses the load up front with a
-structured diagnostic instead of failing deep in a schema parse. 6.2.0 shipped on ObjectStack
+structured diagnostic instead of failing deep in a schema parse. 6.2.1 and 6.2.0 shipped on ObjectStack
 18.4.0 too; 6.1.2, 6.1.1 and 6.1.0 shipped on
 ObjectStack 18.3.0, 6.0.0 on ObjectStack
 18.0.0, 5.1.2, 5.1.1 and 5.1.0 on ObjectStack 18.0.0-next.3, 5.0.0 on ObjectStack
@@ -76,10 +76,48 @@ ObjectStack 18.3.0, 6.0.0 on ObjectStack
 
 > **This page does not keep a second release table.** The release-by-release
 > history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 6.2.1 are
+> entry every pull request adds. The versions between v1.0 and 6.3.0 are
 > recorded there and are deliberately not re-listed here — a hand-maintained
 > copy of that history is exactly how this section came to advertise a "v5.0"
 > while the app was at 2.2.2, on a platform major that never shipped it.
+
+### What 6.3.0 changes
+
+- **Order to Cash: a contract's collection plan, its invoices and its payments.** Three new objects
+  sit under the contract. *Billing Milestones* are the plan: what is due, when, and how much of it
+  has been invoiced, received and is still open. *Invoices* and *Payments* are what finance records
+  against it, by hand or imported from the ERP; importing the same file twice updates the rows
+  instead of duplicating them. Reps get *Overdue Invoices* and *Planned This Month*, and see the
+  plan, invoices and payments as tabs on the contract and account pages. A new *Accounts
+  Receivable* position (`crm_ar_accountant`) and permission set (`ar_accountant`) carry finance's
+  access.
+- **Receivables totals on the contract and the account.** The contract shows *Planned*,
+  *Invoiced*, *Received* and *Receivable Balance* in its Contract Value section; the account shows
+  *Invoiced*, *Received* and *Receivable Balance* across its contracts in Financials. *Invoiced*
+  counts issued invoices only, and the balance is what is still open on issued invoices, so an
+  advance not yet set against an invoice shows in *Received* and leaves the balance alone.
+- **Order to Cash is an app of its own, finance's.** The **Order to Cash** app holds the invoices,
+  payments and collection plan, the two follow-up lists, the contracts and accounts they belong to,
+  and the Order to Cash Manual. An Accounts Receivable member's launcher offers it alone; sales
+  managers and administrators see all four apps; reps, service and marketing users do not see it.
+  The Sales app keeps a **Collection Plan** group with the billing milestones reps and managers
+  write. A tenant that disables the module loses the app, the objects and the totals with it.
+
+**Check these before and after upgrading to 6.3.0:**
+
+- **Finance cannot save invoices and payments yet.** The platform asks for edit access to the
+  contract before it saves an invoice or a payment, and the Accounts Receivable position reads
+  contracts without editing them. Until a platform release lifts that
+  ([objectstack#33250](https://github.com/objectstack-ai/objectstack/issues/33250)), an
+  administrator enters and imports invoices and payments, and a sales manager or an administrator
+  builds the collection plan.
+- **Totals read blank on contracts and accounts that existed before the upgrade**, until a billing
+  milestone, invoice or payment is written under them. The totals are recalculated when a child row
+  is written, and the platform's backfill does not run on HotCRM yet
+  ([objectstack#33608](https://github.com/objectstack-ai/objectstack/issues/33608)). A blank total
+  means nothing has been recorded under that record.
+- **Give finance the position.** Assign **Accounts Receivable** to the people who record invoices
+  and payments, then sign in as one of them and see the Order to Cash app in the launcher.
 
 ### What 6.2.1 changes
 
