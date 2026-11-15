@@ -27,10 +27,12 @@ import * as psaViews from '../../src/psa/views';
 import * as salesDashboards from '../../src/sales/dashboards';
 import * as serviceDashboards from '../../src/service/dashboards';
 import * as revenueDashboards from '../../src/revenue/dashboards';
+import * as psaDashboards from '../../src/psa/dashboards';
 
 import * as salesDatasets from '../../src/sales/datasets';
 import * as serviceDatasets from '../../src/service/datasets';
 import * as revenueDatasets from '../../src/revenue/datasets';
+import * as psaDatasets from '../../src/psa/datasets';
 
 import * as salesReports from '../../src/sales/reports';
 import * as serviceReports from '../../src/service/reports';
@@ -207,8 +209,8 @@ const BARRELS: Readonly<
     o2c: o2cViews,
     psa: psaViews,
   },
-  dashboards: { sales: salesDashboards, service: serviceDashboards, revenue: revenueDashboards },
-  datasets: { sales: salesDatasets, service: serviceDatasets, revenue: revenueDatasets },
+  dashboards: { sales: salesDashboards, service: serviceDashboards, revenue: revenueDashboards, psa: psaDashboards },
+  datasets: { sales: salesDatasets, service: serviceDatasets, revenue: revenueDatasets, psa: psaDatasets },
   reports: { sales: salesReports, service: serviceReports },
   sharing: { sales: salesSharing, service: serviceSharing, marketing: marketingSharing, psa: psaSharing },
 };

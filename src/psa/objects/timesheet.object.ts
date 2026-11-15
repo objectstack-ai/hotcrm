@@ -85,6 +85,20 @@ export const Timesheet = ObjectSchema.create({
       summaryOperations: { object: 'crm_time_entry', field: 'hours', function: 'sum', relationshipField: 'crm_timesheet' },
     }),
 
+    billable_hours: Field.summary({
+      label: 'Billable Hours',
+      group: 'totals',
+      scale: 2,
+      readonly: true,
+      summaryOperations: {
+        object: 'crm_time_entry',
+        field: 'hours',
+        function: 'sum',
+        relationshipField: 'crm_timesheet',
+        filter: { is_billable: true },
+      },
+    }),
+
     total_cost: Field.summary({
       label: 'Total Cost',
       group: 'totals',

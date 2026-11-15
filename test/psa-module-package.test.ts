@@ -71,6 +71,19 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
       'crm.project_budget_exceeded', 'crm.project_budget_warning',
     ]);
   });
+  it('it owns its datasets, the Projects Overview dashboard and its manual (phase 1c)', () => {
+    const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
+    expect(((stack.datasets ?? []) as AnyRec[]).map((d) => d.name).sort()).toEqual(['project_financials', 'time_utilization']);
+    const dashboards = (stack.dashboards ?? []) as AnyRec[];
+    expect(dashboards.map((d) => d.name)).toEqual(['projects_overview']);
+    // A dashboard reads only the datasets of its own package's closure (18.4.0):
+    // every widget binds one of the module's own two.
+    const bound = new Set(((dashboards[0].widgets ?? []) as AnyRec[]).map((w) => w.dataset ?? w.datasetName ?? w.data?.dataset));
+    expect([...bound].sort()).toEqual(['project_financials', 'time_utilization']);
+    // No date picker: windowing projects by a date cuts a running project out of its figures.
+    expect(dashboards[0].dateRange).toBeUndefined();
+    expect(((stack.books ?? []) as AnyRec[]).map((b) => b.name)).toEqual(['crm_psa_manual']);
+  });
 });
 
 describe('Project Delivery is its own app (#2316)', () => {
@@ -83,7 +96,7 @@ describe('Project Delivery is its own app (#2316)', () => {
 
   it('its own groups come first, then the customer and work entries the app package contributes', () => {
     const nav = servedApp(PSA_APP).navigation as AnyRec[];
-    expect(nav.map((n) => n.id)).toEqual(['group_projects', 'group_time_expenses', 'group_rates', 'group_customers', 'group_work']);
+    expect(nav.map((n) => n.id)).toEqual(['group_projects', 'group_time_expenses', 'group_rates', 'group_customers', 'group_work', 'group_help']);
     const objects = walk(nav).filter((i) => i.type === 'object').map((i) => `${i.objectName}${i.viewName ? `/${i.viewName}` : ''}`);
     expect(objects).toEqual([
       'crm_project', 'crm_project/my_projects', 'crm_project_member',
@@ -106,6 +119,18 @@ describe('Project Delivery is its own app (#2316)', () => {
     const rows = pack?.apps?.[PSA_APP]?.navigation ?? {};
     const ids = (servedApp(PSA_APP).navigation as AnyRec[]).flatMap((n) => [n.id, ...walk([n]).map((i) => i.id)]);
     for (const id of new Set(ids)) expect(rows[id]?.label, `${locale} ${id}`).toEqual(expect.any(String));
+  });
+
+  it('Projects Overview sits under Projects, out of a plain team member\'s sidebar, and the manual under Help (phase 1c)', () => {
+    const items = walk(servedApp(PSA_APP).navigation as AnyRec[]);
+    const overview = items.find((i) => i.id === 'nav_projects_overview')!;
+    expect(overview).toMatchObject({ type: 'dashboard', dashboardName: 'projects_overview' });
+    // A team member reads the project but not its cost (FLS), so every money
+    // tile would answer 403: the entry is held back from them by position.
+    const visible = String(overview.visible?.source ?? overview.visible);
+    expect(visible).toContain('current_user.can("crm_project", "read")');
+    expect(visible).toContain('!("crm_project_member" in current_user.positions)');
+    expect(items.find((i) => i.id === 'nav_help_psa')).toMatchObject({ type: 'doc', book: 'crm_psa_manual' });
   });
 
   it('zh-CN uses the name the maintainer chose', () => {

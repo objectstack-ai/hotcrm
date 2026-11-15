@@ -3,6 +3,9 @@
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { PsaApp } from './apps/index.js';
+import { CrmPsaManual } from './books/index.js';
+import { ProjectsOverviewDashboard } from './dashboards/index.js';
+import { ProjectFinancialsDataset, TimeUtilizationDataset } from './datasets/index.js';
 import { PsaEmailTemplates } from './email-templates/index.js';
 import {
   ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, ProjectBudgetAlertFlow, ProjectInitiationApprovalFlow,
@@ -69,7 +72,8 @@ export const psaSharingRules = [
  * (ADR-0130 addendum, 2026-09-02): `project_manager`, `project_member` and
  * `finance_controller`, distributed by the positions in
  * `src/sales/sharing/positions.ts`. Phase 1b adds the three approvals and
- * the overrun alert and lock.
+ * the overrun alert and lock. Phase 1c adds the module's manual under *Help*,
+ * its two datasets and the Projects Overview dashboard that reads them.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
@@ -103,8 +107,9 @@ export const createHotCrmPsaStack = (
 
   // What THIS package's metadata needs (see `requires` in
   // `src/service/index.ts`): `automation` and `triggers` for the record-change
-  // flows, `approvals` for their approval nodes, `sharing` for the rules.
-  requires: ['automation', 'triggers', 'approvals', 'sharing'],
+  // flows, `approvals` for their approval nodes, `sharing` for the rules,
+  // `analytics` for the datasets.
+  requires: ['automation', 'triggers', 'approvals', 'sharing', 'analytics'],
 
   // The delivery team's app; see the app's own note.
   apps: [PsaApp],
@@ -114,6 +119,12 @@ export const createHotCrmPsaStack = (
   sharingRules: psaSharingRules,
   flows: psaFlows,
   emailTemplates: PsaEmailTemplates,
+  // Read only by the module's own dashboard (phase-0 reading P4); see each
+  // file's note.
+  datasets: [ProjectFinancialsDataset, TimeUtilizationDataset],
+  dashboards: [ProjectsOverviewDashboard],
+  // Its manual (phase 1c), over `src/psa/docs/`. See the book's own note.
+  books: [CrmPsaManual],
   data: collections.data,
   translations: [PsaTranslations],
 });

@@ -136,25 +136,25 @@ const REFRESH_INTERVALS: number[] = [
 const PAGES = [
   {
     file: 'content/docs/analytics/index.mdx',
-    six: 'Six',
+    seven: 'Seven',
     ten: 'Ten',
-    nine: 'Nine',
+    eleven: 'Eleven',
     noContract: 'There is no contract report',
     navHeading: '## Where to find things',
   },
   {
     file: 'content/docs/analytics/index.zh-Hans.mdx',
-    six: '六个',
+    seven: '七个',
     ten: '十份',
-    nine: '九个',
+    eleven: '十一个',
     noContract: '这里没有合同报表',
     navHeading: '## 在哪里可以找到',
   },
   {
     file: 'content/docs/analytics/index.zh-Hant.mdx',
-    six: '六個',
+    seven: '七個',
     ten: '十份',
-    nine: '九個',
+    eleven: '十一個',
     noContract: '這裡沒有合約報表',
     navHeading: '## 在哪裡可以找到',
   },
@@ -170,7 +170,7 @@ const PHANTOMS = ['Analytics', 'Dashboards', 'Cubes'] as const;
 const RETIRED_CUBES = ['Sales', 'Pipeline', 'Service', 'Marketing'] as const;
 
 /**
- * The directories the nine datasets really live in — READ FROM `src/`, like
+ * The directories the datasets really live in — READ FROM `src/`, like
  * every other product fact in this file.
  *
  * This assertion used to be `toContain('src/datasets/')`, a literal. ADR-0130
@@ -212,10 +212,10 @@ const italicNames = (text: string): string[] =>
   [...text.replace(/\*\*[^*\n]+\*\*/g, '').matchAll(/\*([^*\n]+)\*/g)].map((m) => m[1].trim());
 
 describe('analytics/index states the counts and names the app really ships (#976)', () => {
-  describe.each(PAGES)('$file', ({ file, six, ten, nine, noContract, navHeading }) => {
-    it('names all six dashboards, and says six', () => {
+  describe.each(PAGES)('$file', ({ file, seven, ten, eleven, noContract, navHeading }) => {
+    it('names all seven dashboards, and says seven', () => {
       const text = read(file);
-      expect(text, `${file}: the dashboard count is not stated as "${six}"`).toContain(six);
+      expect(text, `${file}: the dashboard count is not stated as "${seven}"`).toContain(seven);
       const missing = DASHBOARD_LABELS.filter((l) => !text.includes(l));
       expect(
         missing,
@@ -234,9 +234,9 @@ describe('analytics/index states the counts and names the app really ships (#976
       ).toContain(noContract);
     });
 
-    it('says nine datasets and points at the directory they live in', () => {
+    it('says eleven datasets and points at the directory they live in', () => {
       const text = read(file);
-      expect(text, `${file}: the dataset count is not stated as "${nine}"`).toContain(nine);
+      expect(text, `${file}: the dataset count is not stated as "${eleven}"`).toContain(eleven);
       expect(
         DATASET_DIRS.length,
         'no package under src/ has a datasets/ directory — this check has gone vacuous. ' +
@@ -440,9 +440,10 @@ describe('the cube vocabulary retired with src/cubes/ is gone from the docs (#97
 });
 
 describe('the source facts these pages now rest on (#976, #977)', () => {
-  // Six since #2436: revenue's Product Catalog.
-  it('the app ships six dashboards, one of them Sales Activity', () => {
-    expect(DASHBOARD_LABELS).toHaveLength(6);
+  // Six since #2436 (revenue's Product Catalog), seven since #2316 phase 1c
+  // (Project Delivery's Projects Overview).
+  it('the app ships seven dashboards, one of them Sales Activity', () => {
+    expect(DASHBOARD_LABELS).toHaveLength(7);
     expect(DASHBOARD_LABELS).toContain('Sales Activity');
   });
 
@@ -451,8 +452,9 @@ describe('the source facts these pages now rest on (#976, #977)', () => {
     expect(REPORT_LABELS.filter((l) => /contract/i.test(l))).toEqual([]);
   });
 
-  it('nine datasets, and none of them reads crm_contract', () => {
-    expect(DATASET_LIST).toHaveLength(9);
+  // Eleven since #2316 phase 1c: project_financials and time_utilization.
+  it('eleven datasets, and none of them reads crm_contract', () => {
+    expect(DATASET_LIST).toHaveLength(11);
     expect(DATASET_LIST.map((d) => d.object as string)).not.toContain('crm_contract');
   });
 
