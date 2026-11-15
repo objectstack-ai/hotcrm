@@ -228,7 +228,7 @@ export const en: TranslationData = {
         },
         receivable_balance: {
           label: 'Receivable Balance',
-          help: 'Invoiced minus received: what the customer still owes on the invoices issued.',
+          help: 'What the customer still owes on the open invoices: the open amount of the issued invoices, summed. A payment not yet set against an invoice shows in Received only.',
         },
       },
     },
@@ -244,7 +244,7 @@ export const en: TranslationData = {
         },
         receivable_balance: {
           label: 'Receivable Balance',
-          help: 'Invoiced minus received: what the customer still owes on the invoices issued.',
+          help: 'What the customer still owes on the open invoices: the open amount of the issued invoices, summed. A payment not yet set against an invoice shows in Received only.',
         },
       },
     },

@@ -171,8 +171,8 @@ existing `quote_expiration` flow.
 
 | Target | Fields added through `objectExtensions` |
 | --- | --- |
-| `crm_contract` | `planned_amount`, `invoiced_amount`, `received_amount`, `receivable_balance` (invoiced minus received) |
-| `crm_account` | `receivable_balance` — invoiced minus received, from summaries over the account-stamped invoices and payments, one hop each, never a summary of the contract's summaries |
+| `crm_contract` | `planned_amount`, `invoiced_amount`, `received_amount`, `receivable_balance` (the open amount of the issued invoices, summed: Q2 ruled B on 2026-11-15) |
+| `crm_account` | `invoiced_amount`, `received_amount`, `receivable_balance` — summaries over the account-stamped invoices and payments, one hop each, never a summary of the contract's summaries |
 
 **What the platform carries, read at `@objectstack/spec` 18.0.0 — not yet measured in this repo:**
 
@@ -194,8 +194,9 @@ payment related lists on the contract page, each list carrying its own amounts, 
 from its invoice list — no core change either way. Per AGENTS.md *Scope* rule 2 a refusal is filed
 upstream and the fallback is a recorded choice, not a workaround.
 
-**One consequence of `fieldGroups` not travelling**: the added fields cannot join a group on the
-contract's derived layout from the module side. Decision 6.
+**One consequence of `fieldGroups` not travelling**: the module cannot add a group of its own to the
+contract's derived layout. A field it adds may still name a group the core object declares
+(measured on 18.4.0). Decision 6.
 
 ## Cross-package edges, judged by the measured rules
 
@@ -302,12 +303,12 @@ The contract and account totals, through `objectExtensions` from the module
 
 | Item | Reading | Verdict |
 | --- | --- | --- |
-| The fields | `crm_contract` gains `planned_amount`, `invoiced_amount`, `received_amount` (summaries) and `receivable_balance` (formula, invoiced − received); `crm_account` gains the last three over the account-stamped rows. One hop each; *Invoiced* sums `issued` invoices only | ✅ |
-| Roll-up | a 400,000 step, a 120,000 issued and a 9,000 cancelled invoice, a 50,000 payment: the contract and the account move by 400,000 / 120,000 / 50,000, balance = invoiced − received | ✅ |
+| The fields | `crm_contract` gains `planned_amount`, `invoiced_amount`, `received_amount` (summaries) and `receivable_balance` (summary of the stored `open_amount` over `issued` invoices, Q2 B); `crm_account` gains the last three over the account-stamped rows. One hop each; *Invoiced* sums `issued` invoices only | ✅ |
+| Roll-up | a 400,000 step, a 120,000 issued and a 9,000 cancelled invoice, a 50,000 payment against the issued invoice and a 30,000 advance against none: the contract and the account move by 400,000 / 120,000 / 80,000 and the balance by 70,000, equal to the issued invoices' open amounts summed. The payment's `paid_amount` recompute rewrites the invoice's stored `open_amount`, and that write moves the balance (measured on 18.4.0) | ✅ |
 | Field rows in app-package sets (#30303) | `'crm_contract.planned_amount'` and the rest named in `sales_rep`, `sales_manager` (contract only: Modify All on the account makes an account row inert, `os lint`), `ar_accountant`, and the account's three in `marketing_user` and `service_agent` (they read no contracts; a row on an object the set cannot read is an orphan, `test/authorization-coverage.test.ts`): builds, `os lint --strict` clean. `crm_user` names none (the default set authors no field-level security), so every member reads them | ✅ |
 | Roll-up over unreadable rows | `os lint` `security-rollup-source-unreadable` flagged the account's summaries for `crm_user`, `marketing_user` and `service_agent`, which read the account but not invoices or payments. Answered by granting them read on `crm_invoice` / `crm_payment` — inert without contract read, since both are `controlled_by_parent` under the contract (measured: a `crm_user`-only owner of the account reads its balance and no invoice, and a holder of each of the three sets alone reads no invoice and no payment). ⛔ No `readable: false` rows (2026-11-05 ruling) | ✅ |
 | Module disabled (#30304) | `PATCH /packages/app.objectstack.hotcrm.o2c/disable`: `GET /meta/object/crm_contract` no longer lists `planned_amount` or `receivable_balance`; `enable` brings them back | ✅ |
-| Placement | decision 6 A: no group, so the fields sit outside the contract's sections. An extension still cannot contribute `fieldGroups` on 18.4.0 (`ObjectExtensionSchema`); recorded, not worked around | ✅ as ruled |
+| Placement | decision 6 C (2026-11-15): the contract's four name `value` and sit in its *Contract Value* section; the account's three name `financials` and sit in *Financials*. An extension field may name a group the base object declares (`os validate`, `os lint --strict` clean; the console renders it inside that section). An extension still cannot contribute `fieldGroups` of its own on 18.4.0 (`ObjectExtensionSchema`); `crm_contract` and `crm_account` are unchanged | ✅ as ruled |
 
 ## Decisions
 
@@ -391,6 +392,18 @@ The maintainer restarted the module on hotcrm#2315 with one direction, 「先考
   `sharing.controlledByParent.writeRequiresMasterRead: true`, the pin moves, and the docs drop the
   note. No temporary contract edit is granted.
 
+### Recorded 2026-11-15 — decision 6 revisited
+
+- **Decision 6 — C, superseding A.** Phase 1b measured that an extension field may name a group
+  the base object already declares. The totals now sit in those sections: the contract's in
+  *Contract Value* (`value`), the account's in *Financials* (`financials`). Neither core object
+  file changes, and the module still contributes no group of its own.
+- **Receivable Balance — B.** The balance is the sum of the stored `open_amount` over issued
+  invoices, not invoiced minus received. A payment not set against an invoice (an advance) shows in
+  *Received* only, and the balance never goes negative on one: the shape NetSuite, Dynamics 365
+  Finance and SAP keep, receivables and customer deposits as two figures. A separate
+  "unapplied advances" total is not part of the ruling and is left for its own card.
+
 ## Upstream asks
 
 - **Per-tenant enablement of a module inside an App** (or the inter-App dependencies ADR-0019
@@ -399,7 +412,7 @@ The maintainer restarted the module on hotcrm#2315 with one direction, 「先考
   migration.
 - **Whatever Phase 0 refuses** among the four measurements is filed as its own platform card, and the
   phase waits for the fix in the pin (AGENTS.md *Scope* rule 2) or takes the recorded fallback.
-- **`fieldGroups` through `objectExtensions`** — not needed: decision 6 took the default placement.
+- **`fieldGroups` through `objectExtensions`** — not needed: decision 6 C places the figures in groups the core objects already declare.
 - **Read on the master is enough to write a detail** — objectstack-ai/objectstack#33250 (2026-11-14).
 
 ## References

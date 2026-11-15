@@ -51,6 +51,9 @@ changes on the first of each month.
 The contract carries **Planned**, **Invoiced**, **Received** and
 **Receivable Balance**; the account carries **Invoiced**, **Received** and
 **Receivable Balance** across all its contracts. **Invoiced** counts issued
-invoices only, and **Receivable Balance** is invoiced minus received. They
-sit among the record's other fields, move whenever a milestone, an invoice or
-a payment is saved, and nobody edits them.
+invoices only. **Receivable Balance** is what the customer still owes on the
+open invoices: the **Open** amount of the issued invoices, summed. A payment
+not yet set against an invoice, such as an advance, counts in **Received**
+only. On the contract they sit in the **Contract Value** section, and on the
+account in **Financials**. They move whenever a milestone, an invoice or a
+payment is saved, and nobody edits them.

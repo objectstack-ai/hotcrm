@@ -228,7 +228,7 @@ export const esES: TranslationData = {
         },
         receivable_balance: {
           label: 'Saldo pendiente',
-          help: 'Facturado menos cobrado: lo que el cliente aún debe de las facturas emitidas.',
+          help: 'Lo que el cliente aún debe de las facturas abiertas: el importe pendiente de las facturas emitidas, sumado. Un cobro aún no aplicado a una factura solo cuenta en Cobrado.',
         },
       },
     },
@@ -244,7 +244,7 @@ export const esES: TranslationData = {
         },
         receivable_balance: {
           label: 'Saldo pendiente',
-          help: 'Facturado menos cobrado: lo que el cliente aún debe de las facturas emitidas.',
+          help: 'Lo que el cliente aún debe de las facturas abiertas: el importe pendiente de las facturas emitidas, sumado. Un cobro aún no aplicado a una factura solo cuenta en Cobrado.',
         },
       },
     },

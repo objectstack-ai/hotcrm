@@ -228,7 +228,7 @@ export const zhCN: TranslationData = {
         },
         receivable_balance: {
           label: '应收余额',
-          help: '已开票减已回款：客户在已开发票上仍欠的金额。',
+          help: '客户在未结清发票上仍欠的金额：已开具发票的未付金额之和。尚未对应到发票的回款只计入已回款。',
         },
       },
     },
@@ -244,7 +244,7 @@ export const zhCN: TranslationData = {
         },
         receivable_balance: {
           label: '应收余额',
-          help: '已开票减已回款：客户在已开发票上仍欠的金额。',
+          help: '客户在未结清发票上仍欠的金额：已开具发票的未付金额之和。尚未对应到发票的回款只计入已回款。',
         },
       },
     },

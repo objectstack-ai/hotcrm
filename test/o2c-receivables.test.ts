@@ -12,8 +12,10 @@ type Rec = Record<string, any>;
  * (`src/o2c/extensions/`), on the shipped app booted by `@objectstack/verify`.
  *
  * - The figures follow the module's rows: planned from the plan, invoiced from
- *   issued invoices only, received from payments, the balance their difference;
- *   the account's over the rows stamped with it.
+ *   issued invoices only, received from payments, the balance from the open
+ *   amount of the issued invoices (Q2 ruled B, 2026-11-15), so an advance not
+ *   set against an invoice moves Received and not the balance; the account's
+ *   over the rows stamped with it.
  * - Every member reads them (the app package's sets, the 2026-11-05 ruling),
  *   and a member who reads the account but not the contract reads the totals
  *   and still no invoice (`controlled_by_parent`).
@@ -63,21 +65,31 @@ describe('the figures follow the module\'s rows', () => {
       invoice_number: `INV-RX-${++k}`, crm_contract: contract.id, issue_date: '2026-10-01', amount: 9000, status: 'cancelled',
     });
     await insert('crm_payment', { crm_contract: contract.id, crm_invoice: inv.id, payment_date: '2026-10-20', amount: 50000 });
+    // An advance: received, set against no invoice yet.
+    await insert('crm_payment', { crm_contract: contract.id, payment_date: '2026-10-21', amount: 30000 });
   });
 
-  it('the contract reads planned, invoiced (issued only), received and the balance', async () => {
+  // The balance is the open amount of the issued invoices, summed: 120,000
+  // issued less the 50,000 set against it. The 9,000 cancelled invoice and the
+  // 30,000 advance leave it alone.
+  const openOfIssued = async (where: Rec): Promise<number> =>
+    (await verify.rows('crm_invoice', { ...where, status: 'issued' })).reduce((sum, r) => sum + num(r.open_amount), 0);
+
+  it('the contract reads planned, invoiced (issued only), received, and the open balance', async () => {
     const c = await row('crm_contract', contract.id);
     expect(num(c.planned_amount) - num(before.c.planned_amount)).toBe(400000);
     expect(num(c.invoiced_amount) - num(before.c.invoiced_amount)).toBe(120000);
-    expect(num(c.received_amount) - num(before.c.received_amount)).toBe(50000);
-    expect(num(c.receivable_balance)).toBe(num(c.invoiced_amount) - num(c.received_amount));
+    expect(num(c.received_amount) - num(before.c.received_amount)).toBe(80000);
+    expect(num(c.receivable_balance) - num(before.c.receivable_balance)).toBe(70000);
+    expect(num(c.receivable_balance)).toBe(await openOfIssued({ crm_contract: contract.id }));
   });
 
   it('the account reads the same rows through the stamp', async () => {
     const a = await row('crm_account', account.id);
     expect(num(a.invoiced_amount) - num(before.a.invoiced_amount)).toBe(120000);
-    expect(num(a.received_amount) - num(before.a.received_amount)).toBe(50000);
-    expect(num(a.receivable_balance)).toBe(num(a.invoiced_amount) - num(a.received_amount));
+    expect(num(a.received_amount) - num(before.a.received_amount)).toBe(80000);
+    expect(num(a.receivable_balance) - num(before.a.receivable_balance)).toBe(70000);
+    expect(num(a.receivable_balance)).toBe(await openOfIssued({ crm_account: account.id }));
   });
 });
 
