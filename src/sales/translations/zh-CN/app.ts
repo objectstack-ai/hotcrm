@@ -757,11 +757,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   positions: {
     crm_executive: {
       label: '高管',
-      description: '公司管理层：可查看整个销售管道中每一笔进行中的大额商机，商机仍归原商机团队负责。',
+      description: '公司管理层，只读：可查看销售经理能查看的每个客户、商机、报价、合同、销售预测和工单，记录仍归原团队负责。',
     },
     crm_sales_director: {
       label: '销售总监',
-      description: '领导销售组织，对最大的商机做最终签批，并可查看每一笔进行中的大额商机。',
+      description: '领导销售组织，对最大的商机做最终签批，并只读查看销售经理能查看的一切。',
     },
     crm_sales_manager: {
       label: '销售经理',
@@ -869,6 +869,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     service_agent: {
       label: '客服专员',
       description: '客服专员和服务经理：处理自己的工单，可查看工单背后的客户、联系人和线索并撰写知识文章，但看不到商机。',
+    },
+    sales_leadership: {
+      label: '销售管理层',
+      description: '高管和销售总监，只读：可查看销售经理能查看的每个客户、联系人、商机、报价、合同、销售预测和工单，不能修改任何记录。',
+    },
+    service_director: {
+      label: '服务总监',
+      description: '服务管理层，只读：查看共享给服务总监的升级工单，以及工单背后的客户和联系人。',
     },
     system_admin: {
       label: '系统管理员',

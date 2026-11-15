@@ -455,7 +455,7 @@ describe('staffing lines up with the rules that grant, and the nodes that route'
  * Delivery positions, staffed by nobody, are held by the roster pin alone.
  */
 describe('each position names the sets it distributes, and none is reached by the name fold (#2200)', () => {
-  it('declares the thirteen bindings, each to a set the app ships', () => {
+  it('declares the sixteen bindings, each to a set the app ships', () => {
     const declared = Object.fromEntries(
       [...positionNames].filter((p) => declaredSets(p).length > 0).map((p) => [p, declaredSets(p)]),
     );
@@ -465,6 +465,13 @@ describe('each position names the sets it distributes, and none is reached by th
       // The #1779 ruling: the escalation pool works tickets with the agent's grants.
       crm_service_manager: ['service_agent'],
       crm_service_agent: ['service_agent'],
+      // The director reads the escalations shared to it, and works none (#2490,
+      // ruled A); unstaffed in the demo.
+      crm_service_director: ['service_director'],
+      // Leadership reads what a sales manager reads, and writes nothing (#2492,
+      // ruled A); both unstaffed in the demo.
+      crm_executive: ['sales_leadership'],
+      crm_sales_director: ['sales_leadership'],
       // The two marketing rungs lead the marketers and hold their set (#2338 item 3).
       crm_marketing_director: ['marketing_user'],
       crm_marketing_manager: ['marketing_user'],

@@ -752,11 +752,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   positions: {
     crm_executive: {
       label: 'エグゼクティブ',
-      description: '経営層：パイプライン全体の進行中の大型商談をすべて閲覧できます。商談の所有権は商談チームに残ります。',
+      description: '経営層（閲覧のみ）：営業マネージャーが閲覧できる取引先・商談・見積・契約・売上予測・ケースをすべて閲覧します。所有権は各チームに残ります。',
     },
     crm_sales_director: {
       label: '営業ディレクター',
-      description: '営業組織を率い、最大規模の商談の最終承認を行い、進行中の大型商談をすべて閲覧します。',
+      description: '営業組織を率い、最大規模の商談の最終承認を行い、営業マネージャーが閲覧できるものをすべて閲覧のみで参照します。',
     },
     crm_sales_manager: {
       label: '営業マネージャー',
@@ -864,6 +864,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     service_agent: {
       label: 'サービス担当者',
       description: 'サービス担当者とマネージャー：自分のケースを処理し、その背後の取引先・取引先責任者・リードを閲覧し、ナレッジ記事を作成できますが、商談は見えません。',
+    },
+    sales_leadership: {
+      label: '営業リーダーシップ',
+      description: '経営層と営業ディレクター（閲覧のみ）：営業マネージャーが閲覧できる取引先・取引先責任者・商談・見積・契約・売上予測・ケースをすべて閲覧し、何も変更しません。',
+    },
+    service_director: {
+      label: 'サービスディレクター',
+      description: 'サービス部門の管理職（閲覧のみ）：サービスディレクターに共有されたエスカレーション中のケースと、その背後の取引先・取引先責任者を閲覧します。',
     },
     system_admin: {
       label: 'システム管理者',
