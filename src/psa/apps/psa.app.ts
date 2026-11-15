@@ -20,8 +20,11 @@ import { HOTCRM_ICON } from '../../sales/apps/crm.app';
  * groups, ahead of the anchors.
  *
  * Who sees it is the app package's permission sets (`tabPermissions`). While
- * the app carries nothing of its own, every business set hides it, so only an
- * administrator is offered it; phase 1 opens it to the delivery roles.
+ * the app carries nothing of its own, every business set hides it. A member
+ * who holds none of those sets is still offered it, as every app is offered
+ * to them: the administrators, and the executive and director positions,
+ * which carry no set of their own (measured on 18.4.0, #2316). Phase 1 opens
+ * it to the delivery roles.
  */
 export const PsaApp = App.create({
   name: 'crm_psa',
