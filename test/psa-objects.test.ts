@@ -115,6 +115,21 @@ describe('staffing (project_team_sync)', () => {
     expect(await row('crm_project', project.id, finance.token), 'finance reads every project').toBeTruthy();
   });
 
+  it('lets a team member read the account but not the opportunity (ruling D)', async () => {
+    expect(await row('crm_account', account.id, consultant.token), 'View All read on accounts').toBeTruthy();
+    const [opp] = await verify.rows('crm_opportunity', {});
+    expect(opp, 'fixture: the seed holds an opportunity').toBeTruthy();
+    expect(await row('crm_opportunity', opp.id, consultant.token)).toBeUndefined();
+    const linked = await insert('crm_project', {
+      name: `Test Linked ${++k}`, crm_account: account.id, crm_opportunity: opp.id, kind: 'delivery',
+    }, admin);
+    await insert('crm_project_member', { crm_project: linked.id, person: consultant.id, responsibility: 'consultant', rate_card: hourly.id }, admin);
+    const p = (await row('crm_project', linked.id, consultant.token))!;
+    expect(p.crm_account).toBe(account.id);
+    expect(p.crm_opportunity, 'the opportunity field is hidden from a member').toBeUndefined();
+    expect((await row('crm_project', linked.id))!.crm_opportunity, 'stored, and read by everyone else').toBe(opp.id);
+  });
+
   it('hides cost from a team member', async () => {
     const p = (await row('crm_project', project.id, consultant.token))!;
     expect(p.actual_labor_cost).toBeUndefined();
