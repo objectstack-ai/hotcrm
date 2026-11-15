@@ -58,7 +58,7 @@ type Rec = Record<string, any>;
  * persona's launcher offers is measured at `/me/apps` (the last block).
  */
 
-const APPS = ['crm_enterprise', 'crm_service', 'crm_marketing', 'crm_o2c'] as const;
+const APPS = ['crm_enterprise', 'crm_service', 'crm_marketing', 'crm_o2c', 'crm_psa'] as const;
 type AppName = (typeof APPS)[number];
 const walkLeaves = (nodes: Rec[]): Rec[] =>
   nodes.flatMap((n) => (n.type === 'group' ? walkLeaves((n.children ?? []) as Rec[]) : [n]));
@@ -564,7 +564,7 @@ describe('a member with no HotCRM grant lands on the platform access page (#2250
  * `hidden` is not undone by it (measured on 18.3.0 in a browser, the
  * screenshots are on the PR).
  */
-describe("each persona's launcher offers the apps its work needs (#2417, #2465)", () => {
+describe("each persona's launcher offers the apps its work needs (#2417, #2465, #2316)", () => {
   const appsOf = async (persona: string): Promise<string[]> => {
     const res = await verify.apiAs(who[persona]!.token, 'GET', '/me/apps');
     expect(res.status, await res.clone().text()).toBe(200);
@@ -582,7 +582,9 @@ describe("each persona's launcher offers the apps its work needs (#2417, #2465)"
     ['marketing_user', ['crm_enterprise', 'crm_marketing']],
     // Finance works in Order to Cash alone (#2465).
     ['ar_accountant', ['crm_o2c']],
-    ['admin', ['crm_enterprise', 'crm_marketing', 'crm_o2c', 'crm_service']],
+    // Project Delivery is a skeleton in phase 0 (#2316): every business set
+    // hides it, so only the administrator is offered it.
+    ['admin', ['crm_enterprise', 'crm_marketing', 'crm_o2c', 'crm_psa', 'crm_service']],
   ])('%s is offered %j', async (persona, apps) => {
     expect(await appsOf(persona)).toEqual(apps);
   });

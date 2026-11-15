@@ -60,7 +60,7 @@ import * as marketingSharing from '../../src/marketing/sharing';
  * `metadataDirs()` below filtered THAT — so a fifth package landing on disk was
  * invisible to it and to every app-wide suite built on it, silently, with
  * nothing anywhere going red. A roster and the guards standing on it went blind
- * together. `src/psa/` is that fifth package (`docs/architecture/psa-module-plan.md`),
+ * together. `src/psa/` is that package (the sixth, after `src/o2c/`) (`docs/architecture/psa-module-plan.md`),
  * and its plan promises every guard walking the package directories covers PSA
  * metadata "from the first file … with no new guard written". This function is
  * where that promise is kept.
@@ -79,11 +79,24 @@ import * as marketingSharing from '../../src/marketing/sharing';
  * AGENTS.md warns about — registered by nothing, validated by nothing, `pnpm
  * validate` still at exit 0 — so the file-walking exports below have to see it
  * THEN, not after someone remembers the barrel.
+ *
+ * WIDENED, deliberately (#2316): a directory carrying its own `index.ts` is a
+ * package too, objects or not. A package's `index.ts` is its `defineStack`
+ * (AGENTS.md, "A package of the artifact has one `index.ts`"), so the predicate
+ * still names nothing by hand, and `src/docs/` (`.md` files only) still falls
+ * out of it. The case it admits is a module that joins the suite before it
+ * owns an object: PSA's phase 0 (`src/psa/`) ships its manifest, its own app
+ * and that app's labels, and its objects arrive in phase 1. Without the
+ * widening its `apps/` and `translations/` would be metadata no sweep sees,
+ * which is the half-seen state the orphan check below refuses.
  */
 const derivePackages = (): string[] =>
   readdirSync(join(REPO_ROOT, 'src'), { withFileTypes: true })
     .filter(
-      (entry) => entry.isDirectory() && existsSync(join(REPO_ROOT, 'src', entry.name, 'objects')),
+      (entry) =>
+        entry.isDirectory() &&
+        (existsSync(join(REPO_ROOT, 'src', entry.name, 'objects')) ||
+          existsSync(join(REPO_ROOT, 'src', entry.name, 'index.ts'))),
     )
     .map((entry) => entry.name)
     .sort();

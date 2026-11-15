@@ -94,10 +94,10 @@ const labelsOnlyOwnExtensionFields = (stack: AnyRec, key: string, row: AnyRec | 
 };
 
 describe('locale packs: each package translates only what it registers (#2352)', () => {
-  it('reads four modules and the app, and every module with objects registers a bundle in the app\'s four locales', () => {
+  it('reads five modules and the app, and every module with objects registers a bundle in the app\'s four locales', () => {
     expect(modules.map(idOf).sort()).toEqual([
-      'app.objectstack.hotcrm.marketing', 'app.objectstack.hotcrm.o2c', 'app.objectstack.hotcrm.revenue',
-      'app.objectstack.hotcrm.service',
+      'app.objectstack.hotcrm.marketing', 'app.objectstack.hotcrm.o2c', 'app.objectstack.hotcrm.psa',
+      'app.objectstack.hotcrm.revenue', 'app.objectstack.hotcrm.service',
     ]);
     const appLocales = Object.keys(Object.assign({}, ...((appStack.translations ?? []) as AnyRec[]))).sort();
     expect(appLocales).toEqual(['en', 'es-ES', 'ja-JP', 'zh-CN']);

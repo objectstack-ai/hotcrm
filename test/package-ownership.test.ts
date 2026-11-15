@@ -33,7 +33,9 @@ const SERVICE_ID = 'app.objectstack.hotcrm.service';
 const REVENUE_ID = 'app.objectstack.hotcrm.revenue';
 const MARKETING_ID = 'app.objectstack.hotcrm.marketing';
 const O2C_ID = 'app.objectstack.hotcrm.o2c';
-const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID, O2C_ID];
+// PSA joins in phase 0 owning no object yet (#2316); its objects arrive in phase 1.
+const PSA_ID = 'app.objectstack.hotcrm.psa';
+const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID, O2C_ID, PSA_ID];
 
 /**
  * Each module's objects — `module-split-plan.md` decision 5, amended by item 11
@@ -67,8 +69,8 @@ const body = (id: string): AnyRec => {
 const namesOf = (items: unknown): string[] =>
   ((Array.isArray(items) ? items : []) as AnyRec[]).map((item) => String(item?.name)).sort();
 
-describe('one artifact, five packages', () => {
-  it('carries exactly the four modules and the app package, the app last', () => {
+describe('one artifact, six packages', () => {
+  it('carries exactly the five modules and the app package, the app last', () => {
     expect(bodies.map((b) => b.id)).toEqual([...MODULE_IDS, APP_ID]);
     expect(body(APP_ID).type).toBe('app');
     for (const id of MODULE_IDS) expect(body(id).type, id).toBe('module');
@@ -83,7 +85,7 @@ describe('one artifact, five packages', () => {
   });
 
   it('shares one namespace, so no object is renamed (ADR-0130 D1)', () => {
-    expect(bodies.map((b) => b.namespace)).toEqual(['crm', 'crm', 'crm', 'crm', 'crm']);
+    expect(bodies.map((b) => b.namespace)).toEqual(['crm', 'crm', 'crm', 'crm', 'crm', 'crm']);
   });
 
   it('declares the edges: every module depends on the app package and nothing else (a star)', () => {

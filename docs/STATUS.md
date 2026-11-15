@@ -10,7 +10,7 @@
 
 ## Summary
 
-HotCRM is a single ObjectStack marketplace app at version `6.3.0`, shipped as one release artifact carrying five packages in the namespace `crm` (ADR-0130 D4). The app manifest — id `app.objectstack.hotcrm`, the artifact's own identity — is defined in [`src/sales/index.ts`](../src/sales/index.ts); the four modules in [`src/service/index.ts`](../src/service/index.ts), [`src/revenue/index.ts`](../src/revenue/index.ts), [`src/marketing/index.ts`](../src/marketing/index.ts) and [`src/o2c/index.ts`](../src/o2c/index.ts) (Order to Cash: the collection plan, invoices and payments, in an app of its own); [`objectstack.config.ts`](../objectstack.config.ts) composes the five.
+HotCRM is a single ObjectStack marketplace app at version `6.3.0`, shipped as one release artifact carrying six packages in the namespace `crm` (ADR-0130 D4). The app manifest — id `app.objectstack.hotcrm`, the artifact's own identity — is defined in [`src/sales/index.ts`](../src/sales/index.ts); the five modules in [`src/service/index.ts`](../src/service/index.ts), [`src/revenue/index.ts`](../src/revenue/index.ts), [`src/marketing/index.ts`](../src/marketing/index.ts), [`src/o2c/index.ts`](../src/o2c/index.ts) (Order to Cash) and [`src/psa/index.ts`](../src/psa/index.ts) (Project Delivery, which carries no object yet); [`objectstack.config.ts`](../objectstack.config.ts) composes the six.
 
 ## ObjectStack Validation
 
@@ -20,7 +20,7 @@ loader registers:
 ```text
 HotCRM v6.3.0
 Data: 23 Objects  409 Fields
-UI: 4 Apps  18 Views  10 Pages  6 Dashboards  10 Reports  40 Actions
+UI: 5 Apps  18 Views  10 Pages  6 Dashboards  10 Reports  40 Actions
 Logic: 36 Flows
 Security: 13 Positions  8 Permissions
 ```
