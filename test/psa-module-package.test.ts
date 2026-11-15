@@ -133,6 +133,22 @@ describe('Project Delivery is its own app (#2316)', () => {
     expect(items.find((i) => i.id === 'nav_help_psa')).toMatchObject({ type: 'doc', book: 'crm_psa_manual' });
   });
 
+  it('Opportunities is held back from a plain team member, and kept for anyone who works with deals (ruling D)', () => {
+    const items = walk(servedApp(PSA_APP).navigation as AnyRec[]);
+    const opp = items.find((i) => i.id === 'nav_opportunity')!;
+    expect(opp).toMatchObject({ type: 'object', objectName: 'crm_opportunity' });
+    // Every member reads their own deals through `crm_user`, so object read
+    // alone left a consultant an empty list here.
+    const visible = String(opp.visible?.source ?? opp.visible);
+    expect(visible).toContain('current_user.can("crm_opportunity", "read")');
+    expect(visible).toContain('!("crm_project_member" in current_user.positions)');
+    for (const kept of ['crm_project_manager', 'crm_finance_controller', 'crm_sales_rep', 'crm_marketing_user']) {
+      expect(visible, kept).toContain(`"${kept}" in current_user.positions`);
+    }
+    // Accounts stay: ruling D gives the member the customer.
+    expect(items.find((i) => i.id === 'nav_account')?.visible).toBeUndefined();
+  });
+
   it('zh-CN uses the name the maintainer chose', () => {
     expect(packFor('zh-CN')?.apps?.[PSA_APP]?.label).toBe('项目交付');
   });

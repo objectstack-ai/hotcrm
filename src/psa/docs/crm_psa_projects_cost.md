@@ -30,8 +30,8 @@ cost too.
   the Team as well.
 - **The Team sees the customer, not the deal.** A team member reads every
   account, read-only, so the project's Account shows by name. The
-  Opportunity is left off their project page, and no opportunity opens for
-  them.
+  Opportunity is left off their project page, the deal does not open for
+  them, and Opportunities is not in their Project Delivery menu.
 - **One row per person per project.** Staffing someone twice is refused.
 - **Staff yourself first.** Until someone is staffed as Project Manager, a
   timesheet or expense written on the project has no approver.
