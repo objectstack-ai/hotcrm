@@ -580,22 +580,7 @@ export const anchor = (tokens) => Math.ceil((tokens * (1 + BUFFER)) / 1000) * 10
  *
  *   src/o2c        business semantics    4,296 × 1.05 =   4,511 -> ceil 1k ->   5,000  (headroom 704, 16.4%)  2026-11-05
  *   src/o2c        interaction layer       996 × 1.05 =   1,046 -> ceil 1k ->   2,000  (headroom 1,004, 100.8%)  2026-11-05
- *   src/o2c        authored total        6,469 × 1.05 =   6,792 -> ceil 1k ->   7,000  (headroom 531, 8.2%)  2026-11-05  superseded (#2465)
- *
- * ## 2026-11-15 — `src/o2c` authored total raised to 10,000 by ruling (#2465)
- *
- * Order to Cash became its own app (hotcrm#2465, the maintainer's option A of
- * 2026-11-15): `src/o2c/apps/o2c.app.ts` and its navigation took the authored
- * total from ~6,901 on main 2492ac6 to ~7,421, past the 7,000 ceiling. Asked
- * whether to raise it, Irene wrote on 2026-11-15T03:59Z: 「代码上限是按模块吗？
- * 可以加到10000」, recorded at objectstack-ai/hotcrm#2465 (comment 6888942097).
- * The row is RULED from here on, so lowering it needs a ruling too. The other
- * two `src/o2c` ceilings stay anchored and unchanged.
- *
- *   node scripts/check-source-token-ratchet.mjs   # 2026-11-15, `claude/project-thread-0qk9jf` at 39fc4fc
- *     src/o2c        business semantics ~4,200 · interaction layer ~1,581 · authored total ~7,421
- *
- *   src/o2c        authored total        ruled 10,000 — Irene's 「可以加到10000」, by the #2465 ruling    2026-11-15
+ *   src/o2c        authored total        6,469 × 1.05 =   6,792 -> ceil 1k ->   7,000  (headroom 531, 8.2%)  2026-11-05
  */
 const CEILING_KIND = { ANCHORED: 'anchored', RULED: 'ruled' };
 
@@ -623,7 +608,7 @@ const COMMITTED = [
   { module: 'src/marketing', label: 'authored total', ceiling: 15000, kind: CEILING_KIND.RULED },
   { module: 'src/o2c', label: 'business semantics', ceiling: 5000, kind: CEILING_KIND.ANCHORED },
   { module: 'src/o2c', label: 'interaction layer', ceiling: 2000, kind: CEILING_KIND.ANCHORED },
-  { module: 'src/o2c', label: 'authored total', ceiling: 10000, kind: CEILING_KIND.RULED },
+  { module: 'src/o2c', label: 'authored total', ceiling: 7000, kind: CEILING_KIND.ANCHORED },
 ];
 
 // Every committed ceiling declares a kind this module recognises. A ceiling
