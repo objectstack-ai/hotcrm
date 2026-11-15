@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import stack from './helpers/composed-stack';
 import artifact from '../objectstack.config';
+import { isNextSnapshot, isReleaseVersion, platformMajorOf, PROTOCOL_MAJOR } from './helpers/platform-version';
 
 /*
  * The versions this app declares, and the pages that state them — the app
@@ -57,6 +58,23 @@ const PLATFORM_VERSIONS: string[] = [
 /** A version that `12.2.2` / `2.2.22` cannot satisfy — see the #612 rule below. */
 const statesVersion = (text: string, version: string): boolean =>
   new RegExp(`(?<![\\d.])${version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\d.])`).test(text);
+
+/**
+ * Does a doc's platform claim fit the installed `platform`?
+ *
+ * On a release pin, the claim is that release, exactly. On a `next` snapshot
+ * pin (`0.0.0-next-…`, helpers/platform-version.ts) it is the snapshot, or a
+ * release of the line the snapshot is cut from: a snapshot has no release
+ * notes, so a page keeps naming the release HotCRM last shipped on until the
+ * real bump re-scopes it (AGENTS.md §Platform Upgrades). A claim naming another
+ * major still fails.
+ */
+const fitsPlatform = (claim: string, platform: string): boolean => {
+  if (statesVersion(claim, platform)) return true;
+  if (!isNextSnapshot(platform)) return false;
+  return [...claim.matchAll(/(?<![\d.])(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)(?![\d.])/g)]
+    .some((m) => isReleaseVersion(m[1]) && platformMajorOf(m[1]) === PROTOCOL_MAJOR);
+};
 
 /** `## Heading` → its text plus everything up to the next `## `. */
 const h2Sections = (text: string): { heading: string; body: string }[] => {
@@ -317,7 +335,7 @@ describe('the docs print the version the manifest declares (#612)', () => {
     const platform = PLATFORM_VERSIONS[0];
     const drifted = WHATS_NEW_PAGES.flatMap((file) =>
       latestSectionsOf(file)
-        .filter((s) => !statesVersion(`${s.heading}\n${s.body}`, platform))
+        .filter((s) => !fitsPlatform(`${s.heading}\n${s.body}`, platform))
         .map((s) => `${file}: "## ${s.heading}" never states the installed platform ${platform}`),
     );
     expect(
@@ -420,6 +438,20 @@ describe('one protocol version, declared in three files (#728)', () => {
     // manifest's `engines.protocol` aligned with the installed `@objectstack/spec`.
     // This is the half that catches an upgrade moving the dependency line and
     // forgetting the metadata — the shape of #728 on both the rc.2 and rc.3 bumps.
+    if (isNextSnapshot(installedSpec)) {
+      // A `next` snapshot pin: `^0.0.0-next-…` is no protocol a handshake can
+      // read (its major would be 0). The declared protocol stays a release
+      // of the line the snapshot is cut from, which the spec's own
+      // PROTOCOL_VERSION names (helpers/platform-version.ts).
+      const declared = bare(template.engines?.protocol);
+      expect(
+        isReleaseVersion(declared) && platformMajorOf(declared) === PROTOCOL_MAJOR,
+        `${TEMPLATE} declares ${template.engines?.protocol} while package.json installs the next ` +
+          `snapshot @objectstack/spec ${installedSpec}, whose protocol major is ${PROTOCOL_MAJOR}. ` +
+          `Declare a ${PROTOCOL_MAJOR}.x release there until the real bump.`,
+      ).toBe(true);
+      return;
+    }
     expect(
       bare(template.engines?.protocol),
       `${TEMPLATE} declares ${template.engines?.protocol} but package.json installs ` +
@@ -616,7 +648,12 @@ describe('docs/STATUS.md states the current repository (#1011)', () => {
   })();
 
   /** Each row's label → where the value actually lives. */
-  const REQUIREMENT_SOURCES: { label: string; source: string; value: () => string }[] = [
+  const REQUIREMENT_SOURCES: {
+    label: string;
+    source: string;
+    value: () => string;
+    fits?: (stated: string, value: string) => boolean;
+  }[] = [
     {
       label: 'Node.js',
       source: 'package.json engines.node',
@@ -632,6 +669,9 @@ describe('docs/STATUS.md states the current repository (#1011)', () => {
       source: 'the @objectstack/* dependency line in package.json',
       // Asserted to be a single version by the test below before it is read.
       value: () => PLATFORM_VERSIONS[0] ?? '',
+      // On a `next` snapshot pin the row may keep naming a release of the
+      // snapshot's line (`fitsPlatform`); on a release pin it is exact.
+      fits: (stated: string, value: string) => stated === value || (isNextSnapshot(value) && fitsPlatform(stated, value)),
     },
     {
       label: 'Local dev port',
@@ -677,7 +717,7 @@ describe('docs/STATUS.md states the current repository (#1011)', () => {
 
   it('every runtime requirement matches package.json', () => {
     const drifted = REQUIREMENT_SOURCES.filter(
-      (r) => r.label in requirementRows && requirementRows[r.label] !== r.value(),
+      (r) => r.label in requirementRows && !(r.fits ?? ((a: string, b: string) => a === b))(requirementRows[r.label], r.value()),
     ).map((r) => `${r.label}: page says \`${requirementRows[r.label]}\`, ${r.source} says \`${r.value()}\``);
     expect(
       drifted,
