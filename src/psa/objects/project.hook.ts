@@ -78,6 +78,25 @@ const projectStatusGuard: Hook = {
   object: 'crm_project',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 90,
+  refusals: {
+    VALIDATION_FAILED: {
+      message: 'This project change is not allowed.',
+      status: 400,
+      reasons: {
+        starts_as_draft: { message: 'A new project starts as Draft. Save it, then set In Approval to send it for approval.' },
+        budget_required: { message: 'Set the Approved Budget before sending the project for approval: the approval is of that figure.' },
+      },
+    },
+    FORBIDDEN: {
+      message: 'You cannot make this project change.',
+      status: 403,
+      params: ['project'],
+      reasons: {
+        budget_finance_only: { message: '{{project}} was approved on its Approved Budget, so only a Finance Controller can change it now. Ask finance to set the new budget.' },
+        decided_by_approver: { message: 'A project is approved or rejected by its approver, from their Inbox. Set In Approval to send it for approval.' },
+      },
+    },
+  },
   description: 'Start a person\'s project as Draft, send it for approval only with a budget, leave Approved and Rejected to the approval, and leave an approved budget to finance.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
@@ -108,11 +127,11 @@ const projectStatusGuard: Hook = {
 
     if (ctx.event === 'beforeInsert') {
       if (input.status != null && input.status !== '' && input.status !== 'draft') {
-        throw refuse(
+        throw Object.assign(refuse(
           'A new project starts as Draft. Save it, then set In Approval to send it for approval.',
           'VALIDATION_FAILED',
           400,
-        );
+        ), { reason: 'starts_as_draft' });
       }
       return;
     }
@@ -123,30 +142,30 @@ const projectStatusGuard: Hook = {
       && BUDGET_LOCKED_STATUSES.includes(String(previous.status ?? ''))
       && !positions.includes('crm_finance_controller')) {
       const name = typeof previous.name === 'string' && previous.name ? previous.name : 'This project';
-      throw refuse(
+      throw Object.assign(refuse(
         `${name} was approved on its Approved Budget, so only a Finance Controller can change it now. Ask finance to set the new budget.`,
         'FORBIDDEN',
         403,
-      );
+      ), { reason: 'budget_finance_only', params: { project: name } });
     }
 
     if (!('status' in input) || input.status === previous.status) return;
     if (input.status === 'approved' || input.status === 'rejected') {
-      throw refuse(
+      throw Object.assign(refuse(
         'A project is approved or rejected by its approver, from their Inbox. Set In Approval to send it for approval.',
         'FORBIDDEN',
         403,
-      );
+      ), { reason: 'decided_by_approver' });
     }
     if (input.status === 'in_approval') {
       const value = 'approved_budget' in input ? input.approved_budget : previous.approved_budget;
       const budget = typeof value === 'number' ? value : Number(value ?? 0);
       if (!Number.isFinite(budget) || budget <= 0) {
-        throw refuse(
+        throw Object.assign(refuse(
           'Set the Approved Budget before sending the project for approval: the approval is of that figure.',
           'VALIDATION_FAILED',
           400,
-        );
+        ), { reason: 'budget_required' });
       }
     }
   },

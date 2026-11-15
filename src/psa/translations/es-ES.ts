@@ -8,6 +8,79 @@ import type { TranslationData } from '@objectstack/spec/system';
  * package's pack: `./index.ts`.
  */
 export const esES: TranslationData = {
+  hooks: {
+    timesheet_stamps: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: 'Esta hoja de horas no se puede cambiar ahora en este proyecto.',
+          reasons: {
+            project_locked: { message: '{{project}} está bloqueado para horas y gastos, así que esta hoja de horas no se puede enviar. Guárdela como borrador o pida al jefe de proyecto que desmarque Bloquear horas y gastos en el proyecto.' },
+            closed_takes_no_new: { message: '{{project}} está cerrado, así que no admite hojas de horas nuevas. Registre las horas en un proyecto abierto.' },
+            cancelled_takes_no_new: { message: '{{project}} está cancelado, así que no admite hojas de horas nuevas. Registre las horas en un proyecto abierto.' },
+            closed_no_submit: { message: '{{project}} está cerrado, así que esta hoja de horas no se puede enviar. Guárdela como borrador o muévala a un proyecto abierto.' },
+            cancelled_no_submit: { message: '{{project}} está cancelado, así que esta hoja de horas no se puede enviar. Guárdela como borrador o muévala a un proyecto abierto.' },
+          },
+        },
+        FORBIDDEN: { message: 'Una hoja de horas la aprueba o rechaza su aprobador, desde su bandeja de entrada, una vez enviada.' },
+        DUPLICATE_VALUE: {
+          message: 'Ya hay una hoja de horas para este proyecto y periodo. Añada las horas a esa.',
+          reasons: {
+            named: { message: 'Ya hay una hoja de horas para este proyecto y periodo: {{timesheet}}. Añada las horas a esa.' },
+          },
+        },
+      },
+    },
+    expense_approver: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: 'Este gasto no se puede cambiar ahora en este proyecto.',
+          reasons: {
+            project_locked: { message: '{{project}} está bloqueado para horas y gastos, así que este gasto no se puede enviar. Guárdelo como borrador o pida al jefe de proyecto que desmarque Bloquear horas y gastos en el proyecto.' },
+            closed_takes_no_new: { message: '{{project}} está cerrado, así que no admite gastos nuevos. Registre el gasto en un proyecto abierto.' },
+            cancelled_takes_no_new: { message: '{{project}} está cancelado, así que no admite gastos nuevos. Registre el gasto en un proyecto abierto.' },
+            closed_no_submit: { message: '{{project}} está cerrado, así que este gasto no se puede enviar. Guárdelo como borrador o muévalo a un proyecto abierto.' },
+            cancelled_no_submit: { message: '{{project}} está cancelado, así que este gasto no se puede enviar. Guárdelo como borrador o muévalo a un proyecto abierto.' },
+          },
+        },
+        FORBIDDEN: { message: 'Un gasto lo aprueban o rechazan sus aprobadores, desde su bandeja de entrada, una vez enviado.' },
+      },
+    },
+    project_status_guard: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'Este cambio del proyecto no está permitido.',
+          reasons: {
+            starts_as_draft: { message: 'Un proyecto nuevo empieza como Borrador. Guárdelo y luego ponga En aprobación para enviarlo a aprobar.' },
+            budget_required: { message: 'Indique el Presupuesto aprobado antes de enviar el proyecto a aprobar: lo que se aprueba es esa cifra.' },
+          },
+        },
+        FORBIDDEN: {
+          message: 'No puede hacer este cambio en el proyecto.',
+          reasons: {
+            budget_finance_only: { message: '{{project}} se aprobó con su Presupuesto aprobado, así que ahora solo un Controller financiero puede cambiarlo. Pida a finanzas que fije el nuevo presupuesto.' },
+            decided_by_approver: { message: 'Un proyecto lo aprueba o rechaza su aprobador, desde su bandeja de entrada. Ponga En aprobación para enviarlo a aprobar.' },
+          },
+        },
+      },
+    },
+    project_member_unique: {
+      refusals: {
+        DUPLICATE_VALUE: { message: 'Esta persona ya está asignada a este proyecto. Cambie su fila de asignación existente en lugar de añadir otra.' },
+      },
+    },
+    time_entry_costing: {
+      refusals: {
+        RECORD_LOCKED: { message: 'Esta hoja de horas está enviada, así que sus horas no pueden cambiar. Devuélvala a Borrador para corregirlas.' },
+        VALIDATION_FAILED: { message: 'La fecha {{day}} está fuera del periodo de esta hoja de horas ({{from}} – {{to}}).' },
+        FORBIDDEN: {
+          message: 'Solo pueden registrar horas las personas asignadas al proyecto. Pida a su jefe de proyecto que le añada.',
+          reasons: {
+            named: { message: 'Solo pueden registrar horas las personas asignadas al proyecto "{{project}}". Pida a su jefe de proyecto que le añada.' },
+          },
+        },
+      },
+    },
+  },
   objects: {
     crm_project: {
       label: 'Proyecto',

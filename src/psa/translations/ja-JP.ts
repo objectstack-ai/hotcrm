@@ -8,6 +8,79 @@ import type { TranslationData } from '@objectstack/spec/system';
  * pack: `./index.ts`.
  */
 export const jaJP: TranslationData = {
+  hooks: {
+    timesheet_stamps: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: 'このプロジェクトのタイムシートは、現在この変更ができません。',
+          reasons: {
+            project_locked: { message: '{{project}}は工数と経費がロックされているため、このタイムシートは提出できません。下書きのままにするか、プロジェクトマネージャーにプロジェクトの「工数と経費をロック」を外すよう依頼してください。' },
+            closed_takes_no_new: { message: '{{project}}はクローズ済みのため、新しいタイムシートは受け付けません。工数は進行中のプロジェクトに記録してください。' },
+            cancelled_takes_no_new: { message: '{{project}}はキャンセル済みのため、新しいタイムシートは受け付けません。工数は進行中のプロジェクトに記録してください。' },
+            closed_no_submit: { message: '{{project}}はクローズ済みのため、このタイムシートは提出できません。下書きのままにするか、進行中のプロジェクトに移してください。' },
+            cancelled_no_submit: { message: '{{project}}はキャンセル済みのため、このタイムシートは提出できません。下書きのままにするか、進行中のプロジェクトに移してください。' },
+          },
+        },
+        FORBIDDEN: { message: 'タイムシートは提出後、承認者が受信トレイから承認または却下します。' },
+        DUPLICATE_VALUE: {
+          message: 'このプロジェクトと期間のタイムシートはすでにあります。工数はそちらに追加してください。',
+          reasons: {
+            named: { message: 'このプロジェクトと期間のタイムシートはすでにあります：{{timesheet}}。工数はそちらに追加してください。' },
+          },
+        },
+      },
+    },
+    expense_approver: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: 'このプロジェクトの経費は、現在この変更ができません。',
+          reasons: {
+            project_locked: { message: '{{project}}は工数と経費がロックされているため、この経費は提出できません。下書きのままにするか、プロジェクトマネージャーにプロジェクトの「工数と経費をロック」を外すよう依頼してください。' },
+            closed_takes_no_new: { message: '{{project}}はクローズ済みのため、新しい経費は受け付けません。経費は進行中のプロジェクトに記録してください。' },
+            cancelled_takes_no_new: { message: '{{project}}はキャンセル済みのため、新しい経費は受け付けません。経費は進行中のプロジェクトに記録してください。' },
+            closed_no_submit: { message: '{{project}}はクローズ済みのため、この経費は提出できません。下書きのままにするか、進行中のプロジェクトに移してください。' },
+            cancelled_no_submit: { message: '{{project}}はキャンセル済みのため、この経費は提出できません。下書きのままにするか、進行中のプロジェクトに移してください。' },
+          },
+        },
+        FORBIDDEN: { message: '経費は提出後、承認者が受信トレイから承認または却下します。' },
+      },
+    },
+    project_status_guard: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'このプロジェクトの変更はできません。',
+          reasons: {
+            starts_as_draft: { message: '新しいプロジェクトは下書きから始まります。保存してから、ステータスを「承認中」にして承認に回してください。' },
+            budget_required: { message: '承認に回す前に承認済み予算を入力してください。承認の対象はその金額です。' },
+          },
+        },
+        FORBIDDEN: {
+          message: 'このプロジェクトの変更はできません。',
+          reasons: {
+            budget_finance_only: { message: '{{project}}は承認済み予算で承認されたため、変更できるのは財務コントローラーだけです。新しい予算の設定は財務に依頼してください。' },
+            decided_by_approver: { message: 'プロジェクトは承認者が受信トレイから承認または却下します。ステータスを「承認中」にして承認に回してください。' },
+          },
+        },
+      },
+    },
+    project_member_unique: {
+      refusals: {
+        DUPLICATE_VALUE: { message: 'この人はすでにこのプロジェクトにアサインされています。行を追加せず、既存のアサイン行を変更してください。' },
+      },
+    },
+    time_entry_costing: {
+      refusals: {
+        RECORD_LOCKED: { message: 'このタイムシートは提出済みのため、工数は変更できません。修正するには下書きに戻してください。' },
+        VALIDATION_FAILED: { message: '日付 {{day}} はこのタイムシートの期間（{{from}} – {{to}}）外です。' },
+        FORBIDDEN: {
+          message: '工数を記録できるのは、プロジェクトにアサインされた人だけです。プロジェクトマネージャーに追加を依頼してください。',
+          reasons: {
+            named: { message: '工数を記録できるのは、プロジェクト「{{project}}」にアサインされた人だけです。プロジェクトマネージャーに追加を依頼してください。' },
+          },
+        },
+      },
+    },
+  },
   objects: {
     crm_project: {
       label: 'プロジェクト',

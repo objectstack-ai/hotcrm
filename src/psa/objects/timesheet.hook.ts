@@ -43,6 +43,29 @@ const timesheetStamps: Hook = {
   object: 'crm_timesheet',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
+  refusals: {
+    RECORD_LOCKED: {
+      message: 'This timesheet cannot be changed on this project now.',
+      status: 409,
+      params: ['project'],
+      reasons: {
+        project_locked: { message: '{{project}} is locked for time and expenses, so this timesheet cannot be submitted. Keep it as a draft, or ask the project manager to untick Lock Time and Expenses on the project.' },
+        closed_takes_no_new: { message: '{{project}} is Closed, so it takes no new timesheets. Record the time on an open project.' },
+        cancelled_takes_no_new: { message: '{{project}} is Cancelled, so it takes no new timesheets. Record the time on an open project.' },
+        closed_no_submit: { message: '{{project}} is Closed, so this timesheet cannot be submitted. Keep it as a draft, or move it to an open project.' },
+        cancelled_no_submit: { message: '{{project}} is Cancelled, so this timesheet cannot be submitted. Keep it as a draft, or move it to an open project.' },
+      },
+    },
+    FORBIDDEN: { message: 'A timesheet is approved or rejected by its approver, from their Inbox, once it is submitted.', status: 403 },
+    DUPLICATE_VALUE: {
+      message: 'There is already a timesheet for this project and period. Add the hours to that one.',
+      status: 409,
+      params: ['timesheet'],
+      reasons: {
+        named: { message: 'There is already a timesheet for this project and period: {{timesheet}}. Add the hours to that one.' },
+      },
+    },
+  },
   description: 'Fill the name and the approver, keep one timesheet per person, project and period, leave the decision to the approval, refuse a submission on a locked project, and take no timesheet onto a Closed or Cancelled project.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
@@ -94,21 +117,22 @@ const timesheetStamps: Hook = {
     const over = person && project && typeof project.status === 'string' ? PROJECT_OVER[project.status] : undefined;
     if (over && (ctx.event === 'beforeInsert' || moving || submitting)) {
       const projectName = String(project?.name ?? 'This project');
-      throw refuse(
-        ctx.event === 'beforeInsert' || moving
+      const fresh = ctx.event === 'beforeInsert' || moving;
+      throw Object.assign(refuse(
+        fresh
           ? `${projectName} is ${over}, so it takes no new timesheets. Record the time on an open project.`
           : `${projectName} is ${over}, so this timesheet cannot be submitted. Keep it as a draft, or move it to an open project.`,
         'RECORD_LOCKED',
         409,
-      );
+      ), { reason: fresh ? (project?.status === 'closed' ? 'closed_takes_no_new' : 'cancelled_takes_no_new') : (project?.status === 'closed' ? 'closed_no_submit' : 'cancelled_no_submit'), params: { project: projectName } });
     }
 
     if (submitting && project && project.time_entry_locked === true) {
-      throw refuse(
+      throw Object.assign(refuse(
         `${String(project.name ?? 'This project')} is locked for time and expenses, so this timesheet cannot be submitted. Keep it as a draft, or ask the project manager to untick Lock Time and Expenses on the project.`,
         'RECORD_LOCKED',
         409,
-      );
+      ), { reason: 'project_locked', params: { project: String(project.name ?? '') } });
     }
 
     const name = pick('name');
@@ -145,11 +169,11 @@ const timesheetStamps: Hook = {
       const clash = others.find((t) => t.id !== previous.id);
       if (clash) {
         const clashName = typeof clash.name === 'string' && clash.name !== '' ? `: ${clash.name}` : '';
-        throw refuse(
+        throw Object.assign(refuse(
           `There is already a timesheet for this project and period${clashName}. Add the hours to that one.`,
           'DUPLICATE_VALUE',
           409,
-        );
+        ), clashName ? { reason: 'named', params: { timesheet: String(clash.name) } } : {});
       }
     }
   },
