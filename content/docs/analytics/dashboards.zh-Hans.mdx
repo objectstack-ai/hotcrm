@@ -1,15 +1,15 @@
 ---
 title: 仪表盘
-description: 六个开箱即用的仪表盘——CRM 概览、销售业绩、销售活动、客户服务、高管概览和产品目录。
+description: 七个开箱即用的仪表盘——CRM 概览、销售业绩、销售活动、客户服务、高管概览、产品目录和项目概览。
 ---
 
 # 仪表盘
 
-HotCRM 内置六个仪表盘。每个都为特定角色而构建，回答该角色每天提出的问题。
+HotCRM 内置七个仪表盘。每个都为特定角色而构建，回答该角色每天提出的问题。
 
 本页列出的每一个磁贴，都是应用真正发布的磁贴。这些清单会在 CI 里与仪表盘元数据逐条比对（`test/docs-dashboard-tiles.test.ts`），所以产品中的磁贴一旦被改名、新增或删除，本页就会直接让构建失败，而不是悄悄开始说假话。
 
-## 六个仪表盘
+## 七个仪表盘
 
 | 仪表盘 | 面向 | 回答 |
 | --- | --- | --- |
@@ -19,8 +19,9 @@ HotCRM 内置六个仪表盘。每个都为特定角色而构建，回答该角�
 | 🎧 **Customer Service** | 服务客服、经理 | "我们在工单和 SLA 上表现如何？" |
 | 👔 **Executive Overview** | 高管、财务 | "我们达成目标了吗？" |
 | 📦 **Product Catalog** | 销售代表、定价负责人 | "产品目录按类别都列了些什么？" |
+| 📋 **Projects Overview** | 项目总监、项目管理办公室、财务、项目经理 | "哪些项目在吃掉预算？谁的工时可以计费？" |
 
-六者都遵守 [共享规则](/zh-Hans/docs/administration/sharing-and-security)——你看到的内容取决于你的角色。建立在商机之上的三块——CRM Overview、Sales Performance 与 Executive Overview——对不能读取商机的人不出现在侧边栏里，也按岗位对服务坐席与服务经理不出现。
+七者都遵守 [共享规则](/zh-Hans/docs/administration/sharing-and-security)——你看到的内容取决于你的角色。建立在商机之上的三块——CRM Overview、Sales Performance 与 Executive Overview——对不能读取商机的人不出现在侧边栏里，也按岗位对服务坐席与服务经理不出现。
 
 **隐藏的仪表盘不等于上锁的仪表盘。** Executive Overview 还对持有 `crm_sales_rep`、`crm_service_agent` 或 `crm_service_manager` 岗位的人不出现在侧边栏里，这样他们打开应用时落在为自己日常工作准备的页面上——销售代表落在 **Sales Home**——而不是公司层面的总览。这只是为了聚焦而缩短菜单，不是访问限制：销售代表直接打开这个仪表盘的链接，仍然能看到它。任何仪表盘显示什么，由记录可见性决定，而记录可见性由 [共享规则](/zh-Hans/docs/administration/sharing-and-security#how-the-layers-combine) 设定：每个数字只汇总查看者有权读取的记录，所以销售代表看到的是高管版式下自己那一份数据，看不到任何他自己打不开的交易。
 
@@ -144,11 +145,30 @@ KPI 磁贴只有在声明了对比时，才显示「对比上期」或「对比�
 
 **控件**：没有。产品没有可取窗的成交日期，产品目录又是共享的，负责人筛选只能说明是谁录入了条目。
 
+## 📋 Projects Overview
+
+整个交付项目组合汇总在一页上，位于**项目交付**应用的**项目**分组下。它随项目交付模块一起安装，也随模块一起移除。项目经理统计自己管理的项目；财务、项目总监和项目管理办公室统计全部项目。只作为团队成员被安排在项目上的人看不到项目成本，所以侧边栏里不会出现这个仪表盘。
+
+**磁贴**：
+
+- **Projects Delivering** — 进行中、暂停和已完成的项目，也就是正在花钱的项目。
+- **Approved Budget** — 这些项目的批准预算。
+- **Actual Cost** — 它们已批准的人工和费用。草稿或等待审批的工时单还不算成本。
+- **Budget Used** — 实际成本合计除以批准预算合计，所以大项目的权重比小项目大；不是各项目百分比的平均值。
+- **Budget and Cost by Project** — 逐个项目并列批准预算与实际成本（条形图）。
+- **Projects by Budget Status** — 正常、预警（80% 起）和超支（100% 起）；没有预算的项目不计入（环形图）。
+- **Margin by Project** — 每个项目的计划收入、实际成本、毛利和预算使用率（表格）。
+- **Projects by Status** — 全部项目，从草稿到已关闭；唯一不限于正在花钱的项目的磁贴（环形图）。
+- **Approved Hours by Week** — 已批准工时单上的工时，以及其中可计费的部分，计在每张工时单开始的那一周（折线图）。
+- **Billable Share by Person** — 每人的已批准工时及其中向客户计费的比例；不计费人员安排的工时只计入总数（表格）。
+
+**控件**：无。一个项目要持续好几个月，按日期截取项目会把正在进行的项目排除在它自己的数字之外；工时磁贴改为按周排列。
+
 ## 你可以改什么
 
-- **日期范围** — 六个仪表盘里有四个带选择器，且四个都支持自定义区间。CRM Overview、Sales Performance 和 Executive Overview 基于商机预计成交日期取窗，默认本季度；Customer Service 基于工单创建日期取窗，默认最近 90 天。Sales Activity 和 Product Catalog 没有选择器，原因见上面各自的章节。每一个时间窗都由服务端解析，按 UTC 日历日算："最近 7 天"指的是以今天的 UTC 日期结尾的那七个 UTC 日历日，两端都含。你自己的时钟不参与其中——一位在 UTC+8 的读者在当地时间凌晨 3 点打开仪表盘，看到的窗口是在上一个 UTC 午夜结束的，而不是在他自己的午夜。
+- **日期范围** — 七个仪表盘里有四个带选择器，且四个都支持自定义区间。CRM Overview、Sales Performance 和 Executive Overview 基于商机预计成交日期取窗，默认本季度；Customer Service 基于工单创建日期取窗，默认最近 90 天。Sales Activity、Product Catalog 和 Projects Overview 没有选择器，原因见上面各自的章节。每一个时间窗都由服务端解析，按 UTC 日历日算："最近 7 天"指的是以今天的 UTC 日期结尾的那七个 UTC 日历日，两端都含。你自己的时钟不参与其中——一位在 UTC+8 的读者在当地时间凌晨 3 点打开仪表盘，看到的窗口是在上一个 UTC 午夜结束的，而不是在他自己的午夜。
 - **筛选器** — 每个仪表盘声明自己的一套：Owner 各处都有，另外 Sales Performance 有 Deal Type、Customer Service 有 Priority、Executive Overview 有 Lead Source。
-- **刷新** — Customer Service 每分钟刷新一次，Sales Performance 每三分钟，其余四个每五分钟。
+- **刷新** — Customer Service 每分钟刷新一次，Sales Performance 每三分钟，其余五个每五分钟。
 
 仪表盘的筛选器匹配的是每个部件所绑数据集背后的那个**对象**，而不是该数据集声明的维度，并且它会被 AND 进每个受它约束的部件的查询里。所以 Customer Service 能提供 Agent 筛选器，哪怕 `case_metrics` 没有声明任何负责人维度：`owner_id` 是工单上的字段，筛选器要的就只是这个。但它买到的只有筛选这一件事——部件依然不能按数据集没有声明的字段**分组**，所以 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation) 说"没有任何报表、也没有任何仪表盘部件能按它分组"是对的，它和同一个应用里按 Agent 筛选的服务台仪表盘并不矛盾。反过来同样成立：筛选器若点名了某个部件自己的对象没有的字段，那个部件的查询就会去要一个并不存在的列，所以答不了某个筛选器的部件会按名字显式退出它（`filterBindings`），而不是默默忽略它。
 

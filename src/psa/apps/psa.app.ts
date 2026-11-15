@@ -1,5 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { App } from '@objectstack/spec/ui';
 import { HOTCRM_ICON } from '../../sales/apps/crm.app';
 
@@ -49,6 +50,17 @@ export const PsaApp = App.create({
         { id: 'nav_projects', type: 'object', objectName: 'crm_project', label: 'All Projects', icon: 'briefcase' },
         { id: 'nav_my_projects', type: 'object', objectName: 'crm_project', viewName: 'my_projects', label: 'My Projects', icon: 'user-check' },
         { id: 'nav_project_members', type: 'object', objectName: 'crm_project_member', label: 'Staffing', icon: 'user-plus' },
+        // The module's own dashboard, over its own datasets (phase 1c). Its
+        // money tiles aggregate the cost a team member may not read: the
+        // analytics door refuses that aggregate (403 "not permitted to
+        // aggregate [actual_labor_cost, actual_expense_cost]", measured on
+        // 18.4.0), so the entry is not offered to someone staffed only as a
+        // team member, rather than open on refused tiles. Visibility only;
+        // the field-level grant is what protects the figures.
+        {
+          id: 'nav_projects_overview', type: 'dashboard', dashboardName: 'projects_overview', label: 'Projects Overview', icon: 'chart-bar',
+          visible: P`current_user.can("crm_project", "read") && (!("crm_project_member" in current_user.positions) || "crm_project_manager" in current_user.positions || "crm_project_director" in current_user.positions || "crm_pmo" in current_user.positions || "crm_finance_controller" in current_user.positions)`,
+        },
       ],
     },
     {
@@ -87,6 +99,17 @@ export const PsaApp = App.create({
       // My Tasks is contributed by the app package and lands after the Inbox.
       children: [
         { id: 'nav_approval_requests', type: 'component', componentRef: 'approvals:inbox', label: 'Inbox', icon: 'inbox', requiresObject: 'sys_approval_request' },
+      ],
+    },
+
+    {
+      id: 'group_help',
+      type: 'group',
+      label: 'Help',
+      icon: 'circle-help',
+      expanded: false,
+      children: [
+        { id: 'nav_help_psa', type: 'doc', book: 'crm_psa_manual', label: 'Project Delivery Manual', icon: 'briefcase' },
       ],
     },
   ],

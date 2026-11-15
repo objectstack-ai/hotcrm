@@ -15,11 +15,11 @@ HotCRM 分析将你的 CRM 活动转化为**决策**。三个层次协同工作�
 
 | 层次 | 作用 |
 | --- | --- |
-| [**仪表盘**](/zh-Hans/docs/analytics/dashboards) | **六个**开箱即用的仪表盘 —— CRM Overview、Sales Performance、Sales Activity、Customer Service、Executive Overview、Product Catalog |
+| [**仪表盘**](/zh-Hans/docs/analytics/dashboards) | **七个**开箱即用的仪表盘 —— CRM Overview、Sales Performance、Sales Activity、Customer Service、Executive Overview、Product Catalog、Projects Overview |
 | [**报表**](/zh-Hans/docs/analytics/reports) | **十份**标准报表 —— 交易 4 份、工单 3 份，线索、客户、流失各 1 份 |
-| [**多维数据集**](/zh-Hans/docs/analytics/cubes) | `src/sales/datasets/`、`src/service/datasets/` 和 `src/revenue/datasets/` 下的**九个** dataset，也就是上面两层按名字绑定的那一层 |
+| [**多维数据集**](/zh-Hans/docs/analytics/cubes) | `src/sales/datasets/`、`src/service/datasets/`、`src/revenue/datasets/` 和 `src/psa/datasets/` 下的**十一个** dataset，也就是上面两层按名字绑定的那一层 |
 
-上表有两个数字过去写的是别的样子，去找东西之前值得先知道。**这里没有合同报表** —— 也建不出来：这些 dataset 只读九个对象，`crm_contract` 不在其中，所以分析里没有任何东西能对合同做计数、求和或分组。另外，**没有任何 cube 叫这四个名字** —— *Sales*、*Pipeline*、*Service*、*Marketing* 在应用里零命中。前三个由哪些 dataset 回答、第四个为什么连数据源都没有，见 [多维数据集](/zh-Hans/docs/analytics/cubes)。
+上表有两个数字过去写的是别的样子，去找东西之前值得先知道。**这里没有合同报表** —— 也建不出来：这些 dataset 只读十一个对象，`crm_contract` 不在其中，所以分析里没有任何东西能对合同做计数、求和或分组。另外，**没有任何 cube 叫这四个名字** —— *Sales*、*Pipeline*、*Service*、*Marketing* 在应用里零命中。前三个由哪些 dataset 回答、第四个为什么连数据源都没有，见 [多维数据集](/zh-Hans/docs/analytics/cubes)。
 
 ## 开箱即用的能力
 
@@ -64,6 +64,6 @@ HotCRM 分析将你的 CRM 活动转化为**决策**。三个层次协同工作�
 
 ## 从这里开始
 
-- [仪表盘](/zh-Hans/docs/analytics/dashboards) —— 六个内置仪表盘。
+- [仪表盘](/zh-Hans/docs/analytics/dashboards) —— 七个内置仪表盘。
 - [报表](/zh-Hans/docs/analytics/reports) —— 十份标准报表。
-- [多维数据集](/zh-Hans/docs/analytics/cubes) —— 底下的九个 dataset，这一层能回答什么、又到哪里为止。
+- [多维数据集](/zh-Hans/docs/analytics/cubes) —— 底下的十一个 dataset，这一层能回答什么、又到哪里为止。

@@ -14,7 +14,7 @@ import stack from './helpers/composed-stack';
  * the new location, so for the whole 16.x line every date axis grouped by the
  * raw timestamp — one column per distinct value.
  *
- * That migration is FINISHED. All six entries in `INTENDED_BUCKET` below are
+ * That migration is FINISHED. Every entry in `INTENDED_BUCKET` below is
  * declared on their dataset dimensions under `src/datasets/`, and this guard
  * runs its 17+ face asserting exactly that. Nothing here waits on the platform.
  *
@@ -87,6 +87,14 @@ const INTENDED_BUCKET: Record<string, Granularity> = {
   // objectstack#3912 and objectstack#3777 are both released as of 17.0.0 GA
   // (see the Activity dashboard's header note, which now says the same).
   'event_metrics.start_datetime': 'week',
+  // #2316 phase 1c, Project Delivery. Projects by the month they are planned
+  // to start, and approved hours by the week (or month) their timesheet
+  // starts: the Projects Overview carries no date range, because windowing a
+  // project by one date cuts a running project out of its own figures, so the
+  // bucket on the axis is the only time cut.
+  'project_financials.planned_start': 'month',
+  'time_utilization.period_week': 'week',
+  'time_utilization.period_month': 'month',
 };
 
 /** Matrix report → the bucket its date axis must carry on @objectstack 17+. */

@@ -17,11 +17,11 @@ A **cube** is a pre-modeled, multi-dimensional dataset: a set of named **measure
 
 ## Where the semantic layer lives
 
-The three dataset barrels — `src/sales/datasets/index.ts`, `src/service/datasets/index.ts` and `src/revenue/datasets/index.ts` — **are** the semantic layer, and together they are the one place that describes itself completely: every dataset declares its own dimensions and measures, with the labels a report or a tile selects them by, right there in source.
+The four dataset barrels — `src/sales/datasets/index.ts`, `src/service/datasets/index.ts`, `src/revenue/datasets/index.ts` and `src/psa/datasets/index.ts` — **are** the semantic layer, and together they are the one place that describes itself completely: every dataset declares its own dimensions and measures, with the labels a report or a tile selects them by, right there in source.
 
 **This page does not reproduce that list, on purpose.** A roster copied into prose has no producer. It is right on the day it is written and quietly wrong on the day someone adds a measure — a bill this neighbourhood has already paid four times. So when you need the exact name to put in a report or a tile, read `src/*/datasets/`; that is the source of truth, and nothing here can be fresher than it. What this page is for is the layer's *meaning*: what it is, which business questions it answers today, and where it stops.
 
-Reach is the fact worth carrying away. The semantic layer covers the records the CRM runs on — customers and the people at them, leads, deals and forecasts, support cases, activities and tasks, and the product catalogue. What it does **not** reach matters more, because most of the limits below come straight from it: **no dataset reads campaigns, contracts, quotes, or the line items under a deal.**
+Reach is the fact worth carrying away. The semantic layer covers the records the CRM runs on — customers and the people at them, leads, deals and forecasts, support cases, activities and tasks, the product catalogue, and project delivery's projects and timesheets. What it does **not** reach matters more, because most of the limits below come straight from it: **no dataset reads campaigns, contracts, quotes, or the line items under a deal.**
 
 This page used to describe four cubes — *Sales*, *Pipeline*, *Service* and *Marketing*. None of those four names exists in the app. Three of them map onto datasets that do exist, under different names and with different contents; the fourth has no data source at all. Each section below says which.
 
@@ -64,6 +64,17 @@ One dataset stands behind every case-related dashboard tile and all three case r
 - *"SLA violation rate by priority."*
 - *"Case volume by origin — where is the load coming in?"*
 - *"Average resolution time by type."*
+
+## 📋 Project delivery — projects and approved hours
+
+Project Delivery brings two datasets of its own, and the **Projects Overview** dashboard reads them. **Project Financials** (`project_financials`) is one row per project: approved budget, planned revenue, labor and expense cost, actual cost, gross margin and budget used, split by status, kind, billing type, budget status or project manager. **Time Utilization** (`time_utilization`) is one row per timesheet: total and billable hours, and the billable share, by person, project, status, and the week or month the timesheet starts.
+
+The cost figures are approved cost only, the same roll-ups the project record shows, and a team member is refused them: the analytics service enforces the same field-level security as the record, so a member cannot add up what they cannot read. Hours are counted per timesheet, not per entry: the approval lives on the sheet, and the in-process aggregate this version uses for every query with a date bucket, and on drivers without SQL, groups by a field of a related object but cannot filter on one.
+
+**Sample questions these datasets answer**:
+- *"Which delivering projects have spent more than 80 % of their budget?"*
+- *"What is the margin on fixed-fee projects against time-and-materials ones?"*
+- *"Whose approved hours this month were mostly non-billable?"*
 
 ## 📣 Marketing — no dataset, no cube
 

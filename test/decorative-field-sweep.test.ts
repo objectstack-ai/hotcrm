@@ -22,6 +22,7 @@ import { products } from '../src/revenue/data/catalog.seed';
 import { ContactImportMapping } from '../src/sales/mappings/contact_import.mapping';
 import { AccountImportMapping } from '../src/sales/mappings/account_import.mapping';
 import { localePacks, type AnyRec } from './helpers/composed-stack';
+import { CrmDatasets } from './helpers/src-roster';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
@@ -94,11 +95,18 @@ describe('every reader of a removed field went with it (#1182)', () => {
   // (and the account, whose views carried some): another object's own field
   // that happens to share a removed name — Project Delivery's
   // `crm_project.billing_type` (#2316) — is not a stale reader of
-  // `crm_product.billing_type`.
+  // `crm_product.billing_type`. The same goes for a dataset's rows: the
+  // `project_financials` dataset (#2316 phase 1c) reads `crm_project`, so its
+  // `billing_type` dimension is the project's.
   const SWEPT = new Set([...REMOVED.map(([object]) => object), 'crm_account']);
+  const datasetObject = new Map(Object.values(CrmDatasets as Record<string, AnyRec>).map((d) => [d.name, d.object]));
   const sweptPacks = localePacks.map(([locale, pack]) => [
     locale,
-    { ...pack, objects: Object.fromEntries(Object.entries((pack.objects ?? {}) as AnyRec).filter(([name]) => SWEPT.has(name))) },
+    {
+      ...pack,
+      objects: Object.fromEntries(Object.entries((pack.objects ?? {}) as AnyRec).filter(([name]) => SWEPT.has(name))),
+      datasets: Object.fromEntries(Object.entries((pack.datasets ?? {}) as AnyRec).filter(([name]) => SWEPT.has(datasetObject.get(name)))),
+    },
   ]);
   const SURFACES: Array<[string, unknown]> = [
     ['product object', Product], ['product views', ProductViews],

@@ -15,11 +15,11 @@ HotCRM Analytics turns your CRM activity into **decisions**. Three layers work t
 
 | Layer | What it does |
 | --- | --- |
-| [**Dashboards**](/docs/analytics/dashboards) | **Six** ready-made dashboards — CRM Overview, Sales Performance, Sales Activity, Customer Service, Executive Overview, Product Catalog |
+| [**Dashboards**](/docs/analytics/dashboards) | **Seven** ready-made dashboards — CRM Overview, Sales Performance, Sales Activity, Customer Service, Executive Overview, Product Catalog, Projects Overview |
 | [**Reports**](/docs/analytics/reports) | **Ten** standard reports — four on deals, three on cases, one each on leads, accounts and churn |
-| [**Cubes**](/docs/analytics/cubes) | **Nine** datasets in `src/sales/datasets/`, `src/service/datasets/` and `src/revenue/datasets/` — the layer both of the above bind by name |
+| [**Cubes**](/docs/analytics/cubes) | **Eleven** datasets in `src/sales/datasets/`, `src/service/datasets/`, `src/revenue/datasets/` and `src/psa/datasets/` — the layer both of the above bind by name |
 
-Two counts on that table used to read differently, and the difference is worth knowing before you go looking. **There is no contract report** — and none can be built, because those datasets read nine objects and `crm_contract` is not one of them, so nothing in analytics counts, sums or groups a contract. And **no cube is named** *Sales*, *Pipeline*, *Service* or *Marketing* — those four names exist nowhere in the app. [Cubes](/docs/analytics/cubes) says which datasets answer the first three and why the fourth has no data source at all.
+Two counts on that table used to read differently, and the difference is worth knowing before you go looking. **There is no contract report** — and none can be built, because those datasets read eleven objects and `crm_contract` is not one of them, so nothing in analytics counts, sums or groups a contract. And **no cube is named** *Sales*, *Pipeline*, *Service* or *Marketing* — those four names exist nowhere in the app. [Cubes](/docs/analytics/cubes) says which datasets answer the first three and why the fourth has no data source at all.
 
 ## What you get out of the box
 
@@ -64,6 +64,6 @@ Whether the platform's own agent additionally reads the compiled cubes is a ques
 
 ## Start here
 
-- [Dashboards](/docs/analytics/dashboards) — the six built-in dashboards.
+- [Dashboards](/docs/analytics/dashboards) — the seven built-in dashboards.
 - [Reports](/docs/analytics/reports) — the ten standard reports.
-- [Cubes](/docs/analytics/cubes) — the nine datasets underneath, what that layer answers and where it stops.
+- [Cubes](/docs/analytics/cubes) — the eleven datasets underneath, what that layer answers and where it stops.
