@@ -109,7 +109,7 @@ Two record-level rules sit on top of the object grants:
 
 - `crm_opportunity.is_private` — a deal flagged Private is visible only to its
   owner, including to the sets that hold org-wide opportunity read (Sales
-  Manager, Marketing User, Finance Controller, Project Manager).
+  Manager, Sales Leadership, Marketing User, Finance Controller, Project Manager).
 - Field-level security masks `crm_account.health_score` (read-only below Sales
   Manager), `crm_case.internal_notes` (service-only; hidden from Sales Rep),
   `crm_account.annual_revenue` and the computed case SLA fields.

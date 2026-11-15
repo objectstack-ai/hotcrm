@@ -141,7 +141,7 @@ crm_na_sales_team       crm_eu_sales_team       （區域分組）
 | 已共用客戶上的相關清單 | 接收者實際看到的 |
 | --- | --- |
 | 聯絡人 | 這個客戶的聯絡人 —— Contact 是「由父層控制」，而共用過來的客戶就算作他們能看到的父記錄 |
-| 商機 | 只有自己的交易；若持有 `crm_sales_director` 或 `crm_executive`，另加金額 ≥ $100,000 的未結交易 |
+| 商機 | 只有自己的交易；若持有 `crm_sales_director` 或 `crm_executive`，另加金額 ≥ $100,000 的未結交易，這兩個職位的 Sales Leadership 權限設定檔還能讀取每一筆未標記為 Private 的交易 |
 | 報價 | 這個客戶的報價 —— Quote 跟隨客戶，報價的明細也隨之而來 |
 | 合約 | 這個客戶的合約 —— Contract 跟隨客戶；能不能*編輯*某一份，由 profile 上的物件級權限決定（Sales Rep 不能） |
 | 回款節點 | 這個客戶的回款節點 —— Billing Milestone 跟隨合約，合約跟隨客戶 |
@@ -203,7 +203,7 @@ HotCRM **不提供客戶團隊物件** —— 客戶上沒有團隊名單，也�
 
 ### 私有商機
 
-商機上的 `Private` 在上述一切之上生效：使用者標記為 **Private** 的交易只對其所有人（以及管理員）可見，即使是像 Sales Manager、Marketing User、Finance Controller 和 Project Manager 這類本來持有組織範圍商機讀取權限的權限設定檔也看不到。用於董事會層級或涉併購敏感的交易。
+商機上的 `Private` 在上述一切之上生效：使用者標記為 **Private** 的交易只對其所有人（以及管理員）可見，即使是像 Sales Manager、Sales Leadership、Marketing User、Finance Controller 和 Project Manager 這類本來持有組織範圍商機讀取權限的權限設定檔也看不到。用於董事會層級或涉併購敏感的交易。
 
 ## 欄位層級安全 (FLS)
 

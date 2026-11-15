@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_FIGURE_FIELDS } from './_o2c-figures';
+import { privateOpportunityPolicy } from './_private-opportunity';
 import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
 import { SalesManagerProfile } from './sales-manager.profile';
 
@@ -19,7 +20,8 @@ import { SalesManagerProfile } from './sales-manager.profile';
  *     reads children), written out below rather than derived so a read the
  *     manager gains later is a decision here too.
  *   - `crm_opportunity` View All carries the private-deal row filter
- *     (ADR-0058): a deal flagged Private stays its owner's.
+ *     (ADR-0058, the shared `privateOpportunityPolicy`): a deal flagged
+ *     Private stays its owner's.
  *   - ⛔ No create, edit, delete, transfer or export anywhere. The large-deal
  *     shares stay as they are; the `crm_user` floor every member holds is
  *     unchanged (#2231: a member may still create and edit their OWN leads,
@@ -76,6 +78,7 @@ export const SalesLeadershipProfile = {
     'crm_case.internal_notes':  { readable: true, editable: false },
   },
   // ADR-0058: org-wide opportunity readers are exactly who the Private flag
-  // has to hold back. The same policy `sales_manager` carries.
-  rowLevelSecurity: SalesManagerProfile.rowLevelSecurity,
+  // has to hold back, so this set carries the shared private-deal row filter
+  // (`_private-opportunity.ts`, hotcrm#2489) under a policy name of its own.
+  rowLevelSecurity: [privateOpportunityPolicy('opportunity_private_owner_only_leadership')],
 };
