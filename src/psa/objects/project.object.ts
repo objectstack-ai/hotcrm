@@ -165,8 +165,13 @@ export const Project = ObjectSchema.create({
       label: 'Approved Budget',
       group: 'financials',
       min: 0,
-      readonlyWhen: P`has(record.status) && record.status in ["in_approval", "approved", "active", "on_hold", "completed", "closed"]`,
-      description: 'The cost this project may spend. Set before the project goes for approval.',
+      // Locked from In Approval on by `project_status_guard`, which lets a
+      // Finance Controller re-baseline it. Not a `readonlyWhen`: that strip
+      // drops every writer's value on a TRUE predicate (system writes
+      // included) and its scope binds no `current_user`, so finance could not
+      // change it either, and the hooks would see a value that is then
+      // dropped (measured on 18.4.0, phase 1b review).
+      description: 'The cost this project may spend. Set before the project goes for approval; after that, only a Finance Controller changes it.',
     }),
 
     actual_labor_cost: Field.summary({

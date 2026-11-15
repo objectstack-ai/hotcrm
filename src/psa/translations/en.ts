@@ -68,7 +68,7 @@ export const en: TranslationData = {
         },
         approved_budget: {
           label: 'Approved Budget',
-          help: 'The cost this project may spend. Set before the project goes for approval.',
+          help: 'The cost this project may spend. Set before the project goes for approval; after that, only a Finance Controller changes it.',
         },
         actual_labor_cost: { label: 'Labor Cost' },
         actual_expense_cost: { label: 'Expense Cost' },

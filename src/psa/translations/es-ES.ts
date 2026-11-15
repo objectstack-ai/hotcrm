@@ -68,7 +68,7 @@ export const esES: TranslationData = {
         },
         approved_budget: {
           label: 'Presupuesto aprobado',
-          help: 'El coste que puede gastar este proyecto. Se fija antes de enviarlo a aprobación.',
+          help: 'El coste que puede gastar este proyecto. Se fija antes de enviarlo a aprobación; después, solo un Controller financiero lo cambia.',
         },
         actual_labor_cost: { label: 'Coste de mano de obra' },
         actual_expense_cost: { label: 'Coste de gastos' },

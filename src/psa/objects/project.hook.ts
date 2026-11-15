@@ -60,6 +60,11 @@ const projectBudgetStatus: Hook = {
  *     Approved Budget: the approval is of that figure.
  *   - Approved and Rejected are written by the approval when the approver
  *     decides. A person who sets either is refused, pointing to the Inbox.
+ *   - From In Approval on, the Approved Budget is the figure the project was
+ *     approved on, and Budget Status is measured against it. Only a Finance
+ *     Controller (`crm_finance_controller`) changes it then, so a project at
+ *     90 % is not put back On Track by its own manager without finance
+ *     hearing. Draft and Rejected stay editable.
  *
  * Judged only on a person's write (`ctx.user` present, not a system write):
  * the approval writes the decision as the platform, a seed or an import loads
@@ -73,7 +78,7 @@ const projectStatusGuard: Hook = {
   object: 'crm_project',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 90,
-  description: 'Start a person\'s project as Draft, send it for approval only with a budget, and leave Approved and Rejected to the approval.',
+  description: 'Start a person\'s project as Draft, send it for approval only with a budget, leave Approved and Rejected to the approval, and leave an approved budget to finance.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -110,6 +115,19 @@ const projectStatusGuard: Hook = {
         );
       }
       return;
+    }
+
+    const BUDGET_LOCKED_STATUSES = ['in_approval', 'approved', 'active', 'on_hold', 'completed', 'closed', 'cancelled'];
+    if ('approved_budget' in input
+      && Number(input.approved_budget ?? 0) !== Number(previous.approved_budget ?? 0)
+      && BUDGET_LOCKED_STATUSES.includes(String(previous.status ?? ''))
+      && !positions.includes('crm_finance_controller')) {
+      const name = typeof previous.name === 'string' && previous.name ? previous.name : 'This project';
+      throw refuse(
+        `${name} was approved on its Approved Budget, so only a Finance Controller can change it now. Ask finance to set the new budget.`,
+        'FORBIDDEN',
+        403,
+      );
     }
 
     if (!('status' in input) || input.status === previous.status) return;

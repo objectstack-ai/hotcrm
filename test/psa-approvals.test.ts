@@ -265,11 +265,17 @@ describe('cost control (project_budget_status, project_budget_alert, time_entry_
     }, { timeout: 15_000, interval: 100 });
   });
 
-  it('moves Budget Status when finance raises the budget', async () => {
-    // Approved Budget is read-only from In Approval on to people (`readonlyWhen`),
-    // so the raise is the system's write here, as an approved budget change will be.
-    await verify.hooks.run('crm_project', 'update', { id: project.id, approved_budget: 4000 }, { as: admin });
-    expect((await row('crm_project', project.id)).budget_status).toBe('on_track');
+  it('leaves an approved budget to finance: the PM is refused, a Finance Controller raises it and Budget Status moves', async () => {
+    await expect(update('crm_project', { id: project.id, approved_budget: 4000 }, pm.token), 'the PM cannot re-baseline')
+      .rejects.toThrow(/only a Finance Controller can change it/);
+    const held = await row('crm_project', project.id);
+    expect(held.approved_budget).toBe(1000);
+    expect(held.budget_status).toBe('exceeded');
+
+    await update('crm_project', { id: project.id, approved_budget: 4000 }, finance.token);
+    const raised = await row('crm_project', project.id);
+    expect(raised.approved_budget, 'the raise is stored, not dropped').toBe(4000);
+    expect(raised.budget_status).toBe('on_track');
   });
 
   it('refuses a submission on a locked project, never a draft, and takes it again once unlocked', async () => {

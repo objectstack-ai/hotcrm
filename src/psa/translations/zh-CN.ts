@@ -68,7 +68,7 @@ export const zhCN: TranslationData = {
         },
         approved_budget: {
           label: '批准预算',
-          help: '这个项目可以花费的成本。在项目提交审批前填写。',
+          help: '这个项目可以花费的成本。在项目提交审批前填写；之后只有财务控制可以修改。',
         },
         actual_labor_cost: { label: '人工成本' },
         actual_expense_cost: { label: '费用成本' },

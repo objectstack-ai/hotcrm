@@ -68,7 +68,7 @@ export const jaJP: TranslationData = {
         },
         approved_budget: {
           label: '承認済み予算',
-          help: 'このプロジェクトで使えるコストです。承認に回す前に設定します。',
+          help: 'このプロジェクトで使えるコストです。承認に回す前に設定します。その後は財務コントローラーだけが変更できます。',
         },
         actual_labor_cost: { label: '人件費' },
         actual_expense_cost: { label: '経費' },
