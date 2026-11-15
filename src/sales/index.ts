@@ -1,8 +1,20 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
+import { defineStack, P, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 import { PrintServicePlugin } from '@objectstack/service-print';
 import { READS_ACCOUNTS, READS_LEADS } from './apps/crm.app.js';
+
+/**
+ * The Opportunities entry in the Project Delivery app, held back from someone
+ * staffed only as a project team member (hotcrm#2316 ruling D: a member sees
+ * the customer, not the deal). Every member reads their OWN opportunities
+ * through `crm_user`, so object read alone keeps the entry, and a consultant
+ * met it as an empty list. Visibility only: what a member may read is still
+ * the permission sets'. A member who also holds a position that works with
+ * deals (delivery management, finance, sales, marketing) keeps it. The Sales
+ * app's own entries are untouched: there it is every member's own book.
+ */
+const NOT_PLAIN_PROJECT_MEMBER_DEALS = P`current_user.can("crm_opportunity", "read") && (!("crm_project_member" in current_user.positions) || "crm_project_manager" in current_user.positions || "crm_project_director" in current_user.positions || "crm_pmo" in current_user.positions || "crm_finance_controller" in current_user.positions || "crm_executive" in current_user.positions || "crm_sales_director" in current_user.positions || "crm_sales_manager" in current_user.positions || "crm_sales_rep" in current_user.positions || "crm_marketing_director" in current_user.positions || "crm_marketing_manager" in current_user.positions || "crm_marketing_user" in current_user.positions)`;
 
 /**
  * Everything the app package REGISTERS, as opposed to what it IS.
@@ -207,7 +219,7 @@ export const createHotCrmAppStack = (
           priority: 10,
           items: [
             { id: 'nav_account', type: 'object', objectName: 'crm_account', label: 'Accounts', icon: 'building' },
-            { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target' },
+            { id: 'nav_opportunity', type: 'object', objectName: 'crm_opportunity', label: 'Opportunities', icon: 'target', visible: NOT_PLAIN_PROJECT_MEMBER_DEALS },
             { id: 'nav_contract', type: 'object', objectName: 'crm_contract', label: 'Contracts', icon: 'file-signature' },
           ],
         },
