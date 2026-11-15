@@ -149,7 +149,7 @@ export const jaJP: TranslationData = {
         // The countersigned copy (#2317).
         signed_copy: {
           label: '署名済みコピー',
-          help: 'お客様が署名した見積書。',
+          help: 'お客様が署名した見積書。見積を承認するには必須です。',
         },
         quote_date: { label: '見積日' },
         expiration_date: { label: '有効期限' },

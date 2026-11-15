@@ -120,18 +120,14 @@ describe('the capability gate refuses a NEW link (REQ-0003 acceptance 2, first h
    */
   it('names no account — "this account", never its number, name or id (#2014)', async () => {
     const refusal = await insertRefusal(RESTRICTED.id);
-    // The sentence the caller reads is the hook's declared one (#2496), and the
-    // developer log keeps the thrown sentence; neither may echo the account.
-    const message = String(refusal?.userMessage);
+    const message = String(refusal?.message);
     expect(message).toContain('this account');
-    for (const said of [message, String(refusal?.message)]) {
-      for (const read of ['ACC-000042', 'Tender Agency Ltd', String(RESTRICTED.display_title), RESTRICTED.id]) {
-        expect(said, `the refusal echoes "${read}"`).not.toContain(read);
-      }
+    for (const read of ['ACC-000042', 'Tender Agency Ltd', String(RESTRICTED.display_title), RESTRICTED.id]) {
+      expect(message, `the refusal echoes "${read}"`).not.toContain(read);
     }
     // The rule's own message, carrying the remedy — not a bare "invalid".
     expect(message).toContain('Settlement Only');
-    expect(String(refusal?.message)).toContain(message);
+    expect(refusal!.userMessage).toBe(refusal?.message);
   });
 });
 

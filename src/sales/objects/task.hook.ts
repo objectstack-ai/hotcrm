@@ -20,13 +20,6 @@ const taskValidation: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 200,
   description: 'Stamp completed/overdue flags + dates on completion and validate reminder timing.',
-  refusals: {
-    VALIDATION_FAILED: {
-      message: 'Reminder ({{reminder}}) is after the due date ({{due}}); reminders should fire before the deadline.',
-      status: 400,
-      params: ['reminder', 'due'],
-    },
-  },
   handler: async (ctx: HookContext) => {
     // D3 stand-down: a predicate update has ONE payload for every matched row,
     // so the `ctx.previous`-conditioned writes below would land on rows that
@@ -145,11 +138,11 @@ const taskValidation: Hook = {
       (typeof previous?.due_date === 'string' && (previous.due_date as string)) ||
       undefined;
     if (reminder && due && reminder.slice(0, 10) > due.slice(0, 10)) {
-      throw Object.assign(refuse(
+      throw refuse(
         `Reminder (${reminder}) is after the due date (${due}); reminders should fire before the deadline.`,
         'VALIDATION_FAILED',
         400,
-      ), { params: { reminder, due } });
+      );
     }
   },
 };
@@ -464,15 +457,6 @@ const taskDoNotCallGuard: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 150,
   description: 'Refuse to schedule an open Call task against a lead/contact flagged Do Not Call.',
-  refusals: {
-    FORBIDDEN: {
-      message: 'This lead is flagged Do Not Call, so a Call task cannot be scheduled against them. Log a completed call if one already happened, choose a non-phone activity type, or clear Do Not Call on the record first.',
-      status: 403,
-      reasons: {
-        contact: { message: 'This contact is flagged Do Not Call, so a Call task cannot be scheduled against them. Log a completed call if one already happened, choose a non-phone activity type, or clear Do Not Call on the record first.' },
-      },
-    },
-  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -540,13 +524,13 @@ const taskDoNotCallGuard: Hook = {
       // ABSENT (see AGENTS.md on predicate totality), and treating that as
       // truthy would block every ordinary call task in the app.
       if (person?.do_not_call === true) {
-        throw Object.assign(refuse(
+        throw refuse(
           `This ${t.label} is flagged Do Not Call, so a Call task cannot be scheduled against them. ` +
             'Log a completed call if one already happened, choose a non-phone activity type, ' +
             'or clear Do Not Call on the record first.',
           'FORBIDDEN',
           403,
-        ), t.label === 'contact' ? { reason: 'contact' } : {});
+        );
       }
     }
   },

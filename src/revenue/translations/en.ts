@@ -114,7 +114,7 @@ export const en: TranslationData = {
         // The countersigned copy (#2317).
         signed_copy: {
           label: 'Signed Copy',
-          help: 'The quote as the customer signed it.',
+          help: 'The quote as the customer signed it. Required to accept the quote.',
         },
         quote_date: { label: 'Quote Date' },
         expiration_date: { label: 'Expiration Date' },

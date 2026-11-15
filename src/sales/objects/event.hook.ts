@@ -291,15 +291,6 @@ const eventDoNotCallGuard: Hook = {
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 150,
   description: 'Refuse to book a planned Call event against a lead/contact flagged Do Not Call.',
-  refusals: {
-    FORBIDDEN: {
-      message: 'This lead is flagged Do Not Call, so a call cannot be scheduled against them. Log the call as held if it already happened, book a meeting instead, or clear Do Not Call on the record first.',
-      status: 403,
-      reasons: {
-        contact: { message: 'This contact is flagged Do Not Call, so a call cannot be scheduled against them. Log the call as held if it already happened, book a meeting instead, or clear Do Not Call on the record first.' },
-      },
-    },
-  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -356,13 +347,13 @@ const eventDoNotCallGuard: Hook = {
       const person = rows[0];
       // `=== true`: absent / null / false are all "not flagged".
       if (person?.do_not_call === true) {
-        throw Object.assign(refuse(
+        throw refuse(
           `This ${t.label} is flagged Do Not Call, so a call cannot be scheduled against them. ` +
             'Log the call as held if it already happened, book a meeting instead, ' +
             'or clear Do Not Call on the record first.',
           'FORBIDDEN',
           403,
-        ), t.label === 'contact' ? { reason: 'contact' } : {});
+        );
       }
     }
   },

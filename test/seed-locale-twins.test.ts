@@ -70,6 +70,14 @@ describe('every zh-CN twin is its English dataset in other words', () => {
             expect(twin[key], `${where}.${key}`).toBe('zh_cn');
             continue;
           }
+          if (key === 'signed_copy') {
+            // A signed-copy sample (#2317): the same file, its name said in Chinese.
+            const { name: _n, ...kept } = value as Rec;
+            const { name: zhName, ...zhKept } = twin[key] as Rec;
+            expect(zhKept, `${where}.${key}`).toEqual(kept);
+            expect(String(zhName), `${where}.${key}.name`).toMatch(/[\u4e00-\u9fff]/);
+            continue;
+          }
           if (key === 'billing_address') {
             // The street and city are said in Chinese; what the territory rules read is kept.
             const { street: _s, city: _c, ...kept } = value as Rec;

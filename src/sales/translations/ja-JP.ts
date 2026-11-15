@@ -3,7 +3,6 @@
 import type { TranslationData } from '@objectstack/spec/system';
 
 import { appSurface } from './ja-JP/app';
-import { hooks } from './ja-JP/hooks';
 import { customer } from './ja-JP/objects.customer';
 import { pipeline } from './ja-JP/objects.pipeline';
 import { commerce } from './ja-JP/objects.commerce';
@@ -64,5 +63,4 @@ export const jaJP: TranslationData = {
     crm_event_attendee: activity.crm_event_attendee,
   },
   ...appSurface,
-  hooks,
 };

@@ -14,6 +14,8 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import artifact from '../../objectstack.config';
+import { placeSeedFiles } from './seed-files';
+import { knowledgeArticles } from '../../src/service/data/service.seed';
 
 /**
  * Each test process keeps its own `OS_HOME`, so a suite that disables a
@@ -148,7 +150,39 @@ export const bootOptions = (overrides: Partial<BootOptions> = {}): BootOptions =
 export const HOTCRM_BOOT: BootOptions = bootOptions();
 
 /** The app's stack — one boot per module registry (see above). */
-export const hotcrmStack = (): Promise<VerifyStack> => bootStackOnce(artifact, HOTCRM_BOOT);
+// The seed files' bytes, as `objectstack build` carries them (#2317).
+placeSeedFiles(artifact as Record<string, any>);
+
+/**
+ * Waits until the boot's seed has been handed to the dev admin.
+ *
+ * Since the seed carries files (#2317), the platform DEFERS the whole inline
+ * seed to `kernel:bootstrapped`, after the storage service is ready (18.3.0:
+ * "[Seeder] inline seed deferred to kernel:bootstrapped — its datasets carry
+ * seed files"). The seed-ownership claim then runs first as PROVISIONAL
+ * ("handed 0 seeded record(s)"), and again when the seed settles
+ * (`app:seeded`) — after the boot has returned. A suite that reads who owns
+ * a seeded row waits for that second pass; the knowledge articles are the
+ * probe because every one of them is seeded ownerless and claimed.
+ */
+export const seedClaimSettled = async (stack: VerifyStack): Promise<void> => {
+  // Once per boot, and only the SEEDED articles: a suite writes ownerless
+  // articles of its own after the first wait.
+  if (claimSettled.has(stack)) return;
+  const seeded = new Set((knowledgeArticles.records as Row[]).map((r) => String(r.title)));
+  await vi.waitFor(async () => {
+    const unowned = (await stack.rows('crm_knowledge_article')).filter((r) => seeded.has(String(r.title)) && r.owner_id == null);
+    if (unowned.length > 0) throw new Error(`${unowned.length} seeded knowledge article(s) still unowned`);
+  }, { timeout: 60_000, interval: 100 });
+  claimSettled.add(stack);
+};
+const claimSettled = new WeakSet<VerifyStack>();
+
+export const hotcrmStack = async (): Promise<VerifyStack> => {
+  const stack = await bootStackOnce(artifact, HOTCRM_BOOT);
+  await seedClaimSettled(stack);
+  return stack;
+};
 
 /**
  * A second build of the app's configuration, from FRESH module instances — for
@@ -166,7 +200,9 @@ export const hotcrmStack = (): Promise<VerifyStack> => bootStackOnce(artifact, H
  */
 export const buildArtifactAgain = async (): Promise<typeof artifact> => {
   vi.resetModules();
-  return (await import('../../objectstack.config')).default;
+  const fresh = (await import('../../objectstack.config')).default;
+  placeSeedFiles(fresh as Record<string, any>);
+  return fresh;
 };
 
 /**
@@ -423,15 +459,26 @@ export const systemUpdate = (stack: VerifyStack, object: string, doc: Row): Prom
  * and its id, the value a `file` field stores (ADR-0104 D3 wave 2). The
  * engine admits a person's write of a file id only when the file is one they
  * may open, so the file is the writer's own, as an upload makes it. Used for
- * the Signed Copy a contract or quote records (#2317).
+ * the Signed Copy that Activated (contract) and Accepted (quote) require
+ * (#2317): a fixture that moves a contract to `activated` or a quote to
+ * `accepted` carries one.
  */
-export const committedFile = async (stack: VerifyStack, ownerId: string): Promise<string> => {
+export const committedFile = async (
+  stack: VerifyStack | { insert(object: string, doc: Row, opts: unknown): Promise<unknown> },
+  ownerId: string,
+  extra: Row = {},
+): Promise<string> => {
   const name = 'signed-copy.pdf';
-  const [row] = await stack.seed('sys_file', [{
+  const doc = {
     key: `attachments/${ownerId}-${++fileSeq}-${name}`, name, mime_type: 'application/pdf', size: 1,
     scope: 'attachments', status: 'committed', owner_id: ownerId,
-  }]);
-  return String(row!.id);
+    ...extra, // e.g. `organization_id`, on an install that holds more than one
+  };
+  // A suite on its own kernel hands its `objectql` service instead of the handle.
+  const row = 'seed' in stack
+    ? (await stack.seed('sys_file', [doc]))[0]
+    : await stack.insert('sys_file', doc, { context: { isSystem: true } }) as Row;
+  return String((row as Row).id);
 };
 let fileSeq = 0;
 

@@ -3,7 +3,6 @@
 import type { TranslationData } from '@objectstack/spec/system';
 
 import { appSurface } from './zh-CN/app';
-import { hooks } from './zh-CN/hooks';
 import { customer } from './zh-CN/objects.customer';
 import { pipeline } from './zh-CN/objects.pipeline';
 import { commerce } from './zh-CN/objects.commerce';
@@ -64,5 +63,4 @@ export const zhCN: TranslationData = {
     crm_event_attendee: activity.crm_event_attendee,
   },
   ...appSurface,
-  hooks,
 };

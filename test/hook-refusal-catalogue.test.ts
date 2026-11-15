@@ -9,8 +9,6 @@ import { o2cHooks } from '../src/o2c';
 import { O2cTranslations } from '../src/o2c/translations';
 import { marketingHooks } from '../src/marketing';
 import { MarketingTranslations } from '../src/marketing/translations';
-import * as salesHookModules from '../src/sales/objects/hooks';
-import { CrmTranslations } from '../src/sales/translations';
 
 type AnyRec = Record<string, any>;
 
@@ -42,7 +40,6 @@ const PACKAGES: Array<{ name: string; hooks: AnyRec[]; bundle: TranslationBundle
   { name: 'psa', hooks: psaHooks as AnyRec[], bundle: PsaTranslations },
   { name: 'o2c', hooks: o2cHooks as AnyRec[], bundle: O2cTranslations },
   { name: 'marketing', hooks: marketingHooks as AnyRec[], bundle: MarketingTranslations },
-  { name: 'sales', hooks: Object.values(salesHookModules).flat() as AnyRec[], bundle: CrmTranslations },
 ];
 
 const LOCALES = ['zh-CN', 'ja-JP', 'es-ES'] as const;

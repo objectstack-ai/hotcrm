@@ -25,32 +25,6 @@ const accountHook: Hook = {
   priority: 200,
   description:
     'Validate account fields and protect customer accounts with opportunities or activated contracts from deletion.',
-  refusals: {
-    VALIDATION_FAILED: {
-      message: 'Website must start with http:// or https://',
-      status: 400,
-      reasons: {
-        annual_revenue: { message: 'Annual Revenue must be greater than or equal to 0' },
-        converted_from_lead: {
-          message: 'Converted From Lead is set only by Convert Lead, when it creates the account. Leave it empty; the account goes to approval as a new account.',
-        },
-      },
-    },
-    DELETE_RESTRICTED: {
-      message: 'Cannot delete customer account: 1 opportunity, open or closed, still references it. Delete the opportunity first, or mark the account inactive to retire it instead.',
-      status: 409,
-      params: ['count'],
-      reasons: {
-        opportunities: {
-          message: 'Cannot delete customer account: {{count}} opportunities, open or closed, still reference it. Delete the opportunities first, or mark the account inactive to retire it instead.',
-        },
-        contract: { message: 'Cannot delete customer account: 1 activated contract still references it. Terminate or reassign it first.' },
-        contracts: {
-          message: 'Cannot delete customer account: {{count}} activated contracts still reference it. Terminate or reassign them first.',
-        },
-      },
-    },
-  },
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -80,7 +54,7 @@ const accountHook: Hook = {
         }
       }
       if (typeof input.annual_revenue === 'number' && input.annual_revenue < 0) {
-        throw Object.assign(refuse('Annual Revenue must be greater than or equal to 0', 'VALIDATION_FAILED', 400), { reason: 'annual_revenue' });
+        throw refuse('Annual Revenue must be greater than or equal to 0', 'VALIDATION_FAILED', 400);
       }
 
       // ─── Territory (#621 storage location, #639 classification) ────────
@@ -230,11 +204,11 @@ const accountHook: Hook = {
         const setsValue = marker !== null && marker !== undefined && marker !== '';
         const stored = event === 'beforeUpdate' ? (ctx.previous ?? {}).converted_from_lead_id : undefined;
         if (setsValue && (event === 'beforeUpdate' ? marker !== stored : !ctx.provenance?.flowRunId)) {
-          throw Object.assign(refuse(
+          throw refuse(
             'Converted From Lead is set only by Convert Lead, when it creates the account. Leave it empty; the account goes to approval as a new account.',
             'VALIDATION_FAILED',
             400,
-          ), { reason: 'converted_from_lead' });
+          );
         }
       }
     }
@@ -287,13 +261,13 @@ const accountHook: Hook = {
         // first." Agreement runs across three words here — noun, verb and
         // pronoun — and the two readable sentences are cheaper to keep correct
         // (and to grep for) than three interlocking conditionals.
-        throw Object.assign(refuse(
+        throw refuse(
           opportunities === 1
             ? 'Cannot delete customer account: 1 opportunity, open or closed, still references it. Delete the opportunity first, or mark the account inactive to retire it instead.'
             : `Cannot delete customer account: ${opportunities} opportunities, open or closed, still reference it. Delete the opportunities first, or mark the account inactive to retire it instead.`,
           'DELETE_RESTRICTED',
           409,
-        ), opportunities === 1 ? {} : { reason: 'opportunities', params: { count: opportunities } });
+        );
       }
       // `crm_contract` is master-detail under the account (#549), so a delete
       // would cascade the signed agreements away. Activated = live (the same
@@ -302,13 +276,13 @@ const accountHook: Hook = {
         where: { crm_account: previous.id, status: 'activated' },
       });
       if (activeContracts > 0) {
-        throw Object.assign(refuse(
+        throw refuse(
           activeContracts === 1
             ? 'Cannot delete customer account: 1 activated contract still references it. Terminate or reassign it first.'
             : `Cannot delete customer account: ${activeContracts} activated contracts still reference it. Terminate or reassign them first.`,
           'DELETE_RESTRICTED',
           409,
-        ), activeContracts === 1 ? { reason: 'contract' } : { reason: 'contracts', params: { count: activeContracts } });
+        );
       }
     }
   },

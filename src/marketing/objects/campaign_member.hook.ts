@@ -190,21 +190,13 @@ const campaignMemberEnrollmentGate: Hook = {
         where: { id: leadId }, fields: ['id', 'first_name', 'last_name', 'email_opt_out'],
       });
       if (lead?.email_opt_out === true) {
-        // The lead as `full_name` names it. That field is a formula, which a
-        // lowered body cannot read, so the rule of `personNameSource`
-        // (`src/sales/objects/_person-name.ts`) is written out: a CJK family
-        // name comes first, with no space (#2431, 「张伟」 not 「伟 张」);
-        // `test/person-name-order.test.ts` holds this literal equal to it.
-        const [given, family] = [lead.first_name, lead.last_name]
-          .map((part) => (typeof part === 'string' ? part.trim() : ''));
-        const person = /^[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(family)
-          ? `${family}${given}`
-          : [given, family].filter(Boolean).join(' ');
+        const first = typeof lead.first_name === 'string' ? lead.first_name : '';
+        const last = typeof lead.last_name === 'string' ? lead.last_name : '';
         throw Object.assign(refuse(
-          `${person} has opted out of email, so the lead was not added to the campaign.`,
+          `${first} ${last} has opted out of email, so the lead was not added to the campaign.`,
           'FORBIDDEN',
           403,
-        ), { params: { lead: person } });
+        ), { params: { lead: `${first} ${last}` } });
       }
     }
     if (contactId) {

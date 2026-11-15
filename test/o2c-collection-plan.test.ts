@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, committedFile, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -143,8 +143,11 @@ describe('who writes what (#2462: read on the contract is the contract-side ques
     const contact = await insert('crm_contact', {
       first_name: 'Plan', last_name: 'Contact', email: 'plan@o2c-collection-plan.test', crm_account: account.id,
     });
+    // Born activated, so it carries the signed copy that state requires (#2317),
+    // a file of the admin's own (the account's `created_by`).
     own = await insert('crm_contract', {
       crm_account: account.id, crm_contact: contact.id, status: 'activated',
+      signed_copy: await committedFile(verify, String(account.created_by)),
       contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 50000,
     });
   }, 120_000);

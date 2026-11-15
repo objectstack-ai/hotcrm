@@ -3,7 +3,6 @@
 import type { TranslationData } from '@objectstack/spec/system';
 
 import { appSurface } from './es-ES/app';
-import { hooks } from './es-ES/hooks';
 import { customer } from './es-ES/objects.customer';
 import { pipeline } from './es-ES/objects.pipeline';
 import { commerce } from './es-ES/objects.commerce';
@@ -64,5 +63,4 @@ export const esES: TranslationData = {
     crm_event_attendee: activity.crm_event_attendee,
   },
   ...appSurface,
-  hooks,
 };

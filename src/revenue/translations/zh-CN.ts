@@ -52,7 +52,7 @@ export const zhCN: TranslationData = {
         // The countersigned copy (#2317).
         signed_copy: {
           label: '签署副本',
-          help: '客户签回的报价。',
+          help: '客户签回的报价。接受报价前必须上传。',
         },
         quote_date: { label: '报价日期' },
         crm_price_book: { label: '价格表', help: '本报价单各行的标价取自这本价格表。新建报价单时留空，即为标准价格表。' },

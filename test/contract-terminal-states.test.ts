@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { Contract } from '../src/sales/objects/contract.object';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, committedFile, type Person } from './helpers/verify-stack';
 
 /**
  * A contract's status moves only along CON-002, and its two end states are
@@ -55,7 +55,11 @@ const PEOPLE = [['the admin', 'admin'], ['a sales manager', 'manager']] as const
 /** The rule under test, read off the object so the pins follow its message rather than copy it. */
 const rule = (Contract.validations as Rec[]).find((v) => v.name === 'contract_status_progression')!;
 
-/** A contract of the manager's stored at `status`, written as the system (an insert is not judged). */
+/**
+ * A contract of the manager's stored at `status`, written as the system (an
+ * insert is not judged). Each carries its signed copy, so a move to Activated
+ * is judged by the status table alone, not by the signed-copy gate (#2317).
+ */
 const contractAt = async (status: string): Promise<Rec> => {
   const n = ++k;
   const [account] = await verify.seed('crm_account', [{ name: `Terminal Works ${n}`, owner_id: people.manager.id }]);
@@ -67,6 +71,7 @@ const contractAt = async (status: string): Promise<Rec> => {
     crm_account: account!.id, crm_contact: contact!.id, owner_id: people.manager.id, status,
     contract_type: 'subscription', contract_value: 12_000, billing_frequency: 'monthly', payment_terms: 'net_30',
     contract_term_months: 12, start_date: '2025-01-01', end_date: '2026-01-01',
+    signed_copy: await committedFile(verify, people.manager.id),
   }]))[0]!;
 };
 

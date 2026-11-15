@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, committedFile, type Person } from './helpers/verify-stack';
 
 /**
  * An accepted quote no longer makes its contact undeletable (#2161).
@@ -87,6 +87,8 @@ const build = async (status: string, quoteElsewhere = false) => {
   const [quote] = await verify.seed('crm_quote', [{
     name: `EQ-${n}`, status, crm_account: quoteElsewhere ? other!.id : account!.id, crm_contact: contact!.id,
     quote_date: '2026-01-01', expiration_date: '2030-12-31', tax: 100, internal_notes: `signed ${n}`, owner_id: manager.id,
+    // Accepted requires the signed copy (#2317).
+    ...(status === 'accepted' ? { signed_copy: await committedFile(verify, manager.id) } : {}),
   }]);
   return { account: account!, other: other!, contact: contact!, quote: (await stored('crm_quote', String(quote!.id)))! };
 };

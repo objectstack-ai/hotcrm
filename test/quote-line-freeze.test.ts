@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { REFUSAL_CODES } from '../src/sales/objects/_refusal';
 import { hookNamed } from './helpers/composed-stack';
-import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, committedFile, type Person } from './helpers/verify-stack';
 
 /**
  * A settled quote's line items are frozen with it (#2060 item 1, finding B-09).
@@ -86,6 +86,7 @@ const quoteWithLine = async (status: string): Promise<{ quote: Rec; line: Rec; p
   const [quote] = await verify.seed('crm_quote', [{
     name: `Freeze Quote ${k}`, crm_account: account!.id, crm_contact: contact!.id, owner_id: rep.id,
     status: 'draft', quote_date: '2026-01-01', expiration_date: '2030-12-31', discount: 0, tax: 0, shipping_handling: 0,
+    signed_copy: await committedFile(verify, rep.id), // what Accepted requires (#2317)
   }]);
   const line = await verify.hooks.run('crm_quote_line_item', 'insert', {
     crm_quote: quote!.id, crm_product: product!.id, quantity: 2, unit_price: 100,

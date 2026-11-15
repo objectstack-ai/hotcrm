@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { OpportunityStagnationFlow } from '../src/sales/flows/opportunity-stagnation.flow';
 import { edgesUnder } from './helpers/flow-regions';
-import { hotcrmStack, signUpPerson, daysFromNow, runScheduledFlow, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, daysFromNow, runScheduledFlow, committedFile, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -135,7 +135,11 @@ describe('flow run summary — the three flows the silent-no-op incident covered
       contract_term_months: 12, start_date: daysFromNow(-345), end_date: daysFromNow(+20),
       billing_frequency: 'monthly', payment_terms: 'net_30', ...over,
     });
-    await verify.seed('crm_contract', [contract({}), contract({ end_date: daysFromNow(+10), start_date: daysFromNow(-355), auto_renewal: true })]);
+    // An activated contract carries its signed copy (#2317).
+    await verify.seed('crm_contract', [
+      contract({ signed_copy: await committedFile(verify, rep.id) }),
+      contract({ end_date: daysFromNow(+10), start_date: daysFromNow(-355), auto_renewal: true, signed_copy: await committedFile(verify, rep.id) }),
+    ]);
     const s = await sweep('contract_renewal');
 
     expect(s.selected).toBeGreaterThan(0);

@@ -368,6 +368,10 @@ describe('deleting a customer account with activated contracts (#549)', () => {
       crm_account: account.id, crm_contact: contact.id, status,
       contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
       contract_value: 1000,
+      // Activated requires the signed copy (#2317). This kernel registers no
+      // `sys_file`, and a system write's file id is not judged against one, so
+      // an opaque id stands in for the upload.
+      ...(status === 'activated' ? { signed_copy: 'signed_copy_fixture' } : {}),
     });
     return { account, contract };
   };

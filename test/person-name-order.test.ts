@@ -209,38 +209,12 @@ describe('the sentences the hooks write name the person the same way', () => {
     expect(String(err!.message)).not.toContain('伟 张');
   });
 
-  it('an opted-out lead\'s enrollment refusal names 「张伟」, in English and in zh-CN', async () => {
-    const admin = await verify.signIn();
-    const asAdmin = (object: string, doc: Rec) => verify.hooks.run(object, 'insert', doc, { as: admin });
-    const lead = await asAdmin('crm_lead', {
-      first_name: '伟', last_name: '张', company: `Name Order ${++k}`, email: `optout${k}@person-name-order.test`, email_opt_out: true,
-    });
-    const campaign = await asAdmin('crm_campaign', {
-      name: `Name Order Campaign ${k}`, type: 'webinar', status: 'planning', start_date: '2026-12-01', end_date: '2026-12-31',
-    });
-    const err = await asAdmin('crm_campaign_member', { crm_campaign: campaign.id, crm_lead: lead.id })
-      .then(() => undefined, (e: unknown) => e as Rec);
-    expect(err?.code).toBe('FORBIDDEN');
-    expect(String(err?.userMessage)).toBe('张伟 has opted out of email, so the lead was not added to the campaign.');
-    const res = await verify.raw('/api/v1/data/crm_campaign_member', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${admin}`, 'accept-language': 'zh-CN' },
-      body: JSON.stringify({ crm_campaign: campaign.id, crm_lead: lead.id }),
-    });
-    expect(res.status).toBe(403);
-    expect(String(((await res.json()) as Rec).error)).toBe('张伟已拒收邮件，因此这个线索没有加入营销活动。');
-  });
-
   // The hooks run body-only in QuickJS and cannot import the class, so each
   // writes it as a regex literal. Every literal must be the shared class.
   it('every hook copy of the CJK class equals CJK_FAMILY_NAME_CLASS', () => {
     const escaped = CJK_FAMILY_NAME_CLASS.replace(/[^\x20-\x7e]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`);
     expect(escaped).toBe('[\\u3040-\\u30ff\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff\\uac00-\\ud7af]');
-    const copies: Record<string, number> = {
-      'src/sales/objects/lead.hook.ts': 3,
-      'src/sales/objects/contact.hook.ts': 2,
-      'src/marketing/objects/campaign_member.hook.ts': 1,
-    };
+    const copies: Record<string, number> = { 'src/sales/objects/lead.hook.ts': 3, 'src/sales/objects/contact.hook.ts': 2 };
     for (const [file, count] of Object.entries(copies)) {
       const source = readFileSync(resolve(__dirname, '..', file), 'utf8');
       const literals = [...source.matchAll(/\/\^(\[[^\]]*\])\/\.test\(family\)/g)].map((m) => m[1]);
