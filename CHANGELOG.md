@@ -1,5 +1,26 @@
 # Changelog
 
+## 6.4.0
+
+First published release since 6.2.0: the 6.3.0 and 6.2.1 entries below also apply to a 6.2.0 install.
+
+### Minor Changes
+
+- 52f6816: **Reps keep the collection plan, and finance enters invoices and payments (#2462).** Billing Milestones, Invoices and Payments now ask only read access to their contract for a write (`writeRequiresMasterRead`, ObjectStack 18.5.0, objectstack#33250). A sales rep writes the plan of any contract they can read, and the Accounts Receivable position enters and imports invoices and payments, without edit on the contract. Each still writes only what their permission set allows, and someone who cannot read a contract writes none of the three. The "for now, an administrator enters them" notes are gone from the docs and the in-app manual.
+- 81efb1c: **Project Delivery joins HotCRM as a module, with its own app (#2316, phase 0).** A sixth package, `app.objectstack.hotcrm.psa`, brings the **Project Delivery** app (「项目交付」), depending on the HotCRM app package only. A tenant that disables the module loses the app with it. No existing object, field or permission changes.
+- 11b0576: **Projects, staffing, rate cards, timesheets and expenses, with cost and margin (#2316, phase 1a).** A **Project** (presales, delivery or internal) hangs off an account and may name its opportunity and contract. People are staffed as **Project Members** at a **Rate Card** with a cost rate and a bill rate, book hours on **Timesheets** of **Time Entries**, and spending as **Expenses**. An entry copies its rates when written, so a rate change never rewrites past cost. Approved time and expenses move the project's cost, budget used, gross margin and approved-to-bill; none is typed in. Projects are private to their team; the Project Manager edits. Five new positions (Project Director, PMO, Project Manager, Project Team Member, Finance Controller) carry three new permission sets. Team members never see cost rates or margin. Demo data adds rate cards and projects in en and zh-CN.
+- 78a4b5c: **Project approvals and cost control (#2316, phase 1b).** A project needs an Approved Budget and goes for approval to every Project Director and PMO holder, and also to a Finance Controller from a budget of 100,000. Timesheets and expenses go to the project manager, and expenses from 2,000 also to finance; nobody approves their own. Records are locked while they wait. **Budget Status** turns Warning at 80 % and Exceeded at 100 % of the budget, and each crossing notifies the project manager and finance once. **Lock Time and Expenses** blocks new submissions. From In Approval on, only a Finance Controller changes the Approved Budget.
+- 49685f1: **Projects Overview dashboard and Project Delivery Manual (#2316, phase 1c).** The dashboard shows budget, actual cost, budget used, margin by project, projects by status, approved hours by week and each person's billable share, counting approved figures and only what the viewer can read. It is backed by the `project_financials` and `time_utilization` datasets, and timesheets gain **Billable Hours**. The manual under Help explains staffing, costing, approvals, budget status and the lock.
+
+### Patch Changes
+
+- 1b95f80: **HotCRM runs on ObjectStack 18.5.0.** Every `@objectstack/*` package moves from 18.4.0 to 18.5.0, and every manifest declares `^18.5.0`. Upgrade the host to 18.5.0 first and walk the platform's 18.5.0 upgrade checklist.
+- 4ac34fb: **Projects Overview counts each approved hour in the week it was worked.** `time_utilization` now reads time entries, with the timesheet included, so a timesheet that crosses a week is split between the two weeks. The hours tiles filter on the timesheet's status, which ObjectStack 18.5.0 serves across the include (objectstack#33512, #2483).
+- 19ca031: **Project team members see the customer, not the deal (#2316, ruling D).** The Project Member permission set reads every account, read-only, so a project page shows its Account by name. Opportunities stay closed to them: the project's Opportunity field is hidden from that set.
+- 4ecdd8f: **No empty Opportunities entry for a project team member.** The entry is held back from someone staffed only as a project team member; a member who also holds a delivery, finance, sales or marketing position keeps it. Visibility only.
+- ee6b962: **The README's opening line states HotCRM's positioning:** "the reference app for AI-written enterprise software: a complete CRM in typed ObjectStack metadata". The README is also the marketplace listing text.
+- 6ff5e66: **The source token ratchet is retired (hotcrm#2468).** The per-package size ceiling check and `pnpm hygiene:tokens` are removed with their CI steps and tests. Nothing changes in an installed app.
+
 ## 6.3.0
 
 ### Minor Changes
