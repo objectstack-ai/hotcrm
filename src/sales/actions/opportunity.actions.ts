@@ -142,7 +142,6 @@ export const MassUpdateStageAction: Action = {
       const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
       if (!ids.length) throw new Error('mass_update_stage: no opportunity selected');
       const missed = [];
-      let firstCause = '';
       let updated = 0;
       for (const id of ids) {
         // \`update(data, options)\` — \`ctx.api\` is the engine repo facade, whose
@@ -161,19 +160,18 @@ export const MassUpdateStageAction: Action = {
         // failure #588 pulled this button for, because it is unrecoverable
         // from the UI. Collect the miss, keep going, reject once at the end.
         //
-        // The catch is deliberately cause-AGNOSTIC — but NOT because the cause
-        // is invisible. Read on 17.4.0 (\`hostErrorToVm\`; not re-read on 17.5.0), a host
-        // rejection reaches a body as \`name\` and \`message\` plus, when the host
-        // error carries them, \`code\`, \`status\`, \`fields\` and \`userMessage\` —
-        // nothing else, so a stale id arrives branchable as
-        // \`code === 'RECORD_NOT_FOUND'\` while \`details\` really is dropped. The
-        // branch is not taken because every cause has the same outcome here —
-        // the row did not move, so collect it and keep going — and narrowing
-        // the catch to a roster of known codes would let an unlisted cause
-        // abort the loop, the failure the paragraph above forbids. Message text
-        // is engine wording and not contract, so \`firstCause\` is carried
-        // verbatim and never parsed.
+        // The catch is cause-AGNOSTIC about the OUTCOME (every cause leaves the
+        // row unmoved, so collect it and keep going; narrowing the catch to a
+        // roster of codes would let an unlisted cause abort the loop), and it
+        // keeps what the rep needs to read (#2511). Measured on 18.5.0, a host
+        // rejection reaches a body as \`name\`, \`message\`, \`code\`, \`status\`
+        // and \`userMessage\`, and a hook refusal's \`userMessage\` is already its
+        // catalogue sentence in the CALLER's locale (the closed-deal freeze
+        // answered "商机… 已关闭（成交）；只能修改它的描述和下一步。" to a zh-CN
+        // caller). \`message\` is the engine's wrapper text ("hook '…' threw:
+        // Error: …"): diagnostic only, never shown as the reason.
         let row = null;
+        let cause = null;
         try {
           row = await ctx.api.object('crm_opportunity').update(
             { id: id, stage: newStage },
@@ -181,30 +179,80 @@ export const MassUpdateStageAction: Action = {
           );
         } catch (err) {
           row = null;
-          if (!firstCause) firstCause = (err && err.message) ? String(err.message) : String(err);
+          cause = {
+            code: err && typeof err.code === 'string' ? err.code : '',
+            status: err && typeof err.status === 'number' ? err.status : 0,
+            message: err && err.message ? String(err.message) : String(err),
+            userMessage: err && typeof err.userMessage === 'string' ? err.userMessage.trim() : '',
+          };
         }
         // Count only what came back: counting the ATTEMPT is how a stale or
         // invisible id turns into a success toast for a write that never
         // happened (#588).
-        if (row) { updated++; } else { missed.push(id); }
+        if (row) { updated++; } else { missed.push({ id: id, cause: cause }); }
       }
       // Aggregate dispatch is all-or-nothing (objectui#3139): a handler that
       // cannot cover the whole selection must reject rather than report partial
-      // work, because the bar offers no per-row retry — the retry IS re-running
-      // the action over the selection, which is safe here since setting a stage
-      // is idempotent. Rows already moved in this run keep the new stage; the
-      // error names the ones that did not so the rep can see the difference.
+      // work, because the bar offers no per-row retry. Rows already moved in
+      // this run keep the new stage; the rejection says which deals did not
+      // move and why (#2511).
       if (missed.length) {
-        throw new Error(
-          'mass_update_stage: ' + missed.length + ' of ' + ids.length
-          + ' selected opportunities could not be updated (' + missed.join(', ')
-          + '). Re-run the action on the selection to retry.'
-          + (firstCause ? ' First cause: ' + firstCause : '')
-        );
+        // What the rep reads (#2511), in this order:
+        // 1. each refusal's own sentence. It names the deal as every screen
+        //    does, and the engine has already put it in the caller's language;
+        // 2. a deal that did not move without such a sentence, by its NAME. A
+        //    deal that is gone (404), or whose name cannot be read, is counted
+        //    instead;
+        // 3. how many did and did not move, since the rows that moved keep
+        //    their new stage;
+        // 4. the retry line, only when a re-run could change the answer.
+        // ⛔ Never a record id and never the engine's wrapper text ("hook '…'
+        // threw: …") in what the rep reads (#1243); the engine logs that.
+        // On 18.5.0 a script body is given no locale (\`ctx.session\` carries
+        // userId, organizationId and positions only), so 2 to 4 are English.
+        const lines = [];
+        let unnamed = 0;
+        let retryable = false;
+        for (const m of missed) {
+          const c = m.cause || { code: '', status: 0, message: 'the engine returned no row', userMessage: '' };
+          // A refusal with a code and a status below 500 is the app saying no
+          // (a closed deal, an approval, a validation, a row that is gone): it
+          // answers the same on a re-run. Only a fault, or a write that
+          // returned nothing, might move on a re-run.
+          if (!c.code || c.status >= 500 || c.status === 0) retryable = true;
+          if (c.status === 404 || c.code === 'RECORD_NOT_FOUND') { unnamed++; continue; }
+          if (c.userMessage) { lines.push(c.userMessage); continue; }
+          let name = '';
+          try {
+            const r = await ctx.api.object('crm_opportunity').findOne({ where: { id: m.id }, fields: ['name'] });
+            name = r && typeof r.name === 'string' ? r.name : '';
+          } catch (e) { name = ''; }
+          if (name) { lines.push('Opportunity ' + name + ' did not move to the new stage.'); } else { unnamed++; }
+        }
+        if (unnamed) {
+          lines.push(unnamed === 1
+            ? '1 selected opportunity no longer exists or is not visible to you.'
+            : unnamed + ' selected opportunities no longer exist or are not visible to you.');
+        }
+        lines.push(missed.length + ' of ' + ids.length + ' selected opportunities did not move to the new stage; '
+          + updated + ' did.');
+        if (retryable) lines.push('Run Update Stage on the selection again to retry the ones that did not move.');
+        // \`message\` is what the console's bulk result dialog prints against
+        // the selection (measured on 18.5.0), so it is the readable text too,
+        // with \`userMessage\` the same lines one per line, for the toast and
+        // REST. The envelope as every refusal in this app sets it: the shared
+        // code when every miss has the same one, else a conflict.
+        const err = new Error(lines.join(' '));
+        const codes = missed.map((m) => (m.cause && m.cause.code) || '');
+        const same = codes.every((x) => x && x === codes[0]);
+        err.code = same ? codes[0] : 'CONFLICT';
+        err.status = same && missed[0].cause && missed[0].cause.status ? missed[0].cause.status : 409;
+        err.userMessage = lines.join('\\n');
+        throw err;
       }
       return { stage: newStage, updated };
     `,
-    capabilities: ['api.write'],
+    capabilities: ['api.read', 'api.write'],
     timeoutMs: 10000,
   },
   // Headless (#2338 item 4): drawn only on the SELECTION BAR, which the
