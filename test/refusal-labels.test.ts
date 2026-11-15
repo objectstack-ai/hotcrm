@@ -71,6 +71,13 @@ describe('freeze refusals use the labels the user sees (#2338 item 12)', () => {
     expect(source).toContain(`only its ${fieldLabel(Quote, 'internal_notes')} can be edited`);
   });
 
+  it('quote_total_rollup: the same frozen statuses, read again after the line is in (#2503)', () => {
+    const source = lowered('quote_total_rollup');
+    const statuses = table(source, 'STATUS_LABELS');
+    expect(statuses).toEqual(table(lowered('quote_workflow'), 'STATUS_LABELS'));
+    for (const [value, label] of statuses) expect(label, value).toBe(optionLabel(Quote, 'status', value));
+  });
+
   it('contract_validation: the end date', () => {
     expect(lowered('contract_validation')).toContain(`contract's ${fieldLabel(Contract, 'end_date')} cannot move earlier`);
   });

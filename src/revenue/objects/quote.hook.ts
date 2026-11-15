@@ -427,8 +427,8 @@ const quoteValidation: Hook = {
  * independent legs (#714) — a contract that will not draft must not decide
  * whether the deal is won — and two hooks make that structural.
  *
- * Organization (AGENTS.md rule 10): it issues no read, so there is no scan to
- * pin; its one write is an insert built from the triggering quote's own links,
+ * Organization (AGENTS.md rule 10): its one read is the triggering quote by
+ * id (#2503), so there is no scan to pin; its one write is an insert built from the triggering quote's own links,
  * and the engine stamps its `organization_id` from the trigger's context, which
  * elevation carries through unchanged (`withRunAs('system')` is the triggering
  * context plus `isSystem`) — pinned on a walled deployment by
@@ -498,7 +498,18 @@ const quoteAcceptedContractDraft: Hook = {
     const contactId = pickId(input.crm_contact, previous?.crm_contact);
     const opportunityId = pickId(input.crm_opportunity, previous?.crm_opportunity);
     const ownerId = pickId(input.owner_id, previous?.owner_id, ctx.user?.id);
-    const totalPrice = [input.total_price, previous?.total_price].find((v) => typeof v === 'number') ?? 0;
+    // The figure the quote STORES, read now, before the accepting write's own
+    // pre-image (#2503). Measured on 18.5.0: a line can be rolled into the
+    // quote after the accept read its prior row and before it wrote, so
+    // `previous.total_price` was the total before that line and the contract
+    // was drafted at a figure the quote's lines contradicted. The accept writes
+    // no figure of its own, and after it the line freeze refuses every new
+    // line, so the stored total is the one the lines sum to.
+    const quoteId = pickId(input.id, previous?.id);
+    const stored = quoteId
+      ? await api.object('crm_quote').findOne({ where: { id: quoteId }, fields: ['total_price'] }).catch(() => null)
+      : null;
+    const totalPrice = [stored?.total_price, input.total_price, previous?.total_price].find((v) => typeof v === 'number') ?? 0;
 
     /**
      * The payment terms the customer actually negotiated.

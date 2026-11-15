@@ -230,7 +230,7 @@ describe('what the freeze lets through', () => {
     const { quote, line, product } = await quoteWithLine('draft');
     await verify.hooks.run('crm_quote_line_item', 'insert', { crm_quote: quote.id, crm_product: product.id, quantity: 1, unit_price: 50 }, as(rep));
     await verify.hooks.run('crm_quote_line_item', 'update', { id: line.id, quantity: 3 }, as(rep));
-    // `quote_total_rollup` is `async: true`, so its result is waited for.
+    // Waited for, though `quote_total_rollup` rides the line write since #2503.
     await vi.waitFor(async () => expect((await stored('crm_quote', quote.id))!.subtotal).toBe(350), { timeout: 10_000, interval: 50 }); // 3×100 + 1×50
   });
 
