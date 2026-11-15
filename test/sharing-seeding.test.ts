@@ -480,6 +480,17 @@ const RULE_WITNESSES: Record<string, { reaches: AnyRec; misses: AnyRec[] }> = {
     reaches: { period: 'quarter' },
     misses: [],
   },
+  // Project Delivery (#2316 phase 1a). Each matches every row by design: the
+  // recipient column (`team_members`, `project_manager`, `approver`) or the
+  // position is what narrows the rule, so, as for the forecast rule above,
+  // the witness is that the `record.id != ""` condition reaches a row at all.
+  project_team_read: { reaches: { name: 'Rollout' }, misses: [] },
+  project_manager_edit: { reaches: { name: 'Rollout' }, misses: [] },
+  project_finance_edit_finance_controller: { reaches: { name: 'Rollout' }, misses: [] },
+  project_finance_edit_project_director: { reaches: { name: 'Rollout' }, misses: [] },
+  project_finance_edit_pmo: { reaches: { name: 'Rollout' }, misses: [] },
+  timesheet_approver_edit: { reaches: { name: 'Rollout · 2026-11-02' }, misses: [] },
+  expense_approver_edit: { reaches: { name: 'Flight' }, misses: [] },
 };
 
 describe('every seeded rule EXECUTES on the configured driver, not merely compiles', () => {

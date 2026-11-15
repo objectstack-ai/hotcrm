@@ -9,6 +9,7 @@ import * as serviceObjects from '../../src/service/objects';
 import * as revenueObjects from '../../src/revenue/objects';
 import * as marketingObjects from '../../src/marketing/objects';
 import * as o2cObjects from '../../src/o2c/objects';
+import * as psaObjects from '../../src/psa/objects';
 
 import * as salesFlows from '../../src/sales/flows';
 import * as serviceFlows from '../../src/service/flows';
@@ -20,6 +21,7 @@ import * as serviceViews from '../../src/service/views';
 import * as revenueViews from '../../src/revenue/views';
 import * as marketingViews from '../../src/marketing/views';
 import * as o2cViews from '../../src/o2c/views';
+import * as psaViews from '../../src/psa/views';
 
 import * as salesDashboards from '../../src/sales/dashboards';
 import * as serviceDashboards from '../../src/service/dashboards';
@@ -35,6 +37,7 @@ import * as serviceReports from '../../src/service/reports';
 import * as salesSharing from '../../src/sales/sharing';
 import * as serviceSharing from '../../src/service/sharing';
 import * as marketingSharing from '../../src/marketing/sharing';
+import * as psaSharing from '../../src/psa/sharing';
 
 /**
  * The package directories under `src/`, and the whole-app views of what they
@@ -186,6 +189,7 @@ const BARRELS: Readonly<
     revenue: revenueObjects,
     marketing: marketingObjects,
     o2c: o2cObjects,
+    psa: psaObjects,
   },
   flows: {
     sales: salesFlows,
@@ -199,11 +203,12 @@ const BARRELS: Readonly<
     revenue: revenueViews,
     marketing: marketingViews,
     o2c: o2cViews,
+    psa: psaViews,
   },
   dashboards: { sales: salesDashboards, service: serviceDashboards, revenue: revenueDashboards },
   datasets: { sales: salesDatasets, service: serviceDatasets, revenue: revenueDatasets },
   reports: { sales: salesReports, service: serviceReports },
-  sharing: { sales: salesSharing, service: serviceSharing, marketing: marketingSharing },
+  sharing: { sales: salesSharing, service: serviceSharing, marketing: marketingSharing, psa: psaSharing },
 };
 
 /**

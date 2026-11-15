@@ -90,6 +90,16 @@ describe('every reader of a removed field went with it (#1182)', () => {
    * bundles at once — an English-only sweep is how three of these fields
    * survived a previous cleanup with their zh-CN / es-ES / ja-JP rows intact.
    */
+  // The packs, cut to the rows of the objects the fields were removed from
+  // (and the account, whose views carried some): another object's own field
+  // that happens to share a removed name — Project Delivery's
+  // `crm_project.billing_type` (#2316) — is not a stale reader of
+  // `crm_product.billing_type`.
+  const SWEPT = new Set([...REMOVED.map(([object]) => object), 'crm_account']);
+  const sweptPacks = localePacks.map(([locale, pack]) => [
+    locale,
+    { ...pack, objects: Object.fromEntries(Object.entries((pack.objects ?? {}) as AnyRec).filter(([name]) => SWEPT.has(name))) },
+  ]);
   const SURFACES: Array<[string, unknown]> = [
     ['product object', Product], ['product views', ProductViews],
     ['case object', Case], ['case views', CaseViews],
@@ -97,7 +107,7 @@ describe('every reader of a removed field went with it (#1182)', () => {
     ['contact object', Contact], ['contact views', ContactViews],
     ['campaign object', Campaign], ['campaign views', CampaignViews],
     ['account object', Account], ['account views', AccountViews],
-    ['locale packs', localePacks],
+    ['locale packs', sweptPacks],
     ['catalog seed', products],
     ['contact import mapping', ContactImportMapping],
   ];

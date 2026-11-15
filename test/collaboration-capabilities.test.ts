@@ -77,7 +77,11 @@ const FILES_ENABLED = [
   'crm_case',
   'crm_contact',
   'crm_contract',
+  // #2316: an expense carries its receipt, and a project its statement of
+  // work, plans and sign-offs.
+  'crm_expense',
   'crm_opportunity',
+  'crm_project',
   'crm_quote',
 ] as const;
 

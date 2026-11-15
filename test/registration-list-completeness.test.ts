@@ -27,6 +27,7 @@ import * as serviceHooks from '../src/service/objects/hooks';
 import * as revenueHooks from '../src/revenue/objects/hooks';
 import * as marketingHooks from '../src/marketing/objects/hooks';
 import * as o2cHooks from '../src/o2c/objects/hooks';
+import * as psaHooks from '../src/psa/objects/hooks';
 
 import * as salesSkills from '../src/sales/skills';
 import * as serviceSkills from '../src/service/skills';
@@ -34,11 +35,13 @@ import * as serviceSkills from '../src/service/skills';
 import * as salesSharing from '../src/sales/sharing';
 import * as serviceSharing from '../src/service/sharing';
 import * as marketingSharing from '../src/marketing/sharing';
+import * as psaSharing from '../src/psa/sharing';
 
 import * as salesData from '../src/sales/data';
 import * as serviceData from '../src/service/data';
 import * as revenueData from '../src/revenue/data';
 import * as marketingData from '../src/marketing/data';
+import * as psaData from '../src/psa/data';
 
 /**
  * Registration completeness for the four remaining hand-maintained lists
@@ -194,6 +197,7 @@ const SPECS: Spec[] = [
       revenue: revenueHooks,
       marketing: marketingHooks,
       o2c: o2cHooks,
+      psa: psaHooks,
     },
     list: allHooks,
     isEntry: isHook,
@@ -224,7 +228,7 @@ const SPECS: Spec[] = [
     listName: 'CrmSharingRules',
     kind: 'sharing',
     barrelFile: 'index.ts',
-    barrels: { sales: salesSharing, service: serviceSharing, marketing: marketingSharing },
+    barrels: { sales: salesSharing, service: serviceSharing, marketing: marketingSharing, psa: psaSharing },
     list: CrmSharingRules,
     isEntry: isSharingRule,
     grouped: true,
@@ -248,6 +252,7 @@ const SPECS: Spec[] = [
       service: serviceData,
       revenue: revenueData,
       marketing: marketingData,
+      psa: psaData,
     },
     list: CrmSeedDataAllLocales,
     isEntry: isSeed,

@@ -792,6 +792,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Cuentas por cobrar',
       description: 'Finanzas: registra e importa las facturas y los cobros que ventas ve en cada contrato.',
     },
+    crm_project_director: {
+      label: 'Director de proyectos',
+      description: 'Dirige la entrega de proyectos: gestiona proyectos y consulta cada proyecto, parte de horas y gasto con su coste y margen.',
+    },
+    crm_pmo: {
+      label: 'PMO',
+      description: 'La oficina de gestión de proyectos: consulta el coste y margen de cada proyecto, mantiene las tarifas y gestiona proyectos.',
+    },
+    crm_project_manager: {
+      label: 'Jefe de proyecto',
+      description: 'Abre y gestiona proyectos, asigna personal según una tarifa y aprueba los partes de horas y gastos del equipo.',
+    },
+    crm_project_member: {
+      label: 'Miembro del equipo de proyecto',
+      description: 'Un consultor asignado a proyectos: registra horas y gastos en los proyectos en los que participa.',
+    },
+    crm_finance_controller: {
+      label: 'Controller financiero',
+      description: 'Finanzas: vigila el coste y margen de los proyectos, fija sus presupuestos y mantiene las tarifas.',
+    },
     crm_na_sales_team: {
       label: 'Equipo de Ventas de Norteamérica',
       description: 'Equipo territorial de Norteamérica: edita todas las cuentas del territorio de Norteamérica.',
@@ -803,6 +823,18 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
+    finance_controller: {
+      label: 'Controller financiero',
+      description: 'Finanzas: consulta cada proyecto, su personal, horas y gastos, edita los presupuestos de proyecto y mantiene las tarifas.',
+    },
+    project_manager: {
+      label: 'Jefe de proyecto',
+      description: 'Entrega: abre y gestiona proyectos, asigna personal según una tarifa, registra horas y gastos, y consulta cada cuenta, oportunidad y contrato.',
+    },
+    project_member: {
+      label: 'Miembro del proyecto',
+      description: 'Entrega: consulta los proyectos en los que participa y registra sus propios partes de horas y gastos, sin ver las tarifas de coste.',
+    },
     ar_accountant: {
       label: 'Cuentas por cobrar',
       description: 'Finanzas: registra e importa las facturas y los cobros de cada contrato, y lee los contratos, las cuentas y los planes de cobro que los respaldan.',

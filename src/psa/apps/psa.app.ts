@@ -12,19 +12,19 @@ import { HOTCRM_ICON } from '../../sales/apps/crm.app';
  * module with its own app. Disabling the module takes the whole app off the
  * launcher, as it does for the Order to Cash app.
  *
- * Phase 0 is the SKELETON: the module owns no object yet, so every entry here
- * is the app package's, reaching the app through ANCHOR groups that
+ * The module's own objects come first (phase 1a): Projects, then Time and
+ * Expenses (with the two to-approve lists a project manager works from), then
+ * the rate cards. Accounts, Opportunities and Contracts, and My Tasks, are the
+ * app package's, reaching the app through ANCHOR groups that
  * `src/sales/index.ts` fills with `navigationContributions` — an app's own
- * `navigation` may not name another package's object (ADR-0130). Phase 1 adds
- * the projects, members, rate cards, timesheets and expenses as this app's own
- * groups, ahead of the anchors.
+ * `navigation` may not name another package's object (ADR-0130).
  *
- * Who sees it is the app package's permission sets (`tabPermissions`). While
- * the app carries nothing of its own, every business set hides it. A member
- * who holds none of those sets is still offered it, as every app is offered
- * to them: the administrators, and the executive and director positions,
- * which carry no set of their own (measured on 18.4.0, #2316). Phase 1 opens
- * it to the delivery roles.
+ * Who sees it is the app package's permission sets (`tabPermissions`): the
+ * three delivery sets and the sales manager are offered it; reps, service,
+ * marketing and receivables hide it. A member who holds none of those sets is
+ * offered it too, as every app is offered to them: the administrators, and the
+ * executive and director positions, which carry no set of their own (measured
+ * on 18.4.0, #2316 phase 0).
  */
 export const PsaApp = App.create({
   name: 'crm_psa',
@@ -39,6 +39,42 @@ export const PsaApp = App.create({
   },
 
   navigation: [
+    {
+      id: 'group_projects',
+      type: 'group',
+      label: 'Projects',
+      icon: 'briefcase',
+      expanded: true,
+      children: [
+        { id: 'nav_projects', type: 'object', objectName: 'crm_project', label: 'All Projects', icon: 'briefcase' },
+        { id: 'nav_my_projects', type: 'object', objectName: 'crm_project', viewName: 'my_projects', label: 'My Projects', icon: 'user-check' },
+        { id: 'nav_project_members', type: 'object', objectName: 'crm_project_member', label: 'Staffing', icon: 'user-plus' },
+      ],
+    },
+    {
+      id: 'group_time_expenses',
+      type: 'group',
+      label: 'Time and Expenses',
+      icon: 'clock',
+      expanded: true,
+      children: [
+        { id: 'nav_my_timesheets', type: 'object', objectName: 'crm_timesheet', viewName: 'my_timesheets', label: 'My Timesheets', icon: 'clock' },
+        { id: 'nav_my_expenses', type: 'object', objectName: 'crm_expense', viewName: 'my_expenses', label: 'My Expenses', icon: 'receipt' },
+        { id: 'nav_timesheets_to_approve', type: 'object', objectName: 'crm_timesheet', viewName: 'timesheets_to_approve', label: 'Timesheets to Approve', icon: 'clipboard-check' },
+        { id: 'nav_expenses_to_approve', type: 'object', objectName: 'crm_expense', viewName: 'expenses_to_approve', label: 'Expenses to Approve', icon: 'clipboard-check' },
+      ],
+    },
+    {
+      id: 'group_rates',
+      type: 'group',
+      label: 'Rates',
+      icon: 'badge-dollar-sign',
+      expanded: false,
+      children: [
+        { id: 'nav_rate_cards', type: 'object', objectName: 'crm_rate_card', label: 'Rate Cards', icon: 'badge-dollar-sign' },
+      ],
+    },
+
     // ANCHOR — Accounts, Opportunities and Contracts, contributed by the app package.
     { id: 'group_customers', type: 'group', label: 'Customers and Contracts', icon: 'building', expanded: true, children: [] },
 

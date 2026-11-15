@@ -1,0 +1,227 @@
+// Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
+
+import { describe, it, expect, beforeAll } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { VerifyStack } from '@objectstack/verify';
+import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { REPO_ROOT } from './helpers/repo-root';
+import { HOURS_PER_DAY } from '../src/psa/objects/_psa-picklists';
+
+type Rec = Record<string, any>;
+
+/**
+ * Project Delivery, phase 1a (hotcrm#2316): the six objects on the shipped app
+ * booted by `@objectstack/verify`, driven as the people who use them.
+ *
+ * - Staffing keeps the project's Team and Project Manager
+ *   (`project_member.hook.ts`), and the team reads the project through the
+ *   `project_team_read` rule; a person not staffed reads nothing.
+ * - A time entry copies its rates from the staffing's rate card when written
+ *   and keeps them (`time_entry.hook.ts`): a day card bills per hour at
+ *   rate ÷ HOURS_PER_DAY, and a later rate change rewrites no past cost.
+ * - Only approved timesheets and expenses reach the project's cost, and only
+ *   the stamped approver (or an administrator) approves.
+ * - The team member's set hides cost (`project_member` field rows).
+ */
+
+let verify: VerifyStack;
+let admin: string;
+let pm: Person;
+let consultant: Person;
+let outsider: Person;
+let finance: Person;
+let account: Rec;
+let hourly: Rec;
+let daily: Rec;
+let project: Rec;
+let k = 0;
+
+const insert = (object: string, doc: Rec, as: string): Promise<Rec> => verify.hooks.run(object, 'insert', doc, { as });
+const update = (object: string, doc: Rec, as: string): Promise<Rec> => verify.hooks.run(object, 'update', doc, { as });
+const row = async (object: string, id: string, as?: string): Promise<Rec | undefined> =>
+  (await verify.rows(object, { id }, as ? { as } : undefined))[0];
+const num = (v: unknown): number => Number(v ?? 0);
+
+beforeAll(async () => {
+  verify = await hotcrmStack();
+  admin = await verify.signIn();
+  pm = await signUpPerson(verify, 'pm@psa-objects.test', {
+    name: 'Delivery PM', positions: ['crm_project_manager'], permissionSets: ['project_manager'],
+  });
+  consultant = await signUpPerson(verify, 'consultant@psa-objects.test', {
+    name: 'Delivery Consultant', positions: ['crm_project_member'], permissionSets: ['project_member'],
+  });
+  outsider = await signUpPerson(verify, 'outsider@psa-objects.test', {
+    name: 'Other Consultant', positions: ['crm_project_member'], permissionSets: ['project_member'],
+  });
+  finance = await signUpPerson(verify, 'finance@psa-objects.test', {
+    name: 'Delivery Finance', positions: ['crm_finance_controller'], permissionSets: ['finance_controller'],
+  });
+  [account] = await verify.rows('crm_account', {});
+  expect(account, 'fixture: the seed holds an account').toBeTruthy();
+  hourly = await insert('crm_rate_card', { name: `Test Consultant ${++k}`, seniority: 'intermediate', unit: 'hour', cost_rate: 50, bill_rate: 120 }, finance.token);
+  daily = await insert('crm_rate_card', { name: `Test Architect ${++k}`, seniority: 'lead', unit: 'day', cost_rate: 800, bill_rate: 1600 }, finance.token);
+  project = await insert('crm_project', {
+    name: `Test Rollout ${++k}`, crm_account: account.id, kind: 'delivery', planned_revenue: 10000, approved_budget: 5000,
+  }, pm.token);
+  await insert('crm_project_member', { crm_project: project.id, person: pm.id, responsibility: 'project_manager', rate_card: daily.id }, pm.token);
+  await insert('crm_project_member', { crm_project: project.id, person: consultant.id, responsibility: 'consultant', rate_card: hourly.id }, pm.token);
+}, 120_000);
+
+describe('the hook bodies keep their copies of the constants', () => {
+  it('time_entry.hook.ts counts a day as HOURS_PER_DAY hours', () => {
+    const body = readFileSync(join(REPO_ROOT, 'src/psa/objects/time_entry.hook.ts'), 'utf8');
+    expect(body).toContain(`const HOURS_PER_DAY = ${HOURS_PER_DAY};`);
+  });
+});
+
+describe('staffing (project_team_sync)', () => {
+  it('keeps the project\'s Project Manager and Team', async () => {
+    const p = (await row('crm_project', project.id))!;
+    expect(p.project_manager).toBe(pm.id);
+    expect(p.team_members, 'the manager is named by project_manager_edit alone').toEqual([consultant.id]);
+  });
+
+  it('lets a project manager who does not own the project edit and staff it', async () => {
+    // Opened by the administrator, so the PM reaches it only through
+    // `project_manager_edit`. With the PM in the Team as well, the team's read
+    // replaced that edit (objectstack#33683) and both writes answered 403.
+    const theirs = await insert('crm_project', {
+      name: `Test Handover ${++k}`, crm_account: account.id, kind: 'delivery', approved_budget: 1000,
+    }, admin);
+    await insert('crm_project_member', { crm_project: theirs.id, person: pm.id, responsibility: 'project_manager', rate_card: daily.id }, admin);
+    const edit = await verify.apiAs(pm.token, 'PATCH', `/data/crm_project/${theirs.id}`, { description: 'Kick-off held.' });
+    expect(edit.status, await edit.clone().text()).toBe(200);
+    const staff = await verify.apiAs(pm.token, 'POST', '/data/crm_project_member', {
+      crm_project: theirs.id, person: consultant.id, responsibility: 'consultant', rate_card: hourly.id,
+    });
+    expect(staff.status, await staff.clone().text()).toBeLessThan(300);
+    expect((await row('crm_project', theirs.id))!.team_members).toEqual([consultant.id]);
+  });
+
+  it('opens the project to the team and to nobody else', async () => {
+    expect(await row('crm_project', project.id, consultant.token)).toBeTruthy();
+    expect(await row('crm_project', project.id, outsider.token)).toBeUndefined();
+    expect(await row('crm_project', project.id, finance.token), 'finance reads every project').toBeTruthy();
+  });
+
+  it('hides cost from a team member', async () => {
+    const p = (await row('crm_project', project.id, consultant.token))!;
+    expect(p.actual_labor_cost).toBeUndefined();
+    expect(p.actual_expense_cost).toBeUndefined();
+    expect(p.gross_margin).toBeUndefined();
+    expect(p.billable_amount, 'the amount to bill stays readable').not.toBeUndefined();
+    const card = (await row('crm_rate_card', hourly.id, consultant.token))!;
+    expect(card.bill_rate).toBe(120);
+    expect(card.cost_rate).toBeUndefined();
+  });
+
+  it('refuses a second staffing row for the same person (project_member_unique)', async () => {
+    await expect(insert('crm_project_member', { crm_project: project.id, person: consultant.id, rate_card: daily.id }, pm.token))
+      .rejects.toThrow(/already staffed on this project/);
+  });
+
+  it('drops a removed member from the Team', async () => {
+    const extra = await insert('crm_project_member', { crm_project: project.id, person: outsider.id, rate_card: hourly.id }, pm.token);
+    expect((await row('crm_project', project.id))!.team_members).toContain(outsider.id);
+    await verify.hooks.run('crm_project_member', 'delete', { id: extra.id }, { as: pm.token });
+    expect((await row('crm_project', project.id))!.team_members).not.toContain(outsider.id);
+  });
+});
+
+describe('time (timesheet_stamps, time_entry_costing)', () => {
+  let sheet: Rec;
+  let entry: Rec;
+
+  beforeAll(async () => {
+    sheet = await insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-02', period_end: '2026-11-08' }, consultant.token);
+    entry = await insert('crm_time_entry', { crm_timesheet: sheet.id, entry_date: '2026-11-03', hours: 8 }, consultant.token);
+  });
+
+  it('stamps the timesheet\'s name and approver', async () => {
+    const s = (await row('crm_timesheet', sheet.id))!;
+    expect(s.approver).toBe(pm.id);
+    expect(s.name).toContain(project.name);
+  });
+
+  it('refuses a second timesheet for the same project and period', async () => {
+    await expect(insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-02', period_end: '2026-11-08' }, consultant.token))
+      .rejects.toThrow(/already a timesheet/);
+  });
+
+  it('copies the rate card\'s rates and costs the hours', async () => {
+    const e = (await row('crm_time_entry', entry.id))!;
+    expect(num(e.cost_rate)).toBe(50);
+    expect(num(e.bill_rate)).toBe(120);
+    expect(num(e.cost_amount)).toBe(400);
+    expect(num(e.bill_amount)).toBe(960);
+  });
+
+  it('costs a day card per hour', async () => {
+    const pmSheet = await insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-02', period_end: '2026-11-08' }, pm.token);
+    const e = await insert('crm_time_entry', { crm_timesheet: pmSheet.id, entry_date: '2026-11-04', hours: 4 }, pm.token);
+    const stored = (await row('crm_time_entry', e.id))!;
+    expect(num(stored.cost_rate)).toBe(800 / HOURS_PER_DAY);
+    expect(num(stored.cost_amount)).toBe(400);
+  });
+
+  it('refuses a date outside the period, and hours from someone not staffed', async () => {
+    await expect(insert('crm_time_entry', { crm_timesheet: sheet.id, entry_date: '2026-11-20', hours: 1 }, consultant.token))
+      .rejects.toThrow(/outside this timesheet's period/);
+    const own = await insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-02', period_end: '2026-11-08', owner_id: outsider.id }, admin);
+    await expect(insert('crm_time_entry', { crm_timesheet: own.id, entry_date: '2026-11-03', hours: 1 }, outsider.token))
+      .rejects.toThrow(/staffed on the project/);
+  });
+
+  it('freezes a submitted timesheet, and lets only the approver approve', async () => {
+    await update('crm_timesheet', { id: sheet.id, status: 'submitted' }, consultant.token);
+    await expect(update('crm_time_entry', { id: entry.id, hours: 9 }, consultant.token)).rejects.toThrow(/has been submitted/);
+    await expect(update('crm_timesheet', { id: sheet.id, status: 'approved' }, consultant.token)).rejects.toThrow(/Only the timesheet's approver/);
+    expect(num((await row('crm_project', project.id))!.actual_labor_cost)).toBe(0);
+    await update('crm_timesheet', { id: sheet.id, status: 'approved' }, pm.token);
+    const p = (await row('crm_project', project.id))!;
+    expect(num(p.actual_labor_cost)).toBe(400);
+    expect(num(p.billable_amount)).toBe(960);
+    expect(num(p.cost_variance)).toBe(4600);
+    expect(num(p.gross_margin)).toBe(9600);
+  });
+
+  it('keeps past cost when the rate card changes', async () => {
+    await update('crm_rate_card', { id: hourly.id, cost_rate: 80 }, finance.token);
+    expect(num((await row('crm_time_entry', entry.id))!.cost_amount)).toBe(400);
+    expect(num((await row('crm_project', project.id))!.actual_labor_cost)).toBe(400);
+  });
+});
+
+describe('expenses (expense_approver)', () => {
+  it('reach the project\'s cost once the approver approves them', async () => {
+    const before = num((await row('crm_project', project.id))!.actual_expense_cost);
+    const exp = await insert('crm_expense', {
+      name: `Flight ${++k}`, crm_project: project.id, expense_date: '2026-11-03', category: 'travel', amount: 300, is_billable: true,
+    }, consultant.token);
+    expect((await row('crm_expense', exp.id))!.approver).toBe(pm.id);
+    await update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token);
+    await expect(update('crm_expense', { id: exp.id, status: 'approved' }, consultant.token)).rejects.toThrow(/Only the expense's approver/);
+    await update('crm_expense', { id: exp.id, status: 'approved' }, pm.token);
+    expect(num((await row('crm_project', project.id))!.actual_expense_cost) - before).toBe(300);
+  });
+});
+
+describe('the delivery launcher', () => {
+  const appsOf = async (token: string): Promise<string[]> => {
+    const res = await verify.apiAs(token, 'GET', '/me/apps');
+    expect(res.status, await res.clone().text()).toBe(200);
+    const body: Rec = await res.json();
+    const list = ((body.data ?? body).apps ?? body.data ?? body) as Rec[];
+    return list.map((a) => String(a.name)).filter((name) => name.startsWith('crm_')).sort();
+  };
+
+  it.each([
+    ['project manager', () => pm.token, ['crm_enterprise', 'crm_psa']],
+    ['team member', () => consultant.token, ['crm_enterprise', 'crm_psa']],
+    ['finance controller', () => finance.token, ['crm_enterprise', 'crm_o2c', 'crm_psa']],
+  ] as const)('a %s is offered Project Delivery', async (_who, token, apps) => {
+    expect(await appsOf(token())).toEqual(apps);
+  });
+});

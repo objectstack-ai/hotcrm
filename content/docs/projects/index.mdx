@@ -1,0 +1,75 @@
+---
+title: Project Delivery
+description: Running customer projects after the sale — who is staffed at what rate, the hours and expenses they book, and what the project costs against its budget and revenue.
+---
+
+# Project Delivery
+
+Project Delivery answers the questions a delivery team asks once a deal is won: **who is working on the project, what has it cost so far, how much of the budget is left, and is it still making money?** It is a module of HotCRM with an app of its own, **Project Delivery**, where project managers, consultants and finance work.
+
+## What is in it
+
+| Record | What it is | Who writes it |
+| --- | --- | --- |
+| **Project** | One engagement for a customer: presales, delivery or internal work | A project manager |
+| **Project Member** | One person staffed on a project, with their responsibility and rate card | The project's manager |
+| **Rate Card** | A grade of work with its cost rate and bill rate, per hour or per day | Finance, the PMO |
+| **Timesheet** | One person's hours on one project for one period, a week for example | The person who worked them |
+| **Time Entry** | One day's hours on a timesheet | The person who worked them |
+| **Expense** | Money one person spent on a project: travel, lodging, meals | The person who spent it |
+
+A project hangs off an **account**, and may name the **opportunity** it was won from and the **contract** it delivers. Open an account, an opportunity or a contract and its **Projects** tab lists them.
+
+| Page | What it covers |
+| --- | --- |
+| [Projects and Staffing](./projects-and-staffing) | Opening a project, its kinds and statuses, staffing it at a rate card, the budget |
+| [Time and Expenses](./time-and-expenses) | Booking hours and expenses, submitting and approving them, how cost is counted |
+
+## Where to find it
+
+| Who | Where |
+| --- | --- |
+| Project managers, team members, finance controllers | The **Project Delivery** app: **All Projects**, **My Projects** and **Staffing** under **Projects**; **My Timesheets**, **My Expenses**, **Timesheets to Approve** and **Expenses to Approve** under **Time and Expenses**; **Rate Cards** under **Rates**; and the **Accounts**, **Opportunities** and **Contracts** the projects belong to. |
+| Sales managers | The Project Delivery app is on their launcher, and every project is readable, so a manager sees how the deals their team won are being delivered. |
+| Sales reps, service, marketing, accounts receivable | Not on their launcher. |
+| Administrators | Everything. |
+
+A launcher decides what is offered, not what may be opened: an app left off it still opens from its address, and every record keeps the access its sharing gives.
+
+## Who can do what
+
+Projects are private. A person reads a project when they own it, when they are staffed on it, or when they are its project manager; the project manager also edits it. Finance and delivery leadership read every project.
+
+| Person | Projects | Staffing | Rate cards | Time and expenses |
+| --- | --- | --- | --- | --- |
+| Project team member | Read the projects they are staffed on, **without cost or margin** | Read | Read, **without the cost rate** | Book their own |
+| Project manager | Open projects; edit the ones they manage | Staff the projects they manage | Read | Book their own; approve their team's |
+| Finance controller | Read every project; set budgets | Read | Create and edit | Read every one |
+| Project director, PMO | Both of the above | Both | Both | Both |
+| Sales manager | Read every project | Read | — | Read every one |
+| Administrator | Everything | Everything | Everything | Everything |
+
+An administrator gives people their access with a **position** under **Setup → Position Holders**: **Project Team Member**, **Project Manager**, **Finance Controller**, **Project Director** or **PMO**.
+
+> **Team members never see what a colleague costs.** The cost rate, the cost of each entry, a timesheet's total cost and the project's cost and margin are hidden from the Project Team Member position. They see the hours, the bill rate and the amount to bill.
+
+## The money on a project [#money]
+
+None of a project's figures is typed in except **Planned Revenue** and **Approved Budget**. Everything else moves when hours and expenses are approved:
+
+| Field | What it counts |
+| --- | --- |
+| **Labor Cost** | The cost of the hours on the project's **Approved** timesheets |
+| **Expense Cost** | The project's **Approved** expenses |
+| **Actual Cost** | Labor Cost plus Expense Cost |
+| **Budget Remaining** | Approved Budget minus Actual Cost |
+| **Budget Used %** | Actual Cost as a percentage of the Approved Budget |
+| **Gross Margin** | Planned Revenue minus Actual Cost |
+| **Gross Margin %** | Gross Margin as a percentage of Planned Revenue |
+| **Approved to Bill** | Approved billable hours at their bill rate, plus approved billable expenses |
+
+Amounts are in your organization's currency. The project only produces **Approved to Bill**: invoicing the customer is done in [Order to Cash](/docs/order-to-cash).
+
+## Not every customer uses it
+
+A company that does not run projects has an administrator disable the module. Its app, its records and the Projects tabs on accounts, opportunities and contracts go with it.

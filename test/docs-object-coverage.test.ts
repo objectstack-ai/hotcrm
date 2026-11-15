@@ -152,6 +152,12 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   crm_billing_milestone: { page: 'order-to-cash/collection-plan' },
   crm_invoice: { page: 'order-to-cash/invoices-and-payments' },
   crm_payment: { page: 'order-to-cash/invoices-and-payments' },
+  crm_project: { page: 'projects/projects-and-staffing' },
+  crm_project_member: { page: 'projects/projects-and-staffing' },
+  crm_rate_card: { page: 'projects/projects-and-staffing' },
+  crm_timesheet: { page: 'projects/time-and-expenses' },
+  crm_time_entry: { page: 'projects/time-and-expenses' },
+  crm_expense: { page: 'projects/time-and-expenses' },
 };
 
 /** Sections written for developers — see check 4 in the header note. */

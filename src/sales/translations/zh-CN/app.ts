@@ -799,6 +799,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '应收会计',
       description: '财务：录入和导入销售在每份合同上看到的发票与回款。',
     },
+    crm_project_director: {
+      label: '项目总监',
+      description: '领导项目交付：负责项目，并可查看每个项目、工时单和费用及其成本与毛利。',
+    },
+    crm_pmo: {
+      label: '项目管理办公室',
+      description: '项目管理办公室：查看每个项目的成本与毛利，维护费率卡，并负责项目。',
+    },
+    crm_project_manager: {
+      label: '项目经理',
+      description: '立项并负责项目，按费率卡安排人员，审批团队的工时单和费用。',
+    },
+    crm_project_member: {
+      label: '项目成员',
+      description: '投入项目的顾问：在自己参与的项目上填报工时和费用。',
+    },
+    crm_finance_controller: {
+      label: '财务控制',
+      description: '财务：关注项目成本与毛利，设定项目预算，维护费率卡。',
+    },
     crm_na_sales_team: {
       label: '北美销售团队',
       description: '北美区域团队：可编辑北美区域内的每一个客户。',
@@ -810,6 +830,18 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
+    finance_controller: {
+      label: '财务控制',
+      description: '财务：查看每个项目及其人员、工时和费用，编辑项目预算，维护费率卡。',
+    },
+    project_manager: {
+      label: '项目经理',
+      description: '交付：立项并负责项目，按费率卡安排人员，填报工时和费用，可查看每个客户、商机和合同。',
+    },
+    project_member: {
+      label: '项目成员',
+      description: '交付：查看自己参与的项目，填报自己的工时单和费用，看不到成本单价。',
+    },
     ar_accountant: {
       label: '应收会计',
       description: '财务：录入和导入每份合同的发票与回款，可查看其背后的合同、客户和回款计划。',

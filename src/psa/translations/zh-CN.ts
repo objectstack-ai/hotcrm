@@ -8,12 +8,332 @@ import type { TranslationData } from '@objectstack/spec/system';
  * pack: `./index.ts`.
  */
 export const zhCN: TranslationData = {
+  objects: {
+    crm_project: {
+      label: '项目',
+      pluralLabel: '项目',
+      description: '交付团队为客户执行的项目，包括人员、工时、费用、成本和毛利',
+      fields: {
+        owner_id: { label: '项目负责人' },
+        project_number: { label: '项目编号' },
+        name: { label: '项目名称' },
+        kind: {
+          label: '类型',
+          options: {
+            presales: '售前',
+            delivery: '交付',
+            internal: '内部',
+          },
+        },
+        billing_type: {
+          label: '计费方式',
+          help: '客户为这项工作付款的方式。开票在「订单与回款」中完成。',
+          options: {
+            fixed_fee: '固定总价',
+            time_and_materials: '按人天计费',
+            retainer: '包年服务',
+            non_billable: '不计费',
+          },
+        },
+        status: {
+          label: '状态',
+          options: {
+            draft: '草稿',
+            in_approval: '审批中',
+            approved: '已批准',
+            rejected: '已驳回',
+            active: '进行中',
+            on_hold: '暂停',
+            completed: '已完成',
+            closed: '已关闭',
+            cancelled: '已取消',
+          },
+        },
+        description: { label: '描述' },
+        crm_account: { label: '客户' },
+        crm_opportunity: { label: '商机' },
+        crm_contract: { label: '合同' },
+        source_project: {
+          label: '来源售前项目',
+          help: '交付项目由哪个售前项目转化而来。',
+        },
+        planned_start: { label: '计划开始' },
+        planned_end: { label: '计划结束' },
+        actual_start: { label: '实际开始' },
+        actual_end: { label: '实际结束' },
+        percent_complete: { label: '完成百分比' },
+        planned_revenue: {
+          label: '计划收入',
+          help: '客户为这个项目支付的金额，毛利以它为基准计算。',
+        },
+        approved_budget: {
+          label: '批准预算',
+          help: '这个项目可以花费的成本。在项目提交审批前填写。',
+        },
+        actual_labor_cost: { label: '人工成本' },
+        actual_expense_cost: { label: '费用成本' },
+        billable_labor_amount: { label: '可计费工时金额' },
+        billable_expense_amount: { label: '可计费费用' },
+        billable_amount: {
+          label: '已批准待开票',
+          help: '已批准的可计费工时按计费单价计算，加上已批准的可计费费用。由「订单与回款」开票。',
+        },
+        actual_cost: { label: '实际成本' },
+        cost_variance: { label: '剩余预算' },
+        budget_consumed_percent: { label: '预算使用率' },
+        gross_margin: { label: '毛利' },
+        gross_margin_percent: { label: '毛利率' },
+        project_manager: {
+          label: '项目经理',
+          help: '在这个项目中担任项目经理的人。',
+        },
+        team_members: { label: '项目团队' },
+      },
+      _views: {
+        all_projects: { label: '全部项目' },
+        my_projects: { label: '我的项目' },
+        active_projects: { label: '进行中的项目' },
+      },
+      _sections: {
+        identity: { label: '项目' },
+        provenance: { label: '客户' },
+        plan: { label: '计划' },
+        financials: { label: '财务' },
+        team: { label: '团队' },
+      },
+      _validations: {
+        project_planned_dates: { message: '计划结束日期不能早于计划开始日期。' },
+        project_status_progression: { message: '不允许这样更改状态。项目按 草稿 → 审批中 → 已批准 → 进行中 → 已完成 → 已关闭 推进；进行中和暂停可以来回切换，被驳回的项目退回草稿，未结束的项目可以取消。' },
+      },
+    },
+    crm_project_member: {
+      label: '项目成员',
+      pluralLabel: '项目成员',
+      description: '投入项目的人员，包括其职责和费率卡',
+      fields: {
+        crm_project: { label: '项目' },
+        person: { label: '人员' },
+        responsibility: {
+          label: '职责',
+          options: {
+            project_manager: '项目经理',
+            project_director: '项目总监',
+            account_manager: '客户经理',
+            architect: '架构师',
+            consultant: '顾问',
+            quality_assurance: '质量保证',
+            finance_partner: '财务伙伴',
+            subcontractor: '分包商',
+          },
+        },
+        rate_card: {
+          label: '费率卡',
+          help: '这个人在这个项目上的工时按哪个成本单价和计费单价计算。',
+        },
+        allocation_percent: { label: '投入比例' },
+        start_date: { label: '开始日期' },
+        end_date: { label: '结束日期' },
+        is_billable: {
+          label: '可计费',
+          help: '这个人在这个项目上的工时是否向客户计费。',
+        },
+      },
+      _views: {
+        all_project_members: { label: '全部项目成员' },
+      },
+      _sections: {
+        basic: { label: '人员安排' },
+      },
+      _validations: {
+        project_member_dates: { message: '结束日期不能早于开始日期。' },
+      },
+    },
+    crm_rate_card: {
+      label: '费率卡',
+      pluralLabel: '费率卡',
+      description: '一个职级的成本单价和计费单价',
+      fields: {
+        owner_id: { label: '负责人' },
+        name: {
+          label: '名称',
+          help: '例如「高级顾问」。',
+        },
+        seniority: {
+          label: '职级',
+          options: {
+            junior: '初级',
+            intermediate: '中级',
+            senior: '高级',
+            lead: '资深',
+            principal: '专家',
+          },
+        },
+        unit: {
+          label: '单位',
+          help: '按天计价时，一天按八小时计算。',
+          options: {
+            hour: '按小时',
+            day: '按天',
+          },
+        },
+        cost_rate: {
+          label: '成本单价',
+          help: '这个职级每个单位给公司带来的成本。',
+        },
+        bill_rate: {
+          label: '计费单价',
+          help: '这个职级每个单位向客户收取的价格。',
+        },
+        is_internal: {
+          label: '内部',
+          help: '内部费率卡可以低于成本计费，或不计费。',
+        },
+        effective_from: { label: '生效日期' },
+        effective_to: { label: '失效日期' },
+      },
+      _views: {
+        all_rate_cards: { label: '全部费率卡' },
+      },
+      _sections: {
+        basic: { label: '费率卡' },
+        rates: { label: '单价' },
+      },
+      _validations: {
+        rate_card_bill_not_below_cost: { message: '除非是内部费率卡，计费单价不能低于成本单价。' },
+        rate_card_dates: { message: '失效日期不能早于生效日期。' },
+      },
+    },
+    crm_timesheet: {
+      label: '工时单',
+      pluralLabel: '工时单',
+      description: '一个人在一个项目上某一期间的工时，作为整体审批',
+      fields: {
+        owner_id: { label: '人员' },
+        name: { label: '工时单' },
+        crm_project: { label: '项目' },
+        period_start: { label: '期间开始' },
+        period_end: { label: '期间结束' },
+        status: {
+          label: '状态',
+          options: {
+            draft: '草稿',
+            submitted: '已提交',
+            approved: '已批准',
+            rejected: '已驳回',
+          },
+        },
+        approver: { label: '审批人' },
+        total_hours: { label: '总工时' },
+        total_cost: { label: '总成本' },
+        total_bill_amount: { label: '可计费金额' },
+        notes: { label: '备注' },
+      },
+      _views: {
+        all_timesheets: { label: '全部工时单' },
+        my_timesheets: { label: '我的工时单' },
+        timesheets_to_approve: { label: '待我审批的工时单' },
+      },
+      _sections: {
+        basic: { label: '工时单' },
+        totals: { label: '合计' },
+      },
+      _validations: {
+        timesheet_period: { message: '期间结束不能早于期间开始，一张工时单最多覆盖 31 天。' },
+        timesheet_status_progression: { message: '不允许这样更改状态。工时单按 草稿 → 已提交 → 已批准或已驳回 推进；被驳回的工时单退回草稿修改。' },
+      },
+    },
+    crm_time_entry: {
+      label: '工时明细',
+      pluralLabel: '工时明细',
+      description: '工时单中某一天的工时，以及对应的成本',
+      fields: {
+        crm_timesheet: { label: '工时单' },
+        entry_date: {
+          label: '日期',
+          help: '工时单期间内的某一天。',
+        },
+        hours: { label: '工时' },
+        is_billable: { label: '可计费' },
+        notes: { label: '备注' },
+        cost_rate: { label: '成本单价（每小时）' },
+        cost_amount: { label: '成本' },
+        bill_rate: { label: '计费单价（每小时）' },
+        bill_amount: { label: '可计费金额' },
+      },
+      _views: {
+        all_time_entries: { label: '全部工时明细' },
+      },
+      _sections: {
+        basic: { label: '工时明细' },
+        rates: { label: '成本与计费' },
+      },
+    },
+    crm_expense: {
+      label: '费用',
+      pluralLabel: '费用',
+      description: '在项目上发生的一笔费用，附有票据',
+      fields: {
+        owner_id: { label: '报销人' },
+        name: { label: '描述' },
+        crm_project: { label: '项目' },
+        expense_date: { label: '日期' },
+        category: {
+          label: '类别',
+          options: {
+            travel: '差旅',
+            lodging: '住宿',
+            meals: '餐饮',
+            equipment: '设备',
+            other: '其他',
+          },
+        },
+        amount: { label: '金额' },
+        is_billable: {
+          label: '可计费',
+          help: '这笔费用是否转嫁给客户。',
+        },
+        status: {
+          label: '状态',
+          options: {
+            draft: '草稿',
+            submitted: '已提交',
+            approved: '已批准',
+            rejected: '已驳回',
+          },
+        },
+        approver: { label: '审批人' },
+        notes: { label: '备注' },
+      },
+      _views: {
+        all_expenses: { label: '全部费用' },
+        my_expenses: { label: '我的费用' },
+        expenses_to_approve: { label: '待我审批的费用' },
+      },
+      _sections: {
+        basic: { label: '费用' },
+      },
+      _validations: {
+        expense_status_progression: { message: '不允许这样更改状态。费用按 草稿 → 已提交 → 已批准或已驳回 推进；被驳回的费用退回草稿修改。' },
+      },
+    },
+  },
   apps: {
     // This package's own app (#2316); the name is the maintainer's (2026-11-15).
     crm_psa: {
       label: '项目交付',
       description: '项目、项目成员、工时与费用，以及由此得出的毛利',
       navigation: {
+        group_projects: { label: '项目' },
+        nav_projects: { label: '全部项目' },
+        nav_my_projects: { label: '我的项目' },
+        nav_project_members: { label: '人员安排' },
+        group_time_expenses: { label: '工时与费用' },
+        nav_my_timesheets: { label: '我的工时单' },
+        nav_my_expenses: { label: '我的费用' },
+        nav_timesheets_to_approve: { label: '待我审批的工时单' },
+        nav_expenses_to_approve: { label: '待我审批的费用' },
+        group_rates: { label: '费率' },
+        nav_rate_cards: { label: '费率卡' },
         group_customers: { label: '客户与合同' },
         group_work: { label: '我的工作' },
         nav_approval_requests: { label: '待我审批' },

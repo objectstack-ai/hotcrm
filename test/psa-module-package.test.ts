@@ -17,8 +17,9 @@ type AnyRec = Record<string, any>;
  * `type: 'module'` package of the ONE HotCRM artifact, by the maintainer's
  * 2026-11-15 ruling (option A, `psa-module-plan.md` *Recorded 2026-11-15*): a
  * suite module, depending on the app package only, with its own app,
- * 项目交付. Phase 0 is the skeleton: the module owns no object yet, so every
- * entry of its app is contributed by the app package into anchor groups. Its
+ * 项目交付. Phase 0 was the skeleton, every entry contributed by the app
+ * package into anchor groups; phase 1a brings the module's own six objects,
+ * whose groups come first, ahead of those anchors. Its
  * version and range are `test/docs-declared-versions.test.ts`'s, read off the
  * same `packages[]`.
  */
@@ -48,11 +49,15 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     expect(Object.keys(psa!.dependencies ?? {})).toEqual([APP_ID]);
   });
 
-  it('in phase 0 it owns no object, hook or seed row', () => {
+  it('it owns its six objects, their five hooks and its seed rows (phase 1a)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
-    expect(stack.objects ?? []).toEqual([]);
-    expect(stack.hooks ?? []).toEqual([]);
-    expect(stack.data ?? []).toEqual([]);
+    expect(((stack.objects ?? []) as AnyRec[]).map((o) => o.name).sort()).toEqual([
+      'crm_expense', 'crm_project', 'crm_project_member', 'crm_rate_card', 'crm_time_entry', 'crm_timesheet',
+    ]);
+    expect(((stack.hooks ?? []) as AnyRec[]).map((h) => h.name).sort()).toEqual([
+      'expense_approver', 'project_member_unique', 'project_team_sync', 'time_entry_costing', 'timesheet_stamps',
+    ]);
+    expect([...new Set(((stack.data ?? []) as AnyRec[]).map((d) => d.object))].sort()).toEqual(['crm_project', 'crm_rate_card']);
   });
 });
 
@@ -64,15 +69,22 @@ describe('Project Delivery is its own app (#2316)', () => {
     expect(owners).toEqual([PSA_ID]);
   });
 
-  it('its customer and work entries arrive from the app package through anchor groups', () => {
+  it('its own groups come first, then the customer and work entries the app package contributes', () => {
     const nav = servedApp(PSA_APP).navigation as AnyRec[];
-    expect(nav.map((n) => n.id)).toEqual(['group_customers', 'group_work']);
+    expect(nav.map((n) => n.id)).toEqual(['group_projects', 'group_time_expenses', 'group_rates', 'group_customers', 'group_work']);
     const objects = walk(nav).filter((i) => i.type === 'object').map((i) => `${i.objectName}${i.viewName ? `/${i.viewName}` : ''}`);
-    expect(objects).toEqual(['crm_account', 'crm_opportunity', 'crm_contract', 'crm_task/my_open_tasks']);
-    // The app's own `navigation` names no foreign object (ADR-0130): those
-    // groups are empty in the module's source.
-    const own = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!.apps[0];
-    expect(walk(own.navigation as AnyRec[]).filter((i) => i.type === 'object')).toEqual([]);
+    expect(objects).toEqual([
+      'crm_project', 'crm_project/my_projects', 'crm_project_member',
+      'crm_timesheet/my_timesheets', 'crm_expense/my_expenses', 'crm_timesheet/timesheets_to_approve', 'crm_expense/expenses_to_approve',
+      'crm_rate_card',
+      'crm_account', 'crm_opportunity', 'crm_contract', 'crm_task/my_open_tasks',
+    ]);
+    // The app's own `navigation` names only the module's objects (ADR-0130):
+    // the anchor groups are empty in the module's source.
+    const own = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
+    const mine = new Set(((own.objects ?? []) as AnyRec[]).map((o) => o.name));
+    const named = walk(own.apps[0].navigation as AnyRec[]).filter((i) => i.type === 'object').map((i) => i.objectName);
+    expect(named.filter((name) => !mine.has(name))).toEqual([]);
   });
 
   it.each(['en', 'zh-CN', 'es-ES', 'ja-JP'])('the %s pack labels the app and every entry it serves', (locale) => {
@@ -88,11 +100,18 @@ describe('Project Delivery is its own app (#2316)', () => {
     expect(packFor('zh-CN')?.apps?.[PSA_APP]?.label).toBe('项目交付');
   });
 
-  it('while it is a skeleton, every business permission set hides it and the administrators are silent', () => {
+  it('rep, service, marketing and AR sets hide it; the sales manager states it; the delivery sets are silent', () => {
     const sets = Object.values(profiles) as AnyRec[];
     const hiding = sets.filter((s) => s.tabPermissions?.[PSA_APP] === 'hidden').map((s) => s.name).sort();
-    expect(hiding).toEqual(['ar_accountant', 'marketing_user', 'sales_manager', 'sales_rep', 'service_agent']);
-    expect(sets.filter((s) => s.tabPermissions?.[PSA_APP] === 'visible').map((s) => s.name)).toEqual([]);
+    expect(hiding).toEqual(['ar_accountant', 'marketing_user', 'sales_rep', 'service_agent']);
+    // The manager states it beside the other four apps, as for Order to Cash,
+    // so a set that hides it cannot take it away (most-visible-wins).
+    expect(sets.filter((s) => s.tabPermissions?.[PSA_APP] === 'visible').map((s) => s.name)).toEqual(['sales_manager']);
+    for (const name of ['project_manager', 'project_member', 'finance_controller']) {
+      const set = sets.find((s) => s.name === name);
+      expect(set, name).toBeTruthy();
+      expect(set!.tabPermissions?.[PSA_APP], name).toBeUndefined();
+    }
   });
 });
 
@@ -110,10 +129,10 @@ describe('with the module disabled (#2316)', () => {
   beforeAll(async () => {
     verify = await hotcrmStack();
     admin = await verify.signIn();
-  });
+  }, 120_000);
 
   afterAll(async () => {
-    await verify.apiAs(admin, 'PATCH', `${PKG}/enable`);
+    await verify?.apiAs(admin, 'PATCH', `${PKG}/enable`);
   });
 
   const appStatus = async (name: string): Promise<number> => (await verify.apiAs(admin, 'GET', `/meta/app/${name}`)).status;
@@ -129,10 +148,13 @@ describe('with the module disabled (#2316)', () => {
     expect(await offered()).toContain(PSA_APP);
     expect((await verify.apiAs(admin, 'PATCH', `${PKG}/disable`)).status).toBe(200);
     expect(await appStatus(PSA_APP)).toBe(404);
+    // Its objects go with it (phase 1a): a project is not served while it is off.
+    expect((await verify.apiAs(admin, 'GET', '/meta/object/crm_project')).status).toBe(404);
     expect(await offered()).toEqual(['crm_enterprise', 'crm_marketing', 'crm_o2c', 'crm_service']);
     for (const app of ['crm_enterprise', 'crm_service', 'crm_marketing', 'crm_o2c']) expect(await appStatus(app), app).toBe(200);
     expect((await verify.apiAs(admin, 'PATCH', `${PKG}/enable`)).status).toBe(200);
     expect(await appStatus(PSA_APP)).toBe(200);
     expect(await offered()).toContain(PSA_APP);
+    expect((await verify.apiAs(admin, 'GET', '/meta/object/crm_project')).status).toBe(200);
   });
 });

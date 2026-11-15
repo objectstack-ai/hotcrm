@@ -8,12 +8,332 @@ import type { TranslationData } from '@objectstack/spec/system';
  * package's pack: `./index.ts`.
  */
 export const esES: TranslationData = {
+  objects: {
+    crm_project: {
+      label: 'Proyecto',
+      pluralLabel: 'Proyectos',
+      description: 'Un proyecto que el equipo de entrega realiza para un cliente, con su personal, horas, gastos, coste y margen',
+      fields: {
+        owner_id: { label: 'Propietario del proyecto' },
+        project_number: { label: 'Número de proyecto' },
+        name: { label: 'Nombre del proyecto' },
+        kind: {
+          label: 'Tipo',
+          options: {
+            presales: 'Preventa',
+            delivery: 'Entrega',
+            internal: 'Interno',
+          },
+        },
+        billing_type: {
+          label: 'Tipo de facturación',
+          help: 'Cómo paga el cliente el trabajo. La facturación se hace en Pedido a cobro.',
+          options: {
+            fixed_fee: 'Precio fijo',
+            time_and_materials: 'Tiempo y materiales',
+            retainer: 'Iguala',
+            non_billable: 'No facturable',
+          },
+        },
+        status: {
+          label: 'Estado',
+          options: {
+            draft: 'Borrador',
+            in_approval: 'En aprobación',
+            approved: 'Aprobado',
+            rejected: 'Rechazado',
+            active: 'Activo',
+            on_hold: 'En pausa',
+            completed: 'Completado',
+            closed: 'Cerrado',
+            cancelled: 'Cancelado',
+          },
+        },
+        description: { label: 'Descripción' },
+        crm_account: { label: 'Cuenta' },
+        crm_opportunity: { label: 'Oportunidad' },
+        crm_contract: { label: 'Contrato' },
+        source_project: {
+          label: 'Ganado desde',
+          help: 'Para un proyecto de entrega: el proyecto de preventa del que se ganó.',
+        },
+        planned_start: { label: 'Inicio previsto' },
+        planned_end: { label: 'Fin previsto' },
+        actual_start: { label: 'Inicio real' },
+        actual_end: { label: 'Fin real' },
+        percent_complete: { label: 'Porcentaje completado' },
+        planned_revenue: {
+          label: 'Ingresos previstos',
+          help: 'Lo que paga el cliente por este proyecto. El margen bruto se mide contra esta cifra.',
+        },
+        approved_budget: {
+          label: 'Presupuesto aprobado',
+          help: 'El coste que puede gastar este proyecto. Se fija antes de enviarlo a aprobación.',
+        },
+        actual_labor_cost: { label: 'Coste de mano de obra' },
+        actual_expense_cost: { label: 'Coste de gastos' },
+        billable_labor_amount: { label: 'Mano de obra facturable' },
+        billable_expense_amount: { label: 'Gastos facturables' },
+        billable_amount: {
+          label: 'Aprobado para facturar',
+          help: 'Horas facturables aprobadas a su tarifa de venta, más gastos facturables aprobados. Pedido a cobro lo factura.',
+        },
+        actual_cost: { label: 'Coste real' },
+        cost_variance: { label: 'Presupuesto restante' },
+        budget_consumed_percent: { label: 'Presupuesto consumido' },
+        gross_margin: { label: 'Margen bruto' },
+        gross_margin_percent: { label: 'Margen bruto %' },
+        project_manager: {
+          label: 'Jefe de proyecto',
+          help: 'La persona asignada a este proyecto como jefe de proyecto.',
+        },
+        team_members: { label: 'Equipo' },
+      },
+      _views: {
+        all_projects: { label: 'Todos los proyectos' },
+        my_projects: { label: 'Mis proyectos' },
+        active_projects: { label: 'Proyectos activos' },
+      },
+      _sections: {
+        identity: { label: 'Proyecto' },
+        provenance: { label: 'Cliente' },
+        plan: { label: 'Plan' },
+        financials: { label: 'Finanzas' },
+        team: { label: 'Equipo' },
+      },
+      _validations: {
+        project_planned_dates: { message: 'El fin previsto debe ser igual o posterior al inicio previsto.' },
+        project_status_progression: { message: 'Este cambio de estado no está permitido. Un proyecto avanza Borrador → En aprobación → Aprobado → Activo → Completado → Cerrado; Activo y En pausa se alternan, un proyecto rechazado vuelve a Borrador y un proyecto abierto puede cancelarse.' },
+      },
+    },
+    crm_project_member: {
+      label: 'Miembro del proyecto',
+      pluralLabel: 'Miembros del proyecto',
+      description: 'Una persona asignada a un proyecto, con una responsabilidad y una tarifa',
+      fields: {
+        crm_project: { label: 'Proyecto' },
+        person: { label: 'Persona' },
+        responsibility: {
+          label: 'Responsabilidad',
+          options: {
+            project_manager: 'Jefe de proyecto',
+            project_director: 'Director de proyecto',
+            account_manager: 'Gestor de cuenta',
+            architect: 'Arquitecto',
+            consultant: 'Consultor',
+            quality_assurance: 'Control de calidad',
+            finance_partner: 'Socio financiero',
+            subcontractor: 'Subcontratista',
+          },
+        },
+        rate_card: {
+          label: 'Tarifa',
+          help: 'La tarifa de coste y de venta a la que se cuentan las horas de esta persona en este proyecto.',
+        },
+        allocation_percent: { label: 'Dedicación' },
+        start_date: { label: 'Fecha de inicio' },
+        end_date: { label: 'Fecha de fin' },
+        is_billable: {
+          label: 'Facturable',
+          help: 'Si las horas de esta persona en este proyecto se facturan al cliente.',
+        },
+      },
+      _views: {
+        all_project_members: { label: 'Todos los miembros de proyecto' },
+      },
+      _sections: {
+        basic: { label: 'Asignación' },
+      },
+      _validations: {
+        project_member_dates: { message: 'La fecha de fin debe ser igual o posterior a la de inicio.' },
+      },
+    },
+    crm_rate_card: {
+      label: 'Tarifa',
+      pluralLabel: 'Tarifas',
+      description: 'La tarifa de coste y de venta de un nivel de seniority',
+      fields: {
+        owner_id: { label: 'Propietario' },
+        name: {
+          label: 'Nombre',
+          help: 'Por ejemplo, "Consultor sénior".',
+        },
+        seniority: {
+          label: 'Seniority',
+          options: {
+            junior: 'Júnior',
+            intermediate: 'Intermedio',
+            senior: 'Sénior',
+            lead: 'Líder',
+            principal: 'Principal',
+          },
+        },
+        unit: {
+          label: 'Unidad',
+          help: 'Una tarifa diaria se cuenta como ocho horas.',
+          options: {
+            hour: 'Por hora',
+            day: 'Por día',
+          },
+        },
+        cost_rate: {
+          label: 'Tarifa de coste',
+          help: 'Lo que una unidad de este perfil cuesta a la empresa.',
+        },
+        bill_rate: {
+          label: 'Tarifa de venta',
+          help: 'Lo que se factura al cliente por una unidad de este perfil.',
+        },
+        is_internal: {
+          label: 'Interno',
+          help: 'Una tarifa interna puede facturar por debajo del coste o no facturar.',
+        },
+        effective_from: { label: 'Vigente desde' },
+        effective_to: { label: 'Vigente hasta' },
+      },
+      _views: {
+        all_rate_cards: { label: 'Todas las tarifas' },
+      },
+      _sections: {
+        basic: { label: 'Tarifa' },
+        rates: { label: 'Tarifas' },
+      },
+      _validations: {
+        rate_card_bill_not_below_cost: { message: 'La tarifa de venta no puede ser inferior a la de coste salvo que la tarifa sea interna.' },
+        rate_card_dates: { message: 'Vigente hasta debe ser igual o posterior a Vigente desde.' },
+      },
+    },
+    crm_timesheet: {
+      label: 'Parte de horas',
+      pluralLabel: 'Partes de horas',
+      description: 'Las horas de una persona en un proyecto durante un periodo, aprobadas en bloque',
+      fields: {
+        owner_id: { label: 'Persona' },
+        name: { label: 'Parte de horas' },
+        crm_project: { label: 'Proyecto' },
+        period_start: { label: 'Inicio del periodo' },
+        period_end: { label: 'Fin del periodo' },
+        status: {
+          label: 'Estado',
+          options: {
+            draft: 'Borrador',
+            submitted: 'Enviado',
+            approved: 'Aprobado',
+            rejected: 'Rechazado',
+          },
+        },
+        approver: { label: 'Aprobador' },
+        total_hours: { label: 'Horas totales' },
+        total_cost: { label: 'Coste total' },
+        total_bill_amount: { label: 'Importe facturable' },
+        notes: { label: 'Notas' },
+      },
+      _views: {
+        all_timesheets: { label: 'Todos los partes de horas' },
+        my_timesheets: { label: 'Mis partes de horas' },
+        timesheets_to_approve: { label: 'Partes de horas por aprobar' },
+      },
+      _sections: {
+        basic: { label: 'Parte de horas' },
+        totals: { label: 'Totales' },
+      },
+      _validations: {
+        timesheet_period: { message: 'El fin del periodo debe ser igual o posterior al inicio, y un parte cubre como máximo 31 días.' },
+        timesheet_status_progression: { message: 'Este cambio de estado no está permitido. Un parte avanza Borrador → Enviado → Aprobado o Rechazado; un parte rechazado vuelve a Borrador para corregirlo.' },
+      },
+    },
+    crm_time_entry: {
+      label: 'Registro de horas',
+      pluralLabel: 'Registros de horas',
+      description: 'Las horas de un día en un parte, y el coste que representan',
+      fields: {
+        crm_timesheet: { label: 'Parte de horas' },
+        entry_date: {
+          label: 'Fecha',
+          help: 'Un día dentro del periodo del parte.',
+        },
+        hours: { label: 'Horas' },
+        is_billable: { label: 'Facturable' },
+        notes: { label: 'Notas' },
+        cost_rate: { label: 'Tarifa de coste (por hora)' },
+        cost_amount: { label: 'Coste' },
+        bill_rate: { label: 'Tarifa de venta (por hora)' },
+        bill_amount: { label: 'Importe facturable' },
+      },
+      _views: {
+        all_time_entries: { label: 'Todos los registros de horas' },
+      },
+      _sections: {
+        basic: { label: 'Registro de horas' },
+        rates: { label: 'Coste y facturación' },
+      },
+    },
+    crm_expense: {
+      label: 'Gasto',
+      pluralLabel: 'Gastos',
+      description: 'Un coste incurrido en un proyecto, con su recibo',
+      fields: {
+        owner_id: { label: 'Gastado por' },
+        name: { label: 'Descripción' },
+        crm_project: { label: 'Proyecto' },
+        expense_date: { label: 'Fecha' },
+        category: {
+          label: 'Categoría',
+          options: {
+            travel: 'Viajes',
+            lodging: 'Alojamiento',
+            meals: 'Comidas',
+            equipment: 'Equipos',
+            other: 'Otros',
+          },
+        },
+        amount: { label: 'Importe' },
+        is_billable: {
+          label: 'Facturable',
+          help: 'Si este gasto se repercute al cliente.',
+        },
+        status: {
+          label: 'Estado',
+          options: {
+            draft: 'Borrador',
+            submitted: 'Enviado',
+            approved: 'Aprobado',
+            rejected: 'Rechazado',
+          },
+        },
+        approver: { label: 'Aprobador' },
+        notes: { label: 'Notas' },
+      },
+      _views: {
+        all_expenses: { label: 'Todos los gastos' },
+        my_expenses: { label: 'Mis gastos' },
+        expenses_to_approve: { label: 'Gastos por aprobar' },
+      },
+      _sections: {
+        basic: { label: 'Gasto' },
+      },
+      _validations: {
+        expense_status_progression: { message: 'Este cambio de estado no está permitido. Un gasto avanza Borrador → Enviado → Aprobado o Rechazado; un gasto rechazado vuelve a Borrador para corregirlo.' },
+      },
+    },
+  },
   apps: {
     // This package's own app (#2316).
     crm_psa: {
       label: 'Entrega de proyectos',
       description: 'Proyectos, las personas asignadas, su tiempo y sus gastos, y el margen resultante',
       navigation: {
+        group_projects: { label: 'Proyectos' },
+        nav_projects: { label: 'Todos los proyectos' },
+        nav_my_projects: { label: 'Mis proyectos' },
+        nav_project_members: { label: 'Asignación' },
+        group_time_expenses: { label: 'Horas y gastos' },
+        nav_my_timesheets: { label: 'Mis partes de horas' },
+        nav_my_expenses: { label: 'Mis gastos' },
+        nav_timesheets_to_approve: { label: 'Partes de horas por aprobar' },
+        nav_expenses_to_approve: { label: 'Gastos por aprobar' },
+        group_rates: { label: 'Tarifas' },
+        nav_rate_cards: { label: 'Tarifas' },
         group_customers: { label: 'Cuentas y contratos' },
         group_work: { label: 'Mi Trabajo' },
         nav_approval_requests: { label: 'Bandeja de Entrada' },

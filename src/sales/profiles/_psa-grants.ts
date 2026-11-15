@@ -1,0 +1,35 @@
+// Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
+
+/**
+ * Project Delivery grant rows shared by the sets that only READ the module's
+ * objects (hotcrm#2316 phase 1). Three sets carry the delivery work itself —
+ * `project_manager`, `project_member`, `finance_controller` — and author their
+ * rows in full; the sales sets that read projects take these.
+ *
+ * `crm_timesheet`, `crm_time_entry` and `crm_expense` are read beside
+ * `crm_project` because the project's and the timesheet's summaries sum them, and a set that reads a
+ * summary must read its source (`os lint` `security-rollup-source-unreadable`).
+ * Both are `private`, so the grant opens a member's own rows and the ones
+ * shared to them, nothing more.
+ */
+
+const READ_OWN = { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const };
+// A `controlled_by_parent` child: whoever reads the timesheet reads its entries.
+const READ_CHILD = { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false };
+const READ_ALL = { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false };
+
+/** A rep: the projects shared to them, and the rows behind their figures. */
+export const PSA_READ_OWN_OBJECTS = {
+  crm_project: READ_OWN,
+  crm_timesheet: READ_OWN,
+  crm_time_entry: READ_CHILD,
+  crm_expense: READ_OWN,
+};
+
+/** A sales manager: every project, and every row behind its figures. */
+export const PSA_READ_ALL_OBJECTS = {
+  crm_project: READ_ALL,
+  crm_timesheet: READ_ALL,
+  crm_time_entry: READ_CHILD,
+  crm_expense: READ_ALL,
+};

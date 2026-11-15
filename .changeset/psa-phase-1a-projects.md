@@ -1,0 +1,8 @@
+---
+"hotcrm": minor
+---
+
+Clause-②: no
+Metadata-protocol: none
+
+**Project Delivery gets its records: projects, staffing, rate cards, timesheets and expenses, with cost and margin (#2316, phase 1a).** The Project Delivery module now owns six objects. A **Project** (presales, delivery or internal) hangs off an account and may name its opportunity and contract; people are staffed on it as **Project Members** at a **Rate Card** that holds a cost rate and a bill rate per hour or per day. Each person books hours on a **Timesheet** of **Time Entries** and spending as **Expenses**. A time entry copies its rates when it is written, so a rate change never rewrites past cost. Once a timesheet or expense is approved, the project's Labor Cost, Expense Cost, Actual Cost, Budget Remaining, Budget Used, Gross Margin and Approved to Bill move with it; none of them is typed in. Only the approver stamped on the record (the project's Project Manager when it was created) or an administrator can approve or reject it. Projects are private: the team staffed on a project reads it and its Project Manager edits it. Five new positions (Project Director, PMO, Project Manager, Project Team Member, Finance Controller) carry three new permission sets (`project_manager`, `project_member`, `finance_controller`). Team members never see cost rates, entry cost or project margin. Sales managers now see the Project Delivery app and read every project; sales reps read the projects shared with them and keep the app hidden. Demo data adds six rate cards and six projects in en and zh-CN. User docs ship under *Project Delivery* in en, zh-Hans and zh-Hant, and labels in en, zh-CN, ja-JP and es-ES. Approval routing, budget alerts and the project lock follow in phase 1b.
