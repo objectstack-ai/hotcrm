@@ -3,6 +3,7 @@
 import { defineStack, type ObjectStackDefinition } from '@objectstack/spec';
 
 import { CrmO2cManual } from './books/index.js';
+import { ContractAccountExtensions } from './extensions/index.js';
 import { InvoiceImportMapping, PaymentImportMapping } from './mappings/index.js';
 import { BillingMilestone, Invoice, Payment } from './objects/index.js';
 import { billingMilestoneHook, invoiceHook, paymentHook } from './objects/hooks.js';
@@ -33,8 +34,9 @@ export const o2cHooks = [billingMilestoneHook, invoiceHook, paymentHook].flat();
  * (`crm_billing_milestone`), `crm_invoice` and `crm_payment` — with their
  * hooks, views, import mappings, translations and manual. Their grants are
  * rows in the app package's permission sets (ADR-0130 addendum, 2026-09-02),
- * finance's in the app's `ar_accountant` set. The contract and account totals
- * (`objectExtensions`) are #2416, which waits on objectstack#30303 and #30304.
+ * finance's in the app's `ar_accountant` set. Phase 1b (#2416) adds the
+ * contract and account totals through `objectExtensions`
+ * (`./extensions/`), on 18.4.0, which carries objectstack#30303 and #30304.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
@@ -86,6 +88,9 @@ export const createHotCrmO2cStack = (): ObjectStackDefinition => defineStack({
   },
 
   objects: [BillingMilestone, Invoice, Payment],
+  // The contract's and the account's receivables figures (#2416); see the
+  // extension's own note.
+  objectExtensions: ContractAccountExtensions,
   hooks: o2cHooks,
   views: [BillingMilestoneViews, InvoiceViews, PaymentViews],
   mappings: [InvoiceImportMapping, PaymentImportMapping],

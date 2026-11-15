@@ -100,6 +100,7 @@ const RUNTIME_TEST_FILES = [
   // REQ-0007 phase 1a (#2315) — Order to Cash's five hooks and the plan
   // figures they keep beside the summaries, on the booted app.
   'o2c-collection-plan.test.ts',
+  'o2c-receivables.test.ts',
   // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
   // files above, and the same reason: the gate is authored on four surfaces
   // (the field default, `convert_lead.visible`, `lead_conversion`'s

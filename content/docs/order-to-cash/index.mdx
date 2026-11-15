@@ -47,8 +47,17 @@ Sales never records a payment. A figure a rep sees is always one finance wrote, 
 
 ## Not every customer uses it
 
-A company that does not want Order to Cash has an administrator disable the module. Its menu entries, its records and its tabs on the contract and account pages go with it.
+A company that does not want Order to Cash has an administrator disable the module. Its menu entries, its records, its tabs and its totals on the contract and account pages go with it.
 
-## Coming next
+## Totals on the contract and the account [#totals]
 
-Totals on the contract and account records themselves (planned, invoiced, received and the open receivable) arrive in a later update (hotcrm#2416). Until then, each tab on the contract page carries its own amounts.
+The contract and the account each carry the module's totals, so a rep reads them without opening a tab:
+
+| Field | On | What it counts |
+| --- | --- | --- |
+| **Planned** | Contract | The collection plan, summed |
+| **Invoiced** | Contract, account | The **Issued** invoices, summed; a cancelled invoice does not count |
+| **Received** | Contract, account | The payments, summed |
+| **Receivable Balance** | Contract, account | What the customer still owes on the open invoices: the **Open** amount of the **Issued** invoices, summed. A payment not yet set against an invoice, such as an advance, counts in **Received** only, so the balance never drops below zero on an advance |
+
+The account's totals cover every contract of the account. None of them is typed in: they move when a plan step, an invoice or a payment is saved. On the contract they appear in the Contract Value section, and on the account in the Financials section. Everyone who can read the contract or the account reads them, and nobody edits them. An account's totals do not open its invoices to a reader who cannot read the contract.

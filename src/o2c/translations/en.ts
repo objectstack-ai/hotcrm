@@ -210,6 +210,44 @@ export const en: TranslationData = {
         },
       },
     },
+    // The contract's and the account's receivables figures, added by this
+    // package through `objectExtensions` (#2416).
+    crm_contract: {
+      fields: {
+        planned_amount: {
+          label: 'Planned',
+          help: 'The collection plan, summed: what the steps expect to collect.',
+        },
+        invoiced_amount: {
+          label: 'Invoiced',
+          help: 'The issued invoices, summed. A cancelled invoice is not counted.',
+        },
+        received_amount: {
+          label: 'Received',
+          help: 'The payments received, summed.',
+        },
+        receivable_balance: {
+          label: 'Receivable Balance',
+          help: 'What the customer still owes on the open invoices: the open amount of the issued invoices, summed. A payment not yet set against an invoice shows in Received only.',
+        },
+      },
+    },
+    crm_account: {
+      fields: {
+        invoiced_amount: {
+          label: 'Invoiced',
+          help: 'The issued invoices, summed. A cancelled invoice is not counted.',
+        },
+        received_amount: {
+          label: 'Received',
+          help: 'The payments received, summed.',
+        },
+        receivable_balance: {
+          label: 'Receivable Balance',
+          help: 'What the customer still owes on the open invoices: the open amount of the issued invoices, summed. A payment not yet set against an invoice shows in Received only.',
+        },
+      },
+    },
   },
   apps: {
     crm_enterprise: {

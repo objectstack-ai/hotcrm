@@ -30,7 +30,9 @@ export const InvoiceViews = defineView({
       { field: 'crm_contract', width: 130 },
       { field: 'issue_date', width: 120, sortable: true },
       { field: 'due_date', width: 120, sortable: true },
-      { field: 'amount', width: 140, align: 'right', summary: 'sum' },
+      // No total on Amount: it would count cancelled invoices. Open is the
+      // figure to total (a cancelled invoice is open for nothing), hotcrm#2463.
+      { field: 'amount', width: 140, align: 'right' },
       { field: 'paid_amount', width: 130, align: 'right', summary: 'sum' },
       { field: 'open_amount', width: 130, align: 'right', summary: 'sum' },
       { field: 'status', width: 110 },

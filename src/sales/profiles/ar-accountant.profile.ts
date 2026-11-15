@@ -1,5 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { O2C_FIGURE_FIELDS } from './_o2c-figures';
+
 /**
  * Accounts Receivable — finance's set for the Order to Cash module (#2315,
  * `docs/architecture/order-to-cash-module-plan.md`, *Permissions and sharing*).
@@ -51,5 +53,9 @@ export const ArAccountantProfile = {
     sys_attachment:        { allowCreate: true,  allowRead: true, allowEdit: false, allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_comment:           { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_activity:          { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+  },
+  // The Order to Cash figures on the contract and the account (#2416).
+  fields: {
+    ...O2C_FIGURE_FIELDS,
   },
 };

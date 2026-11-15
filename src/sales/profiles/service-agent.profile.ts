@@ -1,5 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
+
 /**
  * Two positions distribute this set: `service_agent` (the intake pool) and
  * `service_manager` (the escalation pool, the #1779 ruling), each declaring it
@@ -32,6 +34,14 @@ export const ServiceAgentProfile = {
     crm_lead:        { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     // Create/edit `false` is overridden by the `crm_user` floor for OWN accounts (#2231).
     crm_account:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
+    // Order to Cash (#2416): read on invoices and payments, so the account's
+    // receivables figures sum rows this set may read (`os lint`
+    // `security-rollup-source-unreadable`). Both are `controlled_by_parent`
+    // under the contract, which this set does not read: the grant opens no
+    // invoice until a set the member also holds reads the contract — whoever
+    // reads the contract reads its invoices (ADR-0055), and no one else.
+    crm_invoice:     { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    crm_payment:     { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     // Create `false` is overridden by the `crm_user` floor under OWN accounts (#2231).
     crm_contact:     { allowCreate: false, allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     // Create/read/edit `false` is overridden by the `crm_user` floor for OWN opportunities (#2231).
@@ -93,6 +103,9 @@ export const ServiceAgentProfile = {
     sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
+    // The Order to Cash figures on the account (#2416); this set reads no
+    // contracts, so the contract's figures are not authored here.
+    ...O2C_ACCOUNT_FIGURE_FIELDS,
     'crm_case.is_sla_violated':        { readable: true, editable: false },
     'crm_case.resolution_time_hours':  { readable: true, editable: false },
     // Internal notes are the agent's working memory on a ticket — full access

@@ -210,6 +210,44 @@ export const esES: TranslationData = {
         },
       },
     },
+    // The contract's and the account's receivables figures, added by this
+    // package through `objectExtensions` (#2416).
+    crm_contract: {
+      fields: {
+        planned_amount: {
+          label: 'Previsto',
+          help: 'El plan de cobro sumado: lo que los hitos esperan cobrar.',
+        },
+        invoiced_amount: {
+          label: 'Facturado',
+          help: 'Las facturas emitidas, sumadas. Una factura anulada no cuenta.',
+        },
+        received_amount: {
+          label: 'Cobrado',
+          help: 'Los cobros recibidos, sumados.',
+        },
+        receivable_balance: {
+          label: 'Saldo pendiente',
+          help: 'Lo que el cliente aún debe de las facturas abiertas: el importe pendiente de las facturas emitidas, sumado. Un cobro aún no aplicado a una factura solo cuenta en Cobrado.',
+        },
+      },
+    },
+    crm_account: {
+      fields: {
+        invoiced_amount: {
+          label: 'Facturado',
+          help: 'Las facturas emitidas, sumadas. Una factura anulada no cuenta.',
+        },
+        received_amount: {
+          label: 'Cobrado',
+          help: 'Los cobros recibidos, sumados.',
+        },
+        receivable_balance: {
+          label: 'Saldo pendiente',
+          help: 'Lo que el cliente aún debe de las facturas abiertas: el importe pendiente de las facturas emitidas, sumado. Un cobro aún no aplicado a una factura solo cuenta en Cobrado.',
+        },
+      },
+    },
   },
   apps: {
     crm_enterprise: {

@@ -1,5 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { O2C_CONTRACT_FIGURE_FIELDS } from './_o2c-figures';
+
 /**
  * Sales Manager Profile
  *
@@ -130,6 +132,9 @@ export const SalesManagerProfile = {
     sys_activity: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
   },
   fields: {
+    // The Order to Cash figures on the contract (#2416). The account's are
+    // read through Modify All on `crm_account`, so no row names them.
+    ...O2C_CONTRACT_FIGURE_FIELDS,
     // Sensitive fields a manager must see in full. Authored explicitly rather
     // than left absent: these are the fields other sets mask, and an unauthored
     // grant reads as an oversight instead of a decision (#488).
