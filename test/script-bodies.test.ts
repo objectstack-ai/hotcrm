@@ -207,9 +207,9 @@ describe('mass_update_stage writes the stage it was given (#508, CRM half)', () 
     const live = await deal('prospecting');
     await expect(runAction('crm_opportunity:mass_update_stage', {
       recordId: undefined, params: { stage: 'negotiation', _selectedIds: [live.id, 'opp_deleted_between_select_and_submit'] },
-    })).rejects.toThrow(/1 of 2 selected opportunities could not be updated/);
+    })).rejects.toThrow(/1 of 2 selected opportunities did not move to the new stage; 1 did\./);
     // The honest half of "all-or-nothing without a transaction": the row that
-    // WAS written keeps its new stage; re-running is the retry.
+    // WAS written keeps its new stage, and the rejection says what did not move (#2511).
     expect((await stored('crm_opportunity', live.id)).stage).toBe('negotiation');
   });
 
@@ -219,7 +219,7 @@ describe('mass_update_stage writes the stage it was given (#508, CRM half)', () 
     const live = await deal('prospecting');
     await expect(runAction('crm_opportunity:mass_update_stage', {
       recordId: undefined, params: { stage: 'negotiation', _selectedIds: ['opp_deleted_before_the_live_row', live.id] },
-    })).rejects.toThrow(/1 of 2 selected opportunities could not be updated/);
+    })).rejects.toThrow(/1 of 2 selected opportunities did not move to the new stage; 1 did\./);
     expect((await stored('crm_opportunity', live.id)).stage, 'the live row behind a stale id was never attempted').toBe('negotiation');
   });
 });
