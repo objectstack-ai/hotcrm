@@ -457,7 +457,7 @@ describe('case_escalation_reassign', () => {
       await expect(verify.rows('sys_user_position', { position: SERVICE_MANAGER_POSITION }, { as: caller.token }), 'the agent can read the pool, so this case proves nothing')
         .rejects.toMatchObject({ code: 'PERMISSION_DENIED' });
       const kase = await verify.hooks.run('crm_case', 'insert', { subject: 'Mine', description: 'x', status: 'new' }, { as: caller.token });
-      await verify.hooks.run('crm_case', 'update', { id: kase.id, status: 'escalated' }, { as: caller.token });
+      await verify.hooks.run('crm_case', 'update', { id: kase.id, status: 'escalated', escalation_reason: 'Customer down' }, { as: caller.token });
       const after = await storedCase(kase.id);
       expect(after.status).toBe('escalated');
       expect(after.owner_id, 'the agent’s escalation did not reach the service_manager pool').toBe(pool.people[0]!.id);

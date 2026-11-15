@@ -82,7 +82,9 @@ const escalate = async (
   );
   if (Object.keys(stored).length > 0) await systemUpdate(verify, 'crm_case', { id: opened.id, ...stored });
   const [kase] = await verify.rows('crm_case', { id: opened.id });
-  await verify.hooks.run('crm_case', 'update', { id: opened.id, status: 'escalated', ...input }, { as: agent.token });
+  // A person's escalation carries its reason (#2497: Status Escalated by Edit is
+  // a full escalation, and the reason is required).
+  await verify.hooks.run('crm_case', 'update', { id: opened.id, status: 'escalated', escalation_reason: 'Customer down', ...input }, { as: agent.token });
   const task = await vi.waitFor(async () => {
     const [row] = await verify.rows('crm_task', { related_to_case: opened.id });
     expect(row, 'no escalation task was inserted').toBeTruthy();

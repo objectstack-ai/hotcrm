@@ -663,7 +663,7 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
    */
   it('hands an agent’s own escalation to the demo service manager', async () => {
     const { agent, id } = await agentsCase();
-    await verify.hooks.run('crm_case', 'update', { id, status: 'escalated' }, { as: agent.token });
+    await verify.hooks.run('crm_case', 'update', { id, status: 'escalated', escalation_reason: 'Customer down' }, { as: agent.token });
     const [stored] = await verify.rows('crm_case', { id });
     expect(stored!.status).toBe('escalated');
     expect(

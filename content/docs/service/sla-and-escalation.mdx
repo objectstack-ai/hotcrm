@@ -111,6 +111,12 @@ The result: within minutes the case carries the *Escalated* status, a service ma
 
 You can't escalate a case without filling in an **Escalation Reason** — a short text field explaining *why* the escalation happened. This becomes part of the case audit trail and feeds the QBR reporting.
 
+### Escalating by hand: the button or the Status field
+
+**Escalate Case** asks for the reason, then sets the case to *Critical* and *Escalated* and stamps the **Escalated** flag and date. Setting **Status** to *Escalated* with Edit does exactly the same: the case gets the flag, the date and *Critical* in the same save, so it shows in **Escalated Cases** and the critical-case sharing like any other escalation. Fill in **Escalation Reason** in the same save, because a Status change to *Escalated* without a reason is refused with *Escalation reason is required when escalating a case*. Clicking the *Escalated* stage on the path has no reason to give, so it is refused too: use the button.
+
+A case that was escalated before keeps its first escalation. Reopened and set back to *Escalated*, it keeps its first date and reason.
+
 ## Other case automations
 
 | Automation | When it fires | What it does |

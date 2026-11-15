@@ -187,7 +187,7 @@ describe('hook-created records inherit the triggering organization', () => {
     })) as AnyRec;
     expect(kase.organization_id).toBe(ORG_A);
 
-    await a.object('crm_case').update({ id: kase.id, status: 'escalated' });
+    await a.object('crm_case').update({ id: kase.id, status: 'escalated', escalation_reason: 'Customer down' });
 
     const task = await awaitRow(
       'case escalation task',
