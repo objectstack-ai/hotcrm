@@ -4,8 +4,8 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { PLATFORM_CAPABILITIES } from '@objectstack/spec/security';
 import defaultStack from './helpers/composed-stack';
 import {
-  CrmSeedDataAllLocales, SaasTenantSeedData, ServiceSeedData, RevenueSeedData, MarketingSeedData, AppSeedData,
-  serviceStack, revenueStack, marketingStack, appStack,
+  CrmSeedDataAllLocales, SaasTenantSeedData, ServiceSeedData, RevenueSeedData, MarketingSeedData, PsaSeedData, AppSeedData,
+  serviceStack, revenueStack, marketingStack, psaStack, appStack,
 } from '../objectstack.composition';
 import { COMPOSITION_ENV_VAR, resolveComposition } from '../src/sales/data/index';
 import { SystemAdminProfile } from '../src/sales/profiles/system-admin.profile';
@@ -132,9 +132,11 @@ describe('the default composition is the community app, untouched', () => {
       'crm_campaign', 'crm_campaign_member', 'crm_campaign_member',
       'crm_campaign', 'crm_campaign_member', 'crm_campaign_member',
     ]);
+    expect(objectsOf(psaStack.data)).toEqual(objectsOf(PsaSeedData));
+    expect(objectsOf(psaStack.data)).toEqual(['crm_rate_card', 'crm_project', 'crm_rate_card', 'crm_project']);
     expect(objectsOf(appStack.data)).toEqual(objectsOf(AppSeedData));
     expect(
-      [serviceStack, revenueStack, marketingStack, appStack].flatMap((stack) => objectsOf(stack.data)).sort(),
+      [serviceStack, revenueStack, marketingStack, psaStack, appStack].flatMap((stack) => objectsOf(stack.data)).sort(),
     ).toEqual(objectsOf(CrmSeedDataAllLocales).sort());
   });
 

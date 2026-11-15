@@ -794,6 +794,26 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '売掛金担当',
       description: '経理：営業が各契約で見る請求書と入金を入力・インポートします。',
     },
+    crm_project_director: {
+      label: 'プロジェクトディレクター',
+      description: 'プロジェクト納品を統括します。プロジェクトを運営し、すべてのプロジェクト、タイムシート、経費とそのコスト・粗利を閲覧します。',
+    },
+    crm_pmo: {
+      label: 'PMO',
+      description: 'プロジェクトマネジメントオフィス。すべてのプロジェクトのコストと粗利を閲覧し、単価表を管理し、プロジェクトを運営します。',
+    },
+    crm_project_manager: {
+      label: 'プロジェクトマネージャー',
+      description: 'プロジェクトを立ち上げて運営し、単価表に沿って要員をアサインし、チームのタイムシートと経費を承認します。',
+    },
+    crm_project_member: {
+      label: 'プロジェクトメンバー',
+      description: 'プロジェクトにアサインされたコンサルタント。担当プロジェクトの工数と経費を登録します。',
+    },
+    crm_finance_controller: {
+      label: '財務コントローラー',
+      description: '財務。プロジェクトのコストと粗利を監視し、予算を設定し、単価表を管理します。',
+    },
     crm_na_sales_team: {
       label: '北米営業チーム',
       description: '北米テリトリーのチーム：北米テリトリーの取引先をすべて編集します。',
@@ -805,6 +825,18 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   },
   // Studio → All Metadata Types → Permission Set (`src/sales/profiles/*.profile.ts`).
   permissions: {
+    finance_controller: {
+      label: '財務コントローラー',
+      description: '財務。すべてのプロジェクトとその要員、工数、経費を閲覧し、プロジェクト予算を編集し、単価表を管理します。',
+    },
+    project_manager: {
+      label: 'プロジェクトマネージャー',
+      description: 'デリバリー。プロジェクトを立ち上げて運営し、単価表に沿ってアサインし、工数と経費を登録し、すべての取引先・商談・契約を閲覧します。',
+    },
+    project_member: {
+      label: 'プロジェクトメンバー',
+      description: 'デリバリー。担当プロジェクトを閲覧し、自分のタイムシートと経費を登録します。コスト単価は表示されません。',
+    },
     ar_accountant: {
       label: '売掛金担当',
       description: '経理：すべての契約の請求書と入金を入力・インポートし、その背後の契約、取引先、回収計画を参照します。',

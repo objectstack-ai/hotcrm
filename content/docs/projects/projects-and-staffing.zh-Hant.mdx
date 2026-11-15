@@ -1,0 +1,82 @@
+---
+title: 項目與人員安排
+description: 新建項目、推進項目狀態、按費率卡安排人員，以及設定衡量成本的預算。
+---
+
+# 項目與人員安排
+
+## 新建項目
+
+項目經理在 **All Projects** 中點 **New**，或者在客戶、商機、合約的 **Projects** 分頁中新建項目。項目需要填寫 **Project Name** 和 **Account**；**Opportunity** 和 **Contract** 會從該客戶下提供可選項。
+
+每個項目都有一個 **Kind**（類型）：
+
+| 類型 | 用途 |
+| --- | --- |
+| **Presales**（售前） | 為贏單所做的工作：概念驗證、試點、範圍調研 |
+| **Delivery**（交付） | 客戶購買的工作。如果之前有售前項目，**Won From** 指向它 |
+| **Internal**（內部） | 為本公司做的工作：能力建設、培訓、工具 |
+
+三種類型的工時填報、人員安排和成本計算方式完全相同，所以售前和內部投入也會和交付一樣體現為成本。**Billing Type**（Fixed Fee、Time and Materials、Retainer、Non-billable）記錄客戶如何付費。
+
+## 狀態
+
+項目從 **Draft** 開始，每次向前推進一步：
+
+| 從 | 到 |
+| --- | --- |
+| Draft | In Approval、Cancelled |
+| In Approval | Approved、Rejected、退回 Draft、Cancelled |
+| Approved | Active、Cancelled |
+| Rejected | Draft、Cancelled |
+| Active | On Hold、Completed、Cancelled |
+| On Hold | Active、Cancelled |
+| Completed | Closed，或退回 Active |
+| Closed、Cancelled | 終態 |
+
+其他任何變更都會被拒絕，提示訊息會列出這些步驟。項目經理不會刪除項目：不再進行的項目設為 **Cancelled**，完成的項目設為 **Closed**。
+
+## 預算
+
+**Approved Budget**（批准預算）是項目可以花的成本。請在項目處於 **Draft** 或 **Rejected** 時填寫：從 **In Approval** 開始它就變為唯讀，因為項目正是按這個數字獲批的。**Planned Revenue**（計劃收入）是客戶為這個項目支付的金額，毛利以它為基準計算。
+
+項目的[成本和毛利欄位](/zh-Hant/docs/projects#money)會隨工時和費用的批准自動填寫。項目花費超過批准預算時，**Budget Used** 會超過 100%。
+
+## 為項目安排人員
+
+在項目的 **Project Members** 分頁或 **Staffing** 中為項目安排人員。每一列包括：
+
+| 欄位 | 含義 |
+| --- | --- |
+| **Person** | 安排的是誰 |
+| **Responsibility** | 他在項目上的角色：Project Manager、Project Director、Account Manager、Architect、Consultant、Quality Assurance、Finance Partner 或 Subcontractor |
+| **Rate Card** | 他的工作職級。他的工時按這張卡的單價計算成本和計費 |
+| **Allocation** | 他投入這個項目的時間佔比 |
+| **Start Date**、**End Date** | 他在項目上的時間 |
+| **Billable** | 他的工時是否向客戶計費。不可計費成員的工時仍然計入成本，但不計費 |
+
+安排一個人會對項目產生兩個效果：
+
+- **他可以查看項目。**項目的 **Team** 列出所有被安排的人，每個人都能查看這個項目。刪除這一列，他就失去這份存取權限。
+- **職責為 Project Manager 的成員成為項目的項目經理。**這個人可以編輯項目、安排人員，並審批項目的工時單和費用。項目上的這個欄位是唯讀的：要改項目經理，就改人員安排。
+
+> **先把自己安排上。**新項目在有人以 Project Manager 職責被安排之前沒有項目經理。新建項目的人作為項目負責人可以編輯它，但在安排項目經理之前建立的工時單和費用沒有審批人。
+
+只有被安排在項目上的人才能在這個項目上填報工時。
+
+## 費率卡
+
+**Rate Card**（費率卡）是一個工作職級，帶有兩個價格：
+
+| 欄位 | 含義 |
+| --- | --- |
+| **Cost Rate** | 這個職級一小時或一天讓公司付出的成本 |
+| **Bill Rate** | 向客戶收取的價格 |
+| **Unit** | Per Hour 或 Per Day。一天按 8 小時計 |
+| **Seniority** | Junior、Intermediate、Senior、Lead 或 Principal |
+| **Internal** | 用於內部工作。只有內部費率卡的計費單價可以低於成本單價 |
+| **Effective From**、**Effective To** | 這張卡的使用期間，僅供參考：以成員那一列上的費率卡為準 |
+
+費率卡由財務和項目管理辦公室維護。所有人都能查看，但成本單價對項目成員隱藏。
+
+> **修改費率卡不會改變過去的成本。**每筆工時明細在儲存時都會複製當時有效的單價。修改之前填報的工時保留舊單價，修改之後填報的工時使用新單價。

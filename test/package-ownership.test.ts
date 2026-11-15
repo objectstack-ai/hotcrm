@@ -33,7 +33,7 @@ const SERVICE_ID = 'app.objectstack.hotcrm.service';
 const REVENUE_ID = 'app.objectstack.hotcrm.revenue';
 const MARKETING_ID = 'app.objectstack.hotcrm.marketing';
 const O2C_ID = 'app.objectstack.hotcrm.o2c';
-// PSA joins in phase 0 owning no object yet (#2316); its objects arrive in phase 1.
+// PSA (#2316): joined in phase 0 owning no object; phase 1a brings its six.
 const PSA_ID = 'app.objectstack.hotcrm.psa';
 const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID, O2C_ID, PSA_ID];
 
@@ -47,7 +47,8 @@ const REVENUE_OBJECTS = [
 ];
 const MARKETING_OBJECTS = ['crm_campaign', 'crm_campaign_member'];
 const O2C_OBJECTS = ['crm_billing_milestone', 'crm_invoice', 'crm_payment'];
-const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS, ...O2C_OBJECTS];
+const PSA_OBJECTS = ['crm_expense', 'crm_project', 'crm_project_member', 'crm_rate_card', 'crm_time_entry', 'crm_timesheet'];
+const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS, ...O2C_OBJECTS, ...PSA_OBJECTS];
 
 /**
  * The assignment rule's roster of deliberate exceptions (AGENTS.md rule 11) —
@@ -108,6 +109,10 @@ describe('every object has exactly one owner', () => {
 
   it('the Order to Cash module owns the collection plan, invoice and payment objects (#2315)', () => {
     expect(namesOf(body(O2C_ID).objects)).toEqual(O2C_OBJECTS);
+  });
+
+  it('the Project Delivery module owns the project, staffing, rate card, time and expense objects (#2316)', () => {
+    expect(namesOf(body(PSA_ID).objects)).toEqual(PSA_OBJECTS);
   });
 
   it('the app package owns the contract — one dependency level (`module-split-plan.md` items 10, 11)', () => {
@@ -213,6 +218,7 @@ describe('every object has exactly one owner', () => {
     expect(grantingOn(REVENUE_OBJECTS).length, 'no app-owned set grants on a revenue object').toBeGreaterThan(0);
     expect(grantingOn(MARKETING_OBJECTS).length, 'no app-owned set grants on a marketing object').toBeGreaterThan(0);
     expect(grantingOn(O2C_OBJECTS).length, 'no app-owned set grants on an Order to Cash object').toBeGreaterThan(0);
+    expect(grantingOn(PSA_OBJECTS).length, 'no app-owned set grants on a Project Delivery object').toBeGreaterThan(0);
   });
 });
 

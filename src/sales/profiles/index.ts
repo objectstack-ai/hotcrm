@@ -130,8 +130,11 @@
 
 export { ArAccountantProfile } from './ar-accountant.profile';
 export { CrmUserProfile } from './crm-user.profile';
+export { FinanceControllerProfile } from './finance-controller.profile';
 export { GuestPortalProfile } from './guest-portal.profile';
 export { MarketingUserProfile } from './marketing-user.profile';
+export { ProjectManagerProfile } from './project-manager.profile';
+export { ProjectMemberProfile } from './project-member.profile';
 export { SalesManagerProfile } from './sales-manager.profile';
 export { SalesRepProfile } from './sales-rep.profile';
 export { ServiceAgentProfile } from './service-agent.profile';

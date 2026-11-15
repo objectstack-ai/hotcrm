@@ -21,8 +21,8 @@ import { CrmPositions } from '../src/sales/sharing/positions';
 const served: Array<Record<string, unknown>> = ((stack as any).positions ?? []) as Array<Record<string, unknown>>;
 
 describe('position descriptions (#2249)', () => {
-  it('serves all thirteen positions declared in positions.ts', () => {
-    expect(CrmPositions).toHaveLength(13);
+  it('serves all eighteen positions declared in positions.ts', () => {
+    expect(CrmPositions).toHaveLength(18);
     expect(served.map((p) => p.name).sort()).toEqual(CrmPositions.map((p) => p.name).sort());
   });
 

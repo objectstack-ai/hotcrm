@@ -451,11 +451,11 @@ describe('staffing lines up with the rules that grant, and the nodes that route'
  * `sales_rep`, `sales_manager`, `service_agent` and `service_manager`, and Setup
  * showed no set on those positions and nobody on each set's Assigned Users panel.
  * The warning is read only for the positions a staffed person holds, the ones
- * this boot resolves; `marketing_user` and `crm_ar_accountant`, staffed by nobody,
- * are held by the roster pin alone.
+ * this boot resolves; `marketing_user`, `crm_ar_accountant` and the five Project
+ * Delivery positions, staffed by nobody, are held by the roster pin alone.
  */
 describe('each position names the sets it distributes, and none is reached by the name fold (#2200)', () => {
-  it('declares the eight bindings, each to a set the app ships', () => {
+  it('declares the thirteen bindings, each to a set the app ships', () => {
     const declared = Object.fromEntries(
       [...positionNames].filter((p) => declaredSets(p).length > 0).map((p) => [p, declaredSets(p)]),
     );
@@ -471,6 +471,13 @@ describe('each position names the sets it distributes, and none is reached by th
       crm_marketing_user: ['marketing_user'],
       // Finance's Order to Cash set (#2315); staffed by nobody in the demo.
       crm_ar_accountant: ['ar_accountant'],
+      // Project Delivery (#2316 phase 1a); staffed by nobody in the demo. The
+      // two leadership rungs run projects and read every project's money.
+      crm_project_director: ['project_manager', 'finance_controller'],
+      crm_pmo: ['project_manager', 'finance_controller'],
+      crm_project_manager: ['project_manager'],
+      crm_project_member: ['project_member'],
+      crm_finance_controller: ['finance_controller'],
     });
     expect(Object.values(declared).flat().filter((s) => !shippedSetNames.has(s)), 'a binding names a set the app does not ship').toEqual([]);
   });

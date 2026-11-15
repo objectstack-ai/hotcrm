@@ -33,6 +33,12 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | Billing Milestone | Controlled by Parent (Contract) | A step of the contract's collection plan; it follows the contract, so the account |
 | Invoice | Controlled by Parent (Contract) | Finance's record of an invoice issued against the contract; it follows the contract |
 | Payment | Controlled by Parent (Contract) | Finance's record of money received on the contract; it follows the contract |
+| Project | Private | The owner, the people staffed on it and its project manager reach it through the two rules below; finance and delivery leadership read every project |
+| Project Member | Controlled by Parent (Project) | A staffing row is part of the project |
+| Rate Card | Public Read-Only | Everyone staffs and bills at the same grades; the cost rate is hidden from team members by field security |
+| Timesheet | Private | A person's hours are their own; the approver reaches the timesheet through a rule |
+| Time Entry | Controlled by Parent (Timesheet) | A day's hours are part of the timesheet |
+| Expense | Private | A person's spending is their own; the approver reaches the expense through a rule |
 | Case | Private | An agent's queue is their own; escalations are shared |
 | Task | Private | Personal activity items |
 | Event | Private | Personal activity items, like tasks |
@@ -50,7 +56,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 
 ### Controlled by Parent, in practice
 
-For the twelve parent-derived objects above, there is nothing to configure per user: access is *computed*.
+For the fourteen parent-derived objects above, there is nothing to configure per user: access is *computed*.
 
 - **Read** — you see the rows whose parent you can see, and "can see" means every route that would let you open the parent directly: you own it, a sharing rule granted it, or someone shared it with you by hand. Measured against the shipped stack (platform 17.0.0-rc.4): a rep who can read exactly one account reads **that** account's contacts, quotes and contracts and no others, and reads the line items of exactly those quotes — the chain quote line item → quote → account is resolved level by level (platform 17.4.0, objectstack-ai/objectstack#11082). The account reaching that rep only through a territory rule is the point — a parent held by a share counts as a parent you can see.
 - **Write** — adding, changing or removing a row requires **edit** access to the parent, resolved the same way as reads. A row under a parent you cannot edit is refused, naming the parent that stopped it.
@@ -61,7 +67,7 @@ Because access is derived, ownership of the child row is irrelevant — a quote 
 
 ## Layer 2 — Positions
 
-A **position** is a flat group used to distribute access. HotCRM ships thirteen:
+A **position** is a flat group used to distribute access. HotCRM ships eighteen:
 
 ```
 crm_executive
@@ -69,6 +75,8 @@ crm_sales_director      crm_sales_manager       crm_sales_rep
 crm_service_director    crm_service_manager     crm_service_agent
 crm_marketing_director  crm_marketing_manager   crm_marketing_user
 crm_ar_accountant
+crm_project_director    crm_pmo                 crm_project_manager
+crm_project_member      crm_finance_controller
 crm_na_sales_team       crm_eu_sales_team       (territory groupings)
 ```
 
@@ -104,6 +112,11 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Escalated Cases — Previous Owner | Case | Read | the user in the case's `escalated_from` field — the agent an escalation took it from, until it is Closed |
 | Live Campaigns — Marketing Manager | Campaign | Edit | `crm_marketing_manager` — planning / in-progress campaigns |
 | Live Campaigns — Marketing Director | Campaign | Edit | `crm_marketing_director` — the same campaigns |
+| Projects — Team | Project | Read | the users in the project's `team_members` field — everyone staffed on it |
+| Projects — Project Manager | Project | Edit | the user in the project's `project_manager` field |
+| Projects — Finance | Project | Edit | `crm_finance_controller`, `crm_project_director`, `crm_pmo` — every project (one rule per position; it can edit them, never delete one) |
+| Timesheets — Approver | Timesheet | Edit | the user in the timesheet's `approver` field — the project manager when it was created |
+| Expenses — Approver | Expense | Edit | the user in the expense's `approver` field — the project manager when it was created |
 
 Create your own in **Setup → Sharing Rules**.
 
@@ -149,6 +162,7 @@ Sharing rules are authored **per object**. Widening `Account` widens accounts �
 | Cases | Their own only, plus open critical cases if they hold `crm_service_manager` or `crm_service_director` |
 | Tasks | Their own only |
 | Events | Their own only |
+| Projects | The projects they own, are staffed on or manage, plus every project if they hold `crm_finance_controller`, `crm_project_director` or `crm_pmo` — a project does not follow its account |
 
 So a territory rule hands over the account record with its contacts, quotes and contracts; the deal, case, task and meeting history underneath stays with its owners, and those related lists can look empty or partial on an account the user can otherwise read in full.
 

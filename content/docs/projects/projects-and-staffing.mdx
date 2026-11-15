@@ -1,0 +1,82 @@
+---
+title: Projects and Staffing
+description: Opening a project, moving it through its statuses, staffing it at a rate card, and setting the budget its cost is measured against.
+---
+
+# Projects and Staffing
+
+## Opening a project
+
+A project manager opens a project from **All Projects** with **New**, or from the **Projects** tab of an account, an opportunity or a contract. A project needs a **Project Name** and an **Account**; the **Opportunity** and **Contract** it comes from are offered from that account.
+
+Each project has a **Kind**:
+
+| Kind | What it is for |
+| --- | --- |
+| **Presales** | Work done to win a deal: a proof of concept, a pilot, a scoping study |
+| **Delivery** | Work the customer bought. **Won From** points at the presales project it grew out of, if there was one |
+| **Internal** | Work for your own company: practice building, training, tooling |
+
+All three are booked, staffed and costed the same way, so presales effort and internal effort show up as cost just as delivery does. **Billing Type** (Fixed Fee, Time and Materials, Retainer, Non-billable) records how the customer pays.
+
+## Statuses
+
+A project starts as **Draft** and moves forward one step at a time:
+
+| From | To |
+| --- | --- |
+| Draft | In Approval, Cancelled |
+| In Approval | Approved, Rejected, back to Draft, Cancelled |
+| Approved | Active, Cancelled |
+| Rejected | Draft, Cancelled |
+| Active | On Hold, Completed, Cancelled |
+| On Hold | Active, Cancelled |
+| Completed | Closed, or back to Active |
+| Closed, Cancelled | Final |
+
+Any other change is refused with a message that lists these steps. A project is never deleted by its manager: a project that will not go ahead is **Cancelled**, and a finished one is **Closed**.
+
+## The budget
+
+**Approved Budget** is the cost the project may spend. Set it while the project is **Draft** or **Rejected**: from **In Approval** onwards it is read-only, because that is the figure the project was approved on. **Planned Revenue** is what the customer pays for the project, and the margin is measured against it.
+
+The project's [cost and margin fields](/docs/projects#money) fill themselves as hours and expenses are approved. **Budget Used** passes 100 % when the project has spent more than its approved budget.
+
+## Staffing a project
+
+People are staffed on a project in its **Project Members** tab, or under **Staffing**. Each row names:
+
+| Field | What it means |
+| --- | --- |
+| **Person** | Who is staffed |
+| **Responsibility** | Their part on the project: Project Manager, Project Director, Account Manager, Architect, Consultant, Quality Assurance, Finance Partner or Subcontractor |
+| **Rate Card** | The grade they work at. Their hours are costed and billed at its rates |
+| **Allocation** | The share of their time the project has, as a percentage |
+| **Start Date**, **End Date** | When they are on the project |
+| **Billable** | Whether their hours are billed to the customer. A non-billable member's hours still cost, but bill nothing |
+
+Staffing someone does two things on the project:
+
+- **They can read it.** The project's **Team** lists everyone staffed, and each of them reads the project. Remove the row and they lose that access.
+- **The member whose Responsibility is Project Manager becomes the project's Project Manager.** That person edits the project, staffs it and approves its timesheets and expenses. The field is read-only on the project: change it by changing the staffing.
+
+> **Staff yourself first.** A new project has no Project Manager until someone is staffed with that responsibility. The person who opened it can edit it as its owner, but timesheets and expenses created before a manager is staffed have no approver.
+
+Only people staffed on a project can book hours on it.
+
+## Rate cards
+
+A **Rate Card** is a grade of work with two prices:
+
+| Field | What it means |
+| --- | --- |
+| **Cost Rate** | What an hour or a day of this grade costs your company |
+| **Bill Rate** | What the customer is charged for it |
+| **Unit** | Per Hour or Per Day. A day is counted as 8 hours |
+| **Seniority** | Junior, Intermediate, Senior, Lead or Principal |
+| **Internal** | For internal work. Only an internal card may bill less than it costs |
+| **Effective From**, **Effective To** | When the card is in use, for reference: the card on a member's row is the one that counts |
+
+Finance and the PMO keep the rate cards. Everyone reads them, but the cost rate is hidden from team members.
+
+> **Changing a rate card never changes past cost.** Each time entry copies the rates in force when it is written. Hours booked before a change keep the old rates; hours booked after it get the new ones.

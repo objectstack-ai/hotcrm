@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_FIGURE_FIELDS } from './_o2c-figures';
+import { PSA_READ_OWN_OBJECTS } from './_psa-grants';
 
 export const SalesRepProfile = {
   name: 'sales_rep',
@@ -123,6 +124,9 @@ export const SalesRepProfile = {
     crm_billing_milestone:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     crm_invoice:               { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_payment:               { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // Project Delivery (#2316 phase 1a): read on the projects shared to the
+    // rep, and the rows their cost figures sum (`_psa-grants.ts`).
+    ...PSA_READ_OWN_OBJECTS,
     // The record Attachments panel: canonical note on `enable.files` in
     // `src/sales/objects/index.ts` (#2029, #2038). Which attachments it lists,
     // and where an upload or a delete is taken, derives from the parent record.

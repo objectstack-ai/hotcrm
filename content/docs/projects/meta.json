@@ -1,0 +1,9 @@
+{
+  "title": "Project Delivery",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "projects-and-staffing",
+    "time-and-expenses"
+  ]
+}

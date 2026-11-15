@@ -132,6 +132,10 @@ const ACCOUNT_CHILD_COVERAGE: Record<string, 'derived' | 'own_only' | 'partial'>
   crm_billing_milestone: 'derived',
   crm_invoice: 'derived',
   crm_payment: 'derived',
+  // #2316: a project is private and reached through its own rules — the team
+  // and the project manager named on the row, and finance by position — never
+  // through the account. A shared account does not carry its projects.
+  crm_project: 'partial',
   crm_task: 'own_only',
   // #592. `crm_event` is `private` with no sharing rule of its own, exactly
   // like `crm_task` — the two are the same kind of record (a rep's personal
@@ -573,6 +577,13 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_billing_milestone: { en: 'Billing Milestone', 'zh-Hans': '回款节点', 'zh-Hant': '回款節點' },
   crm_invoice: { en: 'Invoice', 'zh-Hans': '发票', 'zh-Hant': '發票' },
   crm_payment: { en: 'Payment', 'zh-Hans': '回款', 'zh-Hant': '回款' },
+  // #2316 — Project Delivery.
+  crm_project: { en: 'Project', 'zh-Hans': '项目', 'zh-Hant': '項目' },
+  crm_project_member: { en: 'Project Member', 'zh-Hans': '项目成员', 'zh-Hant': '項目成員' },
+  crm_rate_card: { en: 'Rate Card', 'zh-Hans': '费率卡', 'zh-Hant': '費率卡' },
+  crm_timesheet: { en: 'Timesheet', 'zh-Hans': '工时单', 'zh-Hant': '工時單' },
+  crm_time_entry: { en: 'Time Entry', 'zh-Hans': '工时明细', 'zh-Hant': '工時明細' },
+  crm_expense: { en: 'Expense', 'zh-Hans': '费用', 'zh-Hant': '費用' },
   // Both Chinese labels are 工单/工單, the pack's `crm_case.label` and its
   // Traditional form. The zh-Hant cell read 「案件」 until #837 — a fourth
   // spelling of this one object, green here while the automation page spelled
@@ -630,13 +641,13 @@ describe('the OWD table lists every registered object, in every locale', () => {
    * `docs-drift.test.ts` uses for `CRON_LABEL`.
    */
   const COUNT_WORD: Record<Locale, Record<number, string>> = {
-    en: { 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven', 12: 'twelve' },
-    'zh-Hans': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二' },
-    'zh-Hant': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二' },
+    en: { 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen', 15: 'fifteen', 16: 'sixteen' },
+    'zh-Hans': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六' },
+    'zh-Hant': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六' },
   };
 
   it('the row ledger answers exactly the objects this app registers', () => {
-    // Anti-vacuum, both halves. 23 objects ship today, 12 of them parent-derived;
+    // Anti-vacuum, both halves. 29 objects ship today, 14 of them parent-derived;
     // a ledger compared against an empty derived set would pass by checking
     // nothing at all, and so would every rule below.
     expect(

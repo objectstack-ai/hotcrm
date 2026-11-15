@@ -161,6 +161,40 @@ export const CrmPositions = [
     description: 'Finance: enters and imports the invoices and payments that sales sees on each contract.',
     permissionSets: ['ar_accountant'],
   },
+  // Project Delivery (#2316 phase 1, `docs/architecture/psa-module-plan.md`,
+  // *Permissions, positions, sharing*). Approvals route to these positions or
+  // to a stamped approver field, never to a named person. The director and
+  // the PMO run delivery AND watch its money, so they hold both sets.
+  {
+    name: 'crm_project_director',
+    label: 'Project Director',
+    description: 'Leads project delivery: runs projects and reads every project, timesheet and expense with its cost and margin.',
+    permissionSets: ['project_manager', 'finance_controller'],
+  },
+  {
+    name: 'crm_pmo',
+    label: 'PMO',
+    description: 'The project management office: reads every project with its cost and margin, keeps the rate cards and runs projects.',
+    permissionSets: ['project_manager', 'finance_controller'],
+  },
+  {
+    name: 'crm_project_manager',
+    label: 'Project Manager',
+    description: 'Opens and runs projects, staffs them at a rate card and approves the team\'s timesheets and expenses.',
+    permissionSets: ['project_manager'],
+  },
+  {
+    name: 'crm_project_member',
+    label: 'Project Team Member',
+    description: 'A consultant staffed on projects: books time and expenses on the projects they are staffed on.',
+    permissionSets: ['project_member'],
+  },
+  {
+    name: 'crm_finance_controller',
+    label: 'Finance Controller',
+    description: 'Finance: watches project cost and margin, sets project budgets and keeps the rate cards.',
+    permissionSets: ['finance_controller'],
+  },
   // Territory groupings referenced by the account sharing rules.
   {
     name: 'crm_na_sales_team',

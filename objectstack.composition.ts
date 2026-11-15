@@ -64,7 +64,7 @@ import {
   createHotCrmMarketingStack, marketingHooks, marketingFlows, marketingSharingRules,
 } from './src/marketing/index.js';
 import { createHotCrmO2cStack, o2cHooks } from './src/o2c/index.js';
-import { createHotCrmPsaStack } from './src/psa/index.js';
+import { createHotCrmPsaStack, psaHooks, psaSharingRules } from './src/psa/index.js';
 
 import * as salesObjects from './src/sales/objects/index.js';
 
@@ -152,6 +152,7 @@ import {
   campaigns, campaignMembersFromLeads, campaignMembersFromContacts,
   campaignsZhCN, campaignMembersFromLeadsZhCN, campaignMembersFromContactsZhCN,
 } from './src/marketing/data/index.js';
+import { projects, rateCards, projectsZhCN, rateCardsZhCN } from './src/psa/data/index.js';
 
 /**
  * One registration array out of the merged per-package barrels of a metadata
@@ -366,7 +367,7 @@ export { CrmPositions };
  * assembled here from each package's own. That every hook still lowers is
  * `pnpm lint`'s to say (`hook-body/not-lowerable`), over the built stack.
  */
-export const allHooks = [...appHooks, ...revenueHooks, ...marketingHooks, ...serviceHooks, ...o2cHooks];
+export const allHooks = [...appHooks, ...revenueHooks, ...marketingHooks, ...serviceHooks, ...o2cHooks, ...psaHooks];
 
 /** Every flow in the artifact, every package — same reason as {@link allHooks}. */
 export const allFlows = [...appFlows, ...revenueFlows, ...marketingFlows, ...serviceFlows];
@@ -375,7 +376,7 @@ export const allFlows = [...appFlows, ...revenueFlows, ...marketingFlows, ...ser
 export const allSkills = [...appSkills, ...serviceSkills];
 
 /** Every sharing rule in the artifact, every package — same reason as {@link allHooks}. */
-export const CrmSharingRules = [...appSharingRules, ...marketingSharingRules, ...serviceSharingRules];
+export const CrmSharingRules = [...appSharingRules, ...marketingSharingRules, ...serviceSharingRules, ...psaSharingRules];
 
 
 /**
@@ -448,6 +449,10 @@ export const CrmSeedData = [
   quoteLineItems,
   forecasts,
   knowledgeArticles,
+  // Project Delivery (#2316): rate cards, then projects, which point at the
+  // accounts and opportunities above.
+  rateCards,
+  projects,
 ];
 
 /**
@@ -488,6 +493,8 @@ export const CrmSeedDataZhCN = [
   quoteLineItemsZhCN,
   forecastsZhCN,
   knowledgeArticlesZhCN,
+  rateCardsZhCN,
+  projectsZhCN,
 ];
 
 /** Both stories: what the default composition's four package stacks register between them. */
@@ -568,11 +575,15 @@ export const MarketingSeedData = CrmSeedDataAllLocales.filter((family) =>
     campaignsZhCN, campaignMembersFromLeadsZhCN, campaignMembersFromContactsZhCN,
   ].includes(family));
 
+/** The PROJECT DELIVERY package's families — the rate cards and projects (#2316). */
+export const PsaSeedData = CrmSeedDataAllLocales.filter((family) =>
+  [rateCards, projects, rateCardsZhCN, projectsZhCN].includes(family));
+
 /** Everything else — the app package's own families, in {@link CrmSeedDataAllLocales} order. */
 export const AppSeedData = CrmSeedDataAllLocales.filter((family) =>
-  ![...ServiceSeedData, ...RevenueSeedData, ...MarketingSeedData].includes(family));
+  ![...ServiceSeedData, ...RevenueSeedData, ...MarketingSeedData, ...PsaSeedData].includes(family));
 
-type PackageSeedData = Record<'app' | 'service' | 'revenue' | 'marketing', typeof CrmSeedDataAllLocales>;
+type PackageSeedData = Record<'app' | 'service' | 'revenue' | 'marketing' | 'psa', typeof CrmSeedDataAllLocales>;
 
 /**
  * The seed datasets each package registers under a composition.
@@ -584,8 +595,8 @@ type PackageSeedData = Record<'app' | 'service' | 'revenue' | 'marketing', typeo
  */
 export const seedDataFor = (composition: HotCrmComposition): PackageSeedData =>
   composition === 'saas'
-    ? { app: [], service: [], revenue: SaasTenantSeedData, marketing: [] }
-    : { app: AppSeedData, service: ServiceSeedData, revenue: RevenueSeedData, marketing: MarketingSeedData };
+    ? { app: [], service: [], revenue: SaasTenantSeedData, marketing: [], psa: [] }
+    : { app: AppSeedData, service: ServiceSeedData, revenue: RevenueSeedData, marketing: MarketingSeedData, psa: PsaSeedData };
 
 // ─── Which SHAPE of HotCRM this build assembles (#1361) ───────────────────
 //
@@ -667,7 +678,7 @@ export const o2cStack = createHotCrmO2cStack();
  * `app.objectstack.hotcrm.psa` — see `src/psa/index.ts`. Phase 0 ships no
  * seed row, so it is handed nothing.
  */
-export const psaStack = createHotCrmPsaStack();
+export const psaStack = createHotCrmPsaStack({ data: seedData.psa });
 
 /** The five module stacks, in the order the artifact lists them. */
 export const moduleStacks = [serviceStack, revenueStack, marketingStack, o2cStack, psaStack];

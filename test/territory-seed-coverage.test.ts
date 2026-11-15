@@ -23,6 +23,8 @@ import * as forecastSeed from '../src/sales/data/forecast.seed';
 // Split out of `revenue.seed.ts` when `crm_contract` moved to the app package
 // (`module-split-plan.md` item 11).
 import * as contractSeed from '../src/sales/data/contract.seed';
+// Project Delivery's rate cards and projects (#2316 phase 1a).
+import * as psaSeed from '../src/psa/data/psa.seed';
 import { hotcrmStack } from './helpers/verify-stack';
 
 /**
@@ -253,6 +255,7 @@ describe('every family module dataset is wired into CrmSeedData (#635 split)', (
     'activity.seed': activitySeed,
     'forecast.seed': forecastSeed,
     'contract.seed': contractSeed,
+    'psa.seed': psaSeed,
   };
 
   const isDataset = (value: unknown): value is Dataset =>

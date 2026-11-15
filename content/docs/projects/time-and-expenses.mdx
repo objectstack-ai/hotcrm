@@ -1,0 +1,60 @@
+---
+title: Time and Expenses
+description: Booking hours on a timesheet and spending on an expense, submitting them, how the project manager approves them, and how they become the project's cost.
+---
+
+# Time and Expenses
+
+## Timesheets
+
+A **Timesheet** holds one person's hours on one project for one period, usually a week. Open **My Timesheets** and choose **New**:
+
+- Pick the **Project**, and the **Period Start** and **Period End**. A period covers at most 31 days.
+- The **Timesheet** name fills itself from the project and the period.
+- The **Approver** is the project's Project Manager at that moment, and cannot be changed.
+
+You keep one timesheet per project per period: a second one for the same project and the same period start is refused, naming the first, so add the hours there.
+
+### Time entries
+
+Each day's work is a **Time Entry** in the timesheet's **Time Entries** tab: the **Date**, the **Hours** (from a quarter of an hour up to 24), whether they are **Billable**, and a note.
+
+- The date must fall inside the timesheet's period.
+- You can only book hours on a project you are staffed on. Otherwise the entry is refused, naming the project: ask its project manager to add you.
+- The entry copies the **Cost Rate** and **Bill Rate** from your staffing's rate card when it is saved, converted to an hourly rate (a day is 8 hours), and works out its **Cost** and **Amount to Bill**. A non-billable entry, or a member staffed as not billable, bills nothing.
+
+The timesheet's **Totals** add up its entries: **Total Hours**, **Total Cost** and **Amount to Bill**.
+
+### Submitting and approving
+
+| Status | What it means |
+| --- | --- |
+| **Draft** | You are still filling it in |
+| **Submitted** | Sent to the approver. Its hours are frozen |
+| **Approved** | The hours count in the project's cost. Final |
+| **Rejected** | Sent back. Move it to Draft, correct it and submit again |
+
+When the week is done, set **Status** to **Submitted**. A submitted timesheet's entries can no longer be added, changed or removed; to correct one, move the timesheet back to **Draft** first.
+
+The approver finds it under **Timesheets to Approve**, opens it and sets **Approved** or **Rejected**.
+
+> **Nobody approves their own hours.** Only the timesheet's approver, or an administrator, can set Approved or Rejected. Anyone else who tries is refused, whatever else they may edit.
+
+## Expenses
+
+An **Expense** is money one person spent on a project. Open **My Expenses** and choose **New**: the **Description**, the **Project**, the **Date**, the **Category** (Travel, Lodging, Meals, Equipment, Other), the **Amount** and whether it is **Billable** to the customer. Attach the receipt in the **Files** tab.
+
+An expense goes through the same statuses as a timesheet. Its **Approver** is the project's Project Manager when it was created, it appears under **Expenses to Approve**, and only that approver or an administrator can approve or reject it.
+
+Amounts are in your organization's currency. Convert a receipt in another currency before you enter it.
+
+## How they become the project's cost
+
+Only **Approved** timesheets and expenses count:
+
+- A timesheet's **Total Cost** adds to the project's **Labor Cost**, and its **Amount to Bill** to **Approved to Bill**.
+- An expense's **Amount** adds to the project's **Expense Cost**, and to **Approved to Bill** when it is billable.
+
+Draft, submitted and rejected ones count nowhere. The project's [cost and margin](/docs/projects#money) move the moment one is approved.
+
+> **Approval is a status change for now.** The approver sets the status on the record. A later release adds an approval step with an inbox, budget warnings and a project lock; this page will say so when it ships.

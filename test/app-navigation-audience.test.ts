@@ -576,14 +576,14 @@ describe("each persona's launcher offers the apps its work needs (#2417, #2465, 
   it.each([
     ['na_rep', ['crm_enterprise']],
     ['eu_rep', ['crm_enterprise']],
-    ['sales_manager', ['crm_enterprise', 'crm_marketing', 'crm_o2c', 'crm_service']],
+    // A sales manager follows the delivery of the deals their team won (#2316 phase 1a).
+    ['sales_manager', ['crm_enterprise', 'crm_marketing', 'crm_o2c', 'crm_psa', 'crm_service']],
     ['service_agent', ['crm_service']],
     ['service_manager', ['crm_service']],
     ['marketing_user', ['crm_enterprise', 'crm_marketing']],
     // Finance works in Order to Cash alone (#2465).
     ['ar_accountant', ['crm_o2c']],
-    // Project Delivery is a skeleton in phase 0 (#2316): every business set
-    // hides it, so only the administrator is offered it.
+    // Project Delivery (#2316): rep, service, marketing and AR sets hide it.
     ['admin', ['crm_enterprise', 'crm_marketing', 'crm_o2c', 'crm_psa', 'crm_service']],
   ])('%s is offered %j', async (persona, apps) => {
     expect(await appsOf(persona)).toEqual(apps);

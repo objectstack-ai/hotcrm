@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_CONTRACT_FIGURE_FIELDS } from './_o2c-figures';
+import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
 
 /**
  * Sales Manager Profile
@@ -19,10 +20,9 @@ export const SalesManagerProfile = {
   // `crm_user`, which says nothing here, so silence never re-shows an app.
   // A manager sees the four working apps, stated rather than left silent so
   // a manager who also holds a set that hides one keeps it (most-visible-
-  // wins). Project Delivery is hidden from every business set while it is a
-  // skeleton carrying only the app package's entries (#2316 phase 0); the
-  // phase that gives it projects opens it to the roles that deliver them.
-  tabPermissions: { crm_enterprise: 'visible' as const, crm_service: 'visible' as const, crm_marketing: 'visible' as const, crm_o2c: 'visible' as const, crm_psa: 'hidden' as const },
+  // wins). Project Delivery too since it carries projects (#2316 phase 1a):
+  // a manager reads every project of the deals the team sells.
+  tabPermissions: { crm_enterprise: 'visible' as const, crm_service: 'visible' as const, crm_marketing: 'visible' as const, crm_o2c: 'visible' as const, crm_psa: 'visible' as const },
   objects: {
     // `allowTransfer` on the objects this set holds `modifyAllRecords` on —
     // the sales book a manager reassigns — plus `crm_forecast`, which kept it
@@ -109,6 +109,9 @@ export const SalesManagerProfile = {
     crm_billing_milestone: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     crm_invoice:           { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_payment:           { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // Project Delivery (#2316 phase 1a): read, every project, with the rows
+    // its cost figures sum (`_psa-grants.ts`). Delivery is delivery's.
+    ...PSA_READ_ALL_OBJECTS,
     // Line items: full CRUD so a manager can fix pricing on any rep's deal or
     // quote. Both objects are `controlled_by_parent`, so there is no scope to
     // author — but that derivation does not narrow these rows to the deals and

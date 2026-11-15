@@ -152,11 +152,15 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // per line object, so two), `quote_price_book`'s inactive-book and
     // book-change refusals, and `price_book_standard`'s refusal to delete a
     // book quotes price from; 41 until #2315 added `payment_plan_step_stamp`'s
-    // refusal of a payment naming another contract's invoice.
+    // refusal of a payment naming another contract's invoice; 42 until
+    // #2316 phase 1a added Project Delivery's six: the timesheet's
+    // duplicate-period and approver-only refusals, the expense's approver-only
+    // refusal, and the time entry's submitted-sheet freeze, out-of-period
+    // date and not-staffed refusals.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(42);
+    expect(sites).toHaveLength(48);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

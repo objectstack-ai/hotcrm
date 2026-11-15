@@ -1,0 +1,60 @@
+---
+title: 工時與費用
+description: 在工時單上填報工時、填報費用、提交，項目經理如何審批，以及它們如何成為項目的成本。
+---
+
+# 工時與費用
+
+## 工時單
+
+**Timesheet**（工時單）記錄一個人在一個項目上某個期間（通常是一週）的工時。打開 **My Timesheets**，點 **New**：
+
+- 選擇 **Project**，以及 **Period Start** 和 **Period End**。一個期間最長 31 天。
+- **Timesheet** 名稱會根據項目和期間自動填寫。
+- **Approver**（審批人）是當時項目的項目經理，不能修改。
+
+每個項目每個期間只保留一張工時單：同一項目、同一期間開始日期的第二張會被拒絕，提示訊息會指出第一張，請把工時加到那張上。
+
+### 工時明細
+
+每天的工作是工時單 **Time Entries** 分頁中的一筆 **Time Entry**（工時明細）：**Date**、**Hours**（從一刻鐘到 24 小時）、是否 **Billable**，以及備註。
+
+- 日期必須在工時單的期間之內。
+- 只能在自己被安排的項目上填報工時。否則會被拒絕，提示訊息會指出項目：請聯繫項目經理把你加進去。
+- 工時明細在儲存時會從你的人員安排所用的費率卡複製 **Cost Rate** 和 **Bill Rate**，換算成每小時單價（一天按 8 小時計），並算出 **Cost** 和 **Amount to Bill**。不可計費的明細，或者以不可計費身分被安排的成員，計費金額為零。
+
+工時單的 **Totals** 匯總它的明細：**Total Hours**、**Total Cost** 和 **Amount to Bill**。
+
+### 提交與審批
+
+| 狀態 | 含義 |
+| --- | --- |
+| **Draft** | 還在填寫 |
+| **Submitted** | 已發給審批人。工時被凍結 |
+| **Approved** | 工時計入項目成本。終態 |
+| **Rejected** | 被退回。改回 Draft、修正後再提交 |
+
+一週結束後，把 **Status** 設為 **Submitted**。已提交的工時單不能再新增、修改或刪除明細；要修正，先把工時單退回 **Draft**。
+
+審批人在 **Timesheets to Approve** 中找到它，打開後設為 **Approved** 或 **Rejected**。
+
+> **任何人都不能審批自己的工時。**只有工時單的審批人或管理員可以設為 Approved 或 Rejected。其他人這樣做都會被拒絕，無論他還能編輯什麼。
+
+## 費用
+
+**Expense**（費用）是一個人為項目花的錢。打開 **My Expenses**，點 **New**：填寫 **Description**、**Project**、**Date**、**Category**（Travel、Lodging、Meals、Equipment、Other）、**Amount**，以及是否向客戶 **Billable**。在 **Files** 分頁上傳票據。
+
+費用與工時單的狀態相同。它的 **Approver** 是建立時項目的項目經理，出現在 **Expenses to Approve** 中，只有這位審批人或管理員可以批准或駁回。
+
+金額使用貴公司的本位幣。外幣票據請先換算再錄入。
+
+## 如何成為項目的成本
+
+只有 **Approved** 的工時單和費用才計入：
+
+- 工時單的 **Total Cost** 計入項目的 **Labor Cost**，它的 **Amount to Bill** 計入 **Approved to Bill**。
+- 費用的 **Amount** 計入項目的 **Expense Cost**；可計費的費用還計入 **Approved to Bill**。
+
+Draft、Submitted 和 Rejected 的都不計入。一旦批准，項目的[成本和毛利](/zh-Hant/docs/projects#money)立即變化。
+
+> **目前審批就是修改狀態。**審批人直接在紀錄上設定狀態。後續版本會增加帶審批收件匣的審批步驟、預算預警和項目鎖定；上線時本頁會說明。

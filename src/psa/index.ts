@@ -1,9 +1,34 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { defineStack, type ObjectStackDefinition } from '@objectstack/spec';
+import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { PsaApp } from './apps/index.js';
+import { Expense, Project, ProjectMember, RateCard, TimeEntry, Timesheet } from './objects/index.js';
+import { expenseHook, projectMemberHook, timeEntryHook, timesheetHook } from './objects/hooks.js';
+import {
+  ExpenseApproverEditSharingRule,
+  ProjectFinanceEditSharingRules,
+  ProjectManagerEditSharingRule,
+  ProjectTeamReadSharingRule,
+  TimesheetApproverEditSharingRule,
+} from './sharing/index.js';
 import { PsaTranslations } from './translations/index.js';
+import { ExpenseViews, ProjectMemberViews, ProjectViews, RateCardViews, TimeEntryViews, TimesheetViews } from './views/index.js';
+
+/**
+ * This package's hooks, for the artifact-wide sweeps (`allHooks` in
+ * `objectstack.composition.ts`) — see `serviceHooks` in
+ * `src/service/index.ts` for the arrangement. Every one attaches to a module
+ * object (ADR-0130 R4).
+ */
+export const psaHooks = [projectMemberHook, timesheetHook, timeEntryHook, expenseHook].flat();
+
+/** This package's sharing rules — see {@link psaHooks}. */
+export const psaSharingRules = [
+  ProjectTeamReadSharingRule, ProjectManagerEditSharingRule,
+  TimesheetApproverEditSharingRule, ExpenseApproverEditSharingRule,
+  ...ProjectFinanceEditSharingRules,
+];
 
 /**
  * `app.objectstack.hotcrm.psa` — the PROJECT DELIVERY module (PSA,
@@ -19,18 +44,30 @@ import { PsaTranslations } from './translations/index.js';
  * not planned), and a project is a child of an account, an opportunity and a
  * contract.
  *
- * Phase 0 joins the suite: the manifest, the Project Delivery app skeleton
- * (`./apps/`) and its labels. It owns no object, hook or seed row yet; phase 1
- * adds the six v1 objects (project, member, rate card, timesheet and its
- * entries, expense), their approvals and the cost and margin roll-ups. Their
- * grants will be rows in the app package's permission sets (ADR-0130 addendum,
- * 2026-09-02).
+ * Phase 0 (#2471) joined the suite with the Project Delivery app skeleton.
+ * Phase 1a adds the six v1 objects (ruling 3): project, staffing, rate card,
+ * timesheet and its entries, expense, with the hooks that keep a project's
+ * team and copy an entry's rates, the record-relative sharing rules, views,
+ * seed rows and labels, and the actual cost, amount to bill and margin
+ * roll-ups. Their grants are rows in the app package's permission sets
+ * (ADR-0130 addendum, 2026-09-02): `project_manager`, `project_member` and
+ * `finance_controller`, distributed by the positions in
+ * `src/sales/sharing/positions.ts`. Phase 1b adds the three approvals and
+ * the overrun alert and lock.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
  * artifact's version.
  */
-export const createHotCrmPsaStack = (): ObjectStackDefinition => defineStack({
+/**
+ * What the composition hands this package: its seed families, cut out of the
+ * artifact's ordered union (`PsaSeedData` in `objectstack.composition.ts`).
+ */
+export type HotCrmPsaCollections = Pick<ObjectStackDefinitionInput, 'data'>;
+
+export const createHotCrmPsaStack = (
+  collections: HotCrmPsaCollections = {},
+): ObjectStackDefinition => defineStack({
   manifest: {
     id: 'app.objectstack.hotcrm.psa',
     name: 'HotCRM Project Delivery',
@@ -50,5 +87,10 @@ export const createHotCrmPsaStack = (): ObjectStackDefinition => defineStack({
 
   // The delivery team's app; see the app's own note.
   apps: [PsaApp],
+  objects: [Project, ProjectMember, RateCard, Timesheet, TimeEntry, Expense],
+  hooks: psaHooks,
+  views: [ProjectViews, ProjectMemberViews, RateCardViews, TimesheetViews, TimeEntryViews, ExpenseViews],
+  sharingRules: psaSharingRules,
+  data: collections.data,
   translations: [PsaTranslations],
 });
