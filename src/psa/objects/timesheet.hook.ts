@@ -25,6 +25,15 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *     on a project whose Lock Time and Expenses is ticked is refused, naming
  *     the project. Drafts are never refused, and nobody is exempt: the way on
  *     is to untick the lock.
+ *   - A project that is over takes no time (hotcrm#2491): on a Closed or
+ *     Cancelled project, a person cannot create a timesheet, move one onto
+ *     it, or submit one, and the refusal names the project and its status.
+ *     A draft already there stays readable and editable, and can be moved to
+ *     an open project; only its submission is refused, since that would put
+ *     cost on a finished project. Completed stays open for late bookings (it
+ *     can go back to Active, and Lock Time and Expenses closes it to
+ *     submissions). Judged on a person's write, administrators included; a
+ *     seed or an import is its author's to keep consistent.
  *
  * Runs as the caller: the person writing their own timesheet reads the
  * project they are staffed on, and counts only their own timesheets.
@@ -34,7 +43,7 @@ const timesheetStamps: Hook = {
   object: 'crm_timesheet',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
-  description: 'Fill the name and the approver, keep one timesheet per person, project and period, leave the decision to the approval, and refuse a submission on a locked project.',
+  description: 'Fill the name and the approver, keep one timesheet per person, project and period, leave the decision to the approval, refuse a submission on a locked project, and take no timesheet onto a Closed or Cancelled project.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -74,10 +83,25 @@ const timesheetStamps: Hook = {
     const periodEnd = typeof pick('period_end') === 'string' ? String(pick('period_end')).slice(0, 10) : '';
     const person = Boolean(ctx.user?.id) && !ctx.session?.isSystem;
     const submitting = person && input.status === 'submitted' && previous.status !== 'submitted';
+    const moving = ctx.event === 'beforeUpdate' && 'crm_project' in input && projectId !== refId(previous.crm_project);
     const needsProject = ctx.event === 'beforeInsert' || 'crm_project' in input || 'period_start' in input || submitting;
     const project = projectId && needsProject
-      ? await api.object('crm_project').findOne({ where: { id: projectId }, fields: ['id', 'name', 'project_manager', 'time_entry_locked'] })
+      ? await api.object('crm_project').findOne({ where: { id: projectId }, fields: ['id', 'name', 'status', 'project_manager', 'time_entry_locked'] })
       : null;
+
+    // The statuses of a project that is over, as the console labels them.
+    const PROJECT_OVER: Record<string, string> = { closed: 'Closed', cancelled: 'Cancelled' };
+    const over = person && project && typeof project.status === 'string' ? PROJECT_OVER[project.status] : undefined;
+    if (over && (ctx.event === 'beforeInsert' || moving || submitting)) {
+      const projectName = String(project?.name ?? 'This project');
+      throw refuse(
+        ctx.event === 'beforeInsert' || moving
+          ? `${projectName} is ${over}, so it takes no new timesheets. Record the time on an open project.`
+          : `${projectName} is ${over}, so this timesheet cannot be submitted. Keep it as a draft, or move it to an open project.`,
+        'RECORD_LOCKED',
+        409,
+      );
+    }
 
     if (submitting && project && project.time_entry_locked === true) {
       throw refuse(

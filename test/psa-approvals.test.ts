@@ -32,6 +32,9 @@ type Rec = Record<string, any>;
  *   approved cost, and its crossing tells the PM and finance once.
  * - `time_entry_locked`: a submission on a locked project is refused, a
  *   draft never is.
+ * - a Closed or Cancelled project (hotcrm#2491): no new timesheet or expense,
+ *   none moved onto it, and a draft already there is editable but not
+ *   submitted; Completed and Active take both.
  */
 
 let verify: VerifyStack;
@@ -295,5 +298,99 @@ describe('cost control (project_budget_status, project_budget_alert, time_entry_
     await update('crm_project', { id: project.id, time_entry_locked: false }, pm.token);
     await update('crm_timesheet', { id: sheet.id, status: 'submitted' }, consultant.token);
     expect((await row('crm_timesheet', sheet.id)).status).toBe('submitted');
+  });
+});
+
+describe('a project that is over takes no time or spend (hotcrm#2491)', () => {
+  const projects: Record<string, Rec> = {};
+  let draftSheet: Rec;
+  let draftExpense: Rec;
+  let start = Date.parse('2026-10-05T00:00:00Z');
+  /** A fresh one-week period, so no two timesheets of the consultant on one project clash. */
+  const week = (): { period_start: string; period_end: string } => {
+    const s = new Date(start).toISOString().slice(0, 10);
+    const e = new Date(start + 6 * 86_400_000).toISOString().slice(0, 10);
+    start += 7 * 86_400_000;
+    return { period_start: s, period_end: e };
+  };
+  const expense = (projectId: string): Rec => ({
+    name: `Taxi ${++k}`, crm_project: projectId, expense_date: '2026-10-06', category: 'travel', amount: 40,
+  });
+  const moveTo = async (p: Rec, ...statuses: string[]): Promise<Rec> => {
+    for (const status of statuses) await update('crm_project', { id: p.id, status }, pm.token);
+    expect((await row('crm_project', p.id)).status).toBe(statuses.at(-1));
+    return p;
+  };
+
+  beforeAll(async () => {
+    projects.active = await activeProject(1000);
+    projects.completed = await moveTo(await activeProject(1000), 'completed');
+    projects.closed = await moveTo(await activeProject(1000), 'completed', 'closed');
+    projects.cancelled = await moveTo(await activeProject(1000), 'cancelled');
+    // Drafts written while the project was Active, which then closes under them.
+    const closing = await activeProject(1000);
+    draftSheet = await insert('crm_timesheet', { crm_project: closing.id, ...week() }, consultant.token);
+    await insert('crm_time_entry', { crm_timesheet: draftSheet.id, entry_date: draftSheet.period_start, hours: 2 }, consultant.token);
+    draftExpense = await insert('crm_expense', expense(closing.id), consultant.token);
+    projects.closing = await moveTo(closing, 'completed', 'closed');
+  }, 120_000);
+
+  it.each([
+    ['closed', 'Closed'],
+    ['cancelled', 'Cancelled'],
+  ])('a %s project refuses a new timesheet and a new expense, naming the project and its status', async (status, label) => {
+    const p = projects[status]!;
+    await expect(insert('crm_timesheet', { crm_project: p.id, ...week() }, consultant.token))
+      .rejects.toThrow(`${p.name} is ${label}, so it takes no new timesheets.`);
+    await expect(insert('crm_expense', expense(p.id), consultant.token))
+      .rejects.toThrow(`${p.name} is ${label}, so it takes no new expenses.`);
+    await expect(insert('crm_timesheet', { crm_project: p.id, ...week() }, admin), 'nobody is exempt')
+      .rejects.toThrow(`${p.name} is ${label}`);
+    expect(await verify.rows('crm_timesheet', { crm_project: p.id })).toEqual([]);
+    expect(await verify.rows('crm_expense', { crm_project: p.id })).toEqual([]);
+  });
+
+  it.each(['completed', 'active'])('a %s project takes a new timesheet and expense, and their submission', async (status) => {
+    const p = projects[status]!;
+    const sheet = await insert('crm_timesheet', { crm_project: p.id, ...week() }, consultant.token);
+    await insert('crm_time_entry', { crm_timesheet: sheet.id, entry_date: sheet.period_start, hours: 1 }, consultant.token);
+    await update('crm_timesheet', { id: sheet.id, status: 'submitted' }, consultant.token);
+    expect((await row('crm_timesheet', sheet.id)).status).toBe('submitted');
+    const exp = await insert('crm_expense', expense(p.id), consultant.token);
+    await update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token);
+    expect((await row('crm_expense', exp.id)).status).toBe('submitted');
+  });
+
+  it('refuses moving a timesheet or an expense onto a closed or cancelled project', async () => {
+    const sheet = await insert('crm_timesheet', { crm_project: projects.active!.id, ...week() }, consultant.token);
+    const exp = await insert('crm_expense', expense(projects.active!.id), consultant.token);
+    for (const status of ['closed', 'cancelled']) {
+      const p = projects[status]!;
+      await expect(update('crm_timesheet', { id: sheet.id, crm_project: p.id }, consultant.token))
+        .rejects.toThrow(`${p.name} is ${status === 'closed' ? 'Closed' : 'Cancelled'}, so it takes no new timesheets.`);
+      await expect(update('crm_expense', { id: exp.id, crm_project: p.id }, consultant.token))
+        .rejects.toThrow(`${p.name} is ${status === 'closed' ? 'Closed' : 'Cancelled'}, so it takes no new expenses.`);
+    }
+    expect((await row('crm_timesheet', sheet.id)).crm_project).toBe(projects.active!.id);
+    expect((await row('crm_expense', exp.id)).crm_project).toBe(projects.active!.id);
+  });
+
+  it('keeps a draft already on a closed project editable and movable, and refuses only its submission', async () => {
+    const p = projects.closing!;
+    await update('crm_timesheet', { id: draftSheet.id, notes: 'Written before the close.' }, consultant.token);
+    await update('crm_expense', { id: draftExpense.id, amount: 45 }, consultant.token);
+    expect((await row('crm_timesheet', draftSheet.id)).notes).toBe('Written before the close.');
+    expect((await row('crm_expense', draftExpense.id)).amount).toBe(45);
+
+    await expect(update('crm_timesheet', { id: draftSheet.id, status: 'submitted' }, consultant.token))
+      .rejects.toThrow(`${p.name} is Closed, so this timesheet cannot be submitted.`);
+    await expect(update('crm_expense', { id: draftExpense.id, status: 'submitted' }, consultant.token))
+      .rejects.toThrow(`${p.name} is Closed, so this expense cannot be submitted.`);
+    expect((await row('crm_timesheet', draftSheet.id)).status).toBe('draft');
+    expect((await row('crm_expense', draftExpense.id)).status).toBe('draft');
+
+    await update('crm_expense', { id: draftExpense.id, crm_project: projects.active!.id }, consultant.token);
+    await update('crm_expense', { id: draftExpense.id, status: 'submitted' }, consultant.token);
+    expect((await row('crm_expense', draftExpense.id)).status, 'moved to an open project, it goes on').toBe('submitted');
   });
 });

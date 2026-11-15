@@ -162,11 +162,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // Rejected set by hand, a project sent for approval with no budget) and the
     // locked project's refusal of a submitted timesheet and a submitted expense;
     // 54 until the 1b review added `project_status_guard`'s refusal of an
-    // approved budget changed by anyone but a Finance Controller.
+    // approved budget changed by anyone but a Finance Controller; 55 until
+    // #2491 added the timesheet's and the expense's refusal on a Closed or
+    // Cancelled project.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(55);
+    expect(sites).toHaveLength(57);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
