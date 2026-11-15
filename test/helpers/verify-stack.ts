@@ -10,7 +10,23 @@ import { ApprovalsServicePlugin } from '@objectstack/plugin-approvals';
 import { AuditPlugin } from '@objectstack/plugin-audit';
 import { EmailServicePlugin, resolveEmailCapabilityArg, type EmailServicePluginOptions } from '@objectstack/plugin-email';
 import { resolveCapabilityArgument } from '@objectstack/core';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import artifact from '../../objectstack.config';
+
+/**
+ * Each test process keeps its own `OS_HOME`, so a suite that disables a
+ * package (`PATCH /packages/ID/disable`) cannot reach another process's boot.
+ * The runtime persists the disabled list to `$OS_HOME/package-state/<env>.<project>.json`
+ * — one file per checkout, shared by every vitest worker — and reads it at
+ * boot. With a shared file, a suite booting while `module-disabled-actions`
+ * held marketing off saw `crm_campaign` answer 404 OBJECT_PACKAGE_DISABLED, and
+ * two suites toggling different packages could lose each other's enable in
+ * the file's read-modify-write (hotcrm#2464 CI, 2026-11-15). A fresh directory
+ * per process makes every boot start from "nothing disabled".
+ */
+process.env.OS_HOME = mkdtempSync(join(tmpdir(), 'hotcrm-verify-home-'));
 
 /**
  * The app, booted through the platform's own in-process handle.
