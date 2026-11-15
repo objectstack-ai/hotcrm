@@ -69,7 +69,7 @@ One dataset stands behind every case-related dashboard tile and all three case r
 
 Project Delivery brings two datasets of its own, and the **Projects Overview** dashboard reads them. **Project Financials** (`project_financials`) is one row per project: approved budget, planned revenue, labor and expense cost, actual cost, gross margin and budget used, split by status, kind, billing type, budget status or project manager. **Time Utilization** (`time_utilization`) is one row per timesheet: total and billable hours, and the billable share, by person, project, status, and the week or month the timesheet starts.
 
-The cost figures are approved cost only, the same roll-ups the project record shows, and a team member is refused them: the analytics service enforces the same field-level security as the record, so a member cannot add up what they cannot read. Hours are counted per timesheet, not per entry: the approval lives on the sheet, and the in-process aggregate this version runs on non-SQL drivers groups by a field of a related object but cannot filter on one.
+The cost figures are approved cost only, the same roll-ups the project record shows, and a team member is refused them: the analytics service enforces the same field-level security as the record, so a member cannot add up what they cannot read. Hours are counted per timesheet, not per entry: the approval lives on the sheet, and the in-process aggregate this version uses for every query with a date bucket, and on drivers without SQL, groups by a field of a related object but cannot filter on one.
 
 **Sample questions these datasets answer**:
 - *"Which delivering projects have spent more than 80 % of their budget?"*

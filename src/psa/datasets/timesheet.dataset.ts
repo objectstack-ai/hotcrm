@@ -13,10 +13,11 @@ import { defineDataset } from '@objectstack/spec/ui';
  * sheet is booked time, not cost.
  *
  * Why the sheet and not the entry: the approval lives on the sheet, and
- * 18.4.0's in-process aggregate (ObjectQLStrategy, the strategy on every
- * non-SQL driver) groups by a field of an included object but refuses to
+ * 18.4.0's in-process aggregate (ObjectQLStrategy: every driver without SQL,
+ * and any query with a date bucket on one with SQL) groups by a field of an included object but refuses to
  * FILTER on one ("cannot evaluate a cross-object filter", 400, measured on the
- * branch server). An entry-level dataset could split approved hours from the
+ * branch server; served on objectstack main by #33512, card #33335, not yet
+ * released). An entry-level dataset could split approved hours from the
  * rest only as a dimension, never as a tile's filter. A week is therefore the
  * week the timesheet starts (`period_start`); a sheet covers at most 31 days.
  *
