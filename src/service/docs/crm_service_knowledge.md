@@ -24,6 +24,12 @@ article, which points the other way — the case an article was *written from*.
 The two answer different questions, and a good article usually has one origin
 and many resolutions.
 
+Any article can be recorded, whatever its status or audience: an agent may
+resolve a case from an internal article or from a draft a colleague is still
+writing, and the record should say so. So **Top Resolving Articles** can rank an
+article that is not published. When one reaches the top, that is a reason to
+finish and publish it, not a mistake in the count.
+
 ## Deflection is measured from that link
 
 That link is what makes deflection measurable. The Service dashboard shows a

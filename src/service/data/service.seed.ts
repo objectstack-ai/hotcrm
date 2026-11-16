@@ -240,11 +240,6 @@ export const cases = defineSeed(Case, {
       // `resolution` is REQUIRED when status is 'closed' (object validation
       // `resolution_required_for_closed`) — without it the seed row is rejected.
       resolution: 'Raised the production rate-limit tier and added client-side backoff; usage now within limits.',
-      // The deflection link (#601): this case was answered out of the knowledge
-      // base, so it names the article that resolved it. Referenced by the
-      // article seed's `externalId` (`title`), the same way every other seeded
-      // lookup names its target.
-      resolved_by_article: 'API Rate Limits',
       // closed−created delta, as case.hook computes it.
       resolution_time_hours: 5.0,
       created_at: cel`daysAgo(7)`,
@@ -321,6 +316,17 @@ export const cases = defineSeed(Case, {
       is_escalated: false,
       // Required for closed cases (resolution_required_for_closed).
       resolution: 'Delivered CSV bulk-import in the 9.4 release; shared the docs link with the customer.',
+      // The deflection link (#601): this case was answered out of the knowledge
+      // base, so it names the article that resolved it. Referenced by the
+      // article seed's `externalId` (`title`), the same way every other seeded
+      // lookup names its target. A PUBLISHED, public article (#2527): this
+      // link used to sit on the rate-limit case above and name `API Rate
+      // Limits`, a draft internal article whose body says its numbers are not
+      // final, so a fresh tenant's Top Resolving Articles ranked an unreviewed
+      // draft first. That case was resolved by raising the customer's tier, not
+      // from the knowledge base; this one was answered with the import article.
+      // `test/knowledge-deflection-seed.test.ts`.
+      resolved_by_article: 'Importing Your First Accounts and Contacts',
       // closed−created delta, as case.hook computes it.
       resolution_time_hours: 48.0,
       created_at: cel`daysAgo(10)`,
