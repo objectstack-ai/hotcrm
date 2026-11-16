@@ -5,6 +5,21 @@ description: Booking hours on a timesheet and spending on an expense, submitting
 
 # Time and Expenses
 
+## Entering your week
+
+Open **My Week** under **Time and Expenses**. It lists your time entries of this week, Monday to Sunday, grouped by project, and you edit them in place. To add a day's work, choose **New** and fill in the **Project**, the **Date**, the **Hours**, and the **Task** if you like. Leave the **Timesheet** empty:
+
+- Your timesheet on that project whose period holds the date is used.
+- When there is none, a draft timesheet is created for you for that week, Monday to Sunday, and the entry goes into it.
+
+So a week across three projects is entered line by line and makes three timesheets, one per project, each approved by its own project manager. Change an entry's **Project** or **Date** and it moves to the matching timesheet. An entry cannot leave, or join, a timesheet that is already submitted.
+
+**My Time** lists all your entries, grouped by timesheet, newest first: use it to fill in last week.
+
+When the week is done, open **Submit This Week**. It lists your timesheets that touch this week, one per project. Select them all and choose **Submit**: each is submitted on its own and goes to its project's manager. If one project is locked or closed, only that timesheet is refused and the others are submitted. A single timesheet also has a **Submit** button.
+
+> A line that is refused (say, more than 24 hours) can still leave behind the empty draft timesheet that was created for it. It is the one your next entry for that project and week goes into.
+
 ## Timesheets
 
 A **Timesheet** holds one person's hours on one project for one period, usually a week. Open **My Timesheets** and choose **New**:
@@ -34,7 +49,7 @@ The timesheet's **Totals** add up its entries: **Total Hours**, **Total Cost** a
 | **Approved** | The hours count in the project's cost. Final |
 | **Rejected** | Sent back. Move it to Draft, correct it and submit again |
 
-When the week is done, set **Status** to **Submitted**. A submitted timesheet's entries can no longer be added, changed or removed, and the timesheet itself is locked while it waits.
+When the week is done, choose **Submit** (or submit the whole week from **Submit This Week**). A submitted timesheet's entries can no longer be added, changed or removed, and the timesheet itself is locked while it waits.
 
 The approver decides in their **Inbox** (under **My Work**), with **Approve** or **Reject**. **Timesheets to Approve** lists the same timesheets, to open and read before deciding.
 

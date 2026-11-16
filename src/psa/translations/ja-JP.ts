@@ -79,6 +79,17 @@ export const jaJP: TranslationData = {
         },
       },
     },
+    time_entry_timesheet: {
+      refusals: {
+        VALIDATION_FAILED: { message: '工数のプロジェクトを選んでください。' },
+        FORBIDDEN: {
+          message: '工数を記録できるのは、プロジェクトにアサインされた人だけです。プロジェクトマネージャーに追加を依頼してください。',
+          reasons: {
+            named: { message: '工数を記録できるのは、プロジェクト「{{project}}」にアサインされた人だけです。プロジェクトマネージャーに追加を依頼してください。' },
+          },
+        },
+      },
+    },
     time_entry_costing: {
       refusals: {
         RECORD_LOCKED: { message: 'このタイムシートは提出済みのため、工数は変更できません。修正するには下書きに戻してください。' },
@@ -86,6 +97,7 @@ export const jaJP: TranslationData = {
           message: '日付 {{day}} はこのタイムシートの期間（{{from}} – {{to}}）外です。',
           reasons: {
             task: { message: 'タスクはこの工数表のプロジェクトのタスクにしてください。' },
+            project: { message: 'プロジェクトはこのタイムシートのプロジェクトにしてください。' },
           },
         },
         FORBIDDEN: {
@@ -399,6 +411,12 @@ export const jaJP: TranslationData = {
       _views: {
         all_timesheets: { label: 'すべてのタイムシート' },
         my_timesheets: { label: '自分のタイムシート' },
+        my_week_timesheets: {
+          label: '今週のタイムシート',
+          bulkActions: {
+            submit_week: { label: '提出', confirmText: '{{count}} 件のタイムシートを承認に提出しますか？それぞれのプロジェクトマネージャーに送られます。' },
+          },
+        },
         timesheets_to_approve: { label: '承認待ちのタイムシート' },
       },
       _sections: {
@@ -409,16 +427,26 @@ export const jaJP: TranslationData = {
         timesheet_period: { message: '期間終了日は期間開始日以降にしてください。1 枚のタイムシートは最長 31 日です。' },
         timesheet_status_progression: { message: 'このステータス変更はできません。タイムシートは 下書き → 提出済み → 承認済みまたは却下 と進みます。却下されたタイムシートは下書きに戻して修正します。' },
       },
+      _actions: {
+        submit_timesheet: { label: '提出', successMessage: 'タイムシート {{ record.name }} を承認に提出しました。' },
+      },
     },
     crm_time_entry: {
       label: '工数明細',
       pluralLabel: '工数明細',
       description: 'タイムシート内の 1 日分の工数と、そのコスト',
       fields: {
-        crm_timesheet: { label: 'タイムシート' },
+        crm_project: {
+          label: 'プロジェクト',
+          help: 'この工数のプロジェクト。新しい行では、このプロジェクトとその週のタイムシートが自動で見つかるか作成されます。',
+        },
+        crm_timesheet: {
+          label: 'タイムシート',
+          help: 'プロジェクトと日付から自動で入ります。別の期間のタイムシートに記録するときだけ選んでください。',
+        },
         entry_date: {
           label: '日付',
-          help: 'タイムシートの期間内の日付です。',
+          help: '作業した日です。',
         },
         hours: { label: '時間' },
         is_billable: { label: '請求対象' },
@@ -434,6 +462,8 @@ export const jaJP: TranslationData = {
       },
       _views: {
         all_time_entries: { label: 'すべての工数明細' },
+        my_week_time: { label: '今週の工数' },
+        my_time_entries: { label: '自分の工数' },
       },
       _sections: {
         basic: { label: '工数明細' },
@@ -542,6 +572,8 @@ export const jaJP: TranslationData = {
         nav_project_plan: { label: 'プロジェクト計画' },
         nav_my_project_tasks: { label: '自分のプロジェクトタスク' },
         group_time_expenses: { label: '工数と経費' },
+        nav_my_week: { label: '今週の工数' },
+        nav_my_week_timesheets: { label: '今週分を提出' },
         nav_my_timesheets: { label: '自分のタイムシート' },
         nav_my_expenses: { label: '自分の経費' },
         nav_timesheets_to_approve: { label: '承認待ちのタイムシート' },
