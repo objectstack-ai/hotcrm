@@ -12,7 +12,9 @@ export const OpportunitiesByStageReport: Report = {
   // per-query, so the YTD window rolls with time instead of freezing the year
   // the artifact was built into dist/objectstack.json.
   runtimeFilter: { stage: { $ne: 'closed_lost' }, close_date: { $gte: '{current_year_start}' } },
-  chart: { type: 'bar', title: 'Pipeline by Stage', showLegend: true, xAxis: 'stage', yAxis: 'total_amount' }
+  // Chart titles are inline 4-locale maps: the report translation has no `chart`
+  // slot on 18.5.0 (#2524). Pinned by test/report-chart-titles.test.ts.
+  chart: { type: 'bar', title: { en: 'Pipeline by Stage', 'zh-CN': '阶段管道分布', 'ja-JP': 'ステージ別パイプライン', 'es-ES': 'Pipeline por etapa' }, showLegend: true, xAxis: 'stage', yAxis: 'total_amount' }
 };
 
 export const WonOpportunitiesByOwnerReport: Report = {
@@ -22,7 +24,7 @@ export const WonOpportunitiesByOwnerReport: Report = {
   dataset: 'opportunity_metrics', rows: ['owner'], values: ['total_amount'],
   type: 'summary',
   runtimeFilter: { stage: 'closed_won' },
-  chart: { type: 'column', title: 'Revenue by Sales Rep', showLegend: false, xAxis: 'owner', yAxis: 'total_amount' }
+  chart: { type: 'column', title: { en: 'Revenue by Sales Rep', 'zh-CN': '各销售代表成交金额', 'ja-JP': '営業担当者別売上', 'es-ES': 'Ingresos por comercial' }, showLegend: false, xAxis: 'owner', yAxis: 'total_amount' }
 };
 
 /**
@@ -69,5 +71,5 @@ export const OpportunityFunnelByOwnerStageReport: Report = {
   dataset: 'opportunity_metrics', rows: ['owner'], columns: ['stage'], values: ['total_amount'],
   type: 'matrix',
   runtimeFilter: { stage: { $ne: 'closed_lost' } },
-  chart: { type: 'horizontal-bar', title: 'Amount by Owner', showLegend: false, xAxis: 'owner', yAxis: 'total_amount' },
+  chart: { type: 'horizontal-bar', title: { en: 'Amount by Owner', 'zh-CN': '各负责人金额', 'ja-JP': '担当者別金額', 'es-ES': 'Importe por responsable' }, showLegend: false, xAxis: 'owner', yAxis: 'total_amount' },
 };
