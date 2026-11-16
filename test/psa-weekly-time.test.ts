@@ -183,6 +183,12 @@ describe('time_entry_costing: the line follows its timesheet', () => {
       .rejects.toThrow('The project must be this timesheet\'s project.');
   });
 
+  it('with the timesheet an optional master, the lines are still read through it', async () => {
+    const mine = await verify.rows('crm_time_entry', { owner_id: consultant.id }, { as: consultant.token });
+    expect(mine.length).toBeGreaterThan(0);
+    expect(await verify.rows('crm_time_entry', { owner_id: consultant.id }, { as: outsider.token }), 'not the outsider\'s').toEqual([]);
+  });
+
   it('a line edited to another date or project moves to the matching timesheet', async () => {
     const line = await insert('crm_time_entry', { crm_project: projects.alpha.id, entry_date: '2026-08-03', hours: 2 }, consultant.token);
     const first = line.crm_timesheet;

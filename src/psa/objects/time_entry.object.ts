@@ -59,12 +59,15 @@ export const TimeEntry = ObjectSchema.create({
       description: 'The day the hours were worked.',
     }),
 
-    // Not `required` on the form: a line entered from My Week names its
-    // project and date and leaves the timesheet to the hook, which always
-    // fills it (the column stays NOT NULL).
+    // The optional master (`required: false`, a shape the spec's
+    // controlled_by_parent resolution keeps): a line entered from My Week names
+    // its project and date and leaves the timesheet to the hook, which always
+    // fills it, so the column stays NOT NULL. Left implicit, ObjectSchema
+    // forces `required: true` and the console form would demand a timesheet.
     crm_timesheet: Field.masterDetail('crm_timesheet', {
       label: 'Timesheet',
       group: 'basic',
+      required: false,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
       description: 'Filled in for you from the project and the date. Pick one only to book onto a timesheet with another period.',
