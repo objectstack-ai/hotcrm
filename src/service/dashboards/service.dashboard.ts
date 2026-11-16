@@ -336,14 +336,17 @@ export const ServiceDashboard: Dashboard = {
     {
       id: 'my_open_cases_by_priority',
       title: 'My Open Cases by Priority',
-      description: 'Your open cases and their SLA-violation rate, broken down by priority',
+      description: 'Your open cases, how many are past their SLA and what share that is, by priority',
       type: 'table',
       filter: { is_closed: false, owner_id: '{current_user_id}' },
       // Opts out of the Agent global filter (keyed by its field, `owner_id`):
       // ANDing an agent pick into "mine" empties the widget for anyone else.
       filterBindings: { owner_id: false },
       colorVariant: 'default',
-      dataset, dimensions: ['priority'], values: ['case_count', 'avg_sla_violated'],
+      // Past SLA at read time (#2525), the way the `sla_violations` tile
+      // counts: the stored flag alone read 0.0% on a deployment without the
+      // sweep. The count sits beside the rate so the rate can be checked.
+      dataset, dimensions: ['priority'], values: ['case_count', 'past_sla_count', 'past_sla_rate'],
       layout: { x: 0, y: 16, w: 12, h: 4 },
       options: {
         sortBy: 'case_count',

@@ -287,7 +287,7 @@ export const esES: TranslationData = {
         kb_resolved_cases: { title: 'Resueltos por KB', description: 'Casos cerrados que señalan el artículo que los resolvió' },
         closed_cases_total: { title: 'Casos Cerrados', description: 'El denominador de la tasa de desvío' },
         top_resolving_articles: { title: 'Artículos que Más Resuelven', description: 'Artículos de la base de conocimiento ordenados por los casos cerrados que resolvieron' },
-        my_open_cases_by_priority: { title: 'Mis casos abiertos por prioridad', description: 'Tus casos abiertos y su tasa de incumplimiento de SLA, desglosados por prioridad' },
+        my_open_cases_by_priority: { title: 'Mis casos abiertos por prioridad', description: 'Tus casos abiertos, cuántos están fuera de SLA y qué parte representan, por prioridad' },
       },
     },
   },
@@ -318,6 +318,12 @@ export const esES: TranslationData = {
       measures: {
         avg_resolution: {
           label: 'Resolución media (h)',
+        },
+        past_sla_count: {
+          label: 'Fuera de SLA',
+        },
+        past_sla_rate: {
+          label: 'Tasa fuera de SLA',
         },
         avg_sla_violated: {
           label: 'Tasa de incumplimiento del SLA',
