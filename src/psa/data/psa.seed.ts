@@ -23,6 +23,23 @@
  *   - Initech phase 1 (completed): every task completed → 100 %.
  *   - Delivery Practice Enablement (draft): not planned yet, so empty.
  *
+ * Each project's budget is seeded as versions with their lines (hotcrm#2547,
+ * phase 2c), and its Approved Budget is the baseline version's total, summed
+ * by the platform, never typed:
+ *
+ *   - Stark pilot: version 1 approved (78,000), and a version 2 top-up in
+ *     Draft (85,800, ten percent more), ready to send.
+ *   - Wayne rollout: version 1 (150,000) superseded by an approved version 2
+ *     (165,000), the hypercare top-up.
+ *   - Vertex onboarding, Vertex scoping, Initech phase 1: version 1 approved
+ *     (36,000, 12,000, 60,000).
+ *   - Delivery Practice Enablement (draft): version 1 in Draft (15,000), sent
+ *     with the project when it goes for approval.
+ *
+ * A labor line names a rate card and its hours; its unit cost is the card's
+ * cost per hour (a day card's over eight hours), copied by
+ * `project_budget.hook.ts` on the seed write, as on a person's.
+ *
  * Seed doctrine lives in `src/sales/data/_shared.ts`; the two-language rule in
  * `src/sales/data/_locale.ts`.
  */
@@ -31,6 +48,8 @@ import { cel } from '@objectstack/spec';
 import { RateCard } from '../objects/rate_card.object';
 import { Project } from '../objects/project.object';
 import { ProjectTask } from '../objects/project_task.object';
+import { ProjectBudget } from '../objects/project_budget.object';
+import { ProjectBudgetLine } from '../objects/project_budget_line.object';
 import { SEED_EN_LOCALES } from '../../sales/data/_locale';
 
 export const rateCards = defineSeed(RateCard, {
@@ -64,7 +83,6 @@ export const projects = defineSeed(Project, {
       planned_end: cel`daysFromNow(35)`,
       actual_start: cel`daysAgo(19)`,
       planned_revenue: 120000,
-      approved_budget: 78000,
     },
     {
       name: 'Wayne Operations Module Rollout',
@@ -78,7 +96,6 @@ export const projects = defineSeed(Project, {
       planned_end: cel`daysFromNow(60)`,
       actual_start: cel`daysAgo(44)`,
       planned_revenue: 260000,
-      approved_budget: 165000,
     },
     {
       name: 'Vertex Developer Platform Onboarding',
@@ -91,7 +108,6 @@ export const projects = defineSeed(Project, {
       planned_start: cel`daysFromNow(7)`,
       planned_end: cel`daysFromNow(97)`,
       planned_revenue: 54000,
-      approved_budget: 36000,
     },
     {
       name: 'Vertex Enterprise Rollout Scoping',
@@ -104,7 +120,6 @@ export const projects = defineSeed(Project, {
       planned_start: cel`daysAgo(10)`,
       planned_end: cel`daysFromNow(14)`,
       actual_start: cel`daysAgo(10)`,
-      approved_budget: 12000,
     },
     {
       name: 'Initech Phase 1 Delivery',
@@ -119,7 +134,6 @@ export const projects = defineSeed(Project, {
       actual_start: cel`daysAgo(118)`,
       actual_end: cel`daysAgo(15)`,
       planned_revenue: 90000,
-      approved_budget: 60000,
     },
     {
       name: 'Delivery Practice Enablement',
@@ -130,7 +144,6 @@ export const projects = defineSeed(Project, {
       description: 'Internal: the delivery playbook, templates and training for new consultants.',
       planned_start: cel`daysFromNow(14)`,
       planned_end: cel`daysFromNow(74)`,
-      approved_budget: 15000,
     },
   ],
 });
@@ -179,5 +192,79 @@ export const projectTasks = defineSeed(ProjectTask, {
     { name: 'Initech phase 1: migration assessment', crm_project: 'Initech Phase 1 Delivery', status: 'completed', planned_hours: 60, percent_complete: 100, planned_start: cel`daysAgo(120)`, planned_end: cel`daysAgo(100)` },
     { name: 'Initech phase 1: workload migration', crm_project: 'Initech Phase 1 Delivery', predecessors: ['Initech phase 1: migration assessment'], status: 'completed', planned_hours: 200, percent_complete: 100, planned_start: cel`daysAgo(99)`, planned_end: cel`daysAgo(30)` },
     { name: 'Initech phase 1: customer acceptance', crm_project: 'Initech Phase 1 Delivery', predecessors: ['Initech phase 1: workload migration'], status: 'completed', is_milestone: true, planned_hours: 0, percent_complete: 100, planned_start: cel`daysAgo(20)`, planned_end: cel`daysAgo(20)` },
+  ],
+});
+
+/**
+ * The projects' budget versions (hotcrm#2547). Listed in version order, so
+ * each version's number (stamped on the write) is the one in its name, and an
+ * approved version 2 supersedes the version 1 before it.
+ */
+export const projectBudgets = defineSeed(ProjectBudget, {
+  mode: 'ignore',
+  locale: SEED_EN_LOCALES,
+  externalId: 'name',
+  records: [
+    { name: 'Stark Medical Pilot Delivery · v1', crm_project: 'Stark Medical Pilot Delivery', version: 1, status: 'approved', notes: 'The signed pilot: three sites, eight weeks.' },
+    {
+      name: 'Stark Medical Pilot Delivery · v2', crm_project: 'Stark Medical Pilot Delivery', version: 2, status: 'draft',
+      reason: 'Site three needs a second configuration pass after the customer changed its ward layout.',
+    },
+    { name: 'Wayne Operations Module Rollout · v1', crm_project: 'Wayne Operations Module Rollout', version: 1, status: 'approved', notes: 'Four regional hubs, one after another.' },
+    {
+      name: 'Wayne Operations Module Rollout · v2', crm_project: 'Wayne Operations Module Rollout', version: 2, status: 'approved',
+      reason: 'The customer added two weeks of on-site hypercare at the south hub.',
+    },
+    { name: 'Vertex Developer Platform Onboarding · v1', crm_project: 'Vertex Developer Platform Onboarding', version: 1, status: 'approved' },
+    { name: 'Vertex Enterprise Rollout Scoping · v1', crm_project: 'Vertex Enterprise Rollout Scoping', version: 1, status: 'approved' },
+    { name: 'Initech Phase 1 Delivery · v1', crm_project: 'Initech Phase 1 Delivery', version: 1, status: 'approved' },
+    { name: 'Delivery Practice Enablement · v1', crm_project: 'Delivery Practice Enablement', version: 1, status: 'draft' },
+  ],
+});
+
+/**
+ * The versions' lines (hotcrm#2547). A version's Total Cost sums their
+ * amounts, and the baseline's total is the project's Approved Budget.
+ */
+export const projectBudgetLines = defineSeed(ProjectBudgetLine, {
+  mode: 'ignore',
+  locale: SEED_EN_LOCALES,
+  externalId: ['crm_project_budget', 'description'],
+  records: [
+    // Stark v1: 34,000 + 31,200 + 8,800 + 4,000 = 78,000.
+    { crm_project_budget: 'Stark Medical Pilot Delivery · v1', category: 'labor', description: 'Senior consultants', rate_card: 'Senior Consultant', hours: 400, period: cel`daysAgo(21)` },
+    { crm_project_budget: 'Stark Medical Pilot Delivery · v1', category: 'labor', description: 'Consultants', rate_card: 'Consultant', hours: 480, period: cel`daysAgo(21)` },
+    { crm_project_budget: 'Stark Medical Pilot Delivery · v1', category: 'labor', description: 'Solution architecture', rate_card: 'Lead Architect', hours: 80, period: cel`daysAgo(21)` },
+    { crm_project_budget: 'Stark Medical Pilot Delivery · v1', category: 'expense', description: 'Travel to the three sites', quantity: 1, unit_cost: 4000 },
+    // Stark v2 (Draft): 34,000 + 39,000 + 8,800 + 4,000 = 85,800, ten percent more.
+    { crm_project_budget: 'Stark Medical Pilot Delivery · v2', category: 'labor', description: 'Senior consultants', rate_card: 'Senior Consultant', hours: 400, period: cel`daysAgo(21)` },
+    { crm_project_budget: 'Stark Medical Pilot Delivery · v2', category: 'labor', description: 'Consultants', rate_card: 'Consultant', hours: 600, period: cel`daysAgo(21)` },
+    { crm_project_budget: 'Stark Medical Pilot Delivery · v2', category: 'labor', description: 'Solution architecture', rate_card: 'Lead Architect', hours: 80, period: cel`daysAgo(21)` },
+    { crm_project_budget: 'Stark Medical Pilot Delivery · v2', category: 'expense', description: 'Travel to the three sites', quantity: 1, unit_cost: 4000 },
+    // Wayne v1 (superseded): 68,000 + 65,000 + 9,000 + 8,000 = 150,000.
+    { crm_project_budget: 'Wayne Operations Module Rollout · v1', category: 'labor', description: 'Senior consultants', rate_card: 'Senior Consultant', hours: 800, period: cel`daysAgo(45)` },
+    { crm_project_budget: 'Wayne Operations Module Rollout · v1', category: 'labor', description: 'Consultants', rate_card: 'Consultant', hours: 1000, period: cel`daysAgo(45)` },
+    { crm_project_budget: 'Wayne Operations Module Rollout · v1', category: 'labor', description: 'Programme advisory', rate_card: 'Principal Advisor', hours: 60, period: cel`daysAgo(45)` },
+    { crm_project_budget: 'Wayne Operations Module Rollout · v1', category: 'expense', description: 'Travel between the hubs', quantity: 1, unit_cost: 8000 },
+    // Wayne v2 (the baseline): 68,000 + 78,000 + 9,000 + 10,000 = 165,000.
+    { crm_project_budget: 'Wayne Operations Module Rollout · v2', category: 'labor', description: 'Senior consultants', rate_card: 'Senior Consultant', hours: 800, period: cel`daysAgo(45)` },
+    { crm_project_budget: 'Wayne Operations Module Rollout · v2', category: 'labor', description: 'Consultants', rate_card: 'Consultant', hours: 1200, period: cel`daysAgo(45)` },
+    { crm_project_budget: 'Wayne Operations Module Rollout · v2', category: 'labor', description: 'Programme advisory', rate_card: 'Principal Advisor', hours: 60, period: cel`daysAgo(45)` },
+    { crm_project_budget: 'Wayne Operations Module Rollout · v2', category: 'expense', description: 'Travel between the hubs', quantity: 1, unit_cost: 10000 },
+    // Vertex onboarding v1: 17,600 + 17,000 + 1,400 = 36,000.
+    { crm_project_budget: 'Vertex Developer Platform Onboarding · v1', category: 'labor', description: 'Architecture review', rate_card: 'Lead Architect', hours: 160, period: cel`daysFromNow(7)` },
+    { crm_project_budget: 'Vertex Developer Platform Onboarding · v1', category: 'labor', description: 'Enablement workshops', rate_card: 'Senior Consultant', hours: 200, period: cel`daysFromNow(7)` },
+    { crm_project_budget: 'Vertex Developer Platform Onboarding · v1', category: 'expense', description: 'Workshop materials', quantity: 4, unit_cost: 350 },
+    // Vertex scoping v1: 8,500 + 2,600 + 900 = 12,000.
+    { crm_project_budget: 'Vertex Enterprise Rollout Scoping · v1', category: 'labor', description: 'Solution design', rate_card: 'Senior Consultant', hours: 100, period: cel`daysAgo(10)` },
+    { crm_project_budget: 'Vertex Enterprise Rollout Scoping · v1', category: 'labor', description: 'Effort estimate', rate_card: 'Consultant', hours: 40, period: cel`daysAgo(10)` },
+    { crm_project_budget: 'Vertex Enterprise Rollout Scoping · v1', category: 'third_party_goods', description: 'Cloud sandbox for the prototype', quantity: 1, unit_cost: 900 },
+    // Initech phase 1 v1: 25,500 + 27,300 + 7,200 = 60,000.
+    { crm_project_budget: 'Initech Phase 1 Delivery · v1', category: 'labor', description: 'Senior consultants', rate_card: 'Senior Consultant', hours: 300, period: cel`daysAgo(120)` },
+    { crm_project_budget: 'Initech Phase 1 Delivery · v1', category: 'labor', description: 'Consultants', rate_card: 'Consultant', hours: 420, period: cel`daysAgo(120)` },
+    { crm_project_budget: 'Initech Phase 1 Delivery · v1', category: 'subcontract_service', description: 'Data-centre decommissioning partner', quantity: 1, unit_cost: 7200 },
+    // Delivery Practice Enablement v1 (Draft): 13,000 + 2,000 = 15,000.
+    { crm_project_budget: 'Delivery Practice Enablement · v1', category: 'labor', description: 'Playbook and templates', rate_card: 'Internal Delivery', hours: 200, period: cel`daysFromNow(14)` },
+    { crm_project_budget: 'Delivery Practice Enablement · v1', category: 'other', description: 'Training venue', quantity: 2, unit_cost: 1000 },
   ],
 });

@@ -17,7 +17,12 @@ import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
  *   - `crm_rate_card` — read, WITHOUT what anything costs: the cost rate, and
  *     the cost copied onto their own entries and summed on their timesheets,
  *     are hidden at the field level, and so is the project's cost and margin
- *     block, which sums them. The bill side stays readable. ⛔ No View All
+ *     block, which sums them. The bill side stays readable. The budget
+ *     versions and their lines (hotcrm#2547) are cost too, so this set has
+ *     no grant on `crm_project_budget` or `crm_project_budget_line`, and the
+ *     project's Approved Budget, now the baseline version's total, is hidden
+ *     with the rest of the cost block (`os lint`
+ *     `security-rollup-source-unreadable`). ⛔ No View All
  *     on the rate card (it is `public_read` anyway): View All would vote on
  *     every field and undo the hiding.
  *   - `crm_account` — read, View All (ruling D on #2316, 2026-11-15): a
@@ -62,6 +67,7 @@ export const ProjectMemberProfile = {
     // The project's cost block, for the same reason: it sums what a member
     // may not read, and the margin follows from it. Expense Cost goes with it,
     // so the block is hidden whole rather than half.
+    'crm_project.approved_budget':         { readable: false, editable: false },
     'crm_project.actual_labor_cost':       { readable: false, editable: false },
     'crm_project.actual_expense_cost':     { readable: false, editable: false },
     'crm_project.actual_cost':             { readable: false, editable: false },

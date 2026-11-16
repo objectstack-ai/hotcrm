@@ -61,11 +61,23 @@ const act = async (recordId: string, token: string, action: 'approve' | 'reject'
   return res.status;
 };
 
+/**
+ * A Draft project with its version 1 budget planned (hotcrm#2547): one line of
+ * `budget`, so the version's total, and once approved the project's Approved
+ * Budget, is `budget`.
+ */
+const plannedProject = async (name: string, budget: number, extra: Rec = {}): Promise<Rec> => {
+  const p = await insert('crm_project', { name: `${name} ${++k}`, crm_account: account.id, kind: 'delivery', ...extra }, pm.token);
+  const version = await insert('crm_project_budget', { crm_project: p.id }, pm.token);
+  await insert('crm_project_budget_line', {
+    crm_project_budget: version.id, category: 'other', description: 'Delivery', quantity: 1, unit_cost: budget,
+  }, pm.token);
+  return p;
+};
+
 /** A project staffed with the PM and the consultant, through approval and Active (as admin, so no tier is under test). */
 const activeProject = async (budget: number): Promise<Rec> => {
-  const p = await insert('crm_project', {
-    name: `Approvals Rollout ${++k}`, crm_account: account.id, kind: 'delivery', planned_revenue: budget * 2, approved_budget: budget,
-  }, pm.token);
+  const p = await plannedProject('Approvals Rollout', budget, { planned_revenue: budget * 2 });
   await insert('crm_project_member', { crm_project: p.id, person: pm.id, responsibility: 'project_manager', rate_card: card.id }, pm.token);
   await insert('crm_project_member', { crm_project: p.id, person: consultant.id, responsibility: 'consultant', rate_card: card.id }, pm.token);
   await update('crm_project', { id: p.id, status: 'in_approval' }, pm.token);
@@ -124,14 +136,12 @@ describe('project initiation (project_initiation_approval, project_status_guard)
     await expect(insert('crm_project', { name: `Born Active ${++k}`, crm_account: account.id, kind: 'delivery', status: 'active' }, pm.token))
       .rejects.toThrow(/starts as Draft/);
     const p = await insert('crm_project', { name: `No Budget ${++k}`, crm_account: account.id, kind: 'delivery' }, pm.token);
-    await expect(update('crm_project', { id: p.id, status: 'in_approval' }, pm.token)).rejects.toThrow(/Set the Approved Budget/);
+    await expect(update('crm_project', { id: p.id, status: 'in_approval' }, pm.token)).rejects.toThrow(/Add the project's budget/);
     expect(await openRequests(p.id)).toHaveLength(0);
   });
 
   it('is approved by a Project Director, and then the PM makes it Active', async () => {
-    const p = await insert('crm_project', {
-      name: `Small Rollout ${++k}`, crm_account: account.id, kind: 'delivery', approved_budget: PROJECT_FINANCE_REVIEW_BUDGET - 1,
-    }, pm.token);
+    const p = await plannedProject('Small Rollout', PROJECT_FINANCE_REVIEW_BUDGET - 1);
     await expect(update('crm_project', { id: p.id, status: 'approved' }, pm.token), 'a person never writes the decision')
       .rejects.toThrow(/approved or rejected by its approver/);
     await update('crm_project', { id: p.id, status: 'in_approval' }, pm.token);
@@ -140,15 +150,15 @@ describe('project initiation (project_initiation_approval, project_status_guard)
       .rejects.toThrow(/locked while an approval is in progress/);
     expect(await act(p.id, pm.token, 'approve'), 'a project manager is not on the slate').not.toBe(200);
     expect(await act(p.id, director.token, 'approve')).toBe(200);
-    expect((await row('crm_project', p.id)).status).toBe('approved');
+    const approved = await row('crm_project', p.id);
+    expect(approved.status).toBe('approved');
+    expect(num(approved.approved_budget), 'its version 1 is the baseline').toBe(PROJECT_FINANCE_REVIEW_BUDGET - 1);
     await update('crm_project', { id: p.id, status: 'active' }, pm.token);
     expect((await row('crm_project', p.id)).status).toBe('active');
   });
 
   it(`also needs a Finance Controller at a budget of ${PROJECT_FINANCE_REVIEW_BUDGET}, whose rejection sends it back`, async () => {
-    const p = await insert('crm_project', {
-      name: `Large Rollout ${++k}`, crm_account: account.id, kind: 'delivery', approved_budget: PROJECT_FINANCE_REVIEW_BUDGET,
-    }, pm.token);
+    const p = await plannedProject('Large Rollout', PROJECT_FINANCE_REVIEW_BUDGET);
     await update('crm_project', { id: p.id, status: 'in_approval' }, pm.token);
     expect(await act(p.id, director.token, 'approve')).toBe(200);
     expect((await row('crm_project', p.id)).status, 'still waiting on finance').toBe('in_approval');
@@ -159,9 +169,7 @@ describe('project initiation (project_initiation_approval, project_status_guard)
   });
 
   it('goes back to Draft when the PM recalls it', async () => {
-    const p = await insert('crm_project', {
-      name: `Recalled Rollout ${++k}`, crm_account: account.id, kind: 'delivery', approved_budget: 1000,
-    }, pm.token);
+    const p = await plannedProject('Recalled Rollout', 1000);
     await update('crm_project', { id: p.id, status: 'in_approval' }, pm.token);
     expect(await act(p.id, pm.token, 'recall')).toBe(200);
     expect((await row('crm_project', p.id)).status).toBe('draft');
@@ -268,16 +276,20 @@ describe('cost control (project_budget_status, project_budget_alert, time_entry_
     }, { timeout: 15_000, interval: 100 });
   });
 
-  it('leaves an approved budget to finance: the PM is refused, a Finance Controller raises it and Budget Status moves', async () => {
-    await expect(update('crm_project', { id: project.id, approved_budget: 4000 }, pm.token), 'the PM cannot re-baseline')
-      .rejects.toThrow(/only a Finance Controller can change it/);
+  it('raises the budget by an approved top-up version, and Budget Status moves with it (hotcrm#2547)', async () => {
     const held = await row('crm_project', project.id);
-    expect(held.approved_budget).toBe(1000);
+    expect(num(held.approved_budget)).toBe(1000);
     expect(held.budget_status).toBe('exceeded');
 
-    await update('crm_project', { id: project.id, approved_budget: 4000 }, finance.token);
+    const topUp = await insert('crm_project_budget', { crm_project: project.id, reason: 'Scope grew.' }, pm.token);
+    await insert('crm_project_budget_line', {
+      crm_project_budget: topUp.id, category: 'other', description: 'Delivery', quantity: 1, unit_cost: 4000,
+    }, pm.token);
+    await update('crm_project_budget', { id: topUp.id, status: 'in_approval' }, pm.token);
+    expect(await act(topUp.id, director.token, 'approve')).toBe(200);
+    expect(await act(topUp.id, finance.token, 'approve'), 'four times the baseline also needs finance').toBe(200);
     const raised = await row('crm_project', project.id);
-    expect(raised.approved_budget, 'the raise is stored, not dropped').toBe(4000);
+    expect(num(raised.approved_budget), 'the new baseline').toBe(4000);
     expect(raised.budget_status).toBe('on_track');
   });
 

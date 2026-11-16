@@ -1,11 +1,11 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 /**
- * The Simplified Chinese twins of the rate cards, projects and project tasks
- * (#2316, #2411, #2545).
+ * The Simplified Chinese twins of the rate cards, projects, project tasks and
+ * budget versions with their lines (#2316, #2411, #2545, #2547).
  * How a twin is built: `src/sales/data/_locale.ts`.
  */
-import { projects, projectTasks, rateCards } from './psa.seed';
+import { projectBudgetLines, projectBudgets, projects, projectTasks, rateCards } from './psa.seed';
 import { zhCNTwin, zhKey } from '../../sales/data/_locale';
 import { zhAccountName, zhOpportunityName } from '../../sales/data/sales.zh-CN.seed';
 
@@ -17,6 +17,8 @@ const RATE_CARDS_ZH: Record<string, Record<string, unknown>> = {
   'Principal Advisor': { name: '专家顾问' },
   'Internal Delivery': { name: '内部交付' },
 };
+
+const zhRateCardName = zhKey('rate card', RATE_CARDS_ZH, 'name');
 
 export const rateCardsZhCN = zhCNTwin(rateCards, {
   words: RATE_CARDS_ZH,
@@ -93,4 +95,52 @@ export const projectTasksZhCN = zhCNTwin(projectTasks, {
   map: (twin) => (Array.isArray(twin.predecessors)
     ? { ...twin, predecessors: (twin.predecessors as string[]).map(zhTaskName) }
     : twin),
+});
+
+/** The budget versions (#2547): the project's Chinese name, then the version. */
+const PROJECT_BUDGETS_ZH: Record<string, Record<string, unknown>> = Object.fromEntries(
+  projectBudgets.records.map((record) => {
+    const english = String(record.name);
+    const [project, version] = english.split(' · ');
+    return [english, { name: `${zhProjectName(project)} · ${version}` }];
+  }),
+);
+const BUDGET_WORDS_ZH: Record<string, Record<string, unknown>> = {
+  'Stark Medical Pilot Delivery · v1': { notes: '已签约的试点：三个院区，八周。' },
+  'Stark Medical Pilot Delivery · v2': { reason: '客户调整了病区布局，第三院区需要再做一轮配置。' },
+  'Wayne Operations Module Rollout · v1': { notes: '四个区域中心，依次上线。' },
+  'Wayne Operations Module Rollout · v2': { reason: '客户在南区中心追加了两周驻场保障。' },
+};
+
+const zhBudgetName = zhKey('budget version', PROJECT_BUDGETS_ZH, 'name');
+
+export const projectBudgetsZhCN = zhCNTwin(projectBudgets, {
+  words: Object.fromEntries(Object.entries(PROJECT_BUDGETS_ZH).map(([k, v]) => [k, { ...v, ...BUDGET_WORDS_ZH[k] }])),
+  text: ['name', 'notes', 'reason'],
+  refs: { crm_project: zhProjectName },
+});
+
+const BUDGET_LINES_ZH: Record<string, Record<string, unknown>> = {
+  'Senior consultants': { description: '高级顾问' },
+  'Consultants': { description: '顾问' },
+  'Solution architecture': { description: '方案架构' },
+  'Travel to the three sites': { description: '三个院区的差旅' },
+  'Programme advisory': { description: '项目群咨询' },
+  'Travel between the hubs': { description: '区域中心之间的差旅' },
+  'Architecture review': { description: '架构评审' },
+  'Enablement workshops': { description: '赋能培训' },
+  'Workshop materials': { description: '培训资料' },
+  'Solution design': { description: '方案设计' },
+  'Effort estimate': { description: '工作量估算' },
+  'Cloud sandbox for the prototype': { description: '原型用的云沙箱' },
+  'Data-centre decommissioning partner': { description: '机房下线分包商' },
+  'Playbook and templates': { description: '交付手册和模板' },
+  'Training venue': { description: '培训场地' },
+};
+
+export const projectBudgetLinesZhCN = zhCNTwin(projectBudgetLines, {
+  words: BUDGET_LINES_ZH,
+  key: (record) => String(record.description),
+  text: ['description'],
+  refs: { crm_project_budget: zhBudgetName, rate_card: zhRateCardName },
 });

@@ -51,13 +51,13 @@ export const esES: TranslationData = {
           message: 'Este cambio del proyecto no está permitido.',
           reasons: {
             starts_as_draft: { message: 'Un proyecto nuevo empieza como Borrador. Guárdelo y luego ponga En aprobación para enviarlo a aprobar.' },
-            budget_required: { message: 'Indique el Presupuesto aprobado antes de enviar el proyecto a aprobar: lo que se aprueba es esa cifra.' },
+            budget_required: { message: 'Añada el presupuesto del proyecto (versión 1, con sus líneas) antes de enviarlo a aprobar: lo que se aprueba es ese presupuesto.' },
+            budget_incomplete: { message: 'El presupuesto no está listo para aprobar: {{problem}} Complételo y envíe el proyecto a aprobar.' },
           },
         },
         FORBIDDEN: {
           message: 'No puede hacer este cambio en el proyecto.',
           reasons: {
-            budget_finance_only: { message: '{{project}} se aprobó con su Presupuesto aprobado, así que ahora solo un Controller financiero puede cambiarlo. Pida a finanzas que fije el nuevo presupuesto.' },
             decided_by_approver: { message: 'Un proyecto lo aprueba o rechaza su aprobador, desde su bandeja de entrada. Ponga En aprobación para enviarlo a aprobar.' },
           },
         },
@@ -77,6 +77,27 @@ export const esES: TranslationData = {
             predecessor: { message: 'Una predecesora debe ser otra tarea del mismo proyecto.' },
           },
         },
+      },
+    },
+    project_budget_rules: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'Este cambio en el presupuesto no está permitido.',
+          reasons: {
+            open_version: { message: '{{project}} ya tiene una versión de presupuesto abierta (versión {{version}}). Envíela o elimínela antes de empezar otra.' },
+            starts_as_draft: { message: 'Una nueva versión del presupuesto empieza como Borrador. Guárdela, añada sus líneas y envíela a aprobar.' },
+            with_project: { message: 'La versión 1 se aprueba con el proyecto: envíe el proyecto a aprobar y su presupuesto va con él.' },
+            reason_required: { message: 'Indique en Motivo por qué se necesita esta ampliación antes de enviarla a aprobar.' },
+            not_ready: { message: 'El presupuesto no está listo para aprobar: {{problem}} Complételo y envíelo a aprobar.' },
+          },
+        },
+        FORBIDDEN: { message: 'Una versión del presupuesto, una vez enviada, la aprueba o rechaza su aprobador desde su Bandeja de entrada.' },
+        RECORD_LOCKED: { message: 'Solo se puede eliminar una versión abierta (Borrador o Rechazado). Una aprobada es el historial del proyecto.' },
+      },
+    },
+    project_budget_line_amount: {
+      refusals: {
+        RECORD_LOCKED: { message: 'Esta versión del presupuesto se ha enviado a aprobación, así que sus líneas no pueden cambiar. Cree una nueva versión para planificar un cambio.' },
       },
     },
     time_entry_timesheet: {
@@ -172,7 +193,7 @@ export const esES: TranslationData = {
         },
         approved_budget: {
           label: 'Presupuesto aprobado',
-          help: 'El coste que puede gastar este proyecto. Se fija antes de enviarlo a aprobación; después, solo un Controller financiero lo cambia.',
+          help: 'El total de la versión de presupuesto que es línea base: lo que este proyecto puede gastar. Cambia cuando se aprueba una nueva versión, nunca escribiéndolo.',
         },
         actual_labor_cost: { label: 'Coste de mano de obra' },
         actual_expense_cost: { label: 'Coste de gastos' },
@@ -283,6 +304,77 @@ export const esES: TranslationData = {
       },
       _validations: {
         project_task_planned_dates: { message: 'El fin previsto debe ser igual o posterior al inicio previsto.' },
+      },
+    },
+    // Budget versions and their lines (hotcrm#2547).
+    crm_project_budget: {
+      label: 'Presupuesto del proyecto',
+      pluralLabel: 'Presupuestos del proyecto',
+      description: 'Una versión del presupuesto de un proyecto: sus líneas, su total y su aprobación. La aprobada es la línea base.',
+      fields: {
+        crm_project: { label: 'Proyecto' },
+        name: { label: 'Presupuesto' },
+        version: { label: 'Versión', help: 'Numeradas 1, 2, 3… en el orden en que se crearon.' },
+        status: {
+          label: 'Estado',
+          options: {
+            draft: 'Borrador',
+            in_approval: 'En aprobación',
+            approved: 'Aprobado',
+            rejected: 'Rechazado',
+            superseded: 'Sustituido',
+          },
+        },
+        is_baseline: { label: 'Línea base', help: 'La versión aprobada de la que sale el Presupuesto aprobado del proyecto. Una por proyecto; la siguiente versión aprobada la sustituye.' },
+        with_initiation: { label: 'Aprobado con el proyecto', help: 'Enviado a aprobación con el propio proyecto, como su primer presupuesto, y no como ampliación.' },
+        reason: { label: 'Motivo', help: 'Por qué se necesita esta versión. Obligatorio para enviar a aprobación una ampliación (versión 2 o posterior).' },
+        total_cost: { label: 'Coste total' },
+        labor_cost: { label: 'Coste de mano de obra' },
+        labor_hours: { label: 'Horas de mano de obra' },
+        notes: { label: 'Notas' },
+      },
+      _views: {
+        all_project_budgets: { label: 'Todas las versiones de presupuesto' },
+        baseline_budgets: { label: 'Líneas base' },
+        open_budgets: { label: 'Versiones abiertas' },
+      },
+      _sections: {
+        basic: { label: 'Versión del presupuesto' },
+        totals: { label: 'Totales' },
+      },
+      _validations: {
+        project_budget_status_progression: { message: 'Este cambio de estado no está permitido. Una versión del presupuesto pasa de Borrador → En aprobación → Aprobado o Rechazado; una rechazada vuelve a Borrador, y una aprobada queda Sustituida cuando se aprueba una versión posterior.' },
+      },
+    },
+    crm_project_budget_line: {
+      label: 'Línea de presupuesto',
+      pluralLabel: 'Líneas de presupuesto',
+      description: 'Un coste planificado de una versión del presupuesto: categoría, mes, cantidad y coste unitario',
+      fields: {
+        crm_project_budget: { label: 'Presupuesto' },
+        category: {
+          label: 'Categoría',
+          options: {
+            labor: 'Mano de obra',
+            subcontract_service: 'Servicios subcontratados',
+            third_party_goods: 'Bienes de terceros',
+            expense: 'Gastos',
+            other: 'Otros',
+          },
+        },
+        description: { label: 'Descripción' },
+        period: { label: 'Mes', help: 'El mes al que corresponde el coste. Se guarda como el primer día de ese mes.' },
+        rate_card: { label: 'Tarifa', help: 'En una línea de mano de obra: el nivel al que se planifican las horas. Su tarifa de coste es el coste unitario si no escribe uno.' },
+        hours: { label: 'Horas', help: 'En una línea de mano de obra: las horas planificadas.' },
+        quantity: { label: 'Cantidad', help: 'En cualquier otra línea: cuántas unidades.' },
+        unit_cost: { label: 'Coste unitario', help: 'Por hora en mano de obra, por unidad en lo demás.' },
+        amount: { label: 'Importe', help: 'Horas × coste unitario en mano de obra, cantidad × coste unitario en lo demás.' },
+      },
+      _views: {
+        all_project_budget_lines: { label: 'Todas las líneas de presupuesto' },
+      },
+      _sections: {
+        basic: { label: 'Línea de presupuesto' },
       },
     },
     crm_project_member: {
@@ -528,6 +620,13 @@ export const esES: TranslationData = {
         finance_review: { label: 'Revisión del controller financiero' },
       },
     },
+    project_budget_approval: {
+      label: 'Aprobación de ampliación de presupuesto',
+      approvals: {
+        leadership_review: { label: 'Revisión del director de proyectos' },
+        finance_review: { label: 'Revisión del controller financiero' },
+      },
+    },
     timesheet_approval: {
       label: 'Aprobación de hoja de horas',
       approvals: { approver_review: { label: 'Revisión del jefe de proyecto' } },
@@ -569,6 +668,7 @@ export const esES: TranslationData = {
         nav_projects: { label: 'Todos los proyectos' },
         nav_my_projects: { label: 'Mis proyectos' },
         nav_project_members: { label: 'Asignación' },
+        nav_project_budgets: { label: 'Presupuestos' },
         nav_project_plan: { label: 'Plan del proyecto' },
         nav_my_project_tasks: { label: 'Mis tareas de proyecto' },
         group_time_expenses: { label: 'Horas y gastos' },

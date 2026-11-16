@@ -33,8 +33,9 @@ import { BUDGET_STATUS_OPTIONS, PROJECT_BILLING_TYPE_OPTIONS, PROJECT_KIND_OPTIO
  * Amounts are in the organization's currency, as every amount in HotCRM is.
  * A summary is drawn as a bare number on 18.4.0 (objectstack#33659).
  *
- * `approved_budget` is v1's budget figure (ruling 3: budget versions are phase
- * 2). It is set before the project goes for approval and read-only from then on.
+ * `approved_budget` is the baseline budget version's total (hotcrm#2547):
+ * the budget is planned in versions (`project_budget.object.ts`), version 1 is
+ * approved with the project, and an approved top-up becomes the new baseline.
  *
  * ## Who sees a project
  *
@@ -165,19 +166,22 @@ export const Project = ObjectSchema.create({
       description: 'What the customer pays for this project. Gross margin is measured against it.',
     }),
 
-    // Read-only once the project leaves the draft stages: the approval is of
-    // this figure (ruling 3, v1's budget).
-    approved_budget: Field.currency({
+    // The baseline budget version's total (hotcrm#2547): never typed. Version 1
+    // is approved with the project; a top-up version, once approved, takes
+    // the baseline over (`project_budget.hook.ts`), and this follows.
+    approved_budget: Field.summary({
       label: 'Approved Budget',
       group: 'financials',
-      min: 0,
-      // Locked from In Approval on by `project_status_guard`, which lets a
-      // Finance Controller re-baseline it. Not a `readonlyWhen`: that strip
-      // drops every writer's value on a TRUE predicate (system writes
-      // included) and its scope binds no `current_user`, so finance could not
-      // change it either, and the hooks would see a value that is then
-      // dropped (measured on 18.4.0, phase 1b review).
-      description: 'The cost this project may spend. Set before the project goes for approval; after that, only a Finance Controller changes it.',
+      scale: 2,
+      readonly: true,
+      description: 'The total of the project\'s baseline budget version: version 1 once the project is approved, then each approved top-up.',
+      summaryOperations: {
+        object: 'crm_project_budget',
+        field: 'total_cost',
+        function: 'sum',
+        relationshipField: 'crm_project',
+        filter: { is_baseline: true },
+      },
     }),
 
     actual_labor_cost: Field.summary({

@@ -50,6 +50,12 @@ export const PsaApp = App.create({
         { id: 'nav_projects', type: 'object', objectName: 'crm_project', label: 'All Projects', icon: 'briefcase' },
         { id: 'nav_my_projects', type: 'object', objectName: 'crm_project', viewName: 'my_projects', label: 'My Projects', icon: 'user-check' },
         { id: 'nav_project_members', type: 'object', objectName: 'crm_project_member', label: 'Staffing', icon: 'user-plus' },
+        // Budget versions (#2547): cost, so offered to whoever may read them,
+        // which a team member may not.
+        {
+          id: 'nav_project_budgets', type: 'object', objectName: 'crm_project_budget', label: 'Budgets', icon: 'wallet',
+          visible: P`current_user.can("crm_project_budget", "read")`,
+        },
         // The plans (#2545): every task the reader may see on the Gantt, and
         // the open tasks they own.
         { id: 'nav_project_plan', type: 'object', objectName: 'crm_project_task', viewName: 'project_plan', label: 'Project Plan', icon: 'gantt-chart' },

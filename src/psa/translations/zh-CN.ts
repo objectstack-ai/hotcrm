@@ -51,13 +51,13 @@ export const zhCN: TranslationData = {
           message: '不允许这样修改项目。',
           reasons: {
             starts_as_draft: { message: '新项目从草稿开始。先保存，再把状态设为“审批中”以提交审批。' },
-            budget_required: { message: '提交审批前请先填写批准预算：审批针对的就是这个数字。' },
+            budget_required: { message: '提交审批前，请先添加项目预算（第 1 版及其明细）：审批针对的就是这份预算。' },
+            budget_incomplete: { message: '预算还不能提交审批：{{problem}} 请补全后再提交项目审批。' },
           },
         },
         FORBIDDEN: {
           message: '你不能这样修改项目。',
           reasons: {
-            budget_finance_only: { message: '{{project}}已按批准预算获批，现在只有财务控制可以修改。请让财务设定新预算。' },
             decided_by_approver: { message: '项目由审批人在收件箱中批准或驳回。请把状态设为“审批中”以提交审批。' },
           },
         },
@@ -77,6 +77,27 @@ export const zhCN: TranslationData = {
             predecessor: { message: '前置任务必须是同一项目中的另一项任务。' },
           },
         },
+      },
+    },
+    project_budget_rules: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '不允许这样修改预算。',
+          reasons: {
+            open_version: { message: '{{project}}已有一个未结的预算版本（第 {{version}} 版）。请先提交或删除它，再新建版本。' },
+            starts_as_draft: { message: '新的预算版本从草稿开始。先保存、添加明细，再提交审批。' },
+            with_project: { message: '第 1 版随项目一起审批：提交项目审批时，预算会一并提交。' },
+            reason_required: { message: '提交审批前，请在“原因”中说明为什么需要追加预算。' },
+            not_ready: { message: '预算还不能提交审批：{{problem}} 请补全后再提交。' },
+          },
+        },
+        FORBIDDEN: { message: '预算版本提交后，由审批人在收件箱中批准或驳回。' },
+        RECORD_LOCKED: { message: '只能删除未结的预算版本（草稿或已驳回）。已批准的版本是项目的历史记录。' },
+      },
+    },
+    project_budget_line_amount: {
+      refusals: {
+        RECORD_LOCKED: { message: '这个预算版本已提交审批，明细不能再修改。如需调整，请新建一个版本。' },
       },
     },
     time_entry_timesheet: {
@@ -172,7 +193,7 @@ export const zhCN: TranslationData = {
         },
         approved_budget: {
           label: '批准预算',
-          help: '这个项目可以花费的成本。在项目提交审批前填写；之后只有财务控制可以修改。',
+          help: '基线预算版本的合计：这个项目可以花费的成本。新版本获批时随之变化，不能直接填写。',
         },
         actual_labor_cost: { label: '人工成本' },
         actual_expense_cost: { label: '费用成本' },
@@ -283,6 +304,77 @@ export const zhCN: TranslationData = {
       },
       _validations: {
         project_task_planned_dates: { message: '计划结束日期不能早于计划开始日期。' },
+      },
+    },
+    // Budget versions and their lines (hotcrm#2547).
+    crm_project_budget: {
+      label: '项目预算',
+      pluralLabel: '项目预算',
+      description: '项目预算的一个版本：明细行、合计和审批。已批准的那个版本就是基线。',
+      fields: {
+        crm_project: { label: '项目' },
+        name: { label: '预算' },
+        version: { label: '版本', help: '按创建顺序编号为 1、2、3……' },
+        status: {
+          label: '状态',
+          options: {
+            draft: '草稿',
+            in_approval: '审批中',
+            approved: '已批准',
+            rejected: '已驳回',
+            superseded: '已被取代',
+          },
+        },
+        is_baseline: { label: '基线', help: '项目的批准预算就取自这个已批准版本。每个项目只有一个；之后批准的版本会接替它。' },
+        with_initiation: { label: '随项目一起审批', help: '作为项目的第一版预算，随立项一起提交审批，而不是作为追加预算。' },
+        reason: { label: '原因', help: '为什么需要这个版本。追加预算（第 2 版及以后）提交审批前必须填写。' },
+        total_cost: { label: '总成本' },
+        labor_cost: { label: '人工成本' },
+        labor_hours: { label: '人工工时' },
+        notes: { label: '备注' },
+      },
+      _views: {
+        all_project_budgets: { label: '全部预算版本' },
+        baseline_budgets: { label: '基线预算' },
+        open_budgets: { label: '未结预算版本' },
+      },
+      _sections: {
+        basic: { label: '预算版本' },
+        totals: { label: '合计' },
+      },
+      _validations: {
+        project_budget_status_progression: { message: '不允许这样修改状态。预算版本按 草稿 → 审批中 → 已批准或已驳回 流转；已驳回的退回草稿，已批准的在之后的版本获批时变为已被取代。' },
+      },
+    },
+    crm_project_budget_line: {
+      label: '预算明细',
+      pluralLabel: '预算明细',
+      description: '预算版本中的一项计划成本：类别、月份、数量和单位成本',
+      fields: {
+        crm_project_budget: { label: '预算' },
+        category: {
+          label: '类别',
+          options: {
+            labor: '人工',
+            subcontract_service: '外包服务',
+            third_party_goods: '第三方采购',
+            expense: '费用',
+            other: '其他',
+          },
+        },
+        description: { label: '说明' },
+        period: { label: '月份', help: '成本发生的月份。保存为该月的第一天。' },
+        rate_card: { label: '费率卡', help: '人工明细：工时按哪个级别计划。不填单位成本时，取它的成本费率。' },
+        hours: { label: '工时', help: '人工明细：计划的工时。' },
+        quantity: { label: '数量', help: '其他明细：多少个单位。' },
+        unit_cost: { label: '单位成本', help: '人工按每小时，其他按每单位。' },
+        amount: { label: '金额', help: '人工为工时 × 单位成本，其他为数量 × 单位成本。' },
+      },
+      _views: {
+        all_project_budget_lines: { label: '全部预算明细' },
+      },
+      _sections: {
+        basic: { label: '预算明细' },
       },
     },
     crm_project_member: {
@@ -528,6 +620,13 @@ export const zhCN: TranslationData = {
         finance_review: { label: '财务控制审核' },
       },
     },
+    project_budget_approval: {
+      label: '追加预算审批',
+      approvals: {
+        leadership_review: { label: '项目总监审核' },
+        finance_review: { label: '财务控制审核' },
+      },
+    },
     timesheet_approval: {
       label: '工时单审批',
       approvals: { approver_review: { label: '项目经理审核' } },
@@ -569,6 +668,7 @@ export const zhCN: TranslationData = {
         nav_projects: { label: '全部项目' },
         nav_my_projects: { label: '我的项目' },
         nav_project_members: { label: '人员安排' },
+        nav_project_budgets: { label: '预算' },
         nav_project_plan: { label: '项目计划' },
         nav_my_project_tasks: { label: '我的项目任务' },
         group_time_expenses: { label: '工时与费用' },

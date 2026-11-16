@@ -9,12 +9,17 @@ import { privateOpportunityPolicy } from './_private-opportunity';
  *
  *   - Every Project Delivery row — read, every record: projects, staffing,
  *     tasks, timesheets, entries and expenses.
- *   - `crm_project` — edit, every record: the controller sets and corrects
- *     the budget figure. ⛔ No create or delete: projects are delivery's. So
+ *   - `crm_project` — edit, every record: the controller corrects a
+ *     project's financial details. ⛔ No create or delete: projects are delivery's. So
  *     not Modify All, which would grant delete (ADR-0049): the edit reach is
  *     the `project_finance_edit_*` shares in `src/psa/sharing/project.sharing.ts`,
  *     to the three positions holding this set.
  *   - `crm_rate_card` — full: the rates are finance's to set.
+ *   - `crm_project_budget`, `crm_project_budget_line` — read, every record,
+ *     and create and edit (hotcrm#2547): finance plans a top-up with the
+ *     manager and decides the large ones from the Inbox. No delete, as on
+ *     the project. The Approved Budget itself is never typed: it is the
+ *     baseline version's total.
  *   - `crm_account`, `crm_opportunity`, `crm_contract` — read, every record.
  */
 export const FinanceControllerProfile = {
@@ -28,6 +33,8 @@ export const FinanceControllerProfile = {
     crm_project:        { allowCreate: false, allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_project_member: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_project_task:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
+    crm_project_budget:      { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
+    crm_project_budget_line: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_rate_card:      { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },
     crm_timesheet:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_time_entry:     { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },

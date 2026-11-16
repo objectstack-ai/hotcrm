@@ -51,13 +51,13 @@ export const jaJP: TranslationData = {
           message: 'このプロジェクトの変更はできません。',
           reasons: {
             starts_as_draft: { message: '新しいプロジェクトは下書きから始まります。保存してから、ステータスを「承認中」にして承認に回してください。' },
-            budget_required: { message: '承認に回す前に承認済み予算を入力してください。承認の対象はその金額です。' },
+            budget_required: { message: '承認に回す前に、プロジェクトの予算（版 1 とその明細）を追加してください。承認の対象はその予算です。' },
+            budget_incomplete: { message: '予算はまだ承認に回せません：{{problem}} 完成させてから、プロジェクトを承認に回してください。' },
           },
         },
         FORBIDDEN: {
           message: 'このプロジェクトの変更はできません。',
           reasons: {
-            budget_finance_only: { message: '{{project}}は承認済み予算で承認されたため、変更できるのは財務コントローラーだけです。新しい予算の設定は財務に依頼してください。' },
             decided_by_approver: { message: 'プロジェクトは承認者が受信トレイから承認または却下します。ステータスを「承認中」にして承認に回してください。' },
           },
         },
@@ -77,6 +77,27 @@ export const jaJP: TranslationData = {
             predecessor: { message: '先行タスクは同じプロジェクトの別のタスクにしてください。' },
           },
         },
+      },
+    },
+    project_budget_rules: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'この予算の変更はできません。',
+          reasons: {
+            open_version: { message: '{{project}}には未確定の予算版（版 {{version}}）がすでにあります。新しい版を作る前に、それを承認に回すか削除してください。' },
+            starts_as_draft: { message: '新しい予算の版は下書きから始まります。保存して明細を追加してから、承認に回してください。' },
+            with_project: { message: '版 1 はプロジェクトと一緒に承認されます。プロジェクトを承認に回すと、予算も一緒に回ります。' },
+            reason_required: { message: '承認に回す前に、追加予算が必要な理由を「理由」に記入してください。' },
+            not_ready: { message: '予算はまだ承認に回せません：{{problem}} 完成させてから承認に回してください。' },
+          },
+        },
+        FORBIDDEN: { message: '予算の版は、承認に回された後、承認者が受信トレイで承認または却下します。' },
+        RECORD_LOCKED: { message: '削除できるのは未確定の予算版（下書きまたは却下）だけです。承認済みの版はプロジェクトの履歴です。' },
+      },
+    },
+    project_budget_line_amount: {
+      refusals: {
+        RECORD_LOCKED: { message: 'この予算の版は承認に回されたため、明細は変更できません。変更を計画するには新しい版を作成してください。' },
       },
     },
     time_entry_timesheet: {
@@ -172,7 +193,7 @@ export const jaJP: TranslationData = {
         },
         approved_budget: {
           label: '承認済み予算',
-          help: 'このプロジェクトで使えるコストです。承認に回す前に設定します。その後は財務コントローラーだけが変更できます。',
+          help: 'ベースラインの予算版の合計で、このプロジェクトが使えるコストです。新しい版が承認されると変わり、直接入力はできません。',
         },
         actual_labor_cost: { label: '人件費' },
         actual_expense_cost: { label: '経費' },
@@ -283,6 +304,77 @@ export const jaJP: TranslationData = {
       },
       _validations: {
         project_task_planned_dates: { message: '終了予定日は開始予定日以降にしてください。' },
+      },
+    },
+    // Budget versions and their lines (hotcrm#2547).
+    crm_project_budget: {
+      label: 'プロジェクト予算',
+      pluralLabel: 'プロジェクト予算',
+      description: 'プロジェクト予算の 1 つの版です。明細、合計、承認を持ち、承認済みの版がベースラインです。',
+      fields: {
+        crm_project: { label: 'プロジェクト' },
+        name: { label: '予算' },
+        version: { label: '版', help: '作成順に 1、2、3… と番号が付きます。' },
+        status: {
+          label: 'ステータス',
+          options: {
+            draft: '下書き',
+            in_approval: '承認中',
+            approved: '承認済み',
+            rejected: '却下',
+            superseded: '置き換え済み',
+          },
+        },
+        is_baseline: { label: 'ベースライン', help: 'プロジェクトの承認済み予算の元になる承認済みの版です。プロジェクトに 1 つだけで、後から承認された版が引き継ぎます。' },
+        with_initiation: { label: 'プロジェクトと一緒に承認', help: '追加予算ではなく最初の予算として、プロジェクト自体と一緒に承認に回された版です。' },
+        reason: { label: '理由', help: 'この版が必要な理由です。追加予算（版 2 以降）を承認に回すときは必須です。' },
+        total_cost: { label: '総コスト' },
+        labor_cost: { label: '人件費' },
+        labor_hours: { label: '工数（時間）' },
+        notes: { label: 'メモ' },
+      },
+      _views: {
+        all_project_budgets: { label: 'すべての予算版' },
+        baseline_budgets: { label: 'ベースライン' },
+        open_budgets: { label: '未確定の版' },
+      },
+      _sections: {
+        basic: { label: '予算の版' },
+        totals: { label: '合計' },
+      },
+      _validations: {
+        project_budget_status_progression: { message: 'このステータス変更はできません。予算の版は 下書き → 承認中 → 承認済み または 却下 と進みます。却下された版は下書きに戻り、承認済みの版は後の版が承認されると置き換え済みになります。' },
+      },
+    },
+    crm_project_budget_line: {
+      label: '予算明細',
+      pluralLabel: '予算明細',
+      description: '予算の版の計画コスト 1 件：区分、月、数量、単価',
+      fields: {
+        crm_project_budget: { label: '予算' },
+        category: {
+          label: '区分',
+          options: {
+            labor: '人件費',
+            subcontract_service: '外注サービス',
+            third_party_goods: '他社製品',
+            expense: '経費',
+            other: 'その他',
+          },
+        },
+        description: { label: '説明' },
+        period: { label: '月', help: 'コストが発生する月です。その月の 1 日として保存されます。' },
+        rate_card: { label: '単価表', help: '人件費の明細：工数を計画するレベルです。単価を入力しなければ、そのコスト単価が使われます。' },
+        hours: { label: '時間', help: '人件費の明細：計画する時間です。' },
+        quantity: { label: '数量', help: 'その他の明細：単位の数です。' },
+        unit_cost: { label: '単価', help: '人件費は 1 時間あたり、その他は 1 単位あたりです。' },
+        amount: { label: '金額', help: '人件費は時間 × 単価、その他は数量 × 単価です。' },
+      },
+      _views: {
+        all_project_budget_lines: { label: 'すべての予算明細' },
+      },
+      _sections: {
+        basic: { label: '予算明細' },
       },
     },
     crm_project_member: {
@@ -528,6 +620,13 @@ export const jaJP: TranslationData = {
         finance_review: { label: '財務コントローラー審査' },
       },
     },
+    project_budget_approval: {
+      label: '追加予算承認',
+      approvals: {
+        leadership_review: { label: 'プロジェクトディレクター審査' },
+        finance_review: { label: '財務コントローラー審査' },
+      },
+    },
     timesheet_approval: {
       label: '工数表承認',
       approvals: { approver_review: { label: 'プロジェクトマネージャー審査' } },
@@ -569,6 +668,7 @@ export const jaJP: TranslationData = {
         nav_projects: { label: 'すべてのプロジェクト' },
         nav_my_projects: { label: '自分のプロジェクト' },
         nav_project_members: { label: 'アサイン' },
+        nav_project_budgets: { label: '予算' },
         nav_project_plan: { label: 'プロジェクト計画' },
         nav_my_project_tasks: { label: '自分のプロジェクトタスク' },
         group_time_expenses: { label: '工数と経費' },

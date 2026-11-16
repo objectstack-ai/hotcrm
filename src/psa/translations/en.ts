@@ -71,7 +71,7 @@ export const en: TranslationData = {
         },
         approved_budget: {
           label: 'Approved Budget',
-          help: 'The cost this project may spend. Set before the project goes for approval; after that, only a Finance Controller changes it.',
+          help: 'The baseline budget version\'s total: what this project may spend. It changes when a new version is approved, never by typing.',
         },
         actual_labor_cost: { label: 'Labor Cost' },
         actual_expense_cost: { label: 'Expense Cost' },
@@ -182,6 +182,77 @@ export const en: TranslationData = {
       },
       _validations: {
         project_task_planned_dates: { message: 'Planned End must be on or after Planned Start.' },
+      },
+    },
+    // Budget versions and their lines (hotcrm#2547).
+    crm_project_budget: {
+      label: 'Project Budget',
+      pluralLabel: 'Project Budgets',
+      description: 'One version of a project\'s budget: its lines, its total and its approval. The approved one is the baseline.',
+      fields: {
+        crm_project: { label: 'Project' },
+        name: { label: 'Budget' },
+        version: { label: 'Version', help: 'Numbered 1, 2, 3… in the order the versions were made.' },
+        status: {
+          label: 'Status',
+          options: {
+            draft: 'Draft',
+            in_approval: 'In Approval',
+            approved: 'Approved',
+            rejected: 'Rejected',
+            superseded: 'Superseded',
+          },
+        },
+        is_baseline: { label: 'Baseline', help: 'The approved version the project\'s Approved Budget is. One per project; a later approved version takes it over.' },
+        with_initiation: { label: 'Approved With the Project', help: 'Sent for approval with the project itself, as its first budget, rather than as a top-up.' },
+        reason: { label: 'Reason', help: 'Why this version is needed. Required to send a top-up (version 2 or later) for approval.' },
+        total_cost: { label: 'Total Cost' },
+        labor_cost: { label: 'Labor Cost' },
+        labor_hours: { label: 'Labor Hours' },
+        notes: { label: 'Notes' },
+      },
+      _views: {
+        all_project_budgets: { label: 'All Budget Versions' },
+        baseline_budgets: { label: 'Baselines' },
+        open_budgets: { label: 'Open Versions' },
+      },
+      _sections: {
+        basic: { label: 'Budget Version' },
+        totals: { label: 'Totals' },
+      },
+      _validations: {
+        project_budget_status_progression: { message: 'This status change is not allowed. A budget version moves Draft → In Approval → Approved or Rejected; a rejected one goes back to Draft, and an approved one is Superseded when a later version is approved.' },
+      },
+    },
+    crm_project_budget_line: {
+      label: 'Budget Line',
+      pluralLabel: 'Budget Lines',
+      description: 'One planned cost of a budget version: category, month, quantity and unit cost',
+      fields: {
+        crm_project_budget: { label: 'Budget' },
+        category: {
+          label: 'Category',
+          options: {
+            labor: 'Labor',
+            subcontract_service: 'Subcontracted Services',
+            third_party_goods: 'Third-Party Goods',
+            expense: 'Expenses',
+            other: 'Other',
+          },
+        },
+        description: { label: 'Description' },
+        period: { label: 'Month', help: 'The month the cost falls in. Saved as the first day of that month.' },
+        rate_card: { label: 'Rate Card', help: 'For a labor line: the level the hours are planned at. Its cost rate is the unit cost unless you type one.' },
+        hours: { label: 'Hours', help: 'For a labor line: the hours planned.' },
+        quantity: { label: 'Quantity', help: 'For any other line: how many units.' },
+        unit_cost: { label: 'Unit Cost', help: 'Per hour for labor, per unit otherwise.' },
+        amount: { label: 'Amount', help: 'Hours × unit cost for labor, quantity × unit cost otherwise.' },
+      },
+      _views: {
+        all_project_budget_lines: { label: 'All Budget Lines' },
+      },
+      _sections: {
+        basic: { label: 'Budget Line' },
       },
     },
     crm_project_member: {
@@ -427,6 +498,13 @@ export const en: TranslationData = {
         finance_review: { label: 'Finance Controller Review' },
       },
     },
+    project_budget_approval: {
+      label: 'Budget Top-Up Approval',
+      approvals: {
+        leadership_review: { label: 'Project Director Review' },
+        finance_review: { label: 'Finance Controller Review' },
+      },
+    },
     timesheet_approval: {
       label: 'Timesheet Approval',
       approvals: { approver_review: { label: 'Project Manager Review' } },
@@ -469,6 +547,7 @@ export const en: TranslationData = {
         nav_projects: { label: 'All Projects' },
         nav_my_projects: { label: 'My Projects' },
         nav_project_members: { label: 'Staffing' },
+        nav_project_budgets: { label: 'Budgets' },
         nav_project_plan: { label: 'Project Plan' },
         nav_my_project_tasks: { label: 'My Project Tasks' },
         group_time_expenses: { label: 'Time and Expenses' },

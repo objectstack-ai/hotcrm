@@ -5,6 +5,8 @@ order: 2
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
   - object:crm_project
+  - object:crm_project_budget
+  - object:crm_project_budget_line
   - object:crm_timesheet
   - object:crm_expense
 ---
@@ -18,10 +20,16 @@ record whose approval cannot run.
 
 ## Who approves what
 
-- **A project** is sent by setting **In Approval**, and only with an
-  **Approved Budget**. Any **Project Director** or **PMO** holder decides, and
-  the first to decide decides for all. A budget of **100,000** or more then
+- **A project** is sent by setting **In Approval**, and only with its
+  budget's **version 1** ready: lines, a total above zero, every labor line
+  with a rate card and hours, every other line with a quantity. Version 1 goes
+  with the project. Any **Project Director** or **PMO** holder decides, and
+  the first to decide decides for all. A version 1 of **100,000** or more then
   goes to the **Finance Controllers** too.
+- **A budget top-up** (version 2 or later, with its **Reason**) is sent by
+  setting the version **In Approval**. A Project Director or PMO holder
+  decides, then the **Finance Controllers** too when it raises the Approved
+  Budget by **10 %** or more.
 - **A timesheet** goes to its project's Project Manager when it is submitted.
 - **An expense** goes to the Project Manager, then, at **2,000** or more, to
   the Finance Controllers.
@@ -32,12 +40,16 @@ record whose approval cannot run.
 - **While it waits, the record is locked**: nobody edits it until it is
   decided.
 
-## The approved budget is finance's
+## The approved budget is a version, not a figure
 
-From **In Approval** on, the Approved Budget is the figure the project was
-approved on. Only a **Finance Controller** can change it then; anyone else is
-refused and told to ask finance. A raise moves **Budget Status** at once, so a
-project is put back **On Track** only with finance's say.
+Nobody types the **Approved Budget**: it is the total of the project's
+**baseline**, the budget version approved last. Plan a change as a new
+version, from the project's **Related** tab or **Budgets** under
+**Projects**: only one version is open at a time,
+its lines lock once it is sent, and when it is approved it becomes the
+baseline and the one before it is **Superseded**. A raise moves **Budget
+Status** at once, so a project is put back **On Track** only through that
+approval.
 
 ## Budget Status and the notices
 
@@ -58,8 +70,8 @@ project with no budget has none.
 The notice proposes the lock; a person decides, and nothing ticks it on its
 own. While **Lock Time and Expenses** is ticked on a project, no timesheet or
 expense on it can be submitted, **whoever submits it**, administrators
-included. Drafts can still be written. Untick it, after finance has set a new
-budget for example, and submissions are taken again.
+included. Drafts can still be written. Untick it, after a top-up is approved for
+example, and submissions are taken again.
 
 A **Closed** or **Cancelled** project takes nothing new at all: no timesheet
 or expense can be created on it or moved onto it, and a draft already there

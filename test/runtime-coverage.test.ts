@@ -109,6 +109,7 @@ const RUNTIME_TEST_FILES = [
   // Percent Complete, run as the people who plan and staff a project.
   'psa-project-tasks.test.ts',
   'psa-weekly-time.test.ts',
+  'psa-budget-versions.test.ts',
   // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
   // files above, and the same reason: the gate is authored on four surfaces
   // (the field default, `convert_lead.visible`, `lead_conversion`'s
