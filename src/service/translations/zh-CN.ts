@@ -188,12 +188,10 @@ export const zhCN: TranslationData = {
         ...activityActions,
         escalate_case: {
           label: '升级工单',
-          confirmText: '此操作会将工单升级到升级处理团队，是否继续？',
           successMessage: '工单升级成功！',
         },
         close_case: {
           label: '关闭工单',
-          confirmText: '确定要关闭此工单吗？',
           successMessage: '工单已成功关闭！',
         },
         reopen_case: {

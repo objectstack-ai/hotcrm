@@ -207,6 +207,29 @@ describe('action labels are translated in every locale', () => {
     expect(bad, `action strings declared in code but not translated:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  it('no locale pack supplies a confirmText the action does not declare (#2532)', () => {
+    // The reverse of the guard above. The console raises a confirm modal from
+    // a translated `confirmText` even when the action declares none, so a
+    // stale pack entry brings back a dialog the action dropped on purpose:
+    // #2257 (#2240) took `confirmText` off `escalate_case` and `close_case`,
+    // whose screen IS the confirmation, and the four service packs kept it,
+    // so the hosted console still asked "Continue?" before the screen.
+    const declares = new Set(
+      stackActions.filter((a) => a.name && a.objectName && a.confirmText).map((a) => `${a.objectName}.${a.name}`),
+    );
+    const bad: string[] = [];
+    for (const [locale, pack] of localePacks) {
+      for (const [objectName, object] of Object.entries((pack?.objects ?? {}) as Record<string, any>)) {
+        for (const [name, entry] of Object.entries((object?._actions ?? {}) as Record<string, any>)) {
+          if (entry?.confirmText && !declares.has(`${objectName}.${name}`)) {
+            bad.push(`${locale}: ${objectName}._actions.${name}.confirmText`);
+          }
+        }
+      }
+    }
+    expect(bad, `confirm text translated for an action that declares none:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('Send Email says the email was queued to the contact, in every locale (#2246)', () => {
     // Its siblings on the contact say what happened; Send Email fell back to
     // the console's generic "Action completed successfully". The body hands the
