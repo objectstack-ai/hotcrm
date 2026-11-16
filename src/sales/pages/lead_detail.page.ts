@@ -217,7 +217,7 @@ export const LeadDetailPage: Page = {
             visible: P`has(record.duplicate_status) && record.duplicate_status == "suspected"`,
             title: {
               en: 'Suspected duplicate — compare before you convert',
-              'zh-CN': '疑似重复——转换前请先比对',
+              'zh-CN': '疑似重复——转化前请先比对',
               'ja-JP': '重複の疑い — 変換する前に照合してください',
               'es-ES': 'Duplicado Sospechoso: compare antes de convertir',
             },
@@ -230,8 +230,8 @@ export const LeadDetailPage: Page = {
                 + 'converting creates a second account, contact and opportunity for them.',
               'zh-CN':
                 '录入时发现该线索与系统中已有记录匹配。下方「重复线索管理」中是它重复的那条记录，'
-                + '请先打开比对。该线索仍然可以转换：这是录入时的自动判断，不是审核人的结论。'
-                + '但若确属同一客户，请改为取消资格——转换会为同一客户再创建一套客户、联系人和商机。',
+                + '请先打开比对。该线索仍然可以转化：这是录入时的自动判断，不是审核人的结论。'
+                + '但若确属同一客户，请改为取消资格——转化会为同一客户再创建一套客户、联系人和商机。',
               'ja-JP':
                 '登録時に、このリードが既存レコードと一致しました。下の「重複管理」に重複先の'
                 + 'レコードがあります。まず開いて照合してください。このリードはまだ変換できます。'
@@ -263,7 +263,7 @@ export const LeadDetailPage: Page = {
             visible: P`has(record.duplicate_status) && record.duplicate_status == "confirmed"`,
             title: {
               en: 'Confirmed duplicate — conversion will be refused',
-              'zh-CN': '已确认重复——转换将被拒绝',
+              'zh-CN': '已确认重复——转化将被拒绝',
               'ja-JP': '重複確定 — 変換は拒否されます',
               'es-ES': 'Duplicado Confirmado: la conversión será rechazada',
             },
@@ -278,10 +278,10 @@ export const LeadDetailPage: Page = {
                 + 'the surviving record from Duplicate Management below. If the verdict is '
                 + 'wrong, a reviewer revises Duplicate Status; there is no override here.',
               'zh-CN':
-                '审核人已核实该线索与系统中已有记录重复，因此「转换线索」会拒绝执行——'
+                '审核人已核实该线索与系统中已有记录重复，因此「转化线索」会拒绝执行——'
                 + '本提示是你按下按钮前唯一的预警。请改为取消该线索的资格，并在下方'
                 + '「重复线索管理」中注明保留的那条记录。若判定有误，应由审核人修改'
-                + '「重复状态」，此处不提供强制转换的入口。',
+                + '「重复状态」，此处不提供强制转化的入口。',
               'ja-JP':
                 '担当者が確認し、このリードは既存レコードの重複であると記録されました。'
                 + 'そのため「リード変換」は拒否されます。この通知が、ボタンを押す前に得られる'
