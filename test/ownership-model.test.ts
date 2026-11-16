@@ -120,6 +120,7 @@ describe('one ownership column, and it is `owner_id`', () => {
       ['crm_invoice',               'controlled_by_parent'],
       ['crm_payment',               'controlled_by_parent'],
       ['crm_project_member',        'controlled_by_parent'],
+      ['crm_project_task',          'controlled_by_parent'],
       ['crm_time_entry',            'controlled_by_parent'],
       // A shared catalog. It never had an app-level owner either — "who added
       // this SKU" is not a permission boundary, and the dashboards that group

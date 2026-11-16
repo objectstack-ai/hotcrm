@@ -35,6 +35,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | Payment | Controlled by Parent (Contract) | Finance's record of money received on the contract; it follows the contract |
 | Project | Private | The owner, the people staffed on it and its project manager reach it through the two rules below; finance and delivery leadership read every project |
 | Project Member | Controlled by Parent (Project) | A staffing row is part of the project |
+| Project Task | Controlled by Parent (Project) | A task is part of the project's plan |
 | Rate Card | Public Read-Only | Everyone staffs and bills at the same grades; the cost rate is hidden from team members by field security |
 | Timesheet | Private | A person's hours are their own; the approver reaches the timesheet through a rule |
 | Time Entry | Controlled by Parent (Timesheet) | A day's hours are part of the timesheet |
@@ -56,7 +57,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 
 ### Controlled by Parent, in practice
 
-For the fourteen parent-derived objects above, there is nothing to configure per user: access is *computed*.
+For the fifteen parent-derived objects above, there is nothing to configure per user: access is *computed*.
 
 - **Read** — you see the rows whose parent you can see, and "can see" means every route that would let you open the parent directly: you own it, a sharing rule granted it, or someone shared it with you by hand. Measured against the shipped stack (platform 17.0.0-rc.4): a rep who can read exactly one account reads **that** account's contacts, quotes and contracts and no others, and reads the line items of exactly those quotes — the chain quote line item → quote → account is resolved level by level (platform 17.4.0, objectstack-ai/objectstack#11082). The account reaching that rep only through a territory rule is the point — a parent held by a share counts as a parent you can see.
 - **Write** — adding, changing or removing a row requires **edit** access to the parent, resolved the same way as reads. A row under a parent you cannot edit is refused, naming the parent that stopped it. Billing Milestone, Invoice and Payment are the exception: they ask only **read** access to the contract, so a rep keeps the plan of a contract they read and finance enters invoices and payments on contracts it does not edit, each as far as their own permission set allows (#2462).

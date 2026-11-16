@@ -68,10 +68,26 @@ export const jaJP: TranslationData = {
         DUPLICATE_VALUE: { message: 'この人はすでにこのプロジェクトにアサインされています。行を追加せず、既存のアサイン行を変更してください。' },
       },
     },
+    project_task_rules: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '親タスクは同じプロジェクトの別のタスクにしてください。',
+          reasons: {
+            loop: { message: 'この親タスクはこのタスク自身のサブタスクです。このタスクの配下にないタスクを選んでください。' },
+            predecessor: { message: '先行タスクは同じプロジェクトの別のタスクにしてください。' },
+          },
+        },
+      },
+    },
     time_entry_costing: {
       refusals: {
         RECORD_LOCKED: { message: 'このタイムシートは提出済みのため、工数は変更できません。修正するには下書きに戻してください。' },
-        VALIDATION_FAILED: { message: '日付 {{day}} はこのタイムシートの期間（{{from}} – {{to}}）外です。' },
+        VALIDATION_FAILED: {
+          message: '日付 {{day}} はこのタイムシートの期間（{{from}} – {{to}}）外です。',
+          reasons: {
+            task: { message: 'タスクはこの工数表のプロジェクトのタスクにしてください。' },
+          },
+        },
         FORBIDDEN: {
           message: '工数を記録できるのは、プロジェクトにアサインされた人だけです。プロジェクトマネージャーに追加を依頼してください。',
           reasons: {
@@ -134,7 +150,10 @@ export const jaJP: TranslationData = {
         planned_end: { label: '終了予定日' },
         actual_start: { label: '実際の開始日' },
         actual_end: { label: '実際の終了日' },
-        percent_complete: { label: '進捗率' },
+        percent_complete: {
+          label: '進捗率',
+          help: 'プロジェクトのタスクから計画工数で重み付けして計算されます。サブタスクを持つタスクはサブタスクを通じて計上されます。',
+        },
         planned_revenue: {
           label: '予定売上',
           help: '顧客がこのプロジェクトに支払う金額です。粗利はこれを基準に計算します。',
@@ -190,6 +209,68 @@ export const jaJP: TranslationData = {
       _validations: {
         project_planned_dates: { message: '終了予定日は開始予定日以降にしてください。' },
         project_status_progression: { message: 'このステータス変更はできません。プロジェクトは 下書き → 承認中 → 承認済み → 進行中 → 完了 → クローズ と進みます。進行中と保留中は行き来でき、却下されたプロジェクトは下書きに戻り、未完了のプロジェクトはキャンセルできます。' },
+      },
+    },
+    crm_project_task: {
+      label: 'プロジェクトタスク',
+      pluralLabel: 'プロジェクトタスク',
+      description: 'プロジェクト計画の作業項目（日程、計画工数、担当者、進捗）',
+      fields: {
+        crm_project: { label: 'プロジェクト' },
+        name: { label: 'タスク名' },
+        parent_task: {
+          label: '親タスク',
+          help: 'このタスクが属するタスク。サブタスクを持つタスクはサマリーで、進捗はサブタスクから計算されます。',
+        },
+        task_owner: {
+          label: 'タスク担当者',
+          help: 'このタスクを実施する、または責任を持つ人。',
+        },
+        status: {
+          label: 'ステータス',
+          options: {
+            not_started: '未着手',
+            in_progress: '進行中',
+            on_hold: '保留',
+            completed: '完了',
+            cancelled: '取消',
+          },
+        },
+        is_milestone: {
+          label: 'マイルストーン',
+          help: '作業ではなくチェックポイント。ガントチャートではひし形で表示され、通常は計画工数がありません。',
+        },
+        description: { label: '説明' },
+        planned_start: { label: '開始予定日' },
+        planned_end: { label: '終了予定日' },
+        predecessors: {
+          label: '先行タスク',
+          help: 'このタスクの開始前に完了している必要があるタスク。',
+        },
+        schedule_type: { label: 'スケジュール種別' },
+        planned_hours: {
+          label: '計画工数',
+          help: 'このタスクに計画した工数。プロジェクトの進捗率は各タスクをこれで重み付けします。',
+        },
+        percent_complete: {
+          label: '進捗率',
+          help: 'このタスクの進み具合。完了にすると 100 になります。',
+        },
+        actual_hours: { label: '実績工数' },
+      },
+      _views: {
+        all_project_tasks: { label: 'すべてのプロジェクトタスク' },
+        project_plan: { label: 'プロジェクト計画' },
+        project_task_tree: { label: 'タスクツリー' },
+        my_project_tasks: { label: '自分のプロジェクトタスク' },
+      },
+      _sections: {
+        basic: { label: 'タスク' },
+        schedule: { label: 'スケジュール' },
+        effort: { label: '工数' },
+      },
+      _validations: {
+        project_task_planned_dates: { message: '終了予定日は開始予定日以降にしてください。' },
       },
     },
     crm_project_member: {
@@ -341,6 +422,10 @@ export const jaJP: TranslationData = {
         },
         hours: { label: '時間' },
         is_billable: { label: '請求対象' },
+        crm_project_task: {
+          label: 'タスク',
+          help: 'この工数を使ったこのプロジェクトのタスク。',
+        },
         notes: { label: 'メモ' },
         cost_rate: { label: 'コスト単価（時間あたり）' },
         cost_amount: { label: 'コスト' },
@@ -437,6 +522,13 @@ export const jaJP: TranslationData = {
     },
     project_budget_alert: { label: 'プロジェクト予算アラート' },
   },
+  pages: {
+    // The project's record page (#2545).
+    project_detail_page: {
+      label: 'プロジェクト詳細',
+      description: 'プロジェクトのレコードページ：システムが生成するレイアウトに、概要タブでタスク計画のガントチャートを加えたもの。',
+    },
+  },
   apps: {
     // This package's own app (#2316).
     crm_psa: {
@@ -447,6 +539,8 @@ export const jaJP: TranslationData = {
         nav_projects: { label: 'すべてのプロジェクト' },
         nav_my_projects: { label: '自分のプロジェクト' },
         nav_project_members: { label: 'アサイン' },
+        nav_project_plan: { label: 'プロジェクト計画' },
+        nav_my_project_tasks: { label: '自分のプロジェクトタスク' },
         group_time_expenses: { label: '工数と経費' },
         nav_my_timesheets: { label: '自分のタイムシート' },
         nav_my_expenses: { label: '自分の経費' },

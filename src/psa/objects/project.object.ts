@@ -145,11 +145,17 @@ export const Project = ObjectSchema.create({
     actual_start: Field.date({ label: 'Actual Start', group: 'plan' }),
     actual_end: Field.date({ label: 'Actual End', group: 'plan' }),
 
+    // Computed, not typed (hotcrm#2545): `project_task.hook.ts` keeps it from
+    // the project's tasks with no subtasks, weighted by their planned hours,
+    // cancelled tasks left out, Completed counted as 100. Empty while the
+    // project has no task to count.
     percent_complete: Field.percent({
       label: 'Percent Complete',
       group: 'plan',
       min: 0,
       max: 100,
+      readonly: true,
+      description: 'Computed from the project\'s tasks, weighted by their planned hours. A task with subtasks counts through them.',
     }),
 
     planned_revenue: Field.currency({

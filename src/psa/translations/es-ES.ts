@@ -68,10 +68,26 @@ export const esES: TranslationData = {
         DUPLICATE_VALUE: { message: 'Esta persona ya está asignada a este proyecto. Cambie su fila de asignación existente en lugar de añadir otra.' },
       },
     },
+    project_task_rules: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'La tarea principal debe ser otra tarea del mismo proyecto.',
+          reasons: {
+            loop: { message: 'Esta tarea principal es una de las subtareas de esta tarea. Elija una tarea que no esté debajo de esta.' },
+            predecessor: { message: 'Una predecesora debe ser otra tarea del mismo proyecto.' },
+          },
+        },
+      },
+    },
     time_entry_costing: {
       refusals: {
         RECORD_LOCKED: { message: 'Esta hoja de horas está enviada, así que sus horas no pueden cambiar. Devuélvala a Borrador para corregirlas.' },
-        VALIDATION_FAILED: { message: 'La fecha {{day}} está fuera del periodo de esta hoja de horas ({{from}} – {{to}}).' },
+        VALIDATION_FAILED: {
+          message: 'La fecha {{day}} está fuera del periodo de esta hoja de horas ({{from}} – {{to}}).',
+          reasons: {
+            task: { message: 'La tarea debe ser una de las tareas del proyecto de esta hoja de horas.' },
+          },
+        },
         FORBIDDEN: {
           message: 'Solo pueden registrar horas las personas asignadas al proyecto. Pida a su jefe de proyecto que le añada.',
           reasons: {
@@ -134,7 +150,10 @@ export const esES: TranslationData = {
         planned_end: { label: 'Fin previsto' },
         actual_start: { label: 'Inicio real' },
         actual_end: { label: 'Fin real' },
-        percent_complete: { label: 'Porcentaje completado' },
+        percent_complete: {
+          label: 'Porcentaje completado',
+          help: 'Se calcula a partir de las tareas del proyecto, ponderadas por sus horas planificadas. Una tarea con subtareas cuenta a través de ellas.',
+        },
         planned_revenue: {
           label: 'Ingresos previstos',
           help: 'Lo que paga el cliente por este proyecto. El margen bruto se mide contra esta cifra.',
@@ -190,6 +209,68 @@ export const esES: TranslationData = {
       _validations: {
         project_planned_dates: { message: 'El fin previsto debe ser igual o posterior al inicio previsto.' },
         project_status_progression: { message: 'Este cambio de estado no está permitido. Un proyecto avanza Borrador → En aprobación → Aprobado → Activo → Completado → Cerrado; Activo y En pausa se alternan, un proyecto rechazado vuelve a Borrador y un proyecto abierto puede cancelarse.' },
+      },
+    },
+    crm_project_task: {
+      label: 'Tarea de proyecto',
+      pluralLabel: 'Tareas de proyecto',
+      description: 'Una parte del plan de un proyecto, con sus fechas, horas planificadas, responsable y avance',
+      fields: {
+        crm_project: { label: 'Proyecto' },
+        name: { label: 'Nombre de la tarea' },
+        parent_task: {
+          label: 'Tarea principal',
+          help: 'La tarea de la que forma parte esta. Una tarea con subtareas es un resumen: su avance sale de ellas.',
+        },
+        task_owner: {
+          label: 'Responsable de la tarea',
+          help: 'La persona que hace la tarea o responde por ella.',
+        },
+        status: {
+          label: 'Estado',
+          options: {
+            not_started: 'No iniciada',
+            in_progress: 'En curso',
+            on_hold: 'En espera',
+            completed: 'Completada',
+            cancelled: 'Cancelada',
+          },
+        },
+        is_milestone: {
+          label: 'Hito',
+          help: 'Un punto de control, no trabajo: se dibuja como un rombo en el Gantt, normalmente sin horas planificadas.',
+        },
+        description: { label: 'Descripción' },
+        planned_start: { label: 'Inicio previsto' },
+        planned_end: { label: 'Fin previsto' },
+        predecessors: {
+          label: 'Predecesoras',
+          help: 'Las tareas que deben terminar antes de que empiece esta.',
+        },
+        schedule_type: { label: 'Tipo de planificación' },
+        planned_hours: {
+          label: 'Horas planificadas',
+          help: 'El esfuerzo planificado de la tarea. El porcentaje completado del proyecto pondera cada tarea por él.',
+        },
+        percent_complete: {
+          label: 'Porcentaje completado',
+          help: 'Cuánto lleva hecho la tarea. Se pone en 100 cuando la tarea está Completada.',
+        },
+        actual_hours: { label: 'Horas reales' },
+      },
+      _views: {
+        all_project_tasks: { label: 'Todas las tareas de proyecto' },
+        project_plan: { label: 'Plan del proyecto' },
+        project_task_tree: { label: 'Árbol de tareas' },
+        my_project_tasks: { label: 'Mis tareas de proyecto' },
+      },
+      _sections: {
+        basic: { label: 'Tarea' },
+        schedule: { label: 'Planificación' },
+        effort: { label: 'Esfuerzo' },
+      },
+      _validations: {
+        project_task_planned_dates: { message: 'El fin previsto debe ser igual o posterior al inicio previsto.' },
       },
     },
     crm_project_member: {
@@ -341,6 +422,10 @@ export const esES: TranslationData = {
         },
         hours: { label: 'Horas' },
         is_billable: { label: 'Facturable' },
+        crm_project_task: {
+          label: 'Tarea',
+          help: 'La tarea de este proyecto en la que se emplearon las horas.',
+        },
         notes: { label: 'Notas' },
         cost_rate: { label: 'Tarifa de coste (por hora)' },
         cost_amount: { label: 'Coste' },
@@ -437,6 +522,13 @@ export const esES: TranslationData = {
     },
     project_budget_alert: { label: 'Alerta de presupuesto del proyecto' },
   },
+  pages: {
+    // The project's record page (#2545).
+    project_detail_page: {
+      label: 'Detalle del Proyecto',
+      description: 'La página de registro del proyecto: el diseño generado, con el plan de tareas del proyecto en un Gantt en la pestaña Resumen.',
+    },
+  },
   apps: {
     // This package's own app (#2316).
     crm_psa: {
@@ -447,6 +539,8 @@ export const esES: TranslationData = {
         nav_projects: { label: 'Todos los proyectos' },
         nav_my_projects: { label: 'Mis proyectos' },
         nav_project_members: { label: 'Asignación' },
+        nav_project_plan: { label: 'Plan del proyecto' },
+        nav_my_project_tasks: { label: 'Mis tareas de proyecto' },
         group_time_expenses: { label: 'Horas y gastos' },
         nav_my_timesheets: { label: 'Mis partes de horas' },
         nav_my_expenses: { label: 'Mis gastos' },

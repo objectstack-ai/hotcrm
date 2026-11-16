@@ -152,7 +152,7 @@ import {
   campaigns, campaignMembersFromLeads, campaignMembersFromContacts,
   campaignsZhCN, campaignMembersFromLeadsZhCN, campaignMembersFromContactsZhCN,
 } from './src/marketing/data/index.js';
-import { projects, rateCards, projectsZhCN, rateCardsZhCN } from './src/psa/data/index.js';
+import { projects, projectTasks, rateCards, projectsZhCN, projectTasksZhCN, rateCardsZhCN } from './src/psa/data/index.js';
 import {
   billingMilestones, invoices, payments, billingMilestonesZhCN, invoicesZhCN, paymentsZhCN,
 } from './src/o2c/data/index.js';
@@ -459,9 +459,10 @@ export const CrmSeedData = [
   forecasts,
   knowledgeArticles,
   // Project Delivery (#2316): rate cards, then projects, which point at the
-  // accounts and opportunities above.
+  // accounts and opportunities above, then the projects' tasks (#2545).
   rateCards,
   projects,
+  projectTasks,
 ];
 
 /**
@@ -507,6 +508,7 @@ export const CrmSeedDataZhCN = [
   knowledgeArticlesZhCN,
   rateCardsZhCN,
   projectsZhCN,
+  projectTasksZhCN,
 ];
 
 /** Both stories: what the default composition's four package stacks register between them. */
@@ -587,9 +589,9 @@ export const MarketingSeedData = CrmSeedDataAllLocales.filter((family) =>
     campaignsZhCN, campaignMembersFromLeadsZhCN, campaignMembersFromContactsZhCN,
   ].includes(family));
 
-/** The PROJECT DELIVERY package's families — the rate cards and projects (#2316). */
+/** The PROJECT DELIVERY package's families — the rate cards, projects and their tasks (#2316, #2545). */
 export const PsaSeedData = CrmSeedDataAllLocales.filter((family) =>
-  [rateCards, projects, rateCardsZhCN, projectsZhCN].includes(family));
+  [rateCards, projects, projectTasks, rateCardsZhCN, projectsZhCN, projectTasksZhCN].includes(family));
 
 /** The ORDER TO CASH package's families — the collection plan, invoices and payments (#2529). */
 export const O2cSeedData = CrmSeedDataAllLocales.filter((family) =>

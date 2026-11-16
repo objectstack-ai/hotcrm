@@ -580,6 +580,7 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   // #2316 — Project Delivery.
   crm_project: { en: 'Project', 'zh-Hans': '项目', 'zh-Hant': '項目' },
   crm_project_member: { en: 'Project Member', 'zh-Hans': '项目成员', 'zh-Hant': '項目成員' },
+  crm_project_task: { en: 'Project Task', 'zh-Hans': '项目任务', 'zh-Hant': '項目任務' },
   crm_rate_card: { en: 'Rate Card', 'zh-Hans': '费率卡', 'zh-Hant': '費率卡' },
   crm_timesheet: { en: 'Timesheet', 'zh-Hans': '工时单', 'zh-Hant': '工時單' },
   crm_time_entry: { en: 'Time Entry', 'zh-Hans': '工时明细', 'zh-Hant': '工時明細' },

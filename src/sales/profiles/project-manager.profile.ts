@@ -17,6 +17,8 @@ import { privateOpportunityPolicy } from './_private-opportunity';
  *     ⛔ No delete: a project with booked hours is closed or cancelled.
  *   - `crm_project_member` — full: staffing is the manager's. A child of the
  *     project, so it needs edit on the project, which the rule above gives.
+ *   - `crm_project_task` — full: the plan is the manager's (hotcrm#2545),
+ *     written on the projects they own or manage, for the same reason.
  *   - `crm_timesheet`, `crm_time_entry`, `crm_expense` — a manager books their
  *     own time and expenses, and edits the ones they approve (the
  *     `*_approver_edit` rules).
@@ -36,6 +38,7 @@ export const ProjectManagerProfile = {
   objects: {
     crm_project:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_project_member: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
+    crm_project_task:   { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     crm_rate_card:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_timesheet:      { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_time_entry:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },

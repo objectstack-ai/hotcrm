@@ -457,6 +457,16 @@ v2 candidates, each its own design note when its turn comes: work breakdown (tas
 milestones with planned-vs-actual hours), resource requests and capacity, billing
 milestones for `fixed_fee` projects, and a project template to seed members and budget lines.
 
+> **Note (2026-11-16, phase 2a, hotcrm#2545).** Work breakdown has landed:
+> `crm_project_task` (master-detail on the project; `parent_task` tree, `predecessors`,
+> `is_milestone`, planned dates and hours, `task_owner`, `status`), a Gantt on the project's
+> record page (`src/psa/pages/project_detail.page.ts`, an `object-gantt` filtered by
+> `{record_id}`) and in the `project_plan` list view, an optional `crm_project_task` lookup on
+> `crm_time_entry` summed into the task's `actual_hours`, and `crm_project.percent_complete`
+> computed by `project_task.hook.ts` from the leaf tasks weighted by planned hours (no longer
+> typed). The console's auto-schedule moves successors; nothing cascades on the server
+> (accepted for 2a).
+
 > **Note (2026-10-23).** The billing milestones are now designed — not here but in the
 > order-to-cash module ([`order-to-cash-module-plan.md`](./order-to-cash-module-plan.md),
 > REQ-0007), whose `crm_billing_milestone` a `fixed_fee` project reaches through its

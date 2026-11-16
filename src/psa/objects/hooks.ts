@@ -9,6 +9,7 @@
 
 export { default as projectHook } from './project.hook';
 export { default as projectMemberHook } from './project_member.hook';
+export { default as projectTaskHook } from './project_task.hook';
 export { default as timesheetHook } from './timesheet.hook';
 export { default as timeEntryHook } from './time_entry.hook';
 export { default as expenseHook } from './expense.hook';

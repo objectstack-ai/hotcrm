@@ -15,6 +15,7 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *     billable bills at zero. Later edits recompute the amounts at the STORED
  *     rates, so a rate card changed next quarter never rewrites this cost.
  *   - **The date falls inside the timesheet's period.**
+ *   - **The task, when one is named, is the timesheet's project's** (#2545).
  *   - **A submitted or approved timesheet's entries do not change** — not
  *     added, edited or removed — on a person's write. Correcting one is
  *     sending the timesheet back to Draft.
@@ -36,7 +37,14 @@ const timeEntryCosting: Hook = {
   runAs: 'system',
   refusals: {
     RECORD_LOCKED: { message: 'This timesheet has been submitted, so its hours cannot change. Send it back to Draft to correct them.', status: 409 },
-    VALIDATION_FAILED: { message: 'The date {{day}} is outside this timesheet\'s period ({{from}} – {{to}}).', status: 400, params: ['day', 'from', 'to'] },
+    VALIDATION_FAILED: {
+      message: 'The date {{day}} is outside this timesheet\'s period ({{from}} – {{to}}).',
+      status: 400,
+      params: ['day', 'from', 'to'],
+      reasons: {
+        task: { message: 'The task must be one of this timesheet\'s project tasks.' },
+      },
+    },
     FORBIDDEN: {
       message: 'Hours can only be booked by people staffed on the project. Ask its project manager to add you.',
       status: 403,
@@ -110,6 +118,25 @@ const timeEntryCosting: Hook = {
         'VALIDATION_FAILED',
         400,
       ), { params: { day, from, to } });
+    }
+
+    // The task the hours went to (hotcrm#2545) is one of the timesheet's
+    // project's tasks: its Actual Hours would otherwise count another
+    // project's time.
+    const taskId = refId(pick('crm_project_task'));
+    const sheetMoved = 'crm_timesheet' in input && refId(previous.crm_timesheet) !== sheetId;
+    if (taskId && ('crm_project_task' in input || sheetMoved)) {
+      const task = await api.object('crm_project_task').findOne({
+        where: { id: taskId },
+        fields: ['id', 'crm_project'],
+      });
+      if (!task || refId(task.crm_project) !== refId(sheet.crm_project)) {
+        throw Object.assign(refuse(
+          'The task must be one of this timesheet\'s project tasks.',
+          'VALIDATION_FAILED',
+          400,
+        ), { reason: 'task' });
+      }
     }
 
     let costRate = num(previous.cost_rate);

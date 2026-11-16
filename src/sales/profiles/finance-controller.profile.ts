@@ -8,7 +8,7 @@ import { privateOpportunityPolicy } from './_private-opportunity';
  * distributes it; the director and PMO positions hold it too.
  *
  *   - Every Project Delivery row — read, every record: projects, staffing,
- *     timesheets, entries and expenses.
+ *     tasks, timesheets, entries and expenses.
  *   - `crm_project` — edit, every record: the controller sets and corrects
  *     the budget figure. ⛔ No create or delete: projects are delivery's. So
  *     not Modify All, which would grant delete (ADR-0049): the edit reach is
@@ -27,6 +27,7 @@ export const FinanceControllerProfile = {
   objects: {
     crm_project:        { allowCreate: false, allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_project_member: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
+    crm_project_task:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_rate_card:      { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },
     crm_timesheet:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_time_entry:     { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },

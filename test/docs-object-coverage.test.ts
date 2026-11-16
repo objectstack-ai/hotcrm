@@ -154,6 +154,7 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   crm_payment: { page: 'order-to-cash/invoices-and-payments' },
   crm_project: { page: 'projects/projects-and-staffing' },
   crm_project_member: { page: 'projects/projects-and-staffing' },
+  crm_project_task: { page: 'projects/project-plan' },
   crm_rate_card: { page: 'projects/projects-and-staffing' },
   crm_timesheet: { page: 'projects/time-and-expenses' },
   crm_time_entry: { page: 'projects/time-and-expenses' },

@@ -47,7 +47,7 @@ const REVENUE_OBJECTS = [
 ];
 const MARKETING_OBJECTS = ['crm_campaign', 'crm_campaign_member'];
 const O2C_OBJECTS = ['crm_billing_milestone', 'crm_invoice', 'crm_payment'];
-const PSA_OBJECTS = ['crm_expense', 'crm_project', 'crm_project_member', 'crm_rate_card', 'crm_time_entry', 'crm_timesheet'];
+const PSA_OBJECTS = ['crm_expense', 'crm_project', 'crm_project_member', 'crm_project_task', 'crm_rate_card', 'crm_time_entry', 'crm_timesheet'];
 const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS, ...O2C_OBJECTS, ...PSA_OBJECTS];
 
 /**
@@ -111,7 +111,7 @@ describe('every object has exactly one owner', () => {
     expect(namesOf(body(O2C_ID).objects)).toEqual(O2C_OBJECTS);
   });
 
-  it('the Project Delivery module owns the project, staffing, rate card, time and expense objects (#2316)', () => {
+  it('the Project Delivery module owns the project, staffing, task, rate card, time and expense objects (#2316, #2545)', () => {
     expect(namesOf(body(PSA_ID).objects)).toEqual(PSA_OBJECTS);
   });
 

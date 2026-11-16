@@ -61,7 +61,10 @@ export const en: TranslationData = {
         planned_end: { label: 'Planned End' },
         actual_start: { label: 'Actual Start' },
         actual_end: { label: 'Actual End' },
-        percent_complete: { label: 'Percent Complete' },
+        percent_complete: {
+          label: 'Percent Complete',
+          help: 'Computed from the project\'s tasks, weighted by their planned hours. A task with subtasks counts through them.',
+        },
         planned_revenue: {
           label: 'Planned Revenue',
           help: 'What the customer pays for this project. Gross margin is measured against it.',
@@ -117,6 +120,68 @@ export const en: TranslationData = {
       _validations: {
         project_planned_dates: { message: 'Planned End must be on or after Planned Start.' },
         project_status_progression: { message: 'This status change is not allowed. A project moves Draft → In Approval → Approved → Active → Completed → Closed; Active and On Hold switch back and forth, a rejected project goes back to Draft, and an open project can be Cancelled.' },
+      },
+    },
+    crm_project_task: {
+      label: 'Project Task',
+      pluralLabel: 'Project Tasks',
+      description: 'A piece of a project\'s plan, with its dates, planned hours, owner and progress',
+      fields: {
+        crm_project: { label: 'Project' },
+        name: { label: 'Task Name' },
+        parent_task: {
+          label: 'Parent Task',
+          help: 'The task this one is part of. A task with subtasks is a summary: its progress comes from them.',
+        },
+        task_owner: {
+          label: 'Task Owner',
+          help: 'The person who does the task or answers for it.',
+        },
+        status: {
+          label: 'Status',
+          options: {
+            not_started: 'Not Started',
+            in_progress: 'In Progress',
+            on_hold: 'On Hold',
+            completed: 'Completed',
+            cancelled: 'Cancelled',
+          },
+        },
+        is_milestone: {
+          label: 'Milestone',
+          help: 'A checkpoint rather than work: drawn as a diamond on the Gantt, usually with no planned hours.',
+        },
+        description: { label: 'Description' },
+        planned_start: { label: 'Planned Start' },
+        planned_end: { label: 'Planned End' },
+        predecessors: {
+          label: 'Predecessors',
+          help: 'The tasks that must finish before this one starts.',
+        },
+        schedule_type: { label: 'Schedule Type' },
+        planned_hours: {
+          label: 'Planned Hours',
+          help: 'The effort the task is planned at. The project\'s Percent Complete weighs each task by it.',
+        },
+        percent_complete: {
+          label: 'Percent Complete',
+          help: 'How far along the task is. Set to 100 when the task is Completed.',
+        },
+        actual_hours: { label: 'Actual Hours' },
+      },
+      _views: {
+        all_project_tasks: { label: 'All Project Tasks' },
+        project_plan: { label: 'Project Plan' },
+        project_task_tree: { label: 'Task Tree' },
+        my_project_tasks: { label: 'My Project Tasks' },
+      },
+      _sections: {
+        basic: { label: 'Task' },
+        schedule: { label: 'Schedule' },
+        effort: { label: 'Effort' },
+      },
+      _validations: {
+        project_task_planned_dates: { message: 'Planned End must be on or after Planned Start.' },
       },
     },
     crm_project_member: {
@@ -268,6 +333,10 @@ export const en: TranslationData = {
         },
         hours: { label: 'Hours' },
         is_billable: { label: 'Billable' },
+        crm_project_task: {
+          label: 'Task',
+          help: 'The task of this project the hours were spent on.',
+        },
         notes: { label: 'Notes' },
         cost_rate: { label: 'Cost Rate (per hour)' },
         cost_amount: { label: 'Cost' },
@@ -364,6 +433,13 @@ export const en: TranslationData = {
     },
     project_budget_alert: { label: 'Project Budget Alert' },
   },
+  pages: {
+    // The project's record page (#2545).
+    project_detail_page: {
+      label: 'Project Detail',
+      description: 'The project\'s record page: the synthesized layout, with the project\'s task plan on a Gantt in the Overview tab.',
+    },
+  },
   apps: {
     // This package's own app (#2316). The contributed entries' labels are the
     // app package's, which contributes them.
@@ -375,6 +451,8 @@ export const en: TranslationData = {
         nav_projects: { label: 'All Projects' },
         nav_my_projects: { label: 'My Projects' },
         nav_project_members: { label: 'Staffing' },
+        nav_project_plan: { label: 'Project Plan' },
+        nav_my_project_tasks: { label: 'My Project Tasks' },
         group_time_expenses: { label: 'Time and Expenses' },
         nav_my_timesheets: { label: 'My Timesheets' },
         nav_my_expenses: { label: 'My Expenses' },
