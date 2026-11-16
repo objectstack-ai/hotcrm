@@ -49,16 +49,16 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     expect(Object.keys(psa!.dependencies ?? {})).toEqual([APP_ID]);
   });
 
-  it('it owns its six objects, their seven hooks and its seed rows (phases 1a and 1b)', () => {
+  it('it owns its seven objects, their nine hooks and its seed rows (phases 1a, 1b and 2a)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.objects ?? []) as AnyRec[]).map((o) => o.name).sort()).toEqual([
-      'crm_expense', 'crm_project', 'crm_project_member', 'crm_rate_card', 'crm_time_entry', 'crm_timesheet',
+      'crm_expense', 'crm_project', 'crm_project_member', 'crm_project_task', 'crm_rate_card', 'crm_time_entry', 'crm_timesheet',
     ]);
     expect(((stack.hooks ?? []) as AnyRec[]).map((h) => h.name).sort()).toEqual([
       'expense_approver', 'project_budget_status', 'project_member_unique', 'project_status_guard',
-      'project_team_sync', 'time_entry_costing', 'timesheet_stamps',
+      'project_task_progress', 'project_task_rules', 'project_team_sync', 'time_entry_costing', 'timesheet_stamps',
     ]);
-    expect([...new Set(((stack.data ?? []) as AnyRec[]).map((d) => d.object))].sort()).toEqual(['crm_project', 'crm_rate_card']);
+    expect([...new Set(((stack.data ?? []) as AnyRec[]).map((d) => d.object))].sort()).toEqual(['crm_project', 'crm_project_task', 'crm_rate_card']);
   });
 
   it('it owns its approval and budget flows and the budget notices\' templates (phase 1b)', () => {
@@ -100,6 +100,7 @@ describe('Project Delivery is its own app (#2316)', () => {
     const objects = walk(nav).filter((i) => i.type === 'object').map((i) => `${i.objectName}${i.viewName ? `/${i.viewName}` : ''}`);
     expect(objects).toEqual([
       'crm_project', 'crm_project/my_projects', 'crm_project_member',
+      'crm_project_task/project_plan', 'crm_project_task/my_project_tasks',
       'crm_timesheet/my_timesheets', 'crm_expense/my_expenses', 'crm_timesheet/timesheets_to_approve', 'crm_expense/expenses_to_approve',
       'crm_rate_card',
       'crm_account', 'crm_opportunity', 'crm_contract', 'crm_task/my_open_tasks',

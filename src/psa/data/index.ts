@@ -5,5 +5,5 @@
  * the ordered `CrmSeedData` union and cuts them back out for this package — see
  * `src/sales/data/index.ts` for why the assembly lives there.
  */
-export { projects, rateCards } from './psa.seed';
-export { projectsZhCN, rateCardsZhCN } from './psa.zh-CN.seed';
+export { projects, projectTasks, rateCards } from './psa.seed';
+export { projectsZhCN, projectTasksZhCN, rateCardsZhCN } from './psa.zh-CN.seed';

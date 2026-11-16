@@ -68,10 +68,26 @@ export const zhCN: TranslationData = {
         DUPLICATE_VALUE: { message: '这个人已经在这个项目上了。请修改他现有的人员配置行，不要再新增一行。' },
       },
     },
+    project_task_rules: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '上级任务必须是同一项目中的另一项任务。',
+          reasons: {
+            loop: { message: '这个上级任务是本任务自己的子任务。请选择不在本任务下面的任务。' },
+            predecessor: { message: '前置任务必须是同一项目中的另一项任务。' },
+          },
+        },
+      },
+    },
     time_entry_costing: {
       refusals: {
         RECORD_LOCKED: { message: '这张工时单已提交，工时不能再修改。请把它退回草稿后再更正。' },
-        VALIDATION_FAILED: { message: '日期 {{day}} 不在这张工时单的周期内（{{from}} – {{to}}）。' },
+        VALIDATION_FAILED: {
+          message: '日期 {{day}} 不在这张工时单的周期内（{{from}} – {{to}}）。',
+          reasons: {
+            task: { message: '任务必须是这张工时单所属项目的任务。' },
+          },
+        },
         FORBIDDEN: {
           message: '只有配置在项目上的人员才能记工时。请让项目经理把你加入项目。',
           reasons: {
@@ -134,7 +150,10 @@ export const zhCN: TranslationData = {
         planned_end: { label: '计划结束' },
         actual_start: { label: '实际开始' },
         actual_end: { label: '实际结束' },
-        percent_complete: { label: '完成百分比' },
+        percent_complete: {
+          label: '完成百分比',
+          help: '由项目任务按计划工时加权计算。有子任务的任务通过子任务计入。',
+        },
         planned_revenue: {
           label: '计划收入',
           help: '客户为这个项目支付的金额，毛利以它为基准计算。',
@@ -190,6 +209,68 @@ export const zhCN: TranslationData = {
       _validations: {
         project_planned_dates: { message: '计划结束日期不能早于计划开始日期。' },
         project_status_progression: { message: '不允许这样更改状态。项目按 草稿 → 审批中 → 已批准 → 进行中 → 已完成 → 已关闭 推进；进行中和暂停可以来回切换，被驳回的项目退回草稿，未结束的项目可以取消。' },
+      },
+    },
+    crm_project_task: {
+      label: '项目任务',
+      pluralLabel: '项目任务',
+      description: '项目计划中的一项工作，包含日期、计划工时、负责人和进度',
+      fields: {
+        crm_project: { label: '项目' },
+        name: { label: '任务名称' },
+        parent_task: {
+          label: '上级任务',
+          help: '这项任务所属的任务。有子任务的任务是汇总任务，进度由子任务计算。',
+        },
+        task_owner: {
+          label: '任务负责人',
+          help: '完成这项任务或对它负责的人。',
+        },
+        status: {
+          label: '状态',
+          options: {
+            not_started: '未开始',
+            in_progress: '进行中',
+            on_hold: '暂停',
+            completed: '已完成',
+            cancelled: '已取消',
+          },
+        },
+        is_milestone: {
+          label: '里程碑',
+          help: '一个检查点而不是一项工作：在甘特图上显示为菱形，通常没有计划工时。',
+        },
+        description: { label: '描述' },
+        planned_start: { label: '计划开始' },
+        planned_end: { label: '计划结束' },
+        predecessors: {
+          label: '前置任务',
+          help: '这项任务开始前必须完成的任务。',
+        },
+        schedule_type: { label: '排期类型' },
+        planned_hours: {
+          label: '计划工时',
+          help: '这项任务计划投入的工时。项目的完成百分比按它给每项任务加权。',
+        },
+        percent_complete: {
+          label: '完成百分比',
+          help: '这项任务完成了多少。任务标为已完成时设为 100。',
+        },
+        actual_hours: { label: '实际工时' },
+      },
+      _views: {
+        all_project_tasks: { label: '全部项目任务' },
+        project_plan: { label: '项目计划' },
+        project_task_tree: { label: '任务树' },
+        my_project_tasks: { label: '我的项目任务' },
+      },
+      _sections: {
+        basic: { label: '任务' },
+        schedule: { label: '排期' },
+        effort: { label: '工作量' },
+      },
+      _validations: {
+        project_task_planned_dates: { message: '计划结束日期不能早于计划开始日期。' },
       },
     },
     crm_project_member: {
@@ -341,6 +422,10 @@ export const zhCN: TranslationData = {
         },
         hours: { label: '工时' },
         is_billable: { label: '可计费' },
+        crm_project_task: {
+          label: '任务',
+          help: '这些工时花在本项目的哪项任务上。',
+        },
         notes: { label: '备注' },
         cost_rate: { label: '成本单价（每小时）' },
         cost_amount: { label: '成本' },
@@ -437,6 +522,13 @@ export const zhCN: TranslationData = {
     },
     project_budget_alert: { label: '项目预算预警' },
   },
+  pages: {
+    // The project's record page (#2545).
+    project_detail_page: {
+      label: '项目详情',
+      description: '项目的记录页：使用系统生成的布局，并在概览页签中用甘特图显示项目的任务计划。',
+    },
+  },
   apps: {
     // This package's own app (#2316); the name is the maintainer's (2026-11-15).
     crm_psa: {
@@ -447,6 +539,8 @@ export const zhCN: TranslationData = {
         nav_projects: { label: '全部项目' },
         nav_my_projects: { label: '我的项目' },
         nav_project_members: { label: '人员安排' },
+        nav_project_plan: { label: '项目计划' },
+        nav_my_project_tasks: { label: '我的项目任务' },
         group_time_expenses: { label: '工时与费用' },
         nav_my_timesheets: { label: '我的工时单' },
         nav_my_expenses: { label: '我的费用' },

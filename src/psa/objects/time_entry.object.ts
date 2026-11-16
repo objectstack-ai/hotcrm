@@ -20,7 +20,7 @@ export const TimeEntry = ObjectSchema.create({
 
   sharingModel: 'controlled_by_parent',
   nameField: 'entry_date',
-  highlightFields: ['hours', 'is_billable', 'cost_amount'],
+  highlightFields: ['hours', 'is_billable', 'crm_project_task', 'cost_amount'],
 
   fieldGroups: [
     { key: 'basic', label: 'Time Entry', icon: 'timer' },
@@ -59,6 +59,16 @@ export const TimeEntry = ObjectSchema.create({
       defaultValue: true,
     }),
 
+    // Optional (hotcrm#2545): which task of the timesheet's project the hours
+    // went to. The task's Actual Hours sums them. `time_entry.hook.ts`
+    // refuses a task from another project.
+    crm_project_task: Field.lookup('crm_project_task', {
+      label: 'Task',
+      group: 'basic',
+      description: 'The task of this project the hours were spent on.',
+      relatedListColumns: ['entry_date', 'hours', 'is_billable', 'notes'],
+    }),
+
     notes: Field.textarea({ label: 'Notes', group: 'basic' }),
 
     cost_rate: Field.currency({
@@ -89,6 +99,7 @@ export const TimeEntry = ObjectSchema.create({
   indexes: [
     { fields: ['crm_timesheet'] },
     { fields: ['entry_date'] },
+    { fields: ['crm_project_task'] },
   ],
 
   enable: {

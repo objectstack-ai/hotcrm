@@ -1,11 +1,12 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 /**
- * The Simplified Chinese twins of the rate cards and projects (#2316, #2411).
+ * The Simplified Chinese twins of the rate cards, projects and project tasks
+ * (#2316, #2411, #2545).
  * How a twin is built: `src/sales/data/_locale.ts`.
  */
-import { projects, rateCards } from './psa.seed';
-import { zhCNTwin } from '../../sales/data/_locale';
+import { projects, projectTasks, rateCards } from './psa.seed';
+import { zhCNTwin, zhKey } from '../../sales/data/_locale';
 import { zhAccountName, zhOpportunityName } from '../../sales/data/sales.zh-CN.seed';
 
 const RATE_CARDS_ZH: Record<string, Record<string, unknown>> = {
@@ -53,4 +54,43 @@ export const projectsZhCN = zhCNTwin(projects, {
   words: PROJECTS_ZH,
   text: ['name', 'description'],
   refs: { crm_account: zhAccountName, crm_opportunity: zhOpportunityName },
+});
+
+const zhProjectName = zhKey('project', PROJECTS_ZH, 'name');
+
+const PROJECT_TASKS_ZH: Record<string, Record<string, unknown>> = {
+  'Stark pilot: discovery workshops': { name: '斯塔克试点：调研工作坊' },
+  'Stark pilot: site configuration': { name: '斯塔克试点：院区配置' },
+  'Stark pilot: configure site one': { name: '斯塔克试点：配置第一院区' },
+  'Stark pilot: configure site two': { name: '斯塔克试点：配置第二院区' },
+  'Stark pilot: configure site three': { name: '斯塔克试点：配置第三院区' },
+  'Stark pilot: staff training': { name: '斯塔克试点：员工培训' },
+  'Stark pilot: go-live review': { name: '斯塔克试点：上线评审' },
+  'Wayne rollout: solution blueprint': { name: '韦恩推广：方案蓝图' },
+  'Wayne rollout: hub deployments': { name: '韦恩推广：区域中心部署' },
+  'Wayne rollout: north hub': { name: '韦恩推广：北区中心' },
+  'Wayne rollout: south hub': { name: '韦恩推广：南区中心' },
+  'Wayne rollout: east hub': { name: '韦恩推广：东区中心' },
+  'Wayne rollout: west hub': { name: '韦恩推广：西区中心' },
+  'Wayne rollout: handover to support': { name: '韦恩推广：移交运维' },
+  'Vertex onboarding: enablement workshops': { name: '维特上手服务：赋能培训' },
+  'Vertex onboarding: architecture review': { name: '维特上手服务：架构评审' },
+  'Vertex onboarding: quarterly check-in': { name: '维特上手服务：季度回顾' },
+  'Vertex scoping: solution design': { name: '维特售前：方案设计' },
+  'Vertex scoping: phased plan': { name: '维特售前：分阶段计划' },
+  'Vertex scoping: effort estimate': { name: '维特售前：工作量估算' },
+  'Initech phase 1: migration assessment': { name: '英科一期：迁移评估' },
+  'Initech phase 1: workload migration': { name: '英科一期：业务迁移' },
+  'Initech phase 1: customer acceptance': { name: '英科一期：客户验收' },
+};
+
+const zhTaskName = zhKey('project task', PROJECT_TASKS_ZH, 'name');
+
+export const projectTasksZhCN = zhCNTwin(projectTasks, {
+  words: PROJECT_TASKS_ZH,
+  text: ['name'],
+  refs: { crm_project: zhProjectName, parent_task: zhTaskName },
+  map: (twin) => (Array.isArray(twin.predecessors)
+    ? { ...twin, predecessors: (twin.predecessors as string[]).map(zhTaskName) }
+    : twin),
 });

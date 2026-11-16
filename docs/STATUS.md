@@ -19,8 +19,8 @@ loader registers:
 
 ```text
 HotCRM v6.4.0
-Data: 29 Objects  490 Fields
-UI: 5 Apps  24 Views  10 Pages  7 Dashboards  10 Reports  40 Actions
+Data: 30 Objects  505 Fields
+UI: 5 Apps  25 Views  11 Pages  7 Dashboards  10 Reports  40 Actions
 Logic: 42 Flows
 Security: 18 Positions  13 Permissions
 ```

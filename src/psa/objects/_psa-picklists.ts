@@ -68,6 +68,19 @@ export const RATE_CARD_UNIT_OPTIONS = [
   { label: 'Per Day', value: 'day' },
 ];
 
+/**
+ * A project task's own state (hotcrm#2545, phase 2a). Completed counts the
+ * task as 100 % done in the project's progress; a cancelled task drops out of
+ * it (`project_task.hook.ts`).
+ */
+export const PROJECT_TASK_STATUS_OPTIONS = [
+  { label: 'Not Started', value: 'not_started', color: '#94A3B8', kind: 'open' as const },
+  { label: 'In Progress', value: 'in_progress', color: '#2563EB', kind: 'open' as const },
+  { label: 'On Hold', value: 'on_hold', color: '#EA580C', kind: 'open' as const },
+  { label: 'Completed', value: 'completed', color: '#16A34A', kind: 'won' as const },
+  { label: 'Cancelled', value: 'cancelled', color: '#666666', kind: 'lost' as const },
+];
+
 /** A timesheet's and an expense's own lifecycle: written, sent, decided. */
 export const SUBMISSION_STATUS_OPTIONS = [
   { label: 'Draft', value: 'draft', color: '#94A3B8', kind: 'open' as const },

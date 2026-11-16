@@ -4,6 +4,7 @@
 
 export { Project } from './project.object';
 export { ProjectMember } from './project_member.object';
+export { ProjectTask } from './project_task.object';
 export { RateCard } from './rate_card.object';
 export { Timesheet } from './timesheet.object';
 export { TimeEntry } from './time_entry.object';

@@ -9,6 +9,9 @@ import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
  *
  *   - `crm_project`, `crm_project_member` — read: the projects a member is
  *     staffed on reach them through the `project_team_read` rule.
+ *   - `crm_project_task` — read: the team reads the project's plan
+ *     (hotcrm#2545). Writing a task needs edit on the project, which the team
+ *     does not have (ruling D), so the manager keeps the plan.
  *   - `crm_timesheet`, `crm_time_entry`, `crm_expense` — their own: a member
  *     writes their own timesheets and expenses and nobody else's.
  *   - `crm_rate_card` — read, WITHOUT what anything costs: the cost rate, and
@@ -34,6 +37,7 @@ export const ProjectMemberProfile = {
   objects: {
     crm_project:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_project_member: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    crm_project_task:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_account:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // Order to Cash, as on `marketing_user`: read on invoices and payments, so
     // the account's receivables figures sum rows this set may read (`os lint`

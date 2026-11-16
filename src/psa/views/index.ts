@@ -4,6 +4,7 @@
 
 export { ProjectViews } from './project.view';
 export { ProjectMemberViews } from './project_member.view';
+export { ProjectTaskViews } from './project_task.view';
 export { RateCardViews } from './rate_card.view';
 export { TimesheetViews } from './timesheet.view';
 export { TimeEntryViews } from './time_entry.view';

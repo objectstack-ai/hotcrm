@@ -1,0 +1,61 @@
+---
+title: The Project Plan
+description: Breaking a project into tasks, drawing them on a Gantt, booking hours against them, and how the project's Percent Complete follows them.
+---
+
+# The Project Plan
+
+A project's plan is its **Project Tasks**. They appear in the project's **Related** tab, on a Gantt under the project's fields in the **Overview** tab, and across every project under **Project Plan** (a Gantt) and **Task Tree** in the Project Delivery app.
+
+## Who writes the plan
+
+| Who | What they can do |
+| --- | --- |
+| The project manager, the project's owner, administrators | Add, change and remove tasks. Writing a task needs edit on its project |
+| People staffed on the project | Read every task. They cannot change one, so they report progress to the project manager |
+| Finance Controllers, Project Directors, the PMO | Read every project's plan |
+
+## A task
+
+| Field | What it means |
+| --- | --- |
+| **Task Name** | What the work is |
+| **Parent Task** | The task this one is part of. A task with subtasks is a summary |
+| **Task Owner** | The person who does the task or answers for it |
+| **Status** | Not Started, In Progress, On Hold, Completed or Cancelled |
+| **Milestone** | A checkpoint rather than work, drawn as a diamond |
+| **Planned Start**, **Planned End** | When the task is planned |
+| **Predecessors** | The tasks that must finish before this one starts |
+| **Planned Hours** | The effort the task is planned at. The project's Percent Complete weighs each task by it |
+| **Percent Complete** | How far along the task is. Set to 100 when the task is Completed |
+| **Actual Hours** | The hours booked against the task |
+
+A **Parent Task** and every **Predecessor** must be tasks of the same project. A parent that is one of the task's own subtasks is refused, because the plan would loop.
+
+## The Gantt
+
+The Gantt draws the tasks with the predecessors as arrows and milestones as diamonds. Subtasks are listed beside their summary task rather than indented under it: **Task Tree** in the app shows the tree. Each bar's colour follows the task's status, and its fill follows its Percent Complete.
+
+- **Drag a bar** to change the task's planned dates, or **drag its progress handle** to change its Percent Complete. Both save at once.
+- **Auto-schedule**, in the Gantt's toolbar, moves the tasks that wait on a task you moved, and saves them.
+
+> **Only the Gantt reschedules.** There is no server-side cascade: a date changed in the task's form, by an import or over the API moves that task only. Its successors keep their dates until someone moves them.
+
+## Hours on a task
+
+A time entry has an optional **Task**, picked from the timesheet's project; a task of another project is refused. The task's **Actual Hours** adds up every entry that names it, whatever its timesheet's status. Cost still counts only once the timesheet is approved (see [Time and Expenses](/docs/projects/time-and-expenses)).
+
+## Percent Complete
+
+A project's **Percent Complete** is worked out from its tasks and cannot be typed. Each time a task changes:
+
+1. Take the tasks with no subtasks, leaving out Cancelled ones. A summary task counts through its subtasks, so no hour is counted twice.
+2. Weigh each one's Percent Complete, 100 for a Completed task, by its Planned Hours.
+3. Divide by the total planned hours.
+
+| Tasks | Percent Complete |
+| --- | --- |
+| Design, 40 h, 50 %; Kick-off, 10 h, Completed | (40 × 50 + 10 × 100) ÷ 50 = **60 %** |
+| The same, with Design Completed | **100 %** |
+
+When none of the counted tasks has planned hours, each counts the same. A project with no task to count shows no percentage.

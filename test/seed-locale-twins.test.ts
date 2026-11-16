@@ -65,6 +65,11 @@ describe('every zh-CN twin is its English dataset in other words', () => {
         expect(Object.keys(twin).sort(), where).toEqual(Object.keys(english).sort());
         for (const [key, value] of Object.entries(english)) {
           if (typeof value === 'string' && !CODE.test(value)) continue; // words and natural keys
+          if (Array.isArray(value) && value.length > 0 && value.every((v) => typeof v === 'string' && !CODE.test(v))) {
+            // A list of natural keys (a task's predecessors, #2545): each said in the twin's words.
+            expect((twin[key] as unknown[]).length, `${where}.${key}`).toBe(value.length);
+            continue;
+          }
           if (key === 'language') {
             // A knowledge article says which language it is written in.
             expect(twin[key], `${where}.${key}`).toBe('zh_cn');
@@ -186,6 +191,8 @@ const LOOKUPS: Array<[object: string, field: string]> = [
   ['crm_payment', 'crm_invoice'],
   ['crm_payment', 'crm_billing_milestone'],
   ['crm_payment', 'crm_account'],
+  // Project Delivery's plans (#2545).
+  ['crm_project_task', 'crm_project'],
 ];
 
 describe.each([
@@ -244,6 +251,24 @@ describe.each([
     expect(balances, 'contract receivable balances').toEqual([0, 0, 21000, 220000]);
     const steps = await stack!.rows('crm_billing_milestone');
     expect(steps.map((m) => num(m.received_amount)).sort((a, b) => a - b)).toEqual([0, 0, 9000, 15000, 15000]);
+  });
+
+  it('the projects\' Percent Complete is told by their tasks (#2545)', async () => {
+    const tasks = await stack!.rows('crm_project_task');
+    const ids = new Set(tasks.map((t) => t.id));
+    // The tree and the links reference rows of the same story.
+    const children = tasks.filter((t) => t.parent_task);
+    expect(children.length, 'subtasks under a summary').toBe(7);
+    expect(children.every((t) => ids.has(t.parent_task)), 'every parent resolved').toBe(true);
+    const linked = tasks.filter((t) => Array.isArray(t.predecessors) && t.predecessors.length > 0);
+    expect(linked.length, 'tasks waiting on a predecessor').toBe(16);
+    expect(linked.every((t) => (t.predecessors as string[]).every((id) => ids.has(id))), 'every predecessor resolved').toBe(true);
+    expect(tasks.filter((t) => t.schedule_type === 'milestone').length, 'milestones').toBe(4);
+    // Weighted by planned hours, summaries counted through their subtasks.
+    const figures = (await stack!.rows('crm_project'))
+      .map((p) => (p.percent_complete == null ? null : Number(p.percent_complete)))
+      .sort((a, b) => (a ?? -1) - (b ?? -1));
+    expect(figures).toEqual([null, 0, 36.2, 44.3, 57.5, 100]);
   });
 
   it('every natural-key reference resolved to a row of the same story', async () => {

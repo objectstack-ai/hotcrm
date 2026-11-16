@@ -50,6 +50,10 @@ export const PsaApp = App.create({
         { id: 'nav_projects', type: 'object', objectName: 'crm_project', label: 'All Projects', icon: 'briefcase' },
         { id: 'nav_my_projects', type: 'object', objectName: 'crm_project', viewName: 'my_projects', label: 'My Projects', icon: 'user-check' },
         { id: 'nav_project_members', type: 'object', objectName: 'crm_project_member', label: 'Staffing', icon: 'user-plus' },
+        // The plans (#2545): every task the reader may see on the Gantt, and
+        // the open tasks they own.
+        { id: 'nav_project_plan', type: 'object', objectName: 'crm_project_task', viewName: 'project_plan', label: 'Project Plan', icon: 'gantt-chart' },
+        { id: 'nav_my_project_tasks', type: 'object', objectName: 'crm_project_task', viewName: 'my_project_tasks', label: 'My Project Tasks', icon: 'list-checks' },
         // The module's own dashboard, over its own datasets (phase 1c). Its
         // money tiles aggregate the cost a team member may not read: the
         // analytics door refuses that aggregate (403 "not permitted to
