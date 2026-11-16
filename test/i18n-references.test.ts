@@ -230,6 +230,23 @@ describe('action labels are translated in every locale', () => {
     expect(bad, `confirm text translated for an action that declares none:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
+  it('no field help names an object by its API name (#2528)', () => {
+    // The knowledge article's vote counters told readers they were
+    // "Recounted from crm_article_feedback": an API name a user cannot find
+    // anywhere in the app, where the object is labelled Article Feedback.
+    const bad: string[] = [];
+    for (const [locale, pack] of localePacks) {
+      for (const [objectName, object] of Object.entries((pack?.objects ?? {}) as Record<string, any>)) {
+        for (const [field, entry] of Object.entries((object?.fields ?? {}) as Record<string, any>)) {
+          const help = typeof entry?.help === 'string' ? entry.help : '';
+          const named = help.match(/\b(?:crm|sys)_[a-z_]+\b/);
+          if (named) bad.push(`${locale}: ${objectName}.${field} help names ${named[0]}`);
+        }
+      }
+    }
+    expect(bad, `help text that shows an API name:\n  ${bad.join('\n  ')}`).toEqual([]);
+  });
+
   it('Send Email says the email was queued to the contact, in every locale (#2246)', () => {
     // Its siblings on the contact say what happened; Send Email fell back to
     // the console's generic "Action completed successfully". The body hands the

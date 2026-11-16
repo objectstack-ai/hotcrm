@@ -84,6 +84,13 @@ account, and the resulting number of hours is added to the time of creation.
 Critical is four hours on every tier; the other three priorities tighten as the
 tier rises (an account with no tier set is treated as SMB).
 
+**Raising the priority re-derives the SLA Due Date** from the moment of the
+change: the case gets *now + the new priority's hours*, so a Medium case raised
+to Critical is due four hours after the raise, not four hours after it was
+opened. It only ever moves the deadline earlier: when the date the case already
+has is sooner, that date stays. **Lowering** the priority never extends the
+deadline, and no other edit moves it.
+
 > Those are **calendar** hours, not business hours. This app has no
 > working-day calendar and no holiday list, so nights, weekends and holidays
 > count against every target — a Critical case raised at 5pm on a Friday is due
@@ -145,7 +152,8 @@ The form does not ask for a priority. A web case arrives at **Low**, with
 open a **Critical** case: the app holds a visitor's case at **High** at most, so
 a web case never escalates on arrival and never goes to the Service Manager pool
 by itself. Critical is a staff decision. When a visitor's problem really is
-urgent, raise the priority yourself and the escalation above runs.
+urgent, raise the priority yourself and the escalation above runs; the SLA Due
+Date then runs from your change, at the new priority's hours.
 
 ## Who owns a new case, and claiming one
 

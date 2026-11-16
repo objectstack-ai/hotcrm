@@ -50,7 +50,7 @@ export const jaJP: TranslationData = {
         },
         audience: {
           label: '対象',
-          help: '公開記事はカスタマーポータルに表示され、社内記事はエージェントのみが閲覧できます。',
+          help: '「公開」は顧客向けに適した記事であることを示しますが、記事を提供するカスタマーポータルはありません。社内記事はエージェント専用です。',
           options: { public: '公開', internal: '社内' },
         },
         language: {
@@ -61,8 +61,8 @@ export const jaJP: TranslationData = {
         related_to_case: { label: '元のケース', help: 'この記事の元になったケース（任意）。' },
         published_at: { label: '公開日時' },
         last_reviewed_at: { label: '最終レビュー' },
-        helpful_count: { label: '役に立った', help: 'crm_article_feedback から再集計されます。手入力はできません。' },
-        not_helpful_count: { label: '役に立たなかった', help: 'crm_article_feedback から再集計されます。手入力はできません。' },
+        helpful_count: { label: '役に立った', help: '読者の記事フィードバックから集計されます（読者 1 人につき 1 票）。編集できません。' },
+        not_helpful_count: { label: '役に立たなかった', help: '読者の記事フィードバックから集計されます（読者 1 人につき 1 票）。編集できません。' },
       },
       _views: {
         all_articles: { label: 'すべての記事' },

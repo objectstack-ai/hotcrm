@@ -42,7 +42,7 @@ export const en: TranslationData = {
         },
         audience: {
           label: 'Audience',
-          help: 'Public articles are visible in the customer portal; internal articles are agent-only.',
+          help: 'Public marks an article as suitable for customers; no customer portal serves it. Internal articles are for agents only.',
           options: { public: 'Public', internal: 'Internal' },
         },
         language: {
@@ -53,8 +53,8 @@ export const en: TranslationData = {
         related_to_case: { label: 'Source Case', help: 'Case this article was authored from (optional).' },
         published_at: { label: 'Published At' },
         last_reviewed_at: { label: 'Last Reviewed' },
-        helpful_count: { label: 'Helpful', help: 'Recounted from crm_article_feedback — never typed in.' },
-        not_helpful_count: { label: 'Not Helpful', help: 'Recounted from crm_article_feedback — never typed in.' },
+        helpful_count: { label: 'Helpful', help: "Counted from readers' Article Feedback, one vote per reader. Not editable." },
+        not_helpful_count: { label: 'Not Helpful', help: "Counted from readers' Article Feedback, one vote per reader. Not editable." },
       },
       _views: {
         all_articles: { label: 'All Articles' },
