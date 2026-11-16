@@ -25,6 +25,8 @@ import * as forecastSeed from '../src/sales/data/forecast.seed';
 import * as contractSeed from '../src/sales/data/contract.seed';
 // Project Delivery's rate cards and projects (#2316 phase 1a).
 import * as psaSeed from '../src/psa/data/psa.seed';
+// Order to Cash's collection plan, invoices and payments (#2529).
+import * as o2cSeed from '../src/o2c/data/o2c.seed';
 import { hotcrmStack } from './helpers/verify-stack';
 
 /**
@@ -256,6 +258,7 @@ describe('every family module dataset is wired into CrmSeedData (#635 split)', (
     'forecast.seed': forecastSeed,
     'contract.seed': contractSeed,
     'psa.seed': psaSeed,
+    'o2c.seed': o2cSeed,
   };
 
   const isDataset = (value: unknown): value is Dataset =>

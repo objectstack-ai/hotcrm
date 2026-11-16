@@ -1,6 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { defineStack, type ObjectStackDefinition } from '@objectstack/spec';
+import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
 import { O2cApp } from './apps/index.js';
 import { CrmO2cManual } from './books/index.js';
@@ -45,7 +45,16 @@ export const o2cHooks = [billingMilestoneHook, invoiceHook, paymentHook].flat();
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
  * artifact's version.
  */
-export const createHotCrmO2cStack = (): ObjectStackDefinition => defineStack({
+/**
+ * What the composition hands this package: its seed families, cut out of the
+ * artifact's ordered union (`O2cSeedData` in `objectstack.composition.ts`,
+ * #2529).
+ */
+export type HotCrmO2cCollections = Pick<ObjectStackDefinitionInput, 'data'>;
+
+export const createHotCrmO2cStack = (
+  collections: HotCrmO2cCollections = {},
+): ObjectStackDefinition => defineStack({
   manifest: {
     id: 'app.objectstack.hotcrm.o2c',
     name: 'HotCRM Order to Cash',
@@ -102,4 +111,7 @@ export const createHotCrmO2cStack = (): ObjectStackDefinition => defineStack({
   // Its manual (#2315), over `src/o2c/docs/`. See the book's own note.
   books: [CrmO2cManual],
   translations: [O2cTranslations],
+  // The demo collection plan, invoices and payments (#2529), registered by
+  // the package that owns their objects; see `src/o2c/data/o2c.seed.ts`.
+  data: collections.data,
 });

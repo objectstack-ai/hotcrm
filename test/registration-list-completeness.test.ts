@@ -42,6 +42,7 @@ import * as serviceData from '../src/service/data';
 import * as revenueData from '../src/revenue/data';
 import * as marketingData from '../src/marketing/data';
 import * as psaData from '../src/psa/data';
+import * as o2cData from '../src/o2c/data';
 
 /**
  * Registration completeness for the four remaining hand-maintained lists
@@ -253,6 +254,7 @@ const SPECS: Spec[] = [
       revenue: revenueData,
       marketing: marketingData,
       psa: psaData,
+      o2c: o2cData,
     },
     list: CrmSeedDataAllLocales,
     isEntry: isSeed,

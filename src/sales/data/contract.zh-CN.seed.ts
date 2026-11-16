@@ -11,7 +11,7 @@
  */
 import { contracts } from './contract.seed';
 import { forecasts } from './forecast.seed';
-import { zhCNTwin, zhLookup } from './_locale';
+import { zhCNTwin, zhKey, zhLookup } from './_locale';
 import { zhAccountName, zhContactEmail, zhContactName, zhOpportunityName } from './sales.zh-CN.seed';
 
 const CONTRACTS_ZH: Record<string, Record<string, unknown>> = {
@@ -20,6 +20,9 @@ const CONTRACTS_ZH: Record<string, Record<string, unknown>> = {
   'Initial service agreement, pending renewal discussion.': { description: '首份服务协议，待续约洽谈。' },
   'Healthcare partnership agreement, currently under legal review.': { description: '医疗合作协议，目前在法务审核中。' },
 };
+
+/** A contract's Chinese seed identity, from its English one: what an O2C row's `crm_contract` names (#2529). */
+export const zhContractDescription = zhKey('contract', CONTRACTS_ZH, 'description');
 
 const SIGNERS: Record<string, string> = {
   'John Smith': 'john.smith@acme.example.com',
