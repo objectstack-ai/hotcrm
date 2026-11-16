@@ -109,6 +109,10 @@ export const en: TranslationData = {
         open_amount: {
           label: 'Open',
         },
+        overpaid_amount: {
+          label: 'Overpaid',
+          help: 'What was paid above the amount. The invoice counts as fully paid; the excess is not set against other invoices.',
+        },
         invoice_file: {
           label: 'Invoice File',
         },

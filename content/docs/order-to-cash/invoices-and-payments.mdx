@@ -21,10 +21,13 @@ The **Accounts Receivable** position enters and imports them on every contract. 
 | **Amount** | As issued, tax included |
 | **Status** | **Issued**, or **Cancelled** |
 | **Paid** | The total of the payments made against this invoice |
-| **Open** | **Amount** minus **Paid**; nothing for a cancelled invoice |
+| **Open** | **Amount** minus **Paid**, never below zero; nothing for a cancelled invoice |
+| **Overpaid** | What was paid above **Amount**, if anything (see below) |
 | **Invoice File** | The invoice document, if you attach one |
 
 **The due date.** Leave **Due Date** empty and it is set when you save: the **Issue Date** plus the contract's **Payment Terms** (Net 15, 30, 60 or 90 days; Due on Receipt is the issue date itself). Enter a date and it is kept as entered.
+
+**Overpayments.** A payment that takes **Paid** above **Amount** is accepted, typed or imported, because the cash was received. The invoice then counts as fully paid: **Open** reads zero and the excess shows in **Overpaid**. The excess is not set against the customer's other invoices, and the contract's and the account's **Receivable Balance** never go below zero because of it.
 
 **Cancelled invoices.** An invoice cancelled or fully credited at the source is set to **Cancelled** here. It then leaves every figure: its plan step stops counting it as invoiced, and it is open for nothing.
 

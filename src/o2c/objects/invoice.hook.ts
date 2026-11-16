@@ -8,24 +8,26 @@ import { createO2cRowStamp } from './_row-stamp';
 const invoiceRowStamp: Hook = createO2cRowStamp('crm_invoice', 'invoice_row_stamp');
 
 /**
- * An invoice's own two derived figures, on every save:
+ * An invoice's own derived figures, on every save:
  *
  *   - `due_date`, when it is empty: the issue date plus the contract's Payment
  *     Terms (`payment_terms` picklist: Net 15/30/60/90 days, Due on Receipt the
  *     same day). Finance may always write a due date outright; the hook only
  *     fills a gap.
- *   - `open_amount` = amount − paid, stored because the Overdue Invoices view
- *     filters on it (see the field). `paid_amount` is a summary the engine
- *     recomputes by an UPDATE of this invoice when a payment is written, so
- *     that update passes through here too and the open amount follows the
- *     payment. A cancelled invoice is open for nothing.
+ *   - `open_amount` = amount − paid, never below 0, stored because the Overdue
+ *     Invoices view filters on it (see the field), and `overpaid_amount` = paid
+ *     − amount when the payments exceed the invoice, else 0 (#2513).
+ *     `paid_amount` is a summary the engine recomputes by an UPDATE of this
+ *     invoice when a payment is written, so that update passes through here
+ *     too and both figures follow the payment. A cancelled invoice is open
+ *     for nothing and overpaid by nothing.
  */
 const invoiceFigures: Hook = {
   name: 'invoice_figures',
   object: 'crm_invoice',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
-  description: 'Fill an empty Due Date from the contract\'s payment terms, and keep Open = Amount − Paid.',
+  description: 'Fill an empty Due Date from the contract\'s payment terms, and keep Open = Amount − Paid (never below 0) and Overpaid = the excess.',
   handler: async (ctx: HookContext) => {
     function refId(value: unknown): string {
       if (typeof value === 'string') return value;
@@ -60,10 +62,14 @@ const invoiceFigures: Hook = {
       }
     }
 
-    // Open amount — only when a figure it reads is part of this write.
+    // Open and Overpaid — only when a figure they read is part of this write.
+    // Payments above the amount are allowed (#2513): the invoice is then fully
+    // paid, Open floors at 0 and the excess is Overpaid, so no receivable that
+    // sums Open goes negative. A cancelled invoice leaves every figure.
     if ('amount' in input || 'paid_amount' in input || 'status' in input || ctx.event === 'beforeInsert') {
-      const open = pick('status') === 'cancelled' ? 0 : num(pick('amount')) - num(pick('paid_amount'));
-      input.open_amount = Math.round(open * 100) / 100;
+      const diff = pick('status') === 'cancelled' ? 0 : Math.round((num(pick('amount')) - num(pick('paid_amount'))) * 100) / 100;
+      input.open_amount = diff > 0 ? diff : 0;
+      input.overpaid_amount = diff < 0 ? -diff : 0;
     }
   },
 };
