@@ -231,8 +231,9 @@ const timeEntryCosting: Hook = {
  * Cancelled project). Every read is keyed to the person and the project
  * (rule 10).
  *
- * Not one unit with the line on 18.5.0: a timesheet created here stays when
- * the line is then refused (a declared validation, say Hours over 24). It is
+ * Not one unit with the line on 18.5.0 (objectstack#34412): a timesheet
+ * created here stays when the line is then refused (a declared validation,
+ * say Hours over 24). It is
  * an empty draft for that project and week, the one the next line uses. A
  * person not staffed on the project is refused before anything is created.
  */
@@ -301,9 +302,13 @@ const timeEntryTimesheet: Hook = {
       const current = currentId
         ? await api.object('crm_timesheet').findOne({
           where: { id: currentId },
-          fields: ['id', 'owner_id', 'crm_project', 'period_start', 'period_end'],
+          fields: ['id', 'owner_id', 'crm_project', 'period_start', 'period_end', 'status'],
         })
         : null;
+      // A line of a submitted or approved timesheet does not move on a
+      // person's write: `time_entry_costing` refuses it, and a timesheet made
+      // here first would stay behind (objectstack#34412).
+      if (ctx.user?.id && (current?.status === 'submitted' || current?.status === 'approved')) return;
       if (!('crm_project' in input)) projectId = refId(previous.crm_project) || refId(current?.crm_project);
       if (!('entry_date' in input)) day = typeof previous.entry_date === 'string' ? previous.entry_date.slice(0, 10) : '';
       if (!projectId || !day) return;
@@ -332,7 +337,8 @@ const timeEntryTimesheet: Hook = {
     // Only for a person staffed on the project. `time_entry_costing` refuses
     // the line anyway, but a timesheet created here would stay: on 18.5.0 a
     // write a hook makes before the line is refused is not undone (no
-    // transaction around a single write), so the check comes first.
+    // transaction around a single write, objectstack#34412), so the check
+    // comes first.
     const staffing = await api.object('crm_project_member').find({
       where: { crm_project: projectId, person: owner },
       fields: ['id'],

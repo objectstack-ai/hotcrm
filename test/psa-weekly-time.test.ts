@@ -147,8 +147,8 @@ describe('time_entry_timesheet: a line finds or creates its timesheet', () => {
 
   it('on 18.5.0 a line refused after its timesheet was made leaves that timesheet, empty, for the next line', async () => {
     // The platform runs one write without a transaction, so what a hook wrote
-    // before the refusal stays (objectql's own refusal text says so). Pinned
-    // so the day it becomes one unit is noticed.
+    // before the refusal stays (objectstack#34412: the unit that aborts covers
+    // only the after* hooks). Pinned so the day it becomes one unit is noticed.
     await expect(insert('crm_time_entry', { crm_project: projects.beta.id, entry_date: '2026-05-04', hours: 30 }, consultant.token))
       .rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
     const [left] = (await sheetsOf(consultant, projects.beta.id)).filter((s) => day(s.period_start) === '2026-05-04');
@@ -215,11 +215,14 @@ describe('time_entry_costing: the line follows its timesheet', () => {
   it('a line does not leave a submitted timesheet', async () => {
     const line = await insert('crm_time_entry', { crm_project: projects.beta.id, entry_date: '2026-07-06', hours: 2 }, consultant.token);
     await update('crm_timesheet', { id: line.crm_timesheet, status: 'submitted' }, consultant.token);
+    const before = (await sheetsOf(consultant, projects.beta.id)).length + (await sheetsOf(consultant, projects.alpha.id)).length;
     await expect(update('crm_time_entry', { id: line.id, entry_date: '2026-07-14' }, consultant.token))
       .rejects.toMatchObject({ code: 'RECORD_LOCKED' });
     await expect(update('crm_time_entry', { id: line.id, crm_project: projects.alpha.id }, consultant.token))
       .rejects.toMatchObject({ code: 'RECORD_LOCKED' });
     expect((await row('crm_time_entry', line.id)).crm_timesheet).toBe(line.crm_timesheet);
+    const after = (await sheetsOf(consultant, projects.beta.id)).length + (await sheetsOf(consultant, projects.alpha.id)).length;
+    expect(after, 'no timesheet is made for a move that is refused').toBe(before);
   });
 });
 
