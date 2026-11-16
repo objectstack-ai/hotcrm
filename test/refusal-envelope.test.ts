@@ -169,11 +169,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // Cancelled project; 57 until #2503 added `quote_total_rollup`'s second
     // look at a quote settled after the line freeze let a line in; 58 until
     // #2545 added the project task's three tree and predecessor refusals and
-    // the time entry's refusal of another project's task.
+    // the time entry's refusal of another project's task; 62 until #2546
+    // added the weekly entry's missing project and not-staffed refusals and
+    // the time entry's refusal of another project than its timesheet's.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(62);
+    expect(sites).toHaveLength(65);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

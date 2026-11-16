@@ -79,6 +79,17 @@ export const zhCN: TranslationData = {
         },
       },
     },
+    time_entry_timesheet: {
+      refusals: {
+        VALIDATION_FAILED: { message: '请选择这些工时所属的项目。' },
+        FORBIDDEN: {
+          message: '只有配置在项目上的人员才能记工时。请让项目经理把你加入项目。',
+          reasons: {
+            named: { message: '只有配置在项目“{{project}}”上的人员才能记工时。请让项目经理把你加入项目。' },
+          },
+        },
+      },
+    },
     time_entry_costing: {
       refusals: {
         RECORD_LOCKED: { message: '这张工时单已提交，工时不能再修改。请把它退回草稿后再更正。' },
@@ -86,6 +97,7 @@ export const zhCN: TranslationData = {
           message: '日期 {{day}} 不在这张工时单的周期内（{{from}} – {{to}}）。',
           reasons: {
             task: { message: '任务必须是这张工时单所属项目的任务。' },
+            project: { message: '项目必须是这张工时单的项目。' },
           },
         },
         FORBIDDEN: {
@@ -399,6 +411,12 @@ export const zhCN: TranslationData = {
       _views: {
         all_timesheets: { label: '全部工时单' },
         my_timesheets: { label: '我的工时单' },
+        my_week_timesheets: {
+          label: '本周工时单',
+          bulkActions: {
+            submit_week: { label: '提交', confirmText: '提交 {{count}} 张工时单审批？每张都会交给它所属项目的项目经理。' },
+          },
+        },
         timesheets_to_approve: { label: '待我审批的工时单' },
       },
       _sections: {
@@ -409,16 +427,26 @@ export const zhCN: TranslationData = {
         timesheet_period: { message: '期间结束不能早于期间开始，一张工时单最多覆盖 31 天。' },
         timesheet_status_progression: { message: '不允许这样更改状态。工时单按 草稿 → 已提交 → 已批准或已驳回 推进；被驳回的工时单退回草稿修改。' },
       },
+      _actions: {
+        submit_timesheet: { label: '提交', successMessage: '工时单 {{ record.name }} 已提交审批。' },
+      },
     },
     crm_time_entry: {
       label: '工时明细',
       pluralLabel: '工时明细',
       description: '工时单中某一天的工时，以及对应的成本',
       fields: {
-        crm_timesheet: { label: '工时单' },
+        crm_project: {
+          label: '项目',
+          help: '这些工时属于哪个项目。新录一行时，会自动找到或新建这个项目这一周的工时单。',
+        },
+        crm_timesheet: {
+          label: '工时单',
+          help: '按项目和日期自动填写。只有要记到另一个期间的工时单时才需要手选。',
+        },
         entry_date: {
           label: '日期',
-          help: '工时单期间内的某一天。',
+          help: '干活的那一天。',
         },
         hours: { label: '工时' },
         is_billable: { label: '可计费' },
@@ -434,6 +462,8 @@ export const zhCN: TranslationData = {
       },
       _views: {
         all_time_entries: { label: '全部工时明细' },
+        my_week_time: { label: '我的本周' },
+        my_time_entries: { label: '我的工时' },
       },
       _sections: {
         basic: { label: '工时明细' },
@@ -542,6 +572,8 @@ export const zhCN: TranslationData = {
         nav_project_plan: { label: '项目计划' },
         nav_my_project_tasks: { label: '我的项目任务' },
         group_time_expenses: { label: '工时与费用' },
+        nav_my_week: { label: '我的本周' },
+        nav_my_week_timesheets: { label: '提交本周' },
         nav_my_timesheets: { label: '我的工时单' },
         nav_my_expenses: { label: '我的费用' },
         nav_timesheets_to_approve: { label: '待我审批的工时单' },

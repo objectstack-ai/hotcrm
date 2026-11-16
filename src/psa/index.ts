@@ -2,6 +2,7 @@
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
+import { SubmitTimesheetAction } from './actions/index.js';
 import { PsaApp } from './apps/index.js';
 import { CrmPsaManual } from './books/index.js';
 import { ProjectsOverviewDashboard } from './dashboards/index.js';
@@ -119,6 +120,7 @@ export const createHotCrmPsaStack = (
   views: [ProjectViews, ProjectMemberViews, ProjectTaskViews, RateCardViews, TimesheetViews, TimeEntryViews, ExpenseViews],
   // The project's record page: the synthesized layout plus its task Gantt.
   pages: [ProjectDetailPage],
+  actions: [SubmitTimesheetAction],
   sharingRules: psaSharingRules,
   flows: psaFlows,
   emailTemplates: PsaEmailTemplates,

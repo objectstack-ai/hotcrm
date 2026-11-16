@@ -50,6 +50,11 @@ cost too.
 - **Hours stay inside their timesheet.** An entry dated outside the
   timesheet's period is refused, and once the timesheet is submitted its
   entries can no longer be changed.
+- **A week is entered line by line.** In **My Week**, an entry with its
+  Project and Date and no Timesheet goes into your timesheet on that project
+  whose period holds the date, or into a new draft one for that week, Monday
+  to Sunday. Each project keeps its own timesheet and its own approver;
+  **Submit This Week** submits them all at once, one by one.
 - **Team members do not see cost.** Cost rates, entry cost and the project's
   cost figures are hidden from people staffed as team members; the bill side
   is shown.

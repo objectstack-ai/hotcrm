@@ -310,6 +310,12 @@ export const en: TranslationData = {
       _views: {
         all_timesheets: { label: 'All Timesheets' },
         my_timesheets: { label: 'My Timesheets' },
+        my_week_timesheets: {
+          label: 'This Week\'s Timesheets',
+          bulkActions: {
+            submit_week: { label: 'Submit', confirmText: 'Submit {{count}} timesheet(s) for approval? Each goes to its project manager.' },
+          },
+        },
         timesheets_to_approve: { label: 'Timesheets to Approve' },
       },
       _sections: {
@@ -320,16 +326,26 @@ export const en: TranslationData = {
         timesheet_period: { message: 'Period End must be on or after Period Start, and a timesheet covers at most 31 days.' },
         timesheet_status_progression: { message: 'This status change is not allowed. A timesheet moves Draft → Submitted → Approved or Rejected; a rejected timesheet goes back to Draft to be corrected.' },
       },
+      _actions: {
+        submit_timesheet: { label: 'Submit', successMessage: 'Timesheet {{ record.name }} submitted for approval.' },
+      },
     },
     crm_time_entry: {
       label: 'Time Entry',
       pluralLabel: 'Time Entries',
       description: 'A day\'s hours in a timesheet, and the cost they stand for',
       fields: {
-        crm_timesheet: { label: 'Timesheet' },
+        crm_project: {
+          label: 'Project',
+          help: 'The project the hours are for. On a new line, the timesheet for this project and week is found or created for you.',
+        },
+        crm_timesheet: {
+          label: 'Timesheet',
+          help: 'Filled in for you from the project and the date. Pick one only to book onto a timesheet with another period.',
+        },
         entry_date: {
           label: 'Date',
-          help: 'A day inside the timesheet\'s period.',
+          help: 'The day the hours were worked.',
         },
         hours: { label: 'Hours' },
         is_billable: { label: 'Billable' },
@@ -345,6 +361,8 @@ export const en: TranslationData = {
       },
       _views: {
         all_time_entries: { label: 'All Time Entries' },
+        my_week_time: { label: 'My Week' },
+        my_time_entries: { label: 'My Time' },
       },
       _sections: {
         basic: { label: 'Time Entry' },
@@ -454,6 +472,8 @@ export const en: TranslationData = {
         nav_project_plan: { label: 'Project Plan' },
         nav_my_project_tasks: { label: 'My Project Tasks' },
         group_time_expenses: { label: 'Time and Expenses' },
+        nav_my_week: { label: 'My Week' },
+        nav_my_week_timesheets: { label: 'Submit This Week' },
         nav_my_timesheets: { label: 'My Timesheets' },
         nav_my_expenses: { label: 'My Expenses' },
         nav_timesheets_to_approve: { label: 'Timesheets to Approve' },

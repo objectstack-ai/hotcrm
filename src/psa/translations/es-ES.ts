@@ -79,6 +79,17 @@ export const esES: TranslationData = {
         },
       },
     },
+    time_entry_timesheet: {
+      refusals: {
+        VALIDATION_FAILED: { message: 'Elija el proyecto al que corresponden las horas.' },
+        FORBIDDEN: {
+          message: 'Solo pueden registrar horas las personas asignadas al proyecto. Pida a su jefe de proyecto que le añada.',
+          reasons: {
+            named: { message: 'Solo pueden registrar horas las personas asignadas al proyecto "{{project}}". Pida a su jefe de proyecto que le añada.' },
+          },
+        },
+      },
+    },
     time_entry_costing: {
       refusals: {
         RECORD_LOCKED: { message: 'Esta hoja de horas está enviada, así que sus horas no pueden cambiar. Devuélvala a Borrador para corregirlas.' },
@@ -86,6 +97,7 @@ export const esES: TranslationData = {
           message: 'La fecha {{day}} está fuera del periodo de esta hoja de horas ({{from}} – {{to}}).',
           reasons: {
             task: { message: 'La tarea debe ser una de las tareas del proyecto de esta hoja de horas.' },
+            project: { message: 'El proyecto debe ser el del parte de horas.' },
           },
         },
         FORBIDDEN: {
@@ -399,6 +411,12 @@ export const esES: TranslationData = {
       _views: {
         all_timesheets: { label: 'Todos los partes de horas' },
         my_timesheets: { label: 'Mis partes de horas' },
+        my_week_timesheets: {
+          label: 'Partes de horas de esta semana',
+          bulkActions: {
+            submit_week: { label: 'Enviar', confirmText: '¿Enviar {{count}} parte(s) de horas a aprobación? Cada uno va a su jefe de proyecto.' },
+          },
+        },
         timesheets_to_approve: { label: 'Partes de horas por aprobar' },
       },
       _sections: {
@@ -409,16 +427,26 @@ export const esES: TranslationData = {
         timesheet_period: { message: 'El fin del periodo debe ser igual o posterior al inicio, y un parte cubre como máximo 31 días.' },
         timesheet_status_progression: { message: 'Este cambio de estado no está permitido. Un parte avanza Borrador → Enviado → Aprobado o Rechazado; un parte rechazado vuelve a Borrador para corregirlo.' },
       },
+      _actions: {
+        submit_timesheet: { label: 'Enviar', successMessage: 'Parte de horas {{ record.name }} enviado a aprobación.' },
+      },
     },
     crm_time_entry: {
       label: 'Registro de horas',
       pluralLabel: 'Registros de horas',
       description: 'Las horas de un día en un parte, y el coste que representan',
       fields: {
-        crm_timesheet: { label: 'Parte de horas' },
+        crm_project: {
+          label: 'Proyecto',
+          help: 'El proyecto al que corresponden las horas. En una línea nueva, el parte de horas de este proyecto y semana se busca o se crea por usted.',
+        },
+        crm_timesheet: {
+          label: 'Parte de horas',
+          help: 'Se rellena a partir del proyecto y la fecha. Elija uno solo para registrar en un parte de horas de otro periodo.',
+        },
         entry_date: {
           label: 'Fecha',
-          help: 'Un día dentro del periodo del parte.',
+          help: 'El día en que se trabajaron las horas.',
         },
         hours: { label: 'Horas' },
         is_billable: { label: 'Facturable' },
@@ -434,6 +462,8 @@ export const esES: TranslationData = {
       },
       _views: {
         all_time_entries: { label: 'Todos los registros de horas' },
+        my_week_time: { label: 'Mi semana' },
+        my_time_entries: { label: 'Mis horas' },
       },
       _sections: {
         basic: { label: 'Registro de horas' },
@@ -542,6 +572,8 @@ export const esES: TranslationData = {
         nav_project_plan: { label: 'Plan del proyecto' },
         nav_my_project_tasks: { label: 'Mis tareas de proyecto' },
         group_time_expenses: { label: 'Horas y gastos' },
+        nav_my_week: { label: 'Mi semana' },
+        nav_my_week_timesheets: { label: 'Enviar esta semana' },
         nav_my_timesheets: { label: 'Mis partes de horas' },
         nav_my_expenses: { label: 'Mis gastos' },
         nav_timesheets_to_approve: { label: 'Partes de horas por aprobar' },

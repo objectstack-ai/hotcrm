@@ -74,6 +74,8 @@ export const PsaApp = App.create({
       icon: 'clock',
       expanded: true,
       children: [
+        { id: 'nav_my_week', type: 'object', objectName: 'crm_time_entry', viewName: 'my_week_time', label: 'My Week', icon: 'calendar-days' },
+        { id: 'nav_my_week_timesheets', type: 'object', objectName: 'crm_timesheet', viewName: 'my_week_timesheets', label: 'Submit This Week', icon: 'send' },
         { id: 'nav_my_timesheets', type: 'object', objectName: 'crm_timesheet', viewName: 'my_timesheets', label: 'My Timesheets', icon: 'clock' },
         { id: 'nav_my_expenses', type: 'object', objectName: 'crm_expense', viewName: 'my_expenses', label: 'My Expenses', icon: 'receipt' },
         { id: 'nav_timesheets_to_approve', type: 'object', objectName: 'crm_timesheet', viewName: 'timesheets_to_approve', label: 'Timesheets to Approve', icon: 'clipboard-check' },
