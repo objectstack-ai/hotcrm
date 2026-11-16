@@ -10,7 +10,7 @@ import { P } from '@objectstack/spec';
  * and ground the assistant's case-resolution skills.
  *
  * Lifecycle: draft → in_review → published → archived.
- * Audience:  public (customer portal visible) | internal (agent-only).
+ * Audience:  public (suitable for customers; no customer portal serves it, #2528) | internal (agent-only).
  */
 export const KnowledgeArticle = ObjectSchema.create({
   name: 'crm_knowledge_article',
@@ -215,7 +215,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       group: 'basic',
-      description: 'Public articles are visible in the customer portal; internal articles are agent-only.',
+      description: 'Public marks an article as suitable for customers; no customer portal serves it. Internal articles are for agents only.',
       options: [
         { label: 'Public',   value: 'public', default: true, color: '#0EA5E9' },
         { label: 'Internal', value: 'internal', color: '#7C3AED' },
@@ -291,7 +291,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       group: 'metrics',
       readonly: true,
       defaultValue: 0,
-      description: 'Recounted from crm_article_feedback — never typed in.',
+      description: "Counted from readers' Article Feedback, one vote per reader. Not editable.",
     }),
 
     not_helpful_count: Field.number({
@@ -299,7 +299,7 @@ export const KnowledgeArticle = ObjectSchema.create({
       group: 'metrics',
       readonly: true,
       defaultValue: 0,
-      description: 'Recounted from crm_article_feedback — never typed in.',
+      description: "Counted from readers' Article Feedback, one vote per reader. Not editable.",
     }),
   },
 

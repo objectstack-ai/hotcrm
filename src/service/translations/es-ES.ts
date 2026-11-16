@@ -50,7 +50,7 @@ export const esES: TranslationData = {
         },
         audience: {
           label: 'Audiencia',
-          help: 'Los artículos públicos son visibles en el portal de clientes; los internos solo los ven los agentes.',
+          help: 'Público marca un artículo como apto para clientes; ningún portal de clientes lo publica. Los internos son solo para agentes.',
           options: { public: 'Público', internal: 'Interno' },
         },
         language: {
@@ -61,8 +61,8 @@ export const esES: TranslationData = {
         related_to_case: { label: 'Caso de origen', help: 'Caso a partir del cual se redactó este artículo (opcional).' },
         published_at: { label: 'Publicado el' },
         last_reviewed_at: { label: 'Última revisión' },
-        helpful_count: { label: 'Útil', help: 'Recontado desde crm_article_feedback — nunca se escribe a mano.' },
-        not_helpful_count: { label: 'No útil', help: 'Recontado desde crm_article_feedback — nunca se escribe a mano.' },
+        helpful_count: { label: 'Útil', help: 'Contado a partir de los comentarios de artículo de los lectores, un voto por lector. No editable.' },
+        not_helpful_count: { label: 'No útil', help: 'Contado a partir de los comentarios de artículo de los lectores, un voto por lector. No editable.' },
       },
       _views: {
         all_articles: { label: 'Todos los artículos' },
