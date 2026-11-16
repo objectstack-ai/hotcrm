@@ -32,3 +32,11 @@ export const PROJECT_FINANCE_REVIEW_BUDGET = 100_000;
  * sign-off, after the project manager's.
  */
 export const EXPENSE_FINANCE_REVIEW_AMOUNT = 2_000;
+
+/**
+ * How far a budget top-up may raise the baseline before a finance controller
+ * signs it off too, after the project director or PMO (#2547): a new version
+ * whose total is this percentage or more above the baseline's total. A top-up
+ * of exactly 10 % goes to finance.
+ */
+export const BUDGET_TOP_UP_FINANCE_REVIEW_PERCENT = 10;

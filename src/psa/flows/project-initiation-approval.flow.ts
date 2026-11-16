@@ -9,10 +9,13 @@ type Flow = Automation.Flow;
  * Project initiation approval, 立项审批 (#2316 phase 1b).
  *
  * A project manager sends a Draft project for approval by setting In
- * Approval (the project's hook asks for an Approved Budget first). The
+ * Approval (the project's hook asks for a budget ready to approve first, and
+ * version 1 of the budget rides along: hotcrm#2547). The
  * delivery leadership approves it from the Inbox: any Project Director or
- * PMO holder, first response wins. A project whose Approved Budget is
- * PROJECT_FINANCE_REVIEW_BUDGET or more then goes to a Finance Controller.
+ * PMO holder, first response wins. A project whose budget is
+ * PROJECT_FINANCE_REVIEW_BUDGET or more then goes to a Finance Controller:
+ * the total of the version riding along, or, with none, the Approved Budget
+ * it already has.
  * Approved by every tier, the project is Approved and its manager makes it
  * Active; rejected, it is Rejected and goes back to Draft for revision;
  * recalled, it is Draft again.
@@ -74,6 +77,17 @@ export const ProjectInitiationApprovalFlow: Flow = {
       label: 'Get Project',
       config: { objectName: 'crm_project', filter: { id: cel`record.id` }, outputVariable: 'projectRecord' },
     },
+    {
+      // The budget version riding on this approval (hotcrm#2547).
+      id: 'get_budget',
+      type: 'get_record',
+      label: 'Get Budget Version',
+      config: {
+        objectName: 'crm_project_budget',
+        filter: { crm_project: cel`record.id`, status: 'in_approval', with_initiation: true },
+        outputVariable: 'budgetRecord',
+      },
+    },
     { id: 'check_budget', type: 'decision', label: `Budget ${PROJECT_FINANCE_REVIEW_BUDGET} or More?` },
     {
       id: 'finance_review',
@@ -117,18 +131,23 @@ export const ProjectInitiationApprovalFlow: Flow = {
       id: 'e_leadership_recall', source: 'leadership_review', target: 'back_to_draft', type: 'conditional', label: 'reject',
       condition: P`has(vars.leadership_review) && has(vars.leadership_review.decision) && vars.leadership_review.decision == "recall"`,
     },
-    { id: 'e_get', source: 'get_project', target: 'check_budget', type: 'default' },
+    { id: 'e_get', source: 'get_project', target: 'get_budget', type: 'default' },
+    { id: 'e_get_budget', source: 'get_budget', target: 'check_budget', type: 'default' },
     {
       id: 'e_large', source: 'check_budget', target: 'finance_review', type: 'conditional',
       label: `${PROJECT_FINANCE_REVIEW_BUDGET} or more`,
-      condition: P`has(vars.projectRecord) && has(vars.projectRecord.approved_budget) && vars.projectRecord.approved_budget != null
-        && vars.projectRecord.approved_budget >= ${PROJECT_FINANCE_REVIEW_BUDGET}`,
+      condition: P`(has(vars.budgetRecord) && vars.budgetRecord != null && has(vars.budgetRecord.total_cost) && vars.budgetRecord.total_cost != null
+          ? vars.budgetRecord.total_cost
+          : (has(vars.projectRecord) && has(vars.projectRecord.approved_budget) && vars.projectRecord.approved_budget != null ? vars.projectRecord.approved_budget : 0))
+        >= ${PROJECT_FINANCE_REVIEW_BUDGET}`,
     },
     {
       id: 'e_small', source: 'check_budget', target: 'mark_approved', type: 'conditional',
       label: `Under ${PROJECT_FINANCE_REVIEW_BUDGET}`,
-      condition: P`!has(vars.projectRecord) || !has(vars.projectRecord.approved_budget) || vars.projectRecord.approved_budget == null
-        || vars.projectRecord.approved_budget < ${PROJECT_FINANCE_REVIEW_BUDGET}`,
+      condition: P`(has(vars.budgetRecord) && vars.budgetRecord != null && has(vars.budgetRecord.total_cost) && vars.budgetRecord.total_cost != null
+          ? vars.budgetRecord.total_cost
+          : (has(vars.projectRecord) && has(vars.projectRecord.approved_budget) && vars.projectRecord.approved_budget != null ? vars.projectRecord.approved_budget : 0))
+        < ${PROJECT_FINANCE_REVIEW_BUDGET}`,
     },
     { id: 'e_finance_approve', source: 'finance_review', target: 'mark_approved', type: 'default', label: 'approve' },
     {

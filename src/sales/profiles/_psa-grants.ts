@@ -10,7 +10,10 @@
  * `crm_project` because the project's and the timesheet's summaries sum them, and a set that reads a
  * summary must read its source (`os lint` `security-rollup-source-unreadable`).
  * Both are `private`, so the grant opens a member's own rows and the ones
- * shared to them, nothing more.
+ * shared to them, nothing more. `crm_project_budget` and
+ * `crm_project_budget_line` are read for the same reason since hotcrm#2547:
+ * the project's Approved Budget sums the baseline version, which sums its
+ * lines. Both are `controlled_by_parent`, so they open with the project.
  */
 
 const READ_OWN = { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const };
@@ -24,6 +27,8 @@ export const PSA_READ_OWN_OBJECTS = {
   crm_timesheet: READ_OWN,
   crm_time_entry: READ_CHILD,
   crm_expense: READ_OWN,
+  crm_project_budget: READ_CHILD,
+  crm_project_budget_line: READ_CHILD,
 };
 
 /** A sales manager: every project, and every row behind its figures. */
@@ -32,4 +37,6 @@ export const PSA_READ_ALL_OBJECTS = {
   crm_timesheet: READ_ALL,
   crm_time_entry: READ_CHILD,
   crm_expense: READ_ALL,
+  crm_project_budget: READ_CHILD,
+  crm_project_budget_line: READ_CHILD,
 };

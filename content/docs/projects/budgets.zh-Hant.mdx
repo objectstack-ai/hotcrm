@@ -1,0 +1,75 @@
+---
+title: 項目預算
+description: 按版本和明細編製項目預算，第 1 版隨立項一起審批，用追加預算調整，以及 Approved Budget 如何跟隨基線變化。
+---
+
+# 項目預算
+
+項目的預算在 **Project Budgets**（項目預算）中編製：一個個版本，每個版本有自己的 **Budget Lines**（預算明細）。目前生效的已批准版本是項目的**基線**，項目的 **Approved Budget**（批准預算）就是它的合計。Approved Budget 不能直接填寫，只有新版本獲批時才會變化。
+
+版本出現在項目的 **Related** 分頁中；在 Project Delivery 應用的 **Budgets** 下可以看到所有項目的版本，**All Budget Versions** 旁邊還有 **Baselines** 和 **Open Versions** 兩個清單。
+
+## 誰編製，誰審批
+
+| 誰 | 能做什麼 |
+| --- | --- |
+| 項目經理、項目負責人、管理員 | 新建版本、編製明細並提交審批 |
+| Project Director 和 PMO | 在 **Inbox** 中批准或駁回版本 |
+| Finance Controller | 查看所有版本；和項目經理一起編製；批准或駁回增幅 10% 或以上的追加預算 |
+| 被安排在項目上的人 | 無權限：預算屬於成本，對他們隱藏，項目的 Approved Budget 也一樣 |
+
+## 一個版本
+
+| 欄位 | 含義 |
+| --- | --- |
+| **Budget** | 名稱，儲存時自動填寫：項目名稱加版本號，例如 *Stark Medical Pilot Delivery · v2* |
+| **Version** | 按建立順序編號為 1、2、3…… |
+| **Status** | Draft、In Approval、Approved、Rejected 或 Superseded |
+| **Baseline** | Approved Budget 所取自的那個已批准版本上會勾選 |
+| **Approved With the Project** | 第 1 版隨立項審批期間會勾選 |
+| **Reason** | 為什麼需要這個版本。提交追加預算時必填 |
+| **Total Cost**、**Labor Cost**、**Labor Hours** | 由明細彙總 |
+
+一個項目**同一時間只能有一個未結版本**：已有 Draft、In Approval 或 Rejected 的版本時，不能再新建。請先提交或刪除它。只能刪除未結版本；已批准或已被取代的版本是項目的歷史紀錄。
+
+## 一條明細
+
+| 欄位 | 含義 |
+| --- | --- |
+| **Category** | Labor、Subcontracted Services、Third-Party Goods、Expenses 或 Other |
+| **Description** | 這項成本是什麼 |
+| **Month** | 成本發生的月份。填寫任何一天都會儲存為該月的第一天 |
+| **Rate Card** | 人工明細：工時按哪個級別計劃 |
+| **Hours** | 人工明細：計劃的工時 |
+| **Quantity** | 其他明細：多少個單位 |
+| **Unit Cost** | 人工按每小時，其他按每單位。有 Rate Card 但沒填 Unit Cost 的人工明細，取該 Rate Card 每小時的成本費率（按天計價的 Rate Card 按每天八小時換算） |
+| **Amount** | 人工為 Hours × Unit Cost，其他為 Quantity × Unit Cost。不能直接填寫 |
+
+只有版本處於 **Draft** 或 **Rejected** 時，明細才能修改。提交後明細即被鎖定；如需調整，請新建一個版本。
+
+## 第 1 版隨項目一起審批 [#version-1]
+
+新項目的第一版預算和項目一起審批：
+
+1. 項目處於 **Draft** 時，項目經理新增第 1 版及其明細。
+2. 把項目設為 **In Approval** 時，第 1 版隨之提交。如果沒有第 1 版，或版本還不完整（沒有明細、合計為零、人工明細沒有 Rate Card 或 Hours、其他明細沒有 Quantity），項目會被拒絕提交。
+3. 立項審批同時決定兩者。第 1 版合計達到 **100,000** 或以上的項目，還要經過 Finance Controller 審批。
+4. **Approved**：第 1 版變為已批准並成為基線，項目的 Approved Budget 就是它的合計。**Rejected** 或撤回：第 1 版退回 Draft，修改後隨項目再次提交。
+
+項目獲批之前，第 1 版不能單獨提交審批。
+
+## 追加預算 [#top-up]
+
+項目需要更多或不同的預算時，項目經理新建一個版本：
+
+1. 在項目的 **Related** 分頁中新建版本。它從 Draft 開始，編號接在上一個版本之後。
+2. 按完整的新預算編製明細，而不是只填差額：獲批後，它的合計就是新的 Approved Budget。
+3. 填寫 **Reason**，再把 **Status** 設為 **In Approval**。
+4. 任何一位 **Project Director** 或 **PMO** 在 Inbox 中審批，第一個做出決定的人代表所有人決定。使 Approved Budget 增加 **10%** 或以上的追加預算，還要經過 **Finance Controller** 審批。
+5. **Approved**：該版本成為基線，之前的版本變為 **Superseded**，Approved Budget、**Budget Remaining**、**Budget Used %** 和 **Budget Status** 隨即更新。**Rejected**：基線不變，可以把版本改回 Draft，修改後再次提交。等待期間，項目經理也可以在 Inbox 中撤回。
+
+一個項目最多只有一個基線。
+
+## 預算版本之前的項目
+
+在預算版本之前直接填寫了 Approved Budget 的項目，會保留原來的數字。管理員可以用 `scripts/backfill-project-budget-baseline.ts` 把它轉為第 1 版，以便之後追加預算（見腳本本身的說明）。不加 `--apply` 時只出報告，已有版本的項目不會被改動。

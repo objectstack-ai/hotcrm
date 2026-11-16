@@ -272,6 +272,7 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   forecast_owner_rename: { 'zh-Hans': '预测负责人改名', 'zh-Hant': '預測負責人改名' },
   // Project Delivery (#2316 phase 1b): 立项, the zh-CN pack's word for initiation.
   project_initiation_approval: { 'zh-Hans': '立项审批', 'zh-Hant': '立項審批' },
+  project_budget_approval: { 'zh-Hans': '追加预算审批', 'zh-Hant': '追加預算審批' },
   timesheet_approval: { 'zh-Hans': '工时单审批', 'zh-Hant': '工時單審批' },
   timesheet_approval_on_create: { 'zh-Hans': '工时单审批（新建时）', 'zh-Hant': '工時單審批（新建時）' },
   expense_approval: { 'zh-Hans': '费用审批', 'zh-Hant': '費用審批' },

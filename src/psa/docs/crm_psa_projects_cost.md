@@ -61,9 +61,11 @@ cost too.
 
 ## The figures that move on their own
 
-Only **Planned Revenue** and **Approved Budget** are typed in. Every other
-money figure on a project counts **approved** hours and expenses only: a draft
-or a timesheet waiting for its approver is not cost yet.
+Only **Planned Revenue** is typed in. The **Approved Budget** is the total of
+the project's baseline budget version, and moves only when a version is
+approved. Every other money figure on a project counts **approved** hours and
+expenses only: a draft or a timesheet waiting for its approver is not cost
+yet.
 
 - **Labor Cost** and **Expense Cost** add up the approved hours and expenses.
   **Actual Cost** is the two together.

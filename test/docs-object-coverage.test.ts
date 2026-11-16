@@ -155,6 +155,9 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   crm_project: { page: 'projects/projects-and-staffing' },
   crm_project_member: { page: 'projects/projects-and-staffing' },
   crm_project_task: { page: 'projects/project-plan' },
+  // #2547 — a budget's versions and their lines, one story on one page.
+  crm_project_budget: { page: 'projects/budgets' },
+  crm_project_budget_line: { page: 'projects/budgets' },
   crm_rate_card: { page: 'projects/projects-and-staffing' },
   crm_timesheet: { page: 'projects/time-and-expenses' },
   crm_time_entry: { page: 'projects/time-and-expenses' },

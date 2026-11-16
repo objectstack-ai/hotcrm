@@ -72,8 +72,14 @@ beforeAll(async () => {
   hourly = await insert('crm_rate_card', { name: `Test Consultant ${++k}`, seniority: 'intermediate', unit: 'hour', cost_rate: 50, bill_rate: 120 }, finance.token);
   daily = await insert('crm_rate_card', { name: `Test Architect ${++k}`, seniority: 'lead', unit: 'day', cost_rate: 800, bill_rate: 1600 }, finance.token);
   project = await insert('crm_project', {
-    name: `Test Rollout ${++k}`, crm_account: account.id, kind: 'delivery', planned_revenue: 10000, approved_budget: 5000,
+    name: `Test Rollout ${++k}`, crm_account: account.id, kind: 'delivery', planned_revenue: 10000,
   }, pm.token);
+  // Its approved baseline (hotcrm#2547), loaded as a seed or an import would:
+  // the Approved Budget is the baseline version's total, 5,000.
+  const baseline = await verify.hooks.run('crm_project_budget', 'insert', { crm_project: project.id, status: 'approved' }, { system: true });
+  await verify.hooks.run('crm_project_budget_line', 'insert', {
+    crm_project_budget: baseline.id, category: 'other', description: 'Delivery', quantity: 1, unit_cost: 5000,
+  }, { system: true });
   await insert('crm_project_member', { crm_project: project.id, person: pm.id, responsibility: 'project_manager', rate_card: daily.id }, pm.token);
   await insert('crm_project_member', { crm_project: project.id, person: consultant.id, responsibility: 'consultant', rate_card: hourly.id }, pm.token);
 }, 120_000);
@@ -97,7 +103,7 @@ describe('staffing (project_team_sync)', () => {
     // `project_manager_edit`. With the PM in the Team as well, the team's read
     // replaced that edit (objectstack#33683) and both writes answered 403.
     const theirs = await insert('crm_project', {
-      name: `Test Handover ${++k}`, crm_account: account.id, kind: 'delivery', approved_budget: 1000,
+      name: `Test Handover ${++k}`, crm_account: account.id, kind: 'delivery',
     }, admin);
     await insert('crm_project_member', { crm_project: theirs.id, person: pm.id, responsibility: 'project_manager', rate_card: daily.id }, admin);
     const edit = await verify.apiAs(pm.token, 'PATCH', `/data/crm_project/${theirs.id}`, { description: 'Kick-off held.' });

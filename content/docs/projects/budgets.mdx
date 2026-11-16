@@ -1,0 +1,75 @@
+---
+title: Project Budgets
+description: Planning a project's budget in versions and lines, approving version 1 with the project, raising it with a top-up, and how the Approved Budget follows the baseline.
+---
+
+# Project Budgets
+
+A project's budget is planned in **Project Budgets**: versions, each with its **Budget Lines**. The approved version in force is the project's **baseline**, and the project's **Approved Budget** is its total. Nobody types the Approved Budget: it changes only when a new version is approved.
+
+Versions appear in the project's **Related** tab, and across every project under **Budgets** in the Project Delivery app, with the **Baselines** and **Open Versions** lists beside **All Budget Versions**.
+
+## Who plans and who decides
+
+| Who | What they can do |
+| --- | --- |
+| The project manager, the project's owner, administrators | Make a version, plan its lines and send it for approval |
+| Project Directors and the PMO | Approve or reject a version from the **Inbox** |
+| Finance Controllers | Read every version; plan one with the project manager; approve or reject a top-up of 10 % or more |
+| People staffed on the project | Nothing: a budget is cost, which is hidden from them, and so is the project's Approved Budget |
+
+## A version
+
+| Field | What it means |
+| --- | --- |
+| **Budget** | Its name, filled on save: the project's name and the version, for example *Stark Medical Pilot Delivery · v2* |
+| **Version** | Numbered 1, 2, 3… in the order the versions were made |
+| **Status** | Draft, In Approval, Approved, Rejected or Superseded |
+| **Baseline** | Ticked on the one approved version the Approved Budget is taken from |
+| **Approved With the Project** | Ticked on version 1 while it rides on the project's approval |
+| **Reason** | Why the version is needed. Required to send a top-up |
+| **Total Cost**, **Labor Cost**, **Labor Hours** | Added up from its lines |
+
+A project has **one open version at a time**: a new one is refused while another is Draft, In Approval or Rejected. Send it or delete it first. Only an open version can be deleted; an approved or superseded one is the project's history.
+
+## A line
+
+| Field | What it means |
+| --- | --- |
+| **Category** | Labor, Subcontracted Services, Third-Party Goods, Expenses or Other |
+| **Description** | What the cost is for |
+| **Month** | The month the cost falls in. Any day typed is saved as the first of its month |
+| **Rate Card** | For a labor line: the level the hours are planned at |
+| **Hours** | For a labor line: the hours planned |
+| **Quantity** | For any other line: how many units |
+| **Unit Cost** | Per hour for labor, per unit otherwise. A labor line with a rate card and no unit cost takes the card's cost rate per hour (a day card's over eight hours) |
+| **Amount** | Hours × unit cost for labor, quantity × unit cost otherwise. It cannot be typed |
+
+A version's lines change only while it is **Draft** or **Rejected**. Once it is sent they are locked; plan a change as a new version.
+
+## Version 1 goes with the project [#version-1]
+
+A new project's first budget is approved with the project itself:
+
+1. The project manager adds version 1 and its lines while the project is **Draft**.
+2. Setting the project to **In Approval** sends version 1 with it. The project is refused if it has no version 1, or if the version is not ready: no lines, a total of zero, a labor line with no rate card or no hours, or another line with no quantity.
+3. The project's approval decides both. A project whose version 1 totals **100,000** or more also goes to the Finance Controllers.
+4. **Approved**: version 1 is Approved and becomes the baseline, and the project's Approved Budget is its total. **Rejected** or recalled: version 1 goes back to Draft, to be corrected and sent again with the project.
+
+Version 1 cannot be sent on its own while the project has not been approved.
+
+## A top-up [#top-up]
+
+When a project needs more, or a different, budget, the project manager makes a new version:
+
+1. Add the version from the project's **Related** tab. It starts as Draft, numbered after the last one.
+2. Plan its lines as the whole new budget, not only the difference: its total becomes the Approved Budget once it is approved.
+3. Write the **Reason**, then set **Status** to **In Approval**.
+4. Any **Project Director** or **PMO** holder decides from the Inbox; the first to decide decides for all. A top-up that raises the Approved Budget by **10 %** or more then goes to the **Finance Controllers** as well.
+5. **Approved**: the version becomes the baseline, the one before it is **Superseded**, and the Approved Budget, **Budget Remaining**, **Budget Used %** and **Budget Status** follow at once. **Rejected**: the baseline stands, and the version can be set back to Draft, corrected and sent again. The project manager can also recall it from the Inbox while it waits.
+
+A project always has at most one baseline.
+
+## Projects from before budget versions
+
+A project whose Approved Budget was typed before budget versions keeps that figure. An administrator can carry it over into a version 1, so later top-ups work, with `scripts/backfill-project-budget-baseline.ts` (see the script's own notes). It only reports until it is run with `--apply`, and touches no project that already has a version.

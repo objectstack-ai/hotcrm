@@ -467,6 +467,21 @@ milestones for `fixed_fee` projects, and a project template to seed members and 
 > typed). The console's auto-schedule moves successors; nothing cascades on the server
 > (accepted for 2a).
 
+> **Note (2026-11-16, phase 2c, hotcrm#2547).** Budget versions have landed as designed
+> above, with these choices (seat ruling A, 2026-11-16): version 1 rides on the project's
+> initiation approval (`with_initiation`, `project_budget_follow`), whose finance tier now
+> reads the riding version's total; a top-up (version 2+) has its own
+> `project_budget_approval`: a Project Director or the PMO, then a Finance Controller when it
+> raises the baseline by `BUDGET_TOP_UP_FINANCE_REVIEW_PERCENT` (10 %) or more. One open
+> version per project; numbers stamped; `reason` required to send v2+. Categories are the
+> four above plus `other`; a line's `amount` is stored by `project_budget_line_amount` (a
+> formula cannot be summed) and a labor line's unit cost defaults from its rate card.
+> `crm_project.approved_budget` is now a read-only summary over the baseline's `total_cost`.
+> Left out of the header for now: `planned_revenue` and the margin formulas (the project
+> keeps them) and `approval_status` (the status is the approval's). Projects saved before
+> keep their typed figure; `scripts/backfill-project-budget-baseline.ts` carries it into a
+> version 1 (report-first, never run against hosted by the maintainers).
+
 > **Note (2026-10-23).** The billing milestones are now designed — not here but in the
 > order-to-cash module ([`order-to-cash-module-plan.md`](./order-to-cash-module-plan.md),
 > REQ-0007), whose `crm_billing_milestone` a `fixed_fee` project reaches through its

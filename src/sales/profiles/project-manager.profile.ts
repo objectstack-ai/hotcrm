@@ -19,6 +19,10 @@ import { privateOpportunityPolicy } from './_private-opportunity';
  *     project, so it needs edit on the project, which the rule above gives.
  *   - `crm_project_task` — full: the plan is the manager's (hotcrm#2545),
  *     written on the projects they own or manage, for the same reason.
+ *   - `crm_project_budget`, `crm_project_budget_line` — full: a manager plans
+ *     the budget versions and sends them for approval (hotcrm#2547). Children
+ *     of the project, written where the manager may edit it; the hooks keep a
+ *     sent version's lines and the decisions out of a person's hands.
  *   - `crm_timesheet`, `crm_time_entry`, `crm_expense` — a manager books their
  *     own time and expenses, and edits the ones they approve (the
  *     `*_approver_edit` rules).
@@ -39,6 +43,8 @@ export const ProjectManagerProfile = {
     crm_project:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_project_member: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     crm_project_task:   { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
+    crm_project_budget:      { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
+    crm_project_budget_line: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_rate_card:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_timesheet:      { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_time_entry:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },

@@ -11,3 +11,4 @@ export {
   ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow,
 } from './submission-approval.flow';
 export { ProjectBudgetAlertFlow } from './project-budget-alert.flow';
+export { ProjectBudgetApprovalFlow } from './project-budget-approval.flow';

@@ -13,3 +13,4 @@ export { default as projectTaskHook } from './project_task.hook';
 export { default as timesheetHook } from './timesheet.hook';
 export { default as timeEntryHook } from './time_entry.hook';
 export { default as expenseHook } from './expense.hook';
+export { default as projectBudgetHook } from './project_budget.hook';

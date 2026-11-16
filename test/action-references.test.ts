@@ -110,7 +110,9 @@ describe('navigation reaches everything the app ships', () => {
         // things they are verdicts on. `_entry` joined it with
         // `crm_price_book_entry` (#2313): a price is reached through the book it
         // is in, which has its own entry, and it is `controlled_by_parent` too.
-        !/_line_item$|_member$|_attendee$|_feedback$|_entry$/.test(name) && !reachable.has(name));
+        // `_budget_line` joined it with `crm_project_budget_line` (#2547): a
+        // line is planned inside its budget version, which has its own entry.
+        !/_line_item$|_member$|_attendee$|_feedback$|_entry$|_budget_line$/.test(name) && !reachable.has(name));
     expect(stranded, `objects with no navigation entry:\n  ${stranded.join('\n  ')}`).toEqual([]);
   });
 

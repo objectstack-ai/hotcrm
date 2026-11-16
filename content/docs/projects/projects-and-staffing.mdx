@@ -38,11 +38,11 @@ Any other change is refused with a message that lists these steps. A project is 
 
 ## Sending a project for approval
 
-A new project starts as **Draft**. When its plan and budget are ready, the project manager sets **Status** to **In Approval**. A project with no **Approved Budget** cannot be sent: the approval is of that figure.
+A new project starts as **Draft**. When its plan and budget are ready, the project manager sets **Status** to **In Approval**. Its [budget's version 1](/docs/projects/budgets#version-1) goes with it, so a project with no version 1, or with one not ready to approve, cannot be sent: the approval is of that budget.
 
 1. Every **Project Director** and **PMO** holder finds the project in their **Inbox** (under **My Work**). The first to decide decides for all.
-2. A project whose Approved Budget is **100,000** or more then goes to the **Finance Controllers** as well.
-3. Approved by everyone it went to, the project is **Approved**, and the project manager makes it **Active** when the work starts.
+2. A project whose version 1 totals **100,000** or more then goes to the **Finance Controllers** as well.
+3. Approved by everyone it went to, the project is **Approved**, its version 1 becomes the baseline, and the project manager makes it **Active** when the work starts.
 
 A rejected project is **Rejected**: move it back to **Draft**, revise it and send it again. The project manager can also recall it from their Inbox while it waits, which puts it back to **Draft**.
 
@@ -50,7 +50,7 @@ While it waits, the project is locked and nobody can edit it. Nobody sets **Appr
 
 ## The budget
 
-**Approved Budget** is the cost the project may spend. Set it while the project is **Draft** or **Rejected**. From **In Approval** onwards it is the figure the project was approved on, and only a **Finance Controller** can change it; anyone else who tries is told to ask finance. **Planned Revenue** is what the customer pays for the project, and the margin is measured against it.
+**Approved Budget** is the cost the project may spend. It is not typed: it is the total of the project's baseline budget version, and it changes when a top-up version is approved. [Project Budgets](./budgets) explains the versions. **Planned Revenue** is what the customer pays for the project, and the margin is measured against it.
 
 The project's [cost and margin fields](/docs/projects#money) fill themselves as hours and expenses are approved. **Budget Used %** passes 100 % when the project has spent more than its approved budget.
 
@@ -68,7 +68,7 @@ The moment it moves into **Warning** or **Exceeded**, the project manager and ev
 
 The notice proposes the lock, and a person decides. Tick **Lock Time and Expenses** on the project and no timesheet or expense on it can be submitted, whoever submits it. People can still write drafts. Untick it, after agreeing a new budget for example, and submissions are taken again.
 
-A new budget is set by a Finance Controller, not by the project manager: raising the Approved Budget moves Budget Status at once, so a project is put back On Track only with finance's say.
+A new budget is a [top-up version](/docs/projects/budgets#top-up), approved by a Project Director or the PMO, and by finance as well when it raises the Approved Budget by 10 % or more: an approved top-up moves Budget Status at once, so a project is put back On Track only with that approval.
 
 ## Staffing a project
 

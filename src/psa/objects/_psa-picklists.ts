@@ -104,3 +104,27 @@ export const EXPENSE_CATEGORY_OPTIONS = [
  * number inside its handler and `test/psa-objects.test.ts` holds the two equal.
  */
 export const HOURS_PER_DAY = 8;
+
+/**
+ * A budget version's lifecycle (#2547): written, sent, decided, and replaced
+ * when a later version becomes the baseline.
+ */
+export const BUDGET_VERSION_STATUS_OPTIONS = [
+  { label: 'Draft', value: 'draft', color: '#94A3B8', kind: 'open' as const },
+  { label: 'In Approval', value: 'in_approval', color: '#F59E0B', kind: 'open' as const },
+  { label: 'Approved', value: 'approved', color: '#16A34A', kind: 'won' as const },
+  { label: 'Rejected', value: 'rejected', color: '#DC2626', kind: 'lost' as const },
+  { label: 'Superseded', value: 'superseded', color: '#64748B', kind: 'lost' as const },
+];
+
+/**
+ * What a budget line plans to spend on (#2547; REQ-0002 items 28–31, plus
+ * Other for what fits none of them, such as a contingency).
+ */
+export const BUDGET_LINE_CATEGORY_OPTIONS = [
+  { label: 'Labor', value: 'labor', color: '#2563EB' },
+  { label: 'Subcontracted Services', value: 'subcontract_service', color: '#7C3AED' },
+  { label: 'Third-Party Goods', value: 'third_party_goods', color: '#0D9488' },
+  { label: 'Expenses', value: 'expense', color: '#EA580C' },
+  { label: 'Other', value: 'other', color: '#64748B' },
+];

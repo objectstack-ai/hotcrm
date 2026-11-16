@@ -9,11 +9,15 @@ import { ProjectsOverviewDashboard } from './dashboards/index.js';
 import { ProjectFinancialsDataset, TimeUtilizationDataset } from './datasets/index.js';
 import { PsaEmailTemplates } from './email-templates/index.js';
 import {
-  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, ProjectBudgetAlertFlow, ProjectInitiationApprovalFlow,
-  TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
+  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, ProjectBudgetAlertFlow, ProjectBudgetApprovalFlow,
+  ProjectInitiationApprovalFlow, TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
 } from './flows/index.js';
-import { Expense, Project, ProjectMember, ProjectTask, RateCard, TimeEntry, Timesheet } from './objects/index.js';
-import { expenseHook, projectHook, projectMemberHook, projectTaskHook, timeEntryHook, timesheetHook } from './objects/hooks.js';
+import {
+  Expense, Project, ProjectBudget, ProjectBudgetLine, ProjectMember, ProjectTask, RateCard, TimeEntry, Timesheet,
+} from './objects/index.js';
+import {
+  expenseHook, projectBudgetHook, projectHook, projectMemberHook, projectTaskHook, timeEntryHook, timesheetHook,
+} from './objects/hooks.js';
 import {
   ExpenseApproverEditSharingRule,
   ProjectFinanceEditSharingRules,
@@ -23,7 +27,10 @@ import {
 } from './sharing/index.js';
 import { PsaTranslations } from './translations/index.js';
 import { ProjectDetailPage } from './pages/project_detail.page.js';
-import { ExpenseViews, ProjectMemberViews, ProjectTaskViews, ProjectViews, RateCardViews, TimeEntryViews, TimesheetViews } from './views/index.js';
+import {
+  ExpenseViews, ProjectBudgetLineViews, ProjectBudgetViews, ProjectMemberViews, ProjectTaskViews, ProjectViews,
+  RateCardViews, TimeEntryViews, TimesheetViews,
+} from './views/index.js';
 
 /**
  * This package's hooks, for the artifact-wide sweeps (`allHooks` in
@@ -31,14 +38,17 @@ import { ExpenseViews, ProjectMemberViews, ProjectTaskViews, ProjectViews, RateC
  * `src/service/index.ts` for the arrangement. Every one attaches to a module
  * object (ADR-0130 R4).
  */
-export const psaHooks = [projectHook, projectMemberHook, projectTaskHook, timesheetHook, timeEntryHook, expenseHook].flat();
+export const psaHooks = [
+  projectHook, projectBudgetHook, projectMemberHook, projectTaskHook, timesheetHook, timeEntryHook, expenseHook,
+].flat();
 
 /**
- * This package's flows (#2316 phase 1b) — see {@link psaHooks}: the three
- * approvals, the two insert twins and the budget alert.
+ * This package's flows (#2316 phase 1b) — see {@link psaHooks}: the
+ * approvals (a budget top-up's since hotcrm#2547), the two insert twins and
+ * the budget alert.
  */
 export const psaFlows = [
-  ProjectInitiationApprovalFlow,
+  ProjectInitiationApprovalFlow, ProjectBudgetApprovalFlow,
   TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
   ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow,
   ProjectBudgetAlertFlow,
@@ -74,7 +84,8 @@ export const psaSharingRules = [
  * (ADR-0130 addendum, 2026-09-02): `project_manager`, `project_member` and
  * `finance_controller`, distributed by the positions in
  * `src/sales/sharing/positions.ts`. Phase 1b adds the three approvals and
- * the overrun alert and lock. Phase 1c adds the module's manual under *Help*,
+ * the overrun alert and lock. Phase 2c (hotcrm#2547) adds budget versions
+ * and their lines, the Approved Budget summed from the baseline. Phase 1c adds the module's manual under *Help*,
  * its two datasets and the Projects Overview dashboard that reads them.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
@@ -115,9 +126,14 @@ export const createHotCrmPsaStack = (
 
   // The delivery team's app; see the app's own note.
   apps: [PsaApp],
-  objects: [Project, ProjectMember, ProjectTask, RateCard, Timesheet, TimeEntry, Expense],
+  objects: [
+    Project, ProjectBudget, ProjectBudgetLine, ProjectMember, ProjectTask, RateCard, Timesheet, TimeEntry, Expense,
+  ],
   hooks: psaHooks,
-  views: [ProjectViews, ProjectMemberViews, ProjectTaskViews, RateCardViews, TimesheetViews, TimeEntryViews, ExpenseViews],
+  views: [
+    ProjectViews, ProjectBudgetViews, ProjectBudgetLineViews, ProjectMemberViews, ProjectTaskViews, RateCardViews,
+    TimesheetViews, TimeEntryViews, ExpenseViews,
+  ],
   // The project's record page: the synthesized layout plus its task Gantt.
   pages: [ProjectDetailPage],
   actions: [SubmitTimesheetAction],

@@ -171,11 +171,14 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // #2545 added the project task's three tree and predecessor refusals and
     // the time entry's refusal of another project's task; 62 until #2546
     // added the weekly entry's missing project and not-staffed refusals and
-    // the time entry's refusal of another project than its timesheet's.
+    // the time entry's refusal of another project than its timesheet's; 65
+    // until #2547 swapped `project_status_guard`'s finance-only budget
+    // refusal for its budget-not-ready one and added the budget version's
+    // seven refusals and its lines' lock.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(65);
+    expect(sites).toHaveLength(73);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

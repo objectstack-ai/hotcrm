@@ -133,7 +133,10 @@ describe('the default composition is the community app, untouched', () => {
       'crm_campaign', 'crm_campaign_member', 'crm_campaign_member',
     ]);
     expect(objectsOf(psaStack.data)).toEqual(objectsOf(PsaSeedData));
-    expect(objectsOf(psaStack.data)).toEqual(['crm_rate_card', 'crm_project', 'crm_project_task', 'crm_rate_card', 'crm_project', 'crm_project_task']);
+    expect(objectsOf(psaStack.data)).toEqual([
+      'crm_rate_card', 'crm_project', 'crm_project_task', 'crm_project_budget', 'crm_project_budget_line',
+      'crm_rate_card', 'crm_project', 'crm_project_task', 'crm_project_budget', 'crm_project_budget_line',
+    ]);
     expect(objectsOf(o2cStack.data)).toEqual(objectsOf(O2cSeedData));
     // Order to Cash (#2529): the plan, its invoices, their payments.
     expect(objectsOf(o2cStack.data)).toEqual([

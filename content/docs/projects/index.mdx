@@ -23,6 +23,7 @@ A project hangs off an **account**, and may name the **opportunity** it was won 
 | Page | What it covers |
 | --- | --- |
 | [Projects and Staffing](./projects-and-staffing) | Opening a project, its kinds and statuses, staffing it at a rate card, the budget |
+| [Project Budgets](./budgets) | Planning the budget in versions and lines, approving it with the project, raising it with a top-up |
 | [Time and Expenses](./time-and-expenses) | Booking hours and expenses, submitting and approving them, how cost is counted |
 
 ## Where to find it
@@ -44,7 +45,7 @@ Projects are private. A person reads a project when they own it, when they are s
 | --- | --- | --- | --- | --- |
 | Project team member | Read the projects they are staffed on, **without cost or margin** | Read | Read, **without the cost rate** | Book their own |
 | Project manager | Open projects; edit the ones they manage | Staff the projects they manage | Read | Book their own; approve their team's |
-| Finance controller | Read every project; set budgets; approve projects of 100,000 or more | Read | Create and edit | Read every one; approve expenses of 2,000 or more |
+| Finance controller | Read every project and budget; approve projects of 100,000 or more and top-ups of 10 % or more | Read | Create and edit | Read every one; approve expenses of 2,000 or more |
 | Project director, PMO | Both of the above; approve new projects | Both | Both | Both |
 | Sales manager | Read every project | Read | — | Read every one |
 | Administrator | Everything | Everything | Everything | Everything |
@@ -57,10 +58,11 @@ An administrator gives people their access with a **position** under **Setup →
 
 ## The money on a project [#money]
 
-None of a project's figures is typed in except **Planned Revenue** and **Approved Budget**. Everything else moves when hours and expenses are approved:
+None of a project's figures is typed in except **Planned Revenue**. Everything else moves when hours and expenses are approved, or when a budget version is:
 
 | Field | What it counts |
 | --- | --- |
+| **Approved Budget** | The total of the project's baseline [budget version](./budgets) |
 | **Labor Cost** | The cost of the hours on the project's **Approved** timesheets |
 | **Expense Cost** | The project's **Approved** expenses |
 | **Actual Cost** | Labor Cost plus Expense Cost |
