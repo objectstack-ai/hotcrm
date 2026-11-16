@@ -289,27 +289,27 @@ const OPPORTUNITIES_ZH: Record<string, Record<string, unknown>> = {
     description: '技术内容系列推出后，三个产品团队采用了开发者平台。',
   },
   'Acme Add-on (Lost)': {
-    name: '艾克美增购模块（丢单）',
+    name: '艾克美增购模块（输单）',
     description: '想通过陌生外呼加购营销云模块。丢单原因：艾克美的市场部已经签了两年的 HubSpot 合同。'
       + '等那份合同续约时再跟进，那才是采购窗口。',
     loss_details: '市场部被两年的 HubSpot 合同锁定，合同续约时才有采购窗口。',
   },
   'Stark Expansion (Lost)': {
-    name: '斯塔克医疗扩容（丢单）',
+    name: '斯塔克医疗扩容（输单）',
     loss_details: '本财年剩余时间内，非临床系统的资本支出全部冻结。',
   },
   'Globex Line Expansion (Lost)': {
-    name: '环球工业产线扩展（丢单）',
+    name: '环球工业产线扩展（输单）',
     description: '扩展到另外两条产线，因捆绑销售输给了现有的 MES 供应商。',
     loss_details: '现有 MES 供应商把新增的两条产线并入了已有的框架协议。',
   },
   'Northwind Field Service Pilot (Lost)': {
-    name: '北风能源现场服务试点（丢单）',
+    name: '北风能源现场服务试点（输单）',
     description: '面向抄表班组的现场服务试点，在价格上输给了更便宜的单点方案。',
     loss_details: '按技术人员计价比运营总监批准的预算高出约 30%。',
   },
   'Apex Compliance Reporting (Lost)': {
-    name: '顶点物流合规报表（丢单）',
+    name: '顶点物流合规报表（输单）',
     description: '面向车队合规团队的监管报表包，因缺少审计追踪能力而丢单。',
     loss_details: '没有原生的工时审计追踪，合规团队无法签字确认。',
   },

@@ -38,8 +38,28 @@ const files = (dir: string, keep: (p: string) => boolean): string[] => {
   }
   return out;
 };
+/**
+ * Seed identities keep their old words. `opportunities` seeds with
+ * `mode: 'ignore'` and `externalId: 'name'` (`sales.seed.ts`), so a deal name
+ * is the row's identity: renaming one makes the next seed pass on a database
+ * that already holds the old name insert a second, duplicate deal. These are
+ * record data, not UI vocabulary, and stay as they landed (seat review on the
+ * #2521/#2523 PR). Only an exact `name: '<identity>',` line is exempt.
+ */
+const SEED_IDENTITIES = new Set([
+  '艾克美增购模块（输单）',
+  '斯塔克医疗扩容（输单）',
+  '环球工业产线扩展（输单）',
+  '北风能源现场服务试点（输单）',
+  '顶点物流合规报表（输单）',
+]);
+const isSeedIdentity = (line: string): boolean => {
+  const m = /^\s*name: '([^']+)',\s*$/.exec(line);
+  return m !== null && SEED_IDENTITIES.has(m[1]);
+};
 const hits = (paths: string[], words: string[]): string[] =>
   paths.flatMap((p) => readFileSync(p, 'utf8').split('\n').flatMap((line, i) =>
+    isSeedIdentity(line) ? [] :
     words.filter((w) => line.includes(w)).map((w) => `${relative(REPO_ROOT, p)}:${i + 1} ${w}`)));
 
 const SRC = join(REPO_ROOT, 'src');
@@ -55,6 +75,11 @@ describe('zh-CN sales terms (#2521, #2523)', () => {
     expect(hits(srcTs, RETIRED_WIN_LOSS)).toEqual([]);
     const hans = files(join(REPO_ROOT, 'content/docs'), (p) => p.endsWith('.zh-Hans.mdx'));
     expect(hits(hans, RETIRED_WIN_LOSS)).toEqual([]);
+  });
+
+  it('every exempt seed identity is still a zh-CN deal name (the allow list cannot go stale)', () => {
+    const seed = readFileSync(join(SRC, 'sales/data/sales.zh-CN.seed.ts'), 'utf8');
+    for (const name of SEED_IDENTITIES) expect(seed).toContain(`name: '${name}',`);
   });
 
   it('the win/loss dataset labels and the win/loss section use the widget words', () => {
