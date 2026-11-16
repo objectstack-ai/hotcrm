@@ -176,6 +176,16 @@ const LOOKUPS: Array<[object: string, field: string]> = [
   ['crm_quote', 'crm_account'],
   ['crm_quote_line_item', 'crm_quote'],
   ['crm_quote_line_item', 'crm_product'],
+  // Order to Cash (#2529); a payment's plan step is copied from its invoice.
+  ['crm_billing_milestone', 'crm_contract'],
+  ['crm_billing_milestone', 'crm_account'],
+  ['crm_invoice', 'crm_contract'],
+  ['crm_invoice', 'crm_billing_milestone'],
+  ['crm_invoice', 'crm_account'],
+  ['crm_payment', 'crm_contract'],
+  ['crm_payment', 'crm_invoice'],
+  ['crm_payment', 'crm_billing_milestone'],
+  ['crm_payment', 'crm_account'],
 ];
 
 describe.each([
@@ -216,6 +226,24 @@ describe.each([
     for (const subject of (await stack!.rows('crm_case')).map((r) => String(r.subject))) {
       expect(inLanguage(subject), `crm_case ${subject}`).toBe(true);
     }
+  });
+
+  it('the Order to Cash story reads its figures (#2529)', async () => {
+    const num = (v: unknown) => Number(v ?? 0);
+    const invoices = await stack!.rows('crm_invoice');
+    // Two paid in full, one paid 9,000 of 15,000, one unpaid and past due, and
+    // the year-one invoice issued today; none overpaid (#2513).
+    expect(invoices.map((i) => [num(i.amount), num(i.paid_amount), num(i.open_amount), num(i.overpaid_amount)])
+      .sort((a, b) => a[0]! - b[0]! || b[1]! - a[1]!)).toEqual([
+      [15000, 15000, 0, 0], [15000, 15000, 0, 0], [15000, 9000, 6000, 0], [15000, 0, 15000, 0], [220000, 0, 220000, 0],
+    ]);
+    const today = new Date().toISOString().slice(0, 10);
+    const overdue = invoices.filter((i) => num(i.open_amount) > 0 && String(i.due_date).slice(0, 10) < today);
+    expect(overdue.map((i) => num(i.open_amount)).sort((a, b) => a - b), 'Overdue Invoices').toEqual([6000, 15000]);
+    const balances = (await stack!.rows('crm_contract')).map((c) => num(c.receivable_balance)).sort((a, b) => a - b);
+    expect(balances, 'contract receivable balances').toEqual([0, 0, 21000, 220000]);
+    const steps = await stack!.rows('crm_billing_milestone');
+    expect(steps.map((m) => num(m.received_amount)).sort((a, b) => a - b)).toEqual([0, 0, 9000, 15000, 15000]);
   });
 
   it('every natural-key reference resolved to a row of the same story', async () => {

@@ -4,8 +4,8 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { PLATFORM_CAPABILITIES } from '@objectstack/spec/security';
 import defaultStack from './helpers/composed-stack';
 import {
-  CrmSeedDataAllLocales, SaasTenantSeedData, ServiceSeedData, RevenueSeedData, MarketingSeedData, PsaSeedData, AppSeedData,
-  serviceStack, revenueStack, marketingStack, psaStack, appStack,
+  CrmSeedDataAllLocales, SaasTenantSeedData, ServiceSeedData, RevenueSeedData, MarketingSeedData, PsaSeedData, O2cSeedData,
+  AppSeedData, serviceStack, revenueStack, marketingStack, psaStack, o2cStack, appStack,
 } from '../objectstack.composition';
 import { COMPOSITION_ENV_VAR, resolveComposition } from '../src/sales/data/index';
 import { SystemAdminProfile } from '../src/sales/profiles/system-admin.profile';
@@ -134,9 +134,15 @@ describe('the default composition is the community app, untouched', () => {
     ]);
     expect(objectsOf(psaStack.data)).toEqual(objectsOf(PsaSeedData));
     expect(objectsOf(psaStack.data)).toEqual(['crm_rate_card', 'crm_project', 'crm_rate_card', 'crm_project']);
+    expect(objectsOf(o2cStack.data)).toEqual(objectsOf(O2cSeedData));
+    // Order to Cash (#2529): the plan, its invoices, their payments.
+    expect(objectsOf(o2cStack.data)).toEqual([
+      'crm_billing_milestone', 'crm_invoice', 'crm_payment',
+      'crm_billing_milestone', 'crm_invoice', 'crm_payment',
+    ]);
     expect(objectsOf(appStack.data)).toEqual(objectsOf(AppSeedData));
     expect(
-      [serviceStack, revenueStack, marketingStack, psaStack, appStack].flatMap((stack) => objectsOf(stack.data)).sort(),
+      [serviceStack, revenueStack, marketingStack, psaStack, o2cStack, appStack].flatMap((stack) => objectsOf(stack.data)).sort(),
     ).toEqual(objectsOf(CrmSeedDataAllLocales).sort());
   });
 

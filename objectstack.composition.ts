@@ -153,6 +153,9 @@ import {
   campaignsZhCN, campaignMembersFromLeadsZhCN, campaignMembersFromContactsZhCN,
 } from './src/marketing/data/index.js';
 import { projects, rateCards, projectsZhCN, rateCardsZhCN } from './src/psa/data/index.js';
+import {
+  billingMilestones, invoices, payments, billingMilestonesZhCN, invoicesZhCN, paymentsZhCN,
+} from './src/o2c/data/index.js';
 
 /**
  * One registration array out of the merged per-package barrels of a metadata
@@ -445,6 +448,12 @@ export const CrmSeedData = [
   campaignMembersFromLeads,
   campaignMembersFromContacts,
   contracts,
+  // Order to Cash (#2529): the collection plan, then the invoices that bill
+  // its steps, then the payments against those invoices, after the contracts
+  // all three are master-details of.
+  billingMilestones,
+  invoices,
+  payments,
   quotes,
   quoteLineItems,
   forecasts,
@@ -489,6 +498,9 @@ export const CrmSeedDataZhCN = [
   campaignMembersFromLeadsZhCN,
   campaignMembersFromContactsZhCN,
   contractsZhCN,
+  billingMilestonesZhCN,
+  invoicesZhCN,
+  paymentsZhCN,
   quotesZhCN,
   quoteLineItemsZhCN,
   forecastsZhCN,
@@ -579,11 +591,15 @@ export const MarketingSeedData = CrmSeedDataAllLocales.filter((family) =>
 export const PsaSeedData = CrmSeedDataAllLocales.filter((family) =>
   [rateCards, projects, rateCardsZhCN, projectsZhCN].includes(family));
 
+/** The ORDER TO CASH package's families — the collection plan, invoices and payments (#2529). */
+export const O2cSeedData = CrmSeedDataAllLocales.filter((family) =>
+  [billingMilestones, invoices, payments, billingMilestonesZhCN, invoicesZhCN, paymentsZhCN].includes(family));
+
 /** Everything else — the app package's own families, in {@link CrmSeedDataAllLocales} order. */
 export const AppSeedData = CrmSeedDataAllLocales.filter((family) =>
-  ![...ServiceSeedData, ...RevenueSeedData, ...MarketingSeedData, ...PsaSeedData].includes(family));
+  ![...ServiceSeedData, ...RevenueSeedData, ...MarketingSeedData, ...PsaSeedData, ...O2cSeedData].includes(family));
 
-type PackageSeedData = Record<'app' | 'service' | 'revenue' | 'marketing' | 'psa', typeof CrmSeedDataAllLocales>;
+type PackageSeedData = Record<'app' | 'service' | 'revenue' | 'marketing' | 'psa' | 'o2c', typeof CrmSeedDataAllLocales>;
 
 /**
  * The seed datasets each package registers under a composition.
@@ -595,8 +611,11 @@ type PackageSeedData = Record<'app' | 'service' | 'revenue' | 'marketing' | 'psa
  */
 export const seedDataFor = (composition: HotCrmComposition): PackageSeedData =>
   composition === 'saas'
-    ? { app: [], service: [], revenue: SaasTenantSeedData, marketing: [], psa: [] }
-    : { app: AppSeedData, service: ServiceSeedData, revenue: RevenueSeedData, marketing: MarketingSeedData, psa: PsaSeedData };
+    ? { app: [], service: [], revenue: SaasTenantSeedData, marketing: [], psa: [], o2c: [] }
+    : {
+      app: AppSeedData, service: ServiceSeedData, revenue: RevenueSeedData,
+      marketing: MarketingSeedData, psa: PsaSeedData, o2c: O2cSeedData,
+    };
 
 // ─── Which SHAPE of HotCRM this build assembles (#1361) ───────────────────
 //
@@ -668,11 +687,8 @@ export const revenueStack = createHotCrmRevenueStack({ data: seedData.revenue })
 /** `app.objectstack.hotcrm.marketing` — see `src/marketing/index.ts`. */
 export const marketingStack = createHotCrmMarketingStack({ data: seedData.marketing });
 
-/**
- * `app.objectstack.hotcrm.o2c` — see `src/o2c/index.ts`. Phase 1a ships no
- * seed row, so it is handed nothing.
- */
-export const o2cStack = createHotCrmO2cStack();
+/** `app.objectstack.hotcrm.o2c` — see `src/o2c/index.ts`. Its seed rows since #2529. */
+export const o2cStack = createHotCrmO2cStack({ data: seedData.o2c });
 
 /**
  * `app.objectstack.hotcrm.psa` — see `src/psa/index.ts`. Phase 0 ships no
