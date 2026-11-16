@@ -750,11 +750,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   positions: {
     crm_executive: {
       label: 'Ejecutivo',
-      description: 'Dirección de la empresa, solo lectura: lee todas las cuentas, oportunidades, cotizaciones, contratos, previsiones y casos que lee un gerente de ventas, mientras los equipos conservan la propiedad.',
+      description: 'Dirección de la empresa: lee todo lo que lee un gerente de ventas, mientras los equipos conservan la propiedad, y solo crea y edita sus propias oportunidades.',
     },
     crm_sales_director: {
       label: 'Director de Ventas',
-      description: 'Dirige la organización de ventas, da el visto bueno final a las mayores oportunidades y lee, solo lectura, todo lo que lee un gerente de ventas.',
+      description: 'Dirige la organización de ventas, da el visto bueno final a las mayores oportunidades, lee todo lo que lee un gerente de ventas y solo edita sus propias oportunidades.',
     },
     crm_sales_manager: {
       label: 'Gerente de Ventas',

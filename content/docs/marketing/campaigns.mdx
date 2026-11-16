@@ -95,7 +95,7 @@ The numbers live on the campaign record itself — the counters and the response
 
 ## Attribution: from campaign to revenue
 
-The link is the **Campaign** lookup on the opportunity, and it is set by hand. Converting a lead does not fill it in, even when the lead is a member of a campaign: the lead's membership is marked *Converted* and the campaign counts a converted lead, but the opportunity the conversion creates names no campaign, so neither the deal nor its revenue is credited to the campaign. The conversion screen has no Campaign field, so set **Campaign** on the opportunity afterwards; from then on the campaign counts the deal and, once it is won, its revenue.
+The link is the **Campaign** lookup on the opportunity. Converting a lead fills it in when the lead responded to a campaign: the opportunity the conversion creates names the campaign the lead responded to most recently (last touch), so the campaign counts the deal and, once it is won, its revenue. A campaign the lead was only sent and never responded to is not credited, and neither is one the converting rep cannot see; such a deal starts with no campaign. Set **Campaign** by hand on any other opportunity that came from a campaign, or change it if the deal belongs to another campaign: the conversion only fills the field on the opportunity it creates and never changes it afterwards.
 
 For deals influenced by multiple campaigns (multi-touch), the convention is to record the **last-touch** campaign (the one closest to conversion). For full multi-touch attribution, consider extending the model with a campaign-influence join object — see [Customization](/docs/customization/extending-objects).
 
@@ -126,7 +126,7 @@ Campaigns are **public read-only** for the whole organisation. Anyone in sales c
 ## Tips for sales reps
 
 - ✅ When a lead arrives, check whether they're in a campaign — it tells you which campaigns they were sent, and how they answered.
-- ✅ Set **Campaign** on the opportunities that came from a campaign, including the ones you converted from a lead — nothing sets it for you, and marketing can't measure ROI without it.
+- ✅ Set **Campaign** on the opportunities that came from a campaign — conversion fills it only from a campaign the lead responded to, and marketing can't measure ROI without it.
 
 ## Tips for admins
 
