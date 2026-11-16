@@ -211,12 +211,10 @@ export const esES: TranslationData = {
         ...activityActions,
         escalate_case: {
           label: 'Escalar Caso',
-          confirmText: 'Esto enviará el caso al equipo de escalación. ¿Continuar?',
           successMessage: '¡Caso escalado con éxito!',
         },
         close_case: {
           label: 'Cerrar Caso',
-          confirmText: '¿Está seguro de querer cerrar este caso?',
           successMessage: '¡Caso cerrado con éxito!',
         },
         reopen_case: {

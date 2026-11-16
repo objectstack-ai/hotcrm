@@ -177,12 +177,10 @@ export const en: TranslationData = {
         ...activityActions,
         escalate_case: {
           label: 'Escalate Case',
-          confirmText: 'This will escalate the case to the escalation team. Continue?',
           successMessage: 'Case escalated successfully!',
         },
         close_case: {
           label: 'Close Case',
-          confirmText: 'Are you sure you want to close this case?',
           successMessage: 'Case closed successfully!',
         },
         reopen_case: {

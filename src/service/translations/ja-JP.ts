@@ -208,12 +208,10 @@ export const jaJP: TranslationData = {
         ...activityActions,
         escalate_case: {
           label: 'ケースをエスカレート',
-          confirmText: 'このケースをエスカレーションチームへ引き継ぎます。続行しますか？',
           successMessage: 'ケースをエスカレートしました！',
         },
         close_case: {
           label: 'ケースをクローズ',
-          confirmText: 'このケースをクローズしてもよろしいですか？',
           successMessage: 'ケースをクローズしました！',
         },
         reopen_case: {
