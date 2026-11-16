@@ -288,7 +288,7 @@ export const zhCN: TranslationData = {
         kb_resolved_cases: { title: '知识库解决数', description: '已关联解决文章的已关闭工单' },
         closed_cases_total: { title: '已关闭工单', description: '转移率的分母' },
         top_resolving_articles: { title: '解决工单最多的文章', description: '按解决的已关闭工单数排名的知识文章' },
-        my_open_cases_by_priority: { title: '我的未关闭工单（按优先级）', description: '你的未关闭工单及其 SLA 违约率，按优先级细分' },
+        my_open_cases_by_priority: { title: '我的未关闭工单（按优先级）', description: '你的未关闭工单、其中已超 SLA 的数量及占比，按优先级细分' },
       },
     },
   },
@@ -319,6 +319,12 @@ export const zhCN: TranslationData = {
       measures: {
         avg_resolution: {
           label: '平均解决时长（小时）',
+        },
+        past_sla_count: {
+          label: '已超 SLA',
+        },
+        past_sla_rate: {
+          label: '超 SLA 比例',
         },
         avg_sla_violated: {
           label: 'SLA 违约率',

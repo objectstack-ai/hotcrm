@@ -109,5 +109,44 @@ export const CaseDataset = defineDataset({
       derived: { op: 'ratio', of: ['sla_met_count', 'closed_count'] },
       format: '0%',
     },
+
+    // ─── Open cases past SLA, counted at read time (#2525) ──────────────
+    //
+    // The Service dashboard's `sla_violations` tile counts an open case that
+    // is flagged OR past its deadline (#2070), because the flag on an OPEN
+    // case is written only by the hourly `case_sla_monitor` sweep, which ships
+    // OFF. The `my_open_cases_by_priority` table beside it read
+    // `avg_sla_violated`, the flag alone, so on a deployment without the sweep
+    // it showed 0.0% on queues whose every case the tile counted as overdue.
+    //
+    // `past_sla_count` is the tile's selection made a measure: a case that is
+    // flagged, or that is not yet resolved or closed and whose `sla_due_date`
+    // is before `{now}` — the sweep's status set and its strict `$lt`. A
+    // resolved or closed case counts by its flag only: the close-time stamp
+    // already decided it (`case-sla-breach-on-close.test.ts`). MEASURED on
+    // 18.5.0: a measure filter takes `$or` and the `{now}` placeholder, both
+    // through `analytics.queryDataset` and the REST dataset route.
+    //
+    // `past_sla_rate` divides it by `case_count` over the widget's own rows,
+    // and the table shows both halves, as every ratio here is shown.
+    // `avg_sla_violated` stays: the closed-case report reads it, where the
+    // flag is the whole truth.
+    {
+      name: 'past_sla_count',
+      label: 'Past SLA',
+      aggregate: 'count',
+      filter: {
+        $or: [
+          { is_sla_violated: true },
+          { status: { $nin: ['resolved', 'closed'] }, sla_due_date: { $lt: '{now}' } },
+        ],
+      },
+    },
+    {
+      name: 'past_sla_rate',
+      label: 'Past SLA Rate',
+      derived: { op: 'ratio', of: ['past_sla_count', 'case_count'] },
+      format: '0.0%',
+    },
   ],
 });

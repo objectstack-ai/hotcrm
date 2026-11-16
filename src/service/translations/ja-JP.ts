@@ -284,7 +284,7 @@ export const jaJP: TranslationData = {
         kb_resolved_cases: { title: 'ナレッジで解決', description: '解決した記事が紐づくクローズ済みケース' },
         closed_cases_total: { title: 'クローズ済みケース', description: 'ナレッジ解決率の分母' },
         top_resolving_articles: { title: '解決件数の多い記事', description: '解決したクローズ済みケース数で並べたナレッジ記事' },
-        my_open_cases_by_priority: { title: '優先度別の私のオープンケース', description: 'あなたのオープンケースとそのSLA違反率を優先度別に集計' },
+        my_open_cases_by_priority: { title: '優先度別の私のオープンケース', description: 'あなたのオープンケースと、そのうち SLA 超過中の件数と割合を優先度別に集計' },
       },
     },
   },
@@ -315,6 +315,12 @@ export const jaJP: TranslationData = {
       measures: {
         avg_resolution: {
           label: '平均解決時間（時間）',
+        },
+        past_sla_count: {
+          label: 'SLA 超過',
+        },
+        past_sla_rate: {
+          label: 'SLA 超過率',
         },
         avg_sla_violated: {
           label: 'SLA 違反率',
