@@ -40,19 +40,19 @@ export const zhCN: EmailTemplatePack = {
     bodyHtml: '<p>{{name}} 以 {{amount | number:2}} 成交。恭喜团队。</p>',
   },
   'crm.lead_conversion_approved': {
-    label: '线索转换已批准',
-    subject: '线索转换已批准：{{person_name}}',
-    bodyHtml: '<p>该线索已审批通过。您可以将其转换为客户、联系人和商机。</p>',
+    label: '线索转化已批准',
+    subject: '线索转化已批准：{{person_name}}',
+    bodyHtml: '<p>该线索已审批通过。您可以将其转化为客户、联系人和商机。</p>',
   },
   'crm.lead_conversion_rejected': {
-    label: '线索转换未批准',
+    label: '线索转化未批准',
     subject: '线索未通过审批：{{person_name}}',
-    bodyHtml: '<p>该线索的转换未获批准。请继续跟进，或注明原因将其取消资格。</p>',
+    bodyHtml: '<p>该线索的转化未获批准。请继续跟进，或注明原因将其取消资格。</p>',
   },
   'crm.lead_converted': {
-    label: '线索已转换',
-    subject: '线索已转换：{{person_name}}',
-    bodyHtml: '<p>线索 {{person_name}} 已转换为客户和联系人。</p>',
+    label: '线索已转化',
+    subject: '线索已转化：{{person_name}}',
+    bodyHtml: '<p>线索 {{person_name}} 已转化为客户和联系人。</p>',
   },
   'crm.lead_routing_hot': {
     label: '热门线索分配',

@@ -352,7 +352,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: '线索来源',
         },
         loss_reason: {
-          label: '失单原因',
+          label: '丢单原因',
         },
         owner: {
           label: '负责人',
@@ -375,13 +375,13 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: '平均赢单概率',
         },
         decided_count: {
-          label: '已定局商机',
+          label: '已结单商机',
         },
         lost_amount: {
-          label: '失单金额',
+          label: '丢单金额',
         },
         lost_count: {
-          label: '失单数',
+          label: '丢单数',
         },
         opp_count: {
           label: '商机数',
@@ -390,7 +390,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
           label: '总金额',
         },
         win_rate: {
-          label: '赢单率',
+          label: '赢率',
         },
         won_amount: {
           label: '赢单金额',

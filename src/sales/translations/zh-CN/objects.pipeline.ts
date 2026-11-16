@@ -432,7 +432,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       overview: { label: '概览' },
       forecast: { label: '预测' },
       sales_strategy: { label: '销售策略' },
-      win_loss: { label: '赢单/输单' },
+      win_loss: { label: '赢单/丢单' },
     },
     _actions: {
       ...activityActions,
