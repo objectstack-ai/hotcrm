@@ -136,9 +136,11 @@ const projectBudgetRules: Hook = {
           400,
         ), { reason: 'open_version', params: { project: projectName, version } });
       }
-      // A seed or an import may carry its own number (the seed loader resolves
-      // the project reference after this hook, so the count above reads
-      // nothing for it); a person's is always the next one.
+      // A seed or an import may carry its own number: a seed family's rows
+      // are not visible to the hooks of its later rows (measured on 18.5.0:
+      // the count above reads 0 for every seeded version, version 2
+      // included, although the project id is already resolved). A person's
+      // is always the next one.
       const next = !person && num(input.version) > 0
         ? num(input.version)
         : versions.reduce((max, v) => Math.max(max, num(v.version)), 0) + 1;
