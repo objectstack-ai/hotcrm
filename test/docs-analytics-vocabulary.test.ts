@@ -476,7 +476,9 @@ describe('the source facts these pages now rest on (#976, #977)', () => {
   it('Pipeline by Stage is a tile title and a chart title, and no report answers to it', () => {
     const title = pipelineByStageWidget({ x: 0, y: 0, w: 6, h: 4 }).title;
     expect(title).toBe('Pipeline by Stage');
-    expect(OpportunitiesByStageReport.chart?.title).toBe(title);
+    // The chart title is an inline locale map since #2524 (the report
+    // translation has no `chart` slot); its English entry is the tile's title.
+    expect((OpportunitiesByStageReport.chart?.title as Record<string, string>)?.en).toBe(title);
     expect(REPORT_LABELS).not.toContain(title);
   });
 

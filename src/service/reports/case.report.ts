@@ -11,7 +11,9 @@ export const CasesByStatusPriorityReport: Report = {
   // was a raw-field name that exists in no dataset, so the axis was empty).
   dataset: 'case_metrics', rows: ['status', 'priority'], values: ['case_count', 'avg_resolution'],
   type: 'summary',
-  chart: { type: 'bar', title: 'Cases by Status', showLegend: true, xAxis: 'status', yAxis: 'case_count' }
+  // Chart titles are inline 4-locale maps: the report translation has no `chart`
+  // slot on 18.5.0 (#2524). Pinned by test/report-chart-titles.test.ts.
+  chart: { type: 'bar', title: { en: 'Cases by Status', 'zh-CN': '按状态统计工单', 'ja-JP': 'ステータス別ケース', 'es-ES': 'Casos por estado' }, showLegend: true, xAxis: 'status', yAxis: 'case_count' }
 };
 
 export const SlaPerformanceReport: Report = {
@@ -27,7 +29,7 @@ export const SlaPerformanceReport: Report = {
   dataset: 'case_metrics', rows: ['priority'], values: ['case_count', 'avg_sla_violated', 'avg_resolution'],
   type: 'summary',
   runtimeFilter: { is_closed: true },
-  chart: { type: 'column', title: 'SLA Violation Rate by Priority', showLegend: false, xAxis: 'priority', yAxis: 'avg_sla_violated' }
+  chart: { type: 'column', title: { en: 'SLA Violation Rate by Priority', 'zh-CN': '各优先级 SLA 违约率', 'ja-JP': '優先度別 SLA 違反率', 'es-ES': 'Tasa de incumplimiento del SLA por prioridad' }, showLegend: false, xAxis: 'priority', yAxis: 'avg_sla_violated' }
 };
 
 /**
