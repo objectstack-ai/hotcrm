@@ -44,6 +44,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | Timesheet | Private | A person's hours are their own; the approver reaches the timesheet through a rule |
 | Time Entry | Controlled by Parent (Timesheet) | A day's hours are part of the timesheet |
 | Expense | Private | A person's spending is their own; the approver reaches the expense through a rule |
+| Travel Request | Private | A person's trip is their own; the approver reaches the request through a rule, finance reads every request |
 | Case | Private | An agent's queue is their own; escalations are shared |
 | Task | Private | Personal activity items |
 | Event | Private | Personal activity items, like tasks |
@@ -122,6 +123,7 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Projects — Finance | Project | Edit | `crm_finance_controller`, `crm_project_director`, `crm_pmo` — every project (one rule per position; it can edit them, never delete one) |
 | Timesheets — Approver | Timesheet | Edit | the user in the timesheet's `approver` field — the project manager when it was created |
 | Expenses — Approver | Expense | Edit | the user in the expense's `approver` field — named when it is submitted: the spender's manager, or the project's manager for an expense on a project |
+| Travel Requests — Approver | Travel Request | Edit | the user in the request's `approver` field — named when it is submitted: the traveler's manager |
 
 Create your own in **Setup → Sharing Rules**.
 

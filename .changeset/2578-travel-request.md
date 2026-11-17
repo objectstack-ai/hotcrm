@@ -1,0 +1,8 @@
+---
+"hotcrm": minor
+---
+
+Clause-②: no
+Metadata-protocol: none
+
+**Travel requests: ask before a trip, and your manager says yes or no (REQ-0011, #2578).** The Expenses app gains **Travel Requests** (`crm_expense_request`, 「出差申请」) with *My Travel Requests*, *Requests to Approve* and *All Travel Requests*. A request names the **Purpose**, **Destination**, **Start Date** and **End Date** and one **Estimated Amount** for the whole trip (all required), with **Days** counted from the dates, an optional **Account**, **Itinerary**, **Notes**, files, a **Source** (Manual, Agent, Import) and **Review Notes** where an assistant or a rule writes what it found for the approver. **Submit** sends it to the traveler's manager (the Manager on their user record; the Finance Controllers when there is none), who approves or rejects it from the Inbox; there is no finance step, and nobody sets Approved or Rejected by hand. A rejected request goes back to Draft; a waiting one can be recalled. Once approved, the purpose, destination, dates and estimated amount no longer change: the traveler chooses **Cancel Trip** and files a new request, or **Close** when the trip is over. Statuses: Draft, Submitted, Approved, Rejected, Cancelled, Closed. A request is private to its traveler and shared to its approver; finance, the sales managers and sales leadership read every request and change none that is not theirs. A travel request is optional for reimbursement, works the same with Project Delivery on or off, and leaves with the expense module when it is disabled. Itinerary lines, a report citing a request, and the project manager's approval follow on #2579, #2580 and #2581.

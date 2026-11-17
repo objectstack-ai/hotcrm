@@ -42,3 +42,19 @@ export const EXPENSE_SOURCE_OPTIONS = [
   { label: 'Agent', value: 'agent' },
   { label: 'Import', value: 'import' },
 ];
+
+/**
+ * A travel request's lifecycle (hotcrm#2578, F3a). All six statuses are in
+ * the list from the first step, so the later steps (the report citing a
+ * request closes it when paid, F3c) add none: written, sent, decided, then
+ * either called off before the trip or closed after it.
+ */
+export const EXPENSE_REQUEST_STATUS_OPTIONS = [
+  { label: 'Draft', value: 'draft', color: '#94A3B8', kind: 'open' as const },
+  { label: 'Submitted', value: 'submitted', color: '#F59E0B', kind: 'open' as const },
+  // Still open: the trip is ahead, and the request is cancelled or closed later.
+  { label: 'Approved', value: 'approved', color: '#16A34A', kind: 'open' as const },
+  { label: 'Rejected', value: 'rejected', color: '#DC2626', kind: 'lost' as const },
+  { label: 'Cancelled', value: 'cancelled', color: '#64748B', kind: 'lost' as const },
+  { label: 'Closed', value: 'closed', color: '#0F766E', kind: 'won' as const },
+];

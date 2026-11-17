@@ -180,11 +180,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // Closed, Cancelled or locked project now turns the expense back in a
     // flow instead); 71 until #2555 added the sales order's line lock (in
     // `sales_order_workflow` and again in `sales_order_total_rollup`) and the
-    // typed line's missing price.
+    // typed line's missing price; 74 until hotcrm#2578 added the travel
+    // request's `expense_request_decision_guard`, the expense's approver-only
+    // refusal on its own object.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(74);
+    expect(sites).toHaveLength(75);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

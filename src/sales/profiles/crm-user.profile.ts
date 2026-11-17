@@ -65,8 +65,9 @@ export const CrmUserProfile = {
     "Every member's default: their own leads, accounts, opportunities and activities and read-only catalogues, with no delete, export, View All or system permission.",
   isDefault: true,
   objects: {
-    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN_FLOOR,
+    crm_expense_request: EXPENSE_OWN_FLOOR,
     // ─── The sales book, own scope ────────────────────────────────────
     crm_lead:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_account:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },

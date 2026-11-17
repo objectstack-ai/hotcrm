@@ -54,13 +54,15 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556)', ()
 
   it('owns crm_expense and its guard, approvals, sharing rule, app and manual; no project field of its own', () => {
     const stack = stackOf(EXPENSE_ID);
-    expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense']);
-    expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual(['expense_decision_guard']);
-    expect(((stack.sharingRules ?? []) as Rec[]).map((r) => r.name)).toEqual(['expense_approver_edit']);
+    // The travel request (hotcrm#2578) is pinned in `test/expense-request.test.ts`.
+    expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense', 'crm_expense_request']);
+    expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual(['expense_decision_guard', 'expense_request_decision_guard']);
+    expect(((stack.sharingRules ?? []) as Rec[]).map((r) => r.name)).toEqual(['expense_approver_edit', 'expense_request_approver_edit']);
     expect(((stack.apps ?? []) as Rec[]).map((a) => a.name)).toEqual(['crm_expenses']);
     expect(((stack.books ?? []) as Rec[]).map((b) => b.name)).toEqual(['crm_expense_manual']);
     expect(((stack.flows ?? []) as Rec[]).map((f) => f.name).sort()).toEqual([
       'expense_approval', 'expense_approval_on_create', 'expense_project_approval', 'expense_project_approval_on_create',
+      'expense_request_approval', 'expense_request_approval_on_create',
     ]);
     expect(stack.data ?? [], 'an expense names a person, so the module seeds none').toEqual([]);
     const fields = stack.objects[0].fields as Rec;
