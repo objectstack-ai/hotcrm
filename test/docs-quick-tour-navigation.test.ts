@@ -379,7 +379,7 @@ describe('the source facts the quick-tour table now rests on (#960)', () => {
   it('the Order to Cash app opens on Invoices, with Help the one group collapsed (#2465)', () => {
     const o2c = TOUR_APPS[3]!;
     expect(o2c.pinned).toEqual([]);
-    expect(o2c.groupLabels).toEqual(['Receivables', 'Follow-up', 'Contracts and Accounts', 'My Work', 'Help']);
+    expect(o2c.groupLabels).toEqual(['Receivables', 'Follow-up', 'Orders, Contracts and Accounts', 'My Work', 'Help']);
     expect(childLabels(o2c.groups[0]!)[0]).toBe('Invoices');
     expect(o2c.collapsed).toEqual(['Help']);
   });

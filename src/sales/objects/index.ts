@@ -126,4 +126,6 @@ export { EventAttendee } from './event_attendee.object';
 export { Forecast } from './forecast.object';
 export { Lead } from './lead.object';
 export { Opportunity } from './opportunity.object';
+export { SalesOrder } from './sales_order.object';
+export { SalesOrderLine } from './sales_order_line.object';
 export { Task } from './task.object';

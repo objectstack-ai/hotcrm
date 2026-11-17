@@ -134,7 +134,8 @@ describe('every object has exactly one owner', () => {
 
   it('the app package owns every other object of the app', () => {
     const appObjects = namesOf(body(APP_ID).objects);
-    expect(appObjects).toHaveLength(9);
+    // Eleven since #2555: the order and its lines.
+    expect(appObjects).toHaveLength(11);
     expect(appObjects.filter((name) => MODULE_OBJECTS.includes(name))).toEqual([]);
     expect([...appObjects, ...MODULE_OBJECTS].sort()).toEqual(namesOf((composed as AnyRec).objects));
   });

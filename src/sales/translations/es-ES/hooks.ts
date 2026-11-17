@@ -177,4 +177,42 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
+  // The order's line lock and line fill (REQ-0010, hotcrm#2555).
+  sales_order_workflow: {
+    refusals: {
+      RECORD_LOCKED: {
+        message: 'El pedido {{order}} está Confirmado, así que ya no se pueden añadir, cambiar ni quitar sus líneas. Devuélvalo a Borrador para cambiarlas.',
+        reasons: {
+          completed: {
+            message: 'El pedido {{order}} está Completado, así que ya no se pueden añadir, cambiar ni quitar sus líneas.',
+          },
+          cancelled: {
+            message: 'El pedido {{order}} está Cancelado, así que ya no se pueden añadir, cambiar ni quitar sus líneas.',
+          },
+        },
+      },
+    },
+  },
+  sales_order_line_fill: {
+    refusals: {
+      VALIDATION_FAILED: {
+        message: 'Escriba un Precio de Venta para esta línea, o elija un producto para tomar su precio de lista.',
+      },
+    },
+  },
+  sales_order_total_rollup: {
+    refusals: {
+      RECORD_LOCKED: {
+        message: 'El pedido {{order}} está Confirmado, así que ya no se pueden añadir, cambiar ni quitar sus líneas. Devuélvalo a Borrador para cambiarlas.',
+        reasons: {
+          completed: {
+            message: 'El pedido {{order}} está Completado, así que ya no se pueden añadir, cambiar ni quitar sus líneas.',
+          },
+          cancelled: {
+            message: 'El pedido {{order}} está Cancelado, así que ya no se pueden añadir, cambiar ni quitar sus líneas.',
+          },
+        },
+      },
+    },
+  },
 };

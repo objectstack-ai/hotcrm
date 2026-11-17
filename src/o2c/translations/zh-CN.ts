@@ -285,7 +285,7 @@ export const zhCN: TranslationData = {
       navigation: {
         group_receivables: { label: '应收' },
         group_follow_up: { label: '跟进' },
-        group_customers: { label: '合同与客户' },
+        group_customers: { label: '订单、合同与客户' },
         group_work: { label: '我的工作' },
         group_help: { label: '帮助' },
         nav_invoices: { label: '发票' },

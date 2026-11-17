@@ -177,4 +177,42 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
+  // The order's line lock and line fill (REQ-0010, hotcrm#2555).
+  sales_order_workflow: {
+    refusals: {
+      RECORD_LOCKED: {
+        message: '订单{{order}}已确认，因此不能再添加、修改或删除它的订单行。请先把它退回草稿再修改。',
+        reasons: {
+          completed: {
+            message: '订单{{order}}已完成，因此不能再添加、修改或删除它的订单行。',
+          },
+          cancelled: {
+            message: '订单{{order}}已取消，因此不能再添加、修改或删除它的订单行。',
+          },
+        },
+      },
+    },
+  },
+  sales_order_line_fill: {
+    refusals: {
+      VALIDATION_FAILED: {
+        message: '请为这一行填写销售单价，或选择一个产品以采用它的标价。',
+      },
+    },
+  },
+  sales_order_total_rollup: {
+    refusals: {
+      RECORD_LOCKED: {
+        message: '订单{{order}}已确认，因此不能再添加、修改或删除它的订单行。请先把它退回草稿再修改。',
+        reasons: {
+          completed: {
+            message: '订单{{order}}已完成，因此不能再添加、修改或删除它的订单行。',
+          },
+          cancelled: {
+            message: '订单{{order}}已取消，因此不能再添加、修改或删除它的订单行。',
+          },
+        },
+      },
+    },
+  },
 };

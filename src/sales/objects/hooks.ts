@@ -31,4 +31,5 @@ export { default as leadHook } from './lead.hook';
 export { default as leadCampaignMetricsHook } from './lead.campaign-metrics.hook';
 export { default as opportunityHook } from './opportunity.hook';
 export { default as opportunityCampaignMetricsHook } from './opportunity.campaign-metrics.hook';
+export { default as salesOrderHook } from './sales_order.hook';
 export { default as taskHook } from './task.hook';

@@ -113,6 +113,7 @@ describe('one ownership column, and it is `owner_id`', () => {
       // column of their own (ADR-0055).
       ['crm_opportunity_line_item', 'controlled_by_parent'],
       ['crm_quote_line_item',       'controlled_by_parent'],
+      ['crm_sales_order_line',      'controlled_by_parent'],
       ['crm_campaign_member',       'controlled_by_parent'],
       ['crm_event_attendee',        'controlled_by_parent'],
       ['crm_price_book_entry',      'controlled_by_parent'],

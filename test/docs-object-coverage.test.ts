@@ -134,6 +134,10 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   crm_campaign: { page: 'marketing/campaigns' },
   crm_campaign_member: { page: 'marketing/campaign-members' },
   crm_contract: { page: 'sales/contracts' },
+  // #2555 — an order and its lines, on one page: a line is only ever edited
+  // inside its order.
+  crm_sales_order: { page: 'sales/orders' },
+  crm_sales_order_line: { page: 'sales/orders' },
   crm_product: { page: 'revenue/products' },
   // #2313 — a book and its entries, on one page: an entry is only ever read
   // inside the book it prices.

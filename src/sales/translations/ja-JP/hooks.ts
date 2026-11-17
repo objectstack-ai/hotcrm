@@ -177,4 +177,42 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
+  // The order's line lock and line fill (REQ-0010, hotcrm#2555).
+  sales_order_workflow: {
+    refusals: {
+      RECORD_LOCKED: {
+        message: '注文 {{order}} は確定済みのため、明細の追加・変更・削除はできません。変更するには下書きに戻してください。',
+        reasons: {
+          completed: {
+            message: '注文 {{order}} は完了しているため、明細の追加・変更・削除はできません。',
+          },
+          cancelled: {
+            message: '注文 {{order}} はキャンセルされているため、明細の追加・変更・削除はできません。',
+          },
+        },
+      },
+    },
+  },
+  sales_order_line_fill: {
+    refusals: {
+      VALIDATION_FAILED: {
+        message: 'この明細の販売価格を入力するか、製品を選んでその定価を使ってください。',
+      },
+    },
+  },
+  sales_order_total_rollup: {
+    refusals: {
+      RECORD_LOCKED: {
+        message: '注文 {{order}} は確定済みのため、明細の追加・変更・削除はできません。変更するには下書きに戻してください。',
+        reasons: {
+          completed: {
+            message: '注文 {{order}} は完了しているため、明細の追加・変更・削除はできません。',
+          },
+          cancelled: {
+            message: '注文 {{order}} はキャンセルされているため、明細の追加・変更・削除はできません。',
+          },
+        },
+      },
+    },
+  },
 };

@@ -112,7 +112,9 @@ describe('navigation reaches everything the app ships', () => {
         // is in, which has its own entry, and it is `controlled_by_parent` too.
         // `_budget_line` joined it with `crm_project_budget_line` (#2547): a
         // line is planned inside its budget version, which has its own entry.
-        !/_line_item$|_member$|_attendee$|_feedback$|_entry$|_budget_line$/.test(name) && !reachable.has(name));
+        // `_order_line` joined it with `crm_sales_order_line` (#2555): a line is
+        // added inside its order, which has its own entry.
+        !/_line_item$|_member$|_attendee$|_feedback$|_entry$|_budget_line$|_order_line$/.test(name) && !reachable.has(name));
     expect(stranded, `objects with no navigation entry:\n  ${stranded.join('\n  ')}`).toEqual([]);
   });
 

@@ -26,7 +26,7 @@
 | QUO | 报价(CPQ 与产品目录) | ACT | 任务与活动 |
 | CON | 合同 | APR | 审批 |
 | SVC | 服务与 SLA | PRM | 权限与共享 |
-| | | ADM | 管理与设置 |
+| ORD | 销售订单 | ADM | 管理与设置 |
 
 ## 总览统计(清点时点)
 
@@ -135,6 +135,17 @@
 | CON-005 | 合同自动过期 | 每日 00:00 把过了 `end_date` 的 activated 合同置 expired 并通知 owner | `src/sales/flows/contract-expiration.flow.ts` |
 | CON-006 | 续约提醒与自动续约 | 每日 08:00 按每份合同的 `renewal_notice_days` 幂等创建续约任务并通知;`auto_renewal` 合同自动开出续约商机(proposal,金额=合同额) | `src/sales/flows/contract-renewal.flow.ts` |
 | CON-007 | 合同视图 | 到期日日历、合同期 gantt、按客户分组的季度 timeline、按最快到期排序的列表 | `src/sales/views/contract.view.ts` |
+
+## ORD — 销售订单
+
+| 编号 | 功能 | 说明 | 实现锚点 |
+| --- | --- | --- | --- |
+| ORD-001 | 订单对象 | 客户本次买了什么(`crm_sales_order`,REQ-0010):SO-{0000} 编号,名称即标题,挂在客户下(`controlled_by_parent`),可选关联合同,客户采购单号,可空且唯一的外部编号,报价单同款的价格字段与付款条款,发货状态与发货日期(只供阅读),启用附件 | `src/sales/objects/sales_order.object.ts` |
+| ORD-002 | 订单行 | `crm_sales_order_line`,与报价单明细相同的十个字段;产品可选,没有产品时手填产品标题与销售单价;选了产品则带出名称与标价、销售单价默认取标价 | `src/sales/objects/sales_order_line.object.ts`、`src/sales/objects/sales_order.hook.ts`(`sales_order_line_fill`、`sales_order_line_number`) |
+| ORD-003 | 订单状态机 | `draft → confirmed → completed`,已确认可退回草稿,草稿/已确认可取消;已完成与已取消为终态 | `src/sales/objects/sales_order.object.ts`(validations) |
+| ORD-004 | 合计随订单行 | 小计 = 各行之和,在订单行的同一次写入里重算;折扣金额与总金额由小计、折扣、税额、运费推出 | `src/sales/objects/sales_order.hook.ts`(`sales_order_total_rollup`、`sales_order_workflow`) |
+| ORD-005 | 订单行锁定 | 订单离开草稿后,用户不能增删改订单行(先退回草稿);已确认订单的订单行列表不再提供"新建" | `src/sales/objects/sales_order.hook.ts`(`sales_order_workflow`)、`src/sales/objects/sales_order_line.object.ts`(`userActions`) |
+| ORD-006 | 订单视图与导航 | 全部订单、订单看板、待发货;销售应用"销售"分组与订单与回款应用"订单、合同与客户"分组中的"订单";客户与合同页面的订单列表 | `src/sales/views/sales_order.view.ts`、`src/sales/apps/crm.app.ts`、`src/sales/index.ts` |
 
 ## SVC — 服务与 SLA
 

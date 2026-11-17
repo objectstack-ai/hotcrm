@@ -23,6 +23,8 @@ import * as forecastSeed from '../src/sales/data/forecast.seed';
 // Split out of `revenue.seed.ts` when `crm_contract` moved to the app package
 // (`module-split-plan.md` item 11).
 import * as contractSeed from '../src/sales/data/contract.seed';
+// Sales orders and their lines (#2555).
+import * as salesOrderSeed from '../src/sales/data/sales_order.seed';
 // Project Delivery's rate cards and projects (#2316 phase 1a).
 import * as psaSeed from '../src/psa/data/psa.seed';
 // Order to Cash's collection plan, invoices and payments (#2529).
@@ -257,6 +259,7 @@ describe('every family module dataset is wired into CrmSeedData (#635 split)', (
     'activity.seed': activitySeed,
     'forecast.seed': forecastSeed,
     'contract.seed': contractSeed,
+    'sales_order.seed': salesOrderSeed,
     'psa.seed': psaSeed,
     'o2c.seed': o2cSeed,
   };
