@@ -91,6 +91,17 @@ position only: a sharing rule, queue member or record share you added here
 under an old position name keeps that name, so re-point it to the renamed
 position.
 
+Coming from 6.5 or earlier with Order to Cash switched on? Billing
+milestones, invoices and payments now belong to the account, and the contract
+is optional on invoices and payments. Every existing record keeps its account,
+its contract and its totals. The database, though, still requires a contract
+on those records until an administrator runs `os migrate apply` once against
+it and confirms the three `relax_not_null` changes it lists (the contract
+column of billing milestones, invoices and payments); skip the account
+changes it marks destructive, as nothing needs them. Until then an invoice or
+payment saved without a contract is refused with "Contract is required". On
+a hosted environment this step is the platform's (objectstack#34377).
+
 ## 4. Check the permission sets
 
 Positions hand out the everyday sets. Two sets are worth checking by hand: read
