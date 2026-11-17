@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_FIGURE_FIELDS } from './_o2c-figures';
-import { EXPENSE_OWN_READ_ALL } from './_expense-grants';
+import { EXPENSE_OWN_READ_ALL, EXPENSE_REPORT_OWN_READ_ALL } from './_expense-grants';
 
 /**
  * Accounts Receivable — finance's set for the Order to Cash module (#2315,
@@ -47,6 +47,7 @@ export const ArAccountantProfile = {
   objects: {
     // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN_READ_ALL,
+    crm_expense_report: EXPENSE_REPORT_OWN_READ_ALL,
     crm_invoice:           { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },
     crm_payment:           { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },
     crm_billing_milestone: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },

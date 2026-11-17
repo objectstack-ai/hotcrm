@@ -553,6 +553,11 @@ export const jaJP: TranslationData = {
         crm_project: { label: 'プロジェクト' },
       },
     },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: 'プロジェクト' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
   flows: {

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
-import { EXPENSE_OWN } from './_expense-grants';
+import { EXPENSE_OWN, EXPENSE_REPORT_OWN } from './_expense-grants';
 
 /**
  * Project Member — a consultant staffed on projects (hotcrm#2316, plan
@@ -57,6 +57,7 @@ export const ProjectMemberProfile = {
     crm_time_entry:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN,
+    crm_expense_report: EXPENSE_REPORT_OWN,
     sys_attachment:     { allowCreate: true,  allowRead: true, allowEdit: false, allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_comment:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_activity:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },

@@ -34,8 +34,8 @@ cost too.
   them, and Opportunities is not in their Project Delivery menu.
 - **One row per person per project.** Staffing someone twice is refused.
 - **Staff yourself first.** Until someone is staffed as Project Manager, a
-  timesheet written on the project has no approver, and an expense submitted
-  on it goes to an administrator.
+  timesheet written on the project has no approver, and an expense report
+  submitted on it goes to an administrator.
 - **Only people staffed on a project can book hours on it.** An hour from
   anyone else is refused, naming the project.
 

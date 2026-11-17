@@ -7,8 +7,12 @@ import { defineView } from '@objectstack/spec/ui';
  * object, names unchanged, so a saved view or a bookmark keeps working).
  *
  *   • All Expenses — every expense the reader may see, newest first.
- *   • My Expenses — the reader's own.
- *   • Expenses to Approve — submitted ones stamped with the reader as approver.
+ *   • My Expenses — the reader's own, where they select expenses and Submit
+ *     for Reimbursement (hotcrm#2559).
+ *
+ * Expenses to Approve retired with per-expense approval (hotcrm#2559): an
+ * approver decides a report, from Reports to Approve
+ * (`./expense_report.view.ts`).
  *
  * The Project column is Project Delivery's field (`src/psa/extensions/`),
  * named here because a view of a foreign object may not live in that package
@@ -16,6 +20,25 @@ import { defineView } from '@objectstack/spec/ui';
  * Project Delivery disabled the field leaves the object, and so does the
  * column (measured on 18.5.0 before filing, hotcrm#2556).
  */
+
+/**
+ * The selection bar of My Expenses: one Submit for Reimbursement for the
+ * whole selection (`execution: 'aggregate'`, one report per project), and
+ * Delete, which any authored bar entry would otherwise hide.
+ */
+const MY_EXPENSES_BAR = [
+  { name: 'submit_for_reimbursement', operation: 'custom', execution: 'aggregate' },
+  {
+    name: 'delete',
+    label: 'Delete',
+    icon: 'trash-2',
+    variant: 'danger',
+    operation: 'delete',
+    confirmText: 'Permanently delete {{count}} expense(s)? This cannot be undone.',
+    confirmLabel: 'Delete',
+  },
+] as const;
+
 export const ExpenseViews = defineView({
   list: {
     type: 'grid',
@@ -33,6 +56,7 @@ export const ExpenseViews = defineView({
       { field: 'paid_by', width: 110 },
       { field: 'is_billable', width: 100, align: 'center' },
       { field: 'status', width: 110 },
+      { field: 'crm_expense_report', width: 200 },
     ],
     sort: [{ field: 'expense_date', order: 'desc' }],
     pagination: { pageSize: 50 },
@@ -43,27 +67,14 @@ export const ExpenseViews = defineView({
       name: 'my_expenses',
       type: 'grid',
       label: 'My Expenses',
+      bulkActionDefs: [...MY_EXPENSES_BAR],
       userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_expense' },
-      columns: ['name', 'crm_project', 'expense_date', 'category', 'amount', 'status'],
+      columns: ['name', 'crm_project', 'expense_date', 'category', 'amount', 'paid_by', 'status', 'crm_expense_report'],
       filter: [
         { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
       ],
       sort: [{ field: 'expense_date', order: 'desc' }],
-    },
-
-    expenses_to_approve: {
-      name: 'expenses_to_approve',
-      type: 'grid',
-      label: 'Expenses to Approve',
-      userActions: { editInline: true },
-      data: { provider: 'object', object: 'crm_expense' },
-      columns: ['name', 'owner_id', 'crm_project', 'expense_date', 'category', 'amount', 'status'],
-      filter: [
-        { field: 'approver', operator: 'equals', value: '{current_user_id}' },
-        { field: 'status', operator: 'equals', value: 'submitted' },
-      ],
-      sort: [{ field: 'expense_date', order: 'asc' }],
     },
   },
 });

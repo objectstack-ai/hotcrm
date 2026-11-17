@@ -446,6 +446,11 @@ export const en: TranslationData = {
         crm_project: { label: 'Project' },
       },
     },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: 'Project' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
   flows: {

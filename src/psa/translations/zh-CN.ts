@@ -553,6 +553,11 @@ export const zhCN: TranslationData = {
         crm_project: { label: '项目' },
       },
     },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: '项目' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
   flows: {

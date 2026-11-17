@@ -31,12 +31,13 @@ record whose approval cannot run.
   decides, then the **Finance Controllers** too when it raises the Approved
   Budget by **10 %** or more.
 - **A timesheet** goes to its project's Project Manager when it is submitted.
-- **An expense on a project** goes to the Project Manager when it is
-  submitted, then, at **2,000** or more, to the Finance Controllers. An
-  expense with no project goes to the spender's own manager instead (the
-  **Expenses** manual).
+- **An expense report on a project** goes to the Project Manager when it is
+  submitted, then, at a total of **2,000** or more, to the Finance
+  Controllers. Submit for Reimbursement puts each project's expenses on a
+  report of their own; a report with no project goes to the spender's own
+  manager instead (the **Expenses** manual).
 - **Nobody approves their own.** A Project Manager's own timesheet or expense
-  goes to an administrator.
+  report goes to an administrator.
 - **Rejected** sends the record back for revision; the sender can also
   **recall** it from their Inbox while it waits, which puts it back to Draft.
 - **While it waits, the record is locked**: nobody edits it until it is
@@ -63,7 +64,7 @@ project with no budget has none.
   every Finance Controller get one inbox notice and one email.
 - **Once per crossing.** A project that stays in Warning while more hours are
   approved sends nothing more. One that falls back (a budget raised, an expense
-  rejected) and crosses again is told again.
+  report rejected) and crosses again is told again.
 - **The notice is in each person's own language**, the one on their user
   record, not the one picked in the console's menu.
 
@@ -72,15 +73,15 @@ project with no budget has none.
 The notice proposes the lock; a person decides, and nothing ticks it on its
 own. While **Lock Time and Expenses** is ticked on a project, no timesheet on
 it can be submitted, **whoever submits it**, administrators included, and an
-expense submitted on it goes back to Draft with an inbox notice to its
+expense report submitted on it goes back to Draft with an inbox notice to its
 spender. Drafts can still be written. Untick it, after a top-up is approved for
 example, and submissions are taken again.
 
 A **Closed** or **Cancelled** project takes nothing new at all: no timesheet
 can be created on it or moved onto it, and a draft already there can be edited
 but not submitted, administrators included. The expense's Project picker does
-not offer such a project, and an expense submitted on one goes back to Draft
-with an inbox notice. A **Completed** project still takes late bookings; tick
+not offer such a project, and an expense report submitted on one goes back to
+Draft with an inbox notice. A **Completed** project still takes late bookings; tick
 the lock to stop them.
 
 The **Projects Overview** dashboard, under **Projects**, shows the same figures

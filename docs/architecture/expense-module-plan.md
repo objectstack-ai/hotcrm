@@ -112,6 +112,16 @@ committed:
 - Not measured on 18.5.0: an agent creating an expense from a receipt image, and a skill calling an
   action.
 
+## Measured on 2026-11-17 (hotcrm#2559)
+
+Where **one report per project** lives: in the expense package's Submit for Reimbursement action. It
+groups the selected expenses by the expense's `crm_project` value, which a record carries only while
+PSA contributes the field, and writes it onto the report, where PSA contributes the same field. With
+PSA on, two projects and one expense with no project made three reports, each routed to its own
+approver; with PSA off, every selection made one report, approved by the manager, with no error in
+any flow run (`test/psa-approvals.test.ts`, `test/expense-module.test.ts`). The project-path approval
+flow stays in the expense package with stage 1's (hotcrm#2575).
+
 ## Why this shape
 
 General products keep the project on each expense line and route to the line manager and finance;
@@ -125,7 +135,7 @@ into the repo.
 | --- | --- |
 | 1 | [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issues/2556) the expense package; `crm_expense` moves into it |
 | 2 | [hotcrm#2559](https://github.com/objectstack-ai/hotcrm/issues/2559) `crm_expense_report` with its approval, Submit for Reimbursement and Mark as Paid; per-expense approval retires |
-| 3 | The travel request and the expense skill (no cards yet) |
+| 3 | The travel request ([hotcrm#2578](https://github.com/objectstack-ai/hotcrm/issues/2578)–[#2581](https://github.com/objectstack-ai/hotcrm/issues/2581)) and the expense skill (no card yet) |
 
 ## Decisions recorded (2026-11-16)
 

@@ -1,11 +1,13 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { App } from '@objectstack/spec/ui';
 import { HOTCRM_ICON } from '../../sales/apps/crm.app';
 
 /**
  * the Expenses app (「费用报销」, REQ-0011, hotcrm#2556) — where every employee
- * records what they spent and their manager approves it, declared by the
+ * records what they spent and sends it to be paid back on a report, their
+ * manager approves the report, and finance marks it paid (hotcrm#2559), declared by the
  * expense module as the Order to Cash and Project Delivery apps are declared
  * by theirs (an app package may declare one app only, ADR-0019 D3). The
  * maintainer ruled reimbursement its own package on 2026-11-16 (the adopted
@@ -17,13 +19,16 @@ import { HOTCRM_ICON } from '../../sales/apps/crm.app';
  * `src/sales/profiles/_expense-grants.ts`); the guest portal set grants
  * nothing here.
  *
- * Project staff also find My Expenses and Expenses to Approve inside the
+ * Reports to Pay is finance's list, shown to the Finance Controller and AR
+ * Accountant positions only.
+ *
+ * Project staff also find My Expenses and Reports to Approve inside the
  * Project Delivery app, contributed by this module (`../index.ts`).
  */
 export const ExpenseApp = App.create({
   name: 'crm_expenses',
   label: 'Expenses',
-  description: 'What you spent for the company, with its receipts, and the expenses waiting for your approval',
+  description: 'What you spent for the company, the reports that pay it back, and the reports waiting for your approval',
   icon: 'receipt',
   defaultAgent: 'ask',
   branding: {
@@ -41,7 +46,18 @@ export const ExpenseApp = App.create({
       expanded: true,
       children: [
         { id: 'nav_my_expenses', type: 'object', objectName: 'crm_expense', viewName: 'my_expenses', label: 'My Expenses', icon: 'receipt' },
-        { id: 'nav_expenses_to_approve', type: 'object', objectName: 'crm_expense', viewName: 'expenses_to_approve', label: 'Expenses to Approve', icon: 'clipboard-check' },
+        { id: 'nav_my_expense_reports', type: 'object', objectName: 'crm_expense_report', viewName: 'my_expense_reports', label: 'My Reports', icon: 'wallet' },
+        { id: 'nav_expense_reports_to_approve', type: 'object', objectName: 'crm_expense_report', viewName: 'expense_reports_to_approve', label: 'Reports to Approve', icon: 'clipboard-check' },
+        {
+          id: 'nav_expense_reports_to_pay',
+          type: 'object',
+          objectName: 'crm_expense_report',
+          viewName: 'expense_reports_to_pay',
+          label: 'Reports to Pay',
+          icon: 'banknote',
+          // Finance's list: the people who mark a report paid.
+          visible: P`current_user.can("crm_expense_report", "read") && ("crm_finance_controller" in current_user.positions || "crm_ar_accountant" in current_user.positions)`,
+        },
         { id: 'nav_all_expenses', type: 'object', objectName: 'crm_expense', label: 'All Expenses', icon: 'list' },
       ],
     },

@@ -1,6 +1,6 @@
 ---
 title: Expenses
-description: Recording what you spent for the company with its receipt, who approves it, and how a project expense reaches the project's cost.
+description: Recording what you spent for the company with its receipt, sending it on an expense report, who approves it, how you are paid back, and how a project expense reaches the project's cost.
 ---
 
 # Expenses
@@ -24,34 +24,51 @@ Open **My Expenses** in the **Expenses** app and choose **New**:
 
 Attach the receipt in the **Files** tab. **Source** says how the record arrived: **Manual** when you type it, **Agent** or **Import** when an assistant or an import wrote it. With Project Delivery on, the form also has a **Project**: see [Expenses on a project](#on-a-project).
 
-## Submitting and approving
+## Submitting for reimbursement
 
-| Status | What it means |
+Select your expenses in **My Expenses** and choose **Submit for Reimbursement** in the selection bar. For one expense, the same button is on its record page. There is nothing else to fill in: the expenses go on an **expense report**, and the report is sent for approval in the same click. Follow it in **My Reports**.
+
+- **One report per project.** With Project Delivery on, each project's expenses go on a report of their own and the rest on one more report, so a trip that touched two projects makes two reports. See [Expenses on a project](#on-a-project).
+- The report's **Title** is the expenses' date range. **Total** adds every expense on it; **To Pay Back** adds only the ones paid by the employee.
+- Only your own expenses, on no report yet and not approved, can be sent. If any selected expense is not, nothing is sent and the message names each one.
+
+An expense's status follows its report; you never set it yourself.
+
+| Report status | What it means |
 | --- | --- |
-| **Draft** | You are still filling it in |
-| **Submitted** | Sent for approval, and locked while it waits |
-| **Approved** | Final |
-| **Rejected** | Sent back. Move it to Draft, correct it and submit again |
+| **Draft** | Recalled, or reopened after a rejection. Its expenses can be changed again |
+| **Submitted** | Waiting for approval. The report and its expenses are locked |
+| **Approved** | Approved. Waiting for finance to pay you back |
+| **Paid** | Finance has recorded that you were paid back. Final |
+| **Rejected** | Sent back. Choose **Back to Draft**, correct the expenses and **Submit** again |
 
-Set the status to **Submitted** to send it. Who decides:
+## Who approves it
 
 - **Your manager**, the **Manager** on your user record. When you have none, the **Finance Controllers** decide instead.
-- An expense of **2,000** or more then goes to the **Finance Controllers** as well, and is approved only once they approve it too.
+- A report with a **Total** of **2,000** or more then goes to the **Finance Controllers** as well, and is approved only once they approve it too.
 
-Approvers decide in their **Inbox** (under **My Work**), with **Approve** or **Reject**. **Expenses to Approve** lists the expenses waiting for you, to open and read first. Nobody decides their own expense, and nobody sets **Approved** or **Rejected** by hand.
+Approvers decide in their **Inbox** (under **My Work**), with **Approve** or **Reject**. **Reports to Approve** lists the reports waiting for you, to open and read first; you can open every expense on them. Nobody decides their own report, and nobody sets **Approved** or **Rejected** by hand.
 
-**Changed your mind?** Recall it from your Inbox while it waits. It goes back to **Draft**.
+**Changed your mind?** Recall the report from your Inbox while it waits. It goes back to **Draft** with its expenses; **Submit** sends it again. Only a draft report can be deleted, and its expenses stay, free to be sent again.
+
+## Being paid back
+
+Approved reports are listed under **Reports to Pay** for the **Finance Controllers** and **AR Accountants**. Once the money has reached the employee, they choose **Mark as Paid** and enter the date and, if there is one, the payment's reference. HotCRM records the payment; it pays nothing out and posts nothing to the books. A paid report can no longer be changed.
 
 ## Who sees what
 
-You see your own expenses, and the ones you are asked to approve. Finance sees every expense under **All Expenses**, and so do sales managers and leadership.
+You see your own expenses and reports, and the ones you are asked to approve. Finance sees every expense under **All Expenses** and every report, and so do sales managers and leadership. Nobody creates a report by hand: **Submit for Reimbursement** creates it.
 
 ## Expenses on a project [#on-a-project]
 
-With [Project Delivery](/docs/projects) on, an expense can name a **Project**. Project staff find **My Expenses** and **Expenses to Approve** in the Project Delivery app too, under **Time and Expenses**.
+With [Project Delivery](/docs/projects) on, an expense can name a **Project**. Project staff find **My Expenses** and **Reports to Approve** in the Project Delivery app too, under **Time and Expenses**.
 
-- An expense on a project is approved by the **project's Project Manager** instead of your manager, then by finance from 2,000.
-- Once approved it counts in the project's cost: see [how time and expenses become the project's cost](/docs/projects/time-and-expenses#how-they-become-the-projects-cost).
-- The **Project** picker does not offer a Closed or Cancelled project. An expense submitted on one anyway, or on a project with **Lock Time and Expenses** ticked, goes back to **Draft** and you get an Inbox notice naming the project.
+- **Submit for Reimbursement** puts each project's expenses on a report of their own, which names the project. That report is approved by the **project's Project Manager** instead of your manager, then by finance from 2,000.
+- Once the report is approved its expenses count in the project's cost: see [how time and expenses become the project's cost](/docs/projects/time-and-expenses#how-they-become-the-projects-cost). Marking it paid changes nothing there.
+- The **Project** picker does not offer a Closed or Cancelled project. A report sent on one anyway, or on a project with **Lock Time and Expenses** ticked, goes back to **Draft** and you get an Inbox notice naming the project. On a locked project, submit it again once the lock is lifted; on a closed or cancelled one, delete the report, move its expenses to an open project and send them again.
 
-With Project Delivery off, the Project field is not shown and every expense goes to your manager. The project an expense named is kept, and shows again when Project Delivery is switched back on.
+With Project Delivery off, the Project field is not shown on the expense or the report, every selection makes one report, and every report goes to your manager. The project an expense or report named is kept, and shows again when Project Delivery is switched back on.
+
+## Upgrading from per-expense approval
+
+Before expense reports, each expense was submitted and approved on its own. An expense that was **approved** stays approved and keeps counting in its project's cost; it is on no report, so it has no payment record. A rejected one is sent like any other. An expense that was **waiting for approval** at the upgrade can no longer be decided: approving its old request answers that the approval cannot be resumed. The spender sends it with **Submit for Reimbursement**, which takes a submitted or rejected expense that is on no report and reports it like the rest, and then recalls the old request from the Inbox so it leaves the approver's list (an administrator can recall it too). Recalling alone leaves the expense **Submitted**.

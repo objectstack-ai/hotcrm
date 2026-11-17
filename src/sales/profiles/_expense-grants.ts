@@ -45,3 +45,19 @@ export const EXPENSE_READ_ALL = {
   allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false,
   viewAllRecords: true, modifyAllRecords: false,
 };
+
+/**
+ * Expense report rows (hotcrm#2559) — the same shapes as the expense's, so
+ * the report follows the expense: own for everyone, every report read by
+ * finance and the sets that read every expense, the approver reaching what
+ * it approves through `expense_report_approver_edit`. One difference: nobody
+ * creates a report by hand. Submit for Reimbursement creates it, with its
+ * expenses on it, and finance's Mark as Paid judges the caller itself, so
+ * neither needs a create or an edit-all row.
+ */
+const noCreate = <T extends { allowCreate: boolean }>(shape: T): T => ({ ...shape, allowCreate: false });
+
+export const EXPENSE_REPORT_OWN = noCreate(EXPENSE_OWN);
+export const EXPENSE_REPORT_OWN_FLOOR = noCreate(EXPENSE_OWN_FLOOR);
+export const EXPENSE_REPORT_OWN_READ_ALL = noCreate(EXPENSE_OWN_READ_ALL);
+export const EXPENSE_REPORT_READ_ALL = EXPENSE_READ_ALL;

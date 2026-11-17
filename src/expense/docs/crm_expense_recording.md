@@ -1,17 +1,19 @@
 ---
-title: Expenses — Recording, Approval and Projects
-description: Recording what you spent with its receipt, who approves it, and what reaches a project's cost.
+title: Expenses — Recording, Reports and Projects
+description: Recording what you spent with its receipt, sending it on an expense report, who approves it, its payment back, and what reaches a project's cost.
 order: 1
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
   - object:crm_expense
+  - object:crm_expense_report
 ---
 
-# Expenses — Recording, Approval and Projects
+# Expenses — Recording, Reports and Projects
 
 For everyone who spends money for the company, their managers, and finance.
-An expense is one cost with its receipt. You record it, submit it, and the
-right person approves it from their **Inbox**.
+An expense is one cost with its receipt. You record your expenses, send them
+together on an **expense report**, the right people approve the report from
+their **Inbox**, and finance marks it paid once you have been paid back.
 
 ## Recording an expense
 
@@ -27,37 +29,96 @@ currency before you enter it.
 **Source** says how the record arrived: typed by a person, written by an
 agent, or imported. It decides nothing.
 
-## Who approves it
+An expense's **Status** is not yours to set: it follows the report the
+expense is on.
 
-Set **Status** to **Submitted**. The expense is locked while it waits.
+## Submitting for reimbursement
+
+Select the expenses in **My Expenses** and choose **Submit for
+Reimbursement**. For one expense, the same button is on its record page.
+There is nothing else to fill in: the expenses go on an expense report, and
+the report is submitted in the same click.
+
+- **One report per project.** The expenses of each project go on a report of
+  their own, which names the project, and the expenses with no project on one
+  more report. A trip that touched two projects makes two reports, so each
+  project manager decides only their own project's spend.
+- The report's **Title** is the expenses' date range. **Total** adds every
+  expense on it; **To Pay Back** adds only the ones you paid yourself.
+- Only your own expenses, on no report yet and not approved, can be
+  submitted. If any selected expense is not, nothing is submitted and the
+  message names each one.
+
+Follow your reports in **My Reports**.
+
+## Who approves it
 
 - **With a project**: the project's **Project Manager** decides.
 - **Without a project**: your **manager** decides, the manager on your user
   record. With no manager there, the **Finance Controllers** decide instead.
-- **2,000 or more**: the **Finance Controllers** decide too, after the first
-  approver, and the expense counts only once they approve.
-- **Nobody approves their own.** A Project Manager's own expense on their
+- **A total of 2,000 or more**: the **Finance Controllers** decide too, after
+  the first approver, and the report counts only once they approve.
+- **Nobody approves their own.** A Project Manager's own report on their
   project goes to an administrator.
 
-The approver is written into **Approver** when you submit, and the expense
-appears under their **Expenses to Approve**. **Rejected** sends it back: move
-it to **Draft**, correct it and submit it again. You can also **recall** it
-from your Inbox while it waits. Nobody sets **Approved** or **Rejected** by
-hand; only an administrator can, to repair an expense whose approval cannot
-run.
+The approver is written into the report's **Approver**, and the report
+appears under their **Reports to Approve**; they can open each expense on it.
+While the report waits, it and its expenses are locked.
+
+- **Recall** the report from your Inbox while it waits: it goes back to
+  **Draft** with its expenses, which you can change again. **Submit** sends
+  it again.
+- **Rejected** sends it back. **Back to Draft** reopens it, its expenses with
+  it; correct them and **Submit** again.
+- Nobody sets **Approved** or **Rejected** by hand; only an administrator
+  can, to repair a report whose approval cannot run.
+
+Only a draft report can be deleted. Its expenses stay, free to be submitted
+again.
+
+## Paying it back
+
+An approved report appears under **Reports to Pay** for the **Finance
+Controllers** and **AR Accountants**. Once the employee has been paid back,
+finance chooses **Mark as Paid** and enters the date and, if there is one, the
+payment's reference. This records the payment; it moves no money and posts
+nothing. A paid report can no longer be changed, and its expenses stay
+**Approved**.
 
 ## Projects
 
 When Project Delivery is in use, an approved expense on a project counts in
 the project's **Expense Cost**, and in **Approved to Bill** when it is
-**Billable**. Paid by the company counts too.
+**Billable**. Paid by the company counts too. Marking the report paid changes
+nothing there.
 
 - The **Project** picker offers only projects that are not **Closed** or
   **Cancelled**.
-- An expense submitted on a project that is **Closed**, **Cancelled**, or has
+- A report submitted on a project that is **Closed**, **Cancelled**, or has
   **Lock Time and Expenses** ticked goes straight back to **Draft**, and you
-  get an Inbox notice naming the project. Keep it as a draft, or move it to an
-  open project and submit it there.
+  get an Inbox notice naming the project. On a locked project, submit the
+  report again once the lock is lifted. On a closed or cancelled one, delete
+  the report, move its expenses to an open project, and submit them again.
 
 When Project Delivery is switched off, the **Project** field leaves the
-expense, and every expense goes to the spender's manager.
+expense and the report, every selection makes one report, and every report
+goes to the spender's manager.
+
+## Upgrading from per-expense approval
+
+Before expense reports, each expense was submitted and approved on its own.
+After the upgrade:
+
+- An expense that was **approved** stays approved and keeps counting in its
+  project's cost. It is on no report, so it has no payment record.
+- A **draft** expense is submitted for reimbursement like any other.
+- A **rejected** expense is submitted for reimbursement like any other: an
+  expense that is on no report and not approved is set back to **Draft** and
+  reported like the rest.
+- An expense that was **waiting for approval** cannot be decided any more:
+  approving its old request answers that the approval can no longer be
+  resumed. The spender selects the expense and chooses **Submit for
+  Reimbursement**, and the report goes to its approver as usual. Then recall
+  the old request from the Inbox so it leaves the approver's list; the
+  spender or an administrator can recall it, before or after. Recalling it
+  alone leaves the expense **Submitted** until it is reported.
