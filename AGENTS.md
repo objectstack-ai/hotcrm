@@ -227,6 +227,7 @@ needed; (3) per-field enumeration only in the extreme case, with a comment namin
 - **Docs**: every new object or feature gets a user-facing page under `content/docs/` for business users and admins — business concepts,
   never a hand-copied machine roster; English first, then `.zh-Hans.mdx` and `.zh-Hant.mdx` beside it. A feature that adds a rule the
   screens do not show also updates its package's **in-app docs** in the same PR (rule 7). Both under **Documentation discipline** below.
+- **Languages per surface**: UI, docs site, in-app manuals, README and marketplace listing each ship their own set — `docs/README.md` § *Languages By Surface* is the table (`test/docs-language-matrix.test.ts` reads it); a language added or dropped anywhere updates it in the same PR.
 - **Validation predicates must be TOTAL**: every `record.x` read in an authored CEL predicate (`validations[].condition`, `requiredWhen`,
   `readonlyWhen`, `visibleWhen`) carries a `has(record.x)` guard.
 - **Dependencies**: the `@objectstack/*` packages in `package.json` are version-locked and bumped together; keep `engines.protocol` in
