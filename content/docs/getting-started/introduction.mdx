@@ -1,26 +1,28 @@
 ---
 title: Introduction
-description: What HotCRM is, who it's for, and what's included out of the box.
+description: What HotCRM is, who it is for, and what ships in the box.
 ---
 
 # Introduction
 
-**HotCRM is an AI-native enterprise CRM.** It helps your team manage the entire customer journey — from the first marketing touch to a closed deal and beyond — with an AI Copilot built into every screen.
+**HotCRM is customer and revenue software for any company that sells products, project services or subscriptions.** It carries the work from the first marketing touch to the money: leads and deals, quotes, orders and contracts, the collection plan with the invoices and payments finance records against it, the projects that deliver what was sold, the expenses people spend along the way, and the service cases that follow. It runs on [**ObjectStack**](https://github.com/objectstack-ai/objectstack), the platform underneath it.
 
-## What's included
+## Six apps
 
-The platform spans the four classic CRM pillars, plus an AI layer that knows your data:
+Each line of work has an app of its own. The app launcher offers each person the apps their work needs.
 
-| Pillar | What you can do |
-| --- | --- |
-| [**Sales**](/docs/sales/index) | Manage leads, accounts, contacts, opportunities, quotes, and pipeline |
-| [**Service**](/docs/service/index) | Track cases, enforce SLAs, manage a knowledge base |
-| [**Marketing**](/docs/marketing/index) | Run campaigns, score engagement, measure ROI |
-| [**Revenue**](/docs/revenue/index) | Maintain products, govern contracts, route discount approvals |
-| [**AI Copilot**](/docs/ai-copilot/index) | An assistant that drafts emails, triages cases, summarises accounts |
-| [**Analytics**](/docs/analytics/index) | Dashboards, reports, and the datasets underneath them |
+| App | Who works in it | What it covers |
+| --- | --- | --- |
+| [**Sales**](/docs/sales/index) | Sales reps, sales managers, sales leadership | Leads, accounts, contacts, opportunities, quotes, orders, contracts, products and price books, forecasts, the collection plan |
+| [**Service**](/docs/service/index) | Service agents, service managers | Cases, SLAs and escalation, the knowledge base |
+| [**Marketing**](/docs/marketing/index) | Marketing users | Campaigns and the leads, contacts and accounts they reach |
+| [**Order to Cash**](/docs/order-to-cash) | Accounts receivable, finance controllers | Invoices and payments recorded against each contract's collection plan |
+| [**Project Delivery**](/docs/projects) | Project managers, project staff, finance controllers | Projects, staffing at a rate card, budgets, timesheets, and what each project costs |
+| [**Expenses**](/docs/expenses) | Every employee | Expenses with their receipts, expense reports and their approval and payment back, travel requests |
 
-Everything is **wired together** out of the box — leads convert into opportunities, opportunities link to quotes and contracts, contracts trigger renewals, support cases see the customer's full history.
+Marketing, Order to Cash, Project Delivery and Expenses are modules: an administrator can switch one off, and its app leaves the launcher. Products, price books and large-deal approvals are described under [Revenue](/docs/revenue/index); dashboards and reports under [Analytics](/docs/analytics/index).
+
+The records are **wired together**: a lead converts into an account, a contact and an opportunity; an accepted quote wins the deal and drafts its contract; a contract carries its collection plan, invoices and payments; a project names the opportunity, contract or order it delivers; a case sees the customer's whole history.
 
 ![Strategic account 360 view](/screenshots/hotcrm/customer-360/en.png)
 
@@ -28,53 +30,56 @@ _Keep relationship context, open opportunities, contracts, and risks together on
 
 ## Who HotCRM is for
 
-- **Sales reps and managers** — for working leads, deals, and forecasts.
-- **Service agents and managers** — for resolving customer cases on time.
-- **Marketers** — for running campaigns and proving ROI.
-- **Sales operations & administrators** — for configuring the system to fit your business.
-- **Executives** — for the rolled-up view across the entire revenue funnel.
+The roles below are the positions an administrator gives people under **Setup → Position Holders**.
+
+- **Sales reps, sales managers, sales directors and executives** — leads, deals, quotes, orders, contracts and forecasts.
+- **Service agents, service managers and service directors** — resolving customer cases on time.
+- **Marketing users, managers and directors** — running campaigns and reaching an audience.
+- **Finance** — accounts receivable records invoices and payments; finance controllers approve large projects, budget top-ups and expense reports; both mark approved expense reports paid.
+- **Project managers, project team members, project directors and the PMO** — delivering projects, booking time and approving it.
+- **Every employee** — recording expenses, sending them on a report, and asking before a trip.
+- **Administrators** — setting the system up to fit the business.
 
 ## What makes it different
 
-### 1. AI-native, not AI-added
+### 1. One record from the first touch to the cash
 
-The Copilot is built into the product, not bolted on. It respects your sharing rules, draws on your real CRM data, and grounds answers in knowledge bases you control.
+Sales, finance, delivery and service work on the same accounts, contracts and orders, so nobody re-keys a deal into a second system to plan its billing or staff its project.
 
-### 2. Process-aware out of the box
+### 2. Built for agents
 
-You don't have to build approval flows, SLA escalation, or campaign automation from scratch. They ship configured to industry best practice — adjust, don't build.
+HotCRM provides the objects, the actions and the skills; the automation that reads a receipt, checks a policy or drafts a reply is the job of **your agent**, connected over MCP. The agent acts as the person it connects as, under the same permissions and sharing as that person. HotCRM ships no assistant of its own: the assistant is the platform's, and HotCRM teaches it with six skills. See [AI and Agents](/docs/ai-copilot/index).
 
-### 3. Built on a modern, extensible platform
+### 3. Processes ship configured
 
-HotCRM runs on [**ObjectStack**](https://github.com/objectstack-ai/framework) — a metadata-first runtime. That means every field, rule, page, and workflow is defined as code in a Git repo. No clicking through admin UIs and forgetting what changed.
+Approvals for large deals, projects, budget top-ups, timesheets, expense reports and travel requests, SLA escalation and contract renewal reminders come built in (the scheduled ones run where an administrator has switched scheduled work on). Adjust them; you do not have to build them.
 
-If you're a developer, see [For Developers](/docs/getting-started/for-developers) for what that means in practice.
+### 4. Built on a metadata-first platform
+
+Every object, field, rule, page and flow is metadata in a Git repository, running on ObjectStack. If you are a developer, see [For Developers](/docs/getting-started/for-developers) for what that means in practice.
 
 ## What ships in the box
 
-The system you get on day one already includes:
-
-- **38 business objects** (account, lead, contact, opportunity, product, quote, contract, order, case, campaign, and more) with industry-standard fields, picklists, and validations.
-- **18 positions** — flat groups covering the usual sales / service / marketing functions, used to distribute record access. Nothing rolls up between them, so each rung that needs a record is named by its own sharing rule.
-- **Built-in automation** for lead routing, opportunity wins, contract expiration, quote expiration, campaign auto-enrollment, and SLA escalation.
-- **Approval processes** for high-value discounts.
-- **Standard list views, dashboards, and reports** for every role.
-- **AI skills** for lead qualification, email drafting, case triage, revenue forecasting, and customer 360°.
-- **A knowledge article library** for support content — one object, seven categories, read by the Copilot like any other record.
+- **38 business objects** across sales, service, marketing, revenue, order to cash, project delivery and expenses, with their fields, picklists and validations.
+- **18 positions** — flat groups that hand out record access by line of work. Nothing rolls up between them, so each one that needs a record is named by its own sharing rule.
+- **47 flows** — approvals, lead routing, deal-won and contract notices, renewal and expiration sweeps, SLA escalation, project and expense approvals, and the two billing hand-off events.
+- **Standard list views, dashboards and reports** for every app.
+- **Six AI skills** for a platform agent — live data, lead qualification, email drafting, revenue forecasting, customer 360° and case triage — and two actions open to agents: **Convert Lead** and **Schedule Follow-up**.
+- **A knowledge article library** for support content: one object, seven categories, readable by an agent like any other record.
 
 ## Where to go next
 
 <Cards>
   <Card title="Quick Tour" href="/docs/getting-started/quick-tour" icon="play">
-    A 5-minute walkthrough of the app.
+    A short walk through the apps.
   </Card>
-  <Card title="Sales" href="/docs/sales/index" icon="briefcase">
-    Start here if you're a sales rep.
+  <Card title="Scenarios" href="/docs/getting-started/scenario-product-sale" icon="compass">
+    A product sale, a project service and a subscription, end to end.
   </Card>
-  <Card title="Service" href="/docs/service/index" icon="headphones">
-    Start here if you're a service agent.
+  <Card title="AI and Agents" href="/docs/ai-copilot/index" icon="sparkles">
+    Connect your agent over MCP.
   </Card>
   <Card title="Administration" href="/docs/administration/index" icon="settings">
-    Start here if you're setting up the system.
+    Start here if you are setting up the system.
   </Card>
 </Cards>

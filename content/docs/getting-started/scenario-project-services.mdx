@@ -1,0 +1,63 @@
+---
+title: "Scenario: Project Services"
+description: A services engagement end to end in HotCRM — the deal, the contract and its collection plan, the project with its plan, budget, timesheets and expenses, and the invoices finance records.
+---
+
+# Scenario: project services
+
+A consultancy or an implementation partner sells a project: a fixed scope delivered by a team over several months, paid in steps — an advance, go-live, acceptance. This page follows one engagement through HotCRM and says plainly where HotCRM stops.
+
+| Step | Record | App | Who |
+| --- | --- | --- | --- |
+| 1 | Opportunity and quote | Sales | Sales rep |
+| 2 | Contract, and optionally an order | Sales | Drafted from the accepted quote |
+| 3 | Collection plan | Sales | The contract's sales team |
+| 4 | Project, budget, staffing | Project Delivery | Project manager; approved by a Project Director or the PMO, and finance for a large one |
+| 5 | Plan and tasks | Project Delivery | Project manager |
+| 6 | Timesheets | Project Delivery | Each team member; approved by the project manager |
+| 7 | Travel requests and expenses | Expenses | Each team member; approved by the project manager |
+| 8 | Invoices and payments | Order to Cash | Finance |
+
+## 1–2. Winning the work
+
+The deal is an opportunity with a quote, as in [a product sale](/docs/getting-started/scenario-product-sale). Accepting the quote wins the deal and drafts the **contract**. When the work is also sold as a list of items, record an **order** as well; a project can name either.
+
+## 3. The collection plan
+
+On the contract's **Billing Milestones** tab, the sales team lists the payment steps the contract agrees: *Advance 30 %*, *Go-live 40 %*, *Acceptance 25 %*, *Retention 5 %*, each with its planned amount and date. The plan is a forecast; finance's invoices and payments report against it. See [The Collection Plan](/docs/order-to-cash/collection-plan).
+
+## 4. The project
+
+The project manager opens a **project** from the contract's or the order's **Projects** tab, so it names the account, the opportunity and the contract or order it delivers. It starts as a draft:
+
+- **Budget.** Planned in versions and lines; the approved version is the project's **Approved Budget**, and a later top-up is a new version. See [Project Budgets](/docs/projects/budgets).
+- **Approval.** A Project Director or the PMO approves a new project; from a budget of 100,000 a finance controller does too. The project manager then makes it *Active*.
+- **Staffing.** Each member is placed at a **rate card**, which carries the cost rate and the bill rate. Team members never see what a colleague costs.
+
+See [Projects and Staffing](/docs/projects/projects-and-staffing).
+
+## 5. The plan
+
+The project's tasks, with their dates and dependencies, are on its **Project Plan** as a Gantt chart. See [Project Plan](/docs/projects/project-plan).
+
+## 6. Time
+
+Each team member books hours on a weekly **timesheet** and submits it; the project manager approves it from the **Inbox**. Approved hours at their cost rate become the project's **Labor Cost**; billable hours at their bill rate count in **Approved to Bill**. See [Time and Expenses](/docs/projects/time-and-expenses).
+
+## 7. Travel and expenses
+
+Before a trip, a team member files a **travel request** naming the project, and the project manager approves it. A travel request is a plan: it adds nothing to the project's cost. What is spent on the trip is recorded as **expenses** naming the project, sent with **Submit for Reimbursement** on an expense report of their own, and approved by the project manager (finance too, from 2,000). Approved expenses become the project's **Expense Cost**. See [Expenses](/docs/expenses) and [Travel Requests](/docs/expenses/travel-requests).
+
+The project's **Actual Cost**, **Budget Remaining** and **Gross Margin** follow from these approvals; crossing 80 % or 100 % of the budget notifies the project manager and finance.
+
+## 8. Invoicing
+
+When a milestone is reached, finance issues the invoice in its own system and records it in **Order to Cash**, linked to the milestone; the payment follows the same way. The milestone then shows what is **Invoiced**, **Received** and still **Open**. See [Invoices and Payments](/docs/order-to-cash/invoices-and-payments).
+
+**Not shipped:** HotCRM does not raise an invoice from **Approved to Bill** or from a milestone; finance invoices in its own software. A milestone is not tied to project progress either: reaching *Go-live* on the plan does not mark the milestone reached.
+
+## Related
+
+- [Scenario: A Product Sale](/docs/getting-started/scenario-product-sale)
+- [Scenario: A Subscription](/docs/getting-started/scenario-subscription)
+- [Project Delivery](/docs/projects)

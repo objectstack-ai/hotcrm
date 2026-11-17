@@ -5,7 +5,7 @@ description: The full library of HotCRM AI skills — what each one does, where 
 
 # Skills
 
-A **skill** is a bite-sized AI ability the platform assistant can perform — like *"qualify this lead"* or *"draft a customer reply"*. Skills are all HotCRM contributes to the assistant; they are documented in two groups, [Sales Skills](/docs/ai-copilot/sales-copilot) and [Service Skills](/docs/ai-copilot/service-copilot).
+A **skill** is a bite-sized AI ability a platform agent can carry — like *"qualify this lead"* or *"draft a customer reply"*. HotCRM ships six; it authors no agent of its own, so the skills attach to the platform's assistant where your environment runs one. They are documented in two groups, [Sales Skills](/docs/ai-copilot/sales-copilot) and [Service Skills](/docs/ai-copilot/service-copilot).
 
 ## Why skills, not "one big AI"
 
@@ -39,7 +39,7 @@ HotCRM ships with six core skills:
 | **Writes** | Nothing — read-only |
 | **Knowledge base** | None — purely metadata + records |
 
-This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema)**: add a field in the admin console, and the assistant uses it on the very next turn. Every other Sales / Service skill composes on top of Live Data, so the same live-schema property applies transitively — Lead Qualification can score a lead on a custom field added 10 seconds ago.
+This is the skill behind **[Live Schema](/docs/ai-copilot/live-schema)**: add a field in the admin console, and the assistant uses it on the very next turn. Every other Sales / Service skill composes on top of Live Data, so the same live-schema property applies transitively — Lead Qualification can score a lead on a custom field added 10 seconds ago.
 
 ### 🎯 Lead Qualification
 
@@ -103,7 +103,6 @@ What every skill does share is the data floor: each one reads through the same l
 
 - **Sharing rules** — a skill running for user X can only read records visible to X.
 - **Field-level security** — restricted fields are hidden from skill input.
-- **Audit log** — every skill invocation, with input and output, is logged for review.
 - **Confirmation** — Lead Qualification is the only skill with a write path at all, and it writes through real Actions rather than fields: **Convert Lead** is irreversible, so it asks for confirmation and an agent-invoked conversion waits for human approval instead of running unattended; **Schedule Follow-up** is additive and reversible, so it carries no approval gate. The other five skills declare no write tool.
 
 ## Adding your own skills
@@ -118,6 +117,5 @@ See [Customization › AI Skills](/docs/customization/ai-skills) for how to defi
 
 ## Tips for admins
 
-- ✅ **Monitor skill usage** in the AI dashboard — which skills are used most, which have low acceptance.
-- ✅ **Tune knowledge bases** for the skills that under-perform — most accuracy issues are knowledge issues.
-- ✅ **Disable skills** that don't fit your business — each skill can be toggled in admin settings.
+- ✅ **Keep knowledge articles filed well** — the skills that read articles match on category and tags, so a misfiled article is invisible to them. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
+- ✅ **Give an agent the access its work needs, through a person** — a skill reads only what the person it runs for may read. See [Connect Your Agent](/docs/ai-copilot/connect-your-agent).

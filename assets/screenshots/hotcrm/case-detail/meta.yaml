@@ -1,0 +1,31 @@
+id: hotcrm-case-detail
+kind: screenshot
+scope: hotcrm
+category: service
+status: published
+captured: '2026-11-17'
+capture:
+  application: HotCRM
+  platformVersion: '18.5.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  zhHansDataset: 'the zh-CN seed story: the same boot with i18n.defaultLocale set to zh-CN, then pnpm demo:staff'
+  signedInAs: 'Service Agent (service.agent), the case owner'
+  record: 'CASE-00001 Login issues after platform upgrade (high priority, in progress); zh-CN story: 平台升级后无法登录'
+  theme: light
+  viewport: 1440x1024
+  deviceScaleFactor: 2
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Support case
+  zh-Hans: 客服工单
+alt:
+  en: A high-priority support case in progress with its SLA due time, owner, account, the customer impact and triage notes, and Escalate and Close actions.
+  zh-Hans: 处理中的高优先级工单：SLA 到期时间、负责人、客户、客户影响与初步分诊说明，以及升级和关闭操作。
+purpose:
+  en: 'Show Service: a support case worked by the agent who owns it.'
+  zh-Hans: 展示服务：由负责的客服处理的一张工单。

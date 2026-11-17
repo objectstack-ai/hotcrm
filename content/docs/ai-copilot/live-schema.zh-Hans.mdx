@@ -1,6 +1,6 @@
 ---
-title: 实时模式（Wow #1）
-description: HotCRM 的 AI 在模式变更发生的那一刻就能看到——无需重新训练、无需重启、无需等待。
+title: 实时模式
+description: 在 HotCRM 上工作的智能体，在模式变更发生的那一刻就能看到——无需重新训练、无需重启、无需等待。
 ---
 
 # 实时模式——会自我改写的 CRM
@@ -12,6 +12,8 @@ HotCRM 与众不同。**模式即系统提示词。**
 每次助手回答数据问题时，它都会针对 `@objectstack/runtime` 的元数据服务调用 `describe_object`——该服务会重新读取实时注册表。在 10:00:00 添加一个字段，下一位用户在 10:00:05 提问时就能看到它。
 
 这个助手就是平台的 `ask` 智能体。HotCRM 不自行编写任何智能体——应用只交付**技能（skills）**，技能按 surface 亲和性挂载到平台智能体上（ADR-0063 §1/§2）。下面演示的行为，来自 HotCRM 的 `live_data` 技能搭载于 `ask` 之上。
+
+你[通过 MCP 接入](/zh-Hans/docs/ai-copilot/connect-your-agent)的智能体也有同样的特性：它的 `describe_object` 工具读取的是同一个实时注册表，所以刚刚添加的字段，就会出现在它的下一个回答里。
 
 ## 30 秒演示
 

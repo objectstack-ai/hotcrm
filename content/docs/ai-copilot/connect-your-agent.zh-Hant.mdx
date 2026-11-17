@@ -1,0 +1,65 @@
+---
+title: 接入你的智能體
+description: 透過 MCP 把智能體接入 HotCRM —— 端點、登入或 API 金鑰、它拿到的工具，以及它以所接入的那個人的身分行事這條規則。
+---
+
+# 接入你的智能體
+
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
+HotCRM 在每個環境的 `/api/v1/mcp` 上作為 **MCP 伺服器**提供服務，預設開啟。任何 MCP 用戶端 —— Claude Code、Claude Desktop，或者你自己建構的智能體 —— 都可以連上它，在和人相同的紀錄上工作。
+
+## 智能體拿到什麼
+
+| 工具 | 做什麼 |
+| --- | --- |
+| `describe_object` | 描述一個物件的欄位（HotCRM 的每個物件都以 `crm_…` 命名），從執行中的應用即時讀取 |
+| `query_records`、`get_record`、`aggregate_records` | 讀取一筆或多筆紀錄，並對它們加總或計數 |
+| `create_record`、`update_record`、`delete_record`、`delete_records` | 寫入紀錄，執行與表單儲存相同的驗證和規則 |
+| `list_actions`、`run_action` | 列出對智能體開放的動作並執行其中一個 —— 參見[對智能體開放的動作](/zh-Hant/docs/ai-copilot/agent-actions) |
+| `list_datasets`、`query_dataset` | 讀取儀表板背後的分析資料集 |
+
+這些工具屬於平台；HotCRM 沒有新增自己的工具。HotCRM 新增的是它們所作用的東西：它的物件、規則、動作和技能。
+
+## 登入
+
+智能體**以一個人的身分**接入。有兩種方式：
+
+- **瀏覽器登入。**支援這種方式的 MCP 用戶端會打開 HotCRM 的登入頁，由這個人以自己的身分登入。對於本機伺服器，`pnpm dev` 會印出 `claude mcp add …` 那一行。
+- **API 金鑰。**已登入的人為自己產生一個金鑰，智能體把它作為 `x-api-key` 發送。這個金鑰帶著這個人的存取權限，不多不少；撤銷它，智能體就進不來了。
+
+ObjectStack 網站上的 [Connect an MCP Client](https://objectstack.ai/docs/ai/connect-mcp) 詳細介紹了這兩種方式。
+
+## 身分規則
+
+無論智能體做什麼，它都**以所接入的那個人的身分**去做：在這個人的權限集、職位和共用規則之下，和這個人發出的 REST 呼叫或點擊完全一樣。它建立的紀錄把這個人記為建立者。這個人會被拒絕的地方，智能體也會被拒絕，錯誤碼和提示都一樣。
+
+### 實測：同一個呼叫，兩個人
+
+在 ObjectStack 18.5.0 上本機啟動社群版 HotCRM（`pnpm dev`，然後 `pnpm demo:staff`），為一個身分登入並產生 API 金鑰：
+
+```bash
+curl -c admin.txt -X POST http://localhost:4001/api/v1/auth/sign-in/email \
+  -H 'content-type: application/json' -d '{"email":"admin@objectos.ai","password":"admin123"}'
+curl -b admin.txt -X POST http://localhost:4001/api/v1/keys     # → { "data": { "key": "osk_…", … } }
+```
+
+然後用這個金鑰發送一個智能體的 `tools/call`：
+
+```bash
+curl -X POST http://localhost:4001/api/v1/mcp \
+  -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+  -H 'x-api-key: osk_…' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"create_record","arguments":{"objectName":"crm_campaign","data":{"name":"Agent-created Q1 Webinar","type":"webinar","status":"planning","start_date":"2027-01-12","end_date":"2027-01-14"}}}}'
+```
+
+| 金鑰屬於 | 回傳什麼 |
+| --- | --- |
+| 開發管理員 `admin@objectos.ai` | 新建的行銷活動，不帶 `isError`；它的 `created_by` 和 `owner_id` 都是開發管理員 |
+| 示範銷售代表 Nina Reyes，`na.rep@objectos.ai` —— 她的 `sales_rep` 權限集能讀取所有行銷活動，但不授予新建權限 | `isError: true`，帶 `PERMISSION_DENIED`、`status: 403`，行銷活動的數量不變 |
+
+這兩個結果，都和同一個人發出的 REST 呼叫得到的答案一樣。想讓智能體能做更多，就給這個人更多；想讓它做得更少，就以權限更少的人接入。
+
+## 在託管環境上
+
+端點是你的環境位址上的同一路徑。在那裡以智能體所服務的那個人登入或產生金鑰。想要一個權限很窄的智能體的管理員，可以給它一個專屬的人 —— 一個只有它所需職位的使用者 —— 並以這個使用者產生金鑰。

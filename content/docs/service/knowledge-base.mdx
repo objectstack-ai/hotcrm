@@ -1,15 +1,15 @@
 ---
 title: Knowledge Base
-description: The support knowledge the AI assistant reads from, so agents can answer customers consistently and faster.
+description: The support knowledge an AI agent reads from, so agents can answer customers consistently and faster.
 ---
 
 # Knowledge Base
 
-The knowledge base is the **library of support content** the AI assistant reads from when it drafts responses, suggests resolutions, or triages cases. A well-maintained knowledge base is what makes the Copilot useful — it's the difference between vague AI fluff and accurate, on-brand customer answers.
+The knowledge base is the **library of support content** an AI agent reads from when it drafts responses, suggests resolutions, or triages cases. A well-maintained knowledge base is what makes the AI agent useful — it's the difference between vague AI fluff and accurate, on-brand customer answers.
 
 ## What's in the knowledge base
 
-The knowledge base is one object — **Knowledge Article** — and every article is an ordinary record you create from **Service → Knowledge**. There is no separate index and no file store behind it: what you see in the list view is what the Copilot can read.
+The knowledge base is one object — **Knowledge Article** — and every article is an ordinary record you create from **Service → Knowledge**. There is no separate index and no file store behind it: what you see in the list view is what the AI agent can read.
 
 Each article is filed under one **Category**, and the seven categories are the whole vocabulary:
 
@@ -23,7 +23,7 @@ Each article is filed under one **Category**, and the seven categories are the w
 | **Release Notes** | What changed, and when |
 | **Policy** | Support hours, SLA promises, data handling, anything you commit to in writing |
 
-Alongside the category, each article carries **Tags** (Auth, SSO, Mobile, Email, Reports, Performance, Data Import, Webhooks), a **Status** (Draft → In Review → Published → Archived), an **Audience** (Public or Internal), and a **Language**. Articles get an **Article Number** — `KA-0001` — automatically, and that number is what the Copilot cites.
+Alongside the category, each article carries **Tags** (Auth, SSO, Mobile, Email, Reports, Performance, Data Import, Webhooks), a **Status** (Draft → In Review → Published → Archived), an **Audience** (Public or Internal), and a **Language**. Articles get an **Article Number** — `KA-0001` — automatically, and that number is what the AI agent cites.
 
 ## Finding articles
 
@@ -35,7 +35,7 @@ The **Knowledge** list ships with three tabs:
 
 The object's declared search targets are the **Title**, **Summary** and **Article Number**, so those are the fields global search and the lookup picker read — the words a colleague would search for belong there rather than buried in the body.
 
-## How the AI assistant uses it
+## How an AI agent uses it
 
 One skill reads articles: **Customer 360°**. Ask it for a customer's history and, alongside the account, contacts, open deals and cases, it queries **published** articles matched on the **category or tags** of the cases it just read, and cites each one by number (`KA-0007`).
 
@@ -80,7 +80,7 @@ An article voted down repeatedly is doing damage and should be rewritten rather 
 
 ## Tips for admins
 
-- **Publish it or it does not exist.** The Copilot queries published articles only; a draft is invisible to it.
+- **Publish it or it does not exist.** The AI agent queries published articles only; a draft is invisible to it.
 - **Set the audience deliberately.** Public articles are the ones written for customers; internal ones are agent-only. Note that the customer portal does not serve articles today — the guest profile cannot read the object at all, by design — so *Public* is a statement of intent, not a publication channel.
 - **Categories are metadata.** Adding an eighth category is a change to the object, not a setting — see [Customization › Extending Objects](/docs/customization/extending-objects).
-- HotCRM ships no separate sales, product or competitive knowledge base to wire up; there is this one object and its categories. [AI Copilot › Knowledge Bases](/docs/ai-copilot/knowledge-bases) has the detail on what the Copilot can and cannot do with it.
+- HotCRM ships no separate sales, product or competitive knowledge base to wire up; there is this one object and its categories. [AI and Agents › Knowledge Bases](/docs/ai-copilot/knowledge-bases) has the detail on what the AI agent can and cannot do with it.
