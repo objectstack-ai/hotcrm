@@ -1,7 +1,11 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { F, P } from '@objectstack/spec';
 import { EXPENSE_REPORT_STATUS_OPTIONS } from './_expense-picklists';
+
+/** A report that cites no travel request shows none of the trip's fields (hotcrm#2580). */
+const CITES_A_REQUEST = P`has(record.crm_expense_request) && record.crm_expense_request != null && record.crm_expense_request != ""`;
 
 /**
  * Expense Report — the expenses a person sends to be paid back, decided and
@@ -48,6 +52,7 @@ export const ExpenseReport = ObjectSchema.create({
 
   fieldGroups: [
     { key: 'basic', label: 'Expense Report', icon: 'wallet' },
+    { key: 'trip', label: 'Travel Request', icon: 'plane' },
     { key: 'payment', label: 'Payment', icon: 'banknote' },
   ],
 
@@ -84,6 +89,60 @@ export const ExpenseReport = ObjectSchema.create({
     // their own pocket, which is what finance pays back. A company-paid
     // expense (a ticket bought on the company's account) is on the report so
     // the approver sees the whole trip, and is not paid back.
+    // The approved travel request this report is the spending of (F3c,
+    // hotcrm#2580). Chosen when the expenses are submitted
+    // (`../actions/expense.actions.ts`) and never afterwards: a report is
+    // born Submitted and an approved one is frozen. Optional, and at most one;
+    // a request may have several reports.
+    crm_expense_request: Field.lookup('crm_expense_request', {
+      label: 'Travel Request',
+      group: 'trip',
+      readonly: true,
+      visibleWhen: CITES_A_REQUEST,
+      description: 'The approved travel request these expenses were spent on.',
+      lookupFilters: [
+        { field: 'owner_id', operator: 'eq', value: '{current_user_id}' },
+        { field: 'status', operator: 'eq', value: 'approved' },
+      ],
+      // A request is filed and approved on its own page first; the picker
+      // offers no "Create new".
+      allowCreate: false,
+      relatedListColumns: ['report_number', 'name', 'total_amount', 'status', 'submitted_date', 'payment_date'],
+    }),
+
+    // The request read from the report, for its approver (hotcrm#2580):
+    // what was estimated, and what its reports in review, approved or paid
+    // add up to, this one included once submitted. Stored copies, kept by
+    // `expense_report_request_totals`, because the approver of a report is
+    // not always someone who may open the request (a report on a project
+    // goes to the project's manager; the request may have gone to the
+    // traveler's manager). Empty on a report with no request.
+    request_estimated_amount: Field.currency({
+      label: 'Trip Estimate',
+      group: 'trip',
+      readonly: true,
+      visibleWhen: CITES_A_REQUEST,
+      description: 'The estimated amount on the travel request.',
+    }),
+
+    request_reported_amount: Field.currency({
+      label: 'Reported for the Trip',
+      group: 'trip',
+      readonly: true,
+      visibleWhen: CITES_A_REQUEST,
+      description: 'The totals of the travel request\'s submitted, approved and paid reports.',
+    }),
+
+    // A sign, never a block (REQ-0011 F3c, AGENTS.md rule 8): an approver
+    // can approve a report over the estimate.
+    request_over_estimate: Field.formula({
+      label: 'Over the Trip Estimate',
+      group: 'trip',
+      visibleWhen: CITES_A_REQUEST,
+      returnType: 'boolean',
+      expression: F`has(record.crm_expense_request) && record.crm_expense_request != null && coalesce(record.request_reported_amount, 0) > coalesce(record.request_estimated_amount, 0)`,
+    }),
+
     total_amount: Field.summary({
       label: 'Total',
       group: 'basic',
@@ -168,6 +227,7 @@ export const ExpenseReport = ObjectSchema.create({
     { fields: ['owner_id'] },
     { fields: ['status'] },
     { fields: ['approver'] },
+    { fields: ['crm_expense_request'] },
   ],
 
   enable: {

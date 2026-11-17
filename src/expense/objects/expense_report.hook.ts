@@ -114,7 +114,8 @@ const expenseReportRules: Hook = {
     if (person && !admin) {
       // Fields the platform or this hook writes are not a person's change.
       const DERIVED = ['id', 'created_at', 'created_by', 'updated_at', 'updated_by', 'report_number',
-        'total_amount', 'reimbursable_amount', 'approver', 'submitted_date', 'approved_date'];
+        'total_amount', 'reimbursable_amount', 'approver', 'submitted_date', 'approved_date',
+        'request_estimated_amount', 'request_reported_amount', 'request_over_estimate'];
       const same = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
       const changed = Object.keys(input).filter((k) => !DERIVED.includes(k) && !same(input[k], previous[k]));
       if (moving && (status === 'approved' || status === 'rejected')) {
@@ -214,4 +215,95 @@ const expenseReportLinesFollow: Hook = {
   },
 };
 
-export default [expenseReportRules, expenseReportLinesFollow];
+/**
+ * A report read against its travel request (F3c, hotcrm#2580).
+ *
+ *   - **The amounts on the report.** Every report of a request carries the
+ *     request's estimate and the totals of its reports in review, approved or
+ *     paid (`request_estimated_amount`, `request_reported_amount`), so a
+ *     report's approver sees them whether or not they may open the request.
+ *     Refreshed on every report of the request whenever one of them is
+ *     created, changes status, or changes request: a report's total cannot
+ *     change while it counts, because its expenses are held from Submitted on
+ *     (`expense_line_lock`), and an approved request's estimate is locked.
+ *     The request's own Reported Amount is a platform summary of the same
+ *     reports.
+ *   - **The last paid report closes the trip.** When a report is marked paid
+ *     and no other report of its request is still Draft, Submitted or
+ *     Approved, an Approved request becomes Closed. A Rejected report does
+ *     not hold it open (the card names the three).
+ *
+ * Nothing here refuses: an approver can approve a report over the estimate
+ * (AGENTS.md rule 8). That a cancelled or closed request takes no new report
+ * is judged where reports are made, in Submit for a Trip.
+ *
+ * `runAs: 'system'`: the report's amounts are read-only to people, a request
+ * is private to its traveler, and Paid is written by Mark as Paid as the
+ * system. Every read is keyed to one request's id (rule 10). It writes only
+ * what differs, so the writes it makes on sibling reports (no status or
+ * request change) return here at once.
+ */
+const expenseReportRequestTotals: Hook = {
+  name: 'expense_report_request_totals',
+  object: 'crm_expense_report',
+  events: ['afterInsert', 'afterUpdate'],
+  priority: 110,
+  runAs: 'system',
+  description: 'Give every report of a travel request the request\'s estimate and reported amount, and close an approved request when its last open report is paid.',
+  handler: async (ctx: HookContext) => {
+    const api = ctx.api as HookApi | undefined;
+    if (!api) return;
+    const input = (ctx.input ?? {}) as Record<string, unknown>;
+    const previous = (ctx.previous ?? {}) as Record<string, unknown>;
+    const result = (ctx.result ?? {}) as Record<string, unknown>;
+    const refOf = (v: unknown): string => (v && typeof v === 'object' ? String((v as { id?: unknown }).id ?? '') : String(v ?? ''));
+    const inserted = ctx.event === 'afterInsert';
+    const id = String(previous.id ?? input.id ?? result.id ?? '');
+    const requestWas = inserted ? '' : refOf(previous.crm_expense_request);
+    const requestNow = 'crm_expense_request' in input ? refOf(input.crm_expense_request) : requestWas;
+    const statusWas = inserted ? '' : String(previous.status ?? '');
+    const statusNow = 'status' in input ? String(input.status ?? '') : statusWas;
+    const statusMoved = inserted || statusNow !== statusWas;
+    if (!statusMoved && requestNow === requestWas) return;
+
+    const COUNTED = ['submitted', 'approved', 'paid'];
+    const OPEN = ['draft', 'submitted', 'approved'];
+    for (const requestId of [...new Set([requestNow, requestWas])].filter(Boolean)) {
+      const request = await api.object('crm_expense_request').findOne({
+        where: { id: requestId },
+        fields: ['id', 'status', 'estimated_amount'],
+      });
+      if (!request) continue;
+      const reports = await api.object('crm_expense_report').find({
+        where: { crm_expense_request: requestId },
+        fields: ['id', 'status', 'total_amount', 'request_estimated_amount', 'request_reported_amount'],
+        top: 500,
+      });
+      const money = (v: unknown): number => Math.round(Number(v ?? 0) * 100) / 100;
+      const estimate = request.estimated_amount == null ? null : money(request.estimated_amount);
+      const reported = money(reports
+        .filter((r) => COUNTED.includes(String(r.status)))
+        .reduce((sum, r) => sum + Number(r.total_amount ?? 0), 0));
+      for (const r of reports) {
+        const patch: Record<string, unknown> = {};
+        if ((r.request_estimated_amount == null ? null : money(r.request_estimated_amount)) !== estimate) patch.request_estimated_amount = estimate;
+        if ((r.request_reported_amount == null ? null : money(r.request_reported_amount)) !== reported) patch.request_reported_amount = reported;
+        if (!Object.keys(patch).length) continue;
+        await api.object('crm_expense_report').update({ id: String(r.id), ...patch }, { where: { id: String(r.id) } });
+      }
+      // A report that leaves a request no longer reads it.
+      if (requestId === requestWas && requestId !== requestNow && id) {
+        await api.object('crm_expense_report').update(
+          { id, request_estimated_amount: null, request_reported_amount: null },
+          { where: { id } },
+        );
+      }
+      if (requestId === requestNow && statusMoved && statusNow === 'paid' && request.status === 'approved'
+        && !reports.some((r) => String(r.id) !== id && OPEN.includes(String(r.status)))) {
+        await api.object('crm_expense_request').update({ id: requestId, status: 'closed' }, { where: { id: requestId } });
+      }
+    }
+  },
+};
+
+export default [expenseReportRules, expenseReportLinesFollow, expenseReportRequestTotals];

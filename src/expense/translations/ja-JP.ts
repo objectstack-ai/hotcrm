@@ -139,6 +139,15 @@ export const jaJP: TranslationData = {
       },
       _actions: {
         submit_for_reimbursement: { label: '精算を申請', successMessage: '精算を申請しました。「自分の精算書」で進捗を確認できます。' },
+        submit_trip_for_reimbursement: {
+          label: '出張申請に紐づけて精算',
+          description: 'これらの経費を、承認済みの出張申請に紐づけて精算します。',
+          submitText: '申請',
+          successMessage: '出張申請に紐づけて精算を申請しました。「自分の精算書」で進捗を確認できます。',
+          params: {
+            crm_expense_request: { label: '出張申請', helpText: 'これらの経費を使った、承認済みの出張申請。' },
+          },
+        },
       },
     },
     crm_expense_report: {
@@ -167,6 +176,10 @@ export const jaJP: TranslationData = {
         approved_date: { label: '承認日時' },
         description: { label: '備考' },
         review_notes: { label: 'チェックメモ', help: 'チェックで見つかった点。承認者が読みます。' },
+        crm_expense_request: { label: '出張申請', help: 'これらの経費が属する承認済みの出張申請。' },
+        request_estimated_amount: { label: '出張の見積金額', help: '出張申請の見積金額。' },
+        request_reported_amount: { label: '出張の精算額', help: 'この出張申請の申請済み・承認済み・支払済みの精算書の合計。' },
+        request_over_estimate: { label: '出張の見積超過' },
         payment_date: { label: '支払日' },
         payment_reference: { label: '支払参照番号' },
       },
@@ -178,6 +191,7 @@ export const jaJP: TranslationData = {
       },
       _sections: {
         basic: { label: '経費精算書' },
+        trip: { label: '出張申請' },
         payment: { label: '支払' },
       },
       _validations: {
@@ -211,6 +225,9 @@ export const jaJP: TranslationData = {
         days: { label: '日数' },
         crm_account: { label: '取引先' },
         estimated_amount: { label: '見積金額', help: '出張全体の合計額（支払者を問わず）。' },
+        reported_amount: { label: '精算額', help: 'この申請の申請済み・承認済み・支払済みの経費精算書の合計。' },
+        estimate_difference: { label: '見積との差額', help: '精算額から見積金額を引いた額。ゼロより大きければ見積超過です。' },
+        over_estimate: { label: '見積超過' },
         itinerary: { label: '行程' },
         notes: { label: 'メモ' },
         source: {
@@ -243,6 +260,7 @@ export const jaJP: TranslationData = {
       },
       _sections: {
         trip: { label: '出張' },
+        spend: { label: '支出' },
         review: { label: '承認' },
       },
       _validations: {
