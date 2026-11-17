@@ -106,6 +106,29 @@ only the **Booking Reference** still takes a value. To change the plan, choose
 
 **Cancelled** and **Closed** are final.
 
+## Reporting the trip's expenses
+
+When you send the trip's expenses for reimbursement, choose **Submit for a
+Trip** and pick this request (see *Expenses — Submitting for
+reimbursement*). The request then reads its spending against the estimate:
+
+- **Reported Amount**: the totals of its expense reports that are submitted,
+  approved or paid. A draft or rejected report is counted once it is sent
+  again.
+- **Difference from Estimate**: reported minus estimated, so above zero is
+  over the estimate. **Over the Estimate** is ticked when it is.
+- Its **Expense Reports** are listed on its page.
+
+Each of those reports shows its approver the same figures under **Travel
+Request**: the trip's estimate, what has been reported for the trip, and
+whether that is over the estimate. Being over is a sign for the approver,
+not a block: the report can still be approved.
+
+When finance marks a report paid and no other report of the request is still
+draft, submitted or approved, the request becomes **Closed** by itself. A
+cancelled or closed request takes no new report, and the picker does not offer
+it.
+
 ## Who sees what
 
 You see your own requests, and the ones you are asked to approve. Finance sees

@@ -93,6 +93,16 @@ beforeAll(async () => {
   });
   const [report] = await verify.seed('crm_expense_report', [{ name: 'Script body report', owner_id: rep.id, status: 'approved' }]);
   record.crm_expense_report = report!;
+  // Submit for a Trip (#2580) shares the submit body: a second expense of the
+  // rep's, so the two runs do not meet, and an approved travel request.
+  record.trip_expense = await create('crm_expense', {
+    name: 'Script body hotel', expense_date: '2026-11-11', category: 'lodging', amount: 120,
+  });
+  const [trip] = await verify.seed('crm_expense_request', [{
+    name: 'Script body trip', destination: 'Beijing', start_date: '2026-11-10', end_date: '2026-11-12',
+    estimated_amount: 500, owner_id: rep.id, status: 'approved',
+  }]);
+  record.crm_expense_request = trip!;
 }, 180_000);
 
 /** Who dispatches each action: the agent works the case and the articles, finance the expense report, the rep the rest. */
@@ -125,9 +135,11 @@ describe('every script action body executes under QuickJS', () => {
     'crm_contact:mark_primary': () => ({}),
     'crm_contact:send_email': () => ({ subject: 'Hello', body: 'Body text' }),
     'crm_opportunity:mass_update_stage': () => ({ stage: 'needs_analysis' }),
-    // The expense module (#2559): one expense from its record page, and Mark
-    // as Paid with its two params.
+    // The expense module (#2559): one expense from its record page, the same
+    // body against a travel request (#2580), and Mark as Paid with its two
+    // params.
     'crm_expense:submit_for_reimbursement': () => ({}),
+    'crm_expense:submit_trip_for_reimbursement': () => ({ _selectedIds: [record.trip_expense!.id], crm_expense_request: record.crm_expense_request!.id }),
     'crm_expense_report:mark_expense_report_paid': () => ({ payment_date: '2026-11-17', payment_reference: 'TRF-1' }),
     // The knowledge-article counters' writers (#601): both INSERT a
     // `crm_article_feedback` row keyed by the voter.

@@ -49,6 +49,18 @@ the report is submitted in the same click.
   submitted. If any selected expense is not, nothing is submitted and the
   message names each one.
 
+### Expenses of a trip
+
+If the expenses belong to a trip you asked for, choose **Submit for a Trip**
+instead (beside **Submit for Reimbursement**, on the record page and in the
+selection bar) and pick the travel request. It offers only your own
+**Approved** requests. The report is made and submitted exactly as above, and
+it names the request. A trip can be reported in several reports; a report
+names one request at most. **Submit for Reimbursement** stays one click for an
+expense with no trip.
+
+The request can't be added to a report afterwards: choose it when you submit.
+
 Follow your reports in **My Reports**.
 
 ## Who approves it

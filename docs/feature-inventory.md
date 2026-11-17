@@ -295,6 +295,7 @@
 | EXP-010 | 出差申请审批 | 没有项目的申请提交后由出差人的上级审批(无上级时由财务控制),只有一级、财务不参与;审批人经共享规则可见;任何人不能手动写批准/驳回 | `src/expense/flows/expense-request-approval.flow.ts`、`src/expense/objects/expense_request.hook.ts` |
 | EXP-011 | 项目出差申请审批 | 项目交付模块给出差申请扩展可选的「项目」(选择框不提供已关闭/已取消的项目);有项目的申请由项目经理审批,只有一级,与无项目路径互斥;项目无项目经理或项目经理本人出差时交管理员;项目页面「相关」列出出差申请,不计入项目成本(暂放费用包,objectstack#34616 修好后搬回,hotcrm#2575) | `src/expense/flows/expense-request-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
 | EXP-012 | 出差申请行程明细 | `crm_expense_request_line`(界面叫「行程明细」):出差申请下的一程,类型(航班/火车/用车/酒店/其他)、出发地、到达地、起止日期、要求、预订号;不带金额,可选;在申请页面上按出行顺序列出;从提交起各程计划值锁定、不能增删,预订号始终可写 | `src/expense/objects/expense_request_line.object.ts`、`src/expense/objects/expense_request_line.hook.ts` |
+| EXP-013 | 报销单引用出差申请 | 「按出差申请报销」与「提交报销」同一段脚本,多一个必选的出差申请参数(只列本人已批准的申请),生成的报销单写明申请;「提交报销」仍然一键、不弹框(18.5.0 上任何参数都会弹框);申请上显示已报销金额(已提交/已批准/已付款报销单合计)、与预计的差额、是否超出预计和报销单列表;报销单给审批人看出差预计、已报销和是否超出(存值,审批人不一定能打开申请);超出不拦;最后一张未完结报销单付款后申请自动关闭;已取消/已关闭的申请不能再报销 | `src/expense/actions/expense.actions.ts`、`src/expense/objects/expense_report.object.ts`、`src/expense/objects/expense_report.hook.ts`、`src/expense/objects/expense_request.object.ts` |
 
 ---
 

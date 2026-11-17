@@ -139,6 +139,15 @@ export const zhCN: TranslationData = {
       },
       _actions: {
         submit_for_reimbursement: { label: '提交报销', successMessage: '已提交报销，可以在「我的报销单」中查看进度。' },
+        submit_trip_for_reimbursement: {
+          label: '按出差申请报销',
+          description: '把这些费用报销到你的一张已批准的出差申请下。',
+          submitText: '提交',
+          successMessage: '已按出差申请提交报销，可以在「我的报销单」中查看进度。',
+          params: {
+            crm_expense_request: { label: '出差申请', helpText: '这些费用是在哪一次已批准的出差中花的。' },
+          },
+        },
       },
     },
     crm_expense_report: {
@@ -167,6 +176,10 @@ export const zhCN: TranslationData = {
         approved_date: { label: '批准时间' },
         description: { label: '备注' },
         review_notes: { label: '检查提示', help: '检查发现的问题，供审批人阅读。' },
+        crm_expense_request: { label: '出差申请', help: '这些费用所属的已批准出差申请。' },
+        request_estimated_amount: { label: '出差预计金额', help: '出差申请上的预计金额。' },
+        request_reported_amount: { label: '出差已报销', help: '这张出差申请下已提交、已批准、已付款的报销单合计。' },
+        request_over_estimate: { label: '超出出差预计' },
         payment_date: { label: '付款日期' },
         payment_reference: { label: '付款参考号' },
       },
@@ -178,6 +191,7 @@ export const zhCN: TranslationData = {
       },
       _sections: {
         basic: { label: '报销单' },
+        trip: { label: '出差申请' },
         payment: { label: '付款' },
       },
       _validations: {
@@ -211,6 +225,9 @@ export const zhCN: TranslationData = {
         days: { label: '天数' },
         crm_account: { label: '客户' },
         estimated_amount: { label: '预计金额', help: '整次出差的一个总数，不论由谁支付。' },
+        reported_amount: { label: '已报销金额', help: '本申请下已提交、已批准、已付款的报销单合计。' },
+        estimate_difference: { label: '与预计的差额', help: '已报销减去预计。大于零就是超出预计。' },
+        over_estimate: { label: '超出预计' },
         itinerary: { label: '行程' },
         notes: { label: '备注' },
         source: {
@@ -243,6 +260,7 @@ export const zhCN: TranslationData = {
       },
       _sections: {
         trip: { label: '出差' },
+        spend: { label: '花费' },
         review: { label: '审批' },
       },
       _validations: {

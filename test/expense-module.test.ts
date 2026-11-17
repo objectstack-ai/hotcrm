@@ -64,8 +64,8 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556, hotc
     // The travel request (hotcrm#2578) is pinned in `test/expense-request.test.ts`.
     expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense', 'crm_expense_report', 'crm_expense_request', 'crm_expense_request_line']);
     expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual([
-      'expense_line_lock', 'expense_report_rules', 'expense_report_lines_follow', 'expense_request_decision_guard',
-      'expense_request_line_lock', 'expense_request_line_number',
+      'expense_line_lock', 'expense_report_rules', 'expense_report_lines_follow', 'expense_report_request_totals',
+      'expense_request_decision_guard', 'expense_request_line_lock', 'expense_request_line_number',
     ]);
     expect(((stack.sharingRules ?? []) as Rec[]).map((r) => r.name)).toEqual([
       'expense_approver_edit', 'expense_report_approver_edit', 'expense_request_approver_edit',
@@ -78,7 +78,7 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556, hotc
       'expense_request_project_approval', 'expense_request_project_approval_on_create',
     ]);
     expect(((stack.actions ?? []) as Rec[]).map((a) => a.name)).toEqual([
-      'submit_for_reimbursement', 'submit_expense_report', 'reopen_expense_report', 'mark_expense_report_paid',
+      'submit_for_reimbursement', 'submit_trip_for_reimbursement', 'submit_expense_report', 'reopen_expense_report', 'mark_expense_report_paid',
       'submit_expense_request', 'cancel_expense_request', 'close_expense_request',
     ]);
     expect(stack.data ?? [], 'an expense, a report and a request name a person, so the module seeds none').toEqual([]);

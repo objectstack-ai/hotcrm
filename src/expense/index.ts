@@ -6,7 +6,7 @@ import { ExpenseApp } from './apps/index.js';
 import { CrmExpenseManual } from './books/index.js';
 import { ExpenseEmailTemplates } from './email-templates/index.js';
 import {
-  SubmitForReimbursementAction, SubmitExpenseReportAction, ReopenExpenseReportAction, MarkExpenseReportPaidAction,
+  SubmitForReimbursementAction, SubmitTripForReimbursementAction, SubmitExpenseReportAction, ReopenExpenseReportAction, MarkExpenseReportPaidAction,
   SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction,
 } from './actions/index.js';
 import {
@@ -44,7 +44,7 @@ export const expenseFlows = [
 
 /** This package's actions — see {@link expenseHooks}. */
 export const expenseActions = [
-  SubmitForReimbursementAction, SubmitExpenseReportAction, ReopenExpenseReportAction, MarkExpenseReportPaidAction,
+  SubmitForReimbursementAction, SubmitTripForReimbursementAction, SubmitExpenseReportAction, ReopenExpenseReportAction, MarkExpenseReportPaidAction,
   // The travel request's Submit, Cancel Trip and Close (hotcrm#2578).
   SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction,
 ];

@@ -66,6 +66,20 @@ The approval was given for the plan, so an approved request's **Purpose**, **Des
 
 The **Booking Reference** of each leg stays open. Once a leg is booked, you, an assistant working as you through the API, your approver or whoever books writes the confirmation there, also after approval.
 
+## Reporting the trip
+
+Send the trip's expenses with **Submit for a Trip** and pick this request ([Expenses](/docs/expenses#expenses-of-a-trip)). The request then reads its spending against the estimate:
+
+| Field | What it shows |
+| --- | --- |
+| **Reported Amount** | The totals of its expense reports that are submitted, approved or paid. A draft or rejected report counts once it is sent again |
+| **Difference from Estimate** | Reported minus estimated: above zero is over the estimate |
+| **Over the Estimate** | Ticked when the reported amount is over the estimate |
+
+Its expense reports are listed on its page, and each one shows its approver the same figures. Over the estimate is a sign for the approver, not a block.
+
+When finance marks a report paid and no other report of the request is still draft, submitted or approved, the request is **Closed** by itself. A cancelled or closed request takes no new report.
+
 ## Who sees what
 
 You see your own requests and their legs, and the ones you are asked to approve. Finance sees every request under **All Travel Requests**, and so do sales managers and leadership; none of them can change a request that is not theirs. Travel requests do not appear in the Sales, Service or Marketing apps, or on the account page.

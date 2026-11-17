@@ -82,6 +82,15 @@ export const en: TranslationData = {
       },
       _actions: {
         submit_for_reimbursement: { label: 'Submit for Reimbursement', successMessage: 'Submitted for reimbursement. Follow it in My Reports.' },
+        submit_trip_for_reimbursement: {
+          label: 'Submit for a Trip',
+          description: 'Report these expenses against one of your approved travel requests.',
+          submitText: 'Submit',
+          successMessage: 'Submitted for reimbursement against the travel request. Follow it in My Reports.',
+          params: {
+            crm_expense_request: { label: 'Travel Request', helpText: 'Your approved travel request these expenses were spent on.' },
+          },
+        },
       },
     },
     crm_expense_report: {
@@ -110,6 +119,10 @@ export const en: TranslationData = {
         approved_date: { label: 'Approved On' },
         description: { label: 'Remarks' },
         review_notes: { label: 'Review Notes', help: 'What a check found, for the approver to read.' },
+        crm_expense_request: { label: 'Travel Request', help: 'The approved travel request these expenses were spent on.' },
+        request_estimated_amount: { label: 'Trip Estimate', help: 'The estimated amount on the travel request.' },
+        request_reported_amount: { label: 'Reported for the Trip', help: "The totals of the travel request's submitted, approved and paid reports." },
+        request_over_estimate: { label: 'Over the Trip Estimate' },
         payment_date: { label: 'Paid On' },
         payment_reference: { label: 'Payment Reference' },
       },
@@ -121,6 +134,7 @@ export const en: TranslationData = {
       },
       _sections: {
         basic: { label: 'Expense Report' },
+        trip: { label: 'Travel Request' },
         payment: { label: 'Payment' },
       },
       _validations: {
@@ -154,6 +168,9 @@ export const en: TranslationData = {
         days: { label: 'Days' },
         crm_account: { label: 'Account' },
         estimated_amount: { label: 'Estimated Amount', help: 'One total for the whole trip, whoever pays.' },
+        reported_amount: { label: 'Reported Amount', help: "The totals of this request's submitted, approved and paid expense reports." },
+        estimate_difference: { label: 'Difference from Estimate', help: 'Reported minus estimated. Above zero is over the estimate.' },
+        over_estimate: { label: 'Over the Estimate' },
         itinerary: { label: 'Itinerary' },
         notes: { label: 'Notes' },
         source: {
@@ -186,6 +203,7 @@ export const en: TranslationData = {
       },
       _sections: {
         trip: { label: 'Trip' },
+        spend: { label: 'Spending' },
         review: { label: 'Approval' },
       },
       _validations: {
