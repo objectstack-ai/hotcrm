@@ -13,7 +13,7 @@ description: 接收客户问题，按优先级路由，达成 SLA 目标，并�
 | --- | --- |
 | [**工单**](/zh-Hans/docs/service/cases) | 工单记录——主题、优先级、状态、解决方案。 |
 | [**SLA 与升级**](/zh-Hans/docs/service/sla-and-escalation) | 自动截止时间、升级流程，以及系统如何呈现违约。 |
-| [**知识库**](/zh-Hans/docs/service/knowledge-base) | AI 助手读取的支持知识。 |
+| [**知识库**](/zh-Hans/docs/service/knowledge-base) | 智能体读取的支持知识。 |
 
 ## 一个典型工单的生命周期
 
@@ -23,7 +23,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
                    ╲ Escalated ────────────╱
 ```
 
-1. **创建工单**（通过电子邮件、网页表单、电话记录，或由 **AI 助手**对来访消息进行分流）。到达时没有负责人的那些，会在插入时分配给负载最轻的**服务坐席**——见[工单路由](/zh-Hans/docs/administration/setup#12-工单路由--一个队列加一条规则)。
+1. **创建工单**（通过电子邮件、网页表单、电话记录，或由 **智能体**对来访消息进行分流）。到达时没有负责人的那些，会在插入时分配给负载最轻的**服务坐席**——见[工单路由](/zh-Hans/docs/administration/setup#12-工单路由--一个队列加一条规则)。
 2. **分配优先级**——Low、Medium、High 或 Critical。*Critical* 会立即提醒**工单负责人**，而不是支持经理：这条提醒的收件人列表只有 `{caseRecord.owner_id}` 一项。
 3. **计算 SLA 目标**——每个工单都会根据优先级获得一个截止时间。
 4. **客服处理工单**，随进度推进状态。
@@ -32,7 +32,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 ## 系统为你做的事
 
-- **自动确定优先级**——通过工单分流技能（AI 助手阅读工单并推荐优先级）。
+- **自动确定优先级**——通过工单分流技能（智能体阅读工单并推荐优先级）。
 - **自动升级**——只针对 Critical 工单：流程把它们标记为 *Escalated*、提醒原来那位客服，并把工单交给未结工单最少的那位服务经理（若无人持有该岗位，则原地不动）。High 工单永远不会被自动升级，无论账户是什么：要升级它，靠的是手动的 **Escalate Case** 按钮。
 - **严重时通知**——每当工单被设为 Critical 时，站内消息 + 邮件只发给**工单负责人**。这就是工单升级流程的 notify 节点，其收件人列表只有 `{caseRecord.owner_id}` 一项；本应用中不存在 `support_manager@example.com` 这个收件人。
 - **升级时通知**——不会给任何升级团队发邮件：`escalation_team@example.com` 在本应用中根本不存在。状态转为 *Escalated* 真正触发的，是 `case_status_side_effects` 钩子开出的那条**次日到期、优先级为紧急、归账户负责人的跟进任务**。
@@ -43,7 +43,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 ## 服务 AI 技能
 
-[服务技能](/zh-Hans/docs/ai-copilot/service-copilot) 内置于每个工单中。你可以问助手：
+接入智能体后，[服务技能](/zh-Hans/docs/ai-copilot/service-copilot)可以用在任何工单上。你可以问它：
 
 - *"分流这个工单"*——根据主题、描述和客户等级分配优先级。
 - *"建议一个解决方案"*——这是两个技能的事，不是一个。**Customer 360°** 读取已发布的知识文章（`crm_knowledge_article` 就是它查询的一个普通对象），**邮件撰写**写客户回复。工单分流两件都不做：它没有检索类工具，也没有起草这一步。
@@ -64,7 +64,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 - **服务概览**（Service Overview）——服务的那个仪表盘，应用的第一个条目，服务坐席与服务经理打开应用时就落在这里。侧边栏上的 label 就是这个；没有任何侧边栏条目叫 *Service Dashboard*。
 - **工单**（Cases）——工单列表。
-- **知识**（Knowledge）——Copilot 读取的知识文章（`crm_knowledge_article`）。
+- **知识**（Knowledge）——智能体读取的知识文章（`crm_knowledge_article`）。
 
 旁边是 **客户与联系人**（Accounts、Contacts）、**我的工作**（My Cases、Inbox、My Tasks、My Calendar）、**报表**下的三张工单报表与 Customer Churn Signals，以及**帮助**下的服务手册。销售代表不处理工单：他们的启动器不提供这个应用，用地址打开也看不到任何工单条目，他们在 Sales 应用的 **Sales** 分组末尾找到知识库。
 
@@ -77,4 +77,4 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 - [工单](/zh-Hans/docs/service/cases)——核心工单记录。
 - [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)——优先级如何驱动截止时间与升级。
-- [知识库](/zh-Hans/docs/service/knowledge-base)——AI Copilot 读取的内容。
+- [知识库](/zh-Hans/docs/service/knowledge-base)——智能体读取的内容。

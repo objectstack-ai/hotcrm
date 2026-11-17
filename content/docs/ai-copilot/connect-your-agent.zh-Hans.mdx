@@ -1,0 +1,63 @@
+---
+title: 接入你的智能体
+description: 通过 MCP 把智能体接入 HotCRM —— 端点、登录或 API 密钥、它拿到的工具，以及它以所接入的那个人的身份行事这条规则。
+---
+
+# 接入你的智能体
+
+HotCRM 在每个环境的 `/api/v1/mcp` 上作为 **MCP 服务器**提供服务，默认开启。任何 MCP 客户端 —— Claude Code、Claude Desktop，或者你自己构建的智能体 —— 都可以连上它，在和人相同的记录上工作。
+
+## 智能体拿到什么
+
+| 工具 | 做什么 |
+| --- | --- |
+| `describe_object` | 描述一个对象的字段（HotCRM 的每个对象都以 `crm_…` 命名），从运行中的应用实时读取 |
+| `query_records`、`get_record`、`aggregate_records` | 读取一条或多条记录，并对它们求和或计数 |
+| `create_record`、`update_record`、`delete_record`、`delete_records` | 写入记录，执行与表单保存相同的校验和规则 |
+| `list_actions`、`run_action` | 列出对智能体开放的动作并运行其中一个 —— 参见[对智能体开放的动作](/zh-Hans/docs/ai-copilot/agent-actions) |
+| `list_datasets`、`query_dataset` | 读取仪表盘背后的分析数据集 |
+
+这些工具属于平台；HotCRM 没有添加自己的工具。HotCRM 添加的是它们所作用的东西：它的对象、规则、动作和技能。
+
+## 登录
+
+智能体**以一个人的身份**接入。有两种方式：
+
+- **浏览器登录。**支持这种方式的 MCP 客户端会打开 HotCRM 的登录页，由这个人以自己的身份登录。对于本地服务器，`pnpm dev` 会打印出 `claude mcp add …` 那一行。
+- **API 密钥。**已登录的人为自己生成一个密钥，智能体把它作为 `x-api-key` 发送。这个密钥带着这个人的访问权限，不多不少；吊销它，智能体就进不来了。
+
+ObjectStack 网站上的 [Connect an MCP Client](https://objectstack.ai/docs/ai/connect-mcp) 详细介绍了这两种方式。
+
+## 身份规则
+
+无论智能体做什么，它都**以所接入的那个人的身份**去做：在这个人的权限集、岗位和共享规则之下，和这个人发出的 REST 调用或点击完全一样。它创建的记录把这个人记为创建者。这个人会被拒绝的地方，智能体也会被拒绝，错误码和提示都一样。
+
+### 实测：同一个调用，两个人
+
+在 ObjectStack 18.5.0 上本地启动社区版 HotCRM（`pnpm dev`，然后 `pnpm demo:staff`），为一个身份登录并生成 API 密钥：
+
+```bash
+curl -c admin.txt -X POST http://localhost:4001/api/v1/auth/sign-in/email \
+  -H 'content-type: application/json' -d '{"email":"admin@objectos.ai","password":"admin123"}'
+curl -b admin.txt -X POST http://localhost:4001/api/v1/keys     # → { "data": { "key": "osk_…", … } }
+```
+
+然后用这个密钥发送一个智能体的 `tools/call`：
+
+```bash
+curl -X POST http://localhost:4001/api/v1/mcp \
+  -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+  -H 'x-api-key: osk_…' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"create_record","arguments":{"objectName":"crm_campaign","data":{"name":"Agent-created Q1 Webinar","type":"webinar","status":"planning","start_date":"2027-01-12","end_date":"2027-01-14"}}}}'
+```
+
+| 密钥属于 | 返回什么 |
+| --- | --- |
+| 开发管理员 `admin@objectos.ai` | 新建的营销活动，不带 `isError`；它的 `created_by` 和 `owner_id` 都是开发管理员 |
+| 演示销售代表 Nina Reyes，`na.rep@objectos.ai` —— 她的 `sales_rep` 权限集能读取所有营销活动，但不授予新建权限 | `isError: true`，带 `PERMISSION_DENIED`、`status: 403`，营销活动的数量不变 |
+
+这两个结果，都和同一个人发出的 REST 调用得到的答案一样。想让智能体能做更多，就给这个人更多；想让它做得更少，就以权限更少的人接入。
+
+## 在托管环境上
+
+端点是你的环境地址上的同一路径。在那里以智能体所服务的那个人登录或生成密钥。想要一个权限很窄的智能体的管理员，可以给它一个专属的人 —— 一个只有它所需岗位的用户 —— 并以这个用户生成密钥。

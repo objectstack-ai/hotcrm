@@ -11,7 +11,7 @@ HotCRM is served as an **MCP server** at `/api/v1/mcp` on every environment, on 
 
 | Tool | What it does |
 | --- | --- |
-| `list_objects`, `describe_object` | Lists every object (each HotCRM one is `crm_…`) and describes its fields, read live from the running app |
+| `describe_object` | Describes an object's fields (each HotCRM object is named `crm_…`), read live from the running app |
 | `query_records`, `get_record`, `aggregate_records` | Reads records, one or many, and sums or counts them |
 | `create_record`, `update_record`, `delete_record`, `delete_records` | Writes records, with the same validations and rules a form save runs |
 | `list_actions`, `run_action` | Lists the actions open to agents and runs one — see [Actions Open to Agents](/docs/ai-copilot/agent-actions) |
