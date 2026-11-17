@@ -58,6 +58,8 @@ export const zhCN: TranslationData = {
     crm_forecast: pipeline.crm_forecast,
     crm_lead: pipeline.crm_lead,
     crm_contract: commerce.crm_contract,
+    crm_sales_order: commerce.crm_sales_order,
+    crm_sales_order_line: commerce.crm_sales_order_line,
     crm_task: activity.crm_task,
     crm_opportunity: pipeline.crm_opportunity,
     crm_event: activity.crm_event,

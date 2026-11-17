@@ -101,7 +101,7 @@ import { TenantAdminProfile } from './src/sales/profiles/tenant-admin.profile.js
 // Hooks — the sales barrel, assembled below in source-file-name order.
 import {
   accountHook, contactHook, contractHook, eventHook, forecastHook, leadHook,
-  leadCampaignMetricsHook, opportunityHook, opportunityCampaignMetricsHook, taskHook,
+  leadCampaignMetricsHook, opportunityHook, opportunityCampaignMetricsHook, salesOrderHook, taskHook,
 } from './src/sales/objects/hooks.js';
 
 // Flows — the registration order the single `allFlows` array used to hold.
@@ -138,10 +138,10 @@ import {
   resolveComposition,
   accounts, contacts, leads, opportunities,
   tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers, forecasts,
-  contracts,
+  contracts, salesOrders, salesOrderLines,
   accountsZhCN, contactsZhCN, leadsZhCN, opportunitiesZhCN,
   tasksZhCN, eventsZhCN, eventAttendeesFromContactsZhCN, eventAttendeesFromLeadsZhCN, leadInteractionPointersZhCN,
-  forecastsZhCN, contractsZhCN,
+  forecastsZhCN, contractsZhCN, salesOrdersZhCN, salesOrderLinesZhCN,
 } from './src/sales/data/index.js';
 import {
   products, priceBooks, priceBookEntries, opportunityLineItems, quotes, quoteLineItems,
@@ -210,6 +210,7 @@ export const appHooks = [
   forecastHook,
   leadHook,
   opportunityHook,
+  salesOrderHook,
   taskHook,
 ].flatMap((entry) => (Array.isArray(entry) ? entry : [entry]));
 
@@ -451,6 +452,9 @@ export const CrmSeedData = [
   campaignMembersFromLeads,
   campaignMembersFromContacts,
   contracts,
+  // Orders (#2555): after the contracts one may sit under, then their lines.
+  salesOrders,
+  salesOrderLines,
   // Order to Cash (#2529): the collection plan, then the invoices that bill
   // its steps, then the payments against those invoices, after the contracts
   // all three are master-details of.
@@ -505,6 +509,8 @@ export const CrmSeedDataZhCN = [
   campaignMembersFromLeadsZhCN,
   campaignMembersFromContactsZhCN,
   contractsZhCN,
+  salesOrdersZhCN,
+  salesOrderLinesZhCN,
   billingMilestonesZhCN,
   invoicesZhCN,
   paymentsZhCN,

@@ -59,6 +59,8 @@ export const esES: TranslationData = {
     crm_lead: pipeline.crm_lead,
     crm_opportunity: pipeline.crm_opportunity,
     crm_contract: commerce.crm_contract,
+    crm_sales_order: commerce.crm_sales_order,
+    crm_sales_order_line: commerce.crm_sales_order_line,
     crm_task: activity.crm_task,
     crm_event: activity.crm_event,
     crm_event_attendee: activity.crm_event_attendee,

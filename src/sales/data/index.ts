@@ -30,6 +30,7 @@ export { accounts, contacts, leads, opportunities, OPPORTUNITY_LINES } from './s
 export { tasks, events, eventAttendeesFromContacts, eventAttendeesFromLeads, leadInteractionPointers } from './activity.seed';
 export { forecasts } from './forecast.seed';
 export { contracts } from './contract.seed';
+export { salesOrders, salesOrderLines } from './sales_order.seed';
 export { celDaysAgo, celDaysFromNow, lineTotal, linesTotal, type LineSpec } from './_shared';
 
 // ─────────────────────────────────────── the SaaS / multi-org composition ──
@@ -95,3 +96,4 @@ export {
   tasksZhCN, eventsZhCN, eventAttendeesFromContactsZhCN, eventAttendeesFromLeadsZhCN, leadInteractionPointersZhCN,
 } from './activity.zh-CN.seed';
 export { contractsZhCN, forecastsZhCN } from './contract.zh-CN.seed';
+export { salesOrdersZhCN, salesOrderLinesZhCN } from './sales_order.zh-CN.seed';

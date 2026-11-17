@@ -1,7 +1,7 @@
 ---
 title: Activities — Tasks, Calls & Meetings
 description: Tasks, logged calls and meetings, scheduled follow-ups, and the automation behind them — reminders, urgent alerts and the activity clock.
-order: 4
+order: 5
 # sources: flows/objects this doc documents. Build ignores unknown
 # frontmatter keys.
 sources:

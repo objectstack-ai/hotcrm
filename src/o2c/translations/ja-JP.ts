@@ -285,7 +285,7 @@ export const jaJP: TranslationData = {
       navigation: {
         group_receivables: { label: '売掛金' },
         group_follow_up: { label: 'フォローアップ' },
-        group_customers: { label: '契約と取引先' },
+        group_customers: { label: '注文・契約・取引先' },
         group_work: { label: 'マイワーク' },
         group_help: { label: 'ヘルプ' },
         nav_invoices: { label: '請求書' },

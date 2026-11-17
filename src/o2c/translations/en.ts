@@ -273,7 +273,7 @@ export const en: TranslationData = {
       navigation: {
         group_receivables: { label: 'Receivables' },
         group_follow_up: { label: 'Follow-up' },
-        group_customers: { label: 'Contracts and Accounts' },
+        group_customers: { label: 'Orders, Contracts and Accounts' },
         group_work: { label: 'My Work' },
         group_help: { label: 'Help' },
         nav_invoices: { label: 'Invoices' },

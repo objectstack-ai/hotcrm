@@ -6,7 +6,8 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * 日本語 (ja-JP) — `objects` translations for the COMMERCE family:
  * what gets sold and on what paper — quotes, contracts, products.
  *
- * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`,
+ * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_sales_order`,
+ * `crm_sales_order_line`, `crm_product`,
  * `crm_price_book`, `crm_price_book_entry`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
@@ -95,6 +96,80 @@ export const commerce: Record<string, ObjectTranslationData> = {
       contract_terms: { label: '契約条件' },
       signing_and_documents: { label: '署名と書類' },
       notes: { label: '備考' },
+    },
+  },
+  // The order and its lines (REQ-0010, hotcrm#2555).
+  crm_sales_order: {
+    _validations: {
+      shipped_after_order: { message: '出荷日を注文日より前にすることはできません' },
+      sales_order_status_progression: { message: 'このステータス変更はできません。注文は 下書き → 確定 → 完了 と進みます。確定は下書きに戻せ、下書きまたは確定はキャンセルにできます。完了とキャンセルは最終状態です。' },
+    },
+    label: '注文',
+    pluralLabel: '注文',
+    description: '顧客が今回注文した内容、明細と合計、出荷の進み具合',
+    fields: {
+      owner_id: { label: '注文担当者' },
+      order_number: { label: '注文番号' },
+      name: { label: '注文名' },
+      crm_account: { label: '取引先' },
+      crm_contact: { label: '取引先責任者' },
+      crm_opportunity: { label: '商談' },
+      order_date: { label: '注文日' },
+      crm_contract: { label: '契約' },
+      customer_po_number: { label: '顧客発注番号', help: '顧客自身の発注書の番号。顧客が引用するとおりに入力します。' },
+      description: { label: '説明' },
+      subtotal: { label: '小計' },
+      discount: { label: '割引率(%)' },
+      discount_amount: { label: '割引額' },
+      tax: { label: '税額' },
+      shipping_handling: { label: '配送・手数料' },
+      total_price: { label: '合計金額' },
+      payment_terms: { label: '支払条件' },
+      shipped_date: { label: '出荷日' },
+      billing_address: { label: '請求先住所' },
+      shipping_address: { label: '配送先住所' },
+      external_ref: { label: '外部参照番号', help: '他のシステムでのこの注文の番号。同じ番号の行をインポートすると、この注文が更新されます。' },
+      status: { label: 'ステータス', options: { draft: '下書き', confirmed: '確定', completed: '完了', cancelled: 'キャンセル' } },
+      fulfillment_status: { label: '出荷状況', options: { not_shipped: '未出荷', partially_shipped: '一部出荷', shipped: '出荷済み' } },
+    },
+    _views: {
+      all_sales_orders: { label: 'すべての注文' },
+      order_board: { label: '注文ボード' },
+      orders_to_ship: { label: '出荷待ち' },
+    },
+    _sections: {
+      basic: { label: '注文情報' },
+      pricing: { label: '価格' },
+      delivery: { label: '出荷' },
+      address: { label: '住所' },
+      system: { label: 'システム' },
+    },
+  },
+  // The order and its lines (REQ-0010, hotcrm#2555).
+  crm_sales_order_line: {
+    _validations: {
+      unit_price_positive: { message: '販売価格を負の値にすることはできません' },
+      product_or_title: { message: '製品を選ぶか、製品タイトルを入力してください' },
+    },
+    label: '注文明細',
+    pluralLabel: '注文明細',
+    description: '注文の明細行',
+    fields: {
+      crm_sales_order: { label: '注文' },
+      crm_product: { label: '製品' },
+      product_title: { label: '製品タイトル', help: 'この明細で販売するもの。製品を選ぶと製品名が入り、製品がなければ入力します。' },
+      description: { label: '説明' },
+      quantity: { label: '数量' },
+      list_price: { label: '定価', help: 'この明細に置いた時点の製品の定価です。' },
+      unit_price: { label: '販売価格' },
+      discount: { label: '割引率（%）' },
+      subtotal: { label: '小計' },
+      total_price: { label: '合計' },
+      line_number: { label: '行番号' },
+    },
+    _sections: {
+      basic: { label: '明細行' },
+      pricing: { label: '価格' },
     },
   },
 };

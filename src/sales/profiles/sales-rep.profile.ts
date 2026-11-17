@@ -69,6 +69,10 @@ export const SalesRepProfile = {
     // gate). `test/parent-derived-reach.test.ts` measures both levels.
     crm_quote:       { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_contract:    { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // Orders (REQ-0010, #2555): what the rep holds on the quote, the order
+    // being the quote's next paper. `controlled_by_parent` under the account,
+    // so no readScope.
+    crm_sales_order: { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_product:     { allowCreate: false, allowRead: true,  allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // Price books (#2313): a rep quotes from them and edits none. Entries are
     // `controlled_by_parent`, so they read as far as the books do: every book
@@ -109,6 +113,7 @@ export const SalesRepProfile = {
     // (#488).
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
+    crm_sales_order_line:      { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // Which campaign sourced a lead — read-only context, derived from the
     // campaign (controlled_by_parent). Enrollment belongs to marketing_user.
     crm_campaign_member:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },

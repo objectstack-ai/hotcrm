@@ -37,6 +37,8 @@ export const SalesManagerProfile = {
     crm_contact:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },
     crm_opportunity: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true, allowExport: true },
     crm_quote:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
+    // Orders (REQ-0010, #2555): the quote's grant, as the card asks.
+    crm_sales_order: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true,  modifyAllRecords: true, allowTransfer: true },
     // No writeScope: `crm_contract` is `controlled_by_parent` under
     // `crm_account` (#549), so a scope here would be inert — the write gate
     // asks for EDIT on the account instead, which this set holds org-wide
@@ -127,6 +129,7 @@ export const SalesManagerProfile = {
     // objectstack-ai/objectstack#5386 (#694).
     crm_opportunity_line_item: { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     crm_quote_line_item:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
+    crm_sales_order_line:      { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: false, modifyAllRecords: false },
     // The record Attachments panel: canonical note on `enable.files` in
     // `src/sales/objects/index.ts` (#2029, #2038). Which attachments it lists,
     // and where an upload or a delete is taken, derives from the parent record.

@@ -174,11 +174,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // the time entry's refusal of another project than its timesheet's; 65
     // until #2547 swapped `project_status_guard`'s finance-only budget
     // refusal for its budget-not-ready one and added the budget version's
-    // seven refusals and its lines' lock.
+    // seven refusals and its lines' lock; 73 until #2555 added the sales
+    // order's line lock (in `sales_order_workflow` and again in
+    // `sales_order_total_rollup`) and the typed line's missing price.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(73);
+    expect(sites).toHaveLength(76);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

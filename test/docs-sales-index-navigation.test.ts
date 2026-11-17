@@ -99,7 +99,7 @@ const PAGES = [
     lang: 'en',
     heading: '## Where to find things',
     /** The group size, stated in prose. */
-    count: /eleven entries/,
+    count: /twelve entries/,
     /** The en page names the object entries in English, so they are checked verbatim. */
     checkObjectLabels: true,
   },
@@ -107,14 +107,14 @@ const PAGES = [
     file: 'content/docs/sales/index.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 在哪里找到这些功能',
-    count: /十一个条目/,
+    count: /十二个条目/,
     checkObjectLabels: false,
   },
   {
     file: 'content/docs/sales/index.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 在哪裡找到這些功能',
-    count: /十一個條目/,
+    count: /十二個條目/,
     checkObjectLabels: false,
   },
 ] as const;
@@ -185,7 +185,8 @@ describe('the source facts that section now rests on (#997)', () => {
   // group the rep is no longer shown. The group holds it for every member;
   // only a rep is shown it (`app-navigation-audience.test.ts`).
   // Eleven since #2436: revenue's Product Catalog dashboard, after Price Books.
-  it('the Sales group holds eleven entries, in this order', () => {
+  // Twelve since #2555: Orders, the app's own entry after Contracts.
+  it('the Sales group holds twelve entries, in this order', () => {
     expect(SALES_CHILDREN.map((c) => c.label)).toEqual([
       'Leads',
       'Accounts',
@@ -193,6 +194,7 @@ describe('the source facts that section now rests on (#997)', () => {
       'Opportunities',
       'Sales Performance',
       'Contracts',
+      'Orders',
       'Quotes',
       'Products',
       'Price Books',
@@ -205,22 +207,23 @@ describe('the source facts that section now rests on (#997)', () => {
     // A contributed item lands after the group's own children (the rule that
     // put My Cases last in My Work, #1907), which is why Sales Performance now
     // precedes them. Contracts is the app's own entry since `crm_contract`
-    // moved to the app package (`module-split-plan.md` item 11), so it is the
-    // last of those children.
+    // moved to the app package (`module-split-plan.md` item 11), and Orders
+    // (#2555) follows it as the last of those children.
     const authored = ((CrmApp as AnyRec).navigation as AnyRec[]).find((n) => n.id === 'group_sales');
     expect(((authored?.children ?? []) as AnyRec[]).map((c) => c.id)).toEqual([
-      'nav_lead', 'nav_account', 'nav_contact', 'nav_opportunity', 'nav_sales_dashboard', 'nav_contract',
+      'nav_lead', 'nav_account', 'nav_contact', 'nav_opportunity', 'nav_sales_dashboard', 'nav_contract', 'nav_sales_order',
     ]);
     expect(SALES_CHILDREN.slice(-5).map((c) => c.id)).toEqual(['nav_quote', 'nav_product', 'nav_price_book', 'nav_product_catalog_dashboard', 'nav_knowledge_published']);
   });
 
-  it('eight of them open an object list; three open something else', () => {
+  it('nine of them open an object list; three open something else', () => {
     expect(OBJECT_ENTRIES.map((c) => c.label)).toEqual([
       'Leads',
       'Accounts',
       'Contacts',
       'Opportunities',
       'Contracts',
+      'Orders',
       'Quotes',
       'Products',
       'Price Books',

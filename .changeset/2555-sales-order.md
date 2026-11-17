@@ -1,0 +1,8 @@
+---
+"hotcrm": minor
+---
+
+Clause-②: no
+Metadata-protocol: none
+
+**Orders: what a customer bought, with its lines (REQ-0010, #2555).** New **Orders** (`crm_sales_order`) under the account, like quotes and contracts, with **Order Lines** (`crm_sales_order_line`) carrying the quote line's ten fields. An order has a name, an order date (today by default), a status (**Draft → Confirmed → Completed**, Confirmed back to Draft, Draft or Confirmed to Cancelled), an optional contract it sits under, the customer's PO number, an external reference (unique, empty on most orders), the quote header's pricing fields and payment terms, billing and shipping addresses, and a **Fulfillment Status** and **Shipped Date** that people type or an import fills. The subtotal is the sum of the lines, recalculated in the same save as each line, and the discount amount and total price follow it. Once an order leaves Draft its lines can no longer be added, changed or removed, and the lines list stops offering New: move the order back to Draft to change them. A line takes its product's name and list price; with no product (something the catalogue does not sell, or the quote-and-product module switched off) its title and sales price are typed. **Orders** sits in the Sales group of the Sales app after Contracts, and in the Order to Cash app, whose group is now **Orders, Contracts and Accounts**; accounts and contracts list their orders. Sales reps, sales managers, sales leadership and administrators hold on orders what they hold on quotes, and Accounts Receivable and the Finance Controller read them. Three demo orders are seeded in English and Chinese. Creating an order from an accepted quote comes later (B2).

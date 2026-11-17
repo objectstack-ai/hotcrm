@@ -200,6 +200,8 @@ export const createHotCrmAppStack = (
           priority: 10,
           items: [
             { id: 'nav_contract', type: 'object', objectName: 'crm_contract', label: 'Contracts', icon: 'file-signature' },
+            // Orders beside contracts (REQ-0010, #2555): finance reads what was bought.
+            { id: 'nav_sales_order', type: 'object', objectName: 'crm_sales_order', label: 'Orders', icon: 'shopping-cart' },
             { id: 'nav_account', type: 'object', objectName: 'crm_account', label: 'Accounts', icon: 'building' },
           ],
         },
