@@ -149,6 +149,23 @@ once each lands.
 - Not measured on 18.5.0: an agent creating an expense from a receipt image, and a skill calling an
   action.
 
+### Expense standards (F4a, [hotcrm#2616](https://github.com/objectstack-ai/hotcrm/issues/2616))
+
+`crm_expense_standard`, labelled Expense Standard (「费用标准」): one row per rule the company states,
+with a name, an optional category (the expense's own list; empty is any), an optional limit in the
+organization's currency and what it is counted per (night, day, item, trip; asked for once a limit is
+written), who and where it applies to in words, details, and Active. `public_read`: every set that
+records expenses reads every standard; finance (the sets that mark a report paid) and administrators
+keep them. One entry in the Expenses app, nowhere else.
+
+⛔ Nothing in the product reads a standard: no validation, hook, flow or formula compares an expense
+with one, and an expense over a standard saves and is submitted as before. An assistant reads the
+standards and writes what it found in the expense's **Review Notes** (`crm_expense.review_notes`,
+with the report's wording), which the approver reads in the report's expense list; it locks with the
+expense's other fields. An index on the expense's receipt number makes a duplicate check one indexed
+query. The skills and the actions opened to an assistant are F4b
+([hotcrm#2617](https://github.com/objectstack-ai/hotcrm/issues/2617)).
+
 ## Measured on 2026-11-17 (hotcrm#2559)
 
 Where **one report per project** lives: in the expense package's Submit for Reimbursement action. It
@@ -240,6 +257,21 @@ What it settles, for the travel request:
    Travel Request, travel only; one estimated amount on the request, none on the itinerary lines;
    one approval tier; a request is optional for reimbursement; `cancelled` and `closed` in the status
    list from the start.
+
+| When | Words |
+| --- | --- |
+| 2026-11-17 14:32Z | 「继续 报销的 AI skill（F4），让助手代填、查差标。」 |
+
+What it settles, for the expense assistant (F4a [hotcrm#2616](https://github.com/objectstack-ai/hotcrm/issues/2616),
+F4b [hotcrm#2617](https://github.com/objectstack-ai/hotcrm/issues/2617)):
+
+6. **An assistant fills expenses and checks them against the standards** (「代填、查差标」), on the
+   interfaces the product provides (2026-11-16 23:04Z). F4a stores the standards and the notes; F4b
+   adds the skills.
+7. **The defaults are the decision thread's, reported to her, not her typed rulings.** All
+   hotcrm-only and reversible: the standards are a table of rows with an optional amount and free
+   words, not one text page and not structured grade or city fields; they are advisory, and the
+   product never blocks on one; finance keeps them and everyone reads them.
 
 ## Not measured
 

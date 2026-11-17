@@ -2,7 +2,7 @@
 
 import { O2C_FIGURE_FIELDS } from './_o2c-figures';
 import { PSA_READ_OWN_OBJECTS } from './_psa-grants';
-import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT } from './_expense-grants';
+import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STANDARD_READ } from './_expense-grants';
 
 export const SalesRepProfile = {
   name: 'sales_rep',
@@ -53,6 +53,7 @@ export const SalesRepProfile = {
     crm_expense_report: EXPENSE_REPORT_OWN,
     crm_expense_request: EXPENSE_OWN,
     crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
+    crm_expense_standard: EXPENSE_STANDARD_READ, // every standard, read (hotcrm#2616)
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
     // read-derived, so a rep's CSV carries their own book, not the org's.

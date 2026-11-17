@@ -26,6 +26,8 @@ Open **My Expenses** in the **Expenses** app and choose **New**:
 
 Attach the receipt in the **Files** tab. **Source** says how the record arrived: **Manual** when you type it, **Agent** or **Import** when an assistant or an import wrote it. With Project Delivery on, the form also has a **Project**: see [Expenses on a project](#on-a-project).
 
+**Review Notes** is where an assistant, or you, writes what a check of the expense found: above one of the [expense standards](#expense-standards), a receipt number seen before, a missing receipt. The approver reads it in the expense list on the report. HotCRM writes nothing there itself, and it locks with the rest of the expense once the report is sent.
+
 ## Submitting for reimbursement
 
 Select your expenses in **My Expenses** and choose **Submit for Reimbursement** in the selection bar. For one expense, the same button is on its record page. There is nothing else to fill in: the expenses go on an **expense report**, and the report is sent for approval in the same click. Follow it in **My Reports**.
@@ -62,6 +64,23 @@ Approvers decide in their **Inbox** (under **My Work**), with **Approve** or **R
 ## Being paid back
 
 Approved reports are listed under **Reports to Pay** for the **Finance Controllers** and **AR Accountants**. Once the money has reached the employee, they choose **Mark as Paid** and enter the date and, if there is one, the payment's reference. HotCRM records the payment; it pays nothing out and posts nothing to the books. A paid report can no longer be changed.
+
+## Expense standards [#expense-standards]
+
+**Expense Standards**, in the Expenses app, lists the company's standards for spending, one row per rule:
+
+| Field | What it holds |
+| --- | --- |
+| **Name** | The rule, e.g. "Hotel, tier-1 cities" |
+| **Category** | The expense category it is about; empty means any |
+| **Limit** and **Per** | The most that may be spent, in your organization's currency, counted per night, day, item or trip. A rule in words only, such as "second-class rail", has no limit |
+| **Applies To** | Who and where, in words, e.g. "Managers and above" |
+| **Details** | What a number cannot say |
+| **Active** | Clear it to retire a standard without deleting it |
+
+Everyone who has the Expenses app reads every standard. The **Finance Controllers** and **AR Accountants** keep them, and administrators can too.
+
+A standard is advice: HotCRM never compares an expense with one, so an expense above a standard saves and is submitted like any other. An assistant working for you or for the approver reads the standards, compares, and writes what it found in the expense's **Review Notes**; the approver decides.
 
 ## Who sees what
 

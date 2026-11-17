@@ -24,7 +24,8 @@ import { HOTCRM_ICON } from '../../sales/apps/crm.app';
  *
  * Project staff also find My Expenses and Reports to Approve inside the
  * Project Delivery app, contributed by this module (`../index.ts`).
- * Travel requests (hotcrm#2578) are listed here only.
+ * Travel requests (hotcrm#2578) and Expense Standards (hotcrm#2616) are
+ * listed here only.
  */
 export const ExpenseApp = App.create({
   name: 'crm_expenses',
@@ -60,6 +61,9 @@ export const ExpenseApp = App.create({
           visible: P`current_user.can("crm_expense_report", "read") && ("crm_finance_controller" in current_user.positions || "crm_ar_accountant" in current_user.positions)`,
         },
         { id: 'nav_all_expenses', type: 'object', objectName: 'crm_expense', label: 'All Expenses', icon: 'list' },
+        // The company's spending standards (hotcrm#2616): read by everyone
+        // who has this app, kept by finance. Here only (usability rule 3).
+        { id: 'nav_expense_standards', type: 'object', objectName: 'crm_expense_standard', label: 'Expense Standards', icon: 'scale' },
       ],
     },
 

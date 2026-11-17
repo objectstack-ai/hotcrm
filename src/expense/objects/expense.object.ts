@@ -120,7 +120,7 @@ export const Expense = ObjectSchema.create({
       label: 'Expense Report',
       group: 'basic',
       readonly: true,
-      relatedListColumns: ['name', 'expense_date', 'category', 'amount', 'paid_by', 'merchant', 'status'],
+      relatedListColumns: ['name', 'expense_date', 'category', 'amount', 'paid_by', 'merchant', 'status', 'review_notes'],
     }),
 
     // Follows the report (`expense_report.hook.ts`): Submitted, Approved or
@@ -145,6 +145,19 @@ export const Expense = ObjectSchema.create({
     }),
 
     notes: Field.textarea({ label: 'Notes', group: 'basic' }),
+
+    // Where an assistant or a rule writes what it found on this one expense
+    // (over a standard, a receipt number seen before, a missing receipt), and
+    // the approver reads it in the report's expense list (hotcrm#2616, F4a).
+    // The report and the travel request carry the same field. The product
+    // writes nothing here itself, and nothing compares (REQ-0011: agents
+    // check, the app provides the place). It locks with the expense's other
+    // fields once the expense is on a sent report (`./expense.hook.ts`).
+    review_notes: Field.textarea({
+      label: 'Review Notes',
+      group: 'basic',
+      description: 'What a check found, for the approver to read.',
+    }),
   },
 
   validations: [
@@ -168,6 +181,8 @@ export const Expense = ObjectSchema.create({
     { fields: ['status'] },
     { fields: ['expense_date'] },
     { fields: ['crm_expense_report'] },
+    // A duplicate check by receipt number is one indexed query (hotcrm#2616).
+    { fields: ['receipt_number'] },
   ],
 
   enable: {
