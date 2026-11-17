@@ -26,7 +26,9 @@ type FlowEdge = Flow['edges'][number];
  * manifest depends on, so a Project Delivery flow on `crm_expense` draws
  * `flow-trigger-unknown-object`, which `pnpm lint --strict` fails on. The
  * runtime publish gate already judges it against the dependency closure.
- * Once the build does too, this file and its two email templates move back.
+ * (objectstack#34616.) Once the build does too, this file and its two email
+ * templates move back (hotcrm#2575; the maintainer's 2026-11-17 ruling,
+ * `docs/architecture/expense-module-plan.md`).
  *
  * With Project Delivery disabled the `crm_project` field leaves the record,
  * so the entry condition below is false and this flow never starts; its

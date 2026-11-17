@@ -38,7 +38,7 @@ export const zhCN: TranslationData = {
         amount: { label: '金额' },
         paid_by: {
           label: '付款方',
-          help: '员工本人（需要报销给他），或公司。',
+          help: '员工本人垫付（需报销给员工），或公司直接支付。',
           options: {
             employee: '员工',
             company: '公司',
