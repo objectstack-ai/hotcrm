@@ -27,6 +27,7 @@ type AnyRec = Record<string, any>;
 const PSA_ID = 'app.objectstack.hotcrm.psa';
 const APP_ID = 'app.objectstack.hotcrm';
 const PSA_APP = 'crm_psa';
+const EXPENSE_ID = 'app.objectstack.hotcrm.expense';
 
 const bodies: AnyRec[] = (((artifact as AnyRec).packages ?? []) as AnyRec[]).map(
   (entry) => (entry?.manifest ?? {}) as AnyRec,
@@ -37,26 +38,35 @@ const walk = (nodes: AnyRec[]): AnyRec[] =>
 describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
   const psa = bodies.find((body) => body.id === PSA_ID);
 
-  it('the artifact carries it as a module of the crm namespace, after Order to Cash', () => {
+  it('the artifact carries it as a module of the crm namespace, after the expense module it depends on', () => {
     expect(psa, `packages[] carries no ${PSA_ID}`).toBeDefined();
     expect(psa!.type).toBe('module');
     expect(psa!.namespace).toBe('crm');
     const ids = bodies.map((b) => b.id);
-    expect(ids.indexOf(PSA_ID)).toBe(ids.indexOf('app.objectstack.hotcrm.o2c') + 1);
+    expect(ids.indexOf(PSA_ID)).toBe(ids.indexOf(EXPENSE_ID) + 1);
+    expect(ids.indexOf(EXPENSE_ID)).toBe(ids.indexOf('app.objectstack.hotcrm.o2c') + 1);
   });
 
-  it('it depends on the app package and on nothing else — not on Order to Cash (ruling 4)', () => {
-    expect(Object.keys(psa!.dependencies ?? {})).toEqual([APP_ID]);
+  it('it depends on the app package and the expense module (hotcrm#2556) — not on Order to Cash (ruling 4)', () => {
+    expect(Object.keys(psa!.dependencies ?? {})).toEqual([APP_ID, EXPENSE_ID]);
   });
 
-  it('it owns its nine objects, their fourteen hooks and its seed rows (phases 1a, 1b, 2a, 2b and 2c)', () => {
+  it('it contributes the expense\'s Project field, and owns no expense metadata of its own (hotcrm#2556)', () => {
+    const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
+    expect(((stack.objectExtensions ?? []) as AnyRec[]).map((e) => [e.extend, Object.keys(e.fields)])).toEqual([['crm_expense', ['crm_project']]]);
+    expect(((stack.views ?? []) as AnyRec[]).flatMap((v) => Object.values(v.listViews ?? {}) as AnyRec[]).map((lv) => lv.data?.object ?? lv.object))
+      .not.toContain('crm_expense');
+    expect(((stack.sharingRules ?? []) as AnyRec[]).map((r) => r.object)).not.toContain('crm_expense');
+  });
+
+  it('it owns its eight objects, their thirteen hooks and its seed rows (phases 1a, 1b, 2a, 2b and 2c; the expense left in hotcrm#2556)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.objects ?? []) as AnyRec[]).map((o) => o.name).sort()).toEqual([
-      'crm_expense', 'crm_project', 'crm_project_budget', 'crm_project_budget_line', 'crm_project_member', 'crm_project_task',
+      'crm_project', 'crm_project_budget', 'crm_project_budget_line', 'crm_project_member', 'crm_project_task',
       'crm_rate_card', 'crm_time_entry', 'crm_timesheet',
     ]);
     expect(((stack.hooks ?? []) as AnyRec[]).map((h) => h.name).sort()).toEqual([
-      'expense_approver', 'project_budget_baseline', 'project_budget_follow', 'project_budget_line_amount', 'project_budget_rules',
+      'project_budget_baseline', 'project_budget_follow', 'project_budget_line_amount', 'project_budget_rules',
       'project_budget_status', 'project_member_unique', 'project_status_guard', 'project_task_progress', 'project_task_rules', 'project_team_sync', 'time_entry_costing', 'time_entry_timesheet', 'timesheet_stamps',
     ]);
     expect([...new Set(((stack.data ?? []) as AnyRec[]).map((d) => d.object))].sort()).toEqual([
@@ -67,7 +77,7 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
   it('it owns its approval and budget flows and the budget notices\' templates (phase 1b)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.flows ?? []) as AnyRec[]).map((f) => f.name).sort()).toEqual([
-      'expense_approval', 'expense_approval_on_create', 'project_budget_alert', 'project_budget_approval',
+      'project_budget_alert', 'project_budget_approval',
       'project_initiation_approval', 'timesheet_approval', 'timesheet_approval_on_create',
     ]);
     expect([...new Set(((stack.emailTemplates ?? []) as AnyRec[]).map((t) => t.name))].sort()).toEqual([
@@ -105,7 +115,9 @@ describe('Project Delivery is its own app (#2316)', () => {
       'crm_project', 'crm_project/my_projects', 'crm_project_member', 'crm_project_budget',
       'crm_project_task/project_plan', 'crm_project_task/my_project_tasks',
       'crm_time_entry/my_week_time', 'crm_timesheet/my_week_timesheets',
-      'crm_timesheet/my_timesheets', 'crm_expense/my_expenses', 'crm_timesheet/timesheets_to_approve', 'crm_expense/expenses_to_approve',
+      // The two expense lists are the expense module's contribution since
+      // hotcrm#2556, so they follow the group's own timesheet entries.
+      'crm_timesheet/my_timesheets', 'crm_timesheet/timesheets_to_approve', 'crm_expense/my_expenses', 'crm_expense/expenses_to_approve',
       'crm_rate_card',
       'crm_account', 'crm_opportunity', 'crm_contract', 'crm_task/my_open_tasks',
     ]);
@@ -210,8 +222,8 @@ describe('with the module disabled (#2316)', () => {
     expect(await appStatus(PSA_APP)).toBe(404);
     // Its objects go with it (phase 1a): a project is not served while it is off.
     expect((await verify.apiAs(admin, 'GET', '/meta/object/crm_project')).status).toBe(404);
-    expect(await offered()).toEqual(['crm_enterprise', 'crm_marketing', 'crm_o2c', 'crm_service']);
-    for (const app of ['crm_enterprise', 'crm_service', 'crm_marketing', 'crm_o2c']) expect(await appStatus(app), app).toBe(200);
+    expect(await offered()).toEqual(['crm_enterprise', 'crm_expenses', 'crm_marketing', 'crm_o2c', 'crm_service']);
+    for (const app of ['crm_enterprise', 'crm_service', 'crm_marketing', 'crm_o2c', 'crm_expenses']) expect(await appStatus(app), app).toBe(200);
     expect((await verify.apiAs(admin, 'PATCH', `${PKG}/enable`)).status).toBe(200);
     expect(await appStatus(PSA_APP)).toBe(200);
     expect(await offered()).toContain(PSA_APP);

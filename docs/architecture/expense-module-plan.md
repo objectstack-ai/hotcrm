@@ -74,7 +74,8 @@ committed:
 - Summaries on `crm_project` over `crm_expense` work: approving an expense of 300 moved
   `actual_expense_cost` and `billable_expense_amount` to 300.
 - A PSA flow triggered on `crm_expense` builds (with a warning that the stack does not define the
-  object) and fires. A PSA sharing rule on it builds. The expense package's `navigationContributions`
+  object) and fires. `pnpm lint --strict` fails on that warning, which this probe did not run; see
+  *Decisions recorded (2026-11-17)*. A PSA sharing rule on it builds. The expense package's `navigationContributions`
   into the PSA app builds.
 - Refused at build inside PSA once the object is foreign: a hook on `crm_expense` (R4), views of it,
   and the PSA app's own navigation to it (R3).
@@ -149,6 +150,28 @@ What they settle:
 3. **The travel request is designed with it, inside the expense module** — the 23:03Z sentence as read
    by the decision thread, not a typed ruling; she was asked to correct the reading and has not.
 4. **The product supplies interfaces; an agent supplies the automation** (23:04Z).
+
+## Decisions recorded (2026-11-17)
+
+| When | Words |
+| --- | --- |
+| 2026-11-17 03:27Z | card option adopted: 「先放报销包,修好后搬回」 |
+
+What it settles, for [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issues/2556):
+
+1. **The project-path approval sits in the expense package for now.** The build's per-package lint
+   judges a record-change flow's object against the package's own objects, not the packages its
+   manifest depends on, so a PSA flow on `crm_expense` draws `flow-trigger-unknown-object`, which
+   `pnpm lint --strict` fails on ([objectstack#34616](https://github.com/objectstack-ai/objectstack/issues/34616);
+   the 2026-11-16 probe ran a build, not `lint --strict`, and missed it). `expense_project_approval`,
+   its insert twin and their two notices are registered by the expense package, in a commit of their
+   own. PSA still contributes the Project field and keeps the cost summaries.
+2. **They move back to PSA once objectstack#34616 ships**, on
+   [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575), blocked on it and on the
+   platform bump that carries it.
+3. **With PSA disabled only the manager path runs.** The Project field leaves the record, so the
+   project path's entry condition is false and nothing reads the absent project; measured at runtime
+   and pinned in `test/expense-module.test.ts`.
 
 ## Not measured
 

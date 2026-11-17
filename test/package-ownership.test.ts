@@ -35,7 +35,9 @@ const MARKETING_ID = 'app.objectstack.hotcrm.marketing';
 const O2C_ID = 'app.objectstack.hotcrm.o2c';
 // PSA (#2316): joined in phase 0 owning no object; phase 1a brings its six.
 const PSA_ID = 'app.objectstack.hotcrm.psa';
-const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID, O2C_ID, PSA_ID];
+// Expenses (#2556): `crm_expense` left Project Delivery for its own module.
+const EXPENSE_ID = 'app.objectstack.hotcrm.expense';
+const MODULE_IDS = [SERVICE_ID, REVENUE_ID, MARKETING_ID, O2C_ID, EXPENSE_ID, PSA_ID];
 
 /**
  * Each module's objects — `module-split-plan.md` decision 5, amended by item 11
@@ -47,11 +49,12 @@ const REVENUE_OBJECTS = [
 ];
 const MARKETING_OBJECTS = ['crm_campaign', 'crm_campaign_member'];
 const O2C_OBJECTS = ['crm_billing_milestone', 'crm_invoice', 'crm_payment'];
+const EXPENSE_OBJECTS = ['crm_expense'];
 const PSA_OBJECTS = [
-  'crm_expense', 'crm_project', 'crm_project_budget', 'crm_project_budget_line', 'crm_project_member', 'crm_project_task',
+  'crm_project', 'crm_project_budget', 'crm_project_budget_line', 'crm_project_member', 'crm_project_task',
   'crm_rate_card', 'crm_time_entry', 'crm_timesheet',
 ];
-const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS, ...O2C_OBJECTS, ...PSA_OBJECTS];
+const MODULE_OBJECTS = [...SERVICE_OBJECTS, ...REVENUE_OBJECTS, ...MARKETING_OBJECTS, ...O2C_OBJECTS, ...EXPENSE_OBJECTS, ...PSA_OBJECTS];
 
 /**
  * The assignment rule's roster of deliberate exceptions (AGENTS.md rule 11) —
@@ -73,8 +76,8 @@ const body = (id: string): AnyRec => {
 const namesOf = (items: unknown): string[] =>
   ((Array.isArray(items) ? items : []) as AnyRec[]).map((item) => String(item?.name)).sort();
 
-describe('one artifact, six packages', () => {
-  it('carries exactly the five modules and the app package, the app last', () => {
+describe('one artifact, seven packages', () => {
+  it('carries exactly the six modules and the app package, the app last', () => {
     expect(bodies.map((b) => b.id)).toEqual([...MODULE_IDS, APP_ID]);
     expect(body(APP_ID).type).toBe('app');
     for (const id of MODULE_IDS) expect(body(id).type, id).toBe('module');
@@ -89,11 +92,13 @@ describe('one artifact, six packages', () => {
   });
 
   it('shares one namespace, so no object is renamed (ADR-0130 D1)', () => {
-    expect(bodies.map((b) => b.namespace)).toEqual(['crm', 'crm', 'crm', 'crm', 'crm', 'crm']);
+    expect(bodies.map((b) => b.namespace)).toEqual(['crm', 'crm', 'crm', 'crm', 'crm', 'crm', 'crm']);
   });
 
-  it('declares the edges: every module depends on the app package and nothing else (a star)', () => {
-    for (const id of MODULE_IDS) expect(Object.keys(body(id).dependencies ?? {}), id).toEqual([APP_ID]);
+  it('declares the edges: every module depends on the app package, and Project Delivery on Expenses too (item 18)', () => {
+    for (const id of MODULE_IDS.filter((m) => m !== PSA_ID)) expect(Object.keys(body(id).dependencies ?? {}), id).toEqual([APP_ID]);
+    // The one module-to-module edge the maintainer allowed (2026-11-16, REQ-0011).
+    expect(Object.keys(body(PSA_ID).dependencies ?? {})).toEqual([APP_ID, EXPENSE_ID]);
   });
 });
 
@@ -114,7 +119,11 @@ describe('every object has exactly one owner', () => {
     expect(namesOf(body(O2C_ID).objects)).toEqual(O2C_OBJECTS);
   });
 
-  it('the Project Delivery module owns the project, staffing, task, rate card, time and expense objects (#2316, #2545)', () => {
+  it('the Expenses module owns the expense (#2556)', () => {
+    expect(namesOf(body(EXPENSE_ID).objects)).toEqual(EXPENSE_OBJECTS);
+  });
+
+  it('the Project Delivery module owns the project, staffing, task, rate card and time objects (#2316, #2545)', () => {
     expect(namesOf(body(PSA_ID).objects)).toEqual(PSA_OBJECTS);
   });
 

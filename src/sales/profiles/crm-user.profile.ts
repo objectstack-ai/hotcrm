@@ -1,5 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { EXPENSE_OWN_FLOOR } from './_expense-grants';
+
 /**
  * CRM User — the package's default permission set (#2231).
  *
@@ -63,6 +65,8 @@ export const CrmUserProfile = {
     "Every member's default: their own leads, accounts, opportunities and activities and read-only catalogues, with no delete, export, View All or system permission.",
   isDefault: true,
   objects: {
+    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    crm_expense: EXPENSE_OWN_FLOOR,
     // ─── The sales book, own scope ────────────────────────────────────
     crm_lead:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_account:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },

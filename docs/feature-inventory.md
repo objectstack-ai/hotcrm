@@ -27,6 +27,7 @@
 | CON | 合同 | APR | 审批 |
 | SVC | 服务与 SLA | PRM | 权限与共享 |
 | ORD | 销售订单 | ADM | 管理与设置 |
+| EXP | 费用报销 | | |
 
 ## 总览统计(清点时点)
 
@@ -274,6 +275,17 @@
 | ADM-013 | 应用内规则手册 | 4 篇随包文档:总览/销售规则(路由、审批阈值、停滞窗口)/服务规则(SLA、升级)/管理手册(岗位、共享、12 个自动化旋钮) | `src/docs/` |
 | ADM-014 | 字段历史跟踪 | 各对象关键字段 `trackHistory`(owner、状态/阶段/优先级、金额/营收等)驱动记录页 History 审计流 | `src/*/objects/*.object.ts` |
 | ADM-015 | 平台能力声明 | `requires: automation/triggers/analytics/auth/ui/approvals/sharing`;`ai` 刻意不列(开源版无 AI service,技能仍编入产物在云端运行);每个包各自声明 | `src/sales/index.ts`、`src/service/index.ts` |
+
+## EXP — 费用报销
+
+增量追加(hotcrm#2556),不在 2026-08-07 的全量清点里,所以不进上方总览统计。
+
+| 编号 | 功能 | 说明 | 实现锚点 |
+| --- | --- | --- | --- |
+| EXP-001 | 费用报销模块与应用 | 独立的 `app.objectstack.hotcrm.expense` 模块和「费用报销」应用,租户可停用;每个内部岗位都能记录、查看和编辑自己的费用,财务看全部 | `src/expense/index.ts` |
+| EXP-002 | 费用记录 | 描述、日期、类别、金额、付款方(员工/公司)、商户、票据号、来源(手工/智能体/导入)、可计费,票据走附件;不带币种 | `src/expense/objects/expense.object.ts` |
+| EXP-003 | 无项目费用审批 | 提交后由报销人的上级审批(无上级时由财务控制),≥2,000 再交财务控制;任何人不能手动写批准/驳回 | `src/expense/flows/expense-approval.flow.ts`、`src/expense/objects/expense.hook.ts` |
+| EXP-004 | 项目费用审批 | 选了项目的费用由项目经理审批,≥2,000 再交财务;项目已关闭、已取消或已锁定时退回草稿并通知;项目字段由项目交付模块扩展提供(暂放费用包,objectstack#34616 修好后搬回,hotcrm#2575) | `src/expense/flows/expense-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
 
 ---
 

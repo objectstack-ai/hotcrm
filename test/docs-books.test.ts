@@ -76,9 +76,9 @@ const docEntries = (): AnyRec[] => {
 describe('the in-app manuals claim every page (#2327)', () => {
   it('reads real pages and real books', () => {
     expect(PAGES.length, 'no package docs found under src/').toBeGreaterThanOrEqual(9);
-    expect(BOOKS.map((b) => b.name).sort()).toEqual(['crm_admin_manual', 'crm_manual', 'crm_marketing_manual', 'crm_o2c_manual', 'crm_psa_manual', 'crm_revenue_manual', 'crm_service_manual']);
+    expect(BOOKS.map((b) => b.name).sort()).toEqual(['crm_admin_manual', 'crm_expense_manual', 'crm_manual', 'crm_marketing_manual', 'crm_o2c_manual', 'crm_psa_manual', 'crm_revenue_manual', 'crm_service_manual']);
     // The six packages that ship pages (#2330 added marketing, #2315 Order to Cash, #2316 Project Delivery), so the module directories are really read.
-    expect(new Set(PAGES.map((p) => p.packageId)).size).toBe(6);
+    expect(new Set(PAGES.map((p) => p.packageId)).size).toBe(7);
   });
 
   it('every page is claimed by a group of some book — none falls to Uncategorized', () => {

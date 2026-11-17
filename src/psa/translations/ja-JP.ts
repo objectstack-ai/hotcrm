@@ -30,21 +30,6 @@ export const jaJP: TranslationData = {
         },
       },
     },
-    expense_approver: {
-      refusals: {
-        RECORD_LOCKED: {
-          message: 'このプロジェクトの経費は、現在この変更ができません。',
-          reasons: {
-            project_locked: { message: '{{project}}は工数と経費がロックされているため、この経費は提出できません。下書きのままにするか、プロジェクトマネージャーにプロジェクトの「工数と経費をロック」を外すよう依頼してください。' },
-            closed_takes_no_new: { message: '{{project}}はクローズ済みのため、新しい経費は受け付けません。経費は進行中のプロジェクトに記録してください。' },
-            cancelled_takes_no_new: { message: '{{project}}はキャンセル済みのため、新しい経費は受け付けません。経費は進行中のプロジェクトに記録してください。' },
-            closed_no_submit: { message: '{{project}}はクローズ済みのため、この経費は提出できません。下書きのままにするか、進行中のプロジェクトに移してください。' },
-            cancelled_no_submit: { message: '{{project}}はキャンセル済みのため、この経費は提出できません。下書きのままにするか、進行中のプロジェクトに移してください。' },
-          },
-        },
-        FORBIDDEN: { message: '経費は提出後、承認者が受信トレイから承認または却下します。' },
-      },
-    },
     project_status_guard: {
       refusals: {
         VALIDATION_FAILED: {
@@ -562,52 +547,10 @@ export const jaJP: TranslationData = {
         rates: { label: 'コストと請求' },
       },
     },
+    // The Project field it contributes to the expense module's object (hotcrm#2556).
     crm_expense: {
-      label: '経費',
-      pluralLabel: '経費',
-      description: 'プロジェクトで発生した経費。領収書を添付します',
       fields: {
-        owner_id: { label: '支出者' },
-        name: { label: '説明' },
         crm_project: { label: 'プロジェクト' },
-        expense_date: { label: '日付' },
-        category: {
-          label: 'カテゴリ',
-          options: {
-            travel: '交通',
-            lodging: '宿泊',
-            meals: '食事',
-            equipment: '機器',
-            other: 'その他',
-          },
-        },
-        amount: { label: '金額' },
-        is_billable: {
-          label: '請求対象',
-          help: 'この経費を顧客に請求するかどうかです。',
-        },
-        status: {
-          label: 'ステータス',
-          options: {
-            draft: '下書き',
-            submitted: '提出済み',
-            approved: '承認済み',
-            rejected: '却下',
-          },
-        },
-        approver: { label: '承認者' },
-        notes: { label: 'メモ' },
-      },
-      _views: {
-        all_expenses: { label: 'すべての経費' },
-        my_expenses: { label: '自分の経費' },
-        expenses_to_approve: { label: '承認待ちの経費' },
-      },
-      _sections: {
-        basic: { label: '経費' },
-      },
-      _validations: {
-        expense_status_progression: { message: 'このステータス変更はできません。経費は 下書き → 提出済み → 承認済みまたは却下 と進みます。却下された経費は下書きに戻して修正します。' },
       },
     },
   },
@@ -635,20 +578,6 @@ export const jaJP: TranslationData = {
       label: '工数表承認（作成時）',
       approvals: { approver_review: { label: 'プロジェクトマネージャー審査' } },
     },
-    expense_approval: {
-      label: '経費承認',
-      approvals: {
-        approver_review: { label: 'プロジェクトマネージャー審査' },
-        finance_review: { label: '財務コントローラー審査' },
-      },
-    },
-    expense_approval_on_create: {
-      label: '経費承認（作成時）',
-      approvals: {
-        approver_review: { label: 'プロジェクトマネージャー審査' },
-        finance_review: { label: '財務コントローラー審査' },
-      },
-    },
     project_budget_alert: { label: 'プロジェクト予算アラート' },
   },
   pages: {
@@ -675,9 +604,7 @@ export const jaJP: TranslationData = {
         nav_my_week: { label: '今週の工数' },
         nav_my_week_timesheets: { label: '今週分を提出' },
         nav_my_timesheets: { label: '自分のタイムシート' },
-        nav_my_expenses: { label: '自分の経費' },
         nav_timesheets_to_approve: { label: '承認待ちのタイムシート' },
-        nav_expenses_to_approve: { label: '承認待ちの経費' },
         group_rates: { label: '単価' },
         nav_rate_cards: { label: '単価表' },
         group_customers: { label: '取引先と契約' },

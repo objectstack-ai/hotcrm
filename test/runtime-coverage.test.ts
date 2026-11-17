@@ -114,6 +114,9 @@ const RUNTIME_TEST_FILES = [
   'psa-project-tasks.test.ts',
   'psa-weekly-time.test.ts',
   'psa-budget-versions.test.ts',
+  // hotcrm#2556 — the expense module's guard and its two approvals, run as
+  // the spender, the manager and finance, and with each module disabled.
+  'expense-module.test.ts',
   // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
   // files above, and the same reason: the gate is authored on four surfaces
   // (the field default, `convert_lead.visible`, `lead_conversion`'s

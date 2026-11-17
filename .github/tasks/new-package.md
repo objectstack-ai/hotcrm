@@ -4,7 +4,8 @@
 
 A package here is **a directory under `src/`** (ADR-0130, `docs/architecture/module-split-plan.md`):
 `src/sales/` is the `type: app` package the artifact takes its identity from, and
-`src/service/`, `src/revenue/`, `src/marketing/` are modules that depend on it. There is no
+`src/service/`, `src/revenue/`, `src/marketing/`, `src/o2c/`, `src/expense/` and `src/psa/` are
+modules that depend on it. There is no
 `packages/` directory, no per-package `package.json` and no npm workspace — one
 `package.json`, one `tsconfig.json`, one build, one artifact. ⛔ Do not scaffold the retired
 multi-package layout; `docs/archive/` is where that shape is kept, and nothing current
@@ -24,7 +25,10 @@ Please scaffold it using the Architect Guidelines:
    hooks from `src/[PACKAGE_NAME]/objects/hooks.ts`.
 3. Import only from the file's own directory or from `src/sales/` — never sideways
    between modules, never upward. A source more than one package needs goes in
-   `src/sales/`, in one copy.
+   `src/sales/`, in one copy. A module depends on the app package only; the one
+   module-to-module edge is Project Delivery's on Expenses (`module-split-plan.md`
+   item 18), and a new one is the maintainer's call. A module that adds a field to
+   another package's object does it with `objectExtensions`, never a hook (R4).
 4. Give the package its own stack, the shape `src/service/index.ts` has: a
    `src/[PACKAGE_NAME]/index.ts` calling `defineStack` with a `type: 'module'` manifest in the
    `crm` namespace, the app's version and protocol, `dependencies` on `app.objectstack.hotcrm`,

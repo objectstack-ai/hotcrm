@@ -29,9 +29,11 @@ export const PROJECT_FINANCE_REVIEW_BUDGET = 100_000;
 
 /**
  * Expense amount at which an expense also needs a finance controller's
- * sign-off, after the project manager's.
+ * sign-off, after the project manager's. Authored in the app package since
+ * hotcrm#2556, because the expense module reads it too; re-exported here so
+ * this package's flows and tests keep one import.
  */
-export const EXPENSE_FINANCE_REVIEW_AMOUNT = 2_000;
+export { EXPENSE_FINANCE_REVIEW_AMOUNT } from '../../sales/objects/_thresholds';
 
 /**
  * How far a budget top-up may raise the baseline before a finance controller

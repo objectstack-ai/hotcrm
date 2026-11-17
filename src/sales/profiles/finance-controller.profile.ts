@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { privateOpportunityPolicy } from './_private-opportunity';
+import { EXPENSE_OWN_READ_ALL } from './_expense-grants';
 
 /**
  * Finance Controller — watches delivery cost and margin (hotcrm#2316, plan
@@ -38,7 +39,8 @@ export const FinanceControllerProfile = {
     crm_rate_card:      { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },
     crm_timesheet:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_time_entry:     { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
-    crm_expense:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
+    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    crm_expense: EXPENSE_OWN_READ_ALL,
     crm_account:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_opportunity:    { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_contract:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },

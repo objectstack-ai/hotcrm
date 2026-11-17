@@ -87,13 +87,14 @@ describe('the composition HotCRM builds', () => {
     const appOwners = Object.fromEntries(
       body.bundle.packages.flatMap((p: AnyRec) => (p.manifest.apps ?? []).map((app: AnyRec) => [app.name, p.manifest.id])),
     );
-    // The three apps of #2417, Order to Cash (#2465) and Project Delivery
-    // (#2316), each filed under the package that owns it.
+    // The three apps of #2417, Order to Cash (#2465), Expenses (#2556) and
+    // Project Delivery (#2316), each filed under the package that owns it.
     expect(appOwners).toEqual({
       crm_enterprise: 'app.objectstack.hotcrm',
       crm_service: 'app.objectstack.hotcrm.service',
       crm_marketing: 'app.objectstack.hotcrm.marketing',
       crm_o2c: 'app.objectstack.hotcrm.o2c',
+      crm_expenses: 'app.objectstack.hotcrm.expense',
       crm_psa: 'app.objectstack.hotcrm.psa',
     });
     expect(describePackages(body.bundle)).toHaveLength(ids.length);

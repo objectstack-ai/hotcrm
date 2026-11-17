@@ -4,15 +4,16 @@ import { P } from '@objectstack/spec';
 
 /**
  * Project Delivery record sharing (hotcrm#2316, plan *Permissions, positions,
- * sharing*). Projects, timesheets and expenses are `private`; these four
- * RECORD-RELATIVE rules (`type: 'field'`, #14103) open each row to the people
+ * sharing*). Projects and timesheets are `private`; these RECORD-RELATIVE
+ * rules (`type: 'field'`, #14103) open each row to the people
  * the row itself names. Each re-materialises when the row's own write changes
  * that column; an empty column shares with nobody.
  *
  * The conditions match every row of the object. A criteria rule must carry
  * one, and the recipient column is what narrows these rules, not a predicate:
- * `record.id != ""` holds for every project, timesheet and expense, all of
- * which require a name (a timesheet's is filled on save).
+ * `record.id != ""` holds for every project and timesheet, both of which
+ * require a name (a timesheet's is filled on save). The expense's approver
+ * rule moved to the expense module with the object (hotcrm#2556).
  */
 
 /** Everyone staffed on a project except its manager reads it (`team_members`, kept by `project_member.hook.ts`). */
@@ -45,17 +46,6 @@ export const TimesheetApproverEditSharingRule = {
   name: 'timesheet_approver_edit',
   label: 'Timesheets — Approver',
   object: 'crm_timesheet',
-  type: 'criteria' as const,
-  condition: P`record.id != ""`,
-  accessLevel: 'edit' as const,
-  sharedWith: { type: 'field' as const, value: 'approver' },
-};
-
-/** The approver stamped on an expense edits it, to approve or reject it (`expense.hook.ts`). */
-export const ExpenseApproverEditSharingRule = {
-  name: 'expense_approver_edit',
-  label: 'Expenses — Approver',
-  object: 'crm_expense',
   type: 'criteria' as const,
   condition: P`record.id != ""`,
   accessLevel: 'edit' as const,

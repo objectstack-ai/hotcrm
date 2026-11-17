@@ -906,7 +906,7 @@ describe('every locale is complete on every authored surface', () => {
     // to Cash (#2465) apps are smaller by design, so each gets its own floor.
     // Project Delivery is a skeleton in phase 0 (#2316): its two anchor groups
     // and the Inbox, plus the four entries the app package contributes.
-    const FLOOR: Record<string, number> = { crm_enterprise: 20, crm_service: 15, crm_marketing: 10, crm_o2c: 10, crm_psa: 7 };
+    const FLOOR: Record<string, number> = { crm_enterprise: 20, crm_service: 15, crm_marketing: 10, crm_o2c: 10, crm_expenses: 8, crm_psa: 7 };
     for (const [app, ids] of declared) {
       expect(ids.size, `app "${app}" declares no navigation ids`).toBeGreaterThanOrEqual(FLOOR[app] ?? 20);
     }

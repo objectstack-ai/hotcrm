@@ -63,11 +63,9 @@ description: 在工時單上填報工時、填報費用、提交，如何在 Inb
 
 ## 費用
 
-**Expense**（費用）是一個人為項目花的錢。打開 **My Expenses**，點 **New**：填寫 **Description**、**Project**、**Date**、**Category**（Travel、Lodging、Meals、Equipment、Other）、**Amount**，以及是否向客戶 **Billable**。在 **Files** 分頁上傳票據。
+費用報銷是一個獨立的模組，面向所有員工：如何記錄費用、有哪些欄位、由誰審批，見[費用報銷](/zh-Hant/docs/expenses)。這裡只說項目帶來的部分。
 
-費用與工時單的狀態相同，也在同一個 Inbox 裡決定。它的 **Approver** 是建立時項目的項目經理，費用也會出現在 **Expenses to Approve** 中。金額達到 **2,000** 或以上的費用，隨後還要交給 **Finance Controller** 審批，他們也批准後才計入成本。
-
-金額使用貴公司的本位幣。外幣票據請先換算再錄入。
+費用可以選擇一個 **Project**，項目人員在這裡的 **Time and Expenses** 下也能找到 **My Expenses** 和 **Expenses to Approve**。項目上的費用由項目經理審批，提交時項目經理被記為它的 **Approver**；金額達到 **2,000** 或以上，隨後還要交給 **Finance Controller** 審批。沒有項目的費用則交給報銷人自己的上級審批。
 
 ## 如何成為項目的成本
 
@@ -80,10 +78,12 @@ Draft、Submitted 和 Rejected 的都不計入。一旦批准，項目的[成本
 
 ## 項目被鎖定時
 
-項目經理或財務可以在項目上勾選 **Lock Time and Expenses**，通常是在收到[預算通知](/zh-Hant/docs/projects/projects-and-staffing#budget-lock)之後。勾選期間，提交這個項目上的工時單或費用都會被拒絕，提示訊息會寫明項目名稱。先儲存為草稿：解除鎖定後照常提交。
+項目經理或財務可以在項目上勾選 **Lock Time and Expenses**，通常是在收到[預算通知](/zh-Hant/docs/projects/projects-and-staffing#budget-lock)之後。勾選期間，提交這個項目上的工時單會被拒絕，提示訊息會寫明項目名稱。在這個項目上提交的費用會退回 **Draft**，報銷人會在 Inbox 裡收到一條寫明項目名稱的通知。先儲存為草稿：解除鎖定後照常提交。
 
 ## 項目已結束時
 
-**Closed** 或 **Cancelled** 的項目不再接受工時和費用。在這樣的項目上新建工時單或費用會被拒絕，把已有的工時單或費用改掛到這樣的項目上也會被拒絕，提示訊息會寫明項目名稱和狀態。項目上已有的草稿保持原樣，仍可編輯，但提交會被拒絕：把它改掛到 Active 的項目上再提交。
+**Closed** 或 **Cancelled** 的項目不再接受工時和費用。在這樣的項目上新建工時單會被拒絕，把已有的工時單改掛到這樣的項目上也會被拒絕，提示訊息會寫明項目名稱和狀態。項目上已有的草稿工時單保持原樣，仍可編輯，但提交會被拒絕：把它改掛到 Active 的項目上再提交。
+
+費用的 **Project** 選擇框不提供 Closed 或 Cancelled 的項目。如果仍在這樣的項目上提交了費用（例如項目關閉前寫好的費用），費用會退回 **Draft**，報銷人會在 Inbox 裡收到一條寫明項目名稱的通知：把它改掛到 Active 的項目上再提交。
 
 **Completed** 的項目仍然接受補錄的工時單和費用。要停止補錄，勾選 **Lock Time and Expenses**，或關閉項目。

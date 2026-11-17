@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
+import { EXPENSE_OWN } from './_expense-grants';
 
 /**
  * Two positions distribute this set: `service_agent` (the intake pool) and
@@ -21,6 +22,8 @@ export const ServiceAgentProfile = {
   // customers and their own tasks.
   tabPermissions: { crm_enterprise: 'hidden' as const, crm_marketing: 'hidden' as const, crm_o2c: 'hidden' as const, crm_psa: 'hidden' as const },
   objects: {
+    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    crm_expense: EXPENSE_OWN,
     // Reference context an agent needs to work ANY ticket — a customer's cases
     // are meaningless without seeing the account/contact behind them, so these
     // are org-visible reads (viewAllRecords: true), NOT own-only. This was the

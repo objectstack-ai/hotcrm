@@ -9,12 +9,14 @@ import * as serviceObjects from '../../src/service/objects';
 import * as revenueObjects from '../../src/revenue/objects';
 import * as marketingObjects from '../../src/marketing/objects';
 import * as o2cObjects from '../../src/o2c/objects';
+import * as expenseObjects from '../../src/expense/objects';
 import * as psaObjects from '../../src/psa/objects';
 
 import * as salesFlows from '../../src/sales/flows';
 import * as serviceFlows from '../../src/service/flows';
 import * as revenueFlows from '../../src/revenue/flows';
 import * as marketingFlows from '../../src/marketing/flows';
+import * as expenseFlows from '../../src/expense/flows';
 import * as psaFlows from '../../src/psa/flows';
 
 import * as salesViews from '../../src/sales/views';
@@ -22,6 +24,7 @@ import * as serviceViews from '../../src/service/views';
 import * as revenueViews from '../../src/revenue/views';
 import * as marketingViews from '../../src/marketing/views';
 import * as o2cViews from '../../src/o2c/views';
+import * as expenseViews from '../../src/expense/views';
 import * as psaViews from '../../src/psa/views';
 
 import * as salesDashboards from '../../src/sales/dashboards';
@@ -40,6 +43,7 @@ import * as serviceReports from '../../src/service/reports';
 import * as salesSharing from '../../src/sales/sharing';
 import * as serviceSharing from '../../src/service/sharing';
 import * as marketingSharing from '../../src/marketing/sharing';
+import * as expenseSharing from '../../src/expense/sharing';
 import * as psaSharing from '../../src/psa/sharing';
 
 /**
@@ -192,6 +196,7 @@ const BARRELS: Readonly<
     revenue: revenueObjects,
     marketing: marketingObjects,
     o2c: o2cObjects,
+    expense: expenseObjects,
     psa: psaObjects,
   },
   flows: {
@@ -199,6 +204,7 @@ const BARRELS: Readonly<
     service: serviceFlows,
     revenue: revenueFlows,
     marketing: marketingFlows,
+    expense: expenseFlows,
     psa: psaFlows,
   },
   views: {
@@ -207,12 +213,13 @@ const BARRELS: Readonly<
     revenue: revenueViews,
     marketing: marketingViews,
     o2c: o2cViews,
+    expense: expenseViews,
     psa: psaViews,
   },
   dashboards: { sales: salesDashboards, service: serviceDashboards, revenue: revenueDashboards, psa: psaDashboards },
   datasets: { sales: salesDatasets, service: serviceDatasets, revenue: revenueDatasets, psa: psaDatasets },
   reports: { sales: salesReports, service: serviceReports },
-  sharing: { sales: salesSharing, service: serviceSharing, marketing: marketingSharing, psa: psaSharing },
+  sharing: { sales: salesSharing, service: serviceSharing, marketing: marketingSharing, expense: expenseSharing, psa: psaSharing },
 };
 
 /**

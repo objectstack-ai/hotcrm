@@ -99,3 +99,14 @@ export const HIGH_VALUE_DEAL_AMOUNT = 500_000;
  * the rules.
  */
 export const QUOTE_DISCOUNT_CEILING = 60;
+
+/**
+ * Expense amount at which an expense also needs a finance controller's
+ * sign-off, after its first approver (hotcrm#2316 phase 1b; shared since
+ * hotcrm#2556). Two packages read it: the expense module's own approval, for
+ * an expense with no project, and Project Delivery's, for an expense on a
+ * project. A source more than one package needs lives here, in one copy
+ * (`module-split-plan.md` item 7). An expense of exactly this amount goes to
+ * finance.
+ */
+export const EXPENSE_FINANCE_REVIEW_AMOUNT = 2_000;
