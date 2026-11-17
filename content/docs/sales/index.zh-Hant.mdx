@@ -1,6 +1,6 @@
 ---
 title: 銷售
-description: 擷取潛在客戶、推進交易、發送報價並完成營收所需的一切。
+description: 擷取線索、推進交易、按產品目錄定價、發送報價並簽下合約所需的一切。
 ---
 
 # 銷售
@@ -33,8 +33,12 @@ Lead  ──►  Account + Contact  ──►  Opportunity  ──►  Quote  �
 | [**銷售管道管理**](/zh-Hant/docs/sales/pipeline-management) | 階段、機率與預測的運作機制。 |
 | [**預測**](/zh-Hant/docs/sales/forecasting) | 按負責人與週期的銷售管道快照——配額、承諾金額、最佳情況與達成率。 |
 | [**報價**](/zh-Hant/docs/sales/quotes) | 與商機關聯的定價提案，包含行項目與折扣。 |
+| [**產品**](/zh-Hant/docs/sales/products) | 你所銷售內容的目錄——名稱、編碼、標價、SKU。 |
+| [**價格表**](/zh-Hant/docs/sales/price-books) | 一個產品不止一個價格——標準價目、合作夥伴檔、地區、促銷。 |
+| [**審批**](/zh-Hant/docs/sales/approvals) | 大額商機的分級審批。 |
 | [**合約**](/zh-Hant/docs/sales/contracts) | 與客戶簽署的協議——條款、價值、續約。 |
 | [**訂單**](/zh-Hant/docs/sales/orders) | 客戶買了什麼——訂單行、合計、狀態與發貨。 |
+| [**與財務軟體的邊界**](/zh-Hant/docs/sales/billing-handoff) | HotCRM 記錄錢的哪些事、把哪些留給財務軟體——以及把贏單商機與已啟用合約交給計費系統的兩個出站事件。 |
 | [**活動**](/zh-Hant/docs/sales/activities) | 任務——你仍然欠客戶的事，掛在任意記錄上。 |
 | [**會議與電話**](/zh-Hant/docs/sales/meetings-and-calls) | 以活動（Event）記錄的形式記錄或預約的會議與電話，帶參與者與互動歷史。 |
 
@@ -49,17 +53,20 @@ Lead  ──►  Account + Contact  ──►  Opportunity  ──►  Quote  �
 - **大單通知**——當一筆金額 $100K 及以上的交易被標記為成交時，該交易的負責人會收到郵件通知——只通知負責人本人，不通知其經理。
 - **報價到期**——超過有效期的報價每晚會被自動標記為已過期。
 - **大額交易審批**——金額 $100K 及以上的商機會自動路由給你的銷售經理審批，高於 $500K 的還要再經銷售總監審批。
+- **接受報價即起草合約**——接受報價單會把商機以 *Closed Won* 關閉，並根據報價單起草一份合約。
+- **自動升級客戶**——合約啟用的那一刻，客戶被升級為 *Customer*，合約若還沒有 **Signed Date** 則記下當天。*客戶*上不記任何日期：做客戶群組報表時，讀合約的 **Signed Date** 或 **Start Date**。
+- **續約提醒與到期**——在管理員開啟了排程工作的環境裡，每日掃描會在合約進入通知期（**Renewal Notice (Days)**，預設 30）時給**合約負責人**建一個續約任務並發出提醒，並把過了結束日期的合約標記為 *Expired*。
 
 ## 銷售 AI 技能
 
-[銷售技能](/zh-Hant/docs/ai-copilot/sales-copilot) 已內建於平台助手。當你打開一筆潛在客戶、客戶或商機時，它可以：
+[銷售技能](/zh-Hant/docs/ai-copilot/sales-copilot)在你的環境執行平台助手時附著在它上面；你[透過 MCP 接入](/zh-Hant/docs/ai-copilot/connect-your-agent)的智能體也在同一批紀錄上工作。兩者都可以：
 
 - 使用 BANT 方法（預算、決策權、需求、時間線）**審核潛在客戶資格**並給出評分。
 - **起草外撥郵件**，針對聯絡人進行個人化，並以產品目錄為依據。
 - **預測營收**並標記看起來有風險的交易。
 - 在你下次會議之前**總結某個客戶**（Customer 360）。
 
-只需在聊天中輸入：*"qualify this lead"*、*"draft a follow-up email"*、*"what's at risk this quarter?"*
+可以這樣問它：*"qualify this lead"*、*"draft a follow-up email"*、*"what's at risk this quarter?"*
 
 ## 在哪裡找到這些功能
 
@@ -70,9 +77,13 @@ Lead  ──►  Account + Contact  ──►  Opportunity  ──►  Quote  �
 - **產品目錄**（Product Catalog）——按類別統計的產品目錄價，來自收入模組的 `product_catalog_dashboard` 儀表板。它排在**價格表**之後，隨收入模組一起消失。
 - **知識庫**（Knowledge）——只對銷售代表顯示：已發布的知識文章，銷售代表在這裡、也能透過搜尋框找到它們。其他人在 Service 應用的**服務**分組下找到**知識庫**，銷售代表的啟動器不提供這個應用。
 
-**產品**（Products）歸在本分組而不是**行銷**之下：產品目錄是每一條報價行項目與商機行項目所指向的主資料，本質上是收入側的資料，只是當初被順手放在了行銷旁邊——參見 [Products](/zh-Hant/docs/revenue/products)。
+**產品**（Products）歸在本分組而不是**行銷**之下：產品目錄是每一條報價行項目與商機行項目所指向的主資料，本質上是收入側的資料，只是當初被順手放在了行銷旁邊——參見 [Products](/zh-Hant/docs/sales/products)。
 
 在側邊欄裡，**合約**和**訂單**排在**銷售業績**（Sales Performance）之後，**報價**、**產品**、**價格表**和**產品目錄**排在其後：它們屬於 HotCRM 的收入模組，而模組貢獻的條目排在應用自己放進分組的條目之後。銷售代表的**知識庫**來自服務模組，排在最後。
+
+大額商機的審批在 **My Work** 下等你處理：
+
+- **Inbox**——點開後進入平台的**審批中心**，在那裡核准或拒絕等著你處理的審批。側邊欄上的 label 就是 **Inbox**；應用裡沒有任何條目叫 *Approval Requests*（審批請求）。參見[審批](/zh-Hant/docs/sales/approvals)。
 
 側邊欄裡沒有 *銷售管道*（Pipeline）這一條。看板是**商機**清單頁上的一個標籤頁，與檢視同一批交易的其他方式並列；那個檢視自身的 label 是**銷售流水線**（Sales Pipeline，`pipeline_kanban`）。
 
@@ -86,3 +97,4 @@ Lead  ──►  Account + Contact  ──►  Opportunity  ──►  Quote  �
 2. [商機](/zh-Hant/docs/sales/opportunities)——你每天都要處理的核心記錄。
 3. [銷售管道管理](/zh-Hant/docs/sales/pipeline-management)——漏斗是如何被治理的。
 4. [報價](/zh-Hant/docs/sales/quotes)——如何發送一份提案。
+5. [產品](/zh-Hant/docs/sales/products)和[價格表](/zh-Hant/docs/sales/price-books)——報價單據以定價的目錄。

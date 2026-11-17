@@ -101,7 +101,7 @@ description: 活跃的销售交易——销售管道的核心，包含 7 个阶�
 - **预期营收** = 金额 × 概率 ÷ 100，每当金额或概率变化时重新计算。
 - **进入当前阶段日期**在交易创建时打上，之后每次移动到新阶段都会重新打上。**当前阶段停留天数**由它推算，因此始终是最新的——这正是暴露停滞交易的依据。
 - 当你将一笔交易标记为**成交且金额为 $100K 及以上** 时，该交易的负责人会收到邮件——只通知负责人本人，不通知其经理。
-- 当一笔未关闭交易的金额达到 **$100K 及以上** 时，它会自动进入 [Large Deal Approval](/zh-Hans/docs/revenue/approvals) 流程——见下文 *大额交易的审批*。
+- 当一笔未关闭交易的金额达到 **$100K 及以上** 时，它会自动进入 [Large Deal Approval](/zh-Hans/docs/sales/approvals) 流程——见下文 *大额交易的审批*。
 
 ## 行项目——实际在销售什么
 
@@ -133,7 +133,7 @@ description: 活跃的销售交易——销售管道的核心，包含 7 个阶�
 
 已经处于*成交*或*失败*的交易不会进入审批。
 
-审批状态会显示为商机详情界面顶部的横幅。完整流程参见 [营收 › 审批](/zh-Hans/docs/revenue/approvals)。
+审批状态会显示为商机详情界面顶部的横幅。完整流程参见 [营收 › 审批](/zh-Hans/docs/sales/approvals)。
 
 ## 共享——谁能看到哪笔交易
 
@@ -212,5 +212,5 @@ description: 活跃的销售交易——销售管道的核心，包含 7 个阶�
 ## 给管理员的提示
 
 - 阶段列表、默认概率和合法的状态转换分散在源码的三处，而不是某个 Setup 界面：`stage` 字段自己的选项（`src/sales/objects/opportunity.object.ts`）；`opportunity_lifecycle` 钩子里的 `STAGE_PROBABILITY` 映射（`src/sales/objects/opportunity.hook.ts`），每次保存都据此重新同步*成交概率*；以及商机对象上名为 `opportunity_stage_progression` 的状态机校验规则（`src/sales/objects/opportunity.object.ts`）。三处需同步修改。参见 [定制化 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
-- 审批金额同样不是 Setup 界面上的字段。$100K 的入口与 $500K 的总监档是 `src/sales/objects/_thresholds.ts` 里的两个金额，而 $100K 这条线是应用对“大额交易”的唯一定义：大单成交提醒与大额交易共享规则都按同一金额划线，改它会让它们一起变动。参见 [营收 › 审批](/zh-Hans/docs/revenue/approvals)。
+- 审批金额同样不是 Setup 界面上的字段。$100K 的入口与 $500K 的总监档是 `src/sales/objects/_thresholds.ts` 里的两个金额，而 $100K 这条线是应用对“大额交易”的唯一定义：大单成交提醒与大额交易共享规则都按同一金额划线，改它会让它们一起变动。参见 [营收 › 审批](/zh-Hans/docs/sales/approvals)。
 - $100K 大单通知阈值同样不是 Setup 界面上的字段：它是 `opportunity_won_alert` 流程的 CEL 起始条件——`src/sales/flows/opportunity-won-alert.flow.ts` 里的 `record.amount >= 100000`。收件人则由该流程 `notify` 节点的 `recipients` 决定，列表里只有 `{record.owner_id}` 一项，即商机负责人本人。
