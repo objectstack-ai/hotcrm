@@ -611,7 +611,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         // (see `result` in `lead-conversion.flow.ts`).
         result: {
           title: 'リードを変換しました',
-          description: '{{ pendingApprovalAccountName | default:"承認待ちの取引先承認はありません：" }}{{ noApprovalAccountName | default:" は、営業マネージャーによる取引先承認を待っています" }}。',
+          description: '{{ pendingApprovalAccountName | default:"リードは次の取引先に変換されました：" }}{{ noApprovalAccountName | default:" は、営業マネージャーによる取引先承認を待っています" }}。',
           fields: {
             accountLink: { label: '取引先' },
             contactLink: { label: '取引先責任者' },

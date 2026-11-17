@@ -99,7 +99,7 @@
 | OPP-008 | 行项目价格填充 | 选择产品即填充 `list_price`,插入时空 `unit_price` 默认为目录价(不覆盖已谈判价);商机/报价行共用一份工厂 | `src/revenue/objects/_line-item-price-fill.ts` |
 | OPP-009 | 销售管道看板 | `pipeline_kanban`:按阶段分列、列头按金额汇总、拖拽推进、640px 抽屉,排除已关闭交易;#1259 起入口是商机列表页的 "Sales Pipeline" 标签页,侧边栏不再单列一行 | `src/sales/views/opportunity.view.ts`(`listViews.pipeline_kanban`) |
 | OPP-010 | 商机视图族 | 默认"Open Deals" + 我的/全量/关闭日日历/timeline/卡片/停滞(按阶段龄排序)/本季关单(预测类别+季度窗口)共 9 个 tab | `src/sales/views/opportunity.view.ts` |
-| OPP-011 | 批量更新阶段 | 全仓唯一聚合式批量动作:整个选择集一次 dispatch(`_selectedIds`),全有或全无;没移动的商机按名称汇总报错(拒绝原句按调用者语言,已关闭等重试无用时不提示重试,#2511) | `src/sales/actions/opportunity.actions.ts`(`mass_update_stage`) |
+| OPP-011 | 批量更新阶段 | 声明式写入(`operation: 'update'`,无脚本体),每条一次调用(`bulkActions` 逐条派发):按调用人的权限和审批锁定逐条执行或拒绝,结果框逐条计数、逐条说明原因;只提供进行中阶段,成交/失败在记录页单条完成(#2586–#2589);对商机无编辑权的人不显示按钮 | `src/sales/actions/opportunity.actions.ts`(`mass_update_stage`) |
 | OPP-012 | 克隆商机 | 复制客户/联系人/金额/来源等为新 prospecting 商机,关闭日重置为 +90 天 | `src/sales/actions/opportunity.actions.ts`(`clone_opportunity`) |
 | OPP-013 | 停滞商机日扫描 | 每日 07:30 扫描阶段停留 >14 天的开放商机:通知 owner 并幂等创建 +2 天跟进任务 | `src/sales/flows/opportunity-stagnation.flow.ts` |
 | OPP-014 | 大单赢单告警 | 金额 ≥$100K 的商机赢单时通知 owner(防重发) | `src/sales/flows/opportunity-won-alert.flow.ts` |

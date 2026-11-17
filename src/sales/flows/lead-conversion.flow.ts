@@ -893,10 +893,14 @@ export const LeadConversionFlow: Flow = {
       // `visibleWhen` reads only the values the dialog collects, and the
       // dialog never seeds a `record_link` field's value.
       //
+      // The sentence for an account that needs no approval says where the
+      // lead went, not what is absent: "No account approval is pending for
+      // X" read as a warning on the screen's first line (#2432 row 7).
+      //
       // Translated as `screens.result` in the packs.
       id: 'result', type: 'screen', label: 'Lead Converted',
       config: {
-        description: '{{ pendingApprovalAccountName | default:"No account approval is pending for " }}{{ noApprovalAccountName | default:" is waiting for account approval by a sales manager" }}.',
+        description: '{{ pendingApprovalAccountName | default:"The lead is now part of the account " }}{{ noApprovalAccountName | default:" is waiting for account approval by a sales manager" }}.',
         fields: [
           { name: 'accountLink', label: 'Account', type: 'record_link', reference: 'crm_account', defaultValue: cel`accountId` },
           { name: 'contactLink', label: 'Contact', type: 'record_link', reference: 'crm_contact', defaultValue: cel`contactId` },

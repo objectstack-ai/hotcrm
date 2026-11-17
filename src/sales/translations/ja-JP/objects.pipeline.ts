@@ -29,6 +29,12 @@ const opportunityStageOptions = {
 };
 
 /**
+ * Update Stage offers the open stages only (#2589): closing a deal is done on
+ * its record page, where the win or loss reason is collected.
+ */
+const { closed_won: _won, closed_lost: _lost, ...openStageOptions } = opportunityStageOptions;
+
+/**
  * The bulk Delete on every opportunity grid list (#2338 item 4, `GRID_BAR` in
  * `src/sales/views/opportunity.view.ts`), translated once and named by each view.
  */
@@ -452,11 +458,11 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       mass_update_stage: {
         label: 'ステージ更新',
-        successMessage: '商談ステージを更新しました！',
+        successMessage: 'ステージを更新しました。',
         params: {
           stage: {
             label: '新しいステージ',
-            options: { ...opportunityStageOptions },
+            options: { ...openStageOptions },
           },
         },
       },

@@ -16,44 +16,43 @@ export const ForecastViews = defineView({
     label: 'All Forecasts',
     userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_forecast' },
+    // The period is named by its kind and its first day, both drawn in the
+    // reader's language: `period_label` is stored text the snapshot hook
+    // writes in English ("Nov 2026", "Q3 2026"), so a zh-CN list read English
+    // in its own column (#2432 row 2). The label stays on the record.
+    //
+    // No footer totals: the list holds months and the quarters that contain
+    // them, so a column total counts each month twice (#2432, beside row 6).
+    // No `sum` on `expected_amount` either: a formula has no stored column to
+    // aggregate, and the spec refuses `sum` on a `formula` field (#1980).
     columns: [
-      { field: 'owner_id',            width: 160, pinned: 'left', link: true },
-      { field: 'period_label',     width: 130, sortable: true },
+      { field: 'owner_id',         width: 160, pinned: 'left', link: true },
+      { field: 'period',           width: 100 },
       { field: 'period_start',     width: 130, sortable: true },
       { field: 'snapshot_date',    width: 130, sortable: true },
-      { field: 'quota',            width: 130, align: 'right', summary: 'sum' },
-      { field: 'closed_amount',    width: 140, align: 'right', summary: 'sum' },
-      { field: 'commit_amount',    width: 140, align: 'right', summary: 'sum' },
-      { field: 'best_case_amount', width: 140, align: 'right', summary: 'sum' },
-      { field: 'pipeline_amount',  width: 140, align: 'right', summary: 'sum' },
-      // No total here: a formula has no stored column to aggregate, so the spec refuses `sum` on a `formula` field (#1980).
+      { field: 'quota',            width: 130, align: 'right' },
+      { field: 'closed_amount',    width: 140, align: 'right' },
+      { field: 'commit_amount',    width: 140, align: 'right' },
+      { field: 'best_case_amount', width: 140, align: 'right' },
+      { field: 'pipeline_amount',  width: 140, align: 'right' },
       { field: 'expected_amount',  width: 140, align: 'right' },
       { field: 'attainment_pct',   width: 130, align: 'right' },
       { field: 'coverage_ratio',   width: 130, align: 'right' },
       { field: 'source',           width: 130 },
     ],
+    // Newest period first. No default grouping (#2432 row 4): a heading per
+    // period (#2060 item 11, #2367 row 5) put one row under each heading on a
+    // book with one owner, and the console fetched each group's rows with a
+    // request of its own (7 requests for 7 periods, measured on 18.5.0). The
+    // columns stay groupable from the list's own grouping control. A quarter
+    // and the month that opens it share `period_start`; the second key puts
+    // the quarter first (`quarter` sorts after `month`), and the `period`
+    // column tells the two apart.
     sort: [
-      { field: 'period_start',  order: 'desc' },
-      { field: 'owner_id',         order: 'asc' },
+      { field: 'period_start', order: 'desc' },
+      { field: 'period',       order: 'desc' },
+      { field: 'owner_id',     order: 'asc' },
     ],
-    // Newest period first, one heading per period, titled by its label (#2060
-    // item 11, then #2367 row 5). A grouping field orders its groups by its
-    // own value unless `orderBy` names another: grouping on the text
-    // `period_label` alone ran the periods as text ("Sep 2026 → Q4 2026 →
-    // Q4 2025 …"), so until 18.2.0 the view grouped twice, `period_start`
-    // then `period_label`, and every period drew two nested headings over one
-    // row. `orderBy` (objectstack#25786, in 18.2.0) places each label's group
-    // where its newest `period_start` falls, so one level does both jobs.
-    //
-    // The label is the group key, not the date: a quarter and the month that
-    // opens it start on the same day (Q4 2026 and Oct 2026), and grouping by
-    // `period_start` would put both rows under one heading. Those two tie on
-    // the order key; their relative order is the platform's.
-    grouping: {
-      fields: [
-        { field: 'period_label', order: 'desc', orderBy: 'period_start' },
-      ],
-    },
     pagination: { pageSize: 50 },
     appearance: { allowedVisualizations: ['grid'] },
   },
@@ -130,7 +129,8 @@ export const ForecastViews = defineView({
       label: 'My Forecast',
       userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_forecast' },
-      columns: ['period_label', 'snapshot_date', 'quota', 'closed_amount', 'commit_amount', 'pipeline_amount', 'attainment_pct'],
+      // The period by kind and first day, as on All Forecasts (#2432 row 2).
+      columns: ['period', 'period_start', 'snapshot_date', 'quota', 'closed_amount', 'commit_amount', 'pipeline_amount', 'attainment_pct'],
       // `{current_user_id}` is the only user token the view runtime resolves
       // (`{current_user}` silently never matches).
       filter: [{ field: 'owner_id', operator: 'equals', value: '{current_user_id}' }],

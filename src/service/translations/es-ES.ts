@@ -353,7 +353,7 @@ export const esES: TranslationData = {
     case_detail_page: {
       label: 'Detalle de Caso',
       description: 'Página de caso para el agente de servicio: datos destacados, progreso del SLA, detalles y cronología de actividad.',
-      title: '{case_number} · {subject}',
+      title: '{display_title}',
       subtitle: '{crm_account}',
       components: {
         case_highlights: { label: 'Información Clave' },

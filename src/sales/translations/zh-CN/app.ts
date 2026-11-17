@@ -616,7 +616,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         // (see `result` in `lead-conversion.flow.ts`).
         result: {
           title: '线索已转化',
-          description: '{{ pendingApprovalAccountName | default:"没有待处理的客户审批：" }}{{ noApprovalAccountName | default:" 正在等待销售经理的客户审批" }}。',
+          description: '{{ pendingApprovalAccountName | default:"线索已转入客户：" }}{{ noApprovalAccountName | default:" 正在等待销售经理的客户审批" }}。',
           fields: {
             accountLink: { label: '客户' },
             contactLink: { label: '联系人' },
