@@ -230,6 +230,10 @@ export const Forecast = ObjectSchema.create({
       label: 'Expected',
       description: 'Closed Won + Commit — what the owner reasonably expects to land.',
       expression: F`coalesce(record.closed_amount, 0) + coalesce(record.commit_amount, 0)`,
+      // An amount of money, so it reads with the tenant currency like the
+      // stored amounts beside it (#2432 row 2: `655,000.00` beside
+      // `¥295,000.00`; docs/developers/number-formats.md).
+      returnType: 'currency',
       scale: 2,
       group: 'amounts',
     }),

@@ -138,28 +138,26 @@ import { SEED_EN_LOCALES } from './_locale';
 // population it exists for is an account being worked right now and still
 // flagged. The seed book has to contain one, or the demo renders a panel that
 // merely restates the 60-day window stacked below it (#1414). Hence a
-// deliberate three-way split, the same shape as the territory and activity
-// partitions above:
+// deliberate split, the same shape as the territory and activity partitions
+// above:
 //
 //   Initech  `at_risk`  + 72 days quiet — flagged AND derived. It lands in
 //            this panel and in `at_risk_accounts`; the report's own header
 //            says the two blocks are allowed to overlap.
-//   Wayne    `churning` + clock at today() — flagged and NOT derived. Its
-//            `strategic` tier is inside `silent_high_value`'s scope as well,
-//            so the clock alone keeps it out of BOTH windowed panels: the
-//            account no derived signal can see. It is what makes the set
-//            difference FLAGGED \ QUIET60 non-empty.
-//   Stark    `at_risk`  + clock at today(), and NOT a customer — the row the
-//            panel's `rows: ['type']` grouping exists for (#1647). While every
-//            flagged account was a `customer` the grouping rendered a single
-//            row and could demonstrate nothing; the grid view
+//   Stark    `at_risk`  + clock at today(), and NOT a customer — flagged
+//            and NOT derived, the account no windowed panel can see, which
+//            makes the set difference FLAGGED \ QUIET60 non-empty. Also the
+//            row the panel's `rows: ['type']` grouping exists for (#1647).
+//            While every flagged account was a `customer` the grouping
+//            rendered a single row and could demonstrate nothing; the grid view
 //            `crm_account.at_risk_accounts` filters `type == 'customer'`
 //            before anything else, so a flagged PARTNER is a row the report
 //            block can show and that grid cannot.
 //
-// The other customers stay `healthy` on purpose. A severity every record
-// carries demonstrates nothing, and `churning` is the most severe option in
-// the model — one record is what makes it real rather than declared.
+// The other customers stay `healthy` on purpose: a severity every record
+// carries demonstrates nothing. Wayne carried `churning` beside the book's
+// largest open deal until #2432 row 8 read it as a contradiction, so no seeded
+// account is `churning`; a flag has to agree with the records it sits on.
 //
 // The three PROSPECTS carry no `health_score` at all, and that blank is a
 // stated choice rather than an oversight: the column is what a CSM asserts
@@ -311,12 +309,11 @@ three regional teams (NA, EMEA, APAC).
       // contract is still in legal review — and the panel's criterion admits
       // both values, so the honest severity is also the one that flags.
       //
-      // Diverging from `segment: 'stable'` is deliberate, the same split
-      // Wayne demonstrates below: `segment` is how the book classifies the
-      // account, `health_score` is what a person asserts about it. The clock
-      // stays at today(), so like Wayne this row is outside every windowed
-      // panel on that report: it reaches `csm_flagged_accounts` and no other
-      // block.
+      // Diverging from `segment: 'stable'` is deliberate: `segment` is how
+      // the book classifies the account, `health_score` is what a person
+      // asserts about it. The clock stays at today(), so this row is outside
+      // every windowed panel on that report: it reaches
+      // `csm_flagged_accounts` and no other block.
       health_score: 'at_risk',
       // The completed 'Send welcome package' task bubbles here on every seed
       // load, so this has ALWAYS resolved to today — the previous `daysAgo(5)`
@@ -336,20 +333,14 @@ three regional teams (NA, EMEA, APAC).
       website: 'https://wayne.example.com',
       tier: 'strategic',
       segment: 'growth',
-      // CHURNING, with the clock still running — the population
-      // `csm_flagged_accounts` exists for (#1414). Every DERIVED signal on
-      // this row reads healthy: an operations rollout closed four days ago, a
-      // licence sits at 80% two weeks from signature, three meetings were held
-      // this month. The CSM who has been in the room says the account is going
-      // anyway, and `health_score` is the only churn signal in the model a
-      // person ASSERTS — which is why the panel that reads it is first on the
-      // report and carries no time window.
-      //
-      // ⛔ Do not "correct" this to `at_risk` to agree with the pipeline, and
-      // ⛔ do not stop the clock to agree with the health score: either edit
-      // folds the row back into `at_risk_accounts` (60-day window) and the
-      // flagged panel goes back to restating its neighbour.
-      health_score: 'churning',
+      // HEALTHY, as every record on it says: the largest open deal in the
+      // book is in negotiation, a contract is in approval, an operations
+      // rollout closed four days ago and three meetings were held this month.
+      // It was seeded `churning` until #2432 row 8, as the flagged account no
+      // windowed panel can see (#1414); a churning account holding the book's
+      // biggest live deal read as a contradiction, not as a CSM's judgement.
+      // Stark Medical (`at_risk`, worked today) is that account now.
+      health_score: 'healthy',
       // Held: negotiation meeting, security-addendum call, governance webinar.
       last_activity_date: cel`today()`,
     },
@@ -609,6 +600,8 @@ export const leads = defineSeed(Lead, {
       industry: 'retail',
       rating: 3,
       next_followup_date: cel`daysFromNow(2)`,
+      need_type: 'new_implementation',
+      estimated_amount: 48000,
     },
     {
       first_name: 'David',
@@ -621,6 +614,8 @@ export const leads = defineSeed(Lead, {
       industry: 'education',
       rating: 4,
       next_followup_date: cel`daysFromNow(1)`,
+      need_type: 'replacement',
+      estimated_amount: 36000,
       // A seeded `held` event names this lead, and `event_activity_bubble`
       // stamps `last_contacted_date` with the SEED MOMENT rather than the
       // event's own timestamp — so an authored age here would be overwritten
@@ -646,6 +641,8 @@ export const leads = defineSeed(Lead, {
       // prevent (#591).
       rating: 5,
       next_followup_date: cel`daysFromNow(0)`,
+      need_type: 'new_implementation',
+      estimated_amount: 120000,
       // Same as David Kim above: a `held` qualification call names this lead.
       last_contacted_date: cel`today()`,
     },
@@ -685,6 +682,13 @@ export const leads = defineSeed(Lead, {
         industry: l.ind,
         rating: 1 + ((i * 7) % 5),
         last_contacted_date: celDaysAgo(l.age),
+        // What the prospect wants and what it is worth (REQ-0005 acceptance 1),
+        // the two columns All Leads shows after the source: blank on every
+        // row, they read as a dead column (#2432 row 5). The description
+        // below says each one is replacing spreadsheets, so the need is a
+        // first CRM or a replacement, alternating.
+        need_type: (['replacement', 'new_implementation'] as const)[i % 2],
+        estimated_amount: 12_000 + ((i * 9_000) % 150_000),
         // The qualification fields were left blank on every generated lead, so
         // the detail page's Contact / Lead Detail / Description sections had
         // nothing to render (they also drop whatever the highlights strip
