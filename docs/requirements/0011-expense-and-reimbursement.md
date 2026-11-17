@@ -19,7 +19,9 @@
   expense package until [objectstack#34616](https://github.com/objectstack-ai/objectstack/issues/34616),
   moved back on [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)); stage 2:
   `.changeset/2559-expense-report.md` (hotcrm#2559; approval moves FROM each expense TO its report); stage 3:
-  `.changeset/2578-travel-request.md` (hotcrm#2578).
+  `.changeset/2578-travel-request.md` (hotcrm#2578), `.changeset/2581-travel-request-project.md`
+  (hotcrm#2581; its project-path approval held in the expense package with the expense report's, until
+  objectstack#34616, and on #2575's move-back list).
 
 ## Raw requirement (verbatim)
 

@@ -27,11 +27,14 @@ type Flow = Automation.Flow;
  * themselves, since nobody approves their own) is approved by the Finance
  * Controllers instead (`onEmptyApprovers: 'fallback'`), as an expense is.
  *
- * ## Projects
+ * ## Two paths, never both
  *
- * This step knows no project. A request on a project, approved by its
- * Project Manager, is F3d (hotcrm#2581); it will split this entry as the
- * expense's two paths are split.
+ * A request on a project goes to that project's Project Manager instead
+ * (`expense_request_project_approval`, hotcrm#2581,
+ * `./expense-request-project-approval.flow.ts`). This flow starts only when
+ * the request names no project, including when Project Delivery is disabled
+ * and the field is gone; the two entry conditions are exact complements,
+ * pinned by `test/expense-request.test.ts`.
  *
  * ## Born submitted
  *
@@ -48,6 +51,11 @@ export const EXPENSE_REQUEST_SUBMITTED_NOW = P`has(record.status) && record.stat
   && (!has(previous.status) || previous.status != "submitted")`;
 export const EXPENSE_REQUEST_BORN_SUBMITTED = P`has(record.status) && record.status == "submitted"`;
 
+/** No project on the request: the exact complement of `expense_request_project_approval`'s entry. */
+export const EXPENSE_REQUEST_NO_PROJECT_CONDITION = P`(!has(record.crm_project) || record.crm_project == null || record.crm_project == "")`;
+
+const both = (a: { source: string }, b: { source: string }) => ({ dialect: 'cel' as const, source: `(${a.source}) && (${b.source})` });
+
 const RECALLED = P`has(vars.approver_review) && has(vars.approver_review.decision) && vars.approver_review.decision == "recall"`;
 const NOT_RECALLED = P`!has(vars.approver_review) || !has(vars.approver_review.decision) || vars.approver_review.decision != "recall"`;
 
@@ -60,7 +68,7 @@ const NO_MANAGER = P`!has(vars.ownerRecord) || vars.ownerRecord == null
 export const ExpenseRequestApprovalFlow: Flow = {
   name: 'expense_request_approval',
   label: 'Travel Request Approval',
-  description: 'When a travel request is submitted: the traveler\'s manager approves or rejects it (the Finance Controllers when there is none). One tier only.',
+  description: 'When a travel request with no project is submitted: the traveler\'s manager approves or rejects it (the Finance Controllers when there is none). One tier only.',
   type: 'record_change',
   status: 'active',
   // Elevated for the reasons `expense_report_approval` gives: the gate must engage
@@ -73,8 +81,12 @@ export const ExpenseRequestApprovalFlow: Flow = {
     {
       id: 'start',
       type: 'start',
-      label: 'Start (travel request submitted)',
-      config: { objectName: 'crm_expense_request', triggerType: 'record-after-update', condition: EXPENSE_REQUEST_SUBMITTED_NOW },
+      label: 'Start (travel request with no project submitted)',
+      config: {
+        objectName: 'crm_expense_request',
+        triggerType: 'record-after-update',
+        condition: both(EXPENSE_REQUEST_SUBMITTED_NOW, EXPENSE_REQUEST_NO_PROJECT_CONDITION),
+      },
     },
     {
       id: 'get_owner',
@@ -140,7 +152,7 @@ export const ExpenseRequestApprovalOnCreateFlow: Flow = {
   description: 'Approval intake for a travel request created already submitted (insert-time twin of expense_request_approval).',
   nodes: ExpenseRequestApprovalFlow.nodes.map((n) =>
     n.id === 'start'
-      ? { ...n, config: { ...n.config, triggerType: 'record-after-create', condition: EXPENSE_REQUEST_BORN_SUBMITTED } }
+      ? { ...n, config: { ...n.config, triggerType: 'record-after-create', condition: both(EXPENSE_REQUEST_BORN_SUBMITTED, EXPENSE_REQUEST_NO_PROJECT_CONDITION) } }
       : n,
   ),
 };

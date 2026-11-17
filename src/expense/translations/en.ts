@@ -227,6 +227,18 @@ export const en: TranslationData = {
         approver_review: { label: 'Manager Review' },
       },
     },
+    expense_request_project_approval: {
+      label: 'Project Travel Request Approval',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+      },
+    },
+    expense_request_project_approval_on_create: {
+      label: 'Project Travel Request Approval (on create)',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+      },
+    },
   },
   apps: {
     crm_expenses: {
@@ -249,11 +261,12 @@ export const en: TranslationData = {
         nav_help_expense: { label: 'Expenses Manual' },
       },
     },
-    // My Expenses and Reports to Approve, contributed into the Project Delivery app.
+    // My Expenses, Reports to Approve and My Travel Requests, contributed into the Project Delivery app.
     crm_psa: {
       navigation: {
         nav_my_expenses: { label: 'My Expenses' },
         nav_expense_reports_to_approve: { label: 'Reports to Approve' },
+        nav_my_travel_requests: { label: 'My Travel Requests' },
       },
     },
   },

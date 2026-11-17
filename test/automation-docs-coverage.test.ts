@@ -280,6 +280,8 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   // #2578: 出差申请, the zh-CN pack's label for the travel request.
   expense_request_approval: { 'zh-Hans': '出差申请审批', 'zh-Hant': '出差申請審批' },
   expense_request_approval_on_create: { 'zh-Hans': '出差申请审批（新建时）', 'zh-Hant': '出差申請審批（新建時）' },
+  expense_request_project_approval: { 'zh-Hans': '项目出差申请审批', 'zh-Hant': '項目出差申請審批' },
+  expense_request_project_approval_on_create: { 'zh-Hans': '项目出差申请审批（新建时）', 'zh-Hant': '項目出差申請審批（新建時）' },
   project_budget_alert: { 'zh-Hans': '项目预算预警', 'zh-Hant': '項目預算預警' },
 };
 

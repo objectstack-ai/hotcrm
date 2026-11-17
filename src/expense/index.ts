@@ -10,7 +10,9 @@ import {
   SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction,
 } from './actions/index.js';
 import {
-  ExpenseReportApprovalFlow, ExpenseReportProjectApprovalFlow, ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
+  ExpenseReportApprovalFlow, ExpenseReportProjectApprovalFlow,
+  ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
+  ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
 } from './flows/index.js';
 import { Expense, ExpenseReport, ExpenseRequest } from './objects/index.js';
 import { expenseHook, expenseReportHook, expenseRequestHook } from './objects/hooks.js';
@@ -31,11 +33,13 @@ export const expenseHooks = [expenseHook, expenseReportHook, expenseRequestHook]
 /**
  * This package's flows: the approval of an expense report with no project
  * and of one on a project (here only for the platform gap its file names),
- * and the approval of a travel request (hotcrm#2578) with its insert twin.
+ * the same two for a travel request (hotcrm#2578, hotcrm#2581), and the
+ * travel request's insert twins.
  */
 export const expenseFlows = [
   ExpenseReportApprovalFlow, ExpenseReportProjectApprovalFlow,
   ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
+  ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
 ];
 
 /** This package's actions — see {@link expenseHooks}. */
@@ -71,14 +75,16 @@ export type HotCrmExpenseCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * item 15).
  *
  * It owns `crm_expense`, which moved here from Project Delivery under the
- * same name (item 16: one `crm` namespace, so no table rename), and
+ * same name (item 16: one `crm` namespace, so no table rename),
  * `crm_expense_report`, on which expenses are sent, approved and paid back
- * (hotcrm#2559), and `crm_expense_request`, the travel request (hotcrm#2578). Project Delivery depends on this package — the one add-on →
- * add-on edge item 18 allows — and contributes the Project field on both and
- * the project cost summaries. This package depends on the app package only.
- * One thing that belongs to Project Delivery is still here: the approval of
- * a report on a project, for the platform gap
- * `./flows/expense-report-project-approval.flow.ts` names; it never starts
+ * (hotcrm#2559), and `crm_expense_request`, the travel request (hotcrm#2578).
+ * Project Delivery depends on this package — the one add-on → add-on edge
+ * item 18 allows — and contributes the Project field on all three (the
+ * travel request's at hotcrm#2581) and the project cost summaries. This
+ * package depends on the app package only. One thing that belongs to Project
+ * Delivery is still here: the approval of an expense report or a travel
+ * request on a project, for the platform gap
+ * `./flows/expense-report-project-approval.flow.ts` names; neither starts
  * while Project Delivery is disabled.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
@@ -103,11 +109,12 @@ export const createHotCrmExpenseStack = (
     dependencies: { 'app.objectstack.hotcrm': '^6.5.0' },
 
     /**
-     * Project staff keep My Expenses and Reports to Approve inside the
-     * Project Delivery app (rule R2): the app's own navigation may not name
-     * this package's objects (R3), so this module contributes them into its *Time and
-     * Expenses* group. With Project Delivery disabled the target app is gone
-     * and the entries with it.
+     * Project staff keep My Expenses and Reports to Approve, and their own
+     * travel requests (hotcrm#2581), inside the Project Delivery app (rule
+     * R2): the app's own navigation may not name this package's objects (R3),
+     * so this module contributes them into its *Time and Expenses* group.
+     * With Project Delivery disabled the target app is gone and the entries
+     * with it.
      */
     navigationContributions: [
       {
@@ -117,6 +124,7 @@ export const createHotCrmExpenseStack = (
         items: [
           { id: 'nav_my_expenses', type: 'object', objectName: 'crm_expense', viewName: 'my_expenses', label: 'My Expenses', icon: 'receipt' },
           { id: 'nav_expense_reports_to_approve', type: 'object', objectName: 'crm_expense_report', viewName: 'expense_reports_to_approve', label: 'Reports to Approve', icon: 'clipboard-check' },
+          { id: 'nav_my_travel_requests', type: 'object', objectName: 'crm_expense_request', viewName: 'my_travel_requests', label: 'My Travel Requests', icon: 'plane' },
         ],
       },
     ],

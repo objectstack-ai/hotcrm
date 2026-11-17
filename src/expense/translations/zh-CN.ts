@@ -272,6 +272,18 @@ export const zhCN: TranslationData = {
         approver_review: { label: '上级审核' },
       },
     },
+    expense_request_project_approval: {
+      label: '项目出差申请审批',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+      },
+    },
+    expense_request_project_approval_on_create: {
+      label: '项目出差申请审批（创建时）',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+      },
+    },
   },
   apps: {
     crm_expenses: {
@@ -294,11 +306,12 @@ export const zhCN: TranslationData = {
         nav_help_expense: { label: '费用报销手册' },
       },
     },
-    // My Expenses and Reports to Approve, contributed into the Project Delivery app.
+    // My Expenses, Reports to Approve and My Travel Requests, contributed into the Project Delivery app.
     crm_psa: {
       navigation: {
         nav_my_expenses: { label: '我的费用' },
         nav_expense_reports_to_approve: { label: '待我审批的报销单' },
+        nav_my_travel_requests: { label: '我的出差申请' },
       },
     },
   },
