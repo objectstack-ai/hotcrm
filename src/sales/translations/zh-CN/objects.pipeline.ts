@@ -446,14 +446,14 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       mass_update_stage: {
         label: '更新阶段',
-        successMessage: '商机阶段已更新！',
+        successMessage: '阶段已更新。',
         params: {
           stage: {
             label: '新阶段',
             options: {
               prospecting: '寻找客户', qualification: '资格审查',
               needs_analysis: '需求分析', proposal: '提案',
-              negotiation: '谈判', closed_won: '成交', closed_lost: '失败',
+              negotiation: '谈判',
             },
           },
         },
