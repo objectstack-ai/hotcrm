@@ -434,6 +434,30 @@ The maintainer restarted the module on hotcrm#2315 with one direction, 「先考
 - **The manual opens from two apps**, its own and the Sales app's Help, because the reps and
   managers who write the collection plan read it too. No platform change.
 
+### Recorded 2026-11-16 and 2026-11-17 — the order is the spine; rows belong to the account
+
+The sections above are left as written. Two premises are superseded by
+[REQ-0010](../requirements/0010-sales-order.md) and [`sales-order-plan.md`](./sales-order-plan.md),
+the maintainer's ruling of 2026-11-16 21:50Z, verbatim:
+
+> 「销售订单和订单行 我觉得还是现在应该定清楚。是基本能力，我们要考虑通用需求而不是软件公司」
+
+- **"The core packages model no orders"** (the *Premise* table): the app package gains
+  `crm_sales_order` and `crm_sales_order_line`.
+- **"For a software vendor the contract is the order"** (the *Premise* summary): every deal has an
+  order; the contract is optional.
+- **"A window, never a book" stands.** The module still keeps no books, allocates nothing and posts
+  nothing.
+- **The three objects move under the account** with
+  [hotcrm#2557](https://github.com/objectstack-ai/hotcrm/issues/2557): the account is required, the
+  contract becomes an optional source, and after
+  [hotcrm#2560](https://github.com/objectstack-ai/hotcrm/issues/2560) the order is one too. This is
+  "改动一" of the card option the maintainer adopted on 2026-11-17 00:12Z, 「立阶段0和1,含改动一」
+  (recorded as adopted rather than as typed). Who can see and edit does not change, because the
+  contract itself derives from the account; existing rows already carry both values, so no data
+  moves. The *Data model — first version* table above describes the contract-mastered shape as it
+  shipped in phase 1a.
+
 ## Upstream asks
 
 - **Per-tenant enablement of a module inside an App** (or the inter-App dependencies ADR-0019

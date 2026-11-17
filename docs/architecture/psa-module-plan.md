@@ -103,6 +103,19 @@ is never declared — and PSA is born as its own installable artifact rather tha
 directory of the HotCRM artifact. The layout, the import rule and the navigation contribution
 are unchanged.
 
+**`crm_expense` leaves PSA, amended 2026-11-16.** By the maintainer's rulings of 2026-11-16
+(22:54Z 「报销 应该是一个单独的软件包吧，很多系统还是单独的产品呢」, 22:55Z 「报销需要放到核心包吗」,
+and the 23:01Z card option adopted rather than typed, 「单独的报销包」), `crm_expense` leaves PSA for
+the new expense module `app.objectstack.hotcrm.expense`
+([REQ-0011](../requirements/0011-expense-and-reimbursement.md),
+[`expense-module-plan.md`](./expense-module-plan.md), card
+[hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issues/2556)). PSA then declares two
+dependencies, `app.objectstack.hotcrm` and `app.objectstack.hotcrm.expense` — the one relaxation of
+`module-split-plan.md` item 10 (*Decisions recorded (2026-11-16)*) — and contributes to the expense
+module the `crm_project` field (through `objectExtensions`), the project cost summaries and the
+project-manager approval flow. The `crm_expense` section below is left as written and describes the
+object while it was PSA's.
+
 **Source layout — a directory is a package (2026-09-14, `module-split-plan.md` item 6).**
 PSA is `src/psa/`: one `index.ts` calling `defineStack` with the manifest above, and the
 metadata-type subdirectories it uses — `objects/` (each `*.hook.ts` beside its
