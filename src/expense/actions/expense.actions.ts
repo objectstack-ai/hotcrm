@@ -164,6 +164,13 @@ export const SubmitForReimbursementAction: Action = {
     && has(record.status) && record.status != "approved"`,
   successMessage: 'Submitted for reimbursement. Follow it in My Reports.',
   refreshAfter: true,
+  // F4b (hotcrm#2617): opened to an assistant acting as the spender. It sends
+  // expenses to an approver, so the client is told to ask first.
+  ai: {
+    exposed: true,
+    requiresConfirmation: true,
+    description: 'Submits the selected expenses (params._selectedIds, or the recordId of one) for reimbursement: puts them on one expense report per project and sends each report for approval. Only the caller\'s own expenses that are on no report and not approved. Ask the person before running it.',
+  },
 };
 
 /**
@@ -211,6 +218,13 @@ export const SubmitTripForReimbursementAction: Action = {
   visible: SubmitForReimbursementAction.visible,
   successMessage: 'Submitted for reimbursement against the travel request. Follow it in My Reports.',
   refreshAfter: true,
+  // F4b (hotcrm#2617): as Submit for Reimbursement, against one approved
+  // travel request (params.crm_expense_request).
+  ai: {
+    exposed: true,
+    requiresConfirmation: true,
+    description: 'Submits the selected expenses for reimbursement against one of the caller\'s approved travel requests (params.crm_expense_request), the same way as Submit for Reimbursement; every report it makes cites the request. Ask the person before running it.',
+  },
 };
 
 /**
@@ -232,6 +246,12 @@ export const SubmitExpenseReportAction: Action = {
   visible: P`has(record.status) && record.status == "draft" && has(record.owner_id) && record.owner_id == current_user.id`,
   successMessage: 'Expense report {{ record.name }} submitted for approval.',
   refreshAfter: true,
+  // F4b (hotcrm#2617): sends a Draft report to its approver again.
+  ai: {
+    exposed: true,
+    requiresConfirmation: true,
+    description: 'Sends one of the caller\'s Draft expense reports (recalled, or reopened after a rejection) for approval again. Ask the person before running it.',
+  },
 };
 
 /**
@@ -249,6 +269,12 @@ export const ReopenExpenseReportAction: Action = {
   visible: P`has(record.status) && record.status == "rejected" && has(record.owner_id) && record.owner_id == current_user.id`,
   successMessage: 'Expense report {{ record.name }} is back in Draft.',
   refreshAfter: true,
+  // F4b (hotcrm#2617): additive and reversible (the report is sent again with
+  // Submit), so no confirmation flag.
+  ai: {
+    exposed: true,
+    description: 'Moves one of the caller\'s Rejected expense reports back to Draft, with its expenses, so they can be corrected and the report submitted again.',
+  },
 };
 
 /**

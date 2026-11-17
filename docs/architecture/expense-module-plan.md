@@ -145,9 +145,10 @@ once each lands.
 
 ## Agent surface (stage 3)
 
-- An expense skill in the package; Submit and Mark as Paid opened to the agent.
-- Not measured on 18.5.0: an agent creating an expense from a receipt image, and a skill calling an
-  action.
+- Two expense skills in the package; the sending steps opened to the agent, Mark as Paid not
+  (F4b, below).
+- Measured on 18.5.0 in F4b: an agent attaching a receipt image to an expense, and a skill's action
+  run over MCP with its confirmation.
 
 ### Expense standards (F4a, [hotcrm#2616](https://github.com/objectstack-ai/hotcrm/issues/2616))
 
@@ -165,6 +166,32 @@ with the report's wording), which the approver reads in the report's expense lis
 expense's other fields. An index on the expense's receipt number makes a duplicate check one indexed
 query. The skills and the actions opened to an assistant are F4b
 ([hotcrm#2617](https://github.com/objectstack-ai/hotcrm/issues/2617)).
+
+### Expense skills (F4b, [hotcrm#2617](https://github.com/objectstack-ai/hotcrm/issues/2617))
+
+Two skills under `src/expense/skills/`, by reader. **Expense Filing** (`expense_filing`, 「费用代填」)
+works for the person who spent: it fills an expense from a receipt with Source = Agent, checks for a
+duplicate, attaches the receipt through the platform's upload link, reads the active standards and
+writes its findings into the expense's Review Notes before the expense is sent, drafts travel
+requests, and submits only after a yes. **Expense Check** (`expense_check`, 「费用检查」) works for
+the approver and finance: it reads a report and lists what is over a standard, duplicated, missing a
+receipt or over its trip's estimate, tells the reader, and changes nothing.
+
+Opened to an assistant (`ai.exposed`): Submit for Reimbursement, Submit for a Trip, the report's
+Submit and Back to Draft, and the travel request's Submit, Cancel Trip and Close; each one that sends
+to an approver or cannot be undone carries `requiresConfirmation`. ⛔ Mark as Paid is not opened.
+
+Measured on 18.5.0 over MCP (the PR body has what was sent and what came back): both prompts are
+offered; the receipt round trip works with attachments, so no file field; `run_action` refuses a
+confirmation-gated action with 428 until `confirm: true`; and **the approver cannot write a report's
+Review Notes while its approval is pending** (`RECORD_LOCKED`: the report approvals set
+`lockRecord`, and the platform has no per-field exemption). Ruled A on 2026-11-17 by the decision
+thread (reported to the maintainer): the lock stays, notes live on each expense before it is sent,
+and Expense Check tells the reader instead of writing. Turning the lock off was refused (the lock
+keeps a report unchanged while it is judged); no platform card for lock-exempt fields; a
+system-write "add review note" action is an idea only. `read_file` and `create_upload_link` stay
+unbound in both skills until strict lint resolves the storage tools
+([objectstack#34948](https://github.com/objectstack-ai/objectstack/issues/34948)).
 
 ## Measured on 2026-11-17 (hotcrm#2559)
 
@@ -272,6 +299,9 @@ F4b [hotcrm#2617](https://github.com/objectstack-ai/hotcrm/issues/2617)):
    hotcrm-only and reversible: the standards are a table of rows with an optional amount and free
    words, not one text page and not structured grade or city fields; they are advisory, and the
    product never blocks on one; finance keeps them and everyone reads them.
+8. **Findings live on each expense, not on a report under approval** (F4b, ruled A by the decision
+   thread on 2026-11-17 after the measurement, reported to her): the approval lock stays, and the
+   approver's assistant reports in the conversation.
 
 ## Not measured
 

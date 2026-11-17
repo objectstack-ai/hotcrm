@@ -32,6 +32,7 @@ import * as psaHooks from '../src/psa/objects/hooks';
 
 import * as salesSkills from '../src/sales/skills';
 import * as serviceSkills from '../src/service/skills';
+import * as expenseSkills from '../src/expense/skills';
 
 import * as salesSharing from '../src/sales/sharing';
 import * as serviceSharing from '../src/service/sharing';
@@ -217,7 +218,7 @@ const SPECS: Spec[] = [
     listName: 'allSkills',
     kind: 'skills',
     barrelFile: 'index.ts',
-    barrels: { sales: salesSkills, service: serviceSkills },
+    barrels: { sales: salesSkills, service: serviceSkills, expense: expenseSkills },
     list: allSkills,
     isEntry: isSkill,
     grouped: false,

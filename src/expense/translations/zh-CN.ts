@@ -425,7 +425,7 @@ export const zhCN: TranslationData = {
   books: {
     crm_expense_manual: {
       label: 'HotCRM 费用报销手册',
-      description: '带票据录入费用、出差前申请、用报销单提交、由谁审批、如何报销给员工，以及什么计入项目。',
+      description: '带票据录入费用、出差前申请、用报销单提交、由谁审批、如何报销给员工、什么计入项目，以及助手能替你做什么。',
       groups: { expense: { label: '费用报销' } },
     },
   },

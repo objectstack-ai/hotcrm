@@ -7,7 +7,7 @@ description: HotCRM 如何與 AI 協作 —— 它提供物件、動作和技能
 
 本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
 
-**HotCRM 為智能體而建，但它不自帶智能體。** 它提供智能體工作所需的三樣東西：**物件**（每一個客戶、商機、訂單、合約、發票、項目、費用和工單），一個人從按鈕上執行的**動作**，以及教智能體理解 CRM 的六項**技能**。智能體本身是你的：可以是你透過 MCP 接入的那個，也可以是平台提供的助手。
+**HotCRM 為智能體而建，但它不自帶智能體。** 它提供智能體工作所需的三樣東西：**物件**（每一個客戶、商機、訂單、合約、發票、項目、費用和工單），一個人從按鈕上執行的**動作**，以及教智能體理解 CRM 的八項**技能**。智能體本身是你的：可以是你透過 MCP 接入的那個，也可以是平台提供的助手。
 
 ## 為什麼這樣設計
 
@@ -19,7 +19,7 @@ description: HotCRM 如何與 AI 協作 —— 它提供物件、動作和技能
 | --- | --- |
 | 每一個物件，透過 MCP，在呼叫者的權限之下 | [接入你的智能體](/zh-Hant/docs/ai-copilot/connect-your-agent) |
 | 智能體可以執行的動作，以及它在不可撤銷的動作前如何先確認 | [對智能體開放的動作](/zh-Hant/docs/ai-copilot/agent-actions) |
-| 平台智能體攜帶的六項技能 | [技能](/zh-Hant/docs/ai-copilot/skills) |
+| 平台智能體攜帶的八項技能 | [技能](/zh-Hant/docs/ai-copilot/skills) |
 | 智能體可以寫入結論的欄位，例如報銷單或出差申請上的 **Review Notes** | [費用報銷](/zh-Hant/docs/expenses) |
 
 ## 唯一的規則：智能體就是一個人
@@ -30,14 +30,14 @@ description: HotCRM 如何與 AI 協作 —— 它提供物件、動作和技能
 
 ## 平台助手額外帶來什麼
 
-ObjectStack 環境可以執行一個平台助手（`ask`）。HotCRM 不為它編寫智能體；它的六項技能附著在這個助手上，教它審查線索資格、起草郵件、預測營收、產生客戶 360° 和分流工單。本機社群版啟動時不執行任何助手（`GET /api/v1/ai/agents` 回傳空清單）：這時，智能體就是你接入的那個。
+ObjectStack 環境可以執行一個平台助手（`ask`）。HotCRM 不為它編寫智能體；它的八項技能附著在這個助手上，教它審查線索資格、起草郵件、預測營收、產生客戶 360°、分流工單，以及代填和檢查費用。本機社群版啟動時不執行任何助手（`GET /api/v1/ai/agents` 回傳空清單）：這時，智能體就是你接入的那個。
 
 > **沒有應用自有的智能體。** HotCRM 曾定義過兩個自己的智能體——「銷售 Copilot」和「服務 Copilot」。它們已被退役，其能力遷移到了附著於平台助手的技能中。
 
 ## 本節頁面
 
 - [接入你的智能體](/zh-Hant/docs/ai-copilot/connect-your-agent) —— MCP、API 金鑰，以及智能體以誰的身分行事。
-- [對智能體開放的動作](/zh-Hant/docs/ai-copilot/agent-actions) —— **Convert Lead** 和 **Schedule Follow-up**，以及智能體如何處理其餘的事。
-- [技能](/zh-Hant/docs/ai-copilot/skills) —— 六項技能；按角色分組見[銷售技能](/zh-Hant/docs/ai-copilot/sales-copilot)和[服務技能](/zh-Hant/docs/ai-copilot/service-copilot)。
+- [對智能體開放的動作](/zh-Hant/docs/ai-copilot/agent-actions) —— **Convert Lead**、**Schedule Follow-up** 和七個費用步驟，以及智能體如何處理其餘的事。
+- [技能](/zh-Hant/docs/ai-copilot/skills) —— 八項技能；按角色分組見[銷售技能](/zh-Hant/docs/ai-copilot/sales-copilot)和[服務技能](/zh-Hant/docs/ai-copilot/service-copilot)。
 - [知識庫](/zh-Hant/docs/ai-copilot/knowledge-bases) —— 智能體讀取的知識文章。
 - [即時結構](/zh-Hant/docs/ai-copilot/live-schema) —— 為什麼今天加的欄位，智能體馬上就能看到。

@@ -368,7 +368,7 @@ export const en: TranslationData = {
   books: {
     crm_expense_manual: {
       label: 'HotCRM Expenses Manual',
-      description: 'Recording an expense with its receipt, asking before a trip, sending expenses on a report, who approves them, their payment back, and what reaches a project.',
+      description: 'Recording an expense with its receipt, asking before a trip, sending expenses on a report, who approves them, their payment back, what reaches a project, and what an assistant does for you.',
       groups: { expense: { label: 'Expenses' } },
     },
   },

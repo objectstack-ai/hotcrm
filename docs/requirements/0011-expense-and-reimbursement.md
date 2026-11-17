@@ -139,8 +139,11 @@ Traceability:
 - **F4a** ([hotcrm#2616](https://github.com/objectstack-ai/hotcrm/issues/2616)): `crm_expense_standard`,
   kept by finance and read by everyone; Review Notes on each expense; an index on the receipt
   number.
-- **F4b** ([hotcrm#2617](https://github.com/objectstack-ai/hotcrm/issues/2617)): the skills for the
-  employee and for the approver and finance, and the actions opened to an assistant.
+- **F4b** ([hotcrm#2617](https://github.com/objectstack-ai/hotcrm/issues/2617)): the skills
+  `expense_filing` (「费用代填」, for the employee) and `expense_check` (「费用检查」, for the approver
+  and finance), and seven actions opened to an assistant; Mark as Paid is not. Findings are written
+  on each expense before it is sent: a report under approval is locked, the approver included
+  (measured, ruled A by the decision thread on 2026-11-17), so Expense Check tells the reader.
 
 The defaults are the decision thread's, reported to her, not her typed rulings (the plan's
 *Decisions recorded (2026-11-17)*, items 6 and 7).
