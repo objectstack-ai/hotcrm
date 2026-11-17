@@ -1,0 +1,153 @@
+---
+title: Developers
+description: Run HotCRM from source, find your way around the repository, and extend it with ObjectStack metadata — objects, actions, flows, skills and UI.
+---
+
+# Developers
+
+This section is for engineers who change HotCRM in code. To configure users, positions, flows or sharing from the app, start with [Administration](/docs/administration/index). To change HotCRM for your own company, read [Customize and Extend](/docs/developers/customize-and-extend) first.
+
+## What you can build
+
+| Area | What it covers |
+| --- | --- |
+| [Customize and Extend](/docs/developers/customize-and-extend) | Changing your own deployment with an agent, and publishing a fork |
+| [Extending Objects](/docs/developers/extending-objects) | Fields, objects, hooks, flows, validation, sharing |
+| [AI Skills](/docs/developers/ai-skills) | Skills for a platform agent, and the barrel that registers them |
+| [UI Extensions](/docs/developers/ui-extensions) | Pages, views, dashboards, actions |
+| [Theming and i18n](/docs/developers/theming-and-i18n) | Branding and translations |
+| [API Reference](/docs/developers/api-reference) | The REST and MCP surface over every object |
+| [Testing and CI](/docs/developers/testing-and-ci) | Metadata validation and automated checks |
+| [Publishing your first app](/docs/developers/publishing-your-first-app) and [Manifest and Versioning](/docs/developers/manifest-and-versioning) | Packaging and releasing to the marketplace |
+
+## Prerequisites
+
+- Node.js 20+
+- pnpm 10+
+- A clone of `objectstack-ai/hotcrm`
+
+## Run locally
+
+```bash
+git clone https://github.com/objectstack-ai/hotcrm.git
+cd hotcrm
+pnpm install
+pnpm dev
+```
+
+Open http://localhost:4001. The app boots with seed data on first start.
+
+## Repository shape
+
+HotCRM builds **one** ObjectStack artifact that carries **seven packages** (ADR-0130): `app.objectstack.hotcrm`, the `type: app` package in `src/sales/`, and six modules — service in `src/service/`, revenue (products and quotes) in `src/revenue/`, marketing in `src/marketing/`, order to cash in `src/o2c/`, expenses in `src/expense/` and project delivery in `src/psa/`. Each has an `index.ts` with its own `defineStack()`; `objectstack.composition.ts` builds the stacks and `objectstack.config.ts` composes them into the artifact. A directory under `src/` is a package. Every item registers with the package of its directory: an app action that launches a module's flow, or an app dashboard tile that binds a module's dataset, reaches it across the artifact. A file may import from its own directory or from `src/sales/` — never sideways between modules; the one exception is project delivery, which builds on expenses.
+
+```text
+hotcrm/
+├── objectstack.config.ts
+├── objectstack.composition.ts
+├── src/
+│   ├── sales/          # the `type: app` package — accounts, contacts, leads, opportunities, contracts, orders, tasks, events
+│   ├── service/        # module — cases and the knowledge base
+│   ├── revenue/        # module — products, price books, quotes
+│   ├── marketing/      # module — campaigns and campaign members
+│   ├── o2c/            # module — billing milestones, invoices, payments
+│   ├── expense/        # module — expenses, expense reports, travel requests
+│   ├── psa/            # module — projects, staffing, budgets, timesheets
+│   └── docs/           # package docs, shipped inside the built artifact
+├── apps/docs/          # Fumadocs app
+└── content/docs/       # documentation content
+```
+
+Each package holds the metadata-type subdirectories it uses, and the same
+suffix protocol applies inside every one of them:
+
+```text
+src/sales/
+├── objects/            # *.object.ts schemas, and the *.hook.ts beside each one
+├── actions/            # UI actions and executable action bodies
+├── flows/              # automation flows
+├── skills/             # AI skills
+├── apps/, views/, pages/
+├── dashboards/, reports/, datasets/
+├── mappings/           # import column-to-field projections
+├── profiles/, sharing/
+├── translations/
+├── data/               # seed data
+└── interfaces/         # shared types (an empty barrel today)
+```
+
+HotCRM authors skills, not agents: the two app-owned copilots and the directory that held them were retired. A skill attaches to the platform's assistant where an environment runs one; any agent connected over MCP works on the same objects and actions. See [AI Skills](/docs/developers/ai-skills) and [AI and Agents](/docs/ai-copilot/index).
+
+## File suffix protocol
+
+| Suffix | Defines |
+| --- | --- |
+| `*.object.ts` | Data model |
+| `*.hook.ts` | Server-side lifecycle logic |
+| `*.actions.ts` | UI actions and AI-callable action bodies |
+| `*.flow.ts` | Automation |
+| `*.skill.ts` | AI skill |
+| `*.page.ts` | UI page |
+| `*.view.ts` | List or kanban view |
+| `*.dashboard.ts` | Dashboard |
+| `*.report.ts` | Report |
+| `*.sharing.ts` | Sharing rule |
+| `*.profile.ts` | Permission profile |
+
+## Common tasks
+
+### Add or change an object
+
+Edit or add a file under `src/*/objects/`, then export it from `src/*/objects/index.ts`.
+
+```ts
+import { ObjectSchema, Field } from '@objectstack/spec/data';
+
+export const Warranty = ObjectSchema.create({
+  name: 'crm_warranty',
+  label: 'Warranty',
+  fields: {
+    name: Field.text({ label: 'Warranty Name', required: true }),
+    crm_account: Field.lookup('crm_account', { label: 'Account' }),
+  },
+});
+```
+
+### Add an AI skill
+
+Create `src/*/skills/<name>.skill.ts` and export it from `src/*/skills/index.ts`. Exporting it from that barrel is the whole wiring step — the skill attaches to the platform assistant (`ask`), and this app defines no agent of its own.
+
+### Add UI metadata
+
+Use `src/*/views/` for list and kanban views, `src/*/pages/` for record pages, and `src/*/actions/` for buttons and modal actions.
+
+## Golden rules
+
+- Use the `crm_` prefix for HotCRM object names.
+- Use ObjectQL and ObjectStack APIs, not raw SQL.
+- Keep metadata exported from the relevant `src/**/index.ts` file.
+- Update translations when adding user-visible labels.
+- Run `pnpm verify` before publishing.
+
+## Verify changes
+
+```bash
+pnpm validate
+pnpm typecheck
+pnpm build
+pnpm test
+```
+
+The shortcut is:
+
+```bash
+pnpm verify
+```
+
+## Where to go next
+
+- [Customize and Extend](/docs/developers/customize-and-extend)
+- [Extending Objects](/docs/developers/extending-objects)
+- [AI Skills](/docs/developers/ai-skills)
+- [UI Extensions](/docs/developers/ui-extensions)
+- [Publishing your first app](/docs/developers/publishing-your-first-app)

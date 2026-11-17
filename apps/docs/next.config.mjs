@@ -18,6 +18,16 @@ const config = {
       // Revenue had no app of its own: its pages are part of Sales now.
       ['/docs/revenue', '/docs/sales'],
       ['/docs/revenue/:slug*', '/docs/sales/:slug*'],
+      // One Developers section replaced Customization, Marketplace and the
+      // getting-started For Developers page; Forking HotCRM became Customize and
+      // Extend. The specific rules come before the catch-alls.
+      ['/docs/getting-started/for-developers', '/docs/developers'],
+      ['/docs/customization', '/docs/developers'],
+      ['/docs/customization/index', '/docs/developers'],
+      ['/docs/customization/:slug*', '/docs/developers/:slug*'],
+      ['/docs/marketplace', '/docs/developers'],
+      ['/docs/marketplace/fork-hotcrm', '/docs/developers/customize-and-extend'],
+      ['/docs/marketplace/:slug*', '/docs/developers/:slug*'],
     ];
     return moved.flatMap(([from, to]) => [
       { source: from, destination: to, permanent: true },

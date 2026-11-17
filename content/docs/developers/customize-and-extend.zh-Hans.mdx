@@ -1,0 +1,141 @@
+---
+title: 定制与扩展
+description: 借助编码智能体把 HotCRM 改成适合你自己公司的样子：先用配置，再在克隆的代码里改；其次，把复刻版作为你自己的应用发布。
+---
+
+# 定制与扩展
+
+改动 HotCRM 有两种原因。大多数公司想让**自己的部署**贴合自己的做法：销售团队需要的一个字段、一个用不到的模块、一个按自己门槛设置的审批。少数公司想基于 HotCRM **发布自己的应用**。本页先讲前者，因为它最常见。
+
+## 定制你自己的部署
+
+### 先看「设置」已经能做什么
+
+公司提出的很多需求是配置，而不是代码。动手之前，先确认管理员能否在应用里完成：
+
+- 用户、经理、岗位和[权限档案](/zh-Hans/docs/administration/profiles)；
+- 停用和启用模块，参见[启用和停用模块](/zh-Hans/docs/administration/modules)；
+- HotCRM 自带的[自动化](/zh-Hans/docs/administration/automation)和审批；
+- [共享与字段安全](/zh-Hans/docs/administration/sharing-and-security)；
+- 列表视图、仪表盘，以及现有记录的[导入](/zh-Hans/docs/guides/import-and-export)。
+
+凡是改动 HotCRM 自身对象的事，比如新字段、新对象、新动作、钩子里的一条规则，都是在仓库克隆里改代码。
+
+### 用编码智能体改代码
+
+HotCRM 的写法让编码智能体可以安全地改动它。所有内容都是 `src/` 下有类型的 ObjectStack 元数据，每类条目一个后缀，另有两份材料告诉智能体如何工作：
+
+- 仓库根目录的 **`AGENTS.md`** 是任何在 HotCRM 里工作的智能体都要遵守的指令集：命名规则、包的边界、文件后缀协议、要运行的检查。
+- **ObjectStack 的智能体 skills**（npm 包 `@objectstack/skills`）教智能体了解平台本身：对象、流程、权限、视图。按 [AI Skills](https://objectstack.ai/docs/ai/skills) 的说明把它装进智能体的目录。
+
+然后用你自己的话提要求，例如：
+
+> 给客户加一个「区域」选项列表，取值 EMEA、Americas 和 APAC，显示在客户页面和「全部客户」列表里，并把标签翻译成 HotCRM 支持的每一种语言。
+
+一个称职的智能体会找到 `src/sales/objects/account.object.ts` 里的对象、对应的页面、视图和四个翻译包，一起改。请它在你审阅之前先跑检查：
+
+```bash
+pnpm verify    # validate、typecheck、lint、hygiene、build、test
+```
+
+`pnpm verify` 就是 HotCRM 自身改动要过的那道关。不符合 `@objectstack/spec` 结构的字段、没有标签的翻译键、断开的引用，会在这里失败，而不是在用户面前失败。
+
+### 看到它，也让你的智能体用上它
+
+用 `pnpm dev`（http://localhost:4001）在本地运行并查看改动。部署之后，你通过 MCP 接入的智能体立刻就能看到新字段和新对象，不需要额外步骤：MCP 接口读的就是同一份元数据。参见[接入你的智能体](/zh-Hans/docs/ai-copilot/connect-your-agent)。
+
+### HotCRM 更新时保留你的改动
+
+把你的部署保持为一个跟随 HotCRM 的克隆：
+
+```bash
+git remote add upstream https://github.com/objectstack-ai/hotcrm.git
+git fetch upstream
+git merge upstream/main
+```
+
+小而增量的改动可以干净地合并：对象文件里的一个新字段、单独文件里的一个新对象、一个新的翻译键。真有冲突时，大多出现在四个翻译包里。每次合并后都运行 `pnpm verify`。
+
+## 把复刻版作为你自己的应用发布
+
+HotCRM 也是一个完整 ObjectStack 应用的可运行参考：对象、钩子、流程、审批、岗位、共享、仪表盘、skills、四种语言及其文档。要基于它做一个不同的应用并发布，就复刻它。
+
+### 1. 克隆
+
+```bash
+git clone https://github.com/objectstack-ai/hotcrm.git my-app
+cd my-app
+git remote rename origin upstream     # `git pull upstream main` 拉取 HotCRM 的更新
+git remote add origin git@github.com:<you>/<my-app>.git
+```
+
+### 2. 给它自己的标识
+
+HotCRM 构建出一个制品，里面有七个包：`src/sales/` 里的应用包和六个模块。每个包都声明自己的清单。修改 `src/sales/index.ts` 里应用包的清单，它同时也是制品的标识：
+
+```diff
+ manifest: {
+-  id: 'app.objectstack.hotcrm',
++  id: 'app.acme.myapp',
+   namespace: 'crm',
+   type: 'app',
+-  name: 'HotCRM',
++  name: 'Acme MyApp',
+   ...
+ },
+```
+
+然后给保留下来的每个模块一个在你名下的 `id`（例如 `app.acme.myapp.service`），并把它的 `dependencies` 指向新的应用 `id`。项目交付还依赖费用，它的 `dependencies` 两个都要写。`objectstack.config.ts` 负责组合这些包，不需要改。
+
+**保留 `crm_` 前缀。** 每个对象、岗位和翻译键都写明了它，涉及数百个文件，HotCRM 自己的升级也以它为前提。改掉前缀的复刻版就无法再从上游合并。你新增的对象也用同一个前缀。
+
+### 3. 去掉用不到的部分
+
+每个模块是 `src/` 下的一个目录：`service`、`revenue`、`marketing`、`o2c`、`expense`、`psa`。要去掉一个模块，删除它的目录，从 `objectstack.composition.ts` 里删掉它的导入、stack 和种子数据族，再删掉 `content/docs/` 下它的页面。项目交付需要费用：要么两个都去掉，要么保留费用。客户、联系人、线索、商机、合同、订单和任务在 `src/sales/` 里，是每个模块所依赖的核心。剩下的引用 `pnpm typecheck` 会指出来。
+
+### 4. 加上你需要的部分
+
+在拥有该实体的包里按文件后缀协议添加。`src/` 下的一个目录**就是**一个包；没有进入所在包 barrel 的文件，不会被任何东西注册：
+
+| 新实体 | 文件 |
+|---|---|
+| 数据模型 | `src/<package>/objects/<entity>.object.ts` |
+| 服务端触发器 | `src/<package>/objects/<entity>.hook.ts`，放在对象旁边，在 `src/<package>/objects/hooks.ts` 中注册 |
+| 供人和智能体使用的动作 | `src/<package>/actions/<entity>.actions.ts` |
+| 记录页面 | `src/<package>/pages/<entity>.page.ts` |
+| 列表视图 | `src/<package>/views/<entity>.view.ts` |
+| 标签 | `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
+
+每个文件在构建时都会经过 `@objectstack/spec` 的结构校验，出错会明确失败。
+
+### 5. 验证
+
+```bash
+pnpm verify
+pnpm dev       # http://localhost:4001
+```
+
+### 6. 发布
+
+```bash
+objectstack cloud login
+objectstack package publish dist/objectstack.json \
+  --visibility marketplace \
+  --category <your-category> \
+  --note "Initial release."
+```
+
+完整的命令行说明见[发布你的第一个应用市场应用](/zh-Hans/docs/developers/publishing-your-first-app)，版本规则见[清单与版本管理](/zh-Hans/docs/developers/manifest-and-versioning)。
+
+### 保持同步
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+文件后缀协议让冲突面保持很小；冲突大多落在翻译包里。
+
+## 许可证
+
+HotCRM 以 Apache-2.0 许可证发布。你可以修改它、重新命名品牌、围绕它提供服务。如果你发现的是约定本身的缺陷，而不是你自己业务逻辑的问题，请提交回上游：这会让这份参考对所有人都更好。

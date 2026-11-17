@@ -1,0 +1,154 @@
+---
+title: 開發者
+description: 從原始碼執行 HotCRM，認識倉庫的結構，並用 ObjectStack 中繼資料擴展它：物件、動作、流程、skills 和介面。
+---
+
+# 開發者
+
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
+本欄目面向用程式碼改動 HotCRM 的工程師。要在應用裡設定使用者、職位、流程或共用，請從[管理](/zh-Hant/docs/administration/index)開始。要為你自己的公司改動 HotCRM，先讀[客製化與擴展](/zh-Hant/docs/developers/customize-and-extend)。
+
+## 你可以做什麼
+
+| 範圍 | 內容 |
+| --- | --- |
+| [客製化與擴展](/zh-Hant/docs/developers/customize-and-extend) | 藉助智能體改動你自己的部署，以及發布複刻版 |
+| [擴展物件](/zh-Hant/docs/developers/extending-objects) | 欄位、物件、鉤子、流程、驗證、共用 |
+| [AI Skills](/zh-Hant/docs/developers/ai-skills) | 供平台智能體使用的 skills，以及註冊它們的 barrel |
+| [UI 擴展](/zh-Hant/docs/developers/ui-extensions) | 頁面、檢視、儀表板、動作 |
+| [主題與 i18n](/zh-Hant/docs/developers/theming-and-i18n) | 品牌與翻譯 |
+| [API 參考](/zh-Hant/docs/developers/api-reference) | 涵蓋每個物件的 REST 和 MCP 介面 |
+| [測試與 CI](/zh-Hant/docs/developers/testing-and-ci) | 中繼資料驗證和自動檢查 |
+| [發布你的第一個應用市集應用程式](/zh-Hant/docs/developers/publishing-your-first-app)和[資訊清單與版本管理](/zh-Hant/docs/developers/manifest-and-versioning) | 打包並發布到應用市集 |
+
+## 前置條件
+
+- Node.js 20+
+- pnpm 10+
+- 已克隆 `objectstack-ai/hotcrm`
+
+## 本機執行
+
+```bash
+git clone https://github.com/objectstack-ai/hotcrm.git
+cd hotcrm
+pnpm install
+pnpm dev
+```
+
+打開 http://localhost:4001。應用會在首次啟動時載入種子資料。
+
+## 倉庫結構
+
+HotCRM 建置出**一個** ObjectStack 產物，裡面裝著**七個套件**（ADR-0130）：`src/sales/` 裡的 `type: app` 套件 `app.objectstack.hotcrm`，以及六個模組：`src/service/` 裡的服務、`src/revenue/` 裡的收入（產品和報價）、`src/marketing/` 裡的行銷、`src/o2c/` 裡的訂單與回款、`src/expense/` 裡的費用和 `src/psa/` 裡的專案交付。每個套件各有一個 `index.ts`，各自呼叫 `defineStack()`；`objectstack.composition.ts` 建置這些套件，`objectstack.config.ts` 把它們組合成產物。`src/` 下的一個目錄就是一個套件。每一項都由其所在目錄的套件註冊：應用套件的動作啟動模組的流程、應用套件的儀表板磁貼綁定模組的資料集，都在產物內跨套件解析。一個檔案只能從自己的目錄或 `src/sales/` 匯入，模組之間不得橫向匯入；唯一的例外是專案交付，它建立在費用之上。
+
+```text
+hotcrm/
+├── objectstack.config.ts
+├── objectstack.composition.ts
+├── src/
+│   ├── sales/          # `type: app` 套件 —— 客戶、聯絡人、線索、商機、合約、訂單、任務、活動
+│   ├── service/        # 模組 —— 工單和知識庫
+│   ├── revenue/        # 模組 —— 產品、價格表、報價
+│   ├── marketing/      # 模組 —— 行銷活動及其成員
+│   ├── o2c/            # 模組 —— 回款節點、發票、回款
+│   ├── expense/        # 模組 —— 費用、報銷單、出差申請
+│   ├── psa/            # 模組 —— 專案、人員安排、預算、工時
+│   └── docs/           # 隨建置產物一起發布的應用文件
+├── apps/docs/          # Fumadocs 應用
+└── content/docs/       # 文件內容
+```
+
+每個套件內是它用到的中繼資料類型子目錄，後綴協議在每個套件內都一樣：
+
+```text
+src/sales/
+├── objects/            # *.object.ts 模型，以及緊挨著各自模型的 *.hook.ts
+├── actions/            # UI 動作和可執行動作體
+├── flows/              # 自動化流程
+├── skills/             # AI skills
+├── apps/, views/, pages/
+├── dashboards/, reports/, datasets/
+├── mappings/           # 資料匯入的欄位對應
+├── profiles/, sharing/
+├── translations/
+├── data/               # 種子資料
+└── interfaces/         # 共享型別（目前是空 barrel）
+```
+
+HotCRM 只定義 skills，不定義 agent：應用自帶的兩個 copilot 及其所在目錄已被移除。skill 在環境執行平台助手時附著到它上面；任何透過 MCP 接入的智能體，都在同樣的物件和動作上工作。參見 [AI Skills](/zh-Hant/docs/developers/ai-skills) 和 [AI 與智能體](/zh-Hant/docs/ai-copilot/index)。
+
+## 檔案後綴協議
+
+| 後綴 | 定義 |
+| --- | --- |
+| `*.object.ts` | 資料模型 |
+| `*.hook.ts` | 服務端生命週期邏輯 |
+| `*.actions.ts` | UI 動作和 AI 可呼叫動作體 |
+| `*.flow.ts` | 自動化 |
+| `*.skill.ts` | AI skill |
+| `*.page.ts` | UI 頁面 |
+| `*.view.ts` | 清單或看板視圖 |
+| `*.dashboard.ts` | 儀表板 |
+| `*.report.ts` | 報表 |
+| `*.sharing.ts` | 共享規則 |
+| `*.profile.ts` | 權限設定檔 |
+
+## 常見任務
+
+### 新增或修改物件
+
+在 `src/*/objects/` 下編輯或新增檔案，然後從 `src/*/objects/index.ts` 匯出。
+
+```ts
+import { ObjectSchema, Field } from '@objectstack/spec/data';
+
+export const Warranty = ObjectSchema.create({
+  name: 'crm_warranty',
+  label: 'Warranty',
+  fields: {
+    name: Field.text({ label: 'Warranty Name', required: true }),
+    crm_account: Field.lookup('crm_account', { label: 'Account' }),
+  },
+});
+```
+
+### 新增 AI skill
+
+建立 `src/*/skills/<name>.skill.ts`，並從 `src/*/skills/index.ts` 匯出。從這個 barrel 匯出就是全部的接線工作——skill 會附著到平台助手（`ask`）上，本應用不定義任何自己的 agent。
+
+### 新增 UI 中繼資料
+
+使用 `src/*/views/` 定義清單和看板視圖，使用 `src/*/pages/` 定義記錄頁面，使用 `src/*/actions/` 定義按鈕和彈窗動作。
+
+## 基本規則
+
+- HotCRM 的物件名稱使用 `crm_` 前綴。
+- 使用 ObjectQL 和 ObjectStack API，不寫原生 SQL。
+- 中繼資料從相應的 `src/**/index.ts` 匯出。
+- 新增使用者可見的標籤時同步更新翻譯。
+- 發布前執行 `pnpm verify`。
+
+## 驗證改動
+
+```bash
+pnpm validate
+pnpm typecheck
+pnpm build
+pnpm test
+```
+
+快捷命令：
+
+```bash
+pnpm verify
+```
+
+## 下一步
+
+- [客製化與擴展](/zh-Hant/docs/developers/customize-and-extend)
+- [擴展物件](/zh-Hant/docs/developers/extending-objects)
+- [AI Skills](/zh-Hant/docs/developers/ai-skills)
+- [UI 擴展](/zh-Hant/docs/developers/ui-extensions)
+- [發布你的第一個應用市集應用程式](/zh-Hant/docs/developers/publishing-your-first-app)
