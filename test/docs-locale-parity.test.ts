@@ -122,7 +122,7 @@ describe('judging a change', () => {
 
 describe('the command, on a real git history and a pull request event', () => {
   let repo: string;
-  const sh = (args: string[]): string => execFileSync('git', args, { cwd: repo, encoding: 'utf8' });
+  const sh = (args: string[]): string => execFileSync('git', args, { cwd: repo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   const write = (path: string, text: string): void => {
     mkdirSync(dirname(join(repo, path)), { recursive: true });
     writeFileSync(join(repo, path), text);
@@ -136,7 +136,7 @@ describe('the command, on a real git history and a pull request event', () => {
       env.GITHUB_EVENT_PATH = file;
     }
     try {
-      return { status: 0, out: execFileSync('node', [SCRIPT], { cwd: repo, env, encoding: 'utf8' }) };
+      return { status: 0, out: execFileSync('node', [SCRIPT], { cwd: repo, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }) };
     } catch (e) {
       const err = e as { status: number; stdout: string };
       return { status: err.status, out: err.stdout };
