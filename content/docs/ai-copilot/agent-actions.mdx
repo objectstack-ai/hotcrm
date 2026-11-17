@@ -1,0 +1,33 @@
+---
+title: Actions Open to Agents
+description: Which of HotCRM's actions an agent may run over MCP, how it asks before an irreversible one, and what an agent does without an action.
+---
+
+# Actions Open to Agents
+
+An **action** is a button a person clicks: **Convert Lead**, **Submit for Reimbursement**, **Mark as Paid**. An action is open to agents only when its author says so, one by one. Today two of HotCRM's actions are:
+
+| Action | On | What it does | Asks first? |
+| --- | --- | --- | --- |
+| **Convert Lead** | A lead | Turns a qualified lead into an account, a contact and an opportunity | **Yes** — it cannot be undone |
+| **Schedule Follow-up** | A lead | Files the next follow-up task on the lead, for its owner | No — it only adds a task |
+
+An agent finds them with `list_actions` and runs them with `run_action`, as the person it connects as (see [Connect Your Agent](/docs/ai-copilot/connect-your-agent)). The action's own checks run as they do for the button: **Convert Lead** is refused on a lead that is already converted, unqualified, or held by a conversion approval.
+
+## Asking before an irreversible action
+
+**Convert Lead** is marked as needing confirmation. Measured on ObjectStack 18.5.0: an agent's first `run_action` call does nothing and answers `ACTION_CONFIRMATION_REQUIRED` (`status: 428`), telling the agent to confirm with the person and call again with `"confirm": true`. Only that second call converts the lead. An agent that runs unattended therefore cannot convert a lead by accident.
+
+## Beside them: the platform's actions
+
+`list_actions` also lists actions the platform provides, not HotCRM — among them **Approve**, **Reject**, **Recall** and **Resubmit** on an approval request. An agent connected as an approver can decide that person's approvals, as the person could from their **Inbox**.
+
+## Without an action
+
+Everything else an agent does through the record tools, under the same rules as a form:
+
+- **Reading** any record the person may read, with `query_records` and `get_record`.
+- **Writing** a field the person may write, with `update_record`. The object's validations, status rules and hooks run as for a save in the app, so a write a person would be refused is refused for the agent too.
+- **Recording findings.** An expense report and a travel request each carry **Review Notes**, a field where an agent (or a rule) writes what it found for the approver to read — a missing receipt, a hotel above policy. HotCRM does not check receipts or policies itself; that is the agent's job.
+
+Actions not on the list above — **Submit for Reimbursement**, **Mark as Paid**, **Close Case** and the rest — stay buttons for people until their authors open them to agents.

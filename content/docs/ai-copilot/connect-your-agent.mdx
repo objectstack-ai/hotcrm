@@ -1,0 +1,63 @@
+---
+title: Connect Your Agent
+description: Connect an agent to HotCRM over MCP — the endpoint, signing in or an API key, the tools it gets, and the rule that it acts as the person it connects as.
+---
+
+# Connect Your Agent
+
+HotCRM is served as an **MCP server** at `/api/v1/mcp` on every environment, on by default. Any MCP client — Claude Code, Claude Desktop, or an agent you build — connects to it and works on the same records people do.
+
+## What the agent gets
+
+| Tool | What it does |
+| --- | --- |
+| `list_objects`, `describe_object` | Lists every object (each HotCRM one is `crm_…`) and describes its fields, read live from the running app |
+| `query_records`, `get_record`, `aggregate_records` | Reads records, one or many, and sums or counts them |
+| `create_record`, `update_record`, `delete_record`, `delete_records` | Writes records, with the same validations and rules a form save runs |
+| `list_actions`, `run_action` | Lists the actions open to agents and runs one — see [Actions Open to Agents](/docs/ai-copilot/agent-actions) |
+| `list_datasets`, `query_dataset` | Reads the analytics datasets behind the dashboards |
+
+These tools are the platform's; HotCRM adds no tool of its own. What HotCRM adds is what they act on: its objects, its rules, its actions and its skills.
+
+## Signing in
+
+An agent connects **as a person**. Two ways:
+
+- **Browser sign-in.** An MCP client that supports it opens the HotCRM sign-in page, and the person signs in as themselves. `pnpm dev` prints the `claude mcp add …` line for a local server.
+- **An API key.** A signed-in person mints a key for themselves, and the agent sends it as `x-api-key`. The key carries that person's access, no more; revoke it and the agent is out.
+
+[Connect an MCP Client](https://objectstack.ai/docs/ai/connect-mcp) on the ObjectStack site covers both in detail.
+
+## The identity rule
+
+Whatever the agent does, it does **as the person it connects as**: under that person's permission sets, positions and sharing rules, exactly as a REST call or a click from that person would run. A record it creates names that person as its creator. Where the person would be refused, the agent is refused, with the same code and message.
+
+### Measured: the same call, two people
+
+On a local community-edition boot (`pnpm dev`, then `pnpm demo:staff`) of HotCRM on ObjectStack 18.5.0, sign in and mint an API key for an identity:
+
+```bash
+curl -c admin.txt -X POST http://localhost:4001/api/v1/auth/sign-in/email \
+  -H 'content-type: application/json' -d '{"email":"admin@objectos.ai","password":"admin123"}'
+curl -b admin.txt -X POST http://localhost:4001/api/v1/keys     # → { "data": { "key": "osk_…", … } }
+```
+
+Then send an agent's `tools/call` with that key:
+
+```bash
+curl -X POST http://localhost:4001/api/v1/mcp \
+  -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+  -H 'x-api-key: osk_…' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"create_record","arguments":{"objectName":"crm_campaign","data":{"name":"Agent-created Q1 Webinar","type":"webinar","status":"planning","start_date":"2027-01-12","end_date":"2027-01-14"}}}}'
+```
+
+| The key belongs to | What comes back |
+| --- | --- |
+| the dev admin, `admin@objectos.ai` | The new campaign, with no `isError`; its `created_by` and `owner_id` are the dev admin |
+| the demo sales rep Nina Reyes, `na.rep@objectos.ai` — her `sales_rep` permission set reads every campaign and grants no create | `isError: true` with `PERMISSION_DENIED`, `status: 403`, and the number of campaigns does not move |
+
+Both are the answers a REST call from the same person gets. To give an agent more, give the person more; to give it less, connect it as someone with less.
+
+## On a hosted environment
+
+The endpoint is the same path on your environment's address. Sign in or mint the key there, as the person the agent works for. An administrator who wants an agent with narrow access gives it a person of its own — a user with only the positions it needs — and mints the key as that user.

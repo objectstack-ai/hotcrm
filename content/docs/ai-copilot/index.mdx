@@ -1,62 +1,43 @@
 ---
-title: AI Copilot
-description: The AI assistant embedded throughout HotCRM — what it can do, where to find it, and how it learns from your data.
+title: AI and Agents
+description: How HotCRM works with AI — it provides the objects, actions and skills, and your agent does the work over MCP, as the person it connects as.
 ---
 
-# AI Copilot
+# AI and Agents
 
-HotCRM is **AI-native** — the assistant is built in, not bolted on. But the assistant
-itself is not something HotCRM ships: it is the **platform assistant** (`ask`) that
-every ObjectStack environment already provides. What HotCRM contributes is **six
-skills** that teach that assistant your CRM.
+**HotCRM is built for agents, and it does not ship one.** It provides three things an agent works with: the **objects** (every account, deal, order, contract, invoice, project, expense and case), the **actions** a person runs from a button, and six **skills** that teach an agent the CRM. The agent itself is yours: one you connect over MCP, or the assistant the platform provides.
+
+## Why it is built this way
+
+Reading a receipt, checking an expense against a travel policy, drafting a reply, chasing an overdue invoice: each is work an agent does better every month, and none of it needs to be built into a CRM. HotCRM keeps what an agent cannot invent — the records, the rules that guard them, and who may do what — and leaves the reasoning to the agent.
+
+So you will not find a built-in receipt scanner, policy engine or chat assistant in HotCRM. You will find:
+
+| HotCRM provides | Where to read about it |
+| --- | --- |
+| Every object, over MCP, under the caller's permissions | [Connect Your Agent](/docs/ai-copilot/connect-your-agent) |
+| The actions an agent may run, and how it asks before an irreversible one | [Actions Open to Agents](/docs/ai-copilot/agent-actions) |
+| Six skills a platform agent carries | [Skills](/docs/ai-copilot/skills) |
+| Fields an agent can write its findings into, such as **Review Notes** on an expense report or a travel request | [Expenses](/docs/expenses) |
+
+## The one rule: an agent is a person
+
+An agent connects **as someone** — with a sign-in or that person's API key — and acts as them. It reads what they may read, writes what they may write, and is refused where they would be refused, with the same message. Records it writes carry that person's name. There is no agent account with wider access, and no switch that gives one.
+
+So the question "what may my agent do?" has the same answer as "what may this person do?": their permission sets, their positions and the sharing rules. See [Sharing and Security](/docs/administration/sharing-and-security).
+
+## What the platform's assistant adds
+
+ObjectStack environments can run a platform assistant (`ask`). HotCRM authors no agent for it; its six skills attach to that assistant and teach it to qualify a lead, draft an email, forecast revenue, build a customer 360° and triage a case. A local community-edition boot runs no assistant (`GET /api/v1/ai/agents` answers an empty list): there, the agent is the one you connect.
 
 > **No app-owned agents.** HotCRM used to define two agents of its own — a "Sales
 > Copilot" and a "Service Copilot". They were retired, and their capability moved into
-> skills that attach to the platform assistant. Everything on this page still works;
-> only the wiring changed.
+> skills that attach to the platform assistant.
 
-The six skills read from the same objects you see in the UI, and they know your
-products, knowledge articles, and process rules.
+## Pages in this section
 
-## Where you'll find it
-
-- 🪄 **Assistant panel** — the chat panel the platform opens from the right edge of every page.
-- 🎯 **Context activation** — skills declare the record they belong to, so opening a lead and asking *"is this worth a call?"* runs Lead Qualification without you naming it.
-- 📈 **Dashboard questions** — the forecasting skill also activates on dashboards, so you can ask *"what's at risk this week?"* where the numbers already are.
-
-## How it works (in plain terms)
-
-The assistant has three ingredients:
-
-1. **Skills** — bite-sized abilities like *Draft an email*, *Qualify this lead*, *Triage this case*. See [Skills](/docs/ai-copilot/skills).
-2. **Knowledge articles** — one library of support articles, filed by category, that the assistant queries like any other object. There is no separate product, sales or competitive library. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
-3. **Your live CRM data** — the assistant reads from the same accounts, contacts, opportunities, and cases you do, respecting the same sharing rules.
-
-When you ask a question, the assistant picks the right skill, pulls relevant
-knowledge, and combines it with your CRM data to produce a grounded answer — with
-citations back to the source records and articles.
-
-## What it won't do
-
-- ❌ See records you can't see — it respects sharing and field-level security.
-- ❌ Take actions without your confirmation — drafted emails and updates are previewed first.
-- ❌ Fabricate data — every claim is traceable to a record or knowledge source.
-- ❌ Reach for tools of its own — skills declare no bespoke tools, so every write goes through a real HotCRM action with the same permission checks as the button.
-
-## Two groupings of skills
-
-The six skills are documented in two role-shaped groups. This is a documentation
-convenience, not a runtime boundary — one assistant runs all six, and it will use a
-"sales" skill on a service question whenever that is the right answer.
-
-| Group | Audience | Skills |
-| --- | --- | --- |
-| [**Sales Skills**](/docs/ai-copilot/sales-copilot) | Sales reps, sales managers | Live Data, Lead Qualification, Email Drafting, Revenue Forecasting, Customer 360° |
-| [**Service Skills**](/docs/ai-copilot/service-copilot) | Service agents, support managers | Live Data, Case Triage, Customer 360°, Email Drafting |
-
-## Start here
-
-- [Sales Skills](/docs/ai-copilot/sales-copilot) — what reps and managers can do.
-- [Service Skills](/docs/ai-copilot/service-copilot) — what agents can do.
-- [Skills](/docs/ai-copilot/skills) — the full skill library.
-- [Knowledge Bases](/docs/ai-copilot/knowledge-bases) — the RAG indexes the assistant reads from.
+- [Connect Your Agent](/docs/ai-copilot/connect-your-agent) — MCP, API keys, and the identity an agent acts as.
+- [Actions Open to Agents](/docs/ai-copilot/agent-actions) — **Convert Lead** and **Schedule Follow-up**, and what an agent does with the rest.
+- [Skills](/docs/ai-copilot/skills) — the six skills; grouped by role in [Sales Skills](/docs/ai-copilot/sales-copilot) and [Service Skills](/docs/ai-copilot/service-copilot).
+- [Knowledge Bases](/docs/ai-copilot/knowledge-bases) — the knowledge articles an agent reads.
+- [Live Schema](/docs/ai-copilot/live-schema) — why a field added today is visible to an agent at once.

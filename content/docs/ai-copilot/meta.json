@@ -1,12 +1,14 @@
 {
-  "title": "AI Copilot",
+  "title": "AI and Agents",
   "defaultOpen": true,
   "pages": [
     "index",
-    "live-schema",
+    "connect-your-agent",
+    "agent-actions",
+    "skills",
     "sales-copilot",
     "service-copilot",
-    "skills",
-    "knowledge-bases"
+    "knowledge-bases",
+    "live-schema"
   ]
 }
