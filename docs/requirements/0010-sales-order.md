@@ -14,7 +14,7 @@
   (quote → order, contract on demand), [hotcrm#2560](https://github.com/objectstack-ai/hotcrm/issues/2560)
   (Order to Cash rows cite the order), [hotcrm#2561](https://github.com/objectstack-ai/hotcrm/issues/2561)
   (a project names its source order); recorded by
-  [hotcrm#2562](https://github.com/objectstack-ai/hotcrm/issues/2562). Changesets / PRs — stage 1: `.changeset/2555-sales-order.md` (the order and its lines, hotcrm#2555); the rest fill in when built.
+  [hotcrm#2562](https://github.com/objectstack-ai/hotcrm/issues/2562). Changesets / PRs — stage 1: `.changeset/2555-sales-order.md` (the order and its lines, hotcrm#2555), `.changeset/2557-o2c-rows-under-account.md` (Order to Cash rows under the account, hotcrm#2557); the rest fill in when built.
 
 ## Raw requirement (verbatim)
 
