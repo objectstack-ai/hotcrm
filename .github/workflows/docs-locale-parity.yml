@@ -1,0 +1,41 @@
+name: Docs Locale Parity
+
+# A pull request that changes an English docs page, manual page or README must
+# change its Chinese twins too, or carry the `docs-en-only` label with a
+# `Docs-en-only: <reason>` line in its body (hotcrm#2609). The rules and the
+# pairs live in `scripts/check-docs-locale-parity.mjs`; its test is
+# `test/docs-locale-parity.test.ts`.
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    # `labeled` / `unlabeled` re-run the gate when the waiver label is applied
+    # or removed, and `edited` when the body's reason line is written: the
+    # event payload a re-run reads is the one that triggered it.
+    types: [opened, synchronize, reopened, labeled, unlabeled, edited]
+
+jobs:
+  docs-locale-parity:
+    name: Docs Locale Parity
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22.x'
+
+      - name: Check that Chinese twins changed with the English
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        # Reads the labels and the body from GITHUB_EVENT_PATH. Node built-ins
+        # only, so no install step.
+        run: node scripts/check-docs-locale-parity.mjs
