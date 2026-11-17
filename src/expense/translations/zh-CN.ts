@@ -18,6 +18,7 @@ export const zhCN: TranslationData = {
             in_review: { message: '费用{{name}}在报销单{{report}}上，该报销单正在等待审批。请先撤回报销单再修改。' },
             rejected: { message: '费用{{name}}在报销单{{report}}上，该报销单已被驳回。请先把报销单退回草稿再修改。' },
             decided: { message: '费用{{name}}在报销单{{report}}上，该报销单已批准，不能再修改。' },
+            project: { message: '费用{{name}}在报销单{{report}}上，报销单按项目交给审批人。要改项目，请先删除这张草稿报销单（其中的费用会被释放），再重新提交。' },
           },
         },
       },

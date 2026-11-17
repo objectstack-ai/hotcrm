@@ -99,6 +99,10 @@ nothing there.
   get an Inbox notice naming the project. On a locked project, submit the
   report again once the lock is lifted. On a closed or cancelled one, delete
   the report, move its expenses to an open project, and submit them again.
+- An expense's **Project** cannot change while the expense is on a report,
+  even a Draft one: the report goes to the approver of the project it was
+  sent with. To move an expense to another project, delete the draft report,
+  which frees its expenses, then change the project and submit again.
 
 When Project Delivery is switched off, the **Project** field leaves the
 expense and the report, every selection makes one report, and every report

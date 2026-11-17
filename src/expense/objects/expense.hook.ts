@@ -16,6 +16,16 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * to refuse there. It stopped stamping the approver and judging the project
  * at hotcrm#2556: this package knows nothing of projects.
  *
+ * **An expense's project stays as reported.** The report's approval is chosen
+ * by the report's project (`../flows/expense-report-project-approval.flow.ts`),
+ * which Submit for Reimbursement takes from its expenses. So a person cannot
+ * change the project of an expense that is on a report, even a Draft one
+ * (recalled, or back from a rejection): the report would still go to the old
+ * project's manager while the cost lands on the new project. To move it,
+ * delete the draft report, which frees its expenses, and submit them again.
+ * The `crm_project` key arrives only while Project Delivery contributes the
+ * field, so this package still names no project object.
+ *
  * Judged on a person's write; the report's approval and Submit for
  * Reimbursement write as the platform. An administrator may, to repair.
  */
@@ -33,10 +43,11 @@ const expenseLineLock: Hook = {
         in_review: { message: 'Expense {{name}} is on report {{report}}, which is waiting for approval. Recall the report to change it.' },
         rejected: { message: 'Expense {{name}} is on report {{report}}, which was rejected. Move the report back to Draft to correct it.' },
         decided: { message: 'Expense {{name}} is on report {{report}}, which has been approved, so it can no longer be changed.' },
+        project: { message: 'Expense {{name}} is on report {{report}}, which goes to the approver of its project. To change the project, delete the draft report, which frees its expenses, and submit them again.' },
       },
     },
   },
-  description: 'Keep an expense on a sent report as the report sent it: a person cannot change or delete it until the report is back to Draft.',
+  description: 'Keep an expense on a sent report as the report sent it: a person cannot change or delete it until the report is back to Draft, nor move it to another project while it is on a report.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -69,17 +80,27 @@ const expenseLineLock: Hook = {
     const ADMIN_IDENTITIES = ['platform_admin', 'org_owner', 'org_admin'];
     if (((ctx.session?.positions ?? []) as string[]).some((p) => ADMIN_IDENTITIES.includes(p))) return;
     const previous = (ctx.previous ?? {}) as Record<string, unknown>;
+    const input = (ctx.input ?? {}) as Record<string, unknown>;
     const reportId = refId(previous.crm_expense_report);
     const status = String(previous.status ?? 'draft');
-    if (!reportId || status === 'draft') return;
+    const projectMoved = ctx.event === 'beforeUpdate' && 'crm_project' in input
+      && refId(input.crm_project) !== refId(previous.crm_project);
+    if (!reportId || (status === 'draft' && !projectMoved)) return;
     const api = ctx.api as HookApi | undefined;
     const report = api
       ? await api.object('crm_expense_report').findOne({ where: { id: reportId }, fields: ['name', 'status'] })
       : null;
     const reportStatus = String(report?.status ?? status);
-    if (reportStatus === 'draft') return;
     const name = String(previous.name ?? '');
     const reportName = String(report?.name ?? '');
+    if (reportStatus === 'draft') {
+      if (!projectMoved) return;
+      throw Object.assign(refuse(
+        `Expense ${name} is on report ${reportName}, which goes to the approver of its project. To change the project, delete the draft report, which frees its expenses, and submit them again.`,
+        'RECORD_LOCKED',
+        409,
+      ), { reason: 'project', params: { name, report: reportName } });
+    }
     if (reportStatus === 'submitted') {
       throw Object.assign(refuse(
         `Expense ${name} is on report ${reportName}, which is waiting for approval. Recall the report to change it.`,

@@ -18,6 +18,7 @@ export const esES: TranslationData = {
             in_review: { message: 'El gasto {{name}} está en el informe {{report}}, que espera aprobación. Recupera el informe para cambiarlo.' },
             rejected: { message: 'El gasto {{name}} está en el informe {{report}}, que fue rechazado. Devuelve el informe a Borrador para corregirlo.' },
             decided: { message: 'El gasto {{name}} está en el informe {{report}}, que ya fue aprobado, así que no se puede cambiar.' },
+            project: { message: 'El gasto {{name}} está en el informe {{report}}, que va al aprobador de su proyecto. Para cambiar el proyecto, elimina el informe en borrador, que libera sus gastos, y vuelve a enviarlos.' },
           },
         },
       },

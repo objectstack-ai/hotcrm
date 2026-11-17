@@ -459,6 +459,19 @@ describe('a project that is over takes no time or spend (hotcrm#2491)', () => {
     const [reportId] = await submitReport([draftExpense.id], consultant.token);
     await expectTurnedBack(reportId!, 'crm.expense_report_project_over');
 
+    // On its Draft report the expense is still editable, but not its project:
+    // the report would go on to the old project's manager while the cost
+    // landed on the new one (#2596 review).
+    const report = await row('crm_expense_report', reportId!);
+    expect(report.status).toBe('draft');
+    await expect(update('crm_expense', { id: draftExpense.id, crm_project: projects.active!.id }, consultant.token))
+      .rejects.toThrow(`Expense ${String(draftExpense.name)} is on report ${String(report.name)}, which goes to the approver of its project. To change the project, delete the draft report, which frees its expenses, and submit them again.`);
+    await expect(update('crm_expense', { id: draftExpense.id, crm_project: null }, consultant.token), 'nor off a project')
+      .rejects.toThrow(/To change the project, delete the draft report/);
+    expect((await row('crm_expense', draftExpense.id)).crm_project).toBe(p.id);
+    await update('crm_expense', { id: draftExpense.id, amount: 46 }, consultant.token);
+    expect((await row('crm_expense', draftExpense.id)).amount, 'the rest stays editable on a draft report').toBe(46);
+
     // As the notice says: delete the report, move the expense, submit again.
     await verify.hooks.run('crm_expense_report', 'delete', { id: reportId! }, { as: consultant.token });
     await update('crm_expense', { id: draftExpense.id, crm_project: projects.active!.id }, consultant.token);

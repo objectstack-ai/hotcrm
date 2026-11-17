@@ -18,6 +18,7 @@ export const jaJP: TranslationData = {
             in_review: { message: '経費 {{name}} は経費精算書 {{report}} に含まれており、承認待ちです。変更するには精算書を取り消してください。' },
             rejected: { message: '経費 {{name}} は経費精算書 {{report}} に含まれており、却下されました。修正するには精算書を下書きに戻してください。' },
             decided: { message: '経費 {{name}} は経費精算書 {{report}} に含まれており、承認済みのため変更できません。' },
+            project: { message: '経費 {{name}} は経費精算書 {{report}} に含まれており、精算書はプロジェクトの承認者に送られます。プロジェクトを変更するには、下書きの精算書を削除して経費を解放し、もう一度提出してください。' },
           },
         },
       },
