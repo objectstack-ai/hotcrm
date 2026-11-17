@@ -18,7 +18,9 @@ type Rec = Record<string, any>;
  *   over the rows stamped with it.
  * - Every member reads them (the app package's sets, the 2026-11-05 ruling),
  *   and a member who reads the account but not the contract reads the totals
- *   and still no invoice (`controlled_by_parent`).
+ *   and still no invoice: since hotcrm#2557 the rows hang off the account,
+ *   so the sets that read accounts and not contracts hold no read on them at
+ *   all (Irene, 2026-11-17 05:08Z 「保持现在的范围」).
  * - With the module disabled the figures are not served (objectstack#30304,
  *   18.4.0), and they come back on enable.
  */
@@ -107,22 +109,23 @@ describe('who reads them', () => {
     const a = await row('crm_account', account.id, member.token);
     expect(a, 'the member reads the account they own').toBeTruthy();
     expect(num(a.receivable_balance)).toBeGreaterThan(0);
-    expect(await verify.rows('crm_invoice', { crm_account: account.id }, { as: member.token })).toEqual([]);
+    await expect(verify.rows('crm_invoice', { crm_account: account.id }, { as: member.token })).rejects.toThrow(/permission/i);
   });
 
-  // crm_user, marketing_user, service_agent and project_member (account read
-  // since #2316 ruling D) grant read on crm_invoice and crm_payment only so the
-  // account's totals have a readable source (`security-rollup-source-unreadable`).
-  // The grant is inert: none of the four reads contracts, and both objects are
-  // `controlled_by_parent` on the contract, so a holder reads no invoice and no
-  // payment at all.
+  // crm_user, marketing_user, service_agent and project_member read accounts
+  // and not contracts. Before hotcrm#2557 they held an inert read on
+  // crm_invoice and crm_payment (inert because the rows hung off the
+  // contract). With the account as the master that grant would open every
+  // row, so it is gone (ruled 2026-11-17 05:08Z): a holder reads the totals
+  // and is refused the rows. Strict lint reports the totals over an unreadable
+  // child until objectstack#34664's acknowledgement is declared.
   it.each(['crm_user', 'marketing_user', 'service_agent', 'project_member'])('a holder of %s alone reads no invoice and no payment', async (set) => {
     const holder = await signUpPerson(verify, `${set}@o2c-receivables.test`, { name: `Inert ${set}`, permissionSets: [set] });
     expect((await verify.rows('crm_invoice', {})).length, 'fixture: invoices exist').toBeGreaterThan(0);
     expect((await verify.rows('crm_payment', {})).length, 'fixture: payments exist').toBeGreaterThan(0);
     await expect(verify.rows('crm_contract', {}, { as: holder.token }), 'the set grants no contract read').rejects.toThrow(/permission/i);
-    expect(await verify.rows('crm_invoice', {}, { as: holder.token })).toEqual([]);
-    expect(await verify.rows('crm_payment', {}, { as: holder.token })).toEqual([]);
+    await expect(verify.rows('crm_invoice', {}, { as: holder.token })).rejects.toThrow(/permission/i);
+    await expect(verify.rows('crm_payment', {}, { as: holder.token })).rejects.toThrow(/permission/i);
   });
 });
 

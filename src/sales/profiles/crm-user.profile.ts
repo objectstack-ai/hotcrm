@@ -70,14 +70,15 @@ export const CrmUserProfile = {
     // ─── The sales book, own scope ────────────────────────────────────
     crm_lead:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_account:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
-    // Order to Cash (#2416): read on invoices and payments, so the account's
-    // receivables figures sum rows this set may read (`os lint`
-    // `security-rollup-source-unreadable`). Both are `controlled_by_parent`
-    // under the contract, which this set does not read: the grant opens no
-    // invoice until a set the member also holds reads the contract — whoever
-    // reads the contract reads its invoices (ADR-0055), and no one else.
-    crm_invoice:     { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    crm_payment:     { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // Order to Cash: NO read on invoices and payments. Since hotcrm#2557 both
+    // are `controlled_by_parent` under the ACCOUNT, so a read grant here would
+    // open the rows of every account this set reads. Irene ruled 2026-11-17
+    // 05:08Z 「保持现在的范围」: sales (own accounts) and finance read the rows;
+    // this set reads the account's totals only. The totals then sum a child
+    // the set cannot read, which `os lint --strict` reports as
+    // `security-rollup-source-unreadable`; the meant pair is acknowledged
+    // with the platform's switch from objectstack#34664, added with the bump
+    // that ships it.
     crm_opportunity: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_task:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_event:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
