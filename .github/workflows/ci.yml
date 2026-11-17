@@ -5,6 +5,11 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  # The merge queue runs this job on the queued merge commit, so "Build and
+  # Test (22.x)" can be a required check: no step below reads pull-request
+  # context, and checkout takes the merge group's commit (github.sha).
+  merge_group:
+    types: [ checks_requested ]
 
 jobs:
   build-and-test:
