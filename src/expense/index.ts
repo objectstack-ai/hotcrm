@@ -9,6 +9,7 @@ import { ExpenseEmailTemplates } from './email-templates/index.js';
 import {
   ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow,
   ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
+  ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
 } from './flows/index.js';
 import { Expense, ExpenseRequest } from './objects/index.js';
 import { expenseHook, expenseRequestHook } from './objects/hooks.js';
@@ -27,13 +28,14 @@ export const expenseHooks = [expenseHook, expenseRequestHook].flat();
 /**
  * This package's flows: the approval of an expense with no project, the
  * approval of one on a project (here only for the platform gap its file
- * names), the approval of a travel request (hotcrm#2578), and the insert twin
- * of each.
+ * names), the same two for a travel request (hotcrm#2578, hotcrm#2581), and
+ * the insert twin of each.
  */
 export const expenseFlows = [
   ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow,
   ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow,
   ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
+  ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
 ];
 
 /** This package's sharing rules — see {@link expenseHooks}. */
@@ -63,10 +65,11 @@ export type HotCrmExpenseCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * same name, and `crm_expense_request`, the travel request (hotcrm#2578) (item 16: one `crm` namespace, so no table rename). Project
  * Delivery depends on this package — the one add-on → add-on edge item 18
  * allows — and contributes the Project field and the project cost
- * summaries. This package depends on the app package only. One thing that
- * belongs to Project Delivery is still here: the approval of an expense on a
+ * summaries, and the travel request's Project field (hotcrm#2581). This
+ * package depends on the app package only. One thing that belongs to Project
+ * Delivery is still here: the approval of an expense or a travel request on a
  * project, for the platform gap `./flows/expense-project-approval.flow.ts`
- * names; it never starts while Project Delivery is disabled.
+ * names; neither starts while Project Delivery is disabled.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
@@ -90,11 +93,11 @@ export const createHotCrmExpenseStack = (
     dependencies: { 'app.objectstack.hotcrm': '^6.5.0' },
 
     /**
-     * Project staff keep their two expense lists inside the Project Delivery
-     * app (rule R2): the app's own navigation may not name this package's
-     * object (R3), so this module contributes them into its *Time and
-     * Expenses* group. With Project Delivery disabled the target app is gone
-     * and the entries with it.
+     * Project staff keep their two expense lists, and their own travel
+     * requests (hotcrm#2581), inside the Project Delivery app (rule R2): the
+     * app's own navigation may not name this package's objects (R3), so this
+     * module contributes them into its *Time and Expenses* group. With Project
+     * Delivery disabled the target app is gone and the entries with it.
      */
     navigationContributions: [
       {
@@ -104,6 +107,7 @@ export const createHotCrmExpenseStack = (
         items: [
           { id: 'nav_my_expenses', type: 'object', objectName: 'crm_expense', viewName: 'my_expenses', label: 'My Expenses', icon: 'receipt' },
           { id: 'nav_expenses_to_approve', type: 'object', objectName: 'crm_expense', viewName: 'expenses_to_approve', label: 'Expenses to Approve', icon: 'clipboard-check' },
+          { id: 'nav_my_travel_requests', type: 'object', objectName: 'crm_expense_request', viewName: 'my_travel_requests', label: 'My Travel Requests', icon: 'plane' },
         ],
       },
     ],

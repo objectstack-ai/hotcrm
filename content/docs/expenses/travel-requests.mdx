@@ -1,11 +1,11 @@
 ---
 title: Travel Requests
-description: Asking before a trip, where, when, why and roughly how much, and your manager's yes or no before money is spent.
+description: Asking before a trip, where, when, why and roughly how much, and your manager's or your project manager's yes or no before money is spent.
 ---
 
 # Travel Requests
 
-A travel request is asked before a trip: where you are going, when, why, and roughly how much it will cost. Your manager approves or rejects it before money is spent. It lives in the **Expenses** app, under **Travel Requests**.
+A travel request is asked before a trip: where you are going, when, why, and roughly how much it will cost. Your manager, or the project's Project Manager when the trip is for a project, approves or rejects it before money is spent. It lives in the **Expenses** app, under **Travel Requests**.
 
 A travel request is optional. You can record and submit an expense without one.
 
@@ -20,32 +20,38 @@ Open **My Travel Requests** and choose **New**:
 | **Start Date** and **End Date** | The first and last day of the trip (required). **Days** counts both |
 | **Estimated Amount** | One total for the whole trip, in your organization's currency, whoever pays for each part (required) |
 | **Account** | The customer the trip is for, if any |
+| **Project** | The project the trip is for, if any (with Project Delivery on). Closed and Cancelled projects are not offered |
 | **Itinerary** | The plan: flights, trains, hotel |
 | **Notes** | Anything else |
 
-Attach files in the **Files** tab. **Source** says how the record arrived, and **Review Notes** is where an assistant or a rule writes what it found for the approver. Neither decides anything: an assistant can draft the request, estimate the amount or check it, working as you through the API, and the decision stays with your manager.
+Attach files in the **Files** tab. **Source** says how the record arrived, and **Review Notes** is where an assistant or a rule writes what it found for the approver. Neither decides anything: an assistant can draft the request, estimate the amount or check it, working as you through the API, and the decision stays with the approver.
 
 ## Submitting and approving
 
 | Status | What it means |
 | --- | --- |
 | **Draft** | You are still filling it in |
-| **Submitted** | Sent to your manager, and locked while it waits |
+| **Submitted** | Sent to its approver, and locked while it waits |
 | **Approved** | Yes. The plan no longer changes |
 | **Rejected** | Sent back. Move it to Draft, change the plan and submit again |
 | **Cancelled** | The trip was called off after approval. Final |
 | **Closed** | The trip is over. Final |
 
-Choose **Submit** to send it. **Your manager**, the **Manager** on your user record, decides in their **Inbox**; when you have none, the **Finance Controllers** decide instead. There is one step only: finance checks the money on the expenses afterwards, not on the request. **Requests to Approve** lists the requests waiting for you. Nobody decides their own request, and nobody sets **Approved** or **Rejected** by hand.
+Choose **Submit** to send it. Who decides depends on the **Project**:
+
+- **On a project**: the project's **Project Manager**, who also approves the project's expenses, so the trip and what it costs go to the same person. When the project has no Project Manager, or the trip is the Project Manager's own, an administrator decides.
+- **No project**: **your manager**, the **Manager** on your user record; when you have none, the **Finance Controllers**.
+
+Either way, one person decides in their **Inbox**, never both. There is one step only: finance checks the money on the expenses afterwards, not on the request. **Requests to Approve** lists the requests waiting for you. Nobody decides their own request, and nobody sets **Approved** or **Rejected** by hand.
 
 **Changed your mind while it waits?** Recall it from your Inbox. It goes back to **Draft**.
 
 ## After approval
 
-The approval was given for the plan, so an approved request's **Purpose**, **Destination**, dates and **Estimated Amount** no longer change. To change the plan, choose **Cancel Trip** and file a new request. When the trip is over, choose **Close**.
+The approval was given for the plan, so an approved request's **Purpose**, **Destination**, dates, **Estimated Amount** and **Project** no longer change. To change the plan, choose **Cancel Trip** and file a new request. When the trip is over, choose **Close**.
 
 ## Who sees what
 
 You see your own requests, and the ones you are asked to approve. Finance sees every request under **All Travel Requests**, and so do sales managers and leadership; none of them can change a request that is not theirs. Travel requests do not appear in the Sales, Service or Marketing apps, or on the account page.
 
-With Project Delivery on or off, a travel request works the same.
+With Project Delivery on, project staff also find **My Travel Requests** in the **Project Delivery** app, beside **My Expenses**, and a project's page lists its travel requests under **Related** (each reader sees the ones above). A travel request adds nothing to the project's cost: the cost arrives with the expenses. With Project Delivery off, the **Project** field is gone and every request goes to the traveler's manager.
