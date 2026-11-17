@@ -98,3 +98,9 @@ card's recorded decision, with the phase-1 seat note's four items (hotcrm#2318, 
   a product already in the book keeps its price.
 - **`crm_opportunity_line_item` is unchanged**: a deal's line takes the product's `list_price`.
 
+## Note (2026-11-16) — multi-currency is deferred by the maintainer, not by the platform
+
+The deferred item above said multi-currency "waits for the platform". The platform has since
+designed per-record currency and dated rates (objectstack ADR-0144), and the reason for waiting is
+now the maintainer's own ruling of 2026-11-16 22:45Z, 「多币种先不启动。」. The item is tracked by
+[REQ-0012](0012-multi-currency.md); the record above is left as written.

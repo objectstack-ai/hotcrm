@@ -159,3 +159,20 @@ The open decisions are the design document's.
   pass; `pnpm verify` green; one changeset per PR.
 - This record is closed as **Shipped** when the first version is on `main`; later versions are new
   records or reopen this one.
+
+## Note (2026-11-16) — two premises superseded by REQ-0010
+
+The record above is left as written. Two of its premises are superseded by
+[REQ-0010](0010-sales-order.md), the maintainer's ruling of 2026-11-16 21:50Z
+(「销售订单和订单行 我觉得还是现在应该定清楚。是基本能力，我们要考虑通用需求而不是软件公司」):
+
+- "the core packages still model no orders": the app package gains `crm_sales_order` and
+  `crm_sales_order_line` ([`sales-order-plan.md`](../architecture/sales-order-plan.md));
+- "for a software vendor the signed contract is the order" (requirement item 3): every deal has an
+  order, and the contract is optional.
+
+"A window, never a book" stands: the module still keeps no books. The three objects (plan steps,
+invoices, payments) move under the account with
+[hotcrm#2557](https://github.com/objectstack-ai/hotcrm/issues/2557), the card option adopted on
+2026-11-17 00:12Z (「立阶段0和1,含改动一」, recorded as adopted rather than as typed), with the
+contract, and later the order, as optional sources.

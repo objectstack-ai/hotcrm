@@ -710,6 +710,63 @@ Ruled by the maintainer on [objectstack#26986](https://github.com/objectstack-ai
       depends on HotCRM. The per-gap options for that day (lookups, actions, widgets, guard
       hooks, record-change flows) are analysed on objectstack#26986 and are not re-derived here.
 
+## Decisions recorded (2026-11-16) — `crm_` everywhere; the sales order is the app package's; one add-on edge for expense; multi-currency not started
+
+Ruled by the maintainer in the data-model review of 2026-11-16, verbatim and untranslated, all
+times UTC:
+
+> 「全仓还是保留现有的 crm_ 前缀是吗」 (22:21Z)
+> 「需要我定的，1 2 我同意，订单与回款、项目交付这两个还没上线的模块，要不要趁上线前换成自己的前缀。 这个如果要改，给我一个具体的清单」 (22:28Z)
+> 「我建议报销一起设计。同意不改前缀。」 (22:37Z)
+> 「多币种先不启动。」 (22:45Z)
+> 「报销 应该是一个单独的软件包吧，很多系统还是单独的产品呢」 (22:54Z)
+> 「报销需要放到核心包吗」 (22:55Z)
+> 「单独的报销包」 on 「定一下报销放在哪个软件包」 (23:01Z, a card option adopted rather than typed)
+
+The sections above are left as written; items 10–15 still hold except where an item below says
+otherwise.
+
+16. **No per-module prefix.** The whole repo keeps `crm_`, including Order to Cash, PSA,
+    `crm_sales_order` and `crm_expense_report` (22:21Z, 22:37Z). The reason: with one shared `crm`
+    namespace an object can change package without a table rename, and the platform has no
+    object-level rename (ADR-0129: the object `name` is the table name), so a per-module prefix
+    would turn every later move into a data migration. `crm_expense` leaving PSA (item 18) is the
+    first such move.
+
+17. **The sales order is the app package's**, for item 11's reason: the quote package writes to it
+    and Order to Cash cites it, and add-ons do not depend on each other
+    ([REQ-0010](../requirements/0010-sales-order.md), [`sales-order-plan.md`](./sales-order-plan.md)).
+
+18. **Expense is its own module, and item 10 is relaxed by exactly one edge: PSA depends on
+    expense** (22:54Z, 22:55Z, the 23:01Z adopted option;
+    [REQ-0011](../requirements/0011-expense-and-reimbursement.md),
+    [`expense-module-plan.md`](./expense-module-plan.md)). Everything else in item 10 stands: no
+    other add-on depends on an add-on, and a source more than one add-on needs still sinks into the
+    app package. What ADR-0141 D3 defers is still deferred — cascade install, uninstall protection,
+    upgrade interception — so nothing stops an administrator disabling expense while PSA is on.
+    That shape was measured instead of protected: with expense disabled, projects still read, list
+    and edit, the expense summaries keep their last value, and `crm_expense` answers 404
+    `OBJECT_PACKAGE_DISABLED`; with PSA disabled, the project field leaves the expense and expenses
+    work without it (the full readings: `expense-module-plan.md`, *Measured on 2026-11-16*).
+
+19. **Multi-currency is not started** (22:45Z, reversing 21:51Z
+    「多币种。应该启用，平台已经有这个核心能力，不用浪费。」). Item 14's "wait for the platform" is
+    superseded: the reason for waiting is now this ruling, tracked by
+    [REQ-0012](../requirements/0012-multi-currency.md). New objects carry no currency field
+    meanwhile.
+
+20. **R1–R4 re-measured on 18.5.0 (2026-11-16)**, in a scratch copy of `main` at `2257cdd`, with
+    `crm_expense` owned by a new expense package and PSA as the consumer:
+    - **Field extension holds** — a PSA `objectExtensions` field (a `crm_project` lookup) on the
+      foreign `crm_expense` builds and appears in the object's metadata, and PSA summaries on
+      `crm_project` over it work (ADR-0130 D5; the R1 lookup direction, now authored from the
+      consumer side).
+    - **R2 holds** — the expense package's `navigationContributions` into the PSA app builds.
+    - **R3 still refuses** — the PSA app's own navigation item to the foreign object.
+    - **R4 still refuses** — a PSA hook on `crm_expense`; PSA views of it are refused too.
+    - Allowed as well: a PSA record-change flow on `crm_expense` (with a build warning that the stack
+      does not define the object) and a PSA sharing rule on it.
+
 ## References
 
 - ADR-0130 — the release artifact is the co-ownership boundary (one artifact, N packages)
