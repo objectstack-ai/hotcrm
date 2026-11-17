@@ -84,3 +84,15 @@ export const EXPENSE_REQUEST_LINE_KIND_OPTIONS = [
   { label: 'Hotel', value: 'hotel' },
   { label: 'Other', value: 'other' },
 ];
+
+/**
+ * What an expense standard's limit is counted per (hotcrm#2616, F4a): a
+ * hotel night, a day of travel, one receipt, or a whole trip. The product
+ * reads it to nobody's sum; an assistant reads it when it checks an expense.
+ */
+export const EXPENSE_STANDARD_PER_OPTIONS = [
+  { label: 'Night', value: 'night' },
+  { label: 'Day', value: 'day' },
+  { label: 'Item', value: 'item' },
+  { label: 'Trip', value: 'trip' },
+];

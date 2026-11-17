@@ -135,6 +135,7 @@ export const esES: TranslationData = {
         },
         approver: { label: 'Aprobador' },
         notes: { label: 'Notas' },
+        review_notes: { label: 'Notas de revisión', help: 'Lo que encontró una comprobación, para que lo lea el aprobador.' },
       },
       _views: {
         all_expenses: { label: 'Todos los gastos' },
@@ -322,6 +323,46 @@ export const esES: TranslationData = {
         expense_request_line_dates: { message: 'La fecha de fin debe ser igual o posterior a la de inicio.' },
       },
     },
+    crm_expense_standard: {
+      label: 'Norma de gastos',
+      pluralLabel: 'Normas de gastos',
+      description: 'Una regla de la empresa sobre lo que se puede gastar, que leen las personas y los asistentes; nada en el producto la aplica',
+      fields: {
+        owner_id: { label: 'Propietario' },
+        name: { label: 'Nombre', help: 'Por ejemplo «Hotel, ciudades de primer nivel».' },
+        category: {
+          label: 'Categoría',
+          help: 'La categoría de gasto a la que se refiere esta norma. Vacía significa cualquier categoría.',
+          options: {
+            travel: 'Viajes',
+            lodging: 'Alojamiento',
+            meals: 'Comidas',
+            equipment: 'Equipos',
+            other: 'Otros',
+          },
+        },
+        limit_amount: { label: 'Límite', help: 'Lo máximo que se puede gastar, en la moneda de la organización. Déjelo vacío para una regla solo en palabras.' },
+        limit_per: {
+          label: 'Por',
+          help: 'Sobre qué se cuenta el límite.',
+          options: {
+            night: 'Noche',
+            day: 'Día',
+            item: 'Gasto',
+            trip: 'Viaje',
+          },
+        },
+        applies_to: { label: 'Se aplica a', help: 'Quién y dónde, en palabras: por ejemplo «Gerentes y superiores» o «Ciudades de primer nivel».' },
+        details: { label: 'Detalles', help: 'Lo que un número no puede decir: excepciones, qué se incluye, a quién preguntar.' },
+        is_active: { label: 'Activa', help: 'Desmárquela para retirar una norma sin eliminarla.' },
+      },
+      _views: {
+        all_expense_standards: { label: 'Normas de gastos' },
+      },
+      _sections: {
+        basic: { label: 'Norma de gastos' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers.
   flows: {
@@ -375,6 +416,7 @@ export const esES: TranslationData = {
         nav_expense_reports_to_approve: { label: 'Informes por aprobar' },
         nav_expense_reports_to_pay: { label: 'Informes por pagar' },
         nav_all_expenses: { label: 'Todos los gastos' },
+        nav_expense_standards: { label: 'Normas de gastos' },
         group_travel_requests: { label: 'Solicitudes de viaje' },
         nav_my_travel_requests: { label: 'Mis solicitudes de viaje' },
         nav_travel_requests_to_approve: { label: 'Solicitudes por aprobar' },

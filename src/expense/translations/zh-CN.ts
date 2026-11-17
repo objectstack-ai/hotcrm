@@ -135,6 +135,7 @@ export const zhCN: TranslationData = {
         },
         approver: { label: '审批人' },
         notes: { label: '备注' },
+        review_notes: { label: '检查提示', help: '检查发现的问题，供审批人阅读。' },
       },
       _views: {
         all_expenses: { label: '全部费用' },
@@ -322,6 +323,46 @@ export const zhCN: TranslationData = {
         expense_request_line_dates: { message: '结束日期不能早于开始日期。' },
       },
     },
+    crm_expense_standard: {
+      label: '费用标准',
+      pluralLabel: '费用标准',
+      description: '公司规定的花费标准，供员工和助手查阅；系统本身不据此校验或拦截',
+      fields: {
+        owner_id: { label: '负责人' },
+        name: { label: '名称', help: '例如「住宿，一线城市」。' },
+        category: {
+          label: '类别',
+          help: '这条标准针对的费用类别。留空表示适用于所有类别。',
+          options: {
+            travel: '差旅',
+            lodging: '住宿',
+            meals: '餐饮',
+            equipment: '设备',
+            other: '其他',
+          },
+        },
+        limit_amount: { label: '限额', help: '最多可花的金额，以组织本位币计。只有文字说明的标准留空。' },
+        limit_per: {
+          label: '计算单位',
+          help: '限额按什么计算。',
+          options: {
+            night: '每晚',
+            day: '每天',
+            item: '每笔',
+            trip: '每次出差',
+          },
+        },
+        applies_to: { label: '适用范围', help: '用文字写明适用于谁、哪里，例如「经理及以上」或「一线城市」。' },
+        details: { label: '说明', help: '数字说不清的部分：例外情况、包含什么、找谁确认。' },
+        is_active: { label: '启用', help: '取消勾选即可停用一条标准，而不必删除。' },
+      },
+      _views: {
+        all_expense_standards: { label: '费用标准' },
+      },
+      _sections: {
+        basic: { label: '费用标准' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers.
   flows: {
@@ -375,6 +416,7 @@ export const zhCN: TranslationData = {
         nav_expense_reports_to_approve: { label: '待我审批的报销单' },
         nav_expense_reports_to_pay: { label: '待付款的报销单' },
         nav_all_expenses: { label: '全部费用' },
+        nav_expense_standards: { label: '费用标准' },
         group_travel_requests: { label: '出差申请' },
         nav_my_travel_requests: { label: '我的出差申请' },
         nav_travel_requests_to_approve: { label: '待我审批的出差申请' },

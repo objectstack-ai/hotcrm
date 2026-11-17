@@ -6,6 +6,7 @@ order: 1
 sources:
   - object:crm_expense
   - object:crm_expense_report
+  - object:crm_expense_standard
 ---
 
 # Expenses — Recording, Reports and Projects
@@ -31,6 +32,12 @@ agent, or imported. It decides nothing.
 
 An expense's **Status** is not yours to set: it follows the report the
 expense is on.
+
+**Review Notes** is where an assistant, or you, writes what a check of the
+expense found: above a standard, a receipt number seen before, a missing
+receipt. The approver reads it in the expense list on the report. HotCRM
+writes nothing there itself, and it locks with the rest of the expense once
+the report is sent.
 
 ## Submitting for reimbursement
 
@@ -96,6 +103,22 @@ finance chooses **Mark as Paid** and enters the date and, if there is one, the
 payment's reference. This records the payment; it moves no money and posts
 nothing. A paid report can no longer be changed, and its expenses stay
 **Approved**.
+
+## Expense standards
+
+**Expense Standards**, in the Expenses app, lists the company's standards for
+spending: a **Name**, the **Category** it is about (empty for any category), a
+**Limit** and what it is counted **Per** (night, day, item or trip), who and
+where it **Applies To**, in words, and **Details**. A standard with no limit
+is a rule in words, such as "second-class rail".
+
+- Everyone who has the Expenses app reads every standard. The **Finance
+  Controllers** and **AR Accountants** add, change and delete them, and
+  retire one by clearing **Active**; administrators can too.
+- **A standard is advice.** HotCRM never compares an expense with a standard:
+  an expense above one saves and is submitted like any other. An assistant
+  reads the standards, compares, and writes what it found in the expense's
+  **Review Notes**; the approver decides.
 
 ## Projects
 
