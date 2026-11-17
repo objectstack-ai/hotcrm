@@ -88,11 +88,12 @@ export const psaSharingRules = [
  * its two datasets and the Projects Overview dashboard that reads them.
  *
  * Since hotcrm#2556 the expense is the expense module's (REQ-0011): this
- * module depends on it, contributes the expense's Project field through
- * `objectExtensions` and keeps the expense cost summaries on the project.
- * The approval of an expense on a project (`expense_project_approval`) is
- * the project's, but sits in the expense module for a platform gap
- * (`src/expense/flows/expense-project-approval.flow.ts`).
+ * module depends on it, contributes the Project field on the expense and on
+ * the expense report (hotcrm#2559) through `objectExtensions`, and keeps the
+ * expense cost summaries on the project. The approval of a report on a
+ * project (`expense_report_project_approval`) is the project's, but sits in
+ * the expense module for a platform gap
+ * (`src/expense/flows/expense-report-project-approval.flow.ts`).
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the

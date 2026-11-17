@@ -3,18 +3,21 @@ kind: screenshot
 scope: hotcrm
 category: automation
 status: published
-captured: '2026-10-20'
+captured: '2026-11-17'
 capture:
   application: HotCRM
-  platformVersion: '18.0.0'
+  platformVersion: '18.5.0'
   browserLocales:
     en: en-US
     zh-Hans: zh-CN
   dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  zhHansDataset: 'the zh-CN seed story: the same boot with i18n.defaultLocale set to zh-CN, then pnpm demo:staff'
+  signedInAs: 'the dev admin: Studio is the administrator''s surface'
   flow: opportunity_approval
   surface: Studio flow designer
   theme: light
   viewport: 1600x900
+  deviceScaleFactor: 2
   aspectRatio: '16:9'
   selectedNode: Sales Director Sign-off
 locales:

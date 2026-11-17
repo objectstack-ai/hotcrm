@@ -4,7 +4,7 @@ import { O2C_FIGURE_FIELDS } from './_o2c-figures';
 import { privateOpportunityPolicy } from './_private-opportunity';
 import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
 import { SalesManagerProfile } from './sales-manager.profile';
-import { EXPENSE_READ_ALL } from './_expense-grants';
+import { EXPENSE_READ_ALL, EXPENSE_REPORT_READ_ALL, EXPENSE_REQUEST_LINE_READ } from './_expense-grants';
 
 /**
  * Sales Leadership — reads what a sales manager reads, and changes nothing a
@@ -47,7 +47,9 @@ export const SalesLeadershipProfile = {
     // Every expense read, nothing written (#2492 A); their own come through
     // `crm_user` (hotcrm#2556, `_expense-grants.ts`).
     crm_expense: EXPENSE_READ_ALL,
+    crm_expense_report: EXPENSE_REPORT_READ_ALL,
     crm_expense_request: EXPENSE_READ_ALL,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_READ,
     crm_lead:              READ_ALL,
     crm_account:           READ_ALL,
     crm_contact:           READ_ALL,

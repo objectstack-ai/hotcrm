@@ -12,17 +12,24 @@ type Rec = Record<string, any>;
 
 /**
  * ═══ Expenses are their own module; Project Delivery adds the project (hotcrm#2556) ═══
+ * ═══ Expenses are sent, approved and paid back on a report (hotcrm#2559) ═══
  *
  * `app.objectstack.hotcrm.expense` (`src/expense/index.ts`, REQ-0011,
  * `docs/architecture/expense-module-plan.md`) owns `crm_expense`, which moved
- * out of Project Delivery under the same name. Project Delivery depends on it
- * and contributes the expense's Project field. Two approvals, never both:
+ * out of Project Delivery under the same name, and `crm_expense_report`.
+ * Project Delivery depends on it and contributes the Project field on both.
+ * Submit for Reimbursement puts the selected expenses on a report (one per
+ * project) and submits it; each expense follows its report. Two approvals,
+ * never both, on the report:
  *
- * - no project: the spender's manager (`sys_user.manager_id`), the Finance
- *   Controllers when there is none, then finance from the threshold;
+ * - no project: the submitter's manager (`sys_user.manager_id`), the Finance
+ *   Controllers when there is none, then finance from the threshold on the
+ *   report's total;
  * - a project: its Project Manager, then finance from the threshold (pinned,
- *   with the project cost and the over or locked turn-back, in
- *   `test/psa-approvals.test.ts`).
+ *   with the project cost, the grouping by project and the over or locked
+ *   turn-back, in `test/psa-approvals.test.ts`).
+ *
+ * Finance marks an approved report paid; it records only.
  *
  * Disabling either module leaves the other usable; both directions are
  * driven here on the shipped app booted by `@objectstack/verify`.
@@ -38,7 +45,7 @@ const flowNamed = (name: string): Rec => (allFlows as Rec[]).find((f) => f.name 
 const startCondition = (name: string): unknown => (flowNamed(name).nodes as Rec[]).find((n) => n.type === 'start')!.config.condition;
 const walk = (nodes: Rec[]): Rec[] => nodes.flatMap((n) => (n.type === 'group' ? walk((n.children ?? []) as Rec[]) : [n]));
 
-describe('the expense module ships inside the HotCRM artifact (hotcrm#2556)', () => {
+describe('the expense module ships inside the HotCRM artifact (hotcrm#2556, hotcrm#2559)', () => {
   const expense = bodies.find((b) => b.id === EXPENSE_ID);
   const psa = bodies.find((b) => b.id === PSA_ID);
 
@@ -52,21 +59,32 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556)', ()
     expect(Object.keys(psa!.dependencies ?? {}).sort()).toEqual([APP_ID, EXPENSE_ID].sort());
   });
 
-  it('owns crm_expense and its guard, approvals, sharing rule, app and manual; no project field of its own', () => {
+  it('owns the expense and the expense report, their rules, approvals, actions, sharing, app and manual; no project field of its own', () => {
     const stack = stackOf(EXPENSE_ID);
     // The travel request (hotcrm#2578) is pinned in `test/expense-request.test.ts`.
-    expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense', 'crm_expense_request']);
-    expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual(['expense_decision_guard', 'expense_request_decision_guard']);
-    expect(((stack.sharingRules ?? []) as Rec[]).map((r) => r.name)).toEqual(['expense_approver_edit', 'expense_request_approver_edit']);
+    expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense', 'crm_expense_report', 'crm_expense_request', 'crm_expense_request_line']);
+    expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual([
+      'expense_line_lock', 'expense_report_rules', 'expense_report_lines_follow', 'expense_report_request_totals',
+      'expense_request_decision_guard', 'expense_request_line_lock', 'expense_request_line_number',
+    ]);
+    expect(((stack.sharingRules ?? []) as Rec[]).map((r) => r.name)).toEqual([
+      'expense_approver_edit', 'expense_report_approver_edit', 'expense_request_approver_edit',
+    ]);
     expect(((stack.apps ?? []) as Rec[]).map((a) => a.name)).toEqual(['crm_expenses']);
     expect(((stack.books ?? []) as Rec[]).map((b) => b.name)).toEqual(['crm_expense_manual']);
-    expect(((stack.flows ?? []) as Rec[]).map((f) => f.name).sort()).toEqual([
-      'expense_approval', 'expense_approval_on_create', 'expense_project_approval', 'expense_project_approval_on_create',
+    expect(((stack.flows ?? []) as Rec[]).map((f) => f.name).sort(), 'per-expense approval retired').toEqual([
+      'expense_report_approval', 'expense_report_project_approval',
       'expense_request_approval', 'expense_request_approval_on_create',
+      'expense_request_project_approval', 'expense_request_project_approval_on_create',
     ]);
-    expect(stack.data ?? [], 'an expense names a person, so the module seeds none').toEqual([]);
-    const fields = stack.objects[0].fields as Rec;
-    expect(fields.crm_project, 'the project field is Project Delivery\'s contribution').toBeUndefined();
+    expect(((stack.actions ?? []) as Rec[]).map((a) => a.name)).toEqual([
+      'submit_for_reimbursement', 'submit_trip_for_reimbursement', 'submit_expense_report', 'reopen_expense_report', 'mark_expense_report_paid',
+      'submit_expense_request', 'cancel_expense_request', 'close_expense_request',
+    ]);
+    expect(stack.data ?? [], 'an expense, a report and a request name a person, so the module seeds none').toEqual([]);
+    for (const object of stack.objects as Rec[]) {
+      expect((object.fields as Rec).crm_project, `${object.name}: the project field is Project Delivery's contribution`).toBeUndefined();
+    }
   });
 
   it('adds who paid, the merchant, the receipt number and where the entry came from, none of them required', () => {
@@ -85,26 +103,48 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556)', ()
     for (const name of ['currency', 'currency_code']) expect(fields[name], 'no currency field (REQ-0012)').toBeUndefined();
   });
 
-  it('Project Delivery contributes the Project field, and the picker offers no Closed or Cancelled project', () => {
+  it('an expense names its report, which only Submit for Reimbursement writes, and its status follows the report', () => {
+    const fields = stackOf(EXPENSE_ID).objects[0].fields as Rec;
+    expect(fields.crm_expense_report).toMatchObject({ type: 'lookup', reference: 'crm_expense_report', readonly: true });
+    expect(fields.status.readonly, 'set by the report, never by hand').toBe(true);
+  });
+
+  it('a report carries the totals, the lifecycle, the approver, the dates, the review notes and the payment', () => {
+    const fields = stackOf(EXPENSE_ID).objects[1].fields as Rec;
+    expect(fields.report_number).toMatchObject({ type: 'autonumber' });
+    expect(fields.crm_account).toMatchObject({ type: 'lookup', reference: 'crm_account' });
+    expect(fields.crm_account.required).toBeFalsy();
+    expect(fields.total_amount.summaryOperations).toMatchObject({ object: 'crm_expense', field: 'amount', function: 'sum', relationshipField: 'crm_expense_report' });
+    expect(fields.total_amount.summaryOperations.filter).toBeUndefined();
+    expect(fields.reimbursable_amount.summaryOperations, 'what the employee paid, not the company').toMatchObject({ filter: { paid_by: 'employee' } });
+    expect((fields.status.options as Rec[]).map((o) => o.value)).toEqual(['draft', 'submitted', 'approved', 'paid', 'rejected']);
+    for (const name of ['approver', 'submitted_date', 'approved_date']) expect(fields[name].readonly, name).toBe(true);
+    for (const name of ['review_notes', 'payment_date', 'payment_reference', 'description']) expect(fields[name], name).toBeDefined();
+  });
+
+  it('Project Delivery contributes the Project field on both; the expense picker offers no Closed or Cancelled project', () => {
     const extensions = (stackOf(PSA_ID).objectExtensions ?? []) as Rec[];
-    expect(extensions.map((e) => e.extend)).toEqual(['crm_expense']);
+    // The travel request's project (hotcrm#2581) is pinned in `test/expense-request.test.ts`.
+    expect(extensions.map((e) => e.extend)).toEqual(['crm_expense', 'crm_expense_report', 'crm_expense_request']);
     const field = extensions[0].fields.crm_project as Rec;
     expect(field).toMatchObject({ type: 'lookup', reference: 'crm_project' });
     expect(field.required).toBeFalsy();
     expect(field.lookupFilters).toEqual([{ field: 'status', operator: 'notIn', value: ['closed', 'cancelled'] }]);
+    expect(extensions[1].fields.crm_project, 'the report\'s project is the one its expenses were grouped by').toMatchObject({ type: 'lookup', reference: 'crm_project', readonly: true });
   });
 
-  it('project staff keep their two expense lists in the Project Delivery app, by contribution', () => {
+  it('project staff keep My Expenses and Reports to Approve in the Project Delivery app, by contribution', () => {
     const items = walk(servedApp('crm_psa').navigation as Rec[]);
-    for (const id of ['nav_my_expenses', 'nav_expenses_to_approve']) {
-      expect(items.find((i) => i.id === id), id).toMatchObject({ type: 'object', objectName: 'crm_expense' });
-    }
+    expect(items.find((i) => i.id === 'nav_my_expenses')).toMatchObject({ type: 'object', objectName: 'crm_expense' });
+    expect(items.find((i) => i.id === 'nav_expense_reports_to_approve')).toMatchObject({ type: 'object', objectName: 'crm_expense_report' });
+    expect(items.find((i) => i.id === 'nav_expenses_to_approve'), 'per-expense approval retired').toBeUndefined();
     const own = walk(stackOf(PSA_ID).apps[0].navigation as Rec[]).map((i) => i.objectName);
-    expect(own, 'the app\'s own navigation no longer names the expense (R3)').not.toContain('crm_expense');
+    expect(own, 'the app\'s own navigation names neither (R3)').not.toContain('crm_expense');
+    expect(own).not.toContain('crm_expense_report');
   });
 });
 
-describe('two approvals, never both (hotcrm#2556)', () => {
+describe('two approvals on the report, never both (hotcrm#2559)', () => {
   let verify: VerifyStack;
   beforeAll(async () => {
     verify = await hotcrmStack();
@@ -117,28 +157,33 @@ describe('two approvals, never both (hotcrm#2556)', () => {
     ['no project key (the field absent, Project Delivery disabled)', {}],
   ];
 
-  it.each(shapes)('an expense submitted with %s starts exactly one of them', (_label, shape) => {
+  it.each(shapes)('a report submitted with %s starts exactly one of them', (_label, shape) => {
     const vars = { record: { status: 'submitted', ...shape }, previous: { status: 'draft', ...shape } };
-    const manager = conditionHolds(verify, startCondition('expense_approval'), vars);
-    const project = conditionHolds(verify, startCondition('expense_project_approval'), vars);
+    const manager = conditionHolds(verify, startCondition('expense_report_approval'), vars);
+    const project = conditionHolds(verify, startCondition('expense_report_project_approval'), vars);
     expect(manager !== project, `manager path ${manager}, project path ${project}`).toBe(true);
     expect(project).toBe(shape.crm_project === 'prj_1');
-    // The insert twins split the same way.
-    const born = { record: { status: 'submitted', ...shape } };
-    expect(conditionHolds(verify, startCondition('expense_approval_on_create'), born)).toBe(manager);
-    expect(conditionHolds(verify, startCondition('expense_project_approval_on_create'), born)).toBe(project);
   });
 
-  it('neither starts while the expense stays a draft', () => {
+  it('neither starts while the report stays a draft', () => {
     for (const [, shape] of shapes) {
       const vars = { record: { status: 'draft', ...shape }, previous: { status: 'draft', ...shape } };
-      expect(conditionHolds(verify, startCondition('expense_approval'), vars)).toBe(false);
-      expect(conditionHolds(verify, startCondition('expense_project_approval'), vars)).toBe(false);
+      expect(conditionHolds(verify, startCondition('expense_report_approval'), vars)).toBe(false);
+      expect(conditionHolds(verify, startCondition('expense_report_project_approval'), vars)).toBe(false);
     }
+  });
+
+  it('both trigger on the report, never on the expense', () => {
+    for (const name of ['expense_report_approval', 'expense_report_project_approval']) {
+      const start = (flowNamed(name).nodes as Rec[]).find((n) => n.type === 'start')!;
+      expect(start.config.objectName, name).toBe('crm_expense_report');
+    }
+    const onExpense = (allFlows as Rec[]).filter((f) => ((f.nodes ?? []) as Rec[]).some((n) => n.type === 'start' && n.config?.objectName === 'crm_expense'));
+    expect(onExpense.map((f) => f.name), 'no flow approves a single expense any more').toEqual([]);
   });
 });
 
-describe('an expense with no project goes to the spender\'s manager (expense_approval)', () => {
+describe('a report with no project goes to the submitter\'s manager (expense_report_approval)', () => {
   let verify: VerifyStack;
   let spender: Person;
   let loner: Person;
@@ -149,6 +194,7 @@ describe('an expense with no project goes to the spender\'s manager (expense_app
   const insert = (doc: Rec, as: string): Promise<Rec> => verify.hooks.run('crm_expense', 'insert', doc, { as });
   const update = (doc: Rec, as: string): Promise<Rec> => verify.hooks.run('crm_expense', 'update', doc, { as });
   const row = async (id: string): Promise<Rec> => (await verify.rows('crm_expense', { id }))[0]!;
+  const report = async (id: string): Promise<Rec> => (await verify.rows('crm_expense_report', { id }))[0]!;
   const openRequests = (id: string): Promise<Rec[]> => verify.rows('sys_approval_request', { record_id: id, status: 'pending' });
   const act = async (recordId: string, token: string, action: 'approve' | 'reject' | 'recall'): Promise<number> => {
     const [request] = await openRequests(recordId);
@@ -156,6 +202,14 @@ describe('an expense with no project goes to the spender\'s manager (expense_app
     return (await verify.apiAs(token, 'POST', `/approvals/requests/${request!.id}/${action}`, { comment: `${action} in test.` })).status;
   };
   const taxi = (amount = 40, extra: Rec = {}): Rec => ({ name: `Taxi ${++k}`, expense_date: '2026-11-02', category: 'travel', amount, ...extra });
+  /** Submit for Reimbursement on these expenses, as `as`; the reports it made. */
+  const submit = async (ids: string[], as: string): Promise<string[]> => {
+    const result = (await verify.actions.run('crm_expense', 'submit_for_reimbursement', ids.length === 1
+      ? { as, recordId: ids[0] }
+      : { as, params: { _selectedIds: ids } })) as Rec;
+    return result.reports as string[];
+  };
+  const linesOf = (reportId: string): Promise<Rec[]> => verify.rows('crm_expense', { crm_expense_report: reportId });
 
   beforeAll(async () => {
     verify = await hotcrmStack();
@@ -174,62 +228,146 @@ describe('an expense with no project goes to the spender\'s manager (expense_app
     await systemUpdate(verify, 'sys_user', { id: spender.id, manager_id: manager.id });
   }, 120_000);
 
-  it('a sales rep records one with the new fields defaulted, and it starts as a draft', async () => {
+  it('a sales rep records one with the new fields defaulted; it starts as a draft and on no report', async () => {
     const exp = await insert(taxi(40, { merchant: 'City Cabs', receipt_number: 'R-1' }), spender.token);
     const stored = await row(exp.id);
     expect(stored).toMatchObject({ status: 'draft', paid_by: 'employee', source: 'manual', merchant: 'City Cabs', receipt_number: 'R-1' });
+    expect(stored.crm_expense_report ?? null).toBeNull();
     expect(await openRequests(exp.id)).toHaveLength(0);
   });
 
-  it('is decided by the manager, who can open it; the spender cannot decide it', async () => {
+  it('nobody submits or approves an expense on its own: its status is not a person\'s to write', async () => {
     const exp = await insert(taxi(), spender.token);
     await update({ id: exp.id, status: 'submitted' }, spender.token);
-    expect(await openRequests(exp.id)).toHaveLength(1);
-    expect((await row(exp.id)).approver, 'the flow names the manager before the request opens').toBe(manager.id);
-    expect((await verify.apiAs(manager.token, 'GET', `/data/crm_expense/${exp.id}`)).status, 'shared to the approver').toBe(200);
-    expect(await act(exp.id, spender.token, 'approve'), 'nobody decides their own').not.toBe(200);
-    expect(await act(exp.id, manager.token, 'approve')).toBe(200);
-    expect((await row(exp.id)).status).toBe('approved');
+    expect((await row(exp.id)).status, 'read-only to people').toBe('draft');
+    expect(await openRequests(exp.id)).toHaveLength(0);
   });
 
-  it('opens the approval for one entered already Submitted', async () => {
-    const exp = await insert(taxi(30, { status: 'submitted' }), spender.token);
-    expect(await openRequests(exp.id)).toHaveLength(1);
-    expect(await act(exp.id, manager.token, 'reject')).toBe(200);
-    expect((await row(exp.id)).status).toBe('rejected');
+  it('one expense, one click: a report with it is submitted, and the manager decides it', async () => {
+    const exp = await insert(taxi(), spender.token);
+    const [reportId] = await submit([exp.id], spender.token);
+    const stored = await report(reportId!);
+    expect(stored).toMatchObject({ status: 'submitted', owner_id: spender.id, approver: manager.id, total_amount: 40, reimbursable_amount: 40 });
+    expect(stored.submitted_date, 'stamped when it was submitted').toBeTruthy();
+    expect(await row(exp.id)).toMatchObject({ crm_expense_report: reportId, status: 'submitted', approver: manager.id });
+    expect((await verify.apiAs(manager.token, 'GET', `/data/crm_expense_report/${reportId}`)).status, 'the report is shared to the approver').toBe(200);
+    expect((await verify.apiAs(manager.token, 'GET', `/data/crm_expense/${exp.id}`)).status, 'and so is each expense on it').toBe(200);
+    expect(await act(reportId!, spender.token, 'approve'), 'nobody decides their own').not.toBe(200);
+    expect(await act(reportId!, manager.token, 'approve')).toBe(200);
+    expect((await report(reportId!)).status).toBe('approved');
+    expect((await report(reportId!)).approved_date).toBeTruthy();
+    expect((await row(exp.id)).status, 'the expense follows').toBe('approved');
   });
 
-  it(`sends one of ${EXPENSE_FINANCE_REVIEW_AMOUNT} or more to finance after the manager`, async () => {
-    const exp = await insert(taxi(EXPENSE_FINANCE_REVIEW_AMOUNT), spender.token);
-    await update({ id: exp.id, status: 'submitted' }, spender.token);
-    expect(await act(exp.id, manager.token, 'approve')).toBe(200);
-    expect((await row(exp.id)).status, 'still waiting on finance').toBe('submitted');
-    expect(await act(exp.id, finance.token, 'approve')).toBe(200);
-    expect((await row(exp.id)).status).toBe('approved');
+  it('several expenses go on one report; the total is all of them, the amount to pay back only what the employee paid', async () => {
+    const a = await insert(taxi(30), spender.token);
+    const b = await insert(taxi(50, { paid_by: 'company', merchant: 'Rail Co' }), spender.token);
+    const c = await insert(taxi(20), spender.token);
+    const reports = await submit([a.id, b.id, c.id], spender.token);
+    expect(reports, 'no project anywhere, so one report').toHaveLength(1);
+    expect(await report(reports[0]!)).toMatchObject({ total_amount: 100, reimbursable_amount: 50 });
+    expect((await linesOf(reports[0]!)).map((l) => l.status)).toEqual(['submitted', 'submitted', 'submitted']);
   });
 
-  it('goes to the Finance Controllers when the spender has no manager', async () => {
+  it(`sends a report totalling ${EXPENSE_FINANCE_REVIEW_AMOUNT} or more to finance after the manager`, async () => {
+    const a = await insert(taxi(EXPENSE_FINANCE_REVIEW_AMOUNT / 2), spender.token);
+    const b = await insert(taxi(EXPENSE_FINANCE_REVIEW_AMOUNT / 2), spender.token);
+    const [reportId] = await submit([a.id, b.id], spender.token);
+    expect(await act(reportId!, manager.token, 'approve')).toBe(200);
+    expect((await report(reportId!)).status, 'still waiting on finance').toBe('submitted');
+    expect(await act(reportId!, finance.token, 'approve')).toBe(200);
+    expect((await report(reportId!)).status).toBe('approved');
+    expect((await row(a.id)).status).toBe('approved');
+  });
+
+  it('goes to the Finance Controllers when the submitter has no manager', async () => {
     const exp = await insert(taxi(), loner.token);
-    await update({ id: exp.id, status: 'submitted' }, loner.token);
-    expect(await openRequests(exp.id)).toHaveLength(1);
-    expect(await act(exp.id, finance.token, 'approve')).toBe(200);
-    expect((await row(exp.id)).status).toBe('approved');
+    const [reportId] = await submit([exp.id], loner.token);
+    expect(await openRequests(reportId!)).toHaveLength(1);
+    expect(await act(reportId!, finance.token, 'approve')).toBe(200);
+    expect((await report(reportId!)).status).toBe('approved');
   });
 
-  it('puts a recalled one back to Draft, and nobody sets Approved by hand', async () => {
+  it('locks its expenses while it waits; a recall puts both back to Draft, and Submit sends it again', async () => {
     const exp = await insert(taxi(), spender.token);
-    await update({ id: exp.id, status: 'submitted' }, spender.token);
-    expect(await act(exp.id, spender.token, 'recall')).toBe(200);
+    const [reportId] = await submit([exp.id], spender.token);
+    await expect(update({ id: exp.id, amount: 41 }, spender.token)).rejects.toThrow(/waiting for approval/);
+    await expect(verify.hooks.run('crm_expense', 'delete', { id: exp.id }, { as: spender.token })).rejects.toThrow(/waiting for approval/);
+    expect(await act(reportId!, spender.token, 'recall')).toBe(200);
+    expect((await report(reportId!)).status).toBe('draft');
     expect((await row(exp.id)).status).toBe('draft');
-    await expect(update({ id: exp.id, status: 'approved' }, manager.token)).rejects.toThrow(/approved or rejected by its approver/);
+    await update({ id: exp.id, amount: 41 }, spender.token);
+    expect((await row(exp.id)).amount, 'a draft report\'s expense is the person\'s to correct').toBe(41);
+    await verify.actions.run('crm_expense_report', 'submit_expense_report', { as: spender.token, recordId: reportId! });
+    expect((await report(reportId!)).status).toBe('submitted');
+    expect(await openRequests(reportId!)).toHaveLength(1);
   });
 
-  it('finance reads every expense; another rep reads none of the spender\'s', async () => {
+  it('a rejected report rejects its expenses; Back to Draft reopens both to be corrected', async () => {
     const exp = await insert(taxi(), spender.token);
+    const [reportId] = await submit([exp.id], spender.token);
+    expect(await act(reportId!, manager.token, 'reject')).toBe(200);
+    expect((await report(reportId!)).status).toBe('rejected');
+    expect((await row(exp.id)).status).toBe('rejected');
+    await expect(update({ id: exp.id, amount: 39 }, spender.token)).rejects.toThrow(/rejected\. Move the report back to Draft/);
+    await verify.actions.run('crm_expense_report', 'reopen_expense_report', { as: spender.token, recordId: reportId! });
+    expect((await report(reportId!)).status).toBe('draft');
+    expect((await row(exp.id)).status).toBe('draft');
+  });
+
+  it('finance marks an approved report paid, with the date and reference; nobody else can, and a paid report stays as it is', async () => {
+    const exp = await insert(taxi(60), spender.token);
+    const [reportId] = await submit([exp.id], spender.token);
+    expect(await act(reportId!, manager.token, 'approve')).toBe(200);
+    await expect(verify.actions.run('crm_expense_report', 'mark_expense_report_paid', {
+      as: spender.token, recordId: reportId!, params: { payment_date: '2026-11-20' },
+    })).rejects.toThrow(/Only finance/);
+    await expect(verify.hooks.run('crm_expense_report', 'update', { id: reportId!, status: 'paid' }, { as: spender.token }))
+      .rejects.toThrow(/marked as paid by finance/);
+    await expect(verify.hooks.run('crm_expense_report', 'update', { id: reportId!, name: 'Renamed' }, { as: spender.token }))
+      .rejects.toThrow(/is approved, so it can no longer be changed/);
+    await verify.actions.run('crm_expense_report', 'mark_expense_report_paid', {
+      as: finance.token, recordId: reportId!, params: { payment_date: '2026-11-20', payment_reference: 'TRF-0042' },
+    });
+    expect(await report(reportId!)).toMatchObject({ status: 'paid', payment_date: '2026-11-20', payment_reference: 'TRF-0042' });
+    expect((await row(exp.id)).status, 'a paid report leaves its expenses Approved').toBe('approved');
+    await expect(verify.hooks.run('crm_expense_report', 'update', { id: reportId!, payment_reference: 'X' }, { as: spender.token }))
+      .rejects.toThrow(/is paid, so it can no longer be changed/);
+  });
+
+  it('a person cannot approve a report by hand; deleting a draft report frees its expenses', async () => {
+    const exp = await insert(taxi(), spender.token);
+    const [reportId] = await submit([exp.id], spender.token);
+    await expect(verify.hooks.run('crm_expense_report', 'update', { id: reportId!, status: 'approved' }, { as: manager.token }),
+      'held by its approval while it waits').rejects.toThrow();
+    expect(await act(reportId!, spender.token, 'recall')).toBe(200);
+    await expect(verify.hooks.run('crm_expense_report', 'update', { id: reportId!, status: 'approved' }, { as: spender.token }))
+      .rejects.toThrow(/approved or rejected by its approvers/);
+    await verify.hooks.run('crm_expense_report', 'delete', { id: reportId! }, { as: spender.token });
+    expect((await row(exp.id)).crm_expense_report ?? null, 'deleting a draft report frees its expenses').toBeNull();
+    const again = await submit([exp.id], spender.token);
+    expect(again, 'and they can be submitted again').toHaveLength(1);
+  });
+
+  it('refuses the whole selection, writing nothing, when an expense is someone else\'s or already on a report', async () => {
+    const mine = await insert(taxi(), spender.token);
+    const theirs = await insert(taxi(), loner.token);
+    await expect(submit([mine.id, theirs.id], spender.token)).rejects.toThrow(/not yours/);
+    expect((await row(mine.id)).crm_expense_report ?? null, 'nothing written').toBeNull();
+    const [reportId] = await submit([mine.id], spender.token);
+    await expect(submit([mine.id], spender.token)).rejects.toThrow(/already on an expense report/);
+    expect((await linesOf(reportId!)).length).toBe(1);
+  });
+
+  it('finance reads every report; another rep reads none of the spender\'s', async () => {
+    const exp = await insert(taxi(), spender.token);
+    const [reportId] = await submit([exp.id], spender.token);
+    expect((await verify.apiAs(finance.token, 'GET', `/data/crm_expense_report/${reportId}`)).status).toBe(200);
     expect((await verify.apiAs(finance.token, 'GET', `/data/crm_expense/${exp.id}`)).status).toBe(200);
     const other = await signUpPerson(verify, 'other-rep@expense-module.test', {
       name: 'Other Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
+    expect((await verify.apiAs(other.token, 'GET', `/data/crm_expense_report/${reportId}`)).status).not.toBe(200);
     expect((await verify.apiAs(other.token, 'GET', `/data/crm_expense/${exp.id}`)).status).not.toBe(200);
   });
 });
@@ -239,7 +377,7 @@ describe('an expense with no project goes to the spender\'s manager (expense_app
  * item 15, and the card's acceptance. Measured on the shipped app booted by
  * `@objectstack/verify`, through the platform's package disable.
  */
-describe('disabling either module leaves the other usable (hotcrm#2556)', () => {
+describe('disabling either module leaves the other usable (hotcrm#2556, hotcrm#2559)', () => {
   let verify: VerifyStack;
   let admin: string;
   let spender: Person;
@@ -279,24 +417,33 @@ describe('disabling either module leaves the other usable (hotcrm#2556)', () => 
     return walk(((body.item ?? body.data ?? body).navigation ?? []) as Rec[]).map((i) => String(i.id));
   };
 
-  it('with Project Delivery off, an expense has no Project field, and is recorded and approved by the manager', async () => {
+  it('with Project Delivery off, neither the expense nor the report has a Project field; a selection makes one report, approved by the manager', async () => {
     expect(await fieldsOf('crm_expense')).toContain('crm_project');
+    expect(await fieldsOf('crm_expense_report')).toContain('crm_project');
     expect((await verify.apiAs(admin, 'PATCH', `${pkg(PSA_ID)}/disable`)).status).toBe(200);
     try {
       expect(await fieldsOf('crm_expense')).not.toContain('crm_project');
+      expect(await fieldsOf('crm_expense_report')).not.toContain('crm_project');
       expect((await verify.apiAs(admin, 'GET', '/meta/app/crm_expenses')).status).toBe(200);
-      const exp = await verify.hooks.run('crm_expense', 'insert', {
-        name: `Lunch ${++k}`, expense_date: '2026-11-03', category: 'meals', amount: 25,
-      }, { as: spender.token });
-      await verify.hooks.run('crm_expense', 'update', { id: exp.id, status: 'submitted' }, { as: spender.token });
-      const [request] = await verify.rows('sys_approval_request', { record_id: exp.id, status: 'pending' });
+      const ids: string[] = [];
+      for (const amount of [25, 15]) {
+        const exp = await verify.hooks.run('crm_expense', 'insert', {
+          name: `Lunch ${++k}`, expense_date: '2026-11-03', category: 'meals', amount,
+        }, { as: spender.token });
+        ids.push(exp.id);
+      }
+      const result = (await verify.actions.run('crm_expense', 'submit_for_reimbursement', { as: spender.token, params: { _selectedIds: ids } })) as Rec;
+      expect(result.reports, 'no project to group by, so one report').toHaveLength(1);
+      const reportId = result.reports[0] as string;
+      const [request] = await verify.rows('sys_approval_request', { record_id: reportId, status: 'pending' });
       expect(request, 'the manager path runs').toBeTruthy();
       expect((await verify.apiAs(manager.token, 'POST', `/approvals/requests/${request!.id}/approve`, { comment: 'ok' })).status).toBe(200);
-      expect((await verify.rows('crm_expense', { id: exp.id }))[0]!.status).toBe('approved');
+      expect((await verify.rows('crm_expense_report', { id: reportId }))[0]!.status).toBe('approved');
+      expect((await verify.rows('crm_expense', { id: ids[0] }))[0]!.status).toBe('approved');
       // Measured at runtime: the project path never starts, so nothing reads
       // the absent project, and the manager path's run ends clean.
-      expect(await flowRuns(verify, 'expense_project_approval', exp.id)).toEqual([]);
-      const runs = await flowRuns(verify, 'expense_approval', exp.id);
+      expect(await flowRuns(verify, 'expense_report_project_approval', reportId)).toEqual([]);
+      const runs = await flowRuns(verify, 'expense_report_approval', reportId);
       expect(runs.length).toBeGreaterThan(0);
       for (const run of runs) expect(run.error ?? null, `run ${run.id}`).toBeNull();
     } finally {
@@ -310,11 +457,12 @@ describe('disabling either module leaves the other usable (hotcrm#2556)', () => 
     expect((await verify.apiAs(admin, 'PATCH', `${pkg(EXPENSE_ID)}/disable`)).status).toBe(200);
     try {
       expect((await verify.apiAs(admin, 'GET', '/meta/object/crm_expense')).status).toBe(404);
+      expect((await verify.apiAs(admin, 'GET', '/meta/object/crm_expense_report')).status).toBe(404);
       expect((await verify.apiAs(admin, 'GET', '/meta/app/crm_expenses')).status).toBe(404);
       expect((await verify.apiAs(admin, 'GET', '/meta/app/crm_psa')).status).toBe(200);
       const ids = await navIds('crm_psa');
       expect(ids).not.toContain('nav_my_expenses');
-      expect(ids).not.toContain('nav_expenses_to_approve');
+      expect(ids).not.toContain('nav_expense_reports_to_approve');
       expect(ids).toContain('nav_my_timesheets');
       const fields = await fieldsOf('crm_project');
       expect(fields, 'the cost summaries stay on the project').toContain('actual_expense_cost');

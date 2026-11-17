@@ -1,9 +1,9 @@
 ---
-title: 服務雲
+title: 服務
 description: 接收客戶問題，按優先順序路由，達成 SLA 目標，並在需要時升級處理。
 ---
 
-# 服務雲
+# 服務
 
 本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
 
@@ -15,7 +15,7 @@ description: 接收客戶問題，按優先順序路由，達成 SLA 目標，�
 | --- | --- |
 | [**工單**](/zh-Hant/docs/service/cases) | 工單記錄——主題、優先順序、狀態、解決方案。 |
 | [**SLA 與升級**](/zh-Hant/docs/service/sla-and-escalation) | 自動截止時間、升級流程，以及系統如何呈現違約。 |
-| [**知識庫**](/zh-Hant/docs/service/knowledge-base) | AI 助手讀取的支援知識。 |
+| [**知識庫**](/zh-Hant/docs/service/knowledge-base) | 智能體讀取的支援知識。 |
 
 ## 一個典型工單的生命週期
 
@@ -25,7 +25,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
                    ╲ Escalated ────────────╱
 ```
 
-1. **建立工單**（透過電子郵件、網頁表單、電話記錄，或由 **AI 助手**對來訪訊息進行分流）。抵達時沒有負責人的那些，會在插入時指派給負載最輕的**服務座席**——見[工單路由](/zh-Hant/docs/administration/setup#12-工單路由--一個佇列加一條規則)。
+1. **建立工單**（透過電子郵件、網頁表單、電話記錄，或由 **智能體**對來訪訊息進行分流）。抵達時沒有負責人的那些，會在插入時指派給負載最輕的**服務座席**——見[工單路由](/zh-Hant/docs/administration/setup#12-工單路由--一個佇列加一條規則)。
 2. **分配優先順序**——Low、Medium、High 或 Critical。*Critical* 會立即提醒**工單負責人**，而不是支援經理：這條提醒的收件人列表只有 `{caseRecord.owner_id}` 一項。
 3. **計算 SLA 目標**——每個工單都會根據優先順序獲得一個截止時間。
 4. **客服處理工單**，隨進度推進狀態。
@@ -34,7 +34,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 ## 系統為你做的事
 
-- **自動確定優先順序**——透過工單分流技能（AI 助手閱讀工單並推薦優先順序）。
+- **自動確定優先順序**——透過工單分流技能（智能體閱讀工單並推薦優先順序）。
 - **自動升級**——只針對 Critical 工單：流程把它們標記為 *Escalated*、提醒原來那位客服，並把工單交給未結工單最少的那位服務經理（若無人持有該職位，則原地不動）。High 工單永遠不會被自動升級，無論帳戶是什麼：要升級它，靠的是手動的 **Escalate Case** 按鈕。
 - **嚴重時通知**——每當工單被設為 Critical 時，站內訊息 + 郵件只發給**工單負責人**。這就是工單升級流程的 notify 節點，其收件人列表只有 `{caseRecord.owner_id}` 一項；本應用中不存在 `support_manager@example.com` 這個收件人。
 - **升級時通知**——不會給任何升級團隊發郵件：`escalation_team@example.com` 在本應用中根本不存在。狀態轉為 *Escalated* 真正觸發的，是 `case_status_side_effects` 鉤子開出的那條**次日到期、優先順序為緊急、歸帳戶負責人的跟進任務**。
@@ -45,7 +45,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 ## 服務 AI 技能
 
-[服務技能](/zh-Hant/docs/ai-copilot/service-copilot) 內建於每個工單中。你可以問助手：
+接入智能體後，[服務技能](/zh-Hant/docs/ai-copilot/service-copilot)可以用在任何工單上。你可以問它：
 
 - *"分流這個工單"*——根據主題、描述和客戶等級分配優先順序。
 - *"建議一個解決方案"*——這是兩個技能的事，不是一個。**Customer 360°** 讀取已發布的知識文章（`crm_knowledge_article` 就是它查詢的一個普通物件），**郵件撰寫**寫客戶回覆。工單分流兩件都不做：它沒有檢索類工具，也沒有起草這一步。
@@ -66,7 +66,7 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 - **服務概覽**（Service Overview）——服務的那個儀表板，應用的第一個條目，服務專員與服務經理打開應用時就落在這裡。側邊欄上的 label 就是這個；沒有任何側邊欄條目叫 *Service Dashboard*。
 - **工單**（Cases）——工單清單。
-- **知識**（Knowledge）——Copilot 讀取的知識文章（`crm_knowledge_article`）。
+- **知識**（Knowledge）——智能體讀取的知識文章（`crm_knowledge_article`）。
 
 旁邊是 **客戶與聯絡人**（Accounts、Contacts）、**我的工作**（My Cases、Inbox、My Tasks、My Calendar）、**報表**下的三張工單報表與 Customer Churn Signals，以及**說明**下的服務手冊。銷售代表不處理工單：他們的啟動器不提供這個應用，用位址打開也看不到任何工單條目，他們在 Sales 應用的 **Sales** 分組末尾找到知識庫。
 
@@ -79,4 +79,4 @@ New ──► In Progress ──► Waiting on Customer ──► Resolved ─�
 
 - [工單](/zh-Hant/docs/service/cases)——核心工單記錄。
 - [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)——優先順序如何驅動截止時間與升級。
-- [知識庫](/zh-Hant/docs/service/knowledge-base)——AI Copilot 讀取的內容。
+- [知識庫](/zh-Hant/docs/service/knowledge-base)——智能體讀取的內容。

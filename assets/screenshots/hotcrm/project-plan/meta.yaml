@@ -1,0 +1,34 @@
+id: hotcrm-project-plan
+kind: screenshot
+scope: hotcrm
+category: project-delivery
+status: published
+captured: '2026-11-17'
+capture:
+  application: HotCRM
+  platformVersion: '18.5.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  zhHansDataset: 'the zh-CN seed story: the same boot with i18n.defaultLocale set to zh-CN, then pnpm demo:staff'
+  signedInAs: 'Project Manager (crm_project_manager), a local user added for the capture and made owner of the Stark pilot, since pnpm demo:staff staffs sales and service only and a project manager reads the projects they own'
+  view: 'crm_project_task / project_plan (Project Delivery app, Projects › Project Plan)'
+  theme: light
+  viewport: 1600x900
+  aspectRatio: '16:9'
+  deviceScaleFactor: 2
+# Record: Stark Medical Pilot Delivery (PRJ-00001), the shipped delivery project
+# with a full plan; zh-CN story: 斯塔克医疗试点交付.
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Project plan on a Gantt
+  zh-Hans: 甘特图上的项目计划
+alt:
+  en: The Stark Medical pilot's seven tasks on a Gantt, with start and end dates, predecessor links, progress by status and today's marker.
+  zh-Hans: 斯塔克医疗试点的七个任务排在甘特图上：开始与结束日期、前置任务连线、按状态着色的进度和今天标记。
+purpose:
+  en: 'Show Project Delivery: a delivery project planned task by task, as the project manager sees it.'
+  zh-Hans: 展示项目交付：项目经理眼中逐项排好的交付计划。

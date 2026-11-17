@@ -3,17 +3,20 @@ kind: screenshot
 scope: hotcrm
 category: ui
 status: published
-captured: '2026-10-20'
+captured: '2026-11-17'
 capture:
   application: HotCRM
-  platformVersion: '18.0.0'
+  platformVersion: '18.5.0'
   browserLocales:
     en: en-US
     zh-Hans: zh-CN
   dataset: 'shipped seed data + pnpm demo:staff, fresh database'
-  view: crm_opportunity / pipeline_kanban
+  zhHansDataset: 'the zh-CN seed story: the same boot with i18n.defaultLocale set to zh-CN, then pnpm demo:staff'
+  signedInAs: 'Sales Manager (sales.manager)'
+  view: 'crm_opportunity / pipeline_kanban'
   theme: light
   viewport: 1600x900
+  deviceScaleFactor: 2
   aspectRatio: '16:9'
 locales:
   en: en.png

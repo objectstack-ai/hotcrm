@@ -10,8 +10,8 @@ import { esES } from './es-ES';
 /**
  * The expense module (hotcrm#2556) — every `sys_email_template` row this
  * package's `notify` nodes name: four locale packs crossed with the two
- * notices that turn an expense on an over or locked project back to Draft
- * (`expense_project_approval`). `bundle()` comes along this module's edge
+ * notices that turn an expense report on an over or locked project back to
+ * Draft (`expense_report_project_approval`, hotcrm#2559). `bundle()` comes along this module's edge
  * into sales, as `src/service/email-templates/` takes it.
  */
 export const ExpenseEmailTemplates: EmailTemplateDefinition[] = bundle({

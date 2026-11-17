@@ -11,7 +11,7 @@ import { defineBook } from '@objectstack/spec';
 export const CrmExpenseManual = defineBook({
   name: 'crm_expense_manual',
   label: 'HotCRM Expenses Manual',
-  description: 'Recording an expense with its receipt, asking before a trip, who approves them, and what reaches a project.',
+  description: 'Recording an expense with its receipt, asking before a trip, sending expenses on a report, who approves them, their payment back, and what reaches a project.',
   icon: 'receipt',
   order: 7,
   groups: [

@@ -2,16 +2,16 @@
 
 import type { EmailTemplatePack } from '../../sales/email-templates/_bundle';
 
-/** Español (es-ES) — plantillas de notificación del módulo de gastos (`expense_project_approval`). */
+/** Español (es-ES) — plantillas de notificación del módulo de gastos (`expense_report_project_approval`). */
 export const esES: EmailTemplatePack = {
-  'crm.expense_project_over': {
-    label: 'Gasto en un proyecto cerrado',
-    subject: 'Gasto devuelto: {{name}}',
-    bodyHtml: '<p>Tu gasto {{name}} se envió en {{project}}, que está cerrado o cancelado y no admite gastos. Ha vuelto a Borrador: muévelo a un proyecto abierto y envíalo allí.</p>',
+  'crm.expense_report_project_over': {
+    label: 'Informe de gastos en un proyecto cerrado',
+    subject: 'Informe de gastos devuelto: {{name}}',
+    bodyHtml: '<p>Tu informe de gastos {{name}} se envió en {{project}}, que está cerrado o cancelado y no admite gastos. Ha vuelto a Borrador: elimina el informe, mueve sus gastos a un proyecto abierto y envíalos de nuevo.</p>',
   },
-  'crm.expense_project_locked': {
-    label: 'Gasto en un proyecto bloqueado',
-    subject: 'Gasto devuelto: {{name}}',
-    bodyHtml: '<p>Tu gasto {{name}} se envió en {{project}}, que está bloqueado para horas y gastos. Ha vuelto a Borrador: envíalo de nuevo cuando el jefe de proyecto desmarque Bloquear horas y gastos.</p>',
+  'crm.expense_report_project_locked': {
+    label: 'Informe de gastos en un proyecto bloqueado',
+    subject: 'Informe de gastos devuelto: {{name}}',
+    bodyHtml: '<p>Tu informe de gastos {{name}} se envió en {{project}}, que está bloqueado para horas y gastos. Ha vuelto a Borrador: envíalo de nuevo cuando el jefe de proyecto desmarque Bloquear horas y gastos.</p>',
   },
 };

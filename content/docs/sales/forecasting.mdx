@@ -7,7 +7,7 @@ description: Pipeline snapshots by owner and period — the foundation of revenu
 
 A **forecast** is a frozen snapshot of pipeline at a moment in time. One record per owner per period — typically one per sales rep per quarter or per month. You build a trend (“how did our Q3 number change week-over-week?”) by stacking snapshots, not by re-reading live opportunity data.
 
-This page is about the **forecast object** that stores those snapshots. For the AI conversation that *generates* a forecast narrative, see **AI Copilot → Revenue Forecasting**.
+This page is about the **forecast object** that stores those snapshots. For the AI conversation that *generates* a forecast narrative, see the **Revenue Forecasting** skill under [AI and Agents › Skills](/docs/ai-copilot/skills).
 
 ## What lives on a forecast record
 
@@ -54,7 +54,7 @@ So you'll never see a record labelled “2026-07-01 through ???” — only the 
 There are three sources, recorded in the `source` field:
 
 1. **Scheduled** — the **Forecast Snapshot** flow runs nightly at 3 AM and snapshots the current quarter for every rep who owns at least one live deal. This is the spine of the historical trend. Re-running it refreshes **the row it wrote itself** — the one whose **Source** is *Scheduled snapshot* — so numbers move down as well as up. It refreshes nothing else: a row a person or an agent entered is never adopted, overwritten or re-stamped. It never writes **Quota**, which stays whatever a manager set.
-2. **AI** — a value nothing in HotCRM writes. The **Revenue Forecasting** Copilot skill is read-only: it composes `describe_object`, `aggregate_data`, `query_records` and `visualize_data` over live opportunity data and answers **in the conversation** — weighted pipeline, at-risk deals, and a chart when one carries the answer better than prose. It opens no forecast row, and there is nowhere to file the exchange either: **Notes** is the only narrative column, and a person types it. The value is reserved for a snapshot some agent or integration of your own writes; a Copilot conversation will never produce one.
+2. **AI** — a value nothing in HotCRM writes. The **Revenue Forecasting** skill is read-only: it composes `describe_object`, `aggregate_data`, `query_records` and `visualize_data` over live opportunity data and answers **in the conversation** — weighted pipeline, at-risk deals, and a chart when one carries the answer better than prose. It opens no forecast row, and there is nowhere to file the exchange either: **Notes** is the only narrative column, and a person types it. The value is reserved for a snapshot some agent or integration of your own writes; a AI agent conversation will never produce one.
 3. **Manual** — a manager enters a number directly. Used for adjustments and overrides.
 
 You can have all three for the same owner/period — they sit next to each other in the trend chart, so disagreements are visible.

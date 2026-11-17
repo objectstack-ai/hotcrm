@@ -138,6 +138,10 @@ const ACCOUNT_CHILD_COVERAGE: Record<string, 'derived' | 'own_only' | 'partial'>
   // and the project manager named on the row, and finance by position — never
   // through the account. A shared account does not carry its projects.
   crm_project: 'partial',
+  // #2559: an expense report is private and reached through its approver
+  // rule; its optional Account says whose spend it was, and a shared account
+  // does not carry its reports.
+  crm_expense_report: 'partial',
   crm_task: 'own_only',
   // #592. `crm_event` is `private` with no sharing rule of its own, exactly
   // like `crm_task` — the two are the same kind of record (a rep's personal
@@ -599,8 +603,11 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_timesheet: { en: 'Timesheet', 'zh-Hans': '工时单', 'zh-Hant': '工時單' },
   crm_time_entry: { en: 'Time Entry', 'zh-Hans': '工时明细', 'zh-Hant': '工時明細' },
   crm_expense: { en: 'Expense', 'zh-Hans': '费用', 'zh-Hant': '費用' },
+  crm_expense_report: { en: 'Expense Report', 'zh-Hans': '报销单', 'zh-Hant': '報銷單' },
   // #2578 — the travel request, labelled 出差申请 in the zh-CN pack.
   crm_expense_request: { en: 'Travel Request', 'zh-Hans': '出差申请', 'zh-Hant': '出差申請' },
+  // #2579 — its legs, 行程明细 in the zh-CN pack.
+  crm_expense_request_line: { en: 'Itinerary Line', 'zh-Hans': '行程明细', 'zh-Hant': '行程明細' },
   // Both Chinese labels are 工单/工單, the pack's `crm_case.label` and its
   // Traditional form. The zh-Hant cell read 「案件」 until #837 — a fourth
   // spelling of this one object, green here while the automation page spelled
@@ -658,9 +665,9 @@ describe('the OWD table lists every registered object, in every locale', () => {
    * `docs-drift.test.ts` uses for `CRON_LABEL`.
    */
   const COUNT_WORD: Record<Locale, Record<number, string>> = {
-    en: { 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen', 15: 'fifteen', 16: 'sixteen', 17: 'seventeen', 18: 'eighteen', 19: 'nineteen' },
-    'zh-Hans': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六', 17: '十七', 18: '十八', 19: '十九' },
-    'zh-Hant': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六', 17: '十七', 18: '十八', 19: '十九' },
+    en: { 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen', 15: 'fifteen', 16: 'sixteen', 17: 'seventeen', 18: 'eighteen', 19: 'nineteen', 20: 'twenty' },
+    'zh-Hans': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六', 17: '十七', 18: '十八', 19: '十九', 20: '二十' },
+    'zh-Hant': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六', 17: '十七', 18: '十八', 19: '十九', 20: '二十' },
   };
 
   it('the row ledger answers exactly the objects this app registers', () => {

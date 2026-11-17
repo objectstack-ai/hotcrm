@@ -1,0 +1,50 @@
+---
+title: "Scenario: A Product Sale"
+description: A product sale end to end in HotCRM — lead, opportunity, quote, order, contract, invoice and payment — and where each step hands over.
+---
+
+# Scenario: a product sale
+
+A company sells equipment or software licences. A prospect asks for a demo, the deal is won on a quote, the goods ship, finance invoices and the customer pays. This page follows that sale through HotCRM, one step per record, and says plainly where HotCRM stops.
+
+| Step | Record | App | Who |
+| --- | --- | --- | --- |
+| 1 | Lead | Sales | Marketing or a sales rep |
+| 2 | Account, contact, opportunity | Sales | Sales rep |
+| 3 | Quote | Sales | Sales rep; a large deal is approved by sales management first |
+| 4 | Contract | Sales | Drafted from the accepted quote |
+| 5 | Order | Sales | Sales rep |
+| 6 | Invoice and payment | Order to Cash | Finance |
+
+## 1. The lead
+
+The prospect fills in the web form, is imported, or is typed in under **Leads**. A lead from the web form is assigned by the lead-routing rule; any other lead belongs to whoever created it. See [Leads](/docs/sales/leads).
+
+## 2. Converting it
+
+When the lead is qualified, **Convert Lead** turns it into an **account**, a **contact** and an **opportunity** in one step. The opportunity moves through its stages, and its line items are picked from a price book. See [Opportunities](/docs/sales/opportunities).
+
+## 3. The quote
+
+A **quote** prices the deal at the moment it is presented; no discount may exceed 60 %. A deal of 100,000 or more is approved by a sales manager, and above 500,000 by a sales director too, before its quote can be accepted. Presenting a quote needs a contact, and accepting it needs the signed copy. See [Quotes](/docs/sales/quotes) and [Approvals](/docs/revenue/approvals).
+
+## 4. Winning the deal
+
+Accepting the quote closes the opportunity as *Closed Won* and drafts a **contract** from the quote. Winning also sends the `crm.opportunity.closed_won` event to your billing system, if you have pointed one at it. See [Contracts](/docs/sales/contracts) and [Boundary with Finance Software](/docs/revenue/billing-handoff).
+
+## 5. The order
+
+An **order** records what the customer bought this time: products, quantities and prices, with a subtotal from its lines. Create it under **Orders**, or from the account; it may sit under the contract. **Confirmed** locks its lines. Its **Fulfillment Status** and **Shipped Date** are typed by hand or imported from the system that ships. See [Orders](/docs/sales/orders).
+
+**Not shipped:** an order is not created from the accepted quote; you enter it. HotCRM keeps no stock and no delivery notes, so shipping does not move a quantity anywhere.
+
+## 6. The invoice and the payment
+
+Finance records the **invoice** it issued, and later the **payment** received, in the **Order to Cash** app, or imports both from the ERP. Each one belongs to a **contract**; sales sees on the contract what is invoiced, paid and overdue. See [Invoices and Payments](/docs/order-to-cash/invoices-and-payments).
+
+**Not shipped:** HotCRM does not issue an invoice, and an invoice belongs to a contract, not to an order. An order with no contract has no invoice in HotCRM; it is invoiced in your finance software.
+
+## Related
+
+- [Scenario: Project Services](/docs/getting-started/scenario-project-services)
+- [Scenario: A Subscription](/docs/getting-started/scenario-subscription)

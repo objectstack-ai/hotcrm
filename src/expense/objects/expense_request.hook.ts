@@ -4,7 +4,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
 
 /**
  * The approval decides a travel request (hotcrm#2578), as it decides an
- * expense (`./expense.hook.ts`): submitting starts an approval, which writes
+ * expense report (`./expense_report.hook.ts`): submitting starts an approval, which writes
  * Approved or Rejected when the approver decides. A person who sets either
  * status is refused, so nobody approves a trip by editing the record; an
  * administrator may, to repair a request whose approval cannot run.

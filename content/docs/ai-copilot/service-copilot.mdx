@@ -6,8 +6,8 @@ description: The service-side AI skills — triage cases, see full customer hist
 # Service Skills
 
 HotCRM does not ship an assistant of its own. It ships **skills** — packaged AI
-abilities that attach to the **platform assistant** (`ask`) that every ObjectStack
-environment already provides. When a service agent opens the assistant panel on a
+abilities that attach to the **platform assistant** (`ask`) that an ObjectStack
+environment can provide; a local community-edition boot runs none, and then the agent is the one you [connect over MCP](/docs/ai-copilot/connect-your-agent). When a service agent opens the assistant panel on a
 case, the skills below are what it knows how to do.
 
 > **Where the personas went.** Earlier versions of this page described a "Service
@@ -102,7 +102,7 @@ points at **Send Email** on the contact record, where a person reviews and sends
 
 Every service skill composes on Live Data: the assistant re-reads the case object's
 schema before answering, so a field an admin added this morning is usable this
-afternoon. See [Live Schema (Wow #1)](/docs/ai-copilot/live-schema).
+afternoon. See [Live Schema](/docs/ai-copilot/live-schema).
 
 ## Tips for agents
 

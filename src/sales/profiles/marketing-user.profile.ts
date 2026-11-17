@@ -2,7 +2,7 @@
 
 import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
 import { privateOpportunityPolicy } from './_private-opportunity';
-import { EXPENSE_OWN } from './_expense-grants';
+import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT } from './_expense-grants';
 
 export const MarketingUserProfile = {
   name: 'marketing_user',
@@ -18,7 +18,9 @@ export const MarketingUserProfile = {
   objects: {
     // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN,
+    crm_expense_report: EXPENSE_REPORT_OWN,
     crm_expense_request: EXPENSE_OWN,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. Lead and contact list exports are marketing's
     // core targeting workflow; account/opportunity back the campaign-ROI

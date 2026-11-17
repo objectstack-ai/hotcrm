@@ -132,7 +132,7 @@ A case that was escalated before keeps its first escalation. Reopened and set ba
 
 By default cases are **private**. But **critical open cases** are automatically shared by two rules that each name their own rung: *Escalated Cases Sharing* grants read + edit to `crm_service_manager`, and *Escalated Cases — Service Director* grants read to `crm_service_director`. Positions are flat, so nothing rolls up from one rung to the other — each is named explicitly, and that is why the pair exists. So when something blows up, leadership doesn't have to ask for access.
 
-## How the AI Copilot uses SLA
+## How an AI agent uses SLA
 
 The [Case Triage skill](/docs/ai-copilot/skills#case-triage) considers SLA when recommending a priority:
 
@@ -140,7 +140,7 @@ The [Case Triage skill](/docs/ai-copilot/skills#case-triage) considers SLA when 
 - A prospect with *"production is down"* in the description gets **Critical** despite not being a paying customer.
 - **Case Triage does not** pattern-match against similar past cases. It declares `describe_object` and `get_record` only, so it reads the one case in front of it and can neither search [knowledge articles](/docs/service/knowledge-base) nor pull up the account's other cases. Matching published articles on a case's category or tags is **Customer 360°**'s job, and a separate ask.
 
-If priority resolves to **Critical**, the Copilot immediately recommends escalation and drafts an internal notification message.
+If priority resolves to **Critical**, the AI agent immediately recommends escalation and drafts an internal notification message.
 
 ## Recommended cadence
 

@@ -113,8 +113,8 @@ once each lands.
   (「检查提示」). Required: purpose, destination, the two dates, the estimated amount.
 - **Statuses**, all present from the first card: draft · submitted · approved · rejected ·
   cancelled · closed. Approved requests are cancelled before the trip or closed after it; both are
-  final. Once approved, the planned values (purpose, destination, dates, estimated amount) no
-  longer change: a new plan is a new request.
+  final. Once approved, the planned values (purpose, destination, dates, estimated amount, and
+  with F3d the project) no longer change: a new plan is a new request.
 - **Approval** (F3a): one tier, the traveler's manager, with the expense's no-manager fallback;
   ⛔ no finance tier, the money check stays on the report. With Project Delivery on, a request on a
   project goes to its project manager instead (F3d; the flow sits in the expense package with the
@@ -122,7 +122,13 @@ once each lands.
   [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)).
 - **Itinerary lines** (F3b, `crm_expense_request_line`): optional segments (flight, train, car,
   hotel, other), from, to, dates, requirements and a booking reference an agent writes back after
-  booking. ⛔ No amounts, so there are never two totals.
+  booking. ⛔ No amounts, so there are never two totals. As built
+  ([hotcrm#2579](https://github.com/objectstack-ai/hotcrm/issues/2579)): a `controlled_by_parent`
+  detail entered from the request page's *Itinerary Lines* tab, as order lines are; from Submitted
+  on, its planned values carry a `parent`-scoped `readonlyWhen` and a hook refuses a person's change,
+  add, removal or move out loud (the edit dialog does not evaluate a `parent` predicate on 18.5.0, so
+  the engine's silent drop alone would read as saved); the booking reference stays writable at
+  every status.
 - **The report cites a request** (F3c): optional, N reports to one request. The request shows the
   estimate, the amount reported, the difference and whether it is over; over only warns. The
   request closes when its last open report is paid.
@@ -142,6 +148,16 @@ once each lands.
 - An expense skill in the package; Submit and Mark as Paid opened to the agent.
 - Not measured on 18.5.0: an agent creating an expense from a receipt image, and a skill calling an
   action.
+
+## Measured on 2026-11-17 (hotcrm#2559)
+
+Where **one report per project** lives: in the expense package's Submit for Reimbursement action. It
+groups the selected expenses by the expense's `crm_project` value, which a record carries only while
+PSA contributes the field, and writes it onto the report, where PSA contributes the same field. With
+PSA on, two projects and one expense with no project made three reports, each routed to its own
+approver; with PSA off, every selection made one report, approved by the manager, with no error in
+any flow run (`test/psa-approvals.test.ts`, `test/expense-module.test.ts`). The project-path approval
+flow stays in the expense package with stage 1's (hotcrm#2575).
 
 ## Why this shape
 
@@ -196,13 +212,18 @@ What it settles, for [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issu
    `pnpm lint --strict` fails on ([objectstack#34616](https://github.com/objectstack-ai/objectstack/issues/34616);
    the 2026-11-16 probe ran a build, not `lint --strict`, and missed it). `expense_project_approval`,
    its insert twin and their two notices are registered by the expense package, in a commit of their
-   own. PSA still contributes the Project field and keeps the cost summaries.
+   own. PSA still contributes the Project field and keeps the cost summaries. The travel request's
+   project path, `expense_request_project_approval` and its insert twin
+   ([hotcrm#2581](https://github.com/objectstack-ai/hotcrm/issues/2581), F3d), sits there on the same
+   terms and is on the same move-back list; unlike the expense's it sends no notice and turns
+   nothing back, so it takes no email template with it.
 2. **They move back to PSA once objectstack#34616 ships**, on
    [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575), blocked on it and on the
    platform bump that carries it.
 3. **With PSA disabled only the manager path runs.** The Project field leaves the record, so the
    project path's entry condition is false and nothing reads the absent project; measured at runtime
-   and pinned in `test/expense-module.test.ts`.
+   and pinned in `test/expense-module.test.ts`, and for the travel request in
+   `test/expense-request.test.ts`.
 
 | When | Words |
 | --- | --- |

@@ -13,9 +13,9 @@ type FlowEdge = Flow['edges'][number];
  * `approver` (the project's Project Manager when the timesheet was created,
  * stamped by its hook), who decides from the approvals Inbox. The expense's
  * approval lived here too until `crm_expense` moved to the expense module
- * (hotcrm#2556); an expense on a project is now approved by
- * `src/expense/flows/expense-project-approval.flow.ts`, which shares these
- * notes. Shaped as
+ * (hotcrm#2556); expenses on a project are now approved on their report by
+ * `src/expense/flows/expense-report-project-approval.flow.ts` (hotcrm#2559),
+ * which shares these notes. Shaped as
  * `opportunity_approval` is
  * (`src/sales/flows/opportunity-approval.flow.ts`, which carries the long
  * notes): approval nodes with `lockRecord`, `onEmptyApprovers: 'admin_rescue'`

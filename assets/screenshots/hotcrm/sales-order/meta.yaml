@@ -1,0 +1,31 @@
+id: hotcrm-sales-order
+kind: screenshot
+scope: hotcrm
+category: sales
+status: published
+captured: '2026-11-17'
+capture:
+  application: HotCRM
+  platformVersion: '18.5.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  zhHansDataset: 'the zh-CN seed story: the same boot with i18n.defaultLocale set to zh-CN, then pnpm demo:staff'
+  signedInAs: 'Sales Representative, NA team (na.rep)'
+  record: 'SO-0002 Globex Seat Expansion Order (confirmed, partially shipped), Order Lines tab; zh-CN story: 环球工业席位扩容订单'
+  theme: light
+  viewport: 1440x1024
+  deviceScaleFactor: 2
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Sales order with its lines
+  zh-Hans: 销售订单及订单行
+alt:
+  en: A confirmed sales order with its account, total, order date and fulfilment status, and the Order Lines tab listing products, quantities, prices, discounts and line totals.
+  zh-Hans: 已确认的销售订单：所属客户、总金额、下单日期与发货状态，以及列出产品、数量、单价、折扣和行合计的订单行页签。
+purpose:
+  en: 'Show Sales: a deal booked as an order with its lines, without a quote first.'
+  zh-Hans: 展示销售：不经报价直接下单的订单及其订单行。

@@ -1,6 +1,6 @@
 ---
-title: 即時結構（Wow #1）
-description: HotCRM 的 AI 在結構變更發生的那一刻就能看到——無需重新訓練、無需重啟、無需等待。
+title: 即時結構
+description: 在 HotCRM 上工作的智能體，在結構變更發生的那一刻就能看到——無需重新訓練、無需重啟、無需等待。
 ---
 
 # 即時結構——會自我改寫的 CRM
@@ -14,6 +14,8 @@ HotCRM 與眾不同。**結構即系統提示詞。**
 每次助理回答資料問題時，它都會針對 `@objectstack/runtime` 的元資料服務呼叫 `describe_object`——該服務會重新讀取即時註冊表。在 10:00:00 新增一個欄位，下一位使用者在 10:00:05 提問時就能看到它。
 
 這個助理就是平台的 `ask` 智慧體。HotCRM 不自行撰寫任何智慧體——應用只交付**技能（skills）**，技能依 surface 親和性掛載到平台智慧體上（ADR-0063 §1/§2）。下面示範的行為，來自 HotCRM 的 `live_data` 技能搭載於 `ask` 之上。
+
+你[透過 MCP 接入](/zh-Hant/docs/ai-copilot/connect-your-agent)的智能體也有同樣的特性：它的 `describe_object` 工具讀取的是同一個即時註冊表，所以剛剛新增的欄位，就會出現在它的下一個回答裡。
 
 ## 30 秒示範
 
