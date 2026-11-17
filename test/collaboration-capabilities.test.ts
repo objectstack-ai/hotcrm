@@ -83,6 +83,8 @@ const FILES_ENABLED = [
   'crm_opportunity',
   'crm_project',
   'crm_quote',
+  // #2555: an order carries the customer's purchase order and delivery papers.
+  'crm_sales_order',
 ] as const;
 
 /**

@@ -126,6 +126,8 @@ const ACCOUNT_CHILD_COVERAGE: Record<string, 'derived' | 'own_only' | 'partial'>
   // account) in `test/parent-derived-reach.test.ts`.
   crm_quote: 'derived',
   crm_contract: 'derived',
+  // #2555: an order is account data, as a quote is, and its lines follow it.
+  crm_sales_order: 'derived',
   // #2315: Order to Cash's three derive from the CONTRACT, which derives from
   // the account, so a shared account carries them as it carries its contracts.
   // Their `crm_account` lookup is a stamped copy the related list reads.
@@ -573,6 +575,9 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_quote: { en: 'Quote', 'zh-Hans': '报价', 'zh-Hant': '報價' },
   crm_quote_line_item: { en: 'Quote Line Item', 'zh-Hans': '报价行项', 'zh-Hant': '報價明細' },
   crm_contract: { en: 'Contract', 'zh-Hans': '合同', 'zh-Hant': '合約' },
+  // #2555 — the order and its lines, under the account.
+  crm_sales_order: { en: 'Order', 'zh-Hans': '订单', 'zh-Hant': '訂單' },
+  crm_sales_order_line: { en: 'Order Line', 'zh-Hans': '订单行', 'zh-Hant': '訂單行' },
   // #2315 — Order to Cash, under the contract.
   crm_billing_milestone: { en: 'Billing Milestone', 'zh-Hans': '回款节点', 'zh-Hant': '回款節點' },
   crm_invoice: { en: 'Invoice', 'zh-Hans': '发票', 'zh-Hant': '發票' },
@@ -644,9 +649,9 @@ describe('the OWD table lists every registered object, in every locale', () => {
    * `docs-drift.test.ts` uses for `CRON_LABEL`.
    */
   const COUNT_WORD: Record<Locale, Record<number, string>> = {
-    en: { 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen', 15: 'fifteen', 16: 'sixteen', 17: 'seventeen' },
-    'zh-Hans': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六', 17: '十七' },
-    'zh-Hant': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六', 17: '十七' },
+    en: { 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen', 15: 'fifteen', 16: 'sixteen', 17: 'seventeen', 18: 'eighteen', 19: 'nineteen' },
+    'zh-Hans': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六', 17: '十七', 18: '十八', 19: '十九' },
+    'zh-Hant': { 3: '三', 4: '四', 5: '五', 6: '六', 7: '七', 8: '八', 9: '九', 10: '十', 11: '十一', 12: '十二', 13: '十三', 14: '十四', 15: '十五', 16: '十六', 17: '十七', 18: '十八', 19: '十九' },
   };
 
   it('the row ledger answers exactly the objects this app registers', () => {

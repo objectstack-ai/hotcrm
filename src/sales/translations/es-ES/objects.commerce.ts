@@ -6,7 +6,8 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * Español (es-ES) — `objects` translations for the COMMERCE family:
  * what gets sold and on what paper — quotes, contracts, products.
  *
- * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`,
+ * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_sales_order`,
+ * `crm_sales_order_line`, `crm_product`,
  * `crm_price_book`, `crm_price_book_entry`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
@@ -96,6 +97,80 @@ export const commerce: Record<string, ObjectTranslationData> = {
       contract_terms: { label: 'Términos' },
       signing_and_documents: { label: 'Firma y Documentos' },
       notes: { label: 'Notas' },
+    },
+  },
+  // The order and its lines (REQ-0010, hotcrm#2555).
+  crm_sales_order: {
+    _validations: {
+      shipped_after_order: { message: 'La Fecha de Envío no puede ser anterior a la Fecha del Pedido' },
+      sales_order_status_progression: { message: 'Este cambio de estado no está permitido. Un pedido avanza Borrador → Confirmado → Completado; Confirmado puede volver a Borrador, y Borrador o Confirmado pueden pasar a Cancelado. Completado y Cancelado son definitivos.' },
+    },
+    label: 'Pedido',
+    pluralLabel: 'Pedidos',
+    description: 'Lo que un cliente pidió, sus líneas y totales, y cuánto se ha enviado',
+    fields: {
+      owner_id: { label: 'Propietario del Pedido' },
+      order_number: { label: 'Número de Pedido' },
+      name: { label: 'Nombre del Pedido' },
+      crm_account: { label: 'Cuenta' },
+      crm_contact: { label: 'Contacto' },
+      crm_opportunity: { label: 'Oportunidad' },
+      order_date: { label: 'Fecha del Pedido' },
+      crm_contract: { label: 'Contrato' },
+      customer_po_number: { label: 'N.º de Orden de Compra del Cliente', help: 'El número de la orden de compra del propio cliente, tal como él la citará.' },
+      description: { label: 'Descripción' },
+      subtotal: { label: 'Subtotal' },
+      discount: { label: 'Descuento %' },
+      discount_amount: { label: 'Monto de Descuento' },
+      tax: { label: 'Impuesto' },
+      shipping_handling: { label: 'Envío y Manipulación' },
+      total_price: { label: 'Precio Total' },
+      payment_terms: { label: 'Términos de Pago' },
+      shipped_date: { label: 'Fecha de Envío' },
+      billing_address: { label: 'Dirección de Facturación' },
+      shipping_address: { label: 'Dirección de Envío' },
+      external_ref: { label: 'Referencia Externa', help: 'El número del pedido en otro sistema. Una importación con la misma referencia actualiza este pedido.' },
+      status: { label: 'Estado', options: { draft: 'Borrador', confirmed: 'Confirmado', completed: 'Completado', cancelled: 'Cancelado' } },
+      fulfillment_status: { label: 'Estado de Envío', options: { not_shipped: 'No Enviado', partially_shipped: 'Enviado Parcialmente', shipped: 'Enviado' } },
+    },
+    _views: {
+      all_sales_orders: { label: 'Todos los Pedidos' },
+      order_board: { label: 'Tablero de Pedidos' },
+      orders_to_ship: { label: 'Por Enviar' },
+    },
+    _sections: {
+      basic: { label: 'Información del Pedido' },
+      pricing: { label: 'Precios' },
+      delivery: { label: 'Envío' },
+      address: { label: 'Direcciones' },
+      system: { label: 'Sistema' },
+    },
+  },
+  // The order and its lines (REQ-0010, hotcrm#2555).
+  crm_sales_order_line: {
+    _validations: {
+      unit_price_positive: { message: 'El precio de venta no puede ser negativo' },
+      product_or_title: { message: 'Elija un producto o escriba un Título del producto' },
+    },
+    label: 'Línea de Pedido',
+    pluralLabel: 'Líneas de Pedido',
+    description: 'Una línea de un pedido',
+    fields: {
+      crm_sales_order: { label: 'Pedido' },
+      crm_product: { label: 'Producto' },
+      product_title: { label: 'Título del producto', help: 'Lo que vende esta línea. Se rellena con el producto elegido; escríbalo si no hay producto.' },
+      description: { label: 'Descripción' },
+      quantity: { label: 'Cantidad' },
+      list_price: { label: 'Precio de Lista', help: 'El precio de lista del producto cuando se puso en esta línea.' },
+      unit_price: { label: 'Precio de Venta' },
+      discount: { label: 'Descuento (%)' },
+      subtotal: { label: 'Subtotal' },
+      total_price: { label: 'Total' },
+      line_number: { label: 'Nº de Línea' },
+    },
+    _sections: {
+      basic: { label: 'Línea' },
+      pricing: { label: 'Precios' },
     },
   },
 };

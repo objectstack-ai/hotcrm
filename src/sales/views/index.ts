@@ -12,6 +12,7 @@ export { LeadViews } from './lead.view';
 export { AccountViews } from './account.view';
 export { ContactViews } from './contact.view';
 export { ContractViews } from './contract.view';
+export { SalesOrderViews } from './sales_order.view';
 export { OpportunityViews } from './opportunity.view';
 export { TaskViews } from './task.view';
 export { EventViews } from './event.view';

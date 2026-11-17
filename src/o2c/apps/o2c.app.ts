@@ -63,8 +63,8 @@ export const O2cApp = App.create({
       ],
     },
 
-    // ANCHOR — Contracts and Accounts, contributed by the app package.
-    { id: 'group_customers', type: 'group', label: 'Contracts and Accounts', icon: 'file-signature', expanded: true, children: [] },
+    // ANCHOR — Orders, Contracts and Accounts, contributed by the app package.
+    { id: 'group_customers', type: 'group', label: 'Orders, Contracts and Accounts', icon: 'file-signature', expanded: true, children: [] },
 
     {
       id: 'group_work',

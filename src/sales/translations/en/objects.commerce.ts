@@ -6,7 +6,8 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * English (en) — `objects` translations for the COMMERCE family:
  * what gets sold and on what paper — quotes, contracts, products.
  *
- * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`,
+ * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_sales_order`,
+ * `crm_sales_order_line`, `crm_product`,
  * `crm_price_book`, `crm_price_book_entry`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
@@ -89,6 +90,70 @@ export const commerce: Record<string, ObjectTranslationData> = {
       contract_terms: { label: 'Terms' },
       signing_and_documents: { label: 'Signing & Documents' },
       notes: { label: 'Notes' },
+    },
+  },
+  // The order and its lines (REQ-0010, hotcrm#2555).
+  crm_sales_order: {
+    label: 'Order',
+    pluralLabel: 'Orders',
+    fields: {
+      owner_id: { label: 'Order Owner' },
+      order_number: { label: 'Order Number' },
+      name: { label: 'Order Name' },
+      crm_account: { label: 'Account' },
+      crm_contact: { label: 'Contact' },
+      crm_opportunity: { label: 'Opportunity' },
+      order_date: { label: 'Order Date' },
+      crm_contract: { label: 'Contract' },
+      customer_po_number: { label: 'Customer PO Number', help: "The number on the customer's own purchase order, as they will quote it." },
+      description: { label: 'Description' },
+      subtotal: { label: 'Subtotal' },
+      discount: { label: 'Discount %' },
+      discount_amount: { label: 'Discount Amount' },
+      tax: { label: 'Tax' },
+      shipping_handling: { label: 'Shipping & Handling' },
+      total_price: { label: 'Total Price' },
+      payment_terms: { label: 'Payment Terms' },
+      shipped_date: { label: 'Shipped Date' },
+      billing_address: { label: 'Billing Address' },
+      shipping_address: { label: 'Shipping Address' },
+      external_ref: { label: 'External Reference', help: "The order's number in another system. An import naming the same reference updates this order." },
+      status: { label: 'Status', options: { draft: 'Draft', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled' } },
+      fulfillment_status: { label: 'Fulfillment Status', options: { not_shipped: 'Not Shipped', partially_shipped: 'Partially Shipped', shipped: 'Shipped' } },
+    },
+    _views: {
+      all_sales_orders: { label: 'All Orders' },
+      order_board: { label: 'Order Board' },
+      orders_to_ship: { label: 'To Ship' },
+    },
+    _sections: {
+      basic: { label: 'Order Information' },
+      pricing: { label: 'Pricing' },
+      delivery: { label: 'Delivery' },
+      address: { label: 'Addresses' },
+      system: { label: 'System' },
+    },
+  },
+  // The order and its lines (REQ-0010, hotcrm#2555).
+  crm_sales_order_line: {
+    label: 'Order Line',
+    pluralLabel: 'Order Lines',
+    fields: {
+      crm_sales_order: { label: 'Order' },
+      crm_product: { label: 'Product' },
+      product_title: { label: 'Product Title', help: 'What this line sells. Filled from the product when one is chosen; type it when there is none.' },
+      description: { label: 'Description' },
+      quantity: { label: 'Quantity' },
+      list_price: { label: 'List Price', help: "The product's list price when it was put on this line." },
+      unit_price: { label: 'Sales Price' },
+      discount: { label: 'Discount %' },
+      subtotal: { label: 'Subtotal' },
+      total_price: { label: 'Total' },
+      line_number: { label: 'Line #' },
+    },
+    _sections: {
+      basic: { label: 'Line' },
+      pricing: { label: 'Pricing' },
     },
   },
 };

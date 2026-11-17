@@ -6,7 +6,8 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
  * 简体中文 (zh-CN) — `objects` translations for the COMMERCE family:
  * what gets sold and on what paper — quotes, contracts, products.
  *
- * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_product`,
+ * Roster: `crm_quote`, `crm_quote_line_item`, `crm_contract`, `crm_sales_order`,
+ * `crm_sales_order_line`, `crm_product`,
  * `crm_price_book`, `crm_price_book_entry`.
  *
  * SPLIT AXIS (#1311): translation NAMESPACE first, then CRM DOMAIN FAMILY.
@@ -94,6 +95,80 @@ export const commerce: Record<string, ObjectTranslationData> = {
       contract_terms: { label: '条款' },
       signing_and_documents: { label: '签署与文件' },
       notes: { label: '备注' },
+    },
+  },
+  // The order and its lines (REQ-0010, hotcrm#2555).
+  crm_sales_order: {
+    _validations: {
+      shipped_after_order: { message: '发货日期不能早于下单日期' },
+      sales_order_status_progression: { message: '不允许这样更改状态。订单按 草稿 → 已确认 → 已完成 推进；已确认可以退回草稿，草稿或已确认的订单可以取消。已完成和已取消是最终状态。' },
+    },
+    label: '订单',
+    pluralLabel: '订单',
+    description: '客户本次订购的内容、订单行与合计，以及发货进度',
+    fields: {
+      owner_id: { label: '订单负责人' },
+      order_number: { label: '订单编号' },
+      name: { label: '订单名称' },
+      crm_account: { label: '所属客户' },
+      crm_contact: { label: '联系人' },
+      crm_opportunity: { label: '关联商机' },
+      order_date: { label: '下单日期' },
+      crm_contract: { label: '关联合同' },
+      customer_po_number: { label: '客户采购单号', help: '客户自己采购单上的编号，按客户引用它的写法填写。' },
+      description: { label: '描述' },
+      subtotal: { label: '小计' },
+      discount: { label: '折扣 (%)' },
+      discount_amount: { label: '折扣金额' },
+      tax: { label: '税额' },
+      shipping_handling: { label: '运费及手续费' },
+      total_price: { label: '总金额' },
+      payment_terms: { label: '付款条款' },
+      shipped_date: { label: '发货日期' },
+      billing_address: { label: '账单地址' },
+      shipping_address: { label: '收货地址' },
+      external_ref: { label: '外部编号', help: '这张订单在其他系统中的编号。导入编号相同的行会更新这张订单。' },
+      status: { label: '状态', options: { draft: '草稿', confirmed: '已确认', completed: '已完成', cancelled: '已取消' } },
+      fulfillment_status: { label: '发货状态', options: { not_shipped: '未发货', partially_shipped: '部分发货', shipped: '已发货' } },
+    },
+    _views: {
+      all_sales_orders: { label: '全部订单' },
+      order_board: { label: '订单看板' },
+      orders_to_ship: { label: '待发货' },
+    },
+    _sections: {
+      basic: { label: '订单信息' },
+      pricing: { label: '价格' },
+      delivery: { label: '发货' },
+      address: { label: '地址' },
+      system: { label: '系统' },
+    },
+  },
+  // The order and its lines (REQ-0010, hotcrm#2555).
+  crm_sales_order_line: {
+    _validations: {
+      unit_price_positive: { message: '销售单价不能为负数' },
+      product_or_title: { message: '请选择产品，或填写产品标题' },
+    },
+    label: '订单行',
+    pluralLabel: '订单行',
+    description: '订单上的一行',
+    fields: {
+      crm_sales_order: { label: '所属订单' },
+      crm_product: { label: '产品' },
+      product_title: { label: '产品标题', help: '这一行卖的是什么。选了产品时自动填为产品名称；没有产品时手动填写。' },
+      description: { label: '描述' },
+      quantity: { label: '数量' },
+      list_price: { label: '标价', help: '产品放到这一行时的标价。' },
+      unit_price: { label: '销售单价' },
+      discount: { label: '折扣（%）' },
+      subtotal: { label: '小计' },
+      total_price: { label: '总计' },
+      line_number: { label: '行号' },
+    },
+    _sections: {
+      basic: { label: '订单行' },
+      pricing: { label: '价格' },
     },
   },
 };

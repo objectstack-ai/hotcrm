@@ -276,6 +276,9 @@ export const CrmApp = App.create({
         // (`module-split-plan.md` item 11), so it is the last of the group's
         // own children, beside the revenue entries that follow it.
         { id: 'nav_contract',    type: 'object', objectName: 'crm_contract',    label: 'Contracts',     icon: 'file-signature' },
+        // What the customer bought (REQ-0010, #2555). An object entry is
+        // pruned by read access, so it shows only to whoever reads orders.
+        { id: 'nav_sales_order', type: 'object', objectName: 'crm_sales_order', label: 'Orders',        icon: 'shopping-cart' },
         // Quotes and Products follow, contributed by the revenue module
         // (`src/revenue/index.ts`): the app's own navigation may not name
         // another package's object (rule R3), and a contributed item lands

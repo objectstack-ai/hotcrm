@@ -46,6 +46,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_contact: { label: '联系人' },
         nav_opportunity: { label: '商机' },
         nav_contract: { label: '合同' },
+        nav_sales_order: { label: '订单' },
         nav_sales_dashboard: { label: '销售业绩' },
 
         group_work: { label: '我的工作' },
@@ -96,6 +97,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       // The ids this package contributes into the Order to Cash app (#2465).
       navigation: {
         nav_contract: { label: '合同' },
+        nav_sales_order: { label: '订单' },
         nav_account: { label: '客户' },
         nav_my_tasks: { label: '我的任务' },
       },

@@ -96,6 +96,10 @@ const RUNTIME_TEST_FILES = [
   // fill reading the book, `product_standard_price` keeping the standard
   // book whole, and the Add Products screen flow, run as the console runs it.
   'quote-price-book.test.ts',
+  // REQ-0010 stage 1 (#2555) — the sales order's four hooks (line lock,
+  // derived header figures, line fill, line number, subtotal roll-up), run
+  // against the booted app beside the model and grants they serve.
+  'sales-order.test.ts',
   'flow-price-book-add-products.test.ts',
   // REQ-0007 phase 1a (#2315) — Order to Cash's five hooks and the plan
   // figures they keep beside the summaries, on the booted app.

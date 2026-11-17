@@ -452,6 +452,7 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
     'content/docs/service/cases.mdx': 'crm_case',
     'content/docs/marketing/campaigns.mdx': 'crm_campaign',
     'content/docs/sales/contracts.mdx': 'crm_contract',
+    'content/docs/sales/orders.mdx': 'crm_sales_order',
     'content/docs/revenue/products.mdx': 'crm_product',
   };
 
@@ -611,6 +612,11 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
       renewal_calendar: '續約日曆',
       contract_gantt: '合約條款',
       contract_timeline: '合約時間線',
+    },
+    crm_sales_order: {
+      all_sales_orders: '全部訂單',
+      order_board: '訂單看板',
+      orders_to_ship: '待發貨',
     },
     crm_product: {
       all_products: '全部產品',

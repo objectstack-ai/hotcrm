@@ -285,7 +285,7 @@ export const esES: TranslationData = {
       navigation: {
         group_receivables: { label: 'Cuentas por cobrar' },
         group_follow_up: { label: 'Seguimiento' },
-        group_customers: { label: 'Contratos y cuentas' },
+        group_customers: { label: 'Pedidos, contratos y cuentas' },
         group_work: { label: 'Mi Trabajo' },
         group_help: { label: 'Ayuda' },
         nav_invoices: { label: 'Facturas' },

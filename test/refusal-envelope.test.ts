@@ -178,11 +178,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // expense into its own module, whose `expense_decision_guard` keeps the
     // approver-only refusal and drops the two that read the project (a
     // Closed, Cancelled or locked project now turns the expense back in a
-    // flow instead).
+    // flow instead); 71 until #2555 added the sales order's line lock (in
+    // `sales_order_workflow` and again in `sales_order_total_rollup`) and the
+    // typed line's missing price.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(71);
+    expect(sites).toHaveLength(74);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
