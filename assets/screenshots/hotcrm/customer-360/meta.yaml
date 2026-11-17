@@ -3,17 +3,20 @@ kind: screenshot
 scope: hotcrm
 category: hotcrm
 status: published
-captured: '2026-10-20'
+captured: '2026-11-17'
 capture:
   application: HotCRM
-  platformVersion: '18.0.0'
+  platformVersion: '18.5.0'
   browserLocales:
     en: en-US
     zh-Hans: zh-CN
   dataset: 'shipped seed data + pnpm demo:staff, fresh database'
-  record: ACC-000001 Acme Corporation
+  zhHansDataset: 'the zh-CN seed story: the same boot with i18n.defaultLocale set to zh-CN, then pnpm demo:staff'
+  signedInAs: 'Sales Representative, NA team (na.rep)'
+  record: 'ACC-000001 Acme Corporation'
   theme: light
   viewport: 1440x1024
+  deviceScaleFactor: 2
 locales:
   en: en.png
   zh-Hans: zh-Hans.png
@@ -21,8 +24,8 @@ title:
   en: Strategic account 360
   zh-Hans: 战略客户 360 视图
 alt:
-  en: An enterprise customer record with relationship context, current state, and risks.
-  zh-Hans: 包含关系背景、当前状态和风险信息的企业客户记录。
+  en: An enterprise customer record with its tier, health score, revenue and territory, and tabs for its contacts, contracts, orders, quotes, opportunities, billing milestones and invoices.
+  zh-Hans: 企业客户记录：客户等级、健康度、年收入与区域，并以页签列出联系人、合同、订单、报价、商机、回款节点和发票。
 purpose:
   en: Tell the HotCRM story of maintaining customer context alongside operational data.
   zh-Hans: 讲述 HotCRM 将客户背景与运营数据放在一起管理的故事。

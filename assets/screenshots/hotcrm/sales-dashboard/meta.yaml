@@ -3,16 +3,19 @@ kind: screenshot
 scope: hotcrm
 category: analytics
 status: published
-captured: '2026-10-20'
+captured: '2026-11-17'
 capture:
   application: HotCRM
-  platformVersion: '18.0.0'
+  platformVersion: '18.5.0'
   browserLocales:
     en: en-US
     zh-Hans: zh-CN
   dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  zhHansDataset: 'the zh-CN seed story: the same boot with i18n.defaultLocale set to zh-CN, then pnpm demo:staff'
+  signedInAs: 'Sales Manager (sales.manager)'
   theme: light
   viewport: 1408x964
+  deviceScaleFactor: 2
   dashboard: sales_dashboard
   navigation: nav_sales_dashboard
 # Browser locale per file, recorded because getting it wrong is exactly how the
@@ -46,6 +49,11 @@ capture:
 # because the widget then declared `chartConfig.yAxis[0].format: '0,0'`. If a
 # numeral format is ever declared on it again, this pair becomes identical once
 # more and both files must be re-captured together.
+#
+# Re-captured on 18.5.0 (hotcrm#2605) at deviceScaleFactor 2. The first screen
+# now ends at Pipeline by Stage and Pipeline by Forecast Category; Monthly
+# Revenue Trend sits below the fold. Their axes follow the same locale-aware
+# compact formatter described above: en 350K / 700K, zh-Hans 35万 / 70万.
 locales:
   en: en.jpg
   zh-Hans: zh-Hans.jpg
@@ -53,8 +61,8 @@ title:
   en: Sales performance dashboard
   zh-Hans: 销售业绩仪表盘
 alt:
-  en: A sales dashboard with KPI cards, open pipeline value by stage, and the monthly revenue trend.
-  zh-Hans: 包含 KPI 卡片、按阶段的进行中管道金额与月度收入趋势的销售仪表盘。
+  en: A sales dashboard with KPI cards for open pipeline, closed-won, deal size and win rate, above pipeline by stage and by forecast category.
+  zh-Hans: 销售仪表盘：进行中管道、本季成交、平均订单金额与赢单率等 KPI 卡片，下方是按阶段和按预测类别的管道分布。
 purpose:
   en: Show a unified analytical workspace for operating metrics and pipeline health.
   zh-Hans: 展示用于运营指标和销售管道健康度的统一分析工作区。

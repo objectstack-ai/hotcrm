@@ -4,6 +4,105 @@ import type { Action } from '@objectstack/spec/ui';
 import { P } from '@objectstack/spec';
 
 /**
+ * The body both submit actions run (hotcrm#2559, #2580): Submit for
+ * Reimbursement sends no travel request, Submit for a Trip sends the one the
+ * person picked as `input.crm_expense_request`.
+ */
+const SUBMIT_FOR_REIMBURSEMENT_SOURCE = `
+      const userId = ctx.session && ctx.session.userId ? String(ctx.session.userId) : '';
+      if (!userId) throw new Error('submit_for_reimbursement needs a signed-in person');
+      const selected = Array.isArray(input._selectedIds) ? input._selectedIds : [];
+      const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
+      const fail = (lines, code, status) => {
+        const err = new Error(lines.join(' '));
+        err.code = code;
+        err.status = status;
+        err.userMessage = lines.join('\\n');
+        return err;
+      };
+      if (!ids.length) throw fail(['Select the expenses to submit for reimbursement.'], 'VALIDATION_FAILED', 400);
+      const refOf = (v) => (v && typeof v === 'object' ? String(v.id || '') : String(v || ''));
+      const E = ctx.api.object('crm_expense');
+      const R = ctx.api.object('crm_expense_report');
+      const taken = [];
+      const problems = [];
+      let unseen = 0;
+      for (const id of ids) {
+        let row = null;
+        try { row = await E.findOne({ where: { id: id } }); } catch (e) { row = null; }
+        if (!row || refOf(row.owner_id) !== userId) { unseen++; continue; }
+        const name = String(row.name || '');
+        if (refOf(row.crm_expense_report)) {
+          problems.push('Expense ' + name + ' is already on an expense report.');
+        } else if (row.status === 'approved') {
+          problems.push('Expense ' + name + ' is already approved.');
+        } else {
+          taken.push(row);
+        }
+      }
+      // The travel request these expenses were spent on (F3c, hotcrm#2580):
+      // only Submit for a Trip sends one. It must be the caller's own and
+      // Approved: a cancelled or closed request takes no new report. Judged
+      // here because the bulk bar's picker is the only filter in front of it.
+      const requestId = refOf(input.crm_expense_request);
+      let request = null;
+      if (requestId) {
+        try {
+          request = await ctx.api.object('crm_expense_request').findOne({
+            where: { id: requestId },
+            fields: ['id', 'name', 'request_number', 'owner_id', 'status'],
+          });
+        } catch (e) { request = null; }
+        const label = request ? 'Travel request ' + String(request.request_number || request.name || '') : '';
+        if (!request || refOf(request.owner_id) !== userId) {
+          problems.push('The travel request chosen is not yours, or no longer exists.');
+        } else if (request.status === 'cancelled' || request.status === 'closed') {
+          problems.push(label + ' is ' + request.status + ', so it takes no new expense report.');
+        } else if (request.status !== 'approved') {
+          problems.push(label + ' is not approved yet. Only an approved travel request can be reported against.');
+        }
+      }
+      if (unseen) {
+        problems.push(unseen === 1
+          ? '1 selected expense is not yours, or no longer exists.'
+          : unseen + ' selected expenses are not yours, or no longer exist.');
+      }
+      if (problems.length) {
+        problems.push('Nothing was submitted.');
+        throw fail(problems, 'VALIDATION_FAILED', 400);
+      }
+      // One group per project, and one for the expenses with none.
+      const groups = new Map();
+      for (const row of taken) {
+        const key = refOf(row.crm_project);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(row);
+      }
+      const reports = [];
+      for (const [project, rows] of groups) {
+        const days = rows.map((r) => String(r.expense_date || '').slice(0, 10)).filter(Boolean).sort();
+        const title = days.length
+          ? (days[0] === days[days.length - 1] ? days[0] : days[0] + ' – ' + days[days.length - 1])
+          : new Date().toISOString().slice(0, 10);
+        const doc = { name: title, owner_id: userId, status: 'draft' };
+        if (project) doc.crm_project = project;
+        if (request) doc.crm_expense_request = String(request.id);
+        const report = await R.insert(doc);
+        for (const row of rows) {
+          const patch = { id: String(row.id), crm_expense_report: String(report.id) };
+          if (row.status !== 'draft') patch.status = 'draft';
+          // A row written before Paid By existed reads empty: it was the
+          // employee's, as every expense was then, and is paid back.
+          if (!row.paid_by) patch.paid_by = 'employee';
+          await E.update(patch, { where: { id: String(row.id) } });
+        }
+        await R.update({ id: String(report.id), status: 'submitted' }, { where: { id: String(report.id) } });
+        reports.push(String(report.id));
+      }
+      return { id: reports[0], reports: reports, count: reports.length };
+`;
+
+/**
  * Submit for Reimbursement (REQ-0011, hotcrm#2559): the person's selected
  * expenses go on an expense report, which is submitted in the same click.
  * Reporting a single expense is the same click from its record page.
@@ -52,76 +151,7 @@ export const SubmitForReimbursementAction: Action = {
   type: 'script',
   body: {
     language: 'js',
-    source: `
-      const userId = ctx.session && ctx.session.userId ? String(ctx.session.userId) : '';
-      if (!userId) throw new Error('submit_for_reimbursement needs a signed-in person');
-      const selected = Array.isArray(input._selectedIds) ? input._selectedIds : [];
-      const ids = selected.length ? selected : (ctx.recordId ? [ctx.recordId] : []);
-      const fail = (lines, code, status) => {
-        const err = new Error(lines.join(' '));
-        err.code = code;
-        err.status = status;
-        err.userMessage = lines.join('\\n');
-        return err;
-      };
-      if (!ids.length) throw fail(['Select the expenses to submit for reimbursement.'], 'VALIDATION_FAILED', 400);
-      const refOf = (v) => (v && typeof v === 'object' ? String(v.id || '') : String(v || ''));
-      const E = ctx.api.object('crm_expense');
-      const R = ctx.api.object('crm_expense_report');
-      const taken = [];
-      const problems = [];
-      let unseen = 0;
-      for (const id of ids) {
-        let row = null;
-        try { row = await E.findOne({ where: { id: id } }); } catch (e) { row = null; }
-        if (!row || refOf(row.owner_id) !== userId) { unseen++; continue; }
-        const name = String(row.name || '');
-        if (refOf(row.crm_expense_report)) {
-          problems.push('Expense ' + name + ' is already on an expense report.');
-        } else if (row.status === 'approved') {
-          problems.push('Expense ' + name + ' is already approved.');
-        } else {
-          taken.push(row);
-        }
-      }
-      if (unseen) {
-        problems.push(unseen === 1
-          ? '1 selected expense is not yours, or no longer exists.'
-          : unseen + ' selected expenses are not yours, or no longer exist.');
-      }
-      if (problems.length) {
-        problems.push('Nothing was submitted.');
-        throw fail(problems, 'VALIDATION_FAILED', 400);
-      }
-      // One group per project, and one for the expenses with none.
-      const groups = new Map();
-      for (const row of taken) {
-        const key = refOf(row.crm_project);
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push(row);
-      }
-      const reports = [];
-      for (const [project, rows] of groups) {
-        const days = rows.map((r) => String(r.expense_date || '').slice(0, 10)).filter(Boolean).sort();
-        const title = days.length
-          ? (days[0] === days[days.length - 1] ? days[0] : days[0] + ' – ' + days[days.length - 1])
-          : new Date().toISOString().slice(0, 10);
-        const doc = { name: title, owner_id: userId, status: 'draft' };
-        if (project) doc.crm_project = project;
-        const report = await R.insert(doc);
-        for (const row of rows) {
-          const patch = { id: String(row.id), crm_expense_report: String(report.id) };
-          if (row.status !== 'draft') patch.status = 'draft';
-          // A row written before Paid By existed reads empty: it was the
-          // employee's, as every expense was then, and is paid back.
-          if (!row.paid_by) patch.paid_by = 'employee';
-          await E.update(patch, { where: { id: String(row.id) } });
-        }
-        await R.update({ id: String(report.id), status: 'submitted' }, { where: { id: String(report.id) } });
-        reports.push(String(report.id));
-      }
-      return { id: reports[0], reports: reports, count: reports.length };
-    `,
+    source: SUBMIT_FOR_REIMBURSEMENT_SOURCE,
     capabilities: ['api.read', 'api.write'],
     timeoutMs: 20000,
   },
@@ -133,6 +163,53 @@ export const SubmitForReimbursementAction: Action = {
     && (!has(record.crm_expense_report) || record.crm_expense_report == null || record.crm_expense_report == "")
     && has(record.status) && record.status != "approved"`,
   successMessage: 'Submitted for reimbursement. Follow it in My Reports.',
+  refreshAfter: true,
+};
+
+/**
+ * Submit for a Trip (F3c, hotcrm#2580): Submit for Reimbursement for the
+ * expenses of one approved travel request. The same body
+ * (`SUBMIT_FOR_REIMBURSEMENT_SOURCE`), the same grouping and checks; the
+ * person also picks the request, and every report it makes cites it.
+ *
+ * **Why a second action and not an optional param.** On 18.5.0 an action
+ * with any param, even an optional one, opens its param dialog every time
+ * (measured: the record header shows the picker and Confirm, the selection
+ * bar the picker and Next). A request param on Submit for Reimbursement would
+ * add that dialog to every expense with no trip, which REQ-0011 F3c forbids.
+ * So Submit for Reimbursement keeps its one click, and a trip costs the
+ * dialog it needs anyway.
+ *
+ * **The picker** is the report's own `crm_expense_request` field, so it
+ * offers the caller's own Approved requests (its `lookupFilters`; both the
+ * record header's and the selection bar's dialogs apply them, measured). The
+ * body checks the request again, because a REST caller passes no picker.
+ */
+export const SubmitTripForReimbursementAction: Action = {
+  name: 'submit_trip_for_reimbursement',
+  label: 'Submit for a Trip',
+  objectName: 'crm_expense',
+  icon: 'plane',
+  type: 'script',
+  description: 'Report these expenses against one of your approved travel requests.',
+  submitText: 'Submit',
+  body: {
+    language: 'js',
+    source: SUBMIT_FOR_REIMBURSEMENT_SOURCE,
+    capabilities: ['api.read', 'api.write'],
+    timeoutMs: 20000,
+  },
+  params: [
+    {
+      field: 'crm_expense_request',
+      objectOverride: 'crm_expense_report',
+      required: true,
+      helpText: 'Your approved travel request these expenses were spent on.',
+    },
+  ],
+  locations: ['record_header'],
+  visible: SubmitForReimbursementAction.visible,
+  successMessage: 'Submitted for reimbursement against the travel request. Follow it in My Reports.',
   refreshAfter: true,
 };
 

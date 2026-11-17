@@ -23,11 +23,15 @@ import { defineView } from '@objectstack/spec/ui';
 
 /**
  * The selection bar of My Expenses: one Submit for Reimbursement for the
- * whole selection (`execution: 'aggregate'`, one report per project), and
+ * whole selection (`execution: 'aggregate'`, one report per project), its
+ * Submit for a Trip twin, and
  * Delete, which any authored bar entry would otherwise hide.
  */
 const MY_EXPENSES_BAR = [
   { name: 'submit_for_reimbursement', operation: 'custom', execution: 'aggregate' },
+  // The same, against one approved travel request picked in its dialog
+  // (hotcrm#2580).
+  { name: 'submit_trip_for_reimbursement', operation: 'custom', execution: 'aggregate' },
   {
     name: 'delete',
     label: 'Delete',

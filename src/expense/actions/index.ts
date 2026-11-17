@@ -8,6 +8,6 @@
  * the same file-by-file registration.
  */
 export {
-  SubmitForReimbursementAction, SubmitExpenseReportAction, ReopenExpenseReportAction, MarkExpenseReportPaidAction,
+  SubmitForReimbursementAction, SubmitTripForReimbursementAction, SubmitExpenseReportAction, ReopenExpenseReportAction, MarkExpenseReportPaidAction,
 } from './expense.actions';
 export { SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction } from './expense-request.actions';

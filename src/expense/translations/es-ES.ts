@@ -139,6 +139,15 @@ export const esES: TranslationData = {
       },
       _actions: {
         submit_for_reimbursement: { label: 'Enviar para reembolso', successMessage: 'Enviado para reembolso. Síguelo en Mis informes.' },
+        submit_trip_for_reimbursement: {
+          label: 'Enviar para un viaje',
+          description: 'Rinde estos gastos contra una de tus solicitudes de viaje aprobadas.',
+          submitText: 'Enviar',
+          successMessage: 'Enviado para reembolso con la solicitud de viaje. Síguelo en Mis informes.',
+          params: {
+            crm_expense_request: { label: 'Solicitud de viaje', helpText: 'Tu solicitud de viaje aprobada a la que corresponden estos gastos.' },
+          },
+        },
       },
     },
     crm_expense_report: {
@@ -167,6 +176,10 @@ export const esES: TranslationData = {
         approved_date: { label: 'Aprobado el' },
         description: { label: 'Observaciones' },
         review_notes: { label: 'Notas de revisión', help: 'Lo que encontró una comprobación, para que lo lea el aprobador.' },
+        crm_expense_request: { label: 'Solicitud de viaje', help: 'La solicitud de viaje aprobada a la que corresponden estos gastos.' },
+        request_estimated_amount: { label: 'Estimación del viaje', help: 'El importe estimado de la solicitud de viaje.' },
+        request_reported_amount: { label: 'Rendido del viaje', help: 'Los totales de los informes enviados, aprobados y pagados de la solicitud de viaje.' },
+        request_over_estimate: { label: 'Supera la estimación del viaje' },
         payment_date: { label: 'Pagado el' },
         payment_reference: { label: 'Referencia del pago' },
       },
@@ -178,6 +191,7 @@ export const esES: TranslationData = {
       },
       _sections: {
         basic: { label: 'Informe de gastos' },
+        trip: { label: 'Solicitud de viaje' },
         payment: { label: 'Pago' },
       },
       _validations: {
@@ -211,6 +225,9 @@ export const esES: TranslationData = {
         days: { label: 'Días' },
         crm_account: { label: 'Cuenta' },
         estimated_amount: { label: 'Importe estimado', help: 'Un total para todo el viaje, pague quien pague.' },
+        reported_amount: { label: 'Importe rendido', help: 'Los totales de los informes de gastos enviados, aprobados y pagados de esta solicitud.' },
+        estimate_difference: { label: 'Diferencia con la estimación', help: 'Lo rendido menos lo estimado. Por encima de cero supera la estimación.' },
+        over_estimate: { label: 'Supera la estimación' },
         itinerary: { label: 'Itinerario' },
         notes: { label: 'Notas' },
         source: {
@@ -243,6 +260,7 @@ export const esES: TranslationData = {
       },
       _sections: {
         trip: { label: 'Viaje' },
+        spend: { label: 'Gasto' },
         review: { label: 'Aprobación' },
       },
       _validations: {

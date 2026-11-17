@@ -55,6 +55,7 @@ export const ExpenseRequest = ObjectSchema.create({
 
   fieldGroups: [
     { key: 'trip', label: 'Trip', icon: 'plane' },
+    { key: 'spend', label: 'Spending', icon: 'wallet' },
     { key: 'review', label: 'Approval', icon: 'clipboard-check' },
   ],
 
@@ -131,6 +132,46 @@ export const ExpenseRequest = ObjectSchema.create({
       min: 0,
       description: 'One total for the whole trip, whoever pays.',
       readonlyWhen: PLANNED_VALUES_LOCKED,
+    }),
+
+    // What the trip has cost so far, read against the estimate (F3c,
+    // hotcrm#2580): the totals of the reports that cite this request and are
+    // in review, approved or paid. A draft or rejected report is not counted
+    // until it is sent. The request's reports are listed on its page (the
+    // report's `crm_expense_request`).
+    reported_amount: Field.summary({
+      label: 'Reported Amount',
+      group: 'spend',
+      scale: 2,
+      readonly: true,
+      description: 'The totals of this request\'s submitted, approved and paid expense reports.',
+      summaryOperations: {
+        object: 'crm_expense_report',
+        field: 'total_amount',
+        function: 'sum',
+        relationshipField: 'crm_expense_request',
+        filter: { status: { $in: ['submitted', 'approved', 'paid'] } },
+      },
+    }),
+
+    // Reported minus estimated: above zero is over the estimate.
+    // Formulas are evaluated after the query, so neither is a column.
+    estimate_difference: Field.formula({
+      label: 'Difference from Estimate',
+      group: 'spend',
+      returnType: 'currency',
+      scale: 2,
+      description: 'Reported minus estimated. Above zero is over the estimate.',
+      expression: F`coalesce(record.reported_amount, 0) - coalesce(record.estimated_amount, 0)`,
+    }),
+
+    // A sign, never a block (AGENTS.md rule 8): nothing refuses a report
+    // over the estimate.
+    over_estimate: Field.formula({
+      label: 'Over the Estimate',
+      group: 'spend',
+      returnType: 'boolean',
+      expression: F`coalesce(record.reported_amount, 0) > coalesce(record.estimated_amount, 0)`,
     }),
 
     itinerary: Field.textarea({ label: 'Itinerary', group: 'trip' }),
