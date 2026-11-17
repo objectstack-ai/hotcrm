@@ -168,6 +168,7 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   crm_expense: { page: 'projects/time-and-expenses' },
   // #2578 — the travel request, the Expenses section's second page.
   crm_expense_request: { page: 'expenses/travel-requests' },
+  crm_expense_request_line: { page: 'expenses/travel-requests' },
 };
 
 /** Sections written for developers — see check 4 in the header note. */

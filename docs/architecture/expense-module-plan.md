@@ -122,7 +122,13 @@ once each lands.
   [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)).
 - **Itinerary lines** (F3b, `crm_expense_request_line`): optional segments (flight, train, car,
   hotel, other), from, to, dates, requirements and a booking reference an agent writes back after
-  booking. ⛔ No amounts, so there are never two totals.
+  booking. ⛔ No amounts, so there are never two totals. As built
+  ([hotcrm#2579](https://github.com/objectstack-ai/hotcrm/issues/2579)): a `controlled_by_parent`
+  detail entered from the request page's *Itinerary Lines* tab, as order lines are; from Submitted
+  on, its planned values carry a `parent`-scoped `readonlyWhen` and a hook refuses a person's change,
+  add, removal or move out loud (the edit dialog does not evaluate a `parent` predicate on 18.5.0, so
+  the engine's silent drop alone would read as saved); the booking reference stays writable at
+  every status.
 - **The report cites a request** (F3c): optional, N reports to one request. The request shows the
   estimate, the amount reported, the difference and whether it is over; over only warns. The
   request closes when its last open report is paid.

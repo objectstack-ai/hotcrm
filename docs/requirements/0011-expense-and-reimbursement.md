@@ -20,7 +20,7 @@
   moved back on [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)); stage 3:
   `.changeset/2578-travel-request.md` (hotcrm#2578), `.changeset/2581-travel-request-project.md`
   (hotcrm#2581; its project-path approval held in the expense package with the expense's, until
-  objectstack#34616, and on #2575's move-back list).
+  objectstack#34616, and on #2575's move-back list), `.changeset/2579-itinerary-lines.md` (hotcrm#2579).
 
 ## Raw requirement (verbatim)
 

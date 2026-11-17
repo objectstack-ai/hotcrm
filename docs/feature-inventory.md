@@ -290,6 +290,7 @@
 | EXP-005 | 出差申请 | `crm_expense_request`(界面叫「出差申请」):事由、出差人、目的地、起止日期、天数(自动算)、客户(可空)、一个预计总额、行程、备注、来源、检查提示,附件;六个状态 草稿/已提交/已批准/已驳回/已取消/已关闭;批准后事由、目的地、日期、金额(及项目)锁定;出差人一键提交、取消出差、关闭;在「费用报销」应用,「我的出差申请」也贡献进「项目交付」应用 | `src/expense/objects/expense_request.object.ts`、`src/expense/actions/expense-request.actions.ts` |
 | EXP-006 | 出差申请审批 | 没有项目的申请提交后由出差人的上级审批(无上级时由财务控制),只有一级、财务不参与;审批人经共享规则可见;任何人不能手动写批准/驳回 | `src/expense/flows/expense-request-approval.flow.ts`、`src/expense/objects/expense_request.hook.ts` |
 | EXP-007 | 项目出差申请审批 | 项目交付模块给出差申请扩展可选的「项目」(选择框不提供已关闭/已取消的项目);有项目的申请由项目经理审批,只有一级,与无项目路径互斥;项目无项目经理或项目经理本人出差时交管理员;项目页面「相关」列出出差申请,不计入项目成本(暂放费用包,objectstack#34616 修好后搬回,hotcrm#2575) | `src/expense/flows/expense-request-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
+| EXP-008 | 出差申请行程明细 | `crm_expense_request_line`(界面叫「行程明细」):出差申请下的一程,类型(航班/火车/用车/酒店/其他)、出发地、到达地、起止日期、要求、预订号;不带金额,可选;在申请页面上按出行顺序列出;从提交起各程计划值锁定、不能增删,预订号始终可写 | `src/expense/objects/expense_request_line.object.ts`、`src/expense/objects/expense_request_line.hook.ts` |
 
 ---
 

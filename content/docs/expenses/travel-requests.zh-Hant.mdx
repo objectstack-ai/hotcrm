@@ -21,10 +21,24 @@ description: 出差前先申請：去哪裡、什麼時候、為什麼、大約�
 | **Estimated Amount** | 整次出差的一個總數，使用貴公司的本位幣，不論每一部分由誰支付（必填） |
 | **Account** | 為哪個客戶出差，可選 |
 | **Project** | 為哪個項目出差，可選（啟用 Project Delivery 時才有）。不提供 Closed 或 Cancelled 的項目 |
-| **Itinerary** | 計劃：機票、火車、酒店 |
+| **Itinerary** | 用你自己的話寫的計劃 |
 | **Notes** | 其他內容 |
 
 在 **Files** 分頁上傳檔案。**Source** 說明這筆記錄從哪裡來，**Review Notes** 是助手或規則寫給審批人看的發現。兩者都不影響任何判斷：助手可以以你的身分透過介面起草申請、估算金額或檢查，決定仍由審批人做出。
+
+## 行程明細
+
+一次出差有好幾程時，可以在申請頁面的 **Itinerary Lines** 下逐程列出。每一程點一次 **New**：
+
+| 欄位 | 填寫什麼 |
+| --- | --- |
+| **Kind** | Flight、Train、Car、Hotel 或 Other（必填） |
+| **From** 和 **To** | 這一程從哪裡出發、到哪裡；酒店的 **To** 填酒店所在地（**To** 必填） |
+| **Start Date** 和 **End Date** | 這一程的日期（必填），酒店另填退房日期 |
+| **Details** | 座位、想住的酒店或其他要求 |
+| **Booking Reference** | 訂好之後的確認號 |
+
+各程按出行順序列出。行程明細不帶金額：申請上的 **Estimated Amount** 是唯一的總數。行程明細是可選的，沒有明細的申請也是完整的。
 
 ## 提交和審批
 
@@ -48,10 +62,12 @@ description: 出差前先申請：去哪裡、什麼時候、為什麼、大約�
 
 ## 批准之後
 
-批准針對的是這份計劃，所以已批准申請的 **Purpose**、**Destination**、日期、**Estimated Amount** 和 **Project** 都不再改動。要改計劃，請點 **Cancel Trip**，再重新申請。出差結束後，點 **Close**。
+批准針對的是這份計劃，所以已批准申請的 **Purpose**、**Destination**、日期、**Estimated Amount** 和 **Project** 都不再改動。從提交那一刻起，各程也一樣被鎖定：類型、地點、日期和要求都不再改動，也不能再新增或刪除行程。要改計劃，請點 **Cancel Trip**，再重新申請。出差結束後，點 **Close**。
+
+每一程的 **Booking Reference** 始終可以填寫。訂好之後，由你本人、以你的身分透過介面辦事的助手、你的審批人或代訂人把確認號寫在這裡，批准之後也可以。
 
 ## 誰能看到
 
-你能看到自己的申請，以及請你審批的申請。財務能在 **All Travel Requests** 裡看到所有申請，銷售經理和銷售領導也一樣；他們都不能修改別人的申請。出差申請不出現在 Sales、Service、Marketing 應用裡，也不出現在客戶頁面上。
+你能看到自己的申請及其行程明細，以及請你審批的申請。財務能在 **All Travel Requests** 裡看到所有申請，銷售經理和銷售領導也一樣；他們都不能修改別人的申請。出差申請不出現在 Sales、Service、Marketing 應用裡，也不出現在客戶頁面上。
 
 啟用 Project Delivery 時，項目人員在 **Project Delivery** 應用的 **My Expenses** 旁邊也能找到 **My Travel Requests**，項目頁面的 **Related** 分頁列出這個項目的出差申請（每個人看到的範圍同上）。出差申請不計入項目成本：成本隨費用而來。不啟用 Project Delivery 時，沒有 **Project** 欄位，所有申請都交給出差人的上級。

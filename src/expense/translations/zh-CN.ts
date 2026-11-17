@@ -20,6 +20,18 @@ export const zhCN: TranslationData = {
         FORBIDDEN: { message: '出差申请提交后，由审批人在收件箱中批准或驳回。' },
       },
     },
+    expense_request_line_lock: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '出差申请{{request}}已提交，因此行程明细已锁定：只能填写预订号。请先撤回到草稿再修改。',
+          reasons: {
+            approved: { message: '出差申请{{request}}已批准，因此行程明细已固定：只能填写预订号。如要改变计划，请取消出差并重新提交申请。' },
+            cancelled: { message: '出差申请{{request}}已取消，因此行程明细已固定：只能填写预订号。' },
+            closed: { message: '出差申请{{request}}已关闭，因此行程明细已固定：只能填写预订号。' },
+          },
+        },
+      },
+    },
   },
   objects: {
     crm_expense: {
@@ -145,6 +157,41 @@ export const zhCN: TranslationData = {
         submit_expense_request: { label: '提交', successMessage: '出差申请 {{ record.name }} 已提交审批。' },
         cancel_expense_request: { label: '取消出差', confirmText: '取消这次出差？取消后的申请不能重新打开，新的计划请重新申请。', successMessage: '出差申请 {{ record.name }} 已取消。' },
         close_expense_request: { label: '关闭', successMessage: '出差申请 {{ record.name }} 已关闭。' },
+      },
+    },
+    crm_expense_request_line: {
+      label: '行程明细',
+      pluralLabel: '行程明细',
+      description: '出差的一程：订什么、从哪里到哪里、什么时候',
+      fields: {
+        crm_expense_request: { label: '出差申请' },
+        line_number: { label: '行号' },
+        kind: {
+          label: '类型',
+          options: {
+            flight: '航班',
+            train: '火车',
+            car: '用车',
+            hotel: '酒店',
+            other: '其他',
+          },
+        },
+        origin: { label: '出发地' },
+        destination: { label: '到达地', help: '这一程去哪里，或酒店在哪里。' },
+        start_date: { label: '开始日期' },
+        end_date: { label: '结束日期', help: '酒店填退房日期；当天的一程可以不填。' },
+        details: { label: '要求', help: '座位、酒店或其他要求。' },
+        booking_reference: { label: '预订号', help: '预订后由出差人、智能助手或代订人填写的确认号。' },
+      },
+      _views: {
+        all_itinerary_lines: { label: '全部行程明细' },
+      },
+      _sections: {
+        leg: { label: '行程' },
+        booking: { label: '预订' },
+      },
+      _validations: {
+        expense_request_line_dates: { message: '结束日期不能早于开始日期。' },
       },
     },
   },

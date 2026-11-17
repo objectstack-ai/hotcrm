@@ -3,7 +3,7 @@
 import { O2C_CONTRACT_FIGURE_FIELDS } from './_o2c-figures';
 import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
 import { privateOpportunityPolicy } from './_private-opportunity';
-import { EXPENSE_OWN_READ_ALL } from './_expense-grants';
+import { EXPENSE_OWN_READ_ALL, EXPENSE_REQUEST_LINE_EDIT } from './_expense-grants';
 
 /**
  * Sales Manager Profile
@@ -29,6 +29,7 @@ export const SalesManagerProfile = {
     // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN_READ_ALL,
     crm_expense_request: EXPENSE_OWN_READ_ALL,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
     // `allowTransfer` on the objects this set holds `modifyAllRecords` on —
     // the sales book a manager reassigns — plus `crm_forecast`, which kept it
     // when #2277 narrowed Modify All there. Canonical note in

@@ -182,11 +182,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // `sales_order_workflow` and again in `sales_order_total_rollup`) and the
     // typed line's missing price; 74 until hotcrm#2578 added the travel
     // request's `expense_request_decision_guard`, the expense's approver-only
-    // refusal on its own object.
+    // refusal on its own object; 75 until hotcrm#2579 added
+    // `expense_request_line_lock`, a leg added to, removed from or moved off a
+    // submitted travel request.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(75);
+    expect(sites).toHaveLength(76);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
