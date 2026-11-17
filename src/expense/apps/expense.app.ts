@@ -24,11 +24,12 @@ import { HOTCRM_ICON } from '../../sales/apps/crm.app';
  *
  * Project staff also find My Expenses and Reports to Approve inside the
  * Project Delivery app, contributed by this module (`../index.ts`).
+ * Travel requests (hotcrm#2578) are listed here only.
  */
 export const ExpenseApp = App.create({
   name: 'crm_expenses',
   label: 'Expenses',
-  description: 'What you spent for the company, the reports that pay it back, and the reports waiting for your approval',
+  description: 'What you spent for the company, with its receipts, the trips you ask for beforehand, the reports that pay you back, and what waits for your approval',
   icon: 'receipt',
   defaultAgent: 'ask',
   branding: {
@@ -59,6 +60,21 @@ export const ExpenseApp = App.create({
           visible: P`current_user.can("crm_expense_report", "read") && ("crm_finance_controller" in current_user.positions || "crm_ar_accountant" in current_user.positions)`,
         },
         { id: 'nav_all_expenses', type: 'object', objectName: 'crm_expense', label: 'All Expenses', icon: 'list' },
+      ],
+    },
+
+    // Asking before a trip (hotcrm#2578). Here only: no other app carries a
+    // travel request menu (REQ-0010 usability rule 3).
+    {
+      id: 'group_travel_requests',
+      type: 'group',
+      label: 'Travel Requests',
+      icon: 'plane',
+      expanded: true,
+      children: [
+        { id: 'nav_my_travel_requests', type: 'object', objectName: 'crm_expense_request', viewName: 'my_travel_requests', label: 'My Travel Requests', icon: 'plane' },
+        { id: 'nav_travel_requests_to_approve', type: 'object', objectName: 'crm_expense_request', viewName: 'travel_requests_to_approve', label: 'Requests to Approve', icon: 'clipboard-check' },
+        { id: 'nav_all_travel_requests', type: 'object', objectName: 'crm_expense_request', label: 'All Travel Requests', icon: 'list' },
       ],
     },
 

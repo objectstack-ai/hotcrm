@@ -16,9 +16,10 @@ export const MarketingUserProfile = {
   // Marketing keeps Sales beside Marketing: the leads and deals it targets.
   tabPermissions: { crm_service: 'hidden' as const, crm_o2c: 'hidden' as const, crm_psa: 'hidden' as const },
   objects: {
-    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN,
     crm_expense_report: EXPENSE_REPORT_OWN,
+    crm_expense_request: EXPENSE_OWN,
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. Lead and contact list exports are marketing's
     // core targeting workflow; account/opportunity back the campaign-ROI

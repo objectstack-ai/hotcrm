@@ -185,11 +185,12 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // `expense_line_lock`'s three (an expense on a report in review, rejected
     // or decided) and `expense_report_rules`' six (a person deciding or
     // marking paid, an approved or paid report changed, a sent report
-    // deleted, a report submitted with no expenses).
+    // deleted, a report submitted with no expenses); 82 until hotcrm#2578
+    // added the travel request's `expense_request_decision_guard`.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(82);
+    expect(sites).toHaveLength(83);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

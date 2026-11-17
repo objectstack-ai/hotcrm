@@ -48,9 +48,10 @@ export const SalesRepProfile = {
   // authors none, so the master set was every record.
   // objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4.
   objects: {
-    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN,
     crm_expense_report: EXPENSE_REPORT_OWN,
+    crm_expense_request: EXPENSE_OWN,
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
     // read-derived, so a rep's CSV carries their own book, not the org's.

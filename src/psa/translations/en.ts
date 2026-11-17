@@ -53,6 +53,10 @@ export const en: TranslationData = {
         crm_account: { label: 'Account' },
         crm_opportunity: { label: 'Opportunity' },
         crm_contract: { label: 'Contract' },
+        crm_sales_order: {
+          label: 'Order',
+          help: 'The sales order this project delivers.',
+        },
         source_project: {
           label: 'Won From',
           help: 'For a delivery project: the presales project it was won from.',

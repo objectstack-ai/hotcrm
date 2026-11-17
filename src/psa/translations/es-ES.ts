@@ -160,6 +160,10 @@ export const esES: TranslationData = {
         crm_account: { label: 'Cuenta' },
         crm_opportunity: { label: 'Oportunidad' },
         crm_contract: { label: 'Contrato' },
+        crm_sales_order: {
+          label: 'Pedido',
+          help: 'El pedido de venta que entrega este proyecto.',
+        },
         source_project: {
           label: 'Ganado desde',
           help: 'Para un proyecto de entrega: el proyecto de preventa del que se ganó.',

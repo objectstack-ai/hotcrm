@@ -147,6 +147,7 @@
 | ORD-004 | 合计随订单行 | 小计 = 各行之和,在订单行的同一次写入里重算;折扣金额与总金额由小计、折扣、税额、运费推出 | `src/sales/objects/sales_order.hook.ts`(`sales_order_total_rollup`、`sales_order_workflow`) |
 | ORD-005 | 订单行锁定 | 订单离开草稿后,用户不能增删改订单行(先退回草稿);已确认订单的订单行列表不再提供"新建" | `src/sales/objects/sales_order.hook.ts`(`sales_order_workflow`)、`src/sales/objects/sales_order_line.object.ts`(`userActions`) |
 | ORD-006 | 订单视图与导航 | 全部订单、订单看板、待发货;销售应用"销售"分组与订单与回款应用"订单、合同与客户"分组中的"订单";客户与合同页面的订单列表 | `src/sales/views/sales_order.view.ts`、`src/sales/apps/crm.app.ts`、`src/sales/index.ts` |
+| ORD-007 | 项目关联订单 | 项目可选填写它交付的销售订单(`crm_project.crm_sales_order`,与合同并列,从项目的客户下选);订单页面列出它的项目,随项目交付模块停用而消失;项目经理只读全部订单与订单行,项目成员看不到这个字段 | `src/psa/objects/project.object.ts`、`src/sales/profiles/project-manager.profile.ts`、`src/sales/profiles/project-member.profile.ts` |
 
 ## SVC — 服务与 SLA
 
@@ -278,7 +279,7 @@
 
 ## EXP — 费用报销
 
-增量追加(hotcrm#2556、hotcrm#2559),不在 2026-08-07 的全量清点里,所以不进上方总览统计。
+增量追加(hotcrm#2556、hotcrm#2559、hotcrm#2578),不在 2026-08-07 的全量清点里,所以不进上方总览统计。
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
@@ -290,6 +291,8 @@
 | EXP-006 | 项目报销单审批 | 写明项目的报销单由项目经理审批,合计 ≥2,000 再交财务;项目已关闭、已取消或已锁定时退回草稿并通知;项目字段由项目交付模块扩展提供(暂放费用包,objectstack#34616 修好后搬回,hotcrm#2575) | `src/expense/flows/expense-report-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
 | EXP-007 | 标记已付款 | 财务控制、应收会计在「待付款的报销单」里对已批准的报销单记录付款日期和参考号;只记录,不付款、不记账 | `src/expense/actions/expense.actions.ts` |
 | EXP-008 | 报销单视图 | 我的报销单、待我审批的报销单、待付款的报销单、全部报销单 | `src/expense/views/expense_report.view.ts` |
+| EXP-009 | 出差申请 | `crm_expense_request`(界面叫「出差申请」):事由、出差人、目的地、起止日期、天数(自动算)、客户(可空)、一个预计总额、行程、备注、来源、检查提示,附件;六个状态 草稿/已提交/已批准/已驳回/已取消/已关闭;批准后事由、目的地、日期、金额锁定;出差人一键提交、取消出差、关闭;只在「费用报销」应用 | `src/expense/objects/expense_request.object.ts`、`src/expense/actions/expense-request.actions.ts` |
+| EXP-010 | 出差申请审批 | 提交后由出差人的上级审批(无上级时由财务控制),只有一级、财务不参与;审批人经共享规则可见;任何人不能手动写批准/驳回 | `src/expense/flows/expense-request-approval.flow.ts`、`src/expense/objects/expense_request.hook.ts` |
 
 ---
 

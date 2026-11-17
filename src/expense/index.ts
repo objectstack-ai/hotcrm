@@ -7,13 +7,18 @@ import { CrmExpenseManual } from './books/index.js';
 import { ExpenseEmailTemplates } from './email-templates/index.js';
 import {
   SubmitForReimbursementAction, SubmitExpenseReportAction, ReopenExpenseReportAction, MarkExpenseReportPaidAction,
+  SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction,
 } from './actions/index.js';
-import { ExpenseReportApprovalFlow, ExpenseReportProjectApprovalFlow } from './flows/index.js';
-import { Expense, ExpenseReport } from './objects/index.js';
-import { expenseHook, expenseReportHook } from './objects/hooks.js';
-import { ExpenseApproverEditSharingRule, ExpenseReportApproverEditSharingRule } from './sharing/index.js';
+import {
+  ExpenseReportApprovalFlow, ExpenseReportProjectApprovalFlow, ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
+} from './flows/index.js';
+import { Expense, ExpenseReport, ExpenseRequest } from './objects/index.js';
+import { expenseHook, expenseReportHook, expenseRequestHook } from './objects/hooks.js';
+import {
+  ExpenseApproverEditSharingRule, ExpenseReportApproverEditSharingRule, ExpenseRequestApproverEditSharingRule,
+} from './sharing/index.js';
 import { ExpenseTranslations } from './translations/index.js';
-import { ExpenseReportViews, ExpenseViews } from './views/index.js';
+import { ExpenseReportViews, ExpenseRequestViews, ExpenseViews } from './views/index.js';
 
 /**
  * This package's hooks, for the artifact-wide sweeps (`allHooks` in
@@ -21,21 +26,29 @@ import { ExpenseReportViews, ExpenseViews } from './views/index.js';
  * `src/service/index.ts` for the arrangement. Every one attaches to this
  * module's own object (ADR-0130 R4).
  */
-export const expenseHooks = [expenseHook, expenseReportHook].flat();
+export const expenseHooks = [expenseHook, expenseReportHook, expenseRequestHook].flat();
 
 /**
  * This package's flows: the approval of an expense report with no project
- * and of one on a project (here only for the platform gap its file names).
+ * and of one on a project (here only for the platform gap its file names),
+ * and the approval of a travel request (hotcrm#2578) with its insert twin.
  */
-export const expenseFlows = [ExpenseReportApprovalFlow, ExpenseReportProjectApprovalFlow];
+export const expenseFlows = [
+  ExpenseReportApprovalFlow, ExpenseReportProjectApprovalFlow,
+  ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
+];
 
 /** This package's actions — see {@link expenseHooks}. */
 export const expenseActions = [
   SubmitForReimbursementAction, SubmitExpenseReportAction, ReopenExpenseReportAction, MarkExpenseReportPaidAction,
+  // The travel request's Submit, Cancel Trip and Close (hotcrm#2578).
+  SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction,
 ];
 
 /** This package's sharing rules — see {@link expenseHooks}. */
-export const expenseSharingRules = [ExpenseApproverEditSharingRule, ExpenseReportApproverEditSharingRule];
+export const expenseSharingRules = [
+  ExpenseApproverEditSharingRule, ExpenseReportApproverEditSharingRule, ExpenseRequestApproverEditSharingRule,
+];
 
 /**
  * What the composition hands this package: its seed families, cut out of the
@@ -60,7 +73,7 @@ export type HotCrmExpenseCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * It owns `crm_expense`, which moved here from Project Delivery under the
  * same name (item 16: one `crm` namespace, so no table rename), and
  * `crm_expense_report`, on which expenses are sent, approved and paid back
- * (hotcrm#2559). Project Delivery depends on this package — the one add-on →
+ * (hotcrm#2559), and `crm_expense_request`, the travel request (hotcrm#2578). Project Delivery depends on this package — the one add-on →
  * add-on edge item 18 allows — and contributes the Project field on both and
  * the project cost summaries. This package depends on the app package only.
  * One thing that belongs to Project Delivery is still here: the approval of
@@ -84,7 +97,7 @@ export const createHotCrmExpenseStack = (
     // holds it, and the range below, to the app package's.
     version: '6.5.0',
     type: 'module',
-    description: 'HotCRM expense module — expenses with their receipts, the reports that send them to be approved, and their payment back.',
+    description: 'HotCRM expense module — expenses with their receipts, travel requests, the reports that send expenses to be approved, and their payment back.',
     engines: { protocol: '^18.5.0' },
     // The App package this module extends, and nothing else.
     dependencies: { 'app.objectstack.hotcrm': '^6.5.0' },
@@ -116,9 +129,9 @@ export const createHotCrmExpenseStack = (
 
   // Everyone's expenses app; see the app's own note.
   apps: [ExpenseApp],
-  objects: [Expense, ExpenseReport],
+  objects: [Expense, ExpenseReport, ExpenseRequest],
   hooks: expenseHooks,
-  views: [ExpenseViews, ExpenseReportViews],
+  views: [ExpenseViews, ExpenseReportViews, ExpenseRequestViews],
   actions: expenseActions,
   sharingRules: expenseSharingRules,
   flows: expenseFlows,

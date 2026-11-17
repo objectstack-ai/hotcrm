@@ -48,6 +48,7 @@ export const SalesLeadershipProfile = {
     // `crm_user` (hotcrm#2556, `_expense-grants.ts`).
     crm_expense: EXPENSE_READ_ALL,
     crm_expense_report: EXPENSE_REPORT_READ_ALL,
+    crm_expense_request: EXPENSE_READ_ALL,
     crm_lead:              READ_ALL,
     crm_account:           READ_ALL,
     crm_contact:           READ_ALL,

@@ -47,6 +47,11 @@ export const jaJP: TranslationData = {
         },
       },
     },
+    expense_request_decision_guard: {
+      refusals: {
+        FORBIDDEN: { message: '出張申請は提出後、承認者が受信トレイから承認または却下します。' },
+      },
+    },
   },
   objects: {
     crm_expense: {
@@ -178,6 +183,65 @@ export const jaJP: TranslationData = {
         },
       },
     },
+    // The travel request (hotcrm#2578).
+    crm_expense_request: {
+      label: '出張申請',
+      pluralLabel: '出張申請',
+      description: '出張前の申請：行き先、日程、目的、おおよその費用',
+      fields: {
+        owner_id: { label: '出張者' },
+        request_number: { label: '申請番号' },
+        name: { label: '出張目的' },
+        destination: { label: '行き先' },
+        start_date: { label: '開始日' },
+        end_date: { label: '終了日' },
+        days: { label: '日数' },
+        crm_account: { label: '取引先' },
+        estimated_amount: { label: '見積金額', help: '出張全体の合計額（支払者を問わず）。' },
+        itinerary: { label: '行程' },
+        notes: { label: 'メモ' },
+        source: {
+          label: '登録元',
+          help: '手入力、エージェントによる登録、またはインポート。',
+          options: {
+            manual: '手入力',
+            agent: 'エージェント',
+            import: 'インポート',
+          },
+        },
+        status: {
+          label: 'ステータス',
+          options: {
+            draft: '下書き',
+            submitted: '提出済み',
+            approved: '承認済み',
+            rejected: '却下',
+            cancelled: 'キャンセル',
+            closed: '完了',
+          },
+        },
+        approver: { label: '承認者' },
+        review_notes: { label: '確認メモ', help: 'アシスタントやルールが見つけた点。承認者向け。' },
+      },
+      _views: {
+        all_travel_requests: { label: 'すべての出張申請' },
+        my_travel_requests: { label: '自分の出張申請' },
+        travel_requests_to_approve: { label: '承認待ちの出張申請' },
+      },
+      _sections: {
+        trip: { label: '出張' },
+        review: { label: '承認' },
+      },
+      _validations: {
+        expense_request_dates: { message: '終了日は開始日以降にしてください。' },
+        expense_request_status_progression: { message: 'このステータス変更はできません。出張申請は 下書き → 提出済み → 承認済み または 却下 と進みます。却下された申請は下書きに戻して修正し、承認済みの申請は出張前にキャンセル、出張後に完了にします。' },
+      },
+      _actions: {
+        submit_expense_request: { label: '提出', successMessage: '出張申請 {{ record.name }} を承認に提出しました。' },
+        cancel_expense_request: { label: '出張をキャンセル', confirmText: 'この出張をキャンセルしますか？キャンセルした申請は再開できません。新しい計画は新たに申請してください。', successMessage: '出張申請 {{ record.name }} をキャンセルしました。' },
+        close_expense_request: { label: '完了', successMessage: '出張申請 {{ record.name }} を完了にしました。' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers.
   flows: {
@@ -195,11 +259,23 @@ export const jaJP: TranslationData = {
         finance_review: { label: '財務コントローラー審査' },
       },
     },
+    expense_request_approval: {
+      label: '出張申請の承認',
+      approvals: {
+        approver_review: { label: '上長レビュー' },
+      },
+    },
+    expense_request_approval_on_create: {
+      label: '出張申請の承認（作成時）',
+      approvals: {
+        approver_review: { label: '上長レビュー' },
+      },
+    },
   },
   apps: {
     crm_expenses: {
       label: '経費精算',
-      description: '会社のために支払った経費、それを払い戻す精算書、そしてあなたの承認を待つ精算書',
+      description: '会社のために支払った経費と領収書、事前に申請する出張、それを払い戻す精算書、そしてあなたの承認を待つもの',
       navigation: {
         group_expenses: { label: '経費' },
         nav_my_expenses: { label: '自分の経費' },
@@ -207,6 +283,10 @@ export const jaJP: TranslationData = {
         nav_expense_reports_to_approve: { label: '承認待ちの精算書' },
         nav_expense_reports_to_pay: { label: '支払待ちの精算書' },
         nav_all_expenses: { label: 'すべての経費' },
+        group_travel_requests: { label: '出張申請' },
+        nav_my_travel_requests: { label: '自分の出張申請' },
+        nav_travel_requests_to_approve: { label: '承認待ちの出張申請' },
+        nav_all_travel_requests: { label: 'すべての出張申請' },
         group_work: { label: 'マイワーク' },
         nav_approval_requests: { label: '受信トレイ' },
         group_help: { label: 'ヘルプ' },
@@ -224,7 +304,7 @@ export const jaJP: TranslationData = {
   books: {
     crm_expense_manual: {
       label: 'HotCRM 経費精算マニュアル',
-      description: '領収書付きの経費の記録、精算書での提出、承認者、払い戻し、そしてプロジェクトに計上されるもの。',
+      description: '領収書付きの経費の登録、出張前の申請、精算書での提出、承認者、払い戻し、プロジェクトに計上されるもの。',
       groups: { expense: { label: '経費精算' } },
     },
   },

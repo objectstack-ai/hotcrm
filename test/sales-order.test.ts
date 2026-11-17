@@ -82,7 +82,9 @@ describe('where orders are reached', () => {
 
 describe('who holds orders', () => {
   const sets = Object.values(profiles) as Rec[];
-  const READ_ONLY = ['ar_accountant', 'finance_controller'];
+  // Read every order, write none. `project_manager` since hotcrm#2561: a
+  // project may name the order it delivers (test/project-source-order.test.ts).
+  const READ_ONLY = ['ar_accountant', 'finance_controller', 'project_manager'];
 
   it.each(sets.filter((p) => !READ_ONLY.includes(p.name)).map((p) => [p.name, p] as const))(
     '%s holds on orders what it holds on quotes, and on order lines what it holds on quote lines',

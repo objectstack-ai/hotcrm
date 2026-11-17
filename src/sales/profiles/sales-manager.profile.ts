@@ -26,9 +26,10 @@ export const SalesManagerProfile = {
   // a manager reads every project of the deals the team sells.
   tabPermissions: { crm_enterprise: 'visible' as const, crm_service: 'visible' as const, crm_marketing: 'visible' as const, crm_o2c: 'visible' as const, crm_expenses: 'visible' as const, crm_psa: 'visible' as const },
   objects: {
-    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN_READ_ALL,
     crm_expense_report: EXPENSE_REPORT_OWN_READ_ALL,
+    crm_expense_request: EXPENSE_OWN_READ_ALL,
     // `allowTransfer` on the objects this set holds `modifyAllRecords` on —
     // the sales book a manager reassigns — plus `crm_forecast`, which kept it
     // when #2277 narrowed Modify All there. Canonical note in

@@ -61,18 +61,25 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556, hotc
 
   it('owns the expense and the expense report, their rules, approvals, actions, sharing, app and manual; no project field of its own', () => {
     const stack = stackOf(EXPENSE_ID);
-    expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense', 'crm_expense_report']);
-    expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual(['expense_line_lock', 'expense_report_rules', 'expense_report_lines_follow']);
-    expect(((stack.sharingRules ?? []) as Rec[]).map((r) => r.name)).toEqual(['expense_approver_edit', 'expense_report_approver_edit']);
+    // The travel request (hotcrm#2578) is pinned in `test/expense-request.test.ts`.
+    expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense', 'crm_expense_report', 'crm_expense_request']);
+    expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual([
+      'expense_line_lock', 'expense_report_rules', 'expense_report_lines_follow', 'expense_request_decision_guard',
+    ]);
+    expect(((stack.sharingRules ?? []) as Rec[]).map((r) => r.name)).toEqual([
+      'expense_approver_edit', 'expense_report_approver_edit', 'expense_request_approver_edit',
+    ]);
     expect(((stack.apps ?? []) as Rec[]).map((a) => a.name)).toEqual(['crm_expenses']);
     expect(((stack.books ?? []) as Rec[]).map((b) => b.name)).toEqual(['crm_expense_manual']);
     expect(((stack.flows ?? []) as Rec[]).map((f) => f.name).sort(), 'per-expense approval retired').toEqual([
       'expense_report_approval', 'expense_report_project_approval',
+      'expense_request_approval', 'expense_request_approval_on_create',
     ]);
     expect(((stack.actions ?? []) as Rec[]).map((a) => a.name)).toEqual([
       'submit_for_reimbursement', 'submit_expense_report', 'reopen_expense_report', 'mark_expense_report_paid',
+      'submit_expense_request', 'cancel_expense_request', 'close_expense_request',
     ]);
-    expect(stack.data ?? [], 'an expense and a report name a person, so the module seeds none').toEqual([]);
+    expect(stack.data ?? [], 'an expense, a report and a request name a person, so the module seeds none').toEqual([]);
     for (const object of stack.objects as Rec[]) {
       expect((object.fields as Rec).crm_project, `${object.name}: the project field is Project Delivery's contribution`).toBeUndefined();
     }

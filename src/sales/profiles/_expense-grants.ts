@@ -10,6 +10,14 @@
  * how an approver reaches what it approves (`expense_approver_edit` shares an
  * expense to the approver its approval stamps).
  *
+ * The travel request (`crm_expense_request`, hotcrm#2578) takes the same
+ * shape as the expense in every set, row for row: it is `private` to its
+ * traveler and shared to the approver its approval stamps
+ * (`expense_request_approver_edit`), and the sets that read every expense read
+ * every request and edit none that is not theirs. The card asked for the
+ * mirror; the sales managers' reason below (the project rollups) does not
+ * reach requests, so for them it is the mirror alone.
+ *
  * Four shapes:
  *   - {@link EXPENSE_OWN} — the position sets: create, read, edit and delete
  *     their own.

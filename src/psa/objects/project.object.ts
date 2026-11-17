@@ -134,6 +134,18 @@ export const Project = ObjectSchema.create({
       relatedListColumns: ['project_number', 'name', 'status', 'billing_type'],
     }),
 
+    // The sale the project delivers, for a project sold on an order with no
+    // contract (hotcrm#2561, REQ-0010 stage 2). Optional, as the contract is.
+    // The order page's Projects list is the one this lookup derives; it leaves
+    // with this module, since the field is on the module's own object.
+    crm_sales_order: Field.lookup('crm_sales_order', {
+      label: 'Order',
+      group: 'provenance',
+      description: 'The sales order this project delivers.',
+      dependsOn: ['crm_account'],
+      relatedListColumns: ['project_number', 'name', 'kind', 'status', 'planned_end', 'project_manager'],
+    }),
+
     source_project: Field.lookup('crm_project', {
       label: 'Won From',
       group: 'provenance',
@@ -371,6 +383,7 @@ export const Project = ObjectSchema.create({
     { fields: ['crm_account'] },
     { fields: ['crm_opportunity'] },
     { fields: ['crm_contract'] },
+    { fields: ['crm_sales_order'] },
     { fields: ['status'] },
     { fields: ['project_manager'] },
   ],
