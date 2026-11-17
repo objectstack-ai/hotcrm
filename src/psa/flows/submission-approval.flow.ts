@@ -2,19 +2,21 @@
 
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
-import { EXPENSE_FINANCE_REVIEW_AMOUNT } from '../objects/_thresholds';
 type Flow = Automation.Flow;
 type FlowNode = Flow['nodes'][number];
 type FlowEdge = Flow['edges'][number];
 
 /**
- * Timesheet and expense approval (#2316 phase 1b).
+ * Timesheet approval (#2316 phase 1b).
  *
- * Setting a timesheet or an expense to Submitted opens an approval request
- * for the record's `approver` (the project's Project Manager when the record
- * was created, stamped by its hook), who decides from the approvals Inbox. An
- * expense of EXPENSE_FINANCE_REVIEW_AMOUNT or more then goes to a Finance
- * Controller as well. Shaped as `opportunity_approval` is
+ * Setting a timesheet to Submitted opens an approval request for its
+ * `approver` (the project's Project Manager when the timesheet was created,
+ * stamped by its hook), who decides from the approvals Inbox. The expense's
+ * approval lived here too until `crm_expense` moved to the expense module
+ * (hotcrm#2556); an expense on a project is now approved by
+ * `src/expense/flows/expense-project-approval.flow.ts`, which shares these
+ * notes. Shaped as
+ * `opportunity_approval` is
  * (`src/sales/flows/opportunity-approval.flow.ts`, which carries the long
  * notes): approval nodes with `lockRecord`, `onEmptyApprovers: 'admin_rescue'`
  * and `first_response`, `runAs: 'system'`, and a recall told apart from a
@@ -48,7 +50,7 @@ type FlowEdge = Flow['edges'][number];
  * ## Born submitted
  *
  * A record-change flow binds one event, so each flow has an insert twin for a
- * record created already Submitted (an expense entered and sent in one save,
+ * record created already Submitted (a timesheet entered and sent in one save,
  * an import), as `opportunity_approval_on_create` is.
  */
 
@@ -60,11 +62,9 @@ type FlowEdge = Flow['edges'][number];
  */
 const RECALLED = {
   approver_review: P`has(vars.approver_review) && has(vars.approver_review.decision) && vars.approver_review.decision == "recall"`,
-  finance_review: P`has(vars.finance_review) && has(vars.finance_review.decision) && vars.finance_review.decision == "recall"`,
 };
 const NOT_RECALLED = {
   approver_review: P`!has(vars.approver_review) || !has(vars.approver_review.decision) || vars.approver_review.decision != "recall"`,
-  finance_review: P`!has(vars.finance_review) || !has(vars.finance_review.decision) || vars.finance_review.decision != "recall"`,
 };
 
 /**
@@ -159,86 +159,6 @@ export const TimesheetApprovalOnCreateFlow: Flow = {
   label: 'Timesheet Approval (on create)',
   description: 'Approval intake for a timesheet created already submitted (insert-time twin of timesheet_approval).',
   nodes: TimesheetApprovalFlow.nodes.map((n) =>
-    n.id === 'start'
-      ? { ...n, config: { ...n.config, triggerType: 'record-after-create', condition: BORN_SUBMITTED } }
-      : n,
-  ),
-};
-
-export const ExpenseApprovalFlow: Flow = {
-  name: 'expense_approval',
-  label: 'Expense Approval',
-  description: `When an expense is submitted: its approver (the project manager) decides, and an expense of ${EXPENSE_FINANCE_REVIEW_AMOUNT} or more then goes to a Finance Controller.`,
-  type: 'record_change',
-  status: 'active',
-  // Elevated for the reasons `opportunity_approval` gives: the gate must
-  // engage for a submission written by any writer, a user-less one included,
-  // and the closing writes land on a record the approval node holds locked,
-  // which only a platform write may. The decider is still attributed.
-  runAs: 'system',
-  variables: [],
-  nodes: [
-    {
-      id: 'start',
-      type: 'start',
-      label: 'Start (expense submitted)',
-      config: { objectName: 'crm_expense', triggerType: 'record-after-update', condition: SUBMITTED_NOW },
-    },
-    approverReview('Project Manager Review'),
-    {
-      id: 'get_expense',
-      type: 'get_record',
-      label: 'Get Expense',
-      config: { objectName: 'crm_expense', filter: { id: cel`record.id` }, outputVariable: 'expenseRecord' },
-    },
-    // The branch is on the edges, where the engine reads it.
-    { id: 'check_amount', type: 'decision', label: `Amount ${EXPENSE_FINANCE_REVIEW_AMOUNT} or More?` },
-    {
-      id: 'finance_review',
-      type: 'approval',
-      label: 'Finance Controller Review',
-      config: {
-        approvers: [{ type: 'position', value: 'crm_finance_controller' }],
-        excludeSubmitter: true,
-        onEmptyApprovers: 'admin_rescue',
-        behavior: 'first_response',
-        lockRecord: true,
-      },
-    },
-    ...closing('crm_expense'),
-  ],
-  edges: [
-    { id: 'e_start', source: 'start', target: 'approver_review', type: 'default' },
-    { id: 'e_approve', source: 'approver_review', target: 'get_expense', type: 'default', label: 'approve' },
-    ...rejectEdges('approver_review', 'e_approver'),
-    { id: 'e_get', source: 'get_expense', target: 'check_amount', type: 'default' },
-    // Re-read, not the trigger snapshot: the amount the first approver saw is
-    // the one locked since, and the two must partition every value.
-    {
-      id: 'e_large', source: 'check_amount', target: 'finance_review', type: 'conditional',
-      label: `${EXPENSE_FINANCE_REVIEW_AMOUNT} or more`,
-      condition: P`has(vars.expenseRecord) && has(vars.expenseRecord.amount) && vars.expenseRecord.amount != null
-        && vars.expenseRecord.amount >= ${EXPENSE_FINANCE_REVIEW_AMOUNT}`,
-    },
-    {
-      id: 'e_small', source: 'check_amount', target: 'mark_approved', type: 'conditional',
-      label: `Under ${EXPENSE_FINANCE_REVIEW_AMOUNT}`,
-      condition: P`!has(vars.expenseRecord) || !has(vars.expenseRecord.amount) || vars.expenseRecord.amount == null
-        || vars.expenseRecord.amount < ${EXPENSE_FINANCE_REVIEW_AMOUNT}`,
-    },
-    { id: 'e_finance_approve', source: 'finance_review', target: 'mark_approved', type: 'default', label: 'approve' },
-    ...rejectEdges('finance_review', 'e_finance'),
-    ...closingEdges,
-  ],
-};
-
-/** Insert twin of {@link ExpenseApprovalFlow}: an expense created already Submitted. */
-export const ExpenseApprovalOnCreateFlow: Flow = {
-  ...ExpenseApprovalFlow,
-  name: 'expense_approval_on_create',
-  label: 'Expense Approval (on create)',
-  description: 'Approval intake for an expense created already submitted (insert-time twin of expense_approval).',
-  nodes: ExpenseApprovalFlow.nodes.map((n) =>
     n.id === 'start'
       ? { ...n, config: { ...n.config, triggerType: 'record-after-create', condition: BORN_SUBMITTED } }
       : n,

@@ -63,11 +63,9 @@ Nobody sets **Approved** or **Rejected** by hand: those are written by the appro
 
 ## Expenses
 
-An **Expense** is money one person spent on a project. Open **My Expenses** and choose **New**: the **Description**, the **Project**, the **Date**, the **Category** (Travel, Lodging, Meals, Equipment, Other), the **Amount** and whether it is **Billable** to the customer. Attach the receipt in the **Files** tab.
+Expenses are their own module, for everyone: recording one, its fields and who approves it are on the [Expenses](/docs/expenses) page. Here is what a project adds.
 
-An expense goes through the same statuses as a timesheet and is decided in the same Inbox. Its **Approver** is the project's Project Manager when it was created, and it appears under **Expenses to Approve**. An expense of **2,000** or more then goes to the **Finance Controllers** as well, and counts only once they approve it too.
-
-Amounts are in your organization's currency. Convert a receipt in another currency before you enter it.
+An expense can name a **Project**, and project staff find **My Expenses** and **Expenses to Approve** here, under **Time and Expenses**. An expense on a project is approved by the project's Project Manager, who is named as its **Approver** when it is submitted, and then by the **Finance Controllers** from **2,000**. An expense with no project goes to the spender's own manager instead.
 
 ## How they become the project's cost
 
@@ -80,10 +78,12 @@ Draft, submitted and rejected ones count nowhere. The project's [cost and margin
 
 ## When the project is locked
 
-A project manager or finance can tick **Lock Time and Expenses** on a project, usually after a [budget notice](/docs/projects/projects-and-staffing#budget-lock). While it is ticked, submitting a timesheet or an expense on that project is refused, naming the project. Keep it as a draft: once the lock is lifted, submit it as usual.
+A project manager or finance can tick **Lock Time and Expenses** on a project, usually after a [budget notice](/docs/projects/projects-and-staffing#budget-lock). While it is ticked, submitting a timesheet on that project is refused, naming the project. An expense submitted on it goes back to **Draft**, and its spender gets an Inbox notice naming the project. Keep them as drafts: once the lock is lifted, submit them as usual.
 
 ## When the project is over
 
-A **Closed** or **Cancelled** project takes no more time or spend. Creating a timesheet or an expense on it is refused, and so is moving one onto it; the message names the project and its status. A draft already on the project stays where it is and can still be edited, but submitting it is refused: move it to an open project to submit it there.
+A **Closed** or **Cancelled** project takes no more time or spend. Creating a timesheet on it is refused, and so is moving one onto it; the message names the project and its status. A draft timesheet already on the project stays where it is and can still be edited, but submitting it is refused: move it to an open project to submit it there.
+
+An expense's **Project** picker does not offer a Closed or Cancelled project. An expense submitted on one anyway (one written before the project closed, say) goes back to **Draft**, and its spender gets an Inbox notice naming the project: move it to an open project and submit it there.
 
 A **Completed** project still takes late timesheets and expenses. To stop them, tick **Lock Time and Expenses**, or close the project.

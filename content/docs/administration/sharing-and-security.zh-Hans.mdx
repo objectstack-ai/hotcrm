@@ -121,7 +121,7 @@ crm_na_sales_team       crm_eu_sales_team       （区域分组）
 | Projects — Project Manager | 项目 | 编辑 | 项目 `project_manager` 字段里的人 |
 | Projects — Finance | 项目 | 编辑 | `crm_finance_controller`、`crm_project_director`、`crm_pmo` —— 每个项目（每个岗位一条规则；可以编辑，从不能删除） |
 | Timesheets — Approver | 工时单 | 编辑 | 工时单 `approver` 字段里的人 —— 创建时的项目经理 |
-| Expenses — Approver | 费用 | 编辑 | 费用 `approver` 字段里的人 —— 创建时的项目经理 |
+| Expenses — Approver | 费用 | 编辑 | 费用 `approver` 字段里的人 —— 提交时写入：报销人的上级；项目上的费用则是项目经理 |
 
 在 **系统设置 → 共享规则** 中创建你自己的规则。
 

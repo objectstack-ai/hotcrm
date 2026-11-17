@@ -2,6 +2,7 @@
 
 import { O2C_FIGURE_FIELDS } from './_o2c-figures';
 import { PSA_READ_OWN_OBJECTS } from './_psa-grants';
+import { EXPENSE_OWN } from './_expense-grants';
 
 export const SalesRepProfile = {
   name: 'sales_rep',
@@ -47,6 +48,8 @@ export const SalesRepProfile = {
   // authors none, so the master set was every record.
   // objectstack-ai/objectstack#5386 fixed that upstream and it shipped in rc.4.
   objects: {
+    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    crm_expense: EXPENSE_OWN,
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. Safe alongside `readScope: 'own'`: export is
     // read-derived, so a rep's CSV carries their own book, not the org's.

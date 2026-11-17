@@ -1,0 +1,57 @@
+---
+title: 費用報銷
+description: 記錄你為公司花的錢和票據，誰來審批，以及項目上的費用如何計入項目成本。
+---
+
+# 費用報銷
+
+費用報銷面向每一位為公司花錢的員工，不只是項目人員。它是 HotCRM 的一個模組，有自己的應用 **Expenses**，管理員可以把它關掉。
+
+## 記錄一筆費用
+
+在 **Expenses** 應用裡打開 **My Expenses**，點 **New**：
+
+| 欄位 | 填寫什麼 |
+| --- | --- |
+| **Description** | 這筆錢花在哪裡 |
+| **Date** | 什麼時候花的 |
+| **Category** | Travel、Lodging、Meals、Equipment 或 Other |
+| **Amount** | 花了多少，使用貴公司的本位幣。外幣票據請先換算再錄入 |
+| **Paid By** | **Employee**（你先墊付，再報銷給你，預設值）或 **Company**（例如用公司卡支付） |
+| **Merchant** | 在哪裡花的，可選 |
+| **Receipt Number** | 票據上的號碼，如有 |
+| **Billable** | 是否向客戶收取 |
+
+在 **Files** 分頁上傳票據。**Source** 說明這筆記錄從哪裡來：你手動填寫時是 **Manual**，由助手或匯入寫入時是 **Agent** 或 **Import**。啟用項目交付後，表單上還有 **Project**：見[項目上的費用](#on-a-project)。
+
+## 提交和審批
+
+| 狀態 | 含義 |
+| --- | --- |
+| **Draft** | 還在填寫 |
+| **Submitted** | 已送審，等待期間鎖定 |
+| **Approved** | 最終狀態 |
+| **Rejected** | 被退回。改回 Draft，修改後重新提交 |
+
+把狀態改為 **Submitted** 即送審。由誰決定：
+
+- **你的上級**，即你使用者記錄上的 **Manager**。沒有上級時，改由 **Finance Controller** 決定。
+- 金額達到 **2,000** 或以上的費用，隨後還要交給 **Finance Controller** 審批，他們也批准後才算批准。
+
+審批人在 **Inbox**（在 **My Work** 下）裡點 **Approve** 或 **Reject**。**Expenses to Approve** 列出等你審批的費用，可以先打開查看。沒有人審批自己的費用，也沒有人能手動設定 **Approved** 或 **Rejected**。
+
+**想撤回？** 在等待期間從 Inbox 裡撤回，費用回到 **Draft**。
+
+## 誰能看到什麼
+
+你能看到自己的費用，以及請你審批的費用。財務在 **All Expenses** 裡能看到所有費用，銷售經理和銷售管理層也能看到。
+
+## 項目上的費用 [#on-a-project]
+
+啟用[項目交付](/zh-Hant/docs/projects)後，費用可以選擇一個 **Project**。項目人員在項目交付應用的 **Time and Expenses** 下也能找到 **My Expenses** 和 **Expenses to Approve**。
+
+- 項目上的費用由**該項目的項目經理**審批，而不是你的上級；金額達到 2,000 或以上再交給財務。
+- 批准後計入項目成本：見[工時和費用如何成為項目的成本](/zh-Hant/docs/projects/time-and-expenses#如何成為項目的成本)。
+- **Project** 選擇框不提供 Closed 或 Cancelled 的項目。如果仍在這樣的項目上，或在勾選了 **Lock Time and Expenses** 的項目上提交了費用，費用會退回 **Draft**，你會在 Inbox 裡收到一條寫明項目名稱的通知。
+
+關閉項目交付後，表單上不顯示項目欄位，所有費用都交給你的上級審批。費用原來選的項目會保留，重新啟用項目交付後再次顯示。

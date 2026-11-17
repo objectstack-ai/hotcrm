@@ -4,15 +4,14 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, notificationsTo, signUpPerson, type Person } from './helpers/verify-stack';
 import { REPO_ROOT } from './helpers/repo-root';
 import {
   BUDGET_EXCEEDED_PERCENT, BUDGET_WARNING_PERCENT, EXPENSE_FINANCE_REVIEW_AMOUNT, PROJECT_FINANCE_REVIEW_BUDGET,
 } from '../src/psa/objects/_thresholds';
 import { ProjectInitiationApprovalFlow } from '../src/psa/flows/project-initiation-approval.flow';
-import {
-  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
-} from '../src/psa/flows/submission-approval.flow';
+import { TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow } from '../src/psa/flows/submission-approval.flow';
+import { allFlows } from '../objectstack.composition';
 import { ProjectBudgetAlertFlow } from '../src/psa/flows/project-budget-alert.flow';
 
 type Rec = Record<string, any>;
@@ -25,16 +24,21 @@ type Rec = Record<string, any>;
  * - `project_initiation_approval`: a project goes Draft → In Approval →
  *   Approved through a Project Director's decision, and a large budget also
  *   through a Finance Controller's. A person cannot write the decision.
- * - `timesheet_approval` / `expense_approval`: the stamped approver decides,
- *   nobody decides their own, a large expense also goes to finance, and a
- *   recall puts the record back to Draft.
+ * - `timesheet_approval` / `expense_project_approval`: the stamped approver
+ *   (the project's Project Manager) decides, nobody decides their own, a large
+ *   expense also goes to finance, and a recall puts the record back to Draft.
+ *   An expense with no project goes to the spender's manager instead
+ *   (`test/expense-module.test.ts`, hotcrm#2556).
  * - `project_budget_status` / `project_budget_alert`: the signal moves with
  *   approved cost, and its crossing tells the PM and finance once.
- * - `time_entry_locked`: a submission on a locked project is refused, a
- *   draft never is.
- * - a Closed or Cancelled project (hotcrm#2491): no new timesheet or expense,
- *   none moved onto it, and a draft already there is editable but not
- *   submitted; Completed and Active take both.
+ * - `time_entry_locked`: a timesheet's submission on a locked project is
+ *   refused, a draft never is; an expense's goes back to Draft with a notice.
+ * - a Closed or Cancelled project (hotcrm#2491): no new timesheet, none moved
+ *   onto it, and a draft already there is editable but not submitted;
+ *   Completed and Active take both. An expense is the expense module's since
+ *   hotcrm#2556, so Project Delivery has no hook on it (ADR-0130 R4): the
+ *   picker offers no over project, and one submitted there anyway goes back
+ *   to Draft with an inbox notice instead of being refused.
  */
 
 let verify: VerifyStack;
@@ -52,6 +56,21 @@ const update = (object: string, doc: Rec, as: string): Promise<Rec> => verify.ho
 const row = async (object: string, id: string): Promise<Rec> => (await verify.rows(object, { id }))[0]!;
 const num = (v: unknown): number => Number(v ?? 0);
 const openRequests = (id: string): Promise<Rec[]> => verify.rows('sys_approval_request', { record_id: id, status: 'pending' });
+const flowNamed = (name: string): Rec => (allFlows as Rec[]).find((f) => f.name === name)!;
+
+/**
+ * An expense submitted on an over or locked project comes back as a Draft, no
+ * request opens, and its spender is told why, naming the template.
+ */
+const expectTurnedBack = async (expenseId: string, template: string): Promise<void> => {
+  expect((await row('crm_expense', expenseId)).status).toBe('draft');
+  expect(await openRequests(expenseId)).toHaveLength(0);
+  await vi.waitFor(async () => {
+    const notices = (await notificationsTo(verify, consultant.id, 'expense_turned_back'))
+      .filter((n) => n.payload?.actionUrl === `/crm_expense/${expenseId}`);
+    expect(notices.map((n) => n.payload?.template ?? n.template)).toEqual([template]);
+  }, { timeout: 15_000, interval: 100 });
+};
 
 /** POST a decision on the one open request of a record; returns the HTTP status. */
 const act = async (recordId: string, token: string, action: 'approve' | 'reject' | 'recall'): Promise<number> => {
@@ -177,7 +196,7 @@ describe('project initiation (project_initiation_approval, project_status_guard)
   });
 });
 
-describe('timesheets and expenses (timesheet_approval, expense_approval)', () => {
+describe('timesheets and expenses (timesheet_approval, expense_project_approval)', () => {
   let project: Rec;
   beforeAll(async () => {
     project = await activeProject(1_000_000);
@@ -217,12 +236,15 @@ describe('timesheets and expenses (timesheet_approval, expense_approval)', () =>
   });
 
   it(`sends an expense of ${EXPENSE_FINANCE_REVIEW_AMOUNT} or more to finance after the PM, and costs it only then`, async () => {
-    expect(ExpenseApprovalFlow.name).toBe('expense_approval');
+    expect(flowNamed('expense_project_approval'), 'the project path').toBeDefined();
     const before = num((await row('crm_project', project.id)).actual_expense_cost);
     const exp = await insert('crm_expense', {
       name: `Workshop ${++k}`, crm_project: project.id, expense_date: '2026-10-06', category: 'equipment', amount: EXPENSE_FINANCE_REVIEW_AMOUNT,
     }, consultant.token);
     await update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token);
+    expect((await row('crm_expense', exp.id)).approver, 'the flow names the PM before the request opens').toBe(pm.id);
+    expect((await verify.apiAs(pm.token, 'GET', `/data/crm_expense/${exp.id}`)).status, 'shared to the approver').toBe(200);
+    expect(await act(exp.id, consultant.token, 'approve'), 'nobody decides their own').not.toBe(200);
     expect(await act(exp.id, pm.token, 'approve')).toBe(200);
     expect((await row('crm_expense', exp.id)).status, 'still waiting on finance').toBe('submitted');
     expect(num((await row('crm_project', project.id)).actual_expense_cost) - before).toBe(0);
@@ -232,7 +254,7 @@ describe('timesheets and expenses (timesheet_approval, expense_approval)', () =>
   });
 
   it('opens the approval for an expense entered already Submitted', async () => {
-    expect(ExpenseApprovalOnCreateFlow.name).toBe('expense_approval_on_create');
+    expect(flowNamed('expense_project_approval_on_create'), 'its insert twin').toBeDefined();
     const exp = await insert('crm_expense', {
       name: `Taxi ${++k}`, crm_project: project.id, expense_date: '2026-10-07', category: 'travel', amount: 40, status: 'submitted',
     }, consultant.token);
@@ -293,7 +315,7 @@ describe('cost control (project_budget_status, project_budget_alert, time_entry_
     expect(raised.budget_status).toBe('on_track');
   });
 
-  it('refuses a submission on a locked project, never a draft, and takes it again once unlocked', async () => {
+  it('refuses a timesheet\'s submission on a locked project, never a draft, turns an expense\'s back, and takes both once unlocked', async () => {
     await update('crm_project', { id: project.id, time_entry_locked: true }, pm.token);
     const sheet = await insert('crm_timesheet', { crm_project: project.id, period_start: '2026-09-28', period_end: '2026-10-04' }, consultant.token);
     await insert('crm_time_entry', { crm_timesheet: sheet.id, entry_date: '2026-09-28', hours: 1 }, consultant.token);
@@ -302,14 +324,17 @@ describe('cost control (project_budget_status, project_budget_alert, time_entry_
     const exp = await insert('crm_expense', {
       name: `Hotel ${++k}`, crm_project: project.id, expense_date: '2026-09-29', category: 'lodging', amount: 90,
     }, consultant.token);
-    await expect(update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token))
-      .rejects.toThrow(/locked for time and expenses/);
+    await update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token);
+    await expectTurnedBack(exp.id, 'crm.expense_project_locked');
     await expect(update('crm_timesheet', { id: sheet.id, status: 'submitted' }, admin), 'nobody is exempt')
       .rejects.toThrow(/locked for time and expenses/);
 
     await update('crm_project', { id: project.id, time_entry_locked: false }, pm.token);
     await update('crm_timesheet', { id: sheet.id, status: 'submitted' }, consultant.token);
     expect((await row('crm_timesheet', sheet.id)).status).toBe('submitted');
+    await update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token);
+    expect((await row('crm_expense', exp.id)).status).toBe('submitted');
+    expect(await openRequests(exp.id)).toHaveLength(1);
   });
 });
 
@@ -350,16 +375,17 @@ describe('a project that is over takes no time or spend (hotcrm#2491)', () => {
   it.each([
     ['closed', 'Closed'],
     ['cancelled', 'Cancelled'],
-  ])('a %s project refuses a new timesheet and a new expense, naming the project and its status', async (status, label) => {
+  ])('a %s project refuses a new timesheet, naming the project and its status, and turns back an expense submitted on it', async (status, label) => {
     const p = projects[status]!;
     await expect(insert('crm_timesheet', { crm_project: p.id, ...week() }, consultant.token))
       .rejects.toThrow(`${p.name} is ${label}, so it takes no new timesheets.`);
-    await expect(insert('crm_expense', expense(p.id), consultant.token))
-      .rejects.toThrow(`${p.name} is ${label}, so it takes no new expenses.`);
     await expect(insert('crm_timesheet', { crm_project: p.id, ...week() }, admin), 'nobody is exempt')
       .rejects.toThrow(`${p.name} is ${label}`);
     expect(await verify.rows('crm_timesheet', { crm_project: p.id })).toEqual([]);
-    expect(await verify.rows('crm_expense', { crm_project: p.id })).toEqual([]);
+    // The picker does not offer it; a write through the API is caught at submission.
+    const exp = await insert('crm_expense', expense(p.id), consultant.token);
+    await update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token);
+    await expectTurnedBack(exp.id, 'crm.expense_project_over');
   });
 
   it.each(['completed', 'active'])('a %s project takes a new timesheet and expense, and their submission', async (status) => {
@@ -373,21 +399,17 @@ describe('a project that is over takes no time or spend (hotcrm#2491)', () => {
     expect((await row('crm_expense', exp.id)).status).toBe('submitted');
   });
 
-  it('refuses moving a timesheet or an expense onto a closed or cancelled project', async () => {
+  it('refuses moving a timesheet onto a closed or cancelled project', async () => {
     const sheet = await insert('crm_timesheet', { crm_project: projects.active!.id, ...week() }, consultant.token);
-    const exp = await insert('crm_expense', expense(projects.active!.id), consultant.token);
     for (const status of ['closed', 'cancelled']) {
       const p = projects[status]!;
       await expect(update('crm_timesheet', { id: sheet.id, crm_project: p.id }, consultant.token))
         .rejects.toThrow(`${p.name} is ${status === 'closed' ? 'Closed' : 'Cancelled'}, so it takes no new timesheets.`);
-      await expect(update('crm_expense', { id: exp.id, crm_project: p.id }, consultant.token))
-        .rejects.toThrow(`${p.name} is ${status === 'closed' ? 'Closed' : 'Cancelled'}, so it takes no new expenses.`);
     }
     expect((await row('crm_timesheet', sheet.id)).crm_project).toBe(projects.active!.id);
-    expect((await row('crm_expense', exp.id)).crm_project).toBe(projects.active!.id);
   });
 
-  it('keeps a draft already on a closed project editable and movable, and refuses only its submission', async () => {
+  it('keeps a draft already on a closed project editable and movable, and stops only its submission', async () => {
     const p = projects.closing!;
     await update('crm_timesheet', { id: draftSheet.id, notes: 'Written before the close.' }, consultant.token);
     await update('crm_expense', { id: draftExpense.id, amount: 45 }, consultant.token);
@@ -396,10 +418,9 @@ describe('a project that is over takes no time or spend (hotcrm#2491)', () => {
 
     await expect(update('crm_timesheet', { id: draftSheet.id, status: 'submitted' }, consultant.token))
       .rejects.toThrow(`${p.name} is Closed, so this timesheet cannot be submitted.`);
-    await expect(update('crm_expense', { id: draftExpense.id, status: 'submitted' }, consultant.token))
-      .rejects.toThrow(`${p.name} is Closed, so this expense cannot be submitted.`);
     expect((await row('crm_timesheet', draftSheet.id)).status).toBe('draft');
-    expect((await row('crm_expense', draftExpense.id)).status).toBe('draft');
+    await update('crm_expense', { id: draftExpense.id, status: 'submitted' }, consultant.token);
+    await expectTurnedBack(draftExpense.id, 'crm.expense_project_over');
 
     await update('crm_expense', { id: draftExpense.id, crm_project: projects.active!.id }, consultant.token);
     await update('crm_expense', { id: draftExpense.id, status: 'submitted' }, consultant.token);

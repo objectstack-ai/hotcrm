@@ -35,7 +35,8 @@ its contract, and the order's page then lists it under **Projects**.
   not open for them, and Opportunities is not in their Project Delivery menu.
 - **One row per person per project.** Staffing someone twice is refused.
 - **Staff yourself first.** Until someone is staffed as Project Manager, a
-  timesheet or expense written on the project has no approver.
+  timesheet written on the project has no approver, and an expense submitted
+  on it goes to an administrator.
 - **Only people staffed on a project can book hours on it.** An hour from
   anyone else is refused, naming the project.
 

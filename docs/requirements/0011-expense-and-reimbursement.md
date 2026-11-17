@@ -11,7 +11,9 @@
   package); stage 2: [hotcrm#2559](https://github.com/objectstack-ai/hotcrm/issues/2559) (the expense
   report, Submit for Reimbursement and Mark as Paid; per-expense approval retires); stage 3 (no cards yet): the travel request and an expense skill;
   recorded by [hotcrm#2562](https://github.com/objectstack-ai/hotcrm/issues/2562). Changesets / PRs —
-  fill in when built.
+  stage 1: `.changeset/2556-expense-module.md` (hotcrm#2556; the project-path approval held in the
+  expense package until [objectstack#34616](https://github.com/objectstack-ai/objectstack/issues/34616),
+  moved back on [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)).
 
 ## Raw requirement (verbatim)
 

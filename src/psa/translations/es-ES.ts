@@ -30,21 +30,6 @@ export const esES: TranslationData = {
         },
       },
     },
-    expense_approver: {
-      refusals: {
-        RECORD_LOCKED: {
-          message: 'Este gasto no se puede cambiar ahora en este proyecto.',
-          reasons: {
-            project_locked: { message: '{{project}} está bloqueado para horas y gastos, así que este gasto no se puede enviar. Guárdelo como borrador o pida al jefe de proyecto que desmarque Bloquear horas y gastos en el proyecto.' },
-            closed_takes_no_new: { message: '{{project}} está cerrado, así que no admite gastos nuevos. Registre el gasto en un proyecto abierto.' },
-            cancelled_takes_no_new: { message: '{{project}} está cancelado, así que no admite gastos nuevos. Registre el gasto en un proyecto abierto.' },
-            closed_no_submit: { message: '{{project}} está cerrado, así que este gasto no se puede enviar. Guárdelo como borrador o muévalo a un proyecto abierto.' },
-            cancelled_no_submit: { message: '{{project}} está cancelado, así que este gasto no se puede enviar. Guárdelo como borrador o muévalo a un proyecto abierto.' },
-          },
-        },
-        FORBIDDEN: { message: 'Un gasto lo aprueban o rechazan sus aprobadores, desde su bandeja de entrada, una vez enviado.' },
-      },
-    },
     project_status_guard: {
       refusals: {
         VALIDATION_FAILED: {
@@ -566,52 +551,10 @@ export const esES: TranslationData = {
         rates: { label: 'Coste y facturación' },
       },
     },
+    // The Project field it contributes to the expense module's object (hotcrm#2556).
     crm_expense: {
-      label: 'Gasto',
-      pluralLabel: 'Gastos',
-      description: 'Un coste incurrido en un proyecto, con su recibo',
       fields: {
-        owner_id: { label: 'Gastado por' },
-        name: { label: 'Descripción' },
         crm_project: { label: 'Proyecto' },
-        expense_date: { label: 'Fecha' },
-        category: {
-          label: 'Categoría',
-          options: {
-            travel: 'Viajes',
-            lodging: 'Alojamiento',
-            meals: 'Comidas',
-            equipment: 'Equipos',
-            other: 'Otros',
-          },
-        },
-        amount: { label: 'Importe' },
-        is_billable: {
-          label: 'Facturable',
-          help: 'Si este gasto se repercute al cliente.',
-        },
-        status: {
-          label: 'Estado',
-          options: {
-            draft: 'Borrador',
-            submitted: 'Enviado',
-            approved: 'Aprobado',
-            rejected: 'Rechazado',
-          },
-        },
-        approver: { label: 'Aprobador' },
-        notes: { label: 'Notas' },
-      },
-      _views: {
-        all_expenses: { label: 'Todos los gastos' },
-        my_expenses: { label: 'Mis gastos' },
-        expenses_to_approve: { label: 'Gastos por aprobar' },
-      },
-      _sections: {
-        basic: { label: 'Gasto' },
-      },
-      _validations: {
-        expense_status_progression: { message: 'Este cambio de estado no está permitido. Un gasto avanza Borrador → Enviado → Aprobado o Rechazado; un gasto rechazado vuelve a Borrador para corregirlo.' },
       },
     },
   },
@@ -639,20 +582,6 @@ export const esES: TranslationData = {
       label: 'Aprobación de hoja de horas (al crear)',
       approvals: { approver_review: { label: 'Revisión del jefe de proyecto' } },
     },
-    expense_approval: {
-      label: 'Aprobación de gastos',
-      approvals: {
-        approver_review: { label: 'Revisión del jefe de proyecto' },
-        finance_review: { label: 'Revisión del controller financiero' },
-      },
-    },
-    expense_approval_on_create: {
-      label: 'Aprobación de gastos (al crear)',
-      approvals: {
-        approver_review: { label: 'Revisión del jefe de proyecto' },
-        finance_review: { label: 'Revisión del controller financiero' },
-      },
-    },
     project_budget_alert: { label: 'Alerta de presupuesto del proyecto' },
   },
   pages: {
@@ -679,9 +608,7 @@ export const esES: TranslationData = {
         nav_my_week: { label: 'Mi semana' },
         nav_my_week_timesheets: { label: 'Enviar esta semana' },
         nav_my_timesheets: { label: 'Mis partes de horas' },
-        nav_my_expenses: { label: 'Mis gastos' },
         nav_timesheets_to_approve: { label: 'Partes de horas por aprobar' },
-        nav_expenses_to_approve: { label: 'Gastos por aprobar' },
         group_rates: { label: 'Tarifas' },
         nav_rate_cards: { label: 'Tarifas' },
         group_customers: { label: 'Cuentas y contratos' },

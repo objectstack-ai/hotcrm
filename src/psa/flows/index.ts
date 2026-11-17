@@ -6,9 +6,6 @@
  * own stack (`psaFlows` in `src/psa/index.ts`).
  */
 export { ProjectInitiationApprovalFlow } from './project-initiation-approval.flow';
-export {
-  TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
-  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow,
-} from './submission-approval.flow';
+export { TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow } from './submission-approval.flow';
 export { ProjectBudgetAlertFlow } from './project-budget-alert.flow';
 export { ProjectBudgetApprovalFlow } from './project-budget-approval.flow';

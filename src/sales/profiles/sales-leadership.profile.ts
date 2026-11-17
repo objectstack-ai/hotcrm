@@ -4,6 +4,7 @@ import { O2C_FIGURE_FIELDS } from './_o2c-figures';
 import { privateOpportunityPolicy } from './_private-opportunity';
 import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
 import { SalesManagerProfile } from './sales-manager.profile';
+import { EXPENSE_READ_ALL } from './_expense-grants';
 
 /**
  * Sales Leadership — reads what a sales manager reads, and changes nothing a
@@ -43,6 +44,9 @@ export const SalesLeadershipProfile = {
     'Executives and sales directors: read what a sales manager reads, change nothing they do not own, and create and edit their own deals with the amount.',
   tabPermissions: SalesManagerProfile.tabPermissions,
   objects: {
+    // Every expense read, nothing written (#2492 A); their own come through
+    // `crm_user` (hotcrm#2556, `_expense-grants.ts`).
+    crm_expense: EXPENSE_READ_ALL,
     crm_lead:              READ_ALL,
     crm_account:           READ_ALL,
     crm_contact:           READ_ALL,

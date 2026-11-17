@@ -14,8 +14,9 @@ import { HOTCRM_ICON } from '../../sales/apps/crm.app';
  * launcher, as it does for the Order to Cash app.
  *
  * The module's own objects come first (phase 1a): Projects, then Time and
- * Expenses (with the two to-approve lists a project manager works from), then
- * the rate cards. Accounts, Opportunities and Contracts, and My Tasks, are the
+ * Expenses (with the two to-approve lists a project manager works from; the
+ * expense entries are contributed by the expense module since hotcrm#2556),
+ * then the rate cards. Accounts, Opportunities and Contracts, and My Tasks, are the
  * app package's, reaching the app through ANCHOR groups that
  * `src/sales/index.ts` fills with `navigationContributions` — an app's own
  * `navigation` may not name another package's object (ADR-0130).
@@ -79,13 +80,14 @@ export const PsaApp = App.create({
       label: 'Time and Expenses',
       icon: 'clock',
       expanded: true,
+      // My Expenses and Expenses to Approve are the expense module's, which
+      // contributes them after these (hotcrm#2556): an app's own navigation
+      // may not name another package's object (ADR-0130 R3).
       children: [
         { id: 'nav_my_week', type: 'object', objectName: 'crm_time_entry', viewName: 'my_week_time', label: 'My Week', icon: 'calendar-days' },
         { id: 'nav_my_week_timesheets', type: 'object', objectName: 'crm_timesheet', viewName: 'my_week_timesheets', label: 'Submit This Week', icon: 'send' },
         { id: 'nav_my_timesheets', type: 'object', objectName: 'crm_timesheet', viewName: 'my_timesheets', label: 'My Timesheets', icon: 'clock' },
-        { id: 'nav_my_expenses', type: 'object', objectName: 'crm_expense', viewName: 'my_expenses', label: 'My Expenses', icon: 'receipt' },
         { id: 'nav_timesheets_to_approve', type: 'object', objectName: 'crm_timesheet', viewName: 'timesheets_to_approve', label: 'Timesheets to Approve', icon: 'clipboard-check' },
-        { id: 'nav_expenses_to_approve', type: 'object', objectName: 'crm_expense', viewName: 'expenses_to_approve', label: 'Expenses to Approve', icon: 'clipboard-check' },
       ],
     },
     {

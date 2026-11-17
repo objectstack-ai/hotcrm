@@ -8,5 +8,4 @@ export { ProjectTaskViews } from './project_task.view';
 export { RateCardViews } from './rate_card.view';
 export { TimesheetViews } from './timesheet.view';
 export { TimeEntryViews } from './time_entry.view';
-export { ExpenseViews } from './expense.view';
 export { ProjectBudgetViews, ProjectBudgetLineViews } from './project_budget.view';

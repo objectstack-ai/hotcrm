@@ -31,8 +31,10 @@ record whose approval cannot run.
   decides, then the **Finance Controllers** too when it raises the Approved
   Budget by **10 %** or more.
 - **A timesheet** goes to its project's Project Manager when it is submitted.
-- **An expense** goes to the Project Manager, then, at **2,000** or more, to
-  the Finance Controllers.
+- **An expense on a project** goes to the Project Manager when it is
+  submitted, then, at **2,000** or more, to the Finance Controllers. An
+  expense with no project goes to the spender's own manager instead (the
+  **Expenses** manual).
 - **Nobody approves their own.** A Project Manager's own timesheet or expense
   goes to an administrator.
 - **Rejected** sends the record back for revision; the sender can also
@@ -68,15 +70,18 @@ project with no budget has none.
 ## The lock
 
 The notice proposes the lock; a person decides, and nothing ticks it on its
-own. While **Lock Time and Expenses** is ticked on a project, no timesheet or
-expense on it can be submitted, **whoever submits it**, administrators
-included. Drafts can still be written. Untick it, after a top-up is approved for
+own. While **Lock Time and Expenses** is ticked on a project, no timesheet on
+it can be submitted, **whoever submits it**, administrators included, and an
+expense submitted on it goes back to Draft with an inbox notice to its
+spender. Drafts can still be written. Untick it, after a top-up is approved for
 example, and submissions are taken again.
 
 A **Closed** or **Cancelled** project takes nothing new at all: no timesheet
-or expense can be created on it or moved onto it, and a draft already there
-can be edited but not submitted, administrators included. A **Completed**
-project still takes late bookings; tick the lock to stop them.
+can be created on it or moved onto it, and a draft already there can be edited
+but not submitted, administrators included. The expense's Project picker does
+not offer such a project, and an expense submitted on one goes back to Draft
+with an inbox notice. A **Completed** project still takes late bookings; tick
+the lock to stop them.
 
 The **Projects Overview** dashboard, under **Projects**, shows the same figures
 across every project: what its tiles count is the next page.
