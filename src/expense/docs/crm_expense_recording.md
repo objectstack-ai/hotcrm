@@ -1,12 +1,14 @@
 ---
 title: Expenses — Recording, Reports and Projects
-description: Recording what you spent with its receipt, sending it on an expense report, who approves it, its payment back, and what reaches a project's cost.
+description: Recording what you spent with its receipt, sending it on an expense report, who approves it, its payment back, what reaches a project's cost, and what an assistant does for you.
 order: 1
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
   - object:crm_expense
   - object:crm_expense_report
   - object:crm_expense_standard
+  - skill:expense_filing
+  - skill:expense_check
 ---
 
 # Expenses — Recording, Reports and Projects
@@ -37,7 +39,10 @@ expense is on.
 expense found: above a standard, a receipt number seen before, a missing
 receipt. The approver reads it in the expense list on the report. HotCRM
 writes nothing there itself, and it locks with the rest of the expense once
-the report is sent.
+the report is sent, so notes are written on each expense **before** it is
+sent. The report has **Review Notes** of its own, but a report under approval
+is locked as a whole, the approver included: its notes can be written only
+while the report is back in Draft.
 
 ## Submitting for reimbursement
 
@@ -119,6 +124,27 @@ is a rule in words, such as "second-class rail".
   an expense above one saves and is submitted like any other. An assistant
   reads the standards, compares, and writes what it found in the expense's
   **Review Notes**; the approver decides.
+
+## With an assistant
+
+Where your deployment runs the platform's assistant, or you connect your own
+agent over MCP, two skills teach it this module (see
+[Using the Assistant](./crm_ai_skills.md)):
+
+- **Expense Filing**, for you as the person who spent: show it a receipt and
+  it records the expense with **Source** Agent, checks for the same receipt
+  number or the same date, amount and merchant, gives you a one-time link to
+  attach the receipt, reads the standards and writes what it found into the
+  expense's **Review Notes**. It can draft a travel request too. It runs
+  **Submit for Reimbursement**, **Submit for a Trip** and the other sending
+  steps only after you say yes.
+- **Expense Check**, for the approver and finance: it lists what in a report
+  deserves a look (over a standard, a possible duplicate, a missing receipt, a
+  trip over its estimate) and changes nothing. It offers a short text you may
+  put in your own approval comment, and it never approves, rejects or marks
+  paid.
+
+**Mark as Paid** stays a person's: no assistant is offered it.
 
 ## Projects
 

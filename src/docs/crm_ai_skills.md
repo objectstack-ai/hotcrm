@@ -11,6 +11,8 @@ sources:
   - skill:customer_360
   - skill:email_drafting
   - skill:case_triage
+  - skill:expense_filing
+  - skill:expense_check
 ---
 
 # Using the Assistant — What It Can Do in HotCRM
@@ -93,6 +95,41 @@ tone of their latest message. It cannot escalate or close a case: it points you
 to **Escalate Case** or **Close Case** and offers the reason or resolution text
 for you to paste. It starts on its own when you are on a case, on installs with
 the service module.
+
+## Expense Filing
+
+Files expenses for the person who spent the money, on installs with the
+expense module. Give it a receipt, or tell it what you spent, and it creates
+the expense as a Draft marked as written by an agent, after checking that the
+same receipt number, or the same date, amount and merchant, is not already
+there. It gives you a one-time link to attach the receipt to the expense.
+Where the connection does not offer files, it asks you to attach the receipt
+on the expense's page.
+
+It reads the company's active expense standards and writes what it found
+into the expense's **Review Notes**, for example a hotel night over the limit,
+and "No findings" when there is nothing to report. A finding never stops you from
+submitting. It is there for the approver to read. These notes are written while the expense
+is still a Draft on no report, because an expense locks once it is sent. It
+can also draft a travel request with its legs.
+
+It can act through the expense buttons, and it asks you before each one that
+sends something to an approver or cannot be undone:
+**Submit for Reimbursement**, **Submit for a Trip**, an expense report's
+**Submit**, a travel request's **Submit**, **Cancel Trip** and **Close**. **Back to Draft**
+on a rejected report it runs when you ask, and tells you. It never approves,
+rejects or marks anything as paid.
+
+## Expense Check
+
+Helps an approver or finance read an expense report before deciding. It lists
+the expenses that deserve a look: over a standard (naming the standard and the
+numbers), a possible duplicate, a missing receipt, and a trip spent over its
+estimate. It also quotes the Review Notes the spender's assistant left on each
+expense. It reads only. A report under approval is locked, so it changes
+nothing on it. Instead it offers a short text you can paste into your own approval
+comment. It never approves, rejects, sends back or marks paid: you do that
+with the report's own buttons.
 
 ---
 
