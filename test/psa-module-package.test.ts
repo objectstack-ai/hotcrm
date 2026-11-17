@@ -195,6 +195,12 @@ describe('Project Delivery is its own app (#2316)', () => {
  */
 describe('with the module disabled (#2316)', () => {
   const PKG = '/packages/app.objectstack.hotcrm.psa';
+  /**
+   * A disable and a re-enable rebuild the served metadata twice: measured
+   * 3.1 s alone for this case, and past the 5 s default on a loaded CI runner
+   * (hotcrm#2585 run, 2026-11-17). The boot budget above, for the same reason.
+   */
+  const DISABLE_BUDGET_MS = 120_000;
   let verify: VerifyStack;
   let admin: string;
 
@@ -228,5 +234,5 @@ describe('with the module disabled (#2316)', () => {
     expect(await appStatus(PSA_APP)).toBe(200);
     expect(await offered()).toContain(PSA_APP);
     expect((await verify.apiAs(admin, 'GET', '/meta/object/crm_project')).status).toBe(200);
-  });
+  }, DISABLE_BUDGET_MS);
 });

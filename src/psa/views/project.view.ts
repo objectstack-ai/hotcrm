@@ -6,7 +6,7 @@ import { defineView } from '@objectstack/spec/ui';
  * Project views (hotcrm#2316 phase 1).
  *
  *   • All Projects — every project the reader may see, newest first, with its
- *     cost and margin.
+ *     order and its cost and margin.
  *   • My Projects — the projects the reader manages.
  *   • Active Projects — the ones being delivered now, by planned end.
  *
@@ -24,6 +24,8 @@ export const ProjectViews = defineView({
       { field: 'project_number', width: 120 },
       { field: 'name', width: 260, link: true, pinned: 'left' },
       { field: 'crm_account', width: 200 },
+      // The order the project delivers (hotcrm#2561), beside its customer.
+      { field: 'crm_sales_order', width: 200 },
       { field: 'kind', width: 110 },
       { field: 'status', width: 120 },
       { field: 'project_manager', width: 160 },

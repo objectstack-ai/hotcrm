@@ -160,6 +160,10 @@ export const jaJP: TranslationData = {
         crm_account: { label: '取引先' },
         crm_opportunity: { label: '商談' },
         crm_contract: { label: '契約' },
+        crm_sales_order: {
+          label: '注文',
+          help: 'このプロジェクトが納品する販売注文。',
+        },
         source_project: {
           label: '受注元',
           help: 'デリバリープロジェクトの場合、受注元のプリセールスプロジェクトです。',
