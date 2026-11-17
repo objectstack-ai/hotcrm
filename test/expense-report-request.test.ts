@@ -211,6 +211,8 @@ describe('a trip\'s reports against its estimate (hotcrm#2580)', () => {
     expect(stored.crm_expense_request ?? null).toBeNull();
     expect(stored.request_estimated_amount ?? null).toBeNull();
     expect(stored.request_reported_amount ?? null).toBeNull();
+    expect((await get(traveler, 'crm_expense_report', reportId!)).record.request_over_estimate ?? null,
+      'empty, not No, so the detail page folds the trip section away').toBeNull();
     expect(await decide(reportId!, 'approve', manager)).toBe(200);
     await pay(reportId!);
     expect((await row('crm_expense_report', reportId!)).status).toBe('paid');

@@ -140,7 +140,9 @@ export const ExpenseReport = ObjectSchema.create({
       group: 'trip',
       visibleWhen: CITES_A_REQUEST,
       returnType: 'boolean',
-      expression: F`has(record.crm_expense_request) && record.crm_expense_request != null && coalesce(record.request_reported_amount, 0) > coalesce(record.request_estimated_amount, 0)`,
+      // Empty, not "No", on a report with no request, so the detail page
+      // folds it away with the other empty fields.
+      expression: F`has(record.crm_expense_request) && record.crm_expense_request != null && record.crm_expense_request != "" ? coalesce(record.request_reported_amount, 0) > coalesce(record.request_estimated_amount, 0) : null`,
     }),
 
     total_amount: Field.summary({
