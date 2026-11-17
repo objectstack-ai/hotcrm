@@ -53,6 +53,20 @@ export const jaJP: TranslationData = {
         FORBIDDEN: { message: '出張申請は提出後、承認者が受信トレイから承認または却下します。' },
       },
     },
+    expense_request_delete_guard: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '削除できるのは下書きの出張申請だけです。承認済みの出張を取りやめるには「出張をキャンセル」を使ってください。',
+          reasons: {
+            submitted: { message: '削除できるのは下書きの出張申請だけです。出張申請 {{name}} は承認待ちです。承認後は「出張をキャンセル」で取りやめられます。' },
+            approved: { message: '削除できるのは下書きの出張申請だけです。出張申請 {{name}} は承認済みです。出張を取りやめるには「出張をキャンセル」を使ってください。' },
+            rejected: { message: '削除できるのは下書きの出張申請だけです。出張申請 {{name}} は却下されました。下書きに戻してから修正または削除してください。' },
+            cancelled: { message: '削除できるのは下書きの出張申請だけです。出張申請 {{name}} はキャンセル済みで、記録として残ります。' },
+            closed: { message: '削除できるのは下書きの出張申請だけです。出張申請 {{name}} は完了しており、経費精算書とともに記録として残ります。' },
+          },
+        },
+      },
+    },
     expense_request_line_lock: {
       refusals: {
         RECORD_LOCKED: {

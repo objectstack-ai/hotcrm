@@ -53,6 +53,20 @@ export const esES: TranslationData = {
         FORBIDDEN: { message: 'Una solicitud de viaje la aprueba o rechaza su aprobador, desde su bandeja de entrada, una vez enviada.' },
       },
     },
+    expense_request_delete_guard: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: 'Solo se puede eliminar una solicitud de viaje en borrador. Para anular un viaje aprobado, usa Cancelar viaje.',
+          reasons: {
+            submitted: { message: 'Solo se puede eliminar una solicitud de viaje en borrador. La solicitud de viaje {{name}} espera aprobación; una vez aprobada, Cancelar viaje la anula.' },
+            approved: { message: 'Solo se puede eliminar una solicitud de viaje en borrador. La solicitud de viaje {{name}} está aprobada; para anular el viaje, usa Cancelar viaje.' },
+            rejected: { message: 'Solo se puede eliminar una solicitud de viaje en borrador. La solicitud de viaje {{name}} fue rechazada; devuélvela a Borrador para corregirla o eliminarla.' },
+            cancelled: { message: 'Solo se puede eliminar una solicitud de viaje en borrador. La solicitud de viaje {{name}} está cancelada y queda registrada.' },
+            closed: { message: 'Solo se puede eliminar una solicitud de viaje en borrador. La solicitud de viaje {{name}} está cerrada y queda registrada con sus informes.' },
+          },
+        },
+      },
+    },
     expense_request_line_lock: {
       refusals: {
         RECORD_LOCKED: {

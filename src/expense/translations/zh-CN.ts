@@ -53,6 +53,20 @@ export const zhCN: TranslationData = {
         FORBIDDEN: { message: '出差申请提交后，由审批人在收件箱中批准或驳回。' },
       },
     },
+    expense_request_delete_guard: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '只有草稿状态的出差申请可以删除。要取消已批准的出差，请用「取消出差」。',
+          reasons: {
+            submitted: { message: '只有草稿状态的出差申请可以删除。出差申请{{name}}正在等待审批；批准后可用「取消出差」取消。' },
+            approved: { message: '只有草稿状态的出差申请可以删除。出差申请{{name}}已批准；要取消这次出差，请用「取消出差」。' },
+            rejected: { message: '只有草稿状态的出差申请可以删除。出差申请{{name}}已被驳回；请先退回草稿，再修改或删除。' },
+            cancelled: { message: '只有草稿状态的出差申请可以删除。出差申请{{name}}已取消，会保留在记录中。' },
+            closed: { message: '只有草稿状态的出差申请可以删除。出差申请{{name}}已关闭，会和它的报销单一起保留在记录中。' },
+          },
+        },
+      },
+    },
     expense_request_line_lock: {
       refusals: {
         RECORD_LOCKED: {
@@ -178,7 +192,7 @@ export const zhCN: TranslationData = {
         review_notes: { label: '检查提示', help: '检查发现的问题，供审批人阅读。' },
         crm_expense_request: { label: '出差申请', help: '这些费用所属的已批准出差申请。' },
         request_estimated_amount: { label: '出差预计金额', help: '出差申请上的预计金额。' },
-        request_reported_amount: { label: '出差已报销', help: '这张出差申请下已提交、已批准、已付款的报销单合计。' },
+        request_reported_amount: { label: '出差已申报', help: '这张出差申请下已提交、已批准、已付款的报销单合计。' },
         request_over_estimate: { label: '超出出差预计' },
         payment_date: { label: '付款日期' },
         payment_reference: { label: '付款参考号' },
@@ -225,7 +239,7 @@ export const zhCN: TranslationData = {
         days: { label: '天数' },
         crm_account: { label: '客户' },
         estimated_amount: { label: '预计金额', help: '整次出差的一个总数，不论由谁支付。' },
-        reported_amount: { label: '已报销金额', help: '本申请下已提交、已批准、已付款的报销单合计。' },
+        reported_amount: { label: '已申报金额', help: '本申请下已提交、已批准、已付款的报销单合计。' },
         estimate_difference: { label: '与预计的差额', help: '已报销减去预计。大于零就是超出预计。' },
         over_estimate: { label: '超出预计' },
         itinerary: { label: '行程' },
