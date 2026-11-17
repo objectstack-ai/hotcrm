@@ -1,0 +1,31 @@
+id: hotcrm-expense-report
+kind: screenshot
+scope: hotcrm
+category: expenses
+status: published
+captured: '2026-11-17'
+capture:
+  application: HotCRM
+  platformVersion: '18.5.0'
+  browserLocales:
+    en: en-US
+    zh-Hans: zh-CN
+  dataset: 'shipped seed data + pnpm demo:staff, fresh database'
+  zhHansDataset: 'the zh-CN seed story: the same boot with i18n.defaultLocale set to zh-CN, then pnpm demo:staff'
+  signedInAs: 'Sales Representative, NA team (na.rep), the person claiming'
+  record: 'ER-0001, made for the capture: the NA rep entered four expenses for a Wayne Enterprises site visit and ran Submit for Reimbursement, which built and submitted the report (the expense module ships no demo data)'
+  theme: light
+  viewport: 1440x1024
+  deviceScaleFactor: 2
+locales:
+  en: en.png
+  zh-Hans: zh-Hans.png
+title:
+  en: Expense report with its expenses
+  zh-Hans: 费用报销单及其费用明细
+alt:
+  en: A submitted expense report with its total and amount to pay back, its approval path, and the Expenses tab listing four expenses by date, category, amount, who paid and merchant.
+  zh-Hans: 已提交的报销单：合计与应报销金额、审批进度，以及按日期、类别、金额、付款方和商户列出四笔费用的明细页签。
+purpose:
+  en: 'Show Expenses: an employee claims a trip in one report that goes to approval.'
+  zh-Hans: 展示费用报销：员工把一次出差的费用放进一张报销单提交审批。
