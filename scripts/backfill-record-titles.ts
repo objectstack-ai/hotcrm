@@ -77,6 +77,9 @@ const TITLES: ReadonlyArray<{ object: string; title: string; resend: string; per
   { object: 'crm_lead', title: 'display_title', resend: 'company', person: { withCompany: true } },
   { object: 'crm_forecast', title: 'display_title', resend: 'period_label', ownerName: true },
   { object: 'crm_case', title: 'display_title', resend: 'subject' },
+  // hotcrm#2568: a staffing row is titled by `person_name`, its copy of the
+  // person's name; the re-save lets `project_member_person_name` write it.
+  { object: 'crm_project_member', title: 'person_name', resend: 'responsibility' },
 ];
 
 /** `--flag value` / `--flag=value`, else the env var, else the fallback. */

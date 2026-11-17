@@ -149,4 +149,50 @@ const projectMemberUnique: Hook = {
   },
 };
 
-export default [projectTeamSync, projectMemberUnique];
+/**
+ * Copy the person's name onto the staffing row; it is the row's title
+ * (hotcrm#2568, `project_member.object.ts`).
+ *
+ * Written on a save that names a person (an insert, a change of person), and
+ * on any other update of a row with no copy yet, which is what heals a row
+ * stored before the field. A rename of the user is
+ * `project_member_person_rename`'s. Runs as the caller: whoever staffs a
+ * project reads the person they staff.
+ */
+const projectMemberPersonName: Hook = {
+  name: 'project_member_person_name',
+  object: 'crm_project_member',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 110,
+  description: "Copy the person's name onto the staffing row; it is the row's title.",
+  handler: async (ctx: HookContext) => {
+    function refId(value: unknown): string {
+      if (typeof value === 'string') return value;
+      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+        return String((value as Record<string, unknown>).id);
+      }
+      return '';
+    }
+    const api = ctx.api as HookApi | undefined;
+    const input = ctx.input as Record<string, unknown> | undefined;
+    if (!api || !input) return;
+    const previous = (ctx.previous ?? {}) as Record<string, unknown>;
+    let personId = '';
+    if ('person' in input) {
+      personId = refId(input.person);
+      if (!personId) {
+        input.person_name = null;
+        return;
+      }
+    } else if (ctx.event === 'beforeUpdate' && ctx.dispatch?.mode !== 'per-row'
+      && (typeof previous.person_name !== 'string' || previous.person_name.trim() === '')) {
+      personId = refId(previous.person);
+    }
+    if (!personId) return;
+    const person = await api.object('sys_user').findOne({ where: { id: personId }, fields: ['id', 'name'] });
+    const name = person && typeof person.name === 'string' ? person.name.trim() : '';
+    input.person_name = name === '' ? null : name.slice(0, 255);
+  },
+};
+
+export default [projectTeamSync, projectMemberUnique, projectMemberPersonName];

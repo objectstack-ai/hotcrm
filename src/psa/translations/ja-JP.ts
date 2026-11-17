@@ -373,6 +373,7 @@ export const jaJP: TranslationData = {
       fields: {
         crm_project: { label: 'プロジェクト' },
         person: { label: '担当者' },
+        person_name: { label: '担当者名', help: '担当者の名前。ユーザーレコードと同期します。このアサインの名前になります。' },
         responsibility: {
           label: '担当',
           options: {
