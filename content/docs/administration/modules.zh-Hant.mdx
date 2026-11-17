@@ -1,0 +1,69 @@
+---
+title: 啟用和停用模組
+description: HotCRM 的哪些部分是模組、怎樣關掉和打開一個模組，以及模組關閉期間什麼會消失 —— 應用、側邊欄條目、按鈕、其它紀錄上的欄位 —— 在 ObjectStack 18.5.0 上實測。
+---
+
+# 啟用和停用模組
+
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
+HotCRM 作為一個產品發布：核心的 **Sales** 應用，加上六個模組。不用某個模組的公司可以把它關掉，需要時再打開。不會解除安裝任何東西，也不會刪除任何東西。
+
+| 模組 | 在 Setup 裡的名稱 | 它帶來什麼 |
+| --- | --- | --- |
+| 服務 | **HotCRM Service** | **Service** 應用：工單、SLA、知識庫 |
+| 產品與報價 | **HotCRM Revenue** | 產品、價格表和報價單，位於 **Sales** 應用內 |
+| 營銷 | **HotCRM Marketing** | **Marketing** 應用：行銷活動及其成員 |
+| 訂單與回款 | **HotCRM Order to Cash** | **Order to Cash** 應用：回款節點、發票、回款 |
+| 費用報銷 | **HotCRM Expenses** | **Expenses** 應用：費用、報銷單、出差申請 |
+| 項目交付 | **HotCRM Project Delivery** | **Project Delivery** 應用：項目、人員安排、預算、工時單 |
+
+客戶、聯絡人、線索、商機、合約、訂單和任務屬於核心，始終開啟。
+
+## 關閉或打開一個模組
+
+管理員打開 **Setup → Installed Apps**，選擇 *Show all*（清單預設停在應用市集篩選上，那裡是空的），打開模組，選擇 **Disable**。在同一畫面選擇 **Enable** 即重新打開。腳本可以用同一個開關：`PATCH /api/v1/packages/<id>/disable`（以及 `/enable`），id 為 `app.objectstack.hotcrm.<模組>`：`service`、`revenue`、`marketing`、`o2c`、`expense` 或 `psa`。
+
+開關立即生效，對所有人生效，管理員也不例外。
+
+## 模組關閉期間什麼會消失
+
+在 ObjectStack 18.5.0 上用示範資料逐個模組實測：
+
+- **它的應用**從應用啟動器上消失。即 Service、Marketing、Order to Cash、Expenses 或 Project Delivery 應用；產品與報價沒有自己的應用。
+- **它的紀錄**無法打開、列出或搜尋。請求其中一筆會回傳 `404 OBJECT_PACKAGE_DISABLED`。
+- **它放在其它應用裡的側邊欄條目**也會消失：
+
+  | 關閉的模組 | 從其它應用消失的條目 |
+  | --- | --- |
+  | 服務 | **Sales** 裡銷售代表專用的 **Knowledge** |
+  | 產品與報價 | **Sales** 裡的 **Quotes**、**Products**、**Price Books**、**Product Catalog** 和 **Revenue Manual** |
+  | 訂單與回款 | **Sales** 裡的 **Collection Plan** 群組（**Billing Milestones**）和 **Order to Cash Manual** |
+  | 費用報銷 | **Project Delivery** 裡的 **My Expenses**、**Reports to Approve** 和 **My Travel Requests** |
+
+- **它的按鈕**會消失，包括它放在核心紀錄上的按鈕：產品與報價關閉時，商機上的 **Generate Quote**；營銷關閉時，線索和聯絡人上的 **Add to Campaign**。
+- **它加到其它紀錄上的欄位**會從那些紀錄上消失：
+
+  | 關閉的模組 | 消失的欄位 |
+  | --- | --- |
+  | 訂單與回款 | 合約上的 **Planned**、**Invoiced**、**Received** 和 **Receivable Balance**；客戶上的 **Invoiced**、**Received** 和 **Receivable Balance** |
+  | 項目交付 | 費用、報銷單和出差申請上的 **Project** |
+
+## 什麼會保留
+
+- **紀錄。**關閉模組不會刪除任何東西。重新打開後，它的紀錄、應用、條目、按鈕和欄位原樣回來。
+- **核心紀錄上指向該模組的欄位**會保留，值也保留。營銷關閉期間，商機的 **Campaign** 仍然寫著原來的行銷活動，商機照樣可以編輯；在營銷重新打開之前，選擇框找不到新的行銷活動。服務關閉時，任務上的關聯工單也是如此。
+- **另一個模組存下的內容。**項目交付關閉時，費用仍保留它寫明的項目，項目交付重新打開後再次顯示。費用報銷關閉時，項目保留最後一次統計的費用成本；費用報銷重新打開後才會繼續變化。
+
+## 互相依賴的模組
+
+項目交付會用到費用報銷：項目的費用成本來自已核准的報銷單。平台不會阻止你在項目交付開啟時關閉費用報銷。項目仍可打開、列出和編輯，只是它們的費用數字停止變化，直到費用報銷重新打開。
+
+項目交付關閉、費用報銷開啟時，費用照常記錄和提交，只是不帶項目：每次勾選只產生一張報銷單，所有報銷單都交給報銷人的上級審批。
+
+> **已知問題。**項目交付關閉期間，顯示 **Project** 欄的費用清單檢視會載入失敗，而不是把這一欄省略（[objectstack#34901](https://github.com/objectstack-ai/objectstack/issues/34901)）。在平台修復發布之前，請使用不含這一欄的檢視。
+
+## 相關
+
+- [設定清單](/zh-Hant/docs/administration/setup) —— 新安裝後的首次設定。
+- [權限設定檔](/zh-Hant/docs/administration/profiles) —— 所有模組都開啟時，誰能看到哪些應用。
