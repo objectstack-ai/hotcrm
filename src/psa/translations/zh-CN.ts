@@ -175,6 +175,10 @@ export const zhCN: TranslationData = {
         crm_account: { label: '客户' },
         crm_opportunity: { label: '商机' },
         crm_contract: { label: '合同' },
+        crm_sales_order: {
+          label: '订单',
+          help: '这个项目交付的销售订单。',
+        },
         source_project: {
           label: '来源售前项目',
           help: '交付项目由哪个售前项目转化而来。',

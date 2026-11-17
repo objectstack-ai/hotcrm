@@ -146,6 +146,7 @@
 | ORD-004 | 合计随订单行 | 小计 = 各行之和,在订单行的同一次写入里重算;折扣金额与总金额由小计、折扣、税额、运费推出 | `src/sales/objects/sales_order.hook.ts`(`sales_order_total_rollup`、`sales_order_workflow`) |
 | ORD-005 | 订单行锁定 | 订单离开草稿后,用户不能增删改订单行(先退回草稿);已确认订单的订单行列表不再提供"新建" | `src/sales/objects/sales_order.hook.ts`(`sales_order_workflow`)、`src/sales/objects/sales_order_line.object.ts`(`userActions`) |
 | ORD-006 | 订单视图与导航 | 全部订单、订单看板、待发货;销售应用"销售"分组与订单与回款应用"订单、合同与客户"分组中的"订单";客户与合同页面的订单列表 | `src/sales/views/sales_order.view.ts`、`src/sales/apps/crm.app.ts`、`src/sales/index.ts` |
+| ORD-007 | 项目关联订单 | 项目可选填写它交付的销售订单(`crm_project.crm_sales_order`,与合同并列,从项目的客户下选);订单页面列出它的项目,随项目交付模块停用而消失;项目经理只读全部订单与订单行,项目成员看不到这个字段 | `src/psa/objects/project.object.ts`、`src/sales/profiles/project-manager.profile.ts`、`src/sales/profiles/project-member.profile.ts` |
 
 ## SVC — 服务与 SLA
 
