@@ -17,7 +17,7 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Activity（活動）** —— 針對某筆記錄記錄的任務、事件、通話或郵件。
 
-**Agent (AI)（AI 代理）** —— 捆綁技能 + 知識庫的複合型 AI 助手。HotCRM 不定義任何自己的代理：它的六項技能附著在每個 ObjectStack 環境自帶的平台 `ask` 代理之上。
+**Agent (AI)（AI 代理）** —— 在 HotCRM 的記錄和動作上工作的 AI 助手。HotCRM 不自帶智能體：你透過 MCP 接入自己的智能體，它以登入者的身分工作。HotCRM 的六項技能在環境執行平台助手時附著到它上面。參見 [AI 與智能體](/zh-Hant/docs/ai-copilot/index)。
 
 **ARPU** *(Average Revenue Per User，每使用者平均收入)* —— 總收入 ÷ 活躍使用者數。
 
@@ -34,6 +34,10 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 **Bookings（簽約額）** —— 某一期間內的贏單合約價值。包括新增 + 擴展 + 續約。
 
 **Business hours（營業時間）** —— 在提供這項設定的 CRM 裡，指截止時間所對照的工作日與工作時段。**HotCRM 沒有這個概念**：沒有工作日日曆，沒有假日清單，沒有「Setup → Business Hours」這個畫面，中繼資料裡也不存在任何可供截止時間去對照的東西。它算得出來的那些截止時間 —— 工單 SLA 矩陣裡的每一個格子，從 Critical 的 4 小時到 SMB Low 的 7 天 —— 都是加在掛鐘上的，夜間、週末與假日一律照算。參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)。
+
+**Billing milestone（回款節點）** —— 合約[回款計劃](/zh-Hant/docs/order-to-cash/collection-plan)中的一步：銷售預計在哪一天收回多少錢。它已開票、已回款和尚未收回的數字，跟隨財務錄入的發票和回款。屬於訂單與回款模組。
+
+**Budget version（預算版本）** —— 項目預算的一個版本，帶有預算明細。生效中的已核准版本是*基線*，其合計就是項目的已核准預算；追加預算就是新建一個版本。參見[項目預算](/zh-Hant/docs/projects/budgets)。
 
 ## C
 
@@ -55,6 +59,8 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **Cube** —— 用於分析的預建模多維資料集。
 
+**Collection plan（回款計劃）** —— 合約的回款節點清單。它歸銷售所有，是對回款的預測，而不是帳本。
+
 ## D
 
 **Dashboard（儀表板）** —— 一頁分析小工具（KPI、圖表、清單）。
@@ -64,6 +70,10 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 ## E
 
 **External ID（外部 ID）** —— 你儲存在 CRM 記錄上的外部系統識別碼，用於匯入 / 同步時匹配。
+
+**Expense（費用）** —— 一個人為公司花的錢，連同票據一起記錄。它在報銷單上審批，從不單獨審批。參見[費用報銷](/zh-Hant/docs/expenses)。
+
+**Expense report（報銷單）** —— 由 **Submit for Reimbursement** 用你選中的費用產生，並在同一次點擊中送審；沒有人手動建立報銷單。由你的經理審批（項目上的費用由該項目的 Project Manager 審批），合計達到 2,000 時還要經 **Finance Controller** 審批。員工拿到報銷款後，財務把它標記為已付款。
 
 ## F
 
@@ -85,6 +95,8 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **ICP** *(Ideal Customer Profile，理想客戶輪廓)* —— 最有可能透過你的產品取得成功的客戶類型。
 
+**Invoice（發票）** —— 財務在自己系統裡開出的、針對某份合約的發票記錄。HotCRM 保存這筆記錄及其未收金額；它不開票、不審批發票，也不記帳。參見[發票與回款](/zh-Hant/docs/order-to-cash/invoices-and-payments)。
+
 ## K
 
 **Knowledge base（知識庫）** *(KB)* —— 文章庫。兩種類型：面向客戶的支援 KB 和用於 AI 接地的 KB。
@@ -105,6 +117,8 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **MQL** *(Marketing Qualified Lead，市場合格線索)* —— 市場部已審定可移交銷售的線索。
 
+**Module（模組）** —— 管理員可以停用和啟用的 HotCRM 組成部分：服務、產品和報價、行銷、訂單與回款、費用和項目交付。停用一個模組只是把它隱藏，不刪除任何東西。參見[啟用和停用模組](/zh-Hant/docs/administration/modules)。
+
 ## N
 
 **NPS** *(Net Promoter Score，淨推薦值)* —— 客戶忠誠度指標（-100 至 +100）。
@@ -121,6 +135,8 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **OWD** *(Org-Wide Default，組織範圍預設值)* —— 每個物件的基線共享設定。Private / Public Read / Public Read-Write。
 
+**Order（訂單）** —— 客戶這一次買了什麼：產品或服務、數量和價格，帶有明細和合計。它可以掛在一份合約下。訂單需要手動錄入：接受報價不會建立訂單。參見[訂單](/zh-Hant/docs/sales/orders)。
+
 ## P
 
 **Pipeline（管道）** —— 所有開啟的商機，無論處於哪個階段。
@@ -133,6 +149,14 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 **PWA** *(Progressive Web App，漸進式 Web 應用)* —— 將 HotCRM 作為「應用」安裝到手機主畫面上。
 
+**Payment（回款）** —— 針對合約、發票或回款節點收到款項的記錄。由財務錄入；銷售從不錄入。
+
+**Project（項目）** —— 為某個客戶做的一項工作，掛在客戶下：售前、交付或內部工作。它的成本和毛利由已核准的工時單和費用自動累計。參見[項目交付](/zh-Hant/docs/projects)。
+
+**Project member（項目成員）** —— 按某張費率卡安排到項目上的一個人。只有項目成員能在該項目上登記工時。
+
+**Project task（項目任務）** —— 項目計劃中的一步，畫在甘特圖上。項目的完成百分比跟隨它的任務。它不同於*任務*（Task）。參見[項目計劃](/zh-Hant/docs/projects/project-plan)。
+
 ## Q
 
 **Qualification（資格審查）** —— 判斷某條線索/商機是否值得追蹤。
@@ -143,11 +167,13 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 
 ## R
 
-**RAG** *(Retrieval-Augmented Generation，檢索增強生成)* —— AI Copilot 背後的技術。在生成答案之前檢索相關知識。
+**RAG** *(Retrieval-Augmented Generation，檢索增強生成)* —— 在生成答案之前先檢索相關知識（例如已發布的知識文章），讓答案以你自己的內容為依據。
 
 **Renewal（續約）** —— 在合約結束日期之前 / 當天延長合約。
 
 **Role（角色）** —— **職位（position）** 的 v1 舊稱，因為舊介面和匯入檔案裡還在用而保留詞條。實際的東西就是職位；參見 *Position*。
+
+**Rate card（費率卡）** —— 一個工作級別及其成本費率和計費費率，按小時或按天。項目團隊成員看不到成本費率。
 
 ## S
 
@@ -184,6 +210,14 @@ description: CRM 與平台術語 —— 按字母排序，讓你在會議中不�
 **Tenant（租戶）** —— 邏輯隔離的 HotCRM 實例（一個客戶組織）。
 
 **TCV** *(Total Contract Value，合約總價值)* —— 合約的完整多年價值（相對於將其標準化為一年的 ACV）。
+
+**Task（任務）** —— 記錄上的一項待辦：要打的電話、要寄的文件。它屬於核心，列在 **My Tasks** 下。項目計劃中的一步是*項目任務*（Project task）。
+
+**Time entry（工時明細）** —— 工時單上某一天的工時，按此人人員安排上的費率計價。
+
+**Timesheet（工時單）** —— 一個人在一個項目上一個週期（通常是一週）的工時。由該項目的 Project Manager 審批，只有已核准的工時才計入項目成本。參見[工時與費用](/zh-Hant/docs/projects/time-and-expenses)。
+
+**Travel request（出差申請）** —— 出差之前提出的申請：去哪裡、什麼時候、為什麼、大約花多少錢。由出差人的經理審批；出差是為某個項目時，由該項目的 Project Manager 審批。它是計劃，不是成本。參見[出差申請](/zh-Hant/docs/expenses/travel-requests)。
 
 ## U
 

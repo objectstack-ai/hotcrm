@@ -15,7 +15,7 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Activity** — A task, event, call, or email logged against a record.
 
-**Agent (AI)** — A composite AI assistant that bundles skills + knowledge bases. HotCRM defines no agents of its own: its six skills attach to the platform `ask` agent that every ObjectStack environment provides.
+**Agent (AI)** — An AI assistant that works on HotCRM's records and actions. HotCRM ships none of its own: you connect yours over MCP, and it acts as the person it signed in as. HotCRM's six skills attach to the platform assistant where an environment runs one. See [AI and Agents](/docs/ai-copilot/index).
 
 **ARPU** *(Average Revenue Per User)* — Total revenue ÷ active users.
 
@@ -32,6 +32,10 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 **Bookings** — Closed-won contract value in a period. Includes new + expansion + renewal.
 
 **Business hours** — The working days and hours a deadline is counted against, in CRMs that have them. **HotCRM does not have them**: no working-day calendar, no holiday list, no *Setup → Business Hours* screen, nothing in its metadata a deadline could be measured against. Its computed deadlines — every cell of the case SLA matrix, from four hours on a Critical case to seven days on an SMB Low one — are added to the wall clock, so nights, weekends and holidays all count. See [SLA & Escalation](/docs/service/sla-and-escalation).
+
+**Billing milestone** — One step of a contract's [collection plan](/docs/order-to-cash/collection-plan): how much sales expects to collect, and on which day. What has been invoiced, received and is still open on it follows finance's invoices and payments. Part of the Order to Cash module.
+
+**Budget version** — One version of a project's budget, with its budget lines. The approved version in force is the *baseline*, and its total is the project's Approved Budget; raising the budget is a new version, a top-up. See [Project Budgets](/docs/projects/budgets).
 
 ## C
 
@@ -53,6 +57,8 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **Cube** — A pre-modeled multi-dimensional dataset for analytics.
 
+**Collection plan** — A contract's billing milestones. It belongs to sales and is a forecast of what will be collected, never a ledger.
+
 ## D
 
 **Dashboard** — A page of analytics widgets (KPIs, charts, lists).
@@ -62,6 +68,10 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 ## E
 
 **External ID** — A foreign-system identifier you store on a CRM record for matching during import / sync.
+
+**Expense** — Money one person spent for the company, recorded with its receipt. It is approved on an expense report, never on its own. See [Expenses](/docs/expenses).
+
+**Expense report** — What **Submit for Reimbursement** makes from the expenses you select, and sends for approval in the same click; nobody creates one by hand. Your manager approves it (the project's Project Manager, for a project's expenses), and the Finance Controllers too from a total of 2,000. Finance marks it **Paid** once you have been paid back.
 
 ## F
 
@@ -83,6 +93,8 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **ICP** *(Ideal Customer Profile)* — The kind of customer most likely to succeed with your product.
 
+**Invoice** — The record of an invoice finance issued in its own system, against a contract. HotCRM keeps the record and what is still open on it; it does not issue, approve or post invoices. See [Invoices and Payments](/docs/order-to-cash/invoices-and-payments).
+
 ## K
 
 **Knowledge base** *(KB)* — A library of articles. Two flavours: customer-facing support KB and AI-grounding KBs.
@@ -103,6 +115,8 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **MQL** *(Marketing Qualified Lead)* — A lead marketing has qualified for sales handoff.
 
+**Module** — A part of HotCRM an administrator can switch off and on: Service, products and quotes, Marketing, Order to Cash, Expenses and Project Delivery. Switching one off hides it and deletes nothing. See [Enable and Disable Modules](/docs/administration/modules).
+
 ## N
 
 **NPS** *(Net Promoter Score)* — Customer loyalty metric (-100 to +100).
@@ -119,6 +133,8 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **OWD** *(Org-Wide Default)* — The baseline sharing setting per object. Private / Public Read / Public Read-Write.
 
+**Order** — What a customer bought this time: products or services, quantities and prices, with lines and totals. It may sit under a contract. It is entered by hand: accepting a quote does not create one. See [Orders](/docs/sales/orders).
+
 ## P
 
 **Pipeline** — All open opportunities, regardless of stage.
@@ -131,6 +147,14 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 **PWA** *(Progressive Web App)* — Install HotCRM as an "app" on your phone home screen.
 
+**Payment** — The record of money received against a contract, an invoice or a billing milestone. Finance writes it; sales never does.
+
+**Project** — One engagement for a customer, under an account: presales, delivery or internal work. Its cost and margin fill themselves from approved timesheets and expenses. See [Project Delivery](/docs/projects).
+
+**Project member** — One person staffed on a project, at a rate card. Only the project's members book hours on it.
+
+**Project task** — A step of a project's plan, drawn on the Gantt. The project's Percent Complete follows its tasks. Not the same as a *Task*. See [The Project Plan](/docs/projects/project-plan).
+
 ## Q
 
 **Qualification** — Determining if a lead/opportunity is worth pursuing.
@@ -141,11 +165,13 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 
 ## R
 
-**RAG** *(Retrieval-Augmented Generation)* — The technique behind the AI Copilot. Retrieves relevant knowledge before generating an answer.
+**RAG** *(Retrieval-Augmented Generation)* — Retrieving the relevant knowledge, such as published knowledge articles, before generating an answer, so the answer rests on your own content.
 
 **Renewal** — Extending a contract before / at its end date.
 
 **Role** — The v1 name for a **position**, kept here because older screens and imports still use it. The thing itself is a position; see *Position*.
+
+**Rate card** — A grade of work with its cost rate and bill rate, per hour or per day. Project team members do not see the cost rate.
 
 ## S
 
@@ -182,6 +208,14 @@ description: CRM and platform terms — alphabetised so you can stop bluffing in
 **Tenant** — A logically isolated HotCRM instance (one customer org).
 
 **TCV** *(Total Contract Value)* — The full multi-year value of a contract (vs ACV which normalises to one year).
+
+**Task** — A to-do on a record: a call to make, a document to send. It belongs to the core and is listed under **My Tasks**. A step of a project's plan is a *Project task*.
+
+**Time entry** — One day's hours on a timesheet, priced at the rates of the person's staffing.
+
+**Timesheet** — One person's hours on one project for one period, usually a week. The project's Project Manager approves it, and only approved hours count in the project's cost. See [Time and Expenses](/docs/projects/time-and-expenses).
+
+**Travel request** — A trip asked for before it happens: where, when, why and roughly how much. The traveler's manager approves it, or the project's Project Manager when it is for a project. It is a plan, not a cost. See [Travel Requests](/docs/expenses/travel-requests).
 
 ## U
 

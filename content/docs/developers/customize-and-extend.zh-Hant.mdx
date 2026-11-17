@@ -87,13 +87,13 @@ HotCRM 建置出一個產物，裡面有七個套件：`src/sales/` 裡的應用
  },
 ```
 
-然後給保留下來的每個模組一個在你名下的 `id`（例如 `app.acme.myapp.service`），並把它的 `dependencies` 指向新的應用程式 `id`。專案交付還依賴費用，它的 `dependencies` 兩個都要寫。`objectstack.config.ts` 負責組合這些套件，不需要改。
+然後給保留下來的每個模組一個在你名下的 `id`（例如 `app.acme.myapp.service`），並把它的 `dependencies` 指向新的應用程式 `id`。項目交付還依賴費用，它的 `dependencies` 兩個都要寫。`objectstack.config.ts` 負責組合這些套件，不需要改。
 
 **保留 `crm_` 前綴。** 每個物件、職位和翻譯鍵都寫明了它，涉及數百個檔案，HotCRM 自己的升級也以它為前提。改掉前綴的複刻版就無法再從上游合併。你新增的物件也用同一個前綴。
 
 ### 3. 去掉用不到的部分
 
-每個模組是 `src/` 下的一個目錄：`service`、`revenue`、`marketing`、`o2c`、`expense`、`psa`。要去掉一個模組，刪除它的目錄，從 `objectstack.composition.ts` 裡刪掉它的匯入、stack 和種子資料族，再刪掉 `content/docs/` 下它的頁面。專案交付需要費用：要麼兩個都去掉，要麼保留費用。客戶、聯絡人、線索、商機、合約、訂單和任務在 `src/sales/` 裡，是每個模組所依賴的核心。剩下的參照 `pnpm typecheck` 會指出來。
+每個模組是 `src/` 下的一個目錄：`service`、`revenue`、`marketing`、`o2c`、`expense`、`psa`。要去掉一個模組，刪除它的目錄，從 `objectstack.composition.ts` 裡刪掉它的匯入、stack 和種子資料族，再刪掉 `content/docs/` 下它的頁面。項目交付需要費用：要麼兩個都去掉，要麼保留費用。客戶、聯絡人、線索、商機、合約、訂單和任務在 `src/sales/` 裡，是每個模組所依賴的核心。剩下的參照 `pnpm typecheck` 會指出來。
 
 ### 4. 加上你需要的部分
 

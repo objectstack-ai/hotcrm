@@ -41,7 +41,7 @@ pnpm dev
 
 ## 倉庫結構
 
-HotCRM 建置出**一個** ObjectStack 產物，裡面裝著**七個套件**（ADR-0130）：`src/sales/` 裡的 `type: app` 套件 `app.objectstack.hotcrm`，以及六個模組：`src/service/` 裡的服務、`src/revenue/` 裡的收入（產品和報價）、`src/marketing/` 裡的行銷、`src/o2c/` 裡的訂單與回款、`src/expense/` 裡的費用和 `src/psa/` 裡的專案交付。每個套件各有一個 `index.ts`，各自呼叫 `defineStack()`；`objectstack.composition.ts` 建置這些套件，`objectstack.config.ts` 把它們組合成產物。`src/` 下的一個目錄就是一個套件。每一項都由其所在目錄的套件註冊：應用套件的動作啟動模組的流程、應用套件的儀表板磁貼綁定模組的資料集，都在產物內跨套件解析。一個檔案只能從自己的目錄或 `src/sales/` 匯入，模組之間不得橫向匯入；唯一的例外是專案交付，它建立在費用之上。
+HotCRM 建置出**一個** ObjectStack 產物，裡面裝著**七個套件**（ADR-0130）：`src/sales/` 裡的 `type: app` 套件 `app.objectstack.hotcrm`，以及六個模組：`src/service/` 裡的服務、`src/revenue/` 裡的收入（產品和報價）、`src/marketing/` 裡的行銷、`src/o2c/` 裡的訂單與回款、`src/expense/` 裡的費用和 `src/psa/` 裡的項目交付。每個套件各有一個 `index.ts`，各自呼叫 `defineStack()`；`objectstack.composition.ts` 建置這些套件，`objectstack.config.ts` 把它們組合成產物。`src/` 下的一個目錄就是一個套件。每一項都由其所在目錄的套件註冊：應用套件的動作啟動模組的流程、應用套件的儀表板磁貼綁定模組的資料集，都在產物內跨套件解析。一個檔案只能從自己的目錄或 `src/sales/` 匯入，模組之間不得橫向匯入；唯一的例外是項目交付，它建立在費用之上。
 
 ```text
 hotcrm/
@@ -54,7 +54,7 @@ hotcrm/
 │   ├── marketing/      # 模組 —— 行銷活動及其成員
 │   ├── o2c/            # 模組 —— 回款節點、發票、回款
 │   ├── expense/        # 模組 —— 費用、報銷單、出差申請
-│   ├── psa/            # 模組 —— 專案、人員安排、預算、工時
+│   ├── psa/            # 模組 —— 項目、人員安排、預算、工時
 │   └── docs/           # 隨建置產物一起發布的應用文件
 ├── apps/docs/          # Fumadocs 應用
 └── content/docs/       # 文件內容

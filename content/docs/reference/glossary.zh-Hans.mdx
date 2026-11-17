@@ -15,7 +15,7 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **Activity（活动）** —— 针对某条记录记录的任务、事件、通话或邮件。
 
-**Agent (AI)（AI 代理）** —— 捆绑技能 + 知识库的复合型 AI 助手。HotCRM 不定义任何自己的代理：它的六项技能附着在每个 ObjectStack 环境自带的平台 `ask` 代理之上。
+**Agent (AI)（AI 代理）** —— 在 HotCRM 的记录和动作上工作的 AI 助手。HotCRM 不自带智能体：你通过 MCP 接入自己的智能体，它以登录者的身份工作。HotCRM 的六项技能在环境运行平台助手时附着到它上面。参见 [AI 与智能体](/zh-Hans/docs/ai-copilot/index)。
 
 **ARPU** *(Average Revenue Per User，每用户平均收入)* —— 总收入 ÷ 活跃用户数。
 
@@ -32,6 +32,10 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 **Bookings（签约额）** —— 某一期间内的赢单合同价值。包括新增 + 扩展 + 续约。
 
 **Business hours（营业时间）** —— 在提供这项设置的 CRM 里，指截止时间所对照的工作日与工作时段。**HotCRM 没有这个概念**：没有工作日日历，没有节假日清单，没有“系统设置 → 营业时间”这个屏幕，元数据里也不存在任何可供截止时间去对照的东西。它算得出来的那些截止时间 —— 工单 SLA 矩阵里的每一个格子，从 Critical 的 4 小时到 SMB Low 的 7 天 —— 都是加在挂钟上的，夜间、周末与节假日一律照算。参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
+
+**Billing milestone（回款节点）** —— 合同[回款计划](/zh-Hans/docs/order-to-cash/collection-plan)中的一步：销售预计在哪一天收回多少钱。它已开票、已回款和尚未收回的数字，跟随财务录入的发票和回款。属于订单与回款模块。
+
+**Budget version（预算版本）** —— 项目预算的一个版本，带有预算明细。生效中的已批准版本是*基线*，其合计就是项目的已批准预算；追加预算就是新建一个版本。参见[项目预算](/zh-Hans/docs/projects/budgets)。
 
 ## C
 
@@ -53,6 +57,8 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **Cube** —— 用于分析的预建模多维数据集。
 
+**Collection plan（回款计划）** —— 合同的回款节点列表。它归销售所有，是对回款的预测，而不是账本。
+
 ## D
 
 **Dashboard（仪表盘）** —— 一页分析小部件（KPI、图表、列表）。
@@ -62,6 +68,10 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 ## E
 
 **External ID（外部 ID）** —— 你存储在 CRM 记录上的外部系统标识符，用于导入 / 同步时匹配。
+
+**Expense（费用）** —— 一个人为公司花的钱，连同票据一起记录。它在报销单上审批，从不单独审批。参见[费用报销](/zh-Hans/docs/expenses)。
+
+**Expense report（报销单）** —— 由 **提交报销** 用你选中的费用生成，并在同一次点击中送审；没有人手工创建报销单。由你的经理审批（项目上的费用由该项目的项目经理审批），合计达到 2,000 时还要经 **财务控制** 审批。员工拿到报销款后，财务把它标记为已付款。
 
 ## F
 
@@ -83,6 +93,8 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **ICP** *(Ideal Customer Profile，理想客户画像)* —— 最有可能通过你的产品取得成功的客户类型。
 
+**Invoice（发票）** —— 财务在自己系统里开出的、针对某份合同的发票记录。HotCRM 保存这条记录及其未收金额；它不开票、不审批发票，也不记账。参见[发票与回款](/zh-Hans/docs/order-to-cash/invoices-and-payments)。
+
 ## K
 
 **Knowledge base（知识库）** *(KB)* —— 文章库。两种类型：面向客户的支持 KB 和用于 AI 接地的 KB。
@@ -103,6 +115,8 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **MQL** *(Marketing Qualified Lead，市场合格线索)* —— 市场部已审定可移交销售的线索。
 
+**Module（模块）** —— 管理员可以停用和启用的 HotCRM 组成部分：服务、产品和报价、营销、订单与回款、费用和项目交付。停用一个模块只是把它隐藏，不删除任何东西。参见[启用和停用模块](/zh-Hans/docs/administration/modules)。
+
 ## N
 
 **NPS** *(Net Promoter Score，净推荐值)* —— 客户忠诚度指标（-100 至 +100）。
@@ -119,6 +133,8 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **OWD** *(Org-Wide Default，组织范围默认值)* —— 每个对象的基线共享设置。Private / Public Read / Public Read-Write。
 
+**Order（订单）** —— 客户这一次买了什么：产品或服务、数量和价格，带有明细和合计。它可以挂在一份合同下。订单需要手工录入：接受报价不会创建订单。参见[订单](/zh-Hans/docs/sales/orders)。
+
 ## P
 
 **Pipeline（管道）** —— 所有打开的商机，无论处于哪个阶段。
@@ -131,6 +147,14 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 **PWA** *(Progressive Web App，渐进式 Web 应用)* —— 将 HotCRM 作为"应用"安装到手机主屏幕上。
 
+**Payment（回款）** —— 针对合同、发票或回款节点收到款项的记录。由财务录入；销售从不录入。
+
+**Project（项目）** —— 为某个客户做的一项工作，挂在客户下：售前、交付或内部工作。它的成本和毛利由已批准的工时单和费用自动累计。参见[项目交付](/zh-Hans/docs/projects)。
+
+**Project member（项目成员）** —— 按某张费率卡安排到项目上的一个人。只有项目成员能在该项目上登记工时。
+
+**Project task（项目任务）** —— 项目计划中的一步，画在甘特图上。项目的完成百分比跟随它的任务。它不同于*任务*（Task）。参见[项目计划](/zh-Hans/docs/projects/project-plan)。
+
 ## Q
 
 **Qualification（资格审查）** —— 判断某条线索/商机是否值得追踪。
@@ -141,11 +165,13 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 
 ## R
 
-**RAG** *(Retrieval-Augmented Generation，检索增强生成)* —— AI Copilot 背后的技术。在生成答案之前检索相关知识。
+**RAG** *(Retrieval-Augmented Generation，检索增强生成)* —— 在生成答案之前先检索相关知识（例如已发布的知识文章），让答案以你自己的内容为依据。
 
 **Renewal（续约）** —— 在合同结束日期之前 / 当天延长合同。
 
 **Role（角色）** —— **岗位（position）** 的 v1 旧称，因为旧界面和导入文件里还在用而保留词条。实际的东西就是岗位；参见 *Position*。
+
+**Rate card（费率卡）** —— 一个工作级别及其成本费率和计费费率，按小时或按天。项目团队成员看不到成本费率。
 
 ## S
 
@@ -182,6 +208,14 @@ description: CRM 与平台术语 —— 按字母排序，让你在会议中不�
 **Tenant（租户）** —— 逻辑隔离的 HotCRM 实例（一个客户组织）。
 
 **TCV** *(Total Contract Value，合同总价值)* —— 合同的完整多年价值（相对于将其标准化为一年的 ACV）。
+
+**Task（任务）** —— 记录上的一项待办：要打的电话、要发的文件。它属于核心，列在 **我的任务** 下。项目计划中的一步是*项目任务*（Project task）。
+
+**Time entry（工时明细）** —— 工时单上某一天的工时，按此人人员安排上的费率计价。
+
+**Timesheet（工时单）** —— 一个人在一个项目上一个周期（通常是一周）的工时。由该项目的项目经理审批，只有已批准的工时才计入项目成本。参见[工时与费用](/zh-Hans/docs/projects/time-and-expenses)。
+
+**Travel request（出差申请）** —— 出差之前提出的申请：去哪里、什么时候、为什么、大约花多少钱。由出差人的经理审批；出差是为某个项目时，由该项目的项目经理审批。它是计划，不是成本。参见[出差申请](/zh-Hans/docs/expenses/travel-requests)。
 
 ## U
 
