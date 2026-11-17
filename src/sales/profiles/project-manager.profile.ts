@@ -30,12 +30,16 @@ import { EXPENSE_OWN } from './_expense-grants';
  *   - `crm_rate_card` — read, cost included: a manager staffs at a rate.
  *   - `crm_account`, `crm_opportunity`, `crm_contract` — read, every record:
  *     a project is opened for any customer, from any deal or contract.
+ *   - `crm_sales_order`, `crm_sales_order_line` — read (hotcrm#2561): a
+ *     project may name the order it delivers, so the manager picks it and
+ *     reads what was sold. Every order, as every contract; the lines open with
+ *     their order (`controlled_by_parent`).
  */
 export const ProjectManagerProfile = {
   name: 'project_manager',
   label: 'Project Manager',
   description:
-    'Delivery: opens and runs projects, staffs them at a rate card, books time and expenses, and reads every account, opportunity and contract.',
+    'Delivery: opens and runs projects, staffs them at a rate card, books time and expenses, and reads every account, opportunity, contract and order.',
   // Which HotCRM apps the launcher offers: Project Delivery and Sales.
   // Visibility, not access, as on `sales_rep`; Project Delivery is offered by
   // silence, so disabling the module drops it (objectstack#33648).
@@ -54,6 +58,8 @@ export const ProjectManagerProfile = {
     crm_account:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_opportunity:    { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_contract:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    crm_sales_order:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
+    crm_sales_order_line: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     // The contract's and the account's Order to Cash figures sum these, and a
     // set that reads a roll-up reads its source (`os lint`
     // `security-rollup-source-unreadable`). All three are children of the
