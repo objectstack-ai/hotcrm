@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
-import { EXPENSE_OWN, EXPENSE_REPORT_OWN } from './_expense-grants';
+import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT } from './_expense-grants';
 
 /**
  * Two positions distribute this set: `service_agent` (the intake pool) and
@@ -26,6 +26,7 @@ export const ServiceAgentProfile = {
     crm_expense: EXPENSE_OWN,
     crm_expense_report: EXPENSE_REPORT_OWN,
     crm_expense_request: EXPENSE_OWN,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
     // Reference context an agent needs to work ANY ticket — a customer's cases
     // are meaningless without seeing the account/contact behind them, so these
     // are org-visible reads (viewAllRecords: true), NOT own-only. This was the

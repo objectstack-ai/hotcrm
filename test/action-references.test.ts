@@ -114,7 +114,9 @@ describe('navigation reaches everything the app ships', () => {
         // line is planned inside its budget version, which has its own entry.
         // `_order_line` joined it with `crm_sales_order_line` (#2555): a line is
         // added inside its order, which has its own entry.
-        !/_line_item$|_member$|_attendee$|_feedback$|_entry$|_budget_line$|_order_line$/.test(name) && !reachable.has(name));
+        // `_request_line` joined it with `crm_expense_request_line` (#2579): a
+        // leg is added inside its travel request, which has its own entries.
+        !/_line_item$|_member$|_attendee$|_feedback$|_entry$|_budget_line$|_order_line$|_request_line$/.test(name) && !reachable.has(name));
     expect(stranded, `objects with no navigation entry:\n  ${stranded.join('\n  ')}`).toEqual([]);
   });
 

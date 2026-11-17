@@ -21,7 +21,7 @@
   `.changeset/2559-expense-report.md` (hotcrm#2559; approval moves FROM each expense TO its report); stage 3:
   `.changeset/2578-travel-request.md` (hotcrm#2578), `.changeset/2581-travel-request-project.md`
   (hotcrm#2581; its project-path approval held in the expense package with the expense report's, until
-  objectstack#34616, and on #2575's move-back list).
+  objectstack#34616, and on #2575's move-back list), `.changeset/2579-itinerary-lines.md` (hotcrm#2579).
 
 ## Raw requirement (verbatim)
 

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { privateOpportunityPolicy } from './_private-opportunity';
-import { EXPENSE_OWN, EXPENSE_REPORT_OWN } from './_expense-grants';
+import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT } from './_expense-grants';
 
 /**
  * Project Manager — runs projects in the Project Delivery module (hotcrm#2316,
@@ -57,6 +57,7 @@ export const ProjectManagerProfile = {
     crm_expense: EXPENSE_OWN,
     crm_expense_report: EXPENSE_REPORT_OWN,
     crm_expense_request: EXPENSE_OWN,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
     crm_account:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_opportunity:    { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     crm_contract:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },

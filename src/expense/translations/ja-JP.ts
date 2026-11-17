@@ -53,6 +53,18 @@ export const jaJP: TranslationData = {
         FORBIDDEN: { message: '出張申請は提出後、承認者が受信トレイから承認または却下します。' },
       },
     },
+    expense_request_line_lock: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: '出張申請 {{request}} は提出済みのため、行程はロックされています。記入できるのは予約番号だけです。変更するには下書きに取り消してください。',
+          reasons: {
+            approved: { message: '出張申請 {{request}} は承認済みのため、行程は確定しています。記入できるのは予約番号だけです。計画を変えるには出張を取り消し、新しい申請を出してください。' },
+            cancelled: { message: '出張申請 {{request}} は取り消し済みのため、行程は確定しています。記入できるのは予約番号だけです。' },
+            closed: { message: '出張申請 {{request}} は完了済みのため、行程は確定しています。記入できるのは予約番号だけです。' },
+          },
+        },
+      },
+    },
   },
   objects: {
     crm_expense: {
@@ -241,6 +253,41 @@ export const jaJP: TranslationData = {
         submit_expense_request: { label: '提出', successMessage: '出張申請 {{ record.name }} を承認に提出しました。' },
         cancel_expense_request: { label: '出張をキャンセル', confirmText: 'この出張をキャンセルしますか？キャンセルした申請は再開できません。新しい計画は新たに申請してください。', successMessage: '出張申請 {{ record.name }} をキャンセルしました。' },
         close_expense_request: { label: '完了', successMessage: '出張申請 {{ record.name }} を完了にしました。' },
+      },
+    },
+    crm_expense_request_line: {
+      label: '行程明細',
+      pluralLabel: '行程明細',
+      description: '出張の1区間：何を予約するか、どこからどこへ、いつ',
+      fields: {
+        crm_expense_request: { label: '出張申請' },
+        line_number: { label: '行番号' },
+        kind: {
+          label: '種別',
+          options: {
+            flight: '航空便',
+            train: '列車',
+            car: '車',
+            hotel: 'ホテル',
+            other: 'その他',
+          },
+        },
+        origin: { label: '出発地' },
+        destination: { label: '到着地', help: 'この区間の行き先、またはホテルの所在地。' },
+        start_date: { label: '開始日' },
+        end_date: { label: '終了日', help: 'ホテルはチェックアウト日。日帰りの区間は空欄で構いません。' },
+        details: { label: '要望', help: '座席、ホテルなどの要望。' },
+        booking_reference: { label: '予約番号', help: '予約後に出張者、アシスタント、または手配した人が記入する確認番号。' },
+      },
+      _views: {
+        all_itinerary_lines: { label: 'すべての行程明細' },
+      },
+      _sections: {
+        leg: { label: '区間' },
+        booking: { label: '予約' },
+      },
+      _validations: {
+        expense_request_line_dates: { message: '終了日は開始日以降にしてください。' },
       },
     },
   },

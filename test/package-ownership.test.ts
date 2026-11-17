@@ -49,7 +49,7 @@ const REVENUE_OBJECTS = [
 ];
 const MARKETING_OBJECTS = ['crm_campaign', 'crm_campaign_member'];
 const O2C_OBJECTS = ['crm_billing_milestone', 'crm_invoice', 'crm_payment'];
-const EXPENSE_OBJECTS = ['crm_expense', 'crm_expense_report', 'crm_expense_request'];
+const EXPENSE_OBJECTS = ['crm_expense', 'crm_expense_report', 'crm_expense_request', 'crm_expense_request_line'];
 const PSA_OBJECTS = [
   'crm_project', 'crm_project_budget', 'crm_project_budget_line', 'crm_project_member', 'crm_project_task',
   'crm_rate_card', 'crm_time_entry', 'crm_timesheet',

@@ -71,3 +71,16 @@ export const EXPENSE_REQUEST_STATUS_OPTIONS = [
   { label: 'Cancelled', value: 'cancelled', color: '#64748B', kind: 'lost' as const },
   { label: 'Closed', value: 'closed', color: '#0F766E', kind: 'won' as const },
 ];
+
+/**
+ * What one leg of a trip books (hotcrm#2579, F3b): a way to travel, a place
+ * to stay, or something else. A line carries no amount (the request holds the
+ * one estimate).
+ */
+export const EXPENSE_REQUEST_LINE_KIND_OPTIONS = [
+  { label: 'Flight', value: 'flight' },
+  { label: 'Train', value: 'train' },
+  { label: 'Car', value: 'car' },
+  { label: 'Hotel', value: 'hotel' },
+  { label: 'Other', value: 'other' },
+];

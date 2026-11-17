@@ -5,6 +5,7 @@ order: 2
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
   - object:crm_expense_request
+  - object:crm_expense_request_line
 ---
 
 # Travel Requests — Asking Before a Trip
@@ -33,6 +34,22 @@ the plan in **Itinerary** and anything else in **Notes**; attach files in the
 **Source** says how the record arrived: typed by a person, written by an
 assistant, or imported. **Review Notes** is where an assistant or a rule writes
 what it found, for the approver to read. Neither decides anything.
+
+## Itinerary lines
+
+A trip with several legs is easier to book, and to check, leg by leg. On the
+request's page, under **Itinerary Lines**, choose **New** for each leg: its
+**Kind** (Flight, Train, Car, Hotel or Other), **From** and **To**, the
+**Start Date**, the **End Date** (for a hotel, the day you check out) and any
+**Details**, such as a seat or a hotel you prefer. The legs are listed in the
+order of the trip.
+
+A leg has no amount: the request's **Estimated Amount** is the one total.
+Lines are optional; a request with none is complete.
+
+Once the trip is booked, write the confirmation into the leg's **Booking
+Reference**. You, an assistant working for you, your approver or whoever books
+can write it at any time, also after approval.
 
 ## Who approves it
 
@@ -79,7 +96,10 @@ stateDiagram-v2
 
 The approval was given for the plan, so once a request is **Approved** its
 **Purpose**, **Destination**, dates, **Estimated Amount** and **Project** no
-longer change. To change the plan, choose **Cancel Trip** and file a new request.
+longer change. The same goes for its legs: from the moment you submit, a leg's
+kind, places, dates and details are held, and no leg can be added or removed;
+only the **Booking Reference** still takes a value. To change the plan, choose
+**Cancel Trip** and file a new request.
 
 - **Cancel Trip**: the trip is not happening, or not as planned.
 - **Close**: the trip is over.

@@ -198,6 +198,41 @@ export const en: TranslationData = {
         close_expense_request: { label: 'Close', successMessage: 'Travel request {{ record.name }} closed.' },
       },
     },
+    crm_expense_request_line: {
+      label: 'Itinerary Line',
+      pluralLabel: 'Itinerary Lines',
+      description: 'One leg of a trip: what to book, from where to where, and when',
+      fields: {
+        crm_expense_request: { label: 'Travel Request' },
+        line_number: { label: 'Line #' },
+        kind: {
+          label: 'Kind',
+          options: {
+            flight: 'Flight',
+            train: 'Train',
+            car: 'Car',
+            hotel: 'Hotel',
+            other: 'Other',
+          },
+        },
+        origin: { label: 'From' },
+        destination: { label: 'To', help: 'Where this leg goes, or where the hotel is.' },
+        start_date: { label: 'Start Date' },
+        end_date: { label: 'End Date', help: 'For a hotel, the day you check out. Leave empty for a one-day leg.' },
+        details: { label: 'Details', help: 'Seat, hotel or other wishes.' },
+        booking_reference: { label: 'Booking Reference', help: 'The confirmation, written after booking by the traveler, an assistant or whoever books.' },
+      },
+      _views: {
+        all_itinerary_lines: { label: 'All Itinerary Lines' },
+      },
+      _sections: {
+        leg: { label: 'Leg' },
+        booking: { label: 'Booking' },
+      },
+      _validations: {
+        expense_request_line_dates: { message: 'End Date must be on or after Start Date.' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers.
   flows: {

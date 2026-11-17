@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
-import { EXPENSE_OWN, EXPENSE_REPORT_OWN } from './_expense-grants';
+import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT } from './_expense-grants';
 
 /**
  * Project Member — a consultant staffed on projects (hotcrm#2316, plan
@@ -61,6 +61,7 @@ export const ProjectMemberProfile = {
     crm_expense: EXPENSE_OWN,
     crm_expense_report: EXPENSE_REPORT_OWN,
     crm_expense_request: EXPENSE_OWN,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
     sys_attachment:     { allowCreate: true,  allowRead: true, allowEdit: false, allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_comment:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_activity:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },

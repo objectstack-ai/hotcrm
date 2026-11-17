@@ -53,6 +53,18 @@ export const esES: TranslationData = {
         FORBIDDEN: { message: 'Una solicitud de viaje la aprueba o rechaza su aprobador, desde su bandeja de entrada, una vez enviada.' },
       },
     },
+    expense_request_line_lock: {
+      refusals: {
+        RECORD_LOCKED: {
+          message: 'La solicitud de viaje {{request}} está enviada, así que sus tramos están retenidos: solo se puede escribir la referencia de reserva. Recupérela a Borrador para cambiarlos.',
+          reasons: {
+            approved: { message: 'La solicitud de viaje {{request}} está aprobada, así que sus tramos son definitivos: solo se puede escribir la referencia de reserva. Para cambiar el plan, cancélela y presente una nueva.' },
+            cancelled: { message: 'La solicitud de viaje {{request}} está cancelada, así que sus tramos son definitivos: solo se puede escribir la referencia de reserva.' },
+            closed: { message: 'La solicitud de viaje {{request}} está cerrada, así que sus tramos son definitivos: solo se puede escribir la referencia de reserva.' },
+          },
+        },
+      },
+    },
   },
   objects: {
     crm_expense: {
@@ -241,6 +253,41 @@ export const esES: TranslationData = {
         submit_expense_request: { label: 'Enviar', successMessage: 'Solicitud de viaje {{ record.name }} enviada para aprobación.' },
         cancel_expense_request: { label: 'Cancelar viaje', confirmText: '¿Cancelar este viaje? Una solicitud cancelada no se puede reabrir; presente una nueva para un nuevo plan.', successMessage: 'Solicitud de viaje {{ record.name }} cancelada.' },
         close_expense_request: { label: 'Cerrar', successMessage: 'Solicitud de viaje {{ record.name }} cerrada.' },
+      },
+    },
+    crm_expense_request_line: {
+      label: 'Línea de itinerario',
+      pluralLabel: 'Líneas de itinerario',
+      description: 'Un tramo del viaje: qué reservar, desde dónde hasta dónde y cuándo',
+      fields: {
+        crm_expense_request: { label: 'Solicitud de viaje' },
+        line_number: { label: 'N.º de línea' },
+        kind: {
+          label: 'Tipo',
+          options: {
+            flight: 'Vuelo',
+            train: 'Tren',
+            car: 'Coche',
+            hotel: 'Hotel',
+            other: 'Otro',
+          },
+        },
+        origin: { label: 'Desde' },
+        destination: { label: 'Hasta', help: 'Adónde va este tramo, o dónde está el hotel.' },
+        start_date: { label: 'Fecha de inicio' },
+        end_date: { label: 'Fecha de fin', help: 'Para un hotel, el día de salida. Déjela vacía para un tramo de un día.' },
+        details: { label: 'Detalles', help: 'Asiento, hotel u otras preferencias.' },
+        booking_reference: { label: 'Referencia de reserva', help: 'La confirmación, que escribe tras reservar el viajero, un asistente o quien reserve.' },
+      },
+      _views: {
+        all_itinerary_lines: { label: 'Todas las líneas de itinerario' },
+      },
+      _sections: {
+        leg: { label: 'Tramo' },
+        booking: { label: 'Reserva' },
+      },
+      _validations: {
+        expense_request_line_dates: { message: 'La fecha de fin debe ser igual o posterior a la de inicio.' },
       },
     },
   },

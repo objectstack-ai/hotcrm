@@ -14,13 +14,13 @@ import {
   ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
   ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
 } from './flows/index.js';
-import { Expense, ExpenseReport, ExpenseRequest } from './objects/index.js';
-import { expenseHook, expenseReportHook, expenseRequestHook } from './objects/hooks.js';
+import { Expense, ExpenseReport, ExpenseRequest, ExpenseRequestLine } from './objects/index.js';
+import { expenseHook, expenseReportHook, expenseRequestHook, expenseRequestLineHook } from './objects/hooks.js';
 import {
   ExpenseApproverEditSharingRule, ExpenseReportApproverEditSharingRule, ExpenseRequestApproverEditSharingRule,
 } from './sharing/index.js';
 import { ExpenseTranslations } from './translations/index.js';
-import { ExpenseReportViews, ExpenseRequestViews, ExpenseViews } from './views/index.js';
+import { ExpenseReportViews, ExpenseRequestLineViews, ExpenseRequestViews, ExpenseViews } from './views/index.js';
 
 /**
  * This package's hooks, for the artifact-wide sweeps (`allHooks` in
@@ -28,7 +28,7 @@ import { ExpenseReportViews, ExpenseRequestViews, ExpenseViews } from './views/i
  * `src/service/index.ts` for the arrangement. Every one attaches to this
  * module's own object (ADR-0130 R4).
  */
-export const expenseHooks = [expenseHook, expenseReportHook, expenseRequestHook].flat();
+export const expenseHooks = [expenseHook, expenseReportHook, expenseRequestHook, expenseRequestLineHook].flat();
 
 /**
  * This package's flows: the approval of an expense report with no project
@@ -137,9 +137,9 @@ export const createHotCrmExpenseStack = (
 
   // Everyone's expenses app; see the app's own note.
   apps: [ExpenseApp],
-  objects: [Expense, ExpenseReport, ExpenseRequest],
+  objects: [Expense, ExpenseReport, ExpenseRequest, ExpenseRequestLine],
   hooks: expenseHooks,
-  views: [ExpenseViews, ExpenseReportViews, ExpenseRequestViews],
+  views: [ExpenseViews, ExpenseReportViews, ExpenseRequestViews, ExpenseRequestLineViews],
   actions: expenseActions,
   sharingRules: expenseSharingRules,
   flows: expenseFlows,
