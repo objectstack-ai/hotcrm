@@ -9,11 +9,12 @@
  * no Chinese key may reuse an English one (`test/seed-locale-twins.test.ts`):
  * the twin's invoice is numbered `FP-…` (发票) and its bank reference `YH-…`
  * (银行), digits kept. Contracts are named by their Chinese description, the
- * Chinese contracts' own seed identity.
+ * Chinese contracts' own seed identity, and an account by its Chinese name.
  */
 import { billingMilestones, invoices, payments } from './o2c.seed';
 import { zhCNTwin, zhKey } from '../../sales/data/_locale';
 import { zhContractDescription } from '../../sales/data/contract.zh-CN.seed';
+import { zhAccountName } from '../../sales/data/sales.zh-CN.seed';
 
 const MILESTONES_ZH: Record<string, Record<string, unknown>> = {
   'Initech Q1 service fee': { name: '英泰第一季度服务费', description: '服务协议第一季度，在季度初开票。' },
@@ -52,6 +53,7 @@ export const invoicesZhCN = zhCNTwin(invoices, {
 export const paymentsZhCN = zhCNTwin(payments, {
   refs: {
     erp_ref: zhBankRef,
+    crm_account: zhAccountName,
     crm_contract: zhContractDescription,
     crm_invoice: zhInvoiceNumber,
   },

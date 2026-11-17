@@ -16,13 +16,18 @@ import { defineMapping } from '@objectstack/spec/data';
  *   on the object: importing the same reference again updates that invoice
  *   rather than adding a second one. An ERP writing through REST batch upsert
  *   uses the same key.
- * - **References resolve by their titles.** `Contract` takes the contract
- *   number (`CTR-0001`, the contract's `nameField`), `Billing Milestone` the
- *   step's name; the import pipeline resolves a reference cell against the
- *   target's title, and a cell that matches nothing fails its row.
+ * - **References resolve by their titles.** `Account` takes the account's
+ *   name, `Contract` the contract number (`CTR-0001`, the contract's
+ *   `nameField`), `Billing Milestone` the step's name; the import pipeline
+ *   resolves a reference cell against the target's title, and a cell that
+ *   matches nothing fails its row.
+ * - **The account is what an invoice belongs to** (hotcrm#2557). A row names
+ *   it, or names a contract (or a step) and the account is filled from it
+ *   (`../objects/_row-stamp.ts`); a row naming both is refused when the
+ *   contract is another account's. A row naming neither fails: the account
+ *   is required.
  * - **`source` is `import`** on every row, a constant — which also stamps
- *   Synced At (`../objects/_row-stamp.ts`). The account is stamped from the
- *   contract, so the sheet carries no account column.
+ *   Synced At (`../objects/_row-stamp.ts`).
  */
 export const InvoiceImportMapping = defineMapping({
   name: 'crm_invoice_import',
@@ -35,6 +40,7 @@ export const InvoiceImportMapping = defineMapping({
   fieldMapping: [
     { source: 'ERP Reference', target: 'erp_ref' },
     { source: 'Invoice Number', target: 'invoice_number' },
+    { source: 'Account', target: 'crm_account', transform: 'lookup' },
     { source: 'Contract', target: 'crm_contract', transform: 'lookup' },
     { source: 'Billing Milestone', target: 'crm_billing_milestone', transform: 'lookup' },
     { source: 'Issue Date', target: 'issue_date' },

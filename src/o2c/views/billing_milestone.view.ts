@@ -15,8 +15,9 @@ import { defineView } from '@objectstack/spec/ui';
  *     needed.
  *
  * No form is authored: the form and the record page derive from the object's
- * `fieldGroups` (AGENTS.md, escape hatches). A contract's steps are listed on
- * its record page through the master-detail's `relatedListColumns`.
+ * `fieldGroups` (AGENTS.md, escape hatches). An account's steps are listed on
+ * its record page through the master-detail's `relatedListColumns`, and a
+ * contract's through its lookup's (hotcrm#2557).
  */
 export const BillingMilestoneViews = defineView({
   list: {
@@ -27,8 +28,8 @@ export const BillingMilestoneViews = defineView({
     data: { provider: 'object', object: 'crm_billing_milestone' },
     columns: [
       { field: 'name', width: 200, link: true, pinned: 'left' },
-      { field: 'crm_contract', width: 130 },
       { field: 'crm_account', width: 200 },
+      { field: 'crm_contract', width: 130 },
       { field: 'planned_date', width: 120, sortable: true },
       { field: 'planned_amount', width: 140, align: 'right', summary: 'sum' },
       { field: 'invoiced_amount', width: 130, align: 'right', summary: 'sum' },
@@ -47,7 +48,7 @@ export const BillingMilestoneViews = defineView({
       label: 'Planned This Month',
       userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_billing_milestone' },
-      columns: ['name', 'crm_contract', 'crm_account', 'planned_date', 'planned_amount', 'invoiced_amount', 'received_amount', 'open_amount'],
+      columns: ['name', 'crm_account', 'crm_contract', 'planned_date', 'planned_amount', 'invoiced_amount', 'received_amount', 'open_amount'],
       filter: [
         { field: 'planned_date', operator: 'greater_than_or_equal', value: '{current_month_start}' },
         { field: 'planned_date', operator: 'less_than', value: '{next_month_start}' },

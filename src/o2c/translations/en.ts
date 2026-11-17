@@ -12,7 +12,10 @@ export const en: TranslationData = {
     crm_billing_milestone: {
       label: 'Billing Milestone',
       pluralLabel: 'Billing Milestones',
-      description: 'One step of a contract\'s collection plan: what is due, when, and how much of it is invoiced and received',
+      description: 'One step of an account\'s collection plan, planned from a contract: what is due, when, and how much of it is invoiced and received',
+      _validations: {
+        billing_milestone_contract: { message: 'Choose the contract this step belongs to.' },
+      },
       fields: {
         name: {
           label: 'Milestone',
@@ -70,7 +73,7 @@ export const en: TranslationData = {
     crm_invoice: {
       label: 'Invoice',
       pluralLabel: 'Invoices',
-      description: 'An invoice finance issued against a contract, and how much of it is paid',
+      description: 'An invoice finance issued to an account, and how much of it is paid',
       fields: {
         invoice_number: {
           label: 'Invoice Number',
@@ -90,7 +93,7 @@ export const en: TranslationData = {
         },
         due_date: {
           label: 'Due Date',
-          help: 'Left empty, it is the issue date plus the contract\'s payment terms.',
+          help: 'Left empty, it is the issue date plus the contract\'s payment terms. With no contract, type it.',
         },
         status: {
           label: 'Status',
@@ -155,7 +158,7 @@ export const en: TranslationData = {
     crm_payment: {
       label: 'Payment',
       pluralLabel: 'Payments',
-      description: 'Money received against a contract, an invoice or a plan step',
+      description: 'Money an account paid: against an invoice, a plan step, a contract, or none of them yet',
       fields: {
         payment_number: {
           label: 'Payment Number',

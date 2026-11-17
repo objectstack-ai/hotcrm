@@ -9,6 +9,10 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
  * authority's system); this row is how sales sees it. Finance enters it or
  * imports it on `erp_ref` (`../mappings/invoice_import.mapping.ts`).
  *
+ * It belongs to the account (REQ-0010, hotcrm#2557). The contract and the plan
+ * step are optional sources: an invoice for an order, for several orders, or
+ * with no contract at all names only the account.
+ *
  * An invoice cancelled or fully credited at the source is set `cancelled` and
  * leaves every figure: the plan step's Invoiced counts `issued` rows only, and
  * a cancelled invoice is open for nothing.
@@ -18,13 +22,15 @@ export const Invoice = ObjectSchema.create({
   label: 'Invoice',
   pluralLabel: 'Invoices',
   icon: 'receipt',
-  description: 'An invoice finance issued against a contract, and how much of it is paid',
+  description: 'An invoice finance issued to an account, and how much of it is paid',
 
-  // Whoever reads the contract reads its invoices (ADR-0055). Who may write
-  // one is the permission sets' to say: finance (`ar_accountant`) holds Modify
-  // All here, reps read only. Read on the contract is the contract-side
-  // question for a write (objectstack#33250, #2462), so finance, who reads
-  // every contract and edits none, enters invoices.
+  // Whoever reads the account reads its invoices (ADR-0055; through the
+  // contract before hotcrm#2557, which derives from the account, so the
+  // readers are the same). Who may write one is the permission sets' to say:
+  // finance (`ar_accountant`) holds Modify All here, reps read only. Read on
+  // the account is the master-side question for a write (objectstack#33250,
+  // #2462), so finance, who reads every account and edits none, enters
+  // invoices.
   sharingModel: 'controlled_by_parent',
   sharing: { controlledByParent: { writeRequiresMasterRead: true } },
   nameField: 'invoice_number',
@@ -45,31 +51,40 @@ export const Invoice = ObjectSchema.create({
       description: 'The number on the invoice, as finance issued it.',
     }),
 
-    // The master. A contract with invoices cannot be deleted: these are
-    // finance's figures, not the contract's to take with it.
-    crm_contract: Field.masterDetail('crm_contract', {
-      label: 'Contract',
+    // The master (hotcrm#2557). An account with invoices cannot be deleted:
+    // these are finance's figures, not the account's to take with it.
+    crm_account: Field.masterDetail('crm_account', {
+      label: 'Account',
       group: 'basic',
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'restrict',
+      relatedListColumns: ['invoice_number', 'crm_contract', 'due_date', 'amount', 'open_amount', 'status'],
+    }),
+
+    // An optional source. Picking it fills the account on the form; on every
+    // write `_row-stamp.ts` takes the account from it and refuses a different
+    // one. A contract with invoices still cannot be deleted (`restrict`, as
+    // when it was the master): its page sums them, and finance's rows keep
+    // the source they were entered with.
+    crm_contract: Field.lookup('crm_contract', {
+      label: 'Contract',
+      group: 'basic',
+      deleteBehavior: 'restrict',
+      lookupAutofill: [{ target: 'crm_account', source: 'crm_account', overwrite: true }],
       relatedListColumns: ['invoice_number', 'issue_date', 'due_date', 'amount', 'paid_amount', 'open_amount', 'status'],
     }),
 
+    // An optional source. When the invoice names no contract, the step's
+    // contract is filled in (`_row-stamp.ts`), so the contract's figures and
+    // the step's count the same invoices. Deleting the step leaves the
+    // invoice (`set_null`, the lookup default).
     crm_billing_milestone: Field.lookup('crm_billing_milestone', {
       label: 'Billing Milestone',
       group: 'basic',
-      // Only the steps of this invoice's contract.
-      dependsOn: ['crm_contract'],
+      // Only the steps of this invoice's account.
+      dependsOn: ['crm_account'],
       relatedListColumns: ['invoice_number', 'issue_date', 'amount', 'status'],
-    }),
-
-    // Stamped from the contract (`_row-stamp.ts`).
-    crm_account: Field.lookup('crm_account', {
-      label: 'Account',
-      group: 'basic',
-      readonly: true,
-      relatedListColumns: ['invoice_number', 'crm_contract', 'due_date', 'amount', 'open_amount', 'status'],
     }),
 
     issue_date: Field.date({
@@ -80,10 +95,11 @@ export const Invoice = ObjectSchema.create({
 
     // Filled on entry from the contract's Payment Terms when left empty
     // (`invoice_figures` in `invoice.hook.ts`); finance may set it outright.
+    // An invoice with no contract has no terms to read: its due date is typed.
     due_date: Field.date({
       label: 'Due Date',
       group: 'basic',
-      description: 'Left empty, it is the issue date plus the contract\'s payment terms.',
+      description: 'Left empty, it is the issue date plus the contract\'s payment terms. With no contract, type it.',
     }),
 
     status: Field.select({

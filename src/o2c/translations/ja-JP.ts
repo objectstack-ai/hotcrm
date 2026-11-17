@@ -12,9 +12,39 @@ export const jaJP: TranslationData = {
     payment_plan_step_stamp: {
       refusals: {
         VALIDATION_FAILED: {
-          message: 'この請求書は別の契約のものです。この入金の契約の請求書を選んでください。',
+          message: 'この請求書は別の取引先のものです。この入金の取引先の請求書を選んでください。',
           reasons: {
-            named: { message: '{{invoice}}は別の契約のものです。この入金の契約の請求書を選んでください。' },
+            named: { message: '{{invoice}}は別の取引先のものです。この入金の取引先の請求書を選んでください。' },
+          },
+        },
+      },
+    },
+    billing_milestone_row_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'この契約は別の取引先のものです。この取引先の契約を選ぶか、取引先を空欄にして契約から設定してください。',
+          reasons: {
+            named: { message: '{{contract}}は別の取引先のものです。この取引先の契約を選ぶか、取引先を空欄にして契約から設定してください。' },
+          },
+        },
+      },
+    },
+    invoice_row_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'この契約は別の取引先のものです。この取引先の契約を選ぶか、取引先を空欄にして契約から設定してください。',
+          reasons: {
+            named: { message: '{{contract}}は別の取引先のものです。この取引先の契約を選ぶか、取引先を空欄にして契約から設定してください。' },
+          },
+        },
+      },
+    },
+    payment_row_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'この契約は別の取引先のものです。この取引先の契約を選ぶか、取引先を空欄にして契約から設定してください。',
+          reasons: {
+            named: { message: '{{contract}}は別の取引先のものです。この取引先の契約を選ぶか、取引先を空欄にして契約から設定してください。' },
           },
         },
       },
@@ -24,7 +54,10 @@ export const jaJP: TranslationData = {
     crm_billing_milestone: {
       label: '請求マイルストーン',
       pluralLabel: '請求マイルストーン',
-      description: '契約の回収計画の 1 ステップ：いつ、いくら回収するか、そのうち請求済・入金済の金額',
+      description: '取引先の回収計画の 1 ステップ（契約から計画）：いつ、いくら回収するか、そのうち請求済・入金済の金額',
+      _validations: {
+        billing_milestone_contract: { message: 'このステップが属する契約を選択してください。' },
+      },
       fields: {
         name: {
           label: 'マイルストーン',
@@ -82,7 +115,7 @@ export const jaJP: TranslationData = {
     crm_invoice: {
       label: '請求書',
       pluralLabel: '請求書',
-      description: '経理が契約に対して発行した請求書と、その入金済の金額',
+      description: '経理が取引先に発行した請求書と、その入金済の金額',
       fields: {
         invoice_number: {
           label: '請求書番号',
@@ -102,7 +135,7 @@ export const jaJP: TranslationData = {
         },
         due_date: {
           label: '支払期日',
-          help: '空欄の場合、発行日に契約の支払条件を加えた日。',
+          help: '空欄の場合、発行日に契約の支払条件を加えた日。契約がない場合は入力してください。',
         },
         status: {
           label: 'ステータス',
@@ -167,7 +200,7 @@ export const jaJP: TranslationData = {
     crm_payment: {
       label: '入金',
       pluralLabel: '入金',
-      description: '契約、請求書または請求マイルストーンに対して受け取った入金',
+      description: '取引先からの入金：請求書、請求マイルストーン、契約のいずれかに対するもの、またはまだどれにも対応しないもの',
       fields: {
         payment_number: {
           label: '入金番号',

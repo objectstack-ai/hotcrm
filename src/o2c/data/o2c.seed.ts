@@ -20,19 +20,23 @@
  *     Month whatever the calendar.
  *
  * Wayne's contract is still in approval and Stark's is a draft, so neither is
- * billed. No payment exceeds its invoice, so every Overpaid reads 0 (#2513).
+ * billed. Wayne has paid a 10,000 deposit all the same: it matches no invoice
+ * and no plan step yet, so it is recorded against the account alone (the rows
+ * belong to the account, hotcrm#2557). Wayne's account reads Received 10,000
+ * and a Receivable Balance of 0; no contract counts it. No payment exceeds its
+ * invoice, so every Overpaid reads 0 (#2513).
  *
  * Hook-owned figures are not authored (`src/sales/data/_shared.ts`, rule 3):
- * the account stamp on every row, an invoice's Due Date (issue date plus the
- * contract's terms), Open and Overpaid, a payment's plan step (copied from its
+ * the account stamp on every row that names a contract, an invoice's Due Date
+ * (issue date plus the contract's terms), Open and Overpaid, a payment's plan step (copied from its
  * invoice), and the steps' invoiced and received summaries all come from the
  * module's own hooks and the engine as the rows are written. The datasets are
  * replayed in this order, after the contracts they reference.
  *
  * Seed identities: a step's `name`, an invoice's `invoice_number`, and a
  * payment's `erp_ref` (its bank reference), since `payment_number` is an
- * autonumber the runtime owns. References name those keys, and a contract by
- * its `description`, the contracts' own seed identity.
+ * autonumber the runtime owns. References name those keys, a contract by its
+ * `description`, the contracts' own seed identity, and an account by its name.
  *
  * INSERT-ONCE (`mode: 'ignore'`, as the contracts): finance edits, cancels and
  * re-imports these rows, and a boot must not write them back.
@@ -47,6 +51,8 @@ import { SEED_EN_LOCALES } from '../../sales/data/_locale';
 /** The two billed contracts, by their seed identity. */
 const INITECH = 'Initech Solutions';
 const ACME = 'Acme Corporation';
+/** The account whose deposit arrived before any contract was billed. */
+const WAYNE = 'Wayne Enterprises';
 const O2C_CONTRACTS = {
   [INITECH]: 'Initial service agreement, pending renewal discussion.',
   [ACME]: 'Annual platform subscription with premium support tier.',
@@ -87,5 +93,7 @@ export const payments = defineSeed(Payment, {
     { erp_ref: 'TRX-129420', crm_contract: O2C_CONTRACTS[INITECH], crm_invoice: 'INV-00538', payment_date: cel`daysAgo(282)`, amount: 15000, method: 'bank_transfer', source: 'manual' },
     // Part payment: the customer paid 9,000 and disputed the rest of the quarter.
     { erp_ref: 'TRX-135180', crm_contract: O2C_CONTRACTS[INITECH], crm_invoice: 'INV-00707', payment_date: cel`daysAgo(180)`, amount: 9000, method: 'bank_transfer', source: 'manual' },
+    // A deposit with no invoice, no plan step and no contract: the account alone (hotcrm#2557).
+    { erp_ref: 'TRX-140215', crm_account: WAYNE, payment_date: cel`daysAgo(20)`, amount: 10000, method: 'bank_transfer', source: 'manual' },
   ],
 });

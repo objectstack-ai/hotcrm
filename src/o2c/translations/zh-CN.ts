@@ -12,9 +12,39 @@ export const zhCN: TranslationData = {
     payment_plan_step_stamp: {
       refusals: {
         VALIDATION_FAILED: {
-          message: '这张发票属于另一份合同。请选择这笔回款所属合同的发票。',
+          message: '这张发票属于另一个客户。请选择这笔回款所属客户的发票。',
           reasons: {
-            named: { message: '{{invoice}}属于另一份合同。请选择这笔回款所属合同的发票。' },
+            named: { message: '{{invoice}}属于另一个客户。请选择这笔回款所属客户的发票。' },
+          },
+        },
+      },
+    },
+    billing_milestone_row_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '这份合同属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。',
+          reasons: {
+            named: { message: '{{contract}}属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。' },
+          },
+        },
+      },
+    },
+    invoice_row_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '这份合同属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。',
+          reasons: {
+            named: { message: '{{contract}}属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。' },
+          },
+        },
+      },
+    },
+    payment_row_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '这份合同属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。',
+          reasons: {
+            named: { message: '{{contract}}属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。' },
           },
         },
       },
@@ -24,7 +54,10 @@ export const zhCN: TranslationData = {
     crm_billing_milestone: {
       label: '回款节点',
       pluralLabel: '回款节点',
-      description: '合同回款计划中的一步：应收多少、何时收，以及其中已开票和已回款的金额',
+      description: '客户回款计划中的一步，按合同制定：应收多少、何时收，以及其中已开票和已回款的金额',
+      _validations: {
+        billing_milestone_contract: { message: '请选择这个节点所属的合同。' },
+      },
       fields: {
         name: {
           label: '节点名称',
@@ -82,7 +115,7 @@ export const zhCN: TranslationData = {
     crm_invoice: {
       label: '发票',
       pluralLabel: '发票',
-      description: '财务针对合同开具的发票，以及其中已付的金额',
+      description: '财务开给客户的发票，以及其中已付的金额',
       fields: {
         invoice_number: {
           label: '发票号码',
@@ -102,7 +135,7 @@ export const zhCN: TranslationData = {
         },
         due_date: {
           label: '到期日',
-          help: '留空时，为开票日期加上合同的付款条件。',
+          help: '留空时，为开票日期加上合同的付款条件。没有合同时请填写。',
         },
         status: {
           label: '状态',
@@ -167,7 +200,7 @@ export const zhCN: TranslationData = {
     crm_payment: {
       label: '回款',
       pluralLabel: '回款',
-      description: '针对合同、发票或回款节点收到的款项',
+      description: '客户付来的款项：对应发票、回款节点、合同，或暂时都不对应',
       fields: {
         payment_number: {
           label: '回款编号',
