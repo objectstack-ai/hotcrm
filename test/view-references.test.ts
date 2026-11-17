@@ -292,13 +292,18 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
       .toEqual([...canonical].sort());
   });
 
-  it('mass_update_stage offers exactly the canonical stages, in order', () => {
+  it('mass_update_stage offers exactly the canonical OPEN stages, in order (#2589)', () => {
     // The action param is projected from the field's own options (#2000); a
-    // hand-typed list there is the drift this suite exists to refuse.
+    // hand-typed list there is the drift this suite exists to refuse. Closing
+    // stages are left out by ruling (#2589): closing needs a reason the bulk
+    // dialog cannot collect, so it is done on the record.
     const action = stackActions.find((a) => a.name === 'mass_update_stage');
     const param = (action?.params ?? []).find((p: AnyRec) => p.name === 'stage');
     expect(param, 'mass_update_stage has no stage param').toBeTruthy();
-    expect((param?.options ?? []).map((o: AnyRec) => String(o.value))).toEqual(canonical);
+    const open = (Opportunity.fields.stage.options ?? [])
+      .filter((o) => (o.kind ?? 'open') === 'open')
+      .map((o) => String(o.value));
+    expect((param?.options ?? []).map((o: AnyRec) => String(o.value))).toEqual(open);
   });
 
   it('every stage has a step on the opportunity stage path', () => {

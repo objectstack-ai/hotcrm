@@ -355,7 +355,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       mass_update_stage: {
         label: 'Update Stage',
-        successMessage: 'Opportunities updated successfully!',
+        successMessage: 'Stage updated.',
         params: {
           stage: { label: 'New Stage' },
         },

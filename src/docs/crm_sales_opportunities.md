@@ -55,6 +55,14 @@ stateDiagram-v2
 New opportunities start at **10% probability**. Keep the **amount**, **stage**,
 and **close date** current — the automation below keys off all three.
 
+## Moving several deals at once
+
+**Update Stage** on a list's selection bar moves each ticked deal on its own,
+as an edit by you: a deal you may not edit, or one locked by a pending
+approval, stays put and is listed with its reason. It offers the open stages
+only; close a deal as **Closed Won** or **Closed Lost** on its own record,
+where the reason is entered.
+
 ## Stalled-deal nudge (automatic)
 
 Where the deployment has switched scheduled work on (an administrator setting),
