@@ -551,8 +551,13 @@ export const esES: TranslationData = {
         rates: { label: 'Coste y facturación' },
       },
     },
-    // The Project field it contributes to the expense module's object (hotcrm#2556).
+    // The Project field it contributes to the expense module's objects (hotcrm#2556, hotcrm#2581).
     crm_expense: {
+      fields: {
+        crm_project: { label: 'Proyecto' },
+      },
+    },
+    crm_expense_request: {
       fields: {
         crm_project: { label: 'Proyecto' },
       },

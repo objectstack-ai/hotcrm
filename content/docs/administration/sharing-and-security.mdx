@@ -124,7 +124,7 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Projects — Finance | Project | Edit | `crm_finance_controller`, `crm_project_director`, `crm_pmo` — every project (one rule per position; it can edit them, never delete one) |
 | Timesheets — Approver | Timesheet | Edit | the user in the timesheet's `approver` field — the project manager when it was created |
 | Expenses — Approver | Expense | Edit | the user in the expense's `approver` field — named when it is submitted: the spender's manager, or the project's manager for an expense on a project |
-| Travel Requests — Approver | Travel Request | Edit | the user in the request's `approver` field — named when it is submitted: the traveler's manager |
+| Travel Requests — Approver | Travel Request | Edit | the user in the request's `approver` field — named when it is submitted: the traveler's manager, or the project's Project Manager for a request on a project |
 
 Create your own in **Setup → Sharing Rules**.
 

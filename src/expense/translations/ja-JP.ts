@@ -237,6 +237,18 @@ export const jaJP: TranslationData = {
         approver_review: { label: '上長レビュー' },
       },
     },
+    expense_request_project_approval: {
+      label: 'プロジェクト出張申請の承認',
+      approvals: {
+        approver_review: { label: 'プロジェクトマネージャー審査' },
+      },
+    },
+    expense_request_project_approval_on_create: {
+      label: 'プロジェクト出張申請の承認（作成時）',
+      approvals: {
+        approver_review: { label: 'プロジェクトマネージャー審査' },
+      },
+    },
   },
   apps: {
     crm_expenses: {
@@ -257,11 +269,12 @@ export const jaJP: TranslationData = {
         nav_help_expense: { label: '経費精算マニュアル' },
       },
     },
-    // My Expenses and Expenses to Approve, contributed into the Project Delivery app.
+    // My Expenses, Expenses to Approve and My Travel Requests, contributed into the Project Delivery app.
     crm_psa: {
       navigation: {
         nav_my_expenses: { label: '自分の経費' },
         nav_expenses_to_approve: { label: '承認待ちの経費' },
+        nav_my_travel_requests: { label: '自分の出張申請' },
       },
     },
   },

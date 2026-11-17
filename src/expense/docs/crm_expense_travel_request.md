@@ -12,7 +12,8 @@ sources:
 
 For everyone who travels for the company, and their managers. A travel
 request says where you are going, when, why, and roughly how much it will
-cost, before any money is spent. Your manager says yes or no.
+cost, before any money is spent. Your manager says yes or no, or the
+project's Project Manager when the trip is for a project.
 
 A travel request is optional: you can record and submit an expense without
 one.
@@ -25,8 +26,10 @@ and **End Date**, and the **Estimated Amount**. **Days** counts both dates.
 
 The **Estimated Amount** is one total for the whole trip, in your
 organization's currency, whoever pays for each part. Pick the **Account** if
-the trip is for a customer. Write the plan in **Itinerary** and anything else
-in **Notes**; attach files in the **Files** tab.
+the trip is for a customer, and the **Project** if it is for a project (with
+Project Delivery on; the picker offers no Closed or Cancelled project). Write
+the plan in **Itinerary** and anything else in **Notes**; attach files in the
+**Files** tab.
 
 **Source** says how the record arrived: typed by a person, written by an
 assistant, or imported. **Review Notes** is where an assistant or a rule writes
@@ -50,10 +53,18 @@ can write it at any time, also after approval.
 
 ## Who approves it
 
-Choose **Submit**. Your **manager**, the manager on your user record, decides
-from their **Inbox**; with no manager there, the **Finance Controllers** decide
-instead. There is one step only: finance does not approve a travel request,
-it checks the money on the expenses afterwards.
+Choose **Submit**. Who decides depends on the **Project**:
+
+- **On a project**: the project's **Project Manager**, the person who answers
+  for its cost and approves its expenses, so the trip and its expenses go to
+  the same person. A project with no Project Manager, or a trip of the Project
+  Manager's own, goes to an administrator.
+- **No project**: your **manager**, the manager on your user record; with no
+  manager there, the **Finance Controllers**.
+
+Either way, one person decides from their **Inbox**, never both. There is one
+step only: finance does not approve a travel request, it checks the money on
+the expenses afterwards.
 
 The approver is written into **Approver** when you submit, and the request
 appears under their **Requests to Approve**. Nobody approves their own, and
@@ -84,11 +95,11 @@ stateDiagram-v2
 ## After approval
 
 The approval was given for the plan, so once a request is **Approved** its
-**Purpose**, **Destination**, dates and **Estimated Amount** no longer change.
-The same goes for its legs: from the
-moment you submit, a leg's kind, places, dates and details are held, and no leg
-can be added or removed; only the **Booking Reference** still takes a value. To
-change the plan, choose **Cancel Trip** and file a new request.
+**Purpose**, **Destination**, dates, **Estimated Amount** and **Project** no
+longer change. The same goes for its legs: from the moment you submit, a leg's
+kind, places, dates and details are held, and no leg can be added or removed;
+only the **Booking Reference** still takes a value. To change the plan, choose
+**Cancel Trip** and file a new request.
 
 - **Cancel Trip**: the trip is not happening, or not as planned.
 - **Close**: the trip is over.
@@ -99,4 +110,6 @@ change the plan, choose **Cancel Trip** and file a new request.
 
 You see your own requests, and the ones you are asked to approve. Finance sees
 every request under **All Travel Requests** and can change none that is not
-theirs; so do sales managers and leadership.
+theirs; so do sales managers and leadership. Project staff also find **My
+Travel Requests** in the **Project Delivery** app, and a project's page lists
+those of its travel requests the reader may see.
