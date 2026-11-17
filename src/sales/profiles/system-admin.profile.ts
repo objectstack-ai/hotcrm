@@ -65,6 +65,7 @@ export const SystemAdminProfile = {
     crm_timesheet:             { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     crm_time_entry:            { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     crm_expense:               { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
+    crm_expense_report:        { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     crm_expense_request:       { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     crm_expense_request_line:  { allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true, viewAllRecords: true, modifyAllRecords: true, allowTransfer: true },
     // The record Attachments panel: canonical note on `enable.files` in

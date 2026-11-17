@@ -224,17 +224,22 @@ describe('time (timesheet_stamps, time_entry_costing)', () => {
   });
 });
 
-describe('expenses on a project (expense_project_approval, hotcrm#2556)', () => {
-  it('reach the project\'s cost once the Project Manager approves them from the Inbox', async () => {
+describe('expenses on a project (expense_report_project_approval, hotcrm#2559)', () => {
+  it('reach the project\'s cost once the Project Manager approves their report from the Inbox', async () => {
     const before = num((await row('crm_project', project.id))!.actual_expense_cost);
     const exp = await insert('crm_expense', {
       name: `Flight ${++k}`, crm_project: project.id, expense_date: '2026-11-03', category: 'travel', amount: 300, is_billable: true,
     }, consultant.token);
     expect((await row('crm_expense', exp.id))!.approver, 'named at submission, not at creation').toBeFalsy();
-    await update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token);
-    expect((await row('crm_expense', exp.id))!.approver).toBe(pm.id);
+    const result = (await verify.actions.run('crm_expense', 'submit_for_reimbursement', {
+      as: consultant.token, params: { _selectedIds: [exp.id] },
+    })) as Rec;
+    const reportId = String(result.id);
+    expect((await row('crm_expense_report', reportId))!.approver).toBe(pm.id);
+    expect((await row('crm_expense', exp.id))!.approver, 'the expense carries its report\'s approver').toBe(pm.id);
     expect(num((await row('crm_project', project.id))!.actual_expense_cost) - before).toBe(0);
-    await decide(exp.id, pm.token);
+    await decide(reportId, pm.token);
+    expect((await row('crm_expense', exp.id))!.status).toBe('approved');
     expect(num((await row('crm_project', project.id))!.actual_expense_cost) - before).toBe(300);
   });
 });

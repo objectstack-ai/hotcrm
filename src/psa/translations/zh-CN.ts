@@ -557,6 +557,11 @@ export const zhCN: TranslationData = {
         crm_project: { label: '项目' },
       },
     },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: '项目' },
+      },
+    },
     crm_expense_request: {
       fields: {
         crm_project: { label: '项目' },

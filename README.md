@@ -14,7 +14,7 @@
 
 **HotCRM is the reference app for AI-written enterprise software: a complete CRM in typed ObjectStack metadata.** For a CRM, it is the reference implementation of the statement above.
 
-- **Its business ontology is the app.** 36 business objects and the relations between them, **44 actions**, 49 flows, 6 permission sets, 18 positions and 11 sharing rules, and 6 AI skills — typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata under `src/`, checked by `pnpm validate`.
+- **Its business ontology is the app.** 37 business objects and the relations between them, **48 actions**, 47 flows, 6 permission sets, 18 positions and 13 sharing rules, and 6 AI skills — typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata under `src/`, checked by `pnpm validate`.
 - **The database, the API, the console UI and the agent tools derive from it.** One `pnpm dev` boot creates the tables, serves the REST API at `/api/v1/data/crm_account` and its siblings, the Console at `/_console/`, and an MCP server at `/api/v1/mcp`. Nothing under `src/` defines a route handler or a React component.
 - **Views, dashboards and translations are projections of it.** List views, record pages, 7 dashboards and the app's navigation, in 4 languages (en, zh-CN, es-ES, ja-JP): the surfaces people use the ontology through, not a second copy of it.
 
@@ -85,7 +85,7 @@ HotCRM defines no agent of its own; its 6 AI skills are metadata for a platform 
 
 ## ✨ What you get
 
-**36 business objects** across seven business domains — sales, service, revenue, marketing, order to cash, expenses and project delivery; the repository layout below says what each package covers, and the roster itself is `src/*/objects/*.object.ts`. Around them: **44 actions**, 49 flows, **7 dashboards**, 10 reports, 11 datasets, 6 AI skills, 4 language bundles (en, zh-CN, es-ES, ja-JP), 6 permission sets, 18 positions and 11 sharing rules. `pnpm build` prints most of these counts on every build.
+**37 business objects** across seven business domains — sales, service, revenue, marketing, order to cash, expenses and project delivery; the repository layout below says what each package covers, and the roster itself is `src/*/objects/*.object.ts`. Around them: **48 actions**, 47 flows, **7 dashboards**, 10 reports, 11 datasets, 6 AI skills, 4 language bundles (en, zh-CN, es-ES, ja-JP), 6 permission sets, 18 positions and 13 sharing rules. `pnpm build` prints most of these counts on every build.
 
 > **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
 

@@ -44,6 +44,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | Timesheet | Private | A person's hours are their own; the approver reaches the timesheet through a rule |
 | Time Entry | Controlled by Parent (Timesheet) | A day's hours are part of the timesheet |
 | Expense | Private | A person's spending is their own; the approver reaches the expense through a rule |
+| Expense Report | Private | Like the expenses on it; the approver reaches the report through a rule, and finance reads every one |
 | Travel Request | Private | A person's trip is their own; the approver reaches the request through a rule, finance reads every request |
 | Itinerary Line | Controlled by Parent (Travel Request) | A leg is part of its trip: whoever reads the request reads its legs |
 | Case | Private | An agent's queue is their own; escalations are shared |
@@ -123,7 +124,8 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Projects — Project Manager | Project | Edit | the user in the project's `project_manager` field |
 | Projects — Finance | Project | Edit | `crm_finance_controller`, `crm_project_director`, `crm_pmo` — every project (one rule per position; it can edit them, never delete one) |
 | Timesheets — Approver | Timesheet | Edit | the user in the timesheet's `approver` field — the project manager when it was created |
-| Expenses — Approver | Expense | Edit | the user in the expense's `approver` field — named when it is submitted: the spender's manager, or the project's manager for an expense on a project |
+| Expenses — Approver | Expense | Edit | the user in the expense's `approver` field — copied from its expense report when the report is submitted |
+| Expense Reports — Approver | Expense Report | Edit | the user in the report's `approver` field — named when it is submitted: the spender's manager, or the project's manager for a report on a project |
 | Travel Requests — Approver | Travel Request | Edit | the user in the request's `approver` field — named when it is submitted: the traveler's manager, or the project's Project Manager for a request on a project |
 
 Create your own in **Setup → Sharing Rules**.
@@ -172,6 +174,7 @@ Sharing rules are authored **per object**. Widening `Account` widens accounts �
 | Tasks | Their own only |
 | Events | Their own only |
 | Projects | The projects they own, are staffed on or manage, plus every project if they hold `crm_finance_controller`, `crm_project_director` or `crm_pmo` — a project does not follow its account |
+| Expense Reports | The reports they submitted, plus the ones whose `approver` field names them — a report does not follow its account |
 
 So a territory rule hands over the account record with its contacts, quotes and contracts; the deal, case, task and meeting history underneath stays with its owners, and those related lists can look empty or partial on an account the user can otherwise read in full.
 

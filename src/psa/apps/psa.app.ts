@@ -80,7 +80,7 @@ export const PsaApp = App.create({
       label: 'Time and Expenses',
       icon: 'clock',
       expanded: true,
-      // My Expenses and Expenses to Approve are the expense module's, which
+      // My Expenses and Reports to Approve are the expense module's, which
       // contributes them after these (hotcrm#2556): an app's own navigation
       // may not name another package's object (ADR-0130 R3).
       children: [

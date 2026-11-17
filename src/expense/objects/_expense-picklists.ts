@@ -44,6 +44,19 @@ export const EXPENSE_SOURCE_OPTIONS = [
 ];
 
 /**
+ * An expense report's lifecycle (REQ-0011, hotcrm#2559): written, sent,
+ * decided, paid back. Paid is recorded by finance once the money has gone
+ * out; nothing here moves money.
+ */
+export const EXPENSE_REPORT_STATUS_OPTIONS = [
+  { label: 'Draft', value: 'draft', color: '#94A3B8', kind: 'open' as const },
+  { label: 'Submitted', value: 'submitted', color: '#F59E0B', kind: 'open' as const },
+  { label: 'Approved', value: 'approved', color: '#2563EB', kind: 'open' as const },
+  { label: 'Paid', value: 'paid', color: '#16A34A', kind: 'won' as const },
+  { label: 'Rejected', value: 'rejected', color: '#DC2626', kind: 'lost' as const },
+];
+
+/**
  * A travel request's lifecycle (hotcrm#2578, F3a). All six statuses are in
  * the list from the first step, so the later steps (the report citing a
  * request closes it when paid, F3c) add none: written, sent, decided, then

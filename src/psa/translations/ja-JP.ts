@@ -557,6 +557,11 @@ export const jaJP: TranslationData = {
         crm_project: { label: 'プロジェクト' },
       },
     },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: 'プロジェクト' },
+      },
+    },
     crm_expense_request: {
       fields: {
         crm_project: { label: 'プロジェクト' },

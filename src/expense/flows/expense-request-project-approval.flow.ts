@@ -11,7 +11,7 @@ type Flow = Automation.Flow;
  * Setting a travel request that names a project to Submitted opens an
  * approval request for the project's Project Manager, who decides from the
  * approvals Inbox. The person who answers for the project's cost approves the
- * trip, as they approve its expenses (`./expense-project-approval.flow.ts`),
+ * trip, as they approve its expenses (`./expense-report-project-approval.flow.ts`),
  * so one trip never goes to two different approvers. One tier, as a request
  * without a project has: no finance step.
  *
@@ -20,7 +20,7 @@ type Flow = Automation.Flow;
  * The request's `crm_project` field is Project Delivery's
  * (`src/psa/extensions/expense-project.extension.ts`), and this flow is the
  * project path, so it belongs there. It is here for the platform gap
- * `./expense-project-approval.flow.ts` names (objectstack#34616: the build's
+ * `./expense-report-project-approval.flow.ts` names (objectstack#34616: the build's
  * per-package lint judges a record-change flow's object against the package's
  * own objects, so a Project Delivery flow on `crm_expense_request` fails
  * `pnpm lint --strict`). The maintainer's 2026-11-17 03:27Z interim ruling

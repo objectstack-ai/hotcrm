@@ -51,10 +51,10 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     expect(Object.keys(psa!.dependencies ?? {})).toEqual([APP_ID, EXPENSE_ID]);
   });
 
-  it('it contributes the Project field of the expense (hotcrm#2556) and the travel request (hotcrm#2581), and owns no expense metadata of its own', () => {
+  it('it contributes the Project field of the expense (hotcrm#2556), its report (hotcrm#2559) and the travel request (hotcrm#2581), and owns no expense metadata of its own', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.objectExtensions ?? []) as AnyRec[]).map((e) => [e.extend, Object.keys(e.fields)])).toEqual([
-      ['crm_expense', ['crm_project']], ['crm_expense_request', ['crm_project']],
+      ['crm_expense', ['crm_project']], ['crm_expense_report', ['crm_project']], ['crm_expense_request', ['crm_project']],
     ]);
     expect(((stack.views ?? []) as AnyRec[]).flatMap((v) => Object.values(v.listViews ?? {}) as AnyRec[]).map((lv) => lv.data?.object ?? lv.object))
       .not.toContain('crm_expense');
@@ -119,8 +119,9 @@ describe('Project Delivery is its own app (#2316)', () => {
       'crm_time_entry/my_week_time', 'crm_timesheet/my_week_timesheets',
       // The two expense lists are the expense module's contribution since
       // hotcrm#2556, and My Travel Requests since hotcrm#2581, so they follow
-      // the group's own timesheet entries.
-      'crm_timesheet/my_timesheets', 'crm_timesheet/timesheets_to_approve', 'crm_expense/my_expenses', 'crm_expense/expenses_to_approve',
+      // the group's own timesheet entries; the approver's list is the
+      // report's since hotcrm#2559.
+      'crm_timesheet/my_timesheets', 'crm_timesheet/timesheets_to_approve', 'crm_expense/my_expenses', 'crm_expense_report/expense_reports_to_approve',
       'crm_expense_request/my_travel_requests',
       'crm_rate_card',
       'crm_account', 'crm_opportunity', 'crm_contract', 'crm_task/my_open_tasks',

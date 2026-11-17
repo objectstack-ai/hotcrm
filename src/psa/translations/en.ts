@@ -450,6 +450,11 @@ export const en: TranslationData = {
         crm_project: { label: 'Project' },
       },
     },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: 'Project' },
+      },
+    },
     crm_expense_request: {
       fields: {
         crm_project: { label: 'Project' },

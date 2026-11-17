@@ -12,19 +12,23 @@ import {
  * object name is the table name (ADR-0129), and both packages share the `crm`
  * namespace (`module-split-plan.md` item 16).
  *
+ * An expense is sent, decided and paid back on an expense report
+ * (`./expense_report.object.ts`, hotcrm#2559): Submit for Reimbursement puts
+ * the selected expenses on a report and submits it, and each expense's status
+ * follows its report's. An expense is no longer approved on its own.
+ *
  * This package knows nothing of projects. Project Delivery adds the optional
- * `crm_project` lookup through `objectExtensions`, sums the approved expenses
- * into the project's cost, and approves an expense on a project
- * (`src/psa/extensions/`, `src/psa/flows/submission-approval.flow.ts`). With
- * Project Delivery disabled the field leaves the object and an expense is
- * still recorded, submitted and approved.
+ * `crm_project` lookup through `objectExtensions` and sums the approved
+ * expenses into the project's cost (`src/psa/extensions/`). With Project
+ * Delivery disabled the field leaves the object and an expense is still
+ * recorded, reported and approved.
  *
  * The amount is in the organization's currency, as every amount here is
  * (REQ-0012: multi-currency is not started).
  *
- * `private` to the person who spent it (the owner). Whoever approves it
- * reaches it through `expense_approver_edit`, which shares it to the
- * `approver` its approval stamps (`./expense.sharing.ts`).
+ * `private` to the person who spent it (the owner). Whoever approves its
+ * report reaches it through `expense_approver_edit`, which shares it to the
+ * `approver` copied from the report (`../sharing/expense.sharing.ts`).
  */
 export const Expense = ObjectSchema.create({
   name: 'crm_expense',
@@ -109,17 +113,31 @@ export const Expense = ObjectSchema.create({
       description: 'Whether this expense is passed on to the customer.',
     }),
 
+    // The report it was sent on (hotcrm#2559). Written by Submit for
+    // Reimbursement, never by hand, so an expense cannot be slipped onto a
+    // report already decided.
+    crm_expense_report: Field.lookup('crm_expense_report', {
+      label: 'Expense Report',
+      group: 'basic',
+      readonly: true,
+      relatedListColumns: ['name', 'expense_date', 'category', 'amount', 'paid_by', 'merchant', 'status'],
+    }),
+
+    // Follows the report (`expense_report.hook.ts`): Submitted, Approved or
+    // Rejected with it, and back to Draft when it is recalled or corrected.
+    // Read-only to people since per-expense approval retired (hotcrm#2559).
     status: Field.select({
       label: 'Status',
       group: 'basic',
       required: true,
+      readonly: true,
       trackHistory: true,
       options: EXPENSE_STATUS_OPTIONS.map((o) => (o.value === 'draft' ? { ...o, default: true } : o)),
     }),
 
-    // Stamped by the approval when the expense is submitted: the project's
-    // Project Manager on a project, otherwise the spender's manager
-    // (`../flows/expense-approval.flow.ts`, and Project Delivery's).
+    // The report's approver, copied onto each of its expenses when the
+    // report's approval names one (`expense_report.hook.ts`), so the approver
+    // can open the expenses they decide (`expense_approver_edit`).
     approver: Field.lookup('sys_user', {
       label: 'Approver',
       group: 'basic',
@@ -134,7 +152,7 @@ export const Expense = ObjectSchema.create({
       name: 'expense_status_progression',
       type: 'state_machine',
       severity: 'error',
-      message: 'This status change is not allowed. An expense moves Draft → Submitted → Approved or Rejected; a rejected expense goes back to Draft to be corrected.',
+      message: 'This status change is not allowed. An expense follows its report: Draft → Submitted → Approved or Rejected, and back to Draft when the report is recalled or corrected.',
       field: 'status',
       transitions: {
         draft: ['submitted'],
@@ -149,6 +167,7 @@ export const Expense = ObjectSchema.create({
     { fields: ['owner_id'] },
     { fields: ['status'] },
     { fields: ['expense_date'] },
+    { fields: ['crm_expense_report'] },
   ],
 
   enable: {

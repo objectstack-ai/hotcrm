@@ -86,7 +86,7 @@ describe('the travel request is the expense module\'s, travel only (hotcrm#2578)
     const psa = walk(servedApp('crm_psa').navigation as Rec[]);
     expect(psa.filter((i) => i.objectName === 'crm_expense_request').map((i) => i.id)).toEqual(['nav_my_travel_requests']);
     const ids = psa.map((i) => i.id);
-    expect(ids.indexOf('nav_my_travel_requests')).toBe(ids.indexOf('nav_expenses_to_approve') + 1);
+    expect(ids.indexOf('nav_my_travel_requests')).toBe(ids.indexOf('nav_expense_reports_to_approve') + 1);
     for (const app of ['crm_enterprise', 'crm_service', 'crm_marketing', 'crm_o2c']) {
       const named = walk(servedApp(app).navigation as Rec[]).filter((i) => i.objectName === 'crm_expense_request');
       expect(named, app).toEqual([]);

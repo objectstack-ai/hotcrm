@@ -557,6 +557,11 @@ export const esES: TranslationData = {
         crm_project: { label: 'Proyecto' },
       },
     },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: 'Proyecto' },
+      },
+    },
     crm_expense_request: {
       fields: {
         crm_project: { label: 'Proyecto' },

@@ -10,7 +10,7 @@ type Flow = Automation.Flow;
  * Setting a travel request to Submitted opens an approval request for the
  * traveler's manager (`sys_user.manager_id` of the request's owner), who
  * decides from the approvals Inbox. Shaped as the expense's manager path
- * (`./expense-approval.flow.ts`) is, which carries the notes: the manager
+ * (`./expense-report-approval.flow.ts`, the report's) is, which carries the notes: the manager
  * stamped into `approver` first, the approval node with `lockRecord` and
  * `first_response`, `runAs: 'system'`, a recall told apart from a rejection
  * by the decision the resume lands as, and the closing writes setting the
@@ -71,7 +71,7 @@ export const ExpenseRequestApprovalFlow: Flow = {
   description: 'When a travel request with no project is submitted: the traveler\'s manager approves or rejects it (the Finance Controllers when there is none). One tier only.',
   type: 'record_change',
   status: 'active',
-  // Elevated for the reasons `expense_approval` gives: the gate must engage
+  // Elevated for the reasons `expense_report_approval` gives: the gate must engage
   // for a submission written by any writer, a user-less one included, and the
   // closing writes land on a record the approval node holds locked, which
   // only a platform write may. The decider is still attributed.
