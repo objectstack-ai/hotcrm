@@ -6,8 +6,8 @@ description: The sales-side AI skills — qualify leads, draft emails, forecast 
 # Sales Skills
 
 HotCRM does not ship an assistant of its own. It ships **skills** — packaged AI
-abilities that attach to the **platform assistant** (`ask`) that every ObjectStack
-environment already provides. When you open the assistant panel inside HotCRM, the
+abilities that attach to the **platform assistant** (`ask`) that an ObjectStack
+environment can provide; a local community-edition boot runs none, and then the agent is the one you [connect over MCP](/docs/ai-copilot/connect-your-agent). When you open the assistant panel inside HotCRM, the
 sales skills below are what it knows how to do.
 
 > **Where the personas went.** Earlier versions of this page described a "Sales
@@ -46,7 +46,7 @@ grounds itself in **live data**. Every turn, it calls `describe_object` and
 That's why adding a field at 10:00:00 lets the assistant answer a question about it
 at 10:00:05 with zero retraining.
 
-See [Live Schema (Wow #1)](/docs/ai-copilot/live-schema) for the 30-second demo.
+See [Live Schema](/docs/ai-copilot/live-schema) for the 30-second demo.
 Everything below composes on top of this skill.
 
 ### 2. 🎯 Lead Qualification

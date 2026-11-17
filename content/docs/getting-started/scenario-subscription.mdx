@@ -1,0 +1,48 @@
+---
+title: "Scenario: A Subscription"
+description: A subscription end to end in HotCRM — the contract with its terms and renewal, a collection plan of one step per period, the invoices finance records, and the renewal deal.
+---
+
+# Scenario: a subscription
+
+A software company sells a yearly subscription billed monthly. The customer signs once, pays every period, and is asked to renew before the term ends. This page follows that subscription through HotCRM and says plainly where HotCRM stops.
+
+| Step | Record | App | Who |
+| --- | --- | --- | --- |
+| 1 | Opportunity and quote | Sales | Sales rep |
+| 2 | Contract | Sales | Drafted from the accepted quote; the rep completes and activates it |
+| 3 | Collection plan, one step per period | Sales | The contract's sales team |
+| 4 | Invoices and payments | Order to Cash | Finance |
+| 5 | Renewal | Sales | The contract owner |
+
+## 1. The deal
+
+The deal is an opportunity with a quote, as in [a product sale](/docs/getting-started/scenario-product-sale). Accepting the quote wins it and drafts the **contract**.
+
+## 2. The contract
+
+A subscription is a contract of type *Subscription*. It carries the **Start Date**, **End Date** and term, the **Contract Value**, the **Billing Frequency** and **Payment Terms**, and its renewal: **Auto Renewal** and **Renewal Notice (Days)**. Activating it stamps the signed date, makes the account a customer, and sends the `crm.contract.activated` event to your billing system, if you have pointed one at it. See [Contracts](/docs/sales/contracts).
+
+HotCRM records **Billing Frequency** and **Payment Terms**; it does not act on them. Your billing system turns *monthly* and *net 30* into a schedule.
+
+## 3. The collection plan
+
+On the contract's **Billing Milestones** tab, the sales team adds one step per billing period — *January*, *February*, … — each with its planned amount and date. **Planned This Month** in Order to Cash lists what is due this month across all contracts. See [The Collection Plan](/docs/order-to-cash/collection-plan).
+
+**Not shipped:** the steps are not generated from **Billing Frequency**; the team adds them one by one.
+
+## 4. Invoices and payments
+
+Each period, finance records the invoice it issued and the payment received in **Order to Cash**, linked to that period's step, or imports them from the ERP. **Overdue Invoices** lists what is past due. See [Invoices and Payments](/docs/order-to-cash/invoices-and-payments).
+
+## 5. Renewal
+
+Where an administrator has switched scheduled work on, the daily renewal sweep finds a contract entering its notice window, files a renewal task and notifies the contract owner. With **Auto Renewal** on, it also opens the renewal opportunity, at *Proposal*, for the contract value. A contract past its end date is set to *Expired* by the nightly sweep. Without scheduled work, nothing runs on its own, and the contract's **Renewal Calendar** tab is where a renewal shows coming.
+
+**Not shipped:** HotCRM has no subscription object of its own, no usage or metered billing, no proration for a mid-term change, and no revenue recognition. Those belong to your billing and finance software; see [Boundary with Finance Software](/docs/revenue/billing-handoff).
+
+## Related
+
+- [Scenario: A Product Sale](/docs/getting-started/scenario-product-sale)
+- [Scenario: Project Services](/docs/getting-started/scenario-project-services)
+- [Order to Cash](/docs/order-to-cash)

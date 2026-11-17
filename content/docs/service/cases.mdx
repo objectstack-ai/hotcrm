@@ -195,7 +195,7 @@ When you open a case, you'll see:
   - **Details** — the field-group sections described under *The detail screen* above: the case description, resolution and internal notes in full, and every other field except the six on the **Key Information** strip, **Display Title** and **Priority Rank**. The stamps are here too once they hold a value: **Escalated Date** and **Escalated From** in *Escalation*, **Closed Date**, **First Response Date** and **Resolution Time (Hours)** in *SLA & Priority*, **Resolved by Article** in *Resolution*, and **Is Closed** in *System*.
   - **Related** — one list, not four: **Open Tasks** — the `crm_task` records pointing at this case through **Related Case** (`related_to_case`), filtered to those whose status is not *Completed*, ten at a time. That is the whole tab. Attachments are not on this tab either: because the object enables files, the page shows an **Attachments** panel with an **Upload** button below the tab strip, whichever tab is open. There is no linked-opportunity list, because `crm_case` has no opportunity relationship in either direction. And there is no milestone list — the case's three milestones, *escalated*, *resolved* and *closed*, are emitted as entries in the **Activity** timeline, not as records here.
   - **Activity** — a unified timeline (more on this below).
-- **AI Reference Rail** — there is no rail on this page, of any kind. The main region holds the tab strip and, below it, the platform's **Attachments** panel, and not one component on the page is AI-driven. The service skills are real — see *How the AI assistant helps* below — but you reach them by asking, not from a panel beside the case. The one reference rail this app does render sits on the opportunity detail page, and even there it lists related records (quotes, products, open tasks) rather than suggestions.
+- **AI Reference Rail** — there is no rail on this page, of any kind. The main region holds the tab strip and, below it, the platform's **Attachments** panel, and not one component on the page is AI-driven. The service skills are real — see *How an AI agent helps* below — but you reach them by asking, not from a panel beside the case. The one reference rail this app does render sits on the opportunity detail page, and even there it lists related records (quotes, products, open tasks) rather than suggestions.
 
 ### The Activity timeline
 
@@ -211,15 +211,15 @@ You don't have to configure any of this. The platform adds an entry of its own e
 
 > Tip — if you only want to see the discussion, use the filter dropdown at the top of the Activity tab; you can also subscribe to the case from there so any future post pings you in the bell.
 
-## How the AI assistant helps
+## How an AI agent helps
 
-The [service skills](/docs/ai-copilot/service-copilot) auto-activate on any case. Ask:
+With an AI agent connected (see [AI and Agents](/docs/ai-copilot/index)), the [service skills](/docs/ai-copilot/service-copilot) work on any case. Ask it:
 
 - *"Triage this case"* — Case Triage skill recommends a priority based on subject and description.
 - *"Suggest a resolution"* — no one skill does this end to end. **Case Triage** declares two tools, `describe_object` and `get_record`, and no query tool at all, so it searches nothing. Ask **Customer 360°** for the published [knowledge articles](/docs/service/knowledge-base) matched on the case's category or tags, then **Email Drafting** for the customer reply — the draft is grounded in the contact and account records, not in those articles, so paste in whatever it should quote.
 - *"Customer 360"* — pulls the full account context (open opportunities, past cases, contract tier).
 
-If the Copilot decides the priority is *Critical*, it will also recommend immediate escalation and draft an internal notification message.
+If the AI agent decides the priority is *Critical*, it will also recommend immediate escalation and draft an internal notification message.
 
 ## Tips for service agents
 
