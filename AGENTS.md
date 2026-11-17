@@ -122,8 +122,11 @@ it reports is the app package, and ⛔ it is not an instruction to move them —
    (`crm_account`); the runtime injects nothing, so the name in source = at runtime = in the DB = in the REST URL = in the docs, and
    every reference — lookup / master-detail targets, cube `sql`, view, hook, action, navigation, dashboard and translation keys — uses
    it. Platform objects keep `sys_*`; the file stays unprefixed (`src/sales/objects/contract.object.ts` declares `name: 'crm_contract'`); the
-   roster is `src/*/objects/*.object.ts`, ⛔ never restated in prose. The `os lint` `naming/namespace-prefix` warning on non-object items
-   is advisory (ADR-0048): ⛔ do not mass-rename to chase it.
+   roster is `src/*/objects/*.object.ts`, ⛔ never restated in prose. **Positions carry `crm_` too**: since 18.4.0 a position is one
+   slot per name in the environment (ADR-0150 D7), so `os lint` warns on an unprefixed one and `--strict` fails; a new position is
+   named `crm_<role>`, and its translation keys, `current_user.positions` checks and staffing spell the same name (#2437). On the
+   other non-object items the platform resolves by package (flows, actions, permission sets, …) the `naming/namespace-prefix`
+   warning is advisory (ADR-0048): ⛔ do not mass-rename to chase it.
 3. **Data access is ObjectQL through `ctx.api`** — there is no `broker`. Shape:
    `ctx.api.object('crm_opportunity').find({ where: { amount: { $gt: 50000 } } })`; a `*.hook.ts` casts once
    (`const api = ctx.api as HookApi | undefined`, from `src/sales/objects/_hook-api.ts` — every package's hooks import it along their edge into sales), an action body calls it directly.
