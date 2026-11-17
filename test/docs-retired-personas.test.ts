@@ -83,9 +83,8 @@ describe('product docs do not name a retired copilot persona (#612)', () => {
     'content/docs/ai-copilot/service-copilot.mdx': "#611's \"Where the personas went\" callout",
     'content/docs/ai-copilot/service-copilot.zh-Hans.mdx': "#611's persona callout (zh-Hans)",
     'content/docs/ai-copilot/service-copilot.zh-Hant.mdx': "#611's persona callout (zh-Hant)",
-    'content/docs/whats-new.mdx': 'the v1.0 release record — what that release actually shipped',
-    'content/docs/whats-new.zh-Hans.mdx': 'the v1.0 release record (zh-Hans)',
-    'content/docs/whats-new.zh-Hant.mdx': 'the v1.0 release record (zh-Hant)',
+    // whats-new's three v1.0 entries left with the v1.0 record itself (#2604):
+    // the page now keeps the releases since 6.0.0 and links CHANGELOG.md.
   };
 
   // `PERSONAS` and `normalise` moved to `test/helpers/persona-vocabulary.ts`

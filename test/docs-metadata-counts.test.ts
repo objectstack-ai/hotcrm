@@ -149,18 +149,10 @@ describe('product docs state the metadata counts the stack registers (#729)', ()
    * other product page.
    */
   const HISTORICAL: Record<string, { section: RegExp; reason: string }> = {
-    'content/docs/whats-new.mdx': {
-      section: /^v1\.0\b/,
-      reason: 'the v1.0 release record — the inventory that release shipped',
-    },
-    'content/docs/whats-new.zh-Hans.mdx': {
-      section: /^v1\.0\b/,
-      reason: 'the v1.0 release record (zh-Hans)',
-    },
-    'content/docs/whats-new.zh-Hant.mdx': {
-      section: /^v1\.0\b/,
-      reason: 'the v1.0 release record (zh-Hant)',
-    },
+    // Empty since #2604: whats-new dropped its v1.0 record for a link to
+    // CHANGELOG.md, and with it the only section that stated a past count.
+    // The map and its dead-entry check stay, so the next historical section
+    // is exempted by name and reason rather than by widening a pattern.
   };
 
   /** Depth-first walk of a docs tree, REPO_ROOT-relative. */
