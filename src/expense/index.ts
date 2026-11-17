@@ -14,13 +14,13 @@ import {
   ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
   ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
 } from './flows/index.js';
-import { Expense, ExpenseReport, ExpenseRequest, ExpenseRequestLine } from './objects/index.js';
+import { Expense, ExpenseReport, ExpenseRequest, ExpenseRequestLine, ExpenseStandard } from './objects/index.js';
 import { expenseHook, expenseReportHook, expenseRequestHook, expenseRequestLineHook } from './objects/hooks.js';
 import {
   ExpenseApproverEditSharingRule, ExpenseReportApproverEditSharingRule, ExpenseRequestApproverEditSharingRule,
 } from './sharing/index.js';
 import { ExpenseTranslations } from './translations/index.js';
-import { ExpenseReportViews, ExpenseRequestLineViews, ExpenseRequestViews, ExpenseViews } from './views/index.js';
+import { ExpenseReportViews, ExpenseRequestLineViews, ExpenseRequestViews, ExpenseStandardViews, ExpenseViews } from './views/index.js';
 
 /**
  * This package's hooks, for the artifact-wide sweeps (`allHooks` in
@@ -77,7 +77,10 @@ export type HotCrmExpenseCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * It owns `crm_expense`, which moved here from Project Delivery under the
  * same name (item 16: one `crm` namespace, so no table rename),
  * `crm_expense_report`, on which expenses are sent, approved and paid back
- * (hotcrm#2559), and `crm_expense_request`, the travel request (hotcrm#2578).
+ * (hotcrm#2559), `crm_expense_request`, the travel request (hotcrm#2578), and
+ * `crm_expense_standard`, the company's spending standards, which finance keeps
+ * and people and assistants read; nothing in the product compares an expense
+ * with one (hotcrm#2616).
  * Project Delivery depends on this package — the one add-on → add-on edge
  * item 18 allows — and contributes the Project field on all three (the
  * travel request's at hotcrm#2581) and the project cost summaries. This
@@ -103,7 +106,7 @@ export const createHotCrmExpenseStack = (
     // holds it, and the range below, to the app package's.
     version: '6.5.0',
     type: 'module',
-    description: 'HotCRM expense module — expenses with their receipts, travel requests, the reports that send expenses to be approved, and their payment back.',
+    description: "HotCRM expense module — expenses with their receipts, travel requests, the reports that send expenses to be approved, their payment back, and the company's expense standards.",
     engines: { protocol: '^18.5.0' },
     // The App package this module extends, and nothing else.
     dependencies: { 'app.objectstack.hotcrm': '^6.5.0' },
@@ -137,9 +140,9 @@ export const createHotCrmExpenseStack = (
 
   // Everyone's expenses app; see the app's own note.
   apps: [ExpenseApp],
-  objects: [Expense, ExpenseReport, ExpenseRequest, ExpenseRequestLine],
+  objects: [Expense, ExpenseReport, ExpenseRequest, ExpenseRequestLine, ExpenseStandard],
   hooks: expenseHooks,
-  views: [ExpenseViews, ExpenseReportViews, ExpenseRequestViews, ExpenseRequestLineViews],
+  views: [ExpenseViews, ExpenseReportViews, ExpenseRequestViews, ExpenseRequestLineViews, ExpenseStandardViews],
   actions: expenseActions,
   sharingRules: expenseSharingRules,
   flows: expenseFlows,
