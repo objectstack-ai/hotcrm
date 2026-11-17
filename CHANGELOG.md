@@ -1,5 +1,38 @@
 # Changelog
 
+## 6.5.0
+
+Runs on ObjectStack 18.5.0, the same pin as 6.4.0. Two upgrade notes. Demo data still does not reach a marketplace install (objectstack#34336): the Order to Cash and Project Delivery seeds load only on a fresh boot. Projects saved before 6.5.0 keep their typed Approved Budget until a budget version is approved; `scripts/backfill-project-budget-baseline.ts` carries it into a version 1, reports only until `--apply`, and is not run by the upgrade: applying it on a hosted tenant is the maintainer's call.
+
+### Minor Changes
+
+- **Project Delivery phase 2: project plans with a Gantt, weekly time entry, and budget versions (#2545, #2546, #2547).** The three entries below give the detail.
+
+### Patch Changes
+
+- d1b4411: **Projects get a plan: tasks, a Gantt and a computed Percent Complete (#2545).** Project Tasks form a tree with planned dates and hours, owners, milestones and predecessors, drawn on a Gantt on the project page, with Project Plan, Task Tree and My Project Tasks lists. Time entries may name a task, whose Actual Hours sums them. Percent Complete is now read-only, weighted by planned hours; a project with no task keeps its typed value until its first task. The project manager writes the plan; the team and finance read it. On 18.5.0 the Gantt does not nest subtasks.
+- 32c08e2: **A consultant enters a whole week across projects without building timesheets by hand (#2546).** A time entry has a Project and finds, or creates as a draft, the person's timesheet for that project and week. New lists My Week, My Time and Submit This Week (bulk Submit), and a Submit button on the timesheet. Each project keeps its own timesheet and approval. On 18.5.0 an entry refused after its timesheet was created leaves that empty draft (objectstack#34412), which the next entry reuses.
+- 2257cdd: **A project's budget is planned in versions, and its Approved Budget follows the approved one (#2547).** Project Budgets (versions) carry Budget Lines and lock once sent. Version 1 is approved with the project; a top-up (version 2 on, with a Reason) goes to a Project Director or the PMO, then finance when it raises the baseline by 10 % or more. The approved version becomes the Baseline, and the project's Approved Budget is now its read-only total, so nobody types it. Team members no longer read it. See the upgrade note above for projects saved before 6.5.0.
+- 625a85c: **A contract is activated, and a quote accepted, only with the customer's signed copy on file (#2317).** Records already activated or accepted without one keep saving other edits (objectstack#30184, in 18.5.0). The demo contract and quote ship a sample signed copy.
+- 5030768: **Order to Cash ships demo data (#2529).** The demo contracts get a collection plan, invoices and payments in en and zh-CN, so Overdue Invoices and Planned This Month are not empty. Marketplace installs wait on objectstack#34336.
+- 3617fbd: **An overpaid invoice counts as paid (#2513).** Open reads 0, the excess shows in a new read-only Overpaid amount, and no receivable goes negative.
+- 2b664f6, 35df8e9: **A deal's amount, and an accepted quote's total and its contract, always equal their lines,** even when lines arrive back to back or with the acceptance: the rollups run inside the line write.
+- f0c1b65: **A person joins a campaign once (#2498).** A second membership for the same lead or contact is refused on every door, backed by unique indexes. Existing duplicates are kept and logged at boot, never refused.
+- 71c38e5: **A converted lead's new opportunity is credited to the campaign the lead last responded to (#2515).**
+- b16fe8d, 897cfc3: **Executives, sales directors and the service director read what their role needs (#2490, #2492).** New read-only Sales Leadership and Service Director sets; executives and sales directors also create and edit their own deals, amount included (#2514).
+- e63a7c8: **A deal flagged Private stays its owner's for finance controllers, project managers, project directors and the PMO (#2489).**
+- 60ec477: **A Closed or Cancelled project takes no new timesheets or expenses (#2491).**
+- 5a36239: **Setting a case to Escalated by Edit is a full escalation (#2497):** the Escalated flag and date, Critical priority, and a required Escalation Reason.
+- dbb5803: **Escalate Case and Close Case open their screen with no confirm modal in front of it, in every language (#2532).**
+- 47b01b8: **My Open Cases by Priority counts past-SLA cases at read time, as the Open Cases Past SLA tile does (#2525).**
+- 0f9710e: **A fresh tenant's Top Resolving Articles ranks a published article, not a draft (#2527).** The Knowledge manual says any article may be recorded as the resolving one.
+- 2d2945d: **Knowledge Base copy says what the app does (#2528), and the Cases manual explains why SLA Due moves on a priority raise (#2530).** No customer portal is promised; zh-CN calls the metric 知识库自助解决率.
+- 07d5d9f: **zh-CN says 转化 for convert and one word per win/loss concept: 丢单, 赢率, 已结单 (#2521, #2523).**
+- 9a5a6ec: **Report chart titles read in the viewer's language (#2524).**
+- a0a8af6: **When Update Stage moves only part of a selection, the message names the deals that did not move and why, in the rep's language (#2511).**
+- b820306, 0096860, 9fd6dcd, 859c694: **The rules the Sales, quote and price book, Order to Cash and Project Delivery hooks enforce now answer in the caller's language (#2496).**
+- 41a29e1: **A marketplace listing's release notes cover every version since the last published one (#2501),** within 8,000 characters.
+
 ## 6.4.0
 
 First published release since 6.2.0: the 6.3.0 and 6.2.1 entries below also apply to a 6.2.0 install.

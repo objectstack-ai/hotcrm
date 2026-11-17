@@ -1,8 +1,0 @@
----
-"hotcrm": patch
----
-
-Clause-②: no
-Metadata-protocol: none
-
-**A project's budget is planned in versions, and its Approved Budget follows the approved one (#2547).** New **Project Budgets** (versions) with **Budget Lines** (category, month, rate card, hours or quantity, unit cost, amount). A version is numbered on save, one is open per project at a time, and its lines lock once it is sent. Version 1 is sent and approved with the project itself: setting a project **In Approval** now needs a version 1 that is ready (lines, a total above zero, every labor line with a rate card and hours), and the project's finance tier reads that version's total. A top-up (version 2 or later, with a **Reason**) goes through the new **Budget Top-Up Approval**: a Project Director or the PMO, then a Finance Controller when it raises the baseline by 10 % or more (`BUDGET_TOP_UP_FINANCE_REVIEW_PERCENT`). The approved version becomes the one **Baseline** and the one before it is **Superseded**. **Approved Budget** on the project is now a read-only summary of the baseline's total, so Budget Remaining, Budget Used % and Budget Status move when a version is approved; nobody types it any more, which replaces "only a Finance Controller changes it". A team member no longer reads the Approved Budget, with the rest of the cost block. Projects saved before this change keep their typed figure until a version is approved; an administrator can carry it into a version 1 with `pnpm exec tsx scripts/backfill-project-budget-baseline.ts --url <org> --email <admin> --password <pw>` (report only until `--apply`). The demo projects are seeded with versions in English and Chinese.
