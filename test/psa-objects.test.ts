@@ -175,6 +175,22 @@ describe('time (timesheet_stamps, time_entry_costing)', () => {
     expect(s.name).toContain(project.name);
   });
 
+  it('keeps a typed name, and moves only a generated one with its period (hotcrm#2567)', async () => {
+    const typed = await insert('crm_timesheet', {
+      name: 'Week 46, onsite', crm_project: project.id, period_start: '2026-11-09', period_end: '2026-11-15',
+    }, consultant.token);
+    expect((await row('crm_timesheet', typed.id))!.name, 'the typed name is kept').toBe('Week 46, onsite');
+    await update('crm_timesheet', { id: typed.id, period_start: '2026-11-30', period_end: '2026-12-06' }, consultant.token);
+    expect((await row('crm_timesheet', typed.id))!.name, 'a typed name is never replaced').toBe('Week 46, onsite');
+
+    const blank = await insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-16', period_end: '2026-11-22' }, consultant.token);
+    expect((await row('crm_timesheet', blank.id))!.name).toBe(`${project.name} · 2026-11-16 – 2026-11-22`);
+    await update('crm_timesheet', { id: blank.id, period_end: '2026-11-20' }, consultant.token);
+    expect((await row('crm_timesheet', blank.id))!.name, 'the generated name follows the period').toBe(`${project.name} · 2026-11-16 – 2026-11-20`);
+    await update('crm_timesheet', { id: blank.id, name: '' }, consultant.token);
+    expect((await row('crm_timesheet', blank.id))!.name, 'a cleared name fills again').toBe(`${project.name} · 2026-11-16 – 2026-11-20`);
+  });
+
   it('refuses a second timesheet for the same project and period', async () => {
     await expect(insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-02', period_end: '2026-11-08' }, consultant.token))
       .rejects.toThrow(/already a timesheet/);

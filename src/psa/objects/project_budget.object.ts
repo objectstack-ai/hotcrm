@@ -177,6 +177,9 @@ export const ProjectBudget = ObjectSchema.create({
   enable: {
     trackHistory: true,
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
+    // `bulk` is the door the New / Edit form saves through when the version's
+    // lines are typed into its inline grid: the console sends the version and
+    // its lines in one `POST /batch` (hotcrm#2565).
+    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'bulk'],
   },
 });
