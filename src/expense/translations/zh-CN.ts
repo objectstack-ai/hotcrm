@@ -240,7 +240,7 @@ export const zhCN: TranslationData = {
         crm_account: { label: '客户' },
         estimated_amount: { label: '预计金额', help: '整次出差的一个总数，不论由谁支付。' },
         reported_amount: { label: '已申报金额', help: '本申请下已提交、已批准、已付款的报销单合计。' },
-        estimate_difference: { label: '与预计的差额', help: '已报销减去预计。大于零就是超出预计。' },
+        estimate_difference: { label: '与预计的差额', help: '已申报减去预计。大于零就是超出预计。' },
         over_estimate: { label: '超出预计' },
         itinerary: { label: '行程' },
         notes: { label: '备注' },
