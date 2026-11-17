@@ -63,6 +63,7 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556)', ()
     expect(((stack.flows ?? []) as Rec[]).map((f) => f.name).sort()).toEqual([
       'expense_approval', 'expense_approval_on_create', 'expense_project_approval', 'expense_project_approval_on_create',
       'expense_request_approval', 'expense_request_approval_on_create',
+      'expense_request_project_approval', 'expense_request_project_approval_on_create',
     ]);
     expect(stack.data ?? [], 'an expense names a person, so the module seeds none').toEqual([]);
     const fields = stack.objects[0].fields as Rec;
@@ -87,7 +88,8 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556)', ()
 
   it('Project Delivery contributes the Project field, and the picker offers no Closed or Cancelled project', () => {
     const extensions = (stackOf(PSA_ID).objectExtensions ?? []) as Rec[];
-    expect(extensions.map((e) => e.extend)).toEqual(['crm_expense']);
+    // The travel request's project (hotcrm#2581) is pinned in `test/expense-request.test.ts`.
+    expect(extensions.map((e) => e.extend)).toEqual(['crm_expense', 'crm_expense_request']);
     const field = extensions[0].fields.crm_project as Rec;
     expect(field).toMatchObject({ type: 'lookup', reference: 'crm_project' });
     expect(field.required).toBeFalsy();

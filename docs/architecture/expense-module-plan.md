@@ -113,8 +113,8 @@ once each lands.
   (「检查提示」). Required: purpose, destination, the two dates, the estimated amount.
 - **Statuses**, all present from the first card: draft · submitted · approved · rejected ·
   cancelled · closed. Approved requests are cancelled before the trip or closed after it; both are
-  final. Once approved, the planned values (purpose, destination, dates, estimated amount) no
-  longer change: a new plan is a new request.
+  final. Once approved, the planned values (purpose, destination, dates, estimated amount, and
+  with F3d the project) no longer change: a new plan is a new request.
 - **Approval** (F3a): one tier, the traveler's manager, with the expense's no-manager fallback;
   ⛔ no finance tier, the money check stays on the report. With Project Delivery on, a request on a
   project goes to its project manager instead (F3d; the flow sits in the expense package with the
@@ -196,13 +196,18 @@ What it settles, for [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issu
    `pnpm lint --strict` fails on ([objectstack#34616](https://github.com/objectstack-ai/objectstack/issues/34616);
    the 2026-11-16 probe ran a build, not `lint --strict`, and missed it). `expense_project_approval`,
    its insert twin and their two notices are registered by the expense package, in a commit of their
-   own. PSA still contributes the Project field and keeps the cost summaries.
+   own. PSA still contributes the Project field and keeps the cost summaries. The travel request's
+   project path, `expense_request_project_approval` and its insert twin
+   ([hotcrm#2581](https://github.com/objectstack-ai/hotcrm/issues/2581), F3d), sits there on the same
+   terms and is on the same move-back list; unlike the expense's it sends no notice and turns
+   nothing back, so it takes no email template with it.
 2. **They move back to PSA once objectstack#34616 ships**, on
    [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575), blocked on it and on the
    platform bump that carries it.
 3. **With PSA disabled only the manager path runs.** The Project field leaves the record, so the
    project path's entry condition is false and nothing reads the absent project; measured at runtime
-   and pinned in `test/expense-module.test.ts`.
+   and pinned in `test/expense-module.test.ts`, and for the travel request in
+   `test/expense-request.test.ts`.
 
 | When | Words |
 | --- | --- |

@@ -47,8 +47,9 @@ export const ExpenseApp = App.create({
       ],
     },
 
-    // Asking before a trip (hotcrm#2578). Here only: no other app carries a
-    // travel request menu (REQ-0010 usability rule 3).
+    // Asking before a trip (hotcrm#2578). Here, and My Travel Requests in the
+    // Project Delivery app by this module's contribution (hotcrm#2581); no
+    // other app carries a travel request menu (REQ-0010 usability rule 3).
     {
       id: 'group_travel_requests',
       type: 'group',

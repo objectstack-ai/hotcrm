@@ -190,6 +190,18 @@ export const esES: TranslationData = {
         approver_review: { label: 'Revisión del responsable' },
       },
     },
+    expense_request_project_approval: {
+      label: 'Aprobación de solicitud de viaje de proyecto',
+      approvals: {
+        approver_review: { label: 'Revisión del jefe de proyecto' },
+      },
+    },
+    expense_request_project_approval_on_create: {
+      label: 'Aprobación de solicitud de viaje de proyecto (al crear)',
+      approvals: {
+        approver_review: { label: 'Revisión del jefe de proyecto' },
+      },
+    },
   },
   apps: {
     crm_expenses: {
@@ -210,11 +222,12 @@ export const esES: TranslationData = {
         nav_help_expense: { label: 'Manual de gastos' },
       },
     },
-    // My Expenses and Expenses to Approve, contributed into the Project Delivery app.
+    // My Expenses, Expenses to Approve and My Travel Requests, contributed into the Project Delivery app.
     crm_psa: {
       navigation: {
         nav_my_expenses: { label: 'Mis gastos' },
         nav_expenses_to_approve: { label: 'Gastos por aprobar' },
+        nav_my_travel_requests: { label: 'Mis solicitudes de viaje' },
       },
     },
   },
