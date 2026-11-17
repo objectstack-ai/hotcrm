@@ -463,6 +463,7 @@ describe('disabling either module leaves the other usable (hotcrm#2556, hotcrm#2
     return walk(((body.item ?? body.data ?? body).navigation ?? []) as Rec[]).map((i) => String(i.id));
   };
 
+  // A package switch re-registers metadata; past the 5 s default under the full suite (hotcrm#2623).
   it('with Project Delivery off, neither the expense nor the report has a Project field; a selection makes one report, approved by the manager', async () => {
     expect(await fieldsOf('crm_expense')).toContain('crm_project');
     expect(await fieldsOf('crm_expense_report')).toContain('crm_project');
@@ -496,8 +497,9 @@ describe('disabling either module leaves the other usable (hotcrm#2556, hotcrm#2
       expect((await verify.apiAs(admin, 'PATCH', `${pkg(PSA_ID)}/enable`)).status).toBe(200);
     }
     expect(await fieldsOf('crm_expense'), 'the field returns on enable').toContain('crm_project');
-  });
+  }, 60_000);
 
+  // A package switch re-registers metadata; past the 5 s default under the full suite (hotcrm#2623).
   it('with the expense module off, projects and timesheets work, and the expense entries leave the Project Delivery app', async () => {
     expect(await navIds('crm_psa')).toContain('nav_my_expenses');
     expect((await verify.apiAs(admin, 'PATCH', `${pkg(EXPENSE_ID)}/disable`)).status).toBe(200);
@@ -523,5 +525,5 @@ describe('disabling either module leaves the other usable (hotcrm#2556, hotcrm#2
       expect((await verify.apiAs(admin, 'PATCH', `${pkg(EXPENSE_ID)}/enable`)).status).toBe(200);
     }
     expect(await navIds('crm_psa')).toContain('nav_my_expenses');
-  });
+  }, 60_000);
 });

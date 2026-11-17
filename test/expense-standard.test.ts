@@ -210,6 +210,7 @@ describe('standards on the booted app: finance keeps them, an expense above one 
 
   it('an expense above a standard saves and is submitted as before; the approver reads its Review Notes', aboveStandard);
 
+  // A package switch re-registers metadata; past the 5 s default under the full suite (hotcrm#2623).
   it('works the same with Project Delivery disabled', async () => {
     expect((await verify.apiAs(admin, 'PATCH', `${pkg(PSA_ID)}/disable`)).status).toBe(200);
     try {
@@ -218,5 +219,5 @@ describe('standards on the booted app: finance keeps them, an expense above one 
     } finally {
       expect((await verify.apiAs(admin, 'PATCH', `${pkg(PSA_ID)}/enable`)).status).toBe(200);
     }
-  });
+  }, 60_000);
 });
