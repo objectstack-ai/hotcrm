@@ -2,7 +2,7 @@ id: hotcrm-sales-representative-permissions
 kind: screenshot
 scope: hotcrm
 category: governance
-status: published
+status: retired
 captured: '2026-10-20'
 capture:
   application: HotCRM
@@ -16,6 +16,8 @@ capture:
   theme: light
   viewport: 1600x900
   aspectRatio: '16:9'
+# Retired 2026-11-17 (hotcrm#2605): no README or docs page references it, so
+# it was not re-captured on 18.5.0. The images stay as captured on 18.0.0.
 locales:
   en: en.png
   zh-Hans: zh-Hans.png

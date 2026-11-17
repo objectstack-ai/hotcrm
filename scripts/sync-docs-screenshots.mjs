@@ -15,7 +15,11 @@ const screenshots = [
   { id: 'sales-dashboard', extension: 'jpg' },
   { id: 'executive-dashboard' },
   { id: 'large-deal-approval' },
-  { id: 'sales-representative-permissions' },
+  { id: 'sales-order' },
+  { id: 'case-detail' },
+  { id: 'invoice-payments' },
+  { id: 'project-plan' },
+  { id: 'expense-report' },
 ];
 const locales = ['en', 'zh-Hans'];
 
