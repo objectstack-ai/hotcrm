@@ -6,12 +6,16 @@
 
 HotCRM is an ObjectStack marketplace app. It is not organized as multiple scoped npm
 packages — one `package.json`, one build — and it ships as ONE release artifact carrying
-FOUR packages (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
-(`src/sales/index.ts`), and three `type: module` packages — `app.objectstack.hotcrm.service`
-(`src/service/index.ts`), `app.objectstack.hotcrm.revenue` (`src/revenue/index.ts`) and
-`app.objectstack.hotcrm.marketing` (`src/marketing/index.ts`). The four directories under
-the local `src/` tree are the four packages, and every item registers with the package of
-its directory. [`objectstack.composition.ts`](../objectstack.composition.ts) builds the four package stacks
+SEVEN packages (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
+(`src/sales/index.ts`), and six `type: module` packages — `app.objectstack.hotcrm.service`
+(`src/service/index.ts`), `app.objectstack.hotcrm.revenue` (`src/revenue/index.ts`),
+`app.objectstack.hotcrm.marketing` (`src/marketing/index.ts`), `app.objectstack.hotcrm.o2c`
+(`src/o2c/index.ts`, Order to Cash), `app.objectstack.hotcrm.expense` (`src/expense/index.ts`,
+Expenses) and `app.objectstack.hotcrm.psa` (`src/psa/index.ts`, Project Delivery). The seven
+directories under the local `src/` tree are the seven packages, and every item registers with
+the package of its directory. Every module depends on the app package; Project Delivery also
+depends on Expenses, the one module-to-module edge (`docs/architecture/module-split-plan.md`
+item 18). [`objectstack.composition.ts`](../objectstack.composition.ts) builds the seven package stacks
 and [`objectstack.config.ts`](../objectstack.config.ts) composes them with
 `composeStacks(…, { manifest: 'preserve' })`.
 
@@ -22,14 +26,20 @@ flowchart TD
   Service["src/service/ — the service module"] --> ServiceStack["app.objectstack.hotcrm.service — defineStack()"]
   Revenue["src/revenue/ — the revenue module"] --> RevenueStack["app.objectstack.hotcrm.revenue — defineStack()"]
   Marketing["src/marketing/ — the marketing module"] --> MarketingStack["app.objectstack.hotcrm.marketing — defineStack()"]
+  O2c["src/o2c/ — the Order to Cash module"] --> O2cStack["app.objectstack.hotcrm.o2c — defineStack()"]
+  Expense["src/expense/ — the Expenses module"] --> ExpenseStack["app.objectstack.hotcrm.expense — defineStack()"]
+  Psa["src/psa/ — the Project Delivery module"] --> PsaStack["app.objectstack.hotcrm.psa — defineStack()"]
   AppStack --> Config["objectstack.config.ts — composeStacks(preserve)"]
   ServiceStack --> Config
   RevenueStack --> Config
   MarketingStack --> Config
+  O2cStack --> Config
+  ExpenseStack --> Config
+  PsaStack --> Config
   Config --> Runtime["@objectstack/runtime"]
 ```
 
-The diagram sketches the assembly path — four directories, four package stacks, one
+The diagram sketches the assembly path — seven directories, seven package stacks, one
 artifact whose `packages[]` carries each package's metadata once, in that package's body.
 It is deliberately not a roster of metadata:
 [Metadata Areas](#metadata-areas) below is the complete directory-to-key map, and each
@@ -161,7 +171,8 @@ export const Account = ObjectSchema.create({
 
 The object roster is deliberately **not** restated here — `src/*/objects/*.object.ts` is
 its source of truth, one file per object, each registering its `crm_`-prefixed `name`.
-The model spans four business domains: Sales, Service, Marketing, and Revenue.
+The model spans seven business domains: Sales, Service, Marketing, Revenue, Order to Cash,
+Expenses and Project Delivery.
 *Supersedes the hand-maintained fifteen-name domain table that stood here, which had
 already drifted three objects behind the tree — 2026-08-31 ruling, item 5.*
 

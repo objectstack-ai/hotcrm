@@ -1,0 +1,57 @@
+---
+title: Expenses
+description: Recording what you spent for the company with its receipt, who approves it, and how a project expense reaches the project's cost.
+---
+
+# Expenses
+
+Expenses is for everyone who spends money for the company, not only project staff. It is a module of HotCRM with an app of its own, **Expenses**, and an administrator can switch it off.
+
+## Recording an expense
+
+Open **My Expenses** in the **Expenses** app and choose **New**:
+
+| Field | What to enter |
+| --- | --- |
+| **Description** | What it was for |
+| **Date** | When you spent it |
+| **Category** | Travel, Lodging, Meals, Equipment or Other |
+| **Amount** | What you spent, in your organization's currency. Convert a receipt in another currency before you enter it |
+| **Paid By** | **Employee** (you paid and are paid back, the default) or **Company** (a company card, say) |
+| **Merchant** | Where you spent it, if you like |
+| **Receipt Number** | The number on the receipt, if it has one |
+| **Billable** | Whether the customer is charged for it |
+
+Attach the receipt in the **Files** tab. **Source** says how the record arrived: **Manual** when you type it, **Agent** or **Import** when an assistant or an import wrote it. With Project Delivery on, the form also has a **Project**: see [Expenses on a project](#on-a-project).
+
+## Submitting and approving
+
+| Status | What it means |
+| --- | --- |
+| **Draft** | You are still filling it in |
+| **Submitted** | Sent for approval, and locked while it waits |
+| **Approved** | Final |
+| **Rejected** | Sent back. Move it to Draft, correct it and submit again |
+
+Set the status to **Submitted** to send it. Who decides:
+
+- **Your manager**, the **Manager** on your user record. When you have none, the **Finance Controllers** decide instead.
+- An expense of **2,000** or more then goes to the **Finance Controllers** as well, and is approved only once they approve it too.
+
+Approvers decide in their **Inbox** (under **My Work**), with **Approve** or **Reject**. **Expenses to Approve** lists the expenses waiting for you, to open and read first. Nobody decides their own expense, and nobody sets **Approved** or **Rejected** by hand.
+
+**Changed your mind?** Recall it from your Inbox while it waits. It goes back to **Draft**.
+
+## Who sees what
+
+You see your own expenses, and the ones you are asked to approve. Finance sees every expense under **All Expenses**, and so do sales managers and leadership.
+
+## Expenses on a project [#on-a-project]
+
+With [Project Delivery](/docs/projects) on, an expense can name a **Project**. Project staff find **My Expenses** and **Expenses to Approve** in the Project Delivery app too, under **Time and Expenses**.
+
+- An expense on a project is approved by the **project's Project Manager** instead of your manager, then by finance from 2,000.
+- Once approved it counts in the project's cost: see [how time and expenses become the project's cost](/docs/projects/time-and-expenses#how-they-become-the-projects-cost).
+- The **Project** picker does not offer a Closed or Cancelled project. An expense submitted on one anyway, or on a project with **Lock Time and Expenses** ticked, goes back to **Draft** and you get an Inbox notice naming the project.
+
+With Project Delivery off, the Project field is not shown and every expense goes to your manager. The project an expense named is kept, and shows again when Project Delivery is switched back on.

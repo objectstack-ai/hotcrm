@@ -13,7 +13,10 @@
   (`.changeset/psa-phase-1b-approvals.md`, #2473); phase 1c: the Projects Overview dashboard, the
   `project_financials` and `time_utilization` datasets and the Project Delivery Manual
   (`.changeset/psa-phase-1c-overview.md`, #2477); the maintainer's 2026-11-15 ruling that team
-  members read the account but not the opportunity (`.changeset/psa-member-account-read.md`, #2478).
+  members read the account but not the opportunity (`.changeset/psa-member-account-read.md`, #2478);
+  the expense left this module for its own (REQ-0011, hotcrm#2556,
+  `.changeset/2556-expense-module.md`): Project Delivery contributes its Project field and keeps the
+  cost summaries.
 
 > **Maintainer ruling on how to read this record** (2026-09-14, verbatim, untranslated):
 > 「hotcrm 是标准模版，如果开发 psa 也是应该按标准产品的方向设计，不应该受限于这个 excel」

@@ -119,7 +119,7 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Projects — Project Manager | Project | Edit | the user in the project's `project_manager` field |
 | Projects — Finance | Project | Edit | `crm_finance_controller`, `crm_project_director`, `crm_pmo` — every project (one rule per position; it can edit them, never delete one) |
 | Timesheets — Approver | Timesheet | Edit | the user in the timesheet's `approver` field — the project manager when it was created |
-| Expenses — Approver | Expense | Edit | the user in the expense's `approver` field — the project manager when it was created |
+| Expenses — Approver | Expense | Edit | the user in the expense's `approver` field — named when it is submitted: the spender's manager, or the project's manager for an expense on a project |
 
 Create your own in **Setup → Sharing Rules**.
 
