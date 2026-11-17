@@ -354,7 +354,7 @@ export const zhCN: TranslationData = {
     case_detail_page: {
       label: '工单详情',
       description: '客服工单记录页：关键信息、SLA 进度、明细与活动时间线。',
-      title: '{case_number} · {subject}',
+      title: '{display_title}',
       subtitle: '{crm_account}',
       components: {
         case_highlights: { label: '关键信息' },

@@ -609,7 +609,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         // (see `result` in `lead-conversion.flow.ts`).
         result: {
           title: 'Prospecto convertido',
-          description: '{{ pendingApprovalAccountName | default:"No hay ninguna aprobación de cuenta pendiente para " }}{{ noApprovalAccountName | default:" está pendiente de la aprobación de cuenta de un gerente de ventas" }}.',
+          description: '{{ pendingApprovalAccountName | default:"El prospecto ya forma parte de la cuenta " }}{{ noApprovalAccountName | default:" está pendiente de la aprobación de cuenta de un gerente de ventas" }}.',
           fields: {
             accountLink: { label: 'Cuenta' },
             contactLink: { label: 'Contacto' },
