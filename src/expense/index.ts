@@ -4,7 +4,10 @@ import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInpu
 
 import { ExpenseApp } from './apps/index.js';
 import { CrmExpenseManual } from './books/index.js';
-import { ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow } from './flows/index.js';
+import { ExpenseEmailTemplates } from './email-templates/index.js';
+import {
+  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow,
+} from './flows/index.js';
 import { Expense } from './objects/index.js';
 import { expenseHook } from './objects/hooks.js';
 import { ExpenseApproverEditSharingRule } from './sharing/index.js';
@@ -19,8 +22,15 @@ import { ExpenseViews } from './views/index.js';
  */
 export const expenseHooks = [expenseHook].flat();
 
-/** This package's flows: the approval of an expense with no project, and its insert twin. */
-export const expenseFlows = [ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow];
+/**
+ * This package's flows: the approval of an expense with no project, the
+ * approval of one on a project (here only for the platform gap its file
+ * names), and the insert twin of each.
+ */
+export const expenseFlows = [
+  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow,
+  ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow,
+];
 
 /** This package's sharing rules — see {@link expenseHooks}. */
 export const expenseSharingRules = [ExpenseApproverEditSharingRule];
@@ -46,11 +56,13 @@ export type HotCrmExpenseCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * item 15).
  *
  * It owns `crm_expense`, which moved here from Project Delivery under the
- * same name (item 16: one `crm` namespace, so no table rename). It knows
- * nothing of projects: Project Delivery depends on this package — the one
- * add-on → add-on edge item 18 allows — and contributes the Project field,
- * the project cost summaries and the approval of an expense on a project.
- * This package depends on the app package only.
+ * same name (item 16: one `crm` namespace, so no table rename). Project
+ * Delivery depends on this package — the one add-on → add-on edge item 18
+ * allows — and contributes the Project field and the project cost
+ * summaries. This package depends on the app package only. One thing that
+ * belongs to Project Delivery is still here: the approval of an expense on a
+ * project, for the platform gap `./flows/expense-project-approval.flow.ts`
+ * names; it never starts while Project Delivery is disabled.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
@@ -105,6 +117,8 @@ export const createHotCrmExpenseStack = (
   views: [ExpenseViews],
   sharingRules: expenseSharingRules,
   flows: expenseFlows,
+  // The two notices the project path sends; see that flow.
+  emailTemplates: ExpenseEmailTemplates,
   // Its manual, over `src/expense/docs/`. See the book's own note.
   books: [CrmExpenseManual],
   data: collections.data,

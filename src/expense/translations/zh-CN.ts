@@ -100,6 +100,20 @@ export const zhCN: TranslationData = {
         finance_review: { label: '财务控制审核' },
       },
     },
+    expense_project_approval: {
+      label: '项目费用审批',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+        finance_review: { label: '财务控制审核' },
+      },
+    },
+    expense_project_approval_on_create: {
+      label: '项目费用审批（创建时）',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+        finance_review: { label: '财务控制审核' },
+      },
+    },
   },
   apps: {
     crm_expenses: {

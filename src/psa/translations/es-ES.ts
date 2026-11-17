@@ -556,20 +556,6 @@ export const esES: TranslationData = {
   },
   // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
   flows: {
-    expense_project_approval: {
-      label: 'Aprobación de gastos de proyecto',
-      approvals: {
-        approver_review: { label: 'Revisión del jefe de proyecto' },
-        finance_review: { label: 'Revisión del controller financiero' },
-      },
-    },
-    expense_project_approval_on_create: {
-      label: 'Aprobación de gastos de proyecto (al crear)',
-      approvals: {
-        approver_review: { label: 'Revisión del jefe de proyecto' },
-        finance_review: { label: 'Revisión del controller financiero' },
-      },
-    },
     project_initiation_approval: {
       label: 'Aprobación de inicio de proyecto',
       approvals: {

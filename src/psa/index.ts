@@ -10,7 +10,7 @@ import { ProjectFinancialsDataset, TimeUtilizationDataset } from './datasets/ind
 import { PsaEmailTemplates } from './email-templates/index.js';
 import { ExpenseProjectExtensions } from './extensions/index.js';
 import {
-  ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow, ProjectBudgetAlertFlow, ProjectBudgetApprovalFlow,
+  ProjectBudgetAlertFlow, ProjectBudgetApprovalFlow,
   ProjectInitiationApprovalFlow, TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
 } from './flows/index.js';
 import {
@@ -50,9 +50,6 @@ export const psaHooks = [
 export const psaFlows = [
   ProjectInitiationApprovalFlow, ProjectBudgetApprovalFlow,
   TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
-  // The approval of an expense on a project (hotcrm#2556), on the expense
-  // module's object.
-  ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow,
   ProjectBudgetAlertFlow,
 ];
 
@@ -92,8 +89,10 @@ export const psaSharingRules = [
  *
  * Since hotcrm#2556 the expense is the expense module's (REQ-0011): this
  * module depends on it, contributes the expense's Project field through
- * `objectExtensions`, keeps the expense cost summaries on the project, and
- * approves an expense on a project (`expense_project_approval`).
+ * `objectExtensions` and keeps the expense cost summaries on the project.
+ * The approval of an expense on a project (`expense_project_approval`) is
+ * the project's, but sits in the expense module for a platform gap
+ * (`src/expense/flows/expense-project-approval.flow.ts`).
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the

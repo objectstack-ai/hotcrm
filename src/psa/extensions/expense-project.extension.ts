@@ -20,7 +20,9 @@ import { Field } from '@objectstack/spec/data';
  * (ADR-0130 R4: no hook on another package's object). The picker is the
  * form's guard only; a write through the API is caught when the expense is
  * submitted, where `expense_project_approval` turns an expense on an over or
- * locked project back to Draft (`../flows/expense-project-approval.flow.ts`).
+ * locked project back to Draft
+ * (`src/expense/flows/expense-project-approval.flow.ts`, in the expense module
+ * for the platform gap that file names).
  */
 export const ExpenseProjectExtensions = [
   {

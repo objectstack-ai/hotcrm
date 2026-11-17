@@ -13,13 +13,12 @@ type FlowEdge = Flow['edges'][number];
  * spender's manager (`sys_user.manager_id` of the expense's owner), who
  * decides from the approvals Inbox. An expense of
  * EXPENSE_FINANCE_REVIEW_AMOUNT or more then goes to a Finance Controller as
- * well, the line Project Delivery's expense approval uses too.
+ * well, the line the project path uses too.
  *
  * ## Two paths, never both
  *
- * An expense on a project is Project Delivery's to approve: the project's
- * Project Manager decides (`expense_project_approval`,
- * `src/psa/flows/expense-project-approval.flow.ts`). This flow starts only when
+ * An expense on a project goes to the project's Project Manager
+ * (`expense_project_approval`, `./expense-project-approval.flow.ts`). This flow starts only when
  * the expense names no project, and that one only when it does; the two entry
  * conditions are exact complements, pinned by
  * `test/expense-module.test.ts`. With Project Delivery disabled the project

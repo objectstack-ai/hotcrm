@@ -93,6 +93,20 @@ export const en: TranslationData = {
         finance_review: { label: 'Finance Controller Review' },
       },
     },
+    expense_project_approval: {
+      label: 'Project Expense Approval',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+        finance_review: { label: 'Finance Controller Review' },
+      },
+    },
+    expense_project_approval_on_create: {
+      label: 'Project Expense Approval (on create)',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+        finance_review: { label: 'Finance Controller Review' },
+      },
+    },
   },
   apps: {
     crm_expenses: {

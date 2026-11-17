@@ -14,16 +14,4 @@ export const esES: EmailTemplatePack = {
     subject: 'Presupuesto superado: {{name}}',
     bodyHtml: '<p>El proyecto {{name}} ha gastado todo su presupuesto aprobado. Para impedir que se envíen más horas y gastos, marque Bloquear horas y gastos en el proyecto y acuerde un nuevo presupuesto.</p>',
   },
-  // `expense_project_approval` (hotcrm#2556): an expense submitted on a project
-  // that takes none goes back to Draft, and its spender is told why.
-  'crm.expense_project_over': {
-    label: 'Gasto en un proyecto cerrado',
-    subject: 'Gasto devuelto: {{name}}',
-    bodyHtml: '<p>Tu gasto {{name}} se envió en {{project}}, que está cerrado o cancelado y no admite gastos. Ha vuelto a Borrador: muévelo a un proyecto abierto y envíalo allí.</p>',
-  },
-  'crm.expense_project_locked': {
-    label: 'Gasto en un proyecto bloqueado',
-    subject: 'Gasto devuelto: {{name}}',
-    bodyHtml: '<p>Tu gasto {{name}} se envió en {{project}}, que está bloqueado para horas y gastos. Ha vuelto a Borrador: envíalo de nuevo cuando el jefe de proyecto desmarque Bloquear horas y gastos.</p>',
-  },
 };

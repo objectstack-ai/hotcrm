@@ -100,6 +100,20 @@ export const esES: TranslationData = {
         finance_review: { label: 'Revisión del controller financiero' },
       },
     },
+    expense_project_approval: {
+      label: 'Aprobación de gastos de proyecto',
+      approvals: {
+        approver_review: { label: 'Revisión del jefe de proyecto' },
+        finance_review: { label: 'Revisión del controller financiero' },
+      },
+    },
+    expense_project_approval_on_create: {
+      label: 'Aprobación de gastos de proyecto (al crear)',
+      approvals: {
+        approver_review: { label: 'Revisión del jefe de proyecto' },
+        finance_review: { label: 'Revisión del controller financiero' },
+      },
+    },
   },
   apps: {
     crm_expenses: {

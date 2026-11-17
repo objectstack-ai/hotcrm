@@ -100,6 +100,20 @@ export const jaJP: TranslationData = {
         finance_review: { label: '財務管理者レビュー' },
       },
     },
+    expense_project_approval: {
+      label: 'プロジェクト経費承認',
+      approvals: {
+        approver_review: { label: 'プロジェクトマネージャー審査' },
+        finance_review: { label: '財務コントローラー審査' },
+      },
+    },
+    expense_project_approval_on_create: {
+      label: 'プロジェクト経費承認（作成時）',
+      approvals: {
+        approver_review: { label: 'プロジェクトマネージャー審査' },
+        finance_review: { label: '財務コントローラー審査' },
+      },
+    },
   },
   apps: {
     crm_expenses: {

@@ -556,20 +556,6 @@ export const zhCN: TranslationData = {
   },
   // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
   flows: {
-    expense_project_approval: {
-      label: '项目费用审批',
-      approvals: {
-        approver_review: { label: '项目经理审核' },
-        finance_review: { label: '财务控制审核' },
-      },
-    },
-    expense_project_approval_on_create: {
-      label: '项目费用审批（创建时）',
-      approvals: {
-        approver_review: { label: '项目经理审核' },
-        finance_review: { label: '财务控制审核' },
-      },
-    },
     project_initiation_approval: {
       label: '立项审批',
       approvals: {

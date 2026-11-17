@@ -14,16 +14,4 @@ export const en: EmailTemplatePack = {
     subject: 'Budget exceeded: {{name}}',
     bodyHtml: '<p>Project {{name}} has spent its whole Approved Budget. To stop further time and expenses being submitted, tick Lock Time and Expenses on the project, then agree a new budget.</p>',
   },
-  // `expense_project_approval` (hotcrm#2556): an expense submitted on a project
-  // that takes none goes back to Draft, and its spender is told why.
-  'crm.expense_project_over': {
-    label: 'Expense on a Closed Project',
-    subject: 'Expense turned back: {{name}}',
-    bodyHtml: '<p>Your expense {{name}} was submitted on {{project}}, which is Closed or Cancelled and takes no expenses. It is back in Draft: move it to an open project and submit it there.</p>',
-  },
-  'crm.expense_project_locked': {
-    label: 'Expense on a Locked Project',
-    subject: 'Expense turned back: {{name}}',
-    bodyHtml: '<p>Your expense {{name}} was submitted on {{project}}, which is locked for time and expenses. It is back in Draft: submit it again once the project manager unticks Lock Time and Expenses.</p>',
-  },
 };

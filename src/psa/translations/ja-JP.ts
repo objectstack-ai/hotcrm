@@ -556,20 +556,6 @@ export const jaJP: TranslationData = {
   },
   // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
   flows: {
-    expense_project_approval: {
-      label: 'プロジェクト経費承認',
-      approvals: {
-        approver_review: { label: 'プロジェクトマネージャー審査' },
-        finance_review: { label: '財務コントローラー審査' },
-      },
-    },
-    expense_project_approval_on_create: {
-      label: 'プロジェクト経費承認（作成時）',
-      approvals: {
-        approver_review: { label: 'プロジェクトマネージャー審査' },
-        finance_review: { label: '財務コントローラー審査' },
-      },
-    },
     project_initiation_approval: {
       label: 'プロジェクト立ち上げ承認',
       approvals: {
