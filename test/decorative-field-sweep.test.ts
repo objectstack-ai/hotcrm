@@ -120,9 +120,12 @@ describe('every reader of a removed field went with it (#1182)', () => {
     ['contact import mapping', ContactImportMapping],
   ];
 
+  // A whole identifier, not a substring: `nav_expense_reports_to_approve`
+  // (hotcrm#2559) contains `reports_to` and reads no contact field.
   it.each(REMOVED.flatMap(([, , fields]) => fields))('%s is referenced by no shipped metadata', (field) => {
+    const reader = new RegExp(`(?<![A-Za-z0-9_])${field}(?![A-Za-z0-9_])`);
     const offenders = SURFACES
-      .filter(([, value]) => JSON.stringify(value ?? null).includes(field))
+      .filter(([, value]) => reader.test(JSON.stringify(value ?? null)))
       .map(([label]) => label);
     expect(offenders, `${field} still read by: ${offenders.join(', ')}`).toEqual([]);
   });

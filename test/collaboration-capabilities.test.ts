@@ -80,6 +80,9 @@ const FILES_ENABLED = [
   // #2316: an expense carries its receipt, and a project its statement of
   // work, plans and sign-offs.
   'crm_expense',
+  // #2559: a report carries what the spender adds for the approver, and
+  // finance's proof of payment.
+  'crm_expense_report',
   'crm_opportunity',
   'crm_project',
   'crm_quote',

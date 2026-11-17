@@ -19,6 +19,7 @@ export const ExpenseReportViews = defineView({
     name: 'all_expense_reports',
     label: 'All Expense Reports',
     data: { provider: 'object', object: 'crm_expense_report' },
+    userActions: { editInline: true },
     columns: [
       { field: 'report_number', width: 120, link: true, pinned: 'left' },
       { field: 'name', width: 240, link: true },
@@ -40,6 +41,7 @@ export const ExpenseReportViews = defineView({
       type: 'grid',
       label: 'My Reports',
       data: { provider: 'object', object: 'crm_expense_report' },
+      userActions: { editInline: true },
       columns: ['report_number', 'name', 'crm_project', 'total_amount', 'reimbursable_amount', 'status', 'approver', 'payment_date'],
       filter: [
         { field: 'owner_id', operator: 'equals', value: '{current_user_id}' },
@@ -52,6 +54,7 @@ export const ExpenseReportViews = defineView({
       type: 'grid',
       label: 'Reports to Approve',
       data: { provider: 'object', object: 'crm_expense_report' },
+      userActions: { editInline: true },
       columns: ['report_number', 'name', 'owner_id', 'crm_project', 'total_amount', 'submitted_date', 'review_notes'],
       filter: [
         { field: 'approver', operator: 'equals', value: '{current_user_id}' },
@@ -65,6 +68,7 @@ export const ExpenseReportViews = defineView({
       type: 'grid',
       label: 'Reports to Pay',
       data: { provider: 'object', object: 'crm_expense_report' },
+      userActions: { editInline: true },
       columns: ['report_number', 'name', 'owner_id', 'reimbursable_amount', 'total_amount', 'approved_date'],
       filter: [
         { field: 'status', operator: 'equals', value: 'approved' },

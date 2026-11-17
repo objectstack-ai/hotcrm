@@ -171,6 +171,7 @@ Sharing rules are authored **per object**. Widening `Account` widens accounts �
 | Tasks | Their own only |
 | Events | Their own only |
 | Projects | The projects they own, are staffed on or manage, plus every project if they hold `crm_finance_controller`, `crm_project_director` or `crm_pmo` — a project does not follow its account |
+| Expense Reports | The reports they submitted, plus the ones whose `approver` field names them — a report does not follow its account |
 
 So a territory rule hands over the account record with its contacts, quotes and contracts; the deal, case, task and meeting history underneath stays with its owners, and those related lists can look empty or partial on an account the user can otherwise read in full.
 
