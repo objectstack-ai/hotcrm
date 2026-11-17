@@ -10,7 +10,9 @@ import { esES } from './es-ES';
 /**
  * Project Delivery — every `sys_email_template` row this package's `notify`
  * nodes name: four locale packs crossed with the two budget notices
- * (`project_budget_alert`). `bundle()` comes along this module's edge into
+ * (`project_budget_alert`) and the two notices that turn an expense on an
+ * over or locked project back to Draft (`expense_project_approval`,
+ * hotcrm#2556). `bundle()` comes along this module's edge into
  * sales, as `src/service/email-templates/` takes it.
  */
 export const PsaEmailTemplates: EmailTemplateDefinition[] = bundle({

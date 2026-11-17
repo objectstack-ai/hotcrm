@@ -3,6 +3,7 @@
 import { O2C_CONTRACT_FIGURE_FIELDS } from './_o2c-figures';
 import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
 import { privateOpportunityPolicy } from './_private-opportunity';
+import { EXPENSE_OWN_READ_ALL } from './_expense-grants';
 
 /**
  * Sales Manager Profile
@@ -23,8 +24,10 @@ export const SalesManagerProfile = {
   // a manager who also holds a set that hides one keeps it (most-visible-
   // wins). Project Delivery too since it carries projects (#2316 phase 1a):
   // a manager reads every project of the deals the team sells.
-  tabPermissions: { crm_enterprise: 'visible' as const, crm_service: 'visible' as const, crm_marketing: 'visible' as const, crm_o2c: 'visible' as const, crm_psa: 'visible' as const },
+  tabPermissions: { crm_enterprise: 'visible' as const, crm_service: 'visible' as const, crm_marketing: 'visible' as const, crm_o2c: 'visible' as const, crm_expenses: 'visible' as const, crm_psa: 'visible' as const },
   objects: {
+    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    crm_expense: EXPENSE_OWN_READ_ALL,
     // `allowTransfer` on the objects this set holds `modifyAllRecords` on —
     // the sales book a manager reassigns — plus `crm_forecast`, which kept it
     // when #2277 narrowed Modify All there. Canonical note in

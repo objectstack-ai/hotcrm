@@ -14,4 +14,16 @@ export const jaJP: EmailTemplatePack = {
     subject: '予算超過: {{name}}',
     bodyHtml: '<p>プロジェクト {{name}} は承認済み予算をすべて使い切りました。工数と経費の提出を止めるには、プロジェクトの「工数と経費をロック」にチェックを入れ、新しい予算を合意してください。</p>',
   },
+  // `expense_project_approval` (hotcrm#2556): an expense submitted on a project
+  // that takes none goes back to Draft, and its spender is told why.
+  'crm.expense_project_over': {
+    label: 'クローズ済みプロジェクトの経費',
+    subject: '経費が差し戻されました：{{name}}',
+    bodyHtml: '<p>経費 {{name}} はプロジェクト {{project}} で提出されましたが、このプロジェクトはクローズまたはキャンセル済みのため経費を受け付けません。下書きに戻りました。進行中のプロジェクトに移してから提出してください。</p>',
+  },
+  'crm.expense_project_locked': {
+    label: 'ロック中プロジェクトの経費',
+    subject: '経費が差し戻されました：{{name}}',
+    bodyHtml: '<p>経費 {{name}} はプロジェクト {{project}} で提出されましたが、このプロジェクトは工数と経費がロックされています。下書きに戻りました。プロジェクトマネージャーが「工数と経費をロック」を外した後に再提出してください。</p>',
+  },
 };

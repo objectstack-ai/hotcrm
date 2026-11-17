@@ -30,21 +30,6 @@ export const zhCN: TranslationData = {
         },
       },
     },
-    expense_approver: {
-      refusals: {
-        RECORD_LOCKED: {
-          message: '这个项目上的费用现在不能这样修改。',
-          reasons: {
-            project_locked: { message: '{{project}}已锁定工时与费用，因此不能提交这笔费用。先保存为草稿，或请项目经理在项目上取消勾选“锁定工时与费用”。' },
-            closed_takes_no_new: { message: '{{project}}已关闭，不再接受新的费用。请把费用记在进行中的项目上。' },
-            cancelled_takes_no_new: { message: '{{project}}已取消，不再接受新的费用。请把费用记在进行中的项目上。' },
-            closed_no_submit: { message: '{{project}}已关闭，因此不能提交这笔费用。先保存为草稿，或把它改挂到进行中的项目上。' },
-            cancelled_no_submit: { message: '{{project}}已取消，因此不能提交这笔费用。先保存为草稿，或把它改挂到进行中的项目上。' },
-          },
-        },
-        FORBIDDEN: { message: '费用提交后，由审批人在收件箱中批准或驳回。' },
-      },
-    },
     project_status_guard: {
       refusals: {
         VALIDATION_FAILED: {
@@ -562,57 +547,29 @@ export const zhCN: TranslationData = {
         rates: { label: '成本与计费' },
       },
     },
+    // The Project field it contributes to the expense module's object (hotcrm#2556).
     crm_expense: {
-      label: '费用',
-      pluralLabel: '费用',
-      description: '在项目上发生的一笔费用，附有票据',
       fields: {
-        owner_id: { label: '报销人' },
-        name: { label: '描述' },
         crm_project: { label: '项目' },
-        expense_date: { label: '日期' },
-        category: {
-          label: '类别',
-          options: {
-            travel: '差旅',
-            lodging: '住宿',
-            meals: '餐饮',
-            equipment: '设备',
-            other: '其他',
-          },
-        },
-        amount: { label: '金额' },
-        is_billable: {
-          label: '可计费',
-          help: '这笔费用是否转嫁给客户。',
-        },
-        status: {
-          label: '状态',
-          options: {
-            draft: '草稿',
-            submitted: '已提交',
-            approved: '已批准',
-            rejected: '已驳回',
-          },
-        },
-        approver: { label: '审批人' },
-        notes: { label: '备注' },
-      },
-      _views: {
-        all_expenses: { label: '全部费用' },
-        my_expenses: { label: '我的费用' },
-        expenses_to_approve: { label: '待我审批的费用' },
-      },
-      _sections: {
-        basic: { label: '费用' },
-      },
-      _validations: {
-        expense_status_progression: { message: '不允许这样更改状态。费用按 草稿 → 已提交 → 已批准或已驳回 推进；被驳回的费用退回草稿修改。' },
       },
     },
   },
   // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
   flows: {
+    expense_project_approval: {
+      label: '项目费用审批',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+        finance_review: { label: '财务控制审核' },
+      },
+    },
+    expense_project_approval_on_create: {
+      label: '项目费用审批（创建时）',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+        finance_review: { label: '财务控制审核' },
+      },
+    },
     project_initiation_approval: {
       label: '立项审批',
       approvals: {
@@ -634,20 +591,6 @@ export const zhCN: TranslationData = {
     timesheet_approval_on_create: {
       label: '工时单审批（创建时）',
       approvals: { approver_review: { label: '项目经理审核' } },
-    },
-    expense_approval: {
-      label: '费用审批',
-      approvals: {
-        approver_review: { label: '项目经理审核' },
-        finance_review: { label: '财务控制审核' },
-      },
-    },
-    expense_approval_on_create: {
-      label: '费用审批（创建时）',
-      approvals: {
-        approver_review: { label: '项目经理审核' },
-        finance_review: { label: '财务控制审核' },
-      },
     },
     project_budget_alert: { label: '项目预算预警' },
   },
@@ -675,9 +618,7 @@ export const zhCN: TranslationData = {
         nav_my_week: { label: '我的本周' },
         nav_my_week_timesheets: { label: '提交本周' },
         nav_my_timesheets: { label: '我的工时单' },
-        nav_my_expenses: { label: '我的费用' },
         nav_timesheets_to_approve: { label: '待我审批的工时单' },
-        nav_expenses_to_approve: { label: '待我审批的费用' },
         group_rates: { label: '费率' },
         nav_rate_cards: { label: '费率卡' },
         group_customers: { label: '客户与合同' },

@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
+import { EXPENSE_OWN } from './_expense-grants';
 
 /**
  * Service Director — watches the escalations, works none (#2490, ruled A by
@@ -47,6 +48,8 @@ export const ServiceDirectorProfile = {
   // Visibility, not access.
   tabPermissions: { crm_enterprise: 'hidden' as const, crm_marketing: 'hidden' as const, crm_o2c: 'hidden' as const, crm_psa: 'hidden' as const },
   objects: {
+    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    crm_expense: EXPENSE_OWN,
     crm_case:     { ...READ, readScope: 'own' as const },
     crm_account:  READ_ALL,
     crm_contact:  READ_ALL,

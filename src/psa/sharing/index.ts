@@ -6,7 +6,6 @@
  */
 
 export {
-  ExpenseApproverEditSharingRule,
   ProjectFinanceEditSharingRules,
   ProjectManagerEditSharingRule,
   ProjectTeamReadSharingRule,

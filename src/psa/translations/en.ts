@@ -440,57 +440,29 @@ export const en: TranslationData = {
         rates: { label: 'Cost and Billing' },
       },
     },
+    // The Project field it contributes to the expense module's object (hotcrm#2556).
     crm_expense: {
-      label: 'Expense',
-      pluralLabel: 'Expenses',
-      description: 'A cost spent on a project, with its receipt',
       fields: {
-        owner_id: { label: 'Spent By' },
-        name: { label: 'Description' },
         crm_project: { label: 'Project' },
-        expense_date: { label: 'Date' },
-        category: {
-          label: 'Category',
-          options: {
-            travel: 'Travel',
-            lodging: 'Lodging',
-            meals: 'Meals',
-            equipment: 'Equipment',
-            other: 'Other',
-          },
-        },
-        amount: { label: 'Amount' },
-        is_billable: {
-          label: 'Billable',
-          help: 'Whether this expense is passed on to the customer.',
-        },
-        status: {
-          label: 'Status',
-          options: {
-            draft: 'Draft',
-            submitted: 'Submitted',
-            approved: 'Approved',
-            rejected: 'Rejected',
-          },
-        },
-        approver: { label: 'Approver' },
-        notes: { label: 'Notes' },
-      },
-      _views: {
-        all_expenses: { label: 'All Expenses' },
-        my_expenses: { label: 'My Expenses' },
-        expenses_to_approve: { label: 'Expenses to Approve' },
-      },
-      _sections: {
-        basic: { label: 'Expense' },
-      },
-      _validations: {
-        expense_status_progression: { message: 'This status change is not allowed. An expense moves Draft → Submitted → Approved or Rejected; a rejected expense goes back to Draft to be corrected.' },
       },
     },
   },
   // Step names the approval request shows the submitter and the approvers (#2316 phase 1b).
   flows: {
+    expense_project_approval: {
+      label: 'Project Expense Approval',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+        finance_review: { label: 'Finance Controller Review' },
+      },
+    },
+    expense_project_approval_on_create: {
+      label: 'Project Expense Approval (on create)',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+        finance_review: { label: 'Finance Controller Review' },
+      },
+    },
     project_initiation_approval: {
       label: 'Project Initiation Approval',
       approvals: {
@@ -512,20 +484,6 @@ export const en: TranslationData = {
     timesheet_approval_on_create: {
       label: 'Timesheet Approval (on create)',
       approvals: { approver_review: { label: 'Project Manager Review' } },
-    },
-    expense_approval: {
-      label: 'Expense Approval',
-      approvals: {
-        approver_review: { label: 'Project Manager Review' },
-        finance_review: { label: 'Finance Controller Review' },
-      },
-    },
-    expense_approval_on_create: {
-      label: 'Expense Approval (on create)',
-      approvals: {
-        approver_review: { label: 'Project Manager Review' },
-        finance_review: { label: 'Finance Controller Review' },
-      },
     },
     project_budget_alert: { label: 'Project Budget Alert' },
   },
@@ -554,9 +512,7 @@ export const en: TranslationData = {
         nav_my_week: { label: 'My Week' },
         nav_my_week_timesheets: { label: 'Submit This Week' },
         nav_my_timesheets: { label: 'My Timesheets' },
-        nav_my_expenses: { label: 'My Expenses' },
         nav_timesheets_to_approve: { label: 'Timesheets to Approve' },
-        nav_expenses_to_approve: { label: 'Expenses to Approve' },
         group_rates: { label: 'Rates' },
         nav_rate_cards: { label: 'Rate Cards' },
         group_customers: { label: 'Customers and Contracts' },

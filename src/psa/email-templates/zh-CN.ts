@@ -14,4 +14,16 @@ export const zhCN: EmailTemplatePack = {
     subject: '预算超支：{{name}}',
     bodyHtml: '<p>项目 {{name}} 已用完全部批准预算。如需停止继续提交工时和费用，请在项目上勾选「锁定工时与费用」，再商定新的预算。</p>',
   },
+  // `expense_project_approval` (hotcrm#2556): an expense submitted on a project
+  // that takes none goes back to Draft, and its spender is told why.
+  'crm.expense_project_over': {
+    label: '关闭项目上的费用',
+    subject: '费用已退回：{{name}}',
+    bodyHtml: '<p>你的费用 {{name}} 提交在项目 {{project}} 上，但该项目已关闭或已取消，不再接受费用。费用已退回草稿：请改挂到进行中的项目后再提交。</p>',
+  },
+  'crm.expense_project_locked': {
+    label: '锁定项目上的费用',
+    subject: '费用已退回：{{name}}',
+    bodyHtml: '<p>你的费用 {{name}} 提交在项目 {{project}} 上，但该项目已锁定工时与费用。费用已退回草稿：请在项目经理取消勾选“锁定工时与费用”后再次提交。</p>',
+  },
 };

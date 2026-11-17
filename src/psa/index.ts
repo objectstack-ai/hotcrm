@@ -8,18 +8,18 @@ import { CrmPsaManual } from './books/index.js';
 import { ProjectsOverviewDashboard } from './dashboards/index.js';
 import { ProjectFinancialsDataset, TimeUtilizationDataset } from './datasets/index.js';
 import { PsaEmailTemplates } from './email-templates/index.js';
+import { ExpenseProjectExtensions } from './extensions/index.js';
 import {
-  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, ProjectBudgetAlertFlow, ProjectBudgetApprovalFlow,
+  ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow, ProjectBudgetAlertFlow, ProjectBudgetApprovalFlow,
   ProjectInitiationApprovalFlow, TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
 } from './flows/index.js';
 import {
-  Expense, Project, ProjectBudget, ProjectBudgetLine, ProjectMember, ProjectTask, RateCard, TimeEntry, Timesheet,
+  Project, ProjectBudget, ProjectBudgetLine, ProjectMember, ProjectTask, RateCard, TimeEntry, Timesheet,
 } from './objects/index.js';
 import {
-  expenseHook, projectBudgetHook, projectHook, projectMemberHook, projectTaskHook, timeEntryHook, timesheetHook,
+  projectBudgetHook, projectHook, projectMemberHook, projectTaskHook, timeEntryHook, timesheetHook,
 } from './objects/hooks.js';
 import {
-  ExpenseApproverEditSharingRule,
   ProjectFinanceEditSharingRules,
   ProjectManagerEditSharingRule,
   ProjectTeamReadSharingRule,
@@ -28,7 +28,7 @@ import {
 import { PsaTranslations } from './translations/index.js';
 import { ProjectDetailPage } from './pages/project_detail.page.js';
 import {
-  ExpenseViews, ProjectBudgetLineViews, ProjectBudgetViews, ProjectMemberViews, ProjectTaskViews, ProjectViews,
+  ProjectBudgetLineViews, ProjectBudgetViews, ProjectMemberViews, ProjectTaskViews, ProjectViews,
   RateCardViews, TimeEntryViews, TimesheetViews,
 } from './views/index.js';
 
@@ -39,7 +39,7 @@ import {
  * object (ADR-0130 R4).
  */
 export const psaHooks = [
-  projectHook, projectBudgetHook, projectMemberHook, projectTaskHook, timesheetHook, timeEntryHook, expenseHook,
+  projectHook, projectBudgetHook, projectMemberHook, projectTaskHook, timesheetHook, timeEntryHook,
 ].flat();
 
 /**
@@ -50,14 +50,16 @@ export const psaHooks = [
 export const psaFlows = [
   ProjectInitiationApprovalFlow, ProjectBudgetApprovalFlow,
   TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
-  ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow,
+  // The approval of an expense on a project (hotcrm#2556), on the expense
+  // module's object.
+  ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow,
   ProjectBudgetAlertFlow,
 ];
 
 /** This package's sharing rules — see {@link psaHooks}. */
 export const psaSharingRules = [
   ProjectTeamReadSharingRule, ProjectManagerEditSharingRule,
-  TimesheetApproverEditSharingRule, ExpenseApproverEditSharingRule,
+  TimesheetApproverEditSharingRule,
   ...ProjectFinanceEditSharingRules,
 ];
 
@@ -88,6 +90,11 @@ export const psaSharingRules = [
  * and their lines, the Approved Budget summed from the baseline. Phase 1c adds the module's manual under *Help*,
  * its two datasets and the Projects Overview dashboard that reads them.
  *
+ * Since hotcrm#2556 the expense is the expense module's (REQ-0011): this
+ * module depends on it, contributes the expense's Project field through
+ * `objectExtensions`, keeps the expense cost summaries on the project, and
+ * approves an expense on a project (`expense_project_approval`).
+ *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
  * artifact's version.
@@ -112,10 +119,12 @@ export const createHotCrmPsaStack = (
     type: 'module',
     description: 'HotCRM project delivery module — projects, staffing, time, expenses and delivery margin.',
     engines: { protocol: '^18.5.0' },
-    // The App package this module extends, and nothing else
-    // (`module-split-plan.md` item 10: one dependency level). No dependency
-    // on Order to Cash: how the two connect is decided in phase 3 (ruling 4).
-    dependencies: { 'app.objectstack.hotcrm': '^6.5.0' },
+    // The App package this module extends, and the expense module whose
+    // `crm_expense` it extends with the project (hotcrm#2556) — the one
+    // add-on → add-on edge `module-split-plan.md` item 18 allows; item 10
+    // stands for every other add-on. No dependency on Order to Cash: how the
+    // two connect is decided in phase 3 (ruling 4).
+    dependencies: { 'app.objectstack.hotcrm': '^6.5.0', 'app.objectstack.hotcrm.expense': '^6.5.0' },
   },
 
   // What THIS package's metadata needs (see `requires` in
@@ -127,12 +136,14 @@ export const createHotCrmPsaStack = (
   // The delivery team's app; see the app's own note.
   apps: [PsaApp],
   objects: [
-    Project, ProjectBudget, ProjectBudgetLine, ProjectMember, ProjectTask, RateCard, Timesheet, TimeEntry, Expense,
+    Project, ProjectBudget, ProjectBudgetLine, ProjectMember, ProjectTask, RateCard, Timesheet, TimeEntry,
   ],
+  // The expense's Project field (hotcrm#2556); see the extension's own note.
+  objectExtensions: ExpenseProjectExtensions,
   hooks: psaHooks,
   views: [
     ProjectViews, ProjectBudgetViews, ProjectBudgetLineViews, ProjectMemberViews, ProjectTaskViews, RateCardViews,
-    TimesheetViews, TimeEntryViews, ExpenseViews,
+    TimesheetViews, TimeEntryViews,
   ],
   // The project's record page: the synthesized layout plus its task Gantt.
   pages: [ProjectDetailPage],
