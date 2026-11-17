@@ -76,6 +76,65 @@ export const en: TranslationData = {
         expense_status_progression: { message: 'This status change is not allowed. An expense moves Draft → Submitted → Approved or Rejected; a rejected expense goes back to Draft to be corrected.' },
       },
     },
+    // The travel request (hotcrm#2578).
+    crm_expense_request: {
+      label: 'Travel Request',
+      pluralLabel: 'Travel Requests',
+      description: 'Asking before a trip: where, when, why and roughly how much',
+      fields: {
+        owner_id: { label: 'Traveler' },
+        request_number: { label: 'Request Number' },
+        name: { label: 'Purpose' },
+        destination: { label: 'Destination' },
+        start_date: { label: 'Start Date' },
+        end_date: { label: 'End Date' },
+        days: { label: 'Days' },
+        crm_account: { label: 'Account' },
+        estimated_amount: { label: 'Estimated Amount', help: 'One total for the whole trip, whoever pays.' },
+        itinerary: { label: 'Itinerary' },
+        notes: { label: 'Notes' },
+        source: {
+          label: 'Source',
+          help: 'Typed by a person, written by an agent, or imported.',
+          options: {
+            manual: 'Manual',
+            agent: 'Agent',
+            import: 'Import',
+          },
+        },
+        status: {
+          label: 'Status',
+          options: {
+            draft: 'Draft',
+            submitted: 'Submitted',
+            approved: 'Approved',
+            rejected: 'Rejected',
+            cancelled: 'Cancelled',
+            closed: 'Closed',
+          },
+        },
+        approver: { label: 'Approver' },
+        review_notes: { label: 'Review Notes', help: 'What an assistant or a rule found, for the approver to read.' },
+      },
+      _views: {
+        all_travel_requests: { label: 'All Travel Requests' },
+        my_travel_requests: { label: 'My Travel Requests' },
+        travel_requests_to_approve: { label: 'Requests to Approve' },
+      },
+      _sections: {
+        trip: { label: 'Trip' },
+        review: { label: 'Approval' },
+      },
+      _validations: {
+        expense_request_dates: { message: 'End Date must be on or after Start Date.' },
+        expense_request_status_progression: { message: 'This status change is not allowed. A travel request moves Draft → Submitted → Approved or Rejected; a rejected request goes back to Draft to be corrected; an approved one is Cancelled before the trip or Closed after it.' },
+      },
+      _actions: {
+        submit_expense_request: { label: 'Submit', successMessage: 'Travel request {{ record.name }} submitted for approval.' },
+        cancel_expense_request: { label: 'Cancel Trip', confirmText: 'Cancel this trip? A cancelled request cannot be reopened; file a new one for a new plan.', successMessage: 'Travel request {{ record.name }} cancelled.' },
+        close_expense_request: { label: 'Close', successMessage: 'Travel request {{ record.name }} closed.' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers.
   flows: {
@@ -107,16 +166,32 @@ export const en: TranslationData = {
         finance_review: { label: 'Finance Controller Review' },
       },
     },
+    expense_request_approval: {
+      label: 'Travel Request Approval',
+      approvals: {
+        approver_review: { label: 'Manager Review' },
+      },
+    },
+    expense_request_approval_on_create: {
+      label: 'Travel Request Approval (on create)',
+      approvals: {
+        approver_review: { label: 'Manager Review' },
+      },
+    },
   },
   apps: {
     crm_expenses: {
       label: 'Expenses',
-      description: 'What you spent for the company, with its receipts, and the expenses waiting for your approval',
+      description: 'What you spent for the company, with its receipts, the trips you ask for beforehand, and what waits for your approval',
       navigation: {
         group_expenses: { label: 'Expenses' },
         nav_my_expenses: { label: 'My Expenses' },
         nav_expenses_to_approve: { label: 'Expenses to Approve' },
         nav_all_expenses: { label: 'All Expenses' },
+        group_travel_requests: { label: 'Travel Requests' },
+        nav_my_travel_requests: { label: 'My Travel Requests' },
+        nav_travel_requests_to_approve: { label: 'Requests to Approve' },
+        nav_all_travel_requests: { label: 'All Travel Requests' },
         group_work: { label: 'My Work' },
         nav_approval_requests: { label: 'Inbox' },
         group_help: { label: 'Help' },
@@ -134,7 +209,7 @@ export const en: TranslationData = {
   books: {
     crm_expense_manual: {
       label: 'HotCRM Expenses Manual',
-      description: 'Recording an expense with its receipt, who approves it, and what reaches a project.',
+      description: 'Recording an expense with its receipt, asking before a trip, who approves them, and what reaches a project.',
       groups: { expense: { label: 'Expenses' } },
     },
   },

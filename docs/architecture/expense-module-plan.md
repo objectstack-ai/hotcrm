@@ -98,13 +98,44 @@ committed:
 - The two approval paths (project manager through PSA, submitter's manager in the expense package)
   must be mutually exclusive.
 
-## Travel request (stage 3, direction as read at 23:03Z)
+## Travel request (stage 3)
 
-- `crm_expense_request` in the same package: requester, purpose, type, dates, destination, account,
-  estimated amount, status, approver.
-- The report gains an optional request and shows planned against actual.
-- Optional by default.
-- Not in the first version: advances, estimate lines, booking, a "request required" switch.
+The intent of [hotcrm#2578](https://github.com/objectstack-ai/hotcrm/issues/2578) to
+[hotcrm#2581](https://github.com/objectstack-ai/hotcrm/issues/2581); `src/` is the source of truth
+once each lands.
+
+- **`crm_expense_request`**, labelled **Travel Request** (「出差申请」), in the expense package. The
+  name is wider than the label: an object name cannot change, and a request before spending may one
+  day cover more than trips. Travel only for now; ⛔ no type field.
+- **The request** (F3a): purpose, the traveler (the owner), destination, start and end date, days,
+  an optional account, **one estimated amount** for the whole trip, itinerary and notes, status, the
+  approver, source, and a notes field where an agent or a rule writes what it found for the approver
+  (「检查提示」). Required: purpose, destination, the two dates, the estimated amount.
+- **Statuses**, all present from the first card: draft · submitted · approved · rejected ·
+  cancelled · closed. Approved requests are cancelled before the trip or closed after it; both are
+  final. Once approved, the planned values (purpose, destination, dates, estimated amount) no
+  longer change: a new plan is a new request.
+- **Approval** (F3a): one tier, the traveler's manager, with the expense's no-manager fallback;
+  ⛔ no finance tier, the money check stays on the report. With Project Delivery on, a request on a
+  project goes to its project manager instead (F3d; the flow sits in the expense package with the
+  expense's project path until objectstack#34616, then moves with
+  [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)).
+- **Itinerary lines** (F3b, `crm_expense_request_line`): optional segments (flight, train, car,
+  hotel, other), from, to, dates, requirements and a booking reference an agent writes back after
+  booking. ⛔ No amounts, so there are never two totals.
+- **The report cites a request** (F3c): optional, N reports to one request. The request shows the
+  estimate, the amount reported, the difference and whether it is over; over only warns. The
+  request closes when its last open report is paid.
+- **Optional:** a reimbursement never requires a request.
+- **Where it appears:** the Expenses app; with F3d, the Project Delivery app too. ⛔ No menu in the
+  Sales, Service or Marketing apps and no list on the account page.
+- **Agent-first:** the product supplies the records, the statuses, the approval, Submit, Cancel and
+  Close, `source`, the approver notes and the booking reference. Estimating, checking, booking and
+  reminding are an agent's work through the API, acting as the traveler.
+- **Not in these cards**, each a pure addition later: advances (an object of their own citing the
+  request and the report), a "request required" switch, a hard overspend limit, per-category
+  estimates, booking and travel-desk roles, per diem and policy checks, a trip calendar, foreign
+  currency (REQ-0012).
 
 ## Agent surface (stage 3)
 
@@ -125,7 +156,7 @@ into the repo.
 | --- | --- |
 | 1 | [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issues/2556) the expense package; `crm_expense` moves into it |
 | 2 | [hotcrm#2559](https://github.com/objectstack-ai/hotcrm/issues/2559) `crm_expense_report` with its approval, Submit for Reimbursement and Mark as Paid; per-expense approval retires |
-| 3 | The travel request and the expense skill (no cards yet) |
+| 3 | The travel request: [hotcrm#2578](https://github.com/objectstack-ai/hotcrm/issues/2578) F3a, [hotcrm#2579](https://github.com/objectstack-ai/hotcrm/issues/2579) F3b, [hotcrm#2580](https://github.com/objectstack-ai/hotcrm/issues/2580) F3c, [hotcrm#2581](https://github.com/objectstack-ai/hotcrm/issues/2581) F3d; the expense skill (no card yet) |
 
 ## Decisions recorded (2026-11-16)
 
@@ -172,6 +203,22 @@ What it settles, for [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issu
 3. **With PSA disabled only the manager path runs.** The Project field leaves the record, so the
    project path's entry condition is false and nothing reads the absent project; measured at runtime
    and pinned in `test/expense-module.test.ts`.
+
+| When | Words |
+| --- | --- |
+| 2026-11-17 05:15Z | 「出差申请用fable 综合分析，立卡开始开发」 |
+
+What it settles, for the travel request:
+
+4. **The travel request is a dispatched task.** The 23:03Z sentence had been recorded "as read"
+   (*Decisions recorded (2026-11-16)* item 3); the 05:15Z order makes it work to build, in four
+   cards, [hotcrm#2578](https://github.com/objectstack-ai/hotcrm/issues/2578) to
+   [hotcrm#2581](https://github.com/objectstack-ai/hotcrm/issues/2581).
+5. **The design choices are the decision thread's, reported to her, not her typed rulings.** Its
+   defaults, all hotcrm-only and reversible: the object named `crm_expense_request` and labelled
+   Travel Request, travel only; one estimated amount on the request, none on the itinerary lines;
+   one approval tier; a request is optional for reimbursement; `cancelled` and `closed` in the status
+   list from the start.
 
 ## Not measured
 

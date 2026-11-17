@@ -2,17 +2,19 @@
 
 import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInput } from '@objectstack/spec';
 
+import { SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction } from './actions/index.js';
 import { ExpenseApp } from './apps/index.js';
 import { CrmExpenseManual } from './books/index.js';
 import { ExpenseEmailTemplates } from './email-templates/index.js';
 import {
   ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow,
+  ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
 } from './flows/index.js';
-import { Expense } from './objects/index.js';
-import { expenseHook } from './objects/hooks.js';
-import { ExpenseApproverEditSharingRule } from './sharing/index.js';
+import { Expense, ExpenseRequest } from './objects/index.js';
+import { expenseHook, expenseRequestHook } from './objects/hooks.js';
+import { ExpenseApproverEditSharingRule, ExpenseRequestApproverEditSharingRule } from './sharing/index.js';
 import { ExpenseTranslations } from './translations/index.js';
-import { ExpenseViews } from './views/index.js';
+import { ExpenseRequestViews, ExpenseViews } from './views/index.js';
 
 /**
  * This package's hooks, for the artifact-wide sweeps (`allHooks` in
@@ -20,20 +22,22 @@ import { ExpenseViews } from './views/index.js';
  * `src/service/index.ts` for the arrangement. Every one attaches to this
  * module's own object (ADR-0130 R4).
  */
-export const expenseHooks = [expenseHook].flat();
+export const expenseHooks = [expenseHook, expenseRequestHook].flat();
 
 /**
  * This package's flows: the approval of an expense with no project, the
  * approval of one on a project (here only for the platform gap its file
- * names), and the insert twin of each.
+ * names), the approval of a travel request (hotcrm#2578), and the insert twin
+ * of each.
  */
 export const expenseFlows = [
   ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow,
   ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow,
+  ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
 ];
 
 /** This package's sharing rules — see {@link expenseHooks}. */
-export const expenseSharingRules = [ExpenseApproverEditSharingRule];
+export const expenseSharingRules = [ExpenseApproverEditSharingRule, ExpenseRequestApproverEditSharingRule];
 
 /**
  * What the composition hands this package: its seed families, cut out of the
@@ -56,7 +60,7 @@ export type HotCrmExpenseCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * item 15).
  *
  * It owns `crm_expense`, which moved here from Project Delivery under the
- * same name (item 16: one `crm` namespace, so no table rename). Project
+ * same name, and `crm_expense_request`, the travel request (hotcrm#2578) (item 16: one `crm` namespace, so no table rename). Project
  * Delivery depends on this package — the one add-on → add-on edge item 18
  * allows — and contributes the Project field and the project cost
  * summaries. This package depends on the app package only. One thing that
@@ -80,7 +84,7 @@ export const createHotCrmExpenseStack = (
     // holds it, and the range below, to the app package's.
     version: '6.5.0',
     type: 'module',
-    description: 'HotCRM expense module — expenses with their receipts, and their approval.',
+    description: 'HotCRM expense module — expenses with their receipts, travel requests, and their approval.',
     engines: { protocol: '^18.5.0' },
     // The App package this module extends, and nothing else.
     dependencies: { 'app.objectstack.hotcrm': '^6.5.0' },
@@ -112,9 +116,11 @@ export const createHotCrmExpenseStack = (
 
   // Everyone's expenses app; see the app's own note.
   apps: [ExpenseApp],
-  objects: [Expense],
+  objects: [Expense, ExpenseRequest],
   hooks: expenseHooks,
-  views: [ExpenseViews],
+  views: [ExpenseViews, ExpenseRequestViews],
+  // The travel request's Submit, Cancel Trip and Close (hotcrm#2578).
+  actions: [SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction],
   sharingRules: expenseSharingRules,
   flows: expenseFlows,
   // The two notices the project path sends; see that flow.

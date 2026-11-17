@@ -9,11 +9,16 @@
 - **Traceability**: design — [`../architecture/expense-module-plan.md`](../architecture/expense-module-plan.md);
   cards — stage 1: [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issues/2556) (the expense
   package); stage 2: [hotcrm#2559](https://github.com/objectstack-ai/hotcrm/issues/2559) (the expense
-  report, Submit for Reimbursement and Mark as Paid; per-expense approval retires); stage 3 (no cards yet): the travel request and an expense skill;
+  report, Submit for Reimbursement and Mark as Paid; per-expense approval retires); stage 3: the travel request in four cards,
+  [hotcrm#2578](https://github.com/objectstack-ai/hotcrm/issues/2578) (F3a, the request and its approval),
+  [hotcrm#2579](https://github.com/objectstack-ai/hotcrm/issues/2579) (F3b, itinerary lines),
+  [hotcrm#2580](https://github.com/objectstack-ai/hotcrm/issues/2580) (F3c, the report cites a request) and
+  [hotcrm#2581](https://github.com/objectstack-ai/hotcrm/issues/2581) (F3d, the project and its project manager); the expense skill has no card yet;
   recorded by [hotcrm#2562](https://github.com/objectstack-ai/hotcrm/issues/2562). Changesets / PRs —
   stage 1: `.changeset/2556-expense-module.md` (hotcrm#2556; the project-path approval held in the
   expense package until [objectstack#34616](https://github.com/objectstack-ai/objectstack/issues/34616),
-  moved back on [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)).
+  moved back on [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)); stage 3:
+  `.changeset/2578-travel-request.md` (hotcrm#2578).
 
 ## Raw requirement (verbatim)
 
@@ -93,3 +98,21 @@ Foreign-currency expenses wait for [REQ-0012](0012-multi-currency.md).
   project cost as today, and the finance controller approves second above the existing threshold.
 - Each card merged with `pnpm verify` green and a browser pass. This record is closed as **Shipped**
   when stage 2 is on `main`; stage 3 reopens it or is a new record.
+
+## Note (2026-11-17): the travel request is dispatched
+
+The maintainer's words, verbatim and untranslated (UTC):
+
+| When | Words |
+| --- | --- |
+| 2026-11-17 05:15Z | 「出差申请用fable 综合分析，立卡开始开发」 |
+
+This turns the travel request, recorded above as read from 23:03Z, into a dispatched task. The
+decision thread wrote the design from it (the plan's *Travel request* section) and filed four
+cards: [hotcrm#2578](https://github.com/objectstack-ai/hotcrm/issues/2578) (F3a, the request and the
+traveler's manager's approval), [hotcrm#2579](https://github.com/objectstack-ai/hotcrm/issues/2579)
+(F3b, itinerary lines without amounts), [hotcrm#2580](https://github.com/objectstack-ai/hotcrm/issues/2580)
+(F3c, a report cites a request, planned against reported) and
+[hotcrm#2581](https://github.com/objectstack-ai/hotcrm/issues/2581) (F3d, the project and its project
+manager's approval). The design's defaults are the decision thread's, reported to her, not her typed
+rulings (the plan's *Decisions recorded (2026-11-17)*).

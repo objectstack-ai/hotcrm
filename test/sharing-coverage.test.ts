@@ -156,6 +156,12 @@ const ACCOUNT_CHILD_COVERAGE: Record<string, 'derived' | 'own_only' | 'partial'>
  * `converted_*` fields are excluded: `crm_lead.converted_account` records what a
  * conversion produced, so the lead is the account's ancestor, not its child —
  * no related list on the account renders it.
+ *
+ * A field that declares `relatedList: false` is excluded for the same reason:
+ * the platform renders no related list for it on the account page. The travel
+ * request (#2578) is the one today — private, the account an optional note of
+ * whom the trip is for, and kept off the sales team's account page on purpose
+ * (REQ-0010 usability rule 3); its reach is pinned in `test/expense-request.test.ts`.
  */
 const accountChildren = objects
   .filter((o) => typeof o.name === 'string' && !o.name.startsWith('sys_') && o.name !== 'crm_account')
@@ -164,7 +170,8 @@ const accountChildren = objects
       ([fieldName, f]) =>
         (f?.type === 'lookup' || f?.type === 'master_detail') &&
         (f.reference ?? f.reference_to ?? f.referenceTo) === 'crm_account' &&
-        !fieldName.startsWith('converted_'),
+        !fieldName.startsWith('converted_') &&
+        f.relatedList !== false,
     ),
   )
   .map((o) => o.name as string);
@@ -592,6 +599,8 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_timesheet: { en: 'Timesheet', 'zh-Hans': '工时单', 'zh-Hant': '工時單' },
   crm_time_entry: { en: 'Time Entry', 'zh-Hans': '工时明细', 'zh-Hant': '工時明細' },
   crm_expense: { en: 'Expense', 'zh-Hans': '费用', 'zh-Hant': '費用' },
+  // #2578 — the travel request, labelled 出差申请 in the zh-CN pack.
+  crm_expense_request: { en: 'Travel Request', 'zh-Hans': '出差申请', 'zh-Hant': '出差申請' },
   // Both Chinese labels are 工单/工單, the pack's `crm_case.label` and its
   // Traditional form. The zh-Hant cell read 「案件」 until #837 — a fourth
   // spelling of this one object, green here while the automation page spelled

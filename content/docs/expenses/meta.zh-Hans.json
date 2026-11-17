@@ -2,6 +2,7 @@
   "title": "费用报销",
   "defaultOpen": true,
   "pages": [
-    "index"
+    "index",
+    "travel-requests"
   ]
 }

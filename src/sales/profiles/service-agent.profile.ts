@@ -22,8 +22,9 @@ export const ServiceAgentProfile = {
   // customers and their own tasks.
   tabPermissions: { crm_enterprise: 'hidden' as const, crm_marketing: 'hidden' as const, crm_o2c: 'hidden' as const, crm_psa: 'hidden' as const },
   objects: {
-    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN,
+    crm_expense_request: EXPENSE_OWN,
     // Reference context an agent needs to work ANY ticket — a customer's cases
     // are meaningless without seeing the account/contact behind them, so these
     // are org-visible reads (viewAllRecords: true), NOT own-only. This was the

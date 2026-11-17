@@ -18,12 +18,13 @@ import { HOTCRM_ICON } from '../../sales/apps/crm.app';
  * nothing here.
  *
  * Project staff also find My Expenses and Expenses to Approve inside the
- * Project Delivery app, contributed by this module (`../index.ts`).
+ * Project Delivery app, contributed by this module (`../index.ts`). Travel
+ * requests (hotcrm#2578) are listed here only.
  */
 export const ExpenseApp = App.create({
   name: 'crm_expenses',
   label: 'Expenses',
-  description: 'What you spent for the company, with its receipts, and the expenses waiting for your approval',
+  description: 'What you spent for the company, with its receipts, the trips you ask for beforehand, and what waits for your approval',
   icon: 'receipt',
   defaultAgent: 'ask',
   branding: {
@@ -43,6 +44,21 @@ export const ExpenseApp = App.create({
         { id: 'nav_my_expenses', type: 'object', objectName: 'crm_expense', viewName: 'my_expenses', label: 'My Expenses', icon: 'receipt' },
         { id: 'nav_expenses_to_approve', type: 'object', objectName: 'crm_expense', viewName: 'expenses_to_approve', label: 'Expenses to Approve', icon: 'clipboard-check' },
         { id: 'nav_all_expenses', type: 'object', objectName: 'crm_expense', label: 'All Expenses', icon: 'list' },
+      ],
+    },
+
+    // Asking before a trip (hotcrm#2578). Here only: no other app carries a
+    // travel request menu (REQ-0010 usability rule 3).
+    {
+      id: 'group_travel_requests',
+      type: 'group',
+      label: 'Travel Requests',
+      icon: 'plane',
+      expanded: true,
+      children: [
+        { id: 'nav_my_travel_requests', type: 'object', objectName: 'crm_expense_request', viewName: 'my_travel_requests', label: 'My Travel Requests', icon: 'plane' },
+        { id: 'nav_travel_requests_to_approve', type: 'object', objectName: 'crm_expense_request', viewName: 'travel_requests_to_approve', label: 'Requests to Approve', icon: 'clipboard-check' },
+        { id: 'nav_all_travel_requests', type: 'object', objectName: 'crm_expense_request', label: 'All Travel Requests', icon: 'list' },
       ],
     },
 
