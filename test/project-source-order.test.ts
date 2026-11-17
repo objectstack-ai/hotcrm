@@ -68,6 +68,12 @@ describe('the shape', () => {
 
 describe('on the booted stack', () => {
   const PKG = '/packages/app.objectstack.hotcrm.psa';
+  /**
+   * A disable and a re-enable rebuild the served metadata twice: measured
+   * 2.1 s alone for the disable case, and past the 5 s default on a loaded CI
+   * runner (hotcrm#2585 run, 2026-11-17), as in test/psa-module-package.test.ts.
+   */
+  const DISABLE_BUDGET_MS = 120_000;
   let verify: VerifyStack;
   let admin: string;
   let pm: Person;
@@ -153,5 +159,5 @@ describe('on the booted stack', () => {
     expect(await childrenOfOrder()).toContain('crm_project');
     const [kept] = await verify.rows('crm_project', { id: project.id });
     expect(kept!.crm_sales_order, 'the link survives the round trip').toBe(order.id);
-  });
+  }, DISABLE_BUDGET_MS);
 });

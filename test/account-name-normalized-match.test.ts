@@ -94,6 +94,14 @@ describe('premise: a flow cannot fold a company into its match key', () => {
     unwrapped_lower: 'LOWER({leadRecord.company})',
   };
   const cel = (source: string) => ({ dialect: 'cel', source });
+  /**
+   * Per-case budget for a probe: it registers a flow through the REST door,
+   * runs it on the real engine and deletes it. Measured 2.2 s alone for the
+   * first probe of the file (it pays the registration warm-up) and under 1 s
+   * after; under a loaded CI runner the first one passed the 5 s default
+   * (hotcrm#2585 run, 2026-11-17).
+   */
+  const PROBE_BUDGET_MS = 30_000;
 
   let leadId: string;
   /**
@@ -153,14 +161,14 @@ describe('premise: a flow cannot fold a company into its match key', () => {
     expect(door.status, door.body).toBe(200);
     expect(refusal).toBeNull();
     expect(written).toEqual(['ACME  Corp']);
-  });
+  }, PROBE_BUDGET_MS);
 
   it.each(Object.entries(RETIRED))('refuses the retired template spelling at the door, writing nothing — %s', async (key, value) => {
     const { door, written } = await probe(key, value);
     expect(door.status, 'a single-brace template in a value slot was admitted').toBe(400);
     expect(door.body).toMatch(/invalid expression/i);
     expect(written).toEqual([]);
-  });
+  }, PROBE_BUDGET_MS);
 
   it('folds case and the outer spaces in CEL — but cannot collapse the inner ones', async () => {
     // Two of the key's three steps exist as CEL functions. The written value
@@ -170,13 +178,13 @@ describe('premise: a flow cannot fold a company into its match key', () => {
     expect(door.status, door.body).toBe(200);
     expect(refusal).toBeNull();
     expect(written).toEqual(['acme  corp']);
-  });
+  }, PROBE_BUDGET_MS);
 
   it('has no string replacement to collapse them with — the door refuses the call', async () => {
     const { door, written } = await probe('replace', cel('leadRecord.company.replace("  ", " ")'));
     expect(door.status, 'a string replace was admitted — premise 1 may no longer hold; re-measure').toBe(400);
     expect(written).toEqual([]);
-  });
+  }, PROBE_BUDGET_MS);
 });
 
 // ═════════════════════════ premise 2: a formula field has no column ══
