@@ -53,3 +53,28 @@ export const EXPENSE_READ_ALL = {
   allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false,
   viewAllRecords: true, modifyAllRecords: false,
 };
+
+/**
+ * Itinerary line grant rows (hotcrm#2579). A leg is `controlled_by_parent`:
+ * who reads a request reads its legs, and a write of a leg needs edit on the
+ * request, so the row grants the operations and the request decides the
+ * records. Every set that writes requests writes legs
+ * ({@link EXPENSE_REQUEST_LINE_EDIT}; the sets that read every request read
+ * every leg through it, and still edit only the legs of requests they may
+ * edit), `crm_user` the same without delete ({@link EXPENSE_REQUEST_LINE_FLOOR}),
+ * and `sales_leadership` reads ({@link EXPENSE_REQUEST_LINE_READ}).
+ */
+export const EXPENSE_REQUEST_LINE_EDIT = {
+  allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true,
+  viewAllRecords: false, modifyAllRecords: false,
+};
+
+export const EXPENSE_REQUEST_LINE_FLOOR = {
+  allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false,
+  viewAllRecords: false, modifyAllRecords: false,
+};
+
+export const EXPENSE_REQUEST_LINE_READ = {
+  allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false,
+  viewAllRecords: false, modifyAllRecords: false,
+};

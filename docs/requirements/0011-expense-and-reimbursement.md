@@ -18,7 +18,7 @@
   stage 1: `.changeset/2556-expense-module.md` (hotcrm#2556; the project-path approval held in the
   expense package until [objectstack#34616](https://github.com/objectstack-ai/objectstack/issues/34616),
   moved back on [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)); stage 3:
-  `.changeset/2578-travel-request.md` (hotcrm#2578).
+  `.changeset/2578-travel-request.md` (hotcrm#2578), `.changeset/2579-itinerary-lines.md` (hotcrm#2579).
 
 ## Raw requirement (verbatim)
 

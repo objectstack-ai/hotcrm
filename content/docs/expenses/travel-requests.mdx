@@ -20,10 +20,24 @@ Open **My Travel Requests** and choose **New**:
 | **Start Date** and **End Date** | The first and last day of the trip (required). **Days** counts both |
 | **Estimated Amount** | One total for the whole trip, in your organization's currency, whoever pays for each part (required) |
 | **Account** | The customer the trip is for, if any |
-| **Itinerary** | The plan: flights, trains, hotel |
+| **Itinerary** | The plan in your own words |
 | **Notes** | Anything else |
 
 Attach files in the **Files** tab. **Source** says how the record arrived, and **Review Notes** is where an assistant or a rule writes what it found for the approver. Neither decides anything: an assistant can draft the request, estimate the amount or check it, working as you through the API, and the decision stays with your manager.
+
+## Itinerary lines
+
+A trip with several legs can list them one by one under **Itinerary Lines** on the request's page. Choose **New** for each leg:
+
+| Field | What to enter |
+| --- | --- |
+| **Kind** | Flight, Train, Car, Hotel or Other (required) |
+| **From** and **To** | Where the leg starts and where it goes; for a hotel, **To** is where it is (**To** required) |
+| **Start Date** and **End Date** | The day of the leg (required), and for a hotel the day you check out |
+| **Details** | A seat, a hotel you prefer, other wishes |
+| **Booking Reference** | The confirmation, once it is booked |
+
+The legs are listed in the order of the trip. A leg has no amount: the request's **Estimated Amount** is the one total. Lines are optional, and a request with none is complete.
 
 ## Submitting and approving
 
@@ -42,10 +56,12 @@ Choose **Submit** to send it. **Your manager**, the **Manager** on your user rec
 
 ## After approval
 
-The approval was given for the plan, so an approved request's **Purpose**, **Destination**, dates and **Estimated Amount** no longer change. To change the plan, choose **Cancel Trip** and file a new request. When the trip is over, choose **Close**.
+The approval was given for the plan, so an approved request's **Purpose**, **Destination**, dates and **Estimated Amount** no longer change. Its legs are held the same way from the moment you submit: their kind, places, dates and details no longer change, and no leg can be added or removed. To change the plan, choose **Cancel Trip** and file a new request. When the trip is over, choose **Close**.
+
+The **Booking Reference** of each leg stays open. Once a leg is booked, you, an assistant working as you through the API, your approver or whoever books writes the confirmation there, also after approval.
 
 ## Who sees what
 
-You see your own requests, and the ones you are asked to approve. Finance sees every request under **All Travel Requests**, and so do sales managers and leadership; none of them can change a request that is not theirs. Travel requests do not appear in the Sales, Service or Marketing apps, or on the account page.
+You see your own requests and their legs, and the ones you are asked to approve. Finance sees every request under **All Travel Requests**, and so do sales managers and leadership; none of them can change a request that is not theirs. Travel requests do not appear in the Sales, Service or Marketing apps, or on the account page.
 
 With Project Delivery on or off, a travel request works the same.

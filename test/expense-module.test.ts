@@ -55,8 +55,8 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556)', ()
   it('owns crm_expense and its guard, approvals, sharing rule, app and manual; no project field of its own', () => {
     const stack = stackOf(EXPENSE_ID);
     // The travel request (hotcrm#2578) is pinned in `test/expense-request.test.ts`.
-    expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense', 'crm_expense_request']);
-    expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual(['expense_decision_guard', 'expense_request_decision_guard']);
+    expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense', 'crm_expense_request', 'crm_expense_request_line']);
+    expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual(['expense_decision_guard', 'expense_request_decision_guard', 'expense_request_line_lock', 'expense_request_line_number']);
     expect(((stack.sharingRules ?? []) as Rec[]).map((r) => r.name)).toEqual(['expense_approver_edit', 'expense_request_approver_edit']);
     expect(((stack.apps ?? []) as Rec[]).map((a) => a.name)).toEqual(['crm_expenses']);
     expect(((stack.books ?? []) as Rec[]).map((b) => b.name)).toEqual(['crm_expense_manual']);

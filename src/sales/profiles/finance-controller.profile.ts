@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { privateOpportunityPolicy } from './_private-opportunity';
-import { EXPENSE_OWN_READ_ALL } from './_expense-grants';
+import { EXPENSE_OWN_READ_ALL, EXPENSE_REQUEST_LINE_EDIT } from './_expense-grants';
 
 /**
  * Finance Controller — watches delivery cost and margin (hotcrm#2316, plan
@@ -42,6 +42,7 @@ export const FinanceControllerProfile = {
     // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN_READ_ALL,
     crm_expense_request: EXPENSE_OWN_READ_ALL,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
     crm_account:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_opportunity:    { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },
     crm_contract:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },

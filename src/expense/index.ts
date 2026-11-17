@@ -10,11 +10,11 @@ import {
   ExpenseApprovalFlow, ExpenseApprovalOnCreateFlow, ExpenseProjectApprovalFlow, ExpenseProjectApprovalOnCreateFlow,
   ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
 } from './flows/index.js';
-import { Expense, ExpenseRequest } from './objects/index.js';
-import { expenseHook, expenseRequestHook } from './objects/hooks.js';
+import { Expense, ExpenseRequest, ExpenseRequestLine } from './objects/index.js';
+import { expenseHook, expenseRequestHook, expenseRequestLineHook } from './objects/hooks.js';
 import { ExpenseApproverEditSharingRule, ExpenseRequestApproverEditSharingRule } from './sharing/index.js';
 import { ExpenseTranslations } from './translations/index.js';
-import { ExpenseRequestViews, ExpenseViews } from './views/index.js';
+import { ExpenseRequestLineViews, ExpenseRequestViews, ExpenseViews } from './views/index.js';
 
 /**
  * This package's hooks, for the artifact-wide sweeps (`allHooks` in
@@ -22,7 +22,7 @@ import { ExpenseRequestViews, ExpenseViews } from './views/index.js';
  * `src/service/index.ts` for the arrangement. Every one attaches to this
  * module's own object (ADR-0130 R4).
  */
-export const expenseHooks = [expenseHook, expenseRequestHook].flat();
+export const expenseHooks = [expenseHook, expenseRequestHook, expenseRequestLineHook].flat();
 
 /**
  * This package's flows: the approval of an expense with no project, the
@@ -116,9 +116,9 @@ export const createHotCrmExpenseStack = (
 
   // Everyone's expenses app; see the app's own note.
   apps: [ExpenseApp],
-  objects: [Expense, ExpenseRequest],
+  objects: [Expense, ExpenseRequest, ExpenseRequestLine],
   hooks: expenseHooks,
-  views: [ExpenseViews, ExpenseRequestViews],
+  views: [ExpenseViews, ExpenseRequestViews, ExpenseRequestLineViews],
   // The travel request's Submit, Cancel Trip and Close (hotcrm#2578).
   actions: [SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction],
   sharingRules: expenseSharingRules,
