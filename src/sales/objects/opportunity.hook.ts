@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import type { HookApi } from './_hook-api';
+import type { HookApi, HookTextContext } from './_hook-api';
 
 /**
  * Opportunity lifecycle hook.
@@ -543,7 +543,17 @@ const opportunityWonHook: Hook = {
   runAs: 'system',
   description:
     'On closed_won: promote linked account to customer and create activation task.',
-  handler: async (ctx: HookContext) => {
+  // The activation task's title, in the organization's language (#2522):
+  // translations at `hooks.opportunity_promote_account.texts.<key>.message` in
+  // the app package's locale packs. Everyone in the organization reads the
+  // task, so it is never the language of the rep who closed the deal. The
+  // private title keeps the deal's name out in every language.
+  texts: {
+    activation_named: { message: 'Activate new customer for opportunity {{ opportunity }}', params: ['opportunity'] },
+    activation_private: { message: 'Activate new customer (private opportunity)' },
+    activation_untitled: { message: 'Activate new customer' },
+  },
+  handler: async (ctx: HookContext & HookTextContext) => {
     const { input } = ctx;
     const previous = ctx.previous;
     const becameWon = input.stage === 'closed_won' && previous?.stage !== 'closed_won';
@@ -606,10 +616,10 @@ const opportunityWonHook: Hook = {
       (typeof previous?.name === 'string' && previous.name.trim()) ||
       '';
     const titled = isPrivate
-      ? 'Activate new customer (private opportunity)'
+      ? await ctx.text('activation_private')
       : oppName
-        ? `Activate new customer for opportunity ${oppName}`
-        : 'Activate new customer';
+        ? await ctx.text('activation_named', { opportunity: oppName })
+        : await ctx.text('activation_untitled');
     await api.object('crm_task').insert({
       subject: titled.length > 255 ? `${titled.slice(0, 254)}…` : titled,
       status: 'not_started',

@@ -90,8 +90,10 @@ const stalledDeals = async (): Promise<Rec[]> => verify.seed('crm_opportunity', 
 ]);
 
 /** The open nudge task the stagnation sweep would have written for `deal`. */
+// The stall task as the sweep writes it: the gate finds it by its
+// `automation_key`, never by its title (#2522).
 const nudgeTaskFor = (deal: Rec) => ({
-  subject: `Advance stalled deal: ${deal.name}`, type: 'follow_up', priority: 'high', status: 'not_started',
+  subject: `Advance stalled deal: ${deal.name}`, automation_key: 'stalled_deal', type: 'follow_up', priority: 'high', status: 'not_started',
   owner_id: rep.id, related_to_type: 'crm_opportunity', related_to_opportunity: deal.id,
 });
 

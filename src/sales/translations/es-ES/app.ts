@@ -542,6 +542,19 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
   flows: {
+    // What the sweeps store in a record (#2522), at
+    // `flows.<flow>.records.<node>.fields.<field>`, holes as the source spells them.
+    contract_renewal: {
+      records: {
+        create_renewal_task: { fields: { subject: 'Renovación pendiente: contrato {{ currentContract.contract_number }}' } },
+      },
+    },
+    opportunity_stagnation: {
+      records: {
+        create_followup_task: { fields: { subject: 'Avanzar oportunidad estancada: {{ currentOpp.name | truncate:200 }}' } },
+        create_private_followup_task: { fields: { subject: 'Avanzar oportunidad estancada (oportunidad privada)' } },
+      },
+    },
     // Approval flows (#2060 item 13, C-15): the flow's own `label`, and each
     // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
     // the step name the approval request shows the submitter and the approvers.

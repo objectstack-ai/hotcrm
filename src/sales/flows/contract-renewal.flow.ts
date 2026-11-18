@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P, cel } from '@objectstack/spec';
+import { P, cel, tmpl } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
 import { RENEWAL_LOOKAHEAD_DAYS } from '../objects/contract.object';
@@ -68,12 +68,16 @@ export const ContractRenewalFlow: Flow = {
               // duplicate task + notification (and, below, a duplicate
               // pipeline-inflating renewal opportunity). An open renewal task
               // for this contract means this window was already handled.
+              //
+              // The task is found by its `automation_key`, which names the
+              // contract — never by its title, which is TEXT in the
+              // organization's language (#2522) and so has no one shape.
               id: 'find_existing_task', type: 'get_record', label: 'Already Reminded?',
               config: {
                 objectName: 'crm_task',
                 filter: {
                   related_to_account: cel`currentContract.crm_account`,
-                  subject: cel`'Renewal due: contract ' + currentContract.contract_number`,
+                  automation_key: cel`'contract_renewal:' + currentContract.id`,
                   status: { $nin: ['completed'] },
                 },
                 outputVariable: 'existingRenewalTask',
@@ -88,7 +92,10 @@ export const ContractRenewalFlow: Flow = {
               config: {
                 objectName: 'crm_task',
                 fields: {
-                  subject: cel`'Renewal due: contract ' + currentContract.contract_number`,
+                  // TEXT, in the organization's language (#2522): translated at
+                  // `flows.contract_renewal.records.create_renewal_task.fields.subject`.
+                  subject: tmpl`Renewal due: contract {{ currentContract.contract_number }}`,
+                  automation_key: cel`'contract_renewal:' + currentContract.id`,
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: cel`currentContract.end_date`,
                   owner_id: cel`has(currentContract.owner_id) ? currentContract.owner_id : null`,
