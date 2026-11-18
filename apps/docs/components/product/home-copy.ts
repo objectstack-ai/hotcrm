@@ -46,7 +46,7 @@ const en: HomeCopy = {
       },
       {
         title: 'No built-in assistant',
-        text: 'The community edition runs no assistant of its own: you connect yours. HotCRM ships six skills for the platform assistant, where an environment runs one, and two actions an agent calls directly: Convert Lead and Schedule Follow-up.',
+        text: 'The community edition runs no assistant of its own: you connect yours. HotCRM ships eight skills for the platform assistant, where an environment runs one, and opens nine actions to agents, among them Convert Lead and Submit for Reimbursement. An action that cannot be undone, or sends to an approver, asks the person first.',
         link: { label: 'Actions open to agents', href: '/docs/ai-copilot/agent-actions' },
       },
     ],
@@ -106,7 +106,7 @@ const zhHans: HomeCopy = {
       },
       {
         title: '没有内置助手',
-        text: '社区版不自带助手：接入你自己的智能体。HotCRM 为平台助手提供六项技能（在环境运行平台助手时使用），并提供两个智能体可以直接调用的动作：转化线索和安排跟进。',
+        text: '社区版不自带助手：接入你自己的智能体。HotCRM 为平台助手提供八项技能（在环境运行平台助手时使用），并向智能体开放九个动作，例如转化线索和提交报销。不可撤销或会送去审批的动作，先征得本人确认。',
         link: { label: '对智能体开放的动作', href: '/docs/ai-copilot/agent-actions' },
       },
     ],
@@ -166,7 +166,7 @@ const zhHant: HomeCopy = {
       },
       {
         title: '沒有內建助手',
-        text: '社群版不自帶助手：接入你自己的智能體。HotCRM 為平台助手提供六項技能（在環境執行平台助手時使用），並提供兩個智能體可以直接呼叫的動作：Convert Lead 和 Schedule Follow-up。',
+        text: '社群版不自帶助手：接入你自己的智能體。HotCRM 為平台助手提供八項技能（在環境執行平台助手時使用），並向智能體開放九個動作，例如 Convert Lead 和 Submit for Reimbursement。不可撤銷或會送去審批的動作，先徵得本人確認。',
         link: { label: '對智能體開放的動作', href: '/docs/ai-copilot/agent-actions' },
       },
     ],
