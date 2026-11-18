@@ -218,20 +218,25 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         industry: {
           label: '行业',
+          description: '客户记录上填写的行业；未填写行业的客户单独成组。',
         },
         type: {
           label: '类型',
+          description: '客户的类型：潜在客户、正式客户、合作伙伴或前客户。',
         },
         created_at: {
           label: '创建时间',
+          description: '客户记录在系统中创建的月份，不是该公司成为正式客户的日期。',
         },
       },
       measures: {
         account_count: {
           label: '客户数',
+          description: '客户记录的数量，涵盖所有类型：潜在客户、正式客户、合作伙伴和前客户都算；只数正式客户需按类型分组。',
         },
         annual_revenue_sum: {
           label: '年营收',
+          description: '客户记录上填写的年营收之和：反映客户公司自身的规模，而不是他们向我们购买的金额。',
         },
       },
     },
@@ -241,6 +246,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       measures: {
         contact_count: {
           label: '联系人数',
+          description: '联系人记录的数量，即客户和合作伙伴公司里的人员；线索单独统计，不计入。',
         },
       },
     },
@@ -250,29 +256,37 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         owner: {
           label: '负责人',
+          description: '活动的负责人。',
         },
         related_to_type: {
           label: '关联对象',
+          description: '活动关联的记录类型：客户、联系人、商机、线索或工单。',
         },
         start_datetime: {
           label: '活动周',
+          description: '活动开始时间所在的周；尚未发生的已计划活动落在未来的周里。',
         },
         status: {
           label: '状态',
+          description: '活动是已计划、已举行、已取消还是客户未到；只有已举行表示真正发生了接触。',
         },
         type: {
           label: '活动类型',
+          description: '活动的类型：会议、电话、演示、线上研讨会、上门拜访或其他。',
         },
       },
       measures: {
         avg_minutes: {
           label: '平均时长',
+          description: '单个活动的平均时长（分钟），未筛选时涵盖所有状态。',
         },
         event_count: {
           label: '活动数',
+          description: '活动的数量，涵盖所有状态：已计划、已举行、已取消和客户未到都算；只数真正发生的接触需筛选已举行。',
         },
         total_minutes: {
           label: '总分钟数',
+          description: '当前范围内活动时长（分钟）之和，未筛选时涵盖所有状态；它是安排的时长，不是实际记录的工时。',
         },
       },
     },
@@ -282,32 +296,41 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         owner: {
           label: '负责人',
+          description: '预测记录所属的销售代表；每位负责人每个周期一条记录。',
         },
         period: {
           label: '周期类型',
+          description: '预测记录覆盖的是一个月还是一个季度；需要选定一种，因为把月度和季度相加会把同一批商机算两遍。',
         },
         period_label: {
           label: '周期',
+          description: '预测记录的周期名称，例如 Q3 2026 或 Aug 2026。',
         },
         period_start: {
           label: '周期开始',
+          description: '预测周期的第一天，即某月或某季度的第一天。',
         },
       },
       measures: {
         attainment: {
           label: '达成率',
+          description: '已成交除以配额，两者先求和再相除，所以大配额比小配额权重更大；没有配额时结果为空，而不是零。',
         },
         closed_sum: {
           label: '已成交',
+          description: '预测记录上的已成交金额之和：负责人在该周期内已经赢下的金额；不含未结管道和失败商机。',
         },
         commit_sum: {
           label: '承诺',
+          description: '预测记录上的承诺金额之和：预测类别为承诺的未结商机；不含最佳情况和管道类别的商机。',
         },
         pipeline_sum: {
           label: '销售管道',
+          description: '预测记录上的管道金额之和：预计在该周期内成交、处于任一未结阶段的商机金额；不含成交和失败的商机。',
         },
         quota_sum: {
           label: '配额',
+          description: '当前范围内预测记录上设定的配额之和，即销售目标；未设定配额的记录不计入；需固定一种周期类型，否则月度和季度会相加。',
         },
       },
     },
@@ -317,20 +340,25 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         created_at: {
           label: '创建时间',
+          description: '线索记录在系统中创建的日期。',
         },
         last_contacted_date: {
           label: '最近联系',
+          description: '最近一次联系该线索的月份；从未联系过的线索单独成组。',
         },
         lead_source: {
           label: '来源',
+          description: '线索记录上填写的来源；未填写来源的线索单独成组。',
         },
         status: {
           label: '状态',
+          description: '线索所处的状态：新建、已联系、已确认、未通过或已转化。',
         },
       },
       measures: {
         lead_count: {
           label: '线索数',
+          description: '线索记录的数量，涵盖所有状态，包括已转化和未通过的线索；只数未结线索需按状态分组。',
         },
       },
     },
@@ -340,65 +368,85 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         account_industry: {
           label: '客户行业',
+          description: '商机所属客户的行业，取自客户记录；客户未填写行业的商机单独成组。',
         },
         close_date: {
           label: '预计成交日',
+          description: '按自然月分组的预计成交日期：未结商机是预计成交的日期，已成交或失败的商机是关闭的日期；不是商机的创建日期。',
         },
         close_quarter: {
           label: '成交季度',
+          description: '同一个预计成交日期按自然季度分组，用于逐季查看；不是财年日历。',
         },
         forecast_category: {
           label: '预测类别',
+          description: '商机计入的预测类别：管道、最佳情况、承诺、已排除或已关闭。',
         },
         lead_source: {
           label: '线索来源',
+          description: '商机记录上填写的来源；未填写来源的商机单独成组。',
         },
         loss_reason: {
           label: '丢单原因',
+          description: '失败商机的丢单原因，在以失败关闭时填写；未结和成交的商机没有丢单原因。',
         },
         owner: {
           label: '负责人',
+          description: '商机的负责人（销售代表）；结果显示人员名称，每个商机只计在当前负责人名下一次。',
         },
         stage: {
           label: '阶段',
+          description: '商机在销售流程中所处的阶段，从寻找客户到成交或失败；除最后两个以外的阶段都是未结管道。',
         },
         type: {
           label: '商机类型',
+          description: '商机是新业务，还是老客户的升级、续约或拓展。',
         },
         win_reason: {
           label: '赢单原因',
+          description: '成交商机的赢单原因，在以成交关闭时填写；未结和失败的商机没有赢单原因。',
         },
       },
       measures: {
         avg_amount: {
           label: '平均单笔金额',
+          description: '单个商机的平均金额，涵盖所有阶段，未结、成交和失败都算；未填写金额的商机不计入平均。',
         },
         avg_probability: {
           label: '平均赢单概率',
+          description: '当前范围内商机成交概率 (%) 的平均值；成交概率随阶段变化，所以它反映商机推进到哪一步，而不是加权管道金额。',
         },
         decided_count: {
           label: '已结单商机',
+          description: '已有结果的商机数量，即成交或失败；未结商机不计入。它是赢率的分母。',
         },
         lost_amount: {
           label: '丢单金额',
+          description: '处于失败阶段的商机的金额之和；不含未结和成交的商机。',
         },
         lost_count: {
           label: '丢单数',
+          description: '处于失败阶段的商机数量；未结和成交的商机不计入。',
         },
         opp_count: {
           label: '商机数',
+          description: '商机数量，涵盖所有阶段：未结、成交和失败都算；只数成交的用赢单数（Won Deals）。',
         },
         total_amount: {
           label: '总金额',
+          description: '所有阶段商机的金额之和，未结、成交和失败都算；按阶段筛选之前，它既不是未结管道，也不是赢单金额。',
         },
         win_rate: {
           label: '赢率',
+          description: '赢单数除以已结单数，按商机个数而不是金额计算；未结商机不计入，所以管道再满也不会拉低它。',
         },
         won_amount: {
           label: '赢单金额',
+          description: '处于成交阶段的商机的金额之和，即已签下的商机金额；不含未结和失败的商机，也不是客户的年营收或项目的计划收入。',
         },
         won_count: {
           label: '赢单数',
+          description: '处于成交阶段的商机数量；未结和失败的商机不计入。',
         },
       },
     },
@@ -408,32 +456,41 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         due_date: {
           label: '截止日期',
+          description: '任务的截止日期；没有截止日期的任务单独成组。',
         },
         is_completed: {
           label: '已完成',
+          description: '任务是否处于已完成状态；其他任何状态都算未完成。',
         },
         is_overdue: {
           label: '已逾期',
+          description: '任务在最近一次保存时是否已过截止日期且未完成。',
         },
         priority: {
           label: '优先级',
+          description: '任务上设定的优先级：低、普通、高或紧急。',
         },
         priority_rank: {
           label: '紧急度',
+          description: '用于排序的优先级数值，低为 1，紧急为 4，没有优先级的任务为 0。',
         },
         status: {
           label: '状态',
+          description: '任务所处的状态：未开始、进行中、等待中、已完成或已推迟。',
         },
         type: {
           label: '类型',
+          description: '任务的类型：电话、邮件、会议、跟进、演示或其他。',
         },
       },
       measures: {
         avg_progress: {
           label: '平均进度',
+          description: '当前范围内任务进度（%）的平均值，包括已完成的任务；从未设定进度的任务按 0% 计。',
         },
         task_count: {
           label: '任务数',
+          description: '任务的数量，涵盖所有状态，包括已完成和已推迟的任务；只数未完成的工作需按是否完成分组。',
         },
       },
     },

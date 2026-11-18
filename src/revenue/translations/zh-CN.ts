@@ -436,14 +436,17 @@ export const zhCN: TranslationData = {
       dimensions: {
         category: {
           label: '类别',
+          description: '产品类别：软件、硬件、服务、订阅或支持服务。',
         },
       },
       measures: {
         list_price_sum: {
           label: '标价合计',
+          description: '当前范围内产品标价之和，是目录上的数字；不是销售额，也不含任何折扣或数量。',
         },
         product_count: {
           label: '产品数',
+          description: '产品目录中的产品数量，启用和停用的都算；不是销售的件数。',
         },
       },
     },

@@ -437,14 +437,17 @@ export const esES: TranslationData = {
       dimensions: {
         category: {
           label: 'Categoría',
+          description: 'La categoría del producto: software, hardware, servicio, suscripción o soporte.',
         },
       },
       measures: {
         list_price_sum: {
           label: 'Precio de lista total',
+          description: 'La suma del Precio de Lista de los productos en vista, una cifra de catálogo; no son ventas y no entra ningún descuento ni cantidad.',
         },
         product_count: {
           label: 'Productos',
+          description: 'Cuántos productos hay en el catálogo, activos e inactivos; no cuenta unidades vendidas.',
         },
       },
     },

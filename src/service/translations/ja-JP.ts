@@ -305,53 +305,69 @@ export const jaJP: TranslationData = {
       dimensions: {
         created_at: {
           label: '作成日',
+          description: 'ケースが作成された日。',
         },
         origin: {
           label: '発生元',
+          description: 'ケースが寄せられたチャネル：メール、電話、ウェブ、チャット、ソーシャルメディア。',
         },
         priority: {
           label: '優先度',
+          description: 'ケースの優先度（低・中・高・重大）。取引先のティアと合わせて SLA 期限が決まります。',
         },
         resolved_article: {
           label: '解決に使用したナレッジ記事',
+          description: 'ケースを解決したと記録されたナレッジ記事。記事なしで解決したケースは別のグループになります。',
         },
         status: {
           label: 'ステータス',
+          description: 'ケースの状況。新規・対応中・回答待ち・エスカレーション済から解決済・クローズ済まで。',
         },
         type: {
           label: '種別',
+          description: 'ケースの種類：問い合わせ、不具合、機能要望、バグ。',
         },
       },
       measures: {
         avg_resolution: {
           label: '平均解決時間（時間）',
+          description: 'クローズ済ケースの平均解決時間（時間）。作成からクローズまでを暦時間で数えます。まだクローズしていないケース（解決済を含む）は除きます。',
         },
         past_sla_count: {
           label: 'SLA 超過',
+          description: '現時点で SLA を過ぎているケースの件数。違反フラグが立っているか、未解決のまま SLA 期限を過ぎたもので、SLA 内の未完了ケースは数えません。',
         },
         past_sla_rate: {
           label: 'SLA 超過率',
+          description: 'Past SLA を Cases で割ったもの。対象のすべてのケース（未完了・クローズ済）が分母です。',
         },
         avg_sla_violated: {
           label: 'SLA 違反率',
+          description: '対象ケースのうち SLA違反フラグが立っている割合。未完了・クローズ済を含みます。未完了ケースのフラグは毎時の SLA 巡回でのみ立つため、読み取り時点の数字は Past SLA Rate です。',
         },
         case_count: {
           label: 'ケース数',
+          description: 'ケースの件数。未完了・クローズ済を含むすべてのステータスを数えます。未完了ケースだけを数える指標はないため、ステータスで分けてください。',
         },
         closed_count: {
           label: 'クローズ済みケース',
+          description: 'クローズ済ステータスのケースの件数。まだクローズしていない解決済ケースと未完了のケースは数えません。',
         },
         kb_deflection_rate: {
           label: 'ナレッジベース自己解決率',
+          description: 'Resolved by KB を Closed Cases で割ったもの。ナレッジ記事で解決したクローズ済ケースの割合で、未完了のケースは除きます。',
         },
         kb_resolved_count: {
           label: 'ナレッジベースで解決した件数',
+          description: '解決したナレッジ記事が記録されたクローズ済ケースの件数。記事のないクローズ済ケースや未完了のケースは数えません。',
         },
         sla_compliance_rate: {
           label: 'SLA 遵守率',
+          description: 'Cases Within SLA を Closed Cases で割ったもの。SLA を守ったクローズ済ケースの割合で、未完了のケースは除きます。クローズ済ケースの違反率の補数です。',
         },
         sla_met_count: {
           label: 'SLA を満たしたケース',
+          description: 'SLA 内にクローズされ、SLA違反が記録されていないクローズ済ケースの件数。未完了のケースは数えません。',
         },
       },
     },
