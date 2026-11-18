@@ -19,6 +19,17 @@ approval here is decided from the **Inbox** under **My Work**; nobody sets
 **Approved** or **Rejected** by hand. Only an administrator can, to repair a
 record whose approval cannot run.
 
+**These approvals need approvals on the deployment.** The request, and the
+Inbox it is decided in, come with the deployment's approvals. On a deployment
+that does not include them, nobody is asked and nobody but an administrator can
+decide: a timesheet or expense report that is submitted stays **Submitted**,
+and a project sent **In Approval** stays there, while its approver's own
+decision is refused with a message sending them to an Inbox that is not there.
+An administrator then sets the decision on the record itself, its **Status**
+to **Approved** or **Rejected**. An approved timesheet or expense report counts
+in the project's cost from then on, and an approved project takes its version 1
+as its Approved Budget.
+
 ## Who approves what
 
 - **A project** is sent by setting **In Approval**, and only with its
