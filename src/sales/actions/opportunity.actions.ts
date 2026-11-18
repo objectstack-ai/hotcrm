@@ -74,7 +74,9 @@ export const CloneOpportunityAction: Action = {
     capabilities: ['api.read', 'api.write'],
     timeoutMs: 5000,
   },
-  locations: ['record_header', 'record_more'],
+  // The More menu only (#2574): cloning is rare, and a header slot it held
+  // pushed Edit off the phone's two-button action bar.
+  locations: ['record_more'],
   // Names the copy: the runner navigates to it straight after, and the
   // record page looks like the source but for the "Copy of" prefix and the
   // stage (#2371 row 4). `result` is the body's return value.
