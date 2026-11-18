@@ -11,8 +11,8 @@ export const zhCN: TranslationData = {
   objects: {
     crm_campaign: {
       _validations: {
-        end_after_start: {
-          message: '结束日期必须晚于开始日期',
+        end_not_before_start: {
+          message: '结束日期不能早于开始日期',
         },
         actual_cost_within_budget: {
           message: '实际成本超出预算成本',

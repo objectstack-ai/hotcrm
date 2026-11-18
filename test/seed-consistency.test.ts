@@ -369,9 +369,9 @@ describe('the campaign metric refresh would be a no-op over the seeds', () => {
     }
   });
 
-  it('campaign date ranges satisfy campaign_validation and end_after_start', () => {
-    // `in_progress` requires both dates; a campaign cannot end on or before it
-    // starts. Both are expressed as cel macros, so compare the macro arguments
+  it('campaign date ranges satisfy campaign_validation and end_not_before_start', () => {
+    // `in_progress` requires both dates; a campaign cannot end before it
+    // starts (the same day is allowed, #2633). Both are expressed as cel macros, so compare the macro arguments
     // on the shared `daysAgo`/`daysFromNow` day axis.
     const dayOffset = (v: any): number | undefined => {
       const source = typeof v === 'string' ? v : v?.source;
@@ -390,7 +390,7 @@ describe('the campaign metric refresh would be a no-op over the seeds', () => {
         problems.push(`${String(c.name)}: unparsable date range`);
         continue;
       }
-      if (end <= start) problems.push(`${String(c.name)}: end_date is not after start_date`);
+      if (end < start) problems.push(`${String(c.name)}: end_date is before start_date`);
       // A campaign that is running must have started.
       if (String(c.status) === 'in_progress' && start > 0) {
         problems.push(`${String(c.name)}: in_progress but starts in ${start} days`);

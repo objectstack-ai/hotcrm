@@ -11,8 +11,8 @@ export const jaJP: TranslationData = {
   objects: {
     crm_campaign: {
       _validations: {
-        end_after_start: {
-          message: '終了日は開始日より後である必要があります',
+        end_not_before_start: {
+          message: '終了日を開始日より前にすることはできません',
         },
         actual_cost_within_budget: {
           message: '実績コストが予算コストを超えています',

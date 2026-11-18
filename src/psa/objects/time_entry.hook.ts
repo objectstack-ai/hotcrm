@@ -231,11 +231,11 @@ const timeEntryCosting: Hook = {
  * Cancelled project). Every read is keyed to the person and the project
  * (rule 10).
  *
- * Not one unit with the line on 18.5.0 (objectstack#34412): a timesheet
- * created here stays when the line is then refused (a declared validation,
- * say Hours over 24). It is
- * an empty draft for that project and week, the one the next line uses. A
- * person not staffed on the project is refused before anything is created.
+ * One unit with the line from 18.6.0 (objectstack#34412, a8e09bb): a
+ * timesheet created here is rolled back when the line is then refused (a
+ * declared validation, say Hours over 24). On 18.5.0 it stayed, an empty
+ * draft for that project and week. A person not staffed on the project is
+ * refused before anything is created.
  */
 const timeEntryTimesheet: Hook = {
   name: 'time_entry_timesheet',
@@ -306,8 +306,9 @@ const timeEntryTimesheet: Hook = {
         })
         : null;
       // A line of a submitted or approved timesheet does not move on a
-      // person's write: `time_entry_costing` refuses it, and a timesheet made
-      // here first would stay behind (objectstack#34412).
+      // person's write: `time_entry_costing` refuses it, so no timesheet is
+      // made for it here (on 18.5.0 one would have stayed behind,
+      // objectstack#34412; from 18.6.0 the refusal rolls it back).
       if (ctx.user?.id && (current?.status === 'submitted' || current?.status === 'approved')) return;
       if (!('crm_project' in input)) projectId = refId(previous.crm_project) || refId(current?.crm_project);
       if (!('entry_date' in input)) day = typeof previous.entry_date === 'string' ? previous.entry_date.slice(0, 10) : '';
@@ -335,10 +336,9 @@ const timeEntryTimesheet: Hook = {
     }
 
     // Only for a person staffed on the project. `time_entry_costing` refuses
-    // the line anyway, but a timesheet created here would stay: on 18.5.0 a
-    // write a hook makes before the line is refused is not undone (no
-    // transaction around a single write, objectstack#34412), so the check
-    // comes first.
+    // the line anyway; the check comes first so nothing is created for it
+    // (on 18.5.0 a write a hook made before the line was refused was not
+    // undone, objectstack#34412; from 18.6.0 the refusal rolls it back).
     const staffing = await api.object('crm_project_member').find({
       where: { crm_project: projectId, person: owner },
       fields: ['id'],

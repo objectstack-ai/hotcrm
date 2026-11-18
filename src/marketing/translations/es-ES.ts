@@ -11,8 +11,8 @@ export const esES: TranslationData = {
   objects: {
     crm_campaign: {
       _validations: {
-        end_after_start: {
-          message: 'La fecha de fin debe ser posterior a la de inicio',
+        end_not_before_start: {
+          message: 'La fecha de fin no puede ser anterior a la de inicio',
         },
         actual_cost_within_budget: {
           message: 'El coste real supera el coste presupuestado',

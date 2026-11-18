@@ -21,31 +21,31 @@ export const OpportunityDataset = defineDataset({
   include: ['crm_account'],
 
   dimensions: [
-    { name: 'stage', label: 'Stage', field: 'stage', type: 'string' },
-    { name: 'lead_source', label: 'Lead Source', field: 'lead_source', type: 'string' },
-    { name: 'forecast_category', label: 'Forecast Category', field: 'forecast_category', type: 'string' },
-    { name: 'type', label: 'Deal Type', field: 'type', type: 'string' },
+    { name: 'stage', label: 'Stage', synonyms: ['sales stage', 'deal stage', '阶段'], field: 'stage', type: 'string' },
+    { name: 'lead_source', label: 'Lead Source', synonyms: ['opportunity source', 'deal source', '商机来源'], field: 'lead_source', type: 'string' },
+    { name: 'forecast_category', label: 'Forecast Category', synonyms: ['forecast bucket', '预测类别'], field: 'forecast_category', type: 'string' },
+    { name: 'type', label: 'Deal Type', synonyms: ['opportunity type', 'new or renewal', '商机类型'], field: 'type', type: 'string' },
     // Semantic name `owner`; column `owner_id`, the platform anchor (#548).
-    { name: 'owner', label: 'Owner', field: 'owner_id', type: 'lookup' },
+    { name: 'owner', label: 'Owner', synonyms: ['sales rep', 'deal owner', '负责人'], field: 'owner_id', type: 'lookup' },
     // Win/loss attribution (#593). Both columns are now mandatory at close
     // (`requiredWhen` on crm_opportunity), so grouping by either one over
     // settled deals has no "unattributed" bucket to explain away.
-    { name: 'win_reason', label: 'Win Reason', field: 'win_reason', type: 'string' },
-    { name: 'loss_reason', label: 'Loss Reason', field: 'loss_reason', type: 'string' },
+    { name: 'win_reason', label: 'Win Reason', synonyms: ['why we won', '赢单原因'], field: 'win_reason', type: 'string' },
+    { name: 'loss_reason', label: 'Loss Reason', synonyms: ['why we lost', '丢单原因'], field: 'loss_reason', type: 'string' },
     // v17 fixes scoped aggregate execution and SQLite's epoch bucketing.
     // Trends and quarter coverage need different buckets over the same field,
     // so each one is its own semantic dimension.
-    { name: 'close_date', label: 'Close Date', field: 'close_date', type: 'date', dateGranularity: 'month' },
-    { name: 'close_quarter', label: 'Close Quarter', field: 'close_date', type: 'date', dateGranularity: 'quarter' },
+    { name: 'close_date', label: 'Close Date', synonyms: ['expected close', 'closing date', '关闭日期'], field: 'close_date', type: 'date', dateGranularity: 'month' },
+    { name: 'close_quarter', label: 'Close Quarter', synonyms: ['quarter', 'fiscal quarter', '关闭季度'], field: 'close_date', type: 'date', dateGranularity: 'quarter' },
     // Cross-object dimension: account industry via the crm_account relationship.
-    { name: 'account_industry', label: 'Account Industry', field: 'crm_account.industry', type: 'string' },
+    { name: 'account_industry', label: 'Account Industry', synonyms: ['customer industry', '客户行业'], field: 'crm_account.industry', type: 'string' },
   ],
 
   measures: [
-    { name: 'opp_count', label: 'Opportunities', aggregate: 'count' },
-    { name: 'total_amount', label: 'Total Amount', aggregate: 'sum', field: 'amount', format: '0,0' },
-    { name: 'avg_amount', label: 'Avg Deal Size', aggregate: 'avg', field: 'amount', format: '0,0' },
-    { name: 'avg_probability', label: 'Avg Probability', aggregate: 'avg', field: 'probability', format: '0%' },
+    { name: 'opp_count', label: 'Opportunities', synonyms: ['number of opportunities', 'deals', '商机数'], aggregate: 'count' },
+    { name: 'total_amount', label: 'Total Amount', synonyms: ['pipeline value', 'deal value', '商机金额'], aggregate: 'sum', field: 'amount', format: '0,0' },
+    { name: 'avg_amount', label: 'Avg Deal Size', synonyms: ['average deal size', 'average amount', '平均金额'], aggregate: 'avg', field: 'amount', format: '0,0' },
+    { name: 'avg_probability', label: 'Avg Probability', synonyms: ['average win probability', '平均赢率'], aggregate: 'avg', field: 'probability', format: '0%' },
 
     // ─── Win rate (#593) ────────────────────────────────────────────────
     //
@@ -79,16 +79,17 @@ export const OpportunityDataset = defineDataset({
     // and filed as #656. The tables show `lost_count` next to `win_rate`
     // precisely so that a blank rate reads as "0 wins out of 3", not as
     // "no data".
-    { name: 'won_count', label: 'Won Deals', aggregate: 'count', filter: { stage: 'closed_won' } },
-    { name: 'lost_count', label: 'Lost Deals', aggregate: 'count', filter: { stage: 'closed_lost' } },
+    { name: 'won_count', label: 'Won Deals', synonyms: ['deals won', 'wins', '赢单数'], aggregate: 'count', filter: { stage: 'closed_won' } },
+    { name: 'lost_count', label: 'Lost Deals', synonyms: ['deals lost', 'losses', '丢单数'], aggregate: 'count', filter: { stage: 'closed_lost' } },
     {
       name: 'decided_count',
       label: 'Settled Deals',
+      synonyms: ['closed deals', 'decided deals', '已结单数'],
       aggregate: 'count',
       filter: { stage: { $in: ['closed_won', 'closed_lost'] } },
     },
-    { name: 'won_amount', label: 'Won Revenue', aggregate: 'sum', field: 'amount', filter: { stage: 'closed_won' }, format: '0,0' },
-    { name: 'lost_amount', label: 'Lost Revenue', aggregate: 'sum', field: 'amount', filter: { stage: 'closed_lost' }, format: '0,0' },
-    { name: 'win_rate', label: 'Win Rate', derived: { op: 'ratio', of: ['won_count', 'decided_count'] }, format: '0%' },
+    { name: 'won_amount', label: 'Won Revenue', synonyms: ['revenue', 'bookings', '赢单金额'], aggregate: 'sum', field: 'amount', filter: { stage: 'closed_won' }, format: '0,0' },
+    { name: 'lost_amount', label: 'Lost Revenue', synonyms: ['lost amount', '丢单金额'], aggregate: 'sum', field: 'amount', filter: { stage: 'closed_lost' }, format: '0,0' },
+    { name: 'win_rate', label: 'Win Rate', synonyms: ['close rate', 'conversion rate', '赢率'], derived: { op: 'ratio', of: ['won_count', 'decided_count'] }, format: '0%' },
   ],
 });

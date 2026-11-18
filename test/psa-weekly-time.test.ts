@@ -145,16 +145,18 @@ describe('time_entry_timesheet: a line finds or creates its timesheet', () => {
     expect(await verify.rows('crm_timesheet', { crm_project: projects.alpha.id })).toHaveLength(before.length);
   });
 
-  it('on 18.5.0 a line refused after its timesheet was made leaves that timesheet, empty, for the next line', async () => {
-    // The platform runs one write without a transaction, so what a hook wrote
-    // before the refusal stays (objectstack#34412: the unit that aborts covers
-    // only the after* hooks). Pinned so the day it becomes one unit is noticed.
+  it('a line refused after its timesheet was made takes that timesheet with it (18.6.0)', async () => {
+    // From 18.6.0 a write whose `before*` hook wrote through `ctx.api` is one
+    // unit, so the timesheet the hook made is rolled back with the refused
+    // line (objectstack#34412, a8e09bb). On 18.5.0 it stayed, an empty draft;
+    // this case pinned that so the day it became one unit was noticed.
     await expect(insert('crm_time_entry', { crm_project: projects.beta.id, entry_date: '2026-05-04', hours: 30 }, consultant.token))
       .rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
-    const [left] = (await sheetsOf(consultant, projects.beta.id)).filter((s) => day(s.period_start) === '2026-05-04');
-    expect([left?.status, Number(left?.total_hours)]).toEqual(['draft', 0]);
+    expect((await sheetsOf(consultant, projects.beta.id)).filter((s) => day(s.period_start) === '2026-05-04')).toEqual([]);
+    // The next line makes the week's timesheet as the first line of a week does.
     const line = await insert('crm_time_entry', { crm_project: projects.beta.id, entry_date: '2026-05-05', hours: 3 }, consultant.token);
-    expect(line.crm_timesheet).toBe(left!.id);
+    const [sheet] = (await sheetsOf(consultant, projects.beta.id)).filter((s) => day(s.period_start) === '2026-05-04');
+    expect(line.crm_timesheet).toBe(sheet!.id);
   });
 
   it('a Closed project takes no line, and no timesheet is left behind', async () => {

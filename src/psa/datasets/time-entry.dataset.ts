@@ -31,16 +31,16 @@ export const TimeUtilizationDataset = defineDataset({
   include: ['crm_timesheet'],
 
   dimensions: [
-    { name: 'period_week', label: 'Week', field: 'entry_date', type: 'date', dateGranularity: 'week' },
-    { name: 'period_month', label: 'Month', field: 'entry_date', type: 'date', dateGranularity: 'month' },
-    { name: 'person', label: 'Person', field: 'crm_timesheet.owner_id', type: 'lookup' },
-    { name: 'project', label: 'Project', field: 'crm_timesheet.crm_project', type: 'lookup' },
-    { name: 'status', label: 'Timesheet Status', field: 'crm_timesheet.status', type: 'string' },
+    { name: 'period_week', label: 'Week', synonyms: ['by week', 'weekly', '周'], field: 'entry_date', type: 'date', dateGranularity: 'week' },
+    { name: 'period_month', label: 'Month', synonyms: ['by month', 'monthly', '月'], field: 'entry_date', type: 'date', dateGranularity: 'month' },
+    { name: 'person', label: 'Person', synonyms: ['employee', 'consultant', '人员'], field: 'crm_timesheet.owner_id', type: 'lookup' },
+    { name: 'project', label: 'Project', synonyms: ['engagement', '项目'], field: 'crm_timesheet.crm_project', type: 'lookup' },
+    { name: 'status', label: 'Timesheet Status', synonyms: ['timesheet approval', '工时表状态'], field: 'crm_timesheet.status', type: 'string' },
   ],
 
   measures: [
-    { name: 'total_hours', label: 'Hours', aggregate: 'sum', field: 'hours', format: '0,0.0' },
-    { name: 'billable_hours', label: 'Billable Hours', aggregate: 'sum', field: 'hours', filter: { is_billable: true }, format: '0,0.0' },
-    { name: 'utilization', label: 'Billable Share', derived: { op: 'ratio', of: ['billable_hours', 'total_hours'] }, format: '0%' },
+    { name: 'total_hours', label: 'Hours', synonyms: ['time booked', 'hours logged', '工时'], aggregate: 'sum', field: 'hours', format: '0,0.0' },
+    { name: 'billable_hours', label: 'Billable Hours', synonyms: ['chargeable hours', '可计费工时'], aggregate: 'sum', field: 'hours', filter: { is_billable: true }, format: '0,0.0' },
+    { name: 'utilization', label: 'Billable Share', synonyms: ['billable ratio', 'chargeable share', '利用率'], derived: { op: 'ratio', of: ['billable_hours', 'total_hours'] }, format: '0%' },
   ],
 });

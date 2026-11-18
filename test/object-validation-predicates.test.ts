@@ -299,16 +299,17 @@ describe('validation predicates are null-guarded', () => {
 });
 
 /**
- * The three date-range twins, unified on one operator.
+ * The strict date-range twins: "end must come strictly after start".
  *
- * All three assert "end must come strictly after start", so the *violation*
- * predicate — validations fire when the condition is true — is `end <= start`.
- * Campaign used `<`, which accepted a zero-length campaign while its own
- * message promised "must be after"; forecast used `<` with an "on or after"
- * message that its rule name (`period_end_after_start`) contradicted.
+ * Both assert a zero-length range is wrong, so the *violation* predicate —
+ * validations fire when the condition is true — is `end <= start`. Forecast
+ * once used `<` with an "on or after" message that its rule name
+ * (`period_end_after_start`) contradicted (#514 item 12).
+ *
+ * `crm_campaign` left this family in #2633: a campaign may start and end on
+ * the same day, so its rule is pinned on its own below.
  */
 const DATE_RANGE_RULES = [
-  { id: 'crm_campaign.end_after_start', end: 'end_date', start: 'start_date' },
   { id: 'crm_contract.end_after_start', end: 'end_date', start: 'start_date' },
   { id: 'crm_forecast.period_end_after_start', end: 'period_end', start: 'period_start' },
 ] as const;
@@ -332,6 +333,33 @@ describe('end-after-start rules agree on one operator', () => {
     // lie, since the predicate rejects equality.
     expect(rule!.message).toMatch(/must be after/i);
     expect(rule!.message).not.toMatch(/on or after/i);
+  });
+});
+
+/**
+ * A campaign may end on the day it starts (#2633): a webinar or a one-day fair
+ * is the common shape, and refusing it forced users to type the next day,
+ * which shifts the duration and the auto-complete sweep by a day. The
+ * violation predicate is therefore `end < start`, and the rule's name and
+ * message say "not before" — never "after", which would promise the
+ * zero-length refusal this rule no longer makes.
+ */
+describe('crm_campaign accepts a same-day campaign', () => {
+  const rule = () => scriptRules.find((r) => r.id === 'crm_campaign.end_not_before_start');
+
+  it('refuses only end < start', () => {
+    expect(rule(), 'crm_campaign.end_not_before_start is missing').toBeDefined();
+    expect(rule()!.source).toContain('record.end_date < record.start_date');
+    expect(rule()!.source).not.toContain('record.end_date <= record.start_date');
+  });
+
+  it('null-guards both dates', () => {
+    expect(comparedFields(rule()!.source).sort()).toEqual(['end_date', 'start_date']);
+    expect(unguardedFields(rule()!.source)).toEqual([]);
+  });
+
+  it('no longer carries the old "after" rule', () => {
+    expect(scriptRules.find((r) => r.id === 'crm_campaign.end_after_start')).toBeUndefined();
   });
 });
 
