@@ -183,27 +183,39 @@ describe('with a Service Manager on the bench', { timeout: WAIT_BUDGET_MS }, () 
       expect(await completedTasks(id)).toHaveLength(2);
     });
 
-    it('the untitled shape the insert falls back to is completed too', async () => {
-      // `case_status_side_effects` titles a case with no number and no subject
-      // "Escalated case needs attention". No door produces that case today (the
-      // subject is required; `escalation-task-subject.test.ts` pins the refusal),
-      // so the task is written through the seed door in that exact shape.
+    it('a task the escalation opened is completed by its key, whatever its title reads (#2494)', async () => {
+      // The title is text in the organization's language, so the close finds
+      // the task by `automation_key` alone. A task stamped `case_escalation`
+      // under a title in another language — what a zh-CN organization's
+      // escalation writes — is completed with the rest.
       const id = await open();
       await escalate(id, agent);
-      const [untitled] = await verify.seed('crm_task', [{
-        subject: 'Escalated case needs attention', status: 'not_started', priority: 'urgent', type: 'follow_up',
+      const [keyed] = await verify.seed('crm_task', [{
+        subject: '已升级的工单需要处理', automation_key: 'case_escalation', status: 'not_started', priority: 'urgent', type: 'follow_up',
         owner_id: rep.id, related_to_type: 'crm_case', related_to_case: id, related_to_account: accountId,
       }]);
       await closeByFlow(id, manager);
       await completedTasks(id);
       await vi.waitFor(async () => {
-        const [row] = await verify.rows('crm_task', { id: untitled!.id });
+        const [row] = await verify.rows('crm_task', { id: keyed!.id });
         expect(row).toMatchObject({ status: 'completed', is_completed: true });
       }, { timeout: 10_000, interval: 50 });
     });
   });
 
   describe('what the close leaves alone', () => {
+    it('a person’s task titled like an escalation task stays open: the title is not read (#2494)', async () => {
+      const id = await open();
+      const own = await verify.hooks.run('crm_task', 'insert', {
+        subject: 'Escalated: call the customer back', status: 'not_started', priority: 'urgent', type: 'follow_up', related_to_case: id,
+      }, { as: agent.token });
+      await escalate(id, agent);
+      await closeByFlow(id, manager);
+      await completedTasks(id);
+      const [mine] = await verify.rows('crm_task', { id: own.id });
+      expect(mine).toMatchObject({ status: 'not_started', is_completed: false });
+    });
+
     it('another task on the same case, written by a person, stays open', async () => {
       const id = await open();
       const own = await verify.hooks.run('crm_task', 'insert', {

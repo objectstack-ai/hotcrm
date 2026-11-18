@@ -57,6 +57,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       due_date: { label: 'Fecha Límite' },
       reminder_date: { label: 'Fecha/Hora de Recordatorio' },
       reminder_sent: { label: 'Recordatorio Enviado' },
+      automation_key: { label: 'Clave de Automatización', help: 'La automatización que abrió esta tarea. La escribe esa automatización; no la edite.' },
       completed_date: { label: 'Fecha de Finalización' },
       owner_id: { label: 'Asignado A' },
       // Los valores son nombres de objeto: se reutilizan las etiquetas ya

@@ -10,6 +10,16 @@ import { activityActions } from '../../sales/translations/es-ES/_shared';
  * package's pack: `./index.ts`.
  */
 export const esES: TranslationData = {
+  // The escalation follow-up task's title (#2494, #2522), at
+  // `hooks.<hook>.texts.<key>.message`.
+  hooks: {
+    case_status_side_effects: {
+      texts: {
+        escalated_named: { message: 'Escalado: {{ label }}' },
+        escalated_untitled: { message: 'Caso escalado que requiere atención' },
+      },
+    },
+  },
   objects: {
     crm_knowledge_article: {
       _validations: {
@@ -367,6 +377,11 @@ export const esES: TranslationData = {
     },
   },
   flows: {
+    // The escalation reason the automatic escalations store (#2494), at
+    // `flows.<flow>.records.<node>.fields.<field>`.
+    case_escalation: { records: { assign_senior_agent: { fields: { escalation_reason: 'Escalado automáticamente: prioridad crítica' } } } },
+    case_escalation_on_create: { records: { assign_senior_agent: { fields: { escalation_reason: 'Escalado automáticamente: prioridad crítica' } } } },
+    case_sla_monitor: { records: { flag_breach: { fields: { escalation_reason: 'Escalado automáticamente: fecha límite SLA incumplida' } } } },
     escalate_case: {
       label: 'Escalar Caso',
       screens: { screen_1: { title: 'Escalar Caso', fields: { reason: { label: 'Motivo de Escalación' } } } },

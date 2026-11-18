@@ -260,6 +260,38 @@ export const Task = ObjectSchema.create({
       defaultValue: false,
     }),
 
+    /**
+     * Which automation opened this task, as a stable key — the one way that
+     * automation finds its own task again (#2494, #2522).
+     *
+     * The title of an automatic task is TEXT, written in the organization's
+     * language (`ctx.text` in a hook, the text envelope in a flow), so no
+     * title shape names the task in every organization. The readers match
+     * this key instead:
+     *
+     *   - `case_escalation` — `case_status_side_effects` opens it, and
+     *     `case_close_escalation_task` completes it when the case closes
+     *     (`src/service/objects/case.hook.ts`);
+     *   - `stalled_deal` — the stall sweep's idempotency gate
+     *     (`src/sales/flows/opportunity-stagnation.flow.ts`);
+     *   - `contract_renewal:<contract id>` — the renewal sweep's gate, one open
+     *     reminder per contract (`src/sales/flows/contract-renewal.flow.ts`).
+     *
+     * A task a person creates carries none. `hidden` keeps a machine-owned
+     * column out of forms and pickers. ⛔ Not `readonly`: since 17.4.0 the
+     * engine strips a readonly column from a non-system caller's INSERT, and
+     * the escalation task is inserted as the escalating agent
+     * (`test/readonly-write-semantics.test.ts`, INSERT path), so the key would
+     * be dropped and the close would never find the task.
+     */
+    automation_key: Field.text({
+      group: 'system',
+      label: 'Automation Key',
+      description: 'Which automation opened this task. Written by that automation; never edit.',
+      hidden: true,
+      maxLength: 100,
+    }),
+
     // Progress
     progress_percent: Field.percent({
       group: 'effort',

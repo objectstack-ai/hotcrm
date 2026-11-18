@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import type { HookApi } from '../../sales/objects/_hook-api';
+import type { HookApi, HookTextContext } from '../../sales/objects/_hook-api';
 import { createCaseEscalationReassign } from './_case-assignment';
 
 /**
@@ -456,7 +456,16 @@ const caseSideEffects: Hook = {
   async: true,
   onError: 'log',
   description: 'Open the escalation follow-up task for the account owner.',
-  handler: async (ctx: HookContext) => {
+  // The task's title, in the organization's language (#2494, #2522): the
+  // English sentence is the source and the fallback, its translations are
+  // `hooks.case_status_side_effects.texts.<key>.message` in this module's
+  // locale packs (`src/service/translations/`). Everyone in the organization
+  // reads the task, so it is never the escalating agent's language.
+  texts: {
+    escalated_named: { message: 'Escalated: {{ label }}', params: ['label'] },
+    escalated_untitled: { message: 'Escalated case needs attention' },
+  },
+  handler: async (ctx: HookContext & HookTextContext) => {
     const { input } = ctx;
     const previous = ctx.previous;
     if (!previous) return;
@@ -529,8 +538,9 @@ const caseSideEffects: Hook = {
       // out of the LOWERED body for exactly that reason
       // (`test/escalation-task-subject.test.ts`).
       //
-      // ⚠️ `case_close_escalation_task` below finds this task again by these
-      // two title shapes; change one and change the other
+      // The title is TEXT, in the organization's language, so nothing reads it
+      // back: `case_close_escalation_task` below finds this task again by its
+      // `automation_key`, which says what opened it in every language
       // (`test/escalation-task-on-close.test.ts` drives both).
       const caseNumber = typeof previous.case_number === 'string' ? previous.case_number.trim() : '';
       const caseSubject =
@@ -538,9 +548,10 @@ const caseSideEffects: Hook = {
         (typeof previous.subject === 'string' && previous.subject.trim()) ||
         '';
       const label = [caseNumber, caseSubject].filter(Boolean).join(' · ');
-      const titled = label ? `Escalated: ${label}` : 'Escalated case needs attention';
+      const titled = label ? await ctx.text('escalated_named', { label }) : await ctx.text('escalated_untitled');
       await api.object('crm_task').insert({
         subject: titled.length > 255 ? `${titled.slice(0, 254)}…` : titled,
+        automation_key: 'case_escalation',
         status: 'not_started',
         priority: 'urgent',
         type: 'follow_up',
@@ -627,10 +638,12 @@ const caseResolutionAccountActivity: Hook = {
  * ## Which tasks
  *
  * Only this case's, only open ones, and only the ones the escalation opened:
- * `related_to_case` is the case, the status is not `completed`, and the subject
- * has one of the two shapes the insert above writes. Any other task on the
- * case is the owner's own work and is left alone. A case escalated twice has
- * two tasks, and both are completed.
+ * `related_to_case` is the case, the status is not `completed`, and the
+ * `automation_key` is `case_escalation`, which the insert above stamps. The
+ * subject is not read: it is written in the organization's language (#2494),
+ * so no title shape names the task in every organization. Any other task on
+ * the case is the owner's own work and is left alone. A case escalated twice
+ * has two tasks, and both are completed.
  *
  * ## `runAs: 'system'` (AGENTS.md rule 9)
  *
@@ -665,13 +678,11 @@ const caseCloseEscalationTask: Hook = {
     const org = typeof previous.organization_id === 'string' && previous.organization_id ? previous.organization_id : undefined;
     const inOrg: Record<string, string> = org ? { organization_id: org } : {};
     const open = await api.object('crm_task').find({
-      where: { related_to_case: caseId, status: { $ne: 'completed' }, ...inOrg },
-      fields: ['id', 'subject'],
+      where: { related_to_case: caseId, automation_key: 'case_escalation', status: { $ne: 'completed' }, ...inOrg },
+      fields: ['id'],
       top: 100,
     });
     for (const task of open ?? []) {
-      const subject = typeof task.subject === 'string' ? task.subject : '';
-      if (!subject.startsWith('Escalated: ') && subject !== 'Escalated case needs attention') continue;
       const id = String(task.id);
       await api.object('crm_task').update({ id, status: 'completed' }, { where: { id } });
     }
