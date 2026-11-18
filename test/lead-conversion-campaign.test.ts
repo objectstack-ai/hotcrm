@@ -50,7 +50,7 @@ const leadFor = (company: string) => {
   const n = ++k;
   return verify.hooks.run('crm_lead', 'insert', {
     company, email: `buyer${n}@lead-conversion-campaign.test`, first_name: 'Theo', last_name: `Park${n}`,
-    lead_source: 'web', status: 'qualified', estimated_amount: 40_000,
+    lead_source: 'web', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
   }, { as: rep.token });
 };
 

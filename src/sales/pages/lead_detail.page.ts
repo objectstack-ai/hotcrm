@@ -90,6 +90,7 @@ export const LeadDetailPage: Page = {
             // `src/sales/actions/lead.actions.ts`, the activity trio in
             // `src/sales/actions/activity-actions.ts`.
             actions: [
+              'qualify_lead',
               'convert_lead',
               'schedule_followup',
               'log_call',
@@ -315,6 +316,12 @@ export const LeadDetailPage: Page = {
           label: 'Lead Status Path',
           properties: {
             statusField: 'status',
+            // A click on a stage moves the record (#2542, ruled A), as on the
+            // platform's default record page (objectstack#30075). The click is
+            // the same write as Edit: every rule that refuses a status change
+            // there (approval locks, required fields, the state machine, the
+            // lead's Qualify gate) refuses it here too.
+            allowStageChange: true,
             // `converted` is the terminal WIN state and must be on the path —
             // without it the strip reads as if "Unqualified" were the goal, and
             // a converted lead had no stage to light up at all.

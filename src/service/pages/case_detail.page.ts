@@ -134,6 +134,12 @@ export const CaseDetailPage: Page = {
           label: 'Case Status Path',
           properties: {
             statusField: 'status',
+            // A click on a stage moves the record (#2542, ruled A), as on the
+            // platform's default record page (objectstack#30075). The click is
+            // the same write as Edit: every rule that refuses a status change
+            // there (the case's own validations and the state
+            // machine) refuses it here too.
+            allowStageChange: true,
             stages: [
               { value: 'new', label: 'New' },
               { value: 'in_progress', label: 'In Progress' },

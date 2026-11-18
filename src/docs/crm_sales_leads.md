@@ -69,6 +69,19 @@ stateDiagram-v2
   unqualified --> new
 ```
 
+- **Contacted happens on its own.** The first call, meeting or email you log
+  on a New lead moves it to Contacted. Later contacts change nothing, and a
+  lead at any other status keeps it.
+- **Qualified needs a reason.** Use **Qualify Lead** on the lead's page: it
+  asks for the **Need Type** and the **Estimated Amount**, and both are
+  required. Setting Qualified any other way (the edit form, the status bar,
+  an import or the API) is refused while either is empty. The amount is what
+  conversion offers as the opportunity's amount.
+- **Click the status bar to move a lead.** Click a status, confirm, and the
+  lead moves. The click is checked like an edit: Qualified still needs both
+  values, and Converted is still set only by **Convert**. The opportunity and
+  case pages work the same way.
+
 ## How a person's name is written
 
 A lead's and a contact's name is built from its **First Name** and **Last
@@ -91,6 +104,14 @@ opportunity (and for its name and amount). On confirm, the system creates:
   to most recently, so the campaign's results count the deal.
 
 You don't re-key anything — company and contact details carry over from the lead.
+
+A contact's email address is unique, so when a contact you can see already has
+the lead's email address, the lead joins that contact instead of creating a new
+one, and the screen names it. Conversion then fills only the contact's empty
+**Phone**, **Mobile** and **Title**; it changes nothing else. When that contact
+has another name than the lead, a second screen asks you to tick **Convert this
+lead into this contact**; leave it unticked and nothing is converted. If they
+are different people, change the lead's email address first.
 
 A converted lead is locked: its page shows no **Edit**, and its fields cannot be
 changed inline. Its **Conversion** section links to the account, contact and

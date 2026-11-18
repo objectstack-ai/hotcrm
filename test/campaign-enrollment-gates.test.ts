@@ -242,7 +242,7 @@ describe('a campaign member carries a Lead or a Contact, not both (#2336 D2)', (
 describe('converting a lead that is a campaign member still promotes the membership (#2336)', () => {
   it('the member reads converted, still on its lead, with no contact', async () => {
     const campaign = await campaignOf('in_progress');
-    const lead = await leadOf({ status: 'qualified', company: `Gates Convert ${++k}` }, manager);
+    const lead = await leadOf({ status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000, company: `Gates Convert ${++k}` }, manager);
     const [member] = await verify.seed('crm_campaign_member', [{ crm_campaign: campaign.id, crm_lead: lead.id, status: 'responded' }]);
 
     const started = await verify.flows.run('lead_conversion', { recordId: lead.id }, { as: manager.token });

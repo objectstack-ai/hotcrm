@@ -74,7 +74,7 @@ const leadWith = async (previous: AnyRec): Promise<AnyRec> => {
   const n = ++k;
   const [lead] = await verify.seed('crm_lead', [{
     first_name: 'Ada', last_name: 'Lovelace', company: `Acme ${n}`, email: `ada${n}@lead-conversion-approval-gate.test`,
-    status: 'qualified', owner_id: rep.id,
+    status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000, owner_id: rep.id,
   }]);
   if (Object.keys(previous).length > 0) await systemUpdate(verify, 'crm_lead', { id: lead!.id, ...previous });
   return lead!;

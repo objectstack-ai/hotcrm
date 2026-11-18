@@ -57,7 +57,7 @@ const identity = () => {
 /** A qualified lead the rep owns, for a company no account carries yet. */
 const qualifiedLead = async (who: { company: string; email: string }): Promise<Rec> => {
   const [lead] = await verify.seed('crm_lead', [{
-    company: who.company, email: who.email, first_name: 'Hugo', last_name: 'Dubois', status: 'qualified',
+    company: who.company, email: who.email, first_name: 'Hugo', last_name: 'Dubois', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
     owner_id: rep.id,
   }]);
   return lead!;

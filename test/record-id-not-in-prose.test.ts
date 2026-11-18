@@ -90,7 +90,7 @@ async function refusalFrom(write: () => Promise<unknown>, label: string): Promis
 describe('task subjects name the record, not its primary key', () => {
   it('the qualified-lead follow-up is titled by the lead (lead_automation)', async () => {
     const lead = await workingLead();
-    await update('crm_lead', { id: lead.id, status: 'qualified' });
+    await update('crm_lead', { id: lead.id, status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000 });
 
     const task = await followUpFor(lead.id);
     expect(task.subject).toBe('Follow up with qualified lead: Mira Costa - Atlas Construction');
@@ -102,7 +102,7 @@ describe('task subjects name the record, not its primary key', () => {
 
   it('prefers the name this very write is setting', async () => {
     const lead = await workingLead();
-    await update('crm_lead', { id: lead.id, status: 'qualified', company: 'Atlas Construction Group' });
+    await update('crm_lead', { id: lead.id, status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000, company: 'Atlas Construction Group' });
     expect((await followUpFor(lead.id)).subject).toBe('Follow up with qualified lead: Mira Costa - Atlas Construction Group');
   });
 
@@ -128,7 +128,7 @@ describe('task subjects name the record, not its primary key', () => {
     // title would mean no task and no trace. `crm_lead.company` alone allows
     // 255, so the composition can exceed the cap on legal data.
     const lead = await workingLead({ company: 'C'.repeat(255) });
-    await update('crm_lead', { id: lead.id, status: 'qualified' });
+    await update('crm_lead', { id: lead.id, status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000 });
     const subject = (await followUpFor(lead.id)).subject as string;
     expect(subject.length).toBe(255);
     expect(subject.startsWith('Follow up with qualified lead: Mira Costa - ')).toBe(true);

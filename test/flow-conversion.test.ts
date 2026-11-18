@@ -57,10 +57,20 @@ const identity = () => {
   return { company: `Globex Industries ${n}`, email: `joe${n}@globex.example.com` };
 };
 
-/** The rep's qualified lead for `who`. */
+/** The rep's qualified lead for `who`: a qualified lead carries its Need Type and Estimated Amount (#2541). */
 const qualifiedLead = (who: { company: string; email: string }) => create('crm_lead', {
   company: who.company, email: who.email, first_name: 'Joe', last_name: 'Green', phone: '555',
-  title: 'Buyer', lead_source: 'web', status: 'qualified',
+  title: 'Buyer', lead_source: 'web', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
+});
+
+/**
+ * The rep's lead for `who` with no estimate and no need type. Since #2541 such
+ * a lead cannot be Qualified, but Convert Lead is offered from New and
+ * Contacted too, so the conversion still meets it.
+ */
+const unestimatedLead = (who: { company: string; email: string }) => create('crm_lead', {
+  company: who.company, email: who.email, first_name: 'Joe', last_name: 'Green', phone: '555',
+  title: 'Buyer', lead_source: 'web', status: 'contacted',
 });
 
 async function runConversion(
@@ -191,7 +201,7 @@ describe('lead_conversion — the contact keeps the lead’s consent and person 
       })
       : undefined;
     const created = await asRep('crm_lead', {
-      company: who.company, email: who.email, first_name: 'Dora', last_name: 'Diaz', status: 'qualified', ...lead,
+      company: who.company, email: who.email, first_name: 'Dora', last_name: 'Diaz', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000, ...lead,
     });
     // The fixture is what the card measured: the lead really holds the flags.
     for (const key of ['do_not_call', 'email_opt_out'] as const) {
@@ -341,7 +351,7 @@ describe('lead_conversion — a ticked Create Opportunity needs an amount before
     ['not posted', {}],
   ] as const)('amount %s: refused with nothing written, and the same run converts once it is given', async (_shape, amount) => {
     const who = identity();
-    const lead = await qualifiedLead(who);
+    const lead = await unestimatedLead(who);
     const { started, fields, prefilled } = await start(lead.id);
     expect(prefilled.opportunityAmount ?? null, 'fixture: a lead with no estimate prefills no amount').toBeNull();
 
@@ -351,7 +361,7 @@ describe('lead_conversion — a ticked Create Opportunity needs an amount before
       .then(() => undefined, (e: unknown) => e as Rec);
     expect({ code: refused?.code, status: refused?.status, ...(await state(who, lead.id)) }).toEqual({
       code: 'INVALID_SCREEN_INPUT', status: 400,
-      accounts: 0, contacts: 0, opportunities: 0, isConverted: false, leadStatus: 'qualified',
+      accounts: 0, contacts: 0, opportunities: 0, isConverted: false, leadStatus: 'contacted',
     });
     expect(String(refused?.message), 'the refusal names another field').toContain('"opportunityAmount"');
     // The console's half: the descriptor it renders marks the amount required.
@@ -369,7 +379,7 @@ describe('lead_conversion — a ticked Create Opportunity needs an amount before
     const who = identity();
     const lead = await create('crm_lead', {
       company: who.company, email: who.email, first_name: 'Joe', last_name: 'Green',
-      status: 'qualified', estimated_amount: 40_000,
+      status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
     });
     const { started, prefilled } = await start(lead.id);
     expect(prefilled.opportunityAmount, 'the estimate no longer prefills the amount').toBe(40_000);
@@ -484,7 +494,7 @@ describe('lead_conversion — a rep converts into a NEW account, and the revenue
   const leadOf = async (owner: Person, revenue: number | null, on: VerifyStack = verify) => {
     const who = identity();
     const [lead] = await on.seed('crm_lead', [{
-      company: who.company, email: who.email, first_name: 'Rita', last_name: 'Ruiz', status: 'qualified',
+      company: who.company, email: who.email, first_name: 'Rita', last_name: 'Ruiz', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
       owner_id: owner.id, ...(revenue === null ? {} : { annual_revenue: revenue }),
     }]);
     return { who, lead: lead! };
@@ -672,7 +682,7 @@ describe('lead_conversion — the converted contact is the account’s primary o
       }]);
     }
     const [lead] = await verify.seed('crm_lead', [{
-      company: who.company, email: who.email, first_name: 'Nia', last_name: 'Newcomer', status: 'qualified',
+      company: who.company, email: who.email, first_name: 'Nia', last_name: 'Newcomer', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
       owner_id: salesRep.id,
     }]);
     const done = await runConversion(lead!.id, { createOpportunity: false }, salesRep);
@@ -717,7 +727,7 @@ describe('lead_conversion — the proposed Opportunity Name is "<company> – <n
     return fields.find((f) => f.name === 'opportunityName')?.defaultValue;
   };
   const leadWith = (who: { company: string; email: string }, extra: Rec = {}) => create('crm_lead', {
-    company: who.company, email: who.email, first_name: 'Joe', last_name: 'Green', status: 'qualified', ...extra,
+    company: who.company, email: who.email, first_name: 'Joe', last_name: 'Green', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000, ...extra,
   });
 
   it('names the need type by its label', async () => {
@@ -738,7 +748,7 @@ describe('lead_conversion — the proposed Opportunity Name is "<company> – <n
 
   it('falls back to the conversion date when the lead has no need type', async () => {
     const who = identity();
-    expect(await proposedName((await leadWith(who)).id)).toBe(`${who.company} – ${today()}`);
+    expect(await proposedName((await unestimatedLead(who)).id)).toBe(`${who.company} – ${today()}`);
   });
 
   it('the proposal is what the deal is named when the rep leaves it, and the rep can overwrite it; account matching is unchanged', async () => {

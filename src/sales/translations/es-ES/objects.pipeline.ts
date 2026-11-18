@@ -43,6 +43,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       converted_flag_only_by_conversion: {
         message: 'Solo «Convertir Prospecto» marca un prospecto como Convertido, porque crea la cuenta y el contacto en los que se convierte. Use «Convertir Prospecto» en lugar de marcar «Convertido».',
       },
+      qualified_needs_qualification: {
+        message: 'Un prospecto se califica con su «Tipo de Necesidad» y su «Importe Estimado». Use «Calificar Prospecto», o rellene ambos antes de poner el estado en Calificado.',
+      },
       disqualification_reason_required: {
         message: 'El motivo de descalificación es obligatorio cuando un prospecto no está cualificado',
       },
@@ -277,6 +280,10 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         params: {
           campaignId: { label: 'Campaña' },
         },
+      },
+      qualify_lead: {
+        label: 'Calificar Prospecto',
+        successMessage: 'Prospecto calificado.',
       },
       schedule_followup: {
         label: 'Programar Seguimiento',

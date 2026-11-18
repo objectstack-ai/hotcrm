@@ -147,7 +147,7 @@ describe('the contact: stored title, search, and a conversion', () => {
     const company = `Converted Name Co ${++k}`;
     const lead = await insert('crm_lead', {
       first_name: '伟', last_name: '张', company, email: `convert${k}@person-name-order.test`,
-      phone: '555', title: 'Buyer', lead_source: 'web', status: 'qualified',
+      phone: '555', title: 'Buyer', lead_source: 'web', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
     });
     const started = await verify.flows.run('lead_conversion', { recordId: lead.id }, { as: manager.token });
     const paused = started as Rec;

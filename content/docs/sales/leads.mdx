@@ -26,12 +26,19 @@ Every lead moves through these states. The usual path runs forward — from New,
 | Status | What it means | What you typically do next |
 | --- | --- | --- |
 | **New** | Just arrived, nobody has reached out | Make first contact within SLA |
-| **Contacted** | A rep has reached out by phone/email | Apply BANT qualification |
-| **Qualified** | Passes BANT — worth pursuing | **Convert** to an account, contact and opportunity |
+| **Contacted** | Set on its own when the first call, meeting or email is logged on a New lead | Find out what they need and roughly what it is worth |
+| **Qualified** | A rep used **Qualify Lead** and gave its Need Type and Estimated Amount | **Convert** to an account, contact and opportunity |
 | **Unqualified** | Not a fit (wrong industry, no budget, etc.) | Optionally reopen later if things change |
 | **Converted** | Has become a real account & contact | (Lead is now locked) |
 
 You can also **reopen** an unqualified lead back to *New* if circumstances change (budget freed up, new project announced).
+
+Two of these steps have rules of their own:
+
+- **Contacted is automatic.** The first call, meeting or email you log on a *New* lead moves it to *Contacted*. Later contacts change nothing, and a lead at any other status keeps it.
+- **Qualified needs a reason.** Click **Qualify Lead** on the lead's page. It asks for the **Need Type** and the **Estimated Amount**, both required, and then sets *Qualified*. Setting *Qualified* any other way (the edit form, the status bar, an import or the API) is refused while either value is empty. The amount is what conversion later offers as the opportunity's amount.
+
+You can also move a lead by clicking a status on the **status bar** at the top of its page and confirming. The click is checked like an edit, so *Qualified* still needs both values and *Converted* is still set only by **Convert Lead**. The opportunity and case pages work the same way.
 
 ## What each lead record stores
 
@@ -149,6 +156,7 @@ The system then, in a single step:
 
 1. Creates an **Account** from the lead's company information — or reuses the existing one the form named. The match ignores capitalisation and extra spaces, so a lead for `ACME  Corp` lands on your existing `Acme Corp` instead of creating a second account. It is not a fuzzy match: `Acme Corp` and `Acme Corporation` are still two different companies. A new account created here does not go to [account approval](/docs/sales/accounts#account-approval): qualifying the lead was the check, so the account is ready to use at once, and its **Converted From Lead** links back to this lead.
 2. Creates a **Contact** from the lead's person information, attached to that account. It becomes the account's primary contact only when the account has none yet: converting into an account that already has a primary contact leaves that contact as primary.
+   A contact's email address is unique, so when a contact you can see already has the lead's email address, the lead joins that contact instead, and the form names it before you submit. Conversion then fills only that contact's empty **Phone**, **Mobile** and **Title** and changes nothing else. When the contact has another name than the lead, a second screen asks you to tick **Convert this lead into this contact**; left unticked, nothing is converted. If they are different people, change the lead's email address first.
 3. *(Optional)* Creates an **Opportunity** in the *Prospecting* stage with a 90-day close date. If the lead responded to a campaign, the opportunity's **Campaign** is set to the campaign it responded to most recently, so the campaign's opportunity, won and revenue figures count the deal; a campaign the lead was only sent, never responded to, is not credited. Campaigns you cannot see are not considered.
 4. Marks the lead as **Converted** and locks it.
 5. Sends you a confirmation email summarising what was created.
