@@ -24,8 +24,9 @@ export const QUOTE_ACCEPTED_NOW = P`has(record.status) && record.status == "acce
  *   wrote, and the contract was drafted at a figure the quote's lines
  *   contradicted). After the accept the line freeze refuses every new line,
  *   so the stored total is the one the lines sum to.
- * - `description` names the quote by number and name, TEXT in the
- *   organization's language (#2535), translated at
+ * - `description` names the quote by number and name (`label_quote`: the
+ *   number is left out, with its separator, on a quote whose number is
+ *   blank), TEXT in the organization's language (#2535), translated at
  *   `flows.quote_accepted_contract_draft.records.<node>.fields.description`.
  *   Quote names may repeat, and `crm_contract` has no field naming the quote,
  *   so the sentence is the whole provenance record.
@@ -35,8 +36,8 @@ const DRAFT = contractDraftGraph({
   value: `vars.storedQuote != null && has(vars.storedQuote.total_price) && vars.storedQuote.total_price != null
     ? double(vars.storedQuote.total_price)
     : (has(record.total_price) && record.total_price != null ? double(record.total_price) : 0.0)`,
-  description: tmpl`Auto-drafted from accepted quote {{ storedQuote.quote_number }} - {{ storedQuote.name }}`,
-}, { from: 'get_quote', to: 'end', firstEdge: 2 });
+  description: tmpl`Auto-drafted from accepted quote {{ quote }}`,
+}, { from: 'label_quote', to: 'find_order', firstEdge: 2, outputVariable: 'contract' });
 
 /**
  * Accepted quote drafts a contract — the automatic draft, as a packaged flow an
@@ -61,6 +62,9 @@ const DRAFT = contractDraftGraph({
  *
  * The contract is the one Draft Contract drafts from an order
  * (`sales_order_draft_contract`): both build it with `contractDraftGraph`.
+ * With the order flow on too, the quote's order is created in the same write,
+ * and this flow names its contract on that order (an order belongs to at most
+ * one contract), so the order does not offer Draft Contract a second time.
  *
  * ## `runAs: 'system'` (#2014)
  *
@@ -95,7 +99,10 @@ export const QuoteAcceptedContractDraftFlow: Flow = {
   status: 'active',
   defaultActive: false,
   runAs: 'system',
-  variables: [],
+  variables: [
+    // The quote as the provenance sentence names it: `QTE-0001 - Name`.
+    { name: 'quote', type: 'text', isInput: false, isOutput: false },
+  ],
   nodes: [
     {
       id: 'start', type: 'start', label: 'Start (quote accepted)',
@@ -106,13 +113,50 @@ export const QuoteAcceptedContractDraftFlow: Flow = {
       id: 'get_quote', type: 'get_record', label: 'Get Accepted Quote',
       config: { objectName: 'crm_quote', filter: { id: cel`record.id` }, outputVariable: 'storedQuote' },
     },
+    {
+      // Number and name. `quote_number` is the engine's autonumber, so it is
+      // read off the stored row; a quote whose number is blank is named by its
+      // name alone, with no dangling separator.
+      id: 'label_quote', type: 'assignment', label: 'Name the Quote',
+      config: {
+        assignments: {
+          quote: cel`vars.storedQuote != null && has(vars.storedQuote.quote_number) && vars.storedQuote.quote_number != null && vars.storedQuote.quote_number != ""
+            ? string(vars.storedQuote.quote_number) + " - " + string(vars.storedQuote.name)
+            : (vars.storedQuote != null && has(vars.storedQuote.name) ? string(vars.storedQuote.name) : "")`,
+        },
+      },
+    },
     ...DRAFT.nodes,
+    {
+      // The quote's order, which `quote_accepted_order` created in the same
+      // write when it is on (it registers first, so its run comes first).
+      id: 'find_order', type: 'get_record', label: 'Get the Quote’s Order',
+      config: { objectName: 'crm_sales_order', filter: { crm_quote: cel`record.id` }, outputVariable: 'orderOfQuote' },
+    },
+    {
+      // An order belongs to at most one contract: name this draft on the
+      // quote's order, so the order does not offer Draft Contract again.
+      id: 'link_order', type: 'update_record', label: 'Name the Contract on the Order',
+      config: { objectName: 'crm_sales_order', filter: { id: cel`orderOfQuote.id` }, fields: { crm_contract: cel`contract.id` } },
+    },
     { id: 'end', type: 'end', label: 'End' },
   ],
   edges: [
     { id: 'e1', source: 'start', target: 'get_quote', type: 'default' },
+    { id: 'e20', source: 'get_quote', target: 'label_quote', type: 'default' },
     // Four complementary conditionals off the read, exactly one of which
     // holds: the two splits of the draft (`contractDraftGraph`).
     ...DRAFT.edges,
+    // Complementary conditionals off the read: `find_order` binds the order
+    // or `null` on every path.
+    {
+      id: 'e100', source: 'find_order', target: 'link_order', type: 'conditional', label: 'Order names no contract',
+      condition: P`vars.orderOfQuote != null && (!has(vars.orderOfQuote.crm_contract) || vars.orderOfQuote.crm_contract == null || vars.orderOfQuote.crm_contract == "")`,
+    },
+    {
+      id: 'e101', source: 'find_order', target: 'end', type: 'conditional', label: 'No order, or it names one',
+      condition: P`!(vars.orderOfQuote != null && (!has(vars.orderOfQuote.crm_contract) || vars.orderOfQuote.crm_contract == null || vars.orderOfQuote.crm_contract == ""))`,
+    },
+    { id: 'e102', source: 'link_order', target: 'end', type: 'default' },
   ],
 };

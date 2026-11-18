@@ -1,13 +1,13 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { extractHookBody } from '@objectstack/cli/hook-body';
 import type { VerifyStack } from '@objectstack/verify';
-import quoteHooks from '../src/revenue/objects/quote.hook';
+import { QuoteAcceptedContractDraftFlow } from '../src/revenue/flows/quote-accepted-contract-draft.flow';
+import { DRAFT_CONTRACT_DEFAULTS } from '../src/sales/flows/_contract-draft';
 import { Contract } from '../src/sales/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
 import {
-  hotcrmStack, signUpPerson, recordEngineWrites, today, committedFile, type Person,
+  hotcrmStack, signUpPerson, switchFlow, recordEngineWrites, today, committedFile, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -39,14 +39,16 @@ import {
  *    facts the comment states about them (two have no counterpart column at
  *    all; `billing_address` has one; the contract's `description` is occupied
  *    by the draft's provenance sentence);
- * 4. that `DRAFT_CONTRACT_DEFAULTS` stays handler-local: an L2 body ships
- *    body-only with no module scope, so a module-scope block would pass every
- *    assertion above and `ReferenceError` in production. `os lint --strict`
- *    (`pnpm lint`) refuses that shape as `hook-body/not-lowerable`.
+ * 4. that the SHIPPED draft carries those values: since hotcrm#2558 the draft
+ *    is a packaged flow (`quote_accepted_contract_draft`, shipped switched
+ *    off and switched on here), and every one of its draft nodes writes the
+ *    declared defaults as literals. (Until then it was an L2 hook body, which
+ *    ships with no module scope, so this item pinned the block handler-local.)
  *
  * Every draft below is a real one: the shipped app booted through
  * `@objectstack/verify`'s handle, a sales rep presenting and then accepting a
- * quote, and `quote_accepted_contract_draft` (an `async` afterUpdate hook) drafting the
+ * quote, and `quote_accepted_contract_draft` (a packaged record-change flow since
+ * hotcrm#2558, switched on through the administrator's door) drafting the
  * contract through the engine. The document read is the one the hook handed
  * `crm_contract.insert`, as the engine received it.
  *
@@ -90,6 +92,7 @@ beforeAll(async () => {
   rep = await signUpPerson(verify, 'rep@quote-accepted-draft-defaults.test', {
     name: 'Quote Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
+  await switchFlow(verify, 'quote_accepted_contract_draft', true);
 }, 120_000);
 
 let deal = 0;
@@ -124,7 +127,7 @@ const draftFor = async (quote: Rec = {}, stored: Rec = {}): Promise<Rec> => {
   const engine = recordEngineWrites(verify);
   try {
     await verify.hooks.run('crm_quote', 'update', { id, status: 'accepted', ...quote }, { as: rep.token });
-    // `quote_accepted_contract_draft` is `async: true` — it runs after the accepting write returned.
+    // The draft runs after the accepting write's own row is in (a record-change flow).
     const insert = await vi.waitFor(() => {
       const [call] = engine.of('crm_contract', 'insert');
       expect(call, 'the hook drafted no contract at all').toBeTruthy();
@@ -241,19 +244,20 @@ describe('what the draft deliberately does NOT carry (the ruling’s other half)
   });
 });
 
-describe('the SHIPPED body carries the declared defaults body-only', () => {
+describe('the SHIPPED flow carries the declared defaults on every draft', () => {
   /**
-   * The runtime ships a lowered, body-only source with no module scope. A
-   * `DRAFT_CONTRACT_DEFAULTS` hoisted out of the handler would be a
-   * `ReferenceError` there (and `os lint --strict` refuses it as
-   * `hook-body/not-lowerable`); this reads the body the build ships, through the
-   * platform's own extractor, and finds the defaults declared inside it.
+   * The flow the package ships, read off its definition: each of its four
+   * draft nodes (one per shape of the document, `src/sales/flows/_contract-draft.ts`)
+   * writes the term and the type as literals, the values the ruling kept.
    */
-  it('reads the declared defaults body-only, with no module scope', () => {
-    const hook = (quoteHooks as Rec[]).find((h) => h.name === 'quote_accepted_contract_draft')!;
-    const { source } = extractHookBody(hook.handler, "hook 'quote_accepted_contract_draft'");
-    expect(source).toMatch(/\bconst DRAFT_CONTRACT_DEFAULTS\b/);
-    expect(source).toMatch(new RegExp(`contract_term_months:\\s*${RULED_TERM_MONTHS}\\b`));
-    expect(source).toMatch(new RegExp(`contract_type:\\s*['"]${RULED_CONTRACT_TYPE}['"]`));
+  it('writes the ruled term and type on each of its draft nodes', () => {
+    const drafts = (QuoteAcceptedContractDraftFlow.nodes as Rec[])
+      .filter((n) => n.type === 'create_record' && n.config?.objectName === 'crm_contract');
+    expect(drafts).toHaveLength(4);
+    for (const node of drafts) {
+      expect(node.config.fields.contract_term_months, node.id).toBe(RULED_TERM_MONTHS);
+      expect(node.config.fields.contract_type, node.id).toBe(RULED_CONTRACT_TYPE);
+    }
+    expect(DRAFT_CONTRACT_DEFAULTS).toEqual({ contract_term_months: RULED_TERM_MONTHS, contract_type: RULED_CONTRACT_TYPE });
   });
 });

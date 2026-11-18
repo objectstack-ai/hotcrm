@@ -143,10 +143,10 @@ export const SalesOrderDraftContractFlow: Flow = {
  * the person's organization.
  */
 const DRAFT = contractDraftGraph({
-  root: 'vars.order',
-  value: 'has(vars.order.total_price) && vars.order.total_price != null ? double(vars.order.total_price) : 0.0',
-  description: tmpl`Drafted from order {{ order.order_number }} - {{ order.name }}`,
-}, { from: 'get_order', to: 'link_order', firstEdge: 2, outputVariable: 'contract' });
+  root: 'vars.orderRow',
+  value: 'has(vars.orderRow.total_price) && vars.orderRow.total_price != null ? double(vars.orderRow.total_price) : 0.0',
+  description: tmpl`Drafted from order {{ order }}`,
+}, { from: 'label_order', to: 'link_order', firstEdge: 2, outputVariable: 'contract' });
 
 export const SalesOrderDraftContractWriteFlow: Flow = {
   name: 'sales_order_draft_contract_write',
@@ -159,12 +159,25 @@ export const SalesOrderDraftContractWriteFlow: Flow = {
     // ⛔ Only ever the order `sales_order_draft_contract` read as the person.
     { name: 'orderId', type: 'text', isInput: true, isOutput: false },
     { name: 'contractId', type: 'text', isInput: false, isOutput: true },
+    // The order as the provenance sentence names it: `SO-0001 - Name`.
+    { name: 'order', type: 'text', isInput: false, isOutput: false },
   ],
   nodes: [
     { id: 'start', type: 'start', label: 'Start' },
     {
       id: 'get_order', type: 'get_record', label: 'Get Order',
-      config: { objectName: 'crm_sales_order', filter: { id: cel`orderId` }, outputVariable: 'order' },
+      config: { objectName: 'crm_sales_order', filter: { id: cel`orderId` }, outputVariable: 'orderRow' },
+    },
+    {
+      // Number and name, as the quote's draft names its quote.
+      id: 'label_order', type: 'assignment', label: 'Name the Order',
+      config: {
+        assignments: {
+          order: cel`vars.orderRow != null && has(vars.orderRow.order_number) && vars.orderRow.order_number != null && vars.orderRow.order_number != ""
+            ? string(vars.orderRow.order_number) + " - " + string(vars.orderRow.name)
+            : (vars.orderRow != null && has(vars.orderRow.name) ? string(vars.orderRow.name) : "")`,
+        },
+      },
     },
     ...DRAFT.nodes,
     {
@@ -179,6 +192,7 @@ export const SalesOrderDraftContractWriteFlow: Flow = {
   ],
   edges: [
     { id: 'e1', source: 'start', target: 'get_order', type: 'default' },
+    { id: 'e20', source: 'get_order', target: 'label_order', type: 'default' },
     ...DRAFT.edges,
     { id: 'e100', source: 'link_order', target: 'set_output', type: 'default' },
     { id: 'e101', source: 'set_output', target: 'end', type: 'default' },

@@ -458,7 +458,7 @@ export const esES: TranslationData = {
     quote_accepted_contract_draft: {
       label: 'La cotización aceptada redacta un contrato',
       records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
-        fields: { description: 'Redactado automáticamente a partir de la cotización aceptada {{ storedQuote.quote_number }} - {{ storedQuote.name }}' },
+        fields: { description: 'Redactado automáticamente a partir de la cotización aceptada {{ quote }}' },
       }])),
     },
     quote_accepted_order: {

@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, signUpPerson, systemUpdate, recordEngineWrites, runShippedHook, today, daysFromNow, committedFile, type Person,
+  hotcrmStack, signUpPerson, switchFlow, systemUpdate, recordEngineWrites, runShippedHook, today, daysFromNow, committedFile, type Person,
 } from './helpers/verify-stack';
 import { hookNamed } from './helpers/composed-stack';
 import { Product } from '../src/revenue/objects/product.object';
@@ -54,6 +54,10 @@ beforeAll(async () => {
   manager = await signUpPerson(verify, 'manager@hooks-runtime-sales.test', {
     name: 'Sales Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
+  // The accepted-quote contract draft is a packaged flow shipped switched off
+  // since hotcrm#2558; `quote_accepted_contract_draft` below pins its
+  // behaviour switched on, through the administrator's door.
+  await switchFlow(verify, 'quote_accepted_contract_draft', true);
 }, 120_000);
 
 const as = (who: Person | string) => ({ as: typeof who === 'string' ? who : who.token });
@@ -590,6 +594,8 @@ describe('quote_accepted_contract_draft', () => {
    * used to be written as the accepting caller — so a rep's acceptance closed
    * the deal and drafted no contract, the refusal swallowed by `onError: 'log'`.
    * The draft is elevated now (`runAs: 'system'`); the rep's own grant is not.
+   * Since hotcrm#2558 the draft is a packaged flow of the same name, switched
+   * on for this file in its `beforeAll`.
    */
   it('drafts a sales rep’s contract — a 12-month draft carrying the quote total and links', async () => {
     const { contract, acct, contact, opp } = await acceptQuote();

@@ -457,7 +457,7 @@ export const jaJP: TranslationData = {
     quote_accepted_contract_draft: {
       label: '承認済みの見積から契約を作成',
       records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
-        fields: { description: '承認済みの見積{{ storedQuote.quote_number }} - {{ storedQuote.name }}から自動作成' },
+        fields: { description: '承認済みの見積{{ quote }}から自動作成' },
       }])),
     },
     quote_accepted_order: {

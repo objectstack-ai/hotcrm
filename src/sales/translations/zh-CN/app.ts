@@ -571,7 +571,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     sales_order_draft_contract_write: {
       label: '根据订单起草合同（写入）',
       records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
-        fields: { description: '根据订单{{ order.order_number }} - {{ order.name }}起草' },
+        fields: { description: '根据订单{{ order }}起草' },
       }])),
     },
     // What the sweeps store in a record (#2522, #2535), at

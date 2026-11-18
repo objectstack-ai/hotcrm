@@ -97,6 +97,30 @@ describe('switched on, a rep who may not create a contract still gets one drafte
     });
     const [run] = await flowRuns(verify, 'quote_accepted_contract_draft', q.id);
     expect(run?.status, `the draft's run: ${String(run?.error ?? '')}`).toBe('completed');
+    // The order flow is on too: the quote's order names the drafted contract,
+    // so it does not offer Draft Contract a second time.
+    const [order] = await verify.rows('crm_sales_order', { crm_quote: q.id });
+    expect(order?.crm_contract, 'the quote\'s order does not name the drafted contract').toBe(contract.id);
+  });
+
+  it("lands the contract and the order in the accepting person's organization (AGENTS.md rule 10)", async () => {
+    // Moved here from `hook-org-inheritance.test.ts`, whose hooks-only rig
+    // cannot run a flow: an elevated run carries the trigger's organization,
+    // so the engine stamps both inserts with the rep's, as on their own write.
+    // Measured on this boot's one organization (the walled two-tenant rig has
+    // no automation engine).
+    const org = (await verify.contextFor(rep.token)).tenantId;
+    expect(org, 'the rep has no organization on this boot').toBeTruthy();
+    const q = await presentedQuote();
+    await accept(q.id);
+    const contract = await vi.waitFor(async () => {
+      const [row] = await verify.rows('crm_contract', { crm_opportunity: q.opportunity });
+      expect(row).toBeTruthy();
+      return row!;
+    }, { timeout: 15_000, interval: 50 });
+    const [order] = await verify.rows('crm_sales_order', { crm_quote: q.id });
+    expect(contract.organization_id).toBe(org);
+    expect(order?.organization_id).toBe(org);
     await vi.waitFor(async () => {
       const notices = (await notificationsTo(verify, rep.id, 'contract_drafted'))
         .filter((x) => x.payload?.actionUrl === `/crm_contract/${contract.id}`);

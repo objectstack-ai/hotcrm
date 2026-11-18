@@ -457,7 +457,7 @@ export const zhCN: TranslationData = {
     quote_accepted_contract_draft: {
       label: '已接受的报价单起草合同',
       records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
-        fields: { description: '根据已接受的报价单{{ storedQuote.quote_number }} - {{ storedQuote.name }}自动起草' },
+        fields: { description: '根据已接受的报价单{{ quote }}自动起草' },
       }])),
     },
     quote_accepted_order: {
