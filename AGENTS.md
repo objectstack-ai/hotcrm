@@ -34,6 +34,21 @@ here pin **this repo's own business facts** only — a seed-row pin, a "doc word
 
 Writing an `emptyState` on every tile, or hand-tuning tile placement to dodge a platform render defect, pays the same tax on every tile. Change the default upstream. (#1212 → objectui#7063)
 
+## 🎯 Product, priorities and the development process
+
+HotCRM is a **product** (maintainer, 2026-11-18: 「hotcrm 早期是样板，实际已经是产品。」): a card is judged by what it does for the
+people who use the six apps. [`docs/PRIORITIES.md`](docs/PRIORITIES.md) is the one home for the four `area:*` areas, their core
+features, the grades, the five-answer first touch and which document is written at which stage — ⛔ not restated here.
+
+- **Tests pin this repo's business facts** (a discount ceiling, an approval route, an invoice amount), through `@objectstack/verify`
+  where it can reach them. Whether the metadata is self-consistent (references, coverage, translation parity, view rosters) is the
+  platform's to check: a new check of that kind is filed upstream, not written here (Scope, rule 3).
+- **User docs ride with the change.** A PR that changes what users see updates `content/docs/` and `src/docs/` in the same PR.
+- **Runs on the community edition.** HotCRM metadata depends only on community capability; on the enterprise edition it gains
+  enterprise features as enhancements, ⛔ never as hard dependencies. A card that would break a community-edition run is the wrong scope.
+- **This repository's rules live here.** The fleet's seat file for hotcrm (objectstack `.claude/skills/pm-dispatch`) holds only
+  seat mechanics and points back to this file and `docs/PRIORITIES.md` (maintainer, 2026-11-18: 「包括 hotcrm 每个仓库的规则都在自己仓库」).
+
 ## 🗣️ 沟通语言 / Communication Language
 
 **始终使用中文与用户沟通。** 所有面向用户的回复、解释、总结、提问都用中文；代码、标识符、提交信息、PR 标题/正文、代码注释保持英文不变。
@@ -41,9 +56,9 @@ Writing an `emptyState` on every tile, or hand-tuning tile placement to dodge a 
 
 ## 🏗️ Project Architecture
 
-HotCRM is **one ObjectStack release artifact carrying four packages** (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
-(`src/sales/index.ts`), and three `type: module` packages — `app.objectstack.hotcrm.service`, `.revenue` and `.marketing`
-(`src/<dir>/index.ts`) — one `defineStack` each, composed by `objectstack.config.ts` with `composeStacks(…, { manifest: 'preserve' })`.
+HotCRM is **one ObjectStack release artifact carrying seven packages** (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package
+(`src/sales/index.ts`), and six `type: module` packages — `app.objectstack.hotcrm.service`, `.revenue`, `.marketing`, `.o2c`,
+`.expense` and `.psa` (`src/<dir>/index.ts`) — one `defineStack` each, composed by `objectstack.config.ts` with `composeStacks(…, { manifest: 'preserve' })`.
 One `package.json`, one `tsconfig.json`, one build — on the `@objectstack/runtime` dependency, ⛔ never built, patched or
 worked around here.
 
@@ -52,13 +67,16 @@ exactly the packages, plus `docs/` (see the note below the tree).
 
 ```
 hotcrm/
-├── objectstack.config.ts      # composeStacks() over the four package stacks — the artifact, nothing else
-├── objectstack.composition.ts # The four package stacks built; the composition knob
+├── objectstack.config.ts      # composeStacks() over the seven package stacks — the artifact, nothing else
+├── objectstack.composition.ts # The seven package stacks built; the composition knob
 ├── src/
-│   ├── sales/              # The `type: app` package — account, contact, contract, lead, opportunity, forecast, task, event, event_attendee
+│   ├── sales/              # The `type: app` package — account, contact, contract, lead, opportunity, forecast, task, event, event_attendee, sales_order, sales_order_line
 │   ├── service/            # The service module — case, knowledge_article, article_feedback
 │   ├── revenue/            # The revenue module — product, price_book, price_book_entry, opportunity_line_item, quote, quote_line_item
 │   ├── marketing/          # The marketing module — campaign, campaign_member
+│   ├── o2c/                # The Order to Cash module — billing_milestone, invoice, payment
+│   ├── expense/            # The expense module — expense, expense_report, expense_request, expense_request_line, expense_standard
+│   ├── psa/                # The Project Delivery module — project, project_budget, project_budget_line, project_member, project_task, rate_card, time_entry, timesheet
 │   └── docs/               # In-product package docs (ADR-0046) — see the note below
 ├── content/docs/           # Product documentation site (Fumadocs): en, zh-Hans, zh-Hant
 └── docs/                   # Internal maintainer documentation (docs/README.md is the full map)
@@ -81,7 +99,7 @@ src/sales/
 └── data/          # Seed data (defineDataset)
 ```
 
-`src/` itself is the roster of what this app authors — open it rather than trust a list. The four packages, and which objects each owns,
+`src/` itself is the roster of what this app authors — open it rather than trust a list. The seven packages, and which objects each owns,
 are recorded in `docs/architecture/module-split-plan.md`; ⛔ do not restate that table in prose.
 
 A package of the artifact has one `index.ts` that calls `defineStack` with its manifest. Two seams cross between packages, both
