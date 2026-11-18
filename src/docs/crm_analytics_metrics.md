@@ -124,3 +124,18 @@ and one with only meetings booked for next quarter still is.
 Case figures (SLA compliance, resolution time, knowledge deflection) are
 explained with the cases themselves, in [Cases & SLAs](./crm_service_cases.md)
 and [Knowledge](./crm_service_knowledge.md).
+
+## Asking the AI about a figure
+
+When you ask the AI assistant a question in your own words, it looks for the
+figure whose name, label or declared words are exactly the word you used, in
+English or Chinese: *win rate* or 赢单率 reaches **Win Rate**, *bookings* or
+赢单金额 reaches **Won Revenue**. Each figure also carries one sentence saying
+what it includes and what it leaves out, and the assistant shows that sentence
+when it has to ask which figure you mean.
+
+Some words fit more than one figure, and are deliberately given to none.
+*Revenue* could mean **Won Revenue**, an account's **Annual Revenue** or a
+project's **Planned Revenue**, and *SLA* could mean any of the SLA figures, so
+the assistant asks which one you mean instead of picking one. No figure counts
+open cases on its own; a case count split by status is the nearest answer.
