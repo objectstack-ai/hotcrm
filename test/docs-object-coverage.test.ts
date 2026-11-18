@@ -171,6 +171,8 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   // #2578 — the travel request, the Expenses section's second page.
   crm_expense_request: { page: 'expenses/travel-requests' },
   crm_expense_request_line: { page: 'expenses/travel-requests' },
+  // #2616 — the standards, on the Expenses section's first page.
+  crm_expense_standard: { page: 'expenses/index' },
 };
 
 /** Sections written for developers — see check 4 in the header note. */

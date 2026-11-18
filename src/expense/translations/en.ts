@@ -64,6 +64,7 @@ export const en: TranslationData = {
         },
         approver: { label: 'Approver' },
         notes: { label: 'Notes' },
+        review_notes: { label: 'Review Notes', help: 'What a check found, for the approver to read.' },
       },
       _views: {
         all_expenses: { label: 'All Expenses' },
@@ -251,6 +252,46 @@ export const en: TranslationData = {
         expense_request_line_dates: { message: 'End Date must be on or after Start Date.' },
       },
     },
+    crm_expense_standard: {
+      label: 'Expense Standard',
+      pluralLabel: 'Expense Standards',
+      description: 'A rule the company states about what may be spent, read by people and assistants; nothing in the product enforces it',
+      fields: {
+        owner_id: { label: 'Owner' },
+        name: { label: 'Name', help: 'For example "Hotel, tier-1 cities".' },
+        category: {
+          label: 'Category',
+          help: 'The expense category this standard is about. Empty means any category.',
+          options: {
+            travel: 'Travel',
+            lodging: 'Lodging',
+            meals: 'Meals',
+            equipment: 'Equipment',
+            other: 'Other',
+          },
+        },
+        limit_amount: { label: 'Limit', help: "The most that may be spent, in the organization's currency. Leave empty for a rule in words only." },
+        limit_per: {
+          label: 'Per',
+          help: 'What the limit is counted per.',
+          options: {
+            night: 'Night',
+            day: 'Day',
+            item: 'Item',
+            trip: 'Trip',
+          },
+        },
+        applies_to: { label: 'Applies To', help: 'Who and where, in words: for example "Managers and above" or "Tier-1 cities".' },
+        details: { label: 'Details', help: 'What a number cannot say: exceptions, what is included, whom to ask.' },
+        is_active: { label: 'Active', help: 'Clear it to retire a standard without deleting it.' },
+      },
+      _views: {
+        all_expense_standards: { label: 'Expense Standards' },
+      },
+      _sections: {
+        basic: { label: 'Expense Standard' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers.
   flows: {
@@ -304,6 +345,7 @@ export const en: TranslationData = {
         nav_expense_reports_to_approve: { label: 'Reports to Approve' },
         nav_expense_reports_to_pay: { label: 'Reports to Pay' },
         nav_all_expenses: { label: 'All Expenses' },
+        nav_expense_standards: { label: 'Expense Standards' },
         group_travel_requests: { label: 'Travel Requests' },
         nav_my_travel_requests: { label: 'My Travel Requests' },
         nav_travel_requests_to_approve: { label: 'Requests to Approve' },
@@ -326,7 +368,7 @@ export const en: TranslationData = {
   books: {
     crm_expense_manual: {
       label: 'HotCRM Expenses Manual',
-      description: 'Recording an expense with its receipt, asking before a trip, sending expenses on a report, who approves them, their payment back, and what reaches a project.',
+      description: 'Recording an expense with its receipt, asking before a trip, sending expenses on a report, who approves them, their payment back, what reaches a project, and what an assistant does for you.',
       groups: { expense: { label: 'Expenses' } },
     },
   },

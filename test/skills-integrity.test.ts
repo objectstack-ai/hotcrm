@@ -82,6 +82,12 @@ describe('skill tool references resolve', () => {
       // path, so no tool is generated even when it opts in. Only flow-typed
       // Actions with a resolvable target, or script-typed Actions with a
       // body, can actually run for an agent.
+      // A declarative record operation (`operation: 'update'` with a fixed
+      // `patch`) runs headless too: `run_action` writes the patch as the
+      // caller, measured on 18.5.0 with `submit_expense_request` (#2617).
+      if (a.operation === 'update' && a.patch && Object.keys(a.patch).length > 0) {
+        continue;
+      }
       if (a.type === 'flow') {
         expect(a.target, `${name}: flow-typed Action with no target`).toBeTruthy();
         expect(flowNames, `${name}: target flow "${a.target}" is not defined`).toContain(a.target);
@@ -131,7 +137,7 @@ describe('skill cross-references resolve', () => {
     // A skill left out of `src/skills/index.ts` is inert: it validates, it
     // typechecks, and the assistant never sees it.
     expect(skillNames.size, 'duplicate skill names on the stack').toBe(skills.length);
-    for (const name of ['live_data', 'lead_qualification', 'email_drafting', 'revenue_forecasting', 'case_triage', 'customer_360']) {
+    for (const name of ['live_data', 'lead_qualification', 'email_drafting', 'revenue_forecasting', 'case_triage', 'customer_360', 'expense_filing', 'expense_check']) {
       expect(skillNames, `skill "${name}" is not registered`).toContain(name);
     }
   });

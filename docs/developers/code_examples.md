@@ -206,12 +206,22 @@ Two more rules the shipped code depends on:
 > no-underscore spelling, read the two 400s as proof of a missing capability,
 > and shipped the bulk button removed. See objectstack-ai/objectstack#5568.
 
-The live reference implementation is `mass_update_stage` —
-`src/sales/actions/opportunity.actions.ts` (the body) plus the `bulkActionDefs` entry
-in `src/sales/views/opportunity.view.ts` (the declaration), pinned end to end in
-`test/bulk-action-dispatch.test.ts` and `test/script-bodies.test.ts`. Read
-those two files together: a body reading `_selectedIds` with no aggregate def in
-the view is just as dead as the misspelling, because nothing injects the key.
+The live reference implementation is `submit_for_reimbursement` —
+`src/expense/actions/` (the body) plus the `bulkActionDefs` entry in
+`src/expense/views/expense.view.ts` (the declaration). A body reading
+`_selectedIds` with no aggregate def in the view is just as dead as the
+misspelling, because nothing injects the key.
+
+**Choose the aggregate contract only when the selection is one unit of work**
+(one report out of many expenses). An action that changes each selected record
+on its own — a field write — is the per-record contract. A script body runs
+system-elevated, so an aggregate body that writes each row skips the caller's
+permissions and approval locks, and the selection bar can only report its one
+rejection as N failures. `mass_update_stage` was built that way and was rebuilt
+as a declared write (#2586): `operation: 'update'`, `execution: 'perRecord'`, no
+body, wired by `bulkActions: ['mass_update_stage']`. The platform writes the
+collected params to each row as the caller, and the bar counts and explains
+each row.
 
 `create_campaign` in `src/sales/actions/lead.actions.ts` is the other contract — bare
 string, per-record fan-out — and it has no body at all: it is a `type: 'flow'` action, so

@@ -94,3 +94,23 @@ export const EXPENSE_REQUEST_LINE_READ = {
   allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false,
   viewAllRecords: false, modifyAllRecords: false,
 };
+
+/**
+ * Expense standard rows (hotcrm#2616, F4a). The standards are the company's,
+ * `public_read`: every set that records expenses reads every standard
+ * ({@link EXPENSE_STANDARD_READ}; `crm_user` too, so every member does), and
+ * the sets that mark a report paid keep them — finance (`finance_controller`,
+ * `ar_accountant`) creates, edits and deletes every standard
+ * ({@link EXPENSE_STANDARD_KEEP}), as it keeps the rate cards. Administrators
+ * hold the full row. `service_director` adds none, as for the expense: its
+ * holders read the standards through `crm_user`.
+ */
+export const EXPENSE_STANDARD_READ = {
+  allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false,
+  viewAllRecords: false, modifyAllRecords: false,
+};
+
+export const EXPENSE_STANDARD_KEEP = {
+  allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true,
+  viewAllRecords: true, modifyAllRecords: true,
+};

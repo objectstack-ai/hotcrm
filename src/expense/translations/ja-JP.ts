@@ -121,6 +121,7 @@ export const jaJP: TranslationData = {
         },
         approver: { label: '承認者' },
         notes: { label: 'メモ' },
+        review_notes: { label: 'チェックメモ', help: 'チェックで見つかった点。承認者が読みます。' },
       },
       _views: {
         all_expenses: { label: 'すべての経費' },
@@ -308,6 +309,46 @@ export const jaJP: TranslationData = {
         expense_request_line_dates: { message: '終了日は開始日以降にしてください。' },
       },
     },
+    crm_expense_standard: {
+      label: '経費基準',
+      pluralLabel: '経費基準',
+      description: '使ってよい金額について会社が定めた基準。社員とアシスタントが参照します。製品自体は判定もブロックもしません',
+      fields: {
+        owner_id: { label: '所有者' },
+        name: { label: '名前', help: '例：「ホテル、一級都市」。' },
+        category: {
+          label: 'カテゴリ',
+          help: 'この基準が対象とする経費カテゴリ。空欄はすべてのカテゴリ。',
+          options: {
+            travel: '交通',
+            lodging: '宿泊',
+            meals: '食事',
+            equipment: '機器',
+            other: 'その他',
+          },
+        },
+        limit_amount: { label: '上限', help: '使ってよい上限額（組織の通貨）。文章だけの基準は空欄にします。' },
+        limit_per: {
+          label: '単位',
+          help: '上限を何ごとに数えるか。',
+          options: {
+            night: '1泊',
+            day: '1日',
+            item: '1件',
+            trip: '1出張',
+          },
+        },
+        applies_to: { label: '適用対象', help: '誰に、どこで適用するかを文章で。例：「マネージャー以上」「一級都市」。' },
+        details: { label: '詳細', help: '数字で言えないこと：例外、含まれるもの、問い合わせ先。' },
+        is_active: { label: '有効', help: '外すと、削除せずに基準を廃止できます。' },
+      },
+      _views: {
+        all_expense_standards: { label: '経費基準' },
+      },
+      _sections: {
+        basic: { label: '経費基準' },
+      },
+    },
   },
   // Step names the approval request shows the submitter and the approvers.
   flows: {
@@ -361,6 +402,7 @@ export const jaJP: TranslationData = {
         nav_expense_reports_to_approve: { label: '承認待ちの精算書' },
         nav_expense_reports_to_pay: { label: '支払待ちの精算書' },
         nav_all_expenses: { label: 'すべての経費' },
+        nav_expense_standards: { label: '経費基準' },
         group_travel_requests: { label: '出張申請' },
         nav_my_travel_requests: { label: '自分の出張申請' },
         nav_travel_requests_to_approve: { label: '承認待ちの出張申請' },
@@ -383,7 +425,7 @@ export const jaJP: TranslationData = {
   books: {
     crm_expense_manual: {
       label: 'HotCRM 経費精算マニュアル',
-      description: '領収書付きの経費の登録、出張前の申請、精算書での提出、承認者、払い戻し、プロジェクトに計上されるもの。',
+      description: '領収書付きの経費の登録、出張前の申請、精算書での提出、承認者、払い戻し、プロジェクトに計上されるもの、アシスタントができること。',
       groups: { expense: { label: '経費精算' } },
     },
   },

@@ -479,7 +479,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       mass_update_stage: {
         label: 'Actualizar Etapa',
-        successMessage: '¡Etapa de oportunidad actualizada!',
+        successMessage: 'Etapa actualizada.',
         params: {
           // Mismos valores que `fields.stage` — deben coincidir literalmente.
           stage: {
@@ -487,7 +487,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
             options: {
               prospecting: 'Prospección', qualification: 'Calificación',
               needs_analysis: 'Análisis de Necesidades', proposal: 'Propuesta',
-              negotiation: 'Negociación', closed_won: 'Cerrada Ganada', closed_lost: 'Cerrada Perdida',
+              negotiation: 'Negociación',
             },
           },
         },

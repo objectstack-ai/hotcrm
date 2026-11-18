@@ -608,6 +608,8 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_expense_request: { en: 'Travel Request', 'zh-Hans': '出差申请', 'zh-Hant': '出差申請' },
   // #2579 — its legs, 行程明细 in the zh-CN pack.
   crm_expense_request_line: { en: 'Itinerary Line', 'zh-Hans': '行程明细', 'zh-Hant': '行程明細' },
+  // #2616 — the company's spending standards, 费用标准 in the zh-CN pack.
+  crm_expense_standard: { en: 'Expense Standard', 'zh-Hans': '费用标准', 'zh-Hant': '費用標準' },
   // Both Chinese labels are 工单/工單, the pack's `crm_case.label` and its
   // Traditional form. The zh-Hant cell read 「案件」 until #837 — a fourth
   // spelling of this one object, green here while the automation page spelled

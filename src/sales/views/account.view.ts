@@ -20,7 +20,9 @@ export const AccountViews = defineView({
       { field: 'name', width: 240, sortable: true, link: true, pinned: 'left' },
       { field: 'industry', width: 140, sortable: true },
       { field: 'type', width: 130 },
-      { field: 'annual_revenue', width: 160, align: 'right', summary: 'sum' },
+      // An average, not a total: the accounts' revenues added up are no
+      // figure anyone owns (#2432 row 6).
+      { field: 'annual_revenue', width: 160, align: 'right', summary: 'avg' },
       { field: 'number_of_employees', width: 130, align: 'right', summary: 'avg' },
       { field: 'health_score', width: 140 },
     ],

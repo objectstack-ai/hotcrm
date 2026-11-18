@@ -5,22 +5,31 @@ description: Which of HotCRM's actions an agent may run over MCP, how it asks be
 
 # Actions Open to Agents
 
-An **action** is a button a person clicks: **Convert Lead**, **Submit for Reimbursement**, **Mark as Paid**. An action is open to agents only when its author says so, one by one. Today two of HotCRM's actions are:
+An **action** is a button a person clicks: **Convert Lead**, **Submit for Reimbursement**, **Mark as Paid**. An action is open to agents only when its author says so, one by one. Today nine of HotCRM's actions are:
 
 | Action | On | What it does | Asks first? |
 | --- | --- | --- | --- |
 | **Convert Lead** | A lead | Turns a qualified lead into an account, a contact and an opportunity | **Yes** — it cannot be undone |
 | **Schedule Follow-up** | A lead | Files the next follow-up task on the lead, for its owner | No — it only adds a task |
+| **Submit for Reimbursement** | The person's own expenses | Puts them on one expense report per project and sends each report for approval | **Yes** — it sends to an approver |
+| **Submit for a Trip** | The person's own expenses | The same, against one of their approved travel requests | **Yes** — it sends to an approver |
+| **Submit** | The person's own Draft expense report | Sends it for approval again | **Yes** — it sends to an approver |
+| **Back to Draft** | The person's own Rejected expense report | Moves it and its expenses back to Draft to be corrected | No — it is undone by submitting again |
+| **Submit** | The person's own Draft travel request | Sends it to their manager for approval | **Yes** — it sends to an approver |
+| **Cancel Trip** | The person's own Approved travel request | The trip is called off | **Yes** — it cannot be undone |
+| **Close** | The person's own Approved travel request | The trip is over; the request takes no new report | **Yes** — it cannot be undone |
+
+**Mark as Paid** is not open to agents: paid is final, so that click stays a person's (finance's). The two expense skills, **Expense Filing** and **Expense Check**, are what teaches an agent to use these (see [Skills](/docs/ai-copilot/skills)).
 
 An agent finds them with `list_actions` and runs them with `run_action`, as the person it connects as (see [Connect Your Agent](/docs/ai-copilot/connect-your-agent)). The action's own checks run as they do for the button: **Convert Lead** is refused on a lead that is already converted, unqualified, or held by a conversion approval.
 
 ## Asking before an irreversible action
 
-**Convert Lead** is marked as needing confirmation. Measured on ObjectStack 18.5.0: an agent's first `run_action` call does nothing and answers `ACTION_CONFIRMATION_REQUIRED` (`status: 428`), telling the agent to confirm with the person and call again with `"confirm": true`. Only that second call converts the lead. An agent that runs unattended therefore cannot convert a lead by accident.
+Every action above marked **Yes** needs confirmation. Measured on ObjectStack 18.5.0 with **Convert Lead**, and again with **Submit for Reimbursement**: an agent's first `run_action` call does nothing and answers `ACTION_CONFIRMATION_REQUIRED` (`status: 428`), telling the agent to confirm with the person and call again with `"confirm": true`. Only that second call runs the action. An agent that runs unattended therefore cannot convert a lead, or send an expense to an approver, by accident.
 
 ## Beside them: the platform's actions
 
-`list_actions` also lists actions the platform provides, not HotCRM — among them **Approve**, **Reject**, **Recall** and **Resubmit** on an approval request. An agent connected as an approver can decide that person's approvals, as the person could from their **Inbox**.
+`list_actions` also lists actions the platform provides, not HotCRM — among them **Approve**, **Reject**, **Recall** and **Resubmit** on an approval request. An agent connected as an approver can decide that person's approvals, as the person could from their **Inbox**. HotCRM's **Expense Check** skill tells its agent never to use them: it reports what it found, and the approver decides.
 
 ## Without an action
 
@@ -28,6 +37,6 @@ Everything else an agent does through the record tools, under the same rules as 
 
 - **Reading** any record the person may read, with `query_records` and `get_record`.
 - **Writing** a field the person may write, with `update_record`. The object's validations, status rules and hooks run as for a save in the app, so a write a person would be refused is refused for the agent too.
-- **Recording findings.** An expense report and a travel request each carry **Review Notes**, a field where an agent (or a rule) writes what it found for the approver to read — a missing receipt, a hotel above policy. HotCRM does not check receipts or policies itself; that is the agent's job.
+- **Recording findings.** An expense, an expense report and a travel request each carry **Review Notes**, a field where an agent (or a rule) writes what it found for the approver to read — a missing receipt, a hotel above a standard. HotCRM does not check receipts or standards itself; that is the agent's job. Write the notes on each expense before it is sent: a sent expense locks, and a report under approval is locked as a whole, so its own **Review Notes** can be written only while the report is back in Draft (measured on 18.5.0: `RECORD_LOCKED`, even for the approver).
 
-Actions not on the list above — **Submit for Reimbursement**, **Mark as Paid**, **Close Case** and the rest — stay buttons for people until their authors open them to agents.
+Actions not on the list above — **Mark as Paid**, **Close Case** and the rest — stay buttons for people until their authors open them to agents.

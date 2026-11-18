@@ -3,7 +3,7 @@
 import { O2C_CONTRACT_FIGURE_FIELDS } from './_o2c-figures';
 import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
 import { privateOpportunityPolicy } from './_private-opportunity';
-import { EXPENSE_OWN_READ_ALL, EXPENSE_REPORT_OWN_READ_ALL, EXPENSE_REQUEST_LINE_EDIT } from './_expense-grants';
+import { EXPENSE_OWN_READ_ALL, EXPENSE_REPORT_OWN_READ_ALL, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STANDARD_READ } from './_expense-grants';
 
 /**
  * Sales Manager Profile
@@ -31,6 +31,7 @@ export const SalesManagerProfile = {
     crm_expense_report: EXPENSE_REPORT_OWN_READ_ALL,
     crm_expense_request: EXPENSE_OWN_READ_ALL,
     crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
+    crm_expense_standard: EXPENSE_STANDARD_READ, // every standard, read (hotcrm#2616)
     // `allowTransfer` on the objects this set holds `modifyAllRecords` on —
     // the sales book a manager reassigns — plus `crm_forecast`, which kept it
     // when #2277 narrowed Modify All there. Canonical note in

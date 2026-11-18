@@ -35,6 +35,12 @@ export const SubmitExpenseRequestAction: Action = {
   visible: P`has(record.status) && record.status == "draft" && has(record.owner_id) && record.owner_id == current_user.id`,
   successMessage: 'Travel request {{ record.name }} submitted for approval.',
   refreshAfter: true,
+  // F4b (hotcrm#2617): sends the request to the approver.
+  ai: {
+    exposed: true,
+    requiresConfirmation: true,
+    description: 'Submits one of the caller\'s Draft travel requests for approval. Ask the person before running it.',
+  },
 };
 
 export const CancelExpenseRequestAction: Action = {
@@ -49,6 +55,12 @@ export const CancelExpenseRequestAction: Action = {
   confirmText: 'Cancel this trip? A cancelled request cannot be reopened; file a new one for a new plan.',
   successMessage: 'Travel request {{ record.name }} cancelled.',
   refreshAfter: true,
+  // F4b (hotcrm#2617): a cancelled request cannot be reopened.
+  ai: {
+    exposed: true,
+    requiresConfirmation: true,
+    description: 'Cancels one of the caller\'s Approved travel requests: the trip is called off or its plan changed. Cannot be undone; a new plan is a new request. Ask the person before running it.',
+  },
 };
 
 export const CloseExpenseRequestAction: Action = {
@@ -62,4 +74,10 @@ export const CloseExpenseRequestAction: Action = {
   visible: P`has(record.status) && record.status == "approved" && has(record.owner_id) && record.owner_id == current_user.id`,
   successMessage: 'Travel request {{ record.name }} closed.',
   refreshAfter: true,
+  // F4b (hotcrm#2617): a closed request takes no new report.
+  ai: {
+    exposed: true,
+    requiresConfirmation: true,
+    description: 'Closes one of the caller\'s Approved travel requests once the trip is over; a closed request takes no new expense report. Cannot be undone. Ask the person before running it.',
+  },
 };

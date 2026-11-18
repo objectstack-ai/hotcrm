@@ -41,7 +41,10 @@ export const CaseDetailPage: Page = {
           id: 'case_header',
           label: 'Case Information',
           properties: {
-            title: '{case_number} · {subject}',
+            // The stored record title, so the header and the breadcrumb read
+            // the same words (#2432 row 3: 「CASE-00034 · …」 over
+            // 「CASE-00034 - …」). `display_title` is `case_number - subject`.
+            title: '{display_title}',
             // The lookup field is `crm_account` — `{account}` matched nothing
             // and the subtitle rendered blank.
             subtitle: '{crm_account}',

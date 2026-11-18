@@ -2,7 +2,7 @@
 
 import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
 import { privateOpportunityPolicy } from './_private-opportunity';
-import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT } from './_expense-grants';
+import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STANDARD_READ } from './_expense-grants';
 
 export const MarketingUserProfile = {
   name: 'marketing_user',
@@ -21,6 +21,7 @@ export const MarketingUserProfile = {
     crm_expense_report: EXPENSE_REPORT_OWN,
     crm_expense_request: EXPENSE_OWN,
     crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
+    crm_expense_standard: EXPENSE_STANDARD_READ, // every standard, read (hotcrm#2616)
     // `allowExport` where an export surface exists — canonical note in
     // `src/sales/profiles/index.ts`. Lead and contact list exports are marketing's
     // core targeting workflow; account/opportunity back the campaign-ROI

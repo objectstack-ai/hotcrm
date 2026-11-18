@@ -56,7 +56,7 @@ There is no *Analytics* group, and nothing in the sidebar is called *Dashboards*
 
 ## AI-powered insights
 
-**On this app's side, nothing connects the Copilot to a dataset.** The six skills under `src/sales/skills/` and `src/service/skills/` name no dataset, no cube and no measure. The one that answers data questions, **Live Data Access**, is wired to the platform's object tools and is instructed to re-read the object's schema and aggregate over records — so a Copilot answer is computed from the objects, not read off a compiled cube.
+**On this app's side, nothing connects the Copilot to a dataset.** The eight skills under `src/sales/skills/`, `src/service/skills/` and `src/expense/skills/` name no dataset, no cube and no measure. The one that answers data questions, **Live Data Access**, is wired to the platform's object tools and is instructed to re-read the object's schema and aggregate over records — so a Copilot answer is computed from the objects, not read off a compiled cube.
 
 That also sets what it can be asked. *"What's driving the gap between commit and forecast?"* has data behind it: **Commit**, **Quota**, **Closed Won** and **Pipeline** are all real figures on the forecast record, published as **Commit**, **Quota**, **Closed** and **Pipeline** on the **Forecast Metrics** dataset. *"Why did East close 3 fewer deals than West last quarter?"* and *"Show me which products correlate with longer sales cycles"* do not — no region is stored on a deal, no dataset reads line items, and the one duration the opportunity carries (**Days in Current Stage**) is a formula evaluated after the query, so nothing can aggregate it. [Cubes](/docs/analytics/cubes) explains where those limits come from.
 

@@ -29,8 +29,9 @@ import stack from './helpers/composed-stack';
  *
  * These are METADATA pins: they assert the shape the renderer needs. The
  * execution half — that the shape actually moves rows — is
- * `test/script-bodies.test.ts`, which runs the shipped body against a real
- * ObjectQL kernel with `_selectedIds` in the params bag.
+ * `test/script-bodies.test.ts`, which runs the shipped bodies against a real
+ * ObjectQL kernel with `_selectedIds` in the params bag. Update Stage left the
+ * aggregate contract in #2586 (see the first test below).
  */
 
 type AnyRec = Record<string, any>;
@@ -44,61 +45,49 @@ const listsOf = (v: AnyRec): AnyRec[] =>
   [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
 
 describe('bulk dispatch is declared the way the renderer reads it', () => {
-  it('the opportunity list dispatches mass_update_stage once for the whole selection', () => {
-    const oppView = views.find((v) => (v.list?.data?.object ?? v.object) === 'crm_opportunity');
-    expect(oppView, 'no crm_opportunity view').toBeTruthy();
+  // #2586. Update Stage was the aggregate contract from #508 to #2586: one
+  // dispatch into a system-elevated body that looped over `_selectedIds`. That
+  // body moved deals the caller could only read and deals an approval had
+  // locked, and the bar could only report its one rejection as N failures
+  // (#2587). It is now a declared write, dispatched once per row; the platform
+  // writes each row as the caller, and the bar counts and explains each row.
+  it('the opportunity list dispatches mass_update_stage once per selected row (#2586)', () => {
+    const action = actions.find((a) => a.name === 'mass_update_stage');
+    expect(action, 'no mass_update_stage action').toBeTruthy();
+    expect(action!.execution).toBe('perRecord');
 
-    const defs = (oppView!.list?.bulkActionDefs ?? []) as AnyRec[];
-    const massUpdate = defs.find((d) => d?.name === 'mass_update_stage');
-    expect(
-      massUpdate,
-      'the opportunity list no longer declares a mass_update_stage bulk def — without it the '
-      + 'renderer injects no `_selectedIds`, the toolbar button degrades to a single-record '
-      + 'action, and a multi-row selection is refused client-side (#508)',
-    ).toBeTruthy();
-    // The two keys that CHOOSE the dispatch contract. `custom` says "dispatch
-    // the action this def names"; `aggregate` says "once, for the whole
-    // selection". Dropping the second is refused at parse time (#4457) — the
-    // shape it leaves behind ticks green per row and does nothing.
-    expect(massUpdate!.operation).toBe('custom');
-    expect(massUpdate!.execution).toBe('aggregate');
-
-    // …and NOT the bare-string form anywhere. That is the per-record fan-out —
-    // a different contract (N dispatches, each carrying `recordId`), which this
-    // body is not written for: it would re-enter the selection loop once per
-    // row, and the all-or-nothing rejection would report per row rather than
-    // per selection.
-    const fanout: string[] = [];
+    // …and NOT as an aggregate def anywhere: that would hand the declared
+    // write no `recordId`, and the platform refuses a declared write without one.
+    const aggregate: string[] = [];
     for (const v of views) {
       for (const list of listsOf(v)) {
-        for (const name of list.bulkActions ?? []) {
-          if (name === 'mass_update_stage') fanout.push(`view "${list.name ?? 'default'}"`);
+        for (const d of (list.bulkActionDefs ?? []) as AnyRec[]) {
+          if (d?.name === 'mass_update_stage') aggregate.push(`view "${list.name ?? 'default'}"`);
         }
       }
     }
     expect(
-      fanout,
-      'mass_update_stage is wired as a per-record fan-out here, but its body is written for the '
-      + `aggregate contract:\n  ${fanout.join('\n  ')}`,
+      aggregate,
+      'mass_update_stage is wired as a bulk def here, but it is a per-record declared write:\n  '
+      + aggregate.join('\n  '),
     ).toEqual([]);
   });
 
   // #2338 item 4. Measured on 18.2.0: a named list view does not inherit the
-  // `list` view's `bulkActionDefs` (All Opportunities' bar offered Delete
-  // only), and the list-header copy that every view did show failed on any
+  // `list` view's bulk entries (All Opportunities' bar offered Delete only),
+  // and the list-header copy that every view did show failed on any
   // selection, so it was dropped. Each grid list therefore declares the bar
-  // entry itself. A grid list is the kind the console draws row selection on;
-  // kanban, calendar, timeline and gallery lists draw none. Any authored bulk
-  // entry hides the console's default bulk Delete, so each list also declares
-  // Delete itself; losing it is as much a regression as losing Update Stage.
+  // entries itself. A grid list is the kind the console draws row selection
+  // on; kanban, calendar, timeline and gallery lists draw none. Any authored
+  // bulk entry hides the console's default bulk Delete, so each list also
+  // declares Delete itself; losing it is as much a regression as losing
+  // Update Stage.
   it('every opportunity grid list offers Update Stage and Delete on its selection bar (#2338 item 4)', () => {
     const oppView = views.find((v) => (v.list?.data?.object ?? v.object) === 'crm_opportunity');
     const grids = listsOf(oppView!).filter((l) => (l.type ?? 'grid') === 'grid');
     expect(grids.length, 'the opportunity views ship fewer grid lists than when this was pinned').toBeGreaterThanOrEqual(6);
     const missing = grids
-      .filter((l) => !((l.bulkActionDefs ?? []) as AnyRec[]).some(
-        (d) => d?.name === 'mass_update_stage' && d.operation === 'custom' && d.execution === 'aggregate',
-      ))
+      .filter((l) => !((l.bulkActions ?? []) as string[]).includes('mass_update_stage'))
       .map((l) => l.name);
     expect(missing, 'these opportunity grid lists offer no Update Stage on the selection bar').toEqual([]);
     const noDelete = grids
@@ -156,37 +145,50 @@ describe('bulk dispatch is declared the way the renderer reads it', () => {
    * `selectedIds` (never merged into the params bag) and a `params.selectedIds`
    * (correctly refused by the strict gate as undeclared).
    */
-  it('mass_update_stage reads the selection from the builtin `_selectedIds`', () => {
-    const massUpdate = actions.find((a) => a.name === 'mass_update_stage');
-    expect(massUpdate, 'mass_update_stage is not defined').toBeTruthy();
-    const source = String(massUpdate!.body?.source ?? '');
+  it('every action wired as an aggregate def reads the selection from the builtin `_selectedIds`', () => {
+    // Since #2586 the expense module's Submit for Reimbursement pair is the
+    // app's aggregate wiring; Update Stage left it for the per-record declared
+    // write. The pin follows the wiring, not a name.
+    const wired = new Set<string>();
+    for (const v of views) {
+      for (const list of listsOf(v)) {
+        for (const d of (list.bulkActionDefs ?? []) as AnyRec[]) {
+          if (d?.operation === 'custom' && d.execution === 'aggregate') wired.add(String(d.name));
+        }
+      }
+    }
+    expect(wired.size, 'no aggregate bulk def is left to pin').toBeGreaterThan(0);
+    for (const name of wired) {
+      const action = actions.find((a) => a.name === name);
+      expect(action, `${name} is not defined`).toBeTruthy();
+      const source = String(action!.body?.source ?? '');
 
-    expect(
-      source.includes('input._selectedIds'),
-      'the body no longer reads `input._selectedIds` — the aggregate dispatch delivers the '
-      + 'selection under exactly that builtin key and nothing else carries it',
-    ).toBe(true);
+      expect(
+        source.includes('input._selectedIds'),
+        `${name}'s body does not read \`input._selectedIds\` — the aggregate dispatch delivers the `
+        + 'selection under exactly that builtin key and nothing else carries it',
+      ).toBe(true);
 
-    // The no-underscore spelling is not a synonym and not a fallback: nothing
-    // can deliver it, so a limb reading it only ever sees `undefined`. Matched
-    // with a boundary so `input._selectedIds` itself does not trip it.
-    expect(
-      /(?<![\w$])input\.selectedIds\b/.test(source),
-      'the body reads `input.selectedIds` (no underscore) — an undeliverable key: the params '
-      + 'gate refuses it as undeclared, and the renderer injects only `_selectedIds`',
-    ).toBe(false);
+      // The no-underscore spelling is not a synonym and not a fallback: nothing
+      // can deliver it, so a limb reading it only ever sees `undefined`.
+      // Matched with a boundary so `input._selectedIds` itself does not trip it.
+      expect(
+        /(?<![\w$])input\.selectedIds\b/.test(source),
+        `${name}'s body reads \`input.selectedIds\` (no underscore) — an undeliverable key: the `
+        + 'params gate refuses it as undeclared, and the renderer injects only `_selectedIds`',
+      ).toBe(false);
 
-    // `_selectedIds` is injected by the renderer and admitted by the gate as a
-    // builtin. Declaring it as a param is not a supported authoring move, and
-    // an author who tries is usually about to re-invent the channel.
-    const declared = (massUpdate!.params ?? []).map((p: AnyRec) => p?.name);
-    expect(declared, 'builtin keys must not be declared as action params')
-      .not.toContain('_selectedIds');
+      // `_selectedIds` is injected by the renderer and admitted by the gate as
+      // a builtin. Declaring it as a param is not a supported authoring move.
+      const declared = (action!.params ?? []).map((p: AnyRec) => p?.name);
+      expect(declared, `${name}: builtin keys must not be declared as action params`)
+        .not.toContain('_selectedIds');
+    }
   });
 });
 
 /**
- * The OTHER contract, pinned on the app's only bare-string wiring (#813).
+ * The OTHER contract, pinned on the lead list's bare-string wiring (#813; Update Stage joined this contract in #2586).
  *
  * `create_campaign` is wired as `bulkActions: ['create_campaign']` on the lead
  * list — the per-record fan-out. The renderer promotes the action to a def

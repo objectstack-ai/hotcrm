@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { EXPENSE_OWN_FLOOR, EXPENSE_REPORT_OWN_FLOOR, EXPENSE_REQUEST_LINE_FLOOR } from './_expense-grants';
+import { EXPENSE_OWN_FLOOR, EXPENSE_REPORT_OWN_FLOOR, EXPENSE_REQUEST_LINE_FLOOR, EXPENSE_STANDARD_READ } from './_expense-grants';
 
 /**
  * CRM User — the package's default permission set (#2231).
@@ -70,6 +70,7 @@ export const CrmUserProfile = {
     crm_expense_report: EXPENSE_REPORT_OWN_FLOOR,
     crm_expense_request: EXPENSE_OWN_FLOOR,
     crm_expense_request_line: EXPENSE_REQUEST_LINE_FLOOR,
+    crm_expense_standard: EXPENSE_STANDARD_READ, // every standard, read (hotcrm#2616)
     // ─── The sales book, own scope ────────────────────────────────────
     crm_lead:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_account:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },

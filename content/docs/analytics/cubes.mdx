@@ -107,7 +107,7 @@ One half of it *is* in the app's hands, and it is the half that fails today: a t
 
 ## AI agents and cubes
 
-**On this app's side, nothing connects an AI agent to a dataset.** The six skills under `src/*/skills/` name no dataset, no cube and no measure. The one that answers data questions, **Live Data Access**, is wired to the platform's object tools — `describe_object`, `list_objects`, `query_records`, `get_record`, `aggregate_data` — and its instructions tell the agent to re-read the object's schema first and aggregate over records. So an AI agent's answer about win rate is computed from the objects, not read off the compiled cube, and this app declares nothing that would make the two consistent by construction.
+**On this app's side, nothing connects an AI agent to a dataset.** The eight skills under `src/*/skills/` name no dataset, no cube and no measure. The one that answers data questions, **Live Data Access**, is wired to the platform's object tools — `describe_object`, `list_objects`, `query_records`, `get_record`, `aggregate_data` — and its instructions tell the agent to re-read the object's schema first and aggregate over records. So an AI agent's answer about win rate is computed from the objects, not read off the compiled cube, and this app declares nothing that would make the two consistent by construction.
 
 Whether the platform's own agent additionally reads the compiled cubes, and whether cube access is audited for admins, are questions about the runtime rather than about this app — so this page makes no claim about them in either direction. If you are relying on an AI agent's answers matching a dashboard to the decimal, check it against your deployment.
 

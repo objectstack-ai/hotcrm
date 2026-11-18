@@ -40,6 +40,7 @@ Related to #
 <!-- Mark completed items with an "x" -->
 
 - [ ] **I have added a changeset** (`pnpm changeset`) — required on every PR, or the `skip-changeset` label is applied
+- [ ] **English docs changed with their Chinese twins** (`content/docs/**/X.mdx` ↔ `.zh-Hans`/`.zh-Hant`, `src/**/docs/X.md` ↔ `.zh.md`, `README.md` ↔ `README.zh-CN.md`), or the `docs-en-only` label is applied and a `Docs-en-only: <reason>` line is in this description
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas

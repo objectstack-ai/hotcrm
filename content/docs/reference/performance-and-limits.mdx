@@ -123,7 +123,7 @@ described nothing. The result-count, query-length and latency figures have no so
 | Embedding storage | Per plan (typically GB per tenant) |
 
 *Not enforced.* No invocation quota, token budget, concurrency cap or re-index schedule
-exists for the six skills in `src/*/skills/` or anywhere in the installed packages. Whatever
+exists for the eight skills in `src/*/skills/` or anywhere in the installed packages. Whatever
 metering you get is your model provider's and your deployment's, not the app's.
 
 ## Reporting & analytics
@@ -286,7 +286,7 @@ plus the cross-object `POST /api/v1/batch`. Mind the 10,000-row per-row-hook cei
 
 ### AI invocation batching
 
-*Not shipped.* There is no bulk-skill invocation surface: the six skills in `src/*/skills/`
+*Not shipped.* There is no bulk-skill invocation surface: the eight skills in `src/*/skills/`
 are invoked one call at a time, and no batching, connection pooling or "~10× speedup" path
 exists in the app or the installed packages. Triaging many records means many invocations.
 Bulk **actions** on a list view are a different thing and are real — see
