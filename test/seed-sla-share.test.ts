@@ -34,13 +34,36 @@ const escalationTasks = (tasks: Rec[]): Rec[] => tasks.filter((t) => String(t.su
 const tileCounts = (c: Rec, now: number): boolean =>
   flagged(c) || (!SETTLED.has(String(c.status)) && c.sla_due_date != null && instant(c.sla_due_date) < now);
 
+/**
+ * The demo's deliberate breaches, sorted: open cases that arrive past their
+ * matrix window and keep it. Three are hand-written — two arrive flagged, and
+ * `Login issues after platform upgrade` is the one the first sweep flags and
+ * escalates, so the escalation task shows — and four are the generated open
+ * High/Critical rows on every third index. Every other open case takes the
+ * seed's loosened target, its window plus two weeks (#2452), so this list is
+ * the whole breached set from the seed to fourteen days after it.
+ */
+const DELIBERATE_BREACHES = [
+  'Data export timing out for large datasets',
+  'Demo case 10 — critical bug',
+  'Demo case 13 — critical problem',
+  'Demo case 19 — high problem',
+  'Demo case 22 — high feature_request',
+  'Login issues after platform upgrade',
+  'Mobile app crashes on iOS 17',
+];
+
 let verify: VerifyStack;
 let tileBefore: number;
 let tasksBefore: Rec[];
 let cases: Rec[];
 let tasks: Rec[];
 
+/** An instant no later than the seed's `now()`: read before the boot that seeds. */
+let seededNoEarlierThan: number;
+
 beforeAll(async () => {
+  seededNoEarlierThan = Date.now();
   verify = await hotcrmStack();
   const seeded = (await verify.rows('crm_case', {})) as Rec[];
   tileBefore = seeded.filter((c) => tileCounts(c, Date.now())).length;
@@ -57,15 +80,7 @@ describe('a fresh demo seed after its first SLA sweep (#2288)', () => {
     expect(
       breached.map((c) => String(c.subject)).sort(),
       'the deliberate breaches: three hand-written cases and the four generated open High/Critical ones',
-    ).toEqual([
-      'Data export timing out for large datasets',
-      'Demo case 10 — critical bug',
-      'Demo case 13 — critical problem',
-      'Demo case 19 — high problem',
-      'Demo case 22 — high feature_request',
-      'Login issues after platform upgrade',
-      'Mobile app crashes on iOS 17',
-    ]);
+    ).toEqual(DELIBERATE_BREACHES);
     const share = breached.length / cases.length;
     expect(share).toBeGreaterThanOrEqual(0.1);
     expect(share).toBeLessThan(0.2);
@@ -97,6 +112,21 @@ describe('a fresh demo seed after its first SLA sweep (#2288)', () => {
     const piled = [...perDay].filter(([, n]) => n > 5).map(([d, n]) => `${d}: ${n}`);
     expect(piled, piled.join('\n')).toEqual([]);
     expect([...perDay.values()].reduce((a, b) => a + b, 0), 'fixture: 30 generated cases').toBe(30);
+  });
+
+  /**
+   * #2452: a fresh demo stays presentable for two weeks. #2431 measured 23 of
+   * 23 open cases past SLA at +72 h. Read on the booted rows: at +72 h and at
+   * +14 days the SLA Violations tile counts the deliberate breaches and
+   * nothing else.
+   */
+  it.each([
+    ['72 hours', 72],
+    ['14 days', 14 * 24],
+  ])('counts only the deliberate breaches on the SLA Violations tile %s after the seed (#2452)', (_label, hours) => {
+    const at = seededNoEarlierThan + hours * 3_600_000;
+    const counted = cases.filter((c) => tileCounts(c, at)).map((c) => String(c.subject)).sort();
+    expect(counted).toEqual(DELIBERATE_BREACHES);
   });
 
   it('opens one escalation task, for the one case the sweep escalates', () => {

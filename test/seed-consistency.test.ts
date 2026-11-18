@@ -529,7 +529,27 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
     expect(blank, blank.join('\n')).toEqual([]);
   });
 
-  it('derives every due date from created_at + the matrix cell', () => {
+  /**
+   * The seed's loosened SLA target for open demo work (#2452, the objectstack
+   * maintainer's ruling on objectstack#32679): an open case still inside its
+   * window when the seed loads is due its matrix cell PLUS two weeks, so a
+   * fresh demo stays presentable for fourteen days. Written out here rather
+   * than imported, so the seed cannot shorten it without this file saying so.
+   */
+  const DEMO_GRACE_HOURS = 14 * 24;
+  /**
+   * Where an OPEN seeded case stands against its matrix window when the seed
+   * loads, whatever hour of the UTC day that is: `daysAgo(n)` is a midnight
+   * between n × 24 and (n + 1) × 24 hours back; `now() - duration('Nh')` is
+   * exactly N hours back.
+   */
+  const standing = (age: { days: number } | { hours: number }, hours: number): 'inside' | 'past' | 'depends on the hour' => {
+    if ('hours' in age) return age.hours < hours ? 'inside' : 'past';
+    if ((age.days + 1) * 24 <= hours) return 'inside';
+    return age.days * 24 >= hours ? 'past' : 'depends on the hour';
+  };
+
+  it('derives every due date from created_at + the matrix cell, plus two weeks on open work inside its window', () => {
     const problems: string[] = [];
     for (const c of cases) {
       const created = celSource(c.created_at);
@@ -539,7 +559,8 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
         problems.push(`${label}: created_at and sla_due_date must both be CEL expressions`);
         continue;
       }
-      if (!creationOf(created)) {
+      const age = creationOf(created);
+      if (!age) {
         problems.push(`${label}: created_at is neither daysAgo(n) nor now() - duration('Nh') — ${created}`);
         continue;
       }
@@ -548,10 +569,58 @@ describe('seeded case SLA due dates match the policy matrix (#595)', () => {
         problems.push(`${label}: no SLA matrix row for priority "${String(c.priority)}"`);
         continue;
       }
-      const expected = `${created} + duration('${hours}h')`;
-      if (due !== expected) problems.push(`${label}: expected \`${expected}\`, seeded \`${due}\``);
+      const where = SETTLED.has(String(c.status)) ? 'settled' : standing(age, hours);
+      if (where === 'depends on the hour') {
+        problems.push(`${label}: open, and inside or past its ${hours}h window depending on the hour the seed loads — move created_at to one side`);
+        continue;
+      }
+      const expected = where === 'inside'
+        ? `${created} + duration('${hours}h') + duration('${DEMO_GRACE_HOURS}h')`
+        : `${created} + duration('${hours}h')`;
+      if (due !== expected) problems.push(`${label}: ${where} — expected \`${expected}\`, seeded \`${due}\``);
     }
     expect(problems, problems.join('\n')).toEqual([]);
+  });
+
+  /**
+   * #2452: a fresh demo had 23 of 23 open cases past SLA by +72 h (#2431),
+   * because no open case can stay inside a 4- to 168-hour window for long.
+   * Read off the seed's own expressions at the WORST hour of the UTC day the
+   * seed can load, no open case that arrives inside its window falls due
+   * within fourteen days of the seed. The cases that arrive past it are the
+   * demo's deliberate breaches, named in `test/seed-sla-share.test.ts`.
+   */
+  it('keeps every open case that arrives inside its window inside it for two weeks (#2452)', () => {
+    const problems: string[] = [];
+    let held = 0;
+    let breaches = 0;
+    for (const c of cases.filter((r) => !SETTLED.has(String(r.status)))) {
+      const label = `${String(c.subject)} (${String(c.priority)} / ${String(c.crm_account)})`;
+      const age = creationOf(celSource(c.created_at));
+      const hours = caseSlaCalendarHours(String(c.priority), tierOf.get(String(c.crm_account)));
+      const due = /^.+ \+ duration\('(\d+)h'\) \+ duration\('(\d+)h'\)$/.exec(celSource(c.sla_due_date) ?? '');
+      if (!age || hours === undefined) {
+        problems.push(`${label}: no seeded creation instant or matrix row`);
+        continue;
+      }
+      if (standing(age, hours) === 'past') {
+        breaches++;
+        continue;
+      }
+      if (!due) {
+        problems.push(`${label}: arrives inside its ${hours}h window but carries no loosened due date`);
+        continue;
+      }
+      // Hours from the seed to the due date, at the worst load hour.
+      const oldest = 'days' in age ? (age.days + 1) * 24 : age.hours;
+      const ahead = Number(due[1]) + Number(due[2]) - oldest;
+      if (ahead < 14 * 24) problems.push(`${label}: due ${ahead}h after the seed at the worst load hour, under two weeks`);
+      held++;
+    }
+    expect(problems, problems.join('\n')).toEqual([]);
+    // Anti-vacuity: most open work is held, and the deliberate breaches are a few.
+    expect(held, 'open cases held inside their SLA').toBeGreaterThanOrEqual(15);
+    expect(breaches, 'open cases past SLA on arrival — the deliberate breaches').toBeLessThanOrEqual(7);
   });
 
   it('never marks an OPEN case as breached while its own due date is still ahead of it', () => {
