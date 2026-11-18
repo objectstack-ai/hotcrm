@@ -28,8 +28,8 @@ An **In Progress** campaign whose **End Date** has passed is set to
 **Completed** for you: see [Campaign Automation](./crm_marketing_automation.md).
 You can also complete one yourself when it ends early.
 
-Two rules hold on every save: **End Date** must be after **Start Date**, and
-both are required. An **Actual Cost** above the **Budgeted Cost** does not stop
+Two rules hold on every save: **End Date** cannot be earlier than **Start
+Date** (a one-day campaign uses the same date for both), and both are required. An **Actual Cost** above the **Budgeted Cost** does not stop
 a save; it is there for you to notice.
 
 ## Members and their status
