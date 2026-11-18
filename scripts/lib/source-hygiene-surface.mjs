@@ -188,7 +188,6 @@ export const ROOT_TEXT_FILES = [
   'CLAUDE.md',
   'CONTRIBUTING.md',
   'LICENSE',
-  'README.legacy.md',
   'README.md',
   'objectstack.composition.ts',
   'objectstack.config.ts',
