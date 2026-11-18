@@ -13,8 +13,12 @@
     "pipeline-management",
     "forecasting",
     "quotes",
+    "products",
+    "price-books",
+    "approvals",
     "contracts",
     "orders",
+    "billing-handoff",
     "activities",
     "meetings-and-calls"
   ]

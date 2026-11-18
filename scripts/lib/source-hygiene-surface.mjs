@@ -79,7 +79,7 @@ export const SCANNED = ['src', 'test', 'e2e', 'scripts'];
  * assumed — as of this change, over `content/` + `.changeset/`:
  *
  *   - `console.log` is already `src/`-only, and docs legitimately print it:
- *     `content/docs/marketplace/publishing-your-first-app*.mdx` instruct the
+ *     `content/docs/developers/publishing-your-first-app*.mdx` instruct the
  *     reader to run `node -e "console.log(...)"` (3 occurrences). Widening
  *     that check here would be wrong, not merely noisy.
  *   - `TODO`/`FIXME` filters to `.ts`, and these two trees hold none of it

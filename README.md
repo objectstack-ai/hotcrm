@@ -143,7 +143,7 @@ objectstack package publish dist/objectstack.json \
 
 The CLI is idempotent: re-running with the same `--manifest-id` updates the package; new `--version` values create immutable versioned snapshots.
 
-See [docs: Publishing your first marketplace app](content/docs/marketplace/publishing-your-first-app.mdx) for the full walkthrough.
+See [docs: Publishing your first marketplace app](content/docs/developers/publishing-your-first-app.mdx) for the full walkthrough.
 
 ---
 

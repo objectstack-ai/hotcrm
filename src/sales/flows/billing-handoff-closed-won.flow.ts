@@ -55,7 +55,7 @@ import {
  * at all.
  *
  * The cost of this route is stated in `_billing-endpoint.ts` and in
- * `content/docs/revenue/billing-handoff.mdx`: the endpoint and secret live in
+ * `content/docs/sales/billing-handoff.mdx`: the endpoint and secret live in
  * flow metadata, so repointing them is a rebuild, not a Setup edit.
  *
  * ## Exactly once per transition, not once per edit

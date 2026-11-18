@@ -42,7 +42,7 @@ Categories and families let you slice reports by product mix — *"how much SMB-
 
 | Field | Purpose |
 | --- | --- |
-| **List Price** | Standard published price — the product's price in the Standard [price book](/docs/revenue/price-books), which a new quote prices from |
+| **List Price** | Standard published price — the product's price in the Standard [price book](/docs/sales/price-books), which a new quote prices from |
 | **Cost** | Your cost — used for margin calculation |
 
 Cost may not be greater than List Price: a save that would make it so is refused, since every sale would lose money.
@@ -51,7 +51,7 @@ Cost may not be greater than List Price: a save that would make it so is refused
 
 ## No inventory, no billing schedule
 
-A product record is a catalog entry and nothing more. HotCRM holds **no stock figure** — no quantity on hand, no reorder point, and nothing decrements on a closed deal — and **no billing schedule or unit of measure**: how a subscription is billed lives in the contract and the quote, not on the catalog row. Those fields used to be declared here and were read by nothing, which made the catalog look like an inventory and billing system it never was. Stock belongs to your fulfilment system; see [Boundary with Finance Software](/docs/revenue/billing-handoff).
+A product record is a catalog entry and nothing more. HotCRM holds **no stock figure** — no quantity on hand, no reorder point, and nothing decrements on a closed deal — and **no billing schedule or unit of measure**: how a subscription is billed lives in the contract and the quote, not on the catalog row. Those fields used to be declared here and were read by nothing, which made the catalog look like an inventory and billing system it never was. Stock belongs to your fulfilment system; see [Boundary with Finance Software](/docs/sales/billing-handoff).
 
 ## The product image and datasheet
 
@@ -96,5 +96,5 @@ Neither view filters anything, so **every product appears in both**, inactive on
 
 ## Tips for admins
 
-- The category and family picklists can be extended. See [Customization › Extending Objects](/docs/customization/extending-objects).
+- The category and family picklists can be extended. See [Developers › Extending Objects](/docs/developers/extending-objects).
 - A product can be linked to multiple opportunities and quotes — deactivation doesn't break historical records.

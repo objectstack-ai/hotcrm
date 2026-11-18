@@ -1,0 +1,67 @@
+---
+title: Enable and Disable Modules
+description: Which parts of HotCRM are modules, how to switch one off and on, and what leaves while it is off — apps, sidebar entries, buttons, fields on other records — measured on ObjectStack 18.5.0.
+---
+
+# Enable and Disable Modules
+
+HotCRM ships as one product: the core **Sales** app and six modules. A company that does not use a module switches it off, and switches it back on when it needs it. Nothing is uninstalled and nothing is deleted.
+
+| Module | In Setup it is called | What it brings |
+| --- | --- | --- |
+| Service | **HotCRM Service** | The **Service** app: cases, SLAs, the knowledge base |
+| Products and quotes | **HotCRM Revenue** | Products, price books and quotes, inside the **Sales** app |
+| Marketing | **HotCRM Marketing** | The **Marketing** app: campaigns and their members |
+| Order to Cash | **HotCRM Order to Cash** | The **Order to Cash** app: billing milestones, invoices, payments |
+| Expenses | **HotCRM Expenses** | The **Expenses** app: expenses, expense reports, travel requests |
+| Project Delivery | **HotCRM Project Delivery** | The **Project Delivery** app: projects, staffing, budgets, timesheets |
+
+Accounts, contacts, leads, opportunities, contracts, orders and tasks belong to the core and are always on.
+
+## Switching a module off or on
+
+An administrator opens **Setup → Installed Apps**, chooses *Show all* (the list starts on the marketplace filter, which is empty), opens the module and chooses **Disable**. **Enable** on the same screen turns it back on. The same switch is `PATCH /api/v1/packages/<id>/disable` (and `/enable`) for a script, where the id is `app.objectstack.hotcrm.<module>`: `service`, `revenue`, `marketing`, `o2c`, `expense` or `psa`.
+
+The switch takes effect at once, for everyone, administrators included.
+
+## What leaves while a module is off
+
+Measured on ObjectStack 18.5.0, one module at a time, with the demo data:
+
+- **Its app** leaves the app launcher. That is the Service, Marketing, Order to Cash, Expenses or Project Delivery app; products and quotes have no app of their own.
+- **Its records** cannot be opened, listed or searched. A request for one answers `404 OBJECT_PACKAGE_DISABLED`.
+- **Its sidebar entries in other apps** leave too:
+
+  | Off | Entries that leave other apps |
+  | --- | --- |
+  | Service | **Knowledge**, the rep's entry in **Sales** |
+  | Products and quotes | **Quotes**, **Products**, **Price Books**, **Product Catalog** and **Revenue Manual** in **Sales** |
+  | Order to Cash | The **Collection Plan** group (**Billing Milestones**) and **Order to Cash Manual** in **Sales** |
+  | Expenses | **My Expenses**, **Reports to Approve** and **My Travel Requests** in **Project Delivery** |
+
+- **Its buttons** leave, including the ones it places on core records: **Generate Quote** on an opportunity while products and quotes are off; **Add to Campaign** on leads and contacts while Marketing is off.
+- **Fields it adds to other records** leave those records:
+
+  | Off | Fields that leave |
+  | --- | --- |
+  | Order to Cash | **Planned**, **Invoiced**, **Received** and **Receivable Balance** on a contract; **Invoiced**, **Received** and **Receivable Balance** on an account |
+  | Project Delivery | **Project** on an expense, an expense report and a travel request |
+
+## What stays
+
+- **The records.** Switching a module off deletes nothing. Switched back on, its records, app, entries, buttons and fields return as they were.
+- **A field on a core record that points into the module** stays, with its value. An opportunity's **Campaign** keeps the campaign it names while Marketing is off, and the opportunity can still be edited; the picker finds nothing new until Marketing is back. The same holds for a task's related case while Service is off.
+- **What another module stored.** With Project Delivery off, an expense keeps the project it named, and shows it again once Project Delivery is on. With Expenses off, a project keeps its expense cost as last counted; it moves again once Expenses is on.
+
+## Modules that depend on each other
+
+Project Delivery uses Expenses: a project's expense cost comes from approved expense reports. The platform does not stop you switching Expenses off while Project Delivery is on. Projects still open, list and edit; their expense figures stop moving until Expenses is back.
+
+With Project Delivery off and Expenses on, expenses are recorded and sent without a project: every selection makes one report, and every report goes to the spender's manager.
+
+> **Known issue.** While Project Delivery is off, an Expenses list view that shows a **Project** column fails to load, rather than leaving the column out ([objectstack#34901](https://github.com/objectstack-ai/objectstack/issues/34901)). Use a view without that column until the platform fix ships.
+
+## Related
+
+- [Setup Checklist](/docs/administration/setup) — the first configuration of a new install.
+- [Profiles](/docs/administration/profiles) — who sees which app when every module is on.

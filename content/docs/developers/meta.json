@@ -1,13 +1,16 @@
 {
-  "title": "定制化",
+  "title": "Developers",
   "defaultOpen": false,
   "pages": [
     "index",
+    "customize-and-extend",
     "extending-objects",
     "ai-skills",
     "ui-extensions",
+    "theming-and-i18n",
     "api-reference",
     "testing-and-ci",
-    "theming-and-i18n"
+    "publishing-your-first-app",
+    "manifest-and-versioning"
   ]
 }

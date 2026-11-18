@@ -97,7 +97,7 @@ The numbers live on the campaign record itself — the counters and the response
 
 The link is the **Campaign** lookup on the opportunity. Converting a lead fills it in when the lead responded to a campaign: the opportunity the conversion creates names the campaign the lead responded to most recently (last touch), so the campaign counts the deal and, once it is won, its revenue. A campaign the lead was only sent and never responded to is not credited, and neither is one the converting rep cannot see; such a deal starts with no campaign. Set **Campaign** by hand on any other opportunity that came from a campaign, or change it if the deal belongs to another campaign: the conversion only fills the field on the opportunity it creates and never changes it afterwards.
 
-For deals influenced by multiple campaigns (multi-touch), the convention is to record the **last-touch** campaign (the one closest to conversion). For full multi-touch attribution, consider extending the model with a campaign-influence join object — see [Customization](/docs/customization/extending-objects).
+For deals influenced by multiple campaigns (multi-touch), the convention is to record the **last-touch** campaign (the one closest to conversion). For full multi-touch attribution, consider extending the model with a campaign-influence join object — see [Extending Objects](/docs/developers/extending-objects).
 
 ## Standard list views
 
@@ -131,5 +131,5 @@ Campaigns are **public read-only** for the whole organisation. Anyone in sales c
 ## Tips for admins
 
 - The auto-complete cron (2 AM daily) is configurable. There is no enrollment cron to configure — enrollment is the **Enroll Members** screen flow, which someone runs from a campaign. See [Administration › Automation](/docs/administration/automation).
-- To add a new campaign type or channel, edit the campaign object's picklists. See [Customization › Extending Objects](/docs/customization/extending-objects).
+- To add a new campaign type or channel, edit the campaign object's picklists. See [Developers › Extending Objects](/docs/developers/extending-objects).
 - For multi-touch attribution, see the customisation guide.

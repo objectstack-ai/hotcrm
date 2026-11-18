@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
+import { P } from '@objectstack/spec';
 import {
   EXPENSE_CATEGORY_OPTIONS, EXPENSE_PAID_BY_OPTIONS, EXPENSE_SOURCE_OPTIONS, EXPENSE_STATUS_OPTIONS,
 } from './_expense-picklists';
@@ -38,6 +39,18 @@ export const Expense = ObjectSchema.create({
   description: 'A cost a person spent for the company, with its receipt',
 
   sharingModel: 'private',
+
+  // No "+ New" on a report's Expenses list, whatever the report's status. An
+  // expense reaches a report only through Submit for Reimbursement: the
+  // report field is read-only, so the platform drops a report a person names
+  // and the new expense would land on no report at all. A related list's
+  // create toolbar evaluates this against the HOST record, and only a report
+  // carries a report number, so the project page's Expenses list keeps it.
+  userActions: {
+    create: {
+      visibleWhen: P`!has(record.report_number)`,
+    },
+  },
   nameField: 'name',
   highlightFields: ['amount', 'expense_date', 'paid_by', 'status'],
 
@@ -115,7 +128,9 @@ export const Expense = ObjectSchema.create({
 
     // The report it was sent on (hotcrm#2559). Written by Submit for
     // Reimbursement, never by hand, so an expense cannot be slipped onto a
-    // report already decided.
+    // report already decided: the platform drops a person's value before any
+    // hook runs, on create and on update alike (pinned in
+    // `test/expense-module.test.ts`).
     crm_expense_report: Field.lookup('crm_expense_report', {
       label: 'Expense Report',
       group: 'basic',

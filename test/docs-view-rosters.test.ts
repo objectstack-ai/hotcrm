@@ -11,7 +11,7 @@ type AnyRec = Record<string, any>;
 /*
  * ─── A docs list-view roster names the views the app actually ships (#1194) ──
  *
- * `content/docs/revenue/products.mdx` carried a *Standard list views* section
+ * `content/docs/sales/products.mdx` carried a *Standard list views* section
  * naming three views — **Active Products**, **By Category**, **By Family** —
  * and `src/views/product.view.ts` declares neither those nor anything like
  * them: the real inventory is *All Products* (a grid grouped by category) and
@@ -217,7 +217,7 @@ type AnyRec = Record<string, any>;
  *     crm_contract`*. That is the exact mistake the ⛔ above forbids, caught.
  *   - **a rename in the producer, which is the property the derived side
  *     exists for.** `zh-CN.ts` `all_products` 全部产品 → 全部产品清单 turns the
- *     zh-Hans rule red on `revenue/products.zh-Hans` — the page did not move,
+ *     zh-Hans rule red on `sales/products.zh-Hans` — the page did not move,
  *     the pack did, and the rule followed it.
  *   - **a pack entry going missing.** Renaming the `crm_case._views.all_cases`
  *     KEY fails the producer rule first, with *`crm_case._views.all_cases is
@@ -226,14 +226,14 @@ type AnyRec = Record<string, any>;
  *   - **a view renamed in `src/views/**`.** `product_catalog` →
  *     `catalog_gallery` turns four rules red at once, the pin audit among them:
  *     *`crm_product.catalog_gallery ("Product Catalog", named on content/docs/
- *     revenue/products.mdx) has no pinned name`*. A view cannot arrive without
+ *     sales/products.mdx) has no pinned name`*. A view cannot arrive without
  *     someone writing its Traditional name.
  *   - **the pin rotting the other way.** A `phantom_view` entry added to
  *     `ZH_HANT_VIEW_NAMES` fails with *`crm_product.phantom_view is pinned as
  *     "幻影檢視", which the app does not ship`*.
  *   - **vacuity, on a translated face.** Renaming the `## 標準列表檢視` heading
- *     on `revenue/products.zh-Hant` fails with *`zh-Hant: roster sections this
- *     rule read no name column out of: content/docs/revenue/
+ *     on `sales/products.zh-Hant` fails with *`zh-Hant: roster sections this
+ *     rule read no name column out of: content/docs/sales/
  *     products.zh-Hant.mdx`* rather than passing over an empty set.
  *
  * ## The translated faces get COVERAGE too, and it is a THIRD direction (#1557)
@@ -247,7 +247,7 @@ type AnyRec = Record<string, any>;
  * because nothing on those faces ever asked whether a shipped view is named.
  *
  * Measured before the rules below were written, on the tree #1556 landed:
- * `revenue/products.zh-Hans` with both of its rows renamed to **全部产品**
+ * `sales/products.zh-Hans` with both of its rows renamed to **全部产品**
  * (dropping **产品目录**, 2 rows in and 2 rows out) ran **9 passed** — green
  * over the defect, on the file whose whole purpose is that defect's class.
  *
@@ -308,8 +308,8 @@ type AnyRec = Record<string, any>;
  * by anchored counts on the removed AND injected text, every restore proved by
  * state — blob hash back at its HEAD value and an empty `git diff HEAD`:
  *
- *   - **the card's own shape, on zh-Hans.** `revenue/products.zh-Hans`
- *     **产品目录** → **全部产品** fails with *`content/docs/revenue/
+ *   - **the card's own shape, on zh-Hans.** `sales/products.zh-Hans`
+ *     **产品目录** → **全部产品** fails with *`content/docs/sales/
  *     products.zh-Hans.mdx never names "产品目录", the zh-CN spelling of a view
  *     crm_product ships`* — 1 failed, 9 passed, where before it was 9 passed.
  *   - **the same shape where the prose still names the dropped view.**
@@ -365,7 +365,7 @@ type AnyRec = Record<string, any>;
  *   - **the shape only the name column sees.** `service/cases.mdx`
  *     **Escalated Cases** → **All Cases**, prose below the table still naming
  *     it: body coverage GREEN, the rule below RED.
- *   - **the shape the body rule was supposed to own.** `revenue/products.mdx`
+ *   - **the shape the body rule was supposed to own.** `sales/products.mdx`
  *     **Product Catalog** → **All Products**, where *Product Catalog* occurs
  *     exactly once in the section — its own row — so the name is then absent
  *     from the body entirely: BOTH rules red. The body rule caught nothing
@@ -407,21 +407,21 @@ type AnyRec = Record<string, any>;
  *     never names "Escalated Cases" in its name column, which crm_case
  *     ships`* — 1 failed, 11 passed, where the same tree ran 11 passed before
  *     the rule existed.
- *   - **the name absent from the section entirely.** `revenue/products.mdx`
+ *   - **the name absent from the section entirely.** `sales/products.mdx`
  *     **Product Catalog** → **All Products** fails the rule below AND the body
  *     coverage rule above it — 2 failed, 10 passed — which is the measurement
  *     behind the subsumption stated above.
  *   - **vacuity, on the English face.** Renaming the `## Standard list views`
- *     heading on `revenue/products.mdx` fails `expectNameColumnIsReadable`
+ *     heading on `sales/products.mdx` fails `expectNameColumnIsReadable`
  *     inside the new rule — *`English: roster sections this rule read no name
- *     column out of: content/docs/revenue/products.mdx`* — rather than letting
+ *     column out of: content/docs/sales/products.mdx`* — rather than letting
  *     coverage pass over an empty cell list, which is the failure mode a
  *     coverage rule is most exposed to.
  *
  * ## Reverse verification
  *
  * Predicted **red before the content fix, green after**, and measured as such.
- * Before: three English pages failed coverage — `revenue/products` (missing
+ * Before: three English pages failed coverage — `sales/products` (missing
  * both of its views), `marketing/campaigns` (missing all four; the section
  * named six views that do not exist, the same defect one page over) and
  * `service/cases` (missing *Unassigned — triage*, on a page that says how many
@@ -453,7 +453,7 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
     'content/docs/marketing/campaigns.mdx': 'crm_campaign',
     'content/docs/sales/contracts.mdx': 'crm_contract',
     'content/docs/sales/orders.mdx': 'crm_sales_order',
-    'content/docs/revenue/products.mdx': 'crm_product',
+    'content/docs/sales/products.mdx': 'crm_product',
   };
 
   /**

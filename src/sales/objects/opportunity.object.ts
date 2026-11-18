@@ -15,6 +15,24 @@ import { F, P } from '@objectstack/spec';
 const QUALIFICATION_GATE_ON = P`has(record.qualification_approval_status) && record.qualification_approval_status != "not_required"`;
 const STATUS_CHANGE_GATE_ON = P`has(record.status_change_approval_status) && record.status_change_approval_status != "not_required"`;
 
+/**
+ * When a close reason may hold a value (#2592): the deal is at its closed
+ * stage, or a request to close it that way waits on the status-change
+ * approval (`requested_status`, `opportunity-status-change-approval.flow.ts`).
+ * TOTAL predicates (AGENTS.md): every read is `has()`-guarded.
+ */
+const WON_REASON_ALLOWED = P`(has(record.stage) && record.stage == "closed_won") || (has(record.requested_status) && record.requested_status == "closed_won")`;
+const LOST_REASON_ALLOWED = P`(has(record.stage) && record.stage == "closed_lost") || (has(record.requested_status) && record.requested_status == "closed_lost")`;
+
+/**
+ * A close-reason option list whose every option carries the field's own
+ * predicate. An option's `visibleWhen` is the visibility rule the server
+ * enforces: a write picking a value whose predicate is false is refused, so
+ * this is what keeps a reason off an open deal on import and API writes too.
+ */
+const closingOptions = <T extends { label: string; value: string }>(allowed: typeof WON_REASON_ALLOWED, options: T[]) =>
+  options.map((o) => ({ ...o, visibleWhen: allowed }));
+
 export const Opportunity = ObjectSchema.create({
   name: 'crm_opportunity',
   label: 'Opportunity',
@@ -610,7 +628,16 @@ export const Opportunity = ObjectSchema.create({
       description: 'Why this deal was won. Required to close an opportunity as Won.',
       group: 'sales_process',
       requiredWhen: P`has(record.stage) && record.stage == "closed_won"`,
-      options: [
+      // Shown, and writable, only on a deal closing as Won (#2592): at Closed
+      // Won, or while a won request waits on the status-change approval (the
+      // rep records the reason with the request; `apply_status` then moves
+      // the stage). The field-level predicate hides it on every surface,
+      // inline edit on the record page included; the same predicate on each
+      // OPTION is the half the server enforces (the rule validator refuses a
+      // picked value whose `visibleWhen` is false), so an import or an API
+      // write cannot put a win reason on an open deal either.
+      visibleWhen: WON_REASON_ALLOWED,
+      options: closingOptions(WON_REASON_ALLOWED, [
         { label: 'Better Product', value: 'better_product' },
         { label: 'Better Price', value: 'better_price' },
         { label: 'Existing Relationship', value: 'relationship' },
@@ -626,7 +653,7 @@ export const Opportunity = ObjectSchema.create({
         // a rep's attribution instead of reading a fabricated "Better Product".
         { label: 'Quote Accepted', value: 'quote_accepted' },
         { label: 'Other', value: 'other' },
-      ],
+      ]),
     }),
 
     loss_reason: Field.select({
@@ -634,7 +661,9 @@ export const Opportunity = ObjectSchema.create({
       description: 'Why this deal was lost. Required to close an opportunity as Lost.',
       group: 'sales_process',
       requiredWhen: P`has(record.stage) && record.stage == "closed_lost"`,
-      options: [
+      // The loss twin of `win_reason` above (#2592).
+      visibleWhen: LOST_REASON_ALLOWED,
+      options: closingOptions(LOST_REASON_ALLOWED, [
         { label: 'Price Too High', value: 'price' },
         { label: 'Lost to Competitor', value: 'competitor' },
         { label: 'No Budget', value: 'no_budget' },
@@ -642,7 +671,7 @@ export const Opportunity = ObjectSchema.create({
         { label: 'Bad Timing', value: 'timing' },
         { label: 'Missing Features', value: 'features' },
         { label: 'Other', value: 'other' },
-      ],
+      ]),
     }),
 
     loss_details: Field.textarea({

@@ -1,0 +1,141 @@
+---
+title: Customize and Extend
+description: Change HotCRM for your own company with a coding agent — configuration first, then code in a clone — and, second, publish a fork of it as an app of your own.
+---
+
+# Customize and Extend
+
+There are two reasons to change HotCRM. Most companies want **their own deployment** to fit how they work: a field the sales team needs, a module they do not use, an approval with their own threshold. A few want to **publish an app of their own** built from HotCRM. The first is described first, because it is the common case.
+
+## Customize your own deployment
+
+### Start with what Setup already does
+
+Much of what a company asks for is configuration, not code. Before you change anything, check whether an administrator can do it in the app:
+
+- users, managers, positions and [profiles](/docs/administration/profiles);
+- switching a module off and on — see [Enable and Disable Modules](/docs/administration/modules);
+- [automation](/docs/administration/automation) and approvals as HotCRM ships them;
+- [sharing and field security](/docs/administration/sharing-and-security);
+- list views, dashboards and the [import](/docs/guides/import-and-export) of your existing records.
+
+Anything that changes HotCRM's own objects — a new field, a new object, a new action, a changed rule in a hook — is a code change in a clone of the repository.
+
+### Change the code with a coding agent
+
+HotCRM is written so that a coding agent can change it safely. Everything is typed ObjectStack metadata under `src/`, one suffix per kind of item, and two files tell an agent how to work:
+
+- **`AGENTS.md`** at the root of the repository is the instruction set for any agent working in HotCRM: the naming rules, the package boundaries, the file-suffix protocol, the checks to run.
+- **ObjectStack's agent skills**, the npm package `@objectstack/skills`, teach an agent the platform itself: objects, flows, permissions, views. Install them into your agent's directory as [AI Skills](https://objectstack.ai/docs/ai/skills) describes.
+
+Then ask in your own words. For example:
+
+> Add a **Region** picklist to accounts with the values EMEA, Americas and APAC, show it on the account page and in the All Accounts list, and translate the label into every language HotCRM ships.
+
+A good agent finds the object in `src/sales/objects/account.object.ts`, the page, the view and the four translation bundles, and changes them together. Ask it to run the checks before you review:
+
+```bash
+pnpm verify    # validate, typecheck, lint, hygiene, build, test
+```
+
+`pnpm verify` is the same gate HotCRM's own changes pass. A field that fails the `@objectstack/spec` schema, a translation key with no label, or a broken reference fails here and not in front of your users.
+
+### See it, and let your agent use it
+
+Run it locally with `pnpm dev` (http://localhost:4001) and look at the change. Once it is deployed, an agent you connect over MCP sees the new field and object at once, with no extra step: the MCP surface is read from the same metadata. See [Connect Your Agent](/docs/ai-copilot/connect-your-agent).
+
+### Keep your changes when HotCRM moves
+
+Keep your deployment as a clone that tracks HotCRM:
+
+```bash
+git remote add upstream https://github.com/objectstack-ai/hotcrm.git
+git fetch upstream
+git merge upstream/main
+```
+
+Small, additive changes merge cleanly: a new field in an object file, a new object in its own file, a new translation key. Conflicts, when they come, are mostly in the four translation bundles. Run `pnpm verify` after every merge.
+
+## Publish a fork as your own app
+
+HotCRM is also a working reference for a full ObjectStack app: objects, hooks, flows, approvals, positions, sharing, dashboards, skills, four languages and their documentation. To build a different app from it and publish that app, fork it.
+
+### 1. Clone
+
+```bash
+git clone https://github.com/objectstack-ai/hotcrm.git my-app
+cd my-app
+git remote rename origin upstream     # `git pull upstream main` brings HotCRM updates
+git remote add origin git@github.com:<you>/<my-app>.git
+```
+
+### 2. Give it its own identity
+
+HotCRM builds one artifact that carries seven packages: the app package in `src/sales/` and six modules. Each declares its own manifest. Edit the app package's in `src/sales/index.ts`; it is also the artifact's identity:
+
+```diff
+ manifest: {
+-  id: 'app.objectstack.hotcrm',
++  id: 'app.acme.myapp',
+   namespace: 'crm',
+   type: 'app',
+-  name: 'HotCRM',
++  name: 'Acme MyApp',
+   ...
+ },
+```
+
+Then give each module you keep an `id` under yours (`app.acme.myapp.service`, say) and point its `dependencies` at your new app `id`. Project delivery depends on expenses too: its `dependencies` name both. `objectstack.config.ts` composes the packages and needs no edit.
+
+**Keep the `crm_` prefix.** Every object, position and translation key spells it out, in hundreds of files, and HotCRM's own upgrades assume it. A fork that renames it can no longer merge from upstream. A new object of yours takes the same prefix.
+
+### 3. Cut what you do not need
+
+Each module is a directory under `src/`: `service`, `revenue`, `marketing`, `o2c`, `expense`, `psa`. To drop one, remove its directory, its imports, stack and seed families from `objectstack.composition.ts`, and its pages under `content/docs/`. Project delivery needs expenses: drop both, or keep expenses. Accounts, contacts, leads, opportunities, contracts, orders and tasks live in `src/sales/` and are the core every module builds on. `pnpm typecheck` flags the references that are left.
+
+### 4. Add what you do need
+
+Follow the file-suffix protocol in the package that owns the entity. A directory under `src/` **is** a package, and a file that never reaches its package's barrel is registered by nothing:
+
+| New entity | File |
+|---|---|
+| Data model | `src/<package>/objects/<entity>.object.ts` |
+| Server-side trigger | `src/<package>/objects/<entity>.hook.ts`, beside its object, registered in `src/<package>/objects/hooks.ts` |
+| Action, for people and agents | `src/<package>/actions/<entity>.actions.ts` |
+| Record page | `src/<package>/pages/<entity>.page.ts` |
+| List view | `src/<package>/views/<entity>.view.ts` |
+| Labels | `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
+
+Every file goes through `@objectstack/spec` schema validation at build time, so mistakes fail loudly.
+
+### 5. Verify
+
+```bash
+pnpm verify
+pnpm dev       # http://localhost:4001
+```
+
+### 6. Publish
+
+```bash
+objectstack cloud login
+objectstack package publish dist/objectstack.json \
+  --visibility marketplace \
+  --category <your-category> \
+  --note "Initial release."
+```
+
+[Publishing your first app](/docs/developers/publishing-your-first-app) has the whole CLI, and [Manifest and Versioning](/docs/developers/manifest-and-versioning) the version rules.
+
+### Stay in sync
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+The file-suffix protocol keeps the conflict surface small; translation bundles are where most conflicts land.
+
+## License
+
+HotCRM ships under Apache-2.0. You can change it, rebrand it and sell services around it. If you find a bug in a convention rather than in your own business logic, send it upstream: that makes the reference better for everyone.

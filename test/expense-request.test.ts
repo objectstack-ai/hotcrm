@@ -287,6 +287,11 @@ describe('the travel request and the module switches (hotcrm#2578)', () => {
     return req.id;
   };
 
+  // A package disable or enable re-registers the module's metadata, and each
+  // of these cases files and approves around one or two of them: under the
+  // full suite's load that runs past the 5 s default (merge-queue run
+  // 44135337244), though about 2 s alone. Each switch case here takes the
+  // explicit timeout of the repo's other multi-step stack cases.
   it('works the same with Project Delivery enabled and disabled', async () => {
     await fileAndApprove();
     expect((await verify.apiAs(admin, 'PATCH', `${pkg(PSA_ID)}/disable`)).status).toBe(200);
@@ -295,7 +300,7 @@ describe('the travel request and the module switches (hotcrm#2578)', () => {
     } finally {
       expect((await verify.apiAs(admin, 'PATCH', `${pkg(PSA_ID)}/enable`)).status).toBe(200);
     }
-  });
+  }, 60_000);
 
   it('leaves with the expense module, and the rest of the app keeps working', async () => {
     const id = await fileAndApprove();
@@ -312,7 +317,7 @@ describe('the travel request and the module switches (hotcrm#2578)', () => {
       expect((await verify.apiAs(admin, 'PATCH', `${pkg(EXPENSE_ID)}/enable`)).status).toBe(200);
     }
     expect((await verify.rows('crm_expense_request', { id }))[0]!.status, 'the request is kept').toBe('approved');
-  });
+  }, 60_000);
 });
 
 describe('the start conditions open one request per submission (hotcrm#2578)', () => {
@@ -597,7 +602,7 @@ describe('the request\'s project and the module switches (hotcrm#2581)', () => {
       expect((await verify.apiAs(admin, 'PATCH', `${pkg(PSA_ID)}/enable`)).status).toBe(200);
     }
     expect(await fieldsOf('crm_expense_request'), 'the field returns on enable').toContain('crm_project');
-  });
+  }, 60_000);
 
   it('with the expense module off, projects read, list and edit, and My Travel Requests leaves Project Delivery', async () => {
     const navIds = async (): Promise<string[]> => {
@@ -620,5 +625,5 @@ describe('the request\'s project and the module switches (hotcrm#2581)', () => {
     } finally {
       expect((await verify.apiAs(admin, 'PATCH', `${pkg(EXPENSE_ID)}/enable`)).status).toBe(200);
     }
-  });
+  }, 60_000);
 });

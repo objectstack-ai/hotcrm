@@ -1,6 +1,6 @@
 ---
 title: Sales
-description: Everything you need to capture leads, work deals, send quotes and close revenue.
+description: Everything you need to capture leads, work deals, price them from the catalog, send quotes and sign contracts.
 ---
 
 # Sales
@@ -31,8 +31,12 @@ You bring leads in, qualify them, convert them into an account, work the opportu
 | [**Pipeline Management**](/docs/sales/pipeline-management) | How stages, probability and forecasting work. |
 | [**Forecasting**](/docs/sales/forecasting) | Pipeline snapshots per owner and period — quota, commit, best case and attainment. |
 | [**Quotes**](/docs/sales/quotes) | Pricing proposals tied to opportunities, with line items and discounts. |
+| [**Products**](/docs/sales/products) | The catalog of what you sell — names, codes, list prices, SKUs. |
+| [**Price Books**](/docs/sales/price-books) | More than one price per product — the standard list, a partner tier, a region, a promotion. |
+| [**Approvals**](/docs/sales/approvals) | Tiered approval for large deals. |
 | [**Contracts**](/docs/sales/contracts) | Signed agreements with customers — terms, value, renewals. |
 | [**Orders**](/docs/sales/orders) | What a customer bought — lines, totals, status and delivery. |
+| [**Boundary with Finance Software**](/docs/sales/billing-handoff) | What HotCRM records about money and what it leaves to finance software — and the two outbound events that hand a won deal and an activated contract to billing. |
 | [**Activities**](/docs/sales/activities) | Tasks — what you still owe a customer, on any record. |
 | [**Meetings & Calls**](/docs/sales/meetings-and-calls) | Meetings and calls logged or booked as events, with attendees and interaction history. |
 
@@ -47,17 +51,20 @@ You don't need to do these manually — HotCRM handles them in the background:
 - **Big-win notifications** — when a deal of $100K or more is marked won, the deal owner is notified by email — the owner alone, not their manager.
 - **Quote expiration** — quotes that pass their expiration date are auto-marked as expired every night.
 - **Large deal approval** — opportunities of $100K or more are automatically routed to your sales manager for approval, and those above $500K to your sales director as well.
+- **Contract on acceptance** — accepting a quote closes the deal as *Closed Won* and drafts a contract from the quote.
+- **Auto-promote account** to *Customer* the moment a contract is activated, and stamp the contract's **Signed Date** if it has none. No date is stamped on the *account*: a cohort report reads the contract's **Signed Date** or **Start Date**.
+- **Renewal reminder and expiration** — where an administrator has switched scheduled work on, a daily sweep gives the **contract owner** a renewal task and a reminder when a contract enters its notice window (**Renewal Notice (Days)**, 30 unless you change it), and contracts past their end date are marked *Expired*.
 
 ## Sales AI skills
 
-The [sales skills](/docs/ai-copilot/sales-copilot) are built into the platform assistant. When you open a lead, account or opportunity, it can:
+The [sales skills](/docs/ai-copilot/sales-copilot) attach to the platform's assistant where your environment runs one; an agent you [connect over MCP](/docs/ai-copilot/connect-your-agent) works on the same records. Either can:
 
 - **Qualify a lead** using the BANT method (Budget, Authority, Need, Timeline) and give you a score.
 - **Draft outbound emails** personalised for the contact and grounded in the product catalog.
 - **Forecast revenue** and flag deals that look at risk.
 - **Summarise an account** before your next meeting (Customer 360).
 
-Just type into the chat: *"qualify this lead"*, *"draft a follow-up email"*, *"what's at risk this quarter?"*
+Ask it: *"qualify this lead"*, *"draft a follow-up email"*, *"what's at risk this quarter?"*
 
 ## Where to find things
 
@@ -68,9 +75,13 @@ The Sales app sidebar groups everything under **Sales**, and that group carries 
 - **Product Catalog** — the catalogue's list prices by category, from the revenue module's `product_catalog_dashboard` dashboard. It follows **Price Books**, and leaves with the revenue module.
 - **Knowledge** — for sales reps only: the published knowledge articles, so a rep finds them here and through the search box. Everyone else finds **Knowledge** under **Service**, in the Service app, which a rep's launcher does not offer.
 
-**Products** joined this group rather than **Marketing**: the catalogue is the master data every quote line and opportunity line item points at, so it is revenue data that happened to be filed next to campaigns — see [Products](/docs/revenue/products).
+**Products** joined this group rather than **Marketing**: the catalogue is the master data every quote line and opportunity line item points at, so it is revenue data that happened to be filed next to campaigns — see [Products](/docs/sales/products).
 
 In the sidebar, **Contracts** and **Orders** follow **Sales Performance**, and **Quotes**, **Products**, **Price Books** and **Product Catalog** follow them: they ship in HotCRM's revenue module, and a module's entries follow the entries the app itself places in a group. A rep's **Knowledge** comes last, from the service module.
+
+Large-deal approvals wait for you under **My Work**:
+
+- **Inbox** — opens the platform's **approval centre**, where the approvals waiting on you are approved or rejected. **Inbox** is the label you see in the sidebar; nothing in the app is called *Approval Requests*. See [Approvals](/docs/sales/approvals).
 
 There is no *Pipeline* entry in the sidebar. The kanban board is a tab on the **Opportunities** list page, where it sits beside the other ways of reading the same deals; the view carries its own label, **Sales Pipeline** (`pipeline_kanban`).
 
@@ -84,3 +95,4 @@ If you're new, read these in order:
 2. [Opportunities](/docs/sales/opportunities) — the core record you'll work on every day.
 3. [Pipeline Management](/docs/sales/pipeline-management) — how the funnel is governed.
 4. [Quotes](/docs/sales/quotes) — how to send a proposal.
+5. [Products](/docs/sales/products) and [Price Books](/docs/sales/price-books) — the catalog your quotes are priced from.
