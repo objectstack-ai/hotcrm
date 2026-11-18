@@ -86,11 +86,22 @@ export const Forecast = ObjectSchema.create({
     // (`period_start_first_of_period` / `quarter_starts_on_quarter_boundary`,
     // both below) so the form and the rejection agree on the same rule
     // instead of describing two different ones (#1085).
+    //
+    // A NOT NULL column the hook fills, ⛔ not `required` — the same shape as
+    // `period_end` below, for the same reason (#2539). `forecast_derive_period`
+    // places a start the write leaves out on the calendar period containing
+    // `snapshot_date`, and the handbook tells a person they may leave it out;
+    // the form reads `required` as "the user must type this" and cannot see
+    // that derivation. Measured on 18.5.0 through the engine's write door, as
+    // a sales manager: an insert with no `period_start` (absent or null)
+    // stored the derived start, end and label; the hookless dry-run preview
+    // stopped reporting "Period Start is required"; and an update that clears
+    // it is still refused by the column ("Period Start is required and cannot
+    // be cleared", `VALIDATION_FAILED`), exactly as it was with `required`.
     period_start: Field.date({
       label: 'Period Start',
       description:
         'Must be the first day of the period — e.g. 2026-08-01 for Aug 2026. A quarterly forecast must additionally start on a quarter boundary: January 1, April 1, July 1 or October 1.',
-      required: true,
       storage: { notNull: true },
       group: 'basic',
     }),
@@ -254,13 +265,26 @@ export const Forecast = ObjectSchema.create({
       group: 'amounts',
     }),
 
+    // Who wrote the row — and, on the current quarter, whose row it is: the
+    // nightly `forecast_snapshot` sweep refreshes ONLY `scheduled` rows and
+    // stands down for any other (`OWNED_PERIOD_FILTER`, #1082).
+    //
+    // So the declared default is `manual`, ⛔ never `scheduled` (#2539). The
+    // engine applies an option's `default` on every insert that names no
+    // source — the New Forecast form pre-selects it, and a REST or system
+    // insert stores it (measured on 18.5.0: both stored `scheduled` while it
+    // was the default) — so a `scheduled` default handed every hand-entered
+    // current-quarter row to the sweep, which overwrote its amounts at 03:00.
+    // A writer that is not a person names its own source: the sweep writes
+    // `scheduled` at both of its write sites, and every seed row does too.
+    // `test/forecast-source-default.test.ts` pins it on the booted app.
     source: Field.select({
       label: 'Source',
       group: 'meta',
       options: [
-        { label: 'Scheduled snapshot', value: 'scheduled', default: true },
+        { label: 'Scheduled snapshot', value: 'scheduled' },
         { label: 'AI skill',           value: 'ai' },
-        { label: 'Manual entry',       value: 'manual' },
+        { label: 'Manual entry',       value: 'manual', default: true },
       ],
     }),
 

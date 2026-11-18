@@ -21,6 +21,11 @@ import { hotcrmStack, signUpPerson, today, type Person } from './helpers/verify-
  * (The last row is item 7b, measured on 18.0.0-next.5: the twin line object
  * the shared price fill also serves.)
  *
+ * `crm_forecast.period_start` joined the second shape in #2539, measured on
+ * 18.5.0 through the engine's write door and preview rather than the console:
+ * an insert without it stored the derived start, the preview reported it
+ * required.
+ *
  * A hook filled each one, and a form cannot see a hook: it reads `required` as
  * "the user must type this". Two constructs, chosen by what the spec can say:
  *
@@ -65,6 +70,9 @@ describe('the create form is told who supplies each value', () => {
     // Item 7b: the twin line object, which the shared price fill serves too.
     ['crm_quote_line_item', 'unit_price'],
     ['crm_forecast', 'period_end'],
+    // #2539: the hook derives a start the write leaves out, and the handbook
+    // says a person may leave it out; the form demanded it all the same.
+    ['crm_forecast', 'period_start'],
   ])('%s.%s is a NOT NULL column the server fills, not a value the writer must supply', (object, field) => {
     const def = fieldOf(object, field);
     expect(def.required, `${object}.${field} is required again, so the create form refuses a blank one`).toBeFalsy();
@@ -170,7 +178,7 @@ describe('the save lands, the value is supplied, and the protection stays', () =
     });
   });
 
-  describe('Period End and Snapshot Date (C-08)', () => {
+  describe('Period Start, Period End and Snapshot Date (C-08, #2539)', () => {
     /** The manager's forecast, as the form posts it: a period and its start. */
     const managerForecast = async (doc: AnyRec): Promise<AnyRec> =>
       stored('crm_forecast', (await verify.hooks.run('crm_forecast', 'insert', doc, as(manager))).id);
@@ -200,6 +208,31 @@ describe('the save lands, the value is supplied, and the protection stays', () =
       const f = await managerForecast({ period: 'month', period_start: '2026-08-01' });
       await verify.hooks.run('crm_forecast', 'update', { id: f.id, period_end: null }, as(manager));
       expect((await stored('crm_forecast', f.id)).period_end).toBe('2026-08-31');
+    });
+
+    // #2539: Period Start follows Period End. Measured on 18.5.0 before the
+    // change: the hookless preview answered "Period Start is required" for a
+    // forecast the hook would have placed.
+    it.each([
+      ['left out', {}],
+      ['sent blank', { period_start: null }],
+    ])('a forecast whose Period Start is %s lands on the period containing its snapshot date', async (_how, doc) => {
+      const f = await managerForecast({ period: 'quarter', snapshot_date: '2026-11-18', ...doc });
+      expect(f).toMatchObject({ period_start: '2026-10-01', period_end: '2026-12-31', period_label: 'Q4 2026' });
+    });
+
+    it('the dry-run preview no longer reports a missing Period Start', async () => {
+      const verdict = await verify.validate('crm_forecast', { period: 'quarter' }, as(manager));
+      expect(verdict.results[0]!.errors).toEqual([]);
+    });
+
+    it('an update that clears Period Start is refused by the column, and the start stays', async () => {
+      const f = await managerForecast({ period: 'month', period_start: '2026-09-01' });
+      const refusal = await refusalOf(verify.hooks.run('crm_forecast', 'update', { id: f.id, period_start: null }, as(manager)));
+      expect(refusal.code).toBe('VALIDATION_FAILED');
+      expect(refusal.status).toBeUndefined();
+      expect(refusal.fields).toEqual(expect.arrayContaining([expect.objectContaining({ field: 'period_start' })]));
+      expect((await stored('crm_forecast', f.id)).period_start).toBe('2026-09-01');
     });
   });
 
