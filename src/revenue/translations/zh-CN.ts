@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../flows/quote-accepted-contract-draft.flow';
 
 // The discount ceiling is interpolated, never retyped: the number lives in
 // `_thresholds.ts` alone (#1711).
@@ -13,13 +14,6 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  */
 export const zhCN: TranslationData = {
   hooks: {
-    // The drafted contract's provenance sentence (#2535).
-    quote_accepted_contract_draft: {
-      texts: {
-        drafted_named: { message: '根据已接受的报价单{{ quote }}自动起草' },
-        drafted_untitled: { message: '根据已接受的报价单自动起草' },
-      },
-    },
     quote_total_rollup: {
       refusals: {
         RECORD_LOCKED: {
@@ -176,6 +170,13 @@ export const zhCN: TranslationData = {
     },
   },
   objects: {
+    // The order's Source Quote, added by this package through
+    // `objectExtensions` (hotcrm#2558).
+    crm_sales_order: {
+      fields: {
+        crm_quote: { label: '来源报价单' },
+      },
+    },
     crm_quote: {
       _validations: {
         discount_within_ceiling: {
@@ -449,6 +450,19 @@ export const zhCN: TranslationData = {
     },
   },
   flows: {
+    // An accepted quote's two automations (hotcrm#2558). The drafted
+    // contract's provenance sentence is TEXT in the organization's language
+    // (#2535), one per variant of the draft, at
+    // `flows.quote_accepted_contract_draft.records.<node>.fields.description`.
+    quote_accepted_contract_draft: {
+      label: '已接受的报价单起草合同',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: '根据已接受的报价单{{ storedQuote.quote_number }} - {{ storedQuote.name }}自动起草' },
+      }])),
+    },
+    quote_accepted_order: {
+      label: '已接受的报价单创建订单',
+    },
     price_book_add_products: {
       label: '向价格表添加产品',
       successMessage: '产品已添加到价格表。',

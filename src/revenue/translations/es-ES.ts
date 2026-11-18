@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../flows/quote-accepted-contract-draft.flow';
 
 // The discount ceiling is interpolated, never retyped: the number lives in
 // `_thresholds.ts` alone (#1711).
@@ -13,13 +14,6 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  */
 export const esES: TranslationData = {
   hooks: {
-    // The drafted contract's provenance sentence (#2535).
-    quote_accepted_contract_draft: {
-      texts: {
-        drafted_named: { message: 'Redactado automáticamente a partir de la cotización aceptada {{ quote }}' },
-        drafted_untitled: { message: 'Redactado automáticamente a partir de una cotización aceptada' },
-      },
-    },
     quote_total_rollup: {
       refusals: {
         RECORD_LOCKED: {
@@ -176,6 +170,13 @@ export const esES: TranslationData = {
     },
   },
   objects: {
+    // The order's Source Quote, added by this package through
+    // `objectExtensions` (hotcrm#2558).
+    crm_sales_order: {
+      fields: {
+        crm_quote: { label: 'Cotización de origen' },
+      },
+    },
     crm_product: {
       _validations: {
         cost_less_than_price: {
@@ -450,6 +451,19 @@ export const esES: TranslationData = {
     },
   },
   flows: {
+    // An accepted quote's two automations (hotcrm#2558). The drafted
+    // contract's provenance sentence is TEXT in the organization's language
+    // (#2535), one per variant of the draft, at
+    // `flows.quote_accepted_contract_draft.records.<node>.fields.description`.
+    quote_accepted_contract_draft: {
+      label: 'La cotización aceptada redacta un contrato',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: 'Redactado automáticamente a partir de la cotización aceptada {{ storedQuote.quote_number }} - {{ storedQuote.name }}' },
+      }])),
+    },
+    quote_accepted_order: {
+      label: 'La cotización aceptada crea un pedido',
+    },
     price_book_add_products: {
       label: 'Añadir Productos a la Lista de Precios',
       successMessage: 'Productos añadidos a la lista de precios.',

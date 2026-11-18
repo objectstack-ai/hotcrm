@@ -9,6 +9,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  */
 export const en: TranslationData = {
   objects: {
+    // The order's Source Quote, added by this package through
+    // `objectExtensions` (hotcrm#2558).
+    crm_sales_order: {
+      fields: {
+        crm_quote: { label: 'Source Quote' },
+      },
+    },
     crm_product: {
       label: 'Product',
       pluralLabel: 'Products',
