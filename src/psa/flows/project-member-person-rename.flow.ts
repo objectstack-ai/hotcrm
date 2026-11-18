@@ -34,8 +34,10 @@ export const ProjectMemberPersonRenameFlow: Flow = {
   description: "When a user's name changes, write the new name onto their staffing rows so each row's title follows.",
   type: 'record_change',
   status: 'active',
-  // Elevated on purpose (see the header). The one write is `person_name`, on
-  // rows scanned inside one organization.
+  // Elevated on purpose (see the header): the renaming person may not edit
+  // every project the user is staffed on, and a sign-in-service rename has no
+  // user at all. The one write is `person_name`, on rows scanned inside one
+  // organization.
   runAs: 'system',
   variables: [],
   nodes: [
