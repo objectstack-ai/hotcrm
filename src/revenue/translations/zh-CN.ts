@@ -210,7 +210,7 @@ export const zhCN: TranslationData = {
         description: { label: '描述' },
         crm_contact: {
           label: '联系人',
-          help: '把报价改为「已提交」或「已接受」的那次保存必须填写 —— 起草的合同从这里取主要联系人。',
+          help: '把报价改为「已提交」或「已接受」的那次保存必须填写 —— 订单从这里取联系人，从订单起草的合同也从这里取主要联系人。',
         },
         owner_id: { label: '报价负责人' },
         // The countersigned copy (#2317).

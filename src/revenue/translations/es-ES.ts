@@ -299,7 +299,7 @@ export const esES: TranslationData = {
         crm_account: { label: 'Cuenta' },
         crm_contact: {
           label: 'Contacto',
-          help: 'Obligatorio en cuanto la cotización pasa a Presentada o Aceptada: el contrato generado toma de aquí su Contacto principal.',
+          help: 'Obligatorio en cuanto la cotización pasa a Presentada o Aceptada: el pedido toma de aquí su contacto, y el contrato redactado desde el pedido, su Contacto principal.',
         },
         crm_opportunity: { label: 'Oportunidad' },
         owner_id: { label: 'Propietario de Cotización' },

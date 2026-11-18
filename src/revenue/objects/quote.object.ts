@@ -159,7 +159,7 @@ export const Quote = ObjectSchema.create({
       dependsOn: ['crm_account'],
       requiredWhen: P`has(record.status) && (record.status == "presented" || (record.status == "accepted" && (previous == null || !has(previous.status) || previous.status != "accepted")))`,
       description:
-        'Required on the save that moves the quote to Presented or Accepted — the drafted contract takes its Primary Contact from here.',
+        'Required on the save that moves the quote to Presented or Accepted — the order takes its contact from here, and a contract drafted from the order its Primary Contact.',
     }),
 
     crm_opportunity: Field.lookup('crm_opportunity', {
