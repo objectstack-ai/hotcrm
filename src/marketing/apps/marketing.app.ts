@@ -21,9 +21,11 @@ export const MarketingApp = App.create({
   description: 'Campaigns and the leads, contacts and accounts they reach',
   icon: 'megaphone',
   defaultAgent: 'ask',
+  // The app's mark is its `icon` on a `primaryColor` tile: no `branding.logo`, so the
+  // home apps strip and the app switcher tell it from the other HotCRM apps (#2666).
+  // `favicon` stays the HotCRM mark; `test/app-marks-distinct.test.ts` holds the six apart.
   branding: {
-    primaryColor: '#EA580C',
-    logo: HOTCRM_ICON,
+    primaryColor: '#DB2777',
     favicon: HOTCRM_ICON,
   },
 
