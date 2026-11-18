@@ -193,7 +193,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: '平均订单金额（本季度）', description: '本季度已成交商机的平均金额' },
         pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
         pipeline_by_forecast_category: { title: '预测类别管道分布', description: '按预测类别统计的进行中管道金额' },
-        lead_source_breakdown: { title: '线索来源分布', description: '按来源统计的线索数量' },
+        lead_source_breakdown: { title: '线索来源分布', description: '按线索来源统计的管道金额' },
         open_pipeline_by_owner: { title: '按负责人统计进行中管道', description: '各销售负责人的进行中管道金额、商机数与平均赢单概率' },
         quota_attainment_by_rep: { title: '按销售代表统计配额达成', description: '各销售代表本季度配额、已成交收入与达成率。每晚的预测快照建好本季度记录、经理填好配额后才有数据' },
         pipeline_stage_by_source: { title: '阶段 × 线索来源', description: '按阶段和来源交叉统计进行中商机金额' },
