@@ -69,7 +69,9 @@ its end date stays activated until someone changes it.
 ### Renewal reminders (automatic)
 
 Each contract carries its own **Renewal Notice Days** — how far ahead to start
-the renewal conversation. A daily sweep finds **activated** contracts whose
+the renewal conversation. It can be at most **120 days**, because the sweep looks
+120 days ahead: a longer window could not fire on time, so a save asking for one
+is refused. A daily sweep finds **activated** contracts whose
 **end date** has entered that notice window and:
 
 - creates a **high-priority renewal task** for the owner (due on the contract's

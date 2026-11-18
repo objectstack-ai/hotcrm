@@ -23,7 +23,7 @@ description: 每个自动化门槛和计划时间、定义它的流程、计划�
 | 报价单自动过期扫描 | 每天 **01:00**（仅计划任务） | `quote-expiration.flow.ts` |
 | 工单 SLA 违约扫描 | **每小时**（仅计划任务） | `case-sla-monitor.flow.ts` |
 | 严重工单自动升级 | 优先级 = **严重** | `case-escalation.flow.ts` |
-| 合同续约提醒 | 每份合同各自的**续约通知（天）**，每天 **08:00** 扫描（仅计划任务） | `contract-renewal.flow.ts` |
+| 合同续约提醒 | 每份合同各自的**续约通知（天）**（最多 **120 天**），每天 **08:00** 扫描（仅计划任务） | `contract-renewal.flow.ts` |
 | 合同自动过期 | 超过**结束日期**，每天 **00:00** 扫描（仅计划任务） | `contract-expiration.flow.ts` |
 
 ## 计划任务默认关闭，需要你开启

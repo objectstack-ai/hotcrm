@@ -7,6 +7,7 @@ import { claimSeedOwnership } from '@objectstack/plugin-security';
 import { SeedLoaderRequestSchema } from '@objectstack/spec/data';
 import { CrmSeedData } from '../objectstack.composition';
 import artifact from '../objectstack.config';
+import { RENEWAL_LOOKAHEAD_DAYS } from '../src/sales/objects/contract.object';
 import { CrmFlows as allFlows } from './helpers/src-roster';
 import { regionsOf } from './helpers/flow-regions';
 import {
@@ -570,18 +571,23 @@ describe('contract_renewal — daily notice-window sweep', () => {
     verify.rows('crm_opportunity', { crm_account: k.crm_account, type: 'existing_renewal' });
   const notices = (k: Rec) => notified(rep.id, 'contract_renewal', `/crm_contract/${k.id}`);
 
-  it('pre-filters to activated contracts ending within the next 120 days', async () => {
-    // The 120-day span must cover the LARGEST renewal_notice_days in use (seeds
-    // go to 90). A narrower pre-filter silently truncates the longest notice
-    // periods, so pin the window itself — at both of its edges, with contracts
-    // whose own notice period would otherwise reach them.
+  it('pre-filters to activated contracts ending within the next RENEWAL_LOOKAHEAD_DAYS', async () => {
+    // The span must cover the LARGEST renewal_notice_days a contract can hold.
+    // A narrower pre-filter silently truncates the longest notice periods, so
+    // pin both edges a contract can reach: ending today, and ending on the
+    // span's last day with the longest notice the field admits.
+    //
+    // The far side of the edge is no longer reachable from here (#2534): the
+    // field's `max` is the span, so no door, the seed door included, stores a
+    // notice window that would show the pre-filter cutting it off. That edge
+    // is pinned on the shipped metadata instead, in
+    // `test/contract-renewal-lookahead.test.ts` (span == field max), beside the
+    // door's refusal of a longer window.
     const today = await contract({ endDays: 0, renewal_notice_days: 30 });
-    const lastDay = await contract({ endDays: 120, renewal_notice_days: 120 });
-    const beyond = await contract({ endDays: 121, renewal_notice_days: 200 });
+    const lastDay = await contract({ endDays: RENEWAL_LOOKAHEAD_DAYS, renewal_notice_days: RENEWAL_LOOKAHEAD_DAYS });
     await sweep('contract_renewal');
     expect(await renewalTasks(today), 'a contract ending today is inside the pre-filter').toHaveLength(1);
-    expect(await renewalTasks(lastDay), 'pre-filter must span 120 days').toHaveLength(1);
-    expect(await renewalTasks(beyond), 'pre-filter must end at 120 days').toHaveLength(0);
+    expect(await renewalTasks(lastDay), 'pre-filter must reach the longest notice the field admits').toHaveLength(1);
   });
 
   it('selects nothing outside the pre-filter window', async () => {

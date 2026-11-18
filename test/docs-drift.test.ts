@@ -86,6 +86,7 @@ const withZh = (...pages: string[]): string[] => pages.flatMap((p) => [p, p.repl
 
 const SALES_OPPS = 'docs/crm_sales_opportunities.md';
 const SALES_LEADS = 'docs/crm_sales_leads.md';
+const SALES_CONTRACTS = 'docs/crm_sales_contracts.md';
 const ADMIN_KNOBS = 'docs/crm_admin_automation.md';
 const QUOTES = 'revenue/docs/crm_revenue_quotes.md';
 const CASES = 'service/docs/crm_service_cases.md';
@@ -273,6 +274,22 @@ const RULES: Rule[] = [
     extract: () => capCel('billing_handoff_contract_activated', /record\.status == "([a-z_]+)"/),
     display: optionLabel('crm_contract', 'status'),
     docs: withZh(BILLING),
+  },
+  {
+    // The longest notice window the renewal sweep can honour, and the field's
+    // `max` (#2534). Read from the compiled pre-filter: the source interpolates
+    // `RENEWAL_LOOKAHEAD_DAYS`, so the file text carries no digits to capture.
+    // `test/contract-renewal-lookahead.test.ts` holds the field bound to it.
+    label: 'renewal notice bound (days)',
+    extract: () => {
+      const flow = FLOWS_COMPILED.find((f) => f?.name === 'contract_renewal');
+      const node = ((flow?.nodes ?? []) as AnyRec[]).find((n) => n?.id === 'query_contracts');
+      const m = celSource(node?.config?.filter?.end_date?.$lte).match(/daysFromNow\((\d+)\)/);
+      if (!m) throw new Error('drift test out of date: no daysFromNow(N) in the contract_renewal pre-filter');
+      return m[1];
+    },
+    display: (v) => [`**${v} days**`, `**${v} 天**`],
+    docs: withZh(SALES_CONTRACTS, ADMIN_KNOBS),
   },
   {
     label: 'contract expiration sweep schedule',

@@ -130,7 +130,7 @@ The task is also what keeps the sweep from repeating itself: the same contract m
 
 On a deployment without scheduled work none of this happens: no renewal task, no notification and no renewal deal. What still shows a renewal coming is the contract itself, through the **Renewal Calendar** tab and the **End Date** order of All Contracts (see *Standard list views* below).
 
-Two bounds worth knowing: the sweep looks 120 days ahead at most, so a notice window set longer than that only starts firing at 120 days out; and it takes at most 500 contracts per run.
+Two bounds worth knowing: the sweep looks 120 days ahead at most, so **Renewal Notice (Days)** accepts at most 120 and a save asking for more is refused (a contract that already held a longer window keeps it, and is reminded at 120 days out); and it takes at most 500 contracts per run.
 
 ### Manual termination
 Terminating a contract is a status change to *Terminated*, and two things about that change are worth knowing.
