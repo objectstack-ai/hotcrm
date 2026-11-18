@@ -4,6 +4,25 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { P } from '@objectstack/spec';
 
 /**
+ * How far ahead, in days, the daily `contract_renewal` sweep looks for
+ * contracts entering their notice window, and therefore the largest
+ * `renewal_notice_days` it can honour.
+ *
+ * One number with two consumers: this field's `max`, and the sweep's
+ * `end_date` pre-filter (`src/sales/flows/contract-renewal.flow.ts`). A notice
+ * window longer than the pre-filter is accepted and then silently truncated:
+ * the reminder fires at the pre-filter edge instead (#2534). So the field
+ * refuses what the sweep cannot honour, and both read this constant.
+ * `test/contract-renewal-lookahead.test.ts` reads both back out of the shipped
+ * metadata and fails if they drift apart.
+ *
+ * A field bound checks the value being written, so a contract stored above it
+ * before the bound existed keeps saving other edits, and the sweep still
+ * reminds it at this many days out.
+ */
+export const RENEWAL_LOOKAHEAD_DAYS = 120;
+
+/**
  * Contract Object
  * Represents legal contracts with customers
  */
@@ -179,6 +198,8 @@ export const Contract = ObjectSchema.create({
       label: 'Renewal Notice (Days)',
       group: 'renewal',
       min: 0,
+      // The sweep's look-ahead: a longer window would fire late (#2534).
+      max: RENEWAL_LOOKAHEAD_DAYS,
       defaultValue: 30,
     }),
     

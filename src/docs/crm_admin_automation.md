@@ -41,7 +41,7 @@ redeploy. These are the values an admin most often revisits:
 | Quote auto-expiration sweep | daily **01:00** (scheduled work only) | `quote-expiration.flow.ts` |
 | Case SLA breach sweep | **hourly** (scheduled work only) | `case-sla-monitor.flow.ts` |
 | Critical-case auto-escalation | priority = **Critical** | `case-escalation.flow.ts` |
-| Contract renewal reminder | each contract's **Renewal Notice Days**, swept daily **08:00** (scheduled work only) | `contract-renewal.flow.ts` |
+| Contract renewal reminder | each contract's **Renewal Notice Days** (at most **120 days**), swept daily **08:00** (scheduled work only) | `contract-renewal.flow.ts` |
 | Contract auto-expiration | past **end date**, swept daily **00:00** (scheduled work only) | `contract-expiration.flow.ts` |
 
 ## Scheduled work is off until you switch it on
