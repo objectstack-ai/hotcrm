@@ -233,13 +233,9 @@ export const en: TranslationData = {
   pages: {
     case_detail_page: {
       label: 'Case Detail',
-      description: 'Service-agent case record: highlights, SLA path, details and activity timeline.',
-      title: '{display_title}',
-      subtitle: '{crm_account}',
+      description: 'The case record page: the synthesized layout, with the SLA-breach banner in the alerts slot.',
       components: {
-        case_highlights: { label: 'Key Information' },
         case_sla_breached: { label: 'SLA Breached' },
-        case_status_path: { label: 'Case Status Path' },
       },
     },
   },

@@ -18,6 +18,8 @@ export const ConvertLeadAction: Action = {
   type: 'flow',
   target: 'lead_conversion',
   locations: ['record_header', 'list_item'],
+  // Header position: see `qualify_lead` (#2382).
+  order: -2,
   // Convert is the lead's most basic outcome — surface it on ANY open lead
   // (new / contacted / qualified), not just qualified. Gating to qualified-only
   // hid the button on most seeded leads, so it read as "conversion is missing".
@@ -132,6 +134,13 @@ export const QualifyLeadAction: Action = {
   operation: 'update',
   patch: { status: 'qualified' },
   locations: ['record_header', 'list_item'],
+  // The lead's record header draws its first three placed actions inline
+  // (#2382): Qualify, Convert, Schedule Follow-up, the order the retired
+  // authored header named them in. Without `order` the header follows
+  // registration order and put the activity trio ahead of Qualify. The values
+  // are negative because an action with no `order` sorts as 0 (measured on
+  // 18.6.0: `order: 1..3` put these three AFTER the unordered activity trio).
+  order: -3,
   visible: P`has(record.is_converted) && record.is_converted == false && has(record.status) && (record.status == "new" || record.status == "contacted")`,
   params: [
     { field: 'need_type', required: true },
@@ -166,6 +175,8 @@ export const ScheduleFollowUpAction: Action = {
   type: 'flow',
   target: 'schedule_followup',
   locations: ['record_header', 'list_item'],
+  // Header position: see `qualify_lead` (#2382).
+  order: -1,
   // A converted or disqualified lead has no next touch to schedule.
   visible: P`has(record.is_converted) && record.is_converted == false && has(record.status) && record.status != "unqualified" && record.status != "converted"`,
   successMessage: 'Follow-up scheduled.',

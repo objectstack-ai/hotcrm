@@ -501,51 +501,24 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '契約書類',
       description: '印刷用の契約書：当事者、期間、金額、請求、条件、署名欄。',
     },
-    account_detail_page: {
-      label: '取引先詳細',
-      description: 'スロット構成の取引先レコードページ — カスタムヘッダーと常設のディスカッションフィード。',
-      title: '{name}',
-      subtitle: '{industry} · {type}',
-      components: {
-        account_chatter: { label: 'ディスカッション' },
-      },
-    },
     account_workbench: {
       label: '取引先ワークベンチ',
       description: '営業チーム向けに厳選した取引先リスト。クイックフィルターのみで、ビュー管理は行いません。',
     },
     lead_detail_page: {
       label: 'リード詳細',
-      description: 'ハイライト・詳細・関連情報を備えたリードの総合詳細ページ。',
-      title: '{full_name}',
-      subtitle: '{company}',
+      description: 'リードのレコードページ：プラットフォームが合成する標準レイアウト。アラート枠に重複の警告を表示します。',
       components: {
         lead_duplicate_alert_confirmed: { label: '重複確定の警告' },
         lead_duplicate_alert_suspected: { label: '重複の疑いの警告' },
-        lead_highlights: { label: '重要情報' },
-        lead_path: { label: 'リードステータスの進捗' },
-        main_tabs: { label: 'リード情報タブ' },
-        lead_details: { label: 'リード詳細情報' },
-        related_accordion: { label: '関連レコード' },
-        related_tasks: { title: '未完了のタスク', label: 'タスク' },
-        lead_activity: { label: '活動タイムライン' },
-        lead_history: { label: '項目履歴' },
       },
     },
     opportunity_detail_page: {
       label: '商談詳細',
-      description: 'ステージパス・ハイライト・詳細・関連リストを備えた商談の総合詳細ページ。',
-      title: '{name}',
-      subtitle: '{crm_account}',
+      description: '商談のレコードページ：プラットフォームが合成する標準レイアウト。アラート枠に承認待ちの通知を表示します。',
       components: {
-        opp_highlights: { label: '重要情報' },
-        opp_stage_path: { label: '商談ステージの進捗' },
         opp_approval_pending_manager: { label: '営業マネージャーの承認待ち' },
         opp_approval_pending_director: { label: '営業マネージャーと営業ディレクターの承認待ち' },
-        opp_details: { label: '商談詳細情報' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        opp_main_tabs: { items: { details: { label: '詳細' }, related: { label: '関連' }, activity: { label: '活動' } } },
       },
     },
     sales_home_page: {

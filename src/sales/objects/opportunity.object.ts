@@ -53,7 +53,23 @@ export const Opportunity = ObjectSchema.create({
   // $search resolves on its own here; the list is kept explicit to pin the
   // intent, as on the objects whose stored title composes several columns.
   searchableFields: ['name'],
-  highlightFields: ['name', 'crm_account', 'amount', 'stage', 'owner_id'],
+  // The record page's highlight strip, and since #2382 its ONLY source: the
+  // deal's authored page retired to the synthesized default page, which draws
+  // exactly this list (minus the title, at most six). The list is the one the
+  // retired page drew, which won over the object's old
+  // `name, crm_account, amount, stage, owner_id`: `name` is the title the H1
+  // already shows (the platform drops it), and `stage` is drawn by the stage
+  // path right under the strip, so the old list spent two of its five chips on
+  // facts the header already carries, and lacked the close date and the
+  // probability a forecast review reads first. The page's list minus
+  // `expected_revenue`: with it, both members of the `financials` group sat in
+  // the strip, and a group whose every member is hoisted renders on forms and
+  // nowhere on the record page (`field-group-shadowed`, which `pnpm lint`
+  // fails on). Expected revenue is the amount times the probability, both of
+  // which the strip shows, and it stays in the Financials section. An
+  // account's list of its deals keeps its own columns (`relatedListColumns`
+  // on `crm_account` below), so the stage still shows there.
+  highlightFields: ['amount', 'close_date', 'probability', 'owner_id', 'crm_account'],
 
   fieldGroups: [
     { key: 'basic',       label: 'Basic Information',   icon: 'dollar-sign' },
@@ -95,6 +111,11 @@ export const Opportunity = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       group: 'basic',
+      // An account's list of its deals (#2382). With no columns declared it
+      // derives them from this object's `highlightFields`, which since #2382
+      // carry the deal page's strip and no `stage`; these are the columns that
+      // derivation drew before, so the account's deal list is unchanged.
+      relatedListColumns: ['name', 'amount', 'stage', 'owner_id'],
     }),
 
     primary_contact: Field.lookup('crm_contact', {

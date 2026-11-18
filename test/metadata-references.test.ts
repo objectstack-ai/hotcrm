@@ -3,6 +3,7 @@
 import { describe, it, expect } from 'vitest';
 import { AgentSchema } from '@objectstack/spec/ai';
 import { ComponentPropsMap, RecordActivityProps, RecordRelatedListProps } from '@objectstack/spec/ui';
+import { FilterConditionSchema } from '@objectstack/spec/data';
 import stack, { type AnyRec, walk } from './helpers/composed-stack';
 import { hotcrmStack, platformObjectNames, registeredFields } from './helpers/verify-stack';
 
@@ -137,11 +138,26 @@ describe('page component references resolve', () => {
    */
   const relatedLists = components.filter((c) => c.type === 'record:related_list');
 
-  it('every record:related_list filter is in the shape the props contract accepts', () => {
+  /**
+   * Since #2382 the app's open-task lists are no longer authored components:
+   * the record pages retired to the default page, and a list's scope moved to
+   * the child's foreign key (`relatedListFilter`, the canonical Query-DSL
+   * `FilterCondition`). That key is parsed by `ObjectSchema.create` at author
+   * time, unlike the component bag, but the guard keeps both doors: any
+   * authored `record:related_list.filter` and every declared
+   * `relatedListFilter`, each against its own contract.
+   */
+  const declaredListFilters = objects.flatMap((o) =>
+    Object.entries((o.fields ?? {}) as Record<string, AnyRec>)
+      .filter(([, f]) => f?.relatedListFilter !== undefined)
+      .map(([name, f]) => ({ id: `${o.name}.${name}`, object: o.name as string, field: name, filter: f.relatedListFilter })),
+  );
+
+  it('every related-list filter is in the shape its contract accepts', () => {
     const filtered = relatedLists.filter((c) => c.properties?.filter !== undefined);
     expect(
-      filtered.length,
-      'no related list authors a filter — this guard would be vacuous',
+      filtered.length + declaredListFilters.length,
+      'no related list declares a filter — this guard would be vacuous',
     ).toBeGreaterThan(0);
 
     const bad: string[] = [];
@@ -152,7 +168,11 @@ describe('page component references resolve', () => {
         bad.push(`${c.id}: filter.${issue.path.join('.')} ${issue.message}`);
       }
     }
-    expect(bad, `related-list filters the component drops:\n  ${bad.join('\n  ')}`).toEqual([]);
+    for (const { id, filter } of declaredListFilters) {
+      const parsed = FilterConditionSchema.safeParse(filter);
+      if (!parsed.success) bad.push(`${id}: relatedListFilter ${parsed.error.issues.map((x) => x.message).join('; ')}`);
+    }
+    expect(bad, `related-list filters the list drops:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   /**
@@ -172,93 +192,52 @@ describe('page component references resolve', () => {
    * bytes.
    */
   it('every crm_task related list actually excludes completed tasks', () => {
-    const taskLists = relatedLists.filter((c) => c.properties?.objectName === 'crm_task');
-    expect(taskLists.length, 'no crm_task related list found — this guard would be vacuous').toBe(3);
+    // Since #2382 the three open-task lists (on the lead, the deal and the
+    // case) are the default page's, scoped by `relatedListFilter` on the task's
+    // `related_to_*` link. The promise moved with them; the guard follows.
+    const OPEN_TASK_LINKS = ['related_to_lead', 'related_to_opportunity', 'related_to_case'];
+    const taskLists = [
+      ...relatedLists
+        .filter((c) => c.properties?.objectName === 'crm_task')
+        .map((c) => ({ id: c.id as string, rules: (c.properties?.filter ?? []) as AnyRec[], condition: undefined as AnyRec | undefined })),
+      ...declaredListFilters
+        .filter((d) => d.object === 'crm_task')
+        .map((d) => ({ id: d.id, rules: [] as AnyRec[], condition: d.filter as AnyRec })),
+    ];
+    expect(
+      taskLists.map((t) => t.id).sort(),
+      'the open-task lists this guard holds are not where it looks — it would be vacuous',
+    ).toEqual(OPEN_TASK_LINKS.map((f) => `crm_task.${f}`).sort());
 
     const excludesCompleted = (rule: AnyRec) =>
       rule?.field === 'status' &&
       ((rule.operator === 'not_equals' && rule.value === 'completed') ||
         (rule.operator === 'not_in' && (rule.value as unknown[])?.includes?.('completed')));
+    const conditionExcludes = (c: AnyRec | undefined) =>
+      c?.status?.$ne === 'completed' || (Array.isArray(c?.status?.$nin) && c.status.$nin.includes('completed'));
 
     const bad = taskLists
-      .filter((c) => !((c.properties?.filter ?? []) as AnyRec[]).some(excludesCompleted))
-      .map((c) => `${c.id}: no filter rule excludes status "completed" — the list is headed "Open Tasks"`);
+      .filter((t) => !t.rules.some(excludesCompleted) && !conditionExcludes(t.condition))
+      .map((t) => `${t.id}: no filter excludes status "completed" — the list is an Open Tasks list`);
     expect(bad, `task lists that promise open tasks and show every task:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   /**
-   * `record:reference_rail` entries are the one page reference the dangling-name
-   * guards above never reached. An entry is a bare object inside
-   * `properties.entries` — it carries no `type`, so `walk` does not yield it —
-   * and the platform declares no schema for it either: `record:reference_rail`
-   * has no row in the spec's `ComponentPropsMap`, and a page component's
-   * `properties` is `z.record(z.string(), z.unknown())`. Nothing between the
-   * authored file and the browser reads these names before the rail queries
-   * them, so a typo is a card that silently comes back empty and — because
-   * `hideEmpty` defaults on — folds itself away.
-   */
-  const railEntries = components
-    .filter((c) => c.type === 'record:reference_rail')
-    .flatMap((c) => ((c.properties?.entries ?? []) as AnyRec[]).map((e) => ({ id: c.id, entry: e })));
-
-  it('every record:reference_rail entry names a real object and a real relationship field', () => {
-    expect(railEntries.length, 'no rail entries found — this guard would be vacuous').toBeGreaterThan(0);
-    const bad: string[] = [];
-    for (const { id, entry } of railEntries) {
-      const objectName = entry.objectName;
-      if (!objectNames.has(objectName)) {
-        bad.push(`${id}: objectName "${objectName}" is not a defined object`);
-        continue;
-      }
-      const relField = entry.relationshipField;
-      if (relField && !fieldsOf(objectName).includes(relField)) {
-        bad.push(`${id}: "${objectName}" has no field "${relField}"`);
-      }
-    }
-    expect(bad, `dangling reference-rail references:\n  ${bad.join('\n  ')}`).toEqual([]);
-  });
-
-  /**
-   * A rail card's heading resolves as
-   * `entry.title || i18n.objectLabel({ name: objectName, … })`. A literal
-   * `title` does not supply a default — it wins outright, and the locale bundle
-   * is never consulted, so one English string overrides all four locale packs
-   * at once (#972). Nor can the literal itself be translated: the rail renders
-   * `entry.title` as a raw React child, unlike `record:alert`, which runs its
-   * `title` through the inline translation-map resolver.
+   * `record:reference_rail` (#972) — retired with the deal page that placed it.
    *
-   * So: until the rail gains a translated-title channel, "declares a title" and
-   * "is untranslatable" are the same fact, and the only correct number of
-   * literals is zero. The other half of this guard — that dropping the literal
-   * lands on a *translation* rather than on a humanized object name — is
-   * `test/i18n-references.test.ts`, which requires `objects.<name>.label` in
-   * every locale for exactly these objects.
+   * Three guards stood here over the rail's entries: each names a real object
+   * and relationship field, none declares a literal `title` (it overrode all
+   * four locale packs) and none declares a `filter` (the rail queries on the
+   * relationship alone, so a filter was a silent lie). The maintainer ruled
+   * the rail deleted (#2382, 2026-10-29): the default page's related column
+   * draws the same three children, from their foreign keys, which
+   * `objectstack validate` resolves and whose headings are the child object's
+   * translated label (`test/i18n-references.test.ts`). What is left to pin is
+   * that no page brings an authored rail back unguarded.
    */
-  it('no record:reference_rail entry declares a literal title', () => {
-    const bad = railEntries
-      .filter(({ entry }) => entry.title !== undefined)
-      .map(({ id, entry }) => `${id}: "${entry.objectName}" declares title ${JSON.stringify(entry.title)}`);
-    expect(
-      bad,
-      `reference-rail titles override the localized object label:\n  ${bad.join('\n  ')}`,
-    ).toEqual([]);
-  });
-
-  /**
-   * The same rail entry has no filter channel either: the rail issues
-   * `find(objectName, { $filter: { [relationshipField]: parentId }, $top: limit,
-   * $count: true })` and reads nothing else off the entry. Because `properties`
-   * is an unvalidated `z.record`, a `filter` written here would parse, ship, and
-   * do nothing — the card would keep counting every related record while the
-   * source claimed otherwise. That is the trap this guard exists to spring: an
-   * author reaching for the *Related* tab's `status neq completed` and putting
-   * it on a rail entry gets a red test instead of a silent lie.
-   */
-  it('no record:reference_rail entry declares a filter the rail cannot apply', () => {
-    const bad = railEntries
-      .filter(({ entry }) => entry.filter !== undefined)
-      .map(({ id, entry }) => `${id}: "${entry.objectName}" declares a filter; the rail queries on the relationship alone`);
-    expect(bad, `inert reference-rail filters:\n  ${bad.join('\n  ')}`).toEqual([]);
+  it('no page places a record:reference_rail', () => {
+    const rails = components.filter((c) => c.type === 'record:reference_rail').map((c) => c.id);
+    expect(rails, 'a reference rail is back — restore its entry guards (see git history of this file) with it').toEqual([]);
   });
 
   /**
@@ -435,7 +414,7 @@ describe('page component references resolve', () => {
         .map((a) => a.objectName as string),
     );
     const recordPages = pages.filter((p) => p.type === 'record' && loggingObjects.has(p.object));
-    // Not vacuous: the lead, case, deal and account pages are all such pages.
+    // Not vacuous: the lead, case and deal pages are all such pages.
     expect(recordPages.length, 'no authored record page of a logging object was found').toBeGreaterThan(0);
 
     const showsCompleted = (c: AnyRec): boolean =>
@@ -445,7 +424,12 @@ describe('page component references resolve', () => {
       const feeds = [...walk(p.regions), ...walk(p.slots)].filter((c) =>
         ['record:activity', 'record:chatter', 'record:discussion'].includes(c.type),
       );
-      if (feeds.length === 0) bad.push(`${p.name}: no activity feed block — a logged call has nowhere to appear`);
+      // A slotted page that leaves the `discussion` slot alone draws the
+      // default page's timeline, which shows completed rows
+      // (`buildDefaultTimeline`: `showCompleted: true`, 18.6.0). Since #2382
+      // that is the lead's, the deal's and the case's timeline.
+      const defaultTimeline = p.kind === 'slotted' && !('discussion' in (p.slots ?? {}));
+      if (feeds.length === 0 && !defaultTimeline) bad.push(`${p.name}: no activity feed block — a logged call has nowhere to appear`);
       for (const c of feeds.filter((f) => !showsCompleted(f))) {
         bad.push(`${p.name} › ${c.id}: ${c.type} hides completed rows — set showCompleted: true${c.type === 'record:activity' ? '' : ' under feed'}`);
       }

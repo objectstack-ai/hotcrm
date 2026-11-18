@@ -8,9 +8,11 @@
  * the same file-by-file registration.
  */
 
+// The lead's and the opportunity's record pages are the synthesized default
+// page with only the `alerts` slot filled (#2382). The account has no authored
+// record page at all: it draws the default page as is.
 export { LeadDetailPage } from './lead_detail.page';
 export { OpportunityDetailPage } from './opportunity_detail.page';
-export { AccountDetailPage } from './account_detail.page';
 export { AccountWorkbenchPage } from './account_workbench.page';
 export { SalesHomePage } from './home.page';
 // The contract's working page (explicit default) and its print page (#2317).

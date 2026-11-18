@@ -82,17 +82,19 @@ function componentsOf(node: unknown, out: AnyRec[] = []): AnyRec[] {
 }
 
 const leadPage: AnyRec | undefined = pages.find((p) => p.name === 'lead_detail_page');
-const leadPageComponents = componentsOf(leadPage?.regions ?? []);
+// Since #2382 the lead's page is the synthesized default page with ONE slot
+// filled, `alerts`: the banners are that slot's nodes, nothing else is authored.
+const leadPageComponents = componentsOf(leadPage?.slots?.alerts ?? []);
 const duplicateAlerts = leadPageComponents.filter((c) => c.type === 'record:alert');
 
 /**
  * One banner per verdict, addressed by the id the page gives it (#1628).
  *
- * The id is not decoration. A region renders as
- * `components.map((node, i) => <SchemaRenderer key={node?.id || fallback} …>)`
- * — read out of the shipped console bundle at the `.objectui-sha` pin — so two
- * sibling `record:alert` nodes are two MOUNTED components, each evaluating its
- * own `properties.visible` against the same row, and each node's `id` is its
+ * The id is not decoration. The default-page synthesizer flattens the
+ * `alerts` slot's array in place (`toNodeArray(slots.alerts)`,
+ * `buildDefaultPageSchema` on the 18.6.0 tag), so two `record:alert` nodes in
+ * the slot are two MOUNTED components, each evaluating its own
+ * `properties.visible` against the same row, and each node's `id` is its
  * React key. That is what makes one-banner-per-verdict expressible at all, and
  * it is why the ids must differ.
  */
@@ -351,20 +353,14 @@ describe('lead record page — the duplicate banners, one per verdict', () => {
 
   it('names the record it repeats, through the fields that carry the link', () => {
     // The banner says a record is repeated; this section is what the rep opens
-    // to compare. It hides itself on a clean lead — `record:details` drops
-    // empty fields and a section whose fields are ALL empty renders nothing
-    // (`test/detail-section-dedup.test.ts` carries that measurement).
-    const details = leadPageComponents.filter((c) => c.type === 'record:details');
-    const sections: AnyRec[] = details.flatMap((d) => (d.properties?.sections ?? []) as AnyRec[]);
-    const duplicates = sections.find((s) => s.group === 'duplicates');
-    expect(duplicates, 'the Details tab has no `{ group: \'duplicates\' }` section').toBeDefined();
-    // The section is a group reference (#806 ruling C): it names the group and
-    // the renderer derives the members from crm_lead's `fieldGroups`, so the
-    // members asserted below are the fields whose `group` is `duplicates`.
-    expect(duplicates!.fields, 'the duplicates section enumerates `fields` again').toBeUndefined();
-    const members = Object.entries(
-      (objects.find((o) => o.name === 'crm_lead')?.fields ?? {}) as Record<string, AnyRec>,
-    )
+    // to compare. Since #2382 the Details body is the default page's, drawn
+    // from crm_lead's `fieldGroups`: every declared group is a section, in
+    // declaration order, so the link is the `duplicates` GROUP. A section whose
+    // fields are all empty renders nothing, so it hides itself on a clean lead.
+    const lead = objects.find((o) => o.name === 'crm_lead') ?? {};
+    const groups = ((lead.fieldGroups ?? []) as AnyRec[]).map((g) => g.key);
+    expect(groups, 'crm_lead declares no `duplicates` field group').toContain('duplicates');
+    const members = Object.entries((lead.fields ?? {}) as Record<string, AnyRec>)
       .filter(([, f]) => f?.group === 'duplicates' && f?.hidden !== true)
       .map(([name]) => name);
 
@@ -380,11 +376,11 @@ describe('lead record page — the duplicate banners, one per verdict', () => {
       expect(leadFields, `crm_lead has no field \`${field}\``).toContain(field);
     }
 
-    // The renderer drops any field the highlights strip already registered, so
-    // a field in both places renders only in the strip — and a duplicates
-    // group emptied that way would drop the link entirely. Keep them disjoint.
-    const highlights = leadPageComponents.find((c) => c.type === 'record:highlights');
-    const strip: string[] = highlights?.properties?.fields ?? [];
+    // The default page leaves every field of the highlight strip (the object's
+    // `highlightFields`) out of the body, so a field in both places renders
+    // only in the strip — and a duplicates group emptied that way would drop
+    // the link entirely. Keep them disjoint.
+    const strip: string[] = lead.highlightFields ?? [];
     expect(strip.filter((f) => members.includes(f))).toEqual([]);
   });
 });

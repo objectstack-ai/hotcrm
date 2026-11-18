@@ -14,6 +14,7 @@ import { LeadAssignmentFlow } from '../src/sales/flows/lead-assignment.flow';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import { LeadConversionApprovalFlow } from '../src/sales/flows/lead-conversion-approval.flow';
 import { LeadDetailPage } from '../src/sales/pages/lead_detail.page';
+import { Lead } from '../src/sales/objects/lead.object';
 import { en as enPack } from '../src/sales/translations/en';
 import { zhCN as zhCNPack } from '../src/sales/translations/zh-CN';
 import { esES as esESPack } from '../src/sales/translations/es-ES';
@@ -103,15 +104,17 @@ describe('the lead record page header', () => {
   // Measured in the console on a fresh zh-CN boot (#2431): with the stored
   // titles fixed, the lead page's own header still read 「伟 张」, because the
   // page composed `{first_name} {last_name}` itself — in the page and in each
-  // locale pack's copy of its title.
-  it('the page and every locale pack title the header by full_name', () => {
-    const header = (LeadDetailPage.regions ?? [])
-      .flatMap((r) => (r.components ?? []) as Rec[])
-      .find((c) => c.type === 'page:header');
-    expect(header?.properties?.title).toBe('{full_name}');
+  // locale pack's copy of its title. Since #2382 the page authors no header:
+  // the default page's H1 is the record title, the stored `display_title`
+  // whose name order the block above pins, so no page or pack can compose
+  // the name a second way.
+  it('the page authors no header and no pack titles it, so the H1 is the stored title', () => {
+    expect(Lead.nameField).toBe('display_title');
+    expect(Object.keys((LeadDetailPage as Rec).slots ?? {})).toEqual(['alerts']);
+    expect(JSON.stringify(LeadDetailPage)).not.toContain('page:header');
     for (const [locale, pack] of Object.entries({ en: enPack, 'zh-CN': zhCNPack, 'es-ES': esESPack, 'ja-JP': jaJPPack })) {
       const page = (pack as Rec).pages?.lead_detail_page as Rec | undefined;
-      expect(page?.title, `${locale}: lead_detail_page.title`).toBe('{full_name}');
+      expect(page?.title, `${locale}: lead_detail_page.title`).toBeUndefined();
     }
   });
 });

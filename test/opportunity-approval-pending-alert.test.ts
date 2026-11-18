@@ -20,7 +20,8 @@ import { packFor, type AnyRec } from './helpers/composed-stack';
 
 type Rec = Record<string, unknown>;
 
-const components: AnyRec[] = (OpportunityDetailPage.regions ?? []).flatMap((r) => (r.components ?? []) as AnyRec[]);
+// Since #2382 the banners are the nodes of the page's one filled slot, `alerts`.
+const components: AnyRec[] = ((OpportunityDetailPage as AnyRec).slots?.alerts ?? []) as AnyRec[];
 const alert = (id: string): AnyRec => {
   const found = components.find((c) => c.id === id);
   if (!found) throw new Error(`opportunity_detail_page has no component ${id}`);
@@ -46,7 +47,7 @@ const SHAPES: Array<[string, Rec, 'manager' | 'director' | null]> = [
 ];
 
 describe('the deal page says a deal is waiting on approval (#2371 row 2)', () => {
-  it('declares two info banners in the header, gated by a CEL predicate', () => {
+  it('declares two info banners in the alerts slot, gated by a CEL predicate', () => {
     for (const c of [MANAGER, DIRECTOR]) {
       expect(c.type).toBe('record:alert');
       expect(c.properties.severity).toBe('info');

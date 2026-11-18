@@ -308,10 +308,22 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
 
   it('every stage has a step on the opportunity stage path', () => {
     const sites = stagePaths();
-    // A renamed component type or statusField would silently empty this list
-    // and turn the assertion below into a no-op — exactly how the navigation
-    // guard in `test/action-references.test.ts` spent its life passing.
-    expect(sites.length, 'no record:path bound to crm_opportunity.stage was found').toBeGreaterThan(0);
+    // Since #2382 the deal's record page authors no path: the default page
+    // draws it from the stage field's OWN options (`deriveStages`, every
+    // option, in order), so it has a step for every canonical stage by
+    // construction. What would break that is the page taking the strip back
+    // (a `highlights` slot) without a path that passes the loop below, or the
+    // object naming another stage field. A renamed component type or
+    // statusField would otherwise silently empty this list and turn the
+    // assertion below into a no-op — exactly how the navigation guard in
+    // `test/action-references.test.ts` spent its life passing.
+    const dealPage = pages.find((p) => p.name === 'opportunity_detail_page');
+    const defaultStrip = dealPage?.kind === 'slotted' && !('highlights' in (dealPage.slots ?? {}));
+    const objDef = objects.find((o) => o.name === 'crm_opportunity');
+    expect(
+      sites.length > 0 || (defaultStrip && (objDef?.stageField ?? 'stage') === 'stage' && objDef?.fields?.status === undefined),
+      'no record:path bound to crm_opportunity.stage was found, and the deal page does not draw the default one',
+    ).toBe(true);
 
     const bad: string[] = [];
     for (const [site, values] of sites) {

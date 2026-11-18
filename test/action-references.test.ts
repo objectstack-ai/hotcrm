@@ -345,11 +345,12 @@ describe('record-page header action references resolve', () => {
   );
 
   it('every page:header action id names an action reachable from the page object', () => {
+    // Since #2382 no RECORD page authors a header (see the next test), so this
+    // sweep covers the pages that still do; it holds the id-resolution rule
+    // for the day one names actions again.
     const bad: string[] = [];
-    let checked = 0;
     for (const { page, component } of headers) {
       for (const id of component.properties?.actions ?? []) {
-        checked++;
         if (typeof id !== 'string') {
           bad.push(
             `${page.name}/${component.id}: ${JSON.stringify(id)} is not an action id — ` +
@@ -362,10 +363,7 @@ describe('record-page header action references resolve', () => {
         }
       }
     }
-    expect(
-      checked,
-      'no header action id was checked — the walk no longer reaches any page:header that names actions',
-    ).toBeGreaterThan(0);
+    expect(headers.length, 'the walk no longer reaches any page:header at all').toBeGreaterThan(0);
     expect(bad, `header actions that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
@@ -380,62 +378,75 @@ describe('record-page header action references resolve', () => {
   });
 
   /**
-   * The converse (#2072): a record page's authored `page:header` names its
-   * buttons, and an action of the page's object that it does not name is
-   * reachable from the record by no button at all — only the list row's ⋮
-   * menu (#592). `case_detail_page` named three of the six crm_case actions
-   * this app places at `record_header`, so an agent on an unowned case went
-   * back to the list to claim it and could not log or book a meeting from
-   * the case.
+   * The converse (#2072), held structurally since #2382.
    *
-   * What this pins is a fact of THIS app, not a platform rule: both inputs
-   * are this app's own metadata — the `locations` each action declares and
-   * the id list each header authors — and the assertion is that the two
-   * agree. It predicts nothing about what the renderer draws (`visible`,
-   * capabilities and the inline/⋯ split stay the renderer's), so a header
-   * that lists an action whose `visible` hides it on a given record passes.
-   *
-   * An action deliberately kept off a header is written down in
-   * `LEFT_OUT_OF_HEADER` with the business reason, keyed by page then action
-   * name. None is today: every header lists every `record_header` action of
-   * its object.
+   * An authored `page:header` named its buttons, and an action of the page's
+   * object it did not name was reachable from the record by no button at all
+   * (#592) — which is how an agent on a case could not log or book a meeting.
+   * #2382 retired the authored record pages: the synthesized header draws
+   * EVERY action of the object placed at `record_header` (inline, then ⋯) or
+   * `record_more` (⋯), the one reader `placedHeaderActions` in
+   * `@object-ui/types`. So the completeness the old pin held by comparing two
+   * lists now holds by there being one list, provided no record page brings
+   * an authored header back.
    */
-  const LEFT_OUT_OF_HEADER: Record<string, Record<string, string>> = {};
+  const recordPages = pages.filter((p) => p.type === 'record');
 
-  /** The `record_header` actions of the page's object its header does not list. */
-  const unlistedHeaderActions = (object: string, listed: unknown[]): string[] =>
-    actions
-      .filter((a) => a.objectName === object && (a.locations ?? []).includes('record_header'))
-      .map((a) => a.name as string)
-      .filter((name) => !listed.includes(name));
-
-  const recordHeaders = headers.filter(({ page }) => typeof page.object === 'string');
-
-  it('every record-page header lists each record_header action of its object, or says why not', () => {
+  it('no record page authors its header, so the header reads every placed action', () => {
     expect(
-      recordHeaders.map(({ page }) => page.name),
-      'the walk no longer reaches the record-page headers this suite holds',
-    ).toContain('case_detail_page');
-    const bad: string[] = [];
-    for (const { page, component } of recordHeaders) {
-      const excused = LEFT_OUT_OF_HEADER[page.name] ?? {};
-      const unlisted = unlistedHeaderActions(page.object, component.properties?.actions ?? []);
-      for (const name of unlisted.filter((n) => !(n in excused))) {
-        bad.push(`${page.name}/${component.id}: "${name}" is placed at record_header on "${page.object}" but the header does not list it`);
-      }
-      for (const name of Object.keys(excused).filter((n) => !unlisted.includes(n))) {
-        bad.push(`${page.name}: LEFT_OUT_OF_HEADER excuses "${name}", which is no unlisted record_header action of "${page.object}"`);
-      }
-    }
-    expect(bad, `record_header actions no header button reaches:\n  ${bad.join('\n  ')}`).toEqual([]);
+      recordPages.map((p) => p.name),
+      'the walk no longer reaches the record pages this suite holds',
+    ).toEqual(expect.arrayContaining(['lead_detail_page', 'opportunity_detail_page', 'case_detail_page']));
+    const bad = recordPages
+      .filter((p) =>
+        [...walk(p.regions), ...walk(p.slots)].some((c) => c.type === 'page:header' || c.type === 'record:quick_actions')
+        || 'header' in (p.slots ?? {}) || 'actions' in (p.slots ?? {}))
+      .map((p) => p.name);
+    expect(bad, 'record pages that author their header, and so drop every action they do not name').toEqual([]);
   });
 
-  it('the completeness check still names an action a header leaves out', () => {
-    // The #2072 shape, on the real case header: take one action off its list.
-    const caseHeader = recordHeaders.find(({ page }) => page.name === 'case_detail_page');
-    const listed: string[] = caseHeader?.component.properties?.actions ?? [];
-    expect(listed).toContain('escalate_case');
-    expect(unlistedHeaderActions('crm_case', listed.filter((n) => n !== 'escalate_case'))).toEqual(['escalate_case']);
+  /**
+   * The buttons the retired headers named (#592, #2072), each still placed on
+   * its object where the synthesized header draws it. A future edit that took
+   * one of them off `record_header` / `record_more` would take it off the
+   * record page; this names it.
+   */
+  const RETIRED_HEADERS: Record<string, string[]> = {
+    crm_lead: ['qualify_lead', 'convert_lead', 'schedule_followup', 'log_call', 'log_meeting', 'schedule_meeting'],
+    crm_opportunity: ['generate_quote', 'clone_opportunity', 'log_call', 'log_meeting', 'schedule_meeting'],
+    crm_case: ['reopen_case', 'escalate_case', 'close_case', 'log_call', 'log_meeting', 'schedule_meeting'],
+    crm_account: ['log_call', 'log_meeting', 'schedule_meeting'],
+  };
+  const placedOnHeader = (object: string): string[] =>
+    actions
+      .filter((a) => a.objectName === object
+        && (a.locations ?? []).some((l: string) => l === 'record_header' || l === 'record_more'))
+      .map((a) => a.name as string);
+
+  it.each(Object.entries(RETIRED_HEADERS))('%s: every button the retired header named is still placed on the record header', (object, names) => {
+    expect(names.filter((n) => !placedOnHeader(object).includes(n))).toEqual([]);
+  });
+
+  it('the placement check still names an action taken off the header', () => {
+    const without = actions.filter((a) => !(a.objectName === 'crm_case' && a.name === 'escalate_case'));
+    const placed = without
+      .filter((a) => a.objectName === 'crm_case' && (a.locations ?? []).includes('record_header'))
+      .map((a) => a.name);
+    expect(RETIRED_HEADERS.crm_case!.filter((n) => !placed.includes(n))).toContain('escalate_case');
+  });
+
+  /**
+   * The lead's header leads with Qualify, Convert and Schedule Follow-up, the
+   * order the retired header named them in (#2382). The synthesized header
+   * sorts placed actions by `order` (an action with none sorts as 0) and keeps
+   * registration order among equals, then draws the first three inline;
+   * measured on 18.6.0, without these values the activity trio came first and
+   * Qualify fell into ⋯.
+   */
+  it('the lead header leads with Qualify, Convert and Schedule Follow-up', () => {
+    const lead = actions.filter((a) => a.objectName === 'crm_lead' && (a.locations ?? []).includes('record_header'));
+    const ordered = [...lead].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((a) => a.name);
+    expect(ordered.slice(0, 3)).toEqual(['qualify_lead', 'convert_lead', 'schedule_followup']);
   });
 });
 

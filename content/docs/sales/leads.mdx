@@ -167,14 +167,15 @@ After conversion, the lead becomes read-only — all future activity happens on 
 
 ## Lead detail layout
 
-When you open a lead, four tabs sit under the header: **Details**, **Related**, **Activity** and **History**. The **Related** tab gathers the records linked to the lead:
+A lead opens on the same record page every object in HotCRM uses:
 
-- **Tasks** — the lead's open tasks, the one due soonest first.
-- **Events** — the calls, meetings and other events with this lead. Booked events come first, and the ones that already happened follow, newest first.
-- **Campaign Members** — the campaigns the lead was added to, when it was added and how it responded.
-- **Conversion** — after the lead is converted, links to the account, contact and opportunity it became, with the conversion date. It does not appear on a lead that has not been converted, and it opens folded: click **Conversion** to show the links.
+- **The header** carries the lead's name and company, and the buttons for the next step: **Qualify Lead**, **Convert Lead** and **Schedule Follow-up**, with **Log a Call**, **Log a Meeting** and **Schedule a Meeting** under **⋯**. A button shows only when it applies: a qualified lead offers no **Qualify Lead**, a converted one no **Edit**.
+- **A banner** under the header on a suspected or confirmed duplicate, saying which of the two it is and what to do (see *Duplicate leads* above). A clean lead shows none.
+- **Key facts** — Status, Lead Score, Lead Source, Email and Phone — and the **status path**. Click a stage on the path to move the lead there; it is the same change as editing Status, so the same rules apply (Qualified asks for a Need Type and an Estimated Amount).
+- **The details**, section by section, in the left column. **Duplicate Management** links the record a duplicate repeats; **Conversion** opens folded, and on a converted lead it links the account, contact and opportunity the lead became, with the conversion date.
+- **The linked records**, one card each, in the right column: **Tasks** (open ones only, the one due soonest first), **Events** (when, then whether it happened, the latest first), **Event Attendees** and **Campaign Members**. Lists with nothing in them fold into one line you can expand. Below them are **Attachments** and **Activity**: comments, the calls and meetings logged on the lead, and changes to its tracked fields, newest first.
 
-A list has a **New** button when you are allowed to create that kind of record, and the new record comes linked to the lead. Sales users can book an event from here. Adding a lead to a campaign is a marketing task, so only users with the Marketing User permission set and administrators see **New** on **Campaign Members**; sales reps and managers see the list without it.
+The tabs across the top open each list on its own. A list has a **New** button when you are allowed to create that kind of record, and the new record comes linked to the lead. Sales users can book an event from here. Adding a lead to a campaign is a marketing task, so only users with the Marketing User permission set and administrators see **New** on **Campaign Members**; sales reps and managers see the list without it.
 
 ## How an AI agent helps
 

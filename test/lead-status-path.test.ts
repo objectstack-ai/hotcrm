@@ -174,20 +174,28 @@ describe('Qualified needs a Need Type and an Estimated Amount (#2541)', () => {
 // ───────────────────────────────────────────────────────────── #2542 ──
 
 describe('the status bars move a record by a click (#2542)', () => {
-  const pathOf = (pageName: string): AnyRec | undefined => {
-    const page = pages.find((p) => p.name === pageName);
-    return [...walk(page?.regions), ...walk(page?.slots)].find((c: AnyRec) => c.type === 'record:path');
-  };
-
+  // Since #2382 the three record pages are the synthesized default page with
+  // only the `alerts` slot filled. The status path is the default strip's,
+  // which turns click-to-advance on for every object (objectstack#30075,
+  // ruled A) and draws it on the object's stage field. So the pin is that no
+  // page overrides the strip (no `highlights` slot, no authored `record:path`)
+  // and that the stage field is the one the path is drawn on.
   it.each([
-    ['lead_detail_page', 'status'],
-    ['opportunity_detail_page', 'stage'],
-    ['case_detail_page', 'status'],
-  ])('%s: the path on %s allows a stage click', (pageName, field) => {
-    const path = pathOf(pageName);
-    expect(path, `${pageName} has no record:path`).toBeTruthy();
-    expect(path!.properties?.statusField).toBe(field);
-    expect(path!.properties?.allowStageChange).toBe(true);
+    ['lead_detail_page', 'crm_lead', 'status'],
+    ['opportunity_detail_page', 'crm_opportunity', 'stage'],
+    ['case_detail_page', 'crm_case', 'status'],
+  ])('%s: the default path on %s.%s allows a stage click', (pageName, object, field) => {
+    const page = pages.find((p) => p.name === pageName);
+    expect(page, `${pageName} is not registered`).toBeTruthy();
+    expect(page!.kind).toBe('slotted');
+    expect(Object.keys(page!.slots ?? {}), `${pageName} overrides a slot beyond alerts`).toEqual(['alerts']);
+    expect([...walk(page!.slots)].filter((c: AnyRec) => c.type === 'record:path')).toEqual([]);
+    const def = objects.find((o) => o.name === object)!;
+    expect(def.stageField ?? field).toBe(field);
+    expect(def.fields?.[field]?.type, `${object}.${field} is not a select`).toBe('select');
+    // The default page picks `status` before `stage` when no `stageField` is
+    // declared, so the opportunity must carry no `status` field.
+    if (field === 'stage') expect(def.fields?.status).toBeUndefined();
   });
 
   it('a click is the edit form\'s PATCH, so the Qualified gate refuses it too', async () => {

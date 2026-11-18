@@ -18,7 +18,8 @@ const objects: AnyRec[] = (stack as AnyRec).objects ?? [];
 const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
 
 /**
- * The opportunity Products panel offers a route to add a line item (#1731).
+ * An opportunity offers a route to add a line item (#1731; the route moved to
+ * the deal's line table in #2382, see the block below).
  *
  * ### What was wrong
  *
@@ -72,63 +73,61 @@ const LINE_ITEM = byName('crm_opportunity_line_item');
 const PRODUCT = byName('crm_product');
 
 const oppDetailPage = pages.find((p) => p.name === 'opportunity_detail_page') as AnyRec;
-const relatedLists = [...walk(oppDetailPage)].filter((n) => n.type === 'record:related_list');
-const oppProducts = relatedLists.find((n) => n.id === 'opp_products') as AnyRec;
 
-// ─────────────────────────────────────────────── the authored route ──
+// ─────────────────────────────────────────────── the declared route ──
 
-describe('the Products related list authors an add picker', () => {
-  it('is still the panel this suite thinks it is', () => {
-    // A rename that unhooked the assertions below from the real list would
-    // otherwise leave them passing against `undefined`.
-    expect(oppProducts).toBeDefined();
-    expect(oppProducts.properties.objectName).toBe('crm_opportunity_line_item');
-    expect(oppProducts.properties.relationshipField).toBe('crm_opportunity');
+/**
+ * Since #2382 the route is the deal's line TABLE, not an authored picker.
+ *
+ * The authored deal page and its Products card (`add.picker` over active
+ * products, `linkField: 'crm_product'`) retired to the synthesized default
+ * page. The default page draws the deal's lines as a body table because the
+ * line's `crm_opportunity` link says `relatedList: 'primary'`, and its New
+ * opens the line form pre-linked to the deal, where the product is chosen in
+ * the `crm_product` lookup. That lookup's `lookupFilters` is what keeps a
+ * retired product off a new line (measured on 18.6.0: without it the form's
+ * picker offered a product whose Active was off). The insert the form makes
+ * carries the same two keys the picker made, plus the defaults it shows, so
+ * the engine block below still measures the row it produces.
+ */
+describe('the deal\'s line table adds a line through the product lookup', () => {
+  it('authors no line list on the page: the body table is derived', () => {
+    expect(oppDetailPage?.kind).toBe('slotted');
+    expect([...walk(oppDetailPage)].filter((n) => n.type === 'record:related_list')).toEqual([]);
   });
 
-  it('offers Add, sourced from the product catalog and linked through crm_product', () => {
-    const add = oppProducts.properties.add;
-    expect(add).toBeDefined();
-    expect(add.picker.object).toBe('crm_product');
-    // The junction case: the picked id lands on the child's OWN product lookup.
-    // Omitting `linkField` would mean a 1:m re-parent instead — it would set the
-    // picked PRODUCT's `crm_opportunity`, a field `crm_product` does not have.
-    expect(add.linkField).toBe('crm_product');
+  it('draws the lines as a body table, with the columns the retired Products card named', () => {
+    const link = LINE_ITEM.fields.crm_opportunity;
+    expect(link.type).toBe('master_detail');
+    expect(link.reference).toBe('crm_opportunity');
+    expect(link.relatedList).toBe('primary');
+    expect(link.relatedListColumns).toEqual(['crm_product', 'quantity', 'unit_price', 'total_price']);
   });
 
-  it('links and labels through fields that exist, with the spec defaults left alone', () => {
-    const add = oppProducts.properties.add;
-    // `linkField` must be a real field on the CHILD, and the one that points at
-    // the picked object. The RESOLVED field spells its target `reference` —
-    // `reference_to` is the authoring-side word AGENTS.md uses, and reading it
-    // here would assert `undefined` against `undefined` forever.
-    expect(LINE_ITEM.fields[add.linkField].type).toBe('lookup');
-    expect(LINE_ITEM.fields[add.linkField].reference).toBe('crm_product');
-    // `valueField` defaults to `id`, which is what a lookup stores, and
-    // `labelField` defaults to the picked object's title field. Both are
-    // deliberately unauthored, so the picker keeps ONE source of truth for a
-    // product's display title — pinned here because restating either as a
-    // literal is the tempting "clarification" that would fork it.
-    expect(add.picker.valueField).toBeUndefined();
-    expect(add.picker.labelField).toBeUndefined();
+  it('links and labels the product through fields that exist', () => {
+    // The product lands on the line's OWN product lookup. The RESOLVED field
+    // spells its target `reference` — `reference_to` is the authoring-side
+    // word AGENTS.md uses, and reading it here would assert `undefined`
+    // against `undefined` forever.
+    expect(LINE_ITEM.fields.crm_product.type).toBe('lookup');
+    expect(LINE_ITEM.fields.crm_product.reference).toBe('crm_product');
+    // The picker labels each product by its title field, and its search
+    // reaches the code too through explicit `searchableFields`; the code shows
+    // under each row because it leads `highlightFields`.
     expect(PRODUCT.nameField).toBe('name');
-    // The title is the name alone (#2369 row 10); the picker's search reaches
-    // the code too through explicit `searchableFields`, and the code shows under
-    // each row because it leads `highlightFields`.
     expect(PRODUCT.searchableFields).toEqual(expect.arrayContaining(['name', 'product_code']));
     expect(PRODUCT.highlightFields?.[0]).toBe('product_code');
   });
 
   it('offers active products only, and that narrowing does not empty the catalog', () => {
-    const [rule, ...rest] = oppProducts.properties.add.picker.filter as AnyRec[];
+    const [rule, ...rest] = LINE_ITEM.fields.crm_product.lookupFilters as AnyRec[];
     expect(rest).toHaveLength(0);
-    // The structured, schema-honoured rule shape — `{ field, operator, value }`
-    // with `operator` from the closed vocabulary. The AST array form and `op:`
-    // are rejected by `objectstack build` and render the list unfiltered.
-    expect(rule).toEqual({ field: 'is_active', operator: 'equals', value: true });
+    // The structured, picker-honoured shape — `{ field, operator, value }` with
+    // `operator` from the lookup filter's closed vocabulary (`eq`, not the
+    // related list's `equals`).
+    expect(rule).toEqual({ field: 'is_active', operator: 'eq', value: true });
     expect(PRODUCT.fields.is_active).toBeDefined();
-    // A filter that hid the whole catalog would be a button that opens an empty
-    // dialog — the same unreachability this card closed, one level in.
+    // A filter that hid the whole catalog would be a picker that opens empty.
     const seeded = (products as AnyRec).records as AnyRec[];
     expect(seeded.length).toBeGreaterThan(0);
     expect(seeded.filter((p) => p.is_active !== false)).toHaveLength(seeded.length);
@@ -137,8 +136,7 @@ describe('the Products related list authors an add picker', () => {
   it('keeps the product catalog priced, which is what makes the price fill total', () => {
     // `_line-item-price-fill.ts` can only default `unit_price` when the chosen
     // product HAS a `list_price`. It always does: the field is required and
-    // NOT NULL, so a product with no price cannot be created at all. Relax this
-    // and the picker gains a path that produces an insert the engine refuses.
+    // NOT NULL, so a product with no price cannot be created at all.
     expect(PRODUCT.fields.list_price.required).toBe(true);
     expect(PRODUCT.fields.list_price.storage?.notNull).toBe(true);
   });
