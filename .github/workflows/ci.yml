@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    # TEMPORARY (#2645 measurement): reverted before the PR is opened.
+    branches: [ main, develop, claude/issue-2645-shard-ci-tests ]
   pull_request:
     branches: [ main, develop ]
   # The merge queue runs this workflow on the queued merge commit, so "Build
