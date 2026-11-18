@@ -34,8 +34,9 @@ Closing an opportunity takes one extra field, and the system will not save the r
 
 **Loss/Win Details** is the free-text box next to it — use it for the sentence a teammate would actually need six months later ("marketing is locked into a 2-year HubSpot contract, revisit at renewal").
 
-Two things to know:
+Three things to know:
 
+- **The reason field appears when you pick the closing stage.** On an open deal neither reason is shown, and nothing can store one there: an import or API call that puts a Win Reason or Loss Reason on an open deal is refused. (A deal waiting on a status-change approval to close as won or lost keeps the reason the rep entered with the request.)
 - **This is checked on the server**, not just in the form. An import, an API call or a bulk update that closes a deal without the applicable reason is rejected the same way a rep's form is.
 - **Closed deals are locked.** Once a deal is closed, only the narrative fields (description, next steps) stay editable — so the reason cannot be filled in afterwards. Pick it when you close.
 
@@ -187,7 +188,7 @@ Where **Closing This Quarter** reads *our* forecast, this view reads the *custom
 
 When you open an opportunity, you'll see:
 
-- **Header** — the deal's **Opportunity Name** as the title, its **Account** as the subtitle, a breadcrumb, and five action buttons: **Generate Quote**, **Clone Opportunity**, **Log a Call**, **Log a Meeting** and **Schedule a Meeting**. What is *not* on it matters just as much: there is **no stage badge, no amount, no close date and no owner** on the header — those belong to the two components below it. **Generate Quote** is the CPQ entry point, and the header is where it actually sits.
+- **Header** — the deal's **Opportunity Name** as the title, its **Account** as the subtitle, a breadcrumb, and the deal's actions: **Generate Quote**, **Log a Call**, **Log a Meeting** and **Edit** as buttons, with **Schedule a Meeting** and **Clone Opportunity** in the **⋯** menu next to them. What is *not* on it matters just as much: there is **no stage badge, no amount, no close date and no owner** on the header — those belong to the two components below it. **Generate Quote** is the CPQ entry point, and the header is where it actually sits.
 - **Key Information** — the highlights strip immediately under the header, and where this deal's numbers really are: **Amount**, **Close Date**, **Probability (%)**, **Expected Revenue**, **Opportunity Owner** and **Account**, side by side. The account therefore appears twice on the screen — once as the header subtitle, once here.
 - **Sales Path** — the stage strip below the highlights: all seven stages in funnel order, the current one marked and the ones already passed ticked. It is a **read-only indicator, not a control** — the stages are not clickable, so there is no one-click progression, and clicking a stage does not move the deal to it. You move a deal by editing its **Stage** field, on the *Details* tab or in the edit form, and the transition rules in *The 7 sales stages* above are what decide whether the move is allowed.
 - **Three tabs:**

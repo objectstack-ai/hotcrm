@@ -55,6 +55,11 @@ stateDiagram-v2
 New opportunities start at **10% probability**. Keep the **amount**, **stage**,
 and **close date** current — the automation below keys off all three.
 
+**Win Reason** appears only on a deal closing as **Closed Won**, and **Loss
+Reason** only on one closing as **Closed Lost**: pick the stage first and the
+reason field shows up next to it. The same holds for imports and integrations,
+which cannot put a reason on an open deal.
+
 ## Moving several deals at once
 
 **Update Stage** on a list's selection bar moves each ticked deal on its own,
