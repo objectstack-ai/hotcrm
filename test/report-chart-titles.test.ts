@@ -22,7 +22,7 @@ const charted = reports.filter((r) => r.chart?.title !== undefined);
 
 describe('report chart titles (#2524)', () => {
   it('the composed stack ships charted reports and locale packs to check', () => {
-    expect(charted.length).toBeGreaterThanOrEqual(5_000); // DELIBERATE RED (#2645 gate proof), reverted next commit
+    expect(charted.length).toBeGreaterThanOrEqual(5);
     expect(locales).toEqual(['en', 'es-ES', 'ja-JP', 'zh-CN']);
   });
 
