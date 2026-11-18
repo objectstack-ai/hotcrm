@@ -55,6 +55,10 @@ const RUNTIME_TEST_FILES = [
   // `forecast_owner_name` hook and the `forecast_owner_rename` flow on the user
   // record, run against the booted app in one file.
   'forecast-owner-title.test.ts',
+  // hotcrm#2568 — a staffing row's title follows a rename of its person: the
+  // `project_member_person_name` hook and the `project_member_person_rename`
+  // flow on the user record, run against the booted app in one file.
+  'psa-member-title.test.ts',
   // #2317 — filing a contract's signed copy dates the signature
   // (`contract_signed_copy_date`), beside the two signed-copy gates it serves.
   'contract-signed-copy.test.ts',

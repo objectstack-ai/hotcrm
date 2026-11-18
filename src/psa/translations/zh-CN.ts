@@ -373,6 +373,7 @@ export const zhCN: TranslationData = {
       fields: {
         crm_project: { label: '项目' },
         person: { label: '人员' },
+        person_name: { label: '人员姓名', help: '人员的姓名，与用户记录保持一致。它是这条人员配置的名称。' },
         responsibility: {
           label: '职责',
           options: {

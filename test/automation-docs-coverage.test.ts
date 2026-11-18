@@ -275,6 +275,8 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   project_budget_approval: { 'zh-Hans': '追加预算审批', 'zh-Hant': '追加預算審批' },
   timesheet_approval: { 'zh-Hans': '工时单审批', 'zh-Hant': '工時單審批' },
   timesheet_approval_on_create: { 'zh-Hans': '工时单审批（新建时）', 'zh-Hant': '工時單審批（新建時）' },
+  // hotcrm#2568: 项目成员, the zh-CN pack's label for `crm_project_member`.
+  project_member_person_rename: { 'zh-Hans': '项目成员改名', 'zh-Hant': '項目成員改名' },
   expense_report_approval: { 'zh-Hans': '报销单审批', 'zh-Hant': '報銷單審批' },
   expense_report_project_approval: { 'zh-Hans': '项目报销单审批', 'zh-Hant': '項目報銷單審批' },
   // #2578: 出差申请, the zh-CN pack's label for the travel request.

@@ -373,6 +373,7 @@ export const esES: TranslationData = {
       fields: {
         crm_project: { label: 'Proyecto' },
         person: { label: 'Persona' },
+        person_name: { label: 'Nombre de la persona', help: 'El nombre de la persona, sincronizado con el registro de usuario. Da nombre a esta asignación.' },
         responsibility: {
           label: 'Responsabilidad',
           options: {

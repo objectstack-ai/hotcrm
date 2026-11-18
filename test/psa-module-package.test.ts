@@ -61,7 +61,7 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     expect(((stack.sharingRules ?? []) as AnyRec[]).map((r) => r.object)).not.toContain('crm_expense');
   });
 
-  it('it owns its eight objects, their thirteen hooks and its seed rows (phases 1a, 1b, 2a, 2b and 2c; the expense left in hotcrm#2556)', () => {
+  it('it owns its eight objects, their fourteen hooks and its seed rows (phases 1a, 1b, 2a, 2b and 2c; the expense left in hotcrm#2556; the member title in hotcrm#2568)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.objects ?? []) as AnyRec[]).map((o) => o.name).sort()).toEqual([
       'crm_project', 'crm_project_budget', 'crm_project_budget_line', 'crm_project_member', 'crm_project_task',
@@ -69,18 +69,18 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     ]);
     expect(((stack.hooks ?? []) as AnyRec[]).map((h) => h.name).sort()).toEqual([
       'project_budget_baseline', 'project_budget_follow', 'project_budget_line_amount', 'project_budget_rules',
-      'project_budget_status', 'project_member_unique', 'project_status_guard', 'project_task_progress', 'project_task_rules', 'project_team_sync', 'time_entry_costing', 'time_entry_timesheet', 'timesheet_stamps',
+      'project_budget_status', 'project_member_person_name', 'project_member_unique', 'project_status_guard', 'project_task_progress', 'project_task_rules', 'project_team_sync', 'time_entry_costing', 'time_entry_timesheet', 'timesheet_stamps',
     ]);
     expect([...new Set(((stack.data ?? []) as AnyRec[]).map((d) => d.object))].sort()).toEqual([
       'crm_project', 'crm_project_budget', 'crm_project_budget_line', 'crm_project_task', 'crm_rate_card',
     ]);
   });
 
-  it('it owns its approval and budget flows and the budget notices\' templates (phase 1b)', () => {
+  it('it owns its approval and budget flows, the member rename follower (hotcrm#2568) and the budget notices\' templates (phase 1b)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.flows ?? []) as AnyRec[]).map((f) => f.name).sort()).toEqual([
       'project_budget_alert', 'project_budget_approval',
-      'project_initiation_approval', 'timesheet_approval', 'timesheet_approval_on_create',
+      'project_initiation_approval', 'project_member_person_rename', 'timesheet_approval', 'timesheet_approval_on_create',
     ]);
     expect([...new Set(((stack.emailTemplates ?? []) as AnyRec[]).map((t) => t.name))].sort()).toEqual([
       'crm.project_budget_exceeded', 'crm.project_budget_warning',

@@ -266,6 +266,7 @@ export const en: TranslationData = {
       fields: {
         crm_project: { label: 'Project' },
         person: { label: 'Person' },
+        person_name: { label: 'Person Name', help: "The person's name, kept in step with the user record. It names this staffing row." },
         responsibility: {
           label: 'Responsibility',
           options: {

@@ -216,13 +216,18 @@ export const AccountViews = defineView({
     },
   },
 
+  // One page of stacked sections, not tabs (#2566): a required field on a
+  // later tab only showed as a dot on its title, and on a phone the last tabs
+  // were off screen. The sections a new account is rarely given are collapsed,
+  // and the wide dialog takes three fields a row.
   form: {
-    type: 'tabbed',
+    type: 'simple',
+    modalSize: 'xl',
     sections: [
       {
         name: 'profile',
         label: 'Profile',
-        columns: 2,
+        columns: 3,
         fields: [
           { field: 'name', required: true, span: 'full' },
           'account_number',
@@ -236,12 +241,6 @@ export const AccountViews = defineView({
           'owner_id',
           'parent_account',
           'is_active',
-          'brand_color',
-          // The other half of the `branding` group. Without a form field there
-          // is no upload control anywhere in the app, so the logo the gallery
-          // cards now cover with could never have been set. Full span: an
-          // image drop target in a half-width cell is a thumbnail-sized one.
-          { field: 'logo', span: 'full' },
         ],
       },
       {
@@ -250,7 +249,7 @@ export const AccountViews = defineView({
         // nobody can see the effect of is the decoration this field replaced.
         name: 'financials',
         label: 'Financials',
-        columns: 2,
+        columns: 3,
         fields: ['annual_revenue', 'number_of_employees', 'child_account_revenue'],
       },
       {
@@ -261,7 +260,8 @@ export const AccountViews = defineView({
         // themselves — #1181.)
         name: 'customer_success',
         label: 'Customer Success',
-        columns: 2,
+        collapsed: true,
+        columns: 3,
         fields: ['tier', 'segment', 'health_score'],
       },
       {
@@ -282,8 +282,23 @@ export const AccountViews = defineView({
       {
         name: 'description',
         label: 'Description',
+        collapsed: true,
         columns: 1,
         fields: ['description'],
+      },
+      {
+        name: 'branding',
+        label: 'Branding',
+        collapsed: true,
+        columns: 2,
+        fields: [
+          'brand_color',
+          // The other half of the `branding` group. Without a form field there
+          // is no upload control anywhere in the app, so the logo the gallery
+          // cards now cover with could never have been set. Full span: an
+          // image drop target in a half-width cell is a thumbnail-sized one.
+          { field: 'logo', span: 'full' },
+        ],
       },
     ],
   },

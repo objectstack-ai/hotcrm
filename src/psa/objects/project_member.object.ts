@@ -21,7 +21,11 @@ export const ProjectMember = ObjectSchema.create({
 
   // Whoever reads the project reads its staffing (ADR-0055).
   sharingModel: 'controlled_by_parent',
-  nameField: 'person',
+  // Titled by the person's name as this row stores it (hotcrm#2568). A title
+  // is a stored text field (ADR-0079 D1, D5: a lookup is not title-eligible);
+  // titled by `person` itself, the created toast printed the raw user id.
+  nameField: 'person_name',
+  searchableFields: ['person_name'],
   highlightFields: ['responsibility', 'rate_card', 'allocation_percent', 'end_date'],
 
   fieldGroups: [
@@ -42,6 +46,21 @@ export const ProjectMember = ObjectSchema.create({
       label: 'Person',
       group: 'basic',
       required: true,
+    }),
+
+    // The person's name, a copy kept in step with the user record by two
+    // writers: `project_member_person_name` (`project_member.hook.ts`) on a
+    // save that names a person, or that reaches a row with no copy yet; and
+    // `project_member_person_rename` (`src/psa/flows/`) when the user is
+    // renamed. Rows stored before this field get it from the next save, or all
+    // at once from `scripts/backfill-record-titles.ts`. `readonly`: a form
+    // never offers it and a value a person sends is dropped.
+    person_name: Field.text({
+      label: 'Person Name',
+      group: 'basic',
+      readonly: true,
+      maxLength: 255,
+      description: "The person's name, kept in step with the user record. It names this staffing row.",
     }),
 
     responsibility: Field.select({
