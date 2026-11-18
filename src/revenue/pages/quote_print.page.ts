@@ -113,12 +113,17 @@ export const QuotePrintPage: Page = {
         {
           // The two groups print whole: every member of `pricing` and `terms`
           // is customer-facing, so the group reference is enough (rung 2).
+          // One block per group, not one block of two: `avoidBreakInside`
+          // keeps a block on one page, so a single block of both moved whole
+          // to sheet 2 behind a short quote and left sheet 1 a third blank
+          // (measured on 18.6.0, a 3-line seeded quote, A4: 41% of sheet 1
+          // blank as one block, 4% split; on 18.5.0's taller print face
+          // pricing does not fit sheet 1 either way).
           type: 'record:details',
-          id: 'quote_print_totals',
-          properties: {
-            sections: [{ group: 'pricing' }, { group: 'terms' }],
-          },
+          id: 'quote_print_pricing',
+          properties: { sections: [{ group: 'pricing' }] },
         },
+        { type: 'record:details', id: 'quote_print_terms', properties: { sections: [{ group: 'terms' }] } },
       ],
     },
   ],
