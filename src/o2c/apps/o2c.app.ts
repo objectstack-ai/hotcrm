@@ -29,9 +29,11 @@ export const O2cApp = App.create({
   description: 'Invoices, payments and the collection plan, with the contracts and accounts they belong to',
   icon: 'receipt',
   defaultAgent: 'ask',
+  // The app's mark is its `icon` on a `primaryColor` tile: no `branding.logo`, so the
+  // home apps strip and the app switcher tell it from the other HotCRM apps (#2666).
+  // `favicon` stays the HotCRM mark; `test/app-marks-distinct.test.ts` holds the six apart.
   branding: {
-    primaryColor: '#EA580C',
-    logo: HOTCRM_ICON,
+    primaryColor: '#15803D',
     favicon: HOTCRM_ICON,
   },
 

@@ -31,11 +31,13 @@ export const ExpenseApp = App.create({
   name: 'crm_expenses',
   label: 'Expenses',
   description: 'What you spent for the company, with its receipts, the trips you ask for beforehand, the reports that pay you back, and what waits for your approval',
-  icon: 'receipt',
+  icon: 'hand-coins',
   defaultAgent: 'ask',
+  // The app's mark is its `icon` on a `primaryColor` tile: no `branding.logo`, so the
+  // home apps strip and the app switcher tell it from the other HotCRM apps (#2666).
+  // `favicon` stays the HotCRM mark; `test/app-marks-distinct.test.ts` holds the six apart.
   branding: {
     primaryColor: '#7C3AED',
-    logo: HOTCRM_ICON,
     favicon: HOTCRM_ICON,
   },
 
