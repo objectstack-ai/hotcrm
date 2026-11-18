@@ -200,6 +200,13 @@ export const Event = ObjectSchema.create({
     related_to_lead: Field.lookup('crm_lead', {
       group: 'related',
       label: 'Related Lead',
+      // A lead's list of events (#2382), drawn by the default record page now
+      // that the lead's authored page retired. These are the columns that page
+      // named: when, then whether it happened, right after the subject — at a
+      // narrow window the list shows about three columns before it scrolls
+      // sideways. The row order is the event's default list view sort, which
+      // the record page inherits; no key here orders it.
+      relatedListColumns: ['subject', 'start_datetime', 'status', 'type', 'owner_id'],
     }),
 
     related_to_case: Field.lookup('crm_case', {

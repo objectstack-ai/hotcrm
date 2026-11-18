@@ -448,51 +448,24 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '合同文档',
       description: '可打印的合同文档：签约方、期限、金额、计费、条款与签署栏。',
     },
-    account_detail_page: {
-      label: '客户详情',
-      description: '插槽式客户记录页——自定义页头 + 常驻讨论区。',
-      title: '{name}',
-      subtitle: '{industry} · {type}',
-      components: {
-        account_chatter: { label: '讨论' },
-      },
-    },
     account_workbench: {
       label: '客户工作台',
       description: '面向销售团队的精选客户列表：仅提供快捷筛选，不含视图管理。',
     },
     lead_detail_page: {
       label: '线索详情',
-      description: '完整的线索详情页，包含关键信息、明细与相关记录。',
-      title: '{full_name}',
-      subtitle: '{company}',
+      description: '线索记录页：平台合成的默认布局，告警槽位中是重复线索提示。',
       components: {
         lead_duplicate_alert_confirmed: { label: '已确认重复提醒' },
         lead_duplicate_alert_suspected: { label: '疑似重复提醒' },
-        lead_highlights: { label: '关键信息' },
-        lead_path: { label: '线索状态进度' },
-        main_tabs: { label: '线索信息标签页' },
-        lead_details: { label: '线索明细' },
-        related_accordion: { label: '相关记录' },
-        related_tasks: { title: '待办任务', label: '任务' },
-        lead_activity: { label: '活动时间线' },
-        lead_history: { label: '字段历史' },
       },
     },
     opportunity_detail_page: {
       label: '商机详情',
-      description: '完整的商机详情页，包含阶段进度、关键信息、明细与相关列表。',
-      title: '{name}',
-      subtitle: '{crm_account}',
+      description: '商机记录页：平台合成的默认布局，告警槽位中是审批提示。',
       components: {
-        opp_highlights: { label: '关键信息' },
-        opp_stage_path: { label: '商机阶段进度' },
         opp_approval_pending_manager: { label: '等待销售经理审批' },
         opp_approval_pending_director: { label: '等待销售经理和销售总监审批' },
-        opp_details: { label: '商机明细' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        opp_main_tabs: { items: { details: { label: '明细' }, related: { label: '相关' }, activity: { label: '互动' } } },
       },
     },
     sales_home_page: {

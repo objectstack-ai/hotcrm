@@ -359,17 +359,9 @@ export const jaJP: TranslationData = {
   pages: {
     case_detail_page: {
       label: 'ケース詳細',
-      description: 'サービス担当者向けのケースレコードページ：ハイライト、SLA パス、詳細、活動タイムライン。',
-      title: '{display_title}',
-      subtitle: '{crm_account}',
+      description: 'ケースのレコードページ：プラットフォームが合成する標準レイアウト。アラート枠に SLA 違反の警告を表示します。',
       components: {
-        case_highlights: { label: '重要情報' },
         case_sla_breached: { label: 'SLA違反' },
-        case_status_path: { label: 'ケースステータスの進捗' },
-        case_details: { label: 'ケース詳細情報' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        case_main_tabs: { items: { details: { label: '詳細' }, related: { label: '関連' }, activity: { label: '活動' } } },
       },
     },
   },

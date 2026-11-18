@@ -113,6 +113,18 @@ export const QuoteLineItem = ObjectSchema.create({
       // four of that strip, so a fifth entry never reaches the strip, and
       // reordering it would evict `total_price` from the record's header.
       relatedListColumns: ['crm_product', 'quantity', 'unit_price', 'discount', 'total_price'],
+      // The quote's lines are part of the quote, not a card beside it (#2382,
+      // maintainer 2026-10-28: 「如果是一个报价单，明细行的子表放在右侧合适嘛？」).
+      // `'primary'` draws them as a full-width table in the quote's Details
+      // body, after its first field group, with the columns above and paging.
+      //
+      // `'primary'`, not `inlineEdit`: a line is not edited on the quote today.
+      // It is added and changed on its own record (New on this table opens the
+      // line form, pre-linked to the quote). `inlineEdit` would put an editable
+      // grid into the quote's FORM, which is a different change: it needs the
+      // quote to allow the batch write that saves a form and its lines
+      // together, and was left to the maintainer on #2382.
+      relatedList: 'primary',
     }),
 
     // Left on the restricting default on purpose — see the twin object: a

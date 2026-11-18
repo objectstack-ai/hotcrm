@@ -362,17 +362,9 @@ export const esES: TranslationData = {
   pages: {
     case_detail_page: {
       label: 'Detalle de Caso',
-      description: 'Página de caso para el agente de servicio: datos destacados, progreso del SLA, detalles y cronología de actividad.',
-      title: '{display_title}',
-      subtitle: '{crm_account}',
+      description: 'La página de registro del caso: el diseño sintetizado, con el aviso de SLA incumplido en el espacio de alertas.',
       components: {
-        case_highlights: { label: 'Información Clave' },
         case_sla_breached: { label: 'SLA incumplido' },
-        case_status_path: { label: 'Progreso del Estado del Caso' },
-        case_details: { label: 'Detalles del Caso' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        case_main_tabs: { items: { details: { label: 'Detalles' }, related: { label: 'Relacionado' }, activity: { label: 'Actividad' } } },
       },
     },
   },

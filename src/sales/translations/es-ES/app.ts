@@ -441,51 +441,24 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Documento del Contrato',
       description: 'El contrato como documento imprimible: partes, plazo, valor, facturación, condiciones y firmas.',
     },
-    account_detail_page: {
-      label: 'Detalle de Cuenta',
-      description: 'Página de registro de cuenta por slots: cabecera personalizada + feed de discusión permanente.',
-      title: '{name}',
-      subtitle: '{industry} · {type}',
-      components: {
-        account_chatter: { label: 'Discusión' },
-      },
-    },
     account_workbench: {
       label: 'Mesa de Trabajo de Cuentas',
       description: 'Lista de cuentas curada para el equipo comercial: solo filtros rápidos, sin gestión de vistas.',
     },
     lead_detail_page: {
       label: 'Detalle de Prospecto',
-      description: 'Página completa de detalle del prospecto, con datos destacados, detalles e información relacionada',
-      title: '{full_name}',
-      subtitle: '{company}',
+      description: 'La página de registro del prospecto: el diseño sintetizado, con los avisos de duplicado en el espacio de alertas.',
       components: {
         lead_duplicate_alert_confirmed: { label: 'Aviso de duplicado confirmado' },
         lead_duplicate_alert_suspected: { label: 'Aviso de duplicado sospechoso' },
-        lead_highlights: { label: 'Información Clave' },
-        lead_path: { label: 'Progreso del Estado del Prospecto' },
-        main_tabs: { label: 'Pestañas de Información del Prospecto' },
-        lead_details: { label: 'Detalles del Prospecto' },
-        related_accordion: { label: 'Registros Relacionados' },
-        related_tasks: { title: 'Tareas Abiertas', label: 'Tareas' },
-        lead_activity: { label: 'Cronología de Actividad' },
-        lead_history: { label: 'Historial de Campos' },
       },
     },
     opportunity_detail_page: {
       label: 'Detalle de Oportunidad',
-      description: 'Página completa de detalle de la oportunidad, con recorrido de etapas, datos destacados, detalles y listas relacionadas',
-      title: '{name}',
-      subtitle: '{crm_account}',
+      description: 'La página de registro de la oportunidad: el diseño sintetizado, con los avisos de aprobación en el espacio de alertas.',
       components: {
-        opp_highlights: { label: 'Información Clave' },
-        opp_stage_path: { label: 'Progreso de Etapa de la Oportunidad' },
         opp_approval_pending_manager: { label: 'Pendiente de aprobación del Gerente de Ventas' },
         opp_approval_pending_director: { label: 'Pendiente de aprobación del Gerente y del Director de Ventas' },
-        opp_details: { label: 'Detalles de la Oportunidad' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        opp_main_tabs: { items: { details: { label: 'Detalles' }, related: { label: 'Relacionado' }, activity: { label: 'Actividad' } } },
       },
     },
     sales_home_page: {

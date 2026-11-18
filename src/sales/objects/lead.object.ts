@@ -657,7 +657,23 @@ export const Lead = ObjectSchema.create({
   // matches each word inside one field, so 「张伟」 — the name as the header
   // writes it, with no space — matched neither 「张」 nor 「伟」 alone.
   searchableFields: ['first_name', 'last_name', 'display_title', 'company', 'email'],
-  highlightFields: ['full_name', 'company', 'email', 'status', 'owner_id'],
+  // The record page's highlight strip, and since #2382 its ONLY source: the
+  // lead's authored page retired to the synthesized default page, which draws
+  // exactly this list (minus the title, at most six). The list is the one the
+  // retired page drew, which won over the object's old
+  // `full_name, company, email, status, owner_id`: those first two repeat the
+  // record title (`display_title` is the name and the company), so they spent
+  // two chips restating the H1, while the page's list carries what a rep
+  // qualifies on (rating, source) and the two numbers they dial or write to.
+  // The page's list minus `owner_id`: the owner is the one member of the
+  // `assignment` group, and a group whose every member is hoisted into the
+  // strip renders on forms and nowhere on the record page
+  // (`field-group-shadowed`, which `pnpm lint` fails on). The record page
+  // still names the owner, in the Assignment section and in the footer's
+  // Owner line. The same list leads a lead's columns in a related list and a
+  // lookup picker (the record's title goes first there), where it replaced
+  // the same two title-repeating columns.
+  highlightFields: ['status', 'rating', 'lead_source', 'email', 'phone'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   

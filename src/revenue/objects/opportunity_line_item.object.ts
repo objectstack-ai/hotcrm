@@ -127,6 +127,15 @@ export const OpportunityLineItem = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
+      // The deal's product lines (#2382). On the retired authored deal page
+      // they were a Products card beside the details; they are part of the
+      // deal, so `'primary'` draws them as a full-width table in the deal's
+      // Details body, after its first field group, with paging. The columns
+      // are the ones that card named. `'primary'`, not `inlineEdit`, for the
+      // reason `crm_quote_line_item.crm_quote` gives: a line is added and
+      // changed on its own record, not in the deal's form.
+      relatedListColumns: ['crm_product', 'quantity', 'unit_price', 'total_price'],
+      relatedList: 'primary',
     }),
 
     // Deliberately left on the default, which the same escalation turns into

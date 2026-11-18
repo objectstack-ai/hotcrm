@@ -363,17 +363,9 @@ export const zhCN: TranslationData = {
   pages: {
     case_detail_page: {
       label: '工单详情',
-      description: '客服工单记录页：关键信息、SLA 进度、明细与活动时间线。',
-      title: '{display_title}',
-      subtitle: '{crm_account}',
+      description: '工单记录页：平台合成的默认布局，告警槽位中是 SLA 违约提示。',
       components: {
-        case_highlights: { label: '关键信息' },
         case_sla_breached: { label: '已违反 SLA' },
-        case_status_path: { label: '工单状态进度' },
-        case_details: { label: '工单明细' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        case_main_tabs: { items: { details: { label: '明细' }, related: { label: '相关' }, activity: { label: '互动' } } },
       },
     },
   },

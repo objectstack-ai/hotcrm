@@ -177,16 +177,32 @@ export const Task = ObjectSchema.create({
       // account waits for the platform release that resolves `{ $record }` in
       // a lookup filter (objectstack#34197, #34199; neither is in 18.5.0).
       lookupFilters: [{ field: 'stage', operator: 'ne', value: 'closed_lost' }],
+      // The lead's, the deal's and the case's list of tasks (#2382). Their
+      // authored record pages each drew an Open Tasks list; the default page
+      // draws this FK's list instead, so the scope and the columns live here.
+      // The filter is the open half of `status` (Completed is the one `won`
+      // option, the rest are `open`); the badge count reads the same filter.
+      // The columns are the ones those pages named, which equal this object's
+      // `highlightFields` today and are written out so a change to that strip
+      // does not move these lists.
+      relatedListFilter: { status: { $ne: 'completed' } },
+      relatedListColumns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
     }),
     
     related_to_lead: Field.lookup('crm_lead', {
       group: 'related',
       label: 'Related Lead',
+      // Open tasks only, these columns: see `related_to_opportunity`.
+      relatedListFilter: { status: { $ne: 'completed' } },
+      relatedListColumns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
     }),
     
     related_to_case: Field.lookup('crm_case', {
       group: 'related',
       label: 'Related Case',
+      // Open tasks only, these columns: see `related_to_opportunity`.
+      relatedListFilter: { status: { $ne: 'completed' } },
+      relatedListColumns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
     }),
     
     // Recurrence (for recurring tasks)
