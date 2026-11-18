@@ -4,6 +4,7 @@
   "pages": [
     "index",
     "setup",
+    "modules",
     "profiles",
     "sharing-and-security",
     "automation",

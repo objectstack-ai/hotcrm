@@ -5,64 +5,6 @@ description: Recent releases, new capabilities, and what's coming next.
 
 # What's New
 
-## v1.0 — HotCRM, the CRM that rewrites itself
-
-**The first launch.** HotCRM v1 is for teams who are sick of waiting on
-their CRM vendor to add the field they need next quarter. You add the
-field; the AI uses it the next time you ask. Three things in this
-release make it different from every CRM you've used before.
-
-### ✨ Wow #1 — Live schema, live AI
-
-Add a field in the admin console. Ten seconds later, ask the AI
-assistant a question about it. It already knows. No retraining, no
-restart, no redeploy — the platform re-reads metadata on every
-agent turn and the Copilot's `describe_object` tool returns your
-new field as soon as it's saved.
-
-Try it in 30 seconds with the script we ship:
-
-```bash
-HOTCRM_TOKEN=... ./scripts/wow1-live-schema.sh
-```
-
-### 💬 Wow #2 — Chat-first record pages
-
-Open any account, opportunity, case, or contract. The Copilot is
-always one click away in the floating chat bubble — and it already
-has the live schema **and** this record in scope. Ask:
-
-- "Give me the full picture of this account."
-- "Draft a follow-up email to the primary contact."
-- "What are the next 3 actions I should take?"
-
-The discussion feed at the bottom of every record page captures the
-back-and-forth so it stays as institutional memory, not a Slack
-thread that nobody can find next quarter.
-
-### 🛠️ Wow #3 — Honest about what's in the box
-
-We don't pretend the platform does things it doesn't. The natural-
-language **flow builder** is a platform capability we've designed
-([ADR-0010](https://github.com/objectstack-ai/framework/blob/main/docs/adr/0010-nl-to-flow-authoring.md))
-and is on the roadmap, but doesn't ship in v1. What does ship: every
-business object, view, page, dashboard, role, and seed record is a
-plain TypeScript file you can edit, diff, and commit — and the AI
-sees those edits the moment you save.
-
-### What's in v1.0
-
-- **15 business objects** across Sales / Service / Marketing / Revenue.
-- **Sales Copilot** with 5 skills: live data, lead qualification, email drafting, revenue forecasting, customer 360°.
-- **Executive Dashboard** + 9 pre-built reports.
-- **Slimmed nav** — 5 core surfaces (Sales, Service, Insights, Approvals) so a new user can find their way around in 30 seconds.
-- **Demo seed** — Acme Corporation is a fully-formed customer (3 opps, 2 cases, 1 contract, 3 narrative tasks, a 1KB strategic brief) so the Copilot has real material to summarize the moment you log in.
-
-Ready to try? `pnpm install && pnpm demo:reset && pnpm dev`, then open
-http://localhost:4001 and create the first admin account.
-
----
-
 ## v6.5.0 — Latest release
 
 **HotCRM 6.5.0** runs on **ObjectStack 18.5.0** across every `@objectstack/*` package, and its
@@ -71,21 +13,18 @@ runtime on a different protocol major — a 17.x host included — refuses the l
 structured diagnostic instead of failing deep in a schema parse. 6.4.0 shipped on ObjectStack
 18.5.0 too; 6.3.0, 6.2.1 and 6.2.0 on
 ObjectStack 18.4.0; 6.1.2, 6.1.1 and 6.1.0 on
-ObjectStack 18.3.0, 6.0.0 on ObjectStack
-18.0.0, 5.1.2, 5.1.1 and 5.1.0 on ObjectStack 18.0.0-next.3, 5.0.0 on ObjectStack
-18.0.0-next.2, and 4.0.1 on ObjectStack 17.7.0.
+ObjectStack 18.3.0 and 6.0.0 on ObjectStack
+18.0.0.
 
 **An environment on 6.4.0 reads "What 6.5.0 changes" alone.** 6.4.0 was the first version
 published since 6.2.0; 6.2.1 and 6.3.0 were cut in the repository but never published, so an
 environment still on 6.2.0 also reads "What 6.4.0 changes", "What 6.3.0 changes" and "What 6.2.1
 changes" below, and their checks.
 
-> **This page does not keep a second release table.** The release-by-release
-> history is `CHANGELOG.md` in the repository, compiled from the `.changeset/`
-> entry every pull request adds. The versions between v1.0 and 6.5.0 are
-> recorded there and are deliberately not re-listed here — a hand-maintained
-> copy of that history is exactly how this section came to advertise a "v5.0"
-> while the app was at 2.2.2, on a platform major that never shipped it.
+> **This page keeps the releases since 6.0.0.** The full history, every earlier
+> release and the v1.0 launch included, is [`CHANGELOG.md`](https://github.com/objectstack-ai/hotcrm/blob/main/CHANGELOG.md) in the
+> repository, compiled from the `.changeset/` entry every pull request adds. That file is the
+> record; this page summarises the recent releases for a reader deciding whether to upgrade.
 
 ### What 6.5.0 changes
 
@@ -414,222 +353,6 @@ each with its own entry in `CHANGELOG.md`.
   `os serve` needs `OS_AUTH_SECRET`.
 - **Coming from 5.1.1 or earlier**, everything under the sections below applies as well.
 
-### What 5.1.2 fixes
-
-- **A product with no product code is titled by its name, and so are its line items.**
-  Products created before HotCRM issued product codes had no title at all, so since 5.1.0
-  their line items were named by a record id that nothing could fix. Coming from 5.1.0,
-  they are now named on their first view like every other line.
-- 5.1.1 was only ever on the staging marketplace; everything under "What 5.1.1 fixes"
-  below reaches production with 5.1.2.
-
-### What 5.1.1 fixes
-
-**5.1.1 makes 5.1.0's line item names work on a hosted environment.**
-
-- **Old line items get their product name on their own.** Lines created before 5.1.0
-  showed a record id until someone ran a script that a hosted environment cannot run.
-  Now the first time a list or a record page shows such a line, every line of that
-  product is named in the background: that first screen still shows the id, the next
-  one shows the product.
-- **Renaming a product with many lines renames every one of them.** On a hosted
-  environment the update used to stop partway; it now carries on until every line has
-  the new name.
-- **The hourly SLA sweep keeps an escalated case's Escalation Reason and date.**
-- **Every campaign member gets an Added Date**, however it was added.
-
-### What 5.1.0 adds
-
-**5.1.0 runs on any ObjectStack 18 host that runs 5.0.0.** The platform moves from
-18.0.0-next.2 to 18.0.0-next.3, every `@objectstack/*` package together.
-
-- **Sales Home's lists draw again.** On the console that ships with 18.0.0-next.3,
-  *My Leads*, *My Open Deals*, *My Open Tasks* and *Upcoming Events* showed "No object
-  named" and loaded nothing. They load again. The page is now headed **Sales Home**, the
-  name its sidebar entry gives it.
-- **Each role opens on its own home page.** A sales rep lands on **Sales Home**, a service
-  agent or service manager on **Service Overview**; managers, administrators and marketing
-  users land on **Home**, as before.
-- **Line items are named after their product.** An opportunity or quote line now reads as
-  its product, for example **PRD-0009 - Premium Support**, instead of a description or a
-  raw record id.
-- **A lead's Related tab shows its events, its campaigns and what it was converted into**,
-  beside its open tasks.
-- **Tasks have a Complete button** on the task's row and on its record page.
-- **Hide columns on the Leads, Accounts and Opportunities lists** from the **Display** menu.
-  The choice is yours alone and stays with your list settings.
-- **Your changes to the sample records survive a restart.** Sample records are added once,
-  on the first boot of a database that does not have them, and a later boot leaves them
-  alone.
-
-Plus a long tail of fixes — one primary contact per account, the approver shown as
-**Last Modified By**, a priority raise bringing the SLA Due Date in, settled line items
-that can no longer be deleted, read-only quote totals, lead cards and calendar,
-one-row dashboard tiles and a fuller sample knowledge base — each with its own entry in
-`CHANGELOG.md`.
-
-**Check these after upgrading to 5.1.x:**
-
-- **Lines created before 5.1.0 are named on first view from 5.1.1 on.** Nothing needs
-  to be run. A self-hosted operator who wants every line named at once can still run
-  `pnpm exec tsx scripts/backfill-line-product-title.ts --url https://YOUR-ORG --email ADMIN --password PASSWORD`
-  (it reports; add `--apply` to write).
-- **A Studio copy of Sales Home keeps its old list spelling.** A deployment that saved
-  its own copy of Sales Home through Studio keeps serving that copy, and this console no
-  longer reads its `objectName` / `viewType`. Delete the copy to fall back to the packaged
-  page, or re-save it with `data` and `type`.
-- **Coming from 4.x**, everything under "What 5.0.0 adds" below, its checks before
-  upgrading included, applies as well.
-
-### What 5.0.0 adds
-
-**5.0.0 is a major because it needs an ObjectStack 18 host.** The platform line moved
-from 17.7.0 to 18.0.0-next.2, in three steps, every `@objectstack/*` package together
-with the protocol range the manifest declares.
-
-- **Tenant administrators no longer hold `manage_org_presentation`.** ObjectStack 18
-  retires per-organization overlays, so a tenant administrator authors no metadata.
-- **The App Launcher and Utility Bar pages are retired.** Neither could be reached from
-  the app. To switch apps, use the console's own app switcher.
-- **Sales Home is three columns, and has its own sidebar entry under Home.** The
-  *Ask the AI Assistant* and *Upcoming Events* cards sit to the right of the key metrics.
-- **A quote has one tax.** Quote line items no longer carry **Tax Rate %**: the quote's
-  own **Tax** is the tax, and a line's **Total** is its **Subtotal**.
-- **An escalated case stays readable to the agent it was taken from.** A new read-only
-  **Escalated From** field names that agent.
-- **Shared option lists are declared once.** Industry, Lead Source, Salutation, Payment
-  Terms and Related To Type no longer drift between the objects that offer them.
-
-Plus a long tail of fixes, each with its own entry in `CHANGELOG.md`.
-
-**Check these before upgrading:**
-
-- **Move the host to ObjectStack 18 first, and run the platform's migration.** An 18
-  runtime refuses to serve a database still in the 17.x organization shape until the
-  operator runs `os migrate organization-ownership` (plan with `--out plan.json`, then
-  `--apply --backup-taken --plan-file plan.json`). That migration keeps existing data,
-  and nothing needs to be cleared.
-- **An integration that writes `crm_quote_line_item.tax_rate`** is refused with 400
-  `INVALID_FIELD`. The stored rates stay in the database, unread; read them before
-  `os migrate apply --allow-destructive`, which drops the column.
-- **A sales manager or service manager whose 17.x position assignment carries no
-  organization** does not staff the case-escalation pool. Assign them again.
-- **A bookmark to the App Launcher or Utility Bar page stops working.**
-- **Coming from 3.x**, everything under "What 4.0.0 adds" below, its checks before
-  upgrading included, applies as well.
-
-### What 4.0.1 fixes
-
-**4.0.1 is the first 4.x release that installs from the marketplace.** 4.0.0's marketplace
-publish carried an empty app and was withdrawn, so a deployment on 3.x upgrades straight to
-4.0.1, and everything under "What 4.0.0 adds" below, the checks before upgrading included,
-applies to it. 4.0.1 also makes the sidebar logo and favicon show on hosted installs.
-
-### What 4.0.0 adds
-
-**4.0.0 is a major because a contact's mailing address becomes one field.** The five
-separate address fields are removed, and an existing deployment converts its contacts'
-addresses once (see the checks below). The release also records more of each sale.
-
-- **The sales records carry more of the deal.** An account records who it is on paper,
-  what it spends, what it may be sold and whether it has been signed off. A contact
-  records the buying centre: their role in the purchase decision, where they stand on
-  you, and how well you know them. A lead records what the prospect needs and roughly
-  what it is worth. An opportunity records whether it is worth pursuing, the customer's
-  own procurement calendar and the story behind the deal.
-- **Sign-offs where the company commits.** Qualification approval (立项) before a deal's
-  stage can move, and sign-offs on an account's registration, a lead's conversion and a
-  deal's won/lost call. The lead, qualification and won/lost gates ship switched off; an
-  administrator turns each one on.
-- **Every notification arrives in the recipient's own language.** One alert addressed
-  to a Chinese-speaking rep and a Japanese-speaking manager reaches each of them in
-  their own language.
-- **Quotes and contracts follow the account.** A rep now reads the quotes and contracts
-  of every account they can see, renewals included.
-- **A contact's mailing address is one field**, shown and edited as one unit, the same
-  shape as an account's billing address. The contact import template keeps its five
-  address columns.
-- **HotCRM installs as one app carrying two packages**: the HotCRM app and its Service
-  module, which holds cases and knowledge.
-- **The platform line moved from 17.4.0 to 17.7.0**, in three steps, every
-  `@objectstack/*` package together with the protocol range the manifest declares.
-
-Plus a long tail of fixes, each with its own entry in `CHANGELOG.md`.
-
-**Check these before upgrading:**
-
-- **Convert the contact addresses once, before `os migrate apply --allow-destructive`.**
-  Upgrading does not move a contact's old address fields, and that command deletes them.
-  The mailing-address entry of `CHANGELOG.md` gives the two commands.
-- **An integration that reads or writes `mailing_street` … `mailing_country`** on a
-  contact must use `mailing_address` and its parts instead.
-- **My Cases is now the last item of My Work.** Every other menu entry is where it was.
-- **A write to a record the caller cannot see now answers 404**, where it answered 403
-  before.
-- **Imports read dates strictly.** A month-first cell such as `07/15/2026` now fails its
-  row instead of importing as a different date.
-
-### What 3.1.0 adds
-
-A minor release: nothing is renamed, no stored record is rewritten, and an
-upgrade from 3.0.0 needs no migration step.
-
-- **A *Claim Case* button.** Taking an unowned case out of **Unassigned —
-  triage** already worked — an agent moves it to a working status and the claim
-  seam stamps them as the owner — and nothing on screen said so. The gesture now
-  has an action on the case record header and in the triage row menu: it asks
-  which working status you are claiming into, defaulted to *In Progress*, and
-  moves the case there. It deliberately does **not** write ownership; the claim
-  seam remains the only writer of that column.
-- **The platform line moved from 17.1.0 to 17.4.0**, in three steps, every
-  `@objectstack/*` package together with the protocol range the manifest
-  declares. Nothing an author writes in `src/` changes shape.
-- **A SaaS / multi-organization composition**, for an operator running one
-  HotCRM deployment on behalf of several organizations.
-- **The knowledge base's *Review Queue* tab is gone.** It returned every
-  published article sorted least-recently-reviewed first, which degrades into
-  "all articles, different sort" as a knowledge base grows. `last_reviewed_at`
-  is untouched — only the tab that ranked by it is removed.
-- **The product catalog's *Default Tax Rate %* is gone.** `crm_product.tax_rate`
-  could be set only through the REST API and no total anywhere read it. Tax is
-  unchanged where it is actually computed: the quote line item's own rate, and
-  the Tax amount on the quote. (A later release retires the line's rate as well,
-  leaving the quote's Tax amount as the only tax.)
-
-Plus a long tail of fixes, each with its own entry in `CHANGELOG.md`.
-
-**The one thing to check before upgrading:** an integration that writes
-`crm_product.tax_rate` over the REST API. That field no longer exists, so the
-write is refused rather than ignored. Nothing else in this release removes or
-renames anything a client can address.
-
-### Upgrading from 2.x — Owner is now one field
-
-**3.0.0 is a major because reassigning Owner now moves access.** Before it,
-every business object carried *two* owners: the **Owner** on forms, views and
-reports, and a separate hidden column the platform used for every access
-decision. Nothing kept them in step — changing Owner moved the record in every
-list and report and moved **no access at all**. The previous owner kept it; the
-new owner never got it.
-
-HotCRM now has exactly one Owner: the platform's ownership column.
-
-What this means for an existing deployment:
-
-- **Reassignment is gated separately from edit rights.** Because it really does
-  transfer access, changing Owner is its own permission rather than a side
-  effect of being able to edit the record.
-- **Run the backfill once.** Deployments where somebody reassigned an Owner
-  under 2.x have the two columns out of step; `pnpm backfill:owner` reconciles
-  them. It never blanks an existing owner and is safe to re-run — and it needs
-  an administrator account, because a bulk transfer is what it performs. If
-  nobody ever reassigned an Owner, the columns already agree and the backfill
-  reports zero divergences.
-
-The full entry — including the per-persona reassignment table — is the
-`Major Changes` section of `CHANGELOG.md`.
-
-
 ### Where the current shape of the product is written down
 
 Rather than restate the inventory here — where nothing would check it — each
@@ -639,9 +362,9 @@ registered metadata by the repository's docs-drift guard:
 - **What ships in the box** — [Introduction](/docs/getting-started/introduction).
 - **Dashboards, reports, and the datasets underneath them** — [Analytics](/docs/analytics/index).
 - **Profiles, positions, and sharing** — [Sharing & security](/docs/administration/sharing-and-security).
-- **The AI surface** — [AI assistant](/docs/ai-copilot/index). HotCRM ships
-  skills only; they attach to the platform assistant, and the app defines no
-  agent of its own.
+- **The AI surface** — [AI and Agents](/docs/ai-copilot/index). HotCRM defines
+  no agent of its own: you connect yours over MCP, and its skills attach to the platform
+  assistant where an environment runs one.
 
 ---
 

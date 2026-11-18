@@ -48,7 +48,7 @@ Auto-assignment ran. **There is no Setup → Lead Settings screen and there are 
 Three blockers, in order:
 
 1. **Required fields** missing (Close Date, Amount, Won Reason).
-2. **Approval pending** — an amount of $100K or more starts [Large Deal Approval](/docs/revenue/approvals), which locks the deal until the approver decides.
+2. **Approval pending** — an amount of $100K or more starts [Large Deal Approval](/docs/sales/approvals), which locks the deal until the approver decides.
 3. **Validation rule** — e.g., *"Must have a primary contact role"*.
 
 ### Why did my opportunity skip back to a previous stage?
@@ -185,6 +185,106 @@ No. Use **permission sets** to grant extras on top of the base profile.
 ### Can a user belong to multiple roles?
 
 No — one role per user. Use **public groups** for cross-cutting sharing.
+
+## 💼 Orders and Order to Cash
+
+### Why can't I see Orders?
+
+Orders are shown to the people who work with quotes (sales reps, sales managers, sales leadership and administrators) and to finance, which reads them. Service and marketing staff do not see them. Look for **Orders** in the Sales app, or on an account's or a contract's page. See [Orders](/docs/sales/orders).
+
+### I accepted a quote. Where is the order?
+
+There is none. Accepting a quote wins the deal and drafts a contract; an order is entered by hand.
+
+### Why can't I change an order's lines?
+
+The order has left **Draft**. A confirmed order's lines are locked: move it back to **Draft**, change them, and confirm it again. A completed or cancelled order's lines stay as they are; its other fields, such as delivery, stay editable.
+
+### Why can't I find the Order to Cash app?
+
+It is finance's app, and a sales rep's launcher does not offer it. Reps find **Billing Milestones** under **Collection Plan** in the Sales app, and the **Billing Milestones**, **Invoices** and **Payments** tabs on every contract. If none of these is there, an administrator has switched the Order to Cash module off. See [Order to Cash](/docs/order-to-cash#where-to-find-it).
+
+### Why can't I enter an invoice or a payment?
+
+Only finance enters and imports them, from the **Accounts Receivable** position; sales reads them. A wrong figure is corrected at its source, in finance's own system, and arrives again the same way. See [Invoices and Payments](/docs/order-to-cash/invoices-and-payments).
+
+### Why can't I change a contract's collection plan?
+
+Reps, sales managers and administrators add, change and remove the billing milestones of any contract they can read; finance reads the plan and never changes it. If you cannot read the contract, you cannot write its plan. What has been invoiced, received and is still open on a step is never typed: it follows finance's records. See [The Collection Plan](/docs/order-to-cash/collection-plan).
+
+### Why didn't an advance lower the Receivable Balance?
+
+The balance counts what is still open on issued invoices. A payment not yet set against an invoice, such as an advance, counts in **Received** only. Once finance names the invoice on that payment, the balance moves.
+
+### Why is an invoice missing from Overdue Invoices?
+
+The list holds only **Issued** invoices whose due date has passed and that still have an open amount. An invoice leaves it the day its payments cover it, or when finance cancels it.
+
+## 🗂️ Projects, time and expenses
+
+### Why can't I see a project?
+
+Projects are private. You read one when you own it, when you are staffed on it, or when you are its project manager. Finance controllers, project directors, the PMO and sales managers read every project. If the Project Delivery app is missing altogether, your launcher does not offer it or an administrator has switched the module off. See [Project Delivery](/docs/projects).
+
+### Why can't I see a project's cost, margin or budget?
+
+You hold the **Project Team Member** position. It hides the cost rate, the cost of each entry, a timesheet's total cost, the project's cost and margin, and its budget, so team members never see what a colleague costs. They see the hours, the bill rate and the amount to bill.
+
+### Why can't I change a project's plan?
+
+Writing a project task needs edit on its project: the project manager, the project's owner and administrators have it. Everyone staffed on the project reads every task and reports progress to the project manager. See [The Project Plan](/docs/projects/project-plan).
+
+### Why was my time entry refused?
+
+The message names the reason. The usual ones:
+
+- You are not staffed on the project: ask its project manager to add you.
+- The date falls outside the timesheet's period.
+- The hours are below a quarter of an hour or above 24.
+- The timesheet is already submitted. Recall it from your Inbox first.
+- The project is **Closed** or **Cancelled**, and takes no more time.
+
+Submitting is also refused while **Lock Time and Expenses** is ticked on the project. See [Time and Expenses](/docs/projects/time-and-expenses).
+
+### Why hasn't the project's cost moved?
+
+Only **Approved** timesheets and expense reports count. Draft, submitted and rejected ones count nowhere, a travel request never adds cost, and marking an expense report paid changes nothing on the project.
+
+### Why can't I type the Approved Budget?
+
+It is the total of the project's baseline budget version, and it changes only when a new version, a top-up, is approved. A version's lines change only while it is **Draft** or **Rejected**, and a project has one open version at a time. See [Project Budgets](/docs/projects/budgets).
+
+### Why can't I send a project for approval?
+
+Its budget's version 1 goes with it, and must be ready: it needs lines and a total above zero, every labor line needs a rate card and hours, and every other line a quantity. See [Projects and Staffing](/docs/projects/projects-and-staffing).
+
+### Where is New on expense reports?
+
+There is none: nobody creates a report by hand. Select your expenses in **My Expenses** and choose **Submit for Reimbursement**, which makes the report and sends it in the same click. See [Expenses](/docs/expenses).
+
+### Why was nothing sent when I submitted my expenses?
+
+Only your own expenses, on no report yet and not approved, can be sent. If any selected expense is not, nothing is sent, and the message names each one.
+
+### Why did my expense report come back as Draft?
+
+It was sent on a project that is locked, closed or cancelled. Your Inbox has a notice naming the project. For a locked project, submit again once the lock is lifted; for a finished one, delete the report, move its expenses to an open project and submit them again.
+
+### Why can't I change an expense's Project?
+
+It is on a report, even a **Draft** one, and the report goes to the approver of the project it was sent with. Delete the draft report, which frees its expenses, then change the project and submit again.
+
+### Why is there no Project field on my expenses?
+
+Project Delivery is switched off. The project an expense named is kept, and shows again when the module is back on. See [Enable and Disable Modules](/docs/administration/modules).
+
+### Why can't I see a colleague's expenses?
+
+You see your own expenses and reports, and the ones you are asked to approve. Finance, sales managers and leadership see every one.
+
+### Why isn't my travel request offered when I submit for a trip?
+
+Only your own **Approved** requests are offered. The request is chosen when you submit, and cannot be added to a report afterwards. See [Travel Requests](/docs/expenses/travel-requests).
 
 ## 🛟 Still stuck?
 
