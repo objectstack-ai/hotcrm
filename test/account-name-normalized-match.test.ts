@@ -512,7 +512,7 @@ const company = (stem: string, n: number) => `${stem} ${n}`;
 
 const leadFor = async (companyName: string): Promise<Rec> => verify.hooks.run('crm_lead', 'insert', {
   company: companyName, email: `lead${++k}@account-name-normalized-match.test`,
-  first_name: 'Joe', last_name: 'Green', status: 'qualified',
+  first_name: 'Joe', last_name: 'Green', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
 }, { as: manager.token });
 
 /** Convert `leadId` as the manager, without an opportunity; the resumed run. */

@@ -85,6 +85,12 @@ export const OpportunityDetailPage: Page = {
           label: 'Opportunity Stage Path',
           properties: {
             statusField: 'stage',
+            // A click on a stage moves the record (#2542, ruled A), as on the
+            // platform's default record page (objectstack#30075). The click is
+            // the same write as Edit: every rule that refuses a status change
+            // there (approval locks, the closed-deal freeze, the win
+            // or loss reason) refuses it here too.
+            allowStageChange: true,
             // Every canonical value of `stage` must appear here, in funnel
             // order — the path is the only place a rep reads "where is this
             // deal". `needs_analysis` was missing, so a deal sitting in that

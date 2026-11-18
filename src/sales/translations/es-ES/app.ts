@@ -588,14 +588,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       screens: {
         screen_1: {
           title: 'Detalles de la Conversión',
-          // The duplicate warning's text is a variable the flow assigns; this
-          // key can only carry the hole that shows it. The account notice
-          // after it is translated here (#2073 item 8): exactly one of the two
-          // holes holds a name, and each hole's `default:` is the OTHER
-          // branch's words, so the sentence stays name-first. Keep both holes,
-          // in this order, with a `default:` each (see `screen_1` in
-          // `lead-conversion.flow.ts`).
-          description: '{{duplicateWarning}} {{ existingAccountName | default:"Ninguna cuenta que usted pueda ver coincide con la empresa de este prospecto, así que la conversión crea una cuenta nueva llamada " }}{{ newAccountName | default:" es la cuenta existente a la que se unirá este prospecto" }}.',
+          // Three notices, every word translated here: the duplicate note
+          // (#2571; its hole holds a space on a clean lead, so `default:`
+          // prints the note only on a suspected one), then the account and
+          // the contact (#2073 item 8, #2572). In each two-hole pair exactly
+          // one hole holds a name and each `default:` is the OTHER branch's
+          // words. Keep every hole, in this order, with a `default:` each
+          // (see `screen_1` in `lead-conversion.flow.ts`).
+          description: '{{ duplicateWarning | default:"Posible duplicado: al registrarlo, el sistema detectó que este prospecto repite un registro existente con la misma dirección de correo. Compare el registro vinculado en la página del prospecto antes de continuar." }} {{ existingAccountName | default:"Ninguna cuenta que usted pueda ver coincide con la empresa de este prospecto, así que la conversión crea una cuenta nueva llamada " }}{{ newAccountName | default:" es la cuenta existente a la que se unirá este prospecto" }}. {{ existingContactName | default:"Ningún contacto que usted pueda ver tiene la dirección de correo de este prospecto, así que la conversión crea un contacto nuevo llamado " }}{{ newContactName | default:" es el contacto existente con la dirección de correo de este prospecto: la conversión une este prospecto a ese contacto y solo rellena su Teléfono, Móvil y Cargo vacíos" }}.',
           fields: {
             createOpportunity: { label: '¿Crear oportunidad?' },
             opportunityName: { label: 'Nombre de Oportunidad' },
@@ -607,6 +607,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         // one hole holds the account's name, and each `default:` is the OTHER
         // state's words. Keep both holes, in this order, with a `default:` each
         // (see `result` in `lead-conversion.flow.ts`).
+        confirm_contact: {
+          title: 'Confirmar el contacto',
+          description: 'Este prospecto es {{ leadPersonName }}, pero el contacto con la misma dirección de correo es {{ existingContactName }}. La dirección de correo de un contacto es única, así que la conversión une este prospecto a ese contacto; solo rellena su Teléfono, Móvil y Cargo vacíos y no cambia nada más. Si son personas distintas, cancele y cambie primero la dirección de correo del prospecto.',
+          fields: {
+            matchedContactLink: { label: 'Contacto existente' },
+            reuseContactConfirmed: { label: 'Convertir este prospecto en este contacto' },
+          },
+        },
         result: {
           title: 'Prospecto convertido',
           description: '{{ pendingApprovalAccountName | default:"El prospecto ya forma parte de la cuenta " }}{{ noApprovalAccountName | default:" está pendiente de la aprobación de cuenta de un gerente de ventas" }}.',
@@ -629,6 +637,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         refuse_no_match_key: {
           message:
             'Conversión rechazada. La empresa de este prospecto no tiene clave de coincidencia, así que la conversión no puede saber a qué cuenta pertenece y no lo va a adivinar: una suposición podría archivar el contacto y la oportunidad bajo otro cliente. Guardar la Empresa del prospecto reconstruye la clave, así que guárdela de nuevo y luego conviértalo. No se ha creado nada.',
+        },
+        refuse_contact_not_confirmed: {
+          message:
+            'No convertido: no confirmó unir este prospecto al contacto existente con la misma dirección de correo. No se creó nada. Si son personas distintas, cambie la dirección de correo del prospecto y conviértalo de nuevo.',
         },
         refuse_nonpositive_amount: {
           message:

@@ -3,6 +3,18 @@
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { F, P } from '@objectstack/spec';
 
+/**
+ * Whether a deal's approval gate is on (#2591, ruled A). Each gate's verdict
+ * column is also its switch: a deal is born `not_required` while the install
+ * keeps the gate off, and keeps that value for life. So the request field and
+ * the verdict field show only on a deal whose verdict column holds anything
+ * else, and a gate that is off draws neither. Fail-closed on a record without
+ * the key (the page's pre-hydration render, or a row written before the
+ * column), which is a deal the gate does not cover.
+ */
+const QUALIFICATION_GATE_ON = P`has(record.qualification_approval_status) && record.qualification_approval_status != "not_required"`;
+const STATUS_CHANGE_GATE_ON = P`has(record.status_change_approval_status) && record.status_change_approval_status != "not_required"`;
+
 export const Opportunity = ObjectSchema.create({
   name: 'crm_opportunity',
   label: 'Opportunity',
@@ -178,6 +190,10 @@ export const Opportunity = ObjectSchema.create({
     // off — nothing reads it unless an install arms the verdict below.
     qualification_requested: Field.boolean({
       label: 'Request Qualification Approval',
+      // Shown only where the gate is on for this deal (#2591, ruled A): a
+      // deal born while the gate is off carries `not_required` for life, and
+      // a box that starts nothing read as "submitted" to the rep who ticked it.
+      visibleWhen: QUALIFICATION_GATE_ON,
       description: 'Tick to send this deal for qualification approval. A rejection clears it; tick it again to ask again.',
       defaultValue: false,
       group: 'qualification',
@@ -212,6 +228,7 @@ export const Opportunity = ObjectSchema.create({
     qualification_approval_status: Field.select({
       label: 'Qualification Approval',
       group: 'qualification',
+      visibleWhen: QUALIFICATION_GATE_ON,
       readonly: true,
       defaultValue: 'not_required',
       options: [
@@ -537,6 +554,9 @@ export const Opportunity = ObjectSchema.create({
     requested_status: Field.select({
       label: 'Requested Status',
       group: 'sales_process',
+      // As the 立项 pair above (#2591): shown only where the status-change
+      // gate is on for this deal.
+      visibleWhen: STATUS_CHANGE_GATE_ON,
       options: [
         { label: 'Won', value: 'closed_won' },
         { label: 'Lost', value: 'closed_lost' },
@@ -546,6 +566,7 @@ export const Opportunity = ObjectSchema.create({
     status_change_approval_status: Field.select({
       label: 'Status Change Approval',
       group: 'sales_process',
+      visibleWhen: STATUS_CHANGE_GATE_ON,
       readonly: true,
       defaultValue: 'not_required',
       options: [

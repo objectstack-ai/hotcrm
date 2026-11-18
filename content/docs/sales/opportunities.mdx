@@ -23,6 +23,8 @@ Every opportunity moves through these stages. The system tracks where you are an
 
 Deals normally walk the funnel one stage at a time, and a deal can be lost from any open stage — but the stage path is **advice, not a gate**. A move off it still saves: you can skip ahead (say, from **Prospecting** straight to **Negotiation**) or step an open deal back to an earlier stage, and the win probability follows the new stage. Such a save comes back with a warning, *"Invalid opportunity stage transition"*, which is also written to the server log, so an odd import or integration can be found afterwards; [Administration › State Machines](/docs/administration/state-machines) shows the declared path. What *is* enforced is the end of the funnel: once a deal is **Closed Won** or **Closed Lost**, its stage cannot be changed — reopening it, or switching a won deal to lost, is refused (see *Closed deals are locked* below).
 
+To move a deal, click a stage on the **status bar** at the top of its page and confirm. The click is checked exactly like an edit: closing still needs its reason, a closed deal stays locked, and a deal waiting on an approval is still held.
+
 ## Closing a deal — the reason is required
 
 Closing an opportunity takes one extra field, and the system will not save the record without it:

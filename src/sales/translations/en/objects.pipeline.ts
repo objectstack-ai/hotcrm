@@ -185,6 +185,10 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           campaignId: { label: 'Campaign' },
         },
       },
+      qualify_lead: {
+        label: 'Qualify Lead',
+        successMessage: 'Lead qualified.',
+      },
       schedule_followup: {
         label: 'Schedule Follow-up',
         successMessage: 'Follow-up scheduled.',

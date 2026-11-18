@@ -242,7 +242,7 @@ describe('the hook is the guard that actually speaks', () => {
 
   it('does not lock an unconverted lead', async () => {
     const [lead] = await verify.seed('crm_lead', [{
-      first_name: 'Ada', last_name: 'Open', company: 'Acme', email: `open${++k}@acme.example.com`, status: 'qualified', owner_id: rep.id,
+      first_name: 'Ada', last_name: 'Open', company: 'Acme', email: `open${++k}@acme.example.com`, status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000, owner_id: rep.id,
     }]);
     expect((await edit(lead!, { company: 'Globex' })).company).toBe('Globex');
   });

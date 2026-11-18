@@ -101,6 +101,48 @@ export const ConvertLeadAction: Action = {
 };
 
 /**
+ * Qualify Lead (#2541, ruled A by the maintainer, 2026-11-17 「加确认按钮并必填」).
+ *
+ * Qualifying is the rep's judgement, and this is the moment the app keeps
+ * what the judgement rests on: the form asks for **Need Type** and
+ * **Estimated Amount**, both required, and writes them with
+ * `status: 'qualified'` in one save. Estimated Amount is what conversion
+ * prefills the deal amount from, so a lead qualified here never converts into
+ * an opportunity with no amount.
+ *
+ * A DECLARED WRITE (`operation: 'update'`), as `mass_update_stage` is: the
+ * route writes the two collected values over the static `patch` on the
+ * current record AS THE CALLER, so the caller's permissions, the state
+ * machine (`lead_status_progression`), the approval and conversion locks and
+ * the validations all apply. The rule that both values are present is not
+ * this button's: `qualified_needs_qualification` in
+ * `../objects/lead.object.ts` refuses every other path to Qualified (the edit
+ * form, inline edit, the path bar, REST, an agent) while either is empty. The
+ * button is the convenient door; the validation is the gate.
+ *
+ * Shown on a New or Contacted lead only: a qualified lead is already there,
+ * and an unqualified or converted one is not qualified from here. No BANT
+ * fields (ruled out with the same tap).
+ */
+export const QualifyLeadAction: Action = {
+  name: 'qualify_lead',
+  label: 'Qualify Lead',
+  objectName: 'crm_lead',
+  icon: 'badge-check',
+  operation: 'update',
+  patch: { status: 'qualified' },
+  locations: ['record_header', 'list_item'],
+  visible: P`has(record.is_converted) && record.is_converted == false && has(record.status) && (record.status == "new" || record.status == "contacted")`,
+  params: [
+    { field: 'need_type', required: true },
+    { field: 'estimated_amount', required: true },
+  ],
+  successMessage: 'Lead qualified.',
+  refreshAfter: true,
+};
+
+
+/**
  * Schedule the next follow-up on a lead.
  *
  * The gap this fills: `log_call` / `log_meeting` record what already happened

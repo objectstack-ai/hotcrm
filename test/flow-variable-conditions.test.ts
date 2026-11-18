@@ -1154,7 +1154,7 @@ describe('the two defects, reproduced end-to-end', () => {
         // which is a fixture gap, not the defect this test is about.
         first_name: 'Sam', last_name: 'Doe', company: 'Globex',
         company_normalized: 'globex',
-        status: 'qualified', email: 'sam@globex.com',
+        status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000, email: 'sam@globex.com',
       });
       const started = await b.engine.execute('lead_conversion', asUser({ recordId: lead.id }));
       expect(started.status).toBe('paused');
@@ -1196,7 +1196,7 @@ describe('the two defects, reproduced end-to-end', () => {
         // because this harness has no hooks (#626).
         first_name: 'Jo', last_name: 'Smith', company: 'Acme',
         company_normalized: 'acme',
-        status: 'qualified', email: 'jo@acme.com',
+        status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000, email: 'jo@acme.com',
       });
       const started = await b.engine.execute('lead_conversion', asUser({ recordId: lead.id }));
       // `closeDate` joined the screen's contract in #1708, so the bag carries

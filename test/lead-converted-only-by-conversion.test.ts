@@ -88,9 +88,14 @@ const rest = async (who: Person, method: string, path: string, body?: unknown): 
 /** Every sentence a REST error body carries, flattened — where the rule's message travels. */
 const restText = (body: Rec): string => JSON.stringify(body);
 
-/** `who`'s own lead at `status`, created through the engine's write door. */
+/**
+ * `who`'s own lead at `status`, created through the engine's write door. It
+ * carries its Need Type and Estimated Amount, so any status is reachable: a
+ * lead without both is refused at `qualified` (#2541,
+ * `qualified_needs_qualification`).
+ */
 const leadOf = (who: Person, status: string): Promise<Rec> =>
-  verify.hooks.run('crm_lead', 'insert', { ...identity(), status }, { as: who.token });
+  verify.hooks.run('crm_lead', 'insert', { ...identity(), status, need_type: 'new_implementation', estimated_amount: 40_000 }, { as: who.token });
 
 /** Run the Convert Lead wizard on `leadId` as `who`, submitting the screen as the console does. */
 async function convert(leadId: string, who: Person): Promise<Rec> {
@@ -228,7 +233,7 @@ describe('a lead stuck at Converted with nothing converted is released (#2189)',
     const [contact] = await verify.seed('crm_contact', [{
       first_name: 'Dee', last_name: `Dupe ${n}`, email, crm_account: account!.id, owner_id: owner.id,
     }]);
-    const lead = await verify.hooks.run('crm_lead', 'insert', { ...identity(), email, status: 'qualified' }, { as: owner.token });
+    const lead = await verify.hooks.run('crm_lead', 'insert', { ...identity(), email, status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000 }, { as: owner.token });
     const ql = verify.kernel.getService<Rec>('objectql');
     await ql.getDriverForObject('crm_lead').update(ql.resolveObjectName('crm_lead'), lead.id, { status: 'converted' });
     expect((await stored(lead.id))?.duplicate_of_contact, 'fixture: the intake dedupe linked the lead').toBe(contact!.id);
