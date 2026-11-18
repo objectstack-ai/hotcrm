@@ -230,6 +230,9 @@ export const OpportunityDataset = defineDataset({
       filter: { stage: 'closed_lost' },
       format: '0,0',
     },
+    // The last synonym below is a retired UI word (every label says 赢率,
+    // #2521) that people still type, so it stays as match input only; it is
+    // exempt by name in `test/zh-cn-sales-terms.test.ts` (TYPED_SYNONYMS), #2593.
     {
       name: 'win_rate',
       label: 'Win Rate',
