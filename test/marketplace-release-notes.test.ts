@@ -7,6 +7,7 @@ import { REPO_ROOT } from './helpers/repo-root';
 import {
   RELEASE_NOTES_CAP,
   ReleaseNotesError,
+  customerText,
   describeReleaseNotes,
   releaseNotesFromChangelog,
 } from '../scripts/lib/marketplace-release-notes.mjs';
@@ -20,6 +21,10 @@ import {
  * 6.4.0's section alone. These cases pin a single-version release (as before),
  * the span the declaration asks for (on the real CHANGELOG.md), the cap, and
  * the refusal of a declaration that cannot be read.
+ *
+ * The notes are what a customer reads on the listing (#2461): no changeset
+ * gate lines, no commit prefixes, no card or framework references. The last
+ * block pins that on fixture text and on every real 6.x section.
  */
 
 const CHANGELOG = readFileSync(join(REPO_ROOT, 'CHANGELOG.md'), 'utf8');
@@ -60,9 +65,9 @@ function changelog(...sections: Array<[string, string, string[]]>): string {
 }
 
 describe('a single-version release', () => {
-  it('sends the section as before when it declares no span (6.3.0, real CHANGELOG)', () => {
+  it('sends the section alone when it declares no span (6.3.0, real CHANGELOG)', () => {
     const notes = releaseNotesFromChangelog(CHANGELOG, '6.3.0')!;
-    expect(notes.text).toBe(`## 6.3.0\n\n${sectionBody(CHANGELOG, '6.3.0')}`);
+    expect(notes.text).toBe(`## 6.3.0\n\n${customerText(sectionBody(CHANGELOG, '6.3.0'))}`);
     expect(notes.span).toEqual(['6.3.0']);
     expect(notes.omitted).toBe(0);
   });
@@ -70,7 +75,7 @@ describe('a single-version release', () => {
   it('prefers the Major Changes, read to the end of the section even past a capital Z', () => {
     const md = '# Changelog\n\n## 2.0.0\n\n### Major Changes\n\n- abc1234: **Zones replace regions.** Zebra.\n\n## 1.0.0\n\n- x\n';
     expect(releaseNotesFromChangelog(md, '2.0.0')!.text).toBe(
-      '## 2.0.0\n\n- abc1234: **Zones replace regions.** Zebra.',
+      '## 2.0.0\n\n- **Zones replace regions.** Zebra.',
     );
   });
 
@@ -84,23 +89,30 @@ describe('the span since the last published version', () => {
     const notes = releaseNotesFromChangelog(CHANGELOG, '6.4.0')!;
     expect(notes.span).toEqual(['6.4.0', '6.3.0', '6.2.1']);
     expect(notes.text.length).toBeLessThanOrEqual(RELEASE_NOTES_CAP);
-    expect(notes.text.startsWith(`## 6.4.0\n\n${sectionBody(CHANGELOG, '6.4.0')}\n\n## 6.3.0\n\n`)).toBe(true);
+    expect(notes.text.startsWith(`## 6.4.0\n\n${customerText(sectionBody(CHANGELOG, '6.4.0'))}\n\n## 6.3.0\n\n`)).toBe(true);
     expect(notes.text).not.toContain('## 6.2.0');
 
-    // Every entry of the three sections is either in the text whole, or named
-    // by its headline in the truncation notice — none is cut or lost.
+    // Every entry of the three sections is either in the text whole, or
+    // accounted for in the truncation notice (by headline when that list fits,
+    // counted per version otherwise) — none is cut or lost.
     const [shown, notice = ''] = notes.text.split('\n\n…truncated');
+    const byHeadline = notice.includes('Not shown above');
+    const perVersion = new Map<string, number>();
     let omitted = 0;
     for (const v of notes.span) {
-      for (const e of entriesOf(sectionBody(CHANGELOG, v))) {
+      for (const e of entriesOf(customerText(sectionBody(CHANGELOG, v)))) {
         if (shown.includes(e)) continue;
         omitted++;
+        perVersion.set(v, (perVersion.get(v) ?? 0) + 1);
         const headline = e.match(/\*\*([\s\S]*?)\*\*/)![1].replace(/\s+/g, ' ').trim();
-        expect(notice, `${v}: ${headline}`).toContain(`- ${v}: **${headline}**`);
+        if (byHeadline) expect(notice, `${v}: ${headline}`).toContain(`- ${v}: **${headline}**`);
       }
     }
     expect(omitted).toBe(notes.omitted);
     if (omitted) expect(notice).toContain('CHANGELOG.md');
+    if (omitted && !byHeadline) {
+      for (const [v, n] of perVersion) expect(notice).toContain(`${n} from ${v}`);
+    }
   });
 
   it('joins the whole sections when they fit, and stops above the named version', () => {
@@ -157,5 +169,86 @@ describe('the cap', () => {
     expect(notes.text).toMatch(/\d+ more entr(y|ies) \(.*from 2\.0\.0\) are in CHANGELOG\.md/);
     expect(notes.text).toContain('- c1:');
     expect(notes.text).not.toContain('**Delta');
+  });
+});
+
+describe('what a customer reads (#2461)', () => {
+  const raw = [
+    '## 7.0.0',
+    '',
+    'Runs on ObjectStack 19.0.0. Demo data waits on objectstack#34336 (objectstack#34336).',
+    '',
+    '### Minor Changes',
+    '',
+    '- cdba71a: Clause-②: no',
+    '  Metadata-protocol: none',
+    '  Skills-docs: none',
+    '  ',
+    '  **Order to Cash is an app of its own (#2465).** Finance works there (REQ-0007, #2315).',
+    '  ',
+    '  Until a platform release lands (objectstack-ai/objectstack#30184, in 18.5.0), an administrator enters invoices.',
+    '- 2b664f6, 35df8e9: **Totals equal their lines (#2316, phase 0),** even back to back. Totals arrive with #2416.',
+    '- 41d301a: Clause-②: yes (narrowing)',
+    '  Metadata-protocol: none',
+    '- a75b28d: Docs guard: the test no longer asserts a locale (hotcrm#2463).',
+  ].join('\n');
+
+  it('drops the gate lines, the commit prefixes and every parenthetical reference', () => {
+    expect(customerText(raw)).toBe(
+      [
+        '## 7.0.0',
+        '',
+        'Runs on ObjectStack 19.0.0. Demo data waits on a platform change.',
+        '',
+        '### Minor Changes',
+        '',
+        '- **Order to Cash is an app of its own.** Finance works there.',
+        '  ',
+        '  Until a platform release lands, an administrator enters invoices.',
+        '- **Totals equal their lines,** even back to back. Totals arrive with #2416.',
+        '- Docs guard: the test no longer asserts a locale.',
+      ].join('\n'),
+    );
+  });
+
+  it('keeps a HotCRM card number in running prose, and names it in the publish log', () => {
+    const md = `# Changelog\n\n${raw}\n\n## 6.9.0\n\n- x\n`;
+    const notes = releaseNotesFromChangelog(md, '7.0.0')!;
+    expect(notes.residualRefs).toEqual(['#2416']);
+    expect(describeReleaseNotes(notes)).toContain('1 card reference left in prose, for the release PR to reword: #2416');
+  });
+
+  it('applies the cap to the filtered text', () => {
+    const gated = (id: string, h: string) =>
+      `- ${id}: Clause-②: no\n  Metadata-protocol: none\n  \n  **${h}.** ${'Words. '.repeat(10)}`.trimEnd();
+    const md = changelog(['2.0.0', '', [gated('aaaaaa1', 'One'), gated('bbbbbb2', 'Two')]], ['1.0.0', '', []]);
+    const filtered = releaseNotesFromChangelog(md, '2.0.0')!;
+    const cap = filtered.text.length;
+    expect(md.length).toBeGreaterThan(cap);
+    const notes = releaseNotesFromChangelog(md, '2.0.0', { cap })!;
+    expect(notes.omitted).toBe(0);
+    expect(notes.text).toBe(filtered.text);
+  });
+
+  const sixes = [...CHANGELOG.matchAll(/^## (6\.\d+\.\d+)\s*$/gm)].map((m) => m[1]);
+
+  it.each(sixes)('%s, real CHANGELOG: no gate line, commit prefix or framework reference, every headline kept', (v) => {
+    const notes = releaseNotesFromChangelog(CHANGELOG, v)!;
+    for (const marker of ['Clause-②', 'Metadata-protocol', 'Skills-docs', 'objectstack#', 'objectui#']) {
+      expect(notes.text, marker).not.toContain(marker);
+    }
+    expect(notes.text).not.toMatch(/^- [0-9a-f]{7,40}(?:, [0-9a-f]{7,40})*: /m);
+    // Every parenthetical reference is gone; what is left is at most a HotCRM
+    // card number in running prose, and the log names each one.
+    expect(notes.text).not.toMatch(/\([^()\n]*#\d+[^()\n]*\)/);
+    for (const ref of notes.text.match(/(?<![\w&#/])(?:[\w.-]+\/)?(?:[A-Za-z][\w.-]*)?#\d+\b/g) ?? []) {
+      expect(notes.residualRefs).toContain(ref);
+    }
+    // The prose stays: each entry the text shows keeps its headline, minus its references.
+    const [shown] = notes.text.split('\n\n…truncated');
+    const bodies = notes.span.map((s) => sectionBody(CHANGELOG, s)).join('\n');
+    expect(entriesOf(shown.replace(/^## .*$/gm, '')).length).toBeGreaterThan(0);
+    const headlines = [...shown.matchAll(/^- \*\*([^*\n]+)/gm)].map((m) => m[1].split(/[.,:;(]/)[0].trim());
+    for (const h of headlines) expect(bodies, h).toContain(h);
   });
 });
