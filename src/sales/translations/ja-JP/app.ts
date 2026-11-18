@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../../flows/_contract-draft';
 
 /**
  * 日本語 (ja-JP) — every translation namespace EXCEPT `objects`:
@@ -544,6 +545,30 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
   flows: {
+    // Draft Contract on an order (#2558). The drafted contract's provenance
+    // sentence is TEXT in the organization's language (#2535), one per
+    // variant of the draft (`../../flows/_contract-draft.ts`).
+    sales_order_draft_contract: {
+      label: '注文から契約を作成',
+      refusals: {
+        refuse_missing: { message: 'この注文は存在しないか、開く権限がありません。契約は作成されませんでした。' },
+        refuse_has_contract: { message: 'この注文にはすでに契約が紐づいています。契約は作成されませんでした。' },
+        refuse_no_contact: { message: '契約には主担当者が必要です。先に注文に担当者を入力してください。契約は作成されませんでした。' },
+      },
+      screens: {
+        result: {
+          title: '契約を作成しました',
+          description: '注文 {{ orderRecord.order_number }} から契約の下書きを作成し、この注文に紐づけました。開いて期間・日付・種別を入力してください。',
+          fields: { contractLink: { label: '契約' } },
+        },
+      },
+    },
+    sales_order_draft_contract_write: {
+      label: '注文から契約を作成（書き込み）',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: '注文{{ order.order_number }} - {{ order.name }}から作成' },
+      }])),
+    },
     // What the sweeps store in a record (#2522, #2535), at
     // `flows.<flow>.records.<node>.fields.<field>`, holes as the source spells them.
     contract_renewal: {

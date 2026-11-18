@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../../flows/_contract-draft';
 
 /**
  * Español (es-ES) — every translation namespace EXCEPT `objects`:
@@ -542,6 +543,30 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
   flows: {
+    // Draft Contract on an order (#2558). The drafted contract's provenance
+    // sentence is TEXT in the organization's language (#2535), one per
+    // variant of the draft (`../../flows/_contract-draft.ts`).
+    sales_order_draft_contract: {
+      label: 'Redactar contrato desde el pedido',
+      refusals: {
+        refuse_missing: { message: 'Este pedido ya no existe o no puedes abrirlo. No se redactó ningún contrato.' },
+        refuse_has_contract: { message: 'Este pedido ya tiene su contrato. No se redactó ningún contrato.' },
+        refuse_no_contact: { message: 'Un contrato indica su contacto principal: añade primero un contacto al pedido. No se redactó ningún contrato.' },
+      },
+      screens: {
+        result: {
+          title: 'Contrato redactado',
+          description: 'Se creó un borrador de contrato a partir del pedido {{ orderRecord.order_number }} y quedó vinculado al pedido. Ábrelo para completar el plazo, las fechas y el tipo.',
+          fields: { contractLink: { label: 'Contrato' } },
+        },
+      },
+    },
+    sales_order_draft_contract_write: {
+      label: 'Redactar contrato desde el pedido (escritura)',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: 'Redactado a partir del pedido {{ order.order_number }} - {{ order.name }}' },
+      }])),
+    },
     // What the sweeps store in a record (#2522, #2535), at
     // `flows.<flow>.records.<node>.fields.<field>`, holes as the source spells them.
     contract_renewal: {

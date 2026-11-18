@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
-import { CONTRACT_DRAFT_NODE_IDS } from '../flows/quote-accepted-contract-draft.flow';
+import { CONTRACT_DRAFT_NODE_IDS } from '../../sales/flows/_contract-draft';
 
 // The discount ceiling is interpolated, never retyped: the number lives in
 // `_thresholds.ts` alone (#1711).
@@ -461,7 +461,7 @@ export const jaJP: TranslationData = {
       }])),
     },
     quote_accepted_order: {
-      label: '承認済みの見積から受注を作成',
+      label: '承認済みの見積から注文を作成',
     },
     price_book_add_products: {
       label: '価格表に製品を追加',

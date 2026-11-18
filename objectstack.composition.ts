@@ -116,7 +116,7 @@ import {
   OpportunityStagnationFlow, OpportunityWonAlertFlow, ScheduleFollowUpFlow,
   TaskDueReminderFlow, TaskUrgentAlertFlow, BillingHandoffClosedWonFlow,
   ContractRenewalFlow, ContractExpirationFlow, BillingHandoffContractActivatedFlow,
-  ContractDraftedNoticeFlow,
+  ContractDraftedNoticeFlow, SalesOrderDraftContractFlow, SalesOrderDraftContractWriteFlow,
 } from './src/sales/flows/index.js';
 
 // Skills — likewise.
@@ -249,6 +249,9 @@ export const appFlows = [
   BillingHandoffContractActivatedFlow,
   // Tells whoever accepted a quote that it drafted this contract (#2371 row 6).
   ContractDraftedNoticeFlow,
+  // Draft Contract on an order, and its elevated half (#2558).
+  SalesOrderDraftContractFlow,
+  SalesOrderDraftContractWriteFlow,
 ];
 
 /**

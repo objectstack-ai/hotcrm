@@ -102,6 +102,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
   },
   // The order and its lines (REQ-0010, hotcrm#2555).
   crm_sales_order: {
+    // Draft Contract (#2558).
+    _actions: {
+      draft_contract: { label: 'Redactar contrato' },
+    },
     _validations: {
       shipped_after_order: { message: 'La Fecha de Envío no puede ser anterior a la Fecha del Pedido' },
       sales_order_status_progression: { message: 'Este cambio de estado no está permitido. Un pedido avanza Borrador → Confirmado → Completado; Confirmado puede volver a Borrador, y Borrador o Confirmado pueden pasar a Cancelado. Completado y Cancelado son definitivos.' },
