@@ -1,10 +1,13 @@
 # HotCRM Requirements Log
 
 > How a **customer's raw requirement** becomes a decision about how the
-> **standard product** responds — managed as repo files, not an issue tracker.
+> **standard product** responds — recorded as repo files next to the metadata.
 >
 > Development is AI-driven. These records are the human-or-customer **input** an
-> AI agent reads before authoring metadata; there is no GitHub issue ceremony.
+> AI agent reads before authoring metadata. The GitHub card is where work enters
+> and is graded; a Feature card cites the record (`REQ-NNNN`) with disposition B
+> as its basis, and a Feature without one goes to `needs-user-decision`
+> ([`docs/PRIORITIES.md`](../PRIORITIES.md)). Bugs need no record.
 > One file per requirement: [`TEMPLATE.md`](TEMPLATE.md) → `NNNN-slug.md`.
 
 ## Why file-based

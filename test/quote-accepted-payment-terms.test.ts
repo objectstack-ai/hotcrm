@@ -6,7 +6,7 @@ import { Contract } from '../src/sales/objects/contract.object';
 import { Quote } from '../src/revenue/objects/quote.object';
 import { PaymentTermsPicklist } from '../src/sales/picklists/payment_terms.picklist';
 import {
-  hotcrmStack, signUpPerson, recordEngineWrites, today, committedFile, type Person,
+  hotcrmStack, signUpPerson, switchFlow, recordEngineWrites, today, committedFile, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -94,6 +94,9 @@ beforeAll(async () => {
   rep = await signUpPerson(verify, 'rep@quote-accepted-payment-terms.test', {
     name: 'Quote Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
+  // The draft is a packaged flow shipped switched off since hotcrm#2558; this
+  // file pins its behaviour switched on.
+  await switchFlow(verify, 'quote_accepted_contract_draft', true);
 }, 120_000);
 
 let deal = 0;
@@ -128,7 +131,7 @@ const accepted = async (quote: Rec, stored: Rec = {}): Promise<{ doc: Rec; row: 
   const engine = recordEngineWrites(verify);
   try {
     await verify.hooks.run('crm_quote', 'update', { id, status: 'accepted', ...quote }, { as: rep.token });
-    // `quote_accepted_contract_draft` is `async: true` — it runs after the accepting write returned.
+    // `quote_accepted_contract_draft` runs after the accepting write's own row is in (a record-change flow).
     const insert = await vi.waitFor(() => {
       const [call] = engine.of('crm_contract', 'insert');
       expect(call, 'the hook drafted no contract at all').toBeTruthy();

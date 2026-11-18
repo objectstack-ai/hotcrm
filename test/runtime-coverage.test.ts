@@ -51,6 +51,13 @@ const RUNTIME_TEST_FILES = [
   // #2312 — printing a quote presents it: the print archive's attachment write
   // fires `quote_print_presented`, and nothing else does.
   'flow-quote-print-presented.test.ts',
+  // #2558 — an accepted quote's order (`quote_accepted_order`), the switchable
+  // contract draft (`quote_accepted_contract_draft`) and the order's Draft
+  // Contract (`sales_order_draft_contract` and its system callee), each driven
+  // on the booted app.
+  'quote-accepted-order.test.ts',
+  'quote-accepted-flow-switch.test.ts',
+  'sales-order-draft-contract.test.ts',
   // #2435 — a forecast's title follows a rename of its owner: the
   // `forecast_owner_name` hook and the `forecast_owner_rename` flow on the user
   // record, run against the booted app in one file.

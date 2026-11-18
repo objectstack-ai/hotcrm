@@ -224,6 +224,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // translate a key en also carries. Screen-flow copy is not repeated here:
   // en reads it from the flow source.
   flows: {
+    // Draft Contract on an order (#2558); its screen copy is read from the flow source.
+    sales_order_draft_contract: { label: 'Draft Contract from Order' },
+    sales_order_draft_contract_write: { label: 'Draft Contract from Order (write)' },
     account_approval: {
       label: 'Account Approval',
       approvals: { account_review: { label: 'Account Review' } },

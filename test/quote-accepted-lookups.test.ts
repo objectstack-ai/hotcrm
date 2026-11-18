@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, signUpPerson, recordEngineWrites, systemUpdate, today, committedFile, type Person,
+  hotcrmStack, signUpPerson, switchFlow, flowRuns, recordEngineWrites, systemUpdate, today, committedFile, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -77,6 +77,9 @@ beforeAll(async () => {
   rep = await signUpPerson(verify, 'rep@quote-accepted-lookups.test', {
     name: 'Lookup Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
+  // The draft is a packaged flow shipped switched off since hotcrm#2558; this
+  // file pins its behaviour switched on.
+  await switchFlow(verify, 'quote_accepted_contract_draft', true);
 }, 120_000);
 
 let deal = 0;
@@ -122,9 +125,9 @@ const accept = async (q: QuoteFixture, fault?: Parameters<typeof recordEngineWri
   const reports = vi.spyOn(logger, 'error');
   try {
     await verify.hooks.run('crm_quote', 'update', { id: q.id, status: 'accepted' }, { as: rep.token });
-    // Both hooks are `async: true`: they finish after the accepting write
-    // returned, and they are done once the contract leg has settled and —
-    // when the quote has an opportunity — the close-won leg has too.
+    // The close-won hook is `async: true` and the draft a record-change flow:
+    // they are done once the contract leg has settled and — when the quote has
+    // an opportunity — the close-won leg has too.
     const legs = await vi.waitFor(() => {
       const [contract] = engine.of('crm_contract', 'insert');
       expect(contract, 'the hook drafted no contract at all').toBeTruthy();
@@ -133,31 +136,29 @@ const accept = async (q: QuoteFixture, fault?: Parameters<typeof recordEngineWri
       return { contract: contract!, won };
     }, { timeout: 10_000, interval: 25 });
     const outcomes = await Promise.all([legs.contract, ...legs.won].map((w) => w.settled));
-    // A failed leg's hook throws, and `onError: 'log'` reports it on the
-    // engine's logger — read off it once the handler has thrown.
-    const failures = () => reports.mock.calls
-      .filter(([message]) => String(message).includes('[hook] handler failed'))
-      .map(([, , meta]) => String((meta as AnyRec)?.error ?? ''));
+    // A failed leg is reported where its kind reports: the close-won is a
+    // hook, whose throw `onError: 'log'` reports on the engine's logger; the
+    // draft is a record-change flow since hotcrm#2558, whose failed run is
+    // recorded on the run row, keyed by the quote that triggered it.
+    const failures = async () => [
+      ...reports.mock.calls
+        .filter(([message]) => String(message).includes('[hook] handler failed'))
+        .map(([, , meta]) => String((meta as AnyRec)?.error ?? '')),
+      ...(await flowRuns(verify, 'quote_accepted_contract_draft', q.id))
+        .filter((r) => r.status === 'failed')
+        .map((r) => `could not draft the contract for quote ${q.id}: ${String(r.error ?? '')}`),
+    ];
     if (outcomes.some((o) => !o.ok)) {
-      await vi.waitFor(() => expect(failures().length, 'the failed leg was never reported').toBeGreaterThan(0),
+      await vi.waitFor(async () => expect((await failures()).length, 'the failed leg was never reported').toBeGreaterThan(0),
         { timeout: 10_000, interval: 25 });
     }
-    return { doc: legs.contract.args[1] as Rec, contract: legs.contract, engine, reported: failures() };
+    return { doc: legs.contract.args[1] as Rec, contract: legs.contract, engine, reported: await failures() };
   } finally {
     reports.mockRestore();
     engine.restore();
   }
 };
 
-/**
- * The quote by number and name (`quote_number - name`) — what a diagnostic and
- * the contract's provenance name it by. Its record title is the name alone
- * (#2369 row 10), but names may repeat and the number names one quote.
- */
-const titleOf = async (id: string): Promise<string> => {
-  const q = (await verify.rows('crm_quote', { id }))[0]!;
-  return `${q.quote_number} - ${q.name}`;
-};
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** The stored opportunity, read fresh. */
@@ -235,8 +236,10 @@ describe('a contract that will not draft does not decide whether the deal is won
     expect(opp.win_reason).toBe('quote_accepted');
 
     // The failure is reported — `onError: 'log'` needs something true to log.
+    // The failed run is the draft of THIS quote (its `trigger_record_id`),
+    // and it says why.
     expect(reported.join('\n')).toMatch(
-      new RegExp(`could not draft the contract for quote ${escape(await titleOf(q.id))}: Primary Contact is required`),
+      new RegExp(`could not draft the contract for quote ${escape(q.id)}: .*Primary Contact is required`),
     );
   });
 

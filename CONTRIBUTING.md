@@ -6,8 +6,8 @@ Thank you for your interest in contributing to HotCRM! This document provides gu
 
 ### Prerequisites
 
-- Node.js 20.9.0 or higher
-- pnpm 9.0.0 or higher
+- Node.js 22.11 or higher
+- pnpm 10 or higher
 - Git
 
 ### Setting Up Development Environment

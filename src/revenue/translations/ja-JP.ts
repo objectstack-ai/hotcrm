@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../../sales/flows/_contract-draft';
 
 // The discount ceiling is interpolated, never retyped: the number lives in
 // `_thresholds.ts` alone (#1711).
@@ -13,13 +14,6 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  */
 export const jaJP: TranslationData = {
   hooks: {
-    // The drafted contract's provenance sentence (#2535).
-    quote_accepted_contract_draft: {
-      texts: {
-        drafted_named: { message: '承認済みの見積{{ quote }}から自動作成' },
-        drafted_untitled: { message: '承認済みの見積から自動作成' },
-      },
-    },
     quote_total_rollup: {
       refusals: {
         RECORD_LOCKED: {
@@ -176,6 +170,13 @@ export const jaJP: TranslationData = {
     },
   },
   objects: {
+    // The order's Source Quote, added by this package through
+    // `objectExtensions` (hotcrm#2558).
+    crm_sales_order: {
+      fields: {
+        crm_quote: { label: '元の見積' },
+      },
+    },
     crm_product: {
       _validations: {
         cost_less_than_price: {
@@ -298,7 +299,7 @@ export const jaJP: TranslationData = {
         crm_account: { label: '取引先' },
         crm_contact: {
           label: '取引先責任者',
-          help: '見積が「提示済み」または「承認済み」になった時点で必須です。作成される契約の主担当者はここから引き継がれます。',
+          help: '見積が「提示済み」または「承認済み」になった時点で必須です。注文の担当者はここから引き継がれ、注文から作成される契約の主担当者もここから引き継がれます。',
         },
         crm_opportunity: { label: '商談' },
         owner_id: { label: '見積担当者' },
@@ -452,6 +453,19 @@ export const jaJP: TranslationData = {
     },
   },
   flows: {
+    // An accepted quote's two automations (hotcrm#2558). The drafted
+    // contract's provenance sentence is TEXT in the organization's language
+    // (#2535), one per variant of the draft, at
+    // `flows.quote_accepted_contract_draft.records.<node>.fields.description`.
+    quote_accepted_contract_draft: {
+      label: '承認済みの見積から契約を作成',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: '承認済みの見積{{ quote }}から自動作成' },
+      }])),
+    },
+    quote_accepted_order: {
+      label: '承認済みの見積から注文を作成',
+    },
     price_book_add_products: {
       label: '価格表に製品を追加',
       successMessage: '製品を価格表に追加しました。',

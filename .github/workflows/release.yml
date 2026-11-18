@@ -18,6 +18,23 @@ jobs:
         with:
           fetch-depth: 0
       
+      # A tag cut while changesets are still unconsumed ships a version whose
+      # notes and number leave those changes out (#2655). Run
+      # `pnpm changeset version` and merge that first (docs/PRIORITIES.md, Release).
+      - name: Refuse a tag with unconsumed changesets
+        run: |
+          left=$(find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' | sort)
+          if [ -n "$left" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} was cut with unconsumed changesets — run 'pnpm changeset version' and merge it before tagging:"
+            echo "$left"
+            exit 1
+          fi
+          version=$(node -p "require('./package.json').version")
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${version}."
+            exit 1
+          fi
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
@@ -42,11 +59,19 @@ jobs:
             README.md \
             LICENSE
       
+      # Notes come from the changesets, via the version's CHANGELOG.md section —
+      # the same text the marketplace listing gets (scripts/lib/marketplace-release-notes.mjs).
       - name: Generate Release Notes
         id: release_notes
         run: |
-          echo "## What's Changed" > release_notes.md
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"* %s (%h)" >> release_notes.md
+          node --input-type=module -e "
+            import { readFileSync, writeFileSync } from 'node:fs';
+            import { releaseNotesFromChangelog } from './scripts/lib/marketplace-release-notes.mjs';
+            const version = process.env.GITHUB_REF_NAME.replace(/^v/, '');
+            const notes = releaseNotesFromChangelog(readFileSync('CHANGELOG.md', 'utf8'), version);
+            if (!notes || !notes.text) { console.error('no CHANGELOG.md section for ' + version); process.exit(1); }
+            writeFileSync('release_notes.md', notes.text + '\\n');
+          "
           cat release_notes.md
       
       - name: Create GitHub Release

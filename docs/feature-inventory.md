@@ -115,7 +115,7 @@
 | QUO-002 | 报价状态机 | `draft → in_review → presented → accepted/rejected/expired`;accepted/expired 终态,rejected 可回 draft 重报 | `src/revenue/objects/quote.object.ts`(validations) |
 | QUO-003 | 报价默认与冻结 | 未给失效日时默认 `quote_date + 30 天`(字段自身的 `defaultValue`,不由 hook 盖戳);accepted/expired 后除内部备注外禁改,明细行随之冻结 | `src/revenue/objects/quote.object.ts`(`expiration_date`)+ `src/revenue/objects/quote.hook.ts`(`quote_workflow`) |
 | QUO-004 | 从商机生成报价 | 屏幕流收集名称/有效期/折扣,按商机金额播种报价定价,并把早期阶段商机推进到 proposal | `src/revenue/flows/quote-generation.flow.ts` + `src/sales/actions/opportunity.actions.ts`(`generate_quote`) |
-| QUO-005 | 接受报价→起草合同 | status 变 accepted 时自动创建 draft 合同(12 个日历月,合同额=报价总价);无联系人时给出具名报错;以系统身份起草,销售代表的接受也能拿到合同 | `src/revenue/objects/quote.hook.ts`(`quote_accepted_contract_draft`) |
+| QUO-005 | 接受报价→订单;合同按需起草 | status 变 accepted 时创建 draft 订单(复制表头与全部明细,每份报价一张,`crm_sales_order.crm_quote` 指向来源报价);不再自动起草合同:订单上的 Draft Contract 起草同一份合同(12 个日历月,合同额=订单总价)并挂到订单;两条随包流程管理员可开关:建订单默认开,自动起草合同默认关(开启即恢复旧行为);以系统身份写入,销售代表也能拿到 (#2558) | `src/revenue/flows/quote-accepted-order.flow.ts`、`src/revenue/flows/quote-accepted-contract-draft.flow.ts`、`src/sales/flows/sales-order-draft-contract.flow.ts`、`src/sales/flows/_contract-draft.ts` |
 | QUO-006 | 接受报价→商机赢单 | 与起草合同相互独立的另一个 hook,以接受者本人身份:关联商机置 closed_won、补关闭日与 `win_reason='quote_accepted'`;商机被审批锁住时接受本身即被拒绝(`quote_workflow`) | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
 | QUO-007 | 报价行项目与总额汇总 | 明细对象(`crm_quote_line_item`,受父控、删报价级联,行合计 = 扣除本行折扣后的金额,行项目不单独计税):重算 subtotal/discount_amount/total_price 回写报价,已结报价跳过 | `src/revenue/objects/quote_line_item.object.ts` + `.hook.ts` |
 | QUO-008 | 报价自动过期 | 每日 01:00 把过了 `expiration_date` 的未结报价置 expired | `src/revenue/flows/quote-expiration.flow.ts` |

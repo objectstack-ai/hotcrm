@@ -7,7 +7,7 @@ import { CrmTranslations } from '../src/sales/translations';
 import { ServiceTranslations } from '../src/service/translations';
 import { RevenueTranslations } from '../src/revenue/translations';
 import {
-  bootOptions, signUpPerson, systemUpdate, runScheduledFlow, settleNotificationDeliveries, committedFile, notificationsTo,
+  bootOptions, signUpPerson, switchFlow, systemUpdate, runScheduledFlow, settleNotificationDeliveries, committedFile, notificationsTo,
   type Person,
 } from './helpers/verify-stack';
 
@@ -56,6 +56,7 @@ const SOURCE = {
   stallNamed: 'Advance stalled deal: {{ currentOpp.name | truncate:200 }}',
   stallPrivate: 'Advance stalled deal (private opportunity)',
   draftedNamed: 'Auto-drafted from accepted quote {{ quote }}',
+  draftedFromOrder: 'Drafted from order {{ order }}',
 } as const;
 type Sentence = keyof typeof SOURCE;
 
@@ -72,7 +73,11 @@ const PACK_PATH: Record<Sentence, [bundle: Rec, path: string]> = {
   renewalNextStep: [CrmTranslations, 'flows.contract_renewal.records.create_renewal_opp.fields.next_step'],
   stallNamed: [CrmTranslations, 'flows.opportunity_stagnation.records.create_followup_task.fields.subject'],
   stallPrivate: [CrmTranslations, 'flows.opportunity_stagnation.records.create_private_followup_task.fields.subject'],
-  draftedNamed: [RevenueTranslations, 'hooks.quote_accepted_contract_draft.texts.drafted_named.message'],
+  // Since hotcrm#2558 a packaged flow (one key per variant of the draft; the
+  // first stands for the four, which `test/sales-order-draft-contract.test.ts`
+  // builds from one definition).
+  draftedNamed: [RevenueTranslations, 'flows.quote_accepted_contract_draft.records.draft_contract.fields.description'],
+  draftedFromOrder: [CrmTranslations, 'flows.sales_order_draft_contract_write.records.draft_contract.fields.description'],
 };
 
 const TRANSLATED_LOCALES = ['zh-CN', 'ja-JP', 'es-ES'] as const;
@@ -144,6 +149,9 @@ describe.each([
   beforeAll(async () => {
     verify = await bootStack(artifactIn(locale), bootOptions());
     await verify.signIn();
+    // The accepted-quote contract draft ships switched off (hotcrm#2558); the
+    // revenue case below pins it switched on.
+    await switchFlow(verify, 'quote_accepted_contract_draft', true);
     rep = await signUpPerson(verify, `rep@org-locale-${locale}.test`, {
       name: 'Locale Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
     });
@@ -306,6 +314,35 @@ describe.each([
           .filter((n) => n.payload?.actionUrl === `/crm_contract/${contract.id}`);
         expect(notices, 'the drafted-contract notice fires exactly once').toHaveLength(1);
       }, { timeout: 15_000, interval: 100 });
+    });
+
+    it('Draft Contract on the order an accepted quote created carries the order\'s provenance sentence (#2558)', async () => {
+      const create = async (object: string, doc: Rec) =>
+        String((await verify.hooks.run(object, 'insert', doc, { as: rep.token })).id);
+      const acct = await create('crm_account', { name: `Ordered Locale Co ${++k}` });
+      const contact = await create('crm_contact', {
+        first_name: 'Odo', last_name: `Ordered ${k}`, email: `odo${k}@org-locale.test`, crm_account: acct,
+      });
+      const id = await create('crm_quote', {
+        name: `Ordered Locale quote ${k}`, crm_account: acct, crm_contact: contact, quote_date: day(0), expiration_date: '2030-12-31',
+      });
+      // The shipped default: the order flow on, the automatic draft off.
+      await switchFlow(verify, 'quote_accepted_contract_draft', false);
+      try {
+        for (const status of ['in_review', 'presented', 'accepted']) {
+          const signed = status === 'accepted' ? { signed_copy: await committedFile(verify, rep.id) } : {};
+          await verify.hooks.run('crm_quote', 'update', { id, status, ...signed }, { as: rep.token });
+        }
+      } finally {
+        await switchFlow(verify, 'quote_accepted_contract_draft', true);
+      }
+      const order = await waitForRow('crm_sales_order', { crm_quote: id });
+      const run = await verify.flows.run('sales_order_draft_contract', { recordId: order.id, objectName: 'crm_sales_order' }, { as: rep.token }) as Rec;
+      expect(run.status, JSON.stringify(run.error ?? run.status)).toBe('paused');
+      const contract = await waitForRow('crm_contract', { crm_account: acct });
+      expect(contract.description).toBe(expected('draftedFromOrder', { order: `${order.order_number} - ${order.name}` }));
+      expect(CJK.test(String(contract.description))).toBe(chinese);
+      expect(contract.automation_key).toBe('quote_acceptance');
     });
   });
 });

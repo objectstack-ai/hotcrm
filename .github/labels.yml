@@ -12,7 +12,8 @@
 #
 # Taxonomy:
 #   type        bug / enhancement / documentation / dependencies
-#   area        metadata / backend / ci/cd / configuration
+#   area        area:business / area:ux / area:ai / area:release — one per card, docs/PRIORITIES.md
+#   path        metadata / backend / ci/cd / configuration
 #   priority    priority:p0 — critical blocker; also the dispatch loop queue-jump
 #               priority:p1 — required for production / M2
 #               priority:p2 — important, M3
@@ -21,10 +22,14 @@
 #   workflow    needs-user-decision / skip-changeset / docs-en-only
 #   pm state    pm:queue / pm:dispatched / pm:blocked / pm:on-hold /
 #               pm:awaiting-maintainer / pm:blocking / pm:epic / pm:retriage / pm:seat
-#   triage      duplicate / invalid / question / wontfix /
-#               good first issue / help wanted
-#   routing     docs / i18n / testing / ui / upstream
-#   lifecycle   finding / stale / post-preview / preview-1
+#   routing     testing
+#   lifecycle   finding / stale
+#
+# Retired 2026-11-18 (maintainer 「同意」 on the label assessment, hotcrm#2659):
+#   duplicate invalid question wontfix 'good first issue' 'help wanted'
+#   post-preview preview-1 pm:reviewed pm:done — unused, deleted;
+#   docs → documentation · tests → testing · upstream → upstream:objectstack ·
+#   ui, i18n → area:ux — open cards moved first, then deleted.
 
 # --- type ---
 - name: bug
@@ -40,7 +45,21 @@
   color: "0366d6"
   description: Dependency bumps and lockfile changes
 
-# --- area (mirrors .github/labeler.yml path rules) ---
+# --- area (what the user feels; exactly one per card — docs/PRIORITIES.md) ---
+- name: "area:business"
+  color: "0e8a16"
+  description: Objects, fields, flows, approvals, permissions and sharing, business data
+- name: "area:ux"
+  color: "1d76db"
+  description: How pages, lists, forms, reports look and behave; translation; mobile; printing
+- name: "area:ai"
+  color: "8250df"
+  description: Skills, dataset synonyms and descriptions, AI-callable actions
+- name: "area:release"
+  color: "fbca04"
+  description: Marketplace, install and upgrade, release notes, demo data, docs site, repo upkeep
+
+# --- path (mirrors .github/labeler.yml path rules; where a PR's files are) ---
 - name: metadata
   color: "c5def5"
   description: Declarative metadata — schema, security posture, UI surfaces
@@ -149,40 +168,9 @@
   color: "ededed"
   description: ""
 
-# --- triage (GitHub's default set, in use since repo creation) ---
-- name: duplicate
-  color: "cfd3d7"
-  description: This issue or pull request already exists
-- name: invalid
-  color: "e4e669"
-  description: This doesn't seem right
-- name: question
-  color: "d876e3"
-  description: Further information is requested
-- name: wontfix
-  color: "ffffff"
-  description: This will not be worked on
-- name: good first issue
-  color: "7057ff"
-  description: Good for newcomers
-- name: help wanted
-  color: "008672"
-  description: Extra attention is needed
 
 # --- routing ---
-- name: docs
-  color: "ededed"
-  description: ""
-- name: i18n
-  color: "ededed"
-  description: ""
 - name: testing
-  color: "ededed"
-  description: ""
-- name: ui
-  color: "ededed"
-  description: ""
-- name: upstream
   color: "ededed"
   description: ""
 
@@ -191,11 +179,5 @@
   color: "ededed"
   description: ""
 - name: stale
-  color: "ededed"
-  description: ""
-- name: post-preview
-  color: "ededed"
-  description: ""
-- name: preview-1
   color: "ededed"
   description: ""

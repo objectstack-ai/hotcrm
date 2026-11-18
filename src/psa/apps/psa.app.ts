@@ -34,9 +34,11 @@ export const PsaApp = App.create({
   description: 'Projects, the people staffed on them, their time and expenses, and the margin that results',
   icon: 'briefcase',
   defaultAgent: 'ask',
+  // The app's mark is its `icon` on a `primaryColor` tile: no `branding.logo`, so the
+  // home apps strip and the app switcher tell it from the other HotCRM apps (#2666).
+  // `favicon` stays the HotCRM mark; `test/app-marks-distinct.test.ts` holds the six apart.
   branding: {
     primaryColor: '#0D9488',
-    logo: HOTCRM_ICON,
     favicon: HOTCRM_ICON,
   },
 

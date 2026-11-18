@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../../flows/_contract-draft';
 
 /**
  * 简体中文 (zh-CN) — every translation namespace EXCEPT `objects`:
@@ -579,6 +580,30 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
   flows: {
+    // Draft Contract on an order (#2558). The drafted contract's provenance
+    // sentence is TEXT in the organization's language (#2535), one per
+    // variant of the draft (`../../flows/_contract-draft.ts`).
+    sales_order_draft_contract: {
+      label: '根据订单起草合同',
+      refusals: {
+        refuse_missing: { message: '这张订单已不存在，或你无权打开它。没有起草合同。' },
+        refuse_has_contract: { message: '这张订单已关联合同。没有起草合同。' },
+        refuse_no_contact: { message: '合同需要主要联系人：请先为订单填写联系人。没有起草合同。' },
+      },
+      screens: {
+        result: {
+          title: '合同已起草',
+          description: '已根据订单 {{ orderRecord.order_number }} 起草一份合同草稿，并关联到这张订单。打开它，补全期限、日期和类型。',
+          fields: { contractLink: { label: '合同' } },
+        },
+      },
+    },
+    sales_order_draft_contract_write: {
+      label: '根据订单起草合同（写入）',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: '根据订单{{ order }}起草' },
+      }])),
+    },
     // What the sweeps store in a record (#2522, #2535), at
     // `flows.<flow>.records.<node>.fields.<field>`, holes as the source spells them.
     contract_renewal: {

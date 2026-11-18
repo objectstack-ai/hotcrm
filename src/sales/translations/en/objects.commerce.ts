@@ -95,6 +95,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
   },
   // The order and its lines (REQ-0010, hotcrm#2555).
   crm_sales_order: {
+    // Draft Contract (#2558).
+    _actions: {
+      draft_contract: { label: 'Draft Contract' },
+    },
     label: 'Order',
     pluralLabel: 'Orders',
     fields: {

@@ -24,6 +24,33 @@ An order belongs to at most one contract; a contract may hold many orders, or no
 
 Orders are shown to the people who work with quotes: sales reps, sales managers, sales leadership and administrators, plus finance (Accounts Receivable and the Finance Controller), who read them. Service and marketing staff do not see them.
 
+## An accepted quote creates its order
+
+When a quote is **Accepted**, its order appears by itself: a **Draft** order with the quote's name, account, contact, opportunity and owner, its discount, tax, shipping and payment terms, its addresses and description, and every quote line copied one to one. The totals are the quote's. The order's **Source Quote** names the quote, and the order is listed on the quote's page. Each accepted quote gets one order, however often its status is saved.
+
+Nothing else is created: accepting a quote no longer drafts a contract. If the sale needs one, draft it from the order (below).
+
+**Source Quote** is filled in by the system and cannot be changed by hand. It comes with the Quotes and Products module: where an administrator has switched that module off, quotes, and so this field, are not there, and orders are entered by hand.
+
+## Drafting the contract from an order
+
+A subscription or a project usually needs a contract; a product sale usually does not. **Draft Contract** on the order's page drafts it: a **Draft** contract typed *Subscription*, on a 12-month term starting today, at the order's total, with the order's account, contact, opportunity, owner and payment terms. It is the same starting draft an accepted quote used to create; open it to complete the term, the dates and the type. The order then names the contract under **Contract**, and you get a **Contract drafted** notice with a link.
+
+- **Draft Contract** is offered only while the order names no contract. An order placed under an existing framework contract names that contract in **Contract**, and is not offered a second one.
+- The order needs a **Contact**: a contract names its primary contact. Without one, nothing is drafted and you are told to add the contact first.
+- A sales rep may run it, though a rep cannot create a contract by hand: the system writes the draft.
+
+## Before this release: every accepted quote drafted a contract
+
+Until this release, accepting a quote drafted a contract and created no order. Now it creates the order, and the contract is drafted from the order when the sale needs one. Both automations are flows an administrator can switch, in Studio (**New in Studio** on the console home page → **HotCRM Revenue** → **Customize** → **Automations**; the steps are in [Administration › Automation](/docs/administration/automation#switching-a-packaged-flow)):
+
+| Flow | Ships | What it does |
+| --- | --- | --- |
+| **Accepted Quote Creates an Order** | On | Creates the draft order described above |
+| **Accepted Quote Drafts a Contract** | Off | Drafts a contract for every accepted quote, as before this release |
+
+To keep the old behaviour, switch **Accepted Quote Drafts a Contract** on. Every accepted quote then drafts its contract exactly as it used to, and the quote's order names that contract. Switch **Accepted Quote Creates an Order** off as well if you want no orders at all. The choice is kept across restarts and upgrades. See [Administration › Automation](/docs/administration/automation#switching-a-packaged-flow).
+
 ## The statuses
 
 | Status | What it means |

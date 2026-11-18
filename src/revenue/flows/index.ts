@@ -9,3 +9,5 @@ export { PriceBookAddProductsFlow } from './price-book-add-products.flow';
 export { QuoteGenerationFlow } from './quote-generation.flow';
 export { QuoteExpirationFlow } from './quote-expiration.flow';
 export { QuotePrintPresentedFlow } from './quote-print-presented.flow';
+export { QuoteAcceptedContractDraftFlow } from './quote-accepted-contract-draft.flow';
+export { QuoteAcceptedOrderFlow } from './quote-accepted-order.flow';
