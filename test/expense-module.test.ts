@@ -65,7 +65,7 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556, hotc
     expect(((stack.objects ?? []) as Rec[]).map((o) => o.name)).toEqual(['crm_expense', 'crm_expense_report', 'crm_expense_request', 'crm_expense_request_line', 'crm_expense_standard']);
     expect(((stack.hooks ?? []) as Rec[]).map((h) => h.name)).toEqual([
       'expense_line_lock', 'expense_report_rules', 'expense_report_lines_follow', 'expense_report_request_totals',
-      'expense_request_decision_guard', 'expense_request_line_lock', 'expense_request_line_number',
+      'expense_request_decision_guard', 'expense_request_delete_guard', 'expense_request_line_lock', 'expense_request_line_number',
     ]);
     expect(((stack.sharingRules ?? []) as Rec[]).map((r) => r.name)).toEqual([
       'expense_approver_edit', 'expense_report_approver_edit', 'expense_request_approver_edit',
@@ -359,6 +359,52 @@ describe('a report with no project goes to the submitter\'s manager (expense_rep
     expect((await linesOf(reportId!)).length).toBe(1);
   });
 
+  it('a person cannot put an expense on a report: the platform drops the report they name, on create and on update, submitted or draft', async () => {
+    // Measured on 18.5.0: the report field is read-only, so a person's value
+    // is dropped before any hook runs and the write still answers 2xx. The
+    // "201 onto a submitted report" seen during the screenshot pass
+    // (hotcrm#2605) was this drop: the expense landed on no report.
+    const post = async (doc: Rec): Promise<string> => {
+      const res = await verify.apiAs(spender.token, 'POST', '/data/crm_expense', doc);
+      expect(res.status, await res.clone().text()).toBe(201);
+      const body: Rec = await res.json();
+      return String((body.record ?? body.data ?? body).id);
+    };
+    const patch = async (id: string, doc: Rec): Promise<void> => {
+      const res = await verify.apiAs(spender.token, 'PATCH', `/data/crm_expense/${id}`, doc);
+      expect(res.status, await res.clone().text()).toBe(200);
+    };
+    const exp = await insert(taxi(), spender.token);
+    const [reportId] = await submit([exp.id], spender.token);
+    expect((await report(reportId!)).status).toBe('submitted');
+
+    const created = await post(taxi(15, { crm_expense_report: reportId }));
+    expect((await row(created)).crm_expense_report ?? null, 'created, on no report').toBeNull();
+    const loose = await insert(taxi(16), spender.token);
+    await patch(loose.id, { crm_expense_report: reportId });
+    expect((await row(loose.id)).crm_expense_report ?? null, 'not moved onto the report').toBeNull();
+    expect((await linesOf(reportId!)).map((l) => l.id), 'the submitted report holds what it was sent with').toEqual([exp.id]);
+    expect((await report(reportId!)).total_amount).toBe(40);
+
+    expect(await act(reportId!, spender.token, 'recall')).toBe(200);
+    expect((await report(reportId!)).status).toBe('draft');
+    const onDraft = await post(taxi(17, { crm_expense_report: reportId }));
+    expect((await row(onDraft)).crm_expense_report ?? null, 'a draft report takes none by hand either').toBeNull();
+    await patch(loose.id, { crm_expense_report: reportId });
+    expect((await row(loose.id)).crm_expense_report ?? null).toBeNull();
+    expect((await linesOf(reportId!)).map((l) => l.id)).toEqual([exp.id]);
+  });
+
+  it('so a report\'s Expenses list offers no New, whatever its status; a project\'s list keeps it', async () => {
+    const create = (stackOf(EXPENSE_ID).objects[0].userActions as Rec).create as Rec;
+    const exp = await insert(taxi(), spender.token);
+    const [reportId] = await submit([exp.id], spender.token);
+    const sent = await report(reportId!);
+    expect(conditionHolds(verify, create.visibleWhen, { record: sent }), 'a submitted report').toBe(false);
+    expect(conditionHolds(verify, create.visibleWhen, { record: { ...sent, status: 'draft' } }), 'a draft report').toBe(false);
+    expect(conditionHolds(verify, create.visibleWhen, { record: { id: 'prj_1', name: 'Pilot', status: 'active' } }), 'a project').toBe(true);
+  });
+
   it('finance reads every report; another rep reads none of the spender\'s', async () => {
     const exp = await insert(taxi(), spender.token);
     const [reportId] = await submit([exp.id], spender.token);
@@ -417,6 +463,7 @@ describe('disabling either module leaves the other usable (hotcrm#2556, hotcrm#2
     return walk(((body.item ?? body.data ?? body).navigation ?? []) as Rec[]).map((i) => String(i.id));
   };
 
+  // A package switch re-registers metadata; past the 5 s default under the full suite (hotcrm#2623).
   it('with Project Delivery off, neither the expense nor the report has a Project field; a selection makes one report, approved by the manager', async () => {
     expect(await fieldsOf('crm_expense')).toContain('crm_project');
     expect(await fieldsOf('crm_expense_report')).toContain('crm_project');
@@ -450,8 +497,9 @@ describe('disabling either module leaves the other usable (hotcrm#2556, hotcrm#2
       expect((await verify.apiAs(admin, 'PATCH', `${pkg(PSA_ID)}/enable`)).status).toBe(200);
     }
     expect(await fieldsOf('crm_expense'), 'the field returns on enable').toContain('crm_project');
-  });
+  }, 60_000);
 
+  // A package switch re-registers metadata; past the 5 s default under the full suite (hotcrm#2623).
   it('with the expense module off, projects and timesheets work, and the expense entries leave the Project Delivery app', async () => {
     expect(await navIds('crm_psa')).toContain('nav_my_expenses');
     expect((await verify.apiAs(admin, 'PATCH', `${pkg(EXPENSE_ID)}/disable`)).status).toBe(200);
@@ -477,5 +525,5 @@ describe('disabling either module leaves the other usable (hotcrm#2556, hotcrm#2
       expect((await verify.apiAs(admin, 'PATCH', `${pkg(EXPENSE_ID)}/enable`)).status).toBe(200);
     }
     expect(await navIds('crm_psa')).toContain('nav_my_expenses');
-  });
+  }, 60_000);
 });

@@ -106,6 +106,10 @@ only the **Booking Reference** still takes a value. To change the plan, choose
 
 **Cancelled** and **Closed** are final.
 
+Only a **Draft** request can be deleted. Once it is sent it stays on record,
+with its approval and its expense reports: to call off an approved trip,
+choose **Cancel Trip**. A rejected request goes back to **Draft** first.
+
 ## Reporting the trip's expenses
 
 When you send the trip's expenses for reimbursement, choose **Submit for a

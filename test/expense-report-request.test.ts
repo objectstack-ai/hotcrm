@@ -218,6 +218,55 @@ describe('a trip\'s reports against its estimate (hotcrm#2580)', () => {
     expect((await row('crm_expense_report', reportId!)).status).toBe('paid');
   });
 
+  it('only a draft travel request is deleted; a sent one stays on record, and the refusal points to Cancel Trip', async () => {
+    // Seat order 2026-11-17 (no card). Before it a Closed request with a paid
+    // report deleted (200) and left the report holding the deleted id
+    // (objectstack#34899), and an Approved request with a report in approval
+    // was refused only by accident, naming the report.
+    const del = async (id: string): Promise<{ status: number; text: string }> => {
+      const res = await verify.apiAs(traveler.token, 'DELETE', `/data/crm_expense_request/${id}`);
+      return { status: res.status, text: await res.text() };
+    };
+    const refused = async (id: string, message: RegExp): Promise<void> => {
+      const { status, text } = await del(id);
+      expect(status, text).toBe(409);
+      expect(text).toMatch(message);
+      expect(await row('crm_expense_request', id), 'still on record').toBeTruthy();
+    };
+
+    const draft = await approvedRequest(500, traveler, false);
+    expect((await del(draft)).status).toBe(200);
+    expect(await verify.rows('crm_expense_request', { id: draft })).toHaveLength(0);
+
+    const waiting = await approvedRequest(500, traveler, false);
+    await verify.hooks.run('crm_expense_request', 'update', { id: waiting, status: 'submitted' }, { as: traveler.token });
+    await refused(waiting, /Only a draft travel request can be deleted\. Travel request .+ is waiting for approval; once it is approved, Cancel Trip calls it off\./);
+
+    const approved = await approvedRequest(500);
+    const [inApproval] = await submit([await expense(80)], approved);
+    expect((await row('crm_expense_report', inApproval!)).status).toBe('submitted');
+    await refused(approved, /Travel request .+ is approved; to call the trip off, use Cancel Trip\./);
+
+    const closed = await approvedRequest(500);
+    const [paid] = await submit([await expense(120)], closed);
+    expect(await decide(paid!, 'approve', manager)).toBe(200);
+    await pay(paid!);
+    expect((await row('crm_expense_request', closed)).status).toBe('closed');
+    await refused(closed, /Travel request .+ is closed, and stays on record with its reports\./);
+    expect((await row('crm_expense_report', paid!)).crm_expense_request, 'the paid report keeps a request that exists').toBe(closed);
+
+    const cancelled = await approvedRequest(500);
+    await verify.actions.run('crm_expense_request', 'cancel_expense_request', { as: traveler.token, recordId: cancelled });
+    await refused(cancelled, /Travel request .+ is cancelled, and stays on record\./);
+
+    const rejected = await approvedRequest(500, traveler, false);
+    await verify.hooks.run('crm_expense_request', 'update', { id: rejected, status: 'submitted' }, { as: traveler.token });
+    expect(await decide(rejected, 'reject', manager)).toBe(200);
+    await refused(rejected, /Travel request .+ was rejected; move it back to Draft to correct or delete it\./);
+    await verify.hooks.run('crm_expense_request', 'update', { id: rejected, status: 'draft' }, { as: traveler.token });
+    expect((await del(rejected)).status, 'back in Draft, it can go').toBe(200);
+  });
+
   it('finance reads the request\'s amounts; nobody writes the report\'s copies by hand', async () => {
     const requestId = await approvedRequest(1000);
     const [reportId] = await submit([await expense(100)], requestId);
