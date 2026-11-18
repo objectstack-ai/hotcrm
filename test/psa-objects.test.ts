@@ -136,6 +136,24 @@ describe('staffing (project_team_sync)', () => {
     expect((await row('crm_project', linked.id))!.crm_opportunity, 'stored, and read by everyone else').toBe(opp.id);
   });
 
+  // Irene, 2026-11-15 (hotcrm#2481): consultants do not see the account's
+  // Order to Cash totals. The set's own `readable: false` rows bind over its
+  // own View All on the account (objectstack#33828, 18.6.0); every other
+  // field of the account stays readable to them.
+  it('lets a team member read the account without its Order to Cash totals (hotcrm#2481)', async () => {
+    const TOTALS = ['invoiced_amount', 'received_amount', 'receivable_balance'];
+    const full = (await row('crm_account', account.id))!;
+    for (const f of TOTALS) expect(full, `fixture: an administrator reads ${f}`).toHaveProperty(f);
+    const seen = (await row('crm_account', account.id, consultant.token))!;
+    expect(seen.name).toBe(full.name);
+    expect(Object.keys(full).filter((k) => !(k in seen)).sort(), 'the totals, and nothing else, are hidden').toEqual([...TOTALS].sort());
+    const res = await verify.apiAs(consultant.token, 'GET', `/data/crm_account/${account.id}`);
+    expect(res.status).toBe(200);
+    const { record } = (await res.json()) as { record: Rec };
+    expect(record.name).toBe(full.name);
+    for (const f of TOTALS) expect(record, `REST serves no ${f} to a team member`).not.toHaveProperty(f);
+  });
+
   it('hides cost from a team member', async () => {
     const p = (await row('crm_project', project.id, consultant.token))!;
     expect(p.actual_labor_cost).toBeUndefined();
