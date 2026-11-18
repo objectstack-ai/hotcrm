@@ -53,8 +53,30 @@ These were measured while writing this page and are not worked around here (AGEN
 
 - A formula with `returnType: 'currency'` still renders as a bare grouped number (`24,000`
   beside `$6,000.00`) in the list, the related list and the record page. The key is declared
-  anyway: it is the spec's statement that the value is money.
+  anyway: it is the spec's statement that the value is money. *(Fixed by 18.5.0: measured on
+  a project's Financials, Actual Cost reads `¥0.00` beside Planned Revenue's `¥120,000.00`.)*
 - A `Field.percent()` draws a progress bar beside the percentage in a list and on a record
   page. No field or page key turns it off.
 - A metric tile prints the measure's label (`Total Amount`) under its value, not the widget's
   `description`.
+
+## Measured on 18.5.0 and left to the platform
+
+Measured for hotcrm#2569 (a project's Financials, a timesheet's totals, Projects Overview,
+billing milestones; zh-CN, tenant currency CNY). Not worked around here either:
+
+- **A roll-up of an amount reads as a bare number.** Every `Field.summary` over a currency
+  field (17 in `src/`: Approved Budget `78,000.00` beside Planned Revenue `¥120,000.00`, a
+  timesheet's Total Cost, a billing milestone's Invoiced and Received) carries no currency.
+  A summary may declare `currencyConfig`, but `currencyMode: 'dynamic'` is admitted only over
+  a stored home amount (`homeAmount.field`, objectstack#33659): on a summary over a plain
+  `Field.currency`, the tenant's currency, `objectstack validate` refuses it ("… is not a stored
+  home amount, so its rows are not known to be in the home currency"). `fixed` would name a
+  currency the tenant did not choose.
+- **A derived dataset measure has no currency.** A measure's `currency` takes only an ISO
+  code, and the analytics service puts the tenant currency only on a measure over a currency
+  field, so `actual_cost_sum` (derived from two sums of summaries) reads without the currency on
+  Projects Overview.
+- **A formula cannot return a percentage.** `returnType` is `number`, `text`, `boolean`,
+  `date` or `currency`, so Budget Used and Gross Margin % read `14.5`, not `14.5%`.
+
