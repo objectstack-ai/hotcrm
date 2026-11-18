@@ -128,6 +128,8 @@ const present = (root: string, field: string): string =>
 const fieldsOf = (source: ContractDraftSource, variant: (typeof CONTRACT_DRAFT_VARIANTS)[number]): Record<string, unknown> => {
   const r = source.root;
   const cel = (src: string) => expression(src, 'cel');
+  // The source has an owner — a CEL test, built outside the template below.
+  const ownerSet = present(r, 'owner_id');
   return {
     contract_term_months: DRAFT_CONTRACT_DEFAULTS.contract_term_months,
     contract_type: DRAFT_CONTRACT_DEFAULTS.contract_type,
@@ -140,7 +142,7 @@ const fieldsOf = (source: ContractDraftSource, variant: (typeof CONTRACT_DRAFT_V
     crm_account: cel(`${r}.crm_account`),
     crm_contact: cel(`has(${r}.crm_contact) ? ${r}.crm_contact : null`),
     ...(variant.opportunity ? { crm_opportunity: cel(`${r}.crm_opportunity`) } : {}),
-    owner_id: cel(`${present(r, 'owner_id')} ? ${r}.owner_id : null`),
+    owner_id: cel(`${ownerSet} ? ${r}.owner_id : null`),
     ...(variant.terms ? { payment_terms: cel(`${r}.payment_terms`) } : {}),
   };
 };
