@@ -4,194 +4,145 @@
 
 # HotCRM
 
-> **The ontology is the software.** One executable business ontology. AI writes it, the runtime runs it, agents operate it, you own it.
->
-> 本体即软件。
->
-> Ontology-driven: database, API, UI and agent tools all derive from that one definition of the business, so there is no second application to keep in step with it.
+<!-- shared:headline -->
 
-<sub>The positioning of [ObjectStack](https://github.com/objectstack-ai/objectstack), quoted as its README and the post [The Ontology Is the Software](https://objectstack.ai/blog/the-ontology-is-the-software) state it.</sub>
+**Leads, orders, projects, cash and expenses in one open-source business system.**
 
-**HotCRM is the reference app for AI-written enterprise software: a complete CRM in typed ObjectStack metadata.** For a CRM, it is the reference implementation of the statement above.
+Change it with AI when your business changes. Let your own AI agents work in it with each user's permissions.
 
-- **Its business ontology is the app.** 38 business objects and the relations between them, **50 actions**, 48 flows, 6 permission sets, 18 positions and 13 sharing rules, and 8 AI skills — typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata under `src/`, checked by `pnpm validate`.
-- **The database, the API, the console UI and the agent tools derive from it.** One `pnpm dev` boot creates the tables, serves the REST API at `/api/v1/data/crm_account` and its siblings, the Console at `/_console/`, and an MCP server at `/api/v1/mcp`. Nothing under `src/` defines a route handler or a React component.
-- **Views, dashboards and translations are projections of it.** List views, record pages, 7 dashboards and the app's navigation, in 4 languages (en, zh-CN, es-ES, ja-JP): the surfaces people use the ontology through, not a second copy of it.
+<!-- /shared:headline -->
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](src/sales/index.ts)
 [![Version](https://img.shields.io/badge/version-6.5.0-brightgreen)](CHANGELOG.md)
 [![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.app-orange)](https://cloud.objectos.app)
 
-Install it into an ObjectStack environment from the [marketplace](https://cloud.objectos.app), or fork it and build & ask with Claude Code or any coding agent: the agent writes the metadata in your repo, and operates the running app over MCP.
+[Documentation](https://hotcrm.com/docs) · [Marketplace](https://cloud.objectos.app) · [中文说明](https://github.com/objectstack-ai/hotcrm/blob/main/README.zh-CN.md)
 
 ---
 
-## 📸 Projections of one ontology
+<!-- section:who -->
+## Who it is for
 
-Captured on ObjectStack 18.0.0 from a fresh database with the shipped seed data and demo staff (`pnpm demo:staff`), in the Console's default light theme.
+Companies that sell products, project services or subscriptions, and want sales, service, delivery and finance on one system. Three sample scenarios walk the whole chain:
 
-| Strategic account 360 | Qualified lead workspace |
-|---|---|
-| ![Strategic account 360](assets/screenshots/hotcrm/customer-360/en.png) | ![Qualified lead workspace](assets/screenshots/hotcrm/lead-detail/en.png) |
+- [A product sale](https://hotcrm.com/docs/getting-started/scenario-product-sale): lead, opportunity, quote, order, contract, invoice and payment, and where each step hands over.
+- [Project services](https://hotcrm.com/docs/getting-started/scenario-project-services): the deal, the contract and its collection plan, the project with its plan, budget, timesheets and expenses, and the invoices finance records.
+- [A subscription](https://hotcrm.com/docs/getting-started/scenario-subscription): the contract with its terms and renewal, one collection step per period, the invoices, and the renewal deal.
 
-| Sales pipeline kanban | Quote lifecycle pipeline |
-|---|---|
-| ![Sales pipeline kanban](assets/screenshots/hotcrm/sales-pipeline/en.png) | ![Quote lifecycle pipeline](assets/screenshots/hotcrm/quote-pipeline/en.png) |
+<!-- section:chain -->
+## One chain, from the first lead to the cash
 
-| Campaign lifecycle and ROI | Large-deal approval flow |
-|---|---|
-| ![Campaign lifecycle and ROI](assets/screenshots/hotcrm/campaign-detail/en.png) | ![Large-deal approval flow](assets/screenshots/hotcrm/large-deal-approval/en.png) |
+<!-- shared:chain -->
 
-The same dashboard, two projections: the English UI and the zh-CN language pack over the same records.
+[Lead](https://hotcrm.com/docs/sales/leads) → [Opportunity](https://hotcrm.com/docs/sales/opportunities) → [Quote](https://hotcrm.com/docs/sales/quotes) → [Order](https://hotcrm.com/docs/sales/orders) → [Contract or project](https://hotcrm.com/docs/sales/contracts) → [Invoice and payment](https://hotcrm.com/docs/order-to-cash/invoices-and-payments)
 
-| Sales performance dashboard (en) | 销售业绩仪表盘 (zh-Hans) |
-|---|---|
-| ![Sales performance dashboard](assets/screenshots/hotcrm/sales-dashboard/en.jpg) | ![销售业绩仪表盘](assets/screenshots/hotcrm/sales-dashboard/zh-Hans.jpg) |
+[Approved hours, travel and expenses on a project count in its cost, so the margin is measured against what the customer pays.](https://hotcrm.com/docs/projects/time-and-expenses)
 
-> The screenshots live in `assets/screenshots/hotcrm/<screen>/<locale>.png` (`.jpg` for the sales dashboard), each with a colocated `meta.yaml` recording its purpose, alt text, capture context and platform version. This README uses English; the documentation site also publishes the `zh-Hans` variants.
+<!-- /shared:chain -->
 
----
+It is one data set from the first lead to the last payment: nothing is exported from one system and imported into the next.
 
-## 🤖 Agents operate it
+<!-- section:apps -->
+## Six apps
 
-The runtime serves HotCRM as an MCP server at `/api/v1/mcp`, on by default. `list_objects` returns every `crm_*` object, the runtime's record tools (`query_records`, `create_record`, …) act on them, and two of HotCRM's actions opt in with `ai: { exposed: true }`: **Convert Lead** and **Schedule Follow-up**. An agent calls them under the permission sets and sharing rules of the identity it connects as — the same ones a REST call from that identity runs under.
+<!-- shared:apps -->
 
-Measured on a local community-edition boot (`pnpm dev`, then `pnpm demo:staff`). Sign in and mint an API key for an identity:
+Everyone opens the app for their job. Sales is always there; an administrator can switch the other five off.
+
+| App | For | What it does |
+| --- | --- | --- |
+| [Sales](https://hotcrm.com/docs/sales) | Sales reps and managers | Leads, accounts, opportunities, quotes and products, orders and contracts. |
+| [Service](https://hotcrm.com/docs/service) | Service agents and managers | Cases with SLAs and escalation, and the knowledge base. |
+| [Marketing](https://hotcrm.com/docs/marketing) | Marketers | Campaigns, and the leads and contacts they reach. |
+| [Order to Cash](https://hotcrm.com/docs/order-to-cash) | Finance | Each contract's collection plan, invoices and payments: what is invoiced, paid and overdue. |
+| [Project Delivery](https://hotcrm.com/docs/projects) | Project managers, consultants and finance | Projects, staffing, plans, timesheets and budgets, with cost and margin. |
+| [Expenses](https://hotcrm.com/docs/expenses) | Every employee | Expenses with their receipts, expense reports, travel requests and their approval. |
+
+<!-- /shared:apps -->
+
+<!-- section:screenshots -->
+## Screenshots
+
+One screen from each app, captured on ObjectStack 18.5.0 from a fresh database with the shipped sample data and the demo team (`pnpm demo:staff`).
+
+| Sales: sales order with its lines | Service: support case |
+| --- | --- |
+| ![A confirmed sales order with its account, total, order date and fulfilment status, and the Order Lines tab listing products, quantities, prices, discounts and line totals.](https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/screenshots/hotcrm/sales-order/en.png) | ![A high-priority support case in progress with its SLA due time, owner, account, the customer impact and triage notes, and Escalate and Close actions.](https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/screenshots/hotcrm/case-detail/en.png) |
+
+| Marketing: campaign lifecycle and ROI | Order to Cash: invoice with its payment |
+| --- | --- |
+| ![A campaign record with lifecycle stage, schedule, budget, revenue, and ROI.](https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/screenshots/hotcrm/campaign-detail/en.png) | ![A partly paid invoice with its amount, due date, open balance, contract, billing milestone and the payment received against it.](https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/screenshots/hotcrm/invoice-payments/en.png) |
+
+| Project Delivery: project plan on a Gantt | Expenses: expense report with its expenses |
+| --- | --- |
+| ![The Stark Medical pilot's seven tasks on a Gantt, with start and end dates, predecessor links, progress by status and today's marker.](https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/screenshots/hotcrm/project-plan/en.png) | ![A submitted expense report with its total and amount to pay back, its approval path, and the Expenses tab listing four expenses by date, category, amount, who paid and merchant.](https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/screenshots/hotcrm/expense-report/en.png) |
+
+<!-- section:ai -->
+## AI and agents
+
+Every HotCRM object is open over MCP, at `/api/v1/mcp` on every environment. Your agent connects as a person, by browser sign-in or with that person's API key, and works under that person's permission sets, positions and sharing rules: where the person would be refused, the agent is refused, with the same code and message.
+
+HotCRM is agent-first. It provides the objects, the actions and the skills; reading a receipt, checking a policy or chasing a payment is the work of your own agent over MCP. The community edition runs no assistant of its own, so you connect yours. HotCRM ships **8 skills** for the platform assistant, where an environment runs one, and opens **9 of its actions to agents**, among them Convert Lead and Submit for Reimbursement; an action that cannot be undone, or that sends a record to an approver, asks the person first.
+
+[Connect your agent](https://hotcrm.com/docs/ai-copilot/connect-your-agent) shows the endpoint, the sign-in, the tools an agent gets, and the same call made by two people with different permissions.
+
+<!-- section:install -->
+## Try and install
+
+**From the marketplace.** Sign in at [cloud.objectos.app](https://cloud.objectos.app), open HotCRM in the marketplace and install it into your environment. New to ObjectStack? Create an environment from the Starter template first.
+
+**On your machine, in three commands** (Node.js 22 or later, and pnpm 10):
 
 ```bash
-curl -c admin.txt -X POST http://localhost:4001/api/v1/auth/sign-in/email \
-  -H 'content-type: application/json' -d '{"email":"admin@objectos.ai","password":"admin123"}'
-curl -b admin.txt -X POST http://localhost:4001/api/v1/keys     # → { "data": { "key": "osk_…", … } }
-```
-
-Then send an agent's `tools/call` with that key:
-
-```bash
-curl -X POST http://localhost:4001/api/v1/mcp \
-  -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
-  -H 'x-api-key: osk_…' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"create_record","arguments":{"objectName":"crm_campaign","data":{"name":"Agent-created Q1 Webinar","type":"webinar","status":"planning","start_date":"2027-01-12","end_date":"2027-01-14"}}}}'
-```
-
-| The key belongs to | What comes back |
-|---|---|
-| the dev admin, `admin@objectos.ai` | `isError: false` — the new campaign, `created_by` the dev admin |
-| the demo sales rep Nina Reyes, `na.rep@objectos.ai` — her `sales_rep` permission set reads every campaign and grants no create | `isError: true` — `PERMISSION_DENIED`, `status: 403`, and the campaign count does not move |
-
-HotCRM defines no agent of its own; its 8 AI skills are metadata for a platform agent to carry, and this community-edition boot runs none (`GET /api/v1/ai/agents` answers an empty list), so the agent is the one you connect. `pnpm dev` prints the `claude mcp add …` line for an MCP client; [Connect an MCP Client](https://objectstack.ai/docs/ai/connect-mcp) covers the browser sign-in and API keys.
-
----
-
-## ✨ What you get
-
-**38 business objects** across seven business domains — sales, service, revenue, marketing, order to cash, expenses and project delivery; the repository layout below says what each package covers, and the roster itself is `src/*/objects/*.object.ts`. Around them: **50 actions**, 48 flows, **7 dashboards**, 10 reports, 11 datasets, 8 AI skills, 4 language bundles (en, zh-CN, es-ES, ja-JP), 6 permission sets, 18 positions and 13 sharing rules. `pnpm build` prints most of these counts on every build.
-
-> **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
-
----
-
-## 🚀 Install from the marketplace (recommended)
-
-1. Sign in at [cloud.objectos.app](https://cloud.objectos.app).
-2. Open **Marketplace → HotCRM** and click **Install** into your environment.
-3. Open your environment URL — HotCRM is wired into the Studio shell. Done.
-
-> First-time on ObjectStack? Create an environment from the **Starter** template first, then install HotCRM on top.
-
----
-
-## 🛠 Run locally (development / fork it)
-
-```bash
-git clone https://github.com/objectstack-ai/hotcrm.git
-cd hotcrm
+git clone https://github.com/objectstack-ai/hotcrm.git && cd hotcrm
 pnpm install
-pnpm dev                    # ObjectStack runtime starts at http://localhost:4001
-pnpm demo:staff             # optional, in a second terminal: the demo sales and service team
+pnpm dev
 ```
 
-```bash
-pnpm typecheck              # strict TypeScript
-pnpm build                  # produces dist/objectstack.json (the publishable artifact)
-```
+Open <http://localhost:4001/_console/> and sign in as `admin@objectos.ai` / `admin123`, the administrator a development server creates on an empty database. The sample data loads on the first start; `pnpm demo:staff`, in a second terminal, adds the demo team.
 
-The compiled `dist/objectstack.json` **is** the package — that's what gets uploaded to the marketplace.
+<!-- section:customize -->
+## Customize with AI
 
----
+The definition is the app. Objects and fields, rules, screens, flows, permissions and translations are typed metadata under `src/`: change a field there and the table, the API and the screens follow, with no second application to keep in step. An AI coding agent such as Claude Code writes that change in your copy of the repository, and `pnpm validate` checks it against the platform's schema before it ships.
 
-## 📦 Publish a fork to the marketplace
+Today the definition holds **38 business objects**, **50 actions**, **48 flows**, **7 dashboards**, **11 datasets** and **18 positions**, in **4 languages** (en, zh-CN, es-ES, ja-JP).
 
-After you've forked, customized, and renamed the package:
+HotCRM is built on [ObjectStack](https://github.com/objectstack-ai/objectstack), the open-source platform that runs one business definition as the database, the API, the screens and the agent tools at once. [Customize and extend](https://hotcrm.com/docs/developers/customize-and-extend) walks through a change.
 
-```bash
-# 1. Authenticate once (writes ~/.objectstack/cloud.json)
-objectstack cloud login
+<!-- section:developers -->
+## Developers
 
-# 2. Build the artifact
-pnpm build
-
-# 3. Publish a new version
-objectstack package publish dist/objectstack.json \
-  --manifest-id app.acme.crm \
-  --version 2.2.2 \
-  --display-name "Acme CRM" \
-  --category crm \
-  --visibility marketplace \
-  --note "Initial release"
-```
-
-The CLI is idempotent: re-running with the same `--manifest-id` updates the package; new `--version` values create immutable versioned snapshots.
-
-See [docs: Publishing your first marketplace app](content/docs/developers/publishing-your-first-app.mdx) for the full walkthrough.
-
----
-
-## 🏗 Repository layout
+HotCRM is one artifact of seven packages: the Sales app and six modules an administrator can switch off ([Enable and disable modules](https://hotcrm.com/docs/administration/modules)).
 
 ```
 hotcrm/
-├── objectstack.config.ts         # composeStacks() — one artifact carrying the four package stacks
-├── objectstack.composition.ts    # the four package stacks built, and the composition knob
+├── objectstack.config.ts         # composeStacks(): the one artifact, carrying the seven package stacks
+├── objectstack.composition.ts    # the package stacks, built
 ├── src/
-│   ├── sales/                    # the `type: app` package — customers, pipeline, activities, contracts
-│   ├── service/                  # the service module — cases and the knowledge base
-│   ├── revenue/                  # the revenue module — products, quotes, line items
-│   ├── marketing/                # the marketing module — campaigns and campaign members
-│   └── docs/                     # package docs, shipped inside the built artifact
-├── apps/docs/                    # Fumadocs site — standalone, own lockfile (not a pnpm workspace member)
-└── content/docs/                 # Documentation content
+│   ├── sales/                    # the app package: accounts, contacts, leads, opportunities, orders, contracts, activities
+│   ├── service/                  # module: cases, SLAs, the knowledge base
+│   ├── revenue/                  # module: products, price books, quotes (shown inside Sales)
+│   ├── marketing/                # module: campaigns and their members
+│   ├── o2c/                      # module: collection plans, invoices, payments (Order to Cash)
+│   ├── psa/                      # module: projects, staffing, plans, timesheets, budgets (Project Delivery)
+│   ├── expense/                  # module: expenses, expense reports, travel requests
+│   └── docs/                     # the in-app manuals, shipped inside the artifact
+├── apps/docs/                    # the docs site, published at https://hotcrm.com/docs
+└── content/docs/                 # the docs content, in en, zh-Hans and zh-Hant
 ```
 
-Metadata files are named **`<name>.<kind>.ts`** — `lead.object.ts` with its hooks beside it in `lead.hook.ts`, `lead.view.ts`, `lead_detail.page.ts`, `opportunity-approval.flow.ts`; actions are the one plural, `lead.actions.ts` — and a few shared files are not (`_hook-api.ts`, `positions.ts`). The `crm_` prefix on object names is explicit in source — no runtime magic.
+```bash
+pnpm dev            # the app at http://localhost:4001
+pnpm verify         # validate, typecheck, lint, hygiene, build and test: run it before a pull request
+pnpm build          # dist/objectstack.json, the artifact the marketplace installs
+pnpm docs:product   # rewrite the shared product blocks after changing an app or apps/docs/lib/product/product.json
+```
 
----
+Read [CONTRIBUTING](https://github.com/objectstack-ai/hotcrm/blob/main/CONTRIBUTING.md) before a first pull request, and the [Developers](https://hotcrm.com/docs/developers) section of the docs for the architecture, the API, testing and [publishing your own copy to the marketplace](https://hotcrm.com/docs/developers/publishing-your-first-app).
 
-## 📚 Documentation
+<!-- section:license -->
+## License
 
-- **Live docs:** start `pnpm -C apps/docs install && pnpm -C apps/docs dev -p 3001`, then open <http://localhost:3001/docs>
-- **For business users:** Sales, Service, Marketing, Revenue, AI Copilot guides
-- **For developers:** Architecture, Customization, API reference, Testing & CI
-- **For publishers:** Marketplace publishing guide
-
----
-
-## 🤝 Why fork HotCRM?
-
-Because it is the platform's reference implementation — ObjectStack's North Star names it so (「参考实现 hotcrm」) — and it applies these conventions to a real CRM:
-
-- ✅ `crm_` namespace prefix on every object (explicit, grep-able)
-- ✅ Strict `*.object.ts` / `*.hook.ts` / `*.actions.ts` separation of concerns
-- ✅ All metadata validated against `@objectstack/spec` schemas
-- ✅ ObjectQL only — no raw SQL anywhere
-- ✅ Agent-operable — every object over MCP, actions exposed to agents only where declared
-- ✅ Four-language i18n out of the box
-- ✅ Permission sets, positions and sharing rules that `pnpm demo:staff` staffs with a demo team and then verifies, identity by identity
-
-If you want to ship an HR app, a project tracker, a help-desk — start by reading HotCRM's structure, then change names.
-
----
-
-## 📄 License
-
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0, like ObjectStack. See [LICENSE](https://github.com/objectstack-ai/hotcrm/blob/main/LICENSE).
