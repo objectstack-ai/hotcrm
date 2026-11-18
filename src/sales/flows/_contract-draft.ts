@@ -102,8 +102,10 @@ export interface ContractDraftSource {
   readonly description: unknown;
 }
 
+// A flow variable is led by its own `has()` (an unbound variable answers
+// `false` there rather than aborting); `record` is always bound.
 const present = (root: string, field: string): string =>
-  `has(${root}.${field}) && ${root}.${field} != null && ${root}.${field} != ""`;
+  `${root.startsWith('vars.') ? `has(${root}) && ` : ''}has(${root}.${field}) && ${root}.${field} != null && ${root}.${field} != ""`;
 
 /**
  * The contract document one variant writes.

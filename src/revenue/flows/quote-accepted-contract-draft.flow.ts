@@ -98,6 +98,11 @@ export const QuoteAcceptedContractDraftFlow: Flow = {
   type: 'record_change',
   status: 'active',
   defaultActive: false,
+  // Elevated because a sales rep holds `crm_contract.allowCreate: false` and
+  // accepting a quote on their own deal is the ordinary path (#2014): the
+  // draft is the business's paperwork, not the rep authoring a contract. The
+  // run carries the accepter, so `created_by` names them; the close-won stays
+  // theirs in `quote_on_accepted`. The full reasoning is in the header above.
   runAs: 'system',
   variables: [
     // The quote as the provenance sentence names it: `QTE-0001 - Name`.
@@ -151,11 +156,11 @@ export const QuoteAcceptedContractDraftFlow: Flow = {
     // or `null` on every path.
     {
       id: 'e100', source: 'find_order', target: 'link_order', type: 'conditional', label: 'Order names no contract',
-      condition: P`vars.orderOfQuote != null && (!has(vars.orderOfQuote.crm_contract) || vars.orderOfQuote.crm_contract == null || vars.orderOfQuote.crm_contract == "")`,
+      condition: P`has(vars.orderOfQuote) && vars.orderOfQuote != null && (!has(vars.orderOfQuote.crm_contract) || vars.orderOfQuote.crm_contract == null || vars.orderOfQuote.crm_contract == "")`,
     },
     {
       id: 'e101', source: 'find_order', target: 'end', type: 'conditional', label: 'No order, or it names one',
-      condition: P`!(vars.orderOfQuote != null && (!has(vars.orderOfQuote.crm_contract) || vars.orderOfQuote.crm_contract == null || vars.orderOfQuote.crm_contract == ""))`,
+      condition: P`!(has(vars.orderOfQuote) && vars.orderOfQuote != null && (!has(vars.orderOfQuote.crm_contract) || vars.orderOfQuote.crm_contract == null || vars.orderOfQuote.crm_contract == ""))`,
     },
     { id: 'e102', source: 'link_order', target: 'end', type: 'default' },
   ],

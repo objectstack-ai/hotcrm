@@ -110,6 +110,9 @@ describe('Draft Contract drafts the order\'s contract and names it on the order'
   }, 60_000);
 
   it('drafts one contract, as a rep who may not create one', () => {
+    // The two flows under test, by the names the runtime-coverage guard reads.
+    expect(DraftContractAction.target).toBe('sales_order_draft_contract');
+    expect(SalesOrderDraftContractWriteFlow.name).toBe('sales_order_draft_contract_write');
     expect(contract, 'Draft Contract drafted nothing').toBeTruthy();
     expect(run.status, `the run: ${JSON.stringify(run.error ?? run.status)}`).toBe('paused');
     const link = ((run.screen?.fields ?? []) as Rec[]).find((f) => f.name === 'contractLink');

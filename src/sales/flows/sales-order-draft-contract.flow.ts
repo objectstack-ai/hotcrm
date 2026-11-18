@@ -103,21 +103,21 @@ export const SalesOrderDraftContractFlow: Flow = {
   edges: [
     { id: 'e1', source: 'start', target: 'get_order', type: 'default' },
     // Complementary conditionals off the read, exactly one of which holds.
-    // `get_order` binds the row or `null` on every path, so `vars.orderRecord`
-    // needs no `has()` of its own; its fields do (a raw row is sparse).
+    // `get_order` binds the row or `null` on every path; each field read is
+    // led by `has(vars.orderRecord)` and its own `has()` (a raw row is sparse).
     { id: 'e2', source: 'get_order', target: 'refuse_missing', type: 'conditional', condition: P`vars.orderRecord == null`, label: 'Not found' },
     {
       id: 'e3', source: 'get_order', target: 'refuse_has_contract', type: 'conditional', label: 'Has a contract',
-      condition: P`vars.orderRecord != null && has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != ""`,
+      condition: P`has(vars.orderRecord) && vars.orderRecord != null && has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != ""`,
     },
     {
       id: 'e4', source: 'get_order', target: 'refuse_no_contact', type: 'conditional', label: 'No contact',
-      condition: P`vars.orderRecord != null && !(has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != "")
+      condition: P`has(vars.orderRecord) && vars.orderRecord != null && !(has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != "")
         && !(has(vars.orderRecord.crm_contact) && vars.orderRecord.crm_contact != null && vars.orderRecord.crm_contact != "")`,
     },
     {
       id: 'e5', source: 'get_order', target: 'draft', type: 'conditional', label: 'Draft',
-      condition: P`vars.orderRecord != null && !(has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != "")
+      condition: P`has(vars.orderRecord) && vars.orderRecord != null && !(has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != "")
         && has(vars.orderRecord.crm_contact) && vars.orderRecord.crm_contact != null && vars.orderRecord.crm_contact != ""`,
     },
     { id: 'e6', source: 'draft', target: 'result', type: 'default' },

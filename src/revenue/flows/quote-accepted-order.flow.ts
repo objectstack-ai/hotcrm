@@ -82,6 +82,11 @@ export const QuoteAcceptedOrderFlow: Flow = {
   description: 'When a quote is accepted, create a draft order with the quote’s header and lines, once per quote.',
   type: 'record_change',
   status: 'active',
+  // Elevated for the three writes the accepter could not make as themselves:
+  // the read-only Source Quote (the engine drops a read-only key a caller
+  // sends), the one-order check over every order of the quote, and an order
+  // for whoever may accept a quote. The run carries the accepter, so the
+  // order's `created_by` names them. The full reasoning is in the header above.
   runAs: 'system',
   variables: [],
   nodes: [
