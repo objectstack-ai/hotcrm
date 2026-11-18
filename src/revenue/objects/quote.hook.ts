@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import type { HookApi } from '../../sales/objects/_hook-api';
+import type { HookApi, HookTextContext } from '../../sales/objects/_hook-api';
 
 /**
  * Quote workflow hook.
@@ -480,7 +480,16 @@ const quoteAcceptedContractDraft: Hook = {
   onError: 'log',
   runAs: 'system',
   description: 'Draft the accepted quote’s contract.',
-  handler: async (ctx: HookContext) => {
+  // The drafted contract's provenance sentence, in the organization's language
+  // (#2535): translations at
+  // `hooks.quote_accepted_contract_draft.texts.<key>.message` in this module's
+  // locale packs. Everyone in the organization reads the contract, so it is
+  // never the accepting rep's language.
+  texts: {
+    drafted_named: { message: 'Auto-drafted from accepted quote {{ quote }}', params: ['quote'] },
+    drafted_untitled: { message: 'Auto-drafted from an accepted quote' },
+  },
+  handler: async (ctx: HookContext & HookTextContext) => {
     const { input, previous } = ctx;
     if (input.status !== 'accepted' || previous?.status === 'accepted') return;
     const api = ctx.api as HookApi | undefined;
@@ -633,12 +642,22 @@ const quoteAcceptedContractDraft: Hook = {
     // absent key — never `false` (see `pickId`), and never `null` either: `null`
     // is a legal shape for the optional `crm_opportunity` but not for the
     // required `crm_contact`, and one idiom for both is what keeps this honest.
+    //
+    // The sentence is TEXT, in the organization's language (#2535), so nothing
+    // reads it back: `automation_key` is the mark of a drafted contract, which
+    // `contract_drafted_notice` (`src/sales/flows/contract-drafted-notice.flow.ts`)
+    // fires on in every language. It names the automation, never the quote: a
+    // drafted contract is a starting point, not tied to the quote (#1129
+    // ruling B, #1253).
     const contract: Record<string, unknown> = {
       ...DRAFT_CONTRACT_DEFAULTS,
       status: 'draft',
       end_date: addMonths(DRAFT_CONTRACT_DEFAULTS.start_date, DRAFT_CONTRACT_DEFAULTS.contract_term_months),
       contract_value: totalPrice,
-      description: quoteLabel ? `Auto-drafted from accepted quote ${quoteLabel}` : 'Auto-drafted from an accepted quote',
+      description: quoteLabel
+        ? await ctx.text('drafted_named', { quote: quoteLabel })
+        : await ctx.text('drafted_untitled'),
+      automation_key: 'quote_acceptance',
     };
     if (accountId) contract.crm_account = accountId;
     if (contactId) contract.crm_contact = contactId;

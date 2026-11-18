@@ -66,6 +66,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       document_url: { label: 'Contract Document' },
       special_terms: { label: 'Special Terms' },
       description: { label: 'Description' },
+      automation_key: { label: 'Automation Key', help: 'Which automation drafted this contract. Written by that automation; never edit.' },
       billing_address: { label: 'Billing Address' },
     },
     // Print Contract (#2317).

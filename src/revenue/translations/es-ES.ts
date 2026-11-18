@@ -13,6 +13,13 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  */
 export const esES: TranslationData = {
   hooks: {
+    // The drafted contract's provenance sentence (#2535).
+    quote_accepted_contract_draft: {
+      texts: {
+        drafted_named: { message: 'Redactado automáticamente a partir de la cotización aceptada {{ quote }}' },
+        drafted_untitled: { message: 'Redactado automáticamente a partir de una cotización aceptada' },
+      },
+    },
     quote_total_rollup: {
       refusals: {
         RECORD_LOCKED: {

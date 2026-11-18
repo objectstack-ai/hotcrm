@@ -166,7 +166,12 @@ export const ContractRenewalFlow: Flow = {
               config: {
                 objectName: 'crm_opportunity',
                 fields: {
-                  name: cel`'Renewal — ' + currentContract.contract_number`,
+                  // The name and the next step are TEXT, in the organization's
+                  // language (#2535): translated at
+                  // `flows.contract_renewal.records.create_renewal_opp.fields.<field>`.
+                  // Nothing reads the name back — the gate above finds a
+                  // renewal deal by type and stage.
+                  name: tmpl`Renewal — {{ currentContract.contract_number }}`,
                   crm_account: cel`currentContract.crm_account`,
                   amount: cel`currentContract.contract_value`,
                   stage: 'proposal',
@@ -176,7 +181,7 @@ export const ContractRenewalFlow: Flow = {
                   // ORG PARTITION — see `create_renewal_task` above.
                   // The renewal deal belongs to the same org as the contract.
                   organization_id: cel`currentContract.organization_id`,
-                  next_step: 'Confirm renewal terms with customer',
+                  next_step: tmpl`Confirm renewal terms with customer`,
                 },
               },
             },

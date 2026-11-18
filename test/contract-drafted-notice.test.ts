@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { VerifyStack } from '@objectstack/verify';
-import { AUTO_DRAFTED_PREFIX, ContractDraftedNoticeFlow } from '../src/sales/flows/contract-drafted-notice.flow';
+import { QUOTE_ACCEPTANCE_KEY, ContractDraftedNoticeFlow } from '../src/sales/flows/contract-drafted-notice.flow';
 import { REPO_ROOT } from './helpers/repo-root';
 import { hotcrmStack, signUpPerson, committedFile, type Person } from './helpers/verify-stack';
 
@@ -18,8 +18,8 @@ type Rec = Record<string, any>;
  * the drafted contract was found only by looking. `contract_drafted_notice`
  * now fires on that contract's insert and sends the person who accepted the
  * quote an inbox notice linking it, which the console also shows as a live
- * toast. Delete the flow, or let its trigger miss the hook's provenance
- * sentence, and this goes red.
+ * toast. Delete the flow, or let its trigger miss the key the hook stamps,
+ * and this goes red.
  */
 
 const today = (): string => new Date().toISOString().slice(0, 10);
@@ -33,11 +33,10 @@ beforeAll(async () => {
   });
 }, 120_000);
 
-describe('the trigger reads the sentence the hook writes', () => {
-  it('both provenance sentences of quote_accepted_contract_draft start with the prefix', () => {
+describe('the trigger reads the key the hook stamps, not its sentence (#2535)', () => {
+  it('quote_accepted_contract_draft stamps the key the trigger matches', () => {
     const hook = readFileSync(join(REPO_ROOT, 'src/revenue/objects/quote.hook.ts'), 'utf8');
-    expect(hook).toContain(`\`${AUTO_DRAFTED_PREFIX} accepted quote \${quoteLabel}\``);
-    expect(hook).toContain(`'${AUTO_DRAFTED_PREFIX} an accepted quote'`);
+    expect(hook).toContain(`automation_key: '${QUOTE_ACCEPTANCE_KEY}'`);
   });
 });
 

@@ -45,6 +45,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       end_date: { label: '结束日期' },
       contract_value: { label: '合同金额' },
       description: { label: '描述' },
+      automation_key: { label: '自动化标识', help: '起草此合同的自动化。由该自动化写入，请勿编辑。' },
       crm_contact: { label: '主要联系人' },
       crm_opportunity: { label: '关联商机' },
       owner_id: { label: '合同负责人' },

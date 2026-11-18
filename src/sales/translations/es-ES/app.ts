@@ -542,11 +542,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
   flows: {
-    // What the sweeps store in a record (#2522), at
+    // What the sweeps store in a record (#2522, #2535), at
     // `flows.<flow>.records.<node>.fields.<field>`, holes as the source spells them.
     contract_renewal: {
       records: {
         create_renewal_task: { fields: { subject: 'Renovación pendiente: contrato {{ currentContract.contract_number }}' } },
+        create_renewal_opp: { fields: { name: 'Renovación — {{ currentContract.contract_number }}', next_step: 'Confirmar las condiciones de renovación con el cliente' } },
       },
     },
     opportunity_stagnation: {

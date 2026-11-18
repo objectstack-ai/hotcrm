@@ -267,6 +267,32 @@ export const Contract = ObjectSchema.create({
       label: 'Description',
       group: 'basic',
     }),
+
+    /**
+     * Which automation drafted this contract, as a stable key (#2535).
+     *
+     * `quote_acceptance` is stamped by `quote_accepted_contract_draft`
+     * (`src/revenue/objects/quote.hook.ts`), and `contract_drafted_notice`
+     * (`src/sales/flows/contract-drafted-notice.flow.ts`) fires on it. The
+     * provenance sentence in `description` is TEXT, written in the
+     * organization's language, so it cannot be the mark: a notice that matched
+     * its English opening fell silent in every other language.
+     *
+     * It names the automation, never the quote: a drafted contract is a
+     * starting point and is deliberately not tied to its quote (#1129 ruling
+     * B; the lookup #1253 described was not staged). A contract a person
+     * creates carries none. `readonly` + `hidden` — the drafting hook writes as
+     * `system`, which the readonly strip exempts, and the key stays out of
+     * forms and pickers (the pairing `crm_account.name_normalized` uses).
+     */
+    automation_key: Field.text({
+      label: 'Automation Key',
+      group: 'status',
+      description: 'Which automation drafted this contract. Written by that automation; never edit.',
+      readonly: true,
+      hidden: true,
+      maxLength: 100,
+    }),
     
     // Billing Address
     billing_address: Field.address({
