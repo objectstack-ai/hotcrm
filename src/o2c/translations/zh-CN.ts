@@ -309,4 +309,10 @@ export const zhCN: TranslationData = {
       },
     },
   },
+  // An import mapping's label, as the import wizard offers it (a key
+  // since 18.6.0; before it the wizard showed the English text in every locale).
+  mappings: {
+    crm_invoice_import: { label: '发票导入（CSV）' },
+    crm_payment_import: { label: '回款导入（CSV）' },
+  },
 };

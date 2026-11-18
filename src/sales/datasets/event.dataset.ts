@@ -27,25 +27,27 @@ export const EventDataset = defineDataset({
   description: 'Semantic layer for meetings, calls and interaction recency',
   object: 'crm_event',
   dimensions: [
-    { name: 'type', label: 'Activity Type', field: 'type', type: 'string' },
-    { name: 'status', label: 'Status', field: 'status', type: 'string' },
+    { name: 'type', label: 'Activity Type', synonyms: ['event type', 'meeting type', '活动类型'], field: 'type', type: 'string' },
+    { name: 'status', label: 'Status', synonyms: ['event status', '活动状态'], field: 'status', type: 'string' },
     // `owner` is the SEMANTIC name every widget/report selects by; the column
     // behind it is the platform ownership anchor `owner_id` (#548).
-    { name: 'owner', label: 'Owner', field: 'owner_id', type: 'string' },
-    { name: 'related_to_type', label: 'Related To', field: 'related_to_type', type: 'string' },
+    { name: 'owner', label: 'Owner', synonyms: ['organizer', 'assigned to', '负责人'], field: 'owner_id', type: 'string' },
+    { name: 'related_to_type', label: 'Related To', synonyms: ['related object', 'regarding', '关联对象'], field: 'related_to_type', type: 'string' },
     {
       name: 'start_datetime',
       label: 'Activity Week',
+      synonyms: ['start time', 'event date', '开始时间'],
       field: 'start_datetime',
       type: 'date',
       dateGranularity: 'week',
     },
   ],
   measures: [
-    { name: 'event_count', label: 'Activities', aggregate: 'count' },
+    { name: 'event_count', label: 'Activities', synonyms: ['number of activities', 'meetings', '活动数'], aggregate: 'count' },
     {
       name: 'total_minutes',
       label: 'Minutes',
+      synonyms: ['total duration', 'time spent', '总时长'],
       aggregate: 'sum',
       field: 'duration_minutes',
       format: '0,0',
@@ -53,6 +55,7 @@ export const EventDataset = defineDataset({
     {
       name: 'avg_minutes',
       label: 'Avg Duration',
+      synonyms: ['average duration', 'average meeting length', '平均时长'],
       aggregate: 'avg',
       field: 'duration_minutes',
       format: '0,0',

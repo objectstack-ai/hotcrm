@@ -651,6 +651,13 @@ export const LeadDetailPage: Page = {
                       // `types: ['task']` with the old `showCompleted: false`
                       // renders an empty tab.
                       showCompleted: true,
+                      // A task-only feed takes no comments: `comment` is not in
+                      // `types`, so a comment posted here would be stored and
+                      // never shown. The renderer already withheld the composer;
+                      // since 18.6.0 the schema refuses the default `true` beside
+                      // such a `types` (`component-props-invalid`), so the
+                      // comment-free choice is written down.
+                      showCommentInput: false,
                     },
                   },
                 ],

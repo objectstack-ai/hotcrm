@@ -916,4 +916,11 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       },
     },
   },
+  // An import mapping's label, as the import wizard offers it (a key
+  // since 18.6.0; before it the wizard showed the English text in every locale).
+  mappings: {
+    crm_account_import: { label: '客户导入（CSV）' },
+    crm_contact_import: { label: '联系人导入（CSV）' },
+    crm_lead_import: { label: '线索导入（CSV）' },
+  },
 };

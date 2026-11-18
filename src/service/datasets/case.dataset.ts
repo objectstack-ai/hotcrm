@@ -13,23 +13,23 @@ export const CaseDataset = defineDataset({
   object: 'crm_case',
 
   dimensions: [
-    { name: 'status', label: 'Status', field: 'status', type: 'string' },
-    { name: 'priority', label: 'Priority', field: 'priority', type: 'string' },
-    { name: 'origin', label: 'Origin', field: 'origin', type: 'string' },
-    { name: 'type', label: 'Type', field: 'type', type: 'string' },
+    { name: 'status', label: 'Status', synonyms: ['case status', '工单状态'], field: 'status', type: 'string' },
+    { name: 'priority', label: 'Priority', synonyms: ['case priority', 'severity', '优先级'], field: 'priority', type: 'string' },
+    { name: 'origin', label: 'Origin', synonyms: ['channel', 'case source', '来源渠道'], field: 'origin', type: 'string' },
+    { name: 'type', label: 'Type', synonyms: ['case type', '工单类型'], field: 'type', type: 'string' },
     // The platform's creation stamp (#1992) — the same dimension
     // `account_metrics` and `lead_metrics` declare, bucketed by day here.
-    { name: 'created_at', label: 'Created', field: 'created_at', type: 'date', dateGranularity: 'day' },
+    { name: 'created_at', label: 'Created', synonyms: ['opened', 'date opened', '创建时间'], field: 'created_at', type: 'date', dateGranularity: 'day' },
     // Article ranking by resolutions (#601) — group closed cases by the
     // article that resolved them. `type: 'lookup'`, the same spelling the
     // `owner` dimension on `opportunity_metrics` uses for `owner_id`.
-    { name: 'resolved_article', label: 'Resolving Article', field: 'resolved_by_article', type: 'lookup' },
+    { name: 'resolved_article', label: 'Resolving Article', synonyms: ['knowledge article', 'KB article', '解决文章'], field: 'resolved_by_article', type: 'lookup' },
   ],
 
   measures: [
-    { name: 'case_count', label: 'Cases', aggregate: 'count' },
-    { name: 'avg_resolution', label: 'Avg Resolution (h)', aggregate: 'avg', field: 'resolution_time_hours', format: '0.0' },
-    { name: 'avg_sla_violated', label: 'SLA Violation Rate', aggregate: 'avg', field: 'is_sla_violated', format: '0.0%' },
+    { name: 'case_count', label: 'Cases', synonyms: ['number of cases', 'tickets', '工单数'], aggregate: 'count' },
+    { name: 'avg_resolution', label: 'Avg Resolution (h)', synonyms: ['average resolution time', 'time to resolve', '平均解决时长'], aggregate: 'avg', field: 'resolution_time_hours', format: '0.0' },
+    { name: 'avg_sla_violated', label: 'SLA Violation Rate', synonyms: ['SLA breach rate', 'SLA违约率'], aggregate: 'avg', field: 'is_sla_violated', format: '0.0%' },
 
     // ─── Knowledge deflection (#601) ────────────────────────────────────
     //
@@ -56,10 +56,11 @@ export const CaseDataset = defineDataset({
     // Every widget that shows `kb_deflection_rate` also shows
     // `kb_resolved_count` and `closed_count` beside it, so a reader can check
     // the arithmetic that produced the percentage.
-    { name: 'closed_count', label: 'Closed Cases', aggregate: 'count', filter: { is_closed: true } },
+    { name: 'closed_count', label: 'Closed Cases', synonyms: ['closed tickets', '已关闭工单'], aggregate: 'count', filter: { is_closed: true } },
     {
       name: 'kb_resolved_count',
       label: 'Resolved by KB',
+      synonyms: ['solved by knowledge base', '知识库解决数'],
       aggregate: 'count',
       field: 'resolved_by_article',
       filter: { is_closed: true },
@@ -67,6 +68,7 @@ export const CaseDataset = defineDataset({
     {
       name: 'kb_deflection_rate',
       label: 'KB Deflection Rate',
+      synonyms: ['deflection rate', 'self-service rate', '知识库解决率'],
       derived: { op: 'ratio', of: ['kb_resolved_count', 'closed_count'] },
       format: '0%',
     },
@@ -102,10 +104,11 @@ export const CaseDataset = defineDataset({
     // group with 0 BEFORE evaluating derived measures, so a fully-breached org
     // reads 0%, not blank. A zero DENOMINATOR (no closed cases at all) does
     // return null — "no data", which is the honest reading.
-    { name: 'sla_met_count', label: 'Cases Within SLA', aggregate: 'count', filter: { is_closed: true, is_sla_violated: false } },
+    { name: 'sla_met_count', label: 'Cases Within SLA', synonyms: ['SLA met', 'within SLA', 'SLA达标数'], aggregate: 'count', filter: { is_closed: true, is_sla_violated: false } },
     {
       name: 'sla_compliance_rate',
       label: 'SLA Compliance Rate',
+      synonyms: ['SLA attainment', 'SLA met rate', 'SLA达标率'],
       derived: { op: 'ratio', of: ['sla_met_count', 'closed_count'] },
       format: '0%',
     },
@@ -134,6 +137,7 @@ export const CaseDataset = defineDataset({
     {
       name: 'past_sla_count',
       label: 'Past SLA',
+      synonyms: ['SLA breached', 'overdue cases', '超时工单'],
       aggregate: 'count',
       filter: {
         $or: [
@@ -145,6 +149,7 @@ export const CaseDataset = defineDataset({
     {
       name: 'past_sla_rate',
       label: 'Past SLA Rate',
+      synonyms: ['breached share', 'overdue rate', '超时率'],
       derived: { op: 'ratio', of: ['past_sla_count', 'case_count'] },
       format: '0.0%',
     },
