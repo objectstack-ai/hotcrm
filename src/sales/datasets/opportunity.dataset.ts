@@ -90,6 +90,6 @@ export const OpportunityDataset = defineDataset({
     },
     { name: 'won_amount', label: 'Won Revenue', synonyms: ['revenue', 'bookings', '赢单金额'], aggregate: 'sum', field: 'amount', filter: { stage: 'closed_won' }, format: '0,0' },
     { name: 'lost_amount', label: 'Lost Revenue', synonyms: ['lost amount', '丢单金额'], aggregate: 'sum', field: 'amount', filter: { stage: 'closed_lost' }, format: '0,0' },
-    { name: 'win_rate', label: 'Win Rate', synonyms: ['close rate', 'conversion rate', '赢单率'], derived: { op: 'ratio', of: ['won_count', 'decided_count'] }, format: '0%' },
+    { name: 'win_rate', label: 'Win Rate', synonyms: ['close rate', 'conversion rate', '赢率'], derived: { op: 'ratio', of: ['won_count', 'decided_count'] }, format: '0%' },
   ],
 });
