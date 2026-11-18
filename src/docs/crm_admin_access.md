@@ -116,10 +116,14 @@ Two record-level rules sit on top of the object grants:
 
 ## Turning a module off
 
-HotCRM ships as the core app plus three modules — **HotCRM Service**,
-**HotCRM Revenue** and **HotCRM Marketing** — and a module you do not use can be
-turned off at **Setup → Installed Apps**: choose *Show all*, open the module
-and choose **Disable**. **Enable** turns it back on.
+HotCRM ships as the core app plus six modules — **HotCRM Service**,
+**HotCRM Revenue**, **HotCRM Marketing**, **HotCRM Order to Cash**,
+**HotCRM Expenses** and **HotCRM Project Delivery** — and a module you do not
+use can be turned off on the **Packages** page. No menu entry opens that page
+([objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)):
+**Setup → Installed Apps** lists only the apps installed from the marketplace.
+Go to `/_console/apps/com.objectstack.setup/component/developer/packages`, open
+the module and choose **Disable**. **Enable** turns it back on.
 
 While a module is off, nobody sees it, administrators included:
 
