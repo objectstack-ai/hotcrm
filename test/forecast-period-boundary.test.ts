@@ -260,7 +260,7 @@ describe('the write is REFUSED, not warned about', () => {
   });
 
   it('admits the manager form path — the user-visible acceptance point', async () => {
-    // `period_start` is required + notNull and sits in the Snapshot block of
+    // `period_start` is a NOT NULL column and sits in the Snapshot block of
     // the record form (`src/views/forecast.view.ts`), and `source: 'manual'` is
     // a documented origin. Manual entry on a boundary must still work, with the
     // amounts a manager types.

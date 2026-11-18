@@ -106,10 +106,11 @@ const forecastDerive: Hook = {
       undefined;
 
     // No period_start anywhere ⇒ snapshot the period that contains the
-    // snapshot day (falling back to today). `period_start` is required +
-    // notNull, so before this the write simply failed; deriving it is what
+    // snapshot day (falling back to today). `period_start` is a NOT NULL
+    // column, so before this the write simply failed; deriving it is what
     // makes `{ period: 'quarter' }` a complete, calendar-true snapshot
-    // request — the only shape an automated writer can express.
+    // request — the only shape an automated writer can express, and the one
+    // the New Forecast form sends when the start is left blank (#2539).
     if (!startStr) {
       const anchorStr =
         (typeof input.snapshot_date === 'string' && input.snapshot_date) ||
