@@ -4,6 +4,7 @@ import { P, cel, tmpl } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
 import { RENEWAL_LOOKAHEAD_DAYS } from '../objects/contract.object';
+import { LEGACY_RENEWAL_TITLE_PREFIX } from '../objects/_legacy-task-titles';
 type Flow = Automation.Flow;
 
 /**
@@ -81,6 +82,25 @@ export const ContractRenewalFlow: Flow = {
                   status: { $nin: ['completed'] },
                 },
                 outputVariable: 'existingRenewalTask',
+              },
+            },
+            {
+              // UPGRADE CONTINUITY (`../objects/_legacy-task-titles.ts`): a
+              // reminder written before the key existed has none, and is
+              // matched by the exact English title the previous release's gate
+              // matched, so a contract already reminded is not reminded again
+              // on the first sweep after an upgrade. (The renewal deal needs no
+              // such node: its gate below reads type and stage, never the name.)
+              id: 'find_legacy_task', type: 'get_record', label: 'Reminded Before the Upgrade?',
+              config: {
+                objectName: 'crm_task',
+                filter: {
+                  related_to_account: cel`currentContract.crm_account`,
+                  automation_key: null,
+                  subject: cel`${LEGACY_RENEWAL_TITLE_PREFIX} + currentContract.contract_number`,
+                  status: { $nin: ['completed'] },
+                },
+                outputVariable: 'legacyRenewalTask',
               },
             },
             {
@@ -217,8 +237,9 @@ export const ContractRenewalFlow: Flow = {
             { id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional', condition: P`has(vars.currentContract) && has(vars.currentContract.end_date) && has(vars.currentContract.renewal_notice_days)
               && vars.currentContract.end_date != null && vars.currentContract.renewal_notice_days != null
               && timestamp(vars.currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(vars.currentContract.renewal_notice_days))`, label: 'In window' },
-            { id: 'b2', source: 'find_existing_task', target: 'check_not_reminded', type: 'default' },
-            { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: P`existingRenewalTask == null`, label: 'First reminder' },
+            { id: 'b2', source: 'find_existing_task', target: 'find_legacy_task', type: 'default' },
+            { id: 'b2a', source: 'find_legacy_task', target: 'check_not_reminded', type: 'default' },
+            { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: P`existingRenewalTask == null && legacyRenewalTask == null`, label: 'First reminder' },
             { id: 'b4', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
             { id: 'b5', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
             // TOTALITY: same loop item, same sparse driver row. Only an

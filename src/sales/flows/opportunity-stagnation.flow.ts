@@ -5,6 +5,7 @@ import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
 import { optionLabelsByLocale } from './_option-labels';
 import { CrmTranslations } from '../translations';
+import { LEGACY_STALL_TITLE_PREFIX, LEGACY_STALL_TITLE_PRIVATE, LEGACY_TITLE_CAP } from '../objects/_legacy-task-titles';
 type Flow = Automation.Flow;
 
 /**
@@ -61,6 +62,16 @@ const NAMED_STALL_SUBJECT = tmpl`Advance stalled deal: {{ currentOpp.name | trun
 
 /** The key both stall nodes stamp and the gate finds a stall task by (`crm_task.automation_key`). */
 const STALL_TASK_KEY = 'stalled_deal';
+
+/**
+ * UPGRADE CONTINUITY (`../objects/_legacy-task-titles.ts`): the exact named
+ * title the sweep wrote before its tasks carried a key, the 255 cut included —
+ * the expression the gate on the previous release matched. `size()` guards
+ * `substring()`, which throws past the string's end.
+ */
+const LEGACY_NAMED_STALL_TITLE = cel`size(${LEGACY_STALL_TITLE_PREFIX} + currentOpp.name) > ${LEGACY_TITLE_CAP}
+  ? (${LEGACY_STALL_TITLE_PREFIX} + currentOpp.name).substring(0, ${LEGACY_TITLE_CAP - 1}) + '…'
+  : ${LEGACY_STALL_TITLE_PREFIX} + currentOpp.name`;
 
 /**
  * The two stall nodes' fields beside the title, written once so the private
@@ -140,6 +151,7 @@ export const OpportunityStagnationFlow: Flow = {
               // it follows `is_private`, which can change while a stall task
               // is open — the key is the same for both titles in every
               // language, so one stall episode books one task.
+              //
               id: 'find_existing_task', type: 'get_record', label: 'Already Nudged?',
               config: {
                 objectName: 'crm_task',
@@ -149,6 +161,24 @@ export const OpportunityStagnationFlow: Flow = {
                   status: { $nin: ['completed'] },
                 },
                 outputVariable: 'existingStallTask',
+              },
+            },
+            {
+              // UPGRADE CONTINUITY (`../objects/_legacy-task-titles.ts`): a
+              // stall task written before the key existed has none, and is
+              // matched by the exact English title the previous release's gate
+              // matched (either shape, the 255 cut included), so a deal already
+              // nudged is not nudged again on the first sweep after an upgrade.
+              id: 'find_legacy_task', type: 'get_record', label: 'Nudged Before the Upgrade?',
+              config: {
+                objectName: 'crm_task',
+                filter: {
+                  related_to_opportunity: cel`currentOpp.id`,
+                  automation_key: null,
+                  subject: { $in: [LEGACY_NAMED_STALL_TITLE, LEGACY_STALL_TITLE_PRIVATE] },
+                  status: { $nin: ['completed'] },
+                },
+                outputVariable: 'legacyStallTask',
               },
             },
             {
@@ -198,12 +228,13 @@ export const OpportunityStagnationFlow: Flow = {
             },
           ],
           edges: [
-            { id: 'b1', source: 'find_existing_task', target: 'check_not_nudged', type: 'default' },
+            { id: 'b1', source: 'find_existing_task', target: 'find_legacy_task', type: 'default' },
+            { id: 'b1a', source: 'find_legacy_task', target: 'check_not_nudged', type: 'default' },
             // "Already nudged" has no edge, so the loop moves to the next item.
             // This edge is the ONLY site for the predicate: a `decision`
             // node's singular `config.condition` is never read, so a node copy
             // would be inert metadata free to drift away from what runs.
-            { id: 'b2', source: 'check_not_nudged', target: 'notify_owner', type: 'conditional', condition: P`existingStallTask == null`, label: 'First nudge' },
+            { id: 'b2', source: 'check_not_nudged', target: 'notify_owner', type: 'conditional', condition: P`existingStallTask == null && legacyStallTask == null`, label: 'First nudge' },
             { id: 'b3', source: 'notify_owner', target: 'check_private', type: 'default' },
             // `is_private` is guarded on `vars.` and compared to `true`:
             // `currentOpp` is a raw driver row (see the totality note in

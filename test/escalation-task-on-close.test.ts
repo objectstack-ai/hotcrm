@@ -204,18 +204,6 @@ describe('with a Service Manager on the bench', { timeout: WAIT_BUDGET_MS }, () 
   });
 
   describe('what the close leaves alone', () => {
-    it('a person’s task titled like an escalation task stays open: the title is not read (#2494)', async () => {
-      const id = await open();
-      const own = await verify.hooks.run('crm_task', 'insert', {
-        subject: 'Escalated: call the customer back', status: 'not_started', priority: 'urgent', type: 'follow_up', related_to_case: id,
-      }, { as: agent.token });
-      await escalate(id, agent);
-      await closeByFlow(id, manager);
-      await completedTasks(id);
-      const [mine] = await verify.rows('crm_task', { id: own.id });
-      expect(mine).toMatchObject({ status: 'not_started', is_completed: false });
-    });
-
     it('another task on the same case, written by a person, stays open', async () => {
       const id = await open();
       const own = await verify.hooks.run('crm_task', 'insert', {

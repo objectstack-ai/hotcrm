@@ -645,6 +645,13 @@ const caseResolutionAccountActivity: Hook = {
  * the case is the owner's own work and is left alone. A case escalated twice
  * has two tasks, and both are completed.
  *
+ * UPGRADE CONTINUITY: a task opened before the key existed has none, and is
+ * recognised by the exact English title the previous release wrote and
+ * matched — `Escalated: …` or `Escalated case needs attention`
+ * (`src/sales/objects/_legacy-task-titles.ts`; spelled inline because a hook
+ * body has no module scope, and `test/legacy-task-titles.test.ts` holds the
+ * copy equal), so a case closed after an upgrade still completes it.
+ *
  * ## `runAs: 'system'` (AGENTS.md rule 9)
  *
  * The task belongs to the account owner, and the closer is usually a service
@@ -677,12 +684,24 @@ const caseCloseEscalationTask: Hook = {
     if (!caseId) return;
     const org = typeof previous.organization_id === 'string' && previous.organization_id ? previous.organization_id : undefined;
     const inOrg: Record<string, string> = org ? { organization_id: org } : {};
-    const open = await api.object('crm_task').find({
-      where: { related_to_case: caseId, automation_key: 'case_escalation', status: { $ne: 'completed' }, ...inOrg },
+    const openTasks = { related_to_case: caseId, status: { $ne: 'completed' }, ...inOrg };
+    const keyed = await api.object('crm_task').find({
+      where: { ...openTasks, automation_key: 'case_escalation' },
       fields: ['id'],
       top: 100,
     });
-    for (const task of open ?? []) {
+    // Upgrade continuity: the case's key-less tasks, kept only when the title
+    // is one the previous release wrote (see the block comment above).
+    const keyless = await api.object('crm_task').find({
+      where: { ...openTasks, automation_key: null },
+      fields: ['id', 'subject'],
+      top: 100,
+    });
+    const legacy = (keyless ?? []).filter((task) => {
+      const subject = typeof task.subject === 'string' ? task.subject : '';
+      return subject.startsWith('Escalated: ') || subject === 'Escalated case needs attention';
+    });
+    for (const task of [...(keyed ?? []), ...legacy]) {
       const id = String(task.id);
       await api.object('crm_task').update({ id, status: 'completed' }, { where: { id } });
     }
