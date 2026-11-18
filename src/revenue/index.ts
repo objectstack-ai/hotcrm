@@ -8,10 +8,12 @@ import {
 } from './actions/index.js';
 import { CrmRevenueManual } from './books/index.js';
 import { RevenueEmailTemplates } from './email-templates/index.js';
+import { SalesOrderQuoteExtensions } from './extensions/index.js';
 import { ProductCatalogDashboard } from './dashboards/index.js';
 import { ProductDataset } from './datasets/index.js';
 import {
-  PriceBookAddProductsFlow, QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow,
+  PriceBookAddProductsFlow, QuoteAcceptedContractDraftFlow, QuoteAcceptedOrderFlow, QuoteExpirationFlow,
+  QuoteGenerationFlow, QuotePrintPresentedFlow,
 } from './flows/index.js';
 import {
   OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem,
@@ -42,7 +44,12 @@ export const revenueHooks = [
  * on `crm_opportunity`); the app stack resolves that target through
  * `artifactFlows` (see `src/sales/index.ts`).
  */
-export const revenueFlows = [PriceBookAddProductsFlow, QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow];
+export const revenueFlows = [
+  PriceBookAddProductsFlow, QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow,
+  // An accepted quote's two automations (hotcrm#2558), each an administrator's
+  // switch: the order ships on, the contract draft ships off. See each flow.
+  QuoteAcceptedOrderFlow, QuoteAcceptedContractDraftFlow,
+];
 
 /**
  * What this package registers but does not assemble: its seed rows, which the
@@ -159,6 +166,8 @@ export const createHotCrmRevenueStack = (
   requires: ['automation', 'triggers', 'analytics'],
 
   objects: [OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem],
+  // The order's Source Quote (hotcrm#2558); see the extension's own note.
+  objectExtensions: SalesOrderQuoteExtensions,
   hooks: revenueHooks,
   views: [PriceBookViews, ProductViews, QuoteViews],
   // The quote's lifecycle steps (#2366 row 9), authored against `crm_quote`.

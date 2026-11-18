@@ -100,6 +100,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
   },
   // The order and its lines (REQ-0010, hotcrm#2555).
   crm_sales_order: {
+    // Draft Contract (#2558).
+    _actions: {
+      draft_contract: { label: '起草合同' },
+    },
     _validations: {
       shipped_after_order: { message: '发货日期不能早于下单日期' },
       sales_order_status_progression: { message: '不允许这样更改状态。订单按 草稿 → 已确认 → 已完成 推进；已确认可以退回草稿，草稿或已确认的订单可以取消。已完成和已取消是最终状态。' },

@@ -101,6 +101,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
   },
   // The order and its lines (REQ-0010, hotcrm#2555).
   crm_sales_order: {
+    // Draft Contract (#2558).
+    _actions: {
+      draft_contract: { label: '契約を作成' },
+    },
     _validations: {
       shipped_after_order: { message: '出荷日を注文日より前にすることはできません' },
       sales_order_status_progression: { message: 'このステータス変更はできません。注文は 下書き → 確定 → 完了 と進みます。確定は下書きに戻せ、下書きまたは確定はキャンセルにできます。完了とキャンセルは最終状態です。' },

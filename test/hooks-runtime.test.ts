@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, guestInsert, systemUpdate, recordEngineWrites, today, committedFile,
+  hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, switchFlow, guestInsert, systemUpdate, recordEngineWrites, today, committedFile,
   type Person,
 } from './helpers/verify-stack';
 
@@ -44,6 +44,9 @@ beforeAll(async () => {
   rep2 = await signUpPerson(verify, 'rep2@hooks-runtime.test', {
     name: 'Second Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
+  // The accepted-quote contract draft ships switched off since hotcrm#2558;
+  // the #2083 case below pins its figure, so it is switched on here.
+  await switchFlow(verify, 'quote_accepted_contract_draft', true);
 }, 120_000);
 
 // Generic over the operation, as `hooks.run` is (@objectstack/verify 18.0.0-next.0): an insert or

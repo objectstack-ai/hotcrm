@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { hookNamed } from './helpers/composed-stack';
-import { hotcrmStack, signUpPerson, systemUpdate, committedFile, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, switchFlow, systemUpdate, committedFile, type Person } from './helpers/verify-stack';
 
 /**
  * An accepted quote's totals are its lines' sum, and its contract is drafted at
@@ -55,6 +55,9 @@ beforeAll(async () => {
   rep = await signUpPerson(verify, 'rep@quote-line-rollup-race.test', {
     name: 'Race Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
+  // The contract draft is a packaged flow shipped switched off since
+  // hotcrm#2558; this file pins its figure switched on.
+  await switchFlow(verify, 'quote_accepted_contract_draft', true);
   const ql = verify.kernel.getService<Rec>('objectql');
   // Window 1: the line is stored, the freeze is behind it, and the quote is
   // accepted before `quote_total_rollup` (priority 300) reads it.
@@ -170,5 +173,10 @@ describe('a line and the accept arrive together (#2503)', () => {
     });
     const [contract] = await verify.rows('crm_contract', { crm_account: account.id });
     expect(contract!.contract_value, 'the contract was drafted from a total the lines contradict').toBe(after.total_price);
+    // The order the acceptance created (hotcrm#2558) carries both lines and
+    // the same total.
+    const [order] = await verify.rows('crm_sales_order', { crm_quote: quote.id });
+    expect(await verify.rows('crm_sales_order_line', { crm_sales_order: order!.id })).toHaveLength(2);
+    expect(order!.total_price, 'the order was created from a total the lines contradict').toBe(after.total_price);
   });
 });

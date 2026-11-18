@@ -181,7 +181,8 @@ export const Contract = ObjectSchema.create({
       group: 'value',
       // The list shared with Quote: an accepted quote's terms (incl.
       // due_on_receipt) must survive the copy onto the contract. That copy is
-      // `quote_accepted_contract_draft` (src/revenue/objects/quote.hook.ts). The
+      // `quote_accepted_contract_draft` (src/sales/flows/_contract-draft.ts, for
+      // that flow and the order's Draft Contract, hotcrm#2558). The
       // list's `net_30` option default applies only when the quote itself
       // carried no term, which is the intended fall-through, not a gap.
       picklist: 'payment_terms',
@@ -271,8 +272,10 @@ export const Contract = ObjectSchema.create({
     /**
      * Which automation drafted this contract, as a stable key (#2535).
      *
-     * `quote_acceptance` is stamped by `quote_accepted_contract_draft`
-     * (`src/revenue/objects/quote.hook.ts`), and `contract_drafted_notice`
+     * `quote_acceptance` is stamped by every drafted contract — the flow
+     * `quote_accepted_contract_draft` and the order's Draft Contract, both
+     * built by `src/sales/flows/_contract-draft.ts` (hotcrm#2558) — and
+     * `contract_drafted_notice`
      * (`src/sales/flows/contract-drafted-notice.flow.ts`) fires on it. The
      * provenance sentence in `description` is TEXT, written in the
      * organization's language, so it cannot be the mark: a notice that matched
@@ -281,7 +284,7 @@ export const Contract = ObjectSchema.create({
      * It names the automation, never the quote: a drafted contract is a
      * starting point and is deliberately not tied to its quote (#1129 ruling
      * B; the lookup #1253 described was not staged). A contract a person
-     * creates carries none. `readonly` + `hidden` — the drafting hook writes as
+     * creates carries none. `readonly` + `hidden` — the drafting flow writes as
      * `system`, which the readonly strip exempts, and the key stays out of
      * forms and pickers (the pairing `crm_account.name_normalized` uses).
      */

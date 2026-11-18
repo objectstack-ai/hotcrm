@@ -38,3 +38,4 @@ export { ContractRenewalFlow } from './contract-renewal.flow';
 export { ContractExpirationFlow } from './contract-expiration.flow';
 export { BillingHandoffContractActivatedFlow } from './billing-handoff-contract-activated.flow';
 export { ContractDraftedNoticeFlow } from './contract-drafted-notice.flow';
+export { SalesOrderDraftContractFlow, SalesOrderDraftContractWriteFlow } from './sales-order-draft-contract.flow';

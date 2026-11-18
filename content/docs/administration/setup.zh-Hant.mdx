@@ -72,7 +72,7 @@ description: 讓 HotCRM 為你的團隊做好生產準備的第一週任務。
 其他所有來路的潛在客戶背後都有一個人，這個人就是所有者：在應用裡新建的潛在客戶、用某人的登入或 API 金鑰透過 API 提交的潛在客戶，以及從 CSV 或 JSON 檔案匯入的潛在客戶。匯入從不進入佇列 —— 所有者留空的列歸執行匯入的人所有，所以匯入潛在客戶之後要安排重新指派。參見[匯入你自己的資料](/zh-Hant/docs/guides/importing-your-data)中的「關於負責人」一節。
 
 - [ ] 把 `crm_sales_rep` 職位指派給每一位應當接收潛在客戶的業務代表，或者在 **Setup → Access Control → Queue Members** 裡新增一列，Queue 填 `lead_intake`，Member 選具體的人。佇列的成員*就是*路由表
-- [ ] 在 **Studio → Automation → Flows** 中查看接下來 `lead_assignment` 流程做了什麼（按評級設定跟進日期，並提醒新的所有者）
+- [ ] 在 Studio 中查看接下來 `lead_assignment` 流程做了什麼：控制台首頁的 **New in Studio**（點 **Cancel** 關掉 *New Package* 表單）→ **HotCRM** → **Customize** → **Automations** → **New Lead Routing & SLA**，（按評級設定跟進日期，並提醒新的所有者）
 
 ### 9. 產品目錄
 

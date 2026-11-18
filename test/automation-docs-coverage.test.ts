@@ -253,6 +253,11 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   contract_expiration: { 'zh-Hans': '合同自动到期', 'zh-Hant': '合約自動到期' },
   quote_expiration: { 'zh-Hans': '报价自动过期', 'zh-Hant': '報價自動過期' },
   contract_drafted_notice: { 'zh-Hans': '合同起草通知', 'zh-Hant': '合約起草通知' },
+  // An accepted quote's two switchable flows and the order's Draft Contract (#2558).
+  quote_accepted_order: { 'zh-Hans': '已接受的报价单创建订单', 'zh-Hant': '已接受的報價單創建訂單' },
+  quote_accepted_contract_draft: { 'zh-Hans': '已接受的报价单起草合同', 'zh-Hant': '已接受的報價單起草合同' },
+  sales_order_draft_contract: { 'zh-Hans': '根据订单起草合同', 'zh-Hant': '根據訂單起草合同' },
+  sales_order_draft_contract_write: { 'zh-Hans': '根据订单起草合同（写入）', 'zh-Hant': '根據訂單起草合同（寫入）' },
   campaign_completion: { 'zh-Hans': '营销活动自动完成', 'zh-Hant': '行銷活動自動完成' },
   forecast_snapshot: { 'zh-Hans': '预测快照', 'zh-Hant': '預測快照' },
   opportunity_stagnation: { 'zh-Hans': '停滞商机提醒', 'zh-Hant': '停滯商機提醒' },

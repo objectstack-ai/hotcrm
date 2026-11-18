@@ -12,8 +12,8 @@ A company sells equipment or software licences. A prospect asks for a demo, the 
 | 1 | Lead | Sales | Marketing or a sales rep |
 | 2 | Account, contact, opportunity | Sales | Sales rep |
 | 3 | Quote | Sales | Sales rep; a large deal is approved by sales management first |
-| 4 | Contract | Sales | Drafted from the accepted quote |
-| 5 | Order | Sales | Sales rep |
+| 4 | Order | Sales | Created from the accepted quote |
+| 5 | Contract, when the sale needs one | Sales | Drafted from the order |
 | 6 | Invoice and payment | Order to Cash | Finance |
 
 ## 1. The lead
@@ -30,13 +30,13 @@ A **quote** prices the deal at the moment it is presented; no discount may excee
 
 ## 4. Winning the deal
 
-Accepting the quote closes the opportunity as *Closed Won* and drafts a **contract** from the quote. Winning also sends the `crm.opportunity.closed_won` event to your billing system, if you have pointed one at it. See [Contracts](/docs/sales/contracts) and [Boundary with Finance Software](/docs/sales/billing-handoff).
+Accepting the quote closes the opportunity as *Closed Won* and creates its **order**. Winning also sends the `crm.opportunity.closed_won` event to your billing system, if you have pointed one at it. See [Contracts](/docs/sales/contracts) and [Boundary with Finance Software](/docs/sales/billing-handoff).
 
 ## 5. The order
 
-An **order** records what the customer bought this time: products, quantities and prices, with a subtotal from its lines. Create it under **Orders**, or from the account; it may sit under the contract. **Confirmed** locks its lines. Its **Fulfillment Status** and **Shipped Date** are typed by hand or imported from the system that ships. See [Orders](/docs/sales/orders).
+An **order** records what the customer bought this time: products, quantities and prices, with a subtotal from its lines. It is created by itself when the quote is accepted, with the quote's lines and totals; an order without a quote is created under **Orders**, or from the account. It may sit under a contract: a product sale usually needs none, and **Draft Contract** on the order drafts one when it does. **Confirmed** locks its lines. Its **Fulfillment Status** and **Shipped Date** are typed by hand or imported from the system that ships. See [Orders](/docs/sales/orders).
 
-**Not shipped:** an order is not created from the accepted quote; you enter it. HotCRM keeps no stock and no delivery notes, so shipping does not move a quantity anywhere.
+**Not shipped:** HotCRM keeps no stock and no delivery notes, so shipping does not move a quantity anywhere.
 
 ## 6. The invoice and the payment
 
