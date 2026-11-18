@@ -14,8 +14,8 @@ description: 在 HotCRM 裡從頭到尾走一次產品銷售 —— 線索、商
 | 1 | 線索 | Sales | 行銷人員或銷售代表 |
 | 2 | 客戶、聯絡人、商機 | Sales | 銷售代表 |
 | 3 | 報價單 | Sales | 銷售代表；大額商機先由銷售管理層審批 |
-| 4 | 合約 | Sales | 由已接受的報價單起草 |
-| 5 | 訂單 | Sales | 銷售代表 |
+| 4 | 訂單 | Sales | 由已接受的報價單建立 |
+| 5 | 合約（需要時） | Sales | 從訂單起草 |
 | 6 | 發票和回款 | Order to Cash | 財務 |
 
 ## 1. 線索
@@ -32,13 +32,13 @@ description: 在 HotCRM 裡從頭到尾走一次產品銷售 —— 線索、商
 
 ## 4. 贏單
 
-接受報價單會把商機以 *Closed Won* 關閉，並根據報價單起草一份**合約**。如果你設定了計費系統，贏單還會向它發送 `crm.opportunity.closed_won` 事件。參見[合約](/zh-Hant/docs/sales/contracts)和[與財務軟體的邊界](/zh-Hant/docs/sales/billing-handoff)。
+接受報價單會把商機以 *Closed Won* 關閉，並建立它的**訂單**。如果你設定了計費系統，贏單還會向它發送 `crm.opportunity.closed_won` 事件。參見[合約](/zh-Hant/docs/sales/contracts)和[與財務軟體的邊界](/zh-Hant/docs/sales/billing-handoff)。
 
 ## 5. 訂單
 
-**訂單**記錄客戶這一次買了什麼：產品、數量和價格，小計由明細彙總。在 **Orders** 下或從客戶上新建它；它可以掛在合約下。**Confirmed** 會鎖定它的明細。它的 **Fulfillment Status** 和 **Shipped Date** 手動填寫，或從負責出貨的系統匯入。參見[訂單](/zh-Hant/docs/sales/orders)。
+**訂單**記錄客戶這一次買了什麼：產品、數量和價格，小計由明細彙總。接受報價單時它會自動建立，帶著報價單的明細和合計；沒有報價單的訂單在 **Orders** 下或從客戶上新建。它可以掛在合約下：產品銷售通常不需要合約，需要時在訂單上點 **Draft Contract** 即可。**Confirmed** 會鎖定它的明細。它的 **Fulfillment Status** 和 **Shipped Date** 手動填寫，或從負責出貨的系統匯入。參見[訂單](/zh-Hant/docs/sales/orders)。
 
-**未提供：**訂單不會從已接受的報價單自動產生，需要你輸入。HotCRM 不管庫存，也沒有出貨單，所以出貨不會讓任何數量發生變動。
+**未提供：**HotCRM 不管庫存，也沒有出貨單，所以出貨不會讓任何數量發生變動。
 
 ## 6. 發票和回款
 

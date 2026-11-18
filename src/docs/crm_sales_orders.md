@@ -32,6 +32,35 @@ takes its name and list price, and the sales price starts at the list price
 until you type another. A line for something the catalogue does not sell needs
 no product: type its **Product Title** and its **Sales Price**.
 
+## Orders from accepted quotes
+
+Where the Quotes and Products module is on, accepting a quote creates its order
+by itself: a **Draft** order with the quote's lines and totals, whose **Source
+Quote** names the quote. One accepted quote gets one order. **Source Quote** is
+filled in by the system and cannot be changed by hand.
+
+Accepting a quote no longer drafts a contract. Until this release it did, for
+every accepted quote. An administrator who wants that back switches the flow
+**Accepted Quote Drafts a Contract** on, in **Studio → Automation → Flows**; the
+quote's order then names the drafted contract. The flow **Accepted Quote Creates
+an Order** can be switched off where orders are not used. Both choices are kept
+across restarts and upgrades.
+
+## Drafting the contract
+
+A subscription or a project usually needs a contract; a product sale usually
+does not. **Draft Contract** on the order drafts it: a **Draft** contract typed
+*Subscription*, on a 12-month term starting today, at the order's total, with
+the order's account, contact, opportunity, owner and payment terms. Complete
+its term, dates and type before you activate it. The order then names the
+contract under **Contract**, and you get a **Contract drafted** notice with a
+link to it.
+
+**Draft Contract** is offered only while the order names no contract: an order
+placed under a framework contract names that one. The order needs a **Contact**,
+because a contract names its primary contact; without one nothing is drafted.
+A sales rep may run it, though a rep cannot create a contract by hand.
+
 ## The totals follow the lines
 
 The order's **Subtotal** is the sum of its lines, recalculated every time a

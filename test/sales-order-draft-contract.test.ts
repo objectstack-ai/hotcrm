@@ -85,6 +85,13 @@ const offered = (record: Rec): boolean => {
 const draftContract = (orderId: string) =>
   verify.flows.run(DraftContractAction.target as string, { recordId: orderId, objectName: 'crm_sales_order' }, { as: rep.token }) as Promise<Rec>;
 
+/** `iso` plus `months` calendar months, on the UTC calendar. */
+const monthsOn = (iso: string, months: number): string => {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  return d.toISOString().slice(0, 10);
+};
+
 /** The fields a draft carries, for comparing two drafts. Dates and the provenance sentence are the source's own. */
 const DRAFT_FIELDS = [
   'status', 'contract_type', 'contract_term_months', 'start_date', 'end_date', 'contract_value',
@@ -115,12 +122,9 @@ describe('Draft Contract drafts the order\'s contract and names it on the order'
   });
 
   it('is the automatic draft\'s contract, from the order', () => {
-    const term = DRAFT_CONTRACT_DEFAULTS.contract_term_months;
-    const end = new Date(`${today()}T00:00:00Z`);
-    end.setUTCMonth(end.getUTCMonth() + term);
     expect(draftShape(contract)).toEqual({
-      status: 'draft', contract_type: 'subscription', contract_term_months: 12,
-      start_date: today(), end_date: end.toISOString().slice(0, 10),
+      status: 'draft', contract_type: 'subscription', contract_term_months: DRAFT_CONTRACT_DEFAULTS.contract_term_months,
+      start_date: today(), end_date: monthsOn(today(), DRAFT_CONTRACT_DEFAULTS.contract_term_months),
       contract_value: fixture.order.total_price,
       crm_account: fixture.order.crm_account, crm_contact: fixture.order.crm_contact,
       crm_opportunity: fixture.opportunity, owner_id: rep.id, payment_terms: 'due_on_receipt',
@@ -194,8 +198,8 @@ describe('refused, with nothing drafted', () => {
   it('an order under a framework contract just names that contract: no button, and the door refuses', async () => {
     const { order, opportunity } = await acceptedQuote();
     const [framework] = await verify.seed('crm_contract', [{
-      crm_account: order.crm_account, crm_contact: order.crm_contact, contract_type: 'msa', status: 'draft',
-      contract_term_months: 24, start_date: today(), end_date: '2030-12-31', owner_id: rep.id,
+      crm_account: order.crm_account, crm_contact: order.crm_contact, contract_type: 'msa', status: 'draft', contract_value: 250_000,
+      contract_term_months: 24, start_date: today(), end_date: monthsOn(today(), 24), owner_id: rep.id,
     }]);
     await verify.hooks.run('crm_sales_order', 'update', { id: order.id, crm_contract: framework!.id }, { as: rep.token });
     const [stored] = await verify.rows('crm_sales_order', { id: order.id });

@@ -65,8 +65,8 @@ statuses it leaves from: **Submit for Review** on a Draft, **Mark Presented** on
 a quote In Review, **Accept** on a Presented quote, **Reject** on a quote In
 Review or Presented, and **Revise** (back to Draft) on a quote In Review or
 Rejected. **Accept** needs the quote's signed copy (below) and asks first, because it cannot be walked back from the
-quote: it freezes the quote, closes its opportunity as won and drafts a
-contract. The buttons are offered to whoever may edit the quote. The move to
+quote: it freezes the quote, closes its opportunity as won and creates its
+order. The buttons are offered to whoever may edit the quote. The move to
 **Expired** has no button; the daily job below makes it. The move from **Draft**
 straight to **Presented** is made by printing the quote (below).
 
@@ -104,10 +104,23 @@ before this rule stays accepted as it was.
 
 ## When a quote is accepted
 
-Accepting a quote wins its opportunity and drafts a **contract** from it. A
+Accepting a quote wins its opportunity and creates its **order**: a **Draft**
+order with the quote's lines and totals, whose **Source Quote** is this quote.
+It is listed on the quote's page. Each accepted quote gets one order.
+
+**No contract is drafted by itself any more.** Until this release, accepting a
+quote also drafted a contract. When the sale needs one, open the order and
+click **Draft Contract**: it drafts the same contract, at the order's total,
+and names it on the order (see [Orders](./crm_sales_orders.md)). A
 moment later you get a notice, **Contract drafted**, with the contract number
 and a **View** link to it. The contract's term and contract type are starting
 values, so check them before you activate it.
+
+An administrator who wants every accepted quote to draft its contract, as before
+this release, switches the **Accepted Quote Drafts a Contract** flow on, and the
+quote's order then names that contract. **Accepted Quote Creates an Order** can
+be switched off where orders are not used. Both switches are in **Studio →
+Automation → Flows** and are kept across restarts and upgrades.
 
 ## Quote auto-expiration (automatic)
 

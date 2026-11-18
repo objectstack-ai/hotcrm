@@ -50,7 +50,7 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (48). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
+**Built-in flows in HotCRM** (52). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
@@ -75,7 +75,11 @@ A flow fires one of three ways, set by its start node:
 | **Lead Conversion Approval** | Record change (insert) | Sign-off a lead needs before it can be converted. Ships switched OFF — it opens nothing until an install arms the gate on the lead's **Conversion Approval** field |
 | **Account Approval** | Record change (insert) | Sign-off a newly created account needs before it counts as established data. Ships switched **ON** — a new account starts *Pending* and is decided in the approval inbox, except one **Convert Lead** creates, which is not submitted (on a deployment without approvals it stays blank and editable instead); an install that wants no account sign-off sets the default on the account's **Approval Status** field to *Approved* |
 | **Large Deal Won Alert** | Record change (update) | When an opportunity of $100K or more turns *Closed Won*, notify the owner — the owner alone, not their manager |
-| **Contract Drafted Notice** | Record change (insert) | When accepting a quote drafts its contract, tell the person who accepted it in the app, with a link to the contract |
+| **Accepted Quote Creates an Order** | Record change (update) | When a quote becomes *Accepted*, create a *Draft* order with the quote's header and lines, once per quote. Ships switched **ON**; see [Switching a packaged flow](#switching-a-packaged-flow) |
+| **Accepted Quote Drafts a Contract** | Record change (update) | When a quote becomes *Accepted*, draft its contract (a 12-month *Subscription* at the quote's total) and name it on the quote's order — what every accepted quote did before this release. Ships switched **OFF**; see [Switching a packaged flow](#switching-a-packaged-flow) |
+| **Draft Contract from Order** | Screen | **Draft Contract** on an order: draft the order's contract and name it on the order; refused when the order names a contract already or has no contact |
+| **Draft Contract from Order (write)** | Subflow | Called by **Draft Contract from Order** to create the contract and name it on the order, with system privilege |
+| **Contract Drafted Notice** | Record change (insert) | When a contract is drafted — from an accepted quote or by **Draft Contract** on an order — tell the person whose act drafted it in the app, with a link to the contract |
 | **Billing Hand-off: Closed Won** | Record change (update) | On the transition into *Closed Won*, enqueue one durable POST of the deal + account + line items to the billing endpoint |
 | **Billing Hand-off: Contract Activated** | Record change (update) | On the transition into *Activated*, enqueue one durable POST of the contract + account + the originating deal's line items |
 | **Quote Printed → Presented** | Record change (insert) | When **Print Quote** files a quote's PDF in its attachments, move a *Draft* or *In Review* quote to *Presented* — the rep's own save, so a quote with no **Contact** keeps its status. Any other attachment, and a reprint of a quote in any other status, changes nothing |
@@ -120,6 +124,19 @@ Time-based automation is implemented as **scheduled flows** — flows whose star
 Date-driven field logic that needs no orchestration lives on the object rather than in a scheduled sweep. A default the field can state for itself is declared on the field: a new quote's expiration date is 30 days after its quote date, and a new forecast's snapshot date is today, unless the person saving it enters another date. The rest — freezing an expired/accepted quote, deriving a forecast period — lives in lightweight **object hooks** (`beforeInsert` / `beforeUpdate`).
 
 The division of labour on forecasts is worth calling out, because it is the pattern to copy: the **Forecast Snapshot** flow decides *who* gets a snapshot and *what the totals are*, while the forecast object's hook decides *which calendar period the snapshot belongs to*. A cron expression can say "every night"; it cannot say "the first day of this quarter", so that boundary is derived once, by the object, for every writer.
+
+## Switching a packaged flow
+
+A flow HotCRM ships is read-only in Studio, but an administrator can switch it on or off: **Studio → Automation → Flows**, open the flow, and use its **Enabled** switch (or `POST /api/v1/automation/<name>/toggle` with `{ "enabled": true }`). The choice belongs to your installation: it is kept across restarts and across upgrades of HotCRM, and it wins over the default the flow ships with. A flow nobody has switched follows that default, so a later version that changes a default moves only installations that never chose.
+
+Two flows decide what accepting a quote creates:
+
+| Flow | Ships | Switch it when |
+| --- | --- | --- |
+| **Accepted Quote Creates an Order** | On | Off: you do not use orders, and accepted quotes should create none |
+| **Accepted Quote Drafts a Contract** | Off | On: every accepted quote should draft its contract, as before this release |
+
+**Restoring the behaviour before this release.** Until this release, every accepted quote drafted a contract and none created an order. Switch **Accepted Quote Drafts a Contract** on to draft the contract again; the drafted contract is exactly the one it used to be, and the quote's order names it. Switch **Accepted Quote Creates an Order** off as well if you want no orders. Without the contract flow, a rep drafts the contract from the order when the sale needs one (**Draft Contract**, see [Sales › Orders](/docs/sales/orders#drafting-the-contract-from-an-order)).
 
 ## Approvals
 
