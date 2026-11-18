@@ -297,6 +297,7 @@
 | EXP-012 | 出差申请行程明细 | `crm_expense_request_line`(界面叫「行程明细」):出差申请下的一程,类型(航班/火车/用车/酒店/其他)、出发地、到达地、起止日期、要求、预订号;不带金额,可选;在申请页面上按出行顺序列出;从提交起各程计划值锁定、不能增删,预订号始终可写 | `src/expense/objects/expense_request_line.object.ts`、`src/expense/objects/expense_request_line.hook.ts` |
 | EXP-013 | 报销单引用出差申请 | 「按出差申请报销」与「提交报销」同一段脚本,多一个必选的出差申请参数(只列本人已批准的申请),生成的报销单写明申请;「提交报销」仍然一键、不弹框(18.5.0 上任何参数都会弹框);申请上显示已报销金额(已提交/已批准/已付款报销单合计)、与预计的差额、是否超出预计和报销单列表;报销单给审批人看出差预计、已报销和是否超出(存值,审批人不一定能打开申请);超出不拦;最后一张未完结报销单付款后申请自动关闭;已取消/已关闭的申请不能再报销 | `src/expense/actions/expense.actions.ts`、`src/expense/objects/expense_report.object.ts`、`src/expense/objects/expense_report.hook.ts`、`src/expense/objects/expense_request.object.ts` |
 | EXP-014 | 费用标准与检查提示 | `crm_expense_standard`(界面叫「费用标准」):名称、类别(可空=任何类别)、限额(可空,只有文字的规定)、计算单位(每晚/每天/每笔/每次出差,有限额时必填)、适用范围(文字)、说明、启用;财务控制、应收会计和管理员维护,所有记录费用的人可读;只在「费用报销」应用;系统里没有任何校验、钩子、流程或公式读取标准,超标照常保存提交。费用新增「检查提示」(助手或本人写检查发现,审批人在报销单的费用列表里看到,随费用一起锁定);票据号加索引便于查重 | `src/expense/objects/expense_standard.object.ts`、`src/expense/objects/expense.object.ts`、`src/sales/profiles/_expense-grants.ts` |
+| EXP-015 | 费用助手技能 | 两项技能:「费用代填」(`expense_filing`,给花钱的人:按票据填费用、来源=助手、查重、通过上传链接附票据、对照费用标准把发现写进每条费用的检查提示、起草出差申请、得到同意才提交)和「费用检查」(`expense_check`,给审批人和财务:列出超标、重复、缺票据、超出出差预计,只读,告诉读者,不审批不驳回不标记已付);对助手开放七个动作(提交报销、按出差申请报销、报销单提交与退回草稿、出差申请提交/取消出差/关闭),发给审批人或不可撤销的需先确认;「标记已付款」不开放;审批中的报销单整张锁定,检查提示写在提交前的每条费用上 | `src/expense/skills/`、`src/expense/actions/expense.actions.ts`、`src/expense/actions/expense-request.actions.ts` |
 
 ---
 

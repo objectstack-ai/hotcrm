@@ -5,7 +5,7 @@ description: HotCRM 如何与 AI 协作 —— 它提供对象、动作和技能
 
 # AI 与智能体
 
-**HotCRM 为智能体而建，但它不自带智能体。** 它提供智能体工作所需的三样东西：**对象**（每一个客户、商机、订单、合同、发票、项目、费用和工单），一个人从按钮上运行的**动作**，以及教智能体理解 CRM 的六项**技能**。智能体本身是你的：可以是你通过 MCP 接入的那个，也可以是平台提供的助手。
+**HotCRM 为智能体而建，但它不自带智能体。** 它提供智能体工作所需的三样东西：**对象**（每一个客户、商机、订单、合同、发票、项目、费用和工单），一个人从按钮上运行的**动作**，以及教智能体理解 CRM 的八项**技能**。智能体本身是你的：可以是你通过 MCP 接入的那个，也可以是平台提供的助手。
 
 ## 为什么这样设计
 
@@ -17,7 +17,7 @@ description: HotCRM 如何与 AI 协作 —— 它提供对象、动作和技能
 | --- | --- |
 | 每一个对象，通过 MCP，在调用者的权限之下 | [接入你的智能体](/zh-Hans/docs/ai-copilot/connect-your-agent) |
 | 智能体可以运行的动作，以及它在不可撤销的动作前如何先确认 | [对智能体开放的动作](/zh-Hans/docs/ai-copilot/agent-actions) |
-| 平台智能体携带的六项技能 | [技能](/zh-Hans/docs/ai-copilot/skills) |
+| 平台智能体携带的八项技能 | [技能](/zh-Hans/docs/ai-copilot/skills) |
 | 智能体可以写入结论的字段，例如报销单或出差申请上的**检查提示** | [费用报销](/zh-Hans/docs/expenses) |
 
 ## 唯一的规则：智能体就是一个人
@@ -28,14 +28,14 @@ description: HotCRM 如何与 AI 协作 —— 它提供对象、动作和技能
 
 ## 平台助手额外带来什么
 
-ObjectStack 环境可以运行一个平台助手（`ask`）。HotCRM 不为它编写智能体；它的六项技能附着在这个助手上，教它判定线索资格、起草邮件、预测营收、生成客户 360° 和分流工单。本地社区版启动时不运行任何助手（`GET /api/v1/ai/agents` 返回空列表）：这时，智能体就是你接入的那个。
+ObjectStack 环境可以运行一个平台助手（`ask`）。HotCRM 不为它编写智能体；它的八项技能附着在这个助手上，教它判定线索资格、起草邮件、预测营收、生成客户 360°、分流工单，以及代填和检查费用。本地社区版启动时不运行任何助手（`GET /api/v1/ai/agents` 返回空列表）：这时，智能体就是你接入的那个。
 
 > **没有应用自有的智能体。** HotCRM 曾定义过两个自己的智能体——"销售 Copilot"和"服务 Copilot"。它们已被退役，其能力迁移到了附着于平台助手的技能中。
 
 ## 本节页面
 
 - [接入你的智能体](/zh-Hans/docs/ai-copilot/connect-your-agent) —— MCP、API 密钥，以及智能体以谁的身份行事。
-- [对智能体开放的动作](/zh-Hans/docs/ai-copilot/agent-actions) —— **转化线索**和**安排跟进**，以及智能体如何处理其余的事。
-- [技能](/zh-Hans/docs/ai-copilot/skills) —— 六项技能；按角色分组见[销售技能](/zh-Hans/docs/ai-copilot/sales-copilot)和[服务技能](/zh-Hans/docs/ai-copilot/service-copilot)。
+- [对智能体开放的动作](/zh-Hans/docs/ai-copilot/agent-actions) —— **转化线索**、**安排跟进**和七个费用步骤，以及智能体如何处理其余的事。
+- [技能](/zh-Hans/docs/ai-copilot/skills) —— 八项技能；按角色分组见[销售技能](/zh-Hans/docs/ai-copilot/sales-copilot)和[服务技能](/zh-Hans/docs/ai-copilot/service-copilot)。
 - [知识库](/zh-Hans/docs/ai-copilot/knowledge-bases) —— 智能体读取的知识文章。
 - [实时模式](/zh-Hans/docs/ai-copilot/live-schema) —— 为什么今天加的字段，智能体马上就能看到。

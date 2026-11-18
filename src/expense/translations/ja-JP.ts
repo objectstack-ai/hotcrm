@@ -425,7 +425,7 @@ export const jaJP: TranslationData = {
   books: {
     crm_expense_manual: {
       label: 'HotCRM 経費精算マニュアル',
-      description: '領収書付きの経費の登録、出張前の申請、精算書での提出、承認者、払い戻し、プロジェクトに計上されるもの。',
+      description: '領収書付きの経費の登録、出張前の申請、精算書での提出、承認者、払い戻し、プロジェクトに計上されるもの、アシスタントができること。',
       groups: { expense: { label: '経費精算' } },
     },
   },

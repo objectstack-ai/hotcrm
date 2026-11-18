@@ -19,6 +19,7 @@ import { expenseHook, expenseReportHook, expenseRequestHook, expenseRequestLineH
 import {
   ExpenseApproverEditSharingRule, ExpenseReportApproverEditSharingRule, ExpenseRequestApproverEditSharingRule,
 } from './sharing/index.js';
+import { ExpenseCheckSkill, ExpenseFilingSkill } from './skills/index.js';
 import { ExpenseTranslations } from './translations/index.js';
 import { ExpenseReportViews, ExpenseRequestLineViews, ExpenseRequestViews, ExpenseStandardViews, ExpenseViews } from './views/index.js';
 
@@ -50,6 +51,9 @@ export const expenseActions = [
 ];
 
 /** This package's sharing rules — see {@link expenseHooks}. */
+/** The expense module's skills (hotcrm#2617, F4b); `objectstack.composition.ts` adds them to `allSkills`. */
+export const expenseSkills = [ExpenseFilingSkill, ExpenseCheckSkill];
+
 export const expenseSharingRules = [
   ExpenseApproverEditSharingRule, ExpenseReportApproverEditSharingRule, ExpenseRequestApproverEditSharingRule,
 ];
@@ -150,6 +154,8 @@ export const createHotCrmExpenseStack = (
   emailTemplates: ExpenseEmailTemplates,
   // Its manual, over `src/expense/docs/`. See the book's own note.
   books: [CrmExpenseManual],
+  // The assistant's two skills (hotcrm#2617).
+  skills: expenseSkills,
   data: collections.data,
   translations: [ExpenseTranslations],
 });

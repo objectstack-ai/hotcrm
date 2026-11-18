@@ -14,7 +14,7 @@
 
 **HotCRM is the reference app for AI-written enterprise software: a complete CRM in typed ObjectStack metadata.** For a CRM, it is the reference implementation of the statement above.
 
-- **Its business ontology is the app.** 38 business objects and the relations between them, **49 actions**, 48 flows, 6 permission sets, 18 positions and 13 sharing rules, and 6 AI skills — typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata under `src/`, checked by `pnpm validate`.
+- **Its business ontology is the app.** 38 business objects and the relations between them, **49 actions**, 48 flows, 6 permission sets, 18 positions and 13 sharing rules, and 8 AI skills — typed [ObjectStack](https://github.com/objectstack-ai/objectstack) metadata under `src/`, checked by `pnpm validate`.
 - **The database, the API, the console UI and the agent tools derive from it.** One `pnpm dev` boot creates the tables, serves the REST API at `/api/v1/data/crm_account` and its siblings, the Console at `/_console/`, and an MCP server at `/api/v1/mcp`. Nothing under `src/` defines a route handler or a React component.
 - **Views, dashboards and translations are projections of it.** List views, record pages, 7 dashboards and the app's navigation, in 4 languages (en, zh-CN, es-ES, ja-JP): the surfaces people use the ontology through, not a second copy of it.
 
@@ -79,13 +79,13 @@ curl -X POST http://localhost:4001/api/v1/mcp \
 | the dev admin, `admin@objectos.ai` | `isError: false` — the new campaign, `created_by` the dev admin |
 | the demo sales rep Nina Reyes, `na.rep@objectos.ai` — her `sales_rep` permission set reads every campaign and grants no create | `isError: true` — `PERMISSION_DENIED`, `status: 403`, and the campaign count does not move |
 
-HotCRM defines no agent of its own; its 6 AI skills are metadata for a platform agent to carry, and this community-edition boot runs none (`GET /api/v1/ai/agents` answers an empty list), so the agent is the one you connect. `pnpm dev` prints the `claude mcp add …` line for an MCP client; [Connect an MCP Client](https://objectstack.ai/docs/ai/connect-mcp) covers the browser sign-in and API keys.
+HotCRM defines no agent of its own; its 8 AI skills are metadata for a platform agent to carry, and this community-edition boot runs none (`GET /api/v1/ai/agents` answers an empty list), so the agent is the one you connect. `pnpm dev` prints the `claude mcp add …` line for an MCP client; [Connect an MCP Client](https://objectstack.ai/docs/ai/connect-mcp) covers the browser sign-in and API keys.
 
 ---
 
 ## ✨ What you get
 
-**38 business objects** across seven business domains — sales, service, revenue, marketing, order to cash, expenses and project delivery; the repository layout below says what each package covers, and the roster itself is `src/*/objects/*.object.ts`. Around them: **49 actions**, 48 flows, **7 dashboards**, 10 reports, 11 datasets, 6 AI skills, 4 language bundles (en, zh-CN, es-ES, ja-JP), 6 permission sets, 18 positions and 13 sharing rules. `pnpm build` prints most of these counts on every build.
+**38 business objects** across seven business domains — sales, service, revenue, marketing, order to cash, expenses and project delivery; the repository layout below says what each package covers, and the roster itself is `src/*/objects/*.object.ts`. Around them: **49 actions**, 48 flows, **7 dashboards**, 10 reports, 11 datasets, 8 AI skills, 4 language bundles (en, zh-CN, es-ES, ja-JP), 6 permission sets, 18 positions and 13 sharing rules. `pnpm build` prints most of these counts on every build.
 
 > **Business reader?** The ObjectStack docs tour every one of these capabilities in plain business language — [What Can It Do?](https://objectstack.ai/docs/capabilities) — with HotCRM as the running example on every page.
 

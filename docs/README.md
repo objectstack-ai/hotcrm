@@ -38,6 +38,26 @@ HotCRM also has product-facing documentation under [`content/docs/`](../content/
 | `docs/archive/` | Maintainers | Historical strategy reports, retired sprint plans, legacy package specs |
 | `docs/architecture/` | Maintainers | Design proposals for shapes this repository does not have yet |
 
+## Languages By Surface
+
+Each surface a reader meets ships its own set of languages, and the sets differ: the docs site
+has a Traditional Chinese edition the app does not, and the app speaks Spanish and Japanese
+where nothing else does. This table is the record. `test/docs-language-matrix.test.ts` reads it
+and holds the files to it both ways: every language listed for a surface exists there, and no
+surface carries a language this table does not list. Adding or dropping a language on any
+surface updates its row in the same PR.
+
+| Surface | Languages | Where the files live | Guarded by |
+| --- | --- | --- | --- |
+| App UI | `en`, `zh-CN`, `es-ES`, `ja-JP` | One locale pack per language in every package, `src/*/translations/<locale>.ts`; the app declares the set in `i18n.supportedLocales` in `src/sales/index.ts` | `test/docs-language-matrix.test.ts`; every key in every pack: `test/i18n-references.test.ts` |
+| Docs site | `en`, `zh-Hans`, `zh-Hant` | `content/docs/` and `content/blog/`: `<page>.mdx` with `<page>.zh-Hans.mdx` and `<page>.zh-Hant.mdx` beside it, and `meta.json` with `meta.zh-Hans.json` and `meta.zh-Hant.json`; the site declares the set in `languages` in `apps/docs/lib/i18n.ts` | `test/docs-language-matrix.test.ts` |
+| In-app manuals | `en`, `zh` | `src/docs/*.md` and each module's `src/*/docs/*.md`, with `<name>.zh.md` beside each page; the platform serves the `zh` page to a `zh-CN` reader (primary-subtag match) | `test/docs-language-matrix.test.ts`; `test/docs-books.test.ts` |
+| README | `en`, `zh-CN` | `README.md` and `README.zh-CN.md` | `test/docs-language-matrix.test.ts`; `test/marketplace-listing.test.ts` |
+| Marketplace listing | `en`, `zh-CN` | `objectstack.manifest.json`: `description`, `tagline` and `readmePath` are the English listing, `translations.zh-CN` the Chinese one | `test/docs-language-matrix.test.ts`; `test/marketplace-listing.test.ts` |
+
+Why a Traditional Chinese docs page labels UI nouns in English: the app ships no Traditional
+pack, so the console shows Simplified — `AGENTS.md`, Documentation discipline rule 6.
+
 ## Current Repository Shape
 
 HotCRM is a single ObjectStack marketplace app, shipped as one release artifact that carries four packages (ADR-0130 D4): `app.objectstack.hotcrm`, the `type: app` package, and the modules `app.objectstack.hotcrm.service`, `app.objectstack.hotcrm.revenue` and `app.objectstack.hotcrm.marketing`. The source of truth is [`objectstack.config.ts`](../objectstack.config.ts), which composes the four package stacks [`objectstack.composition.ts`](../objectstack.composition.ts) builds from `src/`.

@@ -65,7 +65,7 @@ import {
   createHotCrmMarketingStack, marketingHooks, marketingFlows, marketingSharingRules,
 } from './src/marketing/index.js';
 import { createHotCrmO2cStack, o2cHooks } from './src/o2c/index.js';
-import { createHotCrmExpenseStack, expenseFlows, expenseHooks, expenseSharingRules } from './src/expense/index.js';
+import { createHotCrmExpenseStack, expenseFlows, expenseHooks, expenseSharingRules, expenseSkills } from './src/expense/index.js';
 import { createHotCrmPsaStack, psaFlows, psaHooks, psaSharingRules } from './src/psa/index.js';
 
 import * as salesObjects from './src/sales/objects/index.js';
@@ -253,7 +253,8 @@ export const appFlows = [
 
 /**
  * Every skill the app package registers — the cross-domain ones are all here.
- * The case-triage skill registers with the service package (`serviceSkills`).
+ * The case-triage skill registers with the service package (`serviceSkills`),
+ * the two expense skills with the expense package (`expenseSkills`).
  */
 export const appSkills = [
   LeadQualificationSkill,
@@ -382,7 +383,7 @@ export const allHooks = [...appHooks, ...revenueHooks, ...marketingHooks, ...ser
 export const allFlows = [...appFlows, ...revenueFlows, ...marketingFlows, ...serviceFlows, ...expenseFlows, ...psaFlows];
 
 /** Every skill in the artifact — same reason as {@link allHooks}. Revenue and marketing author none. */
-export const allSkills = [...appSkills, ...serviceSkills];
+export const allSkills = [...appSkills, ...serviceSkills, ...expenseSkills];
 
 /** Every sharing rule in the artifact, every package — same reason as {@link allHooks}. */
 export const CrmSharingRules = [...appSharingRules, ...marketingSharingRules, ...serviceSharingRules, ...expenseSharingRules, ...psaSharingRules];

@@ -425,7 +425,7 @@ export const esES: TranslationData = {
   books: {
     crm_expense_manual: {
       label: 'Manual de gastos de HotCRM',
-      description: 'Registrar un gasto con su recibo, pedir antes de un viaje, enviar los gastos en un informe, quién los aprueba, su reembolso y qué llega a un proyecto.',
+      description: 'Registrar un gasto con su recibo, pedir antes de un viaje, enviar los gastos en un informe, quién los aprueba, su reembolso, qué llega a un proyecto y qué hace por ti un asistente.',
       groups: { expense: { label: 'Gastos' } },
     },
   },
