@@ -436,14 +436,17 @@ export const jaJP: TranslationData = {
       dimensions: {
         category: {
           label: 'カテゴリ',
+          description: '製品カテゴリ：ソフトウェア、ハードウェア、サービス、サブスクリプション、サポート。',
         },
       },
       measures: {
         list_price_sum: {
           label: '定価合計',
+          description: '対象製品の定価の合計（カタログ上の数字）。売上ではなく、値引きや数量は含みません。',
         },
         product_count: {
           label: '製品数',
+          description: '製品カタログにある製品の数。有効・無効の両方を含みます。販売数量ではありません。',
         },
       },
     },

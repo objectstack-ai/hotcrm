@@ -46,20 +46,87 @@ export const ForecastDataset = defineDataset({
 
   dimensions: [
     // Semantic name `owner`; column `owner_id`, the platform anchor (#548).
-    { name: 'owner', label: 'Owner', synonyms: ['sales rep', 'forecast owner', '负责人'], field: 'owner_id', type: 'lookup' },
-    { name: 'period', label: 'Period Type', synonyms: ['period kind', 'monthly or quarterly', '周期类型'], field: 'period', type: 'string' },
-    { name: 'period_label', label: 'Period', synonyms: ['forecast period', 'month or quarter', '预测周期'], field: 'period_label', type: 'string' },
-    { name: 'period_start', label: 'Period Start', synonyms: ['start of period', 'period start date', '周期开始'], field: 'period_start', type: 'date' },
+    {
+      name: 'owner',
+      label: 'Owner',
+      description: 'The sales rep a forecast row belongs to; each owner has one row per period.',
+      synonyms: ['sales rep', 'forecast owner', '负责人'],
+      field: 'owner_id',
+      type: 'lookup',
+    },
+    {
+      name: 'period',
+      label: 'Period Type',
+      description: 'Whether a forecast row covers a month or a quarter; pick one, because adding a month to a quarter counts the same deals twice.',
+      synonyms: ['period kind', 'monthly or quarterly', '周期类型'],
+      field: 'period',
+      type: 'string',
+    },
+    {
+      name: 'period_label',
+      label: 'Period',
+      description: 'The named period of a forecast row, such as Q3 2026 or Aug 2026.',
+      synonyms: ['forecast period', 'month or quarter', '预测周期'],
+      field: 'period_label',
+      type: 'string',
+    },
+    {
+      name: 'period_start',
+      label: 'Period Start',
+      description: 'The first day of the forecast period, the first of a month or of a quarter.',
+      synonyms: ['start of period', 'period start date', '周期开始'],
+      field: 'period_start',
+      type: 'date',
+    },
   ],
 
   measures: [
-    { name: 'quota_sum', label: 'Quota', synonyms: ['target', 'sales target', '配额'], aggregate: 'sum', field: 'quota', format: '0,0' },
-    { name: 'closed_sum', label: 'Closed', synonyms: ['closed won amount', 'booked', '已成交'], aggregate: 'sum', field: 'closed_amount', format: '0,0' },
-    { name: 'pipeline_sum', label: 'Pipeline', synonyms: ['open pipeline', 'pipeline amount', '管道金额'], aggregate: 'sum', field: 'pipeline_amount', format: '0,0' },
-    { name: 'commit_sum', label: 'Commit', synonyms: ['committed', 'commit forecast', '承诺金额'], aggregate: 'sum', field: 'commit_amount', format: '0,0' },
+    {
+      name: 'quota_sum',
+      label: 'Quota',
+      description: 'The sum of the Quota set on the forecast rows in view: the sales target. Rows with no quota set add nothing; pin one period type, or a month and a quarter are added together.',
+      synonyms: ['target', 'sales target', '配额', '销售目标'],
+      aggregate: 'sum',
+      field: 'quota',
+      format: '0,0',
+    },
+    {
+      name: 'closed_sum',
+      label: 'Closed',
+      description: 'The Closed Won amount recorded on the forecast rows: what the owners have already won in the period; open pipeline and lost deals are not included.',
+      synonyms: ['closed won amount', 'booked', '已成交'],
+      aggregate: 'sum',
+      field: 'closed_amount',
+      format: '0,0',
+    },
+    {
+      name: 'pipeline_sum',
+      label: 'Pipeline',
+      description: 'The open pipeline recorded on the forecast rows: the amount of open deals, at any open stage, expected to close in the period; won and lost deals are not included.',
+      synonyms: ['open pipeline', 'pipeline amount', '管道金额'],
+      aggregate: 'sum',
+      field: 'pipeline_amount',
+      format: '0,0',
+    },
+    {
+      name: 'commit_sum',
+      label: 'Commit',
+      description: 'The Commit amount recorded on the forecast rows: open deals in the Commit forecast category; Best Case and Pipeline deals are not included.',
+      synonyms: ['committed', 'commit forecast', '承诺金额'],
+      aggregate: 'sum',
+      field: 'commit_amount',
+      format: '0,0',
+    },
     // Derived ratio (ADR-0021 Q1) rather than avg(attainment_pct): summing
     // closed and quota before dividing weights every rep/period by quota
     // size, where an average of per-row percentages would not.
-    { name: 'attainment', label: 'Attainment', synonyms: ['quota attainment', 'percent of quota', '完成率'], derived: { op: 'ratio', of: ['closed_sum', 'quota_sum'] }, format: '0%' },
+    {
+      name: 'attainment',
+      label: 'Attainment',
+      description: 'Closed divided by Quota, with both summed before dividing, so a large quota weighs more than a small one; rows with no quota make it blank, not zero.',
+      synonyms: ['quota attainment', 'percent of quota', '完成率'],
+      derived: { op: 'ratio', of: ['closed_sum', 'quota_sum'] },
+      format: '0%',
+    },
   ],
 });
