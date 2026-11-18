@@ -5,6 +5,7 @@ import { getMDXComponents } from '@/mdx-components';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { LLMCopyButton, ViewOptions } from '@/components/ai/page-actions';
+import { ProductApps, ProductChain, ProductHeadline } from '@/components/product/blocks';
 
 export default async function Page(props: PageProps<'/[lang]/docs/[[...slug]]'>) {
   const { lang, slug } = await props.params;
@@ -30,6 +31,10 @@ export default async function Page(props: PageProps<'/[lang]/docs/[[...slug]]'>)
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
             a: createRelativeLink(source, page),
+            // The shared product block (#2608) speaks the page's language.
+            ProductHeadline: (props: { subtitle?: boolean }) => <ProductHeadline lang={lang} {...props} />,
+            ProductChain: (props: { heading?: boolean }) => <ProductChain lang={lang} {...props} />,
+            ProductApps: (props: { heading?: boolean }) => <ProductApps lang={lang} {...props} />,
           })}
         />
       </DocsBody>

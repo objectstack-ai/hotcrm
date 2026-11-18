@@ -30,6 +30,7 @@
     "publish:marketplace:dry-run": "DRY_RUN=1 node scripts/publish-marketplace.mjs",
     "demo:reset": "rm -rf .objectstack/data && pnpm build && echo '✅ DB reset — start the server with: pnpm dev (or pnpm start). Seed data loads on first boot, then run: pnpm demo:staff'",
     "demo:staff": "tsx scripts/demo-staff.ts",
+    "docs:product": "tsx scripts/generate-docs-product.ts",
     "backfill:owner": "tsx scripts/backfill-owner-id.ts"
   },
   "packageManager": "pnpm@10.33.0",
