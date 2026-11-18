@@ -110,7 +110,7 @@ const leadFor = (company: string) => {
   const n = ++k;
   return verify.hooks.run('crm_lead', 'insert', {
     company, email: `buyer${n}@lead-conversion-result-screen.test`, first_name: 'Pat', last_name: `Result${n}`,
-    lead_source: 'web', status: 'qualified', estimated_amount: 42000,
+    lead_source: 'web', status: 'qualified', need_type: 'new_implementation', estimated_amount: 42000,
   }, { as: rep.token });
 };
 
@@ -134,7 +134,7 @@ const leadRow = async (id: string) => (await verify.rows('crm_lead', { id }))[0]
 const accountRow = async (id: string) => (await verify.rows('crm_account', { id }))[0]!;
 
 const PENDING = 'is waiting for account approval by a sales manager.';
-const CLEAR = 'No account approval is pending for';
+const CLEAR = 'The lead is now part of the account';
 
 describe('as a sales rep, the result screen links what the conversion made (#2297)', () => {
   it('with an opportunity: links the new account, contact and opportunity the lead now names', async () => {

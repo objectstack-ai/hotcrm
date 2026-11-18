@@ -201,6 +201,29 @@ const leadHook: Hook = {
     // converted, so setting `is_converted` on it is a conversion this gate
     // judges — reading the status here as well would let exactly that write
     // past an approval the lock no longer stands in front of.
+    // ── First contact moves a New lead to Contacted (#2540, ruled A) ──────
+    //
+    // Contacted is a fact, not a judgement, and the app already records it
+    // in the same moment: every logged call, meeting or email reaches the
+    // lead as a write of `last_contacted_date` (`event_activity_bubble` for a
+    // held event, `task_activity_bubble` for a completed task). So the status
+    // follows that write here, the one place every writer passes through,
+    // rather than in each bubble.
+    //
+    // Only from New, and only when this write does not set the status
+    // itself: a later contact finds the lead Contacted already and changes
+    // nothing, and Qualified, Unqualified and Converted are left alone. The
+    // state machine allows New → Contacted, and `trackHistory` on `status`
+    // puts the change on the lead's timeline.
+    if (event === 'beforeUpdate') {
+      const previous = ctx.previous;
+      const stampsContact =
+        input.last_contacted_date !== undefined && input.last_contacted_date !== null && input.last_contacted_date !== '';
+      if (stampsContact && input.status === undefined && previous?.status === 'new') {
+        input.status = 'contacted';
+      }
+    }
+
     if (event === 'beforeUpdate') {
       const previous = ctx.previous;
       const wasConverted = previous?.is_converted === true;

@@ -29,6 +29,12 @@ const opportunityStageOptions = {
 };
 
 /**
+ * Update Stage offers the open stages only (#2589): closing a deal is done on
+ * its record page, where the win or loss reason is collected.
+ */
+const { closed_won: _won, closed_lost: _lost, ...openStageOptions } = opportunityStageOptions;
+
+/**
  * The bulk Delete on every opportunity grid list (#2338 item 4, `GRID_BAR` in
  * `src/sales/views/opportunity.view.ts`), translated once and named by each view.
  */
@@ -48,6 +54,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       converted_flag_only_by_conversion: {
         message: '「リード変換」だけがリードを変換済みにできます。変換先の取引先と取引先責任者を作成するのが「リード変換」だからです。「変換済み」にチェックを入れる代わりに「リード変換」を使ってください。',
+      },
+      qualified_needs_qualification: {
+        message: 'リードを適格にするには「ニーズ種別」と「予想金額」が必要です。「リードを適格にする」を使うか、ステータスを適格にする前に両方を入力してください。',
       },
       disqualification_reason_required: {
         message: 'リードを「対象外」にする場合は失格理由が必要です',
@@ -278,6 +287,10 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           campaignId: { label: 'キャンペーン' },
         },
       },
+      qualify_lead: {
+        label: 'リードを適格にする',
+        successMessage: 'リードを適格にしました。',
+      },
       schedule_followup: {
         label: 'フォローアップを設定',
         successMessage: 'フォローアップを設定しました。',
@@ -452,11 +465,11 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       mass_update_stage: {
         label: 'ステージ更新',
-        successMessage: '商談ステージを更新しました！',
+        successMessage: 'ステージを更新しました。',
         params: {
           stage: {
             label: '新しいステージ',
-            options: { ...opportunityStageOptions },
+            options: { ...openStageOptions },
           },
         },
       },

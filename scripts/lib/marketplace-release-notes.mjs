@@ -32,9 +32,33 @@
  * that form, or names a version with no `## X.Y.Z` heading below this one, is
  * refused rather than published as one section.
  *
+ * ## What a customer reads
+ *
+ * A changeset is written for two readers: the fleet's PR gates, which need
+ * `Clause-②:`, `Metadata-protocol:` and `Skills-docs:` lines at the top of its
+ * body, and the person deciding whether to update. `changeset version` copies
+ * both into `CHANGELOG.md`, prefixed with the commit (`- cdba71a: Clause-②: no`),
+ * and the marketplace renders what it is sent (#2461). So each section body is
+ * passed through `customerText()` before anything else, which removes:
+ *
+ * - the gate lines (`Clause-②:` / `Metadata-protocol:` / `Skills-docs:` at the
+ *   start of a line), the changeset's own business, never the reader's;
+ * - the commit prefix of an entry (`- cdba71a: ` or `- 2b664f6, 35df8e9: `);
+ * - every parenthetical that carries a card or framework reference, whole:
+ *   `(#2465)`, `(objectstack#33250)`, `(REQ-0007, #2315)`, `(#2316, phase 0)`.
+ *   A parenthetical can leave a sentence without breaking it, and what sits
+ *   beside a reference in one (a phase, an item, a ruling) is about the card;
+ * - a framework reference left in running prose (`wait on objectstack#34336`)
+ *   becomes "a platform change", which reads in each sentence it appears in.
+ *
+ * A HotCRM card number in running prose (`arrive with #2416`) has no wording
+ * that is true in every sentence, so it is kept and named in the publish log
+ * (`residualRefs`), for the release PR to reword. The user-facing prose, the
+ * `## VERSION` / `### …` structure and the span are untouched.
+ *
  * ## Size
  *
- * The whole text stays within `RELEASE_NOTES_CAP` characters. Each section
+ * The cap applies to the filtered text. The whole text stays within `RELEASE_NOTES_CAP` characters. Each section
  * contributes what it always did — its `### Major Changes` when it has them
  * (3.0.0's whole section is 649 KB, 292 changesets deep, and what an installer
  * needs is what changes their deployment), otherwise the section — and when the span is longer than the cap, entries
@@ -100,13 +124,65 @@ function declaredLastPublished(section) {
   return undefined;
 }
 
-/** What one section contributes: its `### Major Changes` if any, else all of it. */
+/** A gate line the fleet's PR and changeset contract writes into a changeset body. */
+const GATE_LINE = /^(?:Clause-②|Metadata-protocol|Skills-docs):/;
+/** The commit prefix `changeset version` writes before an entry: one hash or several. */
+const COMMIT_PREFIX = /^- [0-9a-f]{7,40}(?:, [0-9a-f]{7,40})*: /;
+/**
+ * A card or framework reference: `#2465`, `objectstack#33250`, `hotcrm#2463`,
+ * `objectstack-ai/objectstack#30184`. Not `&#123;`, not `abc#1` inside a word.
+ */
+const REF = String.raw`(?<![\w&#/])(?:[\w.-]+\/)?(?:[A-Za-z][\w.-]*)?#\d+\b`;
+const REF_PARENTHETICAL = new RegExp(String.raw`[^\S\n]*\([^()\n]*${REF}[^()\n]*\)`, 'g');
+/** A reference to another repository (the platform's), as `owner/repo#N` or `repo#N`. */
+const FOREIGN_REF = /(?<![\w&#/])(?:[\w.-]+\/)?([A-Za-z][\w.-]*)#\d+\b/g;
+
+/**
+ * A section body as a customer reads it: no gate lines, no commit prefixes,
+ * no card or framework references (see "What a customer reads" above).
+ * Exported for the suite.
+ */
+export function customerText(body) {
+  const out = [];
+  // `true` once an entry's `- ` line turned out to be a gate line: the marker
+  // moves to the entry's first line of prose.
+  let markerPending = false;
+  for (const raw of body.split('\n')) {
+    let line = raw.replace(COMMIT_PREFIX, '- ');
+    const content = line.replace(/^\s*(?:- )?/, '');
+    if (GATE_LINE.test(content)) {
+      if (/^- /.test(line)) markerPending = true;
+      continue;
+    }
+    if (markerPending) {
+      if (content.trim() === '') continue;
+      if (/^- /.test(line)) markerPending = false; // the next entry opened: this one was gate lines only
+      else {
+        line = `- ${line.replace(/^ {0,2}/, '')}`;
+        markerPending = false;
+      }
+    }
+    out.push(line);
+  }
+  return out
+    .join('\n')
+    .replace(REF_PARENTHETICAL, '')
+    .replace(FOREIGN_REF, (ref, repo) => (repo.toLowerCase() === 'hotcrm' ? ref : 'a platform change'))
+    .trim();
+}
+
+/** The references `customerText()` keeps (a HotCRM card number in running prose). */
+function residualRefsOf(text) {
+  return [...new Set(text.match(new RegExp(REF, 'g')) ?? [])];
+}
+
+/** What one section contributes: its `### Major Changes` if any, else all of it, as a customer reads it. */
 function bodyOf(section) {
   // `$(?![\s\S])` is the end of the input under the `m` flag. (`\Z` is not a
   // JavaScript assertion: it matched a literal `Z`, so a Major Changes entry
   // containing a capital Z was cut there.)
   const major = section.text.match(/^### Major Changes\s*$([\s\S]*?)(?=^### |$(?![\s\S]))/m);
-  return (major ? major[1] : withoutHeading(section)).trim();
+  return customerText(major ? major[1] : withoutHeading(section));
 }
 
 /**
@@ -124,12 +200,11 @@ function blocksOf(body) {
   });
 }
 
-/** An entry's bold headline, or its changeset id when it has none. */
+/** An entry's bold headline, or its first line when it has none (its commit prefix is gone by now). */
 function headlineOf(entryText) {
   const bold = entryText.match(/\*\*([^*\n][\s\S]*?)\*\*/);
   if (bold) return `**${bold[1].replace(/\s+/g, ' ').trim()}**`;
-  const id = entryText.match(/^- ([0-9a-f]{7,40}):/);
-  return id ? `entry ${id[1]}` : entryText.slice(2).split('\n')[0].trim();
+  return entryText.slice(2).split('\n')[0].trim();
 }
 
 /** One section rendered from the blocks chosen for it. */
@@ -170,12 +245,18 @@ function truncationNotice(omitted, cap, { headlines }) {
  * @param {string} md       the whole of `CHANGELOG.md`
  * @param {string} version  the version being published
  * @param {{ cap?: number }} [options]
- * @returns {{ text: string, span: string[], versions: string[], omitted: number } | undefined}
+ * @returns {{ text: string, span: string[], versions: string[], omitted: number, residualRefs: string[] } | undefined}
  *   undefined when the changelog has no section (or an empty one) for `version`;
  *   `span` are the sections the notes cover, `versions` the ones the text shows,
- *   `omitted` the entries dropped for size
+ *   `omitted` the entries dropped for size, `residualRefs` the card references
+ *   the text still carries
  */
-export function releaseNotesFromChangelog(md, version, { cap = RELEASE_NOTES_CAP } = {}) {
+export function releaseNotesFromChangelog(md, version, options) {
+  const notes = buildReleaseNotes(md, version, options);
+  return notes && { ...notes, residualRefs: residualRefsOf(notes.text) };
+}
+
+function buildReleaseNotes(md, version, { cap = RELEASE_NOTES_CAP } = {}) {
   const sections = sectionsOf(md);
   const idx = sections.findIndex((s) => s.version === version);
   if (idx === -1) return undefined;
@@ -238,5 +319,8 @@ export function describeReleaseNotes(notes) {
   const dropped = notes.omitted
     ? ` · truncated, ${notes.omitted} ${notes.omitted === 1 ? 'entry' : 'entries'} omitted, shows ${notes.versions.join(', ')}`
     : '';
-  return `release notes: ${notes.text.length} chars · sections ${notes.span.join(', ')}${dropped}`;
+  const refs = notes.residualRefs?.length
+    ? ` · ${notes.residualRefs.length} card ${notes.residualRefs.length === 1 ? 'reference' : 'references'} left in prose, for the release PR to reword: ${notes.residualRefs.join(', ')}`
+    : '';
+  return `release notes: ${notes.text.length} chars · sections ${notes.span.join(', ')}${dropped}${refs}`;
 }

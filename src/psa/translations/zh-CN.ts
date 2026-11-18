@@ -160,6 +160,10 @@ export const zhCN: TranslationData = {
         crm_account: { label: '客户' },
         crm_opportunity: { label: '商机' },
         crm_contract: { label: '合同' },
+        crm_sales_order: {
+          label: '订单',
+          help: '这个项目交付的销售订单。',
+        },
         source_project: {
           label: '来源售前项目',
           help: '交付项目由哪个售前项目转化而来。',
@@ -369,6 +373,7 @@ export const zhCN: TranslationData = {
       fields: {
         crm_project: { label: '项目' },
         person: { label: '人员' },
+        person_name: { label: '人员姓名', help: '人员的姓名，与用户记录保持一致。它是这条人员配置的名称。' },
         responsibility: {
           label: '职责',
           options: {
@@ -547,8 +552,18 @@ export const zhCN: TranslationData = {
         rates: { label: '成本与计费' },
       },
     },
-    // The Project field it contributes to the expense module's object (hotcrm#2556).
+    // The Project field it contributes to the expense module's objects (hotcrm#2556, hotcrm#2581).
     crm_expense: {
+      fields: {
+        crm_project: { label: '项目' },
+      },
+    },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: '项目' },
+      },
+    },
+    crm_expense_request: {
       fields: {
         crm_project: { label: '项目' },
       },

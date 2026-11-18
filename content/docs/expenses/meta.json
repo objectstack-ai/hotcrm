@@ -2,6 +2,7 @@
   "title": "Expenses",
   "defaultOpen": true,
   "pages": [
-    "index"
+    "index",
+    "travel-requests"
   ]
 }

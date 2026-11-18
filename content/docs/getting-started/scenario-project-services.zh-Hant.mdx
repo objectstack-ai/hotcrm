@@ -1,0 +1,65 @@
+---
+title: 情境：項目服務
+description: 在 HotCRM 裡從頭到尾走一項服務業務 —— 交易、合約及其回款計劃，帶著計劃、預算、工時單和費用的項目，以及財務記錄的發票。
+---
+
+# 情境：項目服務
+
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
+一家顧問公司或實施夥伴賣出一個項目：固定範圍，由一個團隊在幾個月內交付，分步付款 —— 預付款、上線、驗收。本頁跟著一項業務走過 HotCRM，並直說 HotCRM 在哪裡止步。
+
+| 步驟 | 紀錄 | 應用 | 誰 |
+| --- | --- | --- | --- |
+| 1 | 商機和報價單 | Sales | 銷售代表 |
+| 2 | 合約，可選再加一張訂單 | Sales | 由已接受的報價單起草 |
+| 3 | 回款計劃 | Sales | 合約的銷售團隊 |
+| 4 | 項目、預算、人員安排 | Project Delivery | 項目經理；由項目總監或 PMO 審批，大項目還要財務審批 |
+| 5 | 計劃和任務 | Project Delivery | 項目經理 |
+| 6 | 工時單 | Project Delivery | 每位團隊成員；由項目經理審批 |
+| 7 | 出差申請和費用 | Expenses | 每位團隊成員；由項目經理審批 |
+| 8 | 發票和回款 | Order to Cash | 財務 |
+
+## 1–2. 贏下這項工作
+
+這筆交易是一個帶報價單的商機，和[一次產品銷售](/zh-Hant/docs/getting-started/scenario-product-sale)一樣。接受報價單即贏單，並起草**合約**。如果這項工作還按條目清單出售，再輸入一張**訂單**；項目可以寫明其中任意一個。
+
+## 3. 回款計劃
+
+在合約的 **Billing Milestones** 分頁上，銷售團隊列出合約約定的付款步驟：*預付款 30%*、*上線 40%*、*驗收 25%*、*保留款 5%*，每一步帶有計劃金額和日期。計劃是一種預測；財務的發票和回款會對照它統計。參見[回款計劃](/zh-Hant/docs/order-to-cash/collection-plan)。
+
+## 4. 項目
+
+項目經理從合約或訂單的 **Projects** 分頁新建一個**項目**，這樣它就寫明了客戶、商機，以及它交付的合約或訂單。它從草稿開始：
+
+- **預算。**按版本和明細編製；獲批的版本就是項目的 **Approved Budget**，之後的追加是一個新版本。參見[項目預算](/zh-Hant/docs/projects/budgets)。
+- **審批。**新項目由項目總監或 PMO 審批；預算從 100,000 起，財務控制也要審批。之後由項目經理把它設為 *Active*。
+- **人員安排。**每位成員都按一張 **Rate Card** 安排，它帶有成本單價和計費單價。團隊成員永遠看不到同事的成本。
+
+參見[項目與人員安排](/zh-Hant/docs/projects/projects-and-staffing)。
+
+## 5. 計劃
+
+項目的任務連同日期和依賴關係，以甘特圖顯示在它的 **Project Plan** 上。參見[項目計劃](/zh-Hant/docs/projects/project-plan)。
+
+## 6. 工時
+
+每位團隊成員在每週的**工時單**上填報工時並提交；項目經理在 **Inbox** 裡審批。已核准的工時按成本單價計入項目的 **Labor Cost**；可計費工時按計費單價計入 **Approved to Bill**。參見[工時與費用](/zh-Hant/docs/projects/time-and-expenses)。
+
+## 7. 出差和費用
+
+出差前，團隊成員提交一份寫明項目的**出差申請**，由項目經理審批。出差申請只是計劃：它不會給項目增加任何成本。出差中花的錢記為寫明項目的**費用**，用 **Submit for Reimbursement** 放進一張他們自己的報銷單，由項目經理審批（金額從 2,000 起，財務也要審批）。已核准的費用計入項目的 **Expense Cost**。參見[費用報銷](/zh-Hant/docs/expenses)和[出差申請](/zh-Hant/docs/expenses/travel-requests)。
+
+項目的 **Actual Cost**、**Budget Remaining** 和 **Gross Margin** 隨這些審批而來；超過預算的 80% 或 100% 時，會通知項目經理和財務。
+
+## 8. 開票
+
+到達某個回款節點時，財務在自己的系統裡開出發票，並把它記錄到 **Order to Cash** 裡，關聯到該節點；回款也照此記錄。節點隨後顯示 **Invoiced**、**Received** 和仍 **Open** 的金額。參見[發票與回款](/zh-Hant/docs/order-to-cash/invoices-and-payments)。
+
+**未提供：**HotCRM 不會根據 **Approved to Bill** 或回款節點開出發票；財務在自己的軟體裡開票。回款節點也不和項目進度掛鉤：計劃上到達*上線*，不會把節點標記為已到達。
+
+## 相關
+
+- [情境：一次產品銷售](/zh-Hant/docs/getting-started/scenario-product-sale)
+- [情境：一份訂閱](/zh-Hant/docs/getting-started/scenario-subscription)
+- [項目交付](/zh-Hant/docs/projects)

@@ -234,7 +234,7 @@ export const en: TranslationData = {
     case_detail_page: {
       label: 'Case Detail',
       description: 'Service-agent case record: highlights, SLA path, details and activity timeline.',
-      title: '{case_number} · {subject}',
+      title: '{display_title}',
       subtitle: '{crm_account}',
       components: {
         case_highlights: { label: 'Key Information' },

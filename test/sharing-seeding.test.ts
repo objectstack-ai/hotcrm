@@ -491,6 +491,9 @@ const RULE_WITNESSES: Record<string, { reaches: AnyRec; misses: AnyRec[] }> = {
   project_finance_edit_pmo: { reaches: { name: 'Rollout' }, misses: [] },
   timesheet_approver_edit: { reaches: { name: 'Rollout · 2026-11-02' }, misses: [] },
   expense_approver_edit: { reaches: { name: 'Flight' }, misses: [] },
+  expense_report_approver_edit: { reaches: { name: '2026-11-09 – 2026-11-10' }, misses: [] },
+  // #2578, the same shape: the stamped `approver` column narrows it.
+  expense_request_approver_edit: { reaches: { name: 'Customer visit' }, misses: [] },
 };
 
 describe('every seeded rule EXECUTES on the configured driver, not merely compiles', () => {

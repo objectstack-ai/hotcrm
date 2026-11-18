@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_FIGURE_FIELDS } from './_o2c-figures';
-import { EXPENSE_OWN_READ_ALL } from './_expense-grants';
+import { EXPENSE_OWN_READ_ALL, EXPENSE_REPORT_OWN_READ_ALL, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STANDARD_KEEP } from './_expense-grants';
 
 /**
  * Accounts Receivable — finance's set for the Order to Cash module (#2315,
@@ -45,8 +45,12 @@ export const ArAccountantProfile = {
   // accounts the invoices hang off. Visibility, not access, as on `sales_rep`.
   tabPermissions: { crm_enterprise: 'hidden' as const, crm_service: 'hidden' as const, crm_marketing: 'hidden' as const, crm_psa: 'hidden' as const },
   objects: {
-    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN_READ_ALL,
+    crm_expense_report: EXPENSE_REPORT_OWN_READ_ALL,
+    crm_expense_request: EXPENSE_OWN_READ_ALL,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
+    crm_expense_standard: EXPENSE_STANDARD_KEEP, // finance keeps the standards (hotcrm#2616)
     crm_invoice:           { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },
     crm_payment:           { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: true, modifyAllRecords: true },
     crm_billing_milestone: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true, modifyAllRecords: false },

@@ -342,4 +342,10 @@ export const jaJP: TranslationData = {
       },
     },
   },
+  // An import mapping's label, as the import wizard offers it (a key
+  // since 18.6.0; before it the wizard showed the English text in every locale).
+  mappings: {
+    crm_invoice_import: { label: '請求書インポート (CSV)' },
+    crm_payment_import: { label: '入金インポート (CSV)' },
+  },
 };

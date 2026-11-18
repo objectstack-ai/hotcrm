@@ -175,6 +175,22 @@ describe('time (timesheet_stamps, time_entry_costing)', () => {
     expect(s.name).toContain(project.name);
   });
 
+  it('keeps a typed name, and moves only a generated one with its period (hotcrm#2567)', async () => {
+    const typed = await insert('crm_timesheet', {
+      name: 'Week 46, onsite', crm_project: project.id, period_start: '2026-11-09', period_end: '2026-11-15',
+    }, consultant.token);
+    expect((await row('crm_timesheet', typed.id))!.name, 'the typed name is kept').toBe('Week 46, onsite');
+    await update('crm_timesheet', { id: typed.id, period_start: '2026-11-30', period_end: '2026-12-06' }, consultant.token);
+    expect((await row('crm_timesheet', typed.id))!.name, 'a typed name is never replaced').toBe('Week 46, onsite');
+
+    const blank = await insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-16', period_end: '2026-11-22' }, consultant.token);
+    expect((await row('crm_timesheet', blank.id))!.name).toBe(`${project.name} · 2026-11-16 – 2026-11-22`);
+    await update('crm_timesheet', { id: blank.id, period_end: '2026-11-20' }, consultant.token);
+    expect((await row('crm_timesheet', blank.id))!.name, 'the generated name follows the period').toBe(`${project.name} · 2026-11-16 – 2026-11-20`);
+    await update('crm_timesheet', { id: blank.id, name: '' }, consultant.token);
+    expect((await row('crm_timesheet', blank.id))!.name, 'a cleared name fills again').toBe(`${project.name} · 2026-11-16 – 2026-11-20`);
+  });
+
   it('refuses a second timesheet for the same project and period', async () => {
     await expect(insert('crm_timesheet', { crm_project: project.id, period_start: '2026-11-02', period_end: '2026-11-08' }, consultant.token))
       .rejects.toThrow(/already a timesheet/);
@@ -224,17 +240,22 @@ describe('time (timesheet_stamps, time_entry_costing)', () => {
   });
 });
 
-describe('expenses on a project (expense_project_approval, hotcrm#2556)', () => {
-  it('reach the project\'s cost once the Project Manager approves them from the Inbox', async () => {
+describe('expenses on a project (expense_report_project_approval, hotcrm#2559)', () => {
+  it('reach the project\'s cost once the Project Manager approves their report from the Inbox', async () => {
     const before = num((await row('crm_project', project.id))!.actual_expense_cost);
     const exp = await insert('crm_expense', {
       name: `Flight ${++k}`, crm_project: project.id, expense_date: '2026-11-03', category: 'travel', amount: 300, is_billable: true,
     }, consultant.token);
     expect((await row('crm_expense', exp.id))!.approver, 'named at submission, not at creation').toBeFalsy();
-    await update('crm_expense', { id: exp.id, status: 'submitted' }, consultant.token);
-    expect((await row('crm_expense', exp.id))!.approver).toBe(pm.id);
+    const result = (await verify.actions.run('crm_expense', 'submit_for_reimbursement', {
+      as: consultant.token, params: { _selectedIds: [exp.id] },
+    })) as Rec;
+    const reportId = String(result.id);
+    expect((await row('crm_expense_report', reportId))!.approver).toBe(pm.id);
+    expect((await row('crm_expense', exp.id))!.approver, 'the expense carries its report\'s approver').toBe(pm.id);
     expect(num((await row('crm_project', project.id))!.actual_expense_cost) - before).toBe(0);
-    await decide(exp.id, pm.token);
+    await decide(reportId, pm.token);
+    expect((await row('crm_expense', exp.id))!.status).toBe('approved');
     expect(num((await row('crm_project', project.id))!.actual_expense_cost) - before).toBe(300);
   });
 });

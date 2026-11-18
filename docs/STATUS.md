@@ -19,9 +19,9 @@ loader registers:
 
 ```text
 HotCRM v6.5.0
-Data: 34 Objects  563 Fields
-UI: 6 Apps  28 Views  11 Pages  7 Dashboards  10 Reports  41 Actions
-Logic: 45 Flows
+Data: 38 Objects  620 Fields
+UI: 6 Apps  32 Views  11 Pages  7 Dashboards  10 Reports  50 Actions
+Logic: 48 Flows
 Security: 18 Positions  13 Permissions
 ```
 
@@ -31,7 +31,7 @@ Validation command:
 pnpm validate
 ```
 
-> **`41 Actions` is the REGISTRATION count, not a count of distinct action
+> **`50 Actions` is the REGISTRATION count, not a count of distinct action
 > definitions.** One action bound to five objects registers five times, so the
 > source tree's `*.actions.ts` files and this figure answer different
 > questions. The registration count is the calibre this repo states to readers
@@ -73,7 +73,7 @@ pnpm verify
 | --- | --- |
 | Node.js | `^22.11 \|\| ^24 \|\| >=26` |
 | pnpm | `>=10.0.0` |
-| ObjectStack packages | `18.5.0` |
+| ObjectStack packages | `18.6.0` |
 | Local dev port | `4001` |
 
 Each row above is asserted against `package.json` (`engines`, the `@objectstack/*`

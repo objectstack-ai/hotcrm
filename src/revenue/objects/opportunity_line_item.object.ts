@@ -138,6 +138,10 @@ export const OpportunityLineItem = ObjectSchema.create({
       group: 'basic',
       required: true,
       storage: { notNull: true },
+      // The product page's list of these lines (#2599). Without columns it
+      // drew each line's title, which is the product's own name, so every row
+      // read the same; the deal, quantity, price and total tell them apart.
+      relatedListColumns: ['crm_opportunity', 'quantity', 'unit_price', 'total_price'],
     }),
 
     description: Field.text({

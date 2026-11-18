@@ -89,7 +89,11 @@ describe('the account notice reads right for both branches in every locale (#207
       .map(([locale, pack]) => [locale, String(pack.flows.lead_conversion.screens?.screen_1?.description ?? '')] as [string, string]),
   ];
   const render = (source: string, vars: Rec): string => {
-    const r = templateEngine.evaluate({ dialect: 'template', source }, { extra: { duplicateWarning: null, ...vars } } as Rec);
+    // The no-duplicate branch assigns one space (`no_duplicate_warning`), and
+    // the contact sentence names a new contact unless a test says otherwise.
+    const r = templateEngine.evaluate({ dialect: 'template', source }, {
+      extra: { duplicateWarning: ' ', existingContactName: null, newContactName: 'Pat Contact', ...vars },
+    } as Rec);
     if (!r.ok) throw new Error(`does not render: ${r.error.message}`);
     return String(r.value);
   };
@@ -101,7 +105,7 @@ describe('the account notice reads right for both branches in every locale (#207
   });
 
   it.each(templates)('%s: names the account, and says existing or new', (_locale, source) => {
-    expect(source.startsWith('{{duplicateWarning}}'), 'the duplicate warning no longer leads the body text').toBe(true);
+    expect(source.startsWith('{{ duplicateWarning'), 'the duplicate warning no longer leads the body text').toBe(true);
     const existing = render(source, { existingAccountName: NAME, newAccountName: null });
     const created = render(source, { existingAccountName: null, newAccountName: NAME });
     for (const text of [existing, created]) {
@@ -116,11 +120,13 @@ describe('the account notice reads right for both branches in every locale (#207
   });
 
   it('the duplicate warning still shows, ahead of the notice', () => {
-    const warning = 'Suspected duplicate — compare first.';
+    // `warn_duplicate` assigns `null`, and the pack's own sentence prints in
+    // its place (#2571: the note is translated with the rest of the body).
     for (const [, source] of templates) {
-      const text = render(source, { duplicateWarning: warning, existingAccountName: NAME, newAccountName: null });
-      expect(text.startsWith(warning)).toBe(true);
-      expect(text).toContain(NAME);
+      const plain = render(source, { existingAccountName: NAME, newAccountName: null });
+      const warned = render(source, { duplicateWarning: null, existingAccountName: NAME, newAccountName: null });
+      expect(warned.endsWith(plain.trim()), `the warning is not ahead of the notice: ${warned}`).toBe(true);
+      expect(warned.length).toBeGreaterThan(plain.length + 20);
     }
   });
 });
@@ -153,7 +159,7 @@ const leadFor = (company: string) => {
   const n = ++k;
   return verify.hooks.run('crm_lead', 'insert', {
     company, email: `buyer${n}@lead-conversion-account-notice.test`, first_name: 'Pat', last_name: `Notice${n}`,
-    lead_source: 'web', status: 'qualified',
+    lead_source: 'web', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
   }, { as: rep.token });
 };
 
@@ -183,6 +189,11 @@ const keyed = (name: string) => verify.rows('crm_account', { name_normalized: fo
 const leadRow = async (id: string) => (await verify.rows('crm_lead', { id }))[0]!;
 
 const EXISTING = 'is the existing account this lead will join.';
+/** The account sentence: the body text up to its first full stop (the contact sentence follows, #2572). */
+const accountSentence = (description: string): string => {
+  const text = description.trim();
+  return text.slice(0, text.indexOf('. ') + 1);
+};
 const CREATES = 'No account you can see matches the company on this lead, so converting creates a new account named';
 
 describe('as a sales rep, the screen names the account each path ends on (#2073 item 8)', () => {
@@ -193,7 +204,7 @@ describe('as a sales rep, the screen names the account each path ends on (#2073 
     // ACCOUNT's spelling, the one the rep will find in Accounts.
     const lead = await leadFor(`VISIBLE  co ${n}`);
     const { started, description } = await screenFor(lead.id);
-    expect(description.trim()).toBe(`Visible Co ${n} ${EXISTING}`);
+    expect(accountSentence(description)).toBe(`Visible Co ${n} ${EXISTING}`);
 
     expect(await submit(started)).toEqual({ ok: true });
     expect((await leadRow(lead.id)).converted_account, 'the lead joined another account than the one named').toBe(account.id);
@@ -204,7 +215,7 @@ describe('as a sales rep, the screen names the account each path ends on (#2073 
     const n = ++k;
     const lead = await leadFor(`Fresh Co ${n}`);
     const { started, description } = await screenFor(lead.id);
-    expect(description.trim()).toBe(`${CREATES} Fresh Co ${n}.`);
+    expect(accountSentence(description)).toBe(`${CREATES} Fresh Co ${n}.`);
 
     expect(await submit(started)).toEqual({ ok: true });
     const created = await keyed(`Fresh Co ${n}`);
@@ -222,7 +233,7 @@ describe('as a sales rep, the screen names the account each path ends on (#2073 
     const account = await accountAs(rep, `Gone Co ${n}`);
     const lead = await leadFor(`Gone Co ${n}`);
     const { started, description } = await screenFor(lead.id);
-    expect(description.trim()).toBe(`Gone Co ${n} ${EXISTING}`);
+    expect(accountSentence(description)).toBe(`Gone Co ${n} ${EXISTING}`);
     // An administrator's delete while the dialog is open (a rep may not delete accounts).
     await verify.kernel.getService<Rec>('objectql').delete('crm_account', { where: { id: account.id }, context: { isSystem: true } });
 
@@ -240,7 +251,7 @@ describe('as a sales rep, the screen names the account each path ends on (#2073 
       .toHaveLength(0);
     const lead = await leadFor(`Hidden Co ${n}`);
     const { started, description } = await screenFor(lead.id);
-    expect(description.trim()).toBe(`${CREATES} Hidden Co ${n}.`);
+    expect(accountSentence(description)).toBe(`${CREATES} Hidden Co ${n}.`);
 
     const answer = await submit(started) as Rec;
     expect({ ok: answer.ok, code: answer.code, status: answer.status }, 'the submit was not refused')
@@ -255,7 +266,7 @@ describe('as a sales rep, the screen names the account each path ends on (#2073 
     const hidden = await accountAs(colleague, `Hidden Near ${n}`);
     const lead = await leadFor(`HIDDEN   near ${n}`);
     const { started, description } = await screenFor(lead.id);
-    expect(description.trim()).toBe(`${CREATES} HIDDEN   near ${n}.`);
+    expect(accountSentence(description)).toBe(`${CREATES} HIDDEN   near ${n}.`);
     expect(description, 'the screen named an account the rep cannot read').not.toContain(`Hidden Near ${n}`);
 
     expect(await submit(started)).toEqual({ ok: true });

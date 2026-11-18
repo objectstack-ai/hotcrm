@@ -43,6 +43,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       converted_flag_only_by_conversion: {
         message: '只有“转化线索”能把线索标记为已转化，因为它会创建线索转化成的客户和联系人。请使用“转化线索”，不要直接勾选“已转化”。',
       },
+      qualified_needs_qualification: {
+        message: '一条线索要带着「需求类型」和「预计金额」才能确认。请使用“确认线索”，或在把状态设为「已确认」之前填好这两项。',
+      },
       disqualification_reason_required: {
         message: '线索标记为不合格时必须填写取消资格原因',
       },
@@ -271,6 +274,10 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           campaignId: { label: '营销活动' },
         },
       },
+      qualify_lead: {
+        label: '确认线索',
+        successMessage: '线索已确认。',
+      },
       schedule_followup: {
         label: '安排跟进',
         successMessage: '跟进任务已创建。',
@@ -446,14 +453,14 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       mass_update_stage: {
         label: '更新阶段',
-        successMessage: '商机阶段已更新！',
+        successMessage: '阶段已更新。',
         params: {
           stage: {
             label: '新阶段',
             options: {
               prospecting: '寻找客户', qualification: '资格审查',
               needs_analysis: '需求分析', proposal: '提案',
-              negotiation: '谈判', closed_won: '成交', closed_lost: '失败',
+              negotiation: '谈判',
             },
           },
         },

@@ -45,6 +45,7 @@ const SCRIPT_ACTIONS = stackActions.filter((a) => a.body?.language === 'js');
 let verify: VerifyStack;
 let rep: Person;
 let agent: Person;
+let finance: Person;
 /** One real record per object an action is dispatched against. */
 const record: Record<string, AnyRec> = {};
 let k = 0;
@@ -82,11 +83,32 @@ beforeAll(async () => {
     body: 'Open Settings › Security and choose Reset password.', summary: 'How to reset a password.',
   }]);
   record.crm_knowledge_article = article!;
+  // The expense module's two bodies (#2559): the rep's own expense, and an
+  // approved report for finance to mark paid.
+  finance = await signUpPerson(verify, 'finance@script-bodies.test', {
+    name: 'Fay Finance', positions: ['crm_finance_controller'], permissionSets: ['finance_controller'],
+  });
+  record.crm_expense = await create('crm_expense', {
+    name: 'Script body taxi', expense_date: '2026-11-10', category: 'travel', amount: 25,
+  });
+  const [report] = await verify.seed('crm_expense_report', [{ name: 'Script body report', owner_id: rep.id, status: 'approved' }]);
+  record.crm_expense_report = report!;
+  // Submit for a Trip (#2580) shares the submit body: a second expense of the
+  // rep's, so the two runs do not meet, and an approved travel request.
+  record.trip_expense = await create('crm_expense', {
+    name: 'Script body hotel', expense_date: '2026-11-11', category: 'lodging', amount: 120,
+  });
+  const [trip] = await verify.seed('crm_expense_request', [{
+    name: 'Script body trip', destination: 'Beijing', start_date: '2026-11-10', end_date: '2026-11-12',
+    estimated_amount: 500, owner_id: rep.id, status: 'approved',
+  }]);
+  record.crm_expense_request = trip!;
 }, 180_000);
 
-/** Who dispatches each action: the agent works the case and the articles, the rep the rest. */
+/** Who dispatches each action: the agent works the case and the articles, finance the expense report, the rep the rest. */
 const actorFor = (key: string): Person => {
   if (key.startsWith('crm_case:') || key.startsWith('crm_knowledge_article:')) return agent;
+  if (key.startsWith('crm_expense_report:')) return finance;
   return rep;
 };
 
@@ -112,7 +134,12 @@ describe('every script action body executes under QuickJS', () => {
     'crm_opportunity:clone_opportunity': () => ({}),
     'crm_contact:mark_primary': () => ({}),
     'crm_contact:send_email': () => ({ subject: 'Hello', body: 'Body text' }),
-    'crm_opportunity:mass_update_stage': () => ({ stage: 'needs_analysis' }),
+    // The expense module (#2559): one expense from its record page, the same
+    // body against a travel request (#2580), and Mark as Paid with its two
+    // params.
+    'crm_expense:submit_for_reimbursement': () => ({}),
+    'crm_expense:submit_trip_for_reimbursement': () => ({ _selectedIds: [record.trip_expense!.id], crm_expense_request: record.crm_expense_request!.id }),
+    'crm_expense_report:mark_expense_report_paid': () => ({ payment_date: '2026-11-17', payment_reference: 'TRF-1' }),
     // The knowledge-article counters' writers (#601): both INSERT a
     // `crm_article_feedback` row keyed by the voter.
     'crm_knowledge_article:mark_article_helpful': () => ({}),
@@ -139,88 +166,6 @@ describe('every script action body executes under QuickJS', () => {
   it.each(SCRIPT_ACTIONS.map(keyOf))('%s', async (key) => {
     const result = await runAction(key, { params: INVOCATIONS[key]!() });
     expect(result, `${key} returned nothing`).toBeTruthy();
-  });
-});
-
-describe('mass_update_stage writes the stage it was given (#508, CRM half)', () => {
-  /**
-   * The defect this executor was built to be able to find, fixed and pinned the
-   * other way round: the body used to call `update(id, { stage })`, but
-   * `ctx.api` is the engine repo facade, whose update takes `(data, options)` —
-   * so the id landed in the `data` slot and the engine refused the write. Live,
-   * that was an HTTP 400 on every single-row dispatch.
-   *
-   * The MULTI-record leg: the opportunity list declares `bulkActionDefs: [{
-   * name: 'mass_update_stage', operation: 'custom', execution: 'aggregate' }]`,
-   * and the renderer delivers the whole selection in the builtin
-   * `params._selectedIds` — which a script body reads as `input._selectedIds`.
-   */
-  const deal = async (stage: string) => create('crm_opportunity', {
-    name: `Stage deal ${++k}`, crm_account: record.crm_account!.id, stage, amount: 1_000, close_date: '2030-06-30',
-  });
-
-  it('calls the facade with (data, options) — and the stored row moves', async () => {
-    const opp = await deal('qualification');
-    const engine = recordEngineWrites(verify);
-    let result: AnyRec;
-    try {
-      result = await runAction('crm_opportunity:mass_update_stage', { recordId: opp.id, params: { stage: 'needs_analysis' } });
-    } finally {
-      engine.restore();
-    }
-    const [call] = engine.of('crm_opportunity', 'update');
-    // The document in the `data` slot, the predicate in `options` — the id is
-    // never a positional argument.
-    expect(call!.args[1]).toEqual({ id: opp.id, stage: 'needs_analysis' });
-    expect((call!.args[2] as AnyRec).where).toEqual({ id: opp.id });
-    expect((await stored('crm_opportunity', opp.id)).stage).toBe('needs_analysis');
-    expect(result!).toEqual({ stage: 'needs_analysis', updated: 1 });
-  });
-
-  it('moves the STORED stage — the single-row path end to end', async () => {
-    // The exact live 400 from the rc.2 acceptance run: a `qualification` deal
-    // dispatched single-row to `needs_analysis`, which never applied.
-    const opp = await deal('qualification');
-    const result = await runAction('crm_opportunity:mass_update_stage', { recordId: opp.id, params: { stage: 'needs_analysis' } });
-    expect(result).toEqual({ stage: 'needs_analysis', updated: 1 });
-    // Read back from the store, not from the body's return value: the return
-    // value was always honest about what the body INTENDED.
-    expect((await stored('crm_opportunity', opp.id)).stage, 'the stage move never reached the store').toBe('needs_analysis');
-  });
-
-  it('moves every STORED row of an aggregate selection — the multi-row path end to end', async () => {
-    const a = await deal('prospecting');
-    const b = await deal('proposal');
-    // No recordId: an aggregate dispatch carries the whole selection under the
-    // builtin `_selectedIds` — the shape the grid renderer POSTs, underscore included.
-    const result = await runAction('crm_opportunity:mass_update_stage', {
-      recordId: undefined, params: { stage: 'negotiation', _selectedIds: [a.id, b.id] },
-    });
-    expect(result).toEqual({ stage: 'negotiation', updated: 2 });
-    for (const id of [a.id, b.id]) expect((await stored('crm_opportunity', id)).stage).toBe('negotiation');
-  });
-
-  it('rejects an aggregate run it cannot cover, instead of counting the miss', async () => {
-    // All-or-nothing (objectui#3139): the selection bar offers no per-row
-    // retry, so a handler that covers only part of the selection must reject
-    // rather than return a success the bar will toast.
-    const live = await deal('prospecting');
-    await expect(runAction('crm_opportunity:mass_update_stage', {
-      recordId: undefined, params: { stage: 'negotiation', _selectedIds: [live.id, 'opp_deleted_between_select_and_submit'] },
-    })).rejects.toThrow(/1 of 2 selected opportunities did not move to the new stage; 1 did\./);
-    // The honest half of "all-or-nothing without a transaction": the row that
-    // WAS written keeps its new stage, and the rejection says what did not move (#2511).
-    expect((await stored('crm_opportunity', live.id)).stage).toBe('negotiation');
-  });
-
-  it('covers_live_rows_after_a_stale_id — a miss does not abandon the rest of the selection', async () => {
-    // The stale id goes FIRST: a body that let the miss escape the loop would
-    // never attempt `live` at all.
-    const live = await deal('prospecting');
-    await expect(runAction('crm_opportunity:mass_update_stage', {
-      recordId: undefined, params: { stage: 'negotiation', _selectedIds: ['opp_deleted_before_the_live_row', live.id] },
-    })).rejects.toThrow(/1 of 2 selected opportunities did not move to the new stage; 1 did\./);
-    expect((await stored('crm_opportunity', live.id)).stage, 'the live row behind a stale id was never attempted').toBe('negotiation');
   });
 });
 

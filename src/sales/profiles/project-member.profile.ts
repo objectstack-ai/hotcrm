@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
-import { EXPENSE_OWN } from './_expense-grants';
+import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STANDARD_READ } from './_expense-grants';
 
 /**
  * Project Member — a consultant staffed on projects (hotcrm#2316, plan
@@ -31,7 +31,9 @@ import { EXPENSE_OWN } from './_expense-grants';
  *     project page. `crm_opportunity` stays closed (no grant): pipeline value
  *     is not delivery's, and the project's `crm_opportunity` field is hidden
  *     at the field level, so the member's page carries no restricted-record
- *     placeholder.
+ *     placeholder. The project's `crm_sales_order` (hotcrm#2561) is hidden the
+ *     same way: what the customer bought and for how much is the sale's, not
+ *     delivery's, so this set has no grant on the order either.
  */
 export const ProjectMemberProfile = {
   name: 'project_member',
@@ -58,8 +60,12 @@ export const ProjectMemberProfile = {
     crm_rate_card:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_timesheet:      { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_time_entry:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
-    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN,
+    crm_expense_report: EXPENSE_REPORT_OWN,
+    crm_expense_request: EXPENSE_OWN,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
+    crm_expense_standard: EXPENSE_STANDARD_READ, // every standard, read (hotcrm#2616)
     sys_attachment:     { allowCreate: true,  allowRead: true, allowEdit: false, allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_comment:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
     sys_activity:       { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
@@ -83,6 +89,9 @@ export const ProjectMemberProfile = {
     // Ruling D (#2316): the opportunity stays closed to a member, so the
     // field that points at it is left off their project page.
     'crm_project.crm_opportunity':         { readable: false, editable: false },
+    // hotcrm#2561: the order the project delivers, closed to a member as the
+    // opportunity is.
+    'crm_project.crm_sales_order':         { readable: false, editable: false },
     // The account's Order to Cash figures, read as every account reader reads
     // them (`_o2c-figures.ts`: the #2315 ruling authors them readable and
     // forbids `readable: false` rows).

@@ -1,5 +1,5 @@
 {
-  "title": "銷售雲",
+  "title": "銷售",
   "defaultOpen": true,
   "pages": [
     "index",
@@ -13,8 +13,12 @@
     "pipeline-management",
     "forecasting",
     "quotes",
+    "products",
+    "price-books",
+    "approvals",
     "contracts",
     "orders",
+    "billing-handoff",
     "activities",
     "meetings-and-calls"
   ]

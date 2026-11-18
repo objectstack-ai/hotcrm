@@ -1,9 +1,9 @@
 ---
-title: 销售云
-description: 捕获线索、推进交易、发送报价并完成营收所需的一切。
+title: 销售
+description: 捕获线索、推进交易、按产品目录定价、发送报价并签下合同所需的一切。
 ---
 
-# 销售云
+# 销售
 
 销售模块覆盖完整的**从线索到回款**旅程。同一条记录从首次入站咨询一路流转到签署合同，每位团队成员都能清楚看到每笔交易所处的位置。
 
@@ -31,8 +31,12 @@ Lead  ──►  Account + Contact  ──►  Opportunity  ──►  Quote  �
 | [**销售管道管理**](/zh-Hans/docs/sales/pipeline-management) | 阶段、概率与预测的工作机制。 |
 | [**预测**](/zh-Hans/docs/sales/forecasting) | 按负责人与周期的销售管道快照——配额、承诺金额、最佳情况与达成率。 |
 | [**报价**](/zh-Hans/docs/sales/quotes) | 与商机关联的定价提案，包含行项目与折扣。 |
+| [**产品**](/zh-Hans/docs/sales/products) | 你所销售内容的目录——名称、编码、标价、SKU。 |
+| [**价格表**](/zh-Hans/docs/sales/price-books) | 一个产品不止一个价格——标准价目、合作伙伴档、地区、促销。 |
+| [**审批**](/zh-Hans/docs/sales/approvals) | 大额商机的分级审批。 |
 | [**合同**](/zh-Hans/docs/sales/contracts) | 与客户签署的协议——条款、价值、续约。 |
 | [**订单**](/zh-Hans/docs/sales/orders) | 客户买了什么——订单行、合计、状态与发货。 |
+| [**与财务软件的边界**](/zh-Hans/docs/sales/billing-handoff) | HotCRM 记录钱的哪些事、把哪些留给财务软件——以及把赢单商机与已激活合同交给计费系统的两个出站事件。 |
 | [**活动**](/zh-Hans/docs/sales/activities) | 任务——你仍然欠客户的事，挂在任意记录上。 |
 | [**会议与电话**](/zh-Hans/docs/sales/meetings-and-calls) | 以活动（Event）记录的形式记录或预约的会议与电话，带参与者与互动历史。 |
 
@@ -47,17 +51,20 @@ Lead  ──►  Account + Contact  ──►  Opportunity  ──►  Quote  �
 - **大单通知**——当一笔金额 $100K 及以上的交易被标记为成交时，该交易的负责人会收到邮件通知——只通知负责人本人，不通知其经理。
 - **报价过期**——超过有效期的报价每晚会被自动标记为已过期。
 - **大额交易审批**——金额 $100K 及以上的商机会自动路由给你的销售经理审批，高于 $500K 的还要再经销售总监审批。
+- **接受报价即起草合同**——接受报价单会把商机以*成交*关闭，并根据报价单起草一份合同。
+- **自动升级客户**——合同激活的那一刻，客户被升级为*正式客户*，合同若还没有**签署日期**则记下当天。*客户*上不记任何日期：做客户群组报表时，读合同的**签署日期**或**开始日期**。
+- **续约提醒与到期**——在管理员打开了定时任务的环境里，每日续约巡检会在合同进入通知期（**续约通知（天）**，默认 30）时给**合同负责人**建一个续约任务并发出提醒，每日到期扫描则把过了结束日期的合同标记为*已过期*。
 
 ## 销售 AI 技能
 
-[销售技能](/zh-Hans/docs/ai-copilot/sales-copilot) 已内置于平台助手。当你打开一条线索、客户或商机时，它可以：
+[销售技能](/zh-Hans/docs/ai-copilot/sales-copilot)在你的环境运行平台助手时附着在它上面；你[通过 MCP 接入](/zh-Hans/docs/ai-copilot/connect-your-agent)的智能体也在同一批记录上工作。两者都可以：
 
 - 使用 BANT 方法（预算、决策权、需求、时间线）**审核线索资格**并给出评分。
 - **起草外呼邮件**，针对联系人进行个性化，并以产品目录为依据。
 - **预测营收**并标记看起来有风险的交易。
 - 在你下次会议之前**总结某个客户**（Customer 360）。
 
-只需在聊天中输入：*"qualify this lead"*、*"draft a follow-up email"*、*"what's at risk this quarter?"*
+可以这样问它：*"qualify this lead"*、*"draft a follow-up email"*、*"what's at risk this quarter?"*
 
 ## 在哪里找到这些功能
 
@@ -68,9 +75,13 @@ Lead  ──►  Account + Contact  ──►  Opportunity  ──►  Quote  �
 - **产品目录**（Product Catalog）——按类别统计的产品目录价，来自收入模块的 `product_catalog_dashboard` 仪表盘。它排在**价格表**之后，随收入模块一起消失。
 - **知识库**（Knowledge）——只对销售代表显示：已发布的知识文章，销售代表在这里、也能通过搜索框找到它们。其他人在 Service 应用的**服务**分组下找到**知识库**，销售代表的启动器不提供这个应用。
 
-**产品**（Products）归在本分组而不是**市场营销**下：产品目录是每一条报价行项目和商机行项目所指向的主数据，本质上是收入侧的数据，只是当初被顺手放在了营销旁边——参见 [Products](/zh-Hans/docs/revenue/products)。
+**产品**（Products）归在本分组而不是**市场营销**下：产品目录是每一条报价行项目和商机行项目所指向的主数据，本质上是收入侧的数据，只是当初被顺手放在了营销旁边——参见 [Products](/zh-Hans/docs/sales/products)。
 
 在侧边栏里，**合同**和**订单**排在**销售业绩**（Sales Performance）之后，**报价**、**产品**、**价格表**和**产品目录**排在其后：它们属于 HotCRM 的收入模块，而模块贡献的条目排在应用自己放进分组的条目之后。销售代表的**知识库**来自服务模块，排在最后。
+
+大额商机的审批在**我的工作**下等你处理：
+
+- **Inbox**——点开后进入平台的**审批中心**，在那里批准或拒绝等着你处理的审批。侧边栏上的 label 就是 **Inbox**，简体中文界面下显示为**待我审批**；应用里没有任何条目叫 *Approval Requests*（审批请求）。参见[审批](/zh-Hans/docs/sales/approvals)。
 
 侧边栏里没有 *销售管道*（Pipeline）这一条。看板是**商机**列表页上的一个标签页，与查看同一批交易的其他方式并列；那个视图自身的 label 是**销售流水线**（Sales Pipeline，`pipeline_kanban`）。
 
@@ -84,3 +95,4 @@ Lead  ──►  Account + Contact  ──►  Opportunity  ──►  Quote  �
 2. [商机](/zh-Hans/docs/sales/opportunities)——你每天都要处理的核心记录。
 3. [销售管道管理](/zh-Hans/docs/sales/pipeline-management)——漏斗是如何被治理的。
 4. [报价](/zh-Hans/docs/sales/quotes)——如何发送一份提案。
+5. [产品](/zh-Hans/docs/sales/products)和[价格表](/zh-Hans/docs/sales/price-books)——报价单据以定价的目录。

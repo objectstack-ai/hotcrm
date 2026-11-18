@@ -23,7 +23,9 @@ export const docs = defineDocs({
 });
 
 // Blog posts live in `content/blog`. Each post adds an author + date on top of
-// the standard frontmatter (title/description).
+// the standard frontmatter (title/description). The folder holds no post today
+// (hotcrm#2603), only `.gitkeep`; while it is empty `lib/layout.shared.tsx`
+// shows no Blog link, and the routes under `app/[lang]/blog/` stay.
 export const blog = defineCollections({
   type: 'doc',
   dir: '../../content/blog',

@@ -350,7 +350,7 @@ export const jaJP: TranslationData = {
     case_detail_page: {
       label: 'ケース詳細',
       description: 'サービス担当者向けのケースレコードページ：ハイライト、SLA パス、詳細、活動タイムライン。',
-      title: '{case_number} · {subject}',
+      title: '{display_title}',
       subtitle: '{crm_account}',
       components: {
         case_highlights: { label: '重要情報' },

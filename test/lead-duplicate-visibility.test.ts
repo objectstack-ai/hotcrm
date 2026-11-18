@@ -445,7 +445,7 @@ const seedLead = async (over: Rec = {}): Promise<Rec> => {
     company: `Skyline Media ${n}`,
     email: `theo.park.${n}@skylinemedia.example.com`,
     phone: '555-0100', title: 'Buyer', lead_source: 'web',
-    status: 'qualified', is_converted: false, owner_id: converter.id,
+    status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000, is_converted: false, owner_id: converter.id,
     ...over,
   }]);
   const [stored] = await verify.rows('crm_lead', { id: lead!.id });
@@ -528,7 +528,7 @@ async function convert(lead: Rec) {
 }
 
 describe('lead_conversion — the warning at the moment of conversion', () => {
-  it('warns on a suspected duplicate, and names the record by its email', async () => {
+  it('warns on a suspected duplicate, and says what this conversion will actually do (#2571)', async () => {
     const lead = await seedLead({
       duplicate_of_type: 'crm_lead',
       duplicate_of_lead: survivorLeadId,
@@ -540,9 +540,15 @@ describe('lead_conversion — the warning at the moment of conversion', () => {
     const description = String(screen!.description ?? '');
     expect(description, 'the conversion screen says nothing about the duplicate')
       .toContain('Suspected duplicate');
-    expect(description, 'the warning does not name the record it repeats')
-      .toContain(lead.email);
-    expect(description).toContain('second account, contact and opportunity');
+    // The warning is the pack's own sentence now (#2571), so it cannot carry
+    // the email; it points the rep at the linked record on the lead page. It
+    // no longer claims a "second account, contact and opportunity": the next
+    // two sentences say which account and contact THIS run ends on, and here
+    // no account or contact the converter can see matches, so both are new.
+    expect(description).toContain('Compare the linked record on the lead page');
+    expect(description).not.toContain('second account, contact and opportunity');
+    expect(description).toContain(`converting creates a new account named ${lead.company}.`);
+    expect(description).toContain('so converting creates a new contact named');
 
     // #1243's house rule: a sentence a user reads names a record the way the UI
     // names it. The id belongs in `duplicate_of_lead` — the relationship field

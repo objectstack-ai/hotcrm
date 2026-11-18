@@ -1,6 +1,6 @@
 # REQ-0011: Expense reimbursement as a module of its own — usable without projects
 
-- **Status**: Triaged
+- **Status**: Shipped — stage 1 by hotcrm#2556, stage 2 by hotcrm#2559. Stage 3, the travel request, runs on hotcrm#2578–#2581.
 - **Source**: Maintainer (internal) — product direction from the data-model review of 2026-11-16, not a customer intake
 - **Raised**: 2026-11-16
 - **Disposition**: **B standard-enhancement — a new standard module**, `app.objectstack.hotcrm.expense`.
@@ -9,11 +9,21 @@
 - **Traceability**: design — [`../architecture/expense-module-plan.md`](../architecture/expense-module-plan.md);
   cards — stage 1: [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issues/2556) (the expense
   package); stage 2: [hotcrm#2559](https://github.com/objectstack-ai/hotcrm/issues/2559) (the expense
-  report, Submit for Reimbursement and Mark as Paid; per-expense approval retires); stage 3 (no cards yet): the travel request and an expense skill;
+  report, Submit for Reimbursement and Mark as Paid; per-expense approval retires); stage 3: the travel request in four cards,
+  [hotcrm#2578](https://github.com/objectstack-ai/hotcrm/issues/2578) (F3a, the request and its approval),
+  [hotcrm#2579](https://github.com/objectstack-ai/hotcrm/issues/2579) (F3b, itinerary lines),
+  [hotcrm#2580](https://github.com/objectstack-ai/hotcrm/issues/2580) (F3c, the report cites a request) and
+  [hotcrm#2581](https://github.com/objectstack-ai/hotcrm/issues/2581) (F3d, the project and its project manager); the expense skill has no card yet;
   recorded by [hotcrm#2562](https://github.com/objectstack-ai/hotcrm/issues/2562). Changesets / PRs —
   stage 1: `.changeset/2556-expense-module.md` (hotcrm#2556; the project-path approval held in the
   expense package until [objectstack#34616](https://github.com/objectstack-ai/objectstack/issues/34616),
-  moved back on [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)).
+  moved back on [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)); stage 2:
+  `.changeset/2559-expense-report.md` (hotcrm#2559; approval moves FROM each expense TO its report); stage 3:
+  `.changeset/2578-travel-request.md` (hotcrm#2578), `.changeset/2581-travel-request-project.md`
+  (hotcrm#2581; its project-path approval held in the expense package with the expense report's, until
+  objectstack#34616, and on #2575's move-back list), `.changeset/2579-itinerary-lines.md` (hotcrm#2579),
+  `.changeset/2580-report-cites-request.md` (hotcrm#2580; the request is chosen by Submit for a Trip, a
+  second action on Submit for Reimbursement's body, because any action param opens a dialog on 18.5.0).
 
 ## Raw requirement (verbatim)
 
@@ -78,8 +88,8 @@ The design is [`expense-module-plan.md`](../architecture/expense-module-plan.md)
 - **Stage 2** ([hotcrm#2559](https://github.com/objectstack-ai/hotcrm/issues/2559)): the expense
   report with its approval (the project manager or the submitter's manager), Submit for
   Reimbursement and Mark as Paid; approving each expense alone retires.
-- **Stage 3** (no cards yet): the travel request (`crm_expense_request`, as read at 23:03Z) and an
-  expense skill for agents.
+- **Stage 3**: the travel request ([hotcrm#2578](https://github.com/objectstack-ai/hotcrm/issues/2578)–[#2581](https://github.com/objectstack-ai/hotcrm/issues/2581)) and an
+  expense skill for agents (no card yet).
 
 **Not now** — each a pure addition later: advances, hard policy limits, per diem and mileage,
 corporate card feeds, receipt verification, payout, accounting export, department attribution.
@@ -93,3 +103,47 @@ Foreign-currency expenses wait for [REQ-0012](0012-multi-currency.md).
   project cost as today, and the finance controller approves second above the existing threshold.
 - Each card merged with `pnpm verify` green and a browser pass. This record is closed as **Shipped**
   when stage 2 is on `main`; stage 3 reopens it or is a new record.
+
+## Note (2026-11-17): the travel request is dispatched
+
+The maintainer's words, verbatim and untranslated (UTC):
+
+| When | Words |
+| --- | --- |
+| 2026-11-17 05:15Z | 「出差申请用fable 综合分析，立卡开始开发」 |
+
+This turns the travel request, recorded above as read from 23:03Z, into a dispatched task. The
+decision thread wrote the design from it (the plan's *Travel request* section) and filed four
+cards: [hotcrm#2578](https://github.com/objectstack-ai/hotcrm/issues/2578) (F3a, the request and the
+traveler's manager's approval), [hotcrm#2579](https://github.com/objectstack-ai/hotcrm/issues/2579)
+(F3b, itinerary lines without amounts), [hotcrm#2580](https://github.com/objectstack-ai/hotcrm/issues/2580)
+(F3c, a report cites a request, planned against reported) and
+[hotcrm#2581](https://github.com/objectstack-ai/hotcrm/issues/2581) (F3d, the project and its project
+manager's approval). The design's defaults are the decision thread's, reported to her, not her typed
+rulings (the plan's *Decisions recorded (2026-11-17)*).
+
+## Note (2026-11-17): the expense assistant (F4)
+
+The maintainer's words, verbatim and untranslated (UTC):
+
+| When | Words |
+| --- | --- |
+| 2026-11-17 14:32Z | 「继续 报销的 AI skill（F4），让助手代填、查差标。」 |
+
+An assistant fills expenses for a person (「代填」) and checks them against the company's spending
+standards (「查差标」). Under her 2026-11-16 23:04Z rule the product provides the interfaces and the
+assistant does the work, so nothing in the product compares or blocks.
+
+Traceability:
+
+- **F4a** ([hotcrm#2616](https://github.com/objectstack-ai/hotcrm/issues/2616)): `crm_expense_standard`,
+  kept by finance and read by everyone; Review Notes on each expense; an index on the receipt
+  number.
+- **F4b** ([hotcrm#2617](https://github.com/objectstack-ai/hotcrm/issues/2617)): the skills
+  `expense_filing` (「费用代填」, for the employee) and `expense_check` (「费用检查」, for the approver
+  and finance), and seven actions opened to an assistant; Mark as Paid is not. Findings are written
+  on each expense before it is sent: a report under approval is locked, the approver included
+  (measured, ruled A by the decision thread on 2026-11-17), so Expense Check tells the reader.
+
+The defaults are the decision thread's, reported to her, not her typed rulings (the plan's
+*Decisions recorded (2026-11-17)*, items 6 and 7).

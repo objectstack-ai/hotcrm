@@ -1,5 +1,6 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import { i18n } from '@/lib/i18n';
+import { blogSource } from '@/lib/source';
 
 export const siteConfig = {
   name: 'HotCRM',
@@ -47,12 +48,16 @@ export function baseOptions(locale: string): BaseLayoutProps {
       title: <Logo />,
       url: `${prefix}/`,
     },
-    links: [
-      {
-        text: 'Blog',
-        url: `${prefix}/blog`,
-      },
-    ],
+    // The Blog link shows only while `content/blog` holds a post; the blog
+    // routes stay either way (hotcrm#2603).
+    links: blogSource.getPages().length
+      ? [
+          {
+            text: 'Blog',
+            url: `${prefix}/blog`,
+          },
+        ]
+      : [],
     githubUrl: siteConfig.github,
   };
 }

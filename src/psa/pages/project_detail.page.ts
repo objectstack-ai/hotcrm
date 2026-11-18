@@ -11,8 +11,18 @@ import type { Page } from '@objectstack/spec/ui';
  * discussion it synthesizes for any object. Only the `details` slot, the body
  * of the first tab (Overview in the console), is authored:
  *
- *   1. a bare `record:details`, which draws the object's field groups exactly
- *      as the synthesized tab does;
+ *   1. a `record:details` that names the object's five field groups as
+ *      `{ group }` references, in their declared order: the spelling the
+ *      synthesized tab itself emits (`buildDefaultPageSchema`'s
+ *      `fieldGroupSectionReferences`), so each section takes its group's label,
+ *      icon and collapse. ⛔ Not a bare node: on @object-ui 18.5.0 a
+ *      `record:details` with neither `sections` nor `fields` draws the
+ *      object's `highlightFields` (objectui#12433) less the ones the highlights
+ *      strip already shows, which for a project is every one of them, so the
+ *      Overview drew no field at all (measured on main, 2026-11-17). Every
+ *      field of `crm_project` is in a group, so there is no ungrouped bucket
+ *      to list; a new field without a group would not show here, and
+ *      `test/project-detail-page.test.ts` holds both;
  *   2. an `object-gantt` over this project's tasks. The filter's
  *      `{record_id}` is the record the page shows, resolved by the console
  *      (`RECORD_CONTEXT_TOKENS`); the server never sees the token.
@@ -44,7 +54,19 @@ export const ProjectDetailPage: Page = {
   regions: [],
   slots: {
     details: [
-      { type: 'record:details', id: 'project_details' },
+      {
+        type: 'record:details',
+        id: 'project_details',
+        properties: {
+          sections: [
+            { group: 'identity' },
+            { group: 'provenance' },
+            { group: 'plan' },
+            { group: 'financials' },
+            { group: 'team' },
+          ],
+        },
+      },
       {
         type: 'object-gantt',
         id: 'project_task_gantt',

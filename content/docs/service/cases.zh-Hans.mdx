@@ -22,6 +22,8 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 一个典型的快速解决工单：**New → In Progress → Resolved → Closed**。
 一个典型的卡住工单：**New → In Progress → Waiting on Customer → In Progress → Resolved → Closed**。
 
+要推进工单，点击页面顶部**状态条**上的状态并确认即可。点击和编辑受同样的检查，下文的每条规则对它同样有效。
+
 ## 4 个优先级级别
 
 | 优先级 | SLA 目标（SMB → Strategic） | 使用场景 |
@@ -195,7 +197,7 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
   - **Details**——上文《详情界面》里描述的那些字段分组分区：完整的工单描述、解决方案和内部备注，以及除**关键信息**摘要栏上那六个、**显示名称**和**优先级排序**之外的所有其他字段。打戳字段一旦有值也都在这里：*Escalation* 里的**升级日期**与**升级前负责人**，*SLA & Priority* 里的**关闭日期**、**首次响应日期**与**解决时间（小时）**，*Resolution* 里的**解决所用文章**，*System* 里的**关闭标记**。
   - **Related**——只有一个列表，不是四个：**Open Tasks**——通过**关联工单**（`related_to_case`）指向本工单的 `crm_task` 记录，过滤掉状态为 *Completed* 的，一次最多十条。整个页签就这些。附件也不在这个页签上：因为对象开了附件能力，页面在页签栏下方显示一个 **Attachments** 面板，带 **Upload** 按钮，无论打开的是哪个页签。没有关联商机列表，因为 `crm_case` 与商机之间双向都不存在任何关系字段。也没有里程碑列表——工单的三个里程碑（*escalated*、*resolved*、*closed*）是以条目形式发到 **Activity** 时间线上的，不是在这里当记录列出来。
   - **Activity**——统一的时间线（下文详述）。
-- **AI 参考栏**——这一页上不存在任何形式的参考栏。主区域里只有那组页签和它下方平台加上的 **Attachments** 面板，页面上也没有任何一个组件是 AI 驱动的。服务技能本身是真实存在的——见下文《AI Copilot 如何提供帮助》一节——但你是靠提问去用它们，而不是靠工单旁边的一块面板。本应用里唯一真正渲染出来的参考栏在商机详情页上，而且即便在那里，它列的也是关联记录（报价、产品、未完成任务），不是什么建议。
+- **AI 参考栏**——这一页上不存在任何形式的参考栏。主区域里只有那组页签和它下方平台加上的 **Attachments** 面板，页面上也没有任何一个组件是 AI 驱动的。服务技能本身是真实存在的——见下文《智能体如何提供帮助》一节——但你是靠提问去用它们，而不是靠工单旁边的一块面板。本应用里唯一真正渲染出来的参考栏在商机详情页上，而且即便在那里，它列的也是关联记录（报价、产品、未完成任务），不是什么建议。
 
 ### 活动时间线
 
@@ -211,15 +213,15 @@ Activity 标签页是工单上发生过什么的唯一可信来源。它将三�
 
 > 提示——如果你只想看讨论，使用 Activity 标签页顶部的筛选下拉菜单；你也可以从那里订阅该工单，这样任何未来的发布都会在铃铛中提醒你。
 
-## AI Copilot 如何提供帮助
+## 智能体如何提供帮助
 
-[服务技能](/zh-Hans/docs/ai-copilot/service-copilot) 会在任何工单上自动激活。你可以问：
+接入智能体后（参见 [AI 与智能体](/zh-Hans/docs/ai-copilot/index)），[服务技能](/zh-Hans/docs/ai-copilot/service-copilot)可以用在任何工单上。你可以问它：
 
 - *"分流这个工单"*——工单分流技能根据主题和描述推荐优先级。
 - *"建议一个解决方案"*——没有哪个技能能端到端做完这件事。**工单分流**只声明了 `describe_object` 与 `get_record` 两个工具，完全没有检索类工具，因此它什么都不检索。请向 **Customer 360°** 要按工单分类或标签匹配出来的已发布[知识文章](/zh-Hans/docs/service/knowledge-base)，再向**邮件撰写**要客户回复——草稿的依据是联系人与账户记录，而不是那些文章，需要援引哪一篇请自己贴进去。
 - *"Customer 360"*——拉取完整的账户上下文（未结商机、过往工单、合同等级）。
 
-如果 Copilot 判断优先级为 *Critical*，它还会建议立即升级并起草内部通知消息。
+如果智能体判断优先级为 *Critical*，它还会建议立即升级并起草内部通知消息。
 
 ## 给服务客服的提示
 
@@ -239,4 +241,4 @@ Activity 标签页是工单上发生过什么的唯一可信来源。它将三�
 
 - 按优先级与客户层级划分的 SLA 目标存储在工单对象的自动化中。要更改它们，请同时编辑 `src/service/objects/_case-sla.ts` 与 `src/service/objects/case.hook.ts` 里 `case_sla_defaults` 内部那张表——两处都要改，因为沙箱化的钩子体无法 import 常量——参见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)与 [系统管理 › 自动化](/zh-Hans/docs/administration/automation)。
 - `escalation_team@example.com` 和 `support_manager@example.com` 都没有在任何地方配置过——这两个地址在本应用中根本不存在。真实存在的收件人列表只有一处：工单升级流程 `notify` 节点的 `recipients: ['{caseRecord.owner_id}']`，即工单负责人一人；它在 `src/service/flows/case-escalation.flow.ts` 里改，不是 Setup 界面上的配置项。
-- 邮件转工单接入（从来访邮件自动创建工单）需要邮件插件——参见 [定制化 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
+- 邮件转工单接入（从来访邮件自动创建工单）需要邮件插件——参见 [开发者 › 扩展对象](/zh-Hans/docs/developers/extending-objects)。

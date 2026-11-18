@@ -42,3 +42,57 @@ export const EXPENSE_SOURCE_OPTIONS = [
   { label: 'Agent', value: 'agent' },
   { label: 'Import', value: 'import' },
 ];
+
+/**
+ * An expense report's lifecycle (REQ-0011, hotcrm#2559): written, sent,
+ * decided, paid back. Paid is recorded by finance once the money has gone
+ * out; nothing here moves money.
+ */
+export const EXPENSE_REPORT_STATUS_OPTIONS = [
+  { label: 'Draft', value: 'draft', color: '#94A3B8', kind: 'open' as const },
+  { label: 'Submitted', value: 'submitted', color: '#F59E0B', kind: 'open' as const },
+  { label: 'Approved', value: 'approved', color: '#2563EB', kind: 'open' as const },
+  { label: 'Paid', value: 'paid', color: '#16A34A', kind: 'won' as const },
+  { label: 'Rejected', value: 'rejected', color: '#DC2626', kind: 'lost' as const },
+];
+
+/**
+ * A travel request's lifecycle (hotcrm#2578, F3a). All six statuses are in
+ * the list from the first step, so the later steps (the report citing a
+ * request closes it when paid, F3c) add none: written, sent, decided, then
+ * either called off before the trip or closed after it.
+ */
+export const EXPENSE_REQUEST_STATUS_OPTIONS = [
+  { label: 'Draft', value: 'draft', color: '#94A3B8', kind: 'open' as const },
+  { label: 'Submitted', value: 'submitted', color: '#F59E0B', kind: 'open' as const },
+  // Still open: the trip is ahead, and the request is cancelled or closed later.
+  { label: 'Approved', value: 'approved', color: '#16A34A', kind: 'open' as const },
+  { label: 'Rejected', value: 'rejected', color: '#DC2626', kind: 'lost' as const },
+  { label: 'Cancelled', value: 'cancelled', color: '#64748B', kind: 'lost' as const },
+  { label: 'Closed', value: 'closed', color: '#0F766E', kind: 'won' as const },
+];
+
+/**
+ * What one leg of a trip books (hotcrm#2579, F3b): a way to travel, a place
+ * to stay, or something else. A line carries no amount (the request holds the
+ * one estimate).
+ */
+export const EXPENSE_REQUEST_LINE_KIND_OPTIONS = [
+  { label: 'Flight', value: 'flight' },
+  { label: 'Train', value: 'train' },
+  { label: 'Car', value: 'car' },
+  { label: 'Hotel', value: 'hotel' },
+  { label: 'Other', value: 'other' },
+];
+
+/**
+ * What an expense standard's limit is counted per (hotcrm#2616, F4a): a
+ * hotel night, a day of travel, one receipt, or a whole trip. The product
+ * reads it to nobody's sum; an assistant reads it when it checks an expense.
+ */
+export const EXPENSE_STANDARD_PER_OPTIONS = [
+  { label: 'Night', value: 'night' },
+  { label: 'Day', value: 'day' },
+  { label: 'Item', value: 'item' },
+  { label: 'Trip', value: 'trip' },
+];

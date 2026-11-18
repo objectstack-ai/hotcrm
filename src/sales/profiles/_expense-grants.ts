@@ -10,6 +10,14 @@
  * how an approver reaches what it approves (`expense_approver_edit` shares an
  * expense to the approver its approval stamps).
  *
+ * The travel request (`crm_expense_request`, hotcrm#2578) takes the same
+ * shape as the expense in every set, row for row: it is `private` to its
+ * traveler and shared to the approver its approval stamps
+ * (`expense_request_approver_edit`), and the sets that read every expense read
+ * every request and edit none that is not theirs. The card asked for the
+ * mirror; the sales managers' reason below (the project rollups) does not
+ * reach requests, so for them it is the mirror alone.
+ *
  * Four shapes:
  *   - {@link EXPENSE_OWN} — the position sets: create, read, edit and delete
  *     their own.
@@ -44,4 +52,65 @@ export const EXPENSE_OWN_READ_ALL = {
 export const EXPENSE_READ_ALL = {
   allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false,
   viewAllRecords: true, modifyAllRecords: false,
+};
+
+/**
+ * Expense report rows (hotcrm#2559) — the same shapes as the expense's, so
+ * the report follows the expense: own for everyone, every report read by
+ * finance and the sets that read every expense, the approver reaching what
+ * it approves through `expense_report_approver_edit`. One difference: nobody
+ * creates a report by hand. Submit for Reimbursement creates it, with its
+ * expenses on it, and finance's Mark as Paid judges the caller itself, so
+ * neither needs a create or an edit-all row.
+ */
+const noCreate = <T extends { allowCreate: boolean }>(shape: T): T => ({ ...shape, allowCreate: false });
+
+export const EXPENSE_REPORT_OWN = noCreate(EXPENSE_OWN);
+export const EXPENSE_REPORT_OWN_FLOOR = noCreate(EXPENSE_OWN_FLOOR);
+export const EXPENSE_REPORT_OWN_READ_ALL = noCreate(EXPENSE_OWN_READ_ALL);
+export const EXPENSE_REPORT_READ_ALL = EXPENSE_READ_ALL;
+
+/**
+ * Itinerary line grant rows (hotcrm#2579). A leg is `controlled_by_parent`:
+ * who reads a request reads its legs, and a write of a leg needs edit on the
+ * request, so the row grants the operations and the request decides the
+ * records. Every set that writes requests writes legs
+ * ({@link EXPENSE_REQUEST_LINE_EDIT}; the sets that read every request read
+ * every leg through it, and still edit only the legs of requests they may
+ * edit), `crm_user` the same without delete ({@link EXPENSE_REQUEST_LINE_FLOOR}),
+ * and `sales_leadership` reads ({@link EXPENSE_REQUEST_LINE_READ}).
+ */
+export const EXPENSE_REQUEST_LINE_EDIT = {
+  allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true,
+  viewAllRecords: false, modifyAllRecords: false,
+};
+
+export const EXPENSE_REQUEST_LINE_FLOOR = {
+  allowCreate: true, allowRead: true, allowEdit: true, allowDelete: false,
+  viewAllRecords: false, modifyAllRecords: false,
+};
+
+export const EXPENSE_REQUEST_LINE_READ = {
+  allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false,
+  viewAllRecords: false, modifyAllRecords: false,
+};
+
+/**
+ * Expense standard rows (hotcrm#2616, F4a). The standards are the company's,
+ * `public_read`: every set that records expenses reads every standard
+ * ({@link EXPENSE_STANDARD_READ}; `crm_user` too, so every member does), and
+ * the sets that mark a report paid keep them — finance (`finance_controller`,
+ * `ar_accountant`) creates, edits and deletes every standard
+ * ({@link EXPENSE_STANDARD_KEEP}), as it keeps the rate cards. Administrators
+ * hold the full row. `service_director` adds none, as for the expense: its
+ * holders read the standards through `crm_user`.
+ */
+export const EXPENSE_STANDARD_READ = {
+  allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false,
+  viewAllRecords: false, modifyAllRecords: false,
+};
+
+export const EXPENSE_STANDARD_KEEP = {
+  allowCreate: true, allowRead: true, allowEdit: true, allowDelete: true,
+  viewAllRecords: true, modifyAllRecords: true,
 };

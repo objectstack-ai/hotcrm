@@ -160,6 +160,10 @@ export const jaJP: TranslationData = {
         crm_account: { label: '取引先' },
         crm_opportunity: { label: '商談' },
         crm_contract: { label: '契約' },
+        crm_sales_order: {
+          label: '注文',
+          help: 'このプロジェクトが納品する販売注文。',
+        },
         source_project: {
           label: '受注元',
           help: 'デリバリープロジェクトの場合、受注元のプリセールスプロジェクトです。',
@@ -369,6 +373,7 @@ export const jaJP: TranslationData = {
       fields: {
         crm_project: { label: 'プロジェクト' },
         person: { label: '担当者' },
+        person_name: { label: '担当者名', help: '担当者の名前。ユーザーレコードと同期します。このアサインの名前になります。' },
         responsibility: {
           label: '担当',
           options: {
@@ -547,8 +552,18 @@ export const jaJP: TranslationData = {
         rates: { label: 'コストと請求' },
       },
     },
-    // The Project field it contributes to the expense module's object (hotcrm#2556).
+    // The Project field it contributes to the expense module's objects (hotcrm#2556, hotcrm#2581).
     crm_expense: {
+      fields: {
+        crm_project: { label: 'プロジェクト' },
+      },
+    },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: 'プロジェクト' },
+      },
+    },
+    crm_expense_request: {
       fields: {
         crm_project: { label: 'プロジェクト' },
       },

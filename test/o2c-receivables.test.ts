@@ -136,6 +136,7 @@ describe('with the module disabled', () => {
     await verify.apiAs(admin, 'PATCH', `${PKG}/enable`);
   });
 
+  // A package switch re-registers metadata; past the 5 s default under the full suite (hotcrm#2623).
   it('the figures are not served, and come back on enable', async () => {
     const fields = async (): Promise<string[]> => {
       const res = await verify.apiAs(admin, 'GET', '/meta/object/crm_contract');
@@ -148,10 +149,11 @@ describe('with the module disabled', () => {
     expect(await fields()).not.toContain('planned_amount');
     expect((await verify.apiAs(admin, 'PATCH', `${PKG}/enable`)).status).toBe(200);
     expect(await fields()).toContain('receivable_balance');
-  });
+  }, 60_000);
 
   // The module's own app (#2465) leaves with it, as the Marketing app does
   // with its module (#2417): the app is not served while the module is off.
+  // A package switch re-registers metadata; past the 5 s default under the full suite (hotcrm#2623).
   it('the Order to Cash app is not served, and comes back on enable', async () => {
     const appStatus = async (): Promise<number> => (await verify.apiAs(admin, 'GET', '/meta/app/crm_o2c')).status;
     expect(await appStatus()).toBe(200);
@@ -159,5 +161,5 @@ describe('with the module disabled', () => {
     expect(await appStatus()).toBe(404);
     expect((await verify.apiAs(admin, 'PATCH', `${PKG}/enable`)).status).toBe(200);
     expect(await appStatus()).toBe(200);
-  });
+  }, 60_000);
 });

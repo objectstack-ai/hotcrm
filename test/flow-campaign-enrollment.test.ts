@@ -90,7 +90,7 @@ async function world(campaignOver: Rec = {}) {
     // Ineligible for various reasons — none may be enrolled.
     lead('l_optout', { email_opt_out: true }),
     lead('l_converted', { is_converted: true, converted_account: account!.id, converted_contact: became!.id }),
-    lead('l_other', { status: 'qualified' }),
+    lead('l_other', { status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000 }),
   ])) as Record<string, Rec>;
   /**
    * Contacts, the #597 mirror of the lead roster above.

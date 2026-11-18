@@ -1,6 +1,6 @@
 ---
 title: 快速导览
-description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、你的第一笔交易。
+description: 简短走一遍 HotCRM —— 主页、六个应用、你的第一条线索和第一笔交易、一个工单、一个项目和一笔费用。
 ---
 
 # 快速导览
@@ -9,7 +9,7 @@ description: HotCRM 的 5 分钟演练 —— 主页、你的第一条线索、�
 
 ## 1. 主页仪表盘
 
-HotCRM 是三个应用（见第 2 节），每个应用打开时都落在你的侧边栏显示的第一个条目上，所以你落在哪里取决于你是谁。在 **Sales** 里，销售经理或管理员落在 **Home**，即两个固定条目中的第一个。销售代表的侧边栏里没有 **Home**：它从 **Sales Home**（销售代表自己的页面）开始，销售代表就落在那里。服务坐席与服务经理在 **Service** 里工作，它打开时落在 **Service Overview**。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
+HotCRM 是六个应用（见第 2 节），每个应用打开时都落在你的侧边栏显示的第一个条目上，所以你落在哪里取决于你是谁。在 **Sales** 里，销售经理或管理员落在 **Home**，即两个固定条目中的第一个。销售代表的侧边栏里没有 **Home**：它从 **Sales Home**（销售代表自己的页面）开始，销售代表就落在那里。服务坐席与服务经理在 **Service** 里工作，它打开时落在 **Service Overview**。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
 
 | 磁贴 | 它显示什么 |
 | --- | --- |
@@ -49,9 +49,11 @@ HotCRM 是三个应用（见第 2 节），每个应用打开时都落在你的�
 - **Service** —— 工单、知识库，以及它们所属的客户。
 - **Marketing** —— 营销活动，以及它触达的线索、联系人与客户；营销模块启用时才有。
 - **Order to Cash** —— 发票、回款和回款计划，以及它们所属的合同与客户：财务的应用；订单与回款模块启用时才有。
+- **Project Delivery** —— 项目、人员配置、预算、工时单，以及每个项目的成本：交付团队的应用；项目交付模块启用时才有。
+- **Expenses** —— 费用、报销单和出差申请：每一位员工的应用；费用报销模块启用时才有。
 - **Admin** —— 面向系统管理员。
 
-启动器只列出你的工作需要的应用：销售代表看到 **Sales**，服务坐席与服务经理看到 **Service**，市场人员看到 **Sales** 与 **Marketing**，应收会计看到 **Order to Cash**，销售经理与管理员四个都看得到。这决定的是启动器显示什么，而不是你能打开什么：启动器上没有的应用，用它的地址照样能打开；记录链接会在你当前所在的应用里打开。
+启动器只列出你的工作需要的应用。销售代表看到 **Sales**，服务坐席与服务经理看到 **Service**，市场人员看到 **Sales** 与 **Marketing**，应收会计看到 **Order to Cash**，项目经理与项目成员看到 **Sales** 与 **Project Delivery**，销售经理与管理员全都看得到。**Expenses** 在每个人的启动器上，因为每个人都会为公司花钱。这决定的是启动器显示什么，而不是你能打开什么：启动器上没有的应用，用它的地址照样能打开；记录链接会在你当前所在的应用里打开。
 
 在 Sales 内，左侧导航最上面是两个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；**Sales Home**，销售代表自己的页面，汇总管道数字、线索、未结商机、未完成任务与即将到来的活动；其余内容分在 7 个分组里：
 
@@ -75,12 +77,12 @@ HotCRM 是三个应用（见第 2 节），每个应用打开时都落在你的�
 
 本页过去列出的 5 个分组名，应用里根本不存在；另有几个条目名，真身并不在它说的位置：
 
-- *Products*（产品）不是分组。产品目录是 **Sales** 分组下的 **Products** 条目——产品是收入侧的主数据，理应放在销售里——参见 [Products](/zh-Hans/docs/revenue/products)。
-- *Approvals* 现在也不是分组了。它下面唯一的条目 **Inbox** 本质上是一个「等你处理」的个人队列，因此已并入 **My Work** 分组——参见 [Approvals](/zh-Hans/docs/revenue/approvals)。
+- *Products*（产品）不是分组。产品目录是 **Sales** 分组下的 **Products** 条目——产品是收入侧的主数据，理应放在销售里——参见 [Products](/zh-Hans/docs/sales/products)。
+- *Approvals* 现在也不是分组了。它下面唯一的条目 **Inbox** 本质上是一个「等你处理」的个人队列，因此已并入 **My Work** 分组——参见 [Approvals](/zh-Hans/docs/sales/approvals)。
 - 本页过去列出的 4 个条目名已经不在侧边栏了，但功能一个都没少——它们各自成了所属列表页上的一个标签页：*Pipeline* 是 **Opportunities** 页面上的 Sales Pipeline 标签页；*Calendar* 与 *Interaction History* 是 **Events** 页面上的 Event Calendar 与 ✅ Interaction History 标签页；*All Tasks* 则是 **My Tasks** 打开的那个页面的第一个标签页。
 - *Activities* 不是分组，真实的分组叫 **Activity**，而且任务不在里面。`crm_task` 在侧边栏上就是 **My Work** 分组下的 **My Tasks** 一项。
 - *Analytics* 不是分组。跨职能的仪表盘 **CRM Overview** 在 **Insights** 分组下，应用自带的每一张报表都在 **Reports** 分组下，上表已按各自的名字列出。没有任何条目叫 *Dashboards*。
-- *AI* 不是分组，也没有叫 *Copilot* 或 *Knowledge Bases* 的侧边栏条目。Copilot 是每个页面右侧的聊天面板（见下文第 6 节），知识文章则是 **Service** 里 **Service** 分组下的 **Knowledge**。
+- *AI* 不是分组，也没有叫 *Copilot* 或 *Knowledge Bases* 的侧边栏条目。HotCRM 不自带助手；你的智能体通过 MCP 接入，而不是通过侧边栏条目（见下文第 8 节），知识文章则是 **Service** 里 **Service** 分组下的 **Knowledge**。
 - *Knowledge Base* 不是 HotCRM 使用的 label。在 **Service** 里，这个条目叫 **Knowledge**，应用打开时落在的仪表盘叫 **Service Overview**——参见 [Service](/zh-Hans/docs/service/index)。
 - *Campaign Members* 不是侧边栏条目。营销活动成员要从营销活动详情页或全局搜索进入——参见 [Campaign Members](/zh-Hans/docs/marketing/campaign-members)。
 - *Approval Requests* 与 *Action History* 也都不是条目：本应用在审批侧只有 **Inbox** 这一个入口。审批的操作留痕本身是真实数据，由审批插件以 `sys_approval_action` 存储，但本应用里没有任何导航条目能打开它。
@@ -127,7 +129,7 @@ HotCRM 是三个应用（见第 2 节），每个应用打开时都落在你的�
 1. 点击 **Sales → Leads → New**。
 2. 填写 **Name**、**Company**、**Email**。
 3. 保存。线索会自动分配给你。
-4. 在线索详情页上请助手 *"判定此线索资格"* —— [线索资格判定技能](/zh-Hans/docs/ai-copilot/sales-copilot) 会按 BANT 给出 0–100 的评分并建议下一步操作。
+4. 如果你接入了智能体（见 [AI 与智能体](/zh-Hans/docs/ai-copilot/index)），请它 *"判定此线索资格"*：[线索资格判定技能](/zh-Hans/docs/ai-copilot/skills) 会按 BANT 给出 0–100 的评分并建议下一步操作。
 5. 准备就绪后，点击 **转化线索** 一步将线索转化为 Account + Contact + Opportunity。
 
 ➜ 了解更多：[线索](/zh-Hans/docs/sales/leads)
@@ -142,8 +144,7 @@ HotCRM 是三个应用（见第 2 节），每个应用打开时都落在你的�
 2. 设置 **Account**、**Amount**、**Close Date**、**Stage**。
 3. 随着交易推进，将其在各阶段间移动：*Prospecting → Qualification → Proposal → Negotiation → Closed Won*。
 4. 系统会强制执行[状态机](/zh-Hans/docs/administration/state-machines) —— 你不能随意跳过阶段。
-5. 点击 **✍️ Draft Email** 让 AI Copilot 起草一封符合上下文的跟进邮件。
-6. 通过将阶段设置为 *Closed Won* 来赢单 —— 系统会自动创建合同并通知团队。
+5. 通过接受它的报价单来赢单：商机以 *Closed Won* 关闭，系统根据报价单起草一份合同，并通知团队。手动把阶段设为 *Closed Won* 也会赢单，但不会起草合同。
 
 ➜ 了解更多：[商机](/zh-Hans/docs/sales/opportunities)
 
@@ -155,26 +156,42 @@ HotCRM 是三个应用（见第 2 节），每个应用打开时都落在你的�
 
 1. 工单通过邮件、Web 表单、电话、聊天或门户到达。
 2. 新工单进入队列 —— 坐席接手。
-3. 在新工单上请助手 *"分流此工单"* —— [工单分流技能](/zh-Hans/docs/ai-copilot/service-copilot) 会建议优先级、分类以及匹配的知识库文章。
+3. 接入智能体后，请它 *"分流此工单"* —— [工单分流技能](/zh-Hans/docs/ai-copilot/skills) 会建议优先级、分类以及匹配的知识库文章。
 4. SLA 计时器开始 —— 在工单页面查看响应时间 / 解决时间倒计时。
 5. 回复客户；解决后关闭工单。
 
 ➜ 了解更多：[工单](/zh-Hans/docs/service/cases)
 
-## 6. AI Copilot
+## 6. 一个项目
 
-Copilot 位于每个页面的**右侧聊天面板**。问它：
+**项目**交付已售出的内容：为一个客户做的一项工作，带着它的团队、预算和成本。
 
-- *"本周我的管道里有什么风险？"*
-- *"给我 [客户名称] 的客户 360。"*
-- *"为这条线索起草一封发现跟进邮件。"*
-- *"我本季度的预测是多少？"*
+1. 在 **Project Delivery** 里打开 **All Projects → New**，或者打开客户、商机、合同或订单上的 **Projects** 页签。
+2. 给它一个名称和所属客户，并写明它交付的商机、合同或订单。
+3. 规划预算，然后提交审批；批准后，由项目经理把它设为 *Active*。
+4. 配置人员：每位成员都按一张费率卡安排，带有成本单价和计费单价。
+5. 团队在工时单上填报工时，项目经理在 **Inbox** 里审批。已批准的工时和已批准的费用构成项目的成本，与预算对照。
 
-它从你的 CRM 数据中读取并遵守你的共享 —— 你无法让它泄露你本就看不到的记录。
+➜ 了解更多：[项目交付](/zh-Hans/docs/projects)
 
-➜ 了解更多：[AI Copilot](/zh-Hans/docs/ai-copilot/index)
+## 7. 一笔费用
 
-## 7. 接下来去哪里？
+每个人都在 **Expenses** 里记录为公司花的钱。
+
+1. 打开 **My Expenses → New**，填写金额和日期，附上票据。
+2. 选中一笔或多笔费用，点击 **Submit for Reimbursement**：它们进入一张报销单，每个项目一张，并在同一次点击中提交审批。
+3. 你的经理在 **Inbox** 里审批这张报销单（项目上的报销单由项目经理审批；金额从 2,000 起，财务也要审批）。
+4. 财务把已批准的报销单标记为已付款。HotCRM 不付出任何款项；这个标记只记录款项已经付过。
+
+➜ 了解更多：[费用报销](/zh-Hans/docs/expenses)
+
+## 8. 你的智能体
+
+HotCRM 不自带助手。通过 MCP 接入你的智能体，它就和你在同一批记录上工作，以你的身份、在你的权限与共享规则之下：你读不到的记录，它也读不到。如果你的环境运行着平台的助手，HotCRM 的八项技能会教它判定线索资格、起草邮件、做预测、生成客户 360°、分流工单，以及代填和检查费用。
+
+➜ 了解更多：[AI 与智能体](/zh-Hans/docs/ai-copilot/index)
+
+## 9. 接下来去哪里？
 
 选择与你匹配的角色：
 
@@ -182,9 +199,12 @@ Copilot 位于每个页面的**右侧聊天面板**。问它：
 | --- | --- |
 | 销售代表 | [销售](/zh-Hans/docs/sales/index) |
 | 服务坐席 | [服务](/zh-Hans/docs/service/index) |
-| 营销人员 | [市场营销](/zh-Hans/docs/marketing/index) |
+| 营销人员 | [营销](/zh-Hans/docs/marketing/index) |
 | 销售经理 | [分析 → 仪表盘](/zh-Hans/docs/analytics/dashboards) |
+| 财务 | [订单与回款](/zh-Hans/docs/order-to-cash) |
+| 项目经理或项目成员 | [项目交付](/zh-Hans/docs/projects) |
+| 为公司花钱的任何员工 | [费用报销](/zh-Hans/docs/expenses) |
 | CRM 管理员 | [系统管理 → 设置清单](/zh-Hans/docs/administration/setup) |
-| 开发者 | [面向开发者](/zh-Hans/docs/getting-started/for-developers) |
+| 开发者 | [开发者](/zh-Hans/docs/developers/index) |
 
-祝销售愉快 🚀
+想从头到尾看完整的流程，请读这几个场景：[一次产品销售](/zh-Hans/docs/getting-started/scenario-product-sale)、[一项项目服务](/zh-Hans/docs/getting-started/scenario-project-services)和[一份订阅](/zh-Hans/docs/getting-started/scenario-subscription)。

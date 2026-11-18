@@ -43,6 +43,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       converted_flag_only_by_conversion: {
         message: 'Solo «Convertir Prospecto» marca un prospecto como Convertido, porque crea la cuenta y el contacto en los que se convierte. Use «Convertir Prospecto» en lugar de marcar «Convertido».',
       },
+      qualified_needs_qualification: {
+        message: 'Un prospecto se califica con su «Tipo de Necesidad» y su «Importe Estimado». Use «Calificar Prospecto», o rellene ambos antes de poner el estado en Calificado.',
+      },
       disqualification_reason_required: {
         message: 'El motivo de descalificación es obligatorio cuando un prospecto no está cualificado',
       },
@@ -278,6 +281,10 @@ export const pipeline: Record<string, ObjectTranslationData> = {
           campaignId: { label: 'Campaña' },
         },
       },
+      qualify_lead: {
+        label: 'Calificar Prospecto',
+        successMessage: 'Prospecto calificado.',
+      },
       schedule_followup: {
         label: 'Programar Seguimiento',
         successMessage: 'Seguimiento programado.',
@@ -479,7 +486,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       mass_update_stage: {
         label: 'Actualizar Etapa',
-        successMessage: '¡Etapa de oportunidad actualizada!',
+        successMessage: 'Etapa actualizada.',
         params: {
           // Mismos valores que `fields.stage` — deben coincidir literalmente.
           stage: {
@@ -487,7 +494,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
             options: {
               prospecting: 'Prospección', qualification: 'Calificación',
               needs_analysis: 'Análisis de Necesidades', proposal: 'Propuesta',
-              negotiation: 'Negociación', closed_won: 'Cerrada Ganada', closed_lost: 'Cerrada Perdida',
+              negotiation: 'Negociación',
             },
           },
         },

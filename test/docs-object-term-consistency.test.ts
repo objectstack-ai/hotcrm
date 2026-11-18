@@ -230,8 +230,6 @@ const SPARED: readonly string[] = [
   '每日过期扫描', // the zh-Hans spelling of the same sweep
   '自动到期', // administration/automation: 合同自动到期
   '自動到期',
-  '报价单到期', // getting-started/introduction, the built-in automation list
-  '報價單到期',
   '到期扫描', // sales/contracts: 每日——到期扫描
   '到期掃描',
   '即将到期', // accounts: 要找即将到期的续约

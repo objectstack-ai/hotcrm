@@ -53,6 +53,10 @@ export const en: TranslationData = {
         crm_account: { label: 'Account' },
         crm_opportunity: { label: 'Opportunity' },
         crm_contract: { label: 'Contract' },
+        crm_sales_order: {
+          label: 'Order',
+          help: 'The sales order this project delivers.',
+        },
         source_project: {
           label: 'Won From',
           help: 'For a delivery project: the presales project it was won from.',
@@ -262,6 +266,7 @@ export const en: TranslationData = {
       fields: {
         crm_project: { label: 'Project' },
         person: { label: 'Person' },
+        person_name: { label: 'Person Name', help: "The person's name, kept in step with the user record. It names this staffing row." },
         responsibility: {
           label: 'Responsibility',
           options: {
@@ -440,8 +445,18 @@ export const en: TranslationData = {
         rates: { label: 'Cost and Billing' },
       },
     },
-    // The Project field it contributes to the expense module's object (hotcrm#2556).
+    // The Project field it contributes to the expense module's objects (hotcrm#2556, hotcrm#2581).
     crm_expense: {
+      fields: {
+        crm_project: { label: 'Project' },
+      },
+    },
+    crm_expense_report: {
+      fields: {
+        crm_project: { label: 'Project' },
+      },
+    },
+    crm_expense_request: {
       fields: {
         crm_project: { label: 'Project' },
       },

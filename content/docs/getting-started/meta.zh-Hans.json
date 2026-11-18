@@ -5,6 +5,8 @@
   "pages": [
     "introduction",
     "quick-tour",
-    "for-developers"
+    "scenario-product-sale",
+    "scenario-project-services",
+    "scenario-subscription"
   ]
 }

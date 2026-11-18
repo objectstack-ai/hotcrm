@@ -1301,7 +1301,7 @@ describe('lead_automation', () => {
 
   it('schedules a follow-up task when a lead becomes qualified', async () => {
     const lead = await leadOf({ status: 'new' });
-    await verify.hooks.run('crm_lead', 'update', { id: lead.id, status: 'qualified' }, as(rep));
+    await verify.hooks.run('crm_lead', 'update', { id: lead.id, status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000 }, as(rep));
     const task = await vi.waitFor(async () => {
       const [t] = await verify.rows('crm_task', { related_to_lead: lead.id });
       expect(t, 'no follow-up task created').toBeTruthy();
@@ -1313,7 +1313,7 @@ describe('lead_automation', () => {
   });
 
   it('does not re-schedule for a lead that was already qualified', async () => {
-    const lead = await leadOf({ status: 'qualified' });
+    const lead = await leadOf({ status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000 });
     const engine = await engineWritesDuring(() =>
       verify.hooks.run('crm_lead', 'update', { id: lead.id, status: 'qualified', description: 'Re-saved.' }, as(rep)));
     expect(engine.of('crm_task', 'insert')).toHaveLength(0);

@@ -36,7 +36,7 @@ import * as psaFlows from '../src/psa/flows';
  * Nothing failed on the second kind. A flow exported from its package barrel
  * but absent from `allFlows` is handed to `defineStack()` by nobody: it is
  * registered by nothing, it never binds a trigger, and `pnpm validate` still
- * exits 0 and names it nowhere. `content/docs/customization/extending-objects`
+ * exits 0 and names it nowhere. `content/docs/developers/extending-objects`
  * taught only the barrel step until this card, so an author following the
  * documentation shipped automation that never runs — the silent-ignore shape
  * `AGENTS.md` warns about, with no gate behind it.

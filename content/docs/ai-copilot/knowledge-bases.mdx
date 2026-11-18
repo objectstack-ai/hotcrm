@@ -1,13 +1,13 @@
 ---
 title: Knowledge Bases
-description: How the AI Copilot reaches knowledge — one Knowledge Article object, read with the same record tools as every other object.
+description: How an agent reaches knowledge — one Knowledge Article object, read with the same record tools as every other object.
 ---
 
 # Knowledge Bases
 
 Knowledge in HotCRM lives in **one** place: the **Knowledge Article** object
 (`crm_knowledge_article`), reachable from **Service → Knowledge** in the navigation.
-The Copilot reads it with the same record tools it uses for accounts, cases and
+An agent reads it with the same record tools it uses for accounts, cases and
 opportunities. There is no separate retrieval subsystem underneath it, and no
 per-team library to choose between.
 
@@ -35,7 +35,7 @@ One record, with the fields that matter for retrieval:
 
 | Field | What it does |
 | --- | --- |
-| **Article Number** | `KA-0001`, assigned automatically — this is what the Copilot cites. |
+| **Article Number** | `KA-0001`, assigned automatically — this is what an agent cites. |
 | **Title** and **Summary** | Both searchable. The summary is the one-paragraph TL;DR shown in search results and in AI citations. |
 | **Body** | The article itself, in Markdown. |
 | **Category** | Getting Started · How-To · Troubleshooting · Billing & Pricing · API & Integrations · Release Notes · Policy. |
@@ -44,12 +44,12 @@ One record, with the fields that matter for retrieval:
 | **Audience** | Public or Internal. |
 | **Language** | English · Simplified Chinese · Spanish · Japanese. |
 
-Category and tags are the fixed vocabulary the Copilot matches on, so they are the
+Category and tags are the fixed vocabulary an agent matches on, so they are the
 two fields that decide whether an article is findable. See
 [Service › Knowledge Base](/docs/service/knowledge-base) for how agents write,
 review and retire articles.
 
-## How the Copilot reaches an article
+## How an agent reaches an article
 
 By querying the object, exactly as it queries a case:
 
@@ -60,7 +60,7 @@ By querying the object, exactly as it queries a case:
 
 That is a filtered record query, not a semantic search. Matching is on the category
 and tags a person set, so an article filed under the wrong category is invisible to
-the Copilot no matter how well its body answers the question.
+an agent no matter how well its body answers the question.
 
 ### Which skills actually read articles
 
@@ -71,7 +71,7 @@ the Copilot no matter how well its body answers the question.
 | ✍️ **Email Drafting** | No. It *could* — it carries `query_records` — but nothing in its instructions reaches for an article, so no draft cites one. |
 | 🎯 **Lead Qualification** · 📈 **Revenue Forecasting** · 🔄 **Live Data** | No. None of them has a knowledge step. |
 
-So "ask the Copilot and it will find the article" means **Customer 360°**
+So "ask an agent and it will find the article" means **Customer 360°**
 specifically. Asking Case Triage for a matching article gets you a priority and
 nothing else.
 
@@ -111,7 +111,7 @@ the file's contents — no skill, no index. It is there for people to download.
 - ✅ **Category and tags are the retrieval surface.** An article no one can find is
   usually filed wrong, not written badly. Audit categories before rewriting bodies.
 - ✅ **Publish it or it does not exist.** The query filters on Published; drafts and
-  archived articles are invisible to the Copilot.
+  archived articles are invisible to an agent.
 - ✅ **Mark internal articles Internal.** Audience is an authored field, and a
   customer-facing answer should not quote a runbook.
 
@@ -126,5 +126,5 @@ the file's contents — no skill, no index. It is there for people to download.
   a knowledge gap worth writing up.
 
 See [Skills](/docs/ai-copilot/skills) for what each skill reads and writes, and
-[Customization › AI Skills](/docs/customization/ai-skills) for authoring a skill of
+[Developers › AI Skills](/docs/developers/ai-skills) for authoring a skill of
 your own.

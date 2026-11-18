@@ -41,7 +41,10 @@ export const CaseDetailPage: Page = {
           id: 'case_header',
           label: 'Case Information',
           properties: {
-            title: '{case_number} · {subject}',
+            // The stored record title, so the header and the breadcrumb read
+            // the same words (#2432 row 3: 「CASE-00034 · …」 over
+            // 「CASE-00034 - …」). `display_title` is `case_number - subject`.
+            title: '{display_title}',
             // The lookup field is `crm_account` — `{account}` matched nothing
             // and the subtitle rendered blank.
             subtitle: '{crm_account}',
@@ -131,6 +134,12 @@ export const CaseDetailPage: Page = {
           label: 'Case Status Path',
           properties: {
             statusField: 'status',
+            // A click on a stage moves the record (#2542, ruled A), as on the
+            // platform's default record page (objectstack#30075). The click is
+            // the same write as Edit: every rule that refuses a status change
+            // there (the case's own validations and the state
+            // machine) refuses it here too.
+            allowStageChange: true,
             stages: [
               { value: 'new', label: 'New' },
               { value: 'in_progress', label: 'In Progress' },

@@ -86,6 +86,10 @@ export const LeadConversionFlow: Flow = {
     // field is therefore the only layer that can carry the expression, which
     // is where the +90 lives and why this line is deliberately bare.
     { name: 'closeDate', type: 'date', isInput: true, isOutput: false },
+    // The rep's tick on `confirm_contact` (#2572), bound `false` up front for
+    // the reason `createOpportunity` is: `decision_contact_confirmed`'s edges
+    // read it, and a runner may post nothing for an unticked box.
+    { name: 'reuseContactConfirmed', type: 'boolean', isInput: true, isOutput: false, defaultValue: false },
   ],
 
   nodes: [
@@ -138,7 +142,20 @@ export const LeadConversionFlow: Flow = {
         // on every conversion. Every pack translates the whole template, and
         // `test/lead-conversion-account-notice.test.ts` renders each one for
         // both branches.
-        description: '{{duplicateWarning}} {{ existingAccountName | default:"No account you can see matches the company on this lead, so converting creates a new account named " }}{{ newAccountName | default:" is the existing account this lead will join" }}.',
+        //
+        // The CONTACT NOTICE follows the account's (#2572, ruled A by the
+        // maintainer): the contact `find_contact` matched by this lead's email
+        // address, by its own name, or a new contact named after the lead. The
+        // same two-hole shape, so every pack translates it.
+        //
+        // The DUPLICATE NOTE (#2571) is in the template too, so every pack
+        // translates it: `duplicateWarning` holds one space on a clean lead
+        // and `null` on a suspected one, and `default:` prints its text only
+        // when the hole is empty (`@objectstack/formula`: null, undefined or
+        // ""). A space is the one value that prints nothing a reader sees and
+        // still counts as present. It says only what is true on every branch:
+        // the two notices after it say what is reused and what is created.
+        description: '{{ duplicateWarning | default:"Suspected duplicate: intake flagged this lead as repeating an existing record with the same email address. Compare the linked record on the lead page before you continue." }} {{ existingAccountName | default:"No account you can see matches the company on this lead, so converting creates a new account named " }}{{ newAccountName | default:" is the existing account this lead will join" }}. {{ existingContactName | default:"No contact you can see has this lead\'s email address, so converting creates a new contact named " }}{{ newContactName | default:" is the existing contact with this lead\'s email address: converting joins this lead to that contact and fills only its empty Phone, Mobile and Title" }}.',
         // `visibleWhen` on a screen field is BARE CEL over the screen's own
         // field names — not the CEL value envelopes the rest of this flow uses
         // for filters and `update_record` fields, evaluated on the server. The
@@ -273,8 +290,8 @@ export const LeadConversionFlow: Flow = {
       id: 'warn_duplicate', type: 'assignment', label: 'Compose Duplicate Warning',
       config: {
         assignments: {
-          duplicateWarning:
-            cel`'Suspected duplicate — intake flagged this lead as repeating an existing record with this email address (' + leadRecord.email + '). Converting creates a second account, contact and opportunity for the same buyer; compare the linked record on the lead page before you continue.'`,
+          // `null` lets the template print the translated note (`screen_1`).
+          duplicateWarning: null,
         },
       },
     },
@@ -284,7 +301,8 @@ export const LeadConversionFlow: Flow = {
       // all (see `screen_1`). Same shape as `no_opportunity` below — both branches
       // write the variable so no downstream read ever meets an unset one.
       id: 'no_duplicate_warning', type: 'assignment', label: 'No Duplicate Warning',
-      config: { assignments: { duplicateWarning: null } },
+      // One space, the "present" value that prints nothing (see `screen_1`).
+      config: { assignments: { duplicateWarning: ' ' } },
     },
     {
       // The REFUSAL. A `confirmed` duplicate is a person's verdict, and the app
@@ -449,6 +467,41 @@ export const LeadConversionFlow: Flow = {
       },
     },
     {
+      // ── The reused contact has another name (#2572, ruled A) ────────────
+      //
+      // `crm_contact.email` is unique, so a lead whose email address a
+      // contact already holds can only join that contact. When the names
+      // differ, that may be two people sharing an inbox, and the rep decides:
+      // tick to reuse the contact, or cancel and change the lead's email
+      // address first. Nothing is written before this answer. Branching on
+      // `e62` / `e63`, then `e64` / `e65`.
+      id: 'decision_contact_name', type: 'decision', label: 'Contact Name Differs?',
+    },
+    {
+      id: 'confirm_contact', type: 'screen', label: 'Confirm the Contact',
+      config: {
+        description: 'This lead is {{ leadPersonName }}, but the contact with the same email address is {{ existingContactName }}. A contact\'s email address is unique, so converting joins this lead to that contact; it fills only the contact\'s empty Phone, Mobile and Title and changes nothing else. If they are different people, cancel and change the lead\'s email address first.',
+        fields: [
+          { name: 'matchedContactLink', label: 'Existing contact', type: 'record_link', reference: 'crm_contact', defaultValue: cel`matchedContact.id` },
+          // Not `required`: a boolean has no unanswered state (see
+          // `createOpportunity`). The answer is read on `e64` / `e65`.
+          { name: 'reuseContactConfirmed', label: 'Convert this lead into this contact', type: 'boolean', defaultValue: false },
+        ],
+      },
+    },
+    {
+      id: 'decision_contact_confirmed', type: 'decision', label: 'Reuse Confirmed?',
+    },
+    {
+      // Unticked: the run ends before any write, with the way out named.
+      // Translated as `refusals.refuse_contact_not_confirmed.message`.
+      id: 'refuse_contact_not_confirmed', type: 'end', label: 'Conversion Cancelled',
+      config: {
+        outcome: 'refused',
+        message: 'Not converted: you did not confirm joining this lead to the existing contact with the same email address. Nothing was created. If they are different people, change the lead\'s email address and convert it again.',
+      },
+    },
+    {
       // Account dedupe: match on the NORMALIZED company name, never on the raw
       // one — "Acme Corp" and "ACME  Corp" are the same account.
       //
@@ -550,6 +603,21 @@ export const LeadConversionFlow: Flow = {
         assignments: {
           existingAccountName: cel`matchedAccount != null ? matchedAccount.name : null`,
           newAccountName: cel`matchedAccount == null ? leadRecord.company : null`,
+          // The contact notice (#2572), read off `find_contact`, which now runs
+          // before the screen. A contact's `full_name` is the name the rep
+          // finds it by; a lead's name is its first and last name, the two
+          // values `create_contact` writes.
+          existingContactName: cel`matchedContact != null ? (has(matchedContact.full_name) && !isBlank(matchedContact.full_name) ? matchedContact.full_name : matchedContact.last_name) : null`,
+          newContactName: cel`matchedContact == null ? (has(leadRecord.full_name) && !isBlank(leadRecord.full_name) ? leadRecord.full_name : leadRecord.last_name) : null`,
+          leadPersonName: cel`has(leadRecord.full_name) && !isBlank(leadRecord.full_name) ? leadRecord.full_name : leadRecord.last_name`,
+          // A different name on the contact the email matches: the rep
+          // confirms the reuse on `confirm_contact` before anything is written.
+          // First and last name compared as stored; any difference asks.
+          contactNameDiffers: cel`matchedContact != null && ((has(matchedContact.first_name) ? matchedContact.first_name : '') != (has(leadRecord.first_name) ? leadRecord.first_name : '') || (has(matchedContact.last_name) ? matchedContact.last_name : '') != leadRecord.last_name)`,
+          // Fill only what the reused contact leaves empty (#2572): true when
+          // the lead holds a Phone, Mobile or Title the contact lacks, so
+          // `fill_contact_blanks` writes only when it has something to add.
+          fillContactBlanks: cel`matchedContact != null && ((has(leadRecord.phone) && !isBlank(leadRecord.phone) && (!has(matchedContact.phone) || isBlank(matchedContact.phone))) || (has(leadRecord.mobile) && !isBlank(leadRecord.mobile) && (!has(matchedContact.mobile) || isBlank(matchedContact.mobile))) || (has(leadRecord.title) && !isBlank(leadRecord.title) && (!has(matchedContact.title) || isBlank(matchedContact.title))))`,
         },
       },
     },
@@ -697,6 +765,28 @@ export const LeadConversionFlow: Flow = {
     {
       id: 'use_existing_contact', type: 'assignment', label: 'Reuse Existing Contact',
       config: { assignments: { contactId: cel`matchedContact.id` } },
+    },
+    {
+      // ── A reused contact keeps what it has (#2572, ruled A) ────────────
+      //
+      // The lead's Phone, Mobile and Title fill only the reused contact's
+      // EMPTY ones; a value the contact holds is never overwritten. Each field
+      // writes the contact's own value when it has one, so the write changes
+      // only the blanks. Reached only when `fillContactBlanks` found one
+      // (`e60` / `e61`), so a contact with nothing to add is not written.
+      id: 'decision_contact_blanks', type: 'decision', label: 'Contact Has Blanks to Fill?',
+    },
+    {
+      id: 'fill_contact_blanks', type: 'update_record', label: 'Fill Contact Blanks from Lead',
+      config: {
+        objectName: 'crm_contact',
+        filter: { id: cel`contactId` },
+        fields: {
+          phone: cel`has(matchedContact.phone) && !isBlank(matchedContact.phone) ? matchedContact.phone : (has(leadRecord.phone) ? leadRecord.phone : null)`,
+          mobile: cel`has(matchedContact.mobile) && !isBlank(matchedContact.mobile) ? matchedContact.mobile : (has(leadRecord.mobile) ? leadRecord.mobile : null)`,
+          title: cel`has(matchedContact.title) && !isBlank(matchedContact.title) ? matchedContact.title : (has(leadRecord.title) ? leadRecord.title : null)`,
+        },
+      },
     },
     {
       // ── A REUSED contact keeps the stricter consent (#2068) ──────────────
@@ -893,10 +983,14 @@ export const LeadConversionFlow: Flow = {
       // `visibleWhen` reads only the values the dialog collects, and the
       // dialog never seeds a `record_link` field's value.
       //
+      // The sentence for an account that needs no approval says where the
+      // lead went, not what is absent: "No account approval is pending for
+      // X" read as a warning on the screen's first line (#2432 row 7).
+      //
       // Translated as `screens.result` in the packs.
       id: 'result', type: 'screen', label: 'Lead Converted',
       config: {
-        description: '{{ pendingApprovalAccountName | default:"No account approval is pending for " }}{{ noApprovalAccountName | default:" is waiting for account approval by a sales manager" }}.',
+        description: '{{ pendingApprovalAccountName | default:"The lead is now part of the account " }}{{ noApprovalAccountName | default:" is waiting for account approval by a sales manager" }}.',
         fields: [
           { name: 'accountLink', label: 'Account', type: 'record_link', reference: 'crm_account', defaultValue: cel`accountId` },
           { name: 'contactLink', label: 'Contact', type: 'record_link', reference: 'crm_contact', defaultValue: cel`contactId` },
@@ -992,7 +1086,11 @@ export const LeadConversionFlow: Flow = {
     // through the notice to the screen.
     { id: 'e48', source: 'decision_match_key', target: 'find_account', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.company_normalized) && !isBlank(vars.leadRecord.company_normalized)`, label: 'Has match key' },
     { id: 'e32', source: 'decision_match_key', target: 'refuse_no_match_key', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.company_normalized) || isBlank(vars.leadRecord.company_normalized)`, label: 'No match key' },
-    { id: 'e49', source: 'find_account', target: 'compose_account_notice', type: 'default' },
+    // `find_contact` runs before the screen since #2572, so the screen can
+    // name the contact: `e49` now leads to it, `e58` on to the notices, and
+    // `e10` (`find_contact` → `decision_contact`) is retired for `e8` / `e9`.
+    { id: 'e49', source: 'find_account', target: 'find_contact', type: 'default' },
+    { id: 'e58', source: 'find_contact', target: 'compose_account_notice', type: 'default' },
     { id: 'e50', source: 'compose_account_notice', target: 'screen_1', type: 'default' },
     // `e26`, `e30` and `e33` (each refusal → `end`) are RETIRED and stay
     // vacant (#2060 item 2c): `e25`, `e28` and `e32` end the run at a refusing
@@ -1008,7 +1106,13 @@ export const LeadConversionFlow: Flow = {
     // runs ahead of the screen now, so an accepted amount goes straight to
     // the account branch, on `e51`, which carries `e44`'s condition unchanged.
     { id: 'e43', source: 'screen_1', target: 'decision_amount', type: 'default' },
-    { id: 'e51', source: 'decision_amount', target: 'decision_account', type: 'default', condition: P`vars.createOpportunity != true || vars.opportunityAmount == null || vars.opportunityAmount > 0`, label: 'Amount accepted' },
+    { id: 'e51', source: 'decision_amount', target: 'decision_contact_name', type: 'default', condition: P`vars.createOpportunity != true || vars.opportunityAmount == null || vars.opportunityAmount > 0`, label: 'Amount accepted' },
+    // The reused contact's name (#2572). TOTAL and PARTITIONING pairs.
+    { id: 'e62', source: 'decision_contact_name', target: 'confirm_contact', type: 'default', condition: P`vars.contactNameDiffers == true`, label: 'Name differs' },
+    { id: 'e63', source: 'decision_contact_name', target: 'decision_account', type: 'default', condition: P`vars.contactNameDiffers != true`, label: 'Same name or new contact' },
+    { id: 'e66', source: 'confirm_contact', target: 'decision_contact_confirmed', type: 'default' },
+    { id: 'e64', source: 'decision_contact_confirmed', target: 'decision_account', type: 'default', condition: P`vars.reuseContactConfirmed == true`, label: 'Confirmed' },
+    { id: 'e65', source: 'decision_contact_confirmed', target: 'refuse_contact_not_confirmed', type: 'default', condition: P`vars.reuseContactConfirmed != true`, label: 'Not confirmed' },
     { id: 'e45', source: 'decision_amount', target: 'refuse_nonpositive_amount', type: 'default', condition: P`vars.createOpportunity == true && vars.opportunityAmount != null && vars.opportunityAmount <= 0`, label: 'Zero or less' },
     // Existing account → reuse; no account → create. Both converge on create_contact.
     // `find_account` is reached only with a match key (`e48`), so a match
@@ -1023,9 +1127,8 @@ export const LeadConversionFlow: Flow = {
     { id: 'e41', source: 'create_account', target: 'copy_account_revenue', type: 'default' },
     { id: 'e42', source: 'copy_account_revenue', target: 'use_new_account', type: 'default' },
     // Both account branches converge on the contact-dedupe lookup.
-    { id: 'e8', source: 'use_new_account', target: 'find_contact', type: 'default' },
-    { id: 'e9', source: 'use_existing_account', target: 'find_contact', type: 'default' },
-    { id: 'e10', source: 'find_contact', target: 'decision_contact', type: 'default' },
+    { id: 'e8', source: 'use_new_account', target: 'decision_contact', type: 'default' },
+    { id: 'e9', source: 'use_existing_account', target: 'decision_contact', type: 'default' },
     // Existing contact → reuse; none → create, after reading whether the
     // account already has a primary (`e12` retired for `e46` / `e47`, #2060
     // item 9). Both converge on decision_opportunity, the reuse path through
@@ -1040,7 +1143,10 @@ export const LeadConversionFlow: Flow = {
     // `e15` (use_existing_contact → decision_opportunity) is RETIRED and stays
     // vacant; `e34` replaces it. Each pair below is TOTAL and PARTITIONING, and
     // only a flag the lead carries as `true` takes the raise.
-    { id: 'e34', source: 'use_existing_contact', target: 'decision_contact_do_not_call', type: 'default' },
+    { id: 'e34', source: 'use_existing_contact', target: 'decision_contact_blanks', type: 'default' },
+    { id: 'e60', source: 'decision_contact_blanks', target: 'fill_contact_blanks', type: 'default', condition: P`vars.fillContactBlanks == true`, label: 'Has blanks' },
+    { id: 'e61', source: 'decision_contact_blanks', target: 'decision_contact_do_not_call', type: 'default', condition: P`vars.fillContactBlanks != true`, label: 'Nothing to fill' },
+    { id: 'e59', source: 'fill_contact_blanks', target: 'decision_contact_do_not_call', type: 'default' },
     { id: 'e35', source: 'decision_contact_do_not_call', target: 'raise_contact_do_not_call', type: 'default', condition: P`has(vars.leadRecord) && has(vars.leadRecord.do_not_call) && vars.leadRecord.do_not_call == true`, label: 'Do not call' },
     { id: 'e36', source: 'decision_contact_do_not_call', target: 'decision_contact_email_opt_out', type: 'default', condition: P`!has(vars.leadRecord) || !has(vars.leadRecord.do_not_call) || vars.leadRecord.do_not_call != true`, label: 'Callable' },
     { id: 'e37', source: 'raise_contact_do_not_call', target: 'decision_contact_email_opt_out', type: 'default' },

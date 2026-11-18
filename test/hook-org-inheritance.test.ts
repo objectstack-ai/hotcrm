@@ -273,7 +273,7 @@ describe('hook-created records inherit the triggering organization', () => {
     })) as AnyRec;
     expect(lead.organization_id).toBe(ORG_A);
 
-    await a.object('crm_lead').update({ id: lead.id, status: 'qualified' });
+    await a.object('crm_lead').update({ id: lead.id, status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000 });
 
     const followUp = await awaitRow(
       'qualified-lead follow-up task',

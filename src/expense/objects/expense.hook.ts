@@ -1,30 +1,53 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
+import type { HookApi } from '../../sales/objects/_hook-api';
 
 /**
- * The approval decides (#2316 phase 1b): submitting starts an approval, which
- * writes Approved or Rejected when the approvers decide. A person who sets
- * either status is refused, so nobody approves spend by editing the record;
- * an administrator may, to repair an expense whose approval cannot run.
+ * An expense on a sent report is the report's (hotcrm#2559). Once its report
+ * is submitted, approved, paid or rejected, a person cannot change or delete
+ * the expense: what the approver decided is what is paid back. A rejected
+ * report goes back to Draft to be corrected, and its expenses with it.
  *
- * What this hook no longer does (hotcrm#2556). It used to stamp the approver
- * from the project and refuse spend on a locked, Closed or Cancelled project.
- * This package knows nothing of projects, and Project Delivery may not attach
- * a hook to an object it does not own (ADR-0130 R4), so each approval stamps
- * its own approver when the expense is submitted, and Project Delivery keeps
- * an over project out of the project picker and turns its submission back in
- * its own flow (`src/psa/flows/submission-approval.flow.ts`).
+ * What this hook no longer does. It used to refuse a person who set an
+ * expense Approved or Rejected (#2316 phase 1b). Since per-expense approval
+ * retired (hotcrm#2559) an expense's status is read-only to people and
+ * follows its report (`./expense_report.hook.ts`), so there is nothing left
+ * to refuse there. It stopped stamping the approver and judging the project
+ * at hotcrm#2556: this package knows nothing of projects.
+ *
+ * **An expense's project stays as reported.** The report's approval is chosen
+ * by the report's project (`../flows/expense-report-project-approval.flow.ts`),
+ * which Submit for Reimbursement takes from its expenses. So a person cannot
+ * change the project of an expense that is on a report, even a Draft one
+ * (recalled, or back from a rejection): the report would still go to the old
+ * project's manager while the cost lands on the new project. To move it,
+ * delete the draft report, which frees its expenses, and submit them again.
+ * The `crm_project` key arrives only while Project Delivery contributes the
+ * field, so this package still names no project object.
+ *
+ * Judged on a person's write; the report's approval and Submit for
+ * Reimbursement write as the platform. An administrator may, to repair.
  */
-const expenseDecisionGuard: Hook = {
-  name: 'expense_decision_guard',
+const expenseLineLock: Hook = {
+  name: 'expense_line_lock',
   object: 'crm_expense',
-  events: ['beforeInsert', 'beforeUpdate'],
+  events: ['beforeUpdate', 'beforeDelete'],
   priority: 100,
   refusals: {
-    FORBIDDEN: { message: 'An expense is approved or rejected by its approvers, from their Inbox, once it is submitted.', status: 403 },
+    RECORD_LOCKED: {
+      message: 'This expense is on a report that has been sent, so it can no longer be changed.',
+      status: 409,
+      params: ['name', 'report'],
+      reasons: {
+        in_review: { message: 'Expense {{name}} is on report {{report}}, which is waiting for approval. Recall the report to change it.' },
+        rejected: { message: 'Expense {{name}} is on report {{report}}, which was rejected. Move the report back to Draft to correct it.' },
+        decided: { message: 'Expense {{name}} is on report {{report}}, which has been approved, so it can no longer be changed.' },
+        project: { message: 'Expense {{name}} is on report {{report}}, which goes to the approver of its project. To change the project, delete the draft report, which frees its expenses, and submit them again.' },
+      },
+    },
   },
-  description: 'Leave the decision on an expense to its approval: a person cannot set Approved or Rejected by hand.',
+  description: 'Keep an expense on a sent report as the report sent it: a person cannot change or delete it until the report is back to Draft, nor move it to another project while it is on a report.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -45,23 +68,59 @@ const expenseDecisionGuard: Hook = {
       err.userMessage = userMessage;
       return err;
     }
-    const { input } = ctx;
-    if (!input) return;
-    const previous = (ctx.previous ?? {}) as Record<string, unknown>;
-    const person = Boolean(ctx.user?.id) && !ctx.session?.isSystem;
-    const status = input.status;
-    if (person && (status === 'approved' || status === 'rejected') && status !== previous.status) {
-      const ADMIN_IDENTITIES = ['platform_admin', 'org_owner', 'org_admin'];
-      const positions = (ctx.session?.positions ?? []) as string[];
-      if (!positions.some((p) => ADMIN_IDENTITIES.includes(p))) {
-        throw refuse(
-          'An expense is approved or rejected by its approvers, from their Inbox, once it is submitted.',
-          'FORBIDDEN',
-          403,
-        );
+    function refId(value: unknown): string {
+      if (typeof value === 'string') return value;
+      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+        return String((value as Record<string, unknown>).id);
       }
+      return '';
     }
+    const person = Boolean(ctx.user?.id) && !ctx.session?.isSystem;
+    if (!person) return;
+    const ADMIN_IDENTITIES = ['platform_admin', 'org_owner', 'org_admin'];
+    if (((ctx.session?.positions ?? []) as string[]).some((p) => ADMIN_IDENTITIES.includes(p))) return;
+    const previous = (ctx.previous ?? {}) as Record<string, unknown>;
+    const input = (ctx.input ?? {}) as Record<string, unknown>;
+    const reportId = refId(previous.crm_expense_report);
+    const status = String(previous.status ?? 'draft');
+    const projectMoved = ctx.event === 'beforeUpdate' && 'crm_project' in input
+      && refId(input.crm_project) !== refId(previous.crm_project);
+    if (!reportId || (status === 'draft' && !projectMoved)) return;
+    const api = ctx.api as HookApi | undefined;
+    const report = api
+      ? await api.object('crm_expense_report').findOne({ where: { id: reportId }, fields: ['name', 'status'] })
+      : null;
+    const reportStatus = String(report?.status ?? status);
+    const name = String(previous.name ?? '');
+    const reportName = String(report?.name ?? '');
+    if (reportStatus === 'draft') {
+      if (!projectMoved) return;
+      throw Object.assign(refuse(
+        `Expense ${name} is on report ${reportName}, which goes to the approver of its project. To change the project, delete the draft report, which frees its expenses, and submit them again.`,
+        'RECORD_LOCKED',
+        409,
+      ), { reason: 'project', params: { name, report: reportName } });
+    }
+    if (reportStatus === 'submitted') {
+      throw Object.assign(refuse(
+        `Expense ${name} is on report ${reportName}, which is waiting for approval. Recall the report to change it.`,
+        'RECORD_LOCKED',
+        409,
+      ), { reason: 'in_review', params: { name, report: reportName } });
+    }
+    if (reportStatus === 'rejected') {
+      throw Object.assign(refuse(
+        `Expense ${name} is on report ${reportName}, which was rejected. Move the report back to Draft to correct it.`,
+        'RECORD_LOCKED',
+        409,
+      ), { reason: 'rejected', params: { name, report: reportName } });
+    }
+    throw Object.assign(refuse(
+      `Expense ${name} is on report ${reportName}, which has been approved, so it can no longer be changed.`,
+      'RECORD_LOCKED',
+      409,
+    ), { reason: 'decided', params: { name, report: reportName } });
   },
 };
 
-export default [expenseDecisionGuard];
+export default [expenseLineLock];

@@ -239,7 +239,7 @@ const SRC_TEXT: string = (() => {
 
 const PAGES = [
   {
-    file: 'content/docs/revenue/approvals.mdx',
+    file: 'content/docs/sales/approvals.mdx',
     lang: 'en',
     heading: '## Where to find pending approvals',
     /** The Inbox entry's label, in this page's language. */
@@ -277,7 +277,7 @@ const PAGES = [
     ],
   },
   {
-    file: 'content/docs/revenue/approvals.zh-Hans.mdx',
+    file: 'content/docs/sales/approvals.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 在哪里找到待处理的审批',
     inboxLabel: ZH_HANS_INBOX,
@@ -315,7 +315,7 @@ const PAGES = [
     ],
   },
   {
-    file: 'content/docs/revenue/approvals.zh-Hant.mdx',
+    file: 'content/docs/sales/approvals.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 在哪裡找到待處理的審批',
     inboxLabel: toHant(ZH_HANS_INBOX),
@@ -355,7 +355,8 @@ const PAGES = [
 ] as const;
 
 /**
- * `revenue/index` carries the same Inbox bullet one directory over, and nothing
+ * `sales/index` carries the same Inbox bullet (it took over `revenue/index`'s,
+ * hotcrm#2604, when Revenue became part of Sales), and nothing
  * pinned it at all — which is why #1123's re-point left it stale in three more
  * files than the section above. Only the destination is pinned here: the roster
  * of names on that page is `revenue/approvals`'s job, and duplicating it would
@@ -363,7 +364,7 @@ const PAGES = [
  */
 const INDEX_PAGES = [
   {
-    file: 'content/docs/revenue/index.mdx',
+    file: 'content/docs/sales/index.mdx',
     heading: '## Where to find things',
     destinationClaims: {
       'approval-centre': "opens the platform's **approval centre**",
@@ -371,16 +372,16 @@ const INDEX_PAGES = [
     },
   },
   {
-    file: 'content/docs/revenue/index.zh-Hans.mdx',
-    heading: '## 在哪里找到这些内容',
+    file: 'content/docs/sales/index.zh-Hans.mdx',
+    heading: '## 在哪里找到这些功能',
     destinationClaims: {
       'approval-centre': '进入平台的**审批中心**',
       'request-object-list': '等着你处理的审批请求（`sys_approval_request`）',
     },
   },
   {
-    file: 'content/docs/revenue/index.zh-Hant.mdx',
-    heading: '## 在哪裡找到這些內容',
+    file: 'content/docs/sales/index.zh-Hant.mdx',
+    heading: '## 在哪裡找到這些功能',
     destinationClaims: {
       'approval-centre': '進入平台的**審批中心**',
       'request-object-list': '等著你處理的審批請求（`sys_approval_request`）',
@@ -660,7 +661,7 @@ describe('revenue/approvals names the navigation that exists (#963, #1162)', () 
   );
 });
 
-describe('revenue/index sends the reader to the same destination (#1162)', () => {
+describe('sales/index sends the reader to the same destination (#1162)', () => {
   describe.each(INDEX_PAGES)('$file', ({ file, heading, destinationClaims }) => {
     it('describes the destination the entry actually carries, and no other', () => {
       const text = sectionOf(file, heading);

@@ -11,13 +11,13 @@ HotCRM 的设计目标是**融入你的技术栈**，而非取代它。今天它
 
 ## 今天已落地的能力
 
-- 🔌 **平台数据 API**——每个 CRM 对象都可以通过运行时的 HTTP API 访问，支持 ObjectQL 形态的筛选与字段选择。参见 [API 参考](/zh-Hans/docs/customization/api-reference)。
+- 🔌 **平台数据 API**——每个 CRM 对象都可以通过运行时的 HTTP API 访问，支持 ObjectQL 形态的筛选与字段选择。参见 [API 参考](/zh-Hans/docs/developers/api-reference)。
 - 🤖 **面向 AI Agent 的 MCP 端点**（`/api/v1/mcp`）——默认开启。任何支持 MCP 的客户端（Claude Code、Claude Desktop、Cursor、VS Code / Copilot、Codex CLI）都能接上这个部署，并通过与人相同的对象、相同的校验、相同的权限检查来操作 CRM。身份是自助的——该部署本身就是一台 OAuth 2.1 授权服务器——而且**每一次调用都以调用者自己的权限与行级安全执行**，不是共享的服务账号。各客户端的复制粘贴配置就在应用里，位于 **系统设置 → 集成 → 连接智能体**。
 - 📤 **列表视图的 CSV / XLSX 导出**——客户、联系人、线索、商机与工单的列表视图各自声明了 `exportOptions: ['csv', 'xlsx']`。
 - 📥 **电子表格导入**，带可复用的列映射，并可先试运行。参见[导入你自己的数据](/zh-Hans/docs/guides/importing-your-data)。
 - ✉️ **对外邮件**——联系人上的**发送邮件**，把邮件排入平台邮件服务。只有出站方向，而且只有在部署配置了传输方式时才真的发得出去。参见[邮件与日历](/zh-Hans/docs/guides/email-and-calendar)。
 - 🔔 **应用内通知**——`notify` 流程节点经平台消息服务送达 Console 铃铛。是在 HotCRM 内部，而不是送进 Slack 或某个收件箱。
-- 🧩 **你自己的代码**——钩子、流程与操作体在进程内针对同一批对象、同一套权限校验运行。参见[定制化 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
+- 🧩 **你自己的代码**——钩子、流程与操作体在进程内针对同一批对象、同一套权限校验运行。参见[开发者 › 扩展对象](/zh-Hans/docs/developers/extending-objects)。
 
 ### 设置 → 集成 下面今天真正有什么
 
@@ -95,7 +95,7 @@ HotCRM 的设计目标是**融入你的技术栈**，而非取代它。今天它
 
 ## HTTP API
 
-外部系统可以通过运行时的 HTTP 数据 API 创建与更新 HotCRM 记录。对象清单、ObjectQL 筛选形态与身份验证请参见 [API 参考](/zh-Hans/docs/customization/api-reference)。对象名就是本应用注册的那些——`crm_lead`、`crm_account`、`crm_opportunity`——而路由形态取决于你的运行时版本，而非本应用钉住的任何东西，所以请从你自己的环境里读它，而不是从一篇指南里硬编码的路径。
+外部系统可以通过运行时的 HTTP 数据 API 创建与更新 HotCRM 记录。对象清单、ObjectQL 筛选形态与身份验证请参见 [API 参考](/zh-Hans/docs/developers/api-reference)。对象名就是本应用注册的那些——`crm_lead`、`crm_account`、`crm_opportunity`——而路由形态取决于你的运行时版本，而非本应用钉住的任何东西，所以请从你自己的环境里读它，而不是从一篇指南里硬编码的路径。
 
 **没有 GraphQL 端点。** GraphQL 不在产品规划内，平台已经把 `/graphql` 从服务表里移除，而不是继续公告一条没人提供服务的路径。
 
@@ -117,13 +117,13 @@ HotCRM 的设计目标是**融入你的技术栈**，而非取代它。今天它
 
 ### 1. 服务器到服务器脚本（真实）
 
-从脚本（cron 作业、Lambda、GitHub Action）调用 HTTP 数据 API。参见 [API 参考](/zh-Hans/docs/customization/api-reference)。
+从脚本（cron 作业、Lambda、GitHub Action）调用 HTTP 数据 API。参见 [API 参考](/zh-Hans/docs/developers/api-reference)。
 
 最适合：计划内的同步、内部工具，以及任何你希望自己掌控可靠性的场景。
 
 ### 2. 进程内扩展代码（真实）
 
-钩子、流程与操作体在 HotCRM 内部运行，针对同一批对象、同一套权限校验。参见[定制化 › 扩展对象](/zh-Hans/docs/customization/extending-objects)。
+钩子、流程与操作体在 HotCRM 内部运行，针对同一批对象、同一套权限校验。参见[开发者 › 扩展对象](/zh-Hans/docs/developers/extending-objects)。
 
 最适合：无论是谁发起的写入都必须执行的逻辑。
 

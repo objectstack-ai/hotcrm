@@ -17,7 +17,8 @@ sources:
 For project managers, the people staffed on projects, and finance. A project
 is presales, delivery or internal work for an account; all three are staffed,
 booked and costed the same way, so presales and internal effort show up as
-cost too.
+cost too. A project may name the sales order it delivers in **Order**, beside
+its contract, and the order's page then lists it under **Projects**.
 
 ## Staffing decides who reads and runs a project
 
@@ -30,12 +31,12 @@ cost too.
   the Team as well.
 - **The Team sees the customer, not the deal.** A team member reads every
   account, read-only, so the project's Account shows by name. The
-  Opportunity is left off their project page, the deal does not open for
-  them, and Opportunities is not in their Project Delivery menu.
+  Opportunity and the Order are left off their project page, the deal does
+  not open for them, and Opportunities is not in their Project Delivery menu.
 - **One row per person per project.** Staffing someone twice is refused.
 - **Staff yourself first.** Until someone is staffed as Project Manager, a
-  timesheet written on the project has no approver, and an expense submitted
-  on it goes to an administrator.
+  timesheet written on the project has no approver, and an expense report
+  submitted on it goes to an administrator.
 - **Only people staffed on a project can book hours on it.** An hour from
   anyone else is refused, naming the project.
 

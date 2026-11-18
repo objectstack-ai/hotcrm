@@ -1,6 +1,6 @@
 ---
 title: Quick Tour
-description: A 5-minute walkthrough of HotCRM — the home page, your first lead, your first deal.
+description: A short walk through HotCRM — the home page, the six apps, your first lead and deal, a case, a project and an expense.
 ---
 
 # Quick Tour
@@ -9,7 +9,7 @@ A guided tour through the screens you'll use every day.
 
 ## 1. The home dashboard
 
-HotCRM is three apps (section 2), and each opens on the first entry your sidebar shows, so where you land depends on who you are. In **Sales**, a sales manager or an administrator lands on **Home**, the first of two pinned entries. A sales rep's sidebar has no **Home**: it starts at **Sales Home**, the rep's own page, and that is where a rep lands. A service agent or service manager works in **Service**, which opens on **Service Overview**. **Home** opens the **Executive Overview** dashboard — nine tiles of revenue, customer and pipeline numbers:
+HotCRM is six apps (section 2), and each opens on the first entry your sidebar shows, so where you land depends on who you are. In **Sales**, a sales manager or an administrator lands on **Home**, the first of two pinned entries. A sales rep's sidebar has no **Home**: it starts at **Sales Home**, the rep's own page, and that is where a rep lands. A service agent or service manager works in **Service**, which opens on **Service Overview**. **Home** opens the **Executive Overview** dashboard — nine tiles of revenue, customer and pipeline numbers:
 
 | Tile | What it shows |
 | --- | --- |
@@ -47,9 +47,11 @@ Click the **app launcher** (top-left grid icon) to switch between apps. HotCRM s
 - **Service** — cases, the knowledge base and the customers they belong to.
 - **Marketing** — campaigns and the leads, contacts and accounts they reach, while the marketing module is enabled.
 - **Order to Cash** — invoices, payments and the collection plan, with the contracts and accounts they belong to: finance's app, while the order-to-cash module is enabled.
+- **Project Delivery** — projects, staffing, budgets, timesheets and what each project costs: the delivery team's app, while the project delivery module is enabled.
+- **Expenses** — expenses, expense reports and travel requests: every employee's app, while the expense module is enabled.
 - **Admin** — for system administrators.
 
-Your launcher offers the apps your work needs: a sales rep gets **Sales**, a service agent or service manager **Service**, a marketing user **Sales** and **Marketing**, an accounts-receivable accountant **Order to Cash**, and a sales manager or an administrator all four. That decides what the launcher shows, not what you may open: an app left off your launcher still opens from its address, and a link to a record opens it in the app you are in.
+Your launcher offers the apps your work needs. A sales rep gets **Sales**, a service agent or service manager **Service**, a marketing user **Sales** and **Marketing**, an accounts-receivable accountant **Order to Cash**, a project manager or project team member **Sales** and **Project Delivery**, and a sales manager or an administrator all of them. **Expenses** is on everyone's launcher, since everyone spends for the company. That decides what the launcher shows, not what you may open: an app left off your launcher still opens from its address, and a link to a record opens it in the app you are in.
 
 Inside Sales, the left nav opens with two pinned items — **Home**, which is the **Executive Overview** dashboard, and **Sales Home**, a rep's own page of pipeline figures, leads, open deals, open tasks and upcoming events — and everything else sits in seven groups:
 
@@ -71,12 +73,12 @@ One sidebar row per destination is deliberate. Where an object offers several wa
 
 Five group names this page used to list are not in the app at all, and several item names sit somewhere other than where it put them:
 
-- *Products* is not a group. The catalog is the **Products** item under **Sales**, where the revenue master data belongs — see [Products](/docs/revenue/products).
-- *Approvals* is no longer a group either. Its one item, **Inbox**, is a personal queue, so it now sits under **My Work** with the rest of what is waiting on you — see [Approvals](/docs/revenue/approvals).
+- *Products* is not a group. The catalog is the **Products** item under **Sales**, where the revenue master data belongs — see [Products](/docs/sales/products).
+- *Approvals* is no longer a group either. Its one item, **Inbox**, is a personal queue, so it now sits under **My Work** with the rest of what is waiting on you — see [Approvals](/docs/sales/approvals).
 - Four item names this page used to list have left the sidebar without leaving the product — each is now a tab on the list page it belongs to. *Pipeline* is the Sales Pipeline tab on **Opportunities**; *Calendar* and *Interaction History* are the Event Calendar and ✅ Interaction History tabs on **Events**; *All Tasks* is the first tab on the page **My Tasks** opens.
 - *Activities* is not a group; the real one is **Activity**, and tasks are not in it. `crm_task` reaches the sidebar as **My Tasks**, under **My Work**.
 - *Analytics* is not a group. The cross-functional dashboard, **CRM Overview**, is under **Insights**, and every report the app ships is under **Reports**, each listed above under its own name. Nothing is called *Dashboards*.
-- *AI* is not a group, and no sidebar item is called *Copilot* or *Knowledge Bases*. The Copilot is the right-side chat panel on every page (section 6 below), and the knowledge articles are **Knowledge** under **Service**, in **Service**.
+- *AI* is not a group, and no sidebar item is called *Copilot* or *Knowledge Bases*. HotCRM ships no assistant of its own; your agent connects over MCP rather than through a sidebar entry (section 8 below), and the knowledge articles are **Knowledge** under **Service**, in **Service**.
 - *Knowledge Base* is not a label HotCRM carries. In **Service** the entry is **Knowledge**, and the dashboard the app opens on is **Service Overview** — see [Service](/docs/service/index).
 - *Campaign Members* is not a sidebar item. Campaign membership is reached from the campaign detail page or from global search — see [Campaign Members](/docs/marketing/campaign-members).
 - *Approval Requests* and *Action History* are not items either: **Inbox** is the only approvals entry the app carries. The approval audit trail is real data — the approvals plugin stores it as `sys_approval_action` — but no navigation entry in this app opens it.
@@ -123,7 +125,7 @@ A **lead** is someone who's expressed interest but hasn't been qualified yet.
 1. Click **Sales → Leads → New**.
 2. Fill in **Name**, **Company**, **Email**.
 3. Save. The lead is automatically assigned to you.
-4. Ask the assistant to *"qualify this lead"* on the lead detail page — the [Lead Qualification skill](/docs/ai-copilot/sales-copilot) scores them 0–100 on BANT and suggests the next action.
+4. If you have connected an agent (see [AI and Agents](/docs/ai-copilot/index)), ask it to *"qualify this lead"*: the [Lead Qualification skill](/docs/ai-copilot/skills) scores the lead 0–100 on BANT and suggests the next action.
 5. When ready, click **Convert Lead** to turn the lead into an Account + Contact + Opportunity in one step.
 
 ➜ Learn more: [Leads](/docs/sales/leads)
@@ -138,8 +140,7 @@ An **opportunity** is a real deal you're working.
 2. Set **Account**, **Amount**, **Close Date**, **Stage**.
 3. As the deal progresses, move it through stages: *Prospecting → Qualification → Proposal → Negotiation → Closed Won*.
 4. The system enforces the [state machine](/docs/administration/state-machines) — you can't skip stages randomly.
-5. Click **✍️ Draft Email** to have the AI Copilot draft a contextual follow-up.
-6. Win it by setting stage to *Closed Won* — the system auto-creates a contract and notifies the team.
+5. Win it by accepting its quote: the deal closes as *Closed Won*, a draft contract is created from the quote, and the team is told. Setting the stage to *Closed Won* by hand wins the deal without drafting a contract.
 
 ➜ Learn more: [Opportunities](/docs/sales/opportunities)
 
@@ -151,26 +152,42 @@ A **case** is a customer issue.
 
 1. Cases arrive via email, web form, phone, chat, or portal.
 2. New cases land in a queue — agents pick them up.
-3. Ask the assistant to *"triage this case"* on a new case — the [Case Triage skill](/docs/ai-copilot/service-copilot) suggests priority, category, and matching knowledge-base articles.
+3. With an agent connected, ask it to *"triage this case"* — the [Case Triage skill](/docs/ai-copilot/skills#case-triage) suggests priority, category, and matching knowledge-base articles.
 4. The SLA clock starts — see the time-to-respond / time-to-resolve countdown on the case page.
 5. Reply to the customer; close the case when resolved.
 
 ➜ Learn more: [Cases](/docs/service/cases)
 
-## 6. The AI Copilot
+## 6. A project
 
-The Copilot lives in the **right-side chat panel** on every page. Ask it:
+A **project** delivers what was sold: one engagement for a customer, with its team, budget and cost.
 
-- *"What's at risk in my pipeline this week?"*
-- *"Give me Customer 360 on [account name]."*
-- *"Draft a discovery follow-up for this lead."*
-- *"What's my forecast for this quarter?"*
+1. In **Project Delivery**, open **All Projects → New**, or the **Projects** tab of an account, an opportunity, a contract or an order.
+2. Give it a name and its account, and name the opportunity, contract or order it delivers.
+3. Plan its budget, then send it for approval; once approved, the project manager makes it *Active*.
+4. Staff it: each member is placed at a rate card, with a cost rate and a bill rate.
+5. The team books hours on timesheets, and the project manager approves them from the **Inbox**. Approved hours and approved expenses make up the project's cost, against its budget.
 
-It reads from your CRM data and respects your sharing — you can't ask it to leak records you can't already see.
+➜ Learn more: [Project Delivery](/docs/projects)
 
-➜ Learn more: [AI Copilot](/docs/ai-copilot/index)
+## 7. An expense
 
-## 7. Where to next?
+Everyone records what they spend for the company in **Expenses**.
+
+1. Open **My Expenses → New**, enter the amount and date, and attach the receipt.
+2. Select one or more expenses and click **Submit for Reimbursement**: they go on an expense report, one report per project, sent for approval in the same click.
+3. Your manager approves the report from the **Inbox** (the project manager, for a report on a project; finance too, from 2,000).
+4. Finance marks the approved report paid. Nothing is paid out from HotCRM; the mark records that it was.
+
+➜ Learn more: [Expenses](/docs/expenses)
+
+## 8. Your agent
+
+HotCRM ships no assistant of its own. Connect your agent over MCP, and it works on the same records you do, as you, under your permissions and sharing: it cannot read a record you cannot. Where your environment runs the platform's assistant, HotCRM's eight skills teach it to qualify a lead, draft an email, forecast, build a customer 360°, triage a case, and file and check expenses.
+
+➜ Learn more: [AI and Agents](/docs/ai-copilot/index)
+
+## 9. Where to next?
 
 Pick the role that matches you:
 
@@ -180,7 +197,10 @@ Pick the role that matches you:
 | Service agent | [Service](/docs/service/index) |
 | Marketer | [Marketing](/docs/marketing/index) |
 | Sales manager | [Analytics → Dashboards](/docs/analytics/dashboards) |
+| Finance | [Order to Cash](/docs/order-to-cash) |
+| Project manager or project team member | [Project Delivery](/docs/projects) |
+| Any employee who spends for the company | [Expenses](/docs/expenses) |
 | CRM administrator | [Administration → Setup Checklist](/docs/administration/setup) |
-| Developer | [For Developers](/docs/getting-started/for-developers) |
+| Developer | [Developers](/docs/developers/index) |
 
-Happy selling 🚀
+To see whole processes end to end, read the scenarios: [a product sale](/docs/getting-started/scenario-product-sale), [a project service](/docs/getting-started/scenario-project-services) and [a subscription](/docs/getting-started/scenario-subscription).

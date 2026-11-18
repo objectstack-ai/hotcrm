@@ -189,7 +189,7 @@ const byForm: CreatePath = async (s, { rep }, company) => {
 const byConvertLead: CreatePath = async (s, { manager }, company) => {
   const lead = await s.hooks.run('crm_lead', 'insert', {
     company, email: `buyer@${company.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.example.com`,
-    first_name: 'Joe', last_name: 'Green', phone: '555', title: 'Buyer', lead_source: 'web', status: 'qualified',
+    first_name: 'Joe', last_name: 'Green', phone: '555', title: 'Buyer', lead_source: 'web', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
   }, { as: manager.token });
   const started = (await s.flows.run('lead_conversion', { recordId: lead.id }, { as: manager.token })) as Rec;
   // Resume ON TOP OF what the screen prefilled, as the console's runner does.

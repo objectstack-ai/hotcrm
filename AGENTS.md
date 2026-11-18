@@ -122,8 +122,11 @@ it reports is the app package, and ⛔ it is not an instruction to move them —
    (`crm_account`); the runtime injects nothing, so the name in source = at runtime = in the DB = in the REST URL = in the docs, and
    every reference — lookup / master-detail targets, cube `sql`, view, hook, action, navigation, dashboard and translation keys — uses
    it. Platform objects keep `sys_*`; the file stays unprefixed (`src/sales/objects/contract.object.ts` declares `name: 'crm_contract'`); the
-   roster is `src/*/objects/*.object.ts`, ⛔ never restated in prose. The `os lint` `naming/namespace-prefix` warning on non-object items
-   is advisory (ADR-0048): ⛔ do not mass-rename to chase it.
+   roster is `src/*/objects/*.object.ts`, ⛔ never restated in prose. **Positions carry `crm_` too**: since 18.4.0 a position is one
+   slot per name in the environment (ADR-0150 D7), so `os lint` warns on an unprefixed one and `--strict` fails; a new position is
+   named `crm_<role>`, and its translation keys, `current_user.positions` checks and staffing spell the same name (#2437). On the
+   other non-object items the platform resolves by package (flows, actions, permission sets, …) the `naming/namespace-prefix`
+   warning is advisory (ADR-0048): ⛔ do not mass-rename to chase it.
 3. **Data access is ObjectQL through `ctx.api`** — there is no `broker`. Shape:
    `ctx.api.object('crm_opportunity').find({ where: { amount: { $gt: 50000 } } })`; a `*.hook.ts` casts once
    (`const api = ctx.api as HookApi | undefined`, from `src/sales/objects/_hook-api.ts` — every package's hooks import it along their edge into sales), an action body calls it directly.
@@ -224,6 +227,7 @@ needed; (3) per-field enumeration only in the extreme case, with a comment namin
 - **Docs**: every new object or feature gets a user-facing page under `content/docs/` for business users and admins — business concepts,
   never a hand-copied machine roster; English first, then `.zh-Hans.mdx` and `.zh-Hant.mdx` beside it. A feature that adds a rule the
   screens do not show also updates its package's **in-app docs** in the same PR (rule 7). Both under **Documentation discipline** below.
+- **Languages per surface**: UI, docs site, in-app manuals, README and marketplace listing each ship their own set — `docs/README.md` § *Languages By Surface* is the table (`test/docs-language-matrix.test.ts` reads it); a language added or dropped anywhere updates it in the same PR.
 - **Validation predicates must be TOTAL**: every `record.x` read in an authored CEL predicate (`validations[].condition`, `requiredWhen`,
   `readonlyWhen`, `visibleWhen`) carries a `has(record.x)` guard.
 - **Dependencies**: the `@objectstack/*` packages in `package.json` are version-locked and bumped together; keep `engines.protocol` in

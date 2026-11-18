@@ -24,6 +24,8 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
 一個典型的快速解決工單：**New → In Progress → Resolved → Closed**。
 一個典型的卡住工單：**New → In Progress → Waiting on Customer → In Progress → Resolved → Closed**。
 
+要推進工單，點擊頁面頂部**狀態條**上的狀態並確認即可。點擊和編輯受同樣的檢查，下文的每條規則對它同樣有效。
+
 ## 4 個優先順序級別
 
 | 優先順序 | SLA 目標（SMB → Strategic） | 使用場景 |
@@ -197,7 +199,7 @@ description: 客戶支援工單——主題、優先順序、狀態、解決方�
   - **Details**——上文《詳情介面》裡描述的那些欄位分組分區：完整的工單描述、解決方案和內部備註，以及除**關鍵資訊**摘要欄上那六個、**顯示名稱**和**優先順序排序**之外的所有其他欄位。打戳欄位一旦有值也都在這裡：*Escalation* 裡的**升級日期**與**升級前負責人**，*SLA & Priority* 裡的**關閉日期**、**首次回應日期**與**解決時間（小時）**，*Resolution* 裡的**解決所用文章**，*System* 裡的**關閉標記**。
   - **Related**——只有一個列表，不是四個：**Open Tasks**——透過**關聯工單**（`related_to_case`）指向本工單的 `crm_task` 記錄，過濾掉狀態為 *Completed* 的，一次最多十筆。整個頁籤就這些。附件也不在這個頁籤上：因為物件開了附件能力，頁面在頁籤列下方顯示一個 **Attachments** 面板，帶 **Upload** 按鈕，無論打開的是哪個頁籤。沒有關聯商機列表，因為 `crm_case` 與商機之間雙向都不存在任何關係欄位。也沒有里程碑列表——工單的三個里程碑（*escalated*、*resolved*、*closed*）是以條目形式發到 **Activity** 時間線上的，不是在這裡當記錄列出來。
   - **Activity**——統一的時間線（下文詳述）。
-- **AI 參考欄**——這一頁上不存在任何形式的參考欄。主區域裡只有那組頁籤和它下方平台加上的 **Attachments** 面板，頁面上也沒有任何一個元件是 AI 驅動的。服務技能本身是真實存在的——見下文《AI Copilot 如何提供幫助》一節——但你是靠提問去用它們，而不是靠工單旁邊的一塊面板。本應用裡唯一真正渲染出來的參考欄在商機詳情頁上，而且即便在那裡，它列的也是關聯記錄（報價、產品、未完成任務），不是什麼建議。
+- **AI 參考欄**——這一頁上不存在任何形式的參考欄。主區域裡只有那組頁籤和它下方平台加上的 **Attachments** 面板，頁面上也沒有任何一個元件是 AI 驅動的。服務技能本身是真實存在的——見下文《智能體如何提供幫助》一節——但你是靠提問去用它們，而不是靠工單旁邊的一塊面板。本應用裡唯一真正渲染出來的參考欄在商機詳情頁上，而且即便在那裡，它列的也是關聯記錄（報價、產品、未完成任務），不是什麼建議。
 
 ### 活動時間線
 
@@ -213,7 +215,7 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將三�
 
 > 提示——如果你只想看討論，使用 Activity 標籤頁頂部的篩選下拉選單；你也可以從那裡訂閱該工單，這樣任何未來的發布都會在鈴鐺中提醒你。
 
-## AI Copilot 如何提供幫助
+## 智能體如何提供幫助
 
 [服務技能](/zh-Hant/docs/ai-copilot/service-copilot) 會在任何工單上自動啟動。你可以問：
 
@@ -221,7 +223,7 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將三�
 - *"建議一個解決方案"*——沒有哪個技能能端到端做完這件事。**工單分流**只宣告了 `describe_object` 與 `get_record` 兩個工具，完全沒有檢索類工具，因此它什麼都不檢索。請向 **Customer 360°** 要按工單分類或標籤匹配出來的已發布[知識文章](/zh-Hant/docs/service/knowledge-base)，再向**郵件撰寫**要客戶回覆——草稿的依據是聯絡人與帳戶記錄，而不是那些文章，需要援引哪一篇請自己貼進去。
 - *"Customer 360"*——拉取完整的帳戶上下文（未結商機、過往工單、合約等級）。
 
-如果 Copilot 判斷優先順序為 *Critical*，它還會建議立即升級並起草內部通知訊息。
+如果智能體判斷優先順序為 *Critical*，它還會建議立即升級並起草內部通知訊息。
 
 ## 給服務客服的提示
 
@@ -241,4 +243,4 @@ Activity 標籤頁是工單上發生過什麼的唯一可信來源。它將三�
 
 - 按優先順序與客戶層級劃分的 SLA 目標儲存在工單物件的自動化中。要更改它們，請同時編輯 `src/service/objects/_case-sla.ts` 與 `src/service/objects/case.hook.ts` 裡 `case_sla_defaults` 內部那張表——兩處都要改，因為沙箱化的鉤子體無法 import 常數——參見 [SLA 與升級](/zh-Hant/docs/service/sla-and-escalation)與 [系統管理 › 自動化](/zh-Hant/docs/administration/automation)。
 - `escalation_team@example.com` 和 `support_manager@example.com` 都沒有在任何地方設定過——這兩個地址在本應用中根本不存在。真實存在的收件人列表只有一處：工單升級流程 `notify` 節點的 `recipients: ['{caseRecord.owner_id}']`，即工單負責人一人；它在 `src/service/flows/case-escalation.flow.ts` 裡改，不是 Setup 介面上的設定項。
-- 郵件轉工單接入（從來訪郵件自動建立工單）需要郵件外掛——參見 [客製化 › 擴展物件](/zh-Hant/docs/customization/extending-objects)。
+- 郵件轉工單接入（從來訪郵件自動建立工單）需要郵件外掛——參見 [開發者 › 擴展物件](/zh-Hant/docs/developers/extending-objects)。

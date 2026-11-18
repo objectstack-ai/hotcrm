@@ -97,13 +97,18 @@ export const ContractViews = defineView({
     },
   },
 
+  // One page of stacked sections, not tabs (#2566): on a phone the last tabs
+  // were off screen. Signing comes after the contract is drafted and the notes
+  // are long-form, so both start collapsed; the wide dialog takes three
+  // fields a row.
   form: {
-    type: 'tabbed',
+    type: 'simple',
+    modalSize: 'xl',
     sections: [
       {
         name: 'parties',
         label: 'Parties',
-        columns: 2,
+        columns: 3,
         fields: ['contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status'],
       },
       {
@@ -113,7 +118,7 @@ export const ContractViews = defineView({
         // group's wording instead of its own "Terms".
         name: 'contract_terms',
         label: 'Terms',
-        columns: 2,
+        columns: 3,
         fields: [
           'contract_term_months',
           'start_date',
@@ -128,6 +133,7 @@ export const ContractViews = defineView({
       {
         name: 'signing_and_documents',
         label: 'Signing & Documents',
+        collapsed: true,
         columns: 2,
         // The Signed Copy first: uploading it fills Signed Date, and an
         // activation requires it (#2317).
@@ -148,6 +154,7 @@ export const ContractViews = defineView({
         // written. One column, because both are long-form.
         name: 'notes',
         label: 'Notes',
+        collapsed: true,
         columns: 1,
         fields: ['description', 'special_terms', 'billing_address'],
       },

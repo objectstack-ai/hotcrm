@@ -41,6 +41,7 @@ const DIAGRAMS: { page: string; object: string }[] = [
   { page: 'docs/crm_sales_contracts', object: 'crm_contract' },
   { page: 'service/docs/crm_service_cases', object: 'crm_case' },
   { page: 'revenue/docs/crm_revenue_quotes', object: 'crm_quote' },
+  { page: 'expense/docs/crm_expense_travel_request', object: 'crm_expense_request' },
 ];
 
 const LOCALES: { suffix: string; label: (object: string, field: string, value: string, fallback: string) => string }[] = [

@@ -15,24 +15,29 @@ import { defineView } from '@objectstack/spec/ui';
  */
 /**
  * The selection bar of every grid list of the object: Update Stage and Delete
- * (#2338 item 4). The full note on the Update Stage dispatch contract is on
- * `list` below.
+ * (#2338 item 4).
  *
- * A named list view does NOT inherit the `list` view's `bulkActionDefs`
- * (measured on 18.2.0: All Opportunities' bar offered only Delete). While
- * `mass_update_stage` was also drawn in the list header, every view showed an
- * Update Stage button, but that copy failed on any selection (see `locations`
- * on the action), so it was dropped, and each grid list declares the bar entry
- * instead. Kanban, calendar, timeline and gallery lists have no row selection.
+ * Update Stage is the bare-string `bulkActions` form: the per-record dispatch.
+ * The bar calls `mass_update_stage` once per selected row with that row's
+ * `recordId`, and the action is a declared write the platform performs as the
+ * caller (`src/sales/actions/opportunity.actions.ts`). So each row is
+ * permitted, locked or refused on its own, and the bar's result dialog counts
+ * and explains each row (#2586, #2587). Its label, icon and New Stage picker
+ * are promoted from the action, so they stay translated.
  *
- * Delete is declared here because any authored bulk entry hides the console's
+ * A named list view does NOT inherit the `list` view's bulk entries (measured
+ * on 18.2.0: All Opportunities' bar offered only Delete), so each grid list
+ * declares both. Kanban, calendar, timeline and gallery lists have no row
+ * selection.
+ *
+ * Delete is declared because any authored bulk entry hides the console's
  * default bulk Delete on that list, so a list naming Update Stage alone loses
  * Delete (Open Deals had, before #2338). The def mirrors `all_accounts`; the
  * grid offers it only to a user who may delete opportunities, and its labels
  * are in the locale packs under each view's `bulkActions`.
  */
+const GRID_BULK = ['mass_update_stage'] as const;
 const GRID_BAR = [
-  { name: 'mass_update_stage', operation: 'custom', execution: 'aggregate' },
   {
     name: 'delete',
     label: 'Delete',
@@ -91,39 +96,14 @@ export const OpportunityViews = defineView({
     // own `locations: ['list_item']`. Built-in `exportOptions` covers CSV
     // export.
     //
-    // `mass_update_stage` is wired as an AGGREGATE bulk def, not as a bare
-    // `bulkActions: ['mass_update_stage']` string (#508). The two forms are
-    // different dispatch contracts, and only this one moves a whole selection:
-    //
-    //   - bare string  → per-record fan-out: the action is dispatched ONCE PER
-    //     selected row with `recordId` set. N requests, N stage moves.
-    //   - aggregate def → ONE dispatch for the whole selection, carrying every
-    //     id in the builtin `params._selectedIds` and no `recordId`. One
-    //     request, N stage moves, one audit entry.
-    //
-    // Aggregate is the right shape here because the body already loops over the
-    // selection itself, and because the run is all-or-nothing: a partial result
-    // rejects instead of leaving the bar reporting per-row success it cannot
-    // honour (see the body in `src/sales/actions/opportunity.actions.ts`).
-    //
-    // `execution: 'aggregate'` is REQUIRED on an `operation: 'custom'` def and
-    // is not boilerplate: a custom def without it has no dispatcher, so the
-    // button ticks green once per row and does nothing at all. The spec refuses
-    // that shape at parse time (#4457) — which is also what makes this
-    // declaration safe to trust rather than merely present.
-    //
-    // History: this list carried the bare-string form until #588 removed it as
-    // a silent no-op, and the removal was read as "the platform cannot deliver
-    // a selection" for two release candidates. It could: the channel is
-    // `params._selectedIds`, the underscore is load-bearing, and nothing was
-    // injecting it precisely BECAUSE this declaration was gone
-    // (objectstack-ai/objectstack#5568, closed works-as-declared).
-    //
-    // The def deliberately carries only the three keys that choose the dispatch
-    // contract. Label, icon, params (the New Stage picker) and `visible` are
-    // promoted from the action itself by the renderer, so the dialog and the
-    // toolbar button cannot drift apart — and the label stays i18n-resolved,
-    // which an inline `label:` here would not be.
+    // Update Stage is the bare-string, PER-RECORD wiring (#2586): one call
+    // per selected row, each a declared write performed as the caller. The
+    // aggregate def this list carried from #508 to #2586 dispatched once for
+    // the whole selection into a system-elevated body; that body moved deals
+    // the caller could not edit and deals an approval had locked, and the bar
+    // could only report its one rejection as N failures. History of the two
+    // forms: #508, #588, objectstack-ai/objectstack#5568.
+    bulkActions: [...GRID_BULK],
     bulkActionDefs: [...GRID_BAR],
   },
 
@@ -135,6 +115,7 @@ export const OpportunityViews = defineView({
     // overflow menu at 1280px.
     my_open_deals: {
       name: 'my_open_deals',
+      bulkActions: [...GRID_BULK],
       bulkActionDefs: [...GRID_BAR],
       type: 'grid',
       label: 'My Open Deals',
@@ -160,6 +141,7 @@ export const OpportunityViews = defineView({
      */
     all_opportunities: {
       name: 'all_opportunities',
+      bulkActions: [...GRID_BULK],
       bulkActionDefs: [...GRID_BAR],
       type: 'grid',
       label: 'All Opportunities',
@@ -256,6 +238,7 @@ export const OpportunityViews = defineView({
     /** Stale Opportunities — still-open deals, longest-parked first */
     stale_opportunities: {
       name: 'stale_opportunities',
+      bulkActions: [...GRID_BULK],
       bulkActionDefs: [...GRID_BAR],
       type: 'grid',
       // Honest label: this view does not apply the 14-day cut its automation
@@ -331,6 +314,7 @@ export const OpportunityViews = defineView({
      */
     tender_this_quarter: {
       name: 'tender_this_quarter',
+      bulkActions: [...GRID_BULK],
       bulkActionDefs: [...GRID_BAR],
       type: 'grid',
       label: 'Tender This Quarter',
@@ -356,6 +340,7 @@ export const OpportunityViews = defineView({
     /** Closing this quarter (commit + best_case) — sales-manager forecast */
     closing_this_quarter: {
       name: 'closing_this_quarter',
+      bulkActions: [...GRID_BULK],
       bulkActionDefs: [...GRID_BAR],
       type: 'grid',
       label: 'Closing This Quarter',
@@ -415,13 +400,18 @@ export const OpportunityViews = defineView({
     },
   },
 
+  // One page of stacked sections, not tabs (#2566): a required field on a
+  // later tab only showed as a dot on its title, and on a phone the fourth tab
+  // was cut short and the last two were off screen. The forecast detail and the
+  // win/loss notes start collapsed; the wide dialog takes three fields a row.
   form: {
-    type: 'tabbed',
+    type: 'simple',
+    modalSize: 'xl',
     sections: [
       {
         name: 'overview',
         label: 'Overview',
-        columns: 2,
+        columns: 3,
         fields: [
           { field: 'name', required: true, span: 'full' },
           { field: 'crm_account', required: true },
@@ -429,8 +419,9 @@ export const OpportunityViews = defineView({
           { field: 'stage', required: true },
           // The close reason sits in the cell beside Stage, shown only once
           // its closed stage is picked (#2238). The object's `requiredWhen`
-          // demands it on that stage; while it lived on the last tab, every
-          // Closed Won save failed once and jumped there to show the field.
+          // demands it on that stage; while it lived on the last tab of the
+          // old tabbed form, every Closed Won save failed once and jumped
+          // there to show the field.
           // Each predicate is TOTAL (`has()`-guarded), per AGENTS.md: an
           // unevaluable `visibleWhen` fails OPEN and would show both at once.
           {
@@ -450,7 +441,8 @@ export const OpportunityViews = defineView({
       {
         name: 'forecast',
         label: 'Forecast',
-        columns: 2,
+        collapsed: true,
+        columns: 3,
         fields: [
           'expected_revenue',
           'forecast_category',
@@ -487,13 +479,10 @@ export const OpportunityViews = defineView({
       // never reaches this form — the Edit and New dialog. A group reference
       // enumerates nothing; members, label and icon come from the object.
       //
-      // ⚠️ Measured on the 17.6.0 console: the tabbed dialog renders NO tab
-      // for a `{ group }` section — this one, and the contact form's buying
-      // centre on `main` alike. That is the platform's to fix, and these two
-      // lines are the contract-correct form waiting for it (AGENTS.md: a
-      // platform defect is waited for, never routed around). Until then every
-      // REQ-0006 field is edited through the Details tab's edit mode — which
-      // offers no markdown editor, the reason the narrative fields are
+      // On 17.6.0 the tabbed dialog rendered NO tab for a `{ group }` section;
+      // this form is stacked sections since #2566, which draw them. A group
+      // section takes no `collapsed` of its own (the group owns its
+      // presentation), so these two stay open. The narrative fields are
       // textareas (see the note above `customer_background`).
       { group: 'qualification', columns: 2 },
       { group: 'narrative', columns: 1 },

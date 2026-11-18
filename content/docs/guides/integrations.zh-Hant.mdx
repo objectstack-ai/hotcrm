@@ -13,13 +13,13 @@ HotCRM 的設計目標是**融入你的技術堆疊**，而非取代它。今天
 
 ## 今天已落地的能力
 
-- 🔌 **平台資料 API**——每個 CRM 物件都可以透過執行階段的 HTTP API 存取，支援 ObjectQL 形態的篩選與欄位選擇。參見 [API 參考](/zh-Hant/docs/customization/api-reference)。
+- 🔌 **平台資料 API**——每個 CRM 物件都可以透過執行階段的 HTTP API 存取，支援 ObjectQL 形態的篩選與欄位選擇。參見 [API 參考](/zh-Hant/docs/developers/api-reference)。
 - 🤖 **面向 AI Agent 的 MCP 端點**（`/api/v1/mcp`）——預設開啟。任何支援 MCP 的用戶端（Claude Code、Claude Desktop、Cursor、VS Code / Copilot、Codex CLI）都能接上這個部署，並透過與人相同的物件、相同的驗證、相同的權限檢查來操作 CRM。身分是自助的——該部署本身就是一台 OAuth 2.1 授權伺服器——而且**每一次呼叫都以呼叫者自己的權限與列級安全執行**，不是共用的服務帳號。各用戶端的複製貼上設定就在應用裡，位於 **Setup → Integrations → Connect an Agent**。
 - 📤 **清單檢視的 CSV / XLSX 匯出**——客戶、聯絡人、潛在客戶、商機與工單的清單檢視各自宣告了 `exportOptions: ['csv', 'xlsx']`。
 - 📥 **試算表匯入**，帶可重複使用的欄位對應，並可先試算。參見[匯入你自己的資料](/zh-Hant/docs/guides/importing-your-data)。
 - ✉️ **對外郵件**——聯絡人上的**傳送郵件**，把郵件排入平台郵件服務。只有出站方向，而且只有在部署設定了傳輸方式時才真的寄得出去。參見[郵件與行事曆](/zh-Hant/docs/guides/email-and-calendar)。
 - 🔔 **應用內通知**——`notify` 流程節點經平台訊息服務送達 Console 鈴鐺。是在 HotCRM 內部，而不是送進 Slack 或某個收件匣。
-- 🧩 **你自己的程式碼**——掛鉤、流程與操作主體在行程內針對同一批物件、同一套權限檢查執行。參見[客製化 › 擴展物件](/zh-Hant/docs/customization/extending-objects)。
+- 🧩 **你自己的程式碼**——掛鉤、流程與操作主體在行程內針對同一批物件、同一套權限檢查執行。參見[開發者 › 擴展物件](/zh-Hant/docs/developers/extending-objects)。
 
 ### Setup → Integrations 底下今天真正有什麼
 
@@ -97,7 +97,7 @@ HotCRM 的設計目標是**融入你的技術堆疊**，而非取代它。今天
 
 ## HTTP API
 
-外部系統可以透過執行階段的 HTTP 資料 API 建立與更新 HotCRM 記錄。物件清單、ObjectQL 篩選形態與身分驗證請參見 [API 參考](/zh-Hant/docs/customization/api-reference)。物件名稱就是本應用註冊的那些——`crm_lead`、`crm_account`、`crm_opportunity`——而路由形態取決於你的執行階段版本，而非本應用釘住的任何東西，所以請從你自己的環境裡讀它，而不是從一篇指南裡硬編碼的路徑。
+外部系統可以透過執行階段的 HTTP 資料 API 建立與更新 HotCRM 記錄。物件清單、ObjectQL 篩選形態與身分驗證請參見 [API 參考](/zh-Hant/docs/developers/api-reference)。物件名稱就是本應用註冊的那些——`crm_lead`、`crm_account`、`crm_opportunity`——而路由形態取決於你的執行階段版本，而非本應用釘住的任何東西，所以請從你自己的環境裡讀它，而不是從一篇指南裡硬編碼的路徑。
 
 **沒有 GraphQL 端點。** GraphQL 不在產品規劃內，平台已經把 `/graphql` 從服務表裡移除，而不是繼續公告一條沒人提供服務的路徑。
 
@@ -119,13 +119,13 @@ HotCRM 的設計目標是**融入你的技術堆疊**，而非取代它。今天
 
 ### 1. 伺服器對伺服器腳本（真實）
 
-從腳本（cron 作業、Lambda、GitHub Action）呼叫 HTTP 資料 API。參見 [API 參考](/zh-Hant/docs/customization/api-reference)。
+從腳本（cron 作業、Lambda、GitHub Action）呼叫 HTTP 資料 API。參見 [API 參考](/zh-Hant/docs/developers/api-reference)。
 
 最適合：計畫內的同步、內部工具，以及任何你希望自己掌控可靠性的場景。
 
 ### 2. 行程內擴充程式碼（真實）
 
-掛鉤、流程與操作主體在 HotCRM 內部執行，針對同一批物件、同一套權限檢查。參見[客製化 › 擴展物件](/zh-Hant/docs/customization/extending-objects)。
+掛鉤、流程與操作主體在 HotCRM 內部執行，針對同一批物件、同一套權限檢查。參見[開發者 › 擴展物件](/zh-Hant/docs/developers/extending-objects)。
 
 最適合：無論是誰發起的寫入都必須執行的邏輯。
 

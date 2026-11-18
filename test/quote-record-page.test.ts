@@ -50,3 +50,28 @@ describe('the quote record page (#2312)', () => {
     expect(quotePages.find((p) => p.name === 'quote_print_page')?.isDefault).not.toBe(true);
   });
 });
+
+type BlockLike = { id?: string; type?: string; properties?: { sections?: unknown } };
+
+/**
+ * The print page prints pricing and terms one block per group (#2553). The
+ * page declares `print.avoidBreakInside`, which keeps a block whole on one
+ * sheet, so one block carrying both groups moved whole to sheet 2 behind a
+ * short quote and left sheet 1 a third blank.
+ */
+describe('the quote print page (#2553)', () => {
+  const page = quotePages.find((p) => p.name === 'quote_print_page') as PageLike & {
+    print?: { avoidBreakInside?: boolean };
+    regions?: { name?: string; components?: BlockLike[] }[];
+  };
+  const main = page.regions?.find((r) => r.name === 'main')?.components ?? [];
+
+  it('prints the customer, the lines, then pricing and terms as separate blocks', () => {
+    expect(page.print?.avoidBreakInside).toBe(true);
+    expect(main.map((c) => c.id)).toEqual(['quote_print_customer', 'quote_print_lines', 'quote_print_pricing', 'quote_print_terms']);
+    expect(main.slice(2).map((c) => [c.type, c.properties?.sections])).toEqual([
+      ['record:details', [{ group: 'pricing' }]],
+      ['record:details', [{ group: 'terms' }]],
+    ]);
+  });
+});

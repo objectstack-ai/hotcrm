@@ -18,7 +18,7 @@ Project Delivery answers the questions a delivery team asks once a deal is won: 
 | **Time Entry** | One day's hours on a timesheet | The person who worked them |
 | **Expense** | Money one person spent on a project: travel, lodging, meals. Expenses are their own module ([Expenses](/docs/expenses)); Project Delivery adds the project | The person who spent it |
 
-A project hangs off an **account**, and may name the **opportunity** it was won from and the **contract** it delivers. Open an account, an opportunity or a contract and its **Projects** tab lists them.
+A project hangs off an **account**, and may name the **opportunity** it was won from and the **contract** or the sales **order** it delivers. Open an account, an opportunity, a contract or an order and its **Projects** tab lists them.
 
 | Page | What it covers |
 | --- | --- |
@@ -30,7 +30,7 @@ A project hangs off an **account**, and may name the **opportunity** it was won 
 
 | Who | Where |
 | --- | --- |
-| Project managers, team members, finance controllers | The **Project Delivery** app: **All Projects**, **My Projects** and **Staffing** under **Projects**; **My Timesheets**, **My Expenses**, **Timesheets to Approve** and **Expenses to Approve** under **Time and Expenses**; **Rate Cards** under **Rates**; the **Accounts**, **Opportunities** and **Contracts** the projects belong to; and the **Inbox** under **My Work**, where projects, timesheets and expenses are approved. |
+| Project managers, team members, finance controllers | The **Project Delivery** app: **All Projects**, **My Projects** and **Staffing** under **Projects**; **My Timesheets**, **My Expenses**, **Timesheets to Approve** and **Reports to Approve** under **Time and Expenses**; **Rate Cards** under **Rates**; the **Accounts**, **Opportunities** and **Contracts** the projects belong to; and the **Inbox** under **My Work**, where projects, timesheets and expenses are approved. |
 | Sales managers | The Project Delivery app is on their launcher, and every project is readable, so a manager sees how the deals their team won are being delivered. |
 | Sales reps, service, marketing, accounts receivable | Not on their launcher. |
 | Administrators | Everything. |
@@ -45,7 +45,7 @@ Projects are private. A person reads a project when they own it, when they are s
 | --- | --- | --- | --- | --- |
 | Project team member | Read the projects they are staffed on, **without cost or margin** | Read | Read, **without the cost rate** | Book their own |
 | Project manager | Open projects; edit the ones they manage | Staff the projects they manage | Read | Book their own; approve their team's |
-| Finance controller | Read every project and budget; approve projects of 100,000 or more and top-ups of 10 % or more | Read | Create and edit | Read every one; approve expenses of 2,000 or more |
+| Finance controller | Read every project and budget; approve projects of 100,000 or more and top-ups of 10 % or more | Read | Create and edit | Read every one; approve expense reports totalling 2,000 or more |
 | Project director, PMO | Both of the above; approve new projects | Both | Both | Both |
 | Sales manager | Read every project | Read | — | Read every one |
 | Administrator | Everything | Everything | Everything | Everything |
@@ -54,7 +54,7 @@ An administrator gives people their access with a **position** under **Setup →
 
 > **Team members never see what a colleague costs.** The cost rate, the cost of each entry, a timesheet's total cost and the project's cost and margin are hidden from the Project Team Member position. They see the hours, the bill rate and the amount to bill.
 
-> **Team members see the customer, not the deal.** The Project Team Member position reads every account, read-only, so a project's **Account** shows by name. Opportunities stay closed to them: the **Opportunity** field is left off their project page, the deal does not open for them, and **Opportunities** is not in their Project Delivery menu.
+> **Team members see the customer, not the deal.** The Project Team Member position reads every account, read-only, so a project's **Account** shows by name. Opportunities stay closed to them: the **Opportunity** and **Order** fields are left off their project page, the deal does not open for them, and **Opportunities** is not in their Project Delivery menu.
 
 ## The money on a project [#money]
 
@@ -77,4 +77,4 @@ Amounts are in your organization's currency. The project only produces **Approve
 
 ## Not every customer uses it
 
-A company that does not run projects has an administrator disable the module. Its app, its records and the Projects tabs on accounts, opportunities and contracts go with it.
+A company that does not run projects has an administrator disable the module. Its app, its records and the Projects tabs on accounts, opportunities, contracts and orders go with it; the order page itself is unchanged.

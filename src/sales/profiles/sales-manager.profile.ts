@@ -3,7 +3,7 @@
 import { O2C_CONTRACT_FIGURE_FIELDS } from './_o2c-figures';
 import { PSA_READ_ALL_OBJECTS } from './_psa-grants';
 import { privateOpportunityPolicy } from './_private-opportunity';
-import { EXPENSE_OWN_READ_ALL } from './_expense-grants';
+import { EXPENSE_OWN_READ_ALL, EXPENSE_REPORT_OWN_READ_ALL, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STANDARD_READ } from './_expense-grants';
 
 /**
  * Sales Manager Profile
@@ -26,8 +26,12 @@ export const SalesManagerProfile = {
   // a manager reads every project of the deals the team sells.
   tabPermissions: { crm_enterprise: 'visible' as const, crm_service: 'visible' as const, crm_marketing: 'visible' as const, crm_o2c: 'visible' as const, crm_expenses: 'visible' as const, crm_psa: 'visible' as const },
   objects: {
-    // Their own expenses, as every internal set (hotcrm#2556, `_expense-grants.ts`).
+    // Their own expenses and travel requests, as every internal set (hotcrm#2556, hotcrm#2578, `_expense-grants.ts`).
     crm_expense: EXPENSE_OWN_READ_ALL,
+    crm_expense_report: EXPENSE_REPORT_OWN_READ_ALL,
+    crm_expense_request: EXPENSE_OWN_READ_ALL,
+    crm_expense_request_line: EXPENSE_REQUEST_LINE_EDIT,
+    crm_expense_standard: EXPENSE_STANDARD_READ, // every standard, read (hotcrm#2616)
     // `allowTransfer` on the objects this set holds `modifyAllRecords` on —
     // the sales book a manager reassigns — plus `crm_forecast`, which kept it
     // when #2277 narrowed Modify All there. Canonical note in

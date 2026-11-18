@@ -99,7 +99,7 @@
 | OPP-008 | 行项目价格填充 | 选择产品即填充 `list_price`,插入时空 `unit_price` 默认为目录价(不覆盖已谈判价);商机/报价行共用一份工厂 | `src/revenue/objects/_line-item-price-fill.ts` |
 | OPP-009 | 销售管道看板 | `pipeline_kanban`:按阶段分列、列头按金额汇总、拖拽推进、640px 抽屉,排除已关闭交易;#1259 起入口是商机列表页的 "Sales Pipeline" 标签页,侧边栏不再单列一行 | `src/sales/views/opportunity.view.ts`(`listViews.pipeline_kanban`) |
 | OPP-010 | 商机视图族 | 默认"Open Deals" + 我的/全量/关闭日日历/timeline/卡片/停滞(按阶段龄排序)/本季关单(预测类别+季度窗口)共 9 个 tab | `src/sales/views/opportunity.view.ts` |
-| OPP-011 | 批量更新阶段 | 全仓唯一聚合式批量动作:整个选择集一次 dispatch(`_selectedIds`),全有或全无;没移动的商机按名称汇总报错(拒绝原句按调用者语言,已关闭等重试无用时不提示重试,#2511) | `src/sales/actions/opportunity.actions.ts`(`mass_update_stage`) |
+| OPP-011 | 批量更新阶段 | 声明式写入(`operation: 'update'`,无脚本体),每条一次调用(`bulkActions` 逐条派发):按调用人的权限和审批锁定逐条执行或拒绝,结果框逐条计数、逐条说明原因;只提供进行中阶段,成交/失败在记录页单条完成(#2586–#2589);对商机无编辑权的人不显示按钮 | `src/sales/actions/opportunity.actions.ts`(`mass_update_stage`) |
 | OPP-012 | 克隆商机 | 复制客户/联系人/金额/来源等为新 prospecting 商机,关闭日重置为 +90 天 | `src/sales/actions/opportunity.actions.ts`(`clone_opportunity`) |
 | OPP-013 | 停滞商机日扫描 | 每日 07:30 扫描阶段停留 >14 天的开放商机:通知 owner 并幂等创建 +2 天跟进任务 | `src/sales/flows/opportunity-stagnation.flow.ts` |
 | OPP-014 | 大单赢单告警 | 金额 ≥$100K 的商机赢单时通知 owner(防重发) | `src/sales/flows/opportunity-won-alert.flow.ts` |
@@ -147,6 +147,7 @@
 | ORD-004 | 合计随订单行 | 小计 = 各行之和,在订单行的同一次写入里重算;折扣金额与总金额由小计、折扣、税额、运费推出 | `src/sales/objects/sales_order.hook.ts`(`sales_order_total_rollup`、`sales_order_workflow`) |
 | ORD-005 | 订单行锁定 | 订单离开草稿后,用户不能增删改订单行(先退回草稿);已确认订单的订单行列表不再提供"新建" | `src/sales/objects/sales_order.hook.ts`(`sales_order_workflow`)、`src/sales/objects/sales_order_line.object.ts`(`userActions`) |
 | ORD-006 | 订单视图与导航 | 全部订单、订单看板、待发货;销售应用"销售"分组与订单与回款应用"订单、合同与客户"分组中的"订单";客户与合同页面的订单列表 | `src/sales/views/sales_order.view.ts`、`src/sales/apps/crm.app.ts`、`src/sales/index.ts` |
+| ORD-007 | 项目关联订单 | 项目可选填写它交付的销售订单(`crm_project.crm_sales_order`,与合同并列,从项目的客户下选);订单页面列出它的项目,随项目交付模块停用而消失;项目经理只读全部订单与订单行,项目成员看不到这个字段 | `src/psa/objects/project.object.ts`、`src/sales/profiles/project-manager.profile.ts`、`src/sales/profiles/project-member.profile.ts` |
 
 ## SVC — 服务与 SLA
 
@@ -278,14 +279,25 @@
 
 ## EXP — 费用报销
 
-增量追加(hotcrm#2556),不在 2026-08-07 的全量清点里,所以不进上方总览统计。
+增量追加(hotcrm#2556、hotcrm#2559、hotcrm#2578、hotcrm#2579、hotcrm#2581),不在 2026-08-07 的全量清点里,所以不进上方总览统计。
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
 | EXP-001 | 费用报销模块与应用 | 独立的 `app.objectstack.hotcrm.expense` 模块和「费用报销」应用,租户可停用;每个内部岗位都能记录、查看和编辑自己的费用,财务看全部 | `src/expense/index.ts` |
 | EXP-002 | 费用记录 | 描述、日期、类别、金额、付款方(员工/公司)、商户、票据号、来源(手工/智能体/导入)、可计费,票据走附件;不带币种 | `src/expense/objects/expense.object.ts` |
-| EXP-003 | 无项目费用审批 | 提交后由报销人的上级审批(无上级时由财务控制),≥2,000 再交财务控制;任何人不能手动写批准/驳回 | `src/expense/flows/expense-approval.flow.ts`、`src/expense/objects/expense.hook.ts` |
-| EXP-004 | 项目费用审批 | 选了项目的费用由项目经理审批,≥2,000 再交财务;项目已关闭、已取消或已锁定时退回草稿并通知;项目字段由项目交付模块扩展提供(暂放费用包,objectstack#34616 修好后搬回,hotcrm#2575) | `src/expense/flows/expense-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
+| EXP-003 | 报销单 | 费用放进报销单一起提交(REQ-0011,hotcrm#2559):编号、标题、提交人、客户、合计、应报销(只算员工垫付)、状态 草稿/已提交/已批准/已付款/已驳回、审批人、提交/批准时间、备注、检查提示、付款日期与参考号;费用的状态跟随报销单,任何人不能手动写批准/驳回;只有草稿报销单可删除 | `src/expense/objects/expense_report.object.ts`、`src/expense/objects/expense_report.hook.ts`、`src/expense/objects/expense.hook.ts` |
+| EXP-004 | 提交报销 | 在我的费用里勾选一笔或多笔(或在单笔记录页)点「提交报销」,同一次点击生成并提交报销单;每个项目一张报销单,无项目的另一张;全部或全不 | `src/expense/actions/expense.actions.ts` |
+| EXP-005 | 无项目报销单审批 | 由报销人的上级审批(无上级时由财务控制),合计 ≥2,000 再交财务控制;撤回、驳回后退回草稿再提交 | `src/expense/flows/expense-report-approval.flow.ts` |
+| EXP-006 | 项目报销单审批 | 写明项目的报销单由项目经理审批,合计 ≥2,000 再交财务;项目已关闭、已取消或已锁定时退回草稿并通知;项目字段由项目交付模块扩展提供(暂放费用包,objectstack#34616 修好后搬回,hotcrm#2575) | `src/expense/flows/expense-report-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
+| EXP-007 | 标记已付款 | 财务控制、应收会计在「待付款的报销单」里对已批准的报销单记录付款日期和参考号;只记录,不付款、不记账 | `src/expense/actions/expense.actions.ts` |
+| EXP-008 | 报销单视图 | 我的报销单、待我审批的报销单、待付款的报销单、全部报销单 | `src/expense/views/expense_report.view.ts` |
+| EXP-009 | 出差申请 | `crm_expense_request`(界面叫「出差申请」):事由、出差人、目的地、起止日期、天数(自动算)、客户(可空)、一个预计总额、行程、备注、来源、检查提示,附件;六个状态 草稿/已提交/已批准/已驳回/已取消/已关闭;批准后事由、目的地、日期、金额(及项目)锁定;出差人一键提交、取消出差、关闭;在「费用报销」应用,「我的出差申请」也贡献进「项目交付」应用 | `src/expense/objects/expense_request.object.ts`、`src/expense/actions/expense-request.actions.ts` |
+| EXP-010 | 出差申请审批 | 没有项目的申请提交后由出差人的上级审批(无上级时由财务控制),只有一级、财务不参与;审批人经共享规则可见;任何人不能手动写批准/驳回 | `src/expense/flows/expense-request-approval.flow.ts`、`src/expense/objects/expense_request.hook.ts` |
+| EXP-011 | 项目出差申请审批 | 项目交付模块给出差申请扩展可选的「项目」(选择框不提供已关闭/已取消的项目);有项目的申请由项目经理审批,只有一级,与无项目路径互斥;项目无项目经理或项目经理本人出差时交管理员;项目页面「相关」列出出差申请,不计入项目成本(暂放费用包,objectstack#34616 修好后搬回,hotcrm#2575) | `src/expense/flows/expense-request-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
+| EXP-012 | 出差申请行程明细 | `crm_expense_request_line`(界面叫「行程明细」):出差申请下的一程,类型(航班/火车/用车/酒店/其他)、出发地、到达地、起止日期、要求、预订号;不带金额,可选;在申请页面上按出行顺序列出;从提交起各程计划值锁定、不能增删,预订号始终可写 | `src/expense/objects/expense_request_line.object.ts`、`src/expense/objects/expense_request_line.hook.ts` |
+| EXP-013 | 报销单引用出差申请 | 「按出差申请报销」与「提交报销」同一段脚本,多一个必选的出差申请参数(只列本人已批准的申请),生成的报销单写明申请;「提交报销」仍然一键、不弹框(18.5.0 上任何参数都会弹框);申请上显示已报销金额(已提交/已批准/已付款报销单合计)、与预计的差额、是否超出预计和报销单列表;报销单给审批人看出差预计、已报销和是否超出(存值,审批人不一定能打开申请);超出不拦;最后一张未完结报销单付款后申请自动关闭;已取消/已关闭的申请不能再报销 | `src/expense/actions/expense.actions.ts`、`src/expense/objects/expense_report.object.ts`、`src/expense/objects/expense_report.hook.ts`、`src/expense/objects/expense_request.object.ts` |
+| EXP-014 | 费用标准与检查提示 | `crm_expense_standard`(界面叫「费用标准」):名称、类别(可空=任何类别)、限额(可空,只有文字的规定)、计算单位(每晚/每天/每笔/每次出差,有限额时必填)、适用范围(文字)、说明、启用;财务控制、应收会计和管理员维护,所有记录费用的人可读;只在「费用报销」应用;系统里没有任何校验、钩子、流程或公式读取标准,超标照常保存提交。费用新增「检查提示」(助手或本人写检查发现,审批人在报销单的费用列表里看到,随费用一起锁定);票据号加索引便于查重 | `src/expense/objects/expense_standard.object.ts`、`src/expense/objects/expense.object.ts`、`src/sales/profiles/_expense-grants.ts` |
+| EXP-015 | 费用助手技能 | 两项技能:「费用代填」(`expense_filing`,给花钱的人:按票据填费用、来源=助手、查重、通过上传链接附票据、对照费用标准把发现写进每条费用的检查提示、起草出差申请、得到同意才提交)和「费用检查」(`expense_check`,给审批人和财务:列出超标、重复、缺票据、超出出差预计,只读,告诉读者,不审批不驳回不标记已付);对助手开放七个动作(提交报销、按出差申请报销、报销单提交与退回草稿、出差申请提交/取消出差/关闭),发给审批人或不可撤销的需先确认;「标记已付款」不开放;审批中的报销单整张锁定,检查提示写在提交前的每条费用上 | `src/expense/skills/`、`src/expense/actions/expense.actions.ts`、`src/expense/actions/expense-request.actions.ts` |
 
 ---
 

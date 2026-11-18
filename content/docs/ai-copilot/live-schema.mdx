@@ -1,6 +1,6 @@
 ---
-title: Live Schema (Wow #1)
-description: HotCRM's AI sees schema changes the moment they happen — no retraining, no restart, no waiting.
+title: Live Schema
+description: An agent working on HotCRM sees a schema change the moment it happens — no retraining, no restart, no waiting.
 ---
 
 # Live Schema — the CRM that rewrites itself
@@ -20,6 +20,8 @@ The assistant is the platform's `ask` agent. HotCRM authors no agents of
 its own — apps ship **skills**, which attach to a platform agent by
 surface affinity (ADR-0063 §1/§2). The behaviour below comes from
 HotCRM's `live_data` skill riding on `ask`.
+
+An agent you [connect over MCP](/docs/ai-copilot/connect-your-agent) gets the same property: its `describe_object` tool reads the same live registry, so a field added a moment ago is in its next answer.
 
 ## The 30-second demo
 

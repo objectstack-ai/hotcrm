@@ -812,6 +812,24 @@ export const Lead = ObjectSchema.create({
       condition: P`has(record.is_converted) && record.is_converted == true && !(has(record.converted_account) && !isBlank(record.converted_account) && has(record.converted_contact) && !isBlank(record.converted_contact)) && (previous == null || !has(previous.is_converted) || previous.is_converted != true)`,
     },
     {
+      // Qualified needs what the judgement rests on (#2541, ruled A by the
+      // maintainer): Need Type and Estimated Amount. **Qualify Lead**
+      // (`../actions/lead.actions.ts`) asks for both; this rule refuses every
+      // other path to Qualified while either is empty: the edit form, inline
+      // edit, the path bar, REST and an agent alike.
+      //
+      // A TRANSITION GATE, in the `previous` shape of the two conversion rules
+      // above: it refuses only the write that CROSSES into Qualified, so a
+      // lead qualified before this rule with either value empty still saves
+      // every other edit and still converts.
+      name: 'qualified_needs_qualification',
+      type: 'script',
+      severity: 'error',
+      message:
+        'A lead is qualified with its Need Type and Estimated Amount. Use Qualify Lead, or fill both before you set the status to Qualified.',
+      condition: P`has(record.status) && record.status == "qualified" && (!has(record.need_type) || isBlank(record.need_type) || !has(record.estimated_amount) || record.estimated_amount == null) && (previous == null || !has(previous.status) || previous.status != "qualified")`,
+    },
+    {
       name: 'lead_status_progression',
       type: 'state_machine',
       severity: 'warning',

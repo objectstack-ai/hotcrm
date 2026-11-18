@@ -1,0 +1,104 @@
+{
+  "$comment": "The shared product block (#2608): headline, subtitle, business chain and the six apps, per docs locale. App NAMES are not here: they are read from src/ into apps.generated.json, except zh-Hant, which has no pack and is authored under appsHant as the zh-CN wording in Traditional characters. Links are locale-neutral; the site adds the locale prefix. test/docs-product-block.test.ts holds this file to the metadata.",
+  "order": ["crm_enterprise", "crm_service", "crm_marketing", "crm_o2c", "crm_psa", "crm_expenses"],
+  "appsHant": {
+    "crm_enterprise": "銷售",
+    "crm_service": "服務",
+    "crm_marketing": "營銷",
+    "crm_o2c": "訂單與回款",
+    "crm_psa": "項目交付",
+    "crm_expenses": "費用報銷"
+  },
+  "locales": {
+    "en": {
+      "headline": "Leads, orders, projects, cash and expenses in one open-source business system.",
+      "subtitle": "Change it with AI when your business changes. Let your own AI agents work in it with each user's permissions.",
+      "chain": {
+        "title": "One chain, from the first lead to the cash",
+        "steps": [
+          { "label": "Lead", "href": "/docs/sales/leads" },
+          { "label": "Opportunity", "href": "/docs/sales/opportunities" },
+          { "label": "Quote", "href": "/docs/sales/quotes" },
+          { "label": "Order", "href": "/docs/sales/orders" },
+          { "label": "Contract or project", "href": "/docs/sales/contracts" },
+          { "label": "Invoice and payment", "href": "/docs/order-to-cash/invoices-and-payments" }
+        ],
+        "note": "Approved hours, travel and expenses on a project count in its cost, so the margin is measured against what the customer pays.",
+        "noteHref": "/docs/projects/time-and-expenses"
+      },
+      "apps": {
+        "title": "Six apps",
+        "intro": "Everyone opens the app for their job. Sales is always there; an administrator can switch the other five off.",
+        "who": "For",
+        "items": {
+          "crm_enterprise": { "who": "Sales reps and managers", "what": "Leads, accounts, opportunities, quotes and products, orders and contracts.", "href": "/docs/sales" },
+          "crm_service": { "who": "Service agents and managers", "what": "Cases with SLAs and escalation, and the knowledge base.", "href": "/docs/service" },
+          "crm_marketing": { "who": "Marketers", "what": "Campaigns, and the leads and contacts they reach.", "href": "/docs/marketing" },
+          "crm_o2c": { "who": "Finance", "what": "Each contract's collection plan, invoices and payments: what is invoiced, paid and overdue.", "href": "/docs/order-to-cash" },
+          "crm_psa": { "who": "Project managers, consultants and finance", "what": "Projects, staffing, plans, timesheets and budgets, with cost and margin.", "href": "/docs/projects" },
+          "crm_expenses": { "who": "Every employee", "what": "Expenses with their receipts, expense reports, travel requests and their approval.", "href": "/docs/expenses" }
+        }
+      }
+    },
+    "zh-Hans": {
+      "headline": "线索、订单、项目、回款、报销，一套开源的业务系统",
+      "subtitle": "业务变了，让 AI 帮你改系统；你的 AI 助手用你的权限替你办事。",
+      "chain": {
+        "title": "从第一条线索到回款，一条链",
+        "steps": [
+          { "label": "线索", "href": "/docs/sales/leads" },
+          { "label": "商机", "href": "/docs/sales/opportunities" },
+          { "label": "报价", "href": "/docs/sales/quotes" },
+          { "label": "订单", "href": "/docs/sales/orders" },
+          { "label": "合同或项目", "href": "/docs/sales/contracts" },
+          { "label": "发票与回款", "href": "/docs/order-to-cash/invoices-and-payments" }
+        ],
+        "note": "项目上已批准的工时、差旅和费用计入项目成本，毛利按客户实际支付的金额来衡量。",
+        "noteHref": "/docs/projects/time-and-expenses"
+      },
+      "apps": {
+        "title": "六个应用",
+        "intro": "每个人打开与自己工作对应的应用。销售始终都在；其他五个管理员可以停用。",
+        "who": "适用于",
+        "items": {
+          "crm_enterprise": { "who": "销售代表和销售经理", "what": "线索、客户、商机、报价与产品、订单和合同。", "href": "/docs/sales" },
+          "crm_service": { "who": "客服人员和客服经理", "what": "带 SLA 和升级的工单，以及知识库。", "href": "/docs/service" },
+          "crm_marketing": { "who": "市场人员", "what": "营销活动，以及它们触达的线索和联系人。", "href": "/docs/marketing" },
+          "crm_o2c": { "who": "财务", "what": "每份合同的回款计划、发票和回款：开了多少票、收了多少钱、有没有逾期。", "href": "/docs/order-to-cash" },
+          "crm_psa": { "who": "项目经理、顾问和财务", "what": "项目、人员安排、计划、工时单和预算，以及成本和毛利。", "href": "/docs/projects" },
+          "crm_expenses": { "who": "每一位员工", "what": "带票据的费用、报销单、出差申请及其审批。", "href": "/docs/expenses" }
+        }
+      }
+    },
+    "zh-Hant": {
+      "headline": "線索、訂單、項目、回款、報銷，一套開源的業務系統",
+      "subtitle": "業務變了，讓 AI 幫你改系統；你的 AI 助手用你的權限替你辦事。",
+      "chain": {
+        "title": "從第一筆線索到回款，一條鏈",
+        "steps": [
+          { "label": "線索", "href": "/docs/sales/leads" },
+          { "label": "商機", "href": "/docs/sales/opportunities" },
+          { "label": "報價", "href": "/docs/sales/quotes" },
+          { "label": "訂單", "href": "/docs/sales/orders" },
+          { "label": "合約或項目", "href": "/docs/sales/contracts" },
+          { "label": "發票與回款", "href": "/docs/order-to-cash/invoices-and-payments" }
+        ],
+        "note": "項目上已核准的工時、差旅和費用計入項目成本，毛利按客戶實際支付的金額來衡量。",
+        "noteHref": "/docs/projects/time-and-expenses"
+      },
+      "apps": {
+        "title": "六個應用",
+        "intro": "每個人打開與自己工作對應的應用。銷售始終都在；其他五個管理員可以停用。",
+        "who": "適用於",
+        "items": {
+          "crm_enterprise": { "who": "銷售代表和銷售經理", "what": "線索、客戶、商機、報價與產品、訂單和合約。", "href": "/docs/sales" },
+          "crm_service": { "who": "客服人員和客服經理", "what": "帶 SLA 和升級的工單，以及知識庫。", "href": "/docs/service" },
+          "crm_marketing": { "who": "市場人員", "what": "營銷活動，以及它們觸達的線索和聯絡人。", "href": "/docs/marketing" },
+          "crm_o2c": { "who": "財務", "what": "每份合約的回款計劃、發票和回款：開了多少票、收了多少錢、有沒有逾期。", "href": "/docs/order-to-cash" },
+          "crm_psa": { "who": "項目經理、顧問和財務", "what": "項目、人員安排、計劃、工時單和預算，以及成本和毛利。", "href": "/docs/projects" },
+          "crm_expenses": { "who": "每一位員工", "what": "帶票據的費用、報銷單、出差申請及其審批。", "href": "/docs/expenses" }
+        }
+      }
+    }
+  }
+}

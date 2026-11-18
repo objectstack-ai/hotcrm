@@ -134,7 +134,7 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 
 預設情況下工單是**私有的**。但**嚴重未結工單**由兩條各自點名一個層級的規則自動共享：*Escalated Cases Sharing* 把讀 + 寫授予 `crm_service_manager`，*Escalated Cases — Service Director* 把讀授予 `crm_service_director`。職位是扁平的，一個層級不會向另一個層級上捲 —— 每個層級都被顯式點名，這也是這一對規則存在的原因。因此當某事爆發時，領導層無需主動申請存取權限。
 
-## AI Copilot 如何使用 SLA
+## 智能體如何使用 SLA
 
 [工單分流技能](/zh-Hant/docs/ai-copilot/skills)在推薦優先順序時會考慮 SLA：
 
@@ -142,7 +142,7 @@ SLA（服務級別協議）系統為**每一張工單**打上一個**截止時�
 - 一個描述中含 *"production is down"* 的潛在客戶會獲得 **Critical**，儘管它不是付費客戶。
 - **工單分流不會**與過往的相似工單做模式匹配。它只宣告了 `describe_object` 與 `get_record`，因此只能讀眼前這一個工單，既檢索不了[知識文章](/zh-Hant/docs/service/knowledge-base)，也拉不出該帳戶的其它工單。按工單的分類或標籤匹配已發布文章，是 **Customer 360°** 的活，需要單獨去問它。
 
-如果優先順序解析為 **Critical**，Copilot 會立即推薦升級並起草內部通知訊息。
+如果優先順序解析為 **Critical**，智能體會立即推薦升級並起草內部通知訊息。
 
 ## 推薦節奏
 

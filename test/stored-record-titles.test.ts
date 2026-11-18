@@ -199,7 +199,7 @@ describe("the backfill's re-save titles a row stored before the title was", () =
   it("a converted lead, which the lead's freeze holds", async () => {
     const company = `Converted Co ${++k}`;
     const lead = await verify.hooks.run('crm_lead', 'insert', {
-      company, email: `lead${k}@stored-record-titles.test`, first_name: 'Joe', last_name: 'Green', status: 'qualified',
+      company, email: `lead${k}@stored-record-titles.test`, first_name: 'Joe', last_name: 'Green', status: 'qualified', need_type: 'new_implementation', estimated_amount: 40_000,
     }, { as: manager.token });
     const started = await verify.flows.run('lead_conversion', { recordId: lead.id }, { as: manager.token });
     await verify.flows.resume(started, { createOpportunity: false }, { as: manager.token });

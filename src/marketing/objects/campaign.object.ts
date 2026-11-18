@@ -293,14 +293,17 @@ export const Campaign = ObjectSchema.create({
   // test/object-validation-predicates.test.ts, which fails the build otherwise.
   validations: [
     {
-      name: 'end_after_start',
+      name: 'end_not_before_start',
       type: 'script',
       severity: 'error',
-      message: 'End Date must be after Start Date',
-      // `<=`, not `<`: the message promises "after", so a campaign that ends
-      // the day it starts is a violation. Matches `crm_contract`'s twin rule
-      // and `crm_forecast.period_end_after_start` (#514 item 12).
-      condition: P`has(record.end_date) && record.end_date != null && has(record.start_date) && record.start_date != null && record.end_date <= record.start_date`,
+      message: 'End Date cannot be earlier than Start Date',
+      // `<`, not `<=`: a campaign may start and end on the same day (a
+      // webinar, a one-day fair), so only an end date BEFORE the start date
+      // is a violation (#2633). This deliberately departs from
+      // `crm_contract.end_after_start` and `crm_forecast.period_end_after_start`,
+      // which still refuse a zero-length range; `test/object-validation-predicates.test.ts`
+      // pins both sides of that split.
+      condition: P`has(record.end_date) && record.end_date != null && has(record.start_date) && record.start_date != null && record.end_date < record.start_date`,
     },
     {
       name: 'actual_cost_within_budget',

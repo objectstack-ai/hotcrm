@@ -3,17 +3,20 @@ kind: screenshot
 scope: hotcrm
 category: hotcrm
 status: published
-captured: '2026-10-20'
+captured: '2026-11-17'
 capture:
   application: HotCRM
-  platformVersion: '18.0.0'
+  platformVersion: '18.5.0'
   browserLocales:
     en: en-US
     zh-Hans: zh-CN
   dataset: 'shipped seed data + pnpm demo:staff, fresh database'
-  record: CPG-0004 Operations Platform Launch
+  zhHansDataset: 'the zh-CN seed story: the same boot with i18n.defaultLocale set to zh-CN, then pnpm demo:staff'
+  signedInAs: 'Marketing Manager (crm_marketing_manager), a local user added for the capture because pnpm demo:staff staffs sales and service only'
+  record: 'CPG-0004 Operations Platform Launch; zh-CN story: 运营平台发布活动'
   theme: light
   viewport: 1440x1024
+  deviceScaleFactor: 2
 locales:
   en: en.png
   zh-Hans: zh-Hans.png

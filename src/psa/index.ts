@@ -11,7 +11,7 @@ import { PsaEmailTemplates } from './email-templates/index.js';
 import { ExpenseProjectExtensions } from './extensions/index.js';
 import {
   ProjectBudgetAlertFlow, ProjectBudgetApprovalFlow,
-  ProjectInitiationApprovalFlow, TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
+  ProjectInitiationApprovalFlow, ProjectMemberPersonRenameFlow, TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
 } from './flows/index.js';
 import {
   Project, ProjectBudget, ProjectBudgetLine, ProjectMember, ProjectTask, RateCard, TimeEntry, Timesheet,
@@ -44,13 +44,13 @@ export const psaHooks = [
 
 /**
  * This package's flows (#2316 phase 1b) — see {@link psaHooks}: the
- * approvals (a budget top-up's since hotcrm#2547), the two insert twins and
- * the budget alert.
+ * approvals (a budget top-up's since hotcrm#2547), the two insert twins, the
+ * budget alert, and the staffing rows' rename follower (hotcrm#2568).
  */
 export const psaFlows = [
   ProjectInitiationApprovalFlow, ProjectBudgetApprovalFlow,
   TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
-  ProjectBudgetAlertFlow,
+  ProjectBudgetAlertFlow, ProjectMemberPersonRenameFlow,
 ];
 
 /** This package's sharing rules — see {@link psaHooks}. */
@@ -88,11 +88,12 @@ export const psaSharingRules = [
  * its two datasets and the Projects Overview dashboard that reads them.
  *
  * Since hotcrm#2556 the expense is the expense module's (REQ-0011): this
- * module depends on it, contributes the expense's Project field through
- * `objectExtensions` and keeps the expense cost summaries on the project.
- * The approval of an expense on a project (`expense_project_approval`) is
- * the project's, but sits in the expense module for a platform gap
- * (`src/expense/flows/expense-project-approval.flow.ts`).
+ * module depends on it, contributes the Project field on the expense and on
+ * the expense report (hotcrm#2559) through `objectExtensions`, and keeps the
+ * expense cost summaries on the project. The approval of a report on a
+ * project (`expense_report_project_approval`) is the project's, but sits in
+ * the expense module for a platform gap
+ * (`src/expense/flows/expense-report-project-approval.flow.ts`).
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
@@ -117,7 +118,7 @@ export const createHotCrmPsaStack = (
     version: '6.5.0',
     type: 'module',
     description: 'HotCRM project delivery module — projects, staffing, time, expenses and delivery margin.',
-    engines: { protocol: '^18.5.0' },
+    engines: { protocol: '^18.6.0' },
     // The App package this module extends, and the expense module whose
     // `crm_expense` it extends with the project (hotcrm#2556) — the one
     // add-on → add-on edge `module-split-plan.md` item 18 allows; item 10

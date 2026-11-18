@@ -193,7 +193,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         avg_deal_size: { title: '平均订单金额（本季度）', description: '本季度已成交商机的平均金额' },
         pipeline_by_stage: { title: '阶段管道分布', description: '按阶段统计的进行中商机金额' },
         pipeline_by_forecast_category: { title: '预测类别管道分布', description: '按预测类别统计的进行中管道金额' },
-        lead_source_breakdown: { title: '线索来源分布', description: '按来源统计的线索数量' },
+        lead_source_breakdown: { title: '线索来源分布', description: '按线索来源统计的管道金额' },
         open_pipeline_by_owner: { title: '按负责人统计进行中管道', description: '各销售负责人的进行中管道金额、商机数与平均赢单概率' },
         quota_attainment_by_rep: { title: '按销售代表统计配额达成', description: '各销售代表本季度配额、已成交收入与达成率。每晚的预测快照建好本季度记录、经理填好配额后才有数据' },
         pipeline_stage_by_source: { title: '阶段 × 线索来源', description: '按阶段和来源交叉统计进行中商机金额' },
@@ -595,14 +595,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       screens: {
         screen_1: {
           title: '转化详情',
-          // The duplicate warning's text is a variable the flow assigns; this
-          // key can only carry the hole that shows it. The account notice
-          // after it is translated here (#2073 item 8): exactly one of the two
-          // holes holds a name, and each hole's `default:` is the OTHER
-          // branch's words, so the sentence stays name-first. Keep both holes,
-          // in this order, with a `default:` each (see `screen_1` in
-          // `lead-conversion.flow.ts`).
-          description: '{{duplicateWarning}} {{ existingAccountName | default:"没有你能查看的客户与该线索的公司匹配，因此转化会新建一个客户，名称为 " }}{{ newAccountName | default:" 是该线索将加入的现有客户" }}。',
+          // Three notices, every word translated here: the duplicate note
+          // (#2571; its hole holds a space on a clean lead, so `default:`
+          // prints the note only on a suspected one), then the account and
+          // the contact (#2073 item 8, #2572). In each two-hole pair exactly
+          // one hole holds a name and each `default:` is the OTHER branch's
+          // words. Keep every hole, in this order, with a `default:` each
+          // (see `screen_1` in `lead-conversion.flow.ts`).
+          description: '{{ duplicateWarning | default:"疑似重复：录入时系统发现这条线索与一条已有记录的邮箱相同。继续之前，请到线索页面比对关联的那条记录。" }} {{ existingAccountName | default:"没有你能查看的客户与该线索的公司匹配，因此转化会新建一个客户，名称为 " }}{{ newAccountName | default:" 是该线索将加入的现有客户" }}。{{ existingContactName | default:"没有你能查看的联系人使用这条线索的邮箱，因此转化会新建一个联系人，名称为 " }}{{ newContactName | default:" 是使用这条线索邮箱的现有联系人：转化会把这条线索并入该联系人，只补填它空着的「电话」「手机」和「职位」" }}。',
           fields: {
             createOpportunity: { label: '是否创建商机？' },
             opportunityName: { label: '商机名称' },
@@ -614,9 +614,17 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         // one hole holds the account's name, and each `default:` is the OTHER
         // state's words. Keep both holes, in this order, with a `default:` each
         // (see `result` in `lead-conversion.flow.ts`).
+        confirm_contact: {
+          title: '确认联系人',
+          description: '这条线索是 {{ leadPersonName }}，但使用同一邮箱的联系人是 {{ existingContactName }}。联系人的邮箱不能重复，所以转化会把这条线索并入该联系人；只补填它空着的「电话」「手机」和「职位」，其他内容不变。如果这是两个不同的人，请取消，先修改线索的邮箱。',
+          fields: {
+            matchedContactLink: { label: '现有联系人' },
+            reuseContactConfirmed: { label: '把这条线索转化到这个联系人' },
+          },
+        },
         result: {
           title: '线索已转化',
-          description: '{{ pendingApprovalAccountName | default:"没有待处理的客户审批：" }}{{ noApprovalAccountName | default:" 正在等待销售经理的客户审批" }}。',
+          description: '{{ pendingApprovalAccountName | default:"线索已转入客户：" }}{{ noApprovalAccountName | default:" 正在等待销售经理的客户审批" }}。',
           fields: {
             accountLink: { label: '客户' },
             contactLink: { label: '联系人' },
@@ -636,6 +644,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         refuse_no_match_key: {
           message:
             '转化被拒绝。该线索的公司没有匹配键，因此转化无法判断它属于哪个客户，也不会去猜测：猜测可能会把联系人和商机归到另一个客户名下。保存线索的「公司」会重新生成匹配键，请重新保存后再转化。尚未创建任何记录。',
+        },
+        refuse_contact_not_confirmed: {
+          message:
+            '未转化：你没有确认把这条线索并入使用同一邮箱的现有联系人。没有创建任何记录。如果这是两个不同的人，请修改线索的邮箱后重新转化。',
         },
         refuse_nonpositive_amount: {
           message:
@@ -903,5 +915,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         admin: { label: '管理' },
       },
     },
+  },
+  // An import mapping's label, as the import wizard offers it (a key
+  // since 18.6.0; before it the wizard showed the English text in every locale).
+  mappings: {
+    crm_account_import: { label: '客户导入（CSV）' },
+    crm_contact_import: { label: '联系人导入（CSV）' },
+    crm_lead_import: { label: '线索导入（CSV）' },
   },
 };

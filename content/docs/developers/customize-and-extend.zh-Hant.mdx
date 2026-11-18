@@ -1,0 +1,143 @@
+---
+title: 客製化與擴展
+description: 藉助程式碼智能體把 HotCRM 改成適合你自己公司的樣子：先用設定，再在克隆的程式碼裡改；其次，把複刻版作為你自己的應用程式發布。
+---
+
+# 客製化與擴展
+
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
+改動 HotCRM 有兩種原因。大多數公司想讓**自己的部署**貼合自己的做法：銷售團隊需要的一個欄位、一個用不到的模組、一個依自己門檻設定的審批。少數公司想以 HotCRM 為基礎**發布自己的應用程式**。本頁先講前者，因為它最常見。
+
+## 客製化你自己的部署
+
+### 先看「設定」已經能做什麼
+
+公司提出的許多需求是設定，而不是程式碼。動手之前，先確認管理員能否在應用程式裡完成：
+
+- 使用者、經理、職位和[權限設定檔](/zh-Hant/docs/administration/profiles)；
+- 停用和啟用模組，參見[啟用和停用模組](/zh-Hant/docs/administration/modules)；
+- HotCRM 內建的[自動化](/zh-Hant/docs/administration/automation)和審批；
+- [共用與欄位安全](/zh-Hant/docs/administration/sharing-and-security)；
+- 清單檢視、儀表板，以及現有記錄的[匯入](/zh-Hant/docs/guides/import-and-export)。
+
+凡是改動 HotCRM 自身物件的事，例如新欄位、新物件、新動作、鉤子裡的一條規則，都是在儲存庫的克隆裡改程式碼。
+
+### 用程式碼智能體改程式碼
+
+HotCRM 的寫法讓程式碼智能體可以安全地改動它。所有內容都是 `src/` 下有型別的 ObjectStack 中繼資料，每類項目一個後綴，另有兩份材料告訴智能體如何工作：
+
+- 儲存庫根目錄的 **`AGENTS.md`** 是任何在 HotCRM 裡工作的智能體都要遵守的指令集：命名規則、套件的邊界、檔案後綴協議、要執行的檢查。
+- **ObjectStack 的智能體 skills**（npm 套件 `@objectstack/skills`）教智能體了解平台本身：物件、流程、權限、檢視。依 [AI Skills](https://objectstack.ai/docs/ai/skills) 的說明把它裝進智能體的目錄。
+
+然後用你自己的話提出要求，例如：
+
+> 給客戶加一個「區域」選項清單，取值 EMEA、Americas 和 APAC，顯示在客戶頁面和「全部客戶」清單裡，並把標籤翻譯成 HotCRM 支援的每一種語言。
+
+一個稱職的智能體會找到 `src/sales/objects/account.object.ts` 裡的物件、對應的頁面、檢視和四個翻譯包，一起改。請它在你審閱之前先跑檢查：
+
+```bash
+pnpm verify    # validate、typecheck、lint、hygiene、build、test
+```
+
+`pnpm verify` 就是 HotCRM 自身改動要通過的那道關。不符合 `@objectstack/spec` 結構的欄位、沒有標籤的翻譯鍵、斷開的參照，會在這裡失敗，而不是在使用者面前失敗。
+
+### 看到它，也讓你的智能體用上它
+
+用 `pnpm dev`（http://localhost:4001）在本機執行並查看改動。部署之後，你透過 MCP 接入的智能體立刻就能看到新欄位和新物件，不需要額外步驟：MCP 介面讀的就是同一份中繼資料。參見[接入你的智能體](/zh-Hant/docs/ai-copilot/connect-your-agent)。
+
+### HotCRM 更新時保留你的改動
+
+把你的部署保持為一個跟隨 HotCRM 的克隆：
+
+```bash
+git remote add upstream https://github.com/objectstack-ai/hotcrm.git
+git fetch upstream
+git merge upstream/main
+```
+
+小而增量的改動可以乾淨地合併：物件檔案裡的一個新欄位、單獨檔案裡的一個新物件、一個新的翻譯鍵。真有衝突時，大多出現在四個翻譯包裡。每次合併後都執行 `pnpm verify`。
+
+## 把複刻版作為你自己的應用程式發布
+
+HotCRM 也是一個完整 ObjectStack 應用程式的可執行參考：物件、鉤子、流程、審批、職位、共用、儀表板、skills、四種語言及其文件。要以它為基礎做一個不同的應用程式並發布，就複刻它。
+
+### 1. 克隆
+
+```bash
+git clone https://github.com/objectstack-ai/hotcrm.git my-app
+cd my-app
+git remote rename origin upstream     # `git pull upstream main` 拉取 HotCRM 的更新
+git remote add origin git@github.com:<you>/<my-app>.git
+```
+
+### 2. 給它自己的標識
+
+HotCRM 建置出一個產物，裡面有七個套件：`src/sales/` 裡的應用程式套件和六個模組。每個套件都宣告自己的資訊清單。修改 `src/sales/index.ts` 裡應用程式套件的資訊清單，它同時也是產物的標識：
+
+```diff
+ manifest: {
+-  id: 'app.objectstack.hotcrm',
++  id: 'app.acme.myapp',
+   namespace: 'crm',
+   type: 'app',
+-  name: 'HotCRM',
++  name: 'Acme MyApp',
+   ...
+ },
+```
+
+然後給保留下來的每個模組一個在你名下的 `id`（例如 `app.acme.myapp.service`），並把它的 `dependencies` 指向新的應用程式 `id`。項目交付還依賴費用，它的 `dependencies` 兩個都要寫。`objectstack.config.ts` 負責組合這些套件，不需要改。
+
+**保留 `crm_` 前綴。** 每個物件、職位和翻譯鍵都寫明了它，涉及數百個檔案，HotCRM 自己的升級也以它為前提。改掉前綴的複刻版就無法再從上游合併。你新增的物件也用同一個前綴。
+
+### 3. 去掉用不到的部分
+
+每個模組是 `src/` 下的一個目錄：`service`、`revenue`、`marketing`、`o2c`、`expense`、`psa`。要去掉一個模組，刪除它的目錄，從 `objectstack.composition.ts` 裡刪掉它的匯入、stack 和種子資料族，再刪掉 `content/docs/` 下它的頁面。項目交付需要費用：要麼兩個都去掉，要麼保留費用。客戶、聯絡人、線索、商機、合約、訂單和任務在 `src/sales/` 裡，是每個模組所依賴的核心。剩下的參照 `pnpm typecheck` 會指出來。
+
+### 4. 加上你需要的部分
+
+在擁有該實體的套件裡依檔案後綴協議新增。`src/` 下的一個目錄**就是**一個套件；沒有進入所在套件 barrel 的檔案，不會被任何東西註冊：
+
+| 新實體 | 檔案 |
+|---|---|
+| 資料模型 | `src/<package>/objects/<entity>.object.ts` |
+| 伺服器端觸發器 | `src/<package>/objects/<entity>.hook.ts`，放在物件旁邊，在 `src/<package>/objects/hooks.ts` 中註冊 |
+| 供人和智能體使用的動作 | `src/<package>/actions/<entity>.actions.ts` |
+| 記錄頁面 | `src/<package>/pages/<entity>.page.ts` |
+| 清單檢視 | `src/<package>/views/<entity>.view.ts` |
+| 標籤 | `src/sales/translations/{en,zh-CN,es-ES,ja-JP}.ts` |
+
+每個檔案在建置時都會經過 `@objectstack/spec` 的結構驗證，出錯會明確失敗。
+
+### 5. 驗證
+
+```bash
+pnpm verify
+pnpm dev       # http://localhost:4001
+```
+
+### 6. 發布
+
+```bash
+objectstack cloud login
+objectstack package publish dist/objectstack.json \
+  --visibility marketplace \
+  --category <your-category> \
+  --note "Initial release."
+```
+
+完整的命令列說明見[發布你的第一個應用市集應用程式](/zh-Hant/docs/developers/publishing-your-first-app)，版本規則見[資訊清單與版本管理](/zh-Hant/docs/developers/manifest-and-versioning)。
+
+### 保持同步
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+檔案後綴協議讓衝突面保持很小；衝突大多落在翻譯包裡。
+
+## 授權條款
+
+HotCRM 以 Apache-2.0 授權條款發布。你可以修改它、重新命名品牌、圍繞它提供服務。如果你發現的是約定本身的缺陷，而不是你自己業務邏輯的問題，請提交回上游：這會讓這份參考對所有人都更好。

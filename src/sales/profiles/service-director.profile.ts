@@ -46,8 +46,9 @@ export const ServiceDirectorProfile = {
   // The Service app, as the service team's own set shows it (#2417).
   // Visibility, not access.
   tabPermissions: { crm_enterprise: 'hidden' as const, crm_marketing: 'hidden' as const, crm_o2c: 'hidden' as const, crm_psa: 'hidden' as const },
-  // No `crm_expense` row: the set is read only, and its holders record their
-  // own expenses through `crm_user`, as every member does (hotcrm#2556).
+  // No `crm_expense` or `crm_expense_request` row: the set is read only, and
+  // its holders record their own expenses and travel requests through
+  // `crm_user`, as every member does (hotcrm#2556, hotcrm#2578).
   objects: {
     crm_case:     { ...READ, readScope: 'own' as const },
     crm_account:  READ_ALL,

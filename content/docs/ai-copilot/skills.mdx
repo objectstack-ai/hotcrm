@@ -5,7 +5,7 @@ description: The full library of HotCRM AI skills — what each one does, where 
 
 # Skills
 
-A **skill** is a bite-sized AI ability the platform assistant can perform — like *"qualify this lead"* or *"draft a customer reply"*. Skills are all HotCRM contributes to the assistant; they are documented in two groups, [Sales Skills](/docs/ai-copilot/sales-copilot) and [Service Skills](/docs/ai-copilot/service-copilot).
+A **skill** is a bite-sized AI ability a platform agent can carry — like *"qualify this lead"* or *"draft a customer reply"*. HotCRM ships eight; it authors no agent of its own, so the skills attach to the platform's assistant where your environment runs one. They are documented in two groups, [Sales Skills](/docs/ai-copilot/sales-copilot) and [Service Skills](/docs/ai-copilot/service-copilot), plus the two expense skills below.
 
 ## Why skills, not "one big AI"
 
@@ -18,7 +18,7 @@ Packaging the capability as skills rather than one prompt makes it:
 
 ## Built-in skills
 
-HotCRM ships with six core skills:
+HotCRM ships with eight core skills:
 
 | Skill | Used by | What it does |
 | --- | --- | --- |
@@ -28,6 +28,8 @@ HotCRM ships with six core skills:
 | **📈 Revenue Forecasting** | Sales | Summarises pipeline by stage and forecasts a range, naming the deals at risk |
 | **🔭 Customer 360°** | Sales + Service | One-page summary of an account or contact |
 | **🚦 Case Triage** | Service | Suggests a priority with the reason that drove it |
+| **🧾 Expense Filing** | Everyone who spends | Files an expense from a receipt, checks it against the standards, notes what it found, submits after a yes |
+| **🔍 Expense Check** | Approvers + finance | Lists what in an expense report deserves a look; reads only |
 
 ### 🔄 Live Data
 
@@ -39,7 +41,7 @@ HotCRM ships with six core skills:
 | **Writes** | Nothing — read-only |
 | **Knowledge base** | None — purely metadata + records |
 
-This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema)**: add a field in the admin console, and the assistant uses it on the very next turn. Every other Sales / Service skill composes on top of Live Data, so the same live-schema property applies transitively — Lead Qualification can score a lead on a custom field added 10 seconds ago.
+This is the skill behind **[Live Schema](/docs/ai-copilot/live-schema)**: add a field in the admin console, and the assistant uses it on the very next turn. Every other Sales / Service skill composes on top of Live Data, so the same live-schema property applies transitively — Lead Qualification can score a lead on a custom field added 10 seconds ago.
 
 ### 🎯 Lead Qualification
 
@@ -91,6 +93,28 @@ This is the skill behind **[Wow #1 — Live Schema](/docs/ai-copilot/live-schema
 | **Writes** | Nothing. Its tools are `describe_object` and `get_record` only, and the two Actions that would change the case — `escalate_case` / `close_case` — carry no AI exposure, so no write tool is materialised for it to call. The `category` and `queue` this row used to name are not fields on `crm_case` under any name (its own classification field is **Case Type**: Question / Problem / Feature Request / Bug, set by a person). Triage supplies the judgement; the agent clicks the button |
 | **Knowledge base** | None. It declares no query tool, so it cannot search articles at all |
 
+### 🧾 Expense Filing [#expense-filing]
+
+| | |
+| --- | --- |
+| **Input** | A receipt, or what the person says they spent; activates on `crm_expense`, `crm_expense_report` and `crm_expense_request`, on installs with the expense module |
+| **Reads** | `describe_object` for the expense and the travel request; the person's own expenses (`query_records`, to find a duplicate by receipt number, or by date, amount and merchant); the active `crm_expense_standard` rows for the category. The receipt itself through `read_file` where the connection serves it |
+| **Output** | A Draft expense with **Source** = Agent, the receipt attached through a one-time `create_upload_link` page, and what it found written into the expense's **Review Notes** ("No findings" when there are none); a Draft travel request with its legs on request |
+| **Writes** | Records the person may write, with `create_record` / `update_record`, and seven actions: **Submit for Reimbursement**, **Submit for a Trip**, an expense report's **Submit**, **Back to Draft**, and a travel request's **Submit**, **Cancel Trip** and **Close**. Each one that sends to an approver or cannot be undone needs the person's yes (`requiresConfirmation`). It never approves, rejects or marks paid; **Mark as Paid** is not open to agents |
+| **Knowledge base** | None. The standards are records it reads |
+
+Review notes are written on each expense **before** it is sent. A sent expense locks, and a report under approval is locked as a whole, so even the approver cannot write the report's own **Review Notes** then (measured on ObjectStack 18.5.0: `RECORD_LOCKED`). `read_file` and `create_upload_link` are named in the instructions but not bound to the skill, because the platform's strict lint does not yet resolve the storage tools (objectstack#34948); the skill is offered on every connection that serves the data tools, and where files are not served it asks the person to attach the receipt in the app.
+
+### 🔍 Expense Check [#expense-check]
+
+| | |
+| --- | --- |
+| **Input** | An expense report; activates on `crm_expense_report` and `crm_expense` |
+| **Reads** | The report and its expenses, the person's other expenses (for duplicates), the active standards, the attachments through `read_file` where served, and the cited travel request's estimate against what was reported (**Trip Estimate**, **Over the Trip Estimate**) |
+| **Output** | A list, most important first: over a standard (naming the standard and the numbers), possible duplicate, missing receipt, trip over its estimate, plus the **Review Notes** already on each expense; and a short text the approver can paste into their own approval comment |
+| **Writes** | Nothing. Its tools are `describe_object`, `query_records` and `get_record`. A report under approval is locked, and finance does not edit reports, so it tells the reader instead. Its instructions forbid the platform's approval actions (**Approve**, **Reject**, **Reassign**, **Send Back**, **Recall**, **Resubmit**) and marking a report paid |
+| **Knowledge base** | None |
+
 ## How skills work together
 
 Skills do not call each other. The assistant selects the skill that fits the question you asked, and one question runs one skill — nothing chains a second skill behind it.
@@ -103,8 +127,7 @@ What every skill does share is the data floor: each one reads through the same l
 
 - **Sharing rules** — a skill running for user X can only read records visible to X.
 - **Field-level security** — restricted fields are hidden from skill input.
-- **Audit log** — every skill invocation, with input and output, is logged for review.
-- **Confirmation** — Lead Qualification is the only skill with a write path at all, and it writes through real Actions rather than fields: **Convert Lead** is irreversible, so it asks for confirmation and an agent-invoked conversion waits for human approval instead of running unattended; **Schedule Follow-up** is additive and reversible, so it carries no approval gate. The other five skills declare no write tool.
+- **Confirmation** — two skills have a write path. Lead Qualification writes through real Actions rather than fields: **Convert Lead** is irreversible, so it asks for confirmation and an agent-invoked conversion waits for human approval instead of running unattended; **Schedule Follow-up** is additive and reversible, so it carries no approval gate. Expense Filing writes the person's own expenses and travel requests, and its six actions that send to an approver or cannot be undone ask first in the same way; **Back to Draft** does not. The other six skills declare no write tool.
 
 ## Adding your own skills
 
@@ -114,10 +137,9 @@ Admins and developers can build custom skills — for example:
 - *Score account health* combining usage, NPS, and case volume.
 - *Draft a release-notes email* when a product hits a milestone.
 
-See [Customization › AI Skills](/docs/customization/ai-skills) for how to define a new skill, what knowledge bases it can use, and how to test it.
+See [Developers › AI Skills](/docs/developers/ai-skills) for how to define a new skill, what knowledge bases it can use, and how to test it.
 
 ## Tips for admins
 
-- ✅ **Monitor skill usage** in the AI dashboard — which skills are used most, which have low acceptance.
-- ✅ **Tune knowledge bases** for the skills that under-perform — most accuracy issues are knowledge issues.
-- ✅ **Disable skills** that don't fit your business — each skill can be toggled in admin settings.
+- ✅ **Keep knowledge articles filed well** — the skills that read articles match on category and tags, so a misfiled article is invisible to them. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
+- ✅ **Give an agent the access its work needs, through a person** — a skill reads only what the person it runs for may read. See [Connect Your Agent](/docs/ai-copilot/connect-your-agent).

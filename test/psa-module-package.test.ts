@@ -51,15 +51,17 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     expect(Object.keys(psa!.dependencies ?? {})).toEqual([APP_ID, EXPENSE_ID]);
   });
 
-  it('it contributes the expense\'s Project field, and owns no expense metadata of its own (hotcrm#2556)', () => {
+  it('it contributes the Project field of the expense (hotcrm#2556), its report (hotcrm#2559) and the travel request (hotcrm#2581), and owns no expense metadata of its own', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
-    expect(((stack.objectExtensions ?? []) as AnyRec[]).map((e) => [e.extend, Object.keys(e.fields)])).toEqual([['crm_expense', ['crm_project']]]);
+    expect(((stack.objectExtensions ?? []) as AnyRec[]).map((e) => [e.extend, Object.keys(e.fields)])).toEqual([
+      ['crm_expense', ['crm_project']], ['crm_expense_report', ['crm_project']], ['crm_expense_request', ['crm_project']],
+    ]);
     expect(((stack.views ?? []) as AnyRec[]).flatMap((v) => Object.values(v.listViews ?? {}) as AnyRec[]).map((lv) => lv.data?.object ?? lv.object))
       .not.toContain('crm_expense');
     expect(((stack.sharingRules ?? []) as AnyRec[]).map((r) => r.object)).not.toContain('crm_expense');
   });
 
-  it('it owns its eight objects, their thirteen hooks and its seed rows (phases 1a, 1b, 2a, 2b and 2c; the expense left in hotcrm#2556)', () => {
+  it('it owns its eight objects, their fourteen hooks and its seed rows (phases 1a, 1b, 2a, 2b and 2c; the expense left in hotcrm#2556; the member title in hotcrm#2568)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.objects ?? []) as AnyRec[]).map((o) => o.name).sort()).toEqual([
       'crm_project', 'crm_project_budget', 'crm_project_budget_line', 'crm_project_member', 'crm_project_task',
@@ -67,18 +69,18 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     ]);
     expect(((stack.hooks ?? []) as AnyRec[]).map((h) => h.name).sort()).toEqual([
       'project_budget_baseline', 'project_budget_follow', 'project_budget_line_amount', 'project_budget_rules',
-      'project_budget_status', 'project_member_unique', 'project_status_guard', 'project_task_progress', 'project_task_rules', 'project_team_sync', 'time_entry_costing', 'time_entry_timesheet', 'timesheet_stamps',
+      'project_budget_status', 'project_member_person_name', 'project_member_unique', 'project_status_guard', 'project_task_progress', 'project_task_rules', 'project_team_sync', 'time_entry_costing', 'time_entry_timesheet', 'timesheet_stamps',
     ]);
     expect([...new Set(((stack.data ?? []) as AnyRec[]).map((d) => d.object))].sort()).toEqual([
       'crm_project', 'crm_project_budget', 'crm_project_budget_line', 'crm_project_task', 'crm_rate_card',
     ]);
   });
 
-  it('it owns its approval and budget flows and the budget notices\' templates (phase 1b)', () => {
+  it('it owns its approval and budget flows, the member rename follower (hotcrm#2568) and the budget notices\' templates (phase 1b)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.flows ?? []) as AnyRec[]).map((f) => f.name).sort()).toEqual([
       'project_budget_alert', 'project_budget_approval',
-      'project_initiation_approval', 'timesheet_approval', 'timesheet_approval_on_create',
+      'project_initiation_approval', 'project_member_person_rename', 'timesheet_approval', 'timesheet_approval_on_create',
     ]);
     expect([...new Set(((stack.emailTemplates ?? []) as AnyRec[]).map((t) => t.name))].sort()).toEqual([
       'crm.project_budget_exceeded', 'crm.project_budget_warning',
@@ -116,8 +118,11 @@ describe('Project Delivery is its own app (#2316)', () => {
       'crm_project_task/project_plan', 'crm_project_task/my_project_tasks',
       'crm_time_entry/my_week_time', 'crm_timesheet/my_week_timesheets',
       // The two expense lists are the expense module's contribution since
-      // hotcrm#2556, so they follow the group's own timesheet entries.
-      'crm_timesheet/my_timesheets', 'crm_timesheet/timesheets_to_approve', 'crm_expense/my_expenses', 'crm_expense/expenses_to_approve',
+      // hotcrm#2556, and My Travel Requests since hotcrm#2581, so they follow
+      // the group's own timesheet entries; the approver's list is the
+      // report's since hotcrm#2559.
+      'crm_timesheet/my_timesheets', 'crm_timesheet/timesheets_to_approve', 'crm_expense/my_expenses', 'crm_expense_report/expense_reports_to_approve',
+      'crm_expense_request/my_travel_requests',
       'crm_rate_card',
       'crm_account', 'crm_opportunity', 'crm_contract', 'crm_task/my_open_tasks',
     ]);
@@ -195,6 +200,12 @@ describe('Project Delivery is its own app (#2316)', () => {
  */
 describe('with the module disabled (#2316)', () => {
   const PKG = '/packages/app.objectstack.hotcrm.psa';
+  /**
+   * A disable and a re-enable rebuild the served metadata twice: measured
+   * 3.1 s alone for this case, and past the 5 s default on a loaded CI runner
+   * (hotcrm#2585 run, 2026-11-17). The boot budget above, for the same reason.
+   */
+  const DISABLE_BUDGET_MS = 120_000;
   let verify: VerifyStack;
   let admin: string;
 
@@ -228,5 +239,5 @@ describe('with the module disabled (#2316)', () => {
     expect(await appStatus(PSA_APP)).toBe(200);
     expect(await offered()).toContain(PSA_APP);
     expect((await verify.apiAs(admin, 'GET', '/meta/object/crm_project')).status).toBe(200);
-  });
+  }, DISABLE_BUDGET_MS);
 });

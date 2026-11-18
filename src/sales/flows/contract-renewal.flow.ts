@@ -3,6 +3,7 @@
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
+import { RENEWAL_LOOKAHEAD_DAYS } from '../objects/contract.object';
 type Flow = Automation.Flow;
 
 /**
@@ -35,16 +36,17 @@ export const ContractRenewalFlow: Flow = {
   nodes: [
     { id: 'start', type: 'start', label: 'Start (daily 08:00)', config: { schedule: '0 8 * * *' } },
     {
-      // Broad pre-filter (next 120 days — ⛔ must cover the LARGEST
-      // renewal_notice_days in use; seeds go up to 90). The per-record notice
+      // Broad pre-filter (next RENEWAL_LOOKAHEAD_DAYS = 120 days — ⛔ must
+      // cover the LARGEST renewal_notice_days in use). The per-record notice
       // window is applied in the decision node below so each contract honours
       // its own renewal_notice_days. A pre-filter narrower than the largest
       // notice period silently truncates it: a 90-day contract stays invisible
-      // until 60 days out.
+      // until 60 days out. The same constant is the field's `max`, so no
+      // contract can ask for a window this span does not reach (#2534).
       id: 'query_contracts', type: 'get_record', label: 'Find Expiring Contracts',
       config: {
         objectName: 'crm_contract',
-        filter: { status: 'activated', end_date: { $gte: cel`isoDate(today())`, $lte: cel`isoDate(daysFromNow(120))` } },
+        filter: { status: 'activated', end_date: { $gte: cel`isoDate(today())`, $lte: cel`isoDate(daysFromNow(${RENEWAL_LOOKAHEAD_DAYS}))` } },
         limit: 500,
         outputVariable: 'contractList',
       },

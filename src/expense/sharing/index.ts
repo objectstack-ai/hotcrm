@@ -5,4 +5,6 @@
  * written once, in `src/sales/sharing/index.ts`.
  */
 
-export { ExpenseApproverEditSharingRule } from './expense.sharing';
+export {
+  ExpenseApproverEditSharingRule, ExpenseReportApproverEditSharingRule, ExpenseRequestApproverEditSharingRule,
+} from './expense.sharing';

@@ -313,3 +313,36 @@ describe('a top-up (project_budget_approval, project_budget_baseline)', () => {
     expect(num((await row('crm_project', project.id))!.approved_budget)).toBe(1000);
   });
 });
+
+describe('the New and Edit forms save a version with its lines in one batch (hotcrm#2565)', () => {
+  // The version's lines are an inline grid on its form (`inlineEdit: 'grid'`
+  // on the line's master-detail), so the console saves the version and its
+  // lines together through the cross-object `POST /batch`, which asks for
+  // the `bulk` API method on every object it writes.
+  const batch = async (operations: Rec[], as: string): Promise<{ status: number; body: Rec }> => {
+    const res = await verify.apiAs(as, 'POST', '/batch', { operations, atomic: true });
+    return { status: res.status, body: await res.json() };
+  };
+
+  it('creates the version with a typed line, then adds one line and removes the other', async () => {
+    const project = await insert('crm_project', { name: `Batch Rollout ${++k}`, crm_account: account.id, kind: 'delivery' }, pm.token);
+    const created = await batch([
+      { object: 'crm_project_budget', action: 'create', data: { crm_project: project.id } },
+      { object: 'crm_project_budget_line', action: 'create', data: { crm_project_budget: { $ref: 0 }, category: 'other', description: 'Contingency', quantity: 1, unit_cost: 1000 } },
+    ], pm.token);
+    expect(created.status, JSON.stringify(created.body)).toBe(200);
+    const versionId = String(created.body.results[0].id);
+    const firstLine = String(created.body.results[1].id);
+    expect(num((await row('crm_project_budget', versionId))!.total_cost)).toBe(1000);
+
+    const edited = await batch([
+      { object: 'crm_project_budget', action: 'update', id: versionId, data: { reason: 'Travel added.' } },
+      { object: 'crm_project_budget_line', action: 'create', data: { crm_project_budget: versionId, category: 'other', description: 'Travel', quantity: 2, unit_cost: 300 } },
+      { object: 'crm_project_budget_line', action: 'delete', id: firstLine },
+    ], pm.token);
+    expect(edited.status, JSON.stringify(edited.body)).toBe(200);
+    const lines = await verify.rows('crm_project_budget_line', { crm_project_budget: versionId });
+    expect(lines.map((l) => [l.description, num(l.amount)])).toEqual([['Travel', 600]]);
+    expect(num((await row('crm_project_budget', versionId))!.total_cost)).toBe(600);
+  });
+});

@@ -24,7 +24,7 @@ export {
   AccountLogCallAction, AccountLogMeetingAction, AccountScheduleMeetingAction,
   OpportunityLogCallAction, OpportunityLogMeetingAction, OpportunityScheduleMeetingAction,
 } from './activity-actions';
-export { ConvertLeadAction, CreateCampaignAction, ScheduleFollowUpAction } from './lead.actions';
+export { ConvertLeadAction, CreateCampaignAction, QualifyLeadAction, ScheduleFollowUpAction } from './lead.actions';
 export { CloneOpportunityAction, MassUpdateStageAction, GenerateQuoteAction } from './opportunity.actions';
 // A declarative update (`operation: 'update'`): no body, the platform writes
 // its `patch` as the caller.

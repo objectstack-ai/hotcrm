@@ -1,0 +1,50 @@
+---
+title: 情境：一份訂閱
+description: 在 HotCRM 裡從頭到尾走一份訂閱 —— 帶條款和續約的合約、每個週期一步的回款計劃、財務記錄的發票，以及續約商機。
+---
+
+# 情境：一份訂閱
+
+本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
+
+一家軟體公司銷售按年訂閱、按月計費的服務。客戶簽約一次，每個週期付款，並在期限結束前被詢問是否續約。本頁跟著這份訂閱走過 HotCRM，並直說 HotCRM 在哪裡止步。
+
+| 步驟 | 紀錄 | 應用 | 誰 |
+| --- | --- | --- | --- |
+| 1 | 商機和報價單 | Sales | 銷售代表 |
+| 2 | 合約 | Sales | 由已接受的報價單起草；銷售代表補全並啟用它 |
+| 3 | 回款計劃，每個週期一步 | Sales | 合約的銷售團隊 |
+| 4 | 發票和回款 | Order to Cash | 財務 |
+| 5 | 續約 | Sales | 合約負責人 |
+
+## 1. 交易
+
+這筆交易是一個帶報價單的商機，和[一次產品銷售](/zh-Hant/docs/getting-started/scenario-product-sale)一樣。接受報價單即贏單，並起草**合約**。
+
+## 2. 合約
+
+訂閱是一份類型為 *Subscription* 的合約。它帶有 **Start Date**、**End Date** 和期限、**Contract Value**、**Billing Frequency** 和 **Payment Terms**，以及續約設定：**Auto Renewal** 和 **Renewal Notice (Days)**。啟用合約會記下簽署日期，把客戶變成正式客戶，並且如果你設定了計費系統，會向它發送 `crm.contract.activated` 事件。參見[合約](/zh-Hant/docs/sales/contracts)。
+
+HotCRM 記錄 **Billing Frequency** 和 **Payment Terms**，但不據此執行任何操作。由你的計費系統把「每月」和「30 天帳期」變成一份時間表。
+
+## 3. 回款計劃
+
+在合約的 **Billing Milestones** 分頁上，銷售團隊為每個計費週期新增一步 —— *一月*、*二月*…… —— 每一步帶有計劃金額和日期。Order to Cash 裡的 **Planned This Month** 列出所有合約在本月應收的款項。參見[回款計劃](/zh-Hant/docs/order-to-cash/collection-plan)。
+
+**未提供：**這些步驟不會根據 **Billing Frequency** 自動產生；由團隊逐個新增。
+
+## 4. 發票和回款
+
+每個週期，財務在 **Order to Cash** 裡記錄它開出的發票和收到的回款，關聯到該週期那一步，或者從 ERP 匯入。**Overdue Invoices** 列出已過期未付的款項。參見[發票與回款](/zh-Hant/docs/order-to-cash/invoices-and-payments)。
+
+## 5. 續約
+
+在管理員開啟了排程工作的環境裡，每日續約掃描會找出進入通知期的合約，建一個續約任務，並通知合約負責人。開啟了 **Auto Renewal** 時，它還會按合約金額開出續約商機，階段為 *Proposal*。過了結束日期的合約，由每晚的掃描設為 *Expired*。沒有排程工作時，什麼都不會自己執行，合約的 **Renewal Calendar** 分頁就是看到續約臨近的地方。
+
+**未提供：**HotCRM 沒有自己的訂閱物件，沒有按用量或計量計費，沒有期中變更的按比例攤算，也沒有收入認列。這些屬於你的計費和財務軟體；參見[與財務軟體的邊界](/zh-Hant/docs/sales/billing-handoff)。
+
+## 相關
+
+- [情境：一次產品銷售](/zh-Hant/docs/getting-started/scenario-product-sale)
+- [情境：項目服務](/zh-Hant/docs/getting-started/scenario-project-services)
+- [訂單與回款](/zh-Hant/docs/order-to-cash)

@@ -1,5 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
+import { P } from '@objectstack/spec';
 import { Field } from '@objectstack/spec/data';
 
 /**
@@ -18,12 +19,41 @@ import { Field } from '@objectstack/spec/data';
  * A Closed or Cancelled project is not offered in the picker. That replaces
  * the refusal the expense's own hook used to make, which may not move here
  * (ADR-0130 R4: no hook on another package's object). The picker is the
- * form's guard only; a write through the API is caught when the expense is
- * submitted, where `expense_project_approval` turns an expense on an over or
- * locked project back to Draft
- * (`src/expense/flows/expense-project-approval.flow.ts`, in the expense module
- * for the platform gap that file names).
+ * form's guard only; a write through the API is caught when its report is
+ * submitted, where `expense_report_project_approval` turns a report on an
+ * over or locked project back to Draft
+ * (`src/expense/flows/expense-report-project-approval.flow.ts`, in the
+ * expense module for the platform gap that file names).
+ *
+ * The expense report's Project (hotcrm#2559). Submit for Reimbursement puts
+ * the expenses of each project on a report of their own and names the project
+ * on it, which routes the report to that project's Project Manager. It is
+ * read-only to people: the report's project is the one its expenses were
+ * grouped by, and a report submitted on an over or locked project is turned
+ * back to Draft by that same flow.
  */
+/**
+ * The travel request's Project field (hotcrm#2581, F3d), on the same terms as
+ * the expense's: optional, the same picker, gone with Project Delivery. A
+ * request on a project is approved by the project's Project Manager, one
+ * without by the traveler's manager; both flows sit in the expense module for
+ * the platform gap `src/expense/flows/expense-report-project-approval.flow.ts` names
+ * (`../../expense/flows/expense-request-project-approval.flow.ts`).
+ *
+ * Locked with the request's other planned values once it is Approved,
+ * Cancelled or Closed: the project chose the approver, so moving an approved
+ * request to another project would show it approved by someone who never saw
+ * it. The predicate is the one on `crm_expense_request`'s own planned values
+ * (`src/expense/objects/expense_request.object.ts`), written out here because
+ * a module imports only from its own directory or from `src/sales/`.
+ *
+ * Its related list puts a project's travel requests on the project page. A
+ * request is private, so each reader sees there the ones they own, approve or
+ * read through View All; ⛔ no summary on the project: a request is a plan,
+ * not a cost (the cost arrives with the expenses).
+ */
+const REQUEST_PLAN_LOCKED = P`has(record.status) && (record.status == "approved" || record.status == "cancelled" || record.status == "closed")`;
+
 export const ExpenseProjectExtensions = [
   {
     extend: 'crm_expense',
@@ -33,6 +63,29 @@ export const ExpenseProjectExtensions = [
         group: 'basic',
         relatedListColumns: ['name', 'owner_id', 'expense_date', 'category', 'amount', 'status'],
         lookupFilters: [{ field: 'status', operator: 'notIn', value: ['closed', 'cancelled'] }],
+      }),
+    },
+  },
+  {
+    extend: 'crm_expense_report',
+    fields: {
+      crm_project: Field.lookup('crm_project', {
+        label: 'Project',
+        group: 'basic',
+        readonly: true,
+        relatedListColumns: ['report_number', 'name', 'owner_id', 'total_amount', 'status'],
+      }),
+    },
+  },
+  {
+    extend: 'crm_expense_request',
+    fields: {
+      crm_project: Field.lookup('crm_project', {
+        label: 'Project',
+        group: 'trip',
+        relatedListColumns: ['request_number', 'name', 'owner_id', 'destination', 'start_date', 'end_date', 'estimated_amount', 'status'],
+        lookupFilters: [{ field: 'status', operator: 'notIn', value: ['closed', 'cancelled'] }],
+        readonlyWhen: REQUEST_PLAN_LOCKED,
       }),
     },
   },

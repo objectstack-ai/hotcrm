@@ -590,14 +590,14 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       screens: {
         screen_1: {
           title: '変換詳細',
-          // The duplicate warning's text is a variable the flow assigns; this
-          // key can only carry the hole that shows it. The account notice
-          // after it is translated here (#2073 item 8): exactly one of the two
-          // holes holds a name, and each hole's `default:` is the OTHER
-          // branch's words, so the sentence stays name-first. Keep both holes,
-          // in this order, with a `default:` each (see `screen_1` in
-          // `lead-conversion.flow.ts`).
-          description: '{{duplicateWarning}} {{ existingAccountName | default:"このリードの会社名に一致する、あなたが閲覧できる取引先はありません。変換すると、次の名前で新しい取引先が作成されます：" }}{{ newAccountName | default:" は、このリードが加わる既存の取引先です" }}。',
+          // Three notices, every word translated here: the duplicate note
+          // (#2571; its hole holds a space on a clean lead, so `default:`
+          // prints the note only on a suspected one), then the account and
+          // the contact (#2073 item 8, #2572). In each two-hole pair exactly
+          // one hole holds a name and each `default:` is the OTHER branch's
+          // words. Keep every hole, in this order, with a `default:` each
+          // (see `screen_1` in `lead-conversion.flow.ts`).
+          description: '{{ duplicateWarning | default:"重複の可能性：登録時に、このリードが同じメールアドレスの既存レコードと重複していると判定されました。続ける前に、リードのページでリンク先のレコードと比べてください。" }} {{ existingAccountName | default:"このリードの会社名に一致する、あなたが閲覧できる取引先はありません。変換すると、次の名前で新しい取引先が作成されます：" }}{{ newAccountName | default:" は、このリードが加わる既存の取引先です" }}。{{ existingContactName | default:"このリードのメールアドレスを持つ、あなたが閲覧できる取引先責任者はいません。変換すると、次の名前で新しい取引先責任者が作成されます：" }}{{ newContactName | default:" は、このリードのメールアドレスを持つ既存の取引先責任者です。変換するとこのリードはその取引先責任者に統合され、空欄の「電話」「携帯電話」「役職」だけが補完されます" }}。',
           fields: {
             createOpportunity: { label: '商談を作成しますか？' },
             opportunityName: { label: '商談名' },
@@ -609,9 +609,17 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         // one hole holds the account's name, and each `default:` is the OTHER
         // state's words. Keep both holes, in this order, with a `default:` each
         // (see `result` in `lead-conversion.flow.ts`).
+        confirm_contact: {
+          title: '取引先責任者の確認',
+          description: 'このリードは {{ leadPersonName }} ですが、同じメールアドレスの取引先責任者は {{ existingContactName }} です。取引先責任者のメールアドレスは重複できないため、変換するとこのリードはその取引先責任者に統合されます。空欄の「電話」「携帯電話」「役職」だけを補完し、ほかは変更しません。別人の場合はキャンセルし、先にリードのメールアドレスを変更してください。',
+          fields: {
+            matchedContactLink: { label: '既存の取引先責任者' },
+            reuseContactConfirmed: { label: 'このリードをこの取引先責任者に変換する' },
+          },
+        },
         result: {
           title: 'リードを変換しました',
-          description: '{{ pendingApprovalAccountName | default:"承認待ちの取引先承認はありません：" }}{{ noApprovalAccountName | default:" は、営業マネージャーによる取引先承認を待っています" }}。',
+          description: '{{ pendingApprovalAccountName | default:"リードは次の取引先に変換されました：" }}{{ noApprovalAccountName | default:" は、営業マネージャーによる取引先承認を待っています" }}。',
           fields: {
             accountLink: { label: '取引先' },
             contactLink: { label: '取引先責任者' },
@@ -631,6 +639,10 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         refuse_no_match_key: {
           message:
             '変換は拒否されました。このリードの会社名には照合キーがないため、変換ではどの取引先に属するかを判断できず、推測もしません。推測すると、取引先責任者と商談が別の顧客の下に登録されるおそれがあります。リードの「会社名」を保存するとキーが再作成されるので、もう一度保存してから変換してください。何も作成されていません。',
+        },
+        refuse_contact_not_confirmed: {
+          message:
+            '変換していません：このリードを同じメールアドレスの既存の取引先責任者に統合することが確認されませんでした。何も作成されていません。別人の場合は、リードのメールアドレスを変更してから再度変換してください。',
         },
         refuse_nonpositive_amount: {
           message:
@@ -898,5 +910,12 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         admin: { label: '管理' },
       },
     },
+  },
+  // An import mapping's label, as the import wizard offers it (a key
+  // since 18.6.0; before it the wizard showed the English text in every locale).
+  mappings: {
+    crm_account_import: { label: '取引先インポート (CSV)' },
+    crm_contact_import: { label: '取引先責任者インポート (CSV)' },
+    crm_lead_import: { label: 'リードインポート (CSV)' },
   },
 };

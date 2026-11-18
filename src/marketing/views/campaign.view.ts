@@ -99,8 +99,13 @@ export const CampaignViews = defineView({
     },
   },
 
+  // One page of stacked sections, not tabs (#2566): on a phone the last tabs
+  // were off screen. Performance is counted by the campaign's members and
+  // deals, not typed on a new campaign, so it starts collapsed; the wide dialog
+  // takes three fields a row.
   form: {
-    type: 'tabbed',
+    type: 'simple',
+    modalSize: 'xl',
     sections: [
       {
         // Every form section here carries a `name` matching the object's
@@ -112,7 +117,7 @@ export const CampaignViews = defineView({
         // those warnings before the #597 restructure gave it a reason to move.
         name: 'basic',
         label: 'Campaign Information',
-        columns: 2,
+        columns: 3,
         fields: [
           { field: 'name', required: true, span: 'full' },
           'campaign_code',
@@ -161,13 +166,14 @@ export const CampaignViews = defineView({
          */
         name: 'budget',
         label: 'Budget & ROI',
-        columns: 2,
+        columns: 3,
         fields: ['budgeted_cost', 'actual_cost', 'expected_revenue', 'actual_revenue', 'roi'],
       },
       {
         name: 'metrics',
         label: 'Performance',
-        columns: 2,
+        collapsed: true,
+        columns: 4,
         fields: [
           'target_size',
           'num_sent',

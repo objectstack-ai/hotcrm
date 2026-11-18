@@ -32,7 +32,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * historical record and is allowed to describe a repo that no longer exists.
  *
  * A doc states the tree in TWO forms, and that check — the first one below —
- * reads only one of them (#984: `getting-started/for-developers.mdx` kept
+ * reads only one of them (#984: `getting-started/for-developers.mdx`, now `developers/index.mdx`, kept
  * drawing `agents/` right through the deletion, under a guard whose own comment
  * names `src/agents/` as the defect it exists to catch):
  *
@@ -87,7 +87,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  * in the PR for #1923). Across the guarded doc surface the loosening added
  * exactly two things: the 13 dead directories in the ARCHITECTURE diagram, and
  * `sales` · `service` · `revenue` · `marketing` on the three
- * `marketplace/fork-hotcrm` pages, all four of which exist. No false positive.
+ * `marketplace/fork-hotcrm` pages (now `developers/customize-and-extend`), all four of which exist. No false positive.
  */
 const inlineSrcDirs = (text: string): string[] =>
   [...text.matchAll(/\bsrc\/([a-z][a-z0-9_]*)(?!\.[a-z])(?![a-z0-9_])/g)].map((m) => m[1]);
@@ -252,7 +252,7 @@ const productDocPages = (): string[] => {
  *
  * This is the one editorial fact a walk cannot read off a page, and it is the
  * reason the roster below stayed a hand-kept list for as long as it did:
- * `customization/ai-skills` says "there is no `src/agents/` directory", which
+ * `developers/ai-skills` says "there is no `src/agents/` directory", which
  * is the current truth and is a false positive under "named ⇒ exists".
  *
  * Declaring the three pages that do this is far cheaper than declaring the
@@ -266,9 +266,9 @@ const productDocPages = (): string[] => {
  * page names it in order to say it is NOT there.
  */
 const NEGATED_SRC_DIRS: Record<string, string[]> = {
-  'content/docs/customization/ai-skills.mdx': ['agents'],
-  'content/docs/customization/ai-skills.zh-Hans.mdx': ['agents'],
-  'content/docs/customization/ai-skills.zh-Hant.mdx': ['agents'],
+  'content/docs/developers/ai-skills.mdx': ['agents'],
+  'content/docs/developers/ai-skills.zh-Hans.mdx': ['agents'],
+  'content/docs/developers/ai-skills.zh-Hant.mdx': ['agents'],
 };
 
 /**
@@ -291,7 +291,7 @@ const NEGATED_SRC_DIRS: Record<string, string[]> = {
  * by construction, which is the very drift this file exists to catch in the
  * docs themselves.
  *
- * `customization/index.{mdx,zh-Hans,zh-Hant}` is still here for the reason
+ * `developers/index.{mdx,zh-Hans,zh-Hant}` (once `customization/index`) is here for the reason
  * #988 put it here — the barrel sentence under its tree names
  * `src/*\/skills/index.ts` outright — but nothing now depends on anyone having
  * noticed. A page that only DRAWS a tree is covered by TREE_DIAGRAM_DOCS

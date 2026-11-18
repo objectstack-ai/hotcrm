@@ -55,6 +55,10 @@ const RUNTIME_TEST_FILES = [
   // `forecast_owner_name` hook and the `forecast_owner_rename` flow on the user
   // record, run against the booted app in one file.
   'forecast-owner-title.test.ts',
+  // hotcrm#2568 — a staffing row's title follows a rename of its person: the
+  // `project_member_person_name` hook and the `project_member_person_rename`
+  // flow on the user record, run against the booted app in one file.
+  'psa-member-title.test.ts',
   // #2317 — filing a contract's signed copy dates the signature
   // (`contract_signed_copy_date`), beside the two signed-copy gates it serves.
   'contract-signed-copy.test.ts',
@@ -117,6 +121,9 @@ const RUNTIME_TEST_FILES = [
   // hotcrm#2556 — the expense module's guard and its two approvals, run as
   // the spender, the manager and finance, and with each module disabled.
   'expense-module.test.ts',
+  // hotcrm#2580 — a report read against its travel request: the amounts on
+  // both, and the last paid report closing the request.
+  'expense-report-request.test.ts',
   // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
   // files above, and the same reason: the gate is authored on four surfaces
   // (the field default, `convert_lead.visible`, `lead_conversion`'s

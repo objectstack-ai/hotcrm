@@ -58,7 +58,7 @@ import stack from './helpers/composed-stack';
  *  3. The page **names the object** — by API name, `label`, `pluralLabel`, or
  *     the entry's `term` override for the handful of concepts the docs spell
  *     differently from the metadata ("line item", "article").
- *  4. The page is **not a developer page**. `content/docs/customization/
+ *  4. The page is **not a developer page**. `content/docs/developers/
  *     api-reference.mdx` tabulates nearly every object in the app, so
  *     "mentioned somewhere under content/docs" would have been satisfied for
  *     free by an API table row. A row in a reference table is not user
@@ -138,11 +138,11 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   // inside its order.
   crm_sales_order: { page: 'sales/orders' },
   crm_sales_order_line: { page: 'sales/orders' },
-  crm_product: { page: 'revenue/products' },
+  crm_product: { page: 'sales/products' },
   // #2313 — a book and its entries, on one page: an entry is only ever read
   // inside the book it prices.
-  crm_price_book: { page: 'revenue/price-books' },
-  crm_price_book_entry: { page: 'revenue/price-books', term: 'price book entry' },
+  crm_price_book: { page: 'sales/price-books' },
+  crm_price_book_entry: { page: 'sales/price-books', term: 'price book entry' },
   crm_case: { page: 'service/cases' },
   crm_knowledge_article: { page: 'service/knowledge-base', term: 'article' },
   // #601 — the vote row behind the article's Helpful / Not Helpful counters.
@@ -166,10 +166,17 @@ const DOCS_LEDGER: Record<string, LedgerEntry> = {
   crm_timesheet: { page: 'projects/time-and-expenses' },
   crm_time_entry: { page: 'projects/time-and-expenses' },
   crm_expense: { page: 'projects/time-and-expenses' },
+  // #2559 — the report the expenses are sent on, approved and paid back.
+  crm_expense_report: { page: 'expenses/index' },
+  // #2578 — the travel request, the Expenses section's second page.
+  crm_expense_request: { page: 'expenses/travel-requests' },
+  crm_expense_request_line: { page: 'expenses/travel-requests' },
+  // #2616 — the standards, on the Expenses section's first page.
+  crm_expense_standard: { page: 'expenses/index' },
 };
 
 /** Sections written for developers — see check 4 in the header note. */
-const DEVELOPER_SECTIONS = ['customization', 'marketplace', 'reference'];
+const DEVELOPER_SECTIONS = ['developers', 'reference'];
 
 /** Fumadocs locale suffixes. `''` is the default (English) page. */
 const LOCALES = ['', '.zh-Hans', '.zh-Hant'] as const;
@@ -234,7 +241,7 @@ describe('every business object has a user-facing docs page', () => {
       misfiled,
       `these rows point at a developer section (${DEVELOPER_SECTIONS.join(', ')}):\n  ` +
         `${misfiled.join('\n  ')}\n` +
-        'content/docs/customization/api-reference.mdx tabulates nearly every object — a ' +
+        'content/docs/developers/api-reference.mdx tabulates nearly every object — a ' +
         'row in that table is not user documentation. Point at the page a business user ' +
         'would be sent to.',
     ).toEqual([]);

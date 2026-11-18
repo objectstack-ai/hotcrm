@@ -18,7 +18,7 @@
 #               priority:p2 — important, M3
 #               priority:p3 — lowest tier (no fleet description authored)
 #   provenance  upstream:objectstack — blocked on / caused by the platform
-#   workflow    needs-user-decision / skip-changeset
+#   workflow    needs-user-decision / skip-changeset / docs-en-only
 #   pm state    pm:queue / pm:dispatched / pm:blocked / pm:on-hold /
 #               pm:awaiting-maintainer / pm:blocking / pm:epic / pm:retriage / pm:seat
 #   triage      duplicate / invalid / question / wontfix /
@@ -96,6 +96,9 @@
 - name: skip-changeset
   color: "cccccc"
   description: PR ships nothing to users (pure CI/docs chore) — changeset gate waived
+- name: docs-en-only
+  color: "cccccc"
+  description: English docs change with no Chinese counterpart; the PR body says why on a Docs-en-only line (hotcrm#2609)
 
 # ---------------------------------------------------------------------------
 # Inventory catch-up (#1501). The 22 entries below already existed as live

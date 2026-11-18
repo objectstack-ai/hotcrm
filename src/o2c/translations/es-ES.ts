@@ -342,4 +342,10 @@ export const esES: TranslationData = {
       },
     },
   },
+  // An import mapping's label, as the import wizard offers it (a key
+  // since 18.6.0; before it the wizard showed the English text in every locale).
+  mappings: {
+    crm_invoice_import: { label: 'Importación de facturas (CSV)' },
+    crm_payment_import: { label: 'Importación de cobros (CSV)' },
+  },
 };
