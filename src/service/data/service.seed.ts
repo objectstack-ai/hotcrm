@@ -93,6 +93,51 @@ const celCaseSlaDue = (age: CaseAge, priority: string, accountName?: string) => 
 };
 
 /**
+ * The seed's loosened SLA target for open demo work (#2452), in hours: an open
+ * case that is still inside its matrix window when the seed loads gets the
+ * matrix cell PLUS fourteen days.
+ *
+ * ⚠️ A deliberate deviation from the doctrine above — the one place a seeded
+ * `sla_due_date` is not what `case_sla_defaults` would have stamped. The
+ * matrix cells run 4 to 168 hours from creation, so no open case can stay
+ * inside one for two weeks: a fresh demo had 23 of 23 open cases past SLA by
+ * +72 h (#2431). The objectstack maintainer's ruling on objectstack#32679
+ * (quoted on #2452) keeps demo dates where they are and loosens the seed's
+ * case due times and SLA targets instead, so a fresh demo stays presentable
+ * for at least two weeks. The product's matrix (`_case-sla.ts`) and the hook
+ * are untouched: a case anybody raises in the demo gets the published clock.
+ *
+ * Read as a renegotiated deadline, which `sla_due_date` deliberately allows
+ * (the field is not `readonly`, and no write moves a value already there).
+ * Settled cases and the deliberate breaches keep the matrix cell, so the
+ * closed-case SLA surfaces and the escalation story read as before. The
+ * roster of what keeps the matrix is the deliberate-breach list in
+ * `test/seed-sla-share.test.ts`; the derivation is held by
+ * `test/seed-consistency.test.ts`.
+ */
+export const DEMO_OPEN_CASE_SLA_GRACE_HOURS = 14 * 24;
+
+/**
+ * `sla_due_date` of an open case still inside its window when the seed loads:
+ * {@link celCaseSlaDue} plus {@link DEMO_OPEN_CASE_SLA_GRACE_HOURS}. Refuses a
+ * row that could already be past due on arrival — whatever hour of the UTC day
+ * the seed loads — since that row is a breach and keeps the matrix cell.
+ */
+const celOpenCaseSlaDue = (age: CaseAge, priority: string, accountName?: string) => {
+  const hours = seededSlaHours(priority, accountName);
+  // `daysAgo(n)` is a UTC midnight up to (n + 1) × 24 hours before the seed
+  // loads, so its window has to reach the next midnight at least.
+  const inside = typeof age === 'number' ? (age + 1) * 24 <= hours : age.hoursAgo < hours;
+  if (!inside) {
+    throw new Error(`seed: an open case created ${JSON.stringify(age)} ago may be past its ${hours}h window on arrival — it keeps the matrix due date`);
+  }
+  const grace = DEMO_OPEN_CASE_SLA_GRACE_HOURS;
+  return typeof age === 'number'
+    ? cel`daysAgo(${age}) + duration('${hours}h') + duration('${grace}h')`
+    : cel`now() - duration('${age.hoursAgo}h') + duration('${hours}h') + duration('${grace}h')`;
+};
+
+/**
  * `is_sla_violated` of a SETTLED case (resolved or closed) — DERIVED, never
  * picked (#2070). `case_sla_defaults` records the breach on the write that
  * settles a case after its due date, so a settled seed row has to arrive
@@ -260,7 +305,7 @@ export const cases = defineSeed(Case, {
       is_sla_violated: false,
       is_escalated: false,
       created_at: cel`daysAgo(1)`,
-      sla_due_date: celCaseSlaDue(1, 'medium', 'Stark Medical'),
+      sla_due_date: celOpenCaseSlaDue(1, 'medium', 'Stark Medical'),
     },
     {
       subject: 'Billing discrepancy on last invoice',
@@ -280,7 +325,7 @@ export const cases = defineSeed(Case, {
       is_sla_violated: false,
       is_escalated: false,
       created_at: cel`daysAgo(4)`,
-      sla_due_date: celCaseSlaDue(4, 'low', 'Acme Corporation'),
+      sla_due_date: celOpenCaseSlaDue(4, 'low', 'Acme Corporation'),
     },
     {
       subject: 'Mobile app crashes on iOS 17',
@@ -373,9 +418,10 @@ export const cases = defineSeed(Case, {
     // On a fresh seed that is 7 of 38 cases breached after the first sweep
     // (three hand-written, four generated), none of them settled, and one
     // escalation task: the sweep's own, on `Login issues after platform
-    // upgrade`. `test/seed-sla-share.test.ts` boots the app and pins it. The
-    // clock keeps running after the seed loads: an open row inside its window
-    // breaches when its window ends, as it would on a real desk.
+    // upgrade`. `test/seed-sla-share.test.ts` boots the app and pins it. Every
+    // open row inside its window takes the seed's loosened target
+    // (`celOpenCaseSlaDue`, #2452): its window plus fourteen days, so the same
+    // seven cases are the whole breached set for two weeks after the seed.
     //
     // ### What the timing does to the date axis
     //
@@ -516,7 +562,8 @@ export const cases = defineSeed(Case, {
           // Resolved cases also carry closed_date: case.hook stamps it as the
           // resolved-date proxy while keeping is_closed=false.
           ...(settled ? { closed_date: celSettledAt(ageDays, resolutionHours) } : {}),
-          sla_due_date: celCaseSlaDue(age, priority, account),
+          // Open work inside its window takes the seed's loosened target (#2452).
+          sla_due_date: settled || breach ? celCaseSlaDue(age, priority, account) : celOpenCaseSlaDue(age, priority, account),
         });
       }
       return out;
