@@ -85,14 +85,18 @@ export const ContactViews = defineView({
     },
   },
 
+  // One page of stacked sections, not tabs (#2566): on a phone the last tabs
+  // were off screen. The sections a new contact is rarely given (the mailing
+  // address, the preferences) are collapsed.
   form: {
-    type: 'tabbed',
+    type: 'simple',
+    modalSize: 'lg',
     sections: [
       {
-        // The first tab holds everything Create requires (#2369 row 1).
-        // `email` is required on the object, and on the Contact Info tab
-        // Create jumped there with "Email is required" after the rep had
-        // filled this one. Three columns put the three name parts on one row
+        // The first section holds everything Create requires (#2369 row 1).
+        // `email` is required on the object, and on the Contact Info tab of
+        // the old tabbed form Create jumped there with "Email is required"
+        // after the rep had filled this one. Three columns put the three name parts on one row
         // (Last Name used to take a whole row of its own), then the account,
         // then how to reach the person.
         name: 'identity',
@@ -162,9 +166,10 @@ export const ContactViews = defineView({
         // readable on the SYNTHESIZED detail page — which does derive from
         // `fieldGroups` — while no form in the app could enter or edit it,
         // even though `contact_import.mapping.ts` writes it from the shipped
-        // CSV template. This tab is the authoring half of the import path.
+        // CSV template. This section is the authoring half of the import path.
         name: 'mailing_address',
         label: 'Mailing Address',
+        collapsed: true,
         columns: 2,
         fields: [
           // One structured `address` field; full width, so its parts lay out
@@ -180,6 +185,7 @@ export const ContactViews = defineView({
         // "Preferences".
         name: 'comm_preferences',
         label: 'Preferences',
+        collapsed: true,
         columns: 2,
         fields: ['lead_source', 'is_primary', 'do_not_call', 'email_opt_out'],
       },

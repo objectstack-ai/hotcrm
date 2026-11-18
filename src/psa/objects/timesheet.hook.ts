@@ -7,7 +7,9 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * A timesheet's own stamps and its one-per-period rule, on save:
  *
  *   - `name`, when empty: the project's name and the period, so a list of
- *     timesheets reads without opening each.
+ *     timesheets reads without opening each. A name the person typed is kept
+ *     (hotcrm#2567). A generated name follows a later change of the project
+ *     or the period; a typed one is never replaced.
  *   - `approver`, when the timesheet is created: the project's Project
  *     Manager at that moment (read-only to people; `timesheet_approval` asks
  *     them).
@@ -66,7 +68,7 @@ const timesheetStamps: Hook = {
       },
     },
   },
-  description: 'Fill the name and the approver, keep one timesheet per person, project and period, leave the decision to the approval, refuse a submission on a locked project, and take no timesheet onto a Closed or Cancelled project.',
+  description: 'Fill an empty name and the approver, keep one timesheet per person, project and period, leave the decision to the approval, refuse a submission on a locked project, and take no timesheet onto a Closed or Cancelled project.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -107,7 +109,8 @@ const timesheetStamps: Hook = {
     const person = Boolean(ctx.user?.id) && !ctx.session?.isSystem;
     const submitting = person && input.status === 'submitted' && previous.status !== 'submitted';
     const moving = ctx.event === 'beforeUpdate' && 'crm_project' in input && projectId !== refId(previous.crm_project);
-    const needsProject = ctx.event === 'beforeInsert' || 'crm_project' in input || 'period_start' in input || submitting;
+    const cleared = 'name' in input && (typeof input.name !== 'string' || input.name.trim() === '');
+    const needsProject = ctx.event === 'beforeInsert' || 'crm_project' in input || 'period_start' in input || 'period_end' in input || cleared || submitting;
     const project = projectId && needsProject
       ? await api.object('crm_project').findOne({ where: { id: projectId }, fields: ['id', 'name', 'status', 'project_manager', 'time_entry_locked'] })
       : null;
@@ -135,10 +138,22 @@ const timesheetStamps: Hook = {
       ), { reason: 'project_locked', params: { project: String(project.name ?? 'This project') } });
     }
 
-    const name = pick('name');
-    if ((name == null || name === '' || 'period_start' in input || 'crm_project' in input) && project && periodStart) {
-      const generated = `${String(project.name ?? '')} · ${periodStart}${periodEnd ? ` – ${periodEnd}` : ''}`;
-      if (name == null || name === '' || ctx.event === 'beforeInsert') input.name = generated.slice(0, 200);
+    // The generated name; a typed one is the person's and stays (hotcrm#2567).
+    const stamp = (projectName: unknown, start: string, end: string): string =>
+      `${String(projectName ?? '')} · ${start}${end ? ` – ${end}` : ''}`.slice(0, 200);
+    if (project && periodStart) {
+      const name = pick('name');
+      let fill = typeof name !== 'string' || name.trim() === '';
+      if (!fill && ctx.event === 'beforeUpdate' && !('name' in input)
+        && ('crm_project' in input || 'period_start' in input || 'period_end' in input)) {
+        // Still the name generated from the old project and period: follow the change.
+        const day = (v: unknown): string => (typeof v === 'string' ? v.slice(0, 10) : '');
+        const before = moving
+          ? await api.object('crm_project').findOne({ where: { id: refId(previous.crm_project) }, fields: ['id', 'name'] })
+          : project;
+        fill = before != null && previous.name === stamp(before.name, day(previous.period_start), day(previous.period_end));
+      }
+      if (fill) input.name = stamp(project.name, periodStart, periodEnd);
     }
 
     if (ctx.event === 'beforeInsert' && project) {

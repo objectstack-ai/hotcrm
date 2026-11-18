@@ -52,7 +52,7 @@ description: 驗證規則、流程、排程作業與審批 —— 無需你動�
 
 > **自動觸發需要 `triggers` 能力。** 記錄變更與排程類流程，只有當 stack 的 `requires` 列表包含 `triggers` 時才會觸發 —— 它會安裝記錄變更與排程觸發器提供方（排程觸發器還依賴 job 服務）。螢幕類流程始終為手動啟動。
 
-**HotCRM 中的內建流程**（47 個）。每一行用的都是流程自身的標籤 —— 也就是 **Studio → Automation → Flows** 裡列出、並在 **Studio → Developer → Flow Runs** 裡供你挑選的那個名字，因此一次執行可以逐字回到這張表裡查：
+**HotCRM 中的內建流程**（48 個）。每一行用的都是流程自身的標籤 —— 也就是 **Studio → Automation → Flows** 裡列出、並在 **Studio → Developer → Flow Runs** 裡供你挑選的那個名字，因此一次執行可以逐字回到這張表裡查：
 
 | 流程 | 觸發 | 它做什麼 |
 | --- | --- | --- |
@@ -88,6 +88,7 @@ description: 驗證規則、流程、排程作業與審批 —— 無需你動�
 | **追加預算審批** | 記錄變更（更新） | 項目的第 2 版及以後的預算設為 *In Approval* 時：由 Project Director 或 PMO 審批，使 Approved Budget 增加 10% 或以上時再由 Finance Controller 審批。批准後該版本成為項目新的基線，駁回則為 *Rejected*，撤回則回到 *Draft* |
 | **工時單審批** | 記錄變更（更新） | 工時單設為 *Submitted* 時：由它的審批人（項目經理）在 Inbox 裡決定，批准後工時才計入項目成本。任何人都不審批自己的，撤回會回到 *Draft* |
 | **工時單審批（新建時）** | 記錄變更（插入） | 同一套審批，用於*建立時*就已提交的工時單 |
+| **項目成員改名** | 記錄變更（更新） | 使用者改名時，把新名字寫到他在所屬每個組織裡的全部項目成員記錄上，讓每筆記錄的名稱隨之更新 |
 | **報銷單審批** | 記錄變更（更新） | 沒有項目的報銷單設為 *Submitted* 時：由報銷人的上級決定（沒有上級時由 Finance Controller 決定），Total 達到 2,000 或以上時再由 Finance Controller 審批。批准後為 *Approved*，駁回為 *Rejected*，撤回則回到 *Draft*。單上的費用隨報銷單變化 |
 | **項目報銷單審批** | 記錄變更（更新） | 項目上的報銷單設為 *Submitted* 時：由項目經理決定，Total 達到 2,000 或以上時再由 Finance Controller 審批，批准後單上的費用計入項目成本。如果項目已 Closed、Cancelled 或已鎖定，報銷單改為退回 *Draft*，並在 Inbox 裡告訴報銷人原因 |
 | **出差申請審批** | 記錄變更（更新） | 沒有項目的出差申請設為 *Submitted* 時：由出差人的上級決定（沒有上級時由 Finance Controller 決定），只有一級。批准後為 *Approved*，駁回為 *Rejected*，撤回則回到 *Draft* |

@@ -11,7 +11,7 @@ import { PsaEmailTemplates } from './email-templates/index.js';
 import { ExpenseProjectExtensions } from './extensions/index.js';
 import {
   ProjectBudgetAlertFlow, ProjectBudgetApprovalFlow,
-  ProjectInitiationApprovalFlow, TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
+  ProjectInitiationApprovalFlow, ProjectMemberPersonRenameFlow, TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
 } from './flows/index.js';
 import {
   Project, ProjectBudget, ProjectBudgetLine, ProjectMember, ProjectTask, RateCard, TimeEntry, Timesheet,
@@ -44,13 +44,13 @@ export const psaHooks = [
 
 /**
  * This package's flows (#2316 phase 1b) — see {@link psaHooks}: the
- * approvals (a budget top-up's since hotcrm#2547), the two insert twins and
- * the budget alert.
+ * approvals (a budget top-up's since hotcrm#2547), the two insert twins, the
+ * budget alert, and the staffing rows' rename follower (hotcrm#2568).
  */
 export const psaFlows = [
   ProjectInitiationApprovalFlow, ProjectBudgetApprovalFlow,
   TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
-  ProjectBudgetAlertFlow,
+  ProjectBudgetAlertFlow, ProjectMemberPersonRenameFlow,
 ];
 
 /** This package's sharing rules — see {@link psaHooks}. */
