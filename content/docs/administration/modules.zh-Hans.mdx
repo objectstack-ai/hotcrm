@@ -20,7 +20,7 @@ HotCRM 作为一个产品发布：核心的**销售**应用，加上六个模块
 
 ## 关闭或打开一个模块
 
-开关在**软件包**页面上，那是平台列出全部已安装内容的清单。在 ObjectStack 18.6.0 上，系统设置菜单和 Studio 里都没有通向这个页面的入口。**系统设置 → 已安装应用**打开的列表只包含从应用市场安装的应用，也没有放宽筛选的控件。HotCRM 从代码加载时（软件包页面的**来源**列显示**代码**），那个列表是空的。
+开关在**软件包**页面上，那是平台列出全部已安装内容的清单。在 ObjectStack 18.6.0 上，系统设置菜单和 Studio 里都没有通向这个页面的入口（[objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)）。**系统设置 → 已安装应用**打开的列表只包含从应用市场安装的应用，也没有放宽筛选的控件。HotCRM 从代码加载时（软件包页面的**来源**列显示**代码**），那个列表是空的。
 
 管理员打开 `/_console/apps/com.objectstack.setup/component/developer/packages`，即标题为**软件包**的页面，打开模块，选择**禁用**并确认。模块的**状态**随即显示**已禁用**；在同一个面板上选择**启用**即重新打开。脚本可以用同一个开关：`PATCH /api/v1/packages/<id>/disable`（以及 `/enable`），id 为 `app.objectstack.hotcrm.<模块>`：`service`、`revenue`、`marketing`、`o2c`、`expense` 或 `psa`。
 
@@ -31,7 +31,7 @@ HotCRM 作为一个产品发布：核心的**销售**应用，加上六个模块
 在 ObjectStack 18.6.0 上用演示数据逐个模块实测：
 
 - **它的应用**从应用启动器上消失。即服务、营销、订单与回款、费用报销或项目交付应用；产品与报价没有自己的应用。
-- **它的记录**无法打开或列出。请求其中一条会返回 `404 OBJECT_PACKAGE_DISABLED`。
+- **它的记录**无法打开或列出。请求其中一条会返回 `404 OBJECT_PACKAGE_DISABLED`。平台的 REST 搜索仍会返回这些记录（[objectstack#35195](https://github.com/objectstack-ai/objectstack/issues/35195)）。
 - **它放在其它应用里的侧边栏条目**也会消失：
 
   | 关闭的模块 | 从其它应用消失的条目 |
