@@ -34,7 +34,7 @@ Triage: repo <repo> · req REQ-NNNN · area:<area> · <type> · p<grade>; why: <
 1. **Which repository.** A defect: where does the broken code live? A new capability: could someone who has only
    the metadata, and knows nothing about this company, write it? Platform ⇒ the card is filed in objectstack; this
    card waits with `pm:blocked` and a `Blocked-by:` line and keeps its grade. The platform card names
-   `blocks hotcrm#N` and takes this card's grade.
+   `blocks hotcrm#N` and is graded by objectstack's rules (blocking a hotcrm p1 makes it p1).
 2. **Should the standard product do it.** A Feature cites a requirement record with disposition B
    (`docs/requirements/`); without one it goes to `needs-user-decision`. A Bug needs none.
 3. **Which area** — the table above.
@@ -64,5 +64,5 @@ the waiting cards are swept.
 | Build | comments say why, not what; all four UI languages; one changeset written for customers | `src/<package>/`, `.changeset/` | every PR |
 | Acceptance | business-fact tests through `@objectstack/verify`; in the PR body, which chain was walked, in which language, and whether on a phone | `test/`, `e2e/`, the PR | every PR that changes behaviour |
 | User docs | the manual and the in-product notes | `content/docs/` (three locales), `src/docs/` | in the same PR as the change users can see |
-| Release | release notes come from the changesets, never hand-written; marketplace listing text | `CHANGELOG.md`, `objectstack.manifest.json` | every release; no `v*` tag while unconsumed changesets remain (today `release.yml` still builds notes from `git log` and checks no tag: #2659 fixes both) |
+| Release | release notes come from the changesets, never hand-written; marketplace listing text | `CHANGELOG.md`, `objectstack.manifest.json` | every release; no `v*` tag while unconsumed changesets remain (`release.yml` refuses the tag otherwise) |
 | Upgrade | from what to what, the platform version required, what the customer does (data backfill steps included) | the changeset's breaking-change section | every breaking change |
