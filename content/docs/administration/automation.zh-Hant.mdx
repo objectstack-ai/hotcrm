@@ -52,7 +52,7 @@ description: 驗證規則、流程、排程作業與審批 —— 無需你動�
 
 > **自動觸發需要 `triggers` 能力。** 記錄變更與排程類流程，只有當 stack 的 `requires` 列表包含 `triggers` 時才會觸發 —— 它會安裝記錄變更與排程觸發器提供方（排程觸發器還依賴 job 服務）。螢幕類流程始終為手動啟動。
 
-**HotCRM 中的內建流程**（52 個）。每一行用的都是流程自身的標籤 —— 也就是 **Studio → Automation → Flows** 裡列出、並在 **Studio → Developer → Flow Runs** 裡供你挑選的那個名字，因此一次執行可以逐字回到這張表裡查：
+**HotCRM 中的內建流程**（52 個）。每一行用的都是流程自身的標籤 —— 也就是 Studio 中軟體包的 **Automations** 裡那條流程打開後的標題（控制台首頁的 **New in Studio** → 軟體包 → **Customize** → **Automations**；左側清單顯示的是流程的英文名），以及在 **Studio → Developer → Flow Runs** 裡供你挑選的那個名字，因此一次執行可以逐字回到這張表裡查：
 
 | 流程 | 觸發 | 它做什麼 |
 | --- | --- | --- |
@@ -129,7 +129,7 @@ description: 驗證規則、流程、排程作業與審批 —— 無需你動�
 
 ## 開關隨包提供的流程 [#switching-a-packaged-flow]
 
-HotCRM 隨包提供的流程在 Studio 中是唯讀的，但管理員可以開啟或關閉它：**Studio → Automation → Flows**，打開該流程，使用它的 **Enabled** 開關（或呼叫 `POST /api/v1/automation/<name>/toggle`，請求體 `{ "enabled": true }`）。這項選擇屬於你的安裝：重啟和升級 HotCRM 後都會保留，並優先於流程出廠時的預設值。沒有人開關過的流程按預設值執行，所以後續版本修改預設值時，只會影響從未做過選擇的安裝。
+HotCRM 隨包提供的流程在 Studio 中是唯讀的，但管理員可以開啟或關閉它。在控制台首頁點 **New in Studio**（Studio 會先打開 *New Package* 表單，點 **Cancel** 關掉），再點提供該流程的軟體包 → **Customize** → **Automations** → 該流程。流程標題旁顯示 *Switched on for this deployment* 或 *Switched off for this deployment*，開關就在旁邊，每次切換都有提示確認。下面兩個報價流程在 **HotCRM Revenue** 裡。開關發出的請求是 `POST /api/v1/automation/<name>/toggle`，請求體 `{ "enabled": true }` 或 `false`，腳本也可以直接呼叫（在 ObjectStack 18.6.0 上以英文和簡體中文實測）。這項選擇屬於你的安裝：重啟和升級 HotCRM 後都會保留，並優先於流程出廠時的預設值。沒有人開關過的流程按預設值執行，所以後續版本修改預設值時，只會影響從未做過選擇的安裝。
 
 有兩個流程決定接受報價時會建立什麼：
 
@@ -178,7 +178,7 @@ HotCRM 為自己的每一則**自動通知**都隨附了一個郵件範本，也
 ## 在哪裡監控自動化
 
 - **Studio → Developer → Flow Runs** —— 先選一條流程，再讀它最近的執行以及每次執行的狀態（*success* / *failed* / *running* / *skipped*）。排程類流程也在這裡：它們本身就是流程，沒有另一個「排程作業歷史」頁可找。
-- **Studio → Automation → Flows** —— 流程清單本身；在讀執行記錄之前想先確認某條流程被接成什麼樣，從這裡進。
+- **Studio → 軟體包 → Automations**（控制台首頁的 **New in Studio**，再點軟體包的 **Customize**）—— 流程清單本身；在讀執行記錄之前想先確認某條流程被接成什麼樣，從這裡進。
 - **Setup → Diagnostics → Audit Log** —— 記錄上改了什麼、是誰改的：每次儲存一條，帶時間、儲存人，以及這次儲存改動的每個欄位的舊值與新值。物件鉤子順帶填寫的欄位，出現在觸發它的那次儲存的同一條裡。這是管理員的畫面：銷售代表的應用清單裡沒有 Setup，這份日誌也拒絕銷售代表讀取，所以銷售代表要在記錄本身上查看它的變化（見下文《給使用者的提示》一節）。
 - **本次執行的結果計數** —— 每次執行還會記錄 **Records Selected**（選中記錄數）、**Records Acted On**（實際寫入數）、**Gate Skips**（閘門跳過數）與 **Uncountable Effects**（無法計數的副作用），並在 **Run Summary** 裡保留逐節點明細。它們是真正的欄位，而不是一整塊 JSON，因此可以直接篩選和告警。終態執行記錄保留 30 天。
 

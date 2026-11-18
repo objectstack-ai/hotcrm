@@ -41,7 +41,7 @@ filled in by the system and cannot be changed by hand.
 
 Accepting a quote no longer drafts a contract. Until this release it did, for
 every accepted quote. An administrator who wants that back switches the flow
-**Accepted Quote Drafts a Contract** on, in **Studio → Automation → Flows**; the
+**Accepted Quote Drafts a Contract** on: **New in Studio** on the console home page (Studio opens on a *New Package* form; close it with **Cancel**) → **HotCRM Revenue** → **Customize** → **Automations** → **Accepted Quote Drafts a Contract**, then the switch beside *Switched off for this deployment*. The
 quote's order then names the drafted contract. The flow **Accepted Quote Creates
 an Order** can be switched off where orders are not used. Both choices are kept
 across restarts and upgrades.

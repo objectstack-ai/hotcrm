@@ -119,8 +119,7 @@ values, so check them before you activate it.
 An administrator who wants every accepted quote to draft its contract, as before
 this release, switches the **Accepted Quote Drafts a Contract** flow on, and the
 quote's order then names that contract. **Accepted Quote Creates an Order** can
-be switched off where orders are not used. Both switches are in **Studio →
-Automation → Flows** and are kept across restarts and upgrades.
+be switched off where orders are not used. The way there: **New in Studio** on the console home page (Studio opens on a *New Package* form; close it with **Cancel**) → **HotCRM Revenue** → **Customize** → **Automations** → the flow, then the switch beside *Switched off for this deployment* (or *on*). Both choices are kept across restarts and upgrades.
 
 ## Quote auto-expiration (automatic)
 

@@ -50,7 +50,7 @@ A flow fires one of three ways, set by its start node:
 
 > **Auto-launch needs the `triggers` capability.** Record-change and scheduled flows only fire when the stack's `requires` list includes `triggers` — it installs the record-change + schedule trigger providers (schedule triggers also use the job service). Screen flows are always launched manually.
 
-**Built-in flows in HotCRM** (52). Each row carries the flow's own label — the name listed in **Studio → Automation → Flows**, and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
+**Built-in flows in HotCRM** (52). Each row carries the flow's own label — the name listed under a package's **Automations** in Studio (**New in Studio** on the console home page → the package → **Customize** → **Automations**), and the name you pick from in **Studio → Developer → Flow Runs**, so a run you are chasing can be looked up here verbatim:
 
 | Flow | Trigger | What it does |
 | --- | --- | --- |
@@ -127,7 +127,7 @@ The division of labour on forecasts is worth calling out, because it is the patt
 
 ## Switching a packaged flow
 
-A flow HotCRM ships is read-only in Studio, but an administrator can switch it on or off: **Studio → Automation → Flows**, open the flow, and use its **Enabled** switch (or `POST /api/v1/automation/<name>/toggle` with `{ "enabled": true }`). The choice belongs to your installation: it is kept across restarts and across upgrades of HotCRM, and it wins over the default the flow ships with. A flow nobody has switched follows that default, so a later version that changes a default moves only installations that never chose.
+A flow HotCRM ships is read-only in Studio, but an administrator can switch it on or off. On the console home page click **New in Studio** (Studio opens on a *New Package* form; close it with **Cancel**), then the package that ships the flow → **Customize** → **Automations** → the flow. Its header reads *Switched on for this deployment* or *Switched off for this deployment*, with the switch beside it; a toast confirms each change. The two quote flows below ship in **HotCRM Revenue**. The switch sends `POST /api/v1/automation/<name>/toggle` with `{ "enabled": true }` or `false`, which a script can send too (measured on ObjectStack 18.6.0, in English and Simplified Chinese). The choice belongs to your installation: it is kept across restarts and across upgrades of HotCRM, and it wins over the default the flow ships with. A flow nobody has switched follows that default, so a later version that changes a default moves only installations that never chose.
 
 Two flows decide what accepting a quote creates:
 
@@ -176,7 +176,7 @@ Each **`notify` node** in the flows listed above names its template and passes t
 ## Where to monitor automation
 
 - **Studio → Developer → Flow Runs** — pick a flow from the list, then read its recent runs and each run's status (*success* / *failed* / *running* / *skipped*). Scheduled flows appear here too: they are flows, so there is no separate scheduled-job history to go looking for.
-- **Studio → Automation → Flows** — the flow roster itself, when you need to check what a flow is wired to do before reading its runs.
+- **Studio → the package → Automations** (**New in Studio** on the console home page, then **Customize** on the package) — the flow roster itself, when you need to check what a flow is wired to do before reading its runs.
 - **Setup → Diagnostics → Audit Log** — what changed on a record and who changed it: one entry per save, with its time, the user who saved, and the old and new value of every field the save changed. A field an object hook filled in on the way appears inside the same entry as the save that set it off. It is an administrator's screen: Setup is not among a sales rep's apps and the audit log refuses a rep's reads, so a rep follows a record's changes on the record itself (see *Tips for users* below).
 - **The run's outcome counters** — each run also records **Records Selected**, **Records Acted On**, **Gate Skips** and **Uncountable Effects**, with a per-node breakdown in **Run Summary**. These are real columns rather than one JSON blob, so you can filter and alert on them. Terminal runs are kept for 30 days.
 
