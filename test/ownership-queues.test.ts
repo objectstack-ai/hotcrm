@@ -219,7 +219,7 @@ describe('claiming from the queue (ruling A: the claim writes the owner only)', 
     expect(await verify.rows('crm_case', { id: kase.id }, { as: b.token })).toHaveLength(0);
   });
 
-  it('concurrent claims leave exactly one owner, and every loser gets 409', async () => {
+  it('concurrent claims leave exactly one owner, and every loser is refused', async () => {
     const ql = verify.kernel.getService<Rec>('objectql');
     const people = [a, b];
     const contexts = await Promise.all(people.map((p) => verify.contextFor(p.token)));
@@ -230,8 +230,17 @@ describe('claiming from the queue (ruling A: the claim writes the owner only)', 
       const won = results.filter((r) => r.status === 'fulfilled');
       const lost = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
       expect(won, `round ${round}: not exactly one claim won`).toHaveLength(1);
+      // The platform documents 409 CONCURRENT_UPDATE for a losing claim; 18.6.0
+      // answers 404 RECORD_NOT_FOUND instead (objectstack-ai/objectstack#35142, a
+      // regression). Under the maintainer's ruling on hotcrm#2634 the loser is held
+      // to being refused with one of those two pairs, and hotcrm#2642 tightens this
+      // back to 409 alone once a release carries the platform fix.
+      expect(lost, `round ${round}: a losing claim was not refused`).toHaveLength(people.length - 1);
       for (const loss of lost) {
-        expect({ code: loss.reason?.code, status: loss.reason?.status }).toEqual({ code: 'CONCURRENT_UPDATE', status: 409 });
+        expect([
+          { code: 'CONCURRENT_UPDATE', status: 409 },
+          { code: 'RECORD_NOT_FOUND', status: 404 },
+        ]).toContainEqual({ code: loss.reason?.code, status: loss.reason?.status });
       }
       const owner = (await stored('crm_case', kase.id)).owner_id;
       expect(people.map((p) => p.id)).toContain(owner);
