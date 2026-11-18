@@ -16,7 +16,8 @@ type Rec = Record<string, any>;
  *
  * - Staffing keeps the project's Team and Project Manager
  *   (`project_member.hook.ts`), and the team reads the project through the
- *   `project_team_read` rule; a person not staffed reads nothing.
+ *   `project_team_read` rule; a person not staffed reads nothing. The manager
+ *   is in the Team too and keeps edit through `project_manager_edit`.
  * - A time entry copies its rates from the staffing's rate card when written
  *   and keeps them (`time_entry.hook.ts`): a day card bills per hour at
  *   rate ÷ HOURS_PER_DAY, and a later rate change rewrites no past cost.
@@ -95,24 +96,32 @@ describe('staffing (project_team_sync)', () => {
   it('keeps the project\'s Project Manager and Team', async () => {
     const p = (await row('crm_project', project.id))!;
     expect(p.project_manager).toBe(pm.id);
-    expect(p.team_members, 'the manager is named by project_manager_edit alone').toEqual([consultant.id]);
+    expect(p.team_members, 'the manager is in the Team too (hotcrm#2485)').toEqual([pm.id, consultant.id].sort());
   });
 
-  it('lets a project manager who does not own the project edit and staff it', async () => {
-    // Opened by the administrator, so the PM reaches it only through
-    // `project_manager_edit`. With the PM in the Team as well, the team's read
-    // replaced that edit (objectstack#33683) and both writes answered 403.
+  it('lets a project manager who does not own the project, and is in its Team, edit and staff it (hotcrm#2485)', async () => {
+    // Opened by the administrator, so the PM reaches it only through the two
+    // record-relative rules: `project_team_read` (the Team) and
+    // `project_manager_edit`. On 18.5.0 the two shared one grant, the read
+    // written last replaced the edit (objectstack#33683), and both writes
+    // answered 403; since 18.6.0 each rule keeps its own grant.
     const theirs = await insert('crm_project', {
       name: `Test Handover ${++k}`, crm_account: account.id, kind: 'delivery',
     }, admin);
     await insert('crm_project_member', { crm_project: theirs.id, person: pm.id, responsibility: 'project_manager', rate_card: daily.id }, admin);
+    const staffed = (await row('crm_project', theirs.id))!;
+    expect(staffed.owner_id, 'fixture: the PM does not own the project').not.toBe(pm.id);
+    expect(staffed.project_manager).toBe(pm.id);
+    expect(staffed.team_members, 'both rules name the PM').toEqual([pm.id]);
     const edit = await verify.apiAs(pm.token, 'PATCH', `/data/crm_project/${theirs.id}`, { description: 'Kick-off held.' });
     expect(edit.status, await edit.clone().text()).toBe(200);
     const staff = await verify.apiAs(pm.token, 'POST', '/data/crm_project_member', {
       crm_project: theirs.id, person: consultant.id, responsibility: 'consultant', rate_card: hourly.id,
     });
     expect(staff.status, await staff.clone().text()).toBeLessThan(300);
-    expect((await row('crm_project', theirs.id))!.team_members).toEqual([consultant.id]);
+    expect((await row('crm_project', theirs.id))!.team_members).toEqual([pm.id, consultant.id].sort());
+    const again = await verify.apiAs(pm.token, 'PATCH', `/data/crm_project/${theirs.id}`, { description: 'Team staffed.' });
+    expect(again.status, `the PM keeps edit after the Team is re-written: ${await again.clone().text()}`).toBe(200);
   });
 
   it('opens the project to the team and to nobody else', async () => {

@@ -16,7 +16,7 @@ import { P } from '@objectstack/spec';
  * rule moved to the expense module with the object (hotcrm#2556).
  */
 
-/** Everyone staffed on a project except its manager reads it (`team_members`, kept by `project_member.hook.ts`). */
+/** Everyone staffed on a project, its manager included, reads it (`team_members`, kept by `project_member.hook.ts`). */
 export const ProjectTeamReadSharingRule = {
   name: 'project_team_read',
   label: 'Projects — Team',

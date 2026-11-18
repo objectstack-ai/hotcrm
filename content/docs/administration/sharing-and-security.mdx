@@ -121,7 +121,7 @@ Criteria-based rules are the enforced flavour: matching records materialise real
 | Escalated Cases — Previous Owner | Case | Read | the user in the case's `escalated_from` field — the agent an escalation took it from, until it is Closed |
 | Live Campaigns — Marketing Manager | Campaign | Edit | `crm_marketing_manager` — planning / in-progress campaigns |
 | Live Campaigns — Marketing Director | Campaign | Edit | `crm_marketing_director` — the same campaigns |
-| Projects — Team | Project | Read | the users in the project's `team_members` field — everyone staffed on it except the project manager, who has the next rule |
+| Projects — Team | Project | Read | the users in the project's `team_members` field — everyone staffed on it, the project manager included, who also has the next rule |
 | Projects — Project Manager | Project | Edit | the user in the project's `project_manager` field |
 | Projects — Finance | Project | Edit | `crm_finance_controller`, `crm_project_director`, `crm_pmo` — every project (one rule per position; it can edit them, never delete one) |
 | Timesheets — Approver | Timesheet | Edit | the user in the timesheet's `approver` field — the project manager when it was created |

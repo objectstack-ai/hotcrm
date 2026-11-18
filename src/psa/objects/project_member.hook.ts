@@ -9,12 +9,12 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * After any member is added, changed or removed, the project's `project_manager`
  * is set to the person staffed with the Project Manager responsibility (the
  * earliest such row when there are several; empty when there is none), and
- * `team_members` to every other person staffed on it. The manager is left out
- * of the team on purpose: they read and edit through `project_manager_edit`,
- * so each person on a project is named by exactly one rule (objectstack#33683
- * keeps one share row per user and record, and a team read written after the
- * manager's edit would replace it). Both fields are read-only to people, so the
- * project's approver and the team the sharing rules read are typed once, here.
+ * `team_members` to every person staffed on it, the manager included. The
+ * manager is then named by two rules, `project_team_read` and
+ * `project_manager_edit`; since 18.6.0 each rule keeps its own grant and the
+ * wider one wins (objectstack#33683), so the manager keeps edit (hotcrm#2485).
+ * Both fields are read-only to people, so the project's approver and the team
+ * the sharing rules read are typed once, here.
  *
  * `runAs: 'system'` (AGENTS.md rule 9): a read-only field is stripped from a
  * non-system write, and the person editing the staffing may not edit the
@@ -60,7 +60,7 @@ const projectTeamSync: Hook = {
       }
       for (const m of members) {
         const person = refId(m.person);
-        if (person && person !== manager && team.indexOf(person) < 0) team.push(person);
+        if (person && team.indexOf(person) < 0) team.push(person);
       }
       team.sort();
       const project = await api.object('crm_project').findOne({
