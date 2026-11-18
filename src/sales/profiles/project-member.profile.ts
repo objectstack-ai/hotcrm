@@ -1,6 +1,5 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
 import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STANDARD_READ } from './_expense-grants';
 
 /**
@@ -28,7 +27,8 @@ import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STA
  *     every field and undo the hiding.
  *   - `crm_account` — read, View All (ruling D on #2316, 2026-11-15): a
  *     member delivers for the customer and needs its name on the
- *     project page. `crm_opportunity` stays closed (no grant): pipeline value
+ *     project page, WITHOUT the account's Order to Cash totals (hotcrm#2481,
+ *     the field rows below). `crm_opportunity` stays closed (no grant): pipeline value
  *     is not delivery's, and the project's `crm_opportunity` field is hidden
  *     at the field level, so the member's page carries no restricted-record
  *     placeholder. The project's `crm_sales_order` (hotcrm#2561) is hidden the
@@ -47,11 +47,12 @@ export const ProjectMemberProfile = {
     crm_project_member: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_project_task:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_account:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
-    // Order to Cash, as on `marketing_user`: read on invoices and payments, so
-    // the account's receivables figures sum rows this set may read (`os lint`
-    // `security-rollup-source-unreadable`). Both are `controlled_by_parent`
-    // under the contract, which this set does not read, so the grant opens no
-    // invoice and no payment by itself (ADR-0055).
+    // Order to Cash, as on `marketing_user`: read on invoices and payments, the
+    // sources the account's receivables figures sum (`os lint`
+    // `security-rollup-source-unreadable`); those figures are hidden from this
+    // set below (hotcrm#2481). Both are `controlled_by_parent` under the
+    // contract, which this set does not read, so the grant opens no invoice and
+    // no payment by itself (ADR-0055).
     crm_invoice:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_payment:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_rate_card:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
@@ -89,9 +90,18 @@ export const ProjectMemberProfile = {
     // hotcrm#2561: the order the project delivers, closed to a member as the
     // opportunity is.
     'crm_project.crm_sales_order':         { readable: false, editable: false },
-    // The account's Order to Cash figures, read as every account reader reads
-    // them (`_o2c-figures.ts`: the #2315 ruling authors them readable and
-    // forbids `readable: false` rows).
-    ...O2C_ACCOUNT_FIGURE_FIELDS,
+    // The account's Order to Cash totals, hidden from a consultant: Irene's
+    // ruling of 2026-11-15 (hotcrm#2481), "consultants (`project_member`) must
+    // not see the account's Order to Cash totals". It departs here from the
+    // #2315 ruling (2026-11-05: these figures are authored readable, with no
+    // `readable: false` rows, `_o2c-figures.ts`): the 11-15 ruling is later and
+    // names this set. The rows bind over this set's own View All on the account
+    // since objectstack#33828 (18.6.0): a set's own `readable: false` row wins
+    // over its own View All vote. A consultant still reads the account and its
+    // other fields; a person who also holds a set reading these totals (a rep,
+    // finance) reads them through that set.
+    'crm_account.invoiced_amount':    { readable: false, editable: false },
+    'crm_account.received_amount':    { readable: false, editable: false },
+    'crm_account.receivable_balance': { readable: false, editable: false },
   },
 };
