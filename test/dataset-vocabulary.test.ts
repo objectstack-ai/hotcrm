@@ -48,6 +48,7 @@ const ONE_METRIC: Record<string, string> = {
   opportunities: 'opportunity_metrics.measures.opp_count',
   赢单金额: 'opportunity_metrics.measures.won_amount',
   bookings: 'opportunity_metrics.measures.won_amount',
+  赢单收入: 'opportunity_metrics.measures.won_amount',
   赢单率: 'opportunity_metrics.measures.win_rate',
   'win rate': 'opportunity_metrics.measures.win_rate',
   客单价: 'opportunity_metrics.measures.avg_amount',

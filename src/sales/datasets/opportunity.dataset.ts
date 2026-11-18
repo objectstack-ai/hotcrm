@@ -209,12 +209,14 @@ export const OpportunityDataset = defineDataset({
     // fits three governed numbers in this app, won deals here, an account's
     // Annual Revenue and a project's Planned Revenue, so a question asked with
     // it is answered by asking which one, from each candidate's description.
+    // 赢单收入 is what puts this member among the candidates offered for 收入
+    // (the platform offers members whose words contain the asked word).
     // `test/dataset-vocabulary.test.ts` pins that it matches no member.
     {
       name: 'won_amount',
       label: 'Won Revenue',
       description: 'The Amount of the deals at Closed Won: booked deal revenue. It excludes open and lost deals, and it is not an account annual revenue or a project planned revenue.',
-      synonyms: ['bookings', '赢单金额'],
+      synonyms: ['bookings', '赢单金额', '赢单收入'],
       aggregate: 'sum',
       field: 'amount',
       filter: { stage: 'closed_won' },
