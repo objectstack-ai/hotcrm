@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import type { EmailTemplateDefinition } from '@objectstack/spec/system';
+import type { EmailTemplateDefinition, EmailTemplateDefinitionVariable } from '@objectstack/spec/system';
 
 /**
  * The one spelling of "a locale pack becomes `sys_email_template` rows",
@@ -41,8 +41,34 @@ export interface LocalizedEmailTemplate {
 export type EmailTemplatePack = Record<string, LocalizedEmailTemplate>;
 
 /**
+ * One `{{hole}}` a template reads, named by the root of its path: the hole
+ * `{{stage_label.en}}` reads `stage_label`, and `{{amount | number:2}}` reads
+ * `amount`. `type` is the Studio form hint; it is left to the schema default
+ * (`string`) unless the value is a number or a date.
+ */
+export type TemplateVariable = Pick<EmailTemplateDefinitionVariable, 'name' | 'type' | 'description'>;
+
+/**
+ * Every variable each template a package owns reads, keyed by template name —
+ * declared ONCE per template, not once per locale pack, so the four language
+ * rows of one template cannot drift apart.
+ *
+ * {@link bundle} declares each of them `required: true` on every row
+ * (hotcrm#2451, the maintainer's ruling A): a send whose `templateData` omits
+ * one is refused with `MISSING_VARIABLES` naming it, where it used to mail a
+ * blank ("Contract  ends on ."), and `os lint` names the omission in the
+ * sending flow (`notify-template-variable-missing`). ⛔ No literal defaults
+ * (`{{ x | default:'…' }}`): a value a template needs and cannot compute — a
+ * full name from its parts — is computed in the sending flow and passed as a
+ * variable of its own (`person_name`). `test/email-template-variables.test.ts`
+ * holds every locale's holes to this declaration.
+ */
+export type TemplateVariables = Record<string, readonly TemplateVariable[]>;
+
+/**
  * Cross a package's locale packs into the flat `(name, locale)` rows
- * `defineStack({ emailTemplates })` takes.
+ * `defineStack({ emailTemplates })` takes, each row carrying its template's
+ * {@link TemplateVariables} entry, every variable `required`.
  *
  * ⚠️ The ENGLISH pack is registered under `en-US`, not `en`, and that is the
  * resolution ladder's doing rather than a style choice.
@@ -56,6 +82,15 @@ export type EmailTemplatePack = Record<string, LocalizedEmailTemplate>;
  * the send fails with `TEMPLATE_NOT_FOUND`. `'en-US'` is the tag that cannot
  * strand a recipient.
  */
-export const bundle = (packs: Record<string, EmailTemplatePack>): EmailTemplateDefinition[] =>
+export const bundle = (
+  packs: Record<string, EmailTemplatePack>,
+  variables: TemplateVariables,
+): EmailTemplateDefinition[] =>
   Object.entries(packs).flatMap(([locale, pack]) =>
-    Object.entries(pack).map(([name, row]) => ({ name, locale, ...row })));
+    Object.entries(pack).map(([name, row]) => {
+      const declared = variables[name];
+      // A template with no declaration would ship with none, and a send that
+      // omits a variable would go back to mailing a blank. Loud, at load.
+      if (!declared) throw new Error(`email template '${name}' (${locale}) declares no variables: add it to its package's TemplateVariables`);
+      return { name, locale, ...row, variables: declared.map((v) => ({ ...v, required: true })) };
+    }));
