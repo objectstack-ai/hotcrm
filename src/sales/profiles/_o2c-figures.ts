@@ -36,5 +36,20 @@ export const O2C_ACCOUNT_FIGURE_FIELDS = {
   'crm_account.receivable_balance':  READ,
 };
 
+/**
+ * The account's figures for a set that reads them over invoice and payment
+ * rows it may not read. Since hotcrm#2557 those rows hang off the account, and
+ * Irene ruled 2026-11-17 05:08Z 「保持现在的范围」: service and marketing read
+ * the account's totals only. `os lint` reports a roll-up over an unreadable
+ * child as `security-rollup-source-unreadable`; each row here is the same
+ * `readable: true` row as above plus the reason the lint quotes in its place
+ * (`rollupSourceUnreadableReason`, @objectstack 18.6.0). The runtime does not
+ * read the reason, so the field merge is what the plain rows give.
+ */
+export const o2cAccountFiguresOverUnreadRows = (reason: string) =>
+  Object.fromEntries(
+    Object.keys(O2C_ACCOUNT_FIGURE_FIELDS).map((field) => [field, { ...READ, rollupSourceUnreadableReason: reason }]),
+  );
+
 /** Both, for the sets that read the contract and the account (see above for the others). */
 export const O2C_FIGURE_FIELDS = { ...O2C_CONTRACT_FIGURE_FIELDS, ...O2C_ACCOUNT_FIGURE_FIELDS };

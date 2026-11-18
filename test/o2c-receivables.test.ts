@@ -118,7 +118,8 @@ describe('who reads them', () => {
   // contract). With the account as the master that grant would open every
   // row, so it is gone (ruled 2026-11-17 05:08Z): a holder reads the totals
   // and is refused the rows. Strict lint reports the totals over an unreadable
-  // child until objectstack#34664's acknowledgement is declared.
+  // child; marketing_user and service_agent acknowledge the pair on the three
+  // account figures (`rollupSourceUnreadableReason`, @objectstack 18.6.0).
   it.each(['crm_user', 'marketing_user', 'service_agent', 'project_member'])('a holder of %s alone reads no invoice and no payment', async (set) => {
     const holder = await signUpPerson(verify, `${set}@o2c-receivables.test`, { name: `Inert ${set}`, permissionSets: [set] });
     expect((await verify.rows('crm_invoice', {})).length, 'fixture: invoices exist').toBeGreaterThan(0);

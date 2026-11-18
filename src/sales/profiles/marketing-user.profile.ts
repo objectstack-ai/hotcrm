@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
+import { o2cAccountFiguresOverUnreadRows } from './_o2c-figures';
 import { privateOpportunityPolicy } from './_private-opportunity';
 import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STANDARD_READ } from './_expense-grants';
 
@@ -35,9 +35,9 @@ export const MarketingUserProfile = {
     // 05:08Z 「保持现在的范围」: sales (own accounts) and finance read the rows;
     // this set reads the account's totals only. The totals then sum a child
     // the set cannot read, which `os lint --strict` reports as
-    // `security-rollup-source-unreadable`; the meant pair is acknowledged
-    // with the platform's switch from objectstack#34664, added with the bump
-    // that ships it.
+    // `security-rollup-source-unreadable`; the meant pair is acknowledged on
+    // the three account figures in `fields` below, so lint reports it as a
+    // note quoting the reason (`o2cAccountFiguresOverUnreadRows`).
     crm_contact:     { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false, allowExport: true },
     crm_campaign:    { allowCreate: true,  allowRead: true,  allowEdit: true,  allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // Org-wide read: marketing attributes campaign → pipeline ROI, which needs
@@ -81,8 +81,11 @@ export const MarketingUserProfile = {
   },
   fields: {
     // The Order to Cash figures on the account (#2416); this set reads no
-    // contracts, so the contract's figures are not authored here.
-    ...O2C_ACCOUNT_FIGURE_FIELDS,
+    // contracts, so the contract's figures are not authored here. It reads
+    // the totals and not the invoice and payment rows they sum (hotcrm#2557).
+    ...o2cAccountFiguresOverUnreadRows(
+      'Marketing reads the account\'s invoiced, received and open totals, never its invoice or payment rows (hotcrm#2557, ruled 2026-11-17).',
+    ),
     // Marketing reads pipeline for campaign ROI but never prices a deal, and
     // account health is the renewal team's call — read, never write (#488).
     'crm_opportunity.amount':   { readable: true, editable: false },
