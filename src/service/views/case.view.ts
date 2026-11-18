@@ -399,7 +399,7 @@ export const CaseViews = defineView({
    * the Resolution section and had NO other authoring surface at all. #1428
    * settled both halves of that, and neither answer was "put them back here":
    *
-   *   internal_notes                   `case_detail.page.ts`'s Description
+   *   internal_notes                   the case record page's System
    *                                    section, authored by inline edit —
    *                                    staff prose an agent writes while
    *                                    WORKING a case, which is why it did not

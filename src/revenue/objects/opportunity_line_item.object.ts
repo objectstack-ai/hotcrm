@@ -151,6 +151,14 @@ export const OpportunityLineItem = ObjectSchema.create({
       // drew each line's title, which is the product's own name, so every row
       // read the same; the deal, quantity, price and total tell them apart.
       relatedListColumns: ['crm_opportunity', 'quantity', 'unit_price', 'total_price'],
+      // Only an active product can be put on a deal (#2382). The retired deal
+      // page's Products card added lines through a picker scoped to active
+      // products; the line is now added through New on the deal's line table,
+      // which opens this form, and this picker offered a retired product too
+      // (measured on 18.6.0 with one product turned off). Turning off Active
+      // is how a product is retired (`product.hook.ts`), so a retired product
+      // stays on the deals that already sold it and is offered to no new one.
+      lookupFilters: [{ field: 'is_active', operator: 'eq', value: true }],
     }),
 
     description: Field.text({

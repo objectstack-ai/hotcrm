@@ -603,42 +603,42 @@ describe('every locale is complete on every authored surface', () => {
   });
 
   /**
-   * Reference-rail cards are headed by the OBJECT's label, not by any copy the
-   * page owns. The rail resolves
-   * `entry.title || i18n.objectLabel({ name, label: humanize(name) })`, and
-   * `objectLabel` looks up `objects.<name>.label` in the active locale bundle
-   * before falling back to the label passed in — which the rail sets to
-   * `humanize(objectName)`, i.e. `Crm Opportunity Line Item`.
+   * Related cards are headed by the CHILD OBJECT's label, not by any copy the
+   * page owns.
    *
-   * So the rail is one of the few surfaces where a MISSING object translation
-   * is worse than no translation system at all: the fallback is not the
-   * authored English label, it is a de-underscored object NAME. #972 removed
-   * the literal `title` from all three entries to let this lookup happen; this
-   * guard is what makes that safe, and it is scoped to the rail's objects
-   * deliberately — `objects.<name>.label` completeness at large is the
-   * surface-completeness test further down, which does not know that these
-   * three names have a second, harsher consumer.
+   * The deal page's reference rail (#972) was the first surface found with
+   * that property: it resolved `entry.title || i18n.objectLabel({ name, label:
+   * humanize(name) })`, so a MISSING object translation fell back to a
+   * de-underscored object NAME (`Crm Opportunity Line Item`), worse than the
+   * English label. #2382 deleted the rail (maintainer ruling 2026-10-29) and
+   * the default page draws the same lists in its related column and body
+   * table, headed the same way, from the child's foreign key. So the guard
+   * moves from the rail's entries to the deal's derived children: every
+   * object that points at `crm_opportunity` through a lookup or master-detail
+   * the record page does not suppress.
    */
-  it('every reference-rail object has a translated label in every locale', () => {
-    const railObjects = [
+  it('every object listed on the deal record has a translated label in every locale', () => {
+    const listed = [
       ...new Set(
-        pages
-          .flatMap((p: AnyRec) => (p.regions ?? []).flatMap((r: AnyRec) => r.components ?? []))
-          .filter((c: AnyRec) => c?.type === 'record:reference_rail')
-          .flatMap((c: AnyRec) => (c.properties?.entries ?? []) as AnyRec[])
-          .map((e: AnyRec) => e.objectName as string),
+        objects
+          .filter((o) => Object.values((o.fields ?? {}) as Record<string, AnyRec>).some(
+            (f) => (f?.type === 'lookup' || f?.type === 'master_detail')
+              && f?.reference === 'crm_opportunity' && f?.relatedList !== false,
+          ))
+          .map((o) => o.name as string),
       ),
     ];
-    expect(railObjects.length, 'no rail entries found — this guard would be vacuous').toBeGreaterThan(0);
+    // The three the retired rail carried are among them.
+    expect(listed).toEqual(expect.arrayContaining(['crm_quote', 'crm_opportunity_line_item', 'crm_task']));
 
     const bad: string[] = [];
     for (const [locale, pack] of packs()) {
-      for (const name of railObjects) {
+      for (const name of listed) {
         const label = pack.objects?.[name]?.label;
-        if (!label) bad.push(`${locale}: objects.${name}.label (rail card would read "${name}" humanized)`);
+        if (!label) bad.push(`${locale}: objects.${name}.label (its card would read "${name}" humanized)`);
       }
     }
-    expect(bad, `reference-rail headings with no translation:\n  ${bad.join('\n  ')}`).toEqual([]);
+    expect(bad, `related-card headings with no translation:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   it('every dashboard widget has a translated title and description', () => {

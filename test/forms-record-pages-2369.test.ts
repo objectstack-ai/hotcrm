@@ -9,6 +9,9 @@ import { Quote } from '../src/revenue/objects/quote.object';
 import { Product } from '../src/revenue/objects/product.object';
 import { Campaign } from '../src/marketing/objects/campaign.object';
 import { KnowledgeArticle } from '../src/service/objects/knowledge_article.object';
+import { Case } from '../src/service/objects/case.object';
+import { Task } from '../src/sales/objects/task.object';
+import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
 import { OpportunityDetailPage } from '../src/sales/pages/opportunity_detail.page';
 import { CaseDetailPage } from '../src/service/pages/case_detail.page';
 import { SendEmailAction } from '../src/sales/actions/contact.actions';
@@ -105,7 +108,10 @@ describe('rows 4 and 5: the record header and pickers lead with what people scan
 
 describe('row 6: a case shows a breached SLA, and nothing red when on track', () => {
   it('leaves the flag out of the highlights strip', () => {
-    expect(byId(CaseDetailPage, 'case_highlights')?.properties.fields).not.toContain('is_sla_violated');
+    // Since #2382 the strip is the default page's, drawn from the object's
+    // `highlightFields`; the SLA due date stays on it.
+    expect((Case as AnyRec).highlightFields).not.toContain('is_sla_violated');
+    expect((Case as AnyRec).highlightFields).toContain('sla_due_date');
   });
 
   it('shows an error alert only when the flag is true', () => {
@@ -137,23 +143,28 @@ describe('row 8: the attendee picker says the record is added for you', () => {
   );
 });
 
-describe('row 9: the Related tabs open the panels people work from', () => {
-  const opened = (id: string, page: unknown) => {
-    const acc = byId(page, id);
-    const items = acc?.properties.items as AnyRec[];
-    return { multi: acc?.properties.allowMultiple, open: items.filter((i) => i.collapsed === false).map((i) => i.label) };
-  };
+describe('row 9: the record opens on the panels people work from', () => {
+  // #2369 opened the authored Related tabs' accordions on arrival. Since #2382
+  // the record pages are the default page, whose related column draws every
+  // derived list as an open card and the line items in the body; what is left
+  // to pin is that the lists exist, are not suppressed, and keep the scope the
+  // panels had (Open Tasks).
+  const fk = (o: AnyRec, name: string): AnyRec => (o.fields as AnyRec)[name];
+  const OPEN_TASKS = { status: { $ne: 'completed' } };
 
-  it('opens Quotes, Products and Open Tasks on an opportunity', () => {
-    // Without `allowMultiple` only the first `collapsed: false` item opens.
-    expect(opened('opp_related_accordion', OpportunityDetailPage)).toEqual({
-      multi: true,
-      open: ['Quotes', 'Products', 'Open Tasks'],
-    });
+  it('shows Quotes, the product lines and Open Tasks on an opportunity', () => {
+    expect(fk(Quote, 'crm_opportunity').relatedList).not.toBe(false);
+    expect(fk(OpportunityLineItem, 'crm_opportunity').relatedList).toBe('primary');
+    expect(fk(Task, 'related_to_opportunity').relatedListFilter).toEqual(OPEN_TASKS);
   });
 
-  it('opens Open Tasks on a case', () => {
-    // Its first item, so one open panel needs no `allowMultiple`.
-    expect(opened('case_related_accordion', CaseDetailPage).open[0]).toBe('Open Tasks');
+  it('shows Open Tasks on a case', () => {
+    expect(fk(Task, 'related_to_case').relatedListFilter).toEqual(OPEN_TASKS);
+  });
+
+  it('the authored pages override nothing but the alerts', () => {
+    for (const page of [OpportunityDetailPage, CaseDetailPage] as AnyRec[]) {
+      expect(Object.keys(page.slots ?? {}), page.name).toEqual(['alerts']);
+    }
   });
 });

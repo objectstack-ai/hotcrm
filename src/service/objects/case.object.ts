@@ -193,8 +193,13 @@ export const Case = ObjectSchema.create({
     // ⛔ It must not be `1` here (or `2` on crm_task): a non-zero sentinel
     // orders the same unknown priority differently on the two objects, and on
     // this one it is indistinguishable from a genuine `low`.
+    // In the collapsed System group (#2382): the case's authored record page
+    // listed its sections by group, so this ungrouped sort key never reached
+    // it; the default page draws every field, and an ungrouped one lands in a
+    // trailing "Other" section an agent would read as a fact about the case.
     priority_rank: Field.number({
       label: 'Priority Rank',
+      group: 'system',
       readonly: true,
       defaultValue: 0,
     }),
