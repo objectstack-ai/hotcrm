@@ -10,6 +10,16 @@ import { activityActions } from '../../sales/translations/ja-JP/_shared';
  * package's pack: `./index.ts`.
  */
 export const jaJP: TranslationData = {
+  // The escalation follow-up task's title (#2494, #2522), at
+  // `hooks.<hook>.texts.<key>.message`.
+  hooks: {
+    case_status_side_effects: {
+      texts: {
+        escalated_named: { message: 'エスカレーション：{{ label }}' },
+        escalated_untitled: { message: 'エスカレーションされたケースへの対応が必要です' },
+      },
+    },
+  },
   objects: {
     crm_knowledge_article: {
       _validations: {
@@ -364,6 +374,11 @@ export const jaJP: TranslationData = {
     },
   },
   flows: {
+    // The escalation reason the automatic escalations store (#2494), at
+    // `flows.<flow>.records.<node>.fields.<field>`.
+    case_escalation: { records: { assign_senior_agent: { fields: { escalation_reason: '自動エスカレーション：優先度が重大' } } } },
+    case_escalation_on_create: { records: { assign_senior_agent: { fields: { escalation_reason: '自動エスカレーション：優先度が重大' } } } },
+    case_sla_monitor: { records: { flag_breach: { fields: { escalation_reason: '自動エスカレーション：SLA期限超過' } } } },
     escalate_case: {
       label: 'ケースをエスカレート',
       screens: { screen_1: { title: 'ケースをエスカレート', fields: { reason: { label: 'エスカレーション理由' } } } },

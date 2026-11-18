@@ -3,6 +3,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, bindHooksToEngine, applySystemFields } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import { QuickJSScriptRunner, hookBodyRunnerFactory } from '@objectstack/runtime';
+import { extractHookBody } from '@objectstack/cli/hook-body';
 import stack from './helpers/composed-stack';
 import { registerStackPicklists } from './helpers/stack-picklists';
 
@@ -137,8 +139,21 @@ beforeAll(async () => {
     }),
   );
 
-  // The app's REAL hooks, bound the way `defineStack({ hooks })` binds them.
-  const bound = bindHooksToEngine(ql as never, hooks as never, {} as never) as AnyRec;
+  // The app's REAL hooks, in the form the shipped artifact runs them: each
+  // handler lowered to its body (`extractHookBody`, what `objectstack build`
+  // does) and run by the runtime's QuickJS body runner. That runner is what
+  // hands a body `ctx.text` (objectstack 18.6.0): the escalation task's title,
+  // the drafted contract's description and the lead follow-up's title are
+  // text in the organization's language (#2494), and a bare in-process bind
+  // has no such surface, so those hooks would write nothing here.
+  const lowered = hooks.map((hook) => {
+    if (typeof hook.handler !== 'function') return hook;
+    const { source, capabilities } = extractHookBody(hook.handler, `hook '${String(hook.name)}'`);
+    const { handler: _inProcess, ...rest } = hook;
+    return { ...rest, body: { language: 'js', source, capabilities, timeoutMs: 5000 } };
+  });
+  const bodyRunner = hookBodyRunnerFactory(new QuickJSScriptRunner(), { ql: ql as never, appId: 'hotcrm' });
+  const bound = bindHooksToEngine(ql as never, lowered as never, { bodyRunner } as never) as AnyRec;
   expect(bound.registered, `no hooks bound: ${JSON.stringify(bound.errors)}`).toBeGreaterThan(0);
 
   a = ql.createContext({ userId: 'usr_a', tenantId: ORG_A });

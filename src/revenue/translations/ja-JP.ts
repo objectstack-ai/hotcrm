@@ -13,6 +13,13 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  */
 export const jaJP: TranslationData = {
   hooks: {
+    // The drafted contract's provenance sentence (#2535).
+    quote_accepted_contract_draft: {
+      texts: {
+        drafted_named: { message: '承認済みの見積{{ quote }}から自動作成' },
+        drafted_untitled: { message: '承認済みの見積から自動作成' },
+      },
+    },
     quote_total_rollup: {
       refusals: {
         RECORD_LOCKED: {

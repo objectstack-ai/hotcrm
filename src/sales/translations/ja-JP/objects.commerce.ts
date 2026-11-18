@@ -73,6 +73,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       document_url: { label: '契約書類' },
       special_terms: { label: '特約事項' },
       description: { label: '説明' },
+      automation_key: { label: '自動化キー', help: 'この契約を起草した自動化。その自動化が書き込みます。編集しないでください。' },
       billing_address: { label: '請求先住所' },
     },
     // Print Contract (#2317).

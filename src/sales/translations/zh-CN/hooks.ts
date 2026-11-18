@@ -162,7 +162,19 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
+  // The closed-won activation task's title (#2522); the private title names no deal.
+  opportunity_promote_account: {
+    texts: {
+      activation_named: { message: '激活新客户：商机{{ opportunity }}' },
+      activation_private: { message: '激活新客户（私密商机）' },
+      activation_untitled: { message: '激活新客户' },
+    },
+  },
   lead_automation: {
+    texts: {
+      follow_up_named: { message: '跟进已确认线索：{{ lead }}' },
+      follow_up_untitled: { message: '跟进已确认线索' },
+    },
     refusals: {
       RECORD_LOCKED: {
         message: '已转化线索{{lead}}只能修改描述和备注。请在转化生成的记录上修改。',

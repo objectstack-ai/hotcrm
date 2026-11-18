@@ -116,7 +116,11 @@ describe.each(PACKAGES)('hook refusals of the $name package are catalogued and t
       for (const code of Object.keys(translated)) if (!(code in catalogue)) problems.push(`${hook.name}.${code}: translated, not declared`);
     }
     for (const name of Object.keys(pack)) {
-      if (!refusing.some(({ hook }) => hook.name === name)) problems.push(`${name}: translated, but no hook of this package refuses under that name`);
+      // A hook that declares `texts` (the sentences it writes into records,
+      // #2494) is translated under the same name; those rows are held to their
+      // declarations by `test/org-locale-stored-text.test.ts`.
+      const writesText = hooks.some((hook) => hook.name === name && hook.texts !== undefined);
+      if (!refusing.some(({ hook }) => hook.name === name) && !writesText) problems.push(`${name}: translated, but no hook of this package refuses under that name`);
     }
     expect(problems).toEqual([]);
   });

@@ -544,6 +544,20 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
   flows: {
+    // What the sweeps store in a record (#2522, #2535), at
+    // `flows.<flow>.records.<node>.fields.<field>`, holes as the source spells them.
+    contract_renewal: {
+      records: {
+        create_renewal_task: { fields: { subject: '更新期限：契約{{ currentContract.contract_number }}' } },
+        create_renewal_opp: { fields: { name: '更新 — {{ currentContract.contract_number }}', next_step: '顧客と更新条件を確認する' } },
+      },
+    },
+    opportunity_stagnation: {
+      records: {
+        create_followup_task: { fields: { subject: '停滞している商談を進める：{{ currentOpp.name | truncate:200 }}' } },
+        create_private_followup_task: { fields: { subject: '停滞している商談を進める（非公開の商談）' } },
+      },
+    },
     // Approval flows (#2060 item 13, C-15): the flow's own `label`, and each
     // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
     // the step name the approval request shows the submitter and the approvers.

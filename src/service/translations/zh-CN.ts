@@ -10,6 +10,16 @@ import { activityActions } from '../../sales/translations/zh-CN/_shared';
  * package's pack: `./index.ts`.
  */
 export const zhCN: TranslationData = {
+  // The escalation follow-up task's title (#2494, #2522), at
+  // `hooks.<hook>.texts.<key>.message`.
+  hooks: {
+    case_status_side_effects: {
+      texts: {
+        escalated_named: { message: '已升级：{{ label }}' },
+        escalated_untitled: { message: '已升级的工单需要处理' },
+      },
+    },
+  },
   objects: {
     crm_knowledge_article: {
       _validations: {
@@ -368,6 +378,11 @@ export const zhCN: TranslationData = {
     },
   },
   flows: {
+    // The escalation reason the automatic escalations store (#2494), at
+    // `flows.<flow>.records.<node>.fields.<field>`.
+    case_escalation: { records: { assign_senior_agent: { fields: { escalation_reason: '自动升级：严重优先级' } } } },
+    case_escalation_on_create: { records: { assign_senior_agent: { fields: { escalation_reason: '自动升级：严重优先级' } } } },
+    case_sla_monitor: { records: { flag_breach: { fields: { escalation_reason: '自动升级：已超过 SLA 到期时间' } } } },
     escalate_case: {
       label: '升级工单',
       screens: { screen_1: { title: '升级工单', fields: { reason: { label: '升级原因' } } } },

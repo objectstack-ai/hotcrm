@@ -58,6 +58,19 @@ renewal reminder goes out. The times above are what runs once the switch is on.
 > on each record's detail page — they are intentionally **not** duplicated here.
 > This guide documents only what those screens can't tell you.
 
+## Text the automation writes is in the organization's language
+
+Some of these rules write words into a record: the title of each task they open
+(a won deal's activation, a qualified lead's follow-up, an escalated case's
+follow-up, a stalled deal, a renewal reminder), a case's escalation reason, a
+drafted contract's description, and a renewal deal's name and next step. They
+are written in the organization's language: its Localization setting when one
+is set, otherwise the app's default language. They are never in the language of
+the person whose save set the rule off, because everyone in the organization
+reads them. A language the app has no translation for gets the English text.
+The wording is picked when the record is written: changing the language later
+does not rewrite records that already exist.
+
 ## AI skills
 
 HotCRM ships **skills**, not assistants of its own. The platform provides the

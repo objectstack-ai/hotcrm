@@ -5,13 +5,17 @@ import type * as Automation from '@objectstack/spec/automation';
 type Flow = Automation.Flow;
 
 /**
- * The opening words of the provenance sentence `quote_accepted_contract_draft`
- * writes on every contract it drafts (`src/revenue/objects/quote.hook.ts`):
- * "Auto-drafted from accepted quote QTE-0006 - …", or "Auto-drafted from an
- * accepted quote" when the quote has no label. `crm_contract` has no link to
- * the quote, so this sentence is the only mark of a drafted contract.
+ * The mark of a drafted contract: the `automation_key`
+ * `quote_accepted_contract_draft` stamps on every contract it drafts
+ * (`src/revenue/objects/quote.hook.ts`).
+ *
+ * The trigger used to read the opening words of the contract's provenance
+ * sentence ("Auto-drafted from …"). That sentence is now TEXT, written in the
+ * organization's language (#2535), so in a zh-CN organization it no longer
+ * starts with the English words and the notice fell silent. The key says the
+ * same thing in every language.
  */
-export const AUTO_DRAFTED_PREFIX = 'Auto-drafted from';
+export const QUOTE_ACCEPTANCE_KEY = 'quote_acceptance';
 
 /**
  * Contract drafted notice (#2371 row 6).
@@ -46,8 +50,7 @@ export const ContractDraftedNoticeFlow: Flow = {
       config: {
         objectName: 'crm_contract',
         triggerType: 'record-after-create',
-        condition: P`has(record.description) && record.description != null
-          && record.description.startsWith(${AUTO_DRAFTED_PREFIX})
+        condition: P`has(record.automation_key) && record.automation_key == ${QUOTE_ACCEPTANCE_KEY}
           && has(record.created_by) && record.created_by != null`,
       },
     },

@@ -162,7 +162,19 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
+  // The closed-won activation task's title (#2522); the private title names no deal.
+  opportunity_promote_account: {
+    texts: {
+      activation_named: { message: 'Activar nuevo cliente de la oportunidad {{ opportunity }}' },
+      activation_private: { message: 'Activar nuevo cliente (oportunidad privada)' },
+      activation_untitled: { message: 'Activar nuevo cliente' },
+    },
+  },
   lead_automation: {
+    texts: {
+      follow_up_named: { message: 'Dar seguimiento al prospecto calificado: {{ lead }}' },
+      follow_up_untitled: { message: 'Dar seguimiento al prospecto calificado' },
+    },
     refusals: {
       RECORD_LOCKED: {
         message: 'Del prospecto convertido {{lead}} solo se pueden editar la Descripción y las Notas. Haga los cambios en los registros convertidos.',

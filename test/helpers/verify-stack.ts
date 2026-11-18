@@ -682,8 +682,12 @@ export async function runShippedHook(
     ql: stack.kernel.getService('objectql') as never,
     appId: 'hotcrm',
   });
+  // `texts` travels with the hook as the artifact carries it: a lowered body
+  // that asks `ctx.text(key)` is refused for a key the hook does not declare
+  // (objectstack 18.6.0, #2494).
   const handler = bind({
     name: hook.name, object: hook.object, events: hook.events,
+    ...(hook.texts !== undefined ? { texts: hook.texts } : {}),
     body: { language: 'js', source, capabilities, timeoutMs: 5000 },
   } as never);
   if (!handler) throw new Error(`hook ${String(hook.name)}: the platform refused its lowered body`);
