@@ -1012,7 +1012,10 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
       const MIXED = [
         'content/docs/administration/automation.zh-Hans.mdx',
         'content/docs/administration/setup.zh-Hans.mdx',
-        'content/docs/administration/sandbox-and-releases.zh-Hans.mdx',
+        // profiles, not sandbox-and-releases (hotcrm#2648): that page's one
+        // Latin-opening path was `**Studio → 软件包**`, and 18.6.0 serves no
+        // Studio app with a Packages entry, so the path left the page.
+        'content/docs/administration/profiles.zh-Hans.mdx',
         'content/docs/reference/faq.zh-Hans.mdx',
       ];
       const runs = boldRuns();
