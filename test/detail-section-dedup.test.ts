@@ -85,6 +85,9 @@ const detailPages: DetailPage[] = pages.flatMap((page) => {
   const highlights = components.filter((c) => c.type === 'record:highlights');
   const details = components.filter((c) => c.type === 'record:details');
   if (details.length === 0) return [];
+  // A full page with no strip of its own (a print page) draws no strip at
+  // all; only a slotted page inherits the default one.
+  if (highlights.length === 0 && page.kind !== 'slotted') return [];
   // A slotted page that authors its Details body but not its strip draws the
   // DEFAULT strip above it: the object's declared `highlightFields` minus the
   // title field, at most six (`deriveHighlightFields`, the default page since
