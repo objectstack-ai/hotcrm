@@ -9,5 +9,5 @@ export const ContactDataset = defineDataset({
   description: 'Semantic layer for contact counts',
   object: 'crm_contact',
   dimensions: [],
-  measures: [{ name: 'contact_count', label: 'Contacts', aggregate: 'count' }],
+  measures: [{ name: 'contact_count', label: 'Contacts', synonyms: ['number of contacts', 'people', '联系人数'], aggregate: 'count' }],
 });

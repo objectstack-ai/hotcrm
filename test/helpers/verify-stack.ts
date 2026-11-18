@@ -605,17 +605,27 @@ export function recordEngineWrites(
 ) {
   const ql = stack.kernel.getService<Row>('objectql');
   const writes: EngineWrite[] = [];
+  // From 18.6.0 the write door opens a unit of work for an object with a
+  // `before*` hook, or an `after*` hook able to abort, and then calls its own
+  // `insert` / `update` / `delete` again inside it, handing over the SAME
+  // argument objects (objectstack a8e09bb; `inAfterAbortUnit(() =>
+  // this.update(object, data, options))`). That is one write, not two: the
+  // inner call is passed through unrecorded, so a suite counting what a hook
+  // handed the engine counts it once, and a `fault` refuses it once.
+  const inFlight = { insert: new Set<unknown>(), update: new Set<unknown>(), delete: new Set<unknown>() };
   const spies = (['insert', 'update', 'delete'] as const).map((op) => {
     const real = ql[op].bind(ql) as (...args: unknown[]) => Promise<unknown>;
     return vi.spyOn(ql, op).mockImplementation(((...args: unknown[]) => {
+      const key = args[1];
+      if (key && typeof key === 'object' && inFlight[op].has(key)) return real(...args);
       const object = String(args[0]);
       const handedOver = args.map((a) => (a && typeof a === 'object' && !Array.isArray(a) ? { ...(a as Row) } : a));
       const injected = fault?.(op, object, args);
+      if (key && typeof key === 'object') inFlight[op].add(key);
       const answer = injected ? Promise.reject(injected) : real(...args);
-      writes.push({
-        op, object, args: handedOver,
-        settled: answer.then((value) => ({ ok: true as const, value }), (error) => ({ ok: false as const, error })),
-      });
+      const settled = answer.then((value) => ({ ok: true as const, value }), (error) => ({ ok: false as const, error }));
+      void settled.then(() => inFlight[op].delete(key));
+      writes.push({ op, object, args: handedOver, settled });
       return answer;
     }) as never);
   });
