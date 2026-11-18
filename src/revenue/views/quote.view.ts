@@ -78,24 +78,35 @@ export const QuoteViews = defineView({
     },
   },
 
+  // One page of stacked sections, not tabs (#2566): on a phone the last tabs
+  // were off screen. What a new quote needs sits in the first two sections,
+  // three fields a row in the wide dialog; the fields a new quote is not given
+  // (its number, its quote date, the signed copy, the terms, the addresses)
+  // wait in the collapsed sections below.
   form: {
-    type: 'tabbed',
+    type: 'simple',
+    modalSize: 'xl',
     sections: [
       {
         name: 'quote',
         label: 'Quote',
-        columns: 2,
+        columns: 3,
         // `name` is required on crm_quote with no default — omitting it made
-        // quote creation through this form impossible.
-        fields: [{ field: 'name', required: true, span: 'full' }, 'quote_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status', 'signed_copy', 'quote_date', 'expiration_date'],
+        // quote creation through this form impossible. The price book comes
+        // right after the parties (#2318): it is where the lines' list prices
+        // come from, and it is chosen before any line is added.
+        fields: [
+          { field: 'name', required: true, span: 'full' },
+          'crm_account', 'crm_contact', 'crm_opportunity',
+          'crm_price_book', 'expiration_date', 'owner_id',
+          'status',
+        ],
       },
       {
         name: 'totals',
         label: 'Totals',
-        columns: 2,
-        // The price book first (#2318): it is where the lines' list prices
-        // come from, and it is chosen before any line is added.
-        fields: [{ field: 'crm_price_book', span: 'full' }, 'subtotal', 'discount', 'discount_amount', 'tax', 'shipping_handling', 'total_price'],
+        columns: 3,
+        fields: ['subtotal', 'discount', 'discount_amount', 'tax', 'shipping_handling', 'total_price'],
       },
       {
         // Named `quote_terms`, not `terms` — `terms` is already a distinct
@@ -104,12 +115,14 @@ export const QuoteViews = defineView({
         // group's wording instead of its own "Terms".
         name: 'quote_terms',
         label: 'Terms',
-        columns: 2,
-        fields: ['payment_terms', 'shipping_terms'],
+        collapsed: true,
+        columns: 3,
+        fields: ['quote_number', 'quote_date', 'signed_copy', 'payment_terms', 'shipping_terms'],
       },
       {
         name: 'addresses_and_notes',
         label: 'Addresses & Notes',
+        collapsed: true,
         columns: 1,
         fields: ['billing_address', 'shipping_address', 'internal_notes'],
       },

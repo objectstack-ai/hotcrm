@@ -72,11 +72,12 @@ billing milestones; zh-CN, tenant currency CNY). Not worked around here either:
   a stored home amount (`homeAmount.field`, objectstack#33659): on a summary over a plain
   `Field.currency`, the tenant's currency, `objectstack validate` refuses it ("… is not a stored
   home amount, so its rows are not known to be in the home currency"). `fixed` would name a
-  currency the tenant did not choose.
+  currency the tenant did not choose. Platform card: objectstack#35045.
 - **A derived dataset measure has no currency.** A measure's `currency` takes only an ISO
   code, and the analytics service puts the tenant currency only on a measure over a currency
   field, so `actual_cost_sum` (derived from two sums of summaries) reads without the currency on
-  Projects Overview.
+  Projects Overview. Platform card: objectstack#35046.
 - **A formula cannot return a percentage.** `returnType` is `number`, `text`, `boolean`,
-  `date` or `currency`, so Budget Used and Gross Margin % read `14.5`, not `14.5%`.
+  `date` or `currency`, so Budget Used and Gross Margin % read `14.5`, not `14.5%`. Platform
+  card: objectstack#35047.
 

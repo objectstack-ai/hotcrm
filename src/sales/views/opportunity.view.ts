@@ -400,13 +400,18 @@ export const OpportunityViews = defineView({
     },
   },
 
+  // One page of stacked sections, not tabs (#2566): a required field on a
+  // later tab only showed as a dot on its title, and on a phone the fourth tab
+  // was cut short and the last two were off screen. The forecast detail and the
+  // win/loss notes start collapsed; the wide dialog takes three fields a row.
   form: {
-    type: 'tabbed',
+    type: 'simple',
+    modalSize: 'xl',
     sections: [
       {
         name: 'overview',
         label: 'Overview',
-        columns: 2,
+        columns: 3,
         fields: [
           { field: 'name', required: true, span: 'full' },
           { field: 'crm_account', required: true },
@@ -414,8 +419,9 @@ export const OpportunityViews = defineView({
           { field: 'stage', required: true },
           // The close reason sits in the cell beside Stage, shown only once
           // its closed stage is picked (#2238). The object's `requiredWhen`
-          // demands it on that stage; while it lived on the last tab, every
-          // Closed Won save failed once and jumped there to show the field.
+          // demands it on that stage; while it lived on the last tab of the
+          // old tabbed form, every Closed Won save failed once and jumped
+          // there to show the field.
           // Each predicate is TOTAL (`has()`-guarded), per AGENTS.md: an
           // unevaluable `visibleWhen` fails OPEN and would show both at once.
           {
@@ -435,7 +441,8 @@ export const OpportunityViews = defineView({
       {
         name: 'forecast',
         label: 'Forecast',
-        columns: 2,
+        collapsed: true,
+        columns: 3,
         fields: [
           'expected_revenue',
           'forecast_category',
@@ -472,13 +479,10 @@ export const OpportunityViews = defineView({
       // never reaches this form — the Edit and New dialog. A group reference
       // enumerates nothing; members, label and icon come from the object.
       //
-      // ⚠️ Measured on the 17.6.0 console: the tabbed dialog renders NO tab
-      // for a `{ group }` section — this one, and the contact form's buying
-      // centre on `main` alike. That is the platform's to fix, and these two
-      // lines are the contract-correct form waiting for it (AGENTS.md: a
-      // platform defect is waited for, never routed around). Until then every
-      // REQ-0006 field is edited through the Details tab's edit mode — which
-      // offers no markdown editor, the reason the narrative fields are
+      // On 17.6.0 the tabbed dialog rendered NO tab for a `{ group }` section;
+      // this form is stacked sections since #2566, which draw them. A group
+      // section takes no `collapsed` of its own (the group owns its
+      // presentation), so these two stay open. The narrative fields are
       // textareas (see the note above `customer_background`).
       { group: 'qualification', columns: 2 },
       { group: 'narrative', columns: 1 },
