@@ -87,9 +87,12 @@ percentage. Three things follow from that:
 - **Only won deals count.** Open pipeline is never added to **Actual Revenue**,
   however promising.
 - **Only deals that name the campaign count.** A deal is credited to a campaign
-  by its **Campaign** field, one campaign per deal. Set it on the deal: nothing
-  fills it in for you, converting a lead included, and a deal without it earns
-  the campaign nothing.
+  by its **Campaign** field, one campaign per deal. Converting a lead fills it
+  in when the lead responded to a campaign: the new deal names the campaign the
+  lead responded to most recently. A campaign the lead was only sent, or one
+  the converting user cannot see, is never filled in, and such a deal starts
+  with no campaign. Set it by hand on any other deal that came from a campaign:
+  a deal without it earns the campaign nothing.
 - **ROI is 0 until you enter a cost.** With no **Actual Cost**, there is
   nothing to measure a return against, and **ROI %** reads 0. Enter the cost as
   soon as you know it.

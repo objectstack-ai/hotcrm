@@ -1,11 +1,17 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { EmailTemplateDefinition } from '@objectstack/spec/system';
-import { bundle } from '../../sales/email-templates/_bundle';
+import { bundle, type TemplateVariables } from '../../sales/email-templates/_bundle';
 import { en } from './en';
 import { zhCN } from './zh-CN';
 import { jaJP } from './ja-JP';
 import { esES } from './es-ES';
+
+/** What each template reads, once for all four locales (`TemplateVariables`, hotcrm#2451). */
+const VARIABLES: TemplateVariables = {
+  'crm.project_budget_warning': [{ name: 'name' }],
+  'crm.project_budget_exceeded': [{ name: 'name' }],
+};
 
 /**
  * Project Delivery — every `sys_email_template` row this package's `notify`
@@ -18,4 +24,4 @@ export const PsaEmailTemplates: EmailTemplateDefinition[] = bundle({
   'zh-CN': zhCN,
   'ja-JP': jaJP,
   'es-ES': esES,
-});
+}, VARIABLES);

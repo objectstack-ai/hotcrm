@@ -5,40 +5,48 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  # The merge queue runs this job on the queued merge commit, so "Build and
-  # Test (22.x)" can be a required check: no step below reads pull-request
+  # The merge queue runs this workflow on the queued merge commit, so "Build
+  # and Test (22.x)" can be a required check: no step below reads pull-request
   # context, and checkout takes the merge group's commit (github.sha).
   merge_group:
     types: [ checks_requested ]
 
+# The test suite is sharded (#2645). One serial `vitest run --coverage` took
+# ≈29 of the ≈30 minutes of a queue entry: 309 files, half of them booting the
+# whole app through `@objectstack/verify`, on a 4-vCPU runner that gives
+# vitest 3 workers. TEST_SHARDS jobs each run a disjoint slice of the files
+# (`--shard=i/N`, vitest's own hash split) and hand their results and coverage
+# to the final job as a blob report; that job merges them and enforces the
+# coverage thresholds in vitest.config.ts on the MERGED coverage, so the gate
+# reads the whole run exactly as before. Changing the shard count means
+# changing both TEST_SHARDS and the `shard` list below.
+env:
+  NODE_VERSION: 22.x
+  TEST_SHARDS: 8
+
+permissions:
+  contents: read
+
 jobs:
-  build-and-test:
-    name: Build and Test
+  checks:
+    name: Validate, lint, typecheck, build
     runs-on: ubuntu-latest
-    
-    permissions:
-      contents: read
-    
-    strategy:
-      matrix:
-        node-version: [22.x]
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-      
-      - name: Setup Node.js ${{ matrix.node-version }}
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v7
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      
+
       - name: Source hygiene (scripts/check-source-hygiene.mjs)
         run: node scripts/check-source-hygiene.mjs
 
@@ -58,12 +66,114 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      # `--coverage` so the thresholds in vitest.config.ts actually gate. They
-      # are set just under the measured numbers for the hook handlers, which
-      # went from 23% statements / 22% functions to 95% / 95% when the runtime
-      # suites landed.
-      - name: Run tests with coverage
-        run: pnpm run test:coverage
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 7
+
+  test:
+    name: Test shard ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Every shard runs to the end, so one red run names every failing file
+      # rather than only the first shard's.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # `--coverage` collects this shard's coverage into its blob report. The
+      # thresholds are NOT checked here: a shard executes only part of the
+      # suite, so its coverage is partial by construction. They are checked
+      # once, on the merged coverage, in "Build and Test (22.x)" below (see
+      # the `--shard` note in vitest.config.ts).
+      - name: Run tests with coverage (shard ${{ matrix.shard }}/${{ env.TEST_SHARDS }})
+        run: pnpm exec vitest run --coverage --shard=${{ matrix.shard }}/${{ env.TEST_SHARDS }} --reporter=default --reporter=blob
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-blob-${{ matrix.shard }}
+          path: .vitest-reports/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  # The merge queue's required check. Its name is matched by the ruleset, so
+  # it stays exactly "Build and Test (22.x)". `if: always()` is load-bearing:
+  # a job skipped because a job it needs failed reports `skipped`, and a
+  # skipped required check lets the merge through. So this job always runs,
+  # and fails unless the checks and every shard succeeded.
+  build-and-test:
+    name: Build and Test (22.x)
+    needs: [ checks, test ]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the checks and every test shard to have passed
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          echo "checks: $CHECKS_RESULT · test shards: $TEST_RESULT"
+          if [ "$CHECKS_RESULT" != "success" ] || [ "$TEST_RESULT" != "success" ]; then
+            echo "::error::A required job did not succeed (checks: $CHECKS_RESULT, test shards: $TEST_RESULT)."
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v7
+        with:
+          pattern: vitest-blob-*
+          path: .vitest-reports
+          merge-multiple: true
+
+      # Exactly TEST_SHARDS blobs, or the merged report would silently cover
+      # fewer files than the suite has.
+      - name: Check every shard reported
+        run: |
+          count=$(find .vitest-reports -maxdepth 1 -name 'blob-*.json' | wc -l)
+          echo "blob reports: $count of $TEST_SHARDS"
+          ls -l .vitest-reports
+          [ "$count" -eq "$TEST_SHARDS" ]
+
+      # Replays every shard's results (a failed test fails this step too) and
+      # merges their coverage, then checks the merged coverage against the
+      # thresholds in vitest.config.ts — the same gate the single run had.
+      - name: Merge test results and enforce coverage thresholds
+        run: pnpm exec vitest run --merge-reports --coverage
 
       - name: Upload coverage report
         if: ${{ !cancelled() }}
@@ -71,12 +181,4 @@ jobs:
         with:
           name: coverage
           path: coverage/
-          retention-days: 7
-      
-      - name: Upload build artifacts
-        if: matrix.node-version == '22.x'
-        uses: actions/upload-artifact@v7
-        with:
-          name: build-output
-          path: dist/
           retention-days: 7

@@ -167,6 +167,8 @@ A green run and a run that did something are not the same thing: a sweep that se
 
 Read one qualifier alongside it, or HotCRM's own sweeps will trip that alert while working perfectly. **Stalled Deal Alert** and **Contract Renewal Reminder** re-select the same records every morning and then gate each one on whether it has already been handled, so a steady state of "everything has already been nudged" also reads as selected-but-not-acted. **Run Summary** tells the two apart: if the run's *Already Nudged?* / *Already Reminded?* lookup found the existing tasks, the gate skips are accounted for and the sweep is healthy; if it found none and the gate closed anyway, the skips are unexplained and the gate is the suspect.
 
+A notification a flow sends without a variable its email template requires is not delivered (`MISSING_VARIABLES`), yet the flow run still reads *completed* and its notify step a success: the refusal is recorded only on that notification's **Notification Delivery** record, with **Status** *dead* and an **Error** that names the missing variable, so that is where to look when someone says a notification never arrived.
+
 ## Tips for admins
 
 - ✅ **Validation rules** are the cheapest way to enforce data quality — use them liberally.
