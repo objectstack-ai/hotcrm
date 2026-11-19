@@ -121,7 +121,7 @@ crm_na_sales_team       crm_eu_sales_team       （区域分组）
 | Escalated Cases — Previous Owner | 工单 | 读取 | 工单 `escalated_from` 字段里的那个人 —— 升级从他手上转走的工单，直到它被 Closed |
 | Live Campaigns — Marketing Manager | 营销活动 | 编辑 | `crm_marketing_manager` —— 筹划中 / 进行中的活动 |
 | Live Campaigns — Marketing Director | 营销活动 | 编辑 | `crm_marketing_director` —— 同一批活动 |
-| Projects — Team | 项目 | 读取 | 项目 `team_members` 字段里的人 —— 除项目经理外所有被安排在项目上的人（项目经理用下一条规则） |
+| Projects — Team | 项目 | 读取 | 项目 `team_members` 字段里的人 —— 所有被安排在项目上的人，包括项目经理（项目经理另有下一条规则） |
 | Projects — Project Manager | 项目 | 编辑 | 项目 `project_manager` 字段里的人 |
 | Projects — Finance | 项目 | 编辑 | `crm_finance_controller`、`crm_project_director`、`crm_pmo` —— 每个项目（每个岗位一条规则；可以编辑，从不能删除） |
 | Timesheets — Approver | 工时单 | 编辑 | 工时单 `approver` 字段里的人 —— 创建时的项目经理 |
