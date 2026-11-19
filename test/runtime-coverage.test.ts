@@ -131,6 +131,12 @@ const RUNTIME_TEST_FILES = [
   // hotcrm#2580 — a report read against its travel request: the amounts on
   // both, and the last paid report closing the request.
   'expense-report-request.test.ts',
+  // hotcrm#2578, hotcrm#2581 — the travel request's guards and its two
+  // approvals, the project path's insert twin included, run as the traveler,
+  // the manager and the Project Manager. Listed at hotcrm#2575: until then the
+  // project path's names were met only by the expense module's flow roster in
+  // `expense-module.test.ts`, a list of names rather than a run.
+  'expense-request.test.ts',
   // REQ-0005 — the lead conversion approval gate. Same precedent as the feature
   // files above, and the same reason: the gate is authored on four surfaces
   // (the field default, `convert_lead.visible`, `lead_conversion`'s
