@@ -201,7 +201,7 @@ describe('the admin docs roster matches the ledger', () => {
    * three spellings, all green.
    */
   const DOC_LABEL: Record<string, { en: string; hans: string; hant: string }> = {
-    crm_lead: { en: 'Leads', hans: '潜在客户', hant: '線索' },
+    crm_lead: { en: 'Leads', hans: '线索', hant: '線索' },
     crm_opportunity: { en: 'Opportunities', hans: '商机', hant: '商機' },
     crm_case: { en: 'Cases', hans: '工单', hant: '工單' },
     crm_contract: { en: 'Contracts', hans: '合同', hant: '合約' },
