@@ -373,13 +373,6 @@ export const esES: TranslationData = {
         finance_review: { label: 'Revisión del controller financiero' },
       },
     },
-    expense_report_project_approval: {
-      label: 'Aprobación de informes de gastos de proyecto',
-      approvals: {
-        approver_review: { label: 'Revisión del jefe de proyecto' },
-        finance_review: { label: 'Revisión del controller financiero' },
-      },
-    },
     expense_request_approval: {
       label: 'Aprobación de solicitud de viaje',
       approvals: {
@@ -390,18 +383,6 @@ export const esES: TranslationData = {
       label: 'Aprobación de solicitud de viaje (al crear)',
       approvals: {
         approver_review: { label: 'Revisión del responsable' },
-      },
-    },
-    expense_request_project_approval: {
-      label: 'Aprobación de solicitud de viaje de proyecto',
-      approvals: {
-        approver_review: { label: 'Revisión del jefe de proyecto' },
-      },
-    },
-    expense_request_project_approval_on_create: {
-      label: 'Aprobación de solicitud de viaje de proyecto (al crear)',
-      approvals: {
-        approver_review: { label: 'Revisión del jefe de proyecto' },
       },
     },
   },

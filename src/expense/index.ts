@@ -4,15 +4,13 @@ import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInpu
 
 import { ExpenseApp } from './apps/index.js';
 import { CrmExpenseManual } from './books/index.js';
-import { ExpenseEmailTemplates } from './email-templates/index.js';
 import {
   SubmitForReimbursementAction, SubmitTripForReimbursementAction, SubmitExpenseReportAction, ReopenExpenseReportAction, MarkExpenseReportPaidAction,
   SubmitExpenseRequestAction, CancelExpenseRequestAction, CloseExpenseRequestAction,
 } from './actions/index.js';
 import {
-  ExpenseReportApprovalFlow, ExpenseReportProjectApprovalFlow,
+  ExpenseReportApprovalFlow,
   ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
-  ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
 } from './flows/index.js';
 import { Expense, ExpenseReport, ExpenseRequest, ExpenseRequestLine, ExpenseStandard } from './objects/index.js';
 import { expenseHook, expenseReportHook, expenseRequestHook, expenseRequestLineHook } from './objects/hooks.js';
@@ -33,14 +31,14 @@ export const expenseHooks = [expenseHook, expenseReportHook, expenseRequestHook,
 
 /**
  * This package's flows: the approval of an expense report with no project
- * and of one on a project (here only for the platform gap its file names),
- * the same two for a travel request (hotcrm#2578, hotcrm#2581), and the
- * travel request's insert twins.
+ * and of a travel request with no project (hotcrm#2578), with the travel
+ * request's insert twin. A report or a request on a project goes to its
+ * Project Manager through Project Delivery's flows (`src/psa/flows/`,
+ * hotcrm#2575); each flow here starts only when the record names no project.
  */
 export const expenseFlows = [
-  ExpenseReportApprovalFlow, ExpenseReportProjectApprovalFlow,
+  ExpenseReportApprovalFlow,
   ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow,
-  ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
 ];
 
 /** This package's actions — see {@link expenseHooks}. */
@@ -87,12 +85,10 @@ export type HotCrmExpenseCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * with one (hotcrm#2616).
  * Project Delivery depends on this package — the one add-on → add-on edge
  * item 18 allows — and contributes the Project field on all three (the
- * travel request's at hotcrm#2581) and the project cost summaries. This
- * package depends on the app package only. One thing that belongs to Project
- * Delivery is still here: the approval of an expense report or a travel
- * request on a project, for the platform gap
- * `./flows/expense-report-project-approval.flow.ts` names; neither starts
- * while Project Delivery is disabled.
+ * travel request's at hotcrm#2581), the project cost summaries, and the
+ * approval of an expense report or a travel request on a project
+ * (`src/psa/flows/`, moved there by hotcrm#2575). This package depends on
+ * the app package only, and sends no notice of its own.
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
@@ -150,8 +146,6 @@ export const createHotCrmExpenseStack = (
   actions: expenseActions,
   sharingRules: expenseSharingRules,
   flows: expenseFlows,
-  // The two notices the project path sends; see that flow.
-  emailTemplates: ExpenseEmailTemplates,
   // Its manual, over `src/expense/docs/`. See the book's own note.
   books: [CrmExpenseManual],
   // The assistant's two skills (hotcrm#2617).

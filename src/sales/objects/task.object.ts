@@ -166,6 +166,14 @@ export const Task = ObjectSchema.create({
     related_to_contact: Field.lookup('crm_contact', {
       group: 'related',
       label: 'Related Contact',
+      // Once the activity names its account, only that account's contacts are
+      // offered (#2677); with no account yet the platform leaves the
+      // `{ $record }` entry out and every contact is offered. No `orEmpty`: a
+      // contact's `crm_account` is its required master, so none has no account.
+      // The picker narrows the choice only; a write is not refused by it.
+      lookupFilters: [
+        { field: 'crm_account', operator: 'eq', value: { $record: 'related_to_account' } },
+      ],
     }),
     
     related_to_opportunity: Field.lookup('crm_opportunity', {

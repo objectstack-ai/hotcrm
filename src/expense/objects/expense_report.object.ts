@@ -24,7 +24,7 @@ const CITES_A_REQUEST = P`has(record.crm_expense_request) && record.crm_expense_
  * Two approvals, never both, as the expense had before: a report with no
  * project goes to the submitter's manager
  * (`../flows/expense-report-approval.flow.ts`), one on a project to its
- * Project Manager (`../flows/expense-report-project-approval.flow.ts`), and
+ * Project Manager (`src/psa/flows/expense-report-project-approval.flow.ts`), and
  * either one from EXPENSE_FINANCE_REVIEW_AMOUNT (on the report's total) to a
  * Finance Controller as well.
  *

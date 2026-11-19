@@ -15,18 +15,15 @@ type Flow = Automation.Flow;
  * so one trip never goes to two different approvers. One tier, as a request
  * without a project has: no finance step.
  *
- * ## Why it lives here, and not in Project Delivery
+ * ## Why it lives in Project Delivery
  *
  * The request's `crm_project` field is Project Delivery's
- * (`src/psa/extensions/expense-project.extension.ts`), and this flow is the
- * project path, so it belongs there. It is here for the platform gap
- * `./expense-report-project-approval.flow.ts` names (objectstack#34616: the build's
- * per-package lint judges a record-change flow's object against the package's
- * own objects, so a Project Delivery flow on `crm_expense_request` fails
- * `pnpm lint --strict`). The maintainer's 2026-11-17 03:27Z interim ruling
- * for the expense flows applies to this one as well; once the build judges
- * the dependency closure, this file moves back with them (hotcrm#2575's
- * move-back list, `docs/architecture/expense-module-plan.md`).
+ * (`../extensions/expense-project.extension.ts`), and this flow is the
+ * project path, so it is this module's. It sat in the expense module from
+ * hotcrm#2581 for the platform gap `./expense-report-project-approval.flow.ts`
+ * names (objectstack#34616), and moved back with that flow once 18.6.0
+ * judged the dependency closure (hotcrm#2575's move-back list,
+ * `docs/architecture/expense-module-plan.md`).
  *
  * With Project Delivery disabled the `crm_project` field leaves the record,
  * so the entry condition below is false and this flow never starts; its read
@@ -35,7 +32,7 @@ type Flow = Automation.Flow;
  * ## Two paths, never both
  *
  * A request with no project goes to the traveler's manager
- * (`expense_request_approval`, `./expense-request-approval.flow.ts`). This
+ * (`expense_request_approval`, `src/expense/flows/expense-request-approval.flow.ts`). This
  * flow starts only when the request names a project; the two entry
  * conditions are exact complements, pinned by `test/expense-request.test.ts`.
  *
@@ -59,7 +56,7 @@ type Flow = Automation.Flow;
  *
  * ## The status is written here, not mirrored
  *
- * Shaped as `./expense-request-approval.flow.ts` is, which carries the notes:
+ * Shaped as `src/expense/flows/expense-request-approval.flow.ts` is, which carries the notes:
  * the approval node with `lockRecord` and `first_response`,
  * `runAs: 'system'`, a recall told apart from a rejection by the decision the
  * resume lands as, and the closing writes setting the status themselves.
