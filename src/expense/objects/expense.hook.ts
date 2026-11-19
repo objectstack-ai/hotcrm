@@ -17,7 +17,7 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  * at hotcrm#2556: this package knows nothing of projects.
  *
  * **An expense's project stays as reported.** The report's approval is chosen
- * by the report's project (`../flows/expense-report-project-approval.flow.ts`),
+ * by the report's project (`src/psa/flows/expense-report-project-approval.flow.ts`),
  * which Submit for Reimbursement takes from its expenses. So a person cannot
  * change the project of an expense that is on a report, even a Draft one
  * (recalled, or back from a rejection): the report would still go to the old

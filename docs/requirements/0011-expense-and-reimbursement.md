@@ -17,11 +17,12 @@
   recorded by [hotcrm#2562](https://github.com/objectstack-ai/hotcrm/issues/2562). Changesets / PRs —
   stage 1: `.changeset/2556-expense-module.md` (hotcrm#2556; the project-path approval held in the
   expense package until [objectstack#34616](https://github.com/objectstack-ai/objectstack/issues/34616),
-  moved back on [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)); stage 2:
+  moved back to Project Delivery by [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575),
+  `.changeset/2575-project-approval-to-psa.md`, with the travel request's); stage 2:
   `.changeset/2559-expense-report.md` (hotcrm#2559; approval moves FROM each expense TO its report); stage 3:
   `.changeset/2578-travel-request.md` (hotcrm#2578), `.changeset/2581-travel-request-project.md`
   (hotcrm#2581; its project-path approval held in the expense package with the expense report's, until
-  objectstack#34616, and on #2575's move-back list), `.changeset/2579-itinerary-lines.md` (hotcrm#2579),
+  objectstack#34616, and moved back by #2575), `.changeset/2579-itinerary-lines.md` (hotcrm#2579),
   `.changeset/2580-report-cites-request.md` (hotcrm#2580; the request is chosen by Submit for a Trip, a
   second action on Submit for Reimbursement's body, because any action param opens a dialog on 18.5.0).
 

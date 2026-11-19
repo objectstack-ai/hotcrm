@@ -594,6 +594,25 @@ export const jaJP: TranslationData = {
       approvals: { approver_review: { label: 'プロジェクトマネージャー審査' } },
     },
     project_budget_alert: { label: 'プロジェクト予算アラート' },
+    expense_report_project_approval: {
+      label: 'プロジェクト経費精算書承認',
+      approvals: {
+        approver_review: { label: 'プロジェクトマネージャー審査' },
+        finance_review: { label: '財務コントローラー審査' },
+      },
+    },
+    expense_request_project_approval: {
+      label: 'プロジェクト出張申請の承認',
+      approvals: {
+        approver_review: { label: 'プロジェクトマネージャー審査' },
+      },
+    },
+    expense_request_project_approval_on_create: {
+      label: 'プロジェクト出張申請の承認（作成時）',
+      approvals: {
+        approver_review: { label: 'プロジェクトマネージャー審査' },
+      },
+    },
   },
   pages: {
     // The project's record page (#2545).

@@ -2,7 +2,7 @@
 
 import type { EmailTemplatePack } from '../../sales/email-templates/_bundle';
 
-/** English (en-US) — Project Delivery's notification templates (`project_budget_alert`). */
+/** English (en-US) — Project Delivery's notification templates (`project_budget_alert`, `expense_report_project_approval`). */
 export const en: EmailTemplatePack = {
   'crm.project_budget_warning': {
     label: 'Project Budget Warning',
@@ -13,5 +13,15 @@ export const en: EmailTemplatePack = {
     label: 'Project Budget Exceeded',
     subject: 'Budget exceeded: {{name}}',
     bodyHtml: '<p>Project {{name}} has spent its whole Approved Budget. To stop further time and expenses being submitted, tick Lock Time and Expenses on the project, then agree a new budget.</p>',
+  },
+  'crm.expense_report_project_over': {
+    label: 'Expense Report on a Closed Project',
+    subject: 'Expense report turned back: {{name}}',
+    bodyHtml: '<p>Your expense report {{name}} was submitted on {{project}}, which is Closed or Cancelled and takes no expenses. It is back in Draft: delete the report, move its expenses to an open project, and submit them again.</p>',
+  },
+  'crm.expense_report_project_locked': {
+    label: 'Expense Report on a Locked Project',
+    subject: 'Expense report turned back: {{name}}',
+    bodyHtml: '<p>Your expense report {{name}} was submitted on {{project}}, which is locked for time and expenses. It is back in Draft: submit it again once the project manager unticks Lock Time and Expenses.</p>',
   },
 };

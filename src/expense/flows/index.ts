@@ -2,14 +2,11 @@
 
 /**
  * The expense module's flows (hotcrm#2559): the approval of an expense report
- * with no project (the submitter's manager) and of one on a project (its
- * Project Manager; why that one is here and not in Project Delivery is in its
- * file), replacing the per-expense approvals hotcrm#2556 shipped; the
- * approval of a travel request with no project (the traveler's manager,
- * hotcrm#2578) and of one on a project (its Project Manager, hotcrm#2581;
- * here for the same platform gap), each with its insert twin.
+ * with no project (the submitter's manager), replacing the per-expense
+ * approval hotcrm#2556 shipped, and of a travel request with no project (the
+ * traveler's manager, hotcrm#2578) with its insert twin. A report or a
+ * request on a project goes to its Project Manager through Project
+ * Delivery's flows (`src/psa/flows/`, hotcrm#2575).
  */
 export { ExpenseReportApprovalFlow } from './expense-report-approval.flow';
-export { ExpenseReportProjectApprovalFlow } from './expense-report-project-approval.flow';
 export { ExpenseRequestApprovalFlow, ExpenseRequestApprovalOnCreateFlow } from './expense-request-approval.flow';
-export { ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow } from './expense-request-project-approval.flow';

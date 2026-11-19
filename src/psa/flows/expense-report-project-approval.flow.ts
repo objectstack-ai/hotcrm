@@ -15,26 +15,25 @@ type FlowEdge = Flow['edges'][number];
  * project's Project Manager, who decides from the approvals Inbox. A report
  * totalling EXPENSE_FINANCE_REVIEW_AMOUNT or more then goes to a Finance
  * Controller as well. Each expense on the report follows its status
- * (`../objects/expense_report.hook.ts`), and an approved expense counts in
+ * (`src/expense/objects/expense_report.hook.ts`), and an approved expense counts in
  * the project's cost through the summaries on `crm_project`, as before.
  *
  * Submit for Reimbursement puts the expenses of each project on a report of
- * their own (`../actions/expense.actions.ts`), so a project manager decides
+ * their own (`src/expense/actions/expense.actions.ts`), so a project manager decides
  * only their project's spend.
  *
- * ## Why it lives here, and not in Project Delivery
+ * ## Why it lives in Project Delivery
  *
  * The report's `crm_project` field is Project Delivery's
- * (`src/psa/extensions/expense-project.extension.ts`), and this flow is the
- * project path, so it belongs there. It is here because of the platform gap
- * hotcrm#2556 measured on 18.5.0: the build's per-package lint judges a
- * record-change flow's object against the package's OWN objects, not the
- * packages its manifest depends on, so a Project Delivery flow on this
- * package's object draws `flow-trigger-unknown-object`, which
- * `pnpm lint --strict` fails on (objectstack#34616). Once the build judges
- * the dependency closure, this file and its two email templates move back
- * (hotcrm#2575; the maintainer's 2026-11-17 ruling,
- * `docs/architecture/expense-module-plan.md`).
+ * (`../extensions/expense-project.extension.ts`), and this flow is the
+ * project path, so it is this module's, triggered on the expense module's
+ * object along the manifest's dependency on it. From hotcrm#2556 it sat in
+ * the expense module, because the build's per-package lint judged a
+ * record-change flow's object against the package's OWN objects and
+ * `pnpm lint --strict` failed on the `flow-trigger-unknown-object` warning
+ * (objectstack#34616). 18.6.0 judges the dependency closure, so it moved
+ * back with its two email templates (hotcrm#2575; the maintainer's
+ * 2026-11-17 ruling, `docs/architecture/expense-module-plan.md`).
  *
  * With Project Delivery disabled the `crm_project` field leaves the report,
  * so the entry condition below is false and this flow never starts; its
@@ -43,7 +42,7 @@ type FlowEdge = Flow['edges'][number];
  * ## Two paths, never both
  *
  * A report with no project goes to the submitter's manager
- * (`expense_report_approval`, `./expense-report-approval.flow.ts`). This flow
+ * (`expense_report_approval`, `src/expense/flows/expense-report-approval.flow.ts`). This flow
  * starts only when the report names a project; the two entry conditions are
  * exact complements, pinned by `test/expense-module.test.ts`.
  *
@@ -65,7 +64,7 @@ type FlowEdge = Flow['edges'][number];
  *
  * ## The status is written here, not mirrored
  *
- * Shaped as `./expense-report-approval.flow.ts` is: approval nodes with
+ * Shaped as `src/expense/flows/expense-report-approval.flow.ts` is: approval nodes with
  * `lockRecord` and `first_response`, `runAs: 'system'`, a recall told apart
  * from a rejection, and the closing writes setting the status.
  */

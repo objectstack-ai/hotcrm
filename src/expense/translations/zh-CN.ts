@@ -373,13 +373,6 @@ export const zhCN: TranslationData = {
         finance_review: { label: '财务控制审核' },
       },
     },
-    expense_report_project_approval: {
-      label: '项目报销单审批',
-      approvals: {
-        approver_review: { label: '项目经理审核' },
-        finance_review: { label: '财务控制审核' },
-      },
-    },
     expense_request_approval: {
       label: '出差申请审批',
       approvals: {
@@ -390,18 +383,6 @@ export const zhCN: TranslationData = {
       label: '出差申请审批（创建时）',
       approvals: {
         approver_review: { label: '上级审核' },
-      },
-    },
-    expense_request_project_approval: {
-      label: '项目出差申请审批',
-      approvals: {
-        approver_review: { label: '项目经理审核' },
-      },
-    },
-    expense_request_project_approval_on_create: {
-      label: '项目出差申请审批（创建时）',
-      approvals: {
-        approver_review: { label: '项目经理审核' },
       },
     },
   },

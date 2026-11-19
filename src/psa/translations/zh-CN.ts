@@ -594,6 +594,25 @@ export const zhCN: TranslationData = {
       approvals: { approver_review: { label: '项目经理审核' } },
     },
     project_budget_alert: { label: '项目预算预警' },
+    expense_report_project_approval: {
+      label: '项目报销单审批',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+        finance_review: { label: '财务控制审核' },
+      },
+    },
+    expense_request_project_approval: {
+      label: '项目出差申请审批',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+      },
+    },
+    expense_request_project_approval_on_create: {
+      label: '项目出差申请审批（创建时）',
+      approvals: {
+        approver_review: { label: '项目经理审核' },
+      },
+    },
   },
   pages: {
     // The project's record page (#2545).

@@ -10,6 +10,7 @@ import { ProjectFinancialsDataset, TimeUtilizationDataset } from './datasets/ind
 import { PsaEmailTemplates } from './email-templates/index.js';
 import { ExpenseProjectExtensions } from './extensions/index.js';
 import {
+  ExpenseReportProjectApprovalFlow, ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
   ProjectBudgetAlertFlow, ProjectBudgetApprovalFlow,
   ProjectInitiationApprovalFlow, ProjectMemberPersonRenameFlow, TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
 } from './flows/index.js';
@@ -45,12 +46,16 @@ export const psaHooks = [
 /**
  * This package's flows (#2316 phase 1b) — see {@link psaHooks}: the
  * approvals (a budget top-up's since hotcrm#2547), the two insert twins, the
- * budget alert, and the staffing rows' rename follower (hotcrm#2568).
+ * budget alert, the staffing rows' rename follower (hotcrm#2568), and the
+ * project path of the expense module's report and travel request, with its
+ * insert twin (hotcrm#2575).
  */
 export const psaFlows = [
   ProjectInitiationApprovalFlow, ProjectBudgetApprovalFlow,
   TimesheetApprovalFlow, TimesheetApprovalOnCreateFlow,
   ProjectBudgetAlertFlow, ProjectMemberPersonRenameFlow,
+  ExpenseReportProjectApprovalFlow,
+  ExpenseRequestProjectApprovalFlow, ExpenseRequestProjectApprovalOnCreateFlow,
 ];
 
 /** This package's sharing rules — see {@link psaHooks}. */
@@ -90,10 +95,12 @@ export const psaSharingRules = [
  * Since hotcrm#2556 the expense is the expense module's (REQ-0011): this
  * module depends on it, contributes the Project field on the expense and on
  * the expense report (hotcrm#2559) through `objectExtensions`, and keeps the
- * expense cost summaries on the project. The approval of a report on a
- * project (`expense_report_project_approval`) is the project's, but sits in
- * the expense module for a platform gap
- * (`src/expense/flows/expense-report-project-approval.flow.ts`).
+ * expense cost summaries on the project. It owns the approval of an expense
+ * report or a travel request on a project (`expense_report_project_approval`,
+ * `expense_request_project_approval` and its insert twin, with the report's
+ * two turn-back notices), which sat in the expense module until the platform
+ * judged a flow's trigger object against the package's dependencies
+ * (objectstack#34616, in 18.6.0; moved back by hotcrm#2575).
  *
  * Packaged exactly as `src/service/index.ts` is; that file carries the
  * reasoning for `namespace`, `dependencies`, the absent `i18n` and the
