@@ -55,7 +55,7 @@ Everyone opens the app for their job. Sales is always there; an administrator ca
 | [Sales](https://hotcrm.com/docs/sales) | Sales reps and managers | Leads, accounts, opportunities, quotes and products, orders and contracts. |
 | [Service](https://hotcrm.com/docs/service) | Service agents and managers | Cases with SLAs and escalation, and the knowledge base. |
 | [Marketing](https://hotcrm.com/docs/marketing) | Marketers | Campaigns, and the leads and contacts they reach. |
-| [Order to Cash](https://hotcrm.com/docs/order-to-cash) | Finance | Each contract's collection plan, invoices and payments: what is invoiced, paid and overdue. |
+| [Order to Cash](https://hotcrm.com/docs/order-to-cash) | Finance | Each account's collection plan, and its invoices and payments with or without a contract. |
 | [Project Delivery](https://hotcrm.com/docs/projects) | Project managers, consultants and finance | Projects, staffing, plans, timesheets and budgets, with cost and margin. |
 | [Expenses](https://hotcrm.com/docs/expenses) | Every employee | Expenses with their receipts, expense reports, travel requests and their approval. |
 

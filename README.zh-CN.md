@@ -55,7 +55,7 @@
 | [销售](https://hotcrm.com/zh-Hans/docs/sales) | 销售代表和销售经理 | 线索、客户、商机、报价与产品、订单和合同。 |
 | [服务](https://hotcrm.com/zh-Hans/docs/service) | 客服人员和客服经理 | 带 SLA 和升级的工单，以及知识库。 |
 | [营销](https://hotcrm.com/zh-Hans/docs/marketing) | 市场人员 | 营销活动，以及它们触达的线索和联系人。 |
-| [订单与回款](https://hotcrm.com/zh-Hans/docs/order-to-cash) | 财务 | 每份合同的回款计划、发票和回款：开了多少票、收了多少钱、有没有逾期。 |
+| [订单与回款](https://hotcrm.com/zh-Hans/docs/order-to-cash) | 财务 | 每个客户的回款计划，以及发票和回款，有没有合同都可以。 |
 | [项目交付](https://hotcrm.com/zh-Hans/docs/projects) | 项目经理、顾问和财务 | 项目、人员安排、计划、工时单和预算，以及成本和毛利。 |
 | [费用报销](https://hotcrm.com/zh-Hans/docs/expenses) | 每一位员工 | 带票据的费用、报销单、出差申请及其审批。 |
 
