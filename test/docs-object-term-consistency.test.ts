@@ -362,8 +362,8 @@ const homonymSite = (hit: string): boolean => {
  * customers not yet qualified"), defines a lead with the account-type word —
  * the zh-Hans docs' 47 sites made the same move and were swept. The pack is
  * outside that docs-only card, so the site is held here, by line, until the
- * pack's own card rewords it; the rule below goes red once it no longer hits,
- * so the entry cannot outlive the fix.
+ * pack itself is reworded; the rule below goes red once it no longer hits, so
+ * the entry cannot outlive the fix.
  */
 const ALLOWED: readonly string[] = [
   'src/sales/translations/zh-CN/objects.pipeline.ts:64', // crm_lead.description: 尚未确认的潜在客户
