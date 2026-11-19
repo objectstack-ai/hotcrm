@@ -4,6 +4,10 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import artifact from '../objectstack.config';
 import { bootOptions, buildArtifactAgain, hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { pauseGate } from './helpers/multitenant-pause';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 type Rec = Record<string, any>;
 
@@ -74,18 +78,6 @@ let adminOrg: string;
 let accountA: Rec;
 let accountB: Rec;
 let k = 0;
-beforeAll(async () => {
-  // A build of its own: one configuration object holds one live kernel since
-  // 18.0.0-next.0 (objectstack#22301), and the shared boot below is booted too.
-  orgBound = await bootStack(await buildArtifactAgain(), bootOptions({ orgContext: true }));
-  admin = await orgBound.signIn();
-  adminOrg = String((await orgBound.contextFor(admin)).tenantId ?? '');
-  expect(adminOrg, 'the org-bound boot bound the admin to no organization').not.toBe('');
-  expect(await orgBound.rows('crm_contact', { email: JOHN }), 'a seed row already carries the fixture address').toEqual([]);
-  [accountA, accountB] = (await orgBound.seed('crm_account', [{ name: 'Acme A' }, { name: 'Acme B' }])) as [Rec, Rec];
-  // One contact of ORG_A, the row the first cases try to duplicate.
-  await orgBound.seed('crm_contact', [{ first_name: 'John', last_name: 'Smith', email: JOHN, crm_account: accountA.id, organization_id: ORG_A }]);
-}, 120_000);
 
 /** A contact the admin opens on account B. */
 const adminInserts = (email: string): Promise<Rec> =>
@@ -103,38 +95,55 @@ const seedContact = async (email: string, organization_id?: string): Promise<Rec
 /** The hook's own refusal — `contact_integrity`'s envelope, not the index's. */
 const hookRefusal = { code: 'DUPLICATE_VALUE', status: 409, message: expect.stringMatching(/already exists/) };
 
-describe('contact_integrity scopes its dedupe to the organization', () => {
-  it('lets ANOTHER organization know the same person', async () => {
-    // The admin's organization is not ORG_A, whose contact carries the address.
-    const written = await adminInserts(JOHN);
-    expect(written.organization_id).toBe(adminOrg);
+// The two org-scoped blocks share the org-bound boot, so it boots inside this
+// one and the #2700 pause holds them together, boot and all.
+pause.describe('several organizations in one database (the org-bound boot)', () => {
+  beforeAll(async () => {
+    // A build of its own: one configuration object holds one live kernel since
+    // 18.0.0-next.0 (objectstack#22301), and the shared boot below is booted too.
+    orgBound = await bootStack(await buildArtifactAgain(), bootOptions({ orgContext: true }));
+    admin = await orgBound.signIn();
+    adminOrg = String((await orgBound.contextFor(admin)).tenantId ?? '');
+    expect(adminOrg, 'the org-bound boot bound the admin to no organization').not.toBe('');
+    expect(await orgBound.rows('crm_contact', { email: JOHN }), 'a seed row already carries the fixture address').toEqual([]);
+    [accountA, accountB] = (await orgBound.seed('crm_account', [{ name: 'Acme A' }, { name: 'Acme B' }])) as [Rec, Rec];
+    // One contact of ORG_A, the row the first cases try to duplicate.
+    await orgBound.seed('crm_contact', [{ first_name: 'John', last_name: 'Smith', email: JOHN, crm_account: accountA.id, organization_id: ORG_A }]);
+  }, 120_000);
+
+  describe('contact_integrity scopes its dedupe to the organization', () => {
+    it('lets ANOTHER organization know the same person', async () => {
+      // The admin's organization is not ORG_A, whose contact carries the address.
+      const written = await adminInserts(JOHN);
+      expect(written.organization_id).toBe(adminOrg);
+    });
+
+    it('still rejects the duplicate INSIDE one organization', async () => {
+      // The negative control for the case above: same address, same handler —
+      // only the organization of the existing row differs. Without this, "allows
+      // it" could equally well mean the guard stopped working.
+      await seedContact('ada.inside@acme.example.com', adminOrg);
+      await expect(adminInserts('Ada.Inside@acme.example.com')).rejects.toMatchObject(hookRefusal);
+    });
+
+    it('scopes by the organization the platform resolved for the caller', async () => {
+      // The caller's organization is the one the platform's session resolution
+      // put on the execution context (`activeOrganizationId` → `tenantId`), and
+      // the row the hook let through is stamped with exactly that one.
+      const written = await adminInserts(`resolved.${++k}@acme.example.com`);
+      expect(written.organization_id).toBe((await orgBound.contextFor(admin)).tenantId);
+    });
   });
 
-  it('still rejects the duplicate INSIDE one organization', async () => {
-    // The negative control for the case above: same address, same handler —
-    // only the organization of the existing row differs. Without this, "allows
-    // it" could equally well mean the guard stopped working.
-    await seedContact('ada.inside@acme.example.com', adminOrg);
-    await expect(adminInserts('Ada.Inside@acme.example.com')).rejects.toMatchObject(hookRefusal);
-  });
+  describe('contact_integrity on a SYSTEM write (the seed replay)', () => {
+    it("scopes by the row's own organization stamp when no session carries one", async () => {
+      const written = await seedContact(JOHN, ORG_B);
+      expect(written.organization_id).toBe(ORG_B);
+    });
 
-  it('scopes by the organization the platform resolved for the caller', async () => {
-    // The caller's organization is the one the platform's session resolution
-    // put on the execution context (`activeOrganizationId` → `tenantId`), and
-    // the row the hook let through is stamped with exactly that one.
-    const written = await adminInserts(`resolved.${++k}@acme.example.com`);
-    expect(written.organization_id).toBe((await orgBound.contextFor(admin)).tenantId);
-  });
-});
-
-describe('contact_integrity on a SYSTEM write (the seed replay)', () => {
-  it("scopes by the row's own organization stamp when no session carries one", async () => {
-    const written = await seedContact(JOHN, ORG_B);
-    expect(written.organization_id).toBe(ORG_B);
-  });
-
-  it('and still refuses a genuine duplicate within that stamped organization', async () => {
-    await expect(seedContact(JOHN, ORG_A)).rejects.toMatchObject(hookRefusal);
+    it('and still refuses a genuine duplicate within that stamped organization', async () => {
+      await expect(seedContact(JOHN, ORG_A)).rejects.toMatchObject(hookRefusal);
+    });
   });
 });
 

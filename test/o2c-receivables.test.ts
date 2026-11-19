@@ -4,6 +4,10 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { bootStack, type VerifyStack } from '@objectstack/verify';
 import { bootOptions, hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 import { COMPOSITION_ENV_VAR } from '../src/sales/data/index';
+import { pauseGate } from './helpers/multitenant-pause';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 type Rec = Record<string, any>;
 
@@ -196,7 +200,7 @@ describe('who reads them', () => {
  * the totals over `crm_user`'s rows: an administrator holding only
  * `tenant_admin` + `crm_user` reads them, and nothing is authored for it.
  */
-describe('the SaaS composition\'s administrator', () => {
+pause.describe("the SaaS composition's administrator", () => {
   let saas: VerifyStack | undefined;
 
   afterAll(() => saas?.stop());

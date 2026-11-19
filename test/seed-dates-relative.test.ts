@@ -2,6 +2,10 @@
 
 import { describe, it, expect } from 'vitest';
 import { CrmSeedData, SaasTenantSeedData } from '../objectstack.composition';
+import { pauseGate } from './helpers/multitenant-pause';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 /**
  * Every date the demo seeds is an offset from the moment the seed is written
@@ -47,23 +51,28 @@ const SETS: Record<string, Dataset[]> = {
   'the SaaS tenant composition (SaasTenantSeedData)': SaasTenantSeedData as unknown as Dataset[],
 };
 
+/** One composition's seed rows hold no literal date. */
+const holdsNoLiteralDate = (datasets: Dataset[]): void => {
+  expect(datasets.length, 'fixture: the composition seeds something').toBeGreaterThan(0);
+  const literals: string[] = [];
+  for (const d of datasets) {
+    d.records.forEach((r, i) => {
+      for (const [path, text] of strings(r, `${d.object}[${i}]`)) {
+        if (ISO_DATE_TEXT.test(text)) literals.push(`${path} = "${text}"`);
+      }
+    });
+  }
+  expect(
+    literals,
+    `these seed values are literal dates, so they read differently on every install day:\n  ${literals.join('\n  ')}\n`
+      + 'Write each one as a CEL expression the loader resolves at seed time (cel`daysAgo(n)`, cel`daysFromNow(n)`).',
+  ).toEqual([]);
+};
+
 describe('no seed row holds a literal date (#2431)', () => {
-  it.each(Object.entries(SETS))('%s', (_name, datasets) => {
-    expect(datasets.length, 'fixture: the composition seeds something').toBeGreaterThan(0);
-    const literals: string[] = [];
-    for (const d of datasets) {
-      d.records.forEach((r, i) => {
-        for (const [path, text] of strings(r, `${d.object}[${i}]`)) {
-          if (ISO_DATE_TEXT.test(text)) literals.push(`${path} = "${text}"`);
-        }
-      });
-    }
-    expect(
-      literals,
-      `these seed values are literal dates, so they read differently on every install day:\n  ${literals.join('\n  ')}\n`
-        + 'Write each one as a CEL expression the loader resolves at seed time (cel`daysAgo(n)`, cel`daysFromNow(n)`).',
-    ).toEqual([]);
-  });
+  // One case per composition, each by its name; the SaaS one is held by the
+  // #2700 pause.
+  for (const [name, datasets] of Object.entries(SETS)) pause.it(name, () => holdsNoLiteralDate(datasets));
 
   it('the dates the card names are expressions, row by row', () => {
     // The fields the #2431 browser pass read as frozen. A row may omit one

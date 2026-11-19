@@ -3,6 +3,10 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { hotcrmStack, signUpPerson, systemInsert, systemUpdate, predicateUpdate, type Person } from './helpers/verify-stack';
+import { pauseGate } from './helpers/multitenant-pause';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 /**
  * A forecast is titled by its period and its owner: "Q4 2026 · Nina Reyes"
@@ -193,7 +197,7 @@ describe('forecast_owner_rename: a renamed owner re-titles their forecasts (#243
 
   // Last in the file: a second organization makes every later system write
   // that names none ambiguous, the fixture's own grants included.
-  it("a forecast in an organization the user is not a member of keeps its name", async () => {
+  pause.it('a forecast in an organization the user is not a member of keeps its name', async () => {
     const rep = await person('Tom Hale');
     const home = await q4({ owner_id: rep.id });
     const [elsewhere] = await verify.seed('sys_organization', [{ name: `Elsewhere ${++k}`, slug: `elsewhere-${k}` }]);

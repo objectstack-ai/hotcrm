@@ -11,6 +11,10 @@ import { COMPOSITION_ENV_VAR, resolveComposition } from '../src/sales/data/index
 import { SystemAdminProfile } from '../src/sales/profiles/system-admin.profile';
 import { TenantAdminProfile } from '../src/sales/profiles/tenant-admin.profile';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
+import { pauseGate } from './helpers/multitenant-pause';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 /**
  * The SaaS / multi-org composition (#1361).
@@ -171,7 +175,7 @@ describe('the default composition is the community app, untouched', () => {
 
 // ───────────────────────────────────────────── the SaaS composition ──
 
-describe('HOTCRM_COMPOSITION=saas', () => {
+pause.describe('HOTCRM_COMPOSITION=saas', () => {
   let saas: AnyRec;
 
   beforeAll(async () => {
@@ -281,7 +285,7 @@ describe('HOTCRM_COMPOSITION=saas', () => {
 // ─────────────────────────────── the walled admin profile, against the ──
 // ─────────────────────────────── platform's OWN capability registry ──
 
-describe('tenant_admin is an ORG admin, judged by the platform capability registry', () => {
+pause.describe('tenant_admin is an ORG admin, judged by the platform capability registry', () => {
   const scopeOf = new Map(PLATFORM_CAPABILITIES.map((c) => [c.name, c.scope]));
 
   it('holds the org-scoped member-management capability', () => {
