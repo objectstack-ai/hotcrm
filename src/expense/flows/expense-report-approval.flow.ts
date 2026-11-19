@@ -19,9 +19,9 @@ type FlowEdge = Flow['edges'][number];
  * ## Two paths, never both
  *
  * A report on a project goes to the project's Project Manager
- * (`expense_report_project_approval`, `./expense-report-project-approval.flow.ts`).
- * This flow starts only when the report names no project, and that one only
- * when it does; the two entry conditions are exact complements, pinned by
+ * (`expense_report_project_approval`, Project Delivery's,
+ * `src/psa/flows/expense-report-project-approval.flow.ts`). This flow starts
+ * only when the report names no project, and that one only when it does; the two entry conditions are exact complements, pinned by
  * `test/expense-module.test.ts`. With Project Delivery disabled the project
  * field leaves the report, so every report comes here.
  *

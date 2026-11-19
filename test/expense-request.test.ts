@@ -342,10 +342,10 @@ describe('the start conditions open one request per submission (hotcrm#2578)', (
  * ═══ A travel request on a project goes to its Project Manager (hotcrm#2581, F3d) ═══
  *
  * Project Delivery contributes the request's Project field
- * (`src/psa/extensions/expense-project.extension.ts`); the project path,
- * `expense_request_project_approval`, sits in the expense module for the
- * platform gap objectstack#34616, as the expense's does
- * (`src/expense/flows/expense-request-project-approval.flow.ts`).
+ * (`src/psa/extensions/expense-project.extension.ts`) and owns the project
+ * path, `expense_request_project_approval`, as it owns the expense report's
+ * (`src/psa/flows/expense-request-project-approval.flow.ts`, moved back from
+ * the expense module by hotcrm#2575).
  */
 describe('Project Delivery contributes the request\'s project (hotcrm#2581)', () => {
   const extension = (): Rec => ((stackOf(PSA_ID).objectExtensions ?? []) as Rec[]).find((e) => e.extend === 'crm_expense_request')!;
@@ -370,7 +370,7 @@ describe('Project Delivery contributes the request\'s project (hotcrm#2581)', ()
   it('the project path is one tier, its Project Manager by expression, an administrator when there is none', () => {
     for (const name of ['expense_request_project_approval', 'expense_request_project_approval_on_create']) {
       const flow = flowNamed(name);
-      expect((stackOf(EXPENSE_ID).flows as Rec[]).map((f) => f.name), 'in the expense module until objectstack#34616').toContain(name);
+      expect((stackOf(PSA_ID).flows as Rec[]).map((f) => f.name), 'Project Delivery\'s own (hotcrm#2575)').toContain(name);
       const approvals = (flow.nodes as Rec[]).filter((n) => n.type === 'approval');
       expect(approvals.map((n) => n.id), name).toEqual(['approver_review']);
       expect(approvals[0]!.config).toMatchObject({

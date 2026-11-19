@@ -110,7 +110,7 @@ const SUBMIT_FOR_REIMBURSEMENT_SOURCE = `
  * **One report per project.** The expenses of each project go on a report of
  * their own, which names the project, and the rest on one report with no
  * project, so nobody splits a trip by hand and each project manager decides
- * only their project's spend (`../flows/expense-report-project-approval.flow.ts`).
+ * only their project's spend (`src/psa/flows/expense-report-project-approval.flow.ts`).
  * This package knows nothing of projects: the action groups by the
  * expense's `crm_project` value when the record carries one, which it does
  * only while Project Delivery contributes the field

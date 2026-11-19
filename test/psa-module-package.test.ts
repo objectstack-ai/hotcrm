@@ -76,13 +76,15 @@ describe('Project Delivery ships inside the HotCRM artifact (#2316)', () => {
     ]);
   });
 
-  it('it owns its approval and budget flows, the member rename follower (hotcrm#2568) and the budget notices\' templates (phase 1b)', () => {
+  it('it owns its approval and budget flows, the member rename follower (hotcrm#2568), the project path of expenses and travel requests (hotcrm#2575) and their notices\' templates (phase 1b)', () => {
     const stack = (packageStacks as AnyRec[]).find((s) => s.manifest?.id === PSA_ID)!;
     expect(((stack.flows ?? []) as AnyRec[]).map((f) => f.name).sort()).toEqual([
+      'expense_report_project_approval', 'expense_request_project_approval', 'expense_request_project_approval_on_create',
       'project_budget_alert', 'project_budget_approval',
       'project_initiation_approval', 'project_member_person_rename', 'timesheet_approval', 'timesheet_approval_on_create',
     ]);
     expect([...new Set(((stack.emailTemplates ?? []) as AnyRec[]).map((t) => t.name))].sort()).toEqual([
+      'crm.expense_report_project_locked', 'crm.expense_report_project_over',
       'crm.project_budget_exceeded', 'crm.project_budget_warning',
     ]);
   });
