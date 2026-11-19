@@ -29,7 +29,7 @@ import stack from './helpers/composed-stack';
  *      new child object (or a rule added/removed) has to update it knowingly;
  *   2. the admin docs — the prose that describes who sees what has to keep
  *      matching the metadata. The gap in #549 was reported as a *promise*
- *      problem: `content/docs/sales/contracts.mdx` told admins "contracts
+ *      problem: `content/docs/(product)/sales/contracts.mdx` told admins "contracts
  *      follow the account's sharing" while the metadata delivered own-only.
  *
  * `test/authorization-coverage.test.ts` (#488/#547) covers the object-grant
@@ -48,7 +48,7 @@ const owdOf = (name: string): string => objectByName.get(name)?.sharingModel ?? 
 const rulesOn = (name: string) => sharingRules.filter((r) => r.object === name);
 
 const DOC = (...segments: string[]) => readFileSync(join(REPO_ROOT, ...segments), 'utf8');
-const SHARING_DOC = 'content/docs/administration/sharing-and-security.mdx';
+const SHARING_DOC = 'content/docs/(operate)/administration/sharing-and-security.mdx';
 
 /**
  * Rows of the first markdown table after `heading`, as trimmed cell arrays.
@@ -363,9 +363,9 @@ describe('the admin docs describe the sharing the app actually ships', () => {
     // sharing" while `crm_contract` shipped private + own-only. Any doc making
     // that promise for a ledger'd own-only object is the same defect.
     const PAGES = [
-      ['content/docs/sales/contracts.mdx', 'crm_contract'],
-      ['content/docs/sales/quotes.mdx', 'crm_quote'],
-      ['content/docs/sales/activities.mdx', 'crm_task'],
+      ['content/docs/(product)/sales/contracts.mdx', 'crm_contract'],
+      ['content/docs/(product)/sales/quotes.mdx', 'crm_quote'],
+      ['content/docs/(product)/sales/activities.mdx', 'crm_task'],
     ] as const;
     const bad: string[] = [];
     for (const [page, name] of PAGES) {
@@ -451,7 +451,7 @@ describe('the admin docs describe the sharing the app actually ships', () => {
  *   1. Delete the new `Event` row from the zh-Hant page → predicted RED on that
  *      page's row rule only, naming `crm_event`; the count rule stays GREEN,
  *      because Event is not parent-derived. Measured, 1 failed | 28 passed:
- *      "crm_event: content/docs/administration/sharing-and-security.zh-Hant.mdx
+ *      "crm_event: content/docs/(operate)/administration/sharing-and-security.zh-Hant.mdx
  *      (zh-Hant) has no "活動" row".
  *   2. Put the `Competitor` row back on the English page → predicted RED on the
  *      ghost-row rule for that page only. This is the direction #710's guard
@@ -532,7 +532,7 @@ const PAGES: LocalePage[] = [
   },
   {
     locale: 'zh-Hans',
-    file: 'content/docs/administration/sharing-and-security.zh-Hans.mdx',
+    file: 'content/docs/(operate)/administration/sharing-and-security.zh-Hans.mdx',
     owdHeading: '## 第 1 层 —— 组织范围默认值',
     owdCell: {
       private: /^私有$/,
@@ -548,7 +548,7 @@ const PAGES: LocalePage[] = [
   },
   {
     locale: 'zh-Hant',
-    file: 'content/docs/administration/sharing-and-security.zh-Hant.mdx',
+    file: 'content/docs/(operate)/administration/sharing-and-security.zh-Hant.mdx',
     owdHeading: '## 第 1 層 —— 組織範圍預設值',
     owdCell: {
       private: /^私有$/,
@@ -1216,7 +1216,7 @@ describe('every locale states the parent-derived reach this release computes', (
  *      {@link bulletsAfter}, so a section that moved fails as a missing heading
  *      rather than as an empty list every rule passes over. Measured,
  *      2 failed | 34 passed, both "…"### 💼 Sales Representative" is gone from
- *      content/docs/administration/profiles.zh-Hans.mdx — this guard has gone
+ *      content/docs/(operate)/administration/profiles.zh-Hans.mdx — this guard has gone
  *      blind".
  *   5. Typo one name in {@link PARENT_DERIVED_IN_PROFILES}
  *      (`crm_quote_line_item` → `crm_quote_lineitem`) → predicted RED on the
@@ -1225,7 +1225,7 @@ describe('every locale states the parent-derived reach this release computes', (
  *      authored list to itself. Measured, 1 failed | 35 passed:
  *      "crm_quote_lineitem: not an object this app registers".
  */
-const PROFILE_DOC = 'content/docs/administration/profiles.mdx';
+const PROFILE_DOC = 'content/docs/(operate)/administration/profiles.mdx';
 
 /**
  * The objects the Sales Representative bullets claim a parent-derived reach for.
@@ -1268,7 +1268,7 @@ const PROFILE_PAGES: ProfilePage[] = [
   },
   {
     locale: 'zh-Hans',
-    file: 'content/docs/administration/profiles.zh-Hans.mdx',
+    file: 'content/docs/(operate)/administration/profiles.zh-Hans.mdx',
     repHeading: '### 💼 Sales Representative',
     contactReach: /代表能看到的那些客户下面的联系人 —— 自己的客户，加上区域规则或手工共享送到手上的每一个客户/,
     lineItemReach: /代表能看到的那些交易和报价的行项，别的都到不了/,
@@ -1279,7 +1279,7 @@ const PROFILE_PAGES: ProfilePage[] = [
   },
   {
     locale: 'zh-Hant',
-    file: 'content/docs/administration/profiles.zh-Hant.mdx',
+    file: 'content/docs/(operate)/administration/profiles.zh-Hant.mdx',
     repHeading: '### 💼 Sales Representative',
     contactReach: /代表能看到的那些客戶底下的聯絡人 —— 自己的客戶，加上區域規則或手動共用送到手上的每一個客戶/,
     lineItemReach: /代表能看到的那些交易和報價的明細，別的都到不了/,

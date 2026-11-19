@@ -7,6 +7,7 @@ import remarkMdx from 'remark-mdx';
 import remarkFrontmatter from 'remark-frontmatter';
 import { remarkHeading } from 'fumadocs-core/mdx-plugins';
 import { REPO_ROOT } from './repo-root';
+import { stripDocsGroups } from './docs-route';
 
 /**
  * The anchor half of a `content/docs` link, answered by the renderer itself.
@@ -129,13 +130,14 @@ const linksOf = (source: string): { href: string; line: number }[] => {
 
 interface PageIdentity {
   readonly locale: string;
-  /** Slug path under `/docs`, `''` for `content/docs/index.mdx`. */
+  /** Slug path under `/docs`, `''` for `content/docs/(start)/index.mdx`. */
   readonly slug: string;
 }
 
 /** The URL a `content/docs` file answers to, per `apps/docs/lib/source.ts`. */
 export const pageIdentity = (file: string): PageIdentity => {
-  let stem = file.replace(/\.mdx$/, '');
+  // A `(group)` section directory is not part of the URL (Fumadocs folder group).
+  let stem = stripDocsGroups(file.replace(/\.mdx$/, ''));
   let locale: string = DEFAULT_LOCALE;
   for (const candidate of LOCALES) {
     if (stem.endsWith(`.${candidate}`)) {

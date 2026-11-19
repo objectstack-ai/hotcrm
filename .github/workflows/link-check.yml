@@ -38,7 +38,7 @@ jobs:
           #    101 `.md` files here (README, AGENTS, CONTRIBUTING, docs/**,
           #    .changeset/**) would leave the scan to let the 204 `.mdx` in.
           #  - what it would let in is mostly noise. Run against a real page
-          #    (`content/docs/service/knowledge-base.mdx`) it saw 2 of that
+          #    (`content/docs/(product)/service/knowledge-base.mdx`) it saw 2 of that
           #    page's links and called BOTH dead with `Status: 400`: it has no
           #    base URL, so every site-absolute `/docs/…` link is a failure to
           #    it, and there are 965 of those under `content/docs`.

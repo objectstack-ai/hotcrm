@@ -143,7 +143,7 @@ const NOT_SERVICE_STAFF = P`!("crm_service_agent" in current_user.positions) && 
  * app, so `/_console/` opens the launcher (ruling Q2 B on #2417).
  *
  * Intentionally narrow. The app sells one story: "the CRM that rewrites
- * itself when your business changes," and `content/docs/whats-new.mdx`
+ * itself when your business changes," and `content/docs/(start)/whats-new.mdx`
  * promises a nav "a new user can find their way around in 30 seconds." Since
  * #2417 that holds per app: the three trees together carry the exemplars below,
  * and each app keeps one entry per destination.

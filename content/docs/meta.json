@@ -1,24 +1,9 @@
 {
   "title": "HotCRM Documentation",
   "pages": [
-    "index",
-    "getting-started",
-    "guides",
-    "---Product---",
-    "sales",
-    "service",
-    "marketing",
-    "order-to-cash",
-    "expenses",
-    "projects",
-    "---Intelligence---",
-    "ai-copilot",
-    "analytics",
-    "---Operate & Extend---",
-    "administration",
-    "developers",
-    "---Resources---",
-    "reference",
-    "whats-new"
+    "(start)",
+    "(product)",
+    "(intelligence)",
+    "(operate)"
   ]
 }

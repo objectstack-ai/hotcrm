@@ -17,7 +17,7 @@ type Rec = Record<string, any>;
  * `crm_contact.email` was platform-wide. It is not: the field-level
  * `unique: true` in `contact.object.ts` materializes as the tenant composite
  * `(organization_id, email)` (framework#3696), which is also what
- * `content/docs/sales/contacts.mdx` promises and what
+ * `content/docs/(product)/sales/contacts.mdx` promises and what
  * `docs-contact-email-uniqueness.test.ts` pins.
  *
  * On the deployment shape where many organizations share one database, the

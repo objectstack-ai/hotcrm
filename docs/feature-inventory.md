@@ -104,7 +104,7 @@
 | OPP-013 | 停滞商机日扫描 | 每日 07:30 扫描阶段停留 >14 天的开放商机:通知 owner 并幂等创建 +2 天跟进任务 | `src/sales/flows/opportunity-stagnation.flow.ts` |
 | OPP-014 | 大单赢单告警 | 金额 ≥$100K 的商机赢单时通知 owner(防重发) | `src/sales/flows/opportunity-won-alert.flow.ts` |
 | OPP-015 | 私密商机 | `is_private` 标记的交易经 RLS 仅对 owner 可见,即使读方持全组织读权限 | `src/sales/profiles/sales-manager.profile.ts`、`src/sales/profiles/marketing-user.profile.ts`(RLS) |
-| OPP-016 | 商机详情页 | 平台默认记录页(#2382),只覆盖 alerts 槽:两条审批提示;产品明细为正文表格(`relatedList: 'primary'`),相关列含报价/未完成任务;参考栏已删除 | `src/sales/pages/opportunity_detail.page.ts` |
+| OPP-016 | 商机详情页 | 平台默认记录页,不再有自写页(#2382;两条审批提示按 #2686 删除,送审中的大单由平台原生审批栏与审批卡片说明当前步骤、在等谁、批准/驳回或撤回);产品明细为正文表格(`relatedList: 'primary'`),相关列含报价/未完成任务;参考栏已删除 | `src/sales/objects/opportunity.object.ts`(`highlightFields`、`fieldGroups`)、`src/sales/flows/opportunity-approval.flow.ts` |
 | OPP-017 | 商机分析 | `opportunity_metrics` 数据集(win_rate 派生比率、跨对象行业维度)+ 阶段/按人赢单/管道覆盖矩阵/漏斗 4 个报表 | `src/sales/datasets/opportunity.dataset.ts` + `src/sales/reports/opportunity.report.ts` |
 
 ## QUO — 报价(CPQ 与产品目录)

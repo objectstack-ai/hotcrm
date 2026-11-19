@@ -24,7 +24,7 @@ import { CrmApp } from '../src/sales/apps/crm.app';
  *     them as empty columns or omits them is the renderer's choice — it lives
  *     outside this repo and no browser measurement was taken — so the page now
  *     states what the metadata proves (five active stages, open deals only, the
- *     conservative shape `content/docs/sales/opportunities.mdx` already uses)
+ *     conservative shape `content/docs/(product)/sales/opportunities.mdx` already uses)
  *     and says plainly that the drawn count is the console's call. What is
  *     pinned here is therefore the FIVE, not a rendered column count.
  *  2. **"Owner avatar"** as the fifth card field. Cards are bound by
@@ -35,7 +35,7 @@ import { CrmApp } from '../src/sales/apps/crm.app';
  *     deleting it.
  *  3. **"The system enforces the stage rules, so you can't drag …"**
  *     `opportunity_stage_progression` is `severity: 'warning'`, so the illegal
- *     move is logged and **saved**. `content/docs/administration/state-machines`
+ *     move is logged and **saved**. `content/docs/(operate)/administration/state-machines`
  *     had said exactly that — naming this very transition — since #919/#950;
  *     the two pages contradicted each other and this was the one that was
  *     wrong. Its wording now matches, phrase for phrase.
@@ -104,7 +104,7 @@ const ZH_BOARD_LABEL = ZH_CN?.objects?.crm_opportunity?._views?.pipeline_kanban?
 
 const PAGES = [
   {
-    file: 'content/docs/sales/pipeline-management.mdx',
+    file: 'content/docs/(product)/sales/pipeline-management.mdx',
     lang: 'en',
     heading: '## The pipeline kanban view',
     cadence: '## Recommended pipeline cadence',
@@ -129,7 +129,7 @@ const PAGES = [
     pageWideRetired: ['Pipeline Kanban'],
   },
   {
-    file: 'content/docs/sales/pipeline-management.zh-Hans.mdx',
+    file: 'content/docs/(product)/sales/pipeline-management.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 销售管道看板视图',
     cadence: '## 推荐的销售管道节奏',
@@ -141,7 +141,7 @@ const PAGES = [
     pageWideRetired: [],
   },
   {
-    file: 'content/docs/sales/pipeline-management.zh-Hant.mdx',
+    file: 'content/docs/(product)/sales/pipeline-management.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 銷售管道看板視圖',
     cadence: '## 推薦的銷售管道節奏',
@@ -279,7 +279,7 @@ describe('the source facts those three claims now rest on (#996)', () => {
 
   it('governs the stage with a warning, not an error', () => {
     // An `error` here would make "advice, not a gate" wrong on this page and on
-    // content/docs/administration/state-machines — change both, or neither.
+    // content/docs/(operate)/administration/state-machines — change both, or neither.
     expect(STAGE_MACHINE.severity).toBe('warning');
     expect(STAGE_MACHINE.field).toBe('stage');
   });

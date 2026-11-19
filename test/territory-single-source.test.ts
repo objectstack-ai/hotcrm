@@ -67,16 +67,16 @@ const DOC = (relative: string) => readFileSync(join(REPO_ROOT, relative), 'utf8'
 
 /** The account-facing docs that carry the country table, one per language. */
 const COUNTRY_TABLE_DOCS = [
-  'content/docs/sales/accounts.mdx',
-  'content/docs/sales/accounts.zh-Hans.mdx',
-  'content/docs/sales/accounts.zh-Hant.mdx',
+  'content/docs/(product)/sales/accounts.mdx',
+  'content/docs/(product)/sales/accounts.zh-Hans.mdx',
+  'content/docs/(product)/sales/accounts.zh-Hant.mdx',
 ];
 
 /** The admin-facing docs that carry the sharing-rule table, one per language. */
 const RULE_TABLE_DOCS = [
-  'content/docs/administration/sharing-and-security.mdx',
-  'content/docs/administration/sharing-and-security.zh-Hans.mdx',
-  'content/docs/administration/sharing-and-security.zh-Hant.mdx',
+  'content/docs/(operate)/administration/sharing-and-security.mdx',
+  'content/docs/(operate)/administration/sharing-and-security.zh-Hans.mdx',
+  'content/docs/(operate)/administration/sharing-and-security.zh-Hant.mdx',
 ];
 
 /** `` `A`, `B`, `C` `` — how both doc tables render a list of country strings. */

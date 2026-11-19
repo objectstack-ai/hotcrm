@@ -18,7 +18,7 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, committedFile,
  * line to an accepted quote (`insert` answered with the new row), the quote kept
  * its accepted subtotal, and its lines no longer summed to it. The quote doc
  * says the opposite: "From then on the quote is frozen"
- * (`content/docs/sales/quotes.mdx`, *Recording the customer's answer*).
+ * (`content/docs/(product)/sales/quotes.mdx`, *Recording the customer's answer*).
  *
  * ### The boundary pinned here, both directions
  *

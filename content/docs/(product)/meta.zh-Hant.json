@@ -1,0 +1,14 @@
+{
+  "title": "產品指南",
+  "description": "銷售、服務、營銷、訂單與回款、費用報銷、項目交付",
+  "root": true,
+  "icon": "LayoutGrid",
+  "pages": [
+    "sales",
+    "service",
+    "marketing",
+    "order-to-cash",
+    "expenses",
+    "projects"
+  ]
+}

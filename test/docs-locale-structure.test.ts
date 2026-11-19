@@ -341,7 +341,7 @@ describe('the structure comparison itself', () => {
 
   it('pairs exactly as the #2609 gate does, README excluded', () => {
     const pages = englishPages();
-    expect(pages).toContain('content/docs/sales/leads.mdx');
+    expect(pages).toContain('content/docs/(product)/sales/leads.mdx');
     expect(pages).toContain('src/docs/crm_sales_activities.md');
     expect(pages.some((p) => p.endsWith('.zh-Hans.mdx') || p.endsWith('.zh.md'))).toBe(false);
     expect(pages).not.toContain('README.md');

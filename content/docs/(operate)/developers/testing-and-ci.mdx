@@ -1,28 +1,28 @@
 ---
-title: 测试与 CI
-description: HotCRM 定制化的单元、集成与端到端测试 —— 以及 CI 模式和一个示例 GitHub Actions 工作流。
+title: Testing & CI
+description: Unit, integration, and end-to-end tests for HotCRM customizations — plus CI patterns and a sample GitHub Actions workflow.
 ---
 
-# 测试与 CI
+# Testing & CI
 
-如何在发布之前自信地测试你的 HotCRM 定制化。
+How to test your HotCRM customisations confidently before shipping.
 
-## 测试什么
+## What to test
 
-| 层 | 测试类型 | 工具 |
+| Layer | Test type | Tool |
 | --- | --- | --- |
-| 对象元数据 | Schema 校验 | `@objectstack/spec` schema + `vitest` |
-| 钩子逻辑 | 单元测试 | `vitest` |
-| 流程 | 集成测试 | `@objectstack/runtime/testing` |
-| AI 技能 | 快照 + 集成 | `@objectstack/runtime/ai/testing` |
-| 验证规则 | 单元测试 | `vitest` |
-| 共享规则 | 集成测试（多用户） | `@objectstack/runtime/testing` |
-| UI 页面 / 仪表板 | Schema 校验 + 可视化 | `@objectstack/spec` + Playwright |
-| 端到端用户流程 | E2E | Playwright |
+| Object metadata | Schema validation | `@objectstack/spec` schemas + `vitest` |
+| Hook logic | Unit test | `vitest` |
+| Flows | Integration test | `@objectstack/runtime/testing` |
+| AI skills | Snapshot + integration | `@objectstack/runtime/ai/testing` |
+| Validation rules | Unit test | `vitest` |
+| Sharing rules | Integration test (multi-user) | `@objectstack/runtime/testing` |
+| UI pages / dashboards | Schema validation + visual | `@objectstack/spec` + Playwright |
+| End-to-end user flows | E2E | Playwright |
 
-## 1. Schema 校验测试
+## 1. Schema validation tests
 
-每个元数据文件都应能通过其 spec schema 的校验。添加一个遍历所有文件的单一测试：
+Every metadata file should validate against its spec schema. Add a single test that walks all files:
 
 ```ts
 // test/metadata-references.test.ts
@@ -31,24 +31,24 @@ import { ObjectSchema } from '@objectstack/spec/data';
 import { PageSchema, ViewSchema, DashboardSchema } from '@objectstack/spec/ui';
 import { StateMachineSchema } from '@objectstack/spec/automation';
 import opportunityObj from '../src/sales/objects/opportunity.object';
-import opportunityPage from '../src/sales/pages/opportunity_detail.page';
+import { LeadDetailPage } from '../src/sales/pages/lead_detail.page';
 
 describe('metadata schemas', () => {
   it('opportunity object', () => {
     expect(() => ObjectSchema.create(opportunityObj)).not.toThrow();
   });
 
-  it('opportunity page', () => {
-    expect(() => PageSchema.parse(opportunityPage)).not.toThrow();
+  it('lead page', () => {
+    expect(() => PageSchema.parse(LeadDetailPage)).not.toThrow();
   });
 });
 ```
 
-这些测试在毫秒级运行，并能在 CI 阶段捕捉大多数元数据缺陷。
+These run in milliseconds and catch most metadata bugs at CI time.
 
-## 2. 钩子单元测试
+## 2. Hook unit tests
 
-下面的示例测试的是一个假想的 `opportunity_territory` 钩子（你可能会自己添加的定制）——请替换成你自己的钩子。（针对内置钩子的真实可运行示例，见 `test/hooks-runtime.test.ts`。）
+The example below tests a hypothetical `opportunity_territory` hook you might add — swap in your own. (For real, runnable examples against the shipped hooks, see `test/hooks-runtime.test.ts`.)
 
 ```ts
 // test/opportunity_territory.hook.test.ts
@@ -71,11 +71,11 @@ it('assigns territory from account region', async () => {
 });
 ```
 
-提示：钩子处理器应当是 **（record, context, broker）的纯函数** —— 便于单元测试。
+Tip: hook handlers should be **pure functions of (record, context, broker)** — easy to unit test.
 
-## 3. 流程 / 自动化测试
+## 3. Flow / automation tests
 
-使用运行时的测试套件来演练多步骤流程：
+Use the runtime's test harness to exercise multi-step flows:
 
 ```ts
 // test/contract_renewal.flow.test.ts
@@ -101,11 +101,11 @@ it('creates a renewal task when contract enters renewal window', async () => {
 });
 ```
 
-`createTestRuntime` 会启动一个加载了你 package 的内存租户 —— 快速、隔离、确定性。
+The `createTestRuntime` spins up an in-memory tenant with your packages loaded — fast, isolated, deterministic.
 
-## 4. AI 技能测试
+## 4. AI skill tests
 
-当你对 LLM 进行 mock 时，技能是确定性的。示例测试的是一个假想的 `renewal-pitch` 技能（内置技能位于 `src/sales/skills/` 与 `src/service/skills/`）：
+Skills are deterministic when you mock the LLM. The example tests a hypothetical `renewal-pitch` skill (the shipped skills live in `src/sales/skills/` and `src/service/skills/`):
 
 ```ts
 // test/renewal-pitch.skill.test.ts
@@ -132,11 +132,11 @@ it('snapshot of prompt for renewal pitch', async () => {
 });
 ```
 
-为渲染后的提示拍快照 —— 当你调整模板时，你会确切看到改变了什么。
+Snapshot the rendered prompt — if you tune the template, you see exactly what changed.
 
-对于使用真实 LLM 的端到端集成测试，请使用 **专用的测试租户** 并搭配一个小型免费层模型，以控制成本。
+For end-to-end integration tests with a real LLM, use a **dedicated test tenant** with a small free-tier model to keep cost down.
 
-## 5. 共享规则测试
+## 5. Sharing rule tests
 
 ```ts
 import { createTestRuntime } from '@objectstack/runtime/testing';
@@ -160,11 +160,11 @@ it('AMER reps cannot see EMEA accounts', async () => {
 });
 ```
 
-## 6. 使用 Playwright 进行端到端测试
+## 6. End-to-end with Playwright
 
 ```ts
-// e2e/lead-conversion.spec.ts — 示例用例，可在内置的 e2e/smoke.spec.ts
-// 与 e2e/opportunity-lifecycle.spec.ts 旁新增
+// e2e/lead-conversion.spec.ts — an example spec to add alongside the shipped
+// e2e/smoke.spec.ts and e2e/opportunity-lifecycle.spec.ts
 import { test, expect } from '@playwright/test';
 
 test('rep can convert a qualified lead to an opportunity', async ({ page }) => {
@@ -187,9 +187,9 @@ test('rep can convert a qualified lead to an opportunity', async ({ page }) => {
 });
 ```
 
-用 `pnpm test:e2e` 运行。
+Run with `pnpm test:e2e`.
 
-## CI：GitHub Actions 示例
+## CI: GitHub Actions example
 
 ```yaml
 # .github/workflows/ci.yaml
@@ -234,34 +234,34 @@ jobs:
       - run: pnpm deploy --tenant=sandbox-uat --token=${{ secrets.HOTCRM_DEPLOY_TOKEN }}
 ```
 
-## 测试数据
+## Test data
 
-不要手写种子数据 —— 使用运行时的种子构建器：
+Don't hand-write seed data — use the runtime's seed builders:
 
 ```ts
 await rt.seed.account({ region: 'amer' });           // sensible defaults
 await rt.seed.opportunity({ stage: 'negotiation' }); // links to a fresh account
 ```
 
-对于较大的测试，请使用 **工厂**：
+For larger tests, use **factories**:
 
 ```ts
 const accounts = await rt.seed.accountFactory(50, { tier: 'platinum' });
 ```
 
-## 覆盖率目标
+## Coverage targets
 
-- **钩子** —— 90%+ 分支覆盖率。
-- **流程** —— 每个决策中的每条路径。
-- **验证规则** —— 通过和失败两种情形。
-- **共享规则** —— 每条规则至少一个正向和一个负向用例。
-- **AI 技能** —— 对提示做快照测试；每周对输出进行抽样的集成测试。
+- **Hooks** — 90%+ branch coverage.
+- **Flows** — every path through every decision.
+- **Validation rules** — both pass and fail cases.
+- **Sharing rules** — at least one positive and one negative case per rule.
+- **AI skills** — snapshot tests for prompts; integration tests sampling outputs weekly.
 
-## 提示
+## Tips
 
-- ✅ **CI 中的 Schema 校验** 能捕捉 80% 的元数据缺陷。
-- ✅ **对 AI 提示拍快照** —— 微小的提示变更会明显改变输出。
-- ✅ **双向测试共享** —— 用户能看到什么 + 不能看到什么。
-- ✅ 在 CI 中使用 **确定性的 LLM mock**；真实 LLM 测试在单独的工作流中每晚运行。
-- ✅ 让 E2E 测试少而 **关键** —— 覆盖登录、线索转化、成交、工单解决。
-- ✅ **在每次推广到 UAT 之前** 运行完整套件 —— 绝不部署一个失败的构建。
+- ✅ **Schema validation in CI** catches 80% of metadata bugs.
+- ✅ **Snapshot AI prompts** — tiny prompt changes shift outputs noticeably.
+- ✅ **Test sharing both ways** — what users CAN see + what they CANNOT.
+- ✅ Use **deterministic LLM mocks** in CI; live LLM tests run nightly on a separate workflow.
+- ✅ Keep E2E tests few but **critical** — cover login, lead conversion, deal close, case resolution.
+- ✅ Run the full suite **before every promotion to UAT** — never deploy a red build.

@@ -518,14 +518,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         lead_duplicate_alert_suspected: { label: '疑似重复提醒' },
       },
     },
-    opportunity_detail_page: {
-      label: '商机详情',
-      description: '商机记录页：平台合成的默认布局，告警槽位中是审批提示。',
-      components: {
-        opp_approval_pending_manager: { label: '等待销售经理审批' },
-        opp_approval_pending_director: { label: '等待销售经理和销售总监审批' },
-      },
-    },
     sales_home_page: {
       label: '销售主页',
       description: '销售团队主页，汇总关键指标、我的待办工作与即将到来的活动',

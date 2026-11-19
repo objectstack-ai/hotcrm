@@ -147,14 +147,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         lead_duplicate_alert_suspected: { label: 'Suspected Duplicate Alert' },
       },
     },
-    opportunity_detail_page: {
-      label: 'Opportunity Detail',
-      description: 'The opportunity record page: the synthesized layout, with the approval banners in the alerts slot.',
-      components: {
-        opp_approval_pending_manager: { label: 'Waiting on Sales Manager Approval' },
-        opp_approval_pending_director: { label: 'Waiting on Sales Manager and Sales Director Approval' },
-      },
-    },
     sales_home_page: {
       label: 'Sales Home',
       description: 'Sales team home page with key metrics, my open work and upcoming events',

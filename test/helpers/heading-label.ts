@@ -42,9 +42,9 @@ export const EXPLICIT_ID = /\s*\[#(?<slug>[^]+?)]\s*$/;
  * Measured on `origin/main` @ `bd61468a`, before this change:
  *
  * ```
- * content/docs/analytics/dashboards.zh-Hans.mdx | headings: 9 | resolve to "": 4
+ * content/docs/(intelligence)/analytics/dashboards.zh-Hans.mdx | headings: 9 | resolve to "": 4
  *   -> ["五个仪表盘","你可以改什么","数字是从哪里来的","提示"]
- * content/docs/analytics/dashboards.zh-Hant.mdx | headings: 9 | resolve to "": 4
+ * content/docs/(intelligence)/analytics/dashboards.zh-Hant.mdx | headings: 9 | resolve to "": 4
  *   -> ["五個儀表板","你可以改什麼","數字是從哪裡來的","提示"]
  * ```
  *
@@ -93,13 +93,13 @@ export const LEADING_ORNAMENT =
  * `## 📈 Sales Performance [#sales-performance]` matches it too (#935).
  *
  * The id half is not cosmetic. Every section heading on the three
- * `content/docs/analytics/dashboards*.mdx` pages opens with an emoji, so
+ * `content/docs/(intelligence)/analytics/dashboards*.mdx` pages opens with an emoji, so
  * `github-slugger` gives them all a leading-hyphen slug (`-sales-performance`)
  * and the one clean way to write a stable anchor at such a section is an
  * explicit id. Stripping only *leading* non-letters rejected exactly that: the
  * coverage guard reported
  *
- *     content/docs/analytics/dashboards.mdx has no section for: Sales Performance.
+ *     content/docs/(intelligence)/analytics/dashboards.mdx has no section for: Sales Performance.
  *
  * about a page whose `## 📈 Sales Performance [#sales-performance]` section was
  * sitting right there. The message names the heading TEXT, so the next reader

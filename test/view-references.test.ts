@@ -317,8 +317,10 @@ describe('every canonical opportunity stage reaches the UI that enumerates stage
     // statusField would otherwise silently empty this list and turn the
     // assertion below into a no-op — exactly how the navigation guard in
     // `test/action-references.test.ts` spent its life passing.
-    const dealPage = pages.find((p) => p.name === 'opportunity_detail_page');
-    const defaultStrip = dealPage?.kind === 'slotted' && !('highlights' in (dealPage.slots ?? {}));
+    // Since #2686 the deal authors no record page at all, which is the
+    // default strip too; a page brought back must leave the strip alone.
+    const dealPages = pages.filter((p) => p.type === 'record' && p.object === 'crm_opportunity');
+    const defaultStrip = dealPages.every((p) => p.kind === 'slotted' && !('highlights' in (p.slots ?? {})));
     const objDef = objects.find((o) => o.name === 'crm_opportunity');
     expect(
       sites.length > 0 || (defaultStrip && (objDef?.stageField ?? 'stage') === 'stage' && objDef?.fields?.status === undefined),

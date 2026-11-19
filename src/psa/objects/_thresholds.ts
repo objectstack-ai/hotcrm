@@ -4,7 +4,7 @@
  * Project Delivery's cost-control lines, authored ONCE (#2316 phase 1b).
  *
  * Each has more than one consumer: a flow's entry or tier gate, the hook that
- * keeps `budget_status`, the user docs under `content/docs/projects/` and the
+ * keeps `budget_status`, the user docs under `content/docs/(product)/projects/` and the
  * tests. Every flow and the hook interpolate the constant; a hook body cannot
  * import (it runs body-only), so `project.hook.ts` repeats the two budget
  * lines and `test/psa-approvals.test.ts` holds its copy equal to these.

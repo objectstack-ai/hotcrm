@@ -179,17 +179,24 @@ describe('the status bars move a record by a click (#2542)', () => {
   // which turns click-to-advance on for every object (objectstack#30075,
   // ruled A) and draws it on the object's stage field. So the pin is that no
   // page overrides the strip (no `highlights` slot, no authored `record:path`)
-  // and that the stage field is the one the path is drawn on.
+  // and that the stage field is the one the path is drawn on. Since #2686 the
+  // opportunity authors no record page at all (its approval banners were
+  // dropped), which leaves the default strip in place by construction; the
+  // pin there is that no record page for the deal comes back.
   it.each([
     ['lead_detail_page', 'crm_lead', 'status'],
-    ['opportunity_detail_page', 'crm_opportunity', 'stage'],
+    [null, 'crm_opportunity', 'stage'],
     ['case_detail_page', 'crm_case', 'status'],
-  ])('%s: the default path on %s.%s allows a stage click', (pageName, object, field) => {
-    const page = pages.find((p) => p.name === pageName);
-    expect(page, `${pageName} is not registered`).toBeTruthy();
-    expect(page!.kind).toBe('slotted');
-    expect(Object.keys(page!.slots ?? {}), `${pageName} overrides a slot beyond alerts`).toEqual(['alerts']);
-    expect([...walk(page!.slots)].filter((c: AnyRec) => c.type === 'record:path')).toEqual([]);
+  ] as Array<[string | null, string, string]>)('%s: the default path on %s.%s allows a stage click', (pageName, object, field) => {
+    if (pageName === null) {
+      expect(pages.filter((p) => p.type === 'record' && p.object === object).map((p) => p.name), `${object} authors a record page`).toEqual([]);
+    } else {
+      const page = pages.find((p) => p.name === pageName);
+      expect(page, `${pageName} is not registered`).toBeTruthy();
+      expect(page!.kind).toBe('slotted');
+      expect(Object.keys(page!.slots ?? {}), `${pageName} overrides a slot beyond alerts`).toEqual(['alerts']);
+      expect([...walk(page!.slots)].filter((c: AnyRec) => c.type === 'record:path')).toEqual([]);
+    }
     const def = objects.find((o) => o.name === object)!;
     expect(def.stageField ?? field).toBe(field);
     expect(def.fields?.[field]?.type, `${object}.${field} is not a select`).toBe('select');

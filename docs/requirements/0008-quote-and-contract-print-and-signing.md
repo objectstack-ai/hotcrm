@@ -71,7 +71,7 @@ too; the standard product ships one print page per object.
   `signed_date` when empty and is the gate the activation transition reads (`requiredWhen` on
   `status = activated`, Metadata semantics rule 7: a transition gate, not an invariant). On
   `crm_quote`, uploading a signed copy is what `accepted` requires the same way.
-- **Docs** under `content/docs/revenue/` (quote) and `content/docs/sales/` (contract), English
+- **Docs** under `content/docs/revenue/` (quote) and `content/docs/(product)/sales/` (contract), English
   first, then `.zh-Hans.mdx` and `.zh-Hant.mdx`, under *Documentation discipline*; the four locale
   packs carry the new action, field and page labels.
 - **Platform readings before phase 1 starts** (filed upstream if any refuses, ⛔ never worked

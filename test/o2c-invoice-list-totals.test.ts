@@ -34,9 +34,9 @@ describe('the All Invoices grid totals no cancelled figure', () => {
 
 describe('the import guide warns that a repeated step name fails the row', () => {
   const pages: [string, RegExp][] = [
-    ['content/docs/order-to-cash/invoices-and-payments.mdx', /more than one contract fails the row[\s\S]*record ID/],
-    ['content/docs/order-to-cash/invoices-and-payments.zh-Hans.mdx', /同名节点时，该行导入失败[\s\S]*记录 ID/],
-    ['content/docs/order-to-cash/invoices-and-payments.zh-Hant.mdx', /同名節點時，該行匯入失敗[\s\S]*紀錄 ID/],
+    ['content/docs/(product)/order-to-cash/invoices-and-payments.mdx', /more than one contract fails the row[\s\S]*record ID/],
+    ['content/docs/(product)/order-to-cash/invoices-and-payments.zh-Hans.mdx', /同名节点时，该行导入失败[\s\S]*记录 ID/],
+    ['content/docs/(product)/order-to-cash/invoices-and-payments.zh-Hant.mdx', /同名節點時，該行匯入失敗[\s\S]*紀錄 ID/],
     ['src/o2c/docs/crm_o2c_invoices_payments.md', /more than one contract fails the row[\s\S]*record ID/],
     ['src/o2c/docs/crm_o2c_invoices_payments.zh.md', /同名节点时，该行导入失败[\s\S]*记录 ID/],
   ];
