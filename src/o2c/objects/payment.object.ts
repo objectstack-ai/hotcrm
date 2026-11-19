@@ -61,6 +61,11 @@ export const Payment = ObjectSchema.create({
     crm_contract: Field.lookup('crm_contract', {
       label: 'Contract',
       group: 'basic',
+      // Declared, not left implicit: through 6.5.0 this column was the
+      // required master and NOT NULL, and an upgrade relaxes it only where the
+      // package says it is nullable (a managed upgrade's
+      // `relaxInstallDeclaredNotNull`; hotcrm#2557, ruling A on #2583).
+      storage: { notNull: false },
       deleteBehavior: 'restrict',
       lookupAutofill: [{ target: 'crm_account', source: 'crm_account', overwrite: true }],
       relatedListColumns: ['payment_number', 'payment_date', 'amount', 'method', 'crm_invoice', 'crm_billing_milestone'],
