@@ -563,7 +563,8 @@ export const LeadViews = defineView({
         provider: 'object',
         object: 'crm_lead',
       },
-      columns: ['first_name', 'last_name', 'company'],
+      // The name as one field (#2685), as every other lead list writes it.
+      columns: ['full_name', 'company'],
       calendar: {
         startDateField: 'next_followup_date',
         titleField: 'company',

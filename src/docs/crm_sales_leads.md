@@ -90,7 +90,12 @@ and notifications show. When the last name (the family name) is written in
 Chinese, Japanese or Korean script, the family name comes first with no space:
 last name 张 and first name 伟 read **张伟**. Any other name reads first name,
 space, last name — *Ada Lovelace*. The rule follows the name, not the language
-you use the app in, so everyone sees the same name.
+you use the app in, so everyone sees the same name. It is also the name
+conversion compares: a contact and a lead with the same
+email address and the same full name are the same person, however the name was
+split between the two fields — last name 欧阳 and first name 娜娜 is the same
+name as last name 欧 and first name 阳娜娜, so conversion does not ask you to
+confirm joining them.
 
 ## Converting a qualified lead
 

@@ -17,8 +17,11 @@ export const ContactViews = defineView({
     data: { provider: 'object', object: 'crm_contact' },
     columns: [
       { field: 'avatar', width: 64, align: 'center' },
-      { field: 'first_name', width: 140, sortable: true, link: true },
-      { field: 'last_name', width: 140, sortable: true },
+      // One name column, the stored `full_name` (#2685), as on the lead grid.
+      // Two columns hung the record link off the given name alone, so a
+      // contact whose given name is empty had nothing to click, and a
+      // Chinese name read 「伟 | 张」 across two cells instead of 「张伟」.
+      { field: 'full_name', width: 200, sortable: true, link: true },
       { field: 'crm_account', width: 200 },
       { field: 'title', width: 180 },
       { field: 'department', width: 140 },
@@ -34,7 +37,7 @@ export const ContactViews = defineView({
       { field: 'phone', width: 150 },
       { field: 'owner_id', width: 150 },
     ],
-    sort: [{ field: 'last_name', order: 'asc' }],
+    sort: [{ field: 'full_name', order: 'asc' }],
     // Groups start OPEN (#2290). Collapsed groups left the landing screen with
     // account headers and not one contact row: an org with one or two
     // contacts per account (the demo seed has one) had to expand every group
@@ -63,13 +66,16 @@ export const ContactViews = defineView({
       type: 'gallery',
       label: 'People Directory',
       data: { provider: 'object', object: 'crm_contact' },
-      columns: ['first_name', 'last_name', 'title', 'email'],
+      // A card is titled by the whole name (#2685): titled by the family name
+      // with the given name printed beneath it, a card split one person over
+      // two lines and was untitled when the family name was empty.
+      columns: ['full_name', 'title', 'email'],
       gallery: {
         coverField: 'avatar',
         coverFit: 'cover',
         cardSize: 'small',
-        titleField: 'last_name',
-        visibleFields: ['first_name', 'title', 'department', 'email', 'phone', 'crm_account'],
+        titleField: 'full_name',
+        visibleFields: ['title', 'department', 'email', 'phone', 'crm_account'],
       },
     },
 
@@ -79,7 +85,7 @@ export const ContactViews = defineView({
       label: 'Primary Contacts',
       userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_contact' },
-      columns: ['first_name', 'last_name', 'crm_account', 'title', 'email', 'phone'],
+      columns: ['full_name', 'crm_account', 'title', 'email', 'phone'],
       filter: [{ field: 'is_primary', operator: 'equals', value: true }],
       sort: [{ field: 'crm_account', order: 'asc' }],
     },

@@ -198,10 +198,13 @@ export const CampaignLeadMemberEnrollFlow: Flow = {
     { id: 'check_lead_opted_in', type: 'decision', label: 'Opted In?' },
     {
       // Translated as `refusals.refuse_lead_opted_out.message` in the packs.
+      // The lead by its `full_name` (#2685), the formula `get_lead` reads back
+      // with the row: composed as `first_name last_name`, a lead entered as
+      // 姓「张」名「伟」 was refused as 「伟 张」.
       id: 'refuse_lead_opted_out', type: 'end', label: 'Lead Opted Out',
       config: {
         outcome: 'refused',
-        message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} has opted out of email, so the lead was not added to the campaign.',
+        message: '{{ leadRecord.full_name }} has opted out of email, so the lead was not added to the campaign.',
       },
     },
     {
