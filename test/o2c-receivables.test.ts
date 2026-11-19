@@ -153,7 +153,8 @@ describe('who reads them', () => {
 
   it('a member who reads the account but not the contract reads it without the totals, and no invoice (ruling C)', async () => {
     await verify.hooks.run('crm_account', 'update', { id: account.id, owner_id: member.id }, { as: admin });
-    expect(num((await row('crm_account', account.id)).receivable_balance), 'fixture: the account has a balance').toBeGreaterThan(0);
+    const full = await row('crm_account', account.id);
+    for (const f of TOTALS) expect(full, `fixture: an administrator reads ${f}`).toHaveProperty(f);
     const a = await row('crm_account', account.id, member.token);
     expect(a, 'the member reads the account they own').toBeTruthy();
     expect(a.name).toBeTruthy();
