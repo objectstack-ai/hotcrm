@@ -133,8 +133,7 @@ export const LeadDetailPage: Page = {
       //
       // `title` / `body` carry inline locale maps rather than plain strings:
       // this renderer resolves both through `pickLocalized(…, language)`
-      // (the same capability `opportunity_detail.page.ts` records under
-      // #972), and `body` has no other channel — the i18n extractor's
+      // (the capability recorded under #972), and `body` has no other channel — the i18n extractor's
       // per-component copy keys (`PAGE_COMPONENT_COPY_KEYS`, read on 17.6.0)
       // are title/description/label/placeholder/emptyText, so a plain-string
       // `body` would ship English to all four locales. Keeping both halves of one banner's copy in one
