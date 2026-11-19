@@ -12,20 +12,20 @@ export const esES: TranslationData = {
     timesheet_stamps: {
       refusals: {
         RECORD_LOCKED: {
-          message: 'Esta hoja de horas no se puede cambiar ahora en este proyecto.',
+          message: 'Este parte de horas no se puede cambiar ahora en este proyecto.',
           reasons: {
-            project_locked: { message: '{{project}} está bloqueado para horas y gastos, así que esta hoja de horas no se puede enviar. Guárdela como borrador o pida al jefe de proyecto que desmarque Bloquear horas y gastos en el proyecto.' },
-            closed_takes_no_new: { message: '{{project}} está cerrado, así que no admite hojas de horas nuevas. Registre las horas en un proyecto abierto.' },
-            cancelled_takes_no_new: { message: '{{project}} está cancelado, así que no admite hojas de horas nuevas. Registre las horas en un proyecto abierto.' },
-            closed_no_submit: { message: '{{project}} está cerrado, así que esta hoja de horas no se puede enviar. Guárdela como borrador o muévala a un proyecto abierto.' },
-            cancelled_no_submit: { message: '{{project}} está cancelado, así que esta hoja de horas no se puede enviar. Guárdela como borrador o muévala a un proyecto abierto.' },
+            project_locked: { message: '{{project}} está bloqueado para horas y gastos, así que este parte de horas no se puede enviar. Guárdelo como borrador o pida al jefe de proyecto que desmarque Bloquear horas y gastos en el proyecto.' },
+            closed_takes_no_new: { message: '{{project}} está cerrado, así que no admite partes de horas nuevos. Registre las horas en un proyecto abierto.' },
+            cancelled_takes_no_new: { message: '{{project}} está cancelado, así que no admite partes de horas nuevos. Registre las horas en un proyecto abierto.' },
+            closed_no_submit: { message: '{{project}} está cerrado, así que este parte de horas no se puede enviar. Guárdelo como borrador o muévalo a un proyecto abierto.' },
+            cancelled_no_submit: { message: '{{project}} está cancelado, así que este parte de horas no se puede enviar. Guárdelo como borrador o muévalo a un proyecto abierto.' },
           },
         },
-        FORBIDDEN: { message: 'Una hoja de horas la aprueba o rechaza su aprobador, desde su bandeja de entrada, una vez enviada.' },
+        FORBIDDEN: { message: 'Un parte de horas lo aprueba o rechaza su aprobador, desde su bandeja de entrada, una vez enviado.' },
         DUPLICATE_VALUE: {
-          message: 'Ya hay una hoja de horas para este proyecto y periodo. Añada las horas a esa.',
+          message: 'Ya hay un parte de horas para este proyecto y periodo. Añada las horas a ese.',
           reasons: {
-            named: { message: 'Ya hay una hoja de horas para este proyecto y periodo: {{timesheet}}. Añada las horas a esa.' },
+            named: { message: 'Ya hay un parte de horas para este proyecto y periodo: {{timesheet}}. Añada las horas a ese.' },
           },
         },
       },
@@ -98,11 +98,11 @@ export const esES: TranslationData = {
     },
     time_entry_costing: {
       refusals: {
-        RECORD_LOCKED: { message: 'Esta hoja de horas está enviada, así que sus horas no pueden cambiar. Devuélvala a Borrador para corregirlas.' },
+        RECORD_LOCKED: { message: 'Este parte de horas está enviado, así que sus horas no pueden cambiar. Devuélvalo a Borrador para corregirlas.' },
         VALIDATION_FAILED: {
-          message: 'La fecha {{day}} está fuera del periodo de esta hoja de horas ({{from}} – {{to}}).',
+          message: 'La fecha {{day}} está fuera del periodo de este parte de horas ({{from}} – {{to}}).',
           reasons: {
-            task: { message: 'La tarea debe ser una de las tareas del proyecto de esta hoja de horas.' },
+            task: { message: 'La tarea debe ser una de las tareas del proyecto de este parte de horas.' },
             project: { message: 'El proyecto debe ser el del parte de horas.' },
           },
         },
@@ -206,7 +206,7 @@ export const esES: TranslationData = {
         },
         time_entry_locked: {
           label: 'Bloquear horas y gastos',
-          help: 'Mientras esté marcado, no se puede enviar ninguna hoja de horas ni gasto de este proyecto. Los borradores se pueden seguir escribiendo.',
+          help: 'Mientras esté marcado, no se puede enviar ningún parte de horas ni gasto de este proyecto. Los borradores se pueden seguir escribiendo.',
         },
         gross_margin: { label: 'Margen bruto' },
         gross_margin_percent: { label: 'Margen bruto %' },
@@ -586,11 +586,11 @@ export const esES: TranslationData = {
       },
     },
     timesheet_approval: {
-      label: 'Aprobación de hoja de horas',
+      label: 'Aprobación de parte de horas',
       approvals: { approver_review: { label: 'Revisión del jefe de proyecto' } },
     },
     timesheet_approval_on_create: {
-      label: 'Aprobación de hoja de horas (al crear)',
+      label: 'Aprobación de parte de horas (al crear)',
       approvals: { approver_review: { label: 'Revisión del jefe de proyecto' } },
     },
     project_budget_alert: { label: 'Alerta de presupuesto del proyecto' },
@@ -717,7 +717,7 @@ export const esES: TranslationData = {
         budget_status_mix: { title: 'Proyectos por estado del presupuesto', description: 'En curso, Aviso (desde el 80 %) y Superado (desde el 100 %), proyectos con presupuesto' },
         project_margin: { title: 'Margen por proyecto', description: 'Ingresos previstos, coste real, margen bruto y presupuesto consumido, por proyecto en entrega' },
         projects_by_status: { title: 'Proyectos por estado', description: 'Todos los proyectos, de Borrador a Cerrado' },
-        hours_by_week: { title: 'Horas aprobadas por semana', description: 'Horas en hojas aprobadas, y la parte facturable' },
+        hours_by_week: { title: 'Horas aprobadas por semana', description: 'Horas en partes de horas aprobados, y la parte facturable' },
         billable_share_by_person: { title: 'Parte facturable por persona', description: 'Horas aprobadas por persona y la parte facturada a clientes' },
       },
     },
