@@ -99,8 +99,11 @@ on those records until an administrator runs `os migrate apply` once against
 it and confirms the three `relax_not_null` changes it lists (the contract
 column of billing milestones, invoices and payments); skip the account
 changes it marks destructive, as nothing needs them. Until then an invoice or
-payment saved without a contract is refused with "Contract is required". On
-a hosted environment this step is the platform's (objectstack#34377).
+payment saved without a contract is refused with "Contract is required". That
+step is for an environment you run yourself. On a hosted environment you do
+nothing: this version declares the three contract columns nullable, and a
+managed upgrade relaxes a column its package declares nullable
+(objectstack#34377).
 
 ## 4. Check the permission sets
 
