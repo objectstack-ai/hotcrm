@@ -534,8 +534,9 @@ export const OpportunityScheduleMeetingAction: Action = opportunityActivityActio
  * package's object, so service instantiates it from this factory — see
  * `src/service/actions/case-activity.actions.ts`, which keeps the original
  * `LogCallAction` / `LogMeetingAction` / `CaseScheduleMeetingAction` export
- * names because `src/service/pages/case_detail.page.ts` imports them by those
- * names.
+ * names, which the service barrel and its tests import. (The case's record
+ * page named them in its header until #2382; the default page's header
+ * reads every placed action itself.)
  */
 
 // ⛔ Never add a global (object-less) body action here: it registers under the

@@ -20,7 +20,8 @@ import stack from './helpers/composed-stack';
  * whether the record's owner fell inside the caller's write DEPTH — `own` by
  * default — and the manager could edit only contracts they had created
  * themselves. That is precisely the wrong half: `quote_accepted_contract_draft`
- * (`src/revenue/objects/quote.hook.ts`) copies the accepted quote's `owner_id`
+ * (a hook until hotcrm#2558, now `src/revenue/flows/quote-accepted-contract-draft.flow.ts`,
+ * and the order's Draft Contract after it) copies the source's `owner_id`
  * onto the contract it drafts, so the most common contract in the app hangs
  * under the **rep** who closed the deal.
  *

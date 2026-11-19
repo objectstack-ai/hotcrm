@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import {
-  hotcrmStack, signUpPerson, recordEngineWrites, systemUpdate, today, committedFile, type Person,
+  hotcrmStack, signUpPerson, switchFlow, recordEngineWrites, systemUpdate, today, committedFile, type Person,
 } from './helpers/verify-stack';
 
 /**
@@ -59,6 +59,9 @@ beforeAll(async () => {
   manager = await signUpPerson(verify, 'manager@record-id-not-in-prose.test', {
     name: 'Prose Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
   });
+  // The accepted-quote draft is a packaged flow shipped switched off since
+  // hotcrm#2558; the provenance cases below pin it switched on.
+  await switchFlow(verify, 'quote_accepted_contract_draft', true);
 }, 120_000);
 
 let n = 0;

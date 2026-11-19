@@ -73,6 +73,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       document_url: { label: '契約書類' },
       special_terms: { label: '特約事項' },
       description: { label: '説明' },
+      automation_key: { label: '自動化キー', help: 'この契約を起草した自動化。その自動化が書き込みます。編集しないでください。' },
       billing_address: { label: '請求先住所' },
     },
     // Print Contract (#2317).
@@ -100,6 +101,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
   },
   // The order and its lines (REQ-0010, hotcrm#2555).
   crm_sales_order: {
+    // Draft Contract (#2558).
+    _actions: {
+      draft_contract: { label: '契約を作成' },
+    },
     _validations: {
       shipped_after_order: { message: '出荷日を注文日より前にすることはできません' },
       sales_order_status_progression: { message: 'このステータス変更はできません。注文は 下書き → 確定 → 完了 と進みます。確定は下書きに戻せ、下書きまたは確定はキャンセルにできます。完了とキャンセルは最終状態です。' },

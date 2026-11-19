@@ -3,6 +3,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { ObjectQL, bindHooksToEngine, applySystemFields } from '@objectstack/objectql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
+import { QuickJSScriptRunner, hookBodyRunnerFactory } from '@objectstack/runtime';
+import { extractHookBody } from '@objectstack/cli/hook-body';
 import stack from './helpers/composed-stack';
 import { registerStackPicklists } from './helpers/stack-picklists';
 
@@ -13,8 +15,7 @@ import { registerStackPicklists } from './helpers/stack-picklists';
  * ### Why this needed measuring rather than reasoning
  *
  * Not one of these inserts names an organization. `case.hook.ts` writes an
- * escalation `crm_task`, `quote.hook.ts` drafts a `crm_contract`,
- * `task.hook.ts` clones the next occurrence of a recurring task and
+ * escalation `crm_task`, `task.hook.ts` clones the next occurrence of a recurring task and
  * `lead.hook.ts` opens a follow-up — all of them through `ctx.api`, all of them
  * relying on the engine to stamp `organization_id` from the execution context
  * they inherit. Under a single-org install that column is NULL and nothing can
@@ -27,7 +28,7 @@ import { registerStackPicklists } from './helpers/stack-picklists';
  *  - **The stamp comes from the context, not the payload.** `buildHookApi`
  *    hands a hook a `ScopedContext` over the SAME execution context the write
  *    ran under, so the tenant id travels only as long as that object does.
- *  - **Three of these four hooks are `async: true`.** An after-event async hook
+ *  - **Two of these three hooks are `async: true`.** An after-event async hook
  *    is dispatched fire-and-forget — the triggering write returns before the
  *    handler runs. Context that lived in ambient storage rather than on the
  *    context object would not survive that boundary.
@@ -100,7 +101,7 @@ const sql = async (statement: string): Promise<AnyRec[]> =>
  * Wait for an async (fire-and-forget) hook to land its row, then return it.
  *
  * Polls to a deadline rather than sleeping a guessed interval, and THROWS when
- * nothing arrives. An absent row must never read as a pass: three of the four
+ * nothing arrives. An absent row must never read as a pass: two of the three
  * hooks under test are `onError: 'log'`, so a refused insert is silent, and
  * "no rows, no failed assertion" is exactly the shape that would hide it.
  */
@@ -137,8 +138,21 @@ beforeAll(async () => {
     }),
   );
 
-  // The app's REAL hooks, bound the way `defineStack({ hooks })` binds them.
-  const bound = bindHooksToEngine(ql as never, hooks as never, {} as never) as AnyRec;
+  // The app's REAL hooks, in the form the shipped artifact runs them: each
+  // handler lowered to its body (`extractHookBody`, what `objectstack build`
+  // does) and run by the runtime's QuickJS body runner. That runner is what
+  // hands a body `ctx.text` (objectstack 18.6.0): the escalation task's title,
+  // the drafted contract's description and the lead follow-up's title are
+  // text in the organization's language (#2494), and a bare in-process bind
+  // has no such surface, so those hooks would write nothing here.
+  const lowered = hooks.map((hook) => {
+    if (typeof hook.handler !== 'function') return hook;
+    const { source, capabilities } = extractHookBody(hook.handler, `hook '${String(hook.name)}'`);
+    const { handler: _inProcess, ...rest } = hook;
+    return { ...rest, body: { language: 'js', source, capabilities, timeoutMs: 5000 } };
+  });
+  const bodyRunner = hookBodyRunnerFactory(new QuickJSScriptRunner(), { ql: ql as never, appId: 'hotcrm' });
+  const bound = bindHooksToEngine(ql as never, lowered as never, { bodyRunner } as never) as AnyRec;
   expect(bound.registered, `no hooks bound: ${JSON.stringify(bound.errors)}`).toBeGreaterThan(0);
 
   a = ql.createContext({ userId: 'usr_a', tenantId: ORG_A });
@@ -202,41 +216,12 @@ describe('hook-created records inherit the triggering organization', () => {
     expect(seenByB).toEqual([]);
   }, 30_000);
 
-  it("quote.hook.ts — the auto-drafted contract lands in the accepting tenant's org", async () => {
-    const account = (await a
-      .object('crm_account')
-      .insert({ name: 'Quote Co', type: 'customer', owner_id: 'usr_a' })) as AnyRec;
-    const contact = (await a.object('crm_contact').insert({
-      first_name: 'Quinn',
-      last_name: 'Buyer',
-      email: 'quinn.buyer@org-inheritance.test',
-      crm_account: account.id,
-      owner_id: 'usr_a',
-    })) as AnyRec;
-    const quote = (await a.object('crm_quote').insert({
-      name: 'org inheritance — quote',
-      status: 'draft',
-      crm_account: account.id,
-      crm_contact: contact.id,
-      owner_id: 'usr_a',
-      expiration_date: '2030-01-01',
-    })) as AnyRec;
-    expect(quote.organization_id).toBe(ORG_A);
-
-    // Accepted needs the signed copy (#2317). This kernel has no file
-    // service, so the id is a placeholder: nothing here resolves it.
-    await a.object('crm_quote').update({ id: quote.id, status: 'accepted', signed_copy: 'signed_copy_fixture' });
-
-    const contract = await awaitRow(
-      'auto-drafted contract',
-      `select id, organization_id, crm_account from crm_contract where crm_account = '${account.id}'`,
-    );
-    expect(contract.organization_id).toBe(ORG_A);
-    // The lookup it carries points INSIDE the same organization — a contract
-    // stamped org_a but pointing at another tenant's account would be the
-    // subtler half of the same defect.
-    expect(contract.crm_account).toBe(account.id);
-  }, 30_000);
+  // `quote.hook.ts`'s drafted contract was the fourth site here until
+  // hotcrm#2558 moved the draft into a packaged flow (`quote_accepted_contract_draft`),
+  // which this hooks-only rig does not run. Its organization stamp, and the
+  // order's, are measured on the booted app in
+  // `test/quote-accepted-flow-switch.test.ts` ("in the accepting person's
+  // organization").
 
   it("task.hook.ts — the next occurrence of a recurring task stays in the org", async () => {
     const seed = (await a.object('crm_task').insert({

@@ -57,7 +57,7 @@
 | LEA-013 | 批量加入活动 | 列表多选批量动作(逐行分派):每行以调用者身份启动 `campaign_lead_member_enroll` 流程,去重后插入活动成员(记录选择器选活动);无活动成员创建权的 profile 不显示该动作,服务端也拒绝(400 `FLOW_FAILED`) | `src/sales/actions/lead.actions.ts`(`create_campaign`)+ `src/marketing/flows/campaign-member-enroll.flow.ts` |
 | LEA-014 | 线索列表视图族 | 默认列表 + 7 个具名视图:我的/热线索/高优/疑似重复/状态看板/日历/卡片 | `src/sales/views/lead.view.ts` |
 | LEA-015 | 线索表单族 | 7 个具名表单覆盖全部布局类型:分 tab 详情/转化向导/分栏/抽屉/弹窗/公开表单/条件示范(SIMPLE 由默认 `form` 演示) | `src/sales/views/lead.view.ts`(formViews) |
-| LEA-016 | 线索详情页 | header 挂转化/跟进/三个活动动作,highlights 条,5 阶段 path,Details/Related/Activity/History 四 tab | `src/sales/pages/lead_detail.page.ts` |
+| LEA-016 | 线索详情页 | 平台默认记录页(#2382),只覆盖 alerts 槽:疑似/已确认重复两条提示;要点条、状态 path、明细、相关列(未完成任务)、时间线均由对象元数据派生,页头动作按 `order` 排序 | `src/sales/pages/lead_detail.page.ts` |
 | LEA-017 | AI 线索鉴定技能 | 按 BANT 四维打 0–100 分并给下一步建议;≥70 且经人工确认才调用转化动作 | `src/sales/skills/lead-qualification.skill.ts` |
 | LEA-018 | 线索导入 | CSV/XLSX 导入映射,按 email upsert,状态/来源/行业同义词表;owner 留空归导入者 | `src/sales/mappings/lead_import.mapping.ts` |
 | LEA-019 | 线索分析 | `lead_metrics` 数据集 + "线索互动月份×来源"矩阵报表 | `src/sales/datasets/lead.dataset.ts` + `src/sales/reports/lead.report.ts` |
@@ -73,7 +73,7 @@
 | ACC-005 | 客户活动时钟 | `last_activity_date` 由多路写入:owner/type 变更、held 事件与完成任务冒泡、工单解决;是流失分析的信号源 | `src/sales/objects/account.hook.ts` 等 |
 | ACC-006 | 客户列表视图族 | 默认列表 + 卡片/地图/大客户/我的/风险共 6 个 tab(续约视图随 #1181 删除,续约队列在合同上);批量改 tier、转移 owner、批量删除 | `src/sales/views/account.view.ts` |
 | ACC-007 | 客户工作台 | ADR-0047 interface page:引用 `all_accounts` 视图的策展列表,仅行业/类型/负责人三个快速筛选,锁定 grid、禁新建;#2286 起不在侧栏(与 Accounts 列表行列相同,读作重复入口),页面作为接口页展品保留,经 `…/page/account_workbench` URL 打开 | `src/sales/pages/account_workbench.page.ts` |
-| ACC-008 | 客户详情页 | slotted 页:覆盖 header(三个活动动作)与 discussion(评论/表情/提及全开的 chatter)两个 slot,其余由默认页合成 | `src/sales/pages/account_detail.page.ts` |
+| ACC-008 | 客户详情页 | 无自定义记录页(#2382 删除 slotted 页与 chatter):平台默认记录页,时间线即 Activity | 对象元数据 `src/sales/objects/account.object.ts` |
 | ACC-009 | 联系人对象 | 自然人档案(`crm_contact`):masterDetail 挂客户(删客户级联删联系人),email 租户内唯一,头像、汇报关系、沟通偏好 | `src/sales/objects/contact.object.ts` |
 | ACC-010 | 联系人完整性 | 邮箱小写化并全局查重;被开放商机/未结报价/激活合同引用的联系人禁止删除 | `src/sales/objects/contact.hook.ts` |
 | ACC-011 | 设为主联系人 | 记录/行菜单 script 动作,置 `is_primary: true` | `src/sales/actions/contact.actions.ts`(`mark_primary`) |
@@ -104,7 +104,7 @@
 | OPP-013 | 停滞商机日扫描 | 每日 07:30 扫描阶段停留 >14 天的开放商机:通知 owner 并幂等创建 +2 天跟进任务 | `src/sales/flows/opportunity-stagnation.flow.ts` |
 | OPP-014 | 大单赢单告警 | 金额 ≥$100K 的商机赢单时通知 owner(防重发) | `src/sales/flows/opportunity-won-alert.flow.ts` |
 | OPP-015 | 私密商机 | `is_private` 标记的交易经 RLS 仅对 owner 可见,即使读方持全组织读权限 | `src/sales/profiles/sales-manager.profile.ts`、`src/sales/profiles/marketing-user.profile.ts`(RLS) |
-| OPP-016 | 商机详情页 | header 挂生成报价/克隆/三个活动动作,7 阶段 path,Related 含报价/产品明细/任务三个相关列表 + 侧栏 reference rail | `src/sales/pages/opportunity_detail.page.ts` |
+| OPP-016 | 商机详情页 | 平台默认记录页(#2382),只覆盖 alerts 槽:两条审批提示;产品明细为正文表格(`relatedList: 'primary'`),相关列含报价/未完成任务;参考栏已删除 | `src/sales/pages/opportunity_detail.page.ts` |
 | OPP-017 | 商机分析 | `opportunity_metrics` 数据集(win_rate 派生比率、跨对象行业维度)+ 阶段/按人赢单/管道覆盖矩阵/漏斗 4 个报表 | `src/sales/datasets/opportunity.dataset.ts` + `src/sales/reports/opportunity.report.ts` |
 
 ## QUO — 报价(CPQ 与产品目录)
@@ -115,7 +115,7 @@
 | QUO-002 | 报价状态机 | `draft → in_review → presented → accepted/rejected/expired`;accepted/expired 终态,rejected 可回 draft 重报 | `src/revenue/objects/quote.object.ts`(validations) |
 | QUO-003 | 报价默认与冻结 | 未给失效日时默认 `quote_date + 30 天`(字段自身的 `defaultValue`,不由 hook 盖戳);accepted/expired 后除内部备注外禁改,明细行随之冻结 | `src/revenue/objects/quote.object.ts`(`expiration_date`)+ `src/revenue/objects/quote.hook.ts`(`quote_workflow`) |
 | QUO-004 | 从商机生成报价 | 屏幕流收集名称/有效期/折扣,按商机金额播种报价定价,并把早期阶段商机推进到 proposal | `src/revenue/flows/quote-generation.flow.ts` + `src/sales/actions/opportunity.actions.ts`(`generate_quote`) |
-| QUO-005 | 接受报价→起草合同 | status 变 accepted 时自动创建 draft 合同(12 个日历月,合同额=报价总价);无联系人时给出具名报错;以系统身份起草,销售代表的接受也能拿到合同 | `src/revenue/objects/quote.hook.ts`(`quote_accepted_contract_draft`) |
+| QUO-005 | 接受报价→订单;合同按需起草 | status 变 accepted 时创建 draft 订单(复制表头与全部明细,每份报价一张,`crm_sales_order.crm_quote` 指向来源报价);不再自动起草合同:订单上的 Draft Contract 起草同一份合同(12 个日历月,合同额=订单总价)并挂到订单;两条随包流程管理员可开关:建订单默认开,自动起草合同默认关(开启即恢复旧行为);以系统身份写入,销售代表也能拿到 (#2558) | `src/revenue/flows/quote-accepted-order.flow.ts`、`src/revenue/flows/quote-accepted-contract-draft.flow.ts`、`src/sales/flows/sales-order-draft-contract.flow.ts`、`src/sales/flows/_contract-draft.ts` |
 | QUO-006 | 接受报价→商机赢单 | 与起草合同相互独立的另一个 hook,以接受者本人身份:关联商机置 closed_won、补关闭日与 `win_reason='quote_accepted'`;商机被审批锁住时接受本身即被拒绝(`quote_workflow`) | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
 | QUO-007 | 报价行项目与总额汇总 | 明细对象(`crm_quote_line_item`,受父控、删报价级联,行合计 = 扣除本行折扣后的金额,行项目不单独计税):重算 subtotal/discount_amount/total_price 回写报价,已结报价跳过 | `src/revenue/objects/quote_line_item.object.ts` + `.hook.ts` |
 | QUO-008 | 报价自动过期 | 每日 01:00 把过了 `expiration_date` 的未结报价置 expired | `src/revenue/flows/quote-expiration.flow.ts` |
@@ -166,7 +166,7 @@
 | SVC-011 | CSAT 关单回访 | **已移除 (#1428)**:曾在工单关闭 1 天后通知 owner 联系客户记录满意度评分。它唯一喂养的 `crm_case.customer_rating` / `customer_feedback` 从来没有任何输入面,两个字段与本流程一并按 ADR-0049 enforce-or-remove 退役 | 已删除 |
 | SVC-012 | 首次响应打戳 | 工单上出现任何一条 held 互动事件时,自动补 `first_response_date`(SLA 首次响应指标) | `src/sales/objects/event.hook.ts`(`event_activity_bubble`) |
 | SVC-013 | 工单视图族 | 默认按优先级序排 + 状态看板(抽屉)/SLA 日历/timeline/已升级/SLA 风险/我的未结共 7 个 tab | `src/service/views/case.view.ts` |
-| SVC-014 | 工单详情页 | SLA highlights 条、6 阶段 path、升级/关闭/记录通话动作,统一活动时间线(评论/提及/线程/表情全开) | `src/service/pages/case_detail.page.ts` |
+| SVC-014 | 工单详情页 | 平台默认记录页(#2382),只覆盖 alerts 槽:SLA 违约提示;要点条、全状态 path、相关列(未完成任务)、时间线由对象元数据派生 | `src/service/pages/case_detail.page.ts` |
 | SVC-015 | 工单升级共享 | critical 未结工单自动共享给 service_manager(可编辑)与 service_director(只读) | `src/service/sharing/case.sharing.ts` |
 | SVC-016 | 工单时间线里程碑 | 声明式里程碑:escalated/resolved/closed 三个状态转换自动发时间线条目 | `src/service/objects/case.object.ts`(activityMilestones) |
 | SVC-017 | AI 工单分诊技能 | 只读技能:建议优先级并给出唯一驱动理由,把用户指向升级/关闭按钮(刻意无变更工具) | `src/service/skills/case-triage.skill.ts` |
@@ -288,12 +288,12 @@
 | EXP-003 | 报销单 | 费用放进报销单一起提交(REQ-0011,hotcrm#2559):编号、标题、提交人、客户、合计、应报销(只算员工垫付)、状态 草稿/已提交/已批准/已付款/已驳回、审批人、提交/批准时间、备注、检查提示、付款日期与参考号;费用的状态跟随报销单,任何人不能手动写批准/驳回;只有草稿报销单可删除 | `src/expense/objects/expense_report.object.ts`、`src/expense/objects/expense_report.hook.ts`、`src/expense/objects/expense.hook.ts` |
 | EXP-004 | 提交报销 | 在我的费用里勾选一笔或多笔(或在单笔记录页)点「提交报销」,同一次点击生成并提交报销单;每个项目一张报销单,无项目的另一张;全部或全不 | `src/expense/actions/expense.actions.ts` |
 | EXP-005 | 无项目报销单审批 | 由报销人的上级审批(无上级时由财务控制),合计 ≥2,000 再交财务控制;撤回、驳回后退回草稿再提交 | `src/expense/flows/expense-report-approval.flow.ts` |
-| EXP-006 | 项目报销单审批 | 写明项目的报销单由项目经理审批,合计 ≥2,000 再交财务;项目已关闭、已取消或已锁定时退回草稿并通知;项目字段由项目交付模块扩展提供(暂放费用包,objectstack#34616 修好后搬回,hotcrm#2575) | `src/expense/flows/expense-report-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
+| EXP-006 | 项目报销单审批 | 写明项目的报销单由项目经理审批,合计 ≥2,000 再交财务;项目已关闭、已取消或已锁定时退回草稿并通知;项目字段与本审批流程都属于项目交付模块(2026-11-19 由 hotcrm#2575 从费用包搬回,objectstack#34616 已在 18.6.0 修复) | `src/psa/flows/expense-report-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
 | EXP-007 | 标记已付款 | 财务控制、应收会计在「待付款的报销单」里对已批准的报销单记录付款日期和参考号;只记录,不付款、不记账 | `src/expense/actions/expense.actions.ts` |
 | EXP-008 | 报销单视图 | 我的报销单、待我审批的报销单、待付款的报销单、全部报销单 | `src/expense/views/expense_report.view.ts` |
 | EXP-009 | 出差申请 | `crm_expense_request`(界面叫「出差申请」):事由、出差人、目的地、起止日期、天数(自动算)、客户(可空)、一个预计总额、行程、备注、来源、检查提示,附件;六个状态 草稿/已提交/已批准/已驳回/已取消/已关闭;批准后事由、目的地、日期、金额(及项目)锁定;出差人一键提交、取消出差、关闭;在「费用报销」应用,「我的出差申请」也贡献进「项目交付」应用 | `src/expense/objects/expense_request.object.ts`、`src/expense/actions/expense-request.actions.ts` |
 | EXP-010 | 出差申请审批 | 没有项目的申请提交后由出差人的上级审批(无上级时由财务控制),只有一级、财务不参与;审批人经共享规则可见;任何人不能手动写批准/驳回 | `src/expense/flows/expense-request-approval.flow.ts`、`src/expense/objects/expense_request.hook.ts` |
-| EXP-011 | 项目出差申请审批 | 项目交付模块给出差申请扩展可选的「项目」(选择框不提供已关闭/已取消的项目);有项目的申请由项目经理审批,只有一级,与无项目路径互斥;项目无项目经理或项目经理本人出差时交管理员;项目页面「相关」列出出差申请,不计入项目成本(暂放费用包,objectstack#34616 修好后搬回,hotcrm#2575) | `src/expense/flows/expense-request-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
+| EXP-011 | 项目出差申请审批 | 项目交付模块给出差申请扩展可选的「项目」(选择框不提供已关闭/已取消的项目);有项目的申请由项目经理审批,只有一级,与无项目路径互斥;项目无项目经理或项目经理本人出差时交管理员;项目页面「相关」列出出差申请,不计入项目成本(审批流程属于项目交付模块,2026-11-19 由 hotcrm#2575 从费用包搬回) | `src/psa/flows/expense-request-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
 | EXP-012 | 出差申请行程明细 | `crm_expense_request_line`(界面叫「行程明细」):出差申请下的一程,类型(航班/火车/用车/酒店/其他)、出发地、到达地、起止日期、要求、预订号;不带金额,可选;在申请页面上按出行顺序列出;从提交起各程计划值锁定、不能增删,预订号始终可写 | `src/expense/objects/expense_request_line.object.ts`、`src/expense/objects/expense_request_line.hook.ts` |
 | EXP-013 | 报销单引用出差申请 | 「按出差申请报销」与「提交报销」同一段脚本,多一个必选的出差申请参数(只列本人已批准的申请),生成的报销单写明申请;「提交报销」仍然一键、不弹框(18.5.0 上任何参数都会弹框);申请上显示已报销金额(已提交/已批准/已付款报销单合计)、与预计的差额、是否超出预计和报销单列表;报销单给审批人看出差预计、已报销和是否超出(存值,审批人不一定能打开申请);超出不拦;最后一张未完结报销单付款后申请自动关闭;已取消/已关闭的申请不能再报销 | `src/expense/actions/expense.actions.ts`、`src/expense/objects/expense_report.object.ts`、`src/expense/objects/expense_report.hook.ts`、`src/expense/objects/expense_request.object.ts` |
 | EXP-014 | 费用标准与检查提示 | `crm_expense_standard`(界面叫「费用标准」):名称、类别(可空=任何类别)、限额(可空,只有文字的规定)、计算单位(每晚/每天/每笔/每次出差,有限额时必填)、适用范围(文字)、说明、启用;财务控制、应收会计和管理员维护,所有记录费用的人可读;只在「费用报销」应用;系统里没有任何校验、钩子、流程或公式读取标准,超标照常保存提交。费用新增「检查提示」(助手或本人写检查发现,审批人在报销单的费用列表里看到,随费用一起锁定);票据号加索引便于查重 | `src/expense/objects/expense_standard.object.ts`、`src/expense/objects/expense.object.ts`、`src/sales/profiles/_expense-grants.ts` |

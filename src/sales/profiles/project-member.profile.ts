@@ -1,6 +1,5 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { O2C_ACCOUNT_FIGURE_FIELDS } from './_o2c-figures';
 import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STANDARD_READ } from './_expense-grants';
 
 /**
@@ -28,7 +27,8 @@ import { EXPENSE_OWN, EXPENSE_REPORT_OWN, EXPENSE_REQUEST_LINE_EDIT, EXPENSE_STA
  *     every field and undo the hiding.
  *   - `crm_account` — read, View All (ruling D on #2316, 2026-11-15): a
  *     member delivers for the customer and needs its name on the
- *     project page. `crm_opportunity` stays closed (no grant): pipeline value
+ *     project page, WITHOUT the account's Order to Cash totals (hotcrm#2481,
+ *     the field rows below). `crm_opportunity` stays closed (no grant): pipeline value
  *     is not delivery's, and the project's `crm_opportunity` field is hidden
  *     at the field level, so the member's page carries no restricted-record
  *     placeholder. The project's `crm_sales_order` (hotcrm#2561) is hidden the
@@ -48,15 +48,13 @@ export const ProjectMemberProfile = {
     crm_project_task:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_account:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
     // Order to Cash: NO read on invoices and payments. Since hotcrm#2557 both
-    // are `controlled_by_parent` under the ACCOUNT, so a read grant here would
-    // open the rows of every account this set reads. Irene ruled 2026-11-17
-    // 05:08Z 「保持现在的范围」: sales (own accounts) and finance read the rows;
-    // consultants read neither the rows nor, once hotcrm#2481 lands, the
-    // totals. Until then the totals sum a child
-    // the set cannot read, which `os lint --strict` reports as
-    // `security-rollup-source-unreadable`; the meant pair is acknowledged
-    // with the platform's switch from objectstack#34664, added with the bump
-    // that ships it.
+    // are `controlled_by_parent` under the ACCOUNT, and this set reads every
+    // account (View All above), so a read grant here would open the rows of
+    // every account. Irene ruled 2026-11-17 05:08Z 「保持现在的范围」: sales
+    // (own accounts) and finance read the rows; consultants read neither the
+    // rows nor the totals (the `crm_account` field rows below, hotcrm#2481),
+    // so the totals sum no source this set can read and `os lint`
+    // `security-rollup-source-unreadable` has nothing to report here.
     crm_rate_card:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_timesheet:      { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_time_entry:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },
@@ -92,9 +90,18 @@ export const ProjectMemberProfile = {
     // hotcrm#2561: the order the project delivers, closed to a member as the
     // opportunity is.
     'crm_project.crm_sales_order':         { readable: false, editable: false },
-    // The account's Order to Cash figures, read as every account reader reads
-    // them (`_o2c-figures.ts`: the #2315 ruling authors them readable and
-    // forbids `readable: false` rows).
-    ...O2C_ACCOUNT_FIGURE_FIELDS,
+    // The account's Order to Cash totals, hidden from a consultant: Irene's
+    // ruling of 2026-11-15 (hotcrm#2481), "consultants (`project_member`) must
+    // not see the account's Order to Cash totals". It departs here from the
+    // #2315 ruling (2026-11-05: these figures are authored readable, with no
+    // `readable: false` rows, `_o2c-figures.ts`): the 11-15 ruling is later and
+    // names this set. The rows bind over this set's own View All on the account
+    // since objectstack#33828 (18.6.0): a set's own `readable: false` row wins
+    // over its own View All vote. A consultant still reads the account and its
+    // other fields; a person who also holds a set reading these totals (a rep,
+    // finance) reads them through that set.
+    'crm_account.invoiced_amount':    { readable: false, editable: false },
+    'crm_account.received_amount':    { readable: false, editable: false },
+    'crm_account.receivable_balance': { readable: false, editable: false },
   },
 };

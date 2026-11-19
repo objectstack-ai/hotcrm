@@ -83,6 +83,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       progress_percent: { label: '进度（%）' },
       priority_rank: { label: '优先级排序' },
       reminder_sent: { label: '提醒已发送' },
+      automation_key: { label: '自动化标识', help: '创建此任务的自动化。由该自动化写入，请勿编辑。' },
     },
     _sections: {
       basic: { label: '任务信息' },

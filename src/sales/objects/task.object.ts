@@ -166,6 +166,14 @@ export const Task = ObjectSchema.create({
     related_to_contact: Field.lookup('crm_contact', {
       group: 'related',
       label: 'Related Contact',
+      // Once the activity names its account, only that account's contacts are
+      // offered (#2677); with no account yet the platform leaves the
+      // `{ $record }` entry out and every contact is offered. No `orEmpty`: a
+      // contact's `crm_account` is its required master, so none has no account.
+      // The picker narrows the choice only; a write is not refused by it.
+      lookupFilters: [
+        { field: 'crm_account', operator: 'eq', value: { $record: 'related_to_account' } },
+      ],
     }),
     
     related_to_opportunity: Field.lookup('crm_opportunity', {
@@ -173,20 +181,40 @@ export const Task = ObjectSchema.create({
       label: 'Related Opportunity',
       // A lost deal is not offered (#2573): an activity is logged against work
       // still going on, or a won deal's delivery and follow-up, never against
-      // a deal that ended lost. Narrowing the picker to the activity's own
-      // account waits for the platform release that resolves `{ $record }` in
-      // a lookup filter (objectstack#34197, #34199; neither is in 18.5.0).
-      lookupFilters: [{ field: 'stage', operator: 'ne', value: 'closed_lost' }],
+      // a deal that ended lost. Once the activity names its account, only that
+      // account's deals are offered; with no account yet the platform leaves
+      // the `{ $record }` entry out and every open or won deal is offered.
+      // The picker narrows the choice only; a write is not refused by it.
+      lookupFilters: [
+        { field: 'stage', operator: 'ne', value: 'closed_lost' },
+        { field: 'crm_account', operator: 'eq', value: { $record: 'related_to_account' } },
+      ],
+      // The lead's, the deal's and the case's list of tasks (#2382). Their
+      // authored record pages each drew an Open Tasks list; the default page
+      // draws this FK's list instead, so the scope and the columns live here.
+      // The filter is the open half of `status` (Completed is the one `won`
+      // option, the rest are `open`); the badge count reads the same filter.
+      // The columns are the ones those pages named, which equal this object's
+      // `highlightFields` today and are written out so a change to that strip
+      // does not move these lists.
+      relatedListFilter: { status: { $ne: 'completed' } },
+      relatedListColumns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
     }),
     
     related_to_lead: Field.lookup('crm_lead', {
       group: 'related',
       label: 'Related Lead',
+      // Open tasks only, these columns: see `related_to_opportunity`.
+      relatedListFilter: { status: { $ne: 'completed' } },
+      relatedListColumns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
     }),
     
     related_to_case: Field.lookup('crm_case', {
       group: 'related',
       label: 'Related Case',
+      // Open tasks only, these columns: see `related_to_opportunity`.
+      relatedListFilter: { status: { $ne: 'completed' } },
+      relatedListColumns: ['subject', 'status', 'priority', 'due_date', 'owner_id'],
     }),
     
     // Recurrence (for recurring tasks)
@@ -258,6 +286,38 @@ export const Task = ObjectSchema.create({
       group: 'system',
       label: 'Reminder Sent',
       defaultValue: false,
+    }),
+
+    /**
+     * Which automation opened this task, as a stable key — the one way that
+     * automation finds its own task again (#2494, #2522).
+     *
+     * The title of an automatic task is TEXT, written in the organization's
+     * language (`ctx.text` in a hook, the text envelope in a flow), so no
+     * title shape names the task in every organization. The readers match
+     * this key instead:
+     *
+     *   - `case_escalation` — `case_status_side_effects` opens it, and
+     *     `case_close_escalation_task` completes it when the case closes
+     *     (`src/service/objects/case.hook.ts`);
+     *   - `stalled_deal` — the stall sweep's idempotency gate
+     *     (`src/sales/flows/opportunity-stagnation.flow.ts`);
+     *   - `contract_renewal:<contract id>` — the renewal sweep's gate, one open
+     *     reminder per contract (`src/sales/flows/contract-renewal.flow.ts`).
+     *
+     * A task a person creates carries none. `hidden` keeps a machine-owned
+     * column out of forms and pickers. ⛔ Not `readonly`: since 17.4.0 the
+     * engine strips a readonly column from a non-system caller's INSERT, and
+     * the escalation task is inserted as the escalating agent
+     * (`test/readonly-write-semantics.test.ts`, INSERT path), so the key would
+     * be dropped and the close would never find the task.
+     */
+    automation_key: Field.text({
+      group: 'system',
+      label: 'Automation Key',
+      description: 'Which automation opened this task. Written by that automation; never edit.',
+      hidden: true,
+      maxLength: 100,
     }),
 
     // Progress

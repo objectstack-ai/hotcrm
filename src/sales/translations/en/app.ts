@@ -135,41 +135,22 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Contract Document',
       description: 'The contract as a printable document: parties, term, value, billing, terms and signatures.',
     },
-    account_detail_page: {
-      label: 'Account Detail',
-      description: 'Slotted account record page — custom header + persistent discussion feed.',
-      // Required, though it equals the page source: a missing `title` falls
-      // back to `label`, and the header then read "Account Detail" instead of
-      // the account's name (#2042).
-      title: '{name}',
-      subtitle: '{industry} · {type}',
-    },
     account_workbench: {
       label: 'Account Workbench',
       description: 'Curated account list for the sales team: quick filters only, no view management.',
     },
     lead_detail_page: {
       label: 'Lead Detail',
-      description: 'Comprehensive lead detail page with highlights, details, and related information',
-      title: '{full_name}',
-      subtitle: '{company}',
+      description: 'The lead record page: the synthesized layout, with the duplicate banners in the alerts slot.',
       components: {
         lead_duplicate_alert_confirmed: { label: 'Confirmed Duplicate Alert' },
         lead_duplicate_alert_suspected: { label: 'Suspected Duplicate Alert' },
-        lead_highlights: { label: 'Key Information' },
-        lead_path: { label: 'Lead Status Path' },
-        main_tabs: { label: 'Lead Information Tabs' },
       },
     },
     opportunity_detail_page: {
       label: 'Opportunity Detail',
-      description:
-        'Comprehensive opportunity detail page with path, highlights, details, and related lists',
-      title: '{name}',
-      subtitle: '{crm_account}',
+      description: 'The opportunity record page: the synthesized layout, with the approval banners in the alerts slot.',
       components: {
-        opp_highlights: { label: 'Key Information' },
-        opp_stage_path: { label: 'Opportunity Stage Path' },
         opp_approval_pending_manager: { label: 'Waiting on Sales Manager Approval' },
         opp_approval_pending_director: { label: 'Waiting on Sales Manager and Sales Director Approval' },
       },
@@ -243,6 +224,9 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // translate a key en also carries. Screen-flow copy is not repeated here:
   // en reads it from the flow source.
   flows: {
+    // Draft Contract on an order (#2558); its screen copy is read from the flow source.
+    sales_order_draft_contract: { label: 'Draft Contract from Order' },
+    sales_order_draft_contract_write: { label: 'Draft Contract from Order (write)' },
     account_approval: {
       label: 'Account Approval',
       approvals: { account_review: { label: 'Account Review' } },

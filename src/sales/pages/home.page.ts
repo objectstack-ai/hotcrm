@@ -112,10 +112,10 @@ export const SalesHomePage: Page = {
             // "Welcome back" said nothing: a greeting that names the user is
             // not expressible on a translatable label (the brace vocabulary
             // in a page header is the BOUND RECORD's fields, and a `home`
-            // page has none — see `case_detail.page.ts`).
+            // page has none).
             // `icon` removed from `page:header` in @objectstack/spec 17.0.0
-            // (#6946, ADR-0087 D2) — deleted, not renamed. See the full note on
-            // `account_detail.page.ts`; nothing ever drew it.
+            // (#6946, ADR-0087 D2) — deleted, not renamed: no renderer ever
+            // read it off the header's own props; nothing ever drew it.
             // `breadcrumb` retired from `page:header` in @objectstack/spec 17.6.0
             // (#20785, `page-header-breadcrumb-removed`) — deleted: no renderer
             // ever drew a trail for it; the app shell's own trail is unchanged.

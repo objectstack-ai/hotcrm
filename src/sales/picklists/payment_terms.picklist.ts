@@ -12,8 +12,10 @@ import { definePicklist } from '@objectstack/spec/data';
  * depends on this one, so the list lives here — the lowest package all its
  * consumers depend on (`module-split-plan.md` item 11).
  *
- * The carry-over is `quote_accepted_contract_draft` in
- * `src/revenue/objects/quote.hook.ts`, named here because this rationale spent
+ * The carry-over is `quote_accepted_contract_draft` (a hook until hotcrm#2558,
+ * now the packaged flow `src/revenue/flows/quote-accepted-contract-draft.flow.ts`,
+ * and the order's Draft Contract after it, both built by
+ * `src/sales/flows/_contract-draft.ts`), named here because this rationale spent
  * its first months unenforced (#873): the hook drafted the contract without
  * `payment_terms`, so every accepted quote produced a contract on the `net_30`
  * default below regardless of what was negotiated — a shared vocabulary

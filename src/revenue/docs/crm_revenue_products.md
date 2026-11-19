@@ -59,7 +59,8 @@ A product that has been sold cannot be deleted. Once it is on any deal's line
 item or any quote's line item, past ones included, the delete is refused and
 the message says how many lines hold it. Turn off **Active** instead: the
 product stays on every deal and quote that sold it, and **Active** tells your
-team it is no longer offered.
+team it is no longer offered. A product with **Active** off is not offered when
+you add a line to a deal.
 
 ## Price books
 

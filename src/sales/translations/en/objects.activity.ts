@@ -63,6 +63,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       progress_percent: { label: 'Progress (%)' },
       priority_rank: { label: 'Priority Rank' },
       reminder_sent: { label: 'Reminder Sent' },
+      automation_key: { label: 'Automation Key', help: 'Which automation opened this task. Written by that automation; never edit.' },
     },
     _views: {
       all_tasks: { label: 'All Tasks' },

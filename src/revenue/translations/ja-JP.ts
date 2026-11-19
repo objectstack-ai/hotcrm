@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../../sales/flows/_contract-draft';
 
 // The discount ceiling is interpolated, never retyped: the number lives in
 // `_thresholds.ts` alone (#1711).
@@ -169,6 +170,13 @@ export const jaJP: TranslationData = {
     },
   },
   objects: {
+    // The order's Source Quote, added by this package through
+    // `objectExtensions` (hotcrm#2558).
+    crm_sales_order: {
+      fields: {
+        crm_quote: { label: '元の見積' },
+      },
+    },
     crm_product: {
       _validations: {
         cost_less_than_price: {
@@ -291,7 +299,7 @@ export const jaJP: TranslationData = {
         crm_account: { label: '取引先' },
         crm_contact: {
           label: '取引先責任者',
-          help: '見積が「提示済み」または「承認済み」になった時点で必須です。作成される契約の主担当者はここから引き継がれます。',
+          help: '見積が「提示済み」または「承認済み」になった時点で必須です。注文の担当者はここから引き継がれ、注文から作成される契約の主担当者もここから引き継がれます。',
         },
         crm_opportunity: { label: '商談' },
         owner_id: { label: '見積担当者' },
@@ -429,19 +437,35 @@ export const jaJP: TranslationData = {
       dimensions: {
         category: {
           label: 'カテゴリ',
+          description: '製品カテゴリ：ソフトウェア、ハードウェア、サービス、サブスクリプション、サポート。',
         },
       },
       measures: {
         list_price_sum: {
           label: '定価合計',
+          description: '対象製品の定価の合計（カタログ上の数字）。売上ではなく、値引きや数量は含みません。',
         },
         product_count: {
           label: '製品数',
+          description: '製品カタログにある製品の数。有効・無効の両方を含みます。販売数量ではありません。',
         },
       },
     },
   },
   flows: {
+    // An accepted quote's two automations (hotcrm#2558). The drafted
+    // contract's provenance sentence is TEXT in the organization's language
+    // (#2535), one per variant of the draft, at
+    // `flows.quote_accepted_contract_draft.records.<node>.fields.description`.
+    quote_accepted_contract_draft: {
+      label: '承認済みの見積から契約を作成',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: '承認済みの見積{{ quote }}から自動作成' },
+      }])),
+    },
+    quote_accepted_order: {
+      label: '承認済みの見積から注文を作成',
+    },
     price_book_add_products: {
       label: '価格表に製品を追加',
       successMessage: '製品を価格表に追加しました。',

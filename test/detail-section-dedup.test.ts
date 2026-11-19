@@ -84,12 +84,24 @@ const detailPages: DetailPage[] = pages.flatMap((page) => {
   const components = [...walk(page.regions), ...walk(page.slots)];
   const highlights = components.filter((c) => c.type === 'record:highlights');
   const details = components.filter((c) => c.type === 'record:details');
-  if (highlights.length === 0 || details.length === 0) return [];
+  if (details.length === 0) return [];
+  // A full page with no strip of its own (a print page) draws no strip at
+  // all; only a slotted page inherits the default one.
+  if (highlights.length === 0 && page.kind !== 'slotted') return [];
+  // A slotted page that authors its Details body but not its strip draws the
+  // DEFAULT strip above it: the object's declared `highlightFields` minus the
+  // title field, at most six (`deriveHighlightFields`, the default page since
+  // #2382 for lead / opportunity / case). That strip is what the body has to
+  // stay disjoint from.
+  const obj = objects.find((o) => o.name === page.object);
+  const defaultStrip = ((obj?.highlightFields ?? []) as string[])
+    .filter((n) => n !== obj?.nameField)
+    .slice(0, 6);
   return [
     {
       page: page.name as string,
       object: page.object as string,
-      highlights: highlights.flatMap((c) => fieldNames(c.properties?.fields)),
+      highlights: highlights.length > 0 ? highlights.flatMap((c) => fieldNames(c.properties?.fields)) : defaultStrip,
       sections: details.flatMap((c) =>
         (c.properties?.sections ?? []).map((s: AnyRec) => ({
           name: (s.name ?? s.group ?? s.label ?? '(unnamed)') as string,
@@ -102,12 +114,13 @@ const detailPages: DetailPage[] = pages.flatMap((page) => {
 });
 
 describe('record:details sections list only fields the tab renders', () => {
-  it('finds the record pages that compose highlights and details', () => {
+  it('finds the record pages that compose a Details body', () => {
     // A rename that unhooks this suite from the pages it guards would otherwise
-    // leave it passing over an empty list.
-    expect(detailPages.map((p) => p.page).sort()).toEqual(
-      ['case_detail_page', 'lead_detail_page', 'opportunity_detail_page'].sort(),
-    );
+    // leave it passing over an empty list. Lead, opportunity and case authored
+    // their bodies until #2382 retired them to the default page, whose body
+    // the platform keeps disjoint from its strip itself; the project's page
+    // still authors its body (the `details` slot) under the default strip.
+    expect(detailPages.map((p) => p.page).sort()).toEqual(['project_detail_page']);
   });
 
   it('no section repeats a field the page highlights', () => {

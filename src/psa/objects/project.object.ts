@@ -335,9 +335,9 @@ export const Project = ObjectSchema.create({
       description: 'The person staffed on this project as its project manager.',
     }),
 
-    // Every person staffed on the project except its manager, kept by
+    // Every person staffed on the project, its manager included, kept by
     // `project_member.hook.ts`. The sharing rule `project_team_read` reads it;
-    // the manager has `project_manager_edit` instead.
+    // the manager also has `project_manager_edit`, and the wider grant wins.
     team_members: Field.lookup('sys_user', {
       label: 'Team',
       group: 'team',

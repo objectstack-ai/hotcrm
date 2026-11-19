@@ -57,6 +57,7 @@ export const activity: Record<string, ObjectTranslationData> = {
       due_date: { label: '期限' },
       reminder_date: { label: 'リマインダー日時' },
       reminder_sent: { label: 'リマインダー送信済み' },
+      automation_key: { label: '自動化キー', help: 'このタスクを作成した自動化。その自動化が書き込みます。編集しないでください。' },
       completed_date: { label: '完了日' },
       owner_id: { label: '担当者' },
       related_to_type: { label: '関連オブジェクト種別' },

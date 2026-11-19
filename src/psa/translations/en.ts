@@ -487,6 +487,25 @@ export const en: TranslationData = {
       approvals: { approver_review: { label: 'Project Manager Review' } },
     },
     project_budget_alert: { label: 'Project Budget Alert' },
+    expense_report_project_approval: {
+      label: 'Project Expense Report Approval',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+        finance_review: { label: 'Finance Controller Review' },
+      },
+    },
+    expense_request_project_approval: {
+      label: 'Project Travel Request Approval',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+      },
+    },
+    expense_request_project_approval_on_create: {
+      label: 'Project Travel Request Approval (on create)',
+      approvals: {
+        approver_review: { label: 'Project Manager Review' },
+      },
+    },
   },
   pages: {
     // The project's record page (#2545).

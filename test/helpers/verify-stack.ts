@@ -298,6 +298,21 @@ export async function signUpPerson(
 }
 
 /**
+ * Switch a PACKAGED flow on or off the way an administrator does: the
+ * packaged-flow switch, `POST /api/v1/automation/:name/toggle`, as the dev
+ * admin (objectstack#34655). The choice is a row in the activation ledger
+ * (`sys_metadata_activation`) and wins over the flow's shipped
+ * `defaultActive`. A suite whose subject is a flow that ships OFF
+ * (`quote_accepted_contract_draft`, hotcrm#2558) switches it on here, through
+ * the real door, rather than booting an edited artifact.
+ */
+export async function switchFlow(stack: VerifyStack, flowName: string, enabled: boolean): Promise<void> {
+  const admin = await stack.signIn();
+  const res = await stack.apiAs(admin, 'POST', `/automation/${flowName}/toggle`, { enabled });
+  if (!res.ok) throw new Error(`switching ${flowName} ${enabled ? 'on' : 'off'} answered ${res.status}: ${await res.text()}`);
+}
+
+/**
  * The run history of `flowName` for the record `recordId` triggered — the
  * engine's own `sys_automation_run` rows, `summary_json` parsed. A
  * record-triggered flow's result never reaches the writer whose save fired it,
@@ -682,8 +697,12 @@ export async function runShippedHook(
     ql: stack.kernel.getService('objectql') as never,
     appId: 'hotcrm',
   });
+  // `texts` travels with the hook as the artifact carries it: a lowered body
+  // that asks `ctx.text(key)` is refused for a key the hook does not declare
+  // (objectstack 18.6.0, #2494).
   const handler = bind({
     name: hook.name, object: hook.object, events: hook.events,
+    ...(hook.texts !== undefined ? { texts: hook.texts } : {}),
     body: { language: 'js', source, capabilities, timeoutMs: 5000 },
   } as never);
   if (!handler) throw new Error(`hook ${String(hook.name)}: the platform refused its lowered body`);

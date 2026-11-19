@@ -45,6 +45,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       end_date: { label: '结束日期' },
       contract_value: { label: '合同金额' },
       description: { label: '描述' },
+      automation_key: { label: '自动化标识', help: '起草此合同的自动化。由该自动化写入，请勿编辑。' },
       crm_contact: { label: '主要联系人' },
       crm_opportunity: { label: '关联商机' },
       owner_id: { label: '合同负责人' },
@@ -99,6 +100,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
   },
   // The order and its lines (REQ-0010, hotcrm#2555).
   crm_sales_order: {
+    // Draft Contract (#2558).
+    _actions: {
+      draft_contract: { label: '起草合同' },
+    },
     _validations: {
       shipped_after_order: { message: '发货日期不能早于下单日期' },
       sales_order_status_progression: { message: '不允许这样更改状态。订单按 草稿 → 已确认 → 已完成 推进；已确认可以退回草稿，草稿或已确认的订单可以取消。已完成和已取消是最终状态。' },

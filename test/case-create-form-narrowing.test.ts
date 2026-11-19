@@ -227,7 +227,21 @@ const surfaces = (): Record<string, Set<string>> => {
     }
     for (const value of Object.values(node)) walk(value, next);
   };
+  // Since #2382 the only authored nodes on the case page are its `alerts`
+  // slot; the walk still reads the alert predicates from there.
   walk(CaseDetailPage, null);
+  // The highlight strip and the Details body are the default page's, drawn
+  // from crm_case's metadata: the strip is the declared `highlightFields`
+  // minus the title field, at most six (`deriveHighlightFields`); the body is
+  // every visible field the header does not already draw, by field group (an
+  // ungrouped field lands in a trailing section), and the status path takes
+  // the stage field out of it.
+  const declared = ((Case as AnyRec).highlightFields ?? []) as string[];
+  for (const name of declared.filter((n) => n !== (Case as AnyRec).nameField).slice(0, 6)) highlightFields.add(name);
+  for (const [name, f] of Object.entries(objectFields)) {
+    if (f?.hidden === true || highlightFields.has(name) || name === 'status') continue;
+    detailFields.add(name);
+  }
 
   return {
     'list.columns': names(list.columns, (c: any) => (typeof c === 'string' ? c : c?.field)),

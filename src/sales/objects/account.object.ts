@@ -23,8 +23,9 @@ export const Account = ObjectSchema.create({
   // account as well as its name.
   searchableFields: ['name', 'account_number', 'registration_number'],
   // The record header's strip (#2369 row 5): what the title does not say. The
-  // page header shows the name and `{industry} · {type}` (account_detail.page.ts),
-  // so the strip carries the number, the tier, the health, the revenue and the
+  // page header shows the name (the account's authored page, with its
+  // `{industry} · {type}` subtitle, retired to the default page in #2382), so
+  // the strip carries the number, the tier, the health, the revenue and the
   // owner. The child-account panel keeps its old columns through
   // `relatedListColumns` on `parent_account`.
   highlightFields: ['account_number', 'tier', 'health_score', 'annual_revenue', 'owner_id'],

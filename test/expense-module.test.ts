@@ -1,11 +1,14 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { VerifyStack } from '@objectstack/verify';
 import artifact from '../objectstack.config';
 import { allFlows, packageStacks } from '../objectstack.composition';
 import { EXPENSE_FINANCE_REVIEW_AMOUNT } from '../src/sales/objects/_thresholds';
 import { servedApp } from './helpers/composed-stack';
+import { REPO_ROOT } from './helpers/repo-root';
 import { conditionHolds, flowRuns, hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -72,10 +75,10 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556, hotc
     ]);
     expect(((stack.apps ?? []) as Rec[]).map((a) => a.name)).toEqual(['crm_expenses']);
     expect(((stack.books ?? []) as Rec[]).map((b) => b.name)).toEqual(['crm_expense_manual']);
+    // The project paths are Project Delivery's (hotcrm#2575), pinned in `test/psa-module-package.test.ts`.
     expect(((stack.flows ?? []) as Rec[]).map((f) => f.name).sort(), 'per-expense approval retired').toEqual([
-      'expense_report_approval', 'expense_report_project_approval',
+      'expense_report_approval',
       'expense_request_approval', 'expense_request_approval_on_create',
-      'expense_request_project_approval', 'expense_request_project_approval_on_create',
     ]);
     expect(((stack.actions ?? []) as Rec[]).map((a) => a.name)).toEqual([
       'submit_for_reimbursement', 'submit_trip_for_reimbursement', 'submit_expense_report', 'reopen_expense_report', 'mark_expense_report_paid',
@@ -141,6 +144,61 @@ describe('the expense module ships inside the HotCRM artifact (hotcrm#2556, hotc
     const own = walk(stackOf(PSA_ID).apps[0].navigation as Rec[]).map((i) => i.objectName);
     expect(own, 'the app\'s own navigation names neither (R3)').not.toContain('crm_expense');
     expect(own).not.toContain('crm_expense_report');
+  });
+});
+
+/**
+ * The expense module knows nothing of projects (hotcrm#2575). Its project path,
+ * the approval of a report or a travel request on a project and the report's two
+ * turn-back notices, is Project Delivery's (`src/psa/flows/`,
+ * `src/psa/email-templates/`). It sat here from hotcrm#2556 until 18.6.0 linted
+ * a flow's trigger object against the package's dependencies (objectstack#34616).
+ *
+ * One spelling of `crm_project` stays in this package's flows, by design: the
+ * no-project half of each manager path's entry condition, which reads the key
+ * Project Delivery contributes and holds while it is absent. That guard is what
+ * keeps the two paths exclusive (pinned below and in `test/expense-request.test.ts`).
+ * The grouping by project inside Submit for Reimbursement is the action's, not a
+ * flow's, and stays as well (`src/expense/actions/expense.actions.ts`).
+ */
+describe('the expense module names no project in its flows, conditions, notices or manual (hotcrm#2575)', () => {
+  /** The no-project entry guard, the one `crm_project` spelling a manager path keeps. */
+  const NO_PROJECT_GUARD = '(!has(record.crm_project) || record.crm_project == null || record.crm_project == "")';
+
+  it('no flow of the module reads, routes on or triggers on a project', () => {
+    const flows = (stackOf(EXPENSE_ID).flows ?? []) as Rec[];
+    expect(flows.length, 'anti-phantom: the module registers flows').toBeGreaterThan(0);
+    for (const flow of flows) {
+      const nodes = walk((flow.nodes ?? []) as Rec[]);
+      expect(nodes.filter((n) => n.config?.objectName === 'crm_project').map((n) => n.id), `${flow.name}: reads no project record`).toEqual([]);
+      const start = nodes.find((n) => n.type === 'start')!;
+      expect(String(start.config.condition?.source ?? start.config.condition), `${flow.name}: starts only on a record with no project`).toContain(NO_PROJECT_GUARD);
+      // The guard as `JSON.stringify(flow)` spells it: the same encoder, its quotes stripped.
+      const rest = JSON.stringify(flow).split(JSON.stringify(NO_PROJECT_GUARD).slice(1, -1)).join('');
+      expect(rest.includes('crm_project'), `${flow.name}: crm_project outside the no-project guard`).toBe(false);
+    }
+  });
+
+  it('it sends no notice: the turn-back templates are Project Delivery\'s', () => {
+    expect(stackOf(EXPENSE_ID).emailTemplates ?? []).toEqual([]);
+    const psaTemplates = ((stackOf(PSA_ID).emailTemplates ?? []) as Rec[]).map((t) => t.name);
+    expect(psaTemplates).toEqual(expect.arrayContaining(['crm.expense_report_project_over', 'crm.expense_report_project_locked']));
+  });
+
+  it('its translations and manual name no project object or project flow', () => {
+    const packs = ((stackOf(EXPENSE_ID).translations ?? []) as Rec[]).flatMap((bundle) => Object.entries(bundle));
+    expect(packs.length, 'anti-phantom: four locale packs').toBe(4);
+    for (const [locale, pack] of packs) {
+      const flowKeys = Object.keys((pack as Rec).flows ?? {});
+      expect(flowKeys.filter((k) => k.includes('project')), `${locale}: no project flow's labels`).toEqual([]);
+      expect(JSON.stringify(pack).includes('crm_project'), `${locale}: no crm_project key`).toBe(false);
+    }
+    const docsDir = join(REPO_ROOT, 'src/expense/docs');
+    const pages = readdirSync(docsDir).filter((f) => f.endsWith('.md'));
+    expect(pages.length, 'anti-phantom: the manual has pages').toBeGreaterThan(0);
+    for (const page of pages) {
+      expect(readFileSync(join(docsDir, page), 'utf8').includes('crm_project'), page).toBe(false);
+    }
   });
 });
 

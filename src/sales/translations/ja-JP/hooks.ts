@@ -162,7 +162,19 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
+  // The closed-won activation task's title (#2522); the private title names no deal.
+  opportunity_promote_account: {
+    texts: {
+      activation_named: { message: '新規顧客の有効化：商談{{ opportunity }}' },
+      activation_private: { message: '新規顧客の有効化（非公開の商談）' },
+      activation_untitled: { message: '新規顧客の有効化' },
+    },
+  },
   lead_automation: {
+    texts: {
+      follow_up_named: { message: '適格リードのフォローアップ：{{ lead }}' },
+      follow_up_untitled: { message: '適格リードのフォローアップ' },
+    },
     refusals: {
       RECORD_LOCKED: {
         message: '変換済みのリード{{lead}}は、説明とメモのみ編集できます。変換後のレコードで変更してください。',

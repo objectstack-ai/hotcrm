@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P, cel } from '@objectstack/spec';
+import { P, cel, tmpl } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { optionLabelsByLocale } from '../../sales/flows/_option-labels';
 import { ServiceTranslations } from '../translations';
@@ -110,7 +110,15 @@ export const CaseEscalationFlow: Flow = {
         // which the app can resolve, rather than a manager chain, which it
         // cannot. With that pool unstaffed the case keeps its owner and this
         // write is unchanged.
-        fields: { is_escalated: true, escalation_reason: 'Auto-escalated: critical priority', escalated_date: cel`isoDatetime(now())`, status: 'escalated' },
+        //
+        // The reason is TEXT, written in the organization's language (#2494):
+        // the template envelope picks
+        // `flows.<flow>.records.assign_senior_agent.fields.escalation_reason`
+        // from this module's packs, for this flow and its on-create twin alike,
+        // and writes the English sentence where a pack has none. Never the
+        // language of whoever saved the case: everyone in the organization
+        // reads it.
+        fields: { is_escalated: true, escalation_reason: tmpl`Auto-escalated: critical priority`, escalated_date: cel`isoDatetime(now())`, status: 'escalated' },
       },
     },
     // No `create_task` node here: the escalation write above flips `status` to

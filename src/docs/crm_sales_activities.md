@@ -68,6 +68,15 @@ priority.
 **Complete** on a task marks it done and stamps the completion date. Your open
 tasks are in **My Work → My Tasks**.
 
+## Choosing the deal
+
+**Related Opportunity** on a task or an event never offers a lost deal. Once
+**Related Account** is filled in, it offers only that account's deals, and it
+narrows again if you change the account; with no account yet it offers every
+deal that is not lost. Won deals stay on offer, for delivery and follow-up.
+**Related Contact** follows the account the same way: once **Related Account** is
+filled in it offers only that account's contacts; with no account yet, every contact.
+
 ## Reminders (automatic)
 
 Give a task a **Reminder Date/Time** and, where the deployment has switched

@@ -30,8 +30,8 @@ type Flow = Automation.Flow;
  * ## Two paths, never both
  *
  * A request on a project goes to that project's Project Manager instead
- * (`expense_request_project_approval`, hotcrm#2581,
- * `./expense-request-project-approval.flow.ts`). This flow starts only when
+ * (`expense_request_project_approval`, hotcrm#2581, Project Delivery's,
+ * `src/psa/flows/expense-request-project-approval.flow.ts`). This flow starts only when
  * the request names no project, including when Project Delivery is disabled
  * and the field is gone; the two entry conditions are exact complements,
  * pinned by `test/expense-request.test.ts`.

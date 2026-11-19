@@ -184,22 +184,34 @@ export const Event = ObjectSchema.create({
     related_to_contact: Field.lookup('crm_contact', {
       group: 'related',
       label: 'Related Contact',
+      // Once the event names its account only that account's contacts are
+      // offered: see `crm_task.related_to_contact` (#2677).
+      lookupFilters: [
+        { field: 'crm_account', operator: 'eq', value: { $record: 'related_to_account' } },
+      ],
     }),
 
     related_to_opportunity: Field.lookup('crm_opportunity', {
       group: 'related',
       label: 'Related Opportunity',
-      // A lost deal is not offered (#2573): an activity is logged against work
-      // still going on, or a won deal's delivery and follow-up, never against
-      // a deal that ended lost. Narrowing the picker to the activity's own
-      // account waits for the platform release that resolves `{ $record }` in
-      // a lookup filter (objectstack#34197, #34199; neither is in 18.5.0).
-      lookupFilters: [{ field: 'stage', operator: 'ne', value: 'closed_lost' }],
+      // A lost deal is not offered, and once the event names its account only
+      // that account's deals are: see `crm_task.related_to_opportunity` (#2573).
+      lookupFilters: [
+        { field: 'stage', operator: 'ne', value: 'closed_lost' },
+        { field: 'crm_account', operator: 'eq', value: { $record: 'related_to_account' } },
+      ],
     }),
 
     related_to_lead: Field.lookup('crm_lead', {
       group: 'related',
       label: 'Related Lead',
+      // A lead's list of events (#2382), drawn by the default record page now
+      // that the lead's authored page retired. These are the columns that page
+      // named: when, then whether it happened, right after the subject — at a
+      // narrow window the list shows about three columns before it scrolls
+      // sideways. The row order is the event's default list view sort, which
+      // the record page inherits; no key here orders it.
+      relatedListColumns: ['subject', 'start_datetime', 'status', 'type', 'owner_id'],
     }),
 
     related_to_case: Field.lookup('crm_case', {

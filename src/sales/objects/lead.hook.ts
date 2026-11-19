@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { Hook, HookContext } from '@objectstack/spec/data';
-import type { HookApi } from './_hook-api';
+import type { HookApi, HookTextContext } from './_hook-api';
 
 /**
  * Lead automation hook.
@@ -50,7 +50,15 @@ const leadHook: Hook = {
       },
     },
   },
-  handler: async (ctx: HookContext) => {
+  // The qualification follow-up task's title, in the organization's language
+  // (#2522): translations at `hooks.lead_automation.texts.<key>.message` in
+  // the app package's locale packs. Everyone in the organization reads the
+  // task, so it is never the qualifying rep's language.
+  texts: {
+    follow_up_named: { message: 'Follow up with qualified lead: {{ lead }}', params: ['lead'] },
+    follow_up_untitled: { message: 'Follow up with qualified lead' },
+  },
+  handler: async (ctx: HookContext & HookTextContext) => {
     // The refusal envelope (#1075). Mirrored from `./_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
     // import; `test/refusal-envelope.test.ts` pins every copy against it.
@@ -479,11 +487,14 @@ const leadHook: Hook = {
         (typeof previous?.company === 'string' && previous.company.trim()) ||
         '';
       const label = [person, company].filter(Boolean).join(' - ');
-      const titled = label
-        ? `Follow up with qualified lead: ${label}`
-        : 'Follow up with qualified lead';
 
       try {
+        // Inside the `try`: `ctx.text` rejects when the organization's
+        // Localization setting cannot be read, and that must not fail the
+        // qualifying write any more than a refused insert does.
+        const titled = label
+          ? await ctx.text('follow_up_named', { lead: label })
+          : await ctx.text('follow_up_untitled');
         await api.object('crm_task').insert({
           subject: titled.length > 255 ? `${titled.slice(0, 254)}…` : titled,
           status: 'not_started',

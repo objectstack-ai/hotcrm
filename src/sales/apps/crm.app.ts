@@ -182,7 +182,8 @@ export const CrmApp = App.create({
   // "This app can't be opened" with no redirect (measured on 18.3.0).
   name: 'crm_enterprise',
   label: 'Sales',
-  icon: 'briefcase',
+  // `handshake`, not `briefcase`: the Project Delivery app draws a briefcase (#2666).
+  icon: 'handshake',
   // ADR-0063 §1/§2 — `defaultAgent` is a surface binding, not a custom-agent
   // slot: the only resolvable values are the two PLATFORM agents, `ask` (data
   // surface) and `build` (authoring surface). HotCRM is a data surface, so it
@@ -195,6 +196,7 @@ export const CrmApp = App.create({
   // passes each value through untouched — `logo` as the sidebar's `<img src>`,
   // `favicon` as the favicon `link.href` — and a `data:` URI renders in both.
   // `primaryColor` is the icon's tile fill (#2066): the mark and the theme are one orange.
+  // This app alone draws the HotCRM mark; the module apps draw their own `icon` (#2666).
   branding: {
     primaryColor: '#EA580C',
     logo: HOTCRM_ICON,

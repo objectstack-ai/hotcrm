@@ -14,7 +14,7 @@ type FlowEdge = Flow['edges'][number];
  * stamped by its hook), who decides from the approvals Inbox. The expense's
  * approval lived here too until `crm_expense` moved to the expense module
  * (hotcrm#2556); expenses on a project are now approved on their report by
- * `src/expense/flows/expense-report-project-approval.flow.ts` (hotcrm#2559),
+ * `./expense-report-project-approval.flow.ts` (hotcrm#2559),
  * which shares these notes. Shaped as
  * `opportunity_approval` is
  * (`src/sales/flows/opportunity-approval.flow.ts`, which carries the long

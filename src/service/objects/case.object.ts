@@ -193,8 +193,13 @@ export const Case = ObjectSchema.create({
     // ⛔ It must not be `1` here (or `2` on crm_task): a non-zero sentinel
     // orders the same unknown priority differently on the two objects, and on
     // this one it is indistinguishable from a genuine `low`.
+    // In the collapsed System group (#2382): the case's authored record page
+    // listed its sections by group, so this ungrouped sort key never reached
+    // it; the default page draws every field, and an ungrouped one lands in a
+    // trailing "Other" section an agent would read as a fact about the case.
     priority_rank: Field.number({
       label: 'Priority Rank',
+      group: 'system',
       readonly: true,
       defaultValue: 0,
     }),
@@ -476,7 +481,18 @@ export const Case = ObjectSchema.create({
   // title was a formula with no column for `$search` to default to. The
   // title is stored now; these stay because they name what is searched.
   searchableFields: ['subject', 'case_number'],
-  highlightFields: ['case_number', 'subject', 'crm_account', 'status', 'priority'],
+  // The record page's highlight strip, and since #2382 its ONLY source: the
+  // case's authored page retired to the synthesized default page, which draws
+  // exactly this list (minus the title, at most six). The list is the one the
+  // retired page drew, which won over the object's old
+  // `case_number, subject, crm_account, status, priority`: `display_title` is
+  // `case_number - subject`, so the old list's first two chips restated the H1
+  // and left out the SLA due date, the agent's most time-critical fact.
+  // `is_sla_violated` stays OFF the strip (#2369 row 6): the console draws a
+  // boolean false as a red "× No" whatever the field means, so every case on
+  // track would wear a red pill. The breach is the alert on
+  // `case_detail.page.ts` instead.
+  highlightFields: ['status', 'priority', 'sla_due_date', 'owner_id', 'crm_account'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition
   

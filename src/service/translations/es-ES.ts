@@ -10,6 +10,16 @@ import { activityActions } from '../../sales/translations/es-ES/_shared';
  * package's pack: `./index.ts`.
  */
 export const esES: TranslationData = {
+  // The escalation follow-up task's title (#2494, #2522), at
+  // `hooks.<hook>.texts.<key>.message`.
+  hooks: {
+    case_status_side_effects: {
+      texts: {
+        escalated_named: { message: 'Escalado: {{ label }}' },
+        escalated_untitled: { message: 'Caso escalado que requiere atención' },
+      },
+    },
+  },
   objects: {
     crm_knowledge_article: {
       _validations: {
@@ -298,53 +308,69 @@ export const esES: TranslationData = {
       dimensions: {
         created_at: {
           label: 'Creado',
+          description: 'El día en que se abrió el caso.',
         },
         origin: {
           label: 'Origen',
+          description: 'El canal por el que llegó el caso: email, teléfono, web, chat o redes sociales.',
         },
         priority: {
           label: 'Prioridad',
+          description: 'La prioridad del caso, Baja, Media, Alta o Crítica, que junto con el nivel de la cuenta fija su fecha límite SLA.',
         },
         resolved_article: {
           label: 'Artículo de resolución',
+          description: 'El artículo de conocimiento registrado como el que resolvió el caso; los casos resueltos sin artículo forman su propio grupo.',
         },
         status: {
           label: 'Estado',
+          description: 'En qué punto está el caso, desde Nuevo, En Curso, Esperando y Escalado hasta Resuelto y Cerrado.',
         },
         type: {
           label: 'Tipo',
+          description: 'Qué tipo de petición es el caso: una consulta, un problema, una solicitud de funcionalidad o un error.',
         },
       },
       measures: {
         avg_resolution: {
           label: 'Resolución media (h)',
+          description: 'El Tiempo de Resolución (Horas) medio de los casos cerrados, de apertura a cierre en horas naturales; quedan fuera los aún no cerrados, incluidos los Resueltos.',
         },
         past_sla_count: {
           label: 'Fuera de SLA',
+          description: 'Cuántos casos están fuera de su SLA ahora mismo: marcados como incumplidos, o aún abiertos con la fecha límite SLA ya pasada; no cuenta los abiertos aún dentro de su SLA.',
         },
         past_sla_rate: {
           label: 'Tasa fuera de SLA',
+          description: 'Past SLA dividido entre Cases, sobre todos los casos en vista, abiertos y cerrados.',
         },
         avg_sla_violated: {
           label: 'Tasa de incumplimiento del SLA',
+          description: 'La proporción de casos en vista con la marca SLA Incumplido, abiertos y cerrados; un caso abierto solo se marca por el barrido horario de SLA, así que Past SLA Rate es la cifra en tiempo de lectura.',
         },
         case_count: {
           label: 'Casos',
+          description: 'Cuántos casos hay, en todos los estados, abiertos y cerrados; ninguna medida cuenta solo los abiertos, así que agrupe por Estado para ello.',
         },
         closed_count: {
           label: 'Casos cerrados',
+          description: 'Cuántos casos están Cerrados; no cuenta los Resueltos aún sin cerrar ni ningún caso abierto.',
         },
         kb_deflection_rate: {
           label: 'Tasa de desvío por base de conocimiento',
+          description: 'Resolved by KB dividido entre Closed Cases: la proporción de casos cerrados resueltos con un artículo; los abiertos quedan fuera.',
         },
         kb_resolved_count: {
           label: 'Resueltos por base de conocimiento',
+          description: 'Cuántos casos cerrados registran un artículo de conocimiento que los resolvió; no cuenta los cerrados sin artículo ni los abiertos.',
         },
         sla_compliance_rate: {
           label: 'Tasa de cumplimiento del SLA',
+          description: 'Cases Within SLA dividido entre Closed Cases: la proporción de casos cerrados que cumplieron su SLA; los abiertos quedan fuera, y es el complemento de la tasa de incumplimiento de los cerrados.',
         },
         sla_met_count: {
           label: 'Casos dentro del SLA',
+          description: 'Cuántos casos cerrados se cerraron dentro de su SLA, sin incumplimiento registrado; no cuenta los abiertos.',
         },
       },
     },
@@ -352,21 +378,18 @@ export const esES: TranslationData = {
   pages: {
     case_detail_page: {
       label: 'Detalle de Caso',
-      description: 'Página de caso para el agente de servicio: datos destacados, progreso del SLA, detalles y cronología de actividad.',
-      title: '{display_title}',
-      subtitle: '{crm_account}',
+      description: 'La página de registro del caso: el diseño sintetizado, con el aviso de SLA incumplido en el espacio de alertas.',
       components: {
-        case_highlights: { label: 'Información Clave' },
         case_sla_breached: { label: 'SLA incumplido' },
-        case_status_path: { label: 'Progreso del Estado del Caso' },
-        case_details: { label: 'Detalles del Caso' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        case_main_tabs: { items: { details: { label: 'Detalles' }, related: { label: 'Relacionado' }, activity: { label: 'Actividad' } } },
       },
     },
   },
   flows: {
+    // The escalation reason the automatic escalations store (#2494), at
+    // `flows.<flow>.records.<node>.fields.<field>`.
+    case_escalation: { records: { assign_senior_agent: { fields: { escalation_reason: 'Escalado automáticamente: prioridad crítica' } } } },
+    case_escalation_on_create: { records: { assign_senior_agent: { fields: { escalation_reason: 'Escalado automáticamente: prioridad crítica' } } } },
+    case_sla_monitor: { records: { flag_breach: { fields: { escalation_reason: 'Escalado automáticamente: fecha límite SLA incumplida' } } } },
     escalate_case: {
       label: 'Escalar Caso',
       screens: { screen_1: { title: 'Escalar Caso', fields: { reason: { label: 'Motivo de Escalación' } } } },

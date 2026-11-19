@@ -1,9 +1,10 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P, cel } from '@objectstack/spec';
+import { P, cel, tmpl } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from './_guarded-iteration';
 import { RENEWAL_LOOKAHEAD_DAYS } from '../objects/contract.object';
+import { LEGACY_RENEWAL_TITLE_PREFIX } from '../objects/_legacy-task-titles';
 type Flow = Automation.Flow;
 
 /**
@@ -68,15 +69,38 @@ export const ContractRenewalFlow: Flow = {
               // duplicate task + notification (and, below, a duplicate
               // pipeline-inflating renewal opportunity). An open renewal task
               // for this contract means this window was already handled.
+              //
+              // The task is found by its `automation_key`, which names the
+              // contract — never by its title, which is TEXT in the
+              // organization's language (#2522) and so has no one shape.
               id: 'find_existing_task', type: 'get_record', label: 'Already Reminded?',
               config: {
                 objectName: 'crm_task',
                 filter: {
                   related_to_account: cel`currentContract.crm_account`,
-                  subject: cel`'Renewal due: contract ' + currentContract.contract_number`,
+                  automation_key: cel`'contract_renewal:' + currentContract.id`,
                   status: { $nin: ['completed'] },
                 },
                 outputVariable: 'existingRenewalTask',
+              },
+            },
+            {
+              // UPGRADE CONTINUITY (`../objects/_legacy-task-titles.ts`): a
+              // reminder written before the key existed has none, and is
+              // matched by the exact English title the previous release's gate
+              // matched, so a contract already reminded is not reminded again
+              // on the first sweep after an upgrade. (The renewal deal needs no
+              // such node: its gate below reads type and stage, never the name.)
+              id: 'find_legacy_task', type: 'get_record', label: 'Reminded Before the Upgrade?',
+              config: {
+                objectName: 'crm_task',
+                filter: {
+                  related_to_account: cel`currentContract.crm_account`,
+                  automation_key: null,
+                  subject: cel`${LEGACY_RENEWAL_TITLE_PREFIX} + currentContract.contract_number`,
+                  status: { $nin: ['completed'] },
+                },
+                outputVariable: 'legacyRenewalTask',
               },
             },
             {
@@ -88,7 +112,10 @@ export const ContractRenewalFlow: Flow = {
               config: {
                 objectName: 'crm_task',
                 fields: {
-                  subject: cel`'Renewal due: contract ' + currentContract.contract_number`,
+                  // TEXT, in the organization's language (#2522): translated at
+                  // `flows.contract_renewal.records.create_renewal_task.fields.subject`.
+                  subject: tmpl`Renewal due: contract {{ currentContract.contract_number }}`,
+                  automation_key: cel`'contract_renewal:' + currentContract.id`,
                   type: 'follow_up', priority: 'high', status: 'not_started',
                   due_date: cel`currentContract.end_date`,
                   owner_id: cel`has(currentContract.owner_id) ? currentContract.owner_id : null`,
@@ -159,7 +186,12 @@ export const ContractRenewalFlow: Flow = {
               config: {
                 objectName: 'crm_opportunity',
                 fields: {
-                  name: cel`'Renewal — ' + currentContract.contract_number`,
+                  // The name and the next step are TEXT, in the organization's
+                  // language (#2535): translated at
+                  // `flows.contract_renewal.records.create_renewal_opp.fields.<field>`.
+                  // Nothing reads the name back — the gate above finds a
+                  // renewal deal by type and stage.
+                  name: tmpl`Renewal — {{ currentContract.contract_number }}`,
                   crm_account: cel`currentContract.crm_account`,
                   amount: cel`currentContract.contract_value`,
                   stage: 'proposal',
@@ -169,7 +201,7 @@ export const ContractRenewalFlow: Flow = {
                   // ORG PARTITION — see `create_renewal_task` above.
                   // The renewal deal belongs to the same org as the contract.
                   organization_id: cel`currentContract.organization_id`,
-                  next_step: 'Confirm renewal terms with customer',
+                  next_step: tmpl`Confirm renewal terms with customer`,
                 },
               },
             },
@@ -205,8 +237,9 @@ export const ContractRenewalFlow: Flow = {
             { id: 'b1', source: 'check_notice_window', target: 'find_existing_task', type: 'conditional', condition: P`has(vars.currentContract) && has(vars.currentContract.end_date) && has(vars.currentContract.renewal_notice_days)
               && vars.currentContract.end_date != null && vars.currentContract.renewal_notice_days != null
               && timestamp(vars.currentContract.end_date + "T00:00:00Z") <= daysFromNow(int(vars.currentContract.renewal_notice_days))`, label: 'In window' },
-            { id: 'b2', source: 'find_existing_task', target: 'check_not_reminded', type: 'default' },
-            { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: P`existingRenewalTask == null`, label: 'First reminder' },
+            { id: 'b2', source: 'find_existing_task', target: 'find_legacy_task', type: 'default' },
+            { id: 'b2a', source: 'find_legacy_task', target: 'check_not_reminded', type: 'default' },
+            { id: 'b3', source: 'check_not_reminded', target: 'create_renewal_task', type: 'conditional', condition: P`existingRenewalTask == null && legacyRenewalTask == null`, label: 'First reminder' },
             { id: 'b4', source: 'create_renewal_task', target: 'notify_owner', type: 'default' },
             { id: 'b5', source: 'notify_owner', target: 'check_auto_renewal', type: 'default' },
             // TOTALITY: same loop item, same sparse driver row. Only an

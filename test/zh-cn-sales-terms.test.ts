@@ -57,10 +57,22 @@ const isSeedIdentity = (line: string): boolean => {
   const m = /^\s*name: '([^']+)',\s*$/.exec(line);
   return m !== null && SEED_IDENTITIES.has(m[1]);
 };
+/**
+ * A retired UI word can still be a word people TYPE. A dataset member's
+ * `synonyms` are match input for the AI's dataset lookup (ADR-0149 D1): they
+ * are compared with the words of a question and never drawn on a screen. So
+ * 赢单率, the word the #2593 card quotes a person asking for, stays among
+ * `win_rate`'s synonyms while every label and every page says 赢率. Only a
+ * one-line `synonyms: [...]` in a `*.dataset.ts` file is exempt, and only for
+ * the words listed here; the comment beside that line says the same.
+ */
+const TYPED_SYNONYMS = new Set(['赢单率']);
+const isTypedSynonym = (path: string, line: string, word: string): boolean =>
+  TYPED_SYNONYMS.has(word) && /[/\\]datasets[/\\][^/\\]+\.dataset\.ts$/.test(path) && /^\s*synonyms: \[.*\],\s*$/.test(line);
 const hits = (paths: string[], words: string[]): string[] =>
   paths.flatMap((p) => readFileSync(p, 'utf8').split('\n').flatMap((line, i) =>
     isSeedIdentity(line) ? [] :
-    words.filter((w) => line.includes(w)).map((w) => `${relative(REPO_ROOT, p)}:${i + 1} ${w}`)));
+    words.filter((w) => line.includes(w) && !isTypedSynonym(p, line, w)).map((w) => `${relative(REPO_ROOT, p)}:${i + 1} ${w}`)));
 
 const SRC = join(REPO_ROOT, 'src');
 const srcTs = files(SRC, (p) => p.endsWith('.ts'));
@@ -80,6 +92,12 @@ describe('zh-CN sales terms (#2521, #2523)', () => {
   it('every exempt seed identity is still a zh-CN deal name (the allow list cannot go stale)', () => {
     const seed = readFileSync(join(SRC, 'sales/data/sales.zh-CN.seed.ts'), 'utf8');
     for (const name of SEED_IDENTITIES) expect(seed).toContain(`name: '${name}',`);
+  });
+
+  it('every exempt typed word is still a synonym of the win rate (the allow list cannot go stale)', () => {
+    const dataset = readFileSync(join(SRC, 'sales/datasets/opportunity.dataset.ts'), 'utf8');
+    const synonymLines = dataset.split('\n').filter((l) => /^\s*synonyms: \[.*\],\s*$/.test(l));
+    for (const word of TYPED_SYNONYMS) expect(synonymLines.some((l) => l.includes(`'${word}'`))).toBe(true);
   });
 
   it('the win/loss dataset labels and the win/loss section use the widget words', () => {

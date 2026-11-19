@@ -186,3 +186,26 @@ export interface HookObjectApi {
 export interface HookApi {
   object: (name: string) => HookObjectApi;
 }
+
+/**
+ * `ctx.text(key, params)` — a sentence the hook writes into a record for
+ * people to read, in the ORGANIZATION's language (objectstack 18.6.0,
+ * objectstack#34374). The hook declares it under its own `texts` (`message`
+ * is the English source and the fallback, `params` the names its `{{ }}`
+ * holes fill from); the translation is `hooks.<hook>.texts.<key>.message` in
+ * the locale pack of the package that registers the hook. The language is the
+ * organization's Localization setting when somebody set it, else the app's
+ * `i18n.defaultLocale` — never the language of the person whose save fired
+ * the hook (`ctx.session.locale`, the wrong key for a stored value; see
+ * `_person-name.ts`). A missing translation answers the declared sentence.
+ *
+ * Declared here for the same reason as {@link HookApi}: the 18.6.0
+ * `HookContext` type does not carry `text`, though the runtime injects it on
+ * both a sandboxed body and an in-process handler. A hook that writes text
+ * types its handler's context `HookContext & HookTextContext`, so the call
+ * stays spelled `ctx.text('key', …)` — the literal the platform's save-time
+ * check reads to refuse a key `texts` does not declare.
+ */
+export interface HookTextContext {
+  text: (key: string, params?: Record<string, string>) => Promise<string>;
+}

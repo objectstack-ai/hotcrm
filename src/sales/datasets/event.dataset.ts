@@ -27,15 +27,44 @@ export const EventDataset = defineDataset({
   description: 'Semantic layer for meetings, calls and interaction recency',
   object: 'crm_event',
   dimensions: [
-    { name: 'type', label: 'Activity Type', synonyms: ['event type', 'meeting type', '活动类型'], field: 'type', type: 'string' },
-    { name: 'status', label: 'Status', synonyms: ['event status', '活动状态'], field: 'status', type: 'string' },
+    {
+      name: 'type',
+      label: 'Activity Type',
+      description: 'The kind of activity: meeting, call, demo, webinar, onsite visit or other.',
+      synonyms: ['event type', 'meeting type', '活动类型'],
+      field: 'type',
+      type: 'string',
+    },
+    {
+      name: 'status',
+      label: 'Status',
+      description: 'Whether the activity is Planned, Held, Cancelled or a No Show; only Held means the contact actually happened.',
+      synonyms: ['event status', '活动状态'],
+      field: 'status',
+      type: 'string',
+    },
     // `owner` is the SEMANTIC name every widget/report selects by; the column
     // behind it is the platform ownership anchor `owner_id` (#548).
-    { name: 'owner', label: 'Owner', synonyms: ['organizer', 'assigned to', '负责人'], field: 'owner_id', type: 'string' },
-    { name: 'related_to_type', label: 'Related To', synonyms: ['related object', 'regarding', '关联对象'], field: 'related_to_type', type: 'string' },
+    {
+      name: 'owner',
+      label: 'Owner',
+      description: 'The person the activity is assigned to.',
+      synonyms: ['organizer', 'assigned to', '负责人'],
+      field: 'owner_id',
+      type: 'string',
+    },
+    {
+      name: 'related_to_type',
+      label: 'Related To',
+      description: 'The kind of record the activity is about: an account, contact, opportunity, lead or case.',
+      synonyms: ['related object', 'regarding', '关联对象'],
+      field: 'related_to_type',
+      type: 'string',
+    },
     {
       name: 'start_datetime',
       label: 'Activity Week',
+      description: 'The week the activity starts in, by its start time; planned activities still ahead fall in future weeks.',
       synonyms: ['start time', 'event date', '开始时间'],
       field: 'start_datetime',
       type: 'date',
@@ -43,10 +72,17 @@ export const EventDataset = defineDataset({
     },
   ],
   measures: [
-    { name: 'event_count', label: 'Activities', synonyms: ['number of activities', 'meetings', '活动数'], aggregate: 'count' },
+    {
+      name: 'event_count',
+      label: 'Activities',
+      description: 'How many activities there are, in every status, planned, held, cancelled and no-shows alike; narrow to Held to count contact that actually happened.',
+      synonyms: ['number of activities', 'meetings', '活动数'],
+      aggregate: 'count',
+    },
     {
       name: 'total_minutes',
       label: 'Minutes',
+      description: 'The sum of Duration (minutes) over the activities in view, in every status unless narrowed; it is scheduled length, not time tracked.',
       synonyms: ['total duration', 'time spent', '总时长'],
       aggregate: 'sum',
       field: 'duration_minutes',
@@ -55,6 +91,7 @@ export const EventDataset = defineDataset({
     {
       name: 'avg_minutes',
       label: 'Avg Duration',
+      description: 'The average Duration (minutes) of one activity, in every status unless narrowed.',
       synonyms: ['average duration', 'average meeting length', '平均时长'],
       aggregate: 'avg',
       field: 'duration_minutes',

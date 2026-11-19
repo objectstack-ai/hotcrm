@@ -10,6 +10,16 @@ import { activityActions } from '../../sales/translations/zh-CN/_shared';
  * package's pack: `./index.ts`.
  */
 export const zhCN: TranslationData = {
+  // The escalation follow-up task's title (#2494, #2522), at
+  // `hooks.<hook>.texts.<key>.message`.
+  hooks: {
+    case_status_side_effects: {
+      texts: {
+        escalated_named: { message: '已升级：{{ label }}' },
+        escalated_untitled: { message: '已升级的工单需要处理' },
+      },
+    },
+  },
   objects: {
     crm_knowledge_article: {
       _validations: {
@@ -299,53 +309,69 @@ export const zhCN: TranslationData = {
       dimensions: {
         created_at: {
           label: '创建时间',
+          description: '工单创建的日期（按天）。',
         },
         origin: {
           label: '来源',
+          description: '工单进入的渠道：邮件、电话、网站、在线客服或社交媒体。',
         },
         priority: {
           label: '优先级',
+          description: '工单的优先级：低、中、高或严重，它与客户等级一起决定工单的 SLA 到期时间。',
         },
         resolved_article: {
           label: '解决用知识文章',
+          description: '记录为解决了该工单的知识文章；没有借助文章解决的工单单独成组。',
         },
         status: {
           label: '状态',
+          description: '工单所处的状态，从新建、处理中、等待、已升级，到已解决和已关闭。',
         },
         type: {
           label: '类型',
+          description: '工单属于哪类请求：咨询、故障、功能需求或缺陷。',
         },
       },
       measures: {
         avg_resolution: {
           label: '平均解决时长（小时）',
+          description: '已关闭工单的平均解决耗时（小时），从创建到关闭，按日历小时计算；尚未关闭的工单（包括已解决的）不计入。',
         },
         past_sla_count: {
           label: '已超 SLA',
+          description: '此刻已超过 SLA 的工单数量：已标记违反，或仍未解决且 SLA 到期时间已过；仍在 SLA 内的未结工单不计入。',
         },
         past_sla_rate: {
           label: '超 SLA 比例',
+          description: '超时工单数除以工单数，涵盖当前范围内所有工单，未结和已关闭都算。',
         },
         avg_sla_violated: {
           label: 'SLA 违约率',
+          description: '当前范围内 SLA 违反标记已设置的工单占比，未结和已关闭都算；未结工单只有每小时的 SLA 巡检才会打标记，按读取时刻计算的是 Past SLA Rate。',
         },
         case_count: {
           label: '工单数',
+          description: '工单的数量，涵盖所有状态，未结和已关闭都算；没有单独统计未结工单的度量，需按状态分组。',
         },
         closed_count: {
           label: '已关闭工单',
+          description: '处于已关闭状态的工单数量；尚未关闭的已解决工单以及所有未结工单不计入。',
         },
         kb_deflection_rate: {
           label: '知识库自助解决率',
+          description: '知识库解决数除以已关闭工单数：借助知识文章解决的已关闭工单占比；未结工单不计入。',
         },
         kb_resolved_count: {
           label: '知识库解决数',
+          description: '记录了解决文章的已关闭工单数量；没有文章的已关闭工单和未结工单不计入。',
         },
         sla_compliance_rate: {
           label: 'SLA 达标率',
+          description: 'SLA 达标工单数除以已关闭工单数：达到 SLA 的已关闭工单占比；未结工单不计入，它是已关闭工单违约率的补数。',
         },
         sla_met_count: {
           label: 'SLA 达标工单',
+          description: '在 SLA 内关闭、没有记录 SLA 违反的已关闭工单数量；未结工单不计入。',
         },
       },
     },
@@ -353,21 +379,18 @@ export const zhCN: TranslationData = {
   pages: {
     case_detail_page: {
       label: '工单详情',
-      description: '客服工单记录页：关键信息、SLA 进度、明细与活动时间线。',
-      title: '{display_title}',
-      subtitle: '{crm_account}',
+      description: '工单记录页：平台合成的默认布局，告警槽位中是 SLA 违约提示。',
       components: {
-        case_highlights: { label: '关键信息' },
         case_sla_breached: { label: '已违反 SLA' },
-        case_status_path: { label: '工单状态进度' },
-        case_details: { label: '工单明细' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        case_main_tabs: { items: { details: { label: '明细' }, related: { label: '相关' }, activity: { label: '互动' } } },
       },
     },
   },
   flows: {
+    // The escalation reason the automatic escalations store (#2494), at
+    // `flows.<flow>.records.<node>.fields.<field>`.
+    case_escalation: { records: { assign_senior_agent: { fields: { escalation_reason: '自动升级：严重优先级' } } } },
+    case_escalation_on_create: { records: { assign_senior_agent: { fields: { escalation_reason: '自动升级：严重优先级' } } } },
+    case_sla_monitor: { records: { flag_breach: { fields: { escalation_reason: '自动升级：已超过 SLA 到期时间' } } } },
     escalate_case: {
       label: '升级工单',
       screens: { screen_1: { title: '升级工单', fields: { reason: { label: '升级原因' } } } },

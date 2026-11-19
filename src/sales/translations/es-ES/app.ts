@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../../flows/_contract-draft';
 
 /**
  * Español (es-ES) — every translation namespace EXCEPT `objects`:
@@ -211,20 +212,25 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         industry: {
           label: 'Sector',
+          description: 'La industria registrada en la cuenta; las cuentas sin industria forman su propio grupo.',
         },
         type: {
           label: 'Tipo',
+          description: 'El tipo de cuenta: prospecto, cliente, socio o cliente anterior.',
         },
         created_at: {
           label: 'Creado',
+          description: 'El mes en que se creó el registro de la cuenta en el CRM, no la fecha en que la empresa se hizo cliente.',
         },
       },
       measures: {
         account_count: {
           label: 'Cuentas',
+          description: 'Cuántos registros de cuenta hay, de todos los tipos: prospectos, clientes, socios y clientes anteriores; agrupe por Tipo para contar solo clientes.',
         },
         annual_revenue_sum: {
           label: 'Ingresos anuales',
+          description: 'La suma de los Ingresos Anuales introducidos en las cuentas: el tamaño de las propias empresas clientes, no lo que nos han comprado.',
         },
       },
     },
@@ -234,6 +240,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       measures: {
         contact_count: {
           label: 'Contactos',
+          description: 'Cuántos registros de contacto hay, las personas de empresas clientes y socias; los prospectos se cuentan aparte y no se incluyen.',
         },
       },
     },
@@ -243,29 +250,37 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         owner: {
           label: 'Propietario',
+          description: 'La persona a la que está asignada la actividad.',
         },
         related_to_type: {
           label: 'Relacionado con',
+          description: 'El tipo de registro al que se refiere la actividad: cuenta, contacto, oportunidad, prospecto o caso.',
         },
         start_datetime: {
           label: 'Semana de actividad',
+          description: 'La semana en que empieza la actividad, según su hora de inicio; las planificadas aún por llegar caen en semanas futuras.',
         },
         status: {
           label: 'Estado',
+          description: 'Si la actividad está Planificada, Realizada, Cancelada o No asistió; solo Realizada significa que el contacto ocurrió.',
         },
         type: {
           label: 'Tipo de actividad',
+          description: 'El tipo de actividad: reunión, llamada, demostración, seminario web, visita presencial u otro.',
         },
       },
       measures: {
         avg_minutes: {
           label: 'Duración media',
+          description: 'La Duración (minutos) media de una actividad, en todos los estados salvo filtro.',
         },
         event_count: {
           label: 'Actividades',
+          description: 'Cuántas actividades hay, en todos los estados, planificadas, realizadas, canceladas y no asistidas; filtre por Realizada para contar el contacto real.',
         },
         total_minutes: {
           label: 'Minutos',
+          description: 'La suma de Duración (minutos) de las actividades en vista, en todos los estados salvo filtro; es la duración programada, no el tiempo registrado.',
         },
       },
     },
@@ -275,32 +290,41 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         owner: {
           label: 'Propietario',
+          description: 'El comercial al que pertenece una fila de pronóstico; cada propietario tiene una fila por periodo.',
         },
         period: {
           label: 'Tipo de periodo',
+          description: 'Si una fila de pronóstico cubre un mes o un trimestre; elija uno, porque sumar un mes y un trimestre cuenta los mismos tratos dos veces.',
         },
         period_label: {
           label: 'Periodo',
+          description: 'El periodo con nombre de una fila de pronóstico, como Q3 2026 o Aug 2026.',
         },
         period_start: {
           label: 'Inicio del periodo',
+          description: 'El primer día del periodo del pronóstico, el primero de un mes o de un trimestre.',
         },
       },
       measures: {
         attainment: {
           label: 'Cumplimiento',
+          description: 'Closed dividido entre Quota, sumando ambos antes de dividir, así que una cuota grande pesa más que una pequeña; sin cuota queda en blanco, no en cero.',
         },
         closed_sum: {
           label: 'Cerrado',
+          description: 'El importe Cerrado Ganado registrado en las filas de pronóstico: lo que los propietarios ya han ganado en el periodo; no incluye pipeline abierto ni tratos perdidos.',
         },
         commit_sum: {
           label: 'Comprometido',
+          description: 'El importe Compromiso registrado en las filas de pronóstico: tratos abiertos en la categoría Compromiso; no incluye los de Mejor Caso ni Pipeline.',
         },
         pipeline_sum: {
           label: 'Pipeline',
+          description: 'El pipeline abierto registrado en las filas de pronóstico: el importe de los tratos abiertos, en cualquier etapa abierta, que se espera cerrar en el periodo; no incluye ganados ni perdidos.',
         },
         quota_sum: {
           label: 'Cuota',
+          description: 'La suma de la Cuota fijada en las filas de pronóstico en vista: el objetivo de ventas. Las filas sin cuota no suman; fije un tipo de periodo o se suman meses y trimestres.',
         },
       },
     },
@@ -310,20 +334,25 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         created_at: {
           label: 'Creado',
+          description: 'La fecha en que se creó el registro del prospecto en el CRM.',
         },
         last_contacted_date: {
           label: 'Último contacto',
+          description: 'El mes del último contacto con el prospecto; los nunca contactados forman su propio grupo.',
         },
         lead_source: {
           label: 'Origen',
+          description: 'De dónde vino el prospecto, según consta en él; los prospectos sin origen forman su propio grupo.',
         },
         status: {
           label: 'Estado',
+          description: 'En qué punto está el prospecto: Nuevo, Contactado, Calificado, No Calificado o Convertido.',
         },
       },
       measures: {
         lead_count: {
           label: 'Prospectos',
+          description: 'Cuántos registros de prospecto hay, en todos los estados, incluidos los convertidos y no calificados; agrupe por Estado para contar solo los abiertos.',
         },
       },
     },
@@ -333,65 +362,85 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         account_industry: {
           label: 'Sector de la cuenta',
+          description: 'La industria de la cuenta cliente a la que pertenece el trato, leída de la cuenta; los tratos cuya cuenta no tiene industria forman su propio grupo.',
         },
         close_date: {
           label: 'Fecha de cierre',
+          description: 'La fecha de cierre por mes natural: la fecha prevista para un trato abierto y la fecha en que cerró para uno ganado o perdido; no es la fecha de creación.',
         },
         close_quarter: {
           label: 'Trimestre de cierre',
+          description: 'La misma fecha de cierre agrupada por trimestre natural, para vistas trimestrales; no es un calendario fiscal.',
         },
         forecast_category: {
           label: 'Categoría de previsión',
+          description: 'La categoría de pronóstico en la que cuenta el trato: Pipeline, Mejor Caso, Compromiso, Omitida o Cerrada.',
         },
         lead_source: {
           label: 'Origen del prospecto',
+          description: 'De dónde vino el trato, según consta en la oportunidad; los tratos sin origen forman su propio grupo.',
         },
         loss_reason: {
           label: 'Motivo de pérdida',
+          description: 'Por qué se perdió un trato perdido, registrado al cerrarlo como perdido; los tratos abiertos y ganados no tienen motivo de pérdida.',
         },
         owner: {
           label: 'Propietario',
+          description: 'El comercial propietario del trato; los resultados muestran a la persona y cada trato cuenta una vez, solo bajo su propietario actual.',
         },
         stage: {
           label: 'Etapa',
+          description: 'Dónde está el trato en el proceso de venta, desde Prospección hasta Cerrada Ganada o Cerrada Perdida; todas las etapas salvo las dos últimas son pipeline abierto.',
         },
         type: {
           label: 'Tipo de negocio',
+          description: 'Si el trato es nuevo negocio o una mejora, renovación o expansión con un cliente existente.',
         },
         win_reason: {
           label: 'Motivo de ganancia',
+          description: 'Por qué se ganó un trato ganado, registrado al cerrarlo como ganado; los tratos abiertos y perdidos no tienen motivo de ganancia.',
         },
       },
       measures: {
         avg_amount: {
           label: 'Tamaño medio del negocio',
+          description: 'El Monto medio de un trato, en todas las etapas, abiertos, ganados y perdidos; los tratos sin monto no entran en la media.',
         },
         avg_probability: {
           label: 'Probabilidad media',
+          description: 'La Probabilidad (%) media de los tratos en vista; la probabilidad sigue a la etapa, así que muestra lo avanzados que están, no un pipeline ponderado.',
         },
         decided_count: {
           label: 'Negocios resueltos',
+          description: 'Cuántos tratos tienen resultado, Cerrada Ganada o Cerrada Perdida; no cuenta los abiertos. Es el denominador de Win Rate.',
         },
         lost_amount: {
           label: 'Ingresos perdidos',
+          description: 'El Monto de los tratos en Cerrada Perdida; no incluye los abiertos ni los ganados.',
         },
         lost_count: {
           label: 'Negocios perdidos',
+          description: 'Cuántos tratos están en Cerrada Perdida; no cuenta los abiertos ni los ganados.',
         },
         opp_count: {
           label: 'Oportunidades',
+          description: 'Cuántas oportunidades hay, en todas las etapas: abiertas, ganadas y perdidas por igual; Won Deals cuenta solo las ganadas.',
         },
         total_amount: {
           label: 'Importe total',
+          description: 'La suma del Monto de todos los tratos en todas las etapas, abiertos, ganados y perdidos, así que no es pipeline abierto ni ingreso ganado hasta filtrarlo por etapa.',
         },
         win_rate: {
           label: 'Tasa de ganancia',
+          description: 'Won Deals dividido entre Settled Deals, contado en tratos y no en importe; los tratos abiertos quedan fuera, así que un pipeline lleno no lo baja.',
         },
         won_amount: {
           label: 'Ingresos ganados',
+          description: 'El Monto de los tratos en Cerrada Ganada: ingreso de tratos ya firmados. Excluye los abiertos y perdidos, y no es el ingreso anual de una cuenta ni el previsto de un proyecto.',
         },
         won_count: {
           label: 'Negocios ganados',
+          description: 'Cuántos tratos están en Cerrada Ganada; no cuenta los abiertos ni los perdidos.',
         },
       },
     },
@@ -401,32 +450,41 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         due_date: {
           label: 'Fecha de vencimiento',
+          description: 'La fecha límite de la tarea; las tareas sin fecha límite forman su propio grupo.',
         },
         is_completed: {
           label: 'Completada',
+          description: 'Si la tarea está Completada; cualquier otro estado cuenta como no completada.',
         },
         is_overdue: {
           label: 'Vencida',
+          description: 'Si la tarea había pasado su fecha límite sin completarse cuando se guardó por última vez.',
         },
         priority: {
           label: 'Prioridad',
+          description: 'La prioridad fijada en la tarea: Baja, Normal, Alta o Urgente.',
         },
         priority_rank: {
           label: 'Urgencia',
+          description: 'La prioridad como número para ordenar, de 1 para Baja a 4 para Urgente, y 0 para una tarea sin prioridad.',
         },
         status: {
           label: 'Estado',
+          description: 'En qué punto está la tarea: No Iniciada, En Curso, En Espera, Completada o Aplazada.',
         },
         type: {
           label: 'Tipo',
+          description: 'El tipo de tarea: llamada, correo, reunión, seguimiento, demostración u otro.',
         },
       },
       measures: {
         avg_progress: {
           label: 'Progreso medio',
+          description: 'El Progreso (%) medio de las tareas en vista, incluidas las completadas; una tarea sin progreso fijado cuenta como 0 %.',
         },
         task_count: {
           label: 'Tareas',
+          description: 'Cuántas tareas hay, en todos los estados, incluidas las completadas y aplazadas; agrupe por Completada para contar solo el trabajo pendiente.',
         },
       },
     },
@@ -441,51 +499,24 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Documento del Contrato',
       description: 'El contrato como documento imprimible: partes, plazo, valor, facturación, condiciones y firmas.',
     },
-    account_detail_page: {
-      label: 'Detalle de Cuenta',
-      description: 'Página de registro de cuenta por slots: cabecera personalizada + feed de discusión permanente.',
-      title: '{name}',
-      subtitle: '{industry} · {type}',
-      components: {
-        account_chatter: { label: 'Discusión' },
-      },
-    },
     account_workbench: {
       label: 'Mesa de Trabajo de Cuentas',
       description: 'Lista de cuentas curada para el equipo comercial: solo filtros rápidos, sin gestión de vistas.',
     },
     lead_detail_page: {
       label: 'Detalle de Prospecto',
-      description: 'Página completa de detalle del prospecto, con datos destacados, detalles e información relacionada',
-      title: '{full_name}',
-      subtitle: '{company}',
+      description: 'La página de registro del prospecto: el diseño sintetizado, con los avisos de duplicado en el espacio de alertas.',
       components: {
         lead_duplicate_alert_confirmed: { label: 'Aviso de duplicado confirmado' },
         lead_duplicate_alert_suspected: { label: 'Aviso de duplicado sospechoso' },
-        lead_highlights: { label: 'Información Clave' },
-        lead_path: { label: 'Progreso del Estado del Prospecto' },
-        main_tabs: { label: 'Pestañas de Información del Prospecto' },
-        lead_details: { label: 'Detalles del Prospecto' },
-        related_accordion: { label: 'Registros Relacionados' },
-        related_tasks: { title: 'Tareas Abiertas', label: 'Tareas' },
-        lead_activity: { label: 'Cronología de Actividad' },
-        lead_history: { label: 'Historial de Campos' },
       },
     },
     opportunity_detail_page: {
       label: 'Detalle de Oportunidad',
-      description: 'Página completa de detalle de la oportunidad, con recorrido de etapas, datos destacados, detalles y listas relacionadas',
-      title: '{name}',
-      subtitle: '{crm_account}',
+      description: 'La página de registro de la oportunidad: el diseño sintetizado, con los avisos de aprobación en el espacio de alertas.',
       components: {
-        opp_highlights: { label: 'Información Clave' },
-        opp_stage_path: { label: 'Progreso de Etapa de la Oportunidad' },
         opp_approval_pending_manager: { label: 'Pendiente de aprobación del Gerente de Ventas' },
         opp_approval_pending_director: { label: 'Pendiente de aprobación del Gerente y del Director de Ventas' },
-        opp_details: { label: 'Detalles de la Oportunidad' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        opp_main_tabs: { items: { details: { label: 'Detalles' }, related: { label: 'Relacionado' }, activity: { label: 'Actividad' } } },
       },
     },
     sales_home_page: {
@@ -542,6 +573,44 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
   flows: {
+    // Draft Contract on an order (#2558). The drafted contract's provenance
+    // sentence is TEXT in the organization's language (#2535), one per
+    // variant of the draft (`../../flows/_contract-draft.ts`).
+    sales_order_draft_contract: {
+      label: 'Redactar contrato desde el pedido',
+      refusals: {
+        refuse_missing: { message: 'Este pedido ya no existe o no puedes abrirlo. No se redactó ningún contrato.' },
+        refuse_has_contract: { message: 'Este pedido ya tiene su contrato. No se redactó ningún contrato.' },
+        refuse_no_contact: { message: 'Un contrato indica su contacto principal: añade primero un contacto al pedido. No se redactó ningún contrato.' },
+      },
+      screens: {
+        result: {
+          title: 'Contrato redactado',
+          description: 'Se creó un borrador de contrato a partir del pedido {{ orderRecord.order_number }} y quedó vinculado al pedido. Ábrelo para completar el plazo, las fechas y el tipo.',
+          fields: { contractLink: { label: 'Contrato' } },
+        },
+      },
+    },
+    sales_order_draft_contract_write: {
+      label: 'Redactar contrato desde el pedido (escritura)',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: 'Redactado a partir del pedido {{ order }}' },
+      }])),
+    },
+    // What the sweeps store in a record (#2522, #2535), at
+    // `flows.<flow>.records.<node>.fields.<field>`, holes as the source spells them.
+    contract_renewal: {
+      records: {
+        create_renewal_task: { fields: { subject: 'Renovación pendiente: contrato {{ currentContract.contract_number }}' } },
+        create_renewal_opp: { fields: { name: 'Renovación — {{ currentContract.contract_number }}', next_step: 'Confirmar las condiciones de renovación con el cliente' } },
+      },
+    },
+    opportunity_stagnation: {
+      records: {
+        create_followup_task: { fields: { subject: 'Avanzar oportunidad estancada: {{ currentOpp.name | truncate:200 }}' } },
+        create_private_followup_task: { fields: { subject: 'Avanzar oportunidad estancada (oportunidad privada)' } },
+      },
+    },
     // Approval flows (#2060 item 13, C-15): the flow's own `label`, and each
     // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
     // the step name the approval request shows the submitter and the approvers.

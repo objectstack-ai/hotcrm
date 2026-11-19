@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../../flows/_contract-draft';
 
 /**
  * 日本語 (ja-JP) — every translation namespace EXCEPT `objects`:
@@ -213,20 +214,25 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         industry: {
           label: '業種',
+          description: '取引先に記録された業種。業種未入力の取引先は別のグループになります。',
         },
         type: {
           label: '種別',
+          description: '取引先の種類：見込み客、顧客、パートナー、過去の取引先。',
         },
         created_at: {
           label: '作成日',
+          description: '取引先レコードが CRM で作成された月。その会社が顧客になった日ではありません。',
         },
       },
       measures: {
         account_count: {
           label: '取引先数',
+          description: '取引先レコードの件数。見込み客・顧客・パートナー・過去の取引先のすべての種類を含みます。顧客のみはタイプで分けてください。',
         },
         annual_revenue_sum: {
           label: '年間売上',
+          description: '取引先に入力された年間売上の合計。顧客企業そのものの規模で、当社からの購入額ではありません。',
         },
       },
     },
@@ -236,6 +242,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       measures: {
         contact_count: {
           label: '取引先責任者数',
+          description: '取引先責任者レコードの件数（顧客・パートナー企業の担当者）。リードは別に数え、含みません。',
         },
       },
     },
@@ -245,29 +252,37 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         owner: {
           label: '所有者',
+          description: '活動の担当者。',
         },
         related_to_type: {
           label: '関連先',
+          description: '活動が関連するレコードの種類：取引先、取引先責任者、商談、リード、ケース。',
         },
         start_datetime: {
           label: '活動週',
+          description: '活動の開始時刻が属する週。まだ先の予定活動は将来の週に入ります。',
         },
         status: {
           label: 'ステータス',
+          description: '活動が予定・実施済み・キャンセル・無断欠席のどれか。実際に接触したのは実施済みだけです。',
         },
         type: {
           label: '活動種別',
+          description: '活動の種類：会議、電話、デモ、ウェビナー、訪問、その他。',
         },
       },
       measures: {
         avg_minutes: {
           label: '平均所要時間',
+          description: '活動1件あたりの平均所要時間（分）。絞り込まない限りすべてのステータスを含みます。',
         },
         event_count: {
           label: '活動件数',
+          description: '活動の件数。予定・実施済み・キャンセル・無断欠席のすべてのステータスを含みます。実際の接触だけなら実施済みで絞り込みます。',
         },
         total_minutes: {
           label: '合計分数',
+          description: '対象活動の所要時間（分）の合計。絞り込まない限りすべてのステータスを含みます。予定された長さで、記録された作業時間ではありません。',
         },
       },
     },
@@ -277,32 +292,41 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         owner: {
           label: '所有者',
+          description: '売上予測の行が属する営業担当。担当者ごとに期間ごとの行が1つあります。',
         },
         period: {
           label: '期間種別',
+          description: '売上予測の行が月次か四半期か。どちらか一方に絞ってください。月次と四半期を足すと同じ商談を二重に数えます。',
         },
         period_label: {
           label: '期間',
+          description: '売上予測の行の期間名（Q3 2026、Aug 2026 など）。',
         },
         period_start: {
           label: '期間開始',
+          description: '売上予測期間の初日（月初または四半期初日）。',
         },
       },
       measures: {
         attainment: {
           label: '達成率',
+          description: 'Closed を Quota で割ったもの。両方を合計してから割るため、大きなクォータほど重みが大きくなります。クォータがないと 0 ではなく空になります。',
         },
         closed_sum: {
           label: 'クローズ済み',
+          description: '売上予測行に記録された成立額の合計。担当者がその期間にすでに受注した額で、未完了のパイプラインや不成立の商談は含みません。',
         },
         commit_sum: {
           label: 'コミット',
+          description: '売上予測行に記録されたコミット額の合計。売上予測カテゴリがコミットの未完了商談で、ベストケースやパイプラインの商談は含みません。',
         },
         pipeline_sum: {
           label: 'パイプライン',
+          description: '売上予測行に記録されたパイプラインの合計。その期間に完了予定で、未完了ステージにある商談の金額です。成立・不成立の商談は含みません。',
         },
         quota_sum: {
           label: '目標',
+          description: '対象の売上予測行に設定されたクォータの合計（販売目標）。未設定の行は加算されません。期間タイプを1つに固定しないと月次と四半期が合算されます。',
         },
       },
     },
@@ -312,20 +336,25 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         created_at: {
           label: '作成日',
+          description: 'リードレコードが CRM で作成された日。',
         },
         last_contacted_date: {
           label: '最終接触日',
+          description: 'リードに最後にコンタクトした月。一度もコンタクトしていないリードは別のグループになります。',
         },
         lead_source: {
           label: 'ソース',
+          description: 'リードに記録された発生元。発生元未入力のリードは別のグループになります。',
         },
         status: {
           label: 'ステータス',
+          description: 'リードの状況：新規、コンタクト済み、適格、不適格、変換済み。',
         },
       },
       measures: {
         lead_count: {
           label: 'リード数',
+          description: 'リードレコードの件数。変換済み・不適格を含むすべてのステータスを数えます。未対応のリードのみはステータスで分けてください。',
         },
       },
     },
@@ -335,65 +364,85 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         account_industry: {
           label: '取引先の業種',
+          description: '商談が属する取引先の業種。取引先から読み取ります。業種未入力の取引先の商談は別のグループになります。',
         },
         close_date: {
           label: '完了予定日',
+          description: '完了予定日を暦月で区切ったもの。未完了の商談では完了見込みの日、成立・不成立の商談ではクローズした日です。商談の作成日ではありません。',
         },
         close_quarter: {
           label: '完了四半期',
+          description: '同じ完了予定日を暦四半期で区切ったもの。四半期ごとの表示用で、会計年度の暦ではありません。',
         },
         forecast_category: {
           label: 'フォーキャスト区分',
+          description: '商談が計上される売上予測カテゴリ：パイプライン、ベストケース、コミット、除外、完了。',
         },
         lead_source: {
           label: 'リードソース',
+          description: '商談に記録された発生元。発生元が未入力の商談は別のグループになります。',
         },
         loss_reason: {
           label: '失注理由',
+          description: '不成立となった商談の失注理由。不成立としてクローズするときに記録されます。未完了・成立の商談にはありません。',
         },
         owner: {
           label: '所有者',
+          description: '商談の所有者（営業担当）。結果には担当者名が表示され、商談は現在の所有者の下に一度だけ数えられます。',
         },
         stage: {
           label: 'ステージ',
+          description: '商談が営業プロセスのどこにあるか。見込み調査から成立・不成立まで。最後の2つ以外のステージはすべて未完了のパイプラインです。',
         },
         type: {
           label: '商談種別',
+          description: '商談が新規ビジネスか、既存顧客のアップグレード・更新・拡大か。',
         },
         win_reason: {
           label: '受注理由',
+          description: '成立した商談の受注理由。成立としてクローズするときに記録されます。未完了・不成立の商談にはありません。',
         },
       },
       measures: {
         avg_amount: {
           label: '平均商談金額',
+          description: '商談1件あたりの平均金額。未完了・成立・不成立のすべてのステージを含みます。金額未入力の商談は平均から除かれます。',
         },
         avg_probability: {
           label: '平均確度',
+          description: '対象商談の確度 (%) の平均。確度はステージに従うため、商談の進み具合を示すもので、加重パイプライン金額ではありません。',
         },
         decided_count: {
           label: '決着した商談',
+          description: '結果が出た商談（成立または不成立）の件数。未完了の商談は数えません。Win Rate の分母です。',
         },
         lost_amount: {
           label: '失注金額',
+          description: '不成立ステージにある商談の金額の合計。未完了・成立の商談は含みません。',
         },
         lost_count: {
           label: '失注件数',
+          description: '不成立ステージにある商談の件数。未完了・成立の商談は数えません。',
         },
         opp_count: {
           label: '商談数',
+          description: '商談の件数。未完了・成立・不成立のすべてのステージを含みます。成立のみは Won Deals です。',
         },
         total_amount: {
           label: '合計金額',
+          description: 'すべてのステージの商談の金額の合計。未完了・成立・不成立を含むため、ステージで絞り込むまではパイプラインでも受注額でもありません。',
         },
         win_rate: {
           label: '受注率',
+          description: 'Won Deals を Settled Deals で割ったもの。金額ではなく件数で数えます。未完了の商談は除くため、パイプラインが多くても下がりません。',
         },
         won_amount: {
           label: '受注金額',
+          description: '成立ステージにある商談の金額の合計（受注額）。未完了・不成立の商談は含まず、取引先の年間売上やプロジェクトの予定売上でもありません。',
         },
         won_count: {
           label: '受注件数',
+          description: '成立ステージにある商談の件数。未完了・不成立の商談は数えません。',
         },
       },
     },
@@ -403,32 +452,41 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       dimensions: {
         due_date: {
           label: '期限',
+          description: 'ToDo の期限日。期限のない ToDo は別のグループになります。',
         },
         is_completed: {
           label: '完了済み',
+          description: 'ToDo が完了ステータスかどうか。それ以外のステータスはすべて未完了です。',
         },
         is_overdue: {
           label: '期限超過',
+          description: '最後に保存した時点で、期限を過ぎていて未完了だったかどうか。',
         },
         priority: {
           label: '優先度',
+          description: 'ToDo に設定された優先度：低、通常、高、緊急。',
         },
         priority_rank: {
           label: '緊急度',
+          description: '並べ替え用の優先度の数値。低が 1、緊急が 4、優先度なしは 0 です。',
         },
         status: {
           label: 'ステータス',
+          description: 'ToDo の状況：未着手、進行中、待機中、完了、保留。',
         },
         type: {
           label: '種別',
+          description: 'ToDo の種類：電話、メール、会議、フォローアップ、デモ、その他。',
         },
       },
       measures: {
         avg_progress: {
           label: '平均進捗',
+          description: '対象 ToDo の進捗（%）の平均。完了した ToDo も含みます。進捗を設定していない ToDo は 0% として数えます。',
         },
         task_count: {
           label: 'タスク数',
+          description: 'ToDo の件数。完了・保留を含むすべてのステータスを数えます。未完了の作業のみは完了済みで分けてください。',
         },
       },
     },
@@ -443,51 +501,24 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '契約書類',
       description: '印刷用の契約書：当事者、期間、金額、請求、条件、署名欄。',
     },
-    account_detail_page: {
-      label: '取引先詳細',
-      description: 'スロット構成の取引先レコードページ — カスタムヘッダーと常設のディスカッションフィード。',
-      title: '{name}',
-      subtitle: '{industry} · {type}',
-      components: {
-        account_chatter: { label: 'ディスカッション' },
-      },
-    },
     account_workbench: {
       label: '取引先ワークベンチ',
       description: '営業チーム向けに厳選した取引先リスト。クイックフィルターのみで、ビュー管理は行いません。',
     },
     lead_detail_page: {
       label: 'リード詳細',
-      description: 'ハイライト・詳細・関連情報を備えたリードの総合詳細ページ。',
-      title: '{full_name}',
-      subtitle: '{company}',
+      description: 'リードのレコードページ：プラットフォームが合成する標準レイアウト。アラート枠に重複の警告を表示します。',
       components: {
         lead_duplicate_alert_confirmed: { label: '重複確定の警告' },
         lead_duplicate_alert_suspected: { label: '重複の疑いの警告' },
-        lead_highlights: { label: '重要情報' },
-        lead_path: { label: 'リードステータスの進捗' },
-        main_tabs: { label: 'リード情報タブ' },
-        lead_details: { label: 'リード詳細情報' },
-        related_accordion: { label: '関連レコード' },
-        related_tasks: { title: '未完了のタスク', label: 'タスク' },
-        lead_activity: { label: '活動タイムライン' },
-        lead_history: { label: '項目履歴' },
       },
     },
     opportunity_detail_page: {
       label: '商談詳細',
-      description: 'ステージパス・ハイライト・詳細・関連リストを備えた商談の総合詳細ページ。',
-      title: '{name}',
-      subtitle: '{crm_account}',
+      description: '商談のレコードページ：プラットフォームが合成する標準レイアウト。アラート枠に承認待ちの通知を表示します。',
       components: {
-        opp_highlights: { label: '重要情報' },
-        opp_stage_path: { label: '商談ステージの進捗' },
         opp_approval_pending_manager: { label: '営業マネージャーの承認待ち' },
         opp_approval_pending_director: { label: '営業マネージャーと営業ディレクターの承認待ち' },
-        opp_details: { label: '商談詳細情報' },
-        // `page:tabs` item labels, keyed by each item's `value` (spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        opp_main_tabs: { items: { details: { label: '詳細' }, related: { label: '関連' }, activity: { label: '活動' } } },
       },
     },
     sales_home_page: {
@@ -544,6 +575,44 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
   // `refusals.<node>.message`. A translated description or message is a text
   // slot like the one it translates, so a hole in it is `{{ }}`.
   flows: {
+    // Draft Contract on an order (#2558). The drafted contract's provenance
+    // sentence is TEXT in the organization's language (#2535), one per
+    // variant of the draft (`../../flows/_contract-draft.ts`).
+    sales_order_draft_contract: {
+      label: '注文から契約を作成',
+      refusals: {
+        refuse_missing: { message: 'この注文は存在しないか、開く権限がありません。契約は作成されませんでした。' },
+        refuse_has_contract: { message: 'この注文にはすでに契約が紐づいています。契約は作成されませんでした。' },
+        refuse_no_contact: { message: '契約には主担当者が必要です。先に注文に担当者を入力してください。契約は作成されませんでした。' },
+      },
+      screens: {
+        result: {
+          title: '契約を作成しました',
+          description: '注文 {{ orderRecord.order_number }} から契約の下書きを作成し、この注文に紐づけました。開いて期間・日付・種別を入力してください。',
+          fields: { contractLink: { label: '契約' } },
+        },
+      },
+    },
+    sales_order_draft_contract_write: {
+      label: '注文から契約を作成（書き込み）',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: '注文{{ order }}から作成' },
+      }])),
+    },
+    // What the sweeps store in a record (#2522, #2535), at
+    // `flows.<flow>.records.<node>.fields.<field>`, holes as the source spells them.
+    contract_renewal: {
+      records: {
+        create_renewal_task: { fields: { subject: '更新期限：契約{{ currentContract.contract_number }}' } },
+        create_renewal_opp: { fields: { name: '更新 — {{ currentContract.contract_number }}', next_step: '顧客と更新条件を確認する' } },
+      },
+    },
+    opportunity_stagnation: {
+      records: {
+        create_followup_task: { fields: { subject: '停滞している商談を進める：{{ currentOpp.name | truncate:200 }}' } },
+        create_private_followup_task: { fields: { subject: '停滞している商談を進める（非公開の商談）' } },
+      },
+    },
     // Approval flows (#2060 item 13, C-15): the flow's own `label`, and each
     // `approval` node's step label under `approvals.<node>.label` (spec 18.1.0),
     // the step name the approval request shows the submitter and the approvers.

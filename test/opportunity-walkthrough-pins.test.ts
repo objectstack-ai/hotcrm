@@ -1,8 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { Task } from '../src/sales/objects/task.object';
-import { Event } from '../src/sales/objects/event.object';
 import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
 import { CloneOpportunityAction } from '../src/sales/actions/opportunity.actions';
 
@@ -10,20 +8,13 @@ type AnyRec = Record<string, any>;
 const field = (o: AnyRec, name: string): AnyRec => (o.fields as AnyRec)[name];
 
 /**
- * Three walkthrough fixes that live in one key each (2026-11-17), pinned so a
+ * Walkthrough fixes that live in one key each (2026-11-17), pinned so a
  * later edit does not quietly undo them. Each was measured in the console on
- * 18.5.0 before it was pinned here.
+ * 18.5.0 before it was pinned here. The activity pickers' lost-deal rule
+ * (#2573) is pinned with their own-account rule in
+ * `activity-deal-picker-account.test.ts`.
  */
 describe('opportunity walkthrough fixes', () => {
-  it.each([['crm_task', Task], ['crm_event', Event]] as const)(
-    "%s's Related Opportunity picker does not offer a lost deal (#2573)",
-    (_name, object) => {
-      expect(field(object, 'related_to_opportunity').lookupFilters).toEqual([
-        { field: 'stage', operator: 'ne', value: 'closed_lost' },
-      ]);
-    },
-  );
-
   it("the product page's list of opportunity lines names each line's deal (#2599)", () => {
     // The line's own title is the product's name, which on the product page
     // repeats on every row; the deal, quantity, price and total tell them apart.

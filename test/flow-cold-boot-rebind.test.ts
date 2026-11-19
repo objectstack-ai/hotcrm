@@ -54,6 +54,9 @@ import { allFlows } from '../objectstack.composition';
  * hiding.
  */
 
+/** The package the rig registers each flow as shipped by (see `registerFailure`). */
+const SHIPPED_BY = 'app.objectstack.hotcrm';
+
 const silentLogger: any = {
   info() {}, warn() {}, error() {}, debug() {}, trace() {}, fatal() {},
 };
@@ -66,8 +69,17 @@ silentLogger.child = () => silentLogger;
  */
 function registerFailure(def: unknown, name: string): string | null {
   const engine = new AutomationEngine(silentLogger);
+  // Every flow this app authors ships in one of the artifact's packages, and
+  // the host re-binds it as that package's (the loader's set answers the
+  // owner). Since 18.6.0 that matters to the parse: `defaultActive`
+  // (objectstack#34655) is refused on a flow no package ships, so a bare
+  // registration would refuse `quote_accepted_contract_draft` (hotcrm#2558)
+  // for a reason the real re-bind never meets. The package named is the
+  // artifact's app package; which of its packages holds a flow does not
+  // change the verdict.
+  engine.setPackagedFlowSource(() => SHIPPED_BY);
   try {
-    engine.registerFlow(name, def as never);
+    engine.registerFlow(name, def as never, { source: 'package', packageId: SHIPPED_BY } as never);
     return null;
   } catch (err) {
     return err instanceof Error ? err.message : String(err);

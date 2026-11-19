@@ -66,6 +66,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       document_url: { label: 'Contract Document' },
       special_terms: { label: 'Special Terms' },
       description: { label: 'Description' },
+      automation_key: { label: 'Automation Key', help: 'Which automation drafted this contract. Written by that automation; never edit.' },
       billing_address: { label: 'Billing Address' },
     },
     // Print Contract (#2317).
@@ -94,6 +95,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
   },
   // The order and its lines (REQ-0010, hotcrm#2555).
   crm_sales_order: {
+    // Draft Contract (#2558).
+    _actions: {
+      draft_contract: { label: 'Draft Contract' },
+    },
     label: 'Order',
     pluralLabel: 'Orders',
     fields: {

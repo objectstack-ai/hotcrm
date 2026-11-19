@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationData } from '@objectstack/spec/system';
+import { CONTRACT_DRAFT_NODE_IDS } from '../../sales/flows/_contract-draft';
 
 // The discount ceiling is interpolated, never retyped: the number lives in
 // `_thresholds.ts` alone (#1711).
@@ -169,6 +170,13 @@ export const zhCN: TranslationData = {
     },
   },
   objects: {
+    // The order's Source Quote, added by this package through
+    // `objectExtensions` (hotcrm#2558).
+    crm_sales_order: {
+      fields: {
+        crm_quote: { label: '来源报价单' },
+      },
+    },
     crm_quote: {
       _validations: {
         discount_within_ceiling: {
@@ -202,7 +210,7 @@ export const zhCN: TranslationData = {
         description: { label: '描述' },
         crm_contact: {
           label: '联系人',
-          help: '把报价改为「已提交」或「已接受」的那次保存必须填写 —— 起草的合同从这里取主要联系人。',
+          help: '把报价改为「已提交」或「已接受」的那次保存必须填写 —— 订单从这里取联系人，从订单起草的合同也从这里取主要联系人。',
         },
         owner_id: { label: '报价负责人' },
         // The countersigned copy (#2317).
@@ -429,19 +437,35 @@ export const zhCN: TranslationData = {
       dimensions: {
         category: {
           label: '类别',
+          description: '产品类别：软件、硬件、服务、订阅或支持服务。',
         },
       },
       measures: {
         list_price_sum: {
           label: '标价合计',
+          description: '当前范围内产品标价之和，是目录上的数字；不是销售额，也不含任何折扣或数量。',
         },
         product_count: {
           label: '产品数',
+          description: '产品目录中的产品数量，启用和停用的都算；不是销售的件数。',
         },
       },
     },
   },
   flows: {
+    // An accepted quote's two automations (hotcrm#2558). The drafted
+    // contract's provenance sentence is TEXT in the organization's language
+    // (#2535), one per variant of the draft, at
+    // `flows.quote_accepted_contract_draft.records.<node>.fields.description`.
+    quote_accepted_contract_draft: {
+      label: '已接受的报价单起草合同',
+      records: Object.fromEntries(CONTRACT_DRAFT_NODE_IDS.map((node) => [node, {
+        fields: { description: '根据已接受的报价单{{ quote }}自动起草' },
+      }])),
+    },
+    quote_accepted_order: {
+      label: '已接受的报价单创建订单',
+    },
     price_book_add_products: {
       label: '向价格表添加产品',
       successMessage: '产品已添加到价格表。',

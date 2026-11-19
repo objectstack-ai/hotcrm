@@ -1,12 +1,11 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { VerifyStack } from '@objectstack/verify';
-import { AUTO_DRAFTED_PREFIX, ContractDraftedNoticeFlow } from '../src/sales/flows/contract-drafted-notice.flow';
-import { REPO_ROOT } from './helpers/repo-root';
-import { hotcrmStack, signUpPerson, committedFile, type Person } from './helpers/verify-stack';
+import { QUOTE_ACCEPTANCE_KEY, ContractDraftedNoticeFlow } from '../src/sales/flows/contract-drafted-notice.flow';
+import { QuoteAcceptedContractDraftFlow } from '../src/revenue/flows/quote-accepted-contract-draft.flow';
+import { SalesOrderDraftContractWriteFlow } from '../src/sales/flows/sales-order-draft-contract.flow';
+import { hotcrmStack, signUpPerson, switchFlow, committedFile, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
 
@@ -18,8 +17,13 @@ type Rec = Record<string, any>;
  * the drafted contract was found only by looking. `contract_drafted_notice`
  * now fires on that contract's insert and sends the person who accepted the
  * quote an inbox notice linking it, which the console also shows as a live
- * toast. Delete the flow, or let its trigger miss the hook's provenance
- * sentence, and this goes red.
+ * toast. Delete the flow, or let its trigger miss the key the draft stamps,
+ * and this goes red.
+ *
+ * Since hotcrm#2558 the automatic draft is a packaged flow shipped switched
+ * OFF (`quote_accepted_contract_draft`); this suite switches it on through the
+ * administrator's door, which is the behaviour it pins. The order's Draft
+ * Contract stamps the same key (`test/sales-order-draft-contract.test.ts`).
  */
 
 const today = (): string => new Date().toISOString().slice(0, 10);
@@ -31,13 +35,14 @@ beforeAll(async () => {
   rep = await signUpPerson(verify, 'rep@contract-drafted-notice.test', {
     name: 'Drafted Notice Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
   });
+  await switchFlow(verify, 'quote_accepted_contract_draft', true);
 }, 120_000);
 
-describe('the trigger reads the sentence the hook writes', () => {
-  it('both provenance sentences of quote_accepted_contract_draft start with the prefix', () => {
-    const hook = readFileSync(join(REPO_ROOT, 'src/revenue/objects/quote.hook.ts'), 'utf8');
-    expect(hook).toContain(`\`${AUTO_DRAFTED_PREFIX} accepted quote \${quoteLabel}\``);
-    expect(hook).toContain(`'${AUTO_DRAFTED_PREFIX} an accepted quote'`);
+describe('the trigger reads the key the draft stamps, not its sentence (#2535)', () => {
+  it.each([QuoteAcceptedContractDraftFlow, SalesOrderDraftContractWriteFlow])('$name stamps the key the trigger matches on every draft', (flow) => {
+    const drafts = (flow.nodes as Rec[]).filter((n) => n.type === 'create_record' && n.config?.objectName === 'crm_contract');
+    expect(drafts.length, `${flow.name} drafts no contract`).toBeGreaterThan(0);
+    for (const node of drafts) expect(node.config.fields.automation_key, node.id).toBe(QUOTE_ACCEPTANCE_KEY);
   });
 });
 

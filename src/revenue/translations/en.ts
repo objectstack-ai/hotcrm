@@ -9,6 +9,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  */
 export const en: TranslationData = {
   objects: {
+    // The order's Source Quote, added by this package through
+    // `objectExtensions` (hotcrm#2558).
+    crm_sales_order: {
+      fields: {
+        crm_quote: { label: 'Source Quote' },
+      },
+    },
     crm_product: {
       label: 'Product',
       pluralLabel: 'Products',
@@ -100,7 +107,7 @@ export const en: TranslationData = {
         crm_account: { label: 'Account' },
         crm_contact: {
           label: 'Contact',
-          help: 'Required on the save that moves the quote to Presented or Accepted — the drafted contract takes its Primary Contact from here.',
+          help: 'Required on the save that moves the quote to Presented or Accepted — the order takes its contact from here, and a contract drafted from the order its Primary Contact.',
         },
         crm_opportunity: { label: 'Opportunity' },
         owner_id: { label: 'Quote Owner' },

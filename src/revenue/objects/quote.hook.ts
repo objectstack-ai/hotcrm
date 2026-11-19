@@ -21,12 +21,12 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *   `subtotal`, and on an unsettled quote's update that carries a pricing
  *   input — the quote header's one formula (#2083), and the only writer of
  *   those two `readonly` fields (#2110).
- * - On `accepted`, drafts a contract — carrying the quote's negotiated
- *   `payment_terms` onto it, and filling what the quote cannot express from
- *   `DRAFT_CONTRACT_DEFAULTS`, declared placeholders rather than decisions
- *   (#1129) — and pushes the linked opportunity to `closed_won`. Two hooks,
- *   `quote_accepted_contract_draft` and `quote_on_accepted`, because only the
- *   draft is elevated (#2014; see its note).
+ * - On `accepted`, pushes the linked opportunity to `closed_won`
+ *   (`quote_on_accepted`). What else an acceptance sets in motion is two
+ *   packaged flows an administrator switches (hotcrm#2558): the order
+ *   (`quote_accepted_order`, on) and the contract draft
+ *   (`quote_accepted_contract_draft`, off), both in `../flows/`. The draft
+ *   was a hook of this file until then, elevated on its own for #2014.
  * - `quote_price_book` (#2318): a new quote prices from the standard price
  *   book unless it names another; an inactive book is refused, and so is a
  *   book change on a quote that already has line items.
@@ -444,248 +444,12 @@ const quoteValidation: Hook = {
 };
 
 /**
- * On acceptance: draft the contract.
- *
- * ## `runAs: 'system'`, and why the close-won is a separate hook (#2014)
- *
- * A sales rep holds `crm_contract.allowCreate: false`, and a rep accepting the
- * quote on their own deal is the ordinary CPQ path — so as the caller the
- * draft was refused ("You do not have permission"), `onError: 'log'` swallowed
- * it, and the deal went `closed_won` with no contract (measured on 17.7.0).
- * The draft is the business's paperwork for a sale the rep is entitled to
- * record, not the rep authoring a contract, so this hook elevates (AGENTS.md
- * rule 9); the rep still cannot create a contract by hand. Elevation is not
- * anonymity: the contract's `created_by` names the person who accepted.
- *
- * Elevating as little as possible is why the close-won is NOT here. `runAs` is
- * per hook, and a system write is not held by an approval's record lock:
- * elevated, an accepted quote would close a deal its manager has not approved.
- * `quote_on_accepted` keeps that write the caller's. The two were already
- * independent legs (#714) — a contract that will not draft must not decide
- * whether the deal is won — and two hooks make that structural.
- *
- * Organization (AGENTS.md rule 10): its one read is the triggering quote by
- * id (#2503), so there is no scan to pin; its one write is an insert built from the triggering quote's own links,
- * and the engine stamps its `organization_id` from the trigger's context, which
- * elevation carries through unchanged (`withRunAs('system')` is the triggering
- * context plus `isSystem`) — pinned on a walled deployment by
- * `test/hook-org-inheritance.test.ts`.
- */
-const quoteAcceptedContractDraft: Hook = {
-  name: 'quote_accepted_contract_draft',
-  object: 'crm_quote',
-  events: ['afterUpdate'],
-  priority: 800,
-  async: true,
-  onError: 'log',
-  runAs: 'system',
-  description: 'Draft the accepted quote’s contract.',
-  handler: async (ctx: HookContext) => {
-    const { input, previous } = ctx;
-    if (input.status !== 'accepted' || previous?.status === 'accepted') return;
-    const api = ctx.api as HookApi | undefined;
-    if (!api) return;
-
-    // Real calendar months — `days * 30` shorted a 12-month term by ~5 days
-    // and only slipped past contract_validation's ±1-month tolerance by luck.
-    //
-    // On the UTC calendar throughout: the base is a stored DATE, and a bare
-    // `YYYY-MM-DD` parses to UTC midnight (measured: `new Date('2026-01-01')`
-    // is `2026-01-01T00:00:00.000Z` in every zone), so a local
-    // `getMonth`/`setMonth` step reads that anchor as the previous evening
-    // west of Greenwich and renders a day short whenever the offset at the
-    // end of the term differs from the offset at its start. A 12-month term makes that
-    // rare but not absent — measured on 9 of 730 consecutive start dates in
-    // `America/New_York` (e.g. `2026-11-02` + 12 months answered
-    // `2027-11-01`), and it is `crm_contract.end_date`, a date the customer is
-    // invoiced against.
-    function addMonths(iso: string, months: number): string {
-      const d = new Date(iso);
-      d.setUTCMonth(d.getUTCMonth() + months);
-      return d.toISOString().slice(0, 10);
-    }
-
-    /**
-     * First candidate that is a non-empty record id, or `undefined` (#714).
-     *
-     * The id chains here used to be written `(typeof a === 'string' && a) || (typeof
-     * b === 'string' && b)`, whose value when NEITHER operand holds is boolean
-     * `false` — not `undefined`. `false` is a VALUE: it went into the contract
-     * document as the content of a lookup, and a lookup column takes a record id
-     * or nothing at all. What the engine did with it depends on the deployment's
-     * ADR-0104 value-shape posture, and both outcomes are wrong:
-     *
-     *   - warn-first (a deployment that has not run `os migrate value-shapes
-     *     --apply`): the write is ADMITTED with a `[value-shape] … accepted for
-     *     now` warning, and `crm_contact = false` is persisted into a reference
-     *     column — a row the value-shape scan will later refuse to convert;
-     *   - strict (after that gate, or `OS_DATA_VALUE_SHAPE_STRICT_ENABLED=1`):
-     *     `ValidationError: Primary Contact has an invalid lookup value: Invalid
-     *     input: expected string, received boolean`, which aborted this whole
-     *     handler — so no contract, and the close-won leg below never ran.
-     *
-     * `undefined` is the only correct "there is no id here": it does not survive
-     * the JSON hop into the engine, and the writes below drop the key outright,
-     * so an absent optional link is an ABSENT COLUMN rather than a junk value.
-     */
-    const pickId = (...candidates: unknown[]): string | undefined =>
-      candidates.find((c): c is string => typeof c === 'string' && c !== '');
-
-    const accountId = pickId(input.crm_account, previous?.crm_account);
-    const contactId = pickId(input.crm_contact, previous?.crm_contact);
-    const opportunityId = pickId(input.crm_opportunity, previous?.crm_opportunity);
-    const ownerId = pickId(input.owner_id, previous?.owner_id, ctx.user?.id);
-    // The figure the quote STORES, read now, before the accepting write's own
-    // pre-image (#2503). Measured on 18.5.0: a line can be rolled into the
-    // quote after the accept read its prior row and before it wrote, so
-    // `previous.total_price` was the total before that line and the contract
-    // was drafted at a figure the quote's lines contradicted. The accept writes
-    // no figure of its own, and after it the line freeze refuses every new
-    // line, so the stored total is the one the lines sum to.
-    const quoteId = pickId(input.id, previous?.id);
-    const stored = quoteId
-      ? await api.object('crm_quote').findOne({ where: { id: quoteId }, fields: ['total_price'] }).catch(() => null)
-      : null;
-    const totalPrice = [stored?.total_price, input.total_price, previous?.total_price].find((v) => typeof v === 'number') ?? 0;
-
-    /**
-     * The payment terms the customer actually negotiated.
-     *
-     * Quote and Contract share one `payment_terms` vocabulary because an
-     * accepted quote's terms carry over to the contract — but only if something
-     * carries them. Without this the drafted contract takes
-     * `crm_contract.payment_terms`'s own option default `net_30` on every
-     * accepted quote, including one negotiated at `due_on_receipt`; and the
-     * contract's `payment_terms` is one of the fields
-     * `src/sales/flows/billing-handoff-contract-activated.flow.ts` POSTs to
-     * billing when the contract activates, so a defaulted term becomes an
-     * invoicing term.
-     *
-     * Read like `totalPrice` above: the patch's value when the accepting write
-     * carried one, else the value already on the quote — `pickId`'s rule
-     * exactly (the first non-empty string), so it is read with `pickId`. A
-     * quote that never chose a term yields `undefined`, which drops the key and
-     * lets the contract's own default apply.
-     */
-    const paymentTerms = pickId(input.payment_terms, previous?.payment_terms);
-
-    const today = new Date().toISOString().slice(0, 10);
-
-    /**
-     * PLACEHOLDER DEFAULTS — declared as defaults, NOT decided as business
-     * facts (#1129 ruling, 2026-08-31). An auto-drafted contract is a STARTING
-     * DRAFT an admin completes, not a faithful transcription of what was sold.
-     * `crm_contract` requires all three, a quote can express none of them, so
-     * the hook has to supply something; none of it is evidence about the deal:
-     *
-     *   - `contract_term_months` — `required + notNull + min: 1` on the
-     *     contract, and the quote has nowhere to record a term. 12 is a guess
-     *     with nothing behind it;
-     *   - `contract_type` — the contract declares six values (subscription /
-     *     service / license / partnership / nda / msa) and NO option default,
-     *     so this line is the only thing that ever picks one: every
-     *     auto-drafted contract in the app is a subscription and the other
-     *     five types are unreachable on this path. It does not stay here
-     *     either —
-     *     `src/sales/flows/billing-handoff-contract-activated.flow.ts`
-     *     POSTs `contract_type` to billing when the contract activates;
-     *   - `start_date` — the one member that is not a literal: the date the
-     *     quote happened to be ACCEPTED, which is not necessarily the date the
-     *     customer's term begins. A placeholder RULE rather than a placeholder
-     *     value. It sits in the block because the block is itself per-draft:
-     *     an L2 body has no module scope at runtime (see the file header), so
-     *     these are handler-local by construction, not module constants.
-     *
-     * `end_date` is not a fourth default — it is DERIVED from the two above
-     * (`addMonths`, real calendar months), so it inherits their guesses rather
-     * than adding one of its own.
-     *
-     * ⛔ Do not read these as decisions and do not quietly re-tune them. The
-     * alternative — the quote carrying a real term and type so the draft
-     * transcribes what was sold — is option A of #1129: recorded, not
-     * undertaken, unfrozen only by measured evidence that real sales processes
-     * fix the term and type at acceptance time. This block is then the list of
-     * values that move onto `crm_quote`. Leaving them unmarked was excluded by
-     * the same ruling: an unmarked hardcode is exactly how the `payment_terms`
-     * drift of #873 happened.
-     */
-    const DRAFT_CONTRACT_DEFAULTS = {
-      contract_term_months: 12,
-      contract_type: 'subscription',
-      start_date: today,
-    } as const;
-
-    // The contract's ONE field explaining where it came from. ⛔ Never a record
-    // id: `Auto-drafted from accepted quote MvNopWgEDZwm2T5L` names a string no
-    // surface in this app ever shows. Name it by number and name, though the
-    // quote's title is its name alone (#2369 row 10): quote names may repeat,
-    // and unlike the task sites in this class there is no relationship field
-    // to hold the id afterwards — `crm_contract` links account, contact and
-    // opportunity but not the quote — so this sentence is the whole provenance
-    // record, and the number, a list column on every quote list, is what makes
-    // it name one quote. `quote_number` is an engine-issued autonumber and
-    // never appears on an update payload, so it is read from the pre-image
-    // alone; `name` can be changing in this very write.
-    const trimmed = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
-    const quoteLabel = [trimmed(previous?.quote_number), [input.name, previous?.name].map(trimmed).find(Boolean)].filter(Boolean).join(' - ');
-
-    // Only lookups we actually HAVE are written. A missing optional link is an
-    // absent key — never `false` (see `pickId`), and never `null` either: `null`
-    // is a legal shape for the optional `crm_opportunity` but not for the
-    // required `crm_contact`, and one idiom for both is what keeps this honest.
-    const contract: Record<string, unknown> = {
-      ...DRAFT_CONTRACT_DEFAULTS,
-      status: 'draft',
-      end_date: addMonths(DRAFT_CONTRACT_DEFAULTS.start_date, DRAFT_CONTRACT_DEFAULTS.contract_term_months),
-      contract_value: totalPrice,
-      description: quoteLabel ? `Auto-drafted from accepted quote ${quoteLabel}` : 'Auto-drafted from an accepted quote',
-    };
-    if (accountId) contract.crm_account = accountId;
-    if (contactId) contract.crm_contact = contactId;
-    if (opportunityId) contract.crm_opportunity = opportunityId;
-    if (ownerId) contract.owner_id = ownerId;
-    // Same idiom for the same reason: written only when the quote HAS a term,
-    // so "the quote chose nothing" stays an absent key rather than becoming a
-    // value the contract's default would otherwise have supplied.
-    if (paymentTerms) contract.payment_terms = paymentTerms;
-
-    // What the draft deliberately does NOT carry (#1129 ruling, 2026-08-31) —
-    // DECIDED, not overlooked. `crm_quote.shipping_terms` and
-    // `crm_quote.shipping_address` have no counterpart column on
-    // `crm_contract` at all; `crm_quote.billing_address` has one and is left
-    // for the admin completing the draft; and the quote's `description` would
-    // displace the provenance sentence written above, which is this contract's
-    // only record of where it came from. Copying any of them is part of option
-    // A (faithful transcription) and unfreezes with it, not before.
-
-    try {
-      await api.object('crm_contract').insert(contract);
-    } catch (err) {
-      // `crm_quote.crm_contact` is deliberately optional while
-      // `crm_contract.crm_contact` is `required + notNull`, so a quote accepted
-      // without a recipient legitimately lands here with "Primary Contact is
-      // required". That refusal is the documented behaviour, not a defect —
-      // `content/docs/sales/quotes.mdx` already tells reps to put the contact on
-      // the quote first, because "what the quote does not carry, acceptance
-      // cannot pass on". The refusal is truthful (a named missing field, not
-      // "received boolean"), and since the close-won lives in its own hook it
-      // can no longer take that leg with it.
-      //
-      // DELIBERATELY BARE, like the close-won one in `quote_on_accepted`: a
-      // cascade fault the accepting user neither caused nor can act on, so a
-      // 500, never a 4xx refusal envelope (#1075). It names the quote by number
-      // and name — the label composed above — never by its id (#1243).
-      throw new Error(`could not draft the contract for quote ${quoteLabel}: ${(err as Error).message}`);
-    }
-  },
-};
-
-/**
  * On acceptance: push the linked opportunity to `closed_won`.
  *
  * Deliberately NOT elevated — the reason is on `quote_accepted_contract_draft`
- * above: this write stays the accepting caller's, so the opportunity's own
- * guards and an approval's record lock judge it as they always have. A deal an
+ * (`../flows/quote-accepted-contract-draft.flow.ts`, a hook here until
+ * hotcrm#2558): this write stays the accepting caller's, so the opportunity's
+ * own guards and an approval's record lock judge it as they always have. A deal an
  * approval holds is refused at the acceptance itself (`quote_workflow`), so this
  * write no longer meets that lock on a user's acceptance.
  */
@@ -701,8 +465,8 @@ const quoteAccepted: Hook = {
     const { input, previous } = ctx;
     if (input.status !== 'accepted' || previous?.status === 'accepted') return;
     const api = ctx.api as HookApi | undefined;
-    // A record id or nothing — never boolean `false` (#714; the full note is on
-    // `pickId` in `quote_accepted_contract_draft`).
+    // A record id or nothing — never boolean `false` (#714: `(a && x) || (b && y)`
+    // is `false` when neither holds, and `false` in a lookup is a junk value).
     const id = [input.crm_opportunity, previous?.crm_opportunity].find((v): v is string => typeof v === 'string' && v !== '');
     if (!api || !id) return;
 
@@ -720,8 +484,8 @@ const quoteAccepted: Hook = {
         await api.object('crm_opportunity').update({ ...won, ...(opp.win_reason ? {} : { win_reason: 'quote_accepted' }) }, { where: { id } });
       }
     } catch (err) {
-      // DELIBERATELY BARE — one of the two throws in this file the #1075 sweep
-      // left alone (the other is the contract draft's, above). Every other
+      // DELIBERATELY BARE — the one throw in this file the #1075 sweep left
+      // alone (the contract draft's, its sibling, is a flow since #2558). Every other
       // throw here is a business refusal: the user asked for something the
       // rules forbid, and an envelope tells their client which rule. This one
       // is the opposite. It fires from an `afterUpdate` cascade when close-won
@@ -864,4 +628,4 @@ const quotePriceBook: Hook = {
   },
 };
 
-export default [quoteValidation, quotePriceBook, quoteAcceptedContractDraft, quoteAccepted];
+export default [quoteValidation, quotePriceBook, quoteAccepted];

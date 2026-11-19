@@ -26,11 +26,11 @@ its contract, and the order's page then lists it under **Projects**.
   responsibility *Project Manager* becomes the project's **Project Manager**:
   they edit the project, staff it, and approve its timesheets and expenses.
   The field cannot be typed on the project; change the staffing row instead.
-- **Everyone else staffed is the Team**, and reads the project. Removing a
-  staffing row takes that access away. The Project Manager is not listed in
-  the Team as well.
+- **Everyone staffed is the Team**, the Project Manager too, and reads the
+  project. Removing a staffing row takes that access away.
 - **The Team sees the customer, not the deal.** A team member reads every
-  account, read-only, so the project's Account shows by name. The
+  account, read-only, so the project's Account shows by name, without the
+  account's Invoiced, Received and Receivable Balance. The
   Opportunity and the Order are left off their project page, the deal does
   not open for them, and Opportunities is not in their Project Delivery menu.
 - **One row per person per project.** Staffing someone twice is refused.

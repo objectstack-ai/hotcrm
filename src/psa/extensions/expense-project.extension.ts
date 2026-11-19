@@ -22,8 +22,7 @@ import { Field } from '@objectstack/spec/data';
  * form's guard only; a write through the API is caught when its report is
  * submitted, where `expense_report_project_approval` turns a report on an
  * over or locked project back to Draft
- * (`src/expense/flows/expense-report-project-approval.flow.ts`, in the
- * expense module for the platform gap that file names).
+ * (`../flows/expense-report-project-approval.flow.ts`).
  *
  * The expense report's Project (hotcrm#2559). Submit for Reimbursement puts
  * the expenses of each project on a report of their own and names the project
@@ -36,9 +35,9 @@ import { Field } from '@objectstack/spec/data';
  * The travel request's Project field (hotcrm#2581, F3d), on the same terms as
  * the expense's: optional, the same picker, gone with Project Delivery. A
  * request on a project is approved by the project's Project Manager, one
- * without by the traveler's manager; both flows sit in the expense module for
- * the platform gap `src/expense/flows/expense-report-project-approval.flow.ts` names
- * (`../../expense/flows/expense-request-project-approval.flow.ts`).
+ * without by the traveler's manager (`src/expense/flows/expense-request-approval.flow.ts`);
+ * the project path is this module's own
+ * (`../flows/expense-request-project-approval.flow.ts`).
  *
  * Locked with the request's other planned values once it is Approved,
  * Cancelled or Closed: the project chose the approver, so moving an approved

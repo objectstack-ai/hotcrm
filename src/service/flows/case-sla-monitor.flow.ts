@@ -1,6 +1,6 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P, cel } from '@objectstack/spec';
+import { P, cel, tmpl } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { guarded } from '../../sales/flows/_guarded-iteration';
 import { optionLabelsByLocale } from '../../sales/flows/_option-labels';
@@ -192,7 +192,9 @@ export const CaseSlaMonitorFlow: Flow = {
                   ...SLA_BREACH,
                   is_escalated: true,
                   escalated_date: cel`isoDatetime(now())`,
-                  escalation_reason: 'Auto-escalated: SLA due date breached',
+                  // TEXT, in the organization's language (#2494): translated
+                  // at `flows.case_sla_monitor.records.flag_breach.fields.escalation_reason`.
+                  escalation_reason: tmpl`Auto-escalated: SLA due date breached`,
                 },
               },
             },

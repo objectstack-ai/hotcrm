@@ -5,18 +5,18 @@
   },
   "manifestId": "app.objectstack.hotcrm",
   "displayName": "HotCRM",
-  "description": "AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, and Contracts in one production-grade workspace.",
-  "tagline": "Production AI-native CRM — accounts to forecasts.",
+  "description": "Leads, orders, projects, cash and expenses in one open-source business system. Six apps: Sales, Service, Marketing, Order to Cash, Project Delivery and Expenses. Change it with AI when your business changes. Let your own AI agents work in it with each user's permissions.",
+  "tagline": "Leads, orders, projects, cash and expenses in one open-source business system.",
   "businessFunctions": ["sales", "customer_service", "marketing"],
   "license": "Apache-2.0",
   "iconUrl": "https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg",
   "homepageUrl": "https://github.com/objectstack-ai/hotcrm",
-  "tags": ["crm", "sales", "accounts", "leads", "opportunities", "cases", "campaigns"],
+  "tags": ["crm", "sales", "accounts", "leads", "opportunities", "cases", "campaigns", "orders", "invoices", "projects", "timesheets", "expenses"],
   "readmePath": "README.md",
   "translations": {
     "zh-CN": {
-      "description": "ObjectStack 应用市场上的 AI 原生 CRM：客户、联系人、线索、商机、工单、知识文章、销售预测、营销活动与合同，集于一个可投入生产的工作空间。",
-      "tagline": "可投入生产的 AI 原生 CRM，从客户到销售预测。",
+      "description": "线索、订单、项目、回款、报销，一套开源的业务系统。六个应用：销售、服务、营销、订单与回款、项目交付、费用报销。业务变了，让 AI 帮你改系统；你的 AI 助手用你的权限替你办事。",
+      "tagline": "线索、订单、项目、回款、报销，一套开源的业务系统",
       "readme": "README.zh-CN.md"
     }
   }
