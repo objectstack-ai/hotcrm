@@ -511,14 +511,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         lead_duplicate_alert_suspected: { label: 'Aviso de duplicado sospechoso' },
       },
     },
-    opportunity_detail_page: {
-      label: 'Detalle de Oportunidad',
-      description: 'La página de registro de la oportunidad: el diseño sintetizado, con los avisos de aprobación en el espacio de alertas.',
-      components: {
-        opp_approval_pending_manager: { label: 'Pendiente de aprobación del Gerente de Ventas' },
-        opp_approval_pending_director: { label: 'Pendiente de aprobación del Gerente y del Director de Ventas' },
-      },
-    },
     sales_home_page: {
       label: 'Inicio de Ventas',
       description: 'Página de inicio del equipo comercial con métricas clave, mi trabajo pendiente y próximos eventos',
