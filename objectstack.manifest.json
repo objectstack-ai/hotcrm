@@ -5,17 +5,17 @@
   },
   "manifestId": "app.objectstack.hotcrm",
   "displayName": "HotCRM",
-  "description": "Leads, orders, projects, cash and expenses in one open-source business system. Six apps: Sales, Service, Marketing, Order to Cash, Project Delivery and Expenses. Change it with AI when your business changes. Let your own AI agents work in it with each user's permissions.",
+  "description": "Leads, orders, projects, cash and expenses in one open-source business system. Six apps: Sales, Service, Marketing, Order to Cash, Project Delivery and Expenses. Order to Cash tracks orders, invoices and payments, and is not an accounting ledger. Change it with AI when your business changes. Let your own AI agents work in it with each user's permissions.",
   "tagline": "Leads, orders, projects, cash and expenses in one open-source business system.",
-  "businessFunctions": ["sales", "customer_service", "marketing"],
+  "businessFunctions": ["sales", "finance", "project"],
   "license": "Apache-2.0",
   "iconUrl": "https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg",
   "homepageUrl": "https://github.com/objectstack-ai/hotcrm",
-  "tags": ["crm", "sales", "accounts", "leads", "opportunities", "cases", "campaigns", "orders", "invoices", "projects", "timesheets", "expenses"],
+  "tags": ["crm", "sales", "accounts", "leads", "opportunities", "cases", "service", "support", "helpdesk", "marketing", "campaigns", "orders", "invoices", "projects", "timesheets", "expenses"],
   "readmePath": "README.md",
   "translations": {
     "zh-CN": {
-      "description": "线索、订单、项目、回款、报销，一套开源的业务系统。六个应用：销售、服务、营销、订单与回款、项目交付、费用报销。业务变了，让 AI 帮你改系统；你的 AI 助手用你的权限替你办事。",
+      "description": "线索、订单、项目、回款、报销，一套开源的业务系统。六个应用：销售、服务、营销、订单与回款、项目交付、费用报销。订单与回款跟踪订单、发票和回款，不是会计记账系统。业务变了，让 AI 帮你改系统；你的 AI 助手用你的权限替你办事。",
       "tagline": "线索、订单、项目、回款、报销，一套开源的业务系统",
       "readme": "README.zh-CN.md"
     }

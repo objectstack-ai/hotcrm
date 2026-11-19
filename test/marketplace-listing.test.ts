@@ -174,9 +174,24 @@ describe('the marketplace classification', () => {
   it('the manifest declares businessFunctions, primary first, and no category', () => {
     const mp = manifest();
     expect(mp).not.toHaveProperty('category');
-    expect(mp.businessFunctions).toEqual(['sales', 'customer_service', 'marketing']);
+    // Sales, finance, project (#2689): the name "HotCRM" already files it
+    // under sales; the two other slots go to what the name does not say.
+    expect(mp.businessFunctions).toEqual(['sales', 'finance', 'project']);
     const parsed = MarketplaceBusinessFunctionsSchema.safeParse(mp.businessFunctions);
     expect(parsed.success, JSON.stringify(parsed.error?.issues)).toBe(true);
+  });
+
+  it('search still finds the service and marketing apps the business functions no longer name (#2689)', () => {
+    const { tags } = manifest();
+    for (const tag of ['service', 'support', 'helpdesk', 'cases', 'marketing', 'campaigns']) expect(tags).toContain(tag);
+    expect(new Set(tags).size).toBe(tags.length);
+  });
+
+  it('under finance, the listing says Order to Cash is not an accounting ledger, in both locales (#2689)', () => {
+    const mp = manifest();
+    expect(mp.businessFunctions).toContain('finance');
+    expect(mp.description).toContain('Order to Cash tracks orders, invoices and payments, and is not an accounting ledger.');
+    expect(mp.translations['zh-CN'].description).toContain('订单与回款跟踪订单、发票和回款，不是会计记账系统。');
   });
 
   it('the package upsert body carries business_functions and no category', () => {

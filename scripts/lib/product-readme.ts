@@ -56,7 +56,17 @@ export type ReadmeLocale = {
   headers: { app: string; what: string };
   /** How the app list is joined in a sentence. */
   join: (names: string[]) => string;
+  /**
+   * The listing description's one sentence on what the Order to Cash app is
+   * not, given its label (#2689). The listing is filed under the `finance`
+   * business function, which the platform's taxonomy glosses as "Finance and
+   * accounting"; Order to Cash keeps no ledger, so the card says so.
+   */
+  financeScope: (app: string) => string;
 };
+
+/** The app `financeScope` is about. */
+export const FINANCE_SCOPE_APP = 'crm_o2c';
 
 export const README_LOCALES: ReadmeLocale[] = [
   {
@@ -66,6 +76,7 @@ export const README_LOCALES: ReadmeLocale[] = [
     prefix: '',
     headers: { app: 'App', what: 'What it does' },
     join: (names) => `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`,
+    financeScope: (app) => `${app} tracks orders, invoices and payments, and is not an accounting ledger.`,
   },
   {
     file: 'README.zh-CN.md',
@@ -74,6 +85,7 @@ export const README_LOCALES: ReadmeLocale[] = [
     prefix: '/zh-Hans',
     headers: { app: '应用', what: '做什么' },
     join: (names) => names.join('、'),
+    financeScope: (app) => `${app}跟踪订单、发票和回款，不是会计记账系统。`,
   },
 ];
 
@@ -146,16 +158,24 @@ export function writeReadmeBlocks(text: string, blocks: Record<BlockName, string
   return out;
 }
 
-/** The listing copy: the tagline is the headline; the description adds the six apps and the subtitle. */
+/**
+ * The listing copy: the tagline is the headline; the description adds the six
+ * apps, what Order to Cash is not (#2689) and the subtitle.
+ */
 export function listingCopy(source: ProductSource, apps: ProductApp[], loc: ReadmeLocale): { description: string; tagline: string } {
   const copy = source.locales[loc.copy];
-  const names = loc.join(appsOf(source, apps, loc).map((a) => a.label));
+  const listed = appsOf(source, apps, loc);
+  const names = loc.join(listed.map((a) => a.label));
+  const scoped = listed.find((a) => a.name === FINANCE_SCOPE_APP);
+  if (!scoped) throw new Error(`product.json orders no '${FINANCE_SCOPE_APP}', which the listing's finance sentence names`);
   const sep = loc.copy === 'en' ? ': ' : '：';
   const stop = loc.copy === 'en' ? '.' : '。';
   const headline = /[.。]$/.test(copy.headline) ? copy.headline : `${copy.headline}${stop}`;
   return {
     tagline: copy.headline,
-    description: [headline, `${copy.apps.title}${sep}${names}${stop}`, copy.subtitle].join(loc.copy === 'en' ? ' ' : ''),
+    description: [headline, `${copy.apps.title}${sep}${names}${stop}`, loc.financeScope(scoped.label), copy.subtitle].join(
+      loc.copy === 'en' ? ' ' : '',
+    ),
   };
 }
 
