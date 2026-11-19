@@ -135,7 +135,7 @@ export const zhCN: TranslationData = {
         },
         due_date: {
           label: '到期日',
-          help: '留空时，为开票日期加上合同的付款条件。没有合同时请填写。',
+          help: '留空时，为开票日期加上合同的付款条款。没有合同时请填写。',
         },
         status: {
           label: '状态',
