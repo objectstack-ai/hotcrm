@@ -147,9 +147,9 @@ export const customer: Record<string, ObjectTranslationData> = {
     description: '客户与商机的关键人物联系人',
     fields: {
       salutation: { label: '称谓' },
-      first_name: { label: '名' },
-      last_name: { label: '姓' },
-      full_name: { label: '全名' },
+      first_name: { label: '名字' },
+      last_name: { label: '姓氏' },
+      full_name: { label: '姓名' },
       crm_account: { label: '所属客户' },
       email: { label: '邮箱' },
       phone: { label: '电话' },

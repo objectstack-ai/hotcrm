@@ -64,9 +64,9 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     description: '尚未确认的潜在客户',
     fields: {
       salutation: { label: '称谓' },
-      first_name: { label: '名' },
-      last_name: { label: '姓' },
-      full_name: { label: '全名' },
+      first_name: { label: '名字' },
+      last_name: { label: '姓氏' },
+      full_name: { label: '姓名' },
       company: { label: '公司' },
       title: { label: '职位' },
       email: { label: '邮箱' },
