@@ -10,7 +10,7 @@
   "businessFunctions": ["sales", "customer_service", "marketing"],
   "license": "Apache-2.0",
   "iconUrl": "https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg",
-  "homepageUrl": "https://github.com/objectstack-ai/hotcrm",
+  "homepageUrl": "https://www.hotcrm.com",
   "tags": ["crm", "sales", "accounts", "leads", "opportunities", "cases", "campaigns", "orders", "invoices", "projects", "timesheets", "expenses"],
   "readmePath": "README.md",
   "translations": {
