@@ -337,8 +337,31 @@ FROM → TO for a breaking change); it ships as `CHANGELOG.md`. The lone excepti
 A seat may take a PR out of draft and arm auto-merge once every check on it has finished and none has failed. Arming **enqueues**:
 `main`'s ruleset carries a merge queue that performs the squash merge within seconds — ⛔ never merge by hand, and do not re-derive a
 wait from `min_entries_to_merge_wait_minutes`. A check that concluded `skipped` under a label, or never ran because a path filter
-excluded it, is not a failure. **Governed paths — `AGENTS.md`, `CLAUDE.md`, `.claude/**` — govern the whole
+excluded it, is not a failure. **Governed paths — `AGENTS.md`, `CLAUDE.md`, `.claude/**`, `.github/workflows/**` — govern the whole
 diff**, however small that part of it is: the PR stays a **draft** and is the maintainer's own merge; ⛔ a seat never flips it ready and never arms auto-merge on it. (#1742)
+The workflows hold the production publish secret and the release job, so they are governed like the instruction files (#2690); a
+third-party action in them is pinned to a commit SHA when it is added or touched.
+
+### Who decides a change (2026-11-19 ruling)
+
+Maintainer, 2026-11-19 (verbatim, untranslated): 「元数据项目是什么规则，也要考虑」. Everything he decides is reviewed first by an
+independent reviewer (a fresh session or subagent, read-only, that took no part in the change and has not read the author's
+conclusion), and he reads that reviewer's four-line Chinese conclusion: what changes · why and who asked · the worst case and whether it
+can be undone · what the review did not verify, or 「无」. Metadata changes are sorted by whether they can hurt people already using the
+app, not by directory:
+
+| Class | Examples | Who decides |
+|---|---|---|
+| **maintainer** | a permission set or sharing rule changes who can see or change what; an existing object or field is deleted or renamed (its data is still there); a platform major-version bump | the reviewer's conclusion says, for permissions, **which roles gain or lose what**, and for a delete or rename, **what happens to existing data**; the PR stays a **draft** for his merge, like a governed path |
+| **reviewer** | new objects, fields, pages, views, reports, dashboards; text and translations; a flow or hook change that does not change who sees what | lands the ordinary way once the review passes |
+
+The author declares the class in the PR body on a line starting `Metadata-impact:` (`maintainer — <which of the three>` or
+`reviewer`); the reviewer verifies it in the review record, and a declaration the reviewer rejects goes to the maintainer. A PR that only
+writes down a ruling he already gave carries a `Ruling-ref:` line (his words, source and time) and the reviewer checks the diff against
+it line by line. Review effort for the maintainer class and for governed paths is `xhigh`; `max` only when he names it.
+
+**CI here is free** (a public repository): no minutes budget. Every job in `.github/workflows/` declares `timeout-minutes`, sized from
+measured run times, and a new job arrives with one.
 
 ### Verifying UI in the browser
 
