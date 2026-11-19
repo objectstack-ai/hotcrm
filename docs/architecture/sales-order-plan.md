@@ -146,5 +146,7 @@ What they settle for this design:
 ## Not measured
 
 - The design was written from the code, with no prototype.
-- Changing the master of the three Order to Cash objects on an environment that installed 6.4.0 is
-  measured inside [hotcrm#2557](https://github.com/objectstack-ai/hotcrm/issues/2557), before it lands.
+- Changing the master of the three Order to Cash objects on an existing environment was measured
+  inside [hotcrm#2557](https://github.com/objectstack-ai/hotcrm/issues/2557) on 2026-11-17, from a
+  6.5.0 database: no row, account, contract or total changed; the contract column stays NOT NULL
+  until an administrator runs `os migrate apply` and confirms the three `relax_not_null` changes.

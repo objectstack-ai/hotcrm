@@ -47,14 +47,14 @@ export const ProjectMemberProfile = {
     crm_project_member: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_project_task:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_account:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: true,  modifyAllRecords: false },
-    // Order to Cash, as on `marketing_user`: read on invoices and payments, the
-    // sources the account's receivables figures sum (`os lint`
-    // `security-rollup-source-unreadable`); those figures are hidden from this
-    // set below (hotcrm#2481). Both are `controlled_by_parent` under the
-    // contract, which this set does not read, so the grant opens no invoice and
-    // no payment by itself (ADR-0055).
-    crm_invoice:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
-    crm_payment:        { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+    // Order to Cash: NO read on invoices and payments. Since hotcrm#2557 both
+    // are `controlled_by_parent` under the ACCOUNT, and this set reads every
+    // account (View All above), so a read grant here would open the rows of
+    // every account. Irene ruled 2026-11-17 05:08Z 「保持现在的范围」: sales
+    // (own accounts) and finance read the rows; consultants read neither the
+    // rows nor the totals (the `crm_account` field rows below, hotcrm#2481),
+    // so the totals sum no source this set can read and `os lint`
+    // `security-rollup-source-unreadable` has nothing to report here.
     crm_rate_card:      { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     crm_timesheet:      { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_time_entry:     { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: true,  viewAllRecords: false, modifyAllRecords: false },

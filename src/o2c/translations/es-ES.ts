@@ -12,9 +12,39 @@ export const esES: TranslationData = {
     payment_plan_step_stamp: {
       refusals: {
         VALIDATION_FAILED: {
-          message: 'Esta factura pertenece a otro contrato. Elija una factura del contrato de este cobro.',
+          message: 'Esta factura pertenece a otra cuenta. Elija una factura de la cuenta de este cobro.',
           reasons: {
-            named: { message: '{{invoice}} pertenece a otro contrato. Elija una factura del contrato de este cobro.' },
+            named: { message: '{{invoice}} pertenece a otra cuenta. Elija una factura de la cuenta de este cobro.' },
+          },
+        },
+      },
+    },
+    billing_milestone_row_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'Este contrato pertenece a otra cuenta. Elija un contrato de esta cuenta, o deje la cuenta vacía para que la rellene el contrato.',
+          reasons: {
+            named: { message: '{{contract}} pertenece a otra cuenta. Elija un contrato de esta cuenta, o deje la cuenta vacía para que la rellene el contrato.' },
+          },
+        },
+      },
+    },
+    invoice_row_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'Este contrato pertenece a otra cuenta. Elija un contrato de esta cuenta, o deje la cuenta vacía para que la rellene el contrato.',
+          reasons: {
+            named: { message: '{{contract}} pertenece a otra cuenta. Elija un contrato de esta cuenta, o deje la cuenta vacía para que la rellene el contrato.' },
+          },
+        },
+      },
+    },
+    payment_row_stamp: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'Este contrato pertenece a otra cuenta. Elija un contrato de esta cuenta, o deje la cuenta vacía para que la rellene el contrato.',
+          reasons: {
+            named: { message: '{{contract}} pertenece a otra cuenta. Elija un contrato de esta cuenta, o deje la cuenta vacía para que la rellene el contrato.' },
           },
         },
       },
@@ -24,7 +54,10 @@ export const esES: TranslationData = {
     crm_billing_milestone: {
       label: 'Hito de facturación',
       pluralLabel: 'Hitos de facturación',
-      description: 'Un paso del plan de cobro de un contrato: qué se debe, cuándo, y cuánto está facturado y cobrado',
+      description: 'Un paso del plan de cobro de una cuenta, planificado a partir de un contrato: qué se debe, cuándo, y cuánto está facturado y cobrado',
+      _validations: {
+        billing_milestone_contract: { message: 'Elija el contrato al que pertenece este hito.' },
+      },
       fields: {
         name: {
           label: 'Hito',
@@ -82,7 +115,7 @@ export const esES: TranslationData = {
     crm_invoice: {
       label: 'Factura',
       pluralLabel: 'Facturas',
-      description: 'Una factura que finanzas emitió contra un contrato, y cuánto de ella está pagado',
+      description: 'Una factura que finanzas emitió a una cuenta, y cuánto de ella está pagado',
       fields: {
         invoice_number: {
           label: 'Número de factura',
@@ -102,7 +135,7 @@ export const esES: TranslationData = {
         },
         due_date: {
           label: 'Fecha de vencimiento',
-          help: 'Si se deja vacía, es la fecha de emisión más las condiciones de pago del contrato.',
+          help: 'Si se deja vacía, es la fecha de emisión más las condiciones de pago del contrato. Sin contrato, escríbala.',
         },
         status: {
           label: 'Estado',
@@ -167,7 +200,7 @@ export const esES: TranslationData = {
     crm_payment: {
       label: 'Cobro',
       pluralLabel: 'Cobros',
-      description: 'Dinero recibido contra un contrato, una factura o un hito',
+      description: 'Dinero que pagó una cuenta: contra una factura, un hito, un contrato, o ninguno todavía',
       fields: {
         payment_number: {
           label: 'Número de cobro',

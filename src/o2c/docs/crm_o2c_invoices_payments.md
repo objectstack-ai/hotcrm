@@ -1,6 +1,6 @@
 ---
 title: Invoices and Payments — Who Writes Them and What Overdue Means
-description: Finance's records on a contract, how a due date is filled, when an invoice is overdue, and importing.
+description: Finance's records on an account, how a due date is filled, when an invoice is overdue, and importing.
 order: 2
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
@@ -15,15 +15,25 @@ and payments are finance's records of what it issued and received in its own
 system. Finance enters or imports them; sales reads them and never writes one,
 so every figure a rep sees is one finance wrote.
 
-The Accounts Receivable position enters and imports them on every contract. It
-reads every contract and edits none: reading the contract is enough to write its
+Invoices and payments belong to the **account**. The contract is optional: an
+invoice for an order, one invoice for several orders, or an advance that
+matches no invoice yet names only the account.
+
+The Accounts Receivable position enters and imports them on every account. It
+reads every account and edits none: reading the account is enough to write its
 invoices and payments.
 
 ## Rules the screens do not show
 
+- **Account and contract.** Choosing a contract fills in its account. A
+  contract of another account is refused, naming the contract. When an invoice
+  names a milestone but no contract, or a payment names an invoice or a
+  milestone but no contract, the contract is filled in from it, so the
+  contract's totals count the same records the milestone and the invoice do.
 - **Due Date.** Left empty, it is filled on save: the **Issue Date** plus the
   contract's **Payment Terms** (Net 15, 30, 60 or 90 days; Due on Receipt is
-  the issue date). A date finance enters is kept.
+  the issue date). A date finance enters is kept. An invoice with no contract
+  has no terms to read: type its due date.
 - **Open** on an invoice is **Amount** minus **Paid**, never below zero, kept
   up to date whenever a payment against it is saved. A **Cancelled** invoice is
   open for nothing and leaves every figure.
@@ -36,7 +46,7 @@ invoices and payments.
   **Open** amount.
 - **One payment per invoice.** A receipt that pays several invoices is one
   payment row per invoice; there is no allocation.
-- **A payment's invoice must belong to its contract.** Otherwise the save is
+- **A payment's invoice must belong to its account.** Otherwise the save is
   refused, naming the invoice.
 
 ## Importing
@@ -44,11 +54,14 @@ invoices and payments.
 Finance imports with **Invoice Import (CSV)** and **Payment Import (CSV)**.
 The **ERP Reference** column is the key: a row whose reference is already on a
 record updates that record instead of adding one. Every imported row reads
-**Source: Import** and carries **Synced At**, the time of the import. Contracts
-are named by their number (CTR-0001), invoices by their number and milestones
-by their name.
+**Source: Import** and carries **Synced At**, the time of the import. Accounts
+are named by their name, contracts by their number (CTR-0001), invoices by
+their number and milestones by their name. A row needs an account or a
+contract: the **Account** column may stay empty when the contract (or, for a
+payment, the invoice) fills it.
 
 **A milestone name used on more than one contract fails the row** ("matches
 more than one record"): the import looks the name up across every contract.
+An account name used by more than one account fails the same way.
 Put the milestone's record ID in that column instead, the end of the address
 of its page.
