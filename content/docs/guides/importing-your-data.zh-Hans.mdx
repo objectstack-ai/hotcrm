@@ -1,6 +1,6 @@
 ---
 title: 导入你自己的数据
-description: 使用 HotCRM 内置的导入映射，从电子表格加载客户、联系人和潜在客户 —— 先试运行，出错可一键撤销。
+description: 使用 HotCRM 内置的导入映射，从电子表格加载客户、联系人和线索 —— 先试运行，出错可一键撤销。
 ---
 
 # 导入你自己的数据
@@ -21,14 +21,14 @@ HotCRM 内置三个 **导入映射（import mapping）**。映射就是保存好
 | --- | --- | --- |
 | `crm_account_import` | 客户 | 客户名称（Account Name） |
 | `crm_contact_import` | 联系人 | 邮箱（Email） |
-| `crm_lead_import` | 潜在客户 | 邮箱（Email） |
+| `crm_lead_import` | 线索 | 邮箱（Email） |
 
 由于每个映射都按业务主键匹配，**重复导入同一个文件是更新而不是重复创建** —— 在表格里
 改好一列，再传一次即可。
 
 ## 从列表视图进 —— 导入向导
 
-打开 **客户**、**联系人** 或 **潜在客户** 列表视图，点工具栏的 **导入**。向导走三步 ——
+打开 **客户**、**联系人** 或 **线索** 列表视图，点工具栏的 **导入**。向导走三步 ——
 **上传**、**字段映射**、**预览**。
 
 上面那三个映射并不是只有 API 才能用。向导会列出目标对象等于你进来时那个对象的映射，
@@ -53,7 +53,7 @@ HotCRM 内置三个 **导入映射（import mapping）**。映射就是保存好
 每个模板带 50 行示例数据。删掉示例行，把你自己的数据粘到相同表头下，**不要改动表头**
 —— 映射就是靠表头文字匹配的。多出来的列会被忽略，所以从旧系统多导出几列没有关系。
 
-**导入顺序：客户 → 联系人 → 潜在客户。** 每个联系人都必须指向一个已存在的客户
+**导入顺序：客户 → 联系人 → 线索。** 每个联系人都必须指向一个已存在的客户
 （*Account Name* 列），先导联系人会失败。
 
 ## 第 2 步 —— 先试运行
@@ -147,7 +147,7 @@ curl -X POST "$HOTCRM/api/v1/data/import/jobs/$JOB_ID/undo" -H "Authorization: B
 作业 **新建** 的记录会被删除，作业 **更新** 的记录会恢复为导入前的值。SDK 调用为
 `data.undoImportJob(jobId)`。
 
-撤销顺序与导入相反 —— 先潜在客户，再联系人，最后客户 —— 避免联系人指向已被删除的客户。
+撤销顺序与导入相反 —— 先线索，再联系人，最后客户 —— 避免联系人指向已被删除的客户。
 
 作业上的 `undoable: true` 表示可撤销。以下情况为 `false`：试运行（本就没写入）、超过
 **5,000 行** 的作业、仍在运行的作业、以及已经撤销过的作业。
@@ -162,7 +162,7 @@ curl -X POST "$HOTCRM/api/v1/data/import/jobs/$JOB_ID/undo" -H "Authorization: B
   去猜。请先邀请该用户，或清空这个单元格。
 - **留空** → 记录归 **执行导入的你** 所有。
 
-最后一条对潜在客户同样成立：留空时负责人是导入者，Lead Intake 的分配规则 **不会** 接管。若需要
+最后一条对线索同样成立：留空时负责人是导入者，Lead Intake 的分配规则 **不会** 接管。若需要
 分配给团队，请在导入后重新指派。
 
 ## 每个映射读取哪些列
@@ -187,7 +187,7 @@ curl -X POST "$HOTCRM/api/v1/data/import/jobs/$JOB_ID/undo" -H "Authorization: B
 
 *First Name*、*Last Name*、*Email* 和 *Account Name* 为必填。
 
-### 潜在客户（`crm_lead_import`）
+### 线索（`crm_lead_import`）
 
 `Salutation` · `First Name` · `Last Name` · `Company` · `Title` · `Industry` ·
 `Email` · `Phone` · `Mobile` · `Website` · `Lead Status` · `Lead Source` ·
@@ -213,7 +213,7 @@ curl -X POST "$HOTCRM/api/v1/data/import/jobs/$JOB_ID/undo" -H "Authorization: B
 
 - **地址只对联系人生效。** 联系人模板的五个 `Mailing …` 列分别填入联系人那一个结构化
   邮寄地址的一部分（街道、城市、省份、邮政编码、国家）；五列全空的行则不写地址。客户和
-  潜在客户的模板不带地址列，自行往表里加一列也不会有任何效果 —— 映射只读它声明过的表头；
+  线索的模板不带地址列，自行往表里加一列也不会有任何效果 —— 映射只读它声明过的表头；
   拼成一整串地址同样行不通，会被逐行拒绝（*"Billing Address has an invalid address
   value"*）。请在导入后在记录页或通过 API 补录。
 - **单个作业上限 50,000 行。** 更大的文件请拆分。
