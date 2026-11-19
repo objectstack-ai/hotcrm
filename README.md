@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icon.svg" alt="HotCRM" width="128" height="128"/>
+  <img src="https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg" alt="HotCRM" width="128" height="128"/>
 </p>
 
 # HotCRM
@@ -15,9 +15,9 @@ Change it with AI when your business changes. Let your own AI agents work in it 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](src/sales/index.ts)
 [![Version](https://img.shields.io/badge/version-6.5.0-brightgreen)](CHANGELOG.md)
-[![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.app-orange)](https://cloud.objectos.app)
+[![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.ai-orange)](https://cloud.objectos.ai)
 
-[Documentation](https://hotcrm.com/docs) · [Marketplace](https://cloud.objectos.app) · [中文说明](https://github.com/objectstack-ai/hotcrm/blob/main/README.zh-CN.md)
+[Documentation](https://hotcrm.com/docs) · [Marketplace](https://cloud.objectos.ai) · [中文说明](https://github.com/objectstack-ai/hotcrm/blob/main/README.zh-CN.md)
 
 ---
 
@@ -90,7 +90,7 @@ HotCRM is agent-first. It provides the objects, the actions and the skills; read
 <!-- section:install -->
 ## Try and install
 
-**From the marketplace.** Sign in at [cloud.objectos.app](https://cloud.objectos.app), open HotCRM in the marketplace and install it into your environment. New to ObjectStack? Create an environment from the Starter template first.
+**From the marketplace.** Sign in at [cloud.objectos.ai](https://cloud.objectos.ai), open HotCRM in the marketplace and install it into your environment. New to ObjectStack? Create an environment from the Starter template first.
 
 **On your machine, in three commands** (Node.js 22 or later, and pnpm 10):
 

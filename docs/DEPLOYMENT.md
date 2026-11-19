@@ -59,7 +59,7 @@ This removes `.objectstack/data`, rebuilds the app, and lets seed data load on f
 The normal distribution path is the ObjectStack marketplace:
 
 ```bash
-export OS_CLOUD_URL=https://cloud.objectos.app
+export OS_CLOUD_URL=https://cloud.objectos.app   # staging; production is https://cloud.objectos.ai
 export OS_CLOUD_API_KEY=…   # the service token, not a personal login
 pnpm build
 pnpm publish:marketplace

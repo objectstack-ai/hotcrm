@@ -1,16 +1,16 @@
 ---
 title: 發布你的第一個應用市集應用程式
-description: 建置、發布並安裝一個套件到 cloud.objectos.app —— 以 HotCRM 作為範例。
+description: 建置、發布並安裝一個套件到 cloud.objectos.ai —— 以 HotCRM 作為範例。
 ---
 
 本應用未隨附繁體中文語言包，因此本頁出現的介面名詞依固定順序取用：zh-CN 語言包已收錄者，採其用詞的繁體寫法；未收錄者，保留產品內的英文原名，不另造譯名。
 
-本指南將引導你把一個 ObjectStack 套件發布到 [cloud.objectos.app](https://cloud.objectos.app) 應用市集，並以 **HotCRM** 作為範例。每個步驟都可以推廣到你自己的應用程式。
+本指南將引導你把一個 ObjectStack 套件發布到 [cloud.objectos.ai](https://cloud.objectos.ai) 應用市集，並以 **HotCRM** 作為範例。每個步驟都可以推廣到你自己的應用程式。
 
 ## 先決條件
 
 - Node.js 20.9+ 和 pnpm 9+
-- 一個 ObjectStack Cloud 帳戶（在 [cloud.objectos.app](https://cloud.objectos.app) 註冊）
+- 一個 ObjectStack Cloud 帳戶（在 [cloud.objectos.ai](https://cloud.objectos.ai) 註冊）
 - `objectstack` CLI：`pnpm add -g @objectstack/cli`（或使用 `pnpm dlx objectstack`）
 - 一個能建置出有效 `dist/objectstack.json` 的儲存庫（本儲存庫就是規範範例）
 
@@ -102,11 +102,11 @@ CLI 會：
 | `--pre-release` | 將此版本標記為預先發行。 |
 | `--env <env_id>` + `--install` | 發布後自動安裝到某個環境。 |
 | `--seed-sample-data` | 自動安裝時包含種子資料。 |
-| `--server` | 覆寫雲端 URL（預設 `https://cloud.objectos.app`；針對本機雲端使用 `http://localhost:4000`）。 |
+| `--server` | 覆寫雲端 URL（預設 `https://cloud.objectos.ai`；針對本機雲端使用 `http://localhost:4000`）。 |
 
 ## 5. 在應用市集上驗證
 
-1. 開啟 [cloud.objectos.app](https://cloud.objectos.app) → **Marketplace**。
+1. 開啟 [cloud.objectos.ai](https://cloud.objectos.ai) → **Marketplace**。
 2. 搜尋你的 `display-name`。該套件會以最新發布的版本出現。
 3. 點選 **Install** 安裝到測試環境並驗證它端對端正常運作。
 
