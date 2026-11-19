@@ -14,10 +14,11 @@ import stack, { packFor, type AnyRec } from './helpers/composed-stack';
  *   `personNameSource` composes, and carries no separate given or family
  *   column. Split over two columns, the record link hung off the given name
  *   alone, and a Chinese name read 「伟 | 张」 across two cells.
- * - The lead's `full_name` is stored like the contact's: a readonly text field
- *   carrying the same expression, which the engine computes on every write,
- *   so lists sort by it and search matches it. It was a formula, computed on
- *   read and stored nowhere.
+ * - The lead's `full_name` composes the name with the contact's expression. It
+ *   stays a formula, computed on read: storing it would leave every existing
+ *   lead's name empty on an upgraded tenant, whose install path fills no
+ *   stored computed column (objectstack-ai/objectstack#35390). The stored
+ *   half waits on that card.
  *
  * Read off the composed stack: the values `defineView` and `ObjectSchema`
  * parsed and the artifact serves.
@@ -64,19 +65,14 @@ describe('contact and lead lists lead with the full name (#2685)', () => {
   });
 });
 
-describe("the lead's full name is stored, like the contact's (#2685)", () => {
-  it('crm_lead.full_name is a readonly text column carrying the same expression as crm_contact.full_name', () => {
+describe("the lead's full name is the contact's name rule, computed on read (#2685)", () => {
+  it('crm_lead.full_name is a formula carrying the same expression as crm_contact.full_name', () => {
     const lead = objectNamed('crm_lead').fields.full_name as AnyRec;
     const contact = objectNamed('crm_contact').fields.full_name as AnyRec;
-    expect(lead.type).toBe('text');
-    expect(lead.readonly).toBe(true);
+    // A formula until objectstack-ai/objectstack#35390: a stored column
+    // would read empty on every lead an upgraded tenant already holds.
+    expect(lead.type).toBe('formula');
     expect(lead.expression).toEqual(contact.expression);
-  });
-
-  it('a search matches the name on both objects', () => {
-    for (const object of PERSON_OBJECTS) {
-      expect(objectNamed(object).searchableFields, object).toContain('full_name');
-    }
   });
 });
 

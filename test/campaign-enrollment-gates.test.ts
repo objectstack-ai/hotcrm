@@ -118,6 +118,28 @@ describe('Add to Campaign refuses a person who opted out of email (#2336 D1)', (
     expect(await membersOf(campaign.id)).toHaveLength(0);
   });
 
+  // The flow names the lead by `leadRecord.full_name`, the formula the lead's
+  // own lists show (#2685): composed `first_name last_name`, a lead entered as
+  // 姓「张」名「伟」 was refused as 「伟 张」. The record `get_lead` reads carries
+  // the formula's value, measured here in English and through the zh-CN pack.
+  it('lead side, a CJK name: the refusal names 「张伟」, in English and in zh-CN', async () => {
+    const campaign = await campaignOf('in_progress');
+    const lead = await leadOf({ first_name: '伟', last_name: '张', email_opt_out: true });
+    const answer = await addLead(lead.id, campaign.id);
+    expect(answer).toMatchObject({ success: true, status: 'refused', output: { enrolled: false } });
+    expect(answer.refusalMessage).toBe('张伟 has opted out of email, so the lead was not added to the campaign.');
+
+    const res = await verify.raw('/api/v1/actions/crm_lead/create_campaign', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${marketer.token}`, 'accept-language': 'zh-CN' },
+      body: JSON.stringify({ recordId: lead.id, params: { campaignId: campaign.id } }),
+    });
+    const body = JSON.stringify(await res.json());
+    expect(body, 'the zh-CN refusal names the lead as 张伟').toContain('张伟 已退订邮件');
+    expect(body).not.toContain('伟 张');
+    expect(await membersOf(campaign.id)).toHaveLength(0);
+  });
+
   it('contact side: refused, naming the contact, and no member is written', async () => {
     const campaign = await campaignOf('in_progress');
     const contact = await contactOf({ email_opt_out: true });

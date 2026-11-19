@@ -35,9 +35,7 @@ const lead = ((stack as AnyRec).objects ?? []).find((o: AnyRec) => o.name === 'c
 
 describe('Leads card views title the card by the person (#2122)', () => {
   it('crm_lead carries the fields the views bind', () => {
-    // Stored since #2685, the contact's shape: a readonly text column the
-    // engine computes on every write (`test/person-name-lists.test.ts`).
-    expect(lead?.fields?.full_name?.type).toBe('text');
+    expect(lead?.fields?.full_name?.type).toBe('formula');
     expect(lead?.fields?.next_followup_date?.type).toBe('date');
   });
 

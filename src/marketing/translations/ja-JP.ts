@@ -214,7 +214,7 @@ export const jaJP: TranslationData = {
             '{{ campaignRecord.name | default: "選択したキャンペーン" }} はメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
         },
         refuse_lead_opted_out: {
-          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} はメールの配信を停止しているため、このリードはキャンペーンに追加されませんでした。',
+          message: '{{ leadRecord.full_name }} はメールの配信を停止しているため、このリードはキャンペーンに追加されませんでした。',
         },
       },
     },

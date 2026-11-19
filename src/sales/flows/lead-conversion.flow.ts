@@ -617,10 +617,9 @@ export const LeadConversionFlow: Flow = {
           // not the two parts one by one (#2685). Compared part by part, a lead
           // entered as 姓「张伟」 with no given name, or as 姓「欧」名「阳娜娜」,
           // asked the rep to confirm joining the contact 「张伟」 / 「欧阳娜娜」,
-          // the very name the screen had just shown for both. Composed from
-          // the parts here rather than read off the two stored `full_name`
-          // columns, so a row no write has computed since the lead's became
-          // stored (#2685) compares by its name all the same.
+          // the very name the screen had just shown for both. Both sides are
+          // composed from the parts here, by the one rule, so the comparison
+          // reads the same name whatever either object stores.
           contactNameDiffers: expression(`matchedContact != null && ${personNameSource('matchedContact')} != ${personNameSource('leadRecord')}`),
           // Fill only what the reused contact leaves empty (#2572): true when
           // the lead holds a Phone, Mobile or Title the contact lacks, so

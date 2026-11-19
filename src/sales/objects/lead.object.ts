@@ -121,16 +121,7 @@ export const Lead = ObjectSchema.create({
     // lists and details. Dropped here and from `display_title` below, matching
     // Contact. A CJK family name is written first with no space (#2431,
     // `./_person-name.ts`), the same rule Contact's stored `full_name` uses.
-    // Stored, the contact's shape (#2685): the engine computes the expression
-    // on every insert and every update by id and stores it, so the lead's name
-    // is a real column that lists sort by and search matches, as the
-    // contact's has been since #2230. `readonly` keeps it off the forms.
-    // Rows stored while it was a formula hold no value until something
-    // writes them: the platform's `os migrate stored-expressions --object
-    // crm_lead --field full_name --apply` fills them, a dry run without
-    // `--apply` counts them.
-    full_name: Field.text({
-      readonly: true,
+    full_name: Field.formula({
       label: 'Full Name',
       expression: personName('record'),
       group: 'identity',
@@ -665,8 +656,7 @@ export const Lead = ObjectSchema.create({
   // `display_title` too (#2431): a search splits its text on whitespace and
   // matches each word inside one field, so 「张伟」 — the name as the header
   // writes it, with no space — matched neither 「张」 nor 「伟」 alone.
-  // `full_name` since it is stored (#2685), the name alone, as on Contact.
-  searchableFields: ['first_name', 'last_name', 'full_name', 'display_title', 'company', 'email'],
+  searchableFields: ['first_name', 'last_name', 'display_title', 'company', 'email'],
   // The record page's highlight strip, and since #2382 its ONLY source: the
   // lead's authored page retired to the synthesized default page, which draws
   // exactly this list (minus the title, at most six). The list is the one the

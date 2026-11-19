@@ -83,11 +83,10 @@ describe('the lead: header title and full name', () => {
     });
     const row = await stored('crm_lead', String(lead.id));
     expect(row.display_title, 'the stored header title').toBe(`${shown} - ${company}`);
-    expect(row.full_name, 'the stored full name (#2685)').toBe(shown);
     const read = await rest('GET', `/data/crm_lead/${lead.id}`);
     expect(read.status, JSON.stringify(read.body)).toBe(200);
     const record = (read.body.record ?? read.body.data ?? read.body) as Rec;
-    expect(record.full_name, 'the full name, read through REST').toBe(shown);
+    expect(record.full_name, 'the full name formula, read through REST').toBe(shown);
   });
 
   it('a rename recomputes the stored title with the same rule', async () => {

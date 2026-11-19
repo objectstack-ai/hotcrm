@@ -215,7 +215,7 @@ export const esES: TranslationData = {
             '{{ campaignRecord.name | default: "La campaña elegida" }} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
         },
         refuse_lead_opted_out: {
-          message: '{{ leadRecord.first_name }} {{ leadRecord.last_name }} se dio de baja del correo electrónico, así que el prospecto no se añadió a la campaña.',
+          message: '{{ leadRecord.full_name }} se dio de baja del correo electrónico, así que el prospecto no se añadió a la campaña.',
         },
       },
     },
