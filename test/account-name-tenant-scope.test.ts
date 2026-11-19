@@ -5,7 +5,7 @@ import { applySystemFields } from '@objectstack/objectql';
 import { expectedIndexes } from '@objectstack/driver-sql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
-import { pauseGate } from './helpers/multitenant-pause';
+import { pauseGate } from './helpers/multitenant-pause-gate';
 
 // The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
 const pause = pauseGate(import.meta.url);

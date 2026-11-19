@@ -49,7 +49,7 @@ const ROSTER = [
 
 const source = (file: string): string => readFileSync(join(REPO_ROOT, file), 'utf8');
 
-const GATE_IMPORT = /import \{ pauseGate \} from '\.\/helpers\/multitenant-pause'/;
+const GATE_IMPORT = /import \{ pauseGate \} from '\.\/helpers\/multitenant-pause-gate'/;
 
 /** Every single- or double-quoted string literal in a source text (no escapes inside). */
 const stringLiterals = (text: string): string[] =>
@@ -112,5 +112,4 @@ describe(`the single-database multi-tenant pause (${MULTITENANT_PAUSE_CARD})`, (
       for (const title of gatedLiteralTitles(source(file))) expect(listed.get(file), file).toContain(title);
     }
   });
-});
 });

@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { hotcrmStack, signUpPerson, systemInsert, systemUpdate, predicateUpdate, type Person } from './helpers/verify-stack';
-import { pauseGate } from './helpers/multitenant-pause';
+import { pauseGate } from './helpers/multitenant-pause-gate';
 
 // The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
 const pause = pauseGate(import.meta.url);

@@ -11,7 +11,7 @@ import { COMPOSITION_ENV_VAR, resolveComposition } from '../src/sales/data/index
 import { SystemAdminProfile } from '../src/sales/profiles/system-admin.profile';
 import { TenantAdminProfile } from '../src/sales/profiles/tenant-admin.profile';
 import { DemoOrgStaffing } from '../src/sales/sharing/demo-staffing';
-import { pauseGate } from './helpers/multitenant-pause';
+import { pauseGate } from './helpers/multitenant-pause-gate';
 
 // The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
 const pause = pauseGate(import.meta.url);

@@ -14,7 +14,7 @@ import {
 import {
   hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, systemUpdate, recordEngineWrites, type Person,
 } from './helpers/verify-stack';
-import { pauseGate } from './helpers/multitenant-pause';
+import { pauseGate } from './helpers/multitenant-pause-gate';
 
 // The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
 const pause = pauseGate(import.meta.url);

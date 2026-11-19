@@ -8,7 +8,7 @@ import {
 import { SEED_EN_LOCALES, SEED_ZH_CN_LOCALES } from '../src/sales/data/index';
 import artifact from '../objectstack.config';
 import { bootOptions } from './helpers/verify-stack';
-import { pauseGate } from './helpers/multitenant-pause';
+import { pauseGate } from './helpers/multitenant-pause-gate';
 
 // The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
 const pause = pauseGate(import.meta.url);

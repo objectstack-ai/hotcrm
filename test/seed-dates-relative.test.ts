@@ -2,7 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { CrmSeedData, SaasTenantSeedData } from '../objectstack.composition';
-import { pauseGate } from './helpers/multitenant-pause';
+import { pauseGate } from './helpers/multitenant-pause-gate';
 
 // The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
 const pause = pauseGate(import.meta.url);

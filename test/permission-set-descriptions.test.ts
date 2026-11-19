@@ -5,7 +5,7 @@ import { PermissionSetSchema } from '@objectstack/spec/security';
 import stack from './helpers/composed-stack';
 import { allProfiles } from '../objectstack.composition';
 import { TenantAdminProfile } from '../src/sales/profiles/tenant-admin.profile';
-import { pauseGate } from './helpers/multitenant-pause';
+import { pauseGate } from './helpers/multitenant-pause-gate';
 
 // The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
 const pause = pauseGate(import.meta.url);

@@ -1,10 +1,5 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { describe, it } from 'vitest';
-import { REPO_ROOT } from './repo-root';
-
 /**
  * The single-database multi-tenant pause (#2700) — the ONE list of the tests it
  * holds, and the only door through which any of them is held.
@@ -20,16 +15,17 @@ import { REPO_ROOT } from './repo-root';
  * An entry holds either a whole FILE (no `case`) — `vitest.config.ts` excludes
  * it, so nothing in it is even imported — or one `describe` / `it` of a file
  * that is otherwise kept (`case` = its exact title), which that file routes
- * through {@link pauseGate}, and which then reports as skipped. A test is
- * held here only when it was green on `main` the day it was paused; nothing
- * red hides behind this list.
+ * through `pauseGate` (`./multitenant-pause-gate.ts`), and which then reports
+ * as skipped. A test is held here only when it was green on `main` the day it
+ * was paused; nothing red hides behind this list. This file imports nothing,
+ * because `vitest.config.ts` imports it.
  *
  * `test/multitenant-pause.test.ts` names every entry in the run's output and
  * pins the roster, so the list cannot grow quietly.
  *
  * RESTART (the maintainer resumes single-database multi-tenant work): delete
  * every entry below, then that guard, which goes red on an empty list to say
- * so. With no entry, every gate below is the plain `describe` / `it`.
+ * so. With no entry, the gate is the plain `describe` / `it` everywhere.
  */
 export const MULTITENANT_PAUSE_CARD = '#2700';
 
@@ -126,27 +122,3 @@ export const MULTITENANT_PAUSE: readonly MultitenantPauseEntry[] = [
 export const MULTITENANT_PAUSED_FILES: readonly string[] = MULTITENANT_PAUSE
   .filter((e) => e.case === undefined)
   .map((e) => e.file);
-
-/** Repo-relative, `/`-separated path of a test module, from its `import.meta.url`. */
-export const repoPathOf = (moduleUrl: string): string =>
-  relative(REPO_ROOT, fileURLToPath(moduleUrl)).split('\\').join('/');
-
-/**
- * The gate a kept file routes a paused `describe` / `it` through. Called with
- * the file's own `import.meta.url`; a title the list names for this file is
- * skipped (and shows as skipped), every other title runs untouched.
- */
-export const pauseGate = (moduleUrl: string) => {
-  const file = repoPathOf(moduleUrl);
-  const paused = (title: string): boolean =>
-    MULTITENANT_PAUSE.some((e) => e.file === file && e.case === title);
-  return {
-    paused,
-    describe: (title: string, fn: () => void): void => {
-      (paused(title) ? describe.skip : describe)(title, fn);
-    },
-    it: (title: string, fn: () => unknown, timeout?: number): void => {
-      (paused(title) ? it.skip : it)(title, fn as () => Promise<void>, timeout);
-    },
-  };
-};
