@@ -3,7 +3,7 @@
 > **Status**: phases 0–2 shipped; phase 3 ruled, not built (see *Phasing*). This file states what
 > `src/psa/` is on `main` and what is ruled for it; every statement names the source it was read
 > from. Where this file and `src/` disagree, `src/` is right and this file is the bug.
-> **Measured against**: `main` at `abe2094c` (2026-11-19), `@objectstack/*` **18.6.0** — the pin in
+> **Measured against**: `main` at `ac17670a` (2026-11-19), `@objectstack/*` **18.6.0** — the pin in
 > `package.json`, held by `engines.protocol: '^18.6.0'` in `src/psa/index.ts`. Readings that name
 > 17.x come from the first draft (`main` at `c716a2c`, pin 17.4.0) and are kept under *History* as
 > history; they are not claims about the current pin.
@@ -47,7 +47,7 @@ unmerged; this section is now their record. `src/psa/index.ts`, `src/psa/apps/ps
 | 2026-11-15 | Ruling D on hotcrm#2316: a project team member reads accounts, not opportunities, and no cost | `src/sales/profiles/project-member.profile.ts` |
 | 2026-11-16 22:54Z–23:01Z | Expense is its own package and app; PSA depends on it — the one add-on → add-on edge (`module-split-plan.md` item 18; [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issues/2556)) | `dependencies` in `src/psa/index.ts`; `src/expense/` |
 | 2026-11-16 | Phase 2a–2c scope (tasks and Gantt; the weekly timesheet; budget versions), ruled after the PSA comparison | hotcrm#2545, #2546, #2547 |
-| 2026-11-17 03:27Z | 「先放报销包,修好后搬回」: the project-path approvals sit in the expense package until objectstack#34616 ships, then move back ([hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)) | `src/expense/flows/expense-report-project-approval.flow.ts`, its header |
+| 2026-11-17 03:27Z | 「先放报销包,修好后搬回」: the project-path approvals sit in the expense package until objectstack#34616 ships, then move back ([hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)) | done: moved back by PR [#2678](https://github.com/objectstack-ai/hotcrm/pull/2678) (2026-11-19); now `src/psa/flows/` (see *Approvals*) |
 | 2026-11-17 14:43Z | 「依赖订单与回款」: phase 3 bills time and expenses through Order to Cash, and PSA will depend on it; after the probe ([hotcrm#2618](https://github.com/objectstack-ai/hotcrm/issues/2618)), 「立开发卡」 at 16:11Z | not built — see *Phase 3* |
 | 2026-11-18 | Option C on hotcrm#2570: timesheet and expense approval needs the deployment's approvals; no second path without them | `test/psa-approvals-composition.test.ts` (header); `src/psa/docs/crm_psa_approvals_budget.md` |
 
@@ -111,8 +111,8 @@ directory and from `src/sales/` (`_hook-api.ts`, the app's icon).
 and *Help*, plus the anchor group *Customers and Contracts*. The app package fills the anchors
 through `navigationContributions` (`app: 'crm_psa'` in `src/sales/index.ts`: Accounts,
 Opportunities, Contracts; My Tasks), and the expense module contributes My Expenses, Reports to
-Approve and My Travel Requests into *Time and Expenses* (`src/expense/index.ts`). Who is offered the app is `tabPermissions` in the app
-package's sets: the three delivery sets and the sales manager see it; reps, service, marketing
+Approve and My Travel Requests into *Time and Expenses* (`src/expense/index.ts`). Who is offered
+the app is `tabPermissions` in the app package's sets: the three delivery sets and the sales manager see it; reps, service, marketing
 and receivables hide it (`src/psa/apps/psa.app.ts`, header).
 
 > **Superseded (2026-11-15, ruling 1).** The first draft planned a `group_projects` node in
@@ -267,21 +267,27 @@ hotcrm#2570; pinned on both compositions by `test/psa-approvals-composition.test
 | `crm_project` | `project_initiation_approval` (`project-initiation-approval.flow.ts`) | any Project Director or PMO; then a Finance Controller when the budget riding along (or the Approved Budget) is `PROJECT_FINANCE_REVIEW_BUDGET` (100,000) or more |
 | `crm_project_budget` (top-up) | `project_budget_approval` (`project-budget-approval.flow.ts`) | a Project Director or the PMO; then a Finance Controller when it raises the baseline by `BUDGET_TOP_UP_FINANCE_REVIEW_PERCENT` (10 %) or more |
 | `crm_timesheet` | `timesheet_approval` and `timesheet_approval_on_create` (`submission-approval.flow.ts`) | the stamped `approver`, the project manager |
-| `crm_expense_report` on a project | `expense_report_project_approval` (`src/expense/flows/expense-report-project-approval.flow.ts`) | the project's manager; then a Finance Controller from `EXPENSE_FINANCE_REVIEW_AMOUNT` (2,000, `src/sales/objects/_thresholds.ts`) |
-| `crm_expense_request` on a project | `expense_request_project_approval` and its `_on_create` twin (`src/expense/flows/expense-request-project-approval.flow.ts`) | the project's manager |
+| `crm_expense_report` on a project | `expense_report_project_approval` (`expense-report-project-approval.flow.ts`) | the project's manager; then a Finance Controller from `EXPENSE_FINANCE_REVIEW_AMOUNT` (2,000, `src/sales/objects/_thresholds.ts`) |
+| `crm_expense_request` on a project | `expense_request_project_approval` and its `_on_create` twin (`expense-request-project-approval.flow.ts`) | the project's manager |
 
 The first draft named a business-unit manager as the project's first approver; HotCRM has no
 business unit, so the first tier is the delivery leadership's two positions (header of
 `project-initiation-approval.flow.ts`).
 
-**The project-path expense approvals are PSA's but sit in the expense package — move pending.**
-On `main` at `abe2094c` the last two rows, and the templates `crm.expense_report_project_over`
-and `crm.expense_report_project_locked`, are registered by `src/expense/`: the 2026-11-17
-ruling 「先放报销包,修好后搬回」 parked them there while the per-package lint refused a PSA flow on
-an expense object (objectstack#34616, closed, fixed in 18.6.0). The move back is
-[hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575), PR
-[#2678](https://github.com/objectstack-ai/hotcrm/pull/2678) — **open, not merged** when this was
-read. When it merges, the flows and templates are `src/psa/`'s and this paragraph is history.
+**The project-path expense approvals are PSA's again — moved back 2026-11-19.** The last two
+rows, and the turn-back templates `crm.expense_report_project_over` and
+`crm.expense_report_project_locked` (`src/psa/email-templates/`), are registered by PSA
+(`psaFlows` and `emailTemplates` in `src/psa/index.ts`): PR
+[#2678](https://github.com/objectstack-ai/hotcrm/pull/2678) for
+[hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575) moved them back from
+`src/expense/` once objectstack#34616 shipped in 18.6.0, as the 2026-11-17 ruling 「先放报销包,修好后搬回」
+said. The expense package keeps only its manager-path flows (`src/expense/flows/`); behaviour,
+approvers and the 2,000 threshold are unchanged. **Upgrade note**
+(`.changeset/2575-project-approval-to-psa.md`): a project expense report or travel request still
+waiting for approval at the upgrade cannot be decided afterwards — deciding it answers 409
+`RESUME_TARGET_LOST`, because the paused run belongs to the expense package's flow. Decide them
+before upgrading; for one left waiting, the submitter recalls it, an administrator sets its status
+back to Draft, and the submitter submits it again.
 
 ## Cost control — a machine signal warns, a person's decision blocks
 
@@ -352,7 +358,8 @@ Closed and Cancelled projects take no new time or expense (#2500), refusals in t
 language (#2506), the expense moves to its own module (#2577), a project names its sales order
 (#2585), the project page's Overview (#2594), the platform bump to 18.6.0 (#2637), consultants
 read the account without Order to Cash totals (#2650), approvals need the deployment's approvals
-(#2673), the project manager back in the team (#2674).
+(#2673), the project manager back in the team (#2674), the project-path expense approvals moved
+back from the expense module (#2678).
 
 ### Phase 3 — ruled, not built
 
