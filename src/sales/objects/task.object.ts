@@ -173,10 +173,14 @@ export const Task = ObjectSchema.create({
       label: 'Related Opportunity',
       // A lost deal is not offered (#2573): an activity is logged against work
       // still going on, or a won deal's delivery and follow-up, never against
-      // a deal that ended lost. Narrowing the picker to the activity's own
-      // account waits for the platform release that resolves `{ $record }` in
-      // a lookup filter (objectstack#34197, #34199; neither is in 18.5.0).
-      lookupFilters: [{ field: 'stage', operator: 'ne', value: 'closed_lost' }],
+      // a deal that ended lost. Once the activity names its account, only that
+      // account's deals are offered; with no account yet the platform leaves
+      // the `{ $record }` entry out and every open or won deal is offered.
+      // The picker narrows the choice only; a write is not refused by it.
+      lookupFilters: [
+        { field: 'stage', operator: 'ne', value: 'closed_lost' },
+        { field: 'crm_account', operator: 'eq', value: { $record: 'related_to_account' } },
+      ],
       // The lead's, the deal's and the case's list of tasks (#2382). Their
       // authored record pages each drew an Open Tasks list; the default page
       // draws this FK's list instead, so the scope and the columns live here.

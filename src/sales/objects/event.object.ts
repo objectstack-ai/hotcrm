@@ -189,12 +189,12 @@ export const Event = ObjectSchema.create({
     related_to_opportunity: Field.lookup('crm_opportunity', {
       group: 'related',
       label: 'Related Opportunity',
-      // A lost deal is not offered (#2573): an activity is logged against work
-      // still going on, or a won deal's delivery and follow-up, never against
-      // a deal that ended lost. Narrowing the picker to the activity's own
-      // account waits for the platform release that resolves `{ $record }` in
-      // a lookup filter (objectstack#34197, #34199; neither is in 18.5.0).
-      lookupFilters: [{ field: 'stage', operator: 'ne', value: 'closed_lost' }],
+      // A lost deal is not offered, and once the event names its account only
+      // that account's deals are: see `crm_task.related_to_opportunity` (#2573).
+      lookupFilters: [
+        { field: 'stage', operator: 'ne', value: 'closed_lost' },
+        { field: 'crm_account', operator: 'eq', value: { $record: 'related_to_account' } },
+      ],
     }),
 
     related_to_lead: Field.lookup('crm_lead', {
