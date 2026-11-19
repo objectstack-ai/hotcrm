@@ -65,13 +65,13 @@ description: 讓 HotCRM 為你的團隊做好生產準備的第一週任務。
 - [ ] 為客戶和聯絡人決定組織範圍預設值（私有 vs 公開讀取 vs 公開讀/寫）—— 參見 [共用與安全](/zh-Hant/docs/administration/sharing-and-security)
 - [ ] 如果你以小組而非單個代表的方式銷售，設定客戶團隊
 
-### 8. 潛在客戶路由 —— 一個佇列加一條規則
+### 8. 線索路由 —— 一個佇列加一條規則
 
-**不存在「Setup → Lead Settings」這個畫面。**潛在客戶路由是應用自帶的兩項中繼資料。**Lead Intake** 佇列（`lead_intake`）以 `crm_sales_rep` 職位為成員。指派規則 `lead_intake_assignment` 把每一筆到達時沒有所有者的潛在客戶，交給成員中**未轉化潛在客戶最少**的那一位。最常見的來路是網頁表單（web-to-lead）。這條規則比的是負載，不按區域、行業或來源比對；沒有區域路由，也沒有發給提交者的自動回覆郵件。如果佇列裡沒有成員，潛在客戶就沒有所有者，留在 **Lead Intake** 裡等待，任何一位業務代表都可以打開它並點選 **Claim**（認領）。
+**不存在「Setup → Lead Settings」這個畫面。**線索路由是應用自帶的兩項中繼資料。**Lead Intake** 佇列（`lead_intake`）以 `crm_sales_rep` 職位為成員。指派規則 `lead_intake_assignment` 把每一筆到達時沒有所有者的線索，交給成員中**未轉化線索最少**的那一位。最常見的來路是網頁表單（web-to-lead）。這條規則比的是負載，不按區域、行業或來源比對；沒有區域路由，也沒有發給提交者的自動回覆郵件。如果佇列裡沒有成員，線索就沒有所有者，留在 **Lead Intake** 裡等待，任何一位業務代表都可以打開它並點選 **Claim**（認領）。
 
-其他所有來路的潛在客戶背後都有一個人，這個人就是所有者：在應用裡新建的潛在客戶、用某人的登入或 API 金鑰透過 API 提交的潛在客戶，以及從 CSV 或 JSON 檔案匯入的潛在客戶。匯入從不進入佇列 —— 所有者留空的列歸執行匯入的人所有，所以匯入潛在客戶之後要安排重新指派。參見[匯入你自己的資料](/zh-Hant/docs/guides/importing-your-data)中的「關於負責人」一節。
+其他所有來路的線索背後都有一個人，這個人就是所有者：在應用裡新建的線索、用某人的登入或 API 金鑰透過 API 提交的線索，以及從 CSV 或 JSON 檔案匯入的線索。匯入從不進入佇列 —— 所有者留空的列歸執行匯入的人所有，所以匯入線索之後要安排重新指派。參見[匯入你自己的資料](/zh-Hant/docs/guides/importing-your-data)中的「關於負責人」一節。
 
-- [ ] 把 `crm_sales_rep` 職位指派給每一位應當接收潛在客戶的業務代表，或者在 **Setup → Access Control → Queue Members** 裡新增一列，Queue 填 `lead_intake`，Member 選具體的人。佇列的成員*就是*路由表
+- [ ] 把 `crm_sales_rep` 職位指派給每一位應當接收線索的業務代表，或者在 **Setup → Access Control → Queue Members** 裡新增一列，Queue 填 `lead_intake`，Member 選具體的人。佇列的成員*就是*路由表
 - [ ] 在 Studio 中查看接下來 `lead_assignment` 流程做了什麼：控制台首頁的 **New in Studio**（點 **Cancel** 關掉 *New Package* 表單）→ **HotCRM** → **Customize** → **Automations** → **New Lead Routing & SLA**，（按評級設定跟進日期，並提醒新的所有者）
 
 ### 9. 產品目錄
@@ -127,7 +127,7 @@ description: 讓 HotCRM 為你的團隊做好生產準備的第一週任務。
 
 - [ ] 把 `crm_service_agent` 職位指派給每一位應當接收工單的客服，或者在 **Setup → Access Control → Queue Members** 裡新增一列，Queue 填 `case_intake`，Member 選具體的人。（這兩個佇列隨應用宣告，不會出現在 **Setup → Access Control → Queues** 的列表裡。）佇列的成員*就是*路由表
 - [ ] 佇列還沒有成員的時候，盯住工單頁面的 **未分派 — 待分診** 頁籤：它列出的正是等待認領的工單
-- [ ] 從引入佇列之前的版本升級上來時：以管理員身分執行一次 `pnpm exec tsx scripts/backfill-intake-queue.ts --apply`，把沒有所有者的未結工單和潛在客戶放進各自的佇列，客服才能重新看到它們
+- [ ] 從引入佇列之前的版本升級上來時：以管理員身分執行一次 `pnpm exec tsx scripts/backfill-intake-queue.ts --apply`，把沒有所有者的未結工單和線索放進各自的佇列，客服才能重新看到它們
 
 ### 13. 審批流程
 
@@ -168,7 +168,7 @@ Setup 裡沒有 *AI* 分組，也沒有任何畫面能把 Copilot 打開。Setup
 ## ✅ 第 7 天 —— 上線
 
 - [ ] 執行 **遷移檢查**（所有匯入的記錄都有所有者和必填欄位）
-- [ ] 執行 **冒煙測試**：建立潛在客戶 → 轉化 → 商機 → 報價 → 贏單 → 合約
+- [ ] 執行 **冒煙測試**：建立線索 → 轉化 → 商機 → 報價 → 贏單 → 合約
 - [ ] 培訓使用者掌握他們的日常工作流（45 分鐘的基於角色的會話）
 - [ ] 設置一個內部 **#hotcrm-help** 頻道用於答疑
 
