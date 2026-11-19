@@ -5,6 +5,10 @@ import { PermissionSetSchema } from '@objectstack/spec/security';
 import stack from './helpers/composed-stack';
 import { allProfiles } from '../objectstack.composition';
 import { TenantAdminProfile } from '../src/sales/profiles/tenant-admin.profile';
+import { pauseGate } from './helpers/multitenant-pause-gate';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 /**
  * Every HotCRM permission set says who holds it (#2294).
@@ -39,6 +43,19 @@ type AnyRec = Record<string, any>;
 const served: AnyRec[] = ((stack as AnyRec).permissions ?? []) as AnyRec[];
 const declared: AnyRec[] = [...Object.values(allProfiles), TenantAdminProfile] as AnyRec[];
 
+/** A set's description is one business sentence the platform's schema keeps. */
+const hasOneSentenceDescription = (set: AnyRec): void => {
+  const description = set.description;
+  expect(typeof description).toBe('string');
+  const text = String(description).trim();
+  expect(text).toMatch(/^[A-Z].*\.$/);
+  // One sentence: the only full stop (or ? / !) followed by a space or the end is the last character.
+  expect(text.slice(0, -1)).not.toMatch(/[.!?](\s|$)/);
+  expect(text.length).toBeLessThanOrEqual(160);
+  // The platform's own schema keeps the key (a stripped key would read back undefined).
+  expect(PermissionSetSchema.parse(set).description).toBe(description);
+};
+
 describe('permission set descriptions (#2294)', () => {
   it('the community app serves every set the profiles barrel declares', () => {
     expect(served.map((p) => p.name).sort()).toEqual(
@@ -46,20 +63,16 @@ describe('permission set descriptions (#2294)', () => {
     );
   });
 
-  it.each(declared.map((p) => [p.name as string, p]))(
+  it.each(Object.values(allProfiles).map((p) => [(p as AnyRec).name as string, p as AnyRec]))(
     '%s has a one-sentence business description',
-    (_name, set) => {
-      const description = (set as AnyRec).description;
-      expect(typeof description).toBe('string');
-      const text = String(description).trim();
-      expect(text).toMatch(/^[A-Z].*\.$/);
-      // One sentence: the only full stop (or ? / !) followed by a space or the end is the last character.
-      expect(text.slice(0, -1)).not.toMatch(/[.!?](\s|$)/);
-      expect(text.length).toBeLessThanOrEqual(160);
-      // The platform's own schema keeps the key (a stripped key would read back undefined).
-      expect(PermissionSetSchema.parse(set).description).toBe(description);
-    },
+    (_name, set) => hasOneSentenceDescription(set),
   );
+
+  // The SaaS composition's set, held by the #2700 pause.
+  pause.it('tenant_admin has a one-sentence business description', () => {
+    expect(TenantAdminProfile.name).toBe('tenant_admin');
+    hasOneSentenceDescription(TenantAdminProfile as AnyRec);
+  });
 
   it('gives no two sets the same description', () => {
     const texts = declared.map((p) => p.description);

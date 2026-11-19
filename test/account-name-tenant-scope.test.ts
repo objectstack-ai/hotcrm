@@ -5,6 +5,10 @@ import { applySystemFields } from '@objectstack/objectql';
 import { expectedIndexes } from '@objectstack/driver-sql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
+import { pauseGate } from './helpers/multitenant-pause-gate';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 /**
  * Account-name uniqueness is PER ORGANIZATION, not platform-wide (#625).
@@ -71,7 +75,7 @@ describe('crm_account declares name uniqueness on the FIELD', () => {
 
 // ─────────────────────────────── the index the driver derives from it ──
 
-describe('the physical index set is tenant-scoped', () => {
+pause.describe('the physical index set is tenant-scoped', () => {
   const indexes = expectedIndexes({
     table: 'crm_account',
     fields: orgScoped.fields as Record<string, unknown>,
@@ -129,7 +133,7 @@ describe('the physical index set is tenant-scoped', () => {
 
 // ───────────────────────────────── the constraint a real database enforces ──
 
-describe('two organizations can each have an "Acme Corp" (real SQLite)', () => {
+pause.describe('two organizations can each have an "Acme Corp" (real SQLite)', () => {
   let driver: SqliteWasmDriver;
 
   beforeAll(async () => {

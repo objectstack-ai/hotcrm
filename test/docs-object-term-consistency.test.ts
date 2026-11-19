@@ -201,6 +201,43 @@ const TERMS: Record<string, Term> = {
       },
     },
   },
+  // #2699: the three rows below follow drifts #2611 found on the docs and
+  // could not retire while the zh-CN pack's own dataset descriptions and help
+  // still carried the old words. Their Traditional twins joined in #2691,
+  // once the last zh-Hant line carrying each read the pack word.
+  crm_time_entry: {
+    hant: '工時明細',
+    minPages: 5,
+    retired: [
+      '\u5de5\u65f6\u8bb0\u5f55', // 工时记录 — the time dataset's descriptions and analytics/cubes.zh-Hans (#2699); whats-new on both faces (#2611)
+      '\u5de5\u6642\u8a18\u9304', // 工時記錄 — its Traditional twin: analytics/cubes.zh-Hant (#2691)
+    ],
+    pins: {},
+  },
+  crm_timesheet: {
+    hant: '工時單',
+    minPages: 10,
+    retired: [
+      '\u5de5\u65f6\u8868', // 工时表 — both PSA datasets' member descriptions (#2699)
+      '\u5de5\u6642\u8868', // 工時表 — its Traditional twin (never shipped; banned anyway)
+    ],
+    pins: {},
+  },
+  crm_contract: {
+    hant: '合約',
+    minPages: 30,
+    // The object name has not drifted; its one defect is a field label.
+    retired: [],
+    pins: {
+      'fields.payment_terms.label': {
+        hant: '付款條款',
+        retired: [
+          '\u4ed8\u6b3e\u6761\u4ef6', // 付款条件 — crm_invoice.due_date help (#2699) and order-to-cash/invoices-and-payments.zh-Hans (#2611)
+          '\u4ed8\u6b3e\u689d\u4ef6', // 付款條件 — its Traditional twin: order-to-cash/invoices-and-payments.zh-Hant (#2691)
+        ],
+      },
+    },
+  },
   crm_lead: {
     hant: '線索',
     // Measured after #2691's sweep: 39 zh-Hans / 46 zh-Hant pages say it.
@@ -643,6 +680,15 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
         // word, outside #2691), so it cannot be listed until that face is swept.
         crm_lead: ['test/sharing-coverage.test.ts'],
         crm_project: ['test/sharing-coverage.test.ts'],
+        // Measured on b6ee3c5f (#2699): the suites that write each object's
+        // Simplified name as a row of their own.
+        crm_time_entry: ['test/sharing-coverage.test.ts'],
+        crm_timesheet: ['test/sharing-coverage.test.ts', 'test/automation-docs-coverage.test.ts'],
+        crm_contract: [
+          'test/sharing-coverage.test.ts',
+          'test/status-state-machines.test.ts',
+          'test/automation-docs-coverage.test.ts',
+        ],
       };
       expect(
         Object.keys(LEDGERS),

@@ -102,10 +102,11 @@ import { stripDocsGroups } from './helpers/docs-route';
  * the word-grain read that preceded this rule, not by the rule — they sit in
  * no cued position — and were fixed in the same PR: the contract's payment-terms
  * field on `order-to-cash/invoices-and-payments.zh-Hans`, and the Time Entry
- * object on both `whats-new` faces. Neither can join the term ledger's TERMS
- * yet, because the zh-CN pack's own help and dataset descriptions still carry
- * the drifted words, and the ledger's pack rule would go red on them; that is
- * reported on the PR. The ablation run on the fixed tree is recorded there too.
+ * object on both `whats-new` faces. Neither could join the term ledger's TERMS
+ * then, because the zh-CN pack's own help and dataset descriptions still carried
+ * the drifted words; #2699 moved the pack to its labels and added the rows
+ * (`crm_time_entry`, `crm_timesheet`, and `crm_contract`'s payment-terms pin).
+ * The ablation run on the fixed tree is recorded on #2611's PR.
  */
 
 type Cls = 'object' | 'field' | 'status' | 'view' | 'action' | 'app';

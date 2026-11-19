@@ -6,6 +6,10 @@ import {
   hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, switchFlow, guestInsert, systemUpdate, recordEngineWrites, today, committedFile,
   type Person,
 } from './helpers/verify-stack';
+import { pauseGate } from './helpers/multitenant-pause-gate';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 /**
  * Runtime hook tests — the REAL handler code, inside the real engine's write
@@ -428,7 +432,7 @@ describe('lead_intake_assignment — ownerless lead intake (ADR-0142 D5)', () =>
     expect(row.duplicate_of_contact).toBe(known!.id);
   });
 
-  it('the assignment rule and the duplicate scan stay inside the new lead’s organization (AGENTS.md rule 10)', async () => {
+  pause.it('the assignment rule and the duplicate scan stay inside the new lead’s organization (AGENTS.md rule 10)', async () => {
     // Elevated, the rep pool, the load counts and the duplicate scan are
     // organization-neutral, so each is pinned to the organization the writer
     // named on the lead (the rule's reads by the platform, ADR-0142 D5). Two organizations: the other one's rep is the LESS

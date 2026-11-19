@@ -135,7 +135,7 @@ export const esES: TranslationData = {
         },
         due_date: {
           label: 'Fecha de vencimiento',
-          help: 'Si se deja vacía, es la fecha de emisión más las condiciones de pago del contrato. Sin contrato, escríbala.',
+          help: 'Si se deja vacía, es la fecha de emisión más los términos de pago del contrato. Sin contrato, escríbala.',
         },
         status: {
           label: 'Estado',
