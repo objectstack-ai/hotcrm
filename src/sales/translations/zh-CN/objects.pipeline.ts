@@ -61,7 +61,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     },
     label: '线索',
     pluralLabel: '线索',
-    description: '尚未确认的潜在客户',
+    description: '尚未确认资格的线索',
     fields: {
       salutation: { label: '称谓' },
       first_name: { label: '名字' },
