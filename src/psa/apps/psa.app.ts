@@ -38,7 +38,7 @@ export const PsaApp = App.create({
   // home apps strip and the app switcher tell it from the other HotCRM apps (#2666).
   // `favicon` stays the HotCRM mark; `test/app-marks-distinct.test.ts` holds the six apart.
   branding: {
-    primaryColor: '#0D9488',
+    primaryColor: '#0F766E',
     favicon: HOTCRM_ICON,
   },
 
