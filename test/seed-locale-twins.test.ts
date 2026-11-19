@@ -8,6 +8,10 @@ import {
 import { SEED_EN_LOCALES, SEED_ZH_CN_LOCALES } from '../src/sales/data/index';
 import artifact from '../objectstack.config';
 import { bootOptions } from './helpers/verify-stack';
+import { pauseGate } from './helpers/multitenant-pause-gate';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 type Rec = Record<string, any>;
 
@@ -142,7 +146,7 @@ describe('every registered dataset belongs to exactly one language market', () =
     }
   });
 
-  it('the SaaS shape registers the catalogue in both languages, each scoped', () => {
+  pause.it('the SaaS shape registers the catalogue in both languages, each scoped', () => {
     const locales = (SaasTenantSeedData as Rec[]).map((family) => family.locale);
     expect(locales).toEqual([
       SEED_EN_LOCALES, SEED_EN_LOCALES, SEED_EN_LOCALES,

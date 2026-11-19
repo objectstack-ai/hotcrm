@@ -255,6 +255,7 @@ metadata lives and what registers it; the counts are deliberately **not** restat
   build registers is decided by `compositionPermissions` in
   [`objectstack.composition.ts`](../objectstack.composition.ts). The default build registers
   `system_admin`; `HOTCRM_COMPOSITION=saas` registers `tenant_admin` in its place.
+  **The SaaS composition is paused (#2700):** see *Single-database multi-tenant: paused* below.
 - **Sharing rules** — `src/*/sharing/*.sharing.ts`, registered by the package that owns
   the rule's object: the case rules in `src/service/index.ts`, the rest through
   `appSharingRules` in `objectstack.composition.ts`. One file may declare several rules,
@@ -272,6 +273,22 @@ which this app does not model.
 rules` had drifted one behind the ten the stack registers, and `6 permission profiles in
 src/sales/profiles/` counted registered profiles while pointing at a directory that holds
 seven files — 2026-08-31 ruling, item 5.*
+
+## Single-database multi-tenant: paused
+
+**Paused (#2700); resumes when the maintainer resumes single-database multi-tenant work.**
+Maintainer's order, 2026-11-19: 「本项目暂停考虑 单库多租户的兼容性问题」. HotCRM does not
+currently consider several organizations sharing one database: the SaaS composition
+(`HOTCRM_COMPOSITION=saas`, `tenant_admin`, `SaasTenantSeedData`), cross-organization
+isolation, and per-organization uniqueness and ownership.
+
+- **The code stays.** The composition knob, `TenantAdminProfile` and `SaasTenantSeedData`
+  are untouched, and the default (community, single-organization) build is unchanged.
+- **The tests are held in one place.** `test/helpers/multitenant-pause.ts` lists every paused
+  test file or case with its reason; `vitest.config.ts` excludes the whole files and the kept
+  files skip the listed cases through the same list. `test/multitenant-pause.test.ts` names
+  each entry in the test output and pins the roster, so the pause cannot grow quietly.
+- **Restart** is deleting that list, and its guard with it.
 
 ## Verification
 
