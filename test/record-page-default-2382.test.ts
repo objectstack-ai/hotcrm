@@ -36,7 +36,6 @@ const field = (object: string, name: string): Rec => (verify.metadata.object(obj
 describe('the four record pages are the default page, with only the alerts slot filled', () => {
   it.each([
     ['crm_lead', 'lead_detail_page', ['lead_duplicate_alert_suspected', 'lead_duplicate_alert_confirmed']],
-    ['crm_opportunity', 'opportunity_detail_page', ['opp_approval_pending_manager', 'opp_approval_pending_director']],
     ['crm_case', 'case_detail_page', ['case_sla_breached']],
   ])('%s: one default record page, %s, overriding `alerts` alone', (object, name, alertIds) => {
     const pages = recordPagesOf(object);
@@ -49,6 +48,14 @@ describe('the four record pages are the default page, with only the alerts slot 
     const alerts = page!.slots.alerts as Rec[];
     expect(alerts.map((a) => a.type)).toEqual(alertIds.map(() => 'record:alert'));
     expect(alerts.map((a) => a.id)).toEqual(alertIds);
+  });
+
+  // The opportunity's page kept only its two approval banners until #2686
+  // dropped them (maintainer ruling 2026-11-19): with nothing left to
+  // override, the deal draws the default page as is, like the account.
+  // `test/opportunity-approval-pending-alert.test.ts` pins what replaced them.
+  it('the opportunity has no authored record page at all (#2686)', () => {
+    expect(recordPagesOf('crm_opportunity')).toEqual([]);
   });
 
   it('the account has no authored record page at all: the chatter and the custom header are gone', () => {
