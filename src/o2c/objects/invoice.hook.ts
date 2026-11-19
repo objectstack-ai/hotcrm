@@ -13,7 +13,8 @@ const invoiceRowStamp: Hook = createO2cRowStamp('crm_invoice', 'invoice_row_stam
  *   - `due_date`, when it is empty: the issue date plus the contract's Payment
  *     Terms (`payment_terms` picklist: Net 15/30/60/90 days, Due on Receipt the
  *     same day). Finance may always write a due date outright; the hook only
- *     fills a gap.
+ *     fills a gap. An invoice with no contract (hotcrm#2557) has no terms to
+ *     read, so its due date stays as typed.
  *   - `open_amount` = amount − paid, never below 0, stored because the Overdue
  *     Invoices view filters on it (see the field), and `overpaid_amount` = paid
  *     − amount when the payments exceed the invoice, else 0 (#2513).

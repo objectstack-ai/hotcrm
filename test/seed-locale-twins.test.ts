@@ -182,6 +182,8 @@ const LOOKUPS: Array<[object: string, field: string]> = [
   ['crm_quote_line_item', 'crm_quote'],
   ['crm_quote_line_item', 'crm_product'],
   // Order to Cash (#2529); a payment's plan step is copied from its invoice.
+  // The invoice's and the payment's sources are optional since hotcrm#2557:
+  // the test below expects the story's account-only rows to leave them empty.
   ['crm_billing_milestone', 'crm_contract'],
   ['crm_billing_milestone', 'crm_account'],
   ['crm_invoice', 'crm_contract'],
@@ -272,10 +274,30 @@ describe.each([
   });
 
   it('every natural-key reference resolved to a row of the same story', async () => {
+    // A row the story records against the account alone names none of the
+    // optional sources (hotcrm#2557: Wayne's deposit), so it leaves those
+    // columns empty on purpose; every other row resolves them all.
+    const SOURCES = ['crm_contract', 'crm_invoice', 'crm_billing_milestone'];
+    const accountOnly = (object: string): number => story
+      .filter((f) => f.object === object)
+      .flatMap((f) => f.records as Rec[])
+      .filter((r) => SOURCES.every((field) => r[field] === undefined)).length;
     for (const [object, field] of LOOKUPS) {
       const rows = await stack!.rows(object);
       const unresolved = rows.filter((r) => r[field] === null || r[field] === undefined || r[field] === '');
-      expect(unresolved.length, `${object}.${field} unresolved in a ${locale} boot`).toBe(0);
+      const expected = object.startsWith('crm_') && SOURCES.includes(field) && ['crm_invoice', 'crm_payment'].includes(object) ? accountOnly(object) : 0;
+      expect(unresolved.length, `${object}.${field} unresolved in a ${locale} boot`).toBe(expected);
     }
+  });
+
+  it('the deposit recorded against the account alone counts on the account and on no contract (hotcrm#2557)', async () => {
+    const num = (v: unknown) => Number(v ?? 0);
+    const deposits = (await stack!.rows('crm_payment')).filter((p) => !p.crm_contract && !p.crm_invoice && !p.crm_billing_milestone);
+    expect(deposits.map((p) => num(p.amount))).toEqual([10000]);
+    const [account] = await stack!.rows('crm_account', { id: deposits[0]!.crm_account });
+    expect(num(account!.received_amount)).toBe(10000);
+    expect(num(account!.receivable_balance)).toBe(0);
+    const contracts = await stack!.rows('crm_contract', { crm_account: deposits[0]!.crm_account });
+    expect(contracts.map((c) => num(c.received_amount))).toEqual(contracts.map(() => 0));
   });
 });

@@ -128,9 +128,10 @@ const ACCOUNT_CHILD_COVERAGE: Record<string, 'derived' | 'own_only' | 'partial'>
   crm_contract: 'derived',
   // #2555: an order is account data, as a quote is, and its lines follow it.
   crm_sales_order: 'derived',
-  // #2315: Order to Cash's three derive from the CONTRACT, which derives from
-  // the account, so a shared account carries them as it carries its contracts.
-  // Their `crm_account` lookup is a stamped copy the related list reads.
+  // #2315: Order to Cash's three derived from the CONTRACT, which derives from
+  // the account; since hotcrm#2557 they derive from the account itself (their
+  // master), with the contract an optional source. Either way a shared account
+  // carries them as it carries its contracts.
   crm_billing_milestone: 'derived',
   crm_invoice: 'derived',
   crm_payment: 'derived',

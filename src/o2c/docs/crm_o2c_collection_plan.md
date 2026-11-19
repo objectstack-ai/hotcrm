@@ -1,6 +1,6 @@
 ---
 title: Collection Plan — What Sales Sees After the Contract
-description: A contract's billing milestones, who may change them, and what Invoiced, Received and Open count.
+description: The billing milestones planned from a contract, who may change them, and what Invoiced, Received and Open count.
 order: 1
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
@@ -16,12 +16,16 @@ the books elsewhere and records its invoices and payments here; the one thing
 sales keeps is the contract's **collection plan**, a list of **billing
 milestones**.
 
+A milestone belongs to the contract's **account** and names the contract it
+plans; a milestone without a contract is refused. Choosing the contract fills
+in the account.
+
 ## Who may change the plan
 
 Reps, sales managers and administrators add, change and remove the milestones
-of any contract they can read; editing the contract itself is not needed.
-Everyone who can read a contract reads its milestones. Finance reads them and
-never changes them.
+of any account they can read; editing the account or the contract is not
+needed. Everyone who can read an account and its contracts reads its
+milestones. Finance reads them and never changes them.
 
 ## What the figures count
 
@@ -49,11 +53,16 @@ changes on the first of each month.
 ## Totals on the contract and the account
 
 The contract carries **Planned**, **Invoiced**, **Received** and
-**Receivable Balance**; the account carries **Invoiced**, **Received** and
-**Receivable Balance** across all its contracts. **Invoiced** counts issued
+**Receivable Balance** over the records that name it; the account carries
+**Invoiced**, **Received** and **Receivable Balance** over all its invoices and
+payments, including those with no contract. **Invoiced** counts issued
 invoices only. **Receivable Balance** is what the customer still owes on the
 open invoices: the **Open** amount of the issued invoices, summed. A payment
 not yet set against an invoice, such as an advance, counts in **Received**
 only. On the contract they sit in the **Contract Value** section, and on the
 account in **Financials**. They move whenever a milestone, an invoice or a
-payment is saved, and nobody edits them.
+payment is saved, and nobody edits them. Everyone who reads a contract
+reads its totals; the account's take a role that works with the customer's
+money (sales, finance, marketing, service, project managers, administrators).
+Someone who holds only CRM User, the set every member gets, or a consultant
+reads the account without them.

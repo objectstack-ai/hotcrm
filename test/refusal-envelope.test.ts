@@ -191,11 +191,14 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // changed while it is on a report); 84 until hotcrm#2579 added
     // `expense_request_line_lock`, a leg added to, removed from or moved off a
     // submitted travel request; 85 until the seat order of 2026-11-17 added
-    // `expense_request_delete_guard`, a sent travel request deleted.
+    // `expense_request_delete_guard`, a sent travel request deleted; 86 until
+    // hotcrm#2557 added the Order to Cash row stamp's refusal of a contract of
+    // another account (one call in the shared stamp, swept once per object, so
+    // three).
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(86);
+    expect(sites).toHaveLength(89);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
