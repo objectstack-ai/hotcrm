@@ -65,7 +65,7 @@ description: 讓 HotCRM 為你的團隊做好生產準備的第一週任務。
 - [ ] 為客戶和聯絡人決定組織範圍預設值（私有 vs 公開讀取 vs 公開讀/寫）—— 參見 [共用與安全](/zh-Hant/docs/administration/sharing-and-security)
 - [ ] 如果你以小組而非單個代表的方式銷售，設定客戶團隊
 
-### 8. 線索路由 —— 一個佇列加一條規則
+### 8. 線索路由 —— 一個佇列加一條規則 [#8-lead-routing--a-queue-and-a-rule]
 
 **不存在「Setup → Lead Settings」這個畫面。**線索路由是應用自帶的兩項中繼資料。**Lead Intake** 佇列（`lead_intake`）以 `crm_sales_rep` 職位為成員。指派規則 `lead_intake_assignment` 把每一筆到達時沒有所有者的線索，交給成員中**未轉化線索最少**的那一位。最常見的來路是網頁表單（web-to-lead）。這條規則比的是負載，不按區域、行業或來源比對；沒有區域路由，也沒有發給提交者的自動回覆郵件。如果佇列裡沒有成員，線索就沒有所有者，留在 **Lead Intake** 裡等待，任何一位業務代表都可以打開它並點選 **Claim**（認領）。
 
