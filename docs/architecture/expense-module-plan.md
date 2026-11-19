@@ -117,9 +117,9 @@ once each lands.
   with F3d the project) no longer change: a new plan is a new request.
 - **Approval** (F3a): one tier, the traveler's manager, with the expense's no-manager fallback;
   ⛔ no finance tier, the money check stays on the report. With Project Delivery on, a request on a
-  project goes to its project manager instead (F3d; the flow sits in the expense package with the
-  expense's project path until objectstack#34616, then moves with
-  [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575)).
+  project goes to its project manager instead (F3d; the flow sat in the expense package with the
+  expense's project path until objectstack#34616, and is Project Delivery's since
+  [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575), *Measured on 2026-11-19*).
 - **Itinerary lines** (F3b, `crm_expense_request_line`): optional segments (flight, train, car,
   hotel, other), from, to, dates, requirements and a booking reference an agent writes back after
   booking. ⛔ No amounts, so there are never two totals. As built
@@ -201,7 +201,38 @@ PSA contributes the field, and writes it onto the report, where PSA contributes 
 PSA on, two projects and one expense with no project made three reports, each routed to its own
 approver; with PSA off, every selection made one report, approved by the manager, with no error in
 any flow run (`test/psa-approvals.test.ts`, `test/expense-module.test.ts`). The project-path approval
-flow stays in the expense package with stage 1's (hotcrm#2575).
+flow stayed in the expense package with stage 1's until hotcrm#2575 moved both back (*Measured on 2026-11-19*).
+
+## Measured on 2026-11-19 (hotcrm#2575): the project path is Project Delivery's again
+
+On `main` at `a18b9e7` with `@objectstack/*` **18.6.0** (the pin, which carries objectstack#34616's
+fix):
+
+- **Where it lives now.** Project Delivery registers the approval of an expense report on a
+  project, the approval of a travel request on a project with its insert twin, the report's two
+  turn-back notices, and the three flows' labels in the four locale packs. The expense package
+  registers only the two no-project approvals; its one remaining spelling of the project field in a
+  flow is the no-project half of their entry conditions, which keeps the two paths exclusive. The
+  grouping by project inside Submit for Reimbursement stays the action's. `test/expense-module.test.ts`
+  pins that the expense package's flows, notices, translations and manual name no project beyond
+  that guard.
+- **Lint.** `pnpm lint` (`os lint --strict`) is clean with the flows owned by Project Delivery; the
+  same flow pointed at an object no package declares still fails with
+  `flow-trigger-unknown-object`, so the rule is live and now reads the dependency.
+- **Behaviour is unchanged**, read on `@objectstack/verify` and on a real `objectstack dev` boot:
+  a project report of 2,500 went to the project manager, then a Finance Controller, and moved the
+  project's expense cost by 2,500; a report without a project went down the manager path; a report
+  on a locked project went back to Draft with the locked-project notice; travel requests followed
+  the same split. With Project Delivery disabled an expense was recorded, submitted and approved on
+  the manager path; with the expense package disabled projects read, list, edit and take tasks.
+- **Upgrade: a request pending when the flow changes package cannot be decided.** The engine keys a
+  paused run by package and flow name, so deciding a request opened before the upgrade answers
+  409 `RESUME_TARGET_LOST`, for a report and for a travel request alike, and the record stays
+  Submitted. Measured recovery: the submitter recalls the request (200; the record stays
+  Submitted, because the flow that would set it back is gone), the record is set back to Draft (by
+  the submitter or an administrator, through the API), and the submitter submits it again; the
+  project manager, then finance above the threshold, approve it as before. Deciding pending
+  requests before upgrading avoids it.
 
 ## Why this shape
 
@@ -263,7 +294,7 @@ What it settles, for [hotcrm#2556](https://github.com/objectstack-ai/hotcrm/issu
    nothing back, so it takes no email template with it.
 2. **They move back to PSA once objectstack#34616 ships**, on
    [hotcrm#2575](https://github.com/objectstack-ai/hotcrm/issues/2575), blocked on it and on the
-   platform bump that carries it.
+   platform bump that carries it. Done on 2026-11-19 on the 18.6.0 pin; see *Measured on 2026-11-19 (hotcrm#2575)*.
 3. **With PSA disabled only the manager path runs.** The Project field leaves the record, so the
    project path's entry condition is false and nothing reads the absent project; measured at runtime
    and pinned in `test/expense-module.test.ts`, and for the travel request in
