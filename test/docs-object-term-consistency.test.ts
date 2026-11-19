@@ -119,6 +119,13 @@ import { stripComments } from '../scripts/lib/strip-comments.mjs';
  * written per term, so another row costs nothing but its own ledger line, and
  * this stays a pin on THIS repo's business facts rather than a gate farm
  * (AGENTS.md, Scope rule 3).
+ *
+ * A row here needs a retired spelling, so it follows a drift; it cannot be
+ * written ahead of one. The forward half — every object, field, status, list
+ * view, action and app of every package, the newer modules included, read off
+ * the pack and held against the bold UI names the Chinese pages cue — is
+ * `docs-zh-bold-ui-names.test.ts` (#2611). A drift that check or a reader finds
+ * comes back here as a row once the pack itself no longer carries the word.
  */
 
 type Pin = {
