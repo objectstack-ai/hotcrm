@@ -40,6 +40,18 @@ Triage: repo <repo> · req REQ-NNNN · area:<area> · <type> · p<grade>; why: <
 3. **Which area** — the table above.
 4. **Which type.** Bug = something shipped is broken (a wrong sentence in shipped docs or release notes too);
    Feature = a new capability or an extension; Task = follow-up, clean-up, a docs rewrite, a tightened test.
+   Every open card carries one, set through the relay's `issue_patch` `type`. When unsure (maintainer,
+   2026-11-19 02:52Z 「同意」, the same five as objectstack):
+   - **Experience problem**: a Bug when the fix needs no new interface or capability; otherwise file a separate
+     Feature (a platform capability goes to objectstack, rule 1).
+   - **Epics take no type**: `pm:epic` and tracking cards, like record and anchor cards; a type goes only on a card
+     that is real work.
+   - **Operations and verification** (a staging reading, a one-off data backfill, a maintainer-action card) = Task.
+   - **Slow**: a shipped feature slow enough to get in the way = Bug; a refactor or tech-debt clean-up = Task.
+   - **A bug found during development** is typed on its own card, never by its epic. Unmerged code of the feature
+     being built: no card, fix it in that card's PR. Merged but unreleased: a Bug under that epic, graded by the
+     table (usually p2/p3; raised if it blocks a release). Another shipped feature: an ordinary Bug in that
+     feature's area; under this epic with a `Blocked-by:` line only when it blocks the epic.
 5. **Which grade.**
    - **p1** — a core feature is broken or data is wrong, and people who use it daily hit it; install, upgrade or
      the marketplace listing is broken; an experience problem on a core path that everyone hits every time; it
