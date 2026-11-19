@@ -102,7 +102,7 @@ export const jaJP: TranslationData = {
         VALIDATION_FAILED: {
           message: '日付 {{day}} はこのタイムシートの期間（{{from}} – {{to}}）外です。',
           reasons: {
-            task: { message: 'タスクはこの工数表のプロジェクトのタスクにしてください。' },
+            task: { message: 'タスクはこのタイムシートのプロジェクトのタスクにしてください。' },
             project: { message: 'プロジェクトはこのタイムシートのプロジェクトにしてください。' },
           },
         },
@@ -206,7 +206,7 @@ export const jaJP: TranslationData = {
         },
         time_entry_locked: {
           label: '工数と経費をロック',
-          help: 'チェックが入っている間、このプロジェクトの工数表と経費は提出できません。下書きは引き続き作成できます。',
+          help: 'チェックが入っている間、このプロジェクトのタイムシートと経費は提出できません。下書きは引き続き作成できます。',
         },
         gross_margin: { label: '粗利' },
         gross_margin_percent: { label: '粗利率' },
@@ -586,11 +586,11 @@ export const jaJP: TranslationData = {
       },
     },
     timesheet_approval: {
-      label: '工数表承認',
+      label: 'タイムシート承認',
       approvals: { approver_review: { label: 'プロジェクトマネージャー審査' } },
     },
     timesheet_approval_on_create: {
-      label: '工数表承認（作成時）',
+      label: 'タイムシート承認（作成時）',
       approvals: { approver_review: { label: 'プロジェクトマネージャー審査' } },
     },
     project_budget_alert: { label: 'プロジェクト予算アラート' },
@@ -717,7 +717,7 @@ export const jaJP: TranslationData = {
         budget_status_mix: { title: '予算ステータス別プロジェクト', description: '順調、警告（80% から）、超過（100% から）。予算のあるプロジェクトのみ' },
         project_margin: { title: 'プロジェクト別粗利', description: '提供中の各プロジェクトの計画収益、実コスト、粗利、予算消化率' },
         projects_by_status: { title: 'ステータス別プロジェクト', description: '下書きからクローズまでのすべてのプロジェクト' },
-        hours_by_week: { title: '週別の承認済み工数', description: '承認済み工数表の工数と、そのうち請求可能な分' },
+        hours_by_week: { title: '週別の承認済み工数', description: '承認済みタイムシートの工数と、そのうち請求可能な分' },
         billable_share_by_person: { title: '担当者別の請求可能割合', description: '担当者ごとの承認済み工数と顧客に請求する割合' },
       },
     },

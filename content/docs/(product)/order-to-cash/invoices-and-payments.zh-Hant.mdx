@@ -30,7 +30,7 @@ description: 財務如何輸入和匯入發票與回款、到期日如何確定�
 | **Overpaid** | 付款超出 **Amount** 的部分（如有，見下文） |
 | **Invoice File** | 發票檔案（如已附上） |
 
-**到期日。** **Due Date** 留空時，儲存時會自動填寫：**Issue Date** 加上合約的 **Payment Terms**（Net 15、30、60 或 90 天；Due on Receipt 即開票當天）。填寫了日期則按填寫的儲存。沒有合約的發票沒有付款條件可用，請手動填寫到期日。
+**到期日。** **Due Date** 留空時，儲存時會自動填寫：**Issue Date** 加上合約的 **Payment Terms**（Net 15、30、60 或 90 天；Due on Receipt 即開票當天）。填寫了日期則按填寫的儲存。沒有合約的發票沒有 **Payment Terms** 可用，請手動填寫到期日。
 
 **溢付。** 讓 **Paid** 超過 **Amount** 的回款照樣接受，無論是手動輸入還是匯入，因為這筆錢確實收到了。發票隨即按已付清處理：**Open** 為零，超出的部分顯示在 **Overpaid** 裡。溢付的金額不會沖抵這位客戶的其他發票，合約和客戶的 **Receivable Balance** 也不會因此變成負數。
 

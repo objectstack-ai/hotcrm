@@ -203,14 +203,14 @@ const TERMS: Record<string, Term> = {
   },
   // #2699: the three rows below follow drifts #2611 found on the docs and
   // could not retire while the zh-CN pack's own dataset descriptions and help
-  // still carried the old words. Two Traditional twins are NOT retired yet:
-  // each still stands on one zh-Hant page whose line another card holds
-  // (#2691). They join their row once those lines read the pack word.
+  // still carried the old words. Their Traditional twins joined in #2691,
+  // once the last zh-Hant line carrying each read the pack word.
   crm_time_entry: {
     hant: '工時明細',
     minPages: 5,
     retired: [
       '\u5de5\u65f6\u8bb0\u5f55', // 工时记录 — the time dataset's descriptions and analytics/cubes.zh-Hans (#2699); whats-new on both faces (#2611)
+      '\u5de5\u6642\u8a18\u9304', // 工時記錄 — its Traditional twin: analytics/cubes.zh-Hant (#2691)
     ],
     pins: {},
   },
@@ -233,10 +233,79 @@ const TERMS: Record<string, Term> = {
         hant: '付款條款',
         retired: [
           '\u4ed8\u6b3e\u6761\u4ef6', // 付款条件 — crm_invoice.due_date help (#2699) and order-to-cash/invoices-and-payments.zh-Hans (#2611)
+          '\u4ed8\u6b3e\u689d\u4ef6', // 付款條件 — its Traditional twin: order-to-cash/invoices-and-payments.zh-Hant (#2691)
         ],
       },
     },
   },
+  crm_lead: {
+    hant: '線索',
+    // Measured after #2691's sweep: 39 zh-Hans / 46 zh-Hant pages say it.
+    minPages: 35,
+    retired: [
+      // 潛在客戶 — 323 zh-Hant sites named a lead with it (#2691). It is also
+      // the account type "prospect", so its lawful sites are in HOMONYMS. The
+      // Simplified 潜在客户 is NOT retired: it is the pack's own word for that
+      // account type, and the zh-Hans pages are another card's sweep.
+      '\u6f5b\u5728\u5ba2\u6236',
+    ],
+    pins: {},
+  },
+  crm_project: {
+    hant: '項目',
+    // Measured after #2691's sweep: 36 zh-Hans / 42 zh-Hant pages say it.
+    minPages: 30,
+    retired: [
+      '\u5c08\u6848', // 專案 — 81 zh-Hant sites (#2691), beside the 616 that already wrote 項目
+      '\u4e13\u6848', // 专案 — its Simplified twin (never shipped; banned anyway)
+    ],
+    pins: {},
+  },
+};
+
+/**
+ * A retired spelling that is ALSO the Traditional form of a DIFFERENT pack
+ * word, and the zh-Hant pages where it lawfully names that word (#2691).
+ *
+ * 潛在客戶 was the zh-Hant docs' word for a lead, and it is the Traditional
+ * form of the account type option 潜在客户 ("prospect"). A Traditional page
+ * cannot be told apart from the inside — the same four characters name both —
+ * so each lawful site is excused by the PACK PATH of the word it renders, and
+ * by an exact count per page rather than a line number: a page that gains a
+ * site (a lead written the old way again) and a page that loses one (the entry
+ * outlived its text) both go red in the count rule below. The path is resolved,
+ * not trusted, and the spelling must still be one TERMS retires, so an entry
+ * cannot rot into decoration.
+ */
+type Homonym = {
+  /** Dotted path from the zh-CN pack root to the word this spelling renders there. */
+  path: string;
+  /** The Traditional spelling (a `\u` escape: it is a retired spelling, and this file scans itself). */
+  hant: string;
+  /** zh-Hant page, repo-relative → how many times it names the word at `path`. */
+  pages: Readonly<Record<string, number>>;
+};
+
+const HOMONYMS: readonly Homonym[] = [
+  {
+    path: 'objects.crm_account.fields.type.options.prospect', // 潜在客户
+    hant: '\u6f5b\u5728\u5ba2\u6236', // 潛在客戶
+    pages: {
+      'content/docs/(product)/sales/accounts.zh-Hant.mdx': 6,
+      'content/docs/(product)/sales/contracts.zh-Hant.mdx': 2,
+      'content/docs/(product)/sales/index.zh-Hant.mdx': 1,
+      'content/docs/(product)/sales/quotes.zh-Hant.mdx': 2,
+      'content/docs/(product)/service/cases.zh-Hant.mdx': 1,
+      'content/docs/(product)/service/sla-and-escalation.zh-Hant.mdx': 3,
+    },
+  },
+];
+
+/** Whether a zh-Hant `file:line: spelling` hit is a HOMONYMS site. */
+const homonymSite = (hit: string): boolean => {
+  const [loc, spelling] = hit.split(': ');
+  const file = loc.slice(0, loc.lastIndexOf(':'));
+  return HOMONYMS.some((h) => h.hant === spelling && file in h.pages);
 };
 
 /**
@@ -353,18 +422,30 @@ const ROW_LABEL_LEDGER = 'test/sharing-coverage.test.ts';
 const scannable = (file: string): string =>
   file.endsWith('.ts') ? stripComments(read(file)) : read(file);
 
-/** Every `file:line: spelling` in `files` carrying one of `spellings`. */
+/**
+ * Every `file:line: spelling` in `files` carrying one of `spellings` — on one
+ * line, or split by a soft wrap. A prose paragraph wraps mid-word in CJK, and
+ * #2691 found two retired words a line scan could not see: the first half
+ * ended one line, the second opened the next. A wrapped hit names the line the
+ * word starts on.
+ */
 const offenders = (files: readonly string[], spellings: readonly string[]): string[] =>
-  files.flatMap((file) =>
-    scannable(file)
-      .split('\n')
-      .flatMap((line, i) =>
-        spellings
-          .filter((s) => line.includes(s))
-          .map((s) => `${file}:${i + 1}: ${s}`)
-          .filter((hit) => !ALLOWED.includes(hit.split(': ')[0])),
-      ),
-  );
+  files.flatMap((file) => {
+    const text = scannable(file);
+    const lines = text.split('\n');
+    const onOneLine = lines.flatMap((line, i) =>
+      spellings.filter((s) => line.includes(s)).map((s) => `${file}:${i + 1}: ${s}`),
+    );
+    const wrapped = spellings.flatMap((s) =>
+      [...s].slice(1).flatMap((_, k) => {
+        const split = new RegExp(`${s.slice(0, k + 1)}[ \\t]*\\n[ \\t]*${s.slice(k + 1)}`, 'g');
+        return [...text.matchAll(split)].map(
+          (m) => `${file}:${text.slice(0, m.index).split('\n').length}: ${s}`,
+        );
+      }),
+    );
+    return [...onOneLine, ...wrapped].filter((hit) => !ALLOWED.includes(hit.split(': ')[0]));
+  });
 
 const carrying = (files: readonly string[], term: string): string[] =>
   files.filter((f) => scannable(f).includes(term));
@@ -505,7 +586,7 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
     });
 
     it('from every zh-Hant page', () => {
-      const bad = offenders(HANT_PAGES, allRetired);
+      const bad = offenders(HANT_PAGES, allRetired).filter((hit) => !homonymSite(hit));
       expect(
         bad,
         `zh-Hant page(s) naming ${name} or one of its statuses/fields by a retired word:\n  ` +
@@ -594,6 +675,11 @@ describe.each(Object.entries(TERMS))('%s is one Chinese word everywhere (#837)',
           'test/automation-docs-coverage.test.ts',
         ],
         crm_quote: [],
+        // `status-state-machines.test.ts` pins a lead row too, but its
+        // Simplified cell is still 潜在客户 (the zh-Hans state-machines page's
+        // word, outside #2691), so it cannot be listed until that face is swept.
+        crm_lead: ['test/sharing-coverage.test.ts'],
+        crm_project: ['test/sharing-coverage.test.ts'],
         // Measured on b6ee3c5f (#2699): the suites that write each object's
         // Simplified name as a row of their own.
         crm_time_entry: ['test/sharing-coverage.test.ts'],
@@ -682,6 +768,52 @@ describe('mechanism prose is spared by word grain, not by markup position (#802)
         `${root} no longer appears on any zh-Hans page — re-derive #802's criterion`,
       ).toBeGreaterThan(1);
     }
+  });
+});
+
+describe('a retired spelling that is another pack word is excused by its pack path (#2691)', () => {
+  const pack = packFor('zh-CN');
+  const retiredBy = (spelling: string): string[] =>
+    Object.entries(TERMS)
+      .filter(([, t]) => [...t.retired, ...Object.values(t.pins).flatMap((p) => p.retired)].includes(spelling))
+      .map(([name]) => name);
+  const word = (path: string): string => {
+    const node = resolve(pack, path);
+    return typeof node === 'string' ? node : String((node as { label?: unknown } | undefined)?.label ?? '');
+  };
+
+  it.each(HOMONYMS.map((h) => [h.path, h] as const))('%s names a real pack word', (path, h) => {
+    const simplified = word(path);
+    expect(simplified, `${path} resolves to nothing in the zh-CN pack — move the entry with the word`).not.toEqual('');
+    // A script twin: same length, different string. Equal would mean the
+    // entry excuses the Simplified word itself, which no zh-Hant page needs.
+    expect(simplified, `${path}: the excused spelling is the Simplified word itself`).not.toEqual(h.hant);
+    expect(simplified.length, `${path}: ${simplified} is not a script twin of the excused spelling`).toEqual(
+      h.hant.length,
+    );
+    const owners = retiredBy(h.hant);
+    expect(owners.length, `${path}: the excused spelling is retired by no TERMS row, so it excuses nothing`).toBeGreaterThan(0);
+    // The homonym must be a DIFFERENT word from the term that retired it.
+    for (const name of owners) {
+      expect(simplified, `${path} is ${name}'s own label, not a homonym of it`).not.toEqual(
+        String(pack?.objects?.[name]?.label ?? ''),
+      );
+    }
+  });
+
+  it.each(HOMONYMS.map((h) => [h.path, h] as const))('%s: each page carries exactly its counted sites', (path, h) => {
+    const drift = Object.entries(h.pages).flatMap(([page, count]) => {
+      if (!HANT_PAGES.includes(page)) return [`${page}: not a zh-Hant page any more`];
+      // Soft wraps joined, so a site split across two lines is still counted.
+      const seen = read(page).replace(/[ \t]*\n[ \t]*/g, '').split(h.hant).length - 1;
+      return seen === count ? [] : [`${page}: ${seen} site(s), ledger says ${count}`];
+    });
+    expect(
+      drift,
+      `${path}: zh-Hant site counts moved. More sites: judge each new one — a lead is ` +
+        'written with the lead term, only the account type keeps this spelling. Fewer: lower the ' +
+        `count or drop the page.\n  ${drift.join('\n  ')}`,
+    ).toEqual([]);
   });
 });
 
