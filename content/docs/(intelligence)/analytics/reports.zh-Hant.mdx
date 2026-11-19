@@ -1,6 +1,6 @@
 ---
 title: 報表
-description: 標準報表庫——HotCRM 就商機、潛在客戶、工單與客戶發布的十份報表，以及缺席的那些各自還缺什麼。
+description: 標準報表庫——HotCRM 就商機、線索、工單與客戶發布的十份報表，以及缺席的那些各自還缺什麼。
 ---
 
 # 報表
@@ -46,20 +46,20 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 - *Sales Cycle Length* —— 建不出來。沒有任何地方存著銷售週期時長：商機上有 **Stage Entry Date** 和 **Close Date**，但沒有「已過天數」這樣的欄，而它唯一帶的時長 **Days in Current Stage** 就是上面那個查詢後公式。*按產品* 也沒有落點 —— 沒有任何資料集讀 `crm_opportunity_line_item`。
 - *Discount Approval Activity* —— 建不出來。審批本身是真的（`src/sales/flows/opportunity-approval.flow.ts`，以及商機上的 **Approval Status**），但沒有任何維度把那個欄位暴露出來；折扣則是行項目上的百分比（`crm_opportunity_line_item.discount`），而沒有任何資料集讀行項目。
 
-### 🎯 潛在客戶報表
+### 🎯 線索報表
 
-`src/sales/reports/lead.report.ts` 發布的潛在客戶報表只有 **一份**：
+`src/sales/reports/lead.report.ts` 發布的線索報表只有 **一份**：
 
 | 報表 | 顯示內容 |
 | --- | --- |
-| **Lead Engagement by Month** | 已聯絡潛在客戶數量的矩陣 —— 橫列是潛在客戶來源，直欄是 **Last Contacted** 所在的月份。從未聯絡過的潛在客戶被排除在外：它們沒有互動月份 |
+| **Lead Engagement by Month** | 已聯絡線索數量的矩陣 —— 橫列是線索來源，直欄是 **Last Contacted** 所在的月份。從未聯絡過的線索被排除在外：它們沒有互動月份 |
 
-本節曾經列出的三份報表，一份都沒有發布，其中兩份還用了一個並不存在的潛在客戶狀態：
+本節曾經列出的三份報表，一份都沒有發布，其中兩份還用了一個並不存在的線索狀態：
 
 - *Lead Conversion Funnel* 與 *Aged Leads* 以任何形式都不存在。兩者都依賴一個 *Working* 狀態，而 `crm_lead.status` 根本沒有這個取值 —— 真實路線是 **New → Contacted → Qualified → Unqualified → Converted**（`src/sales/objects/lead.object.ts`），其中 **Unqualified** 從任何開放狀態都能進入。*Working* 是匯入別名表（`src/sales/mappings/lead_import.mapping.ts`）裡的一行，它在記錄匯入時把這個歷史寫法對應到 **Contacted**；產品從不顯示這個詞。宣告出來的路線見 [狀態機](/zh-Hant/docs/administration/state-machines)。
-- *Lead Source ROI* 同樣不存在，而且按它寫的口徑，語義層也答不出來：`lead_metrics`（`src/sales/datasets/lead.dataset.ts`）只宣告了一個度量 —— 潛在客戶計數 —— 而且它從不跨到商機那一側。「按來源的數量」可以直接從它得到，因為 **Source** 就是它的維度之一；轉化率要你自己在按狀態分組的計數上做除法；而收入那一半無處可取。
+- *Lead Source ROI* 同樣不存在，而且按它寫的口徑，語義層也答不出來：`lead_metrics`（`src/sales/datasets/lead.dataset.ts`）只宣告了一個度量 —— 線索計數 —— 而且它從不跨到商機那一側。「按來源的數量」可以直接從它得到，因為 **Source** 就是它的維度之一；轉化率要你自己在按狀態分組的計數上做除法；而收入那一半無處可取。
 
-潛在客戶計數也是別處唯一會讀的潛在客戶數字：[Executive Overview](/zh-Hant/docs/analytics/dashboards) 儀表板上的 **Open Leads** 磁貼正是用同一個資料集數未轉化的潛在客戶。其餘的請自建 —— 見下文《自訂報表》。
+線索計數也是別處唯一會讀的線索數字：[Executive Overview](/zh-Hant/docs/analytics/dashboards) 儀表板上的 **Open Leads** 磁貼正是用同一個資料集數未轉化的線索。其餘的請自建 —— 見下文《自訂報表》。
 
 ### 🎧 服務報表
 
@@ -133,7 +133,7 @@ HotCRM 開箱即用地發布 **十份** 報表 —— `src/sales/reports/index.t
 
 擁有 *Report Builder* 權限的任何人都可以：
 
-1. 選擇一個**來源物件**（潛在客戶、商機、工單等）。
+1. 選擇一個**來源物件**（線索、商機、工單等）。
 2. 選擇要顯示的**欄**。
 3. 新增**篩選條件**。
 4. 選擇**分組**和**彙總欄位**。
