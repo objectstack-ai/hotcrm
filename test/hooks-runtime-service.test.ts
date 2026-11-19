@@ -978,7 +978,7 @@ describe('knowledge_article_publish_timestamps', () => {
 
   /**
    * What is NOT a review (#2060 item 10, B-17). The date "reflects real
-   * attention" (`content/docs/service/knowledge-base.mdx`). Measured at
+   * attention" (`content/docs/(product)/service/knowledge-base.mdx`). Measured at
    * 5b7301f, every write of a published article refreshed it: a reader's vote
    * (the recount submits only the two counters), an owner change, and the
    * system insert that carries a historical date. Each case below starts from

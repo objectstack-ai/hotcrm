@@ -192,7 +192,7 @@ describe('flow run summary — the three flows the silent-no-op incident covered
  * of these sweeps re-select the same records every morning and gate each one on
  * whether it was already handled, so their healthy steady state — "everything
  * has already been nudged" — satisfies that predicate exactly as a broken sweep
- * does. `content/docs/administration/automation.mdx` tells operators the
+ * does. `content/docs/(operate)/administration/automation.mdx` tells operators the
  * qualifier; this is the measurement behind it.
  *
  * What separates them is the per-node fold: whether the idempotency lookup

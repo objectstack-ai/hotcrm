@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import stack from './helpers/composed-stack';
 import { readProductApps, renderProductApps } from '../scripts/lib/product-apps';
+import { docsSourceForSlug } from './helpers/docs-route';
 
 /**
  * The shared product block is the app list the metadata declares (#2608).
@@ -94,7 +95,7 @@ describe('the shared product block matches the registered apps (#2608)', () => {
 
   it('every link in the block lands on a page in every locale', () => {
     const page = (href: string, loc: string): boolean => {
-      const rel = href.replace(/^\/docs\/?/, '').replace(/#.*$/, '') || 'index';
+      const rel = docsSourceForSlug(href.replace(/^\/docs\/?/, '').replace(/#.*$/, '').replace(/\/$/, ''));
       const suffix = loc === 'en' ? '' : `.${loc}`;
       const base = join(REPO_ROOT, 'content', 'docs', rel);
       return existsSync(`${base}${suffix}.mdx`) || existsSync(join(base, `index${suffix}.mdx`));

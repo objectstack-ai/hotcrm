@@ -190,7 +190,7 @@ const RETIRED_GROUP_NAMES = ['Products', 'Approvals'] as const;
 
 const LOCALES = [
   {
-    file: 'content/docs/getting-started/quick-tour.mdx',
+    file: 'content/docs/(start)/getting-started/quick-tour.mdx',
     lang: 'en',
     /** First line of an app's guarded block; the block runs to the next block or `## `. */
     startOf: (label: string) => `Inside ${label},`,
@@ -200,7 +200,7 @@ const LOCALES = [
     launcherOf: (label: string) => `- **${label}** — `,
   },
   {
-    file: 'content/docs/getting-started/quick-tour.zh-Hans.mdx',
+    file: 'content/docs/(start)/getting-started/quick-tour.zh-Hans.mdx',
     lang: 'zh-Hans',
     startOf: (label: string) => `在 ${label} 内，`,
     sep: '、',
@@ -208,7 +208,7 @@ const LOCALES = [
     launcherOf: (label: string) => `- **${label}** —— `,
   },
   {
-    file: 'content/docs/getting-started/quick-tour.zh-Hant.mdx',
+    file: 'content/docs/(start)/getting-started/quick-tour.zh-Hant.mdx',
     lang: 'zh-Hant',
     startOf: (label: string) => `在 ${label} 內，`,
     sep: '、',
@@ -509,7 +509,7 @@ const ALLOWED_BOLD_SECTION1 = new Set<string>([
 
 const SECTION1 = [
   {
-    file: 'content/docs/getting-started/quick-tour.mdx',
+    file: 'content/docs/(start)/getting-started/quick-tour.mdx',
     lang: 'en',
     heading: '## 1. The home dashboard',
     /** The tile count, stated in prose, must match the dashboard. */
@@ -528,7 +528,7 @@ const SECTION1 = [
     ],
   },
   {
-    file: 'content/docs/getting-started/quick-tour.zh-Hans.mdx',
+    file: 'content/docs/(start)/getting-started/quick-tour.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 1. 主页仪表盘',
     count: /9 个磁贴/,
@@ -541,7 +541,7 @@ const SECTION1 = [
     gone: ['你看到的第一个东西是 **CRM Overview** 仪表盘', '如果你是经理，你还会看到团队级汇总'],
   },
   {
-    file: 'content/docs/getting-started/quick-tour.zh-Hant.mdx',
+    file: 'content/docs/(start)/getting-started/quick-tour.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 1. 主頁儀表板',
     count: /9 個磁貼/,

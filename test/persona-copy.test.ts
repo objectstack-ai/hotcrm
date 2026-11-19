@@ -30,7 +30,7 @@ import { PERSONAS, normalise } from './helpers/persona-vocabulary';
  * - **Comments are structurally excluded.** They are the one legitimate place
  *   in `src/` to name a retired persona, and they exist today:
  *   `src/pages/home.page.ts` carries two, explaining why the card must NOT name
- *   `sales_copilot` and pointing at `content/docs/ai-copilot/index.mdx`. A
+ *   `sales_copilot` and pointing at `content/docs/(intelligence)/ai-copilot/index.mdx`. A
  *   source-text grep would flag both and need a `HISTORICAL`-style whitelist to
  *   excuse them. Reading the resolved stack means there is nothing to excuse,
  *   which is why this rule ships with no exemption map — an exemption list with

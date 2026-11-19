@@ -231,7 +231,7 @@ contract's derived layout. A field it adds may still name a group the core objec
 
 - **Locales**: every object, field, option, view and navigation label in all four packs under
   `src/sales/translations/`, in the same PR as the metadata (AGENTS.md, *Constraint Checklist*).
-- **Product docs**: a `content/docs/order-to-cash/` section — `index`, `collection-plan`,
+- **Product docs**: a `content/docs/(product)/order-to-cash/` section — `index`, `collection-plan`,
   `invoices-and-payments` (including entry and import) — English first, `.zh-Hans.mdx` and
   `.zh-Hant.mdx` beside each, under *Documentation discipline*. `content/docs/revenue/billing-handoff.mdx`
   gains a pointer to the module.

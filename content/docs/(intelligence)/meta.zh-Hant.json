@@ -1,0 +1,10 @@
+{
+  "title": "智慧與分析",
+  "description": "AI 智能體、技能、儀表板和報表",
+  "root": true,
+  "icon": "Sparkles",
+  "pages": [
+    "ai-copilot",
+    "analytics"
+  ]
+}

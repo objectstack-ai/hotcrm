@@ -1,0 +1,12 @@
+{
+  "title": "Start Here",
+  "description": "Introduction, quick tour and everyday guides",
+  "root": true,
+  "icon": "Rocket",
+  "pages": [
+    "index",
+    "getting-started",
+    "guides",
+    "whats-new"
+  ]
+}

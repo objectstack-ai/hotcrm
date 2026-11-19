@@ -266,9 +266,9 @@ const productDocPages = (): string[] => {
  * page names it in order to say it is NOT there.
  */
 const NEGATED_SRC_DIRS: Record<string, string[]> = {
-  'content/docs/developers/ai-skills.mdx': ['agents'],
-  'content/docs/developers/ai-skills.zh-Hans.mdx': ['agents'],
-  'content/docs/developers/ai-skills.zh-Hant.mdx': ['agents'],
+  'content/docs/(operate)/developers/ai-skills.mdx': ['agents'],
+  'content/docs/(operate)/developers/ai-skills.zh-Hans.mdx': ['agents'],
+  'content/docs/(operate)/developers/ai-skills.zh-Hant.mdx': ['agents'],
 };
 
 /**

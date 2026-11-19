@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
+import { docsSourceForSlug } from './helpers/docs-route';
 
 /**
  * "Conversion rate" is spelled 转化率 / 轉化率 on every Chinese page (#905).
@@ -41,8 +42,8 @@ import { REPO_ROOT } from './helpers/repo-root';
  * This guard rejects exactly the three-character compound 转换率 / 轉換率. Bare
  * 转换 / 轉換 is deliberately untouched and MUST stay reachable: it names the
  * state-machine mechanism (state transition) on
- * `content/docs/administration/state-machines`, type coercion in the import
- * guides, and contract activation on `content/docs/sales/contracts` — a
+ * `content/docs/(operate)/administration/state-machines`, type coercion in the import
+ * guides, and contract activation on `content/docs/(product)/sales/contracts` — a
  * different word that happens to share a spelling with the retired convert
  * translation. #844 drew that line; this test does not move it, and widening
  * the pattern to bare 转换 would turn every one of those pages red.
@@ -115,7 +116,7 @@ describe('conversion rate reads 转化率 on every Chinese docs page (#905)', ()
 
   it.each(CARRIERS)('$page still states the metric in both scripts', (carrier) => {
     for (const locale of ['zh-Hans', 'zh-Hant'] as const) {
-      const file = join(DOCS_ROOT, `${carrier.page}.${locale}.mdx`);
+      const file = join(DOCS_ROOT, `${docsSourceForSlug(carrier.page)}.${locale}.mdx`);
       // Cross the literal against the walk. This block reads the carrier by
       // absolute path and the sweep above reads whatever `chineseDocs()`
       // returns, and nothing tied the two together: narrow the walk — a skipped

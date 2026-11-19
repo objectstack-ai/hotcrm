@@ -17,7 +17,7 @@ import stack from './helpers/composed-stack';
 /**
  * Dashboard-tile drift — the docs page must not list tiles the app does not ship.
  *
- * `content/docs/analytics/dashboards.mdx` names the tiles of each dashboard, and
+ * `content/docs/(intelligence)/analytics/dashboards.mdx` names the tiles of each dashboard, and
  * before #610 almost none of them existed: CRM Overview and Executive overlapped
  * the real metadata on ZERO tiles, the page advertised measures no dataset
  * defines ("Net New ARR", "Customer Acquisition Cost", "Forecast vs Quota"), and
@@ -71,7 +71,7 @@ import stack from './helpers/composed-stack';
  * notice a fourth page naming tiles. Both are guards that are self-consistent
  * with their own inputs and silent about reality.
  *
- * Measured on `main` @ c772cbe: `content/docs/service/cases.zh-Hant.mdx` wrote
+ * Measured on `main` @ c772cbe: `content/docs/(product)/service/cases.zh-Hant.mdx` wrote
  * 「磁磚」 where every other Traditional page writes 「磁貼」, so its
  * `**SLA Violations** 磁磚` was read by nothing — while the character-for-
  * character identical sentence in `cases.zh-Hans.mdx` WAS a readable reference,
@@ -104,9 +104,9 @@ describe('the dashboards docs page lists tiles that exist', () => {
    * The prose rule does NOT read this list any more; see {@link PROSE_PAGES}.
    */
   const DASHBOARD_PAGES = [
-    'content/docs/analytics/dashboards.mdx',
-    'content/docs/analytics/dashboards.zh-Hans.mdx',
-    'content/docs/analytics/dashboards.zh-Hant.mdx',
+    'content/docs/(intelligence)/analytics/dashboards.mdx',
+    'content/docs/(intelligence)/analytics/dashboards.zh-Hans.mdx',
+    'content/docs/(intelligence)/analytics/dashboards.zh-Hant.mdx',
   ];
 
   /** `## 🏠 CRM Overview` → heading text + everything up to the next `## `. */

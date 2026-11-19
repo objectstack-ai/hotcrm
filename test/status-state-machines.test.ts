@@ -169,7 +169,7 @@ describe('the new tables agree with the automation that drives them', () => {
 /**
  * The admin page's roster agrees with the ledger above (#896).
  *
- * `content/docs/administration/state-machines` opens with "HotCRM uses state
+ * `content/docs/(operate)/administration/state-machines` opens with "HotCRM uses state
  * machines on:" and a bullet per object. That roster was written when only
  * `crm_lead` and `crm_opportunity` had a machine, and it did not move when
  * #575 B4 added three more — so the page went on listing case, contract and
@@ -218,7 +218,7 @@ describe('the admin docs roster matches the ledger', () => {
 
   /** The bullet lines of the first `##` section, which is the roster. */
   const rosterBullets = (file: string): string[] => {
-    const text = readFileSync(join(REPO_ROOT, 'content/docs/administration', file), 'utf8');
+    const text = readFileSync(join(REPO_ROOT, 'content/docs/(operate)/administration', file), 'utf8');
     const sections = text.split(/^## /m);
     // [0] is the frontmatter + `# Title` + lede; [1] is "Where state machines apply".
     const section = sections[1];

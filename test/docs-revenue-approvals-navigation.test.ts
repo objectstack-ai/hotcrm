@@ -239,7 +239,7 @@ const SRC_TEXT: string = (() => {
 
 const PAGES = [
   {
-    file: 'content/docs/sales/approvals.mdx',
+    file: 'content/docs/(product)/sales/approvals.mdx',
     lang: 'en',
     heading: '## Where to find pending approvals',
     /** The Inbox entry's label, in this page's language. */
@@ -277,7 +277,7 @@ const PAGES = [
     ],
   },
   {
-    file: 'content/docs/sales/approvals.zh-Hans.mdx',
+    file: 'content/docs/(product)/sales/approvals.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 在哪里找到待处理的审批',
     inboxLabel: ZH_HANS_INBOX,
@@ -315,7 +315,7 @@ const PAGES = [
     ],
   },
   {
-    file: 'content/docs/sales/approvals.zh-Hant.mdx',
+    file: 'content/docs/(product)/sales/approvals.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 在哪裡找到待處理的審批',
     inboxLabel: toHant(ZH_HANS_INBOX),
@@ -364,7 +364,7 @@ const PAGES = [
  */
 const INDEX_PAGES = [
   {
-    file: 'content/docs/sales/index.mdx',
+    file: 'content/docs/(product)/sales/index.mdx',
     heading: '## Where to find things',
     destinationClaims: {
       'approval-centre': "opens the platform's **approval centre**",
@@ -372,7 +372,7 @@ const INDEX_PAGES = [
     },
   },
   {
-    file: 'content/docs/sales/index.zh-Hans.mdx',
+    file: 'content/docs/(product)/sales/index.zh-Hans.mdx',
     heading: '## 在哪里找到这些功能',
     destinationClaims: {
       'approval-centre': '进入平台的**审批中心**',
@@ -380,7 +380,7 @@ const INDEX_PAGES = [
     },
   },
   {
-    file: 'content/docs/sales/index.zh-Hant.mdx',
+    file: 'content/docs/(product)/sales/index.zh-Hant.mdx',
     heading: '## 在哪裡找到這些功能',
     destinationClaims: {
       'approval-centre': '進入平台的**審批中心**',

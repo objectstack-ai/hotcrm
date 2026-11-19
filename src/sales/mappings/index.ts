@@ -8,7 +8,7 @@
  * customer loading their own spreadsheet never has to map columns by hand.
  * Templates with the matching headers live in `assets/import-templates/`, and
  * the business-facing walkthrough is
- * `content/docs/guides/importing-your-data.mdx`.
+ * `content/docs/(start)/guides/importing-your-data.mdx`.
  */
 
 export { AccountImportMapping } from './account_import.mapping';

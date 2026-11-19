@@ -172,17 +172,17 @@ describe('a closed deal keeps its stage (#2234)', () => {
 describe('the Opportunities page says what was measured (#2234)', () => {
   const PAGES = [
     {
-      file: 'content/docs/sales/opportunities.mdx',
+      file: 'content/docs/(product)/sales/opportunities.mdx',
       says: ['**advice, not a gate**', 'A move off it still saves', 'its stage cannot be changed'],
       retired: ["you can't skip forward", 'blocks invalid jumps'],
     },
     {
-      file: 'content/docs/sales/opportunities.zh-Hans.mdx',
+      file: 'content/docs/(product)/sales/opportunities.zh-Hans.mdx',
       says: ['**建议，不是闸门**', '偏离路线的移动照样保存', '阶段就不能再改'],
       retired: ['你不能向前跳过', '拦截无效跳转'],
     },
     {
-      file: 'content/docs/sales/opportunities.zh-Hant.mdx',
+      file: 'content/docs/(product)/sales/opportunities.zh-Hant.mdx',
       says: ['**建議，不是閘門**', '偏離路線的移動照樣儲存', '階段就不能再改'],
       retired: ['你不能向前跳過', '攔截無效跳轉'],
     },

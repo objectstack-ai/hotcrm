@@ -382,12 +382,12 @@ describe('published docs pages do not drift from the large-deal condition', () =
    * configured?" answer — the copy-paste surface that motivated #1127.
    */
   const VERBATIM_PAGES = [
-    'content/docs/sales/opportunities.mdx',
-    'content/docs/sales/opportunities.zh-Hans.mdx',
-    'content/docs/sales/opportunities.zh-Hant.mdx',
-    'content/docs/sales/pipeline-management.mdx',
-    'content/docs/sales/pipeline-management.zh-Hans.mdx',
-    'content/docs/sales/pipeline-management.zh-Hant.mdx',
+    'content/docs/(product)/sales/opportunities.mdx',
+    'content/docs/(product)/sales/opportunities.zh-Hans.mdx',
+    'content/docs/(product)/sales/opportunities.zh-Hant.mdx',
+    'content/docs/(product)/sales/pipeline-management.mdx',
+    'content/docs/(product)/sales/pipeline-management.zh-Hans.mdx',
+    'content/docs/(product)/sales/pipeline-management.zh-Hant.mdx',
   ];
 
   /**

@@ -327,7 +327,7 @@ export const CaseSlaMonitorFlow: Flow = {
               // FROM, not the manager who now owns it.
               //
               // It is the SAME etiquette `case_escalation` already states in
-              // `content/docs/service/sla-and-escalation.mdx` — "the
+              // `content/docs/(product)/service/sla-and-escalation.mdx` — "the
               // notification goes to the previous owner alone" — and that page
               // now states it for this sweep too. One escalation etiquette
               // across both mechanisms.
