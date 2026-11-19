@@ -46,7 +46,7 @@ import stack from './helpers/composed-stack';
  *
  * Its CLAIMS pattern is bold-scoped (`**26 actions**`) where the others are not,
  * and that is not decoration: `actions` is the one noun on this list that is
- * also an ordinary English word in these pages. `content/docs/whats-new.mdx`
+ * also an ordinary English word in these pages. `content/docs/(start)/whats-new.mdx`
  * quotes a Copilot prompt — "What are the next 3 actions I should take?" — in
  * all three locales, and a bare `(\d+) actions` reads that sentence as an
  * inventory claim and demands it say 26. The inventory sentence bolds every
@@ -134,7 +134,7 @@ describe('product docs state the metadata counts the stack registers (#729)', ()
    *
    * ## Why the key is a SECTION and not a file (#1015)
    *
-   * It was a file. `content/docs/whats-new.mdx` carries the v1.0 record AND a
+   * It was a file. `content/docs/(start)/whats-new.mdx` carries the v1.0 record AND a
    * "Latest release" section, which is a claim about TODAY — and a page-wide
    * exemption granted for the first covered the second. Under it that section
    * advertised `v5.0` / "Upgraded to ObjectStack 5.0" for however long it took

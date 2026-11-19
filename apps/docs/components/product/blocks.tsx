@@ -3,7 +3,7 @@ import { localeHref, productApps, productCopy } from '@/lib/product';
 
 /**
  * The shared product block (#2608), rendered by the homepage and by
- * `content/docs/index*.mdx`. Its words live in `lib/product/`, never here.
+ * `content/docs/(start)/index*.mdx`. Its words live in `lib/product/`, never here.
  */
 
 export function ProductHeadline({ lang, subtitle = false }: { lang: string; subtitle?: boolean }) {

@@ -17,7 +17,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  *
  * A callout — `> **Always scope a roll-up to one period.** …` — is where a docs
  * page puts the thing that bites: the trap someone already fell into, written
- * up so the next reader does not. `content/docs/sales/forecasting.mdx` gained
+ * up so the next reader does not. `content/docs/(product)/sales/forecasting.mdx` gained
  * exactly such a box after #614 (a roll-up that added a quarter's quota to a
  * month's), and neither zh page ever grew a counterpart. The whole warning was
  * missing for the half of this product's audience that reads those pages, and

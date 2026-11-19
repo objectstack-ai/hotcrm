@@ -1,0 +1,14 @@
+{
+  "title": "产品指南",
+  "description": "销售、服务、营销、订单与回款、费用报销、项目交付",
+  "root": true,
+  "icon": "LayoutGrid",
+  "pages": [
+    "sales",
+    "service",
+    "marketing",
+    "order-to-cash",
+    "expenses",
+    "projects"
+  ]
+}

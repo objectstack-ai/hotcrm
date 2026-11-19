@@ -27,7 +27,7 @@ const permissionSets: AnyRec[] = (stack as any).permissions ?? [];
 /**
  * `system_admin` reads every row of every object by design: the docs say a
  * private deal is visible to "its owner (and to administrators)"
- * (`content/docs/administration/sharing-and-security.mdx`).
+ * (`content/docs/(operate)/administration/sharing-and-security.mdx`).
  */
 const EXEMPT = new Set(['system_admin']);
 

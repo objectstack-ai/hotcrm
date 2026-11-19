@@ -11,7 +11,7 @@ type AnyRec = Record<string, any>;
 /*
  * ─── A docs list-view roster names the views the app actually ships (#1194) ──
  *
- * `content/docs/sales/products.mdx` carried a *Standard list views* section
+ * `content/docs/(product)/sales/products.mdx` carried a *Standard list views* section
  * naming three views — **Active Products**, **By Category**, **By Family** —
  * and `src/views/product.view.ts` declares neither those nor anything like
  * them: the real inventory is *All Products* (a grid grouped by category) and
@@ -130,7 +130,7 @@ type AnyRec = Record<string, any>;
  * Predicted **red on the pre-#1322 bytes and green on `main`**, and measured as
  * such — green-on-main alone is what coverage already achieved while the defect
  * was present, so it proves nothing on its own. Writing
- * `git show 794d6fe~1:content/docs/sales/activities.mdx` to disk (blob
+ * `git show 794d6fe~1:content/docs/(product)/sales/activities.mdx` to disk (blob
  * `3fc1568` against HEAD's `0f7117e`, hashed before the verdict was read) fails
  * this rule with eight name-column entries — *All*, *Board*, *Schedule*,
  * *Plan*, *Worklog*, *My Tasks*, *Priority*, *Backlog* — none of which
@@ -208,7 +208,7 @@ type AnyRec = Record<string, any>;
  * `git diff HEAD` and the blob hash back at its HEAD value:
  *
  *   - **a Traditional name on a Simplified face.** `service/cases.zh-Hans`
- *     全部工单 → 全部工單 fails the zh-Hans rule with *`content/docs/service/
+ *     全部工单 → 全部工單 fails the zh-Hans rule with *`content/docs/(product)/service/
  *     cases.zh-Hans.mdx names "全部工單", which is not the zh-CN spelling of any
  *     view crm_case ships`*, and nothing else — 1 failed, 8 passed.
  *   - **the glyph-derived name a derivation would have produced.**
@@ -221,7 +221,7 @@ type AnyRec = Record<string, any>;
  *     the pack did, and the rule followed it.
  *   - **a pack entry going missing.** Renaming the `crm_case._views.all_cases`
  *     KEY fails the producer rule first, with *`crm_case._views.all_cases is
- *     missing — "All Cases" is named on content/docs/service/cases.mdx`*,
+ *     missing — "All Cases" is named on content/docs/(product)/service/cases.mdx`*,
  *     which points at the pack rather than at the page.
  *   - **a view renamed in `src/views/**`.** `product_catalog` →
  *     `catalog_gallery` turns four rules red at once, the pin audit among them:
@@ -233,7 +233,7 @@ type AnyRec = Record<string, any>;
  *     "幻影檢視", which the app does not ship`*.
  *   - **vacuity, on a translated face.** Renaming the `## 標準列表檢視` heading
  *     on `sales/products.zh-Hant` fails with *`zh-Hant: roster sections this
- *     rule read no name column out of: content/docs/sales/
+ *     rule read no name column out of: content/docs/(product)/sales/
  *     products.zh-Hant.mdx`* rather than passing over an empty set.
  *
  * ## The translated faces get COVERAGE too, and it is a THIRD direction (#1557)
@@ -309,7 +309,7 @@ type AnyRec = Record<string, any>;
  * state — blob hash back at its HEAD value and an empty `git diff HEAD`:
  *
  *   - **the card's own shape, on zh-Hans.** `sales/products.zh-Hans`
- *     **产品目录** → **全部产品** fails with *`content/docs/sales/
+ *     **产品目录** → **全部产品** fails with *`content/docs/(product)/sales/
  *     products.zh-Hans.mdx never names "产品目录", the zh-CN spelling of a view
  *     crm_product ships`* — 1 failed, 9 passed, where before it was 9 passed.
  *   - **the same shape where the prose still names the dropped view.**
@@ -403,7 +403,7 @@ type AnyRec = Record<string, any>;
  * back at its HEAD value and an empty `git diff HEAD`:
  *
  *   - **the card's own shape.** `service/cases.mdx` **Escalated Cases** →
- *     **All Cases** fails the rule below with *`content/docs/service/cases.mdx
+ *     **All Cases** fails the rule below with *`content/docs/(product)/service/cases.mdx
  *     never names "Escalated Cases" in its name column, which crm_case
  *     ships`* — 1 failed, 11 passed, where the same tree ran 11 passed before
  *     the rule existed.
@@ -414,7 +414,7 @@ type AnyRec = Record<string, any>;
  *   - **vacuity, on the English face.** Renaming the `## Standard list views`
  *     heading on `sales/products.mdx` fails `expectNameColumnIsReadable`
  *     inside the new rule — *`English: roster sections this rule read no name
- *     column out of: content/docs/sales/products.mdx`* — rather than letting
+ *     column out of: content/docs/(product)/sales/products.mdx`* — rather than letting
  *     coverage pass over an empty cell list, which is the failure mode a
  *     coverage rule is most exposed to.
  *
@@ -443,17 +443,17 @@ describe('a docs list-view roster names the views the app ships (#1194)', () => 
    * rather than escaping it.
    */
   const PAGE_OBJECT: Record<string, string> = {
-    'content/docs/sales/accounts.mdx': 'crm_account',
-    'content/docs/sales/contacts.mdx': 'crm_contact',
-    'content/docs/sales/leads.mdx': 'crm_lead',
-    'content/docs/sales/opportunities.mdx': 'crm_opportunity',
-    'content/docs/sales/activities.mdx': 'crm_task',
-    'content/docs/sales/quotes.mdx': 'crm_quote',
-    'content/docs/service/cases.mdx': 'crm_case',
-    'content/docs/marketing/campaigns.mdx': 'crm_campaign',
-    'content/docs/sales/contracts.mdx': 'crm_contract',
-    'content/docs/sales/orders.mdx': 'crm_sales_order',
-    'content/docs/sales/products.mdx': 'crm_product',
+    'content/docs/(product)/sales/accounts.mdx': 'crm_account',
+    'content/docs/(product)/sales/contacts.mdx': 'crm_contact',
+    'content/docs/(product)/sales/leads.mdx': 'crm_lead',
+    'content/docs/(product)/sales/opportunities.mdx': 'crm_opportunity',
+    'content/docs/(product)/sales/activities.mdx': 'crm_task',
+    'content/docs/(product)/sales/quotes.mdx': 'crm_quote',
+    'content/docs/(product)/service/cases.mdx': 'crm_case',
+    'content/docs/(product)/marketing/campaigns.mdx': 'crm_campaign',
+    'content/docs/(product)/sales/contracts.mdx': 'crm_contract',
+    'content/docs/(product)/sales/orders.mdx': 'crm_sales_order',
+    'content/docs/(product)/sales/products.mdx': 'crm_product',
   };
 
   /**

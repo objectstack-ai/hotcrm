@@ -24,7 +24,7 @@ import {
  *     forgot to build — `case_metrics` declares no owner dimension (so nothing
  *     in analytics can group, let alone rank, by agent) and every widget on the
  *     dashboard binds that dataset, i.e. aggregates it, so no tile there lists
- *     individual records by age. `content/docs/service/cases.mdx` had already
+ *     individual records by age. `content/docs/(product)/service/cases.mdx` had already
  *     written the agent half to source in #912/PR #939 — the two pages
  *     contradicted each other, and this was the page that was lying.
  *  2. The three report bullets named reports that do not exist under those
@@ -100,7 +100,7 @@ const ALLOWED_BOLD = new Set<string>([
 
 const PAGES = [
   {
-    file: 'content/docs/service/index.mdx',
+    file: 'content/docs/(product)/service/index.mdx',
     lang: 'en',
     heading: '## Standard dashboards & reports',
     /** The section must say WHY an agent ranking is impossible, not just that it is missing. */
@@ -114,7 +114,7 @@ const PAGES = [
     ],
   },
   {
-    file: 'content/docs/service/index.zh-Hans.mdx',
+    file: 'content/docs/(product)/service/index.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 标准仪表盘与报表',
     impossibility: /没有负责人维度/,
@@ -126,7 +126,7 @@ const PAGES = [
     ],
   },
   {
-    file: 'content/docs/service/index.zh-Hant.mdx',
+    file: 'content/docs/(product)/service/index.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 標準儀表板與報表',
     impossibility: /沒有負責人維度/,

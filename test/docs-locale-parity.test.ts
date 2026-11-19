@@ -24,11 +24,11 @@ const run = (changed: string[], pr: { labels?: string[]; body?: string } = {}): 
 
 describe('the three pairs the gate watches', () => {
   it('a docs site page has two twins, Simplified and Traditional', () => {
-    expect(twinsOf('content/docs/expenses/travel-requests.mdx')).toEqual([
-      'content/docs/expenses/travel-requests.zh-Hans.mdx',
-      'content/docs/expenses/travel-requests.zh-Hant.mdx',
+    expect(twinsOf('content/docs/(product)/expenses/travel-requests.mdx')).toEqual([
+      'content/docs/(product)/expenses/travel-requests.zh-Hans.mdx',
+      'content/docs/(product)/expenses/travel-requests.zh-Hant.mdx',
     ]);
-    expect(twinsOf('content/docs/index.mdx')).toEqual(['content/docs/index.zh-Hans.mdx', 'content/docs/index.zh-Hant.mdx']);
+    expect(twinsOf('content/docs/(start)/index.mdx')).toEqual(['content/docs/(start)/index.zh-Hans.mdx', 'content/docs/(start)/index.zh-Hant.mdx']);
   });
 
   it('a manual page has one twin, .zh.md, wherever its docs folder sits under src/', () => {
@@ -42,8 +42,8 @@ describe('the three pairs the gate watches', () => {
 
   it('a twin, and every other file, is not an English file the gate watches', () => {
     for (const path of [
-      'content/docs/index.zh-Hans.mdx', 'content/docs/index.zh-Hant.mdx', 'src/expense/docs/crm_expense_recording.zh.md',
-      'README.zh-CN.md', 'content/docs/expenses/meta.json', 'docs/STATUS.md', 'src/expense/objects/expense.object.ts',
+      'content/docs/(start)/index.zh-Hans.mdx', 'content/docs/(start)/index.zh-Hant.mdx', 'src/expense/docs/crm_expense_recording.zh.md',
+      'README.zh-CN.md', 'content/docs/(product)/expenses/meta.json', 'docs/STATUS.md', 'src/expense/objects/expense.object.ts',
       'packages/x/README.md', 'docs/README.md',
     ]) expect(twinsOf(path), path).toBeNull();
   });

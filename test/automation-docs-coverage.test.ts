@@ -9,7 +9,7 @@ import stack from './helpers/composed-stack';
 /**
  * The automation docs page lists every flow the app ships, in every locale (#827).
  *
- * `content/docs/administration/automation.mdx` carries the "Built-in flows in
+ * `content/docs/(operate)/administration/automation.mdx` carries the "Built-in flows in
  * HotCRM" table, and that table is the ONLY place an admin can go from a
  * symptom ("something re-assigned this case", "a task appeared on my list") to
  * the automation that caused it. When the table is short, a reader does not
@@ -20,7 +20,7 @@ import stack from './helpers/composed-stack';
  *   - **Half the rows were missing.** The header said `(11)` on the English page
  *     and `(10 个)` / `(10 個)` on the two Chinese ones, while the compiled stack
  *     shipped 24 flows. Contract auto-expiration was among the missing — and
- *     `content/docs/sales/contracts.mdx` sends admins to this very table to
+ *     `content/docs/(product)/sales/contracts.mdx` sends admins to this very table to
  *     find it (#823/#805).
  *   - **A row's TRIGGER was wrong.** `campaign_enrollment` was a Monday-9-AM
  *     schedule flow until it was rewritten as a screen flow (a cron seeds no
@@ -312,21 +312,21 @@ type Page = {
 
 const PAGES: Page[] = [
   {
-    file: 'content/docs/administration/automation.mdx',
+    file: 'content/docs/(operate)/administration/automation.mdx',
     locale: 'en',
     flowsHeading: '## Flows (multi-step)',
     totalSentence: /\*\*Built-in flows in HotCRM\*\* \((\d+)\)/,
     scheduleSentence: /The ([a-z]+) `Schedule` rows above/,
   },
   {
-    file: 'content/docs/administration/automation.zh-Hans.mdx',
+    file: 'content/docs/(operate)/administration/automation.zh-Hans.mdx',
     locale: 'zh-Hans',
     flowsHeading: '## 流程（多步骤）',
     totalSentence: /\*\*HotCRM 中的内置流程\*\*（(\d+) 个）/,
     scheduleSentence: /上表中([一二三四五六七八九十]+)个 `计划` 行/,
   },
   {
-    file: 'content/docs/administration/automation.zh-Hant.mdx',
+    file: 'content/docs/(operate)/administration/automation.zh-Hant.mdx',
     locale: 'zh-Hant',
     flowsHeading: '## 流程（多步驟）',
     totalSentence: /\*\*HotCRM 中的內建流程\*\*（(\d+) 個）/,
