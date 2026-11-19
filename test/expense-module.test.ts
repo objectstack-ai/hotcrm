@@ -173,7 +173,8 @@ describe('the expense module names no project in its flows, conditions, notices 
       expect(nodes.filter((n) => n.config?.objectName === 'crm_project').map((n) => n.id), `${flow.name}: reads no project record`).toEqual([]);
       const start = nodes.find((n) => n.type === 'start')!;
       expect(String(start.config.condition?.source ?? start.config.condition), `${flow.name}: starts only on a record with no project`).toContain(NO_PROJECT_GUARD);
-      const rest = JSON.stringify(flow).split(NO_PROJECT_GUARD.replace(/"/g, '\\"')).join('');
+      // The guard as `JSON.stringify(flow)` spells it: the same encoder, its quotes stripped.
+      const rest = JSON.stringify(flow).split(JSON.stringify(NO_PROJECT_GUARD).slice(1, -1)).join('');
       expect(rest.includes('crm_project'), `${flow.name}: crm_project outside the no-project guard`).toBe(false);
     }
   });
