@@ -31,6 +31,8 @@ import stack, { packFor } from './helpers/composed-stack';
  *   docs-dashboard-tiles.test.ts    the dashboards page lists tiles that exist,
  *                                   and no docs page names one that does not (#949)
  *   docs-locale-callouts.test.ts    translated pages keep the English callouts
+ *   docs-locale-structure.test.ts   translated pages keep the English outline,
+ *                                   heading ids, tables and code blocks (#2610)
  *   docs-retired-personas.test.ts   product prose does not re-personify the
  *                                   retired copilots (#612)
  *   docs-metadata-counts.test.ts    docs state the counts the stack registers
