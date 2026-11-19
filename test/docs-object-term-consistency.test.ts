@@ -385,18 +385,30 @@ const ROW_LABEL_LEDGER = 'test/sharing-coverage.test.ts';
 const scannable = (file: string): string =>
   file.endsWith('.ts') ? stripComments(read(file)) : read(file);
 
-/** Every `file:line: spelling` in `files` carrying one of `spellings`. */
+/**
+ * Every `file:line: spelling` in `files` carrying one of `spellings` — on one
+ * line, or split by a soft wrap. A prose paragraph wraps mid-word in CJK, and
+ * #2691 found two retired words a line scan could not see: the first half
+ * ended one line, the second opened the next. A wrapped hit names the line the
+ * word starts on.
+ */
 const offenders = (files: readonly string[], spellings: readonly string[]): string[] =>
-  files.flatMap((file) =>
-    scannable(file)
-      .split('\n')
-      .flatMap((line, i) =>
-        spellings
-          .filter((s) => line.includes(s))
-          .map((s) => `${file}:${i + 1}: ${s}`)
-          .filter((hit) => !ALLOWED.includes(hit.split(': ')[0])),
-      ),
-  );
+  files.flatMap((file) => {
+    const text = scannable(file);
+    const lines = text.split('\n');
+    const onOneLine = lines.flatMap((line, i) =>
+      spellings.filter((s) => line.includes(s)).map((s) => `${file}:${i + 1}: ${s}`),
+    );
+    const wrapped = spellings.flatMap((s) =>
+      [...s].slice(1).flatMap((_, k) => {
+        const split = new RegExp(`${s.slice(0, k + 1)}[ \\t]*\\n[ \\t]*${s.slice(k + 1)}`, 'g');
+        return [...text.matchAll(split)].map(
+          (m) => `${file}:${text.slice(0, m.index).split('\n').length}: ${s}`,
+        );
+      }),
+    );
+    return [...onOneLine, ...wrapped].filter((hit) => !ALLOWED.includes(hit.split(': ')[0]));
+  });
 
 const carrying = (files: readonly string[], term: string): string[] =>
   files.filter((f) => scannable(f).includes(term));
@@ -746,7 +758,8 @@ describe('a retired spelling that is another pack word is excused by its pack pa
   it.each(HOMONYMS.map((h) => [h.path, h] as const))('%s: each page carries exactly its counted sites', (path, h) => {
     const drift = Object.entries(h.pages).flatMap(([page, count]) => {
       if (!HANT_PAGES.includes(page)) return [`${page}: not a zh-Hant page any more`];
-      const seen = read(page).split(h.hant).length - 1;
+      // Soft wraps joined, so a site split across two lines is still counted.
+      const seen = read(page).replace(/[ \t]*\n[ \t]*/g, '').split(h.hant).length - 1;
       return seen === count ? [] : [`${page}: ${seen} site(s), ledger says ${count}`];
     });
     expect(
