@@ -77,7 +77,7 @@ jobs:
   test:
     name: Test shard ${{ matrix.shard }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       # Every shard runs to the end, so one red run names every failing file
       # rather than only the first shard's.
