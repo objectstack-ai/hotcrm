@@ -50,13 +50,28 @@ import { EXPENSE_OWN_FLOOR, EXPENSE_REPORT_OWN_FLOOR, EXPENSE_REQUEST_LINE_FLOOR
  * `public_read`, so that read would be every enrollment for every member.
  * Pricing and enrollment stay with the sales and marketing profiles.
  *
- * No `fields` block, deliberately. Field-level security merges MOST
+ * ONE `fields` block, on three fields only. Field-level security merges MOST
  * PERMISSIVE over the fields a set authors (`getFieldPermissions`,
  * plugin-security), and this set is held by every member alongside their own:
- * a restriction authored here would narrow every persona that leaves the
- * field unauthored — `sales_manager` edits `crm_account.annual_revenue`
- * exactly because no set it holds names that field. Authoring nothing here
- * leaves every other persona's field security as it was.
+ * a restriction authored here narrows every persona that leaves the field
+ * unauthored — `sales_manager` edits `crm_account.annual_revenue` exactly
+ * because no set it holds names that field. So the set authors nothing,
+ * with one ruled exception:
+ *   - `crm_account.invoiced_amount`, `received_amount`, `receivable_balance`
+ *     — `{ readable: false }`. The maintainer ruled C on hotcrm#2557
+ *     (comment 6999611419, 2026-11-19): reading the account's Order to Cash
+ *     totals takes a business role. Each set that should read them opens
+ *     them with its own `readable: true` row (`_o2c-figures.ts`) or with View
+ *     All / Modify All on the account, both of which out-vote this row in the
+ *     merge; a member holding this set and nothing that reads them (a bare
+ *     member, a consultant) reads the account without the totals. Since
+ *     hotcrm#2557 the invoices and payments they sum hang off the account and
+ *     this set reads neither, so without the row `os lint --strict` reports
+ *     the totals over unreadable rows (`security-rollup-source-unreadable`):
+ *     the row is the lint's own named remedy. It overrides, on these three
+ *     fields, the #2315 wording "⛔ no `readable: false` rows in `crm_user`".
+ *     The roster that pins it is `test/default-permission-set.test.ts`; who
+ *     reads the totals, set by set, is pinned in `test/o2c-receivables.test.ts`.
  */
 export const CrmUserProfile = {
   name: 'crm_user',
@@ -77,12 +92,9 @@ export const CrmUserProfile = {
     // Order to Cash: NO read on invoices and payments. Since hotcrm#2557 both
     // are `controlled_by_parent` under the ACCOUNT, so a read grant here would
     // open the rows of every account this set reads. Irene ruled 2026-11-17
-    // 05:08Z 「保持现在的范围」: sales (own accounts) and finance read the rows;
-    // this set reads the account's totals only. The totals then sum a child
-    // the set cannot read, which `os lint --strict` reports as
-    // `security-rollup-source-unreadable`; the meant pair is acknowledged
-    // with the platform's switch from objectstack#34664, added with the bump
-    // that ships it.
+    // 05:08Z 「保持现在的范围」: sales (own accounts) and finance read the rows.
+    // The account's totals over them are hidden by the `fields` rows below
+    // (ruling C, hotcrm#2557), so this set sums no row it cannot read.
     crm_opportunity: { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_task:        { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
     crm_event:       { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false, readScope: 'own' as const },
@@ -100,5 +112,13 @@ export const CrmUserProfile = {
     sys_attachment: { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     sys_comment:    { allowCreate: true,  allowRead: true, allowEdit: true,  allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
     sys_activity:   { allowCreate: false, allowRead: true, allowEdit: false, allowDelete: false, viewAllRecords: false, modifyAllRecords: false },
+  },
+  // Ruling C on hotcrm#2557 (comment 6999611419): the account's Order to Cash
+  // totals take a business role — see the note above. Computed fields, so
+  // nobody edits them anyway.
+  fields: {
+    'crm_account.invoiced_amount':    { readable: false, editable: false },
+    'crm_account.received_amount':    { readable: false, editable: false },
+    'crm_account.receivable_balance': { readable: false, editable: false },
   },
 };

@@ -114,7 +114,10 @@ person under **Setup → People & Organization → Permission Set Assignment**:
 - **CRM User** — HotCRM's floor for every member: their own leads, accounts,
   deals, tasks and events, and read access to products, campaigns and
   knowledge. Someone who holds no position needs at least this set to work in
-  HotCRM.
+  HotCRM. It hides the account's Order to Cash totals (Invoiced, Received,
+  Receivable Balance): a sales, finance, marketing, service or management set
+  shows them. A permission set of your own that reads accounts shows them only
+  if it names the three fields readable or holds View All on accounts.
 
 ## 5. Switch on scheduled work
 

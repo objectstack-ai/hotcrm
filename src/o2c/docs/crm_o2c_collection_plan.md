@@ -61,4 +61,8 @@ open invoices: the **Open** amount of the issued invoices, summed. A payment
 not yet set against an invoice, such as an advance, counts in **Received**
 only. On the contract they sit in the **Contract Value** section, and on the
 account in **Financials**. They move whenever a milestone, an invoice or a
-payment is saved, and nobody edits them.
+payment is saved, and nobody edits them. Everyone who reads a contract
+reads its totals; the account's take a role that works with the customer's
+money (sales, finance, marketing, service, project managers, administrators).
+Someone who holds only CRM User, the set every member gets, or a consultant
+reads the account without them.

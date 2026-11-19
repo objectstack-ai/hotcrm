@@ -8,12 +8,15 @@
  * The 2026-11-05 ruling on #2315 puts their access in the app package's sets
  * (reps read, finance reads; ⛔ no `readable: false` rows): a tenant that does
  * not use the module disables the package, and the fields are then served to
- * nobody (objectstack#30304, 18.4.0).
+ * nobody (objectstack#30304, 18.4.0). Ruling C on hotcrm#2557 (comment
+ * 6999611419) overrides the "no `readable: false` rows" wording for the
+ * account's three: `crm_user`, the default set every member holds, hides
+ * them, so the account's totals take a business role.
  *
  * Authored, not left silent, so each persona set says the figures are its to
- * read. `crm_user` names none: the default set authors no field-level
- * security (`test/default-permission-set.test.ts`), and a field no held set
- * names is read by everyone.
+ * read — and since ruling C an account row here is what opens the account's
+ * totals to a set that holds no View All on the account (a field the default
+ * set names `readable: false` is read only by a set that votes for it).
  * A set holding Modify All on the account reads every account field whatever
  * its rows say, so `sales_manager` names the contract's alone (`os lint`
  * reports an account row there as inert). `marketing_user` and
