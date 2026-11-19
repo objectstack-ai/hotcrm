@@ -396,7 +396,10 @@ describe('record-page header action references resolve', () => {
     expect(
       recordPages.map((p) => p.name),
       'the walk no longer reaches the record pages this suite holds',
-    ).toEqual(expect.arrayContaining(['lead_detail_page', 'opportunity_detail_page', 'case_detail_page']));
+    ).toEqual(expect.arrayContaining(['lead_detail_page', 'case_detail_page']));
+    // The opportunity authors no record page since #2686: its header is the
+    // default one, which reads every placed action by construction.
+    expect(recordPages.filter((p) => p.object === 'crm_opportunity').map((p) => p.name)).toEqual([]);
     const bad = recordPages
       .filter((p) =>
         [...walk(p.regions), ...walk(p.slots)].some((c) => c.type === 'page:header' || c.type === 'record:quick_actions')

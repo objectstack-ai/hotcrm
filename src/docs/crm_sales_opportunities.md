@@ -95,10 +95,11 @@ off.
 | **> $500,000** | Sales Manager **and** Sales Director sign-off |
 
 While an approval is pending, the opportunity is **locked** and its
-**Approval Status** shows the live state. A blue banner under the title, above
-the deal's key facts, says the deal was sent for approval, to whom (a Sales Manager, or a Sales
-Manager and then a Sales Director over $500,000), and that **Recall**, above
-the title, withdraws the request. On full approval it is stamped
+**Approval Status** shows the live state. The approval strip above the title
+says where the request stands: an approver sees **Awaiting your approval**, the
+step (for example **Sales Manager Review**) and who submitted it, with
+**Approve** and **Reject**; the submitter sees **Recall** and **Reply**, and the
+**Approvals** card on the page names who the request is waiting on. On full approval it is stamped
 **Approved** (with date). On rejection it is stamped **Rejected** — the deal
 is unlocked; revise it and save to resubmit. Either way you hear the outcome
 once in the app — **Request approved** or **Request rejected**, with the

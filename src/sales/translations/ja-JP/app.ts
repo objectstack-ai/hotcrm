@@ -513,14 +513,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         lead_duplicate_alert_suspected: { label: '重複の疑いの警告' },
       },
     },
-    opportunity_detail_page: {
-      label: '商談詳細',
-      description: '商談のレコードページ：プラットフォームが合成する標準レイアウト。アラート枠に承認待ちの通知を表示します。',
-      components: {
-        opp_approval_pending_manager: { label: '営業マネージャーの承認待ち' },
-        opp_approval_pending_director: { label: '営業マネージャーと営業ディレクターの承認待ち' },
-      },
-    },
     sales_home_page: {
       label: '営業ホーム',
       description: '主要指標、自分の未完了の仕事、今後の予定をまとめた営業チームのホームページ',
