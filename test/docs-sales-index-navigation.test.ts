@@ -20,7 +20,7 @@ import { AccountWorkbenchPage } from '../src/sales/pages/account_workbench.page'
  * not exist, or that the sidebar they were looking at was broken.
  *
  * The same fact was already right one page over:
- * `content/docs/getting-started/quick-tour.mdx` lists all nine, and
+ * `content/docs/(start)/getting-started/quick-tour.mdx` lists all nine, and
  * `docs-quick-tour-navigation.test.ts` (#960) pins that list item-for-item. Two
  * pages, one question, two answers — and only one of them had a guard. This
  * file is the other guard, and it is why the same drift cannot recur here: add
@@ -95,7 +95,7 @@ const OBJECT_BULLET_ITEMS = (section: string): string[] => {
 
 const PAGES = [
   {
-    file: 'content/docs/sales/index.mdx',
+    file: 'content/docs/(product)/sales/index.mdx',
     lang: 'en',
     heading: '## Where to find things',
     /** The group size, stated in prose. */
@@ -104,14 +104,14 @@ const PAGES = [
     checkObjectLabels: true,
   },
   {
-    file: 'content/docs/sales/index.zh-Hans.mdx',
+    file: 'content/docs/(product)/sales/index.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '## 在哪里找到这些功能',
     count: /十二个条目/,
     checkObjectLabels: false,
   },
   {
-    file: 'content/docs/sales/index.zh-Hant.mdx',
+    file: 'content/docs/(product)/sales/index.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '## 在哪裡找到這些功能',
     count: /十二個條目/,

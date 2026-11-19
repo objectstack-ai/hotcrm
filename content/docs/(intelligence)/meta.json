@@ -1,0 +1,10 @@
+{
+  "title": "AI & Analytics",
+  "description": "AI agents, skills, dashboards and reports",
+  "root": true,
+  "icon": "Sparkles",
+  "pages": [
+    "ai-copilot",
+    "analytics"
+  ]
+}

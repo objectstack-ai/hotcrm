@@ -110,7 +110,7 @@ const quoteValidation: Hook = {
     // Measured on 17.7.0 before this branch: a rep added a line to an accepted
     // quote (200), `quote_total_rollup` rightly left the settled totals alone,
     // and the quote's lines stopped summing to them. The doc promises the
-    // opposite (`content/docs/sales/quotes.mdx`, "the quote is frozen").
+    // opposite (`content/docs/(product)/sales/quotes.mdx`, "the quote is frozen").
     //
     // The freeze's own boundary, not a second one: USER writes only (a seed or
     // import carries no user and is let through, as below), and an update is

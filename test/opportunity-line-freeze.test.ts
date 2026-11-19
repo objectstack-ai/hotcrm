@@ -15,7 +15,7 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } 
  * move of an open deal's line onto a closed one were all admitted, while
  * `opportunity_amount_rollup` rightly kept the closed amount — so the lines
  * stopped summing to it (1,000 against 1,500). The opportunity doc says
- * "Closed deals are locked" (`content/docs/sales/opportunities.mdx`).
+ * "Closed deals are locked" (`content/docs/(product)/sales/opportunities.mdx`).
  *
  * Pinned both ways: a user's insert, change or move is refused with the deal
  * freeze's own envelope (`RECORD_LOCKED` / 409); an open deal still takes lines
@@ -30,7 +30,7 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } 
  * (objectstack#23221), the one key the guard reads. The lowered body is pinned
  * on both sides of that key with an otherwise identical context. No account
  * case here: an account with any deal, closed included, is not deletable at
- * all (#2019, `content/docs/sales/accounts.mdx`), so no account delete reaches
+ * all (#2019, `content/docs/(product)/sales/accounts.mdx`), so no account delete reaches
  * a deal's lines.
  */
 

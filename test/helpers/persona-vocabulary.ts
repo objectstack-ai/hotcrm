@@ -17,7 +17,7 @@
  * Two things about the matching are load-bearing rather than style, and both
  * travel with the code rather than with either caller:
  *
- * - **Soft wraps are normalised first.** `content/docs/index.mdx` wrote "the
+ * - **Soft wraps are normalised first.** `content/docs/(start)/index.mdx` wrote "the
  *   Sales\n> Copilot" across a blockquote line break, and `whats-new.mdx`
  *   wrote "ask the Sales\nCopilot" across a plain one. A line-oriented grep —
  *   the obvious way to write this — reads neither.

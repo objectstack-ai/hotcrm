@@ -6,6 +6,7 @@ import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { packFor, type AnyRec } from './helpers/composed-stack';
 import { packageStacks } from '../objectstack.composition';
+import { stripDocsGroups } from './helpers/docs-route';
 
 /**
  * A **bold** UI name on a Chinese docs page is the word the Chinese console
@@ -297,7 +298,11 @@ const cueOf = (face: Face, after: string): Cls | undefined => {
   return undefined;
 };
 
-/** Every cued bold run on one page (relative to `content/docs/`), fenced code skipped. */
+/**
+ * Every cued bold run on one page (relative to `content/docs/`), fenced code skipped.
+ * A hit names its page without the `(group)` sidebar-section directory, so
+ * ALLOWED keys and MODULE_DIRS read as the page's URL path does.
+ */
 const hitsOn = (face: Face, page: string): Hit[] => {
   const out: Hit[] = [];
   let fenced = false;
@@ -317,7 +322,7 @@ const hitsOn = (face: Face, page: string): Hit[] => {
         carried = cls;
         const text = seg[k].trim();
         if (!cls || !CJK.test(text) || SENTENCE.test(text) || COUNT.test(text)) continue;
-        out.push({ face, page, line: i + 1, cls, text });
+        out.push({ face, page: stripDocsGroups(page), line: i + 1, cls, text });
       }
     });
   return out;

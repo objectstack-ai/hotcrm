@@ -22,7 +22,7 @@ import stack from './helpers/composed-stack';
  *
  * ```
  * × every registered dashboard has a section on the page
- *   AssertionError: content/docs/analytics/dashboards.mdx has no section for:
+ *   AssertionError: content/docs/(intelligence)/analytics/dashboards.mdx has no section for:
  *   Sales Performance. Add a `## <label>` section listing its tiles …
  * Tests  1 failed | 75 passed (76)
  * ```
@@ -65,9 +65,9 @@ describe('headingLabel() reads a heading the way fumadocs renders it', () => {
   const dashboards: AnyRec[] = (stack as any).dashboards ?? [];
 
   const DOC_PAGES = [
-    'content/docs/analytics/dashboards.mdx',
-    'content/docs/analytics/dashboards.zh-Hans.mdx',
-    'content/docs/analytics/dashboards.zh-Hant.mdx',
+    'content/docs/(intelligence)/analytics/dashboards.mdx',
+    'content/docs/(intelligence)/analytics/dashboards.zh-Hans.mdx',
+    'content/docs/(intelligence)/analytics/dashboards.zh-Hant.mdx',
   ];
 
   /**

@@ -96,8 +96,8 @@ describe('content/docs anchored links', () => {
    * quietly become vacuous if the headings are reworded.
    */
   it('reads explicit [#id] headings the way fumadocs does', async () => {
-    const skills = pages.find((p) => p.file === 'ai-copilot/skills.mdx');
-    const exports_ = pages.find((p) => p.file === 'guides/import-and-export.mdx');
+    const skills = pages.find((p) => p.file === '(intelligence)/ai-copilot/skills.mdx');
+    const exports_ = pages.find((p) => p.file === '(start)/guides/import-and-export.mdx');
     expect(skills?.source).toContain('### 🚦 Case Triage [#case-triage]');
     expect(exports_?.source).toContain(
       '### Scheduled export to a warehouse (not shipped yet) [#scheduled-export]',
@@ -110,10 +110,10 @@ describe('content/docs anchored links', () => {
 
     // …and the links that depend on them are really in the audited set.
     expect(
-      pages.find((p) => p.file === 'service/sla-and-escalation.mdx')?.source,
+      pages.find((p) => p.file === '(product)/service/sla-and-escalation.mdx')?.source,
     ).toContain('(/docs/ai-copilot/skills#case-triage)');
     expect(
-      pages.find((p) => p.file === 'reference/performance-and-limits.mdx')?.source,
+      pages.find((p) => p.file === '(operate)/reference/performance-and-limits.mdx')?.source,
     ).toContain('(/docs/guides/import-and-export#scheduled-export)');
   }, 60_000);
 

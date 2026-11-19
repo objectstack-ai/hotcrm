@@ -111,16 +111,16 @@ describe('product docs do not teach a role hierarchy that drives visibility (#10
    * may not start explaining what the operator does to this app's records.
    */
   const PLATFORM_VOCABULARY: Record<string, { form: RegExp; reason: string }> = {
-    'content/docs/guides/search-and-navigation.mdx': {
+    'content/docs/(start)/guides/search-and-navigation.mdx': {
       form: /`in role hierarchy`/g,
       reason:
         "the platform list-view filter operator, quoted as a token in the operator list — platform vocabulary, not a claim about this app's model",
     },
-    'content/docs/guides/search-and-navigation.zh-Hans.mdx': {
+    'content/docs/(start)/guides/search-and-navigation.zh-Hans.mdx': {
       form: /`in role hierarchy`/g,
       reason: 'the same operator token, quoted untranslated (zh-Hans)',
     },
-    'content/docs/guides/search-and-navigation.zh-Hant.mdx': {
+    'content/docs/(start)/guides/search-and-navigation.zh-Hant.mdx': {
       form: /`in role hierarchy`/g,
       reason: 'the same operator token, quoted untranslated (zh-Hant)',
     },

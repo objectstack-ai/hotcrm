@@ -1,0 +1,11 @@
+{
+  "title": "管理與開發",
+  "description": "系統管理、擴充開發和參考資料",
+  "root": true,
+  "icon": "Settings",
+  "pages": [
+    "administration",
+    "developers",
+    "reference"
+  ]
+}

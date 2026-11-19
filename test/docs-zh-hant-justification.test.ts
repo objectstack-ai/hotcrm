@@ -201,13 +201,13 @@ const RETIRED_REASON = [
  * the honest move rather than widening this roster into a claim nobody ruled.
  */
 const CONVENTION_SITES = [
-  'content/docs/administration/automation.zh-Hant.mdx',
-  'content/docs/administration/profiles.zh-Hant.mdx',
-  'content/docs/administration/sandbox-and-releases.zh-Hant.mdx',
-  'content/docs/administration/setup.zh-Hant.mdx',
-  'content/docs/administration/sharing-and-security.zh-Hant.mdx',
-  'content/docs/guides/integrations.zh-Hant.mdx',
-  'content/docs/reference/glossary.zh-Hant.mdx',
+  'content/docs/(operate)/administration/automation.zh-Hant.mdx',
+  'content/docs/(operate)/administration/profiles.zh-Hant.mdx',
+  'content/docs/(operate)/administration/sandbox-and-releases.zh-Hant.mdx',
+  'content/docs/(operate)/administration/setup.zh-Hant.mdx',
+  'content/docs/(operate)/administration/sharing-and-security.zh-Hant.mdx',
+  'content/docs/(start)/guides/integrations.zh-Hant.mdx',
+  'content/docs/(operate)/reference/glossary.zh-Hant.mdx',
 ];
 
 /** Convention blocks on the tree when this landed: 7 pages + 2 in the nav guard. */

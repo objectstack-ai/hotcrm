@@ -22,7 +22,7 @@ import { defineSkill } from '@objectstack/spec';
  * knowledge service, and no app of any shape declares one. The knowledge
  * base here is `crm_knowledge_article`, a normal CRM object, so
  * `query_records` reaches it like every other object this skill reads;
- * `content/docs/ai-copilot/knowledge-bases.mdx` is that promise. Revisit
+ * `content/docs/(intelligence)/ai-copilot/knowledge-bases.mdx` is that promise. Revisit
  * if a source becomes declarable — objectstack#17464 is the trigger.
  */
 export const Customer360Skill = defineSkill({

@@ -312,7 +312,7 @@ describe('import mappings — a template CSV imports without hand-mapping', () =
 });
 
 describe('import mappings — the docs describe what ships', () => {
-  const doc = readFileSync(join(REPO_ROOT, 'content/docs/guides/importing-your-data.mdx'), 'utf8');
+  const doc = readFileSync(join(REPO_ROOT, 'content/docs/(start)/guides/importing-your-data.mdx'), 'utf8');
 
   it.each(EXPECTED)('the import guide names $name and $template', ({ name, template }) => {
     expect(doc).toContain(name);
@@ -337,7 +337,7 @@ describe('import mappings — the docs describe what ships', () => {
 });
 
 describe('import mappings — the Order to Cash page describes its two (#2315)', () => {
-  const page = readFileSync(join(REPO_ROOT, 'content/docs/order-to-cash/invoices-and-payments.mdx'), 'utf8');
+  const page = readFileSync(join(REPO_ROOT, 'content/docs/(product)/order-to-cash/invoices-and-payments.mdx'), 'utf8');
 
   it.each(O2C_EXPECTED)('names $template and every one of its columns', ({ template }) => {
     expect(page).toContain(template);

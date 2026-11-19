@@ -132,7 +132,7 @@ import { REPO_ROOT } from './helpers/repo-root';
  *    CORRECT and is deliberately not covered. `Revenue Forecasting` is a real
  *    skill label (`src/skills/revenue-forecasting.skill.ts`), and *AI Copilot*
  *    is this product's name for the platform assistant panel — see
- *    `content/docs/ai-copilot/index.mdx`, which spends a section saying the
+ *    `content/docs/(intelligence)/ai-copilot/index.mdx`, which spends a section saying the
  *    assistant is the platform's `ask` agent and what HotCRM adds to it are
  *    skills. It is a surface, not a sidebar entry: the app switcher offers
  *    exactly two apps, HotCRM and Setup. Renaming it to something that
@@ -1010,13 +1010,13 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
       // and no rule in this file may compare the locale of one half, or of one
       // page, against another.
       const MIXED = [
-        'content/docs/administration/automation.zh-Hans.mdx',
-        'content/docs/administration/setup.zh-Hans.mdx',
+        'content/docs/(operate)/administration/automation.zh-Hans.mdx',
+        'content/docs/(operate)/administration/setup.zh-Hans.mdx',
         // profiles, not sandbox-and-releases (hotcrm#2648): that page's one
         // Latin-opening path was `**Studio → 软件包**`, and 18.6.0 serves no
         // Studio app with a Packages entry, so the path left the page.
-        'content/docs/administration/profiles.zh-Hans.mdx',
-        'content/docs/reference/faq.zh-Hans.mdx',
+        'content/docs/(operate)/administration/profiles.zh-Hans.mdx',
+        'content/docs/(operate)/reference/faq.zh-Hans.mdx',
       ];
       const runs = boldRuns();
       const drift = appWordDrift();

@@ -24,7 +24,7 @@ const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
  * ### What was wrong
  *
  * `crm_opportunity_line_item` was declared live on every surface but one.
- * Three profiles granted `allowCreate`; `content/docs/sales/opportunities.mdx`
+ * Three profiles granted `allowCreate`; `content/docs/(product)/sales/opportunities.mdx`
  * described the deal amount rolling up from line items;
  * `billing-handoff.flow.ts`'s `load_line_items` READ them on every won deal.
  * Nothing in the app could create one — no action, no list view, no navigation

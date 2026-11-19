@@ -25,7 +25,7 @@ import type * as Automation from '@objectstack/spec/automation';
  * admin-editable `webhooks` surface cannot express either of these events, so
  * the trade is exact events with a shaped payload at the price of repointing
  * being a rebuild. The measurements behind that are in
- * `billing-handoff.flow.ts`; `content/docs/sales/billing-handoff.mdx`
+ * `billing-handoff.flow.ts`; `content/docs/(product)/sales/billing-handoff.mdx`
  * documents the cost plainly instead of teaching a Setup screen that does not
  * apply.
  *

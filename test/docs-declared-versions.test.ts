@@ -236,8 +236,8 @@ describe('the docs print the version the manifest declares (#612)', () => {
   /*
    * ─── A section marked "Latest release" states the version we ship (#1015) ───
    *
-   * The rules above cover the MAINTAINER docs. `content/docs/whats-new.mdx` is
-   * the product-side version page — `content/docs/index.mdx` sends a reader to
+   * The rules above cover the MAINTAINER docs. `content/docs/(start)/whats-new.mdx` is
+   * the product-side version page — `content/docs/(start)/index.mdx` sends a reader to
    * it for "what changed in the latest version" — and it wrote
    * `## v5.0 — Latest release`, on "ObjectStack 5.0", offering
    * `@objectstack/console@5.0` and `@objectstack/account@5.0` "on npm". Not one
@@ -272,9 +272,9 @@ describe('the docs print the version the manifest declares (#612)', () => {
    * output is in the PR.
    */
   const WHATS_NEW_PAGES = [
-    'content/docs/whats-new.mdx',
-    'content/docs/whats-new.zh-Hans.mdx',
-    'content/docs/whats-new.zh-Hant.mdx',
+    'content/docs/(start)/whats-new.mdx',
+    'content/docs/(start)/whats-new.zh-Hans.mdx',
+    'content/docs/(start)/whats-new.zh-Hant.mdx',
   ];
 
   /** How each locale marks the section as being about the current release. */

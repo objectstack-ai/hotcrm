@@ -1,0 +1,11 @@
+{
+  "title": "Admin & Developers",
+  "description": "Administration, extending HotCRM and reference",
+  "root": true,
+  "icon": "Settings",
+  "pages": [
+    "administration",
+    "developers",
+    "reference"
+  ]
+}
