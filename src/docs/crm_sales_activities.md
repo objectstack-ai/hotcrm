@@ -74,6 +74,8 @@ tasks are in **My Work → My Tasks**.
 **Related Account** is filled in, it offers only that account's deals, and it
 narrows again if you change the account; with no account yet it offers every
 deal that is not lost. Won deals stay on offer, for delivery and follow-up.
+**Related Contact** follows the account the same way: once **Related Account** is
+filled in it offers only that account's contacts; with no account yet, every contact.
 
 ## Reminders (automatic)
 

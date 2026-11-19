@@ -6,7 +6,8 @@ import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
  * A task's or an event's Related Opportunity picker offers only the deals of
- * the account the activity names, and never a lost one (#2573).
+ * the account the activity names, and never a lost one (#2573); its Related
+ * Contact picker offers only that account's contacts (#2677).
  *
  * The rule is two `lookupFilters` entries on `related_to_opportunity`: rule 2,
  * `stage ne closed_lost`, and rule 1, `crm_account eq { $record:
@@ -14,7 +15,11 @@ import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
  * activity's account in place of the `{ $record }` reference and re-queries
  * when the account changes; with no account yet it leaves that entry out.
  * Both halves were read in the console on 18.6.0 (New and Edit forms, en and
- * zh-CN, PR body).
+ * zh-CN, PR bodies of #2676 and of #2677's PR).
+ *
+ * `related_to_contact` carries the account entry alone, with no `orEmpty`: a
+ * contact's `crm_account` is its required master-detail parent (`notNull`),
+ * so no contact is without an account for "or empty" to admit.
  *
  * Pinned here on the booted app:
  *
@@ -39,6 +44,7 @@ let rep: Person;
 let home: string;
 let other: string;
 const deals: Record<string, string> = {};
+const contacts: Record<string, string> = {};
 
 beforeAll(async () => {
   verify = await hotcrmStack();
@@ -59,27 +65,40 @@ beforeAll(async () => {
     { name: 'Picker Other Open', stage: 'negotiation', amount: 100, close_date: '2030-06-30', crm_account: other, owner_id: rep.id },
   ]);
   for (const row of rows) deals[String(row.name)] = String(row.id);
+  const people = await verify.seed('crm_contact', [
+    { first_name: 'Hana', last_name: 'Home', email: 'hana@activity-contact-picker.test', crm_account: home, owner_id: rep.id },
+    { first_name: 'Hugo', last_name: 'Home', email: 'hugo@activity-contact-picker.test', crm_account: home, owner_id: rep.id },
+    { first_name: 'Olga', last_name: 'Other', email: 'olga@activity-contact-picker.test', crm_account: other, owner_id: rep.id },
+  ]);
+  for (const row of people) contacts[String(row.first_name)] = String(row.id);
 }, 120_000);
 
-const pickerFilters = (activity: string): Entry[] =>
-  (verify.metadata.object(activity)?.fields as Row | undefined)?.related_to_opportunity?.lookupFilters;
+const pickerFilters = (activity: string, field = 'related_to_opportunity'): Entry[] =>
+  (verify.metadata.object(activity)?.fields as Row | undefined)?.[field]?.lookupFilters;
 
 /**
  * The candidate query for a form whose activity names `account`: each entry
- * with the form's value in place of its `{ $record }` reference. Only the two
- * operators this field declares are spelled; anything else fails the test.
+ * of `field`'s picker with the form's value in place of its `{ $record }`
+ * reference, read over `target` and kept to the rows this file seeded. Only
+ * the two operators these fields declare are spelled; anything else fails.
  */
-const candidates = async (activity: string, account: string): Promise<string[]> => {
+const candidates = async (
+  activity: string,
+  account: string,
+  field = 'related_to_opportunity',
+  target = 'crm_opportunity',
+  seeded: Record<string, string> = deals,
+): Promise<string[]> => {
   const where: Row = {};
-  for (const entry of pickerFilters(activity)) {
+  for (const entry of pickerFilters(activity, field)) {
     const ref = (entry.value as Row | null)?.$record;
     const value = ref === undefined ? entry.value : ({ related_to_account: account } as Row)[ref];
     if (entry.operator === 'eq') where[entry.field] = value;
     else if (entry.operator === 'ne') where[entry.field] = { $ne: value };
     else throw new Error(`unexpected operator ${entry.operator}`);
   }
-  const ours = new Set(Object.values(deals));
-  const rows = await verify.rows('crm_opportunity', where, { as: rep.token });
+  const ours = new Set(Object.values(seeded));
+  const rows = await verify.rows(target, where, { as: rep.token });
   return rows.map((r) => String(r.id)).filter((id) => ours.has(id)).sort();
 };
 
@@ -99,5 +118,24 @@ describe("an activity's Related Opportunity picker (#2573)", () => {
       [deals['Picker Home Open'], deals['Picker Home Won']].sort(),
     );
     expect(await candidates(activity, other)).toEqual([deals['Picker Other Open']]);
+  });
+});
+
+describe("an activity's Related Contact picker (#2677)", () => {
+  const contactPicker = (activity: string, account: string) =>
+    candidates(activity, account, 'related_to_contact', 'crm_contact', contacts);
+
+  it.each(ACTIVITIES)('%s declares the own-account rule', (activity) => {
+    expect(pickerFilters(activity, 'related_to_contact')).toEqual([
+      { field: 'crm_account', operator: 'eq', value: { $record: 'related_to_account' } },
+    ]);
+    const parent = (verify.metadata.object('crm_contact')?.fields as Row).crm_account;
+    expect(parent.reference).toBe('crm_account');
+    expect(parent.required).toBe(true);
+  });
+
+  it.each(ACTIVITIES)("%s on an account offers that account's contacts only", async (activity) => {
+    expect(await contactPicker(activity, home)).toEqual([contacts.Hana, contacts.Hugo].sort());
+    expect(await contactPicker(activity, other)).toEqual([contacts.Olga]);
   });
 });

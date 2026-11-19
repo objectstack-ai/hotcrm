@@ -184,6 +184,11 @@ export const Event = ObjectSchema.create({
     related_to_contact: Field.lookup('crm_contact', {
       group: 'related',
       label: 'Related Contact',
+      // Once the event names its account only that account's contacts are
+      // offered: see `crm_task.related_to_contact` (#2677).
+      lookupFilters: [
+        { field: 'crm_account', operator: 'eq', value: { $record: 'related_to_account' } },
+      ],
     }),
 
     related_to_opportunity: Field.lookup('crm_opportunity', {
