@@ -31,6 +31,7 @@ jobs:
   checks:
     name: Validate, lint, typecheck, build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -76,6 +77,7 @@ jobs:
   test:
     name: Test shard ${{ matrix.shard }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       # Every shard runs to the end, so one red run names every failing file
       # rather than only the first shard's.
@@ -126,6 +128,7 @@ jobs:
     needs: [ checks, test ]
     if: ${{ always() }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Require the checks and every test shard to have passed
         env:

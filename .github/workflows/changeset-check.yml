@@ -11,6 +11,7 @@ jobs:
   changeset-check:
     name: Check Changeset
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: "!contains(github.event.pull_request.labels.*.name, 'skip-changeset')"
 
     permissions:

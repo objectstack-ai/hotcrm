@@ -25,10 +25,11 @@ jobs:
   publish:
     name: Build + publish HotCRM → production
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.repository == 'objectstack-ai/hotcrm'
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
