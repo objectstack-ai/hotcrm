@@ -53,6 +53,12 @@ export const ProjectBudget = ObjectSchema.create({
 
   fieldGroups: [
     { key: 'basic', label: 'Budget Version', icon: 'wallet' },
+    // The budget's lines are part of the budget: this group draws their table
+    // between the version and its totals on the record page, and keeps the
+    // line grid in the New / Edit Budget form. From objectstack#35889 on, the
+    // platform inlines a master-detail child only where a group of the parent
+    // names it; the line FK's `inlineEdit: 'grid'` only picks the grid.
+    { key: 'lines', label: 'Budget Lines', icon: 'list', relatedList: 'crm_project_budget_line' },
     { key: 'totals', label: 'Totals', icon: 'sigma' },
   ],
 
