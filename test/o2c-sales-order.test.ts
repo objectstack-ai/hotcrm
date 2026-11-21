@@ -42,14 +42,15 @@ describe('the shape', () => {
     ['crm_payment', Payment, 'restrict'],
   ] as const;
 
-  it.each(objects)('%s cites an order through an optional lookup beside the contract, offered from its account', (_name, object, onDelete) => {
+  it.each(objects)('%s cites an order through an optional lookup beside the contract, which fills the account', (_name, object, onDelete) => {
     const field = object.fields.crm_sales_order as Rec;
     expect(field.type).toBe('lookup');
     expect(field.reference).toBe('crm_sales_order');
     expect(field.required ?? false).toBe(false);
     expect(field.storage?.notNull ?? false, 'a new column, nullable').toBe(false);
     expect(field.group).toBe((object.fields.crm_contract as Rec).group);
-    expect(field.dependsOn).toEqual(['crm_account']);
+    expect(field.dependsOn, 'as the contract lookup: a dependsOn hides the order the order page prefills').toBe((object.fields.crm_contract as Rec).dependsOn);
+    expect(field.lookupAutofill).toContainEqual({ target: 'crm_account', source: 'crm_account', overwrite: true });
     expect(field.deleteBehavior, 'as the contract lookup on the same object').toBe((object.fields.crm_contract as Rec).deleteBehavior);
     expect(field.deleteBehavior).toBe(onDelete);
     expect(field.relatedListColumns, 'the tab on the order page').toBeDefined();

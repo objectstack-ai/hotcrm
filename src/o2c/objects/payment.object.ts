@@ -64,7 +64,10 @@ export const Payment = ObjectSchema.create({
     crm_sales_order: Field.lookup('crm_sales_order', {
       label: 'Order',
       group: 'basic',
-      dependsOn: ['crm_account'],
+      // No `dependsOn`, as the contract lookup has none: a `dependsOn` hides a
+      // value the order page's New prefills ("Select Account first") while the
+      // account is still empty, measured in the browser on hotcrm#2560. The
+      // pick fills the account; another account's order is refused on save.
       deleteBehavior: 'restrict',
       lookupAutofill: [
         { target: 'crm_account', source: 'crm_account', overwrite: true },
