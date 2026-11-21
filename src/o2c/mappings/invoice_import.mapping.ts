@@ -20,12 +20,16 @@ import { defineMapping } from '@objectstack/spec/data';
  *   name, `Contract` the contract number (`CTR-0001`, the contract's
  *   `nameField`), `Billing Milestone` the step's name; the import pipeline
  *   resolves a reference cell against the target's title, and a cell that
- *   matches nothing fails its row.
+ *   matches nothing fails its row. `Order` (hotcrm#2560) takes the order
+ *   number (`SO-0001`) or the order's External Reference: the pipeline also
+ *   tries the target's unique fields, and both are unique (an autonumber
+ *   counts as one), so either spelling of the same order resolves.
  * - **The account is what an invoice belongs to** (hotcrm#2557). A row names
- *   it, or names a contract (or a step) and the account is filled from it
- *   (`../objects/_row-stamp.ts`); a row naming both is refused when the
- *   contract is another account's. A row naming neither fails: the account
- *   is required.
+ *   it, or names an order, a contract (or a step) and the account is filled
+ *   from it (`../objects/_row-stamp.ts`); a row naming an account is refused
+ *   when the order or the contract is another account's, and a row naming an
+ *   order and a different contract than the order's is refused. A row naming
+ *   none of them fails: the account is required.
  * - **`source` is `import`** on every row, a constant — which also stamps
  *   Synced At (`../objects/_row-stamp.ts`).
  */
@@ -41,6 +45,7 @@ export const InvoiceImportMapping = defineMapping({
     { source: 'ERP Reference', target: 'erp_ref' },
     { source: 'Invoice Number', target: 'invoice_number' },
     { source: 'Account', target: 'crm_account', transform: 'lookup' },
+    { source: 'Order', target: 'crm_sales_order', transform: 'lookup' },
     { source: 'Contract', target: 'crm_contract', transform: 'lookup' },
     { source: 'Billing Milestone', target: 'crm_billing_milestone', transform: 'lookup' },
     { source: 'Issue Date', target: 'issue_date' },

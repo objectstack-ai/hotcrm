@@ -6,10 +6,12 @@ import { F, P } from '@objectstack/spec';
 /**
  * Billing Milestone — one step of a collection plan (REQ-0007,
  * `docs/architecture/order-to-cash-module-plan.md`, *The data model*). The
- * step belongs to the account (REQ-0010, hotcrm#2557); the contract it plans
- * is its source. Until an order can be the source too (step B3, hotcrm#2560),
- * every step names a contract (`billing_milestone_contract`), because a plan
- * must hang on something.
+ * step belongs to the account (REQ-0010, hotcrm#2557); the order or the
+ * contract it plans is its source (hotcrm#2560), and every step names one of
+ * the two (`billing_milestone_source`), because a plan must hang on
+ * something. One deal's plan hangs in one place, on the order when there is
+ * one and on the contract only when there is no order: the manual says so,
+ * and no rule blocks it (the card's own words).
  *
  * An advance, go-live, acceptance, retention, or one subscription period: what
  * the rep expects to collect, and when. Sales keeps the plan; finance's
@@ -27,7 +29,7 @@ export const BillingMilestone = ObjectSchema.create({
   label: 'Billing Milestone',
   pluralLabel: 'Billing Milestones',
   icon: 'flag',
-  description: 'One step of an account\'s collection plan, planned from a contract: what is due, when, and how much of it is invoiced and received',
+  description: 'One step of an account\'s collection plan, planned from an order or a contract: what is due, when, and how much of it is invoiced and received',
 
   // Plan steps are account data (hotcrm#2557): whoever reads the account reads
   // its plan (ADR-0055 derivation, the same shape as `crm_contract` under
@@ -64,14 +66,32 @@ export const BillingMilestone = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
-      relatedListColumns: ['name', 'crm_contract', 'planned_date', 'planned_amount', 'invoiced_amount', 'received_amount', 'open_amount'],
+      relatedListColumns: ['name', 'crm_sales_order', 'crm_contract', 'planned_date', 'planned_amount', 'invoiced_amount', 'received_amount', 'open_amount'],
     }),
 
-    // The source, required by `billing_milestone_contract` until an order can
-    // be one (step B3). Picking it fills the account on the form; on every
-    // write `_row-stamp.ts` takes the account from it and refuses a
-    // different one. A contract's plan still goes with it (`cascade`), as it
-    // did when the contract was the master.
+    // A source (hotcrm#2560): the step plans this order. Picking it fills the
+    // account, and the order's contract while the step has none, on the form;
+    // on every write `_row-stamp.ts` takes the account from it (refusing a
+    // different one) and the order's contract (refusing a different one). An
+    // order's plan goes with it (`cascade`), as a contract's does. Nullable
+    // and new, so an upgrade only adds the column (no row carries it yet).
+    crm_sales_order: Field.lookup('crm_sales_order', {
+      label: 'Order',
+      group: 'basic',
+      dependsOn: ['crm_account'],
+      deleteBehavior: 'cascade',
+      lookupAutofill: [
+        { target: 'crm_account', source: 'crm_account', overwrite: true },
+        { target: 'crm_contract', source: 'crm_contract' },
+      ],
+      relatedListColumns: ['name', 'planned_date', 'planned_amount', 'invoiced_amount', 'received_amount', 'open_amount'],
+    }),
+
+    // A source, the other of the two `billing_milestone_source` accepts.
+    // Picking it fills the account on the form; on every write
+    // `_row-stamp.ts` takes the account from it and refuses a different one.
+    // A contract's plan still goes with it (`cascade`), as it did when the
+    // contract was the master.
     crm_contract: Field.lookup('crm_contract', {
       label: 'Contract',
       group: 'basic',
@@ -150,20 +170,23 @@ export const BillingMilestone = ObjectSchema.create({
   },
 
   // A transition gate would let a step through without a source; an invariant
-  // is what is meant (AGENTS.md rule 7): a step names its contract. Step B3
-  // (hotcrm#2560) widens it to "a contract or an order".
+  // is what is meant (AGENTS.md rule 7): a step names its order or its
+  // contract. Until hotcrm#2560 it was the contract alone
+  // (`billing_milestone_contract`); renamed with the widening, since the old
+  // name would say the narrower rule.
   validations: [
     {
-      name: 'billing_milestone_contract',
+      name: 'billing_milestone_source',
       type: 'script',
       severity: 'error',
-      message: 'Choose the contract this step belongs to.',
-      condition: P`!has(record.crm_contract) || isBlank(record.crm_contract)`,
+      message: 'Choose the order or the contract this step belongs to.',
+      condition: P`(!has(record.crm_sales_order) || isBlank(record.crm_sales_order)) && (!has(record.crm_contract) || isBlank(record.crm_contract))`,
     },
   ],
 
   indexes: [
     { fields: ['crm_contract'] },
+    { fields: ['crm_sales_order'] },
     { fields: ['crm_account'] },
     { fields: ['planned_date'] },
   ],
