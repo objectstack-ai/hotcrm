@@ -444,6 +444,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       // これらのグループを参照する詳細ページのセクション（#1452）で使用
       crm_forecast: { label: 'ステージ・売上予測' },
       basic: { label: '基本情報' },
+      line_items: { label: '商談商品明細' },
       financials: { label: '財務情報' },
       sales_process: { label: '営業プロセス' },
       classification: { label: '分類' },

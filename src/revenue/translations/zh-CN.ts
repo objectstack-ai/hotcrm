@@ -237,6 +237,7 @@ export const zhCN: TranslationData = {
       },
       _sections: {
         basic: { label: '报价信息' },
+        line_items: { label: '报价单明细' },
         pricing: { label: '价格' },
         terms: { label: '条款与有效期' },
         address: { label: '地址' },

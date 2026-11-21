@@ -339,6 +339,7 @@ export const esES: TranslationData = {
       },
       _sections: {
         basic: { label: 'Información de la Cotización' },
+        line_items: { label: 'Líneas de Cotización' },
         pricing: { label: 'Precios' },
         terms: { label: 'Términos y Vigencia' },
         address: { label: 'Direcciones' },

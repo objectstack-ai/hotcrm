@@ -338,6 +338,7 @@ export const jaJP: TranslationData = {
       },
       _sections: {
         basic: { label: '見積情報' },
+        line_items: { label: '見積明細' },
         pricing: { label: '価格' },
         terms: { label: '条件・有効期限' },
         address: { label: '住所' },
