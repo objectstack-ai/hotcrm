@@ -29,10 +29,11 @@ import { hotcrmStack, signUpPerson, committedFile, flowRuns, type Person } from 
 type Rec = Record<string, any>;
 const num = (v: unknown): number => Number(v ?? 0);
 const FIGURES = ['planned_amount', 'invoiced_amount', 'received_amount'] as const;
-const FLOW = SalesOrderContractFillFlow.name;
+const FLOW = 'sales_order_contract_fill';
 
 describe('the shape', () => {
   it('the module ships the flow on the order, and no hook on the order', () => {
+    expect(SalesOrderContractFillFlow.name).toBe(FLOW);
     expect((o2cStack.flows ?? []).map((f) => f.name)).toContain(FLOW);
     expect((appStack.flows ?? []).map((f) => f.name)).not.toContain(FLOW);
     const start = SalesOrderContractFillFlow.nodes.find((n) => n.type === 'start')!.config as Rec;

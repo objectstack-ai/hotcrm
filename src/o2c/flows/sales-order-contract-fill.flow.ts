@@ -104,8 +104,10 @@ export const SalesOrderContractFillFlow: Flow = {
   description: "When an order is placed under a contract, write that contract onto the order's plan steps, invoices and payments that have none.",
   type: 'record_change',
   status: 'active',
-  // Elevated on purpose (see the header): the one write is `crm_contract`, on
-  // rows found by the order inside its organization.
+  // Elevated on purpose (see the header): a sales rep who places the order
+  // under a contract may not edit its invoices or payments, and Draft Contract
+  // names the contract with no person at all. The one write is
+  // `crm_contract`, on rows found by the order inside its organization.
   runAs: 'system',
   variables: [],
   nodes: [
