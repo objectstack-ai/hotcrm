@@ -109,6 +109,8 @@ export const commerce: Record<string, ObjectTranslationData> = {
     _validations: {
       shipped_after_order: { message: 'La Fecha de Envío no puede ser anterior a la Fecha del Pedido' },
       sales_order_status_progression: { message: 'Este cambio de estado no está permitido. Un pedido avanza Borrador → Confirmado → Completado; Confirmado puede volver a Borrador, y Borrador o Confirmado pueden pasar a Cancelado. Completado y Cancelado son definitivos.' },
+      contract_same_account: { message: 'El contrato debe pertenecer a la Cuenta de este pedido.' },
+      contract_same_account_check: { message: 'Este contrato pertenece a otra cuenta. Un pedido solo puede llevar un contrato de su propia Cuenta: elija uno de los contratos de esta cuenta, o deje Contrato vacío.' },
     },
     label: 'Pedido',
     pluralLabel: 'Pedidos',

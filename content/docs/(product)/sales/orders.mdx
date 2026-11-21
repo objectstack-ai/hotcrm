@@ -16,6 +16,8 @@ An **order** records what a customer bought this time: the products or services,
 
 An order belongs to at most one contract; a contract may hold many orders, or none.
 
+That contract is always one of the order's own account. The order form offers only the account's contracts under **Contract**, and clears **Contract** when you change the account. A save that names another account's contract anyway (through the API, for instance) is refused, with the message on **Contract**: choose one of the account's contracts, or clear **Contract**. An order saved with another account's contract before this rule existed is refused on its next edit until its contract or its account is corrected.
+
 ## Where to find orders
 
 - **Orders** in the **Sales** group of the Sales app.
