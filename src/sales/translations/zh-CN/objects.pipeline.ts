@@ -428,6 +428,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       // and by the detail page, whose sections reference these groups (#1452)
       crm_forecast: { label: '阶段与预测' },
       basic: { label: '基本信息' },
+      line_items: { label: '商机产品明细' },
       financials: { label: '财务信息' },
       sales_process: { label: '销售流程' },
       classification: { label: '分类' },

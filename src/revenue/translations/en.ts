@@ -146,6 +146,7 @@ export const en: TranslationData = {
       },
       _sections: {
         basic: { label: 'Quote Information' },
+        line_items: { label: 'Quote Line Items' },
         pricing: { label: 'Pricing' },
         terms: { label: 'Terms & Validity' },
         address: { label: 'Addresses' },

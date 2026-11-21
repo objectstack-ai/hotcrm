@@ -335,6 +335,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     },
     _sections: {
       basic: { label: 'Basic Information' },
+      line_items: { label: 'Opportunity Line Items' },
       financials: { label: 'Financials' },
       sales_process: { label: 'Sales Process' },
       classification: { label: 'Classification' },

@@ -465,6 +465,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       // Forecast»; desde entonces solo la lee el grupo.
       crm_forecast: { label: 'Etapa y Previsión' },
       basic: { label: 'Información Básica' },
+      line_items: { label: 'Líneas de Oportunidad' },
       financials: { label: 'Datos Financieros' },
       sales_process: { label: 'Proceso de Venta' },
       classification: { label: 'Clasificación' },
