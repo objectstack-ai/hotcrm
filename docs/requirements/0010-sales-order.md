@@ -14,7 +14,7 @@
   (quote → order, contract on demand), [hotcrm#2560](https://github.com/objectstack-ai/hotcrm/issues/2560)
   (Order to Cash rows cite the order), [hotcrm#2561](https://github.com/objectstack-ai/hotcrm/issues/2561)
   (a project names its source order); recorded by
-  [hotcrm#2562](https://github.com/objectstack-ai/hotcrm/issues/2562). Changesets / PRs — stage 1: `.changeset/2555-sales-order.md` (the order and its lines, hotcrm#2555), `.changeset/2557-o2c-rows-under-account.md` (Order to Cash rows under the account, hotcrm#2557); stage 2: `.changeset/2558-quote-creates-order.md` (an accepted quote creates its order, the contract is drafted from the order, both automations switchable, hotcrm#2558), `.changeset/2561-project-source-order.md` (a project names its order, hotcrm#2561); the rest fill in when built.
+  [hotcrm#2562](https://github.com/objectstack-ai/hotcrm/issues/2562). Changesets / PRs — stage 1: `.changeset/2555-sales-order.md` (the order and its lines, hotcrm#2555), `.changeset/2557-o2c-rows-under-account.md` (Order to Cash rows under the account, hotcrm#2557); stage 2: `.changeset/2558-quote-creates-order.md` (an accepted quote creates its order, the contract is drafted from the order, both automations switchable, hotcrm#2558), `.changeset/2560-o2c-rows-cite-order.md` (plan steps, invoices and payments may cite an order, the order page shows planned, invoiced and received, hotcrm#2560), `.changeset/2561-project-source-order.md` (a project names its order, hotcrm#2561). Stage 2 is complete.
 
 ## Raw requirement (verbatim)
 
