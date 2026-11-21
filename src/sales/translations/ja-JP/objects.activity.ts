@@ -205,9 +205,6 @@ export const activity: Record<string, ObjectTranslationData> = {
     _sections: {
       basic: { label: '参加者' },
       response: { label: '招待' },
-      // event_attendee.view.ts のフォームセクション名 (#1100)
-      attendee: { label: '参加者' },
-      invitation: { label: '招待' },
     },
   },
 };

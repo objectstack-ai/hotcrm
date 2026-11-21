@@ -223,10 +223,6 @@ export const jaJP: TranslationData = {
         basic: { label: '製品情報' },
         pricing: { label: '価格' },
         metadata: { label: '関連資料' },
-        // product.view.ts のフォームセクション名 (#1100)
-        product_info: { label: '製品情報' },
-        pricing_info: { label: '価格' },
-        media: { label: 'メディア' },
       },
     },
     crm_price_book: {
