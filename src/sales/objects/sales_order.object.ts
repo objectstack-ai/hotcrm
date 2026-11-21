@@ -288,8 +288,11 @@ export const SalesOrder = ObjectSchema.create({
       message: "The contract must belong to this order's Account.",
       when: P`has(record.crm_contract) && record.crm_contract != null`,
       then: {
+        // `cross_field` so the refusal is attached to Contract, the field to
+        // correct, rather than to the record as a whole.
         name: 'contract_same_account_check',
-        type: 'script',
+        type: 'cross_field',
+        fields: ['crm_contract', 'crm_account'],
         severity: 'error',
         message:
           "This contract belongs to another account. An order can only carry a contract of its own Account: choose one of this account's contracts, or clear Contract.",

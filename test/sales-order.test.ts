@@ -230,7 +230,9 @@ describe('an order on the booted stack', () => {
     };
     const refused = (res: { status: number; body: Rec }) => {
       expect(res.status, JSON.stringify(res.body)).toBe(400);
-      expect(JSON.stringify(res.body)).toContain(sentence);
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+      // On Contract, the field to correct, so the form shows it there.
+      expect(res.body.fields?.[0]).toMatchObject({ field: 'crm_contract', code: 'rule_violation', message: sentence });
     };
 
     it("refuses another account's contract on create, on a contract change and on an account change", async () => {
