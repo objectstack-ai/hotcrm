@@ -19,6 +19,17 @@
  *     Receivable Balance reads 220,000 and the step shows in Planned This
  *     Month whatever the calendar.
  *
+ * And by order (`src/sales/data/sales_order.seed.ts`, hotcrm#2560):
+ *
+ *   - Globex Industries' Seat Expansion Order, a product sale with no
+ *     contract (22,464, Net 60 on the order): two steps of 11,232, one on
+ *     order and one on delivery, the plan hanging on the order because there
+ *     is no contract. The first is invoiced, its due date taken from the
+ *     order's terms (no contract to read), and paid in full; the payment
+ *     names only its invoice and takes the invoice's order and step. The
+ *     order's page reads Planned 22,464, Invoiced 11,232 and Received
+ *     11,232, and Globex's account the same Invoiced and Received.
+ *
  * Wayne's contract is still in approval and Stark's is a draft, so neither is
  * billed. Wayne has paid a 10,000 deposit all the same: it matches no invoice
  * and no plan step yet, so it is recorded against the account alone (the rows
@@ -27,16 +38,18 @@
  * invoice, so every Overpaid reads 0 (#2513).
  *
  * Hook-owned figures are not authored (`src/sales/data/_shared.ts`, rule 3):
- * the account stamp on every row that names a contract, an invoice's Due Date
- * (issue date plus the contract's terms), Open and Overpaid, a payment's plan step (copied from its
- * invoice), and the steps' invoiced and received summaries all come from the
+ * the account stamp on every row that names an order or a contract, an
+ * invoice's Due Date (issue date plus the contract's terms, else the order's),
+ * Open and Overpaid, a payment's order, contract and plan step (copied from
+ * its invoice), and the steps' invoiced and received summaries all come from the
  * module's own hooks and the engine as the rows are written. The datasets are
  * replayed in this order, after the contracts they reference.
  *
  * Seed identities: a step's `name`, an invoice's `invoice_number`, and a
  * payment's `erp_ref` (its bank reference), since `payment_number` is an
  * autonumber the runtime owns. References name those keys, a contract by its
- * `description`, the contracts' own seed identity, and an account by its name.
+ * `description`, the contracts' own seed identity, an order by its name, the
+ * orders' own, and an account by its name.
  *
  * INSERT-ONCE (`mode: 'ignore'`, as the contracts): finance edits, cancels and
  * re-imports these rows, and a boot must not write them back.
@@ -47,6 +60,7 @@ import { BillingMilestone } from '../objects/billing_milestone.object';
 import { Invoice } from '../objects/invoice.object';
 import { Payment } from '../objects/payment.object';
 import { SEED_EN_LOCALES } from '../../sales/data/_locale';
+import { celDaysFromNow } from '../../sales/data/_shared';
 
 /** The two billed contracts, by their seed identity. */
 const INITECH = 'Initech Solutions';
@@ -57,6 +71,8 @@ const O2C_CONTRACTS = {
   [INITECH]: 'Initial service agreement, pending renewal discussion.',
   [ACME]: 'Annual platform subscription with premium support tier.',
 } as const;
+/** The order billed with no contract, by its seed identity (its name). */
+const GLOBEX_ORDER = 'Globex Seat Expansion Order';
 
 export const billingMilestones = defineSeed(BillingMilestone, {
   mode: 'ignore',
@@ -68,6 +84,9 @@ export const billingMilestones = defineSeed(BillingMilestone, {
     { name: 'Initech Q3 service fee', crm_contract: O2C_CONTRACTS[INITECH], planned_amount: 15000, planned_date: cel`daysAgo(218)`, description: 'Third quarter of the service agreement.' },
     { name: 'Initech Q4 service fee', crm_contract: O2C_CONTRACTS[INITECH], planned_amount: 15000, planned_date: cel`daysAgo(127)`, description: 'Fourth and last quarter of the service agreement.' },
     { name: 'Acme Year 1 subscription', crm_contract: O2C_CONTRACTS[ACME], planned_amount: 220000, planned_date: cel`today()`, description: 'Year one of the platform subscription, billed annually in advance.' },
+    // The plan of an order with no contract hangs on the order (hotcrm#2560).
+    { name: 'Globex seats on order', crm_sales_order: GLOBEX_ORDER, planned_amount: 11232, planned_date: cel`daysAgo(5)`, description: 'Half of the seat order, billed when the order was confirmed.' },
+    { name: 'Globex seats on delivery', crm_sales_order: GLOBEX_ORDER, planned_amount: 11232, planned_date: celDaysFromNow(25), description: 'The other half, billed once every seat and workshop day is delivered.' },
   ],
 });
 
@@ -81,6 +100,8 @@ export const invoices = defineSeed(Invoice, {
     { invoice_number: 'INV-00707', crm_contract: O2C_CONTRACTS[INITECH], crm_billing_milestone: 'Initech Q3 service fee', issue_date: cel`daysAgo(218)`, amount: 15000, status: 'issued', source: 'manual' },
     { invoice_number: 'INV-00836', crm_contract: O2C_CONTRACTS[INITECH], crm_billing_milestone: 'Initech Q4 service fee', issue_date: cel`daysAgo(127)`, amount: 15000, status: 'issued', source: 'manual' },
     { invoice_number: 'INV-00991', crm_contract: O2C_CONTRACTS[ACME], crm_billing_milestone: 'Acme Year 1 subscription', issue_date: cel`today()`, amount: 220000, status: 'issued', source: 'manual' },
+    // Against the order alone: the due date comes from the order's Net 60.
+    { invoice_number: 'INV-01024', crm_sales_order: GLOBEX_ORDER, crm_billing_milestone: 'Globex seats on order', issue_date: cel`daysAgo(5)`, amount: 11232, status: 'issued', source: 'manual' },
   ],
 });
 
@@ -95,5 +116,7 @@ export const payments = defineSeed(Payment, {
     { erp_ref: 'TRX-135180', crm_contract: O2C_CONTRACTS[INITECH], crm_invoice: 'INV-00707', payment_date: cel`daysAgo(180)`, amount: 9000, method: 'bank_transfer', source: 'manual' },
     // A deposit with no invoice, no plan step and no contract: the account alone (hotcrm#2557).
     { erp_ref: 'TRX-140215', crm_account: WAYNE, payment_date: cel`daysAgo(20)`, amount: 10000, method: 'bank_transfer', source: 'manual' },
+    // Names only its invoice: the order, the step and the account come from it (hotcrm#2560).
+    { erp_ref: 'TRX-151360', crm_invoice: 'INV-01024', payment_date: cel`daysAgo(2)`, amount: 11232, method: 'bank_transfer', source: 'manual' },
   ],
 });

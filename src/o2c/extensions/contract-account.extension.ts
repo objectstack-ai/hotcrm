@@ -34,7 +34,7 @@ import { Field } from '@objectstack/spec/data';
  * Who reads them is the app package's permission sets (the 2026-11-05 ruling):
  * every member reads, nobody edits — they are computed.
  */
-const receivables = (relationshipField: string, group: string) => ({
+export const receivables = (relationshipField: string, group: string) => ({
   invoiced_amount: Field.summary({
     label: 'Invoiced',
     description: 'The issued invoices, summed. A cancelled invoice is not counted.',
@@ -78,23 +78,28 @@ const receivables = (relationshipField: string, group: string) => ({
   }),
 });
 
+/** The collection plan, summed, over the steps that name the row through `relationshipField`. */
+export const planned = (relationshipField: string, group: string) => ({
+  planned_amount: Field.summary({
+    label: 'Planned',
+    description: 'The collection plan, summed: what the steps expect to collect.',
+    group,
+    scale: 2,
+    readonly: true,
+    summaryOperations: {
+      object: 'crm_billing_milestone',
+      field: 'planned_amount',
+      function: 'sum',
+      relationshipField,
+    },
+  }),
+});
+
 export const ContractAccountExtensions = [
   {
     extend: 'crm_contract',
     fields: {
-      planned_amount: Field.summary({
-        label: 'Planned',
-        description: 'The collection plan, summed: what the steps expect to collect.',
-        group: 'value',
-        scale: 2,
-        readonly: true,
-        summaryOperations: {
-          object: 'crm_billing_milestone',
-          field: 'planned_amount',
-          function: 'sum',
-          relationshipField: 'crm_contract',
-        },
-      }),
+      ...planned('crm_contract', 'value'),
       ...receivables('crm_contract', 'value'),
     },
   },

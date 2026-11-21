@@ -4,7 +4,7 @@ import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInpu
 
 import { O2cApp } from './apps/index.js';
 import { CrmO2cManual } from './books/index.js';
-import { ContractAccountExtensions } from './extensions/index.js';
+import { ContractAccountExtensions, SalesOrderExtensions } from './extensions/index.js';
 import { InvoiceImportMapping, PaymentImportMapping } from './mappings/index.js';
 import { BillingMilestone, Invoice, Payment } from './objects/index.js';
 import { billingMilestoneHook, invoiceHook, paymentHook } from './objects/hooks.js';
@@ -102,9 +102,10 @@ export const createHotCrmO2cStack = (
   // Finance's app (hotcrm#2465); see the app's own note.
   apps: [O2cApp],
   objects: [BillingMilestone, Invoice, Payment],
-  // The contract's and the account's receivables figures (#2416); see the
+  // The contract's and the account's receivables figures (#2416), and the
+  // order's planned, invoiced and received (hotcrm#2560); see each
   // extension's own note.
-  objectExtensions: ContractAccountExtensions,
+  objectExtensions: [...ContractAccountExtensions, ...SalesOrderExtensions],
   hooks: o2cHooks,
   views: [BillingMilestoneViews, InvoiceViews, PaymentViews],
   mappings: [InvoiceImportMapping, PaymentImportMapping],

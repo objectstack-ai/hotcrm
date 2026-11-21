@@ -15,8 +15,9 @@ type Rec = Record<string, any>;
  *   row, and an account that is not the contract's is refused; a missing
  *   contract is filled from the step or the invoice; an imported invoice or
  *   payment is dated `synced_at`. The rows belong to the account since
- *   hotcrm#2557, and the contract is an optional source (a plan step still
- *   needs one, `billing_milestone_contract`).
+ *   hotcrm#2557, and the contract is an optional source (a plan step needs
+ *   it or an order, `billing_milestone_source`; the order's half is
+ *   `test/o2c-sales-order.test.ts`).
  * - `invoice_figures` — a blank due date takes the contract's payment terms,
  *   and `open_amount` (stored, so the overdue view can filter it) follows the
  *   payments and the status.
@@ -165,9 +166,9 @@ describe('the rows belong to the account; the contract is a source (hotcrm#2557)
     expect(Number((await row('crm_invoice', i.id)).open_amount)).toBe(0);
   });
 
-  it('a plan step still needs its contract', async () => {
+  it('a plan step still needs a source: an order or a contract (hotcrm#2560)', async () => {
     await expect(insert('crm_billing_milestone', {
-      name: `No contract ${++k}`, crm_account: acme.crm_account, planned_amount: 1, planned_date: '2026-12-01',
+      name: `No source ${++k}`, crm_account: acme.crm_account, planned_amount: 1, planned_date: '2026-12-01',
     })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
   });
 

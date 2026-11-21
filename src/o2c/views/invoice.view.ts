@@ -27,6 +27,7 @@ export const InvoiceViews = defineView({
     columns: [
       { field: 'invoice_number', width: 150, link: true, pinned: 'left' },
       { field: 'crm_account', width: 200 },
+      { field: 'crm_sales_order', width: 200 },
       { field: 'crm_contract', width: 130 },
       { field: 'issue_date', width: 120, sortable: true },
       { field: 'due_date', width: 120, sortable: true },
