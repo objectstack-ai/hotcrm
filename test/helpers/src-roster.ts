@@ -18,6 +18,7 @@ import * as revenueFlows from '../../src/revenue/flows';
 import * as marketingFlows from '../../src/marketing/flows';
 import * as expenseFlows from '../../src/expense/flows';
 import * as psaFlows from '../../src/psa/flows';
+import * as o2cFlows from '../../src/o2c/flows';
 
 import * as salesViews from '../../src/sales/views';
 import * as serviceViews from '../../src/service/views';
@@ -204,6 +205,7 @@ const BARRELS: Readonly<
     service: serviceFlows,
     revenue: revenueFlows,
     marketing: marketingFlows,
+    o2c: o2cFlows,
     expense: expenseFlows,
     psa: psaFlows,
   },
