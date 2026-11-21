@@ -210,9 +210,6 @@ export const activity: Record<string, ObjectTranslationData> = {
       // «Basic Information» / «Response Tracking» de crm_campaign_member.
       basic: { label: 'Asistente' },
       response: { label: 'Invitación' },
-      // Nombres de sección del formulario en event_attendee.view.ts (#1100)
-      attendee: { label: 'Asistente' },
-      invitation: { label: 'Invitación' },
     },
   },
 };

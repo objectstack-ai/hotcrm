@@ -190,12 +190,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       identity: { label: '基本情報' },
       company_info: { label: '会社情報' },
       contact_info: { label: '連絡先情報' },
-      qualification: {
-        label: '適格判定',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
+      qualification: { label: '適格判定' },
       assignment: { label: '担当者' },
       additional: { label: 'その他の情報' },
       preferences: { label: 'コミュニケーション設定' },
@@ -214,63 +209,12 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       company_information: { label: '会社情報' },
       additional_information: { label: '追加情報' },
       privacy: { label: 'プライバシー' },
-      general: { label: '一般' },
-      details: { label: '詳細' },
-      step_1_contact_details: { label: 'ステップ1：連絡先情報' },
-      step_2_company_information: { label: 'ステップ2：会社情報' },
-      step_3_qualification: {
-        label: 'ステップ3：資格評価',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      step_4_review_and_convert: {
-        label: 'ステップ4：確認と変換',
-        fields: {
-          description: { helpText: '取引先と取引先責任者に変換する前に、すべての情報を確認してください' },
-        },
-      },
-      primary_information: {
-        label: '主要情報',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      extended_details: { label: '詳細情報' },
-      quick_edit: {
-        label: 'クイック編集',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      update_lead_status: {
-        label: 'リードステータスを更新',
-        fields: {
-          status: { helpText: 'このリードの新しいステータスを選択してください' },
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-          notes: { placeholder: 'このステータス変更についてのメモを追加' },
-        },
-      },
       tell_us_about_yourself: { label: 'あなたについて教えてください' },
       about_your_company: { label: '貴社について' },
       how_can_we_help: {
         label: 'どのようなご用件でしょうか？',
         fields: {
           description: { placeholder: 'ご希望の内容を簡単にご記入ください…', helpText: '1 営業日以内に営業担当者よりご連絡いたします。' },
-        },
-      },
-      lead_information: {
-        label: 'リード情報',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      address_information: { label: '住所情報' },
-      privacy_preferences: {
-        label: 'プライバシー設定',
-        fields: {
-          do_not_call: { helpText: 'このリードが電話連絡を希望しない場合はチェックします' },
-          email_opt_out: { helpText: 'このリードがメール配信を停止している場合はチェックします' },
         },
       },
     },
