@@ -2,7 +2,7 @@
 
 ## 6.6.0
 
-**Requires ObjectStack 18.6.0: upgrade the host first.** HotCRM 6.5.0 as it was published on 2026-11-18 already required 18.6.0, though its notes say 18.5.0, and it already carried the Expenses app (expense reports, travel requests, expense standards), Orders, Qualify Lead, the permission-aware Update Stage and the smaller fixes 18.6.0 brought (#2655). An installation on 6.5.0 has those; the rest below is new to it.
+**Requires ObjectStack 18.6.0: upgrade the host first.** HotCRM 6.5.0 as it was published on 2026-11-18 already required 18.6.0, though its notes say 18.5.0, and it already carried the Expenses app (expense reports, travel requests, expense standards), Orders, Qualify Lead, the permission-aware Update Stage and the smaller fixes 18.6.0 brought (#2655). An installation on 6.5.0 already has those; they are listed below because 6.5.0's notes left them out.
 
 **Before and after upgrading:**
 
