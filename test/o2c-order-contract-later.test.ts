@@ -183,4 +183,50 @@ describe('on the booted stack', () => {
       expect(await figures('crm_contract', drafted)).toEqual([5000, 4000, 2500]);
     }, 120_000);
   });
+
+  /**
+   * The two premises the ruling on step 3 rests on (hotcrm#2724, ruling B,
+   * comment 7072581116), pinned on the platform as installed.
+   */
+  describe('the premises of a move', () => {
+    it('(a) the trigger hands the flow the order\'s previous contract', async () => {
+      const f = await fixture();
+      await rowsOn(f.order.id);
+      const a = await f.contract();
+      const b = await f.contract();
+      await update('crm_sales_order', { id: f.order.id, crm_contract: a.id });
+      await vi.waitFor(async () => expect(await flowRuns(verify, FLOW, f.order.id)).toHaveLength(1), { timeout: 15_000, interval: 100 });
+      // Another field of an order already under A: the start condition reads
+      // `previous.crm_contract != record.crm_contract`. An absent previous
+      // would satisfy `!has(previous.crm_contract)` and record a second run.
+      await update('crm_sales_order', { id: f.order.id, customer_po_number: `PO-${++k}` });
+      await new Promise((r) => setTimeout(r, 1500));
+      expect(await flowRuns(verify, FLOW, f.order.id), 'no run when the contract did not change').toHaveLength(1);
+      // A to B: previous now differs from the record, so a run is recorded.
+      await update('crm_sales_order', { id: f.order.id, crm_contract: b.id });
+      await vi.waitFor(async () => expect(await flowRuns(verify, FLOW, f.order.id)).toHaveLength(2), { timeout: 15_000, interval: 100 });
+    }, 120_000);
+
+    it('(b) a record moved from one contract to another leaves the old contract\'s figures and joins the new one\'s', async () => {
+      const f = await fixture();
+      const rows = await rowsOn(f.order.id);
+      const a = await f.contract();
+      const b = await f.contract();
+      await update('crm_sales_order', { id: f.order.id, crm_contract: a.id });
+      await vi.waitFor(async () => expect(await contractOf('crm_payment', rows.pay.id)).toBe(a.id), { timeout: 15_000, interval: 100 });
+      expect(await figures('crm_contract', a.id)).toEqual([5000, 4000, 2500]);
+      // The order moved to B, then each record written to B by id, by hand: the
+      // summaries' recompute on a changed lookup is the subject, not the flow.
+      await update('crm_sales_order', { id: f.order.id, crm_contract: b.id });
+      await vi.waitFor(async () => expect(await flowRuns(verify, FLOW, f.order.id)).toHaveLength(2), { timeout: 15_000, interval: 100 });
+      for (const [object, id] of [['crm_billing_milestone', rows.step.id], ['crm_invoice', rows.inv.id], ['crm_payment', rows.pay.id]] as const) {
+        if (await contractOf(object, id) !== b.id) await update(object, { id, crm_contract: b.id });
+      }
+      for (const [object, id] of [['crm_billing_milestone', rows.step.id], ['crm_invoice', rows.inv.id], ['crm_payment', rows.pay.id]] as const) {
+        expect(await contractOf(object, id), object).toBe(b.id);
+      }
+      expect(await figures('crm_contract', a.id), 'the old contract falls').toEqual([0, 0, 0]);
+      expect(await figures('crm_contract', b.id), 'the new contract rises').toEqual([5000, 4000, 2500]);
+    }, 120_000);
+  });
 });
