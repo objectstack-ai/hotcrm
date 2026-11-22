@@ -64,7 +64,23 @@ describe('the request is chosen at submit, never afterwards (hotcrm#2580)', () =
   });
 });
 
-describe('a trip\'s reports against its estimate (hotcrm#2580)', () => {
+/**
+ * The budget of each case on the booted stack below (hotcrm#2736). The cases
+ * share the one `beforeAll` boot; their time is their own sequence of writes,
+ * each through the real engine: the delete case walks six travel requests
+ * through draft, submitted, approved, closed, cancelled and rejected — six
+ * request inserts, six status updates, five approval decisions, two Submit for
+ * a Trip runs, one payment, one cancel and seven DELETEs, with no call above
+ * about 0.2 s. Measured on a 4-core box: that case 1.7–2.1 s alone (10 runs),
+ * 2.3–2.8 s beside the rest of the suite (10 runs), the other cases at most
+ * 1.5 s alone and 2.1 s loaded. A loaded CI runner ran this file about 3x
+ * slower than that, and the delete case ran past the 5 s default in a merge
+ * group once (run 44987719323). The work is the behaviour pinned, so the
+ * budget is raised rather than the sequence cut.
+ */
+const TRIP_BUDGET_MS = 30_000;
+
+describe('a trip\'s reports against its estimate (hotcrm#2580)', { timeout: TRIP_BUDGET_MS }, () => {
   let verify: VerifyStack;
   let traveler: Person;
   let manager: Person;
