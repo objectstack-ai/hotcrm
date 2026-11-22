@@ -93,10 +93,6 @@ export const commerce: Record<string, ObjectTranslationData> = {
       value: { label: '契約金額' },
       status: { label: 'ステータス・承認' },
       renewal: { label: '更新' },
-      // contract.view.ts のフォームセクション名 (#1100)
-      contract_terms: { label: '契約条件' },
-      signing_and_documents: { label: '署名と書類' },
-      notes: { label: '備考' },
     },
   },
   // The order and its lines (REQ-0010, hotcrm#2555).

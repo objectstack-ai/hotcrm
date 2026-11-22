@@ -139,10 +139,6 @@ export const customer: Record<string, ObjectTranslationData> = {
       ownership: { label: '所有者・ステータス' },
       branding: { label: 'ブランディング' },
       system: { label: 'システム' },
-      // account.view.ts のフォームセクション名 (#1100)
-      profile: { label: 'プロフィール' },
-      customer_success: { label: 'カスタマーサクセス' },
-      locations: { label: '所在地' },
       description: { label: '説明' },
     },
     _actions: { ...activityActions },
@@ -218,9 +214,6 @@ export const customer: Record<string, ObjectTranslationData> = {
       mailing_address: { label: '郵送先住所' },
       additional: { label: 'その他の情報' },
       preferences: { label: 'コミュニケーション設定' },
-      // contact.view.ts のフォームセクション名 (#1100)
-      contact_details: { label: '連絡先情報' },
-      comm_preferences: { label: '設定' },
     },
     _actions: {
       ...activityActions,

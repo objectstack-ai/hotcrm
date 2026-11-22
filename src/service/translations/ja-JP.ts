@@ -84,9 +84,6 @@ export const jaJP: TranslationData = {
         content: { label: 'コンテンツ' },
         taxonomy: { label: '分類' },
         metrics: { label: '利用状況' },
-        engagement: { label: '利用状況' },
-        // knowledge_article.view.ts のフォームセクション名 (#1100)
-        article: { label: '記事' },
       },
       _actions: {
         mark_article_helpful: {
@@ -191,8 +188,6 @@ export const jaJP: TranslationData = {
         sla_at_risk: { label: '⏰ SLA リスクあり' },
       },
       _sections: {
-        // case.view.ts のフォームセクション名 (#1100)。
-        case: { label: 'ケース' },
         how_can_we_help: {
           label: 'どのようなご用件でしょうか？',
           description: '緊急の障害はサービスホットラインにお電話ください。',

@@ -145,16 +145,8 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       conversion: { label: 'Conversion' },
       duplicates: { label: 'Duplicate Management' },
       // The detail page's sections reference the groups above (#806), so it
-      // has no section names of its own.
-      // Form section names on lead.view.ts (#1100). The sections of the
-      // default form and of every named formView live here — add a form
-      // there, add its section names here. `address` / `qualification` above
-      // are reused (identical fieldGroup wording); every other name here is new.
-      contact_information: { label: 'Contact Information' },
-      lead_classification: { label: 'Lead Classification' },
-      company_information: { label: 'Company Information' },
-      additional_information: { label: 'Additional Information' },
-      privacy: { label: 'Privacy' },
+      // has no section names of its own. The names below are the public
+      // Web-to-Lead form's sections.
       tell_us_about_yourself: { label: 'Tell us about yourself' },
       about_your_company: { label: 'About your company' },
       how_can_we_help: { label: 'How can we help?' },
@@ -333,11 +325,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       crm_forecast: { label: 'Forecast & Metrics' },
       // The detail page's sections reference the groups above (#1452), so it
       // has no section names of its own.
-      // Form section names on opportunity.view.ts (#1100)
-      overview: { label: 'Overview' },
-      forecast: { label: 'Forecast' },
-      sales_strategy: { label: 'Sales Strategy' },
-      win_loss: { label: 'Win / Loss' },
     },
     _actions: {
       ...activityActions,
@@ -425,11 +412,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       basic: { label: 'Snapshot' },
       amounts: { label: 'Amounts' },
       meta: { label: 'Source' },
-      // Form section names on forecast.view.ts (#1100). `basic`'s label
-      // matches "Snapshot" but its key does not, so this form section
-      // needs its own entry; `notes` has no fieldGroup counterpart at all.
-      snapshot: { label: 'Snapshot' },
-      notes: { label: 'Notes' },
     },
   },
 };

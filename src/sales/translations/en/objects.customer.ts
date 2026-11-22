@@ -108,10 +108,6 @@ export const customer: Record<string, ObjectTranslationData> = {
       ownership: { label: 'Ownership & Status' },
       branding: { label: 'Branding' },
       system: { label: 'System' },
-      // Form section names on account.view.ts (#1100)
-      profile: { label: 'Profile' },
-      customer_success: { label: 'Customer Success' },
-      locations: { label: 'Locations' },
       description: { label: 'Description' },
     },
     _actions: { ...activityActions },
@@ -184,11 +180,6 @@ export const customer: Record<string, ObjectTranslationData> = {
       mailing_address: { label: 'Mailing Address' },
       additional: { label: 'Additional Info' },
       preferences: { label: 'Communication Preferences' },
-      // Form section names on contact.view.ts (#1100). `contact_details` /
-      // `comm_preferences`, not `contact_info` / `preferences` — those are
-      // already fieldGroup keys with their own (longer) wording above.
-      contact_details: { label: 'Contact Info' },
-      comm_preferences: { label: 'Preferences' },
     },
     _actions: {
       ...activityActions,

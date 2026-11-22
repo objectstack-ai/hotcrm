@@ -82,10 +82,6 @@ export const activity: Record<string, ObjectTranslationData> = {
       recurrence: { label: 'Recurrence' },
       effort: { label: 'Progress & Effort' },
       system: { label: 'System' },
-      // Form section names on task.view.ts (#1100)
-      task: { label: 'Task' },
-      related_records: { label: 'Related Records' },
-      recurrence_and_effort: { label: 'Recurrence & Effort' },
     },
     _actions: {
       complete_task: {
@@ -141,10 +137,6 @@ export const activity: Record<string, ObjectTranslationData> = {
       schedule: { label: 'Schedule' },
       related: { label: 'Related Records' },
       outcome: { label: 'Outcome' },
-      // Form section names on event.view.ts (#1100). `related_records`,
-      // not `related` — `related` is already the fieldGroup key above.
-      event: { label: 'Event' },
-      related_records: { label: 'Related Records' },
     },
   },
   crm_event_attendee: {

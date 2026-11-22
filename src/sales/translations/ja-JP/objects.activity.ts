@@ -94,10 +94,6 @@ export const activity: Record<string, ObjectTranslationData> = {
       recurrence: { label: '繰り返し' },
       effort: { label: '進捗・工数' },
       system: { label: 'システム' },
-      // task.view.ts のフォームセクション名 (#1100)
-      task: { label: 'タスク' },
-      related_records: { label: '関連レコード' },
-      recurrence_and_effort: { label: '繰り返しと工数' },
     },
     _actions: {
       complete_task: {
@@ -161,9 +157,6 @@ export const activity: Record<string, ObjectTranslationData> = {
       schedule: { label: 'スケジュール' },
       related: { label: '関連レコード' },
       outcome: { label: '実施結果' },
-      // event.view.ts のフォームセクション名 (#1100)
-      event: { label: 'イベント' },
-      related_records: { label: '関連レコード' },
     },
   },
   crm_event_attendee: {

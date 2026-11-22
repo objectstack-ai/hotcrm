@@ -80,9 +80,6 @@ export const zhCN: TranslationData = {
         content: { label: '内容' },
         taxonomy: { label: '分类' },
         metrics: { label: '互动数据' },
-        engagement: { label: '互动数据' },
-        // knowledge_article.view.ts 表单区块名称 (#1100)
-        article: { label: '文章' },
       },
       _actions: {
         mark_article_helpful: {
@@ -210,8 +207,6 @@ export const zhCN: TranslationData = {
         },
       },
       _sections: {
-        // case.view.ts 表单区块名称 (#1100)。
-        case: { label: '工单' },
         how_can_we_help: {
           label: '我们能帮您什么？',
           description: '紧急故障请拨打服务热线。',

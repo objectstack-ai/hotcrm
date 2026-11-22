@@ -74,45 +74,4 @@ export const KnowledgeArticleViews = defineView({
       sort: [{ field: 'updated_at', order: 'desc' }],
     },
   },
-
-  form: {
-    type: 'simple',
-    sections: [
-      {
-        name: 'article',
-        label: 'Article',
-        columns: 2,
-        fields: [
-          'article_number',
-          { field: 'title', required: true, span: 'full' },
-          { field: 'summary', span: 'full' },
-          'category',
-          'tags',
-          'status',
-          'audience',
-          'language',
-          'owner_id',
-        ],
-      },
-      {
-        name: 'content',
-        label: 'Content',
-        columns: 1,
-        fields: ['body'],
-      },
-      {
-        // `name` alongside `label` (#1100): a form section declaring only a
-        // label renders its ENGLISH label under every locale, and neither the
-        // existing i18n tests nor the `i18n/missing-*` gate can see it — the
-        // heading has no key for a translator to miss. This section is named
-        // because this change edits it (`view_count` was removed from it, #601);
-        // the app-wide sweep of the other headings is #1100's job, held behind
-        // this card precisely so the two do not collide in the locale packs.
-        name: 'engagement',
-        label: 'Engagement',
-        columns: 3,
-        fields: ['helpful_count', 'not_helpful_count', 'published_at', 'last_reviewed_at', 'related_to_case'],
-      },
-    ],
-  },
 });

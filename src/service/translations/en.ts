@@ -66,9 +66,6 @@ export const en: TranslationData = {
         content: { label: 'Content' },
         taxonomy: { label: 'Categorization' },
         metrics: { label: 'Engagement' },
-        engagement: { label: 'Engagement' },
-        // Form section name on knowledge_article.view.ts (#1100)
-        article: { label: 'Article' },
       },
       _actions: {
         mark_article_helpful: {
@@ -168,9 +165,8 @@ export const en: TranslationData = {
         escalation: { label: 'Escalation' },
         system: { label: 'System' },
         // The detail page's sections reference the groups above (#970), so it
-        // has no section names of its own.
-        // Form section names on case.view.ts (#1100).
-        case: { label: 'Case' },
+        // has no section names of its own. The name below is the public
+        // Web-to-Case form's section.
         how_can_we_help: { label: 'How can we help?' },
       },
       _actions: {

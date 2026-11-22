@@ -149,10 +149,6 @@ export const customer: Record<string, ObjectTranslationData> = {
       ownership: { label: 'Propiedad y Estado' },
       branding: { label: 'Identidad de Marca' },
       system: { label: 'Sistema' },
-      // Nombres de sección del formulario en account.view.ts (#1100)
-      profile: { label: 'Perfil' },
-      customer_success: { label: 'Éxito del Cliente' },
-      locations: { label: 'Ubicaciones' },
       description: { label: 'Descripción' },
     },
     _actions: { ...activityActions },
@@ -232,9 +228,6 @@ export const customer: Record<string, ObjectTranslationData> = {
       mailing_address: { label: 'Dirección de Correo' },
       additional: { label: 'Información Adicional' },
       preferences: { label: 'Preferencias de Comunicación' },
-      // Nombres de sección del formulario en contact.view.ts (#1100)
-      contact_details: { label: 'Información de Contacto' },
-      comm_preferences: { label: 'Preferencias' },
     },
     _actions: {
       ...activityActions,

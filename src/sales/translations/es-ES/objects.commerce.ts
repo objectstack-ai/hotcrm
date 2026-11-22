@@ -94,10 +94,6 @@ export const commerce: Record<string, ObjectTranslationData> = {
       value: { label: 'Valor del Contrato' },
       status: { label: 'Estado y Aprobación' },
       renewal: { label: 'Renovación' },
-      // Nombres de sección del formulario en contract.view.ts (#1100)
-      contract_terms: { label: 'Términos' },
-      signing_and_documents: { label: 'Firma y Documentos' },
-      notes: { label: 'Notas' },
     },
   },
   // The order and its lines (REQ-0010, hotcrm#2555).

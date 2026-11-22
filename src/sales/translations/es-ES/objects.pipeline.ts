@@ -4,10 +4,6 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
 
 import { activityActions } from './_shared';
 
-// The `duplicate_status` entry of every lead form that shows it carries the same
-// help sentence (`DUPLICATE_LINK_FIELDS` in src/sales/views/lead.view.ts).
-const DUPLICATE_STATUS_HELP = 'Confirmado significa que una persona revisó los dos registros y son la misma persona.';
-
 /**
  * Español (es-ES) — `objects` translations for the PIPELINE family:
  * demand and the deals it becomes, plus the roll-up that forecasts them.
@@ -189,20 +185,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       additional: { label: 'Información Adicional' },
       preferences: { label: 'Preferencias de Comunicación' },
       duplicates: { label: 'Gestión de Duplicados' },
-      // Nombres de sección del formulario en lead.view.ts (#1100) — aquí
-      // viven las secciones del formulario por defecto y las de cada formView
-      // con nombre: si se añade un formulario allí, se añaden aquí sus
-      // nombres de sección.
-      contact_information: { label: 'Información de Contacto' },
-      lead_classification: {
-        label: 'Clasificación del Lead',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      company_information: { label: 'Información de la Empresa' },
-      additional_information: { label: 'Información Adicional' },
-      privacy: { label: 'Privacidad' },
       tell_us_about_yourself: { label: 'Cuéntanos sobre ti' },
       about_your_company: { label: 'Sobre tu empresa' },
       how_can_we_help: {
@@ -417,11 +399,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       notes: { label: 'Notas y Próximos Pasos' },
       qualification: { label: 'Calificación' },
       narrative: { label: 'Narrativa del Negocio' },
-      // Nombres de sección del formulario en opportunity.view.ts (#1100)
-      overview: { label: 'Resumen' },
-      forecast: { label: 'Previsión' },
-      sales_strategy: { label: 'Estrategia de Ventas' },
-      win_loss: { label: 'Ganada / Perdida' },
     },
     _actions: {
       ...activityActions,
@@ -519,9 +496,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       basic: { label: 'Instantánea' },
       amounts: { label: 'Importes' },
       meta: { label: 'Origen' },
-      // Nombres de sección del formulario en forecast.view.ts (#1100)
-      snapshot: { label: 'Instantánea' },
-      notes: { label: 'Notas' },
     },
   },
 };

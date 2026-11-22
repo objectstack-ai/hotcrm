@@ -244,9 +244,6 @@ export const zhCN: TranslationData = {
         system: { label: '系统' },
         // quote.view.ts 表单区块名称 (#1100)
         quote: { label: '报价单' },
-        totals: { label: '合计' },
-        quote_terms: { label: '条款' },
-        addresses_and_notes: { label: '地址与备注' },
       },
       _actions: {
         submit_quote_for_review: { label: '提交审核', successMessage: '报价单 {{ record.name }} 已提交审核。' },

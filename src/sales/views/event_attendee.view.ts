@@ -73,13 +73,4 @@ export const EventAttendeeViews = defineView({
     rowColor: { field: 'response', colors: { declined: 'red' } },
     pagination: { pageSize: 25 },
   },
-
-  // No `sections`: the dialog draws the object's two `fieldGroups`, Attendee
-  // and Invitation, with the same fields the authored sections listed
-  // (#2725, the #2665 assessment row 17). Required marks come from the
-  // object (`required` on the event, the type and the response; `requiredWhen`
-  // on the party columns), not from this form.
-  form: {
-    type: 'simple',
-  },
 });

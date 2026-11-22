@@ -92,10 +92,6 @@ export const activity: Record<string, ObjectTranslationData> = {
       recurrence: { label: '重复规则' },
       system: { label: '系统' },
       effort: { label: '进度与工时' },
-      // task.view.ts 表单区块名称 (#1100)
-      task: { label: '任务' },
-      related_records: { label: '关联记录' },
-      recurrence_and_effort: { label: '重复与工时' },
     },
     _actions: {
       complete_task: {
@@ -161,9 +157,6 @@ export const activity: Record<string, ObjectTranslationData> = {
       schedule: { label: '日程安排' },
       related: { label: '关联记录' },
       outcome: { label: '结果' },
-      // event.view.ts 表单区块名称 (#1100)
-      event: { label: '活动' },
-      related_records: { label: '关联记录' },
     },
     _views: {
       all_events: { label: '全部活动' },

@@ -133,10 +133,6 @@ export const customer: Record<string, ObjectTranslationData> = {
       ownership: { label: '归属与状态' },
       branding: { label: '品牌' },
       system: { label: '系统' },
-      // account.view.ts 表单区块名称 (#1100)
-      profile: { label: '资料' },
-      customer_success: { label: '客户成功' },
-      locations: { label: '地址信息' },
       description: { label: '描述' },
     },
     _actions: { ...activityActions },
@@ -235,9 +231,6 @@ export const customer: Record<string, ObjectTranslationData> = {
       mailing_address: { label: '邮寄地址' },
       additional: { label: '附加信息' },
       preferences: { label: '沟通偏好' },
-      // contact.view.ts 表单区块名称 (#1100)
-      contact_details: { label: '联系信息' },
-      comm_preferences: { label: '偏好设置' },
     },
   },
 };

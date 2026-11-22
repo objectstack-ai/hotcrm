@@ -1,117 +1,13 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P } from '@objectstack/spec';
 import { defineView } from '@objectstack/spec/ui';
-import { DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS } from '../objects/lead.object';
-
-/**
- * ═══ HOUSE RULE: form predicates are `record.`-bound AND TOTAL ═════════════
- *
- * Every `visibleWhen` below is a CEL predicate the *renderer*
- * evaluates, and it must satisfy two properties. `test/view-predicate-dialect.test.ts`
- * enforces both against the compiled stack, so you do not have to remember them.
- *
- * 1. **`record.`-bound.** The evaluation context binds field values under the
- *    `record` namespace (`buildScope` in `@objectstack/formula` binds exactly
- *    `record` / `previous` / `input` / `user` / `current_user` / `ctx` / `os`).
- *    A bare field name is an unbound identifier, so it never evaluates:
- *
- *        evaluate('status == "unqualified"',        { record: { status: 'new' } })
- *          → ok:false  type  "Unknown variable: status"       ← for EVERY record
- *        evaluate('record.status == "unqualified"', { record: { status: 'new' } })
- *          → ok:true   false
- *
- * 2. **TOTAL** — the same `has(record.x)` rule AGENTS.md states for
- *    `validations[].condition` / `requiredWhen` / `readonlyWhen` / `visibleWhen`
- *    (#630). Prefixing alone is not enough: on a *brand-new* record the key is
- *    absent, and strict CEL aborts on the read:
- *
- *        evaluate('record.duplicate_of_type == "crm_lead"',                { record: {} })
- *          → ok:false  "No such key: duplicate_of_type"
- *        evaluate('has(record.duplicate_of_type) && record.duplicate_of_type == "crm_lead"',
- *                                                                          { record: {} })
- *          → ok:true   false
- *
- * Why both matter here and not only in theory (#688): the console's predicate
- * evaluation **fails OPEN** — an unevaluable `visibleWhen` defaults the field to
- * *visible*, with no diagnostic — and a visible field carries its `required: true`
- * into client-side submit validation. So a predicate that cannot answer does not
- * degrade to "shown but optional"; it makes the form unsatisfiable. On `crm_lead`
- * this rendered all five conditional disqualification fields at once and demanded
- * a new lead be a duplicate of *both* a lead and a contact — mutually exclusive by
- * design — so no lead could be created through the UI at all. The fail-open half
- * is tracked upstream at objectstack-ai/objectstack#5149; these predicates are the
- * half this repo owns, and they must be able to answer.
- *
- * Numeric comparisons carry `!= null` on top of `has(...)`, matching the object
- * files: `has(record.rating) && record.rating != null && record.rating >= 4`.
- * Strict CEL aborts on `dyn<null> < int`, which `has()` alone does not prevent.
- */
-
-/**
- * The duplicate-link block (#598), spread into the form that offers
- * `disqualification_reason`.
- *
- * `duplicate_disqualification_requires_survivor` on `crm_lead` rejects a lead
- * closed as "Duplicate" that does not name the record it duplicates and confirm
- * the match. So the same rule the `disqualification_reason` field itself follows
- * applies one level down: a form that lets a user PICK "Duplicate" must also let
- * them satisfy it, or the save fails with an error the form gives no way to
- * clear. It is kept as one named block, so the four fields and their
- * predicates read as the unit the rule demands; a form that quietly lost one
- * of them is exactly the failure this shape is meant to make impossible.
- *
- * The two lookups mirror the object's `requiredWhen` predicates: each appears
- * only when `duplicate_of_type` names its object — and now says so in the same
- * words, character for character as the `requiredWhen` on those two fields in
- * `lead.object.ts`, so the form shows a lookup exactly when the server will
- * demand it. `test/view-predicate-dialect.test.ts` pins the two together.
- */
-const DUPLICATE_LINK_FIELDS = [
-  {
-    field: 'duplicate_of_type',
-    required: true,
-    // The picker offers the AUTHORABLE half of the vocabulary only (#1164).
-    // `crm_lead.duplicate_of_type` also accepts `erased`, a tombstone
-    // `lead_duplicate_check` stamps when the engine's reference cleanup nulls
-    // the pointer — "confirmed duplicate of a record that has since been
-    // erased". Nobody authors that: it is an observation about a deletion that
-    // already happened, and offering it would let a reviewer close a lead as a
-    // duplicate of nothing while satisfying every rule that exists to stop
-    // exactly that. Narrowing here rather than deleting the value is the point
-    // — the record can still SAY it, and the field keeps its label in all four
-    // locales, so a tombstoned lead reads as "Erased Record" on the detail page
-    // instead of as a raw enum nobody can explain.
-    //
-    // Spread from `lead.object.ts` rather than retyped: the authorable set is
-    // the source both lists derive from, so a future object type added there
-    // reaches this picker automatically and the tombstone never can.
-    options: [...DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS],
-    visibleWhen: P`has(record.disqualification_reason) && record.disqualification_reason == "duplicate"`,
-  },
-  {
-    field: 'duplicate_of_lead',
-    required: true,
-    visibleWhen: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_lead"`,
-  },
-  {
-    field: 'duplicate_of_contact',
-    required: true,
-    visibleWhen: P`has(record.duplicate_of_type) && record.duplicate_of_type == "crm_contact"`,
-  },
-  {
-    field: 'duplicate_status',
-    required: true,
-    visibleWhen: P`has(record.disqualification_reason) && record.disqualification_reason == "duplicate"`,
-    helpText: 'Confirmed means a human checked the two records and they are the same person.',
-  },
-];
 
 /**
  * Lead Views
  *
- * The default list and its named list views, the record form the New and
- * Edit dialogs open, and the public Web-to-Lead form.
+ * The default list and its named list views, and the public Web-to-Lead
+ * form. There is no internal record form: the New and Edit dialogs draw the
+ * object's `fieldGroups` (#2739).
  */
 export const LeadViews = defineView({
   /**
@@ -227,159 +123,6 @@ export const LeadViews = defineView({
       message: 'Get started by creating your first lead',
       icon: 'user-plus',
     },
-  },
-  
-  /**
-   * Default Form View - SIMPLE Layout
-   * Basic sectioned form with collapsible sections and column layouts
-   */
-  form: {
-    type: 'simple',
-    
-    sections: [
-      {
-        name: 'contact_information',
-        label: 'Contact Information',
-        collapsible: true,
-        collapsed: false,
-        // Three columns put Salutation, First Name and Last Name on one row
-        // (#2369 row 2). On two, Salutation took half a row and Last Name a
-        // whole one. The nine fields fill three rows exactly.
-        columns: 3,
-        fields: [
-          {
-            field: 'salutation',
-          },
-          {
-            field: 'first_name',
-            required: true,
-          },
-          {
-            field: 'last_name',
-            required: true,
-          },
-          'company',
-          'title',
-          'email',
-          'phone',
-          'mobile',
-          'website',
-        ],
-      },
-      {
-        name: 'lead_classification',
-        label: 'Lead Classification',
-        collapsible: true,
-        collapsed: false,
-        columns: 3, // 3-column layout
-        fields: [
-          {
-            field: 'status',
-            required: true,
-          },
-          {
-            field: 'rating',
-            widget: 'star_rating', // Custom widget
-          },
-          'lead_source',
-          'industry',
-          // Offered, ⛔ not `required` (#2097): an insert that leaves it empty is
-          // stamped to the creator by the platform (see `lead.hook.ts`), so a
-          // rep's new lead is theirs without a pick. `required` blocked that
-          // save client-side. A pick of another owner on create is currently
-          // dropped by the console (objectui#12359).
-          'owner_id',
-          // `disqualification_reason` is enforced by the
-          // `disqualification_reason_required` validation on crm_lead, so every
-          // form that lets a user pick "Unqualified" must also offer the reason
-          // — otherwise the save fails with an error the form gives you no way
-          // to clear. Hidden until it applies.
-          {
-            field: 'disqualification_reason',
-            required: true,
-            visibleWhen: P`has(record.status) && record.status == "unqualified"`,
-          },
-          // REQ-0005 step 6: 「填写…需求类型…预计金额」. A rep types these at
-          // intake, so they need an authoring surface — and this form IS the
-          // create dialog (`RecordFormPage` and `useActionModal` both resolve
-          // `view.form ?? view.formViews?.default`, see `case.view.ts`).
-          //
-          // ⚠️ Named rather than reached through a group reference, and the
-          // AGENTS.md ladder's rung 3 asks for the reason in writing. Both
-          // fields declare `group: 'qualification'` on the object, so every
-          // DERIVED surface — the page synthesizer, an auto-derived form —
-          // already carries them from `fieldGroups` alone with nothing authored.
-          // This form is not one of those: it authors `sections`, and an
-          // authored `sections` array wins outright over the auto-derived path.
-          // The rung-2 fix, a `{ group: 'qualification' }` section, cannot be
-          // used HERE specifically: this section is a CURATED cross-group set,
-          // not a mirror of that group. It already names four of the group's
-          // members with per-field overrides a group reference cannot carry
-          // (`status` required, `rating`'s star widget, and
-          // `disqualification_reason`'s `required` + `visibleWhen` directly
-          // above), and it borrows `industry` and `owner_id` from two other
-          // groups. Adding a group reference beside it would render those four
-          // a second time and pull in `next_followup_date` /
-          // `last_contacted_date`, which are machine-written and deliberately
-          // absent from every form. ⇒ The customer need is real, the group
-          // reference genuinely cannot express it, and the two lines below are
-          // what that leaves.
-          'need_type',
-          'estimated_amount',
-          ...DUPLICATE_LINK_FIELDS,
-        ],
-      },
-      {
-        name: 'company_information',
-        label: 'Company Information',
-        collapsible: true,
-        collapsed: true, // Collapsed by default
-        columns: 2,
-        fields: [
-          'annual_revenue',
-          'number_of_employees',
-        ],
-      },
-      {
-        name: 'address',
-        label: 'Address',
-        collapsible: true,
-        collapsed: true,
-        columns: 2,
-        // `crm_lead` stores the location in one composite `Field.address`;
-        // the discrete street/city/state/postal_code/country columns this
-        // section used to list do not exist on the object, so the whole
-        // section rendered blank.
-        fields: [
-          {
-            field: 'address',
-            span: 'full',
-          },
-        ],
-      },
-      {
-        name: 'additional_information',
-        label: 'Additional Information',
-        collapsible: true,
-        collapsed: true,
-        columns: 1, // Single column for text areas
-        fields: [
-          'description',
-          'notes',
-        ],
-      },
-      {
-        name: 'privacy',
-        label: 'Privacy',
-        collapsible: true,
-        collapsed: true,
-        columns: 2,
-        fields: [
-          'do_not_call',
-          'email_opt_out',
-        ],
-      },
-    ],
   },
   
   /**
@@ -590,11 +333,10 @@ export const LeadViews = defineView({
   /**
    * Named form views: the public Web-to-Lead form only.
    *
-   * The record dialogs (New and Edit) open the default `form` above: the
+   * The record dialogs (New and Edit) open no authored form (#2739): the
    * console resolves `formViews['crm_lead.create']` in create mode, then
-   * `form`, then `formViews.default`. A named entry under any other key
-   * reaches no console surface, which is why the six layout showcases that
-   * used to sit here were deleted (#2725, the #2665 assessment rows 31-36).
+   * `form`, then `formViews.default`, and finding none it draws the object's
+   * `fieldGroups`. A named entry under any other key reaches no record dialog;
    * `web_to_lead` stays because its `sharing.publicLink` serves it.
    */
   formViews: {

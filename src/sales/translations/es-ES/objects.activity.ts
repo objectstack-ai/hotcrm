@@ -97,10 +97,6 @@ export const activity: Record<string, ObjectTranslationData> = {
       recurrence: { label: 'Recurrencia' },
       effort: { label: 'Progreso y Esfuerzo' },
       system: { label: 'Sistema' },
-      // Nombres de sección del formulario en task.view.ts (#1100)
-      task: { label: 'Tarea' },
-      related_records: { label: 'Registros Relacionados' },
-      recurrence_and_effort: { label: 'Recurrencia y Esfuerzo' },
     },
     _actions: {
       complete_task: {
@@ -164,9 +160,6 @@ export const activity: Record<string, ObjectTranslationData> = {
       schedule: { label: 'Programación' },
       related: { label: 'Registros Relacionados' },
       outcome: { label: 'Resultado' },
-      // Nombres de sección del formulario en event.view.ts (#1100)
-      event: { label: 'Evento' },
-      related_records: { label: 'Registros Relacionados' },
     },
   },
   crm_event_attendee: {

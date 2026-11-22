@@ -150,9 +150,6 @@ export const en: TranslationData = {
         // Form section names on quote.view.ts (#1100). `quote_terms`, not
         // `terms` — `terms` is already the fieldGroup key for "Terms & Validity".
         quote: { label: 'Quote' },
-        totals: { label: 'Totals' },
-        quote_terms: { label: 'Terms' },
-        addresses_and_notes: { label: 'Addresses & Notes' },
       },
       _actions: {
         submit_quote_for_review: { label: 'Submit for Review', successMessage: 'Quote {{ record.name }} submitted for review.' },

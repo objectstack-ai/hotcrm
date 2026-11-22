@@ -84,9 +84,6 @@ export const esES: TranslationData = {
         content: { label: 'Contenido' },
         taxonomy: { label: 'Categorización' },
         metrics: { label: 'Interacción' },
-        engagement: { label: 'Interacción' },
-        // Nombre de sección del formulario en knowledge_article.view.ts (#1100)
-        article: { label: 'Artículo' },
       },
       _actions: {
         mark_article_helpful: {
@@ -193,8 +190,6 @@ export const esES: TranslationData = {
         sla_at_risk: { label: '⏰ SLA en Riesgo' },
       },
       _sections: {
-        // Nombres de sección del formulario en case.view.ts (#1100).
-        case: { label: 'Caso' },
         how_can_we_help: {
           label: '¿Cómo podemos ayudarte?',
           description: 'Para una caída urgente, llama a la línea de soporte.',

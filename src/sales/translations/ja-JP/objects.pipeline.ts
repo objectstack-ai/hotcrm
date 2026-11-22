@@ -4,10 +4,6 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
 
 import { activityActions } from './_shared';
 
-// The `duplicate_status` entry of every lead form that shows it carries the same
-// help sentence (`DUPLICATE_LINK_FIELDS` in src/sales/views/lead.view.ts).
-const DUPLICATE_STATUS_HELP = '「重複確定」は、担当者が 2 件のレコードを確認し、同一人物だと判断したことを表します。';
-
 /**
  * 日本語 (ja-JP) — `objects` translations for the PIPELINE family:
  * demand and the deals it becomes, plus the roll-up that forecasts them.
@@ -196,19 +192,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       preferences: { label: 'コミュニケーション設定' },
       conversion: { label: '変換' },
       duplicates: { label: '重複管理' },
-      // lead.view.ts のフォームセクション名 (#1100) — デフォルトフォームと
-      // 名前付き formView すべてのセクション名がここに集まる。あちらにフォームを
-      // 追加したら、そのセクション名をここに追加する。
-      contact_information: { label: '連絡先情報' },
-      lead_classification: {
-        label: 'リード分類',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      company_information: { label: '会社情報' },
-      additional_information: { label: '追加情報' },
-      privacy: { label: 'プライバシー' },
       tell_us_about_yourself: { label: 'あなたについて教えてください' },
       about_your_company: { label: '貴社について' },
       how_can_we_help: {
@@ -396,11 +379,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       notes: { label: 'メモ・次のステップ' },
       qualification: { label: '適格判定' },
       narrative: { label: '商談の経緯' },
-      // opportunity.view.ts のフォームセクション名 (#1100)
-      overview: { label: '概要' },
-      forecast: { label: '予測' },
-      sales_strategy: { label: '営業戦略' },
-      win_loss: { label: '受注／失注' },
     },
     _actions: {
       ...activityActions,
@@ -514,9 +492,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       basic: { label: 'スナップショット' },
       amounts: { label: '金額' },
       meta: { label: 'ソース' },
-      // forecast.view.ts のフォームセクション名 (#1100)
-      snapshot: { label: 'スナップショット' },
-      notes: { label: 'メモ' },
     },
   },
 };

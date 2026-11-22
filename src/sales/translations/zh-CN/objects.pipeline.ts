@@ -4,10 +4,6 @@ import type { ObjectTranslationData } from '@objectstack/spec/system';
 
 import { activityActions } from './_shared';
 
-// The `duplicate_status` entry of every lead form that shows it carries the same
-// help sentence (`DUPLICATE_LINK_FIELDS` in src/sales/views/lead.view.ts).
-const DUPLICATE_STATUS_HELP = '「已确认重复」表示有人核对过这两条记录，确认是同一个人。';
-
 /**
  * 简体中文 (zh-CN) — `objects` translations for the PIPELINE family:
  * demand and the deals it becomes, plus the roll-up that forecasts them.
@@ -184,18 +180,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       preferences: { label: '沟通偏好' },
       conversion: { label: '转化' },
       duplicates: { label: '重复线索管理' },
-      // lead.view.ts 表单区块名称 (#1100) —— 默认表单与每一个具名 formView
-      // 的区块名字都住在这里：那边新增一个表单，这里就补上它的区块名。
-      contact_information: { label: '联系信息' },
-      lead_classification: {
-        label: '线索分类',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      company_information: { label: '公司信息' },
-      additional_information: { label: '附加信息' },
-      privacy: { label: '隐私' },
       tell_us_about_yourself: { label: '请介绍一下您自己' },
       about_your_company: { label: '您的公司信息' },
       how_can_we_help: {
@@ -380,11 +364,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       notes: { label: '备注与下一步' },
       qualification: { label: '资格评估' },
       narrative: { label: '商机叙述' },
-      // opportunity.view.ts 表单区块名称 (#1100)
-      overview: { label: '概览' },
-      forecast: { label: '预测' },
-      sales_strategy: { label: '销售策略' },
-      win_loss: { label: '赢单/丢单' },
     },
     _actions: {
       ...activityActions,
@@ -478,9 +457,6 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       basic: { label: '快照' },
       amounts: { label: '金额' },
       meta: { label: '来源' },
-      // forecast.view.ts 表单区块名称 (#1100)
-      snapshot: { label: '快照' },
-      notes: { label: '备注' },
     },
   },
 };

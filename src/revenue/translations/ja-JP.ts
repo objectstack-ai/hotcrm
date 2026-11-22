@@ -341,9 +341,6 @@ export const jaJP: TranslationData = {
         system: { label: 'システム' },
         // quote.view.ts のフォームセクション名 (#1100)
         quote: { label: '見積書' },
-        totals: { label: '合計' },
-        quote_terms: { label: '契約条件' },
-        addresses_and_notes: { label: '住所と備考' },
       },
       _actions: {
         submit_quote_for_review: { label: 'レビューに提出', successMessage: '見積 {{ record.name }} をレビューに提出しました。' },

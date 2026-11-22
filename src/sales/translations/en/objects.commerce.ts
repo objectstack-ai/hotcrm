@@ -86,11 +86,6 @@ export const commerce: Record<string, ObjectTranslationData> = {
       value: { label: 'Contract Value' },
       status: { label: 'Status & Approval' },
       renewal: { label: 'Renewal' },
-      // Form section names on contract.view.ts (#1100). `contract_terms`,
-      // not `terms` — `terms` is already the fieldGroup key for "Terms & Dates".
-      contract_terms: { label: 'Terms' },
-      signing_and_documents: { label: 'Signing & Documents' },
-      notes: { label: 'Notes' },
     },
   },
   // The order and its lines (REQ-0010, hotcrm#2555).

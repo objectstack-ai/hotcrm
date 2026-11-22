@@ -342,9 +342,6 @@ export const esES: TranslationData = {
         system: { label: 'Sistema' },
         // Nombres de sección del formulario en quote.view.ts (#1100)
         quote: { label: 'Cotización' },
-        totals: { label: 'Totales' },
-        quote_terms: { label: 'Términos' },
-        addresses_and_notes: { label: 'Direcciones y Notas' },
       },
       _actions: {
         submit_quote_for_review: { label: 'Enviar a Revisión', successMessage: 'Cotización {{ record.name }} enviada a revisión.' },
