@@ -329,6 +329,7 @@ export const esES: TranslationData = {
       },
       _sections: {
         basic: { label: 'Versión del presupuesto' },
+        lines: { label: 'Líneas de presupuesto' },
         totals: { label: 'Totales' },
       },
       _validations: {

@@ -329,6 +329,7 @@ export const zhCN: TranslationData = {
       },
       _sections: {
         basic: { label: '预算版本' },
+        lines: { label: '预算明细' },
         totals: { label: '合计' },
       },
       _validations: {
