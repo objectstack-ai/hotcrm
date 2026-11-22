@@ -222,6 +222,7 @@ export const en: TranslationData = {
       },
       _sections: {
         basic: { label: 'Budget Version' },
+        lines: { label: 'Budget Lines' },
         totals: { label: 'Totals' },
       },
       _validations: {

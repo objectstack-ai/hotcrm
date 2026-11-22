@@ -329,6 +329,7 @@ export const jaJP: TranslationData = {
       },
       _sections: {
         basic: { label: '予算の版' },
+        lines: { label: '予算明細' },
         totals: { label: '合計' },
       },
       _validations: {
