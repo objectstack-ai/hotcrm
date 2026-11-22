@@ -1,4 +1,5 @@
 import generated from './apps.generated.json';
+import screens from './home-screens.generated.json';
 import product from './product.json';
 import { i18n } from '@/lib/i18n';
 
@@ -55,4 +56,39 @@ export function productApps(lang: string): ProductApp[] {
     ...items[name],
     href: localeHref(lang, items[name].href),
   }));
+}
+
+export type ProductScreen = {
+  id: string;
+  src: string;
+  width: number;
+  height: number;
+  /** The screen's `title` in its `meta.yaml`, shown as the caption. */
+  title: string;
+  alt: string;
+};
+
+type GeneratedScreen = Omit<(typeof screens)['hero'], 'app'>;
+
+/**
+ * A screen in the image's language: en pages show the en capture; zh-Hans and
+ * zh-Hant pages show the zh-Hans one, with its own caption and alt. The app
+ * ships no Traditional locale, so there is no Traditional capture to show and
+ * no Traditional caption to coin (#1397, #1368).
+ */
+function screenFor(screen: GeneratedScreen, lang: string): ProductScreen {
+  const image = productLocale(lang) === 'en' ? screen.locales.en : screen.locales['zh-Hans'];
+  return { id: screen.id, width: screen.width, height: screen.height, ...image };
+}
+
+/** The homepage screenshots (#2694): the hero shot, and one per app keyed by app name. */
+export function productScreens(lang: string): {
+  hero: ProductScreen & { app: string };
+  apps: Record<string, ProductScreen>;
+} {
+  const apps = screens.apps as Record<string, GeneratedScreen>;
+  return {
+    hero: { app: screens.hero.app, ...screenFor(screens.hero, lang) },
+    apps: Object.fromEntries(Object.entries(apps).map(([name, screen]) => [name, screenFor(screen, lang)])),
+  };
 }

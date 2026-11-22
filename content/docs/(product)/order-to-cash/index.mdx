@@ -19,11 +19,11 @@ The one thing sales keeps here is its own **collection plan**.
 
 | Record | What it is | Who writes it |
 | --- | --- | --- |
-| **Billing Milestone** | One step of a collection plan, planned from a contract: an advance, go-live, acceptance, retention or a subscription period | The account's sales team |
-| **Invoice** | An invoice finance issued to the customer, against a contract or not | Finance |
-| **Payment** | Money the customer paid: against an invoice, a plan step, a contract, or none of them yet | Finance |
+| **Billing Milestone** | One step of a collection plan, planned from an order or a contract: an advance, go-live, acceptance, retention or a subscription period | The account's sales team |
+| **Invoice** | An invoice finance issued to the customer, against an order, a contract, or neither | Finance |
+| **Payment** | Money the customer paid: against an invoice, a plan step, an order, a contract, or none of them yet | Finance |
 
-All three belong to an **account**. A plan step always names the contract it plans; an invoice or a payment names a contract only when there is one. So an invoice for an order, one invoice for several orders, or an advance that matches no invoice yet is recorded on the account alone. An account's **Billing Milestones**, **Invoices** and **Payments** tabs list all of its records; a contract's tabs list those that name it.
+All three belong to an **account**. A plan step names the order or the contract it plans; an invoice or a payment names an order or a contract only when there is one. So one invoice for several orders, or an advance that matches no invoice yet, is recorded on the account alone. An account's **Billing Milestones**, **Invoices** and **Payments** tabs list all of its records; an order's and a contract's tabs list those that name it. A record of an order that sits under a contract names both, so the contract's tabs and totals include everything under its orders.
 
 | Page | What it covers |
 | --- | --- |
@@ -35,7 +35,7 @@ All three belong to an **account**. A plan step always names the contract it pla
 | Who | Where |
 | --- | --- |
 | Finance (Accounts Receivable) | The **Order to Cash** app: **Invoices**, **Payments** and **Billing Milestones** under **Receivables**, **Overdue Invoices** and **Planned This Month** under **Follow-up**, and the **Contracts** and **Accounts** the records belong to. It is the only app finance's launcher offers. |
-| Sales reps and managers | **Billing Milestones** under **Collection Plan** in the **Sales** app, and the **Billing Milestones**, **Invoices** and **Payments** tabs of every contract. The Order to Cash app is not on a rep's launcher. |
+| Sales reps and managers | **Billing Milestones** under **Collection Plan** in the **Sales** app, and the **Billing Milestones**, **Invoices** and **Payments** tabs of every order and contract. The Order to Cash app is not on a rep's launcher. |
 | Sales managers and administrators | Both: their launcher offers all four apps. |
 
 A launcher decides what is offered, not what may be opened: an app left off it still opens from its address, and every record keeps the access its sharing gives.
@@ -57,17 +57,17 @@ Sales never records a payment. A figure a rep sees is always one finance wrote, 
 
 ## Not every customer uses it
 
-A company that does not want Order to Cash has an administrator disable the module. Its app, its menu entries in Sales, its records, its tabs and its totals on the contract and account pages go with it.
+A company that does not want Order to Cash has an administrator disable the module. Its app, its menu entries in Sales, its records, its tabs and its totals on the order, contract and account pages go with it; the order itself works as before.
 
-## Totals on the contract and the account [#totals]
+## Totals on the order, the contract and the account [#totals]
 
-The contract and the account each carry the module's totals, so a rep reads them without opening a tab:
+The order, the contract and the account each carry the module's totals, so a rep reads them without opening a tab:
 
 | Field | On | What it counts |
 | --- | --- | --- |
-| **Planned** | Contract | The collection plan, summed |
-| **Invoiced** | Contract, account | The **Issued** invoices, summed; a cancelled invoice does not count |
-| **Received** | Contract, account | The payments, summed |
+| **Planned** | Order, contract | The collection plan, summed |
+| **Invoiced** | Order, contract, account | The **Issued** invoices, summed; a cancelled invoice does not count |
+| **Received** | Order, contract, account | The payments, summed |
 | **Receivable Balance** | Contract, account | What the customer still owes on the open invoices: the **Open** amount of the **Issued** invoices, summed. A payment not yet set against an invoice, such as an advance, counts in **Received** only, so the balance never drops below zero on an advance. An overpaid invoice is open for nothing, so an overpayment does not take it below zero either |
 
-The account's totals cover every invoice and payment of the account, those with no contract included; the contract's cover the records that name it. None of them is typed in: they move when a plan step, an invoice or a payment is saved. On the contract they appear in the Contract Value section, and on the account in the Financials section. Everyone who can read the contract reads its totals. The account's totals take a role that works with the customer's money: sales, finance, marketing, service, project managers and administrators read them, while someone who holds only **CRM User**, the set every member gets, and a consultant staffed on projects read the account without them. Nobody edits them.
+The account's totals cover every invoice and payment of the account, those with no order or contract included; the order's and the contract's cover the records that name them. None of them is typed in: they move when a plan step, an invoice or a payment is saved. On the order they appear in the Pricing section, on the contract in the Contract Value section, and on the account in the Financials section. Deal results count the order's own total, never these figures. Everyone who can read the order or the contract reads its totals. The account's totals take a role that works with the customer's money: sales, finance, marketing, service, project managers and administrators read them, while someone who holds only **CRM User**, the set every member gets, and a consultant staffed on projects read the account without them. Nobody edits them.

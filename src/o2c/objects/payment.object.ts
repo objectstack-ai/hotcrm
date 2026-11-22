@@ -5,7 +5,8 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
 /**
  * Payment — money an account paid (REQ-0007, plan *The data model*; under the
  * account since REQ-0010, hotcrm#2557): against one invoice, against a plan
- * step before it is invoiced, or against nothing yet — an advance that
+ * step before it is invoiced, against an order (hotcrm#2560), or against
+ * nothing yet — an advance that
  * matches no invoice names only the account. A receipt that pays several
  * invoices is one row per invoice, the split the ERP or finance already made,
  * so there is no allocation object. An advance paid before its invoice points
@@ -21,7 +22,7 @@ export const Payment = ObjectSchema.create({
   label: 'Payment',
   pluralLabel: 'Payments',
   icon: 'banknote',
-  description: 'Money an account paid: against an invoice, a plan step, a contract, or none of them yet',
+  description: 'Money an account paid: against an invoice, a plan step, an order, a contract, or none of them yet',
 
   // Whoever reads the account reads its payments; finance writes them, with
   // read on the account as the master-side question (see `crm_invoice`).
@@ -50,7 +51,29 @@ export const Payment = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'restrict',
-      relatedListColumns: ['payment_number', 'crm_contract', 'payment_date', 'amount', 'method'],
+      relatedListColumns: ['payment_number', 'crm_sales_order', 'crm_contract', 'payment_date', 'amount', 'method'],
+    }),
+
+    // An optional source (hotcrm#2560): the order the money was received for.
+    // Filled from the invoice (or else the plan step) when the payment names
+    // none (`_row-stamp.ts`), so the order's Received counts what its invoices
+    // and steps count. Picking it fills the account, and the order's contract
+    // while the payment has none; a different account or contract is refused.
+    // An order with payments cannot be deleted (`restrict`, as a contract with
+    // payments cannot). Nullable and new: an upgrade only adds the column.
+    crm_sales_order: Field.lookup('crm_sales_order', {
+      label: 'Order',
+      group: 'basic',
+      // No `dependsOn`, as the contract lookup has none: a `dependsOn` hides a
+      // value the order page's New prefills ("Select Account first") while the
+      // account is still empty, measured in the browser on hotcrm#2560. The
+      // pick fills the account; another account's order is refused on save.
+      deleteBehavior: 'restrict',
+      lookupAutofill: [
+        { target: 'crm_account', source: 'crm_account', overwrite: true },
+        { target: 'crm_contract', source: 'crm_contract' },
+      ],
+      relatedListColumns: ['payment_number', 'payment_date', 'amount', 'method', 'crm_invoice', 'crm_billing_milestone'],
     }),
 
     // An optional source, filled from the invoice (or else the plan step)
@@ -145,6 +168,7 @@ export const Payment = ObjectSchema.create({
 
   indexes: [
     { fields: ['crm_contract'] },
+    { fields: ['crm_sales_order'] },
     { fields: ['crm_account'] },
     { fields: ['crm_invoice'] },
     { fields: ['crm_billing_milestone'] },

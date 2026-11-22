@@ -181,11 +181,6 @@ export const activity: Record<string, ObjectTranslationData> = {
     _sections: {
       basic: { label: 'Attendee' },
       response: { label: 'Invitation' },
-      // Form section names on event_attendee.view.ts (#1100) — same English
-      // text as the fieldGroups above, but a distinct key: `attendee` /
-      // `invitation` are not `basic` / `response`.
-      attendee: { label: 'Attendee' },
-      invitation: { label: 'Invitation' },
     },
   },
 };

@@ -3,14 +3,15 @@ import type { Metadata } from 'next';
 import { HomeLayout } from 'fumadocs-ui/layouts/home';
 import { baseOptions, siteConfig } from '@/lib/layout.shared';
 import { localeHref, productCopy } from '@/lib/product';
-import { ProductApps, ProductChain } from '@/components/product/blocks';
+import { ProductApps, ProductChain, ProductHeroScreen } from '@/components/product/blocks';
 import { homeCopy } from '@/components/product/home-copy';
 
 /**
  * The product homepage at the site root (#2608). Until this card the root only
  * redirected to `/docs`, so a first-time visitor landed in a manual. Sections,
  * in the card's order: headline, business chain, six apps, three scenarios, AI,
- * boundaries, open source and deployment, partners and developers.
+ * boundaries, open source and deployment, partners and developers. The hero
+ * shot and the one-per-app shots are the README's screenshots (#2694).
  */
 
 const RUN = [
@@ -72,6 +73,9 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                 {home.github}
               </a>
             </div>
+            <div className="mt-12">
+              <ProductHeroScreen lang={lang} />
+            </div>
           </div>
         </section>
 
@@ -80,7 +84,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
         </Section>
 
         <Section>
-          <ProductApps lang={lang} />
+          <ProductApps lang={lang} screens />
         </Section>
 
         <Section>

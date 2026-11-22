@@ -9,6 +9,10 @@ import salesOrderHooks from '../src/sales/objects/sales_order.hook';
 import * as profiles from '../src/sales/profiles';
 import { CrmApp } from '../src/sales/apps/crm.app';
 import { packageStacks } from '../objectstack.composition';
+import { salesOrders } from '../src/sales/data/sales_order.seed';
+import { salesOrdersZhCN } from '../src/sales/data/sales_order.zh-CN.seed';
+import { contracts } from '../src/sales/data/contract.seed';
+import { contractsZhCN } from '../src/sales/data/contract.zh-CN.seed';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 
 /**
@@ -210,6 +214,66 @@ describe('an order on the booted stack', () => {
     expect((await call('PATCH', `/data/crm_sales_order/${order.id}`, { status: 'cancelled' })).status).toBe(200);
     expect((await call('PATCH', `/data/crm_sales_order/${order.id}`, { status: 'draft' })).status).toBe(400);
   }, 60_000);
+
+  describe('an order carries only a contract of its own account (#2728)', () => {
+    const sentence = "This contract belongs to another account. An order can only carry a contract of its own Account: choose one of this account's contracts, or clear Contract.";
+    /** A draft contract under `account`, with the contact it requires. */
+    const contractOf = async (account: string): Promise<Rec> => {
+      const [contact] = await verify.seed('crm_contact', [
+        { first_name: 'Con', last_name: `Tract ${++k}`, email: `con${k}@order-contract.test`, crm_account: account },
+      ]);
+      const [contract] = await verify.seed('crm_contract', [{
+        crm_account: account, crm_contact: contact!.id, status: 'draft', start_date: '2030-01-01',
+        end_date: '2030-12-31', contract_term_months: 12, contract_value: 1_000, description: `Order contract ${k}`,
+      }]);
+      return contract!;
+    };
+    const refused = (res: { status: number; body: Rec }) => {
+      expect(res.status, JSON.stringify(res.body)).toBe(400);
+      expect(res.body.code).toBe('VALIDATION_FAILED');
+      // On Contract, the field to correct, so the form shows it there.
+      expect(res.body.fields?.[0]).toMatchObject({ field: 'crm_contract', code: 'rule_violation', message: sentence });
+    };
+
+    it("refuses another account's contract on create, on a contract change and on an account change", async () => {
+      const order = await draftOrder();
+      const [other] = await verify.seed('crm_account', [{ name: `Other Co ${++k}`, owner_id: rep.id }]);
+      const theirs = await contractOf(other!.id);
+      const ours = await contractOf(order.crm_account);
+
+      refused(await call('POST', '/data/crm_sales_order', { name: `Order ${++k}`, crm_account: order.crm_account, crm_contract: theirs.id }));
+      refused(await call('PATCH', `/data/crm_sales_order/${order.id}`, { crm_contract: theirs.id }));
+      expect((await stored('crm_sales_order', order.id)).crm_contract ?? null).toBeNull();
+
+      // Its own account's contract saves as before; moving the order to
+      // another account then has to take the contract with it.
+      expect((await call('PATCH', `/data/crm_sales_order/${order.id}`, { crm_contract: ours.id })).status).toBe(200);
+      refused(await call('PATCH', `/data/crm_sales_order/${order.id}`, { crm_account: other!.id }));
+      expect((await call('PATCH', `/data/crm_sales_order/${order.id}`, { crm_account: other!.id, crm_contract: theirs.id })).status).toBe(200);
+      const after = await stored('crm_sales_order', order.id);
+      expect([after.crm_account, after.crm_contract]).toEqual([other!.id, theirs.id]);
+    }, 60_000);
+
+    it('saves an order with no contract, and with its own account\'s contract', async () => {
+      const order = await draftOrder();
+      const ours = await contractOf(order.crm_account);
+      const created = await call('POST', '/data/crm_sales_order', { name: `Order ${++k}`, crm_account: order.crm_account, crm_contract: ours.id });
+      expect(created.status, JSON.stringify(created.body)).toBe(201);
+      expect((await call('PATCH', `/data/crm_sales_order/${order.id}`, { customer_po_number: `PO-${k}` })).status).toBe(200);
+    }, 60_000);
+
+    it.each([
+      ['en', salesOrders, contracts],
+      ['zh-CN', salesOrdersZhCN, contractsZhCN],
+    ] as const)('every %s seeded order under a contract is under its own account\'s contract', (_locale, orders, ctrs) => {
+      // A seed names its references by seed identity: the account by name,
+      // the contract by its description.
+      const accountOf = new Map((ctrs.records as Rec[]).map((c) => [String(c.description), String(c.crm_account)]));
+      const under = (orders.records as Rec[]).filter((o) => o.crm_contract != null);
+      expect(under.length, 'the renewal order is the seed\'s order under a contract').toBeGreaterThan(0);
+      for (const o of under) expect(accountOf.get(String(o.crm_contract)), String(o.name)).toBe(String(o.crm_account));
+    });
+  });
 
   it('the manager deletes a confirmed order, and its lines go with it', async () => {
     const order = await draftOrder();

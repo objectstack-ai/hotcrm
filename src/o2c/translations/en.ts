@@ -12,14 +12,17 @@ export const en: TranslationData = {
     crm_billing_milestone: {
       label: 'Billing Milestone',
       pluralLabel: 'Billing Milestones',
-      description: 'One step of an account\'s collection plan, planned from a contract: what is due, when, and how much of it is invoiced and received',
+      description: 'One step of an account\'s collection plan, planned from an order or a contract: what is due, when, and how much of it is invoiced and received',
       _validations: {
-        billing_milestone_contract: { message: 'Choose the contract this step belongs to.' },
+        billing_milestone_source: { message: 'Choose the order or the contract this step belongs to.' },
       },
       fields: {
         name: {
           label: 'Milestone',
           help: 'What the step is, as the contract says it: "Advance 30%", "Go-live", "Year 2".',
+        },
+        crm_sales_order: {
+          label: 'Order',
         },
         crm_contract: {
           label: 'Contract',
@@ -79,6 +82,9 @@ export const en: TranslationData = {
           label: 'Invoice Number',
           help: 'The number on the invoice, as finance issued it.',
         },
+        crm_sales_order: {
+          label: 'Order',
+        },
         crm_contract: {
           label: 'Contract',
         },
@@ -93,7 +99,7 @@ export const en: TranslationData = {
         },
         due_date: {
           label: 'Due Date',
-          help: 'Left empty, it is the issue date plus the contract\'s payment terms. With no contract, type it.',
+          help: 'Left empty, it is the issue date plus the payment terms of the contract, or else of the order. With neither, type it.',
         },
         status: {
           label: 'Status',
@@ -158,10 +164,13 @@ export const en: TranslationData = {
     crm_payment: {
       label: 'Payment',
       pluralLabel: 'Payments',
-      description: 'Money an account paid: against an invoice, a plan step, a contract, or none of them yet',
+      description: 'Money an account paid: against an invoice, a plan step, an order, a contract, or none of them yet',
       fields: {
         payment_number: {
           label: 'Payment Number',
+        },
+        crm_sales_order: {
+          label: 'Order',
         },
         crm_contract: {
           label: 'Contract',
@@ -214,6 +223,24 @@ export const en: TranslationData = {
         },
         source: {
           label: 'Source',
+        },
+      },
+    },
+    // The order's figures, added by this package through `objectExtensions`
+    // (hotcrm#2560).
+    crm_sales_order: {
+      fields: {
+        planned_amount: {
+          label: 'Planned',
+          help: 'The collection plan, summed: what the steps expect to collect.',
+        },
+        invoiced_amount: {
+          label: 'Invoiced',
+          help: 'The issued invoices, summed. A cancelled invoice is not counted.',
+        },
+        received_amount: {
+          label: 'Received',
+          help: 'The payments received, summed.',
         },
       },
     },

@@ -9,9 +9,10 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
  * authority's system); this row is how sales sees it. Finance enters it or
  * imports it on `erp_ref` (`../mappings/invoice_import.mapping.ts`).
  *
- * It belongs to the account (REQ-0010, hotcrm#2557). The contract and the plan
- * step are optional sources: an invoice for an order, for several orders, or
- * with no contract at all names only the account.
+ * It belongs to the account (REQ-0010, hotcrm#2557). The order, the contract
+ * and the plan step are optional sources (the order since hotcrm#2560): an
+ * invoice for one order names it, and one for several orders, or with no
+ * source at all, names only the account.
  *
  * An invoice cancelled or fully credited at the source is set `cancelled` and
  * leaves every figure: the plan step's Invoiced counts `issued` rows only, and
@@ -59,7 +60,30 @@ export const Invoice = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'restrict',
-      relatedListColumns: ['invoice_number', 'crm_contract', 'due_date', 'amount', 'open_amount', 'status'],
+      relatedListColumns: ['invoice_number', 'crm_sales_order', 'crm_contract', 'due_date', 'amount', 'open_amount', 'status'],
+    }),
+
+    // An optional source (hotcrm#2560): the order this invoice bills. Picking
+    // it fills the account, and the order's contract while the invoice has
+    // none, on the form; on every write `_row-stamp.ts` takes the account
+    // from it (refusing a different one) and the order's contract (refusing a
+    // different one), and fills it from the plan step when the invoice names
+    // none. An order with invoices cannot be deleted (`restrict`, as a
+    // contract with invoices cannot). Nullable and new: an upgrade only adds
+    // the column.
+    crm_sales_order: Field.lookup('crm_sales_order', {
+      label: 'Order',
+      group: 'basic',
+      // No `dependsOn`, as the contract lookup has none: a `dependsOn` hides a
+      // value the order page's New prefills ("Select Account first") while the
+      // account is still empty, measured in the browser on hotcrm#2560. The
+      // pick fills the account; another account's order is refused on save.
+      deleteBehavior: 'restrict',
+      lookupAutofill: [
+        { target: 'crm_account', source: 'crm_account', overwrite: true },
+        { target: 'crm_contract', source: 'crm_contract' },
+      ],
+      relatedListColumns: ['invoice_number', 'issue_date', 'due_date', 'amount', 'paid_amount', 'open_amount', 'status'],
     }),
 
     // An optional source. Picking it fills the account on the form; on every
@@ -98,13 +122,14 @@ export const Invoice = ObjectSchema.create({
       required: true,
     }),
 
-    // Filled on entry from the contract's Payment Terms when left empty
-    // (`invoice_figures` in `invoice.hook.ts`); finance may set it outright.
-    // An invoice with no contract has no terms to read: its due date is typed.
+    // Filled on entry when left empty (`invoice_figures` in `invoice.hook.ts`):
+    // the contract's Payment Terms, else the order's (hotcrm#2560); finance
+    // may set it outright. With neither, there are no terms to read and the
+    // due date is typed.
     due_date: Field.date({
       label: 'Due Date',
       group: 'basic',
-      description: 'Left empty, it is the issue date plus the contract\'s payment terms. With no contract, type it.',
+      description: 'Left empty, it is the issue date plus the payment terms of the contract, or else of the order. With neither, type it.',
     }),
 
     status: Field.select({
@@ -200,6 +225,7 @@ export const Invoice = ObjectSchema.create({
 
   indexes: [
     { fields: ['crm_contract'] },
+    { fields: ['crm_sales_order'] },
     { fields: ['crm_account'] },
     { fields: ['crm_billing_milestone'] },
     { fields: ['due_date'] },

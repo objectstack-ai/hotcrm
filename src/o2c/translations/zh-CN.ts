@@ -25,6 +25,9 @@ export const zhCN: TranslationData = {
           message: '这份合同属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。',
           reasons: {
             named: { message: '{{contract}}属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。' },
+          order_named: { message: '{{order}}属于另一个客户。请选择这个客户的订单，或不填客户、由订单带出。' },
+          order_contract: { message: '{{order}}归在另一份合同下。请不填合同、由订单带出，或选择订单自己的合同。' },
+          apart: { message: '{{order}}和{{contract}}属于不同的客户。请选择同一客户的订单和合同。' },
           },
         },
       },
@@ -35,6 +38,9 @@ export const zhCN: TranslationData = {
           message: '这份合同属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。',
           reasons: {
             named: { message: '{{contract}}属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。' },
+          order_named: { message: '{{order}}属于另一个客户。请选择这个客户的订单，或不填客户、由订单带出。' },
+          order_contract: { message: '{{order}}归在另一份合同下。请不填合同、由订单带出，或选择订单自己的合同。' },
+          apart: { message: '{{order}}和{{contract}}属于不同的客户。请选择同一客户的订单和合同。' },
           },
         },
       },
@@ -45,6 +51,9 @@ export const zhCN: TranslationData = {
           message: '这份合同属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。',
           reasons: {
             named: { message: '{{contract}}属于另一个客户。请选择这个客户的合同，或不填客户、由合同带出。' },
+          order_named: { message: '{{order}}属于另一个客户。请选择这个客户的订单，或不填客户、由订单带出。' },
+          order_contract: { message: '{{order}}归在另一份合同下。请不填合同、由订单带出，或选择订单自己的合同。' },
+          apart: { message: '{{order}}和{{contract}}属于不同的客户。请选择同一客户的订单和合同。' },
           },
         },
       },
@@ -54,14 +63,17 @@ export const zhCN: TranslationData = {
     crm_billing_milestone: {
       label: '回款节点',
       pluralLabel: '回款节点',
-      description: '客户回款计划中的一步，按合同制定：应收多少、何时收，以及其中已开票和已回款的金额',
+      description: '客户回款计划中的一步，按订单或合同制定：应收多少、何时收，以及其中已开票和已回款的金额',
       _validations: {
-        billing_milestone_contract: { message: '请选择这个节点所属的合同。' },
+        billing_milestone_source: { message: '请选择这个节点所属的订单或合同。' },
       },
       fields: {
         name: {
           label: '节点名称',
           help: '合同里这一步的说法，例如「预付款 30%」「上线」「第二年」。',
+        },
+        crm_sales_order: {
+          label: '订单',
         },
         crm_contract: {
           label: '合同',
@@ -121,6 +133,9 @@ export const zhCN: TranslationData = {
           label: '发票号码',
           help: '财务开具的发票上的号码。',
         },
+        crm_sales_order: {
+          label: '订单',
+        },
         crm_contract: {
           label: '合同',
         },
@@ -135,7 +150,7 @@ export const zhCN: TranslationData = {
         },
         due_date: {
           label: '到期日',
-          help: '留空时，为开票日期加上合同的付款条款。没有合同时请填写。',
+          help: '留空时，为开票日期加上合同的付款条款；没有合同或合同未填付款条款时，取订单的付款条款。两者都没有时请填写。',
         },
         status: {
           label: '状态',
@@ -200,10 +215,13 @@ export const zhCN: TranslationData = {
     crm_payment: {
       label: '回款',
       pluralLabel: '回款',
-      description: '客户付来的款项：对应发票、回款节点、合同，或暂时都不对应',
+      description: '客户付来的款项：对应发票、回款节点、订单、合同，或暂时都不对应',
       fields: {
         payment_number: {
           label: '回款编号',
+        },
+        crm_sales_order: {
+          label: '订单',
         },
         crm_contract: {
           label: '合同',
@@ -256,6 +274,24 @@ export const zhCN: TranslationData = {
         },
         source: {
           label: '来源',
+        },
+      },
+    },
+    // The order's figures, added by this package through `objectExtensions`
+    // (hotcrm#2560).
+    crm_sales_order: {
+      fields: {
+        planned_amount: {
+          label: '计划回款',
+          help: '回款计划各节点的计划金额合计。',
+        },
+        invoiced_amount: {
+          label: '已开票',
+          help: '已开具发票的金额合计，已作废的发票不计入。',
+        },
+        received_amount: {
+          label: '已回款',
+          help: '已收到回款的金额合计。',
         },
       },
     },

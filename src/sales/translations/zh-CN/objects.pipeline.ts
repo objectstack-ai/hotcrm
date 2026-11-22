@@ -178,12 +178,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       identity: { label: '身份信息' },
       company_info: { label: '公司信息' },
       contact_info: { label: '联系方式' },
-      qualification: {
-        label: '资格评估',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
+      qualification: { label: '资格评估' },
       assignment: { label: '分配' },
       additional: { label: '附加信息' },
       preferences: { label: '沟通偏好' },
@@ -201,63 +196,12 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       company_information: { label: '公司信息' },
       additional_information: { label: '附加信息' },
       privacy: { label: '隐私' },
-      general: { label: '常规信息' },
-      details: { label: '详情' },
-      step_1_contact_details: { label: '第一步：联系方式' },
-      step_2_company_information: { label: '第二步：公司信息' },
-      step_3_qualification: {
-        label: '第三步：资质审核',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      step_4_review_and_convert: {
-        label: '第四步：审核并转化',
-        fields: {
-          description: { helpText: '转化为客户和联系人之前，请核对所有信息' },
-        },
-      },
-      primary_information: {
-        label: '主要信息',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      extended_details: { label: '扩展信息' },
-      quick_edit: {
-        label: '快速编辑',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      update_lead_status: {
-        label: '更新线索状态',
-        fields: {
-          status: { helpText: '为此线索选择新状态' },
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-          notes: { placeholder: '添加此次状态变更的备注' },
-        },
-      },
       tell_us_about_yourself: { label: '请介绍一下您自己' },
       about_your_company: { label: '您的公司信息' },
       how_can_we_help: {
         label: '我们能帮您什么？',
         fields: {
           description: { placeholder: '请简要描述您的需求……', helpText: '销售代表将在一个工作日内与您联系。' },
-        },
-      },
-      lead_information: {
-        label: '线索信息',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      address_information: { label: '地址信息' },
-      privacy_preferences: {
-        label: '隐私偏好',
-        fields: {
-          do_not_call: { helpText: '如果该线索要求不要致电，请勾选' },
-          email_opt_out: { helpText: '如果该线索已退订邮件通讯，请勾选' },
         },
       },
     },
@@ -428,6 +372,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       // and by the detail page, whose sections reference these groups (#1452)
       crm_forecast: { label: '阶段与预测' },
       basic: { label: '基本信息' },
+      line_items: { label: '商机产品明细' },
       financials: { label: '财务信息' },
       sales_process: { label: '销售流程' },
       classification: { label: '分类' },

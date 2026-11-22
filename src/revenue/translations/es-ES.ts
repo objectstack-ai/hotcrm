@@ -223,10 +223,6 @@ export const esES: TranslationData = {
         basic: { label: 'Información del Producto' },
         pricing: { label: 'Precios' },
         metadata: { label: 'Recursos' },
-        // Nombres de sección del formulario en product.view.ts (#1100)
-        product_info: { label: 'Información del Producto' },
-        pricing_info: { label: 'Precios' },
-        media: { label: 'Multimedia' },
       },
     },
     crm_price_book: {
@@ -339,6 +335,7 @@ export const esES: TranslationData = {
       },
       _sections: {
         basic: { label: 'Información de la Cotización' },
+        line_items: { label: 'Líneas de Cotización' },
         pricing: { label: 'Precios' },
         terms: { label: 'Términos y Vigencia' },
         address: { label: 'Direcciones' },

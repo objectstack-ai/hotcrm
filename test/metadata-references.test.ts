@@ -778,10 +778,23 @@ describe('forms can actually author the data the views depend on', () => {
   const viewObjectOf = (v: AnyRec): string | undefined =>
     v.list?.data?.object ?? v.form?.data?.object ?? v.object;
 
+  /**
+   * The fields a form authoring no `sections` draws: the platform derives it
+   * from the object's `fieldGroups`, every field but `owner_id` (which the
+   * derived form never renders, hotcrm#2665 row 39) and the hidden ones.
+   * Measured on 18.6.0 for `crm_product` and `crm_event_attendee` (#2725):
+   * the New and Edit dialogs drew every field their authored sections drew.
+   */
+  const derivedFormFields = (objDef: AnyRec | undefined): string[] =>
+    Object.entries((objDef?.fields ?? {}) as Record<string, AnyRec>)
+      .filter(([name, field]) => name !== 'owner_id' && !field.hidden)
+      .map(([name]) => name);
+
   /** Field names present in the default form + all named form views. */
-  const formFieldsOf = (v: AnyRec): Set<string> => {
+  const formFieldsOf = (v: AnyRec, objDef: AnyRec | undefined): Set<string> => {
     const names = new Set<string>();
     for (const form of [v.form, ...Object.values(v.formViews ?? {})].filter(Boolean) as AnyRec[]) {
+      if (!(form.sections ?? []).length) for (const name of derivedFormFields(objDef)) names.add(name);
       for (const section of form.sections ?? []) {
         for (const f of section.fields ?? []) {
           const name = typeof f === 'string' ? f : f?.field;
@@ -804,6 +817,7 @@ describe('forms can actually author the data the views depend on', () => {
       const objDef = objects.find((o) => o.name === objectName);
       if (!objDef || !v.form) continue;
       const formFields = new Set<string>();
+      if (!(v.form.sections ?? []).length) for (const name of derivedFormFields(objDef)) formFields.add(name);
       for (const section of v.form.sections ?? []) {
         for (const f of section.fields ?? []) {
           const name = typeof f === 'string' ? f : f?.field;
@@ -854,7 +868,7 @@ describe('forms can actually author the data the views depend on', () => {
       // filter field can be missing from it. Order to Cash's views are the
       // first in this app to rely on that (#2315).
       if (!v.form && !Object.keys(v.formViews ?? {}).length) continue;
-      const editable = formFieldsOf(v);
+      const editable = formFieldsOf(v, objDef);
       const lists = [v.list, ...Object.values(v.listViews ?? {})].filter(Boolean) as AnyRec[];
       const filtered = new Set<string>();
       for (const list of lists) {
@@ -950,11 +964,12 @@ describe('page templates and record components stay inside their record context'
  * (`first_name: "Mira"`, `company: "Atlas Construction"`, `status: "contacted"`,
  * …), no console errors.
  *
- * Scope note: named forms under `formViews` (`lead_conversion_wizard`,
- * `split_edit`, …) still carry `data` blocks. The liveness rule does
- * NOT flag those and they have not been measured — a create form has no record
- * in the route context, so the same reasoning may not hold. They are left alone
- * deliberately; measure first if you plan to remove them.
+ * Scope note: named forms under `formViews` are not checked here. The six
+ * lead layout showcases that carried `data` blocks were deleted in #2725, so
+ * the one named form left on `crm_lead` is the public `web_to_lead`, which
+ * also declares `data`. The liveness rule does NOT flag a named form's block,
+ * and a public form has no record in the route context, so the reasoning
+ * above has not been measured for it; measure first if you plan to remove it.
  */
 describe('form views do not declare a dead data provider', () => {
   it('no view sets form.data', () => {

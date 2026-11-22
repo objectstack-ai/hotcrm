@@ -20,14 +20,14 @@ import { defineView } from '@objectstack/spec/ui';
  * at all, which is what sent #944 looking; re-measuring the paragraph against
  * the shipped Console (17.0.0-rc.3) left only the form half standing.
  *
- * **`form` — live.** The Console merges a view bundle's `form` onto the object
- * definition it holds, and the record drawer a related list opens ("New" on
- * the panel, edit on a row) renders that form's `sections`. What the authored
- * form buys is the section split and the field order — not rescue from a raw
- * autonumber, because the no-form fallback is not raw either: in `create` mode
- * the drawer drops `autonumber`, `formula` and `summary` fields (and anything
- * hidden or readonly) and sections whatever is left by the object's own
- * `fieldGroups`. `attendee_number` was never on offer.
+ * **`form` — the platform default.** The Console merges a view bundle's
+ * `form` onto the object definition it holds, and the record drawer a related
+ * list opens ("New" on the panel, edit on a row) renders it. With no authored
+ * `sections` the drawer sections the fields by the object's own `fieldGroups`,
+ * and in `create` mode it drops `autonumber`, `formula` and `summary` fields
+ * (and anything hidden or readonly), so `attendee_number` is never on offer.
+ * The two sections this form used to author drew the same split and the same
+ * fields (#2725).
  *
  * **`list` — not what the related list reads.** A detail-page related list
  * takes its columns from the CHILD's lookup field — `relatedListColumns` on
@@ -74,28 +74,12 @@ export const EventAttendeeViews = defineView({
     pagination: { pageSize: 25 },
   },
 
+  // No `sections`: the dialog draws the object's two `fieldGroups`, Attendee
+  // and Invitation, with the same fields the authored sections listed
+  // (#2725, the #2665 assessment row 17). Required marks come from the
+  // object (`required` on the event, the type and the response; `requiredWhen`
+  // on the party columns), not from this form.
   form: {
     type: 'simple',
-    sections: [
-      {
-        name: 'attendee',
-        label: 'Attendee',
-        columns: 2,
-        fields: [
-          { field: 'crm_event', required: true },
-          { field: 'attendee_type', required: true },
-          'crm_contact',
-          'crm_lead',
-          'sys_user',
-          'external_name',
-        ],
-      },
-      {
-        name: 'invitation',
-        label: 'Invitation',
-        columns: 2,
-        fields: ['response', 'is_organizer', 'invited_date'],
-      },
-    ],
   },
 });

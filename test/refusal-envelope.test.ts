@@ -194,11 +194,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // `expense_request_delete_guard`, a sent travel request deleted; 86 until
     // hotcrm#2557 added the Order to Cash row stamp's refusal of a contract of
     // another account (one call in the shared stamp, swept once per object, so
-    // three).
+    // three); 89 until hotcrm#2560 added the stamp's three order refusals (an
+    // order of another account, a contract other than the order's, an order
+    // and a contract of two accounts), each swept once per object, so nine.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(89);
+    expect(sites).toHaveLength(98);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

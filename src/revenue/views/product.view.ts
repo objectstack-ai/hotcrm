@@ -58,35 +58,13 @@ export const ProductViews = defineView({
     },
   },
 
+  // No `sections`: the New and Edit dialogs draw the object's `fieldGroups`
+  // (Product Information, Pricing, Resources collapsed), the same layout as
+  // the record page. The three authored sections restated those groups under
+  // other names, with Description moved into a Media section (#2725, the
+  // #2665 assessment row 10). No `columns` either: a field group has none, and
+  // the dialog lays its fields out by width on its own (row 40).
   form: {
     type: 'simple',
-    sections: [
-      {
-        name: 'product_info',
-        label: 'Product Info',
-        columns: 2,
-        fields: [
-          'product_code',
-          { field: 'name', required: true, span: 'full' },
-          'category',
-          'family',
-          'sku',
-          'product_manager',
-          'is_active',
-        ],
-      },
-      {
-        name: 'pricing_info',
-        label: 'Pricing',
-        columns: 2,
-        fields: ['list_price', 'cost'],
-      },
-      {
-        name: 'media',
-        label: 'Media',
-        columns: 1,
-        fields: ['image', 'datasheet', 'description'],
-      },
-    ],
   },
 });
