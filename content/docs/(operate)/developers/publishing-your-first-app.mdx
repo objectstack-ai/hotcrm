@@ -1,14 +1,14 @@
 ---
 title: Publishing your first marketplace app
-description: Build, publish, and install a package to cloud.objectos.app — using HotCRM as the worked example.
+description: Build, publish, and install a package to cloud.objectos.ai — using HotCRM as the worked example.
 ---
 
-This guide walks through publishing an ObjectStack package to the [cloud.objectos.app](https://cloud.objectos.app) marketplace, using **HotCRM** as the worked example. Every step generalizes to your own app.
+This guide walks through publishing an ObjectStack package to the [cloud.objectos.ai](https://cloud.objectos.ai) marketplace, using **HotCRM** as the worked example. Every step generalizes to your own app.
 
 ## Prerequisites
 
 - Node.js 20.9+ and pnpm 9+
-- An ObjectStack Cloud account (sign up at [cloud.objectos.app](https://cloud.objectos.app))
+- An ObjectStack Cloud account (sign up at [cloud.objectos.ai](https://cloud.objectos.ai))
 - The `objectstack` CLI: `pnpm add -g @objectstack/cli` (or use `pnpm dlx objectstack`)
 - A repository that builds to a valid `dist/objectstack.json` (this repo is the canonical example)
 
@@ -100,11 +100,11 @@ The CLI:
 | `--pre-release` | Mark this version as pre-release. |
 | `--env <env_id>` + `--install` | Auto-install into an environment after publish. |
 | `--seed-sample-data` | Include seed data when auto-installing. |
-| `--server` | Override cloud URL (default `https://cloud.objectos.app`; use `http://localhost:4000` against a local cloud). |
+| `--server` | Override cloud URL (default `https://cloud.objectos.ai`; use `http://localhost:4000` against a local cloud). |
 
 ## 5. Verify on the marketplace
 
-1. Open [cloud.objectos.app](https://cloud.objectos.app) → **Marketplace**.
+1. Open [cloud.objectos.ai](https://cloud.objectos.ai) → **Marketplace**.
 2. Search for your `display-name`. The package appears with the latest published version.
 3. Click **Install** into a test environment and verify it works end-to-end.
 

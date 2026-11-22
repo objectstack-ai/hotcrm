@@ -1,7 +1,7 @@
 # HotCRM
 
 <p align="center">
-  <img src="assets/icon.svg" alt="HotCRM" width="128" height="128"/>
+  <img src="https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg" alt="HotCRM" width="128" height="128"/>
 </p>
 
 <!-- shared:headline -->
@@ -15,9 +15,9 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](src/sales/index.ts)
 [![Version](https://img.shields.io/badge/version-6.5.0-brightgreen)](CHANGELOG.md)
-[![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.app-orange)](https://cloud.objectos.app)
+[![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.ai-orange)](https://cloud.objectos.ai)
 
-[文档](https://hotcrm.com/zh-Hans/docs) · [应用市场](https://cloud.objectos.app) · [English](https://github.com/objectstack-ai/hotcrm/blob/main/README.md)
+[文档](https://hotcrm.com/zh-Hans/docs) · [应用市场](https://cloud.objectos.ai) · [English](https://github.com/objectstack-ai/hotcrm/blob/main/README.md)
 
 ---
 
@@ -90,7 +90,7 @@ HotCRM 以智能体为先。它提供对象、动作和技能；识别票据、�
 <!-- section:install -->
 ## 试用与安装
 
-**从应用市场安装。** 在 [cloud.objectos.app](https://cloud.objectos.app) 登录，在应用市场中打开 HotCRM，安装到你的环境。第一次使用 ObjectStack？先用 Starter 模板创建一个环境。
+**从应用市场安装。** 在 [cloud.objectos.ai](https://cloud.objectos.ai) 登录，在应用市场中打开 HotCRM，安装到你的环境。第一次使用 ObjectStack？先用 Starter 模板创建一个环境。
 
 **在本机运行，三条命令**（Node.js 22 或更高版本，以及 pnpm 10）：
 
