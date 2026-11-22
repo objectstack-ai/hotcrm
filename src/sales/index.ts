@@ -107,7 +107,7 @@ export const createHotCrmAppStack = (
       version: '6.5.0',
       type: 'app',
       name: 'HotCRM',
-      description: 'AI-Native CRM for the ObjectStack marketplace — Accounts, Contacts, Leads, Opportunities, Cases, Knowledge, Forecasts, Campaigns, Contracts.',
+      description: 'Leads, orders, projects, cash and expenses in one open-source business system. Six apps: Sales, Service, Marketing, Order to Cash, Project Delivery and Expenses. Order to Cash tracks orders, invoices and payments, and is not an accounting ledger. Change it with AI when your business changes. Let your own AI agents work in it with each user\'s permissions.',
       // ADR-0087 protocol handshake (ADR-0025 §3.2): the metadata/runtime
       // protocol major this app's metadata is authored against. Only the major
       // participates in the check — a runtime on a different major refuses the

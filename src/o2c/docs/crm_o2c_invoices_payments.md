@@ -35,6 +35,16 @@ invoices and payments.
   contract, or a payment names an invoice or a milestone but none, they are
   filled in from it, so the order's and the contract's totals count the same
   records the milestone and the invoice do.
+- **The order's contract carries to its invoices and payments.** When an order
+  gets its contract after its invoices and payments were saved (with **Draft
+  Contract**, or by choosing the order's **Contract**), those that name no
+  contract take it, and the contract's totals count them at once. When the
+  order moves to another contract, those that carried the old one move with
+  it; when the order's contract is cleared, they are cleared too, and the
+  order's next contract fills them. One that names any other contract stays
+  where it is. This happens whoever edits the order: a sales rep's order edit
+  changes the **Contract** of finance's invoices and payments, and nothing
+  else on them. Each record's history shows the change.
 - **Due Date.** Left empty, it is filled on save: the **Issue Date** plus the
   **Payment Terms** of the contract, or of the order when there is no contract
   or it has no terms (Net 15, 30, 60 or 90 days; Due on Receipt is the issue

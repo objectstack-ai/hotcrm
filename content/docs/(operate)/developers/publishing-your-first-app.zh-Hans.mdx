@@ -1,14 +1,14 @@
 ---
 title: 发布你的第一个应用市场应用
-description: 构建、发布并安装一个包到 cloud.objectos.app —— 以 HotCRM 作为示例。
+description: 构建、发布并安装一个包到 cloud.objectos.ai —— 以 HotCRM 作为示例。
 ---
 
-本指南将引导你把一个 ObjectStack 包发布到 [cloud.objectos.app](https://cloud.objectos.app) 应用市场，并以 **HotCRM** 作为示例。每个步骤都可以推广到你自己的应用。
+本指南将引导你把一个 ObjectStack 包发布到 [cloud.objectos.ai](https://cloud.objectos.ai) 应用市场，并以 **HotCRM** 作为示例。每个步骤都可以推广到你自己的应用。
 
 ## 先决条件
 
 - Node.js 20.9+ 和 pnpm 9+
-- 一个 ObjectStack Cloud 账户（在 [cloud.objectos.app](https://cloud.objectos.app) 注册）
+- 一个 ObjectStack Cloud 账户（在 [cloud.objectos.ai](https://cloud.objectos.ai) 注册）
 - `objectstack` CLI：`pnpm add -g @objectstack/cli`（或使用 `pnpm dlx objectstack`）
 - 一个能构建出有效 `dist/objectstack.json` 的仓库（本仓库就是规范示例）
 
@@ -100,11 +100,11 @@ CLI 会：
 | `--pre-release` | 将此版本标记为预发布。 |
 | `--env <env_id>` + `--install` | 发布后自动安装到某个环境。 |
 | `--seed-sample-data` | 自动安装时包含种子数据。 |
-| `--server` | 覆盖云 URL（默认 `https://cloud.objectos.app`；针对本地云使用 `http://localhost:4000`）。 |
+| `--server` | 覆盖云 URL（默认 `https://cloud.objectos.ai`；针对本地云使用 `http://localhost:4000`）。 |
 
 ## 5. 在应用市场上验证
 
-1. 打开 [cloud.objectos.app](https://cloud.objectos.app) → **Marketplace**。
+1. 打开 [cloud.objectos.ai](https://cloud.objectos.ai) → **Marketplace**。
 2. 搜索你的 `display-name`。该包会以最新发布的版本出现。
 3. 点击 **Install** 安装到测试环境并验证它端到端正常工作。
 

@@ -98,6 +98,9 @@ export const BillingMilestone = ObjectSchema.create({
     crm_contract: Field.lookup('crm_contract', {
       label: 'Contract',
       group: 'basic',
+      // The order's contract moves it (`sales_order_contract_fill`, hotcrm#2724
+      // ruling B): the history says from which contract to which.
+      trackHistory: true,
       // Declared, not left implicit: through 6.5.0 this column was the
       // required master and NOT NULL, and an upgrade relaxes it only where the
       // package says it is nullable (a managed upgrade's

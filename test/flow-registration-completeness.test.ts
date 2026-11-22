@@ -8,6 +8,7 @@ import * as salesFlows from '../src/sales/flows';
 import * as serviceFlows from '../src/service/flows';
 import * as revenueFlows from '../src/revenue/flows';
 import * as marketingFlows from '../src/marketing/flows';
+import * as o2cFlows from '../src/o2c/flows';
 import * as expenseFlows from '../src/expense/flows';
 import * as psaFlows from '../src/psa/flows';
 
@@ -71,6 +72,7 @@ const BARRELS: Record<string, Record<string, unknown>> = {
   service: serviceFlows,
   revenue: revenueFlows,
   marketing: marketingFlows,
+  o2c: o2cFlows,
   expense: expenseFlows,
   psa: psaFlows,
 };

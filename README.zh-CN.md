@@ -1,7 +1,7 @@
 # HotCRM
 
 <p align="center">
-  <img src="assets/icon.svg" alt="HotCRM" width="128" height="128"/>
+  <img src="https://raw.githubusercontent.com/objectstack-ai/hotcrm/main/assets/icon.svg" alt="HotCRM" width="128" height="128"/>
 </p>
 
 <!-- shared:headline -->
@@ -15,9 +15,9 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](src/sales/index.ts)
 [![Version](https://img.shields.io/badge/version-6.5.0-brightgreen)](CHANGELOG.md)
-[![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.app-orange)](https://cloud.objectos.app)
+[![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.ai-orange)](https://cloud.objectos.ai)
 
-[文档](https://hotcrm.com/zh-Hans/docs) · [应用市场](https://cloud.objectos.app) · [English](https://github.com/objectstack-ai/hotcrm/blob/main/README.md)
+[文档](https://hotcrm.com/zh-Hans/docs) · [应用市场](https://cloud.objectos.ai) · [English](https://github.com/objectstack-ai/hotcrm/blob/main/README.md)
 
 ---
 
@@ -90,7 +90,7 @@ HotCRM 以智能体为先。它提供对象、动作和技能；识别票据、�
 <!-- section:install -->
 ## 试用与安装
 
-**从应用市场安装。** 在 [cloud.objectos.app](https://cloud.objectos.app) 登录，在应用市场中打开 HotCRM，安装到你的环境。第一次使用 ObjectStack？先用 Starter 模板创建一个环境。
+**从应用市场安装。** 在 [cloud.objectos.ai](https://cloud.objectos.ai) 登录，在应用市场中打开 HotCRM，安装到你的环境。第一次使用 ObjectStack？先用 Starter 模板创建一个环境。
 
 **在本机运行，三条命令**（Node.js 22 或更高版本，以及 pnpm 10）：
 
@@ -107,7 +107,7 @@ pnpm dev
 
 定义就是应用。对象和字段、规则、界面、流程、权限和翻译都是 `src/` 下的类型化元数据：在那里改一个字段，数据表、API 和界面随之一起变，没有第二套应用需要同步。像 Claude Code 这样的 AI 编程智能体在你的仓库副本里写下这次改动，`pnpm validate` 在发布前按平台的 schema 检查它。
 
-目前这份定义包含 **38 个业务对象**、**51 个动作**、**52 个流程**、**7 个仪表盘**、**11 个数据集**和 **18 个岗位**，支持 **4 种语言**（en、zh-CN、es-ES、ja-JP）。
+目前这份定义包含 **38 个业务对象**、**51 个动作**、**53 个流程**、**7 个仪表盘**、**11 个数据集**和 **18 个岗位**，支持 **4 种语言**（en、zh-CN、es-ES、ja-JP）。
 
 HotCRM 构建在 [ObjectStack](https://github.com/objectstack-ai/objectstack) 之上：这个开源平台把一份业务定义同时运行为数据库、API、界面和智能体工具。[定制与扩展](https://hotcrm.com/zh-Hans/docs/developers/customize-and-extend) 演示了一次改动的全过程。
 

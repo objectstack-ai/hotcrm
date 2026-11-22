@@ -32,6 +32,15 @@ its own plan, and the contract's page totals the plans of all its orders. A
 milestone that names an order and a different contract is refused, and so is
 one whose order and contract belong to different accounts.
 
+An order that gets its contract only after its milestones were saved (with
+**Draft Contract**, or by choosing the order's **Contract**) passes it to the
+milestones, invoices and payments that name no contract yet, so the
+contract's page counts them at once. When the order moves to another
+contract, the milestones that carried the old one move with it; when the
+order's contract is cleared, they are cleared too, and the order's next
+contract fills them. A milestone that names any other contract stays where it
+is. Each milestone's history shows the change.
+
 ## Who may change the plan
 
 Reps, sales managers and administrators add, change and remove the milestones
