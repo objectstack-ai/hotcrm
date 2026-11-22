@@ -1,5 +1,6 @@
+import Image from 'next/image';
 import Link from 'next/link';
-import { localeHref, productApps, productCopy } from '@/lib/product';
+import { localeHref, productApps, productCopy, productScreens, type ProductScreen } from '@/lib/product';
 
 /**
  * The shared product block (#2608), rendered by the homepage and by
@@ -47,20 +48,79 @@ export function ProductChain({ lang, heading = true }: { lang: string; heading?:
   );
 }
 
-export function ProductApps({ lang, heading = true }: { lang: string; heading?: boolean }) {
+/**
+ * One product screenshot (#2694), framed so it does not float on the dark
+ * background. The width and height are the file's own, from the generated
+ * screen file, so the page reserves the space before the image arrives.
+ */
+export function ProductScreenshot({
+  screen,
+  sizes,
+  priority = false,
+}: {
+  screen: ProductScreen;
+  sizes: string;
+  priority?: boolean;
+}) {
+  return (
+    <figure className="m-0">
+      <Image
+        src={screen.src}
+        alt={screen.alt}
+        width={screen.width}
+        height={screen.height}
+        sizes={sizes}
+        priority={priority}
+        className="h-auto w-full rounded-lg border bg-fd-muted shadow-md dark:border-white/15 dark:shadow-black/60"
+      />
+      <figcaption className="mt-2 text-xs text-fd-muted-foreground">{screen.title}</figcaption>
+    </figure>
+  );
+}
+
+/** The hero shot, opening the docs page of the app it shows. */
+export function ProductHeroScreen({ lang }: { lang: string }) {
+  const { hero } = productScreens(lang);
+  const app = productApps(lang).find((a) => a.name === hero.app);
+  return (
+    <Link href={app?.href ?? localeHref(lang, '/docs')} className="block">
+      <ProductScreenshot screen={hero} sizes="(min-width: 1024px) 992px, 100vw" priority />
+    </Link>
+  );
+}
+
+export function ProductApps({
+  lang,
+  heading = true,
+  screens = false,
+}: {
+  lang: string;
+  heading?: boolean;
+  /** Show each app's screenshot in its card (the homepage); the docs front page keeps the text cards. */
+  screens?: boolean;
+}) {
   const copy = productCopy(lang);
   const apps = productApps(lang);
+  const shots = screens ? productScreens(lang).apps : {};
   return (
     <div className="not-prose">
       {heading ? <h2 className="mb-2 text-2xl font-semibold">{copy.apps.title}</h2> : null}
       <p className="mb-4 text-fd-muted-foreground">{copy.apps.intro}</p>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={screens ? 'grid gap-4 sm:grid-cols-2' : 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3'}>
         {apps.map((app) => (
           <Link
             key={app.name}
             href={app.href}
-            className="block rounded-xl border bg-fd-card p-4 transition-colors hover:bg-fd-accent"
+            className="block min-w-0 rounded-xl border bg-fd-card p-4 transition-colors hover:bg-fd-accent"
           >
+            {shots[app.name] ? (
+              <div className="mb-4">
+                <ProductScreenshot
+                  screen={shots[app.name]}
+                  sizes="(min-width: 1024px) 480px, (min-width: 640px) 50vw, 100vw"
+                />
+              </div>
+            ) : null}
             <p className="font-semibold">{app.label}</p>
             <p className="mt-1 text-xs uppercase tracking-wide text-fd-muted-foreground">
               {copy.apps.who} · {app.who}
