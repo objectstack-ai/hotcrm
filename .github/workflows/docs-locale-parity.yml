@@ -18,6 +18,7 @@ jobs:
   docs-locale-parity:
     name: Docs Locale Parity
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     permissions:
       contents: read

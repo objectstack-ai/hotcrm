@@ -6,6 +6,10 @@ import type { VerifyStack } from '@objectstack/verify';
 import { FLOW_REGION_SLOTS_BY_TYPE } from '@objectstack/spec/automation';
 import { CrmFlows as allFlows } from './helpers/src-roster';
 import { hotcrmStack, signUpPerson, runScheduledFlow, committedFile, type Person } from './helpers/verify-stack';
+import { pauseGate } from './helpers/multitenant-pause-gate';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 type Rec = Record<string, any>;
 
@@ -203,10 +207,14 @@ describe('scheduled create_record declares organization_id (#700)', () => {
  */
 let verify: VerifyStack;
 let k = 0;
-beforeAll(async () => {
+/**
+ * Booted by each runtime block rather than for the whole file, so the metadata
+ * halves run without a boot while the #2700 pause holds the runtime ones.
+ */
+const bootRuntimeHalf = async (): Promise<void> => {
   verify = await hotcrmStack();
   await verify.signIn(); // the harness admin, as before: the sweeps no longer run as anyone
-}, 120_000);
+};
 
 /** A fresh organization row, written as the system. */
 const organization = async (label: string): Promise<string> =>
@@ -240,7 +248,9 @@ const quarterStart = (): string => {
 const accountIn = async (org: string, who: Person): Promise<Rec> =>
   (await verify.seed('crm_account', [{ name: `Partitioned Co ${++k}`, organization_id: org, owner_id: who.id }]))[0]!;
 
-describe('the declared organization_id actually resolves (#700)', () => {
+pause.describe('the declared organization_id actually resolves (#700)', () => {
+  beforeAll(bootRuntimeHalf, 120_000);
+
   it('contract_renewal stamps the contract’s org on the task and the renewal deal', async () => {
     const org = await organization('alpha');
     const who = await owner();
@@ -317,7 +327,9 @@ describe('the declared organization_id actually resolves (#700)', () => {
  * bug, because both readings produce the same four numbers there; that is
  * asserted below rather than trusted.
  */
-describe('forecast_snapshot sums only the target row\u2019s organization (#1372)', () => {
+pause.describe('forecast_snapshot sums only the target row’s organization (#1372)', () => {
+  beforeAll(bootRuntimeHalf, 120_000);
+
   /** The four buckets inside the first organization alone — what the pin should produce. */
   const OWN_ORG_TOTALS = { pipeline: 250_000, best_case: 200_000, commit: 200_000, closed: 90_000 };
   /** …and summed across both organizations — what the defect produced. */

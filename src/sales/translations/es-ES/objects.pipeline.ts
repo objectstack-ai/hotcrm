@@ -183,12 +183,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       identity: { label: 'Identidad' },
       company_info: { label: 'Información de la Empresa' },
       contact_info: { label: 'Información de Contacto' },
-      qualification: {
-        label: 'Calificación',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
+      qualification: { label: 'Calificación' },
       assignment: { label: 'Asignación' },
       conversion: { label: 'Conversión' },
       additional: { label: 'Información Adicional' },
@@ -208,63 +203,12 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       company_information: { label: 'Información de la Empresa' },
       additional_information: { label: 'Información Adicional' },
       privacy: { label: 'Privacidad' },
-      general: { label: 'General' },
-      details: { label: 'Detalles' },
-      step_1_contact_details: { label: 'Paso 1: Datos de Contacto' },
-      step_2_company_information: { label: 'Paso 2: Información de la Empresa' },
-      step_3_qualification: {
-        label: 'Paso 3: Calificación',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      step_4_review_and_convert: {
-        label: 'Paso 4: Revisar y Convertir',
-        fields: {
-          description: { helpText: 'Revisa toda la información antes de convertir en Cuenta y Contacto' },
-        },
-      },
-      primary_information: {
-        label: 'Información Principal',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      extended_details: { label: 'Detalles Ampliados' },
-      quick_edit: {
-        label: 'Edición Rápida',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      update_lead_status: {
-        label: 'Actualizar Estado del Lead',
-        fields: {
-          status: { helpText: 'Selecciona el nuevo estado de este lead' },
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-          notes: { placeholder: 'Añade notas sobre este cambio de estado' },
-        },
-      },
       tell_us_about_yourself: { label: 'Cuéntanos sobre ti' },
       about_your_company: { label: 'Sobre tu empresa' },
       how_can_we_help: {
         label: '¿Cómo podemos ayudarte?',
         fields: {
           description: { placeholder: 'Describe brevemente lo que buscas...', helpText: 'Un representante de ventas se pondrá en contacto contigo en un día hábil.' },
-        },
-      },
-      lead_information: {
-        label: 'Información del Lead',
-        fields: {
-          duplicate_status: { helpText: DUPLICATE_STATUS_HELP },
-        },
-      },
-      address_information: { label: 'Información de Dirección' },
-      privacy_preferences: {
-        label: 'Preferencias de Privacidad',
-        fields: {
-          do_not_call: { helpText: 'Marca esta casilla si el lead ha pedido que no se le llame' },
-          email_opt_out: { helpText: 'Marca esta casilla si el lead ha optado por no recibir comunicaciones por correo electrónico' },
         },
       },
     },
@@ -465,6 +409,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       // Forecast»; desde entonces solo la lee el grupo.
       crm_forecast: { label: 'Etapa y Previsión' },
       basic: { label: 'Información Básica' },
+      line_items: { label: 'Líneas de Oportunidad' },
       financials: { label: 'Datos Financieros' },
       sales_process: { label: 'Proceso de Venta' },
       classification: { label: 'Clasificación' },

@@ -6,6 +6,7 @@ import { join, relative } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { packFor, type AnyRec } from './helpers/composed-stack';
 import { packageStacks } from '../objectstack.composition';
+import { stripDocsGroups } from './helpers/docs-route';
 
 /**
  * A **bold** UI name on a Chinese docs page is the word the Chinese console
@@ -101,10 +102,11 @@ import { packageStacks } from '../objectstack.composition';
  * the word-grain read that preceded this rule, not by the rule — they sit in
  * no cued position — and were fixed in the same PR: the contract's payment-terms
  * field on `order-to-cash/invoices-and-payments.zh-Hans`, and the Time Entry
- * object on both `whats-new` faces. Neither can join the term ledger's TERMS
- * yet, because the zh-CN pack's own help and dataset descriptions still carry
- * the drifted words, and the ledger's pack rule would go red on them; that is
- * reported on the PR. The ablation run on the fixed tree is recorded there too.
+ * object on both `whats-new` faces. Neither could join the term ledger's TERMS
+ * then, because the zh-CN pack's own help and dataset descriptions still carried
+ * the drifted words; #2699 moved the pack to its labels and added the rows
+ * (`crm_time_entry`, `crm_timesheet`, and `crm_contract`'s payment-terms pin).
+ * The ablation run on the fixed tree is recorded on #2611's PR.
  */
 
 type Cls = 'object' | 'field' | 'status' | 'view' | 'action' | 'app';
@@ -297,7 +299,11 @@ const cueOf = (face: Face, after: string): Cls | undefined => {
   return undefined;
 };
 
-/** Every cued bold run on one page (relative to `content/docs/`), fenced code skipped. */
+/**
+ * Every cued bold run on one page (relative to `content/docs/`), fenced code skipped.
+ * A hit names its page without the `(group)` sidebar-section directory, so
+ * ALLOWED keys and MODULE_DIRS read as the page's URL path does.
+ */
 const hitsOn = (face: Face, page: string): Hit[] => {
   const out: Hit[] = [];
   let fenced = false;
@@ -317,7 +323,7 @@ const hitsOn = (face: Face, page: string): Hit[] => {
         carried = cls;
         const text = seg[k].trim();
         if (!cls || !CJK.test(text) || SENTENCE.test(text) || COUNT.test(text)) continue;
-        out.push({ face, page, line: i + 1, cls, text });
+        out.push({ face, page: stripDocsGroups(page), line: i + 1, cls, text });
       }
     });
   return out;

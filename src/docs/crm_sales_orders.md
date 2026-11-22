@@ -19,6 +19,13 @@ Find orders under **Orders** in the Sales app, and on the account's page in the
 **Orders** list. An order placed under a framework contract also appears on
 that contract's page.
 
+An order's **Contract** is always one of the order's own account. The form
+offers only that account's contracts and clears **Contract** when the account
+changes; a save that names another account's contract anyway, through the API
+for instance, is refused with the message on **Contract**. An order saved that
+way before this rule existed is refused on its next edit until its contract
+or its account is corrected.
+
 ## Recording an order
 
 **New** on the Orders list, or in the account's **Orders** list, opens the

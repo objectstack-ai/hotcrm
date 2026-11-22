@@ -9,7 +9,7 @@ Metadata-protocol: none
 
 FROM → TO for the record page layout:
 
-- **Lead, opportunity, case.** FROM a hand-built page of tabs (Details / Related / Activity, and History on a lead) TO the standard record page: the header with the record's actions, key facts and the status path, the details on the left, a card per kind of linked record on the right, and one **Activity** timeline (comments, logged calls and meetings, field changes). The warning banners stay where they were, under the header: a lead's suspected or confirmed duplicate, a deal waiting on approval, a case past its SLA.
+- **Lead, opportunity, case.** FROM a hand-built page of tabs (Details / Related / Activity, and History on a lead) TO the standard record page: the header with the record's actions, key facts and the status path, the details on the left, a card per kind of linked record on the right, and one **Activity** timeline (comments, logged calls and meetings, field changes). The warning banners stay where they were, under the header: a lead's suspected or confirmed duplicate, a case past its SLA.
 - **Account.** FROM a page with its own header (name, industry and type) and a **Discussion** feed TO the standard record page: the **Activity** card is its timeline, and logged calls and meetings show there.
 - **Opportunity.** The side rail of quotes, products and tasks is gone; the deal's **product lines** are a table in the body, under the first section, and its quotes and tasks are cards on the right. **New** on the line table opens the line form, whose product picker offers active products only, as the old **Add** picker did.
 - **Quote.** Its **lines** move FROM a card on the right TO a table in the body, with product, quantity, sales price, discount and total, a page at a time.

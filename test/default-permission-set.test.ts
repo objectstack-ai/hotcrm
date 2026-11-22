@@ -51,10 +51,18 @@ describe('the default permission set', () => {
     expect(wider, 'crm_user grants what sales_rep does not').toEqual([]);
   });
 
-  it('authors no field-level security, so it narrows no other persona', () => {
+  it('authors field-level security on the account\'s three Order to Cash totals only, each hidden (ruling C, hotcrm#2557)', () => {
     // Field permissions merge most-permissive over the fields a held set
-    // AUTHORS; a restriction here would bind every member — see the profile.
-    expect(Object.keys(setByName.get(DEFAULT_SET)?.fields ?? {})).toEqual([]);
+    // AUTHORS; a restriction here binds every member who holds no set voting
+    // for the field — see the profile. The one ruled exception (hotcrm#2557,
+    // comment 6999611419): reading the account's totals takes a business
+    // role. Anything else authored here narrows some persona: this roster is
+    // the guard, and a new entry is a new ruling.
+    expect(setByName.get(DEFAULT_SET)?.fields ?? {}).toEqual({
+      'crm_account.invoiced_amount':    { readable: false, editable: false },
+      'crm_account.received_amount':    { readable: false, editable: false },
+      'crm_account.receivable_balance': { readable: false, editable: false },
+    });
   });
 });
 

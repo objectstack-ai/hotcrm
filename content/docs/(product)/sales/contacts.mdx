@@ -1,0 +1,93 @@
+---
+title: Contacts
+description: The people at the accounts you sell to and support — decision-makers, influencers and end users.
+---
+
+# Contacts
+
+A **contact** is an individual person at an account — typically a decision-maker, influencer, or end user. Every contact belongs to an account.
+
+## What a contact record stores
+
+The contact detail screen has 7 collapsible sections:
+
+| Section | Fields |
+| --- | --- |
+| **Identity** | Salutation, first name, last name, full name, profile picture |
+| **Account & Title** | Contact owner, account, job title, department |
+| **Buying Centre** | Buying function, attitude to us, relationship strength — see [The Buying Centre](./buying-centre) |
+| **Contact Information** | Email, phone, mobile |
+| **Mailing Address** | One structured mailing address — street, city, state/province, postal code and country kept together as a single field |
+| **Additional Info** | Lead source, description, last contacted |
+| **Communication Preferences** | Primary contact flag, do-not-call, email opt-out |
+
+The **full name** is built from the first and last name. When the last name (the family name) is written in Chinese, Japanese or Korean script, the family name comes first with no space — last name 张 and first name 伟 read **张伟**; any other name reads first name, space, last name (*Ada Lovelace*). The rule follows the name, not the language the app is shown in, so everyone sees the same name in the header, lists, lookups, search and notifications. Every list and card leads with the full name, so a record opens from its name whichever part you filled in.
+
+## The primary contact
+
+Each account has **one primary contact** — usually the main decision-maker or business sponsor. Setting a contact as primary automatically clears the flag on the previous one, so you never end up with two.
+
+The flag is not a default anywhere. On a new opportunity, quote or contract you pick the person yourself: the opportunity's **Primary Contact**, the quote's **Contact** and the contract's **Primary Contact** each offer the chosen account's contacts and start empty. Two flows carry a contact forward, and both copy a field rather than read the flag: **Generate Quote** takes the opportunity's **Primary Contact**, and the contract drafted when a quote is accepted takes the quote's **Contact**.
+
+## No org chart — and what to use instead
+
+There is **no reporting line on a contact**. A `Reports To` field was declared for one, and the tree it promised was never built: no page rendered it, no report grouped by it, and the AI agent never read it when summarising an account. Rather than keep a field whose documented behaviour did not exist, HotCRM records seniority where something acts on it — **job title** and **department**, which reports do group by and the AI agent does read.
+
+Nor is a date of birth stored. `Birthdate` was importable and read by nothing; personal data with no purpose is a liability rather than a feature, so it is gone too.
+
+## Communication preferences (GDPR / CCPA)
+
+Two opt-out flags record that this person does not want to be contacted. Both are checkboxes in the **Communication Preferences** section of the contact record, and they differ in how much of the product actually acts on them:
+
+| Flag | What it does today |
+| --- | --- |
+| **Email Opt Out** | **Enforced.** The **Send Email** action is hidden on a contact who has opted out — on the record header and on the list row — and creating such a contact raises no welcome prompt for its owner. |
+| **Do Not Call** | **Enforced for scheduling, not for logging.** HotCRM refuses to *schedule* a phone touch against a flagged contact: an open **Call** task and a **planned** *Call* calendar event are both rejected on save, wherever the write comes from — the Schedule Follow-up screen, a hand-created task, an import, or the API. Recording a call that already happened stays available on purpose: **Log a Call**, and a *Call* task saved as **Completed**, are never blocked, because refusing them would hide the evidence rather than prevent the call. The flag is about the phone only — email is governed by **Email Opt Out**, and meetings and demos are not restricted. |
+
+Both are ordinary editable checkboxes: anyone who can edit the contact can set or clear them. There is no field-level rule reserving them to admins, so treat them as a record of the person's wishes that your team is expected to honour — not as a lock.
+
+## Built-in rules
+
+- An **email address must be unique within your organization**. The same address cannot be used by two contacts, even when those contacts sit under different accounts — the second save is rejected with *"Another contact … with email … already exists."* Another organization on the same platform is free to have its own contact at that address; the rule is scoped to your data, not the whole platform. Email is normalised to lower case before it is stored and compared, so `Ada@Example.com` and `ada@example.com` count as the same address. A person you deal with at two companies therefore needs a different address on each contact record.
+- **New-contact prompt** — creating a contact notifies its **owner**, in the inbox and by email: *"… was added as a contact. Reach out to welcome them."* Nothing is sent to the contact: *contact_welcome* is the name of the flow and of its notification topic, not an email template, and HotCRM ships no outbound welcome mail. Two cases raise no prompt at all — a contact with **no owner** (records written by seed data or an integration carry none) and a contact with **Email Opt Out** ticked.
+
+## Sharing — who can see which contact
+
+Contact visibility **inherits from the parent account**. If you can see the account, you can see all its contacts. There's no separate contact sharing model to manage.
+
+This makes the security story simple: get the account-sharing right and contacts follow.
+
+## Standard list views
+
+Contacts opens on **All Contacts**, and the switcher carries three saved views — these, and nothing else:
+
+| View | What it shows |
+| --- | --- |
+| **All Contacts** *(the landing view)* | Every contact, **grouped by account with the groups open**: contact rows show the moment the list opens, under a header per account, and you can fold the accounts you are not working on. Inside a group, people are ordered by full name A→Z, with avatar, the full name (the link that opens the contact), account, title, department, the three buying-centre columns, email, phone and owner on the row — one account's group reads as a map of who decides and who is on our side. 50 rows a page, export to CSV or XLSX. |
+| **People Directory** | The same people as photo cards, each card fronted by the contact's avatar and titled by the full name — the fastest way to put faces to an account team before a meeting. Title, department, email, phone and account are on the card. |
+| **Primary Contacts** | Only the contacts flagged as primary — one per account, as described above — ordered by account, each led by the full name: each account's main person, in one list. No field anywhere defaults from it. |
+
+There is no owner-filtered contact view, and none is needed for access: contacts are not shared on their own, they inherit the account's sharing (see above). To work "your" people, start from **My Accounts** on the [Accounts](./accounts) list and open the account, or find your accounts' groups on **All Contacts**.
+
+## How an AI agent uses contacts
+
+When you ask an AI agent to draft an email, it uses:
+
+- The contact's first name and title (for personalisation).
+- The account name and industry (for context).
+- The product catalog (for relevant talking points).
+- The contact's communication preferences (to skip opt-outs).
+
+So *"Draft a follow-up to Jane"* gives you a personalised, on-brand email in seconds.
+
+## Tips for sales reps
+
+- ✅ Always set a job title and department — it's used by reports and by the AI agent.
+- ✅ Fill in job title and department for every contact you meet — they are what the AI agent and the reports actually read.
+- ✅ Mark exactly one primary contact per account.
+
+## Tips for admins
+
+- The list of departments (Executive, Sales, Marketing, Engineering, Support, Finance, Human Resources, Operations) is configurable per the picklist values. See [Developers › Extending Objects](/docs/developers/extending-objects).
+- The new-contact prompt is a flow, not a template: edit `src/sales/flows/contact-welcome.flow.ts` to change its wording, its channels, or who it goes to. There is no email-template setting behind it.
+- Sharing inheritance from accounts means you generally never need account-specific contact sharing rules.

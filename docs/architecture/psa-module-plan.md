@@ -326,7 +326,7 @@ AGENTS.md rule 8, as built:
   ja-JP), and come and go with the package (`src/psa/translations/index.ts`).
 - **In-app manual**: the `crm_psa_manual` book (`src/psa/books/crm-psa-manual.book.ts`) over
   `src/psa/docs/crm_psa_*.md` and `.zh.md`, opened from the app's *Help* group.
-- **Product docs**: `content/docs/projects/` (index, projects and staffing, project plan, budgets,
+- **Product docs**: `content/docs/(product)/projects/` (index, projects and staffing, project plan, budgets,
   time and expenses), in English, zh-Hans and zh-Hant.
 - **Analytics**: datasets `project_financials` (`src/psa/datasets/project.dataset.ts`) and
   `time_utilization` (`src/psa/datasets/time-entry.dataset.ts`); the `projects_overview`

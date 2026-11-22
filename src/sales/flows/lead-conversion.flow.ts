@@ -1,8 +1,8 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { P, cel } from '@objectstack/spec';
+import { P, cel, expression } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
-import { personName } from '../objects/_person-name';
+import { personName, personNameSource } from '../objects/_person-name';
 import { Lead } from '../objects/lead.object';
 type Flow = Automation.Flow;
 
@@ -612,8 +612,15 @@ export const LeadConversionFlow: Flow = {
           leadPersonName: cel`has(leadRecord.full_name) && !isBlank(leadRecord.full_name) ? leadRecord.full_name : leadRecord.last_name`,
           // A different name on the contact the email matches: the rep
           // confirms the reuse on `confirm_contact` before anything is written.
-          // First and last name compared as stored; any difference asks.
-          contactNameDiffers: cel`matchedContact != null && ((has(matchedContact.first_name) ? matchedContact.first_name : '') != (has(leadRecord.first_name) ? leadRecord.first_name : '') || (has(matchedContact.last_name) ? matchedContact.last_name : '') != leadRecord.last_name)`,
+          // The two NAMES are compared, each composed by the one rule every
+          // surface shows (`personNameSource`, `../objects/_person-name.ts`),
+          // not the two parts one by one (#2685). Compared part by part, a lead
+          // entered as 姓「张伟」 with no given name, or as 姓「欧」名「阳娜娜」,
+          // asked the rep to confirm joining the contact 「张伟」 / 「欧阳娜娜」,
+          // the very name the screen had just shown for both. Both sides are
+          // composed from the parts here, by the one rule, so the comparison
+          // reads the same name whatever either object stores.
+          contactNameDiffers: expression(`matchedContact != null && ${personNameSource('matchedContact')} != ${personNameSource('leadRecord')}`),
           // Fill only what the reused contact leaves empty (#2572): true when
           // the lead holds a Phone, Mobile or Title the contact lacks, so
           // `fill_contact_blanks` writes only when it has something to add.

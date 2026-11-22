@@ -5,7 +5,7 @@ import { ProductApps, ProductChain, ProductHeadline } from '@/components/product
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,
-    // The shared product block (#2608): `content/docs/index*.mdx` renders the
+    // The shared product block (#2608): `content/docs/(start)/index*.mdx` renders the
     // same headline and six apps as the homepage, from `lib/product/`.
     ProductHeadline,
     ProductChain,

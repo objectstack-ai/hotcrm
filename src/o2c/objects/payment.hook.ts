@@ -14,9 +14,11 @@ const paymentRowStamp: Hook = createO2cRowStamp('crm_payment', 'payment_row_stam
  * step too. Runs whenever a write sets the invoice; a payment with no invoice
  * keeps the step finance gave it (an advance paid before it is invoiced).
  *
- * It also refuses an invoice of another contract — an import can name one,
+ * It also refuses an invoice of another account — an import can name one,
  * where the form's picker cannot — since the payment would then count toward
- * one contract's invoice and another contract's figures.
+ * one account's invoice and another account's figures (hotcrm#2557: the rows
+ * belong to the account, so the account is what must match; before, the
+ * contract).
  */
 const paymentPlanStepStamp: Hook = {
   name: 'payment_plan_step_stamp',
@@ -25,15 +27,15 @@ const paymentPlanStepStamp: Hook = {
   priority: 100,
   refusals: {
     VALIDATION_FAILED: {
-      message: 'This invoice belongs to another contract. Choose an invoice of this payment\'s contract.',
+      message: 'This invoice belongs to another account. Choose an invoice of this payment\'s account.',
       status: 400,
       params: ['invoice'],
       reasons: {
-        named: { message: '{{invoice}} belongs to another contract. Choose an invoice of this payment\'s contract.' },
+        named: { message: '{{invoice}} belongs to another account. Choose an invoice of this payment\'s account.' },
       },
     },
   },
-  description: 'Copy the invoice\'s billing milestone onto the payment; refuse an invoice of another contract.',
+  description: 'Copy the invoice\'s billing milestone onto the payment; refuse an invoice of another account.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -68,14 +70,16 @@ const paymentPlanStepStamp: Hook = {
     if (!invoiceId) return;
 
     const invoice = await api.object('crm_invoice').findOne({
-      where: { id: invoiceId }, fields: ['id', 'invoice_number', 'crm_contract', 'crm_billing_milestone'],
+      where: { id: invoiceId }, fields: ['id', 'invoice_number', 'crm_account', 'crm_billing_milestone'],
     });
     if (!invoice) return;
-    const contractId = refId(input.crm_contract) || refId(ctx.previous?.crm_contract);
-    if (contractId && refId(invoice.crm_contract) && refId(invoice.crm_contract) !== contractId) {
+    // The account as `payment_row_stamp` (priority 50, before this hook) left
+    // it: stamped from the contract when there is one.
+    const accountId = ('crm_account' in input ? refId(input.crm_account) : '') || refId(ctx.previous?.crm_account);
+    if (accountId && refId(invoice.crm_account) && refId(invoice.crm_account) !== accountId) {
       const number = typeof invoice.invoice_number === 'string' ? invoice.invoice_number : 'This invoice';
       throw Object.assign(refuse(
-        `${number} belongs to another contract. Choose an invoice of this payment's contract.`,
+        `${number} belongs to another account. Choose an invoice of this payment's account.`,
         'VALIDATION_FAILED',
         400,
       ), typeof invoice.invoice_number === 'string' ? { reason: 'named', params: { invoice: invoice.invoice_number } } : {});

@@ -11,8 +11,12 @@ import { Field } from '@objectstack/spec/data';
  * objectstack#30304).
  *
  * Every figure is one hop over the module's own rows, never a summary of a
- * summary: the contract's over its master-detail children, the account's over
- * the invoices and payments stamped with it (`*_row_stamp`). *Invoiced* counts
+ * summary: the account's over its master-detail children, the contract's over
+ * the rows that name it through their optional `crm_contract` lookup (since
+ * hotcrm#2557; before, the contract was the master and the account a stamped
+ * lookup, so the two pages swapped roles and the definitions did not change).
+ * A row entered against the account alone counts on the account page only.
+ * *Invoiced* counts
  * issued invoices only, as the plan step's does. The balance sums the stored
  * `open_amount` of the issued invoices (Q2 ruled B on 2026-11-15), not
  * invoiced minus received: a payment held as an advance, not yet set against
@@ -30,7 +34,7 @@ import { Field } from '@objectstack/spec/data';
  * Who reads them is the app package's permission sets (the 2026-11-05 ruling):
  * every member reads, nobody edits — they are computed.
  */
-const receivables = (relationshipField: string, group: string) => ({
+export const receivables = (relationshipField: string, group: string) => ({
   invoiced_amount: Field.summary({
     label: 'Invoiced',
     description: 'The issued invoices, summed. A cancelled invoice is not counted.',
@@ -74,23 +78,28 @@ const receivables = (relationshipField: string, group: string) => ({
   }),
 });
 
+/** The collection plan, summed, over the steps that name the row through `relationshipField`. */
+export const planned = (relationshipField: string, group: string) => ({
+  planned_amount: Field.summary({
+    label: 'Planned',
+    description: 'The collection plan, summed: what the steps expect to collect.',
+    group,
+    scale: 2,
+    readonly: true,
+    summaryOperations: {
+      object: 'crm_billing_milestone',
+      field: 'planned_amount',
+      function: 'sum',
+      relationshipField,
+    },
+  }),
+});
+
 export const ContractAccountExtensions = [
   {
     extend: 'crm_contract',
     fields: {
-      planned_amount: Field.summary({
-        label: 'Planned',
-        description: 'The collection plan, summed: what the steps expect to collect.',
-        group: 'value',
-        scale: 2,
-        readonly: true,
-        summaryOperations: {
-          object: 'crm_billing_milestone',
-          field: 'planned_amount',
-          function: 'sum',
-          relationshipField: 'crm_contract',
-        },
-      }),
+      ...planned('crm_contract', 'value'),
       ...receivables('crm_contract', 'value'),
     },
   },

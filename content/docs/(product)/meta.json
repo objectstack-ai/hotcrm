@@ -1,0 +1,14 @@
+{
+  "title": "Product Guides",
+  "description": "Sales, Service, Marketing, Order to Cash, Expenses, Project Delivery",
+  "root": true,
+  "icon": "LayoutGrid",
+  "pages": [
+    "sales",
+    "service",
+    "marketing",
+    "order-to-cash",
+    "expenses",
+    "projects"
+  ]
+}

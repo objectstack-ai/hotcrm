@@ -1,0 +1,223 @@
+---
+title: Opportunities
+description: Active sales deals — the heart of the pipeline, with 7 stages, line items and large-deal approvals.
+---
+
+# Opportunities
+
+An **opportunity** is an active deal — a potential revenue event with a known account, amount, close date and stage. This is the record sales reps work on every day.
+
+## The 7 sales stages
+
+Every opportunity moves through these stages. The system tracks where you are and updates the win probability automatically.
+
+| Stage | Default win probability | When you're in this stage |
+| --- | --- | --- |
+| ⚪ **Prospecting** | 10% | First contact, qualifying budget and need |
+| 🟠 **Qualification** | 25% | You've identified the decision-maker |
+| 🟡 **Needs Analysis** | 40% | Requirements have been documented |
+| 🔵 **Proposal** | 60% | Quote has been sent |
+| 🟣 **Negotiation** | 80% | Pricing and terms are being negotiated |
+| 🟢 **Closed Won** | 100% | **Deal won** *(final stage)* |
+| 🔴 **Closed Lost** | 0% | **Deal lost** *(final stage)* |
+
+Deals normally walk the funnel one stage at a time, and a deal can be lost from any open stage — but the stage path is **advice, not a gate**. A move off it still saves: you can skip ahead (say, from **Prospecting** straight to **Negotiation**) or step an open deal back to an earlier stage, and the win probability follows the new stage. Such a save comes back with a warning, *"Invalid opportunity stage transition"*, which is also written to the server log, so an odd import or integration can be found afterwards; [Administration › State Machines](/docs/administration/state-machines) shows the declared path. What *is* enforced is the end of the funnel: once a deal is **Closed Won** or **Closed Lost**, its stage cannot be changed — reopening it, or switching a won deal to lost, is refused (see *Closed deals are locked* below).
+
+To move a deal, click a stage on the **status bar** at the top of its page and confirm. The click is checked exactly like an edit: closing still needs its reason, a closed deal stays locked, and a deal waiting on an approval is still held.
+
+## Closing a deal — the reason is required
+
+Closing an opportunity takes one extra field, and the system will not save the record without it:
+
+| Closing as | You must pick |
+| --- | --- |
+| 🟢 **Closed Won** | **Win Reason** — Better Product, Better Price, Existing Relationship, Better Support, Best Fit / Features, or Other |
+| 🔴 **Closed Lost** | **Loss Reason** — Price Too High, Lost to Competitor, No Budget, No Decision, Bad Timing, Missing Features, or Other |
+
+**Loss/Win Details** is the free-text box next to it — use it for the sentence a teammate would actually need six months later ("marketing is locked into a 2-year HubSpot contract, revisit at renewal").
+
+Three things to know:
+
+- **The reason field appears when you pick the closing stage.** On an open deal neither reason is shown, and nothing can store one there: an import or API call that puts a Win Reason or Loss Reason on an open deal is refused. (A deal waiting on a status-change approval to close as won or lost keeps the reason the rep entered with the request.)
+- **This is checked on the server**, not just in the form. An import, an API call or a bulk update that closes a deal without the applicable reason is rejected the same way a rep's form is.
+- **Closed deals are locked.** Once a deal is closed, only the narrative fields (description, next steps) stay editable — so the reason cannot be filled in afterwards. Pick it when you close.
+
+If the deal closes because the customer accepted a quote, HotCRM closes it for you and records the win reason as **Quote Accepted** — see [Quotes](/docs/sales/quotes).
+
+Those two fields are what the Sales dashboard's **win rate** and **Why We Lose** widgets are built from; see [Dashboards](/docs/analytics/dashboards).
+
+## What an opportunity record stores
+
+Three things organise `crm_opportunity`'s fields — the object's own field groups, the opportunity detail screen, and the opportunity form. The detail screen follows the field groups; the form does not, so it is worth knowing which one you are being shown.
+
+### The object's field groups
+
+The nine names below are `crm_opportunity`'s **field groups** (`fieldGroups` in `src/sales/objects/opportunity.object.ts`), the object's own filing scheme for its fields. The detail screen's **Details** tab is built from them; the form declares tabs of its own, listed below. This is the one list that accounts for every field the object has:
+
+| Field group | Fields |
+| --- | --- |
+| **Basic Information** | Opportunity Owner, Opportunity Name, Account, Primary Contact |
+| **Financials** | Amount, Expected Revenue |
+| **Sales Process** | Stage, Probability (%), Close Date, Stage Entry Date, Customer Initiation Date, Expected Tender Date, Expected Signing Date, Expected Tender Amount, Expected Signing Amount, Approval Status, Approved Date, Requested Status, Status Change Approval, Win Reason, Loss Reason |
+| **Qualification** | Will Bid, Controllability, Priority, Deal Level, Involves Subcontracting, Subcontracting Note, Request Qualification Approval, Qualification Approval |
+| **Deal Narrative** | Customer Background, Project Background, Risk Analysis, Payment Terms |
+| **Classification** | Opportunity Type, Business Line, Lead Source, Loss/Win Details |
+| **Campaigns** *(collapsed by default)* | Campaign |
+| **Notes & Next Steps** | Description, Next Steps |
+| **Forecast & Metrics** *(collapsed by default)* | Days in Current Stage, Private, Forecast Category |
+
+Four of the original seven rows used to be written differently on this page, and the differences were not cosmetic: **Probability (%)** is in *Sales Process*, not *Financials*; *Sales Process* also holds **Approval Status** and **Approved Date**, and an opportunity has no *created date* field at all; the campaign field's label is **Campaign**, not *Source campaign*; and *Forecast & Metrics* holds **Days in Current Stage**, **Private** and **Forecast Category** — not *line item totals*, which is not a field on this object, and not **Approval Status**, which is one row further up.
+
+### The detail screen
+
+A deal's details are its field groups above — **Basic Information**, **Financials**, **Classification**, **Campaigns**, **Sales Process**, **Qualification**, **Deal Narrative**, **Forecast & Metrics**, **Notes & Next Steps** — each with that group's name, fields and collapsed state, with the deal's product-line table placed right after **Basic Information**. Nothing on the page lists them, so a field added to a group reaches the screen by itself.
+
+The sections are shorter than that list suggests, and that is deliberate. **Amount**, **Close Date**, **Probability (%)**, **Opportunity Owner** and **Account** are among the key facts under the header, **Opportunity Name** is the page title and **Stage** is on the sales path, so no section repeats them: *Financials* shows **Expected Revenue**, and *Basic Information*, left with the primary contact alone, appears once that is set. A section whose fields are all empty is not drawn, and inside one that is, empty fields fold behind a **Show N empty fields** toggle. *Forecast & Metrics* starts collapsed.
+
+### The form
+
+The opportunity form (`src/sales/views/opportunity.view.ts`) is tabbed, and its **four** sections are its tabs:
+
+| Section | Fields |
+| --- | --- |
+| **Overview** | Opportunity Name, Account, Primary Contact, Stage, Win Reason *(only at Closed Won)*, Loss Reason *(only at Closed Lost)*, Amount, Probability (%), Close Date, Opportunity Owner |
+| **Forecast** | Expected Revenue, Forecast Category, Opportunity Type, Lead Source, Campaign, Stage Entry Date, Days in Current Stage, Private, Customer Initiation Date, Expected Tender Date, Expected Tender Amount, Expected Signing Date, Expected Signing Amount |
+| **Sales Strategy** | Next Steps |
+| **Win / Loss** *(collapsed by default)* | Loss/Win Details |
+
+## Opportunity types
+
+| Type | What it means |
+| --- | --- |
+| **New Business** | A brand-new logo / customer |
+| **Existing - Upgrade** | Existing customer moving up tiers |
+| **Existing - Renewal** | Existing contract renewing |
+| **Existing - Expansion** | Existing customer adding new product lines |
+
+Splitting deals by type is essential for accurate revenue forecasting — new business and renewals have very different win rates.
+
+## What happens automatically
+
+You don't have to remember any of this — the system does it for you:
+
+- **Probability** is set from the stage whenever you move the deal (you *can* override it manually if you have a special situation, but it'll reset next time the stage changes).
+- **Expected revenue** = amount × probability ÷ 100, recalculated whenever amount or probability changes.
+- **Stage entry date** is stamped the moment a deal is created and re-stamped every time you move it to a new stage. **Days in current stage** counts from it, so it is always up to date — that is what surfaces stagnant deals.
+- When you mark a deal **Closed Won and the amount is $100K or more**, the deal owner gets an email — the owner alone, not their manager.
+- When an open deal's amount is **$100K or more**, it enters the [Large Deal Approval](/docs/sales/approvals) flow automatically — see *Approval for large deals* below.
+
+## Line items — what's actually being sold
+
+Each opportunity can have line items — one per product being sold. Each line stores:
+
+- The product (from the catalog)
+- Quantity
+- Unit price (defaults to the product's list price, can be overridden)
+- Discount %
+- Line total
+
+The sum of all line items rolls up into the opportunity **Amount**. If you'd rather just type the amount manually without configuring line items, you can — both work.
+
+A closed deal's line items are locked with it: once the deal is *Closed Won* or *Closed Lost*, a line can no longer be added, changed or removed. Deleting the whole deal is not affected, and its lines go with it.
+
+The same holds while an approval locks the deal (see *Approval for large deals* below): its lines wait for the approver's decision. A line is saved together with the amount it makes, so a line that takes the deal to $100K or more sends it for approval in the same save, and the next line you add is refused until the approver decides. The amount the approver sees is always the sum of the deal's lines, however quickly lines arrive, from the deal's line table, an import or the API.
+
+The deal's lines are a table in the body of its page, under the first section: product, quantity, sales price and total, a page at a time, with **New** above it while the deal is open. **New** opens the line form already linked to the deal. Its **Product** picker offers **active** products only, so a retired product cannot be sold onto a new deal, and the line arrives complete and priced — quantity 1, the product's list price as the unit price, no discount — for you to adjust from there. The picker reads the way the catalog names a product, by its name, *Widget*, with the product code under it. There is no line-item entry in the sidebar: `crm_opportunity_line_item` has no list view of its own, and an import or the API still writes these rows. If itemising is not how your team works, type the **Amount** by hand: that is a supported route, not a workaround.
+
+## Approval for large deals
+
+Saving an open deal whose **amount is $100K or more** routes it into the **Large Deal Approval** flow automatically — there is no submit button, and a deal at exactly $100,000 is on the approval side of the line:
+
+1. The opportunity is **locked** while a step is pending — edits wait until the approver decides.
+2. A **Sales Manager** reviews it first. For a deal up to $500K, that review is the whole approval.
+3. A deal **above $500K** goes on to a **Sales Director** for sign-off once the manager approves.
+4. On final approval, **Approval Status** becomes *Approved*, **Approved Date** is stamped and the owner is notified. The stage does not move: the deal stays where it was, and the rep closes it as usual.
+5. If either approver rejects it, the run ends there: **Approval Status** becomes *Rejected* and the owner is notified.
+
+A deal already *Closed Won* or *Closed Lost* never enters approval.
+
+While a step is pending, the approval strip above the deal's title says where the request stands, and the **Approvals** card on the page names who it is waiting on (see *The opportunity detail layout* below). See [Revenue › Approvals](/docs/sales/approvals) for the full process.
+
+## Sharing — who can see which deal
+
+By default opportunities are **private** — only the owner. Positions are flat and **nothing rolls up**, so no one sees a deal by sitting above its owner in an org chart; every other reader is named by one of the rules below.
+
+On top of that:
+
+- **Open opportunities of $100K or more** are shared *read-only* with the `crm_sales_director` position — and, because nothing rolls up, a second rule shares the same deals with `crm_executive`. This way leadership sees the big deals without having to follow up.
+- **High-value deals in approval** are visible to the approvers regardless of ownership.
+
+## Standard list views
+
+Opportunities opens on **Open Deals**, and the switcher along the top of the list carries ten saved views — these, and nothing else:
+
+| View | What it shows |
+| --- | --- |
+| **Open Deals** *(the landing view)* | Every deal that is not Closed Won or Closed Lost, soonest close date first. **Amount** and **Expected Revenue** carry column totals. |
+| **My Open Deals** | The same open-deal filter, narrowed to the deals you own. |
+| **Sales Pipeline** | The kanban board — one column per stage, open deals only, drag a card to move the deal. It has no sidebar entry of its own: this tab is the way in. |
+| **All Opportunities** | The unfiltered book *including* closed business, latest close date first. Where win/loss reviews and audits start. |
+| **Forecast Calendar** | Every deal placed on a month calendar by its close date, coloured by stage. |
+| **Deal Timeline** | One entry per deal, on its close date, grouped by owner on a month scale. |
+| **Deal Cards** | Gallery cards — account, amount, stage, probability, close date, owner — for pipeline and executive reviews. |
+| **⚠️ Stale Opportunities · Longest in Stage First** | Open deals ordered by how long they have sat in their current stage, longest first. Nothing is cut off by age — **Days in Current Stage** is a column, so you read the wait off the row. The daily [Stalled Deal Alert](/docs/administration/automation) is what acts on it, nudging the owner once a deal passes 14 days in one stage. |
+| **Closing This Quarter** | Open **Commit** and **Best Case** deals whose close date falls inside the current quarter — see below. |
+| **Tender This Quarter** | Open deals whose **Expected Tender Date** — the customer's own tender date, not our close date — falls inside the current quarter, soonest tender first — see below. |
+
+### Moving several deals at once
+
+Tick deals in a list and choose **Update Stage** on the bar that appears. Each ticked deal is moved on its own, exactly as if you had edited it: a deal you may not edit, or one locked while an approval is in progress, stays where it was, and the result lists each one with its reason beside the ones that moved. Only the open stages are offered. A deal is closed **Won** or **Lost** on its own record, where the reason is entered (see *Closing a deal* above). The button is not shown to anyone who cannot edit opportunities at all.
+
+### Closing This Quarter
+
+This is the view a sales manager works at quarter-end, and it is scoped on three things at once:
+
+- **Forecast category** — only **Commit** and **Best Case** deals.
+- **Still open** — Closed Won and Closed Lost never appear.
+- **Close date inside the current quarter** — both ends of the quarter are computed each time the list runs, so it rolls into the new quarter by itself and never needs re-saving.
+
+That third filter is what makes the name true: summing the **Amount** column gives you *this quarter's* commit, not the total of every open deal that will one day close. A deal slated for next March is not here — it waits on **Open Deals** until its quarter comes round. Rows are ordered by close date, soonest first.
+
+**An empty list here is an answer, not a broken view.** When nothing matches, the view says so in place of the grid — *No Deals Closing This Quarter*, with a pointer back to **Open Deals** — because a quarter whose commit has slipped out entirely is exactly the state a manager needs to see. A freshly seeded demo org meets the same screen in the closing days of a quarter, when every sample deal lands in the next one.
+
+### Tender This Quarter
+
+Where **Closing This Quarter** reads *our* forecast, this view reads the *customer's* calendar. It lists open deals whose **Expected Tender Date** falls inside the current quarter, with the tender amount and the expected signing date beside it, and it never looks at the close date — a deal we expect to sign next year can still have a tender this quarter, and this is where it shows up. Both ends of the quarter are computed each time the list runs.
+
+**It is empty until somebody records a tender date.** No sample deal carries one, so a fresh install opens this view on *No Tenders Expected This Quarter*. See [Opportunity Qualification](/docs/sales/opportunity-qualification) for the customer-side dates and how they differ from the close date.
+
+## The opportunity detail layout
+
+A deal opens on the same record page every object in HotCRM uses:
+
+- **Header** — the deal's **Opportunity Name** as the title, and the deal's actions: **Generate Quote**, **Log a Call** and **Log a Meeting** as buttons beside **Edit**, with **Schedule a Meeting** and **Clone Opportunity** in the **⋯** menu. **Generate Quote** is the CPQ entry point. While a deal waits on approval, a strip above the title says where the request stands. The approver reads **Awaiting your approval**, the step (for example **Sales Manager Review**) and who submitted it, with **Approve** and **Reject** beside it. The submitter gets **Recall**, which withdraws the request and unlocks the deal, and **Reply**; the **Approvals** card in the right column names who the request is waiting on, with **Send reminder**. See *Approval for large deals* above.
+- **Key facts** — **Amount**, **Close Date**, **Probability (%)**, **Opportunity Owner** and **Account**, side by side. **Expected Revenue** is the amount times the probability; it stays in the **Financials** section.
+- **Sales Path** — all seven stages in funnel order, the current one marked and the ones already passed ticked. Click a stage to move the deal there. It is the same change as editing **Stage**, so the transition rules in *The 7 sales stages* above, the close reasons and an approval lock all apply; a reader who may not edit the deal sees the path without the click.
+- **The details**, in the left column: **Basic Information**, then the deal's product lines as a table (see *Line items* above), then the rest of the object's field groups, described under *What an opportunity record stores* above. The fields already among the key facts are not repeated there, so on a deal with no primary contact *Basic Information* is not drawn and the product lines come first.
+- **The linked records**, one card each, in the right column: **Events**, **Tasks** (open ones only, the one due soonest first) and **Quotes**, then the lists with nothing in them folded into one line. Below them are **Attachments**, the **Approvals** card while there is a request, and **Activity**: comments, the calls and meetings logged with **Log a Call** / **Log a Meeting**, and changes to the deal's tracked fields (stage, amount, close date, owner), newest first. No email reaches it, because **Send Email** is a contact action and the opportunity has none.
+
+The tabs across the top open each list on its own. The **Generate Quote** button that runs the [Quote Generation flow](/docs/sales/quotes#generating-a-quote) is in the header, not on the Quotes list.
+
+There is no competitors panel: the only competitor signal the app records is the *Lost to Competitor* closed-lost reason, with the free-text **Loss/Win Details** beside it. And no part of the page is AI-driven: Customer 360, a revenue forecast or a deal's risks are reached by asking — see *How an AI agent helps* below.
+
+## How an AI agent helps
+
+With an AI agent connected (see [AI and Agents](/docs/ai-copilot/index)), ask it about an opportunity:
+
+- *"What's at risk here?"* — Revenue Forecasting skill examines stage age, activity gaps and close-date slippage.
+- *"Draft a follow-up email"* — Email Drafting skill writes the next outbound message.
+- *"Summarise this account"* — Customer 360 skill gives you a one-screen briefing on the account history.
+
+## Tips for sales reps
+
+- ✅ **Move stages promptly** — the probability is wrong if your stage is wrong.
+- ✅ **Add line items** for proper revenue forecasting; the rolled-up amount is more accurate.
+- ✅ **Fill in Next Steps** — it's the single most useful field for handoffs and standups.
+- ✅ **Record why you won or lost** at close time — *Win Reason*, *Loss Reason* and *Loss/Win Details* are the only competitive data the app keeps, and they only exist if you fill them in.
+- ❌ Don't push the close date out to keep a deal looking on track. An honest date is what makes **Closing This Quarter** add up — and a deal that has stopped moving surfaces on **Stale Opportunities** by its time in stage, whatever its close date says.
+
+## Tips for admins
+
+- The stage list, the default probabilities and the legal transitions live in three places in the source, not on a Setup screen: the `stage` field's own options (`src/sales/objects/opportunity.object.ts`); the `STAGE_PROBABILITY` map inside the `opportunity_lifecycle` hook (`src/sales/objects/opportunity.hook.ts`), which re-syncs *Probability* on every save; and the `opportunity_stage_progression` state-machine validation rule on the opportunity object (`src/sales/objects/opportunity.object.ts`). Change the three in lockstep. See [Developers › Extending Objects](/docs/developers/extending-objects).
+- The approval amounts are not a Setup field either. The $100K entry and the $500K director tier are the two amounts in `src/sales/objects/_thresholds.ts`, and the $100K line is the app's one definition of a large deal: the won-deal alert and the large-deal sharing rules cut at the same amount, so changing it moves them together. See [Revenue › Approvals](/docs/sales/approvals).
+- The $100K large-deal notification threshold is not a Setup field either: it is the CEL start condition of the `opportunity_won_alert` flow — `record.amount >= 100000` in `src/sales/flows/opportunity-won-alert.flow.ts`. Who gets the alert is that flow's `notify` node, whose `recipients` list is the single entry `{record.owner_id}` — the deal owner alone.

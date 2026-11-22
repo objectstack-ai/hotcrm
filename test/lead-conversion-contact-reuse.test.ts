@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { templateEngine } from '@objectstack/formula';
+import { ExpressionEngine, templateEngine } from '@objectstack/formula';
 import type { VerifyStack } from '@objectstack/verify';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import { localePacks } from './helpers/composed-stack';
@@ -135,6 +135,58 @@ describe('a different name needs a tick (#2572)', () => {
       first_name: contact.first_name, last_name: contact.last_name,
       phone: '+1-555-0100', mobile: '+1-555-0199', title: 'Head of IT',
     });
+  });
+});
+
+/**
+ * The NAMES are compared, not the parts one by one (#2685). Each side is the
+ * name every surface shows (`personNameSource`), so a person whose name was
+ * split differently between the two fields — 姓「张伟」 with no given name,
+ * 姓「欧」名「阳娜娜」 — is the contact 「张伟」 / 「欧阳娜娜」 the first screen
+ * already named, and the rep is not asked to confirm it.
+ */
+describe('the same name split another way asks nothing (#2685)', () => {
+  const differs = (LeadConversionFlow.nodes as Rec[])
+    .find((n) => n.id === 'compose_account_notice')!.config.assignments.contactNameDiffers;
+  const evaluate = (matchedContact: Rec | null, leadRecord: Rec): unknown => {
+    const r = ExpressionEngine.evaluate(differs, { extra: { matchedContact, leadRecord } } as never) as Rec;
+    if (!r.ok) throw new Error(`contactNameDiffers does not evaluate: ${r.error?.message}`);
+    return r.value;
+  };
+  // [case, contact, lead, differs]. Both name columns are NOT NULL today, so
+  // an empty side reaches this binding only once #2684 makes them optional;
+  // the expression is pinned for it now, empty and null alike.
+  const CASES: ReadonlyArray<readonly [string, Rec, Rec, boolean]> = [
+    ['「张伟」 + empty given name = 「张」 + 「伟」', { last_name: '张', first_name: '伟' }, { last_name: '张伟', first_name: '' }, false],
+    ['「张伟」 + null given name = 「张」 + 「伟」', { last_name: '张', first_name: '伟' }, { last_name: '张伟', first_name: null }, false],
+    ['empty family name + given 「张伟」 = 「张」 + 「伟」', { last_name: '张', first_name: '伟' }, { last_name: '', first_name: '张伟' }, false],
+    ['「欧」 + 「阳娜娜」 = 「欧阳」 + 「娜娜」', { last_name: '欧阳', first_name: '娜娜' }, { last_name: '欧', first_name: '阳娜娜' }, false],
+    ['Mary / Ann Smith = Mary Ann / Smith', { first_name: 'Mary Ann', last_name: 'Smith' }, { first_name: 'Mary', last_name: 'Ann Smith' }, false],
+    ['「李伟」 is not 「张伟」', { last_name: '张', first_name: '伟' }, { last_name: '李', first_name: '伟' }, true],
+    ['Pat Lin is not Dee Dupe', { first_name: 'Dee', last_name: 'Dupe' }, { first_name: 'Pat', last_name: 'Lin' }, true],
+  ];
+  it.each(CASES)('%s', (_case, contact, lead, expected) => {
+    expect(evaluate(contact, lead)).toBe(expected);
+  });
+
+  it('no contact matched: nothing to confirm', () => {
+    expect(evaluate(null, { last_name: '张', first_name: '伟' })).toBe(false);
+  });
+
+  it('a lead entered as 姓「欧」名「阳娜娜」 converts onto the contact 「欧阳娜娜」 without the confirm screen', async () => {
+    const tag = `${++k}`;
+    const { contact, lead } = await fixture(
+      { last_name: '欧阳', first_name: `娜娜${tag}` },
+      { last_name: '欧', first_name: `阳娜娜${tag}` },
+    );
+    const { started, screen, description } = await start(lead.id);
+    expect(description).toContain(`欧阳娜娜${tag}`);
+    const done = await next(started, { ...prefilledOf(screen), createOpportunity: false });
+    expect(done.refused ?? null).toBeNull();
+    expect(screenOf(done)?.nodeId ?? null, 'the same name asked for confirmation').not.toBe('confirm_contact');
+    expect((await row('crm_lead', lead.id)).converted_contact).toBe(contact.id);
+    // The conversion never renames a person: the contact keeps its own split.
+    expect(await row('crm_contact', contact.id)).toMatchObject({ last_name: '欧阳', first_name: `娜娜${tag}`, full_name: `欧阳娜娜${tag}` });
   });
 });
 

@@ -53,10 +53,6 @@ export const en: TranslationData = {
         basic: { label: 'Product Information' },
         pricing: { label: 'Pricing' },
         metadata: { label: 'Resources' },
-        // Form section names on product.view.ts (#1100)
-        product_info: { label: 'Product Info' },
-        pricing_info: { label: 'Pricing' },
-        media: { label: 'Media' },
       },
     },
     crm_price_book: {
@@ -146,6 +142,7 @@ export const en: TranslationData = {
       },
       _sections: {
         basic: { label: 'Quote Information' },
+        line_items: { label: 'Quote Line Items' },
         pricing: { label: 'Pricing' },
         terms: { label: 'Terms & Validity' },
         address: { label: 'Addresses' },

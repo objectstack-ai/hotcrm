@@ -91,6 +91,20 @@ position only: a sharing rule, queue member or record share you added here
 under an old position name keeps that name, so re-point it to the renamed
 position.
 
+Coming from 6.5 or earlier with Order to Cash switched on? Billing
+milestones, invoices and payments now belong to the account, and the contract
+is optional on invoices and payments. Every existing record keeps its account,
+its contract and its totals. The database, though, still requires a contract
+on those records until an administrator runs `os migrate apply` once against
+it and confirms the three `relax_not_null` changes it lists (the contract
+column of billing milestones, invoices and payments); skip the account
+changes it marks destructive, as nothing needs them. Until then an invoice or
+payment saved without a contract is refused with "Contract is required". That
+step is for an environment you run yourself. On a hosted environment you do
+nothing: this version declares the three contract columns nullable, and a
+managed upgrade relaxes a column its package declares nullable
+(objectstack#34377).
+
 ## 4. Check the permission sets
 
 Positions hand out the everyday sets. Two sets are worth checking by hand: read
@@ -103,7 +117,10 @@ person under **Setup → People & Organization → Permission Set Assignment**:
 - **CRM User** — HotCRM's floor for every member: their own leads, accounts,
   deals, tasks and events, and read access to products, campaigns and
   knowledge. Someone who holds no position needs at least this set to work in
-  HotCRM.
+  HotCRM. It hides the account's Order to Cash totals (Invoiced, Received,
+  Receivable Balance): a sales, finance, marketing, service or management set
+  shows them. A permission set of your own that reads accounts shows them only
+  if it names the three fields readable or holds View All on accounts.
 
 ## 5. Switch on scheduled work
 

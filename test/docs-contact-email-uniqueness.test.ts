@@ -10,7 +10,7 @@ import { hotcrmStack, signUpPerson } from './helpers/verify-stack';
 /**
  * The contact-email rule, as documented vs. as enforced (#648).
  *
- * `content/docs/sales/contacts.mdx` and its two translations used to promise
+ * `content/docs/(product)/sales/contacts.mdx` and its two translations used to promise
  * that "an email address must be unique within the same account" and that "the
  * same person can appear under multiple companies (a board member, for
  * example)". Both halves were wrong, and the second one described the exact
@@ -39,9 +39,9 @@ import { hotcrmStack, signUpPerson } from './helpers/verify-stack';
  */
 
 const DOCS: Array<{ file: string; lang: string }> = [
-  { file: 'content/docs/sales/contacts.mdx', lang: 'en' },
-  { file: 'content/docs/sales/contacts.zh-Hans.mdx', lang: 'zh-Hans' },
-  { file: 'content/docs/sales/contacts.zh-Hant.mdx', lang: 'zh-Hant' },
+  { file: 'content/docs/(product)/sales/contacts.mdx', lang: 'en' },
+  { file: 'content/docs/(product)/sales/contacts.zh-Hans.mdx', lang: 'zh-Hans' },
+  { file: 'content/docs/(product)/sales/contacts.zh-Hant.mdx', lang: 'zh-Hant' },
 ];
 
 /** The one bullet under "Built-in rules" that states the email constraint. */

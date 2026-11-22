@@ -11,12 +11,13 @@ import { CrmDatasets as datasets } from './helpers/src-roster';
 import { CrmReports as reports } from './helpers/src-roster';
 import { OpportunitiesByStageReport } from '../src/sales/reports/opportunity.report';
 import { pipelineByStageWidget } from '../src/sales/dashboards/shared-widgets';
+import { docsSourceForSlug } from './helpers/docs-route';
 
 /**
  * The analytics landing page, and the cube vocabulary around it, pinned to
  * source (#976, #977).
  *
- * `content/docs/analytics/index.mdx` is the first screen a reader of the
+ * `content/docs/(intelligence)/analytics/index.mdx` is the first screen a reader of the
  * analytics docs sees, and every count on it was a count of something else.
  * PR #954 / #975 had already written `analytics/reports` and `analytics/cubes`
  * to source; the landing page in front of them still promised *four cubes*,
@@ -135,7 +136,7 @@ const REFRESH_INTERVALS: number[] = [
 
 const PAGES = [
   {
-    file: 'content/docs/analytics/index.mdx',
+    file: 'content/docs/(intelligence)/analytics/index.mdx',
     seven: 'Seven',
     ten: 'Ten',
     eleven: 'Eleven',
@@ -143,7 +144,7 @@ const PAGES = [
     navHeading: '## Where to find things',
   },
   {
-    file: 'content/docs/analytics/index.zh-Hans.mdx',
+    file: 'content/docs/(intelligence)/analytics/index.zh-Hans.mdx',
     seven: '七个',
     ten: '十份',
     eleven: '十一个',
@@ -151,7 +152,7 @@ const PAGES = [
     navHeading: '## 在哪里可以找到',
   },
   {
-    file: 'content/docs/analytics/index.zh-Hant.mdx',
+    file: 'content/docs/(intelligence)/analytics/index.zh-Hant.mdx',
     seven: '七個',
     ten: '十份',
     eleven: '十一個',
@@ -334,7 +335,9 @@ describe('analytics/index states the counts and names the app really ships (#976
         `${file}: no internal doc links found — this rule would be vacuous`,
       ).toBeGreaterThan(3);
       const dangling = targets.filter((t) => {
-        const slug = t.replace(/^\/(?:zh-Han[st]\/)?docs\//, '').replace(/\/$/, '');
+        const slug = docsSourceForSlug(
+          t.replace(/^\/(?:zh-Han[st]\/)?docs\//, '').replace(/\/$/, ''),
+        );
         const locale = t.startsWith('/zh-Hans/')
           ? '.zh-Hans'
           : t.startsWith('/zh-Hant/')
@@ -389,12 +392,12 @@ describe('the cube vocabulary retired with src/cubes/ is gone from the docs (#97
       'no dashboard declares a refreshIntervalSeconds — this rule has gone vacuous',
     ).toBeGreaterThan(1);
     const carriers = [
-      'content/docs/reference/faq.mdx',
-      'content/docs/reference/faq.zh-Hans.mdx',
-      'content/docs/reference/faq.zh-Hant.mdx',
-      'content/docs/reference/performance-and-limits.mdx',
-      'content/docs/reference/performance-and-limits.zh-Hans.mdx',
-      'content/docs/reference/performance-and-limits.zh-Hant.mdx',
+      'content/docs/(operate)/reference/faq.mdx',
+      'content/docs/(operate)/reference/faq.zh-Hans.mdx',
+      'content/docs/(operate)/reference/faq.zh-Hant.mdx',
+      'content/docs/(operate)/reference/performance-and-limits.mdx',
+      'content/docs/(operate)/reference/performance-and-limits.zh-Hans.mdx',
+      'content/docs/(operate)/reference/performance-and-limits.zh-Hant.mdx',
     ];
     const missing = carriers.flatMap((f) => {
       const text = read(f);
@@ -410,9 +413,9 @@ describe('the cube vocabulary retired with src/cubes/ is gone from the docs (#97
     // greppability reason as CJK above.
     const REFRESH_GLYPH = /\u27f3/;
     for (const f of [
-      'content/docs/reference/faq.mdx',
-      'content/docs/reference/faq.zh-Hans.mdx',
-      'content/docs/reference/faq.zh-Hant.mdx',
+      'content/docs/(operate)/reference/faq.mdx',
+      'content/docs/(operate)/reference/faq.zh-Hans.mdx',
+      'content/docs/(operate)/reference/faq.zh-Hant.mdx',
     ]) {
       expect(
         REFRESH_GLYPH.test(read(f)),
@@ -427,9 +430,9 @@ describe('the cube vocabulary retired with src/cubes/ is gone from the docs (#97
     // #977 called this out explicitly: the concept is real and its entry is
     // correct, so a vocabulary sweep must not take it out with the rest.
     for (const f of [
-      'content/docs/reference/glossary.mdx',
-      'content/docs/reference/glossary.zh-Hans.mdx',
-      'content/docs/reference/glossary.zh-Hant.mdx',
+      'content/docs/(operate)/reference/glossary.mdx',
+      'content/docs/(operate)/reference/glossary.zh-Hans.mdx',
+      'content/docs/(operate)/reference/glossary.zh-Hant.mdx',
     ]) {
       expect(
         read(f),
@@ -488,7 +491,7 @@ describe('the source facts these pages now rest on (#976, #977)', () => {
     // been there throughout. Pinned so a future page move turns this red
     // instead of quietly re-creating the link the issue expected to find.
     for (const suffix of ['', '.zh-Hans', '.zh-Hant']) {
-      expect(existsSync(join(DOCS_ROOT, `ai-copilot/sales-copilot${suffix}.mdx`))).toBe(true);
+      expect(existsSync(join(DOCS_ROOT, `(intelligence)/ai-copilot/sales-copilot${suffix}.mdx`))).toBe(true);
     }
   });
 });

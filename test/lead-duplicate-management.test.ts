@@ -418,7 +418,11 @@ describe('the forms can satisfy the rule they are shipped under', () => {
     );
 
   it('found the forms at all', () => {
-    expect(forms.length, 'no crm_lead forms found — the walker stopped matching').toBeGreaterThan(3);
+    // The default form and the public Web-to-Lead form (#2725 deleted the six
+    // layout showcases no console surface opened).
+    expect(forms.map(([name]) => name), 'the walker stopped matching the crm_lead forms').toEqual(
+      expect.arrayContaining(['form', 'web_to_lead']),
+    );
   });
 
   it('every form offering "Duplicate" also offers the link that makes it savable', () => {
@@ -428,7 +432,9 @@ describe('the forms can satisfy the rule they are shipped under', () => {
     const offersReason = forms.filter(([, form]) =>
       fieldNames(form).includes('disqualification_reason'),
     );
-    expect(offersReason.length, 'no lead form offers disqualification_reason').toBeGreaterThan(3);
+    // The default form is the one the New and Edit dialogs open, so it is the
+    // form that must offer the reason (and, below, the survivor link).
+    expect(offersReason.map(([name]) => name), 'the default lead form no longer offers disqualification_reason').toContain('form');
 
     const required = ['duplicate_of_type', 'duplicate_of_lead', 'duplicate_of_contact', 'duplicate_status'];
     const bad = offersReason

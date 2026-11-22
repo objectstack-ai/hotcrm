@@ -652,6 +652,12 @@ export const seedDataFor = (composition: HotCrmComposition): PackageSeedData =>
 
 // ─── Which SHAPE of HotCRM this build assembles (#1361) ───────────────────
 //
+// ⏸ PAUSED (#2700): single-database multi-tenant work is paused, and the `saas`
+// shape with it; it resumes when the maintainer resumes that work. The knob and
+// the `saas` branch stay as they are, `default` is unchanged, and the paused
+// tests are listed once in `test/helpers/multitenant-pause.ts`
+// (`docs/ARCHITECTURE.md`, "Single-database multi-tenant: paused").
+//
 // `default` (unset, or `HOTCRM_COMPOSITION=default`) is the community app and
 // is byte-for-byte what it always was — every field below that a composition
 // touches falls through to the same value it had before this knob existed.

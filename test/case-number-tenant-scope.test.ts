@@ -5,6 +5,10 @@ import { applySystemFields } from '@objectstack/objectql';
 import { expectedIndexes } from '@objectstack/driver-sql';
 import { SqliteWasmDriver } from '@objectstack/driver-sqlite-wasm';
 import stack from './helpers/composed-stack';
+import { pauseGate } from './helpers/multitenant-pause-gate';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 /**
  * Case-number uniqueness is PER ORGANIZATION *and* holds on an install that has
@@ -114,7 +118,7 @@ describe('crm_case declares case-number uniqueness on the FIELD', () => {
 
 // ─────────────────────────────── the index the driver derives from it ──
 
-describe('the physical index set is tenant-scoped', () => {
+pause.describe('the physical index set is tenant-scoped', () => {
   const indexes = expectedIndexes({
     table: 'crm_case',
     fields: orgScoped.fields as Record<string, unknown>,
@@ -148,7 +152,7 @@ describe('the physical index set is tenant-scoped', () => {
 
 // ───────────────────────────────── the constraint a real database enforces ──
 
-describe('case numbers collide per organization, never across (real SQLite)', () => {
+pause.describe('case numbers collide per organization, never across (real SQLite)', () => {
   let driver: SqliteWasmDriver;
 
   beforeAll(async () => {
@@ -217,7 +221,7 @@ describe('case numbers collide per organization, never across (real SQLite)', ()
 
 // ────────────────────────────────────────────── reverse verification ──
 
-describe('the OLD table-composite spelling, re-measured', () => {
+pause.describe('the OLD table-composite spelling, re-measured', () => {
   /**
    * Reverse verification, kept in the repo rather than done by hand once: put
    * the deleted spelling back and measure what it materializes. Up to 18.0.0

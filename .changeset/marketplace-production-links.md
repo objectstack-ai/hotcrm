@@ -11,3 +11,5 @@ Metadata-protocol: none
 - The README's logo is an absolute URL, so it no longer shows as a broken image on the listing page, where a relative `assets/icon.svg` has no repository to resolve against.
 - The listing's homepage is `https://www.hotcrm.com` instead of the GitHub repository.
 - The app package's description says what HotCRM is today, six apps from lead to cash, the same text as the listing, instead of "AI-Native CRM … Contracts".
+
+No object, field or permission changes. The listing updates on the next marketplace publish.

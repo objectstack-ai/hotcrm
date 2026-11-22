@@ -108,6 +108,8 @@ export const commerce: Record<string, ObjectTranslationData> = {
     _validations: {
       shipped_after_order: { message: '出荷日を注文日より前にすることはできません' },
       sales_order_status_progression: { message: 'このステータス変更はできません。注文は 下書き → 確定 → 完了 と進みます。確定は下書きに戻せ、下書きまたは確定はキャンセルにできます。完了とキャンセルは最終状態です。' },
+      contract_same_account: { message: '契約はこの注文の取引先のものである必要があります。' },
+      contract_same_account_check: { message: 'この契約は別の取引先のものです。注文には自身の取引先の契約しか設定できません。この取引先の契約を選択するか、契約を空にしてください。' },
     },
     label: '注文',
     pluralLabel: '注文',

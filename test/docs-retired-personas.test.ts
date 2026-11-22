@@ -21,7 +21,7 @@ import { PERSONAS, normalise } from './helpers/persona-vocabulary';
  * (#612).
  *
  * #512 removed the two app-authored agents and ADR-0063 §2 made the surface
- * skills-only; #589 / PR #611 rewrote `content/docs/ai-copilot/*` accordingly.
+ * skills-only; #589 / PR #611 rewrote `content/docs/(intelligence)/ai-copilot/*` accordingly.
  * What #611 could not reach was the rest of the tree. At the time this guard was
  * written the docs carried 79 occurrences of the two names across 39 pages; 14
  * of those, on the 12 pages in HISTORICAL below, are retirement history and
@@ -40,7 +40,7 @@ import { PERSONAS, normalise } from './helpers/persona-vocabulary';
  *
  * Two things about the scan are load-bearing rather than style:
  *
- * - **Soft wraps are normalised first.** `content/docs/index.mdx` wrote "the
+ * - **Soft wraps are normalised first.** `content/docs/(start)/index.mdx` wrote "the
  *   Sales\n> Copilot" across a blockquote line break, and `whats-new.mdx` wrote
  *   "ask the Sales\nCopilot" across a plain one. A line-oriented grep — the
  *   obvious way to write this, and the way the issue's own inventory was taken —
@@ -74,15 +74,15 @@ describe('product docs do not name a retired copilot persona (#612)', () => {
    * the one context where naming the thing is the point.
    */
   const HISTORICAL: Record<string, string> = {
-    'content/docs/ai-copilot/index.mdx': "#611's \"No app-owned agents\" retirement callout",
-    'content/docs/ai-copilot/index.zh-Hans.mdx': "#611's retirement callout (zh-Hans)",
-    'content/docs/ai-copilot/index.zh-Hant.mdx': "#611's retirement callout (zh-Hant)",
-    'content/docs/ai-copilot/sales-copilot.mdx': "#611's \"Where the personas went\" callout",
-    'content/docs/ai-copilot/sales-copilot.zh-Hans.mdx': "#611's persona callout (zh-Hans)",
-    'content/docs/ai-copilot/sales-copilot.zh-Hant.mdx': "#611's persona callout (zh-Hant)",
-    'content/docs/ai-copilot/service-copilot.mdx': "#611's \"Where the personas went\" callout",
-    'content/docs/ai-copilot/service-copilot.zh-Hans.mdx': "#611's persona callout (zh-Hans)",
-    'content/docs/ai-copilot/service-copilot.zh-Hant.mdx': "#611's persona callout (zh-Hant)",
+    'content/docs/(intelligence)/ai-copilot/index.mdx': "#611's \"No app-owned agents\" retirement callout",
+    'content/docs/(intelligence)/ai-copilot/index.zh-Hans.mdx': "#611's retirement callout (zh-Hans)",
+    'content/docs/(intelligence)/ai-copilot/index.zh-Hant.mdx': "#611's retirement callout (zh-Hant)",
+    'content/docs/(intelligence)/ai-copilot/sales-copilot.mdx': "#611's \"Where the personas went\" callout",
+    'content/docs/(intelligence)/ai-copilot/sales-copilot.zh-Hans.mdx': "#611's persona callout (zh-Hans)",
+    'content/docs/(intelligence)/ai-copilot/sales-copilot.zh-Hant.mdx': "#611's persona callout (zh-Hant)",
+    'content/docs/(intelligence)/ai-copilot/service-copilot.mdx': "#611's \"Where the personas went\" callout",
+    'content/docs/(intelligence)/ai-copilot/service-copilot.zh-Hans.mdx': "#611's persona callout (zh-Hans)",
+    'content/docs/(intelligence)/ai-copilot/service-copilot.zh-Hant.mdx': "#611's persona callout (zh-Hant)",
     // whats-new's three v1.0 entries left with the v1.0 record itself (#2604):
     // the page now keeps the releases since 6.0.0 and links CHANGELOG.md.
   };
@@ -134,9 +134,9 @@ describe('product docs do not name a retired copilot persona (#612)', () => {
       { text: 'the AI Service Copilot reads from', expected: 'Service Copilot' },
       { text: '让销售 Copilot 替你判定', expected: '销售 Copilot' },
       { text: '由服务Copilot 分流', expected: '服务 Copilot' },
-      // blockquote continuation — `content/docs/index.mdx` wrote exactly this
+      // blockquote continuation — `content/docs/(start)/index.mdx` wrote exactly this
       { text: '> Ten seconds later, the Sales\n> Copilot uses it', expected: 'Sales Copilot' },
-      // plain soft wrap — `content/docs/whats-new.mdx` wrote exactly this
+      // plain soft wrap — `content/docs/(start)/whats-new.mdx` wrote exactly this
       { text: 'ten seconds later, ask the Sales\nCopilot a question', expected: 'Sales Copilot' },
       // CJK word split — `ai-copilot/index.zh-Hant.mdx` wraps 服務 this way
       { text: '> 兩個自己的智能體——「銷售 Copilot」和「服\n> 務 Copilot」', expected: '服務 Copilot' },

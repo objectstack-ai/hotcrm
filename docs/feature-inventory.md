@@ -56,7 +56,7 @@
 | LEA-012 | 排定跟进 | 屏幕流收集下一步动作/到期日/类型/优先级,创建任务并同步线索 `next_followup_date` | `src/sales/flows/schedule-followup.flow.ts` + `src/sales/actions/lead.actions.ts`(`schedule_followup`) |
 | LEA-013 | 批量加入活动 | 列表多选批量动作(逐行分派):每行以调用者身份启动 `campaign_lead_member_enroll` 流程,去重后插入活动成员(记录选择器选活动);无活动成员创建权的 profile 不显示该动作,服务端也拒绝(400 `FLOW_FAILED`) | `src/sales/actions/lead.actions.ts`(`create_campaign`)+ `src/marketing/flows/campaign-member-enroll.flow.ts` |
 | LEA-014 | 线索列表视图族 | 默认列表 + 7 个具名视图:我的/热线索/高优/疑似重复/状态看板/日历/卡片 | `src/sales/views/lead.view.ts` |
-| LEA-015 | 线索表单族 | 7 个具名表单覆盖全部布局类型:分 tab 详情/转化向导/分栏/抽屉/弹窗/公开表单/条件示范(SIMPLE 由默认 `form` 演示) | `src/sales/views/lead.view.ts`(formViews) |
+| LEA-015 | 线索表单族 | 已移除 (#2725):6 个布局展示表单(分 tab 详情/转化向导/分栏/抽屉/弹窗/条件示范)控制台没有任何入口能打开,已删除;新建与编辑对话框用默认 `form`,公开表单见 LEA-006 | `src/sales/views/lead.view.ts` |
 | LEA-016 | 线索详情页 | 平台默认记录页(#2382),只覆盖 alerts 槽:疑似/已确认重复两条提示;要点条、状态 path、明细、相关列(未完成任务)、时间线均由对象元数据派生,页头动作按 `order` 排序 | `src/sales/pages/lead_detail.page.ts` |
 | LEA-017 | AI 线索鉴定技能 | 按 BANT 四维打 0–100 分并给下一步建议;≥70 且经人工确认才调用转化动作 | `src/sales/skills/lead-qualification.skill.ts` |
 | LEA-018 | 线索导入 | CSV/XLSX 导入映射,按 email upsert,状态/来源/行业同义词表;owner 留空归导入者 | `src/sales/mappings/lead_import.mapping.ts` |
@@ -104,7 +104,7 @@
 | OPP-013 | 停滞商机日扫描 | 每日 07:30 扫描阶段停留 >14 天的开放商机:通知 owner 并幂等创建 +2 天跟进任务 | `src/sales/flows/opportunity-stagnation.flow.ts` |
 | OPP-014 | 大单赢单告警 | 金额 ≥$100K 的商机赢单时通知 owner(防重发) | `src/sales/flows/opportunity-won-alert.flow.ts` |
 | OPP-015 | 私密商机 | `is_private` 标记的交易经 RLS 仅对 owner 可见,即使读方持全组织读权限 | `src/sales/profiles/sales-manager.profile.ts`、`src/sales/profiles/marketing-user.profile.ts`(RLS) |
-| OPP-016 | 商机详情页 | 平台默认记录页(#2382),只覆盖 alerts 槽:两条审批提示;产品明细为正文表格(`relatedList: 'primary'`),相关列含报价/未完成任务;参考栏已删除 | `src/sales/pages/opportunity_detail.page.ts` |
+| OPP-016 | 商机详情页 | 平台默认记录页,不再有自写页(#2382;两条审批提示按 #2686 删除,送审中的大单由平台原生审批栏与审批卡片说明当前步骤、在等谁、批准/驳回或撤回);产品明细为正文表格(`relatedList: 'primary'`),相关列含报价/未完成任务;参考栏已删除 | `src/sales/objects/opportunity.object.ts`(`highlightFields`、`fieldGroups`)、`src/sales/flows/opportunity-approval.flow.ts` |
 | OPP-017 | 商机分析 | `opportunity_metrics` 数据集(win_rate 派生比率、跨对象行业维度)+ 阶段/按人赢单/管道覆盖矩阵/漏斗 4 个报表 | `src/sales/datasets/opportunity.dataset.ts` + `src/sales/reports/opportunity.report.ts` |
 
 ## QUO — 报价(CPQ 与产品目录)

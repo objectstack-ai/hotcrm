@@ -73,6 +73,12 @@ export const Opportunity = ObjectSchema.create({
 
   fieldGroups: [
     { key: 'basic',       label: 'Basic Information',   icon: 'dollar-sign' },
+    // The deal's product lines sit under its basic information, before the
+    // financials (#2720): the body table of `crm_opportunity_line_item`
+    // (`relatedList: 'primary'` on its `crm_opportunity` link), placed here
+    // by the spec's `fieldGroups[].relatedList` (objectstack#27069). This
+    // group holds no fields. Notes are in `quote.object.ts`.
+    { key: 'line_items',  label: 'Opportunity Line Items', icon: 'list', relatedList: 'crm_opportunity_line_item' },
     { key: 'financials',  label: 'Financials',          icon: 'trending-up' },
     { key: 'sales_process', label: 'Sales Process',     icon: 'target' },
     { key: 'qualification', label: 'Qualification',     icon: 'filter' },
@@ -722,7 +728,16 @@ export const Opportunity = ObjectSchema.create({
   // the activity feed.
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete'], // Whitelist allowed API operations
+    // `bulk` (#2720): saving a deal together with its product lines goes out
+    // as one atomic `POST /api/v1/batch`, which the REST layer refuses 405
+    // `OBJECT_API_METHOD_NOT_ALLOWED` on any object in it without `bulk`.
+    // It also opens the per-object batch routes (`/data/OBJECT/batch`,
+    // `createMany`, `updateMany`, `deleteMany`). It grants nothing: every row
+    // in a batch is still written as the caller, through the same permission
+    // set, sharing rule, validation and hook as a single save. The lines
+    // (`crm_opportunity_line_item`) declare no `apiMethods`, so all six are
+    // already open there.
+    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'bulk'],
     // #602 — proposals, redlines and signed orders belong on the deal.
     // See the canonical capability note in `src/sales/objects/index.ts`.
     files: true,

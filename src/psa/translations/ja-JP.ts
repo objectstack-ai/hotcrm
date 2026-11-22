@@ -102,7 +102,7 @@ export const jaJP: TranslationData = {
         VALIDATION_FAILED: {
           message: '日付 {{day}} はこのタイムシートの期間（{{from}} – {{to}}）外です。',
           reasons: {
-            task: { message: 'タスクはこの工数表のプロジェクトのタスクにしてください。' },
+            task: { message: 'タスクはこのタイムシートのプロジェクトのタスクにしてください。' },
             project: { message: 'プロジェクトはこのタイムシートのプロジェクトにしてください。' },
           },
         },
@@ -206,7 +206,7 @@ export const jaJP: TranslationData = {
         },
         time_entry_locked: {
           label: '工数と経費をロック',
-          help: 'チェックが入っている間、このプロジェクトの工数表と経費は提出できません。下書きは引き続き作成できます。',
+          help: 'チェックが入っている間、このプロジェクトのタイムシートと経費は提出できません。下書きは引き続き作成できます。',
         },
         gross_margin: { label: '粗利' },
         gross_margin_percent: { label: '粗利率' },
@@ -586,11 +586,11 @@ export const jaJP: TranslationData = {
       },
     },
     timesheet_approval: {
-      label: '工数表承認',
+      label: 'タイムシート承認',
       approvals: { approver_review: { label: 'プロジェクトマネージャー審査' } },
     },
     timesheet_approval_on_create: {
-      label: '工数表承認（作成時）',
+      label: 'タイムシート承認（作成時）',
       approvals: { approver_review: { label: 'プロジェクトマネージャー審査' } },
     },
     project_budget_alert: { label: 'プロジェクト予算アラート' },
@@ -682,15 +682,15 @@ export const jaJP: TranslationData = {
       label: '工数稼働率',
       description: '担当者・プロジェクト・週ごとの工数と請求可能な割合',
       dimensions: {
-        period_week: { label: '週', description: '時間を実際に作業した週。各工数エントリの日付で決まり、タイムシートの開始週ではありません。' },
-        period_month: { label: '月', description: '時間を実際に作業した月。各工数エントリの日付で決まります。' },
+        period_week: { label: '週', description: '時間を実際に作業した週。各工数明細の日付で決まり、タイムシートの開始週ではありません。' },
+        period_month: { label: '月', description: '時間を実際に作業した月。各工数明細の日付で決まります。' },
         person: { label: '担当者', description: '時間を登録した人（タイムシートの所有者）。' },
         project: { label: 'プロジェクト', description: 'タイムシートの対象プロジェクト。' },
-        status: { label: '工数表ステータス', description: '時間が載っているタイムシートの承認ステータス：下書き、提出済み、承認済み、却下。コストに入るのは承認済みの時間だけです。' },
+        status: { label: 'タイムシートステータス', description: '時間が載っているタイムシートの承認ステータス：下書き、提出済み、承認済み、却下。コストに入るのは承認済みの時間だけです。' },
       },
       measures: {
-        total_hours: { label: '工数', description: '工数エントリに登録された時間。下書き・却下を含むすべてのステータスのタイムシートを含みます。コストに入る時間は承認済みで絞り込みます。' },
-        billable_hours: { label: '請求可能工数', description: '請求対象とされた工数エントリの時間。すべてのステータスのタイムシートを含み、請求対象外の時間は含みません。' },
+        total_hours: { label: '工数', description: '工数明細に登録された時間。下書き・却下を含むすべてのステータスのタイムシートを含みます。コストに入る時間は承認済みで絞り込みます。' },
+        billable_hours: { label: '請求可能工数', description: '請求対象とされた工数明細の時間。すべてのステータスのタイムシートを含み、請求対象外の時間は含みません。' },
         utilization: { label: '請求可能割合', description: 'Billable Hours を Hours で割ったもの。登録時間のうち請求可能な割合で、稼働可能時間に対する割合ではありません。' },
       },
     },
@@ -717,7 +717,7 @@ export const jaJP: TranslationData = {
         budget_status_mix: { title: '予算ステータス別プロジェクト', description: '順調、警告（80% から）、超過（100% から）。予算のあるプロジェクトのみ' },
         project_margin: { title: 'プロジェクト別粗利', description: '提供中の各プロジェクトの計画収益、実コスト、粗利、予算消化率' },
         projects_by_status: { title: 'ステータス別プロジェクト', description: '下書きからクローズまでのすべてのプロジェクト' },
-        hours_by_week: { title: '週別の承認済み工数', description: '承認済み工数表の工数と、そのうち請求可能な分' },
+        hours_by_week: { title: '週別の承認済み工数', description: '承認済みタイムシートの工数と、そのうち請求可能な分' },
         billable_share_by_person: { title: '担当者別の請求可能割合', description: '担当者ごとの承認済み工数と顧客に請求する割合' },
       },
     },

@@ -1,6 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { defineConfig } from 'vitest/config';
+import { MULTITENANT_PAUSED_FILES } from './test/helpers/multitenant-pause';
 
 /**
  * Floors sit just under the measured numbers, so they lock in the
@@ -34,7 +35,10 @@ const isShardRun = process.argv.some((arg) => arg === '--shard' || arg.startsWit
 export default defineConfig({
   test: {
     include: ['test/**/*.test.ts'],
-    exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
+    // The whole files the single-database multi-tenant pause holds (#2700) —
+    // the list lives in `test/helpers/multitenant-pause.ts`, and
+    // `test/multitenant-pause.test.ts` names each one in the run's output.
+    exclude: ['e2e/**', 'node_modules/**', 'dist/**', ...MULTITENANT_PAUSED_FILES],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],

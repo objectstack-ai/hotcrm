@@ -1,0 +1,12 @@
+{
+  "title": "入門",
+  "description": "簡介、快速導覽和日常操作指南",
+  "root": true,
+  "icon": "Rocket",
+  "pages": [
+    "index",
+    "getting-started",
+    "guides",
+    "whats-new"
+  ]
+}

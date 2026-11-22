@@ -304,7 +304,7 @@ export const SalesHomePage: Page = {
         // people looking for a control that was not there. A page component
         // cannot be shown only where the `ai` capability is present, so the
         // card is dropped rather than reworded; the assistant documents
-        // itself where it exists (`content/docs/ai-copilot/`).
+        // itself where it exists (`content/docs/(intelligence)/ai-copilot/`).
         {
           type: 'page:card',
           id: 'upcoming_events',

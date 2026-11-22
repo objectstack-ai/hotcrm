@@ -49,7 +49,7 @@ import { DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS } from '../objects/lead.object';
  */
 
 /**
- * The duplicate-link block (#598), spread into every form that offers
+ * The duplicate-link block (#598), spread into the form that offers
  * `disqualification_reason`.
  *
  * `duplicate_disqualification_requires_survivor` on `crm_lead` rejects a lead
@@ -57,9 +57,9 @@ import { DUPLICATE_OF_TYPE_AUTHORABLE_OPTIONS } from '../objects/lead.object';
  * the match. So the same rule the `disqualification_reason` field itself follows
  * applies one level down: a form that lets a user PICK "Duplicate" must also let
  * them satisfy it, or the save fails with an error the form gives no way to
- * clear. Declared once and reused rather than retyped eight times — the copies
- * would drift, and a form that quietly lost the block is exactly the failure
- * this shape is meant to make impossible.
+ * clear. It is kept as one named block, so the four fields and their
+ * predicates read as the unit the rule demands; a form that quietly lost one
+ * of them is exactly the failure this shape is meant to make impossible.
  *
  * The two lookups mirror the object's `requiredWhen` predicates: each appears
  * only when `duplicate_of_type` names its object — and now says so in the same
@@ -108,15 +108,10 @@ const DUPLICATE_LINK_FIELDS = [
 ];
 
 /**
- * Lead Views - Comprehensive UI Showcase
- * 
- * This file demonstrates:
- * 1. All 3 FormView layout types (simple, tabbed, wizard; split, drawer and
- *    modal were retired in @objectstack/spec 18.3.0)
- * 2. Section features (collapsible, 1-4 column layouts)
- * 3. Field-level controls (readonly, required, hidden, span, visibleWhen, dependsOn, custom widget)
- * 4. Multiple named formViews for different scenarios
- * 5. Various list view types
+ * Lead Views
+ *
+ * The default list and its named list views, the record form the New and
+ * Edit dialogs open, and the public Web-to-Lead form.
  */
 export const LeadViews = defineView({
   /**
@@ -210,9 +205,7 @@ export const LeadViews = defineView({
     // named nothing and selected nothing. The record page here is rendered by
     // `lead_detail_page` (`src/sales/pages/lead_detail.page.ts`), not by a named
     // form view, and clicking a row behaved identically with the key present,
-    // with it absent, and on a list that never declared it. `detail_form`
-    // below stays: it is this file's one TABBED layout example, and it was
-    // already reachable by no path.
+    // with it absent, and on a list that never declared it.
     navigation: {
       mode: 'page',
     },
@@ -563,7 +556,8 @@ export const LeadViews = defineView({
         provider: 'object',
         object: 'crm_lead',
       },
-      columns: ['first_name', 'last_name', 'company'],
+      // The name as one field (#2685), as every other lead list writes it.
+      columns: ['full_name', 'company'],
       calendar: {
         startDateField: 'next_followup_date',
         titleField: 'company',
@@ -594,299 +588,18 @@ export const LeadViews = defineView({
   },
 
   /**
-   * Additional Named Form Views - Demonstrating All 6 Layout Types
+   * Named form views: the public Web-to-Lead form only.
    *
-   * One example per layout type. The SIMPLE one is the default `form`
-   * above, so this block carries the other five, plus the public and the
-   * conditional-visibility examples. Every layout is demonstrated exactly
-   * once across the file: each entry below is the only example of its own.
+   * The record dialogs (New and Edit) open the default `form` above: the
+   * console resolves `formViews['crm_lead.create']` in create mode, then
+   * `form`, then `formViews.default`. A named entry under any other key
+   * reaches no console surface, which is why the six layout showcases that
+   * used to sit here were deleted (#2725, the #2665 assessment rows 31-36).
+   * `web_to_lead` stays because its `sharing.publicLink` serves it.
    */
   formViews: {
     /**
-     * 2. TABBED Layout
-     * Organize complex forms with tabs
-     */
-    detail_form: {
-      type: 'tabbed',
-      sections: [
-        {
-          name: 'general',
-          label: 'General',
-          columns: 2,
-          fields: [
-            'salutation',
-            'first_name',
-            'last_name',
-            'company',
-            'title',
-            'email',
-            'phone',
-            'mobile',
-          ],
-        },
-        {
-          name: 'qualification',
-          label: 'Qualification',
-          columns: 2,
-          fields: [
-            { field: 'status', required: true },
-            { field: 'rating', widget: 'star_rating' },
-            'lead_source',
-            'industry',
-            'annual_revenue',
-            'number_of_employees',
-            // See the default form: `unqualified` requires a reason.
-            {
-              field: 'disqualification_reason',
-              required: true,
-              visibleWhen: P`has(record.status) && record.status == "unqualified"`,
-            },
-            ...DUPLICATE_LINK_FIELDS,
-          ],
-        },
-        {
-          name: 'address',
-          label: 'Address',
-          columns: 2,
-          // Single composite `Field.address` — see the note on the default
-          // form's Address section.
-          fields: [
-            { field: 'address', span: 'full' },
-          ],
-        },
-        {
-          name: 'details',
-          label: 'Details',
-          columns: 1,
-          fields: [
-            'description',
-            'notes',
-            'do_not_call',
-            'email_opt_out',
-          ],
-        },
-      ],
-    },
-    
-    /**
-     * 3. WIZARD Layout
-     * Step-by-step guided process
-     */
-    lead_conversion_wizard: {
-      type: 'wizard',
-      data: {
-        provider: 'object',
-        object: 'crm_lead',
-      },
-      sections: [
-        {
-          name: 'step_1_contact_details',
-          label: 'Step 1: Contact Details',
-          columns: 2,
-          fields: [
-            { field: 'first_name', required: true, readonly: true },
-            { field: 'last_name', required: true, readonly: true },
-            { field: 'email', readonly: true, span: 'full' },
-            'phone',
-            'mobile',
-          ],
-        },
-        {
-          name: 'step_2_company_information',
-          label: 'Step 2: Company Information',
-          columns: 2,
-          fields: [
-            { field: 'company', required: true, readonly: true },
-            'title',
-            'industry',
-            'annual_revenue',
-            'number_of_employees',
-            'website',
-          ],
-        },
-        {
-          name: 'step_3_qualification',
-          label: 'Step 3: Qualification',
-          columns: 2,
-          fields: [
-            { field: 'status', required: true },
-            // See the default form: `unqualified` requires a reason. The status
-            // is editable in this step, so the wizard can land there too.
-            {
-              field: 'disqualification_reason',
-              required: true,
-              visibleWhen: P`has(record.status) && record.status == "unqualified"`,
-            },
-            ...DUPLICATE_LINK_FIELDS,
-            { field: 'rating', widget: 'star_rating' },
-            'lead_source',
-            {
-              field: 'owner_id',
-              // Conditional visibility. `!= null` on top of `has(...)`: strict
-              // CEL aborts on `dyn<null> < int`, which `has()` alone allows.
-              visibleWhen: P`has(record.rating) && record.rating != null && record.rating >= 4`,
-            },
-          ],
-        },
-        {
-          name: 'step_4_review_and_convert',
-          label: 'Step 4: Review & Convert',
-          columns: 1,
-          fields: [
-            {
-              field: 'description',
-              helpText: 'Review all information before converting to Account and Contact',
-            },
-          ],
-        },
-      ],
-    },
-    
-    /**
-     * 4. Two-section edit (was `type: 'split'`, retired in @objectstack/spec
-     * 18.3.0: a form's `type` is its layout only, and whether a record opens
-     * beside its list is each reader's Display-menu preference). Kept as a
-     * `simple` form so the named view and its sections stay addressable.
-     */
-    split_edit: {
-      data: {
-        provider: 'object',
-        object: 'crm_lead',
-      },
-      sections: [
-        {
-          name: 'primary_information',
-          label: 'Primary Information',
-          columns: 1,
-          fields: [
-            'first_name',
-            'last_name',
-            'company',
-            'email',
-            { field: 'status', required: true },
-            'owner_id',
-            // See the default form: `unqualified` requires a reason.
-            {
-              field: 'disqualification_reason',
-              required: true,
-              visibleWhen: P`has(record.status) && record.status == "unqualified"`,
-            },
-            ...DUPLICATE_LINK_FIELDS,
-          ],
-        },
-        {
-          name: 'extended_details',
-          label: 'Extended Details',
-          columns: 2,
-          fields: [
-            'phone',
-            'mobile',
-            'title',
-            'industry',
-            'lead_source',
-            { field: 'rating', widget: 'star_rating' },
-            'annual_revenue',
-            'number_of_employees',
-          ],
-        },
-      ],
-    },
-    
-    /**
-     * 5. Quick edit, single column (was `type: 'drawer'`, retired in
-     * @objectstack/spec 18.3.0: where a form opens is decided by whoever opens
-     * it — a list opens a clicked record in the drawer via `navigation.mode`).
-     */
-    quick_edit_drawer: {
-      data: {
-        provider: 'object',
-        object: 'crm_lead',
-      },
-      sections: [
-        {
-          name: 'quick_edit',
-          label: 'Quick Edit',
-          columns: 1, // Drawers typically use single column
-          fields: [
-            { field: 'first_name', required: true },
-            { field: 'last_name', required: true },
-            'company',
-            'email',
-            'phone',
-            { field: 'status', required: true },
-            { field: 'rating', widget: 'star_rating' },
-            'lead_source',
-            {
-              field: 'owner_id',
-              // Only show owner after initial contact. A record with no status
-              // yet has not been contacted, so `!isBlank` keeps the blank case
-              // on the "hidden" side rather than letting `null != "new"` show it.
-              visibleWhen: P`has(record.status) && !isBlank(record.status) && record.status != "new"`,
-            },
-            // See the default form: `unqualified` requires a reason.
-            {
-              field: 'disqualification_reason',
-              required: true,
-              visibleWhen: P`has(record.status) && record.status == "unqualified"`,
-            },
-            ...DUPLICATE_LINK_FIELDS,
-          ],
-        },
-      ],
-    },
-    
-    /**
-     * 6. Status update (was `type: 'modal'`, retired in @objectstack/spec
-     * 18.3.0: the console's New / Edit dialogs open the record form
-     * themselves, sized by the form's `modalSize`).
-     */
-    status_update_modal: {
-      data: {
-        provider: 'object',
-        object: 'crm_lead',
-      },
-      sections: [
-        {
-          name: 'update_lead_status',
-          label: 'Update Lead Status',
-          columns: 1,
-          fields: [
-            { field: 'first_name', readonly: true },
-            { field: 'last_name', readonly: true },
-            { field: 'company', readonly: true },
-            { 
-              field: 'status', 
-              required: true,
-              helpText: 'Select the new status for this lead',
-            },
-            {
-              field: 'rating',
-              widget: 'star_rating',
-              // Only show rating for qualified leads
-              visibleWhen: P`has(record.status) && record.status == "qualified"`,
-            },
-            // The reason picklist, not just free-text notes: it is what the
-            // `disqualification_reason_required` validation checks, and this
-            // modal is the main place a rep flips a lead to Unqualified.
-            {
-              field: 'disqualification_reason',
-              required: true,
-              visibleWhen: P`has(record.status) && record.status == "unqualified"`,
-            },
-            ...DUPLICATE_LINK_FIELDS,
-            {
-              field: 'notes',
-              placeholder: 'Add notes about this status change',
-              // Free-text context alongside the reason
-              visibleWhen: P`has(record.status) && record.status == "unqualified"`,
-            },
-          ],
-        },
-      ],
-    },
-    
-    /**
-     * 7. PUBLIC / ANONYMOUS — "Web-to-Lead"
+     * PUBLIC / ANONYMOUS — "Web-to-Lead"
      *
      * Airtable-style public form hosted at `/forms/contact-us`. Embeddable
      * via iframe on a marketing site. Guests can ONLY submit (insert) — the
@@ -950,100 +663,6 @@ export const LeadViews = defineView({
         allowAnonymous: true,
         publicLink: '/forms/contact-us',
       },
-    },
-
-    /**
-     * Advanced Example: Conditional Field Visibility & Dependencies
-     */
-    advanced_conditional: {
-      type: 'simple',
-      data: {
-        provider: 'object',
-        object: 'crm_lead',
-      },
-      sections: [
-        {
-          name: 'lead_information',
-          label: 'Lead Information',
-          columns: 2,
-          fields: [
-            'first_name',
-            'last_name',
-            'company',
-            'email',
-            'status',
-            'lead_source',
-            {
-              field: 'rating',
-              widget: 'star_rating',
-              // Only show after first contact — see the drawer form's note on
-              // why blank stays on the "hidden" side.
-              visibleWhen: P`has(record.status) && !isBlank(record.status) && record.status != "new"`,
-            },
-            {
-              field: 'industry',
-              dependsOn: 'company', // Industry options depend on company
-            },
-            {
-              field: 'annual_revenue',
-              // Only for qualified leads
-              visibleWhen: P`has(record.rating) && record.rating != null && record.rating >= 3`,
-            },
-            {
-              field: 'number_of_employees',
-              visibleWhen: P`has(record.rating) && record.rating != null && record.rating >= 3`,
-            },
-            {
-              field: 'owner_id',
-              required: true,
-              visibleWhen: P`has(record.status) && (record.status == "contacted" || record.status == "qualified")`,
-            },
-            // See the default form: `unqualified` requires a reason.
-            {
-              field: 'disqualification_reason',
-              required: true,
-              visibleWhen: P`has(record.status) && record.status == "unqualified"`,
-            },
-            ...DUPLICATE_LINK_FIELDS,
-            {
-              field: 'notes',
-              span: 'full',
-              required: true,
-              // Require explanation for unqualified
-              visibleWhen: P`has(record.status) && record.status == "unqualified"`,
-            },
-          ],
-        },
-        {
-          name: 'address_information',
-          label: 'Address Information',
-          collapsible: true,
-          collapsed: true,
-          columns: 2,
-          // Single composite `Field.address` — the discrete street/city/state/
-          // postal_code/country columns do not exist on crm_lead.
-          fields: [
-            { field: 'address', span: 'full' },
-          ],
-        },
-        {
-          name: 'privacy_preferences',
-          label: 'Privacy Preferences',
-          collapsible: true,
-          collapsed: true,
-          columns: 2,
-          fields: [
-            {
-              field: 'do_not_call',
-              helpText: 'Check if this lead has requested not to be called',
-            },
-            {
-              field: 'email_opt_out',
-              helpText: 'Check if this lead has opted out of email communications',
-            },
-          ],
-        },
-      ],
     },
   },
 });

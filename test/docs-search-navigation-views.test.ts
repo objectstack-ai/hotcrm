@@ -110,14 +110,14 @@ const shipsZhLabel = (label: string): boolean =>
 
 const PAGES = [
   {
-    file: 'content/docs/guides/search-and-navigation.mdx',
+    file: 'content/docs/(start)/guides/search-and-navigation.mdx',
     lang: 'en',
     heading: '### Built-in vs personal vs shared',
     /** Verbatim fragments of the wrong bullet. None may return. */
     retired: ['All Open Opportunities', 'Pending My Approval'],
   },
   {
-    file: 'content/docs/guides/search-and-navigation.zh-Hans.mdx',
+    file: 'content/docs/(start)/guides/search-and-navigation.zh-Hans.mdx',
     lang: 'zh-Hans',
     heading: '### 内置 vs 个人 vs 共享',
     // 待我审批 used to be retired HERE: it was the zh-CN label of the
@@ -130,7 +130,7 @@ const PAGES = [
     retired: ['所有未结商机'],
   },
   {
-    file: 'content/docs/guides/search-and-navigation.zh-Hant.mdx',
+    file: 'content/docs/(start)/guides/search-and-navigation.zh-Hant.mdx',
     lang: 'zh-Hant',
     heading: '### 內建 vs 個人 vs 共享',
     retired: ['所有未結商機', '待我審核'],

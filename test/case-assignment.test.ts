@@ -14,6 +14,10 @@ import {
 import {
   hotcrmStack, bootOptions, buildArtifactAgain, signUpPerson, systemUpdate, recordEngineWrites, type Person,
 } from './helpers/verify-stack';
+import { pauseGate } from './helpers/multitenant-pause-gate';
+
+// The #2700 pause (single-database multi-tenant): test/helpers/multitenant-pause.ts.
+const pause = pauseGate(import.meta.url);
 
 /**
  * The organization every write here carries: since 18.1.0 the driver creates
@@ -469,7 +473,7 @@ describe('case_escalation_reassign', () => {
     }
   });
 
-  it('stays inside the escalating case’s organization (AGENTS.md rule 10)', async () => {
+  pause.it('stays inside the escalating case’s organization (AGENTS.md rule 10)', async () => {
     // The pool and the load counts are organization-neutral predicates, and the
     // SLA sweep escalates as the system with NO tenant — so nothing but the
     // hook's own pin keeps a breached case from going to the least-loaded

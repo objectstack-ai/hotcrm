@@ -10,10 +10,15 @@ const invoiceRowStamp: Hook = createO2cRowStamp('crm_invoice', 'invoice_row_stam
 /**
  * An invoice's own derived figures, on every save:
  *
- *   - `due_date`, when it is empty: the issue date plus the contract's Payment
- *     Terms (`payment_terms` picklist: Net 15/30/60/90 days, Due on Receipt the
- *     same day). Finance may always write a due date outright; the hook only
- *     fills a gap.
+ *   - `due_date`, when it is empty: the issue date plus the Payment Terms of
+ *     the contract, or else of the order (hotcrm#2560; the shared
+ *     `payment_terms` picklist: Net 15/30/60/90 days, Due on Receipt the same
+ *     day). Finance may always write a due date outright; the hook only fills
+ *     a gap. An invoice whose contract and order carry no terms, or that names
+ *     neither (hotcrm#2557), has none to read, so its due date stays as typed.
+ *     `invoice_row_stamp` (priority 50) has already filled the contract from
+ *     the order or the step, so an order under a contract reads the
+ *     contract's terms first.
  *   - `open_amount` = amount − paid, never below 0, stored because the Overdue
  *     Invoices view filters on it (see the field), and `overpaid_amount` = paid
  *     − amount when the payments exceed the invoice, else 0 (#2513).
@@ -27,7 +32,7 @@ const invoiceFigures: Hook = {
   object: 'crm_invoice',
   events: ['beforeInsert', 'beforeUpdate'],
   priority: 100,
-  description: 'Fill an empty Due Date from the contract\'s payment terms, and keep Open = Amount − Paid (never below 0) and Overpaid = the excess.',
+  description: 'Fill an empty Due Date from the payment terms of the contract, or else the order, and keep Open = Amount − Paid (never below 0) and Overpaid = the excess.',
   handler: async (ctx: HookContext) => {
     function refId(value: unknown): string {
       if (typeof value === 'string') return value;
@@ -47,13 +52,19 @@ const invoiceFigures: Hook = {
     const issueDate = pick('issue_date');
     const api = ctx.api as HookApi | undefined;
     if ((dueDate == null || dueDate === '') && typeof issueDate === 'string' && issueDate !== '' && api) {
+      const termDays: Record<string, number> = { net_15: 15, net_30: 30, net_60: 60, net_90: 90, due_on_receipt: 0 };
+      const termsOf = (row: Record<string, unknown> | null | undefined): string =>
+        typeof row?.payment_terms === 'string' && row.payment_terms in termDays ? row.payment_terms : '';
       const contractId = refId(pick('crm_contract'));
       const contract = contractId
         ? await api.object('crm_contract').findOne({ where: { id: contractId }, fields: ['id', 'payment_terms'] })
         : null;
-      const termDays: Record<string, number> = { net_15: 15, net_30: 30, net_60: 60, net_90: 90, due_on_receipt: 0 };
-      const terms = typeof contract?.payment_terms === 'string' ? contract.payment_terms : '';
-      if (terms in termDays) {
+      let terms = termsOf(contract);
+      const orderId = refId(pick('crm_sales_order'));
+      if (!terms && orderId) {
+        terms = termsOf(await api.object('crm_sales_order').findOne({ where: { id: orderId }, fields: ['id', 'payment_terms'] }));
+      }
+      if (terms) {
         const day = new Date(`${issueDate.slice(0, 10)}T00:00:00.000Z`);
         if (!Number.isNaN(day.getTime())) {
           day.setUTCDate(day.getUTCDate() + termDays[terms]);

@@ -85,6 +85,15 @@ Follow your reports in **My Reports**.
 - **Nobody approves their own.** A Project Manager's own report on their
   project goes to an administrator.
 
+**A one-person organization.** Nobody approves a report they submitted, an
+administrator included, so a report needs a second user who can approve it:
+your manager, a Finance Controller or an administrator, or for a report on a
+project, the project's Project Manager or an administrator. A total of
+**2,000** or more also needs a Finance Controller or an administrator. Until
+that person has been added, a submitted report waits in **Submitted** and
+nobody can decide it: recall it from your Inbox, and submit it again once they
+have been added.
+
 The approver is written into the report's **Approver**, and the report
 appears under their **Reports to Approve**; they can open each expense on it.
 While the report waits, it and its expenses are locked.

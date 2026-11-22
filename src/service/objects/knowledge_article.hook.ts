@@ -13,7 +13,7 @@ import type { Hook, HookContext } from '@objectstack/spec/data';
  *
  * ### What is a review, and what is not (#2060 item 10, B-17)
  *
- * The date "reflects real attention" (`content/docs/service/knowledge-base.mdx`).
+ * The date "reflects real attention" (`content/docs/(product)/service/knowledge-base.mdx`).
  * Until #2060 it refreshed on EVERY write of a published article, and two
  * writers that are not attention reached it, both measured on 18.0.0-next.3:
  *

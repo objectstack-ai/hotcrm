@@ -12,7 +12,6 @@ import { KnowledgeArticle } from '../src/service/objects/knowledge_article.objec
 import { Case } from '../src/service/objects/case.object';
 import { Task } from '../src/sales/objects/task.object';
 import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
-import { OpportunityDetailPage } from '../src/sales/pages/opportunity_detail.page';
 import { CaseDetailPage } from '../src/service/pages/case_detail.page';
 import { SendEmailAction } from '../src/sales/actions/contact.actions';
 import {
@@ -162,8 +161,11 @@ describe('row 9: the record opens on the panels people work from', () => {
     expect(fk(Task, 'related_to_case').relatedListFilter).toEqual(OPEN_TASKS);
   });
 
+  // The opportunity authors no record page since #2686 (its two approval
+  // banners were dropped), so only the case's page is left to hold to the
+  // alerts slot; the deal's lists above are derived either way.
   it('the authored pages override nothing but the alerts', () => {
-    for (const page of [OpportunityDetailPage, CaseDetailPage] as AnyRec[]) {
+    for (const page of [CaseDetailPage] as AnyRec[]) {
       expect(Object.keys(page.slots ?? {}), page.name).toEqual(['alerts']);
     }
   });

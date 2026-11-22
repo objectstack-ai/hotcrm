@@ -1,0 +1,100 @@
+---
+title: Products
+description: The catalog of what you sell — codes, list prices and SKUs.
+---
+
+# Products
+
+A **product** is anything you sell — software, hardware, services, subscriptions, support packages. The product catalog feeds into quotes and opportunities: when sales builds a quote, they pick products from this catalog rather than typing names manually.
+
+## What a product record stores
+
+The record page and the **New** / **Edit** dialog share the same 3 sections:
+
+| Section | Fields |
+| --- | --- |
+| **Product Information** | Product code *(auto, shown on the record page only)*, name, description, category, family, SKU, active, product manager |
+| **Pricing** | List price, cost |
+| **Resources** *(collapsed until opened)* | Product image, datasheet |
+
+## Categories and families
+
+Categorise products two ways:
+
+**Category** — how the product is delivered:
+
+- **Software** *(default)* — installed or downloaded software
+- **Hardware** — physical equipment
+- **Service** — consulting, training, professional services
+- **Subscription** — recurring access
+- **Support** — paid support tiers
+
+**Family** — how the product fits in your portfolio:
+
+- **Enterprise Solutions**
+- **SMB Solutions**
+- **Professional Services**
+- **Cloud Services**
+
+Categories and families let you slice reports by product mix — *"how much SMB-tier subscription revenue did we book this quarter?"*
+
+## Pricing fields
+
+| Field | Purpose |
+| --- | --- |
+| **List Price** | Standard published price — the product's price in the Standard [price book](/docs/sales/price-books), which a new quote prices from |
+| **Cost** | Your cost — used for margin calculation |
+
+Cost may not be greater than List Price: a save that would make it so is refused, since every sale would lose money.
+
+**Tax is a quote-level figure, and the catalog carries no rate.** A quote's total is *subtotal − discount + Tax + Shipping*, where **Tax** is an amount you type on the quote itself; a quote line item carries no tax of its own. A product record stores nothing about tax.
+
+## No inventory, no billing schedule
+
+A product record is a catalog entry and nothing more. HotCRM holds **no stock figure** — no quantity on hand, no reorder point, and nothing decrements on a closed deal — and **no billing schedule or unit of measure**: how a subscription is billed lives in the contract and the quote, not on the catalog row. Those fields used to be declared here and were read by nothing, which made the catalog look like an inventory and billing system it never was. Stock belongs to your fulfilment system; see [Boundary with Finance Software](/docs/sales/billing-handoff).
+
+## The product image and datasheet
+
+Two attachment fields let you upload:
+
+- **Product Image** — shown on quote line items and product list views.
+- **Datasheet** — a PDF of up to 20 MB, for people to open from the product record.
+
+Nothing reads the file's contents. There is no *Product Information* knowledge base — HotCRM ships no separate knowledge libraries at all — and no skill opens an attachment, so a datasheet never reaches an AI-drafted email or proposal. What the assistant can quote about a product is what is typed into the product's own fields. See [Knowledge Bases](/docs/ai-copilot/knowledge-bases).
+
+## Built-in rules
+
+- **List price cannot be negative** — a negative List Price is refused. Zero is accepted, so a free product can sit in the catalog at a list price of 0.
+- **Cost cannot exceed list price** — a save with Cost above List Price is refused, whether it is a new product or a change to either price. A cost equal to the list price saves.
+- **Unit price on opportunity / quote line items must be zero or positive** — basic validation.
+
+## Sharing — products are public by default
+
+The product catalog is **public read-only** for the whole organisation. Sales reps can see and use any product; only marketing/product managers can edit.
+
+## Standard list views
+
+Products saves **two** views (`src/revenue/views/product.view.ts`), and the two tabs above the list — one per view, each labelled with the view's own name — switch between them:
+
+| View | What it shows |
+| --- | --- |
+| **All Products** | The grid: product code (pinned left, and the link into the record), name, category, family, SKU, list price with a column average, cost and Active. Sorted by name and **grouped by category**, 50 rows a page. |
+| **Product Catalog** | The same products drawn as cards, with the **Product Image** as the cover and product code, category, family, list price and SKU on the face. |
+
+Neither view filters anything, so **every product appears in both**, inactive ones included, and switching tabs only redraws them. There is no saved *Active Products*, *By Category* or *By Family* view: grouping by category is a setting on the grid above, not a second saved view, and nothing groups by family at all. To work with active products only, sort or filter the **Active** column yourself.
+
+## Tips for product managers
+
+- ✅ **Keep the datasheet up to date** — it is the file a rep sends the customer. The assistant never reads it, so anything you want the AI to quote belongs in the product's own fields.
+- ✅ **Use the Product Image** — it dramatically improves the look of customer-facing quotes.
+- ✅ **Mark old products as inactive**, don't delete them — past quotes and contracts still reference them.
+
+## Tips for sales reps
+
+- ✅ Use products from the catalog rather than typing line items by hand — the List Price is filled in for you, and on a new line the Sales Price starts there too. Tax is not filled in: enter it on the quote.
+- ✅ Open the datasheet yourself before proposing — it usually has the exact specifications you need to paste into the proposal.
+
+## Tips for admins
+
+- The category and family picklists can be extended. See [Developers › Extending Objects](/docs/developers/extending-objects).
+- A product can be linked to multiple opportunities and quotes — deactivation doesn't break historical records.

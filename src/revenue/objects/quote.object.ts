@@ -35,6 +35,14 @@ export const Quote = ObjectSchema.create({
 
   fieldGroups: [
     { key: 'basic',     label: 'Quote Information', icon: 'info' },
+    // The quote's lines sit under its basic information, before Pricing and
+    // the terms (#2720). A group with `relatedList` stands for the body table
+    // of that child, at this position, and holds no fields (spec
+    // `fieldGroups[].relatedList`, objectstack#27069). It names a body table
+    // only: `crm_quote_line_item.crm_quote` declares `relatedList: 'primary'`.
+    // Declared rather than left to the default, which places a body table by
+    // its own rule and changes it between releases.
+    { key: 'line_items', label: 'Quote Line Items', icon: 'list', relatedList: 'crm_quote_line_item' },
     { key: 'pricing',   label: 'Pricing',           icon: 'dollar-sign' },
     { key: 'terms',     label: 'Terms & Validity',  icon: 'calendar' },
     { key: 'address',   label: 'Addresses',         icon: 'map-pin', collapse: 'collapsed' },
@@ -410,7 +418,9 @@ export const Quote = ObjectSchema.create({
   // API surface. History → Field.trackHistory (ADR-0052).
   enable: {
     apiEnabled: true,
-    apiMethods: ['get', 'list', 'create', 'update', 'delete'],
+    // `bulk` (#2720): a quote saved together with its lines is one
+    // `POST /api/v1/batch`; the full note is on `crm_opportunity`.
+    apiMethods: ['get', 'list', 'create', 'update', 'delete', 'bulk'],
     // #602 — the generated quote PDF and the customer's countersigned copy.
     // See the canonical capability note in `src/sales/objects/index.ts`.
     files: true,

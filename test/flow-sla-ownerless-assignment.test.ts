@@ -287,7 +287,7 @@ describe('pool NON-EMPTY: the ownerless breach is assigned, then that owner is a
     // (director batch #73), option A: `case_sla_monitor` follows the
     // `case_escalation` precedent, so the breach alert goes to the PREVIOUS
     // owner — the agent the case is being taken from — and
-    // `content/docs/service/sla-and-escalation.mdx` now states that as intent
+    // `content/docs/(product)/service/sla-and-escalation.mdx` now states that as intent
     // for this sweep the way it always has for `case_escalation`. ⛔ Alerting
     // the receiving manager instead is option C, and it would have to re-rule
     // `case_escalation` in the same stroke.

@@ -3,11 +3,14 @@
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 
 /**
- * Payment — money received against a contract (REQ-0007, plan *The data
- * model*): against one invoice, or against a plan step before it is invoiced.
- * A receipt that pays several invoices is one row per invoice, the split the
- * ERP or finance already made, so there is no allocation object. An advance
- * paid before its invoice points at the plan step; when the invoice is issued,
+ * Payment — money an account paid (REQ-0007, plan *The data model*; under the
+ * account since REQ-0010, hotcrm#2557): against one invoice, against a plan
+ * step before it is invoiced, against an order (hotcrm#2560), or against
+ * nothing yet — an advance that
+ * matches no invoice names only the account. A receipt that pays several
+ * invoices is one row per invoice, the split the ERP or finance already made,
+ * so there is no allocation object. An advance paid before its invoice points
+ * at the plan step (or only at the account); when the invoice is issued,
  * finance fills in the invoice on the same row.
  *
  * Sales does not record payments: a figure sales sees is always one finance
@@ -19,10 +22,10 @@ export const Payment = ObjectSchema.create({
   label: 'Payment',
   pluralLabel: 'Payments',
   icon: 'banknote',
-  description: 'Money received against a contract, an invoice or a plan step',
+  description: 'Money an account paid: against an invoice, a plan step, an order, a contract, or none of them yet',
 
-  // Whoever reads the contract reads its payments; finance writes them, with
-  // read on the contract as the contract-side question (see `crm_invoice`).
+  // Whoever reads the account reads its payments; finance writes them, with
+  // read on the account as the master-side question (see `crm_invoice`).
   sharingModel: 'controlled_by_parent',
   sharing: { controlledByParent: { writeRequiresMasterRead: true } },
   nameField: 'payment_number',
@@ -40,19 +43,63 @@ export const Payment = ObjectSchema.create({
       format: 'PAY-{00000}',
     }),
 
-    crm_contract: Field.masterDetail('crm_contract', {
-      label: 'Contract',
+    // The master (hotcrm#2557). An account with payments cannot be deleted,
+    // as an account with invoices cannot.
+    crm_account: Field.masterDetail('crm_account', {
+      label: 'Account',
       group: 'basic',
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'restrict',
+      relatedListColumns: ['payment_number', 'crm_sales_order', 'crm_contract', 'payment_date', 'amount', 'method'],
+    }),
+
+    // An optional source (hotcrm#2560): the order the money was received for.
+    // Filled from the invoice (or else the plan step) when the payment names
+    // none (`_row-stamp.ts`), so the order's Received counts what its invoices
+    // and steps count. Picking it fills the account, and the order's contract
+    // while the payment has none; a different account or contract is refused.
+    // An order with payments cannot be deleted (`restrict`, as a contract with
+    // payments cannot). Nullable and new: an upgrade only adds the column.
+    crm_sales_order: Field.lookup('crm_sales_order', {
+      label: 'Order',
+      group: 'basic',
+      // No `dependsOn`, as the contract lookup has none: a `dependsOn` hides a
+      // value the order page's New prefills ("Select Account first") while the
+      // account is still empty, measured in the browser on hotcrm#2560. The
+      // pick fills the account; another account's order is refused on save.
+      deleteBehavior: 'restrict',
+      lookupAutofill: [
+        { target: 'crm_account', source: 'crm_account', overwrite: true },
+        { target: 'crm_contract', source: 'crm_contract' },
+      ],
       relatedListColumns: ['payment_number', 'payment_date', 'amount', 'method', 'crm_invoice', 'crm_billing_milestone'],
     }),
 
+    // An optional source, filled from the invoice (or else the plan step)
+    // when the payment names none (`_row-stamp.ts`), so the contract's
+    // Received counts what its invoices and steps count. Picking it fills the
+    // account on the form. A contract with payments cannot be deleted
+    // (`restrict`, as when it was the master).
+    crm_contract: Field.lookup('crm_contract', {
+      label: 'Contract',
+      group: 'basic',
+      // Declared, not left implicit: through 6.5.0 this column was the
+      // required master and NOT NULL, and an upgrade relaxes it only where the
+      // package says it is nullable (a managed upgrade's
+      // `relaxInstallDeclaredNotNull`; hotcrm#2557, ruling A on #2583).
+      storage: { notNull: false },
+      deleteBehavior: 'restrict',
+      lookupAutofill: [{ target: 'crm_account', source: 'crm_account', overwrite: true }],
+      relatedListColumns: ['payment_number', 'payment_date', 'amount', 'method', 'crm_invoice', 'crm_billing_milestone'],
+    }),
+
+    // Only the invoices of this payment's account; one of another account is
+    // refused (`payment_plan_step_stamp`).
     crm_invoice: Field.lookup('crm_invoice', {
       label: 'Invoice',
       group: 'basic',
-      dependsOn: ['crm_contract'],
+      dependsOn: ['crm_account'],
       relatedListColumns: ['payment_number', 'payment_date', 'amount', 'method'],
     }),
 
@@ -61,15 +108,8 @@ export const Payment = ObjectSchema.create({
     crm_billing_milestone: Field.lookup('crm_billing_milestone', {
       label: 'Billing Milestone',
       group: 'basic',
-      dependsOn: ['crm_contract'],
+      dependsOn: ['crm_account'],
       relatedListColumns: ['payment_number', 'payment_date', 'amount', 'crm_invoice'],
-    }),
-
-    crm_account: Field.lookup('crm_account', {
-      label: 'Account',
-      group: 'basic',
-      readonly: true,
-      relatedListColumns: ['payment_number', 'crm_contract', 'payment_date', 'amount', 'method'],
     }),
 
     payment_date: Field.date({
@@ -128,6 +168,7 @@ export const Payment = ObjectSchema.create({
 
   indexes: [
     { fields: ['crm_contract'] },
+    { fields: ['crm_sales_order'] },
     { fields: ['crm_account'] },
     { fields: ['crm_invoice'] },
     { fields: ['crm_billing_milestone'] },

@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import stack from './helpers/composed-stack';
+import { docsSourceForSlug } from './helpers/docs-route';
 
 /**
  * Every business object this app ships has a user-facing docs page (#672).
@@ -58,7 +59,7 @@ import stack from './helpers/composed-stack';
  *  3. The page **names the object** — by API name, `label`, `pluralLabel`, or
  *     the entry's `term` override for the handful of concepts the docs spell
  *     differently from the metadata ("line item", "article").
- *  4. The page is **not a developer page**. `content/docs/developers/
+ *  4. The page is **not a developer page**. `content/docs/(operate)/developers/
  *     api-reference.mdx` tabulates nearly every object in the app, so
  *     "mentioned somewhere under content/docs" would have been satisfied for
  *     free by an API table row. A row in a reference table is not user
@@ -77,7 +78,7 @@ import stack from './helpers/composed-stack';
  *
  * ## Reverse verification (#672)
  *
- * Predicted direction: **red**. Deleting `content/docs/sales/
+ * Predicted direction: **red**. Deleting `content/docs/(product)/sales/
  * meetings-and-calls.mdx` fails "the page exists in every locale" naming
  * `crm_event` and `crm_event_attendee`; deleting their ledger rows instead
  * fails "every registered business object has a ledger entry" with the same two
@@ -182,10 +183,10 @@ const DEVELOPER_SECTIONS = ['developers', 'reference'];
 const LOCALES = ['', '.zh-Hans', '.zh-Hant'] as const;
 
 const docPath = (slug: string, locale: string): string =>
-  join(REPO_ROOT, 'content/docs', `${slug}${locale}.mdx`);
+  join(REPO_ROOT, 'content/docs', `${docsSourceForSlug(slug)}${locale}.mdx`);
 
 const metaPath = (slug: string, locale: string): string =>
-  join(REPO_ROOT, 'content/docs', dirname(slug), `meta${locale}.json`);
+  join(REPO_ROOT, 'content/docs', dirname(docsSourceForSlug(slug)), `meta${locale}.json`);
 
 const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -241,7 +242,7 @@ describe('every business object has a user-facing docs page', () => {
       misfiled,
       `these rows point at a developer section (${DEVELOPER_SECTIONS.join(', ')}):\n  ` +
         `${misfiled.join('\n  ')}\n` +
-        'content/docs/developers/api-reference.mdx tabulates nearly every object — a ' +
+        'content/docs/(operate)/developers/api-reference.mdx tabulates nearly every object — a ' +
         'row in that table is not user documentation. Point at the page a business user ' +
         'would be sent to.',
     ).toEqual([]);

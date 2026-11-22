@@ -24,7 +24,7 @@ const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
  * ### What was wrong
  *
  * `crm_opportunity_line_item` was declared live on every surface but one.
- * Three profiles granted `allowCreate`; `content/docs/sales/opportunities.mdx`
+ * Three profiles granted `allowCreate`; `content/docs/(product)/sales/opportunities.mdx`
  * described the deal amount rolling up from line items;
  * `billing-handoff.flow.ts`'s `load_line_items` READ them on every won deal.
  * Nothing in the app could create one — no action, no list view, no navigation
@@ -72,7 +72,9 @@ const byName = (n: string) => objects.find((o) => o.name === n) as AnyRec;
 const LINE_ITEM = byName('crm_opportunity_line_item');
 const PRODUCT = byName('crm_product');
 
-const oppDetailPage = pages.find((p) => p.name === 'opportunity_detail_page') as AnyRec;
+// Since #2686 the deal authors no record page at all; every page bound to it
+// (none today) is still walked, so a line list authored back onto one shows.
+const oppPages = pages.filter((p) => p.object === 'crm_opportunity');
 
 // ─────────────────────────────────────────────── the declared route ──
 
@@ -92,8 +94,8 @@ const oppDetailPage = pages.find((p) => p.name === 'opportunity_detail_page') as
  */
 describe('the deal\'s line table adds a line through the product lookup', () => {
   it('authors no line list on the page: the body table is derived', () => {
-    expect(oppDetailPage?.kind).toBe('slotted');
-    expect([...walk(oppDetailPage)].filter((n) => n.type === 'record:related_list')).toEqual([]);
+    expect(oppPages.filter((p) => p.type === 'record').map((p) => p.name), 'the deal authors a record page again').toEqual([]);
+    expect([...walk(oppPages)].filter((n) => n.type === 'record:related_list')).toEqual([]);
   });
 
   it('draws the lines as a body table, with the columns the retired Products card named', () => {

@@ -1,27 +1,43 @@
 ---
 title: Collection Plan — What Sales Sees After the Contract
-description: A contract's billing milestones, who may change them, and what Invoiced, Received and Open count.
+description: The billing milestones planned from an order or a contract, who may change them, and what Invoiced, Received and Open count.
 order: 1
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
   - object:crm_billing_milestone
+  - object:crm_sales_order
   - object:crm_contract
 ---
 
 # Collection Plan — What Sales Sees After the Contract
 
-For sales reps and managers. Order to Cash shows, on each contract, whether it
-has been invoiced, whether it has been paid, and what is overdue. Finance keeps
-the books elsewhere and records its invoices and payments here; the one thing
-sales keeps is the contract's **collection plan**, a list of **billing
+For sales reps and managers. Order to Cash shows, on each order and contract,
+whether it has been invoiced, whether it has been paid, and what is overdue.
+Finance keeps the books elsewhere and records its invoices and payments here;
+the one thing sales keeps is the **collection plan**, a list of **billing
 milestones**.
+
+A milestone belongs to an **account** and names the **order** or the
+**contract** it plans; a milestone with neither is refused. Choosing the order
+or the contract fills in the account.
+
+**One deal's plan hangs in one place: on the order when there is one, and on
+the contract only when there is no order.** Nothing stops you from planning
+the same deal twice, once on each, so do not: the account's figures would not
+count it twice, but the two pages would each show a plan.
+
+When the order sits under a contract (a framework or subscription contract),
+a milestone of the order takes that contract too. The order's page then shows
+its own plan, and the contract's page totals the plans of all its orders. A
+milestone that names an order and a different contract is refused, and so is
+one whose order and contract belong to different accounts.
 
 ## Who may change the plan
 
 Reps, sales managers and administrators add, change and remove the milestones
-of any contract they can read; editing the contract itself is not needed.
-Everyone who can read a contract reads its milestones. Finance reads them and
-never changes them.
+of any account they can read; editing the account or the contract is not
+needed. Everyone who can read an account and its contracts reads its
+milestones. Finance reads them and never changes them.
 
 ## What the figures count
 
@@ -46,14 +62,27 @@ records it; nothing sets it for you.
 milestones whose **Planned Date** falls in the current calendar month. It
 changes on the first of each month.
 
+## Totals on the order
+
+The order carries **Planned**, **Invoiced** and **Received**, in its
+**Pricing** section, counted exactly as the contract's are, over the
+milestones, invoices and payments that name the order. They leave the order
+when the module is disabled. Deal results count the order's own total, never
+these figures.
+
 ## Totals on the contract and the account
 
 The contract carries **Planned**, **Invoiced**, **Received** and
-**Receivable Balance**; the account carries **Invoiced**, **Received** and
-**Receivable Balance** across all its contracts. **Invoiced** counts issued
+**Receivable Balance** over the records that name it; the account carries
+**Invoiced**, **Received** and **Receivable Balance** over all its invoices and
+payments, including those with no contract. **Invoiced** counts issued
 invoices only. **Receivable Balance** is what the customer still owes on the
 open invoices: the **Open** amount of the issued invoices, summed. A payment
 not yet set against an invoice, such as an advance, counts in **Received**
 only. On the contract they sit in the **Contract Value** section, and on the
 account in **Financials**. They move whenever a milestone, an invoice or a
-payment is saved, and nobody edits them.
+payment is saved, and nobody edits them. Everyone who reads a contract
+reads its totals; the account's take a role that works with the customer's
+money (sales, finance, marketing, service, project managers, administrators).
+Someone who holds only CRM User, the set every member gets, or a consultant
+reads the account without them.

@@ -12,12 +12,17 @@ type Rec = Record<string, any>;
  * `@objectstack/verify`.
  *
  * - `*_row_stamp` (one per object) — the contract's account is stamped on the
- *   row; an imported invoice or payment is dated `synced_at`.
+ *   row, and an account that is not the contract's is refused; a missing
+ *   contract is filled from the step or the invoice; an imported invoice or
+ *   payment is dated `synced_at`. The rows belong to the account since
+ *   hotcrm#2557, and the contract is an optional source (a plan step needs
+ *   it or an order, `billing_milestone_source`; the order's half is
+ *   `test/o2c-sales-order.test.ts`).
  * - `invoice_figures` — a blank due date takes the contract's payment terms,
  *   and `open_amount` (stored, so the overdue view can filter it) follows the
  *   payments and the status.
  * - `payment_plan_step_stamp` — a payment takes its invoice's plan step, and a
- *   payment naming another contract's invoice is refused.
+ *   payment naming another account's invoice is refused.
  *
  * Real writes: each refusal is the engine's answer, envelope asserted.
  */
@@ -118,14 +123,103 @@ describe('the plan figures follow invoices and payments', () => {
     expect(Number(s.open_amount)).toBe(260000);
   });
 
-  it('refuses a payment naming another contract\'s invoice, naming the invoice', async () => {
+  it('refuses a payment naming another account\'s invoice, naming the invoice', async () => {
     const refused = insert('crm_payment', { crm_contract: acme.id, crm_invoice: inv.id, payment_date: '2026-10-26', amount: 1 });
     await expect(refused).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
-    expect(String(await refused.catch((err: Error) => err.message))).toContain(String(inv.invoice_number));
+    const message = String(await refused.catch((err: Error) => err.message));
+    expect(message).toContain(String(inv.invoice_number));
+    expect(message).toContain('another account');
+  });
+
+  it('refuses it on the account alone too, with no contract named', async () => {
+    await expect(insert('crm_payment', { crm_account: acme.crm_account, crm_invoice: inv.id, payment_date: '2026-10-26', amount: 1 }))
+      .rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
   });
 });
 
-describe('who writes what (#2462: read on the contract is the contract-side question)', () => {
+describe('the rows belong to the account; the contract is a source (hotcrm#2557)', () => {
+  it('an invoice and a payment are recorded against an account with no contract', async () => {
+    const i = await insert('crm_invoice', {
+      invoice_number: `INV-ACC-${++k}`, crm_account: acme.crm_account, issue_date: '2026-10-01', due_date: '2026-10-31', amount: 700,
+    });
+    const advance = await insert('crm_payment', { crm_account: acme.crm_account, payment_date: '2026-09-20', amount: 300 });
+    const ri = await row('crm_invoice', i.id);
+    expect(ri.crm_account).toBe(acme.crm_account);
+    expect(ri.crm_contract ?? null).toBeNull();
+    expect(Number(ri.open_amount)).toBe(700);
+    const ra = await row('crm_payment', advance.id);
+    expect(ra.crm_account).toBe(acme.crm_account);
+    expect(ra.crm_contract ?? null).toBeNull();
+  });
+
+  it('an invoice with no contract has no terms to read: a blank due date stays blank', async () => {
+    const i = await insert('crm_invoice', { invoice_number: `INV-ACC-${++k}`, crm_account: acme.crm_account, issue_date: '2026-10-01', amount: 1 });
+    expect((await row('crm_invoice', i.id)).due_date ?? null).toBeNull();
+  });
+
+  it('a payment on the account alone takes the account of the invoice it pays', async () => {
+    const i = await insert('crm_invoice', { invoice_number: `INV-ACC-${++k}`, crm_account: wayne.crm_account, issue_date: '2026-10-01', due_date: '2026-10-31', amount: 50 });
+    const p = await insert('crm_payment', { crm_invoice: i.id, payment_date: '2026-10-02', amount: 50 });
+    const rp = await row('crm_payment', p.id);
+    expect(rp.crm_account).toBe(wayne.crm_account);
+    expect(rp.crm_contract ?? null).toBeNull();
+    expect(Number((await row('crm_invoice', i.id)).open_amount)).toBe(0);
+  });
+
+  it('a plan step still needs a source: an order or a contract (hotcrm#2560)', async () => {
+    await expect(insert('crm_billing_milestone', {
+      name: `No source ${++k}`, crm_account: acme.crm_account, planned_amount: 1, planned_date: '2026-12-01',
+    })).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+  });
+
+  it('refuses a contract of another account, naming the contract, on each of the three', async () => {
+    const attempts: Array<[string, Rec]> = [
+      ['crm_billing_milestone', { name: `Cross ${++k}`, crm_account: acme.crm_account, crm_contract: wayne.id, planned_amount: 1, planned_date: '2026-12-01' }],
+      ['crm_invoice', { invoice_number: `INV-X-${++k}`, crm_account: acme.crm_account, crm_contract: wayne.id, issue_date: '2026-10-01', amount: 1 }],
+      ['crm_payment', { crm_account: acme.crm_account, crm_contract: wayne.id, payment_date: '2026-10-01', amount: 1 }],
+    ];
+    for (const [object, doc] of attempts) {
+      const refused = insert(object, doc);
+      await expect(refused, object).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
+      const message = String(await refused.catch((err: Error) => err.message));
+      expect(message, object).toContain(String(wayne.contract_number));
+      expect(message, object).toContain('another account');
+    }
+  });
+
+  it('refuses moving a row to another account while it keeps its contract', async () => {
+    const i = await invoice(wayne);
+    await expect(verify.hooks.run('crm_invoice', 'update', { id: i.id, crm_account: acme.crm_account }, { as: admin }))
+      .rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
+  });
+
+  it('control: naming the contract\'s own account passes', async () => {
+    const i = await insert('crm_invoice', {
+      invoice_number: `INV-OWN-${++k}`, crm_account: wayne.crm_account, crm_contract: wayne.id, issue_date: '2026-10-01', amount: 1,
+    });
+    expect((await row('crm_invoice', i.id)).crm_contract).toBe(wayne.id);
+  });
+
+  it('an invoice naming a step but no contract takes the step\'s contract', async () => {
+    const s = await step(wayne);
+    const i = await insert('crm_invoice', { invoice_number: `INV-STEP-${++k}`, crm_billing_milestone: s.id, issue_date: '2026-10-01', amount: 1 });
+    const ri = await row('crm_invoice', i.id);
+    expect(ri.crm_contract).toBe(wayne.id);
+    expect(ri.crm_account).toBe(wayne.crm_account);
+  });
+
+  it('a payment naming an invoice but no contract takes the invoice\'s contract and step', async () => {
+    const s = await step(wayne);
+    const i = await invoice(wayne, { crm_billing_milestone: s.id });
+    const p = await insert('crm_payment', { crm_invoice: i.id, payment_date: '2026-10-02', amount: 1 });
+    const rp = await row('crm_payment', p.id);
+    expect(rp.crm_contract).toBe(wayne.id);
+    expect(rp.crm_account).toBe(wayne.crm_account);
+    expect(rp.crm_billing_milestone).toBe(s.id);
+  });
+});
+
+describe('who writes what (#2462: read on the master is the master-side question; the account since hotcrm#2557)', () => {
   let fin: Person;
   let stranger: Person;
   let own: Rec; // a contract under an account the rep owns, so the rep reads it
@@ -182,10 +276,110 @@ describe('who writes what (#2462: read on the contract is the contract-side ques
       .rejects.toMatchObject({ status: 403 });
   });
 
-  it('someone who cannot read the contract cannot write its plan', async () => {
+  it('someone who cannot read the account cannot write its plan', async () => {
     expect(await verify.rows('crm_contract', { id: own.id }, { as: stranger.token })).toHaveLength(0);
+    expect(await verify.rows('crm_account', { id: own.crm_account }, { as: stranger.token })).toHaveLength(0);
+    // Naming the account: the master read is refused.
     await expect(insert('crm_billing_milestone', {
-      name: 'Stranger step', crm_contract: own.id, planned_amount: 1, planned_date: '2026-12-01',
+      name: 'Stranger step', crm_account: own.crm_account, crm_contract: own.id, planned_amount: 1, planned_date: '2026-12-01',
     }, stranger.token)).rejects.toMatchObject({ status: 403 });
+    // Naming the contract alone: the stamp cannot read it as the stranger, so
+    // no account is filled and the write is refused before it lands.
+    await expect(insert('crm_billing_milestone', {
+      name: 'Stranger step 2', crm_contract: own.id, planned_amount: 1, planned_date: '2026-12-01',
+    }, stranger.token)).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    expect(await verify.rows('crm_billing_milestone', { crm_contract: own.id, name: 'Stranger step' })).toEqual([]);
+  });
+});
+
+/**
+ * hotcrm#2557 moved the three objects' master from the contract to the
+ * account. The contract itself derives from the account, so for the people
+ * who work Order to Cash — the rep, the sales manager and finance — who reads
+ * and who writes must not move. Pinned here on one account the rep owns and
+ * one the rep does not, with a record of each kind on each, plus an invoice
+ * and a payment entered against the owned account with no contract.
+ */
+describe('who reads and writes after the move to the account (hotcrm#2557)', () => {
+  let rep2: Person;
+  let manager: Person;
+  let finance: Person;
+  let mine: Rec; // contract under an account rep2 owns
+  let theirs: Rec; // contract under an account rep2 does not own
+  const rows: Record<'mine' | 'theirs', Record<string, string[]>> = { mine: {}, theirs: {} };
+
+  beforeAll(async () => {
+    rep2 = await signUpPerson(verify, 'rep2@o2c-collection-plan.test', {
+      name: 'Move Rep', positions: ['crm_sales_rep'], permissionSets: ['sales_rep'],
+    });
+    manager = await signUpPerson(verify, 'manager@o2c-collection-plan.test', {
+      name: 'Move Manager', positions: ['crm_sales_manager'], permissionSets: ['sales_manager'],
+    });
+    finance = await signUpPerson(verify, 'finance@o2c-collection-plan.test', {
+      name: 'Move Finance', positions: ['crm_ar_accountant'], permissionSets: ['ar_accountant'],
+    });
+    const make = async (label: string, owner?: string): Promise<Rec> => {
+      const account = await insert('crm_account', {
+        name: `Move ${label} Corp`, type: 'customer', industry: 'technology', ...(owner ? { owner_id: owner } : {}),
+      });
+      const contact = await insert('crm_contact', {
+        first_name: 'Move', last_name: label, email: `move-${label}@o2c-collection-plan.test`, crm_account: account.id,
+      });
+      return insert('crm_contract', {
+        crm_account: account.id, crm_contact: contact.id, status: 'activated',
+        signed_copy: await committedFile(verify, String(account.created_by)),
+        contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1000,
+      });
+    };
+    mine = await make('Mine', rep2.id);
+    theirs = await make('Theirs');
+    for (const [key, contract] of [['mine', mine], ['theirs', theirs]] as const) {
+      const s = await step(contract, { planned_amount: 1000 });
+      const i = await invoice(contract, { amount: 1000, crm_billing_milestone: s.id });
+      const p = await insert('crm_payment', { crm_contract: contract.id, crm_invoice: i.id, payment_date: '2026-10-01', amount: 100 });
+      rows[key] = { crm_billing_milestone: [s.id], crm_invoice: [i.id], crm_payment: [p.id] };
+    }
+    const loose = await insert('crm_invoice', {
+      invoice_number: `INV-LOOSE-${++k}`, crm_account: mine.crm_account, issue_date: '2026-10-01', due_date: '2026-10-31', amount: 10,
+    });
+    const deposit = await insert('crm_payment', { crm_account: mine.crm_account, payment_date: '2026-10-01', amount: 5 });
+    rows.mine.crm_invoice!.push(loose.id);
+    rows.mine.crm_payment!.push(deposit.id);
+  }, 120_000);
+
+  const seen = async (object: string, ids: string[], token: string): Promise<number> =>
+    (await verify.rows(object, { id: { $in: ids } }, { as: token })).length;
+
+  it.each(['crm_billing_milestone', 'crm_invoice', 'crm_payment'])('the rep reads the %s rows of an account they own, and none of another', async (object) => {
+    expect(await seen(object, rows.mine[object]!, rep2.token)).toBe(rows.mine[object]!.length);
+    expect(await seen(object, rows.theirs[object]!, rep2.token)).toBe(0);
+  });
+
+  it.each(['crm_billing_milestone', 'crm_invoice', 'crm_payment'])('the sales manager and finance read every %s row', async (object) => {
+    for (const person of [manager, finance]) {
+      expect(await seen(object, [...rows.mine[object]!, ...rows.theirs[object]!], person.token))
+        .toBe(rows.mine[object]!.length + rows.theirs[object]!.length);
+    }
+  });
+
+  it('the rep and the sales manager keep the plan; finance does not write it', async () => {
+    await verify.hooks.run('crm_billing_milestone', 'update', { id: rows.mine.crm_billing_milestone![0], planned_amount: 1100 }, { as: rep2.token });
+    await verify.hooks.run('crm_billing_milestone', 'update', { id: rows.theirs.crm_billing_milestone![0], planned_amount: 1200 }, { as: manager.token });
+    await expect(verify.hooks.run('crm_billing_milestone', 'update', { id: rows.theirs.crm_billing_milestone![0], planned_amount: 1 }, { as: finance.token }))
+      .rejects.toMatchObject({ status: 403 });
+    await expect(verify.hooks.run('crm_billing_milestone', 'update', { id: rows.theirs.crm_billing_milestone![0], planned_amount: 1 }, { as: rep2.token }))
+      .rejects.toMatchObject({ status: expect.any(Number) });
+  });
+
+  it('finance writes invoices and payments on any account, with or without a contract; the rep and the manager write neither', async () => {
+    const i = await insert('crm_invoice', { invoice_number: `INV-FINMOVE-${++k}`, crm_account: theirs.crm_account, issue_date: '2026-10-01', due_date: '2026-10-31', amount: 20 }, finance.token);
+    await insert('crm_payment', { crm_account: theirs.crm_account, crm_invoice: i.id, payment_date: '2026-10-02', amount: 20 }, finance.token);
+    await insert('crm_invoice', { invoice_number: `INV-FINMOVE-${++k}`, crm_contract: theirs.id, issue_date: '2026-10-01', amount: 20 }, finance.token);
+    for (const person of [rep2, manager]) {
+      await expect(insert('crm_invoice', { invoice_number: `INV-NO-${++k}`, crm_account: mine.crm_account, issue_date: '2026-10-01', amount: 1 }, person.token))
+        .rejects.toMatchObject({ status: 403 });
+      await expect(insert('crm_payment', { crm_account: mine.crm_account, payment_date: '2026-10-01', amount: 1 }, person.token))
+        .rejects.toMatchObject({ status: 403 });
+    }
   });
 });

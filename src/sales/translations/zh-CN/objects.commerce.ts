@@ -107,6 +107,8 @@ export const commerce: Record<string, ObjectTranslationData> = {
     _validations: {
       shipped_after_order: { message: '发货日期不能早于下单日期' },
       sales_order_status_progression: { message: '不允许这样更改状态。订单按 草稿 → 已确认 → 已完成 推进；已确认可以退回草稿，草稿或已确认的订单可以取消。已完成和已取消是最终状态。' },
+      contract_same_account: { message: '关联合同必须属于本订单的所属客户。' },
+      contract_same_account_check: { message: '这份合同属于另一个客户。订单只能关联其所属客户的合同：请选择该客户的合同，或清空关联合同。' },
     },
     label: '订单',
     pluralLabel: '订单',
