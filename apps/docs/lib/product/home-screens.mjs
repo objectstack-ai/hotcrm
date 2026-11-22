@@ -44,13 +44,22 @@ export const HOME_SCREEN_IDS = [HERO_SCREEN, ...Object.values(APP_SCREENS)];
 const SCREEN_ROOT = ['assets', 'screenshots', 'hotcrm'];
 
 /**
+ * @typedef {{ status?: string, locales?: Record<string, string>, title?: Record<string, string>, alt?: Record<string, string> }} ScreenMeta
+ */
+
+/**
  * Reads the keys this page needs from a screen's `meta.yaml`: the top-level
  * `status` scalar and the `locales`, `title` and `alt` maps of one-line
  * scalars. It is deliberately narrow — any other shape for those keys (a
  * block scalar, a flow map, a continued line) throws rather than guesses.
+ *
+ * @param {string} yaml
+ * @param {string} where
+ * @returns {ScreenMeta}
  */
 export function readScreenMeta(yaml, where) {
   const lines = yaml.split(/\r?\n/);
+  /** @type {ScreenMeta} */
   const out = {};
   const scalar = (raw, at) => {
     const v = raw.trim();
