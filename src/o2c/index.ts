@@ -5,6 +5,7 @@ import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInpu
 import { O2cApp } from './apps/index.js';
 import { CrmO2cManual } from './books/index.js';
 import { ContractAccountExtensions, SalesOrderExtensions } from './extensions/index.js';
+import { SalesOrderContractFillFlow } from './flows/index.js';
 import { InvoiceImportMapping, PaymentImportMapping } from './mappings/index.js';
 import { BillingMilestone, Invoice, Payment } from './objects/index.js';
 import { billingMilestoneHook, invoiceHook, paymentHook } from './objects/hooks.js';
@@ -18,6 +19,14 @@ import { BillingMilestoneViews, InvoiceViews, PaymentViews } from './views/index
  * object (ADR-0130 R4).
  */
 export const o2cHooks = [billingMilestoneHook, invoiceHook, paymentHook].flat();
+
+/**
+ * This package's flows — see {@link o2cHooks}: the one that passes an order's
+ * contract, set after the rows were saved, to the order's rows (hotcrm#2724).
+ * It starts on the app package's `crm_sales_order`, along this manifest's
+ * dependency on it; see the flow's own note.
+ */
+export const o2cFlows = [SalesOrderContractFillFlow];
 
 /**
  * `app.objectstack.hotcrm.o2c` — the ORDER TO CASH module (「订单与回款」) of
@@ -99,6 +108,11 @@ export const createHotCrmO2cStack = (
     ],
   },
 
+  // What THIS package's metadata needs (see `requires` in
+  // `src/service/index.ts`): `automation` and `triggers` for the record-change
+  // flow (hotcrm#2724).
+  requires: ['automation', 'triggers'],
+
   // Finance's app (hotcrm#2465); see the app's own note.
   apps: [O2cApp],
   objects: [BillingMilestone, Invoice, Payment],
@@ -107,6 +121,7 @@ export const createHotCrmO2cStack = (
   // extension's own note.
   objectExtensions: [...ContractAccountExtensions, ...SalesOrderExtensions],
   hooks: o2cHooks,
+  flows: o2cFlows,
   views: [BillingMilestoneViews, InvoiceViews, PaymentViews],
   mappings: [InvoiceImportMapping, PaymentImportMapping],
   // Its manual (#2315), over `src/o2c/docs/`. See the book's own note.
