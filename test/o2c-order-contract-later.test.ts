@@ -20,8 +20,17 @@ import { hotcrmStack, signUpPerson, committedFile, flowRuns, type Person } from 
  *
  * - Edited on the order, or drafted by Draft Contract: the three rows take the
  *   contract, and the contract's figures count them at once.
- * - A row that already names a contract keeps it; another order's rows are
+ * - Moved to another contract (ruling B on step 3, comment 7072581116): the
+ *   rows that carried the previous contract move, its figures fall and the new
+ *   one's rise. Cleared: those rows are cleared, and the next contract (set
+ *   directly, or by Draft Contract) fills them, so A, then none, then B ends
+ *   under B. A row naming any other contract stays; another order's rows are
  *   not touched; the order's and the account's figures do not move.
+ * - The moved rows' history names the change and the person whose order edit
+ *   caused it (a sales rep's edit names the rep).
+ * - The ruling's two premises, pinned on the installed platform: the trigger
+ *   hands the flow the previous contract, and a row moved between contracts
+ *   leaves one contract's figures and joins the other's.
  * - The flow is the module's, on the app package's order: no hook attaches to
  *   `crm_sales_order` (ADR-0130 R4).
  */
@@ -69,9 +78,14 @@ describe('on the booted stack', () => {
     const order = await insert('crm_sales_order', {
       name: `Later Order ${n}`, crm_account: account.id, crm_contact: contact.id, status: 'confirmed', order_date: '2026-10-01', payment_terms: 'net_15',
     }, as);
+    // Activated, with the signed copy that state requires (#2317), when the
+    // admin made the account and so owns a file the admin can open; a draft
+    // otherwise. The figures sum the same either way.
     const contract = async (): Promise<Rec> => insert('crm_contract', {
-      crm_account: account.id, crm_contact: contact.id, status: 'activated',
-      signed_copy: await committedFile(verify, String(account.created_by)),
+      crm_account: account.id, crm_contact: contact.id,
+      ...(as === admin
+        ? { status: 'activated', signed_copy: await committedFile(verify, String(account.created_by)) }
+        : { status: 'draft' }),
       contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 50000,
     });
     return { account, order, contract };
@@ -182,6 +196,141 @@ describe('on the booted stack', () => {
       expect(await contractOf('crm_invoice', rows.inv.id)).toBe(drafted);
       expect(await figures('crm_contract', drafted)).toEqual([5000, 4000, 2500]);
     }, 120_000);
+  });
+
+  /**
+   * The order's contract changed or cleared (hotcrm#2724 step 3, ruling B):
+   * the records that carried the previous contract follow it, a record on any
+   * other contract stays.
+   */
+  describe('the order\'s contract changed', () => {
+    const OBJECTS = ['crm_billing_milestone', 'crm_invoice', 'crm_payment'] as const;
+    const idsOf = (rows: Awaited<ReturnType<typeof rowsOn>>): string[] => [rows.step.id, rows.inv.id, rows.pay.id];
+    const contractsOf = async (rows: Awaited<ReturnType<typeof rowsOn>>): Promise<Array<string | null>> =>
+      Promise.all(OBJECTS.map((object, i) => contractOf(object, idsOf(rows)[i]!)));
+    /** Set the order's contract and wait for the flow's run number `n`. */
+    const setContract = async (orderId: string, contract: string | null, n: number): Promise<void> => {
+      await update('crm_sales_order', { id: orderId, crm_contract: contract });
+      await vi.waitFor(async () => expect(await flowRuns(verify, FLOW, orderId)).toHaveLength(n), { timeout: 15_000, interval: 100 });
+    };
+
+    describe('to another contract', () => {
+      let f: Awaited<ReturnType<typeof fixture>>;
+      let rows: Awaited<ReturnType<typeof rowsOn>>;
+      let a: Rec;
+      let b: Rec;
+      let c: Rec;
+      let third: Rec;
+      let cBefore: number[];
+
+      beforeAll(async () => {
+        f = await fixture();
+        rows = await rowsOn(f.order.id);
+        [a, b, c] = [await f.contract(), await f.contract(), await f.contract()];
+        // Named while the order had no contract: a step on a third contract.
+        third = await insert('crm_billing_milestone', {
+          name: `Third ${++k}`, crm_sales_order: f.order.id, crm_contract: c.id, planned_amount: 700, planned_date: '2026-11-01',
+        });
+        await setContract(f.order.id, a.id, 1);
+        cBefore = await figures('crm_contract', c.id);
+        await setContract(f.order.id, b.id, 2);
+      }, 120_000);
+
+      it('the records that carried the previous contract move to the new one', async () => {
+        expect(await contractsOf(rows)).toEqual([b.id, b.id, b.id]);
+        for (const [i, object] of OBJECTS.entries()) expect((await row(object, idsOf(rows)[i]!)).crm_account, object).toBe(f.account.id);
+      });
+
+      it('the previous contract\'s figures fall and the new one\'s rise', async () => {
+        expect(await figures('crm_contract', a.id)).toEqual([0, 0, 0]);
+        expect(await figures('crm_contract', b.id)).toEqual([5000, 4000, 2500]);
+      });
+
+      it('a record on a third contract stays, and its contract\'s figures do not move', async () => {
+        expect(await contractOf('crm_billing_milestone', third.id)).toBe(c.id);
+        expect(await figures('crm_contract', c.id)).toEqual(cBefore);
+      });
+
+      it('the move\'s run wrote the three records and failed none', async () => {
+        const runs = await flowRuns(verify, FLOW, f.order.id);
+        const last = runs.sort((x, y) => String(x.started_at).localeCompare(String(y.started_at))).at(-1)!;
+        expect(last.status).toBe('completed');
+        expect(last.summary).toMatchObject({ selected: 3, acted: 3, failed: 0 });
+      });
+
+      it('each moved record\'s history names the change of contract', async () => {
+        const [entry] = (await verify.rows('sys_activity', { object_name: 'crm_invoice', record_id: rows.inv.id }))
+          .filter((r: Rec) => JSON.stringify(r.metadata ?? '').includes(b.id) && String(r.summary ?? '').length > 0)
+          .sort((x: Rec, y: Rec) => String(y.timestamp).localeCompare(String(x.timestamp)));
+        expect(entry, 'a history entry for the move').toBeTruthy();
+        const meta = typeof entry!.metadata === 'string' ? JSON.parse(entry!.metadata) : entry!.metadata;
+        expect(meta.new).toMatchObject({ crm_contract: b.id });
+        expect(meta.old).toMatchObject({ crm_contract: a.id });
+        // `trackHistory` on the field: the entry reads "Contract: A → B", not
+        // the generic "Updated Invoice …" line an untracked field gets.
+        const number = async (id: string): Promise<string> => String((await row('crm_contract', id)).contract_number);
+        expect(String(entry!.summary)).toBe(`Contract: ${await number(a.id)} → ${await number(b.id)}`);
+        // The system write names the person whose order edit triggered it
+        // (here the administrator who made the order), not the system.
+        expect(entry!.actor_id).toBe(f.account.created_by);
+      });
+    });
+
+    it('a sales rep\'s order edit moves finance\'s invoice and payment, and their history names the rep', async () => {
+      const f = await fixture(rep.token);
+      const rows = await rowsOn(f.order.id);
+      const [a, b] = [await f.contract(), await f.contract()];
+      await update('crm_sales_order', { id: f.order.id, crm_contract: a.id }, rep.token);
+      await vi.waitFor(async () => expect(await contractsOf(rows)).toEqual([a.id, a.id, a.id]), { timeout: 15_000, interval: 100 });
+      await update('crm_sales_order', { id: f.order.id, crm_contract: b.id }, rep.token);
+      await vi.waitFor(async () => expect(await contractsOf(rows)).toEqual([b.id, b.id, b.id]), { timeout: 15_000, interval: 100 });
+      for (const [object, id] of [['crm_invoice', rows.inv.id], ['crm_payment', rows.pay.id]] as const) {
+        const moves = (await verify.rows('sys_activity', { object_name: object, record_id: id }))
+          .filter((r: Rec) => { const m = typeof r.metadata === 'string' ? JSON.parse(r.metadata) : r.metadata; return m?.new?.crm_contract === b.id; });
+        expect(moves, object).toHaveLength(1);
+        expect(moves[0]!.actor_id, object).toBe(rep.id);
+      }
+    }, 120_000);
+
+    describe('cleared', () => {
+      it('the records that carried it are cleared, and the contract\'s figures fall', async () => {
+        const f = await fixture();
+        const rows = await rowsOn(f.order.id);
+        const a = await f.contract();
+        await setContract(f.order.id, a.id, 1);
+        expect(await contractsOf(rows)).toEqual([a.id, a.id, a.id]);
+        await setContract(f.order.id, null, 2);
+        expect(await contractsOf(rows)).toEqual([null, null, null]);
+        expect(await figures('crm_contract', a.id)).toEqual([0, 0, 0]);
+        expect(await figures('crm_sales_order', f.order.id), 'the order still counts them').toEqual([5000, 4000, 2500]);
+      }, 120_000);
+
+      it('then another contract: the records end under it', async () => {
+        const f = await fixture();
+        const rows = await rowsOn(f.order.id);
+        const [a, b] = [await f.contract(), await f.contract()];
+        await setContract(f.order.id, a.id, 1);
+        await setContract(f.order.id, null, 2);
+        await setContract(f.order.id, b.id, 3);
+        expect(await contractsOf(rows)).toEqual([b.id, b.id, b.id]);
+        expect(await figures('crm_contract', a.id)).toEqual([0, 0, 0]);
+        expect(await figures('crm_contract', b.id)).toEqual([5000, 4000, 2500]);
+      }, 120_000);
+
+      it('then Draft Contract, as a sales rep: the records take the drafted contract', async () => {
+        const f = await fixture(rep.token);
+        const rows = await rowsOn(f.order.id);
+        const a = await f.contract();
+        await setContract(f.order.id, a.id, 1);
+        await setContract(f.order.id, null, 2);
+        await verify.flows.run('sales_order_draft_contract', { recordId: f.order.id, objectName: 'crm_sales_order' }, { as: rep.token });
+        const drafted = (await row('crm_sales_order', f.order.id)).crm_contract;
+        expect(drafted, 'Draft Contract named a contract on the order').toBeTruthy();
+        await vi.waitFor(async () => expect(await contractsOf(rows)).toEqual([drafted, drafted, drafted]), { timeout: 15_000, interval: 100 });
+        expect(await figures('crm_contract', a.id)).toEqual([0, 0, 0]);
+        expect(await figures('crm_contract', drafted)).toEqual([5000, 4000, 2500]);
+      }, 120_000);
+    });
   });
 
   /**

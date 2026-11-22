@@ -291,7 +291,7 @@ const ROW_LABEL: Record<string, Record<'zh-Hans' | 'zh-Hant', string>> = {
   expense_request_project_approval_on_create: { 'zh-Hans': '项目出差申请审批（新建时）', 'zh-Hant': '項目出差申請審批（新建時）' },
   project_budget_alert: { 'zh-Hans': '项目预算预警', 'zh-Hant': '項目預算預警' },
   // hotcrm#2724: 回款记录 as the Order to Cash pages say it; 合約 on the zh-Hant page, as its other contract rows.
-  sales_order_contract_fill: { 'zh-Hans': '订单合同补到回款记录', 'zh-Hant': '訂單合約補到回款紀錄' },
+  sales_order_contract_fill: { 'zh-Hans': '订单合同同步到回款记录', 'zh-Hant': '訂單合約同步到回款紀錄' },
 };
 
 /** How each page spells the two counts. An unmapped count throws — see the header. */
