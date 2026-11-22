@@ -70,6 +70,14 @@ The approver is written into **Approver** when you submit, and the request
 appears under their **Requests to Approve**. Nobody approves their own, and
 nobody sets **Approved** or **Rejected** by hand.
 
+**A one-person organization.** Nobody approves a request they submitted, an
+administrator included, so a request needs a second user who can approve it:
+your manager, a Finance Controller or an administrator, or for a request on a
+project, the project's Project Manager or an administrator. Until that person
+has been added, a submitted request waits in **Submitted** and nobody can
+decide it: recall it from your Inbox, and submit it again once they have been
+added.
+
 ```mermaid
 stateDiagram-v2
     state "Draft" as draft

@@ -60,6 +60,16 @@ as its Approved Budget.
 - **While it waits, the record is locked**: nobody edits it until it is
   decided.
 
+**A one-person organization.** Nobody approves a request they submitted, an
+administrator included, so a timesheet, or an expense report or travel request
+on a project, needs a second user who can approve it: the project's Project Manager, or an
+administrator. An expense report of **2,000** or more also needs a Finance
+Controller or an administrator. A timesheet keeps the approver it was created
+with, so one created while you were its project's Project Manager goes to an
+administrator other than you. Until that person has been added, what you
+submit waits in **Submitted** and nobody can decide it: recall it from your
+Inbox, and submit it again once they have been added.
+
 ## The approved budget is a version, not a figure
 
 Nobody types the **Approved Budget**: it is the total of the project's

@@ -76,7 +76,11 @@ describe('crm_lead disqualification reason is enforced, not just documented', ()
       ...(leadView?.form ? ([['form', leadView.form]] as [string, AnyRec][]) : []),
       ...(Object.entries(leadView?.formViews ?? {}) as [string, AnyRec][]),
     ];
-    expect(forms.length, 'no crm_lead forms found — the walker stopped matching').toBeGreaterThan(3);
+    // The default form and the public Web-to-Lead form (#2725 deleted the six
+    // layout showcases no console surface opened).
+    expect(forms.map(([name]) => name), 'the walker stopped matching the crm_lead forms').toEqual(
+      expect.arrayContaining(['form', 'web_to_lead']),
+    );
 
     /** Field names a form section renders, whether declared bare or as an object. */
     const fieldNames = (form: AnyRec): string[] =>

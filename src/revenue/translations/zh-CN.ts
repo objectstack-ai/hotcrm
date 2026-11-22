@@ -308,10 +308,6 @@ export const zhCN: TranslationData = {
         basic: { label: '产品信息' },
         pricing: { label: '价格' },
         metadata: { label: '资源' },
-        // product.view.ts 表单区块名称 (#1100)
-        product_info: { label: '产品信息' },
-        pricing_info: { label: '定价' },
-        media: { label: '媒体' },
       },
     },
     crm_price_book: {

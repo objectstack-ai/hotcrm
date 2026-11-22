@@ -266,6 +266,40 @@ export const SalesOrder = ObjectSchema.create({
       condition: P`has(record.shipped_date) && record.shipped_date != null && has(record.order_date) && record.order_date != null && record.shipped_date < record.order_date`,
     },
     {
+      // An order carries only a contract of its own account (#2728). The
+      // contract's `dependsOn: ['crm_account']` filters the form's picker and
+      // the import's lookup, but an API write was accepted with another
+      // account's contract, and the Order to Cash rows on that order then
+      // could not be saved against it (the row stamp refuses `apart`).
+      //
+      // The rule reads the contract's account one hop through the reference,
+      // which a `validations[]` condition does since 18.x (objectql
+      // `resolveTraversalScope`). A reference read through must hold an id,
+      // so the read sits in `then` behind a `when` that the contract is set:
+      // an order without a contract is not checked. An invariant (AGENTS.md
+      // rule 7): an order already saved with another account's contract is
+      // refused on its next edit until its contract or account is corrected.
+      //
+      // The message is fixed text: 18.6.0 interpolates no record values into
+      // a rule's message, so it names the fields, not the two accounts.
+      name: 'contract_same_account',
+      type: 'conditional',
+      severity: 'error',
+      message: "The contract must belong to this order's Account.",
+      when: P`has(record.crm_contract) && record.crm_contract != null`,
+      then: {
+        // `cross_field` so the refusal is attached to Contract, the field to
+        // correct, rather than to the record as a whole.
+        name: 'contract_same_account_check',
+        type: 'cross_field',
+        fields: ['crm_contract', 'crm_account'],
+        severity: 'error',
+        message:
+          "This contract belongs to another account. An order can only carry a contract of its own Account: choose one of this account's contracts, or clear Contract.",
+        condition: P`has(record.crm_account) && record.crm_account != null && record.crm_contract.crm_account != record.crm_account`,
+      },
+    },
+    {
       // The order's path. `error`, like the contract's (#2192): Completed and
       // Cancelled are final, and Confirmed goes back to Draft to change its
       // lines (`sales_order_workflow`). A create carries no transition, so an

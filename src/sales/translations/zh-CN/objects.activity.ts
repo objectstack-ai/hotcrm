@@ -210,9 +210,6 @@ export const activity: Record<string, ObjectTranslationData> = {
     _sections: {
       basic: { label: '参与者' },
       response: { label: '邀请' },
-      // event_attendee.view.ts 表单区块名称 (#1100)
-      attendee: { label: '参与者' },
-      invitation: { label: '邀请' },
     },
     _views: {
       all_event_attendees: { label: '活动参与者' },
