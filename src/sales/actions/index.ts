@@ -32,4 +32,7 @@ export { CompleteTaskAction } from './task.actions';
 // Print Contract (#2317): an `api` action on the print service's door.
 export { PrintContractAction } from './contract.actions';
 // Draft Contract (#2558): the order's contract, drafted on demand by a flow.
-export { DraftContractAction } from './sales_order.actions';
+// Confirm / Complete / Cancel Order (#2716): declarative updates of the status.
+export {
+  DraftContractAction, ConfirmSalesOrderAction, CompleteSalesOrderAction, CancelSalesOrderAction,
+} from './sales_order.actions';
