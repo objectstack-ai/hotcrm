@@ -1,5 +1,52 @@
 # Changelog
 
+## 6.6.0
+
+**Requires ObjectStack 18.6.0: upgrade the host first.** HotCRM 6.5.0 as it was published on 2026-11-18 already required 18.6.0, though its notes say 18.5.0, and it already carried the Expenses app (expense reports, travel requests, expense standards), Orders, Qualify Lead, the permission-aware Update Stage and the smaller fixes 18.6.0 brought (#2655). An installation on 6.5.0 already has those; they are listed below because 6.5.0's notes left them out.
+
+**Before and after upgrading:**
+
+1. **Self-hosted:** run `os migrate apply` once and confirm the three `relax_not_null` changes on the contract column of `crm_billing_milestone`, `crm_invoice` and `crm_payment`; skip the three `tighten_not_null` changes it marks destructive. Until then a record with no contract is refused and the demo deposit logs one seed error at boot (#2583). Coming from 18.5.0, a deployment that boots with `OS_SKIP_SCHEMA_SYNC=1` also runs `os migrate plan` and `os migrate apply` for 18.6.0's boolean storage fix.
+2. **Hosted:** expect the upgrade to ask you to confirm 6 type changes. On plan steps, invoices and payments the `crm_contract` field goes from master-detail to lookup and `crm_account` from lookup to master-detail, so 18.6.0 answers `409 SCHEMA_UPGRADE_CONFIRMATION_REQUIRED` until they are confirmed. This was measured on a minimal model, not on a real hosted upgrade. No data should move: none did on a self-hosted database. The managed upgrade relaxes the contract columns' NOT NULL itself; that relax was read on staging with a test package on 2026-11-21, not yet with HotCRM (objectstack#35262).
+3. **Finish in-flight approvals first.** A project expense report or travel request still waiting for approval cannot be decided after the upgrade: approving it answers `RESUME_TARGET_LOST` (#2575). For one left waiting, the submitter recalls it, an administrator sets it back to Draft, and it is submitted again. From 6.4.0 the same holds for an expense waiting for approval: recall it, then the spender chooses **Submit for Reimbursement** (#2556, #2559).
+4. **The CRM User permission set no longer reads an account's Invoiced, Received and Receivable Balance** (#2557). Sales, finance, marketing and service sets still do; a consultant (Project Member) does not (#2481). A set your organization authored that reads accounts loses the three unless it grants them or View All on accounts: add `{ readable: true }` rows for the three fields.
+5. **An accepted quote now creates a Draft order and drafts no contract** (#2558); **Draft Contract** on the order drafts one on demand. To restore the old behaviour, switch the packaged flow **Accepted Quote Drafts a Contract** on (it ships off), and **Accepted Quote Creates an Order** off for no orders: **New in Studio** on the console home page, **HotCRM Revenue**, **Customize**, **Automations**. The choice survives upgrades.
+6. **Lead, opportunity, case and account open on the platform's default record page** (#2382, #2686). Lead and case keep their warning banners (a duplicate lead, a case past its SLA); a deal waiting for approval shows the platform's approval strip instead of a banner.
+7. **From 6.4.0 with typed Approved Budgets:** confirm the `crm_project.approved_budget` change (currency to summary), then, before anyone adds a budget version, run `scripts/backfill-project-budget-baseline.ts` (it only reports until `--apply`).
+8. **Smaller:** a forecast saved by hand under the old default is still refreshed nightly until its Source is set to Manual entry; a Renewal Notice above 120 days is refused on the next save that sends it; an order carrying another account's contract is refused on its next edit; project members get their names on their next save or from `scripts/backfill-record-titles.ts`. Records written before the upgrade keep their English automatic text.
+
+### Order to Cash
+
+- **Orders** with their lines under the account, in the Sales and Order to Cash apps (#2555). An accepted quote creates one, and an order carries only its own account's contract (#2728).
+- **Plan steps, invoices and payments belong to the account; the contract is optional,** so an invoice for several orders or an advance payment has a home (#2557). They may cite an order, whose page shows Planned, Invoiced and Received (#2560), and they follow the order when its contract changes, so a rep's order edit can move the contract on finance's rows (#2724). The imports gain Account and Order columns. A project can name the order it delivers (#2561).
+
+### Sales
+
+- Quote and deal lines are a table in the record body, and a deal or quote saves with its lines in one request (#2382, #2720).
+- **Qualify Lead** asks for Need Type and Estimated Amount, and any other move to Qualified without them is refused (400 over the API). The first logged contact moves a New lead to Contacted, status bars move a record on a click, and Convert Lead names the contact it joins (#2541).
+- **Update Stage** runs as the person clicking, respects permissions and approval locks, reports each deal and offers open stages only; `mass_update_stage` takes one `recordId` (#2586). Win and Loss Reason show only on a closing deal; Clone Opportunity moves to the menu; activity pickers offer the account's deals and contacts only (#2592, #2573, #2677).
+- A notification missing a value is not sent; Renewal Notice is capped at 120 days; a forecast saved by hand is Manual entry; a campaign may start and end on one day; the printed quote's Pricing and Terms break separately (#2451, #2534, #2539, #2633, #2553).
+- Display and demo-data details, the demo's service desk inside its SLAs for two weeks, standard product and attendee dialogs, and six unused lead forms removed (#2432, #2452, #2725).
+
+### Project Delivery and Expenses
+
+- **The Expenses app** for every employee (#2556): expenses go on an **expense report** that the manager or the project manager approves and finance marks paid (#2559); **travel requests** with itinerary lines, approved before the trip and cited by the reports spent on it (#2578, #2579, #2580, #2581); **expense standards** and Review Notes (#2616); two assistant skills, Expense Filing and Expense Check (#2617); three corrections from testing.
+- Project approvals of expense reports and travel requests are registered by Project Delivery again (#2575). A project's Team includes its Project Manager (#2485). Budget versions save with their lines and keep them in a field group; the Overview shows the project's fields; a refused time entry leaves no empty timesheet; the app's teal is deeper (#2565, #2687).
+
+### i18n
+
+- Text HotCRM writes by itself (escalation reasons, automatic task titles, renewal deals) is in the organization's language, and automations find their records by a hidden Automation Key (#2494).
+- zh-CN labels a person's name 名字 / 姓氏 / 姓名, and Full Name leads the contact and lead lists (#2685). Import mappings are named in the reader's language. Pack wording fixes in Chinese, Spanish and Japanese (#2537, #2611, #2699, #2711, #2717).
+
+### Analytics
+
+- Every dataset dimension and measure says in four languages what it counts, and an assistant finds figures in everyday words; "revenue" now asks which figure you mean (#2593, #2634).
+
+### Marketplace and docs
+
+- The listing describes six apps from lead to cash, is filed under Sales, Finance and Project, links to the production marketplace and shows its icon; its release notes drop review lines and card numbers (#2606, #2689, #2461). Each app has its own icon (#2666).
+- The docs sidebar has four sections; the module switch, Order to Cash, one-person approvals and lead conversion are documented as they are (#2648, #2708, #2570, #2654, #2632).
+
 ## 6.5.0
 
 Runs on ObjectStack 18.5.0, the same pin as 6.4.0. Two upgrade notes. Demo data still does not reach a marketplace install (objectstack#34336): the Order to Cash and Project Delivery seeds load only on a fresh boot. Projects saved before 6.5.0 keep their typed Approved Budget until a budget version is approved; `scripts/backfill-project-budget-baseline.ts` carries it into a version 1, reports only until `--apply`, and is not run by the upgrade: applying it on a hosted tenant is the maintainer's call.

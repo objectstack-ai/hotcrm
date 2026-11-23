@@ -5,26 +5,71 @@ description: Recent releases, new capabilities, and what's coming next.
 
 # What's New
 
-## v6.5.0 — Latest release
+## v6.6.0 — Latest release
 
-**HotCRM 6.5.0**, like 6.4.0, shipped on **ObjectStack 18.5.0**. The repository has since moved
-every `@objectstack/*` package to **ObjectStack 18.6.0**, and its manifest declares the matching
-`^18.6.0` protocol range, so a
+**HotCRM 6.6.0** runs on **ObjectStack 18.6.0** across every `@objectstack/*` package, and its
+manifest declares the matching `^18.6.0` protocol range, so a
 runtime on a different protocol major — a 17.x host included — refuses the load up front with a
-structured diagnostic instead of failing deep in a schema parse. 6.3.0, 6.2.1 and 6.2.0 on
+structured diagnostic instead of failing deep in a schema parse. 6.5.0, as it was published on
+2026-11-18, already required ObjectStack 18.6.0, though its notes said 18.5.0; 6.4.0 shipped on
+ObjectStack 18.5.0; 6.3.0, 6.2.1 and 6.2.0 on
 ObjectStack 18.4.0; 6.1.2, 6.1.1 and 6.1.0 on
 ObjectStack 18.3.0 and 6.0.0 on ObjectStack
 18.0.0.
 
-**An environment on 6.4.0 reads "What 6.5.0 changes" alone.** 6.4.0 was the first version
-published since 6.2.0; 6.2.1 and 6.3.0 were cut in the repository but never published, so an
-environment still on 6.2.0 also reads "What 6.4.0 changes", "What 6.3.0 changes" and "What 6.2.1
-changes" below, and their checks.
+**An environment on 6.5.0 reads "What 6.6.0 changes" alone.** An environment on 6.4.0 also reads
+"What 6.5.0 changes". 6.4.0 was the first version published since 6.2.0; 6.2.1 and 6.3.0 were cut
+in the repository but never published, so an environment still on 6.2.0 also reads "What 6.4.0
+changes", "What 6.3.0 changes" and "What 6.2.1 changes" below, and their checks.
 
 > **This page keeps the releases since 6.0.0.** The full history, every earlier
 > release and the v1.0 launch included, is [`CHANGELOG.md`](https://github.com/objectstack-ai/hotcrm/blob/main/CHANGELOG.md) in the
 > repository, compiled from the `.changeset/` entry every pull request adds. That file is the
 > record; this page summarises the recent releases for a reader deciding whether to upgrade.
+
+### What 6.6.0 changes
+
+6.5.0 as it was published already carried the Expenses app, Orders, Qualify Lead and the new Update
+Stage. They are listed here because 6.5.0's notes left them out; an environment on 6.5.0 already has them.
+
+- **Orders and the account's money.** An accepted quote now creates a Draft **order** with its lines,
+  and **Draft Contract** on the order drafts the contract when you want one. Plan steps, invoices and
+  payments belong to the **account**: the contract is optional, and they may name the order, whose
+  page shows what is planned, invoiced and received. They follow the order when its contract changes.
+- **Expenses, as 6.5.0 published them.** The **Expenses** app sends expenses on an **expense report**
+  that the manager, or the project manager, approves and finance marks paid. **Travel requests** with
+  their itinerary lines are approved before the trip, and **expense standards** guide an assistant
+  that fills and checks expenses.
+- **Sales.** Leads, opportunities, cases and accounts open on the platform's default record page;
+  **Qualify Lead** asks for the need and the amount; **Update Stage** respects permissions and approval
+  locks; activity pickers offer only the account's deals and contacts.
+- **Language and analytics.** Text the app writes by itself is in the organization's language, a
+  person's name reads like an address book in Chinese, and every analytics figure says what it counts.
+- **Each app has its own icon**, and the marketplace listing describes the six apps. `CHANGELOG.md`
+  lists every change.
+
+**Check these before and after upgrading to 6.6.0:**
+
+- **ObjectStack 18.6.0.** Upgrade the host first, if it is not there yet.
+- **Self-hosted: one migration step.** Run `os migrate apply` once and confirm the three
+  `relax_not_null` changes on the contract column of plan steps, invoices and payments; skip the
+  three `tighten_not_null` changes it marks destructive. Until then a record with no contract is
+  refused.
+- **Hosted: expect to confirm six type changes.** On plan steps, invoices and payments the Contract
+  field goes from master-detail to lookup and the Account field from lookup to master-detail, and
+  the upgrade answers `409 SCHEMA_UPGRADE_CONFIRMATION_REQUIRED` until you confirm them. This is
+  expected from a reading on a minimal model, not from a real hosted upgrade.
+- **Finish project expense report and travel request approvals before upgrading.** One still waiting
+  cannot be decided afterwards (`RESUME_TARGET_LOST`): the submitter recalls it, an administrator
+  sets it back to Draft, and it is submitted again.
+- **The CRM User permission set no longer reads an account's Invoiced, Received and Receivable
+  Balance.** A permission set of your own that reads accounts loses them unless it grants the three
+  fields or View All on accounts.
+- **To keep drafting a contract on acceptance**, switch the packaged flow **Accepted Quote Drafts a
+  Contract** on (it ships off), and **Accepted Quote Creates an Order** off if you want no orders, in
+  Studio under **HotCRM Revenue**, **Customize**, **Automations**.
+- **Lead and case pages keep their warning banners**; a deal waiting for approval shows the
+  platform's approval strip instead.
 
 ### What 6.5.0 changes
 
@@ -47,7 +92,9 @@ changes" below, and their checks.
 
 **Check these before and after upgrading to 6.5.0:**
 
-- **No platform change.** 6.5.0 stays on ObjectStack 18.5.0.
+- **ObjectStack 18.6.0.** 6.5.0 as it was published requires ObjectStack 18.6.0, though these notes
+  were first written for 18.5.0: upgrade the host first. It also already carried the Expenses app,
+  Orders, Qualify Lead and the new Update Stage, which "What 6.6.0 changes" describes.
 - **Projects saved before 6.5.0 keep their typed Approved Budget** until a budget version is
   approved. `scripts/backfill-project-budget-baseline.ts` carries it into a version 1; it only
   reports until it is run with `--apply`, and the upgrade does not run it.
