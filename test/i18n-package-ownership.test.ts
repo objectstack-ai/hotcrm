@@ -82,15 +82,41 @@ const extensionFieldsOf = (stack: AnyRec, objectName: string): Set<string> =>
       .flatMap((ext) => Object.keys(ext.fields ?? {})),
   );
 
-/** A row that labels ONLY fields this package contributes to that object, and nothing of the object itself. */
-const labelsOnlyOwnExtensionFields = (stack: AnyRec, key: string, row: AnyRec | undefined): boolean => {
+/**
+ * The validation rules a package contributes to another package's object the
+ * same way (Project Delivery's refusals of a submission on `crm_expense_report`,
+ * #2764). A `conditional` rule carries a second rule in `then` / `otherwise`,
+ * and the message shown is that inner rule's, so both names count. Their
+ * messages belong in the contributing module's pack for the reason the field
+ * labels do: the rules leave the object with the module.
+ */
+const ruleNames = (rule: AnyRec | undefined): string[] =>
+  rule?.name ? [rule.name, ...ruleNames(rule.then), ...ruleNames(rule.otherwise)] : [];
+const extensionRulesOf = (stack: AnyRec, objectName: string): Set<string> =>
+  new Set(
+    ((stack.objectExtensions ?? []) as AnyRec[])
+      .filter((ext) => ext.extend === objectName)
+      .flatMap((ext) => ((ext.validations ?? []) as AnyRec[]).flatMap(ruleNames)),
+  );
+
+/**
+ * A row that translates ONLY what this package contributes to that object (the
+ * labels of its fields, the messages of its rules), and nothing of the object
+ * itself.
+ */
+const translatesOnlyOwnContributions = (stack: AnyRec, key: string, row: AnyRec | undefined): boolean => {
   if (!key.startsWith('objects:') || !row) return false;
-  const contributed = extensionFieldsOf(stack, key.slice('objects:'.length));
-  if (contributed.size === 0) return false;
-  const fieldNames = Object.keys(row.fields ?? {});
-  return Object.keys(row).every((k) => k === 'fields')
-    && fieldNames.length > 0
-    && fieldNames.every((f) => contributed.has(f));
+  const objectName = key.slice('objects:'.length);
+  const allowed: Record<string, Set<string>> = {
+    fields: extensionFieldsOf(stack, objectName),
+    _validations: extensionRulesOf(stack, objectName),
+  };
+  const sections = Object.keys(row);
+  return sections.length > 0 && sections.every((section) => {
+    const contributed = allowed[section];
+    const names = Object.keys(row[section] ?? {});
+    return contributed !== undefined && names.length > 0 && names.every((n) => contributed.has(n));
+  });
 };
 
 describe('locale packs: each package translates only what it registers (#2352)', () => {
@@ -135,15 +161,35 @@ describe('locale packs: each package translates only what it registers (#2352)',
     }
   });
 
+  it('a module words the rules it contributes to another package\'s object, in every locale', () => {
+    // The positive control for the extension-rule allowance below: Project
+    // Delivery's three refusals on the expense module's report (#2764), each
+    // under its own name and under the name of the rule inside it.
+    const psa = modules.find((s) => idOf(s) === 'app.objectstack.hotcrm.psa')!;
+    const contributed = [...extensionRulesOf(psa, 'crm_expense_report')].sort();
+    expect(contributed).toEqual([
+      'expense_report_project_cancelled', 'expense_report_project_cancelled_check',
+      'expense_report_project_closed', 'expense_report_project_closed_check',
+      'expense_report_project_locked', 'expense_report_project_locked_check',
+    ]);
+    for (const locale of ['en', 'zh-CN', 'es-ES', 'ja-JP']) {
+      const row = rowsOf(psa).find((r) => r.locale === locale && r.key === 'objects:crm_expense_report')?.row;
+      expect(Object.keys(row?._validations ?? {}).sort(), locale).toEqual(contributed);
+      for (const name of contributed) {
+        expect(String(row?._validations?.[name]?.message ?? '').length, `${locale} ${name}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it('no pack carries a row for an item another package registers', () => {
     const strays: string[] = [];
     for (const stack of stacks) {
       for (const { locale, key, row } of rowsOf(stack)) {
         const registeredBy = owner.get(key);
-        // A module labels the fields it contributes to another package's
-        // object; anything else in that row (the object's label, a field it
-        // does not contribute) is still a stray.
-        if (registeredBy !== idOf(stack) && labelsOnlyOwnExtensionFields(stack, key, row)) continue;
+        // A module labels the fields and words the rules it contributes to
+        // another package's object; anything else in that row (the object's
+        // label, a field or a rule it does not contribute) is still a stray.
+        if (registeredBy !== idOf(stack) && translatesOnlyOwnContributions(stack, key, row)) continue;
         // A module may only translate what it registers; the app may also
         // translate items no package of this artifact registers (platform rows).
         const foreign = stack.manifest.type === 'module'

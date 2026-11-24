@@ -62,6 +62,13 @@ type FlowEdge = Flow['edges'][number];
  * it, and its submitter gets an inbox notice naming the project
  * (`../email-templates/`). No approval opens.
  *
+ * Since hotcrm#2764 this is the backstop, not the usual path: the rules in
+ * `../extensions/expense-project.extension.ts` refuse such a submission at
+ * the click, before any flow runs, so the submitter is no longer told
+ * "submitted for approval" about a report that is then turned back. These
+ * branches still judge a project that closes or locks between the rule's
+ * read and this flow's.
+ *
  * ## The status is written here, not mirrored
  *
  * Shaped as `src/expense/flows/expense-report-approval.flow.ts` is: approval nodes with

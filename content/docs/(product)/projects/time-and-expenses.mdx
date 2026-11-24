@@ -84,12 +84,12 @@ Draft, submitted and rejected ones count nowhere. The project's [cost and margin
 
 ## When the project is locked
 
-A project manager or finance can tick **Lock Time and Expenses** on a project, usually after a [budget notice](/docs/projects/projects-and-staffing#budget-lock). While it is ticked, submitting a timesheet on that project is refused, naming the project. An expense report submitted on it goes back to **Draft**, and its spender gets an Inbox notice naming the project. Keep them as drafts: once the lock is lifted, submit them as usual.
+A project manager or finance can tick **Lock Time and Expenses** on a project, usually after a [budget notice](/docs/projects/projects-and-staffing#budget-lock). While it is ticked, submitting a timesheet on that project is refused, naming the project. Submitting an expense report on it is refused too, with the reason, and the report stays in **Draft**. **Submit for Reimbursement** and **Submit for a Trip** still create that project's report, leave it in Draft with its expenses on it, send the reports of the other projects, and end with an error naming the report that was not sent. Keep them as drafts: once the lock is lifted, submit them as usual.
 
 ## When the project is over
 
 A **Closed** or **Cancelled** project takes no more time or spend. Creating a timesheet on it is refused, and so is moving one onto it; the message names the project and its status. A draft timesheet already on the project stays where it is and can still be edited, but submitting it is refused: move it to an open project to submit it there.
 
-An expense's **Project** picker does not offer a Closed or Cancelled project. An expense report submitted on one anyway (for expenses written before the project closed, say) goes back to **Draft**, and its spender gets an Inbox notice naming the project: delete the report, move its expenses to an open project and submit them again.
+An expense's **Project** picker does not offer a Closed or Cancelled project. An expense report already on one (for expenses written before the project closed, say) cannot be submitted: the submission is refused with the reason, and the report stays in **Draft**. Delete the report, move its expenses to an open project and submit them again.
 
 A **Completed** project still takes late timesheets and expenses. To stop them, tick **Lock Time and Expenses**, or close the project.

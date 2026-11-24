@@ -20,16 +20,30 @@ import { Field } from '@objectstack/spec/data';
  * the refusal the expense's own hook used to make, which may not move here
  * (ADR-0130 R4: no hook on another package's object). The picker is the
  * form's guard only; a write through the API is caught when its report is
- * submitted, where `expense_report_project_approval` turns a report on an
- * over or locked project back to Draft
- * (`../flows/expense-report-project-approval.flow.ts`).
+ * submitted, which the report's rules below refuse on an over or locked
+ * project.
  *
  * The expense report's Project (hotcrm#2559). Submit for Reimbursement puts
  * the expenses of each project on a report of their own and names the project
  * on it, which routes the report to that project's Project Manager. It is
  * read-only to people: the report's project is the one its expenses were
- * grouped by, and a report submitted on an over or locked project is turned
- * back to Draft by that same flow.
+ * grouped by.
+ *
+ * A report cannot be submitted on a Closed, Cancelled or locked project
+ * (hotcrm#2764): the three `validations` contributed to `crm_expense_report`
+ * refuse the write that makes it Submitted, at the click, with the reason and
+ * what to do, as `timesheet.hook.ts` refuses a timesheet. They are rules and
+ * not a hook because no hook may attach to another package's object
+ * (ADR-0130 R4), and they are this module's because the expense module knows
+ * nothing of projects. Until that card the submission was accepted, the
+ * click said "submitted for approval", and the flow then turned the report
+ * back to Draft. The flow keeps its turn-back branches
+ * (`../flows/expense-report-project-approval.flow.ts`) for what a rule
+ * cannot see: a project closed or locked between the rule's read and the
+ * flow's.
+ *
+ * A Draft is never refused: a report can be written, changed and deleted on
+ * such a project; only its submission is stopped.
  */
 /**
  * The travel request's Project field (hotcrm#2581, F3d), on the same terms as
@@ -53,6 +67,35 @@ import { Field } from '@objectstack/spec/data';
  */
 const REQUEST_PLAN_LOCKED = P`has(record.status) && (record.status == "approved" || record.status == "cancelled" || record.status == "closed")`;
 
+/**
+ * A report becomes Submitted on a project: the write that the three refusals
+ * below judge. `previous` is null on a create, so a report created Submitted
+ * is judged too. The project test sits here, in `when`, because a rule that
+ * reads through an empty reference is unevaluable and rejects the write
+ * (objectql `resolveTraversalScope`); a report with no project is not checked.
+ */
+const SUBMITTED_ON_A_PROJECT = P`has(record.status) && record.status == "submitted"
+  && (previous == null || !has(previous.status) || previous.status != "submitted")
+  && has(record.crm_project) && record.crm_project != null && record.crm_project != ""`;
+
+/**
+ * One refusal of a report's submission (hotcrm#2764), shaped as
+ * `contract_same_account` on `crm_sales_order` is: the project is read one
+ * hop through the reference in `then`, behind the `when` above.
+ *
+ * The message is fixed text: 18.6.0 interpolates no record values into a
+ * rule's message, so it says "this report's project" where the timesheet's
+ * hook names the project. The report's page shows the project beside it.
+ */
+const refuseSubmission = (name: string, condition: ReturnType<typeof P>, message: string) => ({
+  name,
+  type: 'conditional' as const,
+  severity: 'error' as const,
+  message,
+  when: SUBMITTED_ON_A_PROJECT,
+  then: { name: `${name}_check`, type: 'script' as const, severity: 'error' as const, message, condition },
+});
+
 export const ExpenseProjectExtensions = [
   {
     extend: 'crm_expense',
@@ -75,6 +118,25 @@ export const ExpenseProjectExtensions = [
         relatedListColumns: ['report_number', 'name', 'owner_id', 'total_amount', 'status'],
       }),
     },
+    validations: [
+      refuseSubmission(
+        'expense_report_project_closed',
+        P`record.crm_project.status == "closed"`,
+        "This report's project is Closed and takes no expenses, so the report cannot be submitted. Delete the report, move its expenses to an open project, and submit them again.",
+      ),
+      refuseSubmission(
+        'expense_report_project_cancelled',
+        P`record.crm_project.status == "cancelled"`,
+        "This report's project is Cancelled and takes no expenses, so the report cannot be submitted. Delete the report, move its expenses to an open project, and submit them again.",
+      ),
+      refuseSubmission(
+        'expense_report_project_locked',
+        // One reason at a time, as the flow gives: unticking the lock does not
+        // open a Closed or Cancelled project.
+        P`record.crm_project.time_entry_locked == true && record.crm_project.status != "closed" && record.crm_project.status != "cancelled"`,
+        "This report's project is locked for time and expenses, so the report cannot be submitted. Keep it as a draft, and submit it again once the project manager unticks Lock Time and Expenses on the project.",
+      ),
+    ],
   },
   {
     extend: 'crm_expense_request',

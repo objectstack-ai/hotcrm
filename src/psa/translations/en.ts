@@ -456,6 +456,17 @@ export const en: TranslationData = {
       fields: {
         crm_project: { label: 'Project' },
       },
+      // The refusals of a submission on a Closed, Cancelled or locked project
+      // (hotcrm#2764). Each rule is a `conditional`; the `_check` rule inside
+      // it is the one whose message is shown, and both carry the same text.
+      _validations: {
+        expense_report_project_closed: { message: "This report's project is Closed and takes no expenses, so the report cannot be submitted. Delete the report, move its expenses to an open project, and submit them again." },
+        expense_report_project_closed_check: { message: "This report's project is Closed and takes no expenses, so the report cannot be submitted. Delete the report, move its expenses to an open project, and submit them again." },
+        expense_report_project_cancelled: { message: "This report's project is Cancelled and takes no expenses, so the report cannot be submitted. Delete the report, move its expenses to an open project, and submit them again." },
+        expense_report_project_cancelled_check: { message: "This report's project is Cancelled and takes no expenses, so the report cannot be submitted. Delete the report, move its expenses to an open project, and submit them again." },
+        expense_report_project_locked: { message: "This report's project is locked for time and expenses, so the report cannot be submitted. Keep it as a draft, and submit it again once the project manager unticks Lock Time and Expenses on the project." },
+        expense_report_project_locked_check: { message: "This report's project is locked for time and expenses, so the report cannot be submitted. Keep it as a draft, and submit it again once the project manager unticks Lock Time and Expenses on the project." },
+      },
     },
     crm_expense_request: {
       fields: {
