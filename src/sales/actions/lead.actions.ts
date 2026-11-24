@@ -142,9 +142,13 @@ export const QualifyLeadAction: Action = {
   // 18.6.0: `order: 1..3` put these three AFTER the unordered activity trio).
   order: -3,
   visible: P`has(record.is_converted) && record.is_converted == false && has(record.status) && (record.status == "new" || record.status == "contacted")`,
+  // `defaultFromRow` (#2754): a lead that already holds either value opens the
+  // dialog with it filled in, so the rep confirms instead of retyping; a lead
+  // without it opens empty and still required. Measured on 18.6.0 from both
+  // doors (record header, list row menu): the dialog gets the clicked row.
   params: [
-    { field: 'need_type', required: true },
-    { field: 'estimated_amount', required: true },
+    { field: 'need_type', required: true, defaultFromRow: true },
+    { field: 'estimated_amount', required: true, defaultFromRow: true },
   ],
   successMessage: 'Lead qualified.',
   refreshAfter: true,
