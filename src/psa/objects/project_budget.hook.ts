@@ -42,13 +42,17 @@ const projectBudgetRules: Hook = {
     VALIDATION_FAILED: {
       message: 'This budget change is not allowed.',
       status: 400,
-      params: ['project', 'version', 'problem'],
+      params: ['project', 'version', 'line'],
       reasons: {
         open_version: { message: '{{project}} already has an open budget version (version {{version}}). Send it, or delete it, before starting another.' },
         starts_as_draft: { message: 'A new budget version starts as Draft. Save it, add its lines, then send it for approval.' },
         with_project: { message: 'Version 1 is approved with the project: send the project for approval, and its budget goes with it.' },
         reason_required: { message: 'Say why this top-up is needed in Reason before sending it for approval.' },
-        not_ready: { message: 'The budget is not ready to approve: {{problem}} Complete it, then send it for approval.' },
+        budget_no_lines: { message: 'The budget is not ready to approve: it has no lines. Complete it, then send it for approval.' },
+        budget_labor_no_rate_card: { message: 'The budget is not ready to approve: the labor line "{{line}}" names no rate card. Complete it, then send it for approval.' },
+        budget_labor_no_hours: { message: 'The budget is not ready to approve: the labor line "{{line}}" has no hours. Complete it, then send it for approval.' },
+        budget_line_no_quantity: { message: 'The budget is not ready to approve: the line "{{line}}" has no quantity. Complete it, then send it for approval.' },
+        budget_total_zero: { message: 'The budget is not ready to approve: its total is zero. Complete it, then send it for approval.' },
       },
     },
     FORBIDDEN: {
@@ -183,26 +187,22 @@ const projectBudgetRules: Hook = {
       fields: ['id', 'category', 'description', 'rate_card', 'hours', 'quantity', 'amount'],
       top: 500,
     });
-    let problem = '';
-    if (lines.length === 0) problem = 'it has no lines.';
+    // Each way a budget is not ready is its own reason, so a locale pack holds
+    // one whole sentence per case and the line's description is the only thing
+    // filled in (hotcrm#2766).
+    const notReady = (problem: string, detail: { reason: string; params?: { line: string } }): Error =>
+      Object.assign(refuse(`The budget is not ready to approve: ${problem} Complete it, then send it for approval.`, 'VALIDATION_FAILED', 400), detail);
+    if (lines.length === 0) throw notReady('it has no lines.', { reason: 'budget_no_lines' });
     for (const line of lines) {
-      if (problem) break;
-      const label = String(line.description ?? 'a line');
+      const params = { line: String(line.description ?? '') };
       if (line.category === 'labor') {
-        if (!line.rate_card) problem = `the labor line "${label}" names no rate card.`;
-        else if (num(line.hours) <= 0) problem = `the labor line "${label}" has no hours.`;
+        if (!line.rate_card) throw notReady(`the labor line "${params.line}" names no rate card.`, { reason: 'budget_labor_no_rate_card', params });
+        if (num(line.hours) <= 0) throw notReady(`the labor line "${params.line}" has no hours.`, { reason: 'budget_labor_no_hours', params });
       } else if (num(line.quantity) <= 0) {
-        problem = `the line "${label}" has no quantity.`;
+        throw notReady(`the line "${params.line}" has no quantity.`, { reason: 'budget_line_no_quantity', params });
       }
     }
-    if (!problem && lines.reduce((sum, line) => sum + num(line.amount), 0) <= 0) problem = 'its total is zero.';
-    if (problem) {
-      throw Object.assign(refuse(
-        `The budget is not ready to approve: ${problem} Complete it, then send it for approval.`,
-        'VALIDATION_FAILED',
-        400,
-      ), { reason: 'not_ready', params: { problem } });
-    }
+    if (lines.reduce((sum, line) => sum + num(line.amount), 0) <= 0) throw notReady('its total is zero.', { reason: 'budget_total_zero' });
   },
 };
 
