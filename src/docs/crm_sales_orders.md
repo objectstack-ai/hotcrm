@@ -64,7 +64,8 @@ contract under **Contract**, and you get a **Contract drafted** notice with a
 link to it.
 
 **Draft Contract** is offered only while the order names no contract: an order
-placed under a framework contract names that one. The order needs a **Contact**,
+placed under a framework contract names that one. A **Cancelled** order is not
+offered it, and nothing is drafted for one. The order needs a **Contact**,
 because a contract names its primary contact; without one nothing is drafted.
 A sales rep may run it, though a rep cannot create a contract by hand.
 
