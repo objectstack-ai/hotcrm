@@ -62,7 +62,11 @@ To keep the old behaviour, switch **Accepted Quote Drafts a Contract** on. Every
 | 🟢 **Completed** | Delivered and done |
 | ⚫ **Cancelled** | Will not go ahead |
 
-An order moves **Draft → Confirmed → Completed**. **Confirmed** can go back to **Draft**, and **Draft** or **Confirmed** can be **Cancelled**. **Completed** and **Cancelled** are final; any other status change is refused when you save.
+An order moves **Draft → Confirmed → Completed**. **Confirmed** can go back to **Draft**, and **Draft** or **Confirmed** can be **Cancelled**. **Completed** and **Cancelled** are final; any other status change is refused, with a message that names the allowed moves.
+
+Move an order with the buttons on its page, also in the row menu of the Orders list: **Confirm Order** on a *Draft* order, **Complete Order** on a *Confirmed* one, and **Cancel Order** on either. Only the moves the order can make from its status are offered. Each button asks first and says what the move does: confirming locks the lines, and completing or cancelling is final. A move that is no longer allowed by the time you click (someone cancelled the order a moment ago) is refused with that message, and nothing changes.
+
+**Status** on the order's form still changes the status for now, held to the same arrows. A *Confirmed* order goes back to *Draft* that way: that move has no button.
 
 ## What an order record stores
 
@@ -96,7 +100,7 @@ The subtotal is recalculated on every line you add, change or remove, and the di
 
 ## A confirmed order's lines are locked
 
-Once an order leaves **Draft**, its lines cannot be added, changed or removed, and the **Order Lines** list stops offering **New**. To change a confirmed order's lines, move it back to **Draft**, change them, and confirm it again. A completed or cancelled order's lines stay as they are. The order's other fields, such as the delivery fields, stay editable.
+Once an order leaves **Draft**, its lines cannot be added, changed or removed, and the **Order Lines** list stops offering **New**. To change a confirmed order's lines, set its **Status** back to **Draft** on the form, change them, and click **Confirm Order** again. A completed or cancelled order's lines stay as they are. The order's other fields, such as the delivery fields, stay editable.
 
 ## Delivery
 

@@ -104,6 +104,22 @@ export const commerce: Record<string, ObjectTranslationData> = {
     // Draft Contract (#2558).
     _actions: {
       draft_contract: { label: '契約を作成' },
+      // Confirm / Complete / Cancel Order (#2716).
+      confirm_sales_order: {
+        label: '注文を確定',
+        confirmText: 'この注文を確定しますか？確定すると明細はロックされます。変更するには、注文を下書きに戻す必要があります。',
+        successMessage: '注文 {{ record.name }} を確定しました。',
+      },
+      complete_sales_order: {
+        label: '注文を完了',
+        confirmText: 'この注文を完了しますか？完了した注文は最終状態です。ステータスと明細は変更できなくなります。',
+        successMessage: '注文 {{ record.name }} を完了しました。',
+      },
+      cancel_sales_order: {
+        label: '注文をキャンセル',
+        confirmText: 'この注文をキャンセルしますか？キャンセルした注文は最終状態です。再開できず、明細も変更できなくなります。',
+        successMessage: '注文 {{ record.name }} をキャンセルしました。',
+      },
     },
     _validations: {
       shipped_after_order: { message: '出荷日を注文日より前にすることはできません' },

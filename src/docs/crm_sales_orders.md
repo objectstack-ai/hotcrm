@@ -79,8 +79,13 @@ An order with no lines keeps the subtotal you type.
 ## Order status
 
 An order moves through these statuses, and only along these arrows: any other
-status change is refused when you save. **Completed** and **Cancelled** are
-final.
+status change is refused. **Completed** and **Cancelled** are final.
+
+Move an order with the buttons on its page: **Confirm Order** on a Draft
+order, **Complete Order** on a Confirmed one, and **Cancel Order** on either.
+Only the moves the order can make are offered, and each button asks first.
+**Status** on the order's form still changes the status for now, along the
+same arrows; Confirmed back to Draft has no button and is made there.
 
 ```mermaid
 stateDiagram-v2
@@ -98,7 +103,8 @@ stateDiagram-v2
 **The lines of a confirmed order cannot change.** Once an order leaves
 **Draft**, adding, changing or removing a line is refused, and the **New**
 button leaves its **Order Lines** list. To change a confirmed order's lines,
-move it back to **Draft**, change them, and confirm it again. The lines of a
+set its **Status** back to **Draft**, change them, and click **Confirm Order**
+again. The lines of a
 completed or cancelled order stay as they are. The order's other fields, such
 as the delivery fields below, can still be edited.
 
