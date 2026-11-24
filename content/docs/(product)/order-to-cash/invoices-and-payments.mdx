@@ -44,10 +44,10 @@ The **Overdue Invoices** list, under **Follow-up → Overdue Invoices** in the *
 | Field | What it holds |
 | --- | --- |
 | **Payment Number** | Numbered for you: PAY-00001, PAY-00002… |
-| **Account** | The customer who paid. Required; filled in when you choose an order or a contract |
+| **Account** | The customer who paid. Required; filled in when you choose an order, a contract, an invoice or a plan step |
 | **Order** | The order the money was received for, if any. Filled in from the invoice, or else the plan step, when left empty |
 | **Contract** | The contract the money was received for, if any. Filled in from the order, the invoice, or else the plan step, when left empty |
-| **Invoice** | The invoice it pays, if any. Only the invoices of the payment's account are offered |
+| **Invoice** | The invoice it pays, if any. Choosing one fills in its account, and its contract and plan step when the payment has none |
 | **Billing Milestone** | The plan step it counts toward. Filled in from the invoice when there is one; set it yourself for an advance paid before its invoice |
 | **Payment Date** | The day the money was received |
 | **Amount** | How much was received |
@@ -57,7 +57,7 @@ The **Overdue Invoices** list, under **Follow-up → Overdue Invoices** in the *
 
 **An advance before its invoice.** Record the payment against the plan step, or against the account alone when no step plans it yet. When the invoice is issued, fill in **Invoice** on the same payment.
 
-**A payment against another account's invoice is refused**, with a message naming the invoice. This can only happen through an import, since the form offers only the account's own invoices.
+**A payment against another account's invoice or plan step is refused**, with a message naming it. The form lists every account's invoices and plan steps, so the check is made when you save.
 
 **An order or a contract of another account is refused** on an invoice or a payment, with a message naming it. So is a contract other than the order's own, and an order and a contract of two different accounts. Leave **Account** empty in an import and the order or the contract fills it.
 

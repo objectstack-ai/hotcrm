@@ -97,21 +97,40 @@ export const Payment = ObjectSchema.create({
       relatedListColumns: ['payment_number', 'payment_date', 'amount', 'method', 'crm_invoice', 'crm_billing_milestone'],
     }),
 
-    // Only the invoices of this payment's account; one of another account is
-    // refused (`payment_plan_step_stamp`).
+    // The invoice this payment pays. One of another account is refused on save
+    // (`payment_plan_step_stamp`).
     crm_invoice: Field.lookup('crm_invoice', {
       label: 'Invoice',
       group: 'basic',
-      dependsOn: ['crm_account'],
+      // No `dependsOn`, as the order and the contract lookups have none
+      // (hotcrm#2755): it hid the invoice the invoice page's New prefills
+      // ("Select Account first") and cleared it when the account was picked,
+      // so the payment was saved with no invoice and the invoice's Paid never
+      // moved. The picker therefore lists every account's invoices; the pick
+      // fills the account, and the contract and the step while the payment has
+      // none, as the server stamps them on save (`_row-stamp.ts`,
+      // `payment_plan_step_stamp`). The step does not overwrite: measured in
+      // the browser, an overwriting autofill empties a step already chosen
+      // when the invoice has none, which the server keeps. A step that differs
+      // from the invoice's is replaced on save, as it always was.
+      lookupAutofill: [
+        { target: 'crm_account', source: 'crm_account', overwrite: true },
+        { target: 'crm_contract', source: 'crm_contract' },
+        { target: 'crm_billing_milestone', source: 'crm_billing_milestone' },
+      ],
       relatedListColumns: ['payment_number', 'payment_date', 'amount', 'method'],
     }),
 
     // Copied from the invoice when there is one (`payment_plan_step_stamp`),
-    // so the step's Received counts payments made through its invoices.
+    // so the step's Received counts payments made through its invoices. One
+    // of another account is refused on save (the same hook).
     crm_billing_milestone: Field.lookup('crm_billing_milestone', {
       label: 'Billing Milestone',
       group: 'basic',
-      dependsOn: ['crm_account'],
+      // No `dependsOn`, for the reason the invoice has none (hotcrm#2755):
+      // the step the milestone page's New prefills was hidden, then cleared.
+      // The pick fills the account.
+      lookupAutofill: [{ target: 'crm_account', source: 'crm_account', overwrite: true }],
       relatedListColumns: ['payment_number', 'payment_date', 'amount', 'crm_invoice'],
     }),
 

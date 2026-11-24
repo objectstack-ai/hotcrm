@@ -104,10 +104,21 @@ export function createO2cRowStamp(objectName: string, hookName: string): Hook {
       if (api && (!held('crm_contract') || !held('crm_sales_order'))) {
         const sources: Array<Record<string, unknown>> = [];
         const sourceFields = ['id', 'crm_contract', 'crm_sales_order', 'crm_account'];
+        // A payment that names its account takes nothing from an invoice or a
+        // step of another account: `payment_plan_step_stamp` then refuses the
+        // invoice or the step by its own name, where the order it carries
+        // would be refused here under a name the user never chose
+        // (hotcrm#2755: the form's pickers list every account's). Payments
+        // only: nothing after this hook judges an invoice's step.
+        const payer = ctx.object === 'crm_payment' && 'crm_account' in input ? refId(input.crm_account) : '';
+        const ofPayer = (source: Record<string, unknown>): boolean => {
+          const owner = refId(source.crm_account);
+          return !payer || !owner || owner === payer;
+        };
         const invoiceId = ctx.object === 'crm_payment' ? refId(input.crm_invoice) : '';
         if (invoiceId) {
           const invoice = await api.object('crm_invoice').findOne({ where: { id: invoiceId }, fields: sourceFields });
-          if (invoice) sources.push(invoice);
+          if (invoice && ofPayer(invoice)) sources.push(invoice);
         }
         const first = (key: string): string => {
           for (const source of sources) {
@@ -120,7 +131,7 @@ export function createO2cRowStamp(objectName: string, hookName: string): Hook {
         const missing = (key: string): boolean => !held(key) && !first(key);
         if (stepId && (missing('crm_contract') || missing('crm_sales_order'))) {
           const step = await api.object('crm_billing_milestone').findOne({ where: { id: stepId }, fields: sourceFields });
-          if (step) sources.push(step);
+          if (step && ofPayer(step)) sources.push(step);
         }
         if (!held('crm_contract') && first('crm_contract')) input.crm_contract = first('crm_contract');
         if (!held('crm_sales_order') && first('crm_sales_order')) input.crm_sales_order = first('crm_sales_order');

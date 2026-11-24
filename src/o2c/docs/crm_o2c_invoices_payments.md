@@ -28,8 +28,10 @@ invoices and payments.
 ## Rules the screens do not show
 
 - **Account, order and contract.** Choosing an order or a contract fills in
-  its account. An order or a contract of another account is refused, naming
-  it. An order under a contract brings its contract: one that names a
+  its account. On a payment, so does choosing an invoice or a billing
+  milestone, and an invoice also fills in its contract and its billing
+  milestone when the payment has none. An order or a contract of another
+  account is refused, naming it. An order under a contract brings its contract: one that names a
   different contract is refused, and so is an order and a contract of two
   different accounts. When an invoice names a milestone but no order or
   contract, or a payment names an invoice or a milestone but none, they are
@@ -62,8 +64,9 @@ invoices and payments.
   **Open** amount.
 - **One payment per invoice.** A receipt that pays several invoices is one
   payment row per invoice; there is no allocation.
-- **A payment's invoice must belong to its account.** Otherwise the save is
-  refused, naming the invoice.
+- **A payment's invoice and billing milestone must belong to its account.**
+  The payment form lists every account's invoices and milestones; one of
+  another account is refused on save, naming it.
 
 ## Importing
 
