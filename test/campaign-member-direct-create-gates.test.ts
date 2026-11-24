@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import stack, { hookNamed } from './helpers/composed-stack';
+import stack, { hookNamed, packFor } from './helpers/composed-stack';
 import { hotcrmStack, signUpPerson, daysFromNow, runShippedHook, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -128,6 +128,66 @@ describe('the direct door answers as the flow door does (#2344)', () => {
     const campaign = await campaignOf('completed');
     const direct = await create({ crm_campaign: campaign.id, crm_lead: (await leadOf({ email_opt_out: true })).id, status: 'sent' });
     expect([direct.status, direct.body?.code], JSON.stringify(direct.body)).toEqual([400, 'VALIDATION_FAILED']);
+  });
+});
+
+/**
+ * The same refusal, in the same words, in every language the app ships (#2774).
+ *
+ * The block above compares the doors in English, the language both sources are
+ * written in. A locale pack translates the hook's refusal and the flow's as
+ * separate rows, and nothing held those rows together: on 6.6.0 zh-CN told a
+ * user the lead 「已拒收邮件」 at the panel's New and 「已退订邮件」 at Add to
+ * Campaign, with ja-JP and es-ES split the same way. These read each pack and
+ * ask the flow's row, with the name it interpolates swapped for the hook's
+ * param, to BE the hook's row.
+ */
+describe('an opted-out person is refused in one sentence per locale, whichever door refused (#2774)', () => {
+  const LOCALES = ['zh-CN', 'ja-JP', 'es-ES'] as const;
+  /** `{{ leadRecord.full_name }}`, or the contact's with its `default:` filter. */
+  const NAME = /\{\{\s*(?:lead|contact)Record\.full_name(?:\s*\|\s*default:\s*"([^"]*)")?\s*\}\}/;
+  const rowsOf = (locale: string) => {
+    const pack = packFor(locale) as Rec;
+    const hook = pack.hooks.campaign_member_enrollment_gate.refusals.FORBIDDEN as Rec;
+    return {
+      pack,
+      hook,
+      leadFlow: String(pack.flows.campaign_lead_member_enroll.refusals.refuse_lead_opted_out.message),
+      contactFlow: String(pack.flows.campaign_contact_member_enroll.refusals.refuse_contact_opted_out.message),
+    };
+  };
+
+  it.each(LOCALES)('%s: the flow refusal is the hook refusal, for a lead, a named contact and an unnamed one', (locale) => {
+    const { hook, leadFlow, contactFlow } = rowsOf(locale);
+    expect(leadFlow.replace(NAME, '{{lead}}'), 'lead').toBe(hook.message);
+    expect(contactFlow.replace(NAME, '{{contact}}'), 'named contact').toBe(hook.reasons.contact_named.message);
+    // The flow names a contact with no name by the filter's default; the hook
+    // answers its `contact` reason for the same record.
+    const fallback = NAME.exec(contactFlow)?.[1];
+    expect(fallback, 'the contact row carries a default name').toBeTruthy();
+    expect(contactFlow.replace(NAME, fallback!), 'unnamed contact').toBe(hook.reasons.contact.message);
+  });
+
+  it.each(LOCALES)('%s: Email Opt Out carries one label on the lead and on the contact', (locale) => {
+    const { pack } = rowsOf(locale);
+    const label = pack.objects.crm_lead.fields.email_opt_out.label;
+    expect(label).toBeTruthy();
+    expect(pack.objects.crm_contact.fields.email_opt_out.label).toBe(label);
+  });
+
+  it('zh-CN: every sentence about the rule uses the field\'s own label, and keeps 「退订」 for the member status', () => {
+    const { pack, hook, leadFlow, contactFlow } = rowsOf('zh-CN');
+    const label = String(pack.objects.crm_lead.fields.email_opt_out.label);
+    const batch = pack.flows.campaign_enrollment as Rec;
+    const sentences = [
+      hook.message, hook.reasons.contact.message, hook.reasons.contact_named.message, leadFlow, contactFlow,
+      batch.refusals.end_refused.message, batch.screens.result.description,
+    ].map(String);
+    for (const sentence of sentences) {
+      expect(sentence, sentence).toContain(label);
+      expect(sentence, sentence).not.toContain('退订');
+    }
+    expect(pack.objects.crm_campaign_member.fields.status.options.unsubscribed).toBe('已退订');
   });
 });
 
