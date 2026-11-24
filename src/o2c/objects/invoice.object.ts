@@ -110,12 +110,27 @@ export const Invoice = ObjectSchema.create({
     // An optional source. When the invoice names no contract, the step's
     // contract is filled in (`_row-stamp.ts`), so the contract's figures and
     // the step's count the same invoices. Deleting the step leaves the
-    // invoice (`set_null`, the lookup default).
+    // invoice (`set_null`, the lookup default). A step of another account is
+    // refused on save (`invoice_plan_step_guard` in `invoice.hook.ts`).
     crm_billing_milestone: Field.lookup('crm_billing_milestone', {
       label: 'Billing Milestone',
       group: 'basic',
-      // Only the steps of this invoice's account.
-      dependsOn: ['crm_account'],
+      // No `dependsOn`, as the order and the contract lookups have none
+      // (hotcrm#2755): measured in the browser, it hid the step the milestone
+      // page's New prefills ("Select Account first") and cleared it when the
+      // account was picked, so the invoice was saved with no step and the
+      // step's Invoiced never moved. The picker therefore lists every
+      // account's steps; the pick fills the account, and the order and the
+      // contract while the invoice has none, as the server stamps them on save
+      // (`_row-stamp.ts`). Those two do not overwrite: an overwriting autofill
+      // empties its target when the step carries none (a step has an order or
+      // a contract, not always both), and the server keeps what the invoice
+      // already names.
+      lookupAutofill: [
+        { target: 'crm_account', source: 'crm_account', overwrite: true },
+        { target: 'crm_sales_order', source: 'crm_sales_order' },
+        { target: 'crm_contract', source: 'crm_contract' },
+      ],
       relatedListColumns: ['invoice_number', 'issue_date', 'amount', 'status'],
     }),
 
