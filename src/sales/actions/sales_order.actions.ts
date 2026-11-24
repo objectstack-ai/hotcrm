@@ -45,7 +45,9 @@ export const DraftContractAction: Action = {
  * | Cancel Order    | Draft, Confirmed   | Cancelled |
  *
  * Confirmed → Draft, the machine's one remaining move, has no button (the
- * card names none): an administrator or an API caller makes it.
+ * card names none): it is made through Status on the form, which stays
+ * editable until the platform offers a field only actions may change
+ * (objectstack#36806), or through the API.
  * `test/sales-order-lifecycle-actions.test.ts` derives every pair from the
  * declared transitions and fails when the two disagree. The machine is
  * unchanged and stays the rule for every door: the form, the API, a batch

@@ -34,7 +34,7 @@ Accepting the quote closes the opportunity as *Closed Won* and creates its **ord
 
 ## 5. The order
 
-An **order** records what the customer bought this time: products, quantities and prices, with a subtotal from its lines. It is created by itself when the quote is accepted, with the quote's lines and totals; an order without a quote is created under **Orders**, or from the account. It may sit under a contract: a product sale usually needs none, and **Draft Contract** on the order drafts one when it does. **Confirmed** locks its lines. Its **Fulfillment Status** and **Shipped Date** are typed by hand or imported from the system that ships. See [Orders](/docs/sales/orders).
+An **order** records what the customer bought this time: products, quantities and prices, with a subtotal from its lines. It is created by itself when the quote is accepted, with the quote's lines and totals; an order without a quote is created under **Orders**, or from the account. It may sit under a contract: a product sale usually needs none, and **Draft Contract** on the order drafts one when it does. **Confirm Order** on the order confirms it and locks its lines; **Complete Order** closes it once delivered, and **Cancel Order** stops it. Its **Fulfillment Status** and **Shipped Date** are typed by hand or imported from the system that ships. See [Orders](/docs/sales/orders).
 
 **Not shipped:** HotCRM keeps no stock and no delivery notes, so shipping does not move a quantity anywhere.
 

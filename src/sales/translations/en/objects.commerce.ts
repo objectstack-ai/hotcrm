@@ -98,6 +98,22 @@ export const commerce: Record<string, ObjectTranslationData> = {
     // Draft Contract (#2558).
     _actions: {
       draft_contract: { label: 'Draft Contract' },
+      // Confirm / Complete / Cancel Order (#2716).
+      confirm_sales_order: {
+        label: 'Confirm Order',
+        confirmText: 'Confirm this order? Its lines are then locked: to change them, the order has to go back to Draft.',
+        successMessage: 'Order {{ record.name }} confirmed.',
+      },
+      complete_sales_order: {
+        label: 'Complete Order',
+        confirmText: 'Complete this order? A completed order is final: its status and its lines can no longer change.',
+        successMessage: 'Order {{ record.name }} completed.',
+      },
+      cancel_sales_order: {
+        label: 'Cancel Order',
+        confirmText: 'Cancel this order? A cancelled order is final: it cannot be reopened, and its lines can no longer change.',
+        successMessage: 'Order {{ record.name }} cancelled.',
+      },
     },
     label: 'Order',
     pluralLabel: 'Orders',

@@ -103,6 +103,22 @@ export const commerce: Record<string, ObjectTranslationData> = {
     // Draft Contract (#2558).
     _actions: {
       draft_contract: { label: '起草合同' },
+      // Confirm / Complete / Cancel Order (#2716).
+      confirm_sales_order: {
+        label: '确认订单',
+        confirmText: '确认此订单？确认后订单行将被锁定：如需修改，须先把订单退回草稿。',
+        successMessage: '订单 {{ record.name }} 已确认。',
+      },
+      complete_sales_order: {
+        label: '完成订单',
+        confirmText: '完成此订单？已完成的订单是最终状态：其状态和订单行都不能再更改。',
+        successMessage: '订单 {{ record.name }} 已完成。',
+      },
+      cancel_sales_order: {
+        label: '取消订单',
+        confirmText: '取消此订单？已取消的订单是最终状态：无法重新打开，其订单行也不能再更改。',
+        successMessage: '订单 {{ record.name }} 已取消。',
+      },
     },
     _validations: {
       shipped_after_order: { message: '发货日期不能早于下单日期' },

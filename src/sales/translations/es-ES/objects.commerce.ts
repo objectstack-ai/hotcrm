@@ -105,6 +105,22 @@ export const commerce: Record<string, ObjectTranslationData> = {
     // Draft Contract (#2558).
     _actions: {
       draft_contract: { label: 'Redactar contrato' },
+      // Confirm / Complete / Cancel Order (#2716).
+      confirm_sales_order: {
+        label: 'Confirmar pedido',
+        confirmText: '¿Confirmar este pedido? Sus líneas quedan bloqueadas: para cambiarlas, el pedido tiene que volver a Borrador.',
+        successMessage: 'Pedido {{ record.name }} confirmado.',
+      },
+      complete_sales_order: {
+        label: 'Completar pedido',
+        confirmText: '¿Completar este pedido? Un pedido completado es definitivo: su estado y sus líneas ya no pueden cambiar.',
+        successMessage: 'Pedido {{ record.name }} completado.',
+      },
+      cancel_sales_order: {
+        label: 'Cancelar pedido',
+        confirmText: '¿Cancelar este pedido? Un pedido cancelado es definitivo: no se puede reabrir y sus líneas ya no pueden cambiar.',
+        successMessage: 'Pedido {{ record.name }} cancelado.',
+      },
     },
     _validations: {
       shipped_after_order: { message: 'La Fecha de Envío no puede ser anterior a la Fecha del Pedido' },
