@@ -8,6 +8,13 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *
  *   - **Completed is 100 %.** A task saved as Completed has its Percent
  *     Complete set to 100, so the project's progress counts it as done.
+ *   - **The 100 leaves with Completed (hotcrm#2768).** That 100 is written by
+ *     this hook, not estimated by the task's owner, so a task moved out of
+ *     Completed, to any other status, goes back to 0 %. A save that changes the
+ *     percentage together with the status keeps the percentage it gives; the
+ *     stored figure sent back unchanged (a form posting every field) is not a
+ *     percentage given. Nothing remembers the estimate from before Completed,
+ *     so there is none to restore.
  *   - **The tree stays inside the project, with no loop.** The parent task
  *     must be another task of the same project, and not one of the task's own
  *     subtasks (that would make the tree a loop the Gantt cannot draw).
@@ -33,7 +40,7 @@ const projectTaskRules: Hook = {
       },
     },
   },
-  description: 'Set a completed task to 100 %, and keep its parent and predecessors inside the same project with no loop.',
+  description: 'Set a completed task to 100 % and a task moved out of Completed back to 0 %, and keep its parent and predecessors inside the same project with no loop.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -68,7 +75,14 @@ const projectTaskRules: Hook = {
     const previous = (ctx.previous ?? {}) as Record<string, unknown>;
     const pick = (key: string): unknown => (key in input ? input[key] : previous[key]);
 
-    if ('status' in input && input.status === 'completed') input.percent_complete = 100;
+    if ('status' in input && input.status === 'completed') {
+      input.percent_complete = 100;
+    } else if ('status' in input && previous.status === 'completed') {
+      const figure = (v: unknown): number | null => (v == null || v === '' ? null : Number(v));
+      const given = 'percent_complete' in input
+        && figure(input.percent_complete) !== figure(previous.percent_complete);
+      if (!given) input.percent_complete = 0;
+    }
 
     const selfId = refId(previous.id);
     const projectId = refId(pick('crm_project'));

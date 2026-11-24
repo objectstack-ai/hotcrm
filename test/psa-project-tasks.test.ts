@@ -125,6 +125,81 @@ describe('project_task_progress: Percent Complete follows the tasks, weighted by
   });
 });
 
+describe('project_task_rules: a task moved out of Completed gives up its 100 % (hotcrm#2768)', () => {
+  let plan: Rec;
+  let design: Rec;
+  let rollout: Rec;
+
+  const task = async (id: string): Promise<Rec> => (await row('crm_project_task', id))!;
+  const complete = async (): Promise<void> => {
+    await update('crm_project_task', { id: rollout.id, status: 'completed' }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(100);
+    // (40·50 + 60·100) / 100 = 80 %.
+    expect(await percent(plan.id)).toBe(80);
+  };
+
+  beforeAll(async () => {
+    plan = await insert('crm_project', { name: `Plan Reopen ${++k}`, crm_account: account.id, kind: 'delivery' }, pm.token);
+    design = await insert('crm_project_task', { crm_project: plan.id, name: 'Design', planned_hours: 40, percent_complete: 50, status: 'in_progress' }, pm.token);
+    rollout = await insert('crm_project_task', { crm_project: plan.id, name: 'Roll out site three', planned_hours: 60, percent_complete: 0 }, pm.token);
+    // 40 h at 50 % and 60 h not started: 2000 / 100 = 20 %.
+    expect(await percent(plan.id)).toBe(20);
+  });
+
+  it('goes back to 0 % when the task is moved back to Not Started, and the project drops back', async () => {
+    await complete();
+    await update('crm_project_task', { id: rollout.id, status: 'not_started' }, pm.token);
+    const t = await task(rollout.id);
+    expect(t.status).toBe('not_started');
+    expect(Number(t.percent_complete)).toBe(0);
+    expect(await percent(plan.id)).toBe(20);
+  });
+
+  it('goes back to 0 % for In Progress, On Hold and Cancelled alike', async () => {
+    for (const status of ['in_progress', 'on_hold']) {
+      await complete();
+      await update('crm_project_task', { id: rollout.id, status }, pm.token);
+      expect(Number((await task(rollout.id)).percent_complete), status).toBe(0);
+      expect(await percent(plan.id), status).toBe(20);
+    }
+    await complete();
+    await update('crm_project_task', { id: rollout.id, status: 'cancelled' }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(0);
+    // Cancelled is left out: Design alone, 50 %.
+    expect(await percent(plan.id)).toBe(50);
+    // The 100 does not come back when the cancelled task is taken up again.
+    await update('crm_project_task', { id: rollout.id, status: 'in_progress' }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(0);
+    expect(await percent(plan.id)).toBe(20);
+  });
+
+  it('keeps a percentage given in the same save', async () => {
+    await complete();
+    await update('crm_project_task', { id: rollout.id, status: 'in_progress', percent_complete: 70 }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(70);
+    // (40·50 + 60·70) / 100 = 62 %.
+    expect(await percent(plan.id)).toBe(62);
+  });
+
+  it('does not take the unchanged 100 a form sends back as a percentage given', async () => {
+    await complete();
+    await update('crm_project_task', { id: rollout.id, name: 'Roll out site three', status: 'not_started', percent_complete: 100 }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(0);
+    expect(await percent(plan.id)).toBe(20);
+  });
+
+  it('leaves the percentage alone on any other move, and on a Completed task that stays Completed', async () => {
+    await update('crm_project_task', { id: design.id, status: 'on_hold' }, pm.token);
+    expect(Number((await task(design.id)).percent_complete)).toBe(50);
+    await update('crm_project_task', { id: design.id, status: 'in_progress' }, pm.token);
+    expect(Number((await task(design.id)).percent_complete)).toBe(50);
+    await complete();
+    await update('crm_project_task', { id: rollout.id, name: 'Roll out site three (done)' }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(100);
+    expect(await percent(plan.id)).toBe(80);
+  });
+});
+
 describe('project_task_rules: the tree and the predecessors stay inside the project', () => {
   let a: Rec;
   let b: Rec;

@@ -169,7 +169,7 @@ export const en: TranslationData = {
         },
         percent_complete: {
           label: 'Percent Complete',
-          help: 'How far along the task is. Set to 100 when the task is Completed.',
+          help: 'How far along the task is. Set to 100 when the task is Completed, and back to 0 when it is moved out of Completed.',
         },
         actual_hours: { label: 'Actual Hours' },
       },
