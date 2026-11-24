@@ -5,7 +5,7 @@ import type { VerifyStack } from '@objectstack/verify';
 import { ExpressionEngine } from '@objectstack/formula';
 import { DraftContractAction } from '../src/sales/actions/sales_order.actions';
 import { QuoteAcceptedContractDraftFlow } from '../src/revenue/flows/quote-accepted-contract-draft.flow';
-import { SalesOrderDraftContractWriteFlow } from '../src/sales/flows/sales-order-draft-contract.flow';
+import { SalesOrderDraftContractFlow, SalesOrderDraftContractWriteFlow } from '../src/sales/flows/sales-order-draft-contract.flow';
 import { CONTRACT_DRAFT_NODE_IDS, DRAFT_CONTRACT_DEFAULTS } from '../src/sales/flows/_contract-draft';
 import {
   hotcrmStack, signUpPerson, switchFlow, notificationsTo, today, committedFile, type Person,
@@ -23,6 +23,10 @@ type Rec = Record<string, any>;
  * order an accepted quote created, through the flow door the action uses. The
  * contract is compared field for field with the one the automatic draft makes
  * when an administrator switches `quote_accepted_contract_draft` on.
+ *
+ * A cancelled order gets no contract (hotcrm#2756): the button is not offered
+ * on it, and the flow refuses it with nothing written. Only Cancelled is
+ * closed: Draft, Confirmed and Completed orders are offered the button.
  */
 
 let verify: VerifyStack;
@@ -84,6 +88,17 @@ const offered = (record: Rec): boolean => {
 /** Run Draft Contract on `orderId` as the rep, through the flow door the action uses. */
 const draftContract = (orderId: string) =>
   verify.flows.run(DraftContractAction.target as string, { recordId: orderId, objectName: 'crm_sales_order' }, { as: rep.token }) as Promise<Rec>;
+
+/** Move `orderId` one step of the order machine as the rep, through the action door the console posts to. */
+const move = (action: 'confirm_sales_order' | 'cancel_sales_order', orderId: string) =>
+  verify.actions.run('crm_sales_order', action, { as: rep.token, recordId: orderId });
+
+/** The sentence a refusal node answers with, as the flow declares it. */
+const refusalOf = (node: string): string => {
+  const end = (SalesOrderDraftContractFlow.nodes as Rec[]).find((x) => x.id === node);
+  if (!end) throw new Error(`sales_order_draft_contract has no ${node} node`);
+  return String(end.config.message);
+};
 
 /** `iso` plus `months` calendar months, on the UTC calendar. */
 const monthsOn = (iso: string, months: number): string => {
@@ -189,7 +204,55 @@ describe('the same contract the automatic draft drafts', () => {
   });
 });
 
+describe('the offer follows the order\'s status', () => {
+  it.each([
+    ['draft', true],
+    ['confirmed', true],
+    ['completed', true],
+    ['cancelled', false],
+  ] as const)('a %s order that names no contract: offered is %s', (status, expected) => {
+    expect(offered({ status })).toBe(expected);
+  });
+
+  it('is withheld before the record has loaded', () => {
+    expect(offered({})).toBe(false);
+  });
+
+  it('a confirmed order still drafts its contract', async () => {
+    const { order, opportunity } = await acceptedQuote();
+    await move('confirm_sales_order', order.id);
+    const [confirmed] = await verify.rows('crm_sales_order', { id: order.id });
+    expect(confirmed!.status).toBe('confirmed');
+    expect(offered(confirmed!)).toBe(true);
+    const run = await draftContract(order.id);
+    expect(run.status, `the run: ${JSON.stringify(run.error ?? run.status)}`).toBe('paused');
+    const [contract] = await verify.rows('crm_contract', { crm_opportunity: opportunity });
+    expect(contract, 'Draft Contract drafted nothing on a confirmed order').toBeTruthy();
+    expect((await verify.rows('crm_sales_order', { id: order.id }))[0]!.crm_contract).toBe(contract!.id);
+  }, 60_000);
+});
+
 describe('refused, with nothing drafted', () => {
+  it('a cancelled order: no button, and the door refuses with the order left as it was', async () => {
+    // The order has a contact and names no contract: but for its status it
+    // would draft, so the refusal can only be the cancelled one.
+    const { order, opportunity } = await acceptedQuote();
+    await move('cancel_sales_order', order.id);
+    const [cancelled] = await verify.rows('crm_sales_order', { id: order.id });
+    expect(cancelled!.status).toBe('cancelled');
+    expect(cancelled!.crm_contact, 'the fixture order has no contact').toBeTruthy();
+    expect(offered(cancelled!)).toBe(false);
+
+    const run = await draftContract(order.id);
+    expect(run.status).toBe('refused');
+    expect(run.refusalMessage).toBe(refusalOf('refuse_cancelled'));
+    expect(String(run.refusalMessage)).toContain('No contract was drafted');
+    expect(await verify.rows('crm_contract', { crm_opportunity: opportunity })).toHaveLength(0);
+    const [after] = await verify.rows('crm_sales_order', { id: order.id });
+    expect(after!.crm_contract ?? null).toBeNull();
+    expect(after!.status).toBe('cancelled');
+  }, 60_000);
+
   it('an order with no contact: a contract names its primary contact', async () => {
     const { order, opportunity } = await acceptedQuote();
     await verify.hooks.run('crm_sales_order', 'update', { id: order.id, crm_contact: null }, { as: rep.token });
