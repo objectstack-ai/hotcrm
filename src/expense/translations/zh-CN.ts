@@ -222,6 +222,12 @@ export const zhCN: TranslationData = {
             payment_date: { label: '付款日期' },
             payment_reference: { label: '付款参考号' },
           },
+          refusals: {
+            FORBIDDEN: { message: '报销单获批准后，只有财务可以把它标记为已付款。' },
+            VALIDATION_FAILED: { message: '请打开报销单，再标记为已付款。' },
+            RECORD_NOT_FOUND: { message: '这张报销单已不存在。' },
+            CONFLICT: { message: '只有已批准的报销单可以标记为已付款。报销单{{name}}不是已批准状态。' },
+          },
         },
       },
     },

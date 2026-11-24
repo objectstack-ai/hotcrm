@@ -222,6 +222,12 @@ export const esES: TranslationData = {
             payment_date: { label: 'Pagado el' },
             payment_reference: { label: 'Referencia del pago' },
           },
+          refusals: {
+            FORBIDDEN: { message: 'Solo finanzas marca un informe de gastos como pagado, una vez aprobado.' },
+            VALIDATION_FAILED: { message: 'Abre el informe de gastos para marcarlo como pagado.' },
+            RECORD_NOT_FOUND: { message: 'Este informe de gastos ya no existe.' },
+            CONFLICT: { message: 'Solo un informe de gastos aprobado se marca como pagado. El informe de gastos {{name}} no está aprobado.' },
+          },
         },
       },
     },
