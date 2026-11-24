@@ -398,9 +398,13 @@ function activityAction(spec: ActivitySpec, objectName: string, nameField: strin
         // contact or a lead that person is added as an attendee (the attendees
         // step above) while this picker stays empty. One sentence true on all
         // five objects, because the locale packs share one params block.
-        // ⛔ Not a prefill: on 18.2.0 the dialog gets no row from the record
-        // header or the list row menu, so `defaultFromRow` fills nothing and a
-        // `{{ record.x }}` hole prints raw (measured; platform finding).
+        // Not a prefill: on 18.2.0 the dialog got no row from the record
+        // header or the list row menu, so `defaultFromRow` filled nothing and
+        // a `{{ record.x }}` hole printed raw (measured on 18.2.0;
+        // objectstack#27434, closed 2026-10-30). On 18.6.0 the dialog does get
+        // the row from both doors and a `defaultFromRow` param is filled
+        // (measured on `qualify_lead`, #2754); this picker was not re-measured
+        // and is unchanged.
         helpText: 'The contact or lead you log this on is added automatically. Add anyone else here.',
       },
       {

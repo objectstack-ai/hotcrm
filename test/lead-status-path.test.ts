@@ -119,6 +119,16 @@ describe('Qualified needs a Need Type and an Estimated Amount (#2541)', () => {
     });
   });
 
+  // #2754: a lead that already holds a Need Type or an Estimated Amount opens
+  // the dialog with it filled in. Without this the rep retypes what the lead
+  // already says.
+  it('Qualify Lead opens with the values the lead already holds', () => {
+    const params = (QualifyLeadAction.params ?? []) as Rec[];
+    expect(params.map((p) => [p.field, p.defaultFromRow])).toEqual([
+      ['need_type', true], ['estimated_amount', true],
+    ]);
+  });
+
   it('is offered on an open New or Contacted lead only', () => {
     const offered = (record: Rec) => {
       const r = ExpressionEngine.evaluate<boolean>(QualifyLeadAction.visible as never, { record } as never);
