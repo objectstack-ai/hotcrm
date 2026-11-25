@@ -506,6 +506,13 @@ export const jaJP: TranslationData = {
             quoteLink: { label: '見積' },
           },
         },
+        result_partial: {
+          title: '見積を作成しました（一部の明細は未コピー）',
+          description: `見積「{{ quoteName }}」を下書きとして作成しましたが、商談の製品明細のうち {{ skippedCount }} 行を見積にコピーできませんでした（{{ copiedCount }} 行はコピー済み）。見積の価格表にその製品の有効な価格がない場合、またはその行の割引が ${QUOTE_DISCOUNT_CEILING}% を超える場合、その行は拒否されます。理由はフローの実行ログに記録されています。見積を開いて、それらの明細を追加してください。`,
+          fields: {
+            quoteLink: { label: '見積' },
+          },
+        },
       },
     },
   },
