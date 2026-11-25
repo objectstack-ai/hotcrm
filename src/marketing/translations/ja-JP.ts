@@ -162,7 +162,7 @@ export const jaJP: TranslationData = {
         FORBIDDEN: {
           message: '{{lead}}はメール配信停止を選んでいるため、このリードはキャンペーンに追加されませんでした。',
           reasons: {
-            contact: { message: 'この取引先責任者はメール配信停止を選んでいるため、キャンペーンに追加されませんでした。' },
+            contact: { message: 'この取引先責任者はメール配信停止を選んでいるため、この取引先責任者はキャンペーンに追加されませんでした。' },
             contact_named: { message: '{{contact}}はメール配信停止を選んでいるため、この取引先責任者はキャンペーンに追加されませんでした。' },
           },
         },
@@ -185,7 +185,7 @@ export const jaJP: TranslationData = {
         },
         refuse_not_open: {
           message:
-            'このキャンペーンはメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
+            'このキャンペーンは参加受付中ではないか、すでに存在しません。メンバーを追加できるのは「計画中」または「実施中」のキャンペーンだけです。誰も追加されていません。',
         },
       },
       screens: {
@@ -211,10 +211,10 @@ export const jaJP: TranslationData = {
       refusals: {
         refuse_campaign_not_open: {
           message:
-            '{{ campaignRecord.name | default: "選択したキャンペーン" }} はメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
+            '{{ campaignRecord.name | default: "選択したキャンペーン" }}は参加受付中ではないか、すでに存在しません。メンバーを追加できるのは「計画中」または「実施中」のキャンペーンだけです。誰も追加されていません。',
         },
         refuse_lead_opted_out: {
-          message: '{{ leadRecord.full_name }} はメールの配信を停止しているため、このリードはキャンペーンに追加されませんでした。',
+          message: '{{ leadRecord.full_name }}はメール配信停止を選んでいるため、このリードはキャンペーンに追加されませんでした。',
         },
       },
     },
@@ -222,10 +222,10 @@ export const jaJP: TranslationData = {
       refusals: {
         refuse_campaign_not_open: {
           message:
-            '{{ campaignRecord.name | default: "選択したキャンペーン" }} はメンバー登録を受け付けていないか、すでに存在しません。メンバーを登録できるのは「計画中」または「実施中」のキャンペーンだけです。誰も登録されていません。',
+            '{{ campaignRecord.name | default: "選択したキャンペーン" }}は参加受付中ではないか、すでに存在しません。メンバーを追加できるのは「計画中」または「実施中」のキャンペーンだけです。誰も追加されていません。',
         },
         refuse_contact_opted_out: {
-          message: '{{ contactRecord.full_name | default: "この取引先責任者" }} はメールの配信を停止しているため、この取引先責任者はキャンペーンに追加されませんでした。',
+          message: '{{ contactRecord.full_name | default: "この取引先責任者" }}はメール配信停止を選んでいるため、この取引先責任者はキャンペーンに追加されませんでした。',
         },
       },
     },
