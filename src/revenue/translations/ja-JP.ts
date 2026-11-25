@@ -350,8 +350,8 @@ export const jaJP: TranslationData = {
         mark_quote_presented: { label: '提示済みにする', successMessage: '見積 {{ record.name }} を提示済みにしました。' },
         accept_quote: {
           label: '承認',
-          confirmText: 'この見積を承認しますか？見積は凍結され、商談は受注でクローズされ、契約が起案されます。',
-          successMessage: '見積 {{ record.name }} を承認しました。',
+          confirmText: 'この見積を承認しますか？見積は凍結され、商談は受注でクローズされ、注文が作成されます。契約が必要な場合は注文から作成してください。管理者が契約の自動作成を有効にしている場合は、契約も作成されます。',
+          successMessage: '見積 {{ record.name }} を承認しました。注文が作成されました。この見積の「注文」で確認できます。',
         },
         reject_quote: { label: '却下', successMessage: '見積 {{ record.name }} を却下しました。改訂して新しい提案ができます。' },
         revise_quote: { label: '改訂', successMessage: '見積 {{ record.name }} を下書きに戻しました。' },

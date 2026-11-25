@@ -159,8 +159,9 @@ export const en: TranslationData = {
         mark_quote_presented: { label: 'Mark Presented', successMessage: 'Quote {{ record.name }} marked as presented.' },
         accept_quote: {
           label: 'Accept',
-          confirmText: 'Accept this quote? It is frozen, its opportunity is closed as won and a contract is drafted.',
-          successMessage: 'Quote {{ record.name }} accepted.',
+          confirmText:
+            'Accept this quote? It is frozen, its opportunity is closed as won and an order is created; if the sale needs a contract, draft it from the order. Where an administrator has switched on automatic contract drafting, a contract is drafted as well.',
+          successMessage: 'Quote {{ record.name }} accepted. Its order has been created: find it under Orders on this quote.',
         },
         reject_quote: { label: 'Reject', successMessage: 'Quote {{ record.name }} rejected. Revise it to make a new offer.' },
         revise_quote: { label: 'Revise', successMessage: 'Quote {{ record.name }} is back at Draft.' },
