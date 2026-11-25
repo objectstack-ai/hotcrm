@@ -17,7 +17,9 @@ type Flow = Automation.Flow;
  * same definition (`./_contract-draft.ts`) — from the order, at the order's
  * total, and names it on the order. The button is offered only while the
  * order names no contract; an order placed under an existing framework
- * contract just names that one, and is never offered a second.
+ * contract just names that one, and is never offered a second. A cancelled
+ * order is not offered it either (hotcrm#2756): its sale is off, and a
+ * contract drafted for it would be paperwork for nothing.
  *
  * ## Two flows, because only the contract insert is elevated (AGENTS.md rule 9)
  *
@@ -39,11 +41,16 @@ type Flow = Automation.Flow;
  *
  * ## Refused before anything is written
  *
- * Three `end` refusals, each saying that no contract was drafted: the order is
- * gone or out of reach; it already names a contract (a second click, or an
- * order under a framework contract); it has no contact — `crm_contract`
- * requires a primary contact, which an order may leave empty. Translated as
- * `refusals.<node>.message` in the packs.
+ * Four `end` refusals, each saying that no contract was drafted: the order is
+ * gone or out of reach; it is cancelled (hotcrm#2756: the button is not drawn
+ * there, but a REST trigger, or a page left open while another person
+ * cancelled the order, still reaches this door); it already names a contract
+ * (a second click, or an order under a framework contract); it has no contact
+ * — `crm_contract` requires a primary contact, which an order may leave
+ * empty. Translated as `refusals.<node>.message` in the packs.
+ *
+ * Only Cancelled is refused by status. Draft, Confirmed and Completed orders
+ * all draft, as before.
  *
  * Afterwards the run pauses on a result screen with a link to the contract,
  * and the person is also told by `contract_drafted_notice`, as for every
@@ -71,6 +78,10 @@ export const SalesOrderDraftContractFlow: Flow = {
     {
       id: 'refuse_missing', type: 'end', label: 'Order Not Found',
       config: { outcome: 'refused', message: 'This order no longer exists, or you cannot open it. No contract was drafted.' },
+    },
+    {
+      id: 'refuse_cancelled', type: 'end', label: 'Order Is Cancelled',
+      config: { outcome: 'refused', message: 'This order is cancelled. No contract was drafted.' },
     },
     {
       id: 'refuse_has_contract', type: 'end', label: 'Order Already Has a Contract',
@@ -102,26 +113,35 @@ export const SalesOrderDraftContractFlow: Flow = {
   ],
   edges: [
     { id: 'e1', source: 'start', target: 'get_order', type: 'default' },
-    // Complementary conditionals off the read, exactly one of which holds.
-    // `get_order` binds the row or `null` on every path; each field read is
-    // led by `has(vars.orderRecord)` and its own `has()` (a raw row is sparse).
+    // Complementary conditionals off the read, exactly one of which holds:
+    // missing, else cancelled, else already under a contract, else without a
+    // contact, else draft. `get_order` binds the row or `null` on every path;
+    // each field read is led by `has(vars.orderRecord)` and its own `has()` (a
+    // raw row is sparse).
     { id: 'e2', source: 'get_order', target: 'refuse_missing', type: 'conditional', condition: P`vars.orderRecord == null`, label: 'Not found' },
     {
-      id: 'e3', source: 'get_order', target: 'refuse_has_contract', type: 'conditional', label: 'Has a contract',
-      condition: P`has(vars.orderRecord) && vars.orderRecord != null && has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != ""`,
+      id: 'e3', source: 'get_order', target: 'refuse_cancelled', type: 'conditional', label: 'Cancelled',
+      condition: P`has(vars.orderRecord) && vars.orderRecord != null && has(vars.orderRecord.status) && vars.orderRecord.status == "cancelled"`,
     },
     {
-      id: 'e4', source: 'get_order', target: 'refuse_no_contact', type: 'conditional', label: 'No contact',
-      condition: P`has(vars.orderRecord) && vars.orderRecord != null && !(has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != "")
+      id: 'e4', source: 'get_order', target: 'refuse_has_contract', type: 'conditional', label: 'Has a contract',
+      condition: P`has(vars.orderRecord) && vars.orderRecord != null && !(has(vars.orderRecord.status) && vars.orderRecord.status == "cancelled")
+        && has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != ""`,
+    },
+    {
+      id: 'e5', source: 'get_order', target: 'refuse_no_contact', type: 'conditional', label: 'No contact',
+      condition: P`has(vars.orderRecord) && vars.orderRecord != null && !(has(vars.orderRecord.status) && vars.orderRecord.status == "cancelled")
+        && !(has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != "")
         && !(has(vars.orderRecord.crm_contact) && vars.orderRecord.crm_contact != null && vars.orderRecord.crm_contact != "")`,
     },
     {
-      id: 'e5', source: 'get_order', target: 'draft', type: 'conditional', label: 'Draft',
-      condition: P`has(vars.orderRecord) && vars.orderRecord != null && !(has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != "")
+      id: 'e6', source: 'get_order', target: 'draft', type: 'conditional', label: 'Draft',
+      condition: P`has(vars.orderRecord) && vars.orderRecord != null && !(has(vars.orderRecord.status) && vars.orderRecord.status == "cancelled")
+        && !(has(vars.orderRecord.crm_contract) && vars.orderRecord.crm_contract != null && vars.orderRecord.crm_contract != "")
         && has(vars.orderRecord.crm_contact) && vars.orderRecord.crm_contact != null && vars.orderRecord.crm_contact != ""`,
     },
-    { id: 'e6', source: 'draft', target: 'result', type: 'default' },
-    { id: 'e7', source: 'result', target: 'end', type: 'default' },
+    { id: 'e7', source: 'draft', target: 'result', type: 'default' },
+    { id: 'e8', source: 'result', target: 'end', type: 'default' },
   ],
 };
 
@@ -141,6 +161,13 @@ export const SalesOrderDraftContractFlow: Flow = {
  * Organization (AGENTS.md rule 10): it reads one order by the id its parent
  * hands it and writes that order and one new contract; an elevated run keeps
  * the person's organization.
+ *
+ * It judges nothing about the order, a cancelled one included (hotcrm#2756):
+ * the parent's refusals are the door. No trigger, action or REST call starts
+ * this flow; only the parent's `subflow` node does, after its own refusals
+ * (gone, cancelled, already under a contract, no contact) have all passed on
+ * the order it read a moment before. A second set of the same conditions here
+ * would be a copy to keep in step, guarding a door nothing else opens.
  */
 const DRAFT = contractDraftGraph({
   root: 'vars.orderRow',

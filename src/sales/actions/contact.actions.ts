@@ -145,9 +145,12 @@ export const SendEmailAction: Action = {
   // The line under the dialog's title (#2369 row 3), which read the platform's
   // generic "Please provide the required information to continue.": where the
   // email goes and what happens to it. It names no address: on 18.2.0 the
-  // dialog gets no row from the record header or the list row menu, so a
-  // `{{ record.email }}` hole prints raw and a `defaultFromRow` param stays
-  // empty (measured; platform finding).
+  // dialog got no row from the record header or the list row menu, so a
+  // `{{ record.email }}` hole printed raw and a `defaultFromRow` param stayed
+  // empty (measured on 18.2.0; objectstack#27434, closed 2026-10-30). On
+  // 18.6.0 the dialog does get the row from both doors: a `defaultFromRow`
+  // param is filled (measured on `qualify_lead`, #2754). Whether a
+  // `{{ record.x }}` hole in this line now resolves was not re-measured.
   description: "Goes to this contact's email address. It is queued, then logged on the contact's timeline.",
   objectName: 'crm_contact',
   icon: 'mail',

@@ -162,8 +162,8 @@ export const zhCN: TranslationData = {
         FORBIDDEN: {
           message: '{{lead}}已拒收邮件，因此这个线索没有加入营销活动。',
           reasons: {
-            contact: { message: '这个联系人已拒绝邮件，因此没有加入营销活动。' },
-            contact_named: { message: '{{contact}}已拒绝邮件，因此这个联系人没有加入营销活动。' },
+            contact: { message: '这个联系人已拒收邮件，因此这个联系人没有加入营销活动。' },
+            contact_named: { message: '{{contact}}已拒收邮件，因此这个联系人没有加入营销活动。' },
           },
         },
       },
@@ -181,11 +181,11 @@ export const zhCN: TranslationData = {
       refusals: {
         end_refused: {
           message:
-            '有 {{refusedCount}} 人被拒绝加入：新加入 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因退订邮件或没有邮箱地址而跳过 {{skippedCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
+            '有 {{refusedCount}} 人被拒绝加入：新加入 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因拒收邮件或没有邮箱地址而跳过 {{skippedCount}} 人，被拒绝 {{refusedCount}} 人。被拒绝的人没有加入营销活动；流程运行日志记录了每个人被拒绝的原因。',
         },
         refuse_not_open: {
           message:
-            '该营销活动不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+            '这个营销活动未开放报名，或已不存在：只有“规划中”或“进行中”的营销活动可以加入成员。没有人被加入。',
         },
       },
       screens: {
@@ -202,7 +202,7 @@ export const zhCN: TranslationData = {
         },
         result: {
           title: '加入结果',
-          description: '新加入营销活动 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因退订邮件或没有邮箱地址而跳过 {{skippedCount}} 人。',
+          description: '新加入营销活动 {{enrolledCount}} 人，已是成员 {{alreadyCount}} 人，因拒收邮件或没有邮箱地址而跳过 {{skippedCount}} 人。',
           fields: { campaignLink: { label: '营销活动' } },
         },
       },
@@ -211,10 +211,10 @@ export const zhCN: TranslationData = {
       refusals: {
         refuse_campaign_not_open: {
           message:
-            '{{ campaignRecord.name | default: "所选营销活动" }} 不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+            '{{ campaignRecord.name | default: "所选营销活动" }}未开放报名，或已不存在：只有“规划中”或“进行中”的营销活动可以加入成员。没有人被加入。',
         },
         refuse_lead_opted_out: {
-          message: '{{ leadRecord.full_name }} 已退订邮件，因此该线索没有被加入营销活动。',
+          message: '{{ leadRecord.full_name }}已拒收邮件，因此这个线索没有加入营销活动。',
         },
       },
     },
@@ -222,10 +222,10 @@ export const zhCN: TranslationData = {
       refusals: {
         refuse_campaign_not_open: {
           message:
-            '{{ campaignRecord.name | default: "所选营销活动" }} 不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+            '{{ campaignRecord.name | default: "所选营销活动" }}未开放报名，或已不存在：只有“规划中”或“进行中”的营销活动可以加入成员。没有人被加入。',
         },
         refuse_contact_opted_out: {
-          message: '{{ contactRecord.full_name | default: "该联系人" }} 已退订邮件，因此该联系人没有被加入营销活动。',
+          message: '{{ contactRecord.full_name | default: "这个联系人" }}已拒收邮件，因此这个联系人没有加入营销活动。',
         },
       },
     },

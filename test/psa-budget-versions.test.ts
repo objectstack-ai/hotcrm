@@ -114,12 +114,20 @@ describe('the threshold and the readiness copies', () => {
   it('asks the same readiness of version 1 (project_status_guard) as of a top-up (project_budget_rules)', () => {
     const block = (file: string): string => {
       const body = readFileSync(join(REPO_ROOT, file), 'utf8');
-      const start = body.indexOf("if (lines.length === 0) problem = 'it has no lines.';");
-      const end = body.indexOf("problem = 'its total is zero.';", start);
+      const start = body.indexOf("if (lines.length === 0) throw notReady('it has no lines.', { reason: 'budget_no_lines' });");
+      const last = "throw notReady('its total is zero.', { reason: 'budget_total_zero' });";
+      const end = body.indexOf(last, start);
       expect(start, `${file} holds the readiness check`).toBeGreaterThan(0);
-      return body.slice(start, end).replace(/\s+/g, ' ');
+      expect(end, `${file} ends the readiness check on the total`).toBeGreaterThan(start);
+      return body.slice(start, end + last.length).replace(/\s+/g, ' ');
     };
-    expect(block('src/psa/objects/project.hook.ts')).toBe(block('src/psa/objects/project_budget.hook.ts'));
+    const version1 = block('src/psa/objects/project.hook.ts');
+    expect(version1).toBe(block('src/psa/objects/project_budget.hook.ts'));
+    // One reason per way of not being ready, each thrown as a literal so
+    // `test/hook-refusal-catalogue.test.ts` holds its sentence in every locale.
+    expect([...version1.matchAll(/reason: '([a-z_]+)'/g)].map((m) => m[1])).toEqual([
+      'budget_no_lines', 'budget_labor_no_rate_card', 'budget_labor_no_hours', 'budget_line_no_quantity', 'budget_total_zero',
+    ]);
   });
 
   it('counts a day card as HOURS_PER_DAY hours in project_budget_line_amount', () => {
@@ -345,4 +353,82 @@ describe('the New and Edit forms save a version with its lines in one batch (hot
     expect(lines.map((l) => [l.description, num(l.amount)])).toEqual([['Travel', 600]]);
     expect(num((await row('crm_project_budget', versionId))!.total_cost)).toBe(600);
   });
+});
+
+describe('a budget not ready to approve is refused in the reader\'s own language (hotcrm#2766)', () => {
+  // Each way a budget is not ready is its own sentence in every locale. A
+  // refusal that passes an English fragment as a param of a translated sentence
+  // reads half in English, which is what #2766 reported.
+  const LINE = 'QX-417';
+  const LOCALES = ['zh-CN', 'ja-JP', 'es-ES'];
+  type Door = { object: string; id: string; versionId: string };
+  const cases: Array<{ name: string; line: boolean; lines: () => Rec[] }> = [
+    { name: 'no lines', line: false, lines: () => [] },
+    { name: 'a labor line with no rate card', line: true, lines: () => [{ category: 'labor', description: LINE, hours: 4 }] },
+    { name: 'a labor line with no hours', line: true, lines: () => [{ category: 'labor', description: LINE, rate_card: hourly.id }] },
+    { name: 'a line with no quantity', line: true, lines: () => [{ category: 'other', description: LINE, unit_cost: 100 }] },
+    { name: 'a total of zero', line: false, lines: () => [{ category: 'other', description: LINE, quantity: 1, unit_cost: 0 }] },
+  ];
+  const doors: Record<string, () => Promise<Door>> = {
+    'a top-up version sent for approval (project_budget_rules)': async () => {
+      const { project } = await approvedProject(1000);
+      const v2 = await insert('crm_project_budget', { crm_project: project.id, reason: 'More scope.' }, pm.token);
+      return { object: 'crm_project_budget', id: v2.id, versionId: v2.id };
+    },
+    'a project sent for approval with its version 1 (project_status_guard)': async () => {
+      const { project, v1 } = await plannedProject(1000);
+      return { object: 'crm_project', id: project.id, versionId: v1.id };
+    },
+  };
+  const setLines = async (versionId: string, lines: Rec[]): Promise<void> => {
+    for (const held of await verify.rows('crm_project_budget_line', { crm_project_budget: versionId })) {
+      await remove('crm_project_budget_line', held.id, pm.token);
+    }
+    for (const line of lines) await insert('crm_project_budget_line', { crm_project_budget: versionId, ...line }, pm.token);
+  };
+  /** Send it for approval as the project manager reading in `locale`; the refusal's status and sentence. */
+  const send = async (door: Door, locale: string): Promise<{ status: number; message: string }> => {
+    const res = await verify.raw(`/api/v1/data/${door.object}/${door.id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${pm.token}`, 'accept-language': locale },
+      body: JSON.stringify({ status: 'in_approval' }),
+    });
+    const body = (await res.json()) as Rec;
+    return { status: res.status, message: String(body.error ?? '') };
+  };
+  const words = (text: string): string[] => text.replaceAll(LINE, ' ').toLowerCase().split(/[^\p{L}]+/u).filter(Boolean);
+  /** The runs of two words `text` shares with `english`: what an untranslated fragment leaves behind. */
+  const englishLeft = (text: string, english: string): string[] => {
+    const pairs = (list: string[]): string[] => list.slice(1).map((word, i) => `${list[i]} ${word}`);
+    const known = new Set(pairs(words(english)));
+    return pairs(words(text)).filter((pair) => known.has(pair));
+  };
+
+  for (const [doorName, open] of Object.entries(doors)) {
+    it(`${doorName}: every case is one whole sentence in each language, naming its line`, async () => {
+      const door = await open();
+      const seen: Record<string, string[]> = { en: [], 'zh-CN': [], 'ja-JP': [], 'es-ES': [] };
+      for (const c of cases) {
+        await setLines(door.versionId, c.lines());
+        const english = await send(door, 'en');
+        expect(english.status, `${c.name}: ${english.message}`).toBe(400);
+        expect(english.message.includes(LINE), `en, ${c.name}: ${english.message}`).toBe(c.line);
+        seen.en!.push(english.message);
+        for (const locale of LOCALES) {
+          const told = await send(door, locale);
+          const where = `${locale}, ${c.name}: ${told.message}`;
+          expect(told.status, where).toBe(400);
+          expect(told.message, where).not.toBe(english.message);
+          expect(told.message.includes(LINE), where).toBe(c.line);
+          expect(englishLeft(told.message, english.message), where).toEqual([]);
+          if (locale !== 'es-ES') expect(told.message.replaceAll(LINE, ''), where).not.toMatch(/[A-Za-z]/);
+          seen[locale]!.push(told.message);
+        }
+      }
+      for (const [locale, messages] of Object.entries(seen)) {
+        expect(new Set(messages).size, `${locale}: each case has its own sentence`).toBe(cases.length);
+      }
+      expect((await row('crm_project_budget', door.versionId))!.status, 'nothing was sent').toBe('draft');
+    }, 60_000);
+  }
 });

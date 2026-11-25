@@ -318,6 +318,17 @@ export const ReopenExpenseReportAction: Action = {
  * body judges the caller itself — a Finance Controller or AR Accountant (or
  * an administrator), on an approved report — and writes as the system;
  * `expense_report_rules` refuses Paid from anyone else.
+ *
+ * Each refusal is a code declared under `refusals` (hotcrm#2763), so the
+ * person reads it in their own language: the catalogue holds the sentence and
+ * the status, the packs under `translations/` hold the other languages, and
+ * the body throws the code (with the report's name where the sentence names
+ * it). The message given to `new Error` is for the server log only. A throw
+ * whose code is not declared here answers 500, so a new refusal is added to
+ * the catalogue and to every pack first. `RECORD_NOT_FOUND` is the race
+ * guard: the platform loads the report under the caller's access before the
+ * body runs and answers a missing one itself, so the body's own sentence is
+ * read only when the report is deleted in between.
  */
 export const MarkExpenseReportPaidAction: Action = {
   name: 'mark_expense_report_paid',
@@ -328,25 +339,18 @@ export const MarkExpenseReportPaidAction: Action = {
   body: {
     language: 'js',
     source: `
-      const fail = (message, code, status) => {
-        const err = new Error(message);
-        err.code = code;
-        err.status = status;
-        err.userMessage = message;
-        return err;
-      };
       const positions = (ctx.session && Array.isArray(ctx.session.positions)) ? ctx.session.positions : [];
       const ALLOWED = ['crm_finance_controller', 'crm_ar_accountant', 'platform_admin', 'org_owner', 'org_admin'];
       if (!positions.some((p) => ALLOWED.includes(p))) {
-        throw fail('Only finance marks an expense report as paid, once it is approved.', 'FORBIDDEN', 403);
+        throw Object.assign(new Error('mark_expense_report_paid: the caller is not finance'), { code: 'FORBIDDEN' });
       }
       const id = ctx.recordId ? String(ctx.recordId) : '';
-      if (!id) throw fail('Open the expense report to mark it as paid.', 'VALIDATION_FAILED', 400);
+      if (!id) throw Object.assign(new Error('mark_expense_report_paid: no report was given'), { code: 'VALIDATION_FAILED' });
       const R = ctx.api.object('crm_expense_report');
       const report = await R.findOne({ where: { id: id }, fields: ['id', 'name', 'status'] });
-      if (!report) throw fail('This expense report no longer exists.', 'RECORD_NOT_FOUND', 404);
+      if (!report) throw Object.assign(new Error('mark_expense_report_paid: the report is gone'), { code: 'RECORD_NOT_FOUND' });
       if (report.status !== 'approved') {
-        throw fail('Only an approved expense report is marked as paid. Expense report ' + String(report.name || '') + ' is not approved.', 'CONFLICT', 409);
+        throw Object.assign(new Error('mark_expense_report_paid: the report is not approved'), { code: 'CONFLICT', params: { name: String(report.name || '') } });
       }
       const day = input.payment_date ? String(input.payment_date).slice(0, 10) : new Date().toISOString().slice(0, 10);
       const reference = input.payment_reference ? String(input.payment_reference) : null;
@@ -355,6 +359,25 @@ export const MarkExpenseReportPaidAction: Action = {
     `,
     capabilities: ['api.read', 'api.write'],
     timeoutMs: 10000,
+  },
+  refusals: {
+    FORBIDDEN: {
+      message: 'Only finance marks an expense report as paid, once it is approved.',
+      status: 403,
+    },
+    VALIDATION_FAILED: {
+      message: 'Open the expense report to mark it as paid.',
+      status: 400,
+    },
+    RECORD_NOT_FOUND: {
+      message: 'This expense report no longer exists.',
+      status: 404,
+    },
+    CONFLICT: {
+      message: 'Only an approved expense report is marked as paid. Expense report {{name}} is not approved.',
+      status: 409,
+      params: ['name'],
+    },
   },
   params: [
     { name: 'payment_date', label: 'Paid On', type: 'date', required: true },

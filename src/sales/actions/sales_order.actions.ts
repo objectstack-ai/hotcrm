@@ -14,9 +14,12 @@ import { P } from '@objectstack/spec';
  *
  * `visible`: only while the order names no contract — an order placed under a
  * framework contract already names that one, and a drafted order names its
- * draft — and only to a person who may edit orders, since the draft is named
- * on the order. The flow re-judges both, so a REST trigger past the button is
- * refused the same way.
+ * draft — never on a cancelled order, whose sale is off (hotcrm#2756), and
+ * only to a person who may edit orders, since the draft is named on the
+ * order. Draft, Confirmed and Completed orders are all offered it. The flow
+ * re-judges the contract and the status, so a REST trigger past the button is
+ * refused the same way. The predicate is total: a page's first render holds
+ * no status, which offers nothing.
  */
 export const DraftContractAction: Action = {
   name: 'draft_contract',
@@ -26,7 +29,8 @@ export const DraftContractAction: Action = {
   type: 'flow',
   target: 'sales_order_draft_contract',
   locations: ['record_header', 'record_more'],
-  visible: P`(!has(record.crm_contract) || record.crm_contract == null || record.crm_contract == "") && current_user.can("crm_sales_order", "edit")`,
+  visible: P`has(record.status) && record.status != "cancelled"
+    && (!has(record.crm_contract) || record.crm_contract == null || record.crm_contract == "") && current_user.can("crm_sales_order", "edit")`,
   refreshAfter: true,
 };
 

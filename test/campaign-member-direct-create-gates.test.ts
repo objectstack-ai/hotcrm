@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import stack, { hookNamed } from './helpers/composed-stack';
+import stack, { hookNamed, packFor } from './helpers/composed-stack';
 import { hotcrmStack, signUpPerson, daysFromNow, runShippedHook, type Person } from './helpers/verify-stack';
 
 type Rec = Record<string, any>;
@@ -131,6 +131,66 @@ describe('the direct door answers as the flow door does (#2344)', () => {
   });
 });
 
+/**
+ * The same refusal, in the same words, in every language the app ships (#2774).
+ *
+ * The block above compares the doors in English, the language both sources are
+ * written in. A locale pack translates the hook's refusal and the flow's as
+ * separate rows, and nothing held those rows together: on 6.6.0 zh-CN told a
+ * user the lead 「已拒收邮件」 at the panel's New and 「已退订邮件」 at Add to
+ * Campaign, with ja-JP and es-ES split the same way. These read each pack and
+ * ask the flow's row, with the name it interpolates swapped for the hook's
+ * param, to BE the hook's row.
+ */
+describe('an opted-out person is refused in one sentence per locale, whichever door refused (#2774)', () => {
+  const LOCALES = ['zh-CN', 'ja-JP', 'es-ES'] as const;
+  /** `{{ leadRecord.full_name }}`, or the contact's with its `default:` filter. */
+  const NAME = /\{\{\s*(?:lead|contact)Record\.full_name(?:\s*\|\s*default:\s*"([^"]*)")?\s*\}\}/;
+  const rowsOf = (locale: string) => {
+    const pack = packFor(locale) as Rec;
+    const hook = pack.hooks.campaign_member_enrollment_gate.refusals.FORBIDDEN as Rec;
+    return {
+      pack,
+      hook,
+      leadFlow: String(pack.flows.campaign_lead_member_enroll.refusals.refuse_lead_opted_out.message),
+      contactFlow: String(pack.flows.campaign_contact_member_enroll.refusals.refuse_contact_opted_out.message),
+    };
+  };
+
+  it.each(LOCALES)('%s: the flow refusal is the hook refusal, for a lead, a named contact and an unnamed one', (locale) => {
+    const { hook, leadFlow, contactFlow } = rowsOf(locale);
+    expect(leadFlow.replace(NAME, '{{lead}}'), 'lead').toBe(hook.message);
+    expect(contactFlow.replace(NAME, '{{contact}}'), 'named contact').toBe(hook.reasons.contact_named.message);
+    // The flow names a contact with no name by the filter's default; the hook
+    // answers its `contact` reason for the same record.
+    const fallback = NAME.exec(contactFlow)?.[1];
+    expect(fallback, 'the contact row carries a default name').toBeTruthy();
+    expect(contactFlow.replace(NAME, fallback!), 'unnamed contact').toBe(hook.reasons.contact.message);
+  });
+
+  it.each(LOCALES)('%s: Email Opt Out carries one label on the lead and on the contact', (locale) => {
+    const { pack } = rowsOf(locale);
+    const label = pack.objects.crm_lead.fields.email_opt_out.label;
+    expect(label).toBeTruthy();
+    expect(pack.objects.crm_contact.fields.email_opt_out.label).toBe(label);
+  });
+
+  it('zh-CN: every sentence about the rule uses the field\'s own label, and keeps 「退订」 for the member status', () => {
+    const { pack, hook, leadFlow, contactFlow } = rowsOf('zh-CN');
+    const label = String(pack.objects.crm_lead.fields.email_opt_out.label);
+    const batch = pack.flows.campaign_enrollment as Rec;
+    const sentences = [
+      hook.message, hook.reasons.contact.message, hook.reasons.contact_named.message, leadFlow, contactFlow,
+      batch.refusals.end_refused.message, batch.screens.result.description,
+    ].map(String);
+    for (const sentence of sentences) {
+      expect(sentence, sentence).toContain(label);
+      expect(sentence, sentence).not.toContain('退订');
+    }
+    expect(pack.objects.crm_campaign_member.fields.status.options.unsubscribed).toBe('已退订');
+  });
+});
+
 describe('what still passes (#2344)', () => {
   it('a system write: the seed stores a member of a Completed campaign naming an opted-out lead', async () => {
     const campaign = await campaignOf('completed');
@@ -194,5 +254,61 @@ describe('the gate holds in the body that ships (#2344)', () => {
   it('lets an open campaign and an opted-in person through, and lets a write with no user through', async () => {
     expect(await insert({ crm_campaign: (await campaignOf('in_progress')).id, crm_lead: (await leadOf()).id }, marketer.token)).toBeNull();
     expect(await insert({ crm_campaign: (await campaignOf('completed')).id, crm_lead: (await leadOf({ email_opt_out: true })).id })).toBeNull();
+  });
+});
+
+/**
+ * A campaign that is not open, refused in the same words in every language the
+ * app ships (#2778).
+ *
+ * The first block of this file compares the doors in English, the language
+ * both sources are written in. A locale pack translates the hook's refusal and
+ * each flow's as separate rows, and nothing held those rows together: on 6.6.0
+ * zh-CN told a user the campaign 「未开放报名」 at the panel's New and
+ * 「不在可加入成员的状态」 at Add to Campaign, with other quotes around the
+ * two statuses and another closing sentence, and ja-JP said 「参加受付中では
+ * ない」 and 追加 at one door, 「メンバー登録を受け付けていない」 and 登録 at
+ * the other.
+ * These read each pack and ask every flow row to BE the hook's row once the
+ * name it carries is put in the hook's terms.
+ */
+describe('a campaign that is not open is refused in one sentence per locale, whichever door refused (#2778)', () => {
+  const LOCALES = ['zh-CN', 'ja-JP', 'es-ES'] as const;
+  /** `{{ campaignRecord.name | default: "…" }}`: the campaign's name, or the words for one with no name to show. */
+  const NAME = /\{\{\s*campaignRecord\.name\s*\|\s*default:\s*"([^"]*)"\s*\}\}/;
+  const rowsOf = (locale: string) => {
+    const pack = packFor(locale) as Rec;
+    return {
+      hook: pack.hooks.campaign_member_enrollment_gate.refusals.VALIDATION_FAILED as Rec,
+      addToCampaign: (['campaign_lead_member_enroll', 'campaign_contact_member_enroll'] as const).map(
+        (flow) => [flow, String(pack.flows[flow].refusals.refuse_campaign_not_open.message)] as const,
+      ),
+      enrollMembers: String(pack.flows.campaign_enrollment.refusals.refuse_not_open.message),
+    };
+  };
+
+  it.each(LOCALES)('%s: Add to Campaign refuses in the hook\'s words, for a named campaign and for one with no name', (locale) => {
+    const { hook, addToCampaign } = rowsOf(locale);
+    for (const [flow, row] of addToCampaign) {
+      expect(row.replace(NAME, '{{campaign}}'), `${flow}, named`).toBe(hook.reasons.named.message);
+      // The flow names a campaign it could not read by the filter's default;
+      // the hook answers its bare message for the same record.
+      const fallback = NAME.exec(row)?.[1];
+      expect(fallback, `${flow}: the row carries a default name`).toBeTruthy();
+      expect(row.replace(NAME, () => fallback!), `${flow}, no name`).toBe(hook.message);
+    }
+  });
+
+  it.each(LOCALES)('%s: Enroll Members says the same of the campaign it was run on', (locale) => {
+    const { hook, enrollMembers } = rowsOf(locale);
+    // Enroll Members runs on one campaign and calls it "this campaign", so only
+    // the subject differs: everything the hook says after the name is the rest.
+    const named = String(hook.reasons.named.message);
+    expect(named.startsWith('{{campaign}}'), 'fixture: the hook row opens with the campaign').toBe(true);
+    const said = named.slice('{{campaign}}'.length);
+    expect(enrollMembers.endsWith(said), `${enrollMembers}\n  does not end with\n${said}`).toBe(true);
+    const subject = enrollMembers.slice(0, enrollMembers.length - said.length);
+    expect(subject.trim(), 'the row names the campaign in words').not.toBe('');
+    expect(subject, 'the row interpolates nothing').not.toContain('{{');
   });
 });

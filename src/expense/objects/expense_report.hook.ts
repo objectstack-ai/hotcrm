@@ -19,7 +19,11 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *   - **A decided report stays as decided.** A person changes nothing on an
  *     approved or paid report; Mark as Paid is the one move left.
  *   - **Only a draft report is deleted**, and its expenses go back to being
- *     free, so they can be submitted again.
+ *     free, so they can be submitted again. An administrator may delete a
+ *     sent report, to repair. The expenses of a report deleted while it was
+ *     waiting for approval or rejected go back to Draft with it (hotcrm#2761):
+ *     an expense's status follows its report, and with no report there is
+ *     nothing left for Submitted to follow.
  *   - It stamps when the report was submitted and approved.
  *
  * Judged on a person's write; the approval, Submit for Reimbursement and an
@@ -61,7 +65,7 @@ const expenseReportRules: Hook = {
       },
     },
   },
-  description: 'Leave the decision on an expense report to its approval and its payment mark to finance, refuse a report sent with no expenses, keep a decided report as decided, and release the expenses of a deleted draft.',
+  description: 'Leave the decision on an expense report to its approval and its payment mark to finance, refuse a report sent with no expenses, keep a decided report as decided, and release the expenses of a deleted report, back to Draft when it was waiting for approval or rejected.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -101,9 +105,19 @@ const expenseReportRules: Hook = {
         ), { reason: 'delete', params: { name } });
       }
       if (!api || !id) return;
-      const lines = await api.object('crm_expense').find({ where: { crm_expense_report: id }, fields: ['id'], top: 500 });
+      // The released expenses go back to Draft when the report was waiting for
+      // approval or rejected (hotcrm#2761): `expense_report_lines_follow` would
+      // have moved them there had the report gone back to Draft first, and it
+      // moves the status alone, so this does too. An approved or paid report is
+      // deliberately left as it was: its expenses stay Approved, which keeps
+      // them in the project's cost. Whether they should return to Draft too is
+      // the open ruling on hotcrm#2761; do not change it here without one.
+      const backToDraft = was === 'submitted' || was === 'rejected';
+      const lines = await api.object('crm_expense').find({ where: { crm_expense_report: id }, fields: ['id', 'status'], top: 500 });
       for (const line of lines) {
-        await api.object('crm_expense').update({ id: String(line.id), crm_expense_report: null }, { where: { id: String(line.id) } });
+        const patch: Record<string, unknown> = { crm_expense_report: null };
+        if (backToDraft && line.status !== 'draft') patch.status = 'draft';
+        await api.object('crm_expense').update({ id: String(line.id), ...patch }, { where: { id: String(line.id) } });
       }
       return;
     }

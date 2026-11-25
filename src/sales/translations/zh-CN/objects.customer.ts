@@ -194,7 +194,7 @@ export const customer: Record<string, ObjectTranslationData> = {
       mailing_address: { label: '邮寄地址' },
       lead_source: { label: '线索来源' },
       do_not_call: { label: '禁止致电' },
-      email_opt_out: { label: '拒绝邮件' },
+      email_opt_out: { label: '拒收邮件' },
       last_contacted_date: { label: '最近联系时间' },
       avatar: { label: '头像' },
     },

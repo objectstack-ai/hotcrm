@@ -85,4 +85,85 @@ const invoiceFigures: Hook = {
   },
 };
 
-export default [invoiceRowStamp, invoiceFigures];
+/**
+ * An invoice's plan step belongs to the invoice's account (hotcrm#2755). The
+ * form's picker lists every account's steps since the lookup lost its
+ * `dependsOn` (see the field), and an import or an API write could always name
+ * any step, so this rule is what keeps an invoice from counting toward one
+ * account's receivable and another account's plan.
+ *
+ * It judges a write that sets the step, or that moves the account under a step
+ * the invoice keeps, and reads the account as `invoice_row_stamp` (priority
+ * 50, before this hook) left it: stamped from the order or the contract when
+ * there is one. The refusal names the step, which is what the user chose.
+ */
+const invoicePlanStepGuard: Hook = {
+  name: 'invoice_plan_step_guard',
+  object: 'crm_invoice',
+  events: ['beforeInsert', 'beforeUpdate'],
+  priority: 90,
+  refusals: {
+    VALIDATION_FAILED: {
+      message: 'This billing milestone belongs to another account. Choose a billing milestone of this invoice\'s account.',
+      status: 400,
+      params: ['milestone'],
+      reasons: {
+        milestone_named: { message: '{{milestone}} belongs to another account. Choose a billing milestone of this invoice\'s account.' },
+      },
+    },
+  },
+  description: 'Refuse an invoice whose billing milestone belongs to another account.',
+  handler: async (ctx: HookContext) => {
+    // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
+    // lowered body has no module scope and `extractHookBody` THROWS on an
+    // import; `test/refusal-envelope.test.ts` pins every copy against it.
+    function refuse(
+      message: string,
+      code: string,
+      status: number,
+      userMessage: string = message,
+    ): Error {
+      const err = new Error(message) as Error & {
+        code: string;
+        status: number;
+        userMessage: string;
+      };
+      err.code = code;
+      err.status = status;
+      err.userMessage = userMessage;
+      return err;
+    }
+    function refId(value: unknown): string {
+      if (typeof value === 'string') return value;
+      if (value && typeof value === 'object' && typeof (value as Record<string, unknown>).id === 'string') {
+        return String((value as Record<string, unknown>).id);
+      }
+      return '';
+    }
+    const { input } = ctx;
+    const api = ctx.api as HookApi | undefined;
+    if (!input || !api) return;
+    const previous = (ctx.previous ?? {}) as Record<string, unknown>;
+    const stepId = refId('crm_billing_milestone' in input ? input.crm_billing_milestone : previous.crm_billing_milestone);
+    const accountId = ('crm_account' in input ? refId(input.crm_account) : '') || refId(previous.crm_account);
+    if (!stepId || !accountId) return;
+    // Only a write that can change the answer: the summary recompute and an
+    // edit of the amount pass through here too.
+    if (!('crm_billing_milestone' in input) && accountId === refId(previous.crm_account)) return;
+
+    const step = await api.object('crm_billing_milestone').findOne({
+      where: { id: stepId }, fields: ['id', 'name', 'crm_account'],
+    });
+    const owner = refId(step?.crm_account);
+    if (!owner || owner === accountId) return;
+    const named = typeof step?.name === 'string' && step.name !== '';
+    const name = named ? String(step?.name) : 'This billing milestone';
+    throw Object.assign(refuse(
+      `${name} belongs to another account. Choose a billing milestone of this invoice's account.`,
+      'VALIDATION_FAILED',
+      400,
+    ), named ? { reason: 'milestone_named', params: { milestone: name } } : {});
+  },
+};
+
+export default [invoiceRowStamp, invoicePlanStepGuard, invoiceFigures];
