@@ -163,7 +163,7 @@ export const esES: TranslationData = {
         FORBIDDEN: {
           message: '{{lead}} se ha excluido de los correos, por lo que el prospecto no se añadió a la campaña.',
           reasons: {
-            contact: { message: 'Este contacto se ha excluido de los correos, por lo que no se añadió a la campaña.' },
+            contact: { message: 'Este contacto se ha excluido de los correos, por lo que el contacto no se añadió a la campaña.' },
             contact_named: { message: '{{contact}} se ha excluido de los correos, por lo que el contacto no se añadió a la campaña.' },
           },
         },
@@ -182,7 +182,7 @@ export const esES: TranslationData = {
       refusals: {
         end_refused: {
           message:
-            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} agregadas, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se dieron de baja del correo o no tienen dirección de correo, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
+            'Inscripción rechazada para {{refusedCount}} de las personas seleccionadas: {{enrolledCount}} agregadas, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se han excluido de los correos o no tienen dirección de correo, {{refusedCount}} rechazadas. Una persona rechazada no se añadió a la campaña; el registro de la ejecución del flujo indica el motivo de cada una.',
         },
         refuse_not_open: {
           message:
@@ -203,7 +203,7 @@ export const esES: TranslationData = {
         },
         result: {
           title: 'Resultado de la inscripción',
-          description: '{{enrolledCount}} agregadas a la campaña, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se dieron de baja del correo o no tienen dirección de correo.',
+          description: '{{enrolledCount}} agregadas a la campaña, {{alreadyCount}} ya eran miembros, {{skippedCount}} omitidas porque se han excluido de los correos o no tienen dirección de correo.',
           fields: { campaignLink: { label: 'Campaña' } },
         },
       },
@@ -215,7 +215,7 @@ export const esES: TranslationData = {
             '{{ campaignRecord.name | default: "La campaña elegida" }} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
         },
         refuse_lead_opted_out: {
-          message: '{{ leadRecord.full_name }} se dio de baja del correo electrónico, así que el prospecto no se añadió a la campaña.',
+          message: '{{ leadRecord.full_name }} se ha excluido de los correos, por lo que el prospecto no se añadió a la campaña.',
         },
       },
     },
@@ -226,7 +226,7 @@ export const esES: TranslationData = {
             '{{ campaignRecord.name | default: "La campaña elegida" }} no está abierta a inscripciones o ya no existe: solo una campaña en Planificación o En Curso admite miembros. No se inscribió a nadie.',
         },
         refuse_contact_opted_out: {
-          message: '{{ contactRecord.full_name | default: "Este contacto" }} se dio de baja del correo electrónico, así que el contacto no se añadió a la campaña.',
+          message: '{{ contactRecord.full_name | default: "Este contacto" }} se ha excluido de los correos, por lo que el contacto no se añadió a la campaña.',
         },
       },
     },

@@ -118,10 +118,13 @@ export const ProjectTask = ObjectSchema.create({
     }),
 
     // What the Gantt reads to draw a milestone as a diamond (`typeField`). A
-    // task with subtasks is drawn as a summary whatever this says.
+    // task with subtasks is drawn as a summary whatever this says. `hidden`
+    // keeps it off the record page, the drawer and the form: it repeats the
+    // Milestone checkbox as a machine value, and only the Gantt reads it.
     schedule_type: Field.formula({
       label: 'Schedule Type',
       group: 'schedule',
+      hidden: true,
       returnType: 'text',
       expression: F`record.is_milestone == true ? "milestone" : "task"`,
     }),

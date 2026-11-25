@@ -135,7 +135,7 @@ describe('Add to Campaign refuses a person who opted out of email (#2336 D1)', (
       body: JSON.stringify({ recordId: lead.id, params: { campaignId: campaign.id } }),
     });
     const body = JSON.stringify(await res.json());
-    expect(body, 'the zh-CN refusal names the lead as 张伟').toContain('张伟 已退订邮件');
+    expect(body, 'the zh-CN refusal names the lead as 张伟').toContain('张伟已拒收邮件，因此这个线索没有加入营销活动。');
     expect(body).not.toContain('伟 张');
     expect(await membersOf(campaign.id)).toHaveLength(0);
   });

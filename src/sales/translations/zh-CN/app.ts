@@ -579,6 +579,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '根据订单起草合同',
       refusals: {
         refuse_missing: { message: '这张订单已不存在，或你无权打开它。没有起草合同。' },
+        refuse_cancelled: { message: '这张订单已取消。没有起草合同。' },
         refuse_has_contract: { message: '这张订单已关联合同。没有起草合同。' },
         refuse_no_contact: { message: '合同需要主要联系人：请先为订单填写联系人。没有起草合同。' },
       },

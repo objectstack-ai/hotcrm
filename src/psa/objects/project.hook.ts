@@ -86,11 +86,15 @@ const projectStatusGuard: Hook = {
     VALIDATION_FAILED: {
       message: 'This project change is not allowed.',
       status: 400,
-      params: ['problem'],
+      params: ['line'],
       reasons: {
         starts_as_draft: { message: 'A new project starts as Draft. Save it, then set In Approval to send it for approval.' },
         budget_required: { message: 'Add the project\'s budget (version 1, with its lines) before sending it for approval: the approval is of that budget.' },
-        budget_incomplete: { message: 'The budget is not ready to approve: {{problem}} Complete it, then send the project for approval.' },
+        budget_no_lines: { message: 'The budget is not ready to approve: it has no lines. Complete it, then send the project for approval.' },
+        budget_labor_no_rate_card: { message: 'The budget is not ready to approve: the labor line "{{line}}" names no rate card. Complete it, then send the project for approval.' },
+        budget_labor_no_hours: { message: 'The budget is not ready to approve: the labor line "{{line}}" has no hours. Complete it, then send the project for approval.' },
+        budget_line_no_quantity: { message: 'The budget is not ready to approve: the line "{{line}}" has no quantity. Complete it, then send the project for approval.' },
+        budget_total_zero: { message: 'The budget is not ready to approve: its total is zero. Complete it, then send the project for approval.' },
       },
     },
     FORBIDDEN: {
@@ -178,26 +182,22 @@ const projectStatusGuard: Hook = {
         top: 500,
       });
       const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : Number(v ?? 0) || 0);
-      let problem = '';
-      if (lines.length === 0) problem = 'it has no lines.';
+      // Each way a budget is not ready is its own reason, so a locale pack holds
+      // one whole sentence per case and the line's description is the only thing
+      // filled in (hotcrm#2766).
+      const notReady = (problem: string, detail: { reason: string; params?: { line: string } }): Error =>
+        Object.assign(refuse(`The budget is not ready to approve: ${problem} Complete it, then send the project for approval.`, 'VALIDATION_FAILED', 400), detail);
+      if (lines.length === 0) throw notReady('it has no lines.', { reason: 'budget_no_lines' });
       for (const line of lines) {
-        if (problem) break;
-        const label = String(line.description ?? 'a line');
+        const params = { line: String(line.description ?? '') };
         if (line.category === 'labor') {
-          if (!line.rate_card) problem = `the labor line "${label}" names no rate card.`;
-          else if (num(line.hours) <= 0) problem = `the labor line "${label}" has no hours.`;
+          if (!line.rate_card) throw notReady(`the labor line "${params.line}" names no rate card.`, { reason: 'budget_labor_no_rate_card', params });
+          if (num(line.hours) <= 0) throw notReady(`the labor line "${params.line}" has no hours.`, { reason: 'budget_labor_no_hours', params });
         } else if (num(line.quantity) <= 0) {
-          problem = `the line "${label}" has no quantity.`;
+          throw notReady(`the line "${params.line}" has no quantity.`, { reason: 'budget_line_no_quantity', params });
         }
       }
-      if (!problem && lines.reduce((sum, line) => sum + num(line.amount), 0) <= 0) problem = 'its total is zero.';
-      if (problem) {
-        throw Object.assign(refuse(
-          `The budget is not ready to approve: ${problem} Complete it, then send the project for approval.`,
-          'VALIDATION_FAILED',
-          400,
-        ), { reason: 'budget_incomplete', params: { problem } });
-      }
+      if (lines.reduce((sum, line) => sum + num(line.amount), 0) <= 0) throw notReady('its total is zero.', { reason: 'budget_total_zero' });
     }
   },
 };

@@ -574,6 +574,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '注文から契約を作成',
       refusals: {
         refuse_missing: { message: 'この注文は存在しないか、開く権限がありません。契約は作成されませんでした。' },
+        refuse_cancelled: { message: 'この注文はキャンセルされています。契約は作成されませんでした。' },
         refuse_has_contract: { message: 'この注文にはすでに契約が紐づいています。契約は作成されませんでした。' },
         refuse_no_contact: { message: '契約には主担当者が必要です。先に注文に担当者を入力してください。契約は作成されませんでした。' },
       },
