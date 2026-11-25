@@ -30,7 +30,7 @@ const OPPORTUNITY_BULK_DELETE = {
   delete: {
     label: '删除',
     confirmLabel: '删除',
-    confirmText: '确定要永久删除 {{count}} 个商机吗？此操作无法撤销。',
+    confirmText: '确定要删除 {{count}} 个商机吗？删除的记录会进入回收站，管理员可以在那里恢复。',
   },
 };
 

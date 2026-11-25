@@ -71,7 +71,7 @@ export const en: TranslationData = {
         my_expenses: {
           label: 'My Expenses',
           bulkActions: {
-            delete: { label: 'Delete', confirmLabel: 'Delete', confirmText: 'Permanently delete {{count}} expense(s)? This cannot be undone.' },
+            delete: { label: 'Delete', confirmLabel: 'Delete', confirmText: 'Delete {{count}} expense(s)? They go to the recycle bin, where an administrator can restore them.' },
           },
         },
       },

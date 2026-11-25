@@ -113,7 +113,7 @@ export const customer: Record<string, ObjectTranslationData> = {
           delete: {
             label: 'Eliminar',
             confirmLabel: 'Eliminar',
-            confirmText: '¿Eliminar permanentemente {{count}} cuenta(s)? Esta acción no se puede deshacer.',
+            confirmText: '¿Eliminar {{count}} cuenta(s)? Irán a la papelera, donde un administrador puede restaurarlas.',
           },
           transfer_owner: {
             label: 'Transferir propietario',
