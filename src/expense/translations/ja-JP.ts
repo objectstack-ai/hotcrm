@@ -44,6 +44,8 @@ export const jaJP: TranslationData = {
             approved: { message: '経費精算書 {{name}} は承認済みのため変更できません。財務が支払済みにします。' },
             paid: { message: '経費精算書 {{name}} は支払済みのため変更できません。' },
             delete: { message: '削除できるのは下書きの経費精算書のみです。経費精算書 {{name}} は提出済みです。' },
+            delete_approved: { message: '経費精算書 {{name}} は承認済みのため削除できません。承認済みまたは支払済みの経費精算書は記録として残ります。' },
+            delete_paid: { message: '経費精算書 {{name}} は支払済みのため削除できません。承認済みまたは支払済みの経費精算書は記録として残ります。' },
           },
         },
       },

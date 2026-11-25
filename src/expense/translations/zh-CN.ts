@@ -44,6 +44,8 @@ export const zhCN: TranslationData = {
             approved: { message: '报销单{{name}}已批准，不能再修改。由财务标记为已付款。' },
             paid: { message: '报销单{{name}}已付款，不能再修改。' },
             delete: { message: '只有草稿状态的报销单可以删除。报销单{{name}}已经提交过。' },
+            delete_approved: { message: '报销单{{name}}已批准，不能删除：已批准或已付款的报销单会保留在记录中。' },
+            delete_paid: { message: '报销单{{name}}已付款，不能删除：已批准或已付款的报销单会保留在记录中。' },
           },
         },
       },

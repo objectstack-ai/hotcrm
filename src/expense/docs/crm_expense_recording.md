@@ -109,10 +109,10 @@ While the report waits, it and its expenses are locked.
 Only a draft report can be deleted. Its expenses stay, free to be submitted
 again.
 
-An administrator can also delete a report that has been sent, to repair. The
-expenses of a report deleted while it waited for approval or was rejected go
-back to **Draft**, free to be submitted again. The expenses of an approved or
-paid report stay **Approved**, on no report, and cannot be submitted again.
+An administrator can also delete a report that is waiting for approval or was
+rejected, to repair. Its expenses go back to **Draft**, free to be submitted
+again. An approved or paid report cannot be deleted, by an administrator
+either: it stays on record with its expenses.
 
 ## Paying it back
 

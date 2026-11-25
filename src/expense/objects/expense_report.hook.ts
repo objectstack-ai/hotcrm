@@ -20,10 +20,15 @@ import type { HookApi } from '../../sales/objects/_hook-api';
  *     approved or paid report; Mark as Paid is the one move left.
  *   - **Only a draft report is deleted**, and its expenses go back to being
  *     free, so they can be submitted again. An administrator may delete a
- *     sent report, to repair. The expenses of a report deleted while it was
- *     waiting for approval or rejected go back to Draft with it (hotcrm#2761):
- *     an expense's status follows its report, and with no report there is
- *     nothing left for Submitted to follow.
+ *     report waiting for approval or rejected, to repair; its expenses go back
+ *     to Draft with it (hotcrm#2761): an expense's status follows its report,
+ *     and with no report there is nothing left for Submitted to follow.
+ *   - **An approved or paid report is never deleted by a person,
+ *     administrators included** (maintainer ruling on hotcrm#2761): the
+ *     administrator's repair is for a report whose approval cannot run, and
+ *     an approved or paid report's approval has already run. Deleting one
+ *     would leave its expenses Approved on no report, still in the project's
+ *     cost and never to be submitted again.
  *   - It stamps when the report was submitted and approved.
  *
  * Judged on a person's write; the approval, Submit for Reimbursement and an
@@ -62,10 +67,12 @@ const expenseReportRules: Hook = {
         approved: { message: 'Expense report {{name}} is approved, so it can no longer be changed. Finance marks it as paid.' },
         paid: { message: 'Expense report {{name}} is paid, so it can no longer be changed.' },
         delete: { message: 'Only a draft expense report can be deleted. Expense report {{name}} has been submitted.' },
+        delete_approved: { message: 'Expense report {{name}} is approved, so it cannot be deleted: an approved or paid report stays on record.' },
+        delete_paid: { message: 'Expense report {{name}} is paid, so it cannot be deleted: an approved or paid report stays on record.' },
       },
     },
   },
-  description: 'Leave the decision on an expense report to its approval and its payment mark to finance, refuse a report sent with no expenses, keep a decided report as decided, and release the expenses of a deleted report, back to Draft when it was waiting for approval or rejected.',
+  description: 'Leave the decision on an expense report to its approval and its payment mark to finance, refuse a report sent with no expenses, keep a decided report as decided and on record, and release the expenses of a deleted report, back to Draft when it was waiting for approval or rejected.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -97,6 +104,25 @@ const expenseReportRules: Hook = {
     const was = String(previous.status ?? 'draft');
 
     if (ctx.event === 'beforeDelete') {
+      // An approved or paid report stays on record: no person deletes it,
+      // administrators included (maintainer ruling on hotcrm#2761). The
+      // administrator's exemption below is for a report whose approval cannot
+      // run; this one's has run. A write with no person on it (a system job)
+      // is not judged here, as before.
+      if (person && was === 'approved') {
+        throw Object.assign(refuse(
+          `Expense report ${name} is approved, so it cannot be deleted: an approved or paid report stays on record.`,
+          'RECORD_LOCKED',
+          409,
+        ), { reason: 'delete_approved', params: { name } });
+      }
+      if (person && was === 'paid') {
+        throw Object.assign(refuse(
+          `Expense report ${name} is paid, so it cannot be deleted: an approved or paid report stays on record.`,
+          'RECORD_LOCKED',
+          409,
+        ), { reason: 'delete_paid', params: { name } });
+      }
       if (person && !admin && was !== 'draft') {
         throw Object.assign(refuse(
           `Only a draft expense report can be deleted. Expense report ${name} has been submitted.`,
@@ -108,10 +134,10 @@ const expenseReportRules: Hook = {
       // The released expenses go back to Draft when the report was waiting for
       // approval or rejected (hotcrm#2761): `expense_report_lines_follow` would
       // have moved them there had the report gone back to Draft first, and it
-      // moves the status alone, so this does too. An approved or paid report is
-      // deliberately left as it was: its expenses stay Approved, which keeps
-      // them in the project's cost. Whether they should return to Draft too is
-      // the open ruling on hotcrm#2761; do not change it here without one.
+      // moves the status alone, so this does too. Only a write with no person
+      // on it reaches here for an approved or paid report (a person is refused
+      // above); its expenses are left Approved, as they were before the ruling,
+      // which did not decide the system's delete.
       const backToDraft = was === 'submitted' || was === 'rejected';
       const lines = await api.object('crm_expense').find({ where: { crm_expense_report: id }, fields: ['id', 'status'], top: 500 });
       for (const line of lines) {
