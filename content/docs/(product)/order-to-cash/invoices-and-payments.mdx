@@ -16,10 +16,10 @@ The **Accounts Receivable** position enters and imports them on every account. I
 | Field | What it holds |
 | --- | --- |
 | **Invoice Number** | The number on the invoice, as finance issued it |
-| **Account** | The customer it was issued to. Required; filled in when you choose an order or a contract |
+| **Account** | The customer it was issued to. Required; filled in when you choose an order, a contract or a plan step |
 | **Order** | The order it bills, if any. Choosing one fills in its account, and its contract when the order sits under one; an order of another account is refused |
 | **Contract** | The contract it was issued against, if any |
-| **Billing Milestone** | The plan step it bills, if any. Only the steps of the invoice's account are offered; choosing one fills in its order and contract when the invoice has none |
+| **Billing Milestone** | The plan step it bills, if any. Choosing one fills in its account, and its order and contract when the invoice has none; a plan step of another account is refused |
 | **Issue Date** | The day it was issued |
 | **Due Date** | The day payment is due (see below) |
 | **Amount** | As issued, tax included |
@@ -34,6 +34,8 @@ The **Accounts Receivable** position enters and imports them on every account. I
 **Overpayments.** A payment that takes **Paid** above **Amount** is accepted, typed or imported, because the cash was received. The invoice then counts as fully paid: **Open** reads zero and the excess shows in **Overpaid**. The excess is not set against the customer's other invoices, and the contract's and the account's **Receivable Balance** never go below zero because of it.
 
 **Cancelled invoices.** An invoice cancelled or fully credited at the source is set to **Cancelled** here. It then leaves every figure: its plan step stops counting it as invoiced, and it is open for nothing.
+
+**An invoice against another account's plan step is refused.** The message names the step, or the order or contract the step filled in while the invoice still has it. The form lists every account's plan steps, so the check is made when you save.
 
 ## Overdue Invoices [#overdue-invoices]
 

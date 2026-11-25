@@ -185,7 +185,7 @@ export const zhCN: TranslationData = {
         },
         refuse_not_open: {
           message:
-            '该营销活动不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+            '这个营销活动未开放报名，或已不存在：只有“规划中”或“进行中”的营销活动可以加入成员。没有人被加入。',
         },
       },
       screens: {
@@ -211,7 +211,7 @@ export const zhCN: TranslationData = {
       refusals: {
         refuse_campaign_not_open: {
           message:
-            '{{ campaignRecord.name | default: "所选营销活动" }} 不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+            '{{ campaignRecord.name | default: "所选营销活动" }}未开放报名，或已不存在：只有“规划中”或“进行中”的营销活动可以加入成员。没有人被加入。',
         },
         refuse_lead_opted_out: {
           message: '{{ leadRecord.full_name }}已拒收邮件，因此这个线索没有加入营销活动。',
@@ -222,7 +222,7 @@ export const zhCN: TranslationData = {
       refusals: {
         refuse_campaign_not_open: {
           message:
-            '{{ campaignRecord.name | default: "所选营销活动" }} 不在可加入成员的状态，或已不存在：只有处于「规划中」或「进行中」的营销活动可以加入成员。没有任何人被加入。',
+            '{{ campaignRecord.name | default: "所选营销活动" }}未开放报名，或已不存在：只有“规划中”或“进行中”的营销活动可以加入成员。没有人被加入。',
         },
         refuse_contact_opted_out: {
           message: '{{ contactRecord.full_name | default: "这个联系人" }}已拒收邮件，因此这个联系人没有加入营销活动。',

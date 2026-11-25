@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { ProjectTask } from '../src/psa/objects/project_task.object';
 
 type Rec = Record<string, any>;
 
@@ -148,6 +149,15 @@ describe('project_task_rules: the tree and the predecessors stay inside the proj
   it('draws a milestone as a milestone', async () => {
     const m = await insert('crm_project_task', { crm_project: project.id, name: 'Go-live', is_milestone: true }, pm.token);
     expect((await row('crm_project_task', m.id))!.schedule_type).toBe('milestone');
+  });
+
+  // The value above is for the Gantt alone: a person reads the Milestone
+  // checkbox, so the record page, the drawer and the form leave this field
+  // out (hotcrm#2769). The Gantt still receives it, as the two cases above
+  // read it from the same rows.
+  it('keeps the value the Gantt reads off the record page and the form', () => {
+    expect((ProjectTask.fields.schedule_type as Rec).hidden).toBe(true);
+    expect((ProjectTask.fields.is_milestone as Rec).hidden).not.toBe(true);
   });
 
   it('refuses a parent from another project', async () => {
