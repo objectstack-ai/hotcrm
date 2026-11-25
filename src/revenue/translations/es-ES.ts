@@ -507,6 +507,13 @@ export const esES: TranslationData = {
             quoteLink: { label: 'Cotización' },
           },
         },
+        result_partial: {
+          title: 'Cotización creada, faltan líneas',
+          description: `La cotización «{{ quoteName }}» se creó como borrador, pero {{ skippedCount }} de las líneas de producto de la oportunidad no se pudieron copiar en ella ({{ copiedCount }} copiadas). Una línea se rechaza cuando la lista de precios de la cotización no tiene un precio activo para su producto, o cuando su descuento supera el ${QUOTE_DISCOUNT_CEILING} %; el registro de ejecución del flujo indica el motivo. Abra la cotización y añada allí esas líneas.`,
+          fields: {
+            quoteLink: { label: 'Cotización' },
+          },
+        },
       },
     },
   },
