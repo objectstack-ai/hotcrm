@@ -104,13 +104,15 @@ export function createO2cRowStamp(objectName: string, hookName: string): Hook {
       if (api && (!held('crm_contract') || !held('crm_sales_order'))) {
         const sources: Array<Record<string, unknown>> = [];
         const sourceFields = ['id', 'crm_contract', 'crm_sales_order', 'crm_account'];
-        // A payment that names its account takes nothing from an invoice or a
-        // step of another account: `payment_plan_step_stamp` then refuses the
-        // invoice or the step by its own name, where the order it carries
-        // would be refused here under a name the user never chose
-        // (hotcrm#2755: the form's pickers list every account's). Payments
-        // only: nothing after this hook judges an invoice's step.
-        const payer = ctx.object === 'crm_payment' && 'crm_account' in input ? refId(input.crm_account) : '';
+        // A payment or an invoice that names its account takes nothing from an
+        // invoice or a step of another account: `payment_plan_step_stamp` and
+        // `invoice_plan_step_guard` (after this hook) then refuse the invoice
+        // or the step by its own name, where the order it carries would be
+        // refused here under a name the user never chose (hotcrm#2755: the
+        // forms' pickers list every account's).
+        const payer = (ctx.object === 'crm_payment' || ctx.object === 'crm_invoice') && 'crm_account' in input
+          ? refId(input.crm_account)
+          : '';
         const ofPayer = (source: Record<string, unknown>): boolean => {
           const owner = refId(source.crm_account);
           return !payer || !owner || owner === payer;

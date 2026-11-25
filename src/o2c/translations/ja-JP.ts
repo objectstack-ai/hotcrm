@@ -46,6 +46,16 @@ export const jaJP: TranslationData = {
         },
       },
     },
+    invoice_plan_step_guard: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'この請求マイルストーンは別の取引先のものです。この請求書の取引先の請求マイルストーンを選んでください。',
+          reasons: {
+            milestone_named: { message: '{{milestone}}は別の取引先のものです。この請求書の取引先の請求マイルストーンを選んでください。' },
+          },
+        },
+      },
+    },
     payment_row_stamp: {
       refusals: {
         VALIDATION_FAILED: {

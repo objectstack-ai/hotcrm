@@ -31,12 +31,17 @@ invoices and payments.
   its account. On a payment, so does choosing an invoice or a billing
   milestone, and an invoice also fills in its contract and its billing
   milestone when the payment has none. An order or a contract of another
-  account is refused, naming it. An order under a contract brings its contract: one that names a
-  different contract is refused, and so is an order and a contract of two
-  different accounts. When an invoice names a milestone but no order or
+  account is refused, naming it. An order under a contract brings its
+  contract: one that names a different contract is refused, and so is an
+  order and a contract of two different accounts. When an invoice names a milestone but no order or
   contract, or a payment names an invoice or a milestone but none, they are
   filled in from it, so the order's and the contract's totals count the same
   records the milestone and the invoice do.
+- **An invoice's billing milestone must belong to its account.** Choosing a
+  milestone on an invoice fills in its account. The invoice form lists every
+  account's milestones; one of another account is refused on save. The message
+  names the milestone, or the order or contract it filled in while the invoice
+  still has it.
 - **The order's contract carries to its invoices and payments.** When an order
   gets its contract after its invoices and payments were saved (with **Draft
   Contract**, or by choosing the order's **Contract**), those that name no

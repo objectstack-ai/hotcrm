@@ -46,6 +46,16 @@ export const esES: TranslationData = {
         },
       },
     },
+    invoice_plan_step_guard: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: 'Este hito de facturación pertenece a otra cuenta. Elija un hito de facturación de la cuenta de esta factura.',
+          reasons: {
+            milestone_named: { message: '{{milestone}} pertenece a otra cuenta. Elija un hito de facturación de la cuenta de esta factura.' },
+          },
+        },
+      },
+    },
     payment_row_stamp: {
       refusals: {
         VALIDATION_FAILED: {

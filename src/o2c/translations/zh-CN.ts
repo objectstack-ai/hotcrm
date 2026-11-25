@@ -46,6 +46,16 @@ export const zhCN: TranslationData = {
         },
       },
     },
+    invoice_plan_step_guard: {
+      refusals: {
+        VALIDATION_FAILED: {
+          message: '这个回款节点属于另一个客户。请选择这张发票所属客户的回款节点。',
+          reasons: {
+            milestone_named: { message: '{{milestone}}属于另一个客户。请选择这张发票所属客户的回款节点。' },
+          },
+        },
+      },
+    },
     payment_row_stamp: {
       refusals: {
         VALIDATION_FAILED: {

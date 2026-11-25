@@ -407,6 +407,40 @@ describe('a report with no project goes to the submitter\'s manager (expense_rep
     expect(again, 'and they can be submitted again').toHaveLength(1);
   });
 
+  it('an administrator may delete a sent report, to repair: its expenses go back to Draft, on no report, and can be submitted again (hotcrm#2761)', async () => {
+    const admin = await verify.signIn();
+    const remove = (id: string) => verify.apiAs(admin, 'DELETE', `/data/crm_expense_report/${id}`);
+
+    // Waiting for approval.
+    const waiting = await insert(taxi(), spender.token);
+    const [sent] = await submit([waiting.id], spender.token);
+    await expect(verify.hooks.run('crm_expense_report', 'delete', { id: sent! }, { as: spender.token }),
+      'its submitter cannot delete a report that has been sent').rejects.toThrow(/Only a draft expense report can be deleted/);
+    expect(await row(waiting.id), 'a refused delete released nothing').toMatchObject({ crm_expense_report: sent, status: 'submitted' });
+    expect((await remove(sent!)).status, 'an administrator can').toBeLessThan(300);
+    expect(await verify.rows('crm_expense_report', { id: sent })).toHaveLength(0);
+    const freed = await row(waiting.id);
+    expect(freed.crm_expense_report ?? null, 'the expense is on no report').toBeNull();
+    expect(freed.status, 'and no longer reads Submitted with nothing to be submitted on').toBe('draft');
+    expect(await openRequests(sent!), 'nobody is left asked to decide a report that is gone').toHaveLength(0);
+    const [again] = await submit([waiting.id], spender.token);
+    expect(await row(waiting.id), 'it can be submitted again').toMatchObject({ crm_expense_report: again, status: 'submitted' });
+    expect(again).not.toBe(sent);
+
+    // Rejected.
+    const refused = await insert(taxi(), spender.token);
+    const [turnedDown] = await submit([refused.id], spender.token);
+    expect(await act(turnedDown!, manager.token, 'reject')).toBe(200);
+    expect((await row(refused.id)).status).toBe('rejected');
+    await expect(verify.hooks.run('crm_expense_report', 'delete', { id: turnedDown! }, { as: spender.token }),
+      'a rejected report goes back to Draft to be corrected; it is not deleted as it stands').rejects.toThrow(/Only a draft expense report can be deleted/);
+    expect((await remove(turnedDown!)).status).toBeLessThan(300);
+    const corrected = await row(refused.id);
+    expect(corrected.crm_expense_report ?? null).toBeNull();
+    expect(corrected.status, 'a rejected expense with no report is a draft again').toBe('draft');
+    expect(await submit([refused.id], spender.token), 'and can be submitted again').toHaveLength(1);
+  });
+
   it('refuses the whole selection, writing nothing, when an expense is someone else\'s or already on a report', async () => {
     const mine = await insert(taxi(), spender.token);
     const theirs = await insert(taxi(), loner.token);
