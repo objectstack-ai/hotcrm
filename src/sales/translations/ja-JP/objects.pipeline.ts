@@ -458,7 +458,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
       },
       period_label: {
         label: '期間ラベル',
-        help: '「2026 年第 3 四半期」「2026 年 8 月」のような読みやすい期間ラベル。',
+        help: '「Q3 2026」「Aug 2026」のような読みやすい期間ラベル。空欄の場合は「期間」と「期間開始」から自動的に生成されます。',
       },
       display_title: { label: '表示名' },
       owner_name: { label: '担当者名', help: '担当者の名前。ユーザーレコードと同期されます。フォーキャストのタイトルの一部です。' },
