@@ -7,7 +7,7 @@ import type { VerifyStack } from '@objectstack/verify';
 import artifact from '../objectstack.config';
 import { allFlows, packageStacks } from '../objectstack.composition';
 import { EXPENSE_FINANCE_REVIEW_AMOUNT } from '../src/sales/objects/_thresholds';
-import { servedApp } from './helpers/composed-stack';
+import { packFor, servedApp } from './helpers/composed-stack';
 import { REPO_ROOT } from './helpers/repo-root';
 import { conditionHolds, flowRuns, hotcrmStack, signUpPerson, systemUpdate, type Person } from './helpers/verify-stack';
 
@@ -439,6 +439,70 @@ describe('a report with no project goes to the submitter\'s manager (expense_rep
     expect(corrected.crm_expense_report ?? null).toBeNull();
     expect(corrected.status, 'a rejected expense with no report is a draft again').toBe('draft');
     expect(await submit([refused.id], spender.token), 'and can be submitted again').toHaveLength(1);
+  });
+
+  it('nobody deletes an approved or a paid report, administrators included: a 409 in the caller\'s language, and it stays on record with its expenses (hotcrm#2761)', async () => {
+    // Maintainer ruling on hotcrm#2761 (option 3): the administrator's repair
+    // above is for a report whose approval cannot run; an approved or paid
+    // report's approval has run. Deleting one used to release its expenses as
+    // Approved on no report, still in the project's cost and never to be
+    // submitted again.
+    const admin = await verify.signIn();
+    const remove = async (id: string, token: string, locale = 'en') => {
+      const res = await verify.raw(`/api/v1/data/crm_expense_report/${id}`, {
+        method: 'DELETE',
+        headers: { authorization: `Bearer ${token}`, 'accept-language': locale },
+      });
+      const text = await res.text();
+      const body = (() => { try { return JSON.parse(text) as Rec; } catch { return {} as Rec; } })();
+      return { status: res.status, code: body.code as string | undefined, message: String(body.error ?? ''), text };
+    };
+    const reason = (locale: string, key: string): string =>
+      (packFor(locale) as Rec).hooks.expense_report_rules.refusals.RECORD_LOCKED.reasons[key].message as string;
+    const kept = async (reportId: string, expenseId: string, status: string): Promise<void> => {
+      expect(await report(reportId), 'the report stays on record').toMatchObject({ status });
+      expect(await row(expenseId), 'and so does its expense, on it, Approved').toMatchObject({ crm_expense_report: reportId, status: 'approved' });
+    };
+
+    const decided = await insert(taxi(), spender.token);
+    const [approvedId] = await submit([decided.id], spender.token);
+    expect(await act(approvedId!, manager.token, 'approve')).toBe(200);
+    const approvedName = (await report(approvedId!)).name as string;
+    expect(approvedName, 'the report has a name to put in the sentence').toBeTruthy();
+
+    const byAdmin = await remove(approvedId!, admin);
+    expect({ status: byAdmin.status, code: byAdmin.code }, byAdmin.text).toEqual({ status: 409, code: 'RECORD_LOCKED' });
+    expect(byAdmin.message).toBe(`Expense report ${approvedName} is approved, so it cannot be deleted: an approved or paid report stays on record.`);
+    await kept(approvedId!, decided.id, 'approved');
+    const bySubmitter = await remove(approvedId!, spender.token);
+    expect({ status: bySubmitter.status, code: bySubmitter.code }, 'a non-administrator is refused as before').toEqual({ status: 409, code: 'RECORD_LOCKED' });
+    await kept(approvedId!, decided.id, 'approved');
+
+    const settled = await insert(taxi(), spender.token);
+    const [paidId] = await submit([settled.id], spender.token);
+    expect(await act(paidId!, manager.token, 'approve')).toBe(200);
+    await verify.actions.run('crm_expense_report', 'mark_expense_report_paid', {
+      as: finance.token, recordId: paidId!, params: { payment_date: '2026-11-20' },
+    });
+    const paidName = (await report(paidId!)).name as string;
+    const paidByAdmin = await remove(paidId!, admin);
+    expect({ status: paidByAdmin.status, code: paidByAdmin.code }, paidByAdmin.text).toEqual({ status: 409, code: 'RECORD_LOCKED' });
+    expect(paidByAdmin.message).toBe(`Expense report ${paidName} is paid, so it cannot be deleted: an approved or paid report stays on record.`);
+    await kept(paidId!, settled.id, 'paid');
+    const paidBySubmitter = await remove(paidId!, spender.token);
+    expect({ status: paidBySubmitter.status, code: paidBySubmitter.code }, paidBySubmitter.text).toEqual({ status: 409, code: 'RECORD_LOCKED' });
+    await kept(paidId!, settled.id, 'paid');
+
+    const chinese = await remove(approvedId!, admin, 'zh-CN');
+    expect({ status: chinese.status, code: chinese.code }, chinese.text).toEqual({ status: 409, code: 'RECORD_LOCKED' });
+    expect(chinese.message).toBe(`报销单${approvedName}已批准，不能删除：已批准或已付款的报销单会保留在记录中。`);
+    expect((await remove(paidId!, admin, 'zh-CN')).message).toBe(`报销单${paidName}已付款，不能删除：已批准或已付款的报销单会保留在记录中。`);
+    for (const locale of ['ja-JP', 'es-ES']) {
+      expect((await remove(approvedId!, admin, locale)).message, locale).toBe(reason(locale, 'delete_approved').replace('{{name}}', approvedName));
+      expect((await remove(paidId!, admin, locale)).message, locale).toBe(reason(locale, 'delete_paid').replace('{{name}}', paidName));
+    }
+    await kept(approvedId!, decided.id, 'approved');
+    await kept(paidId!, settled.id, 'paid');
   });
 
   it('refuses the whole selection, writing nothing, when an expense is someone else\'s or already on a report', async () => {
