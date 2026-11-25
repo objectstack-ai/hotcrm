@@ -129,7 +129,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| CON-001 | 合同对象 | 法律协议(`crm_contract`):CTR-{0000} 编号即标题,必填客户/联系人/期限/起止日/合同额,签署与计费字段,共享随所属客户(`controlled_by_parent`),启用附件 | `src/sales/objects/contract.object.ts` |
+| CON-001 | 合同对象 | 法律协议(`crm_contract`):合同名称即标题(#2746),CTR-{0000} 编号并列显示、选择器里写在名称下方,必填名称/客户/联系人/期限/起止日/合同额,起草的合同带来源订单或报价的名称,签署与计费字段,共享随所属客户(`controlled_by_parent`),启用附件 | `src/sales/objects/contract.object.ts` |
 | CON-002 | 合同状态机 | `draft → in_approval → activated → expired/terminated`;两个终态,续约=新建合同而非复活旧行 | `src/sales/objects/contract.object.ts`(validations) |
 | CON-003 | 期限一致性校验 | 起止日与 `contract_term_months` 偏差 >1 个月即拒绝;激活后禁止缩短 `end_date`(应走终止/变更) | `src/sales/objects/contract.hook.ts`(`contract_validation`) |
 | CON-004 | 激活后置动作 | 激活的同一次写入补 `signed_date`(如未填,计费推送因此带上该日期),随后把客户升级为 customer | `src/sales/objects/contract.hook.ts`(`contract_signed_date_stamp`、`contract_on_activation`) |

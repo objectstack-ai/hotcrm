@@ -189,7 +189,7 @@ beforeAll(async () => {
 
   const contractOn = (account: string, contact: string) => ({
     crm_account: account, crm_contact: contact, owner_id: id.owner, status: 'draft',
-    contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
+    name: 'Fixture Contract', contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
     contract_value: 1000,
   });
   id.contract_US = await insert('crm_contract', contractOn(id.acct_US, id.contact_US));

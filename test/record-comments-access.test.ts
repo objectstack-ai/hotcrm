@@ -112,7 +112,7 @@ beforeAll(async () => {
   });
   id.contract_US = await insert('crm_contract', {
     crm_account: id.acct_US, crm_contact: id.contact_US, owner_id: id.owner, status: 'draft',
-    contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1000,
+    name: 'Fixture Contract', contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1000,
   });
   id.cmt_contract_US = await ownerComment(thread(id.contract_US, 'crm_contract'), 'US contract note');
 

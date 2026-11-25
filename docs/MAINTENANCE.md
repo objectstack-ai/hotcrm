@@ -326,6 +326,31 @@ the name (`line_item_product_title_backfill`, `src/revenue/objects/product.hook.
 To finish them in one go instead, run `scripts/backfill-line-product-title.ts`,
 which now compares each line against the product's name.
 
+### 3.6 Naming the contracts saved before Contract Name (#2746)
+
+A contract is titled by its **Contract Name** (`crm_contract.name`, required).
+A **fresh install needs nothing**: the demo contracts are seeded with names and
+every new contract must have one.
+
+An **in-place upgrade does**. The migration adds the column, nullable on
+purpose: on ObjectStack 18.6.0 adding a NOT NULL column to the existing
+contract table fails the contract's whole schema sync (measured on SQLite:
+`Cannot add a NOT NULL column with default value NULL`), which would leave
+contracts unwritable. So `required` holds every new write, and the rows written
+before it hold `NULL` until they are named. Until then their record header,
+lookup chips, approvals and notices fall back to the record id (a notice names
+the contract by its number alone), and they still save any edit that does not
+touch the name.
+
+`scripts/backfill-contract-names.ts` is the writer. It is report-only without
+`--apply`, touches only rows with no name, and is rerunnable. Each contract
+gets its source quote's name — the quote of an order that names the contract,
+else the one accepted quote of its opportunity — otherwise the account's name
+and its start date (`Acme Corporation 2026-11-24`). It writes `name` alone, so
+the status and every other field stay as they are; a contract whose stored
+term and dates already disagree is refused by `contract_validation` and is
+listed for a person to fix.
+
 ## 4. Seed-data staleness — the #1 HotCRM pitfall
 
 Stale seed data is the most common cause of "Studio shows a red

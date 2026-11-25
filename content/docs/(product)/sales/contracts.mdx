@@ -36,14 +36,24 @@ A contract record declares its fields in **six groups**. The contract form shows
 
 | Group | What's in it |
 | --- | --- |
-| **Contract Information** | Contract Number *(auto-numbered `CTR-0001`)*, Contract Type, Contract Document, Description |
+| **Contract Information** | Contract Name, Contract Number *(auto-numbered `CTR-0001`)*, Contract Type, Contract Document, Description |
 | **Parties** | Contract Owner, Account, Primary Contact, Related Opportunity — the contact and opportunity pickers are scoped to the account you pick first |
 | **Terms & Dates** | Contract Term (Months), Start Date, End Date, Special Terms |
 | **Contract Value** | Contract Value, Billing Frequency, Payment Terms, Billing Address |
 | **Status & Approval** | Status, Signed Date, Signed By, Signed Copy |
 | **Renewal** | Auto Renewal, Renewal Notice (Days) |
 
-Account, Primary Contact, Contract Term, Start Date, End Date, Contract Value and Status are all **required** — a contract cannot be saved without them.
+Contract Name, Account, Primary Contact, Contract Term, Start Date, End Date, Contract Value and Status are all **required** — a contract cannot be saved without them.
+
+## The contract's name and number
+
+A contract's **Contract Name** is what people call it — *Annual Service 2027*, *Phase 2 Implementation* — and it is the contract's title. The record header, the first column of the **All Contracts** list, the **Contracts** tab on an account, an opportunity or a contact, approvals and notices all show it, so two contracts of one customer read apart. The new-contract form asks for it first.
+
+The **Contract Number** stays: the system numbers every contract (`CTR-0001`) and never reuses a number. It stands beside the name — in the list's second column and first in the record header's strip — and wherever you pick a contract (on a plan step, an invoice or a payment) each candidate shows its number under its name. Search finds a contract by either. The contract notices name it by both: *Contract drafted: CTR-0006 · Annual Service 2027*.
+
+A drafted contract takes its source's name, which you can change like any other field: **Draft Contract** on an order uses the order's name, which an order created from an accepted quote carries over from the quote; the **Accepted Quote Drafts a Contract** flow, when switched on, uses the quote's name, or the opportunity's when the quote has none.
+
+Contracts saved before contracts had names are named once, after the upgrade, by an administrator (see the release notes): each gets its source quote's name, or otherwise the account's name and its start date — *Acme Corporation 2026-11-24*.
 
 Three field names people go looking for and do not find:
 
@@ -55,7 +65,7 @@ Three field names people go looking for and do not find:
 
 ## Printing a contract and the signed copy
 
-**Print Contract**, on the contract's record page and in the contract list's row menu, prints the contract as a document and files the PDF under the contract's **Attachments**, in your name. The document carries the parties (contract number and type, account, primary contact and contract owner), the **Terms & Dates**, **Contract Value** and **Renewal** groups, and a signature block for each side; each sheet repeats the header and carries its page number. Printing changes nothing else on the contract, so a contract can be printed as often as it needs to be. The button is offered to whoever may edit the contract and attach files to it — a **Sales Manager** or a **System Administrator**, not a **Sales Rep** (see *Who can edit which contract* below).
+**Print Contract**, on the contract's record page and in the contract list's row menu, prints the contract as a document and files the PDF under the contract's **Attachments**, in your name. The document carries the parties (contract name, number and type, account, primary contact and contract owner), the **Terms & Dates**, **Contract Value** and **Renewal** groups, and a signature block for each side; each sheet repeats the header and carries its page number. Printing changes nothing else on the contract, so a contract can be printed as often as it needs to be. The button is offered to whoever may edit the contract and attach files to it — a **Sales Manager** or a **System Administrator**, not a **Sales Rep** (see *Who can edit which contract* below).
 
 What the customer signs and sends back is uploaded to **Signed Copy**, in the **Status & Approval** group (on the Edit form, the **Signing & Documents** tab). The save that files it fills **Signed Date** with today's date when Signed Date is empty; a date already on the contract, or typed in the same save, is kept.
 
@@ -182,8 +192,8 @@ Contracts saves **one** list — **All Contracts**, every contract you may see, 
 
 | Tab | How it draws the same contracts |
 | --- | --- |
-| **All Contracts** *(the landing tab)* | The grid: contract number (pinned left, and the link into the record), account, related opportunity, status, contract value with a column total, term in months, start and end date, auto-renewal and owner. Ordered by **End Date**, soonest first, so whatever expires next is on top. 25 rows a page. |
-| **Renewal Calendar** | The same contracts on a month calendar, each placed on its **End Date**, titled by contract number and coloured by status. |
+| **All Contracts** *(the landing tab)* | The grid: contract name (pinned left, and the link into the record), contract number, account, related opportunity, status, contract value with a column total, term in months, start and end date, auto-renewal and owner. Ordered by **End Date**, soonest first, so whatever expires next is on top. 25 rows a page. |
+| **Renewal Calendar** | The same contracts on a month calendar, each placed on its **End Date**, titled by contract name and coloured by status. |
 | **Contract Terms** | One gantt bar per contract, from start date to end date, so overlapping terms line up against one another. |
 | **Contract Timeline** | The same start-to-end spans on a quarter scale, grouped by account and coloured by status. |
 
@@ -197,7 +207,7 @@ None of the four filters anything, so **every contract you can see appears in al
 
 ## Tips for sales reps
 
-- ✅ **You never fill a contract in — the system drafts it.** Contract is read-only for a Sales Rep: you cannot create one and you cannot edit one. What you do own is the quote and its order: **Draft Contract** on the order drafts the contract — a *Draft* contract carrying the order's account, primary contact, related opportunity, owner, payment terms and total, on a 12-month term starting today, typed *Subscription* (see [Orders](/docs/sales/orders#drafting-the-contract-from-an-order)). Where an administrator has switched the **Accepted Quote Drafts a Contract** flow on, marking the quote **Accepted** drafts it instead, as every acceptance did before this release.
+- ✅ **You never fill a contract in — the system drafts it.** Contract is read-only for a Sales Rep: you cannot create one and you cannot edit one. What you do own is the quote and its order: **Draft Contract** on the order drafts the contract — a *Draft* contract carrying the order's name, account, primary contact, related opportunity, owner, payment terms and total, on a 12-month term starting today, typed *Subscription* (see [Orders](/docs/sales/orders#drafting-the-contract-from-an-order)). Where an administrator has switched the **Accepted Quote Drafts a Contract** flow on, marking the quote **Accepted** drafts it instead, as every acceptance did before this release.
 - ✅ **The opportunity link is copied off the quote, not pre-filled on a form you are typing into** — so there is nothing on it for you to keep or lose. Nor does the manual route pre-fill it: when a manager or an admin creates a contract by hand, the opportunity is picked by hand, and the only help the picker gives is that it lists the deals of the account already chosen on the contract. Nothing reads that link for reporting today — HotCRM ships no contract report or dashboard at all.
 - ✅ **You read the contracts of your accounts and ask for the rest.** Contracts follow the account: every account you can see — your own, and the ones a territory or team rule shares with you — shows you its contracts, renewals included. Changing a term, a date, the value or the status is somebody else's job, and so is an amendment — that is a new contract, which only they can create. Ask your **Sales Manager**: a manager can change the contract standing in your name without it being handed over first, on any edition — see *Who can edit which contract* above.
 

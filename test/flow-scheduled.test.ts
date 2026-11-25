@@ -348,7 +348,7 @@ const contract = async (over: Rec = {}): Promise<Rec> => {
   return (await verify.seed('crm_contract', [{
     status: 'activated', crm_account: acct.id, crm_contact: contact.id, owner_id: rep.id,
     contract_type: 'subscription', contract_value: 90_000, auto_renewal: false, renewal_notice_days: 30,
-    contract_term_months: 12, start_date: day(endDays - 365), end_date: day(endDays),
+    name: 'Fixture Contract', contract_term_months: 12, start_date: day(endDays - 365), end_date: day(endDays),
     billing_frequency: 'monthly', payment_terms: 'net_30',
     ...((rest.status ?? 'activated') === 'activated' ? { signed_copy: await committedFile(verify, rep.id) } : {}), // #2317
     ...rest,
@@ -382,7 +382,8 @@ describe('contract_expiration — daily auto-expiry', () => {
     for (const id of ['k_future', 'k_draft', 'k_expired']) {
       expect(await notified(rep.id, 'contract_expired', `/crm_contract/${ids[id]}`), `${id} was notified`).toHaveLength(0);
     }
-    expect(String(alert!.payload.templateData.contract_number)).toBe(byId.k_past!.contract_number);
+    // Number and name, side by side (hotcrm#2746).
+    expect(String(alert!.payload.templateData.contract)).toBe(`${byId.k_past!.contract_number} · ${byId.k_past!.name}`);
     expect(JSON.stringify(alert), 'a template failed to interpolate').not.toContain('undefined');
   });
 });
@@ -620,7 +621,7 @@ describe('contract_renewal — daily notice-window sweep', () => {
 
     const sent = await notices(k);
     expect(sent).toHaveLength(1);
-    expect(String(sent[0]!.payload.templateData.contract_number)).toContain(k.contract_number);
+    expect(String(sent[0]!.payload.templateData.contract)).toBe(`${k.contract_number} · ${k.name}`);
   });
 
   it('honours each contract’s own renewal_notice_days, not a shared constant', async () => {

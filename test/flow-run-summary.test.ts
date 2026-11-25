@@ -134,7 +134,7 @@ describe('flow run summary — the three flows the silent-no-op incident covered
     const contract = (over: Rec): Rec => ({
       status: 'activated', crm_account: accountId, crm_contact: contact!.id, owner_id: rep.id,
       contract_type: 'subscription', contract_value: 90_000, auto_renewal: false, renewal_notice_days: 30,
-      contract_term_months: 12, start_date: daysFromNow(-345), end_date: daysFromNow(+20),
+      name: 'Fixture Contract', contract_term_months: 12, start_date: daysFromNow(-345), end_date: daysFromNow(+20),
       billing_frequency: 'monthly', payment_terms: 'net_30', ...over,
     });
     // An activated contract carries its signed copy (#2317).

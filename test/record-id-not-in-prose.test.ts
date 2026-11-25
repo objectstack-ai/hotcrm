@@ -315,7 +315,7 @@ describe('refusals a user reads name the record they are about', () => {
     }, manager);
     await verify.seed('crm_contract', [{
       crm_account: account.id, crm_contact: contact.id, status: 'activated', contract_type: 'subscription',
-      contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1_000,
+      name: 'Fixture Contract', contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1_000,
       signed_copy: await committedFile(verify, manager.id), // activated carries its signed copy (#2317)
     }]);
     const err = await refusalFrom(
