@@ -1,0 +1,439 @@
+---
+name: objectstack-query
+description: >
+  Construct ObjectQL queries — filters, sorting, pagination, aggregation,
+  relation expansion, and full-text search. Use when the user is writing a
+  query DSL expression or picking a pagination strategy. Do not use for
+  defining objects / fields / relationships (see objectstack-data), for
+  designing the API endpoint that exposes a query (see objectstack-api), or
+  for a list view's filter rules / dashboard datasets (see objectstack-ui).
+license: Apache-2.0
+compatibility: Requires @objectstack/spec 18.x (Zod v4 schemas)
+metadata:
+  author: objectstack-ai
+  version: "18.6.0"
+  domain: query
+  tags: query, filter, sort, paginate, aggregate, ObjectQL, full-text
+---
+
+# Query Design — ObjectStack Query DSL
+
+## Calling Convention — `object` is the FIRST ARGUMENT
+
+| Surface | Shape | Legal option keys |
+|:--|:--|:--|
+| engine `find` / `findOne` | `engine.find('task', {…}, { context })` | `context`, `where`, `fields`, `orderBy`, `limit`, `offset`, `search`, `searchFields`, `expand` — **plus** the driver passthrough keys `transaction`, `tenantId`, `tenantIds`, `timezone`, `bypassTenantAudit`, `preserveAudit` |
+| engine `aggregate` | `engine.aggregate('deal', {…})` | `context`, `where`, `groupBy`, `aggregations`, `having`, `timezone`, `search`, `searchFields` — the two search keys filter the input rows **before** grouping, AND-ed with `where`, exactly as on `find` |
+| engine `count` | `engine.count('task', {…})` | `context`, `where` |
+| protocol / REST | `findData({ object: 'task', query: {…} })` | `object` sits OUTSIDE the query |
+| nested `expand` value | a `QueryAST` — `{ object, fields, where }` | (see **Expand**) |
+
+`ENGINE_FIND_OPTION_KEYS` / `ENGINE_AGGREGATE_OPTION_KEYS` are **closed sets**:
+a key outside the row is refused by name (`find('task') does not recognise option
+'bogus'`), never ignored. A standalone `{ object: 'account', limit: 20 }` literal
+is therefore a **`QueryAST`** — legal as `findData`'s `query` or an `expand`
+value — not an engine option bag. `top` folds to `limit`, `filter` to `where`,
+before that check.
+
+The passthrough six ride along on `find`/`findOne` (and on `update`/`delete`)
+because there the option bag IS the base of the driver options, which is how an
+explicit `tenantId` reaches the driver. `count` and `aggregate` never forward the
+bag, so on those two the same keys are deliberately ILLEGAL — accepting them
+would be the silently-ignored option this check exists to close. The one
+exception is `timezone`: `aggregate` reads it itself, for date bucketing, so it
+is legal there and the row above lists it; `count` refuses it with the rest.
+
+### Which filter dialect?
+
+| Writing… | Dialect | Owner |
+|:--|:--|:--|
+| an ObjectQL `where` | the `$` operators below | this skill |
+| a list view / nav-item `filter` | `[{ field, operator, value }]` over the 20-operator `VIEW_FILTER_OPERATORS` enum (`equals`, `icontains`, `is_null`, `before`, `between`, …) — unknown operators are refused at parse | **objectstack-ui** |
+| a dataset measure `filter` | the measure's own filter | **objectstack-ui** |
+
+## Execution Context (`context`)
+
+The RLS / system-read escape hatch. A hook, job or endpoint that reads without
+one runs as whatever identity the caller carried — org-scoping hooks then return
+**fewer rows**, indistinguishable from "there is no data".
+
+<!-- os:check -->
+```typescript
+import type { IDataEngine } from '@objectstack/spec/contracts';
+declare const engine: IDataEngine;
+declare const name: string;
+const SYS = { isSystem: true } as const;
+const [row] = await engine.find('project', { where: { name }, limit: 1, context: SYS });
+```
+
+Pass any SUBSET of the execution envelope (identity, tenant, transaction):
+`{ isSystem: true }` for a system read, otherwise the caller's own context
+(user, position or permission set), or `403 PERMISSION_DENIED` (ADR-0096 D5).
+On the READ methods it may sit in the query bag (above) OR in the trailing
+options argument, `engine.find(obj, query, { context })`; the trailing one wins
+when both are given. Writes take only the trailing argument.
+
+## Removed Keys → Live Replacement
+
+| Removed key | Live replacement |
+|:--|:--|
+| `query.cursor` | keyset paging — `where` on the sort key + `orderBy` + `limit` |
+| `query.joins` | `expand` (display), or `{ relation: { field: value } }` in `where` (filter) |
+| `query.distinct` | `groupBy` the fields — each unique combination is one row |
+| `query.windowFunctions` | report/dashboard metadata (**objectstack-ui**), or rank / accumulate in app code |
+| aggregation `distinct: true` | `count_distinct` |
+| aggregation `array_agg` / `string_agg` | none — read the rows with `fields` and shape them in the caller, or materialise the roll-up as a stored field |
+
+All six are tombstoned in `@objectstack/spec` 17: `tsc` types them `never`, and a
+query carrying one fails to parse with the upgrade prescription. The retirement
+procedure and the full tombstone register are **objectstack-upgrade**.
+
+## Quick Reference — Detailed Rules
+
+- **[Filters](./rules/filters.md)** — all operators, logical combinations, filtering by a related record, now-anchored comparands, date macros and session tokens
+- **[Aggregation](./rules/aggregation.md)** — groupBy, date bucketing, functions, `having`, per-measure `filter`
+- **[Pagination](./rules/pagination.md)** — offset vs keyset, best practices, performance
+
+## Filter Operators
+
+The bare `{ where: … }` blocks here are option fragments, so `check:skill-examples` skips them.
+
+### Implicit Equality (Shorthand)
+
+The simplest filter — field equals value:
+
+```typescript
+{ where: { status: 'active' } }
+// SQL: WHERE status = 'active'
+```
+
+### Comparison Operators
+
+| Operator | Purpose | SQL Equivalent | Types |
+|:---------|:--------|:---------------|:------|
+| `$eq` | Equal | `=` | Any |
+| `$ne` | Not equal | `<>` | Any |
+| `$gt` | Greater than | `>` | Number, Date |
+| `$gte` | Greater than or equal | `>=` | Number, Date |
+| `$lt` | Less than | `<` | Number, Date |
+| `$lte` | Less than or equal | `<=` | Number, Date |
+
+```typescript
+{ where: { age: { $gte: 18 } } }
+// SQL: WHERE age >= 18
+```
+
+### Set & Range Operators
+
+| Operator | Purpose | SQL Equivalent |
+|:---------|:--------|:---------------|
+| `$in` | In list | `IN (...)` |
+| `$nin` | Not in list | `NOT IN (...)` |
+| `$between` | Inclusive range | `BETWEEN ? AND ?` |
+
+```typescript
+{ where: { status: { $in: ['active', 'pending'] } } }
+{ where: { amount: { $between: [100, 500] } } }
+```
+
+### String Operators
+
+| Operator | Purpose | SQL Equivalent |
+|:---------|:--------|:---------------|
+| `$contains` | Contains substring | `LIKE '%?%'` |
+| `$notContains` | Does not contain | `NOT LIKE '%?%'` |
+| `$startsWith` | Starts with prefix | `LIKE '?%'` |
+| `$endsWith` | Ends with suffix | `LIKE '%?'` |
+| `$icontains` | Contains, case-blind | `LIKE '%?%'` folded |
+| `$like` | Whole-value pattern, caller binds `%` / `_` | `LIKE ?` |
+| `$ilike` | `$like`, case-blind | `ILIKE ?` |
+
+`$contains` / `$notContains` / `$startsWith` / `$endsWith` compare
+**CASE-SENSITIVELY**; `$icontains` is the case-INSENSITIVE twin (ASCII folding
+only). So the user-facing cases want `$icontains`:
+
+```typescript
+{ where: { email: { $icontains: '@company.com' } } }
+```
+
+Full table, `$like` portability and the `$ilike` boundary: **[filter rules](./rules/filters.md)**.
+
+### Null & Existence Operators
+
+| Operator | Purpose | SQL / NoSQL |
+|:---------|:--------|:------------|
+| `$null` | Is null check | `IS NULL` / `IS NOT NULL` |
+| `$exists` | Has a value | `IS NOT NULL` / `IS NULL` |
+| `$empty` | Is empty by the field's declared type | `IS NULL`, plus `''` (text types) or `[]` (multi-value) |
+
+```typescript
+{ where: { deleted_at: { $null: true } } }
+{ where: { notes: { $empty: true } } }   // false = has content
+```
+
+A view filter's `is_empty` / `is_not_empty` lowers to `$empty`. A face that judges
+by declared type refuses it on a column it holds no declaration for (the built-in
+`id`, for one) — use `$null` there.
+
+### Logical Operators
+
+Combine conditions with `$and`, `$or`, and `$not`:
+
+```typescript
+// OR: active accounts OR accounts with high revenue
+{ where: { $or: [{ status: 'active' }, { revenue: { $gt: 1000000 } }] } }
+
+// AND + OR combined
+{
+  where: {
+    $and: [
+      { type: 'enterprise' },
+      { $or: [{ region: 'us' }, { region: 'eu' }] },
+    ]
+  }
+}
+
+// NOT: exclude closed accounts
+{ where: { $not: { status: 'closed' } } }
+```
+
+### Filtering by a related record
+
+`{ customer: { country: 'US' } }` beneath a lookup is served in `where`: the
+engine reads the related object as the caller and matches its ids. The limits
+(one level, forward only, `where` only, 1000 ids, the caller's permissions) and
+the two-step route past them: **[filter rules → Relation Filters](./rules/filters.md)**.
+
+### Cross-field comparisons
+
+`{ $field: '...' }` compares two columns of the same row, in a **comparison**
+position only; `{ $now: true, addDays: OFFSET }` is the instant the query runs
+at, shifted by whole days a number field of the record holds — see **[filter
+rules → Field References / Now-Anchored Comparands](./rules/filters.md)**.
+
+## Sorting
+
+Sort with `orderBy` — an array of sort nodes:
+
+<!-- os:check -->
+```typescript
+import type { QueryInput } from '@objectstack/spec/data';
+const query: QueryInput = {
+  object: 'account',
+  orderBy: [
+    { field: 'priority', order: 'desc' },
+    { field: 'name', order: 'asc' },      // Secondary sort
+  ]
+};
+```
+
+**Rules:**
+- Order of array elements defines sort priority
+- Default `order` is `'asc'` — you can omit it for ascending sorts
+- Sort fields should be indexed for performance (see **objectstack-data** indexing rules)
+
+## Pagination
+
+<!-- os:check -->
+```typescript
+import type { QueryInput } from '@objectstack/spec/data';
+// Offset paging — page 3
+const page3: QueryInput = { object: 'account', limit: 20, offset: 40 };
+```
+
+**When to use:** UI pages, small datasets, "jump to page N". It degrades on
+large offsets — the database still scans the skipped rows.
+
+For **keyset** paging (infinite scroll, APIs, large datasets, real-time feeds),
+filter past the last row you saw with a `where` on the sort key, and always
+`orderBy` that same field in that same direction — the pattern, the direction
+rule and the pitfalls are **[pagination rules](./rules/pagination.md)**.
+
+## Aggregation
+
+The functions (`count`, `sum`, `avg`, `min`, `max`, `count_distinct`), date
+bucketing, `having`, and the per-measure `filter` are
+**[aggregation rules](./rules/aggregation.md)**. The call shape:
+
+<!-- os:check -->
+```typescript
+import type { IDataEngine } from '@objectstack/spec/contracts';
+declare const engine: IDataEngine;
+// Total revenue per region
+const rows = await engine.aggregate('deal', {
+  groupBy: ['region'],
+  aggregations: [
+    { function: 'sum', field: 'amount', alias: 'total_revenue' },
+    { function: 'count', alias: 'deal_count' },
+  ],
+});
+// SQL: SELECT region, SUM(amount) AS total_revenue, COUNT(*) AS deal_count
+//      FROM deal GROUP BY region
+```
+
+`fields` and `orderBy` are NOT in `ENGINE_AGGREGATE_OPTION_KEYS` — do not put
+them in an `aggregate` bag. Grouped fields are auto-selected into the result
+rows; read each measure under its `alias`, and reference that same name from
+`having`. `groupBy` entries may be objects for date bucketing —
+`{ field: 'closed_at', dateGranularity: 'quarter' }`.
+
+## Expand (Related Records)
+
+Load related records through lookup / master_detail fields. **Keep the foreign
+key in `fields`** — the relation is carried by that column:
+
+<!-- os:check -->
+```typescript
+import type { IDataEngine } from '@objectstack/spec/contracts';
+declare const engine: IDataEngine;
+const tasks = await engine.find('task', {
+  fields: ['title', 'status', 'owner_id', 'project'],   // the FK columns stay
+  expand: {
+    owner_id: { object: 'user', fields: ['name', 'email'] },
+    project: {
+      object: 'project',
+      fields: ['name'],
+      expand: { org: { object: 'org', fields: ['name'] } },   // nested expand
+    },
+  },
+});
+```
+
+**Rules:**
+- **The projection must RETAIN the foreign-key column.** `fields: ['title']`
+  with `expand: { project: … }` resolves **nothing**: the engine reads the FK
+  off each record and skips the relation when it is absent, so the call returns
+  rows with no related data and no error.
+- Max expand depth is **3** by default
+- The engine resolves expands via batch `$in` queries (not N+1)
+- Keys in `expand` must be lookup or master_detail field names
+- Each expand value is a nested `QueryAST`, but the engine applies **select
+  (`fields`) and filter (`where`) only** — per-parent `limit` / `offset` /
+  `orderBy` are NOT applied on this path. To paginate or sort related
+  records, query the related object directly.
+
+## Full-Text Search
+
+The canonical form is a **bare string** with a sibling `searchFields`:
+
+<!-- os:check -->
+```typescript
+import type { IDataEngine } from '@objectstack/spec/contracts';
+declare const engine: IDataEngine;
+const rows = await engine.find('article', {
+  search: 'machine learning',
+  searchFields: ['title', 'content'],
+  limit: 10,
+});
+// Executes as:
+// { $and: [
+//   { $or: [{ title: { $icontains: 'machine' } }, { content: { $icontains: 'machine' } }] },
+//   { $or: [{ title: { $icontains: 'learning' } }, { content: { $icontains: 'learning' } }] },
+// ]}
+```
+
+Each term becomes an `$or` of `$icontains` predicates across the resolved
+searchable fields, and whitespace-separated terms are **AND-ed** (every term
+must hit some field). `select`/`status` fields match by option *label*, mapped
+to stored values.
+
+**One knob, three spellings:** emit `searchFields` (the engine option). The
+protocol normalizes `$searchFields` onto it, and the object form
+`search: { query, fields }` spells the same narrowing `fields`.
+
+Omit it to search the object's declared `searchableFields` (or, with none
+declared, an auto-default: name/title + short-text fields, plus every field
+marked `searchable: true` of any type except `secret` / `password` / `vector` or a virtual `formula`),
+resolved server-side. It can only **narrow** that set, never widen it: over the
+REST/protocol ingress a name outside it is `400 INVALID_FIELD`, not a silent
+fall-back to a full scan. `searchable: false`, the default, never removes a
+field the type default already scans; declare `searchableFields` to choose the
+set. The object form `search: { query, fields }` stays available for the Tier-2
+knobs below.
+
+> ⚠️ **Validates, then silently ignored — never emit these.** `fuzzy`, `boost`,
+> `operator`, `minScore`, `language` and `highlight` are the whole set; their
+> `.describe()` markers say so. Terms are always AND-ed; there is no relevance
+> scoring or highlighting.
+
+**`search` never traverses.** A dotted path is refused —
+`searchFields: ['project_id.name']` names a column `task` does not declare.
+Mirror the related record's title into a **stored** field on the queried object
+and search that; the field, the write hooks and the lint wording are
+**objectstack-data → Search Fields (`searchableFields`)**. To *filter* by a
+related record's column, `where: { relation: { column: value } }`; to *display* it, `expand`.
+
+## Common Patterns
+
+### Cross-Object Queries: Which Tool to Use?
+
+| Scenario | Use |
+|:---------|:----|
+| Load lookup fields for display | `expand` |
+| Filter rows by their lookup target's column | `{ lookup: { column: value } }` in `where`, up to 1000 related ids; past the cap query the target, then `{ lookup: { $in: ids } }` — `$contains` per id when `multiple` |
+| Filter parent by child conditions | Query the child with `fields: [lookup]`, then `{ id: { $in: those ids } }` on the parent |
+| **Keyword-search by a related record's title** | **Mirror the title into a stored field on this object and search that** — `search` never traverses |
+| Paginate/sort a parent's related records | Query the related object directly |
+| Analytical queries across objects | Report/dashboard metadata, or separate queries combined in app code |
+
+### Pagination Pattern for APIs
+
+<!-- os:check -->
+```typescript
+import type { IDataEngine } from '@objectstack/spec/contracts';
+declare const engine: IDataEngine;
+declare const pageNumber: number;
+const page = await engine.find('account', {
+  where: { status: 'active' },
+  fields: ['id', 'name', 'email'],
+  orderBy: [{ field: 'name', order: 'asc' }],
+  limit: 20,
+  offset: (pageNumber - 1) * 20,
+});
+```
+
+### Dashboard Aggregation Pattern
+
+Every KPI on a dashboard shares **one** aggregate call — unconditional measures
+plain, conditional ones carrying their own `filter`. `where` scopes the whole
+call, so reach for it only when every measure wants the same scope:
+
+<!-- os:check -->
+```typescript
+import type { IDataEngine } from '@objectstack/spec/contracts';
+declare const engine: IDataEngine;
+const [kpis] = await engine.aggregate('deal', {
+  aggregations: [
+    { function: 'count', alias: 'total_deals' },
+    { function: 'sum', field: 'amount', alias: 'pipeline_value' },
+    { function: 'avg', field: 'amount', alias: 'avg_deal_size' },
+    { function: 'count', alias: 'won_deals', filter: { stage: 'closed_won' } },
+  ],
+});
+```
+
+Dashboards and reports themselves — KPI widgets, `compareTo`, `dateGranularity`
+bucketing, matrix rows/columns — are metadata, not hand-written queries: model
+them in **objectstack-ui** and the renderer issues the queries.
+
+## Verify your work
+
+Most queries run at runtime (smoke-test them with `os data query` or a vitest
+test), but query *metadata* — list-view filter specs and report/dashboard
+datasets — is validated statically. After editing those, run:
+
+```bash
+os validate     # schema + CEL predicates + widget/dataset bindings (no artifact)
+# or: os build  # the same gates, plus emits dist/
+```
+
+A dashboard widget whose `dataset` / `dimensions` / `values` don't resolve fails
+here instead of rendering an empty chart (ADR-0021). In a scaffolded project the
+gate is `npm run validate`. See objectstack-platform → **Verify your work**.
+
+## References
+
+See [references/_index.md](./references/_index.md) for the full list of Zod
+schemas (with one-line descriptions) — pointers into
+`node_modules/@objectstack/spec/src/`. Always `Read` the source for exact field
+shapes; do not rely on memory of property names.

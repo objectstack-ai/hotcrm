@@ -1,0 +1,330 @@
+# Validation Rules
+
+- [Available Rule Types](#available-rule-types) · [Expression Syntax](#expression-syntax) · [Script Validation](#script-validation)
+- [Uniqueness — Use Unique Indexes](#uniqueness--use-unique-indexes) · [State Machine Validation](#state-machine-validation)
+- [Format](#format-validation) · [Cross-Field](#cross-field-validation) · [JSON Schema](#json-schema-validation) · [Conditional](#conditional-validation)
+- [External / Custom Validation → Lifecycle Hooks](#external--custom-validation--lifecycle-hooks) · [Validation Properties](#validation-properties)
+- [Incorrect vs Correct](#incorrect-vs-correct)
+
+Unmarked blocks are fragments; `check:skill-examples` skips them.
+
+## Available Rule Types
+
+The **complete** set of `type` discriminators accepted by `ValidationRuleSchema`:
+
+| Type | Purpose | When Validation Fails | Judged against |
+|:-----|:--------|:---------------------|:---------------|
+| `script` | CEL predicate over the record | When predicate evaluates to `true` | Merged record — prior row plus this write |
+| `state_machine` | Legal state transitions | When transition not allowed | Written value vs the prior row's, only when the write sets the field (insert: `initialStates`) |
+| `format` | Regex or built-in format | When format doesn't match | Write payload only — an omitted field is never judged |
+| `cross_field` | CEL predicate comparing fields | When predicate evaluates to `true` | Merged record — prior row plus this write |
+| `json_schema` | Validate JSON field | When JSON doesn't match schema | Write payload only — an omitted field is never judged |
+| `conditional` | Apply nested rule when a predicate holds | When nested rule fails | Its `when` on the merged record; the nested rule as its own type |
+
+There is no other type. In particular:
+
+- **No `unique` type** — enforce uniqueness with a **unique index**
+  ([see below](#uniqueness--use-unique-indexes)).
+- **No `async` / `custom` type** — see [External / Custom Validation](#external--custom-validation--lifecycle-hooks).
+
+## Expression Syntax
+
+`condition` / `when` are **CEL predicates** (ADR-0032). Author them with the
+`P` tag from `@objectstack/spec`; a plain string is also accepted and parsed
+as CEL. Record fields are addressed as `record.<field>`; on update the prior
+row is available as `previous.<field>`. CEL operator and null-handling rules:
+see **objectstack-formula**.
+An ordering or arithmetic operator on a field with no `required: true` /
+`defaultValue` is refused at publish unless a `!= null` test guards it.
+
+**⚠️ CRITICAL:** For `script` **and** `cross_field`, the predicate expresses
+the **failure** condition — validation **fails** when it evaluates to `true`.
+
+## Script Validation
+
+**Tool choice — this is the invariant tool.** `script` and `cross_field`
+are judged against the *merged* record on every write, with no pre-state
+exemption, so a row that already violates the rule is refused on any edit until
+a repairing write lands (frozen, not bricked). A condition that must hold only
+from a transition onward is not this tool: use `requiredWhen` or a field bound
+(`min` / `max` / `minLength` / `maxLength`), which judge the write, not the
+stored row (see **Choose by intent — invariant or transition gate** in
+`SKILL.md`).
+
+<!-- os:check -->
+```typescript
+import { P } from '@objectstack/spec';
+
+const validations = [
+  {
+    name: 'prevent_past_dates',
+    type: 'script',
+    condition: P`record.due_date != null && record.due_date < today()`,  // ❌ Fails when this is TRUE
+    message: 'Due date cannot be in the past',
+    severity: 'error',
+    events: ['insert', 'update'],
+  },
+];
+```
+
+### Common Script Patterns
+
+```typescript
+// Prevent negative values
+condition: P`record.amount != null && record.amount < 0`
+
+// Require field when another field has value
+condition: P`record.status == 'approved' && isBlank(record.approver_id)`
+```
+
+> On **insert**, an optional field omitted from the payload reads as `null`
+> in the predicate — `record.due_date == null` matches an omitted field the
+> same as an explicit `null`. Use `isBlank(v)` to catch `null` and
+> empty strings together.
+
+## Uniqueness — Use Unique Indexes
+
+Uniqueness — including composite
+uniqueness — is declared as a unique **index** on the object:
+
+```typescript
+indexes: [
+  { fields: ['email'], unique: 'organization' },              // one per organization
+  { fields: ['department', 'email'], unique: 'organization' }, // composite, per organization
+  { fields: ['hostname'], unique: 'global' },                 // one across the installation
+]
+```
+
+The database enforces the constraint; duplicate writes are rejected at the
+driver layer. See [indexing.md](./indexing.md) for index options.
+
+## State Machine Validation
+
+```typescript
+validations: [
+  {
+    name: 'status_flow',
+    type: 'state_machine',
+    field: 'status',
+    initialStates: ['draft'],   // the one state a record may be CREATED in
+    transitions: {
+      draft: ['submitted', 'cancelled'],
+      submitted: ['in_review', 'cancelled'],
+      in_review: ['approved', 'rejected'],
+      approved: ['published'],
+      rejected: ['draft'],
+      published: [],  // Terminal state
+      cancelled: [],  // Terminal state
+    },
+    message: 'Invalid status transition',
+    severity: 'error',
+  },
+]
+```
+
+## Format Validation
+
+```typescript
+validations: [
+  // Built-in formats
+  {
+    name: 'email_format',
+    type: 'format',
+    field: 'email',
+    format: 'email',  // Built-in: email, url, phone, json
+    message: 'Invalid email format',
+  },
+
+  // Custom regex — the key is `regex`, not `pattern`
+  {
+    name: 'sku_format',
+    type: 'format',
+    field: 'sku',
+    regex: '^[A-Z]{3}-\\d{4}$',  // e.g., ABC-1234
+    message: 'SKU must be format: XXX-0000',
+  },
+]
+```
+
+## Cross-Field Validation
+
+`fields` lists the fields involved (used for error targeting).
+
+```typescript
+validations: [
+  {
+    name: 'date_range',
+    type: 'cross_field',
+    condition: P`record.start_date != null && record.end_date != null && record.end_date <= record.start_date`,  // ❌ TRUE = invalid
+    message: 'End date must be after start date',
+    fields: ['start_date', 'end_date'],
+  },
+  {
+    name: 'discount_limit',
+    type: 'cross_field',
+    condition: P`record.discount_amount != null && record.subtotal != null && record.discount_amount > record.subtotal * 0.5`,
+    message: 'Discount cannot exceed 50% of subtotal',
+    fields: ['discount_amount', 'subtotal'],
+  },
+]
+```
+
+## JSON Schema Validation
+
+```typescript
+validations: [
+  {
+    name: 'config_schema',
+    type: 'json_schema',
+    field: 'config',
+    schema: {
+      type: 'object',
+      properties: {
+        timeout: { type: 'number', minimum: 0 },
+        retries: { type: 'integer', minimum: 1, maximum: 5 },
+        enabled: { type: 'boolean' },
+      },
+      required: ['timeout', 'enabled'],
+      additionalProperties: false,
+    },
+    message: 'Invalid configuration format',
+  },
+]
+```
+
+## Conditional Validation
+
+Shape is `when` / `then` / `otherwise` — `when` is a CEL predicate, `then`
+is a **single** nested rule applied when it holds, `otherwise` (optional) a
+single rule applied when it doesn't. There is no `validations: []` array —
+compose multiple checks as multiple top-level rules or nested conditionals.
+
+```typescript
+validations: [
+  {
+    name: 'enterprise_requires_manager',
+    type: 'conditional',
+    when: P`record.type == 'enterprise'`,
+    message: 'Enterprise account validation',
+    then: {
+      name: 'manager_required',
+      type: 'script',
+      condition: P`isBlank(record.account_manager)`,
+      message: 'Enterprise accounts must have an account manager',
+    },
+  },
+]
+```
+
+With an `otherwise` branch:
+
+```typescript
+{
+  name: 'payment_validation',
+  type: 'conditional',
+  when: P`record.order_total != null && record.order_total > 10000`,
+  message: 'Order validation',
+  then: {
+    name: 'manager_approval_required',
+    type: 'script',
+    condition: P`isBlank(record.manager_approval_id)`,
+    message: 'Orders over $10,000 require manager approval',
+  },
+  otherwise: {
+    name: 'payment_method_required',
+    type: 'script',
+    condition: P`isBlank(record.payment_method)`,
+    message: 'Payment method is required',
+  },
+}
+```
+
+## External / Custom Validation → Lifecycle Hooks
+
+Hitting another object or running arbitrary code is **not** a validation type.
+Implement it as a `beforeInsert` / `beforeUpdate` lifecycle hook whose `body`
+throws a [declared code](../references/data-hooks.md#declared-refusals-refusals).
+A `body` has no outbound HTTP: an external-API check goes through a Connector
+recipe ([data-hooks.md](../references/data-hooks.md#capabilities--the-complete-list)).
+
+<!-- os:check -->
+```typescript
+import { defineHook } from '@objectstack/spec/data';
+
+const taxIdCheck = defineHook({
+  name: 'crm_tax_id_blocklist_check',
+  object: 'account',
+  events: ['beforeInsert', 'beforeUpdate'],
+  refusals: { TAX_ID_BLOCKED: { message: 'This tax ID is blocked.' } },
+  body: {
+    language: 'js',
+    source: `
+      if (!ctx.input.tax_id) return;
+      const hit = await ctx.api.object('blocked_tax_id').findOne({ where: { tax_id: ctx.input.tax_id } });
+      if (hit) throw Object.assign(new Error(), { code: 'TAX_ID_BLOCKED' });
+    `,
+    capabilities: ['api.read'],
+  },
+});
+```
+
+## Validation Properties
+
+### Severity Levels
+
+```typescript
+severity: 'error'    // Blocks save (default)
+severity: 'warning'  // Allows save, shows warning
+severity: 'info'     // Informational only
+```
+
+**Blocking rests on a human judgement.** A machine-inferred signal — a score, a
+duplicate guess, anything the system decided — may `warning`, never `error`.
+Only a value a person wrote may block a save. Do not add an override flag to
+soften a block either: an escape hatch around a rule is evidence the rule should
+have been a warning.
+
+### Events
+
+```typescript
+events: ['insert']              // Only on create
+events: ['update']              // Only on update
+events: ['insert', 'update']    // On create and update (default)
+```
+
+> Validation rules run only on the insert/update write path — there is no `'delete'`
+> event (a delete carries no record payload to validate). To block or guard a deletion,
+> use a `beforeDelete` lifecycle hook instead (see `references/data-hooks.md`).
+
+### Priority
+
+```typescript
+priority: 0      // System validations (run first)
+priority: 100    // Application validations (default)
+priority: 1000   // User validations (run last)
+```
+
+## Incorrect vs Correct
+
+### ❌ Incorrect — Validation Fires Too Often
+
+```typescript
+{
+  type: 'script',
+  condition: P`record.status == 'draft'`,
+  message: 'Record is still in draft',
+  // ❌ No events — runs on all operations
+}
+```
+
+### ✅ Correct — Validation Scoped to Events
+
+```typescript
+{
+  name: 'no_draft_publish',
+  type: 'script',
+  condition: P`record.status == 'draft'`,
+  message: 'Cannot publish draft records',
+  events: ['update'],  // ✅ Only validate on update
+}
+```

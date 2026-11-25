@@ -1,0 +1,478 @@
+# Dashboards, Reports & Cubes
+
+- [Dashboards](#dashboards) · [Widget Types](#widget-types) · [Dataset-Bound Widgets](#dataset-bound-widgets) · [KPI Widgets, Filters, Drilldown](#kpi-widgets-filters-drilldown)
+- [Dashboard filters](#dashboard-filters--globalfilters--per-widget-filterbindings) · [Period-over-period](#period-over-period--compareto)
+- [Server-side date bucketing](#server-side-date-bucketing--dategranularity-adr-0021) · [Widget `options`](#widget-options--the-five-declared-keys) · [Drilldown](#drilldown)
+- [Report Configuration](#report-configuration)
+- [Analytics Cubes — Semantic Layer](#analytics-cubes--semantic-layer) · [Cube Rules](#cube-rules)
+
+## Dashboards
+
+Dashboards are a grid of widgets (`columns` × `rowHeight`) sharing a
+`dateRange` scrubber and `globalFilters`. Each widget binds a `dataset`
+(below), picks a chart `type`, and sets a `layout: {x,y,w,h}` (omitted, the
+widget auto-flows; `position` is not a widget key).
+
+### Widget Types
+
+A widget's `type` is its **chart type** (`ChartTypeSchema`; defaults to
+`metric`) — there are no separate `list` / `calendar` / `custom` widget kinds:
+
+| Family | `type` values |
+|:-------|:--------------|
+| Single value | `metric`, `kpi`, `gauge`, `solid-gauge`, `bullet` (all render the number today; gauge variants gain a dial when a gauge renderer lands) |
+| Comparison | `bar`, `horizontal-bar`, `column` |
+| Trend | `line`, `area` |
+| Mixed | `combo` (bar/line/area on shared dual axes) |
+| Distribution | `pie`, `donut`, `funnel` |
+| Relationship | `scatter` |
+| Composition | `treemap`, `sankey` |
+| Advanced | `radar` |
+| Tabular | `table`, `pivot` |
+
+### Dataset-Bound Widgets
+
+Every persisted chart is **dataset-backed**: a
+dashboard widget, a report, and a list `type:'chart'` view all **bind a `dataset`
+and select named `dimensions` + `values`**; the dataset owns the base object,
+allowed joins, intrinsic filter, dimensions, and certified measures. A widget
+**requires `dataset` + `values`**; the closed schema rejects `object` /
+`categoryField` / `valueField` / `aggregate` by name, and one lacking `dataset`,
+or naming a `dataset` / `dimensions` / `values` that resolves to nothing
+declared (an empty chart), fails `os validate`.
+
+A widget's presentation-scope `filter` flows into the query as the runtime
+filter; keep `filter` on the widget when binding a dataset.
+
+<!-- os:check -->
+```typescript
+import type { DashboardWidget } from '@objectstack/spec/ui';
+
+const widget: DashboardWidget = {
+  id: 'revenue_by_region',
+  type: 'bar',
+  title: 'Revenue by Region',
+  dataset: 'crm_sales',
+  dimensions: ['region'],
+  values: ['revenue'],
+  layout: { x: 0, y: 0, w: 6, h: 4 },
+};
+```
+
+**The real decision is not "inline vs dataset" — it is "can a dataset express
+this?"** The shape is already fixed (always a dataset), so what you decide is
+whether the *data need fits the dataset envelope*, and if not, which lower layer to
+escalate to. Decide on **expressibility**; reuse/governance is Level B.
+
+**Level A — the dataset envelope:**
+
+| Fits a dataset → author one | Beyond the envelope → escalate |
+|:--|:--|
+| one base object + **to-one** joins (`include`, ≤3 hops) | a join that **changes grain** / a **to-many** rollup onto the parent |
+| 0..N dimensions; date-bucket `day/week/month/quarter/year` | a **computed dimension** / CASE bucket / numeric bin |
+| measures `count/sum/avg/min/max/count_distinct`, `duration` | list aggregation (collect-into-array / concatenate — retired in protocol 17, no spelling exists) |
+| **derived measures** — `ratio/sum/difference/product` of other measures | scalar math on raw fields (`amount*0.8`), aggregate-of-aggregate |
+| WHERE (`$and/$or/$not` on the base object) + measure-scoped filters | **HAVING** (filtering the aggregate result) |
+| `compareTo` (previous period/year) + `totals` (matrix subtotals) | **window** (rank, running total, lag/lead, %-of-total); **union**; reshaping params |
+
+> **The iron rule:** a dataset is a governed, *narrow* semantic layer — NOT a
+> general analytics escape hatch (no raw SQL, no hand-authored joins, no
+> window/having). If the need is in the right column, a dataset **cannot** express
+> it — escalate to a **stored field** on the object (a `summary` rollup, or a field
+> holding the computed value or bucket) or app code, not to a **Cube**: a cube
+> member's `sql` is a column reference. Do not force it into a dataset: it fails to
+> compile or renders an empty series.
+
+Standardized answers to the recurring ambiguous cases:
+
+- **Count of child tasks per project.** Base the dataset on the **child** (`task`)
+  and group by the `project` lookup — grain = child. A rollup onto the **parent**
+  grain is to-many: **not** a dataset — a **stored rollup field** on `project`.
+- **To-one enrichment** ("revenue by `account.industry`") keeps grain — `account`
+  in `include`, `account.industry` as a dimension.
+- **Computed column.** Format/currency → the measure's `format`/`currency`;
+  arithmetic over measures → a **derived measure**; time between two
+  `datetime` fields of a record → a **`duration` measure**
+  (`{ name: 'avg_days_to_close', aggregate: 'avg', duration: { from:
+  'created_at', to: 'closed_at', unit: 'days' } }`); CASE / bins /
+  `revenue*0.8` / computed dimensions → **not** a dataset.
+- **Total over a computed value.** `sum`/`avg`/`min`/`max` need a STORED numeric
+  or boolean field (`percent` not under `sum`; `min`/`max` also dates); a `formula`
+  has no column: refused whatever its `returnType` says. Make it a field of its
+  return type with the same `expression` (computed and stored on write, from its own
+  row only: objectstack-data → Relationships → Computed column; rows a publish did
+  not fill: `os migrate stored-expressions --apply`) or title the widget the `count` it is.
+  Leave days (`date` fields: no `duration`): the `formula` `days_requested` ⇒ a
+  `readonly` `number` `days_count` with its `expression`, then `{ name: 'days_sum', aggregate: 'sum', field: 'days_count' }`.
+- **Breakdown by a multi-value field.** `multiselect`/`checkboxes`/`tags` and
+  any `multiple: true` field is refused as a dataset or cube dimension and as
+  `groupBy` (`INVALID_FIELD`; no per-member buckets); so is a `formula` (at a
+  dataset's compile, `DATASET_INVALID`). One widget per member, filtered
+  `{ tags: { $contains: 'urgent' } }`, or a single-value axis.
+- **Filter by a parent's attribute** → a **dimension** (guaranteed to join); a
+  lookup-path *filter* is not a reliable analytics-path construct.
+- **A dashboard filter driving several charts** → **not** a dataset: `globalFilters`
+  + per-widget `filterBindings` (below); a parameter that **reshapes**
+  grain/window/join is beyond the envelope.
+
+**Level B — naming is governance, not expressibility.** An inline dataset draft
+(Studio Live Canvas) and a saved named dataset have **identical** expressibility;
+naming one is a reuse/governance call (canonical/shared metric, RLS, shared
+labels/formats → `defineDataset`). Persisted widgets already require a named
+dataset, so Level B only surfaces in Studio previews and hand-coded react-page
+`<ObjectChart>` blocks (a single-object inline `aggregate`, no dataset binding).
+
+- **The two paths key their result rows differently — this is the #1 way a
+  chart renders blank.** A DATASET returns rows keyed by the declared measure
+  NAME (`sum_amount`), because a measure has an author-chosen `name`. An
+  OBJECT-bound inline `aggregate` has no such name, so its rows are keyed by
+  the RAW FIELD NAMES it was given: `groupBy` for the category column, `field`
+  for the value column (the literal `count` for a fieldless `count`). Bind
+  `<ObjectChart>`'s `xAxis.field` / `yAxis[].field` / `series[].name` to *those*
+  names — never to a `sum_`-style measure name, and never to a field the
+  aggregate did not select. `os validate` checks both halves
+  (`react-chart-field-unknown`, `react-chart-axis-unknown`).
+- **Charts speak the spec `ChartConfig` shape on every surface** — the same
+  `type` / `xAxis` / `yAxis` / `series` you write on a dashboard widget or a
+  report. Axis presentation rides on the axis (`format`, `min`/`max`,
+  `logarithmic`, `title`); a second `yAxis` entry plus `series[].yAxis: 'right'`
+  gives a dual axis; `series[].stack` groups a stacked bar; `annotations` draw
+  reference lines/bands.
+- The analytics runtime applies SecurityPlugin read scope via
+  `security.getReadFilter`, so dashboard/report datasets remain RLS-aware.
+
+### KPI Widgets, Filters, Drilldown
+
+<!-- os:check -->
+```typescript
+import type { Dashboard } from '@objectstack/spec/ui';
+
+export const SalesDashboard: Dashboard = {
+  name: 'crm_sales_dashboard',
+  label: 'Sales Performance',
+  columns: 12,
+  gap: 4,
+  refreshIntervalSeconds: 180,             // auto-refresh cadence
+
+  header: {
+    showTitle: true,
+    actions: [
+      { label: 'New Opportunity', icon: 'Plus',     actionType: 'modal',  actionUrl: 'crm_create_opportunity' },
+      { label: 'Forecast',        icon: 'TrendingUp', actionType: 'url',   actionUrl: '/reports/forecast' },
+      { label: 'Export',          icon: 'Download', actionType: 'script', actionUrl: 'crm_export_dashboard_pdf' },
+    ],
+  },
+
+  // Date-range scrubber bound to a field on the underlying objects:
+  dateRange: { field: 'close_date', defaultRange: 'this_quarter', allowCustomRange: true },
+
+  // Filters applied to ALL widgets:
+  globalFilters: [
+    { field: 'owner', label: 'Sales Rep', type: 'lookup', scope: 'dashboard',
+      optionsFrom: { object: 'user', valueField: 'id', labelField: 'name' } },
+  ],
+
+  widgets: [
+    {
+      id: 'total_pipeline_value', type: 'metric',
+      title: 'Total Pipeline',
+      dataset: 'crm_opportunity_metrics', values: ['total_amount'],
+      filter: { stage: { $nin: ['closed_won', 'closed_lost'] } },
+      layout: { x: 0, y: 0, w: 3, h: 2 },
+      colorVariant: 'success',   // the accent only
+      compareTo: { kind: 'previousPeriod' },
+    },
+
+    // Chart widget with comparison overlay.
+    {
+      id: 'revenue_vs_last_year', type: 'line',
+      title: 'Revenue — This Year vs Last',
+      dataset: 'crm_order_metrics', dimensions: ['closed_at'], values: ['total_sum'],
+      filter: { closed_at: { $gte: '{current_year_start}', $lte: '{current_year_end}' } },
+      compareTo: { kind: 'previousYear' },
+      layout: { x: 3, y: 0, w: 9, h: 4 },
+    },
+  ],
+};
+```
+
+### Dashboard filters — `globalFilters` + per-widget `filterBindings`
+
+A dashboard filter is **broadcast into every widget's query**. A widget with no
+`filterBindings` inherits it on its own object's like-named field — which is how
+a filter bar looks alive while the tiles read `0`: the inherited binding is
+field-valid and value-empty when two objects share a column name under different
+vocabularies.
+
+| Declare | On | Meaning |
+|:--|:--|:--|
+| `name` | a `globalFilters` entry | The stable key `filterBindings` references. Defaults to `field`; name it for the **vocabulary it carries**, not the column it sits on. |
+| `scope: 'widget'` + `targetWidgets` | a `globalFilters` entry | Apply to those widget ids only. `scope` defaults to `'dashboard'`. |
+| `filterBindings: { filterName: 'field' }` | a widget | Re-target onto THIS widget's field. |
+| `filterBindings: { filterName: false }` | a widget | Opt out — the honest binding when the vocabularies are disjoint and no field can be re-targeted. |
+| absent | a widget | Default binding: the filter's own `field`; for the reserved `dateRange`, `dateRange.field ?? 'created_at'`. |
+
+<!-- os:check -->
+```typescript
+import type { DashboardWidget } from '@objectstack/spec/ui';
+
+// One control, two objects: re-target on one widget, opt the other out.
+const widgets: DashboardWidget[] = [
+{ id: 'revenue_by_region', dataset: 'crm_order_metrics', values: ['total_sum'],
+  filterBindings: { region: 'sales_region' } },
+{ id: 'projects_at_risk', dataset: 'crm_project_metrics', values: ['project_count'],
+  filterBindings: { task_status: false } },
+];
+```
+
+### Period-over-period — `compareTo`
+
+Set `compareTo` on any data-bound widget to add a second query against a
+shifted time window.
+
+`compareTo` is `{ kind, dimension? }`.
+
+| Key | Value | Behaviour |
+|:--|:--|:--|
+| `kind` | `'previousPeriod'` | The equal-length window immediately before the resolved one. |
+| `kind` | `'previousYear'` | The same window shifted back one calendar year. |
+| `dimension` | dimension name, **optional** | Which time dimension's window to shift. Omit it when the selection dates exactly one — the executor resolves it. With zero or several it errors, naming the candidates; it never guesses. |
+
+The two bare `compareTo:` lines are a fragment, so `check:skill-examples` skips them.
+
+```typescript
+compareTo: { kind: 'previousPeriod' }                            // one dated dimension
+compareTo: { kind: 'previousYear', dimension: 'close_date' }     // several — say which
+```
+
+* **Metric widgets** — a delta arrow plus a trend label from the kind (`vs
+  previous period`). Its colour follows `polarity` (the measure's; an inline
+  `object-metric` declares its own): `'lower'` (turnaround, cost) draws a rise
+  red, `'neutral'` uncoloured; undeclared = rise green. `compareTo` is the trend.
+* **Cartesian charts** (`line` / `area` / `bar` / `horizontal-bar` /
+  `scatter`) — the comparison series is appended after the primary series
+  with `variant: 'comparison'`, muted per family (dashed `'4 4'` on
+  line/area only; reduced opacity on all). That muting is the renderer's
+  default; `chartConfig.colors` is the one palette channel that remains.
+* **Pie / donut / funnel** — `compareTo` is silently ignored.
+* **Requirements** — a comparison needs a **dated window** to shift. When the
+  selection carries no time dimension with a date range (no resolvable date
+  macro in the widget `filter`, no dashboard `dateRange`), the executor says so
+  rather than rendering a silently empty comparison column. The shifted query
+  reuses the original `filter` shape and replaces only the date-bound clauses.
+
+<!-- os:check -->
+```typescript
+import type { DashboardWidget } from '@objectstack/spec/ui';
+
+const widgets: DashboardWidget[] = [
+// Metric — WoW delta
+{ id: 'done_this_week', type: 'metric', dataset: 'crm_task_metrics', values: ['task_count'],
+  filter: { owner_id: '{current_user_id}', status: 'done',
+            completed_at: { $gte: '{week_start}' } },
+  compareTo: { kind: 'previousPeriod' } },
+
+// Bar — YoY overlay on a stable category set
+{ id: 'headcount_by_dept', type: 'bar', dataset: 'crm_employee_metrics',
+  dimensions: ['department'], values: ['headcount'],
+  filter: { status: { $ne: 'terminated' } },
+  compareTo: { kind: 'previousYear' } },
+];
+```
+
+### Server-side date bucketing — `dateGranularity` (ADR-0021)
+
+The **dataset dimension carries the default; a widget's
+`options.dateGranularity` overrides it for that widget only.** Give a date
+dimension a `dateGranularity` and any presentation that selects it groups by that
+bucket server-side — without it every distinct timestamp becomes its own
+category, collapsing a 12-row seed into a 12-point flat line.
+
+<!-- os:check -->
+```typescript
+import { defineDataset, type DashboardWidget } from '@objectstack/spec/ui';
+
+// In the dataset (Guides → Analytics Datasets):
+defineDataset({
+  name: 'crm_contract_metrics', label: 'Contract Metrics', object: 'contract',
+  dimensions: [{ name: 'signed_date', field: 'signed_date', type: 'date', dateGranularity: 'month',
+    synonyms: ['签约月'] }],
+  measures: [{ name: 'signed_count', aggregate: 'count', synonyms: ['签约数', 'deals signed'],
+    description: 'Contracts signed in the period, drafts excluded.' }],
+});
+// Every member: `synonyms`, the words a person types, in the brief's
+// language (matched, never translated; one word names one member), and a
+// one-sentence business `description`, never a prompt. Neither warns:
+// `dataset-member-no-vocabulary`.
+// A money measure may set `currency` (ISO 4217, e.g. `'USD'`). Chain:
+// measure `currency` → the field's `defaultCurrency` (`fixed` only) →
+// tenant `localization.currency`; omit it for counts. A
+// `currencyMode: 'record'` amount refuses `currency`, and sum/avg/min/max
+// unless grouped by its code field (a parent-path `currencyField` admits
+// none, objectstack-data → Field Types → Currency: measure its `homeAmount`
+// field or the parent's `summary`). A `fixed`
+// field, or a derived sum/difference over one `fixed` code, refuses another
+// `currency` (delete it, the column takes that code; restating is fine); a
+// derived measure refuses operands in two `fixed` codes (derive from one
+// currency or drop one).
+
+// The widget just selects the dimension by name:
+const signedByMonth: DashboardWidget = { id: 'signed_by_month', type: 'line',
+  dataset: 'crm_contract_metrics', dimensions: ['signed_date'], values: ['signed_count'],
+  filter: { signed_date: { $gte: '{12_months_ago}' } },
+  compareTo: { kind: 'previousYear' } };
+```
+
+| `dateGranularity` | Rendered bucket label |
+|:--|:--|
+| `'day'` | `YYYY-MM-DD` |
+| `'week'` | ISO week `YYYY-Www` |
+| `'month'` | `YYYY-MM` |
+| `'quarter'` | `YYYY-Qn` |
+| `'year'` | `YYYY` |
+
+* **Human labels are automatic** — the analytics layer formats the bucket value
+  to the label above, and resolves `select`/`lookup` dimension values to their
+  option label / related-record name. Measures carry their `label` + `format`
+  (e.g. `$0,0`) so KPIs and legends read "Total Spent / $616,000", not
+  "spent_sum / 616000".
+* **Combines with `compareTo`** — the comparison query is issued with the same
+  granularity, so the muted overlay aligns bucket-for-bucket.
+* **Rule of thumb** — `day` for ≤30d windows, `week` for ~90d, `month` for
+  6–12 months, `quarter` for multi-year, `year` for retention / compliance.
+
+### Widget `options` — the five declared keys
+
+`options` is an open bag, but a dataset-bound widget reads no other key: `icon`,
+`trend`, `format`, `color` style nothing, and `os validate` warns on each (`unconsumed-widget-option`).
+Presentation lives on the measure (`format` / `currency` / `polarity`), `colorVariant` and `chartConfig`.
+These five change the dataset SQL; a typo (`sortDirection`) parses too, and draws that warning.
+
+| Key | Value | Effect |
+|:--|:--|:--|
+| `dateGranularity` | `day` / `week` / `month` / `quarter` / `year` | Buckets this widget's selected DATE dimensions. **Overrides** the dataset dimension's own default, for this widget only. |
+| `sortBy` | a name this widget selects | Order by that dimension or measure. It must be one of this widget's own `dimensions` / `values` entries. |
+| `sortOrder` | `'asc'` \| `'desc'` | Direction for `sortBy` (default ascending). |
+| `limit` | positive integer | Max rows, applied **after** ordering — so "top 10 accounts" is `limit` **plus** `sortBy`. Without `sortBy` the runtime orders by the selected dimensions: deterministic, but not the top of anything. |
+| `stageOrder` | array of **stored** values | Explicit stage order for `funnel`; no other type reads it. Stored values, not display labels; omit to inherit the field's picklist order. |
+
+<!-- os:check -->
+```typescript
+import type { DashboardWidget } from '@objectstack/spec/ui';
+
+// Top 10 accounts by revenue, bucketed monthly
+const options: DashboardWidget['options'] = { sortBy: 'revenue_sum', sortOrder: 'desc', limit: 10, dateGranularity: 'month' };
+```
+
+### Drilldown
+
+Dashboards drill in two ways: **drill-through** turns an aggregate into the rows
+behind it; **drill-to-record** opens one record.
+
+* **`table` / `pivot` widgets drill through.** Clicking an aggregated table row
+  or pivot cell opens a side drawer listing the underlying records. The dataset
+  preserves each grouped row's raw group keys, so the drawer filters to the
+  *exact* records (no label→id guessing). Automatic — no per-widget config.
+* **The drilled record list drills to record.** Any row in that drawer opens the
+  single record's detail, completing the **group → records → record** chain.
+* **Escape hatch — "Open in list →".** The drawer header offers a link to the
+  object's *full* list page (sort / bulk-select / export / shareable URL),
+  scoped by the same drill filter. The in-place drawer is the default (peek
+  without losing the dashboard).
+* **`metric` / `chart` widgets are not click-drillable** in the dataset form
+  (they render the aggregate only; `compareTo` still applies). Surface the detail
+  through a `table` / `pivot` widget instead.
+
+**Reports drill the same way.** A `summary` / `matrix` report (`drilldown`
+defaults `true`) opens the identical in-place drawer on row/cell click — peek the
+records, click a row to open one, or "Open in list →" for the full list page.
+
+---
+
+## Report Configuration
+
+<!-- os:check -->
+```typescript
+import { defineReport } from '@objectstack/spec/ui';
+
+// ADR-0021: the `crm_opportunity_metrics` dataset defines the
+// object, the `amount_sum` measure, and the `forecast_category` + `close_date`
+// (dateGranularity: 'quarter') dimensions — see Guides → Analytics Datasets.
+export const PipelineCoverageReport = defineReport({
+  name: 'crm_pipeline_coverage_by_quarter',
+  label: 'Pipeline Coverage (Quarter)',
+  type: 'matrix',
+  dataset: 'crm_opportunity_metrics',
+  rows: ['forecast_category'],   // down axis
+  columns: ['close_date'],       // across axis — matrix pivots rows × columns
+  values: ['amount_sum'],        // measures placed in the cells
+  runtimeFilter: { stage: { $ne: 'closed_lost' } },
+  // Period: ONE `type: 'date'` dataset dimension, not a dashboard-style raw `field`.
+  dateRange: { dimension: 'close_date', defaultRange: 'this_year' },
+  exportOptions: { formats: ['csv', 'xlsx'] }, // the download; optional `includeHeaders`, `fileNamePrefix`
+  order: [{ by: 'amount_sum', direction: 'desc' }], // by measure; dates default to chronological
+  // `seriesBy`: one bar per quarter inside each category.
+  chart: { type: 'bar', xAxis: 'forecast_category', yAxis: 'amount_sum', seriesBy: 'close_date' },
+});
+```
+
+> **`rows`** are the report's grouping dimensions (selected from the dataset by
+> name). A `summary` groups *down* by `rows`. A `matrix` pivots `rows` (down) ×
+> **`columns`** (across) with `values` in the cells — do **not**
+> put both axes in `rows`. Multi-level grouping on either axis = multiple
+> dimension names in that array.
+> **`order`** sorts the result server-side — a list of `{ by, direction }`, most
+> significant key first. `by` must be a `rows`/`columns` dimension or a `values`
+> measure the report actually selects (anything else is an authoring error). A
+> selected date dimension already defaults to ASCENDING, so a month-bucketed
+> matrix reads left-to-right in time with no `order` at all; list the `columns`
+> key first when the across-axis header sequence is what matters. A `joined`
+> report orders per block (`blocks[].order`), never on the container.
+> **`exportOptions`** declares the download, never who may download — that is the
+> base object's permission-set `allowExport`; a `joined` report takes neither
+> `dateRange` nor `exportOptions`.
+> **`seriesBy`** splits the one `yAxis` measure into a series per value of a second
+> dataset dimension: the chart's own split, where a second `columns` dimension
+> only pivots the table. It must name a declared dimension (publish refuses an
+> unknown name) other than `xAxis`, and is refused on the
+> single-series types `pie` / `donut` / `funnel` / `treemap` / `sankey`; with it,
+> `series[].name` names one of its values.
+
+---
+
+## Analytics Cubes — Semantic Layer
+
+`Cube` definitions sit between objects and dashboards/reports — they expose
+named **measures** (aggregates) and **dimensions** (groupings) that BI
+widgets can compose without hand-rolling each query. Register under
+`defineStack({ analyticsCubes: [...] })`.
+
+<!-- os:check -->
+```typescript
+import { defineCube } from '@objectstack/spec/data';
+
+export const opportunityCube = defineCube({
+  name: 'crm_opportunity',
+  title: 'Opportunities',
+  sql: 'opportunity',            // underlying object name (snake_case)
+  public: true,
+  measures: {
+    count:  { label: 'Count',        type: 'count', sql: '*' },
+    amount: { label: 'Total Amount', type: 'sum',   sql: 'amount', format: 'currency' },
+  },
+  dimensions: {
+    stage:            { label: 'Stage',    type: 'string', sql: 'stage' },
+    close_date:       { label: 'Close',    type: 'time',   sql: 'close_date',
+                        granularities: ['day', 'week', 'month', 'quarter', 'year'] },
+    account_industry: { label: 'Industry', type: 'string', sql: 'account.industry' },
+    owner:            { label: 'Owner',    type: 'string', sql: 'owner' },
+  },
+});
+```
+
+### Cube Rules
+
+1. **`sql` = object name** (e.g. `'opportunity'`). The ObjectQL strategy
+   reads it via `cube.sql.trim()` — do **not** put raw SQL there.
+2. **Always declare `granularities`** on `time` dimensions so dashboards can
+   bucket by day / month / quarter without ad-hoc queries.

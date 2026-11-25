@@ -1,0 +1,493 @@
+---
+name: objectstack-formula
+description: >
+  Author CEL expressions used across ObjectStack — formula fields,
+  field conditional rules (`visibleWhen`, `readonlyWhen`, `requiredWhen`),
+  validation / sharing / visibility predicates, flow conditions, and dynamic
+  seed values. This is the companion skill that objectstack-data, -ui, -api
+  and -automation each tell you to load alongside them. Use when the user is
+  writing an `F`, `P`, or `cel` tagged-template literal, or asks "how do I
+  express X as a formula / predicate". Do not use for SQL fragments
+  (driver-native) or L2 hook bodies (those belong in objectstack-data).
+license: Apache-2.0
+compatibility: Requires @objectstack/spec 18.x and @objectstack/formula 18.x (CEL)
+metadata:
+  author: objectstack-ai
+  version: "18.6.0"
+  domain: expression
+  tags: cel, formula, predicate, condition, validation, visibility, seed-dynamic
+---
+
+# Expressions (CEL) — ObjectStack Formula Protocol
+
+ObjectStack has **one** expression language across every domain that needs
+computation or boolean predicates: **CEL** (Google Common Expression
+Language).
+
+> **Predicates / formulas are bare CEL — never wrap field references in `{…}`
+> braces.** The #1 authoring mistake is a condition like
+> `{record.rating} >= 4`: in CEL, `{…}` is a **map literal**, so it is a parse
+> error. Write bare CEL: `record.rating >= 4`. Braces are *only* for `{{ … }}`
+> text templates (see Cron and template surfaces).
+
+---
+
+## Skill Boundaries
+
+| Need | Use instead |
+|:---|:---|
+| Define a `type: 'formula'` field | objectstack-data (and embed CEL via `F\`...\``) |
+| Define seed records | objectstack-data (use `cel\`...\`` for dynamic dates) |
+| Author flow / automation step | objectstack-automation (use `P\`...\`` for `condition`) |
+| Author L2 hook body (TS code) | objectstack-data |
+| Cron schedule | objectstack-automation |
+| SQL fragment | driver-native; not unified into the expression registry |
+
+---
+
+## Core contract
+
+Every expression in metadata is the same envelope — `dialect` plus `source`,
+with optional `ast` and `meta` — declared as `Expression` / `ExpressionInput` in
+`shared/expression.zod.ts`. **Three registered dialects**:
+
+| Dialect    | Engine                 | Purpose                                           | Helper        | Example                                |
+|:-----------|:-----------------------|:--------------------------------------------------|:--------------|:---------------------------------------|
+| `cel`      | `@marcbachmann/cel-js` | Computed values + boolean predicates              | `` cel`...` `` / `` F`...` `` / `` P`...` `` | `` cel`record.amount * 1.1` ``         |
+| `cron`     | built-in validator     | Recurring schedules                               | `` cron`...` `` | `` cron`0 6 * * MON` ``               |
+| `template` | built-in interpolator  | `{{path}}` text interpolation (notif/prompt/title) | `` tmpl`...` `` | `` tmpl`Hello {{record.first_name}}` ``|
+
+There is **no `js` dialect** — it was retired. Procedural JavaScript is
+the L2 `ScriptBody { language: 'js' }` authoring surface (hook bodies, mapping
+transforms — see objectstack-data), not an expression dialect.
+
+> **AI authors:** when emitting structured-output JSON for metadata, always
+> emit the full envelope `{ dialect, source }` — never a bare string.
+
+---
+
+## CEL syntax cheat-sheet
+
+| Concept | CEL |
+|:---|:---|
+| Current record field | `record.first_name` |
+| Previous record (update hooks, validation rules) | `previous.status` — §5 |
+| Master-detail line item's header | `parent.status` — cell `readonlyWhen` / `requiredWhen` |
+| Metadata-editing form row | `data` — the row under edit, repeater rows included |
+| Hook input payload | `input.amount` |
+| Identity context | `os.user.id`, `os.org.id`, `os.org.tier`, `os.env` |
+| Equality | `==` / `!=` |
+| Logical | `&&` / `\|\|` / `!` |
+| Ternary | `cond ? a : b` |
+| String literal | `'abc'` — CEL parses `"abc"` too |
+| Membership | `record.region in ['us', 'eu']` |
+| Key existence (NOT null-safety) | `has(record.foo)` |
+| Null check | `record.foo == null` or `isBlank(record.foo)` |
+
+The org context is `{ id, tier }` — there is no `os.org.slug` or `os.org.name`.
+The evaluator also binds the current user as `current_user` (alias `user`) per
+ADR-0068 — spec field docs write predicates like `current_user.positions`.
+
+### `has()` is NOT a null check
+
+`has(record.x)` is **true whenever the key exists**, even when its value is
+`null`.
+
+Every server-evaluated predicate — validation rules, `requiredWhen`, option
+`visibleWhen`, `readonlyWhen`, hook `condition`, the flow trigger record —
+reads a `record` (and, where §5 binds it, a `previous`) that is **total over
+the object's declared fields**: a declared column the driver never returned
+reads as `null`, not as a fault. There `has(record.<declared_field>)` and
+`has(previous.<declared_field>)` are uniformly `true`, and `!= null` is the
+whole guard. The idiom that reads like a guard is not one:
+
+```text
+# WRONG — both has() calls are true on a NULL row, so this reaches `null < null`,
+# CEL has no overload, the predicate aborts and the write is rejected.
+has(record.start_date) && has(record.end_date) && record.end_date < record.start_date
+
+# RIGHT
+record.start_date != null && record.end_date != null && record.end_date < record.start_date
+```
+
+**This is a publish-time rejection, not advice.** `os build` /
+`os validate` / `os lint` and the runtime publish gate reject any validation-rule
+or hook predicate — and a record-triggered flow's (`triggerType: 'record-*'`)
+start `config.condition`, edge `condition` (nested regions too) or `decision`
+branch `expression` — that applies an ordering (`< <= > >=`) or arithmetic
+(`+ - * / %`) operator to a **declared nullable** field — no `required: true`,
+no `defaultValue`, no default option, not a `count` / `sum` roll-up (empty reads
+`0`; `min` / `max` / `avg` stay nullable) — unless an explicit `!= null` / `== null` /
+`!isBlank()` test dominates it in the same boolean branch. `has()` deliberately
+does not satisfy that gate. `has()` over an **undeclared** key stays legal: that
+is its use there — telling "absent from this PATCH" apart from "explicitly null".
+
+**The exception: action `visible` / `disabled` are client-side and sparse.**
+They bind the row the client already holds, and that row — a `list_item` row
+above all — lacks a key when the column is outside the view's projection, when
+field-level security refuses it, or when it was never written (the mongo and
+memory drivers).
+Reading an absent key faults `No such key`: a `visible` predicate hides the
+action, a `disabled` one leaves it refused, silently either way.
+There the guard is `has(record.x) && record.x != null`; `has()` alone is enough
+beside a literal `==` / `!=`; a nested path takes one `has()` per segment:
+
+```text
+has(record.status) && record.status != 'resolved'
+has(record.amount) && record.amount != null && record.amount > 1000
+has(record.viewer) && has(record.viewer.can_approve) && record.viewer.can_approve == true
+```
+
+---
+
+## ObjectStack CEL standard library
+
+Registered automatically by `@objectstack/formula`, which ships `dist` only —
+there is no `src/` to read in an installed app. Its exported
+`CEL_STDLIB_FUNCTIONS` is the advertised bare-callable subset, pinned by two
+tests: every entry resolves at runtime, and this table documents them all.
+
+**Dates**
+
+| Function | Returns | Notes |
+|:---|:---|:---|
+| `now()` | timestamp | Current instant. Pinned per evaluation run; deterministic in build |
+| `today()` | timestamp | Reference-timezone **calendar day**, expressed as **UTC midnight** (not plain UTC start-of-day) |
+| `daysFromNow(n)` | timestamp | Calendar-day: `today()` + `n` days, at **UTC midnight** (never carries time-of-day) |
+| `daysAgo(n)` | timestamp | Calendar-day: `today()` − `n` days, at **UTC midnight** |
+| `daysBetween(a, b)` | int | Whole days from `a` to `b` (negative if `b` precedes `a`). `daysBetween(today(), record.due)` = days remaining |
+| `addDays(d, n)` | timestamp | Shift **any** date by `n` days (negative ok). `addDays(record.last_service, record.cycle_days)` = next due date |
+| `addMonths(d, n)` | timestamp | Shift **any** date by `n` months; clamps to month-end (`addMonths(date('2026-01-31'), 1)` → Feb 28) |
+| `date(s)` / `datetime(s)` | timestamp | Parse an ISO date / date-time string to a timestamp |
+| `isoDate(t)` / `isoDatetime(t)` | string | Timestamp to UTC ISO text, `2026-10-08` / `2026-10-08T17:55:06.123Z` |
+
+> **A `date` / `datetime` field is its ISO text.** The build refuses it in a
+> timestamp-only call or method (`date-text-call`); wrap it in `date()` first:
+> `isoDate(date(record.start_at))`, `date(record.start_date).getFullYear()`.
+> `+` with text and ordering against a text literal take the text as is.
+
+> **No date arithmetic.** The build refuses `date + n` and `end - start`: a
+> date or date-time mixed with a number, or minus another, reads `null`, and
+> `today()` / `now()` minus a date field reads `{}`. Use `daysBetween(a, b)` for whole days, two `datetime(…)` for hours (row below).
+
+| Want | Write — never bare `end - start`, `date + n`, `today() + 30` |
+|:---|:---|
+| Inclusive span | `daysBetween(record.start_date, record.end_date) + 1` |
+| Shift a date | `daysFromNow(n)` / `addDays(d, n)` / `addMonths(d, n)` |
+| Tenure in years | `daysBetween(record.hire_date, today()) / 365` |
+| Hours between | `double((datetime(record.end_at) - datetime(record.start_at)).getMinutes()) / 60.0` |
+| Sub-day offset | `now() + duration("3h")` — the calendar helpers land on UTC midnight |
+
+**Numbers**
+
+| Function | Returns | Notes |
+|:---|:---|:---|
+| `abs(x)` | double | Absolute value |
+| `round(x)` | int | Round to the nearest integer |
+| `floor(x)` / `ceil(x)` | int | Round toward −∞ / +∞ (`floor(-1.2)` = −2, not −1) |
+| `min(a, b)` / `max(a, b)` | dyn | Smaller / larger operand (numeric comparison) |
+| `rmbUpper(x)` | string | Amount in Chinese capitals, rounded to 分: `rmbUpper(10500.5)` = `壹万零伍佰元伍角`; `''` for null |
+
+**Strings**
+
+| Function | Returns | Notes |
+|:---|:---|:---|
+| `upper(s)` / `lower(s)` | string | Case conversion |
+| `trim(s)` | string | Strip surrounding whitespace (`''` for null) |
+| `contains(s, sub)` | bool | Substring test |
+| `startsWith(s, p)` / `endsWith(s, p)` | bool | Prefix / suffix test |
+| `matches(s, re)` | bool | Regex test |
+| `joinNonEmpty(list, sep)` | string | Join, dropping null/empty entries |
+
+**Collections / null-ish**
+
+| Function | Returns | Notes |
+|:---|:---|:---|
+| `isBlank(v)` | bool | true for `null`, `undefined`, `''`, `[]` |
+| `isEmpty(v)` | bool | true for `null`, `undefined`, empty string / list / map |
+| `coalesce(v, fallback)` | dyn | `v` when non-null, else `fallback` |
+| `len(v)` | int | Length of a string / list / map |
+
+**Options**
+
+| Function | Returns | Notes |
+|:---|:---|:---|
+| `label(record.f)` | string | A select value's option label in the reader's locale: `'v' + string(record.version_no) + ' · ' + label(record.kind)` reads `v2 · 清稿` (zh-CN), `v2 · Clean` (en-US). Only `record.<field>`; `''` for null or an empty selection. A multi-select (`multiple: true`) reads each selected label in stored order, joined with `, `. A stored (non-formula) field stores the declared label. Formula fields only: in a predicate (validation, visibility, hook) it faults, so compare the stored value |
+
+Plus CEL built-ins: `has(x)`, `size(x)`, `int(x)`, `string(x)`, `bool(x)`,
+`double(x)`, `timestamp(s)`, `duration(s)`. `timestamp()` parses only a full
+ISO instant, so over a `date` field (`YYYY-MM-DD`) the build refuses it
+(`date-text-call`), `+ duration(…)` included; shift a date with
+`isoDate(addDays(record.d, n))`.
+
+> Receiver methods (`s.split(',')`,
+> `list.map(...)`) are called on a value, never bare, and are not in this table;
+> four bare primitives (`bytes`, `dyn`, `type`, `uint`) resolve but are withheld
+> from the catalogue by an authoring decision — don't reach for them. An UNKNOWN
+> function — `PRIOR()`, a legacy `ISBLANK()`, a typo'd `isBlnk()` — **fails
+> `os build`** with a "no matching overload" type error, rather than silently
+> no-op'ing the predicate at run time. Use `previous.x` (not `PRIOR()`),
+> `isBlank()` (not `ISBLANK()`).
+
+---
+
+## Mandatory patterns for AI emission
+
+The ❌ blocks are wrong on purpose, so `check:skill-examples` skips them.
+
+### 1. Computed text formula — always coalesce nullable operands
+
+✅ **Correct**
+
+<!-- os:check -->
+```ts
+import { F } from '@objectstack/spec';
+F`coalesce(record.salutation, '') + ' '
+  + coalesce(record.first_name, '') + ' '
+  + coalesce(record.last_name, '')`
+```
+
+❌ **Wrong** (CEL throws on null + string)
+
+```ts
+F`record.salutation + ' ' + record.first_name + ' ' + record.last_name`
+```
+
+### 2. Conditional numeric formula — guard divisor
+
+✅
+
+<!-- os:check -->
+```ts
+import { F } from '@objectstack/spec';
+F`coalesce(record.cost, 0) > 0
+  ? ((coalesce(record.revenue, 0) - record.cost) * 100) / record.cost
+  : 0.0`
+```
+
+### 3. Predicate (field rules / visibility / validation)
+
+✅
+
+<!-- os:check -->
+```ts
+import { P } from '@objectstack/spec';
+
+P`record.status == 'qualified'`;
+P`record.amount != null && record.amount > 10000 && record.region in ['us', 'eu']`;
+P`!isBlank(record.po_number)`;
+```
+
+Conditional requiredness: [objectstack-data](../objectstack-data/SKILL.md#conditional-field-rules).
+
+❌ Salesforce-flavor — **fails CEL compile**: `os build` errors with a
+located message, and the flow engine throws if it ever reaches runtime:
+
+```ts
+"status = 'qualified'"
+"amount > 10000 AND region IN ('us', 'eu')"
+"NOT(ISBLANK(po_number))"
+```
+
+### 4. Dynamic seed value — use `cel\`\`` not `new Date()`
+
+✅
+
+<!-- os:check -->
+```ts
+import { cel } from '@objectstack/spec';
+const seed = { close_date: cel`daysFromNow(45)`, created_at: cel`now()` };
+```
+
+❌ Compile-time evaluation — every customer gets the package author's clock:
+
+```ts
+{ close_date: new Date(Date.now() + 45 * 86400000), created_at: new Date() }
+```
+
+This is the determinism gate: two consecutive `os build` runs produce
+byte-identical `dist/objectstack.json` only when every dynamic seed value is
+`` cel`...` `` — no `new Date()`, no `Date.now()`, no random or otherwise
+impure source.
+
+### 5. Update hook condition — `previous` vs `record`
+
+✅
+
+<!-- os:check -->
+```ts
+import { P } from '@objectstack/spec';
+P`previous.status != 'escalated' && record.status == 'escalated'`
+```
+
+`record` is the record's **state**, not this write's diff: stored row ⊕
+payload, so `record.status == 'escalated'` is true on *every* update of an
+already-escalated record. Comparing against `previous` is the only way to say
+"just became". Hook `condition`s and validation predicates bind the same two
+roots — one scope, one meaning, whichever surface reads it.
+
+**Where `previous` is bound, and where it is not:**
+
+| Surface / event | `previous` |
+|:---|:---|
+| Update hook `condition` (single-record write), validation rule on update | the stored pre-write row |
+| Insert events (`beforeInsert` / `afterInsert`), validation rule on insert | **`null`** — `previous == null \|\| …` judges an insert, `previous != null && …` skips one; a column read off it (`previous.x`) has no value and faults |
+| A write to an existing row whose prior state is not in hand | **unbound** — fails closed, so `previous == null` never reads an update as an insert |
+| **`after*` hook `condition` / record-change flow trigger on a predicate (`multi: true`) write** | **that row's pre-write row** — a bulk write fires after-hooks once PER MATCHED ROW |
+| Validation rule on a predicate bulk update | that row's pre-write row — per row |
+| `before*` hook `condition` on a predicate (`multi: true`) write | **that row's pre-write row** — `beforeUpdate` / `beforeDelete` dispatch once PER MATCHED ROW too, each on a single-record-shaped context whose `input.id` names the row (ADR-0058 Addendum II, D1/D2); `record` is that row's state, stored ⊕ payload, as on any update. Only the *payload* stays batch-scoped — see below the table |
+
+⚠️ **An unevaluable condition ABORTS the operation.** A column read off
+`previous` on an insert (`previous.status`, where `previous` is `null`) — like
+a typo'd key (`record.stauts`), a retired field, or a comparison CEL has no
+overload for — does **not** degrade to "the hook did not fire": it **fails the
+write**, with an error naming the hook and the key — `before*` and `after*`
+alike, with no `onError` escape (`onError` governs a handler that throws, and
+the condition is evaluated before any handler runs).
+
+**A transition condition needs no special handling for bulk writes.**
+Write it once, on a `before*` or an `after*` event, and it means the same thing
+whether the write carries an id or a predicate:
+
+<!-- os:check -->
+```ts
+import { P } from '@objectstack/spec';
+P`previous.status != 'done' && record.status == 'done'`
+```
+
+A predicate (`multi: true`) write is N record changes, so every record-scoped
+declaration on it is evaluated **per row** — `previous` is that row's own
+pre-write state, `record` its real state, not the bare payload (ADR-0058,
+bulk-write Addenda I and II). Record-change flow triggers ride the same
+dispatch. `before*` is no exception to the *condition*; the asymmetry is what a
+`before*` handler WRITES: one `updateMany` takes one SET clause, so every row's
+dispatch carries the one payload and a rewrite made on any row applies to every
+matched row (D3). A rewrite *decided* per row must assign the same key set on
+every row, in place — assigned onto the payload object, never a replaced one —
+because the engine records the keys each row's chain wrote and refuses the
+batch whole, before any write, when two rows disagree
+(`MULTI_UPDATE_HOOK_KEY_DIVERGENCE`, status 400; ADR-0058 Amendment II.3).
+
+Above 10 000 matched rows the platform refuses a predicate write on an object
+with per-row hooks in either phase — one ceiling for `before*` and `after*`,
+checked before the first dispatch (ADR-0058 Addendum II, D6) — rather than fan
+out that many handler runs inside one write; paginate the write. It is a
+refusal, never a silent downgrade to one hook call.
+
+---
+
+## Mechanical translation table (legacy → CEL)
+
+When migrating Salesforce-flavor metadata, apply these rules in order:
+
+| Legacy | CEL |
+|:---|:---|
+| `bare_field` | `record.bare_field` — except in a flow condition, below |
+| `OLD.x` | `previous.x` |
+| `NEW.x` | `record.x` |
+| `=` (comparison) | `==` |
+| `<>` | `!=` |
+| `AND` | `&&` |
+| `OR` | `\|\|` |
+| `NOT(x)` | `!x` |
+| `"abc"` | `'abc'` |
+| `IF(c, a, b)` | `c ? a : b` |
+| `ISBLANK(x)` | `isBlank(record.x)` |
+| `CONCAT(a, b)` | `coalesce(a, '') + coalesce(b, '')` |
+| `TODAY()` / `NOW()` | `today()` / `now()` |
+| `IN (a, b, c)` | `in [a, b, c]` |
+| `ISCHANGED(x)` | `previous.x != record.x` |
+| `MONTH_DIFF`, `MID`, `LEFT`, `RIGHT`, `SUBSTITUTE` | _not in stdlib — propose addition_ |
+
+> ⚠️ `OLD.x` and `ISCHANGED(x)` both land on `previous.x`, which is `null` on an
+> insert event and **fails the write** there unless guarded by `previous != null
+> &&` (§5).
+
+> ⚠️ **Flow conditions are the exception to row 1.** The engine spreads the
+> trigger record's fields, nulls included, to top level wherever no flow variable
+> or node id holds the name, so in a start, edge or `decision` condition a bare
+> `budget` IS `record.budget`: `os validate` judges either spelling (bare names
+> only while the flow's bound names are provable) and a guard on one guards both.
+> What the start condition proves non-null is presumed at every edge and branch;
+> spell that guard `record.budget != null` — the runtime publish gate judges the
+> written flow alone and resolves no bare name. An unguarded null fails the
+> **run** at that condition; the write that fired it still lands.
+
+---
+
+## Surfaces that take an Expression
+
+All of these spec fields accept `string | Expression`. The build normalizes
+to the envelope.
+
+### CEL surfaces (predicates + computed values)
+
+| Surface | Field | Dialect |
+|:---|:---|:---|
+| `Field` | `expression` (when `type: 'formula'`) | cel |
+| `Field` | `visibleWhen` / `readonlyWhen` / `requiredWhen` | cel |
+| `View` / `Page` | `visibleWhen` (form section/field, page component) | cel |
+| `Field` | `defaultValue` (envelope only; bare string = literal) | cel |
+| `ConditionalValidation` | `when` | cel |
+| `Action` | `visible` / `disabled` — client-side, sparse | cel (or boolean) |
+| `Hook` | `condition` | cel |
+| `SharingRule` | `condition` | cel |
+| `Flow.decision` | `expression` / edge `condition` | cel (use `vars.<step>.<key>`) |
+| `Seed.records[*]` | any value | cel (via `cel\`\``) |
+| `audit` / `metrics` / `tracing` | `condition` / `successCriteria` | structured \| cel |
+
+⚠️ **A `formula` field is virtual — no driver materialises a column for it**, so
+all three query axes refuse one at both doors: `where` and `searchableFields`
+answer `400 INVALID_FIELD`, `orderBy` answers `400 INVALID_SORT`. It still READS
+correctly, which is why refusing matters: a `where` on one used to answer
+`200` with zero rows. Denormalise onto a stored field and query that. `summary`
+and `autonumber` have real columns and need no such care.
+
+⚠️ **A form-view `visibleWhen` is the one predicate here that faults OPEN.** It
+is CLIENT-SIDE only, and an unbound root falls back to `true`, so the control
+renders for everyone — never use one as access control; that is permission-set
+field-level security. Everywhere else on this table the opposite holds: an
+unevaluable `Hook` / `SharingRule` `condition` or validation predicate **aborts
+the write** (§5).
+
+View list filters are **not** a CEL surface — they are structured JSON filter
+rules (`ViewFilterRuleSchema`), so do not emit CEL there. For "last 30 days"
+style windows use the **date macro tokens** (`data/date-macros.zod.ts`) —
+objectstack-query `rules/filters.md` has the token list.
+
+### Cron and template surfaces
+
+Two more dialects ride the same envelope. Neither is CEL; both take
+a bare string (auto-wrapped) or their helper, and read the same variable scope.
+
+| Dialect | Helper | Grammar | Carriers |
+|:---|:---|:---|:---|
+| `cron` | `` cron`0 6 * * MON` `` | 5- or 6-field cron, or one of `@yearly` `@annually` `@monthly` `@weekly` `@daily` `@hourly` `@reboot` | `Job.schedule.expression` (canonical) |
+| `template` | `` tmpl`Hello {{ record.first_name }}` `` | `{{ path }}` or `{{ path \| formatter[:arg] }}` — double braces only, no conditionals; the formatter whitelist is `TEMPLATE_FORMATTERS`, exported from `@objectstack/formula` | `system/email-template` `subject` / `bodyHtml` / `bodyText`, `ai/model-registry` `promptTemplate.system` / `.user`, `Object.titleFormat` (a save and `os validate` refuse it; move it to `nameField`, ADR-0079) |
+
+Missing template paths render as the empty string. Move logic into a CEL field.
+A `currency` argument is a
+literal code (`currency:EUR`); only an email template may read it from the send's
+data instead, `{{ amount | currency:@currency_code }}`.
+
+---
+
+## Verify your work
+
+A malformed expression does not fail silently (ADR-0032): `os validate` and
+`os build` run the shared validator over every formula and predicate in the
+stack — CEL syntax **plus** `record.<field>` existence on the target object —
+and fail non-zero with a located, did-you-mean message, while at runtime the
+engine **throws** and the rule fails loudly. Use `os validate` as the fast
+post-edit check (no artifact emitted; `npm run validate` in a scaffolded
+project). To check a *single* expression before saving it, call the
+`validate_expression` agent tool, which runs the same validator inline.
+
+---
+
+## See also
+
+- [references/_index.md](./references/_index.md) — the Zod schemas behind every
+  surface above
+- `node_modules/@objectstack/spec/src/shared/expression.zod.ts` — `Expression`,
+  `ExpressionInput`, `cel` / `F` / `P`

@@ -1,0 +1,56 @@
+{
+  "skill_name": "objectstack-ui",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "On the lead record page, put the tasks first: our reps want the open tasks table before anything else when they open a lead. The `task` object already has a `lead` master_detail field.",
+      "expected_output": "No page file. One flag on the child's reference field — `relatedList: 'primary'` on `task.lead` — makes the tasks a full-width body table in the lead's details, after the first field section; `relatedListFilter: { status: { $ne: 'done' } }` keeps it to open tasks, and the lead's `relatedLists: ['task', ...]` puts it before the other lists. Not a `definePage` with `kind: 'full'`, and never a `slots.tabs`.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "relatedList: 'primary'",
+          "relatedLists"
+        ],
+        "must_not_contain": [
+          "definePage(",
+          "slots: { tabs",
+          "kind: 'full',"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "prompt": "Contracts should open as a full page, not the side drawer. Reps also keep asking for records to open beside the list — add that to the contract object too.",
+      "expected_output": "One declaration: `navigation: { mode: 'page' }` on the contract list view. A pane beside the list is no longer offered: the split pane is retired. How a record opens is each reader's own choice in the list's Display menu (Open records: drawer, the default, or full page), kept in the browser and offered for drawer-mode objects only, so nothing is authored for it; `split`, `modal` and `popover` were removed in @objectstack/spec 18.3.0 and are refused.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "navigation: { mode: 'page' }",
+          "Display menu"
+        ],
+        "must_not_contain": [
+          "mode: 'split'",
+          "mode: 'modal'",
+          "mode: 'popover'",
+          "definePage"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "prompt": "Our account record page is a custom `kind: 'full'` page with its own tab strip. Installed packages keep adding header actions to `account` (an 'Open in billing' link, for one), and none of them ever shows in the page header. Make the header show every action placed on the account's header, including ones a package adds later, without us listing ids. None of the project's files are in this directory: write the change in your answer.",
+      "expected_output": "Keep the `kind: 'full'` page and its tab strip, and set `placedActions: true` on its `page:header` node: `{ type: 'page:header', properties: { placedActions: true } }`. The header then draws every action of `account` whose `locations` include `record_header` or `record_more`, read live, so a package's action appears without a page edit. No `actions` id list beside it: an authored list is the whole set, and `placedActions: true` beside one is refused. Not a return to a `slotted` page and never a `slots.tabs`.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "placedActions: true",
+          "page:header"
+        ],
+        "must_not_contain": [
+          "slots: { tabs",
+          "actions: ['"
+        ]
+      }
+    }
+  ]
+}

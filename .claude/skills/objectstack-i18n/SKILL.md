@@ -1,0 +1,526 @@
+---
+name: objectstack-i18n
+description: >
+  Author ObjectStack translation bundles — object/field labels, view text,
+  app navigation strings, automation messages — and configure locale
+  fallback, coverage reporting, and the source layout. Use when the user is
+  adding `*.translation.ts` files, authoring a `translation` metadata item in
+  the Studio or through the metadata API, shipping a generated bundle from a
+  package or plugin, wiring a new locale, or resolving missing-translation
+  warnings. Do not use for general i18n library questions unrelated to
+  ObjectStack bundles.
+license: Apache-2.0
+compatibility: Requires @objectstack/spec 18.x (Zod v4 schemas)
+metadata:
+  author: objectstack-ai
+  version: "18.6.0"
+  domain: i18n
+  tags: i18n, translation, locale, l10n, bundle, coverage
+---
+
+# Internationalization — ObjectStack I18n Protocol
+
+## Translation Configuration
+
+### Stack-Level I18n Config
+
+Configure i18n settings in your `objectstack.config.ts`:
+
+<!-- os:check -->
+```typescript
+import { defineStack } from '@objectstack/spec';
+
+export default defineStack({
+  i18n: {
+    defaultLocale: 'en',
+    supportedLocales: ['en', 'zh-CN', 'ja-JP', 'es-ES'],
+    fallbackLocale: 'en',
+  },
+  // translations: [MyTranslations],  ← register your bundles here (see below)
+});
+```
+
+| Property | Type | Required / Default | Description |
+|:---------|:-----|:-------------------|:------------|
+| `defaultLocale` | `string` | **required** | The locale a user who has not chosen one gets |
+| `sourceLocale` | `string` | optional, defaults to `defaultLocale` | The language inline `label:` text is written in; read by `os lint`, `os i18n check`, `os i18n extract` |
+| `supportedLocales` | `string[]` | **required** | All supported locales |
+| `fallbackLocale` | `string` | optional | Fallback when translation missing |
+
+An app authored in English for Chinese users declares `defaultLocale: 'zh-CN', sourceLocale: 'en'`,
+not an English `defaultLocale`. ⚠️ Label serving still reads inline text as `defaultLocale` text: with no
+`fallbackLocale: 'en'`, an `en` request reaches the zh-CN bundle before the English inline label.
+`sourceLanguage`, `authoringLocale` and `authoringLanguage` are refused, each naming `sourceLocale`.
+
+---
+
+## Authoring Translation Bundles (`objects.*`)
+
+The canonical authoring path: one `TranslationData` per locale, assembled with
+`defineTranslationBundle` and registered on the stack:
+
+<!-- os:check -->
+```typescript
+// src/translations/en.ts — one TranslationData per locale
+import { defineStack, defineTranslationBundle } from '@objectstack/spec';
+import type { TranslationData } from '@objectstack/spec/system';
+
+const en: TranslationData = {
+  objects: {
+    task: {
+      label: 'Task',
+      pluralLabel: 'Tasks',
+      fields: {
+        subject: { label: 'Subject', help: 'Brief title of the task' },
+        status: {
+          label: 'Status',
+          options: {
+            not_started: 'Not Started',
+            in_progress: 'In Progress',
+            completed: 'Completed',
+          },
+        },
+        due_date: { label: 'Due Date' },
+      },
+      _views: {
+        all_tasks: {
+          label: 'All Tasks',
+          emptyState: { title: 'No tasks yet', message: 'Create your first task' },
+        },
+      },
+      _sections: {
+        details: { label: 'Details' },
+      },
+      _actions: {
+        todo_complete: {
+          label: 'Complete',
+          confirmText: 'Mark this task as completed?',
+          successMessage: 'Task completed',
+        },
+      },
+    },
+  },
+  apps: {
+    todo_app: { label: 'Todo Manager', description: 'Personal task management' },
+  },
+  messages: {
+    'common.save': 'Save',
+    'common.cancel': 'Cancel',
+    'welcome.user': 'Welcome, {{userName}}!',
+  },
+};
+
+// src/translations/zh-CN.ts — same shape, translated values
+const zhCN: TranslationData = {
+  objects: {
+    task: {
+      label: '任务',
+      pluralLabel: '任务',
+      fields: {
+        subject: { label: '主题', help: '任务的简要标题' },
+        status: {
+          label: '状态',
+          options: { not_started: '未开始', in_progress: '进行中', completed: '已完成' },
+        },
+        due_date: { label: '截止日期' },
+      },
+    },
+  },
+  apps: {
+    todo_app: { label: '待办管理', description: '个人任务管理' },
+  },
+  messages: {
+    'common.save': '保存',
+    'common.cancel': '取消',
+    'welcome.user': '欢迎，{{userName}}！',
+  },
+};
+
+// src/translations/index.ts — assemble the locales into one bundle…
+export const TodoTranslations = defineTranslationBundle({
+  en,
+  'zh-CN': zhCN,
+});
+
+// objectstack.config.ts — …and register it on the stack
+export default defineStack({
+  i18n: { defaultLocale: 'en', supportedLocales: ['en', 'zh-CN'] },
+  translations: [TodoTranslations],
+});
+```
+
+`defineTranslationBundle` validates the bundle at authoring time via `.parse()` —
+prefer it over a bare `: TranslationBundle` literal.
+
+---
+
+## Object-Level Translation Structure
+
+All translatable content for a single object is aggregated under
+`objects.{object_name}` with these sub-keys:
+
+| Sub-key | Holds |
+|:--------|:------|
+| `label` / `pluralLabel` / `description` | Object-level text (every key optional) |
+| `fields.{field_name}` | `label`, `help`, `placeholder`, `options` (option value → label), `inlineTitle` (the heading of the inline child grid a `master_detail` field draws on its parent's form — the field lives on the child object, so the key is the child's; untranslated it keeps its authored text, never the child's plural label), `relatedListTitle` (the title of the related list a `lookup` or `master_detail` field draws on its parent's record page — the key is the child's too; untranslated it keeps its authored text, never the child's label) per field |
+| `_views.{view_name}` | `label`, `description`, `title` (a form view's own heading — only a form that authors one is translated; a list view has none), `submitBehavior.title` / `submitBehavior.message` (the thank-you panel of a form whose `submitBehavior` is `kind: 'thank-you'`; only the copy the form authors is translated, and the other kinds carry none), `emptyState.title` / `emptyState.message`, `bulkActions.{def_name}` (`label`, `confirmText`, `confirmLabel`, `params`) |
+| `_actions.{action_name}` | `label`, `description`, `confirmText`, `submitText` (the param dialog's button verb — only under an action that declares `params`), `cancelText` (the dismiss button of the confirm or param dialog — only under an action that declares `confirmText` or a non-empty `params`), `successMessage`, `disabledReason` (the sentence a greyed action shows; absent keeps the console's default), `params.{param_name}` (and `.options.{value}` beneath it — an option's stored `value` in that param's inline `options`), `outcomeMessages.{outcome}` (an outcome the action's own `outcomeMessages` declares), `resultDialog.title` / `.description` / `.acknowledge` (only under an action that declares a `resultDialog`), `resultDialog.fields.{path}` (the literal `path` of a field in `resultDialog.fields[]`, dots included — `client.secret` is one key), `preflight.fields.{path}` (only under an action that declares `preflight`: a field's literal `path` in its `preflight.fields[]`, its value a plain string as under `resultDialog.fields`), `resultDialog.columns.{path}.{column_path}` / `preflight.columns.{path}.{column_path}` (a table's column headers, beside `fields`: the literal `path` of a `format: 'table'` field, then of one of its `columns[]`, each a plain string; `defineTranslationBundle` refuses any other key under `preflight`, a `title` included); the same keys hold under `globalActions.{action_name}` |
+| `_sections.{section_name}` | Form section `label`, `description`; `fields.{field_name}` — the `label`, `placeholder`, `helpText` an entry overrides for that form alone (`helpText` here, `help` under `fields.{field_name}` above: each spells what its source does) |
+| `_tabs.{tab_name}` | Filter-preset tab `label` (`ViewTabSchema.name`) |
+| `_validations.{rule_name}` | `message` only — the sentence a rejected write returns (replaces the retired `validationMessages`) |
+
+Top-level groups alongside `objects`: `apps` (label, description, navigation),
+`messages`, `globalActions` (actions with no `objectName` — a key naming a bound action is
+an **error** whose message names the `objects.{owner}._actions.{action_name}` key to write
+instead), `picklists` (`label`, `options` by stored value — every field referencing the
+picklist inherits them), `dashboards`, `datasets`, `reports`, `pages`, `flows`, `positions`,
+`permissions` (permission sets, spelled as the stack's `permissions[]`), `books` (a doc book's
+spine, by `Book.name`: `books.{book}.label` / `.description`, and `groups.{group_key}.label` by
+each group's stable `key`, never its position — `books.crm_manual.groups.getting_started.label`;
+the pages themselves localize through `doc.translations`, and the inline `translations` map a
+book once carried stays retired), `metadataForms`, `settingsCommon`; `reports`, `positions` and
+`permissions` hold `label` + `description` by name, so do `datasets` and each dataset member at
+`datasets.{dataset}.{dimensions,measures}.{member}` (a member's `synonyms` have no key: one
+authored list carries every language), and a joined report's block headings sit at
+`reports.{report}.blocks.{block_name}.{label,description}`, keyed by the block's required `name`.
+Three keys sit deeper than their group's `label`: a `page:tabs` item at
+`pages.{page}.components.{tabs_id}.items.{value}.label` (by the item's `value`; an item without
+one has no key), an approval step at `flows.{flow}.approvals.{node_id}.label`, and the text a
+`create_record` / `update_record` writes into a field marked `{ dialect: 'template', source }` at
+`flows.{flow}.records.{node_id}.fields.{field}`, picked in the organization's language (the
+Localization setting if set, else `i18n.defaultLocale`; never the run starter's).
+`os i18n extract --no-objects-only` scaffolds every group above but `messages` and
+`settingsCommon`, all three keys included. The `inlineTitle`, report-block and table-column
+keys, as the shipped `app-crm`, `app-showcase` and platform bundles spell them for `zh-CN`
+(`rows` is the table field's `path`, `error.message` one column's):
+
+```typescript
+objects: { crm_opportunity_line_item: { fields: { opportunity: { inlineTitle: '产品明细' } } } },
+reports: { showcase_task_overview: { blocks: { open_block: { label: '未完成任务' } } } },
+objects: { sys_user: { _actions: { import_sso_users: { resultDialog: { columns: { rows: { email: '邮箱', 'error.message': '未添加的原因' } } } } } } },
+```
+
+`settings` is **platform-only** — it is keyed by a settings manifest's namespace and only
+the platform declares one, so an app bundle carrying it is refused by name.
+
+---
+
+## Naming Conventions
+
+| Context | Convention | Example |
+|:--------|:-----------|:--------|
+| Locale codes | BCP-47 | `en`, `en-US`, `zh-CN`, `pt-BR` |
+| Object keys in `objects.*` | `snake_case` | `objects.project_task`, `objects.support_case` |
+| Field keys | `snake_case` | `fields.first_name`, `fields.due_date` |
+| Option values | lowercase | `options.status.in_progress` |
+| Message keys | dot-separated | `common.save`, `validation.required` |
+
+Option sub-keys are the option's stored **`value`**, never its display label:
+for `options: [{ value: 'direct_mail', label: 'Direct Mail' }]` write
+`options: { direct_mail: '直邮' }` — both `'Direct Mail'` and `'direct-mail'`
+parse, ship, and resolve to nothing.
+
+`os validate` / `os lint` / `os compile` check this direction: `translation-target-unknown`
+is an **error** and fails the run; `translation-option-key-unknown` is a warning.
+A key naming an object, field, view, tab, action, param, section, validation rule, app,
+nav item, dashboard, widget or flow screen that does not exist is listed alongside the names
+that do. Six more shapes under an action entry are the error: an outcome the action does
+not declare in `outcomeMessages`; a `resultDialog.fields` or `preflight.fields` path it does
+not declare; a `columns` key whose field path is no declared `format: 'table'` field, or
+whose column path that field's `columns[]` does not list;
+`resultDialog` `title` / `description` / `acknowledge` under an action that declares no
+`resultDialog`; `submitText` under an action with no non-empty `params`; and `cancelText`
+under an action that declares neither `confirmText` nor a non-empty `params` — a bundle
+translates a dialog the action declares and cannot add one. A
+param's inline option keys share the option warning with a field's `options`; a param that
+references a `field` and declares no inline `options` is not judged. A bundle keyed to
+something since renamed still parses — the label just renders silently in its source locale
+while every neighbouring one resolves.
+
+---
+
+## File Organization Strategies
+
+Layout is an **authoring convention**: whichever one you pick, your own import graph
+assembles it into the `TranslationBundle` you register on the stack — nothing loads a
+directory tree for you.
+
+| Layout | Files | Use when |
+|:--|:--|:--|
+| Bundled | one `crm.translation.ts` holding every locale | under 5 objects, 2-3 locales |
+| Per-locale (recommended) | `src/translations/{en,zh-CN,ja-JP}.ts` + `index.ts` | 5-20 objects, 3-5 locales |
+| Per-namespace | `i18n/{locale}/{object}.json`, assembled by your own imports | 20+ objects, 5+ locales |
+
+---
+
+## Authoring at Runtime: the `translation` Item
+
+Translations do not have to ship as files. A **`translation` metadata item** — created in
+the Studio, through the metadata API, or by an agent — carries one locale's worth of the
+**same** `objects.*` groups documented above plus the `locale` it translates. `locale` is
+required, one locale per item, and published items load at boot and on every publish,
+layering **over** the file bundles (delete the item and the shipped value returns). There
+is exactly one shape; nothing converts between formats. Author with `defineTranslation`;
+exact Zod shape is `TranslationItemSchema` in
+`node_modules/@objectstack/spec/src/system/translation.zod.ts`.
+
+---
+
+## Message Interpolation
+
+### Simple Format (Default)
+
+Both shipped adapters (`FileI18nAdapter` and the in-memory fallback) substitute
+**double-brace** `{{variable}}` placeholders only — single braces pass through
+unchanged. (The schema docstring mentions `{variable}` notation, but that is not
+what the runtime implements.)
+
+```json
+{
+  "messages": {
+    "welcome": "Welcome, {{userName}}!",
+    "pagination": "Showing {{start}} to {{end}} of {{total}} items"
+  }
+}
+```
+
+### No ICU MessageFormat
+
+There is no ICU MessageFormat engine (the aspirational `messageFormat` config knob
+was removed). To pluralize, select the form in application code before calling `t()`.
+
+---
+
+## Translation Coverage
+
+### `os i18n check`
+
+The working coverage path is the CLI:
+
+```bash
+os i18n check                          # every locale found in the config
+os i18n check --locales=zh-CN          # scope to specific locales
+os i18n check --strict --threshold=95  # CI gate: locale parity + minimum coverage
+```
+
+It compares registered bundles against source metadata and reports missing keys
+per locale for every surface the extractor walks — objects and their sub-keys,
+global actions, apps, dashboards, pages, flow screens. The platform's metadata
+forms count only for a stack that ships their translations (`--include-platform`
+audits them anyway). Gaps in the source locale are errors, `--strict` promotes
+the rest, `--show-keys` lists them all; `os lint --i18n-strict` folds it in.
+
+### `os i18n extract --check` — freshness, not coverage
+
+If you commit **generated** bundles (`*.generated.ts` produced by
+`os i18n extract`), coverage is only half the gate:
+
+```bash
+os i18n extract <config> --locales=zh-CN,ja-JP --fill=default \
+  --out=src/translations --check
+```
+
+`--check` writes nothing. It re-renders what a real extract would produce and
+fails if that differs from what is committed in `--out`, naming each stale or
+missing file and printing the regenerate command.
+
+**Use both gates — they answer different questions.** `os i18n check` asks *are
+the strings translated?* (coverage: human work). `extract --check` asks *are the
+generated bundles still what the schema produces?* (freshness: machine output).
+Renaming a label or removing a spec key leaves coverage at 100% while bundles go
+stale — how the platform's own ended up translating keys the schema had deleted.
+
+It runs in the same **merge mode** as a normal extract, so it never asks for
+re-translation: an up-to-date bundle re-extracts byte-identically. Requires
+`--out` — there is nothing to compare against without it.
+
+### Diff & Coverage Schemas
+
+The spec models coverage results for tooling — the return shapes of the optional `getCoverage()` / `suggestTranslations()` (see *Service Contract* below): `TranslationCoverageResult`
+(totals, `coveragePercent`, per-group `breakdown`) and `TranslationDiffItem` —
+`key` (dot path), `status` (`missing | redundant | stale`), `locale`, optional
+`objectName`, optional `sourceHash` for stale detection, and AI-enrichment
+fields (`aiSuggested`, `aiConfidence`). Full Zod shape:
+`node_modules/@objectstack/spec/src/system/translation.zod.ts` —
+`TranslationCoverageResultSchema`, `TranslationDiffItemSchema`.
+
+---
+
+## Integration with II18nService
+
+### Service Contract
+
+`II18nService` is the kernel service (name `'i18n'`) that loads bundles and
+resolves keys with fallback:
+
+```typescript
+import type { II18nService } from '@objectstack/spec/contracts';
+```
+
+(The contract's source `.ts` is not part of the published package — only
+`src/**/*.zod.ts` ships — so there is no `node_modules` source to read.)
+
+Methods implemented by both shipped adapters (`FileI18nAdapter` from
+`@objectstack/service-i18n`, and the in-memory fallback `@objectstack/core`
+registers when no i18n plugin is present):
+
+- **`t(key, locale, params?)`** — dot-path resolution (e.g. `objects.account.label`)
+  with `{{param}}` interpolation and fallback-locale lookup
+- **`getTranslations(locale)`** — full snapshot for a locale
+- **`loadTranslations(locale, data)`** — programmatic load (deep-merge)
+- **`getLocales()`** / **`setSupportedLocales()`** / **`getDefaultLocale()`** / **`setDefaultLocale()`**
+
+The in-memory fallback additionally resolves locale codes through `resolveLocaleAmong`
+(`@objectstack/spec/system`), the one ladder `resolveBundleLocale` also runs: exact →
+case-insensitive → same platform-table language (`zh-TW` → `zh-Hant`) → base language
+`zh-CN` → `zh` → first registered variant `zh` → `zh-CN`.
+
+The contract also declares optional methods — `getFieldLabels`, `getCoverage`,
+`suggestTranslations` — that **no shipped implementation provides**. Treat them
+as extension points for a custom workbench or TMS adapter. (`getAppBundle` /
+`loadAppBundle` went with the `o.*` shape they returned.)
+
+### Registration
+
+You do not wire this plugin: `os serve` registers `I18nServicePlugin` itself whenever the
+stack config carries `translations` or `i18n` (kernel bootstrap is
+**objectstack-platform → Runtime Boot Sequence**). It self-registers
+`GET /api/v1/i18n/locales`, `/translations/:locale` and `/labels/:object/:locale`.
+
+---
+
+## Server-Composed User Text (`userMessage`)
+
+Text the server addresses to the end user — `userMessage` on an error envelope, a save /
+publish advisory or a 422 issue — comes back in the REQUEST's locale, composed where it is
+produced; a client renders it as received.
+
+- **Platform-composed** text follows one ladder over the platform locale table
+  (`PLATFORM_LOCALES`, `@objectstack/spec/system`): the locale the request names (its
+  `Accept-Language`, or `?locale` on the REST door), else the workspace default (the
+  `localization` settings' locale), else `en`. Each code is read whole and then one subtag
+  shorter at a time (`fr-FR` → `fr`, `zh-Hant-US` → `zh-Hant`), so a Traditional Chinese
+  code is never handed Simplified text.
+- **App-authored** refusal text is not on this ladder: a hook's catalogued refusal is served
+  through `hooks.<hook>.refusals.<CODE>.message` (a declared reason's through
+  `hooks.<hook>.refusals.<CODE>.reasons.<REASON>.message`) in the caller's locale, negotiated over
+  whatever locales the app's translations hold, and otherwise as declared, in the app's own
+  source language. No `en` floor is supplied for it. Under an entry declaring `params`, a
+  translation keeps its `{{ name }}` holes; the runtime fills them after picking it.
+
+---
+
+## Translation Workflow Best Practices
+
+### 1. Extract Skeletons from Metadata
+
+Scaffold ready-to-edit translation files from your stack config:
+
+```bash
+os i18n extract --locales=zh-CN --out=./src/translations
+```
+
+This writes `<locale>.objects.generated.ts` TypeScript modules (not JSON), plus a
+`<locale>.metadata-forms.generated.ts` companion unless `--no-metadata-forms` —
+the source locale is filled from schema labels, other locales follow `--fill`
+(`empty | default | todo`). `--default-locale` overrides the source locale for one run
+(`i18n.sourceLocale`, else `i18n.defaultLocale`, else `en`). `os i18n extract --help` lists
+the rest: `--filter`, `--no-merge`, `--objects-only`, `--source-hashes`, `--dry-run`, `--json`, …
+
+⚠️ **`--objects-only` is on by DEFAULT**, so extract writes only the `objects` /
+`globalActions` subtree — while `os i18n check` also demands `app`, `navigation`,
+`dashboard`, `widget`, `dataset`, `report`, `picklist`, `page`, `flow`, `position` and
+`permission` keys. Pass `--no-objects-only` to include those
+groups, or author them by hand.
+
+### 2. Translate
+
+Fill in the values manually.
+
+### 3. Register
+
+A stack registers its bundles with `defineStack({ translations: [...] })`. A **package or
+plugin shipping its own generated bundle** — the most common shape in this repo — has one
+more step: a generated module exports an objects *subtree*
+(`NonNullable<TranslationData['objects']>`), not a `TranslationData`, so it must be
+wrapped before it is a bundle at all.
+
+```typescript
+// src/translations/index.ts
+import { defineTranslationBundle } from '@objectstack/spec';
+import type { TranslationData } from '@objectstack/spec/system';
+import { withSourceFallback } from '@objectstack/platform-objects/apps';
+import { enObjects } from './en.objects.generated.js';
+import { zhCNObjects } from './zh-CN.objects.generated.js';
+import { zhCNGeneratedSourceHashes } from './zh-CN.source-hashes.generated.js';
+
+const enSource: TranslationData = { objects: enObjects };
+
+export const StorageTranslations = defineTranslationBundle({
+  en: enSource,
+  // 4th argument = the `--source-hashes` companion. Without it a leaf whose SOURCE has
+  // moved goes on serving the superseded fill under a green `os i18n check` forever.
+  // The 3rd stays undefined: it judges hand-authored `apps` / `dashboards` / `pages`,
+  // which a fully generated set does not have.
+  'zh-CN': withSourceFallback({ objects: zhCNObjects }, enSource, undefined, zhCNGeneratedSourceHashes),
+});
+```
+
+A plugin that owns its objects loads that bundle from its own `kernel:ready` hook rather
+than registering it on the stack: `i18n.loadTranslations(locale, data)` deep-merges, so
+every plugin contributes its own `objects.*` slice.
+
+---
+
+## Shipped examples
+
+`examples/app-crm` — the bundled layout (one `crm.translation.ts`, `en` + `zh-CN`).
+`examples/app-todo` — the per-locale layout (`{en,zh-CN,ja-JP}.ts` + `index.ts`).
+
+---
+
+## Common Pitfalls
+
+### ❌ The Retired `o.*` Shape
+
+Everything reads `objects.*`. The `o.*` dialect was removed. Both doors reject it, files included.
+
+```typescript
+// WRONG
+{ o: { account: { label: '客户' } } }
+
+// CORRECT (TranslationData)
+{ objects: { account: { label: '客户' } } }
+```
+
+Same rule for its sibling keys: `app` → `apps`, `nav` →
+`apps.<app>.navigation.<id>.label`, `dashboard` → `dashboards`,
+`_globalOptions` → `objects.<obj>.fields.<field>.options`, `_meta.locale` →
+top-level `locale`, and `_actions.confirmMessage` → `_actions.confirmText`.
+
+---
+
+## Verify your work
+
+```bash
+os i18n check   # coverage: which keys are missing, per locale
+os validate     # the bundle conforms to the protocol schema
+```
+
+For the build and scaffold
+gates see objectstack-platform → **Verify your work**.
+
+---
+
+## References
+
+See [references/_index.md](./references/_index.md) for the full list of Zod
+schemas (with one-line descriptions) — pointers into
+`node_modules/@objectstack/spec/src/`. Always `Read` the source for exact field
+shapes; do not rely on memory of property names.
+
+## See Also
+
+- **objectstack-data** — For understanding object and field metadata structure
+- **objectstack-ui** — For view, app, and action translations
+- **objectstack-automation** — For workflow and flow message translations
