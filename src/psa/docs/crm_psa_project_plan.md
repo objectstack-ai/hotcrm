@@ -39,9 +39,10 @@ and the project's **Percent Complete** is worked out from them.
   task stays on the plan but no longer counts.
 - **Moving a task out of Completed** sets its **Percent Complete** back to 0,
   whichever status it moves to: the 100 was written by the system, and the
-  estimate from before the task was completed is not kept. To reopen a task
-  part done, change the status and the percentage in the same save; the
-  percentage you give is kept. The project's Percent Complete follows at once.
+  estimate from before the task was completed is not restored automatically
+  (the record's history still shows it). To reopen a task part done, change
+  the status and the percentage in the same save; the percentage you give is
+  kept. The project's Percent Complete follows at once.
 
 ## The Gantt
 

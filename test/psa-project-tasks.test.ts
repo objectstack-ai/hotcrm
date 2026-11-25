@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, predicateUpdate, type Person } from './helpers/verify-stack';
 import { ProjectTask } from '../src/psa/objects/project_task.object';
 
 type Rec = Record<string, any>;
@@ -198,6 +198,29 @@ describe('project_task_rules: a task moved out of Completed gives up its 100 % (
     await update('crm_project_task', { id: rollout.id, name: 'Roll out site three (done)' }, pm.token);
     expect(Number((await task(rollout.id)).percent_complete)).toBe(100);
     expect(await percent(plan.id)).toBe(80);
+  });
+
+  it('keeps the figure of a Completed task that does not read 100 (a row from before hotcrm#2545)', async () => {
+    const legacy = await insert('crm_project', { name: `Plan Legacy ${++k}`, crm_account: account.id, kind: 'delivery' }, pm.token);
+    const t = await insert('crm_project_task', { crm_project: legacy.id, name: 'Migrate the archive', planned_hours: 10, status: 'completed' }, pm.token);
+    // Written straight to the driver: no hook today stores a Completed task below 100.
+    const ql = verify.kernel.getService<Rec>('objectql');
+    await ql.getDriverForObject('crm_project_task').update(ql.resolveObjectName('crm_project_task'), t.id, { percent_complete: 80 });
+    // That 80 was not written by the hook, so it is the owner's: a form that
+    // sends it back with the new status keeps it, and so does a status-only save.
+    await update('crm_project_task', { id: t.id, name: 'Migrate the archive', status: 'in_progress', percent_complete: 80 }, pm.token);
+    expect(Number((await task(t.id)).percent_complete)).toBe(80);
+  });
+
+  it('lets one update move several Completed tasks at once (a predicate update)', async () => {
+    const bulk = await insert('crm_project', { name: `Plan Bulk ${++k}`, crm_account: account.id, kind: 'delivery' }, pm.token);
+    const a = await insert('crm_project_task', { crm_project: bulk.id, name: 'Site one', status: 'completed' }, pm.token);
+    const b = await insert('crm_project_task', { crm_project: bulk.id, name: 'Site two', status: 'completed' }, pm.token);
+    await predicateUpdate(verify, 'crm_project_task', { status: 'in_progress' }, { id: { $in: [a.id, b.id] } }, pm.token);
+    expect((await task(a.id)).status).toBe('in_progress');
+    expect((await task(b.id)).status).toBe('in_progress');
+    // One payload serves every row on this path, so the hook does not reset the
+    // percentage there (see `project_task.hook.ts`); a by-id save does.
   });
 });
 
