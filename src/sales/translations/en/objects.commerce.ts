@@ -24,6 +24,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
     pluralLabel: 'Contracts',
     fields: {
       contract_number: { label: 'Contract Number' },
+      name: { label: 'Contract Name' },
       crm_account: { label: 'Account' },
       crm_contact: { label: 'Primary Contact' },
       crm_opportunity: { label: 'Related Opportunity' },

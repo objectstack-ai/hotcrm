@@ -37,16 +37,20 @@ export const Contract = ObjectSchema.create({
   // crm_account — a contract IS account data: reachable by whoever can reach
   // the account, editable by whoever can edit it (#549, ruling 2026-08-31).
   sharingModel: 'controlled_by_parent',
-  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
-  // Original template was '{contract_number} - {crm_account.name}'. The
-  // `crm_account.name` segment is a lookup DOT-WALK, which a formula field
-  // could not reference when this was written (ADR-0072), so it was DROPPED.
-  // Only the local `contract_number` (autonumber) remains, so no formula is
-  // needed — point `nameField` straight at it. Since 18.0.0-next.4 a formula
-  // reads one hop through a reference (changeset
-  // `24197-objectql-formula-one-hop`), so the drop is no longer forced; the
-  // title is left as it ships.
-  nameField: 'contract_number',
+  // The record title is the contract's name (hotcrm#2746), as on the quote and
+  // the order: approvals, notifications, lookup chips and the account's
+  // Contracts tab show it, so two contracts of one customer read apart. Until
+  // then the title was the autonumber `contract_number` (the retired
+  // `titleFormat` '{contract_number} - {crm_account.name}' minus its dot-walk),
+  // and every one of those places showed a bare CTR- number.
+  nameField: 'name',
+  // Explicit search targets (ADR-0061): the picker and global search match
+  // the number as well as the name. A name may repeat; the number never does.
+  searchableFields: ['name', 'contract_number'],
+  // `contract_number` leads the strip, so it stands beside the name wherever
+  // the name alone is the title: the record header, and the lookup picker,
+  // which shows the strip's first field under each candidate's name and as
+  // the column after it (measured on 18.6.0; the quote does the same).
   highlightFields: ['contract_number', 'crm_account', 'status', 'start_date', 'end_date'],
 
   fieldGroups: [
@@ -74,6 +78,29 @@ export const Contract = ObjectSchema.create({
       group: 'basic',
       format: 'CTR-{0000}',
     }),
+
+    // The contract's name, what people call it ("Annual Service 2027",
+    // "Phase 2 Implementation"): the record title (`nameField`, above).
+    // Drafted contracts take their source's name (`../flows/_contract-draft.ts`).
+    //
+    // `required` WITHOUT `storage: { notNull: true }`, unlike the other
+    // required fields here, and on purpose (AGENTS.md Metadata semantics rule
+    // 11). `required` is the write contract: a new contract, and any write
+    // that clears the name, is refused (ADR-0113). The column constraint is
+    // what an installed database cannot take: contracts saved before this
+    // field have no name, and on 18.6.0 adding a NOT NULL column to the
+    // existing table fails the contract's whole schema sync (measured on
+    // SQLite, hotcrm#2746: "Cannot add a NOT NULL column with default value
+    // NULL"), leaving contracts unwritable. Nullable, the column is added, an
+    // old contract still saves an edit that does not touch its name, and
+    // `scripts/backfill-contract-names.ts` names the old rows.
+    name: Field.text({
+      label: 'Contract Name',
+      group: 'basic',
+      required: true,
+      searchable: true,
+      maxLength: 255,
+    }),
     
     // Relationships — the master the OWD derives from. Authored as
     // master-detail so the master is not decided by declaration order against
@@ -84,6 +111,8 @@ export const Contract = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
+      // The account's Contracts tab: the name and the number side by side.
+      relatedListColumns: ['name', 'contract_number', 'status', 'start_date', 'end_date', 'contract_value'],
     }),
     
     crm_contact: Field.lookup('crm_contact', {
@@ -95,6 +124,7 @@ export const Contract = ObjectSchema.create({
       // picker); `dependsOn` is the live cascading-lookup form — scopes contacts
       // to the contract's `crm_account` (ADR-0049).
       dependsOn: ['crm_account'],
+      relatedListColumns: ['name', 'contract_number', 'crm_account', 'status', 'end_date'],
     }),
 
     crm_opportunity: Field.lookup('crm_opportunity', {
@@ -102,6 +132,7 @@ export const Contract = ObjectSchema.create({
       group: 'parties',
       // Scope opportunities to the contract's account (was dead referenceFilters).
       dependsOn: ['crm_account'],
+      relatedListColumns: ['name', 'contract_number', 'status', 'start_date', 'end_date', 'contract_value'],
     }),
     
 

@@ -30,6 +30,10 @@ export const QUOTE_ACCEPTED_NOW = P`has(record.status) && record.status == "acce
  *   `flows.quote_accepted_contract_draft.records.<node>.fields.description`.
  *   Quote names may repeat, and `crm_contract` has no field naming the quote,
  *   so the sentence is the whole provenance record.
+ * - `name`, the contract's title (hotcrm#2746), is the quote's name, else its
+ *   opportunity's (`get_opportunity`), else the quote's number: the person
+ *   completing the draft may change it, and it is never empty, since a
+ *   contract's name is required.
  */
 const DRAFT = contractDraftGraph({
   root: 'record',
@@ -37,6 +41,7 @@ const DRAFT = contractDraftGraph({
     ? double(vars.storedQuote.total_price)
     : (has(record.total_price) && record.total_price != null ? double(record.total_price) : 0.0)`,
   description: tmpl`Auto-drafted from accepted quote {{ quote }}`,
+  name: 'vars.contractName',
 }, { from: 'label_quote', to: 'find_order', firstEdge: 2, outputVariable: 'contract' });
 
 /**
@@ -107,6 +112,8 @@ export const QuoteAcceptedContractDraftFlow: Flow = {
   variables: [
     // The quote as the provenance sentence names it: `QTE-0001 - Name`.
     { name: 'quote', type: 'text', isInput: false, isOutput: false },
+    // The contract's name: the quote's, else its opportunity's (hotcrm#2746).
+    { name: 'contractName', type: 'text', isInput: false, isOutput: false },
   ],
   nodes: [
     {
@@ -119,6 +126,16 @@ export const QuoteAcceptedContractDraftFlow: Flow = {
       config: { objectName: 'crm_quote', filter: { id: cel`record.id` }, outputVariable: 'storedQuote' },
     },
     {
+      // The quote's opportunity, for the contract's name when the quote has
+      // none. A quote with no opportunity binds `null`.
+      id: 'get_opportunity', type: 'get_record', label: 'Get the Quote’s Opportunity',
+      config: {
+        objectName: 'crm_opportunity',
+        filter: { id: cel`has(record.crm_opportunity) && record.crm_opportunity != null ? string(record.crm_opportunity) : ""` },
+        outputVariable: 'quoteOpportunity',
+      },
+    },
+    {
       // Number and name. `quote_number` is the engine's autonumber, so it is
       // read off the stored row; a quote whose number is blank is named by its
       // name alone, with no dangling separator.
@@ -128,6 +145,11 @@ export const QuoteAcceptedContractDraftFlow: Flow = {
           quote: cel`vars.storedQuote != null && has(vars.storedQuote.quote_number) && vars.storedQuote.quote_number != null && vars.storedQuote.quote_number != ""
             ? string(vars.storedQuote.quote_number) + " - " + string(vars.storedQuote.name)
             : (vars.storedQuote != null && has(vars.storedQuote.name) ? string(vars.storedQuote.name) : "")`,
+          contractName: cel`vars.storedQuote != null && has(vars.storedQuote.name) && vars.storedQuote.name != null && vars.storedQuote.name != ""
+            ? string(vars.storedQuote.name)
+            : (has(vars.quoteOpportunity) && vars.quoteOpportunity != null && has(vars.quoteOpportunity.name) && vars.quoteOpportunity.name != null && vars.quoteOpportunity.name != ""
+              ? string(vars.quoteOpportunity.name)
+              : (vars.storedQuote != null && has(vars.storedQuote.quote_number) && vars.storedQuote.quote_number != null ? string(vars.storedQuote.quote_number) : ""))`,
         },
       },
     },
@@ -148,7 +170,8 @@ export const QuoteAcceptedContractDraftFlow: Flow = {
   ],
   edges: [
     { id: 'e1', source: 'start', target: 'get_quote', type: 'default' },
-    { id: 'e20', source: 'get_quote', target: 'label_quote', type: 'default' },
+    { id: 'e20', source: 'get_quote', target: 'get_opportunity', type: 'default' },
+    { id: 'e21', source: 'get_opportunity', target: 'label_quote', type: 'default' },
     // Four complementary conditionals off the read, exactly one of which
     // holds: the two splits of the draft (`contractDraftGraph`).
     ...DRAFT.edges,

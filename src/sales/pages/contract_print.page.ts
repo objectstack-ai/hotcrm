@@ -80,7 +80,7 @@ export const ContractPrintPage: Page = {
                 name: 'parties',
                 label: 'Parties',
                 columns: 2,
-                fields: ['contract_number', 'contract_type', 'crm_account', 'crm_contact', 'owner_id'],
+                fields: ['name', 'contract_number', 'contract_type', 'crm_account', 'crm_contact', 'owner_id'],
               },
             ],
           },

@@ -2,6 +2,7 @@
 
 import { cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { contractLabel } from './_contract-label';
 import { guarded } from './_guarded-iteration';
 type Flow = Automation.Flow;
 
@@ -52,7 +53,7 @@ export const ContractExpirationFlow: Flow = {
                 channels: ['inbox', 'email'],
                 topic: 'contract_expired',
                 template: 'crm.contract_expired',
-                templateData: { contract_number: cel`currentContract.contract_number` },
+                templateData: { contract: contractLabel('currentContract') },
                 actionUrl: '/crm_contract/{{currentContract.id}}',
                 // A schedule run has no organization: since 18.0.0-next.1 the
                 // notification takes its owner from this record (objectstack#23284).

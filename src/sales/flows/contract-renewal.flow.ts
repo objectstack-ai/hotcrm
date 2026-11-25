@@ -2,6 +2,7 @@
 
 import { P, cel, tmpl } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { contractLabel } from './_contract-label';
 import { guarded } from './_guarded-iteration';
 import { RENEWAL_LOOKAHEAD_DAYS } from '../objects/contract.object';
 import { LEGACY_RENEWAL_TITLE_PREFIX } from '../objects/_legacy-task-titles';
@@ -149,7 +150,7 @@ export const ContractRenewalFlow: Flow = {
                 topic: 'contract_renewal',
                 template: 'crm.contract_renewal',
                 templateData: {
-                  contract_number: cel`currentContract.contract_number`, end_date: cel`currentContract.end_date`,
+                  contract: contractLabel('currentContract'), end_date: cel`currentContract.end_date`,
                 },
                 actionUrl: '/crm_contract/{{currentContract.id}}',
                 // A schedule run has no organization: since 18.0.0-next.1 the
