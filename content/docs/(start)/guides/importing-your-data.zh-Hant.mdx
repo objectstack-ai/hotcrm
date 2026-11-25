@@ -195,11 +195,23 @@ curl -X POST "$HOTCRM/api/v1/data/import/jobs/$JOB_ID/undo" -H "Authorization: B
 ### 線索（`crm_lead_import`）
 
 `Salutation` · `First Name` · `Last Name` · `Company` · `Title` · `Industry` ·
-`Email` · `Phone` · `Mobile` · `Website` · `Lead Status` · `Lead Source` ·
+`Email` · `Phone` · `Mobile` · `Website` · `Lead Status` ·
+`Disqualification Reason` · `Need Type` · `Estimated Amount` · `Lead Source` ·
 `Annual Revenue` · `Employees` · `Lead Owner Email` · `Description`
 
 *First Name*、*Last Name*、*Company* 與 *Email* 為必填。*Lead Status* 留空時，線索
-會落為 **New**。
+會落為 **New**。有兩種狀態要求同一列再填一格，因為線索本身就這樣要求：
+
+- **Unqualified**（也可寫作 *Disqualified* 或 *Closed - Not Converted*）的線索
+  必須帶 *Disqualification Reason*。原因接受 HotCRM 的選項，也接受其他系統的用語：
+  *Bad Fit* 轉為 *Not a Fit*，*Not Interested* 轉為 *Other*，*Budget* 轉為 *No Budget*，
+  *Wrong Contact* 轉為 *Wrong Persona*，*No Response* 轉為 *Unreachable*，
+  *Lost to Competitor* 轉為 *Competitor*。沒填原因的列會被拒絕，不會被代填一個。
+- **Qualified** 的線索必須帶 *Need Type* 與 *Estimated Amount*。
+
+有兩種情況無法透過檔案匯入。被判為重複而取消資格的線索必須指明它重複的那筆記錄，
+所以先用其他狀態匯入，再到線索上標記。**Converted** 永遠不能匯入：轉換才會建立
+客戶、聯絡人與商機，所以先匯入線索再轉換。
 
 ## 值如何比對
 
