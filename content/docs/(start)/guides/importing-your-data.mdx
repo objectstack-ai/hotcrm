@@ -211,11 +211,26 @@ file. *Website* must be a full URL (`https://…`) or the row is rejected.
 ### Leads (`crm_lead_import`)
 
 `Salutation` · `First Name` · `Last Name` · `Company` · `Title` · `Industry` ·
-`Email` · `Phone` · `Mobile` · `Website` · `Lead Status` · `Lead Source` ·
+`Email` · `Phone` · `Mobile` · `Website` · `Lead Status` ·
+`Disqualification Reason` · `Need Type` · `Estimated Amount` · `Lead Source` ·
 `Annual Revenue` · `Employees` · `Lead Owner Email` · `Description`
 
 *First Name*, *Last Name*, *Company* and *Email* are required. Leave *Lead Status*
-blank and the lead lands as **New**.
+blank and the lead lands as **New**. Two statuses need a second cell on the same
+row, because the lead itself asks for it:
+
+- An **Unqualified** lead (also written *Disqualified* or *Closed - Not
+  Converted*) needs its *Disqualification Reason*. The reason takes HotCRM's
+  options or the words other systems use: *Bad Fit* becomes
+  *Not a Fit*, *Not Interested* becomes *Other*, *Budget* becomes *No Budget*, *Wrong Contact* becomes *Wrong
+  Persona*, *No Response* becomes *Unreachable*, *Lost to Competitor* becomes
+  *Competitor*. A row with no reason is refused, never given one.
+- A **Qualified** lead needs its *Need Type* and *Estimated Amount*.
+
+Two cases cannot come in through a file. A lead disqualified as a *Duplicate*
+must name the record it duplicates, so import it under another status and mark it
+on the lead afterwards. And **Converted** is never imported: conversion is what
+creates the account, contact and deal, so import the lead and convert it.
 
 ## How values are matched
 

@@ -222,6 +222,12 @@ export const jaJP: TranslationData = {
             payment_date: { label: '支払日' },
             payment_reference: { label: '支払参照番号' },
           },
+          refusals: {
+            FORBIDDEN: { message: '経費精算書を支払済みにできるのは財務のみで、承認後に行います。' },
+            VALIDATION_FAILED: { message: '支払済みにするには、経費精算書を開いてください。' },
+            RECORD_NOT_FOUND: { message: 'この経費精算書はすでに存在しません。' },
+            CONFLICT: { message: '支払済みにできるのは承認済みの経費精算書のみです。経費精算書 {{name}} は承認済みではありません。' },
+          },
         },
       },
     },

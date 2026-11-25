@@ -74,7 +74,8 @@ stateDiagram-v2
   lead at any other status keeps it.
 - **Qualified needs a reason.** Use **Qualify Lead** on the lead's page: it
   asks for the **Need Type** and the **Estimated Amount**, and both are
-  required. Setting Qualified any other way (the edit form, the status bar,
+  required. A value the lead already has is filled in for you: keep it or
+  change it. Setting Qualified any other way (the edit form, the status bar,
   an import or the API) is refused while either is empty. The amount is what
   conversion offers as the opportunity's amount.
 - **Click the status bar to move a lead.** Click a status, confirm, and the

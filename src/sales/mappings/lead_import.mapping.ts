@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { defineMapping } from '@objectstack/spec/data';
-import { INDUSTRY_SYNONYMS, LEAD_SOURCE_SYNONYMS } from './_shared';
+import { DISQUALIFICATION_REASON_SYNONYMS, INDUSTRY_SYNONYMS, LEAD_SOURCE_SYNONYMS } from './_shared';
 
 /**
  * Lead import mapping — see `account_import.mapping.ts` for the shared notes
@@ -15,6 +15,25 @@ import { INDUSTRY_SYNONYMS, LEAD_SOURCE_SYNONYMS } from './_shared';
  *   lands as New. `crm_lead`'s state machine only accepts an initial status,
  *   so importing a mid-lifecycle status is a normal write here, not a
  *   transition.
+ * - **Two statuses need their companion columns, because `crm_lead`'s own
+ *   rules refuse the row without them** (#2780). Measured through the real
+ *   import before this change: a `Disqualified` row was refused by
+ *   `disqualification_reason_required`, and 8 of the template's own 50 rows
+ *   (the `Qualified` ones) by `qualified_needs_qualification` — the mapping
+ *   produced both statuses and had no column for what either rule asks.
+ *     - Unqualified → "Disqualification Reason".
+ *     - Qualified   → "Need Type" and "Estimated Amount".
+ *   ⛔ Never default the reason (to `other`, say) when the cell is blank. The
+ *   rule exists to capture why a lead was dropped, and a default would file a
+ *   reason nobody gave; a row without one stays refused, and the file is
+ *   where it is repaired.
+ * - **Two values stay refused, by design, whatever the row carries.**
+ *   `Converted` is written by the conversion flow only
+ *   (`converted_only_by_conversion`). The reason `Duplicate` needs the
+ *   surviving record named and confirmed
+ *   (`duplicate_disqualification_requires_survivor`), which a person does on
+ *   the lead by filling Duplicate Of and setting Duplicate Status to
+ *   Confirmed, never a file.
  * - **A blank owner lands with the IMPORTER, not with auto-assignment.**
  *   `lead_intake_assignment` (the platform's assignment rule, ADR-0142 D5) only
  *   routes a lead whose `owner_id` is still empty after the beforeInsert hooks —
@@ -67,6 +86,18 @@ export const LeadImportMapping = defineMapping({
         },
       },
     },
+
+    // The three companions of a status (see the header). Each is a plain
+    // select / currency cell: HotCRM's own labels and codes are matched by the
+    // platform, the reason additionally by the synonyms in `_shared.ts`.
+    {
+      source: 'Disqualification Reason',
+      target: 'disqualification_reason',
+      transform: 'map',
+      params: { valueMap: DISQUALIFICATION_REASON_SYNONYMS },
+    },
+    { source: 'Need Type', target: 'need_type' },
+    { source: 'Estimated Amount', target: 'estimated_amount' },
 
     {
       source: 'Lead Source',

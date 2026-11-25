@@ -21,7 +21,7 @@ what its numbers count, so you can trust them or know when not to.
 | --- | --- |
 | **Planning** | Being prepared. It can already take members. |
 | **In Progress** | Running. It takes members, and their answers are recorded. |
-| **Completed** | Over. It takes no new members, so its member counts stay as they closed; a deal that names it and is won later still adds to its revenue. |
+| **Completed** | Over. It takes no new members. Members already on it can still be marked responded or removed, and their leads can still convert; the campaign's numbers follow each change. A deal that names it and is won later still adds to its revenue. |
 | **Aborted** | Called off before it finished. It takes no new members. |
 
 An **In Progress** campaign whose **End Date** has passed is set to

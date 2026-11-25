@@ -572,6 +572,7 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Redactar contrato desde el pedido',
       refusals: {
         refuse_missing: { message: 'Este pedido ya no existe o no puedes abrirlo. No se redactó ningún contrato.' },
+        refuse_cancelled: { message: 'Este pedido está cancelado. No se redactó ningún contrato.' },
         refuse_has_contract: { message: 'Este pedido ya tiene su contrato. No se redactó ningún contrato.' },
         refuse_no_contact: { message: 'Un contrato indica su contacto principal: añade primero un contacto al pedido. No se redactó ningún contrato.' },
       },
