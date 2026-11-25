@@ -12,8 +12,8 @@ import { SalesOrderQuoteExtensions } from './extensions/index.js';
 import { ProductCatalogDashboard } from './dashboards/index.js';
 import { ProductDataset } from './datasets/index.js';
 import {
-  PriceBookAddProductsFlow, QuoteAcceptedContractDraftFlow, QuoteAcceptedOrderFlow, QuoteExpirationFlow,
-  QuoteGenerationFlow, QuotePrintPresentedFlow,
+  PriceBookAddProductsFlow, QuoteAcceptedContractDraftFlow, QuoteAcceptedOrderFlow, QuoteDiscountApprovalFlow,
+  QuoteDiscountApprovalOnCreateFlow, QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow,
 } from './flows/index.js';
 import {
   OpportunityLineItem, PriceBook, PriceBookEntry, Product, Quote, QuoteLineItem,
@@ -46,6 +46,8 @@ export const revenueHooks = [
  */
 export const revenueFlows = [
   PriceBookAddProductsFlow, QuoteExpirationFlow, QuoteGenerationFlow, QuotePrintPresentedFlow,
+  // The discount approval a quote over the line is sent to when submitted (#2751).
+  QuoteDiscountApprovalFlow, QuoteDiscountApprovalOnCreateFlow,
   // An accepted quote's two automations (hotcrm#2558), each an administrator's
   // switch: the order ships on, the contract draft ships off. See each flow.
   QuoteAcceptedOrderFlow, QuoteAcceptedContractDraftFlow,

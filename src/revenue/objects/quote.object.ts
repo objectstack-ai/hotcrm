@@ -2,7 +2,7 @@
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
 import { P, cel } from '@objectstack/spec';
-import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
+import { QUOTE_DISCOUNT_APPROVAL_PERCENT, QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
 
 /**
  * Quote Object
@@ -328,7 +328,60 @@ export const Quote = ObjectSchema.create({
       max: 100,
     }),
     
-    discount_amount: Field.currency({ 
+    // ─── Discount approval (#2751, the maintainer's ruling A of 2026-11-25) ──
+    //
+    // A quote whose Discount %, or any line's, is above
+    // `QUOTE_DISCOUNT_APPROVAL_PERCENT` needs a sales manager's approval before
+    // it is presented. The three fields below are what that approval reads and
+    // writes; none of them is typed by a person.
+    //
+    // The deepest line discount, rolled up by the platform from the lines
+    // (`summaryOperations`, `max`), so the gate and the approval flow read one
+    // number off the quote instead of walking its lines. A quote with no lines
+    // holds none, which every reader takes as no line discount.
+    max_line_discount: Field.summary({
+      label: 'Highest Line Discount %',
+      group: 'pricing',
+      scale: 2,
+      readonly: true,
+      description: 'The deepest discount on any of this quote\'s line items.',
+      summaryOperations: { object: 'crm_quote_line_item', field: 'discount', function: 'max', relationshipField: 'crm_quote' },
+    }),
+
+    // Where the quote's discount approval stands: the approval node's mirror
+    // (`approvalStatusField` in `quote_discount_approval`), so `pending`,
+    // `approved` and `rejected` are written by the platform as the request
+    // opens and is decided. `not_required` is every quote that was never sent
+    // for one, including each quote at or under the line, which keeps today's
+    // path: Submit for Review, then Mark Presented, with no approver.
+    discount_approval_status: Field.select({
+      label: 'Discount Approval',
+      group: 'pricing',
+      readonly: true,
+      defaultValue: 'not_required',
+      options: [
+        { label: 'Not Required', value: 'not_required', default: true },
+        { label: 'Pending', value: 'pending', color: '#FFA500' },
+        { label: 'Approved', value: 'approved', color: '#00AA00' },
+        { label: 'Rejected', value: 'rejected', color: '#FF0000' },
+      ],
+    }),
+
+    // The deepest discount the sales manager approved, stamped by
+    // `quote_discount_approval` on approval: the larger of the quote's Discount
+    // % and its Highest Line Discount % at that moment. The approval covers
+    // that discount and no deeper one, so a quote whose discount grows after it
+    // is approved is not presented on the old approval
+    // (`discount_approval_before_presented`).
+    approved_discount: Field.percent({
+      label: 'Approved Discount %',
+      group: 'pricing',
+      scale: 2,
+      readonly: true,
+      description: 'The deepest discount a sales manager approved on this quote. A deeper one needs a new approval.',
+    }),
+
+    discount_amount: Field.currency({
       label: 'Discount Amount',
       group: 'pricing',
       readonly: true,
@@ -480,6 +533,40 @@ export const Quote = ObjectSchema.create({
       severity: 'error',
       message: `Discount cannot exceed ${QUOTE_DISCOUNT_CEILING}%`,
       condition: P`has(record.discount) && record.discount != null && record.discount > ${QUOTE_DISCOUNT_CEILING}`,
+    },
+    {
+      // #2751 (ruling A, 2026-11-25): a quote whose discount is above the
+      // approval line is not presented until a sales manager has approved it.
+      //
+      // A TRANSITION GATE, not an invariant (AGENTS.md Metadata semantics rule
+      // 7): it judges the write that takes a quote INTO `presented` (an insert
+      // at Presented included, `previous == null`), so a quote presented
+      // before this rule shipped keeps every later edit. It is the one gate on
+      // every path there — Mark Presented, Edit, the REST door and the print
+      // flow (`quote_print_presented`, which runs as the printing rep and so
+      // meets this rule the way it meets the contact gate: the PDF is filed and
+      // the move is refused). ⛔ No path restates it.
+      //
+      // "Approved" means approved for THIS deep a discount: `approved_discount`
+      // is what the manager signed, so a discount raised after the approval
+      // (the quote is unlocked again once it is decided) is refused until it
+      // is approved again. A rejected, recalled or never-sent quote holds no
+      // `approved` verdict and is refused outright.
+      //
+      // Every read is guarded (#630); an absent discount or roll-up is no
+      // discount, and an absent verdict is not an approval.
+      name: 'discount_approval_before_presented',
+      type: 'script',
+      severity: 'error',
+      message: `A discount above ${QUOTE_DISCOUNT_APPROVAL_PERCENT}% needs a sales manager's approval before the quote is presented. Submit the quote for review to send it for approval.`,
+      condition: P`has(record.status) && record.status == "presented"
+        && (previous == null || !has(previous.status) || previous.status != "presented")
+        && ((has(record.discount) && record.discount != null && record.discount > ${QUOTE_DISCOUNT_APPROVAL_PERCENT})
+          || (has(record.max_line_discount) && record.max_line_discount != null && record.max_line_discount > ${QUOTE_DISCOUNT_APPROVAL_PERCENT}))
+        && !(has(record.discount_approval_status) && record.discount_approval_status == "approved"
+          && has(record.approved_discount) && record.approved_discount != null
+          && (!has(record.discount) || record.discount == null || record.discount <= record.approved_discount)
+          && (!has(record.max_line_discount) || record.max_line_discount == null || record.max_line_discount <= record.approved_discount))`,
     },
     {
       // #575 B4. `crm_quote` had a full lifecycle vocabulary and no transition

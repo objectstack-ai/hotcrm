@@ -78,14 +78,8 @@ export const HIGH_VALUE_DEAL_AMOUNT = 500_000;
  * agrees: the deepest discount HotCRM seeds anywhere is 20%
  * (`src/<pkg>/data/*.seed.ts`).
  *
- * ⛔ There is deliberately no SOFT ceiling constant beside it. A soft tier has
- * exactly one possible consumer — discount-triggered approval routing — which
- * does not exist yet, and ⚠️ a `severity: 'warning'` script validation is
- * admitted by this platform with *no observable surface at all*: no warning on
- * the result, nothing in the envelope. Declaring the number now would add a
- * sixth entry to the "declared and then not applied" table in
- * `test/win-loss-capture.test.ts`. The soft tier returns with the routing that
- * gives it a job.
+ * The SOFT line beside it is {@link QUOTE_DISCOUNT_APPROVAL_PERCENT}: below the
+ * ceiling, a discount above that line is not refused but reviewed (#2751).
  *
  * ### Why this is a validation rule and not `Field.percent({ max })`
  *
@@ -99,6 +93,25 @@ export const HIGH_VALUE_DEAL_AMOUNT = 500_000;
  * the rules.
  */
 export const QUOTE_DISCOUNT_CEILING = 60;
+
+/**
+ * The discount above which a quote needs a sales manager's approval before it
+ * is presented, in percent (#2751, the maintainer's ruling of 2026-11-25 on
+ * option A: 30, the soft tier #599 suggested beside the 60 hard ceiling).
+ *
+ * Read against the quote's own Discount % AND each of its lines' (the deepest
+ * line is the quote's `max_line_discount` roll-up): either one above the line
+ * sends the quote to `quote_discount_approval` when it is submitted for
+ * review, and `discount_approval_before_presented` refuses to present it
+ * until a manager has approved that deep a discount. A discount AT the line
+ * needs no approval — the comparison is `>` everywhere, as the ruling words
+ * it ("above 30 %").
+ *
+ * The two numbers do different jobs and stay separate: above
+ * {@link QUOTE_DISCOUNT_CEILING} nothing can approve a quote, between the two
+ * a manager decides.
+ */
+export const QUOTE_DISCOUNT_APPROVAL_PERCENT = 30;
 
 /**
  * Expense amount at which an expense also needs a finance controller's
