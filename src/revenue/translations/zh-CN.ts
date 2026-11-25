@@ -253,8 +253,8 @@ export const zhCN: TranslationData = {
         mark_quote_presented: { label: '标记为已提交', successMessage: '报价单 {{ record.name }} 已标记为已提交。' },
         accept_quote: {
           label: '接受',
-          confirmText: '接受此报价？报价将被冻结，其商机关闭为赢单，并起草一份合同。',
-          successMessage: '报价单 {{ record.name }} 已接受。',
+          confirmText: '接受此报价？报价将被冻结，商机关闭为赢单，并生成一张销售订单；需要合同时可在订单上起草。若管理员开启了自动起草合同，还会同时起草一份合同。',
+          successMessage: '报价单 {{ record.name }} 已接受，已生成销售订单，可在本报价单的「订单」中查看。',
         },
         reject_quote: { label: '拒绝', successMessage: '报价单 {{ record.name }} 已拒绝。修订后可重新报价。' },
         revise_quote: { label: '修订', successMessage: '报价单 {{ record.name }} 已退回草稿。' },
