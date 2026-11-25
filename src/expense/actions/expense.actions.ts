@@ -145,8 +145,10 @@ const SUBMIT_FOR_REIMBURSEMENT_SOURCE = `
  * Rejected one with no report can only be left from the per-expense approval
  * this card retired: it is set back to Draft and reported like the rest, so
  * an expense stranded by the upgrade reaches a report without a hand edit
- * (the upgrade note in the changeset). Any problem refuses the whole
- * selection before anything is written, naming each expense.
+ * (the upgrade note in the changeset). Any problem with the selected expenses
+ * refuses the whole selection before anything is written, naming each
+ * expense. The one exception is a report its own rules refuse, below: that
+ * refusal comes only once the reports are written.
  *
  * **A report its own rules refuse.** A rule on the report may refuse its
  * submission: Project Delivery contributes three for a Closed, Cancelled or
