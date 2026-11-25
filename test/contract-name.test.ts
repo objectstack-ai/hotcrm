@@ -117,17 +117,24 @@ describe('on the booted stack', () => {
     });
   }, 180_000);
 
-  it('a contract without a name is refused, on that field', async () => {
-    const err = await refusal(verify.hooks.run('crm_contract', 'insert', contractDoc(await parties()), { as: admin }));
+  it('a contract without a name is refused, on that field, at the engine and over REST', async () => {
+    const p = await parties();
+    const err = await refusal(verify.hooks.run('crm_contract', 'insert', contractDoc(p), { as: admin }));
     expect(err, 'a nameless contract was saved').not.toBeNull();
-    expect(err).toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
-    expect(JSON.stringify(err!.fields ?? err!.message)).toContain('name');
+    expect(err).toMatchObject({ code: 'VALIDATION_FAILED' });
+    expect((err!.fields as Rec[]).map((f) => f.field)).toContain('name');
+    const res = await verify.apiAs(admin, 'POST', '/data/crm_contract', contractDoc(p));
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as Rec;
+    expect(body.code ?? body.error?.code).toBe('VALIDATION_FAILED');
+    expect(JSON.stringify(body)).toContain('Contract Name');
   });
 
   it('clearing a contract\'s name is refused, and the name is kept', async () => {
     const c = await verify.hooks.run('crm_contract', 'insert', contractDoc(await parties(), { name: 'Keep Me' }), { as: admin });
     const err = await refusal(verify.hooks.run('crm_contract', 'update', { id: c.id, name: null }, { as: admin }));
-    expect(err).toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
+    expect(err).toMatchObject({ code: 'VALIDATION_FAILED' });
+    expect((err!.fields as Rec[]).map((f) => f.field)).toContain('name');
     expect((await row('crm_contract', c.id)).name).toBe('Keep Me');
   });
 
