@@ -421,6 +421,16 @@ describe('page component references resolve', () => {
     // (`buildDefaultTimeline`: `showCompleted: true`, 18.6.0); the loop below
     // holds any page that comes back.
     expect(loggingObjects.size, 'no object registers log_call / log_meeting').toBeGreaterThan(0);
+    // Non-vacuity of the page half: the walk still reaches the record pages
+    // the app authors (the quote's and the contract's shells and print
+    // pages), and none of them is on a logging object. A record page that
+    // comes back on one (a lead, case or deal page) turns this red and is
+    // then judged by the loop below.
+    expect(
+      pages.filter((p) => p.type === 'record').map((p) => p.name).sort(),
+      'the authored record pages changed — re-aim this pin',
+    ).toEqual(['contract_detail_page', 'contract_print_page', 'quote_detail_page', 'quote_print_page']);
+    expect(recordPages.map((p) => p.name), 'an authored record page is back on a logging object').toEqual([]);
 
     const showsCompleted = (c: AnyRec): boolean =>
       c.type === 'record:activity' ? c.properties?.showCompleted === true : c.properties?.feed?.showCompleted === true;

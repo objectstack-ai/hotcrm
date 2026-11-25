@@ -218,9 +218,10 @@ the cost rate unless the card is internal. No business-unit scope.
 
 Phase 2a (PR #2549), `src/psa/objects/project_task.object.ts`: `name`, `parent_task` (a tree),
 `predecessors`, `task_owner`, `status`, `is_milestone`, `planned_start`, `planned_end`,
-`planned_hours`, `percent_complete`, `actual_hours` (summary over time entries). The project
-record page (`src/psa/pages/project_detail.page.ts`) carries a Gantt filtered to the project, and
-the `project_plan` view shows every task the reader may see. The console's auto-schedule shifts
+`planned_hours`, `percent_complete`, `actual_hours` (summary over time entries). The
+`project_plan` view (`src/psa/views/project_task.view.ts`) draws every task the reader may see on
+a Gantt, with a quick filter by project; the project record page is the platform default and draws
+no Gantt (its authored page was deleted by #2740). The console's auto-schedule shifts
 successors; nothing cascades on the server (phase-0 reading P3, accepted for 2a).
 
 ### `crm_project_budget` and `crm_project_budget_line`

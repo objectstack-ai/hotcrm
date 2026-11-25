@@ -9,7 +9,8 @@ import { PROJECT_TASK_STATUS_OPTIONS } from './_psa-picklists';
  * and with how many hours (hotcrm#2545, PSA phase 2a).
  *
  * Not `crm_task`. That object is the sales activity (a call to return, an
- * email to send); this one is the delivery plan the project's Gantt draws.
+ * email to send); this one is the delivery plan the Project Plan view's Gantt
+ * draws (`../views/project_task.view.ts`).
  *
  * ## The tree and the schedule
  *

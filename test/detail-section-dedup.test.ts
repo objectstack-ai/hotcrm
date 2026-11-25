@@ -123,6 +123,13 @@ describe('record:details sections list only fields the tab renders', () => {
     // names it, so the suite is re-aimed rather than left passing over an
     // empty list by accident.
     expect(detailPages.map((p) => p.page).sort()).toEqual([]);
+    // …and the walk is not idle because the roster went missing: it reads
+    // every authored record page the app registers (the quote's and the
+    // contract's shells and print pages), none of which composes a body.
+    expect(
+      pages.filter((p) => p.type === 'record').map((p) => p.name).sort(),
+      'the authored record pages changed — re-aim this pin',
+    ).toEqual(['contract_detail_page', 'contract_print_page', 'quote_detail_page', 'quote_print_page']);
   });
 
   it('no section repeats a field the page highlights', () => {
