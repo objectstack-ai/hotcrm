@@ -173,6 +173,7 @@ const DRAFT = contractDraftGraph({
   root: 'vars.orderRow',
   value: 'has(vars.orderRow.total_price) && vars.orderRow.total_price != null ? double(vars.orderRow.total_price) : 0.0',
   description: tmpl`Drafted from order {{ order }}`,
+  name: 'vars.contractName',
 }, { from: 'label_order', to: 'link_order', firstEdge: 2, outputVariable: 'contract' });
 
 export const SalesOrderDraftContractWriteFlow: Flow = {
@@ -188,6 +189,9 @@ export const SalesOrderDraftContractWriteFlow: Flow = {
     { name: 'contractId', type: 'text', isInput: false, isOutput: true },
     // The order as the provenance sentence names it: `SO-0001 - Name`.
     { name: 'order', type: 'text', isInput: false, isOutput: false },
+    // The contract's name (hotcrm#2746): the order's, which an order created
+    // from a quote carries over from the quote.
+    { name: 'contractName', type: 'text', isInput: false, isOutput: false },
   ],
   nodes: [
     { id: 'start', type: 'start', label: 'Start' },
@@ -196,13 +200,18 @@ export const SalesOrderDraftContractWriteFlow: Flow = {
       config: { objectName: 'crm_sales_order', filter: { id: cel`orderId` }, outputVariable: 'orderRow' },
     },
     {
-      // Number and name, as the quote's draft names its quote.
+      // Number and name, as the quote's draft names its quote; and the
+      // contract's own name.
       id: 'label_order', type: 'assignment', label: 'Name the Order',
       config: {
         assignments: {
           order: cel`vars.orderRow != null && has(vars.orderRow.order_number) && vars.orderRow.order_number != null && vars.orderRow.order_number != ""
             ? string(vars.orderRow.order_number) + " - " + string(vars.orderRow.name)
             : (vars.orderRow != null && has(vars.orderRow.name) ? string(vars.orderRow.name) : "")`,
+          // The order's name, else its number: a contract's name is required.
+          contractName: cel`vars.orderRow != null && has(vars.orderRow.name) && vars.orderRow.name != null && vars.orderRow.name != ""
+            ? string(vars.orderRow.name)
+            : (vars.orderRow != null && has(vars.orderRow.order_number) && vars.orderRow.order_number != null ? string(vars.orderRow.order_number) : "")`,
         },
       },
     },

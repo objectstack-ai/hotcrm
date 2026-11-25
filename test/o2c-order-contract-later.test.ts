@@ -57,6 +57,7 @@ describe('on the booted stack', () => {
   let finance: Person;
   let rep: Person;
   let k = 0;
+  let named = 0;
 
   const insert = (object: string, doc: Rec, as: string = admin): Promise<Rec> => verify.hooks.run(object, 'insert', doc, { as });
   const update = (object: string, doc: Rec, as: string = admin): Promise<Rec> => verify.hooks.run(object, 'update', doc, { as });
@@ -81,12 +82,13 @@ describe('on the booted stack', () => {
     // Activated, with the signed copy that state requires (#2317), when the
     // admin made the account and so owns a file the admin can open; a draft
     // otherwise. The figures sum the same either way.
+    // Each contract its own name: the history names a contract by its title (hotcrm#2746).
     const contract = async (): Promise<Rec> => insert('crm_contract', {
       crm_account: account.id, crm_contact: contact.id,
       ...(as === admin
         ? { status: 'activated', signed_copy: await committedFile(verify, String(account.created_by)) }
         : { status: 'draft' }),
-      contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 50000,
+      name: `Later Contract ${++named}`, contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 50000,
     });
     return { account, order, contract };
   };
@@ -267,9 +269,10 @@ describe('on the booted stack', () => {
         expect(meta.new).toMatchObject({ crm_contract: b.id });
         expect(meta.old).toMatchObject({ crm_contract: a.id });
         // `trackHistory` on the field: the entry reads "Contract: A → B", not
-        // the generic "Updated Invoice …" line an untracked field gets.
-        const number = async (id: string): Promise<string> => String((await row('crm_contract', id)).contract_number);
-        expect(String(entry!.summary)).toBe(`Contract: ${await number(a.id)} → ${await number(b.id)}`);
+        // the generic "Updated Invoice …" line an untracked field gets. A
+        // contract is named by its title, its name since hotcrm#2746.
+        const title = async (id: string): Promise<string> => String((await row('crm_contract', id)).name);
+        expect(String(entry!.summary)).toBe(`Contract: ${await title(a.id)} → ${await title(b.id)}`);
         // The system write names the person whose order edit triggered it
         // (here the administrator who made the order), not the system.
         expect(entry!.actor_id).toBe(f.account.created_by);

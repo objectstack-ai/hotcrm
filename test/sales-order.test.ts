@@ -224,7 +224,7 @@ describe('an order on the booted stack', () => {
       ]);
       const [contract] = await verify.seed('crm_contract', [{
         crm_account: account, crm_contact: contact!.id, status: 'draft', start_date: '2030-01-01',
-        end_date: '2030-12-31', contract_term_months: 12, contract_value: 1_000, description: `Order contract ${k}`,
+        end_date: '2030-12-31', name: 'Fixture Contract', contract_term_months: 12, contract_value: 1_000, description: `Order contract ${k}`,
       }]);
       return contract!;
     };

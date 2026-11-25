@@ -57,8 +57,9 @@ across restarts and upgrades.
 
 A subscription or a project usually needs a contract; a product sale usually
 does not. **Draft Contract** on the order drafts it: a **Draft** contract typed
-*Subscription*, on a 12-month term starting today, at the order's total, with
-the order's account, contact, opportunity, owner and payment terms. Complete
+*Subscription*, on a 12-month term starting today, at the order's total, named
+as the order is, with the order's account, contact, opportunity, owner and
+payment terms. Complete
 its term, dates and type before you activate it. The order then names the
 contract under **Contract**, and you get a **Contract drafted** notice with a
 link to it.

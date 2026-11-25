@@ -37,6 +37,15 @@ stateDiagram-v2
   activated --> terminated
 ```
 
+## A contract's name
+
+Every contract has a **Contract Name**, and it is the contract's title in
+lists, pickers, approvals and notices; its **Contract Number** stands beside
+it, and a picker shows the number under each name. A contract drafted from an
+order is named as the order is, so one drafted from an accepted quote's order
+carries the quote's name. Change it to whatever the customer calls the
+agreement.
+
 ## Printing a contract and filing the signed copy
 
 **Print Contract**, on the contract and in the contract list's row menu, prints

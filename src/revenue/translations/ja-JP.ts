@@ -350,8 +350,8 @@ export const jaJP: TranslationData = {
         mark_quote_presented: { label: '提示済みにする', successMessage: '見積 {{ record.name }} を提示済みにしました。' },
         accept_quote: {
           label: '承認',
-          confirmText: 'この見積を承認しますか？見積は凍結され、商談は受注でクローズされ、契約が起案されます。',
-          successMessage: '見積 {{ record.name }} を承認しました。',
+          confirmText: 'この見積を承認しますか？見積は凍結され、商談は受注でクローズされ、注文が作成されます。契約が必要な場合は注文から作成してください。管理者が契約の自動作成を有効にしている場合は、契約も作成されます。',
+          successMessage: '見積 {{ record.name }} を承認しました。注文が作成されました。この見積の「注文」で確認できます。',
         },
         reject_quote: { label: '却下', successMessage: '見積 {{ record.name }} を却下しました。改訂して新しい提案ができます。' },
         revise_quote: { label: '改訂', successMessage: '見積 {{ record.name }} を下書きに戻しました。' },
@@ -502,6 +502,13 @@ export const jaJP: TranslationData = {
         result: {
           title: '見積を作成しました',
           description: '見積「{{ quoteName }}」を下書きとして作成しました。開いて価格を確認し、次の手続きへ進めてください。',
+          fields: {
+            quoteLink: { label: '見積' },
+          },
+        },
+        result_partial: {
+          title: '見積を作成しました（一部の明細は未コピー）',
+          description: `見積「{{ quoteName }}」を下書きとして作成しましたが、商談の製品明細のうち {{ skippedCount }} 行を見積にコピーできませんでした（{{ copiedCount }} 行はコピー済み）。見積の価格表にその製品の有効な価格がない場合、またはその行の割引が ${QUOTE_DISCOUNT_CEILING}% を超える場合、その行は拒否されます。理由はフローの実行ログに記録されています。見積を開いて、それらの明細を追加してください。`,
           fields: {
             quoteLink: { label: '見積' },
           },

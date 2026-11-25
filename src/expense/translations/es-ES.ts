@@ -44,6 +44,8 @@ export const esES: TranslationData = {
             approved: { message: 'El informe de gastos {{name}} está aprobado, así que ya no se puede cambiar. Finanzas lo marca como pagado.' },
             paid: { message: 'El informe de gastos {{name}} está pagado, así que ya no se puede cambiar.' },
             delete: { message: 'Solo se puede eliminar un informe de gastos en Borrador. El informe {{name}} ya se envió.' },
+            delete_approved: { message: 'El informe de gastos {{name}} está aprobado, así que no se puede eliminar: un informe aprobado o pagado se conserva en el registro.' },
+            delete_paid: { message: 'El informe de gastos {{name}} está pagado, así que no se puede eliminar: un informe aprobado o pagado se conserva en el registro.' },
           },
         },
       },

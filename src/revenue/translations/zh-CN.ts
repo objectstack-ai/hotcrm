@@ -253,8 +253,8 @@ export const zhCN: TranslationData = {
         mark_quote_presented: { label: '标记为已提交', successMessage: '报价单 {{ record.name }} 已标记为已提交。' },
         accept_quote: {
           label: '接受',
-          confirmText: '接受此报价？报价将被冻结，其商机关闭为赢单，并起草一份合同。',
-          successMessage: '报价单 {{ record.name }} 已接受。',
+          confirmText: '接受此报价？报价将被冻结，商机关闭为赢单，并生成一张销售订单；需要合同时可在订单上起草。若管理员开启了自动起草合同，还会同时起草一份合同。',
+          successMessage: '报价单 {{ record.name }} 已接受，已生成销售订单，可在本报价单的「订单」中查看。',
         },
         reject_quote: { label: '拒绝', successMessage: '报价单 {{ record.name }} 已拒绝。修订后可重新报价。' },
         revise_quote: { label: '修订', successMessage: '报价单 {{ record.name }} 已退回草稿。' },
@@ -502,6 +502,13 @@ export const zhCN: TranslationData = {
         result: {
           title: '报价单已创建',
           description: '报价单「{{ quoteName }}」已作为草稿创建。打开它核对价格，再继续推进。',
+          fields: {
+            quoteLink: { label: '报价单' },
+          },
+        },
+        result_partial: {
+          title: '报价单已创建，部分明细未复制',
+          description: `报价单「{{ quoteName }}」已作为草稿创建，但商机上有 {{ skippedCount }} 行产品明细未能复制到报价单（已复制 {{ copiedCount }} 行）。报价单的价格表中没有该产品的有效价格，或该行折扣超过 ${QUOTE_DISCOUNT_CEILING}% 时，这一行会被拒绝；流程运行日志记录了原因。请打开报价单，在那里补上这些明细。`,
           fields: {
             quoteLink: { label: '报价单' },
           },

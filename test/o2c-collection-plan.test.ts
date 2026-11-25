@@ -458,7 +458,7 @@ describe('who writes what (#2462: read on the master is the master-side question
     own = await insert('crm_contract', {
       crm_account: account.id, crm_contact: contact.id, status: 'activated',
       signed_copy: await committedFile(verify, String(account.created_by)),
-      contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 50000,
+      name: 'Fixture Contract', contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 50000,
     });
   }, 120_000);
 
@@ -544,7 +544,7 @@ describe('who reads and writes after the move to the account (hotcrm#2557)', () 
       return insert('crm_contract', {
         crm_account: account.id, crm_contact: contact.id, status: 'activated',
         signed_copy: await committedFile(verify, String(account.created_by)),
-        contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1000,
+        name: 'Fixture Contract', contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31', contract_value: 1000,
       });
     };
     mine = await make('Mine', rep2.id);

@@ -33,6 +33,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
     description: 'Contratos y acuerdos legales',
     fields: {
       contract_number: { label: 'Número de Contrato' },
+      name: { label: 'Nombre del Contrato' },
       crm_account: { label: 'Cuenta' },
       crm_contact: { label: 'Contacto Principal' },
       crm_opportunity: { label: 'Oportunidad Relacionada' },

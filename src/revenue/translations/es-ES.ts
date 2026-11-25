@@ -351,8 +351,9 @@ export const esES: TranslationData = {
         mark_quote_presented: { label: 'Marcar como Presentada', successMessage: 'Cotización {{ record.name }} marcada como presentada.' },
         accept_quote: {
           label: 'Aceptar',
-          confirmText: '¿Aceptar esta cotización? Queda congelada, su oportunidad se cierra como ganada y se redacta un contrato.',
-          successMessage: 'Cotización {{ record.name }} aceptada.',
+          confirmText:
+            '¿Aceptar esta cotización? Queda congelada, su oportunidad se cierra como ganada y se crea un pedido; si la venta necesita un contrato, redáctelo desde el pedido. Si un administrador activó la redacción automática de contratos, también se redacta un contrato.',
+          successMessage: 'Cotización {{ record.name }} aceptada. Se ha creado su pedido: lo encontrará en Pedidos de esta cotización.',
         },
         reject_quote: { label: 'Rechazar', successMessage: 'Cotización {{ record.name }} rechazada. Revísela para hacer una nueva oferta.' },
         revise_quote: { label: 'Revisar', successMessage: 'La cotización {{ record.name }} vuelve a Borrador.' },
@@ -503,6 +504,13 @@ export const esES: TranslationData = {
         result: {
           title: 'Cotización creada',
           description: 'La cotización «{{ quoteName }}» se creó como borrador. Ábrala para revisar el precio y continuar.',
+          fields: {
+            quoteLink: { label: 'Cotización' },
+          },
+        },
+        result_partial: {
+          title: 'Cotización creada, faltan líneas',
+          description: `La cotización «{{ quoteName }}» se creó como borrador, pero {{ skippedCount }} de las líneas de producto de la oportunidad no se pudieron copiar en ella ({{ copiedCount }} copiadas). Una línea se rechaza cuando la lista de precios de la cotización no tiene un precio activo para su producto, o cuando su descuento supera el ${QUOTE_DISCOUNT_CEILING} %; el registro de ejecución del flujo indica el motivo. Abra la cotización y añada allí esas líneas.`,
           fields: {
             quoteLink: { label: 'Cotización' },
           },

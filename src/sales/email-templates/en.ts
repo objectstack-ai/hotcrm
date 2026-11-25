@@ -44,13 +44,13 @@ export const en: EmailTemplatePack = {
   },
   'crm.contract_expired': {
     label: 'Contract Expired',
-    subject: 'Contract expired: {{contract_number}}',
-    bodyHtml: '<p>Contract {{contract_number}} reached its end date and has been marked expired.</p>',
+    subject: 'Contract expired: {{contract}}',
+    bodyHtml: '<p>Contract {{contract}} reached its end date and has been marked expired.</p>',
   },
   'crm.contract_renewal': {
     label: 'Contract Renewal Due',
-    subject: 'Contract renewal due: {{contract_number}}',
-    bodyHtml: '<p>Contract {{contract_number}} ends on {{end_date}}. Start the renewal conversation now.</p>',
+    subject: 'Contract renewal due: {{contract}}',
+    bodyHtml: '<p>Contract {{contract}} ends on {{end_date}}. Start the renewal conversation now.</p>',
   },
   'crm.deal_stalled': {
     label: 'Stalled Deal',
@@ -120,7 +120,7 @@ export const en: EmailTemplatePack = {
   // contract (#2371 row 6).
   'crm.contract_drafted': {
     label: 'Contract Drafted',
-    subject: 'Contract drafted: {{contract_number}}',
-    bodyHtml: '<p>Accepting the quote drafted contract {{contract_number}}. Its term and contract type are starting values: check them before you activate it.</p>',
+    subject: 'Contract drafted: {{contract}}',
+    bodyHtml: '<p>Accepting the quote drafted contract {{contract}}. Its term and contract type are starting values: check them before you activate it.</p>',
   },
 };

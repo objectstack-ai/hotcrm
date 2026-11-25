@@ -286,7 +286,7 @@ const contractParties = async (accountOver: Rec = {}): Promise<{ account: Rec; c
 const managerContract = async (doc: Rec, accountOver: Rec = {}): Promise<Rec> => {
   const { account, contact } = await contractParties(accountOver);
   return verify.hooks.run('crm_contract', 'insert', {
-    crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
+    name: 'Fixture Contract', crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
     billing_frequency: 'monthly', payment_terms: 'net_30', status: 'draft', ...doc,
   }, as(manager));
 };
@@ -299,7 +299,7 @@ const contractOf = async (doc: Rec, accountOver: Rec = {}): Promise<Rec> => {
   // Signed Date fill does not date it before the stamp cases below.
   const signed_copy = await committedFile(verify, manager.id);
   const [row] = await verify.seed('crm_contract', [{
-    crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
+    name: 'Fixture Contract', crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
     billing_frequency: 'monthly', payment_terms: 'net_30', owner_id: manager.id, ...doc,
     ...(doc.status === 'activated' ? { signed_copy } : {}),
   }]);

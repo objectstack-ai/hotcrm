@@ -237,7 +237,7 @@ beforeAll(async () => {
 
   const contractOwnedBy = (owner: string) => ({
     crm_account: id.account, crm_contact: id.contact, owner_id: owner, status: 'draft',
-    contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
+    name: 'Fixture Contract', contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
     contract_value: 1000,
   });
   // THE record #880 is about: the shape `quote_accepted_contract_draft` drafts — owned by

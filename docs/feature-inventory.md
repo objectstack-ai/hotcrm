@@ -114,7 +114,7 @@
 | QUO-001 | 报价对象 | 正式报价单(`crm_quote`):QTE-{0000} 自动编号,定价字段组(subtotal/discount/tax/shipping/total),条款与双地址,启用附件 | `src/revenue/objects/quote.object.ts` |
 | QUO-002 | 报价状态机 | `draft → in_review → presented → accepted/rejected/expired`;accepted/expired 终态,rejected 可回 draft 重报 | `src/revenue/objects/quote.object.ts`(validations) |
 | QUO-003 | 报价默认与冻结 | 未给失效日时默认 `quote_date + 30 天`(字段自身的 `defaultValue`,不由 hook 盖戳);accepted/expired 后除内部备注外禁改,明细行随之冻结 | `src/revenue/objects/quote.object.ts`(`expiration_date`)+ `src/revenue/objects/quote.hook.ts`(`quote_workflow`) |
-| QUO-004 | 从商机生成报价 | 屏幕流收集名称/有效期/折扣,按商机金额播种报价定价,并把早期阶段商机推进到 proposal | `src/revenue/flows/quote-generation.flow.ts` + `src/sales/actions/opportunity.actions.ts`(`generate_quote`) |
+| QUO-004 | 从商机生成报价 | 屏幕流收集名称/有效期/折扣,把商机产品明细逐行复制为报价明细(小计由明细汇总;无明细时按商机金额),并把早期阶段商机推进到 proposal | `src/revenue/flows/quote-generation.flow.ts` + `src/sales/actions/opportunity.actions.ts`(`generate_quote`) |
 | QUO-005 | 接受报价→订单;合同按需起草 | status 变 accepted 时创建 draft 订单(复制表头与全部明细,每份报价一张,`crm_sales_order.crm_quote` 指向来源报价);不再自动起草合同:订单上的 Draft Contract 起草同一份合同(12 个日历月,合同额=订单总价)并挂到订单;两条随包流程管理员可开关:建订单默认开,自动起草合同默认关(开启即恢复旧行为);以系统身份写入,销售代表也能拿到 (#2558) | `src/revenue/flows/quote-accepted-order.flow.ts`、`src/revenue/flows/quote-accepted-contract-draft.flow.ts`、`src/sales/flows/sales-order-draft-contract.flow.ts`、`src/sales/flows/_contract-draft.ts` |
 | QUO-006 | 接受报价→商机赢单 | 与起草合同相互独立的另一个 hook,以接受者本人身份:关联商机置 closed_won、补关闭日与 `win_reason='quote_accepted'`;商机被审批锁住时接受本身即被拒绝(`quote_workflow`) | `src/revenue/objects/quote.hook.ts`(`quote_on_accepted`) |
 | QUO-007 | 报价行项目与总额汇总 | 明细对象(`crm_quote_line_item`,受父控、删报价级联,行合计 = 扣除本行折扣后的金额,行项目不单独计税):重算 subtotal/discount_amount/total_price 回写报价,已结报价跳过 | `src/revenue/objects/quote_line_item.object.ts` + `.hook.ts` |
@@ -129,7 +129,7 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| CON-001 | 合同对象 | 法律协议(`crm_contract`):CTR-{0000} 编号即标题,必填客户/联系人/期限/起止日/合同额,签署与计费字段,共享随所属客户(`controlled_by_parent`),启用附件 | `src/sales/objects/contract.object.ts` |
+| CON-001 | 合同对象 | 法律协议(`crm_contract`):合同名称即标题(#2746),CTR-{0000} 编号并列显示、选择器里写在名称下方,必填名称/客户/联系人/期限/起止日/合同额,起草的合同带来源订单或报价的名称,签署与计费字段,共享随所属客户(`controlled_by_parent`),启用附件 | `src/sales/objects/contract.object.ts` |
 | CON-002 | 合同状态机 | `draft → in_approval → activated → expired/terminated`;两个终态,续约=新建合同而非复活旧行 | `src/sales/objects/contract.object.ts`(validations) |
 | CON-003 | 期限一致性校验 | 起止日与 `contract_term_months` 偏差 >1 个月即拒绝;激活后禁止缩短 `end_date`(应走终止/变更) | `src/sales/objects/contract.hook.ts`(`contract_validation`) |
 | CON-004 | 激活后置动作 | 激活的同一次写入补 `signed_date`(如未填,计费推送因此带上该日期),随后把客户升级为 customer | `src/sales/objects/contract.hook.ts`(`contract_signed_date_stamp`、`contract_on_activation`) |

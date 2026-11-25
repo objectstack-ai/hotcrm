@@ -197,16 +197,18 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // three); 89 until hotcrm#2560 added the stamp's three order refusals (an
     // order of another account, a contract other than the order's, an order
     // and a contract of two accounts), each swept once per object, so nine;
-    // 98 until hotcrm#2755 added `payment_plan_step_stamp`'s refusal of a
-    // payment naming another account's billing milestone, and 99 until
-    // `invoice_plan_step_guard`'s refusal of an invoice naming one (the same
-    // issue, from the invoice form), and 100 until the #2760 review split the
-    // payment's refusal of a milestone its invoice brings (naming the invoice,
-    // which the user chose) from one the write names.
+    // 98 until hotcrm#2755 added `invoice_plan_step_guard`'s refusal of an
+    // invoice naming another account's billing milestone; 99 until hotcrm#2761
+    // added `expense_report_rules`' two refusals of deleting an approved or a
+    // paid report, administrators included; 101 until #2760 added
+    // `payment_plan_step_stamp`'s refusal of a payment naming another
+    // account's billing milestone, and its refusal by the invoice of a
+    // milestone of another account that the invoice brings (naming the invoice,
+    // which the user chose).
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(101);
+    expect(sites).toHaveLength(103);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

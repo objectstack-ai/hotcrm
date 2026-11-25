@@ -24,12 +24,22 @@ Generate a quote from an opportunity. The quote screen asks for:
 - **Valid for (days)** — default **30**
 - **Discount %** — default **0**
 
-The system computes the math for you: subtotal = the opportunity amount,
-discount amount = subtotal × discount %, and **total = amount × (1 − discount%)**.
+The opportunity's product lines are copied onto the quote, one line item each
+(product, quantity, sales price, line discount, description). A copied line is
+priced like one you add yourself: its list price comes from the quote's price
+book. Afterwards the two sides are separate: editing a quote line does not
+change the opportunity, and the other way round.
+
+The system computes the math for you: subtotal = the sum of the copied lines
+(the opportunity amount when it has no product lines), discount amount =
+subtotal × discount %, and **total = subtotal × (1 − discount%)**.
 
 When you submit, the dialog shows **Quote Created**: the quote is saved as a
-**Draft**, and its name is a link that opens it. **Submit** on that screen just
-closes the dialog; the quote is already there either way.
+**Draft**, and its name is a link that opens it. **Done** on that screen just
+closes the dialog; the quote is already there either way. If a line could not
+be copied (its product has no active price in the quote's price book, or its
+discount is above the line ceiling), the dialog says how many are missing; the
+other lines are copied, and you add the missing ones on the quote.
 
 ## Quote status
 

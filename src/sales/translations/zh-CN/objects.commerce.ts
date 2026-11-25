@@ -33,6 +33,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
     description: '与客户签署的法律合同',
     fields: {
       contract_number: { label: '合同编号' },
+      name: { label: '合同名称' },
       crm_account: { label: '所属客户' },
       status: {
         label: '状态',

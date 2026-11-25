@@ -93,6 +93,15 @@ export interface ContractDraftSource {
   /** CEL for the contract's value: the figure the source STORES. */
   readonly value: string;
   /**
+   * CEL for the contract's name, its record title (hotcrm#2746): the source's
+   * own name, which the person completing the draft may change. Each flow
+   * computes it into a variable, since the fallbacks differ by source (the
+   * quote's name, else its opportunity's; the order's name, else its number).
+   * Never empty: `crm_contract.name` is required, and an empty one would
+   * refuse the draft.
+   */
+  readonly name: string;
+  /**
    * The contract's ONE field explaining where it came from: a text envelope
    * (`tmpl`), written in the ORGANIZATION's language (#2535) — everyone in the
    * organization reads the contract, so never the drafting person's. ⛔ Never
@@ -110,6 +119,8 @@ const present = (root: string, field: string): string =>
 /**
  * The contract document one variant writes.
  *
+ * - `name` is the source's name (`ContractDraftSource.name`), so the draft
+ *   is titled like the sale it came from, not by a bare CTR- number.
  * - `owner_id` is the source's owner; a source with none is left to the
  *   engine, which stamps an elevated run's insert with the person whose act
  *   ran it (`stampSystemInsertOwner`), as the hook wrote `ctx.user.id`.
@@ -133,6 +144,7 @@ const fieldsOf = (source: ContractDraftSource, variant: (typeof CONTRACT_DRAFT_V
   // The source has an owner — a CEL test, built outside the template below.
   const ownerSet = present(r, 'owner_id');
   return {
+    name: cel(source.name),
     contract_term_months: DRAFT_CONTRACT_DEFAULTS.contract_term_months,
     contract_type: DRAFT_CONTRACT_DEFAULTS.contract_type,
     start_date: cel(START_DATE),

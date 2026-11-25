@@ -33,6 +33,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
     description: '顧客と締結した法的な契約・合意',
     fields: {
       contract_number: { label: '契約番号' },
+      name: { label: '契約名' },
       crm_account: { label: '取引先' },
       crm_contact: { label: '主担当者' },
       crm_opportunity: { label: '関連商談' },

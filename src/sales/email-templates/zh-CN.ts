@@ -21,13 +21,13 @@ export const zhCN: EmailTemplatePack = {
   },
   'crm.contract_expired': {
     label: '合同已到期',
-    subject: '合同已到期：{{contract_number}}',
-    bodyHtml: '<p>合同 {{contract_number}} 已到达结束日期，并已标记为到期。</p>',
+    subject: '合同已到期：{{contract}}',
+    bodyHtml: '<p>合同 {{contract}} 已到达结束日期，并已标记为到期。</p>',
   },
   'crm.contract_renewal': {
     label: '合同续约提醒',
-    subject: '合同待续约：{{contract_number}}',
-    bodyHtml: '<p>合同 {{contract_number}} 将于 {{end_date}} 结束。请立即启动续约沟通。</p>',
+    subject: '合同待续约：{{contract}}',
+    bodyHtml: '<p>合同 {{contract}} 将于 {{end_date}} 结束。请立即启动续约沟通。</p>',
   },
   'crm.deal_stalled': {
     label: '商机停滞',
@@ -88,7 +88,7 @@ export const zhCN: EmailTemplatePack = {
   // contract (#2371 row 6).
   'crm.contract_drafted': {
     label: '合同已起草',
-    subject: '合同已起草：{{contract_number}}',
-    bodyHtml: '<p>接受报价单后已起草合同 {{contract_number}}。其中的期限和合同类型只是初始值，激活前请先核对。</p>',
+    subject: '合同已起草：{{contract}}',
+    bodyHtml: '<p>接受报价单后已起草合同 {{contract}}。其中的期限和合同类型只是初始值，激活前请先核对。</p>',
   },
 };

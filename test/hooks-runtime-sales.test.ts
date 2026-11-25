@@ -615,7 +615,7 @@ describe('quote_accepted_contract_draft', () => {
     const { acct, contact } = await acceptQuote();
     await expect(verify.hooks.run('crm_contract', 'insert', {
       crm_account: acct, crm_contact: contact, status: 'draft', contract_type: 'subscription',
-      contract_term_months: 12, start_date: today(), end_date: daysFromNow(365), contract_value: 1,
+      name: 'Fixture Contract', contract_term_months: 12, start_date: today(), end_date: daysFromNow(365), contract_value: 1,
     }, as(rep))).rejects.toMatchObject({ code: 'PERMISSION_DENIED' });
   });
 
@@ -766,7 +766,7 @@ describe('account_protection', () => {
       const signedCopy = await committedFile(verify, rep.id); // an activated contract carries one (#2317)
       const contract = (accountId: string, contactId: string, status: string) => ({
         status, crm_account: accountId, crm_contact: contactId, owner_id: rep.id, contract_type: 'subscription',
-        contract_value: 1_000, contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
+        contract_value: 1_000, name: 'Fixture Contract', contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
         billing_frequency: 'monthly', payment_terms: 'net_30', signed_copy: signedCopy,
       });
       const mine = await contactOf(acct.id);
@@ -1069,7 +1069,7 @@ describe('contact_integrity', () => {
     if (refs.contract) {
       await verify.seed('crm_contract', [{
         status: refs.contract, crm_account: acct.id, crm_contact: contact!.id, owner_id: rep.id, contract_type: 'subscription',
-        contract_value: 1_000, contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
+        contract_value: 1_000, name: 'Fixture Contract', contract_term_months: 12, start_date: '2026-01-01', end_date: '2026-12-31',
         billing_frequency: 'monthly', payment_terms: 'net_30', signed_copy: await committedFile(verify, rep.id), // #2317
       }]);
     }
