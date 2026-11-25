@@ -414,8 +414,13 @@ describe('page component references resolve', () => {
         .map((a) => a.objectName as string),
     );
     const recordPages = pages.filter((p) => p.type === 'record' && loggingObjects.has(p.object));
-    // Not vacuous: the lead, case and deal pages are all such pages.
-    expect(recordPages.length, 'no authored record page of a logging object was found').toBeGreaterThan(0);
+    // Not vacuous on the action half: the walk still finds the objects that
+    // log calls. No authored record page is left on any of them since #2740
+    // (the lead's and the case's went, after the deal's and the account's), so
+    // each draws the default page's timeline, which shows completed rows
+    // (`buildDefaultTimeline`: `showCompleted: true`, 18.6.0); the loop below
+    // holds any page that comes back.
+    expect(loggingObjects.size, 'no object registers log_call / log_meeting').toBeGreaterThan(0);
 
     const showsCompleted = (c: AnyRec): boolean =>
       c.type === 'record:activity' ? c.properties?.showCompleted === true : c.properties?.feed?.showCompleted === true;
@@ -426,8 +431,7 @@ describe('page component references resolve', () => {
       );
       // A slotted page that leaves the `discussion` slot alone draws the
       // default page's timeline, which shows completed rows
-      // (`buildDefaultTimeline`: `showCompleted: true`, 18.6.0). Since #2382
-      // that is the lead's, the deal's and the case's timeline.
+      // (`buildDefaultTimeline`: `showCompleted: true`, 18.6.0).
       const defaultTimeline = p.kind === 'slotted' && !('discussion' in (p.slots ?? {}));
       if (feeds.length === 0 && !defaultTimeline) bad.push(`${p.name}: no activity feed block — a logged call has nowhere to appear`);
       for (const c of feeds.filter((f) => !showsCompleted(f))) {
