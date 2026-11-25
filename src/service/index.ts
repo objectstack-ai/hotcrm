@@ -18,7 +18,6 @@ import {
 } from './flows/index.js';
 import { ArticleFeedback, Case, KnowledgeArticle } from './objects/index.js';
 import { articleFeedbackHook, caseHook, knowledgeArticleHook } from './objects/hooks.js';
-import { CaseDetailPage } from './pages/index.js';
 import {
   CasesByStatusPriorityReport, SlaPerformanceReport, CasesOpenedByDayPriorityReport,
 } from './reports/index.js';
@@ -75,9 +74,9 @@ export type HotCrmServiceCollections = Pick<ObjectStackDefinitionInput, 'data'>;
  * (ADR-0130 D4: one release artifact, N packages, one namespace).
  *
  * It owns `crm_case`, `crm_knowledge_article` and `crm_article_feedback`, and
- * every item authored against them: their hooks, views, the case detail page,
- * the seven case flows, the case and article actions, `case_metrics` and the
- * three reports over it, the Service Overview dashboard, the case-triage skill,
+ * every item authored against them: their hooks, views, the seven case flows,
+ * the case and article actions, `case_metrics` and the three reports over it,
+ * the Service Overview dashboard, the case-triage skill,
  * the four case sharing rules, the two case notification templates and the
  * case and knowledge seed rows.
  *
@@ -180,7 +179,6 @@ export const createHotCrmServiceStack = (
   apps: [ServiceApp],
   hooks: serviceHooks,
   views: [CaseViews, KnowledgeArticleViews],
-  pages: [CaseDetailPage],
   flows: serviceFlows,
   actions: [
     EscalateCaseAction, CloseCaseAction, ReopenCaseAction,

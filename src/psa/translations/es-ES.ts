@@ -623,13 +623,6 @@ export const esES: TranslationData = {
       },
     },
   },
-  pages: {
-    // The project's record page (#2545).
-    project_detail_page: {
-      label: 'Detalle del Proyecto',
-      description: 'La página de registro del proyecto: el diseño generado, con el plan de tareas del proyecto en un Gantt en la pestaña Resumen.',
-    },
-  },
   apps: {
     // This package's own app (#2316).
     crm_psa: {

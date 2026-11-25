@@ -623,13 +623,6 @@ export const jaJP: TranslationData = {
       },
     },
   },
-  pages: {
-    // The project's record page (#2545).
-    project_detail_page: {
-      label: 'プロジェクト詳細',
-      description: 'プロジェクトのレコードページ：システムが生成するレイアウトに、概要タブでタスク計画のガントチャートを加えたもの。',
-    },
-  },
   apps: {
     // This package's own app (#2316).
     crm_psa: {

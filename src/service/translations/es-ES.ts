@@ -375,15 +375,6 @@ export const esES: TranslationData = {
       },
     },
   },
-  pages: {
-    case_detail_page: {
-      label: 'Detalle de Caso',
-      description: 'La página de registro del caso: el diseño sintetizado, con el aviso de SLA incumplido en el espacio de alertas.',
-      components: {
-        case_sla_breached: { label: 'SLA incumplido' },
-      },
-    },
-  },
   flows: {
     // The escalation reason the automatic escalations store (#2494), at
     // `flows.<flow>.records.<node>.fields.<field>`.

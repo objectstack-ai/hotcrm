@@ -27,7 +27,6 @@ import {
   TimesheetApproverEditSharingRule,
 } from './sharing/index.js';
 import { PsaTranslations } from './translations/index.js';
-import { ProjectDetailPage } from './pages/project_detail.page.js';
 import {
   ProjectBudgetLineViews, ProjectBudgetViews, ProjectMemberViews, ProjectTaskViews, ProjectViews,
   RateCardViews, TimeEntryViews, TimesheetViews,
@@ -152,8 +151,6 @@ export const createHotCrmPsaStack = (
     ProjectViews, ProjectBudgetViews, ProjectBudgetLineViews, ProjectMemberViews, ProjectTaskViews, RateCardViews,
     TimesheetViews, TimeEntryViews,
   ],
-  // The project's record page: the synthesized layout plus its task Gantt.
-  pages: [ProjectDetailPage],
   actions: [SubmitTimesheetAction],
   sharingRules: psaSharingRules,
   flows: psaFlows,

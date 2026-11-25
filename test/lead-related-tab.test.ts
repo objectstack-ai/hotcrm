@@ -17,7 +17,8 @@ const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
  * groups (the Details body). So the same four facts now live on object
  * metadata, and this file pins them there:
  *
- *   - the lead page authors no related list of its own (only `alerts`);
+ *   - the lead authors no record page at all since #2740, so no related list
+ *     of its own;
  *   - each list is reached through a lookup on the child that points at the
  *     lead, and none is suppressed (`relatedList: false`);
  *   - Tasks are the open ones only (`relatedListFilter`), with their columns;
@@ -36,7 +37,7 @@ const byName = (name: string): AnyRec => {
   return obj;
 };
 const LEAD = byName('crm_lead');
-const leadPage = pages.find((p) => p.name === 'lead_detail_page') as AnyRec;
+const leadPages = pages.filter((p) => p.object === 'crm_lead');
 
 const LISTS: Array<[string, string]> = [
   ['crm_task', 'related_to_lead'],
@@ -46,11 +47,8 @@ const LISTS: Array<[string, string]> = [
 const fk = (object: string, field: string): AnyRec => byName(object).fields?.[field] ?? {};
 
 describe('the lead record lists its tasks, events and campaign memberships', () => {
-  it('authors no related list on the page: the default page derives them', () => {
-    expect(leadPage?.object).toBe('crm_lead');
-    expect(leadPage?.kind).toBe('slotted');
-    expect(Object.keys(leadPage?.slots ?? {})).toEqual(['alerts']);
-    expect(JSON.stringify(leadPage)).not.toContain('record:related_list');
+  it('authors no record page at all: the default page derives the lists (#2740)', () => {
+    expect(leadPages.map((p) => p.name)).toEqual([]);
   });
 
   it.each(LISTS)('reaches %s through %s, a lookup on the lead that is not suppressed', (object, field) => {

@@ -372,15 +372,6 @@ export const jaJP: TranslationData = {
       },
     },
   },
-  pages: {
-    case_detail_page: {
-      label: 'ケース詳細',
-      description: 'ケースのレコードページ：プラットフォームが合成する標準レイアウト。アラート枠に SLA 違反の警告を表示します。',
-      components: {
-        case_sla_breached: { label: 'SLA違反' },
-      },
-    },
-  },
   flows: {
     // The escalation reason the automatic escalations store (#2494), at
     // `flows.<flow>.records.<node>.fields.<field>`.

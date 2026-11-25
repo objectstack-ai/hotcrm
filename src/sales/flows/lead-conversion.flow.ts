@@ -274,7 +274,8 @@ export const LeadConversionFlow: Flow = {
       // the house rule `test/record-id-not-in-prose.test.ts` states for every
       // sentence a user reads: "the id goes in the relationship field that
       // exists to carry it, or nowhere". The link itself is on the lead's
-      // record page (`lead_detail.page.ts`), where it can be clicked.
+      // record page, in the Duplicate Management section, where it can be
+      // clicked.
       //
       // "flagged at intake" is the app's own published definition of this
       // value, not a guess about provenance: `duplicate_status`'s help text

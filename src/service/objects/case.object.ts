@@ -490,8 +490,8 @@ export const Case = ObjectSchema.create({
   // and left out the SLA due date, the agent's most time-critical fact.
   // `is_sla_violated` stays OFF the strip (#2369 row 6): the console draws a
   // boolean false as a red "× No" whatever the field means, so every case on
-  // track would wear a red pill. The breach is the alert on
-  // `case_detail.page.ts` instead.
+  // track would wear a red pill. The breach is SLA Violated in the open SLA &
+  // Priority section instead; the case's banner went with its page (#2740).
   highlightFields: ['status', 'priority', 'sla_due_date', 'owner_id', 'crm_account'],
   
   // Removed: list_views and form_views belong in UI configuration, not object definition

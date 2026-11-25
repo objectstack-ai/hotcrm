@@ -510,14 +510,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '客户工作台',
       description: '面向销售团队的精选客户列表：仅提供快捷筛选，不含视图管理。',
     },
-    lead_detail_page: {
-      label: '线索详情',
-      description: '线索记录页：平台合成的默认布局，告警槽位中是重复线索提示。',
-      components: {
-        lead_duplicate_alert_confirmed: { label: '已确认重复提醒' },
-        lead_duplicate_alert_suspected: { label: '疑似重复提醒' },
-      },
-    },
     sales_home_page: {
       label: '销售主页',
       description: '销售团队主页，汇总关键指标、我的待办工作与即将到来的活动',

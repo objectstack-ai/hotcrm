@@ -202,8 +202,8 @@ export const LeadViews = defineView({
     // (#1716), the key is not resolved as a form-view name. The navigation
     // hook reads it into the SECOND argument of `onNavigate` — the slot that
     // otherwise carries the literal mode string, `r(t, d ?? 'view')` — so it
-    // named nothing and selected nothing. The record page here is rendered by
-    // `lead_detail_page` (`src/sales/pages/lead_detail.page.ts`), not by a named
+    // named nothing and selected nothing. The record page here is the
+    // platform's default record page for `crm_lead`, not a named
     // form view, and clicking a row behaved identically with the key present,
     // with it absent, and on a list that never declared it.
     navigation: {

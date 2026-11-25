@@ -12,8 +12,8 @@ import { defineView } from '@objectstack/spec/ui';
  *   • Task Tree — the same tasks indented under their summary tasks.
  *   • My Project Tasks — the tasks the reader owns that are still open.
  *
- * A single project's Gantt is on the project's record page
- * (`../pages/project_detail.page.ts`).
+ * The project's record page is the platform default and draws no Gantt
+ * (#2740): one project's plan is Project Plan with its project quick filter.
  */
 export const ProjectTaskViews = defineView({
   list: {

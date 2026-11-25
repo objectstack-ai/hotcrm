@@ -623,13 +623,6 @@ export const zhCN: TranslationData = {
       },
     },
   },
-  pages: {
-    // The project's record page (#2545).
-    project_detail_page: {
-      label: '项目详情',
-      description: '项目的记录页：使用系统生成的布局，并在概览页签中用甘特图显示项目的任务计划。',
-    },
-  },
   apps: {
     // This package's own app (#2316); the name is the maintainer's (2026-11-15).
     crm_psa: {

@@ -79,7 +79,10 @@ export const Lead = ObjectSchema.create({
     { key: 'additional',   label: 'Additional Info',    icon: 'info', collapse: 'collapsed' },
     { key: 'preferences',  label: 'Communication Preferences', icon: 'bell-off', collapse: 'collapsed' },
     { key: 'conversion',   label: 'Conversion',         icon: 'check-circle', collapse: 'collapsed' },
-    { key: 'duplicates',   label: 'Duplicate Management', icon: 'copy', collapse: 'collapsed' },
+    // Opens expanded (#2740, maintainer 2026-11-25): with the lead's record page
+    // and its two duplicate banners gone, this section is where a rep sees the
+    // verdict and the record it repeats before pressing Convert Lead.
+    { key: 'duplicates',   label: 'Duplicate Management', icon: 'copy', collapse: 'expanded' },
   ],
 
   fields: {

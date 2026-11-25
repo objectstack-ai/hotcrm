@@ -31,15 +31,15 @@ import { ObjectSchema } from '@objectstack/spec/data';
 import { PageSchema, ViewSchema, DashboardSchema } from '@objectstack/spec/ui';
 import { StateMachineSchema } from '@objectstack/spec/automation';
 import opportunityObj from '../src/sales/objects/opportunity.object';
-import { LeadDetailPage } from '../src/sales/pages/lead_detail.page';
+import { QuotePrintPage } from '../src/revenue/pages/quote_print.page';
 
 describe('metadata schemas', () => {
   it('opportunity object', () => {
     expect(() => ObjectSchema.create(opportunityObj)).not.toThrow();
   });
 
-  it('lead page', () => {
-    expect(() => PageSchema.parse(LeadDetailPage)).not.toThrow();
+  it('quote print page', () => {
+    expect(() => PageSchema.parse(QuotePrintPage)).not.toThrow();
   });
 });
 ```

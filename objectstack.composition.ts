@@ -169,8 +169,8 @@ import {
  * `Object.values(<module namespace>)` — what this file did for each of these
  * collections while there was one barrel per type — enumerates in ascending
  * code-unit order of the export name, not in the barrel's declaration order.
- * (Measured on the pre-move artifact: `src/pages/index.ts` declared
- * `LeadDetailPage` first and the artifact's `pages[]` still began with
+ * (Measured on the pre-move artifact: `src/pages/index.ts` declared the
+ * lead's record page first and the artifact's `pages[]` still began with
  * `account_detail_page`.) So sorting the merged entries by export name is not
  * a new ordering rule — it is the same one, applied across four namespaces
  * instead of one.
