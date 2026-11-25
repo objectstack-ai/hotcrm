@@ -284,7 +284,7 @@ async function contractInApproval(opts: { withDeal?: boolean } = {}): Promise<Re
     contract_type: 'subscription',
     start_date: '2026-09-01',
     end_date: '2027-08-31',
-    contract_term_months: 12,
+    name: 'Fixture Contract', contract_term_months: 12,
     contract_value: 250000,
     billing_frequency: 'monthly',
     payment_terms: 'net_30',

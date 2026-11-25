@@ -21,13 +21,13 @@ export const esES: EmailTemplatePack = {
   },
   'crm.contract_expired': {
     label: 'Contrato vencido',
-    subject: 'Contrato vencido: {{contract_number}}',
-    bodyHtml: '<p>El contrato {{contract_number}} alcanzó su fecha de fin y se ha marcado como vencido.</p>',
+    subject: 'Contrato vencido: {{contract}}',
+    bodyHtml: '<p>El contrato {{contract}} alcanzó su fecha de fin y se ha marcado como vencido.</p>',
   },
   'crm.contract_renewal': {
     label: 'Renovación de contrato pendiente',
-    subject: 'Renovación de contrato pendiente: {{contract_number}}',
-    bodyHtml: '<p>El contrato {{contract_number}} finaliza el {{end_date}}. Inicia ya la conversación de renovación.</p>',
+    subject: 'Renovación de contrato pendiente: {{contract}}',
+    bodyHtml: '<p>El contrato {{contract}} finaliza el {{end_date}}. Inicia ya la conversación de renovación.</p>',
   },
   'crm.deal_stalled': {
     label: 'Oportunidad estancada',
@@ -88,7 +88,7 @@ export const esES: EmailTemplatePack = {
   // contract (#2371 row 6).
   'crm.contract_drafted': {
     label: 'Contrato redactado',
-    subject: 'Contrato redactado: {{contract_number}}',
-    bodyHtml: '<p>Al aceptar la cotización se redactó el contrato {{contract_number}}. Su plazo y su tipo de contrato son valores iniciales: revíselos antes de activarlo.</p>',
+    subject: 'Contrato redactado: {{contract}}',
+    bodyHtml: '<p>Al aceptar la cotización se redactó el contrato {{contract}}. Su plazo y su tipo de contrato son valores iniciales: revíselos antes de activarlo.</p>',
   },
 };

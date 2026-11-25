@@ -17,8 +17,10 @@ import { defineMapping } from '@objectstack/spec/data';
  *   rather than adding a second one. An ERP writing through REST batch upsert
  *   uses the same key.
  * - **References resolve by their titles.** `Account` takes the account's
- *   name, `Contract` the contract number (`CTR-0001`, the contract's
- *   `nameField`), `Billing Milestone` the step's name; the import pipeline
+ *   name, `Contract` the contract number (`CTR-0001`, unique, which the
+ *   pipeline also tries, as for `Order` below) or the contract's name (its
+ *   `nameField` since hotcrm#2746; names may repeat, so the number is the
+ *   safe spelling), `Billing Milestone` the step's name; the import pipeline
  *   resolves a reference cell against the target's title, and a cell that
  *   matches nothing fails its row. `Order` (hotcrm#2560) takes the order
  *   number (`SO-0001`) or the order's External Reference: the pipeline also

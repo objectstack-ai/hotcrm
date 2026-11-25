@@ -152,6 +152,11 @@ describe('Draft Contract drafts the order\'s contract and names it on the order'
     expect(contract.description).toBe(`Drafted from order ${fixture.order.order_number} - ${fixture.order.name}`);
   });
 
+  it('is titled with the order\'s name, the accepted quote\'s (hotcrm#2746)', () => {
+    expect(fixture.order.name).toBe(fixture.quote.name);
+    expect(contract.name).toBe(fixture.order.name);
+  });
+
   it('tells the rep once, as every drafted contract does', async () => {
     await vi.waitFor(async () => {
       const notices = (await notificationsTo(verify, rep.id, 'contract_drafted'))
@@ -265,7 +270,7 @@ describe('refused, with nothing drafted', () => {
     const { order, opportunity } = await acceptedQuote();
     const [framework] = await verify.seed('crm_contract', [{
       crm_account: order.crm_account, crm_contact: order.crm_contact, contract_type: 'msa', status: 'draft', contract_value: 250_000,
-      contract_term_months: 24, start_date: today(), end_date: monthsOn(today(), 24), owner_id: rep.id,
+      name: 'Fixture Contract', contract_term_months: 24, start_date: today(), end_date: monthsOn(today(), 24), owner_id: rep.id,
     }]);
     await verify.hooks.run('crm_sales_order', 'update', { id: order.id, crm_contract: framework!.id }, { as: rep.token });
     const [stored] = await verify.rows('crm_sales_order', { id: order.id });

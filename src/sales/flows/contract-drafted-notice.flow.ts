@@ -2,6 +2,7 @@
 
 import { P, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
+import { contractLabel } from './_contract-label';
 type Flow = Automation.Flow;
 
 /**
@@ -62,7 +63,7 @@ export const ContractDraftedNoticeFlow: Flow = {
         severity: 'info',
         topic: 'contract_drafted',
         template: 'crm.contract_drafted',
-        templateData: { contract_number: cel`has(record.contract_number) ? record.contract_number : ""` },
+        templateData: { contract: contractLabel('record') },
         actionUrl: '/crm_contract/{{record.id}}',
       },
     },

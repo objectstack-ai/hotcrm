@@ -109,7 +109,7 @@ beforeAll(async () => {
 const as = (who: Person) => ({ as: who.token });
 const stored = async (object: string, id: string): Promise<Rec> => (await verify.rows(object, { id }))[0]!;
 const refusal = (p: Promise<unknown>): Promise<Rec | null> => p.then(() => null, (e: Rec) => e);
-const TERM = { start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 };
+const TERM = { start_date: '2026-01-01', end_date: '2027-01-01', name: 'Fixture Contract', contract_term_months: 12 };
 
 /** An account and contact of the rep's, written as the system. */
 const parties = async (): Promise<{ account: Rec; contact: Rec }> => {
