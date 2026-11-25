@@ -35,7 +35,7 @@ The system computes the math for you: subtotal = the sum of the copied lines
 subtotal × discount %, and **total = subtotal × (1 − discount%)**.
 
 When you submit, the dialog shows **Quote Created**: the quote is saved as a
-**Draft**, and its name is a link that opens it. **Submit** on that screen just
+**Draft**, and its name is a link that opens it. **Done** on that screen just
 closes the dialog; the quote is already there either way. If a line could not
 be copied (its product has no active price in the quote's price book, or its
 discount is above the line ceiling), the dialog says how many are missing; the
