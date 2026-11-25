@@ -103,7 +103,7 @@ describe('row 6: a case shows a breached SLA, and nothing red when on track', ()
 
   // The red banner went with the case's page (#2740, maintainer 2026-11-25):
   // a breached case shows SLA Violated ticked in the SLA & Priority section,
-  // which has no toggle, so it is on the first screen without a banner.
+  // which has no toggle, so it shows without a click or a banner.
   it('shows the flag in an always-open section', () => {
     expect((Case as AnyRec).fields.is_sla_violated.group).toBe('sla');
     const sla = ((Case as AnyRec).fieldGroups as AnyRec[]).find((g) => g.key === 'sla');

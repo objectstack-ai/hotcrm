@@ -46,7 +46,7 @@ describe('the four record pages are the default page, with nothing authored', ()
     expect(recordPagesOf(object)).toEqual([]);
   });
 
-  it('the case\'s breach stays on its first screen: SLA Violated in an always-open section, the due date in the strip', () => {
+  it('the case\'s breach stays on the page without a banner: SLA Violated in an always-open section, the due date in the strip', () => {
     const kase = verify.metadata.object('crm_case') as Rec;
     expect(field('crm_case', 'is_sla_violated').group).toBe('sla');
     const sla = ((kase.fieldGroups ?? []) as Rec[]).find((g) => g.key === 'sla');

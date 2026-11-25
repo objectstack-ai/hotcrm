@@ -38,13 +38,14 @@ const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
  * Until 2026-11-25 the record page also carried two banners, one per verdict
  * (#1628), in the `alerts` slot of an authored lead page. The maintainer
  * deleted that page with them (#2740, 「2A+ 删甘特图」) and, in the same ruling,
- * had the Duplicate Management section open expanded, so the verdict is still
- * on the first screen. The control did not move: the conversion screen warns
+ * had the Duplicate Management section open expanded, so the verdict shows
+ * without a click (it is the last section of Overview, below the fold at
+ * 1440 px: measured 2026-11-25). The control did not move: the conversion screen warns
  * on a suspected duplicate and refuses a confirmed one, pinned below on the
  * real engines.
  */
 
-describe('lead record page — the duplicate verdict on the first screen', () => {
+describe('lead record page — the duplicate verdict in an expanded section', () => {
   it('the lead authors no record page: its Details body is the default page\'s (#2740)', () => {
     expect(pages.filter((p) => p.object === 'crm_lead').map((p) => p.name)).toEqual([]);
   });
