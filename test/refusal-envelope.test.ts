@@ -200,11 +200,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // 98 until hotcrm#2755 added `payment_plan_step_stamp`'s refusal of a
     // payment naming another account's billing milestone, and 99 until
     // `invoice_plan_step_guard`'s refusal of an invoice naming one (the same
-    // issue, from the invoice form).
+    // issue, from the invoice form), and 100 until the #2760 review split the
+    // payment's refusal of a milestone its invoice brings (naming the invoice,
+    // which the user chose) from one the write names.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(100);
+    expect(sites).toHaveLength(101);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

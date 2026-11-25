@@ -29,8 +29,13 @@ invoices and payments.
 
 - **Account, order and contract.** Choosing an order or a contract fills in
   its account. On a payment, so does choosing an invoice or a billing
-  milestone, and an invoice also fills in its contract and its billing
-  milestone when the payment has none. An order or a contract of another
+  milestone, and an invoice also fills in its contract when the payment has
+  none. A save that sets a payment's invoice, when the invoice counts toward a
+  billing milestone, gives the payment that milestone, replacing one it named: the
+  milestone's **Received** counts the payments that point at it, so a payment
+  that paid the invoice must count where the invoice does. A payment keeps its
+  own milestone only when its invoice has none, or it has no invoice (an
+  advance). An order or a contract of another
   account is refused, naming it. An order under a contract brings its
   contract: one that names a different contract is refused, and so is an
   order and a contract of two different accounts. When an invoice names a milestone but no order or
@@ -71,7 +76,10 @@ invoices and payments.
   payment row per invoice; there is no allocation.
 - **A payment's invoice and billing milestone must belong to its account.**
   The payment form lists every account's invoices and milestones; one of
-  another account is refused on save, naming it.
+  another account is refused on save, naming it. An invoice of the payment's
+  account whose own milestone is another account's is refused by the invoice
+  (the milestone came from it): correct the invoice's milestone, or choose
+  another invoice.
 
 ## Importing
 

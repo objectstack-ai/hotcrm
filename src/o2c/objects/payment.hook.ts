@@ -37,6 +37,7 @@ const paymentPlanStepStamp: Hook = {
       reasons: {
         named: { message: '{{invoice}} belongs to another account. Choose an invoice of this payment\'s account.' },
         milestone_named: { message: '{{milestone}} belongs to another account. Choose a billing milestone of this payment\'s account.' },
+        invoice_milestone: { message: '{{invoice}} counts toward {{milestone}}, a billing milestone of another account. Correct the invoice\'s billing milestone, or choose another invoice.' },
       },
     },
   },
@@ -80,6 +81,10 @@ const paymentPlanStepStamp: Hook = {
     // judged.
     const accountMoved = accountId !== refId(previous.crm_account);
 
+    // The invoice that gave the payment its step in this write, when the step
+    // is not one the write itself named: a step of another account is then
+    // the invoice's fault, and the refusal names the invoice the user chose.
+    let stepFromInvoice = '';
     const invoiceId = held('crm_invoice');
     if (invoiceId && ('crm_invoice' in input || accountMoved)) {
       const invoice = await api.object('crm_invoice').findOne({
@@ -95,12 +100,21 @@ const paymentPlanStepStamp: Hook = {
           ), typeof invoice.invoice_number === 'string' ? { reason: 'named', params: { invoice: invoice.invoice_number } } : {});
         }
         const invoiceStep = refId(invoice.crm_billing_milestone);
-        if (invoiceStep && 'crm_invoice' in input) input.crm_billing_milestone = invoiceStep;
+        if (invoiceStep && 'crm_invoice' in input) {
+          if (refId(input.crm_billing_milestone) !== invoiceStep) {
+            stepFromInvoice = typeof invoice.invoice_number === 'string' && invoice.invoice_number !== ''
+              ? invoice.invoice_number
+              : 'This invoice';
+          }
+          input.crm_billing_milestone = invoiceStep;
+        }
       }
     }
 
     // The step, the invoice's copy included: an invoice of this account whose
-    // step is another account's is refused too, rather than counted there.
+    // step is another account's is refused too, rather than counted there —
+    // by the invoice when the step came from it, since the user chose the
+    // invoice and not the step.
     const stepId = held('crm_billing_milestone');
     if (stepId && accountId && ('crm_billing_milestone' in input || accountMoved)) {
       const step = await api.object('crm_billing_milestone').findOne({
@@ -108,6 +122,13 @@ const paymentPlanStepStamp: Hook = {
       });
       if (step && refId(step.crm_account) && refId(step.crm_account) !== accountId) {
         const name = typeof step.name === 'string' && step.name !== '' ? step.name : 'This billing milestone';
+        if (stepFromInvoice) {
+          throw Object.assign(refuse(
+            `${stepFromInvoice} counts toward ${name}, a billing milestone of another account. Correct the invoice's billing milestone, or choose another invoice.`,
+            'VALIDATION_FAILED',
+            400,
+          ), { reason: 'invoice_milestone', params: { invoice: stepFromInvoice, milestone: name } });
+        }
         throw Object.assign(refuse(
           `${name} belongs to another account. Choose a billing milestone of this payment's account.`,
           'VALIDATION_FAILED',

@@ -16,6 +16,7 @@ export const zhCN: TranslationData = {
           reasons: {
             named: { message: '{{invoice}}属于另一个客户。请选择这笔回款所属客户的发票。' },
             milestone_named: { message: '{{milestone}}属于另一个客户。请选择这笔回款所属客户的回款节点。' },
+            invoice_milestone: { message: '{{invoice}}计入的回款节点{{milestone}}属于另一个客户。请更正这张发票的回款节点，或选择另一张发票。' },
           },
         },
       },

@@ -16,6 +16,7 @@ export const esES: TranslationData = {
           reasons: {
             named: { message: '{{invoice}} pertenece a otra cuenta. Elija una factura de la cuenta de este cobro.' },
             milestone_named: { message: '{{milestone}} pertenece a otra cuenta. Elija un hito de facturación de la cuenta de este cobro.' },
+            invoice_milestone: { message: '{{invoice}} cuenta para {{milestone}}, un hito de facturación de otra cuenta. Corrija el hito de facturación de la factura o elija otra factura.' },
           },
         },
       },

@@ -63,6 +63,11 @@ const invoice = (contract: Rec, doc: Rec = {}): Promise<Rec> =>
   insert('crm_invoice', {
     invoice_number: `INV-T-${++k}`, crm_contract: contract.id, issue_date: '2026-09-26', amount: 60000, ...doc,
   });
+/** `payment_plan_step_stamp`'s two refusals, word for word. */
+const invoiceRefusal = (i: Rec): string =>
+  `${i.invoice_number} belongs to another account. Choose an invoice of this payment's account.`;
+const milestoneRefusal = (s: Rec): string =>
+  `${s.name} belongs to another account. Choose a billing milestone of this payment's account.`;
 
 describe('the row stamps', () => {
   it('billing_milestone_row_stamp stamps the contract\'s account', async () => {
@@ -221,9 +226,7 @@ describe('the plan figures follow invoices and payments', () => {
   it('refuses a payment naming another account\'s invoice, naming the invoice', async () => {
     const refused = insert('crm_payment', { crm_contract: acme.id, crm_invoice: inv.id, payment_date: '2026-10-26', amount: 1 });
     await expect(refused).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
-    const message = String(await refused.catch((err: Error) => err.message));
-    expect(message).toContain(String(inv.invoice_number));
-    expect(message).toContain('another account');
+    expect(String(await refused.catch((err: Rec) => err.userMessage))).toBe(invoiceRefusal(inv));
   });
 
   // What the form posts when the invoice is picked under the wrong account:
@@ -232,9 +235,7 @@ describe('the plan figures follow invoices and payments', () => {
   it('refuses it on the account alone too, with no contract named, still naming the invoice', async () => {
     const refused = insert('crm_payment', { crm_account: acme.crm_account, crm_invoice: inv.id, payment_date: '2026-10-26', amount: 1 });
     await expect(refused).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
-    const message = String(await refused.catch((err: Error) => err.message));
-    expect(message).toContain(String(inv.invoice_number));
-    expect(message).not.toContain(String(wayne.contract_number));
+    expect(String(await refused.catch((err: Rec) => err.userMessage))).toBe(invoiceRefusal(inv));
   });
 });
 
@@ -274,33 +275,81 @@ describe('a payment\'s invoice and plan step belong to its account (hotcrm#2755)
     const s = await step(wayne);
     const refused = insert('crm_payment', { crm_account: acme.crm_account, crm_billing_milestone: s.id, payment_date: '2026-10-26', amount: 1 });
     await expect(refused).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
-    const message = String(await refused.catch((err: Error) => err.message));
-    expect(message).toContain(String(s.name));
-    expect(message).toContain('another account');
-    expect(message).not.toContain(String(wayne.contract_number));
+    expect(String(await refused.catch((err: Rec) => err.userMessage))).toBe(milestoneRefusal(s));
   });
 
   it('refuses it under a contract of the payment\'s own account too', async () => {
     const s = await step(wayne);
     const refused = insert('crm_payment', { crm_contract: acme.id, crm_billing_milestone: s.id, payment_date: '2026-10-26', amount: 1 });
     await expect(refused).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
-    expect(String(await refused.catch((err: Error) => err.message))).toContain(String(s.name));
+    expect(String(await refused.catch((err: Rec) => err.userMessage))).toBe(milestoneRefusal(s));
+    expect(await verify.rows('crm_payment', { crm_billing_milestone: s.id })).toEqual([]);
+  });
+
+  // An invoice saved before its milestone moved to another account's contract:
+  // the user picks only the invoice, so the refusal names the invoice, and the
+  // milestone it brings, never the milestone alone as if the user had chosen it.
+  it('refuses an invoice whose milestone is now another account\'s, naming the invoice', async () => {
+    const s = await step(wayne);
+    const i = await invoice(wayne, { crm_billing_milestone: s.id });
+    await verify.hooks.run('crm_billing_milestone', 'update', { id: s.id, crm_contract: acme.id }, { as: admin });
+    expect((await row('crm_billing_milestone', s.id)).crm_account, 'fixture: the step moved to Acme').toBe(acme.crm_account);
+    expect((await row('crm_invoice', i.id)).crm_billing_milestone, 'fixture: the invoice still counts toward it').toBe(s.id);
+    const refused = insert('crm_payment', { crm_account: wayne.crm_account, crm_invoice: i.id, payment_date: '2026-10-26', amount: 1 });
+    await expect(refused).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
+    expect(String(await refused.catch((err: Rec) => err.userMessage))).toBe(
+      `${i.invoice_number} counts toward ${s.name}, a billing milestone of another account. Correct the invoice's billing milestone, or choose another invoice.`,
+    );
+    expect(await verify.rows('crm_payment', { crm_invoice: i.id })).toEqual([]);
+  });
+
+  // A write that names a contract and no account: the contract gives the
+  // account, so the invoice of another account brings no order to refuse.
+  it('refuses another account\'s invoice under a contract alone by the invoice, not the order it carries', async () => {
+    const [globexInvoice] = await verify.rows('crm_invoice', { invoice_number: 'INV-01024' });
+    expect(globexInvoice?.crm_sales_order, 'fixture: the seeded Globex invoice carries its order').toBeTruthy();
+    const order = await row('crm_sales_order', globexInvoice!.crm_sales_order);
+    const refused = insert('crm_payment', { crm_contract: acme.id, crm_invoice: globexInvoice!.id, payment_date: '2026-10-26', amount: 1 });
+    await expect(refused).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
+    const message = String(await refused.catch((err: Rec) => err.userMessage));
+    expect(message).toBe(invoiceRefusal(globexInvoice!));
+    expect(message).not.toContain(String(order.order_number));
   });
 
   it('refuses moving a payment to another account while it keeps its invoice or its step', async () => {
+    const s = await step(wayne);
     const i = await insert('crm_invoice', { invoice_number: `INV-MOVE-${++k}`, crm_account: wayne.crm_account, issue_date: '2026-10-01', due_date: '2026-10-31', amount: 50 });
     const paid = await insert('crm_payment', { crm_account: wayne.crm_account, crm_invoice: i.id, payment_date: '2026-10-02', amount: 5 });
     const moved = verify.hooks.run('crm_payment', 'update', { id: paid.id, crm_account: acme.crm_account }, { as: admin });
     await expect(moved).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
-    expect(String(await moved.catch((err: Error) => err.message))).toContain(String(i.invoice_number));
-    expect((await row('crm_payment', paid.id)).crm_account).toBe(wayne.crm_account);
+    expect(String(await moved.catch((err: Rec) => err.userMessage))).toBe(invoiceRefusal(i));
+    const keptPaid = await row('crm_payment', paid.id);
+    expect(keptPaid.crm_account).toBe(wayne.crm_account);
+    expect(keptPaid.crm_invoice).toBe(i.id);
+
+    // The step gave the advance Wayne's contract, which would answer first;
+    // with it taken off, the step is what ties the advance to its account.
+    const advance = await insert('crm_payment', { crm_account: wayne.crm_account, crm_billing_milestone: s.id, payment_date: '2026-10-02', amount: 7 });
+    await verify.hooks.run('crm_payment', 'update', { id: advance.id, crm_contract: null }, { as: admin });
+    expect((await row('crm_payment', advance.id)).crm_contract ?? null).toBeNull();
+    const stepMoved = verify.hooks.run('crm_payment', 'update', { id: advance.id, crm_account: acme.crm_account }, { as: admin });
+    await expect(stepMoved).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
+    expect(String(await stepMoved.catch((err: Rec) => err.userMessage))).toBe(milestoneRefusal(s));
+    const keptAdvance = await row('crm_payment', advance.id);
+    expect(keptAdvance.crm_account).toBe(wayne.crm_account);
+    expect(keptAdvance.crm_billing_milestone).toBe(s.id);
+    expect(Number((await row('crm_billing_milestone', s.id)).received_amount)).toBe(7);
   });
 
   it('control: an edit that touches neither the account, the invoice nor the step is not judged', async () => {
     const s = await step(wayne);
     const p = await insert('crm_payment', { crm_account: wayne.crm_account, crm_billing_milestone: s.id, payment_date: '2026-10-26', amount: 10 });
     await verify.hooks.run('crm_payment', 'update', { id: p.id, amount: 20 }, { as: admin });
-    expect(Number((await row('crm_payment', p.id)).amount)).toBe(20);
+    const rp = await row('crm_payment', p.id);
+    expect(Number(rp.amount)).toBe(20);
+    expect(rp.crm_account).toBe(wayne.crm_account);
+    expect(rp.crm_billing_milestone).toBe(s.id);
+    expect(Number((await row('crm_billing_milestone', s.id)).received_amount)).toBe(20);
   });
 });
 
