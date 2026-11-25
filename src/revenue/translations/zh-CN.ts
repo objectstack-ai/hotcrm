@@ -506,6 +506,13 @@ export const zhCN: TranslationData = {
             quoteLink: { label: '报价单' },
           },
         },
+        result_partial: {
+          title: '报价单已创建，部分明细未复制',
+          description: `报价单「{{ quoteName }}」已作为草稿创建，但商机上有 {{ skippedCount }} 行产品明细未能复制到报价单（已复制 {{ copiedCount }} 行）。报价单的价格表中没有该产品的有效价格，或该行折扣超过 ${QUOTE_DISCOUNT_CEILING}% 时，这一行会被拒绝；流程运行日志记录了原因。请打开报价单，在那里补上这些明细。`,
+          fields: {
+            quoteLink: { label: '报价单' },
+          },
+        },
       },
     },
   },
