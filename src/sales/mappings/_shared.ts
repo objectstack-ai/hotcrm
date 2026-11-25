@@ -98,7 +98,8 @@ export const DEPARTMENT_SYNONYMS: Record<string, string> = {
 export const DISQUALIFICATION_REASON_SYNONYMS: Record<string, string> = {
   'Bad Fit': 'not_a_fit',
   'Poor Fit': 'not_a_fit',
-  'Not Interested': 'not_a_fit',
+  // The prospect's own answer, not our fit judgement: filed as Other.
+  'Not Interested': 'other',
   'Budget': 'no_budget',
   'Wrong Contact': 'wrong_persona',
   'Not a Decision Maker': 'wrong_persona',

@@ -32,7 +32,8 @@ import { DISQUALIFICATION_REASON_SYNONYMS, INDUSTRY_SYNONYMS, LEAD_SOURCE_SYNONY
  *   (`converted_only_by_conversion`). The reason `Duplicate` needs the
  *   surviving record named and confirmed
  *   (`duplicate_disqualification_requires_survivor`), which a person does on
- *   the lead (Mark as Duplicate), never a file.
+ *   the lead by filling Duplicate Of and setting Duplicate Status to
+ *   Confirmed, never a file.
  * - **A blank owner lands with the IMPORTER, not with auto-assignment.**
  *   `lead_intake_assignment` (the platform's assignment rule, ADR-0142 D5) only
  *   routes a lead whose `owner_id` is still empty after the beforeInsert hooks —

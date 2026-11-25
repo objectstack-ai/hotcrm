@@ -99,7 +99,7 @@ describe('an unqualified lead imports with its reason (#2780)', () => {
   it.each([
     ['Not a Fit', 'not_a_fit'], ['no_budget', 'no_budget'], ['wrong persona', 'wrong_persona'], ['Unreachable', 'unreachable'],
     ['Competitor', 'competitor'], ['Other', 'other'],
-    ['Bad Fit', 'not_a_fit'], ['Not Interested', 'not_a_fit'], ['Budget', 'no_budget'], ['Wrong Contact', 'wrong_persona'],
+    ['Bad Fit', 'not_a_fit'], ['Not Interested', 'other'], ['Budget', 'no_budget'], ['Wrong Contact', 'wrong_persona'],
     ['No Response', 'unreachable'], ['Lost to Competitor', 'competitor'],
   ])('the reason "%s" lands as %s', async (reason, value) => {
     const { body, stored } = await importLead({ 'Lead Status': 'Disqualified', 'Disqualification Reason': reason });
@@ -119,6 +119,9 @@ describe('an unqualified lead imports with its reason (#2780)', () => {
   it('a reason no option matches refuses the row instead of dropping the reason', async () => {
     const { body, stored } = await importLead({ 'Lead Status': 'Disqualified', 'Disqualification Reason': 'Went quiet after the demo' });
     expect(body.created).toBe(0);
+    const [result] = (body.results ?? []) as Rec[];
+    expect(result).toMatchObject({ ok: false, field: 'disqualification_reason' });
+    expect(String(result?.error)).toContain('Went quiet after the demo');
     expect(stored).toBeUndefined();
   });
 
@@ -164,11 +167,16 @@ describe('a qualified lead imports with its need and estimate', () => {
 });
 
 /**
- * The general form of #2780: for every spelling a mapping translates, a row
- * carrying it is accepted — given only cells the SAME mapping has columns for.
- * `COMPANIONS` is the whole list of produced values that need a second cell; a
- * new rule on a target object that a mapped value trips fails here until the
- * mapping grows the column and this table names it.
+ * The general form of #2780: for every spelling a mapping's `valueMap`
+ * translates, a row carrying it is accepted — given only cells the SAME mapping
+ * has columns for. `COMPANIONS` lists the translated values that need a second
+ * cell; a new rule that a translated value trips fails here until the mapping
+ * grows the column and this table names it.
+ *
+ * Only `valueMap` spellings are walked. A value that passes through untouched
+ * and matches an option by its label or code (Lead Status `Qualified`,
+ * `Converted`) is not covered here; those are pinned by the dedicated
+ * Qualified / Converted tests above.
  */
 const COMPANIONS: Record<string, Record<string, Record<string, Record<string, string>>>> = {
   crm_lead_import: {
