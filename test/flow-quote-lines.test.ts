@@ -45,7 +45,7 @@ const screenOf = (run: Rec): Rec | undefined => run.screen ?? run.output?.screen
 /** A catalogue product; `product_standard_price` prices it in the standard book. */
 const product = (listPrice: number): Promise<Rec> =>
   verify.hooks.run('crm_product', 'insert', {
-    name: `Lines Product ${++k}`, product_code: `LN-${k}`, is_active: true, list_price: listPrice,
+    name: `Lines Product ${++k}`, is_active: true, list_price: listPrice,
   }, as(admin));
 
 /**
