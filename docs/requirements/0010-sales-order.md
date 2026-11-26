@@ -29,6 +29,7 @@ and they bound every change below.
 | 2026-11-16 21:50Z | 「销售订单和订单行 我觉得还是现在应该定清楚。是基本能力，我们要考虑通用需求而不是软件公司」 |
 | 2026-11-16 22:28Z | 「需要我定的，1 2 我同意，订单与回款、项目交付这两个还没上线的模块，要不要趁上线前换成自己的前缀。 这个如果要改，给我一个具体的清单」 |
 | 2026-11-17 00:12Z | card option adopted: 「立阶段0和1,含改动一」 on 「定一下现在开卡开到哪一步」 |
+| 2026-11-26 08:17Z | 「所有需要拍板的都做」, adopting every decision in the discussion notes on how contracts, orders, invoices and payments relate (*Note (2026-11-26)* below) |
 
 **How to read two of them.**
 
@@ -91,6 +92,10 @@ The design is [`sales-order-plan.md`](../architecture/sales-order-plan.md). In s
   ([hotcrm#2560](https://github.com/objectstack-ai/hotcrm/issues/2560)).
 - A project may name its source order, and the order page lists its projects
   ([hotcrm#2561](https://github.com/objectstack-ai/hotcrm/issues/2561)).
+- A contract has a **form** — order contract, framework contract or other — and an order
+  contract's amount is its order's; an active contract's amount and term change only through a
+  Change action (*Note (2026-11-26)* below;
+  [hotcrm#2804](https://github.com/objectstack-ai/hotcrm/issues/2804)).
 
 **Not added, each with the trigger that would bring it in:**
 
@@ -112,3 +117,25 @@ The design is [`sales-order-plan.md`](../architecture/sales-order-plan.md). In s
   switches the automatic draft back on); an invoice and a payment can be recorded against the order
   with no contract; the order page shows invoiced and received.
 - This record is closed as **Shipped** when stage 2 is on `main`.
+
+## Note (2026-11-26) — the contract's form, its amount, and Change
+
+The maintainer's 2026-11-26 08:17Z words, 「所有需要拍板的都做」, adopted every decision in the
+discussion notes on how contracts, orders, invoices and payments relate (recorded as adopted
+rather than as typed; the decisions are listed on the tracking card,
+[hotcrm#2803](https://github.com/objectstack-ai/hotcrm/issues/2803)). For this record:
+
+- **A contract form** with three values: *order contract*, *framework contract*, and *other* (no
+  amount, for example an NDA).
+- **An order contract is generated from its order, and its amount is the order amount.** It cannot
+  be edited by hand; to change it, change the order first.
+- **A framework contract** is created by hand, can carry many orders, and its amount is a ceiling.
+- **On an active contract, amount and term change only through a Change action**, with a reason
+  and a signed amendment attached.
+
+The order stays the spine; the contract stays optional. This is the requirement as decided; the
+code follows with [hotcrm#2804](https://github.com/objectstack-ai/hotcrm/issues/2804), and a
+framework contract's quota roll-up and over-limit warning with
+[hotcrm#2807](https://github.com/objectstack-ai/hotcrm/issues/2807); a formal change order and its
+approval are a proposal in [hotcrm#2809](https://github.com/objectstack-ai/hotcrm/issues/2809). The same ruling's invoice and
+payment decisions are recorded on [REQ-0007](0007-order-to-cash-module.md), *Note (2026-11-26)*.
