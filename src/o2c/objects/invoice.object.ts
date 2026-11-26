@@ -145,7 +145,9 @@ export const Invoice = ObjectSchema.create({
         { target: 'crm_sales_order', source: 'crm_sales_order' },
         { target: 'crm_contract', source: 'crm_contract' },
       ],
-      relatedListColumns: ['invoice_number', 'issue_date', 'amount', 'status'],
+      // No Invoices list on the payment plan's page either: a New there
+      // would write the hidden link (hotcrm#2806).
+      relatedList: false,
     }),
 
     issue_date: Field.date({

@@ -14,11 +14,10 @@ import { defineMapping } from '@objectstack/spec/data';
  * names the account alone.
  *
  * No `Invoice` column (the 2026-11-26 ruling, hotcrm#2806): invoices and
- * payments run in parallel, and a payment names no invoice. A file that still
- * carries the column imports with it ignored (a named mapping projects only
- * the columns below). One receipt split across two orders is two rows, and
- * each needs its own `erp_ref`, which is unique: agree the reference rule with
- * the integrator (for example the receipt's key plus the order number).
+ * payments run in parallel, and a payment names no invoice. One receipt
+ * split across two orders is two rows, and each needs its own `erp_ref`,
+ * which is unique: agree the reference rule with the integrator (for example
+ * the receipt's key plus the order number).
  */
 export const PaymentImportMapping = defineMapping({
   name: 'crm_payment_import',

@@ -106,8 +106,10 @@ export const Payment = ObjectSchema.create({
       label: 'Invoice',
       group: 'basic',
       hidden: true,
+      // No Payments list on the invoice's page either: a New there would
+      // write the hidden link (hotcrm#2806).
+      relatedList: false,
       dependsOn: ['crm_account'],
-      relatedListColumns: ['payment_number', 'payment_date', 'amount', 'method'],
     }),
 
     // The plan step the money collects; the step's Received sums it. Picking
