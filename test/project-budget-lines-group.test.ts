@@ -1,7 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { describe, it, expect } from 'vitest';
-import { isBodyTableRelationship } from '@objectstack/spec/data';
+import { fieldGroupsPlaceRelationship, isBodyTableRelationship } from '@objectstack/spec/data';
 import stack, { type AnyRec } from './helpers/composed-stack';
 
 /**
@@ -34,9 +34,12 @@ describe('crm_project_budget places its lines between the version and the totals
 
   it('the link it names is a body table', () => {
     // A group places a table only if the link it names is a body table;
-    // a side card would draw nothing there.
+    // a side card would draw nothing there. From 19.0 the group naming it is
+    // what makes it one (`placedByGroup`), as the record page reads it.
     const link = (object('crm_project_budget_line').fields as AnyRec).crm_project_budget;
-    expect(isBodyTableRelationship(link as never)).toBe(true);
+    const placedByGroup = fieldGroupsPlaceRelationship(groups, 'crm_project_budget_line', 'crm_project_budget');
+    expect(placedByGroup).toBe(true);
+    expect(isBodyTableRelationship(link as never, { placedByGroup })).toBe(true);
   });
 
   it('the group holds no fields', () => {

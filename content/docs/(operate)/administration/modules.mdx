@@ -20,7 +20,7 @@ Accounts, contacts, leads, opportunities, contracts, orders and tasks belong to 
 
 ## Switching a module off or on
 
-The switch is on the **Packages** page, the platform's full list of what is installed. On ObjectStack 18.6.0 neither the Setup menu nor Studio has an entry for that page ([objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)). **Setup → Installed Apps** opens a list of only the apps installed from the marketplace, with no control that widens it. Where HotCRM is loaded from code (the **Source** column of the Packages page reads **Code**), that list is empty.
+The switch is on the **Packages** page, the platform's full list of what is installed. From ObjectStack 19 **Setup → Packages** opens it: every package of every source, with a **Source** filter. On 18.6.0 no menu entry opened that page ([objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)), and the Setup entry it replaces listed only the apps installed from the marketplace, which is empty where HotCRM is loaded from code (the **Source** column reads **Code**).
 
 An administrator opens `/_console/apps/com.objectstack.setup/component/developer/packages`, the page titled **Packages**, opens the module, chooses **Disable** and confirms. The module's **Status** then reads **Disabled**, and **Enable** on the same panel turns it back on. The same switch is `PATCH /api/v1/packages/<id>/disable` (and `/enable`) for a script, where the id is `app.objectstack.hotcrm.<module>`: `service`, `revenue`, `marketing`, `o2c`, `expense` or `psa`.
 

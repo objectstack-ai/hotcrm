@@ -173,8 +173,12 @@ describe('the legs on a request, through approval (hotcrm#2579)', () => {
     await submit(id);
     const [, flight] = await legs(id);
     expect((await call(traveler, 'PATCH', `/data/crm_expense_request_line/${flight!.id}`, { origin: 'Hangzhou' })).status).toBe(409);
-    expect((await call(traveler, 'PATCH', `/data/crm_expense_request_line/${flight!.id}`, { booking_reference: 'HOLD-1' })).status).toBeLessThan(300);
-    expect((await legs(id))[1]).toMatchObject({ origin: 'Shanghai', booking_reference: 'HOLD-1' });
+    // While the approval is pending the platform holds every line of the request (objectstack 1e018d6, 19.0):
+    // the booking reference too, which stays writable once the request is decided.
+    const held = await call(traveler, 'PATCH', `/data/crm_expense_request_line/${flight!.id}`, { booking_reference: 'HOLD-1' });
+    expect([held.status, held.body.code]).toEqual([409, 'RECORD_LOCKED']);
+    expect((await legs(id))[1]).toMatchObject({ origin: 'Shanghai' });
+    expect((await legs(id))[1]!.booking_reference ?? null).toBeNull();
     expect((await addLeg(id, { kind: 'other', destination: 'Beijing', start_date: '2026-12-02' })).status).toBe(409);
 
     await decide(id, 'reject', manager);

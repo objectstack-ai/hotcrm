@@ -140,7 +140,7 @@ export const createHotCrmServiceStack = (
     // The same protocol as the app package (ADR-0087 handshake); bump it with
     // the template manifest's `engines.protocol` on every platform upgrade,
     // exactly as the app's is.
-    engines: { protocol: '^18.6.0' },
+    engines: { protocol: '^19.0.0-next.0' },
     // The App package this module extends.
     dependencies: { 'app.objectstack.hotcrm': '^6.6.0' },
 

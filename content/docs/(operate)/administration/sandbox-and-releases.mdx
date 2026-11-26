@@ -7,7 +7,7 @@ description: Make configuration changes safely — what release management for H
 
 Never make config changes directly in production. This page covers the safe workflow: build in a sandbox, test, package, promote to production, rollback if needed.
 
-**None of the screens named below exist.** Setup ships no *Sandbox Management*, no *Change Packages* and no *Git Sync* entry — its navigation is Overview, Apps, People & Organization, Access Control, Approvals, Configuration, Diagnostics, Integrations and Advanced, and nothing under them provisions a tenant or assembles a change set. What follows is the intended shape of release management, kept because the discipline it teaches is the right one. What HotCRM does today: its metadata is TypeScript under `src/`, reviewed in git and shipped with the app; installed packages are listed on the **Packages** page, at `/_console/apps/com.objectstack.setup/component/developer/packages`. On ObjectStack 18.6.0 no menu entry opens that page ([objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)), and **Setup → Installed Apps** lists only the apps installed from the marketplace; see [Enable and Disable Modules](/docs/administration/modules).
+**None of the screens named below exist.** Setup ships no *Sandbox Management*, no *Change Packages* and no *Git Sync* entry — its navigation is Overview, Apps, People & Organization, Access Control, Approvals, Configuration, Diagnostics, Integrations and Advanced, and nothing under them provisions a tenant or assembles a change set. What follows is the intended shape of release management, kept because the discipline it teaches is the right one. What HotCRM does today: its metadata is TypeScript under `src/`, reviewed in git and shipped with the app; installed packages are listed on the **Packages** page, at `/_console/apps/com.objectstack.setup/component/developer/packages`. From ObjectStack 19 **Setup → Packages** opens it; on 18.6.0 no menu entry did ([objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)); see [Enable and Disable Modules](/docs/administration/modules).
 
 > **Every claim below was measured, and most did not survive.** The page was checked
 > claim by claim against the app's own metadata (`src/`, `objectstack.config.ts`) and the
@@ -102,7 +102,7 @@ That artefact is real, and this is the one place the page's mental model is clos
 
 The intended flow: a *Change Packages → New* screen taking a name and description, components added by hand / by tag / automatically since the last package, then **Validate** for consistency and **Save**.
 
-There is no such screen. A package here is the platform's own unit — listed on the **Packages** page at `/_console/apps/com.objectstack.setup/component/developer/packages`, which no menu entry opens on 18.6.0 ([objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)) — and HotCRM's own metadata is packaged from source at build time, never assembled in the UI.
+There is no such screen. A package here is the platform's own unit — listed on the **Packages** page at `/_console/apps/com.objectstack.setup/component/developer/packages`, which **Setup → Packages** opens from ObjectStack 19 and no menu entry opened on 18.6.0 ([objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)) — and HotCRM's own metadata is packaged from source at build time, never assembled in the UI.
 
 ### Deploying a package
 

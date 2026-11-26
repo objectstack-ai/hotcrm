@@ -633,6 +633,10 @@ export const Contract = ObjectSchema.create({
       message:
         'This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; In Approval can go back to Draft, and Draft, In Approval or Activated can be Terminated. Expired and Terminated are final: a renewal is a new contract.',
       field: 'status',
+      // Protocol 19 asks for an entry contract (`state-machine-no-initial-states`). Every state is listed: a
+      // record (an import or an integration included) may still be created in any of them, as on 18.6.
+      // Narrowing this to the first state is a product decision of its own, not part of the upgrade.
+      initialStates: ['draft', 'in_approval', 'activated', 'expired', 'terminated'],
       transitions: {
         draft: ['in_approval', 'terminated'],
         // Approval either lands (`activated`) or sends the paperwork back.

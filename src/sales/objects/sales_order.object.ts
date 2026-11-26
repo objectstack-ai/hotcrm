@@ -390,6 +390,10 @@ export const SalesOrder = ObjectSchema.create({
       message:
         'This status change is not allowed. An order moves Draft → Confirmed → Completed; Confirmed can go back to Draft, and Draft or Confirmed can be Cancelled. Completed and Cancelled are final.',
       field: 'status',
+      // Protocol 19 asks for an entry contract (`state-machine-no-initial-states`). Every state is listed: a
+      // record (an import or an integration included) may still be created in any of them, as on 18.6.
+      // Narrowing this to the first state is a product decision of its own, not part of the upgrade.
+      initialStates: ['draft', 'confirmed', 'completed', 'cancelled'],
       transitions: {
         draft: ['confirmed', 'cancelled'],
         confirmed: ['draft', 'completed', 'cancelled'],

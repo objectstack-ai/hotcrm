@@ -22,7 +22,7 @@ HotCRM 作為一個產品發布：核心的 **Sales** 應用，加上六個模�
 
 ## 關閉或打開一個模組
 
-開關在 **Packages** 頁面上，那是平台列出全部已安裝內容的清單。在 ObjectStack 18.6.0 上，Setup 選單和 Studio 裡都沒有通往這個頁面的入口（[objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)）。**Setup → Installed Apps** 打開的清單只包含從應用市集安裝的應用，也沒有放寬篩選的控制項。HotCRM 從程式碼載入時（Packages 頁面的 **Source** 欄顯示 **Code**），那個清單是空的。
+開關在 **Packages** 頁面上，那是平台列出全部已安裝內容的清單。從 ObjectStack 19 起，**Setup → Packages** 打開的就是它：所有來源的全部套件，帶 **Source** 篩選。在 18.6.0 上沒有選單項目通往這個頁面（[objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)），它取代的那個 Setup 入口只列出從應用市集安裝的應用，HotCRM 從程式碼載入時（**Source** 欄顯示 **Code**）那個清單是空的。
 
 管理員打開 `/_console/apps/com.objectstack.setup/component/developer/packages`，即標題為 **Packages** 的頁面，打開模組，選擇 **Disable** 並確認。模組的 **Status** 隨即顯示 **Disabled**；在同一個面板上選擇 **Enable** 即重新打開。腳本可以用同一個開關：`PATCH /api/v1/packages/<id>/disable`（以及 `/enable`），id 為 `app.objectstack.hotcrm.<模組>`：`service`、`revenue`、`marketing`、`o2c`、`expense` 或 `psa`。
 

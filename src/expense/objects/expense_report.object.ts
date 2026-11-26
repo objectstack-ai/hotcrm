@@ -215,6 +215,10 @@ export const ExpenseReport = ObjectSchema.create({
       severity: 'error',
       message: 'This status change is not allowed. A report moves Draft → Submitted → Approved → Paid; a submitted report can be recalled to Draft, and a rejected one goes back to Draft to be corrected.',
       field: 'status',
+      // Protocol 19 asks for an entry contract (`state-machine-no-initial-states`). Every state is listed: a
+      // record (an import or an integration included) may still be created in any of them, as on 18.6.
+      // Narrowing this to the first state is a product decision of its own, not part of the upgrade.
+      initialStates: ['draft', 'submitted', 'approved', 'paid', 'rejected'],
       transitions: {
         draft: ['submitted'],
         submitted: ['approved', 'rejected', 'draft'],

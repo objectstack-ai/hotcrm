@@ -106,14 +106,22 @@ const lockedDeal = async (): Promise<{ deal: Rec; line: Rec; product: Rec }> => 
  */
 const settle = (): Promise<void> => new Promise((r) => setTimeout(r, 500));
 
-const sentence = (deal: Rec) =>
+/**
+ * From 19.0 the platform holds a locked master's master-detail lines itself (objectstack 1e018d6), ahead of
+ * `opportunity_line_approval_lock`, so the refusal a rep sees is the platform's: same code and status, its own
+ * wording, which names the object and never the deal's id.
+ */
+/** `opportunity_line_item_freeze`'s own sentence, which its shipped body still throws when run on its own. */
+const hookSentence = (deal: Rec) =>
   `Opportunity ${deal.name} is locked while an approval is in progress, so its line items cannot be added, changed or removed until that approval is complete.`;
 
-/** The deal freeze's envelope, its wording, and the deal named by its name, never its id. */
+const sentence = /^This Opportunity is locked while an approval is in progress, and cannot be edited until that approval is complete$/;
+
+/** The deal freeze's envelope, its wording, and never the deal's id. */
 const expectHeld = (err: Rec | null, deal: Rec): void => {
   expect(err, 'the line write went through on a deal its approval locks').toBeTruthy();
-  expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
-  expect(String(err!.message)).toContain(sentence(deal));
+  expect([err!.code, err!.status ?? err!.statusCode]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
+  expect(String(err!.userMessage ?? err!.message).replace(/^RECORD_LOCKED: /, '')).toMatch(sentence);
   expect(String(err!.message)).not.toContain(deal.id);
 };
 
@@ -184,7 +192,8 @@ describe('a line write on a deal its approval locks is refused, and nothing is s
     expect({ status: res.status, code: body.code }, JSON.stringify(body)).toEqual({
       status: REFUSAL_CODES.locked.status, code: REFUSAL_CODES.locked.code,
     });
-    expect(body.userMessage).toBe(sentence(deal));
+    expect(body.userMessage).toMatch(sentence);
+    expect(String(body.userMessage)).not.toContain(deal.id);
     expect(await linesOf(deal.id)).toHaveLength(1);
     await expectAmountIsLines(deal.id, LARGE_DEAL_AMOUNT);
   });
@@ -196,7 +205,7 @@ describe('a line write on a deal its approval locks is refused, and nothing is s
     }));
     expect(err?.name).toBe('SandboxError');
     expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
-    expect(String(err!.userMessage)).toBe(sentence(deal));
+    expect(String(err!.userMessage)).toBe(hookSentence(deal));
   });
 
   it('holds while a status-change request is open, the other approval that locks the deal', async () => {
