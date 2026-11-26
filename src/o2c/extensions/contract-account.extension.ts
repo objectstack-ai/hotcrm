@@ -141,7 +141,9 @@ const sumOf = (...fields: string[]): EvaluatedExpression => expression(fields.ma
  * hidden one onto the account, and that write computes the sum.
  */
 const COUNTED_ORDER = { status: { $in: ['confirmed', 'completed'] } };
-const COUNTED_CONTRACT = { status: { $in: ['activated', 'expired'] }, order_count: 0 };
+// `order_count` empty reads as none: a contract stored before the upgrade
+// holds no count until `os migrate summary-nulls` fills it (the changeset).
+const COUNTED_CONTRACT = { status: { $in: ['activated', 'expired'] }, $or: [{ order_count: 0 }, { order_count: null }] };
 
 const accountLeg = (label: string, object: 'crm_sales_order' | 'crm_contract', field: string, filter: Record<string, unknown>) =>
   Field.summary({
