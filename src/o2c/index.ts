@@ -5,7 +5,7 @@ import { defineStack, type ObjectStackDefinition, type ObjectStackDefinitionInpu
 import { O2cApp } from './apps/index.js';
 import { CrmO2cManual } from './books/index.js';
 import { ContractAccountExtensions, SalesOrderExtensions } from './extensions/index.js';
-import { SalesOrderContractFillFlow } from './flows/index.js';
+import { SalesOrderAmountPlanStepFlow, SalesOrderConfirmedPlanStepFlow, SalesOrderContractFillFlow } from './flows/index.js';
 import { InvoiceImportMapping, PaymentImportMapping } from './mappings/index.js';
 import { BillingMilestone, Invoice, Payment } from './objects/index.js';
 import { billingMilestoneHook, invoiceHook, paymentHook } from './objects/hooks.js';
@@ -22,11 +22,13 @@ export const o2cHooks = [billingMilestoneHook, invoiceHook, paymentHook].flat();
 
 /**
  * This package's flows — see {@link o2cHooks}: the one that passes an order's
- * contract, set after the rows were saved, to the order's rows (hotcrm#2724).
- * It starts on the app package's `crm_sales_order`, along this manifest's
- * dependency on it; see the flow's own note.
+ * contract, set after the rows were saved, to the order's rows (hotcrm#2724),
+ * and the two that give a confirmed order a payment plan step and keep a lone
+ * step at the order's total (hotcrm#2806). Each starts on the app package's
+ * `crm_sales_order`, along this manifest's dependency on it; see each flow's
+ * own note.
  */
-export const o2cFlows = [SalesOrderContractFillFlow];
+export const o2cFlows = [SalesOrderContractFillFlow, SalesOrderConfirmedPlanStepFlow, SalesOrderAmountPlanStepFlow];
 
 /**
  * `app.objectstack.hotcrm.o2c` — the ORDER TO CASH module (「订单与回款」) of

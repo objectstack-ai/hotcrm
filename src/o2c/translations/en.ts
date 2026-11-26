@@ -12,7 +12,7 @@ export const en: TranslationData = {
     crm_billing_milestone: {
       label: 'Payment Plan',
       pluralLabel: 'Payment Plans',
-      description: 'One step of an account\'s collection plan, planned from an order or a contract: what is due, when, and how much of it is invoiced and received',
+      description: 'One step of an account\'s collection plan, planned from an order or a contract: what is due, when, and how much of it is received',
       _validations: {
         billing_milestone_source: { message: 'Choose the order or the contract this step belongs to.' },
       },
@@ -40,9 +40,6 @@ export const en: TranslationData = {
           label: 'Accepted Date',
           help: 'For a step paid on acceptance: the day the customer signed it off.',
         },
-        invoiced_amount: {
-          label: 'Invoiced',
-        },
         received_amount: {
           label: 'Received',
         },
@@ -60,6 +57,9 @@ export const en: TranslationData = {
         planned_this_month: {
           label: 'Planned This Month',
         },
+        overdue_billing_milestones: {
+          label: 'Overdue Payment Plans',
+        },
       },
       _sections: {
         basic: {
@@ -76,7 +76,7 @@ export const en: TranslationData = {
     crm_invoice: {
       label: 'Invoice',
       pluralLabel: 'Invoices',
-      description: 'An invoice finance issued to an account, and how much of it is paid',
+      description: 'An invoice finance issued to an account, against its order or contract',
       fields: {
         invoice_number: {
           label: 'Invoice Number',
@@ -145,16 +145,10 @@ export const en: TranslationData = {
         all_invoices: {
           label: 'All Invoices',
         },
-        overdue_invoices: {
-          label: 'Overdue Invoices',
-        },
       },
       _sections: {
         basic: {
           label: 'Invoice',
-        },
-        amounts: {
-          label: 'Amounts',
         },
         source: {
           label: 'Source',
@@ -164,7 +158,7 @@ export const en: TranslationData = {
     crm_payment: {
       label: 'Payment',
       pluralLabel: 'Payments',
-      description: 'Money an account paid: against an invoice, a plan step, an order, a contract, or none of them yet',
+      description: 'Money an account paid: against a payment plan, an order, a contract, or none of them yet',
       fields: {
         payment_number: {
           label: 'Payment Number',
@@ -242,6 +236,18 @@ export const en: TranslationData = {
           label: 'Received',
           help: 'The payments received, summed.',
         },
+        unpaid_amount: {
+          label: 'Unpaid',
+          help: 'The amount less what was received, never below 0.',
+        },
+        uninvoiced_amount: {
+          label: 'Uninvoiced',
+          help: 'The amount less what was invoiced (issued invoices), never below 0.',
+        },
+        plan_differs: {
+          label: 'Payment Plan Differs',
+          help: 'The payment plan\'s total is not the order\'s Total Price. Edit, split or add plan steps so the plan adds up to the order.',
+        },
       },
     },
     // The contract's and the account's receivables figures, added by this
@@ -260,9 +266,16 @@ export const en: TranslationData = {
           label: 'Received',
           help: 'The payments received, summed.',
         },
-        receivable_balance: {
-          label: 'Receivable Balance',
-          help: 'What the customer still owes on the open invoices: the open amount of the issued invoices, summed. A payment not yet set against an invoice shows in Received only.',
+        unpaid_amount: {
+          label: 'Unpaid',
+          help: 'The amount less what was received, never below 0.',
+        },
+        uninvoiced_amount: {
+          label: 'Uninvoiced',
+          help: 'The amount less what was invoiced (issued invoices), never below 0.',
+        },
+        order_count: {
+          label: 'Orders',
         },
       },
     },
@@ -276,9 +289,25 @@ export const en: TranslationData = {
           label: 'Received',
           help: 'The payments received, summed.',
         },
-        receivable_balance: {
-          label: 'Receivable Balance',
-          help: 'What the customer still owes on the open invoices: the open amount of the issued invoices, summed. A payment not yet set against an invoice shows in Received only.',
+        unpaid_amount: {
+          label: 'Unpaid',
+          help: 'What the account\'s confirmed and completed orders, and its signed contracts with no order, still have to receive: each one\'s amount less what it received, never below 0, summed.',
+        },
+        uninvoiced_amount: {
+          label: 'Uninvoiced',
+          help: 'What the account\'s confirmed and completed orders, and its signed contracts with no order, still have to invoice: each one\'s amount less its issued invoices, never below 0, summed.',
+        },
+        unpaid_on_orders: {
+          label: 'Unpaid on Orders',
+        },
+        unpaid_on_contracts: {
+          label: 'Unpaid on Contracts',
+        },
+        uninvoiced_on_orders: {
+          label: 'Uninvoiced on Orders',
+        },
+        uninvoiced_on_contracts: {
+          label: 'Uninvoiced on Contracts',
         },
       },
     },
@@ -309,7 +338,7 @@ export const en: TranslationData = {
         nav_invoices: { label: 'Invoices' },
         nav_payments: { label: 'Payments' },
         nav_billing_milestones: { label: 'Payment Plans' },
-        nav_overdue_invoices: { label: 'Overdue Invoices' },
+        nav_overdue_billing_milestones: { label: 'Overdue Payment Plans' },
         nav_planned_this_month: { label: 'Planned This Month' },
         nav_approval_requests: { label: 'Inbox' },
         nav_help_o2c: { label: 'Order to Cash Manual' },

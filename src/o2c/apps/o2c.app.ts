@@ -60,7 +60,9 @@ export const O2cApp = App.create({
       icon: 'alarm-clock',
       expanded: true,
       children: [
-        { id: 'nav_overdue_invoices', type: 'object', objectName: 'crm_invoice', viewName: 'overdue_invoices', label: 'Overdue Invoices', icon: 'alarm-clock' },
+        // Overdue is measured on the payment plan (the 2026-11-26 ruling,
+        // hotcrm#2806): this replaced Overdue Invoices.
+        { id: 'nav_overdue_billing_milestones', type: 'object', objectName: 'crm_billing_milestone', viewName: 'overdue_billing_milestones', label: 'Overdue Payment Plans', icon: 'alarm-clock' },
         { id: 'nav_planned_this_month', type: 'object', objectName: 'crm_billing_milestone', viewName: 'planned_this_month', label: 'Planned This Month', icon: 'calendar-days' },
       ],
     },

@@ -1,28 +1,32 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { Field } from '@objectstack/spec/data';
+import { expression, type EvaluatedExpression } from '@objectstack/spec';
 
 /**
- * The contract's and the account's receivables figures (REQ-0007, plan
- * *Contract and account fields*, #2416): what sales sees on the two pages
- * without opening the module's lists. Added from the module through
- * `objectExtensions` (ADR-0130 D5), so they come and go with it: a tenant that
- * disables the package is served none of them (measured on 18.4.0,
- * objectstack#30304).
+ * The contract's and the account's Order to Cash figures (REQ-0007, plan
+ * *Contract and account fields*, #2416; the 2026-11-26 ruling, hotcrm#2806):
+ * what sales sees on the two pages without opening the module's lists. Added
+ * from the module through `objectExtensions` (ADR-0130 D5), so they come and
+ * go with it: a tenant that disables the package is served none of them
+ * (measured on 18.4.0, objectstack#30304).
  *
- * Every figure is one hop over the module's own rows, never a summary of a
- * summary: the account's over its master-detail children, the contract's over
- * the rows that name it through their optional `crm_contract` lookup (since
- * hotcrm#2557; before, the contract was the master and the account a stamped
- * lookup, so the two pages swapped roles and the definitions did not change).
- * A row entered against the account alone counts on the account page only.
- * *Invoiced* counts
- * issued invoices only, as the plan step's does. The balance sums the stored
- * `open_amount` of the issued invoices (Q2 ruled B on 2026-11-15), not
- * invoiced minus received: a payment held as an advance, not yet set against
- * an invoice, shows in *Received* and leaves the balance alone, so the balance
- * never goes below zero on an advance. `open_amount` is a plain column the
- * invoice hook writes, recomputed when a payment moves `paid_amount`.
+ * *Invoiced* and *Received* are one hop over the module's own rows: the
+ * account's over its master-detail children, the contract's (and the
+ * order's, `./sales-order.extension.ts`) over the rows that name it through
+ * their optional lookup. *Invoiced* counts issued invoices only. Invoices and
+ * payments run in parallel (the 2026-11-26 ruling): neither is set against
+ * the other, and each is summed on its own.
+ *
+ * *Unpaid* and *Uninvoiced* replace the Receivable Balance (the 2026-11-26
+ * ruling, superseding the 2026-11-15 ruling B that summed the invoices' open
+ * amounts). On the order and the contract each is the row's own amount less
+ * what was received, or invoiced, never below 0 (`max`), STORED: the engine
+ * computes the expression on every write of the row, the summary recompute
+ * that moves Received or Invoiced included, so the account can total it (a
+ * `formula` stores nothing and cannot be totalled). The account sums each
+ * deal's own figure (`accountOutstanding` below), so a deal paid above its
+ * amount does not hide what another deal still owes.
  *
  * Placement (plan decision 6, ruled C on 2026-11-15, superseding A): each
  * figure names a section the core object already declares, `value` (Contract
@@ -62,19 +66,30 @@ export const receivables = (relationshipField: string, group: string) => ({
       relationshipField,
     },
   }),
-  receivable_balance: Field.summary({
-    label: 'Receivable Balance',
-    description: 'What the customer still owes on the open invoices: the open amount of the issued invoices, summed. A payment not yet set against an invoice shows in Received only.',
+});
+
+/**
+ * Unpaid and Uninvoiced on a row that has an amount of its own (the order's
+ * Total Price, the contract's Contract Value): that amount less Received, and
+ * less Invoiced, never below 0. Stored computed fields (a non-`formula` field
+ * with an `expression`), read from the row's own columns only, so nothing
+ * across records goes stale: Received and Invoiced are this row's summaries,
+ * and the recompute that moves them writes this row.
+ */
+export const outstanding = (group: string, amount: { unpaid: EvaluatedExpression; uninvoiced: EvaluatedExpression }) => ({
+  unpaid_amount: Field.currency({
+    label: 'Unpaid',
+    description: 'The amount less what was received, never below 0.',
     group,
-    scale: 2,
     readonly: true,
-    summaryOperations: {
-      object: 'crm_invoice',
-      field: 'open_amount',
-      function: 'sum',
-      relationshipField,
-      filter: { status: 'issued' },
-    },
+    expression: amount.unpaid,
+  }),
+  uninvoiced_amount: Field.currency({
+    label: 'Uninvoiced',
+    description: 'The amount less what was invoiced (issued invoices), never below 0.',
+    group,
+    readonly: true,
+    expression: amount.uninvoiced,
   }),
 });
 
@@ -95,16 +110,96 @@ export const planned = (relationshipField: string, group: string) => ({
   }),
 });
 
+/** A number field of the row, or 0.0 when it holds none. */
+const amountOf = (field: string): string =>
+  `(has(record.${field}) && record.${field} != null ? double(record.${field}) : 0.0)`;
+
+/** `max(0, amount − figure)` over the row's own columns. */
+export const leftOver = (amount: string, figure: string): EvaluatedExpression =>
+  expression(`max(0.0, ${amountOf(amount)} - ${amountOf(figure)})`);
+
+/** The sum of the row's own number fields. */
+const sumOf = (...fields: string[]): EvaluatedExpression => expression(fields.map(amountOf).join(' + '));
+
+/**
+ * Which deals the account sums (the 2026-11-26 ruling: "the account sums each
+ * order's or contract's own figure"). Each deal is counted once, by the row
+ * that carries it:
+ *
+ *   - its **order**, when the order is Confirmed or Completed — a Draft order
+ *     is not yet owed and a Cancelled one never will be. The order is the
+ *     spine (REQ-0010): an order contract's amount is its order's, and a
+ *     framework contract's amount is a ceiling, not what is owed, so a deal
+ *     with an order is counted on the order and never on its contract too;
+ *   - its **contract**, only when no order names the contract (a contract
+ *     signed before orders, hotcrm#2560) and it is Activated or Expired —
+ *     signed, not withdrawn.
+ *
+ * The account cannot total two objects in one summary, so each figure is two
+ * hidden summaries, one per object, and the shown field is their sum, stored
+ * like the order's and the contract's. The summary recompute writes each
+ * hidden one onto the account, and that write computes the sum.
+ */
+const COUNTED_ORDER = { status: { $in: ['confirmed', 'completed'] } };
+const COUNTED_CONTRACT = { status: { $in: ['activated', 'expired'] }, order_count: 0 };
+
+const accountLeg = (label: string, object: 'crm_sales_order' | 'crm_contract', field: string, filter: Record<string, unknown>) =>
+  Field.summary({
+    label,
+    group: 'financials',
+    hidden: true,
+    scale: 2,
+    readonly: true,
+    summaryOperations: { object, field, function: 'sum', relationshipField: 'crm_account', filter },
+  });
+
+export const accountOutstanding = {
+  unpaid_on_orders: accountLeg('Unpaid on Orders', 'crm_sales_order', 'unpaid_amount', COUNTED_ORDER),
+  unpaid_on_contracts: accountLeg('Unpaid on Contracts', 'crm_contract', 'unpaid_amount', COUNTED_CONTRACT),
+  uninvoiced_on_orders: accountLeg('Uninvoiced on Orders', 'crm_sales_order', 'uninvoiced_amount', COUNTED_ORDER),
+  uninvoiced_on_contracts: accountLeg('Uninvoiced on Contracts', 'crm_contract', 'uninvoiced_amount', COUNTED_CONTRACT),
+  unpaid_amount: Field.currency({
+    label: 'Unpaid',
+    description: "What the account's confirmed and completed orders, and its signed contracts with no order, still have to receive: each one's amount less what it received, never below 0, summed.",
+    group: 'financials',
+    readonly: true,
+    expression: sumOf('unpaid_on_orders', 'unpaid_on_contracts'),
+  }),
+  uninvoiced_amount: Field.currency({
+    label: 'Uninvoiced',
+    description: "What the account's confirmed and completed orders, and its signed contracts with no order, still have to invoice: each one's amount less its issued invoices, never below 0, summed.",
+    group: 'financials',
+    readonly: true,
+    expression: sumOf('uninvoiced_on_orders', 'uninvoiced_on_contracts'),
+  }),
+};
+
 export const ContractAccountExtensions = [
   {
     extend: 'crm_contract',
     fields: {
       ...planned('crm_contract', 'value'),
       ...receivables('crm_contract', 'value'),
+      ...outstanding('value', {
+        unpaid: leftOver('contract_value', 'received_amount'),
+        uninvoiced: leftOver('contract_value', 'invoiced_amount'),
+      }),
+      // How many orders name the contract: a contract with one is counted on
+      // the account through its orders (`accountOutstanding`), never itself.
+      order_count: Field.summary({
+        label: 'Orders',
+        group: 'value',
+        hidden: true,
+        readonly: true,
+        summaryOperations: { object: 'crm_sales_order', function: 'count', relationshipField: 'crm_contract' },
+      }),
     },
   },
   {
     extend: 'crm_account',
-    fields: receivables('crm_account', 'financials'),
+    fields: {
+      ...receivables('crm_account', 'financials'),
+      ...accountOutstanding,
+    },
   },
 ];
