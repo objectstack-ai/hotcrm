@@ -76,10 +76,28 @@ export const commerce: Record<string, ObjectTranslationData> = {
       description: { label: '説明' },
       automation_key: { label: '自動化キー', help: 'この契約を起草した自動化。その自動化が書き込みます。編集しないでください。' },
       billing_address: { label: '請求先住所' },
+      // The contract's form, an order contract's amount and Change (#2804).
+      contract_form: {
+        label: '契約形態',
+        help: '受注契約：受注から作成され、金額は受注金額です。基本契約：金額は手入力で、複数の受注を紐付けられます。その他：NDA など金額のない契約です。',
+        options: { order: '受注契約', framework: '基本契約', other: 'その他' },
+      },
+      crm_sales_order: { label: '元の受注', help: 'この契約の作成元となった受注です。' },
+      order_amount: { label: '受注金額', help: '受注の税込合計です。' },
+      order_amount_differs: { label: '受注金額と不一致', help: '契約金額が受注金額と一致しなくなっています。「変更」で「受注から更新」を選ぶと受注金額を取り込みます。' },
+      change_reason: { label: '変更理由', help: '契約を最後に変更した理由です。「変更」が書き込みます。' },
+      change_amendment: { label: '署名済み変更契約書', help: '最後の変更について顧客が署名した変更契約書です。「変更」が書き込みます。' },
+      change_new_value: { label: '新しい契約金額', help: '空欄のままにすると契約金額は変わりません。' },
+      change_new_end_date: { label: '新しい終了日', help: '空欄のままにすると終了日は変わりません。' },
+      change_new_payment_terms: { label: '新しい支払条件', help: '空欄のままにすると支払条件は変わりません。' },
+      change_from_order: { label: '受注から更新', help: '受注の現在の金額を契約金額にします。' },
     },
     // Print Contract (#2317).
     _actions: {
       print_contract: { label: '契約書を印刷', successMessage: '契約書の PDF を添付しました。' },
+      // Change (#2804): one action per kind of contract.
+      change_contract: { label: '変更', description: '有効化済みのこの契約の金額、終了日、支払条件を変更します。空欄の項目は変わりません。', successMessage: '契約 {{ record.name }} を変更しました。' },
+      change_order_contract: { label: '変更', description: '有効化済みのこの受注契約の終了日や支払条件を変更するか、受注の現在の金額を取り込みます。空欄の項目は変わりません。', successMessage: '契約 {{ record.name }} を変更しました。' },
     },
     _views: {
       all_contracts: { label: '全契約' },
@@ -94,6 +112,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       value: { label: '契約金額' },
       status: { label: 'ステータス・承認' },
       renewal: { label: '更新' },
+      change: { label: '直近の変更' },
       // contract.view.ts のフォームセクション名 (#1100)
       contract_terms: { label: '契約条件' },
       signing_and_documents: { label: '署名と書類' },

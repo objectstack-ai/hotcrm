@@ -59,7 +59,7 @@ type Flow = Automation.Flow;
 export const SalesOrderDraftContractFlow: Flow = {
   name: 'sales_order_draft_contract',
   label: 'Draft Contract from Order',
-  description: "Draft the order's contract — a 12-month subscription at the order's total, for an administrator to complete — and name it on the order.",
+  description: "Draft the order's contract — an order contract at the order's total, a 12-month subscription for an administrator to complete — and name it on the order.",
   type: 'screen',
   status: 'active',
   runAs: 'user',
@@ -150,7 +150,8 @@ export const SalesOrderDraftContractFlow: Flow = {
  * link to it. See `SalesOrderDraftContractFlow` for why it is a flow of its
  * own and why the link is here.
  *
- * The contract is the shared draft (`./_contract-draft.ts`): its value is the
+ * The contract is the shared draft (`./_contract-draft.ts`), as an order
+ * contract naming this order (`DRAFT` below): its value is the
  * order's STORED total, read here by id; its description names the order by
  * number and name, TEXT in the organization's language (#2535), translated at
  * `flows.sales_order_draft_contract_write.records.<node>.fields.description`.
@@ -169,12 +170,34 @@ export const SalesOrderDraftContractFlow: Flow = {
  * the order it read a moment before. A second set of the same conditions here
  * would be a copy to keep in step, guarding a door nothing else opens.
  */
-const DRAFT = contractDraftGraph({
+const SHARED_DRAFT = contractDraftGraph({
   root: 'vars.orderRow',
   value: 'has(vars.orderRow.total_price) && vars.orderRow.total_price != null ? double(vars.orderRow.total_price) : 0.0',
   description: tmpl`Drafted from order {{ order }}`,
   name: 'vars.contractName',
 }, { from: 'label_order', to: 'link_order', firstEdge: 2, outputVariable: 'contract' });
+
+/**
+ * The order's draft is an ORDER CONTRACT (hotcrm#2804): its form says so and
+ * it names the order it came from, so its value follows that order while it
+ * is a draft (`contract_form_and_change`, `../objects/contract.hook.ts`). Added
+ * here, onto the shared draft's inserts, and not in `./_contract-draft.ts`:
+ * the accepted quote's automatic draft builds the same inserts and has no
+ * order to name, so it stays a framework contract, the form's default. Both
+ * keys ride the elevated insert: a person may write neither.
+ */
+const DRAFT = {
+  ...SHARED_DRAFT,
+  nodes: SHARED_DRAFT.nodes.map((node) => node.type === 'create_record'
+    ? {
+      ...node,
+      config: {
+        ...node.config,
+        fields: { ...(node.config as { fields: Record<string, unknown> }).fields, contract_form: 'order', crm_sales_order: cel`orderId` },
+      },
+    }
+    : node),
+};
 
 export const SalesOrderDraftContractWriteFlow: Flow = {
   name: 'sales_order_draft_contract_write',

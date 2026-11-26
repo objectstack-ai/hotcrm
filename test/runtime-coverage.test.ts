@@ -69,6 +69,10 @@ const RUNTIME_TEST_FILES = [
   // #2317 — filing a contract's signed copy dates the signature
   // (`contract_signed_copy_date`), beside the two signed-copy gates it serves.
   'contract-signed-copy.test.ts',
+  // #2804 — the contract form and Change (`contract_form_and_change`): the
+  // order contract's draft follow, the person locks, both Change actions and
+  // the backfill rule, driven on the booted app.
+  'contract-form-change.test.ts',
   // #592 — the activity model's own runtime file: both `crm_event` hooks, the
   // parity check that keeps the duplicated bubble body from drifting, and the
   // readonly-strip regression proof against a real engine.
