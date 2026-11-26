@@ -81,6 +81,22 @@ amount, such as an NDA); you choose while it is a draft.
 Once an order contract is activated, its value stays as signed. If the order
 changes afterwards, the contract shows **Differs from the Order Amount**.
 
+## A framework contract's quota
+
+A framework contract's value is a ceiling for the orders placed under it. Its
+**Order Totals** show how far the orders have gone: **Order Amount** is the
+total of every order linked to the contract, tax included, whatever the
+order's status, and **Remaining Quota** is the contract value less that
+amount. Remaining Quota below zero means the orders have gone over.
+
+Linking an order to a framework contract, or raising a linked order's total,
+so that the orders go over the contract value saves the order and shows a
+warning. An edit that does not add to the order's total, or lowers it, gives
+no warning. An order line that takes its order over saves without the
+warning; the contract's Remaining Quota shows it. The quota is the contract's
+current value: once Change gives an activated contract a new value, Remaining
+Quota counts from it.
+
 ## Changing an activated contract
 
 An activated contract's **Contract Value**, **End Date** and **Payment Terms**
