@@ -591,7 +591,7 @@ const ROW_LABEL: Record<string, Record<Locale, string>> = {
   crm_sales_order: { en: 'Order', 'zh-Hans': '订单', 'zh-Hant': '訂單' },
   crm_sales_order_line: { en: 'Order Line', 'zh-Hans': '订单行', 'zh-Hant': '訂單行' },
   // #2315 — Order to Cash, under the contract.
-  crm_billing_milestone: { en: 'Billing Milestone', 'zh-Hans': '回款计划', 'zh-Hant': '回款計劃' },
+  crm_billing_milestone: { en: 'Payment Plan', 'zh-Hans': '回款计划', 'zh-Hant': '回款計劃' },
   crm_invoice: { en: 'Invoice', 'zh-Hans': '发票', 'zh-Hant': '發票' },
   crm_payment: { en: 'Payment', 'zh-Hans': '回款', 'zh-Hant': '回款' },
   // #2316 — Project Delivery.

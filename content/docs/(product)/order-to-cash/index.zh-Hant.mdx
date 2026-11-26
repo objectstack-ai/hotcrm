@@ -21,11 +21,11 @@ description: 合約簽訂之後業務能看到什麼——回款計劃，以及�
 
 | 紀錄 | 是什麼 | 由誰輸入 |
 | --- | --- | --- |
-| **Billing Milestone** | 按訂單或合約制定的回款計劃中的一步：預付款、上線、驗收、保留款，或一個訂閱週期 | 客戶的業務團隊 |
+| **Payment Plan** | 按訂單或合約制定的回款計劃中的一步：預付款、上線、驗收、保留款，或一個訂閱週期 | 客戶的業務團隊 |
 | **Invoice** | 財務開給客戶的一張發票，可以針對訂單或合約，也可以都不針對 | 財務 |
 | **Payment** | 客戶付來的款項：對應發票、回款計劃、訂單、合約，或暫時都不對應 | 財務 |
 
-三者都屬於**客戶**。回款計劃寫明它按哪張訂單或哪份合約制定；發票和回款只在有訂單或合約時才填。所以一張發票對應多個訂單，或暫時對應不上任何發票的預收款，都只記在客戶上。客戶的 **Billing Milestones**、**Invoices** 和 **Payments** 分頁列出它的全部紀錄；訂單和合約的分頁列出填了它的紀錄。歸在合約下的訂單，它的紀錄兩者都填，所以合約的分頁和彙總包括它所有訂單下的紀錄。
+三者都屬於**客戶**。回款計劃寫明它按哪張訂單或哪份合約制定；發票和回款只在有訂單或合約時才填。所以一張發票對應多個訂單，或暫時對應不上任何發票的預收款，都只記在客戶上。客戶的 **Payment Plans**、**Invoices** 和 **Payments** 分頁列出它的全部紀錄；訂單和合約的分頁列出填了它的紀錄。歸在合約下的訂單，它的紀錄兩者都填，所以合約的分頁和彙總包括它所有訂單下的紀錄。
 
 | 頁面 | 內容 |
 | --- | --- |
@@ -36,8 +36,8 @@ description: 合約簽訂之後業務能看到什麼——回款計劃，以及�
 
 | 誰 | 在哪裡 |
 | --- | --- |
-| 財務（應收會計） | **Order to Cash** 應用：**Receivables** 下的 **Invoices**、**Payments** 和 **Billing Milestones**，**Follow-up** 下的 **Overdue Invoices** 和 **Planned This Month**，以及這些紀錄所屬的 **Contracts** 和 **Accounts**。這是財務啟動器上唯一的應用。 |
-| 銷售代表和銷售經理 | **Sales** 應用 **Collection Plan** 群組下的 **Billing Milestones**，以及每張訂單和每份合約上的 **Billing Milestones**、**Invoices**、**Payments** 分頁。銷售代表的啟動器上沒有 Order to Cash 應用。 |
+| 財務（應收會計） | **Order to Cash** 應用：**Receivables** 下的 **Invoices**、**Payments** 和 **Payment Plans**，**Follow-up** 下的 **Overdue Invoices** 和 **Planned This Month**，以及這些紀錄所屬的 **Contracts** 和 **Accounts**。這是財務啟動器上唯一的應用。 |
+| 銷售代表和銷售經理 | **Sales** 應用 **Collection Plan** 群組下的 **Payment Plans**，以及每張訂單和每份合約上的 **Payment Plans**、**Invoices**、**Payments** 分頁。銷售代表的啟動器上沒有 Order to Cash 應用。 |
 | 銷售經理和管理員 | 兩處都有：他們的啟動器提供全部四個應用。 |
 
 啟動器決定的是提供哪些應用，而不是能打開哪些：啟動器上沒有的應用，用位址照樣能打開；每筆紀錄的存取權限仍由它的共用規則決定。

@@ -26,8 +26,8 @@ import { F, P } from '@objectstack/spec';
  */
 export const BillingMilestone = ObjectSchema.create({
   name: 'crm_billing_milestone',
-  label: 'Billing Milestone',
-  pluralLabel: 'Billing Milestones',
+  label: 'Payment Plan',
+  pluralLabel: 'Payment Plans',
   icon: 'flag',
   description: 'One step of an account\'s collection plan, planned from an order or a contract: what is due, when, and how much of it is invoiced and received',
 

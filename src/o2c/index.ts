@@ -94,7 +94,7 @@ export const createHotCrmO2cStack = (
         group: 'group_collection_plan',
         priority: 50,
         items: [
-          { id: 'nav_billing_milestones', type: 'object', objectName: 'crm_billing_milestone', label: 'Billing Milestones', icon: 'flag' },
+          { id: 'nav_billing_milestones', type: 'object', objectName: 'crm_billing_milestone', label: 'Payment Plans', icon: 'flag' },
         ],
       },
       {
