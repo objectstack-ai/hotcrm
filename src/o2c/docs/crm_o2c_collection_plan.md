@@ -1,6 +1,6 @@
 ---
 title: Collection Plan — What Sales Sees After the Contract
-description: The billing milestones planned from an order or a contract, who may change them, and what Invoiced, Received and Open count.
+description: The payment plans planned from an order or a contract, who may change them, and what Invoiced, Received and Open count.
 order: 1
 # sources: the objects this doc documents. Build ignores unknown frontmatter keys.
 sources:
@@ -67,7 +67,7 @@ records it; nothing sets it for you.
 ## Planned This Month
 
 **Follow-up → Planned This Month** in the **Order to Cash** app, also a tab of
-**Collection Plan → Billing Milestones** in **Sales**, lists the
+**Collection Plan → Payment Plans** in **Sales**, lists the
 milestones whose **Planned Date** falls in the current calendar month. It
 changes on the first of each month.
 

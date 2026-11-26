@@ -104,15 +104,15 @@ const invoicePlanStepGuard: Hook = {
   priority: 90,
   refusals: {
     VALIDATION_FAILED: {
-      message: 'This billing milestone belongs to another account. Choose a billing milestone of this invoice\'s account.',
+      message: 'This payment plan belongs to another account. Choose a payment plan of this invoice\'s account.',
       status: 400,
       params: ['milestone'],
       reasons: {
-        milestone_named: { message: '{{milestone}} belongs to another account. Choose a billing milestone of this invoice\'s account.' },
+        milestone_named: { message: '{{milestone}} belongs to another account. Choose a payment plan of this invoice\'s account.' },
       },
     },
   },
-  description: 'Refuse an invoice whose billing milestone belongs to another account.',
+  description: 'Refuse an invoice whose payment plan belongs to another account.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -157,9 +157,9 @@ const invoicePlanStepGuard: Hook = {
     const owner = refId(step?.crm_account);
     if (!owner || owner === accountId) return;
     const named = typeof step?.name === 'string' && step.name !== '';
-    const name = named ? String(step?.name) : 'This billing milestone';
+    const name = named ? String(step?.name) : 'This payment plan';
     throw Object.assign(refuse(
-      `${name} belongs to another account. Choose a billing milestone of this invoice's account.`,
+      `${name} belongs to another account. Choose a payment plan of this invoice's account.`,
       'VALIDATION_FAILED',
       400,
     ), named ? { reason: 'milestone_named', params: { milestone: name } } : {});

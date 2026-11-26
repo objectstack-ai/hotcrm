@@ -24,7 +24,7 @@ export const BillingMilestoneViews = defineView({
   list: {
     type: 'grid',
     name: 'all_billing_milestones',
-    label: 'All Billing Milestones',
+    label: 'All Payment Plans',
     userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_billing_milestone' },
     columns: [

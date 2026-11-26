@@ -10,8 +10,8 @@ import type { TranslationData } from '@objectstack/spec/system';
 export const en: TranslationData = {
   objects: {
     crm_billing_milestone: {
-      label: 'Billing Milestone',
-      pluralLabel: 'Billing Milestones',
+      label: 'Payment Plan',
+      pluralLabel: 'Payment Plans',
       description: 'One step of an account\'s collection plan, planned from an order or a contract: what is due, when, and how much of it is invoiced and received',
       _validations: {
         billing_milestone_source: { message: 'Choose the order or the contract this step belongs to.' },
@@ -55,7 +55,7 @@ export const en: TranslationData = {
       },
       _views: {
         all_billing_milestones: {
-          label: 'All Billing Milestones',
+          label: 'All Payment Plans',
         },
         planned_this_month: {
           label: 'Planned This Month',
@@ -63,7 +63,7 @@ export const en: TranslationData = {
       },
       _sections: {
         basic: {
-          label: 'Milestone',
+          label: 'Payment Plan',
         },
         plan: {
           label: 'Plan',
@@ -89,7 +89,7 @@ export const en: TranslationData = {
           label: 'Contract',
         },
         crm_billing_milestone: {
-          label: 'Billing Milestone',
+          label: 'Payment Plan',
         },
         crm_account: {
           label: 'Account',
@@ -179,7 +179,7 @@ export const en: TranslationData = {
           label: 'Invoice',
         },
         crm_billing_milestone: {
-          label: 'Billing Milestone',
+          label: 'Payment Plan',
         },
         crm_account: {
           label: 'Account',
@@ -289,7 +289,7 @@ export const en: TranslationData = {
     crm_enterprise: {
       navigation: {
         nav_billing_milestones: {
-          label: 'Billing Milestones',
+          label: 'Payment Plans',
         },
         nav_help_o2c: {
           label: 'Order to Cash Manual',
@@ -308,7 +308,7 @@ export const en: TranslationData = {
         group_help: { label: 'Help' },
         nav_invoices: { label: 'Invoices' },
         nav_payments: { label: 'Payments' },
-        nav_billing_milestones: { label: 'Billing Milestones' },
+        nav_billing_milestones: { label: 'Payment Plans' },
         nav_overdue_invoices: { label: 'Overdue Invoices' },
         nav_planned_this_month: { label: 'Planned This Month' },
         nav_approval_requests: { label: 'Inbox' },

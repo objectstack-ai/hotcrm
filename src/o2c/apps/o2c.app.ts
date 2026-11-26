@@ -47,7 +47,7 @@ export const O2cApp = App.create({
       children: [
         { id: 'nav_invoices', type: 'object', objectName: 'crm_invoice', label: 'Invoices', icon: 'receipt' },
         { id: 'nav_payments', type: 'object', objectName: 'crm_payment', label: 'Payments', icon: 'banknote' },
-        { id: 'nav_billing_milestones', type: 'object', objectName: 'crm_billing_milestone', label: 'Billing Milestones', icon: 'flag' },
+        { id: 'nav_billing_milestones', type: 'object', objectName: 'crm_billing_milestone', label: 'Payment Plans', icon: 'flag' },
       ],
     },
 
