@@ -323,6 +323,13 @@ export const Contract = ObjectSchema.create({
       label: 'Differs from the Order Amount',
       group: 'orders',
       returnType: 'boolean',
+      // An order contract's sign only, like the Order Amount's and the
+      // Remaining Quota's `visibleWhen` (hotcrm#2807). ⚠️ Measured on 18.6.0:
+      // the console's synthesized record page does not apply a field's
+      // `visibleWhen` in its detail sections, so the three still show, empty,
+      // on a contract of another form; the condition is the metadata's to
+      // state, and the renderer gap is reported upstream, not worked around.
+      visibleWhen: P`has(record.contract_form) && record.contract_form == "order"`,
       // Judged only once the order amount is known: a contract that predates
       // the field holds NULL there until the roll-up is materialised.
       expression: F`has(record.contract_form) && record.contract_form == "order"

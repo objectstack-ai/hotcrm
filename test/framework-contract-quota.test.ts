@@ -96,6 +96,9 @@ describe('a framework contract shows its Order Amount and Remaining Quota', () =
     ]);
     expect([visible('order_amount', 'order'), visible('remaining_quota', 'order')].map((r) => r.ok && r.value)).toEqual([true, false]);
     expect([visible('order_amount', 'other'), visible('remaining_quota', 'other')].map((r) => r.ok && r.value)).toEqual([false, false]);
+    // Differs is an order contract's sign; a framework contract does not show it empty.
+    expect(['order', 'framework', 'other'].map((f) => { const r = visible('order_amount_differs', f); return r.ok && r.value; }))
+      .toEqual([true, false, false]);
   });
 
   it('shows no Remaining Quota while the orders are not yet counted', () => {
