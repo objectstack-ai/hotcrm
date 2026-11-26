@@ -458,6 +458,34 @@ the maintainer's ruling of 2026-11-16 21:50Z, verbatim:
   moves. The *Data model — first version* table above describes the contract-mastered shape as it
   shipped in phase 1a.
 
+### Recorded 2026-11-26 — invoices and payments run in parallel
+
+The sections above are left as written. The maintainer ruled in the test thread
+「测试标准版 HotCRM」, adopting every decision in the discussion notes on how contracts, orders,
+invoices and payments relate, verbatim:
+
+> 「所有需要拍板的都做」 (2026-11-26 08:17Z)
+
+recorded as adopted rather than as typed; the decisions are the tracking card's,
+[hotcrm#2803](https://github.com/objectstack-ai/hotcrm/issues/2803). For this module:
+
+- **Receivable Balance — replaced, superseding the 2026-11-15 ruling B** ("Receivable Balance sums
+  invoices' open amounts"). The account and the contract (and the order) show **Unpaid** (the
+  amount less what was received) and **Uninvoiced** (the amount less what was invoiced); the
+  account sums each order's or contract's own figure. *Invoiced* and *Received* stay.
+- **Invoices and payments are parallel and unlinked.** An invoice hangs on its order or contract,
+  on no payment and on no plan step; a payment keeps its order or contract and its plan step.
+- **Overdue is measured on the payment plan**, not on invoices.
+- **The contract** gains a form (order contract, framework contract, other), an order contract's
+  amount is its order's, and an active contract's amount and term change only through a Change
+  action ([REQ-0010](../requirements/0010-sales-order.md), *Note (2026-11-26)*).
+
+"A window, never a book" stands; the module still allocates nothing and reconciles nothing. This is
+the decided target: the code follows with
+[hotcrm#2806](https://github.com/objectstack-ai/hotcrm/issues/2806) (invoices, payments, the
+figures and overdue) and [hotcrm#2804](https://github.com/objectstack-ai/hotcrm/issues/2804) (the
+contract); until they land, the module ships the 2026-11-15 shape.
+
 ## Upstream asks
 
 - **Per-tenant enablement of a module inside an App** (or the inter-App dependencies ADR-0019
