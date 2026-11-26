@@ -76,5 +76,6 @@ describe('scripts/backfill-contract-form.ts --apply', () => {
     expect(printed).toContain('differs from the order amount: 1.');
     expect(printed).toContain('CTR-0002 "Differs": contract 1100, order 1300');
     expect(printed).not.toContain('CTR-0003 "Agrees":');
+    expect(printed).not.toContain('no Order Amount yet');
   });
 });

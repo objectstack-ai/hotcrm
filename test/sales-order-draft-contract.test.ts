@@ -209,7 +209,7 @@ describe('the same contract the automatic draft drafts', () => {
     // contract, naming the order it came from. The quote's draft has no order.
     const fromQuote = drafts(QuoteAcceptedContractDraftFlow);
     expect(drafts(SalesOrderDraftContractWriteFlow)).toEqual(Object.fromEntries(Object.entries(fromQuote)
-      .map(([id, keys]) => [id, [...keys, 'contract_form', 'crm_sales_order'].sort()])));
+      .map(([id, keys]) => [id, [...(keys as string[]), 'contract_form', 'crm_sales_order'].sort()])));
   });
 });
 

@@ -290,6 +290,20 @@ describe('the backfill rule (item 7)', () => {
     expect(Number(row.contract_value)).toBe(999);
   });
 
+  it('does not correct an old draft order contract when its Order Amount is first computed', async () => {
+    const order = await draftOrder();
+    const c = await draftFrom(String(order.id));
+    // As a contract that predates the roll-up: no Order Amount yet, and a
+    // value that differs from its order.
+    const ql = verify.kernel.getService<Rec>('objectql');
+    await (ql.getDriverForObject('crm_contract') as Rec).update('crm_contract', c.id, { order_amount: null, contract_value: 500 });
+    // The platform materialises it (`os migrate summary-nulls`), as the system.
+    await systemUpdate(verify, 'crm_contract', { id: c.id, order_amount: 1_100 });
+    const row = await stored('crm_contract', c.id);
+    expect(Number(row.order_amount)).toBe(1_100);
+    expect(Number(row.contract_value)).toBe(500);
+  });
+
   it('no amount ⇒ other; the rest ⇒ framework', async () => {
     const none = await formless({ contract_value: 0 });
     const some = await formless({});

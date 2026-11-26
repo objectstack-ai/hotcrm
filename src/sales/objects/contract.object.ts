@@ -313,8 +313,11 @@ export const Contract = ObjectSchema.create({
       label: 'Differs from the Order Amount',
       group: 'value',
       returnType: 'boolean',
+      // Judged only once the order amount is known: a contract that predates
+      // the field holds NULL there until the roll-up is materialised.
       expression: F`has(record.contract_form) && record.contract_form == "order"
-        && (has(record.order_amount) && record.order_amount != null ? double(record.order_amount) : 0.0)
+        && has(record.order_amount) && record.order_amount != null
+        && double(record.order_amount)
           != (has(record.contract_value) && record.contract_value != null ? double(record.contract_value) : 0.0)
         ? true : null`,
       description: "The contract value no longer equals the order's amount. Change, with Update from Order, takes the order's amount.",

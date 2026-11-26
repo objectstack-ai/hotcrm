@@ -19,6 +19,12 @@
 //   2. no amount ⇒ Other;
 //   3. every other contract ⇒ Framework Contract.
 //
+// Run the platform's own step first, `pnpm exec objectstack migrate
+// summary-nulls --apply --yes`, which computes Order Amount on the contracts
+// that predate it; without it the order contracts cannot be compared, and the
+// script says so and exits non-zero. The order of the two does not matter
+// for the values: neither corrects one.
+//
 // So this script decides nothing itself. It writes each contract with no form
 // once, as the administrator signed in, one PATCH carrying `contract_form:
 // null` (no choice: the hook applies the rule and writes the form), and reads
@@ -162,7 +168,16 @@ async function main(): Promise<void> {
 
   // The difference list (item 7): order contracts whose value is not their
   // order's amount, for the business to check. Nothing here corrects them.
-  const differing = after.filter((c) => c.contract_form === 'order' && money(c.contract_value) !== money(c.order_amount));
+  // An Order Amount still NULL has not been computed for a contract that
+  // predates the field: the platform's own step fills it, and until then the
+  // contract cannot be compared.
+  const orders = after.filter((c) => c.contract_form === 'order');
+  const uncounted = orders.filter((c) => c.order_amount === null || c.order_amount === undefined);
+  const differing = orders.filter((c) => !uncounted.includes(c) && money(c.contract_value) !== money(c.order_amount));
+  if (uncounted.length > 0) {
+    console.log(`\n${uncounted.length} order contract(s) have no Order Amount yet: run \`pnpm exec objectstack migrate summary-nulls --apply --yes\`, then this script again, to compare them.`);
+    failed++;
+  }
   console.log(`\nOrder contracts whose value differs from the order amount: ${differing.length}.`);
   for (const c of differing) {
     console.log(`  ${c.contract_number ?? c.id} "${text(c.name)}": contract ${money(c.contract_value)}, order ${money(c.order_amount)}`);

@@ -230,11 +230,15 @@ const contractFormAndChange: Hook = {
 
     // ── A draft order contract follows its order. Only the platform's own
     // roll-up write carries `order_amount` this far: a person's copy of a
-    // summary field is held back from hooks and dropped. Not on the write
-    // that backfills the form: the first roll-up after the upgrade must not
-    // correct an old value (ruling item 7); the next change of the order does.
+    // summary field is held back from hooks and dropped. A CHANGE of the
+    // amount, from one the contract already held: not the write that
+    // backfills the form, and not the first value the platform materialises
+    // on a contract that predates the field (`os migrate summary-nulls`,
+    // NULL → the order's total). Neither may correct an old value (ruling
+    // item 7); the next change of the order does. A new contract is born
+    // holding 0 (its orders are named after it), so its first order counts.
     if (ctx.session?.isSystem && !backfilled && form === 'order' && status === 'draft' && 'order_amount' in input
-      && !same(input.order_amount, prev.order_amount)) {
+      && typeof prev.order_amount === 'number' && !same(input.order_amount, prev.order_amount)) {
       input.contract_value = blank(input.order_amount) ? 0 : Number(input.order_amount);
     }
 
