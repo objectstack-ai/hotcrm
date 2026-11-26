@@ -17,7 +17,9 @@ sit under a contract, and most orders have none.
 
 Find orders under **Orders** in the Sales app, and on the account's page in the
 **Orders** list. An order placed under a framework contract also appears on
-that contract's page.
+that contract's page, and counts against the contract's value: an order, or a
+higher total on one, that takes the orders under a framework contract over its
+value is saved with a warning (see [Contracts](./crm_sales_contracts.md)).
 
 An order's **Contract** is always one of the order's own account. The form
 offers only that account's contracts and clears **Contract** when the account

@@ -58,6 +58,12 @@ export const Contract = ObjectSchema.create({
     { key: 'parties',   label: 'Parties',              icon: 'users' },
     { key: 'terms',     label: 'Terms & Dates',        icon: 'calendar' },
     { key: 'value',     label: 'Contract Value',       icon: 'dollar-sign' },
+    // What the orders under the contract add up to (hotcrm#2807): the Order
+    // Amount, an order contract's Differs sign and a framework contract's
+    // Remaining Quota. A group of its own, not `value`, because the printed
+    // contract prints `value` whole (`contract_print_page`: every member is
+    // something the customer signs) and these are running figures.
+    { key: 'orders',    label: 'Order Totals',         icon: 'shopping-cart' },
     { key: 'status',    label: 'Status & Approval',    icon: 'check-circle' },
     { key: 'renewal',   label: 'Renewal',              icon: 'refresh-ccw', collapse: 'collapsed' },
     // The last Change on an activated contract (hotcrm#2804): its reason and
@@ -286,15 +292,19 @@ export const Contract = ObjectSchema.create({
     // that is its one order. The platform keeps it, rewriting it whenever an
     // order under the contract changes, and that rewrite is what lets a
     // draft order contract follow its order (`contract_form_and_change`).
-    // Shown on an order contract only: a framework contract's quota is sub 4
-    // of hotcrm#2803, not this field.
+    //
+    // On a framework contract it is the ordered amount of the quota
+    // (hotcrm#2807, maintainer ruling 2026-11-26): every order linked to the
+    // contract, whatever its status, at the same tax-inclusive total. One
+    // roll-up serves both forms, so the quota and an order contract's value
+    // count an order the same way. Not shown on Other, which has no amount.
     order_amount: Field.summary({
       label: 'Order Amount',
-      group: 'value',
+      group: 'orders',
       scale: 2,
       readonly: true,
-      visibleWhen: P`has(record.contract_form) && record.contract_form == "order"`,
-      description: "The order's total, tax included.",
+      visibleWhen: P`has(record.contract_form) && (record.contract_form == "order" || record.contract_form == "framework")`,
+      description: 'The total of the orders under this contract, tax included.',
       summaryOperations: {
         object: 'crm_sales_order',
         field: 'total_price',
@@ -311,8 +321,15 @@ export const Contract = ObjectSchema.create({
     // record page folds it away.
     order_amount_differs: Field.formula({
       label: 'Differs from the Order Amount',
-      group: 'value',
+      group: 'orders',
       returnType: 'boolean',
+      // An order contract's sign only, like the Order Amount's and the
+      // Remaining Quota's `visibleWhen` (hotcrm#2807). ⚠️ Measured on 18.6.0:
+      // the console's synthesized record page does not apply a field's
+      // `visibleWhen` in its detail sections, so the three still show, empty,
+      // on a contract of another form; the condition is the metadata's to
+      // state, and the renderer gap is reported upstream, not worked around.
+      visibleWhen: P`has(record.contract_form) && record.contract_form == "order"`,
       // Judged only once the order amount is known: a contract that predates
       // the field holds NULL there until the roll-up is materialised.
       expression: F`has(record.contract_form) && record.contract_form == "order"
@@ -321,6 +338,30 @@ export const Contract = ObjectSchema.create({
           != (has(record.contract_value) && record.contract_value != null ? double(record.contract_value) : 0.0)
         ? true : null`,
       description: "The contract value no longer equals the order's amount. Change, with Update from Order, takes the order's amount.",
+    }),
+
+    // A framework contract's quota left (hotcrm#2807): its value, the
+    // ceiling, less the Order Amount above. The current value: a quota
+    // raised or lowered by Change counts from the next read. Below zero
+    // when the orders have gone over the ceiling, which is the sign that
+    // stays on the record; the order's save that takes the contract over
+    // warns (`crm_sales_order.framework_quota_exceeded`).
+    //
+    // A contract whose orders have not been counted yet (NULL roll-up, a
+    // contract that predates the field until `migrate summary-nulls`) shows
+    // nothing rather than its whole value as left.
+    remaining_quota: Field.formula({
+      label: 'Remaining Quota',
+      group: 'orders',
+      returnType: 'currency',
+      scale: 2,
+      visibleWhen: P`has(record.contract_form) && record.contract_form == "framework"`,
+      expression: F`has(record.contract_form) && record.contract_form == "framework"
+        && has(record.order_amount) && record.order_amount != null
+        ? (has(record.contract_value) && record.contract_value != null ? double(record.contract_value) : 0.0)
+          - double(record.order_amount)
+        : null`,
+      description: 'The contract value less the Order Amount. Below zero when the orders have gone over the contract value.',
     }),
     
     billing_frequency: Field.select({
