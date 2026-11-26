@@ -323,18 +323,22 @@ describe('contract_validation', () => {
     await expect(managerContract({ start_date: '2026-01-01', end_date: '2026-12-15', contract_term_months: 12 })).resolves.toBeTruthy();
   });
 
-  it('refuses to move End Date earlier after activation, naming the field by its label', async () => {
-    // Shrunk within the term's one-month tolerance, so the shrink rule is the
-    // one that answers.
+  // An activated contract's End Date moves only through Change (#2804): the
+  // earlier shrink-only rule is gone, and a direct edit in either direction is
+  // refused by contract_form_and_change, naming the field.
+  it('refuses moving End Date earlier after activation, naming the field by its label', async () => {
     const contract = await contractOf({ status: 'activated', start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 });
-    await expect(verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2026-12-15' }, as(manager)))
-      .rejects.toThrow(/End Date cannot move earlier/);
+    const err = await verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2026-12-15' }, as(manager)).catch((e) => e);
+    expect([err?.code, err?.status ?? err?.statusCode]).toEqual(['RECORD_LOCKED', 409]);
+    expect(String(err?.message)).toMatch(/End Date changes only through Change/);
+    expect((await stored('crm_contract', contract.id)).end_date).toBe('2027-01-01');
   });
 
-  it('allows extending end_date after activation', async () => {
+  it('refuses extending end_date directly after activation too', async () => {
     const contract = await contractOf({ status: 'activated', start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 });
-    await verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2028-01-01', contract_term_months: 24 }, as(manager));
-    expect((await stored('crm_contract', contract.id)).end_date).toBe('2028-01-01');
+    const err = await verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2028-01-01', contract_term_months: 24 }, as(manager)).catch((e) => e);
+    expect([err?.code, err?.status ?? err?.statusCode]).toEqual(['RECORD_LOCKED', 409]);
+    expect((await stored('crm_contract', contract.id)).end_date).toBe('2027-01-01');
   });
 
   it('allows shrinking end_date while still a draft', async () => {

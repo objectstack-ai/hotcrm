@@ -75,10 +75,28 @@ export const commerce: Record<string, ObjectTranslationData> = {
       document_url: { label: '合同文档' },
       special_terms: { label: '特殊条款' },
       billing_address: { label: '账单地址' },
+      // The contract's form, an order contract's amount and Change (#2804).
+      contract_form: {
+        label: '合同形式',
+        help: '订单合同：由订单起草，金额就是订单金额。框架合同：金额手工填写，可挂多张订单。其他：没有金额，例如保密协议。',
+        options: { order: '订单合同', framework: '框架合同', other: '其他' },
+      },
+      crm_sales_order: { label: '来源订单', help: '起草这份合同的订单。' },
+      order_amount: { label: '订单金额', help: '订单的含税总额。' },
+      order_amount_differs: { label: '与订单金额不一致', help: '合同金额已不等于订单金额。用“变更”并选择“按订单更新”，可取订单的当前金额。' },
+      change_reason: { label: '变更原因', help: '合同最近一次变更的原因。由“变更”写入。' },
+      change_amendment: { label: '签署的变更协议', help: '客户为最近一次变更签署的补充协议。由“变更”写入。' },
+      change_new_value: { label: '新合同金额', help: '留空则保持合同金额不变。' },
+      change_new_end_date: { label: '新结束日期', help: '留空则保持结束日期不变。' },
+      change_new_payment_terms: { label: '新付款条款', help: '留空则保持付款条款不变。' },
+      change_from_order: { label: '按订单更新', help: '把订单的当前金额作为合同金额。' },
     },
     // Print Contract (#2317).
     _actions: {
       print_contract: { label: '打印合同', successMessage: '合同 PDF 已归档到附件。' },
+      // Change (#2804): one action per kind of contract.
+      change_contract: { label: '变更', description: '变更这份已激活合同的金额、结束日期或付款条款。留空的项保持不变。', successMessage: '合同 {{ record.name }} 已变更。' },
+      change_order_contract: { label: '变更', description: '变更这份已激活订单合同的结束日期或付款条款，或取订单的当前金额。留空的项保持不变。', successMessage: '合同 {{ record.name }} 已变更。' },
     },
     _views: {
       all_contracts: { label: '全部合同' },
@@ -93,6 +111,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       value: { label: '合同金额' },
       status: { label: '状态与审批' },
       renewal: { label: '续约' },
+      change: { label: '最近一次变更' },
       // contract.view.ts 表单区块名称 (#1100)
       contract_terms: { label: '条款' },
       signing_and_documents: { label: '签署与文件' },

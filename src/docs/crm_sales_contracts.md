@@ -68,6 +68,28 @@ before, and an import or an integration still saves its other changes. The
 **Edit** form asks for the **Signed Copy** before it saves any change to such a
 contract, so upload the copy first.
 
+## Order contracts, framework contracts and other
+
+A contract's **Contract Form** says where its value comes from. **Draft
+Contract** on an order makes an **order contract**: its value is the order's
+total, tax included, and while the contract is a draft it follows the order —
+change the order and the contract's value changes with it. Nobody types an
+order contract's value. A contract you create by hand is a **framework
+contract** (its value typed, and it may carry many orders) or **Other** (no
+amount, such as an NDA); you choose while it is a draft.
+
+Once an order contract is activated, its value stays as signed. If the order
+changes afterwards, the contract shows **Differs from the Order Amount**.
+
+## Changing an activated contract
+
+An activated contract's **Contract Value**, **End Date** and **Payment Terms**
+change only through **Change**: give the reason and upload the signed
+amendment, or nothing is saved. On an order contract, **Update from Order**
+takes the order's current amount; no value is typed. The contract stays
+activated, and its history keeps every value before and after, with who
+changed it and when.
+
 ## Renewals and expiration are watched for you
 
 Two automatic jobs make sure a contract never lapses unnoticed, on a deployment

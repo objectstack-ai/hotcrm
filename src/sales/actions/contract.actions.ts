@@ -55,3 +55,74 @@ export const PrintContractAction: Action = {
   locations: ['record_header', 'list_item'],
   refreshAfter: true,
 };
+
+/**
+ * Change — the one way an activated contract's value, end date and payment
+ * terms change (hotcrm#2804, maintainer ruling 2026-11-26).
+ *
+ * Two actions, one per kind of contract, because the ruling gives them
+ * different inputs: a framework contract (and an Other one) may be given a
+ * new value; an order contract is offered no value at all, only Update from
+ * Order, which takes the order's amount. Both ask for the reason and the
+ * signed amendment, and may give a new end date and new payment terms; an
+ * input left empty keeps the field as it is.
+ *
+ * A declarative update (`operation: 'update'`, the dialog's `params`), so it
+ * writes AS THE CALLER: the contract's own grants judge it, as Edit would. It
+ * cannot write the three fields itself — on an activated contract
+ * `readonlyWhen` drops every caller's write to them — so it writes the reason,
+ * the amendment and the `change_new_*` inputs, and
+ * `contract_form_and_change` (`../objects/contract.hook.ts`) refuses a
+ * change without a reason or a newly signed amendment, moves each input
+ * onto its field, and clears the inputs, in the same write. The field history
+ * keeps every value before and after, who and when. The status stays
+ * Activated, so the renewal and expiry sweeps go on reading the contract;
+ * no change order is created, the order is not changed and the payment plan
+ * is not re-planned.
+ *
+ * `visible`: activated contracts of the action's kind, for a person who may
+ * edit contracts. Every predicate is total: a page's first render holds no
+ * status, which offers nothing.
+ */
+export const ChangeContractAction: Action = {
+  name: 'change_contract',
+  label: 'Change',
+  objectName: 'crm_contract',
+  icon: 'file-diff',
+  operation: 'update',
+  locations: ['record_header'],
+  visible: P`has(record.status) && record.status == "activated"
+    && !(has(record.contract_form) && record.contract_form == "order") && current_user.can("crm_contract", "edit")`,
+  description: 'Changes the contract value, the end date or the payment terms of this activated contract. Leave a field empty to keep it.',
+  params: [
+    { field: 'change_reason', required: true },
+    { field: 'change_amendment', required: true },
+    { field: 'change_new_value' },
+    { field: 'change_new_end_date' },
+    { field: 'change_new_payment_terms' },
+  ],
+  successMessage: 'Contract {{ record.name }} changed.',
+  refreshAfter: true,
+};
+
+/** Change on an order contract: as `ChangeContractAction`, with Update from Order in place of a value. */
+export const ChangeOrderContractAction: Action = {
+  name: 'change_order_contract',
+  label: 'Change',
+  objectName: 'crm_contract',
+  icon: 'file-diff',
+  operation: 'update',
+  locations: ['record_header'],
+  visible: P`has(record.status) && record.status == "activated"
+    && has(record.contract_form) && record.contract_form == "order" && current_user.can("crm_contract", "edit")`,
+  description: "Changes the end date or the payment terms of this activated order contract, or takes the order's current amount. Leave a field empty to keep it.",
+  params: [
+    { field: 'change_reason', required: true },
+    { field: 'change_amendment', required: true },
+    { field: 'change_from_order' },
+    { field: 'change_new_end_date' },
+    { field: 'change_new_payment_terms' },
+  ],
+  successMessage: 'Contract {{ record.name }} changed.',
+  refreshAfter: true,
+};

@@ -200,11 +200,17 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // 98 until hotcrm#2755 added `invoice_plan_step_guard`'s refusal of an
     // invoice naming another account's billing milestone; 99 until hotcrm#2761
     // added `expense_report_rules`' two refusals of deleting an approved or a
-    // paid report, administrators included.
+    // paid report, administrators included; 101 until hotcrm#2804 moved the
+    // contract's end-date refusal out of `contract_validation` (one less) and
+    // added `contract_form_and_change`'s eight (an order contract by hand on
+    // insert and on update, the form's lock, the activated contract's locked
+    // field, an order contract's value, Change on a contract that is not
+    // activated, Change without its reason or amendment, a typed value on an
+    // order contract).
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(101);
+    expect(sites).toHaveLength(108);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
