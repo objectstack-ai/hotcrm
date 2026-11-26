@@ -28,7 +28,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       // Keyed by navigation-node `id` (a flat keyspace regardless of depth).
       navigation: {
         nav_home: { label: 'ホーム' },
-        nav_sales_home: { label: '営業ホーム' },
 
         group_sales: { label: '営業' },
         group_collection_plan: { label: '回収計画' },
@@ -500,46 +499,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     contract_print_page: {
       label: '契約書類',
       description: '印刷用の契約書：当事者、期間、金額、請求、条件、署名欄。',
-    },
-    account_workbench: {
-      label: '取引先ワークベンチ',
-      description: '営業チーム向けに厳選した取引先リスト。クイックフィルターのみで、ビュー管理は行いません。',
-    },
-    sales_home_page: {
-      label: '営業ホーム',
-      description: '主要指標、自分の未完了の仕事、今後の予定をまとめた営業チームのホームページ',
-      components: {
-        kpi_revenue_won: {
-          label: '総売上（全期間）',
-        },
-        kpi_deals_won: {
-          label: '成立商談数（全期間）',
-        },
-        kpi_pipeline_value: {
-          label: 'オープンパイプライン（全期間）',
-        },
-        kpi_open_leads: {
-          label: 'オープンリード',
-        },
-        home_upcoming_events: {
-          label: '📅 開催予定 · 直近順',
-        },
-        key_metrics: { title: '主要業績評価指標', label: '主要指標' },
-        // `page:tabs` item labels, keyed by each item's `value` (#2284, spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        home_tabs: {
-          label: 'ホームタブ',
-          items: {
-            my_leads: { label: '私のリード' },
-            my_open_deals: { label: '私のオープン商談' },
-            my_open_tasks: { label: '私のオープンタスク' },
-          },
-        },
-        home_my_leads: { label: '私のリード' },
-        home_my_deals: { label: '私のオープン商談' },
-        home_my_tasks: { label: '私のオープンタスク' },
-        upcoming_events: { title: '今後の予定', label: '今後の予定' },
-      },
     },
   },
   // Screen-flow copy (#1210, #1975). Keyed `flows.<flow>.label`,

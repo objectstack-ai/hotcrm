@@ -135,28 +135,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Contract Document',
       description: 'The contract as a printable document: parties, term, value, billing, terms and signatures.',
     },
-    account_workbench: {
-      label: 'Account Workbench',
-      description: 'Curated account list for the sales team: quick filters only, no view management.',
-    },
-    sales_home_page: {
-      label: 'Sales Home',
-      description: 'Sales team home page with key metrics, my open work and upcoming events',
-      components: {
-        key_metrics: { title: 'Key Performance Indicators', label: 'Key Metrics' },
-        // `page:tabs` item labels, keyed by each item's `value` (#2284, spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        home_tabs: {
-          label: 'Home Tabs',
-          items: {
-            my_leads: { label: 'My Leads' },
-            my_open_deals: { label: 'My Open Deals' },
-            my_open_tasks: { label: 'My Open Tasks' },
-          },
-        },
-        upcoming_events: { title: 'Upcoming Events', label: 'Upcoming Events' },
-      },
-    },
   },
   // Shared option lists (`src/<pkg>/picklists/*.picklist.ts`), translated ONCE:
   // every field that references a list (`Field.select({ picklist })`) inherits

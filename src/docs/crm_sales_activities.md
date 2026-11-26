@@ -28,8 +28,8 @@ Leads, contacts, accounts, opportunities and cases each carry three buttons:
   attendees. You are added as the organizer, and the contact or lead you start
   from is added for you, so **Contact Attendees** is only for anyone else.
 - **Schedule a Meeting** books one in the future. It is saved as **planned**
-  and appears in **My Calendar**, and in **Upcoming Events** on **Sales Home**
-  until its start time passes. A planned meeting whose time has passed leaves
+  and appears in **My Calendar**, and on the **📅 Upcoming · Soonest First** tab
+  of **Events** until its start time passes. A planned meeting whose time has passed leaves
   that list but stays **planned**: nothing marks it held for you, so log what
   happened by setting it to **held** (or **cancelled**).
 

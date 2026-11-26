@@ -6,18 +6,15 @@ import { join } from 'node:path';
 import { REPO_ROOT } from './helpers/repo-root';
 import { servedApp } from './helpers/composed-stack';
 import { CrmApp } from '../src/sales/apps/crm.app';
-import { AccountWorkbenchPage } from '../src/sales/pages/account_workbench.page';
 
 /**
  * The sales index page's "Where to find things" section, pinned to the Sales
  * navigation group (#997).
  *
  * The section's whole job is "here is what the sidebar's Sales group holds",
- * and it held eight of the group's nine entries. The missing one was
- * **Account Workbench** — an ADR-0047 interface page
- * (`src/pages/account_workbench.page.ts`), with a real label in every locale
- * bundle, sitting third in the group — so the page told a new reader it does
- * not exist, or that the sidebar they were looking at was broken.
+ * and it held eight of the group's nine entries: the missing one, an ADR-0047
+ * interface page sitting third in the group, told a new reader it did not
+ * exist, or that the sidebar they were looking at was broken.
  *
  * The same fact was already right one page over:
  * `content/docs/(start)/getting-started/quick-tour.mdx` lists all nine, and
@@ -28,12 +25,10 @@ import { AccountWorkbenchPage } from '../src/sales/pages/account_workbench.page'
  * in all three locales, the way #938 (marketing/index, Products) and #927
  * (service/index, Knowledge) each had to be found by hand.
  *
- * #2286 (ruling B) then took Account Workbench OUT of the group: it showed
- * the same rows and columns as Accounts, so the sidebar carried two identical
- * entries. The page still ships as the ADR-0047 exhibit; the section now says
- * there is no such entry, in italics, the way it says there is no Pipeline
- * entry. That the page is served and that no nav item opens it is pinned in
- * `account-workbench-exhibit.test.ts`.
+ * #2286 (ruling B) then took that interface page OUT of the group, and #2740
+ * (ruling W1) deleted the page: it showed the same rows and columns as
+ * Accounts, and its three quick filters ship on the Enterprise Accounts view
+ * (`account-list-quick-filters.test.ts`). The section no longer mentions it.
  *
  * The rules are shaped around the section's own layout, which differs by
  * locale in exactly one respect worth knowing:
@@ -159,19 +154,6 @@ describe('sales/index lists the whole Sales navigation group (#997)', () => {
       ).toEqual([]);
     });
 
-    it('says Account Workbench is not a sidebar entry, and never bolds it (#2286)', () => {
-      const text = section();
-      expect(
-        text,
-        `${file}: a reader who knew the Account Workbench entry is told where it went`,
-      ).toContain('Account Workbench');
-      // Bold is for names the sidebar carries; the zh pages bold the
-      // translated name, so both spellings are refused.
-      for (const bold of ['**Account Workbench**', '**客户工作台**', '**客戶工作台**']) {
-        expect(text, `${file}: Account Workbench is no longer a Sales entry`).not.toContain(bold);
-      }
-    });
-
     if (checkObjectLabels) {
       it('spells each object entry with its own navigation label', () => {
         expect(OBJECT_BULLET_ITEMS(section())).toEqual(OBJECT_ENTRIES.map((c) => c.label));
@@ -243,17 +225,5 @@ describe('the source facts that section now rests on (#997)', () => {
     expect(product?.objectName).toBe('crm_product');
     expect(product?.viewName, 'Products opens the object list, so it belongs in the shared bullet')
       .toBeUndefined();
-  });
-
-  it('the Account Workbench page reuses the accounts view rather than restating it, as the section says', () => {
-    const cfg = (AccountWorkbenchPage as AnyRec).interfaceConfig ?? {};
-    expect(cfg.source).toBe('crm_account');
-    expect(cfg.sourceView).toBe('all_accounts');
-    expect(cfg.userActions?.filter).toBe(false);
-    expect((cfg.userFilters?.fields ?? []).map((f: AnyRec) => f.field)).toEqual([
-      'industry',
-      'type',
-      'owner_id',
-    ]);
   });
 });

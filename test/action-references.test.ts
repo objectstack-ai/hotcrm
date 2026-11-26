@@ -345,9 +345,11 @@ describe('record-page header action references resolve', () => {
   );
 
   it('every page:header action id names an action reachable from the page object', () => {
-    // Since #2382 no RECORD page authors a header (see the next test), so this
-    // sweep covers the pages that still do; it holds the id-resolution rule
-    // for the day one names actions again.
+    // Since #2382 no RECORD page authors a header (see the next test), and
+    // the last page that did, the rep's custom home page, went with #2740. So
+    // the sweep finds no header today; it holds the id-resolution rule for
+    // the day a page names actions again, and the page roster is pinned in
+    // place of a header count: a new page turns it red and is then swept.
     const bad: string[] = [];
     for (const { page, component } of headers) {
       for (const id of component.properties?.actions ?? []) {
@@ -363,7 +365,11 @@ describe('record-page header action references resolve', () => {
         }
       }
     }
-    expect(headers.length, 'the walk no longer reaches any page:header at all').toBeGreaterThan(0);
+    expect(
+      pages.map((p) => p.name).sort(),
+      'the shipped pages changed — re-aim this pin',
+    ).toEqual(['contract_detail_page', 'contract_print_page', 'quote_detail_page', 'quote_print_page']);
+    expect(headers.map(({ page }) => page.name), 'a page authors a page:header again: the sweep above now reads it').toEqual([]);
     expect(bad, `header actions that resolve to nothing:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 

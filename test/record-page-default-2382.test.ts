@@ -64,9 +64,10 @@ describe('the four record pages are the default page, with nothing authored', ()
 
   it('the account has no authored record page at all: the chatter and the custom header are gone', () => {
     expect(recordPagesOf('crm_account')).toEqual([]);
-    // The workbench is the account's LIST page and stays (ruling).
+    // Nor any other page: the account's list interface page went too (#2740,
+    // ruling W1), and the account opens on its own list views.
     expect(servedPages().filter((p) => p.object === 'crm_account').map((p) => `${p.name}:${p.type}`))
-      .toEqual(['account_workbench:list']);
+      .toEqual([]);
   });
 });
 

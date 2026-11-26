@@ -220,7 +220,6 @@ const labelsOf = (cls: Cls): Set<string> =>
 const HANT: Record<string, string> = {
   'apps.crm_psa.label': '項目交付',
   'objects.crm_account._actions.log_call.label': '記錄通話',
-  'objects.crm_account._views.all_accounts.label': '全部客戶',
   'objects.crm_account.fields.approval_status.label': '審批狀態',
   'objects.crm_account.fields.approval_status.options.pending': '待審批',
   'objects.crm_account.fields.tier.label': '客戶分層',
