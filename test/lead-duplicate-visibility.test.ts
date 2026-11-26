@@ -38,9 +38,11 @@ const pages: AnyRec[] = (stack as AnyRec).pages ?? [];
  * Until 2026-11-25 the record page also carried two banners, one per verdict
  * (#1628), in the `alerts` slot of an authored lead page. The maintainer
  * deleted that page with them (#2740, 「2A+ 删甘特图」) and, in the same ruling,
- * had the Duplicate Management section open expanded, so the verdict shows
- * without a click (it is the last section of Overview, below the fold at
- * 1440 px: measured 2026-11-25). The control did not move: the conversion screen warns
+ * had the Duplicate Management section open expanded. It was then the last of
+ * ten sections, below the fold at 1440 px (measured 2026-11-25), so the
+ * maintainer moved it to second place, right after Identity (「挪到第 2 位」,
+ * 2026-11-26): the verdict is on the first screen without a click or a
+ * scroll. The control did not move: the conversion screen warns
  * on a suspected duplicate and refuses a confirmed one, pinned below on the
  * real engines.
  */
@@ -50,11 +52,15 @@ describe('lead record page — the duplicate verdict in an expanded section', ()
     expect(pages.filter((p) => p.object === 'crm_lead').map((p) => p.name)).toEqual([]);
   });
 
-  it('the Duplicate Management section opens expanded, so the verdict shows without a click (#2740)', () => {
+  it('the Duplicate Management section is second and opens expanded, so the verdict is on the first screen (#2740)', () => {
     // `collapse: 'expanded'` is the spec's "collapsible, starts open"
     // (ADR-0085). It was `collapsed` while a banner announced the verdict above
-    // the fields; with the banner gone, a folded section would hide it.
+    // the fields; with the banner gone, a folded section would hide it. The
+    // default page draws the groups in declaration order, so index 1 puts it
+    // right under Identity (maintainer, 2026-11-26: 「挪到第 2 位」).
     const lead = objects.find((o) => o.name === 'crm_lead') ?? {};
+    const keys = ((lead.fieldGroups ?? []) as AnyRec[]).map((g) => g.key);
+    expect(keys.slice(0, 2), 'Duplicate Management is no longer right after Identity').toEqual(['identity', 'duplicates']);
     const group = ((lead.fieldGroups ?? []) as AnyRec[]).find((g) => g.key === 'duplicates');
     expect(group, 'crm_lead declares no `duplicates` field group').toBeDefined();
     expect(group!.collapse).toBe('expanded');
