@@ -134,7 +134,8 @@ rather than as typed; the decisions are listed on the tracking card,
   and a signed amendment attached.
 
 The order stays the spine; the contract stays optional. This is the requirement as decided; the
-code follows with [hotcrm#2804](https://github.com/objectstack-ai/hotcrm/issues/2804) (and, for a
-framework contract's ceiling, the proposal in
-[hotcrm#2807](https://github.com/objectstack-ai/hotcrm/issues/2807)). The same ruling's invoice and
+code follows with [hotcrm#2804](https://github.com/objectstack-ai/hotcrm/issues/2804), and a
+framework contract's quota roll-up and over-limit warning with
+[hotcrm#2807](https://github.com/objectstack-ai/hotcrm/issues/2807); a formal change order and its
+approval are a proposal in [hotcrm#2809](https://github.com/objectstack-ai/hotcrm/issues/2809). The same ruling's invoice and
 payment decisions are recorded on [REQ-0007](0007-order-to-cash-module.md), *Note (2026-11-26)*.

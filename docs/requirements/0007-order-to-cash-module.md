@@ -161,7 +161,8 @@ The open decisions are the design document's.
 - First version: on `pnpm dev`, a software contract carries an advance / go-live / acceptance /
   retention collection plan kept by its rep; finance enters an issued invoice for one step and a
   payment against it, and imports a second invoice from a spreadsheet; the contract shows planned /
-  invoiced / received / open and the account its open receivable; ~~an invoice past its due date
+  invoiced / received / open and ~~the account its open receivable~~ the account its unpaid amount
+  (the 2026-11-26 ruling); ~~an invoice past its due date
   appears in its rep's overdue view~~ a plan step past its planned date with an amount still open
   appears in its rep's overdue plan steps (the 2026-11-26 ruling; the shipped first version
   measured overdue on invoices); a rep can read invoices and payments but cannot create or edit
