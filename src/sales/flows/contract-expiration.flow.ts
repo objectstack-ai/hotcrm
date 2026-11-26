@@ -25,7 +25,7 @@ export const ContractExpirationFlow: Flow = {
   runAs: 'system',
   variables: [],
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 00:00)', config: { schedule: '0 0 * * *' } },
+    { id: 'start', type: 'start', label: 'Start (daily 00:00)', config: { schedule: { type: 'cron', expression: '0 0 * * *', timezone: 'UTC' } } },
     {
       id: 'query_contracts', type: 'get_record', label: 'Find Expired Contracts',
       config: {

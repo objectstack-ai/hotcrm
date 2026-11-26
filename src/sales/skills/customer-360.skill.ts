@@ -56,6 +56,9 @@ customer / account / contact:
    the UI can deep link. If a section has no records, say so plainly
    instead of filling it.`,
 
+  // Written for the in-product agents: it binds `aggregate_data`, which no MCP connection serves, so MCP
+  // already withholds it from `prompts/list` (ai-skill-tool-unresolved, ObjectStack 19). Said here, not implied.
+  mcpPrompt: false,
   tools: ['describe_object', 'get_record', 'query_records', 'aggregate_data'],
 
 });

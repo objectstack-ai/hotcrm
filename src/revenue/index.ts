@@ -23,6 +23,7 @@ import {
 } from './objects/hooks.js';
 import { QuoteDetailPage, QuotePrintPage } from './pages/index.js';
 import { RevenueTranslations } from './translations/index.js';
+import { RevenueFlowStepTranslations } from './translations/flow-steps.js';
 import { PriceBookViews, ProductViews, QuoteViews } from './views/index.js';
 
 /**
@@ -184,7 +185,7 @@ export const createHotCrmRevenueStack = (
   emailTemplates: RevenueEmailTemplates,
   // Its manual (#2327), over `src/revenue/docs/`. See the book's own note.
   books: [CrmRevenueManual],
-  translations: [RevenueTranslations],
+  translations: [RevenueTranslations, RevenueFlowStepTranslations],
   // The quote's working page (explicit default) and its print page (#2312).
   // Print Quote's door, `POST /api/v1/print/records`, is mounted by the app
   // package (`src/sales/index.ts`), which Print Contract needs too (#2317).

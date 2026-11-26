@@ -38,6 +38,9 @@ risk, or deal slippage:
 6. Be quantitative: every claim cites a number or a deal name. If the
    data cannot support a claim, say so instead of estimating.`,
 
+  // Written for the in-product agents: it binds `aggregate_data`, which no MCP connection serves, so MCP
+  // already withholds it from `prompts/list` (ai-skill-tool-unresolved, ObjectStack 19). Said here, not implied.
+  mcpPrompt: false,
   tools: ['describe_object', 'aggregate_data', 'query_records', 'visualize_data'],
 
   triggerConditions: [

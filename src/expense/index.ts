@@ -19,6 +19,7 @@ import {
 } from './sharing/index.js';
 import { ExpenseCheckSkill, ExpenseFilingSkill } from './skills/index.js';
 import { ExpenseTranslations } from './translations/index.js';
+import { ExpenseFlowStepTranslations } from './translations/flow-steps.js';
 import { ExpenseReportViews, ExpenseRequestLineViews, ExpenseRequestViews, ExpenseStandardViews, ExpenseViews } from './views/index.js';
 
 /**
@@ -151,5 +152,5 @@ export const createHotCrmExpenseStack = (
   // The assistant's two skills (hotcrm#2617).
   skills: expenseSkills,
   data: collections.data,
-  translations: [ExpenseTranslations],
+  translations: [ExpenseTranslations, ExpenseFlowStepTranslations],
 });

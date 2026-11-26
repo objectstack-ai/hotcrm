@@ -27,6 +27,7 @@ import {
   TimesheetApproverEditSharingRule,
 } from './sharing/index.js';
 import { PsaTranslations } from './translations/index.js';
+import { PsaFlowStepTranslations } from './translations/flow-steps.js';
 import {
   ProjectBudgetLineViews, ProjectBudgetViews, ProjectMemberViews, ProjectTaskViews, ProjectViews,
   RateCardViews, TimeEntryViews, TimesheetViews,
@@ -162,5 +163,5 @@ export const createHotCrmPsaStack = (
   // Its manual (phase 1c), over `src/psa/docs/`. See the book's own note.
   books: [CrmPsaManual],
   data: collections.data,
-  translations: [PsaTranslations],
+  translations: [PsaTranslations, PsaFlowStepTranslations],
 });

@@ -12,6 +12,7 @@ import { Campaign, CampaignMember } from './objects/index.js';
 import { campaignHook, campaignMemberHook } from './objects/hooks.js';
 import { CampaignLeadershipSharingRules } from './sharing/index.js';
 import { MarketingTranslations } from './translations/index.js';
+import { MarketingFlowStepTranslations } from './translations/flow-steps.js';
 import { CampaignViews } from './views/index.js';
 
 /**
@@ -95,7 +96,7 @@ export const createHotCrmMarketingStack = (
   sharingRules: marketingSharingRules,
   // Its manual (#2330), over `src/marketing/docs/`. See the book's own note.
   books: [CrmMarketingManual],
-  translations: [MarketingTranslations],
+  translations: [MarketingTranslations, MarketingFlowStepTranslations],
 
   ...collections,
 });

@@ -31,7 +31,7 @@ export const CampaignCompletionFlow: Flow = {
   runAs: 'system',
   variables: [],
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 02:00)', config: { schedule: '0 2 * * *' } },
+    { id: 'start', type: 'start', label: 'Start (daily 02:00)', config: { schedule: { type: 'cron', expression: '0 2 * * *', timezone: 'UTC' } } },
     {
       id: 'query_campaigns', type: 'get_record', label: 'Find Ended Campaigns',
       config: {

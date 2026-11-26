@@ -33,6 +33,9 @@ record (account, contact, lead, opportunity, case, quote, etc.):
    USE IT — that's the user's whole point in adding it. Surface it
    in your answer when relevant.`,
 
+  // Written for the in-product agents: it binds `aggregate_data`, which no MCP connection serves, so MCP
+  // already withholds it from `prompts/list` (ai-skill-tool-unresolved, ObjectStack 19). Said here, not implied.
+  mcpPrompt: false,
   tools: [
     'describe_object',
     'list_objects',
