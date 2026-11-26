@@ -408,9 +408,14 @@ describe('contract_on_activation', () => {
     const contract = await contractOf({ status: 'activated', ...TERM }, { type: 'prospect' });
     const engine = await engineWritesDuring(() =>
       verify.hooks.run('crm_contract', 'update', { id: contract.id, status: 'activated', description: 'Re-saved.' }, as(manager)));
-    // Only the manager's own write reached the contract, and nothing reached the account.
+    // Only the manager's own write reached the contract, and the account was
+    // not promoted. Since hotcrm#2806 the account rolls up its contracts' Unpaid
+    // and Uninvoiced, so a contract write recomputes those roll-ups on the
+    // account: that write carries no `type`, and it is the only one.
     expect(engine.of('crm_contract', 'update')).toHaveLength(1);
-    expect(engine.of('crm_account', 'update')).toHaveLength(0);
+    const accountKeys = engine.of('crm_account', 'update').flatMap((w) => Object.keys((w.args[1] ?? {}) as Rec));
+    expect(accountKeys).not.toContain('type');
+    expect((await stored('crm_account', String(contract.crm_account))).type).toBe('prospect');
   });
 });
 

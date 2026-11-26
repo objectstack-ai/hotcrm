@@ -38,7 +38,7 @@ description: 財務如何輸入和匯入發票與回款、到期日如何確定�
 | **Unpaid** | **Total Price** 減去 **Received** | **Contract Value** 減去 **Received** |
 | **Uninvoiced** | **Total Price** 減去 **Invoiced** | **Contract Value** 減去 **Invoiced** |
 
-兩者都不低於零：超過應收的回款照樣接受，無論是手動輸入還是匯入，因為這筆錢確實收到了，**Unpaid** 到零為止。客戶上的 **Unpaid** 和 **Uninvoiced** 把它已簽下的每筆交易各自的數加起來，每筆只算一次：每張 **Confirmed** 或 **Completed** 的訂單，以及每份沒有訂單的 **Activated** 或 **Expired** 合約。哪些計入，見[訂單、合約和客戶上的彙總](/docs/order-to-cash#totals)。
+兩者都不低於零：超過應收的回款照樣接受，無論是手動輸入還是匯入，因為這筆錢確實收到了，**Unpaid** 到零為止。客戶上的 **Unpaid** 和 **Uninvoiced** 把它已簽下的每筆交易各自的數加起來，每筆只算一次：每張 **Confirmed** 或 **Completed** 的訂單，以及每份沒有訂單的 **Activated** 或 **Expired** 合約。哪些計入，見[訂單、合約和客戶上的彙總](/zh-Hant/docs/order-to-cash#totals)。
 
 **什麼算逾期**看的是回款計劃：過了 **Planned Date** 仍有 **Open** 金額的節點，在 Order to Cash 應用的 **Follow-up → Overdue Payment Plans** 裡。見[回款計劃](./collection-plan)。
 

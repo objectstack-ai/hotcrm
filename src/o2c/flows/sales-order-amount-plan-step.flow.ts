@@ -29,8 +29,10 @@ export const SalesOrderAmountPlanStepFlow: Flow = {
   description: 'When an order\'s total changes and it has one payment plan step with nothing received, set that step\'s amount to the new total.',
   type: 'record_change',
   status: 'active',
-  // Elevated on purpose (see the header). The one write is the lone step's
-  // Planned Amount.
+  // Elevated on purpose (see the header): the person whose edit moves the
+  // order's total may not write payment plans, and the plan must still follow.
+  // The one write is the lone step's Planned Amount, found under the
+  // organization pin.
   runAs: 'system',
   variables: [],
   nodes: [
@@ -89,15 +91,15 @@ export const SalesOrderAmountPlanStepFlow: Flow = {
   ],
   edges: [
     { id: 'e1', source: 'start', target: 'find_steps', type: 'default' },
-    { id: 'e2', source: 'find_steps', target: 'get_step', type: 'conditional', condition: P`size(vars.orderSteps) == 1`, label: 'One step' },
-    { id: 'e3', source: 'find_steps', target: 'end', type: 'conditional', condition: P`size(vars.orderSteps) != 1`, label: 'None, or several' },
+    { id: 'e2', source: 'find_steps', target: 'get_step', type: 'conditional', condition: P`has(vars.orderSteps) && vars.orderSteps != null && size(vars.orderSteps) == 1`, label: 'One step' },
+    { id: 'e3', source: 'find_steps', target: 'end', type: 'conditional', condition: P`!has(vars.orderSteps) || vars.orderSteps == null || size(vars.orderSteps) != 1`, label: 'None, or several' },
     {
       id: 'e6', source: 'get_step', target: 'get_order', type: 'conditional', label: 'Nothing received',
-      condition: P`!has(vars.loneStep.received_amount) || vars.loneStep.received_amount == null || double(vars.loneStep.received_amount) == 0.0`,
+      condition: P`has(vars.loneStep) && vars.loneStep != null && (!has(vars.loneStep.received_amount) || vars.loneStep.received_amount == null || double(vars.loneStep.received_amount) == 0.0)`,
     },
     {
       id: 'e7', source: 'get_step', target: 'end', type: 'conditional', label: 'Something received',
-      condition: P`has(vars.loneStep.received_amount) && vars.loneStep.received_amount != null && double(vars.loneStep.received_amount) != 0.0`,
+      condition: P`!has(vars.loneStep) || vars.loneStep == null || (has(vars.loneStep.received_amount) && vars.loneStep.received_amount != null && double(vars.loneStep.received_amount) != 0.0)`,
     },
     { id: 'e4', source: 'get_order', target: 'update_step', type: 'default' },
     { id: 'e5', source: 'update_step', target: 'end', type: 'default' },

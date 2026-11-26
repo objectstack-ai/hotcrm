@@ -119,6 +119,10 @@ const RUNTIME_TEST_FILES = [
   // hotcrm#2724 — `sales_order_contract_fill`, the order's contract set
   // later and passed to its rows, on the booted app.
   'o2c-order-contract-later.test.ts',
+  // hotcrm#2806 — the confirmed order's payment plan step
+  // (`sales_order_confirmed_plan_step`) and the lone step following the order's
+  // total (`sales_order_amount_plan_step`), on the booted app.
+  'o2c-parallel-figures.test.ts',
   // #2316 phase 1a — Project Delivery's four hooks, run as the people who use
   // them: staffing, time costing, the timesheet's stamps, the approver gates.
   'psa-objects.test.ts',
