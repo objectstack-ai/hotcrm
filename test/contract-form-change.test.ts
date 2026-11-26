@@ -14,7 +14,8 @@ import {
 type Rec = Record<string, any>;
 
 /**
- * The contract's form, an order contract's value and Change (hotcrm#2804,
+ * The contract's form, an order contract's value and Change (hotcrm#2804, hook
+ * `contract_form_and_change`,
  * maintainer ruling 2026-11-26), against a booted stack.
  *
  *  1. Draft Contract on an order drafts an ORDER contract naming its order,
@@ -155,7 +156,7 @@ describe('Draft Contract drafts an order contract (hotcrm#2804 item 2)', () => {
   });
 });
 
-describe('an activated order contract: locked, a sign when the order moves, Change from the order (items 2, 5)', () => {
+describe('contract_form_and_change — an activated order contract: locked, a sign when the order moves, Change from the order (items 2, 5)', () => {
   let order: Rec;
   let contract: Rec;
   beforeAll(async () => {
