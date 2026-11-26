@@ -527,7 +527,9 @@ describe('every locale is complete on every authored surface', () => {
    * consumer case objectstack#12961 was filed on by name. That card was ruled on
    * 2026-08-29 (option A: descend declared `properties.children`) and its fix
    * merged as objectstack#13111, with the extractor's matching walk following in
-   * objectstack#13109 / #13215.
+   * objectstack#13109 / #13215. (That card and its page are gone since
+   * #2740, which deleted the rep's custom home page; the reading stays as the
+   * record of what the platform translates.)
    *
    * That reading was taken while this repo pinned 17.1.0 and the newest
    * published tarball was 17.2.0: `translatePage` there mapped
@@ -1022,39 +1024,21 @@ describe('every locale is complete on every authored surface', () => {
   // and `pnpm lint` fails on it.
 });
 
-describe('the Sales Home tabs and the public forms keep the slot their translation is keyed under (#2284)', () => {
+describe('the public forms keep the slot their translation is keyed under (#2284)', () => {
   /**
    * `objectstack lint --strict` (`pnpm lint`) names a missing locale key for each
    * of these as `i18n/missing-page` / `i18n/missing-view` — measured on 18.1.0 by
    * removing one key per row. What it cannot see is the SOURCE side going: a
-   * `page:tabs` item with no `value` gets no translation slot at all (its token
-   * is index-derived), and a form view with no `title` has nothing for
-   * `GET /forms/:slug` to translate, so either regression makes the key vanish
-   * and lint go green while the visitor reads English again. This pins the two
-   * authoring facts and the key each locale carries for them.
+   * form view with no `title` has nothing for `GET /forms/:slug` to
+   * translate, so the key vanishes and lint goes green while the visitor reads
+   * English again. This pins the authoring fact and the key each locale
+   * carries for it. (It also pinned the `page:tabs` items of the rep's custom
+   * home page, the app's one tab strip, until #2740 deleted that page.)
    */
-  const homeTabs = [...walk(pages.find((p) => p.name === 'sales_home_page'))].find(
-    (c) => c.type === 'page:tabs' && c.id === 'home_tabs',
-  );
   const forms: [string, string][] = [['crm_lead', 'web_to_lead'], ['crm_case', 'web_to_case']];
   const formView = (object: string, key: string): AnyRec | undefined =>
     views.find((v) => (v.list?.data?.object ?? v.form?.data?.object) === object && v.formViews?.[key])
       ?.formViews?.[key];
-
-  it('every Sales Home tab item carries a value, and every locale labels it', () => {
-    const items: AnyRec[] = homeTabs?.properties?.items ?? [];
-    expect(items.length).toBe(3);
-    const bad: string[] = [];
-    for (const item of items) {
-      if (typeof item.value !== 'string' || !item.value) bad.push(`item "${item.label}" has no value`);
-      for (const [locale, pack] of localePacks) {
-        if (!pack.pages?.sales_home_page?.components?.home_tabs?.items?.[item.value]?.label) {
-          bad.push(`${locale}: home_tabs.items.${item.value}.label`);
-        }
-      }
-    }
-    expect(bad).toEqual([]);
-  });
 
   it('both public forms author a title, and every locale translates it', () => {
     const bad: string[] = [];

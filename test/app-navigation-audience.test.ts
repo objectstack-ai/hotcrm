@@ -26,9 +26,11 @@ type Rec = Record<string, any>;
  * module's contributions, merged by the platform registry), kept when its
  * `visible` evaluates true against the caller's positions and the effective
  * object permissions the server publishes at `/auth/me/permissions`, and an
- * object entry kept only when its object is read. Because the console opens
- * the app on the first entry shown (objectui#12426), the same list pins each
- * persona's landing (#2060 item 5).
+ * object entry kept only when its object is read. The console opens the app
+ * on the first entry of the app's `landing` that holds for the member and
+ * names an entry shown to them, and otherwise on the first entry shown
+ * (objectui#12426), so the same list, read through `landsOn`, pins each
+ * persona's landing (#2060 item 5, #2740).
  *
  * The personas are the five the demo staffs (`demo-staffing.ts`: two reps, the
  * sales manager, the service agent, the service manager), each signed up with
@@ -41,8 +43,8 @@ type Rec = Record<string, any>;
  * three reports. Every persona but the reps must be shown exactly what those
  * gates showed it, and every persona's first entry must be the same.
  *
- * #2262 pins the service personas' landing the same way, against the gates
- * Home and Sales Home carried before it (`BEFORE_2262`), and #2268 pins the
+ * #2262 pins the service personas' landing the same way, against the gate
+ * Home carried before it (`BEFORE_2262`), and #2268 pins the
  * six opportunity entries they are no longer shown against the plain read
  * gate those six carried before it (`BEFORE_2268`).
  *
@@ -87,10 +89,9 @@ const BEFORE: Record<string, unknown> = {
   nav_report_cases_by_status: READS_CASES, nav_report_sla: READS_CASES, nav_report_cases_opened_by_day: READS_CASES,
 };
 
-/** The gates Home and Sales Home carried before #2262: neither asked a service position. */
+/** The gate Home carried before #2262: it asked no service position. */
 const BEFORE_2262: Record<string, unknown> = {
   nav_home: P`current_user.can("crm_opportunity", "read") && !("crm_sales_rep" in current_user.positions)`,
-  nav_sales_home: P`current_user.can("crm_opportunity", "read")`,
 };
 
 /** Sales Performance, CRM Overview and the four opportunity reports (#2268). */
@@ -172,6 +173,27 @@ const shownTo = (persona: string, before?: Record<string, unknown>, app: AppName
   }).map((n) => n.id as string);
 };
 
+/**
+ * Where `persona` lands in `app`, the way the console's app root chooses
+ * (#2740, spec `app.landing`, read by the console since objectstack#28450):
+ * the first entry of the app's `landing` whose `visible` holds for the member
+ * and whose `item` the member is shown, else the first entry shown. A
+ * `visible` that faults passes its entry over, as the console does. `before`
+ * is handed to `shownTo`.
+ */
+const landsOn = (persona: string, before?: Record<string, unknown>, app: AppName = homeOf(persona)): string => {
+  const p = who[persona]!;
+  const shown = shownTo(persona, before, app);
+  for (const entry of (servedApp(app).landing ?? []) as Rec[]) {
+    const result = ExpressionEngine.evaluate<boolean>(entry.visible as never, {
+      user: { id: p.id, positions: p.positions },
+      permissions: p.objects as never,
+    });
+    if (result.ok && (result as Rec).value === true && shown.includes(entry.item)) return entry.item as string;
+  }
+  return shown[0]!;
+};
+
 describe('a sales rep is not shown the service entries (#2244)', () => {
   it('reads a real served tree that carries all six entries', () => {
     expect(LEAVES.length).toBeGreaterThan(20);
@@ -234,38 +256,80 @@ describe("no other persona's sidebar or landing moves (#2060 item 5, #2244)", ()
   });
 
   it.each(ALL)('%s lands where it landed before', (persona) => {
-    expect(shownTo(persona)[0]).toBe(shownTo(persona, BEFORE)[0]);
+    expect(landsOn(persona)).toBe(landsOn(persona, BEFORE));
   });
 
-  // The ruled homes this app's order is built for, one per persona.
+  // The ruled homes, one per persona: the app's order, and its `landing` for a rep (#2740).
   it.each([
-    ['na_rep', 'nav_sales_home'],
-    ['eu_rep', 'nav_sales_home'],
+    ['na_rep', 'nav_my_deals'],
+    ['eu_rep', 'nav_my_deals'],
     ['sales_manager', 'nav_home'],
     ['service_agent', 'nav_service_dashboard'],
     ['service_manager', 'nav_service_dashboard'],
     ['admin', 'nav_home'],
+    ['marketing_user', 'nav_home'],
   ])('%s lands on %s', (persona, landing) => {
-    expect(shownTo(persona)[0]).toBe(landing);
+    expect(landsOn(persona)).toBe(landing);
+  });
+});
+
+/**
+ * A rep lands on My Deals, by the app's `landing` (#2740, maintainer ruling
+ * 「1b、同意 landing、两点确认、W1」, hotcrm#2740 comment 7181610829).
+ *
+ * A rep used to land, by order, on the custom home page that came second
+ * after Home. The cleanup of HotCRM's custom pages deleted it, and order alone
+ * would then open a rep's Sales app on Leads, the first entry a rep is shown.
+ * The app declares the rep's landing instead, on the deals they own; every
+ * other persona has no entry and keeps the landing the order gives it.
+ */
+describe("a rep lands on My Deals by the app's landing; no other persona's landing moves (#2740)", () => {
+  const OTHERS = ['sales_manager', 'admin', 'marketing_user'];
+
+  it('the Sales app declares one landing entry, for the rep position, on the My Deals view entry', () => {
+    const landing = (servedApp('crm_enterprise').landing ?? []) as Rec[];
+    expect(landing.map((e) => [e.item, e.visible?.source ?? e.visible])).toEqual([
+      ['nav_my_deals', '"crm_sales_rep" in current_user.positions'],
+    ]);
+    expect(TREES.crm_enterprise.leaves.find((n) => n.id === 'nav_my_deals')).toMatchObject({
+      type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals',
+    });
+  });
+
+  it.each(REPS)('%s is not shown Home, so order alone would open on Leads; the landing opens My Deals', (rep) => {
+    expect(shownTo(rep)).not.toContain('nav_home');
+    expect(shownTo(rep)[0]).toBe('nav_lead');
+    expect(shownTo(rep)).toContain('nav_my_deals');
+    expect(landsOn(rep)).toBe('nav_my_deals');
+  });
+
+  it.each(OTHERS)('%s holds no rep position, so the entry passes it over and it lands on Home, its first entry shown', (persona) => {
+    expect(who[persona]!.positions).not.toContain('crm_sales_rep');
+    expect(shownTo(persona)[0]).toBe('nav_home');
+    expect(landsOn(persona)).toBe('nav_home');
+  });
+
+  it.each(['service_agent', 'service_manager'])('%s, opening the Sales app by its address, still lands on Leads', (persona) => {
+    expect(landsOn(persona, undefined, 'crm_enterprise')).toBe('nav_lead');
   });
 });
 
 describe('a service persona lands on Service Overview again (#2262)', () => {
   const SERVICE = ['service_agent', 'service_manager'];
-  const PINNED = ['nav_home', 'nav_sales_home'];
+  const PINNED = ['nav_home'];
 
-  it.each(SERVICE)('%s reads opportunities (crm_user, since #2231), so its position is what hides Home and Sales Home', (persona) => {
+  it.each(SERVICE)('%s reads opportunities (crm_user, since #2231), so its position is what hides Home', (persona) => {
     expect(who[persona]!.positions).toContain(`crm_${persona}`);
     expect(who[persona]!.objects.crm_opportunity?.allowRead).toBe(true);
   });
 
-  // Asked in the Sales app, where the two entries live: the service personas'
+  // Asked in the Sales app, where Home lives: the service personas'
   // launcher no longer offers it (#2417), but its address still opens it.
   it.each(SERVICE)('the gates before #2262 opened %s on Home', (persona) => {
     expect(shownTo(persona, BEFORE_2262, 'crm_enterprise')[0]).toBe('nav_home');
   });
 
-  it.each(SERVICE)('%s is shown its old sidebar less Home and Sales Home, nothing else', (persona) => {
+  it.each(SERVICE)('%s is shown its old sidebar less Home, nothing else', (persona) => {
     expect(shownTo(persona, undefined, 'crm_enterprise')).toEqual(
       shownTo(persona, BEFORE_2262, 'crm_enterprise').filter((id) => !PINNED.includes(id)),
     );
@@ -305,7 +369,7 @@ describe('a service persona is not shown the opportunity dashboards and reports 
   });
 
   it.each(SERVICE)('%s still lands on Service Overview', (persona) => {
-    expect(shownTo(persona)[0]).toBe('nav_service_dashboard');
+    expect(landsOn(persona)).toBe('nav_service_dashboard');
   });
 
   it.each(OTHERS)('%s is shown all six and exactly the sidebar it was shown before', (persona) => {
@@ -323,10 +387,10 @@ describe('a service persona is not shown the opportunity dashboards and reports 
  * so both lists were always empty for them; the entries now ask the position,
  * as #2268 did for the opportunity dashboards and reports.
  *
- * Row 1: a rep's Service group held Knowledge alone, between Sales Home and
- * Sales. Knowledge now asks the rep position too, so a rep is shown no entry
- * of the group, and a group with no entry shown is not drawn (measured in the
- * 18.2.0 console on the PR): the rep's sidebar runs Sales Home, then Sales.
+ * Row 1: a rep's Service group held Knowledge alone, above Sales. Knowledge
+ * now asks the rep position too, so a rep is shown no entry of the group, and
+ * a group with no entry shown is not drawn (measured in the 18.2.0 console on
+ * the PR): the rep's sidebar runs straight into Sales.
  * The rep's Knowledge is folded into Sales instead of dropped, as a Published
  * entry only a rep is shown: the console's search box looks for records only
  * in the objects of the entries shown, so without it a rep could no longer
@@ -375,10 +439,10 @@ describe("each persona's own work first: service staff lose the empty deal lists
     expect(service.entries.filter((id) => before.includes(id))).toEqual(['nav_knowledge']);
   });
 
-  it.each(REPS)('%s is shown no Service group: Sales follows Sales Home, and ends with Knowledge', (rep) => {
+  it.each(REPS)('%s is shown no Service group: Sales opens the sidebar, and ends with Knowledge', (rep) => {
     expect(groupsShownTo(rep)).not.toContain('group_service');
     expect(groupsShownTo(rep)[0]).toBe('group_sales');
-    expect(shownTo(rep).slice(0, 2)).toEqual(['nav_sales_home', 'nav_lead']);
+    expect(shownTo(rep)[0]).toBe('nav_lead');
     const sales = GROUPS.find((g) => g.id === 'group_sales')!.entries.filter((id) => shownTo(rep).includes(id));
     expect(sales.at(-1)).toBe('nav_knowledge_published');
   });
@@ -420,7 +484,7 @@ describe("each persona's own work first: service staff lose the empty deal lists
   });
 
   it.each(ALL)('%s lands where it landed before', (persona) => {
-    expect(shownTo(persona)[0]).toBe(shownTo(persona, BEFORE_2367)[0]);
+    expect(landsOn(persona)).toBe(landsOn(persona, BEFORE_2367));
   });
 });
 
@@ -486,7 +550,8 @@ describe('a member who reads no cases is not offered Service Overview (#2338 ite
  * 18.1.0: the member opens `/_console/` and lands on that page.
  *
  * `landingOf` is that order of questions: the platform's page when every
- * object the served tree names is unread, otherwise the first entry shown.
+ * object the served tree names is unread, otherwise `landsOn` (the app's
+ * `landing`, then the first entry shown).
  */
 const PLATFORM_ACCESS_PAGE = 'platform:no-readable-object';
 /** The objects an app's served tree names: the console asks its question per app. */
@@ -497,7 +562,7 @@ const NAMED_OBJECTS = [...new Set(APPS.flatMap(namedObjects))];
 const landingOf = (persona: string, app: AppName = homeOf(persona)): string => {
   const p = who[persona]!;
   if (namedObjects(app).every((o) => p.objects[o]?.allowRead !== true)) return PLATFORM_ACCESS_PAGE;
-  return shownTo(persona, undefined, app)[0]!;
+  return landsOn(persona, undefined, app);
 };
 
 describe('a member with no HotCRM grant lands on the platform access page (#2250)', () => {
@@ -542,15 +607,15 @@ describe('a member with no HotCRM grant lands on the platform access page (#2250
   });
 
   it.each([
-    ['na_rep', 'nav_sales_home'],
-    ['eu_rep', 'nav_sales_home'],
+    ['na_rep', 'nav_my_deals'],
+    ['eu_rep', 'nav_my_deals'],
     ['sales_manager', 'nav_home'],
     ['service_agent', 'nav_service_dashboard'],
     ['service_manager', 'nav_service_dashboard'],
     ['admin', 'nav_home'],
   ])('%s still lands on %s', (persona, landing) => {
     expect(landingOf(persona)).toBe(landing);
-    expect(landingOf(persona)).toBe(shownTo(persona)[0]);
+    expect(landingOf(persona)).toBe(landsOn(persona));
   });
 });
 

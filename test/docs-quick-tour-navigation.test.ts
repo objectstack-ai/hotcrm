@@ -351,8 +351,10 @@ describe('getting-started/quick-tour names the navigation the app really ships (
 });
 
 describe('the source facts the quick-tour table now rests on (#960)', () => {
-  it('the Sales app has two pinned top-level entries and seven groups', () => {
-    expect(PINNED.map((p) => p.label)).toEqual(['Home', 'Sales Home']);
+  it('the Sales app has one pinned top-level entry and seven groups', () => {
+    // The rep's custom home page left with #2740; a rep lands on My Deals by
+    // the app's `landing` instead (`app-navigation-shape.test.ts`).
+    expect(PINNED.map((p) => p.label)).toEqual(['Home']);
     // Service and Marketing left with #2417, each to an app of its own.
     expect(GROUP_LABELS).toEqual([
       'Sales',

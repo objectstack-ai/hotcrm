@@ -33,7 +33,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_activity_dashboard: { label: 'Actividad de Ventas' },
         nav_my_calendar: { label: 'Mi Calendario' },
         nav_home: { label: 'Inicio' },
-        nav_sales_home: { label: 'Inicio de Ventas' },
 
         group_sales: { label: 'Ventas' },
         group_collection_plan: { label: 'Plan de cobro' },
@@ -498,46 +497,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     contract_print_page: {
       label: 'Documento del Contrato',
       description: 'El contrato como documento imprimible: partes, plazo, valor, facturación, condiciones y firmas.',
-    },
-    account_workbench: {
-      label: 'Mesa de Trabajo de Cuentas',
-      description: 'Lista de cuentas curada para el equipo comercial: solo filtros rápidos, sin gestión de vistas.',
-    },
-    sales_home_page: {
-      label: 'Inicio de Ventas',
-      description: 'Página de inicio del equipo comercial con métricas clave, mi trabajo pendiente y próximos eventos',
-      components: {
-        kpi_revenue_won: {
-          label: 'Ingresos totales (todas las fechas)',
-        },
-        kpi_deals_won: {
-          label: 'Negocios ganados (todas las fechas)',
-        },
-        kpi_pipeline_value: {
-          label: 'Pipeline abierto (todas las fechas)',
-        },
-        kpi_open_leads: {
-          label: 'Prospectos abiertos',
-        },
-        home_upcoming_events: {
-          label: '📅 Próximos · Más cercanos primero',
-        },
-        key_metrics: { title: 'Indicadores Clave de Rendimiento', label: 'Métricas Clave' },
-        // `page:tabs` item labels, keyed by each item's `value` (#2284, spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        home_tabs: {
-          label: 'Pestañas de Inicio',
-          items: {
-            my_leads: { label: 'Mis Prospectos' },
-            my_open_deals: { label: 'Mis Negocios Abiertos' },
-            my_open_tasks: { label: 'Mis Tareas Abiertas' },
-          },
-        },
-        home_my_leads: { label: 'Mis Prospectos' },
-        home_my_deals: { label: 'Mis Negocios Abiertos' },
-        home_my_tasks: { label: 'Mis Tareas Abiertas' },
-        upcoming_events: { title: 'Próximos Eventos', label: 'Próximos Eventos' },
-      },
     },
   },
   // Screen-flow copy (#1210, #1975). Keyed `flows.<flow>.label`,

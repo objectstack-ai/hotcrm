@@ -15,8 +15,8 @@ import { PERSONAS, normalise } from './helpers/persona-vocabulary';
  * a card's `title` as free text; the "documented agent names resolve" rule and
  * `test/metadata-references.test.ts`'s AI-binding rule both read `agent:` /
  * `defaultAgent:` KEYS. All three watch keys, and a persona in live UI copy is
- * a sentence. One lived in `src/pages/home.page.ts` for months with six gates
- * green (#1002), and the pin #1002 added covers exactly one card: change a
+ * a sentence. One lived in the rep's custom home page for months with six
+ * gates green (#1002; the page itself is gone since #2740), and the pin #1002 added covers exactly one card: change a
  * different card, a view's `emptyState`, or a skill's `description`, and the
  * same wording walks back in.
  *
@@ -28,10 +28,10 @@ import { PERSONAS, normalise } from './helpers/persona-vocabulary';
  * is load-bearing twice over:
  *
  * - **Comments are structurally excluded.** They are the one legitimate place
- *   in `src/` to name a retired persona, and they exist today:
- *   `src/pages/home.page.ts` carries two, explaining why the card must NOT name
+ *   in `src/` to name a retired persona: the rep's custom home page carried
+ *   two until #2740 deleted it, explaining why its card must NOT name
  *   `sales_copilot` and pointing at `content/docs/(intelligence)/ai-copilot/index.mdx`. A
- *   source-text grep would flag both and need a `HISTORICAL`-style whitelist to
+ *   source-text grep would flag such comments and need a `HISTORICAL`-style whitelist to
  *   excuse them. Reading the resolved stack means there is nothing to excuse,
  *   which is why this rule ships with no exemption map — an exemption list with
  *   no members is a standing licence granted to nobody and reviewed by nobody.

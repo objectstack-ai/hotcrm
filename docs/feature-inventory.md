@@ -72,7 +72,7 @@
 | ACC-004 | 客户保护 | 网址须以 http(s) 开头、营收非负;仍被任何商机(开放或已关闭)或已激活合同引用的 customer 禁止删除(409 `DELETE_RESTRICTED`,提示改为停用) | `src/sales/objects/account.hook.ts` |
 | ACC-005 | 客户活动时钟 | `last_activity_date` 由多路写入:owner/type 变更、held 事件与完成任务冒泡、工单解决;是流失分析的信号源 | `src/sales/objects/account.hook.ts` 等 |
 | ACC-006 | 客户列表视图族 | 默认列表 + 卡片/地图/大客户/我的/风险共 6 个 tab(续约视图随 #1181 删除,续约队列在合同上);批量改 tier、转移 owner、批量删除 | `src/sales/views/account.view.ts` |
-| ACC-007 | 客户工作台 | ADR-0047 interface page:引用 `all_accounts` 视图的策展列表,仅行业/类型/负责人三个快速筛选,锁定 grid、禁新建;#2286 起不在侧栏(与 Accounts 列表行列相同,读作重复入口),页面作为接口页展品保留,经 `…/page/account_workbench` URL 打开 | `src/sales/pages/account_workbench.page.ts` |
+| ACC-007 | 客户工作台 | 已移除 (#2740):ADR-0047 接口页随维护者的自定义页清理删除,内容无需迁移:行列与 All Accounts 视图相同,行业(带计数)/类型/负责人三个快速筛选在 Enterprise Accounts 视图上 | `src/sales/views/account.view.ts` |
 | ACC-008 | 客户详情页 | 无自定义记录页(#2382 删除 slotted 页与 chatter):平台默认记录页,时间线即 Activity | 对象元数据 `src/sales/objects/account.object.ts` |
 | ACC-009 | 联系人对象 | 自然人档案(`crm_contact`):masterDetail 挂客户(删客户级联删联系人),email 租户内唯一,头像、汇报关系、沟通偏好 | `src/sales/objects/contact.object.ts` |
 | ACC-010 | 联系人完整性 | 邮箱小写化并全局查重;被开放商机/未结报价/激活合同引用的联系人禁止删除 | `src/sales/objects/contact.hook.ts` |
@@ -262,8 +262,8 @@
 
 | 编号 | 功能 | 说明 | 实现锚点 |
 | --- | --- | --- | --- |
-| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Service/Sales/My Work/Activity/Marketing/Insights/Reports),橙色品牌;落地页按岗位:销售经理/管理员/营销用户落在 Home(高管仪表板),销售代表落在 Sales Home,服务岗位落在 Service Overview | `src/sales/apps/crm.app.ts` |
-| ADM-002 | Sales Home 页 | 主栏 + 侧栏首页(仅 sales_rep 的落地页;其他能读商机的成员在 Home 下方有它的入口):4 个实时 KPI、我的线索/我的未结交易/我的未结任务三个嵌入列表 tab、AI 助手引导卡、即将到来的事件(快速新建卡已随 #2060 item 5 删除) | `src/sales/pages/home.page.ts` |
+| ADM-001 | 应用定义与导航 | `crm_enterprise` 应用:7 个导航组(Service/Sales/My Work/Activity/Marketing/Insights/Reports),橙色品牌;落地页按岗位:销售经理/管理员/营销用户落在 Home(高管仪表板),销售代表经应用的 `landing` 落在 My Work › My Deals(#2740),服务岗位落在 Service Overview | `src/sales/apps/crm.app.ts` |
+| ADM-002 | 销售代表首页 | 已移除 (#2740):销售代表的自写首页随维护者的自定义页清理删除;销售代表改为经应用的 `landing` 落在 My Work › My Deals(见 ADM-001),其余岗位落地不变 | `src/sales/apps/crm.app.ts` |
 | ADM-003 | 启动器与工具条 | **已移除 (#2118)**:曾有 App Launcher 与 Utility Bar 两个页面,但只能经手输 URL 打开,没有任何导航入口;前者重复控制台自带的应用切换,后者并不悬浮,只在主栏内平铺(控制台没有工具条槽位,上游 objectstack#23610)。两页连同其四语言文案一并下线,应用内不再有对应功能 | 已删除 |
 | ADM-004 | 数据导入 | 3 个可复用导入映射(客户/联系人/线索,CSV/XLSX upsert)+ 行业与线索来源同义词表 + 现成模板 | `src/sales/mappings/` + `assets/import-templates/` |
 | ADM-005 | 数据导出 | 五对象(客户/联系人/线索/商机/工单)列表 CSV/XLSX 导出,经单一服务端路由与 `allowExport` 权限把关 | `src/*/views/*.view.ts`(exportOptions)+ `src/sales/profiles/index.ts` |
@@ -307,7 +307,7 @@
 按 #1052 的完整性要求逐项核对,均已覆盖:
 
 - 17 个业务对象与全部 hook:LEA/ACC/OPP/QUO/CON/SVC/KB/MKT/FCT/ACT 各域首行起
-- 客户工作台:ACC-007;报价与合同完整生命周期:QUO-002~008、CON-002~006
+- 客户工作台(已移除):ACC-007;报价与合同完整生命周期:QUO-002~008、CON-002~006
 - 产品:QUO-010~013;任务/事件与参与者:ACT-001~008;互动历史:ACT-009~011、ACC-005
 - 知识库审核流:KB-002~004;数据导入导出:ADM-004/005;批量操作:LEA-013、OPP-011、ACC-006
 - 文件上传:ADM-006;审批流:APR 全域;guest portal:PRM-002、LEA-006、SVC-005

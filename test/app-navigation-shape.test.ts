@@ -33,8 +33,9 @@ const setsOf = (position: string): AnyRec[] =>
  * directions they can break:
  *
  *  1. **A FLOOR on variety.** HotCRM is the exemplar app: an author reading it
- *     is reading it to learn what each kind of nav item looks like. Nav items
- *     come in seven kinds and every one of them must keep at least one entry —
+ *     is reading it to learn what each kind of nav item looks like. The app
+ *     shows six kinds and every one of them must keep at least one entry (the
+ *     `page` kind left with its last entry, #2740) —
  *     `component` is down to a single exemplar, so the next slimming pass is
  *     one deletion away from removing a demonstration silently. That is the failure this half exists to make loud.
  *
@@ -80,8 +81,17 @@ const LEAVES: AnyRec[] = (() => {
 const kindOf = (n: AnyRec): string =>
   n.type === 'object' && n.viewName ? 'view' : String(n.type);
 
-/** The seven kinds the app is meant to demonstrate — `doc` since the Help manuals (#2327). */
-const REQUIRED_KINDS = ['object', 'view', 'page', 'dashboard', 'report', 'component', 'doc'] as const;
+/**
+ * The six kinds the app is meant to demonstrate — `doc` since the Help manuals (#2327).
+ *
+ * `page` left the roster with its last entry (#2740): the maintainer's cleanup
+ * of HotCRM's custom pages deleted the rep's custom home page, and he
+ * confirmed that it supersedes this floor for the `page` kind (「两点确认」,
+ * hotcrm#2740 comment 7181610829). A `page` entry added later is unknown to
+ * the roster below and goes red: bringing the kind back is a decision, not a
+ * side effect.
+ */
+const REQUIRED_KINDS = ['object', 'view', 'dashboard', 'report', 'component', 'doc'] as const;
 
 describe('the app navigation keeps one exemplar of every nav-item kind (#1259)', () => {
   it('the walk finds a real navigation tree', () => {
@@ -110,7 +120,7 @@ describe('the app navigation keeps one exemplar of every nav-item kind (#1259)',
   });
 
   it('accounts for every entry — no kind escapes the roster unnoticed', () => {
-    // If the spec grows a seventh nav-item type and someone uses it here, that
+    // If the spec grows another nav-item type and someone uses it here, that
     // is a new thing to demonstrate and this list has to be a deliberate
     // decision about it, not silence.
     const unknown = LEAVES.filter((n) => !(REQUIRED_KINDS as readonly string[]).includes(kindOf(n)));
@@ -180,12 +190,11 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
   // this — the server reads it as capability names, and `crm_opportunity:read`
   // hid the entry from every user, the admin included (see `crm.app.ts`).
   // Since #2268 the read question carries the two service positions (#2231
-  // let them through it): one gate, `OPPORTUNITY_AUDIENCE`, shared by Sales
-  // Home and the six entries below.
+  // let them through it): one gate, `OPPORTUNITY_AUDIENCE`, shared by the six
+  // entries below.
   const GATE =
     'current_user.can("crm_opportunity", "read") && !("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)';
   const GATED = [
-    'nav_sales_home',
     'nav_sales_dashboard', 'nav_crm_dashboard',
     'nav_report_opportunities_by_stage', 'nav_report_won_by_owner',
     'nav_report_pipeline_coverage', 'nav_report_funnel_by_owner',
@@ -223,11 +232,9 @@ describe('entries built on opportunities are gated on reading them (#2060 item 5
     expect(CrmUserProfile).toMatchObject({ isDefault: true, objects: { crm_opportunity: { allowRead: true } } });
   });
 
-  it('Sales Home has a sidebar entry, second after Home', () => {
-    expect(NAV.slice(0, 2).map((n) => [n.id, n.dashboardName ?? n.pageName])).toEqual([
-      ['nav_home', 'executive_dashboard'],
-      ['nav_sales_home', 'sales_home_page'],
-    ]);
+  it('Home is the first entry, and no entry opens a custom page (#2740)', () => {
+    expect([NAV[0]?.id, NAV[0]?.dashboardName]).toEqual(['nav_home', 'executive_dashboard']);
+    expect(LEAVES.filter((n) => n.type === 'page').map((n) => n.id)).toEqual([]);
   });
 });
 
@@ -377,17 +384,31 @@ describe('every shipped report has one entry, under Reports, gated on reading wh
   });
 });
 
-describe("each persona's first entry is its home (#2060 item 5)", () => {
-  // The console opens an app on the first entry the member is SHOWN
-  // (objectui#12426, in the 18.0.0-next.2 console), so the landing is this
-  // app's order and gates. The ruled homes: rep → Sales Home, manager / admin
-  // → Executive Overview, service agent / manager → the service module's
-  // dashboard. Measured per persona in a browser by the PR that made this order (its
-  // body has the table); these are the source facts that measurement rests on.
+describe("each persona's landing is its home (#2060 item 5, #2740)", () => {
+  // The console opens an app on the first entry of its `landing` that holds
+  // for the member, and otherwise on the first entry the member is SHOWN
+  // (objectui#12426). The ruled homes: rep → My Deals (the app's `landing`,
+  // #2740), manager / admin / marketing user → Executive Overview (first),
+  // service agent / manager → the service module's dashboard. Measured per
+  // persona in a browser by the PRs that made them (their bodies have the
+  // tables); these are the source facts that measurement rests on, and
+  // `app-navigation-audience.test.ts` asks them of booted personas.
   const SERVED = (servedApp((CrmApp as AnyRec).name).navigation ?? []) as AnyRec[];
 
-  it('the Sales app opens with Home and Sales Home; the Service app opens on its dashboard (#2417)', () => {
-    expect(SERVED.slice(0, 3).map((n) => n.id)).toEqual(['nav_home', 'nav_sales_home', 'group_sales']);
+  it('a rep\'s landing is declared: the app\'s one landing entry opens My Deals for the rep position (#2740)', () => {
+    const landing = ((CrmApp as AnyRec).landing ?? []) as AnyRec[];
+    expect(landing.map((e) => [e.item, sourceOf(e.visible)])).toEqual([
+      ['nav_my_deals', '"crm_sales_rep" in current_user.positions'],
+    ]);
+    expect(LEAVES.find((n) => n.id === 'nav_my_deals')).toMatchObject({
+      type: 'object', objectName: 'crm_opportunity', viewName: 'my_open_deals',
+    });
+    // The served app carries it: the console reads the served tree.
+    expect(((servedApp((CrmApp as AnyRec).name).landing ?? []) as AnyRec[]).map((e) => e.item)).toEqual(['nav_my_deals']);
+  });
+
+  it('the Sales app opens with Home, then Sales; the Service app opens on its dashboard (#2417)', () => {
+    expect(SERVED.slice(0, 2).map((n) => n.id)).toEqual(['nav_home', 'group_sales']);
     // The service personas' home moved with the Service group into the
     // service package's own app, where it is the first entry.
     expect(NAV.find((n) => n.id === 'group_service')).toBeUndefined();
@@ -408,12 +429,12 @@ describe("each persona's first entry is its home (#2060 item 5)", () => {
     expect(['na_rep', 'eu_rep', 'sales_manager'].map(holds)).toEqual([true, true, false]);
   });
 
-  it('a service persona who opens the Sales app is shown neither pinned entry (#2262)', () => {
-    // Both pinned entries refuse both service positions by name: the read
-    // question alone lets them through since #2231 (asserted above). Their
-    // launcher no longer offers the Sales app (#2417), but its address still
-    // opens it, and these gates are what it then shows them.
-    for (const n of SERVED.slice(0, 2)) {
+  it('a service persona who opens the Sales app is not shown Home (#2262)', () => {
+    // Home refuses both service positions by name: the read question alone
+    // lets them through since #2231 (asserted above). Their launcher no longer
+    // offers the Sales app (#2417), but its address still opens it, and this
+    // gate is what it then shows them.
+    for (const n of SERVED.slice(0, 1)) {
       for (const position of ['crm_service_agent', 'crm_service_manager']) {
         expect(String(sourceOf(n.visible)), n.id).toContain(`!("${position}" in current_user.positions)`);
       }
