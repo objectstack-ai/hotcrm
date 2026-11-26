@@ -111,8 +111,10 @@ export const ContractViews = defineView({
         name: 'parties',
         label: 'Parties',
         columns: 3,
-        // The name first: a new contract asks for it (hotcrm#2746).
-        fields: ['name', 'contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status'],
+        // The name first: a new contract asks for it (hotcrm#2746). The form
+        // next (hotcrm#2804): a person creating a contract chooses Framework
+        // or Other, and it decides whether the value is required.
+        fields: ['name', 'contract_form', 'contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status'],
       },
       {
         // Named `contract_terms`, not `terms` — `terms` is already a distinct
