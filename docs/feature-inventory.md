@@ -57,7 +57,7 @@
 | LEA-013 | 批量加入活动 | 列表多选批量动作(逐行分派):每行以调用者身份启动 `campaign_lead_member_enroll` 流程,去重后插入活动成员(记录选择器选活动);无活动成员创建权的 profile 不显示该动作,服务端也拒绝(400 `FLOW_FAILED`) | `src/sales/actions/lead.actions.ts`(`create_campaign`)+ `src/marketing/flows/campaign-member-enroll.flow.ts` |
 | LEA-014 | 线索列表视图族 | 默认列表 + 7 个具名视图:我的/热线索/高优/疑似重复/状态看板/日历/卡片 | `src/sales/views/lead.view.ts` |
 | LEA-015 | 线索表单族 | 已移除 (#2725):6 个布局展示表单(分 tab 详情/转化向导/分栏/抽屉/弹窗/条件示范)控制台没有任何入口能打开,已删除;新建与编辑对话框用默认 `form`,公开表单见 LEA-006 | `src/sales/views/lead.view.ts` |
-| LEA-016 | 线索详情页 | 平台默认记录页(#2382),只覆盖 alerts 槽:疑似/已确认重复两条提示;要点条、状态 path、明细、相关列(未完成任务)、时间线均由对象元数据派生,页头动作按 `order` 排序 | `src/sales/pages/lead_detail.page.ts` |
+| LEA-016 | 线索详情页 | 平台默认记录页,不再有自写页(#2382;两条重复提示按 #2740 随页删除,「重复线索管理」分组排第二(紧接身份信息)并默认展开,显示重复状态与重复的那条记录,转化时疑似重复照样提醒、已确认重复照样拒绝);要点条、状态 path、明细、相关列(未完成任务)、时间线均由对象元数据派生,页头动作按 `order` 排序 | `src/sales/objects/lead.object.ts` |
 | LEA-017 | AI 线索鉴定技能 | 按 BANT 四维打 0–100 分并给下一步建议;≥70 且经人工确认才调用转化动作 | `src/sales/skills/lead-qualification.skill.ts` |
 | LEA-018 | 线索导入 | CSV/XLSX 导入映射,按 email upsert,状态/来源/行业同义词表;owner 留空归导入者 | `src/sales/mappings/lead_import.mapping.ts` |
 | LEA-019 | 线索分析 | `lead_metrics` 数据集 + "线索互动月份×来源"矩阵报表 | `src/sales/datasets/lead.dataset.ts` + `src/sales/reports/lead.report.ts` |
@@ -167,7 +167,7 @@
 | SVC-011 | CSAT 关单回访 | **已移除 (#1428)**:曾在工单关闭 1 天后通知 owner 联系客户记录满意度评分。它唯一喂养的 `crm_case.customer_rating` / `customer_feedback` 从来没有任何输入面,两个字段与本流程一并按 ADR-0049 enforce-or-remove 退役 | 已删除 |
 | SVC-012 | 首次响应打戳 | 工单上出现任何一条 held 互动事件时,自动补 `first_response_date`(SLA 首次响应指标) | `src/sales/objects/event.hook.ts`(`event_activity_bubble`) |
 | SVC-013 | 工单视图族 | 默认按优先级序排 + 状态看板(抽屉)/SLA 日历/timeline/已升级/SLA 风险/我的未结共 7 个 tab | `src/service/views/case.view.ts` |
-| SVC-014 | 工单详情页 | 平台默认记录页(#2382),只覆盖 alerts 槽:SLA 违约提示;要点条、全状态 path、相关列(未完成任务)、时间线由对象元数据派生 | `src/service/pages/case_detail.page.ts` |
+| SVC-014 | 工单详情页 | 平台默认记录页,不再有自写页(#2382;SLA 违约提示按 #2740 随页删除,违约看始终展开的「SLA 与优先级」分组里的 SLA 违反,要点条保留 SLA 到期);要点条、全状态 path、相关列(未完成任务)、时间线由对象元数据派生 | `src/service/objects/case.object.ts` |
 | SVC-015 | 工单升级共享 | critical 未结工单自动共享给 service_manager(可编辑)与 service_director(只读) | `src/service/sharing/case.sharing.ts` |
 | SVC-016 | 工单时间线里程碑 | 声明式里程碑:escalated/resolved/closed 三个状态转换自动发时间线条目 | `src/service/objects/case.object.ts`(activityMilestones) |
 | SVC-017 | AI 工单分诊技能 | 只读技能:建议优先级并给出唯一驱动理由,把用户指向升级/关闭按钮(刻意无变更工具) | `src/service/skills/case-triage.skill.ts` |

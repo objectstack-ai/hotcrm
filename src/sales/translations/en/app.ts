@@ -139,14 +139,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Account Workbench',
       description: 'Curated account list for the sales team: quick filters only, no view management.',
     },
-    lead_detail_page: {
-      label: 'Lead Detail',
-      description: 'The lead record page: the synthesized layout, with the duplicate banners in the alerts slot.',
-      components: {
-        lead_duplicate_alert_confirmed: { label: 'Confirmed Duplicate Alert' },
-        lead_duplicate_alert_suspected: { label: 'Suspected Duplicate Alert' },
-      },
-    },
     sales_home_page: {
       label: 'Sales Home',
       description: 'Sales team home page with key metrics, my open work and upcoming events',

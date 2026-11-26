@@ -190,7 +190,7 @@ description: 客户支持工单——主题、优先级、状态、解决方案�
 工单打开的是 HotCRM 每个对象共用的记录页：
 
 - **页眉**——标题是工单的存储标题，即编号与主题（`CASE-00034 - Login fails`），旁边是动作：**Escalate Case**、**Close Case** 和 **Log a Call** 是按钮，紧挨着 **Edit**；**Log a Meeting** 和 **Schedule a Meeting** 在 **⋯** 里。已解决或已关闭的工单上，**Reopen Case** 排在第一位；在 Support Intake 队列里等待的工单上，控制台还会加上 **Claim**。这里**没有 SLA 倒计时**：这个应用里没有任何东西计算剩余时间或超时时长，所以无从显示。两个 SLA 字段实际做什么，见 [SLA 与升级](/zh-Hans/docs/service/sla-and-escalation)。
-- **SLA 提示条**——被标记为 **SLA Violated** 的工单，页眉下方有一条红色的**已违反 SLA**提示。按时进行中的工单不显示。
+- **SLA 违约**——没有提示条：违约的工单在始终展开的 *SLA & Priority* 分区里勾选了 **SLA Violated**，它的 **SLA 截止日期**在关键信息里。
 - **关键信息**——**状态**、**优先级**、**SLA 截止日期**、**负责人**和**账户**并排显示。
 - **状态路径**——全部状态：New → In Progress → Waiting on Customer → Waiting on Support → Escalated → Resolved → Closed，当前状态被标出。点击某个状态，工单就移到那里；这和编辑**状态**是同一次修改，规则也相同（关闭工单需要填写解决方案）。
 - 左栏是**明细**：上文《详情界面》里描述的那些字段分组分区。

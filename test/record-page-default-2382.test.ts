@@ -11,12 +11,14 @@ type Rec = Record<string, any>;
  * Record page v3/v4 on HotCRM's four most-worked objects (#2382).
  *
  * Maintainer ruling, 2026-10-29: 「是，把 hotcrm#2382 改成四张页全部退成默认页，只把告警留作
- * 单槽覆盖；商机参考栏和客户 chatter 删掉。」 The lead, deal and case pages keep only their
- * conditional banners, in the `alerts` slot of a `kind: 'slotted'` page; the
- * account has no authored record page. Everything else the retired pages drew
- * is the platform's default page, drawn from object metadata — so this suite
- * pins that metadata as the BOOTED app serves it (`@objectstack/verify`), not
- * as the source files spell it: the registry is what the console reads.
+ * 单槽覆盖；商机参考栏和客户 chatter 删掉。」 The lead, deal and case pages then kept only
+ * their conditional banners, in the `alerts` slot of a `kind: 'slotted'` page.
+ * The deal's banners went with #2686, and the lead's and the case's with their
+ * pages by the 2026-11-25 ruling on #2740 (「2A+ 删甘特图」): none of the four
+ * objects has an authored record page any more. Everything the retired pages
+ * drew is the platform's default page, drawn from object metadata — so this
+ * suite pins that metadata as the BOOTED app serves it (`@objectstack/verify`),
+ * not as the source files spell it: the registry is what the console reads.
  *
  * The rendering itself (the strip, the body table, the related column) is the
  * console's and was read in a browser on `objectstack dev` at the 18.6.0 pin;
@@ -33,21 +35,23 @@ const recordPagesOf = (object: string): Rec[] =>
   servedPages().filter((p) => p.type === 'record' && p.object === object);
 const field = (object: string, name: string): Rec => (verify.metadata.object(object)?.fields as Rec)?.[name] ?? {};
 
-describe('the four record pages are the default page, with only the alerts slot filled', () => {
-  it.each([
-    ['crm_lead', 'lead_detail_page', ['lead_duplicate_alert_suspected', 'lead_duplicate_alert_confirmed']],
-    ['crm_case', 'case_detail_page', ['case_sla_breached']],
-  ])('%s: one default record page, %s, overriding `alerts` alone', (object, name, alertIds) => {
-    const pages = recordPagesOf(object);
-    expect(pages.map((p) => p.name)).toEqual([name]);
-    const [page] = pages;
-    expect(page!.kind).toBe('slotted');
-    expect(page!.isDefault).toBe(true);
-    expect(page!.regions ?? []).toEqual([]);
-    expect(Object.keys(page!.slots ?? {})).toEqual(['alerts']);
-    const alerts = page!.slots.alerts as Rec[];
-    expect(alerts.map((a) => a.type)).toEqual(alertIds.map(() => 'record:alert'));
-    expect(alerts.map((a) => a.id)).toEqual(alertIds);
+describe('the four record pages are the default page, with nothing authored', () => {
+  // The lead's two duplicate banners and the case's SLA banner were the last
+  // authored pieces (#2382's single-slot overrides); the maintainer dropped
+  // them with their pages on 2026-11-25 (#2740). The facts they announced are
+  // on the default page: the lead's Duplicate Management section opens
+  // expanded (`test/lead-duplicate-visibility.test.ts`), the case's SLA
+  // Violated sits in its open SLA & Priority section.
+  it.each(['crm_lead', 'crm_case'])('%s has no authored record page at all (#2740)', (object) => {
+    expect(recordPagesOf(object)).toEqual([]);
+  });
+
+  it('the case\'s breach stays on the page without a banner: SLA Violated in an always-open section, the due date in the strip', () => {
+    const kase = verify.metadata.object('crm_case') as Rec;
+    expect(field('crm_case', 'is_sla_violated').group).toBe('sla');
+    const sla = ((kase.fieldGroups ?? []) as Rec[]).find((g) => g.key === 'sla');
+    expect(sla?.collapse ?? 'none').toBe('none');
+    expect(kase.highlightFields).toContain('sla_due_date');
   });
 
   // The opportunity's page kept only its two approval banners until #2686

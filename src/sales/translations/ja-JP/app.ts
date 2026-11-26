@@ -505,14 +505,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: '取引先ワークベンチ',
       description: '営業チーム向けに厳選した取引先リスト。クイックフィルターのみで、ビュー管理は行いません。',
     },
-    lead_detail_page: {
-      label: 'リード詳細',
-      description: 'リードのレコードページ：プラットフォームが合成する標準レイアウト。アラート枠に重複の警告を表示します。',
-      components: {
-        lead_duplicate_alert_confirmed: { label: '重複確定の警告' },
-        lead_duplicate_alert_suspected: { label: '重複の疑いの警告' },
-      },
-    },
     sales_home_page: {
       label: '営業ホーム',
       description: '主要指標、自分の未完了の仕事、今後の予定をまとめた営業チームのホームページ',

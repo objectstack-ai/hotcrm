@@ -503,14 +503,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
       label: 'Mesa de Trabajo de Cuentas',
       description: 'Lista de cuentas curada para el equipo comercial: solo filtros rápidos, sin gestión de vistas.',
     },
-    lead_detail_page: {
-      label: 'Detalle de Prospecto',
-      description: 'La página de registro del prospecto: el diseño sintetizado, con los avisos de duplicado en el espacio de alertas.',
-      components: {
-        lead_duplicate_alert_confirmed: { label: 'Aviso de duplicado confirmado' },
-        lead_duplicate_alert_suspected: { label: 'Aviso de duplicado sospechoso' },
-      },
-    },
     sales_home_page: {
       label: 'Inicio de Ventas',
       description: 'Página de inicio del equipo comercial con métricas clave, mi trabajo pendiente y próximos eventos',
