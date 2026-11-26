@@ -205,7 +205,11 @@ describe('the same contract the automatic draft drafts', () => {
       .filter((node) => node.type === 'create_record' && node.config.objectName === 'crm_contract')
       .map((node) => [node.id, Object.keys(node.config.fields).sort()]));
     expect(Object.keys(drafts(QuoteAcceptedContractDraftFlow))).toEqual(CONTRACT_DRAFT_NODE_IDS);
-    expect(drafts(SalesOrderDraftContractWriteFlow)).toEqual(drafts(QuoteAcceptedContractDraftFlow));
+    // The order's draft adds two keys of its own (hotcrm#2804): it is an order
+    // contract, naming the order it came from. The quote's draft has no order.
+    const fromQuote = drafts(QuoteAcceptedContractDraftFlow);
+    expect(drafts(SalesOrderDraftContractWriteFlow)).toEqual(Object.fromEntries(Object.entries(fromQuote)
+      .map(([id, keys]) => [id, [...keys, 'contract_form', 'crm_sales_order'].sort()])));
   });
 });
 

@@ -78,8 +78,11 @@ describe('freeze refusals use the labels the user sees (#2338 item 12)', () => {
     for (const [value, label] of statuses) expect(label, value).toBe(optionLabel(Quote, 'status', value));
   });
 
-  it('contract_validation: the end date', () => {
-    expect(lowered('contract_validation')).toContain(`contract's ${fieldLabel(Contract, 'end_date')} cannot move earlier`);
+  it('contract_form_and_change: the three fields an activated contract changes only through Change (#2804)', () => {
+    const source = lowered('contract_form_and_change');
+    for (const field of ['contract_value', 'end_date', 'payment_terms']) {
+      expect(source, field).toContain(`An activated contract's ${fieldLabel(Contract, field)} change`);
+    }
   });
 });
 
