@@ -30,7 +30,7 @@ const OPPORTUNITY_BULK_DELETE = {
   delete: {
     label: 'Eliminar',
     confirmLabel: 'Eliminar',
-    confirmText: '¿Eliminar permanentemente {{count}} oportunidad(es)? Esta acción no se puede deshacer.',
+    confirmText: '¿Eliminar {{count}} oportunidad(es)? Irán a la papelera, donde un administrador puede restaurarlas.',
   },
 };
 

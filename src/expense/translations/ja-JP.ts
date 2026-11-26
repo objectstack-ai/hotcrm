@@ -144,7 +144,7 @@ export const jaJP: TranslationData = {
         my_expenses: {
           label: '自分の経費',
           bulkActions: {
-            delete: { label: '削除', confirmLabel: '削除', confirmText: '{{count}} 件の経費を完全に削除しますか？この操作は元に戻せません。' },
+            delete: { label: '削除', confirmLabel: '削除', confirmText: '{{count}} 件の経費を削除しますか？削除したレコードはごみ箱に移り、管理者がそこから復元できます。' },
           },
         },
       },
