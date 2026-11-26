@@ -109,7 +109,7 @@ export const Payment = ObjectSchema.create({
     // Copied from the invoice when there is one (`payment_plan_step_stamp`),
     // so the step's Received counts payments made through its invoices.
     crm_billing_milestone: Field.lookup('crm_billing_milestone', {
-      label: 'Billing Milestone',
+      label: 'Payment Plan',
       group: 'basic',
       dependsOn: ['crm_account'],
       relatedListColumns: ['payment_number', 'payment_date', 'amount', 'crm_invoice'],

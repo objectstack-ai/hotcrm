@@ -113,7 +113,7 @@ export const Invoice = ObjectSchema.create({
     // invoice (`set_null`, the lookup default). A step of another account is
     // refused on save (`invoice_plan_step_guard` in `invoice.hook.ts`).
     crm_billing_milestone: Field.lookup('crm_billing_milestone', {
-      label: 'Billing Milestone',
+      label: 'Payment Plan',
       group: 'basic',
       // No `dependsOn`, as the order and the contract lookups have none
       // (hotcrm#2755): measured in the browser, it hid the step the milestone

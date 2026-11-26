@@ -35,7 +35,7 @@ invoices and payments.
   contract, or a payment names an invoice or a milestone but none, they are
   filled in from it, so the order's and the contract's totals count the same
   records the milestone and the invoice do.
-- **An invoice's billing milestone must belong to its account.** Choosing a
+- **An invoice's payment plan must belong to its account.** Choosing a
   milestone on an invoice fills in its account. The invoice form lists every
   account's milestones; one of another account is refused on save. The message
   names the milestone, or the order or contract it filled in while the invoice
