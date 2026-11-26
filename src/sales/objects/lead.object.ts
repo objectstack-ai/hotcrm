@@ -71,6 +71,13 @@ export const Lead = ObjectSchema.create({
   
   fieldGroups: [
     { key: 'identity',     label: 'Identity',           icon: 'user-plus' },
+    // Second, and open (#2740: 「2A+ 删甘特图」 2026-11-25, then 「挪到第 2 位」
+    // 2026-11-26): with the lead's record page and its two duplicate banners
+    // gone, this section is where a rep sees the verdict and the record it
+    // repeats before pressing Convert Lead, on the first screen. On a clean
+    // lead every field in it is empty, so the default page draws no section.
+    // The lead form is unaffected: `lead.view.ts` enumerates its own sections.
+    { key: 'duplicates',   label: 'Duplicate Management', icon: 'copy', collapse: 'expanded' },
     { key: 'company_info', label: 'Company Information', icon: 'building' },
     { key: 'contact_info', label: 'Contact Information', icon: 'phone' },
     { key: 'qualification', label: 'Qualification',     icon: 'star' },
@@ -79,7 +86,6 @@ export const Lead = ObjectSchema.create({
     { key: 'additional',   label: 'Additional Info',    icon: 'info', collapse: 'collapsed' },
     { key: 'preferences',  label: 'Communication Preferences', icon: 'bell-off', collapse: 'collapsed' },
     { key: 'conversion',   label: 'Conversion',         icon: 'check-circle', collapse: 'collapsed' },
-    { key: 'duplicates',   label: 'Duplicate Management', icon: 'copy', collapse: 'collapsed' },
   ],
 
   fields: {

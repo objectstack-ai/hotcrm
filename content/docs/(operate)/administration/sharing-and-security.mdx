@@ -32,7 +32,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 | Contract | Controlled by Parent (Account) | A contract *is* account data and follows the account's sharing — see *Controlled by Parent, in practice* below |
 | Order | Controlled by Parent (Account) | An order is what the account bought, and follows the account's sharing |
 | Order Line | Controlled by Parent (Order) | A line is part of the order |
-| Billing Milestone | Controlled by Parent (Contract) | A step of the contract's collection plan; it follows the contract, so the account |
+| Payment Plan | Controlled by Parent (Contract) | A step of the contract's collection plan; it follows the contract, so the account |
 | Invoice | Controlled by Parent (Contract) | Finance's record of an invoice issued against the contract; it follows the contract |
 | Payment | Controlled by Parent (Contract) | Finance's record of money received on the contract; it follows the contract |
 | Project | Private | The owner, the people staffed on it and its project manager reach it through the two rules below; finance and delivery leadership read every project |
@@ -68,7 +68,7 @@ OWD is the *most restrictive* setting for each object. Everything else widens it
 For the twenty parent-derived objects above, there is nothing to configure per user: access is *computed*.
 
 - **Read** — you see the rows whose parent you can see, and "can see" means every route that would let you open the parent directly: you own it, a sharing rule granted it, or someone shared it with you by hand. Measured against the shipped stack (platform 17.0.0-rc.4): a rep who can read exactly one account reads **that** account's contacts, quotes and contracts and no others, and reads the line items of exactly those quotes — the chain quote line item → quote → account is resolved level by level (platform 17.4.0, objectstack-ai/objectstack#11082). The account reaching that rep only through a territory rule is the point — a parent held by a share counts as a parent you can see.
-- **Write** — adding, changing or removing a row requires **edit** access to the parent, resolved the same way as reads. A row under a parent you cannot edit is refused, naming the parent that stopped it. Billing Milestone, Invoice and Payment are the exception: they ask only **read** access to the contract, so a rep keeps the plan of a contract they read and finance enters invoices and payments on contracts it does not edit, each as far as their own permission set allows (#2462).
+- **Write** — adding, changing or removing a row requires **edit** access to the parent, resolved the same way as reads. A row under a parent you cannot edit is refused, naming the parent that stopped it. Payment Plan, Invoice and Payment are the exception: they ask only **read** access to the contract, so a rep keeps the plan of a contract they read and finance enters invoices and payments on contracts it does not edit, each as far as their own permission set allows (#2462).
 
 > **This changed in platform 17.0.0-rc.4.** Through 17.0.0-rc.3 the computed answer was org-wide rather than parent-scoped: the derivation resolved accessible parents from the parent object's *row-level security policies* alone, and HotCRM authors almost none, so a Controlled by Parent object was readable — and writable — by every user whose profile granted the object at all. If you are running an earlier release, that is the behaviour you have, and quote and opportunity line pricing is visible org-wide. The repo test `test/parent-derived-reach.test.ts` pins the current reach in both directions (#549, #694; upstream fix objectstack-ai/objectstack#5386).
 
@@ -159,7 +159,7 @@ A case or lead that arrives with **no owner** waits in a queue: **Support Intake
 
 ### A rule widens one object, not the records underneath it
 
-Sharing rules are authored **per object**. Widening `Account` widens accounts — the records hanging off a shared account keep their own baseline, except the ones derived from it (Contact, Quote, Contract, Order, and through the contract its Billing Milestones, Invoices and Payments):
+Sharing rules are authored **per object**. Widening `Account` widens accounts — the records hanging off a shared account keep their own baseline, except the ones derived from it (Contact, Quote, Contract, Order, and through the contract its Payment Plans, Invoices and Payments):
 
 | Related list on a shared account | What the recipient sees |
 | --- | --- |
@@ -168,7 +168,7 @@ Sharing rules are authored **per object**. Widening `Account` widens accounts �
 | Quotes | This account's quotes — Quote follows the account, and so do the quotes' line items |
 | Contracts | This account's contracts — Contract follows the account; whether they can *edit* one is the object-level right on their profile (a Sales Rep cannot) |
 | Orders | This account's orders — Order follows the account, and so do the orders' lines |
-| Billing Milestones | This account's plan steps — Billing Milestone follows the contract, which follows the account |
+| Payment Plans | This account's plan steps — Payment Plan follows the contract, which follows the account |
 | Invoices | This account's invoices — Invoice follows the contract, which follows the account |
 | Payments | This account's payments — Payment follows the contract, which follows the account |
 | Cases | Their own only, plus open critical cases if they hold `crm_service_manager` or `crm_service_director` |

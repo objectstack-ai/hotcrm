@@ -15,8 +15,8 @@ export const jaJP: TranslationData = {
           message: 'この請求書は別の取引先のものです。この入金の取引先の請求書を選んでください。',
           reasons: {
             named: { message: '{{invoice}}は別の取引先のものです。この入金の取引先の請求書を選んでください。' },
-            milestone_named: { message: '{{milestone}}は別の取引先のものです。この入金の取引先の請求マイルストーンを選んでください。' },
-            invoice_milestone: { message: '{{invoice}}が計上される{{milestone}}は別の取引先の請求マイルストーンです。請求書の請求マイルストーンを修正するか、別の請求書を選んでください。' },
+            milestone_named: { message: '{{milestone}}は別の取引先のものです。この入金の取引先の入金計画を選んでください。' },
+            invoice_milestone: { message: '{{invoice}}が計上される{{milestone}}は別の取引先の入金計画です。請求書の入金計画を修正するか、別の請求書を選んでください。' },
           },
         },
       },
@@ -50,9 +50,9 @@ export const jaJP: TranslationData = {
     invoice_plan_step_guard: {
       refusals: {
         VALIDATION_FAILED: {
-          message: 'この請求マイルストーンは別の取引先のものです。この請求書の取引先の請求マイルストーンを選んでください。',
+          message: 'この入金計画は別の取引先のものです。この請求書の取引先の入金計画を選んでください。',
           reasons: {
-            milestone_named: { message: '{{milestone}}は別の取引先のものです。この請求書の取引先の請求マイルストーンを選んでください。' },
+            milestone_named: { message: '{{milestone}}は別の取引先のものです。この請求書の取引先の入金計画を選んでください。' },
           },
         },
       },
@@ -73,8 +73,8 @@ export const jaJP: TranslationData = {
   },
   objects: {
     crm_billing_milestone: {
-      label: '請求マイルストーン',
-      pluralLabel: '請求マイルストーン',
+      label: '入金計画',
+      pluralLabel: '入金計画',
       description: '取引先の回収計画の 1 ステップ（注文または契約から計画）：いつ、いくら回収するか、そのうち請求済・入金済の金額',
       _validations: {
         billing_milestone_source: { message: 'このステップが属する注文または契約を選択してください。' },
@@ -118,7 +118,7 @@ export const jaJP: TranslationData = {
       },
       _views: {
         all_billing_milestones: {
-          label: 'すべての請求マイルストーン',
+          label: 'すべての入金計画',
         },
         planned_this_month: {
           label: '今月の入金予定',
@@ -126,7 +126,7 @@ export const jaJP: TranslationData = {
       },
       _sections: {
         basic: {
-          label: 'マイルストーン',
+          label: '入金計画',
         },
         plan: {
           label: '計画',
@@ -152,7 +152,7 @@ export const jaJP: TranslationData = {
           label: '契約',
         },
         crm_billing_milestone: {
-          label: '請求マイルストーン',
+          label: '入金計画',
         },
         crm_account: {
           label: '取引先',
@@ -227,7 +227,7 @@ export const jaJP: TranslationData = {
     crm_payment: {
       label: '入金',
       pluralLabel: '入金',
-      description: '取引先からの入金：請求書、請求マイルストーン、注文、契約のいずれかに対するもの、またはまだどれにも対応しないもの',
+      description: '取引先からの入金：請求書、入金計画、注文、契約のいずれかに対するもの、またはまだどれにも対応しないもの',
       fields: {
         payment_number: {
           label: '入金番号',
@@ -242,7 +242,7 @@ export const jaJP: TranslationData = {
           label: '請求書',
         },
         crm_billing_milestone: {
-          label: '請求マイルストーン',
+          label: '入金計画',
         },
         crm_account: {
           label: '取引先',
@@ -352,7 +352,7 @@ export const jaJP: TranslationData = {
     crm_enterprise: {
       navigation: {
         nav_billing_milestones: {
-          label: '請求マイルストーン',
+          label: '入金計画',
         },
         nav_help_o2c: {
           label: '受注から入金マニュアル',
@@ -371,7 +371,7 @@ export const jaJP: TranslationData = {
         group_help: { label: 'ヘルプ' },
         nav_invoices: { label: '請求書' },
         nav_payments: { label: '入金' },
-        nav_billing_milestones: { label: '請求マイルストーン' },
+        nav_billing_milestones: { label: '入金計画' },
         nav_overdue_invoices: { label: '期日超過の請求書' },
         nav_planned_this_month: { label: '今月の入金予定' },
         nav_approval_requests: { label: '受信トレイ' },

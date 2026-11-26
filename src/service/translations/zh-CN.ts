@@ -376,15 +376,6 @@ export const zhCN: TranslationData = {
       },
     },
   },
-  pages: {
-    case_detail_page: {
-      label: '工单详情',
-      description: '工单记录页：平台合成的默认布局，告警槽位中是 SLA 违约提示。',
-      components: {
-        case_sla_breached: { label: '已违反 SLA' },
-      },
-    },
-  },
   flows: {
     // The escalation reason the automatic escalations store (#2494), at
     // `flows.<flow>.records.<node>.fields.<field>`.

@@ -36,12 +36,12 @@ const paymentPlanStepStamp: Hook = {
       params: ['invoice', 'milestone'],
       reasons: {
         named: { message: '{{invoice}} belongs to another account. Choose an invoice of this payment\'s account.' },
-        milestone_named: { message: '{{milestone}} belongs to another account. Choose a billing milestone of this payment\'s account.' },
-        invoice_milestone: { message: '{{invoice}} counts toward {{milestone}}, a billing milestone of another account. Correct the invoice\'s billing milestone, or choose another invoice.' },
+        milestone_named: { message: '{{milestone}} belongs to another account. Choose a payment plan of this payment\'s account.' },
+        invoice_milestone: { message: '{{invoice}} counts toward {{milestone}}, a payment plan of another account. Correct the invoice\'s payment plan, or choose another invoice.' },
       },
     },
   },
-  description: 'Copy the invoice\'s billing milestone onto the payment; refuse an invoice or a billing milestone of another account.',
+  description: 'Copy the invoice\'s payment plan onto the payment; refuse an invoice or a payment plan of another account.',
   handler: async (ctx: HookContext) => {
     // The refusal envelope (#1075). Mirrored from `src/sales/objects/_refusal.ts` because a
     // lowered body has no module scope and `extractHookBody` THROWS on an
@@ -121,16 +121,16 @@ const paymentPlanStepStamp: Hook = {
         where: { id: stepId }, fields: ['id', 'name', 'crm_account'],
       });
       if (step && refId(step.crm_account) && refId(step.crm_account) !== accountId) {
-        const name = typeof step.name === 'string' && step.name !== '' ? step.name : 'This billing milestone';
+        const name = typeof step.name === 'string' && step.name !== '' ? step.name : 'This payment plan';
         if (stepFromInvoice) {
           throw Object.assign(refuse(
-            `${stepFromInvoice} counts toward ${name}, a billing milestone of another account. Correct the invoice's billing milestone, or choose another invoice.`,
+            `${stepFromInvoice} counts toward ${name}, a payment plan of another account. Correct the invoice's payment plan, or choose another invoice.`,
             'VALIDATION_FAILED',
             400,
           ), { reason: 'invoice_milestone', params: { invoice: stepFromInvoice, milestone: name } });
         }
         throw Object.assign(refuse(
-          `${name} belongs to another account. Choose a billing milestone of this payment's account.`,
+          `${name} belongs to another account. Choose a payment plan of this payment's account.`,
           'VALIDATION_FAILED',
           400,
         ), { reason: 'milestone_named', params: { milestone: name } });

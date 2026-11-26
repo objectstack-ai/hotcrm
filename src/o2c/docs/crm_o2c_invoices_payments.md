@@ -28,10 +28,10 @@ invoices and payments.
 ## Rules the screens do not show
 
 - **Account, order and contract.** Choosing an order or a contract fills in
-  its account. On a payment, so does choosing an invoice or a billing
-  milestone, and an invoice also fills in its contract when the payment has
+  its account. On a payment, so does choosing an invoice or a payment
+  plan, and an invoice also fills in its contract when the payment has
   none. A save that sets a payment's invoice, when the invoice counts toward a
-  billing milestone, gives the payment that milestone, replacing one it named: the
+  payment plan, gives the payment that milestone, replacing one it named: the
   milestone's **Received** counts the payments that point at it, so a payment
   that paid the invoice must count where the invoice does. A payment keeps its
   own milestone only when its invoice has none, or it has no invoice (an
@@ -42,7 +42,7 @@ invoices and payments.
   contract, or a payment names an invoice or a milestone but none, they are
   filled in from it, so the order's and the contract's totals count the same
   records the milestone and the invoice do.
-- **An invoice's billing milestone must belong to its account.** Choosing a
+- **An invoice's payment plan must belong to its account.** Choosing a
   milestone on an invoice fills in its account. The invoice form lists every
   account's milestones; one of another account is refused on save. The message
   names the milestone, or the order or contract it filled in while the invoice
@@ -74,7 +74,7 @@ invoices and payments.
   **Open** amount.
 - **One payment per invoice.** A receipt that pays several invoices is one
   payment row per invoice; there is no allocation.
-- **A payment's invoice and billing milestone must belong to its account.**
+- **A payment's invoice and payment plan must belong to its account.**
   The payment form lists every account's invoices and milestones; one of
   another account is refused on save, naming it. An invoice of the payment's
   account whose own milestone is another account's is refused by the invoice

@@ -97,7 +97,7 @@ is optional on invoices and payments. Every existing record keeps its account,
 its contract and its totals. The database, though, still requires a contract
 on those records until an administrator runs `os migrate apply` once against
 it and confirms the three `relax_not_null` changes it lists (the contract
-column of billing milestones, invoices and payments); skip the account
+column of payment plans, invoices and payments); skip the account
 changes it marks destructive, as nothing needs them. Until then an invoice or
 payment saved without a contract is refused with "Contract is required". That
 step is for an environment you run yourself. On a hosted environment you do

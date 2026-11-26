@@ -67,7 +67,7 @@ const invoice = (contract: Rec, doc: Rec = {}): Promise<Rec> =>
 const invoiceRefusal = (i: Rec): string =>
   `${i.invoice_number} belongs to another account. Choose an invoice of this payment's account.`;
 const milestoneRefusal = (s: Rec): string =>
-  `${s.name} belongs to another account. Choose a billing milestone of this payment's account.`;
+  `${s.name} belongs to another account. Choose a payment plan of this payment's account.`;
 
 describe('the row stamps', () => {
   it('billing_milestone_row_stamp stamps the contract\'s account', async () => {
@@ -298,7 +298,7 @@ describe('a payment\'s invoice and plan step belong to its account (hotcrm#2755)
     const refused = insert('crm_payment', { crm_account: wayne.crm_account, crm_invoice: i.id, payment_date: '2026-10-26', amount: 1 });
     await expect(refused).rejects.toMatchObject({ code: 'VALIDATION_FAILED', status: 400 });
     expect(String(await refused.catch((err: Rec) => err.userMessage))).toBe(
-      `${i.invoice_number} counts toward ${s.name}, a billing milestone of another account. Correct the invoice's billing milestone, or choose another invoice.`,
+      `${i.invoice_number} counts toward ${s.name}, a payment plan of another account. Correct the invoice's payment plan, or choose another invoice.`,
     );
     expect(await verify.rows('crm_payment', { crm_invoice: i.id })).toEqual([]);
   });

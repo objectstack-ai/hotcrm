@@ -144,7 +144,7 @@ export const zhCN: TranslationData = {
         my_expenses: {
           label: '我的费用',
           bulkActions: {
-            delete: { label: '删除', confirmLabel: '删除', confirmText: '确定要永久删除 {{count}} 笔费用吗？此操作无法撤销。' },
+            delete: { label: '删除', confirmLabel: '删除', confirmText: '确定要删除 {{count}} 笔费用吗？删除的记录会进入回收站，管理员可以在那里恢复。' },
           },
         },
       },

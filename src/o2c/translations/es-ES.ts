@@ -15,8 +15,8 @@ export const esES: TranslationData = {
           message: 'Esta factura pertenece a otra cuenta. Elija una factura de la cuenta de este cobro.',
           reasons: {
             named: { message: '{{invoice}} pertenece a otra cuenta. Elija una factura de la cuenta de este cobro.' },
-            milestone_named: { message: '{{milestone}} pertenece a otra cuenta. Elija un hito de facturación de la cuenta de este cobro.' },
-            invoice_milestone: { message: '{{invoice}} cuenta para {{milestone}}, un hito de facturación de otra cuenta. Corrija el hito de facturación de la factura o elija otra factura.' },
+            milestone_named: { message: '{{milestone}} pertenece a otra cuenta. Elija un plan de cobro de la cuenta de este cobro.' },
+            invoice_milestone: { message: '{{invoice}} cuenta para {{milestone}}, un plan de cobro de otra cuenta. Corrija el plan de cobro de la factura o elija otra factura.' },
           },
         },
       },
@@ -50,9 +50,9 @@ export const esES: TranslationData = {
     invoice_plan_step_guard: {
       refusals: {
         VALIDATION_FAILED: {
-          message: 'Este hito de facturación pertenece a otra cuenta. Elija un hito de facturación de la cuenta de esta factura.',
+          message: 'Este plan de cobro pertenece a otra cuenta. Elija un plan de cobro de la cuenta de esta factura.',
           reasons: {
-            milestone_named: { message: '{{milestone}} pertenece a otra cuenta. Elija un hito de facturación de la cuenta de esta factura.' },
+            milestone_named: { message: '{{milestone}} pertenece a otra cuenta. Elija un plan de cobro de la cuenta de esta factura.' },
           },
         },
       },
@@ -73,8 +73,8 @@ export const esES: TranslationData = {
   },
   objects: {
     crm_billing_milestone: {
-      label: 'Hito de facturación',
-      pluralLabel: 'Hitos de facturación',
+      label: 'Plan de cobro',
+      pluralLabel: 'Planes de cobro',
       description: 'Un paso del plan de cobro de una cuenta, planificado a partir de un pedido o un contrato: qué se debe, cuándo, y cuánto está facturado y cobrado',
       _validations: {
         billing_milestone_source: { message: 'Elija el pedido o el contrato al que pertenece este hito.' },
@@ -118,7 +118,7 @@ export const esES: TranslationData = {
       },
       _views: {
         all_billing_milestones: {
-          label: 'Todos los hitos de facturación',
+          label: 'Todos los planes de cobro',
         },
         planned_this_month: {
           label: 'Previsto este mes',
@@ -126,7 +126,7 @@ export const esES: TranslationData = {
       },
       _sections: {
         basic: {
-          label: 'Hito',
+          label: 'Plan de cobro',
         },
         plan: {
           label: 'Plan',
@@ -152,7 +152,7 @@ export const esES: TranslationData = {
           label: 'Contrato',
         },
         crm_billing_milestone: {
-          label: 'Hito de facturación',
+          label: 'Plan de cobro',
         },
         crm_account: {
           label: 'Cuenta',
@@ -227,7 +227,7 @@ export const esES: TranslationData = {
     crm_payment: {
       label: 'Cobro',
       pluralLabel: 'Cobros',
-      description: 'Dinero que pagó una cuenta: contra una factura, un hito, un pedido, un contrato, o ninguno todavía',
+      description: 'Dinero que pagó una cuenta: contra una factura, un plan de cobro, un pedido, un contrato, o ninguno todavía',
       fields: {
         payment_number: {
           label: 'Número de cobro',
@@ -242,7 +242,7 @@ export const esES: TranslationData = {
           label: 'Factura',
         },
         crm_billing_milestone: {
-          label: 'Hito de facturación',
+          label: 'Plan de cobro',
         },
         crm_account: {
           label: 'Cuenta',
@@ -352,7 +352,7 @@ export const esES: TranslationData = {
     crm_enterprise: {
       navigation: {
         nav_billing_milestones: {
-          label: 'Hitos de facturación',
+          label: 'Planes de cobro',
         },
         nav_help_o2c: {
           label: 'Manual Del pedido al cobro',
@@ -371,7 +371,7 @@ export const esES: TranslationData = {
         group_help: { label: 'Ayuda' },
         nav_invoices: { label: 'Facturas' },
         nav_payments: { label: 'Cobros' },
-        nav_billing_milestones: { label: 'Hitos de facturación' },
+        nav_billing_milestones: { label: 'Planes de cobro' },
         nav_overdue_invoices: { label: 'Facturas vencidas' },
         nav_planned_this_month: { label: 'Previsto este mes' },
         nav_approval_requests: { label: 'Bandeja de Entrada' },

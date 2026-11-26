@@ -8,10 +8,11 @@ import stack, { type AnyRec } from './helpers/composed-stack';
 /**
  * "Upcoming" means planned AND not started yet (#2393).
  *
- * Sales Home's Upcoming Events card reads `crm_event.upcoming_events`, and that
- * view filtered on `status = planned` alone. Nothing turns a booking into
+ * `crm_event.upcoming_events` (the Upcoming tab on Events, and until #2740 the
+ * Upcoming Events card on the rep's custom home page) filtered on
+ * `status = planned` alone. Nothing turns a booking into
  * `held` when its time passes, so every meeting nobody logged stayed on the
- * card for ever: a week after install every seeded row on it was in the past.
+ * list for ever: a week after install every seeded row on it was in the past.
  * The view now also carries `start_datetime >= {now}`, and the Sales Activity
  * dashboard's Meetings Booked tile ("meetings on the calendar that have not
  * happened yet") carries the same bound.

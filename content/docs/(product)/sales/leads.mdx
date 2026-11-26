@@ -47,6 +47,7 @@ A lead record declares its fields in **10 groups**. The lead's own record page c
 | Group | What's in it |
 | --- | --- |
 | **Identity** | Salutation, first/last name, full name, display title |
+| **Duplicate Management** | Duplicate Of (which object the surviving record lives on), Duplicate Of Lead, Duplicate Of Contact, Duplicate Status — the fields behind *Duplicate leads* below |
 | **Company Information** | Company, job title, industry — plus a hidden normalised copy of the company name, which is what conversion and duplicate checks match on |
 | **Contact Information** | Email, phone, mobile, website |
 | **Qualification** | Status, Lead Score (a 1-5 star rating), lead source, next follow-up date, last contacted, disqualification reason |
@@ -55,7 +56,6 @@ A lead record declares its fields in **10 groups**. The lead's own record page c
 | **Additional Info** | Annual revenue, number of employees, description, notes |
 | **Communication Preferences** | Do-not-call, email opt-out |
 | **Conversion** | Converted flag, converted account, contact and opportunity, converted date — all auto-filled when the lead is converted |
-| **Duplicate Management** | Duplicate Of (which object the surviving record lives on), Duplicate Of Lead, Duplicate Of Contact, Duplicate Status — the fields behind *Duplicate leads* below |
 
 The **full name** is built from the first and last name. When the last name (the family name) is written in Chinese, Japanese or Korean script, the family name comes first with no space — last name 张 and first name 伟 read **张伟**; any other name reads first name, space, last name (*Ada Lovelace*). The rule follows the name, not the language the app is shown in, so everyone sees the same name in the header, lists, lookups, search and notifications. Every list and card leads with the full name, so a record opens from its name whichever part you filled in.
 
@@ -170,9 +170,8 @@ After conversion, the lead becomes read-only — all future activity happens on 
 A lead opens on the same record page every object in HotCRM uses:
 
 - **The header** carries the lead's name and company, and the buttons for the next step: **Qualify Lead**, **Convert Lead** and **Schedule Follow-up**, with **Log a Call**, **Log a Meeting** and **Schedule a Meeting** under **⋯**. A button shows only when it applies: a qualified lead offers no **Qualify Lead**, a converted one no **Edit**.
-- **A banner** under the header on a suspected or confirmed duplicate, saying which of the two it is and what to do (see *Duplicate leads* above). A clean lead shows none.
 - **Key facts** — Status, Lead Score, Lead Source, Email and Phone — and the **status path**. Click a stage on the path to move the lead there; it is the same change as editing Status, so the same rules apply (Qualified asks for a Need Type and an Estimated Amount).
-- **The details**, section by section, in the left column. **Duplicate Management** links the record a duplicate repeats; **Conversion** opens folded, and on a converted lead it links the account, contact and opportunity the lead became, with the conversion date.
+- **The details**, section by section, in the left column. **Duplicate Management** comes second, right under Identity, and opens expanded on a suspected or confirmed duplicate: it shows the **Duplicate Status** and links the record the lead repeats, so you see the verdict on opening the lead, before you press **Convert Lead** (see *Duplicate leads* above). A clean lead has nothing in it and does not show it; **Conversion** opens folded, and on a converted lead it links the account, contact and opportunity the lead became, with the conversion date.
 - **The linked records**, one card each, in the right column: **Tasks** (open ones only, the one due soonest first), **Events** (when, then whether it happened, the latest first), **Event Attendees** and **Campaign Members**. Lists with nothing in them fold into one line you can expand. Below them are **Attachments** and **Activity**: comments, the calls and meetings logged on the lead, and changes to its tracked fields, newest first.
 
 The tabs across the top open each list on its own. A list has a **New** button when you are allowed to create that kind of record, and the new record comes linked to the lead. Sales users can book an event from here. Adding a lead to a campaign is a marketing task, so only users with the Marketing User permission set and administrators see **New** on **Campaign Members**; sales reps and managers see the list without it.

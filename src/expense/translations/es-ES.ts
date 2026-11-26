@@ -144,7 +144,7 @@ export const esES: TranslationData = {
         my_expenses: {
           label: 'Mis gastos',
           bulkActions: {
-            delete: { label: 'Eliminar', confirmLabel: 'Eliminar', confirmText: '¿Eliminar definitivamente {{count}} gasto(s)? No se puede deshacer.' },
+            delete: { label: 'Eliminar', confirmLabel: 'Eliminar', confirmText: '¿Eliminar {{count}} gasto(s)? Irán a la papelera, donde un administrador puede restaurarlos.' },
           },
         },
       },

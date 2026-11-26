@@ -44,7 +44,7 @@ const GRID_BAR = [
     icon: 'trash-2',
     variant: 'danger',
     operation: 'delete',
-    confirmText: 'Permanently delete {{count}} opportunity(ies)? This cannot be undone.',
+    confirmText: 'Delete {{count}} opportunity(ies)? They go to the recycle bin, where an administrator can restore them.',
     confirmLabel: 'Delete',
   },
 ] as const;

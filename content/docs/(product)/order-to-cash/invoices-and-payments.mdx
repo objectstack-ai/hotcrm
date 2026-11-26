@@ -19,7 +19,7 @@ The **Accounts Receivable** position enters and imports them on every account. I
 | **Account** | The customer it was issued to. Required; filled in when you choose an order, a contract or a plan step |
 | **Order** | The order it bills, if any. Choosing one fills in its account, and its contract when the order sits under one; an order of another account is refused |
 | **Contract** | The contract it was issued against, if any |
-| **Billing Milestone** | The plan step it bills, if any. Choosing one fills in its account, and its order and contract when the invoice has none; a plan step of another account is refused |
+| **Payment Plan** | The plan step it bills, if any. Choosing one fills in its account, and its order and contract when the invoice has none; a plan step of another account is refused |
 | **Issue Date** | The day it was issued |
 | **Due Date** | The day payment is due (see below) |
 | **Amount** | As issued, tax included |
@@ -50,7 +50,7 @@ The **Overdue Invoices** list, under **Follow-up → Overdue Invoices** in the *
 | **Order** | The order the money was received for, if any. Filled in from the invoice, or else the plan step, when left empty |
 | **Contract** | The contract the money was received for, if any. Filled in from the order, the invoice, or else the plan step, when left empty |
 | **Invoice** | The invoice it pays, if any. Choosing one fills in its account, and its contract when the payment has none. When the invoice counts toward a plan step, saving the payment with it gives the payment that step, replacing one it named |
-| **Billing Milestone** | The plan step it counts toward. Filled in from the invoice when there is one; set it yourself for an advance paid before its invoice |
+| **Payment Plan** | The plan step it counts toward. Filled in from the invoice when there is one; set it yourself for an advance paid before its invoice |
 | **Payment Date** | The day the money was received |
 | **Amount** | How much was received |
 | **Method** | **Bank Transfer** or **Other** |
@@ -82,6 +82,6 @@ Finance can load invoices and payments from a spreadsheet, an accounting package
 - **The ERP Reference is the key.** Importing a row whose **ERP Reference** is already on an invoice updates that invoice instead of adding a second one, so the same file can be imported again after finance changes it. An ERP writing through the API uses the same key.
 - **Every imported row is marked.** Its **Source** reads **Import** and its **Synced At** is the moment of the import, so a reader can see where a figure came from and how old it is. A row entered by hand reads **Manual entry**.
 - **References resolve by name.** An account name, order number or reference, contract number, invoice number or step name that matches nothing fails that row, and the import report names it. A row that names no account, order or contract (nor, for a payment, an invoice or a step) fails too: the account is required.
-- **A step name used on more than one contract fails the row.** Steps are often named alike ("Advance 30%", "Year 2"), and the import looks the name up across every contract, not only the row's own, so the report reads *matches more than one record*. Put the step's record ID in the **Billing Milestone** column instead; it is at the end of the address of the step's page. Two accounts with the same name fail the **Account** column the same way.
+- **A step name used on more than one contract fails the row.** Steps are often named alike ("Advance 30%", "Year 2"), and the import looks the name up across every contract, not only the row's own, so the report reads *matches more than one record*. Put the step's record ID in the **Payment Plan** column instead; it is at the end of the address of the step's page. Two accounts with the same name fail the **Account** column the same way.
 
 Amounts are in your company's currency, like every amount in HotCRM. Convert before importing.

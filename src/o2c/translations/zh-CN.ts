@@ -15,8 +15,8 @@ export const zhCN: TranslationData = {
           message: '这张发票属于另一个客户。请选择这笔回款所属客户的发票。',
           reasons: {
             named: { message: '{{invoice}}属于另一个客户。请选择这笔回款所属客户的发票。' },
-            milestone_named: { message: '{{milestone}}属于另一个客户。请选择这笔回款所属客户的回款节点。' },
-            invoice_milestone: { message: '{{invoice}}计入的回款节点{{milestone}}属于另一个客户。请更正这张发票的回款节点，或选择另一张发票。' },
+            milestone_named: { message: '{{milestone}}属于另一个客户。请选择这笔回款所属客户的回款计划。' },
+            invoice_milestone: { message: '{{invoice}}计入的回款计划{{milestone}}属于另一个客户。请更正这张发票的回款计划，或选择另一张发票。' },
           },
         },
       },
@@ -50,9 +50,9 @@ export const zhCN: TranslationData = {
     invoice_plan_step_guard: {
       refusals: {
         VALIDATION_FAILED: {
-          message: '这个回款节点属于另一个客户。请选择这张发票所属客户的回款节点。',
+          message: '这个回款计划属于另一个客户。请选择这张发票所属客户的回款计划。',
           reasons: {
-            milestone_named: { message: '{{milestone}}属于另一个客户。请选择这张发票所属客户的回款节点。' },
+            milestone_named: { message: '{{milestone}}属于另一个客户。请选择这张发票所属客户的回款计划。' },
           },
         },
       },
@@ -73,8 +73,8 @@ export const zhCN: TranslationData = {
   },
   objects: {
     crm_billing_milestone: {
-      label: '回款节点',
-      pluralLabel: '回款节点',
+      label: '回款计划',
+      pluralLabel: '回款计划',
       description: '客户回款计划中的一步，按订单或合同制定：应收多少、何时收，以及其中已开票和已回款的金额',
       _validations: {
         billing_milestone_source: { message: '请选择这个节点所属的订单或合同。' },
@@ -118,7 +118,7 @@ export const zhCN: TranslationData = {
       },
       _views: {
         all_billing_milestones: {
-          label: '全部回款节点',
+          label: '全部回款计划',
         },
         planned_this_month: {
           label: '本月计划回款',
@@ -126,7 +126,7 @@ export const zhCN: TranslationData = {
       },
       _sections: {
         basic: {
-          label: '回款节点',
+          label: '回款计划',
         },
         plan: {
           label: '计划',
@@ -152,7 +152,7 @@ export const zhCN: TranslationData = {
           label: '合同',
         },
         crm_billing_milestone: {
-          label: '回款节点',
+          label: '回款计划',
         },
         crm_account: {
           label: '客户',
@@ -227,7 +227,7 @@ export const zhCN: TranslationData = {
     crm_payment: {
       label: '回款',
       pluralLabel: '回款',
-      description: '客户付来的款项：对应发票、回款节点、订单、合同，或暂时都不对应',
+      description: '客户付来的款项：对应发票、回款计划、订单、合同，或暂时都不对应',
       fields: {
         payment_number: {
           label: '回款编号',
@@ -242,7 +242,7 @@ export const zhCN: TranslationData = {
           label: '发票',
         },
         crm_billing_milestone: {
-          label: '回款节点',
+          label: '回款计划',
         },
         crm_account: {
           label: '客户',
@@ -352,7 +352,7 @@ export const zhCN: TranslationData = {
     crm_enterprise: {
       navigation: {
         nav_billing_milestones: {
-          label: '回款节点',
+          label: '回款计划',
         },
         nav_help_o2c: {
           label: '订单与回款手册',
@@ -371,7 +371,7 @@ export const zhCN: TranslationData = {
         group_help: { label: '帮助' },
         nav_invoices: { label: '发票' },
         nav_payments: { label: '回款' },
-        nav_billing_milestones: { label: '回款节点' },
+        nav_billing_milestones: { label: '回款计划' },
         nav_overdue_invoices: { label: '逾期发票' },
         nav_planned_this_month: { label: '本月计划回款' },
         nav_approval_requests: { label: '待我审批' },

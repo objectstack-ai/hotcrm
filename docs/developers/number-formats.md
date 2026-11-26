@@ -1,7 +1,7 @@
 # Money, number and date formats
 
 One convention for how HotCRM shows amounts, counts, percentages and dates, so the same
-number reads the same way on a dashboard, a list, a record page and Sales Home (#2370).
+number reads the same way on a dashboard, a list and a record page (#2370).
 Each rule names the metadata that carries it. The platform owns the rendering; this page
 only says which declared key HotCRM sets, and which gaps were measured on platform 18.2.0
 and left to the platform.
@@ -12,7 +12,6 @@ and left to the platform.
 | --- | --- | --- |
 | An amount of money on a record or in a list | with the currency and its minor unit: `$86,400.00` | a `Field.currency()` field, no `currencyConfig` (the tenant currency) |
 | An amount on a KPI tile, chart or dashboard table | with the currency, whole units: `$1,290,000` | the dataset measure's `format: '0,0'`; the currency comes from the tenant |
-| An amount on a Sales Home KPI (`object-metric`) | with the currency, whole units | the component's `format: '0,0'` |
 | An amount computed by a formula | as an amount of money | the formula's `returnType: 'currency'` |
 | A count of units (a line's quantity) | a whole number: `4` | `Field.number({ scale: 0 })` |
 | A percentage on a record | the percentage, at the field's `scale` | `Field.percent()` |
@@ -44,7 +43,8 @@ rule for price books.
 A KPI is read at a glance, so it drops the cents. Dataset measures over an amount declare
 `format: '0,0'` (`opportunity_metrics`, `forecast_metrics`, `product_metrics`, `account_metrics`).
 An `object-metric` on a page has no measure, so it carries the same pattern itself; without it
-Sales Home showed `1,220,000.00` beside the dashboards' `1,220,000`.
+the rep's custom home page showed `1,220,000.00` beside the dashboards' `1,220,000`. No page
+carries one since #2740 deleted that page.
 
 ## Measured on 18.2.0 and left to the platform
 

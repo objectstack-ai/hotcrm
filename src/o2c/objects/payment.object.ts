@@ -125,7 +125,7 @@ export const Payment = ObjectSchema.create({
     // so the step's Received counts payments made through its invoices. One
     // of another account is refused on save (the same hook).
     crm_billing_milestone: Field.lookup('crm_billing_milestone', {
-      label: 'Billing Milestone',
+      label: 'Payment Plan',
       group: 'basic',
       // No `dependsOn`, for the reason the invoice has none (hotcrm#2755):
       // the step the milestone page's New prefills was hidden, then cleared.

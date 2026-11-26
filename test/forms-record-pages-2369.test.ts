@@ -12,7 +12,6 @@ import { KnowledgeArticle } from '../src/service/objects/knowledge_article.objec
 import { Case } from '../src/service/objects/case.object';
 import { Task } from '../src/sales/objects/task.object';
 import { OpportunityLineItem } from '../src/revenue/objects/opportunity_line_item.object';
-import { CaseDetailPage } from '../src/service/pages/case_detail.page';
 import { SendEmailAction } from '../src/sales/actions/contact.actions';
 import {
   ContactLogCallAction,
@@ -31,17 +30,6 @@ type AnyRec = Record<string, any>;
 const fieldName = (f: unknown): string => (typeof f === 'string' ? f : (f as AnyRec)?.field);
 const section = (view: AnyRec, name: string): AnyRec =>
   (view.form?.sections ?? []).find((s: AnyRec) => s.name === name);
-
-/** Every node of a page, depth first. */
-const nodes = (node: unknown, out: AnyRec[] = []): AnyRec[] => {
-  if (Array.isArray(node)) node.forEach((n) => nodes(n, out));
-  else if (node && typeof node === 'object') {
-    out.push(node as AnyRec);
-    Object.values(node).forEach((v) => nodes(v, out));
-  }
-  return out;
-};
-const byId = (page: unknown, id: string): AnyRec | undefined => nodes(page).find((n) => n.id === id);
 
 describe('row 1: a new contact’s required and reachable fields share the first tab', () => {
   it('puts email and phone in the identity section, beside the required names', () => {
@@ -113,16 +101,13 @@ describe('row 6: a case shows a breached SLA, and nothing red when on track', ()
     expect((Case as AnyRec).highlightFields).toContain('sla_due_date');
   });
 
-  it('shows an error alert only when the flag is true', () => {
-    const alert = byId(CaseDetailPage, 'case_sla_breached');
-    expect(alert?.type).toBe('record:alert');
-    expect(alert?.properties.severity).toBe('error');
-    const visible = JSON.stringify(alert?.properties.visible);
-    expect(visible).toContain('has(record.is_sla_violated)');
-    expect(visible).toContain('record.is_sla_violated == true');
-    for (const key of ['title', 'body']) {
-      expect(Object.keys(alert?.properties[key]).sort()).toEqual(['en', 'es-ES', 'ja-JP', 'zh-CN']);
-    }
+  // The red banner went with the case's page (#2740, maintainer 2026-11-25):
+  // a breached case shows SLA Violated ticked in the SLA & Priority section,
+  // which has no toggle, so it shows without a click or a banner.
+  it('shows the flag in an always-open section', () => {
+    expect((Case as AnyRec).fields.is_sla_violated.group).toBe('sla');
+    const sla = ((Case as AnyRec).fieldGroups as AnyRec[]).find((g) => g.key === 'sla');
+    expect(sla?.collapse ?? 'none').toBe('none');
   });
 });
 
@@ -161,12 +146,4 @@ describe('row 9: the record opens on the panels people work from', () => {
     expect(fk(Task, 'related_to_case').relatedListFilter).toEqual(OPEN_TASKS);
   });
 
-  // The opportunity authors no record page since #2686 (its two approval
-  // banners were dropped), so only the case's page is left to hold to the
-  // alerts slot; the deal's lists above are derived either way.
-  it('the authored pages override nothing but the alerts', () => {
-    for (const page of [CaseDetailPage] as AnyRec[]) {
-      expect(Object.keys(page.slots ?? {}), page.name).toEqual(['alerts']);
-    }
-  });
 });

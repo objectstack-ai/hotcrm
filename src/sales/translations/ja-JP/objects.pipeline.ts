@@ -42,7 +42,7 @@ const OPPORTUNITY_BULK_DELETE = {
   delete: {
     label: '削除',
     confirmLabel: '削除',
-    confirmText: '{{count}} 件の商談を完全に削除しますか？この操作は取り消せません。',
+    confirmText: '{{count}} 件の商談を削除しますか？削除したレコードはごみ箱に移り、管理者がそこから復元できます。',
   },
 };
 

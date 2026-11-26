@@ -12,8 +12,8 @@ sources:
 # The Project Plan — Tasks, the Gantt and Percent Complete
 
 For project managers, and for the team who reads the plan. A project's plan is
-its **Project Tasks**: the Gantt on the project's **Overview** tab draws them,
-and the project's **Percent Complete** is worked out from them.
+its **Project Tasks**: **Project Plan** in the app draws them on a Gantt, and
+the project's **Percent Complete** is worked out from them.
 
 ## Who writes the plan
 
@@ -40,11 +40,11 @@ and the project's **Percent Complete** is worked out from them.
 
 ## The Gantt
 
-- **On the project:** the Overview tab shows the project's own tasks under its
-  fields, with the predecessors as arrows and milestones as diamonds. Subtasks
-  are listed beside their summary task rather than under it; **Task Tree**
-  shows the tree. **Project Plan** in the app shows every task you can read, with a
-  filter by project.
+- **Where:** **Project Plan** in the app shows every task you can read, with
+  the predecessors as arrows and milestones as diamonds. Pick a project in its
+  **Project** filter to see that project's plan alone; the project's own page
+  lists its tasks in the Related tab and draws no Gantt. Subtasks are listed
+  beside their summary task rather than under it; **Task Tree** shows the tree.
 - **Dragging a bar** changes the task's planned dates, and dragging its
   progress handle changes its Percent Complete. Both save at once.
 - **Auto-schedule** in the Gantt's toolbar moves the tasks that wait on a moved
