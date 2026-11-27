@@ -6,7 +6,14 @@ import { defineView } from '@objectstack/spec/ui';
  * Billing Milestone Views — the collection plan.
  *
  *   • grid — every plan step the reader can see, soonest first, with its
- *     planned, invoiced, received and open figures.
+ *     planned, received and open figures (an invoice hangs on no plan step
+ *     since the 2026-11-26 ruling, hotcrm#2806, so a step shows no Invoiced).
+ *   • Overdue Payment Plans — the rep's view since the 2026-11-26 ruling
+ *     (overdue is measured on the payment plan, not on invoices; it replaced
+ *     Overdue Invoices): steps past their planned date with an amount still
+ *     open. `{today}` resolves on the read path (measured for Overdue Invoices
+ *     on 18.3.0, #2315). `open_amount` is a STORED column for this filter's
+ *     sake (see the field): a formula cannot be filtered.
  *   • Planned This Month — the rep's view (plan *The data model*): steps
  *     planned for the current calendar month. `{current_month_start}` and
  *     `{next_month_start}` resolve on the read path (`resolveFilterTokens`),
@@ -34,7 +41,6 @@ export const BillingMilestoneViews = defineView({
       { field: 'crm_contract', width: 130 },
       { field: 'planned_date', width: 120, sortable: true },
       { field: 'planned_amount', width: 140, align: 'right', summary: 'sum' },
-      { field: 'invoiced_amount', width: 130, align: 'right', summary: 'sum' },
       { field: 'received_amount', width: 130, align: 'right', summary: 'sum' },
       { field: 'open_amount', width: 130, align: 'right' },
     ],
@@ -50,10 +56,25 @@ export const BillingMilestoneViews = defineView({
       label: 'Planned This Month',
       userActions: { editInline: true },
       data: { provider: 'object', object: 'crm_billing_milestone' },
-      columns: ['name', 'crm_account', 'crm_sales_order', 'crm_contract', 'planned_date', 'planned_amount', 'invoiced_amount', 'received_amount', 'open_amount'],
+      columns: ['name', 'crm_account', 'crm_sales_order', 'crm_contract', 'planned_date', 'planned_amount', 'received_amount', 'open_amount'],
       filter: [
         { field: 'planned_date', operator: 'greater_than_or_equal', value: '{current_month_start}' },
         { field: 'planned_date', operator: 'less_than', value: '{next_month_start}' },
+      ],
+      sort: [{ field: 'planned_date', order: 'asc' }],
+    },
+
+    /** Past the planned date with an amount still open — oldest first. */
+    overdue_billing_milestones: {
+      name: 'overdue_billing_milestones',
+      type: 'grid',
+      label: 'Overdue Payment Plans',
+      userActions: { editInline: true },
+      data: { provider: 'object', object: 'crm_billing_milestone' },
+      columns: ['name', 'crm_account', 'crm_sales_order', 'crm_contract', 'planned_date', 'planned_amount', 'received_amount', 'open_amount'],
+      filter: [
+        { field: 'planned_date', operator: 'less_than', value: '{today}' },
+        { field: 'open_amount', operator: 'greater_than', value: 0 },
       ],
       sort: [{ field: 'planned_date', order: 'asc' }],
     },

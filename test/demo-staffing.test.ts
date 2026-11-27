@@ -737,7 +737,7 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
  */
 describe('the finance personas read the Order to Cash surfaces (hotcrm#2821)', () => {
   const FINANCE = ['finance_controller', 'ar_accountant'] as const;
-  const ACCOUNT_FIGURES = ['invoiced_amount', 'received_amount', 'receivable_balance'];
+  const ACCOUNT_FIGURES = ['invoiced_amount', 'received_amount', 'unpaid_amount', 'uninvoiced_amount'];
   const member = (key: string) => DemoOrgStaffing.find((m) => m.key === key)!;
 
   /** `POST /data/OBJECT/query` as `token`: the REST door the console reads through, field-level security applied. */

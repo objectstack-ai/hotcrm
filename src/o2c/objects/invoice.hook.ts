@@ -19,9 +19,10 @@ const invoiceRowStamp: Hook = createO2cRowStamp('crm_invoice', 'invoice_row_stam
  *     `invoice_row_stamp` (priority 50) has already filled the contract from
  *     the order or the step, so an order under a contract reads the
  *     contract's terms first.
- *   - `open_amount` = amount − paid, never below 0, stored because the Overdue
- *     Invoices view filters on it (see the field), and `overpaid_amount` = paid
- *     − amount when the payments exceed the invoice, else 0 (#2513).
+ *   - `open_amount` = amount − paid, never below 0, and `overpaid_amount` =
+ *     paid − amount when the payments exceed the invoice, else 0 (#2513).
+ *     Hidden since the 2026-11-26 ruling (hotcrm#2806: an invoice is not set
+ *     against payments), and kept current on the rows entered before.
  *     `paid_amount` is a summary the engine recomputes by an UPDATE of this
  *     invoice when a payment is written, so that update passes through here
  *     too and both figures follow the payment. A cancelled invoice is open

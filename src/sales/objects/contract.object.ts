@@ -286,31 +286,80 @@ export const Contract = ObjectSchema.create({
       readonlyWhen: P`(has(record.contract_form) && record.contract_form == "order") || (has(record.status) && record.status == "activated")`,
     }),
 
-    // The amounts of the orders placed under this contract (hotcrm#2804):
-    // `total_price`, the order's tax-inclusive total (subtotal less discount,
-    // plus tax and shipping; `sales_order.hook.ts`). On an order contract
-    // that is its one order. The platform keeps it, rewriting it whenever an
-    // order under the contract changes, and that rewrite is what lets a
-    // draft order contract follow its order (`contract_form_and_change`).
+    // What was ordered under this contract (hotcrm#2804, #2807; the
+    // maintainer's ruling of 2026-11-27 on hotcrm#2806): the `total_price`
+    // (tax-inclusive) of its CONFIRMED and COMPLETED orders. A Draft is not
+    // yet ordered and a Cancelled order never will be, so neither counts in a
+    // framework contract's Order Amount, its Remaining Quota, the quota
+    // warning's running total, or the contract's Unpaid and Uninvoiced (Order
+    // to Cash). The same status set the account counts its orders by.
     //
-    // On a framework contract it is the ordered amount of the quota
-    // (hotcrm#2807, maintainer ruling 2026-11-26): every order linked to the
-    // contract, whatever its status, at the same tax-inclusive total. One
-    // roll-up serves both forms, so the quota and an order contract's value
-    // count an order the same way. Not shown on Other, which has no amount.
+    // Hidden: the record page does not apply `visibleWhen` in its detail
+    // sections (measured on 18.6.0, below), so two "Order Amount" fields told
+    // apart by form would both show on every contract. The one shown is
+    // `order_amount_shown`, which reads this figure on a framework contract
+    // and `linked_order_amount` on an order contract.
     order_amount: Field.summary({
       label: 'Order Amount',
       group: 'orders',
       scale: 2,
       readonly: true,
+      hidden: true,
       visibleWhen: P`has(record.contract_form) && (record.contract_form == "order" || record.contract_form == "framework")`,
-      description: 'The total of the orders under this contract, tax included.',
+      description: 'The total of the confirmed and completed orders under this contract, tax included.',
       summaryOperations: {
         object: 'crm_sales_order',
         field: 'total_price',
         function: 'sum',
         relationshipField: 'crm_contract',
+        filter: { status: { $in: ['confirmed', 'completed'] } },
       },
+    }),
+
+    // An order contract's order amount, whatever its order's status but
+    // Cancelled (hotcrm#2804, kept as ruled): an order contract is drafted
+    // from its order, usually a Draft, and its value follows that order while
+    // the contract is a draft. The platform rewrites this roll-up whenever an
+    // order under the contract changes, and that rewrite is what the draft
+    // follow, Differs from the Order Amount and Change's Update from Order
+    // read (`contract_form_and_change`). Hidden; shown through
+    // `order_amount_shown`.
+    linked_order_amount: Field.summary({
+      label: 'Linked Order Amount',
+      group: 'orders',
+      scale: 2,
+      readonly: true,
+      hidden: true,
+      description: 'The total of the orders under this contract that are not cancelled, tax included.',
+      summaryOperations: {
+        object: 'crm_sales_order',
+        field: 'total_price',
+        function: 'sum',
+        relationshipField: 'crm_contract',
+        filter: { status: { $in: ['draft', 'confirmed', 'completed'] } },
+      },
+    }),
+
+    // The Order Amount the record page shows: on an order contract its
+    // order's amount (`linked_order_amount`, what #2804 showed), on a
+    // framework contract what was ordered (`order_amount`, confirmed and
+    // completed orders), on Other nothing. One field rather than two with
+    // complementary `visibleWhen`, which the record page would both show.
+    order_amount_shown: Field.formula({
+      label: 'Order Amount',
+      group: 'orders',
+      returnType: 'currency',
+      scale: 2,
+      visibleWhen: P`has(record.contract_form) && (record.contract_form == "order" || record.contract_form == "framework")`,
+      // One flat chain, each amount `dyn`, so every branch has one type.
+      expression: F`has(record.contract_form) && record.contract_form == "order"
+        && has(record.linked_order_amount) && record.linked_order_amount != null
+        ? dyn(double(record.linked_order_amount))
+        : has(record.contract_form) && record.contract_form == "framework"
+          && has(record.order_amount) && record.order_amount != null
+          ? dyn(double(record.order_amount))
+          : dyn(null)`,
+      description: "An order contract: its order's amount. A framework contract: the confirmed and completed orders under it. Tax included.",
     }),
 
     // The sign the ruling asks for (hotcrm#2804): an order contract whose
@@ -331,17 +380,20 @@ export const Contract = ObjectSchema.create({
       // state, and the renderer gap is reported upstream, not worked around.
       visibleWhen: P`has(record.contract_form) && record.contract_form == "order"`,
       // Judged only once the order amount is known: a contract that predates
-      // the field holds NULL there until the roll-up is materialised.
+      // the field holds NULL there until the roll-up is materialised. Read
+      // from `linked_order_amount`, the order's amount whatever its status
+      // but Cancelled (hotcrm#2806), as #2804 ruled.
       expression: F`has(record.contract_form) && record.contract_form == "order"
-        && has(record.order_amount) && record.order_amount != null
-        && double(record.order_amount)
+        && has(record.linked_order_amount) && record.linked_order_amount != null
+        && double(record.linked_order_amount)
           != (has(record.contract_value) && record.contract_value != null ? double(record.contract_value) : 0.0)
         ? true : null`,
       description: "The contract value no longer equals the order's amount. Change, with Update from Order, takes the order's amount.",
     }),
 
     // A framework contract's quota left (hotcrm#2807): its value, the
-    // ceiling, less the Order Amount above. The current value: a quota
+    // ceiling, less the Order Amount above (confirmed and completed orders,
+    // hotcrm#2806). The current value: a quota
     // raised or lowered by Change counts from the next read. Below zero
     // when the orders have gone over the ceiling, which is the sign that
     // stays on the record; the order's save that takes the contract over

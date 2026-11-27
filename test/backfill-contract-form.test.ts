@@ -20,10 +20,10 @@ type Rec = Record<string, any>;
  */
 
 const ROWS: Rec[] = [
-  { id: 'c1', contract_number: 'CTR-0001', name: 'Old one', contract_form: null, contract_value: 5_000, order_amount: 0 },
-  { id: 'c2', contract_number: 'CTR-0002', name: 'Differs', contract_form: 'order', contract_value: 1_100, order_amount: 1_300 },
-  { id: 'c3', contract_number: 'CTR-0003', name: 'Agrees', contract_form: 'order', contract_value: 900, order_amount: 900 },
-  { id: 'c4', contract_number: 'CTR-0004', name: 'Framework', contract_form: 'framework', contract_value: 2_000, order_amount: 0 },
+  { id: 'c1', contract_number: 'CTR-0001', name: 'Old one', contract_form: null, contract_value: 5_000, linked_order_amount: 0 },
+  { id: 'c2', contract_number: 'CTR-0002', name: 'Differs', contract_form: 'order', contract_value: 1_100, linked_order_amount: 1_300 },
+  { id: 'c3', contract_number: 'CTR-0003', name: 'Agrees', contract_form: 'order', contract_value: 900, linked_order_amount: 900 },
+  { id: 'c4', contract_number: 'CTR-0004', name: 'Framework', contract_form: 'framework', contract_value: 2_000, linked_order_amount: 0 },
 ];
 
 afterEach(() => {

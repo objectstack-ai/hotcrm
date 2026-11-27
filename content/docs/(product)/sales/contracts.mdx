@@ -31,7 +31,7 @@ Every contract has a **Contract Form**, which decides where its value comes from
 
 You choose **Framework Contract** or **Other** while the contract is a draft; once it leaves Draft, the form is fixed. An order contract stays an order contract, and its **Source Order** names the order it was drafted from.
 
-**An order contract follows its order while it is a draft.** Its **Order Amount** and its **Contract Value** are the order's total: change the order (or the quote it came from), and the draft contract's value changes with it. Nobody types the value of an order contract.
+**An order contract follows its order while it is a draft.** Its **Order Amount** and its **Contract Value** are the order's total, whatever the order's status but Cancelled: change the order (or the quote it came from), and the draft contract's value changes with it. Nobody types the value of an order contract.
 
 **Once the contract is activated, its value stays as signed.** If the order's amount changes afterwards, the contract shows **Differs from the Order Amount**, and its value does not move until someone runs **Change** with **Update from Order** (below).
 
@@ -41,10 +41,10 @@ Contracts that existed before contract forms took one by this rule, the first ti
 
 A framework contract's value is the ceiling for the orders placed under it. Its **Order Totals** section shows how much of it the orders use:
 
-- **Order Amount** — the total of every order linked to the contract, tax included, whatever the order's status.
+- **Order Amount** — the total of the **Confirmed** and **Completed** orders linked to the contract, tax included. A Draft is not yet ordered and a Cancelled order never will be, so neither counts — here, in Remaining Quota, or in the contract's Unpaid and Uninvoiced ([Order to Cash](/docs/order-to-cash)). Confirming a Draft adds it.
 - **Remaining Quota** — the contract value less the Order Amount. Below zero, the orders have gone over the contract value.
 
-**Going over warns, and the save goes through.** Linking an order to a framework contract, or raising a linked order's total, so that the orders under it total more than the contract value saves the order and shows a warning. An edit that does not add to the order's total — or lowers it — gives no warning, so an order already over is not flagged again on every save. An order line that takes its order over saves without the warning; the contract's Remaining Quota shows it.
+**Going over warns, and the save goes through.** Linking an order to a framework contract, or raising a linked order's total, so that the orders under it total more than the contract value saves the order and shows a warning. A Draft order is checked as if it were confirmed, so the warning comes while there is still time to change it, and confirming an order that takes the contract over warns again. An edit that does not add to the order's total — or lowers it — gives no warning, so an order already over is not flagged again on every save. An order line that takes its order over saves without the warning; the contract's Remaining Quota shows it.
 
 The quota is the contract's current value. When **Change** gives an activated framework contract a new value, Remaining Quota counts from the new one. Order and Other contracts have no quota: an order contract's value *is* its order's amount, and an Other contract has none.
 
