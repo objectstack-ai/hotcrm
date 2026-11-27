@@ -125,7 +125,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: 'Confirm Order',
-        confirmText: 'Confirm this order? Its lines are then locked: to change them, the order has to go back to Draft.',
+        confirmText: 'Confirm this order? Its lines and its amount are then locked: to change them, the order has to go back to Draft.',
         successMessage: 'Order {{ record.name }} confirmed.',
       },
       complete_sales_order: {

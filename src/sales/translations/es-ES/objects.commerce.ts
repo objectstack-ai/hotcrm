@@ -132,7 +132,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: 'Confirmar pedido',
-        confirmText: '¿Confirmar este pedido? Sus líneas quedan bloqueadas: para cambiarlas, el pedido tiene que volver a Borrador.',
+        confirmText: '¿Confirmar este pedido? Sus líneas y su importe quedan bloqueados: para cambiarlos, el pedido tiene que volver a Borrador.',
         successMessage: 'Pedido {{ record.name }} confirmado.',
       },
       complete_sales_order: {

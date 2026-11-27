@@ -130,7 +130,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: '确认订单',
-        confirmText: '确认此订单？确认后订单行将被锁定：如需修改，须先把订单退回草稿。',
+        confirmText: '确认此订单？确认后订单行和金额将被锁定：如需修改，须先把订单退回草稿。',
         successMessage: '订单 {{ record.name }} 已确认。',
       },
       complete_sales_order: {

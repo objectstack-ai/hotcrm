@@ -131,7 +131,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: '注文を確定',
-        confirmText: 'この注文を確定しますか？確定すると明細はロックされます。変更するには、注文を下書きに戻す必要があります。',
+        confirmText: 'この注文を確定しますか？確定すると明細と金額はロックされます。変更するには、注文を下書きに戻す必要があります。',
         successMessage: '注文 {{ record.name }} を確定しました。',
       },
       complete_sales_order: {
