@@ -37,6 +37,15 @@ stateDiagram-v2
   activated --> terminated
 ```
 
+## A contract's name
+
+Every contract has a **Contract Name**, and it is the contract's title in
+lists, pickers, approvals and notices; its **Contract Number** stands beside
+it, and a picker shows the number under each name. A contract drafted from an
+order is named as the order is, so one drafted from an accepted quote's order
+carries the quote's name. Change it to whatever the customer calls the
+agreement.
+
 ## Printing a contract and filing the signed copy
 
 **Print Contract**, on the contract and in the contract list's row menu, prints
@@ -58,6 +67,49 @@ that was already activated before this rule still expires or is terminated as
 before, and an import or an integration still saves its other changes. The
 **Edit** form asks for the **Signed Copy** before it saves any change to such a
 contract, so upload the copy first.
+
+## Order contracts, framework contracts and other
+
+A contract's **Contract Form** says where its value comes from. **Draft
+Contract** on an order makes an **order contract**: its value is the order's
+total, tax included, and while the contract is a draft it follows the order —
+change the order and the contract's value changes with it. Nobody types an
+order contract's value. A contract you create by hand is a **framework
+contract** (its value typed, and it may carry many orders) or **Other** (no
+amount, such as an NDA); you choose while it is a draft.
+
+Once an order contract is activated, its value stays as signed. If the order
+changes afterwards, the contract shows **Differs from the Order Amount**.
+
+## A framework contract's quota
+
+A framework contract's value is a ceiling for the orders placed under it. Its
+**Order Totals** show how far the orders have gone: **Order Amount** is the
+total of the **Confirmed** and **Completed** orders linked to the contract,
+tax included, and **Remaining Quota** is the contract value less that
+amount. A Draft or a Cancelled order counts in neither, nor in the contract's
+Unpaid and Uninvoiced; confirming a Draft adds it. Remaining Quota below zero
+means the orders have gone over. On an order contract, **Order Amount** is its
+order's total whatever the order's status but Cancelled.
+
+Linking an order to a framework contract, or raising a linked order's total,
+so that the orders go over the contract value saves the order and shows a
+warning. A Draft order is checked as if it were confirmed, so the warning
+comes in time to change it, and confirming an order that takes the contract
+over warns again. An edit that does not add to the order's total, or lowers
+it, gives no warning. An order line that takes its order over saves without the
+warning; the contract's Remaining Quota shows it. The quota is the contract's
+current value: once Change gives an activated contract a new value, Remaining
+Quota counts from it.
+
+## Changing an activated contract
+
+An activated contract's **Contract Value**, **End Date** and **Payment Terms**
+change only through **Change**: give the reason and upload the signed
+amendment, or nothing is saved. On an order contract, **Update from Order**
+takes the order's current amount; no value is typed. The contract stays
+activated, and its history keeps every value before and after, with who
+changed it and when.
 
 ## Renewals and expiration are watched for you
 

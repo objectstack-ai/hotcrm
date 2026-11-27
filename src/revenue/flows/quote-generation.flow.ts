@@ -3,7 +3,16 @@
 import { P, expression, cel } from '@objectstack/spec';
 import type * as Automation from '@objectstack/spec/automation';
 import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
+import { guarded } from '../../sales/flows/_guarded-iteration';
 type Flow = Automation.Flow;
+
+/**
+ * The opportunity line's value, or `null` when it has none. A raw driver row is
+ * sparse (an optional `description` is simply absent), so each read is
+ * `has()`-guarded. Spliced with `expression()`: the `cel` tag JSON-quotes an
+ * interpolated string.
+ */
+const fromLine = (field: string) => expression(`has(oppLine.${field}) ? oppLine.${field} : null`, 'cel');
 
 /**
  * Edge `e4a`'s predicate — advance the deal to `proposal`. A source FRAGMENT,
@@ -16,7 +25,38 @@ const ADVANCE = `has(vars.oppRecord) && has(vars.oppRecord.stage)
   && (vars.oppRecord.stage == "prospecting" || vars.oppRecord.stage == "qualification" || vars.oppRecord.stage == "needs_analysis")
   && (!has(vars.oppRecord.approval_status) || vars.oppRecord.approval_status != "pending")`;
 
-/** Quote Generation — screen flow to create a quote from an opportunity */
+/**
+ * Quote Generation — screen flow to create a quote from an opportunity.
+ *
+ * ## The opportunity's product lines come with it (#2750)
+ *
+ * Product-owner ruling, quoted from the card: 「生成报价单时，把商机的每行产品明细
+ * 复制为报价单明细（产品、数量、目录价、销售单价、行折扣、描述）。报价单头的小计 /
+ * 总价由复制过来的明细汇总；生成时填写的整单折扣在此基础上生效。复制后两边各自独立：
+ * 在报价上改明细不回写商机。商机没有明细时，保持现状（只建报价单头）。」
+ *
+ * After `create_quote`, `get_opp_lines` reads the deal's lines and `copy_lines`
+ * creates one quote line per row through the ordinary insert, AS THE REP (the
+ * flow's default `runAs: 'user'`), so every quote-line hook judges a copied line
+ * exactly as it judges a typed one: `quote_line_item_price_fill` stamps the List
+ * Price from the quote's price book (the field is `readonly`, so the flow does
+ * not send one), `quote_line_item_product_title` names the line,
+ * `quote_line_item_line_number` numbers it in the order the lines are read, and
+ * `quote_total_rollup` rolls the quote's Subtotal up from the lines, from which
+ * `quote_workflow` derives the header discount entered on the screen. A deal
+ * with no lines leaves the loop empty, so its quote is the header alone, priced
+ * from the deal's amount as before.
+ *
+ * The copy is one way. Nothing on a quote line points back at the deal's line,
+ * and no hook writes from one to the other, so a change on either side stays
+ * there.
+ *
+ * A line the quote refuses is counted, never lost in silence: the quote's price
+ * book has no active price for its product, or its discount is above the
+ * per-line ceiling that the deal's lines do not carry. Each line is its own
+ * guarded iteration, so the others are still copied, and the result screen
+ * says how many could not be (`result_partial`); the run log records why.
+ */
 export const QuoteGenerationFlow: Flow = {
   name: 'quote_generation',
   label: 'Generate Quote from Opportunity',
@@ -32,6 +72,9 @@ export const QuoteGenerationFlow: Flow = {
     { name: 'quoteName', type: 'text', isInput: true, isOutput: false },
     { name: 'expirationDays', type: 'number', isInput: true, isOutput: false },
     { name: 'discount', type: 'number', isInput: true, isOutput: false },
+    // The line copy's two counts (#2750), read by the result screens.
+    { name: 'copiedCount', type: 'number', isInput: false, isOutput: false, defaultValue: 0 },
+    { name: 'skippedCount', type: 'number', isInput: false, isOutput: false, defaultValue: 0 },
   ],
 
   nodes: [
@@ -171,7 +214,9 @@ export const QuoteGenerationFlow: Flow = {
           quote_date: cel`isoDate(today())`, expiration_date: cel`isoDate(addDays(today(), expirationDays))`,
           // `subtotal` is a bare path pass-through and needs no rounding: it
           // copies `crm_opportunity.amount` as stored and does no arithmetic,
-          // so it adds no floating-point tail of its own.
+          // so it adds no floating-point tail of its own. It is the price of a
+          // deal with no lines; once `copy_lines` adds the first line,
+          // `quote_total_rollup` replaces it with the sum of the quote's lines.
           // `discount` is an optional screen answer: a resume may leave it
           // unbound, which the template wrote as nothing and the guard writes
           // as null (the quote field has no default, so the two agree).
@@ -190,6 +235,55 @@ export const QuoteGenerationFlow: Flow = {
           payment_terms: 'net_30',
         },
         outputVariable: 'quoteId',
+      },
+    },
+    // ─── The deal's product lines, copied onto the quote (#2750) ─────────
+    //
+    // Read after the quote exists, as the rep: a line is readable by whoever
+    // can read its deal (`controlled_by_parent`). `limit` above 1 makes the
+    // read a list, so a deal with no lines binds `[]` and the loop runs zero
+    // times: the header-only quote of before. `get_record` takes no sort, so
+    // the quote numbers its lines in the order they are read.
+    {
+      id: 'get_opp_lines', type: 'get_record', label: 'Get Opportunity Lines',
+      config: { objectName: 'crm_opportunity_line_item', filter: { crm_opportunity: cel`recordId` }, limit: 1000, outputVariable: 'oppLines' },
+    },
+    {
+      id: 'copy_lines', type: 'loop', label: 'Copy Each Line',
+      config: {
+        collection: cel`oppLines`,
+        iteratorVariable: 'oppLine',
+        body: guarded('line', {
+          nodes: [
+            {
+              // Every field the card names that the quote line lets a caller
+              // write. ⛔ No `list_price`: it is `readonly` on the quote line,
+              // so the engine drops a caller's value, and
+              // `quote_line_item_price_fill` writes it from the quote's price
+              // book on every insert that names a product, the rule a typed
+              // line meets. `unit_price` is sent, so that hook keeps it.
+              id: 'create_line', type: 'create_record', label: 'Copy Line',
+              config: {
+                objectName: 'crm_quote_line_item',
+                fields: {
+                  crm_quote: cel`quoteId.id`,
+                  crm_product: fromLine('crm_product'),
+                  quantity: fromLine('quantity'),
+                  unit_price: fromLine('unit_price'),
+                  discount: fromLine('discount'),
+                  description: fromLine('description'),
+                },
+              },
+            },
+            {
+              id: 'count_copied', type: 'assignment', label: 'Count Copied',
+              config: { assignments: { copiedCount: cel`copiedCount + 1` } },
+            },
+          ],
+          edges: [
+            { id: 'b1', source: 'create_line', target: 'count_copied', type: 'default' },
+          ],
+        }, { skippedCount: cel`skippedCount + 1` }),
       },
     },
     {
@@ -263,6 +357,22 @@ export const QuoteGenerationFlow: Flow = {
         ],
       },
     },
+    // The same screen when a deal line could not be copied (#2750): the quote
+    // exists, so the run is not refused, but the rep is told how many lines
+    // are missing and what to do about them. The two reasons are the two
+    // quote-line rules a deal line does not meet by construction; the run
+    // log names the one that applied to each line.
+    //
+    // Translated as `screens.result_partial` in the packs.
+    {
+      id: 'result_partial', type: 'screen', label: 'Quote Created, Lines Missing',
+      config: {
+        description: `Quote "{{ quoteName }}" was created as a draft, but {{ skippedCount }} of the opportunity's product lines could not be copied onto it ({{ copiedCount }} copied). A line is refused when the quote's price book has no active price for its product, or when its discount is above ${QUOTE_DISCOUNT_CEILING}%; the flow run log records why. Open the quote and add those lines there.`,
+        fields: [
+          { name: 'quoteLink', label: 'Quote', type: 'record_link', reference: 'crm_quote', defaultValue: cel`quoteId.id` },
+        ],
+      },
+    },
     { id: 'end', type: 'end', label: 'End' },
   ],
 
@@ -287,7 +397,11 @@ export const QuoteGenerationFlow: Flow = {
     { id: 'e11', source: 'get_deal_name', target: 'screen_1', type: 'default' },
     { id: 'e2', source: 'screen_1', target: 'get_opportunity', type: 'default' },
     { id: 'e3', source: 'get_opportunity', target: 'create_quote', type: 'default' },
-    { id: 'e4', source: 'create_quote', target: 'check_stage', type: 'default' },
+    // `e4` (create_quote → check_stage) is retired and stays vacant: the line
+    // copy now sits between them (#2750).
+    { id: 'e13', source: 'create_quote', target: 'get_opp_lines', type: 'default' },
+    { id: 'e14', source: 'get_opp_lines', target: 'copy_lines', type: 'default' },
+    { id: 'e15', source: 'copy_lines', target: 'check_stage', type: 'default' },
     // The two branches must PARTITION, so the keep side is the advance side
     // negated whole (`ADVANCE` above): `has(…) && …` advances and everything
     // else keeps. An unknown stage therefore lands on "keep stage" — the quote
@@ -316,7 +430,12 @@ export const QuoteGenerationFlow: Flow = {
     { id: 'e4a', source: 'check_stage', target: 'update_opportunity', type: 'conditional', condition: expression(ADVANCE, 'cel'), label: 'Advance' },
     { id: 'e4b', source: 'check_stage', target: 'notify_owner', type: 'conditional', condition: expression(`!(${ADVANCE})`, 'cel'), label: 'Keep stage' },
     { id: 'e5', source: 'update_opportunity', target: 'notify_owner', type: 'default' },
-    { id: 'e6', source: 'notify_owner', target: 'result', type: 'default' },
+    // Complementary conditionals off a plain data node, as `e9` / `e10`. Both
+    // counts are declared with a default of 0, so `skippedCount` is bound on
+    // every path and neither side takes a `has()` guard.
+    { id: 'e6', source: 'notify_owner', target: 'result', type: 'default', condition: P`vars.skippedCount == 0`, label: 'Every line copied' },
+    { id: 'e16', source: 'notify_owner', target: 'result_partial', type: 'default', condition: P`vars.skippedCount != 0`, label: 'Lines missing' },
     { id: 'e12', source: 'result', target: 'end', type: 'default' },
+    { id: 'e17', source: 'result_partial', target: 'end', type: 'default' },
   ],
 };

@@ -326,6 +326,31 @@ the name (`line_item_product_title_backfill`, `src/revenue/objects/product.hook.
 To finish them in one go instead, run `scripts/backfill-line-product-title.ts`,
 which now compares each line against the product's name.
 
+### 3.6 Naming the contracts saved before Contract Name (#2746)
+
+A contract is titled by its **Contract Name** (`crm_contract.name`, required).
+A **fresh install needs nothing**: the demo contracts are seeded with names and
+every new contract must have one.
+
+An **in-place upgrade does**. The migration adds the column, nullable on
+purpose: on ObjectStack 18.6.0 adding a NOT NULL column to the existing
+contract table fails the contract's whole schema sync (measured on SQLite:
+`Cannot add a NOT NULL column with default value NULL`), which would leave
+contracts unwritable. So `required` holds every new write, and the rows written
+before it hold `NULL` until they are named. Until then their record header,
+lookup chips, approvals and notices fall back to the record id (a notice names
+the contract by its number alone), and they still save any edit that does not
+touch the name.
+
+`scripts/backfill-contract-names.ts` is the writer. It is report-only without
+`--apply`, touches only rows with no name, and is rerunnable. Each contract
+gets its source quote's name — the quote of an order that names the contract,
+else the one accepted quote of its opportunity — otherwise the account's name
+and its start date (`Acme Corporation 2026-11-24`). It writes `name` alone, so
+the status and every other field stay as they are; a contract whose stored
+term and dates already disagree is refused by `contract_validation` and is
+listed for a person to fix.
+
 ## 4. Seed-data staleness — the #1 HotCRM pitfall
 
 Stale seed data is the most common cause of "Studio shows a red
@@ -362,8 +387,9 @@ its seed for a while after that, and the script waits for the seed to finish
 (up to 180 s, `--seed-wait SECONDS`) before it hands anything over ([#2206]).
 
 That creates the non-admin demo users the table declares (`na.rep@` /
-`eu.rep@` / `sales.manager@` / `service.agent@` / `service.manager@objectos.ai`,
-all `demo1234`), assigns their positions, hands them the demo book by
+`eu.rep@` / `sales.manager@` / `service.agent@` / `service.manager@` /
+`finance.controller@` / `ar.accountant@objectos.ai`, all `demo1234`), assigns
+their positions, hands them the demo book by
 re-stamping `owner_id` on the routed objects (each seeded case goes to the
 service manager when it is escalated or critical, to the service agent otherwise), and re-evaluates every sharing
 rule so the already-seeded accounts materialise grants. It is idempotent,
@@ -380,6 +406,12 @@ eu.rep@objectos.ai sees 2 account(s) · countries: [DE, UK]
    object               total          na.rep          eu.rep   sales.manager
    crm_opportunity         23              16               5               2
 ```
+
+The two finance users (Finance Controller, Accounts Receivable) are there to
+show the Order to Cash screens as finance: each reads every invoice and payment
+and the account's Order to Cash figures, and the script checks, signed in as
+each, that invoices and payments answer them with rows. Neither owns any seeded
+record — finance does not own the routed book ([#2821]).
 
 Who exists and which positions they hold is a table —
 [`src/sales/sharing/demo-staffing.ts`](../src/sales/sharing/demo-staffing.ts). Adding a
@@ -417,6 +449,7 @@ Three things worth knowing before changing any of it:
 [#640]: https://github.com/objectstack-ai/hotcrm/issues/640
 [#1759]: https://github.com/objectstack-ai/hotcrm/issues/1759
 [#2206]: https://github.com/objectstack-ai/hotcrm/issues/2206
+[#2821]: https://github.com/objectstack-ai/hotcrm/issues/2821
 [objectstack#16549]: https://github.com/objectstack-ai/objectstack/issues/16549
 
 ## 5. Releasing

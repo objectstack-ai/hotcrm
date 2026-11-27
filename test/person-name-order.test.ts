@@ -13,13 +13,9 @@ import { ContactWelcomeFlow } from '../src/sales/flows/contact-welcome.flow';
 import { LeadAssignmentFlow } from '../src/sales/flows/lead-assignment.flow';
 import { LeadConversionFlow } from '../src/sales/flows/lead-conversion.flow';
 import { LeadConversionApprovalFlow } from '../src/sales/flows/lead-conversion-approval.flow';
-import { LeadDetailPage } from '../src/sales/pages/lead_detail.page';
 import { Lead } from '../src/sales/objects/lead.object';
-import { en as enPack } from '../src/sales/translations/en';
-import { zhCN as zhCNPack } from '../src/sales/translations/zh-CN';
-import { esES as esESPack } from '../src/sales/translations/es-ES';
-import { jaJP as jaJPPack } from '../src/sales/translations/ja-JP';
 import { hotcrmStack, signUpPerson, notificationsTo, type Person } from './helpers/verify-stack';
+import composed from './helpers/composed-stack';
 
 /**
  * A person's name reads the way its owner writes it (#2431).
@@ -107,15 +103,11 @@ describe('the lead record page header', () => {
   // locale pack's copy of its title. Since #2382 the page authors no header:
   // the default page's H1 is the record title, the stored `display_title`
   // whose name order the block above pins, so no page or pack can compose
-  // the name a second way.
-  it('the page authors no header and no pack titles it, so the H1 is the stored title', () => {
+  // the name a second way. Since #2740 the lead authors no record page at all.
+  it('no page authors the lead\'s header, so the H1 is the stored title', () => {
     expect(Lead.nameField).toBe('display_title');
-    expect(Object.keys((LeadDetailPage as Rec).slots ?? {})).toEqual(['alerts']);
-    expect(JSON.stringify(LeadDetailPage)).not.toContain('page:header');
-    for (const [locale, pack] of Object.entries({ en: enPack, 'zh-CN': zhCNPack, 'es-ES': esESPack, 'ja-JP': jaJPPack })) {
-      const page = (pack as Rec).pages?.lead_detail_page as Rec | undefined;
-      expect(page?.title, `${locale}: lead_detail_page.title`).toBeUndefined();
-    }
+    const leadPages = ((composed as Rec).pages ?? []).filter((p: Rec) => p.object === 'crm_lead');
+    expect(leadPages.map((p: Rec) => p.name)).toEqual([]);
   });
 });
 

@@ -74,7 +74,7 @@ export const SalesDashboard: Dashboard = {
       // The window is the header's date picker (close date, this quarter by
       // default), so the title names it rather than a quarter the reader may
       // have changed (#2291). Same name as the CRM Overview tiles over the
-      // same window; Sales Home's unwindowed tiles say "(All Time)".
+      // same window.
       title: 'Open Pipeline (Selected Period)',
       description: 'Value of open opportunities closing in the selected period',
       type: 'metric',

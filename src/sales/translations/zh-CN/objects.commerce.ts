@@ -33,6 +33,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
     description: '与客户签署的法律合同',
     fields: {
       contract_number: { label: '合同编号' },
+      name: { label: '合同名称' },
       crm_account: { label: '所属客户' },
       status: {
         label: '状态',
@@ -74,10 +75,31 @@ export const commerce: Record<string, ObjectTranslationData> = {
       document_url: { label: '合同文档' },
       special_terms: { label: '特殊条款' },
       billing_address: { label: '账单地址' },
+      // The contract's form, an order contract's amount and Change (#2804).
+      contract_form: {
+        label: '合同形式',
+        help: '订单合同：由订单起草，金额就是订单金额。框架合同：金额手工填写，可挂多张订单。其他：没有金额，例如保密协议。',
+        options: { order: '订单合同', framework: '框架合同', other: '其他' },
+      },
+      crm_sales_order: { label: '来源订单', help: '起草这份合同的订单。' },
+      order_amount: { label: '订单金额', help: '挂在这份合同下、已确认和已完成订单的含税总额。草稿和已取消的订单不计入。' },
+      linked_order_amount: { label: '关联订单金额', help: '挂在这份合同下、未取消订单的含税总额。订单合同在草稿状态时跟随它。' },
+      order_amount_shown: { label: '订单金额', help: '订单合同上是它的订单金额；框架合同上是已确认和已完成订单的合计，草稿和已取消的订单不计入。含税。' },
+      order_amount_differs: { label: '与订单金额不一致', help: '合同金额已不等于订单金额。用“变更”并选择“按订单更新”，可取订单的当前金额。' },
+      remaining_quota: { label: '剩余额度', help: '合同金额减去订单金额（已确认和已完成的订单）。订单总额超过合同金额时为负数。' },
+      change_reason: { label: '变更原因', help: '合同最近一次变更的原因。由“变更”写入。' },
+      change_amendment: { label: '签署的变更协议', help: '客户为最近一次变更签署的补充协议。由“变更”写入。' },
+      change_new_value: { label: '新合同金额', help: '留空则保持合同金额不变。' },
+      change_new_end_date: { label: '新结束日期', help: '留空则保持结束日期不变。' },
+      change_new_payment_terms: { label: '新付款条款', help: '留空则保持付款条款不变。' },
+      change_from_order: { label: '按订单更新', help: '把订单的当前金额作为合同金额。' },
     },
     // Print Contract (#2317).
     _actions: {
       print_contract: { label: '打印合同', successMessage: '合同 PDF 已归档到附件。' },
+      // Change (#2804): one action per kind of contract.
+      change_contract: { label: '变更', description: '变更这份已激活合同的金额、结束日期或付款条款。留空的项保持不变。', successMessage: '合同 {{ record.name }} 已变更。' },
+      change_order_contract: { label: '变更', description: '变更这份已激活订单合同的结束日期或付款条款，或取订单的当前金额。留空的项保持不变。', successMessage: '合同 {{ record.name }} 已变更。' },
     },
     _views: {
       all_contracts: { label: '全部合同' },
@@ -90,8 +112,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
       parties: { label: '签约方' },
       terms: { label: '条款与日期' },
       value: { label: '合同金额' },
+      orders: { label: '订单汇总' },
       status: { label: '状态与审批' },
       renewal: { label: '续约' },
+      change: { label: '最近一次变更' },
       // contract.view.ts 表单区块名称 (#1100)
       contract_terms: { label: '条款' },
       signing_and_documents: { label: '签署与文件' },
@@ -106,7 +130,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: '确认订单',
-        confirmText: '确认此订单？确认后订单行将被锁定：如需修改，须先把订单退回草稿。',
+        confirmText: '确认此订单？确认后订单行和金额将被锁定：如需修改，须先把订单退回草稿。',
         successMessage: '订单 {{ record.name }} 已确认。',
       },
       complete_sales_order: {
@@ -125,6 +149,8 @@ export const commerce: Record<string, ObjectTranslationData> = {
       sales_order_status_progression: { message: '不允许这样更改状态。订单按 草稿 → 已确认 → 已完成 推进；已确认可以退回草稿，草稿或已确认的订单可以取消。已完成和已取消是最终状态。' },
       contract_same_account: { message: '关联合同必须属于本订单的所属客户。' },
       contract_same_account_check: { message: '这份合同属于另一个客户。订单只能关联其所属客户的合同：请选择该客户的合同，或清空关联合同。' },
+      framework_quota_exceeded: { message: '这张订单使框架合同超出合同金额。' },
+      framework_quota_exceeded_check: { message: '加上这张订单，框架合同下的订单总额已超过合同金额。订单已保存；合同的剩余额度显示超出多少。' },
     },
     label: '订单',
     pluralLabel: '订单',
@@ -140,7 +166,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: '关联合同' },
       customer_po_number: { label: '客户采购单号', help: '客户自己采购单上的编号，按客户引用它的写法填写。' },
       description: { label: '描述' },
-      subtotal: { label: '小计' },
+      subtotal: { label: '小计', help: '订单各订单行之和。只有没有订单行的订单才能手工填写。订单确认后锁定，折扣、税额和运费也一样。' },
       discount: { label: '折扣 (%)' },
       discount_amount: { label: '折扣金额' },
       tax: { label: '税额' },

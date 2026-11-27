@@ -82,3 +82,28 @@ export const LEAD_SOURCE_SYNONYMS: Record<string, string> = {
 export const DEPARTMENT_SYNONYMS: Record<string, string> = {
   'HR': 'hr',
 };
+
+/**
+ * Spellings → `crm_lead.disqualification_reason` option values (#2780).
+ *
+ * The reason is a custom picklist in every system that has one, so there is no
+ * standard export vocabulary to follow; these are the common wordings for the
+ * options HotCRM has. The option labels themselves ("Not a Fit", "No Budget",
+ * "Wrong Persona", "Unreachable", "Competitor", "Other") land unaided.
+ *
+ * ⛔ Nothing maps onto `duplicate`: that reason needs the surviving record
+ * named and confirmed on the lead, which no file column can do, so a synonym
+ * would only widen the set of rows the object refuses.
+ */
+export const DISQUALIFICATION_REASON_SYNONYMS: Record<string, string> = {
+  'Bad Fit': 'not_a_fit',
+  'Poor Fit': 'not_a_fit',
+  // The prospect's own answer, not our fit judgement: filed as Other.
+  'Not Interested': 'other',
+  'Budget': 'no_budget',
+  'Wrong Contact': 'wrong_persona',
+  'Not a Decision Maker': 'wrong_persona',
+  'No Response': 'unreachable',
+  'Unresponsive': 'unreachable',
+  'Lost to Competitor': 'competitor',
+};

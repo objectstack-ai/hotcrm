@@ -23,11 +23,11 @@ HotCRM is three apps, one per line of work: the Sales app, the Service app and
 the Marketing app (while the marketing module is enabled). Your launcher offers
 the ones your job uses. HotCRM opens on the home page, whose *Your apps* row
 lists them; the app switcher moves you between them. Each app opens on the
-first entry your sidebar shows:
+first entry your sidebar shows, unless it names a landing for your role:
 
 | You are | Your launcher offers | The app opens on |
 |---|---|---|
-| A sales rep | the Sales app | **Sales Home** — your own figures, your leads, open deals and open tasks, and your upcoming events |
+| A sales rep | the Sales app | **My Deals** — the open deals you own, under **My Work** |
 | A service agent or service manager | the Service app | **Service Overview** — the case dashboard, the app's first entry |
 | A marketer | the Sales app and the Marketing app | **Home** (the **Executive Overview** dashboard) in Sales, **Campaigns** in Marketing |
 | A sales manager or an administrator | all three | **Home** in Sales, **Service Overview** in Service, **Campaigns** in Marketing |

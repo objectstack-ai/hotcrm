@@ -11,7 +11,9 @@ import { InvoiceViews } from '../src/o2c/views/invoice.view';
  *
  * 1. A grid total over invoice `amount` counts cancelled invoices: All
  *    Invoices read 925,000 with a cancelled 480,000 inside it. Amount carries
- *    no total; Open does, and a cancelled invoice is open for nothing.
+ *    no total. Open carried one until hotcrm#2806 hid it with Paid and
+ *    Overpaid (invoices and payments run in parallel), so the grid totals
+ *    nothing.
  * 2. An import cell naming a billing milestone is looked up across every
  *    contract, not within the row's own (objectstack#33523), so a step name
  *    used on two contracts fails the row as `reference_ambiguous`. Until that
@@ -24,11 +26,11 @@ type Col = { field: string; summary?: string };
 describe('the All Invoices grid totals no cancelled figure', () => {
   const columns = (InvoiceViews as { list: { columns: Col[] } }).list.columns;
 
-  it('totals Open, Paid and never Amount', () => {
+  it('never totals Amount, and shows no Paid, Open or Overpaid (hotcrm#2806)', () => {
     const byField = Object.fromEntries(columns.map((c) => [c.field, c]));
     expect(byField.amount, 'the grid shows Amount').toBeTruthy();
     expect(byField.amount.summary).toBeUndefined();
-    expect(byField.open_amount.summary).toBe('sum');
+    for (const hidden of ['paid_amount', 'open_amount', 'overpaid_amount']) expect(byField[hidden]).toBeUndefined();
   });
 });
 

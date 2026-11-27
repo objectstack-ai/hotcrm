@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import type { VerifyStack } from '@objectstack/verify';
 import stack from './helpers/composed-stack';
 import { CrmSeedData, CrmSeedDataAllLocales } from '../objectstack.composition';
-import { CASE_DESK, caseDeskOf, DemoAdminPermissionSets, DemoOrgStaffing, DemoPipelineOwnership } from '../src/sales/sharing/demo-staffing';
+import { CASE_DESK, caseDeskOf, DemoAdminPermissionSets, DemoOrgStaffing, DemoPipelineOwnership, TERRITORY_OWNER } from '../src/sales/sharing/demo-staffing';
 import * as salesSeeds from '../src/sales/data';
 import * as serviceSeeds from '../src/service/data';
 import { CrmSharing as sharingBarrel } from './helpers/src-roster';
@@ -208,8 +208,9 @@ const IDENTITY_OBJECTS = [
 describe('the staffing table is well-formed', () => {
   it('has people at all', () => {
     // Guard the guard: an empty table would make every assertion below vacuous.
-    // Five since the 2026-08-31 ruling added the two case-routing pools.
-    expect(DemoOrgStaffing.length).toBeGreaterThanOrEqual(5);
+    // Five since the 2026-08-31 ruling added the two case-routing pools; seven
+    // since the two finance personas (hotcrm#2821).
+    expect(DemoOrgStaffing.length).toBeGreaterThanOrEqual(7);
   });
 
   it('gives every row a unique key, a unique email, a login and a reason', () => {
@@ -298,7 +299,7 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
       `these positions were deliberately left unstaffed in #640 — staffing them is a decision, ` +
       `not a tidy-up: ${surprises.join(', ')}\n` +
       `\n` +
-      `  WHY TWO POSITIONS ARE STAFFED AND THESE SIX ARE NOT. Exactly two have ever crossed this ` +
+      `  WHY TWO POSITIONS ARE STAFFED AND THESE SIX ARE NOT. Exactly two pools have ever crossed this ` +
       `fence — service_agent and service_manager, maintainer ruling 2026-08-31 — and the bar they ` +
       `cleared is the only one that opens it: a shipped mechanism PICKS AN OWNER out of that pool ` +
       `(the case_intake_assignment rule #596/#2395, the case_escalation_reassign hook #1070), ` +
@@ -308,7 +309,10 @@ describe('the staffing table encodes the #640 decision, not an org chart', () =>
       `mechanism the staffed sales_manager and the two territory reps already demonstrate — and ` +
       `the approval nodes routing to them declare onEmptyApprovers: 'admin_rescue', so the empty ` +
       `bench is itself part of what the demo shows. "It looks unstaffed" is NOT the bar; neither ` +
-      `is "the rule has no holder". Get a ruling first, the way #640 and 2026-08-31 both did.`,
+      `is "the rule has no holder". Get a ruling first, the way #640 and 2026-08-31 both did. ` +
+      `(The two finance personas, crm_finance_controller and crm_ar_accountant, are not on this ` +
+      `bench: they were staffed on the maintainer's own ask of 2026-11-27, hotcrm#2821, to show ` +
+      `the Order to Cash surfaces as finance — a ruling of their own, not a precedent for these six.)`,
     ).toEqual([]);
   });
 
@@ -724,6 +728,67 @@ describe('the case-routing pools actually route (what this staffing lights)', ()
  * `recalled`, and the flow enters only from `not_required`, so the owner's next
  * save opens nothing (hotcrm#2179).
  */
+/**
+ * The two finance personas (hotcrm#2821, the maintainer's ask of 2026-11-27):
+ * the Order to Cash surfaces shown as finance rather than as the admin. They
+ * light no pool and receive no share; what they show is what the set their
+ * position declares reads, so that is what is read here, as each of them,
+ * against the dev admin's control reading.
+ */
+describe('the finance personas read the Order to Cash surfaces (hotcrm#2821)', () => {
+  const FINANCE = ['finance_controller', 'ar_accountant'] as const;
+  const ACCOUNT_FIGURES = ['invoiced_amount', 'received_amount', 'unpaid_amount', 'uninvoiced_amount'];
+  const member = (key: string) => DemoOrgStaffing.find((m) => m.key === key)!;
+
+  /** `POST /data/OBJECT/query` as `token`: the REST door the console reads through, field-level security applied. */
+  const query = async (token: string, object: string, fields: string[]) => {
+    const res = await verify.apiAs(token, 'POST', `/data/${object}/query`, { fields, top: 500 });
+    expect(res.status, `${object}: ${await res.clone().text()}`).toBe(200);
+    const body = (await res.json()) as AnyRec;
+    return ((body.data ?? body).records ?? []) as AnyRec[];
+  };
+
+  it('staffs each finance position once, on different people, and names what each must read', () => {
+    expect(holdersOf('crm_finance_controller').map((m) => m.key)).toEqual(['finance_controller']);
+    expect(holdersOf('crm_ar_accountant').map((m) => m.key)).toEqual(['ar_accountant']);
+    for (const key of FINANCE) {
+      expect(member(key).positions, `${key} holds a second position`).toHaveLength(1);
+      expect(member(key).mustRead, `${key}: the script would not check the surface this persona shows`).toEqual(
+        expect.arrayContaining(['crm_invoice', 'crm_payment']),
+      );
+    }
+  });
+
+  it('hands neither of them any part of the routed book', () => {
+    // Finance does not own the book: no route names either key.
+    const routedTo = new Set<string>([...Object.values(TERRITORY_OWNER), ...Object.values(CASE_DESK)]);
+    for (const key of FINANCE) expect(routedTo.has(key), `${key} is an ownership route target`).toBe(false);
+  });
+
+  it.each(['crm_invoice', 'crm_payment'])('lets each of them read every seeded %s the dev admin reads', async (object) => {
+    const all = (await query(admin, object, ['id'])).map((r) => String(r.id)).sort();
+    expect(all.length, `the dev admin reads no ${object}: the control reading proves nothing`).toBeGreaterThan(0);
+    for (const key of FINANCE) {
+      const seen = (await query(staffed[key]!.token, object, ['id'])).map((r) => String(r.id)).sort();
+      expect(seen, `${member(key).email} on ${object}`).toEqual(all);
+    }
+  });
+
+  it("lets each of them read the account's Order to Cash figures", async () => {
+    const withFigures = (rows: AnyRec[]) => rows.filter((r) => ACCOUNT_FIGURES.every((f) => f in r));
+    const control = withFigures(await query(admin, 'crm_account', ['id', ...ACCOUNT_FIGURES]));
+    expect(control.length, 'the dev admin reads no account figure: the control reading proves nothing').toBeGreaterThan(0);
+    for (const key of FINANCE) {
+      const rows = await query(staffed[key]!.token, 'crm_account', ['id', ...ACCOUNT_FIGURES]);
+      expect(rows.length, `${member(key).email} reads no account`).toBeGreaterThan(0);
+      expect(
+        withFigures(rows).length,
+        `${member(key).email} reads accounts without ${ACCOUNT_FIGURES.join(' / ')}: ${JSON.stringify(rows[0])}`,
+      ).toBe(rows.length);
+    }
+  });
+});
+
 describe('pnpm demo:staff on the shipped app: the hand-over opens each large-deal approval, as the dev admin (#2129)', () => {
   /** The two open deals the seed prices over the line, by name (`test/seed-consistency.test.ts` pins them). */
   const LARGE_OPEN_DEALS = ['Acme Platform Upgrade', 'Wayne Enterprise License'];

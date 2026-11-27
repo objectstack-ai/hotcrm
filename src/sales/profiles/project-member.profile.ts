@@ -100,8 +100,15 @@ export const ProjectMemberProfile = {
     // over its own View All vote. A consultant still reads the account and its
     // other fields; a person who also holds a set reading these totals (a rep,
     // finance) reads them through that set.
-    'crm_account.invoiced_amount':    { readable: false, editable: false },
-    'crm_account.received_amount':    { readable: false, editable: false },
-    'crm_account.receivable_balance': { readable: false, editable: false },
+    'crm_account.invoiced_amount':         { readable: false, editable: false },
+    'crm_account.received_amount':         { readable: false, editable: false },
+    // Unpaid and Uninvoiced replace the Receivable Balance, with the hidden
+    // halves they are summed from (hotcrm#2806): the same audience as before.
+    'crm_account.unpaid_amount':           { readable: false, editable: false },
+    'crm_account.uninvoiced_amount':       { readable: false, editable: false },
+    'crm_account.unpaid_on_orders':        { readable: false, editable: false },
+    'crm_account.unpaid_on_contracts':     { readable: false, editable: false },
+    'crm_account.uninvoiced_on_orders':    { readable: false, editable: false },
+    'crm_account.uninvoiced_on_contracts': { readable: false, editable: false },
   },
 };

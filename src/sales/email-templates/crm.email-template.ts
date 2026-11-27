@@ -12,9 +12,10 @@ const VARIABLES: TemplateVariables = {
   'crm.account_approved': [{ name: 'name' }],
   'crm.account_rejected': [{ name: 'name' }],
   'crm.contact_welcome': [{ name: 'person_name' }],
-  'crm.contract_drafted': [{ name: 'contract_number' }],
-  'crm.contract_expired': [{ name: 'contract_number' }],
-  'crm.contract_renewal': [{ name: 'contract_number' }, { name: 'end_date', type: 'date' }],
+  // The contract's number and name, composed by the flow (`contractLabel`, hotcrm#2746).
+  'crm.contract_drafted': [{ name: 'contract' }],
+  'crm.contract_expired': [{ name: 'contract' }],
+  'crm.contract_renewal': [{ name: 'contract' }, { name: 'end_date', type: 'date' }],
   'crm.deal_stalled': [
     { name: 'name' },
     { name: 'stage_label', description: "The stage's label in each language, keyed by locale; each locale's row reads its own key." },

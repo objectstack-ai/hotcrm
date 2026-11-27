@@ -78,7 +78,7 @@ describe('the rep who accepts a quote is told its contract was drafted (#2371 ro
     expect(contract, 'no contract was drafted').toBeTruthy();
     expect(notices[0]!.channel).toBe('inbox');
     expect(notices[0]!.payload?.actionUrl).toBe(`/crm_contract/${contract!.id}`);
-    expect(notices[0]!.payload?.templateData?.contract_number).toBe(contract!.contract_number);
+    expect(notices[0]!.payload?.templateData?.contract).toBe(`${contract!.contract_number} · ${contract!.name}`);
     expect(String(contract!.contract_number).length).toBeGreaterThan(0);
   });
 
@@ -89,7 +89,7 @@ describe('the rep who accepts a quote is told its contract was drafted (#2371 ro
     const admin = await verify.signIn();
     await verify.hooks.run('crm_contract', 'insert', {
       crm_account: account!.id, crm_contact: contact!.id, status: 'draft', start_date: '2030-01-01', end_date: '2031-01-01',
-      contract_term_months: 12, contract_type: 'service', contract_value: 5_000, description: 'Signed on paper.',
+      name: 'Fixture Contract', contract_term_months: 12, contract_type: 'service', contract_value: 5_000, description: 'Signed on paper.',
     }, { as: admin });
     await new Promise((r) => setTimeout(r, 500));
     expect((await verify.rows('sys_notification_delivery', { topic: 'contract_drafted' })).length).toBe(before);

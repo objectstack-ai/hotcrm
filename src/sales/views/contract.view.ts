@@ -18,7 +18,9 @@ export const ContractViews = defineView({
     userActions: { editInline: true },
     data: { provider: 'object', object: 'crm_contract' },
     columns: [
-      { field: 'contract_number', width: 150, link: true, pinned: 'left' },
+      // The name first, the number beside it (hotcrm#2746).
+      { field: 'name', width: 240, link: true, pinned: 'left' },
+      { field: 'contract_number', width: 130 },
       { field: 'crm_account', width: 200 },
       { field: 'crm_opportunity', width: 200 },
       { field: 'status', width: 130, sortable: true },
@@ -42,7 +44,7 @@ export const ContractViews = defineView({
     // why `end_date` is the start of the event here rather than an end.
     calendar: {
       startDateField: 'end_date',
-      titleField: 'contract_number',
+      titleField: 'name',
       colorField: 'status',
     },
   },
@@ -54,10 +56,10 @@ export const ContractViews = defineView({
       type: 'calendar',
       label: 'Renewal Calendar',
       data: { provider: 'object', object: 'crm_contract' },
-      columns: ['contract_number', 'crm_account', 'status'],
+      columns: ['name', 'contract_number', 'crm_account', 'status'],
       calendar: {
         startDateField: 'end_date',
-        titleField: 'contract_number',
+        titleField: 'name',
         colorField: 'status',
       },
     },
@@ -68,11 +70,11 @@ export const ContractViews = defineView({
       type: 'gantt',
       label: 'Contract Terms',
       data: { provider: 'object', object: 'crm_contract' },
-      columns: ['contract_number', 'crm_account', 'contract_value'],
+      columns: ['name', 'contract_number', 'crm_account', 'contract_value'],
       gantt: {
         startDateField: 'start_date',
         endDateField: 'end_date',
-        titleField: 'contract_number',
+        titleField: 'name',
         // Opens at Quarter (#2367 row 4): a contract term runs a year or
         // more, so the Day default showed one week of one bar.
         viewMode: 'quarter',
@@ -85,11 +87,11 @@ export const ContractViews = defineView({
       type: 'timeline',
       label: 'Contract Timeline',
       data: { provider: 'object', object: 'crm_contract' },
-      columns: ['contract_number', 'crm_account'],
+      columns: ['name', 'contract_number', 'crm_account'],
       timeline: {
         startDateField: 'start_date',
         endDateField: 'end_date',
-        titleField: 'contract_number',
+        titleField: 'name',
         groupByField: 'crm_account',
         colorField: 'status',
         scale: 'quarter',
@@ -109,7 +111,10 @@ export const ContractViews = defineView({
         name: 'parties',
         label: 'Parties',
         columns: 3,
-        fields: ['contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status'],
+        // The name first: a new contract asks for it (hotcrm#2746). The form
+        // next (hotcrm#2804): a person creating a contract chooses Framework
+        // or Other, and it decides whether the value is required.
+        fields: ['name', 'contract_form', 'contract_number', 'crm_account', 'crm_contact', 'crm_opportunity', 'owner_id', 'status'],
       },
       {
         // Named `contract_terms`, not `terms` — `terms` is already a distinct

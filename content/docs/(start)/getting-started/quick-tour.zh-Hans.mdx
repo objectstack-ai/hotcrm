@@ -9,7 +9,7 @@ description: 简短走一遍 HotCRM —— 主页、六个应用、你的第一�
 
 ## 1. 主页仪表盘
 
-HotCRM 是六个应用（见第 2 节），每个应用打开时都落在你的侧边栏显示的第一个条目上，所以你落在哪里取决于你是谁。在 **Sales** 里，销售经理或管理员落在 **Home**，即两个固定条目中的第一个。销售代表的侧边栏里没有 **Home**：它从 **Sales Home**（销售代表自己的页面）开始，销售代表就落在那里。服务坐席与服务经理在 **Service** 里工作，它打开时落在 **Service Overview**。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
+HotCRM 是六个应用（见第 2 节），每个应用打开时都落在你的侧边栏显示的第一个条目上，除非应用为你的角色指定了落地条目，所以你落在哪里取决于你是谁。在 **Sales** 里，销售经理、管理员或营销用户落在 **Home**，即唯一的固定条目。销售代表的侧边栏里没有 **Home**，**Sales** 为销售代表打开的是 **My Work** 下的 **My Deals**：销售代表自己名下的未结商机。服务坐席与服务经理在 **Service** 里工作，它打开时落在 **Service Overview**。**Home** 打开的是 **Executive Overview** 仪表盘——9 个磁贴，讲收入、客户与管道：
 
 | 磁贴 | 它显示什么 |
 | --- | --- |
@@ -55,12 +55,12 @@ HotCRM 是六个应用（见第 2 节），每个应用打开时都落在你的�
 
 启动器只列出你的工作需要的应用。销售代表看到 **Sales**，服务坐席与服务经理看到 **Service**，市场人员看到 **Sales** 与 **Marketing**，应收会计看到 **Order to Cash**，项目经理与项目成员看到 **Sales** 与 **Project Delivery**，销售经理与管理员全都看得到。**Expenses** 在每个人的启动器上，因为每个人都会为公司花钱。这决定的是启动器显示什么，而不是你能打开什么：启动器上没有的应用，用它的地址照样能打开；记录链接会在你当前所在的应用里打开。
 
-在 Sales 内，左侧导航最上面是两个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；**Sales Home**，销售代表自己的页面，汇总管道数字、线索、未结商机、未完成任务与即将到来的活动；其余内容分在 7 个分组里：
+在 Sales 内，左侧导航最上面是一个固定条目——**Home**，它打开的是 **Executive Overview** 仪表盘；其余内容分在 7 个分组里：
 
 | 分组 | 内容 |
 | --- | --- |
 | **Sales** | Leads、Accounts、Contacts、Opportunities、Sales Performance、Contracts、Orders、Quotes、Products、Price Books、Product Catalog、Knowledge |
-| **Collection Plan** | Billing Milestones |
+| **Collection Plan** | Payment Plans |
 | **My Work** | My Tasks、My Deals、My Leads、My Calendar、Inbox |
 | **Activity** | Events、Sales Activity |
 | **Insights** | CRM Overview、Forecasts |
@@ -71,7 +71,7 @@ HotCRM 是六个应用（见第 2 节），每个应用打开时都落在你的�
 
 **Reports** 和 **Help** 这两个分组在应用加载时是折叠的——**Sales**、**Collection Plan**、**My Work**、**Activity**、**Insights** 都会自动展开。先把 **Reports** 点开，再判断某份报表在不在这里。**Help** 打开应用内手册；**Admin Manual** 只对管理员显示。
 
-建立在商机之上的条目——**Home**、**Sales Home**、**Sales Performance**、**CRM Overview**，以及 **Reports** 下的四张商机报表——不能读取商机的人在侧边栏里看不到；服务坐席与服务经理即使用地址打开 Sales 应用，也按岗位看不到它们：他们名下没有商机，**Opportunities** 与 **My Deals** 对他们总是空的，所以这两个条目也不对他们显示。其余报表对各自的数据也是同样的要求。销售代表也看不到 **Home**，所以销售代表的侧边栏从 **Sales Home** 开始。**Sales** 最后一项 **Knowledge** 是给销售代表的：它打开已发布的文章，只对销售代表显示。其他人在 **Service** 里找到 **Knowledge**。
+建立在商机之上的条目——**Home**、**Sales Performance**、**CRM Overview**，以及 **Reports** 下的四张商机报表——不能读取商机的人在侧边栏里看不到；服务坐席与服务经理即使用地址打开 Sales 应用，也按岗位看不到它们：他们名下没有商机，**Opportunities** 与 **My Deals** 对他们总是空的，所以这两个条目也不对他们显示。其余报表对各自的数据也是同样的要求。销售代表也看不到 **Home**，所以销售代表的侧边栏从 **Sales** 开始，应用为销售代表打开的是 **My Deals**。**Sales** 最后一项 **Knowledge** 是给销售代表的：它打开已发布的文章，只对销售代表显示。其他人在 **Service** 里找到 **Knowledge**。
 
 一个去处只占一行，这是刻意的。同一个对象如果有多种查看方式，它们是该对象列表页顶部的标签页，而不是导航里另起一行——这样侧边栏才短到能一眼扫完。
 
@@ -114,13 +114,13 @@ HotCRM 是六个应用（见第 2 节），每个应用打开时都落在你的�
 
 | 分组 | 内容 |
 | --- | --- |
-| **Receivables** | Invoices、Payments、Billing Milestones |
-| **Follow-up** | Overdue Invoices、Planned This Month |
+| **Receivables** | Invoices、Payments、Payment Plans |
+| **Follow-up** | Overdue Payment Plans、Planned This Month |
 | **Orders, Contracts and Accounts** | Contracts、Orders、Accounts |
 | **My Work** | Inbox、My Tasks |
 | **Help** | Order to Cash Manual |
 
-**Help** 在应用加载时是折叠的——**Receivables**、**Follow-up**、**Orders, Contracts and Accounts**、**My Work** 都会自动展开。编写回款计划的销售代表和经理在 **Sales** 的 **Collection Plan** 下找到 **Billing Milestones**，在它的 **Help** 下找到 **Order to Cash Manual**；两处条目打开的是同一个列表或手册。
+**Help** 在应用加载时是折叠的——**Receivables**、**Follow-up**、**Orders, Contracts and Accounts**、**My Work** 都会自动展开。编写回款计划的销售代表和经理在 **Sales** 的 **Collection Plan** 下找到 **Payment Plans**，在它的 **Help** 下找到 **Order to Cash Manual**；两处条目打开的是同一个列表或手册。
 
 ## 3. 你的第一条线索
 

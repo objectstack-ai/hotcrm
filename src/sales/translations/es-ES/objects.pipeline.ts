@@ -30,7 +30,7 @@ const OPPORTUNITY_BULK_DELETE = {
   delete: {
     label: 'Eliminar',
     confirmLabel: 'Eliminar',
-    confirmText: '¿Eliminar permanentemente {{count}} oportunidad(es)? Esta acción no se puede deshacer.',
+    confirmText: '¿Eliminar {{count}} oportunidad(es)? Irán a la papelera, donde un administrador puede restaurarlas.',
   },
 };
 
@@ -482,7 +482,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: 'Fin del periodo',
         help: 'Normalmente se calcula automáticamente a partir de Periodo e Inicio del periodo. Si se introduce a mano, debe ser el último día de ese periodo — p. ej. 2026-09-30 para un trimestre que empieza el 2026-07-01, o 2026-08-31 para agosto de 2026.',
       },
-      period_label: { label: 'Etiqueta del periodo', help: 'Etiqueta legible, p. ej. «T3 2026» o «Ago 2026».' },
+      period_label: { label: 'Etiqueta del periodo', help: 'Etiqueta legible, p. ej. «Q3 2026» o «Aug 2026». Si se deja en blanco, se genera a partir de Periodo e Inicio del periodo.' },
       display_title: { label: 'Título Mostrado' },
       owner_name: { label: 'Nombre del Propietario', help: 'El nombre del propietario, sincronizado con el registro de usuario. Forma parte del título de la previsión.' },
       snapshot_date: { label: 'Fecha de instantánea', help: 'El día en que se capturó esta instantánea.' },

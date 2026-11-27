@@ -104,3 +104,10 @@ and run it again. The ones you will meet most:
 Business rules run during an import exactly as they do on a save: a new lead
 gets its follow-up deadline, and a row that breaks a rule the app enforces is
 refused with that rule's own message.
+
+Two lead statuses need a second cell on the same row. An **Unqualified** lead
+needs its **Disqualification Reason**, and a row without one is refused rather
+than given a reason. A **Qualified** lead needs its **Need Type** and
+**Estimated Amount**. A lead disqualified as a duplicate, and a **Converted**
+lead, cannot come in through a file: import the lead under another status, then
+mark the duplicate or convert it in the app.

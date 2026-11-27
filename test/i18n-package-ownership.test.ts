@@ -84,9 +84,10 @@ const extensionFieldsOf = (stack: AnyRec, objectName: string): Set<string> =>
 
 /**
  * The validation rules a package contributes to another package's object the
- * same way (Project Delivery's refusals of a submission on `crm_expense_report`,
- * #2764). A `conditional` rule carries a second rule in `then` / `otherwise`,
- * and the message shown is that inner rule's, so both names count. Their
+ * same way (Order to Cash's re-confirm floor on `crm_sales_order`, #2827;
+ * Project Delivery's refusals of a submission on `crm_expense_report`, #2764).
+ * A `conditional` rule carries a second rule in `then` / `otherwise`, and the
+ * message shown is that inner rule's, so both names count. Their
  * messages belong in the contributing module's pack for the reason the field
  * labels do: the rules leave the object with the module.
  */
@@ -153,10 +154,13 @@ describe('locale packs: each package translates only what it registers (#2352)',
     // The positive control for the extension-field allowance below.
     const o2c = modules.find((s) => idOf(s) === 'app.objectstack.hotcrm.o2c')!;
     for (const locale of ['en', 'zh-CN', 'es-ES', 'ja-JP']) {
-      for (const objectName of ['crm_contract', 'crm_account']) {
+      for (const objectName of ['crm_contract', 'crm_account', 'crm_sales_order']) {
         const row = rowsOf(o2c).find((r) => r.locale === locale && r.key === `objects:${objectName}`)?.row;
         expect(Object.keys(row?.fields ?? {}).sort(), `${locale} ${objectName}`)
           .toEqual([...extensionFieldsOf(o2c, objectName)].sort());
+        // And the messages of the rules it contributes there (#2827).
+        expect(Object.keys(row?._validations ?? {}).sort(), `${locale} ${objectName} _validations`)
+          .toEqual([...extensionRulesOf(o2c, objectName)].sort());
       }
     }
   });

@@ -107,7 +107,7 @@ Open <http://localhost:4001/_console/> and sign in as `admin@objectos.ai` / `adm
 
 The definition is the app. Objects and fields, rules, screens, flows, permissions and translations are typed metadata under `src/`: change a field there and the table, the API and the screens follow, with no second application to keep in step. An AI coding agent such as Claude Code writes that change in your copy of the repository, and `pnpm validate` checks it against the platform's schema before it ships.
 
-Today the definition holds **38 business objects**, **54 actions**, **53 flows**, **7 dashboards**, **11 datasets** and **18 positions**, in **4 languages** (en, zh-CN, es-ES, ja-JP).
+Today the definition holds **38 business objects**, **56 actions**, **55 flows**, **7 dashboards**, **11 datasets** and **18 positions**, in **4 languages** (en, zh-CN, es-ES, ja-JP).
 
 HotCRM is built on [ObjectStack](https://github.com/objectstack-ai/objectstack), the open-source platform that runs one business definition as the database, the API, the screens and the agent tools at once. [Customize and extend](https://hotcrm.com/docs/developers/customize-and-extend) walks through a change.
 

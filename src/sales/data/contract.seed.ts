@@ -14,8 +14,11 @@ import { SEED_EN_LOCALES } from './_locale';
 
 // ─── Contracts ────────────────────────────────────────────────────────
 // `contract_number` is a runtime-owned autonumber and is NOT seeded (#490).
-// Contract has no natural-name field, so the (unique, stable) description
-// doubles as the seed identity (`externalId`) for these fixtures.
+// The seed identity (`externalId`) stays the (unique, stable) description,
+// though contracts have a name since hotcrm#2746: a database seeded before
+// then holds these rows with no name, so keyed by name the insert-once seed
+// would not find them and would write each contract a second time. The O2C
+// seed names its contracts by the same description.
 //
 // INSERT-ONCE (`mode: 'ignore'`, #2139): a rep moves a contract through
 // approval and activation and edits its terms; under `upsert` the next boot
@@ -51,6 +54,7 @@ export const contracts = defineSeed(Contract, {
     //   end_date       — start + 365d, the span every other row here uses for a
     //                    12-month term.
     {
+      name: 'Acme Platform Subscription',
       crm_account: 'Acme Corporation',
       crm_contact: 'john.smith@acme.example.com',
       crm_opportunity: 'Acme Annual Renewal 2025',
@@ -75,6 +79,7 @@ export const contracts = defineSeed(Contract, {
       description: 'Annual platform subscription with premium support tier.',
     },
     {
+      name: 'Wayne Enterprise License Agreement',
       crm_account: 'Wayne Enterprises',
       crm_contact: 'rwilson@wayne.example.com',
       crm_opportunity: 'Wayne Enterprise License',
@@ -91,6 +96,7 @@ export const contracts = defineSeed(Contract, {
       description: 'Multi-year enterprise license with custom SLA.',
     },
     {
+      name: 'Initech Service Agreement',
       crm_account: 'Initech Solutions',
       crm_contact: 'mchen@initech.example.com',
       status: 'expired',
@@ -108,6 +114,7 @@ export const contracts = defineSeed(Contract, {
       description: 'Initial service agreement, pending renewal discussion.',
     },
     {
+      name: 'Stark Medical Partnership Agreement',
       crm_account: 'Stark Medical',
       crm_contact: 'emily.d@starkmed.example.com',
       status: 'draft',

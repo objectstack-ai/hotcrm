@@ -15,10 +15,10 @@ import { zhCNTwin, zhKey, zhLookup } from './_locale';
 import { zhAccountName, zhContactEmail, zhContactName, zhOpportunityName } from './sales.zh-CN.seed';
 
 const CONTRACTS_ZH: Record<string, Record<string, unknown>> = {
-  'Annual platform subscription with premium support tier.': { description: '平台年度订阅，含高级支持服务。' },
-  'Multi-year enterprise license with custom SLA.': { description: '多年期企业级许可，含定制 SLA。' },
-  'Initial service agreement, pending renewal discussion.': { description: '首份服务协议，待续约洽谈。' },
-  'Healthcare partnership agreement, currently under legal review.': { description: '医疗合作协议，目前在法务审核中。' },
+  'Annual platform subscription with premium support tier.': { name: '艾克美平台订阅', description: '平台年度订阅，含高级支持服务。' },
+  'Multi-year enterprise license with custom SLA.': { name: '韦恩企业级许可协议', description: '多年期企业级许可，含定制 SLA。' },
+  'Initial service agreement, pending renewal discussion.': { name: '英泰科技服务协议', description: '首份服务协议，待续约洽谈。' },
+  'Healthcare partnership agreement, currently under legal review.': { name: '斯塔克医疗合作协议', description: '医疗合作协议，目前在法务审核中。' },
 };
 
 /** A contract's Chinese seed identity, from its English one: what an O2C row's `crm_contract` names (#2529). */
@@ -32,7 +32,7 @@ const SIGNERS: Record<string, string> = {
 export const contractsZhCN = zhCNTwin(contracts, {
   key: (r) => String(r.description),
   words: CONTRACTS_ZH,
-  text: ['description'],
+  text: ['name', 'description'],
   refs: {
     crm_account: zhAccountName,
     crm_contact: zhContactEmail,

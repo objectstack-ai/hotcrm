@@ -70,7 +70,7 @@ const contractAt = async (status: string): Promise<Rec> => {
   return (await verify.seed('crm_contract', [{
     crm_account: account!.id, crm_contact: contact!.id, owner_id: people.manager.id, status,
     contract_type: 'subscription', contract_value: 12_000, billing_frequency: 'monthly', payment_terms: 'net_30',
-    contract_term_months: 12, start_date: '2025-01-01', end_date: '2026-01-01',
+    name: 'Fixture Contract', contract_term_months: 12, start_date: '2025-01-01', end_date: '2026-01-01',
     signed_copy: await committedFile(verify, people.manager.id),
   }]))[0]!;
 };
@@ -179,7 +179,7 @@ describe('a create is not judged (#2192)', () => {
     }]);
     const res = await rest(people[key], 'POST', '/data/crm_contract', {
       crm_account: account!.id, crm_contact: contact!.id, status: 'expired', contract_type: 'subscription',
-      contract_value: 1_000, contract_term_months: 12, start_date: '2025-01-01', end_date: '2026-01-01',
+      contract_value: 1_000, name: 'Fixture Contract', contract_term_months: 12, start_date: '2025-01-01', end_date: '2026-01-01',
     });
     expect(res.status).toBe(201);
     const [row] = await verify.rows('crm_contract', { crm_contact: contact!.id });

@@ -84,7 +84,7 @@ export const AccountViews = defineView({
         icon: 'trash-2',
         variant: 'danger',
         operation: 'delete',
-        confirmText: 'Permanently delete {{count}} account(s)? This cannot be undone.',
+        confirmText: 'Delete {{count}} account(s)? They go to the recycle bin, where an administrator can restore them.',
         confirmLabel: 'Delete',
       },
     ],

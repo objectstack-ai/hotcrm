@@ -1,7 +1,7 @@
 // Copyright (c) 2025 ObjectStack. Licensed under the Apache-2.0 license.
 
 import { ObjectSchema, Field } from '@objectstack/spec/data';
-import { P } from '@objectstack/spec';
+import { P, F } from '@objectstack/spec';
 
 /**
  * How far ahead, in days, the daily `contract_renewal` sweep looks for
@@ -37,16 +37,20 @@ export const Contract = ObjectSchema.create({
   // crm_account — a contract IS account data: reachable by whoever can reach
   // the account, editable by whoever can edit it (#549, ruling 2026-08-31).
   sharingModel: 'controlled_by_parent',
-  // ADR-0079: render-only `titleFormat` retired in favor of `nameField`.
-  // Original template was '{contract_number} - {crm_account.name}'. The
-  // `crm_account.name` segment is a lookup DOT-WALK, which a formula field
-  // could not reference when this was written (ADR-0072), so it was DROPPED.
-  // Only the local `contract_number` (autonumber) remains, so no formula is
-  // needed — point `nameField` straight at it. Since 18.0.0-next.4 a formula
-  // reads one hop through a reference (changeset
-  // `24197-objectql-formula-one-hop`), so the drop is no longer forced; the
-  // title is left as it ships.
-  nameField: 'contract_number',
+  // The record title is the contract's name (hotcrm#2746), as on the quote and
+  // the order: approvals, notifications, lookup chips and the account's
+  // Contracts tab show it, so two contracts of one customer read apart. Until
+  // then the title was the autonumber `contract_number` (the retired
+  // `titleFormat` '{contract_number} - {crm_account.name}' minus its dot-walk),
+  // and every one of those places showed a bare CTR- number.
+  nameField: 'name',
+  // Explicit search targets (ADR-0061): the picker and global search match
+  // the number as well as the name. A name may repeat; the number never does.
+  searchableFields: ['name', 'contract_number'],
+  // `contract_number` leads the strip, so it stands beside the name wherever
+  // the name alone is the title: the record header, and the lookup picker,
+  // which shows the strip's first field under each candidate's name and as
+  // the column after it (measured on 18.6.0; the quote does the same).
   highlightFields: ['contract_number', 'crm_account', 'status', 'start_date', 'end_date'],
 
   fieldGroups: [
@@ -54,8 +58,17 @@ export const Contract = ObjectSchema.create({
     { key: 'parties',   label: 'Parties',              icon: 'users' },
     { key: 'terms',     label: 'Terms & Dates',        icon: 'calendar' },
     { key: 'value',     label: 'Contract Value',       icon: 'dollar-sign' },
+    // What the orders under the contract add up to (hotcrm#2807): the Order
+    // Amount, an order contract's Differs sign and a framework contract's
+    // Remaining Quota. A group of its own, not `value`, because the printed
+    // contract prints `value` whole (`contract_print_page`: every member is
+    // something the customer signs) and these are running figures.
+    { key: 'orders',    label: 'Order Totals',         icon: 'shopping-cart' },
     { key: 'status',    label: 'Status & Approval',    icon: 'check-circle' },
     { key: 'renewal',   label: 'Renewal',              icon: 'refresh-ccw', collapse: 'collapsed' },
+    // The last Change on an activated contract (hotcrm#2804): its reason and
+    // its signed amendment. Every earlier one is in the field history.
+    { key: 'change',    label: 'Last Change',          icon: 'file-diff', collapse: 'collapsed' },
   ],
 
   fields: {
@@ -74,7 +87,84 @@ export const Contract = ObjectSchema.create({
       group: 'basic',
       format: 'CTR-{0000}',
     }),
+
+    // The contract's name, what people call it ("Annual Service 2027",
+    // "Phase 2 Implementation"): the record title (`nameField`, above).
+    // Drafted contracts take their source's name (`../flows/_contract-draft.ts`).
+    //
+    // `required` WITHOUT `storage: { notNull: true }`, unlike the other
+    // required fields here, and on purpose (AGENTS.md Metadata semantics rule
+    // 11). `required` is the write contract: a new contract, and any write
+    // that clears the name, is refused (ADR-0113). The column constraint is
+    // what an installed database cannot take: contracts saved before this
+    // field have no name, and on 18.6.0 adding a NOT NULL column to the
+    // existing table fails the contract's whole schema sync (measured on
+    // SQLite, hotcrm#2746: "Cannot add a NOT NULL column with default value
+    // NULL"), leaving contracts unwritable. Nullable, the column is added, an
+    // old contract still saves an edit that does not touch its name, and
+    // `scripts/backfill-contract-names.ts` names the old rows.
+    name: Field.text({
+      label: 'Contract Name',
+      group: 'basic',
+      required: true,
+      searchable: true,
+      maxLength: 255,
+    }),
     
+    // The contract's FORM (hotcrm#2804, maintainer ruling 2026-11-26): what
+    // the contract is FOR, which decides where its value comes from. Distinct
+    // from `contract_type` below, which says what is agreed (subscription,
+    // service, NDA …) and stays as it is.
+    //
+    //   - `order`: drafted from one order by Draft Contract
+    //     (`../flows/sales-order-draft-contract.flow.ts`), which names that
+    //     order in `crm_sales_order`. Its value IS the order's amount: while
+    //     the contract is a draft it follows the order, and it is never typed.
+    //   - `framework`: created by hand, may carry many orders, its value typed
+    //     by hand. The default for a contract a person creates.
+    //   - `other`: carries no amount (an NDA, say); the value is not required.
+    //
+    // A person chooses between Framework and Other while the contract is a
+    // draft. Order is not offered (the option shows only on a contract that
+    // already is one), and `contract_form_and_change` (`./contract.hook.ts`)
+    // refuses a person who writes it, or who moves an order contract to
+    // another form. `readonlyWhen` makes the field read-only on the form once
+    // either holds. A contract saved before this field existed takes its
+    // form by the backfill rule the next time it is written (the hook), and
+    // `scripts/backfill-contract-form.ts` writes each one once.
+    //
+    // `required` WITHOUT `storage: { notNull: true }`, as `name` above and for
+    // the same reason (AGENTS.md Metadata semantics rule 11): contracts saved
+    // before this field have none, and a NOT NULL column cannot be added to
+    // the installed table.
+    contract_form: Field.select({
+      label: 'Contract Form',
+      group: 'basic',
+      required: true,
+      options: [
+        {
+          label: 'Order Contract', value: 'order',
+          visibleWhen: P`has(record.contract_form) && record.contract_form == "order"`,
+        },
+        { label: 'Framework Contract', value: 'framework', default: true },
+        { label: 'Other', value: 'other' },
+      ],
+      readonlyWhen: P`(has(record.contract_form) && record.contract_form == "order") || (has(record.status) && record.status != "draft")`,
+      description: 'Order Contract: drafted from an order, its value is the order amount. Framework Contract: its value is typed, and it may carry many orders. Other: no amount, such as an NDA.',
+    }),
+
+    // The order an order contract was drafted from (hotcrm#2804). Written by
+    // Draft Contract's elevated insert and, for a contract that predates the
+    // field, by the backfill rule in `contract.hook.ts`; `readonly`, so no
+    // person sets it. An order still names its contract in its own
+    // `crm_contract`; this is the other direction, for the contract alone.
+    crm_sales_order: Field.lookup('crm_sales_order', {
+      label: 'Source Order',
+      group: 'basic',
+      readonly: true,
+      description: 'The order this contract was drafted from.',
+    }),
+
     // Relationships — the master the OWD derives from. Authored as
     // master-detail so the master is not decided by declaration order against
     // the required `crm_contact` lookup below (objectstack#14747).
@@ -84,6 +174,8 @@ export const Contract = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
+      // The account's Contracts tab: the name and the number side by side.
+      relatedListColumns: ['name', 'contract_number', 'status', 'start_date', 'end_date', 'contract_value'],
     }),
     
     crm_contact: Field.lookup('crm_contact', {
@@ -95,6 +187,7 @@ export const Contract = ObjectSchema.create({
       // picker); `dependsOn` is the live cascading-lookup form — scopes contacts
       // to the contract's `crm_account` (ADR-0049).
       dependsOn: ['crm_account'],
+      relatedListColumns: ['name', 'contract_number', 'crm_account', 'status', 'end_date'],
     }),
 
     crm_opportunity: Field.lookup('crm_opportunity', {
@@ -102,6 +195,7 @@ export const Contract = ObjectSchema.create({
       group: 'parties',
       // Scope opportunities to the contract's account (was dead referenceFilters).
       dependsOn: ['crm_account'],
+      relatedListColumns: ['name', 'contract_number', 'status', 'start_date', 'end_date', 'contract_value'],
     }),
     
 
@@ -140,12 +234,23 @@ export const Contract = ObjectSchema.create({
     // (measured on 18.3.0: a printed contract started "Yesterday"). `short`
     // reads "Sep 14, '26", as the quote's dates do (#2370 row 9,
     // docs/developers/number-formats.md).
+    //
+    // The term's dates, the value and the payment terms keep their history
+    // (hotcrm#2804): the record's History shows each change before and after,
+    // who made it and when. On an activated contract the end date, the value
+    // and the payment terms change only through Change
+    // (`../actions/contract.actions.ts`): `readonlyWhen` holds them read-only
+    // on the form and drops a direct write from any caller, and
+    // `contract_form_and_change` refuses a person's direct write by name and
+    // writes the values a Change carries. The start date is not one of the
+    // three: the ruling names the end date.
     start_date: Field.date({
       label: 'Start Date',
       group: 'terms',
       format: 'short',
       required: true,
       storage: { notNull: true },
+      trackHistory: true,
     }),
     
     end_date: Field.date({
@@ -154,15 +259,161 @@ export const Contract = ObjectSchema.create({
       format: 'short',
       required: true,
       storage: { notNull: true },
+      trackHistory: true,
+      readonlyWhen: P`has(record.status) && record.status == "activated"`,
     }),
     
     // Financial
+    //
+    // An order contract's value is its order's amount (hotcrm#2804): never
+    // typed, so read-only on the form whatever the status, and written by
+    // `contract_form_and_change` from `order_amount` while the contract is a
+    // draft, and by a Change's "Update from Order" once it is activated.
+    //
+    // An Other contract carries no amount, and nobody has to type one: the
+    // value defaults to 0, the backfill rule's "no amount". It stays
+    // `required` + NOT NULL rather than `requiredWhen` (Other exempt): the
+    // platform refuses `requiredWhen` beside `storage.notNull` (ADR-0113),
+    // and the installed column is NOT NULL.
     contract_value: Field.currency({ 
       label: 'Contract Value',
       group: 'value',
       min: 0,
       required: true,
+      defaultValue: 0,
       storage: { notNull: true },
+      trackHistory: true,
+      readonlyWhen: P`(has(record.contract_form) && record.contract_form == "order") || (has(record.status) && record.status == "activated")`,
+    }),
+
+    // What was ordered under this contract (hotcrm#2804, #2807; the
+    // maintainer's ruling of 2026-11-27 on hotcrm#2806): the `total_price`
+    // (tax-inclusive) of its CONFIRMED and COMPLETED orders. A Draft is not
+    // yet ordered and a Cancelled order never will be, so neither counts in a
+    // framework contract's Order Amount, its Remaining Quota, the quota
+    // warning's running total, or the contract's Unpaid and Uninvoiced (Order
+    // to Cash). The same status set the account counts its orders by.
+    //
+    // Hidden: the record page does not apply `visibleWhen` in its detail
+    // sections (measured on 18.6.0, below), so two "Order Amount" fields told
+    // apart by form would both show on every contract. The one shown is
+    // `order_amount_shown`, which reads this figure on a framework contract
+    // and `linked_order_amount` on an order contract.
+    order_amount: Field.summary({
+      label: 'Order Amount',
+      group: 'orders',
+      scale: 2,
+      readonly: true,
+      hidden: true,
+      visibleWhen: P`has(record.contract_form) && (record.contract_form == "order" || record.contract_form == "framework")`,
+      description: 'The total of the confirmed and completed orders under this contract, tax included.',
+      summaryOperations: {
+        object: 'crm_sales_order',
+        field: 'total_price',
+        function: 'sum',
+        relationshipField: 'crm_contract',
+        filter: { status: { $in: ['confirmed', 'completed'] } },
+      },
+    }),
+
+    // An order contract's order amount, whatever its order's status but
+    // Cancelled (hotcrm#2804, kept as ruled): an order contract is drafted
+    // from its order, usually a Draft, and its value follows that order while
+    // the contract is a draft. The platform rewrites this roll-up whenever an
+    // order under the contract changes, and that rewrite is what the draft
+    // follow, Differs from the Order Amount and Change's Update from Order
+    // read (`contract_form_and_change`). Hidden; shown through
+    // `order_amount_shown`.
+    linked_order_amount: Field.summary({
+      label: 'Linked Order Amount',
+      group: 'orders',
+      scale: 2,
+      readonly: true,
+      hidden: true,
+      description: 'The total of the orders under this contract that are not cancelled, tax included.',
+      summaryOperations: {
+        object: 'crm_sales_order',
+        field: 'total_price',
+        function: 'sum',
+        relationshipField: 'crm_contract',
+        filter: { status: { $in: ['draft', 'confirmed', 'completed'] } },
+      },
+    }),
+
+    // The Order Amount the record page shows: on an order contract its
+    // order's amount (`linked_order_amount`, what #2804 showed), on a
+    // framework contract what was ordered (`order_amount`, confirmed and
+    // completed orders), on Other nothing. One field rather than two with
+    // complementary `visibleWhen`, which the record page would both show.
+    order_amount_shown: Field.formula({
+      label: 'Order Amount',
+      group: 'orders',
+      returnType: 'currency',
+      scale: 2,
+      visibleWhen: P`has(record.contract_form) && (record.contract_form == "order" || record.contract_form == "framework")`,
+      // One flat chain, each amount `dyn`, so every branch has one type.
+      expression: F`has(record.contract_form) && record.contract_form == "order"
+        && has(record.linked_order_amount) && record.linked_order_amount != null
+        ? dyn(double(record.linked_order_amount))
+        : has(record.contract_form) && record.contract_form == "framework"
+          && has(record.order_amount) && record.order_amount != null
+          ? dyn(double(record.order_amount))
+          : dyn(null)`,
+      description: "An order contract: its order's amount. A framework contract: the confirmed and completed orders under it. Tax included.",
+    }),
+
+    // The sign the ruling asks for (hotcrm#2804): an order contract whose
+    // value no longer equals its order's amount — the order changed after the
+    // contract was activated, or the contract predates the rule (item 7: such
+    // contracts are listed, not corrected). A sign, never a block (AGENTS.md
+    // rule 8). Empty, not "No", when the two agree or on another form, so the
+    // record page folds it away.
+    order_amount_differs: Field.formula({
+      label: 'Differs from the Order Amount',
+      group: 'orders',
+      returnType: 'boolean',
+      // An order contract's sign only, like the Order Amount's and the
+      // Remaining Quota's `visibleWhen` (hotcrm#2807). ⚠️ Measured on 18.6.0:
+      // the console's synthesized record page does not apply a field's
+      // `visibleWhen` in its detail sections, so the three still show, empty,
+      // on a contract of another form; the condition is the metadata's to
+      // state, and the renderer gap is reported upstream, not worked around.
+      visibleWhen: P`has(record.contract_form) && record.contract_form == "order"`,
+      // Judged only once the order amount is known: a contract that predates
+      // the field holds NULL there until the roll-up is materialised. Read
+      // from `linked_order_amount`, the order's amount whatever its status
+      // but Cancelled (hotcrm#2806), as #2804 ruled.
+      expression: F`has(record.contract_form) && record.contract_form == "order"
+        && has(record.linked_order_amount) && record.linked_order_amount != null
+        && double(record.linked_order_amount)
+          != (has(record.contract_value) && record.contract_value != null ? double(record.contract_value) : 0.0)
+        ? true : null`,
+      description: "The contract value no longer equals the order's amount. Change, with Update from Order, takes the order's amount.",
+    }),
+
+    // A framework contract's quota left (hotcrm#2807): its value, the
+    // ceiling, less the Order Amount above (confirmed and completed orders,
+    // hotcrm#2806). The current value: a quota
+    // raised or lowered by Change counts from the next read. Below zero
+    // when the orders have gone over the ceiling, which is the sign that
+    // stays on the record; the order's save that takes the contract over
+    // warns (`crm_sales_order.framework_quota_exceeded`).
+    //
+    // A contract whose orders have not been counted yet (NULL roll-up, a
+    // contract that predates the field until `migrate summary-nulls`) shows
+    // nothing rather than its whole value as left.
+    remaining_quota: Field.formula({
+      label: 'Remaining Quota',
+      group: 'orders',
+      returnType: 'currency',
+      scale: 2,
+      visibleWhen: P`has(record.contract_form) && record.contract_form == "framework"`,
+      expression: F`has(record.contract_form) && record.contract_form == "framework"
+        && has(record.order_amount) && record.order_amount != null
+        ? (has(record.contract_value) && record.contract_value != null ? double(record.contract_value) : 0.0)
+          - double(record.order_amount)
+        : null`,
+      description: 'The contract value less the Order Amount. Below zero when the orders have gone over the contract value.',
     }),
     
     billing_frequency: Field.select({
@@ -186,6 +437,10 @@ export const Contract = ObjectSchema.create({
       // list's `net_30` option default applies only when the quote itself
       // carried no term, which is the intended fall-through, not a gap.
       picklist: 'payment_terms',
+      // Changed only through Change once activated (hotcrm#2804; see the
+      // dates above).
+      trackHistory: true,
+      readonlyWhen: P`has(record.status) && record.status == "activated"`,
     }),
     
     // Renewal
@@ -297,6 +552,70 @@ export const Contract = ObjectSchema.create({
       maxLength: 100,
     }),
     
+    // ─── Change (hotcrm#2804) ─────────────────────────────────────────────
+    // An activated contract changes its value, end date and payment terms
+    // only through Change (`../actions/contract.actions.ts`), with a reason
+    // and the signed amendment. The status stays Activated, so renewal and
+    // expiry go on as before; no change order is created, the order is not
+    // changed and the payment plan is not re-planned.
+    //
+    // The reason and the amendment are what Change records: the last one
+    // here, every one in the field history with who and when. Neither is on
+    // the edit form (`../views/contract.view.ts`); a write that carries them
+    // IS a change, and `contract_form_and_change` holds it to the rules.
+    change_reason: Field.textarea({
+      label: 'Change Reason',
+      group: 'change',
+      maxLength: 2000,
+      trackHistory: true,
+      description: 'Why the contract was last changed. Written by Change.',
+    }),
+
+    change_amendment: Field.file({
+      label: 'Signed Amendment',
+      group: 'change',
+      trackHistory: true,
+      description: 'The amendment the customer signed for the last change. Written by Change.',
+    }),
+
+    // What one Change asks for: the dialog's inputs, which the hook moves
+    // onto the three locked fields and then clears, in the same write.
+    // `readonlyWhen` drops a CALLER's write to a locked field, so a Change
+    // cannot write them itself; a value the hook derives is not a caller's
+    // write and is kept (the platform's sanctioned path for a conditionally
+    // locked field). `hidden`: they hold nothing between Changes.
+    change_new_value: Field.currency({
+      label: 'New Contract Value',
+      group: 'change',
+      min: 0,
+      hidden: true,
+      description: 'Leave empty to keep the contract value.',
+    }),
+
+    change_new_end_date: Field.date({
+      label: 'New End Date',
+      group: 'change',
+      format: 'short',
+      hidden: true,
+      description: 'Leave empty to keep the end date.',
+    }),
+
+    change_new_payment_terms: Field.select({
+      label: 'New Payment Terms',
+      group: 'change',
+      picklist: 'payment_terms',
+      hidden: true,
+      description: 'Leave empty to keep the payment terms.',
+    }),
+
+    change_from_order: Field.boolean({
+      label: 'Update from Order',
+      group: 'change',
+      defaultValue: false,
+      hidden: true,
+      description: "Take the order's current amount as the contract value.",
+    }),
+
     // Billing Address
     billing_address: Field.address({
       label: 'Billing Address',

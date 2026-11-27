@@ -38,7 +38,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
         nav_activity_dashboard: { label: '销售活动' },
         nav_my_calendar: { label: '我的日历' },
         nav_home: { label: '首页' },
-        nav_sales_home: { label: '销售主页' },
 
         group_sales: { label: '销售' },
         group_collection_plan: { label: '回款计划' },
@@ -505,54 +504,6 @@ export const appSurface: Omit<TranslationData, 'objects'> = {
     contract_print_page: {
       label: '合同文档',
       description: '可打印的合同文档：签约方、期限、金额、计费、条款与签署栏。',
-    },
-    account_workbench: {
-      label: '客户工作台',
-      description: '面向销售团队的精选客户列表：仅提供快捷筛选，不含视图管理。',
-    },
-    lead_detail_page: {
-      label: '线索详情',
-      description: '线索记录页：平台合成的默认布局，告警槽位中是重复线索提示。',
-      components: {
-        lead_duplicate_alert_confirmed: { label: '已确认重复提醒' },
-        lead_duplicate_alert_suspected: { label: '疑似重复提醒' },
-      },
-    },
-    sales_home_page: {
-      label: '销售主页',
-      description: '销售团队主页，汇总关键指标、我的待办工作与即将到来的活动',
-      components: {
-        kpi_revenue_won: {
-          label: '总收入（全部期间）',
-        },
-        kpi_deals_won: {
-          label: '赢单数（全部期间）',
-        },
-        kpi_pipeline_value: {
-          label: '进行中管道（全部期间）',
-        },
-        kpi_open_leads: {
-          label: '开放线索',
-        },
-        home_upcoming_events: {
-          label: '📅 即将开始 · 最近优先',
-        },
-        key_metrics: { title: '关键绩效指标', label: '关键指标' },
-        // `page:tabs` item labels, keyed by each item's `value` (#2284, spec 18.1.0,
-        // `pages.PAGE.components.TABS.items.VALUE.label`).
-        home_tabs: {
-          label: '主页标签页',
-          items: {
-            my_leads: { label: '我的线索' },
-            my_open_deals: { label: '我的进行中商机' },
-            my_open_tasks: { label: '我的待办任务' },
-          },
-        },
-        home_my_leads: { label: '我的线索' },
-        home_my_deals: { label: '我的进行中商机' },
-        home_my_tasks: { label: '我的待办任务' },
-        upcoming_events: { title: '即将开始的活动', label: '即将开始的活动' },
-      },
     },
   },
   // Screen-flow copy (#1210, #1975). Keyed `flows.<flow>.label`,

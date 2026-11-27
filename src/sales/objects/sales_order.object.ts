@@ -23,8 +23,70 @@ import { P, cel } from '@objectstack/spec';
  * the tenant currency, as on the quote.
  *
  * The behaviour lives in `sales_order.hook.ts`: the header totals follow the
- * lines, and the lines of an order past Draft cannot change.
+ * lines, and the lines and the header amount of an order past Draft cannot
+ * change (#2826).
  */
+/**
+ * The three amounts the framework-contract quota rule compares (hotcrm#2807),
+ * in CEL, each a double and 0 when unset.
+ *
+ *   - `NOW`: this order's total after the write.
+ *   - `BEFORE`: this order's total before the write, when it was already
+ *     linked to the same contract; 0 on a create or a newly linked order.
+ *     Whether the write raises the order's share is judged against it.
+ *   - `BEFORE_COUNTED`: the part of `BEFORE` the contract's Order Amount
+ *     already holds — `BEFORE` when the order was confirmed or completed,
+ *     else 0 (hotcrm#2806).
+ *   - `ORDERED`: the contract's Order Amount (confirmed and completed orders)
+ *     as stored before this write (the roll-up is recomputed after it), so
+ *     the amount with this order is `ORDERED - BEFORE_COUNTED + NOW`.
+ *
+ * `record.crm_contract.id` names the contract through the reference: a
+ * predicate that reads through a reference may not also read it as a value.
+ */
+const QUOTA_NOW = 'has(record.total_price) && record.total_price != null ? double(record.total_price) : 0.0';
+const QUOTA_LINKED_BEFORE = 'previous != null && has(previous.crm_contract) && previous.crm_contract == record.crm_contract.id';
+const QUOTA_BEFORE =
+  `${QUOTA_LINKED_BEFORE} && has(previous.total_price) && previous.total_price != null ? double(previous.total_price) : 0.0`;
+const QUOTA_COUNTED_NOW = 'has(record.status) && (record.status == "confirmed" || record.status == "completed")';
+const QUOTA_COUNTED_BEFORE = 'previous != null && has(previous.status) && (previous.status == "confirmed" || previous.status == "completed")';
+const QUOTA_BEFORE_COUNTED =
+  `${QUOTA_LINKED_BEFORE} && ${QUOTA_COUNTED_BEFORE} && has(previous.total_price) && previous.total_price != null`
+  + ' ? double(previous.total_price) : 0.0';
+const QUOTA_ORDERED =
+  'has(record.crm_contract.order_amount) && record.crm_contract.order_amount != null'
+  + ' ? double(record.crm_contract.order_amount) : 0.0';
+const QUOTA_CEILING =
+  'has(record.crm_contract.contract_value) && record.crm_contract.contract_value != null'
+  + ' ? double(record.crm_contract.contract_value) : 0.0';
+/**
+ * The order takes a framework contract over its value: the contract is a
+ * framework contract, this write adds to what the order counts against it (a
+ * newly linked order, a higher total, or an order confirmed under it), and the
+ * contract's ordered amount with this order then totals more than the
+ * contract value. A write that leaves the order's share as it was, or lowers
+ * it, is never judged, so an order already over is not frozen (AGENTS.md
+ * rule 7) and lowering it is always allowed.
+ *
+ * The contract's Order Amount counts confirmed and completed orders only
+ * (hotcrm#2806, the maintainer's ruling of 2026-11-27), so the projection is
+ * `ORDERED - BEFORE_COUNTED + NOW`: this order's total is added whatever its
+ * status, so a Draft that would take the contract over still warns, and what
+ * it already counted (only when it was confirmed or completed under the same
+ * contract) is taken out first. A Cancelled order adds nothing and is never
+ * judged.
+ */
+const QUOTA_EXCEEDED = {
+  // Composed from the strings above: `P` quotes an interpolated string as a CEL
+  // string literal, so a predicate built from parts is spelled as the
+  // expression object it compiles to (the shape `_option-labels.ts` builds).
+  dialect: 'cel' as const,
+  source: `has(record.crm_contract.contract_form) && record.crm_contract.contract_form == "framework"
+  && !(has(record.status) && record.status == "cancelled")
+  && ((${QUOTA_NOW}) > (${QUOTA_BEFORE}) || ((${QUOTA_COUNTED_NOW}) && !(${QUOTA_COUNTED_BEFORE}) && (${QUOTA_LINKED_BEFORE})))
+  && (${QUOTA_ORDERED}) - (${QUOTA_BEFORE_COUNTED}) + (${QUOTA_NOW}) > (${QUOTA_CEILING})`,
+};
+
 export const SalesOrder = ObjectSchema.create({
   name: 'crm_sales_order',
   label: 'Order',
@@ -152,11 +214,17 @@ export const SalesOrder = ObjectSchema.create({
     // ─── Pricing: the quote header's figures and one formula ────────────
     // `discount_amount` / `total_price` are derived and `readonly` (#2110 on
     // the quote); their one writer is `sales_order_workflow`, in the write that
-    // changes an input. `subtotal` is the lines' sum (`sales_order_total_rollup`)
-    // and stays editable: on an order with no lines it is the rep's own number.
+    // changes an input. `subtotal` is the lines' sum (`sales_order_total_rollup`);
+    // on an order with no lines it is the rep's own number, so it is not
+    // `readonly`. A person's Subtotal on an order WITH lines that differs from
+    // their sum is refused by `sales_order_workflow` (#2826), and Subtotal,
+    // Discount %, Tax and Shipping lock once the order leaves Draft, there too.
+    // Not `readonlyWhen`: on 18.6.0 that strips system writes as well, and
+    // whether an order has lines is not a field of the order.
     subtotal: Field.currency({
       label: 'Subtotal',
       group: 'pricing',
+      description: 'The sum of the order\'s lines. Typed only on an order with no lines. Locked once the order is confirmed, as are the discount, tax and shipping.',
     }),
 
     discount: Field.percent({
@@ -297,6 +365,43 @@ export const SalesOrder = ObjectSchema.create({
         message:
           "This contract belongs to another account. An order can only carry a contract of its own Account: choose one of this account's contracts, or clear Contract.",
         condition: P`has(record.crm_account) && record.crm_account != null && record.crm_contract.crm_account != record.crm_account`,
+      },
+    },
+    {
+      // A framework contract's quota (hotcrm#2807, maintainer ruling
+      // 2026-11-26: 「超额默认警告，管理员可以改成拦截」). An order linked to a
+      // framework contract, or a linked order whose total goes up, that takes
+      // the contract's Order Amount over its Contract Value WARNS: the save
+      // goes through and the console shows the message as a warning (the
+      // write answer's `warnings`). The amounts are `QUOTA_EXCEEDED` above.
+      //
+      // ⚠️ A line's save that raises the order's total reaches this rule
+      // through `sales_order_total_rollup`'s own write to the order, which has
+      // no person waiting on its answer, so that warning is not shown; the
+      // contract's Remaining Quota below zero is the sign that stays.
+      //
+      // The ruling's second half, an administrator's switch to BLOCK, is not
+      // here: on 18.6.0 an installation cannot switch a packaged validation
+      // rule on or off (a managed object is sealed, ADR-0131 D6), and an
+      // app-made setting would re-invent the platform's (AGENTS.md Scope). It
+      // waits on the maintainer's decision recorded on hotcrm#2807.
+      //
+      // `conditional` because the check reads through the contract, and a
+      // read through an empty reference cannot be evaluated: `when` skips an
+      // order with no contract.
+      name: 'framework_quota_exceeded',
+      type: 'conditional',
+      severity: 'warning',
+      message: "This order takes its framework contract over the Contract Value.",
+      when: P`has(record.crm_contract) && record.crm_contract != null`,
+      then: {
+        name: 'framework_quota_exceeded_check',
+        type: 'cross_field',
+        fields: ['crm_contract', 'total_price'],
+        severity: 'warning',
+        message:
+          "With this order, the orders under the framework contract total more than its Contract Value. The order is saved; the contract's Remaining Quota shows how far over it is.",
+        condition: QUOTA_EXCEEDED,
       },
     },
     {

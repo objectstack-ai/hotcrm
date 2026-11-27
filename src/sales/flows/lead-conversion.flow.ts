@@ -274,19 +274,21 @@ export const LeadConversionFlow: Flow = {
       // the house rule `test/record-id-not-in-prose.test.ts` states for every
       // sentence a user reads: "the id goes in the relationship field that
       // exists to carry it, or nowhere". The link itself is on the lead's
-      // record page (`lead_detail.page.ts`), where it can be clicked.
+      // record page, in the Duplicate Management section, where it can be
+      // clicked.
       //
       // "flagged at intake" is the app's own published definition of this
       // value, not a guess about provenance: `duplicate_status`'s help text
       // reads "Suspected = flagged automatically at intake" in all four
       // locales, and `lead_duplicate_check` is insert-only by design.
       //
-      // This warning's TEXT is English-only: it is the value of a variable,
-      // and no locale pack reaches a variable — the screen's translated
-      // `description` can only carry the `{{duplicateWarning}}` hole that
-      // shows it. The screens' own headings and bodies are keyed in the packs
-      // (`flows.lead_conversion` in `src/sales/translations/<locale>/app.ts`),
-      // and the banner on the record page carries the warning in all four.
+      // This node assigns no text: `null` makes the `{{ duplicateWarning }}`
+      // hole in `screen_1`'s `description` print its `default:`, and that
+      // template is keyed in every locale pack (`flows.lead_conversion` in
+      // `src/sales/translations/<locale>/app.ts`), so the warning reads in
+      // the rep's own language (#2571). Off this screen, the lead's record
+      // page shows the verdict in its Duplicate Management section, which
+      // opens expanded; there is no banner since #2740.
       id: 'warn_duplicate', type: 'assignment', label: 'Compose Duplicate Warning',
       config: {
         assignments: {

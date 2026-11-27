@@ -69,6 +69,10 @@ const RUNTIME_TEST_FILES = [
   // #2317 — filing a contract's signed copy dates the signature
   // (`contract_signed_copy_date`), beside the two signed-copy gates it serves.
   'contract-signed-copy.test.ts',
+  // #2804 — the contract form and Change (`contract_form_and_change`): the
+  // order contract's draft follow, the person locks, both Change actions and
+  // the backfill rule, driven on the booted app.
+  'contract-form-change.test.ts',
   // #592 — the activity model's own runtime file: both `crm_event` hooks, the
   // parity check that keeps the duplicated bubble body from drifting, and the
   // readonly-strip regression proof against a real engine.
@@ -119,6 +123,10 @@ const RUNTIME_TEST_FILES = [
   // hotcrm#2724 — `sales_order_contract_fill`, the order's contract set
   // later and passed to its rows, on the booted app.
   'o2c-order-contract-later.test.ts',
+  // hotcrm#2806 — the confirmed order's payment plan step
+  // (`sales_order_confirmed_plan_step`) and the lone step following the order's
+  // total (`sales_order_amount_plan_step`), on the booted app.
+  'o2c-parallel-figures.test.ts',
   // #2316 phase 1a — Project Delivery's four hooks, run as the people who use
   // them: staffing, time costing, the timesheet's stamps, the approver gates.
   'psa-objects.test.ts',

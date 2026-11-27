@@ -30,7 +30,7 @@ its contract, and the order's page then lists it under **Projects**.
   project. Removing a staffing row takes that access away.
 - **The Team sees the customer, not the deal.** A team member reads every
   account, read-only, so the project's Account shows by name, without the
-  account's Invoiced, Received and Receivable Balance. The
+  account's Invoiced, Received, Unpaid and Uninvoiced. The
   Opportunity and the Order are left off their project page, the deal does
   not open for them, and Opportunities is not in their Project Delivery menu.
 - **One row per person per project.** Staffing someone twice is refused.

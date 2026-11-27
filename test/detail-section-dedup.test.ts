@@ -114,13 +114,22 @@ const detailPages: DetailPage[] = pages.flatMap((page) => {
 });
 
 describe('record:details sections list only fields the tab renders', () => {
-  it('finds the record pages that compose a Details body', () => {
-    // A rename that unhooks this suite from the pages it guards would otherwise
-    // leave it passing over an empty list. Lead, opportunity and case authored
-    // their bodies until #2382 retired them to the default page, whose body
-    // the platform keeps disjoint from its strip itself; the project's page
-    // still authors its body (the `details` slot) under the default strip.
-    expect(detailPages.map((p) => p.page).sort()).toEqual(['project_detail_page']);
+  it('no record page composes a Details body today', () => {
+    // Lead, opportunity and case authored their bodies until #2382 retired
+    // them to the default page, whose body the platform keeps disjoint from
+    // its strip itself; the project's page authored the last one (its
+    // `details` slot) until #2740 deleted that page. The rules below are kept
+    // for the day a page authors a body again: this pin then goes red and
+    // names it, so the suite is re-aimed rather than left passing over an
+    // empty list by accident.
+    expect(detailPages.map((p) => p.page).sort()).toEqual([]);
+    // …and the walk is not idle because the roster went missing: it reads
+    // every authored record page the app registers (the quote's and the
+    // contract's shells and print pages), none of which composes a body.
+    expect(
+      pages.filter((p) => p.type === 'record').map((p) => p.name).sort(),
+      'the authored record pages changed — re-aim this pin',
+    ).toEqual(['contract_detail_page', 'contract_print_page', 'quote_detail_page', 'quote_print_page']);
   });
 
   it('no section repeats a field the page highlights', () => {

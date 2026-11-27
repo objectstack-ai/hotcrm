@@ -72,7 +72,7 @@ beforeAll(async () => {
   }]);
   const [contract] = await verify.seed('crm_contract', [{
     crm_account: account!.id, crm_contact: contact!.id, contract_type: 'subscription', contract_value: 12_000, owner_id,
-    start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12,
+    start_date: '2026-01-01', end_date: '2027-01-01', name: 'Fixture Contract', contract_term_months: 12,
   }]);
   const [forecast] = await verify.seed('crm_forecast', [{
     owner_id, period: 'quarter', period_start: '2021-01-01', period_end: '2021-03-31', period_label: 'Q1 2021',

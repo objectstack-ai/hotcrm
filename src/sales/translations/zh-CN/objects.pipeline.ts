@@ -30,7 +30,7 @@ const OPPORTUNITY_BULK_DELETE = {
   delete: {
     label: '删除',
     confirmLabel: '删除',
-    confirmText: '确定要永久删除 {{count}} 个商机吗？此操作无法撤销。',
+    confirmText: '确定要删除 {{count}} 个商机吗？删除的记录会进入回收站，管理员可以在那里恢复。',
   },
 };
 
@@ -444,7 +444,7 @@ export const pipeline: Record<string, ObjectTranslationData> = {
         label: '周期截止',
         help: '通常根据"周期"和"周期起始"自动推算。如手动填写，必须是该周期的最后一天——例如起始为 2026-07-01 的季度对应 2026-09-30，2026 年 8 月对应 2026-08-31。',
       },
-      period_label: { label: '周期标签', help: '易读的周期标签，例如"2026 年第三季度"或"2026 年 8 月"。' },
+      period_label: { label: '周期标签', help: '易读的周期标签，例如"Q3 2026"或"Aug 2026"。留空时根据"周期"和"周期起始"自动生成。' },
       snapshot_date: { label: '快照日期', help: '本次快照的采集日期。' },
       source: {
         label: '来源',

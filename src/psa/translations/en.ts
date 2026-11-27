@@ -519,13 +519,6 @@ export const en: TranslationData = {
       },
     },
   },
-  pages: {
-    // The project's record page (#2545).
-    project_detail_page: {
-      label: 'Project Detail',
-      description: 'The project\'s record page: the synthesized layout, with the project\'s task plan on a Gantt in the Overview tab.',
-    },
-  },
   apps: {
     // This package's own app (#2316). The contributed entries' labels are the
     // app package's, which contributes them.

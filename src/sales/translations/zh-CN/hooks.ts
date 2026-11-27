@@ -78,13 +78,34 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
+  // The contract's form, an order contract's value and Change (#2804).
+  contract_form_and_change: {
+    refusals: {
+      FORBIDDEN: {
+        message: '订单合同只能在订单上用“起草合同”生成。请选择框架合同或其他。',
+      },
+      RECORD_LOCKED: {
+        message: '订单合同的金额就是订单金额：请修改订单，草稿合同会随之更新。',
+        reasons: {
+          form: { message: '合同形式只能在草稿时选择，订单合同始终是订单合同。' },
+          contract_value: { message: '已激活合同的合同金额只能通过“变更”修改，并需填写原因、上传签署的变更协议。' },
+          end_date: { message: '已激活合同的结束日期只能通过“变更”修改，并需填写原因、上传签署的变更协议。' },
+          payment_terms: { message: '已激活合同的付款条款只能通过“变更”修改，并需填写原因、上传签署的变更协议。' },
+        },
+      },
+      VALIDATION_FAILED: {
+        message: '变更需要填写原因，并上传新签署的变更协议。',
+        reasons: {
+          not_activated: { message: '“变更”只适用于已激活的合同。草稿合同请直接编辑。' },
+          order_value: { message: '订单合同的变更不填写金额：选择“按订单更新”以取订单金额。' },
+        },
+      },
+    },
+  },
   contract_validation: {
     refusals: {
       VALIDATION_FAILED: {
         message: '合同期限（{{term}} 个月）与日期范围不符（从 {{start}} 到 {{end}} 为 {{calc}} 个月）。',
-      },
-      RECORD_LOCKED: {
-        message: '已激活合同的结束日期不能提前（{{from}} → {{to}}）。请改用终止或变更流程。',
       },
     },
   },
@@ -189,7 +210,7 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
-  // The order's line lock and line fill (REQ-0010, hotcrm#2555).
+  // The order's line lock, header amount lock (#2826) and line fill (REQ-0010, hotcrm#2555).
   sales_order_workflow: {
     refusals: {
       RECORD_LOCKED: {
@@ -201,7 +222,19 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
           cancelled: {
             message: '订单{{order}}已取消，因此不能再添加、修改或删除它的订单行。',
           },
+          amount_confirmed: {
+            message: '订单{{order}}已确认，因此不能再修改它的金额。请先把它退回草稿。',
+          },
+          amount_completed: {
+            message: '订单{{order}}已完成，因此不能再修改它的金额。',
+          },
+          amount_cancelled: {
+            message: '订单{{order}}已取消，因此不能再修改它的金额。',
+          },
         },
+      },
+      VALIDATION_FAILED: {
+        message: '订单{{order}}有订单行，因此它的小计是各订单行之和，不能手工填写。请改为修改订单行。',
       },
     },
   },

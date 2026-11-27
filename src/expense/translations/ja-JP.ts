@@ -44,6 +44,8 @@ export const jaJP: TranslationData = {
             approved: { message: '経費精算書 {{name}} は承認済みのため変更できません。財務が支払済みにします。' },
             paid: { message: '経費精算書 {{name}} は支払済みのため変更できません。' },
             delete: { message: '削除できるのは下書きの経費精算書のみです。経費精算書 {{name}} は提出済みです。' },
+            delete_approved: { message: '経費精算書 {{name}} は承認済みのため削除できません。承認済みまたは支払済みの経費精算書は記録として残ります。' },
+            delete_paid: { message: '経費精算書 {{name}} は支払済みのため削除できません。承認済みまたは支払済みの経費精算書は記録として残ります。' },
           },
         },
       },
@@ -142,7 +144,7 @@ export const jaJP: TranslationData = {
         my_expenses: {
           label: '自分の経費',
           bulkActions: {
-            delete: { label: '削除', confirmLabel: '削除', confirmText: '{{count}} 件の経費を完全に削除しますか？この操作は元に戻せません。' },
+            delete: { label: '削除', confirmLabel: '削除', confirmText: '{{count}} 件の経費を削除しますか？削除したレコードはごみ箱に移り、管理者がそこから復元できます。' },
           },
         },
       },

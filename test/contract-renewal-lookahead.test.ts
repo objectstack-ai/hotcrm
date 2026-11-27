@@ -90,7 +90,7 @@ describe('a save above the look-ahead is refused at the door', () => {
     return verify.hooks.run('crm_contract', 'insert', {
       crm_account: account!.id, crm_contact: contact!.id, contract_type: 'subscription', contract_value: 12_000,
       billing_frequency: 'monthly', payment_terms: 'net_30', status: 'draft',
-      contract_term_months: 12, start_date: '2027-01-01', end_date: '2027-12-31', ...doc,
+      name: 'Fixture Contract', contract_term_months: 12, start_date: '2027-01-01', end_date: '2027-12-31', ...doc,
     }, { as: manager.token });
   };
 

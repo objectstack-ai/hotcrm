@@ -190,11 +190,23 @@ curl -X POST "$HOTCRM/api/v1/data/import/jobs/$JOB_ID/undo" -H "Authorization: B
 ### 线索（`crm_lead_import`）
 
 `Salutation` · `First Name` · `Last Name` · `Company` · `Title` · `Industry` ·
-`Email` · `Phone` · `Mobile` · `Website` · `Lead Status` · `Lead Source` ·
+`Email` · `Phone` · `Mobile` · `Website` · `Lead Status` ·
+`Disqualification Reason` · `Need Type` · `Estimated Amount` · `Lead Source` ·
 `Annual Revenue` · `Employees` · `Lead Owner Email` · `Description`
 
 *First Name*、*Last Name*、*Company* 和 *Email* 为必填。*Lead Status* 留空则落为
-**New**。
+**New**。有两种状态要求同一行再填一格，因为线索本身就这样要求：
+
+- **Unqualified**（也可写作 *Disqualified* 或 *Closed - Not Converted*）的线索
+  必须带 *Disqualification Reason*。原因接受 HotCRM 的选项，也接受其他系统的说法：
+  *Bad Fit* 转成 *Not a Fit*，*Not Interested* 转成 *Other*，*Budget* 转成 *No Budget*，
+  *Wrong Contact* 转成 *Wrong Persona*，*No Response* 转成 *Unreachable*，
+  *Lost to Competitor* 转成 *Competitor*。没填原因的行会被拒绝，不会被代填一个。
+- **Qualified** 的线索必须带 *Need Type* 和 *Estimated Amount*。
+
+有两种情况无法通过文件导入。被判为重复而取消资格的线索必须指明它重复的那条记录，
+所以先用别的状态导入，再到线索上标记。**Converted** 永远不能导入：转化才会创建
+客户、联系人和商机，所以先导入线索再转化。
 
 ## 取值如何匹配
 

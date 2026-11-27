@@ -1,17 +1,17 @@
 ---
 title: The Collection Plan
-description: The billing milestones planned from an order or a contract — what the rep plans to collect and when, and how the invoiced, received and open figures are counted.
+description: The payment plans planned from an order or a contract — what the rep plans to collect and when, the step a confirmed order gets, how the received and open figures are counted, and what is overdue.
 ---
 
 # The Collection Plan
 
-A deal's **collection plan** is its list of **billing milestones**: each step says how much the rep expects to collect and on which day. A plan is made on an **order**, or on a **contract** when the deal has no order. The steps belong to the account, so the account's page lists the plans of all its orders and contracts. A software deal might have an advance of 30%, 40% at go-live, 25% on acceptance and a 5% retention a year later. A subscription has one step per billing period.
+A deal's **collection plan** is its list of **payment plans**: each step says how much the rep expects to collect and on which day. A plan is made on an **order**, or on a **contract** when the deal has no order. The steps belong to the account, so the account's page lists the plans of all its orders and contracts. A software deal might have an advance of 30%, 40% at go-live, 25% on acceptance and a 5% retention a year later. A subscription has one step per billing period.
 
-The plan belongs to sales. Finance's invoices and payments report against it, but never change it.
+The plan belongs to sales. Finance's payments report against it, but never change it; invoices run beside it and name the order or the contract.
 
 ## Building the plan [#building-the-plan]
 
-On the order, open the **Billing Milestones** tab and add a step for each part of the payment schedule; for a deal with no order, do the same on the contract. A step always names its order or its contract: one with neither is refused.
+On the order, open the **Payment Plans** tab and add a step for each part of the payment schedule; for a deal with no order, do the same on the contract. A step always names its order or its contract: one with neither is refused.
 
 **One deal's plan hangs in one place: on the order when there is one, and on the contract only when there is no order.** Nothing stops a second plan for the same deal on the other record, so keep to one: the two pages would each show a plan.
 
@@ -27,18 +27,27 @@ Choosing the **Order** or the **Contract** fills in the step's **Account**. An o
 
 Reps, sales managers and administrators add, change and remove the steps of any account they can read; editing the account or the contract is not needed. Finance reads the plan and never changes it. When a contract is amended, revise its plan to match: the plan is a forecast, never a ledger.
 
+## The step a confirmed order gets [#confirmed-order]
+
+When an order becomes **Confirmed** and has no payment plan yet, HotCRM adds one step: the order's **Total Price**, planned for today plus the order's **Payment Terms** (Net 15, 30, 60 or 90 days; Due on Receipt, or no terms, today). An order that already has a plan gets none, and confirming it again adds none. Instalments stay yours: change the step's amount and add the others.
+
+When the order's total changes later, a step that is the order's only one and has received nothing follows the new total. Otherwise the plan stays as it is, and the order shows **Payment Plan Differs** while it has steps that add up to anything other than its total: change, split or add steps until they match.
+
 ## What the figures count [#figures]
 
-Each step shows three figures. You do not type them; they follow finance's records.
+Each step shows two figures. You do not type them; they follow finance's payments.
 
 | Figure | What it counts |
 | --- | --- |
-| **Invoiced** | The amounts of the **Issued** invoices finance linked to this step. A cancelled invoice is not counted. |
-| **Received** | The payments that count toward this step: those finance linked to it directly (an advance paid before its invoice), and those made against an invoice of this step. |
+| **Received** | The payments that name this step. |
 | **Open** | **Planned Amount** minus **Received**. It goes below zero when more was received than planned. |
 
-A payment made against an invoice counts toward that invoice's step automatically, so finance only links the invoice. If finance later moves the invoice to a different step, payments already recorded keep the step they were given; choosing the invoice again on such a payment moves it too.
+**Open** is stored on the step, so any list of payment plans can be filtered and sorted on it.
 
 ## Planned This Month [#planned-this-month]
 
-The **Planned This Month** list, under **Follow-up → Planned This Month** in the **Order to Cash** app and as a tab of the **Billing Milestones** list (**Collection Plan → Billing Milestones** in **Sales**), shows every step you can see whose **Planned Date** falls in the current calendar month, earliest first, with what has been invoiced and received so far. It moves with the calendar: on the first of the month it shows the new month.
+The **Planned This Month** list, under **Follow-up → Planned This Month** in the **Order to Cash** app and as a tab of the **Payment Plans** list (**Collection Plan → Payment Plans** in **Sales**), shows every step you can see whose **Planned Date** falls in the current calendar month, earliest first, with what has been received so far. It moves with the calendar: on the first of the month it shows the new month.
+
+## Overdue Payment Plans [#overdue]
+
+The **Overdue Payment Plans** list, under **Follow-up → Overdue Payment Plans** in the **Order to Cash** app and as a tab of the **Payment Plans** list, shows every step you can see whose **Planned Date** is before today and that still has an **Open** amount, oldest first. A step leaves the list the day its payments cover it.

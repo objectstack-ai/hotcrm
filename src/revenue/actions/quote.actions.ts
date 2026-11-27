@@ -32,8 +32,10 @@ import { P } from '@objectstack/spec';
  * THE CALLER, so the quote's permissions, `quote_workflow`'s freeze and the
  * acceptance gates (`requiredWhen` on the contact, #2014's held-deal refusal)
  * judge it exactly as they judge the same status set by Edit. Each patch is the
- * status alone: what follows from an acceptance — the frozen quote, the won
- * deal, the drafted contract — is the hooks' (`quote.hook.ts`).
+ * status alone: what follows from an acceptance is not the action's — the
+ * frozen quote and the won deal are the hooks' (`quote.hook.ts`), the order is
+ * `quote_accepted_order`'s and a contract, only where an administrator has
+ * switched it on, `quote_accepted_contract_draft`'s (`../flows/`).
  *
  * `current_user.can("crm_quote", "edit")` keeps the buttons off a reader who
  * may not edit quotes, by the rule `case.actions.ts` states: `visible` mirrors
@@ -44,8 +46,20 @@ import { P } from '@objectstack/spec';
  *
  * Each success message names the quote by its title, its name (`{{ record.name }}`,
  * the action's own record). Accept alone asks first: it cannot be undone from
- * the quote — the quote freezes, its opportunity closes as won and a contract
- * is drafted. Every other move can be walked back by another action.
+ * the quote — the quote freezes, its opportunity closes as won and its order is
+ * created. Every other move can be walked back by another action.
+ *
+ * Accept's two sentences say what the shipped switches do (#2752): the order
+ * flow ships on and the contract flow off (#2558), so the order is announced
+ * and the contract is offered from the order. An action's copy cannot read
+ * whether a flow is switched on — `confirmText` binds `record` (and static
+ * `params`) only, `visible` `record` and `current_user` — so the switched-on
+ * contract draft is named as a condition rather than as a second wording.
+ * The success message cannot name the order either: an `operation: 'update'`
+ * answers with the quote, which holds no link to its order (the order holds
+ * the Source Quote), so it points to the quote's Orders list, which shows the
+ * order once the page refreshes — the order is created inside the accepting
+ * write, before the action answers (`test/quote-accept-copy.test.ts`).
  */
 
 export const SubmitQuoteForReviewAction: Action = {
@@ -86,8 +100,9 @@ export const AcceptQuoteAction: Action = {
   locations: ['record_header', 'list_item'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "presented" && current_user.can("crm_quote", "edit")`,
-  confirmText: 'Accept this quote? It is frozen, its opportunity is closed as won and a contract is drafted.',
-  successMessage: 'Quote {{ record.name }} accepted.',
+  confirmText:
+    'Accept this quote? It is frozen, its opportunity is closed as won and an order is created; if the sale needs a contract, draft it from the order. Where an administrator has switched on automatic contract drafting, a contract is drafted as well.',
+  successMessage: 'Quote {{ record.name }} accepted. Its order has been created: find it under Orders on this quote.',
   refreshAfter: true,
 };
 

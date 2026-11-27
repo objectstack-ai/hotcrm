@@ -18,18 +18,20 @@ import { F, P } from '@objectstack/spec';
  * invoices and payments report against it. When a contract is amended, its rep
  * revises the plan — a step is a forecast, never a book entry.
  *
- * The three figures are one-hop summaries over this module's own rows (never a
- * summary of a summary): invoiced counts only `issued` invoices, received counts
- * every payment that points at the step — directly, or through its invoice,
- * because `payment_plan_step_stamp` (`payment.hook.ts`) copies the invoice's
- * step onto the payment.
+ * Received is a one-hop summary over the payments that point at the step, and
+ * Open is planned less received, stored. Invoices and payments run in
+ * parallel (the 2026-11-26 ruling, hotcrm#2806): an invoice hangs on no plan
+ * step, so the step no longer carries an Invoiced figure (it summed the
+ * invoices naming the step; the invoices keep that column, hidden, for a
+ * later ERP sync). A step whose order is confirmed with no plan is generated
+ * by `../flows/sales-order-confirmed-plan-step.flow.ts`.
  */
 export const BillingMilestone = ObjectSchema.create({
   name: 'crm_billing_milestone',
-  label: 'Billing Milestone',
-  pluralLabel: 'Billing Milestones',
+  label: 'Payment Plan',
+  pluralLabel: 'Payment Plans',
   icon: 'flag',
-  description: 'One step of an account\'s collection plan, planned from an order or a contract: what is due, when, and how much of it is invoiced and received',
+  description: 'One step of an account\'s collection plan, planned from an order or a contract: what is due, when, and how much of it is received',
 
   // Plan steps are account data (hotcrm#2557): whoever reads the account reads
   // its plan (ADR-0055 derivation, the same shape as `crm_contract` under
@@ -41,7 +43,7 @@ export const BillingMilestone = ObjectSchema.create({
   sharingModel: 'controlled_by_parent',
   sharing: { controlledByParent: { writeRequiresMasterRead: true } },
   nameField: 'name',
-  highlightFields: ['planned_amount', 'planned_date', 'received_amount', 'open_amount'],
+  highlightFields: ['planned_amount', 'planned_date', 'open_amount'],
 
   fieldGroups: [
     { key: 'basic',   label: 'Milestone',  icon: 'flag' },
@@ -66,7 +68,7 @@ export const BillingMilestone = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'cascade',
-      relatedListColumns: ['name', 'crm_sales_order', 'crm_contract', 'planned_date', 'planned_amount', 'invoiced_amount', 'received_amount', 'open_amount'],
+      relatedListColumns: ['name', 'crm_sales_order', 'crm_contract', 'planned_date', 'planned_amount', 'received_amount', 'open_amount'],
     }),
 
     // A source (hotcrm#2560): the step plans this order. Picking it fills the
@@ -87,7 +89,7 @@ export const BillingMilestone = ObjectSchema.create({
         { target: 'crm_account', source: 'crm_account', overwrite: true },
         { target: 'crm_contract', source: 'crm_contract' },
       ],
-      relatedListColumns: ['name', 'planned_date', 'planned_amount', 'invoiced_amount', 'received_amount', 'open_amount'],
+      relatedListColumns: ['name', 'planned_date', 'planned_amount', 'received_amount', 'open_amount'],
     }),
 
     // A source, the other of the two `billing_milestone_source` accepts.
@@ -108,7 +110,7 @@ export const BillingMilestone = ObjectSchema.create({
       storage: { notNull: false },
       deleteBehavior: 'cascade',
       lookupAutofill: [{ target: 'crm_account', source: 'crm_account', overwrite: true }],
-      relatedListColumns: ['name', 'planned_date', 'planned_amount', 'invoiced_amount', 'received_amount', 'open_amount'],
+      relatedListColumns: ['name', 'planned_date', 'planned_amount', 'received_amount', 'open_amount'],
     }),
 
     planned_amount: Field.currency({
@@ -132,20 +134,6 @@ export const BillingMilestone = ObjectSchema.create({
       description: 'For a step paid on acceptance: the day the customer signed it off.',
     }),
 
-    invoiced_amount: Field.summary({
-      label: 'Invoiced',
-      group: 'figures',
-      scale: 2,
-      readonly: true,
-      summaryOperations: {
-        object: 'crm_invoice',
-        field: 'amount',
-        function: 'sum',
-        relationshipField: 'crm_billing_milestone',
-        filter: { status: 'issued' },
-      },
-    }),
-
     received_amount: Field.summary({
       label: 'Received',
       group: 'figures',
@@ -159,14 +147,17 @@ export const BillingMilestone = ObjectSchema.create({
       },
     }),
 
-    // Planned minus received, for reading only: no view filters on it (a
-    // formula is not a stored column and cannot be filtered).
-    open_amount: Field.formula({
+    // Planned minus received, STORED (the 2026-11-26 ruling, hotcrm#2806):
+    // the Overdue Payment Plans view filters on it, and a formula is not a
+    // stored column the engine can filter. A stored computed field: the engine
+    // computes the expression on every write of the step, the summary
+    // recompute that moves Received included. A step received above its plan
+    // reads below 0, as the formula did, and the view's `> 0` leaves it out.
+    open_amount: Field.currency({
       label: 'Open',
       group: 'figures',
-      returnType: 'currency',
-      expression: F`coalesce(record.planned_amount, 0) - coalesce(record.received_amount, 0)`,
-      scale: 2,
+      readonly: true,
+      expression: F`(has(record.planned_amount) && record.planned_amount != null ? double(record.planned_amount) : 0.0) - (has(record.received_amount) && record.received_amount != null ? double(record.received_amount) : 0.0)`,
     }),
 
     description: Field.textarea({

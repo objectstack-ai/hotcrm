@@ -90,7 +90,7 @@ export const ConfirmSalesOrderAction: Action = {
   locations: ['record_header', 'list_item'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "draft" && current_user.can("crm_sales_order", "edit")`,
-  confirmText: 'Confirm this order? Its lines are then locked: to change them, the order has to go back to Draft.',
+  confirmText: 'Confirm this order? Its lines and its amount are then locked: to change them, the order has to go back to Draft.',
   successMessage: 'Order {{ record.name }} confirmed.',
   refreshAfter: true,
 };

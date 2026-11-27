@@ -21,13 +21,13 @@ export const jaJP: EmailTemplatePack = {
   },
   'crm.contract_expired': {
     label: '契約の満了',
-    subject: '契約が満了しました: {{contract_number}}',
-    bodyHtml: '<p>契約 {{contract_number}} は終了日に達し、満了として記録されました。</p>',
+    subject: '契約が満了しました: {{contract}}',
+    bodyHtml: '<p>契約 {{contract}} は終了日に達し、満了として記録されました。</p>',
   },
   'crm.contract_renewal': {
     label: '契約更新の時期',
-    subject: '契約の更新時期です: {{contract_number}}',
-    bodyHtml: '<p>契約 {{contract_number}} は {{end_date}} に終了します。更新の相談を始めてください。</p>',
+    subject: '契約の更新時期です: {{contract}}',
+    bodyHtml: '<p>契約 {{contract}} は {{end_date}} に終了します。更新の相談を始めてください。</p>',
   },
   'crm.deal_stalled': {
     label: '停滞中の商談',
@@ -88,7 +88,7 @@ export const jaJP: EmailTemplatePack = {
   // contract (#2371 row 6).
   'crm.contract_drafted': {
     label: '契約を起草しました',
-    subject: '契約を起草しました: {{contract_number}}',
-    bodyHtml: '<p>見積の承諾により契約 {{contract_number}} を起草しました。期間と契約種別は初期値です。有効化する前に確認してください。</p>',
+    subject: '契約を起草しました: {{contract}}',
+    bodyHtml: '<p>見積の承諾により契約 {{contract}} を起草しました。期間と契約種別は初期値です。有効化する前に確認してください。</p>',
   },
 };

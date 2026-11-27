@@ -78,13 +78,34 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
+  // The contract's form, an order contract's value and Change (#2804).
+  contract_form_and_change: {
+    refusals: {
+      FORBIDDEN: {
+        message: 'Un contrato de pedido se redacta desde su pedido con Redactar contrato. Elija Contrato Marco u Otro.',
+      },
+      RECORD_LOCKED: {
+        message: 'El valor de un contrato de pedido es el importe de su pedido: cambie el pedido, y un contrato en borrador lo sigue.',
+        reasons: {
+          form: { message: 'La forma de un contrato se elige mientras es un borrador, y un contrato de pedido sigue siéndolo.' },
+          contract_value: { message: 'El Valor del Contrato de un contrato activado solo cambia con Cambiar, con un motivo y la enmienda firmada.' },
+          end_date: { message: 'La Fecha de Fin de un contrato activado solo cambia con Cambiar, con un motivo y la enmienda firmada.' },
+          payment_terms: { message: 'Las Condiciones de Pago de un contrato activado solo cambian con Cambiar, con un motivo y la enmienda firmada.' },
+        },
+      },
+      VALIDATION_FAILED: {
+        message: 'Un cambio necesita un motivo y la enmienda recién firmada.',
+        reasons: {
+          not_activated: { message: 'Cambiar se aplica a un contrato activado. Un contrato en borrador se edita directamente.' },
+          order_value: { message: 'En un cambio no se escribe el valor de un contrato de pedido: elija Actualizar desde el Pedido para tomar el importe del pedido.' },
+        },
+      },
+    },
+  },
   contract_validation: {
     refusals: {
       VALIDATION_FAILED: {
         message: 'La duración del contrato ({{term}} meses) no coincide con el rango de fechas ({{calc}} meses del {{start}} al {{end}}).',
-      },
-      RECORD_LOCKED: {
-        message: 'La Fecha de Fin de un contrato activado no puede adelantarse ({{from}} → {{to}}). Use un proceso de rescisión o enmienda.',
       },
     },
   },
@@ -189,7 +210,7 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
-  // The order's line lock and line fill (REQ-0010, hotcrm#2555).
+  // The order's line lock, header amount lock (#2826) and line fill (REQ-0010, hotcrm#2555).
   sales_order_workflow: {
     refusals: {
       RECORD_LOCKED: {
@@ -201,7 +222,19 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
           cancelled: {
             message: 'El pedido {{order}} está Cancelado, así que ya no se pueden añadir, cambiar ni quitar sus líneas.',
           },
+          amount_confirmed: {
+            message: 'El pedido {{order}} está Confirmado, así que su importe ya no se puede cambiar. Devuélvalo antes a Borrador.',
+          },
+          amount_completed: {
+            message: 'El pedido {{order}} está Completado, así que su importe ya no se puede cambiar.',
+          },
+          amount_cancelled: {
+            message: 'El pedido {{order}} está Cancelado, así que su importe ya no se puede cambiar.',
+          },
         },
+      },
+      VALIDATION_FAILED: {
+        message: 'El pedido {{order}} tiene líneas, así que su Subtotal es la suma de sus líneas y no se puede escribir. Cambie las líneas en su lugar.',
       },
     },
   },

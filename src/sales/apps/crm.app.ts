@@ -23,13 +23,13 @@ export const HOTCRM_ICON =
 
 /**
  * The gate on the entries built on `crm_opportunity` (#2060 item 5): Home
- * (Executive Overview), Sales Home, Sales Performance, CRM Overview and the
- * four opportunity reports under Reports. A member whose permission sets do
- * not read opportunities got each one as a page of "You don't have access"
+ * (Executive Overview), Sales Performance, CRM Overview and the four
+ * opportunity reports under Reports. A member whose permission sets do not
+ * read opportunities got each one as a page of "You don't have access"
  * tiles, one 403 per opportunity query. Object entries are pruned by read
- * access already; dashboard, report and page entries are not. Home asks one
- * more term (`EXECUTIVE_AUDIENCE`); the other seven share
- * `OPPORTUNITY_AUDIENCE` below. (This note was the `READS_OPPORTUNITIES` note
+ * access already; dashboard and report entries are not. Home asks one more
+ * term (`EXECUTIVE_AUDIENCE`); the other six share `OPPORTUNITY_AUDIENCE`
+ * below. (This note was the `READS_OPPORTUNITIES` note
  * until #2268 retired that constant; `src/service/index.ts` cites it by that
  * name.)
  *
@@ -42,8 +42,8 @@ export const HOTCRM_ICON =
  *
  * Sales Activity (1 of 13 tiles) stays open: it works without opportunity
  * read. Since objectui#12426 (in the 18.0.0-next.2 console) the gate moves the
- * landing too: the console opens an app on the first entry the member is
- * SHOWN, not the first one served.
+ * landing too: with no `landing` entry for them, the console opens an app on
+ * the first entry the member is SHOWN, not the first one served.
  *
  * Two dashboards stay open to the marketing user, measured on 18.2.0 (#2338
  * item 1). Sales Activity carries no gate: every member reads their own events
@@ -75,8 +75,9 @@ export const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
  * Executive Overview's audience (#2060 item 5): everyone who reads
  * opportunities, except a sales rep and the two service personas.
  *
- * The app opens on the first entry a member is shown, and Home is first, so
- * this gate is what sends a rep to Sales Home (second) instead. A rep's grants
+ * Home is the app's first entry, so it is where everyone this gate shows it
+ * to lands. A rep is not shown it: a rep lands on My Deals, by the app's
+ * `landing` (`SALES_REP` below). A rep's grants
  * are a subset of a manager's on every object, so no `current_user.can(…)`
  * term can tell the two apart: the only candidates are grants a rep happens
  * to lack (`transfer`, `delete`), which say "cannot reassign deals", not "is a
@@ -100,19 +101,19 @@ export const READS_ACCOUNTS = P`current_user.can("crm_account", "read")`;
 const EXECUTIVE_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("crm_sales_rep" in current_user.positions) && !("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)`;
 
 /**
- * The audience of Sales Home (#2262) and of the six opportunity entries
- * (#2268: Sales Performance, CRM Overview and the four opportunity reports):
- * everyone who reads opportunities, except the two service personas —
+ * The audience of the six opportunity entries (#2262, #2268: Sales
+ * Performance, CRM Overview and the four opportunity reports): everyone who
+ * reads opportunities, except the two service personas —
  * `EXECUTIVE_AUDIENCE` above says why they are asked by position. Since #2231
- * the read term alone showed them all seven, each scoped to the deals they
- * own. A rep keeps them: Sales Home is a rep's landing. ⛔ Do not narrow
+ * the read term alone showed them all six, each scoped to the deals they
+ * own. A rep keeps them. ⛔ Do not narrow
  * `crm_user` instead (#2231). The two opportunity object entries ask the
  * position half only (`NOT_SERVICE_STAFF` below); the other object entries
  * (Leads, Accounts…) keep no position term and stay visible to them.
  *
  * Each gate spells the positions out: `P` interpolates a value as a literal,
  * never as an expression, so a sub-predicate cannot be shared by reference.
- * One constant is shared by the seven entries instead.
+ * One constant is shared by the six entries instead.
  */
 const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)`;
 
@@ -130,6 +131,14 @@ const OPPORTUNITY_AUDIENCE = P`current_user.can("crm_opportunity", "read") && !(
  * this gate adds.
  */
 const NOT_SERVICE_STAFF = P`!("crm_service_agent" in current_user.positions) && !("crm_service_manager" in current_user.positions)`;
+
+/**
+ * Who lands on My Deals (#2740, the app's `landing` below): the holder of the
+ * `crm_sales_rep` position, asked by position for the reason
+ * `EXECUTIVE_AUDIENCE` gives. Everyone else lands on the app's first shown
+ * entry, which is Home for a manager, an administrator and the marketing user.
+ */
+const SALES_REP = P`"crm_sales_rep" in current_user.positions`;
 
 /**
  * the Sales app — navigation.
@@ -164,13 +173,15 @@ const NOT_SERVICE_STAFF = P`!("crm_service_agent" in current_user.positions) && 
  * view no view file defines.
  *
  * What is NOT trimmed is the demonstration. This is the exemplar app, and
- * nav items come in seven kinds — plain `object`, object + `viewName` (a view
- * entry), `page`, `dashboard`, `report`, `component`, and `doc` (the *Help*
- * manuals, #2327). **Every kind keeps at
- * least one entry**, because showing an author what each kind looks like is
- * part of what this app is for. `test/app-navigation-shape.test.ts` pins that
- * floor, so a future slimming pass cannot delete the last exemplar of a kind
- * without going red.
+ * it shows six kinds of nav item — plain `object`, object + `viewName` (a view
+ * entry), `dashboard`, `report`, `component`, and `doc` (the *Help* manuals,
+ * #2327). **Each of these keeps at least one entry**, because showing an
+ * author what each kind looks like is part of what this app is for.
+ * `test/app-navigation-shape.test.ts` pins that floor, so a future slimming
+ * pass cannot delete the last exemplar of a kind without going red. The
+ * `page` kind left the roster with its last entry, the rep's custom home
+ * page (#2740): the maintainer's cleanup of HotCRM's custom pages supersedes
+ * the floor for it.
  *
  * Personalisation rides the platform's pin + recent mechanisms rather than
  * pre-materialising every possible entry for every user.
@@ -203,24 +214,38 @@ export const CrmApp = App.create({
     favicon: HOTCRM_ICON,
   },
 
+  // ── Each persona's landing (#2060 item 5, #2740) ──────────────────────────
+  //
+  // The console asks these entries in order and opens the first whose
+  // `visible` holds for the member and whose `item` the member is shown; when
+  // none matches, it opens the first entry the member is shown — after
+  // `visible`, `requiredPermissions` and the object-read prune, the gates the
+  // sidebar draws with (objectui#12426). The spec refuses an `item` that names
+  // no entry of this app's own navigation (`checkAppLandingItems`, since
+  // 18.3.0), so a renamed entry cannot leave a rep landing nowhere.
+  //
+  //   sales rep                                       → My Deals (this entry)
+  //   sales manager · administrator · marketing user → Home (Executive Overview, first)
+  //
+  // A rep used to land, by order, on a custom home page that came second
+  // after Home. The maintainer's cleanup of the custom pages took it out
+  // (#2740), and a rep now opens on the deals they own, the My Work entry
+  // that lists them.
+  landing: [
+    { item: 'nav_my_deals', visible: SALES_REP },
+  ],
+
   navigation: [
-    // ── The order below IS each persona's landing (#2060 item 5) ─────────────
+    // ── The order below is the landing of everyone `landing` does not name ──
     //
-    // The console opens an app on the first entry the member is shown — after
-    // `visible`, `requiredPermissions` and the object-read prune, the gates the
-    // sidebar draws with (objectui#12426, in the 18.0.0-next.2 console). There
-    // is no landing key to declare, so the first three slots are ordered and
-    // gated so that each persona's first shown entry is its home:
-    //
-    //   sales manager · administrator · marketing user → Home (Executive Overview)
-    //   sales rep                                       → Sales Home
-    //
-    // The service personas work in the Service app (`src/service/apps/`, #2417),
-    // which opens on Service Overview, and their sets hide this app from their
-    // launcher. Both pinned entries stay gated away from them by the position
-    // they hold (#2262: since #2231 they read their own opportunities, so the
-    // read question alone no longer parts them): one who opens this app by
-    // its address lands on Leads, the first entry shown to them.
+    // Home comes first and is gated (`EXECUTIVE_AUDIENCE`) to the personas
+    // who land on it. The service personas work in the Service app
+    // (`src/service/apps/`, #2417), which opens on Service Overview, and their
+    // sets hide this app from their launcher. Home stays gated away from them
+    // by the position they hold (#2262: since #2231 they read their own
+    // opportunities, so the read question alone no longer parts them): one who
+    // opens this app by its address lands on Leads, the first entry shown to
+    // them.
     //
     // A member who reads NONE of the objects this tree names (no HotCRM grant
     // yet: `crm_user` not accepted on a managed environment, #2231) is never
@@ -236,17 +261,6 @@ export const CrmApp = App.create({
       icon: 'home',
       visible: EXECUTIVE_AUDIENCE,
     },
-    // The rep's own page (`sales_home_page`): pipeline KPIs, my leads, open
-    // deals and open tasks, upcoming events — a rep's landing, because Home
-    // above is not shown to a rep.
-    {
-      id: 'nav_sales_home',
-      type: 'page',
-      pageName: 'sales_home_page',
-      label: 'Sales Home',
-      icon: 'layout-grid',
-      visible: OPPORTUNITY_AUDIENCE,
-    },
 
     {
       id: 'group_sales',
@@ -257,12 +271,6 @@ export const CrmApp = App.create({
       children: [
         { id: 'nav_lead',        type: 'object', objectName: 'crm_lead',        label: 'Leads',         icon: 'user-plus' },
         { id: 'nav_account',     type: 'object', objectName: 'crm_account',     label: 'Accounts',      icon: 'building' },
-        // No "Account Workbench" entry (#2286): the ADR-0047 interface page
-        // `account_workbench` showed the same rows and columns as Accounts, so
-        // a second row here read as a duplicate. The page still ships and is
-        // reached by URL — not by ⌘K, whose palette on 18.1.0 lists pages
-        // from navigation only. `test/account-workbench-exhibit.test.ts` pins
-        // that it is served and that no entry here opens it.
         { id: 'nav_contact',     type: 'object', objectName: 'crm_contact',     label: 'Contacts',      icon: 'user' },
         // No separate "Pipeline" entry: the kanban board is another tab on
         // this same list page — `pipeline_kanban` in
@@ -470,9 +478,10 @@ export const CrmApp = App.create({
       // The in-app manuals (#2327, ADR-0046 §6): one `type: 'doc'` entry per
       // book, each opening its book on the first page the member may read.
       //
-      // LAST and collapsed on purpose. The order above is every persona's
-      // landing (the note at the top of this array), and an entry added after
-      // all of it moves no landing; collapsed, it costs the sidebar one row.
+      // LAST and collapsed on purpose. The order above is the landing of
+      // everyone the app's `landing` does not name (the notes above this
+      // array), and an entry added after all of it moves no landing;
+      // collapsed, it costs the sidebar one row.
       //
       // The entries carry no `visible`: a `doc` entry inherits the book's
       // audience. The Admin Manual is gated on the administrator's set

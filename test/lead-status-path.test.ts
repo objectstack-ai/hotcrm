@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { ExpressionEngine } from '@objectstack/formula';
 import type { VerifyStack } from '@objectstack/verify';
-import stack, { type AnyRec, walk } from './helpers/composed-stack';
+import stack, { type AnyRec } from './helpers/composed-stack';
 import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
 import { QualifyLeadAction } from '../src/sales/actions/lead.actions';
 
@@ -184,29 +184,19 @@ describe('Qualified needs a Need Type and an Estimated Amount (#2541)', () => {
 // ───────────────────────────────────────────────────────────── #2542 ──
 
 describe('the status bars move a record by a click (#2542)', () => {
-  // Since #2382 the three record pages are the synthesized default page with
-  // only the `alerts` slot filled. The status path is the default strip's,
-  // which turns click-to-advance on for every object (objectstack#30075,
-  // ruled A) and draws it on the object's stage field. So the pin is that no
-  // page overrides the strip (no `highlights` slot, no authored `record:path`)
-  // and that the stage field is the one the path is drawn on. Since #2686 the
-  // opportunity authors no record page at all (its approval banners were
-  // dropped), which leaves the default strip in place by construction; the
-  // pin there is that no record page for the deal comes back.
+  // The status path is the default strip's, which turns click-to-advance on
+  // for every object (objectstack#30075, ruled A) and draws it on the object's
+  // stage field. None of the three objects authors a record page any more:
+  // the opportunity's went with #2686, the lead's and the case's with #2740
+  // (their banners were the last authored pieces), which leaves the default
+  // strip in place by construction. So the pin is that no record page for
+  // them comes back, and that the stage field is the one the path is drawn on.
   it.each([
-    ['lead_detail_page', 'crm_lead', 'status'],
-    [null, 'crm_opportunity', 'stage'],
-    ['case_detail_page', 'crm_case', 'status'],
-  ] as Array<[string | null, string, string]>)('%s: the default path on %s.%s allows a stage click', (pageName, object, field) => {
-    if (pageName === null) {
-      expect(pages.filter((p) => p.type === 'record' && p.object === object).map((p) => p.name), `${object} authors a record page`).toEqual([]);
-    } else {
-      const page = pages.find((p) => p.name === pageName);
-      expect(page, `${pageName} is not registered`).toBeTruthy();
-      expect(page!.kind).toBe('slotted');
-      expect(Object.keys(page!.slots ?? {}), `${pageName} overrides a slot beyond alerts`).toEqual(['alerts']);
-      expect([...walk(page!.slots)].filter((c: AnyRec) => c.type === 'record:path')).toEqual([]);
-    }
+    ['crm_lead', 'status'],
+    ['crm_opportunity', 'stage'],
+    ['crm_case', 'status'],
+  ] as Array<[string, string]>)('the default path on %s.%s allows a stage click', (object, field) => {
+    expect(pages.filter((p) => p.type === 'record' && p.object === object).map((p) => p.name), `${object} authors a record page`).toEqual([]);
     const def = objects.find((o) => o.name === object)!;
     expect(def.stageField ?? field).toBe(field);
     expect(def.fields?.[field]?.type, `${object}.${field} is not a select`).toBe('select');

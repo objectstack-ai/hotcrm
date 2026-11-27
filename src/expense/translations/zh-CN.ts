@@ -44,6 +44,8 @@ export const zhCN: TranslationData = {
             approved: { message: '报销单{{name}}已批准，不能再修改。由财务标记为已付款。' },
             paid: { message: '报销单{{name}}已付款，不能再修改。' },
             delete: { message: '只有草稿状态的报销单可以删除。报销单{{name}}已经提交过。' },
+            delete_approved: { message: '报销单{{name}}已批准，不能删除：已批准或已付款的报销单会保留在记录中。' },
+            delete_paid: { message: '报销单{{name}}已付款，不能删除：已批准或已付款的报销单会保留在记录中。' },
           },
         },
       },
@@ -142,7 +144,7 @@ export const zhCN: TranslationData = {
         my_expenses: {
           label: '我的费用',
           bulkActions: {
-            delete: { label: '删除', confirmLabel: '删除', confirmText: '确定要永久删除 {{count}} 笔费用吗？此操作无法撤销。' },
+            delete: { label: '删除', confirmLabel: '删除', confirmText: '确定要删除 {{count}} 笔费用吗？删除的记录会进入回收站，管理员可以在那里恢复。' },
           },
         },
       },

@@ -12,7 +12,7 @@ HotCRM ships as one product: the core **Sales** app and six modules. A company t
 | Service | **HotCRM Service** | The **Service** app: cases, SLAs, the knowledge base |
 | Products and quotes | **HotCRM Revenue** | Products, price books and quotes, inside the **Sales** app |
 | Marketing | **HotCRM Marketing** | The **Marketing** app: campaigns and their members |
-| Order to Cash | **HotCRM Order to Cash** | The **Order to Cash** app: billing milestones, invoices, payments |
+| Order to Cash | **HotCRM Order to Cash** | The **Order to Cash** app: payment plans, invoices, payments |
 | Expenses | **HotCRM Expenses** | The **Expenses** app: expenses, expense reports, travel requests |
 | Project Delivery | **HotCRM Project Delivery** | The **Project Delivery** app: projects, staffing, budgets, timesheets |
 
@@ -38,7 +38,7 @@ Measured on ObjectStack 18.6.0, one module at a time, with the demo data:
   | --- | --- |
   | Service | **Knowledge**, the rep's entry in **Sales** |
   | Products and quotes | **Quotes**, **Products**, **Price Books**, **Product Catalog** and **Revenue Manual** in **Sales** |
-  | Order to Cash | The **Collection Plan** group (**Billing Milestones**) and **Order to Cash Manual** in **Sales** |
+  | Order to Cash | The **Collection Plan** group (**Payment Plans**) and **Order to Cash Manual** in **Sales** |
   | Expenses | **My Expenses**, **Reports to Approve** and **My Travel Requests** in **Project Delivery** |
 
 - **Its buttons** leave, including the ones it places on core records: **Generate Quote** on an opportunity while products and quotes are off; **Add to Campaign** on leads and contacts while Marketing is off.
@@ -46,7 +46,7 @@ Measured on ObjectStack 18.6.0, one module at a time, with the demo data:
 
   | Off | Fields that leave |
   | --- | --- |
-  | Order to Cash | **Planned**, **Invoiced**, **Received** and **Receivable Balance** on a contract; **Invoiced**, **Received** and **Receivable Balance** on an account |
+  | Order to Cash | **Planned**, **Invoiced**, **Received**, **Unpaid**, **Uninvoiced** and **Payment Plan Differs** on an order; **Planned**, **Invoiced**, **Received**, **Unpaid** and **Uninvoiced** on a contract; **Invoiced**, **Received**, **Unpaid** and **Uninvoiced** on an account |
   | Project Delivery | **Project** on an expense, an expense report and a travel request |
 
   With Project Delivery off, an Expenses list that shows a **Project** column opens without it, and one line above the list says why: "Not shown, filtered, sorted or grouped by crm_project: the package that adds it is disabled. It comes back when the package is enabled." The line names the field by its API name; `crm_project` is the **Project** column.

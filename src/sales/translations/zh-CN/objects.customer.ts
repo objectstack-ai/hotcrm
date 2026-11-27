@@ -97,7 +97,7 @@ export const customer: Record<string, ObjectTranslationData> = {
           delete: {
             label: '删除',
             confirmLabel: '删除',
-            confirmText: '确定要永久删除 {{count}} 个客户吗？此操作无法撤销。',
+            confirmText: '确定要删除 {{count}} 个客户吗？删除的记录会进入回收站，管理员可以在那里恢复。',
           },
           transfer_owner: {
             label: '转移负责人',

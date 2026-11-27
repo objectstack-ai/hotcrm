@@ -112,7 +112,7 @@ describe('the renewal sweep recognises a pre-release renewal reminder', { timeou
     const [contract] = await verify.seed('crm_contract', [{
       status: 'activated', crm_account: acct.id, crm_contact: contact!.id, owner_id: rep.id,
       contract_type: 'subscription', contract_value: 90_000, auto_renewal: false, renewal_notice_days: 30,
-      contract_term_months: 12, start_date: day(20 - 365), end_date: day(20),
+      name: 'Fixture Contract', contract_term_months: 12, start_date: day(20 - 365), end_date: day(20),
       billing_frequency: 'monthly', payment_terms: 'net_30', signed_copy: await committedFile(verify, rep.id),
     }]);
     await preReleaseTask({

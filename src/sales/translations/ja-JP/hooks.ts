@@ -78,13 +78,34 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
+  // The contract's form, an order contract's value and Change (#2804).
+  contract_form_and_change: {
+    refusals: {
+      FORBIDDEN: {
+        message: '受注契約は受注の「契約を作成」からのみ作成されます。基本契約またはその他を選択してください。',
+      },
+      RECORD_LOCKED: {
+        message: '受注契約の金額は受注金額です。受注を変更してください。下書きの契約はそれに従います。',
+        reasons: {
+          form: { message: '契約形態は下書きの間に選択します。受注契約は受注契約のままです。' },
+          contract_value: { message: '有効化済みの契約の契約金額は、理由と署名済みの変更契約書を添えて「変更」でのみ変更できます。' },
+          end_date: { message: '有効化済みの契約の終了日は、理由と署名済みの変更契約書を添えて「変更」でのみ変更できます。' },
+          payment_terms: { message: '有効化済みの契約の支払条件は、理由と署名済みの変更契約書を添えて「変更」でのみ変更できます。' },
+        },
+      },
+      VALIDATION_FAILED: {
+        message: '変更には理由と、新たに署名された変更契約書が必要です。',
+        reasons: {
+          not_activated: { message: '「変更」は有効化済みの契約に使います。下書きの契約は直接編集してください。' },
+          order_value: { message: '受注契約の変更では金額を入力しません。「受注から更新」を選んで受注金額を取り込んでください。' },
+        },
+      },
+    },
+  },
   contract_validation: {
     refusals: {
       VALIDATION_FAILED: {
         message: '契約期間（{{term}}か月）が日付範囲（{{start}}から{{end}}まで{{calc}}か月）と一致しません。',
-      },
-      RECORD_LOCKED: {
-        message: '有効な契約の終了日は前倒しできません（{{from}} → {{to}}）。解約または変更の手続きを使用してください。',
       },
     },
   },
@@ -189,7 +210,7 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
-  // The order's line lock and line fill (REQ-0010, hotcrm#2555).
+  // The order's line lock, header amount lock (#2826) and line fill (REQ-0010, hotcrm#2555).
   sales_order_workflow: {
     refusals: {
       RECORD_LOCKED: {
@@ -201,7 +222,19 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
           cancelled: {
             message: '注文 {{order}} はキャンセルされているため、明細の追加・変更・削除はできません。',
           },
+          amount_confirmed: {
+            message: '注文 {{order}} は確定済みのため、金額は変更できません。先に下書きに戻してください。',
+          },
+          amount_completed: {
+            message: '注文 {{order}} は完了しているため、金額は変更できません。',
+          },
+          amount_cancelled: {
+            message: '注文 {{order}} はキャンセルされているため、金額は変更できません。',
+          },
         },
+      },
+      VALIDATION_FAILED: {
+        message: '注文 {{order}} には明細があるため、小計は明細の合計であり、手入力できません。代わりに明細を変更してください。',
       },
     },
   },

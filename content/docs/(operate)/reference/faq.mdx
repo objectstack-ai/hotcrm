@@ -57,7 +57,7 @@ Likely a rejected approval. Check the **Approval History** section on the opport
 
 ### Where do deleted records go?
 
-Nowhere — **a delete is permanent and immediate.** There is no recycle bin to restore from and no Setup entry for one: the platform ships no soft-delete runtime at all. `@objectstack/spec` retired the flag that used to promise one, and says why in as many words — *"every delete has always been a hard delete, and a default-true flag promising a recycle bin was a false affordance"*. Treat every delete as irreversible. The platform still writes an audit row for every delete, but since ObjectStack 17.6.0 the audit log shows each reader only rows about records that reader can still open — administrators included. A deleted record can no longer be opened, so its rows, the delete among them, no longer appear in **Setup → Audit Log**; only a server-side job running with system access reads them. Neither brings the record back.
+To the **recycle bin**. Since ObjectStack 18.4.0, deleting a record takes it out of every list, search and report at once, and keeps a copy of it in the recycle bin for **30 days** by default; after that it is removed for good. An administrator sees each object's deleted records under **Setup → Recycle Bin** and can restore one there, or empty an object's bin, which cannot be undone. Three roles can also restore, on the objects whose every record they may change: a **Sales Manager** on leads, accounts, contacts, opportunities, quotes, orders, tasks and events; a **Finance Controller** (and the **Project Director** and **PMO**, who hold the same rights) on rate cards and expense standards; an **AR Accountant** on invoices, payments and expense standards. Nobody else can restore a record, not even one they deleted themselves: ask one of these people within those 30 days. The platform also writes an audit row for every delete, but since ObjectStack 17.6.0 the audit log shows each reader only rows about records that reader can still open — administrators included. A deleted record can no longer be opened, so its rows, the delete among them, no longer appear in **Setup → Audit Log**; only a server-side job running with system access reads them.
 
 ### My import says "0 rows imported" — why?
 
@@ -202,7 +202,7 @@ The order has left **Draft**. A confirmed order's lines are locked: set its **St
 
 ### Why can't I find the Order to Cash app?
 
-It is finance's app, and a sales rep's launcher does not offer it. Reps find **Billing Milestones** under **Collection Plan** in the Sales app, and the **Billing Milestones**, **Invoices** and **Payments** tabs on every contract. If none of these is there, an administrator has switched the Order to Cash module off. See [Order to Cash](/docs/order-to-cash#where-to-find-it).
+It is finance's app, and a sales rep's launcher does not offer it. Reps find **Payment Plans** under **Collection Plan** in the Sales app, and the **Payment Plans**, **Invoices** and **Payments** tabs on every contract. If none of these is there, an administrator has switched the Order to Cash module off. See [Order to Cash](/docs/order-to-cash#where-to-find-it).
 
 ### Why can't I enter an invoice or a payment?
 
@@ -210,15 +210,15 @@ Only finance enters and imports them, from the **Accounts Receivable** position;
 
 ### Why can't I change a contract's collection plan?
 
-Reps, sales managers and administrators add, change and remove the billing milestones of any contract they can read; finance reads the plan and never changes it. If you cannot read the contract, you cannot write its plan. What has been invoiced, received and is still open on a step is never typed: it follows finance's records. See [The Collection Plan](/docs/order-to-cash/collection-plan).
+Reps, sales managers and administrators add, change and remove the payment plans of any contract they can read; finance reads the plan and never changes it. If you cannot read the contract, you cannot write its plan. What has been received and is still open on a step is never typed: it follows finance's payments. See [The Collection Plan](/docs/order-to-cash/collection-plan).
 
-### Why didn't an advance lower the Receivable Balance?
+### Why didn't an advance lower the account's Unpaid?
 
-The balance counts what is still open on issued invoices. A payment not yet set against an invoice, such as an advance, counts in **Received** only. Once finance names the invoice on that payment, the balance moves.
+The account's **Unpaid** adds up the Unpaid of each signed order, and of each signed contract with no order. A payment that names only the account, such as an advance, counts in **Received** only. Once finance names the order, the contract or the plan step it pays, that deal's Unpaid, and the account's, moves.
 
-### Why is an invoice missing from Overdue Invoices?
+### What does Overdue Payment Plans list?
 
-The list holds only **Issued** invoices whose due date has passed and that still have an open amount. An invoice leaves it the day its payments cover it, or when finance cancels it.
+The plan steps whose **Planned Date** has passed and that still have an **Open** amount. A step leaves the list the day its payments cover it. Invoices are not followed up one by one: invoices and payments run in parallel, and a payment names no invoice.
 
 ## 🗂️ Projects, time and expenses
 

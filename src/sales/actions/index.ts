@@ -30,7 +30,8 @@ export { CloneOpportunityAction, MassUpdateStageAction, GenerateQuoteAction } fr
 // its `patch` as the caller.
 export { CompleteTaskAction } from './task.actions';
 // Print Contract (#2317): an `api` action on the print service's door.
-export { PrintContractAction } from './contract.actions';
+// Change (#2804): declarative updates the contract hook applies.
+export { PrintContractAction, ChangeContractAction, ChangeOrderContractAction } from './contract.actions';
 // Draft Contract (#2558): the order's contract, drafted on demand by a flow.
 // Confirm / Complete / Cancel Order (#2716): declarative updates of the status.
 export {

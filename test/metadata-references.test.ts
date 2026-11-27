@@ -347,8 +347,9 @@ describe('page component references resolve', () => {
    *
    * Empty since @objectstack/spec 18.0.0-next.4, whose `ComponentPropsMap`
    * gained a `list-view` row (changeset `22444-list-view-component-props-row`):
-   * the embedded saved-view panels `home.page.ts` builds for each Sales Home
-   * tab, the one line this set held, are now parsed by lint.
+   * the embedded saved-view panels the rep's custom home page built for each
+   * of its tabs, the one line this set held, were then parsed by lint (#2740
+   * has since deleted that page).
    *
    * The staleness half matters as much as the list: when the spec grows a row
    * for one of these, the exemption must go so lint's parse covers the type.
@@ -414,8 +415,23 @@ describe('page component references resolve', () => {
         .map((a) => a.objectName as string),
     );
     const recordPages = pages.filter((p) => p.type === 'record' && loggingObjects.has(p.object));
-    // Not vacuous: the lead, case and deal pages are all such pages.
-    expect(recordPages.length, 'no authored record page of a logging object was found').toBeGreaterThan(0);
+    // Not vacuous on the action half: the walk still finds the objects that
+    // log calls. No authored record page is left on any of them since #2740
+    // (the lead's and the case's went, after the deal's and the account's), so
+    // each draws the default page's timeline, which shows completed rows
+    // (`buildDefaultTimeline`: `showCompleted: true`, 18.6.0); the loop below
+    // holds any page that comes back.
+    expect(loggingObjects.size, 'no object registers log_call / log_meeting').toBeGreaterThan(0);
+    // Non-vacuity of the page half: the walk still reaches the record pages
+    // the app authors (the quote's and the contract's shells and print
+    // pages), and none of them is on a logging object. A record page that
+    // comes back on one (a lead, case or deal page) turns this red and is
+    // then judged by the loop below.
+    expect(
+      pages.filter((p) => p.type === 'record').map((p) => p.name).sort(),
+      'the authored record pages changed — re-aim this pin',
+    ).toEqual(['contract_detail_page', 'contract_print_page', 'quote_detail_page', 'quote_print_page']);
+    expect(recordPages.map((p) => p.name), 'an authored record page is back on a logging object').toEqual([]);
 
     const showsCompleted = (c: AnyRec): boolean =>
       c.type === 'record:activity' ? c.properties?.showCompleted === true : c.properties?.feed?.showCompleted === true;
@@ -426,8 +442,7 @@ describe('page component references resolve', () => {
       );
       // A slotted page that leaves the `discussion` slot alone draws the
       // default page's timeline, which shows completed rows
-      // (`buildDefaultTimeline`: `showCompleted: true`, 18.6.0). Since #2382
-      // that is the lead's, the deal's and the case's timeline.
+      // (`buildDefaultTimeline`: `showCompleted: true`, 18.6.0).
       const defaultTimeline = p.kind === 'slotted' && !('discussion' in (p.slots ?? {}));
       if (feeds.length === 0 && !defaultTimeline) bad.push(`${p.name}: no activity feed block — a logged call has nowhere to appear`);
       for (const c of feeds.filter((f) => !showsCompleted(f))) {
@@ -494,8 +509,8 @@ describe('page component references resolve', () => {
   /**
    * A tab whose name promises content must render content (#771).
    *
-   * Sales Home's three tabs — My Leads / My Opportunities / My Tasks — each
-   * held one `{ type: 'page:section', properties: {} }`. That is a legal page
+   * The rep's custom home page had three tabs — My Leads / My Opportunities /
+   * My Tasks — each holding one `{ type: 'page:section', properties: {} }`. That is a legal page
    * schema and it validates, builds and renders: as `<section></section>`,
    * literally nothing, measured in the browser. Three tab names over three
    * blank panels, and no diagnostic anywhere, because there is no dangling
@@ -509,6 +524,11 @@ describe('page component references resolve', () => {
    * #771 scoped this to TAB children, deliberately, and #734 is the card that
    * widens it: the sidebar rule below now covers every region, so the two
    * together answer for the whole page.
+   *
+   * No page the app ships has a tab strip since #2740 deleted that home page,
+   * so the walk below finds no tab. It is kept for a page that brings one
+   * back, and the page roster is pinned instead of a tab count: a new page
+   * turns it red and is then judged by the loop.
    */
   it('no page tab renders an empty container', () => {
     const bad: string[] = [];
@@ -532,16 +552,21 @@ describe('page component references resolve', () => {
         }
       }
     }
-    // Without this the rule dies silently the day the walk stops finding tabs.
-    expect(tabsSeen, 'no page tabs were inspected — the walk found nothing').toBeGreaterThan(0);
+    // The walk reaches every page the app ships, and none has tabs today
+    // (#2740): a page added to this roster is judged by the loop above.
+    expect(
+      pages.map((p) => p.name).sort(),
+      'the shipped pages changed — re-aim this pin',
+    ).toEqual(['contract_detail_page', 'contract_print_page', 'quote_detail_page', 'quote_print_page']);
+    expect(tabsSeen, 'a page with tabs is back: the rule above now reads it').toBe(0);
     expect(bad, `tabs that render blank:\n  ${bad.join('\n  ')}`).toEqual([]);
   });
 
   /**
    * The same rule, everywhere else on the page (#734).
    *
-   * The tab rule above covers panels behind a tab strip. Sales Home shipped
-   * the identical defect in its SIDEBARS, where nothing is hidden behind a
+   * The tab rule above covers panels behind a tab strip. The same home page
+   * (gone since #2740) shipped the identical defect in its SIDEBARS, where nothing is hidden behind a
    * click: `my_recent_items` and `upcoming_events` were `page:card`s with a
    * title and no body, so the landing page of every `sales_rep` /
    * `sales_manager` carried bordered boxes reading "Recent Items" and
@@ -587,7 +612,7 @@ describe('page component references resolve', () => {
    * later refactor of `hasContent` cannot quietly turn it into a pass-through.
    */
   it('the empty-tab rule still rejects the shape #771 found', () => {
-    // What Sales Home shipped: rejected.
+    // What the rep's custom home page shipped: rejected.
     expect(hasContent({ type: 'page:section', properties: {} })).toBe(false);
     expect(hasContent({ type: 'page:card', properties: { title: 'Recent Items' } })).toBe(false);
     // The #734 shape: a card whose only copy is under a key `page:card` does
@@ -1063,7 +1088,7 @@ describe('app AI bindings resolve to a platform agent', () => {
 });
 
 /**
- * Sales Home carries no AI card (#2338 item 5).
+ * No page carries an AI card (#2338 item 5).
  *
  * `ai_briefing` told every user to open "the assistant panel from the right
  * edge of the page". The panel is the platform's, and an install without its
@@ -1075,13 +1100,14 @@ describe('app AI bindings resolve to a platform agent', () => {
  * This replaces the #1002 guard, which read that card's copy for a retired
  * copilot persona. With the card gone it would read nothing, and a copy rule
  * over nothing passes forever. The wider scan #1003 asked for is unchanged.
+ *
+ * The card sat on the rep's custom home page, which #2740 deleted, so the
+ * rule now reads every page the app ships.
  */
-describe('Sales Home offers no AI card (#2338 item 5)', () => {
-  const homePage = pages.find((p) => p.name === 'sales_home_page');
-  const components = [...walk(homePage?.regions), ...walk(homePage?.slots)] as AnyRec[];
+describe('no page offers an AI card (#2338 item 5)', () => {
+  const components = pages.flatMap((p) => [...walk(p.regions), ...walk(p.slots)]) as AnyRec[];
 
-  it('the page this rule reads is still registered and has components', () => {
-    expect(homePage, 'sales_home_page is no longer registered in the stack').toBeDefined();
+  it('the pages this rule reads have components', () => {
     expect(components.length).toBeGreaterThan(0);
   });
 

@@ -89,14 +89,22 @@ does not do revenue recognition either). This record is that revisit.
 
 1. **Per contract**: the collection plan (what is due, when), and against it what has been invoiced
    and received, and what is still open.
-2. **Per account**: the open receivable.
-3. **Per rep**: the invoices past their due date, and this month's planned collections.
+2. **Per account**: ~~the open receivable~~ the unpaid amount (the 2026-11-26 ruling; see the
+   note at the end).
+3. **Per rep**: ~~the invoices past their due date~~ the overdue plan steps (the 2026-11-26
+   ruling), and this month's planned collections.
 
 **What the module never does** — keep the books; allocate receipts across invoices; request, approve,
 issue or correct invoices; reconcile with the bank or the customer; general ledger, vouchers, tax
 filing; inventory, costing, production, purchasing and payables; revenue recognition; commission
-calculation; notify the customer. Each belongs to the ERP, the accounting package, the tax
+calculation; notify the customer; match a payment to an invoice. Each belongs to the ERP, the accounting package, the tax
 authority's or an e-invoicing provider's system, or finance.
+
+**Invoices and payments run in parallel** (the 2026-11-26 ruling): each hangs on its order or
+contract, an invoice hangs on no payment and no plan step, and neither is matched to the other.
+The order and the contract sum them separately as *Invoiced* and *Received*. This is the
+requirement; the code follows with
+[hotcrm#2806](https://github.com/objectstack-ai/hotcrm/issues/2806).
 
 **The revised ruling.** The 2026-08-02 ruling stands for the core packages — `sales`, `service`,
 `revenue`, `marketing` model no orders, invoices or payments, and the core gains no field for them. A
@@ -153,8 +161,11 @@ The open decisions are the design document's.
 - First version: on `pnpm dev`, a software contract carries an advance / go-live / acceptance /
   retention collection plan kept by its rep; finance enters an issued invoice for one step and a
   payment against it, and imports a second invoice from a spreadsheet; the contract shows planned /
-  invoiced / received / open and the account its open receivable; an invoice past its due date
-  appears in its rep's overdue view; a rep can read invoices and payments but cannot create or edit
+  invoiced / received / open and ~~the account its open receivable~~ the account its unpaid amount
+  (the 2026-11-26 ruling); ~~an invoice past its due date
+  appears in its rep's overdue view~~ a plan step past its planned date with an amount still open
+  appears in its rep's overdue plan steps (the 2026-11-26 ruling; the shipped first version
+  measured overdue on invoices); a rep can read invoices and payments but cannot create or edit
   them; the same invoice imported twice with the same `erp_ref` is one row. Recorded with a browser
   pass; `pnpm verify` green; one changeset per PR.
 - This record is closed as **Shipped** when the first version is on `main`; later versions are new
@@ -176,3 +187,28 @@ invoices, payments) move under the account with
 [hotcrm#2557](https://github.com/objectstack-ai/hotcrm/issues/2557), the card option adopted on
 2026-11-17 00:12Z (「立阶段0和1,含改动一」, recorded as adopted rather than as typed), with the
 contract, and later the order, as optional sources.
+
+## Note (2026-11-26) — invoices and payments run in parallel; Unpaid replaces the open receivable
+
+The maintainer ruled on 2026-11-26 in the test thread 「测试标准版 HotCRM」, adopting every decision
+in the discussion notes on how contracts, orders, invoices and payments relate with
+「所有需要拍板的都做」 (08:17Z; recorded as adopted rather than as typed). For this record:
+
+- **Invoices and payments are parallel and unlinked.** An invoice hangs on its order or contract,
+  on no payment and on no plan step; the order and the contract sum *Invoiced* and *Received*
+  separately. "One transfer pays several invoices"
+  ([hotcrm#2801](https://github.com/objectstack-ai/hotcrm/issues/2801), closed as superseded) no
+  longer arises.
+- **Unpaid and Uninvoiced replace the Receivable Balance** on the account and the contract (and the
+  order): *Unpaid* is the amount less what was received, *Uninvoiced* the amount less what was
+  invoiced, and the account sums each order's or contract's own figure. This replaces the
+  2026-11-15 ruling B, "Receivable Balance sums invoices' open amounts" (the design's
+  [*Recorded 2026-11-26*](../architecture/order-to-cash-module-plan.md#recorded-2026-11-26--invoices-and-payments-run-in-parallel)).
+- **Overdue is measured on the payment plan**, not on invoices: the rep's view lists the plan steps
+  past their planned date with an amount still open.
+
+"A window, never a book" stands, and so do "allocate receipts across invoices" and "reconcile with
+the bank" in *What the module never does*: the ruling takes the module further from both. This is
+the requirement as decided; the shipped first version still links a payment to an invoice and sums
+the Receivable Balance, until [hotcrm#2806](https://github.com/objectstack-ai/hotcrm/issues/2806)
+lands. The tracking card is [hotcrm#2803](https://github.com/objectstack-ai/hotcrm/issues/2803).

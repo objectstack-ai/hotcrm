@@ -286,7 +286,7 @@ const contractParties = async (accountOver: Rec = {}): Promise<{ account: Rec; c
 const managerContract = async (doc: Rec, accountOver: Rec = {}): Promise<Rec> => {
   const { account, contact } = await contractParties(accountOver);
   return verify.hooks.run('crm_contract', 'insert', {
-    crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
+    name: 'Fixture Contract', crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
     billing_frequency: 'monthly', payment_terms: 'net_30', status: 'draft', ...doc,
   }, as(manager));
 };
@@ -299,7 +299,7 @@ const contractOf = async (doc: Rec, accountOver: Rec = {}): Promise<Rec> => {
   // Signed Date fill does not date it before the stamp cases below.
   const signed_copy = await committedFile(verify, manager.id);
   const [row] = await verify.seed('crm_contract', [{
-    crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
+    name: 'Fixture Contract', crm_account: account.id, crm_contact: contact.id, contract_type: 'subscription', contract_value: 12_000,
     billing_frequency: 'monthly', payment_terms: 'net_30', owner_id: manager.id, ...doc,
     ...(doc.status === 'activated' ? { signed_copy } : {}),
   }]);
@@ -323,18 +323,22 @@ describe('contract_validation', () => {
     await expect(managerContract({ start_date: '2026-01-01', end_date: '2026-12-15', contract_term_months: 12 })).resolves.toBeTruthy();
   });
 
-  it('refuses to move End Date earlier after activation, naming the field by its label', async () => {
-    // Shrunk within the term's one-month tolerance, so the shrink rule is the
-    // one that answers.
+  // An activated contract's End Date moves only through Change (#2804): the
+  // earlier shrink-only rule is gone, and a direct edit in either direction is
+  // refused by contract_form_and_change, naming the field.
+  it('refuses moving End Date earlier after activation, naming the field by its label', async () => {
     const contract = await contractOf({ status: 'activated', start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 });
-    await expect(verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2026-12-15' }, as(manager)))
-      .rejects.toThrow(/End Date cannot move earlier/);
+    const err = await verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2026-12-15' }, as(manager)).catch((e) => e);
+    expect([err?.code, err?.status ?? err?.statusCode]).toEqual(['RECORD_LOCKED', 409]);
+    expect(String(err?.message)).toMatch(/End Date changes only through Change/);
+    expect((await stored('crm_contract', contract.id)).end_date).toBe('2027-01-01');
   });
 
-  it('allows extending end_date after activation', async () => {
+  it('refuses extending end_date directly after activation too', async () => {
     const contract = await contractOf({ status: 'activated', start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12 });
-    await verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2028-01-01', contract_term_months: 24 }, as(manager));
-    expect((await stored('crm_contract', contract.id)).end_date).toBe('2028-01-01');
+    const err = await verify.hooks.run('crm_contract', 'update', { id: contract.id, end_date: '2028-01-01', contract_term_months: 24 }, as(manager)).catch((e) => e);
+    expect([err?.code, err?.status ?? err?.statusCode]).toEqual(['RECORD_LOCKED', 409]);
+    expect((await stored('crm_contract', contract.id)).end_date).toBe('2027-01-01');
   });
 
   it('allows shrinking end_date while still a draft', async () => {
@@ -408,9 +412,14 @@ describe('contract_on_activation', () => {
     const contract = await contractOf({ status: 'activated', ...TERM }, { type: 'prospect' });
     const engine = await engineWritesDuring(() =>
       verify.hooks.run('crm_contract', 'update', { id: contract.id, status: 'activated', description: 'Re-saved.' }, as(manager)));
-    // Only the manager's own write reached the contract, and nothing reached the account.
+    // Only the manager's own write reached the contract, and the account was
+    // not promoted. Since hotcrm#2806 the account rolls up its contracts' Unpaid
+    // and Uninvoiced, so a contract write recomputes those roll-ups on the
+    // account: that write carries no `type`, and it is the only one.
     expect(engine.of('crm_contract', 'update')).toHaveLength(1);
-    expect(engine.of('crm_account', 'update')).toHaveLength(0);
+    const accountKeys = engine.of('crm_account', 'update').flatMap((w) => Object.keys((w.args[1] ?? {}) as Rec));
+    expect(accountKeys).not.toContain('type');
+    expect((await stored('crm_account', String(contract.crm_account))).type).toBe('prospect');
   });
 });
 

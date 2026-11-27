@@ -23,7 +23,7 @@ export const PaymentViews = defineView({
       { field: 'crm_account', width: 200 },
       { field: 'crm_sales_order', width: 200 },
       { field: 'crm_contract', width: 130 },
-      { field: 'crm_invoice', width: 150 },
+      { field: 'crm_billing_milestone', width: 180 },
       { field: 'payment_date', width: 120, sortable: true },
       { field: 'amount', width: 140, align: 'right', summary: 'sum' },
       { field: 'method', width: 130 },

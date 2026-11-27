@@ -17,7 +17,9 @@ sit under a contract, and most orders have none.
 
 Find orders under **Orders** in the Sales app, and on the account's page in the
 **Orders** list. An order placed under a framework contract also appears on
-that contract's page.
+that contract's page, and counts against the contract's value: an order, or a
+higher total on one, that takes the orders under a framework contract over its
+value is saved with a warning (see [Contracts](./crm_sales_contracts.md)).
 
 An order's **Contract** is always one of the order's own account. The form
 offers only that account's contracts and clears **Contract** when the account
@@ -57,11 +59,18 @@ across restarts and upgrades.
 
 A subscription or a project usually needs a contract; a product sale usually
 does not. **Draft Contract** on the order drafts it: a **Draft** contract typed
-*Subscription*, on a 12-month term starting today, at the order's total, with
-the order's account, contact, opportunity, owner and payment terms. Complete
+*Subscription*, on a 12-month term starting today, at the order's total, named
+as the order is, with the order's account, contact, opportunity, owner and
+payment terms. Complete
 its term, dates and type before you activate it. The order then names the
 contract under **Contract**, and you get a **Contract drafted** notice with a
 link to it.
+
+The drafted contract is an **order contract** naming this order as its
+**Source Order**. Its value is the order's total and is never typed: while the
+contract is a draft, a change to the order's amount changes the contract's
+value too. Once the contract is activated it keeps the signed value; see
+[Contracts](./crm_sales_contracts.md).
 
 **Draft Contract** is offered only while the order names no contract: an order
 placed under a framework contract names that one. A **Cancelled** order is not
@@ -75,7 +84,9 @@ The order's **Subtotal** is the sum of its lines, recalculated every time a
 line is added, changed or removed. The **Discount Amount** and the **Total
 Price** are calculated from the subtotal, the order's **Discount %**, the
 **Tax** and the **Shipping & Handling**, so they always agree with each other.
-An order with no lines keeps the subtotal you type.
+On an order with lines the subtotal cannot be typed: a save that changes it to
+anything other than the sum of the lines is refused, and you change the lines
+instead. An order with no lines keeps the subtotal you type.
 
 ## Order status
 
@@ -101,13 +112,19 @@ stateDiagram-v2
   confirmed --> cancelled
 ```
 
-**The lines of a confirmed order cannot change.** Once an order leaves
-**Draft**, adding, changing or removing a line is refused, and the **New**
-button leaves its **Order Lines** list. To change a confirmed order's lines,
-set its **Status** back to **Draft**, change them, and click **Confirm Order**
-again. The lines of a
-completed or cancelled order stay as they are. The order's other fields, such
-as the delivery fields below, can still be edited.
+**The lines and the amount of a confirmed order cannot change.** Once an
+order leaves **Draft**, adding, changing or removing a line is refused, and the
+**New** button leaves its **Order Lines** list. A change to its **Subtotal**,
+**Discount %**, **Tax** or **Shipping & Handling** is refused too, so its
+**Total Price** stays what was confirmed. To change a confirmed order's lines or
+amount, set its **Status** back to **Draft** and save, change them, and click
+**Confirm Order** again; the contract and the payment plan then follow the new
+total as they do for any change while the order is a draft. A Draft order does
+not count towards a framework contract's Order Amount until it is confirmed
+again. The lines and the amount of a completed or cancelled order stay as they
+are: a difference goes on a new order. The order's other fields, such as the
+delivery fields below, can still be edited. Imports and the system's own
+updates are not held by this rule.
 
 ## Delivery
 
