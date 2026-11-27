@@ -238,6 +238,12 @@ customer-demanded customization only. The ladder: (1) `fieldGroups` on the objec
 norm, the layout is *derived*; (2) the group-reference form `{ group: '<key>' }` (objectstack#13897) when partial arrangement is genuinely
 needed; (3) per-field enumeration only in the extreme case, with a comment naming the customer need and why a group reference cannot express it — rule 11 applying itself.
 
+**Record pages and forms are consistent — the default first (2026-11-19 ruling).** The ladder above, applied to a whole page or form:
+
+1. A new object uses the platform's default record page and form.
+2. An authored page or form exists only for a business need the default cannot express, and the file states that need.
+3. An existing authored piece kept because of a platform gap names the upstream card. It is deleted when the pin carries the fix. (#2665)
+
 ## ⚠️ Constraint Checklist
 
 - **Object Naming**: `crm_` prefix on every business object, written out (Tech Stack rule 2).
@@ -303,9 +309,11 @@ re-described (ADR-0051 §1). English first, `<name>.zh.md` beside it. A page fil
 - revenue: `src/revenue/docs/` — `crm_revenue_manual` (`crm_revenue_*`), `src/revenue/books/`;
 - marketing: `src/marketing/docs/` — `crm_marketing_manual` (`crm_marketing_*`), `src/marketing/books/`.
 
-A machine fact is embedded as a ```` ```metadata ```` block, ⛔ never hand-copied (rule 5); while the pinned platform refuses those
-blocks in this multi-package artifact, a lifecycle is a ```` ```mermaid ```` diagram held to its machine by
-`test/docs-lifecycle-diagrams.test.ts`. ⛔ A page in the app's books never links to a page of a module's own book (Revenue, Marketing):
+A machine fact is embedded as a ```` ```metadata ```` block, ⛔ never hand-copied (rule 5). Measured on 18.6.0 (#2706): a
+`type: flow` block and a module package's `type: state_machine` block both pass `pnpm validate` and `pnpm build`;
+`docs/metadata-embed-ref` resolves the name per package; a state-machine embed renders localized; a flow embed renders in the
+authored language until objectstack#35979 ships. So a ```` ```mermaid ```` diagram held to its machine by
+`test/docs-lifecycle-diagrams.test.ts` stays only for a flow diagram, until objectstack#35979 ships. ⛔ A page in the app's books never links to a page of a module's own book (Revenue, Marketing):
 that book leaves with its module; the module's pages may link to the app's. (#2328)
 
 ## ⬆️ Platform Upgrades (ObjectStack version bumps)
@@ -365,7 +373,8 @@ missing line, or a change that fits neither row (a field made required, a pickli
 report deleted, a hook changed, seed data changed), is the maintainer class until the reviewer says otherwise. A PR that only writes
 down a ruling he already gave carries a `Ruling-ref:` line (his words, source and time); the reviewer checks the diff against it line
 by line, and anything beyond the quoted words is split into another PR and reviewed the ordinary way. Review effort for the
-maintainer class and for governed paths is `xhigh`; `max` only when he names it.
+maintainer class and for governed paths follows the fleet's one home for effort, objectstack
+`.claude/skills/pm-dispatch/references/execution-duties.md` § 定档 — ⛔ not restated here.
 
 **CI here is free** (a public repository): no minutes budget. Every job in `.github/workflows/` declares `timeout-minutes`, sized from
 measured run times, and a new job arrives with one.

@@ -70,7 +70,7 @@ the waiting cards are swept.
 | Stage | Write | Where | When |
 |:--|:--|:--|:--|
 | Requirement | the customer's words, the A/B/C/D disposition and why, the revisit trigger for D | `docs/requirements/NNNN-*.md` | every new Feature |
-| Design | objects and relations, flows and approvals, permissions, translations, datasets for asking, demo data, doc pages, the effect on installed customers' data, and that the community edition still runs | `docs/architecture/<module>-plan.md` | spans two packages or adds an object; otherwise the card body. Frozen at ship — the feature list is the truth after |
+| Design | objects and relations, flows and approvals, permissions, translations, datasets for asking, demo data, doc pages, the effect on installed customers' data, and that the community edition still runs; record pages and forms follow `AGENTS.md`, *Record pages and forms are consistent* | `docs/architecture/<module>-plan.md` | spans two packages or adds an object; otherwise the card body. Frozen at ship — the feature list is the truth after |
 | Feature | one row: id, one sentence, source file, area, core or not | `docs/feature-inventory.md` | every new feature point |
 | Card | which metadata changes, an acceptance sentence ("a user can …") citing the feature id, `Blocked-by:` | the GitHub issue | every card |
 | Build | comments say why, not what; all four UI languages; one changeset written for customers | `src/<package>/`, `.changeset/` | every PR |
