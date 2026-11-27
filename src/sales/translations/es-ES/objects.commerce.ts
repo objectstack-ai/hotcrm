@@ -77,10 +77,29 @@ export const commerce: Record<string, ObjectTranslationData> = {
       description: { label: 'Descripción' },
       automation_key: { label: 'Clave de Automatización', help: 'La automatización que redactó este contrato. La escribe esa automatización; no la edite.' },
       billing_address: { label: 'Dirección de Facturación' },
+      // The contract's form, an order contract's amount and Change (#2804).
+      contract_form: {
+        label: 'Forma del Contrato',
+        help: 'Contrato de Pedido: redactado desde un pedido, su valor es el importe del pedido. Contrato Marco: su valor se escribe a mano y puede cubrir varios pedidos. Otro: sin importe, como un NDA.',
+        options: { order: 'Contrato de Pedido', framework: 'Contrato Marco', other: 'Otro' },
+      },
+      crm_sales_order: { label: 'Pedido de Origen', help: 'El pedido desde el que se redactó este contrato.' },
+      order_amount: { label: 'Importe del Pedido', help: 'El total de los pedidos de este contrato, impuestos incluidos.' },
+      order_amount_differs: { label: 'Difiere del Importe del Pedido', help: 'El valor del contrato ya no es igual al importe del pedido. Cambiar, con Actualizar desde el Pedido, toma el importe del pedido.' },
+      remaining_quota: { label: 'Cupo Restante', help: 'El valor del contrato menos el Importe del Pedido. Es negativo cuando los pedidos superan el valor del contrato.' },
+      change_reason: { label: 'Motivo del Cambio', help: 'Por qué se cambió el contrato la última vez. Lo escribe Cambiar.' },
+      change_amendment: { label: 'Enmienda Firmada', help: 'La enmienda que el cliente firmó para el último cambio. La escribe Cambiar.' },
+      change_new_value: { label: 'Nuevo Valor del Contrato', help: 'Déjelo vacío para conservar el valor del contrato.' },
+      change_new_end_date: { label: 'Nueva Fecha de Fin', help: 'Déjela vacía para conservar la fecha de fin.' },
+      change_new_payment_terms: { label: 'Nuevas Condiciones de Pago', help: 'Déjelas vacías para conservar las condiciones de pago.' },
+      change_from_order: { label: 'Actualizar desde el Pedido', help: 'Toma el importe actual del pedido como valor del contrato.' },
     },
     // Print Contract (#2317).
     _actions: {
       print_contract: { label: 'Imprimir Contrato', successMessage: 'PDF del contrato adjuntado al contrato.' },
+      // Change (#2804): one action per kind of contract.
+      change_contract: { label: 'Cambiar', description: 'Cambia el valor, la fecha de fin o las condiciones de pago de este contrato activado. Deje un campo vacío para conservarlo.', successMessage: 'Contrato {{ record.name }} cambiado.' },
+      change_order_contract: { label: 'Cambiar', description: 'Cambia la fecha de fin o las condiciones de pago de este contrato de pedido activado, o toma el importe actual del pedido. Deje un campo vacío para conservarlo.', successMessage: 'Contrato {{ record.name }} cambiado.' },
     },
     _views: {
       all_contracts: { label: 'Todos los Contratos' },
@@ -93,8 +112,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
       parties: { label: 'Partes' },
       terms: { label: 'Términos y Fechas' },
       value: { label: 'Valor del Contrato' },
+      orders: { label: 'Totales de Pedidos' },
       status: { label: 'Estado y Aprobación' },
       renewal: { label: 'Renovación' },
+      change: { label: 'Último Cambio' },
       // Nombres de sección del formulario en contract.view.ts (#1100)
       contract_terms: { label: 'Términos' },
       signing_and_documents: { label: 'Firma y Documentos' },
@@ -128,6 +149,8 @@ export const commerce: Record<string, ObjectTranslationData> = {
       sales_order_status_progression: { message: 'Este cambio de estado no está permitido. Un pedido avanza Borrador → Confirmado → Completado; Confirmado puede volver a Borrador, y Borrador o Confirmado pueden pasar a Cancelado. Completado y Cancelado son definitivos.' },
       contract_same_account: { message: 'El contrato debe pertenecer a la Cuenta de este pedido.' },
       contract_same_account_check: { message: 'Este contrato pertenece a otra cuenta. Un pedido solo puede llevar un contrato de su propia Cuenta: elija uno de los contratos de esta cuenta, o deje Contrato vacío.' },
+      framework_quota_exceeded: { message: 'Este pedido hace que el contrato marco supere el Valor del Contrato.' },
+      framework_quota_exceeded_check: { message: 'Con este pedido, los pedidos del contrato marco suman más que su Valor del Contrato. El pedido se ha guardado; el Cupo Restante del contrato muestra cuánto lo supera.' },
     },
     label: 'Pedido',
     pluralLabel: 'Pedidos',

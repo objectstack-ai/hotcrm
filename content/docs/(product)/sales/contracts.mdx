@@ -19,6 +19,45 @@ A **contract** is the legal agreement between your company and a customer — wh
 
 Activation is the key transition — it triggers the account to be promoted to *Customer*.
 
+## The contract form: order, framework or other
+
+Every contract has a **Contract Form**, which decides where its value comes from. It sits beside the contract type and does not replace it: the type says *what* is agreed (a subscription, a service, an NDA), the form says what the contract is *for*.
+
+| Form | How it is made | Its value |
+| --- | --- | --- |
+| **Order Contract** | **Draft Contract** on an order — never by hand | The order's total, tax included. Read-only on the form |
+| **Framework Contract** | By hand — the default for a new contract | Typed by hand. It may carry many orders |
+| **Other** | By hand | No amount needed, such as an NDA. The value is 0 unless you type one |
+
+You choose **Framework Contract** or **Other** while the contract is a draft; once it leaves Draft, the form is fixed. An order contract stays an order contract, and its **Source Order** names the order it was drafted from.
+
+**An order contract follows its order while it is a draft.** Its **Order Amount** and its **Contract Value** are the order's total: change the order (or the quote it came from), and the draft contract's value changes with it. Nobody types the value of an order contract.
+
+**Once the contract is activated, its value stays as signed.** If the order's amount changes afterwards, the contract shows **Differs from the Order Amount**, and its value does not move until someone runs **Change** with **Update from Order** (below).
+
+Contracts that existed before contract forms took one by this rule, the first time each was saved after the upgrade: a contract drafted by **Draft Contract** and named by its order is an order contract; a contract with no value is **Other**; every other contract is a framework contract. An order contract whose value already differed from its order was left as it was, showing **Differs from the Order Amount**, for the business to check.
+
+## Framework contract quota
+
+A framework contract's value is the ceiling for the orders placed under it. Its **Order Totals** section shows how much of it the orders use:
+
+- **Order Amount** — the total of every order linked to the contract, tax included, whatever the order's status.
+- **Remaining Quota** — the contract value less the Order Amount. Below zero, the orders have gone over the contract value.
+
+**Going over warns, and the save goes through.** Linking an order to a framework contract, or raising a linked order's total, so that the orders under it total more than the contract value saves the order and shows a warning. An edit that does not add to the order's total — or lowers it — gives no warning, so an order already over is not flagged again on every save. An order line that takes its order over saves without the warning; the contract's Remaining Quota shows it.
+
+The quota is the contract's current value. When **Change** gives an activated framework contract a new value, Remaining Quota counts from the new one. Order and Other contracts have no quota: an order contract's value *is* its order's amount, and an Other contract has none.
+
+## Changing an activated contract
+
+On an **Activated** contract, the **Contract Value**, the **End Date** and the **Payment Terms** are read-only on the form. They change only through **Change**, on the contract's header:
+
+- Give a **Change Reason** and upload the **Signed Amendment** the customer signed. Change without both does not save.
+- A framework (or other) contract may be given a **New Contract Value**. An order contract is offered no value at all: tick **Update from Order** to take the order's current amount.
+- A **New End Date** and **New Payment Terms** are optional. A field left empty keeps its value. When the new end date takes the term out of step with **Contract Term (Months)**, the term is counted again from the dates.
+
+The contract stays **Activated**, so renewal reminders and the expiration sweep go on as before. Change creates no change order, does not change the order, and does not re-plan the payments. The contract's **History** shows each value before and after, who changed it and when, and the **Last Change** section shows the latest reason and amendment.
+
 ## The 6 contract types
 
 | Type | Use for |
@@ -32,18 +71,20 @@ Activation is the key transition — it triggers the account to be promoted to *
 
 ## What a contract record stores
 
-A contract record declares its fields in **six groups**. The contract form shows a curated subset of them across its tabs, so read this as the full inventory of what a contract carries rather than a screen-by-screen map:
+A contract record declares its fields in **eight groups**. The contract form shows a curated subset of them across its tabs, so read this as the full inventory of what a contract carries rather than a screen-by-screen map:
 
 | Group | What's in it |
 | --- | --- |
-| **Contract Information** | Contract Name, Contract Number *(auto-numbered `CTR-0001`)*, Contract Type, Contract Document, Description |
+| **Contract Information** | Contract Name, Contract Form, Source Order, Contract Number *(auto-numbered `CTR-0001`)*, Contract Type, Contract Document, Description |
 | **Parties** | Contract Owner, Account, Primary Contact, Related Opportunity — the contact and opportunity pickers are scoped to the account you pick first |
 | **Terms & Dates** | Contract Term (Months), Start Date, End Date, Special Terms |
 | **Contract Value** | Contract Value, Billing Frequency, Payment Terms, Billing Address |
+| **Order Totals** | Order Amount *(order and framework contracts)*, Differs from the Order Amount *(order contracts)*, Remaining Quota *(framework contracts)* — what the orders add up to; not printed on the contract |
 | **Status & Approval** | Status, Signed Date, Signed By, Signed Copy |
 | **Renewal** | Auto Renewal, Renewal Notice (Days) |
+| **Last Change** | Change Reason, Signed Amendment — written by **Change** |
 
-Contract Name, Account, Primary Contact, Contract Term, Start Date, End Date, Contract Value and Status are all **required** — a contract cannot be saved without them.
+Contract Name, Contract Form, Account, Primary Contact, Contract Term, Start Date, End Date, Contract Value and Status are all **required** — a contract cannot be saved without them. Contract Value starts at 0, so an Other contract needs no amount typed.
 
 ## The contract's name and number
 
@@ -149,15 +190,16 @@ Terminating a contract is a status change to *Terminated*, and two things about 
 
 **And it is final.** An edit that moves a terminated contract to any other status is refused, and the contract stays *Terminated* — see *The status progression is a gate* below; a replacement is a new contract. The rest of the contract stays editable: a change to its notes, its terms or its primary contact saves as long as the status is left as it is.
 
-**Status** is one of the two fields Contract keeps history on, so the audit log does record who moved it and when.
+**Status** is one of the fields Contract keeps history on, so the audit log does record who moved it and when. The others are the owner, the start and end dates, the value, the payment terms and the change reason.
 
 ## Built-in rules
 
-Five rules reject a save outright:
+Six rules reject a save outright:
 
 - **End date must be after start date** — a validation rule on the object.
 - **The term must match the dates** — the contract hook counts the months between **Start Date** and **End Date** and rejects anything more than **one month** away from **Contract Term (Months)**: *"Contract term (12 months) does not match date range (6 months from … to …)."* Term and dates move together, or the save bounces.
-- **An activated contract's end date cannot be pulled in** — once the contract is *Activated*, an edit that moves **End Date** earlier is refused (*"Cannot shrink end_date … after activation"*). Pushing it out is fine; shortening a live agreement is a termination or an amendment, not an edit.
+- **An activated contract changes only through Change** — once the contract is *Activated*, an edit to **Contract Value**, **End Date** or **Payment Terms** is refused, naming the field (*"An activated contract's End Date changes only through Change, with a reason and the signed amendment."*). See *Changing an activated contract* above.
+- **An order contract's value is its order's** — typing **Contract Value** on an order contract is refused, whatever its status.
 - **Activated requires a signed copy** — a save that moves a contract to *Activated*, or creates one already *Activated*, without a **Signed Copy** is refused on that field; see *Printing a contract and the signed copy* above.
 - **The status progression is a gate.** The route is *Draft* → *In Approval* → *Activated* → *Expired* or *Terminated*, with *In Approval* able to go back to *Draft*, *Terminated* reachable from all three live statuses, and *Expired* and *Terminated* both final: a renewal is a new contract, never a revived one. A status change off that route — *Draft* straight to *Activated*, *Activated* back to *Draft*, or reviving an *Expired* or *Terminated* contract — is refused on **Status** with *"This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; In Approval can go back to Draft, and Draft, In Approval or Activated can be Terminated. Expired and Terminated are final: a renewal is a new contract."*, and the contract keeps its status, whether the change comes from the Edit form or the REST API (`400 VALIDATION_FAILED`). Only a change of the status is judged: any other edit saves on any contract, an expired or terminated one included. A contract *created* directly as *Activated* or *Expired* is not checked by this rule, which is the same import path that skips the activation writes described above; one created *Activated* still needs its **Signed Copy**.
 

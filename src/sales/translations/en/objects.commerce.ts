@@ -69,10 +69,29 @@ export const commerce: Record<string, ObjectTranslationData> = {
       description: { label: 'Description' },
       automation_key: { label: 'Automation Key', help: 'Which automation drafted this contract. Written by that automation; never edit.' },
       billing_address: { label: 'Billing Address' },
+      // The contract's form, an order contract's amount and Change (#2804).
+      contract_form: {
+        label: 'Contract Form',
+        help: 'Order Contract: drafted from an order, its value is the order amount. Framework Contract: its value is typed, and it may carry many orders. Other: no amount, such as an NDA.',
+        options: { order: 'Order Contract', framework: 'Framework Contract', other: 'Other' },
+      },
+      crm_sales_order: { label: 'Source Order', help: 'The order this contract was drafted from.' },
+      order_amount: { label: 'Order Amount', help: 'The total of the orders under this contract, tax included.' },
+      order_amount_differs: { label: 'Differs from the Order Amount', help: 'The contract value no longer equals the order\'s amount. Change, with Update from Order, takes the order\'s amount.' },
+      remaining_quota: { label: 'Remaining Quota', help: 'The contract value less the Order Amount. Below zero when the orders have gone over the contract value.' },
+      change_reason: { label: 'Change Reason', help: 'Why the contract was last changed. Written by Change.' },
+      change_amendment: { label: 'Signed Amendment', help: 'The amendment the customer signed for the last change. Written by Change.' },
+      change_new_value: { label: 'New Contract Value', help: 'Leave empty to keep the contract value.' },
+      change_new_end_date: { label: 'New End Date', help: 'Leave empty to keep the end date.' },
+      change_new_payment_terms: { label: 'New Payment Terms', help: 'Leave empty to keep the payment terms.' },
+      change_from_order: { label: 'Update from Order', help: 'Take the order\'s current amount as the contract value.' },
     },
     // Print Contract (#2317).
     _actions: {
       print_contract: { label: 'Print Contract', successMessage: 'Contract PDF attached to the contract.' },
+      // Change (#2804): one action per kind of contract.
+      change_contract: { label: 'Change', description: 'Changes the contract value, the end date or the payment terms of this activated contract. Leave a field empty to keep it.', successMessage: 'Contract {{ record.name }} changed.' },
+      change_order_contract: { label: 'Change', description: 'Changes the end date or the payment terms of this activated order contract, or takes the order\'s current amount. Leave a field empty to keep it.', successMessage: 'Contract {{ record.name }} changed.' },
     },
     _views: {
       all_contracts: { label: 'All Contracts' },
@@ -85,8 +104,10 @@ export const commerce: Record<string, ObjectTranslationData> = {
       parties: { label: 'Parties' },
       terms: { label: 'Terms & Dates' },
       value: { label: 'Contract Value' },
+      orders: { label: 'Order Totals' },
       status: { label: 'Status & Approval' },
       renewal: { label: 'Renewal' },
+      change: { label: 'Last Change' },
       // Form section names on contract.view.ts (#1100). `contract_terms`,
       // not `terms` — `terms` is already the fieldGroup key for "Terms & Dates".
       contract_terms: { label: 'Terms' },

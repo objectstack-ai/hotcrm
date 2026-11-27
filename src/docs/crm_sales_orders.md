@@ -17,7 +17,9 @@ sit under a contract, and most orders have none.
 
 Find orders under **Orders** in the Sales app, and on the account's page in the
 **Orders** list. An order placed under a framework contract also appears on
-that contract's page.
+that contract's page, and counts against the contract's value: an order, or a
+higher total on one, that takes the orders under a framework contract over its
+value is saved with a warning (see [Contracts](./crm_sales_contracts.md)).
 
 An order's **Contract** is always one of the order's own account. The form
 offers only that account's contracts and clears **Contract** when the account
@@ -63,6 +65,12 @@ payment terms. Complete
 its term, dates and type before you activate it. The order then names the
 contract under **Contract**, and you get a **Contract drafted** notice with a
 link to it.
+
+The drafted contract is an **order contract** naming this order as its
+**Source Order**. Its value is the order's total and is never typed: while the
+contract is a draft, a change to the order's amount changes the contract's
+value too. Once the contract is activated it keeps the signed value; see
+[Contracts](./crm_sales_contracts.md).
 
 **Draft Contract** is offered only while the order names no contract: an order
 placed under a framework contract names that one. A **Cancelled** order is not
