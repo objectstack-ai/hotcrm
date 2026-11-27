@@ -59,7 +59,7 @@ To keep the old behaviour, switch **Accepted Quote Drafts a Contract** on. Every
 | Status | What it means |
 | --- | --- |
 | ⚪ **Draft** | Being put together *(default for new orders)* |
-| 🔵 **Confirmed** | Agreed with the customer; its lines are locked |
+| 🔵 **Confirmed** | Agreed with the customer; its lines and amount are locked |
 | 🟢 **Completed** | Delivered and done |
 | ⚫ **Cancelled** | Will not go ahead |
 
@@ -97,11 +97,11 @@ Discount Amount  = Subtotal × order discount %
 Total Price      = Subtotal − Discount Amount + Tax + Shipping & Handling
 ```
 
-The subtotal is recalculated on every line you add, change or remove, and the discount amount and total price follow every change to the subtotal, the discount, the tax or the shipping. An order with no lines keeps the subtotal you type.
+The subtotal is recalculated on every line you add, change or remove, and the discount amount and total price follow every change to the subtotal, the discount, the tax or the shipping. On an order with lines the subtotal cannot be typed: a save that changes it to anything other than the sum of the lines is refused, and you change the lines instead. An order with no lines keeps the subtotal you type.
 
-## A confirmed order's lines are locked
+## A confirmed order's lines and amount are locked
 
-Once an order leaves **Draft**, its lines cannot be added, changed or removed, and the **Order Lines** list stops offering **New**. To change a confirmed order's lines, set its **Status** back to **Draft** on the form, change them, and click **Confirm Order** again. A completed or cancelled order's lines stay as they are. The order's other fields, such as the delivery fields, stay editable.
+Once an order leaves **Draft**, its lines cannot be added, changed or removed, and the **Order Lines** list stops offering **New**. Its **Subtotal**, **Discount %**, **Tax** and **Shipping & Handling** cannot be changed either, so its **Total Price** stays what was confirmed: the order contract, the payment plan and a framework contract's quota all read it. To change a confirmed order's lines or amount, set its **Status** back to **Draft** on the form and save, change them, and click **Confirm Order** again; the contract and the payment plan then follow the new total as they do for any change while the order is a draft. While it is back in Draft the order does not count towards a framework contract's Order Amount. A completed or cancelled order's lines and amount stay as they are: a difference goes on a new order. The order's other fields, such as the delivery fields, stay editable. Imports and the system's own updates are not held by this rule.
 
 ## Delivery
 
