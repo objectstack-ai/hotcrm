@@ -40,6 +40,8 @@ A contract with orders owes what was ordered under it, not its value: a framewor
 
 Neither goes below zero: a payment above what is owed is accepted, typed or imported, because the cash was received, and Unpaid stops at zero. The account's **Unpaid** and **Uninvoiced** add up the figures of each deal it has signed, once: every **Confirmed** or **Completed** order, and every **Activated** or **Expired** contract with no order. [Totals on the order, the contract and the account](/docs/order-to-cash#totals) lists what counts.
 
+**Confirming again never takes an order below its figures.** An order sent back to **Draft** to change its amount, whose **Total Price** is now below its **Received** or its **Invoiced**, cannot be confirmed: the refusal says which figure is above the total. Deal with the overpayment or the invoices first (cancel or correct an invoice, or raise the total), then confirm. With 10,000 received, a total of 8,000 is refused and a total of 12,000 confirms with **Unpaid** at 2,000. A first confirm, and any edit of an order already confirmed, are not checked.
+
 **What is overdue** is a plan step past its **Planned Date** with an amount still open: **Follow-up → Overdue Payment Plans** in the **Order to Cash** app. See [The Collection Plan](./collection-plan).
 
 ## Payments [#payments]
