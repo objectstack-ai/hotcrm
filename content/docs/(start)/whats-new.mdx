@@ -5,20 +5,22 @@ description: Recent releases, new capabilities, and what's coming next.
 
 # What's New
 
-## v6.6.0 — Latest release
+## v6.7.0 — Latest release
 
-**HotCRM 6.6.0** runs on **ObjectStack 18.6.0** across every `@objectstack/*` package, and its
+**HotCRM 6.7.0** runs on **ObjectStack 18.6.0** across every `@objectstack/*` package, and its
 manifest declares the matching `^18.6.0` protocol range, so a
 runtime on a different protocol major — a 17.x host included — refuses the load up front with a
-structured diagnostic instead of failing deep in a schema parse. 6.5.0, as it was published on
+structured diagnostic instead of failing deep in a schema parse. 6.6.0 runs on ObjectStack 18.6.0
+too, so a host that runs 6.6.0 needs no upgrade for 6.7.0. 6.5.0, as it was published on
 2026-11-18, already required ObjectStack 18.6.0, though its notes said 18.5.0; 6.4.0 shipped on
 ObjectStack 18.5.0; 6.3.0, 6.2.1 and 6.2.0 on
 ObjectStack 18.4.0; 6.1.2, 6.1.1 and 6.1.0 on
 ObjectStack 18.3.0 and 6.0.0 on ObjectStack
 18.0.0.
 
-**An environment on 6.5.0 reads "What 6.6.0 changes" alone.** An environment on 6.4.0 also reads
-"What 6.5.0 changes". 6.4.0 was the first version published since 6.2.0; 6.2.1 and 6.3.0 were cut
+**An environment on 6.6.0 reads "What 6.7.0 changes" alone.** An environment on 6.5.0 also reads
+"What 6.6.0 changes", and one on 6.4.0 reads "What 6.5.0 changes" as well. 6.4.0 was the first
+version published since 6.2.0; 6.2.1 and 6.3.0 were cut
 in the repository but never published, so an environment still on 6.2.0 also reads "What 6.4.0
 changes", "What 6.3.0 changes" and "What 6.2.1 changes" below, and their checks.
 
@@ -26,6 +28,55 @@ changes", "What 6.3.0 changes" and "What 6.2.1 changes" below, and their checks.
 > release and the v1.0 launch included, is [`CHANGELOG.md`](https://github.com/objectstack-ai/hotcrm/blob/main/CHANGELOG.md) in the
 > repository, compiled from the `.changeset/` entry every pull request adds. That file is the
 > record; this page summarises the recent releases for a reader deciding whether to upgrade.
+
+### What 6.7.0 changes
+
+- **Invoices and payments run side by side.** A payment names its payment plan step, its order or
+  its contract, or the account alone, and no longer an invoice; an invoice names the order or the
+  contract it bills. **Unpaid** (amount minus Received) and **Uninvoiced** (amount minus Invoiced)
+  replace the Receivable Balance on the order, the contract and the account, and **Overdue Payment
+  Plans** replaces Overdue Invoices. Billing Milestone is now called **Payment Plan**, and
+  confirming an order creates its plan step when it has none.
+- **Contracts have a name and a form.** **Contract Name** is required and is the contract's title.
+  **Contract Form** is Order Contract, Framework Contract or Other: an order contract's value
+  follows its order while the contract is a draft, and a framework contract shows **Order Amount**
+  and **Remaining Quota**. On an activated contract, Contract Value, End Date and Payment Terms
+  change only through **Change**, which asks for a reason and the signed amendment.
+- **Orders.** **Confirm Order**, **Complete Order** and **Cancel Order** are buttons on the order
+  and in the Orders list. A confirmed order's amount is locked with its lines: to change it, set
+  Status back to Draft, make the change and confirm again. An order that takes a framework contract
+  over the contract's value saves with a warning.
+- **Sales.** Leads, cases and projects open on the platform's default record page, and the
+  duplicate and SLA banners are gone: Duplicate Management on the lead and SLA Violated on the case
+  show what they said. Sales reps open the Sales app on **My Deals**; the Sales Home and Account
+  Workbench pages are removed. **Generate Quote** copies the opportunity's product lines onto the
+  quote.
+- **Smaller fixes** in expenses, project delivery, marketing and the manuals. `CHANGELOG.md` lists
+  every change.
+
+**Check these before and after upgrading to 6.7.0:**
+
+- **ObjectStack 18.6.0, as 6.6.0.** A host that runs 6.6.0 needs no upgrade.
+- **Two platform commands, once, after the upgrade.** Run `os migrate summary-nulls --apply`, then
+  `os migrate stored-expressions --object crm_sales_order --object crm_contract --object crm_billing_milestone --object crm_account --apply`.
+  The first fills Order Amount on the contracts saved before the upgrade. The second fills Unpaid,
+  Uninvoiced and each plan step's Open, which otherwise stay empty on such a record until it is
+  next saved. Both are platform commands that act on the database.
+- **Then three scripts, as an administrator.** `scripts/backfill-contract-form.ts` gives each
+  contract its form, `scripts/backfill-contract-names.ts` names the contracts that have no name,
+  and `scripts/compare-unpaid-receivable.ts` prints each account's old Receivable Balance beside
+  its new Unpaid and Uninvoiced. The two backfills only report until you add `--apply`, and the
+  upgrade runs none of the three. `CHANGELOG.md` gives their arguments.
+- **A permission set of your own that names `receivable_balance`** names `unpaid_amount` and
+  `uninvoiced_amount` instead.
+- **Imports.** The payment file has no Invoice column, and the invoice file no Billing Milestone
+  column. A receipt split across two orders is two payment rows, each with its own ERP Reference.
+- **An invoice or payment saved before the upgrade that names only the contract** of a deal that
+  has an order is counted by the contract, not by the order: name the order on it.
+- **Integrations.** A write to Subtotal, Discount %, Tax or Shipping & Handling of a Confirmed,
+  Completed or Cancelled order is refused, and so is one to Contract Value, End Date or Payment
+  Terms of an activated contract.
+- **Bookmarks** of Sales Home and Account Workbench no longer open.
 
 ### What 6.6.0 changes
 

@@ -104,7 +104,7 @@ export const createHotCrmAppStack = (
     manifest: {
       id: 'app.objectstack.hotcrm',
       namespace: 'crm',
-      version: '6.6.0',
+      version: '6.7.0',
       type: 'app',
       name: 'HotCRM',
       description: 'Leads, orders, projects, cash and expenses in one open-source business system. Six apps: Sales, Service, Marketing, Order to Cash, Project Delivery and Expenses. Order to Cash tracks orders, invoices and payments, and is not an accounting ledger. Change it with AI when your business changes. Let your own AI agents work in it with each user\'s permissions.',

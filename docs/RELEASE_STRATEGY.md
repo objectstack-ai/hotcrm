@@ -14,7 +14,7 @@ D4; one artifact, one version — D6):
 | ObjectStack manifest id | `app.objectstack.hotcrm` |
 | Packages in the artifact | `app.objectstack.hotcrm` (`type: app`), `app.objectstack.hotcrm.service`, `app.objectstack.hotcrm.revenue`, `app.objectstack.hotcrm.marketing`, `app.objectstack.hotcrm.o2c`, `app.objectstack.hotcrm.expense`, `app.objectstack.hotcrm.psa` (`type: module`) |
 | Namespace | `crm` |
-| Current version | `6.6.0` |
+| Current version | `6.7.0` |
 | Publish artifact | output from `pnpm build` |
 
 The active repository is not released as separate scoped npm packages.

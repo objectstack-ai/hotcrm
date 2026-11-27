@@ -121,7 +121,7 @@ export const createHotCrmPsaStack = (
     namespace: 'crm',
     // The ARTIFACT's version (ADR-0130 D6) — `test/docs-declared-versions.test.ts`
     // holds it, and the range below, to the app package's.
-    version: '6.6.0',
+    version: '6.7.0',
     type: 'module',
     description: 'HotCRM project delivery module — projects, staffing, time, expenses and delivery margin.',
     engines: { protocol: '^18.6.0' },
@@ -130,7 +130,7 @@ export const createHotCrmPsaStack = (
     // add-on → add-on edge `module-split-plan.md` item 18 allows; item 10
     // stands for every other add-on. No dependency on Order to Cash: how the
     // two connect is decided in phase 3 (ruling 4).
-    dependencies: { 'app.objectstack.hotcrm': '^6.6.0', 'app.objectstack.hotcrm.expense': '^6.6.0' },
+    dependencies: { 'app.objectstack.hotcrm': '^6.7.0', 'app.objectstack.hotcrm.expense': '^6.7.0' },
   },
 
   // What THIS package's metadata needs (see `requires` in
