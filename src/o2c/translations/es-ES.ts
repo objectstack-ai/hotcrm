@@ -284,6 +284,11 @@ export const esES: TranslationData = {
     // The order's figures, added by this package through `objectExtensions`
     // (hotcrm#2560).
     crm_sales_order: {
+      // The rules this package adds to the order (hotcrm#2827).
+      _validations: {
+        reconfirm_total_below_received: { message: 'El Precio Total de este pedido es inferior a lo ya cobrado (Cobrado). Resuelva primero el cobro en exceso o las facturas y luego confirme.' },
+        reconfirm_total_below_invoiced: { message: 'El Precio Total de este pedido es inferior a lo ya facturado (Facturado). Anule o corrija primero las facturas y luego confirme.' },
+      },
       fields: {
         planned_amount: {
           label: 'Previsto',

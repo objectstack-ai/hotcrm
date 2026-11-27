@@ -45,9 +45,65 @@ import { leftOver, outstanding, planned, receivables } from './contract-account.
  * for these fields, as `project_manager` and `finance_controller` name none for
  * the contract's.
  */
+/**
+ * Confirming again may not take the order's total below what it has already
+ * invoiced or received (hotcrm#2827). Since hotcrm#2826 an order's amount
+ * changes only while it is Draft, so a lowered total reaches Confirmed only
+ * through this move; let through, Unpaid or Uninvoiced would sit at 0 over a
+ * real overpayment and the payment plan would no longer add up.
+ *
+ * A transition gate (AGENTS.md rule 7): only the status move Draft →
+ * Confirmed is judged, so an order already Confirmed, or one confirmed for the
+ * first time (nothing invoiced or received yet), is untouched, and an order
+ * that was confirmed below its figures before this rule keeps its status.
+ * Judged on the status field until the Confirm button (hotcrm#2716) ships.
+ *
+ * The figures are this module's own summary fields, stored on the order, so
+ * the rule reads them in its `{...previous, ...data}` record and lives here:
+ * the sales package does not import this module, and a hook of this module
+ * on the order is refused by ADR-0130 R4. A tenant without the module has
+ * neither the figures nor the rule.
+ *
+ * Two rules, so the refusal says which figure is above the total. Each is
+ * `cross_field` on Total Price, the field to change. The messages are fixed
+ * text: 18.6.0 interpolates no record values into a rule's message, so they
+ * name the fields the order's page shows beside each other, not the amounts.
+ */
+const confirmedBelow = (figure: 'invoiced_amount' | 'received_amount') => ({
+  // Built from parts, so spelled as the expression object `P` compiles to
+  // (`P` would quote an interpolated string as a CEL string literal).
+  dialect: 'cel' as const,
+  source: `previous != null && has(previous.status) && previous.status == "draft"
+    && has(record.status) && record.status == "confirmed"
+    && has(record.${figure}) && record.${figure} != null
+    && double(record.${figure}) > (has(record.total_price) && record.total_price != null ? double(record.total_price) : 0.0)`,
+});
+
 export const SalesOrderExtensions = [
   {
     extend: 'crm_sales_order',
+    validations: [
+      {
+        name: 'reconfirm_total_below_received',
+        type: 'cross_field',
+        severity: 'error',
+        events: ['update'],
+        fields: ['total_price', 'received_amount'],
+        message:
+          "This order's Total Price is below what was already received (Received). Deal with the overpayment or the invoices first, then confirm.",
+        condition: confirmedBelow('received_amount'),
+      },
+      {
+        name: 'reconfirm_total_below_invoiced',
+        type: 'cross_field',
+        severity: 'error',
+        events: ['update'],
+        fields: ['total_price', 'invoiced_amount'],
+        message:
+          "This order's Total Price is below what was already invoiced (Invoiced). Cancel or correct the invoices first, then confirm.",
+        condition: confirmedBelow('invoiced_amount'),
+      },
+    ],
     fields: (() => {
       return {
         ...planned('crm_sales_order', 'pricing'),
