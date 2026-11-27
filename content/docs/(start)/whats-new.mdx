@@ -44,8 +44,9 @@ changes", "What 6.3.0 changes" and "What 6.2.1 changes" below, and their checks.
   change only through **Change**, which asks for a reason and the signed amendment.
 - **Orders.** **Confirm Order**, **Complete Order** and **Cancel Order** are buttons on the order
   and in the Orders list. A confirmed order's amount is locked with its lines: to change it, set
-  Status back to Draft, make the change and confirm again. An order that takes a framework contract
-  over the contract's value saves with a warning.
+  Status back to Draft, make the change and confirm again. Confirming again is refused when the new
+  Total Price is below what the order has already received or invoiced. An order that takes a
+  framework contract over the contract's value saves with a warning.
 - **Sales.** Leads, cases and projects open on the platform's default record page, and the
   duplicate and SLA banners are gone: Duplicate Management on the lead and SLA Violated on the case
   show what they said. Sales reps open the Sales app on **My Deals**; the Sales Home and Account

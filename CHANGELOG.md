@@ -14,7 +14,7 @@
 6. **Your own permission sets:** one that names `receivable_balance` names `unpaid_amount` and `uninvoiced_amount` instead (#2806).
 7. **Imports:** the payment file has no Invoice column and the invoice file no Billing Milestone column. A receipt split across two orders is two payment rows, each with its own ERP Reference (#2806).
 8. **An invoice or payment saved before the upgrade that names only the contract** of a deal that has an order is counted by the contract, not by the order, so the account's Unpaid and Uninvoiced do not see it: name the order on it (#2806).
-9. **Integrations:** a write to Subtotal, Discount %, Tax or Shipping & Handling of a Confirmed, Completed or Cancelled order is refused (#2826), and so is one to Contract Value, End Date or Payment Terms of an activated contract (#2804). The budget-not-ready refusal's `reason` is now one of `budget_no_lines`, `budget_labor_no_rate_card`, `budget_labor_no_hours`, `budget_line_no_quantity` and `budget_total_zero`, and its `problem` parameter is `line` (#2766).
+9. **Integrations:** a write to Subtotal, Discount %, Tax or Shipping & Handling of a Confirmed, Completed or Cancelled order is refused (#2826), and so is one to Contract Value, End Date or Payment Terms of an activated contract (#2804). So is confirming a Draft order whose Total Price is below its Received or Invoiced (#2827). The budget-not-ready refusal's `reason` is now one of `budget_no_lines`, `budget_labor_no_rate_card`, `budget_labor_no_hours`, `budget_line_no_quantity` and `budget_total_zero`, and its `problem` parameter is `line` (#2766).
 10. **Bookmarks** of Sales Home and Account Workbench no longer open: both pages are gone (#2740).
 
 ### Order to Cash
@@ -23,6 +23,7 @@
 - **Unpaid** (amount minus Received) and **Uninvoiced** (amount minus Invoiced) replace the Receivable Balance, on the order, the contract and the account. A contract with Confirmed or Completed orders reads them from its Order Amount, any other contract from its Contract Value; Order Amount counts Confirmed and Completed orders only (#2806).
 - **Overdue Payment Plans** replaces Overdue Invoices: the plan steps past their planned date with an amount open (#2806).
 - **Confirming an order creates its payment plan step** when it has none: the order's total, planned by its payment terms. If the total changes later and the steps no longer add up to it, the order shows **Payment Plan Differs** (#2806).
+- **Confirming an order again is refused when its Total Price is below what it has already received or invoiced;** a total equal to that figure confirms. A first confirm is not checked, and an order confirmed below its figures before the upgrade keeps its status (#2827).
 - **Billing Milestone is now called Payment Plan** (回款计划, Plan de cobro, 入金計画). The API name `crm_billing_milestone` and the payment file's Billing Milestone column heading are unchanged (#2805).
 - An invoice that names another account's payment plan step is refused, on an API write too (#2755).
 
