@@ -138,15 +138,19 @@ describe('Unpaid and Uninvoiced', () => {
 
     it('once an order names it, the deal counts through the order and never twice', async () => {
       const placed = await order(initech, 2000, { crm_contract: contract.id, status: 'draft' });
-      expect(num((await row('crm_contract', contract.id)).order_count)).toBe(1);
-      // The draft order is not owed yet, and the contract now counts through it.
-      expect(num((await row('crm_account', initech.id)).unpaid_amount)).toBe(0);
+      // A Draft is not yet ordered (hotcrm#2806): the contract keeps its
+      // Contract Value and still counts on the account itself.
+      let c = await row('crm_contract', contract.id);
+      expect([num(c.order_count), num(c.order_amount), num(c.unpaid_amount)]).toEqual([0, 0, 21000]);
+      expect(num((await row('crm_account', initech.id)).unpaid_amount)).toBe(21000);
       await update('crm_sales_order', { id: placed.id, status: 'confirmed' });
-      // The contract's payments named no order, so the order owes all 2000.
+      c = await row('crm_contract', contract.id);
+      expect(num(c.order_count)).toBe(1);
+      // Confirmed, the deal counts through the order: the contract's payments
+      // named no order, so the order owes all 2000.
       expect(num((await row('crm_account', initech.id)).unpaid_amount)).toBe(2000);
-      // The contract now has an order, so its own base is what was ordered
-      // (2000), not its 60,000 value: 39,000 received leaves nothing unpaid.
-      const c = await row('crm_contract', contract.id);
+      // The contract now has a confirmed order, so its own base is what was
+      // ordered (2000), not its 60,000 value: 39,000 received leaves nothing unpaid.
       expect([num(c.order_amount), num(c.unpaid_amount), num(c.uninvoiced_amount)]).toEqual([2000, 0, 0]);
     });
   });
@@ -239,6 +243,52 @@ describe('a contract with orders owes what was ordered', () => {
       // Ordered 730,000; invoiced 130,000.
       expect([num(c.order_amount), num(c.invoiced_amount), num(c.uninvoiced_amount)]).toEqual([730_000, 130_000, 600_000]);
     });
+  });
+});
+
+/**
+ * Only confirmed and completed orders are ordered (hotcrm#2806, the
+ * maintainer's ruling of 2026-11-27): a Draft or a Cancelled order counts in
+ * no framework contract's Order Amount, Remaining Quota, Unpaid or
+ * Uninvoiced; confirming the Draft counts it. An order contract still shows
+ * its order's amount whatever its status but Cancelled (#2804).
+ */
+describe('Draft and Cancelled orders count nowhere on a framework contract', () => {
+  let account: Rec;
+  let contract: Rec;
+  let draft: Rec;
+
+  beforeAll(async () => {
+    account = await insert('crm_account', { name: 'Draft Orders Corp', type: 'customer', industry: 'technology' });
+    const contact = await insert('crm_contact', {
+      first_name: 'Dora', last_name: `Draft ${++k}`, email: `dora${k}@o2c-parallel.test`, crm_account: account.id,
+    });
+    contract = await insert('crm_contract', {
+      name: `Framework drafts ${k}`, crm_account: account.id, crm_contact: contact.id, contract_form: 'framework',
+      contract_value: 1_000_000, start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12,
+    });
+    await order(account, 300_000, { crm_contract: contract.id });
+    draft = await order(account, 200_000, { crm_contract: contract.id, status: 'draft' });
+    const cancelled = await order(account, 150_000, { crm_contract: contract.id, status: 'draft' });
+    await update('crm_sales_order', { id: cancelled.id, status: 'cancelled' });
+  });
+
+  it('counts the confirmed order alone in Order Amount, Remaining Quota, Unpaid and Uninvoiced', async () => {
+    const c = await row('crm_contract', contract.id);
+    expect([num(c.order_count), num(c.order_amount), num(c.remaining_quota)]).toEqual([1, 300_000, 700_000]);
+    expect([num(c.unpaid_amount), num(c.uninvoiced_amount)]).toEqual([300_000, 300_000]);
+    expect(num(c.order_amount_shown), 'a framework contract shows what was ordered').toBe(300_000);
+    expect(num(c.linked_order_amount), 'the Draft is linked, the Cancelled order is not').toBe(500_000);
+    const a = await row('crm_account', account.id);
+    expect([num(a.unpaid_amount), num(a.uninvoiced_amount)]).toEqual([300_000, 300_000]);
+  });
+
+  it('confirming the Draft counts it everywhere', async () => {
+    await update('crm_sales_order', { id: draft.id, status: 'confirmed' });
+    const c = await row('crm_contract', contract.id);
+    expect([num(c.order_count), num(c.order_amount), num(c.remaining_quota)]).toEqual([2, 500_000, 500_000]);
+    expect([num(c.unpaid_amount), num(c.uninvoiced_amount), num(c.order_amount_shown)]).toEqual([500_000, 500_000, 500_000]);
+    expect(num((await row('crm_account', account.id)).uninvoiced_amount)).toBe(500_000);
   });
 });
 

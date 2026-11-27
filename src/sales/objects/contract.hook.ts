@@ -42,7 +42,7 @@ import type { HookApi } from './_hook-api';
  * `scripts/backfill-contract-form.ts` lists them, but nothing corrects them.
  *
  * **An order contract's value.** While the contract is a draft it follows its
- * order: when the platform rewrites `order_amount` (the order's total,
+ * order: when the platform rewrites `linked_order_amount` (the order's total,
  * summed; a system write after any order under the contract changes), the
  * value takes it. A person never types it; their direct write is refused.
  * Once activated it stays as signed: a later order change shows Differs from
@@ -229,7 +229,7 @@ const contractFormAndChange: Hook = {
     }
 
     // ── A draft order contract follows its order. Only the platform's own
-    // roll-up write carries `order_amount` this far: a person's copy of a
+    // roll-up write carries `linked_order_amount` this far: a person's copy of a
     // summary field is held back from hooks and dropped. A CHANGE of the
     // amount, from one the contract already held: not the write that
     // backfills the form, and not the first value the platform materialises
@@ -237,9 +237,9 @@ const contractFormAndChange: Hook = {
     // NULL → the order's total). Neither may correct an old value (ruling
     // item 7); the next change of the order does. A new contract is born
     // holding 0 (its orders are named after it), so its first order counts.
-    if (ctx.session?.isSystem && !backfilled && form === 'order' && status === 'draft' && 'order_amount' in input
-      && typeof prev.order_amount === 'number' && !same(input.order_amount, prev.order_amount)) {
-      input.contract_value = blank(input.order_amount) ? 0 : Number(input.order_amount);
+    if (ctx.session?.isSystem && !backfilled && form === 'order' && status === 'draft' && 'linked_order_amount' in input
+      && typeof prev.linked_order_amount === 'number' && !same(input.linked_order_amount, prev.linked_order_amount)) {
+      input.contract_value = blank(input.linked_order_amount) ? 0 : Number(input.linked_order_amount);
     }
 
     // ── Change.
@@ -269,7 +269,7 @@ const contractFormAndChange: Hook = {
 
     if (form === 'order') {
       if (input.change_from_order === true) {
-        input.contract_value = blank(prev.order_amount) ? 0 : Number(prev.order_amount);
+        input.contract_value = blank(prev.linked_order_amount) ? 0 : Number(prev.linked_order_amount);
       }
     } else if (!blank(input.change_new_value)) {
       input.contract_value = Number(input.change_new_value);

@@ -54,8 +54,9 @@ invoices and payments.
   every figure.
 - **Unpaid and Uninvoiced.** On an order, **Unpaid** is the order's amount
   minus **Received**, and **Uninvoiced** its amount minus **Invoiced**, never
-  below zero; on a contract they read the same from its **Order Amount** when
-  it has orders, else from its **Contract Value**. A payment above
+  below zero; on a contract they read the same from its **Order Amount** (its
+  **Confirmed** and **Completed** orders) when it has such an order, else from
+  its **Contract Value**. A payment above
   what is owed is accepted, typed or imported, and Unpaid stops at zero. The
   account's two figures add up each order's and contract's own: see the
   collection plan guide.

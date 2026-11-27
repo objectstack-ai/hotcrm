@@ -33,10 +33,10 @@ The **Accounts Receivable** position enters and imports them on every account. I
 
 | Figure | On the order | On the contract |
 | --- | --- | --- |
-| **Unpaid** | **Total Price** minus **Received** | **Order Amount** minus **Received** when it has orders, else **Contract Value** minus **Received** |
-| **Uninvoiced** | **Total Price** minus **Invoiced** | **Order Amount** minus **Invoiced** when it has orders, else **Contract Value** minus **Invoiced** |
+| **Unpaid** | **Total Price** minus **Received** | **Order Amount** minus **Received** when it has a confirmed or completed order, else **Contract Value** minus **Received** |
+| **Uninvoiced** | **Total Price** minus **Invoiced** | **Order Amount** minus **Invoiced** when it has a confirmed or completed order, else **Contract Value** minus **Invoiced** |
 
-A contract with orders owes what was ordered under it, not its value: a framework contract worth 1,000,000 with 600,000 ordered and 100,000 invoiced reads Uninvoiced 500,000. An invoice or a payment entered on an order takes the order's contract, so the contract's **Invoiced** and **Received** count it, once.
+A contract with orders owes what was ordered under it, not its value: a framework contract worth 1,000,000 with 600,000 ordered and 100,000 invoiced reads Uninvoiced 500,000. What was ordered counts **Confirmed** and **Completed** orders only: a Draft or a Cancelled order adds nothing, and a contract whose orders are all Draft or Cancelled owes its Contract Value. Confirming a Draft adds it. An invoice or a payment entered on an order takes the order's contract, so the contract's **Invoiced** and **Received** count it, once.
 
 Neither goes below zero: a payment above what is owed is accepted, typed or imported, because the cash was received, and Unpaid stops at zero. The account's **Unpaid** and **Uninvoiced** add up the figures of each deal it has signed, once: every **Confirmed** or **Completed** order, and every **Activated** or **Expired** contract with no order. [Totals on the order, the contract and the account](/docs/order-to-cash#totals) lists what counts.
 

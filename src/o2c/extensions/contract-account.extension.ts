@@ -125,12 +125,13 @@ export const leftOver = (amount: string, figure: string): EvaluatedExpression =>
 
 /**
  * The contract's base for Unpaid and Uninvoiced (the maintainer's ruling of
- * 2026-11-27 on hotcrm#2806): a contract that has orders owes what was
- * ordered under it, its Order Amount (`order_amount`, the sales package's
- * roll-up of its orders' totals, hotcrm#2804/#2807), not its Contract Value,
- * which on a framework contract is a ceiling. A contract with no order keeps
- * its Contract Value. `order_count` empty (a row stored before the upgrade)
- * reads as none, as on the account.
+ * 2026-11-27 on hotcrm#2806): a contract that has confirmed or completed
+ * orders owes what was ordered under it, its Order Amount (`order_amount`,
+ * the sales package's roll-up of those orders' totals, hotcrm#2804/#2807),
+ * not its Contract Value, which on a framework contract is a ceiling. A
+ * contract with none keeps its Contract Value; Draft and Cancelled orders
+ * count nowhere. `order_count` empty (a row stored before the upgrade) reads
+ * as none, as on the account.
  */
 const CONTRACT_BASE =
   `((has(record.order_count) && record.order_count != null && double(record.order_count) > 0.0) ? ${amountOf('order_amount')} : ${amountOf('contract_value')})`;
@@ -148,8 +149,9 @@ const sumOf = (...fields: string[]): EvaluatedExpression => expression(fields.ma
  *     spine (REQ-0010): an order contract's amount is its order's, and a
  *     framework contract's amount is a ceiling, not what is owed, so a deal
  *     with an order is counted on the order and never on its contract too;
- *   - its **contract**, only when no order names the contract (a contract
- *     signed before orders, hotcrm#2560) and it is Activated or Expired —
+ *   - its **contract**, only when no confirmed or completed order names the
+ *     contract (a contract signed before orders, hotcrm#2560, or one whose
+ *     orders are all Draft or Cancelled) and it is Activated or Expired —
  *     signed, not withdrawn.
  *
  * The account cannot total two objects in one summary, so each figure is two
@@ -208,14 +210,21 @@ export const ContractAccountExtensions = [
         unpaid: leftOver(CONTRACT_BASE, 'received_amount'),
         uninvoiced: leftOver(CONTRACT_BASE, 'invoiced_amount'),
       }, 'The Order Amount when the contract has orders, else the Contract Value,'),
-      // How many orders name the contract: a contract with one is counted on
-      // the account through its orders (`accountOutstanding`), never itself.
+      // How many confirmed or completed orders name the contract, the set its
+      // Order Amount counts (hotcrm#2806): a contract with one owes what was
+      // ordered and is counted on the account through its orders
+      // (`accountOutstanding`), never itself. A contract whose orders are all
+      // Draft or Cancelled keeps its Contract Value and counts on the account
+      // itself, once it is signed.
       order_count: Field.summary({
         label: 'Orders',
         group: 'value',
         hidden: true,
         readonly: true,
-        summaryOperations: { object: 'crm_sales_order', function: 'count', relationshipField: 'crm_contract' },
+        summaryOperations: {
+          object: 'crm_sales_order', function: 'count', relationshipField: 'crm_contract',
+          filter: { status: { $in: ['confirmed', 'completed'] } },
+        },
       }),
     },
   },
