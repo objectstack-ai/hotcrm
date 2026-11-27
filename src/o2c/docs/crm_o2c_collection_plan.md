@@ -100,9 +100,14 @@ total, never these figures.
 ## Totals on the contract and the account
 
 The contract carries **Planned**, **Invoiced**, **Received**, **Unpaid** and
-**Uninvoiced** over the records that name it, Unpaid and Uninvoiced read from
-its **Contract Value**. The account carries **Invoiced** and **Received** over
-all its invoices and payments, including those with no order or contract.
+**Uninvoiced** over the records that name it. An invoice or a payment entered
+on an order takes the order's contract, so the contract counts what was
+recorded on its orders, each record once. A contract with orders owes what
+was ordered: Unpaid and Uninvoiced read from its **Order Amount**. A contract
+with no order reads them from its **Contract Value**. So a framework contract
+worth 1,000,000 with 600,000 ordered and 100,000 invoiced reads Uninvoiced
+500,000. The account carries **Invoiced** and **Received** over all its
+invoices and payments, including those with no order or contract.
 
 The account's **Unpaid** and **Uninvoiced** add up the figures of the deals it
 has signed, each deal once:

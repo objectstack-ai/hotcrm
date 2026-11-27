@@ -329,11 +329,11 @@ export const zhCN: TranslationData = {
         },
         unpaid_amount: {
           label: '未回款',
-          help: '金额减去已回款，不低于 0。',
+          help: '合同有订单时为订单金额，没有订单时为合同金额，减去已回款，不低于 0。',
         },
         uninvoiced_amount: {
           label: '未开票',
-          help: '金额减去已开票（已开具的发票），不低于 0。',
+          help: '合同有订单时为订单金额，没有订单时为合同金额，减去已开票（已开具的发票），不低于 0。',
         },
         order_count: {
           label: '订单数',

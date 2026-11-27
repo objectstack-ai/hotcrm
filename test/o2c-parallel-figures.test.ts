@@ -129,6 +129,8 @@ describe('Unpaid and Uninvoiced', () => {
     it('counts on the account through the contract', async () => {
       const c = await row('crm_contract', contract.id);
       expect(c.status).toBe('expired');
+      // No order: the base is the Contract Value, 60,000 (39,000 received, 60,000 invoiced).
+      expect(num(c.contract_value)).toBe(60000);
       expect([num(c.unpaid_amount), num(c.uninvoiced_amount), num(c.order_count)]).toEqual([21000, 0, 0]);
       const a = await row('crm_account', initech.id);
       expect([num(a.unpaid_amount), num(a.uninvoiced_amount)], 'the draft order is not counted').toEqual([21000, 0]);
@@ -142,6 +144,100 @@ describe('Unpaid and Uninvoiced', () => {
       await update('crm_sales_order', { id: placed.id, status: 'confirmed' });
       // The contract's payments named no order, so the order owes all 2000.
       expect(num((await row('crm_account', initech.id)).unpaid_amount)).toBe(2000);
+      // The contract now has an order, so its own base is what was ordered
+      // (2000), not its 60,000 value: 39,000 received leaves nothing unpaid.
+      const c = await row('crm_contract', contract.id);
+      expect([num(c.order_amount), num(c.unpaid_amount), num(c.uninvoiced_amount)]).toEqual([2000, 0, 0]);
+    });
+  });
+});
+
+/**
+ * A contract with orders owes what was ordered under it, not its value (the
+ * maintainer's ruling of 2026-11-27 on hotcrm#2806): a framework contract
+ * worth 1,000,000 with 600,000 of confirmed orders and 100,000 invoiced on
+ * those orders reads Uninvoiced 500,000, and so does its account. Invoices
+ * and payments entered on an order take the order's contract on save, so the
+ * contract's Invoiced and Received count them without naming the contract.
+ */
+describe('a contract with orders owes what was ordered', () => {
+  let account: Rec;
+  let contract: Rec;
+  let orders: Rec[];
+  let invoices: Rec[];
+
+  beforeAll(async () => {
+    account = await insert('crm_account', { name: 'Framework Figures Corp', type: 'customer', industry: 'technology' });
+    const contact = await insert('crm_contact', {
+      first_name: 'Fran', last_name: `Framework ${++k}`, email: `fran${k}@o2c-parallel.test`, crm_account: account.id,
+    });
+    contract = await insert('crm_contract', {
+      name: `Framework ${k}`, crm_account: account.id, crm_contact: contact.id, contract_form: 'framework',
+      contract_value: 1_000_000, start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12,
+    });
+    orders = [
+      await order(account, 400_000, { crm_contract: contract.id }),
+      await order(account, 200_000, { crm_contract: contract.id }),
+    ];
+    // Entered on the orders alone: neither names the contract.
+    invoices = [
+      await insert('crm_invoice', { invoice_number: `INV-FW-${++k}`, crm_sales_order: orders[0]!.id, issue_date: day(0), amount: 60_000 }),
+      await insert('crm_invoice', { invoice_number: `INV-FW-${++k}`, crm_sales_order: orders[1]!.id, issue_date: day(0), amount: 40_000 }),
+    ];
+  });
+
+  it('an invoice entered on an order takes the order\'s contract, so the contract counts it once', async () => {
+    for (const i of invoices) expect((await row('crm_invoice', i.id)).crm_contract).toBe(contract.id);
+    const c = await row('crm_contract', contract.id);
+    expect([num(c.order_count), num(c.order_amount), num(c.invoiced_amount)]).toEqual([2, 600_000, 100_000]);
+  });
+
+  it('the contract reads Uninvoiced 500,000 and Unpaid 600,000, from what was ordered, not its 1,000,000 value', async () => {
+    const c = await row('crm_contract', contract.id);
+    expect([num(c.uninvoiced_amount), num(c.unpaid_amount)]).toEqual([500_000, 600_000]);
+  });
+
+  it('the account reads Uninvoiced 500,000 through the orders', async () => {
+    const a = await row('crm_account', account.id);
+    expect([num(a.uninvoiced_amount), num(a.unpaid_amount)]).toEqual([500_000, 600_000]);
+  });
+
+  it('a payment on an order moves the contract and the account alike', async () => {
+    const p = await insert('crm_payment', { crm_sales_order: orders[0]!.id, payment_date: day(0), amount: 50_000 });
+    expect((await row('crm_payment', p.id)).crm_contract).toBe(contract.id);
+    expect(num((await row('crm_contract', contract.id)).unpaid_amount)).toBe(550_000);
+    expect(num((await row('crm_account', account.id)).unpaid_amount)).toBe(550_000);
+  });
+
+  it('a third order raises the base: the contract owes the new ordered amount', async () => {
+    await order(account, 100_000, { crm_contract: contract.id });
+    const c = await row('crm_contract', contract.id);
+    expect([num(c.order_amount), num(c.uninvoiced_amount)]).toEqual([700_000, 600_000]);
+  });
+
+  it('a contract with no order keeps its Contract Value as the base', async () => {
+    const contact = await insert('crm_contact', {
+      first_name: 'Nora', last_name: `No Orders ${++k}`, email: `nora${k}@o2c-parallel.test`, crm_account: account.id,
+    });
+    const bare = await insert('crm_contract', {
+      name: `No orders ${k}`, crm_account: account.id, crm_contact: contact.id, contract_form: 'framework',
+      contract_value: 1_000_000, start_date: '2026-01-01', end_date: '2027-01-01', contract_term_months: 12,
+    });
+    await insert('crm_invoice', { invoice_number: `INV-FW-${++k}`, crm_contract: bare.id, issue_date: day(0), amount: 100_000 });
+    const c = await row('crm_contract', bare.id);
+    expect([num(c.order_count), num(c.uninvoiced_amount), num(c.unpaid_amount)]).toEqual([0, 900_000, 1_000_000]);
+  });
+
+  it('an order given its contract after its invoices passes the contract to them', async () => {
+    const late = await order(account, 30_000);
+    const inv = await insert('crm_invoice', { invoice_number: `INV-FW-${++k}`, crm_sales_order: late.id, issue_date: day(0), amount: 30_000 });
+    expect((await row('crm_invoice', inv.id)).crm_contract ?? null).toBeNull();
+    await update('crm_sales_order', { id: late.id, crm_contract: contract.id });
+    await settle(async () => expect((await row('crm_invoice', inv.id)).crm_contract).toBe(contract.id));
+    await settle(async () => {
+      const c = await row('crm_contract', contract.id);
+      // Ordered 730,000; invoiced 130,000.
+      expect([num(c.order_amount), num(c.invoiced_amount), num(c.uninvoiced_amount)]).toEqual([730_000, 130_000, 600_000]);
     });
   });
 });

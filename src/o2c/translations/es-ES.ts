@@ -329,11 +329,11 @@ export const esES: TranslationData = {
         },
         unpaid_amount: {
           label: 'Pendiente de cobro',
-          help: 'El importe menos lo cobrado, nunca por debajo de 0.',
+          help: 'El Importe del Pedido si el contrato tiene pedidos, si no el valor del contrato, menos lo cobrado, nunca por debajo de 0.',
         },
         uninvoiced_amount: {
           label: 'Pendiente de facturar',
-          help: 'El importe menos lo facturado (facturas emitidas), nunca por debajo de 0.',
+          help: 'El Importe del Pedido si el contrato tiene pedidos, si no el valor del contrato, menos lo facturado (facturas emitidas), nunca por debajo de 0.',
         },
         order_count: {
           label: 'Pedidos',

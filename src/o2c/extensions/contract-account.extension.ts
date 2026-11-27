@@ -20,7 +20,8 @@ import { expression, type EvaluatedExpression } from '@objectstack/spec';
  *
  * *Unpaid* and *Uninvoiced* replace the Receivable Balance (the 2026-11-26
  * ruling, superseding the 2026-11-15 ruling B that summed the invoices' open
- * amounts). On the order and the contract each is the row's own amount less
+ * amounts). On the order and the contract each is the row's own amount (on
+ * a contract with orders, what was ordered under it: `CONTRACT_BASE`) less
  * what was received, or invoiced, never below 0 (`max`), STORED: the engine
  * computes the expression on every write of the row, the summary recompute
  * that moves Received or Invoiced included, so the account can total it (a
@@ -76,17 +77,21 @@ export const receivables = (relationshipField: string, group: string) => ({
  * across records goes stale: Received and Invoiced are this row's summaries,
  * and the recompute that moves them writes this row.
  */
-export const outstanding = (group: string, amount: { unpaid: EvaluatedExpression; uninvoiced: EvaluatedExpression }) => ({
+export const outstanding = (
+  group: string,
+  amount: { unpaid: EvaluatedExpression; uninvoiced: EvaluatedExpression },
+  base = 'The amount',
+) => ({
   unpaid_amount: Field.currency({
     label: 'Unpaid',
-    description: 'The amount less what was received, never below 0.',
+    description: `${base} less what was received, never below 0.`,
     group,
     readonly: true,
     expression: amount.unpaid,
   }),
   uninvoiced_amount: Field.currency({
     label: 'Uninvoiced',
-    description: 'The amount less what was invoiced (issued invoices), never below 0.',
+    description: `${base} less what was invoiced (issued invoices), never below 0.`,
     group,
     readonly: true,
     expression: amount.uninvoiced,
@@ -114,9 +119,21 @@ export const planned = (relationshipField: string, group: string) => ({
 const amountOf = (field: string): string =>
   `(has(record.${field}) && record.${field} != null ? double(record.${field}) : 0.0)`;
 
-/** `max(0, amount − figure)` over the row's own columns. */
+/** `max(0, amount − figure)` over the row's own columns; `amount` is a field name or a CEL number expression. */
 export const leftOver = (amount: string, figure: string): EvaluatedExpression =>
-  expression(`max(0.0, ${amountOf(amount)} - ${amountOf(figure)})`);
+  expression(`max(0.0, ${/^[a-z_]+$/.test(amount) ? amountOf(amount) : amount} - ${amountOf(figure)})`);
+
+/**
+ * The contract's base for Unpaid and Uninvoiced (the maintainer's ruling of
+ * 2026-11-27 on hotcrm#2806): a contract that has orders owes what was
+ * ordered under it, its Order Amount (`order_amount`, the sales package's
+ * roll-up of its orders' totals, hotcrm#2804/#2807), not its Contract Value,
+ * which on a framework contract is a ceiling. A contract with no order keeps
+ * its Contract Value. `order_count` empty (a row stored before the upgrade)
+ * reads as none, as on the account.
+ */
+const CONTRACT_BASE =
+  `((has(record.order_count) && record.order_count != null && double(record.order_count) > 0.0) ? ${amountOf('order_amount')} : ${amountOf('contract_value')})`;
 
 /** The sum of the row's own number fields. */
 const sumOf = (...fields: string[]): EvaluatedExpression => expression(fields.map(amountOf).join(' + '));
@@ -182,10 +199,15 @@ export const ContractAccountExtensions = [
     fields: {
       ...planned('crm_contract', 'value'),
       ...receivables('crm_contract', 'value'),
+      // Invoiced and Received already count what was recorded on the
+      // contract's orders: `_row-stamp.ts` gives every invoice and payment
+      // that names an order the order's contract (form, import and API alike),
+      // and `sales_order_contract_fill` passes a contract set on the order
+      // later to its rows. Each row is one row, so nothing counts twice.
       ...outstanding('value', {
-        unpaid: leftOver('contract_value', 'received_amount'),
-        uninvoiced: leftOver('contract_value', 'invoiced_amount'),
-      }),
+        unpaid: leftOver(CONTRACT_BASE, 'received_amount'),
+        uninvoiced: leftOver(CONTRACT_BASE, 'invoiced_amount'),
+      }, 'The Order Amount when the contract has orders, else the Contract Value,'),
       // How many orders name the contract: a contract with one is counted on
       // the account through its orders (`accountOutstanding`), never itself.
       order_count: Field.summary({

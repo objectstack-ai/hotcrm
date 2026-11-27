@@ -268,11 +268,11 @@ export const en: TranslationData = {
         },
         unpaid_amount: {
           label: 'Unpaid',
-          help: 'The amount less what was received, never below 0.',
+          help: 'The Order Amount when the contract has orders, else the Contract Value, less what was received, never below 0.',
         },
         uninvoiced_amount: {
           label: 'Uninvoiced',
-          help: 'The amount less what was invoiced (issued invoices), never below 0.',
+          help: 'The Order Amount when the contract has orders, else the Contract Value, less what was invoiced (issued invoices), never below 0.',
         },
         order_count: {
           label: 'Orders',
