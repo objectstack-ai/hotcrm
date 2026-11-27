@@ -1,6 +1,6 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
-import { Field } from '@objectstack/spec/data';
+import { Field, type ObjectExtension } from '@objectstack/spec/data';
 import { F, P } from '@objectstack/spec';
 import { leftOver, outstanding, planned, receivables } from './contract-account.extension';
 
@@ -103,7 +103,7 @@ export const SalesOrderExtensions = [
           "This order's Total Price is below what was already invoiced (Invoiced). Cancel or correct the invoices first, then confirm.",
         condition: confirmedBelow('invoiced_amount'),
       },
-    ],
+    ] satisfies ObjectExtension['validations'],
     fields: (() => {
       return {
         ...planned('crm_sales_order', 'pricing'),
