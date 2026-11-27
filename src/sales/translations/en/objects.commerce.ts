@@ -152,7 +152,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: 'Contract' },
       customer_po_number: { label: 'Customer PO Number', help: "The number on the customer's own purchase order, as they will quote it." },
       description: { label: 'Description' },
-      subtotal: { label: 'Subtotal' },
+      subtotal: { label: 'Subtotal', help: 'The sum of the order\'s lines. Typed only on an order with no lines. Locked once the order is confirmed, as are the discount, tax and shipping.' },
       discount: { label: 'Discount %' },
       discount_amount: { label: 'Discount Amount' },
       tax: { label: 'Tax' },

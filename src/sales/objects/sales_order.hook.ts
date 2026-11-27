@@ -6,10 +6,12 @@ import type { HookApi } from './_hook-api';
 /**
  * Sales order hooks (REQ-0010, hotcrm#2555): the order and its lines.
  *
- * - `sales_order_workflow` — the lines of an order past Draft cannot change
- *   (Confirmed goes back to Draft first; Completed and Cancelled are final),
- *   and the header's `discount_amount` / `total_price` follow their inputs,
- *   the quote header's one formula (`quote_workflow`, #2083).
+ * - `sales_order_workflow` — the lines of an order past Draft cannot change,
+ *   nor can its header amount (Subtotal, Discount %, Tax, Shipping; #2826):
+ *   Confirmed goes back to Draft first, Completed and Cancelled are final. On
+ *   an order with lines a person's Subtotal must be the lines' sum. The
+ *   header's `discount_amount` / `total_price` follow their inputs, the quote
+ *   header's one formula (`quote_workflow`, #2083).
  * - `sales_order_line_fill` — a line that names a product takes its name and
  *   list price, and a blank Sales Price defaults to it on create. A line with
  *   no product must say what it sells and what it costs.
@@ -34,7 +36,7 @@ const salesOrderWorkflow: Hook = {
   // Before the line fill (100, 105, 110), so the caller's own payload is what
   // the lock judges.
   priority: 90,
-  description: "Lock an order's lines once it leaves Draft; derive the header totals.",
+  description: "Lock an order's lines and header amount once it leaves Draft; derive the header totals.",
   refusals: {
     RECORD_LOCKED: {
       message: 'Order {{order}} is Confirmed, so its lines can no longer be added, changed or removed. Move it back to Draft to change them.',
@@ -43,7 +45,16 @@ const salesOrderWorkflow: Hook = {
       reasons: {
         completed: { message: 'Order {{order}} is Completed, so its lines can no longer be added, changed or removed.' },
         cancelled: { message: 'Order {{order}} is Cancelled, so its lines can no longer be added, changed or removed.' },
+        // The header amount (#2826): Subtotal, Discount %, Tax, Shipping.
+        amount_confirmed: { message: 'Order {{order}} is Confirmed, so its amount can no longer be changed. Send it back to Draft first.' },
+        amount_completed: { message: 'Order {{order}} is Completed, so its amount can no longer be changed.' },
+        amount_cancelled: { message: 'Order {{order}} is Cancelled, so its amount can no longer be changed.' },
       },
+    },
+    VALIDATION_FAILED: {
+      message: "Order {{order}} has lines, so its Subtotal is the sum of its lines and cannot be typed. Change the lines instead.",
+      status: 400,
+      params: ['order'],
     },
   },
   handler: async (ctx: HookContext) => {
@@ -105,15 +116,77 @@ const salesOrderWorkflow: Hook = {
 
     if (event === 'beforeDelete') return;
 
+    // ─── The header amount of an order past Draft is locked (#2826) ─────
+    //
+    // The order is the one source of its amount (#2803): the order contract,
+    // the payment plan and the framework quota all read its Total Price, so
+    // once it is Confirmed its inputs lock together with its lines. The same
+    // exemption as the line lock: USER writes only, so a seed, an import and
+    // `sales_order_total_rollup` under a system write pass. An update is
+    // judged by what it CHANGES against the stored row, so a form that sends
+    // the unchanged figures back passes, and by the status the order WAS in:
+    // a write that moves a Confirmed order back to Draft and changes its
+    // amount in one go is refused, the amount changes in the next write.
+    //
+    // ⚠️ A hook, not `readonlyWhen`: on 18.6.0 a TRUE `readonlyWhen` strips
+    // every caller's write, `isSystem` included, and strips it in silence,
+    // so the seed's lines on confirmed orders could no longer roll up.
+    if (event === 'beforeUpdate' && previous && ctx.user?.id) {
+      const same = (a: unknown, b: unknown): boolean => (a == null && b == null) || a === b;
+      const edited = ['subtotal', 'discount', 'tax', 'shipping_handling'].filter((k) => k in input && !same(input[k], previous[k]));
+      const was = typeof previous.status === 'string' ? previous.status : '';
+      const name = String(previous.name ?? input.name ?? '');
+      if (edited.length > 0 && STATUS_LABELS[was]) {
+        const what = `Order ${name} is`;
+        const rest = 'so its amount can no longer be changed.';
+        const back = was === 'confirmed' ? ' Send it back to Draft first.' : '';
+        const REASONS: Record<string, string> = { confirmed: 'amount_confirmed', completed: 'amount_completed', cancelled: 'amount_cancelled' };
+        throw Object.assign(refuse(
+          `${what} ${was}, ${rest}${back}`,
+          'RECORD_LOCKED',
+          409,
+          `${what} ${STATUS_LABELS[was]}, ${rest}${back}`,
+        ), { reason: REASONS[was], params: { order: name } });
+      }
+
+      // On an order with lines, Subtotal IS the lines' sum: a person's
+      // Subtotal that differs from it is refused (not overridden, so the
+      // person is told why the number they typed did not stick). The
+      // rollup's own write carries the sum and passes; an order with no
+      // lines keeps the Subtotal typed on it. The sum is the rollup's.
+      const orderId = previous.id ?? input.id;
+      if (edited.includes('subtotal') && typeof orderId === 'string' && orderId) {
+        const api = ctx.api as HookApi | undefined;
+        const lines = api
+          ? await api.object('crm_sales_order_line').find({
+            where: { crm_sales_order: orderId }, fields: ['quantity', 'unit_price', 'discount'], top: 5000,
+          })
+          : [];
+        if ((lines ?? []).length > 0) {
+          const num = (v: unknown): number => (typeof v === 'number' ? v : 0);
+          let sum = 0;
+          for (const l of lines ?? []) sum += num(l.quantity) * num(l.unit_price) * (1 - num(l.discount) / 100);
+          sum = Math.round(sum * 100) / 100;
+          if (typeof input.subtotal !== 'number' || Math.abs(input.subtotal - sum) >= 0.005) {
+            throw Object.assign(refuse(
+              `Order ${name} has lines, so its Subtotal is the sum of its lines and cannot be typed. Change the lines instead.`,
+              'VALIDATION_FAILED',
+              400,
+            ), { params: { order: name } });
+          }
+        }
+      }
+    }
+
     // ─── The header totals follow their inputs ──────────────────────────
     //
     //   discount_amount = subtotal × discount%
     //   total_price     = subtotal − discount_amount + tax + shipping_handling
     //
     // On a create carrying a subtotal, and on an update that carries a pricing
-    // input: a person's edit, or `sales_order_total_rollup`'s subtotal. Any
-    // writer, at any status: the lock is on the lines, and the header's
-    // figures always agree with each other. Both outputs are `readonly`, and
+    // input: a person's edit while the order is Draft, a system write, or
+    // `sales_order_total_rollup`'s subtotal. The header's figures always
+    // agree with each other. Both outputs are `readonly`, and
     // the engine keeps a read-only key a before-hook wrote (#2110). Not on the
     // predicate path, which hands every row one payload (D3, `forecast.hook.ts`).
     if (event === 'beforeInsert' || (event === 'beforeUpdate' && previous && ctx.dispatch?.mode !== 'per-row'

@@ -166,7 +166,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: '关联合同' },
       customer_po_number: { label: '客户采购单号', help: '客户自己采购单上的编号，按客户引用它的写法填写。' },
       description: { label: '描述' },
-      subtotal: { label: '小计' },
+      subtotal: { label: '小计', help: '订单各订单行之和。只有没有订单行的订单才能手工填写。订单确认后锁定，折扣、税额和运费也一样。' },
       discount: { label: '折扣 (%)' },
       discount_amount: { label: '折扣金额' },
       tax: { label: '税额' },

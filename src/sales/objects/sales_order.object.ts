@@ -23,7 +23,8 @@ import { P, cel } from '@objectstack/spec';
  * the tenant currency, as on the quote.
  *
  * The behaviour lives in `sales_order.hook.ts`: the header totals follow the
- * lines, and the lines of an order past Draft cannot change.
+ * lines, and the lines and the header amount of an order past Draft cannot
+ * change (#2826).
  */
 /**
  * The three amounts the framework-contract quota rule compares (hotcrm#2807),
@@ -213,11 +214,17 @@ export const SalesOrder = ObjectSchema.create({
     // ─── Pricing: the quote header's figures and one formula ────────────
     // `discount_amount` / `total_price` are derived and `readonly` (#2110 on
     // the quote); their one writer is `sales_order_workflow`, in the write that
-    // changes an input. `subtotal` is the lines' sum (`sales_order_total_rollup`)
-    // and stays editable: on an order with no lines it is the rep's own number.
+    // changes an input. `subtotal` is the lines' sum (`sales_order_total_rollup`);
+    // on an order with no lines it is the rep's own number, so it is not
+    // `readonly`. A person's Subtotal on an order WITH lines that differs from
+    // their sum is refused by `sales_order_workflow` (#2826), and Subtotal,
+    // Discount %, Tax and Shipping lock once the order leaves Draft, there too.
+    // Not `readonlyWhen`: on 18.6.0 that strips system writes as well, and
+    // whether an order has lines is not a field of the order.
     subtotal: Field.currency({
       label: 'Subtotal',
       group: 'pricing',
+      description: 'The sum of the order\'s lines. Typed only on an order with no lines. Locked once the order is confirmed, as are the discount, tax and shipping.',
     }),
 
     discount: Field.percent({
