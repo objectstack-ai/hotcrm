@@ -210,7 +210,7 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
-  // The order's line lock and line fill (REQ-0010, hotcrm#2555).
+  // The order's line lock, header amount lock (#2826) and line fill (REQ-0010, hotcrm#2555).
   sales_order_workflow: {
     refusals: {
       RECORD_LOCKED: {
@@ -222,7 +222,19 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
           cancelled: {
             message: '注文 {{order}} はキャンセルされているため、明細の追加・変更・削除はできません。',
           },
+          amount_confirmed: {
+            message: '注文 {{order}} は確定済みのため、金額は変更できません。先に下書きに戻してください。',
+          },
+          amount_completed: {
+            message: '注文 {{order}} は完了しているため、金額は変更できません。',
+          },
+          amount_cancelled: {
+            message: '注文 {{order}} はキャンセルされているため、金額は変更できません。',
+          },
         },
+      },
+      VALIDATION_FAILED: {
+        message: '注文 {{order}} には明細があるため、小計は明細の合計であり、手入力できません。代わりに明細を変更してください。',
       },
     },
   },

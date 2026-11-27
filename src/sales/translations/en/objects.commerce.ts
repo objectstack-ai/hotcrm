@@ -125,7 +125,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: 'Confirm Order',
-        confirmText: 'Confirm this order? Its lines are then locked: to change them, the order has to go back to Draft.',
+        confirmText: 'Confirm this order? Its lines and its amount are then locked: to change them, the order has to go back to Draft.',
         successMessage: 'Order {{ record.name }} confirmed.',
       },
       complete_sales_order: {
@@ -152,7 +152,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: 'Contract' },
       customer_po_number: { label: 'Customer PO Number', help: "The number on the customer's own purchase order, as they will quote it." },
       description: { label: 'Description' },
-      subtotal: { label: 'Subtotal' },
+      subtotal: { label: 'Subtotal', help: 'The sum of the order\'s lines. Typed only on an order with no lines. Locked once the order is confirmed, as are the discount, tax and shipping.' },
       discount: { label: 'Discount %' },
       discount_amount: { label: 'Discount Amount' },
       tax: { label: 'Tax' },

@@ -132,7 +132,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: 'Confirmar pedido',
-        confirmText: '¿Confirmar este pedido? Sus líneas quedan bloqueadas: para cambiarlas, el pedido tiene que volver a Borrador.',
+        confirmText: '¿Confirmar este pedido? Sus líneas y su importe quedan bloqueados: para cambiarlos, el pedido tiene que volver a Borrador.',
         successMessage: 'Pedido {{ record.name }} confirmado.',
       },
       complete_sales_order: {
@@ -168,7 +168,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: 'Contrato' },
       customer_po_number: { label: 'N.º de Orden de Compra del Cliente', help: 'El número de la orden de compra del propio cliente, tal como él la citará.' },
       description: { label: 'Descripción' },
-      subtotal: { label: 'Subtotal' },
+      subtotal: { label: 'Subtotal', help: 'La suma de las líneas del pedido. Solo se escribe en un pedido sin líneas. Se bloquea cuando el pedido se confirma, igual que el descuento, el impuesto y el envío.' },
       discount: { label: 'Descuento %' },
       discount_amount: { label: 'Monto de Descuento' },
       tax: { label: 'Impuesto' },

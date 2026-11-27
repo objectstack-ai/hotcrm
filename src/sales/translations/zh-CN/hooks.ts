@@ -210,7 +210,7 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
-  // The order's line lock and line fill (REQ-0010, hotcrm#2555).
+  // The order's line lock, header amount lock (#2826) and line fill (REQ-0010, hotcrm#2555).
   sales_order_workflow: {
     refusals: {
       RECORD_LOCKED: {
@@ -222,7 +222,19 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
           cancelled: {
             message: '订单{{order}}已取消，因此不能再添加、修改或删除它的订单行。',
           },
+          amount_confirmed: {
+            message: '订单{{order}}已确认，因此不能再修改它的金额。请先把它退回草稿。',
+          },
+          amount_completed: {
+            message: '订单{{order}}已完成，因此不能再修改它的金额。',
+          },
+          amount_cancelled: {
+            message: '订单{{order}}已取消，因此不能再修改它的金额。',
+          },
         },
+      },
+      VALIDATION_FAILED: {
+        message: '订单{{order}}有订单行，因此它的小计是各订单行之和，不能手工填写。请改为修改订单行。',
       },
     },
   },
