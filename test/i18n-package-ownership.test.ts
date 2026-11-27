@@ -82,15 +82,30 @@ const extensionFieldsOf = (stack: AnyRec, objectName: string): Set<string> =>
       .flatMap((ext) => Object.keys(ext.fields ?? {})),
   );
 
-/** A row that labels ONLY fields this package contributes to that object, and nothing of the object itself. */
+/** The validation rules a package contributes to another package's object (Order to Cash's re-confirm floor on `crm_sales_order`, #2827). */
+const extensionValidationsOf = (stack: AnyRec, objectName: string): Set<string> =>
+  new Set(
+    ((stack.objectExtensions ?? []) as AnyRec[])
+      .filter((ext) => ext.extend === objectName)
+      .flatMap((ext) => ((ext.validations ?? []) as AnyRec[]).map((rule) => String(rule.name))),
+  );
+
+/**
+ * A row that labels ONLY fields this package contributes to that object, and
+ * the messages of the validation rules it contributes, and nothing of the
+ * object itself.
+ */
 const labelsOnlyOwnExtensionFields = (stack: AnyRec, key: string, row: AnyRec | undefined): boolean => {
   if (!key.startsWith('objects:') || !row) return false;
-  const contributed = extensionFieldsOf(stack, key.slice('objects:'.length));
+  const objectName = key.slice('objects:'.length);
+  const contributed = extensionFieldsOf(stack, objectName);
   if (contributed.size === 0) return false;
+  const rules = extensionValidationsOf(stack, objectName);
   const fieldNames = Object.keys(row.fields ?? {});
-  return Object.keys(row).every((k) => k === 'fields')
+  return Object.keys(row).every((k) => k === 'fields' || k === '_validations')
     && fieldNames.length > 0
-    && fieldNames.every((f) => contributed.has(f));
+    && fieldNames.every((f) => contributed.has(f))
+    && Object.keys(row._validations ?? {}).every((r) => rules.has(r));
 };
 
 describe('locale packs: each package translates only what it registers (#2352)', () => {
@@ -127,10 +142,13 @@ describe('locale packs: each package translates only what it registers (#2352)',
     // The positive control for the extension-field allowance below.
     const o2c = modules.find((s) => idOf(s) === 'app.objectstack.hotcrm.o2c')!;
     for (const locale of ['en', 'zh-CN', 'es-ES', 'ja-JP']) {
-      for (const objectName of ['crm_contract', 'crm_account']) {
+      for (const objectName of ['crm_contract', 'crm_account', 'crm_sales_order']) {
         const row = rowsOf(o2c).find((r) => r.locale === locale && r.key === `objects:${objectName}`)?.row;
         expect(Object.keys(row?.fields ?? {}).sort(), `${locale} ${objectName}`)
           .toEqual([...extensionFieldsOf(o2c, objectName)].sort());
+        // And the messages of the rules it contributes there (#2827).
+        expect(Object.keys(row?._validations ?? {}).sort(), `${locale} ${objectName} _validations`)
+          .toEqual([...extensionValidationsOf(o2c, objectName)].sort());
       }
     }
   });

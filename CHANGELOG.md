@@ -1,5 +1,59 @@
 # Changelog
 
+## 6.7.0
+
+**Runs on ObjectStack 18.6.0, as 6.6.0 does: the host needs no upgrade.** Invoices and payments now run side by side, **Unpaid** and **Uninvoiced** replace the Receivable Balance, and every contract has a name and a form.
+
+**After upgrading, an administrator runs steps 1 to 5 once, in this order, and checks 6 to 10:**
+
+1. `os migrate summary-nulls --apply` fills **Order Amount** and the order count on the contracts saved before the upgrade (#2804, #2806).
+2. `os migrate stored-expressions --object crm_sales_order --object crm_contract --object crm_billing_milestone --object crm_account --apply` fills **Unpaid**, **Uninvoiced** and each payment plan step's **Open**. Without it they stay empty on a record saved before the upgrade until that record is next saved (#2806). Steps 1 and 2 are platform commands that act on the database.
+3. `pnpm exec tsx scripts/backfill-contract-form.ts --url <your org> --email <admin> --password <password>` lists the contracts that have no form; add `--apply` to give each one its form. It changes no value, and it prints the order contracts whose value differs from their order (#2804).
+4. `pnpm exec tsx scripts/backfill-contract-names.ts` with the same arguments shows the name each unnamed contract would get: its source quote's, else its account's name and its start date. Add `--apply` to write. Until it is named, a contract is titled by its record id (#2746).
+5. `pnpm exec tsx scripts/compare-unpaid-receivable.ts` with the same arguments prints each account's old Receivable Balance beside its new Unpaid and Uninvoiced. It writes nothing (#2806).
+6. **Your own permission sets:** one that names `receivable_balance` names `unpaid_amount` and `uninvoiced_amount` instead (#2806).
+7. **Imports:** the payment file has no Invoice column and the invoice file no Billing Milestone column. A receipt split across two orders is two payment rows, each with its own ERP Reference (#2806).
+8. **An invoice or payment saved before the upgrade that names only the contract** of a deal that has an order is counted by the contract, not by the order, so the account's Unpaid and Uninvoiced do not see it: name the order on it (#2806).
+9. **Integrations:** a write to Subtotal, Discount %, Tax or Shipping & Handling of a Confirmed, Completed or Cancelled order is refused (#2826), and so is one to Contract Value, End Date or Payment Terms of an activated contract (#2804). So is confirming a Draft order whose Total Price is below its Received or Invoiced (#2827). The budget-not-ready refusal's `reason` is now one of `budget_no_lines`, `budget_labor_no_rate_card`, `budget_labor_no_hours`, `budget_line_no_quantity` and `budget_total_zero`, and its `problem` parameter is `line` (#2766).
+10. **Bookmarks** of Sales Home and Account Workbench no longer open: both pages are gone (#2740).
+
+### Order to Cash
+
+- **Invoices and payments run in parallel.** A payment names its Payment Plan, its Order or its Contract, or the account alone, and no longer an invoice. An invoice names the order or the contract it bills; its Payment Plan, Paid, Open and Overpaid fields are hidden, not deleted (#2806).
+- **Unpaid** (amount minus Received) and **Uninvoiced** (amount minus Invoiced) replace the Receivable Balance, on the order, the contract and the account. A contract with Confirmed or Completed orders reads them from its Order Amount, any other contract from its Contract Value; Order Amount counts Confirmed and Completed orders only (#2806).
+- **Overdue Payment Plans** replaces Overdue Invoices: the plan steps past their planned date with an amount open (#2806).
+- **Confirming an order creates its payment plan step** when it has none: the order's total, planned by its payment terms. If the total changes later and the steps no longer add up to it, the order shows **Payment Plan Differs** (#2806).
+- **Confirming an order is refused when its Total Price is below what it has already received or invoiced;** a total equal to that figure confirms. Only the move from Draft to Confirmed is checked, a first confirm included, so an order confirmed below its figures before the upgrade keeps its status (#2827).
+- **Billing Milestone is now called Payment Plan** (回款计划, Plan de cobro, 入金計画). The API name `crm_billing_milestone` and the payment file's Billing Milestone column heading are unchanged (#2805).
+- An invoice that names another account's payment plan step is refused, on an API write too (#2755).
+
+### Sales
+
+- **Confirm Order, Complete Order and Cancel Order** buttons on the order and in the Orders list; each asks first. Status on the form still works, and is the only way back from Confirmed to Draft (#2716).
+- **A confirmed order's amount is locked with its lines,** and on an order with lines the Subtotal is the sum of the lines. To change a confirmed order, set its Status back to Draft, make the change and click Confirm Order again. Imports are not held by either rule (#2826).
+- **Contract Name** is required and is the contract's title. The number stays beside it, search finds a contract by either, and notices read `CTR-0006 · Annual Service 2027` (#2746).
+- **Contract Form:** Order Contract, Framework Contract or Other. **Draft Contract** on an order makes an order contract: its value is the order's total and follows it while the contract is a draft. On an activated contract, Contract Value, End Date and Payment Terms change only through **Change**, which asks for a reason and the signed amendment, and History keeps each change. An order contract whose order has changed since shows **Differs from the Order Amount** (#2804).
+- **A framework contract shows Order Amount and Remaining Quota** in a new Order Totals section. An order that takes it over the contract value saves with a warning; it is not blocked (#2807).
+- **Generate Quote** copies the opportunity's product lines onto the quote (#2750). **Accept** on a quote says that an order is created, not a contract (#2752). **Qualify Lead** opens with the Need Type and Estimated Amount the lead already has (#2754). A cancelled order no longer offers Draft Contract (#2756).
+- **Leads, cases and projects open on the standard record page.** The duplicate and SLA banners are gone: Duplicate Management sits under Identity on the lead, SLA Violated shows in SLA & Priority on the case, and the project's Gantt is in Project Tasks › Project Plan (#2740).
+- **Sales reps open the Sales app on My Deals.** What Sales Home and Account Workbench showed is in My Leads, My Tasks, Events and the Accounts views (#2740).
+- The lead import takes Disqualification Reason, Need Type and Estimated Amount columns, so unqualified and qualified leads import (#2780). Bulk Delete on expenses, accounts and opportunities says that the records go to the recycle bin (#2796). The forecast's Period Label help shows `Q3 2026` and `Aug 2026` in every language (#2786).
+
+### Project Delivery and Expenses
+
+- An approved or paid expense report can no longer be deleted, by an administrator either. The expenses of a report deleted while it waited for approval or was rejected go back to Draft (#2761).
+- **Mark as Paid** explains a refusal in your language (#2763), and a budget that is not ready for approval is refused in one whole sentence in Chinese, Japanese and Spanish (#2766).
+- A project task no longer shows the internal Schedule Type field; the Gantt still draws a milestone as a diamond (#2769).
+
+### Marketing
+
+- A person who opted out of email is refused in the same words at every door, in Chinese, Japanese and Spanish; the Chinese field label is `拒收邮件` on both the lead and the contact (#2774). A campaign that is not open for enrollment is refused in one sentence at every door, in Chinese and Japanese (#2778).
+
+### Docs
+
+- The Security & Compliance page says what a delete does for an erasure request: the record stays in the recycle bin, 30 days by default, unless an administrator purges it through the REST API (#2794).
+- The marketing manual says that a Completed campaign's numbers still follow its existing members (#2775), and the quote manual names the **Done** button (#2783).
+
 ## 6.6.0
 
 **Requires ObjectStack 18.6.0: upgrade the host first.** HotCRM 6.5.0 as it was published on 2026-11-18 already required 18.6.0, though its notes say 18.5.0, and it already carried the Expenses app (expense reports, travel requests, expense standards), Orders, Qualify Lead, the permission-aware Update Stage and the smaller fixes 18.6.0 brought (#2655). An installation on 6.5.0 already has those; they are listed below because 6.5.0's notes left them out.

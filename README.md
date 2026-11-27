@@ -14,7 +14,7 @@ Change it with AI when your business changes. Let your own AI agents work in it 
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Manifest](https://img.shields.io/badge/manifest-app.objectstack.hotcrm-blueviolet)](src/sales/index.ts)
-[![Version](https://img.shields.io/badge/version-6.6.0-brightgreen)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-6.7.0-brightgreen)](CHANGELOG.md)
 [![Marketplace](https://img.shields.io/badge/marketplace-cloud.objectos.ai-orange)](https://cloud.objectos.ai)
 
 [Documentation](https://hotcrm.com/docs) · [Marketplace](https://cloud.objectos.ai) · [中文说明](https://github.com/objectstack-ai/hotcrm/blob/main/README.zh-CN.md)
