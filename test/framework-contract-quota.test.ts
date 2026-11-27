@@ -161,6 +161,11 @@ describe('going over a framework contract warns, and the save goes through', () 
   });
 
   it('warns when a linked order\'s total goes up, and not on an edit that leaves it as it was', async () => {
+    // A confirmed order's amount is locked (hotcrm#2826): it goes up only
+    // back in Draft, where its own total on top of what was ordered still
+    // warns (hotcrm#2806), though the Draft does not count.
+    expect((await save('PATCH', `/data/crm_sales_order/${order}`, { tax: 10 })).status).toBe(409);
+    expect((await save('PATCH', `/data/crm_sales_order/${order}`, { status: 'draft' })).status).toBe(200);
     const raised = await save('PATCH', `/data/crm_sales_order/${order}`, { tax: 10 });
     expect(raised.status).toBe(200);
     expect(Number(raised.body.record.total_price)).toBe(610);

@@ -206,11 +206,13 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // insert and on update, the form's lock, the activated contract's locked
     // field, an order contract's value, Change on a contract that is not
     // activated, Change without its reason or amendment, a typed value on an
-    // order contract).
+    // order contract); 108 until hotcrm#2826 added `sales_order_workflow`'s
+    // two: the header amount of an order past Draft, and a typed Subtotal on
+    // an order with lines.
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(108);
+    expect(sites).toHaveLength(110);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {
