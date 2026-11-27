@@ -10,7 +10,7 @@
 
 ## Summary
 
-HotCRM is a single ObjectStack marketplace app at version `6.6.0`, shipped as one release artifact carrying seven packages in the namespace `crm` (ADR-0130 D4). The app manifest — id `app.objectstack.hotcrm`, the artifact's own identity — is defined in [`src/sales/index.ts`](../src/sales/index.ts); the six modules in [`src/service/index.ts`](../src/service/index.ts), [`src/revenue/index.ts`](../src/revenue/index.ts), [`src/marketing/index.ts`](../src/marketing/index.ts), [`src/o2c/index.ts`](../src/o2c/index.ts) (Order to Cash), [`src/expense/index.ts`](../src/expense/index.ts) (Expenses) and [`src/psa/index.ts`](../src/psa/index.ts) (Project Delivery); [`objectstack.config.ts`](../objectstack.config.ts) composes the seven.
+HotCRM is a single ObjectStack marketplace app at version `6.7.0`, shipped as one release artifact carrying seven packages in the namespace `crm` (ADR-0130 D4). The app manifest — id `app.objectstack.hotcrm`, the artifact's own identity — is defined in [`src/sales/index.ts`](../src/sales/index.ts); the six modules in [`src/service/index.ts`](../src/service/index.ts), [`src/revenue/index.ts`](../src/revenue/index.ts), [`src/marketing/index.ts`](../src/marketing/index.ts), [`src/o2c/index.ts`](../src/o2c/index.ts) (Order to Cash), [`src/expense/index.ts`](../src/expense/index.ts) (Expenses) and [`src/psa/index.ts`](../src/psa/index.ts) (Project Delivery); [`objectstack.config.ts`](../objectstack.config.ts) composes the seven.
 
 ## ObjectStack Validation
 
@@ -18,7 +18,7 @@ The summary `pnpm validate` prints — every figure read straight off the stack 
 loader registers:
 
 ```text
-HotCRM v6.6.0
+HotCRM v6.7.0
 Data: 38 Objects  638 Fields
 UI: 6 Apps  32 Views  4 Pages  7 Dashboards  10 Reports  56 Actions
 Logic: 55 Flows
