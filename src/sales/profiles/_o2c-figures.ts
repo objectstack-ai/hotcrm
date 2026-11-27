@@ -28,17 +28,38 @@
  */
 const READ = { readable: true } as const;
 
+// Unpaid and Uninvoiced replace the Receivable Balance (the 2026-11-26
+// ruling, hotcrm#2806): each set reads the two exactly where it read the
+// balance, so nobody gains or loses a figure's audience. The account's four
+// `*_on_orders` / `*_on_contracts` are the hidden halves its two figures are
+// summed from (`src/o2c/extensions/contract-account.extension.ts`), held to
+// the same audience so an API read cannot rebuild a figure a set does not see.
 export const O2C_CONTRACT_FIGURE_FIELDS = {
   'crm_contract.planned_amount':     READ,
   'crm_contract.invoiced_amount':    READ,
   'crm_contract.received_amount':    READ,
-  'crm_contract.receivable_balance': READ,
+  'crm_contract.unpaid_amount':      READ,
+  'crm_contract.uninvoiced_amount':  READ,
 };
 
+// Each half sums orders or contracts, which a set reading the account's
+// totals may not read (`service_director`, `service_agent`,
+// `marketing_user`): the totals are what it reads, never the rows, as for
+// invoices and payments (Irene, 2026-11-17 05:08Z 「保持现在的范围」).
+const HALF = {
+  ...READ,
+  rollupSourceUnreadableReason: 'The account\'s Unpaid and Uninvoiced are summed from these halves; a set that reads the totals reads them whether or not it reads the orders and contracts (hotcrm#2806).',
+} as const;
+
 export const O2C_ACCOUNT_FIGURE_FIELDS = {
-  'crm_account.invoiced_amount':     READ,
-  'crm_account.received_amount':     READ,
-  'crm_account.receivable_balance':  READ,
+  'crm_account.invoiced_amount':         READ,
+  'crm_account.received_amount':         READ,
+  'crm_account.unpaid_amount':           READ,
+  'crm_account.uninvoiced_amount':       READ,
+  'crm_account.unpaid_on_orders':        HALF,
+  'crm_account.unpaid_on_contracts':     HALF,
+  'crm_account.uninvoiced_on_orders':    HALF,
+  'crm_account.uninvoiced_on_contracts': HALF,
 };
 
 /**
@@ -53,7 +74,7 @@ export const O2C_ACCOUNT_FIGURE_FIELDS = {
  */
 export const o2cAccountFiguresOverUnreadRows = (reason: string) =>
   Object.fromEntries(
-    Object.keys(O2C_ACCOUNT_FIGURE_FIELDS).map((field) => [field, { ...READ, rollupSourceUnreadableReason: reason }]),
+    Object.entries(O2C_ACCOUNT_FIGURE_FIELDS).map(([field, row]) => [field, 'rollupSourceUnreadableReason' in row ? row : { ...READ, rollupSourceUnreadableReason: reason }]),
   );
 
 /** Both, for the sets that read the contract and the account (see above for the others). */

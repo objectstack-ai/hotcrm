@@ -85,14 +85,19 @@ changes afterwards, the contract shows **Differs from the Order Amount**.
 
 A framework contract's value is a ceiling for the orders placed under it. Its
 **Order Totals** show how far the orders have gone: **Order Amount** is the
-total of every order linked to the contract, tax included, whatever the
-order's status, and **Remaining Quota** is the contract value less that
-amount. Remaining Quota below zero means the orders have gone over.
+total of the **Confirmed** and **Completed** orders linked to the contract,
+tax included, and **Remaining Quota** is the contract value less that
+amount. A Draft or a Cancelled order counts in neither, nor in the contract's
+Unpaid and Uninvoiced; confirming a Draft adds it. Remaining Quota below zero
+means the orders have gone over. On an order contract, **Order Amount** is its
+order's total whatever the order's status but Cancelled.
 
 Linking an order to a framework contract, or raising a linked order's total,
 so that the orders go over the contract value saves the order and shows a
-warning. An edit that does not add to the order's total, or lowers it, gives
-no warning. An order line that takes its order over saves without the
+warning. A Draft order is checked as if it were confirmed, so the warning
+comes in time to change it, and confirming an order that takes the contract
+over warns again. An edit that does not add to the order's total, or lowers
+it, gives no warning. An order line that takes its order over saves without the
 warning; the contract's Remaining Quota shows it. The quota is the contract's
 current value: once Change gives an activated contract a new value, Remaining
 Quota counts from it.

@@ -17,10 +17,11 @@ type Rec = Record<string, any>;
  * (`src/o2c/extensions/`), on the shipped app booted by `@objectstack/verify`.
  *
  * - The figures follow the module's rows: planned from the plan, invoiced from
- *   issued invoices only, received from payments, the balance from the open
- *   amount of the issued invoices (Q2 ruled B, 2026-11-15), so an advance not
- *   set against an invoice moves Received and not the balance; the account's
- *   over the rows stamped with it.
+ *   issued invoices only, received from payments, each on its own (invoices
+ *   and payments run in parallel, the 2026-11-26 ruling, hotcrm#2806), and
+ *   Unpaid and Uninvoiced from the contract's own value; the account's over
+ *   the rows stamped with it. How the account sums Unpaid and Uninvoiced is
+ *   `test/o2c-parallel-figures.test.ts`.
  * - Who reads the account's totals is ruling C on hotcrm#2557 (comment
  *   6999611419): it takes a business role. `crm_user`, the default set every
  *   member holds, authors them `readable: false`; each set that should read
@@ -46,12 +47,12 @@ const insert = (object: string, doc: Rec): Promise<Rec> => verify.hooks.run(obje
 const row = async (object: string, id: string, as?: string): Promise<Rec> =>
   (await verify.rows(object, { id }, as ? { as } : undefined))[0]!;
 const num = (v: unknown): number => Number(v ?? 0);
-const TOTALS = ['invoiced_amount', 'received_amount', 'receivable_balance'] as const;
+const TOTALS = ['invoiced_amount', 'received_amount', 'unpaid_amount', 'uninvoiced_amount'] as const;
 
 /**
  * Ruling C on hotcrm#2557 (comment 6999611419), set by set: does a person
  * holding this set — and `crm_user`, which every member holds on this runtime
- * (`test/default-permission-set.test.ts`) — read the account's three totals,
+ * (`test/default-permission-set.test.ts`) — read the account's four totals,
  * and through what. `tenant_admin` is the SaaS composition's and is measured
  * on that boot below.
  */
@@ -111,38 +112,35 @@ describe('the figures follow the module\'s rows', () => {
     const step = await insert('crm_billing_milestone', {
       name: `Rx step ${++k}`, crm_contract: contract.id, planned_amount: 400000, planned_date: '2026-12-01',
     });
-    const inv = await insert('crm_invoice', {
-      invoice_number: `INV-RX-${++k}`, crm_contract: contract.id, crm_billing_milestone: step.id, issue_date: '2026-10-01', amount: 120000,
+    await insert('crm_invoice', {
+      invoice_number: `INV-RX-${++k}`, crm_contract: contract.id, issue_date: '2026-10-01', amount: 120000,
     });
     await insert('crm_invoice', {
       invoice_number: `INV-RX-${++k}`, crm_contract: contract.id, issue_date: '2026-10-01', amount: 9000, status: 'cancelled',
     });
-    await insert('crm_payment', { crm_contract: contract.id, crm_invoice: inv.id, payment_date: '2026-10-20', amount: 50000 });
-    // An advance: received, set against no invoice yet.
+    // Invoices and payments run in parallel (hotcrm#2806): the payments name
+    // the step or only the contract, never an invoice.
+    await insert('crm_payment', { crm_contract: contract.id, crm_billing_milestone: step.id, payment_date: '2026-10-20', amount: 50000 });
     await insert('crm_payment', { crm_contract: contract.id, payment_date: '2026-10-21', amount: 30000 });
   });
 
-  // The balance is the open amount of the issued invoices, summed: 120,000
-  // issued less the 50,000 set against it. The 9,000 cancelled invoice and the
-  // 30,000 advance leave it alone.
-  const openOfIssued = async (where: Rec): Promise<number> =>
-    (await verify.rows('crm_invoice', { ...where, status: 'issued' })).reduce((sum, r) => sum + num(r.open_amount), 0);
-
-  it('the contract reads planned, invoiced (issued only), received, and the open balance', async () => {
+  it('the contract reads planned, invoiced (issued only), received, and its own Unpaid and Uninvoiced', async () => {
     const c = await row('crm_contract', contract.id);
     expect(num(c.planned_amount) - num(before.c.planned_amount)).toBe(400000);
     expect(num(c.invoiced_amount) - num(before.c.invoiced_amount)).toBe(120000);
     expect(num(c.received_amount) - num(before.c.received_amount)).toBe(80000);
-    expect(num(c.receivable_balance) - num(before.c.receivable_balance)).toBe(70000);
-    expect(num(c.receivable_balance)).toBe(await openOfIssued({ crm_contract: contract.id }));
+    // The contract value less each, never below 0 (the 2026-11-26 ruling).
+    expect(num(c.unpaid_amount)).toBe(Math.max(0, num(c.contract_value) - num(c.received_amount)));
+    expect(num(c.uninvoiced_amount)).toBe(Math.max(0, num(c.contract_value) - num(c.invoiced_amount)));
   });
 
-  it('the account reads the same rows through the stamp', async () => {
+  it('the account reads the same rows through the stamp; a contract still in approval is not owed yet', async () => {
+    expect(contract.status, 'fixture: Wayne\'s contract is in approval').toBe('in_approval');
     const a = await row('crm_account', account.id);
     expect(num(a.invoiced_amount) - num(before.a.invoiced_amount)).toBe(120000);
     expect(num(a.received_amount) - num(before.a.received_amount)).toBe(80000);
-    expect(num(a.receivable_balance) - num(before.a.receivable_balance)).toBe(70000);
-    expect(num(a.receivable_balance)).toBe(await openOfIssued({ crm_account: account.id }));
+    expect(num(a.unpaid_amount)).toBe(num(before.a.unpaid_amount));
+    expect(num(a.uninvoiced_amount)).toBe(num(before.a.uninvoiced_amount));
   });
 });
 
@@ -151,7 +149,8 @@ describe('who reads them', () => {
     await verify.hooks.run('crm_account', 'update', { id: account.id, owner_id: rep.id }, { as: admin });
     const c = await row('crm_contract', contract.id, rep.token);
     expect(c, 'the rep reads the contract of an account they own').toBeTruthy();
-    expect(c.receivable_balance).not.toBeUndefined();
+    expect(c.unpaid_amount).not.toBeUndefined();
+    expect(c.uninvoiced_amount).not.toBeUndefined();
     expect(c.planned_amount).not.toBeUndefined();
   });
 
@@ -171,7 +170,7 @@ describe('who reads them', () => {
       ? await signUpPerson(verify, 'totals-crm_user@o2c-receivables.test', { name: 'Totals crm_user' })
       : await signUpPerson(verify, `totals-${set}@o2c-receivables.test`, { name: `Totals ${set}`, permissionSets: [set] });
     const record = await totalsAsServedTo(verify, admin, holder, set);
-    expect(TOTALS.map((f) => f in record), `what ${set} reads of the three`).toEqual([reads, reads, reads]);
+    expect(TOTALS.map((f) => f in record), `what ${set} reads of the four`).toEqual([reads, reads, reads, reads]);
   });
 
   // crm_user, marketing_user, service_agent and project_member read accounts
@@ -225,7 +224,7 @@ pause.describe("the SaaS composition's administrator", () => {
     const me = (await (await saas.apiAs(tenantAdmin.token, 'GET', '/auth/me/permissions')).json()) as Rec;
     expect([...me.permissionSets].sort(), 'the person holds tenant_admin and the default set').toEqual(expect.arrayContaining(['crm_user', 'tenant_admin']));
     const record = await totalsAsServedTo(saas, saasAdmin, tenantAdmin, 'tenant_admin');
-    expect(TOTALS.map((f) => f in record)).toEqual([true, true, true]);
+    expect(TOTALS.map((f) => f in record)).toEqual([true, true, true, true]);
   }, 180_000);
 });
 
@@ -243,12 +242,12 @@ describe('with the module disabled', () => {
       const body = (await res.json()) as Rec;
       return Object.keys((body.item ?? body.data ?? body).fields ?? {});
     };
-    expect(await fields()).toContain('receivable_balance');
+    expect(await fields()).toContain('unpaid_amount');
     expect((await verify.apiAs(admin, 'PATCH', `${PKG}/disable`)).status).toBe(200);
-    expect(await fields()).not.toContain('receivable_balance');
+    expect(await fields()).not.toContain('unpaid_amount');
     expect(await fields()).not.toContain('planned_amount');
     expect((await verify.apiAs(admin, 'PATCH', `${PKG}/enable`)).status).toBe(200);
-    expect(await fields()).toContain('receivable_balance');
+    expect(await fields()).toContain('unpaid_amount');
   }, 60_000);
 
   // The module's own app (#2465) leaves with it, as the Marketing app does

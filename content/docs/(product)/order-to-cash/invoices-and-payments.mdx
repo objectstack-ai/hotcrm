@@ -1,13 +1,13 @@
 ---
 title: Invoices and Payments
-description: How finance enters and imports invoices and payments, how a due date is set, what Overdue Invoices lists, and how payments are imported.
+description: How finance enters and imports invoices and payments, how a due date is set, what Unpaid and Uninvoiced count, and how payments are imported.
 ---
 
 # Invoices and Payments
 
 An **invoice** here is the record of an invoice finance issued in its own system; a **payment** is the record of money received. Finance writes both, by entry or by import. Sales reads them on the account, on the order, on the contract and in the **Order to Cash** lists.
 
-Both belong to the **account**. The order and the contract are optional: an invoice for one order names that order; one invoice for several orders, or an advance that matches no invoice yet, names only the account.
+Both belong to the **account**, and they run **in parallel**: a payment names no invoice. An invoice names the order or the contract it bills; a payment names the plan step it collects, or the order or the contract it pays. One invoice for several orders, or an advance that matches nothing yet, names only the account. What the customer still owes is read off the order, the contract and the account (**Unpaid**), and what is late off the collection plan, not off each invoice.
 
 The **Accounts Receivable** position enters and imports them on every account. It reads every account and edits none: reading the account is enough to write its invoices and payments.
 
@@ -16,50 +16,50 @@ The **Accounts Receivable** position enters and imports them on every account. I
 | Field | What it holds |
 | --- | --- |
 | **Invoice Number** | The number on the invoice, as finance issued it |
-| **Account** | The customer it was issued to. Required; filled in when you choose an order, a contract or a plan step |
+| **Account** | The customer it was issued to. Required; filled in when you choose an order or a contract |
 | **Order** | The order it bills, if any. Choosing one fills in its account, and its contract when the order sits under one; an order of another account is refused |
 | **Contract** | The contract it was issued against, if any |
-| **Payment Plan** | The plan step it bills, if any. Choosing one fills in its account, and its order and contract when the invoice has none; a plan step of another account is refused |
 | **Issue Date** | The day it was issued |
 | **Due Date** | The day payment is due (see below) |
 | **Amount** | As issued, tax included |
 | **Status** | **Issued**, or **Cancelled** |
-| **Paid** | The total of the payments made against this invoice |
-| **Open** | **Amount** minus **Paid**, never below zero; nothing for a cancelled invoice |
-| **Overpaid** | What was paid above **Amount**, if anything (see below) |
 | **Invoice File** | The invoice document, if you attach one |
 
 **The due date.** Leave **Due Date** empty and it is set when you save: the **Issue Date** plus the contract's **Payment Terms**, or the order's when there is no contract or it has none (Net 15, 30, 60 or 90 days; Due on Receipt is the issue date itself). Enter a date and it is kept as entered. An invoice with neither an order nor a contract has no payment terms to read, so type its due date.
 
-**Overpayments.** A payment that takes **Paid** above **Amount** is accepted, typed or imported, because the cash was received. The invoice then counts as fully paid: **Open** reads zero and the excess shows in **Overpaid**. The excess is not set against the customer's other invoices, and the contract's and the account's **Receivable Balance** never go below zero because of it.
+**Cancelled invoices.** An invoice cancelled or fully credited at the source is set to **Cancelled** here. It then leaves every figure: the order's, the contract's and the account's **Invoiced** stop counting it, and their **Uninvoiced** rises by its amount.
 
-**Cancelled invoices.** An invoice cancelled or fully credited at the source is set to **Cancelled** here. It then leaves every figure: its plan step stops counting it as invoiced, and it is open for nothing.
+## Unpaid and Uninvoiced [#unpaid-and-uninvoiced]
 
-**An invoice against another account's plan step is refused.** The message names the step, or the order or contract the step filled in while the invoice still has it. The form lists every account's plan steps, so the check is made when you save.
+| Figure | On the order | On the contract |
+| --- | --- | --- |
+| **Unpaid** | **Total Price** minus **Received** | **Order Amount** minus **Received** when it has a confirmed or completed order, else **Contract Value** minus **Received** |
+| **Uninvoiced** | **Total Price** minus **Invoiced** | **Order Amount** minus **Invoiced** when it has a confirmed or completed order, else **Contract Value** minus **Invoiced** |
 
-## Overdue Invoices [#overdue-invoices]
+A contract with orders owes what was ordered under it, not its value: a framework contract worth 1,000,000 with 600,000 ordered and 100,000 invoiced reads Uninvoiced 500,000. What was ordered counts **Confirmed** and **Completed** orders only: a Draft or a Cancelled order adds nothing, and a contract whose orders are all Draft or Cancelled owes its Contract Value. Confirming a Draft adds it. An invoice or a payment entered on an order takes the order's contract, so the contract's **Invoiced** and **Received** count it, once.
 
-The **Overdue Invoices** list, under **Follow-up → Overdue Invoices** in the **Order to Cash** app and as a tab of its **Invoices** list, shows every invoice you can see that is **Issued**, whose **Due Date** is before today, and that still has an **Open** amount, oldest due date first. An invoice leaves the list the day its payments cover it, or when finance cancels it.
+Neither goes below zero: a payment above what is owed is accepted, typed or imported, because the cash was received, and Unpaid stops at zero. The account's **Unpaid** and **Uninvoiced** add up the figures of each deal it has signed, once: every **Confirmed** or **Completed** order, and every **Activated** or **Expired** contract with no order. [Totals on the order, the contract and the account](/docs/order-to-cash#totals) lists what counts.
+
+**What is overdue** is a plan step past its **Planned Date** with an amount still open: **Follow-up → Overdue Payment Plans** in the **Order to Cash** app. See [The Collection Plan](./collection-plan).
 
 ## Payments [#payments]
 
 | Field | What it holds |
 | --- | --- |
 | **Payment Number** | Numbered for you: PAY-00001, PAY-00002… |
-| **Account** | The customer who paid. Required; filled in when you choose an order, a contract, an invoice or a plan step |
-| **Order** | The order the money was received for, if any. Filled in from the invoice, or else the plan step, when left empty |
-| **Contract** | The contract the money was received for, if any. Filled in from the order, the invoice, or else the plan step, when left empty |
-| **Invoice** | The invoice it pays, if any. Choosing one fills in its account, and its contract when the payment has none. When the invoice counts toward a plan step, saving the payment with it gives the payment that step, replacing one it named |
-| **Payment Plan** | The plan step it counts toward. Filled in from the invoice when there is one; set it yourself for an advance paid before its invoice |
+| **Account** | The customer who paid. Required; filled in when you choose an order, a contract or a plan step |
+| **Order** | The order the money was received for, if any. Filled in from the plan step when left empty |
+| **Contract** | The contract the money was received for, if any. Filled in from the order, or else the plan step, when left empty |
+| **Payment Plan** | The plan step it counts toward, if any. Choosing one fills in its account; another account's is refused |
 | **Payment Date** | The day the money was received |
 | **Amount** | How much was received |
 | **Method** | **Bank Transfer** or **Other** |
 
-**One row per invoice.** A receipt that pays several invoices is recorded as one payment per invoice, split the way finance already split it. There is no allocation step in HotCRM.
+**One row per plan step.** A receipt that settles several plan steps, or several orders, is recorded as one payment per step or order, split the way finance already split it. There is no allocation step in HotCRM.
 
-**An advance before its invoice.** Record the payment against the plan step, or against the account alone when no step plans it yet. When the invoice is issued, fill in **Invoice** on the same payment.
+**An advance.** Record the payment against the plan step, the order, or the account alone when nothing plans it yet. Nothing has to be filled in when the invoice is issued later: invoices and payments are not matched.
 
-**A payment against another account's invoice or plan step is refused**, with a message naming it. The form lists every account's invoices and plan steps, so the check is made when you save.
+**A payment against another account's plan step is refused**, with a message naming it. The form lists every account's plan steps, so the check is made when you save.
 
 **An order or a contract of another account is refused** on an invoice or a payment, with a message naming it. So is a contract other than the order's own, and an order and a contract of two different accounts. Leave **Account** empty in an import and the order or the contract fills it.
 
@@ -70,18 +70,18 @@ Finance can load invoices and payments from a spreadsheet, an accounting package
 | Column | Invoices | Payments |
 | --- | --- | --- |
 | ERP Reference | ✓ the key | ✓ the key |
-| Account | ✓ the account name; may stay empty when an order or a contract is given | ✓ may stay empty when an order, a contract, an invoice or a step is given |
+| Account | ✓ the account name; may stay empty when an order or a contract is given | ✓ may stay empty when an order, a contract or a step is given |
 | Order | ✓ the order number, such as SO-0001, or the order's External Reference; optional | ✓ optional |
 | Contract | ✓ the contract number, such as CTR-0001; optional | ✓ optional |
 | Invoice Number | ✓ | — |
-| Invoice | — | ✓ the invoice number |
-| Billing Milestone | ✓ the step's name | ✓ |
+| Billing Milestone | — | ✓ the step's name |
 | Issue Date, Due Date, Amount, Status | ✓ | — |
 | Payment Date, Amount, Method | — | ✓ |
 
 - **The ERP Reference is the key.** Importing a row whose **ERP Reference** is already on an invoice updates that invoice instead of adding a second one, so the same file can be imported again after finance changes it. An ERP writing through the API uses the same key.
 - **Every imported row is marked.** Its **Source** reads **Import** and its **Synced At** is the moment of the import, so a reader can see where a figure came from and how old it is. A row entered by hand reads **Manual entry**.
-- **References resolve by name.** An account name, order number or reference, contract number, invoice number or step name that matches nothing fails that row, and the import report names it. A row that names no account, order or contract (nor, for a payment, an invoice or a step) fails too: the account is required.
+- **References resolve by name.** An account name, order number or reference, contract number or step name that matches nothing fails that row, and the import report names it. A row that names no account, order or contract (nor, for a payment, a step) fails too: the account is required.
 - **A step name used on more than one contract fails the row.** Steps are often named alike ("Advance 30%", "Year 2"), and the import looks the name up across every contract, not only the row's own, so the report reads *matches more than one record*. Put the step's record ID in the **Payment Plan** column instead; it is at the end of the address of the step's page. Two accounts with the same name fail the **Account** column the same way.
+- **One receipt across two orders is two payment rows**, and each needs its own **ERP Reference**, which is unique. Agree the reference rule with whoever produces the file, for example the receipt's key plus the order number.
 
 Amounts are in your company's currency, like every amount in HotCRM. Convert before importing.

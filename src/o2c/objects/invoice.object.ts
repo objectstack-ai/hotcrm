@@ -9,21 +9,28 @@ import { ObjectSchema, Field } from '@objectstack/spec/data';
  * authority's system); this row is how sales sees it. Finance enters it or
  * imports it on `erp_ref` (`../mappings/invoice_import.mapping.ts`).
  *
- * It belongs to the account (REQ-0010, hotcrm#2557). The order, the contract
- * and the plan step are optional sources (the order since hotcrm#2560): an
- * invoice for one order names it, and one for several orders, or with no
- * source at all, names only the account.
+ * It belongs to the account (REQ-0010, hotcrm#2557). The order and the
+ * contract are optional sources (the order since hotcrm#2560): an invoice for
+ * one order names it, and one for several orders, or with no source at all,
+ * names only the account.
+ *
+ * Invoices and payments run in parallel (the 2026-11-26 ruling, hotcrm#2806):
+ * an invoice hangs on its order or contract, on no payment and on no plan
+ * step, and is never set against a payment. The order's, the contract's and
+ * the account's Invoiced sum it; their Received sums payments on their own.
+ * Paid, Open, Overpaid and the plan step are hidden, not deleted: the columns
+ * and what earlier rows hold stay for a later ERP sync, and `invoice_figures`
+ * still keeps Open and Overpaid in step with Paid on those rows.
  *
  * An invoice cancelled or fully credited at the source is set `cancelled` and
- * leaves every figure: the plan step's Invoiced counts `issued` rows only, and
- * a cancelled invoice is open for nothing.
+ * leaves every figure: Invoiced counts `issued` rows only.
  */
 export const Invoice = ObjectSchema.create({
   name: 'crm_invoice',
   label: 'Invoice',
   pluralLabel: 'Invoices',
   icon: 'receipt',
-  description: 'An invoice finance issued to an account, and how much of it is paid',
+  description: 'An invoice finance issued to an account, against its order or contract',
 
   // Whoever reads the account reads its invoices (ADR-0055; through the
   // contract before hotcrm#2557, which derives from the account, so the
@@ -35,11 +42,12 @@ export const Invoice = ObjectSchema.create({
   sharingModel: 'controlled_by_parent',
   sharing: { controlledByParent: { writeRequiresMasterRead: true } },
   nameField: 'invoice_number',
-  highlightFields: ['amount', 'due_date', 'status', 'open_amount'],
+  // The amount sits in the strip: with Paid, Open and Overpaid hidden
+  // (hotcrm#2806) an Amounts section would hold nothing else.
+  highlightFields: ['amount', 'issue_date', 'due_date', 'status'],
 
   fieldGroups: [
     { key: 'basic',   label: 'Invoice',        icon: 'receipt' },
-    { key: 'amounts', label: 'Amounts',        icon: 'dollar-sign' },
     { key: 'source',  label: 'Source',         icon: 'refresh-ccw', collapse: 'collapsed' },
   ],
 
@@ -60,7 +68,7 @@ export const Invoice = ObjectSchema.create({
       required: true,
       storage: { notNull: true },
       deleteBehavior: 'restrict',
-      relatedListColumns: ['invoice_number', 'crm_sales_order', 'crm_contract', 'due_date', 'amount', 'open_amount', 'status'],
+      relatedListColumns: ['invoice_number', 'crm_sales_order', 'crm_contract', 'due_date', 'amount', 'status'],
     }),
 
     // An optional source (hotcrm#2560): the order this invoice bills. Picking
@@ -83,7 +91,7 @@ export const Invoice = ObjectSchema.create({
         { target: 'crm_account', source: 'crm_account', overwrite: true },
         { target: 'crm_contract', source: 'crm_contract' },
       ],
-      relatedListColumns: ['invoice_number', 'issue_date', 'due_date', 'amount', 'paid_amount', 'open_amount', 'status'],
+      relatedListColumns: ['invoice_number', 'issue_date', 'due_date', 'amount', 'status'],
     }),
 
     // An optional source. Picking it fills the account on the form; on every
@@ -104,7 +112,7 @@ export const Invoice = ObjectSchema.create({
       storage: { notNull: false },
       deleteBehavior: 'restrict',
       lookupAutofill: [{ target: 'crm_account', source: 'crm_account', overwrite: true }],
-      relatedListColumns: ['invoice_number', 'issue_date', 'due_date', 'amount', 'paid_amount', 'open_amount', 'status'],
+      relatedListColumns: ['invoice_number', 'issue_date', 'due_date', 'amount', 'status'],
     }),
 
     // An optional source. When the invoice names no contract, the step's
@@ -112,9 +120,15 @@ export const Invoice = ObjectSchema.create({
     // the step's count the same invoices. Deleting the step leaves the
     // invoice (`set_null`, the lookup default). A step of another account is
     // refused on save (`invoice_plan_step_guard` in `invoice.hook.ts`).
+    //
+    // Hidden, not deleted (the 2026-11-26 ruling, hotcrm#2806): an invoice
+    // hangs on no plan step any more. The column and what earlier rows hold
+    // stay, for a later ERP sync; a row that still names a step through the
+    // API is held to the step's account (`invoice_plan_step_guard`).
     crm_billing_milestone: Field.lookup('crm_billing_milestone', {
       label: 'Payment Plan',
       group: 'basic',
+      hidden: true,
       // No `dependsOn`, as the order and the contract lookups have none
       // (hotcrm#2755): measured in the browser, it hid the step the milestone
       // page's New prefills ("Select Account first") and cleared it when the
@@ -131,7 +145,9 @@ export const Invoice = ObjectSchema.create({
         { target: 'crm_sales_order', source: 'crm_sales_order' },
         { target: 'crm_contract', source: 'crm_contract' },
       ],
-      relatedListColumns: ['invoice_number', 'issue_date', 'amount', 'status'],
+      // No Invoices list on the payment plan's page either: a New there
+      // would write the hidden link (hotcrm#2806).
+      relatedList: false,
     }),
 
     issue_date: Field.date({
@@ -163,15 +179,20 @@ export const Invoice = ObjectSchema.create({
 
     amount: Field.currency({
       label: 'Amount',
-      group: 'amounts',
+      group: 'basic',
       required: true,
       min: 0,
       description: 'As issued, tax included.',
     }),
 
+    // Paid, Open and Overpaid are hidden, not deleted (the 2026-11-26 ruling,
+    // hotcrm#2806): an invoice is not set against payments any more, so no
+    // new payment moves them. Kept for the rows entered before, and for a
+    // later ERP sync.
     paid_amount: Field.summary({
       label: 'Paid',
-      group: 'amounts',
+      group: 'basic',
+      hidden: true,
       scale: 2,
       readonly: true,
       summaryOperations: {
@@ -182,16 +203,15 @@ export const Invoice = ObjectSchema.create({
       },
     }),
 
-    // Amount minus paid, never below zero, STORED rather than a formula,
-    // because the rep's Overdue Invoices view filters on it and a formula is
-    // not a stored column the engine can filter (INVALID_FIELD).
-    // `invoice_figures` (`invoice.hook.ts`) writes it on every save, the
-    // paid-amount recompute included; a cancelled invoice is open for nothing.
-    // The contract's and the account's Receivable Balance sum it, so the floor
-    // here is what keeps both from going negative (#2513).
+    // Amount minus paid, never below zero, stored. `invoice_figures`
+    // (`invoice.hook.ts`) writes it on every save, the paid-amount recompute
+    // included; a cancelled invoice is open for nothing. Until the 2026-11-26
+    // ruling the Overdue Invoices view filtered on it and the Receivable
+    // Balance summed it (#2513); both are gone (hotcrm#2806).
     open_amount: Field.currency({
       label: 'Open',
-      group: 'amounts',
+      group: 'basic',
+      hidden: true,
       readonly: true,
     }),
 
@@ -202,7 +222,8 @@ export const Invoice = ObjectSchema.create({
     // Written by `invoice_figures` beside Open.
     overpaid_amount: Field.currency({
       label: 'Overpaid',
-      group: 'amounts',
+      group: 'basic',
+      hidden: true,
       readonly: true,
       description: 'What was paid above the amount. The invoice counts as fully paid; the excess is not set against other invoices.',
     }),

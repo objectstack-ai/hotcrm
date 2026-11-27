@@ -107,7 +107,7 @@ pnpm dev
 
 定义就是应用。对象和字段、规则、界面、流程、权限和翻译都是 `src/` 下的类型化元数据：在那里改一个字段，数据表、API 和界面随之一起变，没有第二套应用需要同步。像 Claude Code 这样的 AI 编程智能体在你的仓库副本里写下这次改动，`pnpm validate` 在发布前按平台的 schema 检查它。
 
-目前这份定义包含 **38 个业务对象**、**56 个动作**、**53 个流程**、**7 个仪表盘**、**11 个数据集**和 **18 个岗位**，支持 **4 种语言**（en、zh-CN、es-ES、ja-JP）。
+目前这份定义包含 **38 个业务对象**、**56 个动作**、**55 个流程**、**7 个仪表盘**、**11 个数据集**和 **18 个岗位**，支持 **4 种语言**（en、zh-CN、es-ES、ja-JP）。
 
 HotCRM 构建在 [ObjectStack](https://github.com/objectstack-ai/objectstack) 之上：这个开源平台把一份业务定义同时运行为数据库、API、界面和智能体工具。[定制与扩展](https://hotcrm.com/zh-Hans/docs/developers/customize-and-extend) 演示了一次改动的全过程。
 

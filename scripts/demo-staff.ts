@@ -57,7 +57,9 @@
 //      evidence that speaks to step 3: the reps must still OWN NO ACCOUNT (a
 //      share to an owner proves nothing under a `private` OWD, so owning them
 //      would delete the territory demonstration), while every routed row must
-//      sit on a demo persona (held rows aside) and none of them may hold the lot. It also
+//      sit on a demo persona (held rows aside) and none of them may hold the lot. Each
+//      persona must also read at least one row of every object its row lists
+//      under `mustRead` (the finance personas: invoices and payments). It also
 //      re-reads the dev admin's resolved sets, which must name every set step 0
 //      granted. Exits non-zero if any of that fails.
 //
@@ -641,7 +643,8 @@ async function ownershipCensus(
   const failures: string[] = [];
   const nameOf = (userId: string) =>
     roster.find((r) => r.userId === userId)?.email ?? (userId === adminId ? 'the dev admin' : userId);
-  const w = 16;
+  // Wide enough for the longest persona handle (`finance.controller` is 18), so columns never run together.
+  const w = Math.max(16, ...roster.map((r) => r.email.split('@')[0].length + 2));
   const ownedOverall = new Map<string, number>();
   let grandTotal = 0;
 
@@ -757,6 +760,20 @@ async function verify(base: URL, outcomes: StaffOutcome[], adminAccounts: Json[]
     const territories = [...new Set(names.map(territoryOf))].sort();
     console.log(`   ${member.email} sees ${rows.length} account(s): ${names.join(', ') || '—'}`);
     console.log(`     territory/country: [${territories.join(', ')}]`);
+
+    // The surfaces a persona exists to show (the table's `mustRead`): each must
+    // answer this user with at least one row, or the persona demonstrates nothing.
+    for (const object of member.mustRead ?? []) {
+      const surface = await asUser.tryQuery(object, ['id']);
+      const count = 'denied' in surface ? 0 : surface.rows.length;
+      console.log(`     ${object}: ${'denied' in surface ? `denied (${surface.denied})` : `${count} row(s)`}`);
+      if (count === 0) {
+        failures.push(
+          `${member.email} reads no ${object} row` +
+          `${'denied' in surface ? ` (${surface.denied})` : ''} — the surface this persona exists to show is empty for them.`,
+        );
+      }
+    }
 
     const owned = rows.filter((r) => String(r.owner_id ?? '') === userId).map((r) => String(r.name));
     if (owned.length > 0) {

@@ -24,12 +24,16 @@ type Rec = Record<string, any>;
  *   is refused, by the step's own name (hotcrm#2755: the form's picker lists
  *   every account's steps, so this rule is what keeps them apart).
  * - `invoice_figures` — a blank due date takes the contract's payment terms,
- *   and `open_amount` (stored, so the overdue view can filter it) follows the
- *   payments and the status.
+ *   and `open_amount` follows the payments and the status.
  * - `payment_plan_step_stamp` — a payment takes its invoice's plan step, and a
  *   payment naming another account's invoice or plan step is refused, by the
  *   invoice's or the step's own name (hotcrm#2755: the form's pickers list
  *   every account's, so this rule is what keeps them apart).
+ *
+ * Since hotcrm#2806 (invoices and payments run in parallel) the payment's
+ * invoice, the invoice's plan step and its paid / open / overpaid are hidden,
+ * not deleted: no form or import writes them, and the stamps and guards above
+ * still hold what an API write or an earlier row names to the account.
  *
  * Real writes: each refusal is the engine's answer, envelope asserted.
  */
@@ -120,7 +124,10 @@ describe('invoice_plan_step_guard: an invoice\'s plan step belongs to its accoun
 
   // What the milestone page's New posts once the account is chosen: the
   // account and the step, no contract.
-  it('an invoice entered from a plan step keeps it, takes its contract, and the step counts it', async () => {
+  // Hidden since hotcrm#2806 (an invoice hangs on no plan step), the column
+  // is kept for earlier rows and an API write still names it: the stamp and
+  // the guard hold it to the account. The step no longer counts invoices.
+  it('an invoice that still names a plan step keeps it and takes its contract; the step counts no invoice', async () => {
     const s = await step(wayne, { planned_amount: 900 });
     const i = await insert('crm_invoice', {
       invoice_number: `INV-FROM-STEP-${++k}`, crm_account: wayne.crm_account, crm_billing_milestone: s.id, issue_date: '2026-10-01', amount: 400,
@@ -129,7 +136,7 @@ describe('invoice_plan_step_guard: an invoice\'s plan step belongs to its accoun
     expect(ri.crm_billing_milestone).toBe(s.id);
     expect(ri.crm_contract).toBe(wayne.id);
     expect(ri.crm_account).toBe(wayne.crm_account);
-    expect(Number((await row('crm_billing_milestone', s.id)).invoiced_amount)).toBe(400);
+    expect(await row('crm_billing_milestone', s.id)).not.toHaveProperty('invoiced_amount');
   });
 
   it('refuses an invoice naming another account\'s plan step, naming the step', async () => {
@@ -216,9 +223,9 @@ describe('the plan figures follow invoices and payments', () => {
     expect(Number(i.open_amount)).toBe(260000);
   });
 
-  it('the step reads invoiced (issued only), received and open', async () => {
+  it('the step reads received and open, stored (hotcrm#2806: no Invoiced on a step)', async () => {
     const s = await row('crm_billing_milestone', plan.id);
-    expect(Number(s.invoiced_amount)).toBe(360000);
+    expect(s).not.toHaveProperty('invoiced_amount');
     expect(Number(s.received_amount)).toBe(100000);
     expect(Number(s.open_amount)).toBe(260000);
   });
@@ -240,15 +247,19 @@ describe('the plan figures follow invoices and payments', () => {
 });
 
 describe('a payment\'s invoice and plan step belong to its account (hotcrm#2755)', () => {
-  it('the two lookups are not filtered by the account, and the pick fills it', () => {
-    for (const key of ['crm_invoice', 'crm_billing_milestone'] as const) {
-      const field = Payment.fields[key] as Rec;
-      expect(field.dependsOn, `${key}: a dependsOn hides, then drops, the parent a page's New prefills`).toBeUndefined();
-      expect(field.lookupAutofill, key).toContainEqual({ target: 'crm_account', source: 'crm_account', overwrite: true });
-    }
+  it('the plan step lookup is not filtered by the account, and the pick fills it', () => {
+    const field = Payment.fields.crm_billing_milestone as Rec;
+    expect(field.dependsOn, 'a dependsOn hides, then drops, the step the payment plan page\'s New prefills').toBeUndefined();
+    expect(field.lookupAutofill).toContainEqual({ target: 'crm_account', source: 'crm_account', overwrite: true });
   });
 
-  it('a payment entered from an invoice keeps it, and the invoice and its step count it', async () => {
+  it('the invoice lookup stays hidden, with no Payments list on the invoice (hotcrm#2806)', () => {
+    const field = Payment.fields.crm_invoice as Rec;
+    expect(field.hidden).toBe(true);
+    expect(field.relatedList).toBe(false);
+  });
+
+  it('a payment written with an invoice through the API keeps it, and the invoice and its step count it', async () => {
     const s = await step(wayne, { planned_amount: 900 });
     const i = await invoice(wayne, { crm_billing_milestone: s.id, amount: 900 });
     const p = await insert('crm_payment', { crm_account: wayne.crm_account, crm_invoice: i.id, payment_date: '2026-10-26', amount: 400 });

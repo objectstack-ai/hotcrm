@@ -75,7 +75,7 @@ export const esES: TranslationData = {
     crm_billing_milestone: {
       label: 'Plan de cobro',
       pluralLabel: 'Planes de cobro',
-      description: 'Un paso del plan de cobro de una cuenta, planificado a partir de un pedido o un contrato: qué se debe, cuándo, y cuánto está facturado y cobrado',
+      description: 'Un paso del plan de cobro de una cuenta, previsto desde un pedido o un contrato: qué se debe, cuándo y cuánto se ha cobrado',
       _validations: {
         billing_milestone_source: { message: 'Elija el pedido o el contrato al que pertenece este hito.' },
       },
@@ -103,9 +103,6 @@ export const esES: TranslationData = {
           label: 'Fecha de aceptación',
           help: 'Para un paso que se cobra a la aceptación: el día en que el cliente lo dio por aceptado.',
         },
-        invoiced_amount: {
-          label: 'Facturado',
-        },
         received_amount: {
           label: 'Cobrado',
         },
@@ -123,6 +120,9 @@ export const esES: TranslationData = {
         planned_this_month: {
           label: 'Previsto este mes',
         },
+        overdue_billing_milestones: {
+          label: 'Planes de cobro vencidos',
+        },
       },
       _sections: {
         basic: {
@@ -139,7 +139,7 @@ export const esES: TranslationData = {
     crm_invoice: {
       label: 'Factura',
       pluralLabel: 'Facturas',
-      description: 'Una factura que finanzas emitió a una cuenta, y cuánto de ella está pagado',
+      description: 'Una factura que finanzas emitió a una cuenta, sobre su pedido o contrato',
       fields: {
         invoice_number: {
           label: 'Número de factura',
@@ -208,16 +208,10 @@ export const esES: TranslationData = {
         all_invoices: {
           label: 'Todas las facturas',
         },
-        overdue_invoices: {
-          label: 'Facturas vencidas',
-        },
       },
       _sections: {
         basic: {
           label: 'Factura',
-        },
-        amounts: {
-          label: 'Importes',
         },
         source: {
           label: 'Origen',
@@ -227,7 +221,7 @@ export const esES: TranslationData = {
     crm_payment: {
       label: 'Cobro',
       pluralLabel: 'Cobros',
-      description: 'Dinero que pagó una cuenta: contra una factura, un plan de cobro, un pedido, un contrato, o ninguno todavía',
+      description: 'Dinero que pagó una cuenta: contra un plan de cobro, un pedido, un contrato o ninguno todavía',
       fields: {
         payment_number: {
           label: 'Número de cobro',
@@ -305,6 +299,18 @@ export const esES: TranslationData = {
           label: 'Cobrado',
           help: 'Los cobros recibidos, sumados.',
         },
+        unpaid_amount: {
+          label: 'Pendiente de cobro',
+          help: 'El importe menos lo cobrado, nunca por debajo de 0.',
+        },
+        uninvoiced_amount: {
+          label: 'Pendiente de facturar',
+          help: 'El importe menos lo facturado (facturas emitidas), nunca por debajo de 0.',
+        },
+        plan_differs: {
+          label: 'El plan de cobro no cuadra',
+          help: 'El total del plan de cobro no es el Precio total del pedido. Edite, divida o añada pasos para que el plan sume el pedido.',
+        },
       },
     },
     // The contract's and the account's receivables figures, added by this
@@ -323,9 +329,16 @@ export const esES: TranslationData = {
           label: 'Cobrado',
           help: 'Los cobros recibidos, sumados.',
         },
-        receivable_balance: {
-          label: 'Saldo pendiente',
-          help: 'Lo que el cliente aún debe de las facturas abiertas: el importe pendiente de las facturas emitidas, sumado. Un cobro aún no aplicado a una factura solo cuenta en Cobrado.',
+        unpaid_amount: {
+          label: 'Pendiente de cobro',
+          help: 'El Importe del Pedido si el contrato tiene pedidos, si no el valor del contrato, menos lo cobrado, nunca por debajo de 0.',
+        },
+        uninvoiced_amount: {
+          label: 'Pendiente de facturar',
+          help: 'El Importe del Pedido si el contrato tiene pedidos, si no el valor del contrato, menos lo facturado (facturas emitidas), nunca por debajo de 0.',
+        },
+        order_count: {
+          label: 'Pedidos',
         },
       },
     },
@@ -339,9 +352,25 @@ export const esES: TranslationData = {
           label: 'Cobrado',
           help: 'Los cobros recibidos, sumados.',
         },
-        receivable_balance: {
-          label: 'Saldo pendiente',
-          help: 'Lo que el cliente aún debe de las facturas abiertas: el importe pendiente de las facturas emitidas, sumado. Un cobro aún no aplicado a una factura solo cuenta en Cobrado.',
+        unpaid_amount: {
+          label: 'Pendiente de cobro',
+          help: 'Lo que los pedidos confirmados y completados de la cuenta, y sus contratos firmados sin pedido, aún tienen por cobrar: el importe de cada uno menos lo cobrado, nunca por debajo de 0, sumado.',
+        },
+        uninvoiced_amount: {
+          label: 'Pendiente de facturar',
+          help: 'Lo que los pedidos confirmados y completados de la cuenta, y sus contratos firmados sin pedido, aún tienen por facturar: el importe de cada uno menos sus facturas emitidas, nunca por debajo de 0, sumado.',
+        },
+        unpaid_on_orders: {
+          label: 'Pendiente de cobro en pedidos',
+        },
+        unpaid_on_contracts: {
+          label: 'Pendiente de cobro en contratos',
+        },
+        uninvoiced_on_orders: {
+          label: 'Pendiente de facturar en pedidos',
+        },
+        uninvoiced_on_contracts: {
+          label: 'Pendiente de facturar en contratos',
         },
       },
     },
@@ -372,7 +401,7 @@ export const esES: TranslationData = {
         nav_invoices: { label: 'Facturas' },
         nav_payments: { label: 'Cobros' },
         nav_billing_milestones: { label: 'Planes de cobro' },
-        nav_overdue_invoices: { label: 'Facturas vencidas' },
+        nav_overdue_billing_milestones: { label: 'Planes de cobro vencidos' },
         nav_planned_this_month: { label: 'Previsto este mes' },
         nav_approval_requests: { label: 'Bandeja de Entrada' },
         nav_help_o2c: { label: 'Manual Del pedido al cobro' },

@@ -75,7 +75,7 @@ export const jaJP: TranslationData = {
     crm_billing_milestone: {
       label: '入金計画',
       pluralLabel: '入金計画',
-      description: '取引先の回収計画の 1 ステップ（注文または契約から計画）：いつ、いくら回収するか、そのうち請求済・入金済の金額',
+      description: '受注または契約から立てた、取引先の入金計画の 1 ステップ：いつ、いくら入金予定で、そのうちいくら入金済か',
       _validations: {
         billing_milestone_source: { message: 'このステップが属する注文または契約を選択してください。' },
       },
@@ -103,9 +103,6 @@ export const jaJP: TranslationData = {
           label: '検収日',
           help: '検収時払いのステップ：顧客が検収した日。',
         },
-        invoiced_amount: {
-          label: '請求済',
-        },
         received_amount: {
           label: '入金済',
         },
@@ -123,6 +120,9 @@ export const jaJP: TranslationData = {
         planned_this_month: {
           label: '今月の入金予定',
         },
+        overdue_billing_milestones: {
+          label: '期日超過の入金計画',
+        },
       },
       _sections: {
         basic: {
@@ -139,7 +139,7 @@ export const jaJP: TranslationData = {
     crm_invoice: {
       label: '請求書',
       pluralLabel: '請求書',
-      description: '経理が取引先に発行した請求書と、その入金済の金額',
+      description: '経理が取引先に発行した請求書（受注または契約にひも付く）',
       fields: {
         invoice_number: {
           label: '請求書番号',
@@ -208,16 +208,10 @@ export const jaJP: TranslationData = {
         all_invoices: {
           label: 'すべての請求書',
         },
-        overdue_invoices: {
-          label: '期日超過の請求書',
-        },
       },
       _sections: {
         basic: {
           label: '請求書',
-        },
-        amounts: {
-          label: '金額',
         },
         source: {
           label: 'ソース',
@@ -227,7 +221,7 @@ export const jaJP: TranslationData = {
     crm_payment: {
       label: '入金',
       pluralLabel: '入金',
-      description: '取引先からの入金：請求書、入金計画、注文、契約のいずれかに対するもの、またはまだどれにも対応しないもの',
+      description: '取引先からの入金：入金計画、受注、契約に対応するもの、またはまだどれにも対応しないもの',
       fields: {
         payment_number: {
           label: '入金番号',
@@ -305,6 +299,18 @@ export const jaJP: TranslationData = {
           label: '入金済',
           help: '受領した入金の合計。',
         },
+        unpaid_amount: {
+          label: '未入金',
+          help: '金額から入金済を差し引いた額（0 未満にはなりません）。',
+        },
+        uninvoiced_amount: {
+          label: '未請求',
+          help: '金額から請求済（発行済の請求書）を差し引いた額（0 未満にはなりません）。',
+        },
+        plan_differs: {
+          label: '入金計画が受注金額と不一致',
+          help: '入金計画の合計が受注の合計金額と一致しません。計画を編集・分割・追加して、受注金額と合うようにしてください。',
+        },
       },
     },
     // The contract's and the account's receivables figures, added by this
@@ -323,9 +329,16 @@ export const jaJP: TranslationData = {
           label: '入金済',
           help: '受領した入金の合計。',
         },
-        receivable_balance: {
-          label: '売掛金残高',
-          help: '未決済の請求書について顧客がまだ支払っていない金額：発行済み請求書の未払額の合計。請求書に充当されていない入金は入金済にのみ計上されます。',
+        unpaid_amount: {
+          label: '未入金',
+          help: '契約に受注がある場合は受注金額、ない場合は契約金額から、入金済を差し引いた額（0 未満にはなりません）。',
+        },
+        uninvoiced_amount: {
+          label: '未請求',
+          help: '契約に受注がある場合は受注金額、ない場合は契約金額から、請求済（発行済の請求書）を差し引いた額（0 未満にはなりません）。',
+        },
+        order_count: {
+          label: '受注数',
         },
       },
     },
@@ -339,9 +352,25 @@ export const jaJP: TranslationData = {
           label: '入金済',
           help: '受領した入金の合計。',
         },
-        receivable_balance: {
-          label: '売掛金残高',
-          help: '未決済の請求書について顧客がまだ支払っていない金額：発行済み請求書の未払額の合計。請求書に充当されていない入金は入金済にのみ計上されます。',
+        unpaid_amount: {
+          label: '未入金',
+          help: '取引先の確定済・完了済の受注と、受注のない締結済の契約が、それぞれまだ入金されていない額（各金額から入金済を差し引き、0 未満にはしない）の合計。',
+        },
+        uninvoiced_amount: {
+          label: '未請求',
+          help: '取引先の確定済・完了済の受注と、受注のない締結済の契約が、それぞれまだ請求していない額（各金額から発行済の請求書を差し引き、0 未満にはしない）の合計。',
+        },
+        unpaid_on_orders: {
+          label: '受注の未入金',
+        },
+        unpaid_on_contracts: {
+          label: '契約の未入金',
+        },
+        uninvoiced_on_orders: {
+          label: '受注の未請求',
+        },
+        uninvoiced_on_contracts: {
+          label: '契約の未請求',
         },
       },
     },
@@ -372,7 +401,7 @@ export const jaJP: TranslationData = {
         nav_invoices: { label: '請求書' },
         nav_payments: { label: '入金' },
         nav_billing_milestones: { label: '入金計画' },
-        nav_overdue_invoices: { label: '期日超過の請求書' },
+        nav_overdue_billing_milestones: { label: '期日超過の入金計画' },
         nav_planned_this_month: { label: '今月の入金予定' },
         nav_approval_requests: { label: '受信トレイ' },
         nav_help_o2c: { label: '受注から入金マニュアル' },

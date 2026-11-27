@@ -17,12 +17,13 @@ const paymentRowStamp: Hook = createO2cRowStamp('crm_payment', 'payment_row_stam
  * It also refuses an invoice or a plan step of another account, since the
  * payment would then count toward one account's invoice or step and another
  * account's figures (hotcrm#2557: the rows belong to the account, so the
- * account is what must match; before, the contract). The form's pickers list
- * every account's invoices and steps since hotcrm#2755 (a picker filtered by
- * the account hid and then dropped the invoice or the step a page's New
+ * account is what must match; before, the contract). The form's step picker
+ * lists every account's steps since hotcrm#2755 (a picker filtered by the
+ * account hid and then dropped the step the payment plan page's New
  * prefills), so this is the rule that keeps them apart, for the form as for
- * an import. Each is judged when the write sets it, and both when the write
- * moves the payment to another account.
+ * an import. The invoice is hidden since hotcrm#2806, so only an API write
+ * names one now. Each is judged when the write sets it, and both when the
+ * write moves the payment to another account.
  */
 const paymentPlanStepStamp: Hook = {
   name: 'payment_plan_step_stamp',

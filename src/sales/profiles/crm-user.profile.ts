@@ -57,8 +57,9 @@ import { EXPENSE_OWN_FLOOR, EXPENSE_REPORT_OWN_FLOOR, EXPENSE_REQUEST_LINE_FLOOR
  * unauthored — `sales_manager` edits `crm_account.annual_revenue` exactly
  * because no set it holds names that field. So the set authors nothing,
  * with one ruled exception:
- *   - `crm_account.invoiced_amount`, `received_amount`, `receivable_balance`
- *     — `{ readable: false }`. The maintainer ruled C on hotcrm#2557
+ *   - `crm_account.invoiced_amount`, `received_amount`, `unpaid_amount`,
+ *     `uninvoiced_amount` and the four hidden halves of the last two —
+ *     `{ readable: false }`. The maintainer ruled C on hotcrm#2557
  *     (comment 6999611419, 2026-11-19): reading the account's Order to Cash
  *     totals takes a business role. Each set that should read them opens
  *     them with its own `readable: true` row (`_o2c-figures.ts`) or with View
@@ -117,8 +118,15 @@ export const CrmUserProfile = {
   // totals take a business role — see the note above. Computed fields, so
   // nobody edits them anyway.
   fields: {
-    'crm_account.invoiced_amount':    { readable: false, editable: false },
-    'crm_account.received_amount':    { readable: false, editable: false },
-    'crm_account.receivable_balance': { readable: false, editable: false },
+    'crm_account.invoiced_amount':         { readable: false, editable: false },
+    'crm_account.received_amount':         { readable: false, editable: false },
+    // Unpaid and Uninvoiced replace the Receivable Balance, with the hidden
+    // halves they are summed from (hotcrm#2806): the same audience as before.
+    'crm_account.unpaid_amount':           { readable: false, editable: false },
+    'crm_account.uninvoiced_amount':       { readable: false, editable: false },
+    'crm_account.unpaid_on_orders':        { readable: false, editable: false },
+    'crm_account.unpaid_on_contracts':     { readable: false, editable: false },
+    'crm_account.uninvoiced_on_orders':    { readable: false, editable: false },
+    'crm_account.uninvoiced_on_contracts': { readable: false, editable: false },
   },
 };

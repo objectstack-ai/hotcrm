@@ -83,9 +83,11 @@ describe('Order to Cash is its own app, finance\'s (#2465)', () => {
     const objects = items.filter((i) => i.type === 'object').map((i) => `${i.objectName}${i.viewName ? `/${i.viewName}` : ''}`);
     expect(objects).toEqual(expect.arrayContaining([
       'crm_invoice', 'crm_payment', 'crm_billing_milestone',
-      'crm_invoice/overdue_invoices', 'crm_billing_milestone/planned_this_month',
+      'crm_billing_milestone/overdue_billing_milestones', 'crm_billing_milestone/planned_this_month',
       'crm_contract', 'crm_account',
     ]));
+    // Overdue is measured on the payment plan (hotcrm#2806): it replaced Overdue Invoices.
+    expect(objects).not.toContain('crm_invoice/overdue_invoices');
     expect(items.filter((i) => i.type === 'doc').map((i) => i.book)).toEqual(['crm_o2c_manual']);
   });
 

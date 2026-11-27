@@ -66,7 +66,6 @@ export const invoicesZhCN = zhCNTwin(invoices, {
     invoice_number: zhInvoiceNumber,
     crm_contract: zhContractDescription,
     crm_sales_order: zhOrderName,
-    crm_billing_milestone: zhMilestoneName,
   },
 });
 
@@ -75,6 +74,6 @@ export const paymentsZhCN = zhCNTwin(payments, {
     erp_ref: zhBankRef,
     crm_account: zhAccountName,
     crm_contract: zhContractDescription,
-    crm_invoice: zhInvoiceNumber,
+    crm_billing_milestone: zhMilestoneName,
   },
 });
