@@ -138,6 +138,10 @@ export const Timesheet = ObjectSchema.create({
       severity: 'error',
       message: 'This status change is not allowed. A timesheet moves Draft → Submitted → Approved or Rejected; a rejected timesheet goes back to Draft to be corrected.',
       field: 'status',
+      // Every status is an initial state: a create is not judged by this rule, so
+      // an import lands a record in the status it already has. Protocol 19 refuses
+      // a state machine that declares no list (`state-machine-no-initial-states`).
+      initialStates: ['draft', 'submitted', 'approved', 'rejected'],
       transitions: {
         draft: ['submitted'],
         submitted: ['approved', 'rejected', 'draft'],

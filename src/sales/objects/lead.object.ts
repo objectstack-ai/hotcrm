@@ -857,6 +857,10 @@ export const Lead = ObjectSchema.create({
       severity: 'warning',
       message: 'Invalid lead status transition',
       field: 'status',
+      // Every status is an initial state: a create is not judged by this rule, so
+      // an import lands a record in the status it already has. Protocol 19 refuses
+      // a state machine that declares no list (`state-machine-no-initial-states`).
+      initialStates: ['new', 'contacted', 'qualified', 'unqualified', 'converted'],
       // Conversion (→ converted) is allowed from any worked-open status so the
       // Convert action's widened visibility (new/contacted/qualified) never trips
       // a spurious "invalid transition" warning when the flow stamps

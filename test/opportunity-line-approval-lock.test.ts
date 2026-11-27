@@ -29,6 +29,18 @@ import { hotcrmStack, signUpPerson, systemUpdate, runShippedHook, type Person } 
  * and its approval node locks the deal. The controls: a deal no lock holds still
  * takes lines and its amount follows them, a system write still lands and rolls
  * up, and deleting the deal still takes its lines with it.
+ *
+ * Who refuses, measured on 19.0.0-next.0: the platform. Its approval lock now
+ * covers a locked record's master-detail rows (`bindDetailRowLockHook`,
+ * priority 50), so a person's line write on a deal a real approval holds is
+ * refused there, before `opportunity_line_item_freeze` (priority 90) runs. The
+ * code and the REST status are the same (`RECORD_LOCKED`, 409); the sentence is
+ * the platform's ("This Opportunity is locked while an approval is in
+ * progress, …"), which names the object and not the deal, and the engine-door
+ * error carries no `status` of ours. So the engine-door pins below read the
+ * code, the REST pin reads the status, and neither pins the platform's
+ * wording. The freeze hook's own answer on a locked deal is still pinned on the
+ * SHIPPED path, where it runs alone.
  */
 
 type Rec = Record<string, any>;
@@ -106,14 +118,14 @@ const lockedDeal = async (): Promise<{ deal: Rec; line: Rec; product: Rec }> => 
  */
 const settle = (): Promise<void> => new Promise((r) => setTimeout(r, 500));
 
+/** `opportunity_line_item_freeze`'s own sentence for a locked deal. */
 const sentence = (deal: Rec) =>
   `Opportunity ${deal.name} is locked while an approval is in progress, so its line items cannot be added, changed or removed until that approval is complete.`;
 
-/** The deal freeze's envelope, its wording, and the deal named by its name, never its id. */
+/** Refused as locked, and the deal never named by its id. */
 const expectHeld = (err: Rec | null, deal: Rec): void => {
   expect(err, 'the line write went through on a deal its approval locks').toBeTruthy();
-  expect([err!.code, err!.status]).toEqual([REFUSAL_CODES.locked.code, REFUSAL_CODES.locked.status]);
-  expect(String(err!.message)).toContain(sentence(deal));
+  expect(err!.code).toBe(REFUSAL_CODES.locked.code);
   expect(String(err!.message)).not.toContain(deal.id);
 };
 
@@ -184,7 +196,8 @@ describe('a line write on a deal its approval locks is refused, and nothing is s
     expect({ status: res.status, code: body.code }, JSON.stringify(body)).toEqual({
       status: REFUSAL_CODES.locked.status, code: REFUSAL_CODES.locked.code,
     });
-    expect(body.userMessage).toBe(sentence(deal));
+    expect(String(body.userMessage ?? ''), 'the refusal carries a sentence for the person').not.toBe('');
+    expect(String(body.userMessage)).not.toContain(deal.id);
     expect(await linesOf(deal.id)).toHaveLength(1);
     await expectAmountIsLines(deal.id, LARGE_DEAL_AMOUNT);
   });

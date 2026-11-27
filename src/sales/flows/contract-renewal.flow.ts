@@ -36,7 +36,12 @@ export const ContractRenewalFlow: Flow = {
   variables: [],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 08:00)', config: { schedule: '0 8 * * *' } },
+    {
+      id: 'start', type: 'start', label: 'Start (daily 08:00)',
+      // UTC is the zone this has always fired in: a cron with no zone runs in UTC,
+      // and Protocol 19 asks a schedule to name its zone (`flow-schedule-timezone-missing`).
+      config: { schedule: { type: 'cron', expression: '0 8 * * *', timezone: 'UTC' } },
+    },
     {
       // Broad pre-filter (next RENEWAL_LOOKAHEAD_DAYS = 120 days — ⛔ must
       // cover the LARGEST renewal_notice_days in use). The per-record notice

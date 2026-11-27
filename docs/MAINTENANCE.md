@@ -55,7 +55,7 @@ can silently invalidate existing metadata or **seed data** (see §4). Treat ever
 1. Bump all `@objectstack/*` deps in [`package.json`](../package.json) together —
    they are released in lockstep, so keep them on one version line.
 2. Update `engines.protocol` in [`objectstack.manifest.json`](../objectstack.manifest.json)
-   to match the installed `@objectstack/spec` (e.g. `^18.6.0`; the template manifest
+   to match the installed `@objectstack/spec` (e.g. `^19.0.0-next.0`; the template manifest
    carries no `specVersion` since 18.4.0, ADR-0049), and the same
    range declared in every package manifest
    ([`src/sales/index.ts`](../src/sales/index.ts),

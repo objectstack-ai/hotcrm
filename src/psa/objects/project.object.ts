@@ -364,6 +364,10 @@ export const Project = ObjectSchema.create({
       message:
         'This status change is not allowed. A project moves Draft → In Approval → Approved → Active → Completed → Closed; Active and On Hold switch back and forth, a rejected project goes back to Draft, and an open project can be Cancelled.',
       field: 'status',
+      // Every status is an initial state: a create is not judged by this rule, so
+      // an import lands a record in the status it already has. Protocol 19 refuses
+      // a state machine that declares no list (`state-machine-no-initial-states`).
+      initialStates: ['draft', 'in_approval', 'approved', 'rejected', 'active', 'on_hold', 'completed', 'closed', 'cancelled'],
       transitions: {
         draft: ['in_approval', 'cancelled'],
         in_approval: ['approved', 'rejected', 'draft', 'cancelled'],

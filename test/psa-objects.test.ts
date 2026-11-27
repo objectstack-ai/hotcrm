@@ -252,10 +252,16 @@ describe('time (timesheet_stamps, time_entry_costing)', () => {
 
   it('freezes a submitted timesheet, and costs it once the approver approves it from the Inbox', async () => {
     await update('crm_timesheet', { id: sheet.id, status: 'submitted' }, consultant.token);
-    await expect(update('crm_time_entry', { id: entry.id, hours: 9 }, consultant.token)).rejects.toThrow(/has been submitted/);
+    // Measured on 19.0.0-next.0: while the approval is open the platform's
+    // approval lock refuses the entry (it covers a locked record's
+    // master-detail rows), before `time_entry_costing` runs. Once the approval
+    // is decided that lock is gone and the timesheet's own rule answers.
+    await expect(update('crm_time_entry', { id: entry.id, hours: 9 }, consultant.token)).rejects.toMatchObject({ code: 'RECORD_LOCKED' });
+    expect(num((await row('crm_time_entry', entry.id))!.hours)).toBe(8);
     expect(num((await row('crm_project', project.id))!.actual_labor_cost)).toBe(0);
     await decide(sheet.id, pm.token);
     expect((await row('crm_timesheet', sheet.id))!.status).toBe('approved');
+    await expect(update('crm_time_entry', { id: entry.id, hours: 9 }, consultant.token)).rejects.toThrow(/has been submitted/);
     const p = (await row('crm_project', project.id))!;
     expect(num(p.actual_labor_cost)).toBe(400);
     expect(num(p.billable_amount)).toBe(960);

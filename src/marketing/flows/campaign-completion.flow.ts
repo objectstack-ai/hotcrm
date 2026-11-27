@@ -31,7 +31,12 @@ export const CampaignCompletionFlow: Flow = {
   runAs: 'system',
   variables: [],
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 02:00)', config: { schedule: '0 2 * * *' } },
+    {
+      id: 'start', type: 'start', label: 'Start (daily 02:00)',
+      // UTC is the zone this has always fired in: a cron with no zone runs in UTC,
+      // and Protocol 19 asks a schedule to name its zone (`flow-schedule-timezone-missing`).
+      config: { schedule: { type: 'cron', expression: '0 2 * * *', timezone: 'UTC' } },
+    },
     {
       id: 'query_campaigns', type: 'get_record', label: 'Find Ended Campaigns',
       config: {

@@ -57,5 +57,9 @@ customer / account / contact:
    instead of filling it.`,
 
   tools: ['describe_object', 'get_record', 'query_records', 'aggregate_data'],
+  // In-product agents only: `aggregate_data` is served by no MCP connection, so
+  // MCP never offered this skill as a prompt. `mcpPrompt: false` says so;
+  // dropping it from `tools` instead would take it from the assistant.
+  mcpPrompt: false,
 
 });

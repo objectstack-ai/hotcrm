@@ -4,7 +4,9 @@
 > `src/psa/` is on `main` and what is ruled for it; every statement names the source it was read
 > from. Where this file and `src/` disagree, `src/` is right and this file is the bug.
 > **Measured against**: `main` at `ac17670a` (2026-11-19), `@objectstack/*` **18.6.0** — the pin in
-> `package.json`, held by `engines.protocol: '^18.6.0'` in `src/psa/index.ts`. Readings that name
+> `package.json` at that commit. The pin has since moved to **19.0.0-next.0**, held by
+> `engines.protocol: '^19.0.0-next.0'` in `src/psa/index.ts`; the readings below were not
+> re-measured on it, so one that names 18.6.0 is dated to that measurement. Readings that name
 > 17.x come from the first draft (`main` at `c716a2c`, pin 17.4.0) and are kept under *History* as
 > history; they are not claims about the current pin.
 > **Companions**: [`module-split-plan.md`](./module-split-plan.md) — the edge rules R1–R4 and the
@@ -81,7 +83,7 @@ Read from the manifest in `src/psa/index.ts`:
 | `type` | `module` — shipped inside the one HotCRM artifact, switched on or off per tenant by the platform's package disable |
 | `namespace` | `crm` (ADR-0130 D1), so objects are `crm_project`, not `psa_project`; `module-split-plan.md` item 16 keeps it |
 | `version` | the artifact's, `6.5.0` (ADR-0130 D6) |
-| `engines.protocol` | `^18.6.0` |
+| `engines.protocol` | `^19.0.0-next.0` |
 | `dependencies` | `{ 'app.objectstack.hotcrm': '^6.5.0', 'app.objectstack.hotcrm.expense': '^6.5.0' }` — **no Order to Cash** today |
 | `requires` | `automation`, `triggers`, `approvals`, `sharing`, `analytics` |
 | `apps` | `crm_psa`, *Project Delivery* (`src/psa/apps/psa.app.ts`) |

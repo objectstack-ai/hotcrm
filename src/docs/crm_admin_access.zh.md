@@ -56,7 +56,7 @@ description: 谁能看到谁的记录——岗位、扩大所有权访问的共�
 
 ## 禁用模块
 
-HotCRM 由核心应用加六个模块组成——**HotCRM Service**、**HotCRM Revenue**、**HotCRM Marketing**、**HotCRM Order to Cash**、**HotCRM Expenses** 和 **HotCRM Project Delivery**。用不到的模块可以在**软件包**页面关掉。没有菜单项通向这个页面（[objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)）：**系统设置 → 已安装应用**只列出从应用市场安装的应用。打开 `/_console/apps/com.objectstack.setup/component/developer/packages`，打开该模块，选择**禁用**；选择**启用**即可重新打开。
+HotCRM 由核心应用加六个模块组成——**HotCRM Service**、**HotCRM Revenue**、**HotCRM Marketing**、**HotCRM Order to Cash**、**HotCRM Expenses** 和 **HotCRM Project Delivery**。用不到的模块可以在**软件包**页面关掉。打开**系统设置 → 应用 → 软件包**，展开 **HotCRM** 一行看到它的模块，打开该模块，选择**禁用**；选择**启用**即可重新打开。
 
 模块禁用期间，所有人都看不到它，管理员也不例外：
 

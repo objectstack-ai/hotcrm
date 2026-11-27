@@ -788,6 +788,10 @@ export const Opportunity = ObjectSchema.create({
       severity: 'warning',
       message: 'Invalid opportunity stage transition',
       field: 'stage',
+      // Every stage is an initial state: a create is not judged by this rule, so
+      // an import lands a record in the stage it already has. Protocol 19 refuses
+      // a state machine that declares no list (`state-machine-no-initial-states`).
+      initialStates: ['prospecting', 'qualification', 'needs_analysis', 'proposal', 'negotiation', 'closed_won', 'closed_lost'],
       transitions: {
         // `→ proposal` is legal from every pre-proposal stage: the
         // quote_generation flow fast-forwards the deal to `proposal` when a

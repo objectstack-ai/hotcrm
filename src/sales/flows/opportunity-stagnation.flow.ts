@@ -111,7 +111,12 @@ export const OpportunityStagnationFlow: Flow = {
   variables: [],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 07:30)', config: { schedule: '30 7 * * *' } },
+    {
+      id: 'start', type: 'start', label: 'Start (daily 07:30)',
+      // UTC is the zone this has always fired in: a cron with no zone runs in UTC,
+      // and Protocol 19 asks a schedule to name its zone (`flow-schedule-timezone-missing`).
+      config: { schedule: { type: 'cron', expression: '30 7 * * *', timezone: 'UTC' } },
+    },
     {
       id: 'query_stalled', type: 'get_record', label: 'Find Stalled Deals',
       config: {

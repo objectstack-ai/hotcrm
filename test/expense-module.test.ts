@@ -508,7 +508,10 @@ describe('a report with no project goes to the submitter\'s manager (expense_rep
   it('refuses the whole selection, writing nothing, when an expense is someone else\'s or already on a report', async () => {
     const mine = await insert(taxi(), spender.token);
     const theirs = await insert(taxi(), loner.token);
-    await expect(submit([mine.id, theirs.id], spender.token)).rejects.toThrow(/not yours/);
+    // Measured on 19.0.0-next.0: the platform reads a selection in the
+    // caller's own scope and refuses it whole when a row is not theirs, before
+    // the action's body (and its "not yours" sentence) runs.
+    await expect(submit([mine.id, theirs.id], spender.token)).rejects.toMatchObject({ code: 'RECORD_NOT_FOUND' });
     expect((await row(mine.id)).crm_expense_report ?? null, 'nothing written').toBeNull();
     const [reportId] = await submit([mine.id], spender.token);
     await expect(submit([mine.id], spender.token)).rejects.toThrow(/already on an expense report/);

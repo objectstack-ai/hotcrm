@@ -23,7 +23,12 @@ export const QuoteExpirationFlow: Flow = {
   runAs: 'system',
   variables: [],
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 01:00)', config: { schedule: '0 1 * * *' } },
+    {
+      id: 'start', type: 'start', label: 'Start (daily 01:00)',
+      // UTC is the zone this has always fired in: a cron with no zone runs in UTC,
+      // and Protocol 19 asks a schedule to name its zone (`flow-schedule-timezone-missing`).
+      config: { schedule: { type: 'cron', expression: '0 1 * * *', timezone: 'UTC' } },
+    },
     {
       id: 'query_quotes', type: 'get_record', label: 'Find Expired Quotes',
       config: {

@@ -689,7 +689,7 @@ Ruled by the maintainer on [objectstack#26986](https://github.com/objectstack-ai
     the disable path is objectstack#28117).
     - Service, revenue and marketing stay `type: 'module'` packages of the one artifact, composed
       by `objectstack.composition.ts`. A tenant that does not use one disables it (Setup →
-      Installed Apps, or `PATCH /api/v1/packages/:id/disable`); its records stay, and enabling it
+      Apps → Packages, or `PATCH /api/v1/packages/:id/disable`); its records stay, and enabling it
       brings them back. What leaves while a module is off is measured in #2404 and documented for
       administrators in `src/docs/crm_admin_access.md`.
     - There is no standalone revenue or marketing artifact and no 7.0.0 for dropping revenue.

@@ -25,7 +25,12 @@ export const ContractExpirationFlow: Flow = {
   runAs: 'system',
   variables: [],
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 00:00)', config: { schedule: '0 0 * * *' } },
+    {
+      id: 'start', type: 'start', label: 'Start (daily 00:00)',
+      // UTC is the zone this has always fired in: a cron with no zone runs in UTC,
+      // and Protocol 19 asks a schedule to name its zone (`flow-schedule-timezone-missing`).
+      config: { schedule: { type: 'cron', expression: '0 0 * * *', timezone: 'UTC' } },
+    },
     {
       id: 'query_contracts', type: 'get_record', label: 'Find Expired Contracts',
       config: {

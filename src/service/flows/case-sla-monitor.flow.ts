@@ -132,7 +132,12 @@ export const CaseSlaMonitorFlow: Flow = {
   variables: [],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (hourly)', config: { schedule: '0 * * * *' } },
+    {
+      id: 'start', type: 'start', label: 'Start (hourly)',
+      // UTC is the zone this has always fired in: a cron with no zone runs in UTC,
+      // and Protocol 19 asks a schedule to name its zone (`flow-schedule-timezone-missing`).
+      config: { schedule: { type: 'cron', expression: '0 * * * *', timezone: 'UTC' } },
+    },
     {
       id: 'query_breached', type: 'get_record', label: 'Find Breached Cases',
       config: {

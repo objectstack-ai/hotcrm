@@ -521,6 +521,10 @@ export const Case = ObjectSchema.create({
       severity: 'warning',
       message: 'Invalid status transition',
       field: 'status',
+      // Every status is an initial state: a create is not judged by this rule, so
+      // an import lands a record in the status it already has. Protocol 19 refuses
+      // a state machine that declares no list (`state-machine-no-initial-states`).
+      initialStates: ['new', 'in_progress', 'waiting_customer', 'waiting_support', 'escalated', 'resolved', 'closed'],
       // Escalate + Close actions are available from ANY open status (see
       // escalate_case / close_case visibility). The transition map must permit
       // →escalated and →closed from every open state, else those actions emit a

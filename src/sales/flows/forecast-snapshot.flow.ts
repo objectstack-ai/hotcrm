@@ -275,7 +275,12 @@ export const ForecastSnapshotFlow: Flow = {
   variables: [],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 03:00)', config: { schedule: '0 3 * * *' } },
+    {
+      id: 'start', type: 'start', label: 'Start (daily 03:00)',
+      // UTC is the zone this has always fired in: a cron with no zone runs in UTC,
+      // and Protocol 19 asks a schedule to name its zone (`flow-schedule-timezone-missing`).
+      config: { schedule: { type: 'cron', expression: '0 3 * * *', timezone: 'UTC' } },
+    },
     {
       // Every user is a candidate; the `has_deals` gate below decides who is
       // actually an opportunity owner. Filtering `sys_user` here instead would

@@ -182,6 +182,10 @@ export const Expense = ObjectSchema.create({
       severity: 'error',
       message: 'This status change is not allowed. An expense follows its report: Draft → Submitted → Approved or Rejected, and back to Draft when the report is recalled or corrected.',
       field: 'status',
+      // Every status is an initial state: a create is not judged by this rule, so
+      // an import lands a record in the status it already has. Protocol 19 refuses
+      // a state machine that declares no list (`state-machine-no-initial-states`).
+      initialStates: ['draft', 'submitted', 'approved', 'rejected'],
       transitions: {
         draft: ['submitted'],
         submitted: ['approved', 'rejected', 'draft'],

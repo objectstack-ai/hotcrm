@@ -39,6 +39,10 @@ risk, or deal slippage:
    data cannot support a claim, say so instead of estimating.`,
 
   tools: ['describe_object', 'aggregate_data', 'query_records', 'visualize_data'],
+  // In-product agents only: `aggregate_data` and `visualize_data` are served by no MCP connection, so
+  // MCP never offered this skill as a prompt. `mcpPrompt: false` says so;
+  // dropping them from `tools` instead would take them from the assistant.
+  mcpPrompt: false,
 
   triggerConditions: [
     { field: 'objectName', operator: 'in', value: ['crm_opportunity', 'dashboard'] },

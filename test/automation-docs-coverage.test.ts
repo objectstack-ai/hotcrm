@@ -148,7 +148,7 @@ const kindOf = (flow: AnyRec): string => flow.type as string;
 const eventOf = (flow: AnyRec): string | undefined => startOf(flow).config?.triggerType;
 
 /** The cron expression, for scheduled flows. */
-const cronOf = (flow: AnyRec): string | undefined => startOf(flow).config?.schedule;
+const cronOf = (flow: AnyRec): string | undefined => startOf(flow).config?.schedule?.expression;
 
 /**
  * How each page spells a cron. An unregistered cron is a deliberate failure —

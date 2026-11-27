@@ -677,14 +677,18 @@ export const Contract = ObjectSchema.create({
       // quote holds its end states with the `quote_workflow` freeze; this rule
       // is the contract's only hold. It judges a write that CHANGES `status`
       // and nothing else: an edit that leaves the status as stored, and a
-      // create (no `initialStates`, so seeds and imports land in any state),
-      // pass untouched, so no stored row is frozen by it.
+      // create (`initialStates` names every status, so seeds and imports land
+      // in any state), pass untouched, so no stored row is frozen by it.
       name: 'contract_status_progression',
       type: 'state_machine',
       severity: 'error',
       message:
         'This status change is not allowed. A contract moves Draft → In Approval → Activated → Expired; In Approval can go back to Draft, and Draft, In Approval or Activated can be Terminated. Expired and Terminated are final: a renewal is a new contract.',
       field: 'status',
+      // Every status is an initial state: a create is not judged by this rule, so
+      // an import lands a record in the status it already has. Protocol 19 refuses
+      // a state machine that declares no list (`state-machine-no-initial-states`).
+      initialStates: ['draft', 'in_approval', 'activated', 'expired', 'terminated'],
       transitions: {
         draft: ['in_approval', 'terminated'],
         // Approval either lands (`activated`) or sends the paperwork back.
