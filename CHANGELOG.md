@@ -23,7 +23,7 @@
 - **Unpaid** (amount minus Received) and **Uninvoiced** (amount minus Invoiced) replace the Receivable Balance, on the order, the contract and the account. A contract with Confirmed or Completed orders reads them from its Order Amount, any other contract from its Contract Value; Order Amount counts Confirmed and Completed orders only (#2806).
 - **Overdue Payment Plans** replaces Overdue Invoices: the plan steps past their planned date with an amount open (#2806).
 - **Confirming an order creates its payment plan step** when it has none: the order's total, planned by its payment terms. If the total changes later and the steps no longer add up to it, the order shows **Payment Plan Differs** (#2806).
-- **Confirming an order again is refused when its Total Price is below what it has already received or invoiced;** a total equal to that figure confirms. A first confirm is not checked, and an order confirmed below its figures before the upgrade keeps its status (#2827).
+- **Confirming an order is refused when its Total Price is below what it has already received or invoiced;** a total equal to that figure confirms. Only the move from Draft to Confirmed is checked, a first confirm included, so an order confirmed below its figures before the upgrade keeps its status (#2827).
 - **Billing Milestone is now called Payment Plan** (回款计划, Plan de cobro, 入金計画). The API name `crm_billing_milestone` and the payment file's Billing Milestone column heading are unchanged (#2805).
 - An invoice that names another account's payment plan step is refused, on an API write too (#2755).
 

@@ -76,7 +76,8 @@ changes", "What 6.3.0 changes" and "What 6.2.1 changes" below, and their checks.
   has an order is counted by the contract, not by the order: name the order on it.
 - **Integrations.** A write to Subtotal, Discount %, Tax or Shipping & Handling of a Confirmed,
   Completed or Cancelled order is refused, and so is one to Contract Value, End Date or Payment
-  Terms of an activated contract.
+  Terms of an activated contract. Confirming a Draft order whose Total Price is below its Received
+  or Invoiced is refused too.
 - **Bookmarks** of Sales Home and Account Workbench no longer open.
 
 ### What 6.6.0 changes
