@@ -387,8 +387,9 @@ its seed for a while after that, and the script waits for the seed to finish
 (up to 180 s, `--seed-wait SECONDS`) before it hands anything over ([#2206]).
 
 That creates the non-admin demo users the table declares (`na.rep@` /
-`eu.rep@` / `sales.manager@` / `service.agent@` / `service.manager@objectos.ai`,
-all `demo1234`), assigns their positions, hands them the demo book by
+`eu.rep@` / `sales.manager@` / `service.agent@` / `service.manager@` /
+`finance.controller@` / `ar.accountant@objectos.ai`, all `demo1234`), assigns
+their positions, hands them the demo book by
 re-stamping `owner_id` on the routed objects (each seeded case goes to the
 service manager when it is escalated or critical, to the service agent otherwise), and re-evaluates every sharing
 rule so the already-seeded accounts materialise grants. It is idempotent,
@@ -405,6 +406,12 @@ eu.rep@objectos.ai sees 2 account(s) · countries: [DE, UK]
    object               total          na.rep          eu.rep   sales.manager
    crm_opportunity         23              16               5               2
 ```
+
+The two finance users (Finance Controller, Accounts Receivable) are there to
+show the Order to Cash screens as finance: each reads every invoice and payment
+and the account's Order to Cash figures, and the script checks, signed in as
+each, that invoices and payments answer them with rows. Neither owns any seeded
+record — finance does not own the routed book ([#2821]).
 
 Who exists and which positions they hold is a table —
 [`src/sales/sharing/demo-staffing.ts`](../src/sales/sharing/demo-staffing.ts). Adding a
@@ -442,6 +449,7 @@ Three things worth knowing before changing any of it:
 [#640]: https://github.com/objectstack-ai/hotcrm/issues/640
 [#1759]: https://github.com/objectstack-ai/hotcrm/issues/1759
 [#2206]: https://github.com/objectstack-ai/hotcrm/issues/2206
+[#2821]: https://github.com/objectstack-ai/hotcrm/issues/2821
 [objectstack#16549]: https://github.com/objectstack-ai/objectstack/issues/16549
 
 ## 5. Releasing
