@@ -643,7 +643,8 @@ async function ownershipCensus(
   const failures: string[] = [];
   const nameOf = (userId: string) =>
     roster.find((r) => r.userId === userId)?.email ?? (userId === adminId ? 'the dev admin' : userId);
-  const w = 16;
+  // Wide enough for the longest persona handle (`finance.controller` is 18), so columns never run together.
+  const w = Math.max(16, ...roster.map((r) => r.email.split('@')[0].length + 2));
   const ownedOverall = new Map<string, number>();
   let grandTotal = 0;
 
