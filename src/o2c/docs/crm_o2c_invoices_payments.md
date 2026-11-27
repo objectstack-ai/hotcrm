@@ -60,6 +60,12 @@ invoices and payments.
   what is owed is accepted, typed or imported, and Unpaid stops at zero. The
   account's two figures add up each order's and contract's own: see the
   collection plan guide.
+- **Confirming again never takes an order below its figures.** An order sent
+  back to **Draft** whose **Total Price** is now below its **Received** or its
+  **Invoiced** cannot be confirmed: the refusal says which figure is above the
+  total. Deal with the overpayment or the invoices first (cancel or correct an
+  invoice, or raise the total), then confirm. A first confirm, and any edit of
+  an order already confirmed, are not checked.
 - **Overdue** is a payment plan's, not an invoice's. **Follow-up → Overdue
   Payment Plans** in the **Order to Cash** app lists the payment plans whose
   **Planned Date** is before today and that still have an **Open** amount.

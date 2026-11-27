@@ -284,6 +284,11 @@ export const jaJP: TranslationData = {
     // The order's figures, added by this package through `objectExtensions`
     // (hotcrm#2560).
     crm_sales_order: {
+      // The rules this package adds to the order (hotcrm#2827).
+      _validations: {
+        reconfirm_total_below_received: { message: 'この受注の合計金額が、すでに入金された額（入金済）を下回っています。過入金または請求書を先に処理してから確定してください。' },
+        reconfirm_total_below_invoiced: { message: 'この受注の合計金額が、すでに請求された額（請求済）を下回っています。請求書を先に取消または修正してから確定してください。' },
+      },
       fields: {
         planned_amount: {
           label: '回収予定',

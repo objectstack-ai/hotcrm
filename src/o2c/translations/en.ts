@@ -223,6 +223,11 @@ export const en: TranslationData = {
     // The order's figures, added by this package through `objectExtensions`
     // (hotcrm#2560).
     crm_sales_order: {
+      // The rules this package adds to the order (hotcrm#2827).
+      _validations: {
+        reconfirm_total_below_received: { message: "This order's Total Price is below what was already received (Received). Deal with the overpayment or the invoices first, then confirm." },
+        reconfirm_total_below_invoiced: { message: "This order's Total Price is below what was already invoiced (Invoiced). Cancel or correct the invoices first, then confirm." },
+      },
       fields: {
         planned_amount: {
           label: 'Planned',
