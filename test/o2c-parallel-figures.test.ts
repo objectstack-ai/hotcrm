@@ -101,7 +101,11 @@ describe('Unpaid and Uninvoiced', () => {
   });
 
   it('the order\'s amount moving moves Unpaid, on the order and the account', async () => {
+    // A confirmed order's amount changes only back in Draft (hotcrm#2826):
+    // send it back, change it, confirm it again.
+    await update('crm_sales_order', { id: first.id, status: 'draft' });
     await update('crm_sales_order', { id: first.id, subtotal: 1500 });
+    await update('crm_sales_order', { id: first.id, status: 'confirmed' });
     const a = await row('crm_sales_order', first.id);
     expect(num(a.total_price)).toBe(1500);
     expect(num(a.unpaid_amount)).toBe(1000);

@@ -210,7 +210,7 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
       },
     },
   },
-  // The order's line lock and line fill (REQ-0010, hotcrm#2555).
+  // The order's line lock, header amount lock (#2826) and line fill (REQ-0010, hotcrm#2555).
   sales_order_workflow: {
     refusals: {
       RECORD_LOCKED: {
@@ -222,7 +222,19 @@ export const hooks: NonNullable<TranslationData['hooks']> = {
           cancelled: {
             message: 'El pedido {{order}} está Cancelado, así que ya no se pueden añadir, cambiar ni quitar sus líneas.',
           },
+          amount_confirmed: {
+            message: 'El pedido {{order}} está Confirmado, así que su importe ya no se puede cambiar. Devuélvalo antes a Borrador.',
+          },
+          amount_completed: {
+            message: 'El pedido {{order}} está Completado, así que su importe ya no se puede cambiar.',
+          },
+          amount_cancelled: {
+            message: 'El pedido {{order}} está Cancelado, así que su importe ya no se puede cambiar.',
+          },
         },
+      },
+      VALIDATION_FAILED: {
+        message: 'El pedido {{order}} tiene líneas, así que su Subtotal es la suma de sus líneas y no se puede escribir. Cambie las líneas en su lugar.',
       },
     },
   },

@@ -131,7 +131,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: '注文を確定',
-        confirmText: 'この注文を確定しますか？確定すると明細はロックされます。変更するには、注文を下書きに戻す必要があります。',
+        confirmText: 'この注文を確定しますか？確定すると明細と金額はロックされます。変更するには、注文を下書きに戻す必要があります。',
         successMessage: '注文 {{ record.name }} を確定しました。',
       },
       complete_sales_order: {
@@ -167,7 +167,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: '契約' },
       customer_po_number: { label: '顧客発注番号', help: '顧客自身の発注書の番号。顧客が引用するとおりに入力します。' },
       description: { label: '説明' },
-      subtotal: { label: '小計' },
+      subtotal: { label: '小計', help: '注文の明細の合計です。明細のない注文でだけ入力できます。注文が確定するとロックされ、割引・税額・配送料も同様です。' },
       discount: { label: '割引率(%)' },
       discount_amount: { label: '割引額' },
       tax: { label: '税額' },

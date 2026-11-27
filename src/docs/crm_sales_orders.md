@@ -84,7 +84,9 @@ The order's **Subtotal** is the sum of its lines, recalculated every time a
 line is added, changed or removed. The **Discount Amount** and the **Total
 Price** are calculated from the subtotal, the order's **Discount %**, the
 **Tax** and the **Shipping & Handling**, so they always agree with each other.
-An order with no lines keeps the subtotal you type.
+On an order with lines the subtotal cannot be typed: a save that changes it to
+anything other than the sum of the lines is refused, and you change the lines
+instead. An order with no lines keeps the subtotal you type.
 
 ## Order status
 
@@ -110,13 +112,19 @@ stateDiagram-v2
   confirmed --> cancelled
 ```
 
-**The lines of a confirmed order cannot change.** Once an order leaves
-**Draft**, adding, changing or removing a line is refused, and the **New**
-button leaves its **Order Lines** list. To change a confirmed order's lines,
-set its **Status** back to **Draft**, change them, and click **Confirm Order**
-again. The lines of a
-completed or cancelled order stay as they are. The order's other fields, such
-as the delivery fields below, can still be edited.
+**The lines and the amount of a confirmed order cannot change.** Once an
+order leaves **Draft**, adding, changing or removing a line is refused, and the
+**New** button leaves its **Order Lines** list. A change to its **Subtotal**,
+**Discount %**, **Tax** or **Shipping & Handling** is refused too, so its
+**Total Price** stays what was confirmed. To change a confirmed order's lines or
+amount, set its **Status** back to **Draft** and save, change them, and click
+**Confirm Order** again; the contract and the payment plan then follow the new
+total as they do for any change while the order is a draft. A Draft order does
+not count towards a framework contract's Order Amount until it is confirmed
+again. The lines and the amount of a completed or cancelled order stay as they
+are: a difference goes on a new order. The order's other fields, such as the
+delivery fields below, can still be edited. Imports and the system's own
+updates are not held by this rule.
 
 ## Delivery
 
