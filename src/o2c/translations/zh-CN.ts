@@ -284,6 +284,11 @@ export const zhCN: TranslationData = {
     // The order's figures, added by this package through `objectExtensions`
     // (hotcrm#2560).
     crm_sales_order: {
+      // The rules this package adds to the order (hotcrm#2827).
+      _validations: {
+        reconfirm_total_below_received: { message: '本订单的总金额低于已回款金额（已回款）。请先处理多收的款项或发票，再确认订单。' },
+        reconfirm_total_below_invoiced: { message: '本订单的总金额低于已开票金额（已开票）。请先作废或更正发票，再确认订单。' },
+      },
       fields: {
         planned_amount: {
           label: '计划回款',
