@@ -49,7 +49,7 @@ export const ContactViews = defineView({
     // (#597), mirroring `bulkActions: ['create_campaign']` on the lead grid.
     // The bare-string form fans the action out once per selected row; do not
     // add strings for `mark_primary` / `send_email`, which declare
-    // `locations: ['list_item']` and are auto-injected into the row menu.
+    // `locations: ['record_row']` and are auto-injected into the row menu.
     bulkActions: ['add_contact_to_campaign'],
     pagination: { pageSize: 50, pageSizeOptions: [25, 50, 100] },
     exportOptions: { formats: ['csv', 'xlsx'] },

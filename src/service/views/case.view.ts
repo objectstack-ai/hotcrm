@@ -79,7 +79,7 @@ export const CaseViews = defineView({
       colorField: 'priority',
     },
     // Escalate straight from the queue: escalate_case's own
-    // `locations: ['list_item']` auto-injects the row-menu item.
+    // `locations: ['record_row']` auto-injects the row-menu item.
   },
 
   listViews: {

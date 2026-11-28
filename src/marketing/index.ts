@@ -12,6 +12,8 @@ import { Campaign, CampaignMember } from './objects/index.js';
 import { campaignHook, campaignMemberHook } from './objects/hooks.js';
 import { CampaignLeadershipSharingRules } from './sharing/index.js';
 import { MarketingTranslations } from './translations/index.js';
+import { MarketingFlowStepTranslations } from './translations/flow-steps.js';
+import { withFlowStepEnglish } from '../sales/translations/_flow-step-english.js';
 import { CampaignViews } from './views/index.js';
 
 /**
@@ -71,7 +73,7 @@ export const createHotCrmMarketingStack = (
     version: '6.7.0',
     type: 'module',
     description: 'HotCRM marketing module — campaigns and campaign members.',
-    engines: { protocol: '^18.6.0' },
+    engines: { protocol: '^19.0.0-next.2' },
     // The App package this module extends, and nothing else (the star).
     dependencies: { 'app.objectstack.hotcrm': '^6.7.0' },
 
@@ -95,7 +97,7 @@ export const createHotCrmMarketingStack = (
   sharingRules: marketingSharingRules,
   // Its manual (#2330), over `src/marketing/docs/`. See the book's own note.
   books: [CrmMarketingManual],
-  translations: [MarketingTranslations],
+  translations: [MarketingTranslations, withFlowStepEnglish(MarketingFlowStepTranslations, marketingFlows)],
 
   ...collections,
 });

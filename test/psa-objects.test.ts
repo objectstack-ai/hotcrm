@@ -252,7 +252,9 @@ describe('time (timesheet_stamps, time_entry_costing)', () => {
 
   it('freezes a submitted timesheet, and costs it once the approver approves it from the Inbox', async () => {
     await update('crm_timesheet', { id: sheet.id, status: 'submitted' }, consultant.token);
-    await expect(update('crm_time_entry', { id: entry.id, hours: 9 }, consultant.token)).rejects.toThrow(/has been submitted/);
+    // While its approval is pending the platform holds the sheet's entries (objectstack 1e018d6, 19.0), ahead of
+    // time_entry_freeze, which still answers for a submitted sheet with no pending approval.
+    await expect(update('crm_time_entry', { id: entry.id, hours: 9 }, consultant.token)).rejects.toThrow(/locked while an approval is in progress/);
     expect(num((await row('crm_project', project.id))!.actual_labor_cost)).toBe(0);
     await decide(sheet.id, pm.token);
     expect((await row('crm_timesheet', sheet.id))!.status).toBe('approved');

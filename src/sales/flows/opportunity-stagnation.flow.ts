@@ -111,7 +111,7 @@ export const OpportunityStagnationFlow: Flow = {
   variables: [],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 07:30)', config: { schedule: '30 7 * * *' } },
+    { id: 'start', type: 'start', label: 'Start (daily 07:30)', config: { schedule: { type: 'cron', expression: '30 7 * * *', timezone: 'UTC' } } },
     {
       id: 'query_stalled', type: 'get_record', label: 'Find Stalled Deals',
       config: {

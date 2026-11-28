@@ -28,8 +28,8 @@ import { hotcrmStack, signUpPerson, committedFile, type Person } from './helpers
  *   3. An edit that leaves the status as stored saves on an expired or a
  *      terminated contract, with the status re-sent (as a full form submit
  *      does) or not: the rule judges a status CHANGE, so it freezes no row.
- *   4. A create is not judged (the rule declares no `initialStates`): a
- *      contract imported straight into a late state still lands.
+ *   4. A create is not judged (the rule's `initialStates` name every
+ *      status): a contract imported straight into a late state still lands.
  *
  * The one automated edge, `contract_expiration` (activated → expired, as the
  * system), is pinned where the sweep is: `test/flow-scheduled.test.ts`.
@@ -97,10 +97,13 @@ const REFUSED = [
 ] as const;
 
 describe('the rule is the contract lifecycle’s hold (#2192)', () => {
-  it('blocks, over status, and declares no initial states', () => {
+  it('blocks, over status, and names every status an initial state', () => {
     expect(rule, 'contract_status_progression is not declared on crm_contract').toBeTruthy();
-    expect({ type: rule.type, field: rule.field, severity: rule.severity, initialStates: rule.initialStates })
-      .toEqual({ type: 'state_machine', field: 'status', severity: 'error', initialStates: undefined });
+    expect({ type: rule.type, field: rule.field, severity: rule.severity })
+      .toEqual({ type: 'state_machine', field: 'status', severity: 'error' });
+    // The whole option list, read off the field: a status left out is one an import can no longer land in.
+    const statuses = (Contract.fields.status as Rec).options.map((o: Rec) => o.value);
+    expect([...rule.initialStates].sort()).toEqual([...statuses].sort());
   });
 
   it('refuses each probed move by its own table — the precondition for the cases below', () => {

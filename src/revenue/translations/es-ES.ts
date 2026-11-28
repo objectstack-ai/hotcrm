@@ -13,6 +13,13 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  * package's pack: `./index.ts`.
  */
 export const esES: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.revenue': {
+      name: 'HotCRM Productos y presupuestos',
+      description: 'Módulo de productos y presupuestos de HotCRM: productos, listas de precios, líneas de producto de oportunidad y presupuestos.',
+    },
+  },
   hooks: {
     quote_total_rollup: {
       refusals: {

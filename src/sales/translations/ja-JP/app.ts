@@ -21,6 +21,13 @@ import { CONTRACT_DRAFT_NODE_IDS } from '../../flows/_contract-draft';
  * how many namespaces can ever arrive.
  */
 export const appSurface: Omit<TranslationData, 'objects'> = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm': {
+      name: 'HotCRM',
+      description: 'リード、注文、プロジェクト、入金、経費を一つのオープンソース業務システムで。6つのアプリ：セールス、サービス、マーケティング、受注から入金、プロジェクト納品、経費精算。受注から入金は注文・請求書・入金を追跡するもので、会計元帳ではありません。業務が変われば AI で変更できます。自社の AI エージェントが各ユーザーの権限で作業できます。',
+    },
+  },
   apps: {
     crm_enterprise: {
       label: '営業',

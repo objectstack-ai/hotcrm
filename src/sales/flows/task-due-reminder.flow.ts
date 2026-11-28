@@ -34,7 +34,7 @@ export const TaskDueReminderFlow: Flow = {
   nodes: [
     {
       id: 'start', type: 'start', label: 'Start (hourly)',
-      config: { schedule: '0 * * * *' },
+      config: { schedule: { type: 'cron', expression: '0 * * * *', timezone: 'UTC' } },
     },
     {
       id: 'query_due', type: 'get_record', label: 'Find Tasks Due for Reminder',

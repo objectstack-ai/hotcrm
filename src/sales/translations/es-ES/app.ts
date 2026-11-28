@@ -21,6 +21,13 @@ import { CONTRACT_DRAFT_NODE_IDS } from '../../flows/_contract-draft';
  * how many namespaces can ever arrive.
  */
 export const appSurface: Omit<TranslationData, 'objects'> = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm': {
+      name: 'HotCRM',
+      description: 'Clientes potenciales, pedidos, proyectos, cobros y gastos en un único sistema de gestión de código abierto. Seis aplicaciones: Ventas, Servicio, Marketing, Del pedido al cobro, Entrega de proyectos y Gastos. Del pedido al cobro sigue pedidos, facturas y cobros, y no es un libro contable. Cámbielo con IA cuando cambie su negocio. Deje que sus propios agentes de IA trabajen en él con los permisos de cada usuario.',
+    },
+  },
   apps: {
     crm_enterprise: {
       label: 'Ventas',

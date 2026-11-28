@@ -23,6 +23,9 @@ describe('opportunity walkthrough fixes', () => {
   });
 
   it('Clone Opportunity sits in the More menu, not on the header bar (#2574)', () => {
-    expect(CloneOpportunityAction.locations).toEqual(['record_more']);
+    // Protocol 19 spells the More-menu-only placement as the record page plus
+    // the ⋯-menu component.
+    expect({ locations: CloneOpportunityAction.locations, component: CloneOpportunityAction.component })
+      .toEqual({ locations: ['record_page'], component: 'action:menu' });
   });
 });

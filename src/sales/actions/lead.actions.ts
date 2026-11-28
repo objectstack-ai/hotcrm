@@ -17,7 +17,7 @@ export const ConvertLeadAction: Action = {
   icon: 'arrow-right-circle',
   type: 'flow',
   target: 'lead_conversion',
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   // Header position: see `qualify_lead` (#2382).
   order: -2,
   // Convert is the lead's most basic outcome — surface it on ANY open lead
@@ -133,7 +133,7 @@ export const QualifyLeadAction: Action = {
   icon: 'badge-check',
   operation: 'update',
   patch: { status: 'qualified' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   // The lead's record header draws its first three placed actions inline
   // (#2382): Qualify, Convert, Schedule Follow-up, the order the retired
   // authored header named them in. Without `order` the header follows
@@ -178,7 +178,7 @@ export const ScheduleFollowUpAction: Action = {
   icon: 'calendar-plus',
   type: 'flow',
   target: 'schedule_followup',
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   // Header position: see `qualify_lead` (#2382).
   order: -1,
   // A converted or disqualified lead has no next touch to schedule.
@@ -242,11 +242,11 @@ export const CreateCampaignAction: Action = {
   // The flow's own input name for the lead (the door seeds `recordId` too).
   recordIdParam: 'leadId',
   // Two doors, and no header button (#2073 item 5):
-  //   - `list_item`: every row's menu, on every lead view — the row's lead.
+  //   - `record_row`: every row's menu, on every lead view — the row's lead.
   //   - the SELECTION BAR, which a view opens by naming the action in its
   //     `bulkActions` (All Leads does) and which fans out once per ticked row.
   //     That placement is the view's, so it takes no location here.
-  // ⛔ Do not add `list_toolbar` back. A header button is drawn with nothing
+  // ⛔ Do not add `list` back. A header button is drawn with nothing
   // selected, and this action runs on exactly one record: launched from the
   // header it opened the whole Campaign dialog, then refused in English
   // ("This action runs on a single record — select a row first.") and sent
@@ -256,7 +256,7 @@ export const CreateCampaignAction: Action = {
   // Suspected Duplicates, and the kanban, calendar and gallery views) all drew
   // it, and a view a user creates names nothing either. On those views a
   // marketing user gets no row checkboxes at all, so it could never succeed.
-  locations: ['list_item'],
+  locations: ['record_row'],
   // The server refusal is the gate; this only stops offering a button that
   // cannot succeed (see the header).
   visible: P`current_user.can("crm_campaign_member", "create")`,

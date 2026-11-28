@@ -132,7 +132,7 @@ export const CaseSlaMonitorFlow: Flow = {
   variables: [],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (hourly)', config: { schedule: '0 * * * *' } },
+    { id: 'start', type: 'start', label: 'Start (hourly)', config: { schedule: { type: 'cron', expression: '0 * * * *', timezone: 'UTC' } } },
     {
       id: 'query_breached', type: 'get_record', label: 'Find Breached Cases',
       config: {

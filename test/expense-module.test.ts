@@ -186,8 +186,11 @@ describe('the expense module names no project in its flows, conditions, notices 
   });
 
   it('its translations and manual name no project object or project flow', () => {
-    const packs = ((stackOf(EXPENSE_ID).translations ?? []) as Rec[]).flatMap((bundle) => Object.entries(bundle));
-    expect(packs.length, 'anti-phantom: four locale packs').toBe(4);
+    const bundles = (stackOf(EXPENSE_ID).translations ?? []) as Rec[];
+    // The main pack and the flow-step bundle (`translations/flow-steps.ts`), four locales each.
+    expect(bundles.length, 'anti-phantom: two translation bundles').toBe(2);
+    const packs = bundles.flatMap((bundle) => Object.entries(bundle));
+    expect(packs.length, 'anti-phantom: four locale packs in each bundle').toBe(8);
     for (const [locale, pack] of packs) {
       const flowKeys = Object.keys((pack as Rec).flows ?? {});
       expect(flowKeys.filter((k) => k.includes('project')), `${locale}: no project flow's labels`).toEqual([]);
@@ -508,7 +511,9 @@ describe('a report with no project goes to the submitter\'s manager (expense_rep
   it('refuses the whole selection, writing nothing, when an expense is someone else\'s or already on a report', async () => {
     const mine = await insert(taxi(), spender.token);
     const theirs = await insert(taxi(), loner.token);
-    await expect(submit([mine.id, theirs.id], spender.token)).rejects.toThrow(/not yours/);
+    // From 19.0 the platform reads an action's selection in the caller's scope before the body runs
+    // (objectstack#36132): an expense the spender cannot read is not found, ahead of the body's "not yours".
+    await expect(submit([mine.id, theirs.id], spender.token)).rejects.toThrow(new RegExp(`Record ${theirs.id} not found`));
     expect((await row(mine.id)).crm_expense_report ?? null, 'nothing written').toBeNull();
     const [reportId] = await submit([mine.id], spender.token);
     await expect(submit([mine.id], spender.token)).rejects.toThrow(/already on an expense report/);

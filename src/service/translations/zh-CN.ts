@@ -10,6 +10,13 @@ import { activityActions } from '../../sales/translations/zh-CN/_shared';
  * package's pack: `./index.ts`.
  */
 export const zhCN: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.service': {
+      name: 'HotCRM 服务',
+      description: 'HotCRM 服务模块——工单、知识文章和 SLA。',
+    },
+  },
   // The escalation follow-up task's title (#2494, #2522), at
   // `hooks.<hook>.texts.<key>.message`.
   hooks: {
@@ -106,6 +113,14 @@ export const zhCN: TranslationData = {
       },
     },
     crm_case: {
+      // The timeline row the status milestones write (`activityMilestones` on the object).
+      _milestones: {
+        status: {
+          escalated: { summary: '工单已升级 — {subject}' },
+          resolved: { summary: '工单已解决 — {subject}' },
+          closed: { summary: '工单已关闭 — {subject}' },
+        },
+      },
       _validations: {
         resolution_required_for_closed: {
           message: '关闭工单时必须填写解决方案',

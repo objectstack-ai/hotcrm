@@ -10,6 +10,8 @@ import { InvoiceImportMapping, PaymentImportMapping } from './mappings/index.js'
 import { BillingMilestone, Invoice, Payment } from './objects/index.js';
 import { billingMilestoneHook, invoiceHook, paymentHook } from './objects/hooks.js';
 import { O2cTranslations } from './translations/index.js';
+import { O2cFlowStepTranslations } from './translations/flow-steps.js';
+import { withFlowStepEnglish } from '../sales/translations/_flow-step-english.js';
 import { BillingMilestoneViews, InvoiceViews, PaymentViews } from './views/index.js';
 
 /**
@@ -76,7 +78,7 @@ export const createHotCrmO2cStack = (
     version: '6.7.0',
     type: 'module',
     description: 'HotCRM order-to-cash module — the collection plan, invoice and payment status on a contract.',
-    engines: { protocol: '^18.6.0' },
+    engines: { protocol: '^19.0.0-next.2' },
     // The App package this module extends, and nothing else
     // (`module-split-plan.md` item 10: one dependency level).
     dependencies: { 'app.objectstack.hotcrm': '^6.7.0' },
@@ -128,7 +130,7 @@ export const createHotCrmO2cStack = (
   mappings: [InvoiceImportMapping, PaymentImportMapping],
   // Its manual (#2315), over `src/o2c/docs/`. See the book's own note.
   books: [CrmO2cManual],
-  translations: [O2cTranslations],
+  translations: [O2cTranslations, withFlowStepEnglish(O2cFlowStepTranslations, o2cFlows)],
   // The demo collection plan, invoices and payments (#2529), registered by
   // the package that owns their objects; see `src/o2c/data/o2c.seed.ts`.
   data: collections.data,

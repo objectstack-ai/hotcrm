@@ -112,7 +112,7 @@ export const MarkArticleHelpfulAction: Action = {
     capabilities: ['api.read', 'api.write'],
     timeoutMs: 5000,
   },
-  locations: ['record_header'],
+  locations: ['record_page'],
   visible: publishedOnly,
   successMessage: 'Thanks — recorded as helpful.',
   // By the body's `outcome` (#2369 row 7), with the article's tally. The
@@ -138,7 +138,7 @@ export const MarkArticleNotHelpfulAction: Action = {
     capabilities: ['api.read', 'api.write'],
     timeoutMs: 5000,
   },
-  locations: ['record_header'],
+  locations: ['record_page'],
   visible: publishedOnly,
   successMessage: 'Thanks — recorded as not helpful.',
   outcomeMessages: {

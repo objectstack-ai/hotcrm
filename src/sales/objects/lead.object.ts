@@ -862,6 +862,10 @@ export const Lead = ObjectSchema.create({
       // a spurious "invalid transition" warning when the flow stamps
       // status:'converted'. WHO may take that step is `converted_only_by_conversion`
       // above: only the write that also sets `is_converted: true`.
+      // Protocol 19 asks for an entry contract (`state-machine-no-initial-states`). Every state is listed: a
+      // record (an import or an integration included) may still be created in any of them, as on 18.6.
+      // Narrowing this to the first state is a product decision of its own, not part of the upgrade.
+      initialStates: ['new', 'contacted', 'qualified', 'unqualified', 'converted'],
       transitions: {
         new: ['contacted', 'qualified', 'unqualified', 'converted'],
         contacted: ['qualified', 'unqualified', 'converted'],

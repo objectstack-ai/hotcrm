@@ -9,6 +9,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  * module's pack, which contributes the field. Why per package: `./index.ts`.
  */
 export const zhCN: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.expense': {
+      name: 'HotCRM 费用报销',
+      description: 'HotCRM 费用报销模块——带票据的费用、出差申请、送审费用的报销单、报销付款，以及公司的费用标准。',
+    },
+  },
   hooks: {
     expense_line_lock: {
       refusals: {

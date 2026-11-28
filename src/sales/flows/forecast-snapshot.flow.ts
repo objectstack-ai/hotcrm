@@ -275,7 +275,7 @@ export const ForecastSnapshotFlow: Flow = {
   variables: [],
 
   nodes: [
-    { id: 'start', type: 'start', label: 'Start (daily 03:00)', config: { schedule: '0 3 * * *' } },
+    { id: 'start', type: 'start', label: 'Start (daily 03:00)', config: { schedule: { type: 'cron', expression: '0 3 * * *', timezone: 'UTC' } } },
     {
       // Every user is a candidate; the `has_deals` gate below decides who is
       // actually an opportunity owner. Filtering `sys_user` here instead would

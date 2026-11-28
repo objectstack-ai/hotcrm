@@ -106,8 +106,10 @@ The approval was given for the plan, so once a request is **Approved** its
 **Purpose**, **Destination**, dates, **Estimated Amount** and **Project** no
 longer change. The same goes for its legs: from the moment you submit, a leg's
 kind, places, dates and details are held, and no leg can be added or removed;
-only the **Booking Reference** still takes a value. To change the plan, choose
-**Cancel Trip** and file a new request.
+only the **Booking Reference** still takes a value, and not while the request
+waits for approval: then every leg is held, its booking reference included,
+until the approval is decided. To change the plan, choose **Cancel Trip** and
+file a new request.
 
 - **Cancel Trip**: the trip is not happening, or not as planned.
 - **Close**: the trip is over.

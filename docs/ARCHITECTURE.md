@@ -201,7 +201,7 @@ export const ConvertLeadAction = {
   objectName: 'crm_lead',
   type: 'flow',
   target: 'lead_conversion',
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
 };
 ```
 

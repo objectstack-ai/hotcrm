@@ -19,6 +19,8 @@ import {
 } from './sharing/index.js';
 import { ExpenseCheckSkill, ExpenseFilingSkill } from './skills/index.js';
 import { ExpenseTranslations } from './translations/index.js';
+import { ExpenseFlowStepTranslations } from './translations/flow-steps.js';
+import { withFlowStepEnglish } from '../sales/translations/_flow-step-english.js';
 import { ExpenseReportViews, ExpenseRequestLineViews, ExpenseRequestViews, ExpenseStandardViews, ExpenseViews } from './views/index.js';
 
 /**
@@ -107,7 +109,7 @@ export const createHotCrmExpenseStack = (
     version: '6.7.0',
     type: 'module',
     description: "HotCRM expense module — expenses with their receipts, travel requests, the reports that send expenses to be approved, their payment back, and the company's expense standards.",
-    engines: { protocol: '^18.6.0' },
+    engines: { protocol: '^19.0.0-next.2' },
     // The App package this module extends, and nothing else.
     dependencies: { 'app.objectstack.hotcrm': '^6.7.0' },
 
@@ -151,5 +153,5 @@ export const createHotCrmExpenseStack = (
   // The assistant's two skills (hotcrm#2617).
   skills: expenseSkills,
   data: collections.data,
-  translations: [ExpenseTranslations],
+  translations: [ExpenseTranslations, withFlowStepEnglish(ExpenseFlowStepTranslations, expenseFlows)],
 });

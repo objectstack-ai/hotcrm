@@ -509,6 +509,10 @@ export const Quote = ObjectSchema.create({
       message:
         "This status change is off the quote's usual path: Draft → In Review → Presented → Accepted. In Review can also go back to Draft or be Rejected, Presented can be Rejected, and a Rejected quote returns to Draft. Draft, In Review or Presented can become Expired. Accepted and Expired are final.",
       field: 'status',
+      // Protocol 19 asks for an entry contract (`state-machine-no-initial-states`). Every state is listed: a
+      // record (an import or an integration included) may still be created in any of them, as on 18.6.
+      // Narrowing this to the first state is a product decision of its own, not part of the upgrade.
+      initialStates: ['draft', 'in_review', 'presented', 'accepted', 'expired', 'rejected'],
       transitions: {
         // `→ expired` is legal from every UNSETTLED state: the quote_expiration
         // flow sweeps on `expiration_date` alone and expires drafts that were

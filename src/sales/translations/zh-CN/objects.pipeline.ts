@@ -229,6 +229,13 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     },
   },
   crm_opportunity: {
+    // The timeline row the stage milestones write (`activityMilestones` on the object).
+    _milestones: {
+      stage: {
+        closed_won: { summary: '赢单 — {name}' },
+        closed_lost: { summary: '丢单 — {name}' },
+      },
+    },
     _validations: {
       amount_positive: {
         message: '金额必须大于零',

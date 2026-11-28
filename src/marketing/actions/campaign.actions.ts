@@ -29,7 +29,7 @@ export const EnrollLeadsAction: Action = {
   icon: 'user-plus',
   type: 'flow',
   target: 'campaign_enrollment',
-  locations: ['record_header', 'record_more'],
+  locations: ['record_page'],
   // Enrollment only makes sense while the campaign is open — the flow
   // double-checks this server-side.
   visible: P`has(record.status) && (record.status == "planning" || record.status == "in_progress") && current_user.can("crm_campaign_member", "create")`,
@@ -53,10 +53,10 @@ export const EnrollLeadsAction: Action = {
  * `has_responded` and `response_date` from it in the same write, the one
  * stamping rule every path that sets the status goes through.
  *
- * `record_header` + `list_item`: `crm_campaign_member` ships no view of its
- * own — its rows are surfaced by the members related list on a campaign's
- * detail page (columns come from `highlightFields`), and `list_item` is the
- * per-row entry point there.
+ * `record` (the record page and each list row): `crm_campaign_member` ships
+ * no view of its own — its rows are surfaced by the members related list on a
+ * campaign's detail page (columns come from `highlightFields`), and the row
+ * half is the per-row entry point there.
  */
 export const MarkRespondedAction: Action = {
   name: 'mark_responded',
@@ -65,7 +65,7 @@ export const MarkRespondedAction: Action = {
   icon: 'reply',
   operation: 'update',
   patch: { status: 'responded' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   // Already-responded and converted members have nothing to record; an
   // unsubscribed member must not be dragged back into the funnel by a
   // mis-click (`campaign_member_optout_sync` has already opted that person out

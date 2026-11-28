@@ -47,7 +47,7 @@ export const EscalateCaseAction: Action = {
   icon: 'alert-triangle',
   type: 'flow',
   target: 'escalate_case',
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   // The record's state, then the caller's edit right on cases (see the header).
   visible: P`has(record.is_escalated) && record.is_escalated == false && has(record.is_closed) && record.is_closed == false && current_user.can("crm_case", "edit")`,
   successMessage: 'Case escalated successfully!',
@@ -61,7 +61,7 @@ export const CloseCaseAction: Action = {
   icon: 'check-circle',
   type: 'flow',
   target: 'close_case',
-  locations: ['record_header'],
+  locations: ['record_page'],
   // Same grant as Escalate Case: closing a case is editing it (see the header).
   visible: P`has(record.is_closed) && record.is_closed == false && current_user.can("crm_case", "edit")`,
   successMessage: 'Case closed successfully!',
@@ -98,7 +98,7 @@ export const ReopenCaseAction: Action = {
   icon: 'rotate-ccw',
   operation: 'update',
   patch: { status: 'in_progress' },
-  locations: ['record_header'],
+  locations: ['record_page'],
   visible: P`has(record.status) && (record.status == "resolved" || record.status == "closed") && current_user.can("crm_case", "edit")`,
   successMessage: 'Case {{ record.display_title }} reopened.',
   refreshAfter: true,

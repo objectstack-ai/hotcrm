@@ -224,6 +224,10 @@ export const ExpenseRequest = ObjectSchema.create({
       severity: 'error',
       message: 'This status change is not allowed. A travel request moves Draft → Submitted → Approved or Rejected; a rejected request goes back to Draft to be corrected; an approved one is Cancelled before the trip or Closed after it.',
       field: 'status',
+      // Protocol 19 asks for an entry contract (`state-machine-no-initial-states`). Every state is listed: a
+      // record (an import or an integration included) may still be created in any of them, as on 18.6.
+      // Narrowing this to the first state is a product decision of its own, not part of the upgrade.
+      initialStates: ['draft', 'submitted', 'approved', 'rejected', 'cancelled', 'closed'],
       transitions: {
         draft: ['submitted'],
         submitted: ['approved', 'rejected', 'draft'],

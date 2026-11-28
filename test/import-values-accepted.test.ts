@@ -87,6 +87,15 @@ describe('the shipped CRM templates import whole', () => {
 });
 
 describe('an unqualified lead imports with its reason (#2780)', () => {
+  // A longer budget than the 5 s default, for the FIRST case only in effect:
+  // it runs straight after the three template imports above, and pays for the
+  // work those 150-odd rows leave running after their writes return. Measured
+  // locally (shared box, two runs each): the "Unqualified" case took 2.0–2.6 s
+  // on 19.0.0-next.2 and 1.0 s on 18.6.0 after those imports, 0.65 s on both
+  // with them skipped (`-t`), and the next case 35–60 ms on both. Since
+  // 19.0.0-next.2 (objectstack#37742) a record-change run's history lands
+  // after the write that fired it rather than inside it, so more of that work
+  // trails the import; on a CI shard it went past 5 s (hotcrm#2820).
   it.each(['Unqualified', 'Disqualified', 'Closed - Not Converted'])(
     'Lead Status "%s" with a Disqualification Reason is stored unqualified, with that reason',
     async (status) => {
@@ -94,6 +103,7 @@ describe('an unqualified lead imports with its reason (#2780)', () => {
       expect(refusals(body)).toEqual([]);
       expect(stored).toMatchObject({ status: 'unqualified', disqualification_reason: 'no_budget' });
     },
+    30_000,
   );
 
   it.each([

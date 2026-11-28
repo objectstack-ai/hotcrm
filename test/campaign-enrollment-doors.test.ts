@@ -398,7 +398,7 @@ describe('each door is offered only to a caller who holds the right it exercises
  * was a header button on every lead view that names it in no `bulkActions` —
  * seven of them, measured on 18.0.0-next.5 — drawn with nothing selected: it
  * ran the whole Campaign dialog, then refused in English and sent nothing. It
- * is drawn at two doors now: each row's menu (`list_item`), and the selection
+ * is drawn at two doors now: each row's menu (`record_row`), and the selection
  * bar All Leads opens by naming it in `bulkActions`. The bar fans out one run
  * per ticked row, each carrying that row's `recordId`, which is the call the
  * row menu makes for its one row.
@@ -407,7 +407,7 @@ describe('Add to Campaign on a lead is drawn on the row menu and the selection b
   const views: Rec[] = (stack as Rec).views ?? [];
 
   it('declares the row menu as its only location', () => {
-    expect(actionNamed('create_campaign').locations).toEqual(['list_item']);
+    expect(actionNamed('create_campaign').locations).toEqual(['record_row']);
   });
 
   it('All Leads still opens the selection bar on it, in the per-record bare-string form', () => {
@@ -442,7 +442,7 @@ describe('Add to Campaign on a contact is declared on the row menu only, like th
   const views: Rec[] = (stack as Rec).views ?? [];
 
   it('declares the row menu as its only location', () => {
-    expect(actionNamed('add_contact_to_campaign').locations).toEqual(['list_item']);
+    expect(actionNamed('add_contact_to_campaign').locations).toEqual(['record_row']);
   });
 
   it('All Contacts still opens the selection bar on it, in the per-record bare-string form', () => {

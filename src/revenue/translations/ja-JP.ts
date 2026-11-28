@@ -13,6 +13,13 @@ import { QUOTE_DISCOUNT_CEILING } from '../../sales/objects/_thresholds';
  * package's pack: `./index.ts`.
  */
 export const jaJP: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.revenue': {
+      name: 'HotCRM 製品と見積',
+      description: 'HotCRM 製品と見積モジュール——製品、価格表、商談の製品明細、見積。',
+    },
+  },
   hooks: {
     quote_total_rollup: {
       refusals: {

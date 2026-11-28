@@ -28,6 +28,8 @@ import { CaseIntakeAssignmentRule } from './assignment-rules/index.js';
 import { CaseIntakeQueue } from './queues/index.js';
 import { CaseTriageSkill } from './skills/index.js';
 import { ServiceTranslations } from './translations/index.js';
+import { ServiceFlowStepTranslations } from './translations/flow-steps.js';
+import { withFlowStepEnglish } from '../sales/translations/_flow-step-english.js';
 import { CaseViews, KnowledgeArticleViews } from './views/index.js';
 
 /**
@@ -140,7 +142,7 @@ export const createHotCrmServiceStack = (
     // The same protocol as the app package (ADR-0087 handshake); bump it with
     // the template manifest's `engines.protocol` on every platform upgrade,
     // exactly as the app's is.
-    engines: { protocol: '^18.6.0' },
+    engines: { protocol: '^19.0.0-next.2' },
     // The App package this module extends.
     dependencies: { 'app.objectstack.hotcrm': '^6.7.0' },
 
@@ -196,7 +198,7 @@ export const createHotCrmServiceStack = (
   assignmentRules: [CaseIntakeAssignmentRule],
   emailTemplates: ServiceEmailTemplates,
   books: [CrmServiceManual],
-  translations: [ServiceTranslations],
+  translations: [ServiceTranslations, withFlowStepEnglish(ServiceFlowStepTranslations, serviceFlows)],
 
   ...collections,
 });

@@ -5,3 +5,4 @@
  */
 
 export { CrmTranslations } from './crm.translation';
+export { CrmFlowStepTranslations } from './flow-steps';

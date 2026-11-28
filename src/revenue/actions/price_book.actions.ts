@@ -25,7 +25,7 @@ export const AddPriceBookProductsAction: Action = {
   icon: 'package-plus',
   type: 'flow',
   target: 'price_book_add_products',
-  locations: ['record_header', 'record_more'],
+  locations: ['record_page'],
   visible: P`current_user.can("crm_price_book_entry", "create")`,
   refreshAfter: true,
 };

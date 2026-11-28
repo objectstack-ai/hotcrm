@@ -51,7 +51,7 @@ What follows from that is on the SLA side: deadlines run on **calendar hours**. 
 
 ### 6. Profiles & permissions
 
-**Studio → All Metadata Types**, then *Permission Set* — what this checklist calls a *profile* is a permission set; since ObjectStack 18.3 sets are defined in Studio and assigned in **Setup → Permission Set Assignment**, and neither app ships a screen called *Profiles*:
+**App Studio → All Metadata Types**, then *Permission Set* — what this checklist calls a *profile* is a permission set; since ObjectStack 18.3 sets are defined in Studio and assigned in **Setup → Permission Set Assignment**, and neither app ships a screen called *Profiles*:
 
 - [ ] Review the six built-in profiles (see [Profiles](/docs/administration/profiles))
 - [ ] Clone and customise if needed (e.g., a *Junior Sales Rep* profile with limited delete rights)
@@ -149,11 +149,11 @@ There is nothing to seed called *Sales Knowledge*, *Product Information* or *Com
 
 ### 15. AI Copilot
 
-There is no *AI* group in Setup, and no screen turns the Copilot on. Setup carries exactly two AI surfaces: **Setup → Configuration → AI & Embedder**, which configures the provider, model and embedder, and a beta *AI Assistant* toggle under **Setup → Configuration → Feature Flags** that ships off and that nothing in the platform reads. What makes the Copilot answer is a configured provider; which skills it can run belongs to the app, not to setup. *AI* as a navigation group is **Studio → AI** (Agents / Tools / Skills).
+There is no *AI* group in Setup, and no screen turns the Copilot on. Setup carries exactly two AI surfaces: **Setup → Configuration → AI & Embedder**, which configures the provider, model and embedder, and a beta *AI Assistant* toggle under **Setup → Configuration → Feature Flags** that ships off and that nothing in the platform reads. What makes the Copilot answer is a configured provider; which skills it can run belongs to the app, not to setup. *AI* as a navigation group is **App Studio → AI** (Agents / Tools / Skills).
 
 - [ ] Confirm the provider at **Setup → Configuration → AI & Embedder** is a real one — it defaults to *Memory (echo — testing only)*, which replays your input instead of answering — then press *Test connection*
 - [ ] Run a sample query (*"Give me Customer 360 on [test account]"*) to verify — an answer that cites real records means the provider is live
-- [ ] Review the skills the Copilot ships with at **Studio → AI → Skills** — they all ship active, and which ones exist is decided in the app rather than picked here (see [Skills](/docs/ai-copilot/skills))
+- [ ] Review the skills the Copilot ships with at **App Studio → AI → Skills** — they all ship active, and which ones exist is decided in the app rather than picked here (see [Skills](/docs/ai-copilot/skills))
 - [ ] Look at field-level security rather than for AI redaction rules: the Copilot reads as the signed-in user, so a field masked on their profile never reaches it (see [Sharing & security](/docs/administration/sharing-and-security))
 
 ## ✅ Day 6 — Dashboards & reports

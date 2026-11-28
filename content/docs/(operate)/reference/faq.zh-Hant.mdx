@@ -84,7 +84,7 @@ Copilot 遵守你的共享設定 —— 如果你看不到它，它也看不到�
 4. 是否有**先前的流程**變更了記錄，導致條件不再匹配？
 5. 這條流程是否在**上一次執行尚未結束時又因同一筆記錄被重入**？引擎的重入守衛會跳過這次執行並記一條警告日誌。沒有可對照的重新評估次數 —— 守衛是兜底，不是停止條件。參見[系統管理 › 自動化](/zh-Hant/docs/administration/automation)。
 
-**Studio → Developer → Flow Runs** 顯示某條流程最近的執行及其狀態 —— 先選中你預期應當觸發的那條流程。
+**App Studio → Developer → Flow Runs** 顯示某條流程最近的執行及其狀態 —— 先選中你預期應當觸發的那條流程。
 
 ### 我的 SLA 計時器沒有執行。
 
@@ -119,7 +119,7 @@ Copilot 遵守你的共享設定 —— 如果你看不到它，它也看不到�
 
 ### 為什麼今天 AI 回應很慢？
 
-**沒有 AI 儀表板，也沒有 AI 健康頁面。** Setup 裡根本沒有 *AI* 分組 —— 那是 **Studio → AI** 的，底下是 Agents / Tools / Skills，與健康無關 —— Setup 裡也沒有任何地方回報模型延遲。最接近的真實介面是 **Setup → Configuration → AI & Embedder**，它設定供應商、模型與 Embedder，並帶有 *Test connection* 與 *Test embedder* 兩個按鈕：那是一次性探測，不是監控面板。變慢基本都在上游 —— LLM 供應商本身，或者它的速率限制。重新索引永遠不是原因，因為根本沒有重新索引這回事。
+**沒有 AI 儀表板，也沒有 AI 健康頁面。** Setup 裡根本沒有 *AI* 分組 —— 那是 **App Studio → AI** 的，底下是 Agents / Tools / Skills，與健康無關 —— Setup 裡也沒有任何地方回報模型延遲。最接近的真實介面是 **Setup → Configuration → AI & Embedder**，它設定供應商、模型與 Embedder，並帶有 *Test connection* 與 *Test embedder* 兩個按鈕：那是一次性探測，不是監控面板。變慢基本都在上游 —— LLM 供應商本身，或者它的速率限制。重新索引永遠不是原因，因為根本沒有重新索引這回事。
 
 ## 📊 報表與儀表板
 

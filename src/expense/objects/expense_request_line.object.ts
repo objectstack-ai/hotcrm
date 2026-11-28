@@ -27,7 +27,9 @@ const LEG_LOCKED = P`has(parent.status) && (parent.status == "submitted" || pare
  * - **Optional.** A request with no legs is complete; nothing requires one.
  * - **The booking reference stays writable** at every status: it is written
  *   after booking, by the traveler, an agent acting as the traveler, or
- *   whoever books, and that is after approval. Every other value carries
+ *   whoever books, and that is after approval. While the approval is pending
+ *   the platform holds every line of the request, this one too (objectstack
+ *   1e018d6, 19.0: a master's approval lock covers its master-detail lines). Every other value carries
  *   {@link LEG_LOCKED}, and `expense_request_line_lock`
  *   (`./expense_request_line.hook.ts`) refuses changing, adding, removing or
  *   moving a leg of a locked request.

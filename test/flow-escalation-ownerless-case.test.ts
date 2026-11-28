@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
 import { CaseEscalationFlow, CaseEscalationOnCreateFlow } from '../src/service/flows/case-escalation.flow';
 import {
-  hotcrmStack, signUpPerson, guestInsert, systemInsert, systemUpdate, flowRuns, notificationsTo,
+  hotcrmStack, signUpPerson, guestInsert, systemInsert, systemUpdate, landedFlowRuns, notificationsTo,
   runRecordFlow, type Person,
 } from './helpers/verify-stack';
 
@@ -86,7 +86,7 @@ async function raise(stack: VerifyStack, flowName: FlowName, owner?: unknown) {
     if (owner !== undefined) await systemUpdate(stack, 'crm_case', { id, owner_id: owner });
     await systemUpdate(stack, 'crm_case', { id, priority: 'critical' });
   }
-  const runs = await flowRuns(stack, flowName, id);
+  const runs = await landedFlowRuns(stack, flowName, id);
   expect(runs, `${flowName} did not run for the critical case`).toHaveLength(1);
   const run = runs[0]!;
   const [stored] = await stack.rows('crm_case', { id });
@@ -181,7 +181,7 @@ describe.each(FLOW_NAMES)('%s — an ownerless critical case (#1430)', (flowName
     if (flowName === 'case_escalation') {
       await sql.hooks.run('crm_case', 'update', { id: opened.id, priority: 'critical' }, { as: agent.token });
     }
-    const [run] = await flowRuns(sql, flowName, opened.id);
+    const [run] = await landedFlowRuns(sql, flowName, opened.id);
     expect(run?.status, `the owned control failed: ${run?.error ?? ''}`).toBe('completed');
     const sent = (await notificationsTo(sql, agent.id, 'case_escalated'))
       .filter((n) => n.payload?.actionUrl === `/crm_case/${opened.id}`);

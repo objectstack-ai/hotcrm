@@ -269,13 +269,14 @@ describe('dashboard actions land on real routes', () => {
 describe('list-level action references resolve', () => {
   const actions: AnyRec[] = (stack as any).actions ?? [];
 
-  it('no rowAction repeats an action that already declares list_item placement', () => {
-    // An Action with `locations: ['list_item']` auto-injects its row-menu
+  it('no rowAction repeats an action that already declares row placement', () => {
+    // An Action placed on each list row (`record_row`, or `record`, which is
+    // the record page and each row) auto-injects its row-menu
     // entry. Naming it AGAIN as a rowActions string goes through objectui's
     // legacy path, which dispatches the string as an action TYPE — producing
     // a second, dead menu item (issue #535 / objectstack-ai/objectui#2960).
     const listItemActions = new Set(
-      actions.filter((a) => (a.locations ?? []).includes('list_item')).map((a) => a.name),
+      actions.filter((a) => (a.locations ?? []).some((l: string) => l === 'record_row' || l === 'record')).map((a) => a.name),
     );
     const bad: string[] = [];
     for (const v of views) {
@@ -283,7 +284,7 @@ describe('list-level action references resolve', () => {
       for (const list of lists) {
         for (const name of list.rowActions ?? []) {
           if (typeof name === 'string' && listItemActions.has(name)) {
-            bad.push(`view "${list.name ?? 'default'}": "${name}" duplicates its list_item auto-injection`);
+            bad.push(`view "${list.name ?? 'default'}": "${name}" duplicates its row-placement auto-injection`);
           }
         }
       }
@@ -390,11 +391,12 @@ describe('record-page header action references resolve', () => {
    * object it did not name was reachable from the record by no button at all
    * (#592) — which is how an agent on a case could not log or book a meeting.
    * #2382 retired the authored record pages: the synthesized header draws
-   * EVERY action of the object placed at `record_header` (inline, then ⋯) or
-   * `record_more` (⋯), the one reader `placedHeaderActions` in
-   * `@object-ui/types`. So the completeness the old pin held by comparing two
-   * lists now holds by there being one list, provided no record page brings
-   * an authored header back.
+   * EVERY action of the object placed on the record page — `record_page`, or
+   * `record` (the page and each list row); protocol 19's words for the
+   * retired `record_header` / `record_more` — as read by `@object-ui/types`.
+   * So the completeness the old pin held by comparing two lists now holds by
+   * there being one list, provided no record page brings an authored header
+   * back.
    */
   const recordPages = pages.filter((p) => p.type === 'record');
 
@@ -420,7 +422,7 @@ describe('record-page header action references resolve', () => {
   /**
    * The buttons the retired headers named (#592, #2072), each still placed on
    * its object where the synthesized header draws it. A future edit that took
-   * one of them off `record_header` / `record_more` would take it off the
+   * one of them off `record_page` / `record` would take it off the
    * record page; this names it.
    */
   const RETIRED_HEADERS: Record<string, string[]> = {
@@ -432,7 +434,7 @@ describe('record-page header action references resolve', () => {
   const placedOnHeader = (object: string): string[] =>
     actions
       .filter((a) => a.objectName === object
-        && (a.locations ?? []).some((l: string) => l === 'record_header' || l === 'record_more'))
+        && (a.locations ?? []).some((l: string) => l === 'record_page' || l === 'record'))
       .map((a) => a.name as string);
 
   it.each(Object.entries(RETIRED_HEADERS))('%s: every button the retired header named is still placed on the record header', (object, names) => {
@@ -442,7 +444,7 @@ describe('record-page header action references resolve', () => {
   it('the placement check still names an action taken off the header', () => {
     const without = actions.filter((a) => !(a.objectName === 'crm_case' && a.name === 'escalate_case'));
     const placed = without
-      .filter((a) => a.objectName === 'crm_case' && (a.locations ?? []).includes('record_header'))
+      .filter((a) => a.objectName === 'crm_case' && (a.locations ?? []).some((l: string) => l === 'record_page' || l === 'record'))
       .map((a) => a.name);
     expect(RETIRED_HEADERS.crm_case!.filter((n) => !placed.includes(n))).toContain('escalate_case');
   });
@@ -456,7 +458,8 @@ describe('record-page header action references resolve', () => {
    * Qualify fell into ⋯.
    */
   it('the lead header leads with Qualify, Convert and Schedule Follow-up', () => {
-    const lead = actions.filter((a) => a.objectName === 'crm_lead' && (a.locations ?? []).includes('record_header'));
+    const lead = actions.filter((a) => a.objectName === 'crm_lead'
+      && (a.locations ?? []).some((l: string) => l === 'record_page' || l === 'record'));
     const ordered = [...lead].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((a) => a.name);
     expect(ordered.slice(0, 3)).toEqual(['qualify_lead', 'convert_lead', 'schedule_followup']);
   });

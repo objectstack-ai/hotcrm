@@ -164,6 +164,10 @@ export const ProjectBudget = ObjectSchema.create({
       severity: 'error',
       message: 'This status change is not allowed. A budget version moves Draft → In Approval → Approved or Rejected; a rejected one goes back to Draft, and an approved one is Superseded when a later version is approved.',
       field: 'status',
+      // Protocol 19 asks for an entry contract (`state-machine-no-initial-states`). Every state is listed: a
+      // record (an import or an integration included) may still be created in any of them, as on 18.6.
+      // Narrowing this to the first state is a product decision of its own, not part of the upgrade.
+      initialStates: ['draft', 'in_approval', 'approved', 'rejected', 'superseded'],
       transitions: {
         draft: ['in_approval'],
         in_approval: ['approved', 'rejected', 'draft'],

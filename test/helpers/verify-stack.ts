@@ -326,6 +326,21 @@ export async function flowRuns(stack: VerifyStack, flowName: string, recordId: s
 }
 
 /**
+ * {@link flowRuns}, once the first history row has landed. Since
+ * 19.0.0-next.2 (objectstack#37742) a record-triggered run's history row is no
+ * longer committed with the write that fired it: it lands a moment after that
+ * write returns, so a read straight after the write can come back empty. For a
+ * case that asserts on a run it expects; a case that asserts NO run stays on
+ * {@link flowRuns}.
+ */
+export const landedFlowRuns = (stack: VerifyStack, flowName: string, recordId: string): Promise<Row[]> =>
+  vi.waitFor(async () => {
+    const rows = await flowRuns(stack, flowName, recordId);
+    if (rows.length === 0) throw new Error(`no ${flowName} run recorded for ${recordId}`);
+    return rows;
+  }, { timeout: 10_000, interval: 50 });
+
+/**
  * The notifications addressed to `userId` (optionally of one `topic`) — the
  * messaging outbox's `inbox`-channel rows, written inside the run that called
  * `notify`. The inbox row itself lands later, when the dispatcher drains the

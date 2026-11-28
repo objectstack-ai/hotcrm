@@ -23,6 +23,8 @@ import {
 } from './objects/hooks.js';
 import { QuoteDetailPage, QuotePrintPage } from './pages/index.js';
 import { RevenueTranslations } from './translations/index.js';
+import { RevenueFlowStepTranslations } from './translations/flow-steps.js';
+import { withFlowStepEnglish } from '../sales/translations/_flow-step-english.js';
 import { PriceBookViews, ProductViews, QuoteViews } from './views/index.js';
 
 /**
@@ -103,7 +105,7 @@ export const createHotCrmRevenueStack = (
     version: '6.7.0',
     type: 'module',
     description: 'HotCRM revenue module — products, price books, opportunity line items and quotes.',
-    engines: { protocol: '^18.6.0' },
+    engines: { protocol: '^19.0.0-next.2' },
     // The App package this module extends — and nothing else: the graph is a
     // star (plan decision 5), ⛔ no edge to another module.
     dependencies: { 'app.objectstack.hotcrm': '^6.7.0' },
@@ -184,7 +186,7 @@ export const createHotCrmRevenueStack = (
   emailTemplates: RevenueEmailTemplates,
   // Its manual (#2327), over `src/revenue/docs/`. See the book's own note.
   books: [CrmRevenueManual],
-  translations: [RevenueTranslations],
+  translations: [RevenueTranslations, withFlowStepEnglish(RevenueFlowStepTranslations, revenueFlows)],
   // The quote's working page (explicit default) and its print page (#2312).
   // Print Quote's door, `POST /api/v1/print/records`, is mounted by the app
   // package (`src/sales/index.ts`), which Print Contract needs too (#2317).

@@ -526,6 +526,10 @@ export const Case = ObjectSchema.create({
       // →escalated and →closed from every open state, else those actions emit a
       // spurious "Invalid status transition" warning (e.g. escalating a brand-new
       // case, which is a legitimate support move).
+      // Protocol 19 asks for an entry contract (`state-machine-no-initial-states`). Every state is listed: a
+      // record (an import or an integration included) may still be created in any of them, as on 18.6.
+      // Narrowing this to the first state is a product decision of its own, not part of the upgrade.
+      initialStates: ['new', 'in_progress', 'waiting_customer', 'waiting_support', 'escalated', 'resolved', 'closed'],
       transitions: {
         'new': ['in_progress', 'waiting_customer', 'escalated', 'closed'],
         'in_progress': ['waiting_customer', 'waiting_support', 'escalated', 'resolved', 'closed'],

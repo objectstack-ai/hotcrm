@@ -85,7 +85,9 @@ describe('the account notice reads right for both branches in every locale (#207
   const templates: Array<[string, string]> = [
     ['en (authored)', String(screen1.config.description)],
     ...localePacks
-      .filter(([, pack]) => pack?.flows?.lead_conversion !== undefined)
+      // The `en` pack carries the flow's step names only (built from the flow,
+      // `withFlowStepEnglish`); its screen text is the authored row above.
+      .filter(([locale, pack]) => locale !== 'en' && pack?.flows?.lead_conversion !== undefined)
       .map(([locale, pack]) => [locale, String(pack.flows.lead_conversion.screens?.screen_1?.description ?? '')] as [string, string]),
   ];
   const render = (source: string, vars: Rec): string => {

@@ -9,6 +9,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  * module's pack, which contributes the field. Why per package: `./index.ts`.
  */
 export const esES: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.expense': {
+      name: 'HotCRM Gastos',
+      description: 'Módulo de gastos de HotCRM: gastos con sus recibos, solicitudes de viaje, los informes que envían los gastos a aprobar, su reembolso y las normas de gastos de la empresa.',
+    },
+  },
   hooks: {
     expense_line_lock: {
       refusals: {

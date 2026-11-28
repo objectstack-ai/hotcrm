@@ -84,6 +84,7 @@ import * as mappings from './src/sales/mappings/index.js';
 import * as apps from './src/sales/apps/index.js';
 import * as profiles from './src/sales/profiles/index.js';
 import * as translations from './src/sales/translations/index.js';
+import { withFlowStepEnglish } from './src/sales/translations/_flow-step-english.js';
 
 import * as salesViews from './src/sales/views/index.js';
 
@@ -321,7 +322,11 @@ export const appQueues = byExportName({ ...salesQueues });
 export const appAssignmentRules = byExportName({ ...salesAssignmentRules });
 
 /** The locale packs — whole in the app package (plan item 4), service labels included. */
-export const appTranslations = byExportName({ ...translations });
+export const appTranslations = byExportName({
+  ...translations,
+  // Its flow-step bundle gains its `en` pack from the flows themselves (`_flow-step-english.ts`).
+  CrmFlowStepTranslations: withFlowStepEnglish(translations.CrmFlowStepTranslations, appFlows),
+});
 
 /**
  * Every `sys_email_template` row the app package registers — the localizable
