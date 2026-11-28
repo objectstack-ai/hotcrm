@@ -11,6 +11,7 @@ import { BillingMilestone, Invoice, Payment } from './objects/index.js';
 import { billingMilestoneHook, invoiceHook, paymentHook } from './objects/hooks.js';
 import { O2cTranslations } from './translations/index.js';
 import { O2cFlowStepTranslations } from './translations/flow-steps.js';
+import { withFlowStepEnglish } from '../sales/translations/_flow-step-english.js';
 import { BillingMilestoneViews, InvoiceViews, PaymentViews } from './views/index.js';
 
 /**
@@ -129,7 +130,7 @@ export const createHotCrmO2cStack = (
   mappings: [InvoiceImportMapping, PaymentImportMapping],
   // Its manual (#2315), over `src/o2c/docs/`. See the book's own note.
   books: [CrmO2cManual],
-  translations: [O2cTranslations, O2cFlowStepTranslations],
+  translations: [O2cTranslations, withFlowStepEnglish(O2cFlowStepTranslations, o2cFlows)],
   // The demo collection plan, invoices and payments (#2529), registered by
   // the package that owns their objects; see `src/o2c/data/o2c.seed.ts`.
   data: collections.data,

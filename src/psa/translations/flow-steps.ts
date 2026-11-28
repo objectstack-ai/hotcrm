@@ -1,6 +1,7 @@
 // Copyright (c) 2026 ObjectStack. Licensed under the Apache-2.0 license.
 
 import type { TranslationBundle } from '@objectstack/spec/system';
+import { PROJECT_FINANCE_REVIEW_BUDGET } from '../objects/_thresholds';
 
 /**
  * The step names the flow designer, the run history and the approval
@@ -20,7 +21,7 @@ export const PsaFlowStepTranslations: TranslationBundle = {
       project_initiation_approval: {
         nodes: {
           start: { label: '开始（项目已提交审批）' },
-          check_budget: { label: '预算 100000 或以上？' },
+          check_budget: { label: `预算 ${PROJECT_FINANCE_REVIEW_BUDGET} 或以上？` },
           end: { label: '结束' },
           mark_approved: { label: '标记为已批准' },
         },
@@ -95,7 +96,7 @@ export const PsaFlowStepTranslations: TranslationBundle = {
       project_initiation_approval: {
         nodes: {
           start: { label: '開始（プロジェクトの承認申請時）' },
-          check_budget: { label: '予算 100000 以上？' },
+          check_budget: { label: `予算 ${PROJECT_FINANCE_REVIEW_BUDGET} 以上？` },
           end: { label: '終了' },
           mark_approved: { label: '承認済みにする' },
         },
@@ -170,7 +171,7 @@ export const PsaFlowStepTranslations: TranslationBundle = {
       project_initiation_approval: {
         nodes: {
           start: { label: 'Inicio (proyecto enviado a aprobación)' },
-          check_budget: { label: '¿Presupuesto de 100000 o más?' },
+          check_budget: { label: `¿Presupuesto de ${PROJECT_FINANCE_REVIEW_BUDGET} o más?` },
           end: { label: 'Fin' },
           mark_approved: { label: 'Marcar como aprobado' },
         },

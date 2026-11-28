@@ -29,6 +29,7 @@ import { CaseIntakeQueue } from './queues/index.js';
 import { CaseTriageSkill } from './skills/index.js';
 import { ServiceTranslations } from './translations/index.js';
 import { ServiceFlowStepTranslations } from './translations/flow-steps.js';
+import { withFlowStepEnglish } from '../sales/translations/_flow-step-english.js';
 import { CaseViews, KnowledgeArticleViews } from './views/index.js';
 
 /**
@@ -197,7 +198,7 @@ export const createHotCrmServiceStack = (
   assignmentRules: [CaseIntakeAssignmentRule],
   emailTemplates: ServiceEmailTemplates,
   books: [CrmServiceManual],
-  translations: [ServiceTranslations, ServiceFlowStepTranslations],
+  translations: [ServiceTranslations, withFlowStepEnglish(ServiceFlowStepTranslations, serviceFlows)],
 
   ...collections,
 });

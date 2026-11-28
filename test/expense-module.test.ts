@@ -186,8 +186,11 @@ describe('the expense module names no project in its flows, conditions, notices 
   });
 
   it('its translations and manual name no project object or project flow', () => {
-    const packs = ((stackOf(EXPENSE_ID).translations ?? []) as Rec[]).flatMap((bundle) => Object.entries(bundle));
-    expect(packs.length, 'anti-phantom: four locale packs').toBe(4);
+    const bundles = (stackOf(EXPENSE_ID).translations ?? []) as Rec[];
+    // The main pack and the flow-step bundle (`translations/flow-steps.ts`), four locales each.
+    expect(bundles.length, 'anti-phantom: two translation bundles').toBe(2);
+    const packs = bundles.flatMap((bundle) => Object.entries(bundle));
+    expect(packs.length, 'anti-phantom: four locale packs in each bundle').toBe(8);
     for (const [locale, pack] of packs) {
       const flowKeys = Object.keys((pack as Rec).flows ?? {});
       expect(flowKeys.filter((k) => k.includes('project')), `${locale}: no project flow's labels`).toEqual([]);
