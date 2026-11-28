@@ -571,6 +571,17 @@ export const zhCN: TranslationData = {
       fields: {
         crm_project: { label: '项目' },
       },
+      // The refusals of a submission on a Closed, Cancelled or locked project
+      // (hotcrm#2764). Each rule is a `conditional`; the `_check` rule inside
+      // it is the one whose message is shown, and both carry the same text.
+      _validations: {
+        expense_report_project_closed: { message: '这张报销单所属的项目已关闭，不再接受费用，因此不能提交。请删除这张报销单，把其中的费用改挂到进行中的项目，再重新提交。' },
+        expense_report_project_closed_check: { message: '这张报销单所属的项目已关闭，不再接受费用，因此不能提交。请删除这张报销单，把其中的费用改挂到进行中的项目，再重新提交。' },
+        expense_report_project_cancelled: { message: '这张报销单所属的项目已取消，不再接受费用，因此不能提交。请删除这张报销单，把其中的费用改挂到进行中的项目，再重新提交。' },
+        expense_report_project_cancelled_check: { message: '这张报销单所属的项目已取消，不再接受费用，因此不能提交。请删除这张报销单，把其中的费用改挂到进行中的项目，再重新提交。' },
+        expense_report_project_locked: { message: '这张报销单所属的项目已锁定工时与费用，因此不能提交。先保留为草稿，待项目经理在项目上取消勾选“锁定工时与费用”后再提交。' },
+        expense_report_project_locked_check: { message: '这张报销单所属的项目已锁定工时与费用，因此不能提交。先保留为草稿，待项目经理在项目上取消勾选“锁定工时与费用”后再提交。' },
+      },
     },
     crm_expense_request: {
       fields: {

@@ -287,9 +287,9 @@
 | EXP-001 | 费用报销模块与应用 | 独立的 `app.objectstack.hotcrm.expense` 模块和「费用报销」应用,租户可停用;每个内部岗位都能记录、查看和编辑自己的费用,财务看全部 | `src/expense/index.ts` |
 | EXP-002 | 费用记录 | 描述、日期、类别、金额、付款方(员工/公司)、商户、票据号、来源(手工/智能体/导入)、可计费,票据走附件;不带币种 | `src/expense/objects/expense.object.ts` |
 | EXP-003 | 报销单 | 费用放进报销单一起提交(REQ-0011,hotcrm#2559):编号、标题、提交人、客户、合计、应报销(只算员工垫付)、状态 草稿/已提交/已批准/已付款/已驳回、审批人、提交/批准时间、备注、检查提示、付款日期与参考号;费用的状态跟随报销单,任何人不能手动写批准/驳回;只有草稿报销单可删除 | `src/expense/objects/expense_report.object.ts`、`src/expense/objects/expense_report.hook.ts`、`src/expense/objects/expense.hook.ts` |
-| EXP-004 | 提交报销 | 在我的费用里勾选一笔或多笔(或在单笔记录页)点「提交报销」,同一次点击生成并提交报销单;每个项目一张报销单,无项目的另一张;全部或全不 | `src/expense/actions/expense.actions.ts` |
+| EXP-004 | 提交报销 | 在我的费用里勾选一笔或多笔(或在单笔记录页)点「提交报销」,同一次点击生成并提交报销单;每个项目一张报销单,无项目的另一张;所选费用有任何问题则整批拒绝、什么都不写;项目已锁定、已关闭或已取消的那张报销单留在草稿(费用仍在其上),其余照常提交,点击以错误结束并点名未提交的报销单(#2764) | `src/expense/actions/expense.actions.ts` |
 | EXP-005 | 无项目报销单审批 | 由报销人的上级审批(无上级时由财务控制),合计 ≥2,000 再交财务控制;撤回、驳回后退回草稿再提交 | `src/expense/flows/expense-report-approval.flow.ts` |
-| EXP-006 | 项目报销单审批 | 写明项目的报销单由项目经理审批,合计 ≥2,000 再交财务;项目已关闭、已取消或已锁定时退回草稿并通知;项目字段与本审批流程都属于项目交付模块(2026-11-19 由 hotcrm#2575 从费用包搬回,objectstack#34616 已在 18.6.0 修复) | `src/psa/flows/expense-report-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
+| EXP-006 | 项目报销单审批 | 写明项目的报销单由项目经理审批,合计 ≥2,000 再交财务;项目已关闭、已取消或已锁定时报销单不能提交:校验规则当场拒绝并说明原因,报销单仍是草稿(hotcrm#2764;流程里的退回草稿与通知留作兜底);项目字段与本审批流程都属于项目交付模块(2026-11-19 由 hotcrm#2575 从费用包搬回,objectstack#34616 已在 18.6.0 修复) | `src/psa/flows/expense-report-project-approval.flow.ts`、`src/psa/extensions/expense-project.extension.ts` |
 | EXP-007 | 标记已付款 | 财务控制、应收会计在「待付款的报销单」里对已批准的报销单记录付款日期和参考号;只记录,不付款、不记账 | `src/expense/actions/expense.actions.ts` |
 | EXP-008 | 报销单视图 | 我的报销单、待我审批的报销单、待付款的报销单、全部报销单 | `src/expense/views/expense_report.view.ts` |
 | EXP-009 | 出差申请 | `crm_expense_request`(界面叫「出差申请」):事由、出差人、目的地、起止日期、天数(自动算)、客户(可空)、一个预计总额、行程、备注、来源、检查提示,附件;六个状态 草稿/已提交/已批准/已驳回/已取消/已关闭;批准后事由、目的地、日期、金额(及项目)锁定;出差人一键提交、取消出差、关闭;在「费用报销」应用,「我的出差申请」也贡献进「项目交付」应用 | `src/expense/objects/expense_request.object.ts`、`src/expense/actions/expense-request.actions.ts` |

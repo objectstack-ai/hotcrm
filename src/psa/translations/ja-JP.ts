@@ -571,6 +571,17 @@ export const jaJP: TranslationData = {
       fields: {
         crm_project: { label: 'プロジェクト' },
       },
+      // The refusals of a submission on a Closed, Cancelled or locked project
+      // (hotcrm#2764). Each rule is a `conditional`; the `_check` rule inside
+      // it is the one whose message is shown, and both carry the same text.
+      _validations: {
+        expense_report_project_closed: { message: 'この経費精算書のプロジェクトはクローズ済みで経費を受け付けないため、精算書は提出できません。精算書を削除し、経費を進行中のプロジェクトに移してから再提出してください。' },
+        expense_report_project_closed_check: { message: 'この経費精算書のプロジェクトはクローズ済みで経費を受け付けないため、精算書は提出できません。精算書を削除し、経費を進行中のプロジェクトに移してから再提出してください。' },
+        expense_report_project_cancelled: { message: 'この経費精算書のプロジェクトはキャンセル済みで経費を受け付けないため、精算書は提出できません。精算書を削除し、経費を進行中のプロジェクトに移してから再提出してください。' },
+        expense_report_project_cancelled_check: { message: 'この経費精算書のプロジェクトはキャンセル済みで経費を受け付けないため、精算書は提出できません。精算書を削除し、経費を進行中のプロジェクトに移してから再提出してください。' },
+        expense_report_project_locked: { message: 'この経費精算書のプロジェクトは工数と経費がロックされているため、精算書は提出できません。下書きのままにして、プロジェクトマネージャーがプロジェクトの「工数と経費をロック」を外した後に再提出してください。' },
+        expense_report_project_locked_check: { message: 'この経費精算書のプロジェクトは工数と経費がロックされているため、精算書は提出できません。下書きのままにして、プロジェクトマネージャーがプロジェクトの「工数と経費をロック」を外した後に再提出してください。' },
+      },
     },
     crm_expense_request: {
       fields: {

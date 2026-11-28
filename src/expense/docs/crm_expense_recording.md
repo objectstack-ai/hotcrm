@@ -169,11 +169,15 @@ nothing there.
 
 - The **Project** picker offers only projects that are not **Closed** or
   **Cancelled**.
-- A report submitted on a project that is **Closed**, **Cancelled**, or has
-  **Lock Time and Expenses** ticked goes straight back to **Draft**, and you
-  get an Inbox notice naming the project. On a locked project, submit the
+- A report on a project that is **Closed**, **Cancelled**, or has **Lock Time
+  and Expenses** ticked cannot be submitted: **Submit** is refused with the
+  reason, and the report stays in **Draft**. On a locked project, submit the
   report again once the lock is lifted. On a closed or cancelled one, delete
   the report, move its expenses to an open project, and submit them again.
+- **Submit for Reimbursement** and **Submit for a Trip** send the other
+  projects' reports as usual. The report of such a project is created and
+  stays in **Draft** in **My Reports** with its expenses on it, and the click
+  ends with an error naming that report, not with a success message.
 - An expense's **Project** cannot change while the expense is on a report,
   even a Draft one: the report goes to the approver of the project it was
   sent with. To move an expense to another project, delete the draft report,

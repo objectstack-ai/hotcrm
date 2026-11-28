@@ -79,6 +79,7 @@ const SUBMIT_FOR_REIMBURSEMENT_SOURCE = `
         groups.get(key).push(row);
       }
       const reports = [];
+      const refused = [];
       for (const [project, rows] of groups) {
         const days = rows.map((r) => String(r.expense_date || '').slice(0, 10)).filter(Boolean).sort();
         const title = days.length
@@ -96,8 +97,28 @@ const SUBMIT_FOR_REIMBURSEMENT_SOURCE = `
           if (!row.paid_by) patch.paid_by = 'employee';
           await E.update(patch, { where: { id: String(row.id) } });
         }
-        await R.update({ id: String(report.id), status: 'submitted' }, { where: { id: String(report.id) } });
-        reports.push(String(report.id));
+        // A rule on the report may refuse its submission (hotcrm#2764: Project
+        // Delivery refuses one on a closed, cancelled or locked project). That
+        // report stays a Draft with its expenses, the other reports are still
+        // submitted, and the click ends as an error naming each one refused, so
+        // it never reads as a plain success. The reason is the rule's own text,
+        // which arrives in the caller's language.
+        try {
+          await R.update({ id: String(report.id), status: 'submitted' }, { where: { id: String(report.id) } });
+          reports.push(String(report.id));
+        } catch (e) {
+          if (!e || e.code !== 'VALIDATION_FAILED') throw e;
+          refused.push('Expense report ' + String(report.report_number || report.name || '') + ' was not submitted: ' + String(e.message || ''));
+        }
+      }
+      if (refused.length) {
+        refused.push(refused.length === 1
+          ? 'It stays in Draft in My Reports, with its expenses on it.'
+          : 'They stay in Draft in My Reports, with their expenses on them.');
+        refused.push(reports.length === 0
+          ? 'No report was submitted.'
+          : (reports.length === 1 ? '1 other report was submitted.' : reports.length + ' other reports were submitted.'));
+        throw fail(refused, 'VALIDATION_FAILED', 400);
       }
       return { id: reports[0], reports: reports, count: reports.length };
 `;
@@ -124,8 +145,20 @@ const SUBMIT_FOR_REIMBURSEMENT_SOURCE = `
  * Rejected one with no report can only be left from the per-expense approval
  * this card retired: it is set back to Draft and reported like the rest, so
  * an expense stranded by the upgrade reaches a report without a hand edit
- * (the upgrade note in the changeset). Any problem refuses the whole
- * selection before anything is written, naming each expense.
+ * (the upgrade note in the changeset). Any problem with the selected expenses
+ * refuses the whole selection before anything is written, naming each
+ * expense. The one exception is a report its own rules refuse, below: that
+ * refusal comes only once the reports are written.
+ *
+ * **A report its own rules refuse.** A rule on the report may refuse its
+ * submission: Project Delivery contributes three for a Closed, Cancelled or
+ * locked project (hotcrm#2764). The script runs in no transaction, so that
+ * report is already written: it stays a Draft with its expenses on it, the
+ * other reports are still submitted, and the click ends as an error naming
+ * each report that was not, with the rule's reason. It never ends as a
+ * success, which is the false "submitted" this card removed. The rule's
+ * reason arrives in the caller's language; the sentences around it are
+ * English, as a script body is given no locale.
  *
  * **Why a script.** It creates records and links them, so it runs as the
  * system (`body` docs on `Action`), and judges the caller itself: the

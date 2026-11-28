@@ -300,8 +300,14 @@ AGENTS.md rule 8, as built:
    notifies the project manager and every Finance Controller once per crossing, and proposes the
    lock; it never sets it.
 2. **The block is a decision.** With `time_entry_locked` ticked, a timesheet cannot be submitted
-   (`timesheet.hook.ts`), and an expense report on the project is turned back to Draft
-   (`expense_report_project_approval`). Drafts are never refused; there is no override flag.
+   (`timesheet.hook.ts`), and nor can an expense report on the project: three validation rules
+   that PSA contributes to `crm_expense_report` (`expense-project.extension.ts`) refuse the
+   submission at the click with the reason, on a locked project and on a Closed or Cancelled one
+   alike (hotcrm#2764). They are rules and not a hook because no hook may attach to another
+   package's object (ADR-0130 R4). Until that card the submission was accepted, the click
+   reported success, and `expense_report_project_approval` turned the report back to Draft; the
+   flow keeps that turn-back and its notice as the backstop for a project that closes or locks
+   between the rule's read and the flow's. Drafts are never refused; there is no override flag.
 
 ## Permissions, positions, sharing
 
@@ -360,7 +366,8 @@ language (#2506), the expense moves to its own module (#2577), a project names i
 (#2585), the project page's Overview (#2594), the platform bump to 18.6.0 (#2637), consultants
 read the account without Order to Cash totals (#2650), approvals need the deployment's approvals
 (#2673), the project manager back in the team (#2674), the project-path expense approvals moved
-back from the expense module (#2678).
+back from the expense module (#2678), an expense report on a locked, Closed or Cancelled project
+is refused at the click instead of turned back after it (#2764).
 
 ### Phase 3 — ruled, not built
 

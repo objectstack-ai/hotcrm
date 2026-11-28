@@ -1,0 +1,8 @@
+---
+"hotcrm": patch
+---
+
+Clause-②: no
+Metadata-protocol: none
+
+**Projects and expenses: Submit on an expense report no longer says "submitted for approval" when its project takes no expenses (#2764).** Before, on a project with **Lock Time and Expenses** ticked, or on a Closed or Cancelled project, pressing **Submit** on a draft expense report showed "submitted for approval", and a moment later the report was back in Draft with a notice in the inbox. Now the submission is refused at the click, as a timesheet's already was: the message says the report's project is locked, Closed or Cancelled and what to do next, and the report stays in Draft with its expenses, with no approval request and no notice. The reason is shown in English, Chinese, Spanish and Japanese. **Submit for Reimbursement** and **Submit for a Trip** over expenses of several projects still send the reports of the open projects and of no project; the report of the locked, Closed or Cancelled project is kept in Draft in **My Reports**, and the click now ends with an error that names that report and gives the reason, where it used to report success for all of them. The sentences around that reason are in English for now. Once the project manager unticks the lock, **Submit** on the same report goes through. A draft report on such a project can still be written, changed and deleted. A report created or imported directly as Submitted on such a project through the API is now refused the same way; before, it was accepted without that check (the turn-back flow runs only when an existing report is changed). No setup is needed.

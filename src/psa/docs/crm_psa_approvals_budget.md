@@ -99,9 +99,9 @@ project with no budget has none.
 
 The notice proposes the lock; a person decides, and nothing ticks it on its
 own. While **Lock Time and Expenses** is ticked on a project, no timesheet on
-it can be submitted, **whoever submits it**, administrators included, and an
-expense report submitted on it goes back to Draft with an inbox notice to its
-spender. Drafts can still be written. Untick it, after a top-up is approved for
+it can be submitted, **whoever submits it**, administrators included, and nor
+can an expense report on it: the submission is refused with the reason, and the
+report stays a Draft. Drafts can still be written. Untick it, after a top-up is approved for
 example, and submissions are taken again. A travel request is a plan, not
 spend: the lock does not stop one, and the Project Manager decides it as usual.
 
@@ -109,8 +109,9 @@ A **Closed** or **Cancelled** project takes nothing new at all: no timesheet
 can be created on it or moved onto it, and a draft already there can be edited
 but not submitted, administrators included. The expense's Project picker does
 not offer such a project, nor does a travel request's, and an expense report
-submitted on one goes back to Draft with an inbox notice. A **Completed** project still takes late bookings; tick
-the lock to stop them.
+already on one cannot be submitted: the submission is refused with the reason,
+and the report stays a Draft. A **Completed** project still takes late
+bookings; tick the lock to stop them.
 
 The **Projects Overview** dashboard, under **Projects**, shows the same figures
 across every project: what its tiles count is the next page.

@@ -94,7 +94,10 @@ committed:
 - Views of `crm_expense` live in the expense package.
 - The refusals "a locked, Closed or Cancelled project takes no expenses" live in `expense.hook.ts`
   today and cannot move to PSA as a hook (R4). They become a lookup filter on the PSA-contributed
-  field plus a rejection in PSA's flow.
+  field plus a rejection in PSA's flow. Since hotcrm#2764 the report's submission is refused
+  before the flow, by validation rules PSA contributes to `crm_expense_report` through the same
+  object extension (a rule is not a hook, so R4 allows it); the flow's rejection stays as the
+  backstop.
 - The two approval paths (project manager through PSA, submitter's manager in the expense package)
   must be mutually exclusive.
 

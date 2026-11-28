@@ -571,6 +571,17 @@ export const esES: TranslationData = {
       fields: {
         crm_project: { label: 'Proyecto' },
       },
+      // The refusals of a submission on a Closed, Cancelled or locked project
+      // (hotcrm#2764). Each rule is a `conditional`; the `_check` rule inside
+      // it is the one whose message is shown, and both carry the same text.
+      _validations: {
+        expense_report_project_closed: { message: 'El proyecto de este informe está cerrado y no admite gastos, así que el informe no se puede enviar. Elimine el informe, mueva sus gastos a un proyecto abierto y envíelos de nuevo.' },
+        expense_report_project_closed_check: { message: 'El proyecto de este informe está cerrado y no admite gastos, así que el informe no se puede enviar. Elimine el informe, mueva sus gastos a un proyecto abierto y envíelos de nuevo.' },
+        expense_report_project_cancelled: { message: 'El proyecto de este informe está cancelado y no admite gastos, así que el informe no se puede enviar. Elimine el informe, mueva sus gastos a un proyecto abierto y envíelos de nuevo.' },
+        expense_report_project_cancelled_check: { message: 'El proyecto de este informe está cancelado y no admite gastos, así que el informe no se puede enviar. Elimine el informe, mueva sus gastos a un proyecto abierto y envíelos de nuevo.' },
+        expense_report_project_locked: { message: 'El proyecto de este informe está bloqueado para horas y gastos, así que el informe no se puede enviar. Guárdelo como borrador y envíelo de nuevo cuando el jefe de proyecto desmarque Bloquear horas y gastos en el proyecto.' },
+        expense_report_project_locked_check: { message: 'El proyecto de este informe está bloqueado para horas y gastos, así que el informe no se puede enviar. Guárdelo como borrador y envíelo de nuevo cuando el jefe de proyecto desmarque Bloquear horas y gastos en el proyecto.' },
+      },
     },
     crm_expense_request: {
       fields: {
