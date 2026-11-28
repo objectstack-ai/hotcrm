@@ -202,7 +202,8 @@ describe('case_escalation — start condition', () => {
   it('fires for a fresh critical case', async () => {
     const kase = await openCase();
     await raise(kase);
-    expect(await runs(kase)).toHaveLength(1);
+    // The history row lands a moment after the write returns (objectstack#37742).
+    expect(await landedRuns('case_escalation', kase.id)).toHaveLength(1);
   });
 
   it('does not re-fire once escalated_date is stamped', async () => {
@@ -260,7 +261,7 @@ describe('case_escalation — start condition', () => {
     // case ends with exactly ONE — and the flow's own run wrote none.
     const kase = await openCase();
     await raise(kase);
-    const [run] = await runs(kase);
+    const [run] = await landedRuns('case_escalation', kase.id);
     expect(
       (run!.summary?.nodes ?? []).filter((n: Rec) => n.nodeType === 'create_record'),
       'case_escalation ran a create node',
@@ -784,7 +785,7 @@ describe('record-change flows under a user-less trigger (#684)', () => {
     }, as(agent));
     await systemUpdate(verify, 'crm_case', { id: kase.id, priority: 'critical' });
 
-    const [run] = await flowRuns(verify, 'case_escalation', kase.id);
+    const [run] = await landedRuns('case_escalation', kase.id);
     expect(String(run?.error ?? ''), 'the runAs refusal is back').not.toContain('[runAs]');
     expect(run?.status).toBe('completed');
     const [stored] = await verify.rows('crm_case', { id: kase.id });
