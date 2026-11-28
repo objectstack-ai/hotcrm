@@ -175,8 +175,9 @@ import { REPO_ROOT } from './helpers/repo-root';
  * **⚠️ A legitimately MIXED REGISTER must stay green — this is the acceptance
  * criterion, not a footnote.** `administration/automation.zh-Hans.mdx` names
  * Studio paths in ENGLISH and the console's zh-CN group labels in the same
- * list, and both are correct: Studio is labelled `Studio` in every locale the
- * platform ships, while its groups are translated.
+ * list, and both were correct through 18.6.0: Studio was labelled `Studio` in
+ * every locale the platform shipped, while its groups are translated (since
+ * 19.0.0-next.1 it is App Studio, and 应用搭建 in Chinese).
  * `administration/setup.zh-Hans.mdx`, `administration/sandbox-and-releases.zh-Hans.mdx`
  * and `reference/faq.zh-Hans.mdx` open some paths with 设置 and others with
  * `Setup` / `Studio`, on the same page, for the same reason. ⛔ A rule
@@ -933,13 +934,17 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
       for (const [app, label] of [
         ['setup', 'Setup'],
         ['setup', '系统设置'],
-        ['studio', 'Studio'],
+        // Since 19.0.0-next.1 (objectstack d92684a) Studio is labelled
+        // App Studio, and 应用搭建 in a Chinese interface.
+        ['studio', 'App Studio'],
+        ['studio', '应用搭建'],
       ] as const) {
         expect(shipsAppLabel(app, label), `${app} should ship the app label '${label}'`).toBe(true);
       }
       // The matcher moves with that roster rather than with a hand-written map.
       expect(APP_WORDS['系统设置']).toBe('setup');
-      expect(APP_WORDS.Studio).toBe('studio');
+      expect(APP_WORDS['App Studio']).toBe('studio');
+      expect(APP_WORDS['应用搭建']).toBe('studio');
       // Two apps sharing one spelling would make the app word ambiguous, and
       // the generated map would silently keep whichever was built last.
       const shared = [...APP_LABELS.setup].filter((label) => APP_LABELS.studio.has(label));
@@ -951,7 +956,7 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
       // matching would make it permanently, invisibly green.
       const runs = boldRuns();
       expect(runs.length).toBeGreaterThan(250);
-      expect(runs.some((r) => r.first === 'Studio' && r.leaf === 'Developer')).toBe(true);
+      expect(runs.some((r) => r.first === 'App Studio' && r.leaf === 'Developer')).toBe(true);
       expect(runs.some((r) => r.first === '系统设置' && r.leaf === '用户')).toBe(true);
     });
 
@@ -994,12 +999,13 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
     });
 
     it('leaves a legitimately mixed register alone', () => {
-      // ⛔ The load-bearing half of #1403. These four pages name one app in
-      // English and another in Chinese, ON THE SAME PAGE, and every one of them
-      // is right: Studio is labelled `Studio` in all four shipped locales while
-      // its groups are translated, and the Setup paths carry zh-CN leaf labels.
+      // ⛔ The load-bearing half of #1403. Through 18.6.0 these four pages
+      // named one app in English and another in Chinese, ON THE SAME PAGE, and
+      // every one of them was right: Studio was labelled `Studio` in all four
+      // shipped locales while its groups are translated, and the Setup paths
+      // carry zh-CN leaf labels.
       //
-      // Measured, because "a naive rule would go red on correct prose" is worth
+      // Measured on 18.x, because "a naive rule would go red on correct prose" is worth
       // a number rather than a warning. Two naive rules, both tempting:
       // requiring a page in Chinese to open its paths with a Chinese app word
       // reds on 91 citations across 22 Chinese pages — every `Studio → …` on
@@ -1027,17 +1033,19 @@ describe('docs cite navigation names the platform actually ships (#853)', () => 
         expect(DOC_PAGES, `${page} should still be a docs page`).toContain(page);
         // The mixing has to still be there, or this test passes on prose that
         // has since been made uniform and proves nothing.
-        const opens = new Set(runs.filter((r) => r.file === page).map((r) => r.first));
-        expect(
-          [...opens].some((word) => /[A-Za-z]/.test(word)),
-          `${page} should still open a bold path with a Latin-script word`,
-        ).toBe(true);
-        expect(
-          [...opens].some((word) => /[\u4e00-\u9fff]/.test(word)),
-          `${page} should still open a bold path with a Chinese word`,
-        ).toBe(true);
+        //
+        // On 19 these pages no longer mix: 19.0.0-next.1 gave Studio its
+        // Chinese label (应用搭建, objectstack d92684a), so a zh-Hans page now
+        // opens every Studio path in Chinese, as it opens Setup's. What this
+        // case still has to prove is the rule's half, so it asks the roster
+        // directly: an app word in either register names its app, whichever
+        // page cites it.
+        expect(runs.some((r) => r.file === page), `${page} should still open a bold path`).toBe(true);
         expect(drift.filter((h) => h.file === page)).toEqual([]);
         expect(unresolved.filter((c) => c.file === page)).toEqual([]);
+      }
+      for (const [word, app] of [['Setup', 'setup'], ['系统设置', 'setup'], ['App Studio', 'studio'], ['应用搭建', 'studio']] as const) {
+        expect(appNamedBy(word), `'${word}' should name ${app} in the roster of every shipped locale`).toBe(app);
       }
     });
   });

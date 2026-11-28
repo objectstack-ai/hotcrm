@@ -20,9 +20,9 @@ HotCRM 作为一个产品发布：核心的**销售**应用，加上六个模块
 
 ## 关闭或打开一个模块
 
-开关在**软件包**页面上，那是平台列出全部已安装内容的清单。从 ObjectStack 19 起，**系统设置 → 软件包**打开的就是它：所有来源的全部软件包，带**来源**筛选。在 18.6.0 上没有菜单项通向这个页面（[objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)），它取代的那个设置入口只列出从应用市场安装的应用，HotCRM 从代码加载时（**来源**列显示**代码**）那个列表是空的。
+开关在**软件包**页面上，那是平台列出全部已安装内容的清单。从 ObjectStack 19 起，**系统设置 → 应用 → 软件包**打开的就是它：所有来源的全部软件包，带**来源**筛选。HotCRM 在列表里是一行，标着它的六个模块；展开这一行才能看到各模块。在 18.6.0 上没有菜单项通向这个页面（[objectstack#35196](https://github.com/objectstack-ai/objectstack/issues/35196)），它取代的那个设置入口只列出从应用市场安装的应用，HotCRM 从代码加载时（**来源**列显示**代码**）那个列表是空的。
 
-管理员打开 `/_console/apps/com.objectstack.setup/component/developer/packages`，即标题为**软件包**的页面，打开模块，选择**禁用**并确认。模块的**状态**随即显示**已禁用**；在同一个面板上选择**启用**即重新打开。脚本可以用同一个开关：`PATCH /api/v1/packages/<id>/disable`（以及 `/enable`），id 为 `app.objectstack.hotcrm.<模块>`：`service`、`revenue`、`marketing`、`o2c`、`expense` 或 `psa`。
+管理员打开**系统设置 → 应用 → 软件包**（同一页面的地址是 `/_console/apps/com.objectstack.setup/component/developer/packages`），展开 HotCRM 这一行，打开模块，选择**禁用**并确认。模块的**状态**随即显示**已禁用**；在同一个面板上选择**启用**即重新打开。脚本可以用同一个开关：`PATCH /api/v1/packages/<id>/disable`（以及 `/enable`），id 为 `app.objectstack.hotcrm.<模块>`：`service`、`revenue`、`marketing`、`o2c`、`expense` 或 `psa`。
 
 开关立即生效，对所有人生效，管理员也不例外。
 

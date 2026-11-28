@@ -81,7 +81,7 @@ Read from the manifest in `src/psa/index.ts`:
 | `type` | `module` — shipped inside the one HotCRM artifact, switched on or off per tenant by the platform's package disable |
 | `namespace` | `crm` (ADR-0130 D1), so objects are `crm_project`, not `psa_project`; `module-split-plan.md` item 16 keeps it |
 | `version` | the artifact's, `6.5.0` (ADR-0130 D6) |
-| `engines.protocol` | `^18.6.0` |
+| `engines.protocol` | the range every package manifest of the artifact declares: `^19.0.0-next.2` at this writing (`^18.6.0` when this plan was written) |
 | `dependencies` | `{ 'app.objectstack.hotcrm': '^6.5.0', 'app.objectstack.hotcrm.expense': '^6.5.0' }` — **no Order to Cash** today |
 | `requires` | `automation`, `triggers`, `approvals`, `sharing`, `analytics` |
 | `apps` | `crm_psa`, *Project Delivery* (`src/psa/apps/psa.app.ts`) |
