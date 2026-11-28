@@ -75,8 +75,11 @@ export const CloneOpportunityAction: Action = {
     timeoutMs: 5000,
   },
   // The More menu only (#2574): cloning is rare, and a header slot it held
-  // pushed Edit off the phone's two-button action bar.
-  locations: ['record_more'],
+  // pushed Edit off the phone's two-button action bar. Protocol 19 spells the
+  // old `record_more`-only placement as the record page plus the ⋯-menu
+  // component.
+  locations: ['record_page'],
+  component: 'action:menu',
   // Names the copy: the runner navigates to it straight after, and the
   // record page looks like the source but for the "Copy of" prefix and the
   // stage (#2371 row 4). `result` is the body's return value.
@@ -125,7 +128,7 @@ export const CloneOpportunityAction: Action = {
  * params gate refuses any other value from every caller (REST and MCP too).
  *
  * Headless (`locations: []`): drawn only on the selection bar. A declared write
- * may not sit in `list_toolbar` (no current record there), and the record page
+ * may not sit in `list` (no current record there), and the record page
  * moves a stage through its own path and edit form.
  */
 export const MassUpdateStageAction: Action = {
@@ -175,7 +178,7 @@ export const GenerateQuoteAction: Action = {
   // Mirror clone_opportunity's placement (header + overflow menu) so the action
   // is reachable both as a primary button and from the "…" menu on narrow
   // viewports where the header collapses.
-  locations: ['record_header', 'record_more', 'list_item'],
+  locations: ['record'],
   visible: P`has(record.stage) && record.stage != "closed_won" && record.stage != "closed_lost"`,
   successMessage: 'Quote created from opportunity!',
   refreshAfter: true,

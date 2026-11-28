@@ -210,7 +210,7 @@ export const LeadViews = defineView({
       mode: 'page',
     },
     
-    // `convert_lead` / `schedule_followup` declare `locations: ['list_item']`
+    // `convert_lead` / `schedule_followup` declare `locations: ['record_row']`
     // and are auto-injected into the menu. Do not add strings here: the legacy
     // rowActions surface only dispatches defined stack actions.
     // Built-in `exportOptions` covers CSV export; no export action needed.

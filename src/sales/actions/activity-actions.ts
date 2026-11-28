@@ -338,7 +338,7 @@ function activityAction(spec: ActivitySpec, objectName: string, nameField: strin
       capabilities: ['api.write', 'activity.append'],
       timeoutMs: 5000,
     },
-    locations: ['record_header', 'list_item', 'record_related'],
+    locations: ['record', 'record_related'],
     params: [
       {
         name: 'subject',

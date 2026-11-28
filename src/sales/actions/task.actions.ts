@@ -53,7 +53,7 @@ import { P } from '@objectstack/spec';
  *    cannot reverse what the hooks did on the way in — `completed_date` and
  *    `progress_percent` stay stamped, and a recurring task's next occurrence
  *    stays created — so an Undo would leave the task half-completed.
- *  - **No `list_toolbar`.** A declarative update writes the one record it runs
+ *  - **No `list`.** A declarative update writes the one record it runs
  *    on, and the spec refuses it on a location that has none. Completing
  *    several tasks at once would be a `bulkActionDefs` entry on a view, which
  *    this card does not ask for.
@@ -81,7 +81,7 @@ export const CompleteTaskAction: Action = {
   icon: 'check-circle',
   operation: 'update',
   patch: { status: 'completed' },
-  locations: ['list_item', 'record_header'],
+  locations: ['record'],
   variant: 'primary',
   visible: P`has(record.status) && record.status != "completed"`,
   successMessage: 'Task completed.',

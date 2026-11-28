@@ -26,7 +26,7 @@ export const SubmitTimesheetAction: Action = {
   icon: 'send',
   operation: 'update',
   patch: { status: 'submitted' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "draft" && current_user.can("crm_timesheet", "edit")`,
   successMessage: 'Timesheet {{ record.name }} submitted for approval.',

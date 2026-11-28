@@ -69,7 +69,7 @@ export const SubmitQuoteForReviewAction: Action = {
   icon: 'send',
   operation: 'update',
   patch: { status: 'in_review' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "draft" && current_user.can("crm_quote", "edit")`,
   successMessage: 'Quote {{ record.name }} submitted for review.',
@@ -83,7 +83,7 @@ export const MarkQuotePresentedAction: Action = {
   icon: 'presentation',
   operation: 'update',
   patch: { status: 'presented' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "in_review" && current_user.can("crm_quote", "edit")`,
   successMessage: 'Quote {{ record.name }} marked as presented.',
@@ -97,7 +97,7 @@ export const AcceptQuoteAction: Action = {
   icon: 'check-circle',
   operation: 'update',
   patch: { status: 'accepted' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "presented" && current_user.can("crm_quote", "edit")`,
   confirmText:
@@ -113,7 +113,7 @@ export const RejectQuoteAction: Action = {
   icon: 'x-circle',
   operation: 'update',
   patch: { status: 'rejected' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   visible: P`has(record.status) && (record.status == "in_review" || record.status == "presented") && current_user.can("crm_quote", "edit")`,
   successMessage: 'Quote {{ record.name }} rejected. Revise it to make a new offer.',
   refreshAfter: true,
@@ -126,7 +126,7 @@ export const ReviseQuoteAction: Action = {
   icon: 'rotate-ccw',
   operation: 'update',
   patch: { status: 'draft' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   visible: P`has(record.status) && (record.status == "in_review" || record.status == "rejected") && current_user.can("crm_quote", "edit")`,
   successMessage: 'Quote {{ record.name }} is back at Draft.',
   refreshAfter: true,
@@ -165,8 +165,8 @@ export const ReviseQuoteAction: Action = {
  * `OS_PRINT_BROWSER_ENDPOINT`, and `OS_PRINT_CONSOLE_URL`) each reach the user
  * as the action's error.
  *
- * `record_header` draws it beside Edit on the quote's record page; `list_item`
- * puts it in the quote list's row menu.
+ * `record` draws it beside Edit on the quote's record page and puts it in
+ * the quote list's row menu.
  */
 export const PrintQuoteAction: Action = {
   name: 'print_quote',
@@ -182,6 +182,6 @@ export const PrintQuoteAction: Action = {
   bodyExtra: { app: 'app.objectstack.hotcrm', object: 'crm_quote', page: 'quote_print_page' },
   visible: P`current_user.can("crm_quote", "edit") && current_user.can("sys_attachment", "create")`,
   successMessage: 'Quote PDF attached to the quote.',
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   refreshAfter: true,
 };

@@ -93,7 +93,7 @@ export const OpportunityViews = defineView({
       colorField: 'stage',
     },
     // List-level entry points: generate_quote reaches the row menu via its
-    // own `locations: ['list_item']`. Built-in `exportOptions` covers CSV
+    // own `locations: ['record_row']`. Built-in `exportOptions` covers CSV
     // export.
     //
     // Update Stage is the bare-string, PER-RECORD wiring (#2586): one call

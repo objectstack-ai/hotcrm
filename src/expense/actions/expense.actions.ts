@@ -157,7 +157,7 @@ export const SubmitForReimbursementAction: Action = {
   },
   // The record page of one expense; the selection bar of My Expenses names
   // it in its own `bulkActionDefs`.
-  locations: ['record_header'],
+  locations: ['record_page'],
   variant: 'primary',
   visible: P`has(record.owner_id) && record.owner_id == current_user.id
     && (!has(record.crm_expense_report) || record.crm_expense_report == null || record.crm_expense_report == "")
@@ -214,7 +214,7 @@ export const SubmitTripForReimbursementAction: Action = {
       helpText: 'Your approved travel request these expenses were spent on.',
     },
   ],
-  locations: ['record_header'],
+  locations: ['record_page'],
   visible: SubmitForReimbursementAction.visible,
   successMessage: 'Submitted for reimbursement against the travel request. Follow it in My Reports.',
   refreshAfter: true,
@@ -241,7 +241,7 @@ export const SubmitExpenseReportAction: Action = {
   icon: 'send',
   operation: 'update',
   patch: { status: 'submitted' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "draft" && has(record.owner_id) && record.owner_id == current_user.id`,
   successMessage: 'Expense report {{ record.name }} submitted for approval.',
@@ -265,7 +265,7 @@ export const ReopenExpenseReportAction: Action = {
   icon: 'undo-2',
   operation: 'update',
   patch: { status: 'draft' },
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   visible: P`has(record.status) && record.status == "rejected" && has(record.owner_id) && record.owner_id == current_user.id`,
   successMessage: 'Expense report {{ record.name }} is back in Draft.',
   refreshAfter: true,
@@ -352,7 +352,7 @@ export const MarkExpenseReportPaidAction: Action = {
     { name: 'payment_date', label: 'Paid On', type: 'date', required: true },
     { name: 'payment_reference', label: 'Payment Reference', type: 'text', required: false },
   ],
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   variant: 'primary',
   visible: P`has(record.status) && record.status == "approved"
     && ("crm_finance_controller" in current_user.positions || "crm_ar_accountant" in current_user.positions)`,

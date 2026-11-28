@@ -35,8 +35,8 @@ import { P } from '@objectstack/spec';
  * configured (`OS_PRINT_CHROMIUM_PATH` or `OS_PRINT_BROWSER_ENDPOINT`, and
  * `OS_PRINT_CONSOLE_URL`) each reach the user as the action's error.
  *
- * `record_header` draws it beside Edit on the contract's record page;
- * `list_item` puts it in the contract list's row menu.
+ * `record` draws it beside Edit on the contract's record page and puts it
+ * in the contract list's row menu.
  */
 export const PrintContractAction: Action = {
   name: 'print_contract',
@@ -52,7 +52,7 @@ export const PrintContractAction: Action = {
   bodyExtra: { app: 'app.objectstack.hotcrm', object: 'crm_contract', page: 'contract_print_page' },
   visible: P`current_user.can("crm_contract", "edit") && current_user.can("sys_attachment", "create")`,
   successMessage: 'Contract PDF attached to the contract.',
-  locations: ['record_header', 'list_item'],
+  locations: ['record'],
   refreshAfter: true,
 };
 
@@ -90,7 +90,7 @@ export const ChangeContractAction: Action = {
   objectName: 'crm_contract',
   icon: 'file-diff',
   operation: 'update',
-  locations: ['record_header'],
+  locations: ['record_page'],
   visible: P`has(record.status) && record.status == "activated"
     && !(has(record.contract_form) && record.contract_form == "order") && current_user.can("crm_contract", "edit")`,
   description: 'Changes the contract value, the end date or the payment terms of this activated contract. Leave a field empty to keep it.',
@@ -112,7 +112,7 @@ export const ChangeOrderContractAction: Action = {
   objectName: 'crm_contract',
   icon: 'file-diff',
   operation: 'update',
-  locations: ['record_header'],
+  locations: ['record_page'],
   visible: P`has(record.status) && record.status == "activated"
     && has(record.contract_form) && record.contract_form == "order" && current_user.can("crm_contract", "edit")`,
   description: "Changes the end date or the payment terms of this activated order contract, or takes the order's current amount. Leave a field empty to keep it.",

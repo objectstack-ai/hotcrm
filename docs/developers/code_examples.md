@@ -105,7 +105,7 @@ export const AddLeadsToCampaignAction: Action = {
   // on one never executes: the runtime refuses it over REST with
   // `400 … a client-side action with no server dispatch`.
   type: 'script',
-  locations: ['list_toolbar'],
+  locations: ['list'],
   params: [
     // Field-backed param: `field` + `objectOverride` make the console resolve
     // the widget from crm_campaign_member.crm_campaign (a lookup → crm_campaign),

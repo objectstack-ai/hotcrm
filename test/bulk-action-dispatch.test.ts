@@ -99,7 +99,7 @@ describe('bulk dispatch is declared the way the renderer reads it', () => {
   it('mass_update_stage is not drawn in the list header, where it gets no selection (#2338 item 4)', () => {
     const action = actions.find((a) => a.name === 'mass_update_stage');
     expect(action, 'no mass_update_stage action').toBeTruthy();
-    expect(action!.locations ?? []).not.toContain('list_toolbar');
+    expect(action!.locations ?? []).not.toContain('list');
   });
 
   it('every custom bulk def names a real action', () => {
