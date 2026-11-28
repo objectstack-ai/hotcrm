@@ -53,10 +53,10 @@ export function withFlowStepEnglish(bundle: TranslationBundle, flows: readonly F
       const labels = nodeLabels(flow);
       const out = (rows[name] ??= {});
       if (row.label !== undefined && flow.label !== undefined) out.label = flow.label;
-      for (const id of Object.keys(row.nodes ?? {})) {
-        const label = labels.get(id);
-        if (label === undefined) throw new Error(`withFlowStepEnglish: ${locale} translates step "${name}.${id}", which has no label on the flow`);
-        (out.nodes ??= {})[id] = { label };
+      for (const step of Object.keys(row.nodes ?? {})) {
+        const label = labels.get(step);
+        if (label === undefined) throw new Error(`withFlowStepEnglish: ${locale} translates step "${name}.${step}", which has no label on the flow`);
+        (out.nodes ??= {})[step] = { label };
       }
     }
   }
