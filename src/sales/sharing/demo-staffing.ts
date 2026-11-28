@@ -21,6 +21,14 @@ import type { Territory } from '../objects/_territory';
  * that never runs on a demo box at all. "It looks unstaffed" is not the bar.
  * The other six leadership positions do not clear it and are still empty.
  *
+ * A second, separate crossing: the maintainer asked on 2026-11-27 (hotcrm#2821,
+ * 「提演示用户加个财务」) for finance personas, so the Order to Cash surfaces
+ * can be demonstrated as finance. `crm_finance_controller` and
+ * `crm_ar_accountant` are not leadership rungs and light no pool; each is
+ * staffed once, on that ask, to show what its permission set reads. It opens
+ * no general "staff a persona per set" door — a further persona needs its own
+ * ruling, the way these two did.
+ *
  * ### The gap this table closes
  *
  * The app ships three layers of position-based access and, until now, only two
@@ -205,6 +213,12 @@ export type DemoStaffMember = {
   readonly positions: readonly string[];
   /** What staffing this person makes observable. Asserted to be non-empty. */
   readonly demonstrates: string;
+  /**
+   * Objects this person must read at least one row of once staffed.
+   * `pnpm demo:staff` signs in as them and checks each, so a persona whose
+   * set stops reaching the surface it exists to show fails the run.
+   */
+  readonly mustRead?: readonly string[];
 };
 
 export const DemoOrgStaffing: readonly DemoStaffMember[] = [
@@ -258,6 +272,35 @@ export const DemoOrgStaffing: readonly DemoStaffMember[] = [
       'case_escalation_reassign: a case moves to him on the escalation transition as the ' +
       'least-loaded holder of the crm_service_manager pool, and case_escalation_sharing grants him ' +
       'edit on the open critical cases he does not own.',
+  },
+  // The two finance personas (maintainer ask, 2026-11-27, hotcrm#2821). They
+  // light no pool and receive no share: they exist so the Order to Cash
+  // surfaces — invoices, payments, the account's money figures — can be shown
+  // as finance rather than as the admin. Each reads every invoice and payment
+  // through the set its position declares; neither owns any seeded record, as
+  // finance does not own the routed book (`DemoPipelineOwnership` names
+  // neither key).
+  {
+    key: 'finance_controller',
+    name: 'Farah Lindqvist',
+    email: 'finance.controller@objectos.ai',
+    password: 'demo1234',
+    positions: ['crm_finance_controller'],
+    demonstrates:
+      'the finance_controller set: reads every invoice and payment (through the contract they hang ' +
+      "off) and the account's Order to Cash figures, edits none of them.",
+    mustRead: ['crm_invoice', 'crm_payment'],
+  },
+  {
+    key: 'ar_accountant',
+    name: 'Arjun Mehta',
+    email: 'ar.accountant@objectos.ai',
+    password: 'demo1234',
+    positions: ['crm_ar_accountant'],
+    demonstrates:
+      'the ar_accountant set: reads and writes every invoice and payment, and reads the ' +
+      "account's Order to Cash figures.",
+    mustRead: ['crm_invoice', 'crm_payment'],
   },
 ];
 

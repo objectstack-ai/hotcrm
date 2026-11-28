@@ -82,9 +82,11 @@ export const commerce: Record<string, ObjectTranslationData> = {
         options: { order: '订单合同', framework: '框架合同', other: '其他' },
       },
       crm_sales_order: { label: '来源订单', help: '起草这份合同的订单。' },
-      order_amount: { label: '订单金额', help: '挂在这份合同下的订单含税总额。' },
+      order_amount: { label: '订单金额', help: '挂在这份合同下、已确认和已完成订单的含税总额。草稿和已取消的订单不计入。' },
+      linked_order_amount: { label: '关联订单金额', help: '挂在这份合同下、未取消订单的含税总额。订单合同在草稿状态时跟随它。' },
+      order_amount_shown: { label: '订单金额', help: '订单合同上是它的订单金额；框架合同上是已确认和已完成订单的合计，草稿和已取消的订单不计入。含税。' },
       order_amount_differs: { label: '与订单金额不一致', help: '合同金额已不等于订单金额。用“变更”并选择“按订单更新”，可取订单的当前金额。' },
-      remaining_quota: { label: '剩余额度', help: '合同金额减去订单金额。订单总额超过合同金额时为负数。' },
+      remaining_quota: { label: '剩余额度', help: '合同金额减去订单金额（已确认和已完成的订单）。订单总额超过合同金额时为负数。' },
       change_reason: { label: '变更原因', help: '合同最近一次变更的原因。由“变更”写入。' },
       change_amendment: { label: '签署的变更协议', help: '客户为最近一次变更签署的补充协议。由“变更”写入。' },
       change_new_value: { label: '新合同金额', help: '留空则保持合同金额不变。' },
@@ -128,7 +130,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: '确认订单',
-        confirmText: '确认此订单？确认后订单行将被锁定：如需修改，须先把订单退回草稿。',
+        confirmText: '确认此订单？确认后订单行和金额将被锁定：如需修改，须先把订单退回草稿。',
         successMessage: '订单 {{ record.name }} 已确认。',
       },
       complete_sales_order: {
@@ -164,7 +166,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: '关联合同' },
       customer_po_number: { label: '客户采购单号', help: '客户自己采购单上的编号，按客户引用它的写法填写。' },
       description: { label: '描述' },
-      subtotal: { label: '小计' },
+      subtotal: { label: '小计', help: '订单各订单行之和。只有没有订单行的订单才能手工填写。订单确认后锁定，折扣、税额和运费也一样。' },
       discount: { label: '折扣 (%)' },
       discount_amount: { label: '折扣金额' },
       tax: { label: '税额' },

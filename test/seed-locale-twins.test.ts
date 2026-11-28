@@ -185,16 +185,16 @@ const LOOKUPS: Array<[object: string, field: string]> = [
   ['crm_quote', 'crm_account'],
   ['crm_quote_line_item', 'crm_quote'],
   ['crm_quote_line_item', 'crm_product'],
-  // Order to Cash (#2529); a payment's plan step is copied from its invoice.
-  // The invoice's and the payment's sources are optional since hotcrm#2557:
-  // the test below expects the story's account-only rows to leave them empty.
+  // Order to Cash (#2529). The invoice's and the payment's sources are
+  // optional since hotcrm#2557: the test below expects the story's
+  // account-only rows to leave them empty. An invoice names no plan step and
+  // a payment no invoice since hotcrm#2806 (they run in parallel), so neither
+  // column is a reference the story resolves.
   ['crm_billing_milestone', 'crm_contract'],
   ['crm_billing_milestone', 'crm_account'],
   ['crm_invoice', 'crm_contract'],
-  ['crm_invoice', 'crm_billing_milestone'],
   ['crm_invoice', 'crm_account'],
   ['crm_payment', 'crm_contract'],
-  ['crm_payment', 'crm_invoice'],
   ['crm_payment', 'crm_billing_milestone'],
   ['crm_payment', 'crm_account'],
   // Project Delivery's plans (#2545).
@@ -244,24 +244,27 @@ describe.each([
   it('the Order to Cash story reads its figures (#2529)', async () => {
     const num = (v: unknown) => Number(v ?? 0);
     const invoices = await stack!.rows('crm_invoice');
-    // Two paid in full, one paid 9,000 of 15,000, one unpaid and past due, and
-    // the year-one invoice issued today; none overpaid (#2513). And Globex's
-    // order, with no contract, invoiced for half and paid (hotcrm#2560).
-    expect(invoices.map((i) => [num(i.amount), num(i.paid_amount), num(i.open_amount), num(i.overpaid_amount)])
-      .sort((a, b) => a[0]! - b[0]! || b[1]! - a[1]!)).toEqual([
-      [11232, 11232, 0, 0], [15000, 15000, 0, 0], [15000, 15000, 0, 0], [15000, 9000, 6000, 0], [15000, 0, 15000, 0], [220000, 0, 220000, 0],
-    ]);
+    // Invoices and payments run in parallel (hotcrm#2806): each invoice names
+    // its contract or order, no payment names an invoice, so none is paid.
+    expect(invoices.map((i) => num(i.amount)).sort((a, b) => a - b)).toEqual([11232, 15000, 15000, 15000, 15000, 220000]);
+    expect(invoices.every((i) => num(i.paid_amount) === 0 && (i.crm_billing_milestone ?? null) === null)).toBe(true);
     const today = new Date().toISOString().slice(0, 10);
-    const overdue = invoices.filter((i) => num(i.open_amount) > 0 && String(i.due_date).slice(0, 10) < today);
-    expect(overdue.map((i) => num(i.open_amount)).sort((a, b) => a - b), 'Overdue Invoices').toEqual([6000, 15000]);
-    const balances = (await stack!.rows('crm_contract')).map((c) => num(c.receivable_balance)).sort((a, b) => a - b);
-    expect(balances, 'contract receivable balances').toEqual([0, 0, 21000, 220000]);
     const steps = await stack!.rows('crm_billing_milestone');
+    // Overdue is measured on the plan: Initech's Q3 (9,000 of 15,000 paid)
+    // and Q4 (unpaid), both past their planned date.
+    const overdue = steps.filter((m) => num(m.open_amount) > 0 && String(m.planned_date).slice(0, 10) < today);
+    expect(overdue.map((m) => num(m.open_amount)).sort((a, b) => a - b), 'Overdue Payment Plans').toEqual([6000, 15000]);
     expect(steps.map((m) => num(m.received_amount)).sort((a, b) => a - b)).toEqual([0, 0, 0, 9000, 11232, 15000, 15000]);
-    // The order with no contract reads its own plan, invoice and payment (hotcrm#2560).
+    // The accounts: Initech through its expired contract (no order names it;
+    // its draft order is not owed yet), Acme through its completed order
+    // (238,700 with tax, 220,000 invoiced), Globex through its confirmed order.
+    const accounts = await stack!.rows('crm_account');
+    expect(accounts.map((a) => num(a.unpaid_amount)).filter((v) => v > 0).sort((a, b) => a - b), 'Unpaid').toEqual([11232, 21000, 238700]);
+    expect(accounts.map((a) => num(a.uninvoiced_amount)).filter((v) => v > 0).sort((a, b) => a - b), 'Uninvoiced').toEqual([11232, 18700]);
+    // The orders read their own plan, invoices and payments (hotcrm#2560).
     const billed = (await stack!.rows('crm_sales_order')).filter((o) => num(o.planned_amount) > 0);
-    expect(billed.map((o) => [num(o.planned_amount), num(o.invoiced_amount), num(o.received_amount), o.crm_contract ?? null]))
-      .toEqual([[22464, 11232, 11232, null]]);
+    expect(billed.map((o) => [num(o.planned_amount), num(o.invoiced_amount), num(o.received_amount), num(o.unpaid_amount), o.crm_contract ? 'contract' : null])
+      .sort((a, b) => Number(a[0]) - Number(b[0]))).toEqual([[22464, 11232, 11232, 11232, null], [220000, 220000, 0, 238700, 'contract']]);
   });
 
   it('the projects\' Percent Complete is told by their tasks (#2545)', async () => {
@@ -286,15 +289,20 @@ describe.each([
     // A row the story records against the account alone names none of the
     // optional sources (hotcrm#2557: Wayne's deposit), so it leaves those
     // columns empty on purpose; a row of an order with no contract (hotcrm#2560:
-    // Globex's plan, its invoice, and the payment that names that invoice)
-    // leaves the contract empty on purpose; every other row resolves them all.
-    const SOURCES = ['crm_contract', 'crm_invoice', 'crm_billing_milestone'];
+    // Globex's plan, its invoice, and the payment that names that plan step)
+    // leaves the contract empty on purpose; a row naming an order under a
+    // contract takes the contract from it; every other row resolves them all.
+    const SOURCES = ['crm_contract', 'crm_billing_milestone', 'crm_sales_order'];
     const recordsOf = (object: string): Rec[] => story.filter((f) => f.object === object).flatMap((f) => f.records as Rec[]);
     const accountOnly = (object: string): number => recordsOf(object)
       .filter((r) => SOURCES.every((field) => r[field] === undefined)).length;
-    const orderInvoices = new Set(recordsOf('crm_invoice').filter((r) => r.crm_sales_order !== undefined).map((r) => r.invoice_number));
+    const orderContract = new Map(recordsOf('crm_sales_order').map((o) => [o.name, o.crm_contract !== undefined]));
+    const steps = new Map(recordsOf('crm_billing_milestone').map((m) => [m.name, m]));
+    /** The order a row names, directly or through the plan step it names. */
+    const orderOf = (r: Rec): unknown => r.crm_sales_order ?? steps.get(r.crm_billing_milestone)?.crm_sales_order;
+    const citesOrder = (object: string): number => recordsOf(object).filter((r) => orderOf(r) !== undefined).length;
     const orderOnly = (object: string): number => recordsOf(object)
-      .filter((r) => r.crm_contract === undefined && (r.crm_sales_order !== undefined || orderInvoices.has(r.crm_invoice))).length;
+      .filter((r) => r.crm_contract === undefined && orderOf(r) !== undefined && orderContract.get(orderOf(r)) === false).length;
     expect(orderOnly('crm_billing_milestone') + orderOnly('crm_invoice') + orderOnly('crm_payment'), 'fixture: the story bills an order with no contract').toBeGreaterThan(0);
     for (const [object, field] of LOOKUPS) {
       const rows = await stack!.rows(object);
@@ -306,7 +314,7 @@ describe.each([
     // The order rows resolve their order, in both stories.
     for (const object of ['crm_billing_milestone', 'crm_invoice', 'crm_payment']) {
       const cite = (await stack!.rows(object)).filter((r) => r.crm_sales_order);
-      expect(cite.length, `${object} rows citing an order in a ${locale} boot`).toBe(orderOnly(object));
+      expect(cite.length, `${object} rows citing an order in a ${locale} boot`).toBe(citesOrder(object));
     }
   });
 

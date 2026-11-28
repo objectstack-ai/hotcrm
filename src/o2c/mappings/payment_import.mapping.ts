@@ -6,13 +6,18 @@ import { defineMapping } from '@objectstack/spec/data';
  * Payment import — receipts from finance's system (REQ-0007, plan *How
  * figures come in*). The same shape as `./invoice_import.mapping.ts`: upsert
  * on `erp_ref`, references resolved by their titles (`Account` takes the
- * account's name, `Invoice` the invoice number, `Contract` the contract
- * number, `Order` the order number or the order's External Reference,
- * hotcrm#2560), `source` written as the constant `import`. The account is
- * required and is filled from the order or the contract, else from the
- * invoice or the step, when the row leaves it empty (hotcrm#2557); an advance
- * that matches no invoice names the account alone, or its order. A receipt that pays several invoices is one row per
- * invoice, each with its own reference.
+ * account's name, `Contract` the contract number, `Order` the order number or
+ * the order's External Reference, hotcrm#2560, `Billing Milestone` the plan
+ * step's name), `source` written as the constant `import`. The account is
+ * required and is filled from the order or the contract, else from the step,
+ * when the row leaves it empty (hotcrm#2557); a deposit that matches no order
+ * names the account alone.
+ *
+ * No `Invoice` column (the 2026-11-26 ruling, hotcrm#2806): invoices and
+ * payments run in parallel, and a payment names no invoice. One receipt
+ * split across two orders is two rows, and each needs its own `erp_ref`,
+ * which is unique: agree the reference rule with the integrator (for example
+ * the receipt's key plus the order number).
  */
 export const PaymentImportMapping = defineMapping({
   name: 'crm_payment_import',
@@ -27,7 +32,6 @@ export const PaymentImportMapping = defineMapping({
     { source: 'Account', target: 'crm_account', transform: 'lookup' },
     { source: 'Order', target: 'crm_sales_order', transform: 'lookup' },
     { source: 'Contract', target: 'crm_contract', transform: 'lookup' },
-    { source: 'Invoice', target: 'crm_invoice', transform: 'lookup' },
     { source: 'Billing Milestone', target: 'crm_billing_milestone', transform: 'lookup' },
     { source: 'Payment Date', target: 'payment_date' },
     { source: 'Amount', target: 'amount' },

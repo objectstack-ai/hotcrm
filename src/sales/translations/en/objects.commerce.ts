@@ -76,9 +76,11 @@ export const commerce: Record<string, ObjectTranslationData> = {
         options: { order: 'Order Contract', framework: 'Framework Contract', other: 'Other' },
       },
       crm_sales_order: { label: 'Source Order', help: 'The order this contract was drafted from.' },
-      order_amount: { label: 'Order Amount', help: 'The total of the orders under this contract, tax included.' },
+      order_amount: { label: 'Order Amount', help: 'The total of the confirmed and completed orders under this contract, tax included. Draft and cancelled orders do not count.' },
+      linked_order_amount: { label: 'Linked Order Amount', help: 'The total of the orders under this contract that are not cancelled, tax included. An order contract follows it while it is a draft.' },
+      order_amount_shown: { label: 'Order Amount', help: 'On an order contract, its order\'s amount. On a framework contract, the total of its confirmed and completed orders; draft and cancelled orders do not count. Tax included.' },
       order_amount_differs: { label: 'Differs from the Order Amount', help: 'The contract value no longer equals the order\'s amount. Change, with Update from Order, takes the order\'s amount.' },
-      remaining_quota: { label: 'Remaining Quota', help: 'The contract value less the Order Amount. Below zero when the orders have gone over the contract value.' },
+      remaining_quota: { label: 'Remaining Quota', help: 'The contract value less the Order Amount (confirmed and completed orders). Below zero when the orders have gone over the contract value.' },
       change_reason: { label: 'Change Reason', help: 'Why the contract was last changed. Written by Change.' },
       change_amendment: { label: 'Signed Amendment', help: 'The amendment the customer signed for the last change. Written by Change.' },
       change_new_value: { label: 'New Contract Value', help: 'Leave empty to keep the contract value.' },
@@ -123,7 +125,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: 'Confirm Order',
-        confirmText: 'Confirm this order? Its lines are then locked: to change them, the order has to go back to Draft.',
+        confirmText: 'Confirm this order? Its lines and its amount are then locked: to change them, the order has to go back to Draft.',
         successMessage: 'Order {{ record.name }} confirmed.',
       },
       complete_sales_order: {
@@ -150,7 +152,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: 'Contract' },
       customer_po_number: { label: 'Customer PO Number', help: "The number on the customer's own purchase order, as they will quote it." },
       description: { label: 'Description' },
-      subtotal: { label: 'Subtotal' },
+      subtotal: { label: 'Subtotal', help: 'The sum of the order\'s lines. Typed only on an order with no lines. Locked once the order is confirmed, as are the discount, tax and shipping.' },
       discount: { label: 'Discount %' },
       discount_amount: { label: 'Discount Amount' },
       tax: { label: 'Tax' },

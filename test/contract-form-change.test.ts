@@ -127,7 +127,10 @@ describe('Draft Contract drafts an order contract (hotcrm#2804 item 2)', () => {
     expect(contract.contract_form).toBe('order');
     expect(contract.crm_sales_order).toBe(order.id);
     expect(Number(contract.contract_value)).toBe(1_100);
-    await vi.waitFor(async () => expect(Number((await stored('crm_contract', contract.id)).order_amount)).toBe(1_100),
+    // The order is a Draft: the order contract follows its linked order amount
+    // (every order but Cancelled), which the Order Amount shows on an order
+    // contract (hotcrm#2806).
+    await vi.waitFor(async () => expect(Number((await stored('crm_contract', contract.id)).linked_order_amount)).toBe(1_100),
       { timeout: 10_000, interval: 50 });
   });
 
@@ -140,7 +143,7 @@ describe('Draft Contract drafts an order contract (hotcrm#2804 item 2)', () => {
     await verify.hooks.run('crm_sales_order', 'update', { id: order.id, tax: 250 }, as(rep));
     await vi.waitFor(async () => {
       const c = await stored('crm_contract', contract.id);
-      expect(Number(c.order_amount)).toBe(1_250);
+      expect(Number(c.linked_order_amount)).toBe(1_250);
       expect(Number(c.contract_value)).toBe(1_250);
     }, { timeout: 10_000, interval: 50 });
   });
@@ -165,7 +168,7 @@ describe('contract_form_and_change — an activated order contract: locked, a si
     await activate(String(contract.id));
     // The order's amount changes after activation.
     await verify.hooks.run('crm_sales_order', 'update', { id: order.id, tax: 300 }, as(rep));
-    await vi.waitFor(async () => expect(Number((await stored('crm_contract', contract.id)).order_amount)).toBe(1_300),
+    await vi.waitFor(async () => expect(Number((await stored('crm_contract', contract.id)).linked_order_amount)).toBe(1_300),
       { timeout: 10_000, interval: 50 });
   }, 90_000);
 
@@ -297,11 +300,11 @@ describe('the backfill rule (item 7)', () => {
     // As a contract that predates the roll-up: no Order Amount yet, and a
     // value that differs from its order.
     const ql = verify.kernel.getService<Rec>('objectql');
-    await (ql.getDriverForObject('crm_contract') as Rec).update('crm_contract', c.id, { order_amount: null, contract_value: 500 });
+    await (ql.getDriverForObject('crm_contract') as Rec).update('crm_contract', c.id, { linked_order_amount: null, contract_value: 500 });
     // The platform materialises it (`os migrate summary-nulls`), as the system.
-    await systemUpdate(verify, 'crm_contract', { id: c.id, order_amount: 1_100 });
+    await systemUpdate(verify, 'crm_contract', { id: c.id, linked_order_amount: 1_100 });
     const row = await stored('crm_contract', c.id);
-    expect(Number(row.order_amount)).toBe(1_100);
+    expect(Number(row.linked_order_amount)).toBe(1_100);
     expect(Number(row.contract_value)).toBe(500);
   });
 

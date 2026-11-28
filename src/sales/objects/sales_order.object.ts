@@ -23,27 +23,36 @@ import { P, cel } from '@objectstack/spec';
  * the tenant currency, as on the quote.
  *
  * The behaviour lives in `sales_order.hook.ts`: the header totals follow the
- * lines, and the lines of an order past Draft cannot change.
+ * lines, and the lines and the header amount of an order past Draft cannot
+ * change (#2826).
  */
 /**
  * The three amounts the framework-contract quota rule compares (hotcrm#2807),
  * in CEL, each a double and 0 when unset.
  *
  *   - `NOW`: this order's total after the write.
- *   - `BEFORE`: what this order already counts in the contract's Order Amount
- *     — its total before the write, when it was already linked to the same
- *     contract; 0 on a create or a newly linked order.
- *   - `ORDERED`: the contract's Order Amount as stored before this write
- *     (the roll-up is recomputed after it), so the amount after the write is
- *     `ORDERED - BEFORE + NOW`.
+ *   - `BEFORE`: this order's total before the write, when it was already
+ *     linked to the same contract; 0 on a create or a newly linked order.
+ *     Whether the write raises the order's share is judged against it.
+ *   - `BEFORE_COUNTED`: the part of `BEFORE` the contract's Order Amount
+ *     already holds — `BEFORE` when the order was confirmed or completed,
+ *     else 0 (hotcrm#2806).
+ *   - `ORDERED`: the contract's Order Amount (confirmed and completed orders)
+ *     as stored before this write (the roll-up is recomputed after it), so
+ *     the amount with this order is `ORDERED - BEFORE_COUNTED + NOW`.
  *
  * `record.crm_contract.id` names the contract through the reference: a
  * predicate that reads through a reference may not also read it as a value.
  */
 const QUOTA_NOW = 'has(record.total_price) && record.total_price != null ? double(record.total_price) : 0.0';
+const QUOTA_LINKED_BEFORE = 'previous != null && has(previous.crm_contract) && previous.crm_contract == record.crm_contract.id';
 const QUOTA_BEFORE =
-  'previous != null && has(previous.crm_contract) && previous.crm_contract == record.crm_contract.id'
-  + ' && has(previous.total_price) && previous.total_price != null ? double(previous.total_price) : 0.0';
+  `${QUOTA_LINKED_BEFORE} && has(previous.total_price) && previous.total_price != null ? double(previous.total_price) : 0.0`;
+const QUOTA_COUNTED_NOW = 'has(record.status) && (record.status == "confirmed" || record.status == "completed")';
+const QUOTA_COUNTED_BEFORE = 'previous != null && has(previous.status) && (previous.status == "confirmed" || previous.status == "completed")';
+const QUOTA_BEFORE_COUNTED =
+  `${QUOTA_LINKED_BEFORE} && ${QUOTA_COUNTED_BEFORE} && has(previous.total_price) && previous.total_price != null`
+  + ' ? double(previous.total_price) : 0.0';
 const QUOTA_ORDERED =
   'has(record.crm_contract.order_amount) && record.crm_contract.order_amount != null'
   + ' ? double(record.crm_contract.order_amount) : 0.0';
@@ -53,10 +62,19 @@ const QUOTA_CEILING =
 /**
  * The order takes a framework contract over its value: the contract is a
  * framework contract, this write adds to what the order counts against it (a
- * newly linked order, or a higher total), and the orders then total more than
- * the contract value. A write that leaves the order's share as it was, or
- * lowers it, is never judged, so an order already over is not frozen (AGENTS.md
+ * newly linked order, a higher total, or an order confirmed under it), and the
+ * contract's ordered amount with this order then totals more than the
+ * contract value. A write that leaves the order's share as it was, or lowers
+ * it, is never judged, so an order already over is not frozen (AGENTS.md
  * rule 7) and lowering it is always allowed.
+ *
+ * The contract's Order Amount counts confirmed and completed orders only
+ * (hotcrm#2806, the maintainer's ruling of 2026-11-27), so the projection is
+ * `ORDERED - BEFORE_COUNTED + NOW`: this order's total is added whatever its
+ * status, so a Draft that would take the contract over still warns, and what
+ * it already counted (only when it was confirmed or completed under the same
+ * contract) is taken out first. A Cancelled order adds nothing and is never
+ * judged.
  */
 const QUOTA_EXCEEDED = {
   // Composed from the strings above: `P` quotes an interpolated string as a CEL
@@ -64,8 +82,9 @@ const QUOTA_EXCEEDED = {
   // expression object it compiles to (the shape `_option-labels.ts` builds).
   dialect: 'cel' as const,
   source: `has(record.crm_contract.contract_form) && record.crm_contract.contract_form == "framework"
-  && (${QUOTA_NOW}) > (${QUOTA_BEFORE})
-  && (${QUOTA_ORDERED}) - (${QUOTA_BEFORE}) + (${QUOTA_NOW}) > (${QUOTA_CEILING})`,
+  && !(has(record.status) && record.status == "cancelled")
+  && ((${QUOTA_NOW}) > (${QUOTA_BEFORE}) || ((${QUOTA_COUNTED_NOW}) && !(${QUOTA_COUNTED_BEFORE}) && (${QUOTA_LINKED_BEFORE})))
+  && (${QUOTA_ORDERED}) - (${QUOTA_BEFORE_COUNTED}) + (${QUOTA_NOW}) > (${QUOTA_CEILING})`,
 };
 
 export const SalesOrder = ObjectSchema.create({
@@ -195,11 +214,17 @@ export const SalesOrder = ObjectSchema.create({
     // ─── Pricing: the quote header's figures and one formula ────────────
     // `discount_amount` / `total_price` are derived and `readonly` (#2110 on
     // the quote); their one writer is `sales_order_workflow`, in the write that
-    // changes an input. `subtotal` is the lines' sum (`sales_order_total_rollup`)
-    // and stays editable: on an order with no lines it is the rep's own number.
+    // changes an input. `subtotal` is the lines' sum (`sales_order_total_rollup`);
+    // on an order with no lines it is the rep's own number, so it is not
+    // `readonly`. A person's Subtotal on an order WITH lines that differs from
+    // their sum is refused by `sales_order_workflow` (#2826), and Subtotal,
+    // Discount %, Tax and Shipping lock once the order leaves Draft, there too.
+    // Not `readonlyWhen`: on 18.6.0 that strips system writes as well, and
+    // whether an order has lines is not a field of the order.
     subtotal: Field.currency({
       label: 'Subtotal',
       group: 'pricing',
+      description: 'The sum of the order\'s lines. Typed only on an order with no lines. Locked once the order is confirmed, as are the discount, tax and shipping.',
     }),
 
     discount: Field.percent({

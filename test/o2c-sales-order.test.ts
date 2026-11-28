@@ -72,7 +72,9 @@ describe('the shape', () => {
   it('the order\'s figures are the contract\'s definitions over the order, in the order\'s Pricing section', () => {
     const [ext] = SalesOrderExtensions;
     expect(ext!.extend).toBe('crm_sales_order');
-    expect(Object.keys(ext!.fields).sort()).toEqual([...FIGURES].sort());
+    // Unpaid, Uninvoiced and Payment Plan Differs since hotcrm#2806, pinned in
+    // `test/o2c-parallel-figures.test.ts`.
+    expect(Object.keys(ext!.fields).sort()).toEqual([...FIGURES, 'unpaid_amount', 'uninvoiced_amount', 'plan_differs'].sort());
     const declared = new Set((SalesOrder.fieldGroups ?? []).map((g: Rec) => g.key));
     const contract = ContractAccountExtensions.find((e) => e.extend === 'crm_contract')!.fields as Rec;
     for (const f of FIGURES) {
@@ -134,8 +136,10 @@ describe('on the booted stack', () => {
       const [p] = await verify.rows('crm_payment', { erp_ref: 'TRX-151360' });
       expect(i.crm_sales_order).toBe(globex.id);
       expect(i.crm_account).toBe(globex.crm_account);
-      expect(p.crm_sales_order, 'the payment took its invoice\'s order').toBe(globex.id);
-      expect(p.crm_billing_milestone).toBe(i.crm_billing_milestone);
+      expect(p.crm_sales_order, 'the payment took its plan step\'s order').toBe(globex.id);
+      // Invoices and payments run in parallel (hotcrm#2806): neither names the other.
+      expect(p.crm_invoice ?? null).toBeNull();
+      expect(i.crm_billing_milestone ?? null).toBeNull();
       expect(await figures('crm_sales_order', globex.id)).toEqual([22464, 11232, 11232]);
     });
   });

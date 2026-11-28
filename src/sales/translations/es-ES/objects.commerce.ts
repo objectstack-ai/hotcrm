@@ -84,9 +84,11 @@ export const commerce: Record<string, ObjectTranslationData> = {
         options: { order: 'Contrato de Pedido', framework: 'Contrato Marco', other: 'Otro' },
       },
       crm_sales_order: { label: 'Pedido de Origen', help: 'El pedido desde el que se redactó este contrato.' },
-      order_amount: { label: 'Importe del Pedido', help: 'El total de los pedidos de este contrato, impuestos incluidos.' },
+      order_amount: { label: 'Importe del Pedido', help: 'El total de los pedidos confirmados y completados de este contrato, impuestos incluidos. Los pedidos en borrador y cancelados no cuentan.' },
+      linked_order_amount: { label: 'Importe de Pedidos Vinculados', help: 'El total de los pedidos no cancelados de este contrato, impuestos incluidos. Un contrato de pedido lo sigue mientras es un borrador.' },
+      order_amount_shown: { label: 'Importe del Pedido', help: 'En un contrato de pedido, el importe de su pedido. En un contrato marco, el total de sus pedidos confirmados y completados; los pedidos en borrador y cancelados no cuentan. Impuestos incluidos.' },
       order_amount_differs: { label: 'Difiere del Importe del Pedido', help: 'El valor del contrato ya no es igual al importe del pedido. Cambiar, con Actualizar desde el Pedido, toma el importe del pedido.' },
-      remaining_quota: { label: 'Cupo Restante', help: 'El valor del contrato menos el Importe del Pedido. Es negativo cuando los pedidos superan el valor del contrato.' },
+      remaining_quota: { label: 'Cupo Restante', help: 'El valor del contrato menos el Importe del Pedido (pedidos confirmados y completados). Es negativo cuando los pedidos superan el valor del contrato.' },
       change_reason: { label: 'Motivo del Cambio', help: 'Por qué se cambió el contrato la última vez. Lo escribe Cambiar.' },
       change_amendment: { label: 'Enmienda Firmada', help: 'La enmienda que el cliente firmó para el último cambio. La escribe Cambiar.' },
       change_new_value: { label: 'Nuevo Valor del Contrato', help: 'Déjelo vacío para conservar el valor del contrato.' },
@@ -130,7 +132,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: 'Confirmar pedido',
-        confirmText: '¿Confirmar este pedido? Sus líneas quedan bloqueadas: para cambiarlas, el pedido tiene que volver a Borrador.',
+        confirmText: '¿Confirmar este pedido? Sus líneas y su importe quedan bloqueados: para cambiarlos, el pedido tiene que volver a Borrador.',
         successMessage: 'Pedido {{ record.name }} confirmado.',
       },
       complete_sales_order: {
@@ -166,7 +168,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: 'Contrato' },
       customer_po_number: { label: 'N.º de Orden de Compra del Cliente', help: 'El número de la orden de compra del propio cliente, tal como él la citará.' },
       description: { label: 'Descripción' },
-      subtotal: { label: 'Subtotal' },
+      subtotal: { label: 'Subtotal', help: 'La suma de las líneas del pedido. Solo se escribe en un pedido sin líneas. Se bloquea cuando el pedido se confirma, igual que el descuento, el impuesto y el envío.' },
       discount: { label: 'Descuento %' },
       discount_amount: { label: 'Monto de Descuento' },
       tax: { label: 'Impuesto' },

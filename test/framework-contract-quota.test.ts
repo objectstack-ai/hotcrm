@@ -83,6 +83,11 @@ describe('a framework contract shows its Order Amount and Remaining Quota', () =
     const first = await newOrder(at, { crm_contract: id, subtotal: 300, tax: 30 });
     expect(first.status).toBe(201);
     expect(quotaWarnings(first)).toEqual([]);
+    // A Draft is not yet ordered (hotcrm#2806): it counts once confirmed.
+    await vi.waitFor(async () => expect(Number((await contractRow(id)).linked_order_amount)).toBe(330), { timeout: 5_000 });
+    c = await contractRow(id);
+    expect([Number(c.order_amount), Number(c.remaining_quota)]).toEqual([0, 1_000]);
+    expect((await save('PATCH', `/data/crm_sales_order/${first.body.id}`, { status: 'confirmed' })).status).toBe(200);
     await vi.waitFor(async () => expect(Number((await contractRow(id)).order_amount)).toBe(330), { timeout: 5_000 });
     c = await contractRow(id);
     expect(Number(c.remaining_quota)).toBe(670);
@@ -124,17 +129,26 @@ describe('going over a framework contract warns, and the save goes through', () 
   beforeAll(async () => {
     at = await parties();
     id = await contractOf('framework', at);
-    const placed = await newOrder(at, { crm_contract: id, subtotal: 600 });
+    // Confirmed: only confirmed and completed orders count (hotcrm#2806).
+    const placed = await newOrder(at, { crm_contract: id, subtotal: 600, status: 'confirmed' });
     expect(placed.status).toBe(201);
     order = String(placed.body.id);
     await vi.waitFor(async () => expect(Number((await contractRow(id)).order_amount)).toBe(600), { timeout: 5_000 });
   });
 
   it('warns when a newly linked order takes the orders over the value, and saves it', async () => {
+    // A Draft: its own total on top of what was ordered warns (hotcrm#2806),
+    // though the Draft does not count yet.
     const over = await newOrder(at, { crm_contract: id, subtotal: 500 });
     expect(over.status).toBe(201);
     expect(quotaWarnings(over)).toEqual([expect.objectContaining({ severity: 'warning', field: 'crm_contract' })]);
     expect(over.body.record.crm_contract).toBe(id);
+    await vi.waitFor(async () => expect(Number((await contractRow(id)).linked_order_amount)).toBe(1_100), { timeout: 5_000 });
+    expect(Number((await contractRow(id)).remaining_quota)).toBe(400);
+    // Confirming it counts it, and warns again: that is when the quota is used.
+    const confirmed = await save('PATCH', `/data/crm_sales_order/${over.body.id}`, { status: 'confirmed' });
+    expect(confirmed.status).toBe(200);
+    expect(quotaWarnings(confirmed)).toHaveLength(1);
     await vi.waitFor(async () => expect(Number((await contractRow(id)).remaining_quota)).toBe(-100), { timeout: 5_000 });
   });
 
@@ -147,6 +161,11 @@ describe('going over a framework contract warns, and the save goes through', () 
   });
 
   it('warns when a linked order\'s total goes up, and not on an edit that leaves it as it was', async () => {
+    // A confirmed order's amount is locked (hotcrm#2826): it goes up only
+    // back in Draft, where its own total on top of what was ordered still
+    // warns (hotcrm#2806), though the Draft does not count.
+    expect((await save('PATCH', `/data/crm_sales_order/${order}`, { tax: 10 })).status).toBe(409);
+    expect((await save('PATCH', `/data/crm_sales_order/${order}`, { status: 'draft' })).status).toBe(200);
     const raised = await save('PATCH', `/data/crm_sales_order/${order}`, { tax: 10 });
     expect(raised.status).toBe(200);
     expect(Number(raised.body.record.total_price)).toBe(610);
@@ -174,6 +193,10 @@ describe('going over a framework contract warns, and the save goes through', () 
       crm_sales_order: placed.body.id, product_title: 'Implementation days', quantity: 12, unit_price: 100,
     });
     expect(line.status).toBe(201);
+    // The Draft does not count yet (hotcrm#2806); confirmed, it takes the contract over.
+    await vi.waitFor(async () => expect(Number((await contractRow(cid)).linked_order_amount)).toBe(1_200), { timeout: 5_000 });
+    expect(Number((await contractRow(cid)).remaining_quota)).toBe(1_000);
+    expect((await save('PATCH', `/data/crm_sales_order/${placed.body.id}`, { status: 'confirmed' })).status).toBe(200);
     await vi.waitFor(async () => expect(Number((await contractRow(cid)).remaining_quota)).toBe(-200), { timeout: 5_000 });
   });
 });

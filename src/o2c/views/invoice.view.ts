@@ -5,13 +5,12 @@ import { defineView } from '@objectstack/spec/ui';
 /**
  * Invoice Views
  *
- *   • grid — every invoice the reader can see, newest first, with what is
- *     paid and what is open.
- *   • Overdue Invoices — the rep's view (plan *The data model*): issued
- *     invoices past their due date with money still open. `{today}` resolves
- *     on the read path (measured for this view on 18.3.0, #2315). `open_amount`
- *     is a STORED column for this filter's sake (see the field): a formula
- *     cannot be filtered.
+ *   • grid — every invoice the reader can see, newest first.
+ *
+ * Invoices and payments run in parallel (the 2026-11-26 ruling, hotcrm#2806):
+ * an invoice is not set against payments, so it shows no paid or open amount,
+ * and overdue is measured on the payment plan (the Overdue Payment Plans view,
+ * `./billing_milestone.view.ts`), which replaced Overdue Invoices.
  *
  * No form is authored: the form and the record page derive from the object's
  * `fieldGroups`. Finance enters invoices on that form or imports them
@@ -31,34 +30,13 @@ export const InvoiceViews = defineView({
       { field: 'crm_contract', width: 130 },
       { field: 'issue_date', width: 120, sortable: true },
       { field: 'due_date', width: 120, sortable: true },
-      // No total on Amount: it would count cancelled invoices. Open is the
-      // figure to total (a cancelled invoice is open for nothing), hotcrm#2463.
+      // No total on Amount: it would count cancelled invoices (hotcrm#2463).
+      // The order's, the contract's and the account's Invoiced count the
+      // issued ones.
       { field: 'amount', width: 140, align: 'right' },
-      { field: 'paid_amount', width: 130, align: 'right', summary: 'sum' },
-      { field: 'open_amount', width: 130, align: 'right', summary: 'sum' },
-      // Paid above the amount (#2513): the invoice is fully paid and Open is 0.
-      { field: 'overpaid_amount', width: 120, align: 'right' },
       { field: 'status', width: 110 },
     ],
     sort: [{ field: 'issue_date', order: 'desc' }],
     pagination: { pageSize: 50 },
-  },
-
-  listViews: {
-    /** Issued, past due, not fully paid — oldest due first. */
-    overdue_invoices: {
-      name: 'overdue_invoices',
-      type: 'grid',
-      label: 'Overdue Invoices',
-      userActions: { editInline: true },
-      data: { provider: 'object', object: 'crm_invoice' },
-      columns: ['invoice_number', 'crm_account', 'crm_contract', 'due_date', 'amount', 'paid_amount', 'open_amount'],
-      filter: [
-        { field: 'status', operator: 'equals', value: 'issued' },
-        { field: 'due_date', operator: 'less_than', value: '{today}' },
-        { field: 'open_amount', operator: 'greater_than', value: 0 },
-      ],
-      sort: [{ field: 'due_date', order: 'asc' }],
-    },
   },
 });

@@ -51,7 +51,7 @@ describe('the default permission set', () => {
     expect(wider, 'crm_user grants what sales_rep does not').toEqual([]);
   });
 
-  it('authors field-level security on the account\'s three Order to Cash totals only, each hidden (ruling C, hotcrm#2557)', () => {
+  it('authors field-level security on the account\'s Order to Cash totals only, each hidden (ruling C, hotcrm#2557; Unpaid and Uninvoiced since hotcrm#2806)', () => {
     // Field permissions merge most-permissive over the fields a held set
     // AUTHORS; a restriction here binds every member who holds no set voting
     // for the field — see the profile. The one ruled exception (hotcrm#2557,
@@ -59,9 +59,16 @@ describe('the default permission set', () => {
     // role. Anything else authored here narrows some persona: this roster is
     // the guard, and a new entry is a new ruling.
     expect(setByName.get(DEFAULT_SET)?.fields ?? {}).toEqual({
-      'crm_account.invoiced_amount':    { readable: false, editable: false },
-      'crm_account.received_amount':    { readable: false, editable: false },
-      'crm_account.receivable_balance': { readable: false, editable: false },
+      'crm_account.invoiced_amount':         { readable: false, editable: false },
+      'crm_account.received_amount':         { readable: false, editable: false },
+      // The Receivable Balance's place (hotcrm#2806): Unpaid and Uninvoiced,
+      // and the hidden halves they are summed from.
+      'crm_account.unpaid_amount':           { readable: false, editable: false },
+      'crm_account.uninvoiced_amount':       { readable: false, editable: false },
+      'crm_account.unpaid_on_orders':        { readable: false, editable: false },
+      'crm_account.unpaid_on_contracts':     { readable: false, editable: false },
+      'crm_account.uninvoiced_on_orders':    { readable: false, editable: false },
+      'crm_account.uninvoiced_on_contracts': { readable: false, editable: false },
     });
   });
 });

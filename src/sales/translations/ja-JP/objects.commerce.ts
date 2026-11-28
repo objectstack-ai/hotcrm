@@ -83,9 +83,11 @@ export const commerce: Record<string, ObjectTranslationData> = {
         options: { order: '受注契約', framework: '基本契約', other: 'その他' },
       },
       crm_sales_order: { label: '元の受注', help: 'この契約の作成元となった受注です。' },
-      order_amount: { label: '受注金額', help: 'この契約に紐づく受注の税込合計です。' },
+      order_amount: { label: '受注金額', help: 'この契約に紐づく確定済・完了の受注の税込合計です。下書きとキャンセルの受注は含みません。' },
+      linked_order_amount: { label: '紐づく受注金額', help: 'この契約に紐づくキャンセル以外の受注の税込合計です。受注契約は下書きの間これに従います。' },
+      order_amount_shown: { label: '受注金額', help: '受注契約ではその受注の金額、フレームワーク契約では確定済・完了の受注の合計です（下書きとキャンセルは含みません）。税込。' },
       order_amount_differs: { label: '受注金額と不一致', help: '契約金額が受注金額と一致しなくなっています。「変更」で「受注から更新」を選ぶと受注金額を取り込みます。' },
-      remaining_quota: { label: '残り枠', help: '契約金額から受注金額を引いた額です。受注の合計が契約金額を超えるとマイナスになります。' },
+      remaining_quota: { label: '残り枠', help: '契約金額から受注金額（確定済・完了の受注）を引いた額です。受注の合計が契約金額を超えるとマイナスになります。' },
       change_reason: { label: '変更理由', help: '契約を最後に変更した理由です。「変更」が書き込みます。' },
       change_amendment: { label: '署名済み変更契約書', help: '最後の変更について顧客が署名した変更契約書です。「変更」が書き込みます。' },
       change_new_value: { label: '新しい契約金額', help: '空欄のままにすると契約金額は変わりません。' },
@@ -129,7 +131,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       // Confirm / Complete / Cancel Order (#2716).
       confirm_sales_order: {
         label: '注文を確定',
-        confirmText: 'この注文を確定しますか？確定すると明細はロックされます。変更するには、注文を下書きに戻す必要があります。',
+        confirmText: 'この注文を確定しますか？確定すると明細と金額はロックされます。変更するには、注文を下書きに戻す必要があります。',
         successMessage: '注文 {{ record.name }} を確定しました。',
       },
       complete_sales_order: {
@@ -165,7 +167,7 @@ export const commerce: Record<string, ObjectTranslationData> = {
       crm_contract: { label: '契約' },
       customer_po_number: { label: '顧客発注番号', help: '顧客自身の発注書の番号。顧客が引用するとおりに入力します。' },
       description: { label: '説明' },
-      subtotal: { label: '小計' },
+      subtotal: { label: '小計', help: '注文の明細の合計です。明細のない注文でだけ入力できます。注文が確定するとロックされ、割引・税額・配送料も同様です。' },
       discount: { label: '割引率(%)' },
       discount_amount: { label: '割引額' },
       tax: { label: '税額' },

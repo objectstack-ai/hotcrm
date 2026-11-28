@@ -313,7 +313,8 @@ that book leaves with its module; the module's pages may link to the app's. (#23
 1. **Read the official release notes first** — <https://docs.objectstack.ai/docs/releases> (per-major pages carry the breaking-change list and a migration checklist). ⛔ Do not reverse-engineer breaking changes from changelogs.
 2. Per-package `node_modules/@objectstack/<pkg>/CHANGELOG.md` supplements the release notes, never replaces them.
 3. Bump all `@objectstack/*` packages **together** (they are version-locked), update `engines.protocol` in `objectstack.manifest.json` and every package manifest, then
-   run `pnpm verify` and browser-verify (see below).
+   run `pnpm verify` and browser-verify (see below). `@objectstack/skills` is one of them: after the bump, re-sync the published skills with
+   `npx skills@1.7.2 experimental_sync --agent claude-code --copy -y` and commit the refreshed `.claude/skills/` and `skills-lock.json` in the same PR.
 4. Record the upgrade in the PR's **changeset**, ⛔ not in `CHANGELOG.md`: `changeset version` owns that file and splices each release in, so a hand-written entry is published by nothing.
 5. **Re-scope the claims that name the old pin — re-scope, never renumber.** Search version-agnostically, across wrapped lines and comment leaders, for the *shape* of a pin claim, over identifiers **and** human-readable labels; every hit is a candidate to classify by hand — a claim is false only when it asserts the old version **is** the current pin (re-measure it on the new pin, or re-word it to date itself), while "measured on X" is dated truth and stays. (#1681)
    A grep finds only text carrying a version token; the same stale fact stated in other words, or by a label, is found by reading — say so in the PR rather than call the sweep complete.

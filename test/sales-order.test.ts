@@ -215,6 +215,110 @@ describe('an order on the booted stack', () => {
     expect((await call('PATCH', `/data/crm_sales_order/${order.id}`, { status: 'draft' })).status).toBe(400);
   }, 60_000);
 
+  describe('the header amount locks once the order leaves Draft (#2826)', () => {
+    const AMOUNT: Array<[string, number]> = [['subtotal', 999], ['discount', 5], ['tax', 70], ['shipping_handling', 30]];
+    const patch = (id: string, body: Rec) => call('PATCH', `/data/crm_sales_order/${id}`, body);
+    const figures = async (id: string): Promise<number[]> => {
+      const o = await stored('crm_sales_order', id);
+      return [o.subtotal, o.discount ?? 0, o.tax ?? 0, o.shipping_handling ?? 0, o.total_price];
+    };
+    /** A Draft order with no lines, its amount typed, then moved to `status`. */
+    const typedOrder = async (...path: string[]): Promise<Rec> => {
+      const order = await draftOrder();
+      expect((await patch(order.id, { subtotal: 1_000, discount: 10, tax: 50, shipping_handling: 20 })).status).toBe(200);
+      for (const status of path) expect((await patch(order.id, { status })).status, status).toBe(200);
+      return stored('crm_sales_order', order.id);
+    };
+
+    it('a Confirmed order refuses a person\'s edit of each amount field, and keeps every other field open', async () => {
+      const order = await typedOrder('confirmed');
+      const before = await figures(order.id);
+      expect(before).toEqual([1_000, 10, 50, 20, 970]);
+      const sentence = `Order ${order.name} is Confirmed, so its amount can no longer be changed. Send it back to Draft first.`;
+      for (const [field, value] of AMOUNT) {
+        const res = await patch(order.id, { [field]: value });
+        expect(res.status, `${field}: ${JSON.stringify(res.body)}`).toBe(409);
+        expect(res.body.code, field).toBe('RECORD_LOCKED');
+        expect(JSON.stringify(res.body), field).toContain(sentence);
+      }
+      // Moving it back to Draft and changing the amount in one write is refused too.
+      const both = await patch(order.id, { status: 'draft', tax: 70 });
+      expect(both.status, JSON.stringify(both.body)).toBe(409);
+      expect(await figures(order.id)).toEqual(before);
+      expect((await stored('crm_sales_order', order.id)).status).toBe('confirmed');
+      // A form that sends the unchanged figures back, and the other fields, save.
+      const same = await patch(order.id, { subtotal: 1_000, discount: 10, tax: 50, shipping_handling: 20, fulfillment_status: 'shipped' });
+      expect(same.status, JSON.stringify(same.body)).toBe(200);
+    }, 60_000);
+
+    it.each([
+      ['Completed', ['confirmed', 'completed']],
+      ['Cancelled', ['cancelled']],
+    ] as const)('a %s order refuses it, with no way back', async (label, path) => {
+      const order = await typedOrder(...path);
+      for (const [field, value] of AMOUNT) {
+        const res = await patch(order.id, { [field]: value });
+        expect(res.status, `${field}: ${JSON.stringify(res.body)}`).toBe(409);
+        expect(res.body.code, field).toBe('RECORD_LOCKED');
+        expect(JSON.stringify(res.body), field).toContain(`Order ${order.name} is ${label}, so its amount can no longer be changed.`);
+        expect(JSON.stringify(res.body), field).not.toContain('Draft');
+      }
+      expect(await figures(order.id)).toEqual([1_000, 10, 50, 20, 970]);
+    }, 60_000);
+
+    it('a system write still changes a Confirmed order\'s amount, and its total follows', async () => {
+      const order = await typedOrder('confirmed');
+      await verify.hooks.run('crm_sales_order', 'update', { id: order.id, tax: 80, shipping_handling: 0 }, { system: true });
+      expect(await figures(order.id)).toEqual([1_000, 10, 80, 0, 980]);
+      // The seed's own shape: a line put on a confirmed order by the system rolls up.
+      const [line] = await verify.seed('crm_sales_order_line', [{ crm_sales_order: order.id, product_title: 'Seeded', quantity: 2, unit_price: 250 }]);
+      expect(line).toBeTruthy();
+      expect((await figures(order.id))[0]).toBe(500);
+    }, 60_000);
+
+    it('back in Draft the amount is editable again, and confirming again keeps the new total', async () => {
+      const order = await typedOrder('confirmed');
+      expect((await patch(order.id, { status: 'draft' })).status).toBe(200);
+      for (const [field, value] of AMOUNT) {
+        const res = await patch(order.id, { [field]: value });
+        expect(res.status, `${field}: ${JSON.stringify(res.body)}`).toBe(200);
+      }
+      // 999 − 49.95 + 70 + 30
+      expect(await figures(order.id)).toEqual([999, 5, 70, 30, 1_049.05]);
+      expect((await patch(order.id, { status: 'confirmed' })).status).toBe(200);
+      expect(await figures(order.id)).toEqual([999, 5, 70, 30, 1_049.05]);
+      expect((await patch(order.id, { tax: 0 })).status).toBe(409);
+    }, 60_000);
+
+    it('on an order with lines, Subtotal is the lines\' sum: a typed one is refused, the sum and the other inputs save', async () => {
+      const order = await draftOrder();
+      expect((await addLine(order.id, { product_title: 'Line S', quantity: 4, unit_price: 125 })).status).toBe(201);
+      expect((await stored('crm_sales_order', order.id)).subtotal).toBe(500);
+
+      const typed = await patch(order.id, { subtotal: 750 });
+      expect(typed.status, JSON.stringify(typed.body)).toBe(400);
+      expect(typed.body.code).toBe('VALIDATION_FAILED');
+      expect(JSON.stringify(typed.body)).toContain(`Order ${order.name} has lines, so its Subtotal is the sum of its lines and cannot be typed. Change the lines instead.`);
+      expect((await patch(order.id, { subtotal: null })).status).toBe(400);
+      expect((await stored('crm_sales_order', order.id)).subtotal).toBe(500);
+
+      // The sum itself, and the Draft order's other inputs, save; the total follows.
+      expect((await patch(order.id, { subtotal: 500, tax: 25 })).status).toBe(200);
+      expect(await figures(order.id)).toEqual([500, 0, 25, 0, 525]);
+      // A line change still moves it: the rollup's own write is the sum.
+      const lines = await verify.rows('crm_sales_order_line', { crm_sales_order: order.id });
+      expect((await call('PATCH', `/data/crm_sales_order_line/${lines[0]!.id}`, { quantity: 2 })).status).toBe(200);
+      expect(await figures(order.id)).toEqual([250, 0, 25, 0, 275]);
+    }, 60_000);
+
+    it('an order with no lines still takes a typed Subtotal', async () => {
+      const order = await draftOrder();
+      const res = await patch(order.id, { subtotal: 1_234, tax: 6 });
+      expect(res.status, JSON.stringify(res.body)).toBe(200);
+      expect(await figures(order.id)).toEqual([1_234, 0, 6, 0, 1_240]);
+    }, 60_000);
+  });
+
   describe('an order carries only a contract of its own account (#2728)', () => {
     const sentence = "This contract belongs to another account. An order can only carry a contract of its own Account: choose one of this account's contracts, or clear Contract.";
     /** A draft contract under `account`, with the contact it requires. */

@@ -20,7 +20,8 @@
 //   3. every other contract ⇒ Framework Contract.
 //
 // Run the platform's own step first, `pnpm exec objectstack migrate
-// summary-nulls --apply --yes`, which computes Order Amount on the contracts
+// summary-nulls --apply --yes`, which computes the order roll-ups (the
+// linked order amount this script compares, hotcrm#2806) on the contracts
 // that predate it; without it the order contracts cannot be compared, and the
 // script says so and exits non-zero. The order of the two does not matter
 // for the values: neither corrects one.
@@ -31,7 +32,7 @@
 // the forms back. The contract's other fields, its value and status included,
 // are left as they are: an order contract whose value already differs from
 // its order is NOT corrected (item 7). Those are listed at the end, from the
-// stored Contract Value and Order Amount; the app shows each of them
+// stored Contract Value and linked order amount; the app shows each of them
 // "Differs from the Order Amount" too.
 //
 // Safe by construction:
@@ -134,7 +135,7 @@ async function main(): Promise<void> {
   console.log(`Signed in as ${me.email ?? me.id} at ${url}`);
   console.log(APPLY ? 'Mode: APPLY (records will be written)' : 'Mode: REPORT ONLY (pass --apply to write)');
 
-  const FIELDS = ['id', 'contract_number', 'name', 'contract_form', 'contract_value', 'order_amount'];
+  const FIELDS = ['id', 'contract_number', 'name', 'contract_form', 'contract_value', 'linked_order_amount'];
   const contracts = await api.all('crm_contract', FIELDS);
   const formless = contracts.filter((c) => blank(c.contract_form));
   console.log(`\ncrm_contract: ${contracts.length} row(s), ${formless.length} without a form.`);
@@ -172,15 +173,15 @@ async function main(): Promise<void> {
   // predates the field: the platform's own step fills it, and until then the
   // contract cannot be compared.
   const orders = after.filter((c) => c.contract_form === 'order');
-  const uncounted = orders.filter((c) => c.order_amount === null || c.order_amount === undefined);
-  const differing = orders.filter((c) => !uncounted.includes(c) && money(c.contract_value) !== money(c.order_amount));
+  const uncounted = orders.filter((c) => c.linked_order_amount === null || c.linked_order_amount === undefined);
+  const differing = orders.filter((c) => !uncounted.includes(c) && money(c.contract_value) !== money(c.linked_order_amount));
   if (uncounted.length > 0) {
     console.log(`\n${uncounted.length} order contract(s) have no Order Amount yet: run \`pnpm exec objectstack migrate summary-nulls --apply --yes\`, then this script again, to compare them.`);
     failed++;
   }
   console.log(`\nOrder contracts whose value differs from the order amount: ${differing.length}.`);
   for (const c of differing) {
-    console.log(`  ${c.contract_number ?? c.id} "${text(c.name)}": contract ${money(c.contract_value)}, order ${money(c.order_amount)}`);
+    console.log(`  ${c.contract_number ?? c.id} "${text(c.name)}": contract ${money(c.contract_value)}, order ${money(c.linked_order_amount)}`);
   }
   if (failed > 0) process.exitCode = 1;
 }

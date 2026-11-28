@@ -73,7 +73,7 @@ export const zhCN: TranslationData = {
     crm_billing_milestone: {
       label: '回款计划',
       pluralLabel: '回款计划',
-      description: '客户回款计划中的一步，按订单或合同制定：应收多少、何时收，以及其中已开票和已回款的金额',
+      description: '客户回款计划中的一步，按订单或合同制定：应收多少、何时收，以及其中已回款的金额',
       _validations: {
         billing_milestone_source: { message: '请选择这个节点所属的订单或合同。' },
       },
@@ -101,9 +101,6 @@ export const zhCN: TranslationData = {
           label: '验收日期',
           help: '按验收付款的节点：客户签字验收的日期。',
         },
-        invoiced_amount: {
-          label: '已开票',
-        },
         received_amount: {
           label: '已回款',
         },
@@ -121,6 +118,9 @@ export const zhCN: TranslationData = {
         planned_this_month: {
           label: '本月计划回款',
         },
+        overdue_billing_milestones: {
+          label: '逾期回款计划',
+        },
       },
       _sections: {
         basic: {
@@ -137,7 +137,7 @@ export const zhCN: TranslationData = {
     crm_invoice: {
       label: '发票',
       pluralLabel: '发票',
-      description: '财务开给客户的发票，以及其中已付的金额',
+      description: '财务开给客户的发票，挂在订单或合同上',
       fields: {
         invoice_number: {
           label: '发票号码',
@@ -206,16 +206,10 @@ export const zhCN: TranslationData = {
         all_invoices: {
           label: '全部发票',
         },
-        overdue_invoices: {
-          label: '逾期发票',
-        },
       },
       _sections: {
         basic: {
           label: '发票',
-        },
-        amounts: {
-          label: '金额',
         },
         source: {
           label: '来源',
@@ -225,7 +219,7 @@ export const zhCN: TranslationData = {
     crm_payment: {
       label: '回款',
       pluralLabel: '回款',
-      description: '客户付来的款项：对应发票、回款计划、订单、合同，或暂时都不对应',
+      description: '客户付来的款项：对应回款计划、订单、合同，或暂时都不对应',
       fields: {
         payment_number: {
           label: '回款编号',
@@ -290,6 +284,11 @@ export const zhCN: TranslationData = {
     // The order's figures, added by this package through `objectExtensions`
     // (hotcrm#2560).
     crm_sales_order: {
+      // The rules this package adds to the order (hotcrm#2827).
+      _validations: {
+        reconfirm_total_below_received: { message: '本订单的总金额低于已回款金额（已回款）。请先处理多收的款项或发票，再确认订单。' },
+        reconfirm_total_below_invoiced: { message: '本订单的总金额低于已开票金额（已开票）。请先作废或更正发票，再确认订单。' },
+      },
       fields: {
         planned_amount: {
           label: '计划回款',
@@ -302,6 +301,18 @@ export const zhCN: TranslationData = {
         received_amount: {
           label: '已回款',
           help: '已收到回款的金额合计。',
+        },
+        unpaid_amount: {
+          label: '未回款',
+          help: '金额减去已回款，不低于 0。',
+        },
+        uninvoiced_amount: {
+          label: '未开票',
+          help: '金额减去已开票（已开具的发票），不低于 0。',
+        },
+        plan_differs: {
+          label: '回款计划与订单金额不符',
+          help: '回款计划的合计不等于订单总价。请修改、拆分或新增回款计划，使合计等于订单金额。',
         },
       },
     },
@@ -321,9 +332,16 @@ export const zhCN: TranslationData = {
           label: '已回款',
           help: '已收到回款的金额合计。',
         },
-        receivable_balance: {
-          label: '应收余额',
-          help: '客户在未结清发票上仍欠的金额：已开具发票的未付金额之和。尚未对应到发票的回款只计入已回款。',
+        unpaid_amount: {
+          label: '未回款',
+          help: '合同有订单时为订单金额，没有订单时为合同金额，减去已回款，不低于 0。',
+        },
+        uninvoiced_amount: {
+          label: '未开票',
+          help: '合同有订单时为订单金额，没有订单时为合同金额，减去已开票（已开具的发票），不低于 0。',
+        },
+        order_count: {
+          label: '订单数',
         },
       },
     },
@@ -337,9 +355,25 @@ export const zhCN: TranslationData = {
           label: '已回款',
           help: '已收到回款的金额合计。',
         },
-        receivable_balance: {
-          label: '应收余额',
-          help: '客户在未结清发票上仍欠的金额：已开具发票的未付金额之和。尚未对应到发票的回款只计入已回款。',
+        unpaid_amount: {
+          label: '未回款',
+          help: '客户已确认和已完成的订单，以及没有订单的已签合同，各自还未收回的金额（各自金额减已回款，不低于 0）之和。',
+        },
+        uninvoiced_amount: {
+          label: '未开票',
+          help: '客户已确认和已完成的订单，以及没有订单的已签合同，各自还未开票的金额（各自金额减已开具发票，不低于 0）之和。',
+        },
+        unpaid_on_orders: {
+          label: '订单未回款',
+        },
+        unpaid_on_contracts: {
+          label: '合同未回款',
+        },
+        uninvoiced_on_orders: {
+          label: '订单未开票',
+        },
+        uninvoiced_on_contracts: {
+          label: '合同未开票',
         },
       },
     },
@@ -370,7 +404,7 @@ export const zhCN: TranslationData = {
         nav_invoices: { label: '发票' },
         nav_payments: { label: '回款' },
         nav_billing_milestones: { label: '回款计划' },
-        nav_overdue_invoices: { label: '逾期发票' },
+        nav_overdue_billing_milestones: { label: '逾期回款计划' },
         nav_planned_this_month: { label: '本月计划回款' },
         nav_approval_requests: { label: '待我审批' },
         nav_help_o2c: { label: '订单与回款手册' },

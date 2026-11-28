@@ -150,7 +150,10 @@ describe('staffing (project_team_sync)', () => {
   // own View All on the account (objectstack#33828, 18.6.0); every other
   // field of the account stays readable to them.
   it('lets a team member read the account without its Order to Cash totals (hotcrm#2481)', async () => {
-    const TOTALS = ['invoiced_amount', 'received_amount', 'receivable_balance'];
+    const TOTALS = [
+      'invoiced_amount', 'received_amount', 'unpaid_amount', 'uninvoiced_amount',
+      'unpaid_on_orders', 'unpaid_on_contracts', 'uninvoiced_on_orders', 'uninvoiced_on_contracts',
+    ];
     const full = (await row('crm_account', account.id))!;
     for (const f of TOTALS) expect(full, `fixture: an administrator reads ${f}`).toHaveProperty(f);
     const seen = (await row('crm_account', account.id, consultant.token))!;

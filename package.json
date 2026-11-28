@@ -1,6 +1,6 @@
 {
   "name": "hotcrm",
-  "version": "6.6.0",
+  "version": "6.7.0",
   "description": "HotCRM - Production CRM built on ObjectStack",
   "license": "Apache-2.0",
   "private": true,
@@ -64,6 +64,7 @@
     "@objectstack/formula": "19.0.0-next.0",
     "@objectstack/plugin-audit": "19.0.0-next.0",
     "@objectstack/plugin-email": "19.0.0-next.0",
+    "@objectstack/skills": "19.0.0-next.0",
     "@objectstack/verify": "19.0.0-next.0",
     "@playwright/test": "^1.65.1",
     "@vitest/coverage-v8": "^4.1.10",

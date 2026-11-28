@@ -48,7 +48,7 @@ HotCRM 作為一個產品發布：核心的 **Sales** 應用，加上六個模�
 
   | 關閉的模組 | 消失的欄位 |
   | --- | --- |
-  | 訂單與回款 | 合約上的 **Planned**、**Invoiced**、**Received** 和 **Receivable Balance**；客戶上的 **Invoiced**、**Received** 和 **Receivable Balance** |
+  | 訂單與回款 | 訂單上的 **Planned**、**Invoiced**、**Received**、**Unpaid**、**Uninvoiced** 和 **Payment Plan Differs**；合約上的 **Planned**、**Invoiced**、**Received**、**Unpaid** 和 **Uninvoiced**；客戶上的 **Invoiced**、**Received**、**Unpaid** 和 **Uninvoiced** |
   | 項目交付 | 費用、報銷單和出差申請上的 **Project** |
 
   項目交付關閉時，顯示 **Project** 欄的 Expenses 清單照常打開，只是沒有這一欄，清單上方有一行說明原因："Not shown, filtered, sorted or grouped by crm_project: the package that adds it is disabled. It comes back when the package is enabled." 這行字用欄位的 API 名稱來稱呼它；`crm_project` 就是 **Project** 欄。

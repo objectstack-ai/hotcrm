@@ -1,0 +1,387 @@
+{
+  "skill_name": "objectstack-data",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create `src/objects/vendor.object.ts` for our vendors: company name, contact email, a status (Active / Inactive), the API key we use to call their system, and the password for their supplier portal. None of the project's files are in this directory: write the file in your answer.",
+      "expected_output": "Emits `ObjectSchema.create({...})` with a snake_case `name`, an authored `sharingModel` (a publish with none is refused), `label` / `pluralLabel` / `icon`, `nameField`, and fields with snake_case keys and camelCase config properties: `text` (required), `email`, a `select` whose `options` carry lowercase `value`s (`active`, `inactive`), and BOTH credentials as `type: 'secret'` (encrypted at rest) — never `type: 'password'`, which is plaintext at rest on a generic object. No `namespace` or `tableName` key.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "ObjectSchema.create",
+          "sharingModel",
+          "type: 'secret'",
+          "options",
+          "nameField"
+        ],
+        "must_not_contain": [
+          "{ type: 'password'",
+          "namespace:",
+          "vendorName"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "prompt": "Model invoices with line items, and let invoices be tagged with many tags where each tagging records who added it and when. A rep who owns a line item but can only read the invoice may still correct that line.",
+      "expected_output": "Line items: `invoice_line` with a `master_detail` field to `invoice`, `required: true`, `deleteBehavior: 'cascade'` (or `'restrict'` — `set_null` is refused on master_detail), `inlineEdit` on that relationship, and a `summary` roll-up field on the parent. Tagging carries attributes, so it is a junction object (`invoice_tag`) with two `lookup` fields plus `added_by` / `added_at` — not a `multiple: true` lookup (an array of ids) and not a `many_to_many` type, which does not exist. The line object is `sharingModel: 'controlled_by_parent'` with `sharing: { controlledByParent: { ownerMayEdit: true } }` (by-id update only; every other write still needs master edit). `added_by` is `type: 'user'` — never a `lookup` to a `user` object, which does not exist.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "master_detail",
+          "deleteBehavior",
+          "inlineEdit",
+          "summary",
+          "lookup",
+          "ownerMayEdit",
+          "type: 'user'"
+        ],
+        "must_not_contain": [
+          "type: 'many_to_many'",
+          "deleteBehavior: 'set_null'",
+          "reference: 'user'"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "prompt": "On `employee`: email must be unique within each organization, `status` may only move draft → active → terminated, and a `contract_end` earlier than `contract_start` must be rejected.",
+      "expected_output": "Uniqueness is an index, not a validation type: `indexes: [{ fields: ['email'], unique: 'organization' }]` (the scope is stated; `type` / `partial` are retired). The lifecycle is one `state_machine` validation with `field: 'status'`, `transitions: { draft: ['active'], active: ['terminated'], terminated: [] }` and a `message`. The date rule is a `script` validation (inverted: fails when the expression is true) or `cross_field`, written as bare CEL over `record.` with explicit `!= null` guards.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "unique: 'organization'",
+          "state_machine",
+          "transitions",
+          "record.",
+          "!= null"
+        ],
+        "must_not_contain": [
+          "type: 'unique'",
+          "partial:"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "prompt": "On `invoice`, `paid_at` should only appear — and become mandatory — once the status is `paid`, and `total` must lock after payment.",
+      "expected_output": "Declares the rules on the FIELD definitions (they belong to the data model, so every form and API write honours them): `visibleWhen: P`record.status == 'paid'``, `requiredWhen: P`record.status == 'paid'`` on `paid_at`, and `readonlyWhen: P`record.status == 'paid'`` on `total`. Bare CEL with `record.` — never brace-wrapped, never Salesforce syntax, never the removed `conditionalRequired` alias, and not in a form view.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "visibleWhen",
+          "requiredWhen",
+          "readonlyWhen",
+          "record.status"
+        ],
+        "must_not_contain": [
+          "conditionalRequired:",
+          "{record."
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "prompt": "We installed HotCRM (`hotcrm`, namespace `crm`). Add a `region` field to its `crm_account` object for our own use, without touching HotCRM's source.",
+      "expected_output": "An object extension authored in HotCRM's paired customization package `hotcrm.custom` (never a replacement of the object, never an edit of HotCRM itself): `defineObjectExtension({ extend: 'crm_account', fields: { region__c: Field.text({ label: 'Region' }) } })` registered in that stack's `objectExtensions`. The field name ends in `__c` because the suffix is reserved to the pair; an unsuffixed field in a `.custom` extension is refused at save, publish, install, `os validate` and `os build`. A change to one of HotCRM's own fields goes through `fieldPatches` (display properties only), and the object takes no `overrides` declaration.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "hotcrm.custom",
+          "defineObjectExtension",
+          "extend: 'crm_account'",
+          "region__c"
+        ],
+        "must_not_contain": [
+          "overrides:",
+          "name: 'crm_account'"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "prompt": "On `ticket`, `reviewer` is the lead who signs it off and must always be set; deleting that lead's user account must be blocked while they still review tickets. `watchers` is several users, and a deleted user should just drop out of the list.",
+      "expected_output": "Both are `type: 'user'` fields, each with an authored `deleteBehavior` — a `user` field joins the referential delete walk only when it declares one. `reviewer`: `required: true` with `deleteBehavior: 'restrict'` (deleting a named reviewer is refused with `409 DELETE_RESTRICTED`; `set_null` on a required field would refuse too). `watchers`: `multiple: true` with `deleteBehavior: 'set_null'` (only the deleted member is removed; an emptied set is `[]`). Neither is a `lookup` to a `user` object, which does not exist, and a `user` field with no `deleteBehavior` keeps the deleted user's id.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "type: 'user'",
+          "deleteBehavior: 'restrict'",
+          "deleteBehavior: 'set_null'",
+          "multiple: true",
+          "required: true"
+        ],
+        "must_not_contain": [
+          "reference: 'user'",
+          "deleteBehavior: 'cascade'"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "prompt": "We installed HotCRM (`hotcrm`, namespace `crm`). Its `crm_account` object's `industry` field should read \"Sector\" instead of \"Industry\" for our users, without touching HotCRM's source.",
+      "expected_output": "An object extension in HotCRM's paired customization package `hotcrm.custom`, registered in that stack's `objectExtensions`: `defineObjectExtension({ extend: 'crm_account', fieldPatches: { industry: { label: 'Sector' } } })`. A patch carries display keys only (`label`, `description`, `inlineHelpText`, `placeholder`); the field's type, values and rules stay HotCRM's, so its upgrades still reach it, and a key the tenant edited keeps the tenant's text. Never redeclare `industry` in `fields`: that takes the field over whole and cuts it off from the owner's upgrades, and an unsuffixed field in a `.custom` extension is refused anyway. An option's label rides the same patch keyed by the option's stored `value` only for a field that declares its own `options`; HotCRM's `industry` takes its options from the `industry` picklist, and a `picklist`-bound field's options are never patchable, so no `options` entry belongs on this patch. A patch naming a field or option value the target lacks is refused at install and by `os validate`.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "hotcrm.custom",
+          "defineObjectExtension",
+          "extend: 'crm_account'",
+          "fieldPatches",
+          "label: 'Sector'"
+        ],
+        "must_not_contain": [
+          "industry: Field.",
+          "overrides:",
+          "name: 'crm_account'"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "prompt": "Model a `project` and its `milestone` rows; a milestone belongs to exactly one project and is deleted with it. Give me both object files.",
+      "expected_output": "Two complete `ObjectSchema.create` calls, each with an authored `sharingModel` (a publish without one is refused with `security-owd-unset`): `project` with `sharingModel: 'private'`, `milestone` with `sharingModel: 'controlled_by_parent'` and a `master_detail` field to `project` with `deleteBehavior: 'cascade'`.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "ObjectSchema.create",
+          "sharingModel: 'private'",
+          "sharingModel: 'controlled_by_parent'",
+          "master_detail",
+          "deleteBehavior: 'cascade'"
+        ],
+        "must_not_contain": [
+          "many_to_many",
+          "deleteBehavior: 'set_null'"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "prompt": "Our app runs multi-tenant. Add an index on `ticket` for the list every agent opens: their organization's open tickets, newest first. None of the project's files are in this directory: write the change in your answer.",
+      "expected_output": "`indexes: [{ fields: ['organization_id', 'status', 'created_at'] }]` — the tenant column is `organization_id`, injected by `systemFields.tenant`, so it is indexed but not declared as a field; an index naming an undeclared `tenant_id` is refused. The platform already adds the single-column `organization_id` index on a multi-tenant host.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "indexes",
+          "organization_id"
+        ],
+        "must_not_contain": []
+      }
+    },
+    {
+      "id": 10,
+      "prompt": "给 `task` 加一个「是否完成」字段，设成必填，免得有人忘了填。",
+      "expected_output": "Adds `is_done: { type: 'boolean', label: '是否完成', defaultValue: false }` with NO `required`: a checkbox always holds one of its two values, so `required` can only read as \"must be true\" and a form that reads it that way refuses the unchecked state — the one state a new task starts in; the default also lands imported or seeded rows that omit the column on a real `false`. Tells the user that \"must be ticked\" (terms, a confirmation) is a `validations[]` rule, not `required`. The label is Chinese, as the request is.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "type: 'boolean'",
+          "defaultValue: false",
+          "label: '是否完成'"
+        ],
+        "must_not_contain": [
+          "required: true,", "required: true }",
+          "label: 'Is Done'"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "prompt": "订单的流程是 草稿 → 已提交 → 已审批 / 已驳回，审批通过后才能发货。请建模这个流程，并保证没人能直接建一张已审批的订单。",
+      "expected_output": "The lifecycle is a `status` field of `type: 'select'` on `order` (options `draft` / `submitted` / `approved` / `rejected` with Chinese labels), guarded by a `type: 'state_machine'` validation whose `transitions` map uses option VALUES and which declares `initialStates: ['draft']` — `transitions` governs only UPDATE and a `select` accepts any option on insert, so without it an order can be created already `approved`. No separate status / stage / step table, and no approval-record object: the approval itself is a flow (objectstack-automation).",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "type: 'select'",
+          "type: 'state_machine'",
+          "initialStates: ['draft']",
+          "transitions"
+        ],
+        "must_not_contain": [
+          "reference: 'order_status'",
+          "name: 'approval_record'",
+          "approved: ['已发货']"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "prompt": "项目上要显示「已完成任务数」「任务总数」和「完成率」。",
+      "expected_output": "Three fields on `project`: `completed_task_count` and `task_count` are `type: 'summary'` fields over the `task` child with `function: 'count'` (and `summaryOperations.object: 'task'`), the completed one carrying the qualifier in `filter: { status: 'completed' }` — keyed by a CHILD field and the option VALUE, never the label `已完成`; dropped, the field counts every task and shows a plausible wrong total. `completion_rate` is a `type: 'formula'` field over the two summaries, authored after them (it computes only once they do). If `project` rows already exist, says the recompute runs only on a child write, so the backfill is `os migrate summary-nulls --apply` — not editing a task to trigger it.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "type: 'summary'",
+          "function: 'count'",
+          "filter:",
+          "type: 'formula'"
+        ],
+        "must_not_contain": [
+          "filter: { status: '已完成' }",
+          "status: { $eq: '已完成' }"
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "prompt": "工单需要一个「负责人」，每个客服只能看到自己负责的工单。",
+      "expected_output": "Adds NO owner lookup: every object already carries the platform `owner_id` (reassignable, stamped to the creator), which is what owner-scoped visibility and \"my records\" views read — a hand-added 负责人 lookup is a second owner those never see. Sets `sharingModel: 'private'` on `ticket` (owner-only by default) and leaves `ownership` at its default. A people field is added only for a role DISTINCT from the owner (a reviewer, an approver), as `type: 'user'`.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "owner_id",
+          "sharingModel: 'private'"
+        ],
+        "must_not_contain": [
+          "reference: 'sys_user'",
+          "reference: 'user'",
+          "ownership: 'user'"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "prompt": "新建「供应商」对象：公司名称、联系邮箱、合作状态（合作中 / 已终止）。",
+      "expected_output": "`supplier` with `label: '供应商'` and Chinese field and option labels (`label: '公司名称'`, `label: '联系邮箱'`, `label: '合作状态'`; options `{ label: '合作中', value: 'active' }`, `{ label: '已终止', value: 'terminated' }`) — labels follow the language of the request, only machine names stay ASCII `snake_case`. An authored `sharingModel`, `pluralLabel` and `icon`; the status is a `select` with a non-empty `options` list.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "label: '供应商'",
+          "label: '公司名称'",
+          "value: '",
+          "sharingModel"
+        ],
+        "must_not_contain": [
+          "label: 'Supplier'",
+          "label: 'Company Name'",
+          "value: '合作中'"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "prompt": "Our package's `lead` object has a `company` text field with data in production. Rename it to `account_name` in the next version without losing the values.",
+      "expected_output": "Key the field `account_name` and declare `renamedFrom: ['company']` on it, removing `company` from the object: on the upgrade the schema sync renames the column, values and all. Without `renamedFrom`, the install-local upgrade stops on a suspected rename before any column changes, and a restart on the new version adds `account_name` as a new, empty column beside `company`, values left behind. Keep the entry while any installed version may still carry `company`.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "renamedFrom",
+          "account_name"
+        ],
+        "must_not_contain": []
+      }
+    },
+    {
+      "id": 16,
+      "prompt": "Our `consent_change` audit log must show it if anyone edits, inserts or deletes rows directly in the database, but whatever proof is stored must not carry the consent text itself. How do I declare that?",
+      "expected_output": "Keep `lifecycle.class: 'audit'` with its bounding `retention` (or a `ttl` on `created_at`) and add `seal: { valueFields: ['consent_text'] }`: the audit plugin signs each `created_at` hour into one checkpoint per organization, chained to the one before, where `valueFields` columns enter as salted commitments and every other column in clear. The object declares its own `id` and `tenant_id` fields; without them it parses but is not sealed, and the sealer reports it at `error` each hour. Refused at parse: `seal` on a class other than `audit`, `valueFields` naming `id`, `created_at` or an undeclared field, and beside `seal` a `retention` or `ttl` `onlyWhen`, a `ttl` on another field, or rotation `storage`. Two limits today: no verifier reads the checkpoints back yet, so a break is recorded but not reported; and until expiry ships, the sweeper still deletes sealed rows, which then read as missing. Field history is not tamper evidence.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "seal",
+          "valueFields",
+          "tenant_id",
+          "salted commitments",
+          "read as missing",
+          "not reported"
+        ],
+        "must_not_contain": [
+          "trackHistory",
+          "class: 'telemetry'"
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "prompt": "Order lines belong to orders. Anyone who can see an order should be able to add, change or remove its lines, as far as the line object's own permissions allow; nobody needs edit rights on the order itself for that. How do I declare the line's sharing?",
+      "expected_output": "`order_line` is `sharingModel: 'controlled_by_parent'` with a required `master_detail` field to `order`, plus `sharing: { controlledByParent: { writeRequiresMasterRead: true } }`: read access to the order becomes the master question for every write (insert, update, delete, re-point), and the line's own object permissions, RLS and FLS decide the rest. Without the key every line write needs edit on the order. Not `ownerMayEdit` (only the owner's by-id update, and refused beside the new key), not the key one level up (`sharing.writeRequiresMasterRead`, refused), and not on a non-`controlled_by_parent` object (refused). The platform ownership floor still binds predicate and on-behalf-of updates and deletes.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "controlled_by_parent",
+          "master_detail",
+          "controlledByParent",
+          "writeRequiresMasterRead: true"
+        ],
+        "must_not_contain": [
+          "sharing: { writeRequiresMasterRead",
+          "ownerMayEdit: true, writeRequiresMasterRead: true",
+          "writeRequiresMasterRead: true, ownerMayEdit: true",
+          "required: true, writeRequiresMasterRead"
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "prompt": "Each `invoice_line` belongs to an `invoice` (deleting the invoice deletes its lines), and the invoice carries `currency_code`. The line's `amount` must always be in its invoice's currency without storing a code on the line, and the invoice shows a subtotal of its lines. A teammate suggests making `invoice` a plain `lookup` instead. How do I declare the amounts?",
+      "expected_output": "Keep `invoice` a `master_detail` and declare `amount` with `currencyMode: 'record'` and `currencyField: 'invoice.currency_code'`: on a `master_detail` child the code may be one hop to the parent's `iso_4217_currency` field, so the line stores no code. A `lookup` path is refused, so the teammate's change would refuse the amount. The invoice's `subtotal` is a `summary` with `function: 'sum'` over the lines' `amount`, and it must declare its own `currencyMode: 'record'` with `currencyField: 'currency_code'`. A blank invoice code refuses the line's amount (`ERR_CURRENCY_CODE_REQUIRED`), and once a line follows it the invoice's `currency_code` cannot change until none does.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "master_detail",
+          "currencyField: 'invoice.currency_code'",
+          "iso_4217_currency",
+          "summary",
+          "ERR_CURRENCY_CODE_REQUIRED"
+        ],
+        "must_not_contain": [
+          "currencyMode: 'fixed'",
+          "Field.lookup('invoice')"
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "prompt": "帮我搭一个工单管理应用：`ticket` 对象有标题、状态（新建 / 处理中 / 已解决）、优先级，以及负责人，负责人可以改派给别的同事。",
+      "expected_output": "The 负责人 is the platform's injected `owner_id` (`ownership: 'user'`, the default; label Owner / 负责人): reassigning the ticket writes `owner_id`, which also drives owner-scoped visibility and \"My records\" views. The `ticket` object declares no `assignee` / `assigned_to` / owner field of its own and no second visible field labelled 负责人; only a handler the request names apart from the owner would be a `user` field, with a label no other visible field carries (system fields `created_by` 创建人 and `updated_by` 更新人 included), granting no access.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "owner_id"
+        ],
+        "must_not_contain": [
+          "assignee:",
+          "assigned_to:",
+          "label: '负责人'"
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "prompt": "Our `expense` rows are entered in many currencies: `amount` is a per-record currency field and the engine already stores its home-currency value in `amount_home`. On `project` I want an `actual_cost` total of all its expenses, shown as money, not as a plain number. We report in dollars, so can I just set the total's currency to USD?",
+      "expected_output": "Roll up the stored home amount, not `amount`: on `project`, `actual_cost` is a `summary` with `function: 'sum'` over `expense`'s `amount_home`, and it declares `currencyConfig: { currencyMode: 'dynamic' }` with no currency code. Every `amount_home` row is already in the organization's home currency, so the total is drawn in `localization.currency` on the record page and in lists; without that declaration it is a bare number. Do not write USD on it: metadata never names the home currency (ADR-0144), so the total follows the organization setting. `dynamic` is admitted only on a roll-up of a home amount (`defineStack` / `os validate` refuses it over any other child field), and a `count` roll-up carries no currency at all.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "summary",
+          "amount_home",
+          "currencyMode: 'dynamic'"
+        ],
+        "must_not_contain": [
+          "defaultCurrency: 'USD'"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "prompt": "Our package `acme_billing` depends on HotCRM and already relabels its `crm_account` fields with `fieldPatches`: `industry` reads \"Sector\" and the `type` option `customer` reads \"Client\". Our zh-CN users still see that English text. Where do the Chinese strings go?",
+      "expected_output": "In `acme_billing`'s own translation bundle, registered on its `defineStack({ translations: [...] })`, under the same keys HotCRM translates its own text under: `'zh-CN': { objects: { crm_account: { fields: { industry: { label: '板块' }, type: { options: { customer: '委托方' } } } } } }` (a patched help text or description goes under the field's `help`). The package that ships the patch translates it: never edit HotCRM's translation files, and never redeclare the field in `fields` to carry a label. HotCRM's zh-CN translation of the text the patch replaced (\"Industry\") never applies to the patched label. A translation of the same key in the paired `hotcrm.custom` package still comes first on the `/meta` reads, and a locale `acme_billing` does not translate serves the patch text (`Sector`) as written.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "translations",
+          "acme_billing",
+          "zh-CN",
+          "objects",
+          "crm_account",
+          "industry",
+          "customer"
+        ],
+        "must_not_contain": [
+          "overrides:"
+        ]
+      }
+    }
+  ]
+}
