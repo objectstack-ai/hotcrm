@@ -1,0 +1,55 @@
+{
+  "skill_name": "objectui",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have a plain REST API at /api/products with standard CRUD endpoints. How do I wire it to my ObjectUI grid and form components?",
+      "expected_output": "Provides a custom DataSource adapter implementation for REST, SchemaRendererProvider wiring, and schema examples with bind for grid and form.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "DataSource",
+          "SchemaRendererProvider",
+          "fetch",
+          "bind"
+        ],
+        "must_not_contain": [
+          "axios.get(`/api/",
+          "useEffect(() => { fetch"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "prompt": "I want to build my ObjectUI frontend before the backend is deployed. I have a Todo object with title, completed, and dueDate fields. How do I get a working API locally?",
+      "expected_output": "Runs the server with os dev (Todo in objectstack.config), proxies /api from Vite, hands ObjectStackAdapter the origin ''; no MSW.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "os dev",
+          "proxy",
+          "objectstack.config"
+        ],
+        "must_not_contain": [
+          "enableBrowser",
+          "setupWorker",
+          "baseUrl: '/api/v1"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "prompt": "My ObjectUI table shows 'undefined' for all rows. The dataSource.find() call returns data correctly in the console. What's wrong? The app's source is not in this directory: answer from what is stated here.",
+      "expected_output": "Diagnoses likely bind path mismatch or missing SchemaRendererProvider. Shows correct data flow: provider → bind → useDataScope resolution.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "bind",
+          "useDataScope",
+          "SchemaRendererProvider"
+        ],
+        "must_not_contain": []
+      }
+    }
+  ]
+}

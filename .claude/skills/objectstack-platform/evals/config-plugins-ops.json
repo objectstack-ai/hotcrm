@@ -1,0 +1,399 @@
+{
+  "skill_name": "objectstack-platform",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write `objectstack.config.ts` for our CRM app: objects, views and flows under src/, namespace `crm`, protocol 18. None of the project's files are in this directory: write the file in your answer.",
+      "expected_output": "`defineStack` with a `manifest` of `id`, `version`, `type: 'app'`, `name`, `namespace: 'crm'`, `engines: { protocol: '^18' }`; barrel imports, `objects: Object.values(objects)` (likewise `views` / `flows`); prefixed object names (`crm_account`), no object-level `namespace`, no `tableName`; no driver in `plugins:` (the CLI resolves it); no `workflows` / `approvals` keys (refused).",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "defineStack",
+          "manifest",
+          "engines",
+          "Object.values("
+        ],
+        "must_not_contain": [
+          "workflows:",
+          "approvals:",
+          "tableName:"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "prompt": "Build a plugin registering an `audit` service that records every metadata reload and every `task` insert.",
+      "expected_output": "A `Plugin` with `name`, `init(ctx)` calling `ctx.registerService('audit', ...)` and `ctx.hook('metadata:reloaded', ...)`, `start(ctx)`, `destroy()`. Record events are not kernel hooks — a `data:*` kernel hook registers and never fires — so the task insert is a data hook (objectstack-data). No install / enable / disable hooks.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "registerService",
+          "ctx.hook(",
+          "metadata:reloaded",
+          "init(",
+          "destroy"
+        ],
+        "must_not_contain": [
+          "data:beforeInsert",
+          "onInstall"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "prompt": "Our scheduled flows never launch, and `notify` reports success but nobody receives anything. The project's `objectstack.config.ts` is not in this directory: answer with what to check and change in it.",
+      "expected_output": "`requires: ['automation', 'triggers']` on the stack root: `triggers` arms the start bindings, and schedule and time-relative ones run on the `job` service. `job` and `messaging` are always-on: a default boot mounts both, listed or not. Only a `--preset minimal` boot drops them; there, list `job` too (else scheduled flows stay silent) and `messaging` (else notify returns success with `skipped: true`). Declaring is a demand (missing provider = hard boot error); `defineStack` rejects an unknown token at authoring time.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "requires",
+          "triggers",
+          "--preset minimal"
+        ],
+        "must_not_contain": [
+          "plugins: [new ServiceJobPlugin",
+          "@objectstack/adapter-"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "prompt": "We deploy on Vercel serverless functions in our own Hono app; mount the ObjectStack API under /api.",
+      "expected_output": "`createHonoApp({ kernel })` from `@objectstack/hono` (prefix defaults to `/api`) in the host app — `HonoServerPlugin` only when ObjectStack owns the server; `LiteKernel` for a cold-start-sensitive host; `/auth/*` follows the auth `basePath`, not `prefix`; no `adapter-*` packages exist.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "createHonoApp",
+          "@objectstack/hono",
+          "LiteKernel"
+        ],
+        "must_not_contain": [
+          "@objectstack/adapter-",
+          "HonoServerPlugin("
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "prompt": "I changed field types on an object with production data. Show me what the database needs, verify the metadata and give me a quality score. None of the project's files are in this directory: answer with the commands to run.",
+      "expected_output": "`os migrate plan` previews the drift, `os migrate apply` (`--allow-destructive` for type changes / drops) reconciles, then `os validate` and `os lint --score`; not done until `os validate` passes, which `os lint` does not replace.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "os migrate plan",
+          "os migrate apply",
+          "os validate",
+          "os lint"
+        ],
+        "must_not_contain": [
+          "os rollback",
+          "os data seed"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "prompt": "Plan the production deployment: Docker on Kubernetes behind nginx, PostgreSQL.",
+      "expected_output": "`os start` as the entrypoint, `PORT` pinned (production fails loudly on a busy port), `driver-sql` by database URL (no `DriverPlugin` in `plugins:`), TLS on the proxy, app on an internal port, `OS_AUTH_URL` / `OS_TRUSTED_ORIGINS` / app `hostname` in sync; health: `GET /health`, `GET /ready`.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "os start",
+          "PORT",
+          "OS_TRUSTED_ORIGINS",
+          "driver-sql"
+        ],
+        "must_not_contain": [
+          "new DriverPlugin",
+          "@objectstack/plugin-prometheus"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "prompt": "Prepare a demo of our contracts app: the seed assigns matters to 'Legal Counsel 1' and 'Paralegal 1', and the demo opens signed in as Legal Counsel 1. None of the project's files are in this directory: write the configuration in your answer.",
+      "expected_output": "Both go in `demoStaff` — `name` as the seed references them, `email`, a `position` / `permissionSets` the stack declares — and `os dev` creates the accounts with the seed password: no `password` key, no `role` alias, no platform set, no hand-written `sys_user` seed row. `devLogins` creates nothing (at most a banner entry); `os build` drops `demoStaff`; production creates no demo account.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "demoStaff",
+          "position",
+          "permissionSets",
+          "os dev"
+        ],
+        "must_not_contain": [
+          "role:",
+          "admin_full_access"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "prompt": "In the contracts demo Paralegal 1 reports to Legal Counsel 1; the approval flow's manager step must reach the right person on a fresh `os dev`. None of the project's files are in this directory: write the configuration in your answer.",
+      "expected_output": "On Paralegal 1's `demoStaff` entry, `manager: 'counsel1@example.com'` — Legal Counsel 1's entry `email`, never the display name — and nothing else: `os dev` writes `sys_user.manager_id` once every demo account exists. No seed row or hook writing `manager_id`, no `reportsTo` / `managerEmail` alias (refused); a manager naming no entry, itself or a loop is refused at load.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "demoStaff",
+          "manager: '",
+          "os dev"
+        ],
+        "must_not_contain": [
+          "manager_id:",
+          "reportsTo:"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "prompt": "Add a `crm_support_intake` queue staffed by the `crm_service_agent` position and route every new `crm_case` into it (`requires: ['automation', 'triggers']`).",
+      "expected_output": "Two stack collections: `queues: [defineQueue({ name: 'crm_support_intake', label: 'Support Intake', members: [{ type: 'position', value: 'crm_service_agent' }] })]` and `assignmentRules: [defineAssignmentRule(...)]` with one entry, `assignTo: { type: 'queue', value: 'crm_support_intake' }`; no `requires` change: the keys need `@objectstack/plugin-sharing`'s ownership-queue service (`queue` is the job queue), and `sharing` is always-on, so a default boot mounts it unlisted. Only under `--preset minimal` must `'sharing'` be listed, else the boot is refused.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "queues:",
+          "assignmentRules:",
+          "defineQueue",
+          "sharing",
+          "--preset minimal"
+        ],
+        "must_not_contain": [
+          "assigned_to",
+          "beforeInsert"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "prompt": "We installed HotCRM (`hotcrm`, version 3.2.0). Replace its `crm_account_grid` list view with our own columns so every read of that view serves ours, and keep the change exportable to staging.",
+      "expected_output": "The whole view, under the same name `crm_account_grid`, authored in HotCRM's paired writable package `hotcrm.custom` (which depends on `hotcrm`) with `overrides: { package: 'hotcrm', basedOn: '3.2.0' }` in its body — the base's `manifest.id` and `manifest.version`, `basedOn` recorded and never judged. Every read of the name (no `?package`, `?package=hotcrm`, the layered read, both lists) then serves it under `_packageId: 'hotcrm'`, and `GET /packages/hotcrm.custom/export` carries it with the declaration. Not an in-place edit of HotCRM's own read-only item, not a package-unbound Setup row (that path wins only until the D11 migration), not an object extension (that adds fields and replaces no view), and no declaration from any other package (ignored).",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "hotcrm.custom",
+          "overrides:",
+          "package: 'hotcrm'",
+          "basedOn"
+        ],
+        "must_not_contain": [
+          "PUT /api/v1/meta/view/crm_account_grid",
+          "PUT /meta/view/crm_account_grid"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "prompt": "Our partner package `com.acme.crm_addon` depends on `hotcrm` and wants to ship its own `crm_account_grid` view and a narrower `crm_sales_rep` permission set. Can it override HotCRM's?",
+      "expected_output": "No. Only HotCRM's paired `hotcrm.custom` declares an override (`overrides: { package: 'hotcrm', basedOn }`); a dependent package's item under a base item's name is refused at save, publish and install, by `os validate` and `os build`, and its one fix is a new name — ship the view as `com.acme.crm_addon`'s own `acme_account_grid` and reach it through its own navigation. A permission set is never overridden by anyone, the pair included: copy `crm_sales_rep` under a new name (\"new similar\"; the clone door lands a copy of a packaged set in `hotcrm.custom` unless `package` names a writable package) and narrow the copy.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "hotcrm.custom",
+          "new name",
+          "new similar"
+        ],
+        "must_not_contain": [
+          "overrides: { package: 'hotcrm.custom'",
+          "PUT /api/v1/meta/permission/crm_sales_rep"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "prompt": "Turn on push notifications for our `os serve` deployment: our own iOS and Android apps, signed with our APNs key and our Firebase project.",
+      "expected_output": "`requires: ['push']` on the stack root (the token mounts `@objectstack/service-push`) plus a top-level `push:` key on the stack definition; no host code, no `PushServicePlugin` in `plugins:`. Their own signed apps take `transport: 'direct'`, the transport served today, with an `apns` block (`teamId`, `keyId`, `topic`, `environment`, `credentialRef`) and an `fcm` block (`projectId`, `credentialRef`). The APNs signing key and the Firebase service-account JSON stay in the secrets layer (an environment variable in the open tier) and each `credentialRef` names one: no `.p8` key, `privateKey`, `serviceAccount` or service-account JSON written inline. Not the hosted relay, which the boot refuses until its sender ships.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "requires",
+          "'push'",
+          "push:",
+          "transport: 'direct'",
+          "credentialRef"
+        ],
+        "must_not_contain": [
+          "BEGIN PRIVATE KEY",
+          "privateKey:",
+          "serviceAccount:",
+          "\"private_key\""
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "prompt": "HotCRM (`hotcrm`, 3.2.0) ships the `crm_pipeline` dataset and the `crm_sales_overview` page. Can we replace both with our own the way we replaced its `crm_account_grid` view, or is that only for views?",
+      "expected_output": "The same declaration, both types. In `hotcrm.custom`, an item of the same name and type with `overrides: { package: 'hotcrm', basedOn: '3.2.0' }` in its body replaces the base's dataset or page whole, and every read of the name serves it: a pair's declared override is served for a view, dashboard, report, email_template, translation, flow, action, page, app, dataset, doc, book or mapping. Not an edit of HotCRM's read-only item, not a package-unbound Setup row, and not an object extension (`__c` fields add to an object and replace no dataset or page).",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "hotcrm.custom",
+          "overrides:",
+          "dataset",
+          "page"
+        ],
+        "must_not_contain": [
+          "PUT /api/v1/meta/dataset/crm_pipeline",
+          "PUT /api/v1/meta/page/crm_sales_overview"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "prompt": "We overrode HotCRM's `crm_account_grid` view from `hotcrm.custom`; the customer wants HotCRM's original back. How do we undo it?",
+      "expected_output": "Remove the pair's item: `DELETE /api/v1/meta/view/crm_account_grid?package=hotcrm.custom`, the removal naming the pair. The base's own document is served again by every read of the name (no `?package`, `?package=hotcrm`, the layered read, both lists), and the pair's export no longer carries the item. Not an edit of HotCRM's item, not a rollback of the base's row (its package-less rollback is refused), and not a second override that copies the base's body into `hotcrm.custom`.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "DELETE",
+          "?package=hotcrm.custom"
+        ],
+        "must_not_contain": [
+          "/rollback",
+          "PUT /api/v1/meta/view/crm_account_grid"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "prompt": "HotCRM (`hotcrm`, 3.2.0) ships the `crm_close_deal` action on `crm_opportunity` with `requiredPermissions: ['crm_close_deal']`. The customer wants it relabelled \"Mark won\", run a different script, and usable by every sales rep, including reps without that capability. How do we change it?",
+      "expected_output": "Relabel it and change what it runs with a declared override in the paired `hotcrm.custom`: an action of the same name on the same object (`objectName: 'crm_opportunity'`) carrying `overrides: { package: 'hotcrm', basedOn: '3.2.0' }`. Its behaviour (`label`, `type`, `body`, …) replaces the base's whole, and it runs for whoever could already run the base action. It cannot widen who that is: dropping `crm_close_deal` from `requiredPermissions` is refused `403 NOT_OVERRIDABLE` (`declared_action_widens_access`), and so is turning `ai.exposed` on or `ai.requiresConfirmation` off. Give the reps the capability through their permission set instead. Moving the action to another object is refused too (`declared_package_ships_no_such_item`). Not an edit of HotCRM's read-only action and not a copy under the same name from a dependent package.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "hotcrm.custom",
+          "overrides:",
+          "requiredPermissions",
+          "declared_action_widens_access"
+        ],
+        "must_not_contain": [
+          "requiredPermissions: []",
+          "PUT /api/v1/meta/action/crm_close_deal"
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "prompt": "We run the official image on one host with a volume at /home/node/.objectstack and never set any OS_* variable. After pulling the new tag the container exits at once: OS_DATABASE_URL, OS_AUTH_SECRET and OS_SECRET_KEY are not set. Get us back up without losing the logins and the stored credentials.",
+      "expected_output": "The image presets `OS_DEPLOYMENT_DURABILITY_CHECK_ENABLED=true`, so `os start` exits before it writes a database file or a secret while any of the three is unset; set all three on the run command, never in the image. Keep the values the old container generated, read from its `/home/node/.objectstack` (`docker exec` or the volume): `OS_AUTH_SECRET` is the contents of `auth-secret`, `OS_SECRET_KEY` the contents of `dev-crypto-key`, and `OS_DATABASE_URL=file:/home/node/.objectstack/data/objectstack.db` on the kept volume (or migrate that file to a database). Fresh secrets would leave every saved credential unreadable and sign everyone out.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "auth-secret",
+          "dev-crypto-key",
+          "objectstack.db",
+          "/home/node/.objectstack"
+        ],
+        "must_not_contain": [
+          "OS_DEV_CRYPTO_KEY"
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "prompt": "I edited an object in my app locally. How do I see my change on my ObjectOS Cloud environment? None of the project's files are in this directory: answer with the commands to run.",
+      "expected_output": "Run `os deploy` from the project (`npm run deploy` in a scaffolded project, or press `d` in `os dev`). It builds, publishes `<manifest.version>-dev.<timestamp>`, installs it into your organization's only environment (or `--env <id>`, or the one `os environments switch` recorded) and waits until the environment serves it; `--no-wait` returns once the install is recorded. `os package publish` is for publishing a release version, not for this loop. On exit 1, a refusal before any write published nothing (log in with `os cloud login`, or pass `--env`); `could not build` is the environment's build failing while it keeps serving the previous build; a timeout means the install is recorded, so deploy again with a longer `--wait-timeout` or check the build in the ObjectOS Cloud console.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "os deploy"
+        ],
+        "must_not_contain": [
+          "os push"
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "prompt": "Our `os serve` app must receive customers' inbound email into mailboxes and link each message to its records. What turns that on?",
+      "expected_output": "`requires: ['mailbox']` on the stack root: the token mounts `@objectstack/service-mailbox` (inbound mail). No `MailboxServicePlugin` instance in `plugins:` and no hand-built mail objects; `defineStack` rejects an unknown token at authoring time.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "requires",
+          "'mailbox'",
+          "@objectstack/service-mailbox"
+        ],
+        "must_not_contain": [
+          "MailboxServicePlugin("
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "prompt": "Scaffold, with the CLI, an object, a flow and an AI agent for our support app.",
+      "expected_output": "`os generate object <name>` and `os generate flow <name>` scaffold the first two. There is no agent generator: `os generate agent` is retired (agents are platform-internal, ADR-0063 §2), so the AI extension is a skill, `os generate skill <name>`. No hand-written `defineAgent` file.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "os generate object",
+          "os generate flow",
+          "os generate skill"
+        ],
+        "must_not_contain": [
+          "defineAgent("
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "prompt": "Uploads and settings must work in our app. Do I have to list `storage` and `settings` in `requires:`?",
+      "expected_output": "No. `storage` and `settings` are always-on (`PLATFORM_ALWAYS_ON_CAPABILITIES`): every boot mounts them, listed or not, and listing one is harmless. Only `--preset minimal` drops the always-on tokens, and there they must be listed. A token outside that set, such as `automation` or `mailbox`, mounts only when `requires:` lists it.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "--preset minimal"
+        ],
+        "must_not_contain": [
+          "requires: ['storage', 'settings']"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "prompt": "We run ObjectStack's Docker image on our own server at https://objectos.example.com. How do I deploy my app there from the project without typing its URL and key every time? None of the project's files are in this directory: answer with the commands to run.",
+      "expected_output": "Remember the runtime once: `os environments use-runtime https://objectos.example.com --token <key>`, with an API key that runtime issued. The key is tried on the runtime before anything is recorded (`--no-verify` skips that), then kept in `~/.objectstack/cloud.json` (0600), across cloud login and logout. From then on `os deploy` (or `d` in `os dev`) deploys there: it builds, prints the runtime's dry-run upgrade plan, installs the build inline, and reports it live when the runtime answers `hotLoaded`; `--confirm-access-upgrade <token>` confirms the access findings a refusal printed. `os package install` falls back to that runtime when `-u` is not given. `os environments use-runtime --forget` or `os environments switch <id>` makes ObjectOS Cloud the target again.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "os environments use-runtime",
+          "--token"
+        ],
+        "must_not_contain": [
+          "os deploy --url"
+        ]
+      }
+    },
+    {
+      "id": 22,
+      "prompt": "Connect Claude Code to our ObjectOS Cloud environment's MCP server, and to my local `os dev` server too.",
+      "expected_output": "Run `os mcp connect`: it runs `claude mcp add --transport http <name> <url>` for the environment `os deploy` would pick on ObjectOS Cloud (`--env <id>`, else the active one, else your organization's only one), named after that environment. For the local server, `os mcp connect --url http://localhost:3000` registers it as `objectstack`. `--name` overrides the name; `--print` prints the endpoint and the line and runs nothing, which is how to connect another client. No token is stored: in Claude Code run `/mcp` and authenticate, and the server's own sign-in and consent open in the browser.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "os mcp connect",
+          "--url"
+        ],
+        "must_not_contain": [
+          "--client cursor"
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "prompt": "On our self-hosted `os serve` deployment, every MCP `run_action` call on an action declaring `ai.requiresConfirmation: true` is refused 428 with `details.reason: 'no_confirmation_service'`. We want our people to approve these calls in our app. What do we build?",
+      "expected_output": "The open build ships no pending-confirmation service, so the `mcp` door refuses a gated call instead of running it on the caller's word. Write a plugin that registers an `IActionConfirmationService` (`@objectstack/spec/contracts`) under the service name `'ai.actionConfirmation'` (the `ACTION_CONFIRMATION_SERVICE` constant): `ctx.registerService('ai.actionConfirmation', service)` in `init`. Its `submit(handOff, context)` records the call for the person it ran as, notifies them and returns `{ pendingId }`. The door then answers `status: 'pending_confirmation'` with that `pendingId`, and nothing runs until that person approves it in the app, which your service owns. Not a `confirm` sent by the client: `run_action` and `resume_run` refuse any call that carries it. An AI service account stays refused (`details.reason: 'service_account'`) and is never handed off; a stdio client that advertised `elicitation` is asked in the client instead, and its `declined`, `cancelled` or `timed_out` answer refuses the call.",
+      "files": [],
+      "assertions": {
+        "must_contain": [
+          "IActionConfirmationService",
+          "ai.actionConfirmation",
+          "pending_confirmation",
+          "pendingId"
+        ],
+        "must_not_contain": [
+          "recordId, confirm: true"
+        ]
+      }
+    }
+  ]
+}

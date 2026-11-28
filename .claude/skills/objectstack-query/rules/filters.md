@@ -1,0 +1,208 @@
+# Filter Rules
+
+Every block below is a `where` fragment, so `check:skill-examples` skips it.
+
+## Operator Reference
+
+| Category | Operator | SQL Equivalent | Example |
+|:---------|:---------|:---------------|:--------|
+| Equality | `$eq` | `=` | `{ status: { $eq: 'active' } }` |
+| Equality | `$ne` | `<>` | `{ status: { $ne: 'deleted' } }` |
+| Comparison | `$gt` | `>` | `{ age: { $gt: 18 } }` |
+| Comparison | `$gte` | `>=` | `{ amount: { $gte: 100 } }` |
+| Comparison | `$lt` | `<` | `{ price: { $lt: 50 } }` |
+| Comparison | `$lte` | `<=` | `{ score: { $lte: 100 } }` |
+| Set | `$in` | `IN (...)` | `{ status: { $in: ['active', 'pending'] } }` |
+| Set | `$nin` | `NOT IN (...)` | `{ role: { $nin: ['guest'] } }` |
+| Range | `$between` | `BETWEEN ? AND ?` | `{ age: { $between: [18, 65] } }` |
+| String | `$contains` | `LIKE %?%` | `{ name: { $contains: 'john' } }` |
+| String | `$notContains` | `NOT LIKE %?%` | `{ email: { $notContains: 'spam' } }` |
+| String | `$startsWith` | `LIKE ?%` | `{ code: { $startsWith: 'PRJ-' } }` |
+| String | `$endsWith` | `LIKE %?` | `{ file: { $endsWith: '.pdf' } }` |
+| String | `$icontains` | `LIKE %?%`, case-blind | `{ name: { $icontains: 'john' } }` |
+| String | `$like` | `LIKE ?` — caller binds `%` / `_` | `{ code: { $like: 'PRJ-%-26' } }` |
+| String | `$ilike` | `$like`, case-blind | `{ code: { $ilike: 'prj-%' } }` |
+| Null | `$null` | `IS NULL` / `IS NOT NULL` | `{ deleted_at: { $null: true } }` |
+| Null | `$exists` | `IS NOT NULL` / `IS NULL` | `{ metadata: { $exists: true } }` |
+| Null | `$empty` | `IS NULL`, `''` or `[]` by type | `{ notes: { $empty: true } }` |
+
+Case sensitivity: SKILL.md, **String Operators**. `$like`/`$ilike` match the
+WHOLE value, so a pattern with no wildcard is an exact comparison, not
+a substring search. Their reach is narrower than the rest of the table: the SQL
+family, `driver-memory` and `@objectstack/formula` answer them, while
+`driver-mongodb`, objectql `having` and service-analytics each keep an operator
+allowlist that omits them and refuse — `Unsupported filter operator`,
+`INVALID_FILTER` / 400 — rather than approximating. A pattern ending in a lone
+unpaired backslash is refused by every face.
+
+## Field References
+
+> ✅ **Enforced.** `{ $field: '...' }` compares two columns of the same row.
+> The in-memory evaluator resolves the reference against the record; the SQL
+> driver pushes it down as a column-to-column predicate. Same rows either way.
+
+```typescript
+// ✅ Projects that ran over budget
+where: {
+  actual_cost: { $gt: { $field: 'budget' } }
+}
+```
+
+Legal in a **comparison** position only. As an `$in` / `$nin` member or a
+`$between` endpoint it is refused at parse — no evaluation path resolves a
+reference there.
+
+## Now-Anchored Comparands
+
+> ✅ **Enforced.** `{ $now: true, addDays: OFFSET }` is the instant the query
+> runs at, shifted by whole days — legal exactly where a `{ $field }` reference
+> is: the whole comparand of `$eq` / `$ne` / `$gt` / `$gte` / `$lt` / `$lte` on
+> a `date` or `datetime` field. The engine pins `$now` to ONE instant per query.
+
+```typescript
+// ✅ Overdue by each record's own grace period: due_at < now + grace_days_offset,
+//    the number field holding the grace period as NEGATIVE days
+where: {
+  due_at: { $lt: { $now: true, addDays: { $field: 'grace_days_offset' } } }
+}
+```
+
+`addDays` is **required** and always ADDED: an integer of any sign (`-30`
+is thirty days ago keeping the time of day, where `{30_days_ago}` names a
+calendar day; for the bare instant write `{now}`), or a `{ $field }` naming
+a **number** field of the same record (NULL counts as zero days). The filter
+cannot negate a positive `grace_days` column: store the signed offset. Refused
+with `INVALID_FILTER` / 400: an anchor without `addDays`, a fractional or
+string offset, any extra key (there is no `subDays`), a target that is not
+`date` / `datetime`, and any `$in` / `$nin` / `$between` position; SQL
+push-down also refuses a dotted or non-number offset field. The filter alone
+answers it — not a stored formula field plus a hook.
+
+## Relation Filters
+
+A condition on a related record's fields beneath a relation field (`lookup`,
+`master_detail`, `user`, `tree`) is served in `where`: the engine reads the
+related object with it **as the caller**, then matches the field against the
+ids it returns (`$in`; any member when `multiple: true`).
+
+```typescript
+// ✅ Orders whose customer is in the US
+where: { customer: { country: 'US' } }
+```
+
+Limits — one level: every key a field the related object declares, no relation
+or dotted key inside; forward only: never a parent by its children; `where`
+only: an aggregation's `filter` and `having` refuse it, `INVALID_FILTER` / 400;
+at most 1000 related ids, refused past that, `INVALID_FILTER` / 400, never
+truncated; as the caller: the related object's row scope and field permissions
+apply, so a field the caller cannot read is refused, `PERMISSION_DENIED` / 403,
+never an empty result. Past the cap, run the two steps yourself — filter the
+related object, then `$in` its ids:
+
+```typescript
+const us = await engine.find('customer', { where: { country: 'US' }, fields: ['id'] });
+where: { customer: { $in: us.map((c) => c.id) } }
+```
+
+On a `multiple: true` lookup match each id with `$contains` (an `$or` of those
+for several); the SQL driver refuses `$in` there. A parent by its children's
+fields is the same two steps reversed: query the child with the condition and
+`fields: [the lookup]`, then `{ id: { $in: … } }` on the parent.
+
+## Common Mistakes
+
+### ❌ Wrong: expecting sibling keys to be an OR
+
+`where: { role: 'admin', status: 'active' }` is an AND — sibling keys always
+are. For OR, wrap them in a `$or` array (SKILL.md, **Logical Operators**).
+
+### ❌ Wrong: Using string operators on non-string fields
+
+`{ age: { $contains: '25' } }` — the string operators are declared on strings
+only; use the comparison operators for numbers and dates.
+
+### ⚠️ A column with no value fails every ordering test
+
+`$gt` / `$gte` / `$lt` / `$lte` / `$between` never match a row whose column is
+null or absent — in `where`, an aggregation's `filter` and `having` alike. So
+`{ amount: { $lte: 0 } }` skips the rows with no amount; to keep them, say so:
+
+```typescript
+where: { $or: [{ amount: { $lte: 0 } }, { amount: { $null: true } }] }
+```
+
+State absence with `$null`: `null` is not an ordering comparand
+(`{ $gte: null }` is refused, `INVALID_FILTER` / 400), and a bare
+`{ deleted_at: null }` lowers to `IS NULL` but has no `IS NOT NULL` spelling.
+
+## Date Filtering Patterns
+
+For **ad-hoc queries in application code**, compute the date yourself:
+
+```typescript
+where: {
+  created_at: { $gte: new Date('2025-01-01') }
+}
+```
+
+### Date Macros (declarative filter metadata)
+
+Filters that travel as JSON metadata — list views, dashboards, reports,
+pages — cannot run code, so they use **date macro tokens** instead
+(defined in `@objectstack/spec` `data/date-macros.zod.ts`):
+
+```typescript
+// List-view / dashboard filter values
+where: {
+  signal_at:    { $gte: '{30_days_ago}' },
+  published_at: { $gte: '{last_quarter_start}' }
+}
+```
+
+- **Fixed tokens:** `{today}`, `{yesterday}`, `{tomorrow}`, `{now}`, plus
+  period boundaries like `{current_month_start}`, `{last_quarter_end}`,
+  `{next_year_start}` (and bare aliases like `{month_start}`).
+- **Parameterised tokens:** `{N_<unit>_ago}` / `{N_<unit>_from_now}` with
+  units `minute|hour|day|week|month|year` — e.g. `{2_weeks_from_now}`.
+- **Both spellings parse:** `{today}` and `${today}` are the same token
+  (`DATE_MACRO_WRAPPED_RE` is `/^\$?\{([a-zA-Z0-9_]+)\}$/`, and the context
+  tokens share it).
+
+**Session tokens:** the same value positions accept `{current_user_id}` and
+`{current_org_id}` (defined in `data/context-tokens.zod.ts`) — the signed-in
+user's id and the active organization id.
+
+```typescript
+where: { owner_id: '{current_user_id}', close_date: { $gte: '{current_year_start}' } }
+```
+
+**Scope:** tokens expand on **both** sides of the wire — client-side by
+`resolveDateMacros()` / `resolveContextTokens()` in `@object-ui/core`,
+server-side by `resolveFilterTokens()` in `@objectstack/core`, wired into the
+ObjectQL read AND write paths (`find`/`findOne`/`count`/`aggregate`/`update`/
+`delete`) plus the analytics dataset executor. The driver only ever sees ISO
+strings and concrete ids. So use tokens in a hand-issued engine query too:
+computing "today" at module load freezes the date into the built artifact.
+
+A **flow node's** `config.filter` takes these tokens too. What a dropped
+condition does there is a flow rule, not a query rule
+(**objectstack-automation**): it *widens* the query, so `get_record` /
+`update_record` / `delete_record` refuse the step instead of running it. Any
+other `{…}` token there is refused (`expression-invalid`), naming its CEL
+value envelope.
+
+**Unknown tokens are rejected, not ignored.** Outside a flow, a whole-`{...}`
+value is a placeholder by construction: `objectstack build` fails it (rule
+`filter-token-unknown`) and the resolver throws — because an unresolved token
+reaches SQL as a **literal**, matches nothing, and renders a widget showing 0,
+indistinguishable from "there is no data". Near-misses, not tokens:
+`{current_user}` (the RLS expression root), `{this_quarter_start}`, `{user_id}`
+(a real `titleFormat` interpolation) and `{organization_id}` (the column name);
+the error names the correction. A value that merely *contains* braces is left
+untouched — `'user-{current_user_id}'` is a literal. Check a spelling with
+`isDateMacroToken(tok)` / `isContextToken(tok)` from `@objectstack/spec/data`,
+WITHOUT braces.
+
+**`*_end` is a calendar DAY; an upper bound means the WHOLE day.**
+`<= {current_year_end}` already reaches the final instant of Dec 31
+(`calendar-day.ts`, ADR-0053 D-D): ⛔ Do NOT hand-write `< {next_year_start}`.

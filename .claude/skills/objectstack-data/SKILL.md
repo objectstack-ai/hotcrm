@@ -1,0 +1,472 @@
+---
+name: objectstack-data
+description: >
+  Design ObjectStack data schemas — objects, fields, relationships,
+  validations, indexes, hooks, security, seeds and datasources. Use when the
+  user is creating or modifying `*.object.ts` files or `src/data/*.ts` seed
+  modules, picking field types, modelling relationships, writing
+  `beforeInsert`/`afterUpdate` hooks, configuring per-object access control,
+  pointing an object at an existing external database, or authoring bootstrap
+  / demo data. Use for `visibleWhen` / `readonlyWhen` / `requiredWhen` rules
+  that belong on fields. Do not use for querying data (see objectstack-query)
+  or for plugin / kernel hooks (see objectstack-platform). CEL expressions:
+  load objectstack-formula alongside.
+license: Apache-2.0
+compatibility: Requires @objectstack/spec 18.x (Zod v4 schemas)
+metadata:
+  author: objectstack-ai
+  version: "18.6.0"
+  domain: data
+  tags: object, field, validation, index, relationship, hook, schema, permission, rls, security, seed, fixture
+---
+
+# Data Modeling — ObjectStack Data Protocol
+
+## Skill Boundaries
+
+| Need | Use instead |
+|:-----|:------------|
+| Query, filter, or aggregate records | **objectstack-query** |
+| Define REST API endpoints or auth | **objectstack-api** |
+| Build views, dashboards, or apps | **objectstack-ui** |
+| Create a plugin or register services | **objectstack-platform** |
+
+---
+
+## Quick Reference — Detailed Rules
+
+- **[Naming Conventions](./rules/naming.md)** — snake_case rules, option values, config properties
+- **[Field Types](./rules/field-types.md)** — All field types and configs
+- **[Relationships](./rules/relationships.md)** — lookup vs master_detail, junction patterns, delete behaviors
+- **[Validation Rules](./rules/validation.md)** — All validation types, script inversion, severity levels
+- **[Index Strategy](./rules/indexing.md)** — btree/gin/gist/fulltext, composite indexes, partial indexes
+- **[Data Lifecycle & Retention](./rules/lifecycle.md)** — `lifecycle` classes (record/audit/telemetry/transient/event), retention/TTL/rotation/archive policies; ❗ append-only objects must declare one (distinct from lifecycle *hooks* below); plus the **save notice** a hook hands the saver (`ctx.notice`)
+- **[Lifecycle Hooks](./references/data-hooks.md)** — the lifecycle events, the sandboxed `body` (ctx + capability contract; the inline `handler` is deprecated), registration, canonical patterns
+- **[Datasources & Federation](./rules/datasources.md)** — `defineDatasource`, external/federated objects (`remoteName`/`columnMap`), auto-connect gating, credentials; ❌ no `field.columnName` on external objects
+- **[Security & Access Control](./rules/security.md)** — permission sets, assignment rows, RLS policies, `secret` / `requiredPermissions`, `tenancy`, platform-global posture
+- **[Quick-Start Template](./references/examples-objects.md#quick-start-template)** — one complete object: fields, `sharingModel`, `enable`, validations
+- **[Metadata Protection](./references/examples-objects.md#metadata-protection-protection)** — the `protection` block that locks shipped metadata against edits and deletes
+- **[Seed Data & Fixtures](./references/seeds.md)** — `defineSeed()`, import modes, `externalId`, relationship references, CEL values
+- **[Linting & Generation Quality](./references/lint-rules.md)** — the `os lint` data-model rules and severities
+
+---
+
+## Core Concepts
+
+### Object Definition
+
+An **Object** is the fundamental data entity in ObjectStack. It maps to a
+database table and exposes automatic CRUD APIs.
+
+**Required properties:**
+
+| Property | Type   | Convention | Description |
+|:---------|:-------|:-----------|:------------|
+| `name`   | string | `snake_case` | Immutable machine identifier (`/^[a-z_][a-z0-9_]*$/`) |
+| `fields` | map    | keys in `snake_case` | Field definitions |
+| `sharingModel` | enum | one of the four below | Org-wide default record visibility (OWD). Zod marks it optional, but **a publish with no authored `sharingModel` is refused** with the 422 lint envelope `security-owd-unset` — absence is not a decision. Author it on every object |
+
+**`sharingModel` — the four canonical values** (ADR-0090 D4; legacy aliases
+removed). A *custom* object that omits it resolves to `private` at runtime, but
+the publish door rejects it before that:
+
+| Value | Who can read / write |
+|:--|:--|
+| `private` | owner only (widen with sharing rules, RLS, or `readScope`/`writeScope`) |
+| `public_read` | everyone reads; the owner writes |
+| `public_read_write` | everyone reads and writes |
+| `controlled_by_parent` | inherited from the master record (`master_detail` children); a row with no (optional) master is its owner's |
+
+Choose the posture from the request, not by habit: a business object a team
+shares is `public_read_write` (`private` would hide every colleague's records
+from everyone else); `private` fits personal or sensitive data only its owner
+should see (HR reviews, pay, personal notes); `public_read` fits reference data
+everyone reads and the owner maintains (price lists, policies, notices). This
+axis is distinct from `ownership`, which decides whether `owner_id` exists at
+all (Relationship Patterns below).
+
+**Important optional properties:**
+
+| Property | Default | Description |
+|:---------|:--------|:------------|
+| `label` | Auto from `name` | Human-readable singular label |
+| `pluralLabel` | — | Plural form (e.g., "Accounts") — on 31/31 objects in the reference apps; author it alongside `label` |
+| `icon` | — | Icon name for nav, list headers and lookup pickers — on 31/31 objects in the reference apps |
+| `highlightFields` | derived | Ordered field keys used as a record's compact face: the columns a **related list** renders on the parent's detail page, and what a lookup picker shows. Declare it on the CHILD object (see [Relationships](./rules/relationships.md)) |
+| `namespace` | — | **Not a schema key** — `ObjectSchema.create()` rejects unknown keys, so authoring it is a build error. Embed the prefix directly in `name` instead (e.g. `name: 'crm_account'`) |
+| `datasource` | `'default'` | Target datasource ID for virtualized data |
+| `nameField` | derived (e.g. `'name'`/`'title'`) | **Canonical** record-title field — the stored field used as the record's display name. Use a single text/email field; a composite title to import, sort or search by is a stored computed field (a non-`formula` field with an `expression`); a text formula is display-only |
+| `displayNameField` | — | **Deprecated** alias for `nameField` (still honored as a fallback) |
+| `titleFormat` | — | **Refused (ADR-0079)**: a save and `os validate` refuse it (`title-format-retired`). Move it to `nameField`; a composite title follows the `nameField` row |
+| `enable` | — | Capability flags (trackHistory, searchable, apiEnabled, etc.) |
+| `fieldGroups` | — | Ordered list of logical field groups for forms/detail pages (see [Field Groups](./references/examples-objects.md#field-groups-mvp)) |
+| `lifecycle` | `record` semantics (permanent) | Data retention/rotation/archival contract. **Required for append-only, high-write-rate objects** (see [Data Lifecycle & Retention](./rules/lifecycle.md)) |
+
+### Object Capabilities (`enable`)
+
+| Flag | Default | Purpose |
+|:-----|:--------|:--------|
+| `trackHistory` | `false` | Field-level audit trail |
+| `searchable` | `true` | Index records for global search |
+| `apiEnabled` | `true` | Expose via automatic REST + MCP APIs |
+| `apiMethods` | all | Whitelist over the six primitives (`get`, `list`, `create`, `update`, `delete`, `bulk`); derived verbs (search/export/upsert/…) follow automatically |
+| `files` | `false` | Attachments & document management |
+| `feeds` | `true` | Social feed, comments, mentions — **opt-out**: explicit `false` hides the feed UI and rejects new comments |
+| `activities` | `true` | Activity timeline (`sys_activity` mirror of CRUD) — **opt-out**: explicit `false` stops mirroring and hides the timeline |
+| `clone` | `true` | Record deep cloning |
+| `aiReadable` | — | Platform `sys_*` objects only (not `sys_metadata`, `sys_metadata_history`): read-only AI access (query, get, aggregate, describe, list; no write). App objects never declare it, `false` included: refused at parse |
+
+---
+
+## Search Fields (`searchableFields`)
+
+`searchableFields` on the object is the canonical set `$search` scans.
+Leave it unset and search auto-defaults to the `nameField` plus the object's
+short-text and enum columns (`text` / `email` / `phone` / `url` / `autonumber` /
+`textarea` / `markdown` / `select`) plus every field marked `searchable: true`,
+of any type except `secret` / `password` / `vector` or a virtual `formula`. `searchable: false`, the
+default, never removes a field the type default scans; declare
+`searchableFields` to choose the set. Views may narrow it, never widen it.
+
+### ⛔ Searching by a related record's title — mirror the value, always
+
+`$search` scans **the queried object's own columns**. A dotted path is never a
+search target: unlike `fields` / `sort` / `filters`, the search axis does not
+resolve traversal, and `project_id.name` in `searchableFields` (or in a
+`$searchFields` override) is **refused** (`os validate`
+`searchable-field-unknown`; a request, `400 INVALID_FIELD`), not silently dropped.
+
+**This is the one prescription — emit it every time.** To search by a related
+record's title, copy that title into a **stored field on this object** and
+declare *that* field searchable. A task list searched by project name:
+
+```typescript
+// `project_name` is a stored, denormalized mirror of the parent's title.
+{
+  name: 'task',
+  enable: { searchable: true },
+  fields: {
+    name:         { type: 'text', required: true },
+    project_id:   { type: 'lookup', reference: 'project' },
+    project_name: { type: 'text', label: 'Project Name' },
+  },
+  searchableFields: ['name', 'project_name'],
+}
+```
+
+`?search=apollo` expands to `name $contains 'apollo' OR project_name $contains
+'apollo'` — one single-table scan, every driver.
+
+❌ **Never mirror onto a `formula` field.** It is *virtual* (no column to scan)
+and CEL reads only this record's own fields, so it cannot hold the related title;
+a `formula` entry in any `searchableFields` is refused — `os validate`
+`searchable-field-unsearchable`, a request `400 INVALID_FIELD`.
+
+**Mirror maintenance is the trade-off** — a mirror is only as fresh as whatever
+writes it. Cover both paths: a `beforeInsert` / `beforeUpdate` hook on `task`
+stamps `project_name` from the incoming `project_id`'s parent; an `afterUpdate`
+hook on `project` re-stamps its tasks when it is renamed. Rows written past the hooks (bulk import, direct SQL) need a
+one-off backfill. See [Lifecycle Hooks](./references/data-hooks.md).
+
+---
+
+## Conditional Field Rules
+
+Put conditional UI/data-entry rules on the **field definition** when the rule
+belongs to the data model and should apply everywhere the field is edited:
+default forms, Studio-authored forms, inline master-detail grids, public forms,
+and API-backed writes.
+
+<!-- os:check -->
+```typescript
+import { P } from '@objectstack/spec';
+import { ObjectSchema, Field } from '@objectstack/spec/data';
+
+export const Invoice = ObjectSchema.create({
+  name: 'invoice',
+  sharingModel: 'public_read_write',
+  fields: {
+    status: Field.select({
+      options: [
+        { label: 'Draft', value: 'draft' },
+        { label: 'Sent', value: 'sent' },
+        { label: 'Paid', value: 'paid' },
+        { label: 'Void', value: 'void' },
+      ],
+    }),
+    paid_at: Field.datetime({
+      visibleWhen: P`record.status == 'paid'`,
+      requiredWhen: P`record.status == 'paid'`,
+    }),
+    locked_total: Field.currency({
+      readonlyWhen: P`record.status == 'paid'`,
+    }),
+  },
+});
+```
+
+- Use `visibleWhen` to hide irrelevant fields in ObjectUI forms.
+- Use `readonlyWhen` for state-locked fields; the ObjectQL write path ignores
+  incoming changes when the predicate is `TRUE` (for everyone; per permission
+  set → field permission `when`, rules/security.md).
+- **`readonly: true` governs the end-user surface, not trusted system writers.**
+  A non-system write (REST/UI, and any `runAs:'user'` flow) has
+  the field **stripped**; the write reports
+  success but the value never lands. System-context writes —
+  `runAs:'system'` flows, system hooks, seeds, imports, migrations — are exempt
+  and DO write it. Keep the field `readonly` when automation maintains it; the
+  flow side: [objectstack-automation → Failure routing & `runAs`](../objectstack-automation/SKILL.md#failure-routing--runas).
+- Use `requiredWhen` for conditional requiredness; the ObjectQL validator
+  enforces it on submit. The `conditionalRequired` alias was REMOVED in
+  protocol 17 — emitting it is a parse error.
+- **Choose by intent — invariant or transition gate.** A fact true of *every
+  stored record* is an invariant: a `validations[]` `script` rule. A row that
+  violates it is refused on any edit until repaired. A *transition* condition
+  ("required once the record reaches `paid`") is `requiredWhen` / field bounds,
+  which judge the write, not the stored row. "Required when X" reads like an
+  invariant and is not one; an invariant written as a gate never enforces
+  itself.
+- For inline `master_detail` grids, predicates are evaluated row-by-row against
+  the child row's `record`, so line-item rules should live on child fields.
+- For complex predicates, load **objectstack-formula** and emit CEL via
+  `P\`...\``; do not use Salesforce-style `AND`, `IN (...)`, or `{field}`
+  syntax.
+
+---
+
+## Schema evolution on an existing database
+
+The metadata→DB sync is **additive-only**: new tables/columns are created on
+boot, but existing columns are **never** altered or dropped. A non-additive
+change to an object that already has data silently diverges from the physical
+schema, and the **database column wins at write time**:
+
+| Change | Existing DB on restart |
+|--------|------------------------|
+| add object / field / index | ✅ applied automatically |
+| `storage: { notNull: true }` removed (relax `NOT NULL`) | ⚠️ **never auto-applied** — the drift is `category: 'needs_confirm'` (`relax_not_null`), so `os migrate apply` confirms it |
+| `unique` re-scoped global → per-tenant | dev auto-heals; otherwise `os migrate apply` (`replace_unique_index`) |
+| type / length change, drop field | `os migrate apply` (`--allow-destructive` for drops / tightenings) |
+| rename a field | `renamedFrom: ['old_key']` on the new key: the sync carries the column's values |
+| declared index removed, or its columns changed | `os migrate apply` (`--allow-destructive` when it drops, or rebuilds as `UNIQUE`) |
+
+**`required` is not the `NOT NULL` dial.** `required` is the
+**write contract** — the engine refuses an insert that omits the value — and it
+implies nothing about the column. The physical constraint is a separate explicit
+opt-in, `storage: { notNull: true }`, and it is what drift detection compares
+against. So tightening `required` on a deployed object is safe (existing null
+rows stay readable), while declaring `storage.notNull` over null rows is a
+destructive migration. The two cannot be combined with `requiredWhen`.
+
+Tell-tale: `/meta` reports a field optional (no `required`, no `storage.notNull`)
+but writes that omit it fail with a **raw driver error** rather than a clean
+validation 400 — that is a stale `NOT NULL` column, not a validator bug. Run
+`os migrate plan` to preview and `os migrate apply` to reconcile, or ratify the
+column by declaring `storage: { notNull: true }`. CLI details: see
+**objectstack-platform**.
+
+---
+
+## Common Patterns
+
+### Naming Rules Summary
+
+`snake_case` object names and field keys, `camelCase` schema properties,
+lowercase option values — incorrect/correct examples: [rules/naming.md](./rules/naming.md).
+
+### Field Type Selection
+
+The full table, per-type config and traps: [rules/field-types.md](./rules/field-types.md).
+From here, three to get right: credentials are `secret` (**encrypted-at-rest**, ADR-0100) —
+never `password`, which on a generic object is **plaintext at rest**; `user` is the person
+picker; `formula` takes CEL in `expression` (`F\`...\`` from `@objectstack/spec`; see
+**objectstack-formula**).
+
+- A yes/no flag (`is_*`, `has_*`, "done?", "active?") is `{ type: 'boolean', defaultValue: false }`
+  and never `required`: a checkbox always holds one of its two values, so
+  `required` can only read as "must be true", and a form that reads it that way
+  refuses the unchecked state — the one state a new record starts in. "Must be
+  accepted" (terms, a confirmation) is a `validations[]` rule, not `required`.
+  The default also lands seeded or imported rows that omit the column on a real
+  `false` instead of a null that only looks unchecked.
+- A person on the record (approver, reviewer) is `type: 'user'` with
+  no `reference`, and optional unless the request says otherwise — the platform
+  already stamps the owner and `created_by`.
+- A dynamic default (`defaultValue: 'current_user'`, `'NOW()'`, a CEL envelope)
+  resolves when the record is SAVED with the field empty. Describe it as
+  save-time; whether a create form pre-displays it is a client capability you
+  cannot promise.
+
+### Relationship Patterns
+
+| Pattern | Implementation |
+|:--------|:---------------|
+| One-to-Many (independent) | `lookup` field on child |
+| One-to-Many (owned) | `master_detail` field on child |
+| Many-to-Many (simple) | multi-value `lookup` (`multiple: true`) — an **array column** of ids |
+| Many-to-Many (with attributes) | Junction object with two `lookup` fields |
+| Hierarchical | `tree` field (self-reference) |
+| Record status / lifecycle | a `select` on the business object (plus a `state_machine` validation) — never a separate status / stage / step table |
+| Approval, review, routing, audit trail | not objects: an approval is a flow node (**objectstack-automation**) and its trail is platform history; model only the people it references (approver, reviewer), as `user` fields beside the owner |
+| Record owner | the platform's `owner_id` (`ownership: 'user'`, the default), also when the request says assignee, 负责人 or 处理人 — never a hand-added owner field, a second owner that owner-scoped visibility and "My records" views never read. A handler the request names apart from the owner is a `user` field that grants no access, with a label no other visible field carries, injected ones included: `owner_id` (Owner, 负责人), `created_by` (创建人), `updated_by` (更新人), `created_at` (创建时间), `updated_at` (更新时间). `ownership: 'none'` only for a shared catalog or a pure junction table |
+
+> **`multiple: true` lookup ≠ junction object.** A multi-value lookup is stored
+> and read as an **array of ids** on the record — reference elements positionally
+> (`{record.tags.0}` in flow values).
+
+### Validation Patterns
+
+**⚠️ Script validation is inverted:** Validation **fails** when expression is `true`.
+
+> On **insert**, an optional field omitted from the payload reads as `null` in a
+> validation predicate — so `record.due_date == null` matches an omitted field the
+> same as an explicit `null`. (On update, the prior record supplies it.)
+
+The **complete** set of types (`ValidationRuleSchema` discriminators): `script`,
+`state_machine`, `format`, `cross_field`, `json_schema`, `conditional`.
+
+A `state_machine` rule also declares `initialStates` whenever the status has a
+real starting point — without it a record can be created already `approved` /
+`paid` and walk past the process. List only the genuine entry states (usually
+one: `draft` / `pending` / `new`), never a terminal one; keys and values are
+option `value`s, never labels.
+
+> **There is NO `unique` validation type** — uniqueness is a unique **index**
+> with its scope ([rules/validation.md § Uniqueness](./rules/validation.md#uniqueness--use-unique-indexes)).
+
+### Index Patterns
+
+**The whole declaration surface is `fields` / `unique` / `name`.** `unique`
+defaults to `false`; omit it when that is what you mean.
+
+```typescript
+indexes: [
+  { fields: ['status', 'created_at'] },                // composite
+  { fields: ['email'], unique: 'organization' },       // unique per organization
+  { fields: ['hostname'], unique: 'global' },          // unique platform-wide
+  { name: 'idx_acct_status', fields: ['status'] },     // custom name
+]
+```
+
+See [rules/indexing.md](./rules/indexing.md) for composite indexes, unique scope
+(on a declared index bare `unique: true` is refused), the retired `type` / `partial`, and partial / gin / gist indexes at the
+database layer.
+
+---
+
+## Object Extension Model
+
+To add fields/validations/indexes to an object you do not own, author
+`defineObjectExtension({ extend, fields, fieldPatches, priority })` and register it on
+`defineStack({ objectExtensions: [...] })`. `priority` sets merge order (default
+`200`, range `0–999`); an extension can add but never remove, except that a new
+`label` without `pluralLabel` clears the base plural unless a tenant authored it (set both). ⛔ Not the same key
+as object-level `ownership` (the record-ownership enum
+`'user' | 'business_unit' | 'org' | 'none'`).
+
+**Relabel a field the owner declares with `fieldPatches` — never by redeclaring
+it in `fields`**, which takes the field over whole and cuts it off from the
+owner's upgrades. A patch carries display keys only:
+`label`, `description`, `inlineHelpText`,
+`placeholder`, and an option's `label` keyed by its stored `value`; the type,
+values and rules stay the owner's. A key the tenant edited keeps the tenant's
+text; between two extensions the higher `priority` wins. A patch naming a field
+or option value the target lacks is refused at install and by `os validate`, and
+a `picklist`-bound field's options are never patchable. Example:
+`defineObjectExtension({ extend: 'crm_account', fieldPatches: { industry: { label: 'Sector' }, type: { options: { customer: { label: 'Client' } } } } })`.
+Translate patched text in the patching package's `translations`, under the
+owner's keys (`objects.crm_account.fields.industry.label`, `.help`,
+`.options.<value>`): the owner's translation of the replaced text never applies, a
+pair `.custom` translation comes first on `/meta`, and an untranslated locale
+serves the patch text.
+
+**An object an installed package ships** is extended from the
+base's paired `.custom` package (`hotcrm.custom`; **objectstack-platform**
+§ Customizing an installed package), never replaced: it takes no `overrides`
+declaration. Every field the pair adds ends in `__c` (`region__c`). The suffix is
+reserved to the pair, so a `__c` field in any other package, or an unsuffixed
+field in a `.custom` extension, is refused at save, publish and install and by
+`os validate` / `os build`.
+Studio's **Add field** on a base object writes the same extension, as an
+`object_extension` item of the pair.
+
+---
+
+## Security & Access Control
+
+Per-object access control is authored in **permission sets**, not on the object
+schema. There is no object-level `permissions` key (and no `hooks` key either) —
+`ObjectSchema.create()` **rejects** both as unknown keys.
+
+Full rules: **[Security & Access Control](./rules/security.md)**.
+
+### Access depth (scope-depth) — the ERP "see my unit / my unit and below" axis
+
+On an owner-scoped (`private`) object, a per-object grant in a permission set may
+carry `readScope` / `writeScope` to widen the owner match declaratively instead of
+hand-writing an RLS policy (ADR-0057 D1): `own` (default) · `own_and_reports` ·
+`unit` · `unit_and_below` · `org`. It resolves at request time into an
+`owner_id IN (…)` set and AND-injects like RLS. ⚠️ Open-core boundary (ADR-0016):
+only `own` and `org` work in open source — the hierarchy-relative three need the
+paid `@objectstack/security-enterprise` plugin, **fail closed to `own`** without
+it, and `defineStack` errors unless the grant declares
+`requires: ['hierarchy-security']`.
+
+### Ownership queues — park a record for a team to claim
+
+Every `ownership: 'user'` object carries a platform-injected `queue` column
+beside `owner_id` (an object declaring its own `queue` field is refused). A
+record **sits in** a queue when `owner_id` is empty and `queue` names it: the
+queue's members read and edit it (rows widen, verbs never — no delete). Declare
+the queue on the stack; a declared queue's members are positions only, an
+organization adds users and teams through `sys_queue_member` rows:
+
+<!-- os:check -->
+```typescript
+import { defineQueue } from '@objectstack/spec/security';
+
+export const supportIntake = defineQueue({
+  name: 'crm_support_intake',   // the one name the `queue` column, a rule, an approver and a sharing recipient use
+  label: 'Support Intake',
+  members: [{ type: 'position', value: 'crm_service_agent' }],
+});
+// defineStack({ queues: [supportIntake], assignmentRules: [...] }) — routing rows in: objectstack-automation
+```
+
+**Claim** is an ordinary by-id update, `{ owner_id: <your id> }`, admitted to a
+member while the record is unowned; one writer wins, the other gets `409
+CONCURRENT_UPDATE`. **Release**: the owner writes `owner_id: null` and the record
+sits in its home queue again. **Move**: writing another `queue` is a transfer
+(`allowTransfer` or `modifyAllRecords`). ⛔ Never a per-record `assigned_to`
+picklist, a round-robin counter field, or a hook that picks an owner.
+
+---
+
+## Verify your work
+
+After authoring or editing any `*.object.ts` / `*.seed.ts`, run the author-time
+gate before reporting done:
+
+```bash
+os validate     # Zod schema + CEL predicates (record.<field> existence) + bindings
+# or: os build  # the same gates, plus emits dist/
+```
+
+It catches what otherwise surfaces only at runtime, where a bare field ref
+(`done` for `record.done`) faults: an `error` validation rule or `requiredWhen`
+refuses the write naming it, an option `visibleWhen` only a write picking the
+option (forms still offer it); a `readonlyWhen` field stays editable and the
+save succeeds without its change (logged); a formula reads `null` (logged).
+`os lint` is a *separate*
+pass that additionally checks the data model against the conventions in this
+skill (relationships, master-detail, roll-ups) — run it too.
+In a scaffolded project the gate is `npm run validate`.
+
+---
+
+## References
+
+See [references/_index.md](./references/_index.md) for the full list of Zod
+schemas (with one-line descriptions) — pointers into
+`node_modules/@objectstack/spec/src/`. Always `Read` the source for exact field
+shapes; do not rely on memory of property names.

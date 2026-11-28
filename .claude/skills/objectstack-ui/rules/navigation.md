@@ -1,0 +1,190 @@
+# App Navigation & Run Modes
+
+Build an App with `App.create({...})` from
+`@objectstack/spec/ui` and register under `defineStack({ apps: [...] })`.
+
+⛔ **At most one App per package** (ADR-0019 (app-as-consumer-unit) D3 as
+amended): `defineStack` refuses a second app in a `type: 'app'` and a
+`type: 'module'` package alike. A suite (an app package plus its modules) may
+surface more apps: each further app goes in a module of its own with the
+objects it shows (gone when it is disabled), and the suite composes with
+`composeStacks(stacks, { manifest: 'preserve' })`, which serves each app under
+its own package id; a flat composition puts them under one and is refused.
+Audiences sharing one product and its objects stay
+`requiredPermissions`-gated groups **inside** one app.
+
+Keys by type ([the ten](../SKILL.md#navigation-item-types); `label`, `icon`
+on all but `separator`): `group` `expanded`, `children[]`; `object`
+`objectName`, `viewName?`, `recordId?`, `filters?`; `dashboard`
+`dashboardName`; `report` `reportName?`; `page` `pageName`; `url` `url`;
+`action` `actionDef` (`{actionName, params?}`); `component` `componentRef`
+(a colon-joined registry key, `metadata:resource`), `params?`; `doc` `book?` /
+`doc?` (one required).
+
+> **`requiresObject` / `requiresService`** hide an item whose optional
+> system object or kernel service is missing — never hard-code conditional UI.
+> `AppContextSelector` ids (e.g. `{active_package}`) resolve in navigation
+> `recordId` / `params` only: filters are not evaluated with the sidebar's
+> selector state.
+
+<!-- os:check -->
+```typescript
+import { App } from '@objectstack/spec/ui';
+
+export const CrmApp = App.create({
+  name: 'crm_enterprise',
+  label: 'Enterprise CRM',
+  icon: 'briefcase',
+  // defaultAgent: 'build',                // only `ask` (the default: omit) or `build` binds (ADR-0063 §2) — objectstack-ai
+  branding: {
+    primaryColor: '#4169E1',
+    logo: '/assets/crm-logo.png',
+    favicon: '/assets/crm-favicon.ico',
+  },
+  navigation: [
+    {
+      id: 'group_sales', type: 'group', label: 'Sales', icon: 'chart-line',
+      expanded: true,
+      children: [
+        { id: 'nav_lead',        type: 'object', objectName: 'lead',        label: 'Leads',         icon: 'user-plus' },
+        { id: 'nav_opportunity', type: 'object', objectName: 'opportunity', label: 'Opportunities', icon: 'target' },
+        // Open a specific named view instead of the object default:
+        { id: 'nav_pipeline',    type: 'object', objectName: 'opportunity', viewName: 'pipeline_kanban', label: 'Sales Pipeline', icon: 'columns-3' },
+        // One-off slice on the bare data surface (Run Modes, below):
+        { id: 'nav_my_open',     type: 'object', objectName: 'opportunity', filters: { owner_id: '{current_user_id}', status: 'open' }, label: 'My Open Deals', icon: 'user-check' },
+        { id: 'nav_dash',        type: 'dashboard', dashboardName: 'crm_sales_dashboard', label: 'Sales Dashboard', icon: 'chart-bar' },
+        { id: 'nav_report',      type: 'report',    reportName: 'crm_opportunities_by_stage', label: 'Opps by Stage', icon: 'bar-chart-3' },
+        // No `reportName` = the app's report index; the console adds none itself:
+        { id: 'nav_reports',     type: 'report',    label: 'Reports', icon: 'library' },
+      ],
+    },
+    {
+      id: 'group_approvals', type: 'group', label: 'Approvals', icon: 'check-circle',
+      children: [
+        // The inbox component, gated on the approvals service. Not `requiresObject`:
+        // the object read answers 404 to approvers until a request involves them.
+        { id: 'nav_approvals', type: 'component', componentRef: 'approvals:inbox', label: 'Approvals', icon: 'inbox', requiresService: 'approvals' },
+      ],
+    },
+  ],
+});
+```
+
+---
+
+## Who sees or opens an app
+
+- **Visibility, per audience.** `tabPermissions: { crm_enterprise: 'hidden' }`
+  (key = app `name`) on a permission set takes the app off its holders' Home
+  tiles, App Switcher and `app:launcher` block: `GET /api/v1/me/apps` drops it,
+  `/api/v1/meta/app` still serves it and its URL still opens. Not an access
+  gate. Any other value for it on another set they hold (`visible`, `default_on`,
+  `default_off`) outranks `hidden`: the set everyone holds must carry no
+  `tabPermissions` entry for it.
+- **Access.** App `requiredPermissions: ['crm.access']` plus `systemPermissions:
+  ['crm.access']` on the holders' permission set. Nobody else is served the app
+  (by name: `403`), admins included until a set grants them the capability.
+- **Everyone.** App `hidden: true` keeps it off the App Switcher for all, still
+  routable and permission-checked; the shell surfaces it (e.g. `account`) from
+  the avatar menu.
+- **No per-position default app.** An app's `isDefault: true` is global: never
+  promise a landing app per position.
+
+---
+
+## Three Run Modes: Object Nav vs Filters Slice vs Interface Pages (ADR-0047 / objectui ADR-0055)
+
+Object list UI has **three run modes**, selected by the navigation item shape:
+
+| | Data mode (`type: 'object'`) | Bare slice (`type: 'object'` + `filters`) | Interface mode (`type: 'page'`) |
+|:--|:--|:--|:--|
+| What renders | ALL list views as switcher tabs | The URL-defined slice, no saved-view tabs | One curated page with its own list definition |
+| Anchored to | Saved views | **The URL itself** (`/:objectName/data?filter[...]`) | Page config |
+| User-created views | Allowed | "Save as view" exit only | Never |
+| Quick filters | Auto-derived (or view `userFilters` — `dropdown` only) | Auto-derived + removable URL chips | Only what the author enabled |
+| Visualization | Switchable (whitelist) | Switchable (URL filter state survives) | Locked unless whitelisted |
+
+**Decision rule — default to data mode.** Generate ONLY objects + list views +
+navigation pointing at objects. Escalate only on explicit signals:
+
+- **`filters` slice** — the entry is a one-off / parameterized condition
+  (dashboard drill-through, "assigned to me" link, a shared URL). Don't
+  author a view for it; a slice graduates to a named view only when it is
+  curated and reused. Values support `{current_user_id}` / `{current_org_id}`.
+  Never treat it as security: the surface shows what row-level permissions
+  allow.
+- **Interface page** — persona split ("sales reps see…", customer portal, "a
+  simplified screen for the business team"); capability narrowing ("users must
+  not change views", "only filter by X"); curation language (workspace /
+  workbench / "Airtable interface-like").
+
+Ambiguity resolves to **no page and no view** — data mode is a functional
+superset; a missing page costs polish, a superfluous page (or a view authored
+for a one-off slice) is a permanently-maintained duplicate asset.
+
+> One-sentence rule: prefer the object's default view over a pinned
+> `viewName`; prefer URL `filters` over authoring a view for one-off slices;
+> prefer a named view over a page; use a page only for composition a single
+> object view cannot express. Every target appears exactly once.
+
+**The iron rule (revised):** an interface page **IS the view definition**. It
+binds an object (`interfaceConfig.source`) and carries its **own** `columns` /
+`sort` / `filterBy` directly, plus presentation policy (`userFilters`,
+`appearance.allowedVisualizations`, `userActions`). The old
+`sourceView` ("inherit from a named object view") is **deprecated** legacy: it
+is still honored at runtime as a fallback when the page defines no `columns` of
+its own.
+
+<!-- os:check -->
+```typescript
+import { definePage } from '@objectstack/spec/ui';
+
+export const TaskWorkbenchPage = definePage({
+  name: 'crm_task_workbench',
+  label: 'Task Workbench',
+  type: 'list',
+  object: 'task',
+  interfaceConfig: {
+    source: 'task',
+    columns: ['subject', 'status', 'due_date'],
+    sort: [{ field: 'due_date', order: 'asc' }],
+    filterBy: [{ field: 'status', operator: 'not_equals', value: 'done' }],
+    userFilters: { element: 'dropdown', fields: [{ field: 'status' }] },
+    appearance: { allowedVisualizations: ['grid'] },  // locked
+    userActions: { sort: true, search: true, filter: false },
+  },
+});
+```
+
+---
+
+## Record Presentation — surface, width & columns are auto-derived
+
+A record's create / edit / detail **presents itself adaptively**. You do **not**
+author the surface, the overlay width, or the column count — all three are derived
+at runtime from the client viewport, because an author
+(especially an AI) cannot know the client's screen. **Write the data (fields,
+`fieldGroups`); let the platform lay it out.**
+
+- **Surface.** A clicked record opens in the **drawer**, which expands to the full
+  page; `page` only by declaration ([Record Page](./record-page.md) §5–6). Create /
+  edit opens in a **modal**, or the full-page route when the object declares `editMode: 'page'`.
+- **Field width.** **Omit it** (`auto` sizes by widget type × current columns —
+  textarea / rich-text / file take the row). Both keys are valid: `colSpan`
+  (1–4) is clamped to the current column count, grid-aligned at every width;
+  `span: 'full'` resolves to the form grid's full column count, but the shipped
+  renderer emits it at the widest tier only (a 3-column form: one cell of two
+  in a modal).
+- **Column count.** Not authored. The form grid follows its **real rendered width**
+  via container queries — the same form is 1 column in a narrow drawer and up to 4
+  on a wide page. Author *grouping* with `fieldGroups` + `Field.group`.
+- **`sections` are the escape hatch — reach for them last.** The ladder, in
+  order: (1) **derive** — declare `fieldGroups` + `Field.group` and author no
+  `sections` at all; (2) **reference** — when one surface needs a local
+  arrangement, a section may name a declared group, `{ group: 'contact_info' }`,
+  and inherits its members, label and presentation (restating a key the group
+  declares is refused at parse); (3) **enumerate** — `{ label, fields: [...] }`
+  only for a named-customer requirement a group reference genuinely cannot
+  express (a cross-group entry combination, a wizard/pane structure), with that
+  reason in a comment beside it. A hand-enumerated section re-copies membership
+  the object already owns and goes stale on the next field added.

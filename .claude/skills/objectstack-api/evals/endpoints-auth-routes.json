@@ -1,0 +1,75 @@
+{
+  "skill_name": "objectstack-api",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add `src/api/lead-feed.endpoint.ts`: a GET endpoint that returns our `acme_lead` records for a partner integration, cached for 30 seconds. The stack's manifest namespace is `acme`. None of the project's files are in this directory: write the file in your answer.",
+      "expected_output": "Emits a declarative `ApiEndpoint` (registered under `defineStack({ apis })`): `path: '/api/v1/apps/acme/leads'` (the ADR-0121 carve-out — only the subpath is free), `method: 'GET'`, `type: 'object_operation'`, `objectParams: { object: 'acme_lead', operation: 'find' }`, `cacheTtlSeconds: 30`. `authRequired` is omitted (defaults to true). No handler code, no `transform` in a mapping, and `manifest.namespace` is declared explicitly.",
+      "files": [],
+      "assertions": {
+        "must_contain": ["/api/v1/apps/", "object_operation", "objectParams", "cacheTtlSeconds"],
+        "must_not_contain": ["transform:", "'/api/v1/leads'"]
+      }
+    },
+    {
+      "id": 2,
+      "prompt": "Our `acme` stack ships a lead feed for a partner integration: a `GET` endpoint at `/api/v1/apps/acme/leads` of `type: 'object_operation'` over `acme_lead`, cached for 30 seconds. The partner can't send a session token — make the lead feed callable without login. None of the project's files are in this directory: write the change in your answer.",
+      "expected_output": "Sets `authRequired: false` and, because ADR-0121 D6 pairs an anonymous entry point with an armed budget, adds `rateLimit: { enabled: true, windowMs: 60_000, maxRequests: 100 }`. Points out that the gate's predicate is `rateLimit.enabled === true`, so writing only `windowMs` / `maxRequests` declares a budget that meters nothing, and that the endpoint budget is independent of `server.security.rateLimit`.",
+      "files": [],
+      "assertions": {
+        "must_contain": ["authRequired", "rateLimit", "enabled: true", "maxRequests"],
+        "must_not_contain": []
+      }
+    },
+    {
+      "id": 3,
+      "prompt": "We receive Stripe webhooks and must verify the signature with real code before writing anything. Mount POST /api/v1/apps/acme/stripe in our plugin.",
+      "expected_output": "Does not mount on `http.server` (the platform plugins' own primitive, not an app surface) and does not invent a door. States the gap: a callback verified by Stripe's own signature over the raw body has no app surface today — the inbound `type: 'api'` flow hook checks only `x-objectstack-signature`. Names what holds for code: a `type: 'flow'` endpoint whose `script` node runs a stack function (`defineStack({ functions })`).",
+      "files": [],
+      "assertions": {
+        "must_contain": ["x-objectstack-signature", "functions"],
+        "must_not_contain": ["'http.server'", "kernel:ready", "getService"]
+      }
+    },
+    {
+      "id": 4,
+      "prompt": "Enable Google and GitHub sign-in next to the existing email/password login.",
+      "expected_output": "Reads `node_modules/@objectstack/spec/src/api/auth.zod.ts` before wiring anything: `AuthProvider` is `'local' | 'google' | 'github' | 'microsoft' | 'ldap' | 'saml'`, and `LoginRequestSchema` carries `type` plus optional `email` / `username` / `password` / `provider` / `redirectTo`. Does not invent a nested `auth` block on an endpoint — endpoint auth is `authRequired` (declarative) or the flat `public` + `permissions` pair.",
+      "files": [],
+      "assertions": {
+        "must_contain": ["AuthProvider", "auth.zod.ts", "google", "github", "LoginRequestSchema"],
+        "must_not_contain": []
+      }
+    },
+    {
+      "id": 5,
+      "prompt": "Lock the `invoice` object's API down to read, list, search and export; add a `/bulk` route for imports and a `restore` operation so deleted invoices can be undeleted.",
+      "expected_output": "Authors only the primitives: `apiMethods: ['get', 'list']` — `search` and `export` derive from `list` automatically and are never declared (a declared derived verb is stripped with a warning). Explains there is no `/bulk` route (batch writes go through `POST /api/v1/data/{object}/batch`) and that `restore` is never declared either: it derives from `delete`, and a by-id delete of a business object already keeps its rows in the recycle bin (`sys_recycle_bin`). Points out the conflict: with `delete` left out, the bin's doors are closed too, so undeleting over the API needs `delete` in `apiMethods`; a caller then restores with `POST /api/v1/data/invoice/recycle-bin/:entryId/restore` (the `recycleBinEntryId` the delete answered), under `allowRestoreOwnDeleted` for its own deletes or `manageRecycleBin` for anyone's. No custom soft-delete to build.",
+      "files": [],
+      "assertions": {
+        "must_contain": ["apiMethods", "/batch", "sys_recycle_bin", "recycle-bin"],
+        "must_not_contain": ["'search'", "'restore'", "nothing lists or restores"]
+      }
+    },
+    {
+      "id": 6,
+      "prompt": "Our nightly CSV upsert of `supplier` rows by `tax_id` keeps resetting the `owner` column that sales reassigns by hand. Fix the import body. Today the job posts `{ format: 'csv', csv, mapping: { 'Tax ID': 'tax_id', Name: 'name', Owner: 'owner' }, writeMode: 'upsert', matchFields: ['tax_id'] }` to `POST /api/v1/data/supplier/import`. None of the project's files are in this directory: write the corrected body in your answer.",
+      "expected_output": "Sends `mapping` as a `FieldMappingEntry[]` (the `{ Column: field }` shorthand cannot carry it) with `{ sourceField: 'Owner', targetField: 'owner', applyOn: 'create' }`: the column is written when the upsert creates the row and left out of the patch when it matches one; the other columns keep the default `applyOn: 'always'`. Keeps `writeMode: 'upsert'` and `matchFields: ['tax_id']`.",
+      "files": [],
+      "assertions": {
+        "must_contain": ["applyOn", "'create'", "sourceField", "targetField"],
+        "must_not_contain": ["writeMode: 'insert'"]
+      }
+    },
+    {
+      "id": 7,
+      "prompt": "Our integration boots by reading the `account`, `contact` and `lead` object definitions from the runtime's metadata API. Today it sends three requests; our `?name=account,contact,lead` attempt came back 400. Make it one request.",
+      "expected_output": "One `GET /api/v1/meta/object?names=account,contact,lead` — the list door's `?names=` filter takes one comma-separated value and answers only the named items the caller may see; a name that matches no item is simply absent (no 404), and an empty value is refused `400`. Does not spell the filter `?name=`, `?ids=` or `?filter=`: the list reads a closed query set (`package`, `preview`, `object`, `include`, `id`, `names`, `locale`) and refuses any other key with `400 VALIDATION_ERROR` instead of ignoring it, so a misspelt filter never silently answers the whole list.",
+      "files": [],
+      "assertions": {
+        "must_contain": ["?names=", "/api/v1/meta/object", "VALIDATION_ERROR"],
+        "must_not_contain": ["object?ids=", "object?filter="]
+      }
+    }
+  ]
+}
