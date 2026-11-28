@@ -108,7 +108,7 @@ export const createHotCrmExpenseStack = (
     version: '6.7.0',
     type: 'module',
     description: "HotCRM expense module — expenses with their receipts, travel requests, the reports that send expenses to be approved, their payment back, and the company's expense standards.",
-    engines: { protocol: '^19.0.0-next.0' },
+    engines: { protocol: '^19.0.0-next.2' },
     // The App package this module extends, and nothing else.
     dependencies: { 'app.objectstack.hotcrm': '^6.7.0' },
 

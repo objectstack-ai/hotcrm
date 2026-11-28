@@ -125,7 +125,7 @@ export const createHotCrmPsaStack = (
     version: '6.7.0',
     type: 'module',
     description: 'HotCRM project delivery module — projects, staffing, time, expenses and delivery margin.',
-    engines: { protocol: '^19.0.0-next.0' },
+    engines: { protocol: '^19.0.0-next.2' },
     // The App package this module extends, and the expense module whose
     // `crm_expense` it extends with the project (hotcrm#2556) — the one
     // add-on → add-on edge `module-split-plan.md` item 18 allows; item 10
