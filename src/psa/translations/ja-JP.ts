@@ -284,7 +284,7 @@ export const jaJP: TranslationData = {
         },
         percent_complete: {
           label: '進捗率',
-          help: 'このタスクの進み具合。完了にすると 100 になります。',
+          help: 'このタスクの進み具合。完了にすると 100 になり、完了から他のステータスに戻すと 0 に戻ります。',
         },
         actual_hours: { label: '実績工数' },
       },

@@ -27,10 +27,12 @@ A project's plan is its **Project Tasks**. They appear in the project's **Relate
 | **Planned Start**, **Planned End** | When the task is planned |
 | **Predecessors** | The tasks that must finish before this one starts |
 | **Planned Hours** | The effort the task is planned at. The project's Percent Complete weighs each task by it |
-| **Percent Complete** | How far along the task is. Set to 100 when the task is Completed |
+| **Percent Complete** | How far along the task is. Set to 100 when the task is Completed, and back to 0 when it is moved out of Completed |
 | **Actual Hours** | The hours booked against the task |
 
 A **Parent Task** and every **Predecessor** must be tasks of the same project. A parent that is one of the task's own subtasks is refused, because the plan would loop.
+
+Moving a task out of **Completed** sets its **Percent Complete** back to 0, whichever status it moves to: the 100 was written by the system, and the estimate from before the task was completed is not restored automatically (the record's history still shows it). To reopen a task part done, change the status and the percentage in the same save; the percentage you give is kept.
 
 ## The Gantt
 

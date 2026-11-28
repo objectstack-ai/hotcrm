@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import type { VerifyStack } from '@objectstack/verify';
-import { hotcrmStack, signUpPerson, type Person } from './helpers/verify-stack';
+import { hotcrmStack, signUpPerson, predicateUpdate, type Person } from './helpers/verify-stack';
 import { ProjectTask } from '../src/psa/objects/project_task.object';
 
 type Rec = Record<string, any>;
@@ -123,6 +123,104 @@ describe('project_task_progress: Percent Complete follows the tasks, weighted by
     const res = await verify.apiAs(pm.token, 'PATCH', `/data/crm_project/${project.id}`, { percent_complete: 7 });
     expect(res.status, await res.clone().text()).toBe(200);
     expect(await percent(project.id)).toBe(100);
+  });
+});
+
+describe('project_task_rules: a task moved out of Completed gives up its 100 % (hotcrm#2768)', () => {
+  let plan: Rec;
+  let design: Rec;
+  let rollout: Rec;
+
+  const task = async (id: string): Promise<Rec> => (await row('crm_project_task', id))!;
+  const complete = async (): Promise<void> => {
+    await update('crm_project_task', { id: rollout.id, status: 'completed' }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(100);
+    // (40·50 + 60·100) / 100 = 80 %.
+    expect(await percent(plan.id)).toBe(80);
+  };
+
+  beforeAll(async () => {
+    plan = await insert('crm_project', { name: `Plan Reopen ${++k}`, crm_account: account.id, kind: 'delivery' }, pm.token);
+    design = await insert('crm_project_task', { crm_project: plan.id, name: 'Design', planned_hours: 40, percent_complete: 50, status: 'in_progress' }, pm.token);
+    rollout = await insert('crm_project_task', { crm_project: plan.id, name: 'Roll out site three', planned_hours: 60, percent_complete: 0 }, pm.token);
+    // 40 h at 50 % and 60 h not started: 2000 / 100 = 20 %.
+    expect(await percent(plan.id)).toBe(20);
+  });
+
+  it('goes back to 0 % when the task is moved back to Not Started, and the project drops back', async () => {
+    await complete();
+    await update('crm_project_task', { id: rollout.id, status: 'not_started' }, pm.token);
+    const t = await task(rollout.id);
+    expect(t.status).toBe('not_started');
+    expect(Number(t.percent_complete)).toBe(0);
+    expect(await percent(plan.id)).toBe(20);
+  });
+
+  it('goes back to 0 % for In Progress, On Hold and Cancelled alike', async () => {
+    for (const status of ['in_progress', 'on_hold']) {
+      await complete();
+      await update('crm_project_task', { id: rollout.id, status }, pm.token);
+      expect(Number((await task(rollout.id)).percent_complete), status).toBe(0);
+      expect(await percent(plan.id), status).toBe(20);
+    }
+    await complete();
+    await update('crm_project_task', { id: rollout.id, status: 'cancelled' }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(0);
+    // Cancelled is left out: Design alone, 50 %.
+    expect(await percent(plan.id)).toBe(50);
+    // The 100 does not come back when the cancelled task is taken up again.
+    await update('crm_project_task', { id: rollout.id, status: 'in_progress' }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(0);
+    expect(await percent(plan.id)).toBe(20);
+  });
+
+  it('keeps a percentage given in the same save', async () => {
+    await complete();
+    await update('crm_project_task', { id: rollout.id, status: 'in_progress', percent_complete: 70 }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(70);
+    // (40·50 + 60·70) / 100 = 62 %.
+    expect(await percent(plan.id)).toBe(62);
+  });
+
+  it('does not take the unchanged 100 a form sends back as a percentage given', async () => {
+    await complete();
+    await update('crm_project_task', { id: rollout.id, name: 'Roll out site three', status: 'not_started', percent_complete: 100 }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(0);
+    expect(await percent(plan.id)).toBe(20);
+  });
+
+  it('leaves the percentage alone on any other move, and on a Completed task that stays Completed', async () => {
+    await update('crm_project_task', { id: design.id, status: 'on_hold' }, pm.token);
+    expect(Number((await task(design.id)).percent_complete)).toBe(50);
+    await update('crm_project_task', { id: design.id, status: 'in_progress' }, pm.token);
+    expect(Number((await task(design.id)).percent_complete)).toBe(50);
+    await complete();
+    await update('crm_project_task', { id: rollout.id, name: 'Roll out site three (done)' }, pm.token);
+    expect(Number((await task(rollout.id)).percent_complete)).toBe(100);
+    expect(await percent(plan.id)).toBe(80);
+  });
+
+  it('keeps the figure of a Completed task that does not read 100 (a row from before hotcrm#2545)', async () => {
+    const legacy = await insert('crm_project', { name: `Plan Legacy ${++k}`, crm_account: account.id, kind: 'delivery' }, pm.token);
+    const t = await insert('crm_project_task', { crm_project: legacy.id, name: 'Migrate the archive', planned_hours: 10, status: 'completed' }, pm.token);
+    // Written straight to the driver: no hook today stores a Completed task below 100.
+    const ql = verify.kernel.getService<Rec>('objectql');
+    await ql.getDriverForObject('crm_project_task').update(ql.resolveObjectName('crm_project_task'), t.id, { percent_complete: 80 });
+    // That 80 was not written by the hook, so it is the owner's: a form that
+    // sends it back with the new status keeps it, and so does a status-only save.
+    await update('crm_project_task', { id: t.id, name: 'Migrate the archive', status: 'in_progress', percent_complete: 80 }, pm.token);
+    expect(Number((await task(t.id)).percent_complete)).toBe(80);
+  });
+
+  it('lets one update move several Completed tasks at once (a predicate update)', async () => {
+    const bulk = await insert('crm_project', { name: `Plan Bulk ${++k}`, crm_account: account.id, kind: 'delivery' }, pm.token);
+    const a = await insert('crm_project_task', { crm_project: bulk.id, name: 'Site one', status: 'completed' }, pm.token);
+    const b = await insert('crm_project_task', { crm_project: bulk.id, name: 'Site two', status: 'completed' }, pm.token);
+    await predicateUpdate(verify, 'crm_project_task', { status: 'in_progress' }, { id: { $in: [a.id, b.id] } }, pm.token);
+    expect((await task(a.id)).status).toBe('in_progress');
+    expect((await task(b.id)).status).toBe('in_progress');
+    // One payload serves every row on this path, so the hook does not reset the
+    // percentage there (see `project_task.hook.ts`); a by-id save does.
   });
 });
 

@@ -27,10 +27,12 @@ description: 把項目拆成任務、在甘特圖上畫出來、把工時記到�
 | **Planned Start**、**Planned End** | 任務計劃在什麼時候做 |
 | **Predecessors** | 這項任務開始前必須完成的任務 |
 | **Planned Hours** | 這項任務計劃投入的工時。項目的 Percent Complete 按它給每項任務加權 |
-| **Percent Complete** | 這項任務完成了多少。標為 Completed 時設為 100 |
+| **Percent Complete** | 這項任務完成了多少。標為 Completed 時設為 100，從 Completed 改回其他狀態時歸 0 |
 | **Actual Hours** | 記到這項任務上的工時 |
 
 **Parent Task** 和每個 **Predecessor** 都必須是同一項目的任務。如果選的上級任務是這項任務自己的子任務，會被拒絕，否則計劃會繞成一個圈。
+
+把任務從 **Completed** 改回其他狀態時，不管改成哪個狀態，**Percent Complete** 都歸 0：那個 100 是系統寫的，任務完成之前的估計值不會自動恢復（記錄的歷史中仍看得到）。如果任務其實做了一部分，請在同一次儲存裡同時修改 Status 和 Percent Complete，系統保留你填的數字。
 
 ## 甘特圖
 

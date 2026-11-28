@@ -28,10 +28,12 @@ import { PROJECT_TASK_STATUS_OPTIONS } from './_psa-picklists';
  * ## Progress
  *
  * A task's `percent_complete` is the owner's estimate; Completed counts as
- * 100 %. The project's own Percent Complete is computed from its tasks by
- * `project_task.hook.ts`: the tasks with no subtasks, weighted by their
- * planned hours, cancelled ones left out. A summary task's own hours and
- * percentage are not counted, so nothing is counted twice.
+ * 100 %, and a task moved out of Completed goes back to 0 % unless the same
+ * save gives a new estimate (hotcrm#2768). The project's own Percent Complete
+ * is computed from its tasks by `project_task.hook.ts`: the tasks with no
+ * subtasks, weighted by their planned hours, cancelled ones left out. A
+ * summary task's own hours and percentage are not counted, so nothing is
+ * counted twice.
  *
  * `actual_hours` sums the time entries booked against the task.
  *
@@ -141,7 +143,7 @@ export const ProjectTask = ObjectSchema.create({
       group: 'effort',
       min: 0,
       max: 100,
-      description: 'How far along the task is. Set to 100 when the task is Completed.',
+      description: 'How far along the task is. Set to 100 when the task is Completed, and back to 0 when it is moved out of Completed.',
     }),
 
     actual_hours: Field.summary({

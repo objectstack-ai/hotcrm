@@ -284,7 +284,7 @@ export const zhCN: TranslationData = {
         },
         percent_complete: {
           label: '完成百分比',
-          help: '这项任务完成了多少。任务标为已完成时设为 100。',
+          help: '这项任务完成了多少。任务标为已完成时设为 100，从已完成改回其他状态时归 0。',
         },
         actual_hours: { label: '实际工时' },
       },

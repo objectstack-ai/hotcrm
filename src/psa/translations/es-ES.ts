@@ -284,7 +284,7 @@ export const esES: TranslationData = {
         },
         percent_complete: {
           label: 'Porcentaje completado',
-          help: 'Cuánto lleva hecho la tarea. Se pone en 100 cuando la tarea está Completada.',
+          help: 'Cuánto lleva hecho la tarea. Se pone en 100 cuando la tarea está Completada, y vuelve a 0 cuando sale de Completada.',
         },
         actual_hours: { label: 'Horas reales' },
       },
