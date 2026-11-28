@@ -208,11 +208,14 @@ describe('every refusal names a code the platform will echo (#1075)', () => {
     // activated, Change without its reason or amendment, a typed value on an
     // order contract); 108 until hotcrm#2826 added `sales_order_workflow`'s
     // two: the header amount of an order past Draft, and a typed Subtotal on
-    // an order with lines.
+    // an order with lines; 110 until #2760 added `payment_plan_step_stamp`'s
+    // refusal of a payment naming another account's payment plan, and its
+    // refusal by the invoice of a payment plan of another account that the
+    // invoice brings (naming the invoice, which the user chose).
     // The number is hand-maintained on purpose: a new refusal has to be a
     // deliberate edit here, so a guard that quietly stopped being swept cannot
     // hide behind a count that follows it.
-    expect(sites).toHaveLength(110);
+    expect(sites).toHaveLength(112);
   });
 
   it('uses only members of the platform ErrorCode enum', () => {

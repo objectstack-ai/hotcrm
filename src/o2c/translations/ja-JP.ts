@@ -15,6 +15,8 @@ export const jaJP: TranslationData = {
           message: 'この請求書は別の取引先のものです。この入金の取引先の請求書を選んでください。',
           reasons: {
             named: { message: '{{invoice}}は別の取引先のものです。この入金の取引先の請求書を選んでください。' },
+            milestone_named: { message: '{{milestone}}は別の取引先のものです。この入金の取引先の入金計画を選んでください。' },
+            invoice_milestone: { message: '{{invoice}}が計上される{{milestone}}は別の取引先の入金計画です。請求書の入金計画を修正するか、別の請求書を選んでください。' },
           },
         },
       },

@@ -104,10 +104,34 @@ export function createO2cRowStamp(objectName: string, hookName: string): Hook {
       if (api && (!held('crm_contract') || !held('crm_sales_order'))) {
         const sources: Array<Record<string, unknown>> = [];
         const sourceFields = ['id', 'crm_contract', 'crm_sales_order', 'crm_account'];
+        // A payment or an invoice takes nothing from an invoice or a step of
+        // another account: `payment_plan_step_stamp` and
+        // `invoice_plan_step_guard` (after this hook) then refuse the invoice
+        // or the step by its own name, where the order it carries would be
+        // refused here under a name the user never chose (hotcrm#2755: the
+        // forms' pickers list every account's). The account is the one the
+        // write names; else the one its contract or order gives (stamped
+        // below); else the row's own.
+        let payer = '';
+        const judged = (ctx.object === 'crm_payment' && (refId(input.crm_invoice) || refId(input.crm_billing_milestone)))
+          || (ctx.object === 'crm_invoice' && refId(input.crm_billing_milestone));
+        if (judged) {
+          payer = 'crm_account' in input ? refId(input.crm_account) : '';
+          for (const key of ['crm_contract', 'crm_sales_order']) {
+            if (payer || !held(key)) continue;
+            const named = await api.object(key).findOne({ where: { id: held(key) }, fields: ['id', 'crm_account'] });
+            payer = refId(named?.crm_account);
+          }
+          if (!payer && !('crm_account' in input)) payer = refId(previous.crm_account);
+        }
+        const ofPayer = (source: Record<string, unknown>): boolean => {
+          const owner = refId(source.crm_account);
+          return !payer || !owner || owner === payer;
+        };
         const invoiceId = ctx.object === 'crm_payment' ? refId(input.crm_invoice) : '';
         if (invoiceId) {
           const invoice = await api.object('crm_invoice').findOne({ where: { id: invoiceId }, fields: sourceFields });
-          if (invoice) sources.push(invoice);
+          if (invoice && ofPayer(invoice)) sources.push(invoice);
         }
         const first = (key: string): string => {
           for (const source of sources) {
@@ -120,13 +144,7 @@ export function createO2cRowStamp(objectName: string, hookName: string): Hook {
         const missing = (key: string): boolean => !held(key) && !first(key);
         if (stepId && (missing('crm_contract') || missing('crm_sales_order'))) {
           const step = await api.object('crm_billing_milestone').findOne({ where: { id: stepId }, fields: sourceFields });
-          // An invoice that names its account takes nothing from another
-          // account's step: `invoice_plan_step_guard` (after this hook) then
-          // refuses it by the step's name, not by an order or a contract the
-          // user never chose (hotcrm#2755).
-          const named = ctx.object === 'crm_invoice' && 'crm_account' in input ? refId(input.crm_account) : '';
-          const owner = refId(step?.crm_account);
-          if (step && !(named && owner && owner !== named)) sources.push(step);
+          if (step && ofPayer(step)) sources.push(step);
         }
         if (!held('crm_contract') && first('crm_contract')) input.crm_contract = first('crm_contract');
         if (!held('crm_sales_order') && first('crm_sales_order')) input.crm_sales_order = first('crm_sales_order');

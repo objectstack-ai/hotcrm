@@ -29,10 +29,10 @@ invoices and payments.
 ## Rules the screens do not show
 
 - **Account, order and contract.** Choosing an order or a contract fills in
-  its account. An order or a contract of another account is refused, naming
-  it. An order under a contract brings its contract: one that names a
-  different contract is refused, and so is an order and a contract of two
-  different accounts. When a payment names a payment plan but no order or
+  its account; on a payment, so does choosing a payment plan. An order or a
+  contract of another account is refused, naming it. An order under a
+  contract brings its contract: one that names a different contract is
+  refused, and so is an order and a contract of two different accounts. When a payment names a payment plan but no order or
   contract, they are filled in from the plan, so the order's and the
   contract's totals count the same payments the plan does.
 - **The order's contract carries to its invoices and payments.** When an order
@@ -71,6 +71,9 @@ invoices and payments.
   **Planned Date** is before today and that still have an **Open** amount.
 - **A payment names one payment plan at most.** A receipt that settles several
   plans is one payment row per plan; there is no allocation.
+- **A payment's payment plan must belong to its account.** The payment form
+  lists every account's payment plans; one of another account is refused on
+  save, naming it.
 
 ## Importing
 

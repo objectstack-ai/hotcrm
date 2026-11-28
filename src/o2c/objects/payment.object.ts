@@ -114,11 +114,18 @@ export const Payment = ObjectSchema.create({
 
     // The plan step the money collects; the step's Received sums it. Picking
     // it fills the order and the contract when the payment names neither
-    // (`_row-stamp.ts`).
+    // (`_row-stamp.ts`). One of another account is refused on save
+    // (`payment_plan_step_stamp`).
     crm_billing_milestone: Field.lookup('crm_billing_milestone', {
       label: 'Payment Plan',
       group: 'basic',
-      dependsOn: ['crm_account'],
+      // No `dependsOn`, as the order and the contract lookups have none
+      // (hotcrm#2755): measured in the browser, it hid the step the payment
+      // plan page's New prefills ("Select Account first") and cleared it when
+      // the account was picked, so the payment was saved with no step and the
+      // step's Received never moved. The picker therefore lists every
+      // account's steps; the pick fills the account.
+      lookupAutofill: [{ target: 'crm_account', source: 'crm_account', overwrite: true }],
       relatedListColumns: ['payment_number', 'payment_date', 'amount', 'method'],
     }),
 

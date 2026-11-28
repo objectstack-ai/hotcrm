@@ -49,10 +49,10 @@ Neither goes below zero: a payment above what is owed is accepted, typed or impo
 | Field | What it holds |
 | --- | --- |
 | **Payment Number** | Numbered for you: PAY-00001, PAY-00002… |
-| **Account** | The customer who paid. Required; filled in when you choose an order or a contract |
+| **Account** | The customer who paid. Required; filled in when you choose an order, a contract or a plan step |
 | **Order** | The order the money was received for, if any. Filled in from the plan step when left empty |
 | **Contract** | The contract the money was received for, if any. Filled in from the order, or else the plan step, when left empty |
-| **Payment Plan** | The plan step it counts toward, if any. Only the steps of the payment's account are kept: another account's is refused |
+| **Payment Plan** | The plan step it counts toward, if any. Choosing one fills in its account; another account's is refused |
 | **Payment Date** | The day the money was received |
 | **Amount** | How much was received |
 | **Method** | **Bank Transfer** or **Other** |
@@ -60,6 +60,8 @@ Neither goes below zero: a payment above what is owed is accepted, typed or impo
 **One row per plan step.** A receipt that settles several plan steps, or several orders, is recorded as one payment per step or order, split the way finance already split it. There is no allocation step in HotCRM.
 
 **An advance.** Record the payment against the plan step, the order, or the account alone when nothing plans it yet. Nothing has to be filled in when the invoice is issued later: invoices and payments are not matched.
+
+**A payment against another account's plan step is refused**, with a message naming it. The form lists every account's plan steps, so the check is made when you save.
 
 **An order or a contract of another account is refused** on an invoice or a payment, with a message naming it. So is a contract other than the order's own, and an order and a contract of two different accounts. Leave **Account** empty in an import and the order or the contract fills it.
 

@@ -15,6 +15,8 @@ export const esES: TranslationData = {
           message: 'Esta factura pertenece a otra cuenta. Elija una factura de la cuenta de este cobro.',
           reasons: {
             named: { message: '{{invoice}} pertenece a otra cuenta. Elija una factura de la cuenta de este cobro.' },
+            milestone_named: { message: '{{milestone}} pertenece a otra cuenta. Elija un plan de cobro de la cuenta de este cobro.' },
+            invoice_milestone: { message: '{{invoice}} cuenta para {{milestone}}, un plan de cobro de otra cuenta. Corrija el plan de cobro de la factura o elija otra factura.' },
           },
         },
       },
