@@ -8,6 +8,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  * package's pack: `./index.ts`.
  */
 export const zhCN: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.marketing': {
+      name: 'HotCRM 营销',
+      description: 'HotCRM 营销模块——营销活动及其成员。',
+    },
+  },
   objects: {
     crm_campaign: {
       _validations: {

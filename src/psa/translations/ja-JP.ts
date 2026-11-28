@@ -8,6 +8,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  * pack: `./index.ts`.
  */
 export const jaJP: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.psa': {
+      name: 'HotCRM プロジェクト納品',
+      description: 'HotCRM プロジェクト納品モジュール——プロジェクト、アサイン、工数、経費、納品利益率。',
+    },
+  },
   hooks: {
     timesheet_stamps: {
       refusals: {

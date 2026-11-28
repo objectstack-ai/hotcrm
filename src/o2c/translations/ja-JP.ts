@@ -8,6 +8,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  * package's pack: `./index.ts`.
  */
 export const jaJP: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.o2c': {
+      name: 'HotCRM 受注から入金',
+      description: 'HotCRM 受注から入金モジュール——契約の入金計画、請求書、入金状況。',
+    },
+  },
   hooks: {
     payment_plan_step_stamp: {
       refusals: {

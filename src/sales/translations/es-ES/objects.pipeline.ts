@@ -236,6 +236,13 @@ export const pipeline: Record<string, ObjectTranslationData> = {
     },
   },
   crm_opportunity: {
+    // The timeline row the stage milestones write (`activityMilestones` on the object).
+    _milestones: {
+      stage: {
+        closed_won: { summary: 'Oportunidad ganada — {name}' },
+        closed_lost: { summary: 'Oportunidad perdida — {name}' },
+      },
+    },
     _validations: {
       amount_positive: {
         message: 'El importe debe ser mayor que cero',

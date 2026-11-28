@@ -10,6 +10,13 @@ import { activityActions } from '../../sales/translations/ja-JP/_shared';
  * package's pack: `./index.ts`.
  */
 export const jaJP: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.service': {
+      name: 'HotCRM サービス',
+      description: 'HotCRM サービスモジュール——ケース、ナレッジ記事、SLA。',
+    },
+  },
   // The escalation follow-up task's title (#2494, #2522), at
   // `hooks.<hook>.texts.<key>.message`.
   hooks: {
@@ -110,6 +117,14 @@ export const jaJP: TranslationData = {
       },
     },
     crm_case: {
+      // The timeline row the status milestones write (`activityMilestones` on the object).
+      _milestones: {
+        status: {
+          escalated: { summary: 'ケースをエスカレーション — {subject}' },
+          resolved: { summary: 'ケース解決 — {subject}' },
+          closed: { summary: 'ケースクローズ — {subject}' },
+        },
+      },
       _validations: {
         resolution_required_for_closed: {
           message: 'ケースをクローズするには解決内容が必要です',

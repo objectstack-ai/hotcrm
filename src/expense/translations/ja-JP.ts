@@ -9,6 +9,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  * module's pack, which contributes the field. Why per package: `./index.ts`.
  */
 export const jaJP: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.expense': {
+      name: 'HotCRM 経費精算',
+      description: 'HotCRM 経費精算モジュール——領収書付きの経費、出張申請、経費を承認に回す精算書、その払い戻し、会社の経費基準。',
+    },
+  },
   hooks: {
     expense_line_lock: {
       refusals: {

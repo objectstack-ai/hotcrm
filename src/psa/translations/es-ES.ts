@@ -8,6 +8,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  * package's pack: `./index.ts`.
  */
 export const esES: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.psa': {
+      name: 'HotCRM Entrega de proyectos',
+      description: 'Módulo de entrega de proyectos de HotCRM: proyectos, asignación de personal, tiempo, gastos y margen de entrega.',
+    },
+  },
   hooks: {
     timesheet_stamps: {
       refusals: {

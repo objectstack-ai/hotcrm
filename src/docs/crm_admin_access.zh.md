@@ -56,7 +56,7 @@ description: 谁能看到谁的记录——岗位、扩大所有权访问的共�
 
 ## 禁用模块
 
-HotCRM 由核心应用加六个模块组成——**HotCRM Service**、**HotCRM Revenue**、**HotCRM Marketing**、**HotCRM Order to Cash**、**HotCRM Expenses** 和 **HotCRM Project Delivery**。用不到的模块可以在**软件包**页面关掉，即**系统设置 → 应用 → 软件包**。HotCRM 在列表里是一行，标着它的六个模块：展开这一行，打开该模块，选择**禁用**；选择**启用**即可重新打开。
+HotCRM 由核心应用加六个模块组成——**HotCRM 服务**、**HotCRM 产品与报价**、**HotCRM 营销**、**HotCRM 订单与回款**、**HotCRM 费用报销** 和 **HotCRM 项目交付**。用不到的模块可以在**软件包**页面关掉，即**系统设置 → 应用 → 软件包**。HotCRM 在列表里是一行，标着它的六个模块：展开这一行，打开该模块，选择**禁用**；选择**启用**即可重新打开。
 
 模块禁用期间，所有人都看不到它，管理员也不例外：
 

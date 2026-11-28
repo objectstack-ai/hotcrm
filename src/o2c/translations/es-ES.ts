@@ -8,6 +8,13 @@ import type { TranslationData } from '@objectstack/spec/system';
  * package's pack: `./index.ts`.
  */
 export const esES: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.o2c': {
+      name: 'HotCRM Del pedido al cobro',
+      description: 'Módulo del pedido al cobro de HotCRM: el plan de cobro, las facturas y el estado de los cobros de un contrato.',
+    },
+  },
   hooks: {
     payment_plan_step_stamp: {
       refusals: {

@@ -10,6 +10,13 @@ import { activityActions } from '../../sales/translations/es-ES/_shared';
  * package's pack: `./index.ts`.
  */
 export const esES: TranslationData = {
+  // This package's name and description on Setup's package list (`packages.MANIFEST_ID`).
+  packages: {
+    'app.objectstack.hotcrm.service': {
+      name: 'HotCRM Servicio',
+      description: 'Módulo de servicio de HotCRM: casos, artículos de conocimiento y el SLA.',
+    },
+  },
   // The escalation follow-up task's title (#2494, #2522), at
   // `hooks.<hook>.texts.<key>.message`.
   hooks: {
@@ -110,6 +117,14 @@ export const esES: TranslationData = {
       },
     },
     crm_case: {
+      // The timeline row the status milestones write (`activityMilestones` on the object).
+      _milestones: {
+        status: {
+          escalated: { summary: 'Caso escalado — {subject}' },
+          resolved: { summary: 'Caso resuelto — {subject}' },
+          closed: { summary: 'Caso cerrado — {subject}' },
+        },
+      },
       _validations: {
         resolution_required_for_closed: {
           message: 'La resolución es obligatoria al cerrar un caso',
